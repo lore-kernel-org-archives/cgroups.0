@@ -1,109 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v4.4-rc7] sched: isolate task_struct bitfields according to
- synchronization domains
-Date: Wed, 30 Dec 2015 04:23:37 -0500
-Message-ID: <20151230092337.GD3873@htj.duckdns.org>
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v4.4-rc7] sched: isolate task_struct bitfields according
+ to synchronization domains
+Date: Wed, 30 Dec 2015 12:10:12 -0800
+Message-ID: <CA+55aFx0WxoUPrOPaq3HxM+YUQQ0DPV-c3f8kE1ec7agERb_Lg@mail.gmail.com>
 References: <20150913185940.GA25369@htj.duckdns.org>
- <55FEC685.5010404@oracle.com>
- <20150921200141.GH13263@mtj.duckdns.org>
- <20151125144354.GB17308@twins.programming.kicks-ass.net>
- <20151125150207.GM11639@twins.programming.kicks-ass.net>
- <CAPAsAGwa9-7UBUnhysfek3kyWKMgaUJRwtDPEqas1rKwkeTtoA@mail.gmail.com>
- <20151125174449.GD17308@twins.programming.kicks-ass.net>
- <20151211162554.GS30240@mtj.duckdns.org>
- <20151215192245.GK6357@twins.programming.kicks-ass.net>
+	<55FEC685.5010404@oracle.com>
+	<20150921200141.GH13263@mtj.duckdns.org>
+	<20151125144354.GB17308@twins.programming.kicks-ass.net>
+	<20151125150207.GM11639@twins.programming.kicks-ass.net>
+	<CAPAsAGwa9-7UBUnhysfek3kyWKMgaUJRwtDPEqas1rKwkeTtoA@mail.gmail.com>
+	<20151125174449.GD17308@twins.programming.kicks-ass.net>
+	<20151211162554.GS30240@mtj.duckdns.org>
+	<20151215192245.GK6357@twins.programming.kicks-ass.net>
+	<20151230092337.GD3873@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=DqYlybeVVw++n0+X8jWDv/gNawLuQrHN7868bI8GC50=;
-        b=L+n2S+aDk2iqLtaHFl4uPQtYrA+O4JZ1B4uFnGCQaxpm9deq7gxS52iOKHiCpORyfr
-         EfRZN3NjU+j/m3ZPvAIbj8pO7RkVZY46jsngeRxM4AJ6cNyKZGJDi1f8Vcwy8Zv3PuDT
-         7n2Ep19PKmwq2kTwEqsQ+MBklVqNN2rRZd/Fc5wGk5XSFk2+XaSwmY7UgjP8jZthJL9B
-         VkQ9w78mxx+hKZA2TeJYiJ4YAhYOCxTyaQnV1hEYfJJt53tQn3KAsyPEG2a7jJHMYm3j
-         oir6wMJ7wtL5ctjjefjya/w+u5CbRUCOFp7/weqtTy6qLqJjWnOYWRKvDLYSy/ywkw5b
-         drtQ==
-Content-Disposition: inline
-In-Reply-To: <20151215192245.GK6357@twins.programming.kicks-ass.net>
-Sender: owner-linux-mm@kvack.org
+        h=mime-version:sender:in-reply-to:references:date:message-id:subject
+         :from:to:cc:content-type;
+        bh=sb/zNJJJ6oUXEcPZW5fwpuK62EYJv3DFo/f7oezpm0I=;
+        b=lNK/L5s8yRkp5GrLkDcE0yYulyx3QsIvRkd2eBeyFGbOhAsGSpRYtvhlASTyCBPQRG
+         iV+Odx9LpB9txaOjliCmUOGJMAAD76Dxf6lYbK/k6M+mK3ie2X+HGbF/p4r0buAsCTml
+         EZIsJJxmiJ59PW262AAdZN0Iy+WyRVO2fpQH6jWsmbHhUyz8KJG+VKe4CucI67WRTx8T
+         zyBt4Bbr04OdrtslNPnTEeGKIcn7bz49tQm4un1OIsnc7UXXAxo0rZubaCEKhQcjl1oW
+         Vuj1I5j9TX2IBf3rjzXDMfNV1EG2rmzmFgm0K0khGezxik9K0kh5LBO3FApkLL4RFcJN
+         yyJQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:sender:in-reply-to:references:date:message-id:subject
+         :from:to:cc:content-type;
+        bh=sb/zNJJJ6oUXEcPZW5fwpuK62EYJv3DFo/f7oezpm0I=;
+        b=h9v65AWTQtV3LyeqH1oh1VOpnldROXhwg3hNS/bxYJ0gOmweJC0TrRZIc8q9+yFzH0
+         OFuZhh8iuIkApoFQ2l9xPlDMITygOq5jd7qZXjg5Lp4DTQfzjjcV3ljzs9f3llQPRpLP
+         0ZUO5NUdG2IPBuXt+MOi1PT37QduxrTJbNAag=
+In-Reply-To: <20151230092337.GD3873-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrey Ryabinin <ryabinin.a.a@gmail.com>, Ingo Molnar <mingo@redhat.com>, Sasha Levin <sasha.levin@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, mhocko@kernel.org, cgroups@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>, vdavydov@parallels.com, kernel-team@fb.com, Dmitry Vyukov <dvyukov@google.com>, Peter Zijlstra <peterz@infradead.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-task_struct has a cluster of unsigned bitfields.  Some are updated
-under scheduler locks while others are updated only by the task
-itself.  Currently, the two classes of bitfields aren't distinguished
-and end up on the same word which can lead to clobbering when there
-are simultaneous read-modify-write attempts.  While difficult to prove
-definitely, it's likely that the resulting inconsistency led to low
-frqeuency failures such as wrong memcg_may_oom state or loadavg
-underflow due to clobbered sched_contributes_to_load.
+On Wed, Dec 30, 2015 at 1:23 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> Peter, I took the patch and changed the bitfields to ulong.
 
-Fix it by putting the two classes of the bitfields into separate
-unsigned longs.
+I wouldn't expect the unsigned long part to matter, except for the
+forced split with
 
-Original-patch-by: Peter Zijlstra <peterz@infradead.org>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Link: http://lkml.kernel.org/g/55FEC685.5010404@oracle.com
-Cc: stable@vger.kernel.org
----
-Hello,
+   unsigned long :0;
 
-Peter, I took the patch and changed the bitfields to ulong.
+itself.
 
-Thanks.
+Also, quite frankly, since this is basically very close to other
+fields that are *not* unsigned longs, I'd really prefer to not
+unnecessarily use a 64-bit field for three bits each.
 
- include/linux/sched.h |   25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+So why not just do it with plain unsigned "int", and then maybe just
+intersperse them with the other int-sized fields in that neighborhood.
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index edad7a4..e51464d 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1455,22 +1455,25 @@ struct task_struct {
- 	/* Used for emulating ABI behavior of previous Linux versions */
- 	unsigned int personality;
- 
--	unsigned in_execve:1;	/* Tell the LSMs that the process is doing an
--				 * execve */
--	unsigned in_iowait:1;
--
--	/* Revert to default priority/policy when forking */
--	unsigned sched_reset_on_fork:1;
--	unsigned sched_contributes_to_load:1;
--	unsigned sched_migrated:1;
-+	/* scheduler bits, serialized by scheduler locks */
-+	unsigned long sched_reset_on_fork:1;
-+	unsigned long sched_contributes_to_load:1;
-+	unsigned long sched_migrated:1;
-+
-+	/* force alignment to the next boundary */
-+	unsigned long :0;
-+
-+	/* unserialized, strictly 'current' */
-+	unsigned long in_execve:1; /* bit to tell LSMs we're in execve */
-+	unsigned long in_iowait:1;
- #ifdef CONFIG_MEMCG
--	unsigned memcg_may_oom:1;
-+	unsigned long memcg_may_oom:1;
- #endif
- #ifdef CONFIG_MEMCG_KMEM
--	unsigned memcg_kmem_skip_account:1;
-+	unsigned long memcg_kmem_skip_account:1;
- #endif
- #ifdef CONFIG_COMPAT_BRK
--	unsigned brk_randomized:1;
-+	unsigned long brk_randomized:1;
- #endif
- 
- 	unsigned long atomic_flags; /* Flags needing atomic access. */
+I'm also wondering if we shouldn't just put the scheduler bits in the
+"atomic_flags" thing instead?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+                     Linus
