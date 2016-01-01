@@ -1,91 +1,163 @@
-From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: CGroup Namespaces (v8)
-Date: Fri, 1 Jan 2016 01:42:57 -0800
-Message-ID: <CAPcyv4iig_sujK=p0TbNjTmtv39N7a0HSqpVe8mLnfX9Es7zNA@mail.gmail.com>
-References: <1450844609-9194-1-git-send-email-serge.hallyn@ubuntu.com>
-	<CAA9_cmcNeg4vR7Ft8YcPGZtacftDWjC=5mHs2ZRzu9yXoOAJiA@mail.gmail.com>
-	<20160101085911.GA28407@mail.hallyn.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type:content-transfer-encoding;
-        bh=rFKGJQzeA/W7KFaSWBT063/KEnkO97gAEFaoiqNjOWE=;
-        b=vKjS16+3MkUwI/soaH8nsuj1Rten8LniZtBPJheemC8AXDduZp9S/3+E+72zr5eyuY
-         SeDlhHEtOwAyAV1MLA7dp0JDtUNhVlzh5ebMEj2eDgaRqf5o3V4zAzekEKQgSgeqPtWf
-         AOhE8pl3/s/TrSsdiLjBYI7Tc0uwiBkXwfVfY6QAikULWDsMvehc7pzOmVs78wAxV5sA
-         EjDzkiTZJs2tTPFhchVnptmJoL5Z36ZVcnOxO7wX0RU/8967ask8knDouVoS1onCeei2
-         RR9wLytRoWgJQ3S/E1f1NkzgWXer6mqN+FYyiMuoBoHsGVCobT4Pn/1ws9c8m7ytV6IC
-         ivmg==
-In-Reply-To: <20160101085911.GA28407-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Chen Yu <yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cpuset: fix cpus_allowed mask for offline/online CPUs
+Date: Fri,  1 Jan 2016 20:09:13 +0800
+Message-ID: <2f805346f87680dddfa9253dc9031db3b6ead8ad.1451648318.git.yu.c.chen@intel.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chen Yu <yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vishnu Pratap Singh <vishnu.ps-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pintu Kumar <pintu.k-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Michal Nazarewicz <mina86-deATy8a+UHjQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Fri, Jan 1, 2016 at 12:59 AM, Serge E. Hallyn
-<serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
-> On Fri, Jan 01, 2016 at 12:19:44AM -0800, Dan Williams wrote:
->> On Tue, Dec 22, 2015 at 8:23 PM,  <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
->> > Hi,
->> >
->> > following is a revised set of the CGroup Namespace patchset which =
-Aditya
->> > Kali has previously sent.  The code can also be found in the cgrou=
-pns.v8
->> > branch of
->> >
->> > https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security=
-=2Egit/
->>
->> Happy New Year!
->>
->> I'm hitting both a build and boot regression in -next with these
->> patches.  The bisect log reports:
->>
->> git bisect skip f176ae3a5df610e0373c39538cc7744c7788b3df
->> # bad: [54b39d263704b66cc8006ce8f7dd4743fdabae70] cgroup: cgroup
->> namespace setns support
->> git bisect bad 54b39d263704b66cc8006ce8f7dd4743fdabae70
->> # good: [bf9b3590879afbaa54148d817ed68a0b51180375] sched: new clone
->> flag CLONE_NEWCGROUP for c
->> group namespace
->> git bisect good bf9b3590879afbaa54148d817ed68a0b51180375
->> # only skipped commits left to test
->> # possible first bad commit:
->> [54b39d263704b66cc8006ce8f7dd4743fdabae70] cgroup: cgroup namespa
->> ce setns support
->> # possible first bad commit:
->> [f176ae3a5df610e0373c39538cc7744c7788b3df] cgroup: introduce cgro
->> up namespaces
->>
->> Where compiling "f176ae3a5df6"  fails with:
->>
->> kernel/cgroup.c: In function =E2=80=98cgroupns_put=E2=80=99:
->> kernel/cgroup.c:5956:2: error: implicit declaration of function
->> =E2=80=98to_cg_ns=E2=80=99 [-Werror=3Dimplicit-f
->> unction-declaration]
->>  put_cgroup_ns(to_cg_ns(ns));
->
-> Hi,
->
-> is it possible you have a bad tree?
+Commit be4c9dd7aee5 ("cpuset: enable onlined cpu/node in effective masks")
+leverages cpuset's cpus_allowed and its parent's effective_cpus to calculate
+the new_cpus by:
 
-No, I don't believe so...
+cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)->effective_cpus);
 
->  Looking at
-> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/tree=
-/kernel/cgroup.c?id=3Drefs/tags/next-20151231
-> to_cg_ns should definately be defined there.
->
+However cpus_allowed will also be updated after the CPU is offline, in
+hotplug_update_tasks_legacy, so when the CPU is online again, it will use
+the old cpus_allowed mask to calculate the new_cpus, thus new_cpus will get
+incorrect value after each round of offline/online.
 
-Right, but it's not defined until commit 54b39d263704 "cgroup: cgroup
-namespace setns support", however it is first used in the preceeding
-commit f176ae3a5df6 "cgroup: introduce cgroup namespaces".  The bad
-patch ordering breaks bisection.
+This problem is found on ubuntu 15.10 with cpuset mounted:
 
-Commit 54b39d263704 "cgroup: cgroup namespace setns support" not
-booting is a separate issue.
+1. echo 0 > /sys/devices/system/cpu/cpu2/online
+2. echo 1 > /sys/devices/system/cpu/cpu2/online
+3. cat /sys/fs/cgroup/cpuset/cpuset.cpus
+   0-3
+4. cat /sys/fs/cgroup/cpuset/user.slice/cpuset.cpus
+   0-1,3
+5. taskset -c 2 ls
+   taskset: failed to set pid 0's affinity: Invalid argument
+
+This patch works around this problem by introducing a new
+mask cpumask_var_t cpus_sysfs inside struct cpuset,
+which will only be updated by writing value to sysfs.cpuset.cpus,
+and CPU offline/online will use this mask to set the new cpumask
+for a cpuset.
+
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Vishnu Pratap Singh <vishnu.ps-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: Pintu Kumar <pintu.k-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: Michal Nazarewicz <mina86-deATy8a+UHjQT0dZR+AlfA@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Cc: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Chen Yu <yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cpuset.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 02a8ea5..49c9cd5 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -106,6 +106,12 @@ struct cpuset {
+ 	nodemask_t effective_mems;
+ 
+ 	/*
++	 * This cpumask can only be modified by sysfs - cpuset.cpus,
++	 * and will not change during cpu online/offline.
++	 */
++	cpumask_var_t cpus_sysfs;
++
++	/*
+ 	 * This is old Memory Nodes tasks took on.
+ 	 *
+ 	 * - top_cpuset.old_mems_allowed is initialized to mems_allowed.
+@@ -963,6 +969,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 
+ 	spin_lock_irq(&callback_lock);
+ 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
++	cpumask_copy(cs->cpus_sysfs, trialcs->cpus_allowed);
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	/* use trialcs->cpus_allowed as a temp variable */
+@@ -1922,17 +1929,22 @@ cpuset_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		goto free_cs;
+ 	if (!alloc_cpumask_var(&cs->effective_cpus, GFP_KERNEL))
+ 		goto free_cpus;
++	if (!alloc_cpumask_var(&cs->cpus_sysfs, GFP_KERNEL))
++		goto free_effective;
+ 
+ 	set_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
+ 	cpumask_clear(cs->cpus_allowed);
+ 	nodes_clear(cs->mems_allowed);
+ 	cpumask_clear(cs->effective_cpus);
+ 	nodes_clear(cs->effective_mems);
++	cpumask_clear(cs->cpus_sysfs);
+ 	fmeter_init(&cs->fmeter);
+ 	cs->relax_domain_level = -1;
+ 
+ 	return &cs->css;
+ 
++free_effective:
++	free_cpumask_var(cs->effective_cpus);
+ free_cpus:
+ 	free_cpumask_var(cs->cpus_allowed);
+ free_cs:
+@@ -1997,6 +2009,7 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ 	cs->effective_mems = parent->mems_allowed;
+ 	cpumask_copy(cs->cpus_allowed, parent->cpus_allowed);
+ 	cpumask_copy(cs->effective_cpus, parent->cpus_allowed);
++	cpumask_copy(cs->cpus_sysfs, parent->cpus_allowed);
+ 	spin_unlock_irq(&callback_lock);
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
+@@ -2030,6 +2043,7 @@ static void cpuset_css_free(struct cgroup_subsys_state *css)
+ 
+ 	free_cpumask_var(cs->effective_cpus);
+ 	free_cpumask_var(cs->cpus_allowed);
++	free_cpumask_var(cs->cpus_sysfs);
+ 	kfree(cs);
+ }
+ 
+@@ -2078,11 +2092,14 @@ int __init cpuset_init(void)
+ 		BUG();
+ 	if (!alloc_cpumask_var(&top_cpuset.effective_cpus, GFP_KERNEL))
+ 		BUG();
++	if (!alloc_cpumask_var(&top_cpuset.cpus_sysfs, GFP_KERNEL))
++		BUG();
+ 
+ 	cpumask_setall(top_cpuset.cpus_allowed);
+ 	nodes_setall(top_cpuset.mems_allowed);
+ 	cpumask_setall(top_cpuset.effective_cpus);
+ 	nodes_setall(top_cpuset.effective_mems);
++	cpumask_setall(top_cpuset.cpus_sysfs);
+ 
+ 	fmeter_init(&top_cpuset.fmeter);
+ 	set_bit(CS_SCHED_LOAD_BALANCE, &top_cpuset.flags);
+@@ -2213,7 +2230,10 @@ retry:
+ 		goto retry;
+ 	}
+ 
+-	cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)->effective_cpus);
++	if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys))
++		cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)->effective_cpus);
++	else
++		cpumask_and(&new_cpus, cs->cpus_sysfs, parent_cs(cs)->effective_cpus);
+ 	nodes_and(new_mems, cs->mems_allowed, parent_cs(cs)->effective_mems);
+ 
+ 	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
+@@ -2354,6 +2374,8 @@ void __init cpuset_init_smp(void)
+ 	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
+ 	top_cpuset.effective_mems = node_states[N_MEMORY];
+ 
++	cpumask_copy(top_cpuset.cpus_sysfs, cpu_active_mask);
++
+ 	register_hotmemory_notifier(&cpuset_track_online_nodes_nb);
+ }
+ 
+-- 
+1.8.4.2
