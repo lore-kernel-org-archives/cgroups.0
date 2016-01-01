@@ -1,41 +1,88 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Lockdep warning at cset_cgroup_from_root()
-Date: Thu, 31 Dec 2015 22:16:42 -0500
-Message-ID: <20160101031642.GB3660@htj.duckdns.org>
-References: <201601011210.BEB82753.OFtOMLJHFOSQVF@I-love.SAKURA.ne.jp>
+From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: CGroup Namespaces (v8)
+Date: Fri, 1 Jan 2016 00:19:44 -0800
+Message-ID: <CAA9_cmcNeg4vR7Ft8YcPGZtacftDWjC=5mHs2ZRzu9yXoOAJiA@mail.gmail.com>
+References: <1450844609-9194-1-git-send-email-serge.hallyn@ubuntu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:sender:in-reply-to:references:date:message-id:subject
+	:from:to:cc:content-type:content-transfer-encoding;
+	bh=xMowhdni/eZJ5ZhKg0RRcEZv1UsiLK2LRdWAhlREkNU=;
+	b=DA7tVAmRPDHz2bmJToaiiuS9mAavOuds1sSlAvjHN1lxGjvmB4RSVrJALxmew+7Ufq
+	ApKUoQOTlsJD/FkOGdVopKlF2vYKEHF77ieQI2Rbo3n1i3E51hH5Bo9Q5EfvlpD7ElHH
+	per5ndeFN0gV6uUYhYxByaYqbElhjGwWwgLI0ZQYMueRBFh9cbB60TXvs+HY/S/mnEJB
+	8QPueqSl8OmDyzDtZzhPEhE9O4TypoBB48gYPvMgtBIIt5suWs/qsgUwJgS+WG23irQL
+	clYcY6YGzAZtT+cl04oSZWBBW+5zI00S/byw8hLAiRIcEguq7Y5olx15sOIuyq9Er/cc
+	+lmA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=3nzwhJZ95OV01trzU1eRpJViN6hdWSgfnCOks1gkLBQ=;
-        b=U6jPsUumMmew3sKzOW/fH4sG/DvvpUR3LAooiA9zS1pTrfRI+wrw/bbirKQkZHJ+wF
-         xBR4OAa01Vi4HvQRn7lmwcyd6AU9AY9mdtX+PSOvrdGBiubw4yDxInI0fPp4MfK0ZlZE
-         cjjuzONMQP8l/pUPF78tJ5BygR3O2cQrq5CTBuBCARt1OkmVUhXxo1O1NQ79QQ+4BOH5
-         InOAU52smanXENhqM0VnJLmafzsAZDbAZAKcJn3RDJB50zeamkIBV4tOXvTEEmYcvWis
-         W+s12kcYbcwua8lJvmRZfYkDICgFlw5JKIs+VNL/5couEOTAsBWf2YMzl4ITozvi8Kgu
-         2wdg==
-Content-Disposition: inline
-In-Reply-To: <201601011210.BEB82753.OFtOMLJHFOSQVF-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+	d=intel-com.20150623.gappssmtp.com; s=20150623;
+	h=mime-version:sender:in-reply-to:references:date:message-id:subject
+	:from:to:cc:content-type:content-transfer-encoding;
+	bh=xMowhdni/eZJ5ZhKg0RRcEZv1UsiLK2LRdWAhlREkNU=;
+	b=SEaDIbCFMz3XGulQmYaD4ZLsc5cpxn2ErkLEB76dFCZw5lgrCtUy9dRckUyOL7MpmQ
+	1FQk+Es6I8Klbsiib8K1ByNVeQ0XpVxtaWevBsnMM0UfDfYeBKx+RlGPALJTnH0IZ0Tt
+	xfkLgYhD/O143if/pQPcVbbrQ8eZwfEnQcLfiiiBXltWOnYO4k3SL3hHmaV6PjqZ4QBW
+	4G0yA2O0Y1ZBcLRn8n3flaJ3OcZGAMV8qJAzbzKJO7AyE0k/7vxW4BN+Z16JlEl2RU+p
+	9oxfgXbqwOwYb7i5at0ue3dFzqDWCcZfN9LRxoAHD5kWTY5hbpi+OZuhkzlorpUMTikV
+	7VYA==
+In-Reply-To: <1450844609-9194-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Cc: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hello,
-
-On Fri, Jan 01, 2016 at 12:10:08PM +0900, Tetsuo Handa wrote:
-> I booted a CONFIG_PREEMPT_NONE=y && CONFIG_SMP=n kernel, and got flood of
-> below warning.
-> The location is lockdep_assert_held(&css_set_lock) in cset_cgroup_from_root()
-> in kernel/cgroup.c. linux.git as of 9c982e86dbdb does not hit this warning.
-
-Just applied the fix patch in cgroup/for-4.5.
-
-Thanks.
-
--- 
-tejun
+T24gVHVlLCBEZWMgMjIsIDIwMTUgYXQgODoyMyBQTSwgIDxzZXJnZS5oYWxseW5AdWJ1bnR1LmNv
+bT4gd3JvdGU6Cj4gSGksCj4KPiBmb2xsb3dpbmcgaXMgYSByZXZpc2VkIHNldCBvZiB0aGUgQ0dy
+b3VwIE5hbWVzcGFjZSBwYXRjaHNldCB3aGljaCBBZGl0eWEKPiBLYWxpIGhhcyBwcmV2aW91c2x5
+IHNlbnQuICBUaGUgY29kZSBjYW4gYWxzbyBiZSBmb3VuZCBpbiB0aGUgY2dyb3VwbnMudjgKPiBi
+cmFuY2ggb2YKPgo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0
+L3NlcmdlaC9saW51eC1zZWN1cml0eS5naXQvCgpIYXBweSBOZXcgWWVhciEKCkknbSBoaXR0aW5n
+IGJvdGggYSBidWlsZCBhbmQgYm9vdCByZWdyZXNzaW9uIGluIC1uZXh0IHdpdGggdGhlc2UKcGF0
+Y2hlcy4gIFRoZSBiaXNlY3QgbG9nIHJlcG9ydHM6CgpnaXQgYmlzZWN0IHNraXAgZjE3NmFlM2E1
+ZGY2MTBlMDM3M2MzOTUzOGNjNzc0NGM3Nzg4YjNkZgojIGJhZDogWzU0YjM5ZDI2MzcwNGI2NmNj
+ODAwNmNlOGY3ZGQ0NzQzZmRhYmFlNzBdIGNncm91cDogY2dyb3VwCm5hbWVzcGFjZSBzZXRucyBz
+dXBwb3J0CmdpdCBiaXNlY3QgYmFkIDU0YjM5ZDI2MzcwNGI2NmNjODAwNmNlOGY3ZGQ0NzQzZmRh
+YmFlNzAKIyBnb29kOiBbYmY5YjM1OTA4NzlhZmJhYTU0MTQ4ZDgxN2VkNjhhMGI1MTE4MDM3NV0g
+c2NoZWQ6IG5ldyBjbG9uZQpmbGFnIENMT05FX05FV0NHUk9VUCBmb3IgYwpncm91cCBuYW1lc3Bh
+Y2UKZ2l0IGJpc2VjdCBnb29kIGJmOWIzNTkwODc5YWZiYWE1NDE0OGQ4MTdlZDY4YTBiNTExODAz
+NzUKIyBvbmx5IHNraXBwZWQgY29tbWl0cyBsZWZ0IHRvIHRlc3QKIyBwb3NzaWJsZSBmaXJzdCBi
+YWQgY29tbWl0OgpbNTRiMzlkMjYzNzA0YjY2Y2M4MDA2Y2U4ZjdkZDQ3NDNmZGFiYWU3MF0gY2dy
+b3VwOiBjZ3JvdXAgbmFtZXNwYQpjZSBzZXRucyBzdXBwb3J0CiMgcG9zc2libGUgZmlyc3QgYmFk
+IGNvbW1pdDoKW2YxNzZhZTNhNWRmNjEwZTAzNzNjMzk1MzhjYzc3NDRjNzc4OGIzZGZdIGNncm91
+cDogaW50cm9kdWNlIGNncm8KdXAgbmFtZXNwYWNlcwoKV2hlcmUgY29tcGlsaW5nICJmMTc2YWUz
+YTVkZjYiICBmYWlscyB3aXRoOgoKa2VybmVsL2Nncm91cC5jOiBJbiBmdW5jdGlvbiDigJhjZ3Jv
+dXBuc19wdXTigJk6Cmtlcm5lbC9jZ3JvdXAuYzo1OTU2OjI6IGVycm9yOiBpbXBsaWNpdCBkZWNs
+YXJhdGlvbiBvZiBmdW5jdGlvbgrigJh0b19jZ19uc+KAmSBbLVdlcnJvcj1pbXBsaWNpdC1mCnVu
+Y3Rpb24tZGVjbGFyYXRpb25dCiBwdXRfY2dyb3VwX25zKHRvX2NnX25zKG5zKSk7CiBeCmtlcm5l
+bC9jZ3JvdXAuYzo1OTU2OjE2OiB3YXJuaW5nOiBwYXNzaW5nIGFyZ3VtZW50IDEgb2YK4oCYcHV0
+X2Nncm91cF9uc+KAmSBtYWtlcyBwb2ludGVyIGZyb20gaW50CmVnZXIgd2l0aG91dCBhIGNhc3QK
+IHB1dF9jZ3JvdXBfbnModG9fY2dfbnMobnMpKTsKICAgICAgICAgICAgICAgXgpJbiBmaWxlIGlu
+Y2x1ZGVkIGZyb20ga2VybmVsL2Nncm91cC5jOjMxOjA6CmluY2x1ZGUvbGludXgvY2dyb3VwLmg6
+NjA5OjYwOiBub3RlOiBleHBlY3RlZCDigJhzdHJ1Y3QgY2dyb3VwX25hbWVzcGFjZQoq4oCZIGJ1
+dCBhcmd1bWVudCBpcyBvZiB0CnlwZSDigJhpbnTigJkKc3RhdGljIGlubGluZSB2b2lkIHB1dF9j
+Z3JvdXBfbnMoc3RydWN0IGNncm91cF9uYW1lc3BhY2UgKm5zKQogICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIF4Ka2VybmVsL2Nncm91cC5j
+OiBBdCB0b3AgbGV2ZWw6Cmtlcm5lbC9jZ3JvdXAuYzo1OTY0OjI6IHdhcm5pbmc6IGluaXRpYWxp
+emF0aW9uIGZyb20gaW5jb21wYXRpYmxlIHBvaW50ZXIgdHlwZQogLmluc3RhbGwgPSBjZ3JvdXBu
+c19pbnN0YWxsLAogXgprZXJuZWwvY2dyb3VwLmM6NTk2NDoyOiB3YXJuaW5nOiAobmVhciBpbml0
+aWFsaXphdGlvbiBmb3IK4oCYY2dyb3VwbnNfb3BlcmF0aW9ucy5pbnN0YWxs4oCZKQpjYzE6IHNv
+bWUgd2FybmluZ3MgYmVpbmcgdHJlYXRlZCBhcyBlcnJvcnMKCi4uLmFuZCBib290aW5nICI1NGIz
+OWQyNjM3MDQiIGZhaWxzIHdpdGggdGhlIGZvbGxvd2luZyBsb2c6CgpbIDMuOTYzMTA1XSBCVUc6
+IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdAowMDAw
+MDAwMDAwMDAwMDMwClsgMy45NjMxMTBdIElQOiBbPGZmZmZmZmZmODExNDNmM2Q+XSBjZ3JvdXBf
+cGF0aCsweDNkLzB4OTAKCmh0dHBzOi8vZ2lzdC5naXRodWIuY29tL2RqYncvMWQzMGNkMzIzZDgw
+MmUzZDlkMDcKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+Q29udGFpbmVycyBtYWlsaW5nIGxpc3QKQ29udGFpbmVyc0BsaXN0cy5saW51eC1mb3VuZGF0aW9u
+Lm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9j
+b250YWluZXJz
