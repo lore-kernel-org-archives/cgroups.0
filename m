@@ -1,189 +1,76 @@
-From: "Chen, Yu C" <yu.c.chen@intel.com>
-Subject: RE: [PATCH] cpuset: fix cpus_allowed mask for offline/online CPUs
-Date: Fri, 1 Jan 2016 12:08:04 +0000
-Message-ID: <36DF59CE26D8EE47B0655C516E9CE64028691B7C@shsmsx102.ccr.corp.intel.com>
-References: <2f805346f87680dddfa9253dc9031db3b6ead8ad.1451648318.git.yu.c.chen@intel.com>
+From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: CGroup Namespaces (v8)
+Date: Fri, 1 Jan 2016 12:06:33 -0600
+Message-ID: <20160101180633.GA30941@mail.hallyn.com>
+References: <1450844609-9194-1-git-send-email-serge.hallyn@ubuntu.com>
+	<CAA9_cmcNeg4vR7Ft8YcPGZtacftDWjC=5mHs2ZRzu9yXoOAJiA@mail.gmail.com>
+	<20160101085911.GA28407@mail.hallyn.com>
+	<CAPcyv4iig_sujK=p0TbNjTmtv39N7a0HSqpVe8mLnfX9Es7zNA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2f805346f87680dddfa9253dc9031db3b6ead8ad.1451648318.git.yu.c.chen@intel.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-To: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4iig_sujK=p0TbNjTmtv39N7a0HSqpVe8mLnfX9Es7zNA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Previous one seems to be dropped by maillist so I resend it,
-sorry for any inconvenience and happy new year : - )
-
-thanks,
-Yu
-
-
-> -----Original Message-----
-> From: Chen, Yu C
-> Sent: Friday, January 01, 2016 8:09 PM
-> To: cgroups@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org; Chen, Yu C; Vlastimil Babka; Rik van Riel;
-> Joonsoo Kim; David Rientjes; Vishnu Pratap Singh; Pintu Kumar; Michal
-> Nazarewicz; Mel Gorman; Gortmaker, Paul (Wind River); Peter Zijlstra; Tim
-> Chen; Hugh Dickins; Li Zefan; Tejun Heo
-> Subject: [PATCH] cpuset: fix cpus_allowed mask for offline/online CPUs
-> 
-> Commit be4c9dd7aee5 ("cpuset: enable onlined cpu/node in effective
-> masks") leverages cpuset's cpus_allowed and its parent's effective_cpus to
-> calculate the new_cpus by:
-> 
-> cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)-
-> >effective_cpus);
-> 
-> However cpus_allowed will also be updated after the CPU is offline, in
-> hotplug_update_tasks_legacy, so when the CPU is online again, it will use
-> the old cpus_allowed mask to calculate the new_cpus, thus new_cpus will
-> get incorrect value after each round of offline/online.
-> 
-> This problem is found on ubuntu 15.10 with cpuset mounted:
-> 
-> 1. echo 0 > /sys/devices/system/cpu/cpu2/online
-> 2. echo 1 > /sys/devices/system/cpu/cpu2/online
-> 3. cat /sys/fs/cgroup/cpuset/cpuset.cpus
->    0-3
-> 4. cat /sys/fs/cgroup/cpuset/user.slice/cpuset.cpus
->    0-1,3
-> 5. taskset -c 2 ls
->    taskset: failed to set pid 0's affinity: Invalid argument
-> 
-> This patch works around this problem by introducing a new mask
-> cpumask_var_t cpus_sysfs inside struct cpuset, which will only be updated
-> by writing value to sysfs.cpuset.cpus, and CPU offline/online will use this
-> mask to set the new cpumask for a cpuset.
-> 
-> Cc: Vlastimil Babka <vbabka@suse.cz>
-> Cc: Rik van Riel <riel@redhat.com>
-> Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-> Cc: David Rientjes <rientjes@google.com>
-> Cc: Vishnu Pratap Singh <vishnu.ps@samsung.com>
-> Cc: Pintu Kumar <pintu.k@samsung.com>
-> Cc: Michal Nazarewicz <mina86@mina86.com>
-> Cc: Mel Gorman <mgorman@suse.de>
-> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-> Cc: Peter Zijlstra <peterz@infradead.org>
-> Cc: Tim Chen <tim.c.chen@linux.intel.com>
-> Cc: Hugh Dickins <hughd@google.com>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: cgroups@vger.kernel.org
-> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> ---
->  kernel/cpuset.c | 24 +++++++++++++++++++++++-
->  1 file changed, 23 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/cpuset.c b/kernel/cpuset.c index 02a8ea5..49c9cd5 100644
-> --- a/kernel/cpuset.c
-> +++ b/kernel/cpuset.c
-> @@ -106,6 +106,12 @@ struct cpuset {
->  	nodemask_t effective_mems;
-> 
->  	/*
-> +	 * This cpumask can only be modified by sysfs - cpuset.cpus,
-> +	 * and will not change during cpu online/offline.
-> +	 */
-> +	cpumask_var_t cpus_sysfs;
-> +
-> +	/*
->  	 * This is old Memory Nodes tasks took on.
->  	 *
->  	 * - top_cpuset.old_mems_allowed is initialized to mems_allowed.
-> @@ -963,6 +969,7 @@ static int update_cpumask(struct cpuset *cs, struct
-> cpuset *trialcs,
-> 
->  	spin_lock_irq(&callback_lock);
->  	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
-> +	cpumask_copy(cs->cpus_sysfs, trialcs->cpus_allowed);
->  	spin_unlock_irq(&callback_lock);
-> 
->  	/* use trialcs->cpus_allowed as a temp variable */ @@ -1922,17
-> +1929,22 @@ cpuset_css_alloc(struct cgroup_subsys_state *parent_css)
->  		goto free_cs;
->  	if (!alloc_cpumask_var(&cs->effective_cpus, GFP_KERNEL))
->  		goto free_cpus;
-> +	if (!alloc_cpumask_var(&cs->cpus_sysfs, GFP_KERNEL))
-> +		goto free_effective;
-> 
->  	set_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
->  	cpumask_clear(cs->cpus_allowed);
->  	nodes_clear(cs->mems_allowed);
->  	cpumask_clear(cs->effective_cpus);
->  	nodes_clear(cs->effective_mems);
-> +	cpumask_clear(cs->cpus_sysfs);
->  	fmeter_init(&cs->fmeter);
->  	cs->relax_domain_level = -1;
-> 
->  	return &cs->css;
-> 
-> +free_effective:
-> +	free_cpumask_var(cs->effective_cpus);
->  free_cpus:
->  	free_cpumask_var(cs->cpus_allowed);
->  free_cs:
-> @@ -1997,6 +2009,7 @@ static int cpuset_css_online(struct
-> cgroup_subsys_state *css)
->  	cs->effective_mems = parent->mems_allowed;
->  	cpumask_copy(cs->cpus_allowed, parent->cpus_allowed);
->  	cpumask_copy(cs->effective_cpus, parent->cpus_allowed);
-> +	cpumask_copy(cs->cpus_sysfs, parent->cpus_allowed);
->  	spin_unlock_irq(&callback_lock);
->  out_unlock:
->  	mutex_unlock(&cpuset_mutex);
-> @@ -2030,6 +2043,7 @@ static void cpuset_css_free(struct
-> cgroup_subsys_state *css)
-> 
->  	free_cpumask_var(cs->effective_cpus);
->  	free_cpumask_var(cs->cpus_allowed);
-> +	free_cpumask_var(cs->cpus_sysfs);
->  	kfree(cs);
->  }
-> 
-> @@ -2078,11 +2092,14 @@ int __init cpuset_init(void)
->  		BUG();
->  	if (!alloc_cpumask_var(&top_cpuset.effective_cpus, GFP_KERNEL))
->  		BUG();
-> +	if (!alloc_cpumask_var(&top_cpuset.cpus_sysfs, GFP_KERNEL))
-> +		BUG();
-> 
->  	cpumask_setall(top_cpuset.cpus_allowed);
->  	nodes_setall(top_cpuset.mems_allowed);
->  	cpumask_setall(top_cpuset.effective_cpus);
->  	nodes_setall(top_cpuset.effective_mems);
-> +	cpumask_setall(top_cpuset.cpus_sysfs);
-> 
->  	fmeter_init(&top_cpuset.fmeter);
->  	set_bit(CS_SCHED_LOAD_BALANCE, &top_cpuset.flags); @@ -2213,7
-> +2230,10 @@ retry:
->  		goto retry;
->  	}
-> 
-> -	cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)-
-> >effective_cpus);
-> +	if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys))
-> +		cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)-
-> >effective_cpus);
-> +	else
-> +		cpumask_and(&new_cpus, cs->cpus_sysfs,
-> +parent_cs(cs)->effective_cpus);
->  	nodes_and(new_mems, cs->mems_allowed, parent_cs(cs)-
-> >effective_mems);
-> 
->  	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
-> @@ -2354,6 +2374,8 @@ void __init cpuset_init_smp(void)
->  	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
->  	top_cpuset.effective_mems = node_states[N_MEMORY];
-> 
-> +	cpumask_copy(top_cpuset.cpus_sysfs, cpu_active_mask);
-> +
->  	register_hotmemory_notifier(&cpuset_track_online_nodes_nb);
->  }
-> 
-> --
-> 1.8.4.2
+T24gRnJpLCBKYW4gMDEsIDIwMTYgYXQgMDE6NDI6NTdBTSAtMDgwMCwgRGFuIFdpbGxpYW1zIHdy
+b3RlOgo+IE9uIEZyaSwgSmFuIDEsIDIwMTYgYXQgMTI6NTkgQU0sIFNlcmdlIEUuIEhhbGx5bgo+
+IDxzZXJnZS5oYWxseW5AdWJ1bnR1LmNvbT4gd3JvdGU6Cj4gPiBPbiBGcmksIEphbiAwMSwgMjAx
+NiBhdCAxMjoxOTo0NEFNIC0wODAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6Cj4gPj4gT24gVHVlLCBE
+ZWMgMjIsIDIwMTUgYXQgODoyMyBQTSwgIDxzZXJnZS5oYWxseW5AdWJ1bnR1LmNvbT4gd3JvdGU6
+Cj4gPj4gPiBIaSwKPiA+PiA+Cj4gPj4gPiBmb2xsb3dpbmcgaXMgYSByZXZpc2VkIHNldCBvZiB0
+aGUgQ0dyb3VwIE5hbWVzcGFjZSBwYXRjaHNldCB3aGljaCBBZGl0eWEKPiA+PiA+IEthbGkgaGFz
+IHByZXZpb3VzbHkgc2VudC4gIFRoZSBjb2RlIGNhbiBhbHNvIGJlIGZvdW5kIGluIHRoZSBjZ3Jv
+dXBucy52OAo+ID4+ID4gYnJhbmNoIG9mCj4gPj4gPgo+ID4+ID4gaHR0cHM6Ly9naXQua2VybmVs
+Lm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvc2VyZ2VoL2xpbnV4LXNlY3VyaXR5LmdpdC8KPiA+
+Pgo+ID4+IEhhcHB5IE5ldyBZZWFyIQo+ID4+Cj4gPj4gSSdtIGhpdHRpbmcgYm90aCBhIGJ1aWxk
+IGFuZCBib290IHJlZ3Jlc3Npb24gaW4gLW5leHQgd2l0aCB0aGVzZQo+ID4+IHBhdGNoZXMuICBU
+aGUgYmlzZWN0IGxvZyByZXBvcnRzOgo+ID4+Cj4gPj4gZ2l0IGJpc2VjdCBza2lwIGYxNzZhZTNh
+NWRmNjEwZTAzNzNjMzk1MzhjYzc3NDRjNzc4OGIzZGYKPiA+PiAjIGJhZDogWzU0YjM5ZDI2Mzcw
+NGI2NmNjODAwNmNlOGY3ZGQ0NzQzZmRhYmFlNzBdIGNncm91cDogY2dyb3VwCj4gPj4gbmFtZXNw
+YWNlIHNldG5zIHN1cHBvcnQKPiA+PiBnaXQgYmlzZWN0IGJhZCA1NGIzOWQyNjM3MDRiNjZjYzgw
+MDZjZThmN2RkNDc0M2ZkYWJhZTcwCj4gPj4gIyBnb29kOiBbYmY5YjM1OTA4NzlhZmJhYTU0MTQ4
+ZDgxN2VkNjhhMGI1MTE4MDM3NV0gc2NoZWQ6IG5ldyBjbG9uZQo+ID4+IGZsYWcgQ0xPTkVfTkVX
+Q0dST1VQIGZvciBjCj4gPj4gZ3JvdXAgbmFtZXNwYWNlCj4gPj4gZ2l0IGJpc2VjdCBnb29kIGJm
+OWIzNTkwODc5YWZiYWE1NDE0OGQ4MTdlZDY4YTBiNTExODAzNzUKPiA+PiAjIG9ubHkgc2tpcHBl
+ZCBjb21taXRzIGxlZnQgdG8gdGVzdAo+ID4+ICMgcG9zc2libGUgZmlyc3QgYmFkIGNvbW1pdDoK
+PiA+PiBbNTRiMzlkMjYzNzA0YjY2Y2M4MDA2Y2U4ZjdkZDQ3NDNmZGFiYWU3MF0gY2dyb3VwOiBj
+Z3JvdXAgbmFtZXNwYQo+ID4+IGNlIHNldG5zIHN1cHBvcnQKPiA+PiAjIHBvc3NpYmxlIGZpcnN0
+IGJhZCBjb21taXQ6Cj4gPj4gW2YxNzZhZTNhNWRmNjEwZTAzNzNjMzk1MzhjYzc3NDRjNzc4OGIz
+ZGZdIGNncm91cDogaW50cm9kdWNlIGNncm8KPiA+PiB1cCBuYW1lc3BhY2VzCj4gPj4KPiA+PiBX
+aGVyZSBjb21waWxpbmcgImYxNzZhZTNhNWRmNiIgIGZhaWxzIHdpdGg6Cj4gPj4KPiA+PiBrZXJu
+ZWwvY2dyb3VwLmM6IEluIGZ1bmN0aW9uIOKAmGNncm91cG5zX3B1dOKAmToKPiA+PiBrZXJuZWwv
+Y2dyb3VwLmM6NTk1NjoyOiBlcnJvcjogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YgZnVuY3Rpb24K
+PiA+PiDigJh0b19jZ19uc+KAmSBbLVdlcnJvcj1pbXBsaWNpdC1mCj4gPj4gdW5jdGlvbi1kZWNs
+YXJhdGlvbl0KPiA+PiAgcHV0X2Nncm91cF9ucyh0b19jZ19ucyhucykpOwo+ID4KPiA+IEhpLAo+
+ID4KPiA+IGlzIGl0IHBvc3NpYmxlIHlvdSBoYXZlIGEgYmFkIHRyZWU/Cj4gCj4gTm8sIEkgZG9u
+J3QgYmVsaWV2ZSBzby4uLgo+IAo+ID4gIExvb2tpbmcgYXQKPiA+IGh0dHBzOi8vZ2l0Lmtlcm5l
+bC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L25leHQvbGludXgtbmV4dC5naXQvdHJlZS9rZXJu
+ZWwvY2dyb3VwLmM/aWQ9cmVmcy90YWdzL25leHQtMjAxNTEyMzEKPiA+IHRvX2NnX25zIHNob3Vs
+ZCBkZWZpbmF0ZWx5IGJlIGRlZmluZWQgdGhlcmUuCj4gPgo+IAo+IFJpZ2h0LCBidXQgaXQncyBu
+b3QgZGVmaW5lZCB1bnRpbCBjb21taXQgNTRiMzlkMjYzNzA0ICJjZ3JvdXA6IGNncm91cAo+IG5h
+bWVzcGFjZSBzZXRucyBzdXBwb3J0IiwgaG93ZXZlciBpdCBpcyBmaXJzdCB1c2VkIGluIHRoZSBw
+cmVjZWVkaW5nCj4gY29tbWl0IGYxNzZhZTNhNWRmNiAiY2dyb3VwOiBpbnRyb2R1Y2UgY2dyb3Vw
+IG5hbWVzcGFjZXMiLiAgVGhlIGJhZAo+IHBhdGNoIG9yZGVyaW5nIGJyZWFrcyBiaXNlY3Rpb24u
+Cj4gCj4gQ29tbWl0IDU0YjM5ZDI2MzcwNCAiY2dyb3VwOiBjZ3JvdXAgbmFtZXNwYWNlIHNldG5z
+IHN1cHBvcnQiIG5vdAo+IGJvb3RpbmcgaXMgYSBzZXBhcmF0ZSBpc3N1ZS4KCk9oIC0gYmVlbiB0
+aGVyZSBzaW5jZSBteSBmaXJzdCB2ZXJzaW9uIG9mIHRoZSBzZXQgKHY0KS4gIE9kZCwgSQp0aG91
+Z2h0IHRoYXQgdGhlIGF1dG9tYXRlZCBrb3JnIHRlc3RpbmcgY2F1Z2h0IHRob3NlLgoKV2hhdCBp
+cyB0aGUgc2ltcGxlc3Qgd2F5IHRvIGZpeCB0aGlzPyAgRG8gSSBzZW5kIG5ldyB2ZXJzaW9ucyBv
+ZgpwYXRjaGVzIHYzIGFuZCB2ND8gIERvZXMgVGVqdW4gb3IgU3RlcGhlbiBqdXN0IGRvIGl0IGlu
+bGluZSBpbiB0aGUKZ2l0IHRyZWU/ICBEbyB3ZSBsZWF2ZSBpdCBiZT8KX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KQ29udGFpbmVycyBtYWlsaW5nIGxpc3QK
+Q29udGFpbmVyc0BsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4
+Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9jb250YWluZXJz
