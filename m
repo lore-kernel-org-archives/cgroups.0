@@ -1,57 +1,60 @@
-From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup: BUG: unable to handle kernel NULL pointer dereference
-Date: Sat, 2 Jan 2016 21:41:24 -0600
-Message-ID: <20160103034124.GA6569@mail.hallyn.com>
-References: <20160101234028.GA1750@hudson.localdomain>
- <20160102115437.GE3660@htj.duckdns.org>
- <20160102182416.GA3957@mail.hallyn.com>
- <20160102215049.GA18564@hudson.localdomain>
- <20160103005916.GA5956@mail.hallyn.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cpuset: fix cpus_allowed mask for offline/online CPUs
+Date: Sun, 3 Jan 2016 08:59:11 -0500
+Message-ID: <20160103135911.GG3660@htj.duckdns.org>
+References: <2f805346f87680dddfa9253dc9031db3b6ead8ad.1451648318.git.yu.c.chen@intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=oKl6UQk9U67zc0jVqP2t8Hn8UJz1MJMX16UyGZ2WC6Q=;
+        b=iZzlTEuVk3YG33rHXwoHOGvLT/6yxBs73ZvnJjZi9GP6k93lGJmAdlyxnDP+1nLYhU
+         8CJmePPTYPfWs4GeAR6aDD4ATPcCjDMZ+7aPHxqX20ig8JDC3pdr63BpjJYRy2kCXGKR
+         SwOYh62iBGk553bRmoVEpmxsmjBgwPesGwkzEzWCoG15MvBhb+w/fxgLTfn8tRKHj682
+         B7yWivBupF2jcNnpzBuvNbCDGKhEmsZ91/SkDHxmluIv8owm25O64KuLbnx0xC1K/nzW
+         1R78xHnbG/zczdy6scQGs/raO67oi0zMOV15OMmtjbfPTnBid72DLDXCdeS6S85jfPx2
+         lbYQ==
 Content-Disposition: inline
-In-Reply-To: <20160103005916.GA5956-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+In-Reply-To: <2f805346f87680dddfa9253dc9031db3b6ead8ad.1451648318.git.yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Jeremiah Mahler <jmmahler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Chen Yu <yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vishnu Pratap Singh <vishnu.ps-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pintu Kumar <pintu.k-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Michal Nazarewicz <mina86-deATy8a+UHjQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Sat, Jan 02, 2016 at 06:59:16PM -0600, Serge E. Hallyn wrote:
-> On Sat, Jan 02, 2016 at 01:50:49PM -0800, Jeremiah Mahler wrote:
-> > Serge,
-> > 
-> > On Sat, Jan 02, 2016 at 12:24:16PM -0600, Serge E. Hallyn wrote:
-> > [...]
-> > > 
-> > > Tried to reproduce with setting CONFIG_CFQ_GROUP_IOSCHED=y, but did not
-> > > succeed.  Could you send me the .config?  Also, if someone could send
-> > > the objdump -d output that might help.  Though really, it seems clear
-> > > that current->nsproxy must be NULL.  Hm, that's right -  we used to have
-> > > that issue in pidns (or was it netns) during process exit.  I don't know
-> > > that I'll get time this afternoon, but I'll look into it asap.
-> > > 
-> > > thanks.
-> > 
-> > Attached is the .config I used.  I can send an objdump, but do you want
-> > a dump of the kernel, where the cgroup code is?
-> > 
-> > -- 
-> > - Jeremiah Mahler
+On Fri, Jan 01, 2016 at 08:09:13PM +0800, Chen Yu wrote:
+> Commit be4c9dd7aee5 ("cpuset: enable onlined cpu/node in effective masks")
+> leverages cpuset's cpus_allowed and its parent's effective_cpus to calculate
+> the new_cpus by:
 > 
-> Thanks - Shoulda looked at the exit path before - exit_io_context is called
-> after exit_task_namespaces().
+> cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)->effective_cpus);
 > 
-> I'll have to figure out the best way to handle this.  In the past we've
-> restructured exit code to ensure that anything wanting to dereference
-> nsproxy happened before exit_task_namespaces().  However, this is only
-> happening in a debug stmt at blkg_path() in
-> http://lxr.free-electrons.com/source/include/linux/blk-cgroup.h#L344
-> so simply returning the init_cgroup_namespace is actually the right thing
-> to do.  I'm tempted to add a init_cgroup_path() which ignores namespaces,
-> for use in debugging statements.
+> However cpus_allowed will also be updated after the CPU is offline, in
+> hotplug_update_tasks_legacy, so when the CPU is online again, it will use
+> the old cpus_allowed mask to calculate the new_cpus, thus new_cpus will get
+> incorrect value after each round of offline/online.
+> 
+> This problem is found on ubuntu 15.10 with cpuset mounted:
+> 
+> 1. echo 0 > /sys/devices/system/cpu/cpu2/online
+> 2. echo 1 > /sys/devices/system/cpu/cpu2/online
+> 3. cat /sys/fs/cgroup/cpuset/cpuset.cpus
+>    0-3
+> 4. cat /sys/fs/cgroup/cpuset/user.slice/cpuset.cpus
+>    0-1,3
+> 5. taskset -c 2 ls
+>    taskset: failed to set pid 0's affinity: Invalid argument
+> 
+> This patch works around this problem by introducing a new
+> mask cpumask_var_t cpus_sysfs inside struct cpuset,
+> which will only be updated by writing value to sysfs.cpuset.cpus,
+> and CPU offline/online will use this mask to set the new cpumask
+> for a cpuset.
 
-Or really I think it makes more sense to make cgroup_path_ns() take
-the namespace into account, switch over cgroup_path() users who want _ns(),
-and leave cgroup_path() using the initial cgroup namespace.
+Li?
+
+-- 
+tejun
