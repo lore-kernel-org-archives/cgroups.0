@@ -1,60 +1,56 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cpuset: fix cpus_allowed mask for offline/online CPUs
-Date: Sun, 3 Jan 2016 08:59:11 -0500
-Message-ID: <20160103135911.GG3660@htj.duckdns.org>
-References: <2f805346f87680dddfa9253dc9031db3b6ead8ad.1451648318.git.yu.c.chen@intel.com>
-Mime-Version: 1.0
+From: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>
+Subject: [PATCH] cgroup: make /proc/cgroups aligned
+Date: Mon,  4 Jan 2016 00:08:23 +0800
+Message-ID: <e814e0db26aa5a3662c1e98dc1410c6b3e9a4c12.1451837184.git.geliangtang@163.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=oKl6UQk9U67zc0jVqP2t8Hn8UJz1MJMX16UyGZ2WC6Q=;
-        b=iZzlTEuVk3YG33rHXwoHOGvLT/6yxBs73ZvnJjZi9GP6k93lGJmAdlyxnDP+1nLYhU
-         8CJmePPTYPfWs4GeAR6aDD4ATPcCjDMZ+7aPHxqX20ig8JDC3pdr63BpjJYRy2kCXGKR
-         SwOYh62iBGk553bRmoVEpmxsmjBgwPesGwkzEzWCoG15MvBhb+w/fxgLTfn8tRKHj682
-         B7yWivBupF2jcNnpzBuvNbCDGKhEmsZ91/SkDHxmluIv8owm25O64KuLbnx0xC1K/nzW
-         1R78xHnbG/zczdy6scQGs/raO67oi0zMOV15OMmtjbfPTnBid72DLDXCdeS6S85jfPx2
-         lbYQ==
-Content-Disposition: inline
-In-Reply-To: <2f805346f87680dddfa9253dc9031db3b6ead8ad.1451648318.git.yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id; bh=qf3jx1iauJM+YMcknN
+	OLHCrt7Z6yXc/UlTd8hzZ8wb0=; b=lqsE/Y119F3obzK62HMrxD8NyXLe/BuG3M
+	nzhYF5SyU+TCsWvWvfsk71WjM1SM+CPTaC1SanGctHxQjgb7wjzgwE4AuShpYhX8
+	we4Ntqjl5Nqpos+TkUwanBfJa6yx6owvY5idhVAyMnVxhvfQelOMf4r5017YmFpr
+	FMDDx0W+M=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chen Yu <yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vishnu Pratap Singh <vishnu.ps-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Pintu Kumar <pintu.k-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Michal Nazarewicz <mina86-deATy8a+UHjQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Jan 01, 2016 at 08:09:13PM +0800, Chen Yu wrote:
-> Commit be4c9dd7aee5 ("cpuset: enable onlined cpu/node in effective masks")
-> leverages cpuset's cpus_allowed and its parent's effective_cpus to calculate
-> the new_cpus by:
-> 
-> cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)->effective_cpus);
-> 
-> However cpus_allowed will also be updated after the CPU is offline, in
-> hotplug_update_tasks_legacy, so when the CPU is online again, it will use
-> the old cpus_allowed mask to calculate the new_cpus, thus new_cpus will get
-> incorrect value after each round of offline/online.
-> 
-> This problem is found on ubuntu 15.10 with cpuset mounted:
-> 
-> 1. echo 0 > /sys/devices/system/cpu/cpu2/online
-> 2. echo 1 > /sys/devices/system/cpu/cpu2/online
-> 3. cat /sys/fs/cgroup/cpuset/cpuset.cpus
->    0-3
-> 4. cat /sys/fs/cgroup/cpuset/user.slice/cpuset.cpus
->    0-1,3
-> 5. taskset -c 2 ls
->    taskset: failed to set pid 0's affinity: Invalid argument
-> 
-> This patch works around this problem by introducing a new
-> mask cpumask_var_t cpus_sysfs inside struct cpuset,
-> which will only be updated by writing value to sysfs.cpuset.cpus,
-> and CPU offline/online will use this mask to set the new cpumask
-> for a cpuset.
+This patch makes /proc/cgroups aligned like this:
+$ cat /proc/cgroups
+#subsys_name    hierarchy       num_cgroups     enabled
+      cpuset           11                 1           1
+         cpu            2                 1           1
+     cpuacct            2                 1           1
+       blkio           12                 1           1
+      memory            3                 1           1
+     devices            4                83           1
+     freezer           10                 1           1
+  perf_event            9                 1           1
+     hugetlb            7                 1           1
+   intel_rdt            6                 1           1
+        pids            8                 1           1
+       debug            5                 1           1
 
-Li?
+Signed-off-by: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>
+---
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index f1603c1..063b28f 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5411,7 +5411,7 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 	mutex_lock(&cgroup_mutex);
+ 
+ 	for_each_subsys(ss, i)
+-		seq_printf(m, "%s\t%d\t%d\t%d\n",
++		seq_printf(m, "%12s\t%9d\t%11d\t%7d\n",
+ 			   ss->legacy_name, ss->root->hierarchy_id,
+ 			   atomic_read(&ss->root->nr_cgrps),
+ 			   cgroup_ssid_enabled(i));
 -- 
-tejun
+2.5.0
+
