@@ -1,359 +1,60 @@
-From: David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
-Subject: [RFC PATCH net-next] net: Add l3mdev cgroup
-Date: Mon,  4 Jan 2016 08:32:16 -0800
-Message-ID: <1451925136-13327-1-git-send-email-dsa@cumulusnetworks.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH net-next] net: Add l3mdev cgroup
+Date: Mon, 4 Jan 2016 12:58:36 -0500
+Message-ID: <20160104175836.GA11668@mtj.duckdns.org>
+References: <1451925136-13327-1-git-send-email-dsa@cumulusnetworks.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cumulusnetworks.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=1ZgHplTNnkm+Wz+YYh3oKa5zRAXDSTdVEopBNs5+rQk=;
-        b=XygWTbKmGBWY7D6c/Y7LQXUxGE3GYahZgvVaTsTJmxMOHEL/nat0a7cGVCY+h/hlm6
-         AfPAxpi3XFjudZA+LUzIngQYJaXZR1gS2yoRwzs9TsZmZGgksIRvZkzLmSDUy7297Pzy
-         SIVO33/oRtLWgeQC1G7psa9mDN8TLHROiakIs=
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=yGKMJTjOx2tng1zCXslqUh+x7XSKT9xIpeTg86L9PmM=;
+        b=x+YYrGS/WH5qLQR1KRil4ESDDRgf6MxoaZv9uqPNTFjYc9eFJgHvFD9CiO6UMjPKAe
+         mqGKu5hukSA27kphB1jLvsHPd8cszilMpiYRAD0nkiUtpPb5poUUegu1Luv18+vi0xC5
+         kqYg5hQAQjxYvvfNLmC6+ZOFqTczw1X+5CTzXdX1bJcKF3FrJaNmWS2eqXtYNd9t/5rj
+         AT679PR8czycUEBUaR0KMQvweIplIGTQYpeewJ+Q/7cbF0Wg1yL9faiJHEVnW0N2m+np
+         10EOUaUuGi5nCC/BB7fDsFGLmI/07UvWdwexnzHPZdc+yb6kg2yUeXEA9OSfI7ig0van
+         GL4Q==
+Content-Disposition: inline
+In-Reply-To: <1451925136-13327-1-git-send-email-dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shm-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org, roopa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org, David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
+To: David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shm-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org, roopa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org
 
-Add cgroup to assoicate tasks with L3 networking domains. AF_INET{6}
-sockets opened by tasks associated with an l3mdev cgroup are bound to
-the associated master device when the socket is created. This allows a
-user to run a command (and its children) within an L3 networking context.
+Hello, David.
 
-The master-device for an l3mdev cgroup must be an L3 master device
-(e.g., VRF), and it must be set before attaching tasks to the cgroup. Once
-set the master-device can not change. Nested l3mdev cgroups are not
-supported. The root (aka default) l3mdev cgroup can not be bound to a
-master device.
+On Mon, Jan 04, 2016 at 08:32:16AM -0800, David Ahern wrote:
+> Add cgroup to assoicate tasks with L3 networking domains. AF_INET{6}
+> sockets opened by tasks associated with an l3mdev cgroup are bound to
+> the associated master device when the socket is created. This allows a
+> user to run a command (and its children) within an L3 networking context.
+> 
+> The master-device for an l3mdev cgroup must be an L3 master device
+> (e.g., VRF), and it must be set before attaching tasks to the cgroup. Once
+> set the master-device can not change. Nested l3mdev cgroups are not
+> supported. The root (aka default) l3mdev cgroup can not be bound to a
+> master device.
+> 
+> Example:
+>     ip link add vrf-red type vrf table vrf-red
+>     ip link set dev vrf-red up
+>     ip link set dev eth1 master vrf-red
+> 
+>     cgcreate -g l3mdev:vrf-red
+>     cgset -r l3mdev.master-device=vrf-red vrf-red
+>     cgexec -g l3mdev:vrf-red bash
 
-Example:
-    ip link add vrf-red type vrf table vrf-red
-    ip link set dev vrf-red up
-    ip link set dev eth1 master vrf-red
+Please don't create any new controller whose sole purpose is
+identifying group membership.  Please take a look at how libxt_cgroup
+handles identification w/o creating a new controller.
 
-    cgcreate -g l3mdev:vrf-red
-    cgset -r l3mdev.master-device=vrf-red vrf-red
-    cgexec -g l3mdev:vrf-red bash
+ http://lkml.kernel.org/g/1449527935-27056-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-At this point the current shell and its child processes are attached to
-the vrf-red L3 domain. Any AF_INET and AF_INET6 sockets opened by the
-tasks are bound to the vrf-red device.
+Thanks.
 
-TO-DO:
-- how to auto-create the cgroup when a VRF device is created and auto-deleted
-  when a VRF device is destroyed
-
-Signed-off-by: David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
----
- include/linux/cgroup_subsys.h |   3 +
- include/net/l3mdev_cgroup.h   |  27 ++++++
- net/core/sock.c               |   2 +
- net/l3mdev/Kconfig            |  12 +++
- net/l3mdev/Makefile           |   1 +
- net/l3mdev/l3mdev_cgroup.c    | 195 ++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 240 insertions(+)
- create mode 100644 include/net/l3mdev_cgroup.h
- create mode 100644 net/l3mdev/l3mdev_cgroup.c
-
-diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
-index 1a96fdaa33d5..507df40f11de 100644
---- a/include/linux/cgroup_subsys.h
-+++ b/include/linux/cgroup_subsys.h
-@@ -58,6 +58,9 @@ SUBSYS(net_prio)
- SUBSYS(hugetlb)
- #endif
- 
-+#if IS_ENABLED(CONFIG_NET_L3_MASTER_DEV)
-+SUBSYS(l3mdev)
-+#endif
- /*
-  * Subsystems that implement the can_fork() family of callbacks.
-  */
-diff --git a/include/net/l3mdev_cgroup.h b/include/net/l3mdev_cgroup.h
-new file mode 100644
-index 000000000000..c20fbb0a7f46
---- /dev/null
-+++ b/include/net/l3mdev_cgroup.h
-@@ -0,0 +1,27 @@
-+/*
-+ * l3mdev_cgroup.h		Control Group for L3 Master Device
-+ *
-+ * Copyright (c) 2015 Cumulus Networks. All rights reserved.
-+ * Copyright (c) 2015 David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ */
-+
-+#ifndef _L3MDEV_CGROUP_H
-+#define _L3MDEV_CGROUP_H
-+
-+#if IS_ENABLED(CONFIG_CGROUP_L3MDEV)
-+
-+void sock_update_l3mdev(struct sock *sk);
-+
-+#else /* !CONFIG_CGROUP_L3MDEV */
-+
-+static inline void sock_update_l3mdev(struct sock *sk)
-+{
-+}
-+
-+#endif /* CONFIG_CGROUP_L3MDEV */
-+#endif /* _L3MDEV_CGROUP_H */
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 565bab7baca9..19ce06674dd9 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -131,6 +131,7 @@
- #include <linux/ipsec.h>
- #include <net/cls_cgroup.h>
- #include <net/netprio_cgroup.h>
-+#include <net/l3mdev_cgroup.h>
- #include <linux/sock_diag.h>
- 
- #include <linux/filter.h>
-@@ -1424,6 +1425,7 @@ struct sock *sk_alloc(struct net *net, int family, gfp_t priority,
- 
- 		sock_update_classid(&sk->sk_cgrp_data);
- 		sock_update_netprioidx(&sk->sk_cgrp_data);
-+		sock_update_l3mdev(sk);
- 	}
- 
- 	return sk;
-diff --git a/net/l3mdev/Kconfig b/net/l3mdev/Kconfig
-index 5d47325037bc..3142d810e222 100644
---- a/net/l3mdev/Kconfig
-+++ b/net/l3mdev/Kconfig
-@@ -8,3 +8,15 @@ config NET_L3_MASTER_DEV
- 	---help---
- 	  This module provides glue between core networking code and device
- 	  drivers to support L3 master devices like VRF.
-+
-+config CGROUP_L3MDEV
-+	bool "L3 Master Device cgroup"
-+	depends on CGROUPS
-+	depends on NET_L3_MASTER_DEV
-+	---help---
-+	  Cgroup subsystem for assigning processes to an L3 domain.
-+	  When a process is assigned to an l3mdev domain all AF_INET and
-+	  AF_INET6 sockets opened by the process are bound to the L3 master
-+	  device.
-+
-+
-diff --git a/net/l3mdev/Makefile b/net/l3mdev/Makefile
-index 84a53a6f609a..ae74ebad8db7 100644
---- a/net/l3mdev/Makefile
-+++ b/net/l3mdev/Makefile
-@@ -3,3 +3,4 @@
- #
- 
- obj-$(CONFIG_NET_L3_MASTER_DEV) += l3mdev.o
-+obj-$(CONFIG_CGROUP_L3MDEV) += l3mdev_cgroup.o
-diff --git a/net/l3mdev/l3mdev_cgroup.c b/net/l3mdev/l3mdev_cgroup.c
-new file mode 100644
-index 000000000000..0326c06bfe02
---- /dev/null
-+++ b/net/l3mdev/l3mdev_cgroup.c
-@@ -0,0 +1,195 @@
-+/*
-+ * net/l3mdev/l3mdev_cgroup.c	Control Group for L3 Master Devices
-+ *
-+ * Copyright (c) 2015 Cumulus Networks. All rights reserved.
-+ * Copyright (c) 2015 David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/types.h>
-+#include <linux/string.h>
-+#include <linux/cgroup.h>
-+#include <net/sock.h>
-+#include <net/l3mdev_cgroup.h>
-+
-+struct l3mdev_cgroup {
-+	struct cgroup_subsys_state      css;
-+	struct net			*net;
-+	int				dev_idx;
-+};
-+
-+static inline struct l3mdev_cgroup *css_l3mdev(struct cgroup_subsys_state *css)
-+{
-+	return css ? container_of(css, struct l3mdev_cgroup, css) : NULL;
-+}
-+
-+static void l3mdev_set_bound_dev(struct sock *sk)
-+{
-+	struct task_struct *tsk = current;
-+	struct l3mdev_cgroup *l3mdev_cgrp;
-+
-+	rcu_read_lock();
-+
-+	l3mdev_cgrp = css_l3mdev(task_css(tsk, l3mdev_cgrp_id));
-+	if (l3mdev_cgrp && l3mdev_cgrp->dev_idx)
-+		sk->sk_bound_dev_if = l3mdev_cgrp->dev_idx;
-+
-+	rcu_read_unlock();
-+}
-+
-+void sock_update_l3mdev(struct sock *sk)
-+{
-+	switch (sk->sk_family) {
-+	case AF_INET:
-+	case AF_INET6:
-+		l3mdev_set_bound_dev(sk);
-+		break;
-+	}
-+}
-+
-+static bool is_root_cgroup(struct cgroup_subsys_state *css)
-+{
-+	return !css || !css->parent;
-+}
-+
-+static struct cgroup_subsys_state *
-+l3mdev_css_alloc(struct cgroup_subsys_state *parent_css)
-+{
-+	struct l3mdev_cgroup *l3mdev_cgrp;
-+
-+	/* nested l3mdev domains are not supportd */
-+	if (!is_root_cgroup(parent_css))
-+		return ERR_PTR(-EINVAL);
-+
-+	l3mdev_cgrp = kzalloc(sizeof(*l3mdev_cgrp), GFP_KERNEL);
-+	if (!l3mdev_cgrp)
-+		return ERR_PTR(-ENOMEM);
-+
-+	return &l3mdev_cgrp->css;
-+}
-+
-+static int l3mdev_css_online(struct cgroup_subsys_state *css)
-+{
-+	return 0;
-+}
-+
-+static void l3mdev_css_free(struct cgroup_subsys_state *css)
-+{
-+	kfree(css_l3mdev(css));
-+}
-+
-+static int l3mdev_read(struct seq_file *sf, void *v)
-+{
-+	struct cgroup_subsys_state *css = seq_css(sf);
-+	struct l3mdev_cgroup *l3mdev_cgrp = css_l3mdev(css);
-+
-+	if (!l3mdev_cgrp)
-+		return -EINVAL;
-+
-+	if (l3mdev_cgrp->net) {
-+		struct net_device *dev;
-+
-+		dev = dev_get_by_index(l3mdev_cgrp->net, l3mdev_cgrp->dev_idx);
-+
-+		seq_printf(sf, "net[%u]: device index %d ==> %s\n",
-+			   l3mdev_cgrp->net->ns.inum, l3mdev_cgrp->dev_idx,
-+			   dev ? dev->name : "<none>");
-+
-+		if (dev)
-+			dev_put(dev);
-+	}
-+	return 0;
-+}
-+
-+static ssize_t l3mdev_write(struct kernfs_open_file *of,
-+			    char *buf, size_t nbytes, loff_t off)
-+{
-+	struct cgroup_subsys_state *css = of_css(of);
-+	struct l3mdev_cgroup *l3mdev_cgrp = css_l3mdev(css);
-+	struct net *net = current->nsproxy->net_ns;
-+	struct net_device *dev;
-+	char name[IFNAMSIZ];
-+	int rc = -EINVAL;
-+
-+	/* once master device is set can not undo. Must delete
-+	 * cgroup and reset
-+	 */
-+	if (l3mdev_cgrp->dev_idx)
-+		goto out;
-+
-+	/* root cgroup does not bind to an L3 domain */
-+	if (is_root_cgroup(css))
-+		goto out;
-+
-+	if (sscanf(buf, "%" __stringify(IFNAMSIZ) "s", name) != 1)
-+		goto out;
-+
-+	dev = dev_get_by_name(net, name);
-+	if (!dev) {
-+		rc = -ENODEV;
-+		goto out;
-+	}
-+
-+	if (netif_is_l3_master(dev)) {
-+		l3mdev_cgrp->net = net;
-+		l3mdev_cgrp->dev_idx = dev->ifindex;
-+		rc = 0;
-+	}
-+
-+	dev_put(dev);
-+out:
-+	return rc ? : nbytes;
-+}
-+
-+/* make master device is set for non-root cgroups before tasks can be added */
-+static int l3mdev_can_attach(struct cgroup_taskset *tset)
-+{
-+	struct cgroup_subsys_state *dst_css;
-+	struct task_struct *tsk;
-+	int rc = 0;
-+
-+	cgroup_taskset_for_each(tsk, dst_css, tset) {
-+		struct l3mdev_cgroup *l3mdev_cgrp;
-+
-+		l3mdev_cgrp = css_l3mdev(dst_css);
-+		if (!is_root_cgroup(dst_css) && !l3mdev_cgrp->dev_idx) {
-+			rc = -ENODEV;
-+			break;
-+		}
-+	}
-+
-+	return rc;
-+}
-+
-+static struct cftype ss_files[] = {
-+	{
-+		.name     = "master-device",
-+		.seq_show = l3mdev_read,
-+		.write    = l3mdev_write,
-+	},
-+	{ }	/* terminate */
-+};
-+
-+struct cgroup_subsys l3mdev_cgrp_subsys = {
-+	.css_alloc	= l3mdev_css_alloc,
-+	.css_online	= l3mdev_css_online,
-+	.css_free	= l3mdev_css_free,
-+	.can_attach	= l3mdev_can_attach,
-+	.legacy_cftypes	= ss_files,
-+};
-+
-+static int __init init_cgroup_l3mdev(void)
-+{
-+	return 0;
-+}
-+
-+subsys_initcall(init_cgroup_l3mdev);
-+MODULE_AUTHOR("David Ahern");
-+MODULE_DESCRIPTION("Control Group for L3 Networking Domains");
-+MODULE_LICENSE("GPL");
 -- 
-1.9.1
+tejun
