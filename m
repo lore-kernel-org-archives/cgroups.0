@@ -1,42 +1,58 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup: BUG: unable to handle kernel NULL pointer dereference
-Date: Mon, 4 Jan 2016 14:17:16 -0500
-Message-ID: <20160104191716.GB3807@mtj.duckdns.org>
-References: <20160101234028.GA1750@hudson.localdomain>
- <20160102115437.GE3660@htj.duckdns.org>
- <20160104191553.GA21384@mail.hallyn.com>
+From: David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
+Subject: Re: [RFC PATCH net-next] net: Add l3mdev cgroup
+Date: Mon, 4 Jan 2016 12:17:08 -0700
+Message-ID: <568AC534.1070308@cumulusnetworks.com>
+References: <1451925136-13327-1-git-send-email-dsa@cumulusnetworks.com>
+ <20160104175836.GA11668@mtj.duckdns.org>
+ <568ABFC3.3010803@cumulusnetworks.com>
+ <20160104185936.GA3807@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=W1NQcSBbW9rcH6FBp6NbYW8VirryQa7fzV5M7qdM6no=;
-        b=WjopHEvGlG0Sf1efH5dOB69XAr9HnX8vR1nE8jGIOLRyYSmu1hyf9KOq28woNFuHT4
-         ARYKCIQwFUe4wMbqJW3GxLtnHzcZfx/wCT0/THQ3r/ELFFuP1kdQ+rwOTJgVdAkt2ntS
-         /zdxIFzcwHtxjEIWokrtbgjAQPBDNEX75c1XCYWXJdGWDuLyIfmCNuJsNcpgv5d8aoo9
-         xYbaga97HqHkcCJ6Z/5zAVOtkNvyZbuZuB3+7Zx64neh4aCdk5jVRkZXK63kMcovFmEF
-         TEjLJM1ulZmPEY4M9ZAsuL0rhtomPRdDfhvaJrMin0aqAg8wXRdkPFaOMsRIIzgIUBR3
-         SvAA==
-Content-Disposition: inline
-In-Reply-To: <20160104191553.GA21384-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+        d=cumulusnetworks.com; s=google;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-type:content-transfer-encoding;
+        bh=yWMr4vNX4TKYvwNtDZ/3GjTy4JHGaj6WWuVEqqy3T9s=;
+        b=HNFUiQWPMNTh0StE6Hh7VVwlAR2e8E27JLvy9nWuq4dEGz09sCu0Ao3MAFP6o9wtEu
+         CX+RZlnXjLKsiXaUQ2SNHK/4e3AoSYE16H+l5OS7eg6KVmYXWkJaRjpPLzq2dC+OHHnd
+         ZT7UAN2wcOKoO8uPW/niC7uTNesEpZCpifPig=
+In-Reply-To: <20160104185936.GA3807-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Jeremiah Mahler <jmmahler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shm-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org, roopa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org
 
-Happy new year, Serge.
+On 1/4/16 11:59 AM, Tejun Heo wrote:
+> Hello, David.
+>
+> On Mon, Jan 04, 2016 at 11:53:55AM -0700, David Ahern wrote:
+>> On 1/4/16 10:58 AM, Tejun Heo wrote:
+>>> Please don't create any new controller whose sole purpose is
+>>> identifying group membership.  Please take a look at how libxt_cgroup
+>>> handles identification w/o creating a new controller.
+>>>
+>>>   http://lkml.kernel.org/g/1449527935-27056-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+>>>
+>>
+>> This controller applies a cgroup specific setting to tasks associated with
+>> an instance (similar to cpuset restricting tasks to specifics CPUs), so it
+>> is more than just identifying membership.
+>
+> Any identification can be mapped back and forth to setting configs to
+> a set of tasks.  That doesn't change the fact that all the controller
+> is doing is identifying cgroup membership and the proposed controller
+> shares exatly the same problems as netprio or netcls controllers.
+>
+>> I looked at the commits referenced above and net/netfilter/xt_cgroup.c code
+>> in particular and I don't see how it applies to this use case. Can you
+>> elaborate?
+>
+> Match cgroup membership in whatever subsystem that cares about it and
+> apply the policy there.
+>
 
-On Mon, Jan 04, 2016 at 01:15:53PM -0600, Serge E. Hallyn wrote:
-> an updated set is at https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/commit/?h=cgroupns.v9
-> Would you like a new patchset send to the list, or is the github
-> tree ok?
-
-Please repost.
-
-Thanks!
-
--- 
-tejun
+None of the existing subsystems are relevant for configuring an L3 
+networking domain, and it does not make sense to tie net_cls and 
+net_prio to an L3 domain.
