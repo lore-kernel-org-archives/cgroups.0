@@ -1,310 +1,176 @@
 From: Parav Pandit <pandit.parav@gmail.com>
-Subject: [PATCHv1 6/6] rdmacg: Added documentation for rdma controller.
-Date: Wed,  6 Jan 2016 00:28:06 +0530
-Message-ID: <1452020286-9508-7-git-send-email-pandit.parav@gmail.com>
+Subject: [PATCHv1 4/6] IB/core: rdmacg support infrastructure APIs
+Date: Wed,  6 Jan 2016 00:28:04 +0530
+Message-ID: <1452020286-9508-5-git-send-email-pandit.parav@gmail.com>
 References: <1452020286-9508-1-git-send-email-pandit.parav@gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-type:content-transfer-encoding;
-        bh=X4Urf0GMJtkVUXaOAu95eG/HFHQyjhT2rLuqJevFnT4=;
-        b=jPX1b95Rrg19cnCRMKIX7Rpa/VJDzM3/hgYTUPD/A4PMVcAIhQHNeca+tpwZRrf/1e
-         NSWIoK5iESUvHVEX3rNUpH79yKPq1E2GqVbqLFGYkS06CbLWgM7IuBqoXLDxNfSoBFzR
-         VK2BGcIAZnh8zLANETyRDmjSDbdeA/Y0EUKxWvxeRUy4mTOmJctwiGsUIwBSH6oVjoYQ
-         78/Zp0E8kX+Cmu1+AjdeaP+a1Ov07SpSHwD+cwse+nIOfEvDKSWbI30uZ5klp/2Yx+/w
-         nACIGkjIoD6ZosvwYPdvWG2yuoU+HwTuDKHKNAApzziQI86lnC40EJ1NbfpELf4UHZnx
-         UPLA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=SnPLcRBUoKDw1KKUDE2QMDENtiCp+7LOb/ojkI0uZpQ=;
+        b=cX2h28X7hC5oWI/KJggLN2wJxdpXFDUQZi79MAq5z4FFBJkeSEKEZBnQCWaxXXN/CT
+         veKjnYQEQcOAg2Hnr3w3OaIhnCLEdrva2cicB+Ct+2YuDyHKyC5GIb6S3cwFIIW08z/U
+         lyNXOOLyi8jH68WVjsKwfQGtrojWCYPrDoo53jA8ifc37vhU9fyN8WRlKVXIYQY4vfhF
+         D4YZaJchRtYZM+qP1sfwTkiMwK3TFgqcKYBhpOUu0Rhu7oZPa6c25ZmpAZw99samzkd1
+         6SLWRkYiYElhwhtkOuHgqW7dHmiuXZGwJQYRVlbsx2wSSRdtTBvNPAhMEu9R1ejjqTxM
+         xE0Q==
 In-Reply-To: <1452020286-9508-1-git-send-email-pandit.parav@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com
 Cc: corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org, pandit.parav@gmail.com
 
-Added documentation for rdma controller to use in legacy mode and
-using new unified hirerchy.
+It defines verb RDMA resources that will be registered with
+RDMA cgroup. It defines new APIs to register device with
+RDMA cgroup and defines resource token table access interface.
 
 Signed-off-by: Parav Pandit <pandit.parav@gmail.com>
 ---
- Documentation/cgroup-legacy/rdma.txt | 129 +++++++++++++++++++++++++++=
-++++++++
- Documentation/cgroup.txt             |  79 +++++++++++++++++++++
- 2 files changed, 208 insertions(+)
- create mode 100644 Documentation/cgroup-legacy/rdma.txt
+ drivers/infiniband/core/Makefile    |  1 +
+ drivers/infiniband/core/cgroup.c    | 80 +++++++++++++++++++++++++++++++++++++
+ drivers/infiniband/core/core_priv.h |  5 +++
+ include/rdma/ib_verbs.h             | 13 ++++++
+ 4 files changed, 99 insertions(+)
+ create mode 100644 drivers/infiniband/core/cgroup.c
 
-diff --git a/Documentation/cgroup-legacy/rdma.txt b/Documentation/cgrou=
-p-legacy/rdma.txt
+diff --git a/drivers/infiniband/core/Makefile b/drivers/infiniband/core/Makefile
+index d43a899..df40cee 100644
+--- a/drivers/infiniband/core/Makefile
++++ b/drivers/infiniband/core/Makefile
+@@ -13,6 +13,7 @@ ib_core-y :=			packer.o ud_header.o verbs.o sysfs.o \
+ 				roce_gid_mgmt.o
+ ib_core-$(CONFIG_INFINIBAND_USER_MEM) += umem.o
+ ib_core-$(CONFIG_INFINIBAND_ON_DEMAND_PAGING) += umem_odp.o umem_rbtree.o
++ib_core-$(CONFIG_CGROUP_RDMA) += cgroup.o
+ 
+ ib_mad-y :=			mad.o smi.o agent.o mad_rmpp.o
+ 
+diff --git a/drivers/infiniband/core/cgroup.c b/drivers/infiniband/core/cgroup.c
 new file mode 100644
-index 0000000..70626c5
+index 0000000..8d80add
 --- /dev/null
-+++ b/Documentation/cgroup-legacy/rdma.txt
-@@ -0,0 +1,129 @@
-+				RDMA Resource Controller
-+				------------------------
++++ b/drivers/infiniband/core/cgroup.c
+@@ -0,0 +1,80 @@
++#include <linux/kernel.h>
++#include <linux/parser.h>
++#include <linux/cgroup_rdma.h>
 +
-+Contents
-+--------
++#include "core_priv.h"
 +
-+1. Overview
-+  1-1. What is RDMA resource controller?
-+  1-2. Why RDMA resource controller needed?
-+  1-3. How is RDMA resource controller implemented?
-+2. Usage Examples
++/**
++ * resource table definition as to be seen by the user.
++ * Need to add entries to it when more resources are
++ * added/defined at IB verb/core layer.
++ */
++static match_table_t resource_tokens = {
++	{RDMA_VERB_RESOURCE_UCTX, "uctx=%d"},
++	{RDMA_VERB_RESOURCE_AH, "ah=%d"},
++	{RDMA_VERB_RESOURCE_PD, "pd=%d"},
++	{RDMA_VERB_RESOURCE_CQ, "cq=%d"},
++	{RDMA_VERB_RESOURCE_MR, "mr=%d"},
++	{RDMA_VERB_RESOURCE_MW, "mw=%d"},
++	{RDMA_VERB_RESOURCE_SRQ, "srq=%d"},
++	{RDMA_VERB_RESOURCE_QP, "qp=%d"},
++	{RDMA_VERB_RESOURCE_FLOW, "flow=%d"},
++	{-1, NULL}
++};
 +
-+1. Overview
++/**
++ * setup table pointers for RDMA cgroup to access.
++ */
++static struct rdmacg_pool_info verbs_token_info = {
++	.resource_table = resource_tokens,
++	.resource_count =
++		(sizeof(resource_tokens) / sizeof(struct match_token)) - 1,
++};
 +
-+1-1. What is RDMA resource controller?
-+-------------------------------------
++static struct rdmacg_pool_info*
++	rdmacg_get_resource_pool_tokens(struct ib_device *device)
++{
++	return &verbs_token_info;
++}
 +
-+RDMA resource controller allows user to limit RDMA/IB specific resourc=
-es
-+that a given set of processes can use. These processes are grouped usi=
-ng
-+RDMA resource controller.
++static struct rdmacg_resource_pool_ops verbs_pool_ops = {
++	.get_resource_pool_tokens = &rdmacg_get_resource_pool_tokens,
++};
 +
-+RDMA resource controller currently allows two different type of resour=
-ce
-+pools.
-+(a) RDMA IB specification level verb resources defined by IB stack
-+(b) HCA vendor device specific resources
++/**
++ * ib_device_register_rdmacg - register with rdma cgroup.
++ * @device: device to register to participate in resource
++ *          accounting by rdma cgroup.
++ *
++ * Register with the rdma cgroup. Should be called before
++ * exposing rdma device to user space applications to avoid
++ * resource accounting leak.
++ * HCA drivers should set resource pool ops first if they wish
++ * to support hw specific resource accounting before IB core
++ * registers with rdma cgroup.
++ */
++void ib_device_register_rdmacg(struct ib_device *device)
++{
++	rdmacg_set_rpool_ops(device,
++			     RDMACG_RESOURCE_POOL_VERB,
++			     &verbs_pool_ops);
++	rdmacg_register_ib_device(device);
++}
 +
-+RDMA resource controller controller allows maximum of upto 64 resource=
-s in
-+a resource pool which is the internal construct of rdma cgroup explain=
-ed
-+at later part of this document.
++/**
++ * ib_device_unregister_rdmacg - unregister with rdma cgroup.
++ * @device: device to unregister.
++ *
++ * Unregister with the rdma cgroup. Should be called after
++ * all the resources are deallocated, and after a stage when any
++ * other resource allocation of user application cannot be done
++ * for this device to avoid any leak in accounting.
++ * HCA drivers should clear resource pool ops after ib stack
++ * unregisters with rdma cgroup.
++ */
++void ib_device_unregister_rdmacg(struct ib_device *device)
++{
++	rdmacg_unregister_ib_device(device);
++	rdmacg_clear_rpool_ops(device,
++			       RDMACG_RESOURCE_POOL_VERB);
++}
+diff --git a/drivers/infiniband/core/core_priv.h b/drivers/infiniband/core/core_priv.h
+index 5cf6eb7..29bdfe2 100644
+--- a/drivers/infiniband/core/core_priv.h
++++ b/drivers/infiniband/core/core_priv.h
+@@ -92,4 +92,9 @@ int ib_cache_setup_one(struct ib_device *device);
+ void ib_cache_cleanup_one(struct ib_device *device);
+ void ib_cache_release_one(struct ib_device *device);
+ 
++#ifdef CONFIG_CGROUP_RDMA
++void ib_device_register_rdmacg(struct ib_device *device);
++void ib_device_unregister_rdmacg(struct ib_device *device);
++#endif
 +
-+1-2. Why RDMA resource controller needed?
-+----------------------------------------
+ #endif /* _CORE_PRIV_H */
+diff --git a/include/rdma/ib_verbs.h b/include/rdma/ib_verbs.h
+index 1a17249..f44b884 100644
+--- a/include/rdma/ib_verbs.h
++++ b/include/rdma/ib_verbs.h
+@@ -96,6 +96,19 @@ enum rdma_protocol_type {
+ 	RDMA_PROTOCOL_USNIC_UDP
+ };
+ 
++enum rdma_resource_type {
++	RDMA_VERB_RESOURCE_UCTX,
++	RDMA_VERB_RESOURCE_AH,
++	RDMA_VERB_RESOURCE_PD,
++	RDMA_VERB_RESOURCE_CQ,
++	RDMA_VERB_RESOURCE_MR,
++	RDMA_VERB_RESOURCE_MW,
++	RDMA_VERB_RESOURCE_SRQ,
++	RDMA_VERB_RESOURCE_QP,
++	RDMA_VERB_RESOURCE_FLOW,
++	RDMA_VERB_RESOURCE_MAX,
++};
 +
-+Currently user space applications can easily take away all the rdma de=
-vice
-+specific resources such as AH, CQ, QP, MR etc. Due to which other appl=
-ications
-+in other cgroup or kernel space ULPs may not even get chance to alloca=
-te any
-+rdma resources. This leads to service unavailability.
-+
-+Therefore RDMA resource controller is needed through which resource co=
-nsumption
-+of processes can be limited. Through this controller various different=
- rdma
-+resources described by IB uverbs layer and any HCA vendor driver can b=
-e
-+accounted.
-+
-+1-3. How is RDMA resource controller implemented?
-+------------------------------------------------
-+
-+rdma cgroup allows limit configuration of resources. These resources a=
-re not
-+defined by the rdma controller. Instead they are defined by the IB sta=
-ck
-+and HCA device drivers(optionally).
-+This provides great flexibility to allow IB stack to define new resour=
-ces,
-+without any changes to rdma cgroup.
-+Rdma cgroup maintains resource accounting per cgroup, per device, per =
-resource
-+type using resource pool structure. Each such resource pool is limited=
- up to
-+64 resources in given resource pool by rdma cgroup, which can be exten=
-ded
-+later if required.
-+
-+This resource pool object is linked to the cgroup css. Typically there
-+are 0 to 4 resource pool instances per cgroup, per device in most use =
-cases.
-+But nothing limits to have it more. At present hundreds of RDMA device=
-s per
-+single cgroup may not be handled optimally, however there is no known =
-use case
-+for such configuration either.
-+
-+Since RDMA resources can be allocated from any process and can be free=
-d by any
-+of the child processes which shares the address space, rdma resources =
-are
-+always owned by the creator cgroup css. This allows process migration =
-from one
-+to other cgroup without major complexity of transferring resource owne=
-rship;
-+because such ownership is not really present due to shared nature of
-+rdma resources. Linking resources around css also ensures that cgroups=
- can be
-+deleted after processes migrated. This allow progress migration as wel=
-l with
-+active resources, even though that=E2=80=99s not the primary use case.
-+
-+Finally mapping of the resource owner pid to cgroup is maintained usin=
-g
-+simple hash table to perform quick look-up during resource charing/unc=
-harging
-+time.
-+
-+Resource pool object is created in following situations.
-+(a) User sets the limit and no previous resource pool exist for the de=
-vice
-+of interest for the cgroup.
-+(b) No resource limits were configured, but IB/RDMA stack tries to
-+charge the resource. So that it correctly uncharge them when applicati=
-ons are
-+running without limits and later on when limits are enforced during un=
-charging,
-+otherwise usage count will drop to negative. This is done using defaul=
-t
-+resource pool. Instead of implementing any sort of time markers, defau=
-lt pool
-+simplifies the design.
-+
-+Resource pool is destroyed if it was of default type (not created
-+by administrative operation) and it=E2=80=99s the last resource gettin=
-g
-+deallocated. Resource pool created as administrative operation is not
-+deleted, as it=E2=80=99s expected to be used in near future.
-+
-+If user setting tries to delete all the resource limit
-+with active resources per device, RDMA cgroup just marks the pool as
-+default pool with maximum limits for each resource, otherwise it delet=
-es the
-+default resource pool.
-+
-+2. Usage Examples
-+-----------------
-+
-+(a) List available RDMA verb level resources:
-+
-+#cat /sys/fs/cgroup/rdma/1/rdma.resource.verb.list
-+Output:
-+mlx4_0 uctx ah pd mr srq qp flow
-+
-+(b) Configure resource limit:
-+echo mlx4_0 mr=3D100 qp=3D10 ah=3D2 > /sys/fs/cgroup/rdma/1/rdma.resou=
-rce.verb.limit
-+echo ocrdma1 mr=3D120 qp=3D20 cq=3D10 > /sys/fs/cgroup/rdma/2/rdma.res=
-ource.verb.limit
-+
-+(c) Query resource limit:
-+cat /sys/fs/cgroup/rdma/2/rdma.resource.verb.limit
-+#Output:
-+mlx4_0 mr=3D100 qp=3D10 ah=3D2
-+ocrdma1 mr=3D120 qp=3D20 cq=3D10
-+
-+(d) Query current usage:
-+cat /sys/fs/cgroup/rdma/2/rdma.resource.verb.usage
-+#Output:
-+mlx4_0 mr=3D95 qp=3D8 ah=3D2
-+ocrdma1 mr=3D0 qp=3D20 cq=3D10
-+
-+(e) Delete resource limit:
-+echo mlx4_0 remove > /sys/fs/cgroup/rdma/1/rdma.resource.verb.limit
-+
-+(f) List available HCA HW specific resources: (optional)
-+cat /sys/fs/cgroup/rdma/1/rdma.hw.verb.list
-+vendor1 hw_qp hw_cq hw_timer
-+
-+(g) Configure hw specific resource limit:
-+echo vendor1 hw_qp=3D56 > /sys/fs/cgroup/rdma/2/rdma.resource.hw.limit
-diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
-index 983ba63..57eb59c 100644
---- a/Documentation/cgroup.txt
-+++ b/Documentation/cgroup.txt
-@@ -47,6 +47,8 @@ CONTENTS
-   5-3. IO
-     5-3-1. IO Interface Files
-     5-3-2. Writeback
-+  5-4. RDMA
-+    5-4-1. RDMA Interface Files
- 6. Namespace
-   6-1. Basics
-   6-2. The Root and Views
-@@ -1017,6 +1019,83 @@ writeback as follows.
- 	total available memory and applied the same way as
- 	vm.dirty[_background]_ratio.
-=20
-+5-4. RDMA
-+
-+The "rdma" controller regulates the distribution of RDMA resources.
-+This controller implements both RDMA/IB verb level and RDMA HCA
-+driver level resource distribution.
-+
-+5-4-1. RDMA Interface Files
-+
-+  rdma.resource.verb.list
-+
-+	A read-only file that exists for all the cgroups that describes
-+	which all verb specific resources of a given device can be
-+	distributed and accounted.
-+
-+	Lines are keyed by device name and are not ordered.
-+	Each line contains space separated resource name that can be
-+	distributed.
-+
-+	An example for mlx4_0 device follows.
-+
-+	  mlx4_0 ah cq pd mr qp flow srq
-+
-+  rdma.resource.verb.limit
-+	A readwrite file that exists for all the cgroups that describes
-+	current configured verbs resource limit for a RDMA/IB device.
-+
-+	Lines are keyed by device name and are not ordered.
-+	Each line contains space separated resource name and its configured
-+	limit that can be distributed.
-+
-+	An example for mlx4 and ocrdma device follows.
-+
-+	  mlx4_0 mr=3D1000 qp=3D104 ah=3D2
-+	  ocrdma1 mr=3D900 qp=3D89 cq=3D10
-+
-+  rdma.resource.verb.usage
-+	A read-only file that describes current resource usage.
-+	It exists for all the cgroup including root.
-+
-+	An example for mlx4 and ocrdma device follows.
-+
-+	  mlx4_0 mr=3D1000 qp=3D102 ah=3D2
-+	  ocrdma1 mr=3D900 qp=3D79 cq=3D10
-+
-+  rdma.resource.verb.failcnt
-+	A read-only file that describes resource allocation failure
-+	count for a given resource type of a particular device.
-+	It exists for all the cgroup including root.
-+
-+	An example for mlx4 and ocrdma device follows.
-+
-+	  mlx4_0 mr=3D0 qp=3D1 ah=3D1
-+	  ocrdma1 mr=3D2 qp=3D1 cq=3D1
-+
-+  rdma.resource.hw.list
-+
-+	A read-only file that exists for all the cgroups that describes
-+	which all HCA hardware specific resources of a given device can be
-+	distributed and accounted.
-+
-+  rdma.resource.hw.limit
-+	A readwrite file that exists for all the cgroups that describes
-+	current configured HCA hardware resource limit for a RDMA/IB device.
-+
-+	Lines are keyed by device name and are not ordered.
-+	Each line contains space separated resource name and its configured
-+	limit that can be distributed.
-+
-+  rdma.resource.hw.usage
-+	A read-only file that describes current resource usage.
-+	It exists for all the cgroup including root.
-+
-+  rdma.resource.hw.failcnt
-+	A read-only file that describes HCA hardware resource
-+	allocation failure count for a given resource type of
-+	a particular device.
-+	It exists for all the cgroup including root.
-=20
- 6. Namespace
-=20
---=20
+ __attribute_const__ enum rdma_transport_type
+ rdma_node_get_transport(enum rdma_node_type node_type);
+ 
+-- 
 1.8.3.1
-
