@@ -1,24 +1,23 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHv1 6/6] rdmacg: Added documentation for rdma controller.
-Date: Tue, 5 Jan 2016 16:53:09 -0500
-Message-ID: <20160105215309.GG5995@mtj.duckdns.org>
+Subject: Re: [PATCHv1 0/6] rdma controller support
+Date: Tue, 5 Jan 2016 16:56:23 -0500
+Message-ID: <20160105215623.GH5995@mtj.duckdns.org>
 References: <1452020286-9508-1-git-send-email-pandit.parav@gmail.com>
- <1452020286-9508-7-git-send-email-pandit.parav@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=D9EMALhqJT/2HSt1mrgiR8/s0UP4o3wZmqrFSEuZ2h0=;
-        b=YjywbneEtzZ0G1ZfHFymS/Aa9SSZW7mGdozTqNgx+ahTH0Za6VLBRCIMdJJS2IRo7K
-         E099mwwIWEWGw3vMlEdTj3nNjdfWXgtyfpzPqiV7wWKWS3kcQwZdiQaQy+huOW72rviK
-         lKpChcWOx635wVXDasK6Crm3Dg1jbDoFl3SXLIBRP5xlzKe2EM4fcG4wiFTtsfVtsRWP
-         VnTCLdIiF4aFs8F/Ov/Fx8kurGOjR4EiywC4hY/2RqRENvAW16H2BmB9hBOAyrliIJkL
-         d/OgQT+HK877O0x4Pdo04e/rfaDOPju0LN4szvcqCsC2syaV4kB9cFqwhAIB1soXsNgW
-         0OSg==
+        bh=EweKpZwPMMrRePLv2EBaRWdu5nigNCEN89AMvRN6ezA=;
+        b=wsItk1Uyute3COFhGmH2ahd7GAzFS5mqwyrkKOL8ToVNQJOtROTDpsHJf03Zi8Wi83
+         tv9k+RgXlTPj1Dm7wbgzMjoJSXgsgpElG7xFvuwXxnpRrbU7WabwG+4RKEJXDPXVmlcm
+         X7k1uZ+QWNNwiQZ6uYiMjTk+4UNAHL7+nFI4r4r1Dfv/AsFIXyFjbeBQE33nRa5Ac0Iv
+         JdEu0ox9QV75PEqHb8PXbqvblahWByZR3MV2nNNFzBvAeogGzML07cee2eBmTI0N5/oq
+         d2zDxR9KBIVJrEnFn0bkp8ETjJDRCUEzO06qsys/J7nGBDIPidCOH6L9CN5vfrhudvLs
+         mQtA==
 Content-Disposition: inline
-In-Reply-To: <1452020286-9508-7-git-send-email-pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <1452020286-9508-1-git-send-email-pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,20 +27,17 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM
 
 Hello,
 
-On Wed, Jan 06, 2016 at 12:28:06AM +0530, Parav Pandit wrote:
-> +5-4-1. RDMA Interface Files
-> +
-> +  rdma.resource.verb.list
-> +  rdma.resource.verb.limit
-> +  rdma.resource.verb.usage
-> +  rdma.resource.verb.failcnt
-> +  rdma.resource.hw.list
-> +  rdma.resource.hw.limit
-> +  rdma.resource.hw.usage
-> +  rdma.resource.hw.failcnt
+On Wed, Jan 06, 2016 at 12:28:00AM +0530, Parav Pandit wrote:
+> Resources are not defined by the RDMA cgroup. Resources are defined
+> by RDMA/IB stack & optionally by HCA vendor device drivers.
 
-Can you please read the rest of cgroup.txt and put the interface in
-line with the common conventions followed by other controllers?
+As I wrote before, I don't think this is a good idea.  Drivers will
+inevitably add non-sensical "resources" which don't make any sense
+without much scrutiny.  If different controllers can't agree upon the
+same set of resources, which probably is a pretty good sign that this
+isn't too well thought out to begin with, at least make all resource
+types defined by the controller itself and let the controllers enable
+them selectively.
 
 Thanks.
 
