@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/6] cgroup: s/cgrp_dfl_root_/cgrp_dfl_/
-Date: Thu,  7 Jan 2016 17:29:45 -0500
-Message-ID: <1452205790-21331-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/6] cgroup, perf_event: make perf_event controller work on cgroup2 hierarchy
+Date: Thu,  7 Jan 2016 17:29:50 -0500
+Message-ID: <1452205790-21331-7-git-send-email-tj@kernel.org>
 References: <1452205790-21331-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7mjHmiujgobyeNljEBNYdMPTF+NayfCSEcWKg5hyhmI=;
-        b=tSCl58d48Bhnd7zFqVSnc/PmG+ZsJATD4FQWc94YWMxS0hjT6n3aGzGzaKPDPCmfd3
-         ylZwrscdphRIfHlGyO4c0quWFtyQZm0pVd8svOkknHVHchFobX7BCtAfLuCnU3IfEZJz
-         +nnQ4PG343SjhDAthWVaMrlnPyAX1UmpX0R4gcazv2FRGWWGKyFFGYm6ZHB/2YRrfu7i
-         Zerhx5xsNs5xGig53l2uTvH6gFWQrxoXjl/cs3DGm5hUawTrMvlb9rG0GvF6s40Uk3Iu
-         glfaiuiBASzEmhpNsMDlxIf4V/tU/8xZNu/pA1HAgN5J/dr/D2ikh5uLTHkE3O0F4dPL
-         v7IA==
+        bh=NflOlPrruRx+OZ0HtisXP6ejMw5QtjEY/YTcv6ZyNh0=;
+        b=jW8Se6bj2vctC+v091yt4vyc1B3XXOkehkwC8fidUIRpSgSb6LbxLKjCbRR8allwxr
+         aytL889F+CslB5Ywt87xI0CmDpKtjHtemTkZ1h6nSajxmQEX5vCJn0jBvEw7+CXfBvIm
+         iBHv3SLaHIiVTZpK2Q449yWIcpDYWpyQAzTgXi9ijiGAzJqOqS4y+pAs7UabNcu9M7ER
+         OSbmffSousR/ziFzDNkW7VqS5UClqBHOb05RimjIuBOG3L5a6Tu+T6BhsMBpElg4tBPv
+         mhi2NQv5TNkeA9UMTHAm0Q1Um3isT/fgPSiEMZNw6hHY+jghhJEjZrKIJ6fsd0ozDatf
+         Vr4Q==
 In-Reply-To: <1452205790-21331-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,94 +23,139 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org, a.p.zijlstra@chello.nl, mingo@redhat.com, acme@kernel.org
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-These var names are unnecessarily unwiedly and another similar
-variable will be added.  Let's shorten them.
+perf_event is a utility controller whose primary role is identifying
+cgroup membership to filter perf events; however, because it also
+tracks some per-css state, it can't be replaced by pure cgroup
+membership test.  Mark the controller as implicitly enabled on the
+default hierarchy so that perf events can always be filtered based on
+cgroup v2 path as long as the controller is not mounted on a legacy
+hierarchy.
+
+"perf record" is updated accordingly so that it searches for both v1
+and v2 hierarchies.  A v1 hierarchy is used if perf_event is mounted
+on it; otherwise, it uses the v2 hierarchy.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Arnaldo Carvalho de Melo <acme@kernel.org>
 ---
- kernel/cgroup.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ Documentation/cgroup.txt | 13 +++++++++++++
+ kernel/events/core.c     |  6 ++++++
+ tools/perf/util/cgroup.c | 26 +++++++++++++++++++-------
+ 3 files changed, 38 insertions(+), 7 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 122ec55..f542264 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -177,10 +177,10 @@ EXPORT_SYMBOL_GPL(cgrp_dfl_root);
-  * The default hierarchy always exists but is hidden until mounted for the
-  * first time.  This is for backward compatibility.
-  */
--static bool cgrp_dfl_root_visible;
-+static bool cgrp_dfl_visible;
+diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
+index 31d1f7b..721e43e 100644
+--- a/Documentation/cgroup.txt
++++ b/Documentation/cgroup.txt
+@@ -47,6 +47,8 @@ CONTENTS
+   5-3. IO
+     5-3-1. IO Interface Files
+     5-3-2. Writeback
++  5-4. Misc
++    5-4-1. perf_event
+ P. Information on Kernel Programming
+   P-1. Filesystem Support for Writeback
+ D. Deprecated v1 Core Features
+@@ -1013,6 +1015,17 @@ writeback as follows.
+ 	vm.dirty[_background]_ratio.
  
- /* some controllers are not supported in the default hierarchy */
--static unsigned long cgrp_dfl_root_inhibit_ss_mask;
-+static unsigned long cgrp_dfl_inhibit_ss_mask;
  
- /* The list of hierarchy roots */
++5-4. Misc
++
++5-4-1. perf_event
++
++perf_event controller, if not mounted on a legacy hierarchy on the
++first mount of cgroup v2, is automatically enabled on the v2 hierarchy
++so that perf events can always be filtered by cgroup v2 path.  The
++controller can still be moved to a legacy hierarchy after v2 hierarchy
++is populated.
++
++
+ P. Information on Kernel Programming
  
-@@ -1473,7 +1473,7 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
- 	/* skip creating root files on dfl_root for inhibited subsystems */
- 	tmp_ss_mask = ss_mask;
- 	if (dst_root == &cgrp_dfl_root)
--		tmp_ss_mask &= ~cgrp_dfl_root_inhibit_ss_mask;
-+		tmp_ss_mask &= ~cgrp_dfl_inhibit_ss_mask;
+ This section contains kernel programming information in the areas
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index 026305d..02ad5b3 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -9469,5 +9469,11 @@ struct cgroup_subsys perf_event_cgrp_subsys = {
+ 	.css_alloc	= perf_cgroup_css_alloc,
+ 	.css_free	= perf_cgroup_css_free,
+ 	.attach		= perf_cgroup_attach,
++	/*
++	 * Implicitly enable on dfl hierarchy so that perf events can
++	 * always be filtered by cgroup2 path as long as perf_event
++	 * controller is not mounted on a legacy hierarchy.
++	 */
++	.implicit_on_dfl = true,
+ };
+ #endif /* CONFIG_CGROUP_PERF */
+diff --git a/tools/perf/util/cgroup.c b/tools/perf/util/cgroup.c
+index 32e12ec..54b5bf4 100644
+--- a/tools/perf/util/cgroup.c
++++ b/tools/perf/util/cgroup.c
+@@ -12,8 +12,8 @@ cgroupfs_find_mountpoint(char *buf, size_t maxlen)
+ {
+ 	FILE *fp;
+ 	char mountpoint[PATH_MAX + 1], tokens[PATH_MAX + 1], type[PATH_MAX + 1];
++	char path_v1[PATH_MAX + 1], path_v2[PATH_MAX + 2], *path;
+ 	char *token, *saved_ptr = NULL;
+-	int found = 0;
  
- 	for_each_subsys_which(ss, ssid, &tmp_ss_mask) {
- 		struct cgroup *scgrp = &ss->root->cgrp;
-@@ -1490,7 +1490,7 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
- 		 * Just warn about it and continue.
- 		 */
- 		if (dst_root == &cgrp_dfl_root) {
--			if (cgrp_dfl_root_visible) {
-+			if (cgrp_dfl_visible) {
- 				pr_warn("failed to create files (%d) while rebinding 0x%lx to default root\n",
- 					ret, ss_mask);
- 				pr_warn("you may retry by moving them to a different hierarchy and unbinding\n");
-@@ -1991,7 +1991,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 			pr_err("cgroup2: unknown option \"%s\"\n", (char *)data);
- 			return ERR_PTR(-EINVAL);
- 		}
--		cgrp_dfl_root_visible = true;
-+		cgrp_dfl_visible = true;
- 		root = &cgrp_dfl_root;
- 		cgroup_get(&root->cgrp);
- 		goto out_mount;
-@@ -2842,7 +2842,7 @@ static int cgroup_root_controllers_show(struct seq_file *seq, void *v)
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
- 
- 	cgroup_print_ss_mask(seq, cgrp->root->subsys_mask &
--			     ~cgrp_dfl_root_inhibit_ss_mask);
-+			     ~cgrp_dfl_inhibit_ss_mask);
- 	return 0;
- }
- 
-@@ -2944,7 +2944,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	fp = fopen("/proc/mounts", "r");
+ 	if (!fp)
+@@ -24,31 +24,43 @@ cgroupfs_find_mountpoint(char *buf, size_t maxlen)
+ 	 * and inspect every cgroupfs mount point to find one that has
+ 	 * perf_event subsystem
  	 */
- 	buf = strstrip(buf);
- 	while ((tok = strsep(&buf, " "))) {
--		unsigned long tmp_ss_mask = ~cgrp_dfl_root_inhibit_ss_mask;
-+		unsigned long tmp_ss_mask = ~cgrp_dfl_inhibit_ss_mask;
++	path_v1[0] = '\0';
++	path_v2[0] = '\0';
++
+ 	while (fscanf(fp, "%*s %"STR(PATH_MAX)"s %"STR(PATH_MAX)"s %"
+ 				STR(PATH_MAX)"s %*d %*d\n",
+ 				mountpoint, type, tokens) == 3) {
  
- 		if (tok[0] == '\0')
- 			continue;
-@@ -5312,7 +5312,7 @@ int __init cgroup_init(void)
- 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
+-		if (!strcmp(type, "cgroup")) {
++		if (!path_v1[0] && !strcmp(type, "cgroup")) {
  
- 		if (!ss->dfl_cftypes)
--			cgrp_dfl_root_inhibit_ss_mask |= 1 << ss->id;
-+			cgrp_dfl_inhibit_ss_mask |= 1 << ss->id;
+ 			token = strtok_r(tokens, ",", &saved_ptr);
  
- 		if (ss->dfl_cftypes == ss->legacy_cftypes) {
- 			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
-@@ -5383,7 +5383,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 		struct cgroup *cgrp;
- 		int ssid, count = 0;
+ 			while (token != NULL) {
+ 				if (!strcmp(token, "perf_event")) {
+-					found = 1;
++					strcpy(path_v1, mountpoint);
+ 					break;
+ 				}
+ 				token = strtok_r(NULL, ",", &saved_ptr);
+ 			}
+ 		}
+-		if (found)
++
++		if (!path_v2[0] && !strcmp(type, "cgroup2"))
++			strcpy(path_v2, mountpoint);
++
++		if (path_v1[0] && path_v2[0])
+ 			break;
+ 	}
+ 	fclose(fp);
+-	if (!found)
++
++	if (path_v1[0])
++		path = path_v1;
++	else if (path_v2[0])
++		path = path_v2;
++	else
+ 		return -1;
  
--		if (root == &cgrp_dfl_root && !cgrp_dfl_root_visible)
-+		if (root == &cgrp_dfl_root && !cgrp_dfl_visible)
- 			continue;
- 
- 		seq_printf(m, "%d:", root->hierarchy_id);
+-	if (strlen(mountpoint) < maxlen) {
+-		strcpy(buf, mountpoint);
++	if (strlen(path) < maxlen) {
++		strcpy(buf, path);
+ 		return 0;
+ 	}
+ 	return -1;
 -- 
 2.5.0
 
