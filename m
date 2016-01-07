@@ -1,76 +1,116 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] cgroup, perf_event: make perf_event work on v2 hierarchy
-Date: Thu,  7 Jan 2016 17:29:44 -0500
-Message-ID: <1452205790-21331-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/6] cgroup: s/cgrp_dfl_root_/cgrp_dfl_/
+Date: Thu,  7 Jan 2016 17:29:45 -0500
+Message-ID: <1452205790-21331-2-git-send-email-tj@kernel.org>
+References: <1452205790-21331-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=KmmgWxvO2N0LW4/fOZFTUZ7xbs1Snb7oB8oCR7WLqVM=;
-        b=UiNIE2DeZVWdAC3aiqliMw5IbmV0qz9PWHh6Y3U9JlXrvEvg9Di3BWb8Q4Ng5fuRq4
-         t4AyX9oylEFHIlR7S6ZFJ2gVH+hSU25KecedJ9pJKpLLByduPkD0NZt37rNWTpF5EYkq
-         aF9lKS4NBbADgRX8nLY7YOlPWSeEeKUAtskCUHtrix3dC0qVkNAOfg4o/6pnvs1b0tGD
-         GD5LeDAeYleSn69cnVgpkn8cVASWCA3Ftom0j9MXqK8fYAdxLX3+1SdeHmnUi5jl6Dmo
-         732gF3xBWYGXOAUL4NtACq+fVQ/eX8mnN+QEA37lbOSIXGfYWufBkfoQ9a13TRoZ61m3
-         FmuQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=7mjHmiujgobyeNljEBNYdMPTF+NayfCSEcWKg5hyhmI=;
+        b=tSCl58d48Bhnd7zFqVSnc/PmG+ZsJATD4FQWc94YWMxS0hjT6n3aGzGzaKPDPCmfd3
+         ylZwrscdphRIfHlGyO4c0quWFtyQZm0pVd8svOkknHVHchFobX7BCtAfLuCnU3IfEZJz
+         +nnQ4PG343SjhDAthWVaMrlnPyAX1UmpX0R4gcazv2FRGWWGKyFFGYm6ZHB/2YRrfu7i
+         Zerhx5xsNs5xGig53l2uTvH6gFWQrxoXjl/cs3DGm5hUawTrMvlb9rG0GvF6s40Uk3Iu
+         glfaiuiBASzEmhpNsMDlxIf4V/tU/8xZNu/pA1HAgN5J/dr/D2ikh5uLTHkE3O0F4dPL
+         v7IA==
+In-Reply-To: <1452205790-21331-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: lizefan@huawei.com, hannes@cmpxchg.org, a.p.zijlstra@chello.nl, mingo@redhat.com, acme@kernel.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-Hello,
+These var names are unnecessarily unwiedly and another similar
+variable will be added.  Let's shorten them.
 
-perf_event is special in that while it primarily is there to identify
-cgroup membership of tasks, it also keeps some per-cgroup state, so
-unlike other controllers which are purely for identification, it can't
-be replaced by v2 hierarchy membership tests.  At the same time, as it
-is primarily used for tagging, doesn't incur meaningful runtime
-overhead and doesn't have any interface, it's awkward to control it
-via the usual "cgroup.subtree_control" mechanism on the v2 hierarchy.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-This patchset makes perf_event implicitly enabled on the v2 hierarchy
-so that cgroup v2 path automatically works with "perf record --cgroup"
-as long as perf_event controller is available and not mounted on a
-legacy hierarchy.  "perf record" is updated so that it searches for
-both v1 hierarchy w/ perf_event on it and v2 hierarchy.  The v1
-hierarchy is used if exists; otherwise, v2 is used, making the
-transition transparent to users.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 122ec55..f542264 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -177,10 +177,10 @@ EXPORT_SYMBOL_GPL(cgrp_dfl_root);
+  * The default hierarchy always exists but is hidden until mounted for the
+  * first time.  This is for backward compatibility.
+  */
+-static bool cgrp_dfl_root_visible;
++static bool cgrp_dfl_visible;
+ 
+ /* some controllers are not supported in the default hierarchy */
+-static unsigned long cgrp_dfl_root_inhibit_ss_mask;
++static unsigned long cgrp_dfl_inhibit_ss_mask;
+ 
+ /* The list of hierarchy roots */
+ 
+@@ -1473,7 +1473,7 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 	/* skip creating root files on dfl_root for inhibited subsystems */
+ 	tmp_ss_mask = ss_mask;
+ 	if (dst_root == &cgrp_dfl_root)
+-		tmp_ss_mask &= ~cgrp_dfl_root_inhibit_ss_mask;
++		tmp_ss_mask &= ~cgrp_dfl_inhibit_ss_mask;
+ 
+ 	for_each_subsys_which(ss, ssid, &tmp_ss_mask) {
+ 		struct cgroup *scgrp = &ss->root->cgrp;
+@@ -1490,7 +1490,7 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 		 * Just warn about it and continue.
+ 		 */
+ 		if (dst_root == &cgrp_dfl_root) {
+-			if (cgrp_dfl_root_visible) {
++			if (cgrp_dfl_visible) {
+ 				pr_warn("failed to create files (%d) while rebinding 0x%lx to default root\n",
+ 					ret, ss_mask);
+ 				pr_warn("you may retry by moving them to a different hierarchy and unbinding\n");
+@@ -1991,7 +1991,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 			pr_err("cgroup2: unknown option \"%s\"\n", (char *)data);
+ 			return ERR_PTR(-EINVAL);
+ 		}
+-		cgrp_dfl_root_visible = true;
++		cgrp_dfl_visible = true;
+ 		root = &cgrp_dfl_root;
+ 		cgroup_get(&root->cgrp);
+ 		goto out_mount;
+@@ -2842,7 +2842,7 @@ static int cgroup_root_controllers_show(struct seq_file *seq, void *v)
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+ 
+ 	cgroup_print_ss_mask(seq, cgrp->root->subsys_mask &
+-			     ~cgrp_dfl_root_inhibit_ss_mask);
++			     ~cgrp_dfl_inhibit_ss_mask);
+ 	return 0;
+ }
+ 
+@@ -2944,7 +2944,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	 */
+ 	buf = strstrip(buf);
+ 	while ((tok = strsep(&buf, " "))) {
+-		unsigned long tmp_ss_mask = ~cgrp_dfl_root_inhibit_ss_mask;
++		unsigned long tmp_ss_mask = ~cgrp_dfl_inhibit_ss_mask;
+ 
+ 		if (tok[0] == '\0')
+ 			continue;
+@@ -5312,7 +5312,7 @@ int __init cgroup_init(void)
+ 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
+ 
+ 		if (!ss->dfl_cftypes)
+-			cgrp_dfl_root_inhibit_ss_mask |= 1 << ss->id;
++			cgrp_dfl_inhibit_ss_mask |= 1 << ss->id;
+ 
+ 		if (ss->dfl_cftypes == ss->legacy_cftypes) {
+ 			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
+@@ -5383,7 +5383,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+ 		struct cgroup *cgrp;
+ 		int ssid, count = 0;
+ 
+-		if (root == &cgrp_dfl_root && !cgrp_dfl_root_visible)
++		if (root == &cgrp_dfl_root && !cgrp_dfl_visible)
+ 			continue;
+ 
+ 		seq_printf(m, "%d:", root->hierarchy_id);
+-- 
+2.5.0
 
-This patchset contains the following six patches.
-
- 0001-cgroup-s-cgrp_dfl_root_-cgrp_dfl_.patch
- 0002-cgroup-convert-cgroup_subsys-flag-fields-to-bool-bit.patch
- 0003-cgroup-make-css_tryget_online_from_dir-also-recogniz.patch
- 0004-cgroup-use-subtree_control-when-testing-no-internal-.patch
- 0005-cgroup-implement-cgroup_subsys-implicit_on_dfl.patch
- 0006-cgroup-perf_event-make-perf_event-controller-work-on.patch
-
-0001-0004 are prep patches.
-
-0005 implents implicit controller enabling.
-
-0006 marks perf_event as implicitly enabled on v2 and updates "perf
-record"
-
-This patchset is on top of cgroup/for-4.5 and available in the
-following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-perf_event
-
-diffstat follows.  Thanks.
-
- Documentation/cgroup.txt    |   13 ++++
- include/linux/cgroup-defs.h |   21 ++++++-
- kernel/cgroup.c             |  129 ++++++++++++++++++++++++++++++++++----------
- kernel/cpuset.c             |    2 
- kernel/events/core.c        |    6 ++
- kernel/sched/core.c         |    2 
- kernel/sched/cpuacct.c      |    2 
- tools/perf/util/cgroup.c    |   26 ++++++--
- 8 files changed, 160 insertions(+), 41 deletions(-)
-
---
-tejun
