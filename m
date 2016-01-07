@@ -1,72 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv1 3/6] rdmacg: implements rdma cgroup
-Date: Thu, 7 Jan 2016 10:29:36 -0500
-Message-ID: <20160107152936.GE29797@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv1 6/6] rdmacg: Added documentation for rdma controller.
+Date: Thu, 7 Jan 2016 10:42:18 -0500
+Message-ID: <20160107154218.GF29797@mtj.duckdns.org>
 References: <1452020286-9508-1-git-send-email-pandit.parav@gmail.com>
- <1452020286-9508-4-git-send-email-pandit.parav@gmail.com>
- <20160105220128.GJ5995@mtj.duckdns.org>
- <CAG53R5UjsDa+JK_afrQ5pMpiDPrc+a+yCOOH3X105pTmU_a53A@mail.gmail.com>
+ <1452020286-9508-7-git-send-email-pandit.parav@gmail.com>
+ <20160105215309.GG5995@mtj.duckdns.org>
+ <CAG53R5WD18VK3sVuVnPR7yjEBqRjHAoUkCpZKzSd9-PYZrx-YA@mail.gmail.com>
+ <20160106225714.GI3660@htj.duckdns.org>
+ <CAG53R5XKpP6YAe8buRrgG=m4_dQK5MjkWtcA7CN-74AJ1SUUyQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=cY0iO/6zd1UehFRDfLd3A1eOQLe3xJ9IFCLIleCvCfE=;
-        b=XWmbj5Y8UwzY5xa+LOwioOG+3LSemKtWQBzvqIxOZWIu7y4di3VlhOhQ04qvAV2cn9
-         b6ntlAtiFM1aDu8tj3GC/kKXumGNILMWtjHzYRUBN7LubV5odPbm7zCVEO5SKCAIVCCo
-         aGLwxI1kiVdeETb09dKHW0QKeHnyJDs7Sw+JYghg95VGbMEKYRZYQpUS9Z2c2/BSAj7u
-         MHanGh/Aw6FdRxybkfv+kwZnthk1YXD4JWdj86gS7GPy1XIARINSWzp4VPzY641YN1p/
-         RD6u5qms2mlJGiQUTtMmLKQszfLXDA0kMjDCxRUhdbnAfq9XCe7o+Kt8eawDa7303WOt
-         q/mw==
+        bh=XgGFFyc8kqVhIpXcMCHumb0dKT4vtbhy9IVMsOpz7uA=;
+        b=iN3DMJNdrr95C+mchf2Z99SwcNc7rL67JQa8QfE/hAY/OgPgyCf3UQEy7NAga3ZA/e
+         uJyjb/t8z2yFE6u7z8sxxrM7f9VHJ4/cqo2EMso30DPgshzjlAfhkTzalFk6En8HPF/3
+         aWqQ9AayXcLkMogWkS9Spq1YVF0nqRFh3e7zK445JVGQGpsCclhamq3GkfJN4BUY/KHJ
+         wqTWcjG+n8Uw2YFQ0fAk4QxwvQMyDRo8lIuKrrf1MEXsVlaROsjuOP1IUXdYhUzt1U17
+         6xXGf4YIf/sab9jorYPyvpJevApbvTa6GdWngsU0AYTgJW9JZ+/WW/7SAUc1ecJXQvnT
+         Vj5Q==
 Content-Disposition: inline
-In-Reply-To: <CAG53R5UjsDa+JK_afrQ5pMpiDPrc+a+yCOOH3X105pTmU_a53A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAG53R5XKpP6YAe8buRrgG=m4_dQK5MjkWtcA7CN-74AJ1SUUyQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav@gmail.com>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hello,
 
-On Thu, Jan 07, 2016 at 05:03:07AM +0530, Parav Pandit wrote:
-> Rdma resource can be allocated by parent process, used and freed by
-> child process.
-> Child process could belong to different rdma cgroup.
-> Parent process might have been terminated after creation of rdma
-> cgroup. (Followed by cgroup might have been deleted too).
-> Its discussed in https://lkml.org/lkml/2015/11/2/307
-> 
-> In nutshell, there is process that clearly owns the rdma resource.
-> So to keep the design simple, rdma resource is owned by the creator
-> process and cgroup without modifying the task_struct.
+On Thu, Jan 07, 2016 at 05:22:40AM +0530, Parav Pandit wrote:
+> I can remove "resource" key word. If just that if something other than
+> resource comes up to limit to in future, it will be hard to define at
+> that time.
 
-So, a resource created by a task in a cgroup staying in the cgroup
-when the task gets migrated is fine; however, a resource being
-allocated in a previous cgroup of the task isn't fine.  Once
-allocated, the resource themselves should be associated with the
-cgroup so that they can be freed from the ones they're allocated from.
+Please remove.  The word doesn't mean anything in this context.
 
-If I'm understanding it correctly, the code is bending basic rules
-around how resource and task cgroup membership is tracked, you really
-can't do that.
-
-> > I'm pretty sure you can get away with an fixed length array of
-> > counters.  Please keep it simple.  It's a simple hard limit enforcer.
-> > There's no need to create a massive dynamic infrastrucure.
+> > Also can't the .max file list
+> > the available resources?  Why does it need a separtae list file?
+> >
+> max file does lists them only after limits are configured for that
+> device. Thats when rpool (array of max and usage counts) is allocated.
 >
-> Every resource pool for verbs resource is fixed length array. Length
-> of the array is defined by the IB stack modules.
-> This array is per cgroup, per device.
-> Its per device, because we agreed that we want to address requirement
-> of controlling/configuring them on per device basis.
-> Devices appear and disappear. Therefore they are allocated dynamically.
-> Otherwise this array could be static in cgroup structure.
+> If user wants to know what all knobs are available, than list file
+> exposes them on per device basis without actually mentioning actual
+> limit or without allocating rpool arrays.
+...
+> list file looks like below for two device entries.
+> mlx4_0 ah qp mr pd srq flow
+> ocrdma0 ah qp mr pd
+> 
+> max file looks like below.
+> mlx4_0 ah=100 qp=40 mr=10 pd=90 srq=10 flow=10
 
-Please see the previous response.
+Just always show the settings for all devices in the max file like the
+following?
+
+  mlx4_0 ah=max qp=max mr=max pd=max srq=max flow=max
+  ocrdma0 ah=max qp=max mr=max pd=max
 
 Thanks.
 
 -- 
 tejun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
