@@ -1,100 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/6] cgroup: convert cgroup_subsys flag fields to bool bitfields
-Date: Thu,  7 Jan 2016 17:29:46 -0500
-Message-ID: <1452205790-21331-3-git-send-email-tj@kernel.org>
-References: <1452205790-21331-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] cgroup, memcg, writeback: drop spurious rcu locking around
+ mem_cgroup_css_from_page()
+Date: Fri, 8 Jan 2016 17:00:53 -0500
+Message-ID: <20160108220053.GB1898@mtj.duckdns.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=J+mbftF1TXSygIgVdUnXEndZfRbD+1J1PbvvH13OAvM=;
-        b=nosGNhpDzyLKpKc2uGHu0zXCXm1urxOjjMzzZy9iPglg/vcrq2t6jt4ZIvnRnYIgZL
-         NNTTAjObIua5/csugxWYy9QlNctQcF1x0NXOHmQqHgnp8zoAEPNkJEkI37RYKDrU32Ly
-         lrZZk1F4jlnEKVx3gaUJroIBlFt7HUJ/vEk6wa/IfPXSwzGMSMrPFjlbemWsOyhujo32
-         l/49+N//bU9nTgeyXAyEm778jREOb4ifTSFwEUa+EkNfc9wHVDgEa3AGuPprI+Fn052i
-         7pUWS5qitsmySJoXOuACpPi4UsiDt6scZPn3gd2XuDD3vqWYG7lfy8EKWF+w0mCQDF1n
-         2+Dw==
-In-Reply-To: <1452205790-21331-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=P459Qjupi+qOm8Qp3rtjQWp/cj0HieyGHEbGqlt7vlk=;
+        b=TfR0nRvwKcvMsLC8NxPxeJIdYohnUFVNpm/5MaXXSFOumZqDNPpwn+VkxB+xTtRmZy
+         AkbFPBPqjOqmHkRKcFh/bijetQfjAeUmzl9YUjDbTV2STeRho6ycnbD/MUkBgUGgTtDE
+         I1+J4XbWTwk18fSPbhFfdCsF9TBKGlTJrLGYJWXRF3QxWxCjZmrLMOJrGNMDWw3jav4w
+         gTGR3Je4JAB5cAE9DJC/64/bjpYFLBf+vwkRd2b/G87sJIScJv5XDG7qg6uq0utZpqon
+         jEbdq0m2vEYN0zdfLIP1lxgyanYViYtWCXIJdVgbJN/+TjOHLDjKbITGBanGVw8jsynT
+         WUUA==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org, a.p.zijlstra@chello.nl, mingo@redhat.com, acme@kernel.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
+In earlier versions, mem_cgroup_css_from_page() could return non-root
+css on a legacy hierarchy which can go away and required rcu locking;
+however, the eventual version simply returns the root cgroup if memcg
+is on a legacy hierarchy and thus doesn't need rcu locking around or
+in it.  Remove spurious rcu lockings.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- include/linux/cgroup-defs.h | 6 +++---
- kernel/cpuset.c             | 2 +-
- kernel/sched/core.c         | 2 +-
- kernel/sched/cpuacct.c      | 2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ fs/fs-writeback.c |    2 --
+ mm/memcontrol.c   |    3 ---
+ 2 files changed, 5 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 7f334c2..dc6f0ce 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -440,7 +440,7 @@ struct cgroup_subsys {
- 	void (*free)(struct task_struct *task);
- 	void (*bind)(struct cgroup_subsys_state *root_css);
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 023f6a1..6915c95 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -677,9 +677,7 @@ void wbc_account_io(struct writeback_control *wbc, struct page *page,
+ 	if (!wbc->wb)
+ 		return;
  
--	int early_init;
-+	bool early_init:1;
+-	rcu_read_lock();
+ 	id = mem_cgroup_css_from_page(page)->id;
+-	rcu_read_unlock();
  
- 	/*
- 	 * If %false, this subsystem is properly hierarchical -
-@@ -454,8 +454,8 @@ struct cgroup_subsys {
- 	 * cases.  Eventually, all subsystems will be made properly
- 	 * hierarchical and this will go away.
- 	 */
--	bool broken_hierarchy;
--	bool warned_broken_hierarchy;
-+	bool broken_hierarchy:1;
-+	bool warned_broken_hierarchy:1;
+ 	if (id == wbc->wb_id) {
+ 		wbc->wb_bytes += bytes;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index fc10620..3230201 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -431,14 +431,11 @@ struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
+ {
+ 	struct mem_cgroup *memcg;
  
- 	/* the following two fields are initialized automtically during boot */
- 	int id;
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 3e945fc..0cf412b 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -2065,7 +2065,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
- 	.attach		= cpuset_attach,
- 	.bind		= cpuset_bind,
- 	.legacy_cftypes	= files,
--	.early_init	= 1,
-+	.early_init	= true,
- };
+-	rcu_read_lock();
+-
+ 	memcg = page->mem_cgroup;
  
- /**
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index b7d2271..9a5b368 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -8576,7 +8576,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
- 	.can_attach	= cpu_cgroup_can_attach,
- 	.attach		= cpu_cgroup_attach,
- 	.legacy_cftypes	= cpu_files,
--	.early_init	= 1,
-+	.early_init	= true,
- };
+ 	if (!memcg || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 		memcg = root_mem_cgroup;
  
- #endif	/* CONFIG_CGROUP_SCHED */
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index dd7cbb5..2ddaebf 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -279,5 +279,5 @@ struct cgroup_subsys cpuacct_cgrp_subsys = {
- 	.css_alloc	= cpuacct_css_alloc,
- 	.css_free	= cpuacct_css_free,
- 	.legacy_cftypes	= files,
--	.early_init	= 1,
-+	.early_init	= true,
- };
--- 
-2.5.0
-
+-	rcu_read_unlock();
+ 	return &memcg->css;
+ }
+ 
