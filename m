@@ -1,45 +1,49 @@
-From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [GIT PULL] cgroup changes for v4.5-rc1
-Date: Mon, 11 Jan 2016 19:20:12 -0800
-Message-ID: <CA+55aFwhyPZaEaDod2jRtG6Yw_+uFqjLyr99xCtCWyidiXombw@mail.gmail.com>
+Date: Mon, 11 Jan 2016 23:32:49 -0500
+Message-ID: <20160112043249.GL3660@htj.duckdns.org>
 References: <20160111200607.GK1898@mtj.duckdns.org>
+ <CA+55aFwhyPZaEaDod2jRtG6Yw_+uFqjLyr99xCtCWyidiXombw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date:message-id:subject
-         :from:to:cc:content-type;
-        bh=KEJMZnE0j3nHlwRn4NJzGqzZGB6Q7BB6mgLsYFxCjqA=;
-        b=kYsB9+SSAaV30RJBd/10pkd/zL7l7et7yTI95PhkuHGDS2AXwrlJAzI9kor1zHwaH1
-         1mXrKBePtQ+EXkHVWZYJRl6Tu30JqD9oi91dKO4of+s73mVokyxYRgAgCyaLa5FmIw27
-         dWa7RZJzl+jvA15Xr8kHSJI56Q9wBEnO+F/7hLBItXVqHr8I86hvMqLFHWQLz+0qwklN
-         sBUXocv6wsqw3KiYbNVYNptO7rnnOdQ2S4RwMbvVbHeDzje+klPqWILNflLDDikczt5j
-         if6vj5LGmoX/9c33PHGD2UmupYRW7p4WNBAG1H7NPvzUdpINFeZxqpGouDGpMTExSrzj
-         dT9g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:sender:in-reply-to:references:date:message-id:subject
-         :from:to:cc:content-type;
-        bh=KEJMZnE0j3nHlwRn4NJzGqzZGB6Q7BB6mgLsYFxCjqA=;
-        b=LhCzZTWklH9A4yAJRmf/onAN7u7MsJdFJDr/OeTKcBWGVftayBKz2velpIW6w5kxWq
-         imyRJVs4JSxmjpskiKnXN2EkX+UcbDYBhyVHflChlrRw8mQZScVEYcRSLI6ik2zkD5o1
-         dIhq1ZY7eXxGYNQPgybirmh0Tv5h7/gGPXBrY=
-In-Reply-To: <20160111200607.GK1898-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=ByJzalui0o8E+Quia3apBwa7ptbChmMouHk8ULYD/FE=;
+        b=vn3m9fMW05XutpD0lrz5YbKhztv2crolaiw8kL2Y0v9g0C8OBo86IMAvUwpsJTkwoM
+         LCR+HZbdonNMb3rYYzs/JAygObAeiZ6N0qtW0/e2o+2B6cqingd/NSIEN6Zj+PR6I5/1
+         PD4lmZj4zidVvF2ybtDMEwsOOyB4M4od+Q1uc9zJ+U3orqB7FlkSQW6uDDZyOQ5cnOVs
+         YBHGkLDlEfQG34M/vZATaXFJlX1MpwaHf/VzelXagiasKk74zGhF0PDoZqYqkP+8Y1V7
+         CXc5NDF3Kk5yYqjW5RflxVtu/Ea+IHX8iSKz9TGoT2Mtz0HpiPefjVn81YHdYGULhJMA
+         aaYg==
+Content-Disposition: inline
+In-Reply-To: <CA+55aFwhyPZaEaDod2jRtG6Yw_+uFqjLyr99xCtCWyidiXombw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Jan 11, 2016 at 12:06 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> cgroup changes for v4.5-rc1.
+Hello, Linus.
 
-Hmm. Is it really called for to rename all the docs etc
-"cgroup-legacy", considering that it's the one that is actually used,
-and the new one isn't even ready yet?
+On Mon, Jan 11, 2016 at 07:20:12PM -0800, Linus Torvalds wrote:
+> On Mon, Jan 11, 2016 at 12:06 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> >
+> > cgroup changes for v4.5-rc1.
+> 
+> Hmm. Is it really called for to rename all the docs etc
+> "cgroup-legacy", considering that it's the one that is actually used,
+> and the new one isn't even ready yet?
+> 
+> That seems very questionable.
 
-That seems very questionable.
+Hmmm... yeah, maybe that was too aggressive.  Renaming it to
+cgroup-v1/ and cgroup-v2.txt.  Will send out the updated pull request
+soon.
 
-                 Linus
+Thanks.
+
+-- 
+tejun
