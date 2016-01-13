@@ -1,96 +1,84 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 7/7] Documentation: cgroup: add
- memory.swap.{current,max} description
-Date: Wed, 13 Jan 2016 18:02:50 +0100
-Message-ID: <20160113170250.GK17512@dhcp22.suse.cz>
-References: <cover.1450352791.git.vdavydov@virtuozzo.com>
- <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov@virtuozzo.com>
-Mime-Version: 1.0
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH] mm: memcontrol: do not uncharge old page in page cache replacement
+Date: Wed, 13 Jan 2016 16:51:57 -0500
+Message-ID: <1452721917-24614-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu 17-12-15 15:30:00, Vladimir Davydov wrote:
-> The rationale of separate swap counter is given by Johannes Weiner.
->
-> Signed-off-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Changing page->mem_cgroup of a live page is tricky and fragile. In
+particular, the memcg writeback code relies on that mapping being
+stable and users of mem_cgroup_replace_page() not overlapping with
+dirtyable inodes.
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Page cache replacement doesn't have to do that, though. Instead of
+being clever and transfering the charge from the old page to the new,
+force-charge the new page and leave the old page alone. A temporary
+overcharge won't matter in practice, and the old page is going to be
+freed shortly after this anyway. And this is not performance critical.
 
-> ---
-> Changes in v2:
->  - Add rationale of separate swap counter provided by Johannes.
-> 
->  Documentation/cgroup.txt | 33 +++++++++++++++++++++++++++++++++
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c | 26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
-this went to Documentation/cgroup-v2.txt with the latest Tejun's pull
-request.
-
->  1 file changed, 33 insertions(+)
-> 
-> diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
-> index 31d1f7bf12a1..f441564023e1 100644
-> --- a/Documentation/cgroup.txt
-> +++ b/Documentation/cgroup.txt
-> @@ -819,6 +819,22 @@ PAGE_SIZE multiple when read back.
->  		the cgroup.  This may not exactly match the number of
->  		processes killed but should generally be close.
->  
-> +  memory.swap.current
-> +
-> +	A read-only single value file which exists on non-root
-> +	cgroups.
-> +
-> +	The total amount of swap currently being used by the cgroup
-> +	and its descendants.
-> +
-> +  memory.swap.max
-> +
-> +	A read-write single value file which exists on non-root
-> +	cgroups.  The default is "max".
-> +
-> +	Swap usage hard limit.  If a cgroup's swap usage reaches this
-> +	limit, anonymous meomry of the cgroup will not be swapped out.
-> +
->  
->  5-2-2. General Usage
->  
-> @@ -1291,3 +1307,20 @@ allocation from the slack available in other groups or the rest of the
->  system than killing the group.  Otherwise, memory.max is there to
->  limit this type of spillover and ultimately contain buggy or even
->  malicious applications.
-> +
-> +The combined memory+swap accounting and limiting is replaced by real
-> +control over swap space.
-> +
-> +The main argument for a combined memory+swap facility in the original
-> +cgroup design was that global or parental pressure would always be
-> +able to swap all anonymous memory of a child group, regardless of the
-> +child's own (possibly untrusted) configuration.  However, untrusted
-> +groups can sabotage swapping by other means - such as referencing its
-> +anonymous memory in a tight loop - and an admin can not assume full
-> +swappability when overcommitting untrusted jobs.
-> +
-> +For trusted jobs, on the other hand, a combined counter is not an
-> +intuitive userspace interface, and it flies in the face of the idea
-> +that cgroup controllers should account and limit specific physical
-> +resources.  Swap space is a resource like all others in the system,
-> +and that's why unified hierarchy allows distributing it separately.
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d75028d..c26ffac 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -366,13 +366,6 @@ mem_cgroup_zone_zoneinfo(struct mem_cgroup *memcg, struct zone *zone)
+  *
+  * If memcg is bound to a traditional hierarchy, the css of root_mem_cgroup
+  * is returned.
+- *
+- * XXX: The above description of behavior on the default hierarchy isn't
+- * strictly true yet as replace_page_cache_page() can modify the
+- * association before @page is released even on the default hierarchy;
+- * however, the current and planned usages don't mix the the two functions
+- * and replace_page_cache_page() will soon be updated to make the invariant
+- * actually true.
+  */
+ struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
+ {
+@@ -5463,7 +5456,8 @@ void mem_cgroup_uncharge_list(struct list_head *page_list)
+ void mem_cgroup_replace_page(struct page *oldpage, struct page *newpage)
+ {
+ 	struct mem_cgroup *memcg;
+-	int isolated;
++	unsigned int nr_pages;
++	bool compound;
+ 
+ 	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
+ 	VM_BUG_ON_PAGE(!PageLocked(newpage), newpage);
+@@ -5483,11 +5477,21 @@ void mem_cgroup_replace_page(struct page *oldpage, struct page *newpage)
+ 	if (!memcg)
+ 		return;
+ 
+-	lock_page_lru(oldpage, &isolated);
+-	oldpage->mem_cgroup = NULL;
+-	unlock_page_lru(oldpage, isolated);
++	/* Force-charge the new page. The old one will be freed soon */
++	compound = PageTransHuge(newpage);
++	nr_pages = compound ? hpage_nr_pages(newpage) : 1;
++
++	page_counter_charge(&memcg->memory, nr_pages);
++	if (do_memsw_account())
++		page_counter_charge(&memcg->memsw, nr_pages);
++	css_get_many(&memcg->css, nr_pages);
+ 
+ 	commit_charge(newpage, memcg, true);
++
++	local_irq_disable();
++	mem_cgroup_charge_statistics(memcg, newpage, compound, nr_pages);
++	memcg_check_events(memcg, newpage);
++	local_irq_enable();
+ }
+ 
+ DEFINE_STATIC_KEY_FALSE(memcg_sockets_enabled_key);
 -- 
-Michal Hocko
-SUSE Labs
+2.7.0
