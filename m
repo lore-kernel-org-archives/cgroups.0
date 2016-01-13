@@ -1,128 +1,121 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 2/7] mm: vmscan: pass memcg to get_scan_count()
-Date: Wed, 13 Jan 2016 17:47:14 +0100
-Message-ID: <20160113164713.GF17512@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v2 3/7] mm: memcontrol: replace mem_cgroup_lruvec_online
+ with mem_cgroup_online
+Date: Wed, 13 Jan 2016 17:47:36 +0100
+Message-ID: <20160113164733.GG17512@dhcp22.suse.cz>
 References: <cover.1450352791.git.vdavydov@virtuozzo.com>
- <daacf7e0dbe2ba11ed44facc36ac2fed3546ffe0.1450352792.git.vdavydov@virtuozzo.com>
+ <d8fc0b5bb025b8b8ab2630aaf3a5cd6dc89a693c.1450352792.git.vdavydov@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <daacf7e0dbe2ba11ed44facc36ac2fed3546ffe0.1450352792.git.vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <d8fc0b5bb025b8b8ab2630aaf3a5cd6dc89a693c.1450352792.git.vdavydov@virtuozzo.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu 17-12-15 15:29:55, Vladimir Davydov wrote:
-> memcg will come in handy in get_scan_count(). It can already be used for
-> getting swappiness immediately in get_scan_count() instead of passing it
-> around. The following patches will add more memcg-related values, which
-> will be used there.
+On Thu 17-12-15 15:29:56, Vladimir Davydov wrote:
+> mem_cgroup_lruvec_online() takes lruvec, but it only needs memcg. Since
+> get_scan_count(), which is the only user of this function, now possesses
+> pointer to memcg, let's pass memcg directly to mem_cgroup_online()
+> instead of picking it out of lruvec and rename the function accordingly.
+> 
+> Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
-OK, the down side would be that every user (even outside of memcg
-proper) has to be aware that the memcg might be NULL but this makes
-the code a bit easier so...
-
-> Signed-off-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Acked-by: Michal Hocko <mhocko@suse.com>
 
 > ---
->  mm/vmscan.c | 20 ++++++++------------
->  1 file changed, 8 insertions(+), 12 deletions(-)
+>  include/linux/memcontrol.h | 27 ++++++++++-----------------
+>  mm/vmscan.c                |  2 +-
+>  2 files changed, 11 insertions(+), 18 deletions(-)
 > 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 6e0126230878..166661708410 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -355,6 +355,13 @@ static inline bool mem_cgroup_disabled(void)
+>  	return !cgroup_subsys_enabled(memory_cgrp_subsys);
+>  }
+>  
+> +static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
+> +{
+> +	if (mem_cgroup_disabled())
+> +		return true;
+> +	return !!(memcg->css.flags & CSS_ONLINE);
+> +}
+> +
+>  /*
+>   * For memory reclaim.
+>   */
+> @@ -363,20 +370,6 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg);
+>  void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+>  		int nr_pages);
+>  
+> -static inline bool mem_cgroup_lruvec_online(struct lruvec *lruvec)
+> -{
+> -	struct mem_cgroup_per_zone *mz;
+> -	struct mem_cgroup *memcg;
+> -
+> -	if (mem_cgroup_disabled())
+> -		return true;
+> -
+> -	mz = container_of(lruvec, struct mem_cgroup_per_zone, lruvec);
+> -	memcg = mz->memcg;
+> -
+> -	return !!(memcg->css.flags & CSS_ONLINE);
+> -}
+> -
+>  static inline
+>  unsigned long mem_cgroup_get_lru_size(struct lruvec *lruvec, enum lru_list lru)
+>  {
+> @@ -589,13 +582,13 @@ static inline bool mem_cgroup_disabled(void)
+>  	return true;
+>  }
+>  
+> -static inline bool
+> -mem_cgroup_inactive_anon_is_low(struct lruvec *lruvec)
+> +static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
+>  {
+>  	return true;
+>  }
+>  
+> -static inline bool mem_cgroup_lruvec_online(struct lruvec *lruvec)
+> +static inline bool
+> +mem_cgroup_inactive_anon_is_low(struct lruvec *lruvec)
+>  {
+>  	return true;
+>  }
 > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index bb01b04154ad..acc6bff84e26 100644
+> index acc6bff84e26..b220e6cda25d 100644
 > --- a/mm/vmscan.c
 > +++ b/mm/vmscan.c
-> @@ -1957,10 +1957,11 @@ enum scan_balance {
->   * nr[0] = anon inactive pages to scan; nr[1] = anon active pages to scan
->   * nr[2] = file inactive pages to scan; nr[3] = file active pages to scan
->   */
-> -static void get_scan_count(struct lruvec *lruvec, int swappiness,
-> +static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
->  			   struct scan_control *sc, unsigned long *nr,
->  			   unsigned long *lru_pages)
->  {
-> +	int swappiness = mem_cgroup_swappiness(memcg);
->  	struct zone_reclaim_stat *reclaim_stat = &lruvec->reclaim_stat;
->  	u64 fraction[2];
->  	u64 denominator = 0;	/* gcc */
-> @@ -2184,9 +2185,10 @@ static inline void init_tlb_ubc(void)
->  /*
->   * This is a basic per-zone page freer.  Used by both kswapd and direct reclaim.
->   */
-> -static void shrink_lruvec(struct lruvec *lruvec, int swappiness,
-> -			  struct scan_control *sc, unsigned long *lru_pages)
-> +static void shrink_zone_memcg(struct zone *zone, struct mem_cgroup *memcg,
-> +			      struct scan_control *sc, unsigned long *lru_pages)
->  {
-> +	struct lruvec *lruvec = mem_cgroup_zone_lruvec(zone, memcg);
->  	unsigned long nr[NR_LRU_LISTS];
->  	unsigned long targets[NR_LRU_LISTS];
->  	unsigned long nr_to_scan;
-> @@ -2196,7 +2198,7 @@ static void shrink_lruvec(struct lruvec *lruvec, int swappiness,
->  	struct blk_plug plug;
->  	bool scan_adjusted;
->  
-> -	get_scan_count(lruvec, swappiness, sc, nr, lru_pages);
-> +	get_scan_count(lruvec, memcg, sc, nr, lru_pages);
->  
->  	/* Record the original scan target for proportional adjustments later */
->  	memcpy(targets, nr, sizeof(nr));
-> @@ -2400,8 +2402,6 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
->  			unsigned long lru_pages;
->  			unsigned long reclaimed;
->  			unsigned long scanned;
-> -			struct lruvec *lruvec;
-> -			int swappiness;
->  
->  			if (mem_cgroup_low(root, memcg)) {
->  				if (!sc->may_thrash)
-> @@ -2409,12 +2409,10 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
->  				mem_cgroup_events(memcg, MEMCG_LOW, 1);
->  			}
->  
-> -			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-> -			swappiness = mem_cgroup_swappiness(memcg);
->  			reclaimed = sc->nr_reclaimed;
->  			scanned = sc->nr_scanned;
->  
-> -			shrink_lruvec(lruvec, swappiness, sc, &lru_pages);
-> +			shrink_zone_memcg(zone, memcg, sc, &lru_pages);
->  			zone_lru_pages += lru_pages;
->  
->  			if (memcg && is_classzone)
-> @@ -2884,8 +2882,6 @@ unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *memcg,
->  		.may_unmap = 1,
->  		.may_swap = !noswap,
->  	};
-> -	struct lruvec *lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-> -	int swappiness = mem_cgroup_swappiness(memcg);
->  	unsigned long lru_pages;
->  
->  	sc.gfp_mask = (gfp_mask & GFP_RECLAIM_MASK) |
-> @@ -2902,7 +2898,7 @@ unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *memcg,
->  	 * will pick up pages from other mem cgroup's as well. We hack
->  	 * the priority and make it zero.
->  	 */
-> -	shrink_lruvec(lruvec, swappiness, &sc, &lru_pages);
-> +	shrink_zone_memcg(zone, memcg, &sc, &lru_pages);
->  
->  	trace_mm_vmscan_memcg_softlimit_reclaim_end(sc.nr_reclaimed);
->  
+> @@ -1988,7 +1988,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+>  	if (current_is_kswapd()) {
+>  		if (!zone_reclaimable(zone))
+>  			force_scan = true;
+> -		if (!mem_cgroup_lruvec_online(lruvec))
+> +		if (!mem_cgroup_online(memcg))
+>  			force_scan = true;
+>  	}
+>  	if (!global_reclaim(sc))
 > -- 
 > 2.1.4
 > 
 > --
 > To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> the body to majordomo@kvack.org.  For more info on Linux MM,
 > see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
