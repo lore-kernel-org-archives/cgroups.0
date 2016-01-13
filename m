@@ -1,146 +1,307 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL UPDATED] cgroup changes for v4.5-rc1
-Date: Mon, 11 Jan 2016 23:34:20 -0500
-Message-ID: <20160112043420.GM3660@htj.duckdns.org>
-References: <20160111200607.GK1898@mtj.duckdns.org>
+From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH 2/2] cgroup: cpu subsystem: split cpu usage into user_usage and sys_usage.
+Date: Wed, 13 Jan 2016 16:40:20 +0800
+Message-ID: <1452674420-31603-3-git-send-email-yangds.fnst@cn.fujitsu.com>
+References: <1452674420-31603-1-git-send-email-yangds.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=hrKSchk/ceV12vdUxOc2++c2gVz4B5KCKhljGCPX3HM=;
-        b=ByrosXGogciFtw4zCOhKbDbMf87EO9bOBWvKsSlVADjIwwQgSyq8bq2IHEATcNoT8s
-         L62lcrln6vEED5GTenNvOaLGmW3YF/P6ZOHPNT5mAPaS9XHyFjuNDyLwemLxa9gRKrpj
-         zSeh7bHTN3fiTJQ3Y9KhtwFn/mrOHP3aqMA3o4Wh3Kpdl4RJI/pGII4J4rYDz51V0A35
-         6PxTWkIKXWWp44HpaZoye5vX8cbzF/YoSXuqwhBPHk6/XC4UIuz+4zYnD+hNJflL2O+l
-         7ApCQrm1fwCLKhLI50yQTxSZ5TMqDnIRx6kOH1Xx/MnAfEOsfNgtF6gR3zjgjkh4yg12
-         nDHg==
-Content-Disposition: inline
-In-Reply-To: <20160111200607.GK1898-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <1452674420-31603-1-git-send-email-yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-Hello, Linus.
+Sometimes, cpu.usage is not detialed enough to user
+to see how much usage a group used. We want to know how
+much time it used in user mode and how much in kernel mode.
 
-cgroup changes for v4.5-rc1.
+This patch introduce some more files to tell user these informations.
+ # ll /cgroup2/cpu.usage*
+-rw-r--r--. 1 root root 0 Jan 12 23:23 /cgroup2/cpu.usage
+-r--r--r--. 1 root root 0 Jan 12 23:23 /cgroup2/cpu.usage_percpu
+-r--r--r--. 1 root root 0 Jan 12 23:23 /cgroup2/cpu.usage_percpu_sys
+-r--r--r--. 1 root root 0 Jan 12 23:23 /cgroup2/cpu.usage_percpu_user
+-r--r--r--. 1 root root 0 Jan 12 23:23 /cgroup2/cpu.usage_sys
+-r--r--r--. 1 root root 0 Jan 12 23:23 /cgroup2/cpu.usage_user
 
-* cgroup v2 interface is now official.  It's no longer hidden behind a
-  devel flag and can be mounted using the new cgroup2 fs type.
-  Unfortunately, cpu v2 interface hasn't made it yet due to the
-  discussion around in-process hierarchical resource distribution and
-  only memory and io controllers can be used on the v2 interface at
-  the moment.
+Signed-off-by: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/sched/core.c  | 125 +++++++++++++++++++++++++++++++++++++++++++--------
+ kernel/sched/sched.h |  15 ++++++-
+ 2 files changed, 120 insertions(+), 20 deletions(-)
 
-* The existing documentation which has always been a bit of mess is
-  relocated under Documentation/cgroup-v1/.
-  Documentation/cgroup-v2.txt is added as the authoritative
-  documentation for the v2 interface.
-
-* Some features are added through for-4.5-ancestor-test branch to
-  enable netfilter xt_cgroup match to use cgroup v2 paths.  The actual
-  netfilter changes will be merged through the net tree which pulled
-  in the said branch.
-
-* Various cleanups.
-
-Thanks.
-
-The following changes since commit 67cde9c4938945b9510730c64e68d2f1dd7bc0aa:
-
-  cgroup_pids: don't account for the root cgroup (2015-12-03 10:18:21 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.5
-
-for you to fetch changes up to 6255c46fa03798cbd8addd98929aff7eef86ae02:
-
-  cgroup: rename cgroup documentations (2016-01-11 23:14:51 -0500)
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      cpuset: Replace all instances of time_t with time64_t
-
-Johannes Weiner (2):
-      cgroup: clean up the kernel configuration menu nomenclature
-      cgroup: put controller Kconfig options in meaningful order
-
-Oleg Nesterov (1):
-      cgroup: kill cgrp_ss_priv[CGROUP_CANFORK_COUNT] and friends
-
-Rami Rosen (2):
-      cgroup_pids: fix a typo.
-      cgroup: fix a typo.
-
-Ross Zwisler (1):
-      cgroup: Fix uninitialized variable warning
-
-Tejun Heo (10):
-      cgroup: replace __DEVEL__sane_behavior with cgroup2 fs type
-      cgroup: rename Documentation/cgroups/ to Documentation/cgroup-legacy/
-      cgroup: replace unified-hierarchy.txt with a proper cgroup v2 documentation
-      cgroup: record ancestor IDs and reimplement cgroup_is_descendant() using it
-      kernfs: implement kernfs_walk_and_get()
-      cgroup: implement cgroup_get_from_path() and expose cgroup_put()
-      Merge branch 'for-4.4-fixes' into for-4.5
-      Merge branch 'for-4.5-ancestor-test' of git://git.kernel.org/.../tj/cgroup into for-4.5
-      cgroup: demote subsystem init messages to KERN_DEBUG
-      cgroup: rename cgroup documentations
-
-Yuan Sun (2):
-      Subject: cgroup: Fix incomplete dd command in blkio documentation
-      cgroup: Remove resource_counter.txt in Documentation/cgroup-legacy/00-INDEX.
-
- Documentation/{cgroups => cgroup-v1}/00-INDEX      |    2 -
- .../{cgroups => cgroup-v1}/blkio-controller.txt    |   82 +-
- Documentation/{cgroups => cgroup-v1}/cgroups.txt   |    0
- Documentation/{cgroups => cgroup-v1}/cpuacct.txt   |    0
- Documentation/{cgroups => cgroup-v1}/cpusets.txt   |    0
- Documentation/{cgroups => cgroup-v1}/devices.txt   |    0
- .../{cgroups => cgroup-v1}/freezer-subsystem.txt   |    0
- Documentation/{cgroups => cgroup-v1}/hugetlb.txt   |    0
- .../{cgroups => cgroup-v1}/memcg_test.txt          |    0
- Documentation/{cgroups => cgroup-v1}/memory.txt    |    0
- Documentation/{cgroups => cgroup-v1}/net_cls.txt   |    0
- Documentation/{cgroups => cgroup-v1}/net_prio.txt  |    0
- Documentation/{cgroups => cgroup-v1}/pids.txt      |    0
- Documentation/cgroup-v2.txt                        | 1293 ++++++++++++++++++++
- Documentation/cgroups/unified-hierarchy.txt        |  647 ----------
- fs/kernfs/dir.c                                    |   46 +
- include/linux/cgroup-defs.h                        |   27 +-
- include/linux/cgroup.h                             |   44 +-
- include/linux/cgroup_subsys.h                      |   18 -
- include/linux/kernfs.h                             |   12 +
- include/uapi/linux/magic.h                         |    1 +
- init/Kconfig                                       |  241 ++--
- kernel/cgroup.c                                    |  152 +--
- kernel/cgroup_freezer.c                            |    2 +-
- kernel/cgroup_pids.c                               |    6 +-
- kernel/cpuset.c                                    |   12 +-
- kernel/fork.c                                      |    7 +-
- kernel/sched/core.c                                |    2 +-
- mm/memcontrol.c                                    |    2 +-
- 29 files changed, 1607 insertions(+), 989 deletions(-)
- rename Documentation/{cgroups => cgroup-v1}/00-INDEX (95%)
- rename Documentation/{cgroups => cgroup-v1}/blkio-controller.txt (80%)
- rename Documentation/{cgroups => cgroup-v1}/cgroups.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/cpuacct.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/cpusets.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/devices.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/freezer-subsystem.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/hugetlb.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/memcg_test.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/memory.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/net_cls.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/net_prio.txt (100%)
- rename Documentation/{cgroups => cgroup-v1}/pids.txt (100%)
- create mode 100644 Documentation/cgroup-v2.txt
- delete mode 100644 Documentation/cgroups/unified-hierarchy.txt
-
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 1333b6c..989fdc5 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7349,7 +7349,7 @@ int in_sched_functions(unsigned long addr)
+ }
+ 
+ #ifdef CONFIG_CGROUP_SCHED
+-DEFINE_PER_CPU(u64, root_cpuusage);
++DEFINE_PER_CPU(struct cpu_usage, root_cpuusage);
+ /*
+  * Default task group.
+  * Every task in system belongs to this group at bootup.
+@@ -7697,7 +7697,7 @@ static DEFINE_SPINLOCK(task_group_lock);
+ 
+ static int alloc_cpuusage(struct task_group *tg)
+ {
+-	tg->cpuusage = alloc_percpu(u64);
++	tg->cpuusage = alloc_percpu(struct cpu_usage);
+ 	if (!tg->cpuusage)
+ 		goto err;
+ 	return 0;
+@@ -8224,7 +8224,9 @@ static inline struct task_group *parent_tg(struct task_group *tg)
+ void cpu_usage_charge(struct task_struct *tsk, u64 cputime)
+ {
+ 	struct task_group *tg;
++	struct cpu_usage *cpuusage;
+ 	int cpu;
++	int user_time;
+ 
+ 	cpu = task_cpu(tsk);
+ 
+@@ -8232,9 +8234,15 @@ void cpu_usage_charge(struct task_struct *tsk, u64 cputime)
+ 
+ 	tg = task_group(tsk);
+ 
++	user_time = user_mode(task_pt_regs(tsk));
++
+ 	while (true) {
+-		u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
+-		*cpuusage += cputime;
++		cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
++
++		if (user_time)
++			cpuusage->usages[CPU_USAGE_USER] += cputime;
++		else
++			cpuusage->usages[CPU_USAGE_SYSTEM] += cputime;
+ 
+ 		tg = parent_tg(tg);
+ 		if (!tg)
+@@ -8603,53 +8611,103 @@ static u64 cpu_rt_period_read_uint(struct cgroup_subsys_state *css,
+ }
+ #endif /* CONFIG_RT_GROUP_SCHED */
+ 
+-static u64 cpu_usage_percpu_read(struct task_group *tg, int cpu)
++static u64 cpu_usage_percpu_read(struct task_group *tg, int cpu,
++				 enum cpu_usage_index index)
+ {
+-	u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
+-	u64 data;
++	struct cpu_usage *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
++	u64 data = 0;
++	int i = 0;
++
++	/*
++	 * Allow index == CPU_USAGE_NRUSAGE here to read
++	 * the sum of suages.
++	 */
++	BUG_ON(index > CPU_USAGE_NRUSAGE);
++
++	if (index == CPU_USAGE_NRUSAGE) {
++		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
++		for (i = 0; i < CPU_USAGE_NRUSAGE; i++)
++			data += cpuusage->usages[i];
++		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
++
++		goto out;
++	}
+ 
+ #ifndef CONFIG_64BIT
+ 	/*
+ 	 * Take rq->lock to make 64-bit read safe on 32-bit platforms.
+ 	 */
+ 	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
+-	data = *cpuusage;
++	data = cpuusage->usages[index];
+ 	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
+ #else
+-	data = *cpuusage;
++	data = cpuusage->usages[index];
+ #endif
+ 
++out:
+ 	return data;
+ }
+ 
+-static void cpu_usage_percpu_write(struct task_group *tg, int cpu, u64 val)
++static void cpu_usage_percpu_write(struct task_group *tg, int cpu,
++				   enum cpu_usage_index index, u64 val)
+ {
+-	u64 *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
++	struct cpu_usage *cpuusage = per_cpu_ptr(tg->cpuusage, cpu);
++	int i = 0;
++
++	/*
++	 * Allow index == CPU_USAGE_NRUSAGE here to write
++	 * val to each index of usages.
++	 */
++	BUG_ON(index > CPU_USAGE_NRUSAGE);
++
++	if (index == CPU_USAGE_NRUSAGE) {
++		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
++		for (i = 0; i < CPU_USAGE_NRUSAGE; i++)
++			cpuusage->usages[i] = val;
++		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
++
++		return;
++	}
+ 
+ #ifndef CONFIG_64BIT
+ 	/*
+ 	 * Take rq->lock to make 64-bit write safe on 32-bit platforms.
+ 	 */
+ 	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
+-	*cpuusage = val;
++	cpuusage->usages[index] = val;
+ 	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
+ #else
+-	*cpuusage = val;
++	cpuusage->usages[index] = val;
+ #endif
+ }
+ 
+-static u64 cpu_usage_read(struct cgroup_subsys_state *css, struct cftype *cft)
++static u64 __cpu_usage_read(struct cgroup_subsys_state *css, enum cpu_usage_index index)
+ {
+ 	struct task_group *tg = css_tg(css);
+ 	u64 totalcpuusage = 0;
+ 	int i;
+ 
+ 	for_each_present_cpu(i)
+-		totalcpuusage += cpu_usage_percpu_read(tg, i);
++		totalcpuusage += cpu_usage_percpu_read(tg, i, index);
+ 
+ 	return totalcpuusage;
+ }
+ 
++static u64 cpu_usage_user_read(struct cgroup_subsys_state *css, struct cftype *cft)
++{
++	return __cpu_usage_read(css, CPU_USAGE_USER);
++}
++
++static u64 cpu_usage_sys_read(struct cgroup_subsys_state *css, struct cftype *cft)
++{
++	return __cpu_usage_read(css, CPU_USAGE_SYSTEM);
++}
++
++static u64 cpu_usage_read(struct cgroup_subsys_state *css, struct cftype *cft)
++{
++	return __cpu_usage_read(css, CPU_USAGE_NRUSAGE);
++}
++
+ static int cpu_usage_write(struct cgroup_subsys_state *css, struct cftype *cft,
+ 			   u64 val)
+ {
+@@ -8666,26 +8724,41 @@ static int cpu_usage_write(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	}
+ 
+ 	for_each_present_cpu(i)
+-		cpu_usage_percpu_write(tg, i, 0);
++		cpu_usage_percpu_write(tg, i, CPU_USAGE_NRUSAGE, 0);
+ 
+ out:
+ 	return err;
+ }
+ 
+-static int cpu_usage_percpu_seq_show(struct seq_file *m, void *V)
++static int __cpu_usage_percpu_seq_show(struct seq_file *m, enum cpu_usage_index index)
+ {
+ 	struct task_group *tg = css_tg(seq_css(m));
+ 	u64 percpu;
+ 	int i;
+ 
+ 	for_each_present_cpu(i) {
+-		percpu = cpu_usage_percpu_read(tg, i);
++		percpu = cpu_usage_percpu_read(tg, i, index);
+ 		seq_printf(m, "%llu ", (unsigned long long) percpu);
+ 	}
+ 	seq_printf(m, "\n");
+ 	return 0;
+ }
+ 
++static int cpu_usage_percpu_user_seq_show(struct seq_file *m, void *V)
++{
++	return __cpu_usage_percpu_seq_show(m, CPU_USAGE_USER);
++}
++
++static int cpu_usage_percpu_sys_seq_show(struct seq_file *m, void *V)
++{
++	return __cpu_usage_percpu_seq_show(m, CPU_USAGE_SYSTEM);
++}
++
++static int cpu_usage_percpu_seq_show(struct seq_file *m, void *V)
++{
++	return __cpu_usage_percpu_seq_show(m, CPU_USAGE_NRUSAGE);
++}
++
+ static struct cftype cpu_legacy_files[] = {
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 	{
+@@ -8767,9 +8840,25 @@ static struct cftype cpu_files[] = {
+ 		.write_u64 = cpu_usage_write,
+ 	},
+ 	{
++		.name = "usage_user",
++		.read_u64 = cpu_usage_user_read,
++	},
++	{
++		.name = "usage_sys",
++		.read_u64 = cpu_usage_sys_read,
++	},
++	{
+ 		.name = "usage_percpu",
+ 		.seq_show = cpu_usage_percpu_seq_show,
+ 	},
++	{
++		.name = "usage_percpu_user",
++		.seq_show = cpu_usage_percpu_user_seq_show,
++	},
++	{
++		.name = "usage_percpu_sys",
++		.seq_show = cpu_usage_percpu_sys_seq_show,
++	},
+ 	{ }	/* terminate */
+ };
+ 
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index fc8db08..6e52d25 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -236,6 +236,17 @@ struct cfs_bandwidth {
+ #endif
+ };
+ 
++enum cpu_usage_index {
++	CPU_USAGE_USER,		/* ... user mode */
++	CPU_USAGE_SYSTEM,	/* ... kernel mode */
++
++	CPU_USAGE_NRUSAGE,
++};
++
++struct cpu_usage {
++	u64	usages[CPU_USAGE_NRUSAGE];
++};
++
+ /* task group related information */
+ struct task_group {
+ 	struct cgroup_subsys_state css;
+@@ -266,8 +277,8 @@ struct task_group {
+ 	struct list_head siblings;
+ 	struct list_head children;
+ 
+-	/* cpuusage holds pointer to a u64-type object on every cpu */
+-	u64 __percpu *cpuusage;
++	/* cpuusage holds pointer to a cpu_usage on every cpu */
++	struct cpu_usage __percpu *cpuusage;
+ 
+ #ifdef CONFIG_SCHED_AUTOGROUP
+ 	struct autogroup *autogroup;
 -- 
-tejun
+1.8.4.2
+
+
