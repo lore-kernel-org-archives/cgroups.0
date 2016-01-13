@@ -1,14 +1,14 @@
 From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 5/7] mm: vmscan: do not scan anon pages if memcg swap
- limit is hit
-Date: Wed, 13 Jan 2016 17:54:50 +0100
-Message-ID: <20160113165450.GI17512@dhcp22.suse.cz>
+Subject: Re: [PATCH v2 6/7] mm: free swap cache aggressively if memcg swap is
+ full
+Date: Wed, 13 Jan 2016 17:59:58 +0100
+Message-ID: <20160113165957.GJ17512@dhcp22.suse.cz>
 References: <cover.1450352791.git.vdavydov@virtuozzo.com>
- <6f6fa6cbfe005917911f89b2b12d5fbfa0b071e4.1450352792.git.vdavydov@virtuozzo.com>
+ <83c9cff28990636841b966f8d6e4a43c1fd342e7.1450352792.git.vdavydov@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <6f6fa6cbfe005917911f89b2b12d5fbfa0b071e4.1450352792.git.vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+In-Reply-To: <83c9cff28990636841b966f8d6e4a43c1fd342e7.1450352792.git.vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,94 +16,132 @@ Content-Transfer-Encoding: 7bit
 To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 17-12-15 15:29:58, Vladimir Davydov wrote:
-> We don't scan anonymous memory if we ran out of swap, neither should we
-> do it in case memcg swap limit is hit, because swap out is impossible
-> anyway.
+On Thu 17-12-15 15:29:59, Vladimir Davydov wrote:
+> Swap cache pages are freed aggressively if swap is nearly full (>50%
+> currently), because otherwise we are likely to stop scanning anonymous
+> when we near the swap limit even if there is plenty of freeable swap
+> cache pages. We should follow the same trend in case of memory cgroup,
+> which has its own swap limit.
 > 
 > Signed-off-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 > Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
+I cannot say I would be deeply familiar with swapcache internalls and
+all the interaction with the reclaim but from what I understand the
+patch looks sane
 Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
 > ---
 > Changes in v2:
+>  - Remove unnecessary PageSwapCache check from mem_cgroup_swap_full.
 >  - Do not check swap limit on the legacy hierarchy.
 > 
 >  include/linux/swap.h |  6 ++++++
->  mm/memcontrol.c      | 13 +++++++++++++
+>  mm/memcontrol.c      | 22 ++++++++++++++++++++++
+>  mm/memory.c          |  3 ++-
+>  mm/swapfile.c        |  2 +-
 >  mm/vmscan.c          |  2 +-
->  3 files changed, 20 insertions(+), 1 deletion(-)
+>  5 files changed, 32 insertions(+), 3 deletions(-)
 > 
 > diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index f8fb4e06c4bd..c544998dfbe7 100644
+> index c544998dfbe7..5ebdbabc62f0 100644
 > --- a/include/linux/swap.h
 > +++ b/include/linux/swap.h
-> @@ -551,6 +551,7 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
->  extern void mem_cgroup_swapout(struct page *page, swp_entry_t entry);
+> @@ -552,6 +552,7 @@ extern void mem_cgroup_swapout(struct page *page, swp_entry_t entry);
 >  extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry);
 >  extern void mem_cgroup_uncharge_swap(swp_entry_t entry);
-> +extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+>  extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+> +extern bool mem_cgroup_swap_full(struct page *page);
 >  #else
 >  static inline void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
 >  {
-> @@ -565,6 +566,11 @@ static inline int mem_cgroup_try_charge_swap(struct page *page,
->  static inline void mem_cgroup_uncharge_swap(swp_entry_t entry)
+> @@ -571,6 +572,11 @@ static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
 >  {
+>  	return get_nr_swap_pages();
 >  }
 > +
-> +static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+> +static inline bool mem_cgroup_swap_full(struct page *page)
 > +{
-> +	return get_nr_swap_pages();
+> +	return vm_swap_full();
 > +}
 >  #endif
 >  
 >  #endif /* __KERNEL__*/
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 567b56da2c23..e0e498f5ca32 100644
+> index e0e498f5ca32..fc25dc211eaf 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -5736,6 +5736,19 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry)
->  	rcu_read_unlock();
+> @@ -5749,6 +5749,28 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+>  	return nr_swap_pages;
 >  }
 >  
-> +long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+> +bool mem_cgroup_swap_full(struct page *page)
 > +{
-> +	long nr_swap_pages = get_nr_swap_pages();
+> +	struct mem_cgroup *memcg;
 > +
+> +	VM_BUG_ON_PAGE(!PageLocked(page), page);
+> +
+> +	if (vm_swap_full())
+> +		return true;
 > +	if (!do_swap_account || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> +		return nr_swap_pages;
+> +		return false;
+> +
+> +	memcg = page->mem_cgroup;
+> +	if (!memcg)
+> +		return false;
+> +
 > +	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
-> +		nr_swap_pages = min_t(long, nr_swap_pages,
-> +				      READ_ONCE(memcg->swap.limit) -
-> +				      page_counter_read(&memcg->swap));
-> +	return nr_swap_pages;
+> +		if (page_counter_read(&memcg->swap) * 2 >= memcg->swap.limit)
+> +			return true;
+> +
+> +	return false;
 > +}
 > +
 >  /* for remember boot option*/
 >  #ifdef CONFIG_MEMCG_SWAP_ENABLED
 >  static int really_do_swap_account __initdata = 1;
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 3b115dcaa26e..2bd6a78c142b 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -2563,7 +2563,8 @@ int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
+>  	}
+>  
+>  	swap_free(entry);
+> -	if (vm_swap_full() || (vma->vm_flags & VM_LOCKED) || PageMlocked(page))
+> +	if (mem_cgroup_swap_full(page) ||
+> +	    (vma->vm_flags & VM_LOCKED) || PageMlocked(page))
+>  		try_to_free_swap(page);
+>  	unlock_page(page);
+>  	if (page != swapcache) {
+> diff --git a/mm/swapfile.c b/mm/swapfile.c
+> index efa279221302..ab1a8a619676 100644
+> --- a/mm/swapfile.c
+> +++ b/mm/swapfile.c
+> @@ -1009,7 +1009,7 @@ int free_swap_and_cache(swp_entry_t entry)
+>  		 * Also recheck PageSwapCache now page is locked (above).
+>  		 */
+>  		if (PageSwapCache(page) && !PageWriteback(page) &&
+> -				(!page_mapped(page) || vm_swap_full())) {
+> +		    (!page_mapped(page) || mem_cgroup_swap_full(page))) {
+>  			delete_from_swap_cache(page);
+>  			SetPageDirty(page);
+>  		}
 > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index b220e6cda25d..ab52d865d922 100644
+> index ab52d865d922..1cd88e9b0383 100644
 > --- a/mm/vmscan.c
 > +++ b/mm/vmscan.c
-> @@ -1995,7 +1995,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
->  		force_scan = true;
+> @@ -1206,7 +1206,7 @@ cull_mlocked:
 >  
->  	/* If we have no swap space, do not bother scanning anon pages. */
-> -	if (!sc->may_swap || (get_nr_swap_pages() <= 0)) {
-> +	if (!sc->may_swap || mem_cgroup_get_nr_swap_pages(memcg) <= 0) {
->  		scan_balance = SCAN_FILE;
->  		goto out;
->  	}
+>  activate_locked:
+>  		/* Not a candidate for swapping, so reclaim swap space. */
+> -		if (PageSwapCache(page) && vm_swap_full())
+> +		if (PageSwapCache(page) && mem_cgroup_swap_full(page))
+>  			try_to_free_swap(page);
+>  		VM_BUG_ON_PAGE(PageActive(page), page);
+>  		SetPageActive(page);
 > -- 
 > 2.1.4
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
 
 -- 
 Michal Hocko
