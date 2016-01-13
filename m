@@ -1,7 +1,7 @@
 From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH 0/2] cpu subsystem for unified hierarchy.
-Date: Wed, 13 Jan 2016 16:40:18 +0800
-Message-ID: <1452674420-31603-1-git-send-email-yangds.fnst@cn.fujitsu.com>
+Subject: [PATCH] cpuacct: rename parameter in cpuusage_write for readability
+Date: Wed, 13 Jan 2016 16:41:04 +0800
+Message-ID: <1452674464-31750-1-git-send-email-yangds.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -11,35 +11,41 @@ Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-Hi TJ,
-	When I want to improve cpuacct subsystem, you said we are going
-to combine cpuacct and cpu subsystem. Then I am here to try to implement
-cpu subsystem in unified hierarchy and squash cpuacct in it.
+The name of 'reset' makes a little confusion in reading, we would
+say, if we want to reset usage, return -EINVAL. That's not true.
 
-	In [1/2], I implemented the .dfl_cftypes for cpu subsystem. it
-includes the all files of cpu subsystem in cgroup1 and some files from
-cpuacct subsystem in cgroup1. I did not pick cpuacct.stat from cpuacct
-because I am not sure is that necessary.
+Actually, we want to say, we only allow user to do a reset. This
+patch rename reset to val and add a comment here, making the code
+more readable.
 
-	In [2/2], I extended the cpu.usage in cpu subsystem, making it
-to be able to show user_usage and sys_usage. That's useful in my usecase.
+Signed-off-by: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/sched/cpuacct.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Please help to review, thanx!
-
-Yang
-
-Dongsheng Yang (2):
-  sched: implement cpu subsystem for unified hierarchy
-  cgroup: cpu subsystem: split cpu usage into user_usage and sys_usage.
-
- kernel/sched/core.c      | 276 ++++++++++++++++++++++++++++++++++++++++++++++-
- kernel/sched/deadline.c  |   2 +-
- kernel/sched/fair.c      |   2 +-
- kernel/sched/rt.c        |   2 +-
- kernel/sched/sched.h     |  21 ++++
- kernel/sched/stop_task.c |   2 +-
- 6 files changed, 299 insertions(+), 6 deletions(-)
-
+diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
+index dd7cbb5..9c2bbf7 100644
+--- a/kernel/sched/cpuacct.c
++++ b/kernel/sched/cpuacct.c
+@@ -145,13 +145,16 @@ static u64 cpuusage_read(struct cgroup_subsys_state *css, struct cftype *cft)
+ }
+ 
+ static int cpuusage_write(struct cgroup_subsys_state *css, struct cftype *cft,
+-			  u64 reset)
++			  u64 val)
+ {
+ 	struct cpuacct *ca = css_ca(css);
+ 	int err = 0;
+ 	int i;
+ 
+-	if (reset) {
++	/*
++	 * Only allow '0' here to do a reset.
++	 */
++	if (val) {
+ 		err = -EINVAL;
+ 		goto out;
+ 	}
 -- 
 1.8.4.2
 
