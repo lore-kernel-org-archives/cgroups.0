@@ -1,37 +1,107 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 1/2] mm: memcontrol: basic memory statistics in cgroup2
- memory controller
-Date: Thu, 14 Jan 2016 15:25:21 -0500
-Message-ID: <20160114202521.GB20218@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 2/2 V2] mm: memcontrol: add "sock" to cgroup2 memory.stat
+Date: Thu, 14 Jan 2016 15:26:58 -0500
+Message-ID: <20160114202658.GC20218@cmpxchg.org>
 References: <1452722469-24704-1-git-send-email-hannes@cmpxchg.org>
- <1452722469-24704-2-git-send-email-hannes@cmpxchg.org>
- <20160113144930.b20ed63f1c6a28730f66eccd@linux-foundation.org>
+ <1452722469-24704-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20160113144930.b20ed63f1c6a28730f66eccd-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1452722469-24704-3-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Wed, Jan 13, 2016 at 02:49:30PM -0800, Andrew Morton wrote:
-> > @@ -5095,6 +5107,46 @@ static int memory_events_show(struct seq_file *m, void *v)
-> >  	return 0;
-> >  }
-> >  
-> > +static int memory_stat_show(struct seq_file *m, void *v)
-> > +{
-> > +	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> > +	int i;
-> > +
-> > +	/* Memory consumer totals */
-> > +
-> > +	seq_printf(m, "anon %lu\n",
-> > +		   tree_stat(memcg, MEM_CGROUP_STAT_RSS) * PAGE_SIZE);
-> 
-> Is there any reason why this won't overflow a longword on 32-bit?
+Provide statistics on how much of a cgroup's memory footprint is made
+up of socket buffers from network connections owned by the group.
 
-It will, I don't know what I was thinking there. Fixed in the update.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+
+v2: add item description in cgroup.txt and rebase to updated 1/2
+
+ Documentation/cgroup.txt   | 4 ++++
+ include/linux/memcontrol.h | 5 ++++-
+ mm/memcontrol.c            | 6 ++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
+index 65b3eac..e8d25e7 100644
+--- a/Documentation/cgroup.txt
++++ b/Documentation/cgroup.txt
+@@ -843,6 +843,10 @@ PAGE_SIZE multiple when read back.
+ 		Amount of memory used to cache filesystem data,
+ 		including tmpfs and shared memory.
+ 
++	  sock
++
++		Amount of memory used in network transmission buffers
++
+ 	  file_mapped
+ 
+ 		Amount of cached filesystem data mapped with mmap()
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 1666617..9ae48d4 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -50,6 +50,9 @@ enum mem_cgroup_stat_index {
+ 	MEM_CGROUP_STAT_WRITEBACK,	/* # of pages under writeback */
+ 	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
+ 	MEM_CGROUP_STAT_NSTATS,
++	/* default hierarchy stats */
++	MEMCG_SOCK,
++	MEMCG_NR_STAT,
+ };
+ 
+ struct mem_cgroup_reclaim_cookie {
+@@ -87,7 +90,7 @@ enum mem_cgroup_events_target {
+ 
+ #ifdef CONFIG_MEMCG
+ struct mem_cgroup_stat_cpu {
+-	long count[MEM_CGROUP_STAT_NSTATS];
++	long count[MEMCG_NR_STAT];
+ 	unsigned long events[MEMCG_NR_EVENTS];
+ 	unsigned long nr_page_events;
+ 	unsigned long targets[MEM_CGROUP_NTARGETS];
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index cdb51a9..97e47de 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5127,6 +5127,8 @@ static int memory_stat_show(struct seq_file *m, void *v)
+ 		   (u64)tree_stat(memcg, MEM_CGROUP_STAT_RSS) * PAGE_SIZE);
+ 	seq_printf(m, "file %llu\n",
+ 		   (u64)tree_stat(memcg, MEM_CGROUP_STAT_CACHE) * PAGE_SIZE);
++	seq_printf(m, "sock %llu\n",
++		   (u64)tree_stat(memcg, MEMCG_SOCK) * PAGE_SIZE);
+ 
+ 	seq_printf(m, "file_mapped %llu\n",
+ 		   (u64)tree_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED) *
+@@ -5630,6 +5632,8 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	if (in_softirq())
+ 		gfp_mask = GFP_NOWAIT;
+ 
++	this_cpu_add(memcg->stat->count[MEMCG_SOCK], nr_pages);
++
+ 	if (try_charge(memcg, gfp_mask, nr_pages) == 0)
+ 		return true;
+ 
+@@ -5649,6 +5653,8 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 		return;
+ 	}
+ 
++	this_cpu_sub(memcg->stat->count[MEMCG_SOCK], nr_pages);
++
+ 	page_counter_uncharge(&memcg->memory, nr_pages);
+ 	css_put_many(&memcg->css, nr_pages);
+ }
+-- 
+2.7.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
