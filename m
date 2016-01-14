@@ -1,41 +1,79 @@
-From: Rami Rosen <rami.rosen@intel.com>
-Subject: [PATCH] Documentation: cgroup v1: remove section about subsystem as a module.
-Date: Thu, 14 Jan 2016 15:46:05 +0200
-Message-ID: <1452779165-15567-1-git-send-email-rami.rosen@intel.com>
-Return-path: <linux-doc-owner@vger.kernel.org>
-Sender: linux-doc-owner@vger.kernel.org
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] memcg: Only free spare array when readers are done
+Date: Thu, 14 Jan 2016 15:38:47 +0100
+Message-ID: <20160114143847.GD5046@dhcp22.suse.cz>
+References: <001a113abaa499606605294b5b17@google.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <001a113abaa499606605294b5b17-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, corbet@lwn.net, Rami Rosen <rami.rosen@intel.com>
+To: Martijn Coenen <maco-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch removes the text relating to compiling cgroup as a module,
-since commit  3ed80a62bf95 ("cgroup: drop module support") makes this text not
-relevant anymore.
+On Thu 14-01-16 14:33:52, Martijn Coenen wrote:
+> A spare array holding mem cgroup threshold events is kept around
+> to make sure we can always safely deregister an event and have an
+> array to store the new set of events in.
+> 
+> In the scenario where we're going from 1 to 0 registered events, the
+> pointer to the primary array containing 1 event is copied to the spare
+> slot, and then the spare slot is freed because no events are left.
+> However, it is freed before calling synchronize_rcu(), which means
+> readers may still be accessing threshold->primary after it is freed.
 
-Signed-off-by: Rami Rosen <rami.rosen@intel.com>
----
- Documentation/cgroup-v1/cgroups.txt | 5 -----
- 1 file changed, 5 deletions(-)
+Have you seen this triggering in the real life?
 
-diff --git a/Documentation/cgroup-v1/cgroups.txt b/Documentation/cgroup-v1/cgroups.txt
-index c6256ae..176f95e 100644
---- a/Documentation/cgroup-v1/cgroups.txt
-+++ b/Documentation/cgroup-v1/cgroups.txt
-@@ -525,11 +525,6 @@ Each subsystem should:
- - add an entry in linux/cgroup_subsys.h
- - define a cgroup_subsys object called <name>_subsys
- 
--If a subsystem can be compiled as a module, it should also have in its
--module initcall a call to cgroup_load_subsys(), and in its exitcall a
--call to cgroup_unload_subsys(). It should also set its_subsys.module =
--THIS_MODULE in its .c file.
--
- Each subsystem may export the following methods. The only mandatory
- methods are css_alloc/free. Any others that are null are presumed to
- be successful no-ops.
+> 
+> Fixed by only freeing after synchronize_rcu().
+> 
+
+Fixes: 8c7577637ca3 ("memcg: free spare array to avoid memory leak")
+> Signed-off-by: Martijn Coenen <maco-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: stable
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+Thanks!
+
+> ---
+>  mm/memcontrol.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 14cb1db..73228b6 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3522,16 +3522,17 @@ static void
+> __mem_cgroup_usage_unregister_event(struct mem_cgroup *memcg,
+>  swap_buffers:
+>  	/* Swap primary and spare array */
+>  	thresholds->spare = thresholds->primary;
+> -	/* If all events are unregistered, free the spare array */
+> -	if (!new) {
+> -		kfree(thresholds->spare);
+> -		thresholds->spare = NULL;
+> -	}
+> 
+>  	rcu_assign_pointer(thresholds->primary, new);
+> 
+>  	/* To be sure that nobody uses thresholds */
+>  	synchronize_rcu();
+> +
+> +	/* If all events are unregistered, free the spare array */
+> +	if (!new) {
+> +		kfree(thresholds->spare);
+> +		thresholds->spare = NULL;
+> +	}
+>  unlock:
+>  	mutex_unlock(&memcg->thresholds_lock);
+>  }
+> -- 
+> 2.6.0.rc2.230.g3dd15c0
+
 -- 
-2.4.3
-
+Michal Hocko
+SUSE Labs
