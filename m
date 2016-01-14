@@ -1,76 +1,41 @@
-From: Martijn Coenen <maco@google.com>
-Subject: [PATCH] memcg: Only free spare array when readers are done
-Date: Thu, 14 Jan 2016 14:33:52 +0100
-Message-ID: <001a113abaa499606605294b5b17@google.com>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:date:message-id:subject:from:to:cc:content-type;
-        bh=F045+Kud0Qdy41oKGEv5jGz4PK0qEbBOdZdLblbc5KY=;
-        b=BTIgWi5/vdRrRWysDx9GaRH75wRcVHyXmLjS3gTJf6Xy5kQ1WRchjYGB1d2M49M2do
-         tsNCgqW+E7K89XTqDjoZzJAoGrzGj1TeJF674aM626sCdOi4BOSIVn1SPBxTph5REJwa
-         DHudJL+BpuF6XYQGW3a9F0XxVAtgVtdv1i0Ta181w0q8gk8Y6T2/gSuXlh6TiTUS+c18
-         AqelxqnpL0kle0XXFNEyQ5//EF3YBRRmR2UGAovyToXtvlfooLNa4U5KGd+kdqdqugFu
-         zLIoIjMch5dkoIkIAVSeNyZIZRCRdOaMTAROoSeBRYwSFBg6kfsfWFDAOON3R6C/ntVI
-         Eolg==
-Sender: owner-linux-mm@kvack.org
+From: Rami Rosen <rami.rosen@intel.com>
+Subject: [PATCH] Documentation: cgroup v1: remove section about subsystem as a module.
+Date: Thu, 14 Jan 2016 15:46:05 +0200
+Message-ID: <1452779165-15567-1-git-send-email-rami.rosen@intel.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: cgroups@vger.kernel.org
+Cc: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, corbet@lwn.net, Rami Rosen <rami.rosen@intel.com>
 
-A spare array holding mem cgroup threshold events is kept around
-to make sure we can always safely deregister an event and have an
-array to store the new set of events in.
+This patch removes the text relating to compiling cgroup as a module,
+since commit  3ed80a62bf95 ("cgroup: drop module support") makes this text not
+relevant anymore.
 
-In the scenario where we're going from 1 to 0 registered events, the
-pointer to the primary array containing 1 event is copied to the spare
-slot, and then the spare slot is freed because no events are left.
-However, it is freed before calling synchronize_rcu(), which means
-readers may still be accessing threshold->primary after it is freed.
-
-Fixed by only freeing after synchronize_rcu().
-
-Signed-off-by: Martijn Coenen <maco@google.com>
+Signed-off-by: Rami Rosen <rami.rosen@intel.com>
 ---
-  mm/memcontrol.c | 11 ++++++-----
-  1 file changed, 6 insertions(+), 5 deletions(-)
+ Documentation/cgroup-v1/cgroups.txt | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 14cb1db..73228b6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3522,16 +3522,17 @@ static void  
-__mem_cgroup_usage_unregister_event(struct mem_cgroup *memcg,
-  swap_buffers:
-  	/* Swap primary and spare array */
-  	thresholds->spare = thresholds->primary;
--	/* If all events are unregistered, free the spare array */
--	if (!new) {
--		kfree(thresholds->spare);
--		thresholds->spare = NULL;
--	}
-
-  	rcu_assign_pointer(thresholds->primary, new);
-
-  	/* To be sure that nobody uses thresholds */
-  	synchronize_rcu();
-+
-+	/* If all events are unregistered, free the spare array */
-+	if (!new) {
-+		kfree(thresholds->spare);
-+		thresholds->spare = NULL;
-+	}
-  unlock:
-  	mutex_unlock(&memcg->thresholds_lock);
-  }
+diff --git a/Documentation/cgroup-v1/cgroups.txt b/Documentation/cgroup-v1/cgroups.txt
+index c6256ae..176f95e 100644
+--- a/Documentation/cgroup-v1/cgroups.txt
++++ b/Documentation/cgroup-v1/cgroups.txt
+@@ -525,11 +525,6 @@ Each subsystem should:
+ - add an entry in linux/cgroup_subsys.h
+ - define a cgroup_subsys object called <name>_subsys
+ 
+-If a subsystem can be compiled as a module, it should also have in its
+-module initcall a call to cgroup_load_subsys(), and in its exitcall a
+-call to cgroup_unload_subsys(). It should also set its_subsys.module =
+-THIS_MODULE in its .c file.
+-
+ Each subsystem may export the following methods. The only mandatory
+ methods are css_alloc/free. Any others that are null are presumed to
+ be successful no-ops.
 -- 
-2.6.0.rc2.230.g3dd15c0
+2.4.3
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
