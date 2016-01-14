@@ -1,73 +1,73 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/2] mm: memcontrol: basic memory statistics in cgroup2
- memory controller
-Date: Wed, 13 Jan 2016 14:49:30 -0800
-Message-ID: <20160113144930.b20ed63f1c6a28730f66eccd@linux-foundation.org>
-References: <1452722469-24704-1-git-send-email-hannes@cmpxchg.org>
-	<1452722469-24704-2-git-send-email-hannes@cmpxchg.org>
+From: Martijn Coenen <maco@google.com>
+Subject: [PATCH] memcg: Only free spare array when readers are done
+Date: Thu, 14 Jan 2016 14:33:52 +0100
+Message-ID: <001a113abaa499606605294b5b17@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1452722469-24704-2-git-send-email-hannes@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:cc:content-type;
+        bh=F045+Kud0Qdy41oKGEv5jGz4PK0qEbBOdZdLblbc5KY=;
+        b=BTIgWi5/vdRrRWysDx9GaRH75wRcVHyXmLjS3gTJf6Xy5kQ1WRchjYGB1d2M49M2do
+         tsNCgqW+E7K89XTqDjoZzJAoGrzGj1TeJF674aM626sCdOi4BOSIVn1SPBxTph5REJwa
+         DHudJL+BpuF6XYQGW3a9F0XxVAtgVtdv1i0Ta181w0q8gk8Y6T2/gSuXlh6TiTUS+c18
+         AqelxqnpL0kle0XXFNEyQ5//EF3YBRRmR2UGAovyToXtvlfooLNa4U5KGd+kdqdqugFu
+         zLIoIjMch5dkoIkIAVSeNyZIZRCRdOaMTAROoSeBRYwSFBg6kfsfWFDAOON3R6C/ntVI
+         Eolg==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Wed, 13 Jan 2016 17:01:08 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
+A spare array holding mem cgroup threshold events is kept around
+to make sure we can always safely deregister an event and have an
+array to store the new set of events in.
 
-> Provide a cgroup2 memory.stat that provides statistics on LRU memory
-> and fault event counters. More consumers and breakdowns will follow.
-> 
-> ...
->
-> @@ -5095,6 +5107,46 @@ static int memory_events_show(struct seq_file *m, void *v)
->  	return 0;
->  }
->  
-> +static int memory_stat_show(struct seq_file *m, void *v)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	int i;
-> +
-> +	/* Memory consumer totals */
-> +
-> +	seq_printf(m, "anon %lu\n",
-> +		   tree_stat(memcg, MEM_CGROUP_STAT_RSS) * PAGE_SIZE);
+In the scenario where we're going from 1 to 0 registered events, the
+pointer to the primary array containing 1 event is copied to the spare
+slot, and then the spare slot is freed because no events are left.
+However, it is freed before calling synchronize_rcu(), which means
+readers may still be accessing threshold->primary after it is freed.
 
-Is there any reason why this won't overflow a longword on 32-bit?
+Fixed by only freeing after synchronize_rcu().
 
-> +	seq_printf(m, "file %lu\n",
-> +		   tree_stat(memcg, MEM_CGROUP_STAT_CACHE) * PAGE_SIZE);
-> +
-> +	/* Per-consumer breakdowns */
-> +
-> +	for (i = 0; i < NR_LRU_LISTS; i++) {
-> +		struct mem_cgroup *mi;
-> +		unsigned long val = 0;
-> +
-> +		for_each_mem_cgroup_tree(mi, memcg)
-> +			val += mem_cgroup_nr_lru_pages(mi, BIT(i)) * PAGE_SIZE;
-> +		seq_printf(m, "%s %lu\n", mem_cgroup_lru_names[i], val);
-> +	}
-> +
-> +	seq_printf(m, "file_mapped %lu\n",
-> +		   tree_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED) * PAGE_SIZE);
-> +	seq_printf(m, "file_dirty %lu\n",
-> +		   tree_stat(memcg, MEM_CGROUP_STAT_DIRTY) * PAGE_SIZE);
-> +	seq_printf(m, "file_writeback %lu\n",
-> +		   tree_stat(memcg, MEM_CGROUP_STAT_WRITEBACK) * PAGE_SIZE);
-> +
-> +	/* Memory management events */
-> +
-> +	seq_printf(m, "pgfault %lu\n",
-> +		   tree_events(memcg, MEM_CGROUP_EVENTS_PGFAULT));
-> +	seq_printf(m, "pgmajfault %lu\n",
-> +		   tree_events(memcg, MEM_CGROUP_EVENTS_PGMAJFAULT));
-> +
-> +	return 0;
-> +}
+Signed-off-by: Martijn Coenen <maco@google.com>
+---
+  mm/memcontrol.c | 11 ++++++-----
+  1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 14cb1db..73228b6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3522,16 +3522,17 @@ static void  
+__mem_cgroup_usage_unregister_event(struct mem_cgroup *memcg,
+  swap_buffers:
+  	/* Swap primary and spare array */
+  	thresholds->spare = thresholds->primary;
+-	/* If all events are unregistered, free the spare array */
+-	if (!new) {
+-		kfree(thresholds->spare);
+-		thresholds->spare = NULL;
+-	}
+
+  	rcu_assign_pointer(thresholds->primary, new);
+
+  	/* To be sure that nobody uses thresholds */
+  	synchronize_rcu();
++
++	/* If all events are unregistered, free the spare array */
++	if (!new) {
++		kfree(thresholds->spare);
++		thresholds->spare = NULL;
++	}
+  unlock:
+  	mutex_unlock(&memcg->thresholds_lock);
+  }
+-- 
+2.6.0.rc2.230.g3dd15c0
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
