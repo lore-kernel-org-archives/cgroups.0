@@ -1,85 +1,94 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] kernfs: make kernfs_walk_ns() use kernfs_pr_cont_buf[]
-Date: Fri, 15 Jan 2016 12:30:14 -0500
-Message-ID: <20160115173014.GI3520@mtj.duckdns.org>
-References: <1449527935-27056-1-git-send-email-tj@kernel.org>
- <1449527935-27056-3-git-send-email-tj@kernel.org>
- <CAMuHMdXT63aJ2hXJg9mtMv-PZYT7CEw+ab-j42_VoFB-ib+ghg@mail.gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 0/2] mm: memcontrol: cgroup2 memory statistics
+Date: Fri, 15 Jan 2016 15:30:59 -0500
+Message-ID: <20160115203059.GA25092@cmpxchg.org>
+References: <1452722469-24704-1-git-send-email-hannes@cmpxchg.org>
+ <20160113144916.03f03766e201b6b04a8a47cc@linux-foundation.org>
+ <20160114202408.GA20218@cmpxchg.org>
+ <20160115095834.GP30160@esperanza>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=02pYKC8e5eUBeXQn1dXBhN09+RlbcISrsAuoHGgTGes=;
-        b=b8Q2YsjXLh9oK1P/ctvPvs0z7wpTe1Kcgdo5YfchILTazZ/gbxBtte3OO5COQ6Obaz
-         yIMvgCUxwBJukE+8wPwemD+GZwmcnDUsmrJAmpvZ5PFJXj0hMea/U9a6QreIP6qzi3wg
-         l0Dfn85dKNcKUYEsDOHuAThICkclKgd7UoDceriYRwMKp33njxWRN5RHdjAQyFE6+glS
-         +ChmNWwmq+lEw5pZNPdkeJhNigH/P33tFqN6afhIdfQb/B9TaVaRlK3fx+eutFxPN7Mp
-         DIm4wOx82lJUefqFPdN3JVKvhHtgED7pUQoc9DFvlXwuZhmtDCvV3RCFFHcf7A/U9jKW
-         zRGQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAMuHMdXT63aJ2hXJg9mtMv-PZYT7CEw+ab-j42_VoFB-ib+ghg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160115095834.GP30160@esperanza>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "David S. Miller" <davem@davemloft.net>, pablo@netfilter.org, Patrick McHardy <kaber@trash.net>, kadlec@blackhole.kfki.hu, Daniel Borkmann <daniel@iogearbox.net>, daniel.wagner@bmw-carit.de, nhorman@tuxdriver.com, Zefan Li <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-team@fb.com, ninasc@fb.com, Josh Triplett <josh@joshtriplett.org>
+To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-kernfs_walk_ns() uses a static path_buf[PATH_MAX] to separate out path
-components.  Keeping around the 4k buffer just for kernfs_walk_ns() is
-wasteful.  This patch makes it piggyback on kernfs_pr_cont_buf[]
-instead.  This requires kernfs_walk_ns() to hold kernfs_rename_lock.
+On Fri, Jan 15, 2016 at 12:58:34PM +0300, Vladimir Davydov wrote:
+> With the follow-up it looks good to me. All exported counters look
+> justified enough and the format follows that of other cgroup2
+> controllers (cpu, blkio). Thanks!
+> 
+> Acked-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
-Hello,
+Thanks Vladimir.
 
-Greg, can you please route this one?
+> One addition though. May be, we could add 'total' field which would show
+> memory.current? Yeah, this would result in a little redundancy, but I
+> think that from userspace pov it's much more convenient to read the
+> only file and get all stat counters than having them spread throughout
+> several files.
 
-Thanks.
+I am not fully convinced that a total value or even memory.current
+will be looked at that often in practice, because in all but a few
+cornercases that value will be pegged to the configured limit. In
+those instances I think it should be okay to check another file.
 
- fs/kernfs/dir.c |   19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+> Come to think of it, do we really need separate memory.events file?
+> Can't these counters live in memory.stat either?
 
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -698,15 +698,22 @@ static struct kernfs_node *kernfs_walk_n
- 					  const unsigned char *path,
- 					  const void *ns)
- {
--	static char path_buf[PATH_MAX];	/* protected by kernfs_mutex */
--	size_t len = strlcpy(path_buf, path, PATH_MAX);
--	char *p = path_buf;
--	char *name;
-+	size_t len;
-+	char *p, *name;
- 
- 	lockdep_assert_held(&kernfs_mutex);
- 
--	if (len >= PATH_MAX)
-+	/* grab kernfs_rename_lock to piggy back on kernfs_pr_cont_buf */
-+	spin_lock_irq(&kernfs_rename_lock);
-+
-+	len = strlcpy(kernfs_pr_cont_buf, path, sizeof(kernfs_pr_cont_buf));
-+
-+	if (len >= sizeof(kernfs_pr_cont_buf)) {
-+		spin_unlock_irq(&kernfs_rename_lock);
- 		return NULL;
-+	}
-+
-+	p = kernfs_pr_cont_buf;
- 
- 	while ((name = strsep(&p, "/")) && parent) {
- 		if (*name == '\0')
-@@ -714,6 +721,8 @@ static struct kernfs_node *kernfs_walk_n
- 		parent = kernfs_find_ns(parent, name, ns);
- 	}
- 
-+	spin_unlock_irq(&kernfs_rename_lock);
-+
- 	return parent;
- }
- 
+I think it sits at a different level of the interface. The events file
+indicates cgroup-specific dynamics between configuration and memory
+footprint, and so it sits on the same level as low, high, max, and
+current. These are the parts involved in the most basic control loop
+between the kernel and the job scheduler--monitor and adjust or notify
+the admin. It's for the entity that allocates and manages the system.
+
+The memory.stat file on the other hand is geared toward analyzing and
+understanding workload-specific performance (whether by humans or with
+some automated heuristics) and if necessary correcting the config file
+that describes the application's requirements to the job scheduler.
+
+I think it makes sense to not conflate these two interfaces.
+
+> Yeah, this file
+> generates events, but IMHO it's not very useful the way it is currently
+> implemented:
+> 
+> Suppose, a user wants to receive notifications about OOM or LOW events,
+> which are rather rare normally and might require immediate action. The
+> only way to do that is to listen to memory.events, but this file can
+> generate tons of MAX/HIGH when the cgroup is performing normally. The
+> userspace app will have to wake up every time the cgroup performs
+> reclaim and check memory.events just to ensure no OOM happened and this
+> all will result in wasting cpu time.
+
+Under optimal system load there is no limit reclaim, and memory
+pressure comes exclusively from a shortage of physical pages that
+global reclaim balances based on memory.low. If groups run into their
+own limits, it means that there are idle resources left on the table.
+
+So events only happen when the machine is over or under utilized, and
+as per above, the events file is mainly meant for something like a job
+scheduler tasked with allocating the machine's resources. It's hard to
+imagine a job scheduler scenario where the long-term goal is anything
+other than optimal utilization.
+
+There are reasonable cases in which memory could be temporarily left
+idle, say to keep startup latency of new jobs low. In those it's true
+that the max and high notifications might become annoying. But do you
+really think that could become problematic in practice? In that case
+it should be enough if we ratelimit the file-changed notifications.
+
+> May be, we could generate LOW/HIGH/MAX events on memory.low/high/max?
+> This would look natural IMO. Don't know where OOM events should go in
+> this case though.
+
+Without a natural place for OOM notifications, it probably makes sense
+to stick with memory.events.
+
+Thanks,
+Johannes
