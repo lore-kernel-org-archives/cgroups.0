@@ -1,32 +1,35 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] memcg: Only free spare array when readers are done
-Date: Fri, 15 Jan 2016 15:56:53 -0500
-Message-ID: <20160115205653.GA26524@cmpxchg.org>
-References: <001a113abaa499606605294b5b17@google.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH] kernfs: make kernfs_walk_ns() use kernfs_pr_cont_buf[]
+Date: Fri, 15 Jan 2016 14:05:21 -0800
+Message-ID: <20160115220521.GA8722@kroah.com>
+References: <1449527935-27056-1-git-send-email-tj@kernel.org>
+ <1449527935-27056-3-git-send-email-tj@kernel.org>
+ <CAMuHMdXT63aJ2hXJg9mtMv-PZYT7CEw+ab-j42_VoFB-ib+ghg@mail.gmail.com>
+ <20160115173014.GI3520@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <001a113abaa499606605294b5b17-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20160115173014.GI3520-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Martijn Coenen <maco-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, Patrick McHardy <kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org>, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org, Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>
 
-On Thu, Jan 14, 2016 at 02:33:52PM +0100, Martijn Coenen wrote:
-> A spare array holding mem cgroup threshold events is kept around
-> to make sure we can always safely deregister an event and have an
-> array to store the new set of events in.
+On Fri, Jan 15, 2016 at 12:30:14PM -0500, Tejun Heo wrote:
+> kernfs_walk_ns() uses a static path_buf[PATH_MAX] to separate out path
+> components.  Keeping around the 4k buffer just for kernfs_walk_ns() is
+> wasteful.  This patch makes it piggyback on kernfs_pr_cont_buf[]
+> instead.  This requires kernfs_walk_ns() to hold kernfs_rename_lock.
 > 
-> In the scenario where we're going from 1 to 0 registered events, the
-> pointer to the primary array containing 1 event is copied to the spare
-> slot, and then the spare slot is freed because no events are left.
-> However, it is freed before calling synchronize_rcu(), which means
-> readers may still be accessing threshold->primary after it is freed.
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+> ---
+> Hello,
 > 
-> Fixed by only freeing after synchronize_rcu().
-> 
-> Signed-off-by: Martijn Coenen <maco-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Greg, can you please route this one?
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Thanks, will take this after 4.5-rc1 is out.
+
+greg k-h
