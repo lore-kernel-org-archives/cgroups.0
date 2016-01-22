@@ -1,61 +1,115 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup: make sure a parent css isn't offlined before
- its children
-Date: Thu, 21 Jan 2016 16:28:12 -0500
-Message-ID: <20160121212812.GJ5157@mtj.duckdns.org>
-References: <56978452.6010606@de.ibm.com>
- <20160114195630.GA3520@mtj.duckdns.org>
- <5698A023.9070703@de.ibm.com>
- <20160121203111.GF5157@mtj.duckdns.org>
- <20160121212416.GL6357@twins.programming.kicks-ass.net>
+From: Masanari Iida <standby24x7@gmail.com>
+Subject: Re: [PATCH] mm: memcontrol: only manage socket pressure for CONFIG_INET
+Date: Fri, 22 Jan 2016 12:25:08 +0900
+Message-ID: <CALLJCT2wHo3jJb7emyG8bWR5=zC7aEo_05JfHsnKHhjgHArCcA@mail.gmail.com>
+References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
+	<2564892.qO1q7YJ6Nb@wuerfel>
+	<7343206.sFybcLLUN2@wuerfel>
+	<20151209185858.GA2342@cmpxchg.org>
+	<20151209142836.e81260567879110f319c01a4@linux-foundation.org>
+	<20151209230505.GA16610@cmpxchg.org>
+	<20151209151326.f7efba4e5697e1b0f212ea34@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=lJGPIZrtkKGHuPdubS321hfKq14YyuNuOd7U+nx70KU=;
-        b=KjPL+nQXXK7xez5lvpunvybWLpy98bKSZduwI9G2rFIK2v0rvBt/MI+nJ9tX5oNEbb
-         4QzVOHFxpyjdZUnkvQgNFZYfHnHJFa2BofGQfQXvyv1cVIhe7eLWD4X2zwwHLSdt/QUG
-         XDVVnDOo6M0mFGNpgvM0/WkHosCRzYoXQCbgN3MHbB7ZT4cdPOyWm9ZIiTIP2/QPA2i4
-         SOfjto2BVweMBFXRSXFvGV1cg3Gi+k0MiE/s+oskpCVMQaAClpuXZwNs5xahki7qxQkO
-         WubBeHADUaE7cO7QlSvhw6oY8zWHzlJHCmzKm9qtuzX1rGTz+3v3sNiRS7hYTxkTzStM
-         j4Xg==
-Content-Disposition: inline
-In-Reply-To: <20160121212416.GL6357-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=1G5qoVROEjlji9HZUuJ9r3JoGJbNjTxv+yMJnIE7zak=;
+        b=hm77RIVpc0w3wZfWG+BZn9aRDAsEpfw7rUat0dHaQFqCKp8juTgLJQDL8tFFIfRrQ9
+         0g7f/ErGHim/Pn6r0EHba4a7bKxs3iBgRNAA0ijVH8sJkdBE9dGNA4nIKFrnTfMtLFk7
+         EcGq6G3H0iGUPngVVn7YtY723KjqF5MDJ3W3z/DBTpvKujagudbAShMC+wPHQJpUfxcT
+         jytYiCCZPok5FCz0Zm+QxWCtc5v3Q4hi2OlB5k9zNaLJOPs43Lnhfcmi1VMVFPmEK9Yk
+         8L0QeuAK5SfAm8BWc0A3qzl0AeVaMhDFyQUTrd+TF5s4Jr2gk8jF3argXsVnKju4zflb
+         TD2A==
+In-Reply-To: <20151209151326.f7efba4e5697e1b0f212ea34@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Christian Borntraeger <borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390 <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KVM list <kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Arnd Bergmann <arnd@arndb.de>, linux-mm@kvack.org, netdev@vger.kernel.org, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, Jan 21, 2016 at 10:24:16PM +0100, Peter Zijlstra wrote:
-> On Thu, Jan 21, 2016 at 03:31:11PM -0500, Tejun Heo wrote:
-> > There are three subsystem callbacks in css shutdown path -
-> > css_offline(), css_released() and css_free().  Except for
-> > css_released(), cgroup core didn't use to guarantee the order of
-> > invocation.  css_offline() or css_free() could be called on a parent
-> > css before its children.  This behavior is unexpected and led to
-> > use-after-free in cpu controller.
-> > 
-> > This patch updates offline path so that a parent css is never offlined
-> > before its children.  Each css keeps online_cnt which reaches zero iff
-> > itself and all its children are offline and offline_css() is invoked
-> > only after online_cnt reaches zero.
-> > 
-> > This fixes the reported cpu controller malfunction.  The next patch
-> > will update css_free() handling.
-> 
-> No, I need to fix the cpu controller too, because the offending code
-> sits off of css_free() (the next patch), but also does a call_rcu() in
-> between, which also doesn't guarantee order.
+Hi,
+I hit this while I was testing 4.5-rc1 with randconfig during merger period.
+And now I noticed that it was fixed after Linus merged akpm branch.
 
-Ah, I see.  Christian, can you please apply all three patches and see
-whether the problem gets fixed?  Once verified, I'll update the patch
-description and repost.
+commit eae21770b4fed5597623aad0d618190fa60426ff
+Merge: e9f57eb 9f273c2
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu Jan 21 12:32:08 2016 -0800
 
-Thanks.
+    Merge branch 'akpm' (patches from Andrew)
 
--- 
-tejun
+Try one commit before this (commit e9f57ebcba563e0cd532926cab83c92bb4d79360 )
+DOES have an issue.
+So I believe it was fixed for now.
+Thanks
+
+Masanari
+
+
+On Thu, Dec 10, 2015 at 8:13 AM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Wed, 9 Dec 2015 18:05:05 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
+>
+>> On Wed, Dec 09, 2015 at 02:28:36PM -0800, Andrew Morton wrote:
+>> > On Wed, 9 Dec 2015 13:58:58 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
+>> > > The calls to tcp_init_cgroup() appear earlier in the series than "mm:
+>> > > memcontrol: hook up vmpressure to socket pressure". However, they get
+>> > > moved around a few times so fixing it earlier means respinning the
+>> > > series. Andrew, it's up to you whether we take the bisectability hit
+>> > > for !CONFIG_INET && CONFIG_MEMCG (how common is this?) or whether you
+>> > > want me to resend the series.
+>> >
+>> > hm, drat, I was suspecting dependency issues here, but a test build
+>> > said it was OK.
+>> >
+>> > Actually, I was expecting this patch series to depend on the linux-next
+>> > cgroup2 changes, but that doesn't appear to be the case.  *should* this
+>> > series be staged after the cgroup2 code?
+>>
+>> Code-wise they are independent. My stuff is finishing up the new memcg
+>> control knobs, the cgroup2 stuff is changing how and when those knobs
+>> are exposed from within the cgroup core. I'm not relying on any recent
+>> changes in the cgroup core AFAICS, so the order shouldn't matter here.
+>
+> OK, thanks.
+>
+>> > Regarding this particular series: yes, I think we can live with a
+>> > bisection hole for !CONFIG_INET && CONFIG_MEMCG users.  But I'm not
+>> > sure why we're discussing bisection issues, because Arnd's build
+>> > failure occurs with everything applied?
+>>
+>> Arnd's patches apply to the top of the stack, but they address issues
+>> introduced early in the series and the problematic code gets touched a
+>> lot in subsequent patches. E.g. the first build breakage is in ("net:
+>> tcp_memcontrol: simplify linkage between socket and page counter")
+>> when the tcp_init_cgroup() and tcp_destroy_cgroup() function calls get
+>> moved around and lose the CONFIG_INET protection.
+>
+> Yeah, this is a pain.  I think I'll fold Arnd's fix into
+> mm-memcontrol-introduce-config_memcg_legacy_kmem.patch (which is staged
+> after all the other MM patches and after linux-next) and will pretend I
+> didn't know about the issue ;)
+>
+>> Anyway, if we can live with the bisection caveat then Arnd's fixes on
+>> top of the kmem series look good to me. Depending on what Vladimir
+>> thinks we might want to replace the CONFIG_SLOB fix with something
+>> else later on, but that shouldn't be a problem, either.
+>
+> I don't have a fix for the CONFIG_SLOB&&CONFIG_MEMCG issue yet.  I
+> agree that it would be best to make the combination work correctly
+> rather than banning it, but that does require a bit of runtime testing.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
