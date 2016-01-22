@@ -1,41 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Documentation: cgroup v1: remove section about subsystem
- as a module.
-Date: Fri, 22 Jan 2016 11:11:31 -0500
-Message-ID: <20160122161131.GI32380@htj.duckdns.org>
-References: <1452779165-15567-1-git-send-email-rami.rosen@intel.com>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: PROBLEM: BUG when using memory.kmem.limit_in_bytes
+Date: Fri, 22 Jan 2016 19:33:24 +0300
+Message-ID: <20160122163324.GH26192@esperanza>
+References: <CAKB58ikDkzc8REt31WBkD99+hxNzjK4+FBmhkgS+NVrC9vjMSg@mail.gmail.com>
+ <20160122135042.GF26192@esperanza>
+ <20160122144854.GA14432@cmpxchg.org>
+ <20160122155104.GG32380@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=EG+kWwpDrin5pQZD25GLJ5RyDQLtQaPBQm252M6YbOE=;
-        b=vr/sWv6C369xwH0PCmI24rUZUjhmw1iJaok2tEHC5bJZap+wp35OV/P6bT8VjdlQ9R
-         Wnd1Ige+nfpS2NgftZ1qglMQSFa0U/g2R5CwTXVkpiP5XStNOUf2RnUFNdxJPWHhmP9x
-         zIX5wdE8tattlNm3hEEW790SyOwQO/jN3sWvjOEiOrWWXh2zvHC9+nGAGt4/8rwVw5Dn
-         I23EhegXCAW71LviB29fy4EcvKDVkTUaBudvpmJH4A4wWABrLg1xUkMCJUMl8ymAHEXk
-         GztOEggwoBstzCuUbmNgubos+YRTfIyPBlN90e9875/NB/74sANK1t5Tom4Jwn2TpSB8
-         lQWg==
-Content-Disposition: inline
-In-Reply-To: <1452779165-15567-1-git-send-email-rami.rosen@intel.com>
-Sender: linux-doc-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160122155104.GG32380-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Rami Rosen <rami.rosen@intel.com>
-Cc: cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, corbet@lwn.net
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Brian Christiansen <brian.o.christiansen-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu, Jan 14, 2016 at 03:46:05PM +0200, Rami Rosen wrote:
-> This patch removes the text relating to compiling cgroup as a module,
-> since commit  3ed80a62bf95 ("cgroup: drop module support") makes this text not
-> relevant anymore.
+On Fri, Jan 22, 2016 at 10:51:04AM -0500, Tejun Heo wrote:
+> On Fri, Jan 22, 2016 at 09:48:54AM -0500, Johannes Weiner wrote:
+> > On Fri, Jan 22, 2016 at 04:50:42PM +0300, Vladimir Davydov wrote:
+> > > From first glance, it looks like the bug was triggered, because
+> > > mem_cgroup_css_offline was run for a child cgroup earlier than for its
+> > > parent. This couldn't happen for sure before the cgroup was switched to
+> > > percpu_ref, because cgroup_destroy_wq has always had max_active == 1.
+> > > Now, however, it looks like this is perfectly possible for
+> > > css_killed_ref_fn is called from an rcu callback - see kill_css ->
+> > > percpu_ref_kill_and_confirm. This breaks kmemcg assumptions.
+> > > 
+> > > I'll take a look what can be done about that.
+> > 
+> > It's an acknowledged problem in the cgroup core then, and not an issue
+> > with kmemcg. Tejun sent a fix to correct the offlining order here:
+> > 
+> > https://www.mail-archive.com/linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org/msg1056544.html
 > 
-> Signed-off-by: Rami Rosen <rami.rosen@intel.com>
+> Patche descriptions updated and applied to cgroup/for-4.5-fixes.
+> 
+>  http://lkml.kernel.org/g/20160122154503.GD32380-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org
+>  http://lkml.kernel.org/g/20160122154552.GE32380-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org
 
-Applied to cgroup/for-4.5-fixes.
+I couldn't reproduce the issue with the two patches applied. Looks like
+they fix it.
 
-Thanks.
-
--- 
-tejun
+Thanks,
+Vladimir
