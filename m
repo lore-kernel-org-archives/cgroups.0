@@ -1,61 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: PROBLEM: BUG when using memory.kmem.limit_in_bytes
-Date: Fri, 22 Jan 2016 10:51:04 -0500
-Message-ID: <20160122155104.GG32380@htj.duckdns.org>
-References: <CAKB58ikDkzc8REt31WBkD99+hxNzjK4+FBmhkgS+NVrC9vjMSg@mail.gmail.com>
- <20160122135042.GF26192@esperanza>
- <20160122144854.GA14432@cmpxchg.org>
+Subject: Re: [PATCH] Documentation: cgroup v1: remove section about subsystem
+ as a module.
+Date: Fri, 22 Jan 2016 11:11:31 -0500
+Message-ID: <20160122161131.GI32380@htj.duckdns.org>
+References: <1452779165-15567-1-git-send-email-rami.rosen@intel.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=IRh2oYQjVZ4i/TmFnbeu4td4k9ZP2nGs18UDX39FYY8=;
-        b=bJWZ9xJpvg1KXR2izN3bj90ULraqTbJkHP/8zoBCaJf04Er3CRk2HRhrTe5GLVCiTM
-         XiQhyjlim2cdGf016C8PKfdIBmPz7hGCnW68TuLyj63AiFSVmtW7n1cCWmCfOAbugFio
-         iU2glLxCnTP6ustBlehWJwDSjlCq4mSh7akj6F/CjWpYyRBXXDAJqE3fCr0hpwhm0ZOG
-         ErnGXRDei9HKvhvpNE00hvyIw5CyeLSZPMOKK/jEB4f5O6sl6TdMDi0ZrI+Yq25JJA+R
-         JYV6ERofCMkuNH8tP6AgHhDcIMoJfwIrT3OyfSSYmOV7RokuX/0SPQyiAP3ZxCRKtWZ1
-         xDsw==
+        bh=EG+kWwpDrin5pQZD25GLJ5RyDQLtQaPBQm252M6YbOE=;
+        b=vr/sWv6C369xwH0PCmI24rUZUjhmw1iJaok2tEHC5bJZap+wp35OV/P6bT8VjdlQ9R
+         Wnd1Ige+nfpS2NgftZ1qglMQSFa0U/g2R5CwTXVkpiP5XStNOUf2RnUFNdxJPWHhmP9x
+         zIX5wdE8tattlNm3hEEW790SyOwQO/jN3sWvjOEiOrWWXh2zvHC9+nGAGt4/8rwVw5Dn
+         I23EhegXCAW71LviB29fy4EcvKDVkTUaBudvpmJH4A4wWABrLg1xUkMCJUMl8ymAHEXk
+         GztOEggwoBstzCuUbmNgubos+YRTfIyPBlN90e9875/NB/74sANK1t5Tom4Jwn2TpSB8
+         lQWg==
 Content-Disposition: inline
-In-Reply-To: <20160122144854.GA14432@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1452779165-15567-1-git-send-email-rami.rosen@intel.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Brian Christiansen <brian.o.christiansen@gmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Rami Rosen <rami.rosen@intel.com>
+Cc: cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, corbet@lwn.net
 
-On Fri, Jan 22, 2016 at 09:48:54AM -0500, Johannes Weiner wrote:
-> On Fri, Jan 22, 2016 at 04:50:42PM +0300, Vladimir Davydov wrote:
-> > From first glance, it looks like the bug was triggered, because
-> > mem_cgroup_css_offline was run for a child cgroup earlier than for its
-> > parent. This couldn't happen for sure before the cgroup was switched to
-> > percpu_ref, because cgroup_destroy_wq has always had max_active == 1.
-> > Now, however, it looks like this is perfectly possible for
-> > css_killed_ref_fn is called from an rcu callback - see kill_css ->
-> > percpu_ref_kill_and_confirm. This breaks kmemcg assumptions.
-> > 
-> > I'll take a look what can be done about that.
+On Thu, Jan 14, 2016 at 03:46:05PM +0200, Rami Rosen wrote:
+> This patch removes the text relating to compiling cgroup as a module,
+> since commit  3ed80a62bf95 ("cgroup: drop module support") makes this text not
+> relevant anymore.
 > 
-> It's an acknowledged problem in the cgroup core then, and not an issue
-> with kmemcg. Tejun sent a fix to correct the offlining order here:
-> 
-> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1056544.html
+> Signed-off-by: Rami Rosen <rami.rosen@intel.com>
 
-Patche descriptions updated and applied to cgroup/for-4.5-fixes.
-
- http://lkml.kernel.org/g/20160122154503.GD32380@htj.duckdns.org
- http://lkml.kernel.org/g/20160122154552.GE32380@htj.duckdns.org
+Applied to cgroup/for-4.5-fixes.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
