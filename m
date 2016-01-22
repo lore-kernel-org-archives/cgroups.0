@@ -1,38 +1,45 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: PROBLEM: BUG when using memory.kmem.limit_in_bytes
-Date: Fri, 22 Jan 2016 09:48:54 -0500
-Message-ID: <20160122144854.GA14432@cmpxchg.org>
-References: <CAKB58ikDkzc8REt31WBkD99+hxNzjK4+FBmhkgS+NVrC9vjMSg@mail.gmail.com>
- <20160122135042.GF26192@esperanza>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH cgroup/for-4.5-fixes] cpuset: make mm migration
+ asynchronous
+Date: Fri, 22 Jan 2016 10:22:32 -0500
+Message-ID: <20160122152232.GB32380@htj.duckdns.org>
+References: <56978452.6010606@de.ibm.com>
+ <20160114195630.GA3520@mtj.duckdns.org>
+ <5698A023.9070703@de.ibm.com>
+ <20160115164023.GH3520@mtj.duckdns.org>
+ <20160119171841.GP3520@mtj.duckdns.org>
+ <56A23BA8.1040403@de.ibm.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=ZLzYqIFAUaY/N9g8vzH5R/O1UJj7SLAfZ0nMZmNjH+A=;
+        b=mQhVn0AsHczULCEdFrBS+3mhJ8rnnLz4QQtZ4XSYQ6fey5VP9+h0J86hA5TngX7rHB
+         0HhUhY+JQZAIYE3Z1T+kVBnf7kJ5kJ1yGaXMJ+YUH9zMgiUKsoJOev0lzdJWZAeSF3wS
+         ZeHZRwMgNby3o5+T4jrV8Zvcx5zH1gE8OifMJAWnej1glI71AicZxeOe3P0UrplBmj6u
+         yt6imdQo8DftTzkTqtOGQAMf/g/ajGZ9Gn+AUcp+3yPMiKYbrYdK4EJBz0GuoZ4r8B+3
+         euRhpEZYiyzQXeFPMj2iLTqFDafde6g3nwF4PiCnh6G+mUXCgT0TS2ILdPuF/mPQxYWC
+         yKhA==
 Content-Disposition: inline
-In-Reply-To: <20160122135042.GF26192@esperanza>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <56A23BA8.1040403@de.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Brian Christiansen <brian.o.christiansen@gmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Christian Borntraeger <borntraeger@de.ibm.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-s390 <linux-s390@vger.kernel.org>, KVM list <kvm@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, Peter Zijlstra <peterz@infradead.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, cgroups@vger.kernel.org, kernel-team@fb.com
 
-On Fri, Jan 22, 2016 at 04:50:42PM +0300, Vladimir Davydov wrote:
-> From first glance, it looks like the bug was triggered, because
-> mem_cgroup_css_offline was run for a child cgroup earlier than for its
-> parent. This couldn't happen for sure before the cgroup was switched to
-> percpu_ref, because cgroup_destroy_wq has always had max_active == 1.
-> Now, however, it looks like this is perfectly possible for
-> css_killed_ref_fn is called from an rcu callback - see kill_css ->
-> percpu_ref_kill_and_confirm. This breaks kmemcg assumptions.
-> 
-> I'll take a look what can be done about that.
+Hello, Christian.
 
-It's an acknowledged problem in the cgroup core then, and not an issue
-with kmemcg. Tejun sent a fix to correct the offlining order here:
+On Fri, Jan 22, 2016 at 03:24:40PM +0100, Christian Borntraeger wrote:
+> Hmmm I just realized that this patch slightly differs from the one that
+> I tested. Do we need a retest?
 
-https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1056544.html
+It should be fine but I'd appreciate if you can test it again.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
