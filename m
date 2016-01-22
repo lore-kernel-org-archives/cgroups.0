@@ -1,53 +1,75 @@
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-Subject: Re: [PATCH 1/2] cgroup: make sure a parent css isn't offlined before
- its children
-Date: Fri, 22 Jan 2016 09:18:35 +0100
-Message-ID: <56A1E5DB.1010201@de.ibm.com>
-References: <56978452.6010606@de.ibm.com>
- <20160114195630.GA3520@mtj.duckdns.org> <5698A023.9070703@de.ibm.com>
- <20160121203111.GF5157@mtj.duckdns.org>
- <20160121212416.GL6357@twins.programming.kicks-ass.net>
- <20160121212812.GJ5157@mtj.duckdns.org>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: PROBLEM: BUG when using memory.kmem.limit_in_bytes
+Date: Fri, 22 Jan 2016 16:50:42 +0300
+Message-ID: <20160122135042.GF26192@esperanza>
+References: <CAKB58ikDkzc8REt31WBkD99+hxNzjK4+FBmhkgS+NVrC9vjMSg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <20160121212812.GJ5157@mtj.duckdns.org>
-Sender: kvm-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-s390 <linux-s390@vger.kernel.org>, KVM list <kvm@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, kernel-team@fb.com
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAKB58ikDkzc8REt31WBkD99+hxNzjK4+FBmhkgS+NVrC9vjMSg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Brian Christiansen <brian.o.christiansen-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 01/21/2016 10:28 PM, Tejun Heo wrote:
-> On Thu, Jan 21, 2016 at 10:24:16PM +0100, Peter Zijlstra wrote:
->> On Thu, Jan 21, 2016 at 03:31:11PM -0500, Tejun Heo wrote:
->>> There are three subsystem callbacks in css shutdown path -
->>> css_offline(), css_released() and css_free().  Except for
->>> css_released(), cgroup core didn't use to guarantee the order of
->>> invocation.  css_offline() or css_free() could be called on a parent
->>> css before its children.  This behavior is unexpected and led to
->>> use-after-free in cpu controller.
->>>
->>> This patch updates offline path so that a parent css is never offlined
->>> before its children.  Each css keeps online_cnt which reaches zero iff
->>> itself and all its children are offline and offline_css() is invoked
->>> only after online_cnt reaches zero.
->>>
->>> This fixes the reported cpu controller malfunction.  The next patch
->>> will update css_free() handling.
->>
->> No, I need to fix the cpu controller too, because the offending code
->> sits off of css_free() (the next patch), but also does a call_rcu() in
->> between, which also doesn't guarantee order.
-> 
-> Ah, I see.  Christian, can you please apply all three patches and see
-> whether the problem gets fixed?  Once verified, I'll update the patch
-> description and repost.
+Hi Brian,
 
-With these 3 patches I always run into the dio/scsi problem, but never in
-the css issue. So I cannot test a full day or so, but it looks like
-the problem is gone. At least it worked multiple times for 30minutes or
-so until my system was killed by the io issue.
+Thanks for the report.
 
-Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
+I managed to reproduce the bug on the latest mmotm kernel using the
+script you attached, so it isn't ubuntu-specific:
 
+: kernel BUG at mm/memcontrol.c:2929!
+: invalid opcode: 0000 [#1] SMP
+: CPU: 0 PID: 4441 Comm: kworker/0:2 Not tainted 4.4.0-mm1+ #256
+: Workqueue: cgroup_destroy css_killed_work_fn
+: task: ffff8800aaddd880 ti: ffff8800369b0000 task.ti: ffff8800369b0000
+: RIP: 0010:[<ffffffff81220551>]  [<ffffffff81220551>] memcg_offline_kmem+0xd1/0xe0
+: RSP: 0018:ffff8800369b3b08  EFLAGS: 00010293
+: RAX: ffff8800a9cba800 RBX: ffff8800ab1c7000 RCX: 0000000000000003
+: RDX: ffff8800a9cba850 RSI: ffff8800ab1c7060 RDI: ffff8800ab1c1000
+: RBP: ffff8800369b3b28 R08: 0000000000000001 R09: 0000000000000000
+: R10: 0000000000000000 R11: 0000000000000000 R12: ffff8800ab1c5000
+: R13: 0000000000000000 R14: ffff8800ab1c7650 R15: ffff8800ab1c7640
+: FS:  0000000000000000(0000) GS:ffff88014ae00000(0000) knlGS:0000000000000000
+: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+: CR2: 00007f3ad9d3b090 CR3: 0000000148d61000 CR4: 00000000000006f0
+: Stack:
+:  ffff8800369b3b28 ffff8800ab1c7640 ffff8800ab1c7640 ffff8800ab1c7000
+:  ffff8800369b3b88 ffffffff81220601 0000000000000001 0000000000000000
+:  0000000000000002 ffff8800aaddd880 ffff8800369b3b88 ffff8800ab1c7090
+: Call Trace:
+:  [<ffffffff81220601>] mem_cgroup_css_offline+0xa1/0xc0
+:  [<ffffffff81124b5c>] css_killed_work_fn+0x5c/0x170
+:  [<ffffffff8109ea30>] process_one_work+0x200/0x560
+:  [<ffffffff8109e99f>] ? process_one_work+0x16f/0x560
+:  [<ffffffff810d2bb2>] ? __lock_acquire+0x1a2/0x440
+:  [<ffffffff8109f6d4>] ? worker_thread+0x204/0x530
+:  [<ffffffff8109f6c7>] ? worker_thread+0x1f7/0x530
+:  [<ffffffff8109f63e>] worker_thread+0x16e/0x530
+:  [<ffffffff816f2eb4>] ? __schedule+0x354/0x900
+:  [<ffffffff810b2e22>] ? default_wake_function+0x12/0x20
+:  [<ffffffff810ca356>] ? __wake_up_common+0x56/0x90
+:  [<ffffffff8109f4d0>] ? maybe_create_worker+0x110/0x110
+:  [<ffffffff816f3567>] ? schedule+0x47/0xc0
+:  [<ffffffff8109f4d0>] ? maybe_create_worker+0x110/0x110
+:  [<ffffffff810a4ac9>] kthread+0xe9/0x110
+:  [<ffffffff810af22e>] ? schedule_tail+0x1e/0xd0
+:  [<ffffffff810a49e0>] ? __init_kthread_worker+0x70/0x70
+:  [<ffffffff816f92cf>] ret_from_fork+0x3f/0x70
+:  [<ffffffff810a49e0>] ? __init_kthread_worker+0x70/0x70
+
+From first glance, it looks like the bug was triggered, because
+mem_cgroup_css_offline was run for a child cgroup earlier than for its
+parent. This couldn't happen for sure before the cgroup was switched to
+percpu_ref, because cgroup_destroy_wq has always had max_active == 1.
+Now, however, it looks like this is perfectly possible for
+css_killed_ref_fn is called from an rcu callback - see kill_css ->
+percpu_ref_kill_and_confirm. This breaks kmemcg assumptions.
+
+I'll take a look what can be done about that.
+
+Thanks,
+Vladimir
