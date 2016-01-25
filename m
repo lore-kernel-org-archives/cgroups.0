@@ -1,58 +1,49 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: gamer and memory bandwith control
-Date: Mon, 25 Jan 2016 13:46:33 +0100
-Message-ID: <20160125124633.GB23939@dhcp22.suse.cz>
-References: <20160124195538.52826080@myPC>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160124195538.52826080@myPC>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] mm/memcontrol: avoid a spurious gcc warning
+Date: Mon, 25 Jan 2016 16:45:50 +0100
+Message-ID: <1453736756-1959377-3-git-send-email-arnd@arndb.de>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dmitri Seletski <drjoms-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Sun 24-01-16 19:55:38, Dmitri Seletski wrote:
-> Hello.
-> 
-> I don't usually start threads on major forum lists like this one.
-> Pardon me if I do something silly or take your valuable time.(i do
-> consider it to be valuable)
-> 
-> I am gamer and I was looking at opportunities to tweak performance
-> while I do CPU extensive tasks while playing games.
-> 
-> My distro is Gentoo.
-> When I install anything - it's compiled from source.
-> My current compiler settings are '-j 20', since I have 8 core AMD cpu
-> with 32 gigs of ram.. I tried to limit CPU usage so games that run in
-> parallel don't have Frames Per Second drops - it didn't help.
+When CONFIG_DEBUG_VM is set, the various VM_BUG_ON() confuse gcc to
+the point where it cannot remember that 'memcg' is known to be initialized:
 
-It would be interesting to debug what is causing the FPS drop. Is the
-application waiting for a memory allocation? /proc/PID/stack would tell
-you. Regular (per second) snapshots of /proc/vmstat while you see the
-FPS drops would be helpful to tell whether there was a disruptive memory
-reclaim activity going on and a potential reason for drops.
+mm/memcontrol.c: In function 'mem_cgroup_can_attach':
+mm/memcontrol.c:4791:9: warning: 'memcg' may be used uninitialized in this function [-Wmaybe-uninitialized]
 
-> On Gentoo forum one of old guys suggested that I should limit memory
-> bandwith from being  overused by compilation process. He suggested I
-> look into cgroups.
-> 
-> I looked into it, but I don't see anything specific to limit memory
-> bandwidth and some other settings available there, don't seem like
-> something that would help me with memory bottleneck, or would it?
+On ARM gcc-5.1, the above happens when any two or more of the VM_BUG_ON()
+are active, but not when I remove most or all of them. This is clearly
+random behavior and the only way I've found to shut up the warning is
+to add an explicit initialization.
 
-There is nothing like memory bandwidth control implemented via cgroups
-subsystem. What you can try though is to use memory cgroup controller to
-throttle application(s) (compilation in your case) to not push the whole
-system under the global memory pressure and reduce the reclaim overhead
-to the particular memory cgroup.
-In other words start your compilation in a memory cgroup with the hard
-limit set to such a value that your game (presumably the only other
-significant memory consumer in the system) doesn't see the lack of
-memory.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ mm/memcontrol.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d06cae2de783..9340eb981653 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4762,6 +4762,7 @@ static int mem_cgroup_can_attach(struct cgroup_taskset *tset)
+ 	 * multiple.
+ 	 */
+ 	p = NULL;
++	memcg = NULL;
+ 	cgroup_taskset_for_each_leader(leader, css, tset) {
+ 		WARN_ON_ONCE(p);
+ 		p = leader;
 -- 
-Michal Hocko
-SUSE Labs
+2.7.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
