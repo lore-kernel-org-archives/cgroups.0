@@ -1,46 +1,29 @@
-From: Andreas Ziegler <andreas.ziegler@fau.de>
-Subject: [PATCH] cgroup: Fix misspelling of CONFIG_SOCK_CGROUP_DATA in comments
-Date: Tue, 26 Jan 2016 15:39:18 +0100
-Message-ID: <1453819158-25380-1-git-send-email-andreas.ziegler@fau.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: "Putinei .Ionut" <putineiionut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: cgroup version
+Date: Tue, 26 Jan 2016 16:56:45 +0200
+Message-ID: <CAGTuRxPpApnRzzrCXFzAfQhZcD5ecDtEzYSBQTPAiSwf19aJiw@mail.gmail.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=aIJhANgCSyI4r/MPCx8udKJyIqNuKcDke7xpdUN7rik=;
+        b=BpoJ2F8ajXw0Lvrd/Jbl6WBmxLLqjWFF9TCRnWrGfPeXau61JrTimAtIYJYtqpc+W1
+         pPtkGyZgPtTeveZ9fM7mOoTL7VP+kW5qu31MdgqlHTtEb3ranfCR9svgS29/Q+w27oiy
+         F7PnTBxb8Nj7gPi96AkHY/oaCMffBxVFAjSyCrcZMN/aY+RumTuCe0fVwgm7zLOSVLcU
+         4ElVDTu/B0ISz/FmAC10i22eOa5yOQos0j44TjRlLHAegRrfpUTw+lPCLtyw2u9xPqBo
+         5DOcSPt3Y/84ROsK/FryfG4RpXXYi2+a/buM56GthAeaVDxLdjveWQawE80KOMo13AyV
+         2xiw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andreas Ziegler <andreas.ziegler@fau.de>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Commit bd1060a1d671 ("sock, cgroup: add sock->sk_cgroup") added new
-code guarded by an #ifdef CONFIG_SOCK_CGROUP_DATA to
-include/linux/cgroup.h.
+Hello,
 
-In the comments for the corresponding #else and #endifs, however,
-the option is misspelled as CONFIG_CGROUP_DATA. Fix those comments.
+How can I detect the version of cgroups on my system?
 
-Signed-off-by: Andreas Ziegler <andreas.ziegler@fau.de>
----
- include/linux/cgroup.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks,
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 2162dca..48ce12f 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -604,11 +604,11 @@ static inline struct cgroup *sock_cgroup_ptr(struct sock_cgroup_data *skcd)
- #endif
- }
- 
--#else	/* CONFIG_CGROUP_DATA */
-+#else	/* CONFIG_SOCK_CGROUP_DATA */
- 
- static inline void cgroup_sk_alloc(struct sock_cgroup_data *skcd) {}
- static inline void cgroup_sk_free(struct sock_cgroup_data *skcd) {}
- 
--#endif	/* CONFIG_CGROUP_DATA */
-+#endif	/* CONFIG_SOCK_CGROUP_DATA */
- 
- #endif /* _LINUX_CGROUP_H */
--- 
-1.9.1
-
+Ionut
