@@ -1,35 +1,44 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH] Documentation: cgroup-v2: add memory.stat::sock description
-Date: Tue, 26 Jan 2016 15:55:55 -0500
-Message-ID: <1453841755-29165-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 0/5] mm: workingset: per-cgroup thrash detection
+Date: Tue, 26 Jan 2016 16:00:01 -0500
+Message-ID: <1453842006-29265-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- Documentation/cgroup-v2.txt | 4 ++++
- 1 file changed, 4 insertions(+)
+Hi,
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 65b3eac8856c..e8d25e784214 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -843,6 +843,10 @@ PAGE_SIZE multiple when read back.
- 		Amount of memory used to cache filesystem data,
- 		including tmpfs and shared memory.
- 
-+	  sock
-+
-+		Amount of memory used in network transmission buffers
-+
- 	  file_mapped
- 
- 		Amount of cached filesystem data mapped with mmap()
--- 
-2.7.0
+these patches make the workingset code cgroup-aware, so that page
+reclaim works properly when using the cgroup memory controller. More
+details in the 5/5 changelog.
+
+This should have been part of the original thrash detection patches,
+but those were already too complex. So here we go.
+
+Thanks,
+Johannes
+
+ fs/buffer.c                |  14 ++--
+ fs/xfs/xfs_aops.c          |   8 +--
+ include/linux/memcontrol.h |  55 ++++++++++++++--
+ include/linux/mmzone.h     |  11 ++--
+ include/linux/swap.h       |   1 +
+ mm/filemap.c               |  12 ++--
+ mm/memcontrol.c            |  59 ++++-------------
+ mm/page-writeback.c        |  28 ++++----
+ mm/rmap.c                  |   8 +--
+ mm/truncate.c              |   6 +-
+ mm/vmscan.c                |  26 ++++----
+ mm/workingset.c            | 151 ++++++++++++++++++++++++++++++++-----------
+ 12 files changed, 236 insertions(+), 143 deletions(-)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
