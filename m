@@ -1,68 +1,46 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm/memcontrol: avoid a spurious gcc warning
-Date: Mon, 25 Jan 2016 13:55:38 -0500
-Message-ID: <20160125185538.GF29291@cmpxchg.org>
-References: <1453736756-1959377-3-git-send-email-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1453736756-1959377-3-git-send-email-arnd@arndb.de>
-Sender: owner-linux-mm@kvack.org
+From: Andreas Ziegler <andreas.ziegler@fau.de>
+Subject: [PATCH] cgroup: Fix misspelling of CONFIG_SOCK_CGROUP_DATA in comments
+Date: Tue, 26 Jan 2016 15:39:18 +0100
+Message-ID: <1453819158-25380-1-git-send-email-andreas.ziegler@fau.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-arm-kernel@lists.infradead.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andreas Ziegler <andreas.ziegler@fau.de>
 
-Hi Arnd,
+Commit bd1060a1d671 ("sock, cgroup: add sock->sk_cgroup") added new
+code guarded by an #ifdef CONFIG_SOCK_CGROUP_DATA to
+include/linux/cgroup.h.
 
-On Mon, Jan 25, 2016 at 04:45:50PM +0100, Arnd Bergmann wrote:
-> When CONFIG_DEBUG_VM is set, the various VM_BUG_ON() confuse gcc to
-> the point where it cannot remember that 'memcg' is known to be initiali=
-zed:
->=20
-> mm/memcontrol.c: In function 'mem_cgroup_can_attach':
-> mm/memcontrol.c:4791:9: warning: 'memcg' may be used uninitialized in t=
-his function [-Wmaybe-uninitialized]
->=20
-> On ARM gcc-5.1, the above happens when any two or more of the VM_BUG_ON=
-()
-> are active, but not when I remove most or all of them. This is clearly
-> random behavior and the only way I've found to shut up the warning is
-> to add an explicit initialization.
->=20
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+In the comments for the corresponding #else and #endifs, however,
+the option is misspelled as CONFIG_CGROUP_DATA. Fix those comments.
 
-Thanks Arnd.
+Signed-off-by: Andreas Ziegler <andreas.ziegler@fau.de>
+---
+ include/linux/cgroup.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-This has been fixed upstream already:
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 2162dca..48ce12f 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -604,11 +604,11 @@ static inline struct cgroup *sock_cgroup_ptr(struct sock_cgroup_data *skcd)
+ #endif
+ }
+ 
+-#else	/* CONFIG_CGROUP_DATA */
++#else	/* CONFIG_SOCK_CGROUP_DATA */
+ 
+ static inline void cgroup_sk_alloc(struct sock_cgroup_data *skcd) {}
+ static inline void cgroup_sk_free(struct sock_cgroup_data *skcd) {}
+ 
+-#endif	/* CONFIG_CGROUP_DATA */
++#endif	/* CONFIG_SOCK_CGROUP_DATA */
+ 
+ #endif /* _LINUX_CGROUP_H */
+-- 
+1.9.1
 
-commit eed67d75b66748a498a0592d9704081a98509444
-Author: Ross Zwisler <ross.zwisler@linux.intel.com>
-Date:   Wed Dec 23 14:53:27 2015 -0700
-
-    cgroup: Fix uninitialized variable warning
-   =20
-    Commit 1f7dd3e5a6e4 ("cgroup: fix handling of multi-destination migra=
-tion
-    from subtree_control enabling") introduced the following compiler war=
-ning:
-   =20
-    mm/memcontrol.c: In function =E2=80=98mem_cgroup_can_attach=E2=80=99:
-    mm/memcontrol.c:4790:9: warning: =E2=80=98memcg=E2=80=99 may be used =
-uninitialized in this function [-Wmaybe-uninitialized]
-       mc.to =3D memcg;
-             ^
-   =20
-    Fix this by initializing 'memcg' to NULL.
-   =20
-    This was found using gcc (GCC) 4.9.2 20150212 (Red Hat 4.9.2-6).
-   =20
-    Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-    Signed-off-by: Tejun Heo <tj@kernel.org>
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
