@@ -1,72 +1,47 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 4/5] mm: workingset: eviction buckets for bigmem/lowbit
- machines
-Date: Wed, 27 Jan 2016 17:39:38 +0300
-Message-ID: <20160127143938.GD9623@esperanza>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 5/5] mm: workingset: per-cgroup cache thrash detection
+Date: Wed, 27 Jan 2016 17:58:27 +0300
+Message-ID: <20160127145827.GE9623@esperanza>
 References: <1453842006-29265-1-git-send-email-hannes@cmpxchg.org>
- <1453842006-29265-5-git-send-email-hannes@cmpxchg.org>
+ <1453842006-29265-6-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1453842006-29265-5-git-send-email-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1453842006-29265-6-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Jan 26, 2016 at 04:00:05PM -0500, Johannes Weiner wrote:
-> For per-cgroup thrash detection, we need to store the memcg ID inside
-> the radix tree cookie as well. However, on 32 bit that doesn't leave
-> enough bits for the eviction timestamp to cover the necessary range of
-> recently evicted pages. The radix tree entry would look like this:
-> 
-> [ RADIX_TREE_EXCEPTIONAL(2) | ZONEID(2) | MEMCGID(16) | EVICTION(12) ]
-> 
-> 12 bits means 4096 pages, means 16M worth of recently evicted pages.
-> But refaults are actionable up to distances covering half of memory.
-> To not miss refaults, we have to stretch out the range at the cost of
-> how precisely we can tell when a page was evicted. This way we can
-> shave off lower bits from the eviction timestamp until the necessary
-> range is covered. E.g. grouping evictions into 1M buckets (256 pages)
-> will stretch the longest representable refault distance to 4G.
-> 
-> This patch implements eviction buckets that are automatically sized
-> according to the available bits and the necessary refault range, in
-> preparation for per-cgroup thrash detection.
-> 
-> The maximum actionable distance is currently half of memory, but to
-> support memory hotplug of up to 200% of boot-time memory, we size the
-> buckets to cover double the distance. Beyond that, thrashing won't be
-> detectable anymore.
-> 
-> During boot, the kernel will print out the exact parameters, like so:
-> 
-> [    0.113929] workingset: timestamp_bits=12 max_order=18 bucket_order=6
-> 
-> In this example, there are 12 radix entry bits available for the
-> eviction timestamp, to cover a maximum distance of 2^18 pages (this is
-> a 1G machine). Consequently, evictions must be grouped into buckets of
-> 2^6 pages, or 256K.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+On Tue, Jan 26, 2016 at 04:00:06PM -0500, Johannes Weiner wrote:
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index b14a2bb33514..1cf3065c143b 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -317,6 +317,7 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+>  
+>  /* linux/mm/vmscan.c */
+>  extern unsigned long zone_reclaimable_pages(struct zone *zone);
+> +extern unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru);
 
-Reviewed-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+Better declare it in mm/internal.h? And is there any point in renaming
+it?
 
-One nit below.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 953f0f984392..864e237f32d9 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -202,11 +207,20 @@ static void unpack_shadow(void *shadow, struct zone **zonep,
+>   */
+>  void *workingset_eviction(struct address_space *mapping, struct page *page)
+>  {
+> +	struct mem_cgroup *memcg = page_memcg(page);
+>  	struct zone *zone = page_zone(page);
+> +	int memcgid = mem_cgroup_id(memcg);
 
-> +/*
-> + * Eviction timestamps need to be able to cover the full range of
-> + * actionable refaults. However, bits are tight in the radix tree
-> + * entry, and after storing the identifier for the lruvec there might
-> + * not be enough left to represent every single actionable refault. In
-> + * that case, we have to sacrifice granularity for distance, and group
-> + * evictions into coarser buckets by shaving off lower timestamp bits.
-> + */
-> +static unsigned int bucket_order;
-
-__read_mostly?
+This will crash in case memcg is disabled via boot param.
 
 Thanks,
 Vladimir
