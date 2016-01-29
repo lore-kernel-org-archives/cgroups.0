@@ -1,95 +1,55 @@
-From: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
-Subject: [PATCH 6/8] cgroup: mount cgroupns-root when inside
-	non-init cgroupns
-Date: Fri, 29 Jan 2016 02:54:09 -0600
-Message-ID: <1454057651-23959-7-git-send-email-serge.hallyn@ubuntu.com>
-References: <1454057651-23959-1-git-send-email-serge.hallyn@ubuntu.com>
-Reply-To: LXC development mailing-list <lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 1/5] mm: memcontrol: generalize locking for the
+ page->mem_cgroup binding
+Date: Fri, 29 Jan 2016 11:43:53 -0500
+Message-ID: <20160129164353.GA8845@cmpxchg.org>
+References: <1453842006-29265-1-git-send-email-hannes@cmpxchg.org>
+ <1453842006-29265-2-git-send-email-hannes@cmpxchg.org>
+ <20160127143045.GA9623@esperanza>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <lxc-devel-bounces-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
-In-Reply-To: <1454057651-23959-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <http://lists.linuxcontainers.org/options/lxc-devel>,
- <mailto:lxc-devel-request-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxcontainers.org/pipermail/lxc-devel/>
-List-Post: <mailto:lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
-List-Help: <mailto:lxc-devel-request-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linuxcontainers.org/listinfo/lxc-devel>,
- <mailto:lxc-devel-request-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org?subject=subscribe>
-Errors-To: lxc-devel-bounces-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org
-Sender: "lxc-devel" <lxc-devel-bounces-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20160127143045.GA9623@esperanza>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-RnJvbTogU2VyZ2UgSGFsbHluIDxzZXJnZS5oYWxseW5AdWJ1bnR1LmNvbT4KClRoaXMgcGF0Y2gg
-ZW5hYmxlcyBjZ3JvdXAgbW91bnRpbmcgaW5zaWRlIHVzZXJucyB3aGVuIGEgcHJvY2VzcwphcyBh
-cHByb3ByaWF0ZSBwcml2aWxlZ2VzLiBUaGUgY2dyb3VwIGZpbGVzeXN0ZW0gbW91bnRlZCBpcwpy
-b290ZWQgYXQgdGhlIGNncm91cG5zLXJvb3QuIFRodXMsIGluIGEgY29udGFpbmVyLXNldHVwLCBv
-bmx5CnRoZSBoaWVyYXJjaHkgdW5kZXIgdGhlIGNncm91cG5zLXJvb3QgaXMgZXhwb3NlZCBpbnNp
-ZGUgdGhlIGNvbnRhaW5lci4KVGhpcyBhbGxvd3MgY29udGFpbmVyIG1hbmFnZW1lbnQgdG9vbHMg
-dG8gcnVuIGluc2lkZSB0aGUgY29udGFpbmVycwp3aXRob3V0IGRlcGVuZGluZyBvbiBhbnkgZ2xv
-YmFsIHN0YXRlLgoKU2lnbmVkLW9mZi1ieTogU2VyZ2UgSGFsbHluIDxzZXJnZS5oYWxseW5AY2Fu
-b25pY2FsLmNvbT4KLS0tCkNoYW5nZWxvZzoKCTIwMTUxMTE2IC0gRG9uJ3QgYWxsb3cgdXNlciBu
-YW1lc3BhY2VzIHRvIGJpbmQgbmV3IHN1YnN5c3RlbXMKCTIwMTUxMTE4IC0gcG9zdHBvbmUgdGhl
-IEZTX1VTRVJOU19NT1VOVCBmbGFnIHVudGlsIHRoZQoJICAgICAgICAgICBsYXN0IHBhdGNoLCB1
-bnRpbCB3ZSBjYW4gY29udmluY2Ugb3Vyc2VsdmVzIGl0CgkJICAgaXMgc2FmZS4KCTIwMTUxMjA3
-IC0gU3dpdGNoIHRvIHdhbGtpbmcgdXAgdGhlIGtlcm5mcyBwYXRoIGZyb20ga24gcm9vdC4KCQkg
-LSBHcm91cCBpbml0aWFsaXplZCB2YXJpYWJsZXMKCQkgLSBFeHBsYWluIHRoZSBjYXBhYmxlKENB
-UF9TWVNfQURNSU4pIGNoZWNrCgkJIC0gU3R5bGUgZml4ZXMKCTIwMTYwMTA0IC0ga2VybmZzX25v
-ZGVfZGVudHJ5OiBsb2NrIGlub2RlIGZvciBsb29rdXBfb25lX2xlbigpCgkyMDE2MDEyOCAtIGdy
-YWIgbmVlZGVkIGxvY2sgaW4gbW91bnQKClNpZ25lZC1vZmYtYnk6IFNlcmdlIEhhbGx5biA8c2Vy
-Z2UuaGFsbHluQHVidW50dS5jb20+Ci0tLQoga2VybmVsL2Nncm91cC5jIHwgICA0OCArKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0KIDEgZmlsZSBjaGFuZ2Vk
-LCA0NyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nn
-cm91cC5jIGIva2VybmVsL2Nncm91cC5jCmluZGV4IDk2ZTNkYWIuLjNlMDRkZjAgMTAwNjQ0Ci0t
-LSBhL2tlcm5lbC9jZ3JvdXAuYworKysgYi9rZXJuZWwvY2dyb3VwLmMKQEAgLTE5ODMsNiArMTk4
-Myw3IEBAIHN0YXRpYyBzdHJ1Y3QgZGVudHJ5ICpjZ3JvdXBfbW91bnQoc3RydWN0IGZpbGVfc3lz
-dGVtX3R5cGUgKmZzX3R5cGUsCiB7CiAJYm9vbCBpc192MiA9IGZzX3R5cGUgPT0gJmNncm91cDJf
-ZnNfdHlwZTsKIAlzdHJ1Y3Qgc3VwZXJfYmxvY2sgKnBpbm5lZF9zYiA9IE5VTEw7CisJc3RydWN0
-IGNncm91cF9uYW1lc3BhY2UgKm5zID0gY3VycmVudC0+bnNwcm94eS0+Y2dyb3VwX25zOwogCXN0
-cnVjdCBjZ3JvdXBfc3Vic3lzICpzczsKIAlzdHJ1Y3QgY2dyb3VwX3Jvb3QgKnJvb3Q7CiAJc3Ry
-dWN0IGNncm91cF9zYl9vcHRzIG9wdHM7CkBAIC0xOTkxLDYgKzE5OTIsMTQgQEAgc3RhdGljIHN0
-cnVjdCBkZW50cnkgKmNncm91cF9tb3VudChzdHJ1Y3QgZmlsZV9zeXN0ZW1fdHlwZSAqZnNfdHlw
-ZSwKIAlpbnQgaTsKIAlib29sIG5ld19zYjsKIAorCWdldF9jZ3JvdXBfbnMobnMpOworCisJLyog
-Q2hlY2sgaWYgdGhlIGNhbGxlciBoYXMgcGVybWlzc2lvbiB0byBtb3VudC4gKi8KKwlpZiAoIW5z
-X2NhcGFibGUobnMtPnVzZXJfbnMsIENBUF9TWVNfQURNSU4pKSB7CisJCXB1dF9jZ3JvdXBfbnMo
-bnMpOworCQlyZXR1cm4gRVJSX1BUUigtRVBFUk0pOworCX0KKwogCS8qCiAJICogVGhlIGZpcnN0
-IHRpbWUgYW55b25lIHRyaWVzIHRvIG1vdW50IGEgY2dyb3VwLCBlbmFibGUgdGhlIGxpc3QKIAkg
-KiBsaW5raW5nIGVhY2ggY3NzX3NldCB0byBpdHMgdGFza3MgYW5kIGZpeCB1cCBhbGwgZXhpc3Rp
-bmcgdGFza3MuCkBAIC0yMDAxLDYgKzIwMTAsNyBAQCBzdGF0aWMgc3RydWN0IGRlbnRyeSAqY2dy
-b3VwX21vdW50KHN0cnVjdCBmaWxlX3N5c3RlbV90eXBlICpmc190eXBlLAogCWlmIChpc192Mikg
-ewogCQlpZiAoZGF0YSkgewogCQkJcHJfZXJyKCJjZ3JvdXAyOiB1bmtub3duIG9wdGlvbiBcIiVz
-XCJcbiIsIChjaGFyICopZGF0YSk7CisJCQlwdXRfY2dyb3VwX25zKG5zKTsKIAkJCXJldHVybiBF
-UlJfUFRSKC1FSU5WQUwpOwogCQl9CiAJCWNncnBfZGZsX3Jvb3RfdmlzaWJsZSA9IHRydWU7CkBA
-IC0yMTA2LDYgKzIxMTYsMTYgQEAgc3RhdGljIHN0cnVjdCBkZW50cnkgKmNncm91cF9tb3VudChz
-dHJ1Y3QgZmlsZV9zeXN0ZW1fdHlwZSAqZnNfdHlwZSwKIAkJZ290byBvdXRfdW5sb2NrOwogCX0K
-IAorCS8qCisJICogV2Uga25vdyB0aGlzIHN1YnN5c3RlbSBoYXMgbm90IHlldCBiZWVuIGJvdW5k
-LiAgVXNlcnMgaW4gYSBub24taW5pdAorCSAqIHVzZXIgbmFtZXNwYWNlIG1heSBvbmx5IG1vdW50
-IGhpZXJhcmNoaWVzIHdpdGggbm8gYm91bmQgc3Vic3lzdGVtcywKKwkgKiBpLmUuICdub25lLG5h
-bWU9dXNlcjEnCisJICovCisJaWYgKCFvcHRzLm5vbmUgJiYgIWNhcGFibGUoQ0FQX1NZU19BRE1J
-TikpIHsKKwkJcmV0ID0gLUVQRVJNOworCQlnb3RvIG91dF91bmxvY2s7CisJfQorCiAJcm9vdCA9
-IGt6YWxsb2Moc2l6ZW9mKCpyb290KSwgR0ZQX0tFUk5FTCk7CiAJaWYgKCFyb290KSB7CiAJCXJl
-dCA9IC1FTk9NRU07CkBAIC0yMTI0LDEyICsyMTQ0LDM3IEBAIG91dF9mcmVlOgogCWtmcmVlKG9w
-dHMucmVsZWFzZV9hZ2VudCk7CiAJa2ZyZWUob3B0cy5uYW1lKTsKIAotCWlmIChyZXQpCisJaWYg
-KHJldCkgeworCQlwdXRfY2dyb3VwX25zKG5zKTsKIAkJcmV0dXJuIEVSUl9QVFIocmV0KTsKKwl9
-CiBvdXRfbW91bnQ6CiAJZGVudHJ5ID0ga2VybmZzX21vdW50KGZzX3R5cGUsIGZsYWdzLCByb290
-LT5rZl9yb290LAogCQkJICAgICAgaXNfdjIgPyBDR1JPVVAyX1NVUEVSX01BR0lDIDogQ0dST1VQ
-X1NVUEVSX01BR0lDLAogCQkJICAgICAgJm5ld19zYik7CisKKwkvKgorCSAqIEluIG5vbi1pbml0
-IGNncm91cCBuYW1lc3BhY2UsIGluc3RlYWQgb2Ygcm9vdCBjZ3JvdXAncworCSAqIGRlbnRyeSwg
-d2UgcmV0dXJuIHRoZSBkZW50cnkgY29ycmVzcG9uZGluZyB0byB0aGUKKwkgKiBjZ3JvdXBucy0+
-cm9vdF9jZ3JwLgorCSAqLworCWlmICghSVNfRVJSKGRlbnRyeSkgJiYgbnMgIT0gJmluaXRfY2dy
-b3VwX25zKSB7CisJCXN0cnVjdCBkZW50cnkgKm5zZGVudHJ5OworCQlzdHJ1Y3QgY2dyb3VwICpj
-Z3JwOworCisJCW11dGV4X2xvY2soJmNncm91cF9tdXRleCk7CisJCXNwaW5fbG9ja19iaCgmY3Nz
-X3NldF9sb2NrKTsKKworCQljZ3JwID0gY3NldF9jZ3JvdXBfZnJvbV9yb290KG5zLT5yb290X2Nz
-ZXQsIHJvb3QpOworCisJCXNwaW5fdW5sb2NrX2JoKCZjc3Nfc2V0X2xvY2spOworCQltdXRleF91
-bmxvY2soJmNncm91cF9tdXRleCk7CisKKwkJbnNkZW50cnkgPSBrZXJuZnNfbm9kZV9kZW50cnko
-Y2dycC0+a24sIGRlbnRyeS0+ZF9zYik7CisJCWRwdXQoZGVudHJ5KTsKKwkJZGVudHJ5ID0gbnNk
-ZW50cnk7CisJfQorCiAJaWYgKElTX0VSUihkZW50cnkpIHx8ICFuZXdfc2IpCiAJCWNncm91cF9w
-dXQoJnJvb3QtPmNncnApOwogCkBAIC0yMTQyLDYgKzIxODcsNyBAQCBvdXRfbW91bnQ6CiAJCWRl
-YWN0aXZhdGVfc3VwZXIocGlubmVkX3NiKTsKIAl9CiAKKwlwdXRfY2dyb3VwX25zKG5zKTsKIAly
-ZXR1cm4gZGVudHJ5OwogfQogCi0tIAoxLjcuOS41CgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwpseGMtZGV2ZWwgbWFpbGluZyBsaXN0Cmx4Yy1kZXZlbEBs
-aXN0cy5saW51eGNvbnRhaW5lcnMub3JnCmh0dHA6Ly9saXN0cy5saW51eGNvbnRhaW5lcnMub3Jn
-L2xpc3RpbmZvL2x4Yy1kZXZlbAo=
+On Wed, Jan 27, 2016 at 05:30:45PM +0300, Vladimir Davydov wrote:
+> On Tue, Jan 26, 2016 at 04:00:02PM -0500, Johannes Weiner wrote:
+> 
+> > @@ -683,17 +683,17 @@ int __set_page_dirty_buffers(struct page *page)
+> >  		} while (bh != head);
+> >  	}
+> >  	/*
+> > -	 * Use mem_group_begin_page_stat() to keep PageDirty synchronized with
+> > -	 * per-memcg dirty page counters.
+> > +	 * Lock out page->mem_cgroup migration to keep PageDirty
+> > +	 * synchronized with per-memcg dirty page counters.
+> >  	 */
+> > -	memcg = mem_cgroup_begin_page_stat(page);
+> > +	memcg = lock_page_memcg(page);
+> >  	newly_dirty = !TestSetPageDirty(page);
+> >  	spin_unlock(&mapping->private_lock);
+> >  
+> >  	if (newly_dirty)
+> >  		__set_page_dirty(page, mapping, memcg, 1);
+> 
+> Do we really want to pass memcg to __set_page_dirty and then to
+> account_page_dirtied, increasing stack/regs usage even in case memory
+> cgroup is disabled? May be, it'd be better to make
+> mem_cgroup_update_page_stat take a page instead of a memcg?
+
+I'll look into that. It will need changing migration to leave the
+page->mem_cgroup binding of live pages alone, but that's something
+worth doing anyway. It's beyond the scope of these patches, though.
+
+Thanks
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
