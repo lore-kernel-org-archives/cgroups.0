@@ -1,288 +1,81 @@
-From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHv2 2/3] IB/core: added support to use rdma cgroup
- controller
-Date: Sat, 30 Jan 2016 21:57:22 +0800
-Message-ID: <201601302114.pjMDNo5j%fengguang.wu@intel.com>
+From: Parav Pandit <pandit.parav@gmail.com>
+Subject: Re: [PATCHv2 2/3] IB/core: added support to use rdma cgroup controller
+Date: Sat, 30 Jan 2016 20:29:49 +0530
+Message-ID: <CAG53R5X7qdzKy-A4-zCEhTGH6dnbtLEMQzkZGkXdtLwi1FRQhA@mail.gmail.com>
 References: <1454154087-27375-3-git-send-email-pandit.parav@gmail.com>
+	<201601302114.pjMDNo5j%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="7JfCtLOvnd9MIVvH"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1454154087-27375-3-git-send-email-pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=ZkUbUuKGtl4sbFsdzrtyVYuF8Tuek/ZCjh2lOybI2xk=;
+        b=jHiV84gEkn0DWshUwxrj61kp471/8i0bGf7bA63IJtse5wmJ1in0YyTzWkDPr3twrS
+         fGB7uUNqpM6yKu5sre4FBb4PjWj+5Ni6RP6VxHqEPoGZu12XGDwkEzu7+d/SuZmI/Sb3
+         lPiDyd6fiH9nfTtf1O6mjKfFDFFfzzjykmqyKL9yOOxfPDGmKghxIsfNeqVx8Znodrcr
+         XzVu3ZIVrUKhQW1q9QMos83EuhTB3AoGRYP7Dlvj/UeNa7jI8VXYiP7C9RgTQ7JWGBUJ
+         jF5Hu111MKjf7K1afrU0WcdbFbt9d/mCtTJXFdXqeCD+cKS2x7TuqviIcNMzWuI3s2+u
+         +tJw==
+In-Reply-To: <201601302114.pjMDNo5j%fengguang.wu@intel.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org, haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
+I am able to reproduce it.
+Spinning v3 for the fix which will be actually in patch_1.
 
---7JfCtLOvnd9MIVvH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Parav
 
-Hi Parav,
-
-[auto build test ERROR on cgroup/for-next]
-[cannot apply to v4.5-rc1 next-20160129]
-[if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
-
-url:    https://github.com/0day-ci/linux/commits/Parav-Pandit/rdma-controller-support/20160130-194534
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-config: m68k-sun3_defconfig (attached as .config)
-reproduce:
-        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=m68k 
-
-All errors (new ones prefixed by >>):
-
-   In file included from include/rdma/ib_verbs.h:58:0,
-                    from include/rdma/ib_addr.h:47,
-                    from include/rdma/rdma_cm.h:39,
-                    from net/rds/rds.h:7,
-                    from net/rds/af_rds.c:41:
->> include/linux/cgroup_rdma.h:19:29: error: field 'css' has incomplete type
-     struct cgroup_subsys_state css;
-                                ^
-
-vim +/css +19 include/linux/cgroup_rdma.h
-
-f74be9d0 Parav Pandit 2016-01-30  13  	RDMACG_RESOURCE_POOL_VERB,
-f74be9d0 Parav Pandit 2016-01-30  14  	RDMACG_RESOURCE_POOL_HW,
-f74be9d0 Parav Pandit 2016-01-30  15  	RDMACG_RESOURCE_POOL_TYPE_MAX,
-f74be9d0 Parav Pandit 2016-01-30  16  };
-f74be9d0 Parav Pandit 2016-01-30  17  
-f74be9d0 Parav Pandit 2016-01-30  18  struct rdma_cgroup {
-f74be9d0 Parav Pandit 2016-01-30 @19  	struct cgroup_subsys_state	css;
-f74be9d0 Parav Pandit 2016-01-30  20  
-f74be9d0 Parav Pandit 2016-01-30  21  	spinlock_t	cg_list_lock;	/* protects cgroup resource pool list */
-f74be9d0 Parav Pandit 2016-01-30  22  	struct list_head rpool_head;	/* head to keep track of all resource
-
-:::::: The code at line 19 was first introduced by commit
-:::::: f74be9d0a094f209c9b8127317d9ce8d2f5dafea rdmacg: Added rdma cgroup controller.
-
-:::::: TO: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-:::::: CC: 0day robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
---7JfCtLOvnd9MIVvH
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-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
-S0RboFnTleWjWxugEoqfSvX/D31wjPatAAA=
-
---7JfCtLOvnd9MIVvH--
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, Jan 30, 2016 at 7:27 PM, kbuild test robot <lkp@intel.com> wrote:
+> Hi Parav,
+>
+> [auto build test ERROR on cgroup/for-next]
+> [cannot apply to v4.5-rc1 next-20160129]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Parav-Pandit/rdma-controller-support/20160130-194534
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+> config: m68k-sun3_defconfig (attached as .config)
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=m68k
+>
+> All errors (new ones prefixed by >>):
+>
+>    In file included from include/rdma/ib_verbs.h:58:0,
+>                     from include/rdma/ib_addr.h:47,
+>                     from include/rdma/rdma_cm.h:39,
+>                     from net/rds/rds.h:7,
+>                     from net/rds/af_rds.c:41:
+>>> include/linux/cgroup_rdma.h:19:29: error: field 'css' has incomplete type
+>      struct cgroup_subsys_state css;
+>                                 ^
+>
+> vim +/css +19 include/linux/cgroup_rdma.h
+>
+> f74be9d0 Parav Pandit 2016-01-30  13    RDMACG_RESOURCE_POOL_VERB,
+> f74be9d0 Parav Pandit 2016-01-30  14    RDMACG_RESOURCE_POOL_HW,
+> f74be9d0 Parav Pandit 2016-01-30  15    RDMACG_RESOURCE_POOL_TYPE_MAX,
+> f74be9d0 Parav Pandit 2016-01-30  16  };
+> f74be9d0 Parav Pandit 2016-01-30  17
+> f74be9d0 Parav Pandit 2016-01-30  18  struct rdma_cgroup {
+> f74be9d0 Parav Pandit 2016-01-30 @19    struct cgroup_subsys_state      css;
+> f74be9d0 Parav Pandit 2016-01-30  20
+> f74be9d0 Parav Pandit 2016-01-30  21    spinlock_t      cg_list_lock;   /* protects cgroup resource pool list */
+> f74be9d0 Parav Pandit 2016-01-30  22    struct list_head rpool_head;    /* head to keep track of all resource
+>
+> :::::: The code at line 19 was first introduced by commit
+> :::::: f74be9d0a094f209c9b8127317d9ce8d2f5dafea rdmacg: Added rdma cgroup controller.
+>
+> :::::: TO: Parav Pandit <pandit.parav@gmail.com>
+> :::::: CC: 0day robot <fengguang.wu@intel.com>
+>
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
