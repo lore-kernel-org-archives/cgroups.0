@@ -1,578 +1,209 @@
-From: Alban Crequy <alban.crequy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] selftests/cgroupns: new test for cgroup namespaces
-Date: Sun, 31 Jan 2016 18:48:12 +0100
-Message-ID: <1454262492-6480-1-git-send-email-alban@kinvolk.io>
-References: <1454057651-23959-1-git-send-email-serge.hallyn@ubuntu.com>
+From: Parav Pandit <pandit.parav@gmail.com>
+Subject: Re: [PATCHv3 1/3] rdmacg: Added rdma cgroup controller.
+Date: Sun, 31 Jan 2016 23:20:45 +0530
+Message-ID: <CAG53R5XXaW-fhb9megcp+Xnv05bSuonDws2fE-D6Wk3JNqS2Aw@mail.gmail.com>
+References: <1454167387-31260-1-git-send-email-pandit.parav@gmail.com>
+	<1454167387-31260-2-git-send-email-pandit.parav@gmail.com>
+	<20160130183015.GP32380@htj.duckdns.org>
+	<CAG53R5XrnYY1AVBnu1b6BVfWwiUgyq+EsXay=CianRXnsUDviQ@mail.gmail.com>
+	<20160131100237.GS32380@htj.duckdns.org>
+	<CAG53R5WOLA_=gD9qVnsVk_oPs0iyacL3M+1qD+RAbrnciVXEOA@mail.gmail.com>
+	<20160131110420.GV32380@htj.duckdns.org>
 Mime-Version: 1.0
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=0tQudTUBKu2pFLanWLk3v0T48zaATBODRk2k4q+aqGM=;
+        b=MDryZP3Ff0iGwWA1Zu81EDfSwlImwarXSebbbiYUU4iq7VlPUUjIUMUfKMhbxQknK5
+         NKkbUoAQ3JtbUADM8/gWMREX0clbNoWvvAMLrfTaapZP7rgU1mrkQ4BcoOq1APXm2+4E
+         /oGPkZmVMEMsm7mwErCJiqNSyuKHREst6OWhwMNJVJg0FxJTMK4iNld3aLVQWsgMPR6J
+         zCx71qFqIq5RpEFT5/fEJu5irmHTSRetFIFndL5Abficb/4VL/ObMyrmSssrow45BZjh
+         myUBUg3uBNes5PTV1lPnh+Hb355FI1IwX67wOib75n6xoY3TaMxCrQJsBKNxka/5Ybcd
+         FKGw==
+In-Reply-To: <20160131110420.GV32380@htj.duckdns.org>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=wGMPotFD25DeXAACP7ELJSKtO9A+hCjCp1hPI3gQA6Y=;
-	b=aTIQKp12RtQrb43mbvx68VDo0FlU33/gqzfK1RqFXBpsDsOzozc3sa5hZMcBsJgXJp
-	zQaGmx6tJHOvwrtTAqMbS8fbaHBwcxrHK2ppngS03lRF7w2dK/W2M84LSpXmvECX1LVQ
-	5TwlGRxkCaA23Ffx3gmrh+CoYwWllm1zuQXoukx6kSII394erV3MUzfWhNBfC3WSV1vt
-	jlats9fvRzAvWOi7UjI2+AIE/vuGdqVdnd04egwgCTh1UN1h+0uUj/0rFyE41EJDbfSq
-	eQPvCja0DR9Y58bjrAeuCnaj3HuUbWDyQbph4bFhaoPmUqVSdhSkJLinNEurzpBkmlf1
-	RYuQ==
-In-Reply-To: <1454057651-23959-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, iago-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org, Alban Crequy <alban-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-From: Alban Crequy <alban-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>
+Hi Doug, Liran, Jason,
 
-This adds the selftest "cgroupns_test" in order to test the CGroup
-Namespace patchset.
+How would you like to see RDMA verb resources being defined - in RDMA
+cgroup or in IB stack?
+In current patch v5, its defined by the IB stack which is often
+shipped as different package due to high amount of changes, bug fixes,
+features.
+In v0 patch it was defined by the RDMA cgroup, which means any new
+resource addition/definition requires kernel upgrade. Which is hard to
+change often.
+If resources are defined by RDMA cgroup kernel than adding/removing
+resource means, someone have to do lot of engineering with different
+versions of kernel support and loadable module support using compat.h
+etc at driver level, which in my mind is some amount of engineering
+compare to what v5 has to offer and its already available. With one
+round of cleanup in resource definition, it should be usable.
 
-cgroupns_test creates two child processes. They perform a list of
-actions defined by the array cgroupns_test. This array can easily be
-extended to more scenarios without adding much code. They are
-synchronized with eventfds to ensure only one action is performed at a
-time.
+Its important to provide this feedback to Tejun and me, so that we
+take informed design decision.
 
-The memory is shared between the processes (CLONE_VM) so each child
-process can know the pid of their siblings without extra IPC.
+Hi Tejun,
 
-The output explains the scenario being played. Short extract:
+On Sun, Jan 31, 2016 at 4:34 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Parav.
+>
+> On Sun, Jan 31, 2016 at 04:11:54PM +0530, Parav Pandit wrote:
+>> No. We agreed that let IB stack define in the header file that rdmacg
+>> can include.
+>> However when I started with that I realized that, such design has
+>> basic flaw that IB stack is compiled as loadable modules.
+>> cgroup which is compiled along with kernel, cannot rely on the header
+>> file of the loadable module, as it will lead to incompatibly and
+>> possible crash.
+>
+> Yes, it can.  It just becomes a part of kernel ABI that the IB stack
+> module depends on.
+>
+o.k. Its doable, but I believe its simple but its restrictive.
+If rest of the RDMA experts are ok with it, I will change it to do it that way.
+We get to hear their feedback before we put this as ABI.
 
-> current cgroup: /user.slice/user-0.slice/session-1.scope
-> child process #0: check that process #self (pid=482) has cgroup /user.slice/user-0.slice/session-1.scope
-> child process #0: unshare cgroupns
-> child process #0: move process #self (pid=482) to cgroup cgroup-a/subcgroup-a
-> child process #0: join parent cgroupns
+>> > Keep the resource types in an array in minimal way and match with the
+>> > information from core side.  It doesn't make any sense to use match
+>> > tokens in defining resources when the resource type is always fixed.
+>> >
+>> Match token is being used in other places also typically where user
+>> configuration is involved.
+>> so Match token infrastructure APIs help to avoid rewriting parser.
+>> What exactly is the issue in using match token?
+>> Resource type is fixed - sure it is with given version of loadable
+>> module. But if new feature/resource is added in IB stack, at that
+>> point new token will be added in the array.
+>
+> Sure, use parser for parsing but you end up stripping =%d in other
+> places anyway.  Do it the other way.  Let the definitions contain
+> what's essential and do the extra stuff in code handling it, not the
+> other way around.
+>
+>> Now coming to remove command's need.
+>> If user has previously configured limit of say mr=15. Now if wants to
+>> remove that configuration and don't want to bother for the limit.
+>> So the way, its done is by issuing "remove" command.
+>> Should I name is "reset".
+>
+> How is this different from setting the limits to max?
+>
+We can set it to max. But during freeing time, checking array of 10+
+elements whether its max or not, didn't find efficient either.
 
-The test does not change the mount namespace and does not mount any
-new cgroup2 filesystem. Therefore this does not test that the cgroup2
-mount is correctly rooted to the cgroupns root at mount time.
+>> When user issues "remove" command it could still happen that there are
+>> active rdma resources. So we cannot really free the rpool object.
+>> That is freed when last resource is uncharged.
+>> Make sense?
+>
+> Not really.
+>
+>> > You're re-stating the same thing without explaining the reasoning
+>> > behind it.  Why is this different from other controllers?  What's the
+>> > justification?
+>>
+>> As in above example of 15-85, if we keep it or create is we will end
+>> up allocating rpool objects for all the 100 cgroups, which might not
+>> be necessary. If it happens to be multi level hierarchy, it will end
+>> up having in each level.
+>> So therefore its allocated and freed dynamically.
+>
+> Just keeping them around till device destruction would work just fine.
 
-Signed-off-by: Alban Crequy <alban-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>
-Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Most likely not. I tried to explained that in reply to Haggai's email
+for RFC, also in rdma.txt documentation patch 3/3.
+Let me try again.
+Device stays in a system for long time. Mostly for months until
+drivers are unloaded or firmware crashes or some other event.
+While on other hand, cgroup life cycle is in hours or more.
+So rpool that we allocated dynamically, it needs to be freed or
+atleast when set to max or when cgroup is deleted.
+But there is catch there, it cannot be freed because there are
+processed which has allocated the resource from this cgroup, but have
+been migrated to other cgroup which will uncharge sometime later.
+(This is not a usecase, but its the artifact of cgroup interface).
+So rpool needs to be freed at later when uncharge occurs. At that
+point we drop the reference to the css, so that css can be freed and
+same css->id can get circulated for new cgroup.
+If we don't do this, and wait until device destruction, rpool just
+keeps growing!
+I think above is more important design aspect than just saving memory to me.
 
----
+Let me know if you have different design thought here.
+(Like engineering can_attach() callback in rdma_cgroup, which I don't
+see necessary either).
 
-Changelog:
-    20160131 - rebase on sergeh/cgroupns.v10 and fix conflicts
+> If you wanna insist on freeing them dynamically, free them when both
+> their usages and configs are nil.
+Agree. Thats what the code is doing using marking object type being default.
+If I remove the object type, as alternative,
+It requires that when we uncharge resource, we should run through the
+max array to see if they are all set to max.
+And keep one aggregate counter for usage (apart from individual)
+counter for each resource.
 
-    20160115 - Detect where cgroup2 is mounted, don't assume
-               /sys/fs/cgroup (suggested by sergeh)
-             - Check more error conditions (from krnowak's review)
-             - Coding style (from krnowak's review)
-             - Update error message for Linux >= 4.5 (from krnowak's
-               review)
+> How the object is created shouldn't be a factor.
 
-    20160104 - Fix coding style (from sergeh's review)
-             - Fix printf formatting (from sergeh's review)
-             - Fix parsing of /proc/pid/cgroup (from sergeh's review)
-             - Fix concatenation of cgroup paths
+Loop for max and aggregate counter can avoid creator variable.
 
-    20151219 - First version
+>
+>> If its created by user configuration, and if we free the rpool object
+>> when last resource is freed which is holding the configuration,
+>> user configuration is lost.
+>> Also it doesn't make much sense to have two different allocation for
+>> limit and usage configuration. Pointer storing overhead is more than
+>> the actual content.
+>
+> See above.  If you want to free dynamically, free when the thing
+> doesn't contain any information.
+o.k.
 
-This patch is available in the cgroupns.v10-tests branch of
-https://github.com/kinvolk/linux.git
-It is rebased on top of Serge Hallyn's cgroupns.v10 branch of
-https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/
+> Better, just don't worry about it. It's unlikely to matter.
+I tried to explain above about the need to free dynamically, instead
+of device destruction time.
 
-Test results:
+>
+>> > No, the locking scheme doesn't make any sense.  Except for some
+>> > special cases, sequence like the following indicates that the code is
+>> > buggy or at least silly.
+>> >
+>> Help me to understand, silly means - unacceptable?
+>
+> Yes, it's a clear anti-pattern for a refcnted object.  Again, just
+> push the locking to the users and drop the atomics.
+>
+ok. Let me see how can I refactor this part of code. I will get back
+on this if I hit a block.
 
-- SUCCESS on kernel cgroupns.v10 booted with systemd.unified_cgroup_hierarchy=1
-- SUCCESS on kernel cgroupns.v10 booted with systemd.unified_cgroup_hierarchy=0
----
- tools/testing/selftests/Makefile                 |   1 +
- tools/testing/selftests/cgroupns/Makefile        |  11 +
- tools/testing/selftests/cgroupns/cgroupns_test.c | 445 +++++++++++++++++++++++
- 3 files changed, 457 insertions(+)
- create mode 100644 tools/testing/selftests/cgroupns/Makefile
- create mode 100644 tools/testing/selftests/cgroupns/cgroupns_test.c
 
-diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-index b04afc3..b373135 100644
---- a/tools/testing/selftests/Makefile
-+++ b/tools/testing/selftests/Makefile
-@@ -1,5 +1,6 @@
- TARGETS = breakpoints
- TARGETS += capabilities
-+TARGETS += cgroupns
- TARGETS += cpu-hotplug
- TARGETS += efivarfs
- TARGETS += exec
-diff --git a/tools/testing/selftests/cgroupns/Makefile b/tools/testing/selftests/cgroupns/Makefile
-new file mode 100644
-index 0000000..0fdbe0a
---- /dev/null
-+++ b/tools/testing/selftests/cgroupns/Makefile
-@@ -0,0 +1,11 @@
-+CFLAGS += -I../../../../usr/include/
-+CFLAGS += -I../../../../include/uapi/
-+
-+all: cgroupns_test
-+
-+TEST_PROGS := cgroupns_test
-+
-+include ../lib.mk
-+
-+clean:
-+	$(RM) cgroupns_test
-diff --git a/tools/testing/selftests/cgroupns/cgroupns_test.c b/tools/testing/selftests/cgroupns/cgroupns_test.c
-new file mode 100644
-index 0000000..71e2336
---- /dev/null
-+++ b/tools/testing/selftests/cgroupns/cgroupns_test.c
-@@ -0,0 +1,445 @@
-+#define _GNU_SOURCE
-+
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <string.h>
-+#include <sys/statfs.h>
-+#include <inttypes.h>
-+#include <sched.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/socket.h>
-+#include <sys/wait.h>
-+#include <sys/eventfd.h>
-+#include <signal.h>
-+#include <fcntl.h>
-+
-+#include <linux/magic.h>
-+#include <linux/sched.h>
-+
-+#include "../kselftest.h"
-+
-+#define STACK_SIZE 65536
-+
-+static char cgroup_mountpoint[4096];
-+static char root_cgroup[4096];
-+
-+#define CHILDREN_COUNT 2
-+typedef struct {
-+	pid_t pid;
-+	uint8_t *stack;
-+	int start_semfd;
-+	int end_semfd;
-+} cgroupns_child_t;
-+cgroupns_child_t children[CHILDREN_COUNT];
-+
-+typedef enum {
-+	UNSHARE_CGROUPNS,
-+	JOIN_CGROUPNS,
-+	CHECK_CGROUP,
-+	CHECK_CGROUP_WITH_ROOT_PREFIX,
-+	MOVE_CGROUP,
-+	MOVE_CGROUP_WITH_ROOT_PREFIX,
-+} cgroupns_action_t;
-+
-+static const struct {
-+	int actor_id;
-+	cgroupns_action_t action;
-+	int target_id;
-+	char *path;
-+} cgroupns_tests[] = {
-+	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, -1, "/"},
-+	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, "/"},
-+	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, "/"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, -1, "/"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, "/"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, "/"},
-+
-+	{ 0, UNSHARE_CGROUPNS, -1, NULL},
-+
-+	{ 0, CHECK_CGROUP, -1, "/"},
-+	{ 0, CHECK_CGROUP, 0, "/"},
-+	{ 0, CHECK_CGROUP, 1, "/"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, -1, "/"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, "/"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, "/"},
-+
-+	{ 1, UNSHARE_CGROUPNS, -1, NULL},
-+
-+	{ 0, CHECK_CGROUP, -1, "/"},
-+	{ 0, CHECK_CGROUP, 0, "/"},
-+	{ 0, CHECK_CGROUP, 1, "/"},
-+	{ 1, CHECK_CGROUP, -1, "/"},
-+	{ 1, CHECK_CGROUP, 0, "/"},
-+	{ 1, CHECK_CGROUP, 1, "/"},
-+
-+	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a"},
-+	{ 1, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-b"},
-+
-+	{ 0, CHECK_CGROUP, -1, "/cgroup-a"},
-+	{ 0, CHECK_CGROUP, 0, "/cgroup-a"},
-+	{ 0, CHECK_CGROUP, 1, "/cgroup-b"},
-+	{ 1, CHECK_CGROUP, -1, "/cgroup-b"},
-+	{ 1, CHECK_CGROUP, 0, "/cgroup-a"},
-+	{ 1, CHECK_CGROUP, 1, "/cgroup-b"},
-+
-+	{ 0, UNSHARE_CGROUPNS, -1, NULL},
-+	{ 1, UNSHARE_CGROUPNS, -1, NULL},
-+
-+	{ 0, CHECK_CGROUP, -1, "/"},
-+	{ 0, CHECK_CGROUP, 0, "/"},
-+	{ 0, CHECK_CGROUP, 1, "/../cgroup-b"},
-+	{ 1, CHECK_CGROUP, -1, "/"},
-+	{ 1, CHECK_CGROUP, 0, "/../cgroup-a"},
-+	{ 1, CHECK_CGROUP, 1, "/"},
-+
-+	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a"},
-+	{ 1, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-b/sub1-b"},
-+
-+	{ 0, CHECK_CGROUP, 0, "/sub1-a"},
-+	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
-+	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a"},
-+	{ 1, CHECK_CGROUP, 1, "/sub1-b"},
-+
-+	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a/sub2-a"},
-+	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a/sub2-a"},
-+	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
-+	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a/sub2-a/sub3-a"},
-+	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a/sub2-a/sub3-a"},
-+	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
-+	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
-+	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
-+	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
-+
-+	{ 1, UNSHARE_CGROUPNS, -1, NULL},
-+	{ 1, CHECK_CGROUP, 0, "/../../cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
-+	{ 0, UNSHARE_CGROUPNS, -1, NULL},
-+	{ 0, CHECK_CGROUP, 1, "/../../../../../cgroup-b/sub1-b"},
-+
-+	{ 0, JOIN_CGROUPNS, -1, NULL},
-+	{ 1, JOIN_CGROUPNS, -1, NULL},
-+
-+	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, "/cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
-+	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, "/cgroup-b/sub1-b"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, "/cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
-+	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, "/cgroup-b/sub1-b"},
-+};
-+#define cgroupns_tests_len (sizeof(cgroupns_tests) / sizeof(cgroupns_tests[0]))
-+
-+static void
-+get_cgroup_mountpoint(char *path, size_t len)
-+{
-+	char line[4096];
-+	char dummy[4096];
-+	char mountpoint[4096];
-+	FILE *f;
-+
-+	f = fopen("/proc/self/mountinfo", "r");
-+	if (!f) {
-+		printf("FAIL: cannot open mountinfo\n");
-+		ksft_exit_fail();
-+	}
-+
-+	for (;;) {
-+		if (!fgets(line, sizeof(line), f)) {
-+			if (ferror(f)) {
-+				printf("FAIL: cannot read mountinfo\n");
-+				ksft_exit_fail();
-+			}
-+			printf("FAIL: cannot find cgroup2 mount in mountinfo\n");
-+			ksft_exit_fail();
-+		}
-+
-+		line[strcspn(line, "\n")] = 0;
-+		/* 36 35 98:0 /mnt1 /mnt2 rw,noatime master:1 - ext3 /dev/root rw,errors=continue
-+		 * (1)(2)(3)   (4)   (5)      (6)      (7)   (8) (9)   (10)         (11)
-+		 */
-+		if (strstr(line, " - cgroup2 ") == NULL) /* (9)=cgroup2 */
-+			continue;
-+
-+		if (sscanf(line, "%4095s %4095s %4095s %4095s %4095s", dummy, dummy, dummy, dummy, mountpoint) != 5)
-+			continue;
-+
-+		strncpy(path, mountpoint, len);
-+		path[len-1] = '\0';
-+		break;
-+	}
-+
-+	fclose(f);
-+}
-+
-+static void
-+get_cgroup(pid_t pid, char *path, size_t len)
-+{
-+	char proc_path[4096];
-+	char line[4096];
-+	FILE *f;
-+
-+	if (pid > 0) {
-+		sprintf(proc_path, "/proc/%d/cgroup", pid);
-+	} else {
-+		sprintf(proc_path, "/proc/self/cgroup");
-+	}
-+
-+	f = fopen(proc_path, "r");
-+	if (!f) {
-+		printf("FAIL: cannot open %s\n", proc_path);
-+		ksft_exit_fail();
-+	}
-+
-+	for (;;) {
-+		if (!fgets(line, sizeof(line), f)) {
-+			if (ferror(f)) {
-+				printf("FAIL: cannot read %s\n", proc_path);
-+				ksft_exit_fail();
-+			}
-+			printf("FAIL: could not parse %s\n", proc_path);
-+			ksft_exit_fail();
-+		}
-+
-+		line[strcspn(line, "\n")] = 0;
-+		if (strncmp(line, "0::", 3) == 0) {
-+			strncpy(path, line+3, len);
-+			path[len-1] = '\0';
-+			break;
-+		}
-+	}
-+
-+	fclose(f);
-+}
-+
-+static void
-+move_cgroup(pid_t target_pid, int prefix, char *cgroup)
-+{
-+	char knob_dir[4096];
-+	char knob_path[4096];
-+	char buf[128];
-+	FILE *f;
-+	int ret;
-+
-+	if (prefix) {
-+		sprintf(knob_dir, "%s/%s/%s", cgroup_mountpoint, root_cgroup, cgroup);
-+		sprintf(knob_path, "%s/cgroup.procs", knob_dir, cgroup);
-+	} else {
-+		sprintf(knob_dir, "%s/%s", cgroup_mountpoint, cgroup);
-+		sprintf(knob_path, "%s/cgroup.procs", knob_dir);
-+	}
-+
-+	mkdir(knob_dir, 0755);
-+
-+	sprintf(buf, "%d\n", target_pid);
-+
-+	f = fopen(knob_path, "w");
-+	ret = fwrite(buf, strlen(buf), 1, f);
-+	if (ret != 1) {
-+		printf("FAIL: cannot write to %s (ret=%d)\n", knob_path, ret);
-+		ksft_exit_fail();
-+	}
-+	fclose(f);
-+}
-+
-+static int
-+child_func(void *arg)
-+{
-+	uintptr_t id = (uintptr_t) arg;
-+	char child_cgroup[4096];
-+	char expected_cgroup[4096];
-+	char process_name[128];
-+	char proc_path[128];
-+	int step;
-+	int ret;
-+	int nsfd;
-+
-+	for (step = 0; step < cgroupns_tests_len; step++) {
-+		uint64_t counter = 0;
-+		pid_t target_pid;
-+
-+		/* wait a signal from the parent process before starting this step */
-+		ret = read(children[id].start_semfd, &counter, sizeof(counter));
-+		if (ret != sizeof(counter)) {
-+			printf("FAIL: cannot read semaphore\n");
-+			ksft_exit_fail();
-+		}
-+
-+		/* only one process will do this step */
-+		if (cgroupns_tests[step].actor_id == id) {
-+			switch (cgroupns_tests[step].action) {
-+			case UNSHARE_CGROUPNS:
-+				printf("child process #%lu: unshare cgroupns\n", id);
-+				ret = unshare(CLONE_NEWCGROUP);
-+				if (ret != 0) {
-+					printf("FAIL: cannot unshare cgroupns\n");
-+					ksft_exit_fail();
-+				}
-+				break;
-+
-+			case JOIN_CGROUPNS:
-+				printf("child process #%lu: join parent cgroupns\n", id);
-+
-+				sprintf(proc_path, "/proc/%d/ns/cgroup", getppid());
-+				nsfd = open(proc_path, 0);
-+				ret = setns(nsfd, CLONE_NEWCGROUP);
-+				if (ret != 0) {
-+					printf("FAIL: cannot join cgroupns\n");
-+					ksft_exit_fail();
-+				}
-+				close(nsfd);
-+				break;
-+
-+			case CHECK_CGROUP:
-+			case CHECK_CGROUP_WITH_ROOT_PREFIX:
-+				if (cgroupns_tests[step].action == CHECK_CGROUP || strcmp(root_cgroup, "/") == 0)
-+					sprintf(expected_cgroup, "%s", cgroupns_tests[step].path);
-+				else if (strcmp(cgroupns_tests[step].path, "/") == 0)
-+					sprintf(expected_cgroup, "%s", root_cgroup);
-+				else
-+					sprintf(expected_cgroup, "%s%s", root_cgroup, cgroupns_tests[step].path);
-+
-+				if (cgroupns_tests[step].target_id >= 0) {
-+					target_pid = children[cgroupns_tests[step].target_id].pid;
-+					sprintf(process_name, "#%d (pid=%d)",
-+					        cgroupns_tests[step].target_id, target_pid);
-+				} else {
-+					target_pid = 0;
-+					sprintf(process_name, "#self (pid=%d)", getpid());
-+				}
-+
-+				printf("child process #%lu: check that process %s has cgroup %s\n",
-+				       id, process_name, expected_cgroup);
-+
-+				get_cgroup(target_pid, child_cgroup, sizeof(child_cgroup));
-+
-+				if (strcmp(child_cgroup, expected_cgroup) != 0) {
-+					printf("FAIL: child has cgroup %s\n", child_cgroup);
-+					ksft_exit_fail();
-+				}
-+
-+				break;
-+
-+			case MOVE_CGROUP:
-+			case MOVE_CGROUP_WITH_ROOT_PREFIX:
-+				if (cgroupns_tests[step].target_id >= 0) {
-+					target_pid = children[cgroupns_tests[step].target_id].pid;
-+					sprintf(process_name, "#%d (pid=%d)",
-+					        cgroupns_tests[step].target_id, target_pid);
-+				} else {
-+					target_pid = children[id].pid;
-+					sprintf(process_name, "#self (pid=%d)", target_pid);
-+				}
-+
-+				printf("child process #%lu: move process %s to cgroup %s\n",
-+				       id, process_name, cgroupns_tests[step].path);
-+
-+				move_cgroup(target_pid,
-+				            cgroupns_tests[step].action == MOVE_CGROUP_WITH_ROOT_PREFIX,
-+				            cgroupns_tests[step].path);
-+				break;
-+
-+			default:
-+				printf("FAIL: invalid action\n");
-+				ksft_exit_fail();
-+			}
-+		}
-+
-+
-+		/* signal the parent process we've finished this step */
-+		counter = 1;
-+		ret = write(children[id].end_semfd, &counter, sizeof(counter));
-+		if (ret != sizeof(counter)) {
-+			printf("FAIL: cannot write semaphore\n");
-+			ksft_exit_fail();
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+int
-+main(int argc, char **argv)
-+{
-+	struct statfs fs;
-+	char child_cgroup[4096];
-+	int ret;
-+	int status;
-+	uintptr_t i;
-+	int step;
-+
-+	get_cgroup_mountpoint(cgroup_mountpoint, sizeof(cgroup_mountpoint));
-+	printf("cgroup2 mounted on: %s\n", cgroup_mountpoint);
-+
-+	if (statfs(cgroup_mountpoint, &fs) < 0) {
-+		printf("FAIL: statfs\n");
-+		ksft_exit_fail();
-+	}
-+
-+	if (fs.f_type != (typeof(fs.f_type)) CGROUP2_SUPER_MAGIC) {
-+		printf("FAIL: this test is for Linux >= 4.5 with cgroup2 mounted\n");
-+		ksft_exit_fail();
-+	}
-+
-+	get_cgroup(0, root_cgroup, sizeof(root_cgroup));
-+	printf("current cgroup: %s\n", root_cgroup);
-+
-+	for (i = 0; i < CHILDREN_COUNT; i++) {
-+		children[i].start_semfd = eventfd(0, EFD_SEMAPHORE);
-+		if (children[i].start_semfd == -1) {
-+			printf("FAIL: cannot create eventfd\n");
-+			ksft_exit_fail();
-+		}
-+
-+		children[i].end_semfd = eventfd(0, EFD_SEMAPHORE);
-+		if (children[i].end_semfd == -1) {
-+			printf("FAIL: cannot create eventfd\n");
-+			ksft_exit_fail();
-+		}
-+
-+		children[i].stack = malloc(STACK_SIZE);
-+		if (!children[i].stack) {
-+			printf("FAIL: cannot allocate stack\n");
-+			ksft_exit_fail();
-+		}
-+	}
-+
-+	for (i = 0; i < CHILDREN_COUNT; i++) {
-+		children[i].pid = clone(child_func, children[i].stack + STACK_SIZE,
-+		                        SIGCHLD|CLONE_VM|CLONE_FILES, (void *)i);
-+		if (children[i].pid == -1) {
-+			printf("FAIL: cannot clone\n");
-+			ksft_exit_fail();
-+		}
-+	}
-+
-+	for (step = 0; step < cgroupns_tests_len; step++) {
-+		uint64_t counter = 1;
-+
-+		/* signal the child processes they can start the current step */
-+		for (i = 0; i < CHILDREN_COUNT; i++) {
-+			ret = write(children[i].start_semfd, &counter, sizeof(counter));
-+			if (ret != sizeof(counter)) {
-+				printf("FAIL: cannot write semaphore\n");
-+				ksft_exit_fail();
-+			}
-+		}
-+
-+		/* wait until all child processes finished the current step */
-+		for (i = 0; i < CHILDREN_COUNT; i++) {
-+			ret = read(children[i].end_semfd, &counter, sizeof(counter));
-+			if (ret != sizeof(counter)) {
-+				printf("FAIL: cannot read semaphore\n");
-+				ksft_exit_fail();
-+			}
-+		}
-+	}
-+
-+	for (i = 0; i < CHILDREN_COUNT; i++) {
-+		ret = waitpid(-1, &status, 0);
-+		if (ret == -1 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-+			printf("FAIL: cannot wait child\n");
-+			ksft_exit_fail();
-+		}
-+	}
-+
-+	printf("SUCCESS\n");
-+	return ksft_exit_pass();
-+}
--- 
-2.5.0
+>> Why you don't want them to be freed when there are no requester
+>> allocating the resource?
+>> Device usually stays for longer time, but applications go way and come
+>> back more often, so freeing them makes more sense when not in use.
+>> What exactly is the problem in freeing when uncharing occurs, due to
+>> which I should defer it to device unregistration stage?
+>
+> Two things.  Freeing dynamically doesn't require creator type or
+> refcnting here, so the code makes no sense to me.  It's complicated
+> without any purpose.  Second, it's not that big a struct.  Just leave
+> them around till it's clear that this is problematic.
+Above explanation should justify that its problematic to keep that
+around until device destruction.
+
+> For the Nth time in this whole thing, keep things simple.  Stop overengineering.
+
+I have tried to keep in simple. I respect your comments and have
+improved upon most of the valuable comments that you gave in
+subsequent patches from v0 to v5.
+Few exceptions which I will work through now are:
+1. resource definition place (cgroup vs IB stack) - avoid callback.
+2. lock functions
+3. dynamic freeing (which I think is justified now above).
