@@ -1,26 +1,27 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCHv4 1/3] rdmacg: Added rdma cgroup controller.
-Date: Sun, 31 Jan 2016 08:37:39 +0800
-Message-ID: <201601310851.uY7ukvCn%fengguang.wu@intel.com>
-References: <1454192901-31003-2-git-send-email-pandit.parav@gmail.com>
+Subject: Re: [PATCHv4 2/3] IB/core: added support to use rdma cgroup
+ controller
+Date: Sun, 31 Jan 2016 09:17:33 +0800
+Message-ID: <201601310900.q7yqBBOS%fengguang.wu@intel.com>
+References: <1454192901-31003-3-git-send-email-pandit.parav@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="ZGiS0Q5IWpPtfppv"
-Return-path: <linux-security-module-owner@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="C7zPtVaVf+AK4Oqc"
+Return-path: <linux-doc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1454192901-31003-2-git-send-email-pandit.parav@gmail.com>
-Sender: owner-linux-security-module@vger.kernel.org
+In-Reply-To: <1454192901-31003-3-git-send-email-pandit.parav@gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Cc: kbuild-all@01.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com, corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org, pandit.parav@gmail.com
 
 
---ZGiS0Q5IWpPtfppv
+--C7zPtVaVf+AK4Oqc
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
 Hi Parav,
 
 [auto build test ERROR on cgroup/for-next]
-[also build test ERROR on v4.5-rc1 next-20160129]
+[cannot apply to v4.5-rc1 next-20160129]
 [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 
 url:    https://github.com/0day-ci/linux/commits/Parav-Pandit/rdmacg-IB-core-rdma-controller-support/20160131-063313
@@ -30,92 +31,167 @@ reproduce:
         # save the attached .config to linux build tree
         make ARCH=i386 
 
-All error/warnings (new ones prefixed by >>):
+All errors (new ones prefixed by >>):
 
-   In file included from arch/x86/include/asm/bug.h:35:0,
-                    from include/linux/bug.h:4,
-                    from include/linux/mmdebug.h:4,
-                    from include/linux/gfp.h:4,
-                    from include/linux/slab.h:14,
-                    from kernel/cgroup_rdma.c:8:
-   kernel/cgroup_rdma.c: In function 'find_cg_rpool_locked':
->> include/linux/lockdep.h:340:51: error: invalid type argument of '->' (have 'spinlock_t {aka struct spinlock}')
-    #define lockdep_is_held(lock) lock_is_held(&(lock)->dep_map)
-                                                      ^
-   include/asm-generic/bug.h:86:25: note: in definition of macro 'WARN_ON'
-     int __ret_warn_on = !!(condition);    \
-                            ^
->> include/linux/lockdep.h:366:27: note: in expansion of macro 'lockdep_is_held'
-      WARN_ON(debug_locks && !lockdep_is_held(l)); \
-                              ^
->> kernel/cgroup_rdma.c:179:2: note: in expansion of macro 'lockdep_assert_held'
-     lockdep_assert_held(cg->rpool_list_lock);
-     ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:12:8: error: redefinition of 'struct match_token'
+    struct match_token {
+           ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:12:8: note: originally defined here
+    struct match_token {
+           ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:17:28: error: conflicting types for 'match_table_t'
+    typedef struct match_token match_table_t[];
+                               ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:17:28: note: previous declaration of 'match_table_t' was here
+    typedef struct match_token match_table_t[];
+                               ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:20:7: error: redeclaration of enumerator 'MAX_OPT_ARGS'
+    enum {MAX_OPT_ARGS = 3};
+          ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:20:7: note: previous definition of 'MAX_OPT_ARGS' was here
+    enum {MAX_OPT_ARGS = 3};
+          ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:26:3: error: conflicting types for 'substring_t'
+    } substring_t;
+      ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:26:3: note: previous declaration of 'substring_t' was here
+    } substring_t;
+      ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:28:5: error: conflicting types for 'match_token'
+    int match_token(char *, const match_table_t table, substring_t args[]);
+        ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:28:5: note: previous declaration of 'match_token' was here
+    int match_token(char *, const match_table_t table, substring_t args[]);
+        ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:29:5: error: conflicting types for 'match_int'
+    int match_int(substring_t *, int *result);
+        ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:29:5: note: previous declaration of 'match_int' was here
+    int match_int(substring_t *, int *result);
+        ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:30:5: error: conflicting types for 'match_octal'
+    int match_octal(substring_t *, int *result);
+        ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:30:5: note: previous declaration of 'match_octal' was here
+    int match_octal(substring_t *, int *result);
+        ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:31:5: error: conflicting types for 'match_hex'
+    int match_hex(substring_t *, int *result);
+        ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:31:5: note: previous declaration of 'match_hex' was here
+    int match_hex(substring_t *, int *result);
+        ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:33:8: error: conflicting types for 'match_strlcpy'
+    size_t match_strlcpy(char *, const substring_t *, size_t);
+           ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:33:8: note: previous declaration of 'match_strlcpy' was here
+    size_t match_strlcpy(char *, const substring_t *, size_t);
+           ^
+   In file included from include/linux/cgroup_rdma.h:5:0,
+                    from include/rdma/ib_verbs.h:58,
+                    from include/rdma/ib_cache.h:38,
+                    from drivers/infiniband/ulp/srp/ib_srp.c:43:
+>> include/linux/parser.h:34:7: error: conflicting types for 'match_strdup'
+    char *match_strdup(const substring_t *);
+          ^
+   In file included from drivers/infiniband/ulp/srp/ib_srp.c:40:0:
+   include/linux/parser.h:34:7: note: previous declaration of 'match_strdup' was here
+    char *match_strdup(const substring_t *);
+          ^
 
-coccinelle warnings: (new ones prefixed by >>)
+vim +12 include/linux/parser.h
 
->> kernel/cgroup_rdma.c:912:1-7: preceding lock on line 879
---
->> kernel/cgroup_rdma.c:787:2-3: Unneeded semicolon
-   kernel/cgroup_rdma.c:611:2-3: Unneeded semicolon
+^1da177e Linus Torvalds    2005-04-16   6   * but could potentially be used anywhere else that simple option=arg
+^1da177e Linus Torvalds    2005-04-16   7   * parsing is required.
+^1da177e Linus Torvalds    2005-04-16   8   */
+^1da177e Linus Torvalds    2005-04-16   9  
+^1da177e Linus Torvalds    2005-04-16  10  
+^1da177e Linus Torvalds    2005-04-16  11  /* associates an integer enumerator with a pattern string. */
+^1da177e Linus Torvalds    2005-04-16 @12  struct match_token {
+^1da177e Linus Torvalds    2005-04-16  13  	int token;
+ef4533f8 David Howells     2007-05-03  14  	const char *pattern;
+^1da177e Linus Torvalds    2005-04-16  15  };
+^1da177e Linus Torvalds    2005-04-16  16  
+1a3f7d98 Linus Torvalds    2008-08-04 @17  typedef struct match_token match_table_t[];
+^1da177e Linus Torvalds    2005-04-16  18  
+^1da177e Linus Torvalds    2005-04-16  19  /* Maximum number of arguments that match_token will find in a pattern */
+^1da177e Linus Torvalds    2005-04-16 @20  enum {MAX_OPT_ARGS = 3};
+^1da177e Linus Torvalds    2005-04-16  21  
+^1da177e Linus Torvalds    2005-04-16  22  /* Describe the location within a string of a substring */
+^1da177e Linus Torvalds    2005-04-16  23  typedef struct {
+^1da177e Linus Torvalds    2005-04-16  24  	char *from;
+^1da177e Linus Torvalds    2005-04-16  25  	char *to;
+^1da177e Linus Torvalds    2005-04-16 @26  } substring_t;
+^1da177e Linus Torvalds    2005-04-16  27  
+a447c093 Steven Whitehouse 2008-10-13 @28  int match_token(char *, const match_table_t table, substring_t args[]);
+^1da177e Linus Torvalds    2005-04-16 @29  int match_int(substring_t *, int *result);
+^1da177e Linus Torvalds    2005-04-16 @30  int match_octal(substring_t *, int *result);
+^1da177e Linus Torvalds    2005-04-16 @31  int match_hex(substring_t *, int *result);
+aace0509 Du, Changbin      2014-01-23  32  bool match_wildcard(const char *pattern, const char *str);
+b32a09db Markus Armbruster 2008-02-26 @33  size_t match_strlcpy(char *, const substring_t *, size_t);
+ef4533f8 David Howells     2007-05-03 @34  char *match_strdup(const substring_t *);
 
-Please review and possibly fold the followup patch.
+:::::: The code at line 12 was first introduced by commit
+:::::: 1da177e4c3f41524e886b7f1b8a0c1fc7321cac2 Linux-2.6.12-rc2
 
-vim +340 include/linux/lockdep.h
-
-7531e2f34 Peter Zijlstra  2008-08-11  334  			 int trylock, int read, int check,
-7531e2f34 Peter Zijlstra  2008-08-11  335  			 struct lockdep_map *nest_lock, unsigned long ip);
-fbb9ce953 Ingo Molnar     2006-07-03  336  
-fbb9ce953 Ingo Molnar     2006-07-03  337  extern void lock_release(struct lockdep_map *lock, int nested,
-fbb9ce953 Ingo Molnar     2006-07-03  338  			 unsigned long ip);
-fbb9ce953 Ingo Molnar     2006-07-03  339  
-f607c6685 Peter Zijlstra  2009-07-20 @340  #define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
-f607c6685 Peter Zijlstra  2009-07-20  341  
-f607c6685 Peter Zijlstra  2009-07-20  342  extern int lock_is_held(struct lockdep_map *lock);
-f607c6685 Peter Zijlstra  2009-07-20  343  
-00ef9f734 Peter Zijlstra  2008-12-04  344  extern void lock_set_class(struct lockdep_map *lock, const char *name,
-00ef9f734 Peter Zijlstra  2008-12-04  345  			   struct lock_class_key *key, unsigned int subclass,
-64aa348ed Peter Zijlstra  2008-08-11  346  			   unsigned long ip);
-64aa348ed Peter Zijlstra  2008-08-11  347  
-00ef9f734 Peter Zijlstra  2008-12-04  348  static inline void lock_set_subclass(struct lockdep_map *lock,
-00ef9f734 Peter Zijlstra  2008-12-04  349  		unsigned int subclass, unsigned long ip)
-00ef9f734 Peter Zijlstra  2008-12-04  350  {
-00ef9f734 Peter Zijlstra  2008-12-04  351  	lock_set_class(lock, lock->name, lock->key, subclass, ip);
-00ef9f734 Peter Zijlstra  2008-12-04  352  }
-00ef9f734 Peter Zijlstra  2008-12-04  353  
-cf40bd16f Nick Piggin     2009-01-21  354  extern void lockdep_set_current_reclaim_state(gfp_t gfp_mask);
-cf40bd16f Nick Piggin     2009-01-21  355  extern void lockdep_clear_current_reclaim_state(void);
-cf40bd16f Nick Piggin     2009-01-21  356  extern void lockdep_trace_alloc(gfp_t mask);
-cf40bd16f Nick Piggin     2009-01-21  357  
-a24fc60d6 Peter Zijlstra  2015-06-11  358  extern void lock_pin_lock(struct lockdep_map *lock);
-a24fc60d6 Peter Zijlstra  2015-06-11  359  extern void lock_unpin_lock(struct lockdep_map *lock);
-a24fc60d6 Peter Zijlstra  2015-06-11  360  
-cf40bd16f Nick Piggin     2009-01-21  361  # define INIT_LOCKDEP				.lockdep_recursion = 0, .lockdep_reclaim_gfp = 0,
-fbb9ce953 Ingo Molnar     2006-07-03  362  
-e3a55fd18 Jarek Poplawski 2007-03-22  363  #define lockdep_depth(tsk)	(debug_locks ? (tsk)->lockdep_depth : 0)
-d5abe6691 Peter Zijlstra  2006-12-06  364  
-b1ae345d9 Johannes Berg   2013-02-21  365  #define lockdep_assert_held(l)	do {				\
-b1ae345d9 Johannes Berg   2013-02-21 @366  		WARN_ON(debug_locks && !lockdep_is_held(l));	\
-b1ae345d9 Johannes Berg   2013-02-21  367  	} while (0)
-f607c6685 Peter Zijlstra  2009-07-20  368  
-9a37110d2 Peter Hurley    2014-09-10  369  #define lockdep_assert_held_once(l)	do {				\
-
-:::::: The code at line 340 was first introduced by commit
-:::::: f607c6685774811b8112e124f10a053d77015485 lockdep: Introduce lockdep_assert_held()
-
-:::::: TO: Peter Zijlstra <a.p.zijlstra@chello.nl>
-:::::: CC: Ingo Molnar <mingo@elte.hu>
+:::::: TO: Linus Torvalds <torvalds@ppc970.osdl.org>
+:::::: CC: Linus Torvalds <torvalds@ppc970.osdl.org>
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---ZGiS0Q5IWpPtfppv
+--C7zPtVaVf+AK4Oqc
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICJ1UrVYAAy5jb25maWcAjDzJdty2svt8RR/nLe5dONZkWTnvaIEGwW6kSYIGwFZLGx5F
+H4sICPlerVYAAy5jb25maWcAjDzJdty2svt8RR/nLe5dONZkWTnvaIEGwW6kSYIGwFZLGx5F
 asc6V4OfJOcmf/+qAA4FEJSTRWRWFUAMNVexf/7p5wX7/vr0cP16d3N9f//34o/94/75+nV/
 u/hyd7//30WmFpWyC5FJ+wsQF3eP3//6cHd8dro4+eXkl4PFZv/8uL9f8KfHL3d/fIeRd0+P
 P/0MlFxVuVy1pydLaRd3L4vHp9fFy/71pw6+Ozttj4/O/ybP44OsjNUNt1JVbSa4yoQekbXQ
@@ -1106,4 +1182,4 @@ EtfcBE4DI7GoMxpTK6y8pqeJU1yINq/kKmuIQ0kXQ4C6lmp+aQWWgsDhuSJetch0+nEaIO7I
 ROjkww1QgtDXj8XSg+B5gZxJUOiGKBkcQnL1yw8ms4OgJiVTKo0uDj8ODz14cfCxIKtdAxd5
 cnadGnu8gUEospIZDKCI9oOn1f8DGuABcsFGAwA=
 
---ZGiS0Q5IWpPtfppv--
+--C7zPtVaVf+AK4Oqc--
