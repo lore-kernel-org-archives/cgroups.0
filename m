@@ -1,37 +1,32 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH 1/3] mm: migrate: do not touch page->mem_cgroup of live
- pages
-Date: Wed, 3 Feb 2016 12:20:09 +0300
-Message-ID: <20160203092009.GE21016@esperanza>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH 2/3] mm: simplify lock_page_memcg()
+Date: Wed, 3 Feb 2016 12:25:27 +0300
+Message-ID: <20160203092527.GF21016@esperanza>
 References: <1454109573-29235-1-git-send-email-hannes@cmpxchg.org>
- <1454109573-29235-2-git-send-email-hannes@cmpxchg.org>
+ <1454109573-29235-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1454109573-29235-2-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1454109573-29235-3-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Fri, Jan 29, 2016 at 06:19:31PM -0500, Johannes Weiner wrote:
-> Changing a page's memcg association complicates dealing with the page,
-> so we want to limit this as much as possible. Page migration e.g. does
-> not have to do that. Just like page cache replacement, it can forcibly
-> charge a replacement page, and then uncharge the old page when it gets
-> freed. Temporarily overcharging the cgroup by a single page is not an
-> issue in practice, and charging is so cheap nowadays that this is much
-> preferrable to the headache of messing with live pages.
+On Fri, Jan 29, 2016 at 06:19:32PM -0500, Johannes Weiner wrote:
+> Now that migration doesn't clear page->mem_cgroup of live pages
+> anymore, it's safe to make lock_page_memcg() and the memcg stat
+> functions take pages, and spare the callers from memcg objects.
 > 
-> The only place that still changes the page->mem_cgroup binding of live
-> pages is when pages move along with a task to another cgroup. But that
-> path isolates the page from the LRU, takes the page lock, and the move
-> lock (lock_page_memcg()). That means page->mem_cgroup is always stable
-> in callers that have the page isolated from the LRU or locked. Lighter
-> unlocked paths, like writeback accounting, can use lock_page_memcg().
-> 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Suggested-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Acked-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Acked-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
