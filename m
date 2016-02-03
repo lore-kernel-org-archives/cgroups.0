@@ -1,47 +1,65 @@
-From: Benjamin LaHaise <bcrl@kvack.org>
-Subject: Re: [mm -next] mapping->tree_lock inconsistent lock state
-Date: Wed, 3 Feb 2016 14:01:11 -0500
-Message-ID: <20160203190111.GE20326@kvack.org>
-References: <20160203153633.GA32219@swordfish> <20160203184509.GB4007@cmpxchg.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] mm/workingset: do not forget to unlock page
+Date: Wed, 3 Feb 2016 13:19:39 -0800
+Message-ID: <20160203131939.1a35d9bc03f13b2b143d27c0@linux-foundation.org>
+References: <1454493513-19316-1-git-send-email-sergey.senozhatsky@gmail.com>
+	<20160203104136.GA517@swordfish>
+	<20160203162400.GB10440@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20160203184509.GB4007@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20160203162400.GB10440-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Vlastimil Babka <vbabka@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Sergey Senozhatsky <sergey.senozhatsky.work-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sergey Senozhatsky <sergey.senozhatsky-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed, Feb 03, 2016 at 01:45:09PM -0500, Johannes Weiner wrote:
-> On Thu, Feb 04, 2016 at 12:36:33AM +0900, Sergey Senozhatsky wrote:
-> > Hello,
+On Wed, 3 Feb 2016 11:24:00 -0500 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+
+> On Wed, Feb 03, 2016 at 07:41:36PM +0900, Sergey Senozhatsky wrote:
+> > From 1d6315221f2f81c53c99f9980158f8ae49dbd582 Mon Sep 17 00:00:00 2001
+> > From: Sergey Senozhatsky <sergey.senozhatsky-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Date: Wed, 3 Feb 2016 18:49:16 +0900
+> > Subject: [PATCH] mm/workingset: do not forget to unlock_page in workingset_activation
 > > 
-> > next-20160203
+> > Do not return from workingset_activation() with locked rcu and page.
 > > 
-> > [ 3587.997451] =================================
-> > [ 3587.997453] [ INFO: inconsistent lock state ]
-> > [ 3587.997456] 4.5.0-rc2-next-20160203-dbg-00007-g37a0a9d-dirty #377 Not tainted
-> > [ 3587.997457] ---------------------------------
-> > [ 3587.997459] inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
+> > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 > 
-> Thanks Sergey. Vladimir sent a patch to move mem_cgroup_migrate() out
-> of the IRQ-disabled section:
+> Thanks Sergey. Even though I wrote this function, my brain must have
+> gone "it can't be locking anything when it returns NULL, right?" It's
+> a dumb interface. Luckily, that's fixed with follow-up patches in -mm.
 > 
-> http://marc.info/?l=linux-mm&m=145452460721208&w=2
+> As for this one:
 > 
-> It looks like Vladimir's original message didn't make it to linux-mm,
-> only my reply to it; CC Ben LaHaise.
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Fixes: mm: workingset: per-cgroup cache thrash detection
+> 
+> Andrew, can you please fold this?
 
-There's not much I can do when Google decides to filter it.
+Yup.  I turned it into a fix against
+mm-workingset-per-cgroup-cache-thrash-detection.patch, which is where
+the bug was added.  And I did the goto thing instead, so the final
+result will be
 
-		-ben
--- 
-"Thought is the essence of where you are now."
+void workingset_activation(struct page *page)
+{
+	struct lruvec *lruvec;
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+	lock_page_memcg(page);
+	/*
+	 * Filter non-memcg pages here, e.g. unmap can call
+	 * mark_page_accessed() on VDSO pages.
+	 *
+	 * XXX: See workingset_refault() - this should return
+	 * root_mem_cgroup even for !CONFIG_MEMCG.
+	 */
+	if (!mem_cgroup_disabled() && !page_memcg(page))
+		goto out;
+	lruvec = mem_cgroup_zone_lruvec(page_zone(page), page_memcg(page));
+	atomic_long_inc(&lruvec->inactive_age);
+out:
+	unlock_page_memcg(page);
+}
+
