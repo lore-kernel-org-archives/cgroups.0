@@ -1,44 +1,31 @@
-From: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Suspected bug with memory controller with kernel 4.2.3
-Date: Fri, 5 Feb 2016 19:15:04 +0200
-Message-ID: <CAGXs5wUFE0obngO7qTzLmwLqdM6tW-NU0WQCpQ3Em6rbGxozzw@mail.gmail.com>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH 1/2] mm: migrate: consolidate mem_cgroup_migrate() calls
+Date: Sun, 7 Feb 2016 21:33:38 +0300
+Message-ID: <20160207183337.GA19151@esperanza>
+References: <1454616467-8994-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:date:message-id:subject:from:to:content-type;
-        bh=MPhXvmaNecC5ouzy7b8ysJ2tgUgmvsQpkKCC0a2zOi4=;
-        b=wBm3VYPtYUlPaGQeRvGgimcPRyHu1MFB8UWKlCEIoNsWvnoqmCkeYdFt593nqtMizN
-         pNm7N9qjUjTUI8lv+Av1SguqUNtandfIpgebl0p5Qr+JCS6E1ETZggBsdgKHYJgi0bmK
-         YryOXIDzmo2AArGV8wBdSWwDXiR7PV19B9mzDBjIWE6YusFdZ/6jewXDzTgHfiS+vTmg
-         y9iNcEJ7vRfYYth7ZtnKFObWSZgoSvMWRno1o6WFbQsahYSgzmwMZb2pslP9S+lDBQgS
-         Fu7AsVMnAW2mQHtSsWHc8njiu7X0v6HAw94VHp7OtWGPpblpWnVYChc7gZ1Q+ogcZT5q
-         rlUA==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1454616467-8994-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, Mateusz Guzik <mguzik@redhat.com>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hi,
+On Thu, Feb 04, 2016 at 03:07:46PM -0500, Johannes Weiner wrote:
+> Rather than scattering mem_cgroup_migrate() calls all over the place,
+> have a single call from a safe place where every migration operation
+> eventually ends up in - migrate_page_copy().
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Suggested-by: Hugh Dickins <hughd@google.com>
 
-I have Fedora 23 with kernel  4.2.3-300.fc23.x86_64 out of the box.
+Acked-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 
-Sytsemd mounts the memory controller on /sys/fs/cgroup/memory
-I am trying the following sequence:
-mkdir /memCgroupTest1
-mount -t cgroup -o memory memtest1 /memCgroupTest1
-
-It succeeds. Also after creating subfolders in /memCgroupTest1, the
-set of control files
-for memory controller + the generic files is created.
- Mounting the memory controller again on other folders under /
-also succeeds.
-When I try it with other controllers like cpu/net_prio it fails.
-
-It seems to me that we should not be permitted to mount the memory
-controller more than once while it is mounted also elsewhere.
-Is this a BUG or an expected behavior ?
-
-Regards,
-Kevin
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
