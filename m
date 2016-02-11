@@ -1,139 +1,155 @@
-From: Parav Pandit <pandit.parav@gmail.com>
-Subject: Re: [PATCHv3 1/3] rdmacg: Added rdma cgroup controller.
-Date: Fri, 12 Feb 2016 02:49:38 +0530
-Message-ID: <CAG53R5WC17nLL2qjtB-_RZR+45qBDmJ2=12UtHxuKtvWhfN5XA@mail.gmail.com>
-References: <1454167387-31260-1-git-send-email-pandit.parav@gmail.com>
-	<1454167387-31260-2-git-send-email-pandit.parav@gmail.com>
-	<20160130183015.GP32380@htj.duckdns.org>
-	<CAG53R5XrnYY1AVBnu1b6BVfWwiUgyq+EsXay=CianRXnsUDviQ@mail.gmail.com>
-	<20160131100237.GS32380@htj.duckdns.org>
-	<CAG53R5WOLA_=gD9qVnsVk_oPs0iyacL3M+1qD+RAbrnciVXEOA@mail.gmail.com>
-	<20160131110420.GV32380@htj.duckdns.org>
-	<CAG53R5XXaW-fhb9megcp+Xnv05bSuonDws2fE-D6Wk3JNqS2Aw@mail.gmail.com>
-	<20160201184046.GD14091@mtj.duckdns.org>
-	<CAG53R5U=ojbn5tQoq=xR0DUb3Tm6yw+oO6mXVAQ2cUOhbvCdKQ@mail.gmail.com>
-	<56BB6502.8040507@mellanox.com>
+From: Alban Crequy <alban.crequy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [lxc-devel] CGroup Namespaces (v10)
+Date: Fri, 12 Feb 2016 00:18:28 +0100
+Message-ID: <CAMXgnP6eSQjsuPXdrbaHytujVSkizPd4cJJQwQcuSCLAgVcYJw@mail.gmail.com>
+References: <1454057651-23959-1-git-send-email-serge.hallyn@ubuntu.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=oPcx20vkvF4vQOWAQK7SC21RLVy2//QN26B0Y6RBJDI=;
-        b=xSFWBsOZyaUI5VuRkjMP0nWw4wUqeVl/DLu7GYfCGKsd2uu36hEtrStSRU9yzqhzyt
-         ymLJaDYu3Z8/N5Fnk2SMIBsdtkYQMMU/wsuNREt+sPpMwPzmcvnh+sHQgeOAisSgQupU
-         xzg+sw8WA0JCpb8GRHCsSY+1Nf2wDC6rDl3T5wXZ2/CFr3V0nOF4MqQouYITquvf7z80
-         uSgzzTgHekFd/lypimhS+zwocOEkgasIvD1Q6WZLQu7/g9eWN6V61QNt7PnMGRSqBdJN
-         GLF5XCqSaXNLDX9q6Wa3bjNb8EevyphyHoyXmNUIAn0RWNRQ9aLicY717tpnPLiGcWIH
-         GtXA==
-In-Reply-To: <56BB6502.8040507@mellanox.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=mime-version:sender:in-reply-to:references:from:date:message-id
+         :subject:to:cc:content-type;
+        bh=rhZP2V5ADbXTbURx6K/LlTY70XjST4t06DnJhZcljxU=;
+        b=p0xJuC9arruMNQyOAo7iR1xHyqA1Px0si7COVLv6MMuBQVKthWVaWFxDds5WJpsFzq
+         vAL5ULy19glZcIKJ+lmdN1TvIYqRAZny6oPjfL0tJt1BJlvrzRzKrGjmc2NDvwW2Fnjk
+         Mpu3DKRfwou56yZwbAhGczlPFtwr5WucYBtVKYG8517Y560D1feutm3NE+vgRX70Whob
+         sWuzaqCU0vYQ47SDkk/oKEQEl3wViz3Zf+C4qZ0+Voi2W13fELQxhjUdDcy/dWHMSqUn
+         f8x3CmMREs7maPfT30Y0Qt5kmoBpGoTWoCXnHJC3HBOji14653isrPPQx3yDWGnJh2uw
+         oRnw==
+In-Reply-To: <1454057651-23959-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Haggai Eran <haggaie@mellanox.com>
-Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: LXC development mailing-list <lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
+Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi Tejun,
-
-(Sending again as by mistake previous mail was non plain text, sorry
-about that).
-
-So based on your comments, Haggai's comments below and past
-experience, I will spin v6.o
-I have made changes, and testing them. I am likely to post during
-coming long weekend.
-
-I have simplified many pieces.
-Can you please confirm below design/implementation looks ok to you?
-If you want to review v6 directly, I am fine with that too instead of
-below post.
-
-1. Removed two type of resource pool, made is single type (as you
-described in past comment)
-2. Removed match tokens and have array definition like "qp", "mr", "cq" etc.
-3. Wrote small parser and avoided match_token API as that won't work
-due to different array definition
-4. Removed one-off remove API to unconfigure cgroup, instead all
-resource should be set to max.
-5. Removed resource pool type (user/default), instead having max_num_cnt,
-when ref_cnt drops to zero and max_num_cnt = total_rescource_cnt, pool is freed.
-6. Resource definition ownership is now only with IB stack at single
-header file, no longer in each low level driver.
-This goes through IB maintainer and other reviewers eyes.
-This continue to give flexibility to not force kernel upgrade for few
-enums additions for new resource type.
-7. Wherever possible pool lock is pushed out, except for hierarchical
-charging/unchanging points, as it not possible to do so, due to
-iterative process involves blocking allocations of rpool. Coming up
-more levels up to release locks doesn't make any sense either.
-This is anyway slow path where rpool is not allocated. Except for
-typical first resource allocation, this is less traveled path.
-8.Other minor cleanups.
-9. Avoided %d manipulation due to removal of match_token and replaced
-with seq_putc etc friend functions.
-
-Parav
-
-On Wed, Feb 10, 2016 at 9:57 PM, Haggai Eran <haggaie@mellanox.com> wrote:
-> On 01/02/2016 20:59, Parav Pandit wrote:
->> On Tue, Feb 2, 2016 at 12:10 AM, Tejun Heo <tj@kernel.org> wrote:
->>> So, I'm really not gonna go for individual drivers defining resources
->>> on their own.  That's a trainwreck waiting to happen.  There needs to
->>> be a lot more scrutiny than that.
->>>
->> Not every low level driver. I started with that infrastructure in
->> v2,v3 but I got your inputs and
->> I align with that. It could be just single IB stack in one header file
->> in one enum list would be sufficient.
->> You have already given that example.
->> With that mostly two resource type that I have can also shrink to just
->> single type.
->> Will wait to hear from them, in case if they have any different thought.
->
+On 29 January 2016 at 09:54,  <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
 > Hi,
 >
-> Sorry for the late reply.
+> following is a revised set of the CGroup Namespace patchset which Aditya
+> Kali has previously sent.  The code can also be found in the cgroupns.v10
+> branch of
 >
-> I think that starting with the standard set of resources that uverbs
-> provide is good, and if we need in the future new types of resources
-> we can add them later.
+> https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/
 >
-> On 31/01/2016 19:50, Parav Pandit wrote:
->> How would you like to see RDMA verb resources being defined - in RDMA
->> cgroup or in IB stack?
->> In current patch v5, its defined by the IB stack which is often
->> shipped as different package due to high amount of changes, bug fixes,
->> features.
->> In v0 patch it was defined by the RDMA cgroup, which means any new
->> resource addition/definition requires kernel upgrade. Which is hard to
->> change often.
+> To summarize the semantics:
 >
-> There is indeed an effort to backport the latest RDMA subsystem modules to
-> older kernels, and it would be preferable to be able to introduce new
-> resources through these modules. However, I understand that there are no
-> other cgroups that are modules or depend on modules this way, so I would
-> understand if you decide against it.
+> 1. CLONE_NEWCGROUP re-uses 0x02000000, which was previously CLONE_STOPPED
 >
->> If resources are defined by RDMA cgroup kernel than adding/removing
->> resource means, someone have to do lot of engineering with different
->> versions of kernel support and loadable module support using compat.h
->> etc at driver level, which in my mind is some amount of engineering
->> compare to what v5 has to offer and its already available. With one
->> round of cleanup in resource definition, it should be usable.
-> If I understand correctly, if the resources are defined in the cgroup,
-> you simply won't be able to add new resources with a module update,
-> no matter how hard you work.
+> 2. unsharing a cgroup namespace makes all your current cgroups your new
+> cgroup root.
 >
-> I agree that if the cgroup code is changed for cleanup or whatever
-> reason, the backporting may become difficult, but that's just life.
+> 3. /proc/pid/cgroup always shows cgroup paths relative to the reader's
+> cgroup namespce root.  A task outside of  your cgroup looks like
 >
->> Its important to provide this feedback to Tejun and me, so that we
->> take informed design decision.
+>         8:memory:/../../..
 >
-> Sure. I hope this patchset gets accepted eventually, as I believe it
-> solves a real problem. Today RDMA application can easily hog these
-> resources and the rdma cgroup allows users to prevent that.
+> 4. when a task mounts a cgroupfs, the cgroup which shows up as root depends
+> on the mounting task's  cgroup namespace.
 >
-> Regards,
-> Haggai
+> 5. setns to a cgroup namespace switches your cgroup namespace but not
+> your cgroups.
+>
+> With this, using github.com/hallyn/lxc #2015-11-09/cgns (and
+> github.com/hallyn/lxcfs #2015-11-10/cgns) we can start a container in a full
+> proper cgroup namespace, avoiding either cgmanager or lxcfs cgroup bind mounts.
+>
+> This is completely backward compatible and will be completely invisible
+> to any existing cgroup users (except for those running inside a cgroup
+> namespace and looking at /proc/pid/cgroup of tasks outside their
+> namespace.)
+
+Hi,
+
+I just noticed commit c38c4597e4bf ("netfilter: implement xt_cgroup
+cgroup2 path match") which, as far as I understand, introduces a new
+userland facing API containing the full cgroup path. Does it mean that
+the cgroupns patchset should include cgroup path translation in
+xt_cgroup?
+
+> Changes from V9:
+> 1. Update to latest Linus tree
+> 2. A few locking fixes
+>
+> Changes from V8:
+> 1. Incorporate updated documentation from tj.
+> 2. Put lookup_one_len() under inode lock
+> 3. Make cgroup_path non-namespaced, so only calls to cgroup_path_ns() are
+>    namespaced.
+> 4. Make cgroup_path{,_ns} take the needed locks, since external callers cannot
+>    do so.
+> 5. Fix the bisectability problem of to_cg_ns() being defined after use
+>
+> Changes from V7:
+> 1. Rework kernfs_path_from_node_locked to return the string length
+> 2. Rename and reorder args to kernfs_path_from_node
+> 3. cgroup.c: undo accidental conversoins to inline
+> 4. cgroup.h: move ns declarations to bottom.
+> 5. Rework the documentation to fit the style of the rest of cgroup.txt
+>
+> Changes from V6:
+> 1. Switch to some WARN_ONs to provide stack traces
+> 2. Rename kernfs_node_distance to kernfs_depth
+> 3. Make sure kernfs_common_ancestor() nodes are from same root
+> 4. Split kernfs changes for cgroup_mount into separate patch
+> 5. Rename kernfs_obtain_root to kernfs_node_dentry
+> (And more, see patch changelogs)
+>
+> Changes from V5:
+> 1. To get a root dentry for cgroup namespace mount, walk the path from the
+>    kernfs root dentry.
+>
+> Changes from V4:
+> 1. Move the FS_USERNS_MOUNT flag to last patch
+> 2. Rebase onto cgroup/for-4.5
+> 3. Don't non-init user namespaces to bind new subsystems when mounting.
+> 4. Address feedback from Tejun (thanks).  Specificaly, not addressed:
+>    . kernfs_obtain_root - walking dentry from kernfs root.
+>      (I think that's the only piece)
+> 5. Dropped unused get_task_cgroup fn/patch.
+> 6. Reworked kernfs_path_from_node_locked() to try to simplify the logic.
+>    It now finds a common ancestor, walks from the source to it, then back
+>    up to the target.
+>
+> Changes from V3:
+> 1. Rebased onto latest cgroup changes.  In particular switch to
+>    css_set_lock and ns_common.
+> 2. Support all hierarchies.
+>
+> Changes from V2:
+> 1. Added documentation in Documentation/cgroups/namespace.txt
+> 2. Fixed a bug that caused crash
+> 3. Incorporated some other suggestions from last patchset:
+>    - removed use of threadgroup_lock() while creating new cgroupns
+>    - use task_lock() instead of rcu_read_lock() while accessing
+>      task->nsproxy
+>    - optimized setns() to own cgroupns
+>    - simplified code around sane-behavior mount option parsing
+> 4. Restored ACKs from Serge Hallyn from v1 on few patches that have
+>    not changed since then.
+>
+> Changes from V1:
+> 1. No pinning of processes within cgroupns. Tasks can be freely moved
+>    across cgroups even outside of their cgroupns-root. Usual DAC/MAC policies
+>    apply as before.
+> 2. Path in /proc/<pid>/cgroup is now always shown and is relative to
+>    cgroupns-root. So path can contain '/..' strings depending on cgroupns-root
+>    of the reader and cgroup of <pid>.
+> 3. setns() does not require the process to first move under target
+>    cgroupns-root.
+>
+> Changes form RFC (V0):
+> 1. setns support for cgroupns
+> 2. 'mount -t cgroup cgroup <mntpt>' from inside a cgroupns now
+>    mounts the cgroup hierarcy with cgroupns-root as the filesystem root.
+> 3. writes to cgroup files outside of cgroupns-root are not allowed
+> 4. visibility of /proc/<pid>/cgroup is further restricted by not showing
+>    anything if the <pid> is in a sibling cgroupns and its cgroup falls outside
+>    your cgroupns-root.
+>
+>
+> _______________________________________________
+> lxc-devel mailing list
+> lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org
+> http://lists.linuxcontainers.org/listinfo/lxc-devel
