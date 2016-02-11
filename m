@@ -1,148 +1,61 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] cgroup: provide cgroup_nov1= to disable controllers in
- v1 mounts
-Date: Thu, 11 Feb 2016 13:34:49 -0500
-Message-ID: <20160211183449.GA399@cmpxchg.org>
-References: <1455145195-7553-1-git-send-email-hannes@cmpxchg.org>
- <20160211151707.GY3741@mtj.duckdns.org>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv3 1/3] rdmacg: Added rdma cgroup controller.
+Date: Fri, 12 Feb 2016 02:47:18 +0530
+Message-ID: <CAG53R5VNt3Q+1Uaze6MVak7dkeFFtcioFHdsX0CXiEvRB-p4wQ@mail.gmail.com>
+References: <1454167387-31260-1-git-send-email-pandit.parav@gmail.com>
+	<1454167387-31260-2-git-send-email-pandit.parav@gmail.com>
+	<20160130183015.GP32380@htj.duckdns.org>
+	<CAG53R5XrnYY1AVBnu1b6BVfWwiUgyq+EsXay=CianRXnsUDviQ@mail.gmail.com>
+	<20160131100237.GS32380@htj.duckdns.org>
+	<CAG53R5WOLA_=gD9qVnsVk_oPs0iyacL3M+1qD+RAbrnciVXEOA@mail.gmail.com>
+	<20160131110420.GV32380@htj.duckdns.org>
+	<CAG53R5XXaW-fhb9megcp+Xnv05bSuonDws2fE-D6Wk3JNqS2Aw@mail.gmail.com>
+	<20160201184046.GD14091@mtj.duckdns.org>
+	<CAG53R5U=ojbn5tQoq=xR0DUb3Tm6yw+oO6mXVAQ2cUOhbvCdKQ@mail.gmail.com>
+	<56BB6502.8040507@mellanox.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160211151707.GY3741-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=Lk3olix8BXfwLJftF3YCjoC+ycz5uFQl60DwqnLd73w=;
+        b=PEOUpo2Dg0llG3v0aQ3Z0EmfLHO9XAsDuCAZA73SEv+8J2gye8TlJUVCsYHTLhxXa6
+         JPBaJZvtpyg3YwAtfC/ajk2gvRmGRMB7zUUGYquyprRRSXRe4V5EhPFZjyBYdAwv2xJf
+         JCqOoUITvZyn4eDwPa2OYFayWMpLGqK+j7ArFTtP64JUpbO/oT2O48TNCcofM6fJJDDm
+         t03jx5N+tlcwd6lQ+aogZI7HD0RQbpr++XGGnD4JJKFMG2jUzXI8Ob+tbAn0ZJWH9yZB
+         JdGnMPBPp9bGjxbyN5jbQQryyYQjSZskZc7u3+GTsOXZZ5D5+QUHiD/XtjCjhN53m6d3
+         GxlQ==
+In-Reply-To: <56BB6502.8040507-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Feb 11, 2016 at 10:17:07AM -0500, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Feb 10, 2016 at 05:59:55PM -0500, Johannes Weiner wrote:
-> > cgroup_nov1=memory,cpu
-> > cgroup_nov1=all
-> 
-> It looks kinda confusing.  cgroup_no_v1?
+On Wed, Feb 10, 2016 at 9:57 PM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+>
+> There is indeed an effort to backport the latest RDMA subsystem modules to
+> older kernels, and it would be preferable to be able to introduce new
+> resources through these modules.
+Right. There is hardly 10 to 20 lines of code that allows to support
+this functionality. So I think its good thing to have.
 
-What's ambiguous about November 1st mode?
 
-From 89e581ca54bdca37d6c464334d2217d14a229540 Mon Sep 17 00:00:00 2001
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Date: Wed, 10 Feb 2016 17:29:31 -0500
-Subject: [PATCH] cgroup: provide cgroup_no_v1= to disable controllers in v1
- mounts
+> > If resources are defined by RDMA cgroup kernel than adding/removing
+> > resource means, someone have to do lot of engineering with different
+> > versions of kernel support and loadable module support using compat.h
+> > etc at driver level, which in my mind is some amount of engineering
+> > compare to what v5 has to offer and its already available. With one
+> > round of cleanup in resource definition, it should be usable.
+> If I understand correctly, if the resources are defined in the cgroup,
+> you simply won't be able to add new resources with a module update,
+> no matter how hard you work.
+>
 
-Testing cgroup2 can be painful with system software automatically
-mounting and populating all cgroup controllers in v1 mode. Sometimes
-they can be unmounted from rc.local, sometimes even that is too late.
-
-Provide a commandline option to disable certain controllers in v1
-mounts, so that they remain available for cgroup2 mounts.
-
-Example use:
-
-cgroup_no_v1=memory,cpu
-cgroup_no_v1=all
-
-Disabling will be confirmed at boot-time as such:
-
-[    0.013770] Disabling cpu control group subsystem in v1 mounts
-[    0.016004] Disabling memory control group subsystem in v1 mounts
-
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- kernel/cgroup.c | 43 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 42 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d27904c193da..7ad61915967f 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -180,6 +180,9 @@ EXPORT_SYMBOL_GPL(cgrp_dfl_root);
-  */
- static bool cgrp_dfl_root_visible;
- 
-+/* Controllers blocked by the commandline in v1 */
-+static unsigned long cgroup_no_v1_mask;
-+
- /* some controllers are not supported in the default hierarchy */
- static unsigned long cgrp_dfl_root_inhibit_ss_mask;
- 
-@@ -241,6 +244,11 @@ static bool cgroup_ssid_enabled(int ssid)
- 	return static_key_enabled(cgroup_subsys_enabled_key[ssid]);
- }
- 
-+static bool cgroup_ssid_no_v1(int ssid)
-+{
-+	return cgroup_no_v1_mask & (1 << ssid);
-+}
-+
- /**
-  * cgroup_on_dfl - test whether a cgroup is on the default hierarchy
-  * @cgrp: the cgroup of interest
-@@ -1678,6 +1686,8 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
- 				continue;
- 			if (!cgroup_ssid_enabled(i))
- 				continue;
-+			if (cgroup_ssid_no_v1(i))
-+				continue;
- 
- 			/* Mutually exclusive option 'all' + subsystem name */
- 			if (all_ss)
-@@ -1698,7 +1708,7 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
- 	 */
- 	if (all_ss || (!one_ss && !opts->none && !opts->name))
- 		for_each_subsys(ss, i)
--			if (cgroup_ssid_enabled(i))
-+			if (cgroup_ssid_enabled(i) && !cgroup_ssid_no_v1(i))
- 				opts->subsys_mask |= (1 << i);
- 
- 	/*
-@@ -5324,6 +5334,10 @@ int __init cgroup_init(void)
- 			continue;
- 		}
- 
-+		if (cgroup_ssid_no_v1(ssid))
-+			printk(KERN_INFO "Disabling %s control group subsystem in v1 mounts\n",
-+			       ss->name);
-+
- 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
- 
- 		if (!ss->dfl_cftypes)
-@@ -5750,6 +5764,33 @@ static int __init cgroup_disable(char *str)
- }
- __setup("cgroup_disable=", cgroup_disable);
- 
-+static int __init cgroup_no_v1(char *str)
-+{
-+	struct cgroup_subsys *ss;
-+	char *token;
-+	int i;
-+
-+	while ((token = strsep(&str, ",")) != NULL) {
-+		if (!*token)
-+			continue;
-+
-+		if (!strcmp(token, "all")) {
-+			cgroup_no_v1_mask = ~0UL;
-+			break;
-+		}
-+
-+		for_each_subsys(ss, i) {
-+			if (strcmp(token, ss->name) &&
-+			    strcmp(token, ss->legacy_name))
-+				continue;
-+
-+			cgroup_no_v1_mask |= 1 << i;
-+		}
-+	}
-+	return 1;
-+}
-+__setup("cgroup_no_v1=", cgroup_no_v1);
-+
- /**
-  * css_tryget_online_from_dir - get corresponding css from a cgroup dentry
-  * @dentry: directory dentry of interest
--- 
-2.7.1
+Yes.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
