@@ -1,45 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: provide cgroup_nov1= to disable controllers in
- v1 mounts
-Date: Fri, 12 Feb 2016 15:03:34 -0500
-Message-ID: <20160212200334.GA3965@htj.duckdns.org>
-References: <1455145195-7553-1-git-send-email-hannes@cmpxchg.org>
- <20160211151707.GY3741@mtj.duckdns.org>
- <20160211183449.GA399@cmpxchg.org>
+From: "Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [lxc-devel] CGroup Namespaces (v10)
+Date: Fri, 12 Feb 2016 17:22:21 -0600
+Message-ID: <20160212232221.GA31062@mail.hallyn.com>
+References: <1454057651-23959-1-git-send-email-serge.hallyn@ubuntu.com>
+ <CAMXgnP6eSQjsuPXdrbaHytujVSkizPd4cJJQwQcuSCLAgVcYJw@mail.gmail.com>
+ <20160212160906.GG3741@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=kv3yqj5rI8lg61KKJynuMG96D6Zr5Nm+VVUo3M0cKTM=;
-        b=lprD/A8gW2JWtmSo3eYqdm4SpEQTX6NDi65RBFnCZ02vFPhQgE/Fuqo7pnEmmKwc01
-         j8KDLmYF9dMLmaa/hVzVMmiIB/6nMuhVS0xZjC7JHjXbPceNIJ0gO08EVcAaFEuyxXl2
-         GUcgTAjoDNW46bTUGi7aoKz1RjD7eaYHyMhPLYwx2jma0XxIUeXrVwdmEQJLLL+5UouO
-         LgmkovjRnmnr3M8Gwk8iG1CPYeS6q6AL8eIsZD5sn+nvYFsp9JI+Sxm9DV6l4XrCdEQS
-         x+/rlppTyrUVjQ1XoeuCwx36IJBuqGts1iRSw2ooLR8cJmZr1HE3JTa+wIqLHG9pfVmY
-         DXhw==
 Content-Disposition: inline
-In-Reply-To: <20160211183449.GA399@cmpxchg.org>
+In-Reply-To: <20160212160906.GG3741@mtj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Alban Crequy <alban.crequy@gmail.com>, LXC development mailing-list <lxc-devel@lists.linuxcontainers.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Aditya Kali <adityakali@google.com>, Linux API <linux-api@vger.kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, gregkh@linuxfoundation.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Feb 11, 2016 at 01:34:49PM -0500, Johannes Weiner wrote:
-> From 89e581ca54bdca37d6c464334d2217d14a229540 Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Date: Wed, 10 Feb 2016 17:29:31 -0500
-> Subject: [PATCH] cgroup: provide cgroup_no_v1= to disable controllers in v1
->  mounts
+On Fri, Feb 12, 2016 at 11:09:06AM -0500, Tejun Heo wrote:
+> Hello,
+> 
+> On Fri, Feb 12, 2016 at 12:18:28AM +0100, Alban Crequy wrote:
+> > I just noticed commit c38c4597e4bf ("netfilter: implement xt_cgroup
+> > cgroup2 path match") which, as far as I understand, introduces a new
+> > userland facing API containing the full cgroup path. Does it mean that
+> > the cgroupns patchset should include cgroup path translation in
+> > xt_cgroup?
+> 
+> I don't think so.  None of netfilter configuration is namespaced in
+> any way.  They're system-global by nature.
 
-Applied to cgroup/for-4.6.  Can you please send another patch to
-update Documentation/kernel-parameters.txt and cgroup.txt for the new
-knob?
+I assume at some point you'll want the set ported onto for-4.6 or
+linux-next?  My 2016-02-03/cgns set still cherrypick cleanly onto
+for-4.6 at the moment, but I haven't tried linux-next, and I haven't
+done build+test since 4.5-rc1 came out.
 
-Thanks.
-
--- 
-tejun
+thanks,
+-serge
