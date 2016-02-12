@@ -1,46 +1,49 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 8/8] netfilter: implement xt_cgroup cgroup2 path match
-Date: Fri, 12 Feb 2016 11:05:58 -0500
-Message-ID: <20160212160558.GE3741@mtj.duckdns.org>
-References: <1449527935-27056-1-git-send-email-tj@kernel.org>
- <1449527935-27056-9-git-send-email-tj@kernel.org>
- <CAMXgnP7Eue2NQrUcRSNgM8NJT5XOscPWwqVkuh7LnwQn-1oQ_A@mail.gmail.com>
+Subject: Re: [lxc-devel] CGroup Namespaces (v10)
+Date: Fri, 12 Feb 2016 11:09:06 -0500
+Message-ID: <20160212160906.GG3741@mtj.duckdns.org>
+References: <1454057651-23959-1-git-send-email-serge.hallyn@ubuntu.com>
+	<CAMXgnP6eSQjsuPXdrbaHytujVSkizPd4cJJQwQcuSCLAgVcYJw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=r+SJkM3IZ9P6iPyrjR8omWJN2Rovh55u3k8oBTNdGkE=;
-        b=XZNy2UxCPyYBUeaiuvPjsFhTUAuFB6agJ+PIyji/d7dnLbd9q0R7U5pfC5f+TGrnRa
-         vPRAvgjzzk1biUg0D8fB+CHEu6r3z4hsZihUdTnKZJHF2aUUu3gMJGNTF5JEDe3aC3qO
-         3wPwjJMHnc/r9cZ6re6FLd99cAdWuBq3bStq0ngrYlPJ5eFMfZfhgo7iL6roxdqhTHgF
-         pUQfaVhvDFa267QyjjiOEdpAvQW4HFykKhk/NBE0/8OgFhXtUGewZit6marDmrAlxapg
-         ZTgIlrK/Jjl4zmeVkRTzaUPgKR9BNEd1vgqc2QpklZg0Qt3fuPeMMrVUQCL7B+GO2mN+
-         dUoA==
-Content-Disposition: inline
-In-Reply-To: <CAMXgnP7Eue2NQrUcRSNgM8NJT5XOscPWwqVkuh7LnwQn-1oQ_A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=uE/aIXI1YX+xd5+UmitFfiYlgVGYdCbF0Pk9AwelnBc=;
+	b=pIvWFKfl5hBWDmL63oXm+7pKRuJRtEdEtYGVwr1wJnaoUL9hT0bgzdDWVh6a9x4Xt9
+	r+8EZOs48z9APQ4UW+nbpHaq6I9clnxSWPx2adOsZIMZIugAS1pb5M9MmrcHIU02lUgi
+	PDdpCRQ17W5+UfqCLO0Kj9/FVstQS2A23g5s83KEy4v9oBQoBp9xJWJGS0hLsNMgAn1H
+	CpdPoudhHtz++Jh4fqqcoDU6uDTEt1fpzelQyXOgMXXJIcjAH6Ct+qPdQQ+VJaTLzG2R
+	uILYiB2HLvXBfQgwIUTJDFz6qen3xPAejbqxfAKWhhkFRAPJCD8/g7MlM2Qc659YQsO1
+	o9YQ==
+Content-Disposition: inline
+In-Reply-To: <CAMXgnP6eSQjsuPXdrbaHytujVSkizPd4cJJQwQcuSCLAgVcYJw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Alban Crequy <alban.crequy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org, Jan Engelhardt <jengelh-9+2X+4sQBs8@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LXC development mailing-list <lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
 Hello,
 
-On Fri, Feb 12, 2016 at 01:10:18AM +0100, Alban Crequy wrote:
-> Is there any plans to implement a similar cgroup2 path match in a
-> cgroup classifier in tc?
+On Fri, Feb 12, 2016 at 12:18:28AM +0100, Alban Crequy wrote:
+> I just noticed commit c38c4597e4bf ("netfilter: implement xt_cgroup
+> cgroup2 path match") which, as far as I understand, introduces a new
+> userland facing API containing the full cgroup path. Does it mean that
+> the cgroupns patchset should include cgroup path translation in
+> xt_cgroup?
 
-That'd be great.  I wanted to but couldn't figure out the heads and
-tails after staring at the code for half an hour.
-
-> I wonder if it will be possible to use cgroup to classify packets in
-> tc without net_cls.class_id in cgroup2.
-
-You can still match against cgroup v2 path using xt_cgroup and then
-mark it and then match that from tc, which isn't ideal but works.
+I don't think so.  None of netfilter configuration is namespaced in
+any way.  They're system-global by nature.
 
 Thanks.
 
