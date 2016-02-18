@@ -1,59 +1,67 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH block/for-4.5-fixes] writeback: keep superblock pinned
- during cgroup writeback association switches
-Date: Thu, 18 Feb 2016 14:20:45 +0100
-Message-ID: <20160218132045.GD4338@quack.suse.cz>
-References: <20160215210047.GN3965@htj.duckdns.org>
- <CAAeU0aNAd1Ra6LXmWwq8row4MD_BpVHiSXOwHx07m86UWREvHw@mail.gmail.com>
- <20160216182457.GO3741@mtj.duckdns.org>
- <20160217205721.GE14140@quack.suse.cz>
- <20160217210744.GA6479@mtj.duckdns.org>
- <20160217223009.GN14140@quack.suse.cz>
- <CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
- <20160217230231.GC6479@mtj.duckdns.org>
- <20160218095538.GA4338@quack.suse.cz>
- <20160218130033.GE6479@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.5-fixes] cgroup: fix alloc_cgroup_ns() error
+ handling in copy_cgroup_ns()
+Date: Thu, 18 Feb 2016 11:46:58 -0500
+Message-ID: <20160218164658.GD13177@mtj.duckdns.org>
+References: <20160217185811.GA3472@mwanda>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=jxlzHPMufUTId1NXpWDw1qGfSvhbdlRyMsiJ1/DZspQ=;
+        b=QFOxBuCJRywSAw2MyCavJLop5Nb+ijU3Gxql60b+8QLboeCa4aaudnYlKo53KVpzku
+         L61VutZhGm6lyoGJ3gf7ekVON9QvEGghyW64gBTLXd55FsGnNiL2f6u/Rdn7M3CYDCKG
+         BXpIpdG+4TWKqsxakm4NFWbXgBafJEJw9NT1kcUanLbjug0bvh3QfKyc4WExKBcdvFX8
+         PERDQtaj8DOqKBaDtlei3nrSneGhgFL7OmvUSAygPDNVPQHAHxjIXZ/aJHY4kDF6iXM/
+         faPFnNT2kKzfbjgsBBtg1DTUTT0mpGP6veRTRArHN/kUYWcsfHvWREbKm/7L0Yv+pKvr
+         J82Q==
 Content-Disposition: inline
-In-Reply-To: <20160218130033.GE6479@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160217185811.GA3472@mwanda>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Tahsin Erdogan <tahsin@google.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Nauman Rafique <nauman@google.com>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, Al Viro <viro@ZenIV.linux.org.uk>
+To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Tejun,
+From d22025570e2ebfc68819b35c5d457e53d9337217 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Thu, 18 Feb 2016 11:44:24 -0500
 
-On Thu 18-02-16 08:00:33, Tejun Heo wrote:
-> On Thu, Feb 18, 2016 at 10:55:38AM +0100, Jan Kara wrote:
-> > I'm not sure I understand the question. Do you mean why both s_active and
-> > s_umount rwsem exist? s_active is a reference count keeping superblock
-> 
-> Yes.
-> 
-> > alive - e.g. if the filesystem is mounted in more places, we need a
-> > reference for each mountpoint. s_umount is used when we want to block any
-> 
-> I could be mistaken but I *think* we used to reject umounts based on
-> s_active and s_umount is the mechanism to delay umounts rather than
-> failing them and probably with bind mounts the behavior changed.
-> 
-> > umount operation until we are done. For example sync(2) is using it to make
-> > sure superblock doesn't disappear and so that we don't keep superblock
-> > alive after admin called umount(2).
-> 
-> So, the question is why aren't we just using s_active and draining it
-> on umount of the last mountpoint.  Because, right now, the behavior is
-> weird in that we allow umounts to proceed but then let the superblock
-> hang onto the block device till s_active is drained.  This really
-> should be synchronous.
+alloc_cgroup_ns() returns an ERR_PTR value on error but
+copy_cgroup_ns() was checking for NULL for error.  Fix it.
 
-Hum, I'm not sure. I guess Al can give you more qualified answer than me.
-Added to CC...
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+---
+Hello, Dan.
 
-								Honza
+Applied to cgroup/for-4.5-fixes.
+
+Thanks.
+
+ kernel/cgroup.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index afb1205..d92d91a 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -6083,10 +6083,11 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
+ 	spin_unlock_bh(&css_set_lock);
+ 	mutex_unlock(&cgroup_mutex);
+ 
+-	err = -ENOMEM;
+ 	new_ns = alloc_cgroup_ns();
+-	if (!new_ns)
++	if (IS_ERR(new_ns)) {
++		err = PTR_ERR(new_ns);
+ 		goto err_out;
++	}
+ 
+ 	new_ns->user_ns = get_user_ns(user_ns);
+ 	new_ns->root_cset = cset;
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.5.0
