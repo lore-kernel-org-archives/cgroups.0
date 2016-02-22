@@ -1,82 +1,125 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/6] Revert "cgroup: add cgroup_subsys->css_e_css_changed()"
-Date: Mon, 22 Feb 2016 18:05:45 -0500
-Message-ID: <1456182349-18156-3-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 5/6] cgroup: use do_each_subsys_mask() where applicable
+Date: Mon, 22 Feb 2016 18:05:48 -0500
+Message-ID: <1456182349-18156-6-git-send-email-tj@kernel.org>
 References: <1456182349-18156-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=jpFKMtFkO+0UiqyO7wSad9Br27Cx+SVRKR2pER1F4tw=;
-        b=a/2ydVO/l2ipLb9hND68nuaIg99lx0t+RHbpT5jeqJS1pMmDdQJBV67nVY95b92PnO
-         FXvRpCOM3MfPm2FnKyhjKi5J0sm4j6Jeey+FK80U7KwREQ5M0SQnG6TGuaqinnsEwbIR
-         f6+kK7KzE19AIkIQQGjYIofFnxVWTWn59yR2b+o2WHHuAVsA+bEonjIXdeCgOQ8dFl+c
-         RRei3sdrSe4PJ1Gw1+FUQkWvsruKSJa6w2ExxBbs6y+arI+hGs/BGHfhDU68btsKs9GL
-         chalp81shnUqStJsqKTAQRuhUs580uHAg7QIojVy7lt6eYXeHzoZCs+B5q9xHos7ND63
-         fjtw==
-In-Reply-To: <1456182349-18156-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=/gGlq+DV1f3fb49OLOLxYVA072OsJq7NPU9jF5vHLPo=;
+        b=nm3Tfey8PYQSn4+fYwXKznI+eAvxPAdUpCi4GYVRcgUMxvQRu62hCgYwSdK31zuEb8
+         GrSnPcjrjvh9upF79ZdcYEOOnbaE/7SZCijSrzb4OtKzUih3Vr30LFS8nFo+p4nL9ryf
+         yV9T9EYKR3VfHrNgHMdsixECrXu6LyqSaR/7U1fZhWRyTFeWkBmiPtYRjwaakGc9gEzc
+         be8hff23qWS4/yY78gUL1OV+U054Izk+ALikbo90yirLp2cgW9K+hPEfsI9o3ja9aA4Z
+         7cKSVPsDYRsVuk1JQl34bjJthp1Y2fK/YIwZ35LU+/OJXjahPsbIphG+rgxE7qdKDGvo
+         pmPg==
+In-Reply-To: <1456182349-18156-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-This reverts commit 56c807ba4e91f0980567b6a69de239677879b17f.
+There are several places in cgroup_subtree_control_write() which can
+use do_each_subsys_mask() instead of manual mask testing.  Use it.
 
-cgroup_subsys->css_e_css_changed() was supposed to be used by cgroup
-writeback support; however, the change to per-inode cgroup association
-made it unnecessary and the callback doesn't have any user.  Remove
-it.
+No functional changes.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup-defs.h |  1 -
- kernel/cgroup.c             | 18 ------------------
- 2 files changed, 19 deletions(-)
+ kernel/cgroup.c | 35 ++++++++++++-----------------------
+ 1 file changed, 12 insertions(+), 23 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 789471d..4f3c0da 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -434,7 +434,6 @@ struct cgroup_subsys {
- 	void (*css_released)(struct cgroup_subsys_state *css);
- 	void (*css_free)(struct cgroup_subsys_state *css);
- 	void (*css_reset)(struct cgroup_subsys_state *css);
--	void (*css_e_css_changed)(struct cgroup_subsys_state *css);
- 
- 	int (*can_attach)(struct cgroup_taskset *tset);
- 	void (*cancel_attach)(struct cgroup_taskset *tset);
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 68b032d..7727b6e 100644
+index 5d10298..1e561bd 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -3127,24 +3127,6 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 		}
- 	}
- 
--	/*
--	 * The effective csses of all the descendants (excluding @cgrp) may
--	 * have changed.  Subsystems can optionally subscribe to this event
--	 * by implementing ->css_e_css_changed() which is invoked if any of
--	 * the effective csses seen from the css's cgroup may have changed.
--	 */
+@@ -3082,10 +3082,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	 * dependency.  An invisible css is made visible when the userland
+ 	 * explicitly enables it.
+ 	 */
 -	for_each_subsys(ss, ssid) {
--		struct cgroup_subsys_state *this_css = cgroup_css(cgrp, ss);
--		struct cgroup_subsys_state *css;
--
--		if (!ss->css_e_css_changed || !this_css)
+-		if (!(enable & (1 << ssid)))
 -			continue;
 -
--		css_for_each_descendant_pre(css, this_css)
--			if (css != this_css)
--				ss->css_e_css_changed(css);
++	do_each_subsys_mask(ss, ssid, enable) {
+ 		cgroup_for_each_live_child(child, cgrp) {
+ 			if (css_enable & (1 << ssid))
+ 				ret = create_css(child, ss,
+@@ -3096,7 +3093,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 			if (ret)
+ 				goto err_undo_css;
+ 		}
 -	}
++	} while_each_subsys_mask();
+ 
+ 	/*
+ 	 * At this point, cgroup_e_css() results reflect the new csses
+@@ -3115,10 +3112,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	 * state if it's made visible again later.  Controllers which may
+ 	 * be depended upon should provide ->css_reset() for this purpose.
+ 	 */
+-	for_each_subsys(ss, ssid) {
+-		if (!(disable & (1 << ssid)))
+-			continue;
 -
++	do_each_subsys_mask(ss, ssid, disable) {
+ 		cgroup_for_each_live_child(child, cgrp) {
+ 			struct cgroup_subsys_state *css = cgroup_css(child, ss);
+ 
+@@ -3130,7 +3124,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 					ss->css_reset(css);
+ 			}
+ 		}
+-	}
++	} while_each_subsys_mask();
+ 
  	kernfs_activate(cgrp->kn);
  	ret = 0;
- out_unlock:
+@@ -3142,10 +3136,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	cgrp->subtree_control = old_sc;
+ 	cgrp->subtree_ss_mask = old_ss;
+ 
+-	for_each_subsys(ss, ssid) {
+-		if (!(enable & (1 << ssid)))
+-			continue;
+-
++	do_each_subsys_mask(ss, ssid, enable) {
+ 		cgroup_for_each_live_child(child, cgrp) {
+ 			struct cgroup_subsys_state *css = cgroup_css(child, ss);
+ 
+@@ -3157,7 +3148,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 			else
+ 				css_clear_dir(css, NULL);
+ 		}
+-	}
++	} while_each_subsys_mask();
+ 	goto out_unlock;
+ }
+ 
+@@ -4973,14 +4964,12 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 		goto out_destroy;
+ 
+ 	/* let's create and online css's */
+-	for_each_subsys(ss, ssid) {
+-		if (parent->subtree_ss_mask & (1 << ssid)) {
+-			ret = create_css(cgrp, ss,
+-					 parent->subtree_control & (1 << ssid));
+-			if (ret)
+-				goto out_destroy;
+-		}
+-	}
++	do_each_subsys_mask(ss, ssid, parent->subtree_ss_mask) {
++		ret = create_css(cgrp, ss,
++				 parent->subtree_control & (1 << ssid));
++		if (ret)
++			goto out_destroy;
++	} while_each_subsys_mask();
+ 
+ 	/*
+ 	 * On the default hierarchy, a child doesn't automatically inherit
 -- 
 2.5.0
-
