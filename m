@@ -1,67 +1,148 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET cgroup/for-4.6] cgroup: make control mask updates modular and recursive
-Date: Mon, 22 Feb 2016 22:45:34 -0500
-Message-ID: <1456199146-14765-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 04/12] cgroup: factor out cgroup_create() out of cgroup_mkdir()
+Date: Mon, 22 Feb 2016 22:45:38 -0500
+Message-ID: <1456199146-14765-5-git-send-email-tj@kernel.org>
+References: <1456199146-14765-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=w0Txupg5Y21WvXomzJ0KeGAxy2XE/GDP1jgdauwjC1Q=;
-        b=yuEpq9pOd+AMLuKsD/Dkwafi8CnAPcd1Mg/dk5s/CmlwAIOZJZecAumA4rm38K+pof
-         sVS3SKy9BqUB5CrFSHjCjn7ITxtXjxhAgZZ4K0U9ev1xU0DteVLKuZq2aDnifmIuPCtP
-         f45ckAiZ4NVvo1WPA4j1S6gYRnyUpPQjDAijo0uVaoxwGTYAdaFXtKgZFHcMbac1PXy4
-         Rtg0m5BnIWggbk84jlV6WEIu+niznOipcGp5aImnM9vAtYlVpSAPyvetlQFeYllJZQaF
-         FQzau+MFusOkNWRZ07li1JIK06zR3upXrEosMl4S6Xa9weUyoxC/gEB7LmlPASOCWhka
-         8YkQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=/uhjxN+HwuMO2HL2uQSx2JYqI8naENA5rfb1haf5ueg=;
+        b=xIJKBWnWdeB1udetG5CDfDEw3sAMpOedMFhrbdaLfeuzLowTZyGArQq2oHYncKG14X
+         x/R6aB6LdGdFoSShI5bpK+4eTqap9RWwjnSEzM2xG3P0Wsvr7kUMsDLy4hxkT9rCsq/B
+         w/svCBwihGYNZe3EhIHSFysez2i3HZC2SJRMrx9yJNKUVezxyt29oi3riNNaLYb0UDtU
+         VeC1Gzr4QTobgqHPDe7jZy9mUZLDdzqNiORQU3lcZtEq4rqHRGRABgv0n4DJidwgsFDK
+         9Pj9GNmempEvLMPcS4zch+NYuqhe9RsI2HIZEQYDaIeJF6zjjss1l0HVbOCE0JLSYM58
+         Z5bg==
+In-Reply-To: <1456199146-14765-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-Hello,
+We're in the process of refactoring cgroup and css management paths to
+separate them out to eventually allow cgroups which aren't visible
+through cgroup fs.  This patch factors out cgroup_create() out of
+cgroup_mkdir().  cgroup_create() contains all internal object creation
+and initialization.  cgroup_mkdir() uses cgroup_create() to create the
+internal cgroup and adds interface directory and file creation.
 
-Currently, subsystem enabling and disabling in the default hierarchy
-are implemented as a long chain of interdependent operations in
-cgroup_subtree_control_write().  The function calculates what need to
-be done to its children and excute the necessary operations.  The
-function unfortunately ends up being a rather opaque blob of
-operations which is difficult to wrap one's head around or reuse.
+This patch doesn't cause any behavior differences.
 
-This patchset restructures control mask update so that it's composed
-of discrete idempotent and recursive operations.  While no new
-features are added by this patchset, future changes will make use of
-flexible control mask updates to implement features involving more
-complex controller management.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup.c | 72 ++++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 43 insertions(+), 29 deletions(-)
 
-This patchset includes the following 12 patches.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index dd550b3..16c04d1 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4884,33 +4884,19 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+ 	return ERR_PTR(err);
+ }
+ 
+-static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+-			umode_t mode)
++static struct cgroup *cgroup_create(struct cgroup *parent)
+ {
+-	struct cgroup *parent, *cgrp, *tcgrp;
+-	struct cgroup_root *root;
++	struct cgroup_root *root = parent->root;
+ 	struct cgroup_subsys *ss;
+-	struct kernfs_node *kn;
+-	int level, ssid, ret;
+-
+-	/* Do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable.
+-	 */
+-	if (strchr(name, '\n'))
+-		return -EINVAL;
+-
+-	parent = cgroup_kn_lock_live(parent_kn);
+-	if (!parent)
+-		return -ENODEV;
+-	root = parent->root;
+-	level = parent->level + 1;
++	struct cgroup *cgrp, *tcgrp;
++	int level = parent->level + 1;
++	int ssid, ret;
+ 
+ 	/* allocate the cgroup and its ID, 0 is reserved for the root */
+ 	cgrp = kzalloc(sizeof(*cgrp) +
+ 		       sizeof(cgrp->ancestor_ids[0]) * (level + 1), GFP_KERNEL);
+-	if (!cgrp) {
+-		ret = -ENOMEM;
+-		goto out_unlock;
+-	}
++	if (!cgrp)
++		return ERR_PTR(-ENOMEM);
+ 
+ 	ret = percpu_ref_init(&cgrp->self.refcnt, css_release, 0, GFP_KERNEL);
+ 	if (ret)
+@@ -4974,6 +4960,40 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 		cgroup_refresh_subtree_ss_mask(cgrp);
+ 	}
+ 
++	return cgrp;
++
++out_cancel_ref:
++	percpu_ref_exit(&cgrp->self.refcnt);
++out_free_cgrp:
++	kfree(cgrp);
++	return ERR_PTR(ret);
++out_destroy:
++	cgroup_destroy_locked(cgrp);
++	return ERR_PTR(ret);
++}
++
++static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
++			umode_t mode)
++{
++	struct cgroup *parent, *cgrp;
++	struct cgroup_subsys *ss;
++	struct kernfs_node *kn;
++	int ssid, ret;
++
++	/* do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable */
++	if (strchr(name, '\n'))
++		return -EINVAL;
++
++	parent = cgroup_kn_lock_live(parent_kn);
++	if (!parent)
++		return -ENODEV;
++
++	cgrp = cgroup_create(parent);
++	if (IS_ERR(cgrp)) {
++		ret = PTR_ERR(cgrp);
++		goto out_unlock;
++	}
++
+ 	/* create the directory */
+ 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
+ 	if (IS_ERR(kn)) {
+@@ -5008,17 +5028,11 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	ret = 0;
+ 	goto out_unlock;
+ 
+-out_cancel_ref:
+-	percpu_ref_exit(&cgrp->self.refcnt);
+-out_free_cgrp:
+-	kfree(cgrp);
++out_destroy:
++	cgroup_destroy_locked(cgrp);
+ out_unlock:
+ 	cgroup_kn_unlock(parent_kn);
+ 	return ret;
+-
+-out_destroy:
+-	cgroup_destroy_locked(cgrp);
+-	goto out_unlock;
+ }
+ 
+ /*
+-- 
+2.5.0
 
- 0001-cgroup-separate-out-interface-file-creation-from-css.patch
- 0002-cgroup-explicitly-track-whether-a-cgroup_subsys_stat.patch
- 0003-cgroup-reorder-operations-in-cgroup_mkdir.patch
- 0004-cgroup-factor-out-cgroup_create-out-of-cgroup_mkdir.patch
- 0005-cgroup-introduce-cgroup_control-and-cgroup_ss_mask.patch
- 0006-cgroup-factor-out-cgroup_drain_offline-from-cgroup_s.patch
- 0007-cgroup-factor-out-cgroup_apply_control_disable-from-.patch
- 0008-cgroup-factor-out-cgroup_apply_control_enable-from-c.patch
- 0009-cgroup-make-cgroup_drain_offline-and-cgroup_apply_co.patch
- 0010-cgroup-introduce-cgroup_-save-propagate-restore-_con.patch
- 0011-cgroup-Factor-out-cgroup_-apply-finalize-_control-fr.patch
- 0012-cgroup-make-cgroup_calc_subtree_ss_mask-take-this_ss.patch
-
-The patchset is on top of cgroup/for-4.6 6e5c830770f ("cgroup: make
-cgroup subsystem masks u16") and available in the following git
-branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-recursive-control
-
-diffstat follows.  Thanks.
-
- include/linux/cgroup-defs.h |    3 
- kernel/cgroup.c             |  653 ++++++++++++++++++++++++++++----------------
- 2 files changed, 419 insertions(+), 237 deletions(-)
-
---
-tejun
