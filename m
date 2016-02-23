@@ -1,144 +1,142 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 06/12] cgroup: factor out cgroup_drain_offline() from cgroup_subtree_control_write()
-Date: Mon, 22 Feb 2016 22:45:40 -0500
-Message-ID: <1456199146-14765-7-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 11/12] cgroup: Factor out cgroup_{apply|finalize}_control() from cgroup_subtree_control_write()
+Date: Mon, 22 Feb 2016 22:45:45 -0500
+Message-ID: <1456199146-14765-12-git-send-email-tj@kernel.org>
 References: <1456199146-14765-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vB1IFRQxqziUEKVjThPyzdGi23+urRyDbc7SKBmKEXc=;
-        b=CjMh26h9bTYBqeevmaS2nVnYbR/maaAMBw9ABS0umfufXhzH1To7P3NQ7GW3l0jLrv
-         bfHBkEc7Z+zaWwNFaWVcssADfmZ5c0zY7gkwGDHpPkmKknU0M8K+lkTGmC3UJrkRvfKx
-         uC4sYgEjS1Q13AN9seEmrqPEz6OQdr+IXnpbjiNp+mhj4F30AXkGMWRgmGA3hZfdYhw0
-         S1o+kNZQBn+8ROATvcJ9NckFbzRDtiYG83DqEm2DgUs+UH2u2RwS+RThkqONtSzMyOSb
-         +z+xXmyHk94hKo4WSTYhXu84dwiGiuISCU9Rb5+JHNPCZ8MslDz9+3CD6kNLWBig8kG1
-         htaA==
-In-Reply-To: <1456199146-14765-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=Q5JiG0nqr8873hD+iI2xojczvfaQqyTR6b5+YdcW8t0=;
+        b=NydCIekSIjqb5qfh83a272YWMcDG2hpzBP6XUjTlwpk4j7ylRRzP/yOwoD9kKFM93m
+         pq0alDruujeCrfyGNREZyiqnJCNfngh1rbPF6npWfXEUvEhMOh+gC1yp72D/08nDFYxQ
+         5ibC31ijE8OSlQ4PWytICGBJwLkA3WjkyQ79Lph77+QacdStL9/zwegukpxkiFfC0D5u
+         C/sapsRmDEPCaRNzNXnubuzBACVRsr0NzRNAm6uSOG/FziXvIKo4R1Vx8i+KGH6Qde4T
+         hL9Va0hNOPczxRgSKbUJZo2tW6R4LOl0AO4d86zE+35iUXGlm7nJ42MFMSQfAC1CJdod
+         9YMw==
+In-Reply-To: <1456199146-14765-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Factor out async css offline draining into cgroup_drain_offline().
+Factor out cgroup_{apply|finalize}_control() so that control mask
+update can be done in several simple steps.  This patch doesn't
+introduce behavior changes.
 
-* Nest subsystem walk inside child walk.  The child walk will later be
-  converted to subtree walk which is a bit more expensive.
-
-* Relocate the draining above subsystem mask preparation, which
-  doesn't create any behavior differences but helps further
-  refactoring.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 77 ++++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 52 insertions(+), 25 deletions(-)
+ kernel/cgroup.c | 81 +++++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 58 insertions(+), 23 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 0282797..7966750 100644
+index 86d7bcb..a1f82fa 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2960,6 +2960,53 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
- 	return ret;
+@@ -3164,6 +3164,62 @@ static void cgroup_apply_control_disable(struct cgroup *cgrp)
+ 	}
  }
  
 +/**
-+ * cgroup_drain_offline - wait for previously offlined csses to go away
-+ * @cgrp: parent of the target cgroups
++ * cgroup_apply_control - apply control mask updates to the subtree
++ * @cgrp: root of the target subtree
 + *
-+ * Because css offlining is asynchronous, userland may try to re-enable a
-+ * controller while the previous css is still around.  This function drains
-+ * the previous css instances of @cgrp's children.
++ * subsystems can be enabled and disabled in a subtree using the following
++ * steps.
 + *
-+ * Must be called with cgroup_mutex held.  Returns %false if there were no
-+ * dying css instances.  Returns %true if there were one or more and this
-+ * function waited.  On %true return, cgroup_mutex has been dropped and
-+ * re-acquired inbetween which anything could have happened.  The caller
-+ * typically would have to start over.
++ * 1. Call cgroup_save_control() to stash the current state.
++ * 2. Update ->subtree_control masks in the subtree as desired.
++ * 3. Call cgroup_apply_control() to apply the changes.
++ * 4. Optionally perform other related operations.
++ * 5. Call cgroup_finalize_control() to finish up.
++ *
++ * This function implements step 3 and propagates the mask changes
++ * throughout @cgrp's subtree, updates csses accordingly and perform
++ * process migrations.
 + */
-+static bool cgroup_drain_offline(struct cgroup *cgrp)
++static int cgroup_apply_control(struct cgroup *cgrp)
 +{
-+	struct cgroup *dsct;
-+	struct cgroup_subsys *ss;
-+	int ssid;
++	int ret;
 +
-+	lockdep_assert_held(&cgroup_mutex);
++	cgroup_propagate_control(cgrp);
 +
-+	cgroup_for_each_live_child(dsct, cgrp) {
-+		for_each_subsys(ss, ssid) {
-+			struct cgroup_subsys_state *css = cgroup_css(dsct, ss);
-+			DEFINE_WAIT(wait);
++	ret = cgroup_apply_control_enable(cgrp);
++	if (ret)
++		return ret;
 +
-+			if (!css)
-+				continue;
++	/*
++	 * At this point, cgroup_e_css() results reflect the new csses
++	 * making the following cgroup_update_dfl_csses() properly update
++	 * css associations of all tasks in the subtree.
++	 */
++	ret = cgroup_update_dfl_csses(cgrp);
++	if (ret)
++		return ret;
 +
-+			cgroup_get(dsct);
-+			prepare_to_wait(&dsct->offline_waitq, &wait,
-+					TASK_UNINTERRUPTIBLE);
++	return 0;
++}
 +
-+			mutex_unlock(&cgroup_mutex);
-+			schedule();
-+			finish_wait(&dsct->offline_waitq, &wait);
-+			mutex_lock(&cgroup_mutex);
-+
-+			cgroup_put(dsct);
-+			return true;
-+		}
++/**
++ * cgroup_finalize_control - finalize control mask update
++ * @cgrp: root of the target subtree
++ * @ret: the result of the update
++ *
++ * Finalize control mask update.  See cgroup_apply_control() for more info.
++ */
++static void cgroup_finalize_control(struct cgroup *cgrp, int ret)
++{
++	if (ret) {
++		cgroup_restore_control(cgrp);
++		cgroup_propagate_control(cgrp);
 +	}
 +
-+	return false;
++	cgroup_apply_control_disable(cgrp);
 +}
 +
  /* change the enabled child controllers for a cgroup in the default hierarchy */
  static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
  					    char *buf, size_t nbytes,
-@@ -3048,6 +3095,11 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 		goto out_unlock;
- 	}
+@@ -3262,36 +3318,15 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	cgrp->subtree_control |= enable;
+ 	cgrp->subtree_control &= ~disable;
  
-+	if (cgroup_drain_offline(cgrp)) {
-+		cgroup_kn_unlock(of->kn);
-+		return restart_syscall();
-+	}
-+
- 	/*
- 	 * Update subsys masks and calculate what needs to be done.  More
- 	 * subsystems than specified may need to be enabled or disabled
-@@ -3063,31 +3115,6 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	enable |= css_enable;
- 	disable |= css_disable;
+-	cgroup_propagate_control(cgrp);
++	ret = cgroup_apply_control(cgrp);
  
+-	ret = cgroup_apply_control_enable(cgrp);
+-	if (ret)
+-		goto err_undo_css;
+-
 -	/*
--	 * Because css offlining is asynchronous, userland might try to
--	 * re-enable the same controller while the previous instance is
--	 * still around.  In such cases, wait till it's gone using
--	 * offline_waitq.
+-	 * At this point, cgroup_e_css() results reflect the new csses
+-	 * making the following cgroup_update_dfl_csses() properly update
+-	 * css associations of all tasks in the subtree.
 -	 */
--	do_each_subsys_mask(ss, ssid, css_enable) {
--		cgroup_for_each_live_child(child, cgrp) {
--			DEFINE_WAIT(wait);
+-	ret = cgroup_update_dfl_csses(cgrp);
+-	if (ret)
+-		goto err_undo_css;
 -
--			if (!cgroup_css(child, ss))
--				continue;
--
--			cgroup_get(child);
--			prepare_to_wait(&child->offline_waitq, &wait,
--					TASK_UNINTERRUPTIBLE);
--			cgroup_kn_unlock(of->kn);
--			schedule();
--			finish_wait(&child->offline_waitq, &wait);
--			cgroup_put(child);
--
--			return restart_syscall();
--		}
--	} while_each_subsys_mask();
--
- 	cgrp->subtree_control = new_sc;
- 	cgrp->subtree_ss_mask = new_ss;
+-	/* all tasks are migrated out of disabled csses, commit disable */
+-	cgroup_apply_control_disable(cgrp);
++	cgroup_finalize_control(cgrp, ret);
  
+ 	kernfs_activate(cgrp->kn);
+ 	ret = 0;
+ out_unlock:
+ 	cgroup_kn_unlock(of->kn);
+ 	return ret ?: nbytes;
+-
+-err_undo_css:
+-	/* restore masks and shoot down new csses */
+-	cgroup_restore_control(cgrp);
+-	cgroup_apply_control_disable(cgrp);
+-
+-	goto out_unlock;
+ }
+ 
+ static int cgroup_events_show(struct seq_file *seq, void *v)
 -- 
 2.5.0
-
