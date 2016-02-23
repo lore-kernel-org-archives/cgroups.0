@@ -1,39 +1,67 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET] cgroup: misc fixes and cleanups
-Date: Mon, 22 Feb 2016 22:27:22 -0500
-Message-ID: <20160223032722.GT3965@htj.duckdns.org>
-References: <1456182349-18156-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Subject: [PATCHSET cgroup/for-4.6] cgroup: make control mask updates modular and recursive
+Date: Mon, 22 Feb 2016 22:45:34 -0500
+Message-ID: <1456199146-14765-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=/Xj4s5Ad3DtQY7MpB5A6LvDP7l23/Qad0OHpXqE0TNg=;
-        b=Q8ceE3Kn0D3bpS6F5L1r3TBsoKUHKgTkbpI5/T4w+9S6SR+MVk4+nM28chr8KBSFPs
-         8YN5kHRECGZ64YwmI+BqrCZ1DEXHeyXupsMqEe8Lhw3qAYOGx53Wz+HU5vG///DdX8Y3
-         kO9Ewf4ojk+VT0OnZP8CHyjzZYH6OrGQ3qIwrzC88I9X+dxaj0QSKAQfhu/d5zH2x98j
-         rGweR/NIdOpfUtyAddv416sEEtow4CFUWjtcosRooy84yBB0oSh26ggiXnQm9zi1gDbp
-         IFeRYAi49oTqeUlMSdU0nq7daxRahHHKRFSPn4ouuQLbmUN6zBARaKfHoU1tDlOfSDgA
-         8eFg==
-Content-Disposition: inline
-In-Reply-To: <1456182349-18156-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=w0Txupg5Y21WvXomzJ0KeGAxy2XE/GDP1jgdauwjC1Q=;
+        b=yuEpq9pOd+AMLuKsD/Dkwafi8CnAPcd1Mg/dk5s/CmlwAIOZJZecAumA4rm38K+pof
+         sVS3SKy9BqUB5CrFSHjCjn7ITxtXjxhAgZZ4K0U9ev1xU0DteVLKuZq2aDnifmIuPCtP
+         f45ckAiZ4NVvo1WPA4j1S6gYRnyUpPQjDAijo0uVaoxwGTYAdaFXtKgZFHcMbac1PXy4
+         Rtg0m5BnIWggbk84jlV6WEIu+niznOipcGp5aImnM9vAtYlVpSAPyvetlQFeYllJZQaF
+         FQzau+MFusOkNWRZ07li1JIK06zR3upXrEosMl4S6Xa9weUyoxC/gEB7LmlPASOCWhka
+         8YkQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon, Feb 22, 2016 at 06:05:43PM -0500, Tejun Heo wrote:
->  0001-cgroup-fix-error-return-value-of-cgroup_addrm_files.patch
->  0002-Revert-cgroup-add-cgroup_subsys-css_e_css_changed.patch
->  0003-cgroup-s-child_subsys_mask-subtree_ss_mask.patch
->  0004-cgroup-convert-for_each_subsys_which-to-do-while-sty.patch
->  0005-cgroup-use-do_each_subsys_mask-where-applicable.patch
->  0006-cgroup-make-cgroup-subsystem-masks-u16.patch
+Hello,
 
-Applied 1-6 to cgroup/for-4.6.
+Currently, subsystem enabling and disabling in the default hierarchy
+are implemented as a long chain of interdependent operations in
+cgroup_subtree_control_write().  The function calculates what need to
+be done to its children and excute the necessary operations.  The
+function unfortunately ends up being a rather opaque blob of
+operations which is difficult to wrap one's head around or reuse.
 
--- 
+This patchset restructures control mask update so that it's composed
+of discrete idempotent and recursive operations.  While no new
+features are added by this patchset, future changes will make use of
+flexible control mask updates to implement features involving more
+complex controller management.
+
+This patchset includes the following 12 patches.
+
+ 0001-cgroup-separate-out-interface-file-creation-from-css.patch
+ 0002-cgroup-explicitly-track-whether-a-cgroup_subsys_stat.patch
+ 0003-cgroup-reorder-operations-in-cgroup_mkdir.patch
+ 0004-cgroup-factor-out-cgroup_create-out-of-cgroup_mkdir.patch
+ 0005-cgroup-introduce-cgroup_control-and-cgroup_ss_mask.patch
+ 0006-cgroup-factor-out-cgroup_drain_offline-from-cgroup_s.patch
+ 0007-cgroup-factor-out-cgroup_apply_control_disable-from-.patch
+ 0008-cgroup-factor-out-cgroup_apply_control_enable-from-c.patch
+ 0009-cgroup-make-cgroup_drain_offline-and-cgroup_apply_co.patch
+ 0010-cgroup-introduce-cgroup_-save-propagate-restore-_con.patch
+ 0011-cgroup-Factor-out-cgroup_-apply-finalize-_control-fr.patch
+ 0012-cgroup-make-cgroup_calc_subtree_ss_mask-take-this_ss.patch
+
+The patchset is on top of cgroup/for-4.6 6e5c830770f ("cgroup: make
+cgroup subsystem masks u16") and available in the following git
+branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-recursive-control
+
+diffstat follows.  Thanks.
+
+ include/linux/cgroup-defs.h |    3 
+ kernel/cgroup.c             |  653 ++++++++++++++++++++++++++++----------------
+ 2 files changed, 419 insertions(+), 237 deletions(-)
+
+--
 tejun
