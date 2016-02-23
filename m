@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 02/12] cgroup: explicitly track whether a cgroup_subsys_state is visible to userland
-Date: Mon, 22 Feb 2016 22:45:36 -0500
-Message-ID: <1456199146-14765-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/12] cgroup: introduce cgroup_control() and cgroup_ss_mask()
+Date: Mon, 22 Feb 2016 22:45:39 -0500
+Message-ID: <1456199146-14765-6-git-send-email-tj@kernel.org>
 References: <1456199146-14765-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=MUYtCScXl4B6v8Of2F7gwWaIJpyAocnk+W/+8U+hkB4=;
-        b=zo2e9tiXZtSYlt4LD8FXEI+PGVt2Llj00HobhR58UKQF+RDR3i63vqS0oEqXpN+/SO
-         +L8NIZg7vXxLCdBndmvLIP3cIXTBkWtNe0j2slc4/32uMIiN48G/M5MPZ7BAX4VKfLpR
-         2GwWs3msTeSD2GI04doSsQqqyP6qqTE+hERHQGSb+Jz0c2ep6+Q/LCqWPn3phhYUzDp6
-         d/x8bzCOGQP2zKUNKZqH2EorFdtsdqgim7GWT9+u6QjGIKPeHT+Onr+MaglvIaHrjHOc
-         tHBSj8EyFQ/soDNTXUdVae/vkPzB6CjxGgKHbwLHIBHUofqSzETiRQ5/5UkpBMyb7/xL
-         dPtg==
+        bh=BefpeiL+ZQr0TGKtl4MuJvyBpqNK9VBhKLQ7Dd/iEEU=;
+        b=cv8hbIV4lkHCbtUK7PyNbReC+kD8YpaF1giRVTj/oFIBd/KMojJuuYIe7Al5wN++xP
+         Af6TK38SyRWMBWb4Dtq/MkZK27Vmhf0iluUHKryfa0ojtimXGQLlYMBTyoNcPRCM+gSk
+         1+O//P7HHambvGD5wcdP1l0HPZFZW2ZecNEtQi09X96gaAfagG/oO0871M2/1bDAKd3P
+         SPQ53QekQT3FfJXB6C28w0HNazca5BoBMnY/oALHMfZjI1yImDqVWFlIAHVtVH15je3T
+         4S2YLfPcMKE/10gnSShOr1piMFVuLgDhb0oRNaHOfMmu7tsjt6r5y4029jrWO/ajqYHj
+         4HAQ==
 In-Reply-To: <1456199146-14765-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,82 +23,168 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-Currently, whether a css (cgroup_subsys_state) has its interface files
-created is not tracked and assumed to change together with the owning
-cgroup's lifecycle.  cgroup directory and interface creation is being
-separated out from internal object creation to help refactoring and
-eventually allow cgroups which are not visible through cgroupfs.
+When a controller is enabled and visible on a non-root cgroup is
+determined by subtree_control and subtree_ss_mask of the parent
+cgroup.  For a root cgroup, by the type of the hierarchy and which
+controllers are attached to it.  Deciding the above on each usage is
+fragile and unnecessarily complicates the users.
 
-This patch adds CSS_VISIBLE to track whether a css has its interface
-files created and perform management operations only when necessary
-which helps decoupling interface file handling from internal object
-lifecycle.  After this patch, all css interface file management
-functions can be called regardless of the current state and will
-achieve the expected result.
+This patch introduces cgroup_control() and cgroup_ss_mask() which
+calculate and return the [visibly] enabled subsyste mask for the
+specified cgroup and conver the existing usages.
+
+* cgroup_e_css() is restructured for simplicity.
+
+* cgroup_calc_subtree_ss_mask() no longer needs to distinguish root
+  and non-root cases.
+
+* With cgroup_control(), cgroup_controllers_show() can now handle both
+  root and non-root cases.  cgroup_root_controllers_show() is removed.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup-defs.h |  1 +
- kernel/cgroup.c             | 13 ++++++++++++-
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ kernel/cgroup.c | 63 +++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 32 insertions(+), 31 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 0abf6aa..13a2708 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -45,6 +45,7 @@ enum {
- 	CSS_NO_REF	= (1 << 0), /* no reference counting for this css */
- 	CSS_ONLINE	= (1 << 1), /* between ->css_online() and ->css_offline() */
- 	CSS_RELEASED	= (1 << 2), /* refcnt reached zero, released */
-+	CSS_VISIBLE	= (1 << 3), /* css is visible to userland */
- };
- 
- /* bits in struct cgroup flags field */
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 48ea999..9e5caf0 100644
+index 16c04d1..0282797 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1420,6 +1420,11 @@ static void css_clear_dir(struct cgroup_subsys_state *css,
- 	struct cgroup *cgrp = cgrp_override ?: css->cgroup;
- 	struct cftype *cfts;
- 
-+	if (!(css->flags & CSS_VISIBLE))
-+		return;
-+
-+	css->flags &= ~CSS_VISIBLE;
-+
- 	list_for_each_entry(cfts, &css->ss->cfts, node)
- 		cgroup_addrm_files(css, cgrp, cfts, false);
+@@ -346,6 +346,28 @@ static struct cgroup *cgroup_parent(struct cgroup *cgrp)
+ 	return NULL;
  }
-@@ -1438,6 +1443,9 @@ static int css_populate_dir(struct cgroup_subsys_state *css,
- 	struct cftype *cfts, *failed_cfts;
- 	int ret;
  
-+	if (css->flags & CSS_VISIBLE)
-+		return 0;
++/* subsystems visibly enabled on a cgroup */
++static u16 cgroup_control(struct cgroup *cgrp)
++{
++	struct cgroup *parent = cgroup_parent(cgrp);
 +
- 	if (!css->ss) {
- 		if (cgroup_on_dfl(cgrp))
- 			cfts = cgroup_dfl_base_files;
-@@ -1454,6 +1462,9 @@ static int css_populate_dir(struct cgroup_subsys_state *css,
- 			goto err;
- 		}
- 	}
++	if (!parent)
++		return cgrp->root->subsys_mask & ~cgrp_dfl_root_inhibit_ss_mask;
 +
-+	css->flags |= CSS_VISIBLE;
++	return parent->subtree_control;
++}
 +
++/* subsystems enabled on a cgroup */
++static u16 cgroup_ss_mask(struct cgroup *cgrp)
++{
++	struct cgroup *parent = cgroup_parent(cgrp);
++
++	if (!parent)
++		return cgrp->root->subsys_mask;
++
++	return parent->subtree_ss_mask;
++}
++
+ /**
+  * cgroup_css - obtain a cgroup's css for the specified subsystem
+  * @cgrp: the cgroup of interest
+@@ -385,16 +407,15 @@ static struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
+ 	if (!ss)
+ 		return &cgrp->self;
+ 
+-	if (!(cgrp->root->subsys_mask & (1 << ss->id)))
+-		return NULL;
+-
+ 	/*
+ 	 * This function is used while updating css associations and thus
+-	 * can't test the csses directly.  Use ->subtree_ss_mask.
++	 * can't test the csses directly.  Test ss_mask.
+ 	 */
+-	while (cgroup_parent(cgrp) &&
+-	       !(cgroup_parent(cgrp)->subtree_ss_mask & (1 << ss->id)))
++	while (!(cgroup_ss_mask(cgrp) & (1 << ss->id))) {
+ 		cgrp = cgroup_parent(cgrp);
++		if (!cgrp)
++			return NULL;
++	}
+ 
+ 	return cgroup_css(cgrp, ss);
+ }
+@@ -1275,7 +1296,6 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
+  */
+ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
+ {
+-	struct cgroup *parent = cgroup_parent(cgrp);
+ 	u16 cur_ss_mask = subtree_control;
+ 	struct cgroup_subsys *ss;
+ 	int ssid;
+@@ -1297,10 +1317,7 @@ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
+ 		 * happen only if some depended-upon subsystems were bound
+ 		 * to non-default hierarchies.
+ 		 */
+-		if (parent)
+-			new_ss_mask &= parent->subtree_ss_mask;
+-		else
+-			new_ss_mask &= cgrp->root->subsys_mask;
++		new_ss_mask &= cgroup_ss_mask(cgrp);
+ 
+ 		if (new_ss_mask == cur_ss_mask)
+ 			break;
+@@ -2863,22 +2880,12 @@ static void cgroup_print_ss_mask(struct seq_file *seq, u16 ss_mask)
+ 		seq_putc(seq, '\n');
+ }
+ 
+-/* show controllers which are currently attached to the default hierarchy */
+-static int cgroup_root_controllers_show(struct seq_file *seq, void *v)
+-{
+-	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-
+-	cgroup_print_ss_mask(seq, cgrp->root->subsys_mask &
+-			     ~cgrp_dfl_root_inhibit_ss_mask);
+-	return 0;
+-}
+-
+ /* show controllers which are enabled from the parent */
+ static int cgroup_controllers_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+ 
+-	cgroup_print_ss_mask(seq, cgroup_parent(cgrp)->subtree_control);
++	cgroup_print_ss_mask(seq, cgroup_control(cgrp));
  	return 0;
- err:
- 	list_for_each_entry(cfts, &css->ss->cfts, node) {
-@@ -3402,7 +3413,7 @@ static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
- 	css_for_each_descendant_pre(css, cgroup_css(root, ss)) {
- 		struct cgroup *cgrp = css->cgroup;
+ }
  
--		if (cgroup_is_dead(cgrp))
-+		if (!(css->flags & CSS_VISIBLE))
- 			continue;
+@@ -4565,12 +4572,6 @@ static struct cftype cgroup_dfl_base_files[] = {
+ 	},
+ 	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_ROOT,
+-		.seq_show = cgroup_root_controllers_show,
+-	},
+-	{
+-		.name = "cgroup.controllers",
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_controllers_show,
+ 	},
+ 	{
+@@ -4941,7 +4942,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	cgroup_idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
  
- 		ret = cgroup_addrm_files(css, cgrp, cfts, is_add);
+ 	/* create the csses */
+-	do_each_subsys_mask(ss, ssid, parent->subtree_ss_mask) {
++	do_each_subsys_mask(ss, ssid, cgroup_ss_mask(cgrp)) {
+ 		struct cgroup_subsys_state *css;
+ 
+ 		css = css_create(cgrp, ss);
+@@ -4956,7 +4957,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	 * subtree_control from the parent.  Each is configured manually.
+ 	 */
+ 	if (!cgroup_on_dfl(cgrp)) {
+-		cgrp->subtree_control = parent->subtree_control;
++		cgrp->subtree_control = cgroup_control(cgrp);
+ 		cgroup_refresh_subtree_ss_mask(cgrp);
+ 	}
+ 
+@@ -5016,7 +5017,7 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	if (ret)
+ 		goto out_destroy;
+ 
+-	do_each_subsys_mask(ss, ssid, parent->subtree_control) {
++	do_each_subsys_mask(ss, ssid, cgroup_control(cgrp)) {
+ 		ret = css_populate_dir(cgroup_css(cgrp, ss), NULL);
+ 		if (ret)
+ 			goto out_destroy;
 -- 
 2.5.0
 
