@@ -1,148 +1,147 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/12] cgroup: factor out cgroup_create() out of cgroup_mkdir()
-Date: Mon, 22 Feb 2016 22:45:38 -0500
-Message-ID: <1456199146-14765-5-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 07/12] cgroup: factor out cgroup_apply_control_disable() from cgroup_subtree_control_write()
+Date: Mon, 22 Feb 2016 22:45:41 -0500
+Message-ID: <1456199146-14765-8-git-send-email-tj@kernel.org>
 References: <1456199146-14765-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=/uhjxN+HwuMO2HL2uQSx2JYqI8naENA5rfb1haf5ueg=;
-        b=xIJKBWnWdeB1udetG5CDfDEw3sAMpOedMFhrbdaLfeuzLowTZyGArQq2oHYncKG14X
-         x/R6aB6LdGdFoSShI5bpK+4eTqap9RWwjnSEzM2xG3P0Wsvr7kUMsDLy4hxkT9rCsq/B
-         w/svCBwihGYNZe3EhIHSFysez2i3HZC2SJRMrx9yJNKUVezxyt29oi3riNNaLYb0UDtU
-         VeC1Gzr4QTobgqHPDe7jZy9mUZLDdzqNiORQU3lcZtEq4rqHRGRABgv0n4DJidwgsFDK
-         9Pj9GNmempEvLMPcS4zch+NYuqhe9RsI2HIZEQYDaIeJF6zjjss1l0HVbOCE0JLSYM58
-         Z5bg==
-In-Reply-To: <1456199146-14765-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=dB4+cbN3F5KTepYzoRQK6UJ+QCZdDP0uVDbeLeepm74=;
+        b=Ut6U0O5qEZSjsZ9UUComFbcUQY3aa7ysYEhxqlH9gsHuoS/I1BTWopsBu/bfZLdQUu
+         hkyiEtZegBHDT62vORZqR3IYHDx2u06tnMO5x6Dcwz25zFCdwBlo2rO34iQRcvbwC/5d
+         3iTU5P6lGBzeeGExmvTZtII0pNTVs2IIKmo6CsqnxgQ2TJgvo1ossYAxr5IQfWO66ZY/
+         9yBxNTfEgE/k6Mf//9m4zeW05WfEk3JzvDacEEbCYyEPA+2NBWD13sp91+cQw1qtHmCp
+         eZGse5yv7tQEZVn45SS1PfsnKkQrorGTzuFbhzc3AlH+ZIZvsIje8pH/Ds/CpslgwkJr
+         LKaQ==
+In-Reply-To: <1456199146-14765-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-We're in the process of refactoring cgroup and css management paths to
-separate them out to eventually allow cgroups which aren't visible
-through cgroup fs.  This patch factors out cgroup_create() out of
-cgroup_mkdir().  cgroup_create() contains all internal object creation
-and initialization.  cgroup_mkdir() uses cgroup_create() to create the
-internal cgroup and adds interface directory and file creation.
+Factor out css disabling and hiding into cgroup_apply_control_disable().
 
-This patch doesn't cause any behavior differences.
+* Nest subsystem walk inside child walk.  The child walk will later be
+  converted to subtree walk which is a bit more expensive.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+* Instead of operating on the differential masks @css_enable and
+  @css_disable, simply disable or hide csses according to the current
+  cgroup_control() and cgroup_ss_mask().  This leads to the same
+  result and is simpler and more robust.
+
+* This allows error handling path to share the same code.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 72 ++++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 43 insertions(+), 29 deletions(-)
+ kernel/cgroup.c | 74 ++++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 41 insertions(+), 33 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index dd550b3..16c04d1 100644
+index 7966750..da178ed 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4884,33 +4884,19 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
- 	return ERR_PTR(err);
+@@ -3007,6 +3007,43 @@ static bool cgroup_drain_offline(struct cgroup *cgrp)
+ 	return false;
  }
  
--static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
--			umode_t mode)
-+static struct cgroup *cgroup_create(struct cgroup *parent)
- {
--	struct cgroup *parent, *cgrp, *tcgrp;
--	struct cgroup_root *root;
-+	struct cgroup_root *root = parent->root;
- 	struct cgroup_subsys *ss;
--	struct kernfs_node *kn;
--	int level, ssid, ret;
--
--	/* Do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable.
--	 */
--	if (strchr(name, '\n'))
--		return -EINVAL;
--
--	parent = cgroup_kn_lock_live(parent_kn);
--	if (!parent)
--		return -ENODEV;
--	root = parent->root;
--	level = parent->level + 1;
-+	struct cgroup *cgrp, *tcgrp;
-+	int level = parent->level + 1;
-+	int ssid, ret;
- 
- 	/* allocate the cgroup and its ID, 0 is reserved for the root */
- 	cgrp = kzalloc(sizeof(*cgrp) +
- 		       sizeof(cgrp->ancestor_ids[0]) * (level + 1), GFP_KERNEL);
--	if (!cgrp) {
--		ret = -ENOMEM;
--		goto out_unlock;
--	}
-+	if (!cgrp)
-+		return ERR_PTR(-ENOMEM);
- 
- 	ret = percpu_ref_init(&cgrp->self.refcnt, css_release, 0, GFP_KERNEL);
- 	if (ret)
-@@ -4974,6 +4960,40 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
- 		cgroup_refresh_subtree_ss_mask(cgrp);
- 	}
- 
-+	return cgrp;
++/**
++ * cgroup_apply_control_disable - kill or hide csses according to control
++ * @cgrp: parent of the target cgroups
++ *
++ * Walk @cgrp's children and kill and hide csses so that they match
++ * cgroup_ss_mask() and cgroup_visible_mask().
++ *
++ * A css is hidden when the userland requests it to be disabled while other
++ * subsystems are still depending on it.  The css must not actively control
++ * resources and be in the vanilla state if it's made visible again later.
++ * Controllers which may be depended upon should provide ->css_reset() for
++ * this purpose.
++ */
++static void cgroup_apply_control_disable(struct cgroup *cgrp)
++{
++	struct cgroup *dsct;
++	struct cgroup_subsys *ss;
++	int ssid;
 +
-+out_cancel_ref:
-+	percpu_ref_exit(&cgrp->self.refcnt);
-+out_free_cgrp:
-+	kfree(cgrp);
-+	return ERR_PTR(ret);
-+out_destroy:
-+	cgroup_destroy_locked(cgrp);
-+	return ERR_PTR(ret);
++	cgroup_for_each_live_child(dsct, cgrp) {
++		for_each_subsys(ss, ssid) {
++			struct cgroup_subsys_state *css = cgroup_css(dsct, ss);
++
++			if (!css)
++				continue;
++
++			if (!(cgroup_ss_mask(dsct) & (1 << ss->id))) {
++				kill_css(css);
++			} else if (!(cgroup_control(dsct) & (1 << ss->id))) {
++				css_clear_dir(css, NULL);
++				if (ss->css_reset)
++					ss->css_reset(css);
++			}
++		}
++	}
 +}
 +
-+static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
-+			umode_t mode)
-+{
-+	struct cgroup *parent, *cgrp;
-+	struct cgroup_subsys *ss;
-+	struct kernfs_node *kn;
-+	int ssid, ret;
-+
-+	/* do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable */
-+	if (strchr(name, '\n'))
-+		return -EINVAL;
-+
-+	parent = cgroup_kn_lock_live(parent_kn);
-+	if (!parent)
-+		return -ENODEV;
-+
-+	cgrp = cgroup_create(parent);
-+	if (IS_ERR(cgrp)) {
-+		ret = PTR_ERR(cgrp);
-+		goto out_unlock;
-+	}
-+
- 	/* create the directory */
- 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
- 	if (IS_ERR(kn)) {
-@@ -5008,17 +5028,11 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
- 	ret = 0;
- 	goto out_unlock;
+ /* change the enabled child controllers for a cgroup in the default hierarchy */
+ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 					    char *buf, size_t nbytes,
+@@ -3158,27 +3195,8 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	if (ret)
+ 		goto err_undo_css;
  
--out_cancel_ref:
--	percpu_ref_exit(&cgrp->self.refcnt);
--out_free_cgrp:
--	kfree(cgrp);
-+out_destroy:
-+	cgroup_destroy_locked(cgrp);
- out_unlock:
- 	cgroup_kn_unlock(parent_kn);
- 	return ret;
+-	/*
+-	 * All tasks are migrated out of disabled csses.  Kill or hide
+-	 * them.  A css is hidden when the userland requests it to be
+-	 * disabled while other subsystems are still depending on it.  The
+-	 * css must not actively control resources and be in the vanilla
+-	 * state if it's made visible again later.  Controllers which may
+-	 * be depended upon should provide ->css_reset() for this purpose.
+-	 */
+-	do_each_subsys_mask(ss, ssid, disable) {
+-		cgroup_for_each_live_child(child, cgrp) {
+-			struct cgroup_subsys_state *css = cgroup_css(child, ss);
 -
--out_destroy:
--	cgroup_destroy_locked(cgrp);
--	goto out_unlock;
+-			if (css_disable & (1 << ssid)) {
+-				kill_css(css);
+-			} else {
+-				css_clear_dir(css, NULL);
+-				if (ss->css_reset)
+-					ss->css_reset(css);
+-			}
+-		}
+-	} while_each_subsys_mask();
++	/* all tasks are migrated out of disabled csses, commit disable */
++	cgroup_apply_control_disable(cgrp);
+ 
+ 	kernfs_activate(cgrp->kn);
+ 	ret = 0;
+@@ -3187,22 +3205,12 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	return ret ?: nbytes;
+ 
+ err_undo_css:
++	/* restore masks and shoot down new csses */
+ 	cgrp->subtree_control = old_sc;
+ 	cgrp->subtree_ss_mask = old_ss;
+ 
+-	do_each_subsys_mask(ss, ssid, enable) {
+-		cgroup_for_each_live_child(child, cgrp) {
+-			struct cgroup_subsys_state *css = cgroup_css(child, ss);
+-
+-			if (!css)
+-				continue;
++	cgroup_apply_control_disable(cgrp);
+ 
+-			if (css_enable & (1 << ssid))
+-				kill_css(css);
+-			else
+-				css_clear_dir(css, NULL);
+-		}
+-	} while_each_subsys_mask();
+ 	goto out_unlock;
  }
  
- /*
 -- 
 2.5.0
-
