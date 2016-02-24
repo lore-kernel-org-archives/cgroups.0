@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/16] cgroup: factor out cgroup_create() out of cgroup_mkdir()
-Date: Wed, 24 Feb 2016 17:02:36 -0500
-Message-ID: <1456351368-786-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/16] cgroup: introduce cgroup_control() and cgroup_ss_mask()
+Date: Wed, 24 Feb 2016 17:02:37 -0500
+Message-ID: <1456351368-786-6-git-send-email-tj@kernel.org>
 References: <1456351368-786-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=sXPhMgZC/2b5JBmGyTQJ5pQhqLePICdy1tZLsHR2WXg=;
-        b=cQU/VfTZaUCKIp0ujzLmBnGrJK5gnFYO5yncRpVHXW26KXggyIxWSbU4HO1Rzm6/51
-         9ag3cmtEgCa3gyecY3sEp+U6FMifMIcI6Bfrk5OVNSunskDgxu8IEGe7gTTUIsWFdDAH
-         AN7CRzuNEBmHAf3S4r+O/R3RciWzzDV1GfPXZ3JxulWL8vZu9+BTXAYRUklAIJyZJRBr
-         jWvalJRWIpxKtziJ6ctr/796T4uPPOQcHPRoXoEAd3DCIB3h+cA9MIEgCdpg+fOu3zgj
-         CIIKoQukabvoCmDF4jesy+JHWDJpxOPj0vjwaIue7Tkt4sWAg4dNUuhvUAWreGi67t9d
-         kLeQ==
+        bh=3UaUaP6j0MVPoSs5uUf4npaYfJsP5asvlyf4wG8GA74=;
+        b=veGY8q4Y2cowVRd/1sAj/Vn/C9h3QQgNGSK4c2o4Yxe0k7WVRtBUCNCDeONkjLZxcD
+         JGcQ0G4vyT3vAb/KGx6dDqYDWlDZJTklQppZwR/sdpfCN4zU2Zr/B9OVGZtkDH18sJ13
+         waYRIt+FBt/VN3y664MDjV+MZHvbcZ48CLBMKXyX/YJAHdoiz7ljwZB0fSamqK4FtpJm
+         N2LiQJL0qdaVPHgElouW+WSKw3vdXaSev8Q0A3Lt8WBkcHadhrLk+/PJDgRGodl2ERfn
+         Mo6KZXUI6R1imwYVzwi/5bhrM2VL1/1fHcipen5b8DZRs0CkXCTCq/ChZwCjq8lfiCWF
+         jAjg==
 In-Reply-To: <1456351368-786-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,126 +23,187 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-We're in the process of refactoring cgroup and css management paths to
-separate them out to eventually allow cgroups which aren't visible
-through cgroup fs.  This patch factors out cgroup_create() out of
-cgroup_mkdir().  cgroup_create() contains all internal object creation
-and initialization.  cgroup_mkdir() uses cgroup_create() to create the
-internal cgroup and adds interface directory and file creation.
+When a controller is enabled and visible on a non-root cgroup is
+determined by subtree_control and subtree_ss_mask of the parent
+cgroup.  For a root cgroup, by the type of the hierarchy and which
+controllers are attached to it.  Deciding the above on each usage is
+fragile and unnecessarily complicates the users.
 
-This patch doesn't cause any behavior differences.
+This patch introduces cgroup_control() and cgroup_ss_mask() which
+calculate and return the [visibly] enabled subsyste mask for the
+specified cgroup and conver the existing usages.
+
+* cgroup_e_css() is restructured for simplicity.
+
+* cgroup_calc_subtree_ss_mask() and cgroup_subtree_control_write() no
+  longer need to distinguish root and non-root cases.
+
+* With cgroup_control(), cgroup_controllers_show() can now handle both
+  root and non-root cases.  cgroup_root_controllers_show() is removed.
+
+v2: cgroup_control() updated to yield the correct result on v1
+    hierarchies too.  cgroup_subtree_control_write() converted.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 72 ++++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 43 insertions(+), 29 deletions(-)
+ kernel/cgroup.c | 72 +++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 37 insertions(+), 35 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 204f78a..070c078 100644
+index 070c078..ada8452 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4884,33 +4884,19 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
- 	return ERR_PTR(err);
+@@ -346,6 +346,32 @@ static struct cgroup *cgroup_parent(struct cgroup *cgrp)
+ 	return NULL;
  }
  
--static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
--			umode_t mode)
-+static struct cgroup *cgroup_create(struct cgroup *parent)
++/* subsystems visibly enabled on a cgroup */
++static u16 cgroup_control(struct cgroup *cgrp)
++{
++	struct cgroup *parent = cgroup_parent(cgrp);
++	u16 root_ss_mask = cgrp->root->subsys_mask;
++
++	if (parent)
++		return parent->subtree_control;
++
++	if (cgroup_on_dfl(cgrp))
++		root_ss_mask &= ~cgrp_dfl_inhibit_ss_mask;
++
++	return root_ss_mask;
++}
++
++/* subsystems enabled on a cgroup */
++static u16 cgroup_ss_mask(struct cgroup *cgrp)
++{
++	struct cgroup *parent = cgroup_parent(cgrp);
++
++	if (parent)
++		return parent->subtree_ss_mask;
++
++	return cgrp->root->subsys_mask;
++}
++
+ /**
+  * cgroup_css - obtain a cgroup's css for the specified subsystem
+  * @cgrp: the cgroup of interest
+@@ -385,16 +411,15 @@ static struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
+ 	if (!ss)
+ 		return &cgrp->self;
+ 
+-	if (!(cgrp->root->subsys_mask & (1 << ss->id)))
+-		return NULL;
+-
+ 	/*
+ 	 * This function is used while updating css associations and thus
+-	 * can't test the csses directly.  Use ->subtree_ss_mask.
++	 * can't test the csses directly.  Test ss_mask.
+ 	 */
+-	while (cgroup_parent(cgrp) &&
+-	       !(cgroup_parent(cgrp)->subtree_ss_mask & (1 << ss->id)))
++	while (!(cgroup_ss_mask(cgrp) & (1 << ss->id))) {
+ 		cgrp = cgroup_parent(cgrp);
++		if (!cgrp)
++			return NULL;
++	}
+ 
+ 	return cgroup_css(cgrp, ss);
+ }
+@@ -1275,7 +1300,6 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
+  */
+ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
  {
--	struct cgroup *parent, *cgrp, *tcgrp;
--	struct cgroup_root *root;
-+	struct cgroup_root *root = parent->root;
+-	struct cgroup *parent = cgroup_parent(cgrp);
+ 	u16 cur_ss_mask = subtree_control;
  	struct cgroup_subsys *ss;
--	struct kernfs_node *kn;
--	int level, ssid, ret;
--
--	/* Do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable.
--	 */
--	if (strchr(name, '\n'))
--		return -EINVAL;
--
--	parent = cgroup_kn_lock_live(parent_kn);
--	if (!parent)
--		return -ENODEV;
--	root = parent->root;
--	level = parent->level + 1;
-+	struct cgroup *cgrp, *tcgrp;
-+	int level = parent->level + 1;
-+	int ssid, ret;
+ 	int ssid;
+@@ -1297,10 +1321,7 @@ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
+ 		 * happen only if some depended-upon subsystems were bound
+ 		 * to non-default hierarchies.
+ 		 */
+-		if (parent)
+-			new_ss_mask &= parent->subtree_ss_mask;
+-		else
+-			new_ss_mask &= cgrp->root->subsys_mask;
++		new_ss_mask &= cgroup_ss_mask(cgrp);
  
- 	/* allocate the cgroup and its ID, 0 is reserved for the root */
- 	cgrp = kzalloc(sizeof(*cgrp) +
- 		       sizeof(cgrp->ancestor_ids[0]) * (level + 1), GFP_KERNEL);
--	if (!cgrp) {
--		ret = -ENOMEM;
--		goto out_unlock;
--	}
-+	if (!cgrp)
-+		return ERR_PTR(-ENOMEM);
+ 		if (new_ss_mask == cur_ss_mask)
+ 			break;
+@@ -2863,22 +2884,12 @@ static void cgroup_print_ss_mask(struct seq_file *seq, u16 ss_mask)
+ 		seq_putc(seq, '\n');
+ }
  
- 	ret = percpu_ref_init(&cgrp->self.refcnt, css_release, 0, GFP_KERNEL);
- 	if (ret)
-@@ -4974,6 +4960,40 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+-/* show controllers which are currently attached to the default hierarchy */
+-static int cgroup_root_controllers_show(struct seq_file *seq, void *v)
+-{
+-	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-
+-	cgroup_print_ss_mask(seq, cgrp->root->subsys_mask &
+-			     ~cgrp_dfl_inhibit_ss_mask);
+-	return 0;
+-}
+-
+ /* show controllers which are enabled from the parent */
+ static int cgroup_controllers_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+ 
+-	cgroup_print_ss_mask(seq, cgroup_parent(cgrp)->subtree_control);
++	cgroup_print_ss_mask(seq, cgroup_control(cgrp));
+ 	return 0;
+ }
+ 
+@@ -3004,10 +3015,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 				continue;
+ 			}
+ 
+-			/* unavailable or not enabled on the parent? */
+-			if (!(cgrp_dfl_root.subsys_mask & (1 << ssid)) ||
+-			    (cgroup_parent(cgrp) &&
+-			     !(cgroup_parent(cgrp)->subtree_control & (1 << ssid)))) {
++			if (!(cgroup_control(cgrp) & (1 << ssid))) {
+ 				ret = -ENOENT;
+ 				goto out_unlock;
+ 			}
+@@ -4565,12 +4573,6 @@ static struct cftype cgroup_dfl_base_files[] = {
+ 	},
+ 	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_ROOT,
+-		.seq_show = cgroup_root_controllers_show,
+-	},
+-	{
+-		.name = "cgroup.controllers",
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_controllers_show,
+ 	},
+ 	{
+@@ -4941,7 +4943,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	cgroup_idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
+ 
+ 	/* create the csses */
+-	do_each_subsys_mask(ss, ssid, parent->subtree_ss_mask) {
++	do_each_subsys_mask(ss, ssid, cgroup_ss_mask(cgrp)) {
+ 		struct cgroup_subsys_state *css;
+ 
+ 		css = css_create(cgrp, ss);
+@@ -4956,7 +4958,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	 * subtree_control from the parent.  Each is configured manually.
+ 	 */
+ 	if (!cgroup_on_dfl(cgrp)) {
+-		cgrp->subtree_control = parent->subtree_control;
++		cgrp->subtree_control = cgroup_control(cgrp);
  		cgroup_refresh_subtree_ss_mask(cgrp);
  	}
  
-+	return cgrp;
-+
-+out_cancel_ref:
-+	percpu_ref_exit(&cgrp->self.refcnt);
-+out_free_cgrp:
-+	kfree(cgrp);
-+	return ERR_PTR(ret);
-+out_destroy:
-+	cgroup_destroy_locked(cgrp);
-+	return ERR_PTR(ret);
-+}
-+
-+static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
-+			umode_t mode)
-+{
-+	struct cgroup *parent, *cgrp;
-+	struct cgroup_subsys *ss;
-+	struct kernfs_node *kn;
-+	int ssid, ret;
-+
-+	/* do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable */
-+	if (strchr(name, '\n'))
-+		return -EINVAL;
-+
-+	parent = cgroup_kn_lock_live(parent_kn);
-+	if (!parent)
-+		return -ENODEV;
-+
-+	cgrp = cgroup_create(parent);
-+	if (IS_ERR(cgrp)) {
-+		ret = PTR_ERR(cgrp);
-+		goto out_unlock;
-+	}
-+
- 	/* create the directory */
- 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
- 	if (IS_ERR(kn)) {
-@@ -5008,17 +5028,11 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
- 	ret = 0;
- 	goto out_unlock;
+@@ -5016,7 +5018,7 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	if (ret)
+ 		goto out_destroy;
  
--out_cancel_ref:
--	percpu_ref_exit(&cgrp->self.refcnt);
--out_free_cgrp:
--	kfree(cgrp);
-+out_destroy:
-+	cgroup_destroy_locked(cgrp);
- out_unlock:
- 	cgroup_kn_unlock(parent_kn);
- 	return ret;
--
--out_destroy:
--	cgroup_destroy_locked(cgrp);
--	goto out_unlock;
- }
- 
- /*
+-	do_each_subsys_mask(ss, ssid, parent->subtree_control) {
++	do_each_subsys_mask(ss, ssid, cgroup_control(cgrp)) {
+ 		ret = css_populate_dir(cgroup_css(cgrp, ss), NULL);
+ 		if (ret)
+ 			goto out_destroy;
 -- 
 2.5.0
 
