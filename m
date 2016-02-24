@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 02/16] cgroup: explicitly track whether a cgroup_subsys_state is visible to userland
-Date: Wed, 24 Feb 2016 17:02:34 -0500
-Message-ID: <1456351368-786-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/16] cgroup: factor out cgroup_drain_offline() from cgroup_subtree_control_write()
+Date: Wed, 24 Feb 2016 17:02:38 -0500
+Message-ID: <1456351368-786-7-git-send-email-tj@kernel.org>
 References: <1456351368-786-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=3STTqu6gI6CPbsvyH685E21jH1CbCAOllT2hJ7Pzcrk=;
-        b=huLj4jlbN5nc2ofxnMhptBYVQQK9Fms+CXKsBnQhBt2Czfg7HXNdgC6APSN5RrJAou
-         8Tp4NbBCIr5kqAGv9Q7mN9CdtrSkupbNUifEKrr9n2Lf7Gab/zShpfu0vH7QvZOqQ0tj
-         OTIBf2aFdkJ48X+klEqcWovSa4odvARmnkav1dvE8bLJtJvw6XFQFTBgg5Flv3ZBD7VN
-         zNODK95RJW9YzzEDas6gbz4j13rTfDURzDxyArVFoSdO3T8W2jz8BteRtoZWC4MGt6ZK
-         2xyrTQLNUVEm/up13sLpt2vBw3TyuhRYRqZY/qbYcta0vHtaNfeDavBX0WmTWhHyYxmG
-         Woow==
+        bh=I/TuYWGKMhIrS7LNKFnym88y0JFlPNmCBPAm1Xqs1HA=;
+        b=IMq4TflTyq6fKScMvMQdVvVtZgO0RkZXjaEQ+sA7KAc5FHntWzmwusujHE72Oki66X
+         hZZxkpj0CSjECPfWtEMtnXox92jwvEYxg1zrt5dE7iTjsOkibbyYQtg3vn7YSyRtW4mL
+         rA2WCAQVjU513j5arM65maztGAr8UxPq1zzqW4HNoCWVDfYTOAa/DERcURPjaIlglPv3
+         dCiUQCpdzfY4+yIbs6f6XjyKHrLG5zXy+Glq55HxLvCiLUyFSUai3DWl7byP9QCj80mV
+         0KYnh1kuus3WcYEY8KEDhQmYpP9KqoZteAWTHH21hFauET9DMJKVCLzYFNCMhBHXE0RT
+         zm9Q==
 In-Reply-To: <1456351368-786-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,82 +23,122 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-Currently, whether a css (cgroup_subsys_state) has its interface files
-created is not tracked and assumed to change together with the owning
-cgroup's lifecycle.  cgroup directory and interface creation is being
-separated out from internal object creation to help refactoring and
-eventually allow cgroups which are not visible through cgroupfs.
+Factor out async css offline draining into cgroup_drain_offline().
 
-This patch adds CSS_VISIBLE to track whether a css has its interface
-files created and perform management operations only when necessary
-which helps decoupling interface file handling from internal object
-lifecycle.  After this patch, all css interface file management
-functions can be called regardless of the current state and will
-achieve the expected result.
+* Nest subsystem walk inside child walk.  The child walk will later be
+  converted to subtree walk which is a bit more expensive.
+
+* Relocate the draining above subsystem mask preparation, which
+  doesn't create any behavior differences but helps further
+  refactoring.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup-defs.h |  1 +
- kernel/cgroup.c             | 13 ++++++++++++-
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ kernel/cgroup.c | 77 ++++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 52 insertions(+), 25 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 8fc3f04..7593c1a 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -45,6 +45,7 @@ enum {
- 	CSS_NO_REF	= (1 << 0), /* no reference counting for this css */
- 	CSS_ONLINE	= (1 << 1), /* between ->css_online() and ->css_offline() */
- 	CSS_RELEASED	= (1 << 2), /* refcnt reached zero, released */
-+	CSS_VISIBLE	= (1 << 3), /* css is visible to userland */
- };
- 
- /* bits in struct cgroup flags field */
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3784f5a..c5fa761 100644
+index ada8452..7f1c636 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1420,6 +1420,11 @@ static void css_clear_dir(struct cgroup_subsys_state *css,
- 	struct cgroup *cgrp = cgrp_override ?: css->cgroup;
- 	struct cftype *cfts;
- 
-+	if (!(css->flags & CSS_VISIBLE))
-+		return;
-+
-+	css->flags &= ~CSS_VISIBLE;
-+
- 	list_for_each_entry(cfts, &css->ss->cfts, node)
- 		cgroup_addrm_files(css, cgrp, cfts, false);
+@@ -2964,6 +2964,53 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+ 	return ret;
  }
-@@ -1438,6 +1443,9 @@ static int css_populate_dir(struct cgroup_subsys_state *css,
- 	struct cftype *cfts, *failed_cfts;
- 	int ret;
  
-+	if (css->flags & CSS_VISIBLE)
-+		return 0;
++/**
++ * cgroup_drain_offline - wait for previously offlined csses to go away
++ * @cgrp: parent of the target cgroups
++ *
++ * Because css offlining is asynchronous, userland may try to re-enable a
++ * controller while the previous css is still around.  This function drains
++ * the previous css instances of @cgrp's children.
++ *
++ * Must be called with cgroup_mutex held.  Returns %false if there were no
++ * dying css instances.  Returns %true if there were one or more and this
++ * function waited.  On %true return, cgroup_mutex has been dropped and
++ * re-acquired inbetween which anything could have happened.  The caller
++ * typically would have to start over.
++ */
++static bool cgroup_drain_offline(struct cgroup *cgrp)
++{
++	struct cgroup *dsct;
++	struct cgroup_subsys *ss;
++	int ssid;
 +
- 	if (!css->ss) {
- 		if (cgroup_on_dfl(cgrp))
- 			cfts = cgroup_dfl_base_files;
-@@ -1454,6 +1462,9 @@ static int css_populate_dir(struct cgroup_subsys_state *css,
- 			goto err;
- 		}
++	lockdep_assert_held(&cgroup_mutex);
++
++	cgroup_for_each_live_child(dsct, cgrp) {
++		for_each_subsys(ss, ssid) {
++			struct cgroup_subsys_state *css = cgroup_css(dsct, ss);
++			DEFINE_WAIT(wait);
++
++			if (!css)
++				continue;
++
++			cgroup_get(dsct);
++			prepare_to_wait(&dsct->offline_waitq, &wait,
++					TASK_UNINTERRUPTIBLE);
++
++			mutex_unlock(&cgroup_mutex);
++			schedule();
++			finish_wait(&dsct->offline_waitq, &wait);
++			mutex_lock(&cgroup_mutex);
++
++			cgroup_put(dsct);
++			return true;
++		}
++	}
++
++	return false;
++}
++
+ /* change the enabled child controllers for a cgroup in the default hierarchy */
+ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 					    char *buf, size_t nbytes,
+@@ -3049,6 +3096,11 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 		goto out_unlock;
  	}
-+
-+	css->flags |= CSS_VISIBLE;
-+
- 	return 0;
- err:
- 	list_for_each_entry(cfts, &css->ss->cfts, node) {
-@@ -3402,7 +3413,7 @@ static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
- 	css_for_each_descendant_pre(css, cgroup_css(root, ss)) {
- 		struct cgroup *cgrp = css->cgroup;
  
--		if (cgroup_is_dead(cgrp))
-+		if (!(css->flags & CSS_VISIBLE))
- 			continue;
++	if (cgroup_drain_offline(cgrp)) {
++		cgroup_kn_unlock(of->kn);
++		return restart_syscall();
++	}
++
+ 	/*
+ 	 * Update subsys masks and calculate what needs to be done.  More
+ 	 * subsystems than specified may need to be enabled or disabled
+@@ -3064,31 +3116,6 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	enable |= css_enable;
+ 	disable |= css_disable;
  
- 		ret = cgroup_addrm_files(css, cgrp, cfts, is_add);
+-	/*
+-	 * Because css offlining is asynchronous, userland might try to
+-	 * re-enable the same controller while the previous instance is
+-	 * still around.  In such cases, wait till it's gone using
+-	 * offline_waitq.
+-	 */
+-	do_each_subsys_mask(ss, ssid, css_enable) {
+-		cgroup_for_each_live_child(child, cgrp) {
+-			DEFINE_WAIT(wait);
+-
+-			if (!cgroup_css(child, ss))
+-				continue;
+-
+-			cgroup_get(child);
+-			prepare_to_wait(&child->offline_waitq, &wait,
+-					TASK_UNINTERRUPTIBLE);
+-			cgroup_kn_unlock(of->kn);
+-			schedule();
+-			finish_wait(&child->offline_waitq, &wait);
+-			cgroup_put(child);
+-
+-			return restart_syscall();
+-		}
+-	} while_each_subsys_mask();
+-
+ 	cgrp->subtree_control = new_sc;
+ 	cgrp->subtree_ss_mask = new_ss;
+ 
 -- 
 2.5.0
 
