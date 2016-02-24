@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 1/2] cgroup: implement cgroup_subsys->implicit_on_dfl
-Date: Wed, 24 Feb 2016 17:12:54 -0500
-Message-ID: <1456351975-1899-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/2] cgroup, perf_event: make perf_event controller work on cgroup2 hierarchy
+Date: Wed, 24 Feb 2016 17:12:55 -0500
+Message-ID: <1456351975-1899-3-git-send-email-tj@kernel.org>
 References: <1456351975-1899-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vZ/au4Bauw47h2CO3my5BaO0o/RTnYl9JvWcp3csqi8=;
-        b=qHUD9XCFbc5i+iaGY+0G7A9m9ijhT0cTMyhiNfKviqE5a5cu0dnq3dYSIUS4QsKzDY
-         yzObmj6FklyQbrjaSi7XrKLFtIWFE005qNCPtP/Tga47Jgt05dB2o2cuWOblQ3+IldWH
-         fN9Y+EVFfOPkLfbZh8lWYcU4062A5fjku8o3udvRm1UlltMw9QWWdRV4iyJyzt6Mj4eo
-         Sd8StFADM/PjcoqRyreGEI9fwbzj28Y3CVdo1yNTALD/CBwyMYvE3qo/plAfDSJ1S3AL
-         Z3Pbyq7RR9ioSbGfjUzYFSEPQfOnrke9HdHQLh+fCTEB46cmZjzAxai+LE0dseWwGgcr
-         8oOg==
+        bh=6TEs3auO1NQIuHW2zyEoARVPPlaW+of2gBnCup/M8+4=;
+        b=qKdUbwQVkLUUdp+iufzeHeKpnV46ZkgrFLfE7giod3Oxf4OaV8uoz33FUhewIwV6A5
+         dL4/+1ntd+evoxbhiKTXj1GDR1FkDjshh0vooAlSL86GCK+E+AucEskCRN975BOtqCve
+         3JEi4eLWLi3mawl5OfWDuHudxuFCZPN4PEw9IJVtcHx/6fiN+6B5/dMFbuA/zWe3DGzX
+         VCz/y+/Qm2m3y5lFLDdqj2E8tQZPiIYjn1bkGlL0zVxvvHnIh1fAu5cbTF2kf+gCKpmY
+         eU5RTYa+iYrcWg3o5m2PRFD8wrqrMJBEP6ZX8nuRMLtq39ZWLDiGmY0uprDIMtfe/BsV
+         66og==
 In-Reply-To: <1456351975-1899-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,154 +23,139 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Some controllers, perf_event for now and possibly freezer in the
-future, don't really make sense to control explicitly through
-"cgroup.subtree_control".  For example, the primary role of perf_event
-is identifying the cgroups of tasks; however, because the controller
-also keeps a small amount of state per cgroup, it can't be replaced
-with simple cgroup membership tests.
+perf_event is a utility controller whose primary role is identifying
+cgroup membership to filter perf events; however, because it also
+tracks some per-css state, it can't be replaced by pure cgroup
+membership test.  Mark the controller as implicitly enabled on the
+default hierarchy so that perf events can always be filtered based on
+cgroup v2 path as long as the controller is not mounted on a legacy
+hierarchy.
 
-This patch implements cgroup_subsys->implicit_on_dfl flag.  When set,
-the controller is implicitly enabled on all cgroups on the v2
-hierarchy so that utility type controllers such as perf_event can be
-enabled and function transparently.
+"perf record" is updated accordingly so that it searches for both v1
+and v2 hierarchies.  A v1 hierarchy is used if perf_event is mounted
+on it; otherwise, it uses the v2 hierarchy.
 
-An implicit controller doesn't show up in "cgroup.controllers" or
-"cgroup.subtree_control", is exempt from no internal process rule and
-can be stolen from the default hierarchy even if there are non-root
-csses.
-
-v2: Reimplemented on top of the recent updates to css handling and
-    subsystem rebinding.  Rebinding implicit subsystems is now a
-    simple matter of exempting it from the busy subsystem check.
+v2: Doc updated to reflect more flexible rebinding behavior.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup-defs.h | 13 +++++++++++++
- kernel/cgroup.c             | 38 +++++++++++++++++++++++++++++++-------
- 2 files changed, 44 insertions(+), 7 deletions(-)
+ Documentation/cgroup-v2.txt | 12 ++++++++++++
+ kernel/events/core.c        |  6 ++++++
+ tools/perf/util/cgroup.c    | 26 +++++++++++++++++++-------
+ 3 files changed, 37 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index aae8c94..0af8dc4 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -450,6 +450,19 @@ struct cgroup_subsys {
- 	bool early_init:1;
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 3922ae1..c49bb10 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -47,6 +47,8 @@ CONTENTS
+   5-3. IO
+     5-3-1. IO Interface Files
+     5-3-2. Writeback
++  5-4. Misc
++    5-4-1. perf_event
+ P. Information on Kernel Programming
+   P-1. Filesystem Support for Writeback
+ D. Deprecated v1 Core Features
+@@ -1091,6 +1093,16 @@ writeback as follows.
+ 	vm.dirty[_background]_ratio.
  
- 	/*
-+	 * If %true, the controller, on the default hierarchy, doesn't show
-+	 * up in "cgroup.controllers" or "cgroup.subtree_control", is
-+	 * implicitly enabled on all cgroups on the default hierarchy, and
-+	 * bypasses the "no internal process" constraint.  This is for
-+	 * utility type controllers which is transparent to userland.
-+	 *
-+	 * An implicit controller can be stolen from the default hierarchy
-+	 * anytime and thus must be okay with offline csses from previous
-+	 * hierarchies coexisting with csses for the current one.
-+	 */
-+	bool implicit_on_dfl:1;
+ 
++5-4. Misc
 +
++5-4-1. perf_event
++
++perf_event controller, if not mounted on a legacy hierarchy, is
++automatically enabled on the v2 hierarchy so that perf events can
++always be filtered by cgroup v2 path.  The controller can still be
++moved to a legacy hierarchy after v2 hierarchy is populated.
++
++
+ P. Information on Kernel Programming
+ 
+ This section contains kernel programming information in the areas
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index c095741..e77fa4f 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -9416,5 +9416,11 @@ struct cgroup_subsys perf_event_cgrp_subsys = {
+ 	.css_alloc	= perf_cgroup_css_alloc,
+ 	.css_free	= perf_cgroup_css_free,
+ 	.attach		= perf_cgroup_attach,
 +	/*
- 	 * If %false, this subsystem is properly hierarchical -
- 	 * configuration, resource accounting and restriction on a parent
- 	 * cgroup cover those of its children.  If %true, hierarchy support
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a44c123..0f17c65 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -186,6 +186,9 @@ static u16 cgroup_no_v1_mask;
- /* some controllers are not supported in the default hierarchy */
- static u16 cgrp_dfl_inhibit_ss_mask;
++	 * Implicitly enable on dfl hierarchy so that perf events can
++	 * always be filtered by cgroup2 path as long as perf_event
++	 * controller is not mounted on a legacy hierarchy.
++	 */
++	.implicit_on_dfl = true,
+ };
+ #endif /* CONFIG_CGROUP_PERF */
+diff --git a/tools/perf/util/cgroup.c b/tools/perf/util/cgroup.c
+index 90aa1b4..5df6235 100644
+--- a/tools/perf/util/cgroup.c
++++ b/tools/perf/util/cgroup.c
+@@ -12,8 +12,8 @@ cgroupfs_find_mountpoint(char *buf, size_t maxlen)
+ {
+ 	FILE *fp;
+ 	char mountpoint[PATH_MAX + 1], tokens[PATH_MAX + 1], type[PATH_MAX + 1];
++	char path_v1[PATH_MAX + 1], path_v2[PATH_MAX + 2], *path;
+ 	char *token, *saved_ptr = NULL;
+-	int found = 0;
  
-+/* some controllers are implicitly enabled on the default hierarchy */
-+static unsigned long cgrp_dfl_implicit_ss_mask;
+ 	fp = fopen("/proc/mounts", "r");
+ 	if (!fp)
+@@ -24,31 +24,43 @@ cgroupfs_find_mountpoint(char *buf, size_t maxlen)
+ 	 * and inspect every cgroupfs mount point to find one that has
+ 	 * perf_event subsystem
+ 	 */
++	path_v1[0] = '\0';
++	path_v2[0] = '\0';
 +
- /* The list of hierarchy roots */
+ 	while (fscanf(fp, "%*s %"STR(PATH_MAX)"s %"STR(PATH_MAX)"s %"
+ 				STR(PATH_MAX)"s %*d %*d\n",
+ 				mountpoint, type, tokens) == 3) {
  
- static LIST_HEAD(cgroup_roots);
-@@ -359,8 +362,8 @@ static u16 cgroup_control(struct cgroup *cgrp)
- 		return parent->subtree_control;
+-		if (!strcmp(type, "cgroup")) {
++		if (!path_v1[0] && !strcmp(type, "cgroup")) {
  
- 	if (cgroup_on_dfl(cgrp))
--		root_ss_mask &= ~cgrp_dfl_inhibit_ss_mask;
--
-+		root_ss_mask &= ~(cgrp_dfl_inhibit_ss_mask |
-+				  cgrp_dfl_implicit_ss_mask);
- 	return root_ss_mask;
- }
+ 			token = strtok_r(tokens, ",", &saved_ptr);
  
-@@ -1326,6 +1329,8 @@ static u16 cgroup_calc_subtree_ss_mask(u16 subtree_control, u16 this_ss_mask)
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
-+	cur_ss_mask |= cgrp_dfl_implicit_ss_mask;
-+
- 	while (true) {
- 		u16 new_ss_mask = cur_ss_mask;
- 
-@@ -1511,8 +1516,13 @@ static int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
- 	lockdep_assert_held(&cgroup_mutex);
- 
- 	do_each_subsys_mask(ss, ssid, ss_mask) {
--		/* if @ss has non-root csses attached to it, can't move */
--		if (css_next_child(NULL, cgroup_css(&ss->root->cgrp, ss)))
-+		/*
-+		 * If @ss has non-root csses attached to it, can't move.
-+		 * If @ss is an implicit controller, it is exempt from this
-+		 * rule and can be stolen.
-+		 */
-+		if (css_next_child(NULL, cgroup_css(&ss->root->cgrp, ss)) &&
-+		    !ss->implicit_on_dfl)
- 			return -EBUSY;
- 
- 		/* can't move between two non-dummy roots either */
-@@ -3032,6 +3042,18 @@ static void cgroup_restore_control(struct cgroup *cgrp)
- 	}
- }
- 
-+static bool css_visible(struct cgroup_subsys_state *css)
-+{
-+	struct cgroup_subsys *ss = css->ss;
-+	struct cgroup *cgrp = css->cgroup;
-+
-+	if (cgroup_control(cgrp) & (1 << ss->id))
-+		return true;
-+	if (!(cgroup_ss_mask(cgrp) & (1 << ss->id)))
-+		return false;
-+	return cgroup_on_dfl(cgrp) && ss->implicit_on_dfl;
-+}
-+
- /**
-  * cgroup_apply_control_enable - enable or show csses according to control
-  * @cgrp: root of the target subtree
-@@ -3067,7 +3089,7 @@ static int cgroup_apply_control_enable(struct cgroup *cgrp)
- 					return PTR_ERR(css);
+ 			while (token != NULL) {
+ 				if (!strcmp(token, "perf_event")) {
+-					found = 1;
++					strcpy(path_v1, mountpoint);
+ 					break;
+ 				}
+ 				token = strtok_r(NULL, ",", &saved_ptr);
  			}
+ 		}
+-		if (found)
++
++		if (!path_v2[0] && !strcmp(type, "cgroup2"))
++			strcpy(path_v2, mountpoint);
++
++		if (path_v1[0] && path_v2[0])
+ 			break;
+ 	}
+ 	fclose(fp);
+-	if (!found)
++
++	if (path_v1[0])
++		path = path_v1;
++	else if (path_v2[0])
++		path = path_v2;
++	else
+ 		return -1;
  
--			if (cgroup_control(dsct) & (1 << ss->id)) {
-+			if (css_visible(css)) {
- 				ret = css_populate_dir(css);
- 				if (ret)
- 					return ret;
-@@ -3110,7 +3132,7 @@ static void cgroup_apply_control_disable(struct cgroup *cgrp)
- 			if (css->parent &&
- 			    !(cgroup_ss_mask(dsct) & (1 << ss->id))) {
- 				kill_css(css);
--			} else if (!(cgroup_control(dsct) & (1 << ss->id))) {
-+			} else if (!css_visible(css)) {
- 				css_clear_dir(css);
- 				if (ss->css_reset)
- 					ss->css_reset(css);
-@@ -5440,7 +5462,9 @@ int __init cgroup_init(void)
- 
- 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
- 
--		if (!ss->dfl_cftypes)
-+		if (ss->implicit_on_dfl)
-+			cgrp_dfl_implicit_ss_mask |= 1 << ss->id;
-+		else if (!ss->dfl_cftypes)
- 			cgrp_dfl_inhibit_ss_mask |= 1 << ss->id;
- 
- 		if (ss->dfl_cftypes == ss->legacy_cftypes) {
+-	if (strlen(mountpoint) < maxlen) {
+-		strcpy(buf, mountpoint);
++	if (strlen(path) < maxlen) {
++		strcpy(buf, path);
+ 		return 0;
+ 	}
+ 	return -1;
 -- 
 2.5.0
