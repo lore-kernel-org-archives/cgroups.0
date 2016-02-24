@@ -1,33 +1,80 @@
-From: Chris Friesen <chris.friesen-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-Subject: blkio cgroups controller doesn't work with LVM?
-Date: Wed, 24 Feb 2016 12:12:19 -0600
-Message-ID: <56CDF283.9010802@windriver.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET v2 cgroup/for-4.6] cgroup: make control mask updates modular and recursive
+Date: Wed, 24 Feb 2016 17:02:32 -0500
+Message-ID: <1456351368-786-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=inkoyVJL5HuaEjdO08HUayrkwSmTg42vZZLK93A87Uw=;
+        b=k7rkFH5iHti5y+OBwWe6WT7RhwWLVY16CS+iFZEq2hhFwo2tFAGb19wkX4AKb+Oqn7
+         nFl4HtqYmtQNlS4l842I1bXtNpvQh0b1Rm7isptxe1pCJRgTvqgCEJtNxzmMGtRF7WaC
+         q6mroOovNpOrHGGOh7qDIF0qU1FyctUMlFYu0tAd809oioizPhj5cgtOj39GNqv51RQJ
+         KFAxD+C/XksB7PmmzZg2Vt+/w0L/e2Zi8HQDWAaiPYF7bLu/5+1vwvu0ee9Wa75phYru
+         wdgX/e4RWlYOameDx5VaSlFVplWmBliCdXCxQAjbhpPQnXQqCvS8pBCDgefsHYGzagOO
+         YGng==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
+Hello,
 
-Hi,
+Changes from v1[1] are
 
-Are there known limitations with the blkio cgroup controller when used with LVM?
+* Patches 0012-0014 and 0016 added.  They further refactor the
+  operations and convert existing css management paths to use the new
+  modular operations.
 
-I'm using Ubuntu 15.10 with the 4.2 kernel.  I got the same results with CentOS 7.
+* 0005 updated to yield the correct result on v1 hierarchies too.
 
-I set up two groups, /sys/fs/cgroup/blkio/test1 and /sys/fs/cgroup/blkio/test2. 
-  I set the weight for test1 to 500, and the weight for test2 to 1000.
+* 0015 updated to reflect earlier changes.
 
-If I then read/write to a file on /dev/sda1 from a process in each group, then 
-everything works as expected and test1 gets half the bandwidth of test2.
+Currently, subsystem enabling and disabling in the default hierarchy
+are implemented as a long chain of interdependent operations in
+cgroup_subtree_control_write().  The function calculates what need to
+be done to its children and excute the necessary operations.  The
+function unfortunately ends up being a rather opaque blob of
+operations which is difficult to wrap one's head around or reuse.
 
-If I do the same but accessing an LVM logical volume, where the underlying 
-physical volume is /dev/sda4, then both groups get the same bandwidth.
+This patchset restructures control mask update so that it's composed
+of discrete idempotent and recursive operations and convert existing
+css managment paths to use them which makes them simpler, more robust
+and capable of recursive operations.
 
-It appears that the group weight doesn't get propagated down through all the 
-layers.  Am I missing something?  If not, is this documented anywhere?
+This patchset includes the following 12 patches.
 
-Thanks,
-Chris
+ 0001-cgroup-separate-out-interface-file-creation-from-css.patch
+ 0002-cgroup-explicitly-track-whether-a-cgroup_subsys_stat.patch
+ 0003-cgroup-reorder-operations-in-cgroup_mkdir.patch
+ 0004-cgroup-factor-out-cgroup_create-out-of-cgroup_mkdir.patch
+ 0005-cgroup-introduce-cgroup_control-and-cgroup_ss_mask.patch
+ 0006-cgroup-factor-out-cgroup_drain_offline-from-cgroup_s.patch
+ 0007-cgroup-factor-out-cgroup_apply_control_disable-from-.patch
+ 0008-cgroup-factor-out-cgroup_apply_control_enable-from-c.patch
+ 0009-cgroup-make-cgroup_drain_offline-and-cgroup_apply_co.patch
+ 0010-cgroup-introduce-cgroup_-save-propagate-restore-_con.patch
+ 0011-cgroup-factor-out-cgroup_-apply-finalize-_control-fr.patch
+ 0012-cgroup-combine-cgroup_mutex-locking-and-offline-css-.patch
+ 0013-cgroup-use-cgroup_apply_enable_control-in-cgroup-cre.patch
+ 0014-cgroup-reimplement-rebind_subsystems-using-cgroup_ap.patch
+ 0015-cgroup-make-cgroup_calc_subtree_ss_mask-take-this_ss.patch
+ 0016-cgroup-allocate-2x-cgrp_cset_links-when-setting-up-a.patch
+
+The patchset is available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-recursive-control
+
+diffstat follows.  Thanks.
+
+ include/linux/cgroup-defs.h |    3 
+ kernel/cgroup.c             |  760 +++++++++++++++++++++++++-------------------
+ 2 files changed, 446 insertions(+), 317 deletions(-)
+
+--
+tejun
+
+[1] http://lkml.kernel.org/g/1456199146-14765-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
