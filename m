@@ -1,104 +1,179 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 15/16] cgroup: make cgroup_calc_subtree_ss_mask() take @this_ss_mask
-Date: Wed, 24 Feb 2016 17:02:47 -0500
-Message-ID: <1456351368-786-16-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 10/16] cgroup: introduce cgroup_{save|propagate|restore}_control()
+Date: Wed, 24 Feb 2016 17:02:42 -0500
+Message-ID: <1456351368-786-11-git-send-email-tj@kernel.org>
 References: <1456351368-786-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vIRvaoNXCW+azYvs/GgReiaW0hpKPhbe+hPjqaNAs7I=;
-        b=DQDOclU1/YMkyBH5qq6FY0J/NaxKcp0WwSe9bZkD/E12V6q3kd3drkiWpleh5O7bn6
-         xN4tnNsWwqN5ZPjBW97YgRdqWk/ip4Zu1dFEQLztXWDDjzXGbMX64EEfS8JYHA4wG4NF
-         Lxvkx4GaZEipxR9HCRa3TqUSHuu4iHGtHX4/CFZD21K1kD0Le42eIn90po8lDYjwSa/X
-         7cH/rwSQWZcvsPz9Hh2s5ZyavoJ0qRGu3pC0sDvNtG6OgWT+wvBFdv5Z+/UxYIJGj/J5
-         Vi3mCSEX+BY4N/99CtJ9KXQ4nvLK1YGe1oI1fGtGbMotNeDlWJQZooMf3/6oLfFEwjBG
-         Uidg==
-In-Reply-To: <1456351368-786-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=ulxuES5sIDmXxD0zc3xmVZcRro4sCVjrZUquFRS5I2g=;
+        b=DHjF7fQx7+tuiOWliJbMn98lWGKgmNeaL17rQ0LNZcY6Y6W7JTWPvxwlrv5jSDG0DA
+         elAgNVgCUARwmAokKnTSavLnh8dMjBu8baYfqt6oXppwjsaDA+R7WF5LjhIx0atODEFR
+         v/+1bu263cz2DQ+uPrlFL8EY+ng2GMSul5fbULreIH+ux0wlit6Yg9fxqq5Lf+oKv6uD
+         YyB2OO4ZB++LxhzHYdYZ5pVIxD5TGkO+4DBu789W2KBeGAWoKGuYKPEweGQicbdtSC2/
+         /t1WLqJwm+M6Dw4RvxM6tk0FuMhO2MN1jvYFgSOSjBGOo2NpVilHFfFQpJ6Iry0UUKf7
+         Aieg==
+In-Reply-To: <1456351368-786-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-cgroup_calc_subtree_ss_mask() currently takes @cgrp and
-@subtree_control.  @cgrp is used for two purposes - to decide whether
-it's for default hierarchy and the mask of available subsystems.  The
-former doesn't matter as the results are the same regardless.  The
-latter can be specified directly through a subsystem mask.
+While controllers are being enabled and disabled in
+cgroup_subtree_control_write(), the original subsystem masks are
+stashed in local variables so that they can be restored if the
+operation fails in the middle.
 
-This patch makes cgroup_calc_subtree_ss_mask() perform the same
-calculations for both default and legacy hierarchies and take
-@this_ss_mask for available subsystems.  @cgrp is no longer used and
-dropped.  This is to allow using the function in contexts where
-available controllers can't be decided from the cgroup.
+This patch adds dedicated fields to struct cgroup to be used instead
+of the local variables and implements functions to stash the current
+values, propagate the changes and restore them recursively.  Combined
+with the previous changes, this makes subsystem management operations
+fully recursive and modularlized.  This will be used to expand cgroup
+core functionalities.
 
-v2: cgroup_refres_subtree_ss_mask() is removed by a previous patch.
-    Updated accordingly.
+While at it, remove now unused @css_enable and @css_disable from
+cgroup_subtree_control_write().
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ include/linux/cgroup-defs.h |  2 ++
+ kernel/cgroup.c             | 82 ++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 64 insertions(+), 20 deletions(-)
 
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 7593c1a..aae8c94 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -260,6 +260,8 @@ struct cgroup {
+ 	 */
+ 	u16 subtree_control;
+ 	u16 subtree_ss_mask;
++	u16 old_subtree_control;
++	u16 old_subtree_ss_mask;
+ 
+ 	/* Private pointers for each registered subsystem */
+ 	struct cgroup_subsys_state __rcu *subsys[CGROUP_SUBSYS_COUNT];
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 01792a5..744e1c6 100644
+index 07ea063..2a55043 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1308,18 +1308,17 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
- 
- /**
-  * cgroup_calc_subtree_ss_mask - calculate subtree_ss_mask
-- * @cgrp: the target cgroup
-  * @subtree_control: the new subtree_control mask to consider
-+ * @this_ss_mask: available subsystems
-  *
-  * On the default hierarchy, a subsystem may request other subsystems to be
-  * enabled together through its ->depends_on mask.  In such cases, more
-  * subsystems than specified in "cgroup.subtree_control" may be enabled.
-  *
-  * This function calculates which subsystems need to be enabled if
-- * @subtree_control is to be applied to @cgrp.  The returned mask is always
-- * a superset of @subtree_control and follows the usual hierarchy rules.
-+ * @subtree_control is to be applied while restricted to @this_ss_mask.
-  */
--static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
-+static u16 cgroup_calc_subtree_ss_mask(u16 subtree_control, u16 this_ss_mask)
- {
- 	u16 cur_ss_mask = subtree_control;
- 	struct cgroup_subsys *ss;
-@@ -1327,9 +1326,6 @@ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	if (!cgroup_on_dfl(cgrp))
--		return cur_ss_mask;
--
- 	while (true) {
- 		u16 new_ss_mask = cur_ss_mask;
- 
-@@ -1342,7 +1338,7 @@ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
- 		 * happen only if some depended-upon subsystems were bound
- 		 * to non-default hierarchies.
- 		 */
--		new_ss_mask &= cgroup_ss_mask(cgrp);
-+		new_ss_mask &= this_ss_mask;
- 
- 		if (new_ss_mask == cur_ss_mask)
- 			break;
-@@ -3011,8 +3007,9 @@ static void cgroup_propagate_control(struct cgroup *cgrp)
- 
- 	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
- 		dsct->subtree_control &= cgroup_control(dsct);
--		dsct->subtree_ss_mask = cgroup_calc_subtree_ss_mask(dsct,
--							dsct->subtree_control);
-+		dsct->subtree_ss_mask =
-+			cgroup_calc_subtree_ss_mask(dsct->subtree_control,
-+						    cgroup_ss_mask(dsct));
- 	}
+@@ -3031,6 +3031,62 @@ static bool cgroup_drain_offline(struct cgroup *cgrp)
  }
  
+ /**
++ * cgroup_save_control - save control masks of a subtree
++ * @cgrp: root of the target subtree
++ *
++ * Save ->subtree_control and ->subtree_ss_mask to the respective old_
++ * prefixed fields for @cgrp's subtree including @cgrp itself.
++ */
++static void cgroup_save_control(struct cgroup *cgrp)
++{
++	struct cgroup *dsct;
++	struct cgroup_subsys_state *d_css;
++
++	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
++		dsct->old_subtree_control = dsct->subtree_control;
++		dsct->old_subtree_ss_mask = dsct->subtree_ss_mask;
++	}
++}
++
++/**
++ * cgroup_propagate_control - refresh control masks of a subtree
++ * @cgrp: root of the target subtree
++ *
++ * For @cgrp and its subtree, ensure ->subtree_ss_mask matches
++ * ->subtree_control and propagate controller availability through the
++ * subtree so that descendants don't have unavailable controllers enabled.
++ */
++static void cgroup_propagate_control(struct cgroup *cgrp)
++{
++	struct cgroup *dsct;
++	struct cgroup_subsys_state *d_css;
++
++	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
++		dsct->subtree_control &= cgroup_control(dsct);
++		dsct->subtree_ss_mask = cgroup_calc_subtree_ss_mask(dsct,
++							dsct->subtree_control);
++	}
++}
++
++/**
++ * cgroup_restore_control - restore control masks of a subtree
++ * @cgrp: root of the target subtree
++ *
++ * Restore ->subtree_control and ->subtree_ss_mask from the respective old_
++ * prefixed fields for @cgrp's subtree including @cgrp itself.
++ */
++static void cgroup_restore_control(struct cgroup *cgrp)
++{
++	struct cgroup *dsct;
++	struct cgroup_subsys_state *d_css;
++
++	cgroup_for_each_live_descendant_post(dsct, d_css, cgrp) {
++		dsct->subtree_control = dsct->old_subtree_control;
++		dsct->subtree_ss_mask = dsct->old_subtree_ss_mask;
++	}
++}
++
++/**
+  * cgroup_apply_control_enable - enable or show csses according to control
+  * @cgrp: root of the target subtree
+  *
+@@ -3118,7 +3174,6 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 					    loff_t off)
+ {
+ 	u16 enable = 0, disable = 0;
+-	u16 css_enable, css_disable, old_sc, new_sc, old_ss, new_ss;
+ 	struct cgroup *cgrp, *child;
+ 	struct cgroup_subsys *ss;
+ 	char *tok;
+@@ -3202,25 +3257,14 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 		return restart_syscall();
+ 	}
+ 
+-	/*
+-	 * Update subsys masks and calculate what needs to be done.  More
+-	 * subsystems than specified may need to be enabled or disabled
+-	 * depending on subsystem dependencies.
+-	 */
+-	old_sc = cgrp->subtree_control;
+-	old_ss = cgrp->subtree_ss_mask;
+-	new_sc = (old_sc | enable) & ~disable;
+-	new_ss = cgroup_calc_subtree_ss_mask(cgrp, new_sc);
++	/* save and update control masks and prepare csses */
++	cgroup_save_control(cgrp);
+ 
+-	css_enable = ~old_ss & new_ss;
+-	css_disable = old_ss & ~new_ss;
+-	enable |= css_enable;
+-	disable |= css_disable;
++	cgrp->subtree_control |= enable;
++	cgrp->subtree_control &= ~disable;
+ 
+-	cgrp->subtree_control = new_sc;
+-	cgrp->subtree_ss_mask = new_ss;
++	cgroup_propagate_control(cgrp);
+ 
+-	/* prepare csses */
+ 	ret = cgroup_apply_control_enable(cgrp);
+ 	if (ret)
+ 		goto err_undo_css;
+@@ -3245,9 +3289,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 
+ err_undo_css:
+ 	/* restore masks and shoot down new csses */
+-	cgrp->subtree_control = old_sc;
+-	cgrp->subtree_ss_mask = old_ss;
+-
++	cgroup_restore_control(cgrp);
+ 	cgroup_apply_control_disable(cgrp);
+ 
+ 	goto out_unlock;
 -- 
 2.5.0
+
