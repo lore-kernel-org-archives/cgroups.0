@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/16] cgroup: make cgroup_drain_offline() and cgroup_apply_control_{disable|enable}() recursive
-Date: Wed, 24 Feb 2016 17:02:41 -0500
-Message-ID: <1456351368-786-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 04/16] cgroup: factor out cgroup_create() out of cgroup_mkdir()
+Date: Wed, 24 Feb 2016 17:02:36 -0500
+Message-ID: <1456351368-786-5-git-send-email-tj@kernel.org>
 References: <1456351368-786-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=N0n6nSZORveu/aCwXosSokKmdxpVkT9YRNmGsXQctX0=;
-        b=TE5imsvfMlwSlFw2xVXazV7LojSQfnxbnVTf333XUpk3VBUgc4Ehzk9xOY+htAEkB1
-         /sYVDsLKi9dUjcCJg8R7/74wHi7bVJmI6WSW0i68dOsQM/pP/PcUERB95ZY+4wN5jfm8
-         +rq0GoiGvNlso2oMVqS9OJOnig760ku5X0salGEoLdMbwToKF6VuHgdLaUrNCKOXPPkH
-         rmjHLcKT/xdlj7JNKnGhYq97wvF7srv3BsDVT4u68QWXIHF4KoP5HidV6+8ujUEd7b6r
-         h9xfsOL1X+8SBvBQIizWYAGdtIOnDcmIQFfwqeR1dz0cuHIKu4g3pOfy37+g7JKVpWW5
-         Psvg==
+        bh=sXPhMgZC/2b5JBmGyTQJ5pQhqLePICdy1tZLsHR2WXg=;
+        b=cQU/VfTZaUCKIp0ujzLmBnGrJK5gnFYO5yncRpVHXW26KXggyIxWSbU4HO1Rzm6/51
+         9ag3cmtEgCa3gyecY3sEp+U6FMifMIcI6Bfrk5OVNSunskDgxu8IEGe7gTTUIsWFdDAH
+         AN7CRzuNEBmHAf3S4r+O/R3RciWzzDV1GfPXZ3JxulWL8vZu9+BTXAYRUklAIJyZJRBr
+         jWvalJRWIpxKtziJ6ctr/796T4uPPOQcHPRoXoEAd3DCIB3h+cA9MIEgCdpg+fOu3zgj
+         CIIKoQukabvoCmDF4jesy+JHWDJpxOPj0vjwaIue7Tkt4sWAg4dNUuhvUAWreGi67t9d
+         kLeQ==
 In-Reply-To: <1456351368-786-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,142 +23,126 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-The three factored out css management operations -
-cgroup_drain_offline() and cgroup_apply_control_{disable|enable}() -
-only depend on the current state of the target cgroups and idempotent
-and thus can be easily made to operate on the subtree instead of the
-immediate children.
+We're in the process of refactoring cgroup and css management paths to
+separate them out to eventually allow cgroups which aren't visible
+through cgroup fs.  This patch factors out cgroup_create() out of
+cgroup_mkdir().  cgroup_create() contains all internal object creation
+and initialization.  cgroup_mkdir() uses cgroup_create() to create the
+internal cgroup and adds interface directory and file creation.
 
-This patch introduces the iterators which walk live subtree and
-converts the three functions to operate on the subtree including self
-instead of the children.  While this leads to spurious walking and be
-slightly more expensive, it will allow them to be used for wider scope
-of operations.
-
-Note that cgroup_drain_offline() now tests for whether a css is dying
-before trying to drain it.  This is to avoid trying to drain live
-csses as there can be mix of live and dying csses in a subtree unlike
-children of the same parent.
+This patch doesn't cause any behavior differences.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 41 +++++++++++++++++++++++++++++++----------
- 1 file changed, 31 insertions(+), 10 deletions(-)
+ kernel/cgroup.c | 72 ++++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 43 insertions(+), 29 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index bcf0bad..07ea063 100644
+index 204f78a..070c078 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -573,6 +573,24 @@ static int notify_on_release(const struct cgroup *cgrp)
- 			;						\
- 		else
+@@ -4884,33 +4884,19 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+ 	return ERR_PTR(err);
+ }
  
-+/* walk live descendants in preorder */
-+#define cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp)		\
-+	css_for_each_descendant_pre((d_css), cgroup_css((cgrp), NULL))	\
-+		if (({ lockdep_assert_held(&cgroup_mutex);		\
-+		       (dsct) = (d_css)->cgroup;			\
-+		       cgroup_is_dead(dsct); }))			\
-+			;						\
-+		else
+-static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+-			umode_t mode)
++static struct cgroup *cgroup_create(struct cgroup *parent)
+ {
+-	struct cgroup *parent, *cgrp, *tcgrp;
+-	struct cgroup_root *root;
++	struct cgroup_root *root = parent->root;
+ 	struct cgroup_subsys *ss;
+-	struct kernfs_node *kn;
+-	int level, ssid, ret;
+-
+-	/* Do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable.
+-	 */
+-	if (strchr(name, '\n'))
+-		return -EINVAL;
+-
+-	parent = cgroup_kn_lock_live(parent_kn);
+-	if (!parent)
+-		return -ENODEV;
+-	root = parent->root;
+-	level = parent->level + 1;
++	struct cgroup *cgrp, *tcgrp;
++	int level = parent->level + 1;
++	int ssid, ret;
+ 
+ 	/* allocate the cgroup and its ID, 0 is reserved for the root */
+ 	cgrp = kzalloc(sizeof(*cgrp) +
+ 		       sizeof(cgrp->ancestor_ids[0]) * (level + 1), GFP_KERNEL);
+-	if (!cgrp) {
+-		ret = -ENOMEM;
+-		goto out_unlock;
+-	}
++	if (!cgrp)
++		return ERR_PTR(-ENOMEM);
+ 
+ 	ret = percpu_ref_init(&cgrp->self.refcnt, css_release, 0, GFP_KERNEL);
+ 	if (ret)
+@@ -4974,6 +4960,40 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 		cgroup_refresh_subtree_ss_mask(cgrp);
+ 	}
+ 
++	return cgrp;
 +
-+/* walk live descendants in postorder */
-+#define cgroup_for_each_live_descendant_post(dsct, d_css, cgrp)		\
-+	css_for_each_descendant_post((d_css), cgroup_css((cgrp), NULL))	\
-+		if (({ lockdep_assert_held(&cgroup_mutex);		\
-+		       (dsct) = (d_css)->cgroup;			\
-+		       cgroup_is_dead(dsct); }))			\
-+			;						\
-+		else
++out_cancel_ref:
++	percpu_ref_exit(&cgrp->self.refcnt);
++out_free_cgrp:
++	kfree(cgrp);
++	return ERR_PTR(ret);
++out_destroy:
++	cgroup_destroy_locked(cgrp);
++	return ERR_PTR(ret);
++}
 +
- static void cgroup_release_agent(struct work_struct *work);
- static void check_for_release(struct cgroup *cgrp);
++static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
++			umode_t mode)
++{
++	struct cgroup *parent, *cgrp;
++	struct cgroup_subsys *ss;
++	struct kernfs_node *kn;
++	int ssid, ret;
++
++	/* do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable */
++	if (strchr(name, '\n'))
++		return -EINVAL;
++
++	parent = cgroup_kn_lock_live(parent_kn);
++	if (!parent)
++		return -ENODEV;
++
++	cgrp = cgroup_create(parent);
++	if (IS_ERR(cgrp)) {
++		ret = PTR_ERR(cgrp);
++		goto out_unlock;
++	}
++
+ 	/* create the directory */
+ 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
+ 	if (IS_ERR(kn)) {
+@@ -5008,17 +5028,11 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	ret = 0;
+ 	goto out_unlock;
  
-@@ -2966,11 +2984,11 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+-out_cancel_ref:
+-	percpu_ref_exit(&cgrp->self.refcnt);
+-out_free_cgrp:
+-	kfree(cgrp);
++out_destroy:
++	cgroup_destroy_locked(cgrp);
+ out_unlock:
+ 	cgroup_kn_unlock(parent_kn);
+ 	return ret;
+-
+-out_destroy:
+-	cgroup_destroy_locked(cgrp);
+-	goto out_unlock;
+ }
  
- /**
-  * cgroup_drain_offline - wait for previously offlined csses to go away
-- * @cgrp: parent of the target cgroups
-+ * @cgrp: root of the target subtree
-  *
-  * Because css offlining is asynchronous, userland may try to re-enable a
-  * controller while the previous css is still around.  This function drains
-- * the previous css instances of @cgrp's children.
-+ * the previous css instances of @cgrp's subtree.
-  *
-  * Must be called with cgroup_mutex held.  Returns %false if there were no
-  * dying css instances.  Returns %true if there were one or more and this
-@@ -2981,17 +2999,18 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
- static bool cgroup_drain_offline(struct cgroup *cgrp)
- {
- 	struct cgroup *dsct;
-+	struct cgroup_subsys_state *d_css;
- 	struct cgroup_subsys *ss;
- 	int ssid;
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	cgroup_for_each_live_child(dsct, cgrp) {
-+	cgroup_for_each_live_descendant_post(dsct, d_css, cgrp) {
- 		for_each_subsys(ss, ssid) {
- 			struct cgroup_subsys_state *css = cgroup_css(dsct, ss);
- 			DEFINE_WAIT(wait);
- 
--			if (!css)
-+			if (!css || !percpu_ref_is_dying(&css->refcnt))
- 				continue;
- 
- 			cgroup_get(dsct);
-@@ -3013,9 +3032,9 @@ static bool cgroup_drain_offline(struct cgroup *cgrp)
- 
- /**
-  * cgroup_apply_control_enable - enable or show csses according to control
-- * @cgrp: parent of the target cgroups
-+ * @cgrp: root of the target subtree
-  *
-- * Walk @cgrp's children and create new csses or make the existing ones
-+ * Walk @cgrp's subtree and create new csses or make the existing ones
-  * visible.  A css is created invisible if it's being implicitly enabled
-  * through dependency.  An invisible css is made visible when the userland
-  * explicitly enables it.
-@@ -3027,10 +3046,11 @@ static bool cgroup_drain_offline(struct cgroup *cgrp)
- static int cgroup_apply_control_enable(struct cgroup *cgrp)
- {
- 	struct cgroup *dsct;
-+	struct cgroup_subsys_state *d_css;
- 	struct cgroup_subsys *ss;
- 	int ssid, ret;
- 
--	cgroup_for_each_live_child(dsct, cgrp) {
-+	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
- 		for_each_subsys(ss, ssid) {
- 			struct cgroup_subsys_state *css = cgroup_css(dsct, ss);
- 
-@@ -3056,9 +3076,9 @@ static int cgroup_apply_control_enable(struct cgroup *cgrp)
- 
- /**
-  * cgroup_apply_control_disable - kill or hide csses according to control
-- * @cgrp: parent of the target cgroups
-+ * @cgrp: root of the target subtree
-  *
-- * Walk @cgrp's children and kill and hide csses so that they match
-+ * Walk @cgrp's subtree and kill and hide csses so that they match
-  * cgroup_ss_mask() and cgroup_visible_mask().
-  *
-  * A css is hidden when the userland requests it to be disabled while other
-@@ -3070,10 +3090,11 @@ static int cgroup_apply_control_enable(struct cgroup *cgrp)
- static void cgroup_apply_control_disable(struct cgroup *cgrp)
- {
- 	struct cgroup *dsct;
-+	struct cgroup_subsys_state *d_css;
- 	struct cgroup_subsys *ss;
- 	int ssid;
- 
--	cgroup_for_each_live_child(dsct, cgrp) {
-+	cgroup_for_each_live_descendant_post(dsct, d_css, cgrp) {
- 		for_each_subsys(ss, ssid) {
- 			struct cgroup_subsys_state *css = cgroup_css(dsct, ss);
- 
+ /*
 -- 
 2.5.0
 
