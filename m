@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 16/16] cgroup: allocate 2x cgrp_cset_links when setting up a new root
-Date: Wed, 24 Feb 2016 17:02:48 -0500
-Message-ID: <1456351368-786-17-git-send-email-tj@kernel.org>
+Subject: [PATCH 15/16] cgroup: make cgroup_calc_subtree_ss_mask() take @this_ss_mask
+Date: Wed, 24 Feb 2016 17:02:47 -0500
+Message-ID: <1456351368-786-16-git-send-email-tj@kernel.org>
 References: <1456351368-786-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=j4qYs3Y1IXkhi3HAJDYfM/7CjAyf5EYLxoKKIfeO4g4=;
-        b=lDpgHHxpeyYxbtrimLylushjUkKsKHF+oc/PmY8BXUi+SuSf9EmNfewvp/bFdX3pYj
-         dmULabRTBczSu9jKkk8qBpkbe1NbT6VRa3eHX9VRIZ8kvnTVsvpThW/I4R/CQUqDvJKh
-         D1OgfBRprleDGJHv3AovdVi0KjYcfM8FSEfuvlX1kJZKIHLCmv7llfXHtf0C2TYC4/OH
-         cVEKMtFKAzWUH5Jwabm2NH/HaTAoPTU/wNMXifV+7wZKTbADpBP+BufMAFg94RTgWr92
-         IJlkES3SPFHfYrmVXtf2moKvPLuUxz7gjtXoVpzuHysnK+Mt/gOlImEbEQ2arMAXomX0
-         w3CQ==
+        bh=vIRvaoNXCW+azYvs/GgReiaW0hpKPhbe+hPjqaNAs7I=;
+        b=DQDOclU1/YMkyBH5qq6FY0J/NaxKcp0WwSe9bZkD/E12V6q3kd3drkiWpleh5O7bn6
+         xN4tnNsWwqN5ZPjBW97YgRdqWk/ip4Zu1dFEQLztXWDDjzXGbMX64EEfS8JYHA4wG4NF
+         Lxvkx4GaZEipxR9HCRa3TqUSHuu4iHGtHX4/CFZD21K1kD0Le42eIn90po8lDYjwSa/X
+         7cH/rwSQWZcvsPz9Hh2s5ZyavoJ0qRGu3pC0sDvNtG6OgWT+wvBFdv5Z+/UxYIJGj/J5
+         Vi3mCSEX+BY4N/99CtJ9KXQ4nvLK1YGe1oI1fGtGbMotNeDlWJQZooMf3/6oLfFEwjBG
+         Uidg==
 In-Reply-To: <1456351368-786-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,41 +23,82 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-During prep, cgroup_setup_root() allocates cgrp_cset_links matching
-the number of existing css_sets to later link the new root.  This is
-fine for now as the only operation which can happen inbetween is
-rebind_subsystems() and rebinding of empty subsystems doesn't create
-new css_sets.
+cgroup_calc_subtree_ss_mask() currently takes @cgrp and
+@subtree_control.  @cgrp is used for two purposes - to decide whether
+it's for default hierarchy and the mask of available subsystems.  The
+former doesn't matter as the results are the same regardless.  The
+latter can be specified directly through a subsystem mask.
 
-However, while not yet allowed, with the recent reimplementation,
-rebind_subsystems() can rebind subsystems with descendant csses and
-thus can create new css_sets.  This patch makes cgroup_setup_root()
-allocate 2x of the existing css_sets so that later use of live
-subsystem rebinding doesn't blow up.
+This patch makes cgroup_calc_subtree_ss_mask() perform the same
+calculations for both default and legacy hierarchies and take
+@this_ss_mask for available subsystems.  @cgrp is no longer used and
+dropped.  This is to allow using the function in contexts where
+available controllers can't be decided from the cgroup.
+
+v2: cgroup_refres_subtree_ss_mask() is removed by a previous patch.
+    Updated accordingly.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ kernel/cgroup.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 744e1c6..a44c123 100644
+index 01792a5..744e1c6 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1914,10 +1914,11 @@ static int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
- 	/*
- 	 * We're accessing css_set_count without locking css_set_lock here,
- 	 * but that's OK - it can only be increased by someone holding
--	 * cgroup_lock, and that's us. The worst that can happen is that we
--	 * have some link structures left over
-+	 * cgroup_lock, and that's us.  Later rebinding may disable
-+	 * controllers on the default hierarchy and thus create new csets,
-+	 * which can't be more than the existing ones.  Allocate 2x.
- 	 */
--	ret = allocate_cgrp_cset_links(css_set_count, &tmp_links);
-+	ret = allocate_cgrp_cset_links(2 * css_set_count, &tmp_links);
- 	if (ret)
- 		goto cancel_ref;
+@@ -1308,18 +1308,17 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
+ 
+ /**
+  * cgroup_calc_subtree_ss_mask - calculate subtree_ss_mask
+- * @cgrp: the target cgroup
+  * @subtree_control: the new subtree_control mask to consider
++ * @this_ss_mask: available subsystems
+  *
+  * On the default hierarchy, a subsystem may request other subsystems to be
+  * enabled together through its ->depends_on mask.  In such cases, more
+  * subsystems than specified in "cgroup.subtree_control" may be enabled.
+  *
+  * This function calculates which subsystems need to be enabled if
+- * @subtree_control is to be applied to @cgrp.  The returned mask is always
+- * a superset of @subtree_control and follows the usual hierarchy rules.
++ * @subtree_control is to be applied while restricted to @this_ss_mask.
+  */
+-static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
++static u16 cgroup_calc_subtree_ss_mask(u16 subtree_control, u16 this_ss_mask)
+ {
+ 	u16 cur_ss_mask = subtree_control;
+ 	struct cgroup_subsys *ss;
+@@ -1327,9 +1326,6 @@ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+-	if (!cgroup_on_dfl(cgrp))
+-		return cur_ss_mask;
+-
+ 	while (true) {
+ 		u16 new_ss_mask = cur_ss_mask;
+ 
+@@ -1342,7 +1338,7 @@ static u16 cgroup_calc_subtree_ss_mask(struct cgroup *cgrp, u16 subtree_control)
+ 		 * happen only if some depended-upon subsystems were bound
+ 		 * to non-default hierarchies.
+ 		 */
+-		new_ss_mask &= cgroup_ss_mask(cgrp);
++		new_ss_mask &= this_ss_mask;
+ 
+ 		if (new_ss_mask == cur_ss_mask)
+ 			break;
+@@ -3011,8 +3007,9 @@ static void cgroup_propagate_control(struct cgroup *cgrp)
+ 
+ 	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
+ 		dsct->subtree_control &= cgroup_control(dsct);
+-		dsct->subtree_ss_mask = cgroup_calc_subtree_ss_mask(dsct,
+-							dsct->subtree_control);
++		dsct->subtree_ss_mask =
++			cgroup_calc_subtree_ss_mask(dsct->subtree_control,
++						    cgroup_ss_mask(dsct));
+ 	}
+ }
  
 -- 
 2.5.0
