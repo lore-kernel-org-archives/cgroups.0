@@ -1,80 +1,143 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET v2 cgroup/for-4.6] cgroup: make control mask updates modular and recursive
-Date: Wed, 24 Feb 2016 17:02:32 -0500
-Message-ID: <1456351368-786-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 11/16] cgroup: factor out cgroup_{apply|finalize}_control() from cgroup_subtree_control_write()
+Date: Wed, 24 Feb 2016 17:02:43 -0500
+Message-ID: <1456351368-786-12-git-send-email-tj@kernel.org>
+References: <1456351368-786-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=inkoyVJL5HuaEjdO08HUayrkwSmTg42vZZLK93A87Uw=;
-        b=k7rkFH5iHti5y+OBwWe6WT7RhwWLVY16CS+iFZEq2hhFwo2tFAGb19wkX4AKb+Oqn7
-         nFl4HtqYmtQNlS4l842I1bXtNpvQh0b1Rm7isptxe1pCJRgTvqgCEJtNxzmMGtRF7WaC
-         q6mroOovNpOrHGGOh7qDIF0qU1FyctUMlFYu0tAd809oioizPhj5cgtOj39GNqv51RQJ
-         KFAxD+C/XksB7PmmzZg2Vt+/w0L/e2Zi8HQDWAaiPYF7bLu/5+1vwvu0ee9Wa75phYru
-         wdgX/e4RWlYOameDx5VaSlFVplWmBliCdXCxQAjbhpPQnXQqCvS8pBCDgefsHYGzagOO
-         YGng==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=lSqpv+GzWb29xrY8jlPW445JIo38Degp5wXbfrWMxtQ=;
+        b=FYVAK8JgARc64oFxGCOlzzj0zepJ5CvoSkP85AI5tLlsNVhA0yM8Ht2Lx3Su+CRGY0
+         i0Wb71O1Qv2OvuonJsHqTJm+NlRptCQxrmeIeQKuiLyGM8YBR5RFobEEoAXEiU+7UCbe
+         jXKx8JaEfCn7v2zYWYQAJz1ZKGq+T2CPjM7NSgM2ctYuhPUoPtfa9k3KRhiXGa8TWjVx
+         3ibAOmdGY0vk2rbmMYcSLIG8tnNwEzGX2GN3Siq3jiVVzplQohfDEw/iHtUx9SPDgr2S
+         SLrcmLcElh7A6I168LhNGW/gM4EDJaS4U0Dx7lRzMdJSUUXKl4Mrdk47T39VbvhPmefM
+         zEmg==
+In-Reply-To: <1456351368-786-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-Hello,
+Factor out cgroup_{apply|finalize}_control() so that control mask
+update can be done in several simple steps.  This patch doesn't
+introduce behavior changes.
 
-Changes from v1[1] are
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup.c | 81 +++++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 58 insertions(+), 23 deletions(-)
 
-* Patches 0012-0014 and 0016 added.  They further refactor the
-  operations and convert existing css management paths to use the new
-  modular operations.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2a55043..baa0e05 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3168,6 +3168,62 @@ static void cgroup_apply_control_disable(struct cgroup *cgrp)
+ 	}
+ }
+ 
++/**
++ * cgroup_apply_control - apply control mask updates to the subtree
++ * @cgrp: root of the target subtree
++ *
++ * subsystems can be enabled and disabled in a subtree using the following
++ * steps.
++ *
++ * 1. Call cgroup_save_control() to stash the current state.
++ * 2. Update ->subtree_control masks in the subtree as desired.
++ * 3. Call cgroup_apply_control() to apply the changes.
++ * 4. Optionally perform other related operations.
++ * 5. Call cgroup_finalize_control() to finish up.
++ *
++ * This function implements step 3 and propagates the mask changes
++ * throughout @cgrp's subtree, updates csses accordingly and perform
++ * process migrations.
++ */
++static int cgroup_apply_control(struct cgroup *cgrp)
++{
++	int ret;
++
++	cgroup_propagate_control(cgrp);
++
++	ret = cgroup_apply_control_enable(cgrp);
++	if (ret)
++		return ret;
++
++	/*
++	 * At this point, cgroup_e_css() results reflect the new csses
++	 * making the following cgroup_update_dfl_csses() properly update
++	 * css associations of all tasks in the subtree.
++	 */
++	ret = cgroup_update_dfl_csses(cgrp);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++/**
++ * cgroup_finalize_control - finalize control mask update
++ * @cgrp: root of the target subtree
++ * @ret: the result of the update
++ *
++ * Finalize control mask update.  See cgroup_apply_control() for more info.
++ */
++static void cgroup_finalize_control(struct cgroup *cgrp, int ret)
++{
++	if (ret) {
++		cgroup_restore_control(cgrp);
++		cgroup_propagate_control(cgrp);
++	}
++
++	cgroup_apply_control_disable(cgrp);
++}
++
+ /* change the enabled child controllers for a cgroup in the default hierarchy */
+ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 					    char *buf, size_t nbytes,
+@@ -3263,36 +3319,15 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	cgrp->subtree_control |= enable;
+ 	cgrp->subtree_control &= ~disable;
+ 
+-	cgroup_propagate_control(cgrp);
++	ret = cgroup_apply_control(cgrp);
+ 
+-	ret = cgroup_apply_control_enable(cgrp);
+-	if (ret)
+-		goto err_undo_css;
+-
+-	/*
+-	 * At this point, cgroup_e_css() results reflect the new csses
+-	 * making the following cgroup_update_dfl_csses() properly update
+-	 * css associations of all tasks in the subtree.
+-	 */
+-	ret = cgroup_update_dfl_csses(cgrp);
+-	if (ret)
+-		goto err_undo_css;
+-
+-	/* all tasks are migrated out of disabled csses, commit disable */
+-	cgroup_apply_control_disable(cgrp);
++	cgroup_finalize_control(cgrp, ret);
+ 
+ 	kernfs_activate(cgrp->kn);
+ 	ret = 0;
+ out_unlock:
+ 	cgroup_kn_unlock(of->kn);
+ 	return ret ?: nbytes;
+-
+-err_undo_css:
+-	/* restore masks and shoot down new csses */
+-	cgroup_restore_control(cgrp);
+-	cgroup_apply_control_disable(cgrp);
+-
+-	goto out_unlock;
+ }
+ 
+ static int cgroup_events_show(struct seq_file *seq, void *v)
+-- 
+2.5.0
 
-* 0005 updated to yield the correct result on v1 hierarchies too.
-
-* 0015 updated to reflect earlier changes.
-
-Currently, subsystem enabling and disabling in the default hierarchy
-are implemented as a long chain of interdependent operations in
-cgroup_subtree_control_write().  The function calculates what need to
-be done to its children and excute the necessary operations.  The
-function unfortunately ends up being a rather opaque blob of
-operations which is difficult to wrap one's head around or reuse.
-
-This patchset restructures control mask update so that it's composed
-of discrete idempotent and recursive operations and convert existing
-css managment paths to use them which makes them simpler, more robust
-and capable of recursive operations.
-
-This patchset includes the following 12 patches.
-
- 0001-cgroup-separate-out-interface-file-creation-from-css.patch
- 0002-cgroup-explicitly-track-whether-a-cgroup_subsys_stat.patch
- 0003-cgroup-reorder-operations-in-cgroup_mkdir.patch
- 0004-cgroup-factor-out-cgroup_create-out-of-cgroup_mkdir.patch
- 0005-cgroup-introduce-cgroup_control-and-cgroup_ss_mask.patch
- 0006-cgroup-factor-out-cgroup_drain_offline-from-cgroup_s.patch
- 0007-cgroup-factor-out-cgroup_apply_control_disable-from-.patch
- 0008-cgroup-factor-out-cgroup_apply_control_enable-from-c.patch
- 0009-cgroup-make-cgroup_drain_offline-and-cgroup_apply_co.patch
- 0010-cgroup-introduce-cgroup_-save-propagate-restore-_con.patch
- 0011-cgroup-factor-out-cgroup_-apply-finalize-_control-fr.patch
- 0012-cgroup-combine-cgroup_mutex-locking-and-offline-css-.patch
- 0013-cgroup-use-cgroup_apply_enable_control-in-cgroup-cre.patch
- 0014-cgroup-reimplement-rebind_subsystems-using-cgroup_ap.patch
- 0015-cgroup-make-cgroup_calc_subtree_ss_mask-take-this_ss.patch
- 0016-cgroup-allocate-2x-cgrp_cset_links-when-setting-up-a.patch
-
-The patchset is available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-recursive-control
-
-diffstat follows.  Thanks.
-
- include/linux/cgroup-defs.h |    3 
- kernel/cgroup.c             |  760 +++++++++++++++++++++++++-------------------
- 2 files changed, 446 insertions(+), 317 deletions(-)
-
---
-tejun
-
-[1] http://lkml.kernel.org/g/1456199146-14765-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
