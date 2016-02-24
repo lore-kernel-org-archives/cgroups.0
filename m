@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/16] cgroup: factor out cgroup_{apply|finalize}_control() from cgroup_subtree_control_write()
-Date: Wed, 24 Feb 2016 17:02:43 -0500
-Message-ID: <1456351368-786-12-git-send-email-tj@kernel.org>
+Subject: [PATCH 02/16] cgroup: explicitly track whether a cgroup_subsys_state is visible to userland
+Date: Wed, 24 Feb 2016 17:02:34 -0500
+Message-ID: <1456351368-786-3-git-send-email-tj@kernel.org>
 References: <1456351368-786-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=lSqpv+GzWb29xrY8jlPW445JIo38Degp5wXbfrWMxtQ=;
-        b=FYVAK8JgARc64oFxGCOlzzj0zepJ5CvoSkP85AI5tLlsNVhA0yM8Ht2Lx3Su+CRGY0
-         i0Wb71O1Qv2OvuonJsHqTJm+NlRptCQxrmeIeQKuiLyGM8YBR5RFobEEoAXEiU+7UCbe
-         jXKx8JaEfCn7v2zYWYQAJz1ZKGq+T2CPjM7NSgM2ctYuhPUoPtfa9k3KRhiXGa8TWjVx
-         3ibAOmdGY0vk2rbmMYcSLIG8tnNwEzGX2GN3Siq3jiVVzplQohfDEw/iHtUx9SPDgr2S
-         SLrcmLcElh7A6I168LhNGW/gM4EDJaS4U0Dx7lRzMdJSUUXKl4Mrdk47T39VbvhPmefM
-         zEmg==
+        bh=3STTqu6gI6CPbsvyH685E21jH1CbCAOllT2hJ7Pzcrk=;
+        b=huLj4jlbN5nc2ofxnMhptBYVQQK9Fms+CXKsBnQhBt2Czfg7HXNdgC6APSN5RrJAou
+         8Tp4NbBCIr5kqAGv9Q7mN9CdtrSkupbNUifEKrr9n2Lf7Gab/zShpfu0vH7QvZOqQ0tj
+         OTIBf2aFdkJ48X+klEqcWovSa4odvARmnkav1dvE8bLJtJvw6XFQFTBgg5Flv3ZBD7VN
+         zNODK95RJW9YzzEDas6gbz4j13rTfDURzDxyArVFoSdO3T8W2jz8BteRtoZWC4MGt6ZK
+         2xyrTQLNUVEm/up13sLpt2vBw3TyuhRYRqZY/qbYcta0vHtaNfeDavBX0WmTWhHyYxmG
+         Woow==
 In-Reply-To: <1456351368-786-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,121 +23,82 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-Factor out cgroup_{apply|finalize}_control() so that control mask
-update can be done in several simple steps.  This patch doesn't
-introduce behavior changes.
+Currently, whether a css (cgroup_subsys_state) has its interface files
+created is not tracked and assumed to change together with the owning
+cgroup's lifecycle.  cgroup directory and interface creation is being
+separated out from internal object creation to help refactoring and
+eventually allow cgroups which are not visible through cgroupfs.
+
+This patch adds CSS_VISIBLE to track whether a css has its interface
+files created and perform management operations only when necessary
+which helps decoupling interface file handling from internal object
+lifecycle.  After this patch, all css interface file management
+functions can be called regardless of the current state and will
+achieve the expected result.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 81 +++++++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 58 insertions(+), 23 deletions(-)
+ include/linux/cgroup-defs.h |  1 +
+ kernel/cgroup.c             | 13 ++++++++++++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 8fc3f04..7593c1a 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -45,6 +45,7 @@ enum {
+ 	CSS_NO_REF	= (1 << 0), /* no reference counting for this css */
+ 	CSS_ONLINE	= (1 << 1), /* between ->css_online() and ->css_offline() */
+ 	CSS_RELEASED	= (1 << 2), /* refcnt reached zero, released */
++	CSS_VISIBLE	= (1 << 3), /* css is visible to userland */
+ };
+ 
+ /* bits in struct cgroup flags field */
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 2a55043..baa0e05 100644
+index 3784f5a..c5fa761 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -3168,6 +3168,62 @@ static void cgroup_apply_control_disable(struct cgroup *cgrp)
+@@ -1420,6 +1420,11 @@ static void css_clear_dir(struct cgroup_subsys_state *css,
+ 	struct cgroup *cgrp = cgrp_override ?: css->cgroup;
+ 	struct cftype *cfts;
+ 
++	if (!(css->flags & CSS_VISIBLE))
++		return;
++
++	css->flags &= ~CSS_VISIBLE;
++
+ 	list_for_each_entry(cfts, &css->ss->cfts, node)
+ 		cgroup_addrm_files(css, cgrp, cfts, false);
+ }
+@@ -1438,6 +1443,9 @@ static int css_populate_dir(struct cgroup_subsys_state *css,
+ 	struct cftype *cfts, *failed_cfts;
+ 	int ret;
+ 
++	if (css->flags & CSS_VISIBLE)
++		return 0;
++
+ 	if (!css->ss) {
+ 		if (cgroup_on_dfl(cgrp))
+ 			cfts = cgroup_dfl_base_files;
+@@ -1454,6 +1462,9 @@ static int css_populate_dir(struct cgroup_subsys_state *css,
+ 			goto err;
+ 		}
  	}
- }
++
++	css->flags |= CSS_VISIBLE;
++
+ 	return 0;
+ err:
+ 	list_for_each_entry(cfts, &css->ss->cfts, node) {
+@@ -3402,7 +3413,7 @@ static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
+ 	css_for_each_descendant_pre(css, cgroup_css(root, ss)) {
+ 		struct cgroup *cgrp = css->cgroup;
  
-+/**
-+ * cgroup_apply_control - apply control mask updates to the subtree
-+ * @cgrp: root of the target subtree
-+ *
-+ * subsystems can be enabled and disabled in a subtree using the following
-+ * steps.
-+ *
-+ * 1. Call cgroup_save_control() to stash the current state.
-+ * 2. Update ->subtree_control masks in the subtree as desired.
-+ * 3. Call cgroup_apply_control() to apply the changes.
-+ * 4. Optionally perform other related operations.
-+ * 5. Call cgroup_finalize_control() to finish up.
-+ *
-+ * This function implements step 3 and propagates the mask changes
-+ * throughout @cgrp's subtree, updates csses accordingly and perform
-+ * process migrations.
-+ */
-+static int cgroup_apply_control(struct cgroup *cgrp)
-+{
-+	int ret;
-+
-+	cgroup_propagate_control(cgrp);
-+
-+	ret = cgroup_apply_control_enable(cgrp);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * At this point, cgroup_e_css() results reflect the new csses
-+	 * making the following cgroup_update_dfl_csses() properly update
-+	 * css associations of all tasks in the subtree.
-+	 */
-+	ret = cgroup_update_dfl_csses(cgrp);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+/**
-+ * cgroup_finalize_control - finalize control mask update
-+ * @cgrp: root of the target subtree
-+ * @ret: the result of the update
-+ *
-+ * Finalize control mask update.  See cgroup_apply_control() for more info.
-+ */
-+static void cgroup_finalize_control(struct cgroup *cgrp, int ret)
-+{
-+	if (ret) {
-+		cgroup_restore_control(cgrp);
-+		cgroup_propagate_control(cgrp);
-+	}
-+
-+	cgroup_apply_control_disable(cgrp);
-+}
-+
- /* change the enabled child controllers for a cgroup in the default hierarchy */
- static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 					    char *buf, size_t nbytes,
-@@ -3263,36 +3319,15 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	cgrp->subtree_control |= enable;
- 	cgrp->subtree_control &= ~disable;
+-		if (cgroup_is_dead(cgrp))
++		if (!(css->flags & CSS_VISIBLE))
+ 			continue;
  
--	cgroup_propagate_control(cgrp);
-+	ret = cgroup_apply_control(cgrp);
- 
--	ret = cgroup_apply_control_enable(cgrp);
--	if (ret)
--		goto err_undo_css;
--
--	/*
--	 * At this point, cgroup_e_css() results reflect the new csses
--	 * making the following cgroup_update_dfl_csses() properly update
--	 * css associations of all tasks in the subtree.
--	 */
--	ret = cgroup_update_dfl_csses(cgrp);
--	if (ret)
--		goto err_undo_css;
--
--	/* all tasks are migrated out of disabled csses, commit disable */
--	cgroup_apply_control_disable(cgrp);
-+	cgroup_finalize_control(cgrp, ret);
- 
- 	kernfs_activate(cgrp->kn);
- 	ret = 0;
- out_unlock:
- 	cgroup_kn_unlock(of->kn);
- 	return ret ?: nbytes;
--
--err_undo_css:
--	/* restore masks and shoot down new csses */
--	cgroup_restore_control(cgrp);
--	cgroup_apply_control_disable(cgrp);
--
--	goto out_unlock;
- }
- 
- static int cgroup_events_show(struct seq_file *seq, void *v)
+ 		ret = cgroup_addrm_files(css, cgrp, cfts, is_add);
 -- 
 2.5.0
 
