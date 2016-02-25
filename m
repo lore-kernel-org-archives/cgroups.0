@@ -1,161 +1,59 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/2] cgroup, perf_event: make perf_event controller work on cgroup2 hierarchy
-Date: Wed, 24 Feb 2016 17:12:55 -0500
-Message-ID: <1456351975-1899-3-git-send-email-tj@kernel.org>
-References: <1456351975-1899-1-git-send-email-tj@kernel.org>
+From: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
+Subject: Re: blkio cgroups controller doesn't work with LVM?
+Date: Thu, 25 Feb 2016 09:48:12 +0200
+Message-ID: <56CEB1BC.4000005@kyup.com>
+References: <56CDF283.9010802@windriver.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=6TEs3auO1NQIuHW2zyEoARVPPlaW+of2gBnCup/M8+4=;
-        b=qKdUbwQVkLUUdp+iufzeHeKpnV46ZkgrFLfE7giod3Oxf4OaV8uoz33FUhewIwV6A5
-         dL4/+1ntd+evoxbhiKTXj1GDR1FkDjshh0vooAlSL86GCK+E+AucEskCRN975BOtqCve
-         3JEi4eLWLi3mawl5OfWDuHudxuFCZPN4PEw9IJVtcHx/6fiN+6B5/dMFbuA/zWe3DGzX
-         VCz/y+/Qm2m3y5lFLDdqj2E8tQZPiIYjn1bkGlL0zVxvvHnIh1fAu5cbTF2kf+gCKpmY
-         eU5RTYa+iYrcWg3o5m2PRFD8wrqrMJBEP6ZX8nuRMLtq39ZWLDiGmY0uprDIMtfe/BsV
-         66og==
-In-Reply-To: <1456351975-1899-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <56CDF283.9010802-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Chris Friesen <chris.friesen-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-perf_event is a utility controller whose primary role is identifying
-cgroup membership to filter perf events; however, because it also
-tracks some per-css state, it can't be replaced by pure cgroup
-membership test.  Mark the controller as implicitly enabled on the
-default hierarchy so that perf events can always be filtered based on
-cgroup v2 path as long as the controller is not mounted on a legacy
-hierarchy.
 
-"perf record" is updated accordingly so that it searches for both v1
-and v2 hierarchies.  A v1 hierarchy is used if perf_event is mounted
-on it; otherwise, it uses the v2 hierarchy.
 
-v2: Doc updated to reflect more flexible rebinding behavior.
+On 02/24/2016 08:12 PM, Chris Friesen wrote:
+> 
+> Hi,
+> 
+> Are there known limitations with the blkio cgroup controller when used
+> with LVM?
+> 
+> I'm using Ubuntu 15.10 with the 4.2 kernel.  I got the same results with
+> CentOS 7.
+> 
+> I set up two groups, /sys/fs/cgroup/blkio/test1 and
+> /sys/fs/cgroup/blkio/test2.  I set the weight for test1 to 500, and the
+> weight for test2 to 1000.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- Documentation/cgroup-v2.txt | 12 ++++++++++++
- kernel/events/core.c        |  6 ++++++
- tools/perf/util/cgroup.c    | 26 +++++++++++++++++++-------
- 3 files changed, 37 insertions(+), 7 deletions(-)
-
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 3922ae1..c49bb10 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -47,6 +47,8 @@ CONTENTS
-   5-3. IO
-     5-3-1. IO Interface Files
-     5-3-2. Writeback
-+  5-4. Misc
-+    5-4-1. perf_event
- P. Information on Kernel Programming
-   P-1. Filesystem Support for Writeback
- D. Deprecated v1 Core Features
-@@ -1091,6 +1093,16 @@ writeback as follows.
- 	vm.dirty[_background]_ratio.
- 
- 
-+5-4. Misc
-+
-+5-4-1. perf_event
-+
-+perf_event controller, if not mounted on a legacy hierarchy, is
-+automatically enabled on the v2 hierarchy so that perf events can
-+always be filtered by cgroup v2 path.  The controller can still be
-+moved to a legacy hierarchy after v2 hierarchy is populated.
-+
-+
- P. Information on Kernel Programming
- 
- This section contains kernel programming information in the areas
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index c095741..e77fa4f 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -9416,5 +9416,11 @@ struct cgroup_subsys perf_event_cgrp_subsys = {
- 	.css_alloc	= perf_cgroup_css_alloc,
- 	.css_free	= perf_cgroup_css_free,
- 	.attach		= perf_cgroup_attach,
-+	/*
-+	 * Implicitly enable on dfl hierarchy so that perf events can
-+	 * always be filtered by cgroup2 path as long as perf_event
-+	 * controller is not mounted on a legacy hierarchy.
-+	 */
-+	.implicit_on_dfl = true,
- };
- #endif /* CONFIG_CGROUP_PERF */
-diff --git a/tools/perf/util/cgroup.c b/tools/perf/util/cgroup.c
-index 90aa1b4..5df6235 100644
---- a/tools/perf/util/cgroup.c
-+++ b/tools/perf/util/cgroup.c
-@@ -12,8 +12,8 @@ cgroupfs_find_mountpoint(char *buf, size_t maxlen)
- {
- 	FILE *fp;
- 	char mountpoint[PATH_MAX + 1], tokens[PATH_MAX + 1], type[PATH_MAX + 1];
-+	char path_v1[PATH_MAX + 1], path_v2[PATH_MAX + 2], *path;
- 	char *token, *saved_ptr = NULL;
--	int found = 0;
- 
- 	fp = fopen("/proc/mounts", "r");
- 	if (!fp)
-@@ -24,31 +24,43 @@ cgroupfs_find_mountpoint(char *buf, size_t maxlen)
- 	 * and inspect every cgroupfs mount point to find one that has
- 	 * perf_event subsystem
- 	 */
-+	path_v1[0] = '\0';
-+	path_v2[0] = '\0';
-+
- 	while (fscanf(fp, "%*s %"STR(PATH_MAX)"s %"STR(PATH_MAX)"s %"
- 				STR(PATH_MAX)"s %*d %*d\n",
- 				mountpoint, type, tokens) == 3) {
- 
--		if (!strcmp(type, "cgroup")) {
-+		if (!path_v1[0] && !strcmp(type, "cgroup")) {
- 
- 			token = strtok_r(tokens, ",", &saved_ptr);
- 
- 			while (token != NULL) {
- 				if (!strcmp(token, "perf_event")) {
--					found = 1;
-+					strcpy(path_v1, mountpoint);
- 					break;
- 				}
- 				token = strtok_r(NULL, ",", &saved_ptr);
- 			}
- 		}
--		if (found)
-+
-+		if (!path_v2[0] && !strcmp(type, "cgroup2"))
-+			strcpy(path_v2, mountpoint);
-+
-+		if (path_v1[0] && path_v2[0])
- 			break;
- 	}
- 	fclose(fp);
--	if (!found)
-+
-+	if (path_v1[0])
-+		path = path_v1;
-+	else if (path_v2[0])
-+		path = path_v2;
-+	else
- 		return -1;
- 
--	if (strlen(mountpoint) < maxlen) {
--		strcpy(buf, mountpoint);
-+	if (strlen(path) < maxlen) {
-+		strcpy(buf, path);
- 		return 0;
- 	}
- 	return -1;
--- 
-2.5.0
+The weighed mode of blkio works only with CFQ scheduler. And as far as I
+have seen you cannot set CFQ to be the scheduler of DM devices. In this
+case you can use the BLK io throttling mechanism. That's what I've
+encountered in my practice. Though I'd be happy to be proven wrong by
+someone. I believe the following sentence in the blkio controller states
+that:
+"
+First one is proportional weight time based division of disk policy. It
+is implemented in CFQ. Hence this policy takes effect only on leaf nodes
+when CFQ is being used.
+"
+> 
+> If I then read/write to a file on /dev/sda1 from a process in each
+> group, then everything works as expected and test1 gets half the
+> bandwidth of test2.
+> 
+> If I do the same but accessing an LVM logical volume, where the
+> underlying physical volume is /dev/sda4, then both groups get the same
+> bandwidth.
+> 
+> It appears that the group weight doesn't get propagated down through all
+> the layers.  Am I missing something?  If not, is this documented anywhere?
+> 
+> Thanks,
+> Chris
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
