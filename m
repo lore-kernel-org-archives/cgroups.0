@@ -1,47 +1,99 @@
-From: Alban Crequy <alban.crequy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [lxc-devel] CGroup Namespaces (v10)
-Date: Fri, 26 Feb 2016 14:18:23 +0100
-Message-ID: <CAMXgnP4Wss0ctx7mHzD0WHL4+-fC59iLZNkYONE5pAeHYr18+A@mail.gmail.com>
-References: <1454057651-23959-1-git-send-email-serge.hallyn@ubuntu.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [dm-devel] blkio cgroups controller doesn't work with LVM?
+Date: Fri, 26 Feb 2016 11:42:28 -0500
+Message-ID: <20160226164228.GA24711@redhat.com>
+References: <56CDF283.9010802@windriver.com>
+ <56CEB1BC.4000005@kyup.com>
+ <20160225145314.GA20699@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=MWmZbr1FyKRauu60ITZD5C6EYu/qK/u3YEmv+PIybBQ=;
-        b=QGG+HvdBYQiAcBUvIw4KdFqomGCWWeQ9rO8YkAHIe+m5yccB3yUWnlYC+43h9amfru
-         gCbrt/y6JC6b/7g8hTi6NKGNqyUldNtffHXwximiYjTEjh+Vx9ZKZkBgrFXqtiFy9NBR
-         eQV5h7r7U6M0DTyb3VeQ5VI2y0gcKypEPdzJ4ZMX9e4c8TBI0YsazXVhkO4PK7lvpOPz
-         IKRNldXV0c/xK04Hnkd4Z5dNaKHVMJ7Qn3qhBiwHl7iW+PmjMFzS1pQB97R8IZJt0+CY
-         cFcGIjgVizrFS9MapcRgOAODS/ZL3ip1s0JMdWDDhiH7RjUHe2jCXH81+jVbMD+bLjKc
-         iBHw==
-In-Reply-To: <1454057651-23959-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160225145314.GA20699-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: LXC development mailing-list <lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>, Chris Friesen <chris.friesen-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tejun-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+On Thu, Feb 25, 2016 at 09:53:14AM -0500, Mike Snitzer wrote:
+> On Thu, Feb 25 2016 at  2:48am -0500,
+> Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org> wrote:
+> 
+> > 
+> > 
+> > On 02/24/2016 08:12 PM, Chris Friesen wrote:
+> > > 
+> > > Hi,
+> > > 
+> > > Are there known limitations with the blkio cgroup controller when used
+> > > with LVM?
+> > > 
+> > > I'm using Ubuntu 15.10 with the 4.2 kernel.  I got the same results with
+> > > CentOS 7.
+> > > 
+> > > I set up two groups, /sys/fs/cgroup/blkio/test1 and
+> > > /sys/fs/cgroup/blkio/test2.  I set the weight for test1 to 500, and the
+> > > weight for test2 to 1000.
+> > 
+> > The weighed mode of blkio works only with CFQ scheduler. And as far as I
+> > have seen you cannot set CFQ to be the scheduler of DM devices. In this
+> > case you can use the BLK io throttling mechanism. That's what I've
+> > encountered in my practice. Though I'd be happy to be proven wrong by
+> > someone. I believe the following sentence in the blkio controller states
+> > that:
+> > "
+> > First one is proportional weight time based division of disk policy. It
+> > is implemented in CFQ. Hence this policy takes effect only on leaf nodes
+> > when CFQ is being used.
+> > "
+> 
+> Right, LVM created devices are bio-based DM devices in the kernel.
+> bio-based block devices do _not_ have an IO scheduler.  Their underlying
+> request-based device does.
+> 
+> I'm not well-versed on the top-level cgroup interface and how it maps to
+> associated resources that are established in the kernel.  But it could
+> be that the configuration of blkio cgroup against a bio-based LVM device
+> needs to be passed through to the underlying request-based device
+> (e.g. /dev/sda4 in Chris's case)?
+> 
+> I'm also wondering whether the latest cgroup work that Tejun has just
+> finished (afaik to support buffered IO in the IO controller) will afford
+> us a more meaningful reason to work to make cgroups' blkio controller
+> actually work with bio-based devices like LVM's DM devices?
+> 
+> I'm very much open to advice on how to proceed with investigating this
+> integration work.  Tejun, Vivek, anyone else: if you have advice on next
+> steps for DM on this front _please_ yell, thanks!
 
-On 29 January 2016 at 09:54,  <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
-> Hi,
->
-> following is a revised set of the CGroup Namespace patchset which Aditya
-> Kali has previously sent.  The code can also be found in the cgroupns.v10
-> branch of
->
-> https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/
->
-> To summarize the semantics:
->
-> 1. CLONE_NEWCGROUP re-uses 0x02000000, which was previously CLONE_STOPPED
+Ok, here is my understanding. Tejun, please correct me if that's not the
+case anymore. I have not been able to keep pace with all the recent work.
 
-What's the best way for a userspace application to test at run-time
-whether the kernel supports cgroup namespaces? Would you recommend to
-test if the file /proc/self/ns/cgroup exists?
+IO throttling policies should be applied on top level dm devices and these
+should work for reads and direct writes.
 
-Thanks!
-Alban
+For IO throttling buffered writes, I think it might not work on dm devices
+as it because we might not be copying cgroup information when cloning
+happens in dm layer.
+
+IIRC, one concern with cloning cgroup info from parent bio was that how
+would one take care of any priority inversion issues. For example, we are
+waiting for a clone to finish IO which is in severely throttled IO cgroup
+and rest of the IO can't proceed till that IO finishes).
+
+IIUC, there might not be a straight forward answer to that question. We
+probably will have to look at all the dm code closely and if that
+serialization is possible in any of the paths, then reset the cgroup info.
+
+For CFQ's proportional policy, it might not work well when a dm device
+is sitting on top. And reason being that for all reads and direct writes
+we inherit cgroup from submitter and dm might be submitting IO from an
+internal thread, hence losing the cgroup of submitter hence IO gets
+misclassified at dm level.
+
+To solve this, we will have to carry submitter's cgroup info in bio and
+clones and again think of priority inversion issues.
+
+Thanks
+Vivek
