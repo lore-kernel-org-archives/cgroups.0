@@ -1,56 +1,47 @@
-From: Xiubo Li <lixiubo-0p4V/sDNsUmm0O/7XYngnFaTQe2KTcn/@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix written mistake in warning message
-Date: Fri, 26 Feb 2016 12:59:15 +0800
-Message-ID: <56CFDBA3.1050208@cmss.chinamobile.com>
-References: <1456454528-10269-1-git-send-email-lixiubo@cmss.chinamobile.com> <56CFD18C.30305@huawei.com>
+From: Alban Crequy <alban.crequy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [lxc-devel] CGroup Namespaces (v10)
+Date: Fri, 26 Feb 2016 14:18:23 +0100
+Message-ID: <CAMXgnP4Wss0ctx7mHzD0WHL4+-fC59iLZNkYONE5pAeHYr18+A@mail.gmail.com>
+References: <1454057651-23959-1-git-send-email-serge.hallyn@ubuntu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <56CFD18C.30305-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:sender:in-reply-to:references:from:date:message-id
+         :subject:to:cc;
+        bh=MWmZbr1FyKRauu60ITZD5C6EYu/qK/u3YEmv+PIybBQ=;
+        b=QGG+HvdBYQiAcBUvIw4KdFqomGCWWeQ9rO8YkAHIe+m5yccB3yUWnlYC+43h9amfru
+         gCbrt/y6JC6b/7g8hTi6NKGNqyUldNtffHXwximiYjTEjh+Vx9ZKZkBgrFXqtiFy9NBR
+         eQV5h7r7U6M0DTyb3VeQ5VI2y0gcKypEPdzJ4ZMX9e4c8TBI0YsazXVhkO4PK7lvpOPz
+         IKRNldXV0c/xK04Hnkd4Z5dNaKHVMJ7Qn3qhBiwHl7iW+PmjMFzS1pQB97R8IZJt0+CY
+         cFcGIjgVizrFS9MapcRgOAODS/ZL3ip1s0JMdWDDhiH7RjUHe2jCXH81+jVbMD+bLjKc
+         iBHw==
+In-Reply-To: <1454057651-23959-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: LXC development mailing-list <lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
+Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On 26/02/2016 12:16, Zefan Li wrote:
-> On 2016/2/26 10:42, Xiubo Li wrote:
->> There is written mistake about the print format name:id <--> %d:%s,
->> which the name is 'char *' type and id is 'int' type.
->>
->> Signed-off-by: Xiubo Li <lixiubo-0p4V/sDNsUmm0O/7XYngnFaTQe2KTcn/@public.gmane.org>
+Hi,
+
+On 29 January 2016 at 09:54,  <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
+> Hi,
 >
-> Good catch. :)
+> following is a revised set of the CGroup Namespace patchset which Aditya
+> Kali has previously sent.  The code can also be found in the cgroupns.v10
+> branch of
 >
-> but could instead change "name:id" to "id:name"? so it's consistent with
-> "cgroup_subsys %d:%s".
+> https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/
 >
-
-Sure, Please see the next version.
-
-Thanks,
-
-
->> ---
->>   kernel/cgroup.c | 4 ++--
->>   1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> index cc40463..0f82d16 100644
->> --- a/kernel/cgroup.c
->> +++ b/kernel/cgroup.c
->> @@ -5324,9 +5324,9 @@ int __init cgroup_init_early(void)
->>
->>   	for_each_subsys(ss, i) {
->>   		WARN(!ss->css_alloc || !ss->css_free || ss->name || ss->id,
->> -		     "invalid cgroup_subsys %d:%s css_alloc=%p css_free=%p name:id=%d:%s\n",
->> +		     "invalid cgroup_subsys %d:%s css_alloc=%p css_free=%p name:id=%s:%d\n",
->>   		     i, cgroup_subsys_name[i], ss->css_alloc, ss->css_free,
->> -		     ss->id, ss->name);
->> +		     ss->name, ss->id);
->>   		WARN(strlen(cgroup_subsys_name[i]) > MAX_CGROUP_TYPE_NAMELEN,
->>   		     "cgroup_subsys_name %s too long\n", cgroup_subsys_name[i]);
->>
->>
+> To summarize the semantics:
 >
+> 1. CLONE_NEWCGROUP re-uses 0x02000000, which was previously CLONE_STOPPED
 
+What's the best way for a userspace application to test at run-time
+whether the kernel supports cgroup namespaces? Would you recommend to
+test if the file /proc/self/ns/cgroup exists?
+
+Thanks!
+Alban
