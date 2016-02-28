@@ -1,935 +1,863 @@
-From: Parav Pandit <pandit.parav@gmail.com>
-Subject: [PATCHv7 1/3] rdmacg: Added rdma cgroup controller
-Date: Sun, 28 Feb 2016 19:43:39 +0530
-Message-ID: <1456668821-25799-2-git-send-email-pandit.parav@gmail.com>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCHv7 2/3] IB/core: added support to use rdma cgroup controller
+Date: Sun, 28 Feb 2016 19:43:40 +0530
+Message-ID: <1456668821-25799-3-git-send-email-pandit.parav@gmail.com>
 References: <1456668821-25799-1-git-send-email-pandit.parav@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=DELAVjYhTnXARRgBI4k38X1cUKMopTgy38Nx9UmBRrM=;
-        b=B6Bbp4BnRrBMzwtORqw4gO4jYHSJECYxdd4mcuTc6A1HgzR8TfxtDamGeqF/UxsEpK
-         u9hrJ5gN6wT8grYZG0xcgbIiw57EqM5Gj7/hN+iGdWmASaNp3K52zrv1uVDaDoAerIt9
-         gFTm0fDB/ljqrQk0Ja9pqFc5QFUHwRoTA/N41Fhaz8rMJ8z0TJ0O3HYaK1q8OnUXN9bL
-         GGMNEgjjlTjmg1h161N/PgqBS4l8OdyjoOAZdhxrKB9DtL3ikWNTp1sCok3KZagXWBGW
-         +dB2ZtpRaqzLcl0bEjygqzASUtNn2Q6A+4Yt0Hm4a6crvJDdvNohW5zuoTzeA9utYhRi
-         hbJw==
-In-Reply-To: <1456668821-25799-1-git-send-email-pandit.parav@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=9Khm8qnsH49GfKj8gXdW6l2Br2pwadDncQzKl1+YL/0=;
+        b=vP247/iXlXEMmFEF3DsO9DayeO2fgURfnpf4q5z6KWH0aKs6ql9eomhuV3sfrIQXWq
+         Y5UC5U88jtEnn2OHbglDMIKjHLMa8G/LFx8nfsIFVpnPOP5XBtBRMEaIBgDjT4I9Afgs
+         H86PhE8cITMtUYbvPnneIrfSWvD2sA8oeauI5Yef1gFy5jtgvgv29B5JE5ZthwxVnuP6
+         4Z0ewIPsRYgB5fvJS59tplBJ9pCWw4i5HHP209EZkSwBst3spTD7d3UCqyYS296pVB0j
+         5nqtJzGq2C7xHuwcBu85OPdN6RL+KqEYXCoSjVq63Yl0tjjdmYgV+US4leybra5nmtat
+         AgGQ==
+In-Reply-To: <1456668821-25799-1-git-send-email-pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com
-Cc: corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org, pandit.parav@gmail.com
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org, haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org
+Cc: corbet-T1hC0tSOHrs@public.gmane.org, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Added rdma cgroup controller that does accounting, limit enforcement
-on rdma/IB verbs and hw resources.
+Added support APIs for IB core to register/unregister every IB/RDMA
+device with rdma cgroup for tracking verbs and hw resources.
+IB core registers with rdma cgroup controller and also defines
+resources that can be accounted.
+Added support APIs for uverbs layer to make use of rdma controller.
+Added uverbs layer to perform resource charge/uncharge functionality.
+Added support during query_device uverb operation to ensure it
+returns resource limits by honoring rdma cgroup configured limits.
 
-Added rdma cgroup header file which defines its APIs to perform
-charing/uncharing functionality and device registration which will
-participate in controller functions of accounting and limit
-enforcements. It also define rdmacg_device structure to bind IB stack
-and RDMA cgroup controller.
-
-RDMA resources are tracked using resource pool. Resource pool is per
-device, per cgroup entity which allows setting up accounting limits
-on per device basis.
-
-Resources are not defined by the RDMA cgroup, instead they are defined
-by the external module IB stack. This allows extending IB stack
-without changing kernel, as IB stack is going through changes
-and enhancements.
-
-Resource pool is created/destroyed dynamically whenever
-charging/uncharging occurs respectively and whenever user
-configuration is done. Its a tradeoff of memory vs little more code
-space that creates resource pool whenever necessary,
-instead of creating them during cgroup creation and device registration
-time.
-
-Signed-off-by: Parav Pandit <pandit.parav@gmail.com>
+Signed-off-by: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/cgroup_rdma.h   |  51 +++
- include/linux/cgroup_subsys.h |   4 +
- init/Kconfig                  |  10 +
- kernel/Makefile               |   1 +
- kernel/cgroup_rdma.c          | 760 ++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 826 insertions(+)
- create mode 100644 include/linux/cgroup_rdma.h
- create mode 100644 kernel/cgroup_rdma.c
+ drivers/infiniband/core/Makefile      |   1 +
+ drivers/infiniband/core/cgroup.c      | 111 +++++++++++++++++++++++++++
+ drivers/infiniband/core/core_priv.h   |  43 +++++++++++
+ drivers/infiniband/core/device.c      |  23 ++++--
+ drivers/infiniband/core/uverbs_cmd.c  | 137 ++++++++++++++++++++++++++++++----
+ drivers/infiniband/core/uverbs_main.c |  19 +++++
+ include/rdma/ib_verbs.h               |  29 +++++++
+ 7 files changed, 342 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/infiniband/core/cgroup.c
 
-diff --git a/include/linux/cgroup_rdma.h b/include/linux/cgroup_rdma.h
-new file mode 100644
-index 0000000..18d3bbb
---- /dev/null
-+++ b/include/linux/cgroup_rdma.h
-@@ -0,0 +1,51 @@
-+#ifndef _CGROUP_RDMA_H
-+#define _CGROUP_RDMA_H
-+
-+#include <linux/cgroup.h>
-+
-+#ifdef CONFIG_CGROUP_RDMA
-+
-+struct rdma_cgroup {
-+	struct cgroup_subsys_state	css;
-+
-+	spinlock_t rpool_list_lock;	/* protects resource pool list */
-+	struct list_head rpool_head;	/* head to keep track of all resource
-+					 * pools that belongs to this cgroup.
-+					 */
-+};
-+
-+struct rdmacg_pool_info {
-+	const char **resource_name_table;
-+	int table_len;
-+};
-+
-+struct rdmacg_device {
-+	struct rdmacg_pool_info pool_info;
-+	struct list_head	rdmacg_list;
-+	struct list_head	rpool_head;
-+	spinlock_t		rpool_lock;	/*
-+						 * protects resource pool list
-+						 */
-+	char			*name;
-+};
-+
-+/* APIs for RDMA/IB stack to publish when a device wants to
-+ * participate in resource accounting
-+ */
-+int rdmacg_register_device(struct rdmacg_device *device);
-+void rdmacg_unregister_device(struct rdmacg_device *device);
-+
-+/* APIs for RDMA/IB stack to charge/uncharge pool specific resources */
-+int rdmacg_try_charge(struct rdma_cgroup **rdmacg,
-+		      struct rdmacg_device *device,
-+		      int resource_index,
-+		      int num);
-+void rdmacg_uncharge(struct rdma_cgroup *cg,
-+		     struct rdmacg_device *device,
-+		     int resource_index,
-+		     int num);
-+void rdmacg_query_limit(struct rdmacg_device *device,
-+			int *limits);
-+
-+#endif	/* CONFIG_CGROUP_RDMA */
-+#endif	/* _CGROUP_RDMA_H */
-diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
-index 0df0336a..d0e597c 100644
---- a/include/linux/cgroup_subsys.h
-+++ b/include/linux/cgroup_subsys.h
-@@ -56,6 +56,10 @@ SUBSYS(hugetlb)
- SUBSYS(pids)
- #endif
+diff --git a/drivers/infiniband/core/Makefile b/drivers/infiniband/core/Makefile
+index f818538..60d9e44 100644
+--- a/drivers/infiniband/core/Makefile
++++ b/drivers/infiniband/core/Makefile
+@@ -13,6 +13,7 @@ ib_core-y :=			packer.o ud_header.o verbs.o cq.o sysfs.o \
+ 				roce_gid_mgmt.o
+ ib_core-$(CONFIG_INFINIBAND_USER_MEM) += umem.o
+ ib_core-$(CONFIG_INFINIBAND_ON_DEMAND_PAGING) += umem_odp.o umem_rbtree.o
++ib_core-$(CONFIG_CGROUP_RDMA) += cgroup.o
  
-+#if IS_ENABLED(CONFIG_CGROUP_RDMA)
-+SUBSYS(rdma)
-+#endif
-+
- /*
-  * The following subsystems are not supported on the default hierarchy.
-  */
-diff --git a/init/Kconfig b/init/Kconfig
-index 2232080..0d3efe0 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1054,6 +1054,16 @@ config CGROUP_PIDS
- 	  since the PIDs limit only affects a process's ability to fork, not to
- 	  attach to a cgroup.
+ ib_mad-y :=			mad.o smi.o agent.o mad_rmpp.o
  
-+config CGROUP_RDMA
-+	bool "RDMA controller"
-+	help
-+	  Provides enforcement of RDMA resources defined by IB stack.
-+	  It is fairly easy for consumers to exhaust RDMA resources, which
-+	  can result into resource unavailability to other consumers.
-+	  RDMA controller is designed to stop this from happening.
-+	  Attaching processes with active RDMA resources to the cgroup
-+	  hierarchy is allowed even if can cross the hierarchy's limit.
-+
- config CGROUP_FREEZER
- 	bool "Freezer controller"
- 	help
-diff --git a/kernel/Makefile b/kernel/Makefile
-index 53abf00..26e413c 100644
---- a/kernel/Makefile
-+++ b/kernel/Makefile
-@@ -57,6 +57,7 @@ obj-$(CONFIG_COMPAT) += compat.o
- obj-$(CONFIG_CGROUPS) += cgroup.o
- obj-$(CONFIG_CGROUP_FREEZER) += cgroup_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += cgroup_pids.o
-+obj-$(CONFIG_CGROUP_RDMA) += cgroup_rdma.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
- obj-$(CONFIG_UTS_NS) += utsname.o
- obj-$(CONFIG_USER_NS) += user_namespace.o
-diff --git a/kernel/cgroup_rdma.c b/kernel/cgroup_rdma.c
+diff --git a/drivers/infiniband/core/cgroup.c b/drivers/infiniband/core/cgroup.c
 new file mode 100644
-index 0000000..75c996a
+index 0000000..6813b87
 --- /dev/null
-+++ b/kernel/cgroup_rdma.c
-@@ -0,0 +1,760 @@
++++ b/drivers/infiniband/core/cgroup.c
+@@ -0,0 +1,111 @@
 +/*
-+ * This file is subject to the terms and conditions of version 2 of the GNU
-+ * General Public License.  See the file COPYING in the main directory of the
-+ * Linux distribution for more details.
++ * This software is available to you under a choice of one of two
++ * licenses.  You may choose to be licensed under the terms of the GNU
++ * General Public License (GPL) Version 2, available from the file
++ * COPYING in the main directory of this source tree, or the
++ * OpenIB.org BSD license below:
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
 + */
 +
 +#include <linux/kernel.h>
-+#include <linux/slab.h>
-+#include <linux/spinlock.h>
-+#include <linux/atomic.h>
-+#include <linux/seq_file.h>
-+#include <linux/hashtable.h>
-+#include <linux/cgroup.h>
-+#include <linux/parser.h>
 +#include <linux/cgroup_rdma.h>
++#include <linux/parser.h>
 +
-+#define RDMACG_MAX_STR "max"
++#include "core_priv.h"
 +
-+static DEFINE_MUTEX(dev_mutex);
-+static LIST_HEAD(dev_list_head);
-+
-+enum rdmacg_file_type {
-+	RDMACG_RESOURCE_MAX,
-+	RDMACG_RESOURCE_STAT,
-+};
-+
-+/* resource tracker per resource for rdma cgroup */
-+struct rdmacg_resource {
-+	int max;
-+	int usage;
++/**
++ * resource table definition as to be seen by the user.
++ * Need to add entries to it when more resources are
++ * added/defined at IB verb/core layer.
++ */
++static char const *resource_tokens[] = {
++	[RDMA_VERB_RESOURCE_UCTX] = "uctx",
++	[RDMA_VERB_RESOURCE_AH] = "ah",
++	[RDMA_VERB_RESOURCE_PD] = "pd",
++	[RDMA_VERB_RESOURCE_CQ] = "cq",
++	[RDMA_VERB_RESOURCE_MR] = "mr",
++	[RDMA_VERB_RESOURCE_MW] = "mw",
++	[RDMA_VERB_RESOURCE_SRQ] = "srq",
++	[RDMA_VERB_RESOURCE_QP] = "qp",
++	[RDMA_VERB_RESOURCE_FLOW] = "flow",
 +};
 +
 +/**
-+ * resource pool object which represents, per cgroup, per device
-+ * resources. There are multiple instance
-+ * of this object per cgroup, therefore it cannot be embedded within
-+ * rdma_cgroup structure. It is maintained as list.
++ * ib_device_register_rdmacg - register with rdma cgroup.
++ * @device: device to register to participate in resource
++ *          accounting by rdma cgroup.
++ *
++ * Register with the rdma cgroup. Should be called before
++ * exposing rdma device to user space applications to avoid
++ * resource accounting leak.
++ * HCA drivers should set resource pool ops first if they wish
++ * to support hw specific resource accounting before IB core
++ * registers with rdma cgroup.
++ * Returns 0 on success or otherwise failure code.
 + */
-+struct rdmacg_resource_pool {
-+	struct list_head cg_list;
-+	struct list_head dev_list;
-+
-+	struct rdmacg_device *device;
-+	struct rdmacg_resource *resources;
-+	struct rdma_cgroup *cg;	/* owner cg used during device cleanup */
-+
-+	int	refcnt;		/* count active user tasks of this pool */
-+	int	num_max_cnt;	/* total number counts which are set to max */
-+};
-+
-+static struct rdma_cgroup *css_rdmacg(struct cgroup_subsys_state *css)
++int ib_device_register_rdmacg(struct ib_device *device)
 +{
-+	return container_of(css, struct rdma_cgroup, css);
++	device->cg_device.name = device->name;
++	device->cg_device.pool_info.resource_name_table = resource_tokens;
++	device->cg_device.pool_info.table_len = ARRAY_SIZE(resource_tokens);
++	return rdmacg_register_device(&device->cg_device);
 +}
 +
-+static struct rdma_cgroup *parent_rdmacg(struct rdma_cgroup *cg)
++/**
++ * ib_device_unregister_rdmacg - unregister with rdma cgroup.
++ * @device: device to unregister.
++ *
++ * Unregister with the rdma cgroup. Should be called after
++ * all the resources are deallocated, and after a stage when any
++ * other resource allocation of user application cannot be done
++ * for this device to avoid any leak in accounting.
++ */
++void ib_device_unregister_rdmacg(struct ib_device *device)
 +{
-+	return css_rdmacg(cg->css.parent);
++	rdmacg_unregister_device(&device->cg_device);
 +}
 +
-+static inline struct rdma_cgroup *task_rdmacg(struct task_struct *task)
++int ib_rdmacg_try_charge(struct ib_rdmacg_object *cg_obj,
++			 struct ib_device *device,
++			 int resource_index, int num)
 +{
-+	return css_rdmacg(task_css(task, rdma_cgrp_id));
++	return rdmacg_try_charge(&cg_obj->cg, &device->cg_device,
++				 resource_index, num);
 +}
++EXPORT_SYMBOL(ib_rdmacg_try_charge);
 +
-+static inline void set_resource_limit(struct rdmacg_resource_pool *rpool,
-+				      int index, int new_max)
++void ib_rdmacg_uncharge(struct ib_rdmacg_object *cg_obj,
++			struct ib_device *device,
++			int resource_index, int num)
 +{
-+	if (new_max == S32_MAX) {
-+		if (rpool->resources[index].max != S32_MAX)
-+			rpool->num_max_cnt++;
-+	} else {
-+		if (rpool->resources[index].max == S32_MAX)
-+			rpool->num_max_cnt--;
-+	}
-+	rpool->resources[index].max = new_max;
++	rdmacg_uncharge(cg_obj->cg, &device->cg_device,
++			resource_index, num);
 +}
++EXPORT_SYMBOL(ib_rdmacg_uncharge);
 +
-+static void set_all_resource_max_limit(struct rdmacg_resource_pool *rpool)
++void ib_rdmacg_query_limit(struct ib_device *device, int *limits, int max_count)
 +{
-+	struct rdmacg_pool_info *pool_info = &rpool->device->pool_info;
++	rdmacg_query_limit(&device->cg_device, limits);
++}
++EXPORT_SYMBOL(ib_rdmacg_query_limit);
+diff --git a/drivers/infiniband/core/core_priv.h b/drivers/infiniband/core/core_priv.h
+index eab3221..ad61d7d9 100644
+--- a/drivers/infiniband/core/core_priv.h
++++ b/drivers/infiniband/core/core_priv.h
+@@ -124,6 +124,49 @@ int ib_cache_setup_one(struct ib_device *device);
+ void ib_cache_cleanup_one(struct ib_device *device);
+ void ib_cache_release_one(struct ib_device *device);
+ 
++#ifdef CONFIG_CGROUP_RDMA
++
++int ib_device_register_rdmacg(struct ib_device *device);
++void ib_device_unregister_rdmacg(struct ib_device *device);
++
++int ib_rdmacg_try_charge(struct ib_rdmacg_object *cg_obj,
++			 struct ib_device *device,
++			 int resource_index, int num);
++
++void ib_rdmacg_uncharge(struct ib_rdmacg_object *cg_obj,
++			struct ib_device *device,
++			int resource_index, int num);
++
++void ib_rdmacg_query_limit(struct ib_device *device,
++			   int *limits, int max_count);
++#else
++
++static inline int ib_device_register_rdmacg(struct ib_device *device)
++{ return 0; }
++
++static inline void ib_device_unregister_rdmacg(struct ib_device *device)
++{ }
++
++static inline int ib_rdmacg_try_charge(struct ib_rdmacg_object *cg_obj,
++				       struct ib_device *device,
++				       int resource_index, int num)
++{ return 0; }
++
++static inline void ib_rdmacg_uncharge(struct ib_rdmacg_object *cg_obj,
++				      struct ib_device *device,
++				      int resource_index, int num)
++{ }
++
++static inline void ib_rdmacg_query_limit(struct ib_device *device,
++					 int *limits, int max_count)
++{
 +	int i;
 +
-+	for (i = 0; i < pool_info->table_len; i++)
-+		set_resource_limit(rpool, i, S32_MAX);
-+}
-+
-+static void free_cg_rpool_mem(struct rdmacg_resource_pool *rpool)
-+{
-+	kfree(rpool->resources);
-+	kfree(rpool);
-+}
-+
-+static void free_cg_rpool(struct rdmacg_resource_pool *rpool)
-+{
-+	spin_lock(&rpool->device->rpool_lock);
-+	list_del(&rpool->dev_list);
-+	spin_unlock(&rpool->device->rpool_lock);
-+
-+	free_cg_rpool_mem(rpool);
-+}
-+
-+static struct rdmacg_resource_pool*
-+find_cg_rpool_locked(struct rdma_cgroup *cg,
-+		     struct rdmacg_device *device)
-+
-+{
-+	struct rdmacg_resource_pool *pool;
-+
-+	lockdep_assert_held(&cg->rpool_list_lock);
-+
-+	list_for_each_entry(pool, &cg->rpool_head, cg_list)
-+		if (pool->device == device)
-+			return pool;
-+
-+	return NULL;
-+}
-+
-+static int
-+alloc_cg_rpool(struct rdma_cgroup *cg, struct rdmacg_device *device)
-+{
-+	struct rdmacg_resource_pool *rpool, *other_rpool;
-+	struct rdmacg_pool_info *pool_info = &device->pool_info;
-+	int ret;
-+
-+	rpool = kzalloc(sizeof(*rpool), GFP_KERNEL);
-+	if (!rpool) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+	rpool->resources = kcalloc(pool_info->table_len,
-+				   sizeof(*rpool->resources),
-+				   GFP_KERNEL);
-+	if (!rpool->resources) {
-+		ret = -ENOMEM;
-+		goto alloc_err;
-+	}
-+
-+	rpool->device = device;
-+	rpool->cg = cg;
-+	INIT_LIST_HEAD(&rpool->cg_list);
-+	INIT_LIST_HEAD(&rpool->dev_list);
-+	spin_lock_init(&device->rpool_lock);
-+	set_all_resource_max_limit(rpool);
-+
-+	spin_lock(&cg->rpool_list_lock);
-+
-+	other_rpool = find_cg_rpool_locked(cg, device);
-+
-+	/*
-+	 * if other task added resource pool for this device for this cgroup
-+	 * than free up which was recently created and use the one we found.
-+	 */
-+	if (other_rpool) {
-+		spin_unlock(&cg->rpool_list_lock);
-+		free_cg_rpool(rpool);
-+		return 0;
-+	}
-+
-+	list_add_tail(&rpool->cg_list, &cg->rpool_head);
-+
-+	spin_lock(&device->rpool_lock);
-+	list_add_tail(&rpool->dev_list, &device->rpool_head);
-+	spin_unlock(&device->rpool_lock);
-+
-+	spin_unlock(&cg->rpool_list_lock);
-+	return 0;
-+
-+alloc_err:
-+	kfree(rpool);
-+err:
-+	return ret;
-+}
-+
-+/**
-+ * uncharge_cg_resource - uncharge resource for rdma cgroup
-+ * @cg: pointer to cg to uncharge and all parents in hierarchy
-+ * @device: pointer to ib device
-+ * @index: index of the resource to uncharge in cg (resource pool)
-+ * @num: the number of rdma resource to uncharge
-+ *
-+ * It also frees the resource pool which was created as part of
-+ * charging operation when there are no resources attached to
-+ * resource pool.
-+ */
-+static void uncharge_cg_resource(struct rdma_cgroup *cg,
-+				 struct rdmacg_device *device,
-+				 int index, int num)
-+{
-+	struct rdmacg_resource_pool *rpool;
-+	struct rdmacg_pool_info *pool_info = &device->pool_info;
-+
-+	spin_lock(&cg->rpool_list_lock);
-+	rpool = find_cg_rpool_locked(cg, device);
-+
-+	/*
-+	 * rpool cannot be null at this stage. Let kernel operate in case
-+	 * if there a bug in IB stack or rdma controller,
-+	 * instead of crashing the system.
-+	 */
-+	if (unlikely(!rpool)) {
-+		spin_unlock(&cg->rpool_list_lock);
-+		pr_warn("Invalid device %p or rdma cgroup %p\n", cg, device);
-+		return;
-+	}
-+
-+	rpool->resources[index].usage -= num;
-+
-+	/*
-+	 * A negative count (or overflow) is invalid,
-+	 * it indicates a bug in the rdma controller.
-+	 */
-+	WARN_ON_ONCE(rpool->resources[index].usage < 0);
-+	rpool->refcnt--;
-+	if (rpool->refcnt == 0 && rpool->num_max_cnt == pool_info->table_len) {
-+		/*
-+		 * No user of the rpool and all entries are set to max, so
-+		 * safe to delete this rpool.
-+		 */
-+		list_del(&rpool->cg_list);
-+		spin_unlock(&cg->rpool_list_lock);
-+
-+		free_cg_rpool(rpool);
-+	} else {
-+		spin_unlock(&cg->rpool_list_lock);
-+	}
-+}
-+
-+/**
-+ * rdmacg_uncharge_resource - hierarchically uncharge rdma resource count
-+ * @device: pointer to rdmacg device
-+ * @index: index of the resource to uncharge in cg in given resource pool
-+ * @num: the number of rdma resource to uncharge
-+ *
-+ */
-+void rdmacg_uncharge(struct rdma_cgroup *cg,
-+		     struct rdmacg_device *device,
-+		     int index, int num)
-+{
-+	struct rdma_cgroup *p;
-+
-+	for (p = cg; p; p = parent_rdmacg(p))
-+		uncharge_cg_resource(p, device, index, num);
-+
-+	css_put(&cg->css);
-+}
-+EXPORT_SYMBOL(rdmacg_uncharge);
-+
-+/**
-+ * charge_cg_resource - charge resource for rdma cgroup
-+ * @cg: pointer to cg to charge
-+ * @device: pointer to rdmacg device
-+ * @index: index of the resource to charge in cg (resource pool)
-+ * @num: the number of rdma resource to charge
-+ */
-+static int charge_cg_resource(struct rdma_cgroup *cg,
-+			      struct rdmacg_device *device,
-+			      int index, int num)
-+{
-+	struct rdmacg_resource_pool *rpool;
-+	s64 new;
-+	int ret = 0;
-+
-+retry:
-+	spin_lock(&cg->rpool_list_lock);
-+	rpool = find_cg_rpool_locked(cg, device);
-+	if (!rpool) {
-+		spin_unlock(&cg->rpool_list_lock);
-+		ret = alloc_cg_rpool(cg, device);
-+		if (ret)
-+			goto err;
-+		else
-+			goto retry;
-+	}
-+	new = num + rpool->resources[index].usage;
-+	if (new > rpool->resources[index].max) {
-+		ret = -EAGAIN;
-+	} else {
-+		rpool->refcnt++;
-+		rpool->resources[index].usage = new;
-+	}
-+	spin_unlock(&cg->rpool_list_lock);
-+err:
-+	return ret;
-+}
-+
-+/**
-+ * rdmacg_try_charge_resource - hierarchically try to charge the rdma resource
-+ * @device: pointer to rdmacg device
-+ * @rdmacg: pointer to rdma cgroup which will own this resource
-+ * @index: index of the resource to charge in cg (resource pool)
-+ * @num: the number of rdma resource to charge
-+ *
-+ * This function follows charging resource in hierarchical way.
-+ * It will fail if the charge would cause the new value to exceed the
-+ * hierarchical limit.
-+ * Returns 0 if the charge succeded, otherwise -EAGAIN, -ENOMEM or -EINVAL.
-+ * Returns pointer to rdmacg for this resource.
-+ *
-+ * Charger needs to account resources on three criteria.
-+ * (a) per cgroup & (b) per device resource usage.
-+ * Per cgroup resource usage ensures that tasks of cgroup doesn't cross
-+ * the configured limits.
-+ * Per device provides granular configuration in multi device usage.
-+ * It allocates resource pool in the hierarchy for each parent it come
-+ * across for first resource. Later on resource pool will be available.
-+ * Therefore it will be much faster thereon to charge/uncharge.
-+ */
-+int rdmacg_try_charge(struct rdma_cgroup **rdmacg,
-+		      struct rdmacg_device *device,
-+		      int index, int num)
-+{
-+	struct rdma_cgroup *cg, *p, *q;
-+	int ret;
-+
-+	cg = task_rdmacg(current);
-+
-+	for (p = cg; p; p = parent_rdmacg(p)) {
-+		ret = charge_cg_resource(p, device, index, num);
-+		if (ret)
-+			goto err;
-+	}
-+	/*
-+	 * hold on to css, as cgroup can be removed but resource
-+	 * accounting happens on css.
-+	 */
-+	css_get(&cg->css);
-+	*rdmacg = cg;
-+	return 0;
-+
-+err:
-+	for (q = cg; q != p; q = parent_rdmacg(q))
-+		uncharge_cg_resource(q, device, index, num);
-+	return ret;
-+}
-+EXPORT_SYMBOL(rdmacg_try_charge);
-+
-+/**
-+ * rdmacg_register_rdmacg_device - register rdmacg device to rdma controller.
-+ * @device: pointer to rdmacg device whose resources need to be accounted.
-+ *
-+ * If IB stack wish a device to participate in rdma cgroup resource
-+ * tracking, it must invoke this API to register with rdma cgroup before
-+ * any user space application can start using the RDMA resources.
-+ * Returns 0 on success or EINVAL when table length given is beyond
-+ * supported size.
-+ */
-+int rdmacg_register_device(struct rdmacg_device *device)
-+{
-+	if (device->pool_info.table_len > 64)
-+		return -EINVAL;
-+
-+	INIT_LIST_HEAD(&device->rdmacg_list);
-+	INIT_LIST_HEAD(&device->rpool_head);
-+	spin_lock_init(&device->rpool_lock);
-+
-+	mutex_lock(&dev_mutex);
-+	list_add_tail(&device->rdmacg_list, &dev_list_head);
-+	mutex_unlock(&dev_mutex);
-+	return 0;
-+}
-+EXPORT_SYMBOL(rdmacg_register_device);
-+
-+/**
-+ * rdmacg_unregister_rdmacg_device - unregister the rdmacg device
-+ * from rdma controller.
-+ * @device: pointer to rdmacg device which was previously registered with rdma
-+ *          controller using rdmacg_register_device().
-+ *
-+ * IB stack must invoke this after all the resources of the IB device
-+ * are destroyed and after ensuring that no more resources will be created
-+ * when this API is invoked.
-+ */
-+void rdmacg_unregister_device(struct rdmacg_device *device)
-+{
-+	struct rdmacg_resource_pool *rpool, *tmp;
-+	struct rdma_cgroup *cg;
-+
-+	/*
-+	 * Synchronize with any active resource settings,
-+	 * usage query happening via configfs.
-+	 * At this stage, there should not be any active resource pools
-+	 * for this device, as RDMA/IB stack is expected to shutdown,
-+	 * tear down all the applications and free up resources.
-+	 */
-+	mutex_lock(&dev_mutex);
-+	list_del_init(&device->rdmacg_list);
-+	mutex_unlock(&dev_mutex);
-+
-+	/*
-+	 * Now that this device off the cgroup list, its safe to free
-+	 * all the rpool resources.
-+	 */
-+	list_for_each_entry_safe(rpool, tmp, &device->rpool_head, dev_list) {
-+		list_del_init(&rpool->dev_list);
-+		cg = rpool->cg;
-+
-+		spin_lock(&cg->rpool_list_lock);
-+		list_del_init(&rpool->cg_list);
-+		spin_unlock(&cg->rpool_list_lock);
-+
-+		free_cg_rpool_mem(rpool);
-+	}
-+}
-+EXPORT_SYMBOL(rdmacg_unregister_device);
-+
-+/**
-+ * rdmacg_query_limit - query the resource limits that
-+ * might have been configured by the user.
-+ * @device: pointer to ib device
-+ * @type: the type of resource pool to know the limits of.
-+ * @limits: pointer to an array of limits where rdma cg will provide
-+ *          the configured limits of the cgroup.
-+ *
-+ * This function follows charging resource in hierarchical way.
-+ * It will fail if the charge would cause the new value to exceed the
-+ * hierarchical limit.
-+ */
-+void rdmacg_query_limit(struct rdmacg_device *device,
-+			int *limits)
-+{
-+	struct rdma_cgroup *cg, *p;
-+	struct rdmacg_resource_pool *rpool;
-+	struct rdmacg_pool_info *pool_info;
-+	int i;
-+
-+	cg = task_rdmacg(current);
-+	pool_info = &device->pool_info;
-+
-+	for (i = 0; i < pool_info->table_len; i++)
++	for (i = 0; i < max_count; i++)
 +		limits[i] = S32_MAX;
-+
-+	/*
-+	 * Check in hirerchy which pool get the least amount of
-+	 * resource limits.
-+	 */
-+	for (p = cg; p; p = parent_rdmacg(p)) {
-+		spin_lock(&cg->rpool_list_lock);
-+		rpool = find_cg_rpool_locked(cg, device);
-+		if (rpool) {
-+			for (i = 0; i < pool_info->table_len; i++)
-+				limits[i] = min_t(int, limits[i],
-+					rpool->resources[i].max);
-+		}
-+		spin_unlock(&cg->rpool_list_lock);
-+	}
 +}
-+EXPORT_SYMBOL(rdmacg_query_limit);
++#endif
 +
-+static int parse_resource(char *c, struct rdmacg_pool_info *pool_info,
-+			  int *intval)
-+{
-+	substring_t argstr;
-+	const char **table = pool_info->resource_name_table;
-+	char *name, *value = c;
-+	size_t len;
-+	int ret, i = 0;
-+
-+	name = strsep(&value, "=");
-+	if (!name || !value)
-+		return -EINVAL;
-+
-+	len = strlen(value);
-+
-+	for (i = 0; i < pool_info->table_len; i++) {
-+		if (strcmp(table[i], name))
-+			continue;
-+
-+		argstr.from = value;
-+		argstr.to = value + len;
-+
-+		ret = match_int(&argstr, intval);
-+		if (ret >= 0) {
-+			if (*intval < 0)
-+				break;
-+			return i;
-+		}
-+		if (strncmp(value, RDMACG_MAX_STR, len) == 0) {
-+			*intval = S32_MAX;
-+			return i;
-+		}
-+		break;
-+	}
-+	return -EINVAL;
-+}
-+
-+static int rdmacg_parse_limits(char *options,
-+			       struct rdmacg_pool_info *pool_info,
-+			       int *new_limits, u64 *enables)
-+{
-+	char *c;
-+	int err = -EINVAL;
-+
-+	/* parse resource options */
-+	while ((c = strsep(&options, " ")) != NULL) {
-+		int index, intval;
-+
-+		index = parse_resource(c, pool_info, &intval);
-+		if (index < 0)
-+			goto err;
-+
-+		new_limits[index] = intval;
-+		*enables |= BIT(index);
-+	}
-+	return 0;
-+
-+err:
-+	return err;
-+}
-+
-+static struct rdmacg_device *rdmacg_get_device_locked(const char *name)
-+{
-+	struct rdmacg_device *device;
-+
-+	list_for_each_entry(device, &dev_list_head, rdmacg_list)
-+		if (!strcmp(name, device->name))
-+			return device;
-+
-+	return NULL;
-+}
-+
-+static ssize_t rdmacg_resource_set_max(struct kernfs_open_file *of,
-+				       char *buf, size_t nbytes, loff_t off)
-+{
-+	struct rdma_cgroup *cg = css_rdmacg(of_css(of));
-+	const char *dev_name;
-+	struct rdmacg_resource_pool *rpool;
-+	struct rdmacg_device *device;
-+	char *options = strstrip(buf);
-+	struct rdmacg_pool_info *pool_info;
-+	u64 enables = 0;
-+	int *new_limits;
-+	int i = 0, ret = 0;
-+
-+	/* extract the device name first */
-+	dev_name = strsep(&options, " ");
-+	if (!dev_name) {
-+		ret = -EINVAL;
-+		goto err;
+ static inline bool rdma_is_upper_dev_rcu(struct net_device *dev,
+ 					 struct net_device *upper)
+ {
+diff --git a/drivers/infiniband/core/device.c b/drivers/infiniband/core/device.c
+index 00da80e..54ea8ce 100644
+--- a/drivers/infiniband/core/device.c
++++ b/drivers/infiniband/core/device.c
+@@ -343,28 +343,38 @@ int ib_register_device(struct ib_device *device,
+ 
+ 	ret = read_port_immutable(device);
+ 	if (ret) {
+-		printk(KERN_WARNING "Couldn't create per port immutable data %s\n",
+-		       device->name);
++		pr_warn("Couldn't create per port immutable data %s\n",
++			device->name);
+ 		goto out;
+ 	}
+ 
+ 	ret = ib_cache_setup_one(device);
+ 	if (ret) {
+-		printk(KERN_WARNING "Couldn't set up InfiniBand P_Key/GID cache\n");
++		pr_warn("Couldn't set up InfiniBand P_Key/GID cache\n");
++		goto out;
 +	}
 +
-+	/* acquire lock to synchronize with hot plug devices */
-+	mutex_lock(&dev_mutex);
-+
-+	device = rdmacg_get_device_locked(dev_name);
-+	if (!device) {
-+		ret = -ENODEV;
-+		goto parse_err;
-+	}
-+
-+	pool_info = &device->pool_info;
-+
-+	new_limits = kcalloc(pool_info->table_len, sizeof(int), GFP_KERNEL);
-+	if (!new_limits) {
-+		ret = -ENOMEM;
-+		goto parse_err;
-+	}
-+
-+	ret = rdmacg_parse_limits(options, pool_info, new_limits, &enables);
++	ret = ib_device_register_rdmacg(device);
++	if (ret) {
++		pr_warn("Couldn't register device with rdma cgroup\n");
++		ib_cache_cleanup_one(device);
+ 		goto out;
+ 	}
+ 
+ 	memset(&device->attrs, 0, sizeof(device->attrs));
+ 	ret = device->query_device(device, &device->attrs, &uhw);
+ 	if (ret) {
+-		printk(KERN_WARNING "Couldn't query the device attributes\n");
++		pr_warn("Couldn't query the device attributes\n");
++		ib_device_unregister_rdmacg(device);
++		ib_cache_cleanup_one(device);
+ 		goto out;
+ 	}
+ 
+ 	ret = ib_device_register_sysfs(device, port_callback);
+ 	if (ret) {
+-		printk(KERN_WARNING "Couldn't register device %s with driver model\n",
+-		       device->name);
++		pr_warn("Couldn't register device %s with driver model\n",
++			device->name);
++		ib_device_unregister_rdmacg(device);
+ 		ib_cache_cleanup_one(device);
+ 		goto out;
+ 	}
+@@ -414,6 +424,7 @@ void ib_unregister_device(struct ib_device *device)
+ 
+ 	mutex_unlock(&device_mutex);
+ 
++	ib_device_unregister_rdmacg(device);
+ 	ib_device_unregister_sysfs(device);
+ 	ib_cache_cleanup_one(device);
+ 
+diff --git a/drivers/infiniband/core/uverbs_cmd.c b/drivers/infiniband/core/uverbs_cmd.c
+index 6ffc9c4..0608be2 100644
+--- a/drivers/infiniband/core/uverbs_cmd.c
++++ b/drivers/infiniband/core/uverbs_cmd.c
+@@ -293,6 +293,7 @@ ssize_t ib_uverbs_get_context(struct ib_uverbs_file *file,
+ 	struct ib_udata                   udata;
+ 	struct ib_ucontext		 *ucontext;
+ 	struct file			 *filp;
++	struct ib_rdmacg_object          cg_obj;
+ 	int ret;
+ 
+ 	if (out_len < sizeof resp)
+@@ -312,13 +313,19 @@ ssize_t ib_uverbs_get_context(struct ib_uverbs_file *file,
+ 		   (unsigned long) cmd.response + sizeof resp,
+ 		   in_len - sizeof cmd, out_len - sizeof resp);
+ 
++	ret = ib_rdmacg_try_charge(&cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_UCTX, 1);
 +	if (ret)
-+		goto opt_err;
-+
-+retry:
-+	spin_lock(&cg->rpool_list_lock);
-+	rpool = find_cg_rpool_locked(cg, device);
-+	if (!rpool) {
-+		spin_unlock(&cg->rpool_list_lock);
-+		ret = alloc_cg_rpool(cg, device);
-+		if (ret)
-+			goto opt_err;
-+		else
-+			goto retry;
-+	}
-+
-+	/* now set the new limits of the rpool */
-+	while (enables) {
-+		/* if user set the limit, enables bit is set */
-+		if (enables & BIT(i)) {
-+			enables &= ~BIT(i);
-+			set_resource_limit(rpool, i, new_limits[i]);
-+		}
-+		i++;
-+	}
-+
-+	if (rpool->refcnt == 0 && rpool->num_max_cnt == pool_info->table_len) {
-+		/*
-+		 * No user of the rpool and all entries are set to max, so
-+		 * safe to delete this rpool.
-+		 */
-+		list_del(&rpool->cg_list);
-+		spin_unlock(&cg->rpool_list_lock);
-+
-+		free_cg_rpool(rpool);
-+	} else {
-+		spin_unlock(&cg->rpool_list_lock);
-+	}
-+
-+opt_err:
-+	kfree(new_limits);
-+parse_err:
-+	mutex_unlock(&dev_mutex);
-+err:
-+	return ret ?: nbytes;
-+}
-+
-+static u32 *get_cg_rpool_values(struct rdma_cgroup *cg,
-+				struct rdmacg_device *device,
-+				enum rdmacg_file_type sf_type,
-+				int count)
-+{
-+	struct rdmacg_resource_pool *rpool;
-+	u32 *value_tbl;
-+	int i, ret;
-+
-+	value_tbl = kcalloc(count, sizeof(u32), GFP_KERNEL);
-+	if (!value_tbl) {
-+		ret = -ENOMEM;
 +		goto err;
++
+ 	ucontext = ib_dev->alloc_ucontext(ib_dev, &udata);
+ 	if (IS_ERR(ucontext)) {
+ 		ret = PTR_ERR(ucontext);
+-		goto err;
++		goto err_alloc;
+ 	}
+ 
+ 	ucontext->device = ib_dev;
++	ucontext->cg_obj = cg_obj;
+ 	INIT_LIST_HEAD(&ucontext->pd_list);
+ 	INIT_LIST_HEAD(&ucontext->mr_list);
+ 	INIT_LIST_HEAD(&ucontext->mw_list);
+@@ -382,6 +389,9 @@ err_free:
+ 	put_pid(ucontext->tgid);
+ 	ib_dev->dealloc_ucontext(ucontext);
+ 
++err_alloc:
++	ib_rdmacg_uncharge(&cg_obj, ib_dev, RDMA_VERB_RESOURCE_UCTX, 1);
++
+ err:
+ 	mutex_unlock(&file->mutex);
+ 	return ret;
+@@ -390,7 +400,8 @@ err:
+ static void copy_query_dev_fields(struct ib_uverbs_file *file,
+ 				  struct ib_device *ib_dev,
+ 				  struct ib_uverbs_query_device_resp *resp,
+-				  struct ib_device_attr *attr)
++				  struct ib_device_attr *attr,
++				  int *limits)
+ {
+ 	resp->fw_ver		= attr->fw_ver;
+ 	resp->node_guid		= ib_dev->node_guid;
+@@ -400,15 +411,19 @@ static void copy_query_dev_fields(struct ib_uverbs_file *file,
+ 	resp->vendor_id		= attr->vendor_id;
+ 	resp->vendor_part_id	= attr->vendor_part_id;
+ 	resp->hw_ver		= attr->hw_ver;
+-	resp->max_qp		= attr->max_qp;
++	resp->max_qp		= min_t(int, attr->max_qp,
++					limits[RDMA_VERB_RESOURCE_QP]);
+ 	resp->max_qp_wr		= attr->max_qp_wr;
+ 	resp->device_cap_flags	= attr->device_cap_flags;
+ 	resp->max_sge		= attr->max_sge;
+ 	resp->max_sge_rd	= attr->max_sge_rd;
+-	resp->max_cq		= attr->max_cq;
++	resp->max_cq		= min_t(int, attr->max_cq,
++					limits[RDMA_VERB_RESOURCE_CQ]);
+ 	resp->max_cqe		= attr->max_cqe;
+-	resp->max_mr		= attr->max_mr;
+-	resp->max_pd		= attr->max_pd;
++	resp->max_mr		= min_t(int, attr->max_mr,
++					limits[RDMA_VERB_RESOURCE_MR]);
++	resp->max_pd		= min_t(int, attr->max_pd,
++					limits[RDMA_VERB_RESOURCE_PD]);
+ 	resp->max_qp_rd_atom	= attr->max_qp_rd_atom;
+ 	resp->max_ee_rd_atom	= attr->max_ee_rd_atom;
+ 	resp->max_res_rd_atom	= attr->max_res_rd_atom;
+@@ -417,16 +432,19 @@ static void copy_query_dev_fields(struct ib_uverbs_file *file,
+ 	resp->atomic_cap		= attr->atomic_cap;
+ 	resp->max_ee			= attr->max_ee;
+ 	resp->max_rdd			= attr->max_rdd;
+-	resp->max_mw			= attr->max_mw;
++	resp->max_mw			= min_t(int, attr->max_mw,
++						limits[RDMA_VERB_RESOURCE_MW]);
+ 	resp->max_raw_ipv6_qp		= attr->max_raw_ipv6_qp;
+ 	resp->max_raw_ethy_qp		= attr->max_raw_ethy_qp;
+ 	resp->max_mcast_grp		= attr->max_mcast_grp;
+ 	resp->max_mcast_qp_attach	= attr->max_mcast_qp_attach;
+ 	resp->max_total_mcast_qp_attach	= attr->max_total_mcast_qp_attach;
+-	resp->max_ah			= attr->max_ah;
++	resp->max_ah			= min_t(int, attr->max_ah,
++						limits[RDMA_VERB_RESOURCE_AH]);
+ 	resp->max_fmr			= attr->max_fmr;
+ 	resp->max_map_per_fmr		= attr->max_map_per_fmr;
+-	resp->max_srq			= attr->max_srq;
++	resp->max_srq			= min_t(int, attr->max_srq,
++						limits[RDMA_VERB_RESOURCE_SRQ]);
+ 	resp->max_srq_wr		= attr->max_srq_wr;
+ 	resp->max_srq_sge		= attr->max_srq_sge;
+ 	resp->max_pkeys			= attr->max_pkeys;
+@@ -441,6 +459,7 @@ ssize_t ib_uverbs_query_device(struct ib_uverbs_file *file,
+ {
+ 	struct ib_uverbs_query_device      cmd;
+ 	struct ib_uverbs_query_device_resp resp;
++	int                                limits[RDMA_RESOURCE_MAX];
+ 
+ 	if (out_len < sizeof resp)
+ 		return -ENOSPC;
+@@ -448,8 +467,10 @@ ssize_t ib_uverbs_query_device(struct ib_uverbs_file *file,
+ 	if (copy_from_user(&cmd, buf, sizeof cmd))
+ 		return -EFAULT;
+ 
++	ib_rdmacg_query_limit(ib_dev, limits, RDMA_RESOURCE_MAX);
++
+ 	memset(&resp, 0, sizeof resp);
+-	copy_query_dev_fields(file, ib_dev, &resp, &ib_dev->attrs);
++	copy_query_dev_fields(file, ib_dev, &resp, &ib_dev->attrs, limits);
+ 
+ 	if (copy_to_user((void __user *) (unsigned long) cmd.response,
+ 			 &resp, sizeof resp))
+@@ -535,6 +556,13 @@ ssize_t ib_uverbs_alloc_pd(struct ib_uverbs_file *file,
+ 	if (!uobj)
+ 		return -ENOMEM;
+ 
++	ret = ib_rdmacg_try_charge(&uobj->cg_obj, file->device->ib_dev,
++				   RDMA_VERB_RESOURCE_PD, 1);
++	if (ret) {
++		kfree(uobj);
++		return -EPERM;
 +	}
 +
-+	spin_lock(&cg->rpool_list_lock);
+ 	init_uobj(uobj, 0, file->ucontext, &pd_lock_class);
+ 	down_write(&uobj->mutex);
+ 
+@@ -580,6 +608,7 @@ err_idr:
+ 	ib_dealloc_pd(pd);
+ 
+ err:
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_PD, 1);
+ 	put_uobj_write(uobj);
+ 	return ret;
+ }
+@@ -612,6 +641,8 @@ ssize_t ib_uverbs_dealloc_pd(struct ib_uverbs_file *file,
+ 	if (ret)
+ 		goto err_put;
+ 
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_PD, 1);
 +
-+	rpool = find_cg_rpool_locked(cg, device);
+ 	uobj->live = 0;
+ 	put_uobj_write(uobj);
+ 
+@@ -982,6 +1013,11 @@ ssize_t ib_uverbs_reg_mr(struct ib_uverbs_file *file,
+ 		}
+ 	}
+ 
++	ret = ib_rdmacg_try_charge(&uobj->cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_MR, 1);
++	if (ret)
++		goto err_charge;
 +
-+	for (i = 0; i < count; i++) {
-+		if (sf_type == RDMACG_RESOURCE_MAX) {
-+			if (rpool)
-+				value_tbl[i] = rpool->resources[i].max;
-+			else
-+				value_tbl[i] = S32_MAX;
-+		} else {
-+			if (rpool)
-+				value_tbl[i] = rpool->resources[i].usage;
-+		}
+ 	mr = pd->device->reg_user_mr(pd, cmd.start, cmd.length, cmd.hca_va,
+ 				     cmd.access_flags, &udata);
+ 	if (IS_ERR(mr)) {
+@@ -1029,6 +1065,9 @@ err_unreg:
+ 	ib_dereg_mr(mr);
+ 
+ err_put:
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_MR, 1);
++
++err_charge:
+ 	put_pd_read(pd);
+ 
+ err_free:
+@@ -1153,6 +1192,8 @@ ssize_t ib_uverbs_dereg_mr(struct ib_uverbs_file *file,
+ 	if (ret)
+ 		return ret;
+ 
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_MR, 1);
++
+ 	idr_remove_uobj(&ib_uverbs_mr_idr, uobj);
+ 
+ 	mutex_lock(&file->mutex);
+@@ -1195,6 +1236,11 @@ ssize_t ib_uverbs_alloc_mw(struct ib_uverbs_file *file,
+ 		goto err_free;
+ 	}
+ 
++	ret = ib_rdmacg_try_charge(&uobj->cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_MW, 1);
++	if (ret)
++		goto err_charge;
++
+ 	mw = pd->device->alloc_mw(pd, cmd.mw_type);
+ 	if (IS_ERR(mw)) {
+ 		ret = PTR_ERR(mw);
+@@ -1240,6 +1286,9 @@ err_unalloc:
+ 	uverbs_dealloc_mw(mw);
+ 
+ err_put:
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_MW, 1);
++
++err_charge:
+ 	put_pd_read(pd);
+ 
+ err_free:
+@@ -1275,6 +1324,8 @@ ssize_t ib_uverbs_dealloc_mw(struct ib_uverbs_file *file,
+ 	if (ret)
+ 		return ret;
+ 
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_MW, 1);
++
+ 	idr_remove_uobj(&ib_uverbs_mw_idr, uobj);
+ 
+ 	mutex_lock(&file->mutex);
+@@ -1374,6 +1425,11 @@ static struct ib_ucq_object *create_cq(struct ib_uverbs_file *file,
+ 	if (cmd_sz > offsetof(typeof(*cmd), flags) + sizeof(cmd->flags))
+ 		attr.flags = cmd->flags;
+ 
++	ret = ib_rdmacg_try_charge(&obj->uobject.cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_CQ, 1);
++	if (ret)
++		goto err_charge;
++
+ 	cq = ib_dev->create_cq(ib_dev, &attr,
+ 					     file->ucontext, uhw);
+ 	if (IS_ERR(cq)) {
+@@ -1421,6 +1477,10 @@ err_free:
+ 	ib_destroy_cq(cq);
+ 
+ err_file:
++	ib_rdmacg_uncharge(&obj->uobject.cg_obj, ib_dev,
++			   RDMA_VERB_RESOURCE_CQ, 1);
++
++err_charge:
+ 	if (ev_file)
+ 		ib_uverbs_release_ucq(file, ev_file, obj);
+ 
+@@ -1701,6 +1761,8 @@ ssize_t ib_uverbs_destroy_cq(struct ib_uverbs_file *file,
+ 	if (ret)
+ 		return ret;
+ 
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_CQ, 1);
++
+ 	idr_remove_uobj(&ib_uverbs_cq_idr, uobj);
+ 
+ 	mutex_lock(&file->mutex);
+@@ -1840,6 +1902,12 @@ static int create_qp(struct ib_uverbs_file *file,
+ 			goto err_put;
+ 		}
+ 
++	ret = ib_rdmacg_try_charge(&obj->uevent.uobject.cg_obj,
++				   file->device->ib_dev,
++				   RDMA_VERB_RESOURCE_QP, 1);
++	if (ret)
++		goto err_put;
++
+ 	if (cmd->qp_type == IB_QPT_XRC_TGT)
+ 		qp = ib_create_qp(pd, &attr);
+ 	else
+@@ -1847,7 +1915,7 @@ static int create_qp(struct ib_uverbs_file *file,
+ 
+ 	if (IS_ERR(qp)) {
+ 		ret = PTR_ERR(qp);
+-		goto err_put;
++		goto err_create;
+ 	}
+ 
+ 	if (cmd->qp_type != IB_QPT_XRC_TGT) {
+@@ -1922,6 +1990,10 @@ err_cb:
+ err_destroy:
+ 	ib_destroy_qp(qp);
+ 
++err_create:
++	ib_rdmacg_uncharge(&obj->uevent.uobject.cg_obj, device,
++			   RDMA_VERB_RESOURCE_QP, 1);
++
+ err_put:
+ 	if (xrcd)
+ 		put_xrcd_read(xrcd_uobj);
+@@ -2389,6 +2461,8 @@ ssize_t ib_uverbs_destroy_qp(struct ib_uverbs_file *file,
+ 	if (ret)
+ 		return ret;
+ 
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_QP, 1);
++
+ 	if (obj->uxrcd)
+ 		atomic_dec(&obj->uxrcd->refcnt);
+ 
+@@ -2835,10 +2909,15 @@ ssize_t ib_uverbs_create_ah(struct ib_uverbs_file *file,
+ 	memset(&attr.dmac, 0, sizeof(attr.dmac));
+ 	memcpy(attr.grh.dgid.raw, cmd.attr.grh.dgid, 16);
+ 
++	ret = ib_rdmacg_try_charge(&uobj->cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_AH, 1);
++	if (ret)
++		goto err_put;
++
+ 	ah = ib_create_ah(pd, &attr);
+ 	if (IS_ERR(ah)) {
+ 		ret = PTR_ERR(ah);
+-		goto err_put;
++		goto err_create;
+ 	}
+ 
+ 	ah->uobject  = uobj;
+@@ -2874,6 +2953,9 @@ err_copy:
+ err_destroy:
+ 	ib_destroy_ah(ah);
+ 
++err_create:
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_AH, 1);
++
+ err_put:
+ 	put_pd_read(pd);
+ 
+@@ -2908,6 +2990,8 @@ ssize_t ib_uverbs_destroy_ah(struct ib_uverbs_file *file,
+ 	if (ret)
+ 		return ret;
+ 
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_AH, 1);
++
+ 	idr_remove_uobj(&ib_uverbs_ah_idr, uobj);
+ 
+ 	mutex_lock(&file->mutex);
+@@ -3160,10 +3244,16 @@ int ib_uverbs_ex_create_flow(struct ib_uverbs_file *file,
+ 		err = -EINVAL;
+ 		goto err_free;
+ 	}
++
++	err = ib_rdmacg_try_charge(&uobj->cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_FLOW, 1);
++	if (err)
++		goto err_free;
++
+ 	flow_id = ib_create_flow(qp, flow_attr, IB_FLOW_DOMAIN_USER);
+ 	if (IS_ERR(flow_id)) {
+ 		err = PTR_ERR(flow_id);
+-		goto err_free;
++		goto err_create;
+ 	}
+ 	flow_id->qp = qp;
+ 	flow_id->uobject = uobj;
+@@ -3197,6 +3287,9 @@ err_copy:
+ 	idr_remove_uobj(&ib_uverbs_rule_idr, uobj);
+ destroy_flow:
+ 	ib_destroy_flow(flow_id);
++err_create:
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev,
++			   RDMA_VERB_RESOURCE_FLOW, 1);
+ err_free:
+ 	kfree(flow_attr);
+ err_put:
+@@ -3236,8 +3329,11 @@ int ib_uverbs_ex_destroy_flow(struct ib_uverbs_file *file,
+ 	flow_id = uobj->object;
+ 
+ 	ret = ib_destroy_flow(flow_id);
+-	if (!ret)
++	if (!ret) {
+ 		uobj->live = 0;
++		ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_FLOW, 1);
 +	}
+ 
+ 	put_uobj_write(uobj);
+ 
+@@ -3305,6 +3401,11 @@ static int __uverbs_create_xsrq(struct ib_uverbs_file *file,
+ 	obj->uevent.events_reported = 0;
+ 	INIT_LIST_HEAD(&obj->uevent.event_list);
+ 
++	ret = ib_rdmacg_try_charge(&obj->uevent.uobject.cg_obj, ib_dev,
++				   RDMA_VERB_RESOURCE_SRQ, 1);
++	if (ret)
++		goto err_put_cq;
 +
-+	spin_unlock(&cg->rpool_list_lock);
+ 	srq = pd->device->create_srq(pd, &attr, udata);
+ 	if (IS_ERR(srq)) {
+ 		ret = PTR_ERR(srq);
+@@ -3369,6 +3470,8 @@ err_destroy:
+ 	ib_destroy_srq(srq);
+ 
+ err_put:
++	ib_rdmacg_uncharge(&obj->uevent.uobject.cg_obj, ib_dev,
++			   RDMA_VERB_RESOURCE_SRQ, 1);
+ 	put_pd_read(pd);
+ 
+ err_put_cq:
+@@ -3553,6 +3656,8 @@ ssize_t ib_uverbs_destroy_srq(struct ib_uverbs_file *file,
+ 	if (ret)
+ 		return ret;
+ 
++	ib_rdmacg_uncharge(&uobj->cg_obj, ib_dev, RDMA_VERB_RESOURCE_SRQ, 1);
 +
-+	return value_tbl;
-+
-+err:
-+	return ERR_PTR(ret);
-+}
-+
-+static void print_rpool_values(struct seq_file *sf,
-+			       struct rdmacg_pool_info *pool_info,
-+			       u32 *value_tbl)
-+{
-+	int i;
-+
-+	for (i = 0; i < pool_info->table_len; i++) {
-+		seq_puts(sf, pool_info->resource_name_table[i]);
-+		seq_putc(sf, '=');
-+		if (value_tbl[i] == S32_MAX)
-+			seq_puts(sf, RDMACG_MAX_STR);
-+		else
-+			seq_printf(sf, "%d", value_tbl[i]);
-+		seq_putc(sf, ' ');
-+	}
-+}
-+
-+static int rdmacg_resource_read(struct seq_file *sf, void *v)
-+{
-+	struct rdmacg_device *device;
-+	struct rdma_cgroup *cg = css_rdmacg(seq_css(sf));
-+	struct rdmacg_pool_info *pool_info;
-+	u32 *value_tbl;
-+	int ret = 0;
-+
-+	mutex_lock(&dev_mutex);
-+
-+	list_for_each_entry(device, &dev_list_head, rdmacg_list) {
-+		pool_info = &device->pool_info;
-+
-+		/* get the value from resource pool */
-+		value_tbl = get_cg_rpool_values(cg, device,
-+						seq_cft(sf)->private,
-+						pool_info->table_len);
-+		if (IS_ERR_OR_NULL(value_tbl)) {
-+			ret = -ENOMEM;
-+			break;
-+		}
-+
-+		seq_printf(sf, "%s ", device->name);
-+		print_rpool_values(sf, pool_info, value_tbl);
-+		seq_putc(sf, '\n');
-+		kfree(value_tbl);
-+	}
-+
-+	mutex_unlock(&dev_mutex);
-+	return ret;
-+}
-+
-+static struct cftype rdmacg_files[] = {
-+	{
-+		.name = "max",
-+		.write = rdmacg_resource_set_max,
-+		.seq_show = rdmacg_resource_read,
-+		.private = RDMACG_RESOURCE_MAX,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{
-+		.name = "current",
-+		.seq_show = rdmacg_resource_read,
-+		.private = RDMACG_RESOURCE_STAT,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{ }	/* terminate */
+ 	if (srq_type == IB_SRQT_XRC) {
+ 		us = container_of(obj, struct ib_usrq_object, uevent);
+ 		atomic_dec(&us->uxrcd->refcnt);
+@@ -3586,6 +3691,7 @@ int ib_uverbs_ex_query_device(struct ib_uverbs_file *file,
+ 	struct ib_uverbs_ex_query_device_resp resp;
+ 	struct ib_uverbs_ex_query_device  cmd;
+ 	struct ib_device_attr attr;
++	int    limits[RDMA_RESOURCE_MAX];
+ 	int err;
+ 
+ 	if (ucore->inlen < sizeof(cmd))
+@@ -3612,7 +3718,8 @@ int ib_uverbs_ex_query_device(struct ib_uverbs_file *file,
+ 	if (err)
+ 		return err;
+ 
+-	copy_query_dev_fields(file, ib_dev, &resp.base, &attr);
++	ib_rdmacg_query_limit(ib_dev, limits, RDMA_RESOURCE_MAX);
++	copy_query_dev_fields(file, ib_dev, &resp.base, &attr, limits);
+ 	resp.comp_mask = 0;
+ 
+ 	if (ucore->outlen < resp.response_length + sizeof(resp.odp_caps))
+diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
+index 39680ae..8bd179e 100644
+--- a/drivers/infiniband/core/uverbs_main.c
++++ b/drivers/infiniband/core/uverbs_main.c
+@@ -49,6 +49,7 @@
+ #include <asm/uaccess.h>
+ 
+ #include "uverbs.h"
++#include "core_priv.h"
+ 
+ MODULE_AUTHOR("Roland Dreier");
+ MODULE_DESCRIPTION("InfiniBand userspace verbs access");
+@@ -227,6 +228,8 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 
+ 		idr_remove_uobj(&ib_uverbs_ah_idr, uobj);
+ 		ib_destroy_ah(ah);
++		ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++				   RDMA_VERB_RESOURCE_AH, 1);
+ 		kfree(uobj);
+ 	}
+ 
+@@ -236,6 +239,8 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 
+ 		idr_remove_uobj(&ib_uverbs_mw_idr, uobj);
+ 		uverbs_dealloc_mw(mw);
++		ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++				   RDMA_VERB_RESOURCE_MW, 1);
+ 		kfree(uobj);
+ 	}
+ 
+@@ -244,6 +249,8 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 
+ 		idr_remove_uobj(&ib_uverbs_rule_idr, uobj);
+ 		ib_destroy_flow(flow_id);
++		ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++				   RDMA_VERB_RESOURCE_FLOW, 1);
+ 		kfree(uobj);
+ 	}
+ 
+@@ -258,6 +265,8 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 		} else {
+ 			ib_uverbs_detach_umcast(qp, uqp);
+ 			ib_destroy_qp(qp);
++			ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++					   RDMA_VERB_RESOURCE_QP, 1);
+ 		}
+ 		ib_uverbs_release_uevent(file, &uqp->uevent);
+ 		kfree(uqp);
+@@ -271,6 +280,8 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 		idr_remove_uobj(&ib_uverbs_srq_idr, uobj);
+ 		ib_destroy_srq(srq);
+ 		ib_uverbs_release_uevent(file, uevent);
++		ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++				   RDMA_VERB_RESOURCE_SRQ, 1);
+ 		kfree(uevent);
+ 	}
+ 
+@@ -282,6 +293,8 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 
+ 		idr_remove_uobj(&ib_uverbs_cq_idr, uobj);
+ 		ib_destroy_cq(cq);
++		ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++				   RDMA_VERB_RESOURCE_CQ, 1);
+ 		ib_uverbs_release_ucq(file, ev_file, ucq);
+ 		kfree(ucq);
+ 	}
+@@ -291,6 +304,8 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 
+ 		idr_remove_uobj(&ib_uverbs_mr_idr, uobj);
+ 		ib_dereg_mr(mr);
++		ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++				   RDMA_VERB_RESOURCE_MR, 1);
+ 		kfree(uobj);
+ 	}
+ 
+@@ -311,9 +326,13 @@ static int ib_uverbs_cleanup_ucontext(struct ib_uverbs_file *file,
+ 
+ 		idr_remove_uobj(&ib_uverbs_pd_idr, uobj);
+ 		ib_dealloc_pd(pd);
++		ib_rdmacg_uncharge(&uobj->cg_obj, context->device,
++				   RDMA_VERB_RESOURCE_PD, 1);
+ 		kfree(uobj);
+ 	}
+ 
++	ib_rdmacg_uncharge(&context->cg_obj, context->device,
++			   RDMA_VERB_RESOURCE_UCTX, 1);
+ 	put_pid(context->tgid);
+ 
+ 	return context->device->dealloc_ucontext(context);
+diff --git a/include/rdma/ib_verbs.h b/include/rdma/ib_verbs.h
+index 284b00c..d3d1713 100644
+--- a/include/rdma/ib_verbs.h
++++ b/include/rdma/ib_verbs.h
+@@ -59,6 +59,7 @@
+ #include <linux/atomic.h>
+ #include <linux/mmu_notifier.h>
+ #include <asm/uaccess.h>
++#include <linux/cgroup_rdma.h>
+ 
+ extern struct workqueue_struct *ib_wq;
+ extern struct workqueue_struct *ib_comp_wq;
+@@ -111,6 +112,22 @@ enum rdma_protocol_type {
+ 	RDMA_PROTOCOL_USNIC_UDP
+ };
+ 
++enum rdma_resource_type {
++	RDMA_VERB_RESOURCE_UCTX,
++	RDMA_VERB_RESOURCE_AH,
++	RDMA_VERB_RESOURCE_PD,
++	RDMA_VERB_RESOURCE_CQ,
++	RDMA_VERB_RESOURCE_MR,
++	RDMA_VERB_RESOURCE_MW,
++	RDMA_VERB_RESOURCE_SRQ,
++	RDMA_VERB_RESOURCE_QP,
++	RDMA_VERB_RESOURCE_FLOW,
++	/*
++	 * add any hw specific resource here as RDMA_HW_RESOURCE_NAME
++	 */
++	RDMA_RESOURCE_MAX,
 +};
 +
-+static struct cgroup_subsys_state *
-+rdmacg_css_alloc(struct cgroup_subsys_state *parent)
-+{
-+	struct rdma_cgroup *cg;
-+
-+	cg = kzalloc(sizeof(*cg), GFP_KERNEL);
-+	if (!cg)
-+		return ERR_PTR(-ENOMEM);
-+
-+	INIT_LIST_HEAD(&cg->rpool_head);
-+	spin_lock_init(&cg->rpool_list_lock);
-+	return &cg->css;
-+}
-+
-+static void rdmacg_css_free(struct cgroup_subsys_state *css)
-+{
-+	struct rdma_cgroup *cg = css_rdmacg(css);
-+
-+	kfree(cg);
-+}
-+
-+/**
-+ * rdmacg_css_offline - cgroup css_offline callback
-+ * @css: css of interest
-+ *
-+ * This function is called when @css is about to go away and responsible
-+ * for shooting down all rdmacg associated with @css. As part of that it
-+ * marks all the resource pool entries to max value, so that when resources are
-+ * uncharged, associated resource pool can be freed as well.
-+ */
-+static void rdmacg_css_offline(struct cgroup_subsys_state *css)
-+{
-+	struct rdma_cgroup *cg = css_rdmacg(css);
-+	struct rdmacg_resource_pool *rpool;
-+
-+	spin_lock(&cg->rpool_list_lock);
-+
-+	list_for_each_entry(rpool, &cg->rpool_head, cg_list)
-+		set_all_resource_max_limit(rpool);
-+
-+	spin_unlock(&cg->rpool_list_lock);
-+}
-+
-+struct cgroup_subsys rdma_cgrp_subsys = {
-+	.css_alloc	= rdmacg_css_alloc,
-+	.css_free	= rdmacg_css_free,
-+	.css_offline	= rdmacg_css_offline,
-+	.legacy_cftypes	= rdmacg_files,
-+	.dfl_cftypes	= rdmacg_files,
+ __attribute_const__ enum rdma_transport_type
+ rdma_node_get_transport(enum rdma_node_type node_type);
+ 
+@@ -1282,6 +1299,12 @@ struct ib_fmr_attr {
+ 	u8	page_shift;
+ };
+ 
++struct ib_rdmacg_object {
++#ifdef CONFIG_CGROUP_RDMA
++	struct rdma_cgroup	*cg;		/* owner rdma cgroup */
++#endif
 +};
++
+ struct ib_umem;
+ 
+ struct ib_ucontext {
+@@ -1314,12 +1337,14 @@ struct ib_ucontext {
+ 	struct list_head	no_private_counters;
+ 	int                     odp_mrs_count;
+ #endif
++	struct ib_rdmacg_object cg_obj;
+ };
+ 
+ struct ib_uobject {
+ 	u64			user_handle;	/* handle given to us by userspace */
+ 	struct ib_ucontext     *context;	/* associated user context */
+ 	void		       *object;		/* containing object */
++	struct ib_rdmacg_object cg_obj;		/* rdmacg object */
+ 	struct list_head	list;		/* link to context's list */
+ 	int			id;		/* index into kernel idr */
+ 	struct kref		ref;
+@@ -1872,6 +1897,10 @@ struct ib_device {
+ 	u8                           phys_port_cnt;
+ 	struct ib_device_attr        attrs;
+ 
++#ifdef CONFIG_CGROUP_RDMA
++	struct rdmacg_device	     cg_device;
++#endif
++
+ 	/**
+ 	 * The following mandatory functions are used only at device
+ 	 * registration.  Keep functions such as these at the end of this
 -- 
 1.8.3.1
-
