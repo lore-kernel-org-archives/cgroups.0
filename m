@@ -1,91 +1,93 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH 1/3] mm: migrate: do not touch page->mem_cgroup of live
- pages
-Date: Sun, 28 Feb 2016 15:57:05 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.1602281552160.2997@eggly.anvils>
-References: <1454109573-29235-1-git-send-email-hannes@cmpxchg.org> <1454109573-29235-2-git-send-email-hannes@cmpxchg.org> <20160203131748.GB15520@mguzik> <20160203140824.GJ21016@esperanza> <20160203183547.GA4007@cmpxchg.org> <alpine.LSU.2.11.1602031648050.1497@eggly.anvils>
- <20160204195324.GA8208@cmpxchg.org>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.6-ns] cgroup: fix and restructure error
+ handling in copy_cgroup_ns()
+Date: Mon, 29 Feb 2016 08:50:00 +0000
+Message-ID: <20160229085000.GC26955@ubuntumail>
+References: <20160217185811.GA3472@mwanda>
+ <20160218164658.GD13177@mtj.duckdns.org>
+ <20160218202112.GZ5273@mwanda>
+ <20160218202650.GH13177@mtj.duckdns.org>
+ <20160218212648.GA5273@mwanda>
+ <20160228135933.GT3965@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=7MDeT2jOXdXgMD8pZC7cB6DY9/e0EJhWC7uNCVr4E8U=;
-        b=kde7tvS2W/BRXCQC8+Twe0q8vosT3MBx4igKPAaLGhCoIw19VrIGJt3VrXNfURyki3
-         MPzRE0gN56cb/PQ34hPZXr5CYzLVsnst0qXsVd1JxSaOFUsB+ipmf7guKsO5i0tjs7re
-         bembSYAJQhsFcGriyVq3BX/zfWxAnCkJ/twc6TkxPempGZqci7kjnv5lpy9708OVrFV9
-         wJKHFAVjx7O+rgXTzrQgVAsj7idMXrSWguE2zXvoFLbtpJMAgftB9J1NaTjivy+bqkhZ
-         mc8nvzMKTwr4QgUFgfZ+zNCx+yt6rQBiV+DLRoiof9rDyL19Z4AXQ17XtqG/dBKgeLvg
-         Nj9w==
-In-Reply-To: <20160204195324.GA8208@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160228135933.GT3965-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Hugh Dickins <hughd@google.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Mateusz Guzik <mguzik@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Greg Thelen <gthelen@google.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 4 Feb 2016, Johannes Weiner wrote:
-> On Wed, Feb 03, 2016 at 05:39:08PM -0800, Hugh Dickins wrote:
+Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+> copy_cgroup_ns()'s error handling was broken and the attempt to fix it
+> d22025570e2e ("cgroup: fix alloc_cgroup_ns() error handling in
+> copy_cgroup_ns()") was broken too in that it ended up trying an
+> ERR_PTR() value.
 > 
-> > And (even more off-topic), I'm slightly sad to see that the lrucare
-> > arg which mem_cgroup_migrate() used to have (before I renamed it and
-> > you renamed it back!) has gone, so mem_cgroup_migrate() now always
-> > demands lrucare of commit_charge().  I'd hoped that with your
-> > separation of new from old charge, mem_cgroup_migrate() would never
-> > need lrucare; but that's not true for the fuse case, though true
-> > for everyone else.  Maybe just not worth bothering about?  Or the
-> > reintroduction of some unnecessary zone->lru_lock-ing in page
-> > migration, which we ought to try to avoid?
-> > 
-> > Or am I wrong, and even fuse doesn't need it?  That early return
-> > "if (newpage->mem_cgroup)": isn't mem_cgroup_migrate() a no-op for
-> > fuse, or is there some corner case by which newpage can be on LRU
-> > but its mem_cgroup unset?
+> There's only one place where copy_cgroup_ns() needs to perform cleanup
+> after failure.  Simplify and fix the error handling by removing the
+> goto's.
 > 
-> That should be impossible nowadays.
-> 
-> I went through the git log to find out why we used to do the LRU
-> handling for newpage, and the clue is in this patch and the way
-> charging used to work at that time:
-> 
-> commit 5a6475a4e162200f43855e2d42bbf55bcca1a9f2
-> Author: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> Date:   Wed Mar 23 16:42:42 2011 -0700
-> 
->     memcg: fix leak on wrong LRU with FUSE
->     
->     fs/fuse/dev.c::fuse_try_move_page() does
->     
->        (1) remove a page by ->steal()
->        (2) re-add the page to page cache
->        (3) link the page to LRU if it was not on LRU at (1)
->     
->     This implies the page is _on_ LRU when it's added to radix-tree.  So, the
->     page is added to memory cgroup while it's on LRU.  because LRU is lazy and
->     no one flushs it.
-> 
-> We used to uncharge the page when deleting it from the page cache, not
-> on the final put. So when fuse replaced a page in cache, it would
-> uncharge the stolen page while it was on the LRU and then re-charge.
-> 
-> Nowadays this doesn't happen, and if newpage is a stolen page cache
-> page it just remains charged and we bail out of the transfer.
-> 
-> I don't see a sceniaro where newpage would be uncharged yet on LRU.
-> 
-> Thanks for your insights, Hugh. I'll send patches to clean this up.
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-And thank you for following up and identifying that commit, which
-explained why it was needed, and now is not.  Not a big deal, but
-it is satisfying to be able to eliminate that piece of lrucruft,
-as your patch then did: thank you.
+It certainly looks cleaner, thanks.
 
-Hugh
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> ---
+>  kernel/cgroup.c |   18 +++++-------------
+>  1 file changed, 5 insertions(+), 13 deletions(-)
+> 
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index d92d91a..2c88149 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -6058,9 +6058,8 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
+>  					struct user_namespace *user_ns,
+>  					struct cgroup_namespace *old_ns)
+>  {
+> -	struct cgroup_namespace *new_ns = NULL;
+> -	struct css_set *cset = NULL;
+> -	int err;
+> +	struct cgroup_namespace *new_ns;
+> +	struct css_set *cset;
+>  
+>  	BUG_ON(!old_ns);
+>  
+> @@ -6070,9 +6069,8 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
+>  	}
+>  
+>  	/* Allow only sysadmin to create cgroup namespace. */
+> -	err = -EPERM;
+>  	if (!ns_capable(user_ns, CAP_SYS_ADMIN))
+> -		goto err_out;
+> +		return ERR_PTR(-EPERM);
+>  
+>  	mutex_lock(&cgroup_mutex);
+>  	spin_lock_bh(&css_set_lock);
+> @@ -6085,20 +6083,14 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
+>  
+>  	new_ns = alloc_cgroup_ns();
+>  	if (IS_ERR(new_ns)) {
+> -		err = PTR_ERR(new_ns);
+> -		goto err_out;
+> +		put_css_set(cset);
+> +		return new_ns;
+>  	}
+>  
+>  	new_ns->user_ns = get_user_ns(user_ns);
+>  	new_ns->root_cset = cset;
+>  
+>  	return new_ns;
+> -
+> -err_out:
+> -	if (cset)
+> -		put_css_set(cset);
+> -	kfree(new_ns);
+> -	return ERR_PTR(err);
+>  }
+>  
+>  static inline struct cgroup_namespace *to_cg_ns(struct ns_common *ns)
