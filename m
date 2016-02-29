@@ -1,51 +1,49 @@
-From: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Subject: Re: [PATCH block/for-linus] writeback: flush inode cgroup wb
- switches instead of pinning super_block
-Date: Mon, 29 Feb 2016 20:54:28 +0000
-Message-ID: <20160229205428.GB17997@ZenIV.linux.org.uk>
-References: <CAAeU0aNCq7LGODvVGRU-oU_o-6enii5ey0p1c26D1ZzYwkDc5A@mail.gmail.com>
- <20160215210047.GN3965@htj.duckdns.org>
- <CAAeU0aNAd1Ra6LXmWwq8row4MD_BpVHiSXOwHx07m86UWREvHw@mail.gmail.com>
- <20160216182457.GO3741@mtj.duckdns.org>
- <20160217205721.GE14140@quack.suse.cz>
- <20160217210744.GA6479@mtj.duckdns.org>
- <20160217223009.GN14140@quack.suse.cz>
- <CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
- <20160217230231.GC6479@mtj.duckdns.org>
- <20160229204724.GV3965@htj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: reset memory.low on css offline
+Date: Mon, 29 Feb 2016 15:55:09 -0500
+Message-ID: <20160229205509.GW3965@htj.duckdns.org>
+References: <1456766193-16255-1-git-send-email-vdavydov@virtuozzo.com>
+ <20160229200255.GA32539@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=0IBQRvSz2anXkXOBm4dVHWLZBLnsgumDnGkCgD3D+hk=;
+        b=01jWgT0ADrBSKZT1L2/MJ4wb6vQdDvIisC+U38TGxIgm4bMQSrHfJ0sArFipD/Jubn
+         7ZuUuCJ5MSpE8fWqIotGZL9/T09HjdzesUdSqzxxhiJ50Dsu038/OhtXULCarDu7+tzl
+         /ll6ZdVzJcsxY82lTOqkC5GM2q9zr3wEjIxxIKp1mG7rEU0Jat9CDi0vtuuZ4dRpDtjE
+         xwEOkVnqVNwRTXUFY/0HwlQsaPV6KdnVve+OH79wlrO1B+hcWtIi0B7oMDtfA21FQYCN
+         0xk44gBrcmoi7jD7xQA3WH7+adUUKKzhnv/KMIoQ/Sax5f3hdHGlUllu4J/HvELRarNq
+         A8Hg==
 Content-Disposition: inline
-In-Reply-To: <20160229204724.GV3965-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20160229200255.GA32539-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Nauman Rafique <nauman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Feb 29, 2016 at 03:47:24PM -0500, Tejun Heo wrote:
-> If cgroup writeback is in use, inodes can be scheduled for
-> asynchronous wb switching.  Before 5ff8eaac1636 ("writeback: keep
-> superblock pinned during cgroup writeback association switches"), this
-> could race with umount leading to super_block being destroyed while
-> inodes are pinned for wb switching.  5ff8eaac1636 fixed it by bumping
-> s_active while wb switches are in flight; however, this allowed
-> in-flight wb switches to make umounts asynchronous when the userland
-> expected synchronosity - e.g. fsck immediately following umount may
-> fail because the device is still busy.
+Hello,
+
+On Mon, Feb 29, 2016 at 03:02:55PM -0500, Johannes Weiner wrote:
+> > To fix this, let's reset memory.low on css offline.
 > 
-> This patch removes the problematic super_block pinning and instead
-> makes generic_shutdown_super() flush in-flight wb switches.  wb
-> switches are now executed on a dedicated isw_wq so that they can be
-> flushed and isw_nr_in_flight keeps track of the number of in-flight wb
-> switches so that flushing can be avoided in most cases.
+> We already have mem_cgroup_css_reset() for soft-offlining a css - when
+> the css is asked to be disabled but another subsystem still uses it.
+> Can we just call that function during offline as well? The css can be
+> around for quite a bit after the user deleted it. Eliminating *any*
+> user-supplied configurations and zapping it back to defaults makes
+> sense in general, so that we never have to worry about any remnants.
 
-Wait a bloody minute.  What's to prevent shrink_dcache_for_umount() from
-dirtying more inodes, triggering more of the same?
+Hmmm... I wonder whether the behavior can be a bit surprising and it
+could be better to simply let memcg offline callback to call the reset
+function explicitly.  No big deal either way tho.  Please feel free to
+send a patch.
 
-> -	if (!atomic_inc_not_zero(&inode->i_sb->s_active))
-> -		goto out_unlock;
+Thanks.
 
-This would've failed for inodes on superblock in the middle of shutdown;
-what's to do the same for the new variant?
+-- 
+tejun
