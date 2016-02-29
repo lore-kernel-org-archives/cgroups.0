@@ -1,49 +1,58 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH block/for-linus] writeback: flush inode cgroup wb
- switches instead of pinning super_block
-Date: Mon, 29 Feb 2016 22:21:19 +0100
-Message-ID: <20160229212119.GH6174@quack.suse.cz>
-References: <20160217205721.GE14140@quack.suse.cz>
- <20160217210744.GA6479@mtj.duckdns.org>
- <20160217223009.GN14140@quack.suse.cz>
- <CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
- <20160217230231.GC6479@mtj.duckdns.org>
- <20160229204724.GV3965@htj.duckdns.org>
- <20160229205428.GB17997@ZenIV.linux.org.uk>
- <20160229205837.GX3965@htj.duckdns.org>
- <20160229210614.GC17997@ZenIV.linux.org.uk>
- <20160229210800.GY3965@htj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.6-ns] cgroup: fix and restructure error
+ handling in copy_cgroup_ns()
+Date: Mon, 29 Feb 2016 16:23:39 -0500
+Message-ID: <20160229212339.GC3965@htj.duckdns.org>
+References: <20160217185811.GA3472@mwanda>
+ <20160218164658.GD13177@mtj.duckdns.org>
+ <20160218202112.GZ5273@mwanda>
+ <20160218202650.GH13177@mtj.duckdns.org>
+ <20160218212648.GA5273@mwanda>
+ <20160228135933.GT3965@htj.duckdns.org>
+ <20160229085000.GC26955@ubuntumail>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=AudnCeiDYq1ImTloGpQTqpkoAv/FAhgvWnpJV8kEw9o=;
+        b=v8lk8Qig637mxGDN7ZQtPaU9jHK1GkaaBorpZKjauDYGiC8UlQ1HZdp9TeiFyINA4A
+         r493cURXwrnVRF4yYMVUjUHnkSZ9ZrzJpY35zb1I65A4VwKhv3BK185lCkQ4Szru0VGm
+         FwWGBv6b31AMgVTjzSppv8xKAeIYiLXfXCUZv7718Nti9lIuOvAgTmgHbzDWiZigbnES
+         JpKhy7DGY4YaR9t4KXxt6xOV4Gn1JTsacv28XrTVlB7DoR4CpRR/oVOYnMrBjkwVtFP7
+         EJVaodqRJh7fJ0YxzufCvGUj3Y1IXQu404pAcEbM7thmm81mYxbDa+HpKHskjxgftGYV
+         8zTQ==
 Content-Disposition: inline
-In-Reply-To: <20160229210800.GY3965-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20160229085000.GC26955@ubuntumail>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Nauman Rafique <nauman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-On Mon 29-02-16 16:08:00, Tejun Heo wrote:
-> On Mon, Feb 29, 2016 at 09:06:15PM +0000, Al Viro wrote:
-> > > Hmmm?  The flushing is done after shrink_dcache_for_umount() and
-> > > sync_filesystems().  Aren't inodes supposed to stay clean after that?
+On Mon, Feb 29, 2016 at 08:50:00AM +0000, Serge Hallyn wrote:
+> Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+> > copy_cgroup_ns()'s error handling was broken and the attempt to fix it
+> > d22025570e2e ("cgroup: fix alloc_cgroup_ns() error handling in
+> > copy_cgroup_ns()") was broken too in that it ended up trying an
+> > ERR_PTR() value.
 > > 
-> > s/shrink_dcache_for_umount/fsnotify_unmount_inodes/ - sorry.
+> > There's only one place where copy_cgroup_ns() needs to perform cleanup
+> > after failure.  Simplify and fix the error handling by removing the
+> > goto's.
+> > 
+> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 > 
-> Is that allowed to dirty indoes and initiate writebacks again, after
-> sync_filesystems() is done?  That sounds weird but it's trivial to
-> move cgroup_writeback_umount() below that if so.
+> It certainly looks cleaner, thanks.
+> 
+> Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-Hardly, but generally it is true that filesystem may still dirty something
-(e.g. from outstanding workqueue work, but most likely some special "system
-inodes" may still become dirty) until ->put_super() is finished.
+Applied to cgroup/for-4.6-ns.
 
-Anyway, to make this foolproof, I'd just avoid queueing any new switching
-work after S_ACTIVE is cleared on the superblock and flush the workqueue just
-before evict_inodes() call.
+Thanks.
 
-								Honza
 -- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+tejun
