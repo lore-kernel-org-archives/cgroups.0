@@ -1,93 +1,41 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-4.6-ns] cgroup: fix and restructure error
- handling in copy_cgroup_ns()
-Date: Mon, 29 Feb 2016 08:50:00 +0000
-Message-ID: <20160229085000.GC26955@ubuntumail>
-References: <20160217185811.GA3472@mwanda>
- <20160218164658.GD13177@mtj.duckdns.org>
- <20160218202112.GZ5273@mwanda>
- <20160218202650.GH13177@mtj.duckdns.org>
- <20160218212648.GA5273@mwanda>
- <20160228135933.GT3965@htj.duckdns.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: reset memory.low on css offline
+Date: Mon, 29 Feb 2016 15:02:55 -0500
+Message-ID: <20160229200255.GA32539@cmpxchg.org>
+References: <1456766193-16255-1-git-send-email-vdavydov@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20160228135933.GT3965-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <1456766193-16255-1-git-send-email-vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> copy_cgroup_ns()'s error handling was broken and the attempt to fix it
-> d22025570e2e ("cgroup: fix alloc_cgroup_ns() error handling in
-> copy_cgroup_ns()") was broken too in that it ended up trying an
-> ERR_PTR() value.
+On Mon, Feb 29, 2016 at 08:16:33PM +0300, Vladimir Davydov wrote:
+> When a cgroup directory is removed, the memory cgroup subsys state does
+> not disappear immediately. Instead, it's left hanging around until the
+> last reference to it is gone, which implies reclaiming all pages from
+> its lruvec.
 > 
-> There's only one place where copy_cgroup_ns() needs to perform cleanup
-> after failure.  Simplify and fix the error handling by removing the
-> goto's.
+> In the unified hierarchy, there's the memory.low knob, which can be used
+> to set a best-effort protection for a memory cgroup - the reclaimer
+> first scans those cgroups whose consumption is above memory.low, and
+> only if it fails to reclaim enough pages, it gets to the rest.
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-
-It certainly looks cleaner, thanks.
-
-Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-
-> ---
->  kernel/cgroup.c |   18 +++++-------------
->  1 file changed, 5 insertions(+), 13 deletions(-)
+> Currently this protection is not reset when the cgroup directory is
+> removed. As a result, if a dead memory cgroup has a lot of page cache
+> charged to it and a high value of memory.low, it will result in higher
+> pressure exerted on live cgroups, and userspace will have no ways to
+> detect such consumers and reconfigure memory.low properly.
 > 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index d92d91a..2c88149 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -6058,9 +6058,8 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
->  					struct user_namespace *user_ns,
->  					struct cgroup_namespace *old_ns)
->  {
-> -	struct cgroup_namespace *new_ns = NULL;
-> -	struct css_set *cset = NULL;
-> -	int err;
-> +	struct cgroup_namespace *new_ns;
-> +	struct css_set *cset;
->  
->  	BUG_ON(!old_ns);
->  
-> @@ -6070,9 +6069,8 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
->  	}
->  
->  	/* Allow only sysadmin to create cgroup namespace. */
-> -	err = -EPERM;
->  	if (!ns_capable(user_ns, CAP_SYS_ADMIN))
-> -		goto err_out;
-> +		return ERR_PTR(-EPERM);
->  
->  	mutex_lock(&cgroup_mutex);
->  	spin_lock_bh(&css_set_lock);
-> @@ -6085,20 +6083,14 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
->  
->  	new_ns = alloc_cgroup_ns();
->  	if (IS_ERR(new_ns)) {
-> -		err = PTR_ERR(new_ns);
-> -		goto err_out;
-> +		put_css_set(cset);
-> +		return new_ns;
->  	}
->  
->  	new_ns->user_ns = get_user_ns(user_ns);
->  	new_ns->root_cset = cset;
->  
->  	return new_ns;
-> -
-> -err_out:
-> -	if (cset)
-> -		put_css_set(cset);
-> -	kfree(new_ns);
-> -	return ERR_PTR(err);
->  }
->  
->  static inline struct cgroup_namespace *to_cg_ns(struct ns_common *ns)
+> To fix this, let's reset memory.low on css offline.
+
+We already have mem_cgroup_css_reset() for soft-offlining a css - when
+the css is asked to be disabled but another subsystem still uses it.
+Can we just call that function during offline as well? The css can be
+around for quite a bit after the user deleted it. Eliminating *any*
+user-supplied configurations and zapping it back to defaults makes
+sense in general, so that we never have to worry about any remnants.
