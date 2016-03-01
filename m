@@ -1,30 +1,39 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 1/2] mm: memcontrol: cleanup css_reset callback
-Date: Tue, 1 Mar 2016 14:53:33 -0500
-Message-ID: <20160301195333.GA22717@cmpxchg.org>
+Subject: Re: [PATCH 2/2] cgroup: reset css on destruction
+Date: Tue, 1 Mar 2016 14:54:38 -0500
+Message-ID: <20160301195438.GB22717@cmpxchg.org>
 References: <69629961aefc48c021b895bb0c8297b56c11a577.1456830735.git.vdavydov@virtuozzo.com>
+ <92b11b89791412df49e73597b87912e8f143a3f7.1456830735.git.vdavydov@virtuozzo.com>
+ <20160301163018.GE3965@htj.duckdns.org>
+ <20160301165630.GB2426@esperanza>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <69629961aefc48c021b895bb0c8297b56c11a577.1456830735.git.vdavydov@virtuozzo.com>
+In-Reply-To: <20160301165630.GB2426@esperanza>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 01, 2016 at 02:13:12PM +0300, Vladimir Davydov wrote:
->  - Do not take memcg_limit_mutex for resetting limits - the cgroup
->    cannot be altered from userspace anymore, so no need to protect them.
+On Tue, Mar 01, 2016 at 07:56:30PM +0300, Vladimir Davydov wrote:
+> From: Vladimir Davydov <vdavydov@virtuozzo.com>
+> Subject: [PATCH] cgroup: reset css on destruction
 > 
->  - Use plain page_counter_limit() for resetting ->memory and ->memsw
->    limits instead of mem_cgrouop_resize_* helpers - we enlarge the
->    limits, so no need in special handling.
+> An associated css can be around for quite a while after a cgroup
+> directory has been removed. In general, it makes sense to reset it to
+> defaults so as not to worry about any remnants. For instance, memory
+> cgroup needs to reset memory.low, otherwise pages charged to a dead
+> cgroup might never get reclaimed. There's ->css_reset callback, which
+> would fit perfectly for the purpose. Currently, it's only called when a
+> subsystem is disabled in the unified hierarchy and there are other
+> subsystems dependant on it. Let's call it on css destruction as well.
 > 
->  - Reset ->swap and ->tcpmem limits as well.
-> 
+> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
 > Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+
+It's already in a git tree, but FWIW
 
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
