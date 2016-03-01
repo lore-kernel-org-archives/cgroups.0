@@ -1,37 +1,212 @@
-From: Haggai Eran <haggaie@mellanox.com>
-Subject: Re: [PATCHv7 2/3] IB/core: added support to use rdma cgroup
- controller
-Date: Tue, 1 Mar 2016 11:12:06 +0200
-Message-ID: <56D55CE6.7030103@mellanox.com>
-References: <1456668821-25799-1-git-send-email-pandit.parav@gmail.com>
- <1456668821-25799-3-git-send-email-pandit.parav@gmail.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2 block/for-linus] writeback: flush inode cgroup wb
+ switches instead of pinning super_block
+Date: Tue, 1 Mar 2016 10:20:11 +0100
+Message-ID: <20160301092011.GA27666@quack.suse.cz>
+References: <20160215210047.GN3965@htj.duckdns.org>
+ <CAAeU0aNAd1Ra6LXmWwq8row4MD_BpVHiSXOwHx07m86UWREvHw@mail.gmail.com>
+ <20160216182457.GO3741@mtj.duckdns.org>
+ <20160217205721.GE14140@quack.suse.cz>
+ <20160217210744.GA6479@mtj.duckdns.org>
+ <20160217223009.GN14140@quack.suse.cz>
+ <CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
+ <20160217230231.GC6479@mtj.duckdns.org>
+ <20160229204724.GV3965@htj.duckdns.org>
+ <20160229232853.GD3965@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=DphgodLCkmtIXsaU6eQWFwPSTKjqPTcFpOigLvhlVwU=;
- b=MYQwTnCHJdQ+Rct4F/v4Za1UNUPkzYgjEUd9+Q7hxsyNEeutoks0fD69E2eOfNCexFbMvRODnIfQM+PCjtR/7BiPMaC8B0fpX431x67JN6A1ZxvVRk2vvopzhN05ly/qsO8FCade6Wq9e9dRRaywCGmizVKvFjiiQzPiGNsvFs8=
-In-Reply-To: <1456668821-25799-3-git-send-email-pandit.parav@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160229232853.GD3965@htj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Parav Pandit <pandit.parav@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com
-Cc: corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Tahsin Erdogan <tahsin@google.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Nauman Rafique <nauman@google.com>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On 28/02/2016 16:13, Parav Pandit wrote:
-> diff --git a/drivers/infiniband/core/device.c b/drivers/infiniband/core/device.c
-> index 00da80e..54ea8ce 100644
-> --- a/drivers/infiniband/core/device.c
-> +++ b/drivers/infiniband/core/device.c
-> @@ -343,28 +343,38 @@ int ib_register_device(struct ib_device *device,
+On Mon 29-02-16 18:28:53, Tejun Heo wrote:
+> If cgroup writeback is in use, inodes can be scheduled for
+> asynchronous wb switching.  Before 5ff8eaac1636 ("writeback: keep
+> superblock pinned during cgroup writeback association switches"), this
+> could race with umount leading to super_block being destroyed while
+> inodes are pinned for wb switching.  5ff8eaac1636 fixed it by bumping
+> s_active while wb switches are in flight; however, this allowed
+> in-flight wb switches to make umounts asynchronous when the userland
+> expected synchronosity - e.g. fsck immediately following umount may
+> fail because the device is still busy.
+> 
+> This patch removes the problematic super_block pinning and instead
+> makes generic_shutdown_super() flush in-flight wb switches.  wb
+> switches are now executed on a dedicated isw_wq so that they can be
+> flushed and isw_nr_in_flight keeps track of the number of in-flight wb
+> switches so that flushing can be avoided in most cases.
+> 
+> v2: Move cgroup_writeback_umount() further below and add MS_ACTIVE
+>     check in inode_switch_wbs() as Jan an Al suggested.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: Tahsin Erdogan <tahsin@google.com>
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Al Viro <viro@ZenIV.linux.org.uk>
+> Link: http://lkml.kernel.org/g/CAAeU0aNCq7LGODvVGRU-oU_o-6enii5ey0p1c26D1ZzYwkDc5A@mail.gmail.com
+> Fixes: 5ff8eaac1636 ("writeback: keep superblock pinned during cgroup writeback association switches")
+> Cc: stable@vger.kernel.org #v4.5
+
+The patch looks good to me now. You can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+									Honza
+
+> ---
+>  fs/fs-writeback.c         |   54 ++++++++++++++++++++++++++++++++++------------
+>  fs/super.c                |    1 
+>  include/linux/writeback.h |    5 ++++
+>  3 files changed, 47 insertions(+), 13 deletions(-)
+> 
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -223,6 +223,9 @@ static void wb_wait_for_completion(struc
+>  #define WB_FRN_HIST_MAX_SLOTS	(WB_FRN_HIST_THR_SLOTS / 2 + 1)
+>  					/* one round can affect upto 5 slots */
 >  
->  	ret = read_port_immutable(device);
->  	if (ret) {
-> -		printk(KERN_WARNING "Couldn't create per port immutable data %s\n",
-> -		       device->name);
-> +		pr_warn("Couldn't create per port immutable data %s\n",
-> +			device->name);
->  		goto out;
-
-This change doesn't belong in the patch.
+> +static atomic_t isw_nr_in_flight = ATOMIC_INIT(0);
+> +static struct workqueue_struct *isw_wq;
+> +
+>  void __inode_attach_wb(struct inode *inode, struct page *page)
+>  {
+>  	struct backing_dev_info *bdi = inode_to_bdi(inode);
+> @@ -317,7 +320,6 @@ static void inode_switch_wbs_work_fn(str
+>  	struct inode_switch_wbs_context *isw =
+>  		container_of(work, struct inode_switch_wbs_context, work);
+>  	struct inode *inode = isw->inode;
+> -	struct super_block *sb = inode->i_sb;
+>  	struct address_space *mapping = inode->i_mapping;
+>  	struct bdi_writeback *old_wb = inode->i_wb;
+>  	struct bdi_writeback *new_wb = isw->new_wb;
+> @@ -424,8 +426,9 @@ skip_switch:
+>  	wb_put(new_wb);
+>  
+>  	iput(inode);
+> -	deactivate_super(sb);
+>  	kfree(isw);
+> +
+> +	atomic_dec(&isw_nr_in_flight);
+>  }
+>  
+>  static void inode_switch_wbs_rcu_fn(struct rcu_head *rcu_head)
+> @@ -435,7 +438,7 @@ static void inode_switch_wbs_rcu_fn(stru
+>  
+>  	/* needs to grab bh-unsafe locks, bounce to work item */
+>  	INIT_WORK(&isw->work, inode_switch_wbs_work_fn);
+> -	schedule_work(&isw->work);
+> +	queue_work(isw_wq, &isw->work);
+>  }
+>  
+>  /**
+> @@ -471,20 +474,20 @@ static void inode_switch_wbs(struct inod
+>  
+>  	/* while holding I_WB_SWITCH, no one else can update the association */
+>  	spin_lock(&inode->i_lock);
+> -
+> -	if (inode->i_state & (I_WB_SWITCH | I_FREEING) ||
+> -	    inode_to_wb(inode) == isw->new_wb)
+> -		goto out_unlock;
+> -
+> -	if (!atomic_inc_not_zero(&inode->i_sb->s_active))
+> -		goto out_unlock;
+> -
+> +	if (!(inode->i_sb->s_flags & MS_ACTIVE) ||
+> +	    inode->i_state & (I_WB_SWITCH | I_FREEING) ||
+> +	    inode_to_wb(inode) == isw->new_wb) {
+> +		spin_unlock(&inode->i_lock);
+> +		goto out_free;
+> +	}
+>  	inode->i_state |= I_WB_SWITCH;
+>  	spin_unlock(&inode->i_lock);
+>  
+>  	ihold(inode);
+>  	isw->inode = inode;
+>  
+> +	atomic_inc(&isw_nr_in_flight);
+> +
+>  	/*
+>  	 * In addition to synchronizing among switchers, I_WB_SWITCH tells
+>  	 * the RCU protected stat update paths to grab the mapping's
+> @@ -494,8 +497,6 @@ static void inode_switch_wbs(struct inod
+>  	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
+>  	return;
+>  
+> -out_unlock:
+> -	spin_unlock(&inode->i_lock);
+>  out_free:
+>  	if (isw->new_wb)
+>  		wb_put(isw->new_wb);
+> @@ -847,6 +848,33 @@ restart:
+>  		wb_put(last_wb);
+>  }
+>  
+> +/**
+> + * cgroup_writeback_umount - flush inode wb switches for umount
+> + *
+> + * This function is called when a super_block is about to be destroyed and
+> + * flushes in-flight inode wb switches.  An inode wb switch goes through
+> + * RCU and then workqueue, so the two need to be flushed in order to ensure
+> + * that all previously scheduled switches are finished.  As wb switches are
+> + * rare occurrences and synchronize_rcu() can take a while, perform
+> + * flushing iff wb switches are in flight.
+> + */
+> +void cgroup_writeback_umount(void)
+> +{
+> +	if (atomic_read(&isw_nr_in_flight)) {
+> +		synchronize_rcu();
+> +		flush_workqueue(isw_wq);
+> +	}
+> +}
+> +
+> +static int __init cgroup_writeback_init(void)
+> +{
+> +	isw_wq = alloc_workqueue("inode_switch_wbs", 0, 0);
+> +	if (!isw_wq)
+> +		return -ENOMEM;
+> +	return 0;
+> +}
+> +fs_initcall(cgroup_writeback_init);
+> +
+>  #else	/* CONFIG_CGROUP_WRITEBACK */
+>  
+>  static struct bdi_writeback *
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -415,6 +415,7 @@ void generic_shutdown_super(struct super
+>  		sb->s_flags &= ~MS_ACTIVE;
+>  
+>  		fsnotify_unmount_inodes(sb);
+> +		cgroup_writeback_umount();
+>  
+>  		evict_inodes(sb);
+>  
+> --- a/include/linux/writeback.h
+> +++ b/include/linux/writeback.h
+> @@ -198,6 +198,7 @@ void wbc_attach_and_unlock_inode(struct
+>  void wbc_detach_inode(struct writeback_control *wbc);
+>  void wbc_account_io(struct writeback_control *wbc, struct page *page,
+>  		    size_t bytes);
+> +void cgroup_writeback_umount(void);
+>  
+>  /**
+>   * inode_attach_wb - associate an inode with its wb
+> @@ -301,6 +302,10 @@ static inline void wbc_account_io(struct
+>  {
+>  }
+>  
+> +static inline void cgroup_writeback_umount(void)
+> +{
+> +}
+> +
+>  #endif	/* CONFIG_CGROUP_WRITEBACK */
+>  
+>  /*
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
