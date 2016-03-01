@@ -1,54 +1,28 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: [PATCH 1/2] mm: memcontrol: cleanup css_reset callback
-Date: Tue, 1 Mar 2016 14:13:12 +0300
-Message-ID: <69629961aefc48c021b895bb0c8297b56c11a577.1456830735.git.vdavydov@virtuozzo.com>
+From: Haggai Eran <haggaie@mellanox.com>
+Subject: Re: [PATCHv7 3/3] rdmacg: Added documentation for rdmacg
+Date: Tue, 1 Mar 2016 13:01:04 +0200
+Message-ID: <56D57670.2060307@mellanox.com>
+References: <1456668821-25799-1-git-send-email-pandit.parav@gmail.com>
+ <1456668821-25799-4-git-send-email-pandit.parav@gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=960nd+w7yUFqEgqjIfElCVFnmxxR7Wq2Jj7VM9kFejw=;
+ b=AJcwJ8qa1XBzxw8f4qUw2mC5vqxkV++O19JVFmaeN/hXPrSLS+LrXIaQ7/KDJ+GkXbIua946fl9ibfAr3P8uZo0Gicegqt4VndGzkmFS5NcLfdEUFSxRe7rXyXx3msW1ZHQmVTrb8YIdeXeoZGFPGW8phNMWoTakTCRXrEMaywg=
+In-Reply-To: <1456668821-25799-4-git-send-email-pandit.parav@gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Parav Pandit <pandit.parav@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com
+Cc: corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
- - Do not take memcg_limit_mutex for resetting limits - the cgroup
-   cannot be altered from userspace anymore, so no need to protect them.
+On 28/02/2016 16:13, Parav Pandit wrote:
+> Added documentation for v1 and v2 version describing high
+> level design and usage examples on using rdma controller.
+> 
+> Signed-off-by: Parav Pandit <pandit.parav@gmail.com>
 
- - Use plain page_counter_limit() for resetting ->memory and ->memsw
-   limits instead of mem_cgrouop_resize_* helpers - we enlarge the
-   limits, so no need in special handling.
+Reviewed-by: Haggai Eran <haggaie@mellanox.com>
 
- - Reset ->swap and ->tcpmem limits as well.
-
-Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
----
- mm/memcontrol.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ae8b81c55685..8615b066b642 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4257,9 +4257,11 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 
--	mem_cgroup_resize_limit(memcg, PAGE_COUNTER_MAX);
--	mem_cgroup_resize_memsw_limit(memcg, PAGE_COUNTER_MAX);
--	memcg_update_kmem_limit(memcg, PAGE_COUNTER_MAX);
-+	page_counter_limit(&memcg->memory, PAGE_COUNTER_MAX);
-+	page_counter_limit(&memcg->swap, PAGE_COUNTER_MAX);
-+	page_counter_limit(&memcg->memsw, PAGE_COUNTER_MAX);
-+	page_counter_limit(&memcg->kmem, PAGE_COUNTER_MAX);
-+	page_counter_limit(&memcg->tcpmem, PAGE_COUNTER_MAX);
- 	memcg->low = 0;
- 	memcg->high = PAGE_COUNTER_MAX;
- 	memcg->soft_limit = PAGE_COUNTER_MAX;
--- 
-2.1.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
