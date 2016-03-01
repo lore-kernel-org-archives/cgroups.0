@@ -1,55 +1,239 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 block/for-linus] writeback: flush inode cgroup wb
- switches instead of pinning super_block
-Date: Tue, 1 Mar 2016 12:50:19 -0500
-Message-ID: <CAOS58YO5vTBnM561np7gpXKGQELrT169bYqmcfvAvsquBJK5yw@mail.gmail.com>
-References: <CAAeU0aNCq7LGODvVGRU-oU_o-6enii5ey0p1c26D1ZzYwkDc5A@mail.gmail.com>
-	<20160215210047.GN3965@htj.duckdns.org>
-	<CAAeU0aNAd1Ra6LXmWwq8row4MD_BpVHiSXOwHx07m86UWREvHw@mail.gmail.com>
-	<20160216182457.GO3741@mtj.duckdns.org>
-	<20160217205721.GE14140@quack.suse.cz>
-	<20160217210744.GA6479@mtj.duckdns.org>
-	<20160217223009.GN14140@quack.suse.cz>
-	<CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
-	<20160217230231.GC6479@mtj.duckdns.org>
-	<20160229204724.GV3965@htj.duckdns.org>
-	<20160229232853.GD3965@htj.duckdns.org>
-	<56D5D592.2020800@kernel.dk>
-Mime-Version: 1.0
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCHv9 0/3] rdmacg: IB/core: rdma controller support
+Date: Wed,  2 Mar 2016 00:35:34 +0530
+Message-ID: <1456859137-13646-1-git-send-email-pandit.parav@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date:message-id:subject
-         :from:to:cc;
-        bh=1RVJBj0F1aEyAflDG3sBJUfxn3fZRIDYO0jeW8+6tq4=;
-        b=dJu8edTSMZa1Oc4t1evkCf2DF1MZCUdPQyJSiaRtZo5yAK3z2W+I7vNOphDGf+KSrh
-         VzBoXcDJhTcvR3jN0dcyiQJ/w+RgSXTzdf2ED3o8QRdhmJoD0Hev86xXxQYtKnS9J0Ls
-         62tg1G77J41rhIJntcgxFcZWZk5p+Yu+F7V+l6+CcYw8OPGcKHd4GZgZSTeWeyL0Wrgt
-         Xf7bYgtoTNq4YqLCHLTIVQc/83jv3PnRBw6YNz2/9MgXpVm5cBPosS2Y/acFSy958lWa
-         T79NMSD7fWPGc+BHM3UlTy41qk0CsBnwAcrrQWsnGLzpvHUPgZsnZqgFVUr8BtnpHElJ
-         lbcQ==
-In-Reply-To: <56D5D592.2020800-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+        h=from:to:cc:subject:date:message-id;
+        bh=5gjVpTvIsiNiD9vECo/vyddMijMwdVnqOcgaAlpAIA8=;
+        b=qqma6RhZO3Excu3x8/Cfuzz34KwVTMs1VepeXu/NLwX2BlEUGwxeNPpfq2bpzRTy62
+         nSZt9wZRBtNHfQurM2yKgtKiFPptnltPo8HqIrPLZH1TBlRG8TmPkSzR7dciRqJMs87S
+         QCXYgLQ0AQ9CTK3BqFidTeR7jKT1Q7m9Tv+l6CBp3zsDnyLrDj3f2k0snWySgWbS4XaG
+         B+uJOzfq8HSYtO8UrP1msF9v/8zGyvzr9DU3P+rIUCNptnKtDyaF+A++B7k5ZhWI16KD
+         OwcBkhgaoX5X4NBW9KfMCnOaeaKy7JYe832/Witk5HDhva/R44bA3AXXlCXkQHWugV6C
+         EkoA==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Nauman Rafique <nauman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org, haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org
+Cc: corbet-T1hC0tSOHrs@public.gmane.org, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Hello, Jens.
+Patch is generated and tested against below Doug's linux-rdma
+git tree as it merges cleanly with both the git tree
+(linux-rdma and linux-cgroup).
 
-On Tue, Mar 1, 2016 at 12:46 PM, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> wrote:
-> I queued this up for 4.5, but I'm feeling a bit uneasy about it. But it's
-> either that, or revert 5ff8eaac1636 and fix it for real in 4.6. Jan/Tejun,
-> what do you think?
+URL: git://git.kernel.org/pub/scm/linux/kernel/git/dledford/rdma.git
+Branch: k.o/for-4.6
 
-Given that this only matters for cgroup writeback cases, this should
-still be fairly low impact, so I don't think it'd matter too much
-whether we fix this in this cycle or for 4.6. However, that also means
-that we're not risking much by doing it in this cycle, so I'd vote for
-doing it now.
+Patch 1/3, 3/3 also compiles against Tejun's cgroup tree as well
+and tested with little different patch of 2/3 as both the
+trees are little different.
 
-Thanks.
+Overview:
+Currently user space applications can easily take away all the rdma
+device specific resources such as AH, CQ, QP, MR etc. Due to which other
+applications in other cgroup or kernel space ULPs may not even get chance
+to allocate any rdma resources. This results into service unavailibility.
+
+RDMA cgroup addresses this issue by allowing resource accounting,
+limit enforcement on per cgroup, per rdma device basis.
+
+Resources are not defined by the RDMA cgroup. Instead they are defined
+by RDMA/IB stack. This allows rdma cgroup to remain constant while RDMA/IB
+stack can evolve without the need of rdma cgroup update. A new
+resource can be easily added by the RDMA/IB stack without touching
+rdma cgroup.
+
+RDMA uverbs layer will enforce limits on well defined RDMA verb
+resources without any HCA vendor device driver involvement.
+
+RDMA uverbs layer will not do limit enforcement of HCA hw vendor
+specific resources. Instead rdma cgroup provides set of APIs
+through which vendor specific drivers can do resource accounting
+by making use of rdma cgroup.
+
+Resource limit enforcement is hierarchical.
+
+When process is migrated with active RDMA resources, rdma cgroup
+continues to uncharge original cgroup for allocated resource. New resource
+is charged to current process's cgroup, which means if the process is
+migrated with active resources, for new resources it will be charged to
+new cgroup and old resources will be correctly uncharged from old cgroup.
+
+Changes from v8:
+ * Fixed compilation error.
+ * Fixed warning reported by checkpatch script.
+
+Changes from v7:
+ * (To address comments from Haggai)
+   1. Removed max_limit from query_limit function as it is
+      unnecessary.
+   2. Kept existing printk as it is to instead of replacing all
+      with pr_warn except newly added printk.
+
+Changes from v6:
+ * (To address comments from Haggai)
+   1. Made functions as void wherever necessary.
+   2. Code cleanup related to correting few spelling mistakes
+      in comments, correcting comments to reflect the code.
+   3. Removed max_count parameter from query_limit as its not
+      necessary.
+   4. Fixed printk to pr_warn.
+   5. Removed dependency on pd, instead relying on ib_dev.
+   6. Added more documentation to reflect that IB stack honors
+      configured limit during query_device operation.
+   7. Added pr_warn and avoided system crash in case of
+      IB stack or rdma cgroup bug.
+ * (To address comments from Leon)
+   1. Removed #ifdef CONFIG_CGROUP_RDMA from .c files and added
+      necessary dummy functions in header file.
+   2. Removed unwanted forward declaration.
+ * Fixed uncharing to rdma controller after resource is released
+   from verb layer, instead of uncharing first. This ensures that
+   uncharging doesn't complete while resource is still allocated.
+ 
+Changes from v5:
+ * (To address comments from Tejun)
+   1. Removed two type of resource pool, made is single type (as Tejun
+      described in past comment)
+   2. Removed match tokens and have array definition like "qp", "mr",
+      "cq" etc.
+   3. Wrote small parser and avoided match_token API as that won't work
+      due to different array definitions
+   4. Removed one-off remove API to unconfigure cgroup, instead all
+      resource should be set to max.
+   5. Removed resource pool type (user/default), instead having
+      max_num_cnt, when ref_cnt drops to zero and
+      max_num_cnt = total_rescource_cnt, pool is freed.
+   6. Resource definition ownership is now only with IB stack at single
+      header file, no longer in each low level driver.
+      This goes through IB maintainer and other reviewers eyes.
+      This continue to give flexibility to not force kernel upgrade for
+      few enums additions for new resource type.
+   7. Wherever possible pool lock is pushed out, except for hierarchical
+      charging/unchanging points, as it not possible to do so, due to
+      iterative process involves blocking allocations of rpool. Coming up
+      more levels up to release locks doesn't make any sense either.
+      This is anyway slow path where rpool is not allocated. Except for
+      typical first resource allocation, this is less travelled path.
+   8. Avoided %d manipulation due to removal of match_token and replaced
+      with seq_putc etc friend functions.
+ * Other minor cleanups.
+ * Fixed rdmacg_register_device to return error in case of IB stack
+   tries to register for than 64 resources.
+ * Fixed not allowing negative value on resource setting.
+ * Fixed cleaning up resource pools during device removal.
+ * Simplfied and rename table length field to use ARRAY_SIZE macro.
+ * Updated documentation to reflect single resource pool and shorter
+   file names.
+
+Changes from v4:
+ * Fixed compilation errors for lockdep_assert_held reported by kbuild
+   test robot
+ * Fixed compilation warning reported by coccinelle for extra
+   semicolon.
+ * Fixed compilation error for inclusion of linux/parser.h which
+   cannot be included in any header file, as that triggers multiple
+   inclusion error. parser.h is included in C files which intent to
+   use it.
+ * Removed unused header file inclusion in cgroup_rdma.c
+
+Changes from v3:
+ * (To address comments from Tejun)
+   1. Renamed cg_resource to rdmacg_resource
+   2. Merged dealloc_cg_rpool and _dealloc_cg_rpool to single function
+   3. Renamed _find_cg_rpool to find_cg_rpool_locked()
+   5. Removed RDMACG_MAX_RESOURCE_INDEX limitation
+   6. Fixed few alignments.
+   7. Improved description for RDMA cgroup configuration menu
+   8. Renamed cg_list_lock to rpool_list_lock to reflect the lock
+      is for rpools.
+   9. Renamed _get_cg_rpool to find_cg_rpool.
+   10. Made creator as int variable, instead of atomic as its not 
+      required to be atomic.
+ * Fixed freeing right rpool during query_limit error path
+ * Added copywrite for cgroup.c
+ * Removed including parser.h from cgroup.c as its included by
+   cgroup_rdma.h
+ * Reduced try_charge functions to single function and removed duplicate
+   comments.
+
+Changes from v2:
+ * Fixed compilation error reported by 0-DAY kernel test infrastructure
+   for m68k architecture where CONFIG_CGROUP is also not defined.
+ * Fixed comment in patch to refer to legacy mode of cgroup, changed to 
+   refer to v1 and v2 version.
+ * Added more information in commit log for rdma controller patch.
+
+Changes from v1:
+ * (To address comments from Tejun)
+   a. reduces 3 patches to single patch
+   b. removed resource word from the cgroup configuration files
+   c. changed cgroup configuration file names to match other cgroups
+   d. removed .list file and merged functionality with .max file
+ * Based on comment to merge to single patch for rdma controller;
+   IB/core patches are reduced to single patch.
+ * Removed pid cgroup map and simplified design -
+   Charge/Uncharge caller stack keeps track of the rdmacg for
+   given resource. This removes the need to maintain and perform
+   hash lookup. This also allows little more accurate resource
+   charging/uncharging when process moved from one to other cgroup
+   with active resources and continue to allocate more.
+ * Critical fix: Removed rdma cgroup's dependency on the kernel module
+   header files to avoid crashes when modules are upgraded without kernel
+   upgrade, which is very common due to high amount of changes in IB stack
+   and it is also shipped as individual kernel modules.
+ * uboject extended to keep track of the owner rdma cgroup, so that same
+   rdmacg can be used while uncharging.
+ * Added support functions to hide details of rdmacg device in uverbs
+   modules for cases of cgroup enabled/disabled at compile time. This
+   avoids multiple ifdefs for every API in uverbs layer.
+ * Removed failure counters in first patch, which will be added once
+   initial feature is merged.
+ * Fixed stale rpool access which is getting freed, while doing
+   configuration to rdma.verb.max file.
+ * Fixed rpool resource leak while querying max, current values.
+
+Changes from v0:
+(To address comments from Haggai, Doug, Liran, Tejun, Sean, Jason)
+ * Redesigned to support per device per cgroup limit settings by bringing
+   concept of resource pool.
+ * Redesigned to let IB stack define the resources instead of rdma
+   controller using resource template.
+ * Redesigned to support hw vendor specific limits setting
+   (optional to drivers).
+ * Created new rdma controller instead of piggyback on device cgroup.
+ * Fixed race conditions for multiple tasks sharing rdma resources.
+ * Removed dependency on the task_struct.
+
+
+Parav Pandit (3):
+  rdmacg: Added rdma cgroup controller
+  IB/core: added support to use rdma cgroup controller
+  rdmacg: Added documentation for rdmacg
+
+ Documentation/cgroup-v1/rdma.txt      | 111 +++++
+ Documentation/cgroup-v2.txt           |  33 ++
+ drivers/infiniband/core/Makefile      |   1 +
+ drivers/infiniband/core/cgroup.c      | 111 +++++
+ drivers/infiniband/core/core_priv.h   |  42 ++
+ drivers/infiniband/core/device.c      |  11 +
+ drivers/infiniband/core/uverbs_cmd.c  | 137 +++++-
+ drivers/infiniband/core/uverbs_main.c |  19 +
+ include/linux/cgroup_rdma.h           |  50 +++
+ include/linux/cgroup_subsys.h         |   4 +
+ include/rdma/ib_verbs.h               |  29 ++
+ init/Kconfig                          |  10 +
+ kernel/Makefile                       |   1 +
+ kernel/cgroup_rdma.c                  | 760 ++++++++++++++++++++++++++++++++++
+ 14 files changed, 1304 insertions(+), 15 deletions(-)
+ create mode 100644 Documentation/cgroup-v1/rdma.txt
+ create mode 100644 drivers/infiniband/core/cgroup.c
+ create mode 100644 include/linux/cgroup_rdma.h
+ create mode 100644 kernel/cgroup_rdma.c
 
 -- 
-tejun
+1.8.3.1
