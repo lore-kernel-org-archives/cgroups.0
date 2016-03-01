@@ -1,45 +1,58 @@
-From: Tahsin Erdogan <tahsin@google.com>
-Subject: Re: [PATCH block/for-linus] writeback: flush inode cgroup wb switches
- instead of pinning super_block
-Date: Tue, 1 Mar 2016 05:39:47 -0800
-Message-ID: <CAAeU0aPXTWSO776giVFtUWgPvFiT_ofA=kW23KUkFawA-EYjMQ@mail.gmail.com>
-References: <CAAeU0aNCq7LGODvVGRU-oU_o-6enii5ey0p1c26D1ZzYwkDc5A@mail.gmail.com>
-	<20160215210047.GN3965@htj.duckdns.org>
-	<CAAeU0aNAd1Ra6LXmWwq8row4MD_BpVHiSXOwHx07m86UWREvHw@mail.gmail.com>
-	<20160216182457.GO3741@mtj.duckdns.org>
-	<20160217205721.GE14140@quack.suse.cz>
-	<20160217210744.GA6479@mtj.duckdns.org>
-	<20160217223009.GN14140@quack.suse.cz>
-	<CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
-	<20160217230231.GC6479@mtj.duckdns.org>
-	<20160229204724.GV3965@htj.duckdns.org>
+From: Parav Pandit <pandit.parav@gmail.com>
+Subject: Re: [PATCHv7 2/3] IB/core: added support to use rdma cgroup controller
+Date: Tue, 1 Mar 2016 19:13:05 +0530
+Message-ID: <CAG53R5XiVgi5iWONFON5_qUvW6k-vdJQx+_8DEkZSF5i3Tp=dQ@mail.gmail.com>
+References: <1456668821-25799-1-git-send-email-pandit.parav@gmail.com>
+	<1456668821-25799-3-git-send-email-pandit.parav@gmail.com>
+	<56D55CE6.7030103@mellanox.com>
+	<CAG53R5UrM7WAuamCEynDRKV0YMJsJUe=SEYfTrueQD0rtx71bA@mail.gmail.com>
+	<56D577CC.1070107@mellanox.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-security-module-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
+        d=gmail.com; s=20120113;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
          :cc;
-        bh=VmP0y4e11Isbp3IegFuFcxJt5CjNZnSNfHmOafe14Hg=;
-        b=ot/JfvLnB7JefAvKf3pGppb41xjDbulkf+33xQx5Parqf5DrO0ytJxwfVc0vJrAbRy
-         5G8vAFrzZ87tElqJ/OLjsM4LPyq7ijJ+gGa+sDHPlh7AyxSVfadZ1PlKbrCFrNJ4mBJv
-         /iGhMn37bR5u+shdXD/l0NphhsanQT9O3YulpBMaBv/cjZB0gGi3hJ1uui/pgJyFvhVJ
-         MGByi1hX9s1QGY0Jt1F4I1GL1Yc4Wa8Lpruweiv1nkkT2RAIJZTq1SzYn3g5oHSnNzn/
-         UC72UF1Y6sjaUA+x4dureLVsWGQTmXbMLy9K3wlEzMTOotBuIhYmOxIj0QjNjLnAgFse
-         PHPQ==
-In-Reply-To: <20160229204724.GV3965@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=oBN9T16typjVt7DYPEshQt9a7FZZuFhtz7RclRf/jQM=;
+        b=L0R4j+oEX5UyZpMWE3dIPzOJIdZDgpCOQOdU6qf4BduVpEveBBLIuqHmXF1nWftzmb
+         aiwcuO+X4ESZdRTbWeq/9+/Brdm9o/qpHY9feSV8ETE9EU6D+Zfv6b8ZmNzzC7HNb+Zx
+         IZ3eXJXHfEZar1fbGW0myCENAk1r2Sy8JxJV8Mv8Vn0pNuYIMz443SVIFJByb+V0WsTX
+         1iPcOVxDDw/RiOw3RIUGGr+eulRha/MT6TFDgQvgCFhxe8EQhZMq9MwEohljwNgwcqwD
+         H0Tbw+wK7e7KDwulfanN+oOn1SefmTut8dHqWghATJsfKpUcLEIki0vWHU7aOzq0G3tI
+         H0Ag==
+In-Reply-To: <56D577CC.1070107@mellanox.com>
+Sender: owner-linux-security-module@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Nauman Rafique <nauman@google.com>, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: Haggai Eran <haggaie@mellanox.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-On Mon, Feb 29, 2016 at 12:47 PM, Tejun Heo <tj@kernel.org> wrote:
-> Tahsin, can you please verify that this removes the asynchronous
-> behavior while still avoiding the original issue?
->
-
-I verified that this fixes the original issue and also removes the
-asynchronous umount behavior.
-
-Thanks a lot for the fix.
+On Tue, Mar 1, 2016 at 4:36 PM, Haggai Eran <haggaie@mellanox.com> wrote:
+> On 01/03/2016 11:22, Parav Pandit wrote:
+>> On Tue, Mar 1, 2016 at 2:42 PM, Haggai Eran <haggaie@mellanox.com> wrote:
+>>> On 28/02/2016 16:13, Parav Pandit wrote:
+>>>> diff --git a/drivers/infiniband/core/device.c b/drivers/infiniband/core/device.c
+>>>> index 00da80e..54ea8ce 100644
+>>>> --- a/drivers/infiniband/core/device.c
+>>>> +++ b/drivers/infiniband/core/device.c
+>>>> @@ -343,28 +343,38 @@ int ib_register_device(struct ib_device *device,
+>>>>
+>>>>       ret = read_port_immutable(device);
+>>>>       if (ret) {
+>>>> -             printk(KERN_WARNING "Couldn't create per port immutable data %s\n",
+>>>> -                    device->name);
+>>>> +             pr_warn("Couldn't create per port immutable data %s\n",
+>>>> +                     device->name);
+>>>>               goto out;
+>>>
+>>> This change doesn't belong in the patch.
+>> I agree, but few warnings are with pr_warn and few with printk just
+>> make code look uneven.
+>> So I changed printk to pr_warn in same function instead of spinning
+>> complete new patch.
+> Still, I think it would be better to have such cosmetic changes in a
+> separate patch, so that we have a cleaner git history. You can send
+> this extra patch separately from this patchset so that Doug can take
+> it independently.
+o.k.
