@@ -1,95 +1,49 @@
-From: Zhao Lei <zhaolei@cn.fujitsu.com>
-Subject: RE: [RESEND PATCH 2/2] cpuacct: split usage into user_usage and sys_usage.
-Date: Tue, 1 Mar 2016 18:35:56 +0800
-Message-ID: <010801d173a6$237a2d70$6a6e8850$@cn.fujitsu.com>
-References: <1450696483-2864-1-git-send-email-yangds.fnst@cn.fujitsu.com> <1450696483-2864-2-git-send-email-yangds.fnst@cn.fujitsu.com> <20151221213328.GP4026@mtj.duckdns.org>
+From: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCHv7 2/3] IB/core: added support to use rdma cgroup
+ controller
+Date: Tue, 1 Mar 2016 13:06:52 +0200
+Message-ID: <56D577CC.1070107@mellanox.com>
+References: <1456668821-25799-1-git-send-email-pandit.parav@gmail.com>
+ <1456668821-25799-3-git-send-email-pandit.parav@gmail.com>
+ <56D55CE6.7030103@mellanox.com>
+ <CAG53R5UrM7WAuamCEynDRKV0YMJsJUe=SEYfTrueQD0rtx71bA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151221213328.GP4026@mtj.duckdns.org>
-Content-Language: zh-cn
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=mJ1MevPUBvjAsGfCzRvZVOya5EHLkERpYo4IMOqDmHE=;
+ b=pYq07Xu2dQ3maw73QDywONP2BitMvh9b2cSzLUrhP8E3Ef7x9WVkeqihZWgJRqUWf7Q02Yhn+vMw3cObmrCFLN+fmVyaKq14bPSanmjzxUwgpl8VXlfu39ZgIWhTu9DjDYvVPsd5E0g2WNsqhqjABrNn1aRD/g49UQBLiDGjBh4=
+In-Reply-To: <CAG53R5UrM7WAuamCEynDRKV0YMJsJUe=SEYfTrueQD0rtx71bA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 'Tejun Heo' <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, peterz@infradead.org
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi, Tejun Heo
-
-> From: linux-kernel-owner@vger.kernel.org
-> [mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of Tejun Heo
-> Sent: Tuesday, December 22, 2015 5:33 AM
-> To: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
-> Cc: cgroups@vger.kernel.org; linux-kernel@vger.kernel.org;
-> mingo@redhat.com; peterz@infradead.org
-> Subject: Re: [RESEND PATCH 2/2] cpuacct: split usage into user_usage and
-> sys_usage.
-> 
-> On Mon, Dec 21, 2015 at 07:14:43PM +0800, Dongsheng Yang wrote:
-> > Sometimes, cpuacct.usage is not detialed enough to user
-> > to see how much usage a group used. We want to know how
-> > much time it used in user mode and how much in kernel mode.
-> 
-Yang gave this patch to me :)
-I'm plan to continue this function.
-
-> cpuusage is being phased out.  If you need these stats, please
-> implement it on cpu side.
-> 
-Currently, old stats are put in cpuacct, if we put new stats into cpu side,
-we have following way:
-
-1: Only put new stats into cpu side, and don't change old interface,
-   we'll see following content in cgroup dir:
-   /cgroup/cpuacct:
-     cpuacct.usage
-     cpuacct.usage_percpu
-   /cgroup/cpu:
-     cpu.usage_sys
-     cpu.usage_percpu_sys
-     cpu.usage_user
-     cpu.usage_percpu_user
-   It is obviously not unify.
-2: Move old stats into cpu side, and add new stats:
-   we'll see following content in cgroup dir:
-   /cgroup/cpuacct:
-     [NONE]
-   /cgroup/cpu:
-     cpu.usage
-     cpu.usage_percpu
-     cpu.usage_sys
-     cpu.usage_percpu_sys
-     cpu.usage_user
-     cpu.usage_percpu_user
-   It have compatibility issues with old system.
-3: Clone old stats into cpu side(share one copy of code), and add new stats
-   Into cpu side, we'll see following content in cgroup dir:
-   /cgroup/cpuacct:
-     cpuacct.usage
-     cpuacct.usage_percpu
-   /cgroup/cpu:
-     cpu.usage
-     cpu.usage_percpu
-     cpu.usage_sys
-     cpu.usage_percpu_sys
-     cpu.usage_user
-     cpu.usage_percpu_user
-   It can support both old and new systems, and we can remove old interface
-   in future, but we if mount both cpu and cpuacct into same dir,
-   we'll see following duplicated files:
-   /cgroup/cpu,cpuacct
-     cpu.usage
-     cpuacct.usage
-     cpu.usage_percpu
-     cpuacct.usage_percpu
-     ...
-
-Maybe above way3 looks having less defect, cound you talk about
-your opinion on it.
-
-Thanks
-Zhaolei
-
-
-
-
+On 01/03/2016 11:22, Parav Pandit wrote:
+> On Tue, Mar 1, 2016 at 2:42 PM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+>> On 28/02/2016 16:13, Parav Pandit wrote:
+>>> diff --git a/drivers/infiniband/core/device.c b/drivers/infiniband/core/device.c
+>>> index 00da80e..54ea8ce 100644
+>>> --- a/drivers/infiniband/core/device.c
+>>> +++ b/drivers/infiniband/core/device.c
+>>> @@ -343,28 +343,38 @@ int ib_register_device(struct ib_device *device,
+>>>
+>>>       ret = read_port_immutable(device);
+>>>       if (ret) {
+>>> -             printk(KERN_WARNING "Couldn't create per port immutable data %s\n",
+>>> -                    device->name);
+>>> +             pr_warn("Couldn't create per port immutable data %s\n",
+>>> +                     device->name);
+>>>               goto out;
+>>
+>> This change doesn't belong in the patch.
+> I agree, but few warnings are with pr_warn and few with printk just
+> make code look uneven.
+> So I changed printk to pr_warn in same function instead of spinning
+> complete new patch.
+Still, I think it would be better to have such cosmetic changes in a
+separate patch, so that we have a cleaner git history. You can send 
+this extra patch separately from this patchset so that Doug can take 
+it independently.
