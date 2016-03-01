@@ -1,49 +1,39 @@
-From: Parav Pandit <pandit.parav@gmail.com>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCHv7 2/3] IB/core: added support to use rdma cgroup controller
-Date: Tue, 1 Mar 2016 14:52:15 +0530
-Message-ID: <CAG53R5UrM7WAuamCEynDRKV0YMJsJUe=SEYfTrueQD0rtx71bA@mail.gmail.com>
+Date: Tue, 1 Mar 2016 14:53:31 +0530
+Message-ID: <CAG53R5V-o9OC9Vvr-KQREYMGQwee27KqtEPdK6-DtPXcKJ4zXg@mail.gmail.com>
 References: <1456668821-25799-1-git-send-email-pandit.parav@gmail.com>
 	<1456668821-25799-3-git-send-email-pandit.parav@gmail.com>
-	<56D55CE6.7030103@mellanox.com>
+	<56D55C06.8090102@mellanox.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
          :cc;
-        bh=HM6F1YXlQV2cJszHGWdZPcQg925EDQskagHnVM+FDn4=;
-        b=CGJl/mh1lXP90NGvqE0UPsjF0ELqLB/OMh8DSaM95vg6KkW+ecFvSWAAOAafoaAtRe
-         dMMt0oDIUKzbBak/dxQYLBDhmNSPS9M1OhNJLJ7dHAE/tGpWsqW3CuV8F0hXZUC4v4/c
-         TE8eOv7zPvFDxDCGnQbBdvhvTVZ9zQ4IOLAweQht+DGgcFka7Q6X/BMS2+TlDsJbKdo4
-         5Hia+sFAJFcd8x30fnH6eEHiW6eWMMMMCHw/7omrSlltD00x6Tx5/A61bja0fnOIryxy
-         5s8V6Hrwv5nCKVtQ+KRPv0KGr2ymgHHTr70RkOxvK+N5z+BmEsqcdnZTW2tUpbjSWiep
-         JS+g==
-In-Reply-To: <56D55CE6.7030103@mellanox.com>
-Sender: linux-doc-owner@vger.kernel.org
+        bh=OBpzx+prgkU/Z9Q+vPNvvx4wlOJS6PUjc/DMjy4NaGY=;
+        b=cjEbzsp5o8KkKtZY+iZ7C3jNyPkAL8THWyEPaoHBunlxeFNE3C+chLwBeKiG0sw2lZ
+         7tqkXbp9+S8MuA3yt/dxn9TxiDlUhiipKBms5beOOJg5bnLknZYR4cu8CKojtM4pHni4
+         OwuyCRf9dNNfDxnvwkknAlSvY0JlwwnZMWLL/3v59MAkLdO9oxA/zMa3LGhZ1vgOzvFf
+         rmBcuKnCkjgcmmTqCfpysvZvK3uPBmoccthkbINxXHdPvAsqcX4tI0eOVJIpkL5b5/7Z
+         xPotAiTri4W9Vul15UPD8wbaGCEBKXgElT5V62fCgfeUanFs0X+VgKZS/xy8Fnp5sYhY
+         C0xA==
+In-Reply-To: <56D55C06.8090102-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Haggai Eran <haggaie@mellanox.com>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Mar 1, 2016 at 2:42 PM, Haggai Eran <haggaie@mellanox.com> wrote:
+On Tue, Mar 1, 2016 at 2:38 PM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
 > On 28/02/2016 16:13, Parav Pandit wrote:
->> diff --git a/drivers/infiniband/core/device.c b/drivers/infiniband/core/device.c
->> index 00da80e..54ea8ce 100644
->> --- a/drivers/infiniband/core/device.c
->> +++ b/drivers/infiniband/core/device.c
->> @@ -343,28 +343,38 @@ int ib_register_device(struct ib_device *device,
->>
->>       ret = read_port_immutable(device);
->>       if (ret) {
->> -             printk(KERN_WARNING "Couldn't create per port immutable data %s\n",
->> -                    device->name);
->> +             pr_warn("Couldn't create per port immutable data %s\n",
->> +                     device->name);
->>               goto out;
+>> +void ib_rdmacg_query_limit(struct ib_device *device, int *limits, int max_count)
+>> +{
+>> +     rdmacg_query_limit(&device->cg_device, limits);
+>> +}
+>> +EXPORT_SYMBOL(ib_rdmacg_query_limit);
 >
-> This change doesn't belong in the patch.
-I agree, but few warnings are with pr_warn and few with printk just
-make code look uneven.
-So I changed printk to pr_warn in same function instead of spinning
-complete new patch.
+> You can remove the max_count parameter here as well.
+
+ok.
