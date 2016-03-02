@@ -1,47 +1,37 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 block/for-linus] writeback: flush inode cgroup wb
- switches instead of pinning super_block
-Date: Wed, 2 Mar 2016 11:29:41 +0100
-Message-ID: <20160302102941.GC19633@quack.suse.cz>
-References: <20160216182457.GO3741@mtj.duckdns.org>
- <20160217205721.GE14140@quack.suse.cz>
- <20160217210744.GA6479@mtj.duckdns.org>
- <20160217223009.GN14140@quack.suse.cz>
- <CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
- <20160217230231.GC6479@mtj.duckdns.org>
- <20160229204724.GV3965@htj.duckdns.org>
- <20160229232853.GD3965@htj.duckdns.org>
- <56D5D592.2020800@kernel.dk>
- <CAOS58YO5vTBnM561np7gpXKGQELrT169bYqmcfvAvsquBJK5yw@mail.gmail.com>
+From: Haggai Eran <haggaie@mellanox.com>
+Subject: Re: [PATCHv9 2/3] IB/core: added support to use rdma cgroup
+ controller
+Date: Wed, 2 Mar 2016 13:28:16 +0200
+Message-ID: <56D6CE50.6060200@mellanox.com>
+References: <1456859137-13646-1-git-send-email-pandit.parav@gmail.com>
+ <1456859137-13646-3-git-send-email-pandit.parav@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAOS58YO5vTBnM561np7gpXKGQELrT169bYqmcfvAvsquBJK5yw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-security-module-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=7WauGJuOAuju0j4YGy1jRop+BlBUe5Z0qMyqG6LDswA=;
+ b=NSmoosIkVd8slrHjxGz2YEAlilqrVYGHMOML/mIpCbWvT/buHu+zlcLvgCdu46EOMMFI6O++JrLLZ/h6Dele6HUArK78XWHRYmUsUE3NPmJqOAHe4bvn3o26taOtwspqDXL6Z5qJQPzmTWzD5pfK8O8yhC6eJ6d0Gxf4eL0pHZQ=
+In-Reply-To: <1456859137-13646-3-git-send-email-pandit.parav@gmail.com>
+Sender: owner-linux-security-module@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Nauman Rafique <nauman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+To: Parav Pandit <pandit.parav@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com
+Cc: corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-On Tue 01-03-16 12:50:19, Tejun Heo wrote:
-> Hello, Jens.
+On 01/03/2016 21:05, Parav Pandit wrote:
+> Added support APIs for IB core to register/unregister every IB/RDMA
+> device with rdma cgroup for tracking verbs and hw resources.
+> IB core registers with rdma cgroup controller and also defines
+> resources that can be accounted.
+> Added support APIs for uverbs layer to make use of rdma controller.
+> Added uverbs layer to perform resource charge/uncharge functionality.
+> Added support during query_device uverb operation to ensure it
+> returns resource limits by honoring rdma cgroup configured limits.
 > 
-> On Tue, Mar 1, 2016 at 12:46 PM, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> wrote:
-> > I queued this up for 4.5, but I'm feeling a bit uneasy about it. But it's
-> > either that, or revert 5ff8eaac1636 and fix it for real in 4.6. Jan/Tejun,
-> > what do you think?
-> 
-> Given that this only matters for cgroup writeback cases, this should
-> still be fairly low impact, so I don't think it'd matter too much
-> whether we fix this in this cycle or for 4.6. However, that also means
-> that we're not risking much by doing it in this cycle, so I'd vote for
-> doing it now.
+> Signed-off-by: Parav Pandit <pandit.parav@gmail.com>
 
-Yeah, without CGROUP_WRITEBACK enabled this patch is NOP so I don't care
-much when this gets merged.
+Looks good to me. Thanks.
 
-								Honza
--- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+Reviewed-by: Haggai Eran <haggaie@mellanox.com>
+
