@@ -1,44 +1,47 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/2] cgroup: reset css on destruction
-Date: Tue, 1 Mar 2016 14:54:38 -0500
-Message-ID: <20160301195438.GB22717@cmpxchg.org>
-References: <69629961aefc48c021b895bb0c8297b56c11a577.1456830735.git.vdavydov@virtuozzo.com>
- <92b11b89791412df49e73597b87912e8f143a3f7.1456830735.git.vdavydov@virtuozzo.com>
- <20160301163018.GE3965@htj.duckdns.org>
- <20160301165630.GB2426@esperanza>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 block/for-linus] writeback: flush inode cgroup wb
+ switches instead of pinning super_block
+Date: Wed, 2 Mar 2016 11:29:41 +0100
+Message-ID: <20160302102941.GC19633@quack.suse.cz>
+References: <20160216182457.GO3741@mtj.duckdns.org>
+ <20160217205721.GE14140@quack.suse.cz>
+ <20160217210744.GA6479@mtj.duckdns.org>
+ <20160217223009.GN14140@quack.suse.cz>
+ <CAAeU0aOvSwPbLPU0=20D1RExNj8VsbB38hUnyso2L8xNSQC0XA@mail.gmail.com>
+ <20160217230231.GC6479@mtj.duckdns.org>
+ <20160229204724.GV3965@htj.duckdns.org>
+ <20160229232853.GD3965@htj.duckdns.org>
+ <56D5D592.2020800@kernel.dk>
+ <CAOS58YO5vTBnM561np7gpXKGQELrT169bYqmcfvAvsquBJK5yw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20160301165630.GB2426@esperanza>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <CAOS58YO5vTBnM561np7gpXKGQELrT169bYqmcfvAvsquBJK5yw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Nauman Rafique <nauman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 
-On Tue, Mar 01, 2016 at 07:56:30PM +0300, Vladimir Davydov wrote:
-> From: Vladimir Davydov <vdavydov@virtuozzo.com>
-> Subject: [PATCH] cgroup: reset css on destruction
+On Tue 01-03-16 12:50:19, Tejun Heo wrote:
+> Hello, Jens.
 > 
-> An associated css can be around for quite a while after a cgroup
-> directory has been removed. In general, it makes sense to reset it to
-> defaults so as not to worry about any remnants. For instance, memory
-> cgroup needs to reset memory.low, otherwise pages charged to a dead
-> cgroup might never get reclaimed. There's ->css_reset callback, which
-> would fit perfectly for the purpose. Currently, it's only called when a
-> subsystem is disabled in the unified hierarchy and there are other
-> subsystems dependant on it. Let's call it on css destruction as well.
+> On Tue, Mar 1, 2016 at 12:46 PM, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> wrote:
+> > I queued this up for 4.5, but I'm feeling a bit uneasy about it. But it's
+> > either that, or revert 5ff8eaac1636 and fix it for real in 4.6. Jan/Tejun,
+> > what do you think?
 > 
-> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+> Given that this only matters for cgroup writeback cases, this should
+> still be fairly low impact, so I don't think it'd matter too much
+> whether we fix this in this cycle or for 4.6. However, that also means
+> that we're not risking much by doing it in this cycle, so I'd vote for
+> doing it now.
 
-It's already in a git tree, but FWIW
+Yeah, without CGROUP_WRITEBACK enabled this patch is NOP so I don't care
+much when this gets merged.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+								Honza
+-- 
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
