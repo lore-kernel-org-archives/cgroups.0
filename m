@@ -1,63 +1,67 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: blkio cgroups controller doesn't work with LVM?
-Date: Wed, 2 Mar 2016 11:06:49 -0500
-Message-ID: <20160302160649.GB29826@mtj.duckdns.org>
-References: <56CDF283.9010802@windriver.com>
- <56CEB1BC.4000005@kyup.com>
- <20160225145314.GA20699@redhat.com>
+From: 'Tejun Heo' <tj@kernel.org>
+Subject: Re: [RESEND PATCH 2/2] cpuacct: split usage into user_usage and
+ sys_usage.
+Date: Wed, 2 Mar 2016 11:12:44 -0500
+Message-ID: <20160302161244.GC29826@mtj.duckdns.org>
+References: <1450696483-2864-1-git-send-email-yangds.fnst@cn.fujitsu.com>
+ <1450696483-2864-2-git-send-email-yangds.fnst@cn.fujitsu.com>
+ <20151221213328.GP4026@mtj.duckdns.org>
+ <010801d173a6$237a2d70$6a6e8850$@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=geumjuVKcgwU+y0p+JsmeydILQ4Fx8Fr7if4XzU1sMU=;
-        b=JXBOMiTXSIOy6IGa2wFaUeGOeg37L3Ml7XitRNUiZlvMmKBBWNtF2LeepWepSyW9xb
-         FmI+17r+wFNLIcn1K/dwKHTe1arfh6qH5c6ngFRipilv+FpYpk5OMF4K4mcUc4oC2hZw
-         iB7CaFeACsfI2QFvNAPpFoNe3s18VHQDBgsR0MxAKMEl61LnBTj8NqroeU7n45iOah5e
-         rTa0j+TsgwQXxuHozJQjiSk89it4/e3319eUm5OU8+dr5/8fX0gv4TExJsq4eup9HxoB
-         BFAh7nPXA62sb6nDjnq151mZDWidQiaYmseaZXMW+I/yvdEzZrJ3IBqq+A+5AFCS5nSD
-         f12Q==
+        bh=AeUg8IhhNyHhUW4krk7D3sC8birJVE1JupFISXa+4n4=;
+        b=HE9j4qJJr6RtK6d8ykC0bWXvnhYi1LWlMqzss0gFkEFw4zRArp5dM3MnqnIJmMStru
+         S+5+mD/Ui/ceS5NGJf9uuQP+LmCmXmV4xujVD4jw/o9tlRDg+/kDlY382eg3KORSoODp
+         UsXjjfSGqlmIWJTOlFcdejyEj0nTgcqJMQcv3kMFcugSp86ibwtTDBcVvz8nYWo+uo/n
+         s6hG+p/tJxc29MAHFjXGL9+vArQR8sG/0VTTc82IlGzysdKHErYz/0zFxbBz09qza2BM
+         qtJc1QK7XwyipVaAge8dGzVjk0D4/yoXecxKoWpXfNrNRvSAxJv72lLZuBDjVvcPMSEx
+         OjQw==
 Content-Disposition: inline
-In-Reply-To: <20160225145314.GA20699-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <010801d173a6$237a2d70$6a6e8850$@cn.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>, Chris Friesen <chris.friesen-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Zhao Lei <zhaolei@cn.fujitsu.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, peterz@infradead.org
 
 Hello,
 
-On Thu, Feb 25, 2016 at 09:53:14AM -0500, Mike Snitzer wrote:
-> Right, LVM created devices are bio-based DM devices in the kernel.
-> bio-based block devices do _not_ have an IO scheduler.  Their underlying
-> request-based device does.
-
-dm devices are not the actual resource source, so I don't think it'd
-work too well to put io controllers on them (can't really do things
-like proportional control without owning the queue).
-
-> I'm not well-versed on the top-level cgroup interface and how it maps to
-> associated resources that are established in the kernel.  But it could
-> be that the configuration of blkio cgroup against a bio-based LVM device
-> needs to be passed through to the underlying request-based device
-> (e.g. /dev/sda4 in Chris's case)?
+On Tue, Mar 01, 2016 at 06:35:56PM +0800, Zhao Lei wrote:
+> Hi, Tejun Heo
 > 
-> I'm also wondering whether the latest cgroup work that Tejun has just
-> finished (afaik to support buffered IO in the IO controller) will afford
-> us a more meaningful reason to work to make cgroups' blkio controller
-> actually work with bio-based devices like LVM's DM devices?
+> > From: linux-kernel-owner@vger.kernel.org
+> > [mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of Tejun Heo
+> > Sent: Tuesday, December 22, 2015 5:33 AM
+> > To: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
+> > Cc: cgroups@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > mingo@redhat.com; peterz@infradead.org
+> > Subject: Re: [RESEND PATCH 2/2] cpuacct: split usage into user_usage and
+> > sys_usage.
+> > 
+> > On Mon, Dec 21, 2015 at 07:14:43PM +0800, Dongsheng Yang wrote:
+> > > Sometimes, cpuacct.usage is not detialed enough to user
+> > > to see how much usage a group used. We want to know how
+> > > much time it used in user mode and how much in kernel mode.
+> > 
+> Yang gave this patch to me :)
+> I'm plan to continue this function.
 > 
-> I'm very much open to advice on how to proceed with investigating this
-> integration work.  Tejun, Vivek, anyone else: if you have advice on next
-> steps for DM on this front _please_ yell, thanks!
+> > cpuusage is being phased out.  If you need these stats, please
+> > implement it on cpu side.
+>
+> Currently, old stats are put in cpuacct, if we put new stats into cpu side,
+> we have following way:
 
-I think the only thing necessary is dm transferring bio cgroup tags to
-the bio's that it ends up passing down the stack.  Please take a look
-at fs/btrfs/extent_io.c::btrfs_bio_clone() for an example.  We
-probably should introduce a wrapper for this so that each site doesn't
-need to ifdef it.
+Yeah, on the second thought, at least for now, I think it's best to
+put this in cpuacct.  We can do the trafer to the cpu controller
+later.  Please feel free to add
+
+ Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
