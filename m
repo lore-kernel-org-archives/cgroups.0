@@ -1,40 +1,60 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Haggai Eran <haggaie@mellanox.com>
 Subject: Re: [PATCHv9 1/3] rdmacg: Added rdma cgroup controller
-Date: Thu, 3 Mar 2016 08:48:54 +0530
-Message-ID: <CAG53R5WcbE8Hesb2sh6xg1fRLBOBt+VFo0L3U6WLPr3irtko8w@mail.gmail.com>
+Date: Thu, 3 Mar 2016 09:51:51 +0200
+Message-ID: <56D7ED17.30800@mellanox.com>
 References: <1456859137-13646-1-git-send-email-pandit.parav@gmail.com>
-	<1456859137-13646-2-git-send-email-pandit.parav@gmail.com>
-	<20160302173949.GG29826@mtj.duckdns.org>
-	<CAG53R5UAmTP9-m77-j2tPGZ+z8AicuVvUB_++cRUbQY-EwaBYw@mail.gmail.com>
+ <1456859137-13646-2-git-send-email-pandit.parav@gmail.com>
+ <20160302173949.GG29826@mtj.duckdns.org>
+ <CAG53R5UAmTP9-m77-j2tPGZ+z8AicuVvUB_++cRUbQY-EwaBYw@mail.gmail.com>
+ <CAG53R5VYnTMzG4DchY2DKgveeeXbKcjUWQpOOjCNQuY-f7g9bg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc;
-        bh=3GYaJPzmwIIA5NjHN5Bix+PxCs8cowZ06lxWWFnZDZ8=;
-        b=ClrP/PcUmEUHlnKbPqp0joUC1aUVbiLeqBkU9XxdItgZT91vSCKM66R5m5d9krv2mA
-         8REyrHo+OGmdGehibhoo99Wbsr9QvDlmYPJ5PVk8BgGFn7XzuF5xYPAng94Fv2pEPYAw
-         vop0ObfuYlNk7/5Gozs7xl/PkVd5gYn3yNL0EXHX0HjgUMoF521duvppx9rtx/IXHzTW
-         BDxqhe5WVc5nsS2GapBgMPp06F/sjILApf09s/FcM/zw4wK9CaqXN+sMbG617fI03FxM
-         cIjX7+sWIIId/8dDB7JXh/A2L625YTFxkaVj9XWMp+QUZiTqcNirMj0prfKsMnXF2jFF
-         P61A==
-In-Reply-To: <CAG53R5UAmTP9-m77-j2tPGZ+z8AicuVvUB_++cRUbQY-EwaBYw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=eku82eni2PfEvYSw1susLMPsIVE1MP+XUK9OScTnEcg=;
+ b=mLwoe69iV+A6Dlv2avBQYnzZ0lyVukQ0lPt+7c7tONT2eO+4rUCZfG02gVRswObJYCCVHH/2JlB6cMEf++qVvfK7BMQH9sGuQjGHyfD1OrpBBDFMd34pWlO0v9Wj1gVwouBI+nzYia9p03e/0Vnk15BOtptfqntw5jUU1wcFurw=
+In-Reply-To: <CAG53R5VYnTMzG4DchY2DKgveeeXbKcjUWQpOOjCNQuY-f7g9bg@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Parav Pandit <pandit.parav@gmail.com>, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org, Yishai Hadas <yishaih@mellanox.com>
 
-On Thu, Mar 3, 2016 at 1:28 AM, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> On Wed, Mar 2, 2016 at 11:09 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->> Nothing seems to prevent @cg from going away if this races with
->> @current being migrated to a different cgroup.  Have you run this with
->> lockdep and rcu debugging enabled?  This should have triggered a
->> warning.
-I am able to reproduce this race. Looking into how to address it.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 03/03/2016 04:49, Parav Pandit wrote:
+> Hi Tejun, Haggai,
+> 
+> On Thu, Mar 3, 2016 at 1:28 AM, Parav Pandit <pandit.parav@gmail.com> wrote:
+>>>> +     rpool->refcnt--;
+>>>> +     if (rpool->refcnt == 0 && rpool->num_max_cnt == pool_info->table_len) {
+>>>
+>>> If the caller charges 2 and then uncharges 1 two times, the refcnt
+>>> underflows?  Why not just track how many usages are zero?
+>>>
+>> This is certainly must fix bug. Changed refcnt to usage_sum and changed to do
+>> usage_sum -= num during uncharging
+>> and
+>> usage_sum += num during charing.
+> 
+> This is not sufficient as css_get() and put are done only once per
+> call, which leads to similar problem as of refcnt.
+Are css_get_many() and css_put_many() relevant here?
+
+> As I think more, I realised that this particular test is missing that
+> resulted in this related bug, I realize that we don't have use case to
+> have "num" field from the IB stack side.
+> For bulk free IB stack will have to keep track of different or same
+> rdmacg returned values to call uncharge() with right number of
+> resources, all of that complexity just doesn't make sense and not
+> required.
+> So as first step to further simplify this, I am removing "num" input
+> field from charge and uncharge API.
+
+IIRC there are no instances in the RDMA subsystem today where userspace
+allocates more than one resource at a time.
+
+Yishai, in your proposed RSS patchset did you have a verb to allocate
+multiple work queues at once?
+
+Haggai
+
