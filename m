@@ -1,46 +1,42 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/4] mm: Convert printk(KERN_<LEVEL> to pr_<level>
-Date: Fri, 4 Mar 2016 07:42:33 -0500
-Message-ID: <20160304124233.GC13868@htj.duckdns.org>
-References: <cover.1457047399.git.joe@perches.com>
- <c12953a0177b3fd04945b042cb10495130c08bec.1457047399.git.joe@perches.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: remove stale item in cgroup-v1 document INDEX
+ file.
+Date: Fri, 4 Mar 2016 08:05:43 -0500
+Message-ID: <20160304130543.GA15458@htj.duckdns.org>
+References: <CAFt=ROOuyaicfrRDnpJxMiB5Gedm-tzeNR0FOr24fPsPWwoH=Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=UMOkbzmQpKQ4auObuK3LuovSONl7tXCUpC819NcopEc=;
-        b=CH746LeKkdnzgYx3WvB4wIdSJYv6VNVsVDLa39DfYDfGww8FJaKBN571PAx7HnGUpz
-         6ERh1GHNsw6iroWB/NInqxUAYhrvxXu6kXyn880UcOkGZn5llZmIwBbJBnQwW0l4srWU
-         UorZuHpZnPNizcGCXNL8FLrQa4Ax9PmDBYFCJ8NZK5SOcU3yOZqXceNdBnnksj71tu94
-         aogXkVD382s81E5h9zl+YFI2p6w4AwpS28YYBWYnSOqBOF4lsVMzFYKDhxUJ9F5Nd3xK
-         d7aLE8r/s5Mc5uquxQGQPW9/RJdZwkYByP7e8Og3B3TQGKZkgyypTrE58P26nuKBacpb
-         NNPQ==
+        bh=04fy2mLpWYRYv73JlW7pVEW+b5AgRgdVOJZW2+HYVbs=;
+        b=MPXhQScvV8OI7FVFO9K2bSHMjiHCrb9qS+VxLxLjbfOUQ/cwir0JWlRCRrJsYvu9ZB
+         Bwn0oOZ25LHgU2bAKcxtam21qwRX/JKyNHMPbxg4jGKuqhsiCAFykTzcfHlD2efJ2D4m
+         OIIYjLEng/ydOr3gvN7RdzQUzO0vDVY5pTA/Bc0ufKJfsCzUtrkDUPCjkAkidLg0t8IK
+         ekPOs05U85Ukzx7/kaM6jYg92pePO3e8tVfCmmCys0KUVFAp0KD1O1EDpEySatCzUuue
+         h0JGwa2ZJtnMt/5XVxrfUgCOglzBTnpdDr+I3qpnbDI2ErRIFE3f3JLKEvz9BnsjzLe2
+         o4sQ==
 Content-Disposition: inline
-In-Reply-To: <c12953a0177b3fd04945b042cb10495130c08bec.1457047399.git.joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAFt=ROOuyaicfrRDnpJxMiB5Gedm-tzeNR0FOr24fPsPWwoH=Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vegard Nossum <vegardno-6miFZF/5cTBuMpJDpNschA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Naoya Horiguchi <n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: haosdent <haosdent@gmail.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu, Mar 03, 2016 at 03:25:33PM -0800, Joe Perches wrote:
-> Most of the mm subsystem uses pr_<level> so make it consistent.
-> 
-> Miscellanea:
-> 
-> o Realign arguments
-> o Add missing newline to format
-> o kmemleak-test.c has a "kmemleak: " prefix added to the
->   "Kmemleak testing" logging message via pr_fmt
-> 
-> Signed-off-by: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Hello, Haosdent.
 
-For percpu,
+Applied the patch to cgroup/for-4.6 but a couple things.
 
- Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+1. It probably would be better to use full name in your from address
+   or put an explicit From: header as that's what ends up as the
+   commit author.  I hand edited it this time.
+
+2. The patch is mime-encoded and whitespace damaged (taps replaced
+   with spaces) and didn't apply.  Please make sure your email is
+   setup for sending out patches.
 
 Thanks.
 
