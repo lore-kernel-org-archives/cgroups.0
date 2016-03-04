@@ -1,44 +1,87 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: remove stale item in cgroup-v1 document INDEX
- file.
-Date: Fri, 4 Mar 2016 08:05:43 -0500
-Message-ID: <20160304130543.GA15458@htj.duckdns.org>
-References: <CAFt=ROOuyaicfrRDnpJxMiB5Gedm-tzeNR0FOr24fPsPWwoH=Q@mail.gmail.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/2] mm: migrate: consolidate mem_cgroup_migrate() calls
+Date: Fri, 4 Mar 2016 19:02:39 +0100
+Message-ID: <20160304180237.GD24204@dhcp22.suse.cz>
+References: <1454616467-8994-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=04fy2mLpWYRYv73JlW7pVEW+b5AgRgdVOJZW2+HYVbs=;
-        b=MPXhQScvV8OI7FVFO9K2bSHMjiHCrb9qS+VxLxLjbfOUQ/cwir0JWlRCRrJsYvu9ZB
-         Bwn0oOZ25LHgU2bAKcxtam21qwRX/JKyNHMPbxg4jGKuqhsiCAFykTzcfHlD2efJ2D4m
-         OIIYjLEng/ydOr3gvN7RdzQUzO0vDVY5pTA/Bc0ufKJfsCzUtrkDUPCjkAkidLg0t8IK
-         ekPOs05U85Ukzx7/kaM6jYg92pePO3e8tVfCmmCys0KUVFAp0KD1O1EDpEySatCzUuue
-         h0JGwa2ZJtnMt/5XVxrfUgCOglzBTnpdDr+I3qpnbDI2ErRIFE3f3JLKEvz9BnsjzLe2
-         o4sQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAFt=ROOuyaicfrRDnpJxMiB5Gedm-tzeNR0FOr24fPsPWwoH=Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1454616467-8994-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: haosdent <haosdent@gmail.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Mateusz Guzik <mguzik-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sergey Senozhatsky <sergey.senozhatsky.work-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello, Haosdent.
+On Thu 04-02-16 15:07:46, Johannes Weiner wrote:
+> Rather than scattering mem_cgroup_migrate() calls all over the place,
+> have a single call from a safe place where every migration operation
+> eventually ends up in - migrate_page_copy().
 
-Applied the patch to cgroup/for-4.6 but a couple things.
+This is very nice!
 
-1. It probably would be better to use full name in your from address
-   or put an explicit From: header as that's what ends up as the
-   commit author.  I hand edited it this time.
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Suggested-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-2. The patch is mime-encoded and whitespace damaged (taps replaced
-   with spaces) and didn't apply.  Please make sure your email is
-   setup for sending out patches.
+Sorry for coming so late.
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-Thanks.
+> ---
+>  mm/migrate.c | 9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index 17db63b2dd36..90cbf7c65cac 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -331,8 +331,6 @@ int migrate_page_move_mapping(struct address_space *mapping,
+>  		if (PageSwapBacked(page))
+>  			SetPageSwapBacked(newpage);
+>  
+> -		mem_cgroup_migrate(page, newpage);
+> -
+>  		return MIGRATEPAGE_SUCCESS;
+>  	}
+>  
+> @@ -428,8 +426,6 @@ int migrate_page_move_mapping(struct address_space *mapping,
+>  	}
+>  	local_irq_enable();
+>  
+> -	mem_cgroup_migrate(page, newpage);
+> -
+>  	return MIGRATEPAGE_SUCCESS;
+>  }
+>  
+> @@ -471,8 +467,6 @@ int migrate_huge_page_move_mapping(struct address_space *mapping,
+>  
+>  	spin_unlock_irq(&mapping->tree_lock);
+>  
+> -	mem_cgroup_migrate(page, newpage);
+> -
+>  	return MIGRATEPAGE_SUCCESS;
+>  }
+>  
+> @@ -586,6 +580,8 @@ void migrate_page_copy(struct page *newpage, struct page *page)
+>  		end_page_writeback(newpage);
+>  
+>  	copy_page_owner(page, newpage);
+> +
+> +	mem_cgroup_migrate(page, newpage);
+>  }
+>  
+>  /************************************************************
+> @@ -1846,7 +1842,6 @@ fail_putback:
+>  	}
+>  
+>  	mlock_migrate_page(new_page, page);
+> -	mem_cgroup_migrate(page, new_page);
+>  	page_remove_rmap(page, true);
+>  	set_page_owner_migrate_reason(new_page, MR_NUMA_MISPLACED);
+>  
+> -- 
+> 2.7.0
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
