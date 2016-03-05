@@ -1,45 +1,51 @@
 From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] Documentation: cgroup v2: Trivial heading correction.
-Date: Sat,  5 Mar 2016 11:20:58 +0530
-Message-ID: <1457157058-4116-1-git-send-email-pandit.parav@gmail.com>
+Subject: [PATCH] cgroup: Trivial correction to reflect controller.
+Date: Sat,  5 Mar 2016 11:30:56 +0530
+Message-ID: <1457157656-5605-1-git-send-email-pandit.parav@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id;
-        bh=sm0wCFGTFBK8srYvXYWlAPPJK4gvr53iD4uo+2Hrweg=;
-        b=WNvBADpsJhpkSTlarkd8hlh3KSKtq8159gQEdJiMDisQdBIEaaNBLRfDvOOUrkPbi2
-         4ix/gqWZw/Mdlko5U2u2hxKzRA4oBAWdumoc8dj/6nmscKv5bfkMVSsm8Vdb7fM1q7+v
-         x4GXov0DurSnFHHvoY0HO871h4lxY9L/683WvpuslcIcrZgyBgaW2NU6aQ9EejWG+9NO
-         iTgvP0LRpDU0Wz3ZjCs2DZY+GJA489kWT+BT5bzkEz0m3yix5eei0n5TstE9gaHrNhli
-         bTtN9ktOBritI32dckxAwgc/RjhkK6twCc8gVKDq7QUwqkbYG6GuXn/7tdah8JcOm8Yr
-         0dXw==
+        bh=SnSLqBadRGRO82sh24oTyS2OAuFic8RwDC/EAy03qog=;
+        b=LpEqtWpWpAfIP9gBCgKgBF9KFVsDEuP8utsSkyPaHLnhtNy3vj3EYIjxdzn0jPuUys
+         P++7dLjleFoIfEHK3H/wruNPhq5uGLmuR6PMLx0itVEmnumytOqOpa4RkhgB6YrXn9Gz
+         F5NGikjPYvvrUGaoDtukPtv6Ln3e1F9E/v0NWjYMghlp+evG+UoE1qbV+11JQdkOMAiD
+         4wiaLhefONgEWUDAF6oRG9L5ZMPxIRjhr8qmAe1merBoQnA1Bh/zButHHYnwBUmu08Df
+         SsAXPCreNPWsQg93WLpXzvTWnmMn3Qf4I4eEAzWEusmxNEjdcW+jIp2Jwdsiy9wlZ1ML
+         t+Sw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Corrected the heading to match with index.
+Trivial correction in menuconfig help to reflect PIDs as
+controller instead of subsystem to align to rest of the text
+and documentation.
 
 Signed-off-by: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- Documentation/cgroup-v2.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ init/Kconfig | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 3922ae1..6039d41 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -898,7 +898,7 @@ PAGE_SIZE multiple when read back.
- 	limit, anonymous meomry of the cgroup will not be swapped out.
+diff --git a/init/Kconfig b/init/Kconfig
+index 2232080..9fefb8e 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1047,10 +1047,10 @@ config CGROUP_PIDS
+ 	  is fairly trivial to reach PID exhaustion before you reach even a
+ 	  conservative kmemcg limit. As a result, it is possible to grind a
+ 	  system to halt without being limited by other cgroup policies. The
+-	  PIDs cgroup subsystem is designed to stop this from happening.
++	  PIDs controller is designed to stop this from happening.
  
+ 	  It should be noted that organisational operations (such as attaching
+-	  to a cgroup hierarchy will *not* be blocked by the PIDs subsystem),
++	  to a cgroup hierarchy will *not* be blocked by the PIDs controller),
+ 	  since the PIDs limit only affects a process's ability to fork, not to
+ 	  attach to a cgroup.
  
--5-2-2. General Usage
-+5-2-2. Usage Guidelines
- 
- "memory.high" is the main mechanism to control memory usage.
- Over-committing on high limit (sum of high limits > available memory)
 -- 
 1.8.3.1
