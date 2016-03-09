@@ -1,53 +1,74 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-4.6] cgroup: update migration destination
- cgroup handling
-Date: Tue, 8 Mar 2016 11:50:22 -0500
-Message-ID: <20160308165022.GB3447@mtj.duckdns.org>
-References: <1457025602-4193-1-git-send-email-tj@kernel.org>
+From: Mel Gorman <mgorman@techsingularity.net>
+Subject: Re: [PATCH 02/27] mm, vmscan: Check if cpusets are enabled during
+ direct reclaim
+Date: Wed, 9 Mar 2016 11:59:38 +0000
+Message-ID: <20160309115909.GA31585@techsingularity.net>
+References: <1456239890-20737-1-git-send-email-mgorman@techsingularity.net>
+ <1456239890-20737-3-git-send-email-mgorman@techsingularity.net>
+ <56D8209C.5020103@suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=WuTby+pfJwBuVsMpoENk1f3s8lyrRXKk2BVpwQqoG+w=;
-        b=Nc6NYnhQlKIUFwbyKApbfluTHL+piwgDF3gFChLDpjCQm2xInjZ8f7Ir1jYSEUM617
-         YLx9ymS2lgIVqPhgm2eAqYjl6l+qNNsZvP3gCkmma5e7ALgojCd+M9svfpudd/C+ArBJ
-         SAciqDhE+jkudgCtcALW3iC1zjSQVuiNI3j+/14hKo4F6hAhZEBB+xAXpoTv+3Y/O1Bq
-         +kNcWbIWK5RdlFQu/llziaIZTcXFqd4L+wLrlEYnLwTrlM63K2P9y92BIVjyrmCkwcaY
-         d8q6cp5QWTEh+O7vMoG9zLQsIwW1A4AJTR5A3mF+R5Frg8W8ClAe0rM2ouxDWSMFiuBh
-         BQ/g==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1457025602-4193-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <56D8209C.5020103@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Linux-MM <linux-mm@kvack.org>, Rik van Riel <riel@surriel.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-On Thu, Mar 03, 2016 at 12:19:58PM -0500, Tejun Heo wrote:
-> cgroup migrations used to always be single destination.  There could
-> be multiple sources but there was only one destination cgroup.  This
-> changed with default hierarchy as enabling a controller would move
-> processes in child cgroups into separate csses.  This was developed
-> over time and is working correctly now but the way multiple
-> destinations are handled is hacky and fragile.  This patchset updates
-> migration logic so that multi-destination handling is integral.
+On Thu, Mar 03, 2016 at 12:31:40PM +0100, Vlastimil Babka wrote:
+> On 02/23/2016 04:04 PM, Mel Gorman wrote:
+> > Direct reclaim obeys cpusets but misses the cpusets_enabled() check.
+> > The overhead is unlikely to be measurable in the direct reclaim
+> > path which is expensive but there is no harm is doing it.
+> > 
+> > Signed-off-by: Mel Gorman <mgorman@techsingularity.net>
+> > ---
+> >  mm/vmscan.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index 86eb21491867..de8d6226e026 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -2566,7 +2566,7 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+> >  		 * to global LRU.
+> >  		 */
+> >  		if (global_reclaim(sc)) {
+> > -			if (!cpuset_zone_allowed(zone,
+> > +			if (cpusets_enabled() && !cpuset_zone_allowed(zone,
+> >  						 GFP_KERNEL | __GFP_HARDWALL))
+> >  				continue;
 > 
-> This patchset contains the following four patches.
+> Hmm, wouldn't it be nicer if cpuset_zone_allowed() itself did the right
+> thing, and not each caller?
 > 
->  0001-cgroup-fix-incorrect-destination-cgroup-in-cgroup_up.patch
->  0002-cgroup-move-migration-destination-verification-out-o.patch
->  0003-cgroup-make-cgroup-_taskset-_migrate-take-cgroup_roo.patch
->  0004-cgroup-use-css_set-mg_dst_cgrp-for-the-migration-tar.patch
+> How about the patch below? (+CC)
+> 
 
-These changes are mostly mechanical and I want them to be in for-4.6
-for a while before the merge window opens up.  Applying to
-cgroup/for-4.6.  In the unlikely case that this breaks something,
-let's fix with followup patches.
+The patch appears to be layer upon the entire series but that in itself
+is ok. This part is a problem
 
-Thanks.
+> An important function for cpusets is cpuset_node_allowed(), which acknowledges
+> that if there's a single root CPU set, it must be trivially allowed. But the
+> check "nr_cpusets() <= 1" doesn't use the cpusets_enabled_key static key in a
+> proper way where static keys can reduce the overhead.
+
+
+There is one check for the static key and a second for the count to see
+if it's likely a valid cpuset that matters has been configured. The
+point of that check was that it was lighter than __cpuset_zone_allowed
+in the case where no cpuset is configured.
+
+The patches are not equivalent.
 
 -- 
-tejun
+Mel Gorman
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
