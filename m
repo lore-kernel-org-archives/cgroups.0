@@ -1,124 +1,52 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v2 2/2] cpuacct: split usage into user_usage and
- sys_usage.
-Date: Thu, 10 Mar 2016 14:27:28 +0100
-Message-ID: <20160310132728.GX6344@twins.programming.kicks-ass.net>
-References: <cover.1457082730.git.zhaolei@cn.fujitsu.com>
- <340a5ec9cb4e7f97b3a41f3dc657b9aca4c76f25.1457082730.git.zhaolei@cn.fujitsu.com>
-Mime-Version: 1.0
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH] mm: memcontrol: reclaim when shrinking memory.high below usage
+Date: Thu, 10 Mar 2016 15:50:13 -0500
+Message-ID: <1457643015-8828-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <340a5ec9cb4e7f97b3a41f3dc657b9aca4c76f25.1457082730.git.zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zhao Lei <zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Yang Dongsheng <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri, Mar 04, 2016 at 05:47:06PM +0800, Zhao Lei wrote:
-> +static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu,
-> +				 enum cpuacct_usage_index index)
->  {
-> +	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> +	u64 data = 0;
-> +	int i = 0;
-> +
-> +	/*
-> +	 * We allow index == CPUACCT_USAGE_NRUSAGE here to read
-> +	 * the sum of suages.
-> +	 */
-> +	BUG_ON(index > CPUACCT_USAGE_NRUSAGE);
-> +
-> +	if (index == CPUACCT_USAGE_NRUSAGE) {
-> +		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> +		for (i = 0; i < CPUACCT_USAGE_NRUSAGE; i++)
-> +			data += cpuusage->usages[i];
-> +		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
+When setting memory.high below usage, nothing happens until the next
+charge comes along, and then it will only reclaim its own charge and
+not the now potentially huge excess of the new memory.high. This can
+cause groups to stay in excess of their memory.high indefinitely.
 
-Why do you unconditionally take the lock here? You really don't need it
-on 64 bit.
+To fix that, when shrinking memory.high, kick off a reclaim cycle that
+goes after the delta.
 
-> +
-> +		goto out;
-> +	}
->  
->  #ifndef CONFIG_64BIT
->  	/*
->  	 * Take rq->lock to make 64-bit read safe on 32-bit platforms.
->  	 */
->  	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> +	data = cpuusage->usages[index];
->  	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
->  #else
-> +	data = cpuusage->usages[index];
->  #endif
->  
-> +out:
->  	return data;
->  }
->  
-> +static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu,
-> +				   enum cpuacct_usage_index index, u64 val)
->  {
-> +	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> +	int i = 0;
-> +
-> +	/*
-> +	 * We allow index == CPUACCT_USAGE_NRUSAGE here to write
-> +	 * val to each index of usages.
-> +	 */
-> +	BUG_ON(index > CPUACCT_USAGE_NRUSAGE);
-> +
-> +	if (index == CPUACCT_USAGE_NRUSAGE) {
-> +		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> +		for (i = 0; i < CPUACCT_USAGE_NRUSAGE; i++)
-> +			cpuusage->usages[i] = val;
-> +		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
-> +
-> +		return;
-> +	}
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Same for the above, and the below is dead code, you only ever call this
-with NRUSAGE.
-
->  #ifndef CONFIG_64BIT
->  	/*
->  	 * Take rq->lock to make 64-bit write safe on 32-bit platforms.
->  	 */
->  	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> +	cpuusage->usages[index] = val;
->  	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
->  #else
-> +	cpuusage->usages[index] = val;
->  #endif
->  }
->  
-
-> @@ -246,9 +344,15 @@ void cpuacct_charge(struct task_struct *tsk, u64 cputime)
->  
->  	ca = task_ca(tsk);
->  
-> +	user_time = user_mode(task_pt_regs(tsk));
-> +
->  	while (true) {
-> -		u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> -		*cpuusage += cputime;
-> +		struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> +
-> +		if (user_time)
-> +			cpuusage->usages[CPUACCT_USAGE_USER] += cputime;
-> +		else
-> +			cpuusage->usages[CPUACCT_USAGE_SYSTEM] += cputime;
->  
->  		ca = parent_ca(ca);
->  		if (!ca)
-
-Have you tried to measure the performance impact of this?
-
-Also, that code seems particularly silly for not using this_cpu_ptr().
-After all, we only ever call this on current.
-
-Also that ca iteration looks daft, should we fix that to read:
-
-	for (ca = task_ca(tsk); ca; ca = parent_ca(ca))
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8615b066b642..f7c9b4cbdf01 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4992,6 +4992,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 				 char *buf, size_t nbytes, loff_t off)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	unsigned long nr_pages;
+ 	unsigned long high;
+ 	int err;
+ 
+@@ -5002,6 +5003,11 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 
+ 	memcg->high = high;
+ 
++	nr_pages = page_counter_read(&memcg->memory);
++	if (nr_pages > high)
++		try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
++					     GFP_KERNEL, true);
++
+ 	memcg_wb_domain_size_changed(memcg);
+ 	return nbytes;
+ }
+-- 
+2.7.2
