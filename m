@@ -1,58 +1,56 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: reclaim when shrinking memory.high below
- usage
-Date: Fri, 11 Mar 2016 12:13:04 +0300
-Message-ID: <20160311091303.GJ1946@esperanza>
-References: <1457643015-8828-1-git-send-email-hannes@cmpxchg.org>
- <20160311083440.GI1946@esperanza>
- <20160311084238.GE27701@dhcp22.suse.cz>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH] mm: memcontrol: reclaim and OOM kill when shrinking
+ memory.max below usage
+Date: Fri, 11 Mar 2016 12:19:31 +0300
+Message-ID: <20160311091931.GK1946@esperanza>
+References: <1457643015-8828-2-git-send-email-hannes@cmpxchg.org>
+ <20160311081825.GC27701@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20160311084238.GE27701-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20160311081825.GC27701@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Fri, Mar 11, 2016 at 09:42:39AM +0100, Michal Hocko wrote:
-> On Fri 11-03-16 11:34:40, Vladimir Davydov wrote:
-> > On Thu, Mar 10, 2016 at 03:50:13PM -0500, Johannes Weiner wrote:
-> > > When setting memory.high below usage, nothing happens until the next
-> > > charge comes along, and then it will only reclaim its own charge and
-> > > not the now potentially huge excess of the new memory.high. This can
-> > > cause groups to stay in excess of their memory.high indefinitely.
-> > > 
-> > > To fix that, when shrinking memory.high, kick off a reclaim cycle that
-> > > goes after the delta.
-> > 
-> > I agree that we should reclaim the high excess, but I don't think it's a
-> > good idea to do it synchronously. Currently, memory.low and memory.high
-> > knobs can be easily used by a single-threaded load manager implemented
-> > in userspace, because it doesn't need to care about potential stalls
-> > caused by writes to these files. After this change it might happen that
-> > a write to memory.high would take long, seconds perhaps, so in order to
-> > react quickly to changes in other cgroups, a load manager would have to
-> > spawn a thread per each write to memory.high, which would complicate its
-> > implementation significantly.
+On Fri, Mar 11, 2016 at 09:18:25AM +0100, Michal Hocko wrote:
+> On Thu 10-03-16 15:50:14, Johannes Weiner wrote:
+...
+> > @@ -5037,9 +5040,36 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+> >  	if (err)
+> >  		return err;
+> >  
+> > -	err = mem_cgroup_resize_limit(memcg, max);
+> > -	if (err)
+> > -		return err;
+> > +	xchg(&memcg->memory.limit, max);
+> > +
+> > +	for (;;) {
+> > +		unsigned long nr_pages = page_counter_read(&memcg->memory);
+> > +
+> > +		if (nr_pages <= max)
+> > +			break;
+> > +
+> > +		if (signal_pending(current)) {
 > 
-> Is the complication on the managing part really an issue though. Such a
-> manager would have to spawn a process/thread to change the .max already.
+> Didn't you want fatal_signal_pending here? At least the changelog
+> suggests that.
 
-IMO memory.max is not something that has to be changed often. In most
-cases it will be set on container start and stay put throughout
-container lifetime. I can also imagine a case when memory.max will be
-changed for all containers when a container starts or stops, so as to
-guarantee that if <= N containers of M go mad, the system will survive.
-In any case, memory.max is reconfigured rarely, it rather belongs to the
-static configuration.
+I suppose the user might want to interrupt the write by hitting CTRL-C.
 
-OTOH memory.low and memory.high are perfect to be changed dynamically,
-basing on containers' memory demand/pressure. A load manager might want
-to reconfigure these knobs say every 5 seconds. Spawning a thread per
-each container that often would look unnecessarily overcomplicated IMO.
+Come to think of it, shouldn't we restore the old limit and return EBUSY
+if we failed to reclaim enough memory?
 
-Thanks,
-Vladimir
+> 
+> > +			err = -EINTR;
+> > +			break;
+> > +		}
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
