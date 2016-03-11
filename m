@@ -1,111 +1,164 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: reclaim when shrinking memory.high below
- usage
-Date: Fri, 11 Mar 2016 17:46:51 +0300
-Message-ID: <20160311144651.GP1946@esperanza>
-References: <1457643015-8828-1-git-send-email-hannes@cmpxchg.org>
- <20160311083440.GI1946@esperanza>
- <20160311084238.GE27701@dhcp22.suse.cz>
- <20160311091303.GJ1946@esperanza>
- <20160311095309.GF27701@dhcp22.suse.cz>
- <20160311114934.GL1946@esperanza>
- <20160311133936.GQ27701@dhcp22.suse.cz>
- <20160311140146.GO1946@esperanza>
- <20160311142227.GR27701@dhcp22.suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160311142227.GR27701-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource group and PRIO_RGRP
+Date: Fri, 11 Mar 2016 10:41:18 -0500
+Message-ID: <1457710888-31182-1-git-send-email-tj@kernel.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=N4QdwJWZY4c1fAn2glGOME8JQxFOXjXWVsqH912LvtE=;
+        b=dbnB9KO1OHzz+3BvuHd+9VIRN5A7hY4TR81Nqkn1zZHKbqmo+FHO0Y4zGJDLaEzcgz
+         DUZlliGdzi3+TluXfgdtyWK5PzKL9eAGyOumhF155+YxYZV0i4ky31hObxhVXeJDOoIW
+         3PnmJfec8GvRD1esg5PzqJPeW2+963zxHjiqfIPoPrS6f9N10gvMXEKZLz7IXkyEIaut
+         fRZO4BaRLVHDwPwpZyJICWxYs/OcJDq51UMdie74C04t1gj7AinMQR/VXKLA0ohch5nv
+         MI2tY4KBXFhPr/w7JXfwPtMckyY6lYeStRTvFM5hSBpB0U09t1zCtlVmfNwndyBz34UW
+         DOlQ==
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri, Mar 11, 2016 at 03:22:27PM +0100, Michal Hocko wrote:
-> On Fri 11-03-16 17:01:46, Vladimir Davydov wrote:
-> > On Fri, Mar 11, 2016 at 02:39:36PM +0100, Michal Hocko wrote:
-> > > On Fri 11-03-16 14:49:34, Vladimir Davydov wrote:
-> > > > On Fri, Mar 11, 2016 at 10:53:09AM +0100, Michal Hocko wrote:
-> > > > > > OTOH memory.low and memory.high are perfect to be changed dynamically,
-> > > > > > basing on containers' memory demand/pressure. A load manager might want
-> > > > > > to reconfigure these knobs say every 5 seconds. Spawning a thread per
-> > > > > > each container that often would look unnecessarily overcomplicated IMO.
-> > > > > 
-> > > > > The question however is whether we want to hide a potentially costly
-> > > > > operation and have it unaccounted and hidden in the kworker context.
-> > > > 
-> > > > There's already mem_cgroup->high_work doing reclaim in an unaccounted
-> > > > context quite often if tcp accounting is enabled.
-> > > 
-> > > I suspect this is done because the charging context cannot do much
-> > > better.
-> > > 
-> > > > And there's kswapd.
-> > > > memory.high knob is for the root only so it can't be abused by an
-> > > > unprivileged user. Regarding a privileged user, e.g. load manager, it
-> > > > can screw things up anyway, e.g. by configuring sum of memory.low to be
-> > > > greater than total RAM on the host and hence driving kswapd mad.
-> > > 
-> > > I am not worried about abuse. It is just weird to move something which
-> > > can be perfectly sync to an async mode.
-> > >  
-> > > > > I mean fork() + write() doesn't sound terribly complicated to me to have
-> > > > > a rather subtle behavior in the kernel.
-> > > > 
-> > > > It'd be just a dubious API IMHO. With memory.max everything's clear: it
-> > > > tries to reclaim memory hard, may stall for several seconds, may invoke
-> > > > OOM, but if it finishes successfully we have memory.current less than
-> > > > memory.max. With this patch memory.high knob behaves rather strangely:
-> > > > it might stall, but there's no guarantee you'll have memory.current less
-> > > > than memory.high; moreover, according to the documentation it's OK to
-> > > > have memory.current greater than memory.high, so what's the point in
-> > > > calling synchronous reclaim blocking the caller?
-> > > 
-> > > Even if the reclaim is best effort it doesn't mean we should hide it
-> > > into an async context. There is simply no reason to do so. We do the
-> > > some for other knobs which are performing a potentially expensive
-> > > operation and do not guarantee the result.
-> > 
-> > IMO it depends on what a knob is used for. If it's for testing or
-> > debugging or recovering the system (e.g. manual oom, compact,
-> > drop_caches), this must be synchronous, but memory.high is going to be
-> > tweaked at runtime during normal system operation every several seconds
-> > or so,
-> 
-> Is this really going to happen in the real life?
+Hello,
 
-I don't think anyone can say for sure now, but I think it's possible.
+This patchset extends cgroup v2 to support rgroup (resource group) for
+in-process hierarchical resource control and implements PRIO_RGRP for
+setpriority(2) on top to allow in-process hierarchical CPU cycle
+control in a seamless way.
 
-> And if yes is it really probable that such an adjustment would cause
-> such a large disruption?
+cgroup v1 allowed putting threads of a process in different cgroups
+which enabled ad-hoc in-process resource control of some resources.
+Unfortunately, this approach was fraught with problems such as
+membership ambiguity with per-process resources and lack of isolation
+between system management and in-process properties.  For a more
+detailed discussion on the subject, please refer to the following
+message.
 
-Dunno.
+ [1] [RFD] cgroup: thread granularity support for cpu controller
 
-> 
-> > at least in my understanding. I understand your concern, and may
-> > be you're right in the end, but think about userspace that will probably
-> > have to spawn thousands threads every 5 seconds or so just to write to a
-> > file. It's painful IMO.
-> > 
-> > Are there any hidden non-obvious implications of handing over reclaim to
-> > a kernel worker on adjusting memory.high? May be, I'm just missing
-> > something obvious, and it can be really dangerous or sub-optimal.
-> 
-> I am just thinking about what would happen if workers just start
-> stacking up because they couldn't be processed and then would race with
-> each other.
+This patchset implements the mechanism outlined in the above message.
+The new mechanism is named rgroup (resource group).  When explicitly
+designating a non-rgroup cgroup, the term sgroup (system group) is
+used.  rgroup has the following properties.
 
-We can use one work per memcg (high_work?) and make it requeue itself if
-it finds that memory usage is above memory.high and there are
-reclaimable pages, so no stacking should happen.
+* A rgroup is a cgroup which is invisible on and transparent to the
+  system-level cgroupfs interface.
 
-> I mean this all would be fixable but I really fail to see
-> how that makes sense from the very beginning.
+* A rgroup can be created by specifying CLONE_NEWRGRP flag, along with
+  CLONE_THREAD, during clone(2).  A new rgroup is created under the
+  parent thread's cgroup and the new thread is created in it.
 
-This is a user API we're defining right now. Changing it in future will
-be troublesome.
+* A rgroup is automatically destroyed when empty.
 
-Thanks,
-Vladimir
+* A top-level rgroup of a process is a rgroup whose parent cgroup is a
+  sgroup.  A process may have multiple top-level rgroups and thus
+  multiple rgroup subtrees under the same parent sgroup.
+
+* Unlike sgroups, rgroups are allowed to compete against peer threads.
+  Each rgroup behaves equivalent to a sibling task.
+
+* rgroup subtrees are local to the process.  When the process forks or
+  execs, its rgroup subtrees are collapsed.
+
+* When a process is migrated to a different cgroup, its rgroup
+  subtrees are preserved.
+
+* Subset of controllers available on the parent sgroup are available
+  to rgroup subtrees.  Controller management on rgroups is automatic
+  and implicit and doesn't interfere with system-level cgroup
+  controller management.  If a controller is made unavailable on the
+  parent sgroup, it's automatically disabled from child rgroup
+  subtrees.
+
+rgroup lays the foundation for other kernel mechanisms to make use of
+resource controllers while providing proper isolation between system
+management and in-process operations removing the awkward and
+layer-violating requirement for coordination between individual
+applications and system management.  On top of the rgroup mechanism,
+PRIO_RGRP is implemented for {set|get}priority(2).
+
+* PRIO_RGRP can only be used if the target task is already in a
+  rgroup.  If setpriority(2) is used and cpu controller is available,
+  cpu controller is enabled until the target rgroup is covered and the
+  specified nice value is set as the weight of the rgroup.
+
+* The specified nice value has the same meaning as for tasks.  For
+  example, a rgroup and a task competing under the same parent would
+  behave exactly the same as two tasks.
+
+* For top-level rgroups, PRIO_RGRP follows the same rlimit
+  restrictions as PRIO_PROCESS; however, as nested rgroups only
+  distribute CPU cycles which are allocated to the process, no
+  restriction is applied.
+
+PRIO_RGRP allows in-process hierarchical control of CPU cycles in a
+manner which is a straight-forward and minimal extension of existing
+task and priority management.
+
+There are still some missing pieces.
+
+* Documentation updates.
+
+* A mechanism that applications can use to publish certain rgroups so
+  that external entities can determine which IDs to use to change
+  rgroup settings.  I already have interface and implementation design
+  mostly pinned down.
+
+* Userland updates such as integrating CLONE_NEWRGRP handling to
+  pthread or updating renice(1) to handle resource groups.
+
+I'll attach a test program which demonstrates PRIO_RGRP usage in a
+follow up email.
+
+This patchset contains the following 10 patches.
+
+ 0001-cgroup-introduce-cgroup_-un-lock.patch
+ 0002-cgroup-un-inline-cgroup_path-and-friends.patch
+ 0003-cgroup-introduce-CGRP_MIGRATE_-flags.patch
+ 0004-signal-make-put_signal_struct-public.patch
+ 0005-cgroup-fork-add-new_rgrp_cset-p-and-clone_flags-to-c.patch
+ 0006-cgroup-fork-add-child-and-clone_flags-to-threadgroup.patch
+ 0007-cgroup-introduce-resource-group.patch
+ 0008-cgroup-implement-rgroup-control-mask-handling.patch
+ 0009-cgroup-implement-rgroup-subtree-migration.patch
+ 0010-cgroup-sched-implement-PRIO_RGRP-for-set-get-priorit.patch
+
+0001-0006 are prepatory patches.
+0007-0009 implemnet rgroup support.
+0010 implements PRIO_RGRP.
+
+This patchset is on top of
+
+  cgroup/for-4.6 f6d635ad341d ("cgroup: implement cgroup_subsys->implicit_on_dfl")
++ [2] [PATCH 2/2] cgroup, perf_event: make perf_event controller work on cgroup2 hierarchy
++ [3] [PATCHSET REPOST] sched, cgroup: implement cgroup v2 interface for cpu controller
+
+and available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-rgroup
+
+diffstat follows.
+
+ fs/exec.c                     |    8 
+ include/linux/cgroup-defs.h   |   72 ++-
+ include/linux/cgroup.h        |   60 +--
+ include/linux/sched.h         |   31 +
+ include/uapi/linux/resource.h |    1 
+ include/uapi/linux/sched.h    |    1 
+ kernel/cgroup.c               |  828 ++++++++++++++++++++++++++++++++++++++----
+ kernel/fork.c                 |   27 -
+ kernel/sched/core.c           |   32 +
+ kernel/signal.c               |    6 
+ kernel/sys.c                  |   11 
+ 11 files changed, 917 insertions(+), 160 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[1] http://lkml.kernel.org/g/20160105154503.GC5995-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org
+[2] http://lkml.kernel.org/g/1456351975-1899-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+[3] http://lkml.kernel.org/g/20160105164758.GD5995-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org
