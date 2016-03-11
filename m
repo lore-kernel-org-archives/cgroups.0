@@ -1,54 +1,70 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH] mm: memcontrol: reclaim when shrinking memory.high below
  usage
-Date: Fri, 11 Mar 2016 14:49:34 +0300
-Message-ID: <20160311114934.GL1946@esperanza>
+Date: Fri, 11 Mar 2016 14:39:36 +0100
+Message-ID: <20160311133936.GQ27701@dhcp22.suse.cz>
 References: <1457643015-8828-1-git-send-email-hannes@cmpxchg.org>
  <20160311083440.GI1946@esperanza>
  <20160311084238.GE27701@dhcp22.suse.cz>
  <20160311091303.GJ1946@esperanza>
  <20160311095309.GF27701@dhcp22.suse.cz>
+ <20160311114934.GL1946@esperanza>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20160311095309.GF27701@dhcp22.suse.cz>
+In-Reply-To: <20160311114934.GL1946@esperanza>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Fri, Mar 11, 2016 at 10:53:09AM +0100, Michal Hocko wrote:
-> > OTOH memory.low and memory.high are perfect to be changed dynamically,
-> > basing on containers' memory demand/pressure. A load manager might want
-> > to reconfigure these knobs say every 5 seconds. Spawning a thread per
-> > each container that often would look unnecessarily overcomplicated IMO.
+On Fri 11-03-16 14:49:34, Vladimir Davydov wrote:
+> On Fri, Mar 11, 2016 at 10:53:09AM +0100, Michal Hocko wrote:
+> > > OTOH memory.low and memory.high are perfect to be changed dynamically,
+> > > basing on containers' memory demand/pressure. A load manager might want
+> > > to reconfigure these knobs say every 5 seconds. Spawning a thread per
+> > > each container that often would look unnecessarily overcomplicated IMO.
+> > 
+> > The question however is whether we want to hide a potentially costly
+> > operation and have it unaccounted and hidden in the kworker context.
 > 
-> The question however is whether we want to hide a potentially costly
-> operation and have it unaccounted and hidden in the kworker context.
+> There's already mem_cgroup->high_work doing reclaim in an unaccounted
+> context quite often if tcp accounting is enabled.
 
-There's already mem_cgroup->high_work doing reclaim in an unaccounted
-context quite often if tcp accounting is enabled. And there's kswapd.
-memory.high knob is for the root only so it can't be abused by an
-unprivileged user. Regarding a privileged user, e.g. load manager, it
-can screw things up anyway, e.g. by configuring sum of memory.low to be
-greater than total RAM on the host and hence driving kswapd mad.
+I suspect this is done because the charging context cannot do much
+better.
 
-> I mean fork() + write() doesn't sound terribly complicated to me to have
-> a rather subtle behavior in the kernel.
+> And there's kswapd.
+> memory.high knob is for the root only so it can't be abused by an
+> unprivileged user. Regarding a privileged user, e.g. load manager, it
+> can screw things up anyway, e.g. by configuring sum of memory.low to be
+> greater than total RAM on the host and hence driving kswapd mad.
 
-It'd be just a dubious API IMHO. With memory.max everything's clear: it
-tries to reclaim memory hard, may stall for several seconds, may invoke
-OOM, but if it finishes successfully we have memory.current less than
-memory.max. With this patch memory.high knob behaves rather strangely:
-it might stall, but there's no guarantee you'll have memory.current less
-than memory.high; moreover, according to the documentation it's OK to
-have memory.current greater than memory.high, so what's the point in
-calling synchronous reclaim blocking the caller?
+I am not worried about abuse. It is just weird to move something which
+can be perfectly sync to an async mode.
+ 
+> > I mean fork() + write() doesn't sound terribly complicated to me to have
+> > a rather subtle behavior in the kernel.
+> 
+> It'd be just a dubious API IMHO. With memory.max everything's clear: it
+> tries to reclaim memory hard, may stall for several seconds, may invoke
+> OOM, but if it finishes successfully we have memory.current less than
+> memory.max. With this patch memory.high knob behaves rather strangely:
+> it might stall, but there's no guarantee you'll have memory.current less
+> than memory.high; moreover, according to the documentation it's OK to
+> have memory.current greater than memory.high, so what's the point in
+> calling synchronous reclaim blocking the caller?
 
-Thanks,
-Vladimir
+Even if the reclaim is best effort it doesn't mean we should hide it
+into an async context. There is simply no reason to do so. We do the
+some for other knobs which are performing a potentially expensive
+operation and do not guarantee the result.
+
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
