@@ -1,40 +1,46 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: add opts release function to simplify the code
-Date: Fri, 11 Mar 2016 12:26:17 -0500
-Message-ID: <20160311172617.GE24046@htj.duckdns.org>
-References: <1457680035-26772-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH v2 1/2] cpuacct: rename parameter in cpuusage_write for
+ readability
+Date: Fri, 11 Mar 2016 12:42:58 -0500
+Message-ID: <20160311174258.GI24046@htj.duckdns.org>
+References: <cover.1457082730.git.zhaolei@cn.fujitsu.com>
+ <874fad2881cb09366a618093a05141847ad9a9fa.1457082730.git.zhaolei@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=dt/JvU23YorEgnHqRqslhrn0pnwKRXpbxybFAPmYBVw=;
-        b=guvvV0hntXzh7CEnL4+xk54j5Mijs2oTNJN9vEAnlpY+cINbEErEd3NXD0nKUFj/IG
-         RbsxfdqE6D6QtUF+dWN7TDfU5Mf9r3srpSIrd3PkuDh7VdZ69pzAMLSG2gxKz2bc7cZT
-         iA1cG7bS448yrI+voSzjdxAN6f1BohgjErUWGP9LhH1dy7eieJ3eSk3ihtHBykfRexyG
-         Ji66fn0iT4XUqj9a3XssrrbjdKs9qLE8HszSW2Ip6v3OogWBS6FUqKJDG65bWEAlVZSS
-         BGonk9odNbLrp1lQtq4vihW7vKnVpM+4cJ0FgHJClZIwGB4AmPI2zgRxgtm0OuLgZEPi
-         79+Q==
+        bh=S4Gpg5C7teRGr4+O3HFnBPmdgmK5oKnUpcfq1gnOd+4=;
+        b=GHmfdKEsE52E7cHY8kcZetLI3EVV4ABssVHeZXV7EeOtowOy0R3T9hJuhsFoJ518Z1
+         TsvMbIqMrGpgWX8FG18L10U3qc8X/p9jk7IWxQSOwKh442mI0ZtxGVTO+ffHljRPsC9Q
+         M/cI9tAP9n0K39ZCsOX6dHi1m+9HAe/MuqAuQ+sVCcJ4qiStx3iRJpOg8bmub0Vqv75t
+         Jka/NaCSBqqTjeKCKKZ7KydBP5vDDF+xfgIHRaxebBxiJoQN1ZToHk8oL32hcGDb1SLh
+         Qc/jgdklEn94TCRSnYV2Iln6/vr8+fALu/d5z84naLplsHz3iGmvZ6k7d4+uoGDrUXRZ
+         AS1w==
 Content-Disposition: inline
-In-Reply-To: <1457680035-26772-1-git-send-email-lixiubo-0p4V/sDNsUmm0O/7XYngnFaTQe2KTcn/@public.gmane.org>
+In-Reply-To: <874fad2881cb09366a618093a05141847ad9a9fa.1457082730.git.zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Xiubo Li <lixiubo-0p4V/sDNsUmm0O/7XYngnFaTQe2KTcn/@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Zhao Lei <zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Yang Dongsheng <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-On Fri, Mar 11, 2016 at 03:07:15PM +0800, Xiubo Li wrote:
-> The old code is a bit confusing for the readers by thinking why
-> these two members of opts should be released?
+On Fri, Mar 04, 2016 at 05:47:05PM +0800, Zhao Lei wrote:
+> From: Yang Dongsheng <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 > 
-> The resources allocated by whom has the possiblity to release it,
-> But this will make the opts parse function more complex. So add
-> opts release function to simplify the code, and at the same time
-> to make the code more easy to read and be understood.
+> The name of 'reset' makes a little confusion in reading, we would
+> say, if we want to reset usage, return -EINVAL. That's not true.
+> 
+> Actually, we want to say, we only allow user to do a reset. This
+> patch rename reset to val and add a comment here, making the code
+> more readable.
+> 
+> From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Signed-off-by: Zhao Lei <zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-I'm not really sure this improves anything.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Thanks.
 
