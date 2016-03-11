@@ -1,70 +1,54 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
 Subject: Re: [PATCH] mm: memcontrol: reclaim when shrinking memory.high below
  usage
-Date: Fri, 11 Mar 2016 10:53:09 +0100
-Message-ID: <20160311095309.GF27701@dhcp22.suse.cz>
+Date: Fri, 11 Mar 2016 14:49:34 +0300
+Message-ID: <20160311114934.GL1946@esperanza>
 References: <1457643015-8828-1-git-send-email-hannes@cmpxchg.org>
  <20160311083440.GI1946@esperanza>
  <20160311084238.GE27701@dhcp22.suse.cz>
  <20160311091303.GJ1946@esperanza>
+ <20160311095309.GF27701@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20160311091303.GJ1946@esperanza>
+In-Reply-To: <20160311095309.GF27701@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@virtuozzo.com>
+To: Michal Hocko <mhocko@kernel.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Fri 11-03-16 12:13:04, Vladimir Davydov wrote:
-> On Fri, Mar 11, 2016 at 09:42:39AM +0100, Michal Hocko wrote:
-> > On Fri 11-03-16 11:34:40, Vladimir Davydov wrote:
-> > > On Thu, Mar 10, 2016 at 03:50:13PM -0500, Johannes Weiner wrote:
-> > > > When setting memory.high below usage, nothing happens until the next
-> > > > charge comes along, and then it will only reclaim its own charge and
-> > > > not the now potentially huge excess of the new memory.high. This can
-> > > > cause groups to stay in excess of their memory.high indefinitely.
-> > > > 
-> > > > To fix that, when shrinking memory.high, kick off a reclaim cycle that
-> > > > goes after the delta.
-> > > 
-> > > I agree that we should reclaim the high excess, but I don't think it's a
-> > > good idea to do it synchronously. Currently, memory.low and memory.high
-> > > knobs can be easily used by a single-threaded load manager implemented
-> > > in userspace, because it doesn't need to care about potential stalls
-> > > caused by writes to these files. After this change it might happen that
-> > > a write to memory.high would take long, seconds perhaps, so in order to
-> > > react quickly to changes in other cgroups, a load manager would have to
-> > > spawn a thread per each write to memory.high, which would complicate its
-> > > implementation significantly.
-> > 
-> > Is the complication on the managing part really an issue though. Such a
-> > manager would have to spawn a process/thread to change the .max already.
+On Fri, Mar 11, 2016 at 10:53:09AM +0100, Michal Hocko wrote:
+> > OTOH memory.low and memory.high are perfect to be changed dynamically,
+> > basing on containers' memory demand/pressure. A load manager might want
+> > to reconfigure these knobs say every 5 seconds. Spawning a thread per
+> > each container that often would look unnecessarily overcomplicated IMO.
 > 
-> IMO memory.max is not something that has to be changed often. In most
-> cases it will be set on container start and stay put throughout
-> container lifetime. I can also imagine a case when memory.max will be
-> changed for all containers when a container starts or stops, so as to
-> guarantee that if <= N containers of M go mad, the system will survive.
-> In any case, memory.max is reconfigured rarely, it rather belongs to the
-> static configuration.
+> The question however is whether we want to hide a potentially costly
+> operation and have it unaccounted and hidden in the kworker context.
 
-I see
- 
-> OTOH memory.low and memory.high are perfect to be changed dynamically,
-> basing on containers' memory demand/pressure. A load manager might want
-> to reconfigure these knobs say every 5 seconds. Spawning a thread per
-> each container that often would look unnecessarily overcomplicated IMO.
+There's already mem_cgroup->high_work doing reclaim in an unaccounted
+context quite often if tcp accounting is enabled. And there's kswapd.
+memory.high knob is for the root only so it can't be abused by an
+unprivileged user. Regarding a privileged user, e.g. load manager, it
+can screw things up anyway, e.g. by configuring sum of memory.low to be
+greater than total RAM on the host and hence driving kswapd mad.
 
-The question however is whether we want to hide a potentially costly
-operation and have it unaccounted and hidden in the kworker context.
-I mean fork() + write() doesn't sound terribly complicated to me to have
-a rather subtle behavior in the kernel.
--- 
-Michal Hocko
-SUSE Labs
+> I mean fork() + write() doesn't sound terribly complicated to me to have
+> a rather subtle behavior in the kernel.
+
+It'd be just a dubious API IMHO. With memory.max everything's clear: it
+tries to reclaim memory hard, may stall for several seconds, may invoke
+OOM, but if it finishes successfully we have memory.current less than
+memory.max. With this patch memory.high knob behaves rather strangely:
+it might stall, but there's no guarantee you'll have memory.current less
+than memory.high; moreover, according to the documentation it's OK to
+have memory.current greater than memory.high, so what's the point in
+calling synchronous reclaim blocking the caller?
+
+Thanks,
+Vladimir
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
