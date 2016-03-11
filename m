@@ -1,58 +1,44 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: clarify the uncharge_list() loop
-Date: Fri, 11 Mar 2016 09:19:52 +0100
-Message-ID: <20160311081951.GD27701@dhcp22.suse.cz>
-References: <1457643015-8828-3-git-send-email-hannes@cmpxchg.org>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: reclaim when shrinking memory.high below
+ usage
+Date: Fri, 11 Mar 2016 11:34:40 +0300
+Message-ID: <20160311083440.GI1946@esperanza>
+References: <1457643015-8828-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1457643015-8828-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <1457643015-8828-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu 10-03-16 15:50:15, Johannes Weiner wrote:
-> uncharge_list() does an unusual list walk because the function can
-> take regular lists with dedicated list_heads as well as singleton
-> lists where a single page is passed via the page->lru list node.
+On Thu, Mar 10, 2016 at 03:50:13PM -0500, Johannes Weiner wrote:
+> When setting memory.high below usage, nothing happens until the next
+> charge comes along, and then it will only reclaim its own charge and
+> not the now potentially huge excess of the new memory.high. This can
+> cause groups to stay in excess of their memory.high indefinitely.
 > 
-> This can sometimes lead to confusion as well as suggestions to replace
-> the loop with a list_for_each_entry(), which wouldn't work.
+> To fix that, when shrinking memory.high, kick off a reclaim cycle that
+> goes after the delta.
 
-Yes this confused at least me 2 times AFAIR.
+I agree that we should reclaim the high excess, but I don't think it's a
+good idea to do it synchronously. Currently, memory.low and memory.high
+knobs can be easily used by a single-threaded load manager implemented
+in userspace, because it doesn't need to care about potential stalls
+caused by writes to these files. After this change it might happen that
+a write to memory.high would take long, seconds perhaps, so in order to
+react quickly to changes in other cgroups, a load manager would have to
+spawn a thread per each write to memory.high, which would complicate its
+implementation significantly.
 
-> 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Since, in contrast to memory.max, memory.high definition allows cgroup
+to breach it, I believe it would be better if we spawned an asynchronous
+reclaim work from the kernel on write to memory.high instead of doing
+this synchronously. I guess we could reuse mem_cgroup->high_work for
+that.
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
-Thanks!
-
-> ---
->  mm/memcontrol.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8614e0d750e5..fa7bf354ae32 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5420,6 +5420,10 @@ static void uncharge_list(struct list_head *page_list)
->  	struct list_head *next;
->  	struct page *page;
->  
-> +	/*
-> +	 * Note that the list can be a single page->lru; hence the
-> +	 * do-while loop instead of a simple list_for_each_entry().
-> +	 */
->  	next = page_list->next;
->  	do {
->  		unsigned int nr_pages = 1;
-> -- 
-> 2.7.2
-
--- 
-Michal Hocko
-SUSE Labs
+Thanks,
+Vladimir
