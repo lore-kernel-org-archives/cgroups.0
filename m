@@ -1,93 +1,114 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHv9 1/3] rdmacg: Added rdma cgroup controller
-Date: Sat, 12 Mar 2016 11:49:03 +0530
-Message-ID: <CAG53R5XPFJn-gKvr-WtJy-+zv=APK0DWTBY96fo47XUD9h1FcQ@mail.gmail.com>
-References: <1456859137-13646-1-git-send-email-pandit.parav@gmail.com>
-	<1456859137-13646-2-git-send-email-pandit.parav@gmail.com>
-	<20160302173949.GG29826@mtj.duckdns.org>
-	<CAG53R5UAmTP9-m77-j2tPGZ+z8AicuVvUB_++cRUbQY-EwaBYw@mail.gmail.com>
-	<CAG53R5VYnTMzG4DchY2DKgveeeXbKcjUWQpOOjCNQuY-f7g9bg@mail.gmail.com>
-	<CAG53R5Wwr41Ma4AbTG==4VcOGvdO=t=be8z0Lkfq0YukuBtCzg@mail.gmail.com>
-	<20160305125215.GC3567@htj.duckdns.org>
-	<CAG53R5V-fhbVqZWroAkvDpgjNWchnO87G47-iXqSGg41sY1A5Q@mail.gmail.com>
+From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
+ group and PRIO_RGRP
+Date: Sat, 12 Mar 2016 07:26:59 +0100
+Message-ID: <1457764019.10402.72.camel@gmail.com>
+References: <1457710888-31182-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc;
-        bh=R37VAQO0JwsijJUn6Bi8+OC6D6j5a0Iwyp3aIEtdMtU=;
-        b=sUbUDSpe+aYS/WBhMZroRr4QQj/euJDCI+LX1yh/mmRa49hQz3IzOPrS97aCHY3DUd
-         nKDvWPtfK9it1zu0uBLv1nvtfJd7DQnp7Ts1VpTBBpffypPXzEBebeUGlYU0bWPDaTFX
-         Q+gd0Rte2BNFC/Hr8tSgs3jAW1gtTTCPScpAKfhAyQrFu5vOWLZ9fuEwSMr68ZZN1KwP
-         s7RjOZbQwmwrX0npeA7bAs86dbmyP1gl4b66slM2Co21FGHMc1BVRc4tVl3csWP4BoW+
-         iwkbTayJoS7+j5WT/FdsWjXlefC+7TqAno+WpxW7QzK8KgkcLh/tKeHVkeX/pkv/IO5T
-         Cc6w==
-In-Reply-To: <CAG53R5V-fhbVqZWroAkvDpgjNWchnO87G47-iXqSGg41sY1A5Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=LkWMI3heiMhym3kpPGhimEqiV7vHiH0752fsn+/BzA4=;
+        b=SnTHRlJkJHAXlf/JtiwyggaEIIyQVnpdtmAlp2lww6r6wAwjeQNnG7wMspVXQt0rmn
+         Fi6FdSYhpwZ6cFrMURSZwg4n9MtHPTeDPfZ0S7gIFC8GaDr8evEztG8bT80RngTtGWsi
+         TEshR9l7G0PKDfi28cSHshT9hGyCBI6NJmyH65347DsiRgc+aBFjJzkLdao1hAXRqPkr
+         TmsH/su1G2omM5/SdhYWt0x4RNqeP2gDnqDDwWtWguSGrBz6XaSuOfvvNTYY+UMpi9bZ
+         QGwEUtE2cpGoOPbxoD15/lJciXVntY4ATJh32uRXYwsqekZHLhCexrG+dNA5kH08YMh4
+         JZhA==
+In-Reply-To: <1457710888-31182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hi Tejun,
+On Fri, 2016-03-11 at 10:41 -0500, Tejun Heo wrote:
+> Hello,
+> 
+> This patchset extends cgroup v2 to support rgroup (resource group) for
+> in-process hierarchical resource control and implements PRIO_RGRP for
+> setpriority(2) on top to allow in-process hierarchical CPU cycle
+> control in a seamless way.
+> 
+> cgroup v1 allowed putting threads of a process in different cgroups
+> which enabled ad-hoc in-process resource control of some resources.
+> Unfortunately, this approach was fraught with problems such as
+> membership ambiguity with per-process resources and lack of isolation
+> between system management and in-process properties.  For a more
+> detailed discussion on the subject, please refer to the following
+> message.
+> 
+>  [1] [RFD] cgroup: thread granularity support for cpu controller
+> 
+> This patchset implements the mechanism outlined in the above message.
+> The new mechanism is named rgroup (resource group).  When explicitly
+> designating a non-rgroup cgroup, the term sgroup (system group) is
+> used.  rgroup has the following properties.
+> 
+> * A rgroup is a cgroup which is invisible on and transparent to the
+>   system-level cgroupfs interface.
+> 
+> * A rgroup can be created by specifying CLONE_NEWRGRP flag, along with
+>   CLONE_THREAD, during clone(2).  A new rgroup is created under the
+>   parent thread's cgroup and the new thread is created in it.
+> 
+> * A rgroup is automatically destroyed when empty.
+> 
+> * A top-level rgroup of a process is a rgroup whose parent cgroup is a
+>   sgroup.  A process may have multiple top-level rgroups and thus
+>   multiple rgroup subtrees under the same parent sgroup.
+> 
+> * Unlike sgroups, rgroups are allowed to compete against peer threads.
+>   Each rgroup behaves equivalent to a sibling task.
+> 
+> * rgroup subtrees are local to the process.  When the process forks or
+>   execs, its rgroup subtrees are collapsed.
+> 
+> * When a process is migrated to a different cgroup, its rgroup
+>   subtrees are preserved.
+> 
+> * Subset of controllers available on the parent sgroup are available
+>   to rgroup subtrees.  Controller management on rgroups is automatic
+>   and implicit and doesn't interfere with system-level cgroup
+>   controller management.  If a controller is made unavailable on the
+>   parent sgroup, it's automatically disabled from child rgroup
+>   subtrees.
+> 
+> rgroup lays the foundation for other kernel mechanisms to make use of
+> resource controllers while providing proper isolation between system
+> management and in-process operations removing the awkward and
+> layer-violating requirement for coordination between individual
+> applications and system management.  On top of the rgroup mechanism,
+> PRIO_RGRP is implemented for {set|get}priority(2).
+> 
+> * PRIO_RGRP can only be used if the target task is already in a
+>   rgroup.  If setpriority(2) is used and cpu controller is available,
+>   cpu controller is enabled until the target rgroup is covered and the
+>   specified nice value is set as the weight of the rgroup.
+> 
+> * The specified nice value has the same meaning as for tasks.  For
+>   example, a rgroup and a task competing under the same parent would
+>   behave exactly the same as two tasks.
+> 
+> * For top-level rgroups, PRIO_RGRP follows the same rlimit
+>   restrictions as PRIO_PROCESS; however, as nested rgroups only
+>   distribute CPU cycles which are allocated to the process, no
+>   restriction is applied.
+> 
+> PRIO_RGRP allows in-process hierarchical control of CPU cycles in a
+> manner which is a straight-forward and minimal extension of existing
+> task and priority management.
 
-On Sat, Mar 5, 2016 at 10:50 PM, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> Hi Tejun,
->
-> On Sat, Mar 5, 2016 at 6:22 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->> Hello, Parav.
->>
->> On Sat, Mar 05, 2016 at 04:45:09PM +0530, Parav Pandit wrote:
->>> Design that remains same from v6 to v10.
->>>   * spin lock is still fine grained at cgroup level instead of one
->>> global shared lock among all cgroups.
->>>      In future it can be optimized further to do per cpu or using
->>> single lock if required.
->>>   * file type enums are still present for max and current, as
->>> read/write call to those files is already taken care by common
->>> functions with required if/else.
->>>   * Resource limit setting is as it is, because number of devices are
->>> in range of 1 to 4 count in most use cases (as explained in
->>> documentation), and its not hot path.
->>
->> 1 and 2 are not okay.
-> For (1) shall I have one spin lock that is uses across multiple
-> hierarchy and multiple cgroup.
-> Essentially one global lock among all cgroup. During hierarchical
-> charging, continue to use same lock it at each level.
-> Would that work in this first release?
->
+Hrm.  You're showing that per-thread groups can coexist just fine,
+which is good given need and usage exists today out in the wild.  Why
+do such groups have to be invisible with a unique interface though?
 
-I am waiting for your reply.
-Shall one lock for all cgroup is ok with you?
+Given the core has to deal with them whether they're visible or not,
+and given they exist to fulfill a need, seems they should be first
+class citizens, not some Quasimodo like creature sneaking into the
+cathedral via a back door and slinking about in the shadows.
 
-> Can you please review the code for (2), I cannot think of any further
-> helper functions that I can write.
-> For both the file types, all the code is already common.
-> file types are used only to find out whether to reference max variable
-> or usage variable in structure.
-> Which can also be made as array, but I do not want to lose the code
-> readability for that little gain.
-> What exactly is the issue in current implementation? You just
-> mentioned that "its not good sign".
-> Its readable, simple and serves the purpose, what am I missing?
->
-If this is ok. I will keep the code as it is, because it uses common
-helper functions for max and current files.
-
-
->> 3 is fine but resource [un]charging is not hot path?
-> charge/uncharge is hot path from cgroup perspective.
-> Considering 1 to 4 devices in system rpool list would grow upto 4
-> entry deep at each cgroup level.
-> I believe this is good enough to start with. O complexity wise its
-> O(N). where N is number of devices in system.
->
->
->>
->> Thanks.
->>
->> --
->> tejun
+	-Mike
