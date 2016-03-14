@@ -1,37 +1,42 @@
-From: Xiubo Li <lixiubo-0p4V/sDNsUmm0O/7XYngnFaTQe2KTcn/@public.gmane.org>
-Subject: Re: [PATCH] cgroup: add opts release function to simplify the code
-Date: Mon, 14 Mar 2016 09:30:36 +0800
-Message-ID: <56E6143C.6060400@cmss.chinamobile.com>
-References: <1457680035-26772-1-git-send-email-lixiubo@cmss.chinamobile.com> <20160311172617.GE24046@htj.duckdns.org>
+From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
+ group and PRIO_RGRP
+Date: Mon, 14 Mar 2016 03:23:21 +0100
+Message-ID: <1457922201.3680.44.camel@gmail.com>
+References: <1457710888-31182-1-git-send-email-tj@kernel.org>
+	 <1457764019.10402.72.camel@gmail.com>
+	 <20160313150012.GB13405@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160311172617.GE24046-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=vU3LBdJk/HjRaYmpJJupcSqXY+RgCLcHKGX3Ra2MqtM=;
+        b=wFjxJlPo+9cFVg5RiYKc+HKW9SHibZzY9DMLu7vnaN6RkpXo3637Hr69gUPcl96aWq
+         GuATb4Gu0bdQ9qSfyCBZFTwY6RXW2DD+9MANFPE7FUyAEo+Mac+o+DxJCa11whC06he7
+         33sTXRDkZ1Ul1CpPtlYV6wkvC2XcP2AHmMLopHuJrEp5WsnwNk/62da0Bedt0eFGHsNh
+         w5oFYckiNd7t+baFfXFf5FEh6+f3cJgUis0xfcLMBzjnz4zi873/EI/XF0McFFDrQ/N0
+         KIdp+rNBhhplQX84XUtPNpmYUpJLGVDzQtvC6Qi4t6cw0Bo0TLTP2CHkLl+9YCoeWO7F
+         B6Zg==
+In-Reply-To: <20160313150012.GB13405-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
+On Sun, 2016-03-13 at 11:00 -0400, Tejun Heo wrote:
 
+> There can be use cases where building cpu resource hierarchy which is
+> completely alien to how the rest of the system is organized is useful.
 
-On 12/03/2016 01:26, Tejun Heo wrote:
-> On Fri, Mar 11, 2016 at 03:07:15PM +0800, Xiubo Li wrote:
->> The old code is a bit confusing for the readers by thinking why
->> these two members of opts should be released?
->>
->> The resources allocated by whom has the possiblity to release it,
->> But this will make the opts parse function more complex. So add
->> opts release function to simplify the code, and at the same time
->> to make the code more easy to read and be understood.
->
-> I'm not really sure this improves anything.
->
+Well, from my POV it's the "process" oriented thingy that's the alien, 
+ and one that wants to meet an alien juice resistant shovel ;-)
 
-Okay
+Another example is cpusets.  I use it, and I know beyond doubt that my
+employer's customers use it for RT/HPC purposes out in the wild, and
+that very much includes placing critical _threads_ in exclusive sets.
 
-Thanks,
-
-> Thanks.
->
-
+	-Mike
