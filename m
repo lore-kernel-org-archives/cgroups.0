@@ -1,69 +1,150 @@
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Issue with mount options on mount/umount
-Date: Mon, 14 Mar 2016 17:22:19 +0300
-Message-ID: <56E6C91B.6090109@oracle.com>
+From: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
+Subject: Re: [PATCH] block: transfer source bio's cgroup tags to clone via
+ bio_associate_blkcg()
+Date: Mon, 14 Mar 2016 17:08:03 +0200
+Message-ID: <56E6D3D3.4070104@kyup.com>
+References: <56CDF283.9010802@windriver.com> <56CEB1BC.4000005@kyup.com>
+ <20160225145314.GA20699@redhat.com> <20160302160649.GB29826@mtj.duckdns.org>
+ <20160302175656.GA59991@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20160302175656.GA59991-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Vasily Isaenko <vasily.isaenko-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Chris Friesen <chris.friesen-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 
-Hello!
 
-It seems that if 'umount' happens before some cgroup cleanup processes 
-finish, we will not be able to mount this cgroup with changed options.
 
-For example, consider this test case (where I'm playing with noprefix):
+On 03/02/2016 07:56 PM, Mike Snitzer wrote:
+> On Wed, Mar 02 2016 at 11:06P -0500,
+> Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> 
+>> Hello,
+>>
+>> On Thu, Feb 25, 2016 at 09:53:14AM -0500, Mike Snitzer wrote:
+>>> Right, LVM created devices are bio-based DM devices in the kernel.
+>>> bio-based block devices do _not_ have an IO scheduler.  Their underlying
+>>> request-based device does.
+>>
+>> dm devices are not the actual resource source, so I don't think it'd
+>> work too well to put io controllers on them (can't really do things
+>> like proportional control without owning the queue).
+>>
+>>> I'm not well-versed on the top-level cgroup interface and how it maps to
+>>> associated resources that are established in the kernel.  But it could
+>>> be that the configuration of blkio cgroup against a bio-based LVM device
+>>> needs to be passed through to the underlying request-based device
+>>> (e.g. /dev/sda4 in Chris's case)?
+>>>
+>>> I'm also wondering whether the latest cgroup work that Tejun has just
+>>> finished (afaik to support buffered IO in the IO controller) will afford
+>>> us a more meaningful reason to work to make cgroups' blkio controller
+>>> actually work with bio-based devices like LVM's DM devices?
+>>>
+>>> I'm very much open to advice on how to proceed with investigating this
+>>> integration work.  Tejun, Vivek, anyone else: if you have advice on next
+>>> steps for DM on this front _please_ yell, thanks!
+>>
+>> I think the only thing necessary is dm transferring bio cgroup tags to
+>> the bio's that it ends up passing down the stack.  Please take a look
+>> at fs/btrfs/extent_io.c::btrfs_bio_clone() for an example.  We
+>> probably should introduce a wrapper for this so that each site doesn't
+>> need to ifdef it.
+>>
+>> Thanks.
+> 
+> OK, I think this should do it.  Nikolay and/or others can you test this
+> patch using blkio cgroups controller with LVM devices and report back?
+> 
+> From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Date: Wed, 2 Mar 2016 12:37:39 -0500
+> Subject: [PATCH] block: transfer source bio's cgroup tags to clone via bio_associate_blkcg()
+> 
+> Move btrfs_bio_clone()'s support for transferring a source bio's cgroup
+> tags to a clone into both bio_clone_bioset() and __bio_clone_fast().
+> The former is used by btrfs (MD and blk-core also use it via bio_split).
+> The latter is used by both DM and bcache.
+> 
+> This should enable the blkio cgroups controller to work with all
+> stacking bio-based block devices.
+> 
+> Reported-by: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
+> Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  block/bio.c          | 10 ++++++++++
+>  fs/btrfs/extent_io.c |  6 ------
+>  2 files changed, 10 insertions(+), 6 deletions(-)
 
-#!/bin/sh
 
-mkdir /tmp/bla
-mkdir /dev/cgroup
+So I had a chance to test the settings here is what I got when running 
+2 container, using LVM-thin for their root device and having applied 
+your patch: 
 
-mount -t cgroup -o cpuset,noprefix bla /dev/cgroup
-mkdir /dev/cgroup/ltp
-rmdir /dev/cgroup/ltp
+When the 2 containers are using the same blkio.weight values (500) I 
+get the following from running DD simultaneously on the 2 containers: 
 
-#sleep 1
+[root@c1501 ~]# dd if=test.img of=test2.img bs=1M count=3000 oflag=direct
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 165.171 s, 19.0 MB/s
 
-umount /dev/cgroup
-rmdir /dev/cgroup
+[root@c1500 ~]# dd if=test.img of=test2.img bs=1M count=3000 oflag=direct
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 166.165 s, 18.9 MB/s
 
-for i in $(seq 2); do
-     echo $i
-     echo $i > /dev/kmsg
-     mount -t cgroup -o cpuset bla /tmp/bla; ls /tmp/bla | grep 
-effective_cpus; umount /tmp/bla
-done
+Also iostat showed the 2 volumes using almost the same amount of 
+IO (around 20mb r/w). I then increase the weight for c1501 to 1000 i.e. 
+twice the bandwidth that c1500 has, so I would expect its dd to complete
+twice as fast: 
 
-rmdir /tmp/bla
+[root@c1501 ~]# dd if=test.img of=test2.img bs=1M count=3000 oflag=direct
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 150.892 s, 20.8 MB/s
 
-If it's executed as is, it reports:
 
-[root@ol6-x64 cgroup]# ./test.sh
-1
-effective_cpus
-2
-cpuset.effective_cpus
+[root@c1500 ~]# dd if=test.img of=test2.img bs=1M count=3000 oflag=direct
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 157.167 s, 20.0 MB/s
 
-and in dmesg:
+Now repeating the same tests but this time using the page-cache 
+(echo 3 > /proc/sys/vm/drop_caches) was executed before each test run: 
 
-[root@ol6-x64 cgroup]# dmesg|tail
-1
-cgroup: new mount options do not match the existing superblock, will be 
-ignored
-2
+With equal weights (500):
+[root@c1501 ~]# dd if=test.img of=test2.img bs=1M count=3000
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 114.923 s, 27.4 MB/s
 
-If we uncomment that 'sleep 1' the test will report 
-cpuset.effective_cpus for both the iterations.
+[root@c1500 ~]# dd if=test.img of=test2.img bs=1M count=3000
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 120.245 s, 26.2 MB/s
 
-The kernel is v4.5-rc7-159-g7f02bf6. However, this issue is applicable 
-to older versions as well.
+With (c1501's weight equal to twice that of c1500 (1000)):
 
-Is this behavior a bug or feature? If it's a feature, then what is the 
-motivation for this behavior?
+[root@c1501 ~]# dd if=test.img of=test2.img bs=1M count=3000
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 99.0181 s, 31.8 MB/s
 
-Thank you.
+[root@c1500 ~]# dd if=test.img of=test2.img bs=1M count=3000
+3000+0 records in
+3000+0 records out
+3145728000 bytes (3.1 GB) copied, 122.872 s, 25.6 MB/s
+
+I'd say that for buffered IO your patch does indeed make a difference, 
+and this sort of aligns with what Vivek said about the patch
+working for buffered writes but not for direct. 
+
+I will proceed now and test his patch applied for the case of 
+direct writes. 
+
+Hope this helps. 
+
