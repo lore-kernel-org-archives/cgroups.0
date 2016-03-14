@@ -1,40 +1,51 @@
-From: Nikolay Borisov <n.borisov-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
-Subject: Re: block: transfer source bio's cgroup tags to clone via bio_associate_blkcg()
-Date: Tue, 15 Mar 2016 00:08:27 +0200
-Message-ID: <CAJFSNy7i-Kp_bPYajdSzDAt9F6_HQJ=_TFgjWzhk16_W66at7A@mail.gmail.com>
-References: <56CDF283.9010802@windriver.com>
-	<56CEB1BC.4000005@kyup.com>
-	<20160225145314.GA20699@redhat.com>
-	<20160302160649.GB29826@mtj.duckdns.org>
-	<20160302175656.GA59991@redhat.com>
-	<56E6D3D3.4070104@kyup.com>
-	<56E6D95B.3030904@siteground.com>
-	<20160314194912.GA6975@redhat.com>
-Mime-Version: 1.0
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: [PATCH] cgroup: avoid false positive gcc-6 warning
+Date: Mon, 14 Mar 2016 23:36:05 +0100
+Message-ID: <1457994978-1057495-1-git-send-email-arnd@arndb.de>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=siteground.com; s=google;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc;
-        bh=Ca/4I5KoHoBmdz9zC2vQdJLlaqrhMoSDn5/+aOzUA4Y=;
-        b=J+97nDDnn8Fz7gHVzHVHyt1w3VtW3MgasE7ipFVKcIETAjyJVx4c5h+9ZJOYeYCSXW
-         OIahevSfRgyALjcbDQCEnZCXk5YAJ0jo4Kj1OFu+gfRE4GalZoI+Q+/W5IGTdWQVPJIR
-         +bYqDm/CN1AOFtffW2R2JA8SjegzVsuIZamGo=
-In-Reply-To: <20160314194912.GA6975-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chris Friesen <chris.friesen-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
->
-> Great.
->
-> Jens, can you pick up the patch in question ("[PATCH] block: transfer
-> source bio's cgroup tags to clone via bio_associate_blkcg()") that I
-> posted in this thread?
+When all subsystems are disabled, gcc notices that cgroup_subsys_enabled_key
+is a zero-length array and that any access to it must be out of bounds:
 
-And what about Vivek's patch of associating the source bio with the io
-context of the process issuing the io?
-Would that help in the DIO case?
+In file included from ../include/linux/cgroup.h:19:0,
+                 from ../kernel/cgroup.c:31:
+../kernel/cgroup.c: In function 'cgroup_add_cftypes':
+../kernel/cgroup.c:261:53: error: array subscript is above array bounds [-Werror=array-bounds]
+  return static_key_enabled(cgroup_subsys_enabled_key[ssid]);
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~
+../include/linux/jump_label.h:271:40: note: in definition of macro 'static_key_enabled'
+  static_key_count((struct static_key *)x) > 0;    \
+                                        ^
+
+We should never call the function in this particular case, so this is
+not a bug. In order to silence the warning, this adds an explicit check
+for the CGROUP_SUBSYS_COUNT==0 case.
+
+Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+---
+ kernel/cgroup.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 155c88470543..3348a36c3694 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -258,6 +258,9 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
+  */
+ static bool cgroup_ssid_enabled(int ssid)
+ {
++	if (CGROUP_SUBSYS_COUNT == 0)
++		return 0;
++
+ 	return static_key_enabled(cgroup_subsys_enabled_key[ssid]);
+ }
+ 
+-- 
+2.7.0
