@@ -1,100 +1,37 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
- group and PRIO_RGRP
-Date: Sun, 13 Mar 2016 18:40:35 +0100
-Message-ID: <1457890835.3859.72.camel@gmail.com>
-References: <1457710888-31182-1-git-send-email-tj@kernel.org>
-	 <1457764019.10402.72.camel@gmail.com>
-	 <20160313150012.GB13405@htj.duckdns.org>
+From: Xiubo Li <lixiubo-0p4V/sDNsUmm0O/7XYngnFaTQe2KTcn/@public.gmane.org>
+Subject: Re: [PATCH] cgroup: add opts release function to simplify the code
+Date: Mon, 14 Mar 2016 09:30:36 +0800
+Message-ID: <56E6143C.6060400@cmss.chinamobile.com>
+References: <1457680035-26772-1-git-send-email-lixiubo@cmss.chinamobile.com> <20160311172617.GE24046@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=mJDG/O1q+pFTA3Oimihr6crjG1XVD2N5PG7nF9gE59M=;
-        b=Hu46VBEwvpD7mZ3KQJQnZqgSXdiTkZaLWW3tk3FVCACu1qGhVDoQepviI/gOrt4gK0
-         wM60cJ7K1qHUrro6PFQTEVNoSDiZ4MWiU7w5hrQZXo0nXbG27aI8JzlkGS/u9GiqbnAh
-         2FvGizXe3leIm3qsekOEszQtfUK4LFRTzpnN+U7/yW1rEk/oTKuRnUF6EE5cac6ybpgJ
-         f+lK9YFwyMXpeidiP9zzkJyaUo/iU6RQQwWSJfF5TNAavVMoWDar/qQMlwmgC6d2ffPc
-         sswezPgLQz/swoiQ9QyBTTRdNAmtzS8lXYbYy0lz2yvIRDVvdxMcqgQsPfuJItM6zCyt
-         miVA==
-In-Reply-To: <20160313150012.GB13405-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20160311172617.GE24046-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, 2016-03-13 at 11:00 -0400, Tejun Heo wrote:
-> Hello, Mike.
-> 
-> On Sat, Mar 12, 2016 at 07:26:59AM +0100, Mike Galbraith wrote:
-> > Hrm.  You're showing that per-thread groups can coexist just fine,
-> > which is good given need and usage exists today out in the wild.  Why
-> > do such groups have to be invisible with a unique interface though?
-> 
-> I tried to explain these in the forementioned RFD document.  I'll give
-> a brief example here.
-> 
-> Let's say there is an application which wants to manage resource
-> distributions across its multiple threadpools in a hierarchical way.
-> With cgroupfs interface as the only system-wide interface, it has to
-> coordinate who or whatever is managing that interface.  Maybe it can
-> get a subtree delegated to it, maybe it has to ask the system thing to
-> create and place threads there, maybe it can just expose the pids and
-> let the system management do its thing (what if the threads in the
-> pools are dynamic tho?).  There is no reliable universal way of doing
-> this.  Each such application has to be ready to specifically
-> coordinate with the specific system management in use.
 
-The last thing I ever want to see on my boxen is random applications
-either doing their own thing with my cgroups management interface, or
-conspiring with "the system thing" behind my back to do things that I
-did not specifically ask them to do.
 
-"The system thing" started doing its own thing behind my back, and
-oddly enough, its tentacles started falling off.  By golly, its eyes
-seem to have fallen out as well.
+On 12/03/2016 01:26, Tejun Heo wrote:
+> On Fri, Mar 11, 2016 at 03:07:15PM +0800, Xiubo Li wrote:
+>> The old code is a bit confusing for the readers by thinking why
+>> these two members of opts should be released?
+>>
+>> The resources allocated by whom has the possiblity to release it,
+>> But this will make the opts parse function more complex. So add
+>> opts release function to simplify the code, and at the same time
+>> to make the code more easy to read and be understood.
+>
+> I'm not really sure this improves anything.
+>
 
-That's what happens when control freak meets control freak, one of them
-ends up in pieces.  There can be only one, and that one is me, the
-administrator.  Applications don't coordinate spit, if I put on my
-administrator hat and stuff 'em in a box, they better stay stuffed.
+Okay
 
-> This is kernel failing to provide proper abstraction and isolation
-> between different layers.  The "raw" feature is there but it's unsafe
-> to use and thus can't be used widely.
+Thanks,
 
-Good, management of my boxen is my turf.  The raw feature works fine
-today, and I'd like to see it to keep on working tomorrow.  If tools
-written for administration diddle, that's fine IFF I'm the guy on the
-other end of the tool.  All other manipulators of my management
-interfaces can go.. fish.
+> Thanks.
+>
 
-> > Given the core has to deal with them whether they're visible or not,
-> > and given they exist to fulfill a need, seems they should be first
-> > class citizens, not some Quasimodo like creature sneaking into the
-> > cathedral via a back door and slinking about in the shadows.
-> 
-> In terms of programmability and accessibility for individual
-> applications, group resource management being available through
-> straight-forward and incremental extension of exsiting mechanisms is
-> *way* more first class citizen.  It is two seamless extensions to
-> clone(2) and setpriority(2) making hierarchical resource management
-> generally available to applications.
-
-To me, that sounds like chaos.
-
-> There can be use cases where building cpu resource hierarchy which is
-> completely alien to how the rest of the system is organized is useful.
-> For those cases, the only thing which can be done is building a
-> separate hierarchy for the cpu controller and that capability isn't
-> going anywhere.
-
-As long as administrators can use the system interface to aggregate
-what they see fit, I'm happy.  The scheduler schedules threads, ergo
-the cpu controller must aggregate threads.  There is no process.
-
-	-Mike
