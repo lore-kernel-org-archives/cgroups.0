@@ -1,54 +1,62 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: [PATCH v2] cgroup: avoid false positive gcc-6 warning
-Date: Tue, 15 Mar 2016 00:21:06 +0100
-Message-ID: <1457997681-2011105-1-git-send-email-arnd@arndb.de>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
+ group and PRIO_RGRP
+Date: Tue, 15 Mar 2016 18:21:36 +0100
+Message-ID: <20160315172136.GA6114@dhcp22.suse.cz>
+References: <1457710888-31182-1-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1457710888-31182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-When all subsystems are disabled, gcc notices that cgroup_subsys_enabled_key
-is a zero-length array and that any access to it must be out of bounds:
+On Fri 11-03-16 10:41:18, Tejun Heo wrote:
+> Hello,
+> 
+> This patchset extends cgroup v2 to support rgroup (resource group) for
+> in-process hierarchical resource control and implements PRIO_RGRP for
+> setpriority(2) on top to allow in-process hierarchical CPU cycle
+> control in a seamless way.
+> 
+> cgroup v1 allowed putting threads of a process in different cgroups
+> which enabled ad-hoc in-process resource control of some resources.
+> Unfortunately, this approach was fraught with problems such as
+> membership ambiguity with per-process resources
 
-In file included from ../include/linux/cgroup.h:19:0,
-                 from ../kernel/cgroup.c:31:
-../kernel/cgroup.c: In function 'cgroup_add_cftypes':
-../kernel/cgroup.c:261:53: error: array subscript is above array bounds [-Werror=array-bounds]
-  return static_key_enabled(cgroup_subsys_enabled_key[ssid]);
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~
-../include/linux/jump_label.h:271:40: note: in definition of macro 'static_key_enabled'
-  static_key_count((struct static_key *)x) > 0;    \
-                                        ^
+[Sorry if this has been already discussed, I haven't followed all the
+ discussions regarding this topic]
 
-We should never call the function in this particular case, so this is
-not a bug. In order to silence the warning, this adds an explicit check
-for the CGROUP_SUBSYS_COUNT==0 case.
+While I agree that per-thread granularity is no fun for controllers
+which operate on different than task_struct entities (like memory cgroup
+controller) but I am afraid that all the complications will not go away
+if we are strictly per-process anyway.
 
-Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
----
-v2: use 'false' as the return code instead of '0', as suggested by
-the friendly kbuild test robot.
+For example memcg controller is not strictly per-process either, it
+operates on the mm_struct and that might be shared between different
+_processes_. So we still might end up in the same schizophrenic
+situation where two different processes are living in different
+cgroups while one of them is silently operating in a different memcg
+cgroup. I really hate this but this is what our clone(CLONE_VM) (without
+CLONE_THREAD) allows to do.
 
- kernel/cgroup.c | 3 +++
- 1 file changed, 3 insertions(+)
+I do not know about other controllers, maybe only memcg is so special,
+but that would suggest that even process-only restriction might turn out
+to be a problem in the future and controllers would have to face the
+same problem later on.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 155c88470543..5f65c1002b4b 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -258,6 +258,9 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
-  */
- static bool cgroup_ssid_enabled(int ssid)
- {
-+	if (CGROUP_SUBSYS_COUNT == 0)
-+		return false;
-+
- 	return static_key_enabled(cgroup_subsys_enabled_key[ssid]);
- }
- 
+Now I have to admit I do not have great ideas how to cover all the
+possible cases but wouldn't it make more sense to allow for more
+flexibility and allow thread migration while the migration can be vetoed
+by any controller should it cross into a different/incompatible cgroup.
+
+[...]
+
+Thanks!
 -- 
-2.7.0
+Michal Hocko
+SUSE Labs
