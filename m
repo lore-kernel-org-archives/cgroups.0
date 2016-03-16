@@ -1,148 +1,72 @@
-From: Zhao Lei <zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: RE: [PATCH v2 2/2] cpuacct: split usage into user_usage and sys_usage.
-Date: Wed, 16 Mar 2016 18:39:52 +0800
-Message-ID: <009601d17f70$2cbc07c0$86341740$@cn.fujitsu.com>
-References: <cover.1457082730.git.zhaolei@cn.fujitsu.com> <340a5ec9cb4e7f97b3a41f3dc657b9aca4c76f25.1457082730.git.zhaolei@cn.fujitsu.com> <20160310132728.GX6344@twins.programming.kicks-ass.net>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH for-4.6] cgroup: ignore css_sets associated with dead
+ cgroups during migration
+Date: Wed, 16 Mar 2016 11:45:27 +0100
+Message-ID: <20160316104527.GG25010@twins.programming.kicks-ass.net>
+References: <20160316004304.GC3447@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160310132728.GX6344-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Content-Language: zh-cn
+Content-Disposition: inline
+In-Reply-To: <20160316004304.GC3447-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 'Peter Zijlstra' <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hi, Peter Zijlstra
+On Tue, Mar 15, 2016 at 08:43:04PM -0400, Tejun Heo wrote:
+> Before 2e91fa7f6d45 ("cgroup: keep zombies associated with their
+> original cgroups"), all dead tasks were associated with init_css_set.
+> If a zombie task is requested for migration, while migration prep
+> operations would still be performed on init_css_set, the actual
+> migration would ignore zombie tasks.  As init_css_set is always valid,
+> this worked fine.
+> 
+> However, after 2e91fa7f6d45, zombie tasks stay with the css_set it was
+> associated with at the time of death.  Let's say a task T associated
+> with cgroup A on hierarchy H-1 and cgroup B on hiearchy H-2.  After T
+> becomes a zombie, it would still remain associated with A and B.  If A
+> only contains zombie tasks, it can be removed.  On removal, A gets
+> marked offline but stays pinned until all zombies are drained.  At
+> this point, if migration is initiated on T to a cgroup C on hierarchy
+> H-2, migration path would try to prepare T's css_set for migration and
+> trigger the following.
+> 
+>  WARNING: CPU: 0 PID: 1576 at kernel/cgroup.c:474 cgroup_get+0x121/0x160()
+>  CPU: 0 PID: 1576 Comm: bash Not tainted 4.4.0-work+ #289
+>  ...
+>  Call Trace:
+>   [<ffffffff8127e63c>] dump_stack+0x4e/0x82
+>   [<ffffffff810445e8>] warn_slowpath_common+0x78/0xb0
+>   [<ffffffff810446d5>] warn_slowpath_null+0x15/0x20
+>   [<ffffffff810c33e1>] cgroup_get+0x121/0x160
+>   [<ffffffff810c349b>] link_css_set+0x7b/0x90
+>   [<ffffffff810c4fbc>] find_css_set+0x3bc/0x5e0
+>   [<ffffffff810c5269>] cgroup_migrate_prepare_dst+0x89/0x1f0
+>   [<ffffffff810c7547>] cgroup_attach_task+0x157/0x230
+>   [<ffffffff810c7a17>] __cgroup_procs_write+0x2b7/0x470
+>   [<ffffffff810c7bdc>] cgroup_tasks_write+0xc/0x10
+>   [<ffffffff810c4790>] cgroup_file_write+0x30/0x1b0
+>   [<ffffffff811c68fc>] kernfs_fop_write+0x13c/0x180
+>   [<ffffffff81151673>] __vfs_write+0x23/0xe0
+>   [<ffffffff81152494>] vfs_write+0xa4/0x1a0
+>   [<ffffffff811532d4>] SyS_write+0x44/0xa0
+>   [<ffffffff814af2d7>] entry_SYSCALL_64_fastpath+0x12/0x6f
+> 
+> It doesn't make sense to prepare migration for css_sets pointing to
+> dead cgroups as they are guaranteed to contain only zombies which are
+> ignored later during migration.  This patch makes cgroup destruction
+> path mark all affected css_sets as dead and updates the migration path
+> to ignore them during preparation.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Fixes: 2e91fa7f6d45 ("cgroup: keep zombies associated with their original cgroups")
 
-Thanks for so detailed review.
+This doesn't fix the problem that those zombies might actually still
+want to use the cgroups they're tied to, as reported here:
 
-> -----Original Message-----
-> From: Peter Zijlstra [mailto:peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org]
-> Sent: Thursday, March 10, 2016 9:27 PM
-> To: Zhao Lei <zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org;
-> mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org; tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; Yang Dongsheng
-> <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> Subject: Re: [PATCH v2 2/2] cpuacct: split usage into user_usage and
-> sys_usage.
-> 
-> On Fri, Mar 04, 2016 at 05:47:06PM +0800, Zhao Lei wrote:
-> > +static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu,
-> > +				 enum cpuacct_usage_index index)
-> >  {
-> > +	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> > +	u64 data = 0;
-> > +	int i = 0;
-> > +
-> > +	/*
-> > +	 * We allow index == CPUACCT_USAGE_NRUSAGE here to read
-> > +	 * the sum of suages.
-> > +	 */
-> > +	BUG_ON(index > CPUACCT_USAGE_NRUSAGE);
-> > +
-> > +	if (index == CPUACCT_USAGE_NRUSAGE) {
-> > +		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> > +		for (i = 0; i < CPUACCT_USAGE_NRUSAGE; i++)
-> > +			data += cpuusage->usages[i];
-> > +		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
-> 
-> Why do you unconditionally take the lock here? You really don't need it
-> on 64 bit.
-> 
-Yes, will fix.
+  lkml.kernel.org/r/20160314112057.GT6356-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org
 
-> > +
-> > +		goto out;
-> > +	}
-> >
-> >  #ifndef CONFIG_64BIT
-> >  	/*
-> >  	 * Take rq->lock to make 64-bit read safe on 32-bit platforms.
-> >  	 */
-> >  	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> > +	data = cpuusage->usages[index];
-> >  	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
-> >  #else
-> > +	data = cpuusage->usages[index];
-> >  #endif
-> >
-> > +out:
-> >  	return data;
-> >  }
-> >
-> > +static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu,
-> > +				   enum cpuacct_usage_index index, u64 val)
-> >  {
-> > +	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> > +	int i = 0;
-> > +
-> > +	/*
-> > +	 * We allow index == CPUACCT_USAGE_NRUSAGE here to write
-> > +	 * val to each index of usages.
-> > +	 */
-> > +	BUG_ON(index > CPUACCT_USAGE_NRUSAGE);
-> > +
-> > +	if (index == CPUACCT_USAGE_NRUSAGE) {
-> > +		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> > +		for (i = 0; i < CPUACCT_USAGE_NRUSAGE; i++)
-> > +			cpuusage->usages[i] = val;
-> > +		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
-> > +
-> > +		return;
-> > +	}
-> 
-> Same for the above, and the below is dead code, you only ever call this
-> with NRUSAGE.
-> 
-Good point.
-
-> >  #ifndef CONFIG_64BIT
-> >  	/*
-> >  	 * Take rq->lock to make 64-bit write safe on 32-bit platforms.
-> >  	 */
-> >  	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
-> > +	cpuusage->usages[index] = val;
-> >  	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
-> >  #else
-> > +	cpuusage->usages[index] = val;
-> >  #endif
-> >  }
-> >
-> 
-> > @@ -246,9 +344,15 @@ void cpuacct_charge(struct task_struct *tsk, u64
-> cputime)
-> >
-> >  	ca = task_ca(tsk);
-> >
-> > +	user_time = user_mode(task_pt_regs(tsk));
-> > +
-> >  	while (true) {
-> > -		u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> > -		*cpuusage += cputime;
-> > +		struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-> > +
-> > +		if (user_time)
-> > +			cpuusage->usages[CPUACCT_USAGE_USER] += cputime;
-> > +		else
-> > +			cpuusage->usages[CPUACCT_USAGE_SYSTEM] += cputime;
-> >
-> >  		ca = parent_ca(ca);
-> >  		if (!ca)
-> 
-> Have you tried to measure the performance impact of this?
-> 
-> Also, that code seems particularly silly for not using this_cpu_ptr().
-> After all, we only ever call this on current.
-> 
-> Also that ca iteration looks daft, should we fix that to read:
-> 
-> 	for (ca = task_ca(tsk); ca; ca = parent_ca(ca))
-I'll rewrite this code block.
-
-Thanks
-Zhaolei
-
-
-
+I would strongly suggest to revert 2e91fa7f6d45 wholesale (and mark for
+stable) and try again later.
