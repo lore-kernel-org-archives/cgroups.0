@@ -1,66 +1,148 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: reclaim and OOM kill when shrinking
- memory.max below usage
-Date: Wed, 16 Mar 2016 09:43:57 +0100
-Message-ID: <20160316084357.GA21228@dhcp22.suse.cz>
-References: <1457643015-8828-2-git-send-email-hannes@cmpxchg.org>
- <20160311081825.GC27701@dhcp22.suse.cz>
- <20160311091931.GK1946@esperanza>
- <20160316051848.GA11006@cmpxchg.org>
+From: Zhao Lei <zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: RE: [PATCH v2 2/2] cpuacct: split usage into user_usage and sys_usage.
+Date: Wed, 16 Mar 2016 18:39:52 +0800
+Message-ID: <009601d17f70$2cbc07c0$86341740$@cn.fujitsu.com>
+References: <cover.1457082730.git.zhaolei@cn.fujitsu.com> <340a5ec9cb4e7f97b3a41f3dc657b9aca4c76f25.1457082730.git.zhaolei@cn.fujitsu.com> <20160310132728.GX6344@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160316051848.GA11006-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20160310132728.GX6344-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Content-Language: zh-cn
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: 'Peter Zijlstra' <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Tue 15-03-16 22:18:48, Johannes Weiner wrote:
-> On Fri, Mar 11, 2016 at 12:19:31PM +0300, Vladimir Davydov wrote:
-> > On Fri, Mar 11, 2016 at 09:18:25AM +0100, Michal Hocko wrote:
-> > > On Thu 10-03-16 15:50:14, Johannes Weiner wrote:
-> > ...
-> > > > @@ -5037,9 +5040,36 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
-> > > >  	if (err)
-> > > >  		return err;
-> > > >  
-> > > > -	err = mem_cgroup_resize_limit(memcg, max);
-> > > > -	if (err)
-> > > > -		return err;
-> > > > +	xchg(&memcg->memory.limit, max);
-> > > > +
-> > > > +	for (;;) {
-> > > > +		unsigned long nr_pages = page_counter_read(&memcg->memory);
-> > > > +
-> > > > +		if (nr_pages <= max)
-> > > > +			break;
-> > > > +
-> > > > +		if (signal_pending(current)) {
-> > > 
-> > > Didn't you want fatal_signal_pending here? At least the changelog
-> > > suggests that.
-> > 
-> > I suppose the user might want to interrupt the write by hitting CTRL-C.
+Hi, Peter Zijlstra
+
+Thanks for so detailed review.
+
+> -----Original Message-----
+> From: Peter Zijlstra [mailto:peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org]
+> Sent: Thursday, March 10, 2016 9:27 PM
+> To: Zhao Lei <zhaolei-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org;
+> mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org; tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; Yang Dongsheng
+> <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Subject: Re: [PATCH v2 2/2] cpuacct: split usage into user_usage and
+> sys_usage.
 > 
-> Yeah. This is the same thing we do for the current limit setting loop.
-
-Yes we do but then the operation is canceled without any change. Now
-re-reading the changelog I've realized I have misread the "we run out of
-OOM victims and there's only unreclaimable memory left, or the task
-writing to memory.max is killed." part and considered task writing... is
-OOM killed.
- 
-> > Come to think of it, shouldn't we restore the old limit and return EBUSY
-> > if we failed to reclaim enough memory?
+> On Fri, Mar 04, 2016 at 05:47:06PM +0800, Zhao Lei wrote:
+> > +static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu,
+> > +				 enum cpuacct_usage_index index)
+> >  {
+> > +	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
+> > +	u64 data = 0;
+> > +	int i = 0;
+> > +
+> > +	/*
+> > +	 * We allow index == CPUACCT_USAGE_NRUSAGE here to read
+> > +	 * the sum of suages.
+> > +	 */
+> > +	BUG_ON(index > CPUACCT_USAGE_NRUSAGE);
+> > +
+> > +	if (index == CPUACCT_USAGE_NRUSAGE) {
+> > +		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
+> > +		for (i = 0; i < CPUACCT_USAGE_NRUSAGE; i++)
+> > +			data += cpuusage->usages[i];
+> > +		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
 > 
-> I suspect it's very rare that it would fail. But even in that case
-> it's probably better to at least not allow new charges past what the
-> user requested, even if we can't push the level back far enough.
+> Why do you unconditionally take the lock here? You really don't need it
+> on 64 bit.
+> 
+Yes, will fix.
 
-I guess you are right. This guarantee is indeed useful.
--- 
-Michal Hocko
-SUSE Labs
+> > +
+> > +		goto out;
+> > +	}
+> >
+> >  #ifndef CONFIG_64BIT
+> >  	/*
+> >  	 * Take rq->lock to make 64-bit read safe on 32-bit platforms.
+> >  	 */
+> >  	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
+> > +	data = cpuusage->usages[index];
+> >  	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
+> >  #else
+> > +	data = cpuusage->usages[index];
+> >  #endif
+> >
+> > +out:
+> >  	return data;
+> >  }
+> >
+> > +static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu,
+> > +				   enum cpuacct_usage_index index, u64 val)
+> >  {
+> > +	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
+> > +	int i = 0;
+> > +
+> > +	/*
+> > +	 * We allow index == CPUACCT_USAGE_NRUSAGE here to write
+> > +	 * val to each index of usages.
+> > +	 */
+> > +	BUG_ON(index > CPUACCT_USAGE_NRUSAGE);
+> > +
+> > +	if (index == CPUACCT_USAGE_NRUSAGE) {
+> > +		raw_spin_lock_irq(&cpu_rq(cpu)->lock);
+> > +		for (i = 0; i < CPUACCT_USAGE_NRUSAGE; i++)
+> > +			cpuusage->usages[i] = val;
+> > +		raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
+> > +
+> > +		return;
+> > +	}
+> 
+> Same for the above, and the below is dead code, you only ever call this
+> with NRUSAGE.
+> 
+Good point.
+
+> >  #ifndef CONFIG_64BIT
+> >  	/*
+> >  	 * Take rq->lock to make 64-bit write safe on 32-bit platforms.
+> >  	 */
+> >  	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
+> > +	cpuusage->usages[index] = val;
+> >  	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
+> >  #else
+> > +	cpuusage->usages[index] = val;
+> >  #endif
+> >  }
+> >
+> 
+> > @@ -246,9 +344,15 @@ void cpuacct_charge(struct task_struct *tsk, u64
+> cputime)
+> >
+> >  	ca = task_ca(tsk);
+> >
+> > +	user_time = user_mode(task_pt_regs(tsk));
+> > +
+> >  	while (true) {
+> > -		u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
+> > -		*cpuusage += cputime;
+> > +		struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
+> > +
+> > +		if (user_time)
+> > +			cpuusage->usages[CPUACCT_USAGE_USER] += cputime;
+> > +		else
+> > +			cpuusage->usages[CPUACCT_USAGE_SYSTEM] += cputime;
+> >
+> >  		ca = parent_ca(ca);
+> >  		if (!ca)
+> 
+> Have you tried to measure the performance impact of this?
+> 
+> Also, that code seems particularly silly for not using this_cpu_ptr().
+> After all, we only ever call this on current.
+> 
+> Also that ca iteration looks daft, should we fix that to read:
+> 
+> 	for (ca = task_ca(tsk); ca; ca = parent_ca(ca))
+I'll rewrite this code block.
+
+Thanks
+Zhaolei
+
+
+
