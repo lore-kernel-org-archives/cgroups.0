@@ -1,38 +1,75 @@
-From: Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [BUG] cgroup writeback list corruption
-Date: Wed, 16 Mar 2016 19:36:41 -0700
-Message-ID: <CAAeU0aP6usVKUZTm7ncrkiEHEY5YGgeM3syhm9BeJvPk6k6wxA@mail.gmail.com>
-References: <CAAeU0aMYeM_39Y2+PaRvyB1nqAPYZSNngJ1eBRmrxn7gKAt2Mg@mail.gmail.com>
-	<20160316221015.GL21104@mtj.duckdns.org>
-	<20160317011350.GN21104@mtj.duckdns.org>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH] mm: memcontrol: reclaim and OOM kill when shrinking
+ memory.max below usage
+Date: Thu, 17 Mar 2016 11:23:45 +0300
+Message-ID: <20160317082345.GF18142@esperanza>
+References: <1457643015-8828-2-git-send-email-hannes@cmpxchg.org>
+ <20160311081825.GC27701@dhcp22.suse.cz>
+ <20160311091931.GK1946@esperanza>
+ <20160316051848.GA11006@cmpxchg.org>
+ <20160316151509.GC18142@esperanza>
+ <20160316201329.GA15498@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc;
-        bh=mTPZlRpESATK/PzkyXs1nkCd6iND5BmtpKLyiz+LseY=;
-        b=IVVhlhixvMMYvxZCrvTuAAv2uNFI755j/gdhgX5zuuFn3CSkF6ybK3mxIU+sqo0Rx/
-         WAQapGK3Im0FA3/p8ae652cp1zTveFaCsWWV7Q2oRqzFq8IiHFWx3kOEcZ95o7L1Ydoe
-         jjg/ygYYoIVP3lUULdb0Wzkzwn4h6FVOpumSdlPaI6GNSWI8SW0y2cx0hjP0vMw9amh7
-         a2LuAOvyGy0YIxGmCUUHxBcaqi+iakqezzQ1uTgCiXFvAcJ8SXd6hpQaWIWVHVoRzLje
-         eFkCemYbnRAMgnftegiv5bvwFTh+4X6AYxwjZQovlN6Vo4FHA7deznvycYZqr7IUXf7+
-         n5CA==
-In-Reply-To: <20160317011350.GN21104-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=K0LDddufhLyCFPBIBZiRI8iJNfcaSF+QYxpMNB01oX4=;
+ b=Epf+xJiGkt50O6NrdanY4OUcN8uAKvQ11mo9hZWOcv+Ay9/rnXDTxDwcocs5jceKKOfVJH/RipQJ2o2Z39gBMgsnP/v5j+1YA2W/GVUHtxhruhBV4FuHEx1u3snEo9R2vpPBa1uYp9/JB1c397TqeNPonsqC5YE/+EeyxxIWupk=
+Content-Disposition: inline
+In-Reply-To: <20160316201329.GA15498@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Wed, Mar 16, 2016 at 6:13 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello, Tahsin.
->
-> FYI, this is the preliminary patch I'm trying to test.  I'm running
-> the repro case w/o the patch but the bug hasn't triggered yet.
+On Wed, Mar 16, 2016 at 01:13:29PM -0700, Johannes Weiner wrote:
+> On Wed, Mar 16, 2016 at 06:15:09PM +0300, Vladimir Davydov wrote:
+> > On Tue, Mar 15, 2016 at 10:18:48PM -0700, Johannes Weiner wrote:
+> > > On Fri, Mar 11, 2016 at 12:19:31PM +0300, Vladimir Davydov wrote:
+> > ...
+> > > > Come to think of it, shouldn't we restore the old limit and return EBUSY
+> > > > if we failed to reclaim enough memory?
+> > > 
+> > > I suspect it's very rare that it would fail. But even in that case
+> > > it's probably better to at least not allow new charges past what the
+> > > user requested, even if we can't push the level back far enough.
+> > 
+> > It's of course good to set the limit before trying to reclaim memory,
+> > but isn't it strange that even if the cgroup's memory can't be reclaimed
+> > to meet the new limit (tmpfs files or tasks protected from oom), the
+> > write will still succeed? It's a rare use case, but still.
+> 
+> It's not optimal, but there is nothing we can do about it, is there? I
+> don't want to go back to the racy semantics that allow the application
+> to balloon up again after the limit restriction fails.
+> 
+> > I've one more concern regarding this patch. It's about calling OOM while
+> > reclaiming cgroup memory. AFAIU OOM killer can be quite disruptive for a
+> > workload, so is it really good to call it when normal reclaim fails?
+> > 
+> > W/o OOM killer you can optimistically try to adjust memory.max and if it
+> > fails you can manually kill some processes in the container or restart
+> > it or cancel the limit update. With your patch adjusting memory.max
+> > never fails, but OOM might kill vital processes rendering the whole
+> > container useless. Wouldn't it be better to let the user decide if
+> > processes should be killed or not rather than calling OOM forcefully?
+> 
+> Those are the memory.max semantics, though. Why should there be a
+> difference between the container growing beyond the limit and the
+> limit cutting into the container?
+> 
+> If you don't want OOM kills, set memory.high instead. This way you get
+> the memory pressure *and* the chance to do your own killing.
 
-Please let me know if you want me to send the repro config. I don't have
-it available at the moment but I can reconstruct it if you want.
+Fair enough.
 
-thanks
+Thanks,
+Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
