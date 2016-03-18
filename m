@@ -1,160 +1,151 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH for-linus 2/2] writeback, cgroup: fix use of the wrong
- bdi_writeback which mismatches the inode
-Date: Fri, 18 Mar 2016 13:52:04 -0400
-Message-ID: <20160318175204.GB20028@mtj.duckdns.org>
-References: <CAAeU0aMYeM_39Y2+PaRvyB1nqAPYZSNngJ1eBRmrxn7gKAt2Mg@mail.gmail.com>
- <20160318175003.GA20028@mtj.duckdns.org>
+Subject: [GIT PULL] cgroup changes for v4.6-rc1
+Date: Fri, 18 Mar 2016 14:59:01 -0400
+Message-ID: <20160318185901.GE20028@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=plEmmuuc4y+jPf1DFnEhmkH8CYomi3h6Uru8YY5Va54=;
-        b=OrAKZ8B/dtVU4em2PZH5bTzmzX/EHG4bSQQ8JTdmZWkFoU2mIuf/i1jKGTqfzABNDW
-         Pjs+DAs0Gmmz0qSoMM8AaKNRDQBqG2v2esR5hK2YGoKrWHW1F5VpfWIe9NRj3so1YqXp
-         kfu5wZfrTr87wyUR798UXdhG0dhG/WrTsw90MkDjSw0A/+Js6YcA6U2semhsAXuIajGk
-         /empEsTwH2g1q0z0SUD3VTtRwDxSIl8ePwBqlcYFzXS89H2FFFTn6vwA/eDZDXb6f5Jz
-         BDxUgq4ONx1glvYOQ2IRUeL1aeMInpw2CL+6inReld+eoQBa5cKZPxiI7Wzbswu+nEHo
-         uZcw==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=yhOanCdGAaHSZpaJOOm0oqcQTRX7njYPWgrvWEln8rs=;
+        b=1IuF7c3NuiZZusw4n9Sa0qLt3yYGi1suCMi0LHsiPM8rsnJ3JK6qTp0r5MgyBq148q
+         aOwZpeWflGVx7uGg5fWUQN1lt99V3JOdz6lSJ4wcw/RYwHx33KP1lmqKjc3au810YUJF
+         MHDufvzfn/Bn0Bt1mGidViZPxEBTzaRjm0AE4PNJ0ifVkF3u1K/dD1QNis5PCksbYIoZ
+         kwi0R+RsmvLPoMHHZRkcgG42HlYMk8nQdaU6jLKtyhcWLKNbrHbTSa69ujd05sD4nR09
+         /+1PvMAiVe1grNsHL0bEk0oZ0DHLJu5N8mBuv7xPdzdtCsS3gzGI9DbtQ9d/HEHuDU6N
+         LMkg==
 Content-Disposition: inline
-In-Reply-To: <20160318175003.GA20028-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-When cgroup writeback is in use, there can be multiple wb's
-(bdi_writeback's) per bdi and an inode may switch among them
-dynamically.  In a couple places, the wrong wb was used leading to
-performing operations on the wrong list under the wrong lock
-corrupting the io lists.
+Hello, Linus.
 
-* writeback_single_inode() was taking @wb parameter and used it to
-  remove the inode from io lists if it becomes clean after writeback.
-  The callers of this function were always passing in the root wb
-  regardless of the actual wb that the inode was associated with,
-  which could also change while writeback is in progress.
+cgroup changes for v4.6-rc1.  No userland visible behavior changes in
+this pull request.  I'll send out a separate pull request for the
+addition of cgroup namespace support.
 
-  Fix it by dropping the @wb parameter and using
-  inode_to_wb_and_lock_list() to determine and lock the associated wb.
+* The biggest change is the revamping of cgroup core task migration
+  and controller handling logic.  There are quite a few places where
+  controllers and tasks are manipulated.  Previously, many of those
+  places implemented custom operations for each specific use case
+  assuming specific starting conditions.  While this worked, it makes
+  the code fragile and difficult to follow.
 
-* After writeback_sb_inodes() writes out an inode, it re-locks @wb and
-  inode to remove it from or move it to the right io list.  It assumes
-  that the inode is still associated with @wb; however, the inode may
-  have switched to another wb while writeback was in progress.
+  Bulk of this pull request restructures these operations so that most
+  related operations are performed through common helpers which
+  implement recursive (subtrees are always processed consistently) and
+  idempotent (they make cgroup hierarchy converge to the target state
+  rather than performing operations assuming specific starting
+  conditions).  This makes the code a lot easier to understand, verify
+  and extend.
 
-  Fix it by using inode_to_wb_and_lock_list() to determine and lock
-  the associated wb after writeback is complete.  As the function
-  requires the original @wb->list_lock locked for the next iteration,
-  in the unlikely case where the inode has changed association, switch
-  the locks.
+* Implicit controller support is added.  This is primarily for using
+  perf_event on the v2 hierarchy so that perf can match cgroup v2 path
+  without requiring the user to do anything special.  The kernel
+  portion of perf_event changes is acked but userland changes are
+  still pending review.
 
-Kudos to Tahsin for pinpointing these subtle breakages.
+* cgroup_no_v1= boot parameter added to ease testing cgroup v2 in
+  certain environments.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Fixes: d10c80955265 ("writeback: implement foreign cgroup inode bdi_writeback switching")
-Link: http://lkml.kernel.org/g/CAAeU0aMYeM_39Y2+PaRvyB1nqAPYZSNngJ1eBRmrxn7gKAt2Mg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org
-Reported-and-diagnosed-by: Tahsin Erdogan <tahsin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v4.2+
----
-Hello,
+* There is a regression introduced during v4.4 devel cycle where
+  attempts to migrate zombie tasks can mess up internal object
+  management.  This was fixed earlier this week and included in this
+  pull request w/ stable cc'd.
 
-Tahsin, I could reproduce the bug and this fixes it for me but it'd be
-great if you can verify the fix too.
+* Misc non-critical fixes and improvements.
 
-Thanks a lot!
+Thanks.
 
- fs/fs-writeback.c |   29 +++++++++++++++++++----------
- 1 file changed, 19 insertions(+), 10 deletions(-)
+The following changes since commit 9a2ddda572a002633a64b1ae5f4bc49cfcbf495f:
 
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1311,10 +1311,10 @@ __writeback_single_inode(struct inode *i
-  * we go e.g. from filesystem. Flusher thread uses __writeback_single_inode()
-  * and does more profound writeback list handling in writeback_sb_inodes().
-  */
--static int
--writeback_single_inode(struct inode *inode, struct bdi_writeback *wb,
--		       struct writeback_control *wbc)
-+static int writeback_single_inode(struct inode *inode,
-+				  struct writeback_control *wbc)
- {
-+	struct bdi_writeback *wb;
- 	int ret = 0;
- 
- 	spin_lock(&inode->i_lock);
-@@ -1352,7 +1352,8 @@ writeback_single_inode(struct inode *ino
- 	ret = __writeback_single_inode(inode, wbc);
- 
- 	wbc_detach_inode(wbc);
--	spin_lock(&wb->list_lock);
-+
-+	wb = inode_to_wb_and_lock_list(inode);
- 	spin_lock(&inode->i_lock);
- 	/*
- 	 * If inode is clean, remove it from writeback lists. Otherwise don't
-@@ -1427,6 +1428,7 @@ static long writeback_sb_inodes(struct s
- 
- 	while (!list_empty(&wb->b_io)) {
- 		struct inode *inode = wb_inode(wb->b_io.prev);
-+		struct bdi_writeback *tmp_wb;
- 
- 		if (inode->i_sb != sb) {
- 			if (work->sb) {
-@@ -1517,15 +1519,23 @@ static long writeback_sb_inodes(struct s
- 			cond_resched();
- 		}
- 
--
--		spin_lock(&wb->list_lock);
-+		/*
-+		 * Requeue @inode if still dirty.  Be careful as @inode may
-+		 * have been switched to another wb in the meantime.
-+		 */
-+		tmp_wb = inode_to_wb_and_lock_list(inode);
- 		spin_lock(&inode->i_lock);
- 		if (!(inode->i_state & I_DIRTY_ALL))
- 			wrote++;
--		requeue_inode(inode, wb, &wbc);
-+		requeue_inode(inode, tmp_wb, &wbc);
- 		inode_sync_complete(inode);
- 		spin_unlock(&inode->i_lock);
- 
-+		if (unlikely(tmp_wb != wb)) {
-+			spin_unlock(&tmp_wb->list_lock);
-+			spin_lock(&wb->list_lock);
-+		}
-+
- 		/*
- 		 * bail out to wb_writeback() often enough to check
- 		 * background threshold and other termination conditions.
-@@ -2312,7 +2322,6 @@ EXPORT_SYMBOL(sync_inodes_sb);
-  */
- int write_inode_now(struct inode *inode, int sync)
- {
--	struct bdi_writeback *wb = &inode_to_bdi(inode)->wb;
- 	struct writeback_control wbc = {
- 		.nr_to_write = LONG_MAX,
- 		.sync_mode = sync ? WB_SYNC_ALL : WB_SYNC_NONE,
-@@ -2324,7 +2333,7 @@ int write_inode_now(struct inode *inode,
- 		wbc.nr_to_write = 0;
- 
- 	might_sleep();
--	return writeback_single_inode(inode, wb, &wbc);
-+	return writeback_single_inode(inode, &wbc);
- }
- EXPORT_SYMBOL(write_inode_now);
- 
-@@ -2341,7 +2350,7 @@ EXPORT_SYMBOL(write_inode_now);
-  */
- int sync_inode(struct inode *inode, struct writeback_control *wbc)
- {
--	return writeback_single_inode(inode, &inode_to_bdi(inode)->wb, wbc);
-+	return writeback_single_inode(inode, wbc);
- }
- EXPORT_SYMBOL(sync_inode);
- 
+  Documentation: cgroup: Fix 'cgroup-legacy' -> 'cgroup-v1' (2016-01-29 06:11:57 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.6
+
+for you to fetch changes up to cfe02a8a973e7e5f66926b8ae38dfce404b19e29:
+
+  cgroup: avoid false positive gcc-6 warning (2016-03-16 13:32:23 -0700)
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      cgroup: avoid false positive gcc-6 warning
+
+Haosdent Huang (1):
+      cgroup: remove stale item in cgroup-v1 document INDEX file.
+
+Johannes Weiner (2):
+      cgroup: provide cgroup_nov1= to disable controllers in v1 mounts
+      cgroup: document cgroup_no_v1=
+
+Li Bin (1):
+      kernel/Makefile: remove the useless CFLAGS_REMOVE_cgroup-debug.o
+
+Parav Pandit (2):
+      cgroup: Trivial correction to reflect controller.
+      Documentation: cgroup v2: Trivial heading correction.
+
+Tejun Heo (35):
+      cgroup: fix error return value of cgroup_addrm_files()
+      Revert "cgroup: add cgroup_subsys->css_e_css_changed()"
+      cgroup: s/child_subsys_mask/subtree_ss_mask/
+      cgroup: convert for_each_subsys_which() to do-while style
+      cgroup: use do_each_subsys_mask() where applicable
+      cgroup: make cgroup subsystem masks u16
+      cgroup: s/cgrp_dfl_root_/cgrp_dfl_/
+      cgroup: convert cgroup_subsys flag fields to bool bitfields
+      cgroup: make css_tryget_online_from_dir() also recognize cgroup2 fs
+      cgroup: use ->subtree_control when testing no internal process rule
+      cgroup: re-hash init_css_set after subsystems are initialized
+      cgroup: suppress spurious de-populated events
+      cgroup: separate out interface file creation from css creation
+      cgroup: explicitly track whether a cgroup_subsys_state is visible to userland
+      cgroup: reorder operations in cgroup_mkdir()
+      cgroup: factor out cgroup_create() out of cgroup_mkdir()
+      cgroup: introduce cgroup_control() and cgroup_ss_mask()
+      cgroup: factor out cgroup_drain_offline() from cgroup_subtree_control_write()
+      cgroup: factor out cgroup_apply_control_disable() from cgroup_subtree_control_write()
+      cgroup: factor out cgroup_apply_control_enable() from cgroup_subtree_control_write()
+      cgroup: make cgroup_drain_offline() and cgroup_apply_control_{disable|enable}() recursive
+      cgroup: introduce cgroup_{save|propagate|restore}_control()
+      cgroup: factor out cgroup_{apply|finalize}_control() from cgroup_subtree_control_write()
+      cgroup: combine cgroup_mutex locking and offline css draining
+      cgroup: use cgroup_apply_enable_control() in cgroup creation path
+      cgroup: reimplement rebind_subsystems() using cgroup_apply_control() and friends
+      cgroup: make cgroup_calc_subtree_ss_mask() take @this_ss_mask
+      cgroup: allocate 2x cgrp_cset_links when setting up a new root
+      cgroup: update css iteration in cgroup_update_dfl_csses()
+      cgroup: fix incorrect destination cgroup in cgroup_update_dfl_csses()
+      cgroup: move migration destination verification out of cgroup_migrate_prepare_dst()
+      cgroup: make cgroup[_taskset]_migrate() take cgroup_root instead of cgroup
+      cgroup: use css_set->mg_dst_cgrp for the migration target cgroup
+      cgroup: implement cgroup_subsys->implicit_on_dfl
+      cgroup: ignore css_sets associated with dead cgroups during migration
+
+Vladimir Davydov (1):
+      cgroup: reset css on destruction
+
+Xiubo Li (1):
+      cgroup: fix a mistake in warning message
+
+ Documentation/cgroup-v1/00-INDEX    |    2 -
+ Documentation/cgroup-v2.txt         |    8 +-
+ Documentation/kernel-parameters.txt |    5 +
+ include/linux/cgroup-defs.h         |   46 +-
+ init/Kconfig                        |    4 +-
+ kernel/Makefile                     |    3 +-
+ kernel/cgroup.c                     | 1168 +++++++++++++++++++++--------------
+ kernel/cpuset.c                     |    2 +-
+ kernel/sched/core.c                 |    2 +-
+ kernel/sched/cpuacct.c              |    2 +-
+ 10 files changed, 738 insertions(+), 504 deletions(-)
+
+-- 
+tejun
