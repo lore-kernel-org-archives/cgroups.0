@@ -1,78 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Leon Romanovsky <leon@leon.nu>
 Subject: Re: [PATCHv10 1/3] rdmacg: Added rdma cgroup controller
-Date: Tue, 5 Apr 2016 10:46:08 -0400
-Message-ID: <20160405144608.GD7822@mtj.duckdns.org>
+Date: Tue, 5 Apr 2016 18:44:23 +0300
+Message-ID: <20160405154423.GK5264@leon.nu>
 References: <1458850962-16057-1-git-send-email-pandit.parav@gmail.com>
  <1458850962-16057-2-git-send-email-pandit.parav@gmail.com>
  <20160404193640.GA7822@mtj.duckdns.org>
  <CAG53R5UgDeFxqvOOJb=r1DH2yFmboQZPM=-_atGrOCvK=XYU=A@mail.gmail.com>
  <20160405012504.GG24661@htj.duckdns.org>
- <CAG53R5Xs9nB_g7pDu6G260EY+iu6hi=fs6eV1ggyk=NwO32oRg@mail.gmail.com>
- <20160405140107.GB7822@mtj.duckdns.org>
- <CAG53R5V=-sRacw7kX-UhjRmr+LS3HF4u8yfQF16utAxo-YHnMw@mail.gmail.com>
+ <20160405090627.GA26425@infradead.org>
+ <CAG53R5WBBUj6=B81Q-zEwL_xy3_yXUofJ6p921baqnqeVocDPQ@mail.gmail.com>
+ <20160405124252.GA4348@infradead.org>
+ <CAG53R5UOogG1itd8AzMOWnpnyGqKSRLY4CNrX5HWGfdF3q-F3w@mail.gmail.com>
+Reply-To: leon@leon.nu
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        d=leon-nu.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=TZQDjhq7S4u5BJyaTYHyutEGHks5E2J3j0mKyTEelh8=;
-        b=0ybG2EAn1T93qy93EXoCuVTwKWjZa1Mlfmio9HiuZerQ4pX5/9OMsKWUIRtzm8DEwJ
-         OgSjpKwmslTFvOkYLJE+YIXDlJpBXllLaQzLGSQa8TrxcSJOsL4ogkHxRHla7CZ3FWST
-         zAUA3MihYKe14BPuAUTdCxifbaxnvRxlzo8M9omj+X4Y3/D2sc0P2b7PuSypaBjOaIHo
-         NNaJYZGLTKZmADxsJtnAEFiDtmDbLb9F8JRvr18lm1E/J9OcCVveHnxe+pGU1UWWkaJn
-         /33bYrVvodWs3D7vV8S7JcOJcB4Fa3NlFY5a6b4tMWqfuNwCsMKfo95W4b6nddVGudVu
-         pHZg==
+        bh=hKJMoh/W1W6Ov2hjOUgkrxBg0K26TXKI52GagP6nMsE=;
+        b=OdN30zNekHJbXSJYLnoDNP4zrF7sFPflplKCYWzc9ZeF0pjWcMn1dl2raKXyr0z6+h
+         Avgj3gR86xO3rh5x3U9rxptHO5VYbr+nfCM0POFPlN1rfiv9Rm2oZxrwGYgKQ3dT5Uvu
+         qjXL6p7Fjn1IQQsAtKgH9CM1vW1G0FDTRdICb09m93ZntIPqPxdZ6imyRVdu11+jWeJ2
+         k8pllICoO5rBI4gBDqgz/tbbiMXITc9mB/NZsgJJ/YIdryU4gIWpsXfcupRyuzF/ick0
+         JbRnH4gCE7kxwVDd5QoLIms4DOJORDPimdGmzt5i8GIg3XfDR1xkSPcqyqq0ffsXex8Z
+         w4Uw==
 Content-Disposition: inline
-In-Reply-To: <CAG53R5V=-sRacw7kX-UhjRmr+LS3HF4u8yfQF16utAxo-YHnMw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAG53R5UOogG1itd8AzMOWnpnyGqKSRLY4CNrX5HWGfdF3q-F3w@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Parav Pandit <pandit.parav@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-Hello, Parav.
-
-On Tue, Apr 05, 2016 at 07:25:11AM -0700, Parav Pandit wrote:
-> > As it is a fairly isolated domain, to certain extent, it could be okay
-> > to let it go.  At the same time, I know that these enterprise things
-> > tend to go completely wayward and am worried about individual drivers
-> > going crazy with custom attributes in a non-sensical way.
+On Tue, Apr 05, 2016 at 05:55:26AM -0700, Parav Pandit wrote:
+> Hi Christoph,
 > 
-> If its crazy at driver level, I am sure it will be equally crazy for
-> any end-user too. Therefore no user would use those crazy resources
-> either.
-
-So, the above paragraph simply isn't true.  It's not difficult to
-twist things bit so that things work in a hackish and often horrible
-way and we know this happens quite a bit, especially in enterprise
-settings.
-
-> Intent is certainly not for the individual drivers as we agreed in
-> past.
-
-You and I agreeing to that doesn't really matter all that much.
-
-> IB stack maintainers would be reviewing new enum addition
-> anyway, whether its verb or hw resource (unlikely).
-
-Well, if the additions are unlikely...
-
-> > In the original review message, I mentioned creating an interface
-> > which creates the hierarchy of objects as necessary and returns the
-> > target pool with lock held, can you please give it a shot?  Something
-> > like the following.
+> On Tue, Apr 5, 2016 at 5:42 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Tue, Apr 05, 2016 at 05:39:21AM -0700, Parav Pandit wrote:
+> >> I am not really trying to address OFED issues here. I am sure you
+> >> understand that if ib_core.ko kernel module is in-kernel module than,
+> >> for all the fixes/enhancements that goes to it would require people to
+> >> upgrade to newer kernel, instead of just modules upgrade. Such heavy
+> >> weight upgrade slows down the adoption which i am trying to avoid here
+> >> by placing knobs in right kernel module's hand.
+> >
+> > What a load of rubbish.  The Linux kernel is one program and should be
+> > upgraded together.
 > 
-> o.k. I will attempt. Looks doable.
-> I am on travel so it will take few more days for me to turn around
-> with below approach with tested code.
+> Just because we add one more rdma resource, we need to ask someone to
+> upgrade kernel?
 
-So, if you go with single mutex, you don't really need get_and_lock
-semantics, you can just call the get function with mutex held.  Please
-do whichever looks best.
-
-Thanks.
-
--- 
-tejun
+It doesn't make sense. Kernel and modules are always coming together,
+the attempts to mix kernel and modules from different versions can lead
+to many interesting debug scenarios.
