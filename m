@@ -1,29 +1,167 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv10 1/3] rdmacg: Added rdma cgroup controller
-Date: Tue, 5 Apr 2016 10:27:20 -0700
-Message-ID: <20160405172720.GA31055@infradead.org>
-References: <1458850962-16057-1-git-send-email-pandit.parav@gmail.com>
- <1458850962-16057-2-git-send-email-pandit.parav@gmail.com>
- <20160404193640.GA7822@mtj.duckdns.org>
- <CAG53R5UgDeFxqvOOJb=r1DH2yFmboQZPM=-_atGrOCvK=XYU=A@mail.gmail.com>
- <20160405012504.GG24661@htj.duckdns.org>
- <20160405090627.GA26425@infradead.org>
- <CAG53R5WBBUj6=B81Q-zEwL_xy3_yXUofJ6p921baqnqeVocDPQ@mail.gmail.com>
- <20160405124252.GA4348@infradead.org>
- <CAG53R5UOogG1itd8AzMOWnpnyGqKSRLY4CNrX5HWGfdF3q-F3w@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <linux-security-module-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAG53R5UOogG1itd8AzMOWnpnyGqKSRLY4CNrX5HWGfdF3q-F3w@mail.gmail.com>
-Sender: owner-linux-security-module@vger.kernel.org
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: [PATCH] cpuset: use static key better and convert to new API
+Date: Wed,  6 Apr 2016 10:39:33 +0200
+Message-ID: <1459931973-29247-1-git-send-email-vbabka@suse.cz>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Mel Gorman <mgorman@techsingularity.net>, Peter Zijlstra <peterz@infradead.org>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
 
-On Tue, Apr 05, 2016 at 05:55:26AM -0700, Parav Pandit wrote:
-> Just because we add one more rdma resource, we need to ask someone to
-> upgrade kernel?
+An important function for cpusets is cpuset_node_allowed(), which optimizes on
+the fact if there's a single root CPU set, it must be trivially allowed. But
+the check "nr_cpusets() <= 1" doesn't use the cpusets_enabled_key static key
+the right way where static keys eliminate branching overhead with jump labels.
 
-Yes.  Just like when you need any other core kernel resource.
+This patch converts it so that static key is used properly. It's also switched
+to the new static key API and the checking functions are converted to return
+bool instead of int. We also provide a new variant __cpuset_zone_allowed()
+which expects that the static key check was already done and they key was
+enabled. This is needed for get_page_from_freelist() where we want to also
+avoid the relatively slower check when ALLOC_CPUSET is not set in alloc_flags.
+
+Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
+---
+ include/linux/cpuset.h | 29 +++++++++++++++++++----------
+ kernel/cpuset.c        | 14 +++++++-------
+ mm/page_alloc.c        |  2 +-
+ 3 files changed, 27 insertions(+), 18 deletions(-)
+
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index fea160ee5803..d5f5c7f87e36 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -16,26 +16,26 @@
+ 
+ #ifdef CONFIG_CPUSETS
+ 
+-extern struct static_key cpusets_enabled_key;
++extern struct static_key_false cpusets_enabled_key;
+ static inline bool cpusets_enabled(void)
+ {
+-	return static_key_false(&cpusets_enabled_key);
++	return static_branch_unlikely(&cpusets_enabled_key);
+ }
+ 
+ static inline int nr_cpusets(void)
+ {
+ 	/* jump label reference count + the top-level cpuset */
+-	return static_key_count(&cpusets_enabled_key) + 1;
++	return static_key_count(&cpusets_enabled_key.key) + 1;
+ }
+ 
+ static inline void cpuset_inc(void)
+ {
+-	static_key_slow_inc(&cpusets_enabled_key);
++	static_branch_inc(&cpusets_enabled_key);
+ }
+ 
+ static inline void cpuset_dec(void)
+ {
+-	static_key_slow_dec(&cpusets_enabled_key);
++	static_branch_dec(&cpusets_enabled_key);
+ }
+ 
+ extern int cpuset_init(void);
+@@ -48,16 +48,25 @@ extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
+ void cpuset_init_current_mems_allowed(void);
+ int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask);
+ 
+-extern int __cpuset_node_allowed(int node, gfp_t gfp_mask);
++extern bool __cpuset_node_allowed(int node, gfp_t gfp_mask);
+ 
+-static inline int cpuset_node_allowed(int node, gfp_t gfp_mask)
++static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+ {
+-	return nr_cpusets() <= 1 || __cpuset_node_allowed(node, gfp_mask);
++	if (cpusets_enabled())
++		return __cpuset_node_allowed(node, gfp_mask);
++	return true;
+ }
+ 
+-static inline int cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
++static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
++{
++	return __cpuset_node_allowed(zone_to_nid(z), gfp_mask);
++}
++
++static inline bool cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+ {
+-	return cpuset_node_allowed(zone_to_nid(z), gfp_mask);
++	if (cpusets_enabled())
++		return __cpuset_zone_allowed(z, gfp_mask);
++	return true;
+ }
+ 
+ extern int cpuset_mems_allowed_intersects(const struct task_struct *tsk1,
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 00ab5c2b7c5b..37a0b44d101f 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -62,7 +62,7 @@
+ #include <linux/cgroup.h>
+ #include <linux/wait.h>
+ 
+-struct static_key cpusets_enabled_key __read_mostly = STATIC_KEY_INIT_FALSE;
++DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
+ 
+ /* See "Frequency meter" comments, below. */
+ 
+@@ -2528,27 +2528,27 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
+  *	GFP_KERNEL   - any node in enclosing hardwalled cpuset ok
+  *	GFP_USER     - only nodes in current tasks mems allowed ok.
+  */
+-int __cpuset_node_allowed(int node, gfp_t gfp_mask)
++bool __cpuset_node_allowed(int node, gfp_t gfp_mask)
+ {
+ 	struct cpuset *cs;		/* current cpuset ancestors */
+ 	int allowed;			/* is allocation in zone z allowed? */
+ 	unsigned long flags;
+ 
+ 	if (in_interrupt())
+-		return 1;
++		return true;
+ 	if (node_isset(node, current->mems_allowed))
+-		return 1;
++		return true;
+ 	/*
+ 	 * Allow tasks that have access to memory reserves because they have
+ 	 * been OOM killed to get memory anywhere.
+ 	 */
+ 	if (unlikely(test_thread_flag(TIF_MEMDIE)))
+-		return 1;
++		return true;
+ 	if (gfp_mask & __GFP_HARDWALL)	/* If hardwall request, stop here */
+-		return 0;
++		return false;
+ 
+ 	if (current->flags & PF_EXITING) /* Let dying task have memory */
+-		return 1;
++		return true;
+ 
+ 	/* Not hardwall and node outside mems_allowed: scan up cpusets */
+ 	spin_lock_irqsave(&callback_lock, flags);
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 59de90d5d3a3..69edac810084 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2650,7 +2650,7 @@ get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
+ 
+ 		if (cpusets_enabled() &&
+ 			(alloc_flags & ALLOC_CPUSET) &&
+-			!cpuset_zone_allowed(zone, gfp_mask))
++			!__cpuset_zone_allowed(zone, gfp_mask))
+ 				continue;
+ 		/*
+ 		 * Distribute pages in proportion to the individual
+-- 
+2.7.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
