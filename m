@@ -1,129 +1,235 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
- group and PRIO_RGRP
-Date: Wed, 13 Apr 2016 09:43:01 +0200
-Message-ID: <1460533381.3780.191.camel@gmail.com>
-References: <1457710888-31182-1-git-send-email-tj@kernel.org>
-	 <20160314113013.GM6344@twins.programming.kicks-ass.net>
-	 <20160406155830.GI24661@htj.duckdns.org>
-	 <20160407064549.GH3430@twins.programming.kicks-ass.net>
-	 <20160407073547.GA12560@cmpxchg.org>
-	 <20160407080833.GK3430@twins.programming.kicks-ass.net>
-	 <20160407194555.GI7822@mtj.duckdns.org>
-	 <20160407202542.GD3448@twins.programming.kicks-ass.net>
-	 <20160408201135.GO24661@htj.duckdns.org>
-	 <20160409133917.GV3448@twins.programming.kicks-ass.net>
-	 <20160412222915.GT24661@htj.duckdns.org>
+From: Petr Mladek <pmladek@suse.com>
+Subject: [BUG] cgroup/workques/fork: deadlock when moving cgroups
+Date: Wed, 13 Apr 2016 11:42:16 +0200
+Message-ID: <20160413094216.GC5774@pathway.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ua9G+hC5/5RyncsSbxOEW+nYqRxnzHf3o+6fflLlRFw=;
-        b=i25wBbhmoGJ9d1dzvcJjZjU0b7ndWmwG6yFnjTTbS37JszcyiWt36PHCQA0SS00M1I
-         /yzmKcm1C/CnWRaZVF+fS0MdqQzEfGcgSzRlP8f0JAGGrB3eodMEBXmHEwvVTZ0NSkIS
-         oKdlEbs4Bi0CzzUsdwfFeFZct5eGlYOCvamSpROGQN46hkpo9OiGqnN+AbOREj6R9+g4
-         wnRFHAjZ0dB4mGqZXMgqD8BDcyGNwz7BCbV455ykzsO11f77MFRQ6Yw8LXdHqZZAJ0Yr
-         +2T8mUWzj2vLdDxv7zxmGhI0+3Oq6UFNorSwiaRsliT0Xy2DLA9818MRKlyK9fKQQ+LI
-         QtHw==
-In-Reply-To: <20160412222915.GT24661-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Cyril Hrubis <chrubis@suse.cz>, linux-kernel@vger.kernel.org
 
-On Tue, 2016-04-12 at 18:29 -0400, Tejun Heo wrote:
-> Hello, Peter.
-> 
-> On Sat, Apr 09, 2016 at 03:39:17PM +0200, Peter Zijlstra wrote:
-> > > While the separate buckets and entities model may not be as elegant as
-> > > tree of uniform objects, it is far from uncommon and more robust when
-> > > dealing with different types of objects.
-> > 
-> > The graph does not care about the type of objects the nodes represent,
-> > and proportional weight distribution only cares about the edges.
-> > 
-> > With cpu-cgroup the nodes are not of uniform type either, they can be a
-> > group or a task. You get runtime type identification and make it work.
-> > 
-> > There just isn't an excuse for crazy crap like this. Its wrong, no two
-> > ways about it.
-> 
-> Abstracing tasks and groups as equivalent objects works well for the
-> scheduler and that's great.  This is also because the domain lends
-> itself very well to such simple and elegant approach.  The only
-> entities of interest are tasks, as you and Mike pointed out earlier in
-> the thread, and group priority can be easily mapped to task priority.
-> However, this isn't necessarily the case for other controllers.
-> 
-> There's also the issue of mapping the model to absolute controllers.
-> For the uniform model to work, there must be a way to treat internal
-> and leaf entities in the same way.  For memory, the leaf entities are
-> processes and applying the same model would mean that memory
-> controller would have to implement equivalent per-process control
-> knobs.  We don't have that.  In fact, we can't have that - a
-> significant part of memory consumption can't be attached to a single
-> process.  There is a fundamental distinction between internal and leaf
-> nodes in the memory resource graph.
-> 
-> We aren't designing a spherical cow in a vacuum, and, I believe,
-> should aspire to make pragmatic trade-offs of all involved factors.
-> If multiple controllers co-operating on the same resource domains is
-> beneficial and required, we should figure out a way to make different
-> controllers agree and that way most likely will require some
-> trade-offs from various controllers.
-> 
-> Given the currently known requirements and constraints, restricting
-> internal competition is a simple and straight-forward way to isolate
-> leaf node handling details of different controllers.
-> 
-> The cost is part aesthetical and part practical.  While less elegant
-> than tree of uniform objects, it seems a stretch to call internal /
-> leaf node distinction broken especially given that the model is
-> natural to some controllers.
+Hi,
 
-That justifies prohibiting proper usages of three controllers, cpu,
-cpuacct and cpuset?
- 
-> The practical cost is loss of the ability to let leaf entities compete
-> against groups.  However, we can't evaluate how important such
-> capability is without actual use-cases.  If there are important ones,
-> please bring them up, so that we can examine the actual requirements
-> and try to find a good trade-off to support them.
+Cyril reported a system lock up when running
+memcg_move_charge_at_immigrate_test.sh test[*] repeatedly.
 
-Hm, I though Google did that, and I know I mentioned another gigabuck
-sized outfit.  Whatever, ob trade-off..
+I have reproduced it also with the plain 4.6-rc3.
 
-Another cpuset example is something I was asked to look into recently. 
- There are folks out in the real world who want to run RT guests.  Now
-VIRTUAL REALtime tickles my funny-bone, but I piddled around with it
-nonetheless to see what such can deliver (not much).  System thing
-and/or libvirt created a cpuset home for qemu, but with VPUs sharing
-CPU with other qemu threads and the rest of the world, RT performance
-in little virtual box was as pathetic as one would expect.  What did I
-do about it?  Among others, the obvious, I created an exclusive cpuset,
-and distributed qemu contexts having different requirements among
-context containment vessels having the required properties.
+There seems to be a deadlock where 4 processes are involved. It makes
+the system unable to fork any new processes. I had to use alt-sysrq
+command to get to debugging information.
 
-I won't be doing any more of that particular scenario, but certainly
-will want to distribute various contexts among various context
-containment vessels in future.  I soon enough won't care about cgroups,
-but others will surely expect cpu, cpuacct and cpuset controllers to
-continue to function properly.
+Please, find the entire log at http://pastebin.com/pL9eKsFb
 
-> I understand that CPU controller getting constrained due to other
-> controllers can feel frustrating; however, the constraint is there to
-> solve practical problems which hopefully are being explained in this
-> conversation.  If there is a better trade-off, we can easily get rid
-> of it and move on, but such decision can only be made considering all
-> the relevant factors.  If you can think of a better solution, let's
-> please discuss it.
+Interesting is the lockdep output:
 
-None here.  Any artificial restriction placed on controllers will
-render same broken in one way or another that will matter to someone
-somewhere.  Making something less than it was will do that.
+[  409.669856] Showing all locks held in the system:
+[  409.669856] 2 locks held by systemd/1:
+[  409.669856]  #0:  (&p->lock){+.+.+.}, at: [<ffffffff8124e54d>] seq_read+0x3d/0x3a0
+[  409.669856]  #1:  (cgroup_mutex){+.+.+.}, at: [<ffffffff8112379e>] proc_cgroup_show+0x4e/0x300
+[  409.669856] 1 lock held by kthreadd/2:
+[  409.669856]  #0:  (&cgroup_threadgroup_rwsem){++++++}, at: [<ffffffff8106b235>] copy_process.part.30+0x555/0x1d30
+[  409.669856] 3 locks held by kworker/0:2/114:
+[  409.669856]  #0:  ("cgroup_destroy"){.+.+..}, at: [<ffffffff8108c971>] process_one_work+0x151/0x6b0
+[  409.669856]  #1:  ((&css->destroy_work)){+.+...}, at: [<ffffffff8108c971>] process_one_work+0x151/0x6b0
+[  409.669856]  #2:  (cgroup_mutex){+.+.+.}, at: [<ffffffff8111a80d>] css_release_work_fn+0x2d/0xf0
+[  409.669856] 1 lock held by kworker/0:3/588:
+[  409.669856]  #0:  (&pool->manager_arb){+.+.+.}, at: [<ffffffff8108d1bc>] worker_thread+0x2ec/0x490
+[  409.669856] 1 lock held by in:imklog/816:
+[  409.669856]  #0:  (&f->f_pos_lock){+.+.+.}, at: [<ffffffff81248013>] __fdget_pos+0x43/0x50
+[  409.669856] 6 locks held by memcg_move_char/2860:
+[  409.669856]  #0:  (sb_writers#6){.+.+.+}, at: [<ffffffff812299e1>] __sb_start_write+0xd1/0xf0
+[  409.669856]  #1:  (&of->mutex){+.+.+.}, at: [<ffffffff812ae4d6>] kernfs_fop_write+0x66/0x190
+[  409.669856]  #2:  (cgroup_mutex){+.+.+.}, at: [<ffffffff8111ef7c>] cgroup_kn_lock_live+0x5c/0x1f0
+[  409.669856]  #3:  (&cgroup_threadgroup_rwsem){++++++}, at: [<ffffffff810c6a64>] percpu_down_write+0x24/0xd0
+[  409.669856]  #4:  (lock#4){+.+...}, at: [<ffffffff811aa1d4>] lru_add_drain_all+0x34/0x1a0
+[  409.669856]  #5:  (cpu_hotplug.lock){++++++}, at: [<ffffffff8106e097>] get_online_cpus+0x17/0x70
 
-	-Mike
+
+The problematic processes seem to be:
+
+1. memcg_move_char/2860:
+========================
+
+It is the process from the test suite. It is waiting in lru_add_drain_all()
+when calling flush_work() on CPU0[**]. Note that it holds many locks
+including 'cgroup_mutex' and 'cgroup_threadgroup_rwsem'.
+
+[  409.669856] memcg_move_char D ffff8800ab82b978     0  2860   1438 0x00000000
+[  409.669856]  ffff8800ab82b978 ffffffff8244c908 ffff880036d44800 ffff880036a0d1c0
+[  409.669856]  ffff8800ab82c000 ffff8800ab82bb00 ffff8800ab82baf8 ffff880036a0d1c0
+[  409.669856]  0000000000000004 ffff8800ab82b990 ffffffff8195c77c 7fffffffffffffff
+[  409.669856] Call Trace:
+[  409.669856]  [<ffffffff8195c77c>] schedule+0x3c/0x90
+[  409.669856]  [<ffffffff81960e74>] schedule_timeout+0x294/0x480
+[  409.669856]  [<ffffffff810c9fd6>] ? mark_held_locks+0x66/0x90
+[  409.669856]  [<ffffffff81961c1c>] ? _raw_spin_unlock_irq+0x2c/0x50
+[  409.669856]  [<ffffffff810ca0f9>] ? trace_hardirqs_on_caller+0xf9/0x1c0
+[  409.669856]  [<ffffffff8195d9d6>] wait_for_completion+0x96/0x100
+[  409.669856]  [<ffffffff810a1a30>] ? wake_up_q+0x80/0x80
+[  409.669856]  [<ffffffff8108b7ca>] flush_work+0x1ca/0x270
+[  409.669856]  [<ffffffff8108b82e>] ? flush_work+0x22e/0x270
+[  409.669856]  [<ffffffff81088f20>] ? destroy_worker+0xd0/0xd0
+[  409.669856]  [<ffffffff811aa2fb>] lru_add_drain_all+0x15b/0x1a0
+[  409.669856]  [<ffffffff81211c8b>] mem_cgroup_move_task+0x5b/0xe0
+[  409.669856]  [<ffffffff81214640>] ? mem_cgroup_move_account+0x290/0x290
+[  409.669856]  [<ffffffff8111fa9e>] cgroup_taskset_migrate+0x1ee/0x360
+[  409.669856]  [<ffffffff8111fd05>] cgroup_migrate+0xf5/0x190
+[  409.669856]  [<ffffffff8111fc15>] ? cgroup_migrate+0x5/0x190
+[  409.669856]  [<ffffffff8111ffa5>] cgroup_attach_task+0x205/0x230
+[  409.669856]  [<ffffffff8111fde2>] ? cgroup_attach_task+0x42/0x230
+[  409.669856]  [<ffffffff811203dd>] __cgroup_procs_write.isra.30+0x2bd/0x470
+[  409.669856]  [<ffffffff8112017f>] ? __cgroup_procs_write.isra.30+0x5f/0x470
+[  409.669856]  [<ffffffff811205a0>] cgroup_tasks_write+0x10/0x20
+[  409.669856]  [<ffffffff8111bf6e>] cgroup_file_write+0x3e/0x1b0
+[  409.669856]  [<ffffffff812ae5b4>] kernfs_fop_write+0x144/0x190
+[  409.669856]  [<ffffffff81225838>] __vfs_write+0x28/0xe0
+[  409.669856]  [<ffffffff810c69a4>] ? percpu_down_read+0x44/0x80
+[  409.669856]  [<ffffffff812299e1>] ? __sb_start_write+0xd1/0xf0
+[  409.669856]  [<ffffffff812299e1>] ? __sb_start_write+0xd1/0xf0
+[  409.669856]  [<ffffffff81226742>] vfs_write+0xa2/0x1a0
+[  409.669856]  [<ffffffff81247296>] ? __fget_light+0x66/0x90
+[  409.669856]  [<ffffffff81227ab9>] SyS_write+0x49/0xa0
+[  409.669856]  [<ffffffff819623fc>] entry_SYSCALL_64_fastpath+0x1f/0xbd
+
+
+2. kworker/0:2/114:
+===================
+
+It is a worker on CPU0 that is blocked in css_release_work_fn().
+It is unable to get 'cgroup_mutex' that is already owned by
+'memcg_move_char/2860'.
+
+
+[  409.669856] kworker/0:2     D ffff880036d4bcd8     0   114      2 0x00000000
+[  409.669856] Workqueue: cgroup_destroy css_release_work_fn
+[  409.669856]  ffff880036d4bcd8 00000000ffffffff ffff8800acd40100 ffff880036d44800
+[  409.669856]  ffff880036d4c000 ffffffff81e94280 0000000000000246 ffff880036d44800
+[  409.669856]  00000000ffffffff ffff880036d4bcf0 ffffffff8195c77c ffffffff81e94288
+[  409.669856] Call Trace:
+[  409.669856]  [<ffffffff8195c77c>] schedule+0x3c/0x90
+[  409.669856]  [<ffffffff8195cb35>] schedule_preempt_disabled+0x15/0x20
+[  409.669856]  [<ffffffff8195ec49>] mutex_lock_nested+0x169/0x3f0
+[  409.669856]  [<ffffffff8111a80d>] ? css_release_work_fn+0x2d/0xf0
+[  409.669856]  [<ffffffff8111a80d>] css_release_work_fn+0x2d/0xf0
+[  409.669856]  [<ffffffff8108c9ec>] process_one_work+0x1cc/0x6b0
+[  409.669856]  [<ffffffff8108c971>] ? process_one_work+0x151/0x6b0
+[  409.669856]  [<ffffffff8108cffb>] worker_thread+0x12b/0x490
+[  409.669856]  [<ffffffff8108ced0>] ? process_one_work+0x6b0/0x6b0
+[  409.669856]  [<ffffffff81093dd4>] kthread+0xe4/0x100
+[  409.669856]  [<ffffffff81962632>] ret_from_fork+0x22/0x50
+[  409.669856]  [<ffffffff81093cf0>] ? kthread_create_on_node+0x200/0x200
+
+
+3. kworker/0:3/588:
+===================
+
+It tries to create another worker on CPU0 to proceed the pending
+works. It waits until the kthread is created by kthreadd.
+
+
+[  409.669856] kworker/0:3     D ffff8800ad8ebb68     0   588      2 0x00000000
+[  409.669856]  ffff8800ad8ebb68 ffffffff82435ae8 ffff88012a648040 ffff8800acd40100
+[  409.669856]  ffff8800ad8ec000 ffff8800ad8ebcc8 ffff8800ad8ebcc0 ffff8800acd40100
+[  409.669856]  ffff8800acd40100 ffff8800ad8ebb80 ffffffff8195c77c 7fffffffffffffff
+[  409.669856] Call Trace:
+[  409.669856]  [<ffffffff8195c77c>] schedule+0x3c/0x90
+[  409.669856]  [<ffffffff81960e74>] schedule_timeout+0x294/0x480
+[  409.669856]  [<ffffffff810c9fd6>] ? mark_held_locks+0x66/0x90
+[  409.669856]  [<ffffffff81961c1c>] ? _raw_spin_unlock_irq+0x2c/0x50
+[  409.669856]  [<ffffffff810ca0f9>] ? trace_hardirqs_on_caller+0xf9/0x1c0
+[  409.669856]  [<ffffffff8195d72b>] wait_for_completion_killable+0xab/0x170
+[  409.669856]  [<ffffffff810a1a30>] ? wake_up_q+0x80/0x80
+[  409.669856]  [<ffffffff8108ced0>] ? process_one_work+0x6b0/0x6b0
+[  409.669856]  [<ffffffff81093c4a>] kthread_create_on_node+0x15a/0x200
+[  409.669856]  [<ffffffff8121d6d8>] ? create_object+0x238/0x2e0
+[  409.669856]  [<ffffffff814505a9>] ? snprintf+0x39/0x40
+[  409.669856]  [<ffffffff8108b9db>] create_worker+0xbb/0x190
+[  409.669856]  [<ffffffff8108d205>] worker_thread+0x335/0x490
+[  409.669856]  [<ffffffff8108ced0>] ? process_one_work+0x6b0/0x6b0
+[  409.669856]  [<ffffffff81093dd4>] kthread+0xe4/0x100
+[  409.669856]  [<ffffffff81962632>] ret_from_fork+0x22/0x50
+[  409.669856]  [<ffffffff81093cf0>] ? kthread_create_on_node+0x200/0x200
+
+
+4. kthreadd/2:
+==============
+
+It is a kthread that is responsible for forking other kthreads.
+It is blocked in copy_process() when calling threadgroup_change_begin()
+because 'cgroup_threadgroup_rwsem' is held by 'memcg_move_char/2860'.
+
+[  409.669856] kthreadd        D ffff88012a64fc20     0     2      0 0x00000000
+[  409.669856]  ffff88012a64fc20 ffffffff830aedd0 ffffffff81e0b540 ffff88012a648040
+[  409.669856]  ffff88012a650000 ffffffff830aedb8 ffffffff830aedd0 ffff88012a648040
+[  409.669856]  0000000000000000 ffff88012a64fc38 ffffffff8195c77c ffff88012a648040
+[  409.669856] Call Trace:
+[  409.669856]  [<ffffffff8195c77c>] schedule+0x3c/0x90
+[  409.669856]  [<ffffffff8196070b>] rwsem_down_read_failed+0xcb/0x120
+[  409.669856]  [<ffffffff81452e38>] call_rwsem_down_read_failed+0x18/0x30
+[  409.669856]  [<ffffffff810c69be>] percpu_down_read+0x5e/0x80
+[  409.669856]  [<ffffffff8106b235>] ? copy_process.part.30+0x555/0x1d30
+[  409.669856]  [<ffffffff8106b235>] copy_process.part.30+0x555/0x1d30
+[  409.669856]  [<ffffffff810cafa0>] ? __lock_acquire+0xab0/0x1ad0
+[  409.669856]  [<ffffffff81093cf0>] ? kthread_create_on_node+0x200/0x200
+[  409.669856]  [<ffffffff810ca0f9>] ? trace_hardirqs_on_caller+0xf9/0x1c0
+[  409.669856]  [<ffffffff8106cbdc>] _do_fork+0xdc/0x6c0
+[  409.669856]  [<ffffffff81094aa5>] ? kthreadd+0x2c5/0x380
+[  409.669856]  [<ffffffff8106d1e9>] kernel_thread+0x29/0x30
+[  409.669856]  [<ffffffff81094b01>] kthreadd+0x321/0x380
+[  409.669856]  [<ffffffff81962632>] ? ret_from_fork+0x22/0x50
+[  409.669856]  [<ffffffff81962632>] ret_from_fork+0x22/0x50
+[  409.669856]  [<ffffffff810947e0>] ? kthread_create_on_cpu+0x60/0x60
+
+
+By other words, "memcg_move_char/2860" flushes a work. But it cannot
+get flushed because one worker is blocked and another one could not
+get created. All these operations are blocked by the very same
+"memcg_move_char/2860".
+
+Note that also "systemd/1" is waiting for "cgroup_mutex" in
+proc_cgroup_show(). But it seems that it is not in the main
+cycle causing the deadlock.
+
+I am able to reproduce this problem quite easily (within few minutes).
+There are often even more tasks waiting for the cgroups-related locks
+but they are not causing the deadlock.
+
+
+The question is how to solve this problem. I see several possibilities:
+
+  + avoid using workqueues in lru_add_drain_all()
+
+  + make lru_add_drain_all() killable and restartable
+
+  + do not block fork() when lru_add_drain_all() is running,
+    e.g. using some lazy techniques like RCU, workqueues
+
+  + at least do not block fork of workers; AFAIK, they have a limited
+     cgroups usage anyway because they are marked with PF_NO_SETAFFINITY
+
+
+I am willing to test any potential fix or even work on the fix.
+But I do not have that big insight into the problem, so I would
+need some pointers.
+
+
+[*] It comes from the LTP test suite. The relevant sources might
+be found at
+https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/controllers/memcg/functional/memcg_move_charge_at_immigrate_test.sh
+https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/controllers/memcg/functional/memcg_lib.sh
+https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/controllers/memcg/functional/memcg_process.c
+
+[**] Some of the details are not visible from the provided log. We have first
+reproduced this problem with an internal kernel based on the upstream 4.4.
+I checked more details using a crash dump. Then I reproduced the same
+deadlock with plain 4.6-rc3 and rather used logs from this kernel
+in this mail.
+
+
+Best Regards,
+Petr
