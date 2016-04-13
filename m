@@ -1,97 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
- group and PRIO_RGRP
-Date: Wed, 13 Apr 2016 11:59:52 -0400
-Message-ID: <20160413155952.GU24661@htj.duckdns.org>
-References: <20160406155830.GI24661@htj.duckdns.org>
- <20160407064549.GH3430@twins.programming.kicks-ass.net>
- <20160407073547.GA12560@cmpxchg.org>
- <20160407080833.GK3430@twins.programming.kicks-ass.net>
- <20160407194555.GI7822@mtj.duckdns.org>
- <20160407202542.GD3448@twins.programming.kicks-ass.net>
- <20160408201135.GO24661@htj.duckdns.org>
- <20160409133917.GV3448@twins.programming.kicks-ass.net>
- <20160412222915.GT24661@htj.duckdns.org>
- <1460533381.3780.191.camel@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup namespaces: add a 'nsroot=' mountinfo field
+Date: Wed, 13 Apr 2016 13:57:36 -0400
+Message-ID: <20160413175736.GC3676@htj.duckdns.org>
+References: <20160321234133.GA22463@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=DkAylrq0Erg8VUmeJRRyzM89MZOkkMFz9HsPuzekswM=;
-        b=COZOmMlUtnEiFlaVP0el1K7OKhuENx53TMsmnJg9S/f+3nmUnB4ERzVhPXZE6qd55/
-         dzTn+LWzcG4iRfzHRr6l4WEQMx/0Qe1JX3cuwPiRLqhKLtCmdO1yIMBB8UoJnW5ZD/f0
-         VXUxHqJ3qt2LwwgjRDCMDAxIegWQx/H+ca0GfSti22fIirbqvC1ZBXPm4NY1jmUhXgTn
-         KS37idTSW2mBx/UudiejWjclxKEMLYJId8K2+38H2Yy+cgVs6VCosqZQ62wPvjZO+8j8
-         1sTEVgdJ9alZVQm284iS3KuZ0iqUgdjMIMZDSSRYsq+PscGO3n+4tkJ6D+FNoD8nMZeY
-         Av7A==
+        bh=qPmsJmvK8cy58kYk86qvQy3+SsS16zHa++eiG+qYHG4=;
+        b=K9ekbMFqXMIVhNOUoXHqk4f1D253sREpfktRwj1CsRaHLrNLpeHDgPmxhcGZV9zZED
+         cevx5X/bOr4Gn4yhTZWXOiYFyJWGWNzvat94HucXycySCv0Dl9hgybKfvdLWflyIJDMK
+         qiOAyjSUZ3y1/sn1BynHO9HTQJBCk629//o6I2nOl4BMKsKaiGOu6L4pO+xPLI89+5+x
+         La3PJw9q3X6M7tw/mjo/+grjSdLaolgOXUGQ9FbPNPSuFnVMB3vYQj75y/2+K5UvlmCu
+         QHUe8/QAaX/OIWbEsobj5Lbpddyx5HHDpRpSRtObgH2A+zdGNp4bkUf0vtofoTPw+QPY
+         bFSg==
 Content-Disposition: inline
-In-Reply-To: <1460533381.3780.191.camel@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160321234133.GA22463-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mike Galbraith <umgwanakikbuti@gmail.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, torvalds@linux-foundation.org, akpm@linux-foundation.org, mingo@redhat.com, lizefan@huawei.com, pjt@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-api@vger.kernel.org, kernel-team@fb.com
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Mike.
+Hello, Serge.
 
-On Wed, Apr 13, 2016 at 09:43:01AM +0200, Mike Galbraith wrote:
-> > The cost is part aesthetical and part practical.  While less elegant
-> > than tree of uniform objects, it seems a stretch to call internal /
-> > leaf node distinction broken especially given that the model is
-> > natural to some controllers.
-> 
-> That justifies prohibiting proper usages of three controllers, cpu,
-> cpuacct and cpuset?
+Sorry about the delay.
 
-Neither cpuacct or cpuset loses any capability from the constraint as
-there is no difference between tasks being in an internal cgroup or a
-leaf cgroup nested under it.  The only practical impact is that we
-lose the ability to let internal tasks compete against sibling cgroups
-for proportional control.
+On Mon, Mar 21, 2016 at 06:41:33PM -0500, Serge E. Hallyn wrote:
+>  struct kernfs_syscall_ops {
+>  	int (*remount_fs)(struct kernfs_root *root, int *flags, char *data);
+> -	int (*show_options)(struct seq_file *sf, struct kernfs_root *root);
+> +	int (*show_options)(struct seq_file *sf, struct dentry *dentry,
+> +			    struct kernfs_root *root);
 
-> > The practical cost is loss of the ability to let leaf entities compete
-> > against groups.  However, we can't evaluate how important such
-> > capability is without actual use-cases.  If there are important ones,
-> > please bring them up, so that we can examine the actual requirements
-> > and try to find a good trade-off to support them.
-> 
-> Hm, I though Google did that, and I know I mentioned another gigabuck
-> sized outfit.  Whatever, ob trade-off..
+Wouldn't it make more sense to pass in kernfs_node pointer instead of
+dentry pointer?
 
-Are you saying that you're aware that google or another big outfit is
-making active use of internal tasks competing against sibling cgroups
-for proportional CPU distribution?  If so, can you please be more
-specific?
+> +static void cgroup_show_nsroot(struct seq_file *seq, struct dentry *dentry,
+> +			       struct kernfs_root *kf_root)
+> +{
+> +	struct kernfs_node *d_kn = dentry->d_fsdata;
+> +	char *nsroot;
+> +	int len, ret;
+> +
+> +	if (!kf_root)
+> +		return;
+> +	len = kernfs_path_from_node(d_kn, kf_root->kn, NULL, 0);
+> +	if (len <= 0)
+> +		return;
+> +	nsroot = kzalloc(len + 1, GFP_ATOMIC);
+> +	if (!nsroot)
+> +		return;
+> +	ret = kernfs_path_from_node(d_kn, kf_root->kn, nsroot, len + 1);
+> +	if (ret <= 0 || ret > len)
+> +		goto out;
 
-> Another cpuset example is something I was asked to look into recently. 
-
-First of all, as mentioned above, cpuset isn't affected at all in
-practical terms.  Besides, for a very specialized cpuset setup, the
-cpuset configuration might not have anything to do with the resource
-domains other controllers use and it might make sense to keep cpuset
-on a separate hierarchy.
-
-> > I understand that CPU controller getting constrained due to other
-> > controllers can feel frustrating; however, the constraint is there to
-> > solve practical problems which hopefully are being explained in this
-> > conversation.  If there is a better trade-off, we can easily get rid
-> > of it and move on, but such decision can only be made considering all
-> > the relevant factors.  If you can think of a better solution, let's
-> > please discuss it.
-> 
-> None here.  Any artificial restriction placed on controllers will
-> render same broken in one way or another that will matter to someone
-> somewhere.  Making something less than it was will do that.
-
-The specifics of gains and losses are what I've been trying to clarify
-in this thread.  Hopefully, what we can gain from sharing common
-resource domains is clear by now.  The practical cost is loss of the
-capability to let internal tasks compete against sibling cgroups for
-proportional control.  However, to determine the weight of this cost,
-we have to know which use-cases call for it.
+Hmmm.... does this mean that someone inside cgroup ns would be able to
+find out the absolute cgroup path of the ns root from inside?  If so,
+wouldn't that be an unnecessary information leak?
 
 Thanks.
 
