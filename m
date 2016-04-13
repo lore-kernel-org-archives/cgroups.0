@@ -1,53 +1,71 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
- group and PRIO_RGRP
-Date: Wed, 13 Apr 2016 21:15:34 +0200
-Message-ID: <1460574934.3775.77.camel@gmail.com>
-References: <20160406155830.GI24661@htj.duckdns.org>
-	 <20160407064549.GH3430@twins.programming.kicks-ass.net>
-	 <20160407073547.GA12560@cmpxchg.org>
-	 <20160407080833.GK3430@twins.programming.kicks-ass.net>
-	 <20160407194555.GI7822@mtj.duckdns.org>
-	 <20160407202542.GD3448@twins.programming.kicks-ass.net>
-	 <20160408201135.GO24661@htj.duckdns.org>
-	 <20160409133917.GV3448@twins.programming.kicks-ass.net>
-	 <20160412222915.GT24661@htj.duckdns.org>
-	 <1460533381.3780.191.camel@gmail.com>
-	 <20160413155952.GU24661@htj.duckdns.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [BUG] cgroup/workques/fork: deadlock when moving cgroups
+Date: Wed, 13 Apr 2016 21:23:14 +0200
+Message-ID: <20160413192313.GA30260@dhcp22.suse.cz>
+References: <20160413094216.GC5774@pathway.suse.cz>
+ <20160413183309.GG3676@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=2P33ILnFagYhyAuOfwZvgfQj3Rerxt6iHvCVuvnS0os=;
-        b=uq8oyqq/vLvlcJaieCRz2Q/OBwEyFHR5Et06BI7huLgMeqomq69KKXpsgJVWBVREh6
-         I0a2YF4vu//E5dRB30akXDVLbgYhDxK3q0SpW5iF7MaSxaiYamy2qoJEPOMS+zdpsOND
-         kbzpOOoyeslGh9qojp9WSABrCjZDcxFK02hQvr4S06DK2i9R8vHfRNkCXkT96JUbjlqt
-         8XY9CH11RdFSPj6LH5pTu6cvY8kDqTjRmTF1XeEdG3ZNGs3vzV+iCawS7dIa7CdFjwtg
-         Vyd4WP72X2rby+/EP3AbJwC4lKUjazZ9Y8d4FN+fTfAqVSnaejCwnZsWjsfFVIbaitMX
-         64YQ==
-In-Reply-To: <20160413155952.GU24661-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160413183309.GG3676-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Wed, 2016-04-13 at 11:59 -0400, Tejun Heo wrote:
+On Wed 13-04-16 14:33:09, Tejun Heo wrote:
+> Hello, Petr.
+> 
+> (cc'ing Johannes)
+> 
+> On Wed, Apr 13, 2016 at 11:42:16AM +0200, Petr Mladek wrote:
+> ...
+> > By other words, "memcg_move_char/2860" flushes a work. But it cannot
+> > get flushed because one worker is blocked and another one could not
+> > get created. All these operations are blocked by the very same
+> > "memcg_move_char/2860".
+> > 
+> > Note that also "systemd/1" is waiting for "cgroup_mutex" in
+> > proc_cgroup_show(). But it seems that it is not in the main
+> > cycle causing the deadlock.
+> > 
+> > I am able to reproduce this problem quite easily (within few minutes).
+> > There are often even more tasks waiting for the cgroups-related locks
+> > but they are not causing the deadlock.
+> > 
+> > 
+> > The question is how to solve this problem. I see several possibilities:
+> > 
+> >   + avoid using workqueues in lru_add_drain_all()
+> > 
+> >   + make lru_add_drain_all() killable and restartable
+> > 
+> >   + do not block fork() when lru_add_drain_all() is running,
+> >     e.g. using some lazy techniques like RCU, workqueues
+> > 
+> >   + at least do not block fork of workers; AFAIK, they have a limited
+> >      cgroups usage anyway because they are marked with PF_NO_SETAFFINITY
+> > 
+> > 
+> > I am willing to test any potential fix or even work on the fix.
+> > But I do not have that big insight into the problem, so I would
+> > need some pointers.
+> 
+> An easy solution would be to make lru_add_drain_all() use a
+> WQ_MEM_RECLAIM workqueue.
 
-> Are you saying that you're aware that google or another big outfit is
-> making active use of internal tasks competing against sibling cgroups
-> for proportional CPU distribution?  If so, can you please be more
-> specific?
+I think we can live without lru_add_drain_all() in the migration path.
+We are talking about 4 pagevecs so 56 pages. The charge migration is
+racy anyway. What concerns me more is how all this is fragile. It sounds
+just too easy to add a dependency on per-cpu sync work later and
+reintroduce this issue which is quite hard to detect.
 
-What I'm aware of is a big outfit that moves thread pool workers in/out
-of a large number of cpu/cpuacct cgroups.  What all a worker thread may
-spawn in a cgroup, or find already there upon arrival and thus compete
-with I do not know. 
+Cannot we come up with something more robust?  Or at least warn when we
+try to use per-cpu workers with problematic locks held?
 
-I'm baffled by why anyone would care which entity competes with which
-other entity.  An entity is an entity is an entity.
-
-	-Mike
+Thanks!
+-- 
+Michal Hocko
+SUSE Labs
