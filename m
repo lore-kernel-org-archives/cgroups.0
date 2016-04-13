@@ -1,48 +1,70 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [BUG] cgroup/workques/fork: deadlock when moving cgroups
-Date: Wed, 13 Apr 2016 21:48:21 +0200
-Message-ID: <20160413194820.GC30260@dhcp22.suse.cz>
-References: <20160413094216.GC5774@pathway.suse.cz>
- <20160413183309.GG3676@htj.duckdns.org>
- <20160413192313.GA30260@dhcp22.suse.cz>
- <20160413193734.GC20142@htj.duckdns.org>
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup namespaces: add a 'nsroot=' mountinfo field
+Date: Wed, 13 Apr 2016 16:31:07 -0700
+Message-ID: <CAGr1F2HXJ1BdMFY+vF40O_khE+4S7OnbQPv-h1Q_AmGGhL7mzw@mail.gmail.com>
+References: <20160321234133.GA22463@mail.hallyn.com> <20160413175736.GC3676@htj.duckdns.org>
+ <20160413184639.GA29483@mail.hallyn.com> <20160413185033.GH3676@htj.duckdns.org>
+ <20160413190152.GA29753@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160413193734.GC20142@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=AiholoauobphFUTs2gzWDLtK8NSCIswsRInj9ZsoDt8=;
+        b=a8kvrGVQrMr64bPyVJVqPYuhHbaIn2tB6vbqjJv7TE1Y2ReH/fyV2IykGRYfIbtQqO
+         O56iXbXyb8cKJEnBtMbsXOeZkHc1eGG0Aot/0jVpWhDSK8/x+qaM9FlEzJ3smpge0NkB
+         YZLriExQp3e5b7KY7zK0KLXyhb2rh6L2rWJ8knwLjSTM/IcYC+S5MK33D/e+vteiF1p7
+         MnFHa9aE1m6zJwirIm17EXae0Yq0W8gEzy6A2tu2ZsKRWXXSgHA7Q4GBdFUrlGw4viEG
+         vYxdsjBvei2cEuhA28gc1SJV8CFhfntJ3H0BCQpNPaT3srKznSb/tbDelhgDzA7hXc9Q
+         rovA==
+In-Reply-To: <20160413190152.GA29753-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Petr Mladek <pmladek@suse.com>, cgroups@vger.kernel.org, Cyril Hrubis <chrubis@suse.cz>, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed 13-04-16 15:37:34, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> On Wed, Apr 13, 2016 at 09:23:14PM +0200, Michal Hocko wrote:
-> > I think we can live without lru_add_drain_all() in the migration path.
-> > We are talking about 4 pagevecs so 56 pages. The charge migration is
-> 
-> Ah, nice.
-> 
-> > racy anyway. What concerns me more is how all this is fragile. It sounds
-> > just too easy to add a dependency on per-cpu sync work later and
-> > reintroduce this issue which is quite hard to detect.
-> > Cannot we come up with something more robust?  Or at least warn when we
-> > try to use per-cpu workers with problematic locks held?
-> 
-> Yeah, workqueue does limited lockdep annotation but it doesn't
-> integrate fully with the rest of dependency tracking.  It'd be nice to
-> have that.  Don't know how to tho.
+On Wed, Apr 13, 2016 at 12:01 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
+> Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+>> Hello, Serge.
+>>
+>> On Wed, Apr 13, 2016 at 01:46:39PM -0500, Serge E. Hallyn wrote:
+>> > It's not a leak of any information we're trying to hide.  I realize
+>> > something like 8 years have passed, but I still basically go by the
+>> > ksummit guidance that containers are ok but the kernel's first priority
+>> > is to facilitate containers but not trick containers into thinking
+>> > they're not containerized.  So long as the container is properly set
+>> > up, I don't think there's anything the workload could do with the
+>> > nsroot= info other than *know* that it is in a ns cgroup.
+>> >
+>> > If we did change that guidance, there's a slew of proc info that we
+>> > could better virtualize :)
+>>
+>> I see.  I'm just wondering because the information here seems a bit
+>> gratuituous.  Isn't the only thing necessary telling whether the root
+>> is bind mounted or namescoped?  Wouldn't simple "nsroot" work for that
+>> purpose?
+>
+> I don't think so - we could be in a cgroup namespace but still have
+> access only to bind-mounted cgroups.  So we need to compare the
+> superblock dentry root field to the nsroot= value.
 
-I was thinking about something like flush_per_cpu_work() which would
-assert on group_threadgroup_rwsem held for write. But this still sounds
-suboptimal to me. Do we really have to do
-cgroup_threadgroup_change_begin for kworker threads? They are
-PF_NO_SETAFFINITY so they cannot be moved AFAIR. Or am I missing
-something?
+Umm, I don't think this is such a good idea. The main purpose of
+cgroup namespace was to prevent this exposure of system cgroup
+hierarchy that used to happen because of /proc/self/cgroup. Wouldn't
+showing that information in /proc/self/mountinfo defeat the purpose?
+
+> One practical problem I've found with cgroup namespaces is that there
+> is no way to disambiguate between a cgroupfs mount which was done in
+> a cgroup namespace, and a bind mount of a cgroupfs directory.
+
+Thats actually by design, no? Namespaced apps should not know/care if
+they are running inside namespace. If they can find it out today, its
+just because of certain side-effects. I fear adding explicit "nsroot"
+or something in /proc/self/mountinfo now becomes an API making it hard
+to virtualize user-apps again.
 
 -- 
-Michal Hocko
-SUSE Labs
+Aditya
