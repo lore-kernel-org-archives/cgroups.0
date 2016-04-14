@@ -1,68 +1,31 @@
-From: Mike Galbraith <umgwanakikbuti@gmail.com>
-Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
- group and PRIO_RGRP
-Date: Thu, 14 Apr 2016 08:07:37 +0200
-Message-ID: <1460614057.5100.150.camel@gmail.com>
-References: <20160406155830.GI24661@htj.duckdns.org>
-	 <20160407064549.GH3430@twins.programming.kicks-ass.net>
-	 <20160407073547.GA12560@cmpxchg.org>
-	 <20160407080833.GK3430@twins.programming.kicks-ass.net>
-	 <20160407194555.GI7822@mtj.duckdns.org>
-	 <20160407202542.GD3448@twins.programming.kicks-ass.net>
-	 <20160408201135.GO24661@htj.duckdns.org>
-	 <20160409133917.GV3448@twins.programming.kicks-ass.net>
-	 <20160412222915.GT24661@htj.duckdns.org>
-	 <1460533381.3780.191.camel@gmail.com>
-	 <20160413155952.GU24661@htj.duckdns.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [BUG] cgroup/workques/fork: deadlock when moving cgroups
+Date: Thu, 14 Apr 2016 09:06:23 +0200
+Message-ID: <20160414070623.GC2850@dhcp22.suse.cz>
+References: <20160413094216.GC5774@pathway.suse.cz>
+ <20160413183309.GG3676@htj.duckdns.org>
+ <20160413192313.GA30260@dhcp22.suse.cz>
+ <20160413193734.GC20142@htj.duckdns.org>
+ <20160413194820.GC30260@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=kxlep/yTKUSCEtsEOoMViwtr6vP/4awqVd66GtwTnUo=;
-        b=V+3S9ygj21a4AzBgvZWevPnsjadsvHFV3HZEeFi8KCNaOgSW4BSEP9PAx8w9nAsTfa
-         fgQ/BlNKcJAi8rYol7wHv4isVWV2kmBcY4PnrLOazTv/AX6QLHAQiIXXOgMaSev6TyU8
-         5HHh4owFLki9CJkyiLRj1lMq6PO+SiKkBSDDN29tprNFvzmqV5HiLMa7g2WAzv658HBS
-         6gaAfwk9OACeLjWS1NaqTkmRNY2Ju/qXAnb2DOaGvKFfezWNsI1bNZptcp8Ixs3RrUmW
-         IGWSKkdvrQ7t8eYrtWYTxia/y84+DkH6E9rCb95kNRUlVLWTEOSZqJa7g/rC+gIvdv4J
-         NmiQ==
-In-Reply-To: <20160413155952.GU24661@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160413194820.GC30260-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, torvalds@linux-foundation.org, akpm@linux-foundation.org, mingo@redhat.com, lizefan@huawei.com, pjt@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-api@vger.kernel.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Wed, 2016-04-13 at 11:59 -0400, Tejun Heo wrote:
-> Hello, Mike.
-> 
-> On Wed, Apr 13, 2016 at 09:43:01AM +0200, Mike Galbraith wrote:
-> > > The cost is part aesthetical and part practical.  While less
-> > > elegant
-> > > than tree of uniform objects, it seems a stretch to call internal
-> > > /
-> > > leaf node distinction broken especially given that the model is
-> > > natural to some controllers.
-> > 
-> > That justifies prohibiting proper usages of three controllers, cpu,
-> > cpuacct and cpuset?
-> 
-> Neither cpuacct or cpuset loses any capability from the constraint as
-> there is no difference between tasks being in an internal cgroup or a
-> leaf cgroup nested under it.  The only practical impact is that we
-> lose the ability to let internal tasks compete against sibling cgroups
-> for proportional control.
+On Wed 13-04-16 21:48:20, Michal Hocko wrote:
+[...]
+> I was thinking about something like flush_per_cpu_work() which would
+> assert on group_threadgroup_rwsem held for write.
 
-I'm not getting it.
-
-A.  entity = task[s] | cgroup[s]
-B.  entity = task[s] ^ cgroup[s]
-
-A I get, B I don't, but you seem to be saying B, else we get the task
-competes with sibling cgroup business.
-
-Let /foo be an exclusive cpuset containing exclusive subset bar.  How can any task acquire set foo affinity if B really really applies?  My box calls me a dummy if I try to create a "proper" home for tasks, one with both no snobby neighbors and proper affinity.
-
-	-Mike
+I have thought about this some more and I guess this is not limitted to
+per cpu workers. Basically any flush_work with group_threadgroup_rwsem
+held for write is dangerous, right?
+-- 
+Michal Hocko
+SUSE Labs
