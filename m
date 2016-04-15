@@ -1,91 +1,186 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [BUG] cgroup/workques/fork: deadlock when moving cgroups
-Date: Fri, 15 Apr 2016 11:25:26 -0400
-Message-ID: <20160415152526.GJ12583@htj.duckdns.org>
-References: <20160413094216.GC5774@pathway.suse.cz>
- <20160413183309.GG3676@htj.duckdns.org>
- <20160413192313.GA30260@dhcp22.suse.cz>
- <20160414175055.GA6794@cmpxchg.org>
- <20160415070601.GA32377@dhcp22.suse.cz>
- <20160415143815.GH12583@htj.duckdns.org>
- <20160415150815.GM32377@dhcp22.suse.cz>
+From: Aditya Kali <adityakali@google.com>
+Subject: Re: [PATCH] cgroup namespaces: add a 'nsroot=' mountinfo field
+Date: Fri, 15 Apr 2016 08:50:31 -0700
+Message-ID: <CAGr1F2EZtts38SPDc9cuH1prc6NfUJiwUQmqyRp-RpNYM5UzxA@mail.gmail.com>
+References: <20160321234133.GA22463@mail.hallyn.com> <20160413175736.GC3676@htj.duckdns.org>
+ <20160414040436.GA3739@mail.hallyn.com> <87oa9c6ymf.fsf@x220.int.ebiederm.org>
+ <20160414152747.GA12700@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=HRcbDRoQqJei4oyAZnw5RUhquIIs742Gk/2yNP5OgoE=;
-        b=cN2mqc3n5qG3z7cr5vqk5UZRPxYeEiw9ry69koGl6BO7eouOS7ykoGLicEoAjSvbC1
-         5aO7a3EmXc1ZzwyYb+n8SaUszkgU7oD6FZSK3yU7yd9eFmdiBi4yjambDjCU0tbRacuM
-         D8yrjN8XjsJ+SRIS9ESUxTngBQQ9X4N7tSx5lDt/5YQcJhd++9Rh0+yl7tj1w7MgM77q
-         pATzu6jJ3aS4IrfQ0kZdg9JILsHg3DS/eHlYkqKfaMccHJFurIUrFARmXrigLgQcPJy8
-         c+wyY+d3HAelHeQlqY2OnUV4K7FXhQirsS5vfAlRgCDqFtwNpUs2UGtO2bT01zP9FqHE
-         K7uw==
-Content-Disposition: inline
-In-Reply-To: <20160415150815.GM32377-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=vSS9AEq7ti20LW1ul5j/dApWFlLisdfvldwZxOubjLU=;
+        b=cwoEknvau8nzrycNhDV/GcdCW2rdUnUhluPV5Qy8RsHVVh8dyABUTXGmOjGG6ml7Pa
+         I4VVmEPsaunVva0QgXAhE4PFv4qhUrFuDewBoYRNyoQ2TTqDVWg0Dsm8Clx8OGndOPnH
+         PMP+FJ9jilfkO6fRH9Uk+OruCR34LBT662V0e62J+az3H9i1LDp/W+jRbWcokoxqoIK+
+         5t00JobJN8DPe2kNy12dbTR5KUGskO9Y4CE9+z5lKm9WNS4o8soQnn4U92a8p/FkM+pJ
+         2AD8Nka+J9silQhk9FPzNBFEKMfBTmnikn1zA5IbqpA4n9z50whZd0DpBET9+jz2ANds
+         ZiWw==
+In-Reply-To: <20160414152747.GA12700@mail.hallyn.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Serge E. Hallyn" <serge@hallyn.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Tejun Heo <tj@kernel.org>, Linux API <linux-api@vger.kernel.org>, Linux Containers <containers@lists.osdl.org>, cgroups mailinglist <cgroups@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 
-Hello,
+On Thu, Apr 14, 2016 at 8:27 AM, Serge E. Hallyn <serge@hallyn.com> wrote:
+> Quoting Eric W. Biederman (ebiederm@xmission.com):
+>> "Serge E. Hallyn" <serge@hallyn.com> writes:
+>>
+>> > This is so that userspace can distinguish a mount made in a cgroup
+>> > namespace from a bind mount from a cgroup subdirectory.
+>>
+>> To do that do you need to print the path, or is an extra option that
+>> reveals nothing except that it was a cgroup mount sufficient?
+>>
+>> Is there any practical difference between a mount in a namespace and a
+>> bind mount?
+>>
+>> Given the way the conversation has been going I think it would be good
+>> to see the answers to these questions.  Perhaps I missed it but I
+>> haven't seen the answers to those questions.
+>
+> Yup, I tried to answer those in my last email, let me try again.
+>
+> Let's say I start a container using cgroup namespaces, /lxc/x1.  It mounts
+> freezer at /sys/fs/cgroup so it has field three of mountinfo as /lxc/x1,
+> and /sys/fs/cgroup/ is the path to the container's cgroup (/lxc/x1).  In
+> that container, I start another container x1, not using cgroup namespaces.
+> It also wants a cgroup mount, and a common way to handle that (to prevent
+> container rewriting its limits) is to mount a tmpfs at /sys/fs/cgroup,
+> create /sysfs/cgroup/lxc/x1, and bind mount /sys/fs/cgroup/lxc/x1 from
+> the parent container onto /sys/fs/cgroup/lxc/x1 in the child container.
+> Now for that bind mount, the mountinfo field 3 will show /lxc/x1/lxc/x1,
+> with mount target /sys/fs/cgroup/lxc/x1, while /proc/self/cgroup for a task
+> in that container will show '/lxc/x1'.  Unless it has been moved into
+> /lxc/x1/lxc/x1 in the container (/lxc/x1/lxc/x1/lxc/x1 on the host)...
+> Every time I've thought "maybe we can just..." I've found a case where it
+> wouldn't work.
+>
+> At first in lxc we simply said if /proc/self/ns/cgroup exists assume that
+> the cgroupfs mounts are not bind mounts.  However, old userspace (and
+> container drivers) on new kernels is certainly possible, especially an
+> older distro in a container on a newer distro on the host.  That completely
+> breaks with this approach.
+>
 
-On Fri, Apr 15, 2016 at 05:08:15PM +0200, Michal Hocko wrote:
-> On Fri 15-04-16 10:38:15, Tejun Heo wrote:
-> > Not necessarily.  The only thing necessary is flushing the work item
-> > after releasing locks but before returning to user.
-> > cpuset_post_attach_flush() does exactly the same thing.
-> 
-> Ahh, ok, didn't know that __cgroup_procs_write is doing something
-> controller specific. Yes then we wouldn't need a generic callback if
-> another code like above would be acceptable.
+My main concern regarding making this a new kernel API is that its too
+generic and exposes information about all system cgroups to every
+process on the system, not just the container or the process inside it
+that needs it. Not all containers need this information and not all
+processes running inside the container needs this. I haven't spent too
+much thought into it, but it seems you will still need to update the
+container userspace to read this extra mount option. So seems like a
+simpler approach where the host "cgroup manager" provides this
+information to specific container cgroup manager via other user-space
+channels (a config file, command-line args, environment vars, proper
+container mounts, etc.) may also work, right?
 
-Yeah, I thought it'd be an one-off thing so didn't made it a generic
-callback.  Making it a generic callback isn't a problem tho.
+> I also personally think there *is* value in letting a task know its
+> place on the system, so hiding the full cgroup path is imo not only not
+> a valid goal, it's counter-productive.  Part of making for better
+> virtualization is to give userspace all the info it needs about its
+> current limits.  Consider that with the unified hierarchy, you cannot
+> have tasks in a cgroup that also has child cgroups - except for the
+> root.  Cgroup namespaces do not make an exception for this, so knowing
+> that you are not in the absolute cgroup root actually can prevent you
+> from trying something that cannot work.  Or, I suppose, at least
+> understanding why you're unable to do what you're trying to do (namely
+> your container manager messed up).  I point this out because finding
+> a way to only show the namespaced root in field 3 of mountinfo would
+> fix the base problem, but at the cost of hiding useful information
+> from a container.
+>
+>> Eric
+>>
+>>
+>> >
+>> > Signed-off-by: Serge Hallyn <serge.hallyn@ubuntu.com>
+>> > ---
+>> > Changelog: 2016-04-13: pass kernfs_node rather than dentry to show_options
+>> > ---
+>> >  fs/kernfs/mount.c      |  2 +-
+>> >  include/linux/kernfs.h |  3 ++-
+>> >  kernel/cgroup.c        | 28 +++++++++++++++++++++++++++-
+>> >  3 files changed, 30 insertions(+), 3 deletions(-)
+>> >
+>> > diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+>> > index f73541f..58e8a86 100644
+>> > --- a/fs/kernfs/mount.c
+>> > +++ b/fs/kernfs/mount.c
+>> > @@ -36,7 +36,7 @@ static int kernfs_sop_show_options(struct seq_file *sf, struct dentry *dentry)
+>> >     struct kernfs_syscall_ops *scops = root->syscall_ops;
+>> >
+>> >     if (scops && scops->show_options)
+>> > -           return scops->show_options(sf, root);
+>> > +           return scops->show_options(sf, dentry->d_fsdata, root);
+>> >     return 0;
+>> >  }
+>> >
+>> > diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+>> > index c06c442..72b4081 100644
+>> > --- a/include/linux/kernfs.h
+>> > +++ b/include/linux/kernfs.h
+>> > @@ -145,7 +145,8 @@ struct kernfs_node {
+>> >   */
+>> >  struct kernfs_syscall_ops {
+>> >     int (*remount_fs)(struct kernfs_root *root, int *flags, char *data);
+>> > -   int (*show_options)(struct seq_file *sf, struct kernfs_root *root);
+>> > +   int (*show_options)(struct seq_file *sf, struct kernfs_node *kn,
+>> > +                       struct kernfs_root *root);
+>> >
+>> >     int (*mkdir)(struct kernfs_node *parent, const char *name,
+>> >                  umode_t mode);
+>> > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+>> > index 671dc05..4d26d07 100644
+>> > --- a/kernel/cgroup.c
+>> > +++ b/kernel/cgroup.c
+>> > @@ -1593,7 +1593,31 @@ static int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
+>> >     return 0;
+>> >  }
+>> >
+>> > -static int cgroup_show_options(struct seq_file *seq,
+>> > +static void cgroup_show_nsroot(struct seq_file *seq, struct kernfs_node *knode,
+>> > +                          struct kernfs_root *kroot)
+>> > +{
+>> > +   char *nsroot;
+>> > +   int len, ret;
+>> > +
+>> > +   if (!kroot)
+>> > +           return;
+>> > +   len = kernfs_path_from_node(knode, kroot->kn, NULL, 0);
+>> > +   if (len <= 0)
+>> > +           return;
+>> > +   nsroot = kzalloc(len + 1, GFP_ATOMIC);
+>> > +   if (!nsroot)
+>> > +           return;
+>> > +   ret = kernfs_path_from_node(knode, kroot->kn, nsroot, len + 1);
+>> > +   if (ret <= 0 || ret > len)
+>> > +           goto out;
+>> > +
+>> > +   seq_show_option(seq, "nsroot", nsroot);
+>> > +
+>> > +out:
+>> > +   kfree(nsroot);
+>> > +}
+>> > +
+>> > +static int cgroup_show_options(struct seq_file *seq, struct kernfs_node *kn,
+>> >                            struct kernfs_root *kf_root)
+>> >  {
+>> >     struct cgroup_root *root = cgroup_root_from_kf(kf_root);
+>> > @@ -1619,6 +1643,8 @@ static int cgroup_show_options(struct seq_file *seq,
+>> >             seq_puts(seq, ",clone_children");
+>> >     if (strlen(root->name))
+>> >             seq_show_option(seq, "name", root->name);
+>> > +   cgroup_show_nsroot(seq, kn, kf_root);
+>> > +
+>> >     return 0;
+>> >  }
 
-> > > really relies on the previous behavior I guess we can solve it with a
-> > > post_move cgroup callback which would be called from a lockless context.
-> > > 
-> > > Anyway, before we go that way, can we at least consider the possibility
-> > > of removing the kworker creation dependency on the global rwsem? AFAIU
-> > > this locking was added because of the pid controller. Do we even care
-> > > about something as volatile as kworkers in the pid controller?
-> > 
-> > It's not just pid controller and the global percpu locking has lower
-> 
-> where else would the locking matter? I have only checked the git history
-> to build my picture so I might be missing something of course.
 
-IIRC, there were followup patches which fixed and/or simplified
-locking paths.  It's just generally a lot simpler to deal with.  The
-downside obviously is that cgroup core operations can't depend on task
-creation.  I didn't expect memcg to trigger it too tho.  I don't think
-we wanna be doing heavy-lifting operations like node migration or page
-relabeling while holding cgroup lock anyway, so would much prefer
-making them async.
-
-> > hotpath overhead.  We can try to exclude kworkers out of the locking
-> > but that can get really nasty and there are already attempts to add
-> > cgroup support to workqueue.  Will think more about it.  For now tho,
-> > do you think making charge moving async would be difficult?
-> 
-> Well it certainly is not that trivial because it relies on being
-> exclusive with global context. I will have to look closer of course but
-> I cannot guarantee I will get to it before I get back from LSF. We can
-> certainly discuss that at the conference. Johannes will be there as
-> well.
-
-I see.  For cpuset, it didn't really matter but what we can do is
-creating a mechanism on cgroup core side which is called after a
-migration operation is done after dropping the usual locks and
-guarantees that no new migration will be started before the callbacks
-finish.  If we have that, relocating charge moving outside the attach
-path should be pretty trivial, right?
-
-Thanks.
 
 -- 
-tejun
+Aditya
