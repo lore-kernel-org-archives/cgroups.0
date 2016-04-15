@@ -1,53 +1,49 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource
- group and PRIO_RGRP
-Date: Fri, 15 Apr 2016 04:42:27 +0200
-Message-ID: <1460688147.3847.1.camel@gmail.com>
-References: <20160407073547.GA12560@cmpxchg.org>
-	 <20160407080833.GK3430@twins.programming.kicks-ass.net>
-	 <20160407194555.GI7822@mtj.duckdns.org>
-	 <20160407202542.GD3448@twins.programming.kicks-ass.net>
-	 <20160408201135.GO24661@htj.duckdns.org>
-	 <20160409133917.GV3448@twins.programming.kicks-ass.net>
-	 <20160412222915.GT24661@htj.duckdns.org>
-	 <1460533381.3780.191.camel@gmail.com>
-	 <20160413155952.GU24661@htj.duckdns.org>
-	 <1460614057.5100.150.camel@gmail.com>
-	 <20160414195748.GK7822@mtj.duckdns.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [BUG] cgroup/workques/fork: deadlock when moving cgroups
+Date: Fri, 15 Apr 2016 09:06:01 +0200
+Message-ID: <20160415070601.GA32377@dhcp22.suse.cz>
+References: <20160413094216.GC5774@pathway.suse.cz>
+ <20160413183309.GG3676@htj.duckdns.org>
+ <20160413192313.GA30260@dhcp22.suse.cz>
+ <20160414175055.GA6794@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ebr9lCzl+6VUNmY3NPubW4OTXGB8GsyCU6wKoNTVTRk=;
-        b=cWliUjdoXFBpb1B5oxR09dQI6FsfCJK4bBtnjc7k53GqIX8ReX2fKggAcw8qGYeF/c
-         t75vOsZfSECbeBRjPaca5COgh+EF8ev7N9ELZVP2J09zUXVL7G1RUekBrjY/aHRi9jZ3
-         sXmkSB+Bt5glYAFzGN+1IaFxOAbu3PajGewOPbjEbYJ09DYzxuFCIUT3iRujYko0R2tv
-         HpMju2osxWXbrBUIwB1kHmCRNjJ7Mt1jZcXlObj8GUhbGaPNUvxNvzGmykmblxvfIPsJ
-         HO98DVOWd3BFFvhENnKgQJVbql+IQXgp/Iqq8m/PowLfxnC8DuLhiMU9kZvka0tQeljp
-         i0HQ==
-In-Reply-To: <20160414195748.GK7822-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160414175055.GA6794@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>, Petr Mladek <pmladek@suse.com>, cgroups@vger.kernel.org, Cyril Hrubis <chrubis@suse.cz>, linux-kernel@vger.kernel.org
 
-On Thu, 2016-04-14 at 15:57 -0400, Tejun Heo wrote:
-> Hello, Mike.
+On Thu 14-04-16 13:50:55, Johannes Weiner wrote:
+> On Wed, Apr 13, 2016 at 09:23:14PM +0200, Michal Hocko wrote:
+> > I think we can live without lru_add_drain_all() in the migration path.
 > 
-> On Thu, Apr 14, 2016 at 08:07:37AM +0200, Mike Galbraith wrote:
-> > Let /foo be an exclusive cpuset containing exclusive subset bar.
-> > How can any task acquire set foo affinity if B really really
-> > applies?  My box calls me a dummy if I try to create a "proper"
-> > home
-> > for tasks, one with both no snobby neighbors and proper affinity.
-> 
-> I'm not sure I quite understand what you're saying.  Are you referring
-> to the cpuset.{cpu|mem}_exclusive knobs?
+> Agreed. Michal, would you care to send a patch to remove it?
 
-Yes.
+Now that I am looking closer I am not sure this would help though.
+mem_cgroup_move_charge needs to take mmap_sem for read and keeps looping
+until it gets it. What if the mmap_sem holder for write depends on the
+work queue code in the same way lru_add_drain_all does? I mean this all
+is really fragile.
+Tejun was proposing to do the migration async (move the whole
+mem_cgroup_move_charge into the work item). This would solve the problem
+of course. I haven't checked whether this would be safe but it at least
+sounds doable (albeit far from trivial). It would also be a user visible
+change because the new memcg will not contain the moved charges after we
+return to user space. I think this would be acceptable but if somebody
+really relies on the previous behavior I guess we can solve it with a
+post_move cgroup callback which would be called from a lockless context.
 
-	-Mike
+Anyway, before we go that way, can we at least consider the possibility
+of removing the kworker creation dependency on the global rwsem? AFAIU
+this locking was added because of the pid controller. Do we even care
+about something as volatile as kworkers in the pid controller?
+
+Anyway one way or another I will be travelling until next Friday and
+will have only limited time to look into this.
+-- 
+Michal Hocko
+SUSE Labs
