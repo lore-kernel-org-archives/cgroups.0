@@ -1,88 +1,135 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH for-4.6-fixes] memcg: remove lru_add_drain_all()
- invocation from mem_cgroup_move_charge()
-Date: Sun, 17 Apr 2016 08:07:48 -0400
-Message-ID: <20160417120747.GC21757@dhcp22.suse.cz>
-References: <20160413094216.GC5774@pathway.suse.cz>
- <20160413183309.GG3676@htj.duckdns.org>
- <20160413192313.GA30260@dhcp22.suse.cz>
- <20160414175055.GA6794@cmpxchg.org>
- <20160415191719.GK12583@htj.duckdns.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160415191719.GK12583-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH 2/2] mountinfo: implement show_path for kernfs and cgroup
+Date: Sun, 17 Apr 2016 15:04:32 -0500
+Message-ID: <1460923472-29370-3-git-send-email-serge.hallyn@ubuntu.com>
+References: <1460923472-29370-1-git-send-email-serge.hallyn@ubuntu.com>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1460923472-29370-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-On Fri 15-04-16 15:17:19, Tejun Heo wrote:
-> mem_cgroup_move_charge() invokes lru_add_drain_all() so that the pvec
-> pages can be moved too.  lru_add_drain_all() schedules and flushes
-> work items on system_wq which depends on being able to create new
-> kworkers to make forward progress.  Since 1ed1328792ff ("sched,
-> cgroup: replace signal_struct->group_rwsem with a global
-> percpu_rwsem"), a new task can't be created while in the cgroup
-> migration path and the described lru_add_drain_all() invocation can
-> easily lead to a deadlock.
-> 
-> Charge moving is best-effort and whether the pvec pages are migrated
-> or not doesn't really matter.  Don't call it during charge moving.
-> Eventually, we want to move the actual charge moving outside the
-> migration path.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-I guess
-Debugged-by: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
-Reported-by: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
+When showing a cgroupfs entry in mountinfo, show the
+path of the mount root dentry relative to the reader's
+cgroup namespace root.
 
-would be due
+Signed-off-by: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+---
+ fs/kernfs/mount.c      | 14 ++++++++++++++
+ include/linux/kernfs.h |  2 ++
+ kernel/cgroup.c        | 35 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 51 insertions(+)
 
-> Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Fixes: 1ed1328792ff ("sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem")
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
-> Hello,
-> 
-> So, this deadlock seems pretty easy to trigger.  We'll make the charge
-> moving asynchronous eventually but let's not hold off fixing an
-> immediate problem.
-
-Although this looks rather straightforward and it fixes the immediate
-problem I am little bit nervous about it. As already pointed out in
-other email mem_cgroup_move_charge still depends on mmap_sem for
-read and we might hit an even more subtle lockup if the current holder
-of the mmap_sem for write depends on the task creation (e.g. some of the
-direct reclaim path uses WQ which is really hard to rule out and I even
-think that some shrinkers do this).
-
-I liked your proposal when mem_cgroup_move_charge would be called from a
-context which doesn't hold the problematic rwsem much more. Would that
-be too intrusive for the stable backport?
-
-> Thanks.
-> 
->  mm/memcontrol.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 36db05f..56060c7 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4859,7 +4859,6 @@ static void mem_cgroup_move_charge(struct mm_struct *mm)
->  		.mm = mm,
->  	};
->  
-> -	lru_add_drain_all();
->  	/*
->  	 * Signal lock_page_memcg() to take the memcg's move_lock
->  	 * while we're moving its pages to another memcg. Then wait
-
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index f73541f..3b78724 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -15,6 +15,7 @@
+ #include <linux/slab.h>
+ #include <linux/pagemap.h>
+ #include <linux/namei.h>
++#include <linux/seq_file.h>
+ 
+ #include "kernfs-internal.h"
+ 
+@@ -40,6 +41,18 @@ static int kernfs_sop_show_options(struct seq_file *sf, struct dentry *dentry)
+ 	return 0;
+ }
+ 
++static int kernfs_sop_show_path(struct seq_file *sf, struct dentry *dentry)
++{
++	struct kernfs_node *node = dentry->d_fsdata;
++	struct kernfs_root *root = kernfs_root(node);
++	struct kernfs_syscall_ops *scops = root->syscall_ops;
++
++	if (scops && scops->show_path)
++		return scops->show_path(sf, node, root);
++
++	return seq_dentry(sf, dentry, " \t\n\\");
++}
++
+ const struct super_operations kernfs_sops = {
+ 	.statfs		= simple_statfs,
+ 	.drop_inode	= generic_delete_inode,
+@@ -47,6 +60,7 @@ const struct super_operations kernfs_sops = {
+ 
+ 	.remount_fs	= kernfs_sop_remount_fs,
+ 	.show_options	= kernfs_sop_show_options,
++	.show_path	= kernfs_sop_show_path,
+ };
+ 
+ /**
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index c06c442..30f089e 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -152,6 +152,8 @@ struct kernfs_syscall_ops {
+ 	int (*rmdir)(struct kernfs_node *kn);
+ 	int (*rename)(struct kernfs_node *kn, struct kernfs_node *new_parent,
+ 		      const char *new_name);
++	int (*show_path)(struct seq_file *sf, struct kernfs_node *kn,
++			 struct kernfs_root *root);
+ };
+ 
+ struct kernfs_root {
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 671dc05..9a0d7b3 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1593,6 +1593,40 @@ static int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
+ 	return 0;
+ }
+ 
++static int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
++			    struct kernfs_root *kf_root)
++{
++	int len = 0, ret = 0;
++	char *buf = NULL;
++	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
++	struct cgroup_root *kf_cgroot = cgroup_root_from_kf(kf_root);
++	struct cgroup *ns_cgroup;
++
++	mutex_lock(&cgroup_mutex);
++	spin_lock_bh(&css_set_lock);
++	ns_cgroup = cset_cgroup_from_root(ns->root_cset, kf_cgroot);
++	len = kernfs_path_from_node(kf_node, ns_cgroup->kn, NULL, 0);
++	if (len > 0)
++		buf = kmalloc(len + 1, GFP_ATOMIC);
++	if (buf)
++		ret = kernfs_path_from_node(kf_node, ns_cgroup->kn, buf, len + 1);
++
++	spin_unlock_bh(&css_set_lock);
++	mutex_unlock(&cgroup_mutex);
++
++	if (len <= 0)
++		return len;
++	if (!buf)
++		return -ENOMEM;
++	if (ret == len) {
++		seq_escape(sf, buf, " \t\n\\");
++		ret = 0;
++	} else if (ret >= 0)
++		ret = -EINVAL;
++	kfree(buf);
++	return ret;
++}
++
+ static int cgroup_show_options(struct seq_file *seq,
+ 			       struct kernfs_root *kf_root)
+ {
+@@ -5430,6 +5464,7 @@ static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
+ 	.mkdir			= cgroup_mkdir,
+ 	.rmdir			= cgroup_rmdir,
+ 	.rename			= cgroup_rename,
++	.show_path		= cgroup_show_path,
+ };
+ 
+ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
 -- 
-Michal Hocko
-SUSE Labs
+2.7.4
