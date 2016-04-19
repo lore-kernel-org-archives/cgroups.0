@@ -1,67 +1,88 @@
-From: Parav Pandit <pandit.parav@gmail.com>
-Subject: Re: [PATCHv10 1/3] rdmacg: Added rdma cgroup controller
-Date: Tue, 19 Apr 2016 14:26:08 +0530
-Message-ID: <CAG53R5Xt1J9+SBvAFRQOcwvkFzeLMkTZ-7vyBG2BVPYdU8p4Nw@mail.gmail.com>
-References: <1458850962-16057-1-git-send-email-pandit.parav@gmail.com>
-	<1458850962-16057-2-git-send-email-pandit.parav@gmail.com>
-	<20160404193640.GA7822@mtj.duckdns.org>
-	<CAG53R5UgDeFxqvOOJb=r1DH2yFmboQZPM=-_atGrOCvK=XYU=A@mail.gmail.com>
-	<20160405012504.GG24661@htj.duckdns.org>
-	<20160405090627.GA26425@infradead.org>
-	<CAG53R5WBBUj6=B81Q-zEwL_xy3_yXUofJ6p921baqnqeVocDPQ@mail.gmail.com>
-	<20160405124252.GA4348@infradead.org>
-	<CAG53R5UOogG1itd8AzMOWnpnyGqKSRLY4CNrX5HWGfdF3q-F3w@mail.gmail.com>
-	<20160405172720.GA31055@infradead.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [BUG] cgroup/workques/fork: deadlock when moving cgroups
+Date: Tue, 19 Apr 2016 10:01:21 -0400
+Message-ID: <20160419140120.GA4126@dhcp22.suse.cz>
+References: <20160413094216.GC5774@pathway.suse.cz>
+ <20160413183309.GG3676@htj.duckdns.org>
+ <20160413192313.GA30260@dhcp22.suse.cz>
+ <20160414175055.GA6794@cmpxchg.org>
+ <20160415070601.GA32377@dhcp22.suse.cz>
+ <20160415143815.GH12583@htj.duckdns.org>
+ <20160418144023.GG6862@pathway.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc;
-        bh=msyJ9U1SsjmZCRr8093QaS0lbfb2lIaI+P60rTJ7ZYg=;
-        b=w+gwy/3H/BRM/MjOI15h299PgkOuvC+djczSaf11PwZtYPX7iNERRXAm6v9AI0zmk1
-         MaUsjScpqtuATZ96VxHRwz4d437GFwsgwP/ih9sJ1/rqqsA+KBmueVYwmq7JT9iXGjIM
-         33/s4UJDjFKf0XowEkrNOtQpDDfgjzGGK0qFtBDsf7RK1Bweytnli8cvqzszhzhYHYVR
-         CP49JT13IVxSGJoAWiBtZBbHruTgWnxuvClFPJ9Ml00lWnQfpbqx2ppZ+Z63em8yr4Yz
-         wifqEFLs84OQFkaqhqpaCRSTWalj8/SKscmMP0ZxbIbQkekct303l/kG77ZH74WIJrKd
-         CZBw==
-In-Reply-To: <20160405172720.GA31055@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160418144023.GG6862-KsEp0d+Q8qECVLCxKZUutA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Christoph,
+On Mon 18-04-16 16:40:23, Petr Mladek wrote:
+> On Fri 2016-04-15 10:38:15, Tejun Heo wrote:
+> > > Anyway, before we go that way, can we at least consider the possibility
+> > > of removing the kworker creation dependency on the global rwsem? AFAIU
+> > > this locking was added because of the pid controller. Do we even care
+> > > about something as volatile as kworkers in the pid controller?
+> >
+> > It's not just pid controller and the global percpu locking has lower
+> > hotpath overhead.  We can try to exclude kworkers out of the locking
+> > but that can get really nasty and there are already attempts to add
+> > cgroup support to workqueue.  Will think more about it.
+> 
+> I have played with this idea on Friday. Please, find below a POC.
+> The worker detection works and the deadlock is removed. But workers
+> do not appear in the root cgroups. I am not familiar with the cgroups
+> stuff, so this part is much more difficult for me.
+> 
+> I send it because it might give you an idea when discussing it
+> on LSF. Please, let me know if I should continue on this way or
+> if it looks too crazy already now.
+> 
+> 
+> >From ca1420926f990892a914d64046ee8d273b876f30 Mon Sep 17 00:00:00 2001
+> From: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
+> Date: Mon, 18 Apr 2016 14:17:17 +0200
+> Subject: [POC PATCH] cgroups/workqueus: Do not block forking workqueues by cgroups
+>  lock
+> 
+> This is a POC how to delay cgroups operations when forking workqueue
+> workers.  Workqueues are used by some cgroups operations, for example,
+> lru_add_drain_all().  Creating new worker might help to avoid a deadlock.
+> 
+> This patch adds a way to detect whether a workqueue worker is being
+> forked, see detect_wq_worker().  For this it needs to make struct
+> kthread_create_info and the main worker_thread public.  As a consequence,
+> it renames worker_thread to wq_worker_thread.
+> 
+> Next, cgroups_fork() just initializes the cgroups fields in task_struct.
+> It does not really need to be guarded by cgroup_threadgroup_rwsem.
+> 
+> cgroup_threadgroup_rwsem is taken later when we check if the fork
+> is allowed and when we copy the cgroups setting.  But these two
+> operations are skipped for workers.
+> 
+> The result is that workers are not blocked by any cgroups operation
+> but they do not appear in the root cgroups.
+> 
+> There is a preparation of cgroup_delayed_post_fork() that might put
+> the workers into the root cgroups.  It is just a copy of
+> cgroup_post_fork() where "kthreadd_task" is hardcoded.  It is not yet
+> called.  Also it is not protected against other cgroups operations.
+> ---
+>  include/linux/kthread.h   | 14 +++++++++++++
+>  include/linux/workqueue.h |  1 +
+>  kernel/cgroup.c           | 53 +++++++++++++++++++++++++++++++++++++++++++++++
+>  kernel/fork.c             | 36 +++++++++++++++++++++++---------
+>  kernel/kthread.c          | 14 -------------
+>  kernel/workqueue.c        |  9 ++++----
+>  6 files changed, 98 insertions(+), 29 deletions(-)
 
-I was on travel. Sorry for the late inline response and question.
-
-Parav
-
-
-
-On Tue, Apr 5, 2016 at 10:57 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Tue, Apr 05, 2016 at 05:55:26AM -0700, Parav Pandit wrote:
->> Just because we add one more rdma resource, we need to ask someone to
->> upgrade kernel?
->
-> Yes.  Just like when you need any other core kernel resource.
-
-By architecture Linux kernel allows
-(a) plugin of any new block level IO scheduler as kernel module.
-This is much more fundamental resource or functionality than rdma resource.
-(b) plugin of any new file system as kernel module.
-
-Changing both in field and out of box can do be more harmful than
-defining new rdma resource.
-
-RDMA Resource definition by IB core module is very similar to above
-two functionality, where elevator and VFS provides basic support
-framework and so rdma cgroup controller here.
-
-So can you please help me understand - which resource did you compare
-against in your above comment for "core kernel resource"?
-I compared it with similar functionality, flexibility given by (a)
-block IO Scheduler and (b) VFS subsystem to implement them as kernel
-module.
+This feels too overcomplicated. Can we simply drop the locking in
+copy_process if the current == ktreadadd? Would something actually
+break?
+-- 
+Michal Hocko
+SUSE Labs
