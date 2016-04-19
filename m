@@ -1,90 +1,67 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] mountinfo: implement show_path for kernfs and cgroup
-Date: Mon, 18 Apr 2016 23:05:46 -0500
-Message-ID: <20160419040546.GA20350@mail.hallyn.com>
-References: <1460923472-29370-1-git-send-email-serge.hallyn@ubuntu.com>
- <1460923472-29370-3-git-send-email-serge.hallyn@ubuntu.com>
- <20160418041126.GA424@mail.hallyn.com>
- <87mvoqqu48.fsf@x220.int.ebiederm.org>
- <20160419014419.GA19080@mail.hallyn.com>
+From: Parav Pandit <pandit.parav@gmail.com>
+Subject: Re: [PATCHv10 1/3] rdmacg: Added rdma cgroup controller
+Date: Tue, 19 Apr 2016 14:26:08 +0530
+Message-ID: <CAG53R5Xt1J9+SBvAFRQOcwvkFzeLMkTZ-7vyBG2BVPYdU8p4Nw@mail.gmail.com>
+References: <1458850962-16057-1-git-send-email-pandit.parav@gmail.com>
+	<1458850962-16057-2-git-send-email-pandit.parav@gmail.com>
+	<20160404193640.GA7822@mtj.duckdns.org>
+	<CAG53R5UgDeFxqvOOJb=r1DH2yFmboQZPM=-_atGrOCvK=XYU=A@mail.gmail.com>
+	<20160405012504.GG24661@htj.duckdns.org>
+	<20160405090627.GA26425@infradead.org>
+	<CAG53R5WBBUj6=B81Q-zEwL_xy3_yXUofJ6p921baqnqeVocDPQ@mail.gmail.com>
+	<20160405124252.GA4348@infradead.org>
+	<CAG53R5UOogG1itd8AzMOWnpnyGqKSRLY4CNrX5HWGfdF3q-F3w@mail.gmail.com>
+	<20160405172720.GA31055@infradead.org>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160419014419.GA19080-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc;
+        bh=msyJ9U1SsjmZCRr8093QaS0lbfb2lIaI+P60rTJ7ZYg=;
+        b=w+gwy/3H/BRM/MjOI15h299PgkOuvC+djczSaf11PwZtYPX7iNERRXAm6v9AI0zmk1
+         MaUsjScpqtuATZ96VxHRwz4d437GFwsgwP/ih9sJ1/rqqsA+KBmueVYwmq7JT9iXGjIM
+         33/s4UJDjFKf0XowEkrNOtQpDDfgjzGGK0qFtBDsf7RK1Bweytnli8cvqzszhzhYHYVR
+         CP49JT13IVxSGJoAWiBtZBbHruTgWnxuvClFPJ9Ml00lWnQfpbqx2ppZ+Z63em8yr4Yz
+         wifqEFLs84OQFkaqhqpaCRSTWalj8/SKscmMP0ZxbIbQkekct303l/kG77ZH74WIJrKd
+         CZBw==
+In-Reply-To: <20160405172720.GA31055@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-Quoting Serge E. Hallyn (serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org):
-> Quoting Eric W. Biederman (ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org):
-> > "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> writes:
-> > 
-> > >> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> > >> index 671dc05..9a0d7b3 100644
-> > >> --- a/kernel/cgroup.c
-> > >> +++ b/kernel/cgroup.c
-> > >> @@ -1593,6 +1593,40 @@ static int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
-> > >>  	return 0;
-> > >>  }
-> > >>  
-> > >> +static int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
-> > >> +			    struct kernfs_root *kf_root)
-> > >> +{
-> > >> +	int len = 0, ret = 0;
-> > >> +	char *buf = NULL;
-> > >> +	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
-> > >> +	struct cgroup_root *kf_cgroot = cgroup_root_from_kf(kf_root);
-> > >> +	struct cgroup *ns_cgroup;
-> > >> +
-> > >> +	mutex_lock(&cgroup_mutex);
-> > >
-> > > Hm, I can't grab the cgroup mutex here because I already have the
-> > > namespace_sem.  But that's required by cset_cgroup_from_root().  Can
-> > > I just call that under rcu_read_lock() instead?  (Not without
-> > > changing the lockdep_assert_help()).  Is there another way to get the
-> > > info needed here?
-> > 
-> > Do we need the current cgroup namespace information at all?
-> > 
-> > Could we not get the relevant cgroup namespace from the mount of
-> > cgroupfs?
-> 
-> I don't think so.  That was my first inclination.  But at show_path()
-> all we have is the vfsmunt->mnt_root.  Since all cgroup namespaces
-> for a hierarchy share the same dentry tree and superblock, there's
-> no way to tell where the mount's namespace root is supposed to be.
-> 
-> whether we did
-> 
-> # enter new cgroup namespace rooted at cgroup /user.slice/user-1000.slice
-> mount -t cgroup -o freezer freezer /mnt
-> 
-> or
-> 
-> mount --bind /sys/fs/cgroup/freezer/user.slice/user-1000.slice /mnt
-> 
-> the mountinfo entry will be the same.
-> 
-> > In general the better path is not to have the contents of files depend on
-> > who is reading the file.
+Hi Christoph,
 
-And actually, while as i said above this was my first inclination, I now
-think that's wrong.  /proc/$$/cgroup is virtualized per the reader.  The
-point of this patch is to make mountinfo virtualized analogously to
-/proc/$$/cgroup, so that we can be certain how a particular cgroup dentry
-relates to a task's actual cgroup.  So the mountinfo dentry root path
-should in fact depend on the reader.
+I was on travel. Sorry for the late inline response and question.
 
-Looking at it another way...  The value we're talking about shows us
-the path of the root dentry of a cgroup mount.  If a task in cgns2
-rooted at /a/b/c mounts a cgroupfs, it will see '/' as the root dentry.
-If a task in cgns1 rooted at /a/b looks at that mountinfo, '/' would
-be misleading.  It really should be '/c'.
+Parav
 
-If there were security implications those might override this.  But there
-is no security benefit to this.  (The usual security argument is about
-the opener vs the reader, not the mounter verses the reader, but in either
-case I maintain there is no security benefit to virtualizing these paths)
+
+
+On Tue, Apr 5, 2016 at 10:57 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Apr 05, 2016 at 05:55:26AM -0700, Parav Pandit wrote:
+>> Just because we add one more rdma resource, we need to ask someone to
+>> upgrade kernel?
+>
+> Yes.  Just like when you need any other core kernel resource.
+
+By architecture Linux kernel allows
+(a) plugin of any new block level IO scheduler as kernel module.
+This is much more fundamental resource or functionality than rdma resource.
+(b) plugin of any new file system as kernel module.
+
+Changing both in field and out of box can do be more harmful than
+defining new rdma resource.
+
+RDMA Resource definition by IB core module is very similar to above
+two functionality, where elevator and VFS provides basic support
+framework and so rdma cgroup controller here.
+
+So can you please help me understand - which resource did you compare
+against in your above comment for "core kernel resource"?
+I compared it with similar functionality, flexibility given by (a)
+block IO Scheduler and (b) VFS subsystem to implement them as kernel
+module.
