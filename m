@@ -1,59 +1,88 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] kernfs_path_from_node_locked: don't overwrite nlen
-Date: Wed, 20 Apr 2016 15:43:13 -0400
-Message-ID: <20160420194313.GA4775@htj.duckdns.org>
-References: <1460923472-29370-1-git-send-email-serge.hallyn@ubuntu.com>
-	<1460923472-29370-2-git-send-email-serge.hallyn@ubuntu.com>
+Subject: Re: [PATCH for-4.6-fixes] memcg: remove lru_add_drain_all()
+ invocation from mem_cgroup_move_charge()
+Date: Wed, 20 Apr 2016 17:29:22 -0400
+Message-ID: <20160420212922.GH4775@htj.duckdns.org>
+References: <20160413094216.GC5774@pathway.suse.cz>
+ <20160413183309.GG3676@htj.duckdns.org>
+ <20160413192313.GA30260@dhcp22.suse.cz>
+ <20160414175055.GA6794@cmpxchg.org>
+ <20160415191719.GK12583@htj.duckdns.org>
+ <20160417120747.GC21757@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=M/tCLm3V6RxzNdzp7cC1yrHRtL8uFdU9mo62Q+TjzQs=;
+        b=IEjjPdbdclhlnJ8F0fl7kmupAa2sl18mwUZow7Ewr/mVVtwk3PoECf1dxCSRkpJMMf
+         zZHI+GMehp7NGr4uUblvoI6X6wtnyriVX5nzqckpi9ZYsbD6fb0H45/0SCP31jkymN11
+         SP8f5/tgaVijwn5oiBL9Fsyp2tgJYhIHOGiaOPF1YddcunJlxbKzY5Az4xKFQNTIbFGY
+         3Qc/PqI6GII1+INLkK2Xi5Z/WVa51OLNOhEjVY1OddcAHVP58CUYXO3pdYiH0OZghqr+
+         XfoQ7n/Rfw2Tbwhgm81HBCWdrEaQPfrgbIENv1XvMpClHx2TfN0SfGac8Fp4FiyB9R/s
+         QpLQ==
+Content-Disposition: inline
+In-Reply-To: <20160417120747.GC21757-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-disposition:in-reply-to:user-agent;
-	bh=qVE90jj/ehDgqw4eqgLWY5BRS6fP8DS3UclJj2EHAeQ=;
-	b=go0z0uQwR8wStAYoLimlQSxLtde0fyM2SXuaFI+moe3JueEzpJcJQcyGBp9jtDNxTT
-	7GJZ8KoEcGa5V6WtZVSdMOEItc1o+3B5DRyVXVTI6LiQASclJFx5WAL90E45Y5HbleBI
-	7km+F+Teb+M4GqVMC+bfxiL99VW9oKYjtaJuhRVN12Fxk7eYHZYW4I6QV+EqpeJu8Rpw
-	mfG872yoO2572bGeu3fRi4ln1WC6Fe9Pzn4Eiaqa6TlEPm0yty8QxaGCkYVLsU2d7cC1
-	31S5fjq7Az3bc25KLBJb4W6F38zaYMNP31Ijg8NFWhlvhZuiRA4Vq0S3ArOdKFBNAqaS
-	ZvEA==
-Content-Disposition: inline
-In-Reply-To: <1460923472-29370-2-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Apr 17, 2016 at 03:04:31PM -0500, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org wrote:
-> From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-> 
-> We've calculated @len to be the bytes we need for '/..' entries from
-> @kn_from to the common ancestor, and calculated @nlen to be the extra
-> bytes we need to get from the common ancestor to @kn_to.  We use them
-> as such at the end.  But in the loop copying the actual entries, we
-> overwrite @nlen.  Use a temporary variable for that instead.
-> 
-> Without this, the return length, when the buffer is large enough, is
-> wrong.  (When the buffer is NULL or too small, the returned value is
-> correct. The buffer contents are also correct.)
-> 
-> Interestingly, no callers of this function are affected by this as of
-> yet.  However the upcoming cgroup_show_path() will be.
-> 
-> Signed-off-by: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Hello, Michal.
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+On Sun, Apr 17, 2016 at 08:07:48AM -0400, Michal Hocko wrote:
+> On Fri 15-04-16 15:17:19, Tejun Heo wrote:
+> > mem_cgroup_move_charge() invokes lru_add_drain_all() so that the pvec
+> > pages can be moved too.  lru_add_drain_all() schedules and flushes
+> > work items on system_wq which depends on being able to create new
+> > kworkers to make forward progress.  Since 1ed1328792ff ("sched,
+> > cgroup: replace signal_struct->group_rwsem with a global
+> > percpu_rwsem"), a new task can't be created while in the cgroup
+> > migration path and the described lru_add_drain_all() invocation can
+> > easily lead to a deadlock.
+> > 
+> > Charge moving is best-effort and whether the pvec pages are migrated
+> > or not doesn't really matter.  Don't call it during charge moving.
+> > Eventually, we want to move the actual charge moving outside the
+> > migration path.
+> > 
+> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> 
+> I guess
+> Debugged-by: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
+> Reported-by: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
 
-Greg, can you please pick this one up for v4.6?
+Yeah, definitely.  Sorry about missing them.
+
+> > Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Fixes: 1ed1328792ff ("sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem")
+> > Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > ---
+> > Hello,
+> > 
+> > So, this deadlock seems pretty easy to trigger.  We'll make the charge
+> > moving asynchronous eventually but let's not hold off fixing an
+> > immediate problem.
+> 
+> Although this looks rather straightforward and it fixes the immediate
+> problem I am little bit nervous about it. As already pointed out in
+> other email mem_cgroup_move_charge still depends on mmap_sem for
+> read and we might hit an even more subtle lockup if the current holder
+> of the mmap_sem for write depends on the task creation (e.g. some of the
+> direct reclaim path uses WQ which is really hard to rule out and I even
+> think that some shrinkers do this).
+> 
+> I liked your proposal when mem_cgroup_move_charge would be called from a
+> context which doesn't hold the problematic rwsem much more. Would that
+> be too intrusive for the stable backport?
+
+Yeah, I'm working on the fix but let's plug this one first as it seems
+really easy to trigger.  I got a couple off-list reports (in and
+outside fb) of this triggering.
 
 Thanks.
 
