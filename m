@@ -1,8 +1,8 @@
-From: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH for-4.6-fixes] memcg: remove lru_add_drain_all()
  invocation from mem_cgroup_move_charge()
-Date: Thu, 21 Apr 2016 17:00:24 +0200
-Message-ID: <20160421150024.GB2749@pathway.suse.cz>
+Date: Thu, 21 Apr 2016 11:51:00 -0400
+Message-ID: <20160421155100.GL7822@mtj.duckdns.org>
 References: <20160413094216.GC5774@pathway.suse.cz>
  <20160413183309.GG3676@htj.duckdns.org>
  <20160413192313.GA30260@dhcp22.suse.cz>
@@ -11,44 +11,38 @@ References: <20160413094216.GC5774@pathway.suse.cz>
  <20160417120747.GC21757@dhcp22.suse.cz>
  <20160420212922.GH4775@htj.duckdns.org>
  <20160421032704.GA15585@dhcp22.suse.cz>
+ <20160421150024.GB2749@pathway.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=IwWXhpahwL88jxT56nccKCUi8UHh8EIfdCYfFhodtmc=;
+        b=olsvEDcyfuUGE5YRUcyK0qcxRHd9BxvWtpK2J0HBB+qVwjlLzIe7WjsLF7SJ/PZaZc
+         W32xe3fblmhiXdm/8fKSVQ3RLtjp8DbYk/sCssR/jIaliClg9k5kaEkexV268YtULGSB
+         9b5WciPOkKrxrrW0BYJ1cSg15gIFeBhfvuWLj10g/h4eoeUYO6JUAXrTxFf0RmuIQusp
+         o1vGSI0WSwHrjjYTGxHV4K4FiMPXvYfJWf4vk+CUyXW+l6y8tE+L9PmiZZmCUu6bFTma
+         BXXxStFnrD+M36TnMQIO2kqnfSSWFhDjM6Eokq9PKtDHmkV4YxrG90xGSWr9S3uk443a
+         iSIA==
 Content-Disposition: inline
-In-Reply-To: <20160421032704.GA15585-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20160421150024.GB2749@pathway.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Petr Mladek <pmladek@suse.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Cyril Hrubis <chrubis@suse.cz>, linux-kernel@vger.kernel.org
 
-On Wed 2016-04-20 23:27:05, Michal Hocko wrote:
-> On Wed 20-04-16 17:29:22, Tejun Heo wrote:
-> > Hello, Michal.
-> > 
-> > On Sun, Apr 17, 2016 at 08:07:48AM -0400, Michal Hocko wrote:
-> [...]
-> > > I liked your proposal when mem_cgroup_move_charge would be called from a
-> > > context which doesn't hold the problematic rwsem much more. Would that
-> > > be too intrusive for the stable backport?
-> > 
-> > Yeah, I'm working on the fix but let's plug this one first as it seems
-> > really easy to trigger.  I got a couple off-list reports (in and
-> > outside fb) of this triggering.
+On Thu, Apr 21, 2016 at 05:00:24PM +0200, Petr Mladek wrote:
+> > Acked-by: Michal Hocko <mhocko@suse.com>
 > 
-> Sure, I think we can use this for an immediate workaround. Nevertheless
-> we want to have a full fix and do not rely on this being the only
-> problem. I would eventually like to reintroduce the draining later when
-> we have a better fix because even though this is not a correctness
-> problem I think we should try hard to not leave anything behind.
+> Just for completeness. The problematic LTP test is running for hours
+> with this patch. Feel free to add:
 > 
-> That being said:
-> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> Tested-by: Petr Mladek <pmladek@suse.com>
 
-Just for completeness. The problematic LTP test is running for hours
-with this patch. Feel free to add:
+Thanks, I'm gonna repost w/ Andrew cc'd and the tags added.
 
-Tested-by: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
-
-Best Regards,
-Petr
+-- 
+tejun
