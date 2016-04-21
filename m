@@ -1,29 +1,30 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 1/2] cgroup, cpuset: replace cpuset_post_attach_flush() with
- cgroup_subsys->post_attach callback
-Date: Thu, 21 Apr 2016 19:06:48 -0400
-Message-ID: <20160421230648.GI4775@htj.duckdns.org>
+Subject: [PATCH 2/2] memcg: relocate charge moving from ->attach to
+ ->post_attach
+Date: Thu, 21 Apr 2016 19:09:02 -0400
+Message-ID: <20160421230902.GJ4775@htj.duckdns.org>
 References: <20160413094216.GC5774@pathway.suse.cz>
  <20160413183309.GG3676@htj.duckdns.org>
  <20160413192313.GA30260@dhcp22.suse.cz>
  <20160414175055.GA6794@cmpxchg.org>
  <20160415191719.GK12583@htj.duckdns.org>
  <20160417120747.GC21757@dhcp22.suse.cz>
+ <20160421230648.GI4775@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=94p6Q6z76R2V2et6xPeZuwX1veWEyPWivtlnEjCcqeQ=;
-        b=xqxSNjSI6nZHar2HBUFJvbBf4tShRyROD2aGAp3bdjatFwZsHJNEsa23W8vNhzvVMj
-         Lb1ZmD4KYpsYxXOCwdbzbmVEhOpT6gEQ5Z7e0C+2D6qsPWQI2U+suSXg4F0jWX6v8MND
-         n1gySWOO7PNJxcgEYMZSBfTBJwr0zRdibnaFldZfwJHrcayxCyXxyt0FiWRrskGiZIjF
-         5GE9AFbOMApIdW9/8vSVuYVC8el6uQ+69Xt3DuRUOzvnhC6b0MuzHCYIHXH6MPkvauxg
-         7M6EB3GksArMU4tmWHUI8UQTGW+Q3k7mTRghg2irXUF00mq0+duqxNZpDTneUrX5cYHB
-         qIaA==
+        bh=7OpwfoiQGkS/MnYU0RMvO0z/r7v9u160ZpjMJsPCU64=;
+        b=DbGaPucDm7QMiJrl2pTL08cdx9AX9foPnBSZf33TmUQT+2bbMkPfdXyE3XHI0TRcnh
+         JS4coMGf+/KEqU/G6mqryCWbo7SwVBs/tEXTcXz7gg6YWNUTyUa/qdD4aMxFfYDd/N3O
+         Ta+bF/RRjAMxvhL2dmAVQ67Bh+Rgja0Uxh3wJi/vWqaTP2bQClwrf36hMEW60asakrP7
+         4SSYCMCUWjctpe2J6PipJ9kRDBydPBTdgUcMpR4s2HZVbG1odWkpUnMpVTFTe9epr8El
+         vM4OFMrEl+jUbuDiId+J4IVDM3lP2BAWzXe074xyUE0xYbyb6WQztM2MqNCR+mBvcODa
+         dNOw==
 Content-Disposition: inline
-In-Reply-To: <20160417120747.GC21757-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20160421230648.GI4775-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -31,120 +32,161 @@ Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Since e93ad19d0564 ("cpuset: make mm migration asynchronous"), cpuset
-kicks off asynchronous NUMA node migration if necessary during task
-migration and flushes it from cpuset_post_attach_flush() which is
-called at the end of __cgroup_procs_write().  This is to avoid
-performing migration with cgroup_threadgroup_rwsem write-locked which
-can lead to deadlock through dependency on kworker creation.
+Hello,
 
-memcg has a similar issue with charge moving, so let's convert it to
-an official callback rather than the current one-off cpuset specific
-function.  This patch adds cgroup_subsys->post_attach callback and
-makes cpuset register cpuset_post_attach_flush() as its ->post_attach.
+So, this ended up a lot simpler than I originally expected.  I tested
+it lightly and it seems to work fine.  Petr, can you please test these
+two patches w/o the lru drain drop patch and see whether the problem
+is gone?
 
-The conversion is mostly one-to-one except that the new callback is
-called under cgroup_mutex.  This is to guarantee that no other
-migration operations are started before ->post_attach callbacks are
-finished.  cgroup_mutex is one of the outermost mutex in the system
-and has never been and shouldn't be a problem.  We can add specialized
-synchronization around __cgroup_procs_write() but I don't think
-there's any noticeable benefit.
+Thanks.
+------ 8< ------
+If charge moving is used, memcg performs relabeling of the affected
+pages from its ->attach callback which is called under both
+cgroup_threadgroup_rwsem and thus can't create new kthreads.  This is
+fragile as various operations may depend on workqueues making forward
+progress which relies on the ability to create new kthreads.
+
+There's no reason to perform charge moving from ->attach which is deep
+in the task migration path.  Move it to ->post_attach which is called
+after the actual migration is finished and cgroup_threadgroup_rwsem is
+dropped.
+
+* move_charge_struct->mm is added and ->can_attach is now responsible
+  for pinning and recording the target mm.  mem_cgroup_clear_mc() is
+  updated accordingly.  This also simplifies mem_cgroup_move_task().
+
+* mem_cgroup_move_task() is now called from ->post_attach instead of
+  ->attach.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 4.4+ prerequisite for the next patch
+Debugged-by: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
+Reported-by: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
+Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Fixes: 1ed1328792ff ("sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem")
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 4.4+
 ---
- include/linux/cgroup-defs.h |    1 +
- include/linux/cpuset.h      |    6 ------
- kernel/cgroup.c             |    7 +++++--
- kernel/cpuset.c             |    4 ++--
- 4 files changed, 8 insertions(+), 10 deletions(-)
+ mm/memcontrol.c |   37 +++++++++++++++++++------------------
+ 1 file changed, 19 insertions(+), 18 deletions(-)
 
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -444,6 +444,7 @@ struct cgroup_subsys {
- 	int (*can_attach)(struct cgroup_taskset *tset);
- 	void (*cancel_attach)(struct cgroup_taskset *tset);
- 	void (*attach)(struct cgroup_taskset *tset);
-+	void (*post_attach)(void);
- 	int (*can_fork)(struct task_struct *task);
- 	void (*cancel_fork)(struct task_struct *task);
- 	void (*fork)(struct task_struct *task);
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -137,8 +137,6 @@ static inline void set_mems_allowed(node
- 	task_unlock(current);
- }
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -207,6 +207,7 @@ static void mem_cgroup_oom_notify(struct
+ /* "mc" and its members are protected by cgroup_mutex */
+ static struct move_charge_struct {
+ 	spinlock_t	  lock; /* for from, to */
++	struct mm_struct  *mm;
+ 	struct mem_cgroup *from;
+ 	struct mem_cgroup *to;
+ 	unsigned long flags;
+@@ -4667,6 +4668,8 @@ static void __mem_cgroup_clear_mc(void)
  
--extern void cpuset_post_attach_flush(void);
--
- #else /* !CONFIG_CPUSETS */
- 
- static inline bool cpusets_enabled(void) { return false; }
-@@ -245,10 +243,6 @@ static inline bool read_mems_allowed_ret
- 	return false;
- }
- 
--static inline void cpuset_post_attach_flush(void)
--{
--}
--
- #endif /* !CONFIG_CPUSETS */
- 
- #endif /* _LINUX_CPUSET_H */
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2825,9 +2825,10 @@ static ssize_t __cgroup_procs_write(stru
- 				    size_t nbytes, loff_t off, bool threadgroup)
+ static void mem_cgroup_clear_mc(void)
  {
- 	struct task_struct *tsk;
-+	struct cgroup_subsys *ss;
- 	struct cgroup *cgrp;
- 	pid_t pid;
--	int ret;
-+	int ssid, ret;
- 
- 	if (kstrtoint(strstrip(buf), 0, &pid) || pid < 0)
- 		return -EINVAL;
-@@ -2875,8 +2876,10 @@ out_unlock_rcu:
- 	rcu_read_unlock();
- out_unlock_threadgroup:
- 	percpu_up_write(&cgroup_threadgroup_rwsem);
-+	for_each_subsys(ss, ssid)
-+		if (ss->post_attach)
-+			ss->post_attach();
- 	cgroup_kn_unlock(of->kn);
--	cpuset_post_attach_flush();
- 	return ret ?: nbytes;
++	struct mm_struct *mm = mc.mm;
++
+ 	/*
+ 	 * we must clear moving_task before waking up waiters at the end of
+ 	 * task migration.
+@@ -4676,7 +4679,10 @@ static void mem_cgroup_clear_mc(void)
+ 	spin_lock(&mc.lock);
+ 	mc.from = NULL;
+ 	mc.to = NULL;
++	mc.mm = NULL;
+ 	spin_unlock(&mc.lock);
++
++	mmput(mm);
  }
  
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -58,7 +58,6 @@
- #include <asm/uaccess.h>
- #include <linux/atomic.h>
- #include <linux/mutex.h>
--#include <linux/workqueue.h>
- #include <linux/cgroup.h>
- #include <linux/wait.h>
+ static int mem_cgroup_can_attach(struct cgroup_taskset *tset)
+@@ -4733,6 +4739,7 @@ static int mem_cgroup_can_attach(struct
+ 		VM_BUG_ON(mc.moved_swap);
  
-@@ -1016,7 +1015,7 @@ static void cpuset_migrate_mm(struct mm_
+ 		spin_lock(&mc.lock);
++		mc.mm = mm;
+ 		mc.from = from;
+ 		mc.to = memcg;
+ 		mc.flags = move_flags;
+@@ -4742,8 +4749,9 @@ static int mem_cgroup_can_attach(struct
+ 		ret = mem_cgroup_precharge_mc(mm);
+ 		if (ret)
+ 			mem_cgroup_clear_mc();
++	} else {
++		mmput(mm);
  	}
+-	mmput(mm);
+ 	return ret;
  }
  
--void cpuset_post_attach_flush(void)
-+static void cpuset_post_attach(void)
- {
- 	flush_workqueue(cpuset_migrate_mm_wq);
+@@ -4852,11 +4860,11 @@ put:			/* get_mctgt_type() gets the page
+ 	return ret;
  }
-@@ -2087,6 +2086,7 @@ struct cgroup_subsys cpuset_cgrp_subsys
- 	.can_attach	= cpuset_can_attach,
- 	.cancel_attach	= cpuset_cancel_attach,
- 	.attach		= cpuset_attach,
-+	.post_attach	= cpuset_post_attach,
- 	.bind		= cpuset_bind,
- 	.legacy_cftypes	= files,
- 	.early_init	= true,
+ 
+-static void mem_cgroup_move_charge(struct mm_struct *mm)
++static void mem_cgroup_move_charge(void)
+ {
+ 	struct mm_walk mem_cgroup_move_charge_walk = {
+ 		.pmd_entry = mem_cgroup_move_charge_pte_range,
+-		.mm = mm,
++		.mm = mc.mm,
+ 	};
+ 
+ 	lru_add_drain_all();
+@@ -4868,7 +4876,7 @@ static void mem_cgroup_move_charge(struc
+ 	atomic_inc(&mc.from->moving_account);
+ 	synchronize_rcu();
+ retry:
+-	if (unlikely(!down_read_trylock(&mm->mmap_sem))) {
++	if (unlikely(!down_read_trylock(&mc.mm->mmap_sem))) {
+ 		/*
+ 		 * Someone who are holding the mmap_sem might be waiting in
+ 		 * waitq. So we cancel all extra charges, wake up all waiters,
+@@ -4885,23 +4893,16 @@ retry:
+ 	 * additional charge, the page walk just aborts.
+ 	 */
+ 	walk_page_range(0, ~0UL, &mem_cgroup_move_charge_walk);
+-	up_read(&mm->mmap_sem);
++	up_read(&mc.mm->mmap_sem);
+ 	atomic_dec(&mc.from->moving_account);
+ }
+ 
+-static void mem_cgroup_move_task(struct cgroup_taskset *tset)
++static void mem_cgroup_move_task(void)
+ {
+-	struct cgroup_subsys_state *css;
+-	struct task_struct *p = cgroup_taskset_first(tset, &css);
+-	struct mm_struct *mm = get_task_mm(p);
+-
+-	if (mm) {
+-		if (mc.to)
+-			mem_cgroup_move_charge(mm);
+-		mmput(mm);
+-	}
+-	if (mc.to)
++	if (mc.to) {
++		mem_cgroup_move_charge();
+ 		mem_cgroup_clear_mc();
++	}
+ }
+ #else	/* !CONFIG_MMU */
+ static int mem_cgroup_can_attach(struct cgroup_taskset *tset)
+@@ -4911,7 +4912,7 @@ static int mem_cgroup_can_attach(struct
+ static void mem_cgroup_cancel_attach(struct cgroup_taskset *tset)
+ {
+ }
+-static void mem_cgroup_move_task(struct cgroup_taskset *tset)
++static void mem_cgroup_move_task(void)
+ {
+ }
+ #endif
+@@ -5195,7 +5196,7 @@ struct cgroup_subsys memory_cgrp_subsys
+ 	.css_reset = mem_cgroup_css_reset,
+ 	.can_attach = mem_cgroup_can_attach,
+ 	.cancel_attach = mem_cgroup_cancel_attach,
+-	.attach = mem_cgroup_move_task,
++	.post_attach = mem_cgroup_move_task,
+ 	.bind = mem_cgroup_bind,
+ 	.dfl_cftypes = memory_files,
+ 	.legacy_cftypes = mem_cgroup_legacy_files,
