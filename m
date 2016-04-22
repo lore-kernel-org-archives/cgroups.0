@@ -1,8 +1,8 @@
 From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [PATCH v3 10/21] fs: Check for invalid i_uid in
-	may_follow_link()
-Date: Fri, 22 Apr 2016 10:38:27 -0500
-Message-ID: <1461339521-123191-11-git-send-email-seth.forshee@canonical.com>
+Subject: [PATCH v3 12/21] fs: Refuse uid/gid changes which
+	don't map into s_user_ns
+Date: Fri, 22 Apr 2016 10:38:29 -0500
+Message-ID: <1461339521-123191-13-git-send-email-seth.forshee@canonical.com>
 References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,59 +21,38 @@ Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
 To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Filesystem uids which don't map into a user namespace may result
-in inode->i_uid being INVALID_UID. A symlink and its parent
-could have different owners in the filesystem can both get
-mapped to INVALID_UID, which may result in following a symlink
-when this would not have otherwise been permitted when protected
-symlinks are enabled.
-
-Add a new helper function, uid_valid_eq(), and use this to
-validate that the ids in may_follow_link() are both equal and
-valid. Also add an equivalent helper for gids, which is
-currently unused.
+Add checks to inode_change_ok to verify that uid and gid changes
+will map into the superblock's user namespace. If they do not
+fail with -EOVERFLOW. This cannot be overriden with ATTR_FORCE.
 
 Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 ---
- fs/namei.c             |  2 +-
- include/linux/uidgid.h | 10 ++++++++++
- 2 files changed, 11 insertions(+), 1 deletion(-)
+ fs/attr.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index a29094c6f4a1..6fe8b0d8ca90 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -915,7 +915,7 @@ static inline int may_follow_link(struct nameidata *nd)
- 		return 0;
+diff --git a/fs/attr.c b/fs/attr.c
+index 25b24d0f6c88..3cfaaac4a18e 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -42,6 +42,17 @@ int inode_change_ok(const struct inode *inode, struct iattr *attr)
+ 			return error;
+ 	}
  
- 	/* Allowed if parent directory and link owner match. */
--	if (uid_eq(parent->i_uid, inode->i_uid))
-+	if (uid_valid_eq(parent->i_uid, inode->i_uid))
- 		return 0;
- 
- 	if (nd->flags & LOOKUP_RCU)
-diff --git a/include/linux/uidgid.h b/include/linux/uidgid.h
-index 03835522dfcb..e09529fe2668 100644
---- a/include/linux/uidgid.h
-+++ b/include/linux/uidgid.h
-@@ -117,6 +117,16 @@ static inline bool gid_valid(kgid_t gid)
- 	return __kgid_val(gid) != (gid_t) -1;
- }
- 
-+static inline bool uid_valid_eq(kuid_t left, kuid_t right)
-+{
-+	return uid_eq(left, right) && uid_valid(left);
-+}
++	/*
++	 * Verify that uid/gid changes are valid in the target namespace
++	 * of the superblock. This cannot be overriden using ATTR_FORCE.
++	 */
++	if (ia_valid & ATTR_UID &&
++	    from_kuid(inode->i_sb->s_user_ns, attr->ia_uid) == (uid_t)-1)
++		return -EOVERFLOW;
++	if (ia_valid & ATTR_GID &&
++	    from_kgid(inode->i_sb->s_user_ns, attr->ia_gid) == (gid_t)-1)
++		return -EOVERFLOW;
 +
-+static inline bool gid_valid_eq(kgid_t left, kgid_t right)
-+{
-+	return gid_eq(left, right) && gid_valid(left);
-+}
-+
- #ifdef CONFIG_USER_NS
- 
- extern kuid_t make_kuid(struct user_namespace *from, uid_t uid);
+ 	/* If force is set do it anyway. */
+ 	if (ia_valid & ATTR_FORCE)
+ 		return 0;
 -- 
 1.9.1
 
