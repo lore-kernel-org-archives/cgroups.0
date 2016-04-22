@@ -1,8 +1,8 @@
 From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [PATCH v3 20/21] fuse: Restrict allow_other to the
-	superblock's namespace or a descendant
-Date: Fri, 22 Apr 2016 10:38:37 -0500
-Message-ID: <1461339521-123191-21-git-send-email-seth.forshee@canonical.com>
+Subject: [PATCH v3 11/21] cred: Reject inodes with invalid ids
+	in set_create_file_as()
+Date: Fri, 22 Apr 2016 10:38:28 -0500
+Message-ID: <1461339521-123191-12-git-send-email-seth.forshee@canonical.com>
 References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -18,38 +18,32 @@ List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gm
 List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
 	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
 Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Unprivileged users are normally restricted from mounting with the
-allow_other option by system policy, but this could be bypassed
-for a mount done with user namespace root permissions. In such
-cases allow_other should not allow users outside the userns
-to access the mount as doing so would give the unprivileged user
-the ability to manipulate processes it would otherwise be unable
-to manipulate. Restrict allow_other to apply to users in the same
-userns used at mount or a descendant of that namespace.
+Using INVALID_[UG]ID for the LSM file creation context doesn't
+make sense, so return an error if the inode passed to
+set_create_file_as() has an invalid id.
 
 Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Acked-by: Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- fs/fuse/dir.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/cred.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index ecba75bf6640..1a6c5af49608 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1015,7 +1015,7 @@ int fuse_allow_current_process(struct fuse_conn *fc)
- 	const struct cred *cred;
- 
- 	if (fc->flags & FUSE_ALLOW_OTHER)
--		return 1;
-+		return current_in_userns(fc->user_ns);
- 
- 	cred = current_cred();
- 	if (uid_eq(cred->euid, fc->user_id) &&
+diff --git a/kernel/cred.c b/kernel/cred.c
+index 0c0cd8a62285..5f264fb5737d 100644
+--- a/kernel/cred.c
++++ b/kernel/cred.c
+@@ -689,6 +689,8 @@ EXPORT_SYMBOL(set_security_override_from_ctx);
+  */
+ int set_create_files_as(struct cred *new, struct inode *inode)
+ {
++	if (!uid_valid(inode->i_uid) || !gid_valid(inode->i_gid))
++		return -EINVAL;
+ 	new->fsuid = inode->i_uid;
+ 	new->fsgid = inode->i_gid;
+ 	return security_kernel_create_files_as(new, inode);
 -- 
 1.9.1
 
