@@ -1,8 +1,8 @@
 From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [PATCH v3 07/21] selinux: Add support for unprivileged
-	mounts from user namespaces
-Date: Fri, 22 Apr 2016 10:38:24 -0500
-Message-ID: <1461339521-123191-8-git-send-email-seth.forshee@canonical.com>
+Subject: [PATCH v3 10/21] fs: Check for invalid i_uid in
+	may_follow_link()
+Date: Fri, 22 Apr 2016 10:38:27 -0500
+Message-ID: <1461339521-123191-11-git-send-email-seth.forshee@canonical.com>
 References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -18,67 +18,62 @@ List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gm
 List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
 	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
 Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>
-Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Security labels from unprivileged mounts in user namespaces must
-be ignored. Force superblocks from user namespaces whose labeling
-behavior is to use xattrs to use mountpoint labeling instead.
-For the mountpoint label, default to converting the current task
-context into a form suitable for file objects, but also allow the
-policy writer to specify a different label through policy
-transition rules.
+Filesystem uids which don't map into a user namespace may result
+in inode->i_uid being INVALID_UID. A symlink and its parent
+could have different owners in the filesystem can both get
+mapped to INVALID_UID, which may result in following a symlink
+when this would not have otherwise been permitted when protected
+symlinks are enabled.
 
-Pieced together from code snippets provided by Stephen Smalley.
+Add a new helper function, uid_valid_eq(), and use this to
+validate that the ids in may_follow_link() are both equal and
+valid. Also add an equivalent helper for gids, which is
+currently unused.
 
 Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Acked-by: Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
-Acked-by: James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 ---
- security/selinux/hooks.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ fs/namei.c             |  2 +-
+ include/linux/uidgid.h | 10 ++++++++++
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 1350167635cb..33beed3ac589 100644
---- a/security/selinux/hooks.c
-+++ b/security/selinux/hooks.c
-@@ -820,6 +820,28 @@ static int selinux_set_mnt_opts(struct super_block *sb,
- 			goto out;
- 		}
- 	}
-+
-+	/*
-+	 * If this is a user namespace mount, no contexts are allowed
-+	 * on the command line and security labels must be ignored.
-+	 */
-+	if (sb->s_user_ns != &init_user_ns) {
-+		if (context_sid || fscontext_sid || rootcontext_sid ||
-+		    defcontext_sid) {
-+			rc = -EACCES;
-+			goto out;
-+		}
-+		if (sbsec->behavior == SECURITY_FS_USE_XATTR) {
-+			sbsec->behavior = SECURITY_FS_USE_MNTPOINT;
-+			rc = security_transition_sid(current_sid(), current_sid(),
-+						     SECCLASS_FILE, NULL,
-+						     &sbsec->mntpoint_sid);
-+			if (rc)
-+				goto out;
-+		}
-+		goto out_set_opts;
-+	}
-+
- 	/* sets the context of the superblock for the fs being mounted. */
- 	if (fscontext_sid) {
- 		rc = may_context_mount_sb_relabel(fscontext_sid, sbsec, cred);
-@@ -888,6 +910,7 @@ static int selinux_set_mnt_opts(struct super_block *sb,
- 		sbsec->def_sid = defcontext_sid;
- 	}
+diff --git a/fs/namei.c b/fs/namei.c
+index a29094c6f4a1..6fe8b0d8ca90 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -915,7 +915,7 @@ static inline int may_follow_link(struct nameidata *nd)
+ 		return 0;
  
-+out_set_opts:
- 	rc = sb_finish_set_opts(sb);
- out:
- 	mutex_unlock(&sbsec->lock);
+ 	/* Allowed if parent directory and link owner match. */
+-	if (uid_eq(parent->i_uid, inode->i_uid))
++	if (uid_valid_eq(parent->i_uid, inode->i_uid))
+ 		return 0;
+ 
+ 	if (nd->flags & LOOKUP_RCU)
+diff --git a/include/linux/uidgid.h b/include/linux/uidgid.h
+index 03835522dfcb..e09529fe2668 100644
+--- a/include/linux/uidgid.h
++++ b/include/linux/uidgid.h
+@@ -117,6 +117,16 @@ static inline bool gid_valid(kgid_t gid)
+ 	return __kgid_val(gid) != (gid_t) -1;
+ }
+ 
++static inline bool uid_valid_eq(kuid_t left, kuid_t right)
++{
++	return uid_eq(left, right) && uid_valid(left);
++}
++
++static inline bool gid_valid_eq(kgid_t left, kgid_t right)
++{
++	return gid_eq(left, right) && gid_valid(left);
++}
++
+ #ifdef CONFIG_USER_NS
+ 
+ extern kuid_t make_kuid(struct user_namespace *from, uid_t uid);
 -- 
 1.9.1
 
