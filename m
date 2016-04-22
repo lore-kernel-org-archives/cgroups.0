@@ -1,161 +1,119 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v3 04/21] block_dev: Support checking inode permissions in lookup_bdev()
-Date: Fri, 22 Apr 2016 10:38:21 -0500
-Message-ID: <1461339521-123191-5-git-send-email-seth.forshee@canonical.com>
+From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: [PATCH v3 08/21] userns: Replace in_userns with
+	current_in_userns
+Date: Fri, 22 Apr 2016 10:38:25 -0500
+Message-ID: <1461339521-123191-9-git-send-email-seth.forshee@canonical.com>
 References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
-Return-path: <linux-bcache-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=canonical-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=kHqY158vJabNchyChpPIgMQfy7vmDFNyGY8AFjxwgdA=;
-        b=z1lu0+8meOT2gflTrMquXTcNr2DnwW01vENsBH9aZwiHiwbpIRKVbPk0JWXCHw94ly
-         AxqNC0yybeFyQEmh9JamTNfabbLI/yCp8avIlL+z+igqL1Ze+F3dhgtDhvaVV5Nl78Pp
-         NZ3D7EQ0SQhopNMErFQspEBmPb4Yl74GJY1JcDLdcFUCiO3+/OnbfA75MdYR0L/ibyG6
-         fGefphXwUl+9UZA1JeK7BPsh8cD5jQRncJ6MqiBRXg7leLmsK+xr7RiJICNUfvVIedwI
-         3BUEcNcZs1Ikn8UkWITRfE/XEdwWFT/NVRW5hrnMZou8wPpl7sEWSoNipiwKq5Rbq6wq
-         l/fQ==
-In-Reply-To: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
-Sender: linux-bcache-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
+Return-path: <fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+In-Reply-To: <1461339521-123191-1-git-send-email-seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
+	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=fuse-devel>
+List-Post: <mailto:fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
+	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-When looking up a block device by path no permission check is
-done to verify that the user has access to the block device inode
-at the specified path. In some cases it may be necessary to
-check permissions towards the inode, such as allowing
-unprivileged users to mount block devices in user namespaces.
+All current callers of in_userns pass current_user_ns as the
+first argument. Simplify by replacing in_userns with
+current_in_userns which checks whether current_user_ns is in the
+namespace supplied as an argument.
 
-Add an argument to lookup_bdev() to optionally perform this
-permission check. A value of 0 skips the permission check and
-behaves the same as before. A non-zero value specifies the mask
-of access rights required towards the inode at the specified
-path. The check is always skipped if the user has CAP_SYS_ADMIN.
-
-All callers of lookup_bdev() currently pass a mask of 0, so this
-patch results in no functional change. Subsequent patches will
-add permission checks where appropriate.
-
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
+Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Acked-by: James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 ---
- drivers/md/bcache/super.c |  2 +-
- drivers/md/dm-table.c     |  2 +-
- drivers/mtd/mtdsuper.c    |  2 +-
- fs/block_dev.c            | 13 ++++++++++---
- fs/quota/quota.c          |  2 +-
- include/linux/fs.h        |  2 +-
- 6 files changed, 15 insertions(+), 8 deletions(-)
+ fs/namespace.c                 | 2 +-
+ include/linux/user_namespace.h | 6 ++----
+ kernel/user_namespace.c        | 6 +++---
+ security/commoncap.c           | 2 +-
+ 4 files changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index a296425a7270..e169739a0253 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1950,7 +1950,7 @@ static ssize_t register_bcache(struct kobject *k, struct kobj_attribute *attr,
- 				  sb);
- 	if (IS_ERR(bdev)) {
- 		if (bdev == ERR_PTR(-EBUSY)) {
--			bdev = lookup_bdev(strim(path));
-+			bdev = lookup_bdev(strim(path), 0);
- 			mutex_lock(&bch_register_lock);
- 			if (!IS_ERR(bdev) && bch_is_open(bdev))
- 				err = "device already registered";
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index f9e8f0bef332..13f568d527b5 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -372,7 +372,7 @@ dev_t dm_get_dev_t(const char *path)
- 	dev_t uninitialized_var(dev);
- 	struct block_device *bdev;
- 
--	bdev = lookup_bdev(path);
-+	bdev = lookup_bdev(path, 0);
- 	if (IS_ERR(bdev))
- 		dev = name_to_dev_t(path);
- 	else {
-diff --git a/drivers/mtd/mtdsuper.c b/drivers/mtd/mtdsuper.c
-index 20c02a3b7417..b5b60e1af31c 100644
---- a/drivers/mtd/mtdsuper.c
-+++ b/drivers/mtd/mtdsuper.c
-@@ -176,7 +176,7 @@ struct dentry *mount_mtd(struct file_system_type *fs_type, int flags,
- 	/* try the old way - the hack where we allowed users to mount
- 	 * /dev/mtdblock$(n) but didn't actually _use_ the blockdev
+diff --git a/fs/namespace.c b/fs/namespace.c
+index 6e9db4c166b4..0ad8e4a4f50b 100644
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -3294,7 +3294,7 @@ bool mnt_may_suid(struct vfsmount *mnt)
+ 	 * in other namespaces.
  	 */
--	bdev = lookup_bdev(dev_name);
-+	bdev = lookup_bdev(dev_name, 0);
- 	if (IS_ERR(bdev)) {
- 		ret = PTR_ERR(bdev);
- 		pr_debug("MTDSB: lookup_bdev() returned %d\n", ret);
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 3e84d62d0a25..e9b937845bdb 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1431,7 +1431,7 @@ struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
- 	struct block_device *bdev;
- 	int err;
+ 	return !(mnt->mnt_flags & MNT_NOSUID) && check_mnt(real_mount(mnt)) &&
+-	       in_userns(current_user_ns(), mnt->mnt_sb->s_user_ns);
++	       current_in_userns(mnt->mnt_sb->s_user_ns);
+ }
  
--	bdev = lookup_bdev(path);
-+	bdev = lookup_bdev(path, 0);
- 	if (IS_ERR(bdev))
- 		return bdev;
- 
-@@ -1821,12 +1821,14 @@ EXPORT_SYMBOL(ioctl_by_bdev);
- /**
-  * lookup_bdev  - lookup a struct block_device by name
-  * @pathname:	special file representing the block device
-+ * @mask:	rights to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC)
-  *
-  * Get a reference to the blockdevice at @pathname in the current
-  * namespace if possible and return it.  Return ERR_PTR(error)
-- * otherwise.
-+ * otherwise.  If @mask is non-zero, check for access rights to the
-+ * inode at @pathname.
-  */
--struct block_device *lookup_bdev(const char *pathname)
-+struct block_device *lookup_bdev(const char *pathname, int mask)
- {
- 	struct block_device *bdev;
- 	struct inode *inode;
-@@ -1841,6 +1843,11 @@ struct block_device *lookup_bdev(const char *pathname)
- 		return ERR_PTR(error);
- 
- 	inode = d_backing_inode(path.dentry);
-+	if (mask != 0 && !capable(CAP_SYS_ADMIN)) {
-+		error = __inode_permission(inode, mask);
-+		if (error)
-+			goto fail;
-+	}
- 	error = -ENOTBLK;
- 	if (!S_ISBLK(inode->i_mode))
- 		goto fail;
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 0f10ee9892ce..59223384b22e 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -799,7 +799,7 @@ static struct super_block *quotactl_block(const char __user *special, int cmd)
- 
- 	if (IS_ERR(tmp))
- 		return ERR_CAST(tmp);
--	bdev = lookup_bdev(tmp->name);
-+	bdev = lookup_bdev(tmp->name, 0);
- 	putname(tmp);
- 	if (IS_ERR(bdev))
- 		return ERR_CAST(bdev);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 66a639ec1bc4..173b8adc6131 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2438,7 +2438,7 @@ static inline void unregister_chrdev(unsigned int major, const char *name)
- #define BLKDEV_MAJOR_HASH_SIZE	255
- extern const char *__bdevname(dev_t, char *buffer);
- extern const char *bdevname(struct block_device *bdev, char *buffer);
--extern struct block_device *lookup_bdev(const char *);
-+extern struct block_device *lookup_bdev(const char *, int mask);
- extern void blkdev_show(struct seq_file *,off_t);
- 
+ static struct ns_common *mntns_get(struct task_struct *task)
+diff --git a/include/linux/user_namespace.h b/include/linux/user_namespace.h
+index a43faa727124..9217169c64cb 100644
+--- a/include/linux/user_namespace.h
++++ b/include/linux/user_namespace.h
+@@ -72,8 +72,7 @@ extern ssize_t proc_projid_map_write(struct file *, const char __user *, size_t,
+ extern ssize_t proc_setgroups_write(struct file *, const char __user *, size_t, loff_t *);
+ extern int proc_setgroups_show(struct seq_file *m, void *v);
+ extern bool userns_may_setgroups(const struct user_namespace *ns);
+-extern bool in_userns(const struct user_namespace *ns,
+-		      const struct user_namespace *target_ns);
++extern bool current_in_userns(const struct user_namespace *target_ns);
  #else
+ 
+ static inline struct user_namespace *get_user_ns(struct user_namespace *ns)
+@@ -103,8 +102,7 @@ static inline bool userns_may_setgroups(const struct user_namespace *ns)
+ 	return true;
+ }
+ 
+-static inline bool in_userns(const struct user_namespace *ns,
+-			     const struct user_namespace *target_ns)
++static inline bool current_in_userns(const struct user_namespace *target_ns)
+ {
+ 	return true;
+ }
+diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
+index dee3be5445da..68f594212759 100644
+--- a/kernel/user_namespace.c
++++ b/kernel/user_namespace.c
+@@ -942,10 +942,10 @@ bool userns_may_setgroups(const struct user_namespace *ns)
+  * Returns true if @ns is the same namespace as or a descendant of
+  * @target_ns.
+  */
+-bool in_userns(const struct user_namespace *ns,
+-	       const struct user_namespace *target_ns)
++bool current_in_userns(const struct user_namespace *target_ns)
+ {
+-	for (; ns; ns = ns->parent) {
++	struct user_namespace *ns;
++	for (ns = current_user_ns(); ns; ns = ns->parent) {
+ 		if (ns == target_ns)
+ 			return true;
+ 	}
+diff --git a/security/commoncap.c b/security/commoncap.c
+index a306c5d90709..e657227d221e 100644
+--- a/security/commoncap.c
++++ b/security/commoncap.c
+@@ -461,7 +461,7 @@ static int get_file_caps(struct linux_binprm *bprm, bool *effective, bool *has_c
+ 	 * explicit that capability bits are limited to s_user_ns and its
+ 	 * descendants.
+ 	 */
+-	if (!in_userns(current_user_ns(), bprm->file->f_path.mnt->mnt_sb->s_user_ns))
++	if (!current_in_userns(bprm->file->f_path.mnt->mnt_sb->s_user_ns))
+ 		return 0;
+ 
+ 	rc = get_vfs_caps_from_disk(bprm->file->f_path.dentry, &vcaps);
 -- 
 1.9.1
+
+
+------------------------------------------------------------------------------
+Find and fix application performance issues faster with Applications Manager
+Applications Manager provides deep performance insights into multiple tiers of
+your business applications. It resolves application problems quickly and
+reduces your MTTR. Get your free trial!
+https://ad.doubleclick.net/ddm/clk/302982198;130105516;z
+-- 
+fuse-devel mailing list
+To unsubscribe or subscribe, visit https://lists.sourceforge.net/lists/listinfo/fuse-devel
