@@ -1,320 +1,201 @@
-From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [PATCH v3 19/21] fuse: Support fuse filesystems
-	outside of init_user_ns
-Date: Fri, 22 Apr 2016 10:38:36 -0500
-Message-ID: <1461339521-123191-20-git-send-email-seth.forshee@canonical.com>
-References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] memcg: relocate charge moving from ->attach to
+ ->post_attach
+Date: Mon, 25 Apr 2016 10:25:42 +0200
+Message-ID: <20160425082542.GB23933@dhcp22.suse.cz>
+References: <20160413094216.GC5774@pathway.suse.cz>
+ <20160413183309.GG3676@htj.duckdns.org>
+ <20160413192313.GA30260@dhcp22.suse.cz>
+ <20160414175055.GA6794@cmpxchg.org>
+ <20160415191719.GK12583@htj.duckdns.org>
+ <20160417120747.GC21757@dhcp22.suse.cz>
+ <20160421230648.GI4775@htj.duckdns.org>
+ <20160421230902.GJ4775@htj.duckdns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160421230902.GJ4775-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <1461339521-123191-1-git-send-email-seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
-	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=fuse-devel>
-List-Post: <mailto:fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
-	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
-Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-In order to support mounts from namespaces other than
-init_user_ns, fuse must translate uids and gids to/from the
-userns of the process servicing requests on /dev/fuse. This
-patch does that, with a couple of restrictions on the namespace:
+On Thu 21-04-16 19:09:02, Tejun Heo wrote:
+> Hello,
+> 
+> So, this ended up a lot simpler than I originally expected.  I tested
+> it lightly and it seems to work fine.  Petr, can you please test these
+> two patches w/o the lru drain drop patch and see whether the problem
+> is gone?
+> 
+> Thanks.
+> ------ 8< ------
+> If charge moving is used, memcg performs relabeling of the affected
+> pages from its ->attach callback which is called under both
+> cgroup_threadgroup_rwsem and thus can't create new kthreads.  This is
+> fragile as various operations may depend on workqueues making forward
+> progress which relies on the ability to create new kthreads.
+> 
+> There's no reason to perform charge moving from ->attach which is deep
+> in the task migration path.  Move it to ->post_attach which is called
+> after the actual migration is finished and cgroup_threadgroup_rwsem is
+> dropped.
+> 
+> * move_charge_struct->mm is added and ->can_attach is now responsible
+>   for pinning and recording the target mm.  mem_cgroup_clear_mc() is
+>   updated accordingly.  This also simplifies mem_cgroup_move_task().
+> 
+> * mem_cgroup_move_task() is now called from ->post_attach instead of
+>   ->attach.
 
- - The userns for the fuse connection is fixed to the namespace
-   from which /dev/fuse is opened.
+This looks much better than the previous quick&dirty workaround. Thanks
+for taking an extra step!
 
- - The namespace must be the same as s_user_ns.
+Sorry for being so pushy but shouldn't we at least document those
+callbacks which depend on cgroup_threadgroup_rwsem to never ever block
+on WQ directly or indirectly. Maybe even enforce they have to be
+non-blocking. This would be out of scope of this particular patch of
+course but it would fit nicely into the series.
+ 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Debugged-by: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
+> Reported-by: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
+> Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Fixes: 1ed1328792ff ("sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem")
+> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 4.4+
 
-These restrictions simplify the implementation by avoiding the
-need to pass around userns references and by allowing fuse to
-rely on the checks in inode_change_ok for ownership changes.
-Either restriction could be relaxed in the future if needed.
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-For cuse the namespace used for the connection is also simply
-current_user_ns() at the time /dev/cuse is opened.
+Thanks!
 
-Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
----
- fs/fuse/cuse.c   |  3 ++-
- fs/fuse/dev.c    | 13 ++++++++-----
- fs/fuse/dir.c    | 14 +++++++-------
- fs/fuse/fuse_i.h |  6 +++++-
- fs/fuse/inode.c  | 33 +++++++++++++++++++++------------
- 5 files changed, 43 insertions(+), 26 deletions(-)
+> ---
+>  mm/memcontrol.c |   37 +++++++++++++++++++------------------
+>  1 file changed, 19 insertions(+), 18 deletions(-)
+> 
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -207,6 +207,7 @@ static void mem_cgroup_oom_notify(struct
+>  /* "mc" and its members are protected by cgroup_mutex */
+>  static struct move_charge_struct {
+>  	spinlock_t	  lock; /* for from, to */
+> +	struct mm_struct  *mm;
+>  	struct mem_cgroup *from;
+>  	struct mem_cgroup *to;
+>  	unsigned long flags;
+> @@ -4667,6 +4668,8 @@ static void __mem_cgroup_clear_mc(void)
+>  
+>  static void mem_cgroup_clear_mc(void)
+>  {
+> +	struct mm_struct *mm = mc.mm;
+> +
+>  	/*
+>  	 * we must clear moving_task before waking up waiters at the end of
+>  	 * task migration.
+> @@ -4676,7 +4679,10 @@ static void mem_cgroup_clear_mc(void)
+>  	spin_lock(&mc.lock);
+>  	mc.from = NULL;
+>  	mc.to = NULL;
+> +	mc.mm = NULL;
+>  	spin_unlock(&mc.lock);
+> +
+> +	mmput(mm);
+>  }
+>  
+>  static int mem_cgroup_can_attach(struct cgroup_taskset *tset)
+> @@ -4733,6 +4739,7 @@ static int mem_cgroup_can_attach(struct
+>  		VM_BUG_ON(mc.moved_swap);
+>  
+>  		spin_lock(&mc.lock);
+> +		mc.mm = mm;
+>  		mc.from = from;
+>  		mc.to = memcg;
+>  		mc.flags = move_flags;
+> @@ -4742,8 +4749,9 @@ static int mem_cgroup_can_attach(struct
+>  		ret = mem_cgroup_precharge_mc(mm);
+>  		if (ret)
+>  			mem_cgroup_clear_mc();
+> +	} else {
+> +		mmput(mm);
+>  	}
+> -	mmput(mm);
+>  	return ret;
+>  }
+>  
+> @@ -4852,11 +4860,11 @@ put:			/* get_mctgt_type() gets the page
+>  	return ret;
+>  }
+>  
+> -static void mem_cgroup_move_charge(struct mm_struct *mm)
+> +static void mem_cgroup_move_charge(void)
+>  {
+>  	struct mm_walk mem_cgroup_move_charge_walk = {
+>  		.pmd_entry = mem_cgroup_move_charge_pte_range,
+> -		.mm = mm,
+> +		.mm = mc.mm,
+>  	};
+>  
+>  	lru_add_drain_all();
+> @@ -4868,7 +4876,7 @@ static void mem_cgroup_move_charge(struc
+>  	atomic_inc(&mc.from->moving_account);
+>  	synchronize_rcu();
+>  retry:
+> -	if (unlikely(!down_read_trylock(&mm->mmap_sem))) {
+> +	if (unlikely(!down_read_trylock(&mc.mm->mmap_sem))) {
+>  		/*
+>  		 * Someone who are holding the mmap_sem might be waiting in
+>  		 * waitq. So we cancel all extra charges, wake up all waiters,
+> @@ -4885,23 +4893,16 @@ retry:
+>  	 * additional charge, the page walk just aborts.
+>  	 */
+>  	walk_page_range(0, ~0UL, &mem_cgroup_move_charge_walk);
+> -	up_read(&mm->mmap_sem);
+> +	up_read(&mc.mm->mmap_sem);
+>  	atomic_dec(&mc.from->moving_account);
+>  }
+>  
+> -static void mem_cgroup_move_task(struct cgroup_taskset *tset)
+> +static void mem_cgroup_move_task(void)
+>  {
+> -	struct cgroup_subsys_state *css;
+> -	struct task_struct *p = cgroup_taskset_first(tset, &css);
+> -	struct mm_struct *mm = get_task_mm(p);
+> -
+> -	if (mm) {
+> -		if (mc.to)
+> -			mem_cgroup_move_charge(mm);
+> -		mmput(mm);
+> -	}
+> -	if (mc.to)
+> +	if (mc.to) {
+> +		mem_cgroup_move_charge();
+>  		mem_cgroup_clear_mc();
+> +	}
+>  }
+>  #else	/* !CONFIG_MMU */
+>  static int mem_cgroup_can_attach(struct cgroup_taskset *tset)
+> @@ -4911,7 +4912,7 @@ static int mem_cgroup_can_attach(struct
+>  static void mem_cgroup_cancel_attach(struct cgroup_taskset *tset)
+>  {
+>  }
+> -static void mem_cgroup_move_task(struct cgroup_taskset *tset)
+> +static void mem_cgroup_move_task(void)
+>  {
+>  }
+>  #endif
+> @@ -5195,7 +5196,7 @@ struct cgroup_subsys memory_cgrp_subsys
+>  	.css_reset = mem_cgroup_css_reset,
+>  	.can_attach = mem_cgroup_can_attach,
+>  	.cancel_attach = mem_cgroup_cancel_attach,
+> -	.attach = mem_cgroup_move_task,
+> +	.post_attach = mem_cgroup_move_task,
+>  	.bind = mem_cgroup_bind,
+>  	.dfl_cftypes = memory_files,
+>  	.legacy_cftypes = mem_cgroup_legacy_files,
 
-diff --git a/fs/fuse/cuse.c b/fs/fuse/cuse.c
-index c5b6b7165489..98ebd0f4fd4c 100644
---- a/fs/fuse/cuse.c
-+++ b/fs/fuse/cuse.c
-@@ -48,6 +48,7 @@
- #include <linux/stat.h>
- #include <linux/module.h>
- #include <linux/uio.h>
-+#include <linux/user_namespace.h>
- 
- #include "fuse_i.h"
- 
-@@ -498,7 +499,7 @@ static int cuse_channel_open(struct inode *inode, struct file *file)
- 	if (!cc)
- 		return -ENOMEM;
- 
--	fuse_conn_init(&cc->fc);
-+	fuse_conn_init(&cc->fc, current_user_ns());
- 
- 	fud = fuse_dev_alloc(&cc->fc);
- 	if (!fud) {
-diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
-index 4e91b2ac25a7..8fa1ce934df3 100644
---- a/fs/fuse/dev.c
-+++ b/fs/fuse/dev.c
-@@ -127,8 +127,8 @@ static void __fuse_put_request(struct fuse_req *req)
- 
- static void fuse_req_init_context(struct fuse_conn *fc, struct fuse_req *req)
- {
--	req->in.h.uid = from_kuid_munged(&init_user_ns, current_fsuid());
--	req->in.h.gid = from_kgid_munged(&init_user_ns, current_fsgid());
-+	req->in.h.uid = from_kuid(fc->user_ns, current_fsuid());
-+	req->in.h.gid = from_kgid(fc->user_ns, current_fsgid());
- 	req->in.h.pid = pid_nr_ns(task_pid(current), fc->pid_ns);
- }
- 
-@@ -186,7 +186,8 @@ static struct fuse_req *__fuse_get_req(struct fuse_conn *fc, unsigned npages,
- 	__set_bit(FR_WAITING, &req->flags);
- 	if (for_background)
- 		__set_bit(FR_BACKGROUND, &req->flags);
--	if (req->in.h.pid == 0) {
-+	if (req->in.h.pid == 0 || req->in.h.uid == (uid_t)-1 ||
-+	    req->in.h.gid == (gid_t)-1) {
- 		fuse_put_request(fc, req);
- 		return ERR_PTR(-EOVERFLOW);
- 	}
-@@ -1248,7 +1249,8 @@ static ssize_t fuse_dev_do_read(struct fuse_dev *fud, struct file *file,
- 	struct fuse_in *in;
- 	unsigned reqsize;
- 
--	if (task_active_pid_ns(current) != fc->pid_ns)
-+	if (task_active_pid_ns(current) != fc->pid_ns ||
-+	    current_user_ns() != fc->user_ns)
- 		return -EIO;
- 
-  restart:
-@@ -1880,7 +1882,8 @@ static ssize_t fuse_dev_do_write(struct fuse_dev *fud,
- 	struct fuse_req *req;
- 	struct fuse_out_header oh;
- 
--	if (task_active_pid_ns(current) != fc->pid_ns)
-+	if (task_active_pid_ns(current) != fc->pid_ns ||
-+	    current_user_ns() != fc->user_ns)
- 		return -EIO;
- 
- 	if (nbytes < sizeof(struct fuse_out_header))
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index 4b855b65d457..ecba75bf6640 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -841,8 +841,8 @@ static void fuse_fillattr(struct inode *inode, struct fuse_attr *attr,
- 	stat->ino = attr->ino;
- 	stat->mode = (inode->i_mode & S_IFMT) | (attr->mode & 07777);
- 	stat->nlink = attr->nlink;
--	stat->uid = make_kuid(&init_user_ns, attr->uid);
--	stat->gid = make_kgid(&init_user_ns, attr->gid);
-+	stat->uid = make_kuid(fc->user_ns, attr->uid);
-+	stat->gid = make_kgid(fc->user_ns, attr->gid);
- 	stat->rdev = inode->i_rdev;
- 	stat->atime.tv_sec = attr->atime;
- 	stat->atime.tv_nsec = attr->atimensec;
-@@ -1459,17 +1459,17 @@ static bool update_mtime(unsigned ivalid, bool trust_local_mtime)
- 	return true;
- }
- 
--static void iattr_to_fattr(struct iattr *iattr, struct fuse_setattr_in *arg,
--			   bool trust_local_cmtime)
-+static void iattr_to_fattr(struct fuse_conn *fc, struct iattr *iattr,
-+			   struct fuse_setattr_in *arg, bool trust_local_cmtime)
- {
- 	unsigned ivalid = iattr->ia_valid;
- 
- 	if (ivalid & ATTR_MODE)
- 		arg->valid |= FATTR_MODE,   arg->mode = iattr->ia_mode;
- 	if (ivalid & ATTR_UID)
--		arg->valid |= FATTR_UID,    arg->uid = from_kuid(&init_user_ns, iattr->ia_uid);
-+		arg->valid |= FATTR_UID,    arg->uid = from_kuid(fc->user_ns, iattr->ia_uid);
- 	if (ivalid & ATTR_GID)
--		arg->valid |= FATTR_GID,    arg->gid = from_kgid(&init_user_ns, iattr->ia_gid);
-+		arg->valid |= FATTR_GID,    arg->gid = from_kgid(fc->user_ns, iattr->ia_gid);
- 	if (ivalid & ATTR_SIZE)
- 		arg->valid |= FATTR_SIZE,   arg->size = iattr->ia_size;
- 	if (ivalid & ATTR_ATIME) {
-@@ -1629,7 +1629,7 @@ int fuse_do_setattr(struct inode *inode, struct iattr *attr,
- 
- 	memset(&inarg, 0, sizeof(inarg));
- 	memset(&outarg, 0, sizeof(outarg));
--	iattr_to_fattr(attr, &inarg, trust_local_cmtime);
-+	iattr_to_fattr(fc, attr, &inarg, trust_local_cmtime);
- 	if (file) {
- 		struct fuse_file *ff = file->private_data;
- 		inarg.valid |= FATTR_FH;
-diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-index 9145445a759a..9f4c3c82edd6 100644
---- a/fs/fuse/fuse_i.h
-+++ b/fs/fuse/fuse_i.h
-@@ -24,6 +24,7 @@
- #include <linux/workqueue.h>
- #include <linux/kref.h>
- #include <linux/pid_namespace.h>
-+#include <linux/user_namespace.h>
- 
- /** Max number of pages that can be used in a single read request */
- #define FUSE_MAX_PAGES_PER_REQ 32
-@@ -469,6 +470,9 @@ struct fuse_conn {
- 	/** The pid namespace for this mount */
- 	struct pid_namespace *pid_ns;
- 
-+	/** The user namespace for this mount */
-+	struct user_namespace *user_ns;
-+
- 	/** The fuse mount flags for this mount */
- 	unsigned flags;
- 
-@@ -867,7 +871,7 @@ struct fuse_conn *fuse_conn_get(struct fuse_conn *fc);
- /**
-  * Initialize fuse_conn
-  */
--void fuse_conn_init(struct fuse_conn *fc);
-+void fuse_conn_init(struct fuse_conn *fc, struct user_namespace *user_ns);
- 
- /**
-  * Release reference to fuse_conn
-diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-index eade0bfa4488..0a771145d853 100644
---- a/fs/fuse/inode.c
-+++ b/fs/fuse/inode.c
-@@ -167,8 +167,8 @@ void fuse_change_attributes_common(struct inode *inode, struct fuse_attr *attr,
- 	inode->i_ino     = fuse_squash_ino(attr->ino);
- 	inode->i_mode    = (inode->i_mode & S_IFMT) | (attr->mode & 07777);
- 	set_nlink(inode, attr->nlink);
--	inode->i_uid     = make_kuid(&init_user_ns, attr->uid);
--	inode->i_gid     = make_kgid(&init_user_ns, attr->gid);
-+	inode->i_uid     = make_kuid(fc->user_ns, attr->uid);
-+	inode->i_gid     = make_kgid(fc->user_ns, attr->gid);
- 	inode->i_blocks  = attr->blocks;
- 	inode->i_atime.tv_sec   = attr->atime;
- 	inode->i_atime.tv_nsec  = attr->atimensec;
-@@ -467,7 +467,8 @@ static int fuse_match_uint(substring_t *s, unsigned int *res)
- 	return err;
- }
- 
--static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev)
-+static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev,
-+			  struct user_namespace *user_ns)
- {
- 	char *p;
- 	memset(d, 0, sizeof(struct fuse_mount_data));
-@@ -503,7 +504,7 @@ static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev)
- 		case OPT_USER_ID:
- 			if (fuse_match_uint(&args[0], &uv))
- 				return 0;
--			d->user_id = make_kuid(current_user_ns(), uv);
-+			d->user_id = make_kuid(user_ns, uv);
- 			if (!uid_valid(d->user_id))
- 				return 0;
- 			d->user_id_present = 1;
-@@ -512,7 +513,7 @@ static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev)
- 		case OPT_GROUP_ID:
- 			if (fuse_match_uint(&args[0], &uv))
- 				return 0;
--			d->group_id = make_kgid(current_user_ns(), uv);
-+			d->group_id = make_kgid(user_ns, uv);
- 			if (!gid_valid(d->group_id))
- 				return 0;
- 			d->group_id_present = 1;
-@@ -555,8 +556,10 @@ static int fuse_show_options(struct seq_file *m, struct dentry *root)
- 	struct super_block *sb = root->d_sb;
- 	struct fuse_conn *fc = get_fuse_conn_super(sb);
- 
--	seq_printf(m, ",user_id=%u", from_kuid_munged(&init_user_ns, fc->user_id));
--	seq_printf(m, ",group_id=%u", from_kgid_munged(&init_user_ns, fc->group_id));
-+	seq_printf(m, ",user_id=%u",
-+		   from_kuid_munged(fc->user_ns, fc->user_id));
-+	seq_printf(m, ",group_id=%u",
-+		   from_kgid_munged(fc->user_ns, fc->group_id));
- 	if (fc->flags & FUSE_DEFAULT_PERMISSIONS)
- 		seq_puts(m, ",default_permissions");
- 	if (fc->flags & FUSE_ALLOW_OTHER)
-@@ -587,7 +590,7 @@ static void fuse_pqueue_init(struct fuse_pqueue *fpq)
- 	fpq->connected = 1;
- }
- 
--void fuse_conn_init(struct fuse_conn *fc)
-+void fuse_conn_init(struct fuse_conn *fc, struct user_namespace *user_ns)
- {
- 	memset(fc, 0, sizeof(*fc));
- 	spin_lock_init(&fc->lock);
-@@ -611,6 +614,7 @@ void fuse_conn_init(struct fuse_conn *fc)
- 	fc->attr_version = 1;
- 	get_random_bytes(&fc->scramble_key, sizeof(fc->scramble_key));
- 	fc->pid_ns = get_pid_ns(task_active_pid_ns(current));
-+	fc->user_ns = get_user_ns(user_ns);
- }
- EXPORT_SYMBOL_GPL(fuse_conn_init);
- 
-@@ -620,6 +624,7 @@ void fuse_conn_put(struct fuse_conn *fc)
- 		if (fc->destroy_req)
- 			fuse_request_free(fc->destroy_req);
- 		put_pid_ns(fc->pid_ns);
-+		put_user_ns(fc->user_ns);
- 		fc->release(fc);
- 	}
- }
-@@ -1046,7 +1051,7 @@ static int fuse_fill_super(struct super_block *sb, void *data, int silent)
- 
- 	sb->s_flags &= ~(MS_NOSEC | MS_I_VERSION);
- 
--	if (!parse_fuse_opt(data, &d, is_bdev))
-+	if (!parse_fuse_opt(data, &d, is_bdev, sb->s_user_ns))
- 		goto err;
- 
- 	if (is_bdev) {
-@@ -1070,8 +1075,12 @@ static int fuse_fill_super(struct super_block *sb, void *data, int silent)
- 	if (!file)
- 		goto err;
- 
--	if ((file->f_op != &fuse_dev_operations) ||
--	    (file->f_cred->user_ns != &init_user_ns))
-+	/*
-+	 * Require mount to happen from the same user namespace which
-+	 * opened /dev/fuse to prevent potential attacks.
-+	 */
-+	if (file->f_op != &fuse_dev_operations ||
-+	    file->f_cred->user_ns != sb->s_user_ns)
- 		goto err_fput;
- 
- 	fc = kmalloc(sizeof(*fc), GFP_KERNEL);
-@@ -1079,7 +1088,7 @@ static int fuse_fill_super(struct super_block *sb, void *data, int silent)
- 	if (!fc)
- 		goto err_fput;
- 
--	fuse_conn_init(fc);
-+	fuse_conn_init(fc, sb->s_user_ns);
- 	fc->release = fuse_free_conn;
- 
- 	fud = fuse_dev_alloc(fc);
 -- 
-1.9.1
-
-
-------------------------------------------------------------------------------
-Find and fix application performance issues faster with Applications Manager
-Applications Manager provides deep performance insights into multiple tiers of
-your business applications. It resolves application problems quickly and
-reduces your MTTR. Get your free trial!
-https://ad.doubleclick.net/ddm/clk/302982198;130105516;z
--- 
-fuse-devel mailing list
-To unsubscribe or subscribe, visit https://lists.sourceforge.net/lists/listinfo/fuse-devel
+Michal Hocko
+SUSE Labs
