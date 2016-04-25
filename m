@@ -1,78 +1,114 @@
-From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Subject: cgroup namespace and user namespace interactions
-Date: Tue, 26 Apr 2016 04:37:01 +1000
-Message-ID: <CAOviyaiusbQya9KtcE5+RyY5qKq51DL5_VQtcHP7jVkehLmRyQ@mail.gmail.com>
+From: "Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH v3 03/21] fs: Allow sysfs and cgroupfs to share super
+ blocks between user namespaces
+Date: Mon, 25 Apr 2016 14:01:52 -0500
+Message-ID: <20160425190152.GB28975@mail.hallyn.com>
+References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
+ <1461339521-123191-4-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cyphar-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:date:message-id:subject:from:to:cc;
-        bh=SH4j1eSlF+yc1xfuqoLEsVf3Oob7JvYyrugb8MQxwQc=;
-        b=mn1jRZEwIXhaDE/9s7bdgPvBCXtaqQSiZwo1zHtSFWrHOlLoTifaE2Fe5ykryTDbhL
-         IocpuWMUZI8YUqWWPrT37JsTrZz8rV/Xkua8WVnmSomQrSmKYXit7/j6otC/Ctp6LWbS
-         KNH2AbU1OaLH2cvN8tRUozEaRaw3/jTjs6/QNMD/V6FDNm+ULSzySyhmAbyjZwz/qJUr
-         RzdSRvQHf5k+VZDUM2iFTrjHc1+strf1gx0UbK9VNA33L9h3X6A6FEg4BZh09ZfqoPYF
-         Nb/j9EaXKHU7lHeHVmvR+s+EcoXnEPaJtyqHp37g5mhUjuAoDDUQPlPmwJ798J2S0qlw
-         8wYA==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1461339521-123191-4-git-send-email-seth.forshee@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
 
-Hello,
+Quoting Seth Forshee (seth.forshee@canonical.com):
+> Both of these filesystems already have use cases for mounting the
+> same super block from multiple user namespaces. For sysfs this
+> happens when using criu for snapshotting a container, where sysfs
+> is mounted in the containers network ns but the hosts user ns.
+> The cgroup filesystem shares the same super block for all mounts
+> of the same hierarchy regardless of the namespace.
+> 
+> As a result, the restriction on mounting a super block from a
+> single user namespace creates regressions for existing uses of
+> these filesystems. For these specific filesystems this
+> restriction isn't really necessary since the backing store is
+> objects in kernel memory and thus the ids assigned from inodes
+> is not subject to translation relative to s_user_ns.
+> 
+> Add a new filesystem flag, FS_USERNS_SHARE_SB, which when set
+> causes sget_userns() to skip the check of s_user_ns. Set this
+> flag for the sysfs and cgroup filesystems to fix the
+> regressions.
+> 
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 
-The new cgroup namespace currently only allows for superficial
-interaction with the user namespace (it checks against the namespace
-it was created in whether or not a user has the right capabilities
-before allowing mounting, and things like that). However, there is one
-glaring feature that appears to be missing from the new cgroup
-namespace implementation: unprivileged user namespaces can't modify
-their sub-hierarchy. This is particularly frustrating for the
-containerisation community, where we are working on adding support for
-"rootless containers" in runC (the execution driver of Docker)[1]. It
-essentially means that we can't use cgroup resource limiting to limit
-*the resources of our own processes*. It also makes things like the
-freezer cgroup unusable.
+Acked-by: Serge Hallyn <serge.hallyn@ubuntu.com>
 
-Here follows how I think we can solve this issue: the most obvious way
-of dealing with this would be (in the cgroupv1 view) to create a new
-subtree in every controller when you CLONE_NEWCGROUP. This new subtree
-is the root of the process's cgroup hierarchy. This doesn't affect any
-resource control, but it will result in the process only being able to
-affect its *own* resources. However, for cgroupv2 we have the "No
-Internal Process Constraint". So, maybe we could also move all of the
-other processes into a sibling subtree (with the *exact same* access
-permissions as the parent). Thus, the operation would look like this:
+thanks.
 
-- C0 - P00
-       \ P01
-       \ P02 (about to setns)
-
-becomes
-
-- C0 - C00 - P00
-                 \ P01
-       \ C01 - P02
-
-But then we have C00 which is just a waste of cycles (it doesn't have
-any resource settings). So maybe there's some optimisation we can do
-there, but that's as far as I've gotten into thinking about how to
-deal with the constraints of cgroupv2. After that's been solved we can
-reuse how we store the user namespace the cgroup was created in
-(cgroup_namespace.user_ns), and just check that whatever user is
-trying to modify the cgroup has CAP_SYS_ADMIN in that user namespace.
-
-Do you think this would work? Are there any recommendations on whether
-we can make this work better? Also, can you clarify whether or not
-CLONE_NEWCGROUP only works for cgroupv2 or does it also work on
-cgroupv1 (we haven't yet transitioned to cgroupv2 in runC).
-
-Thanks.
-
-[1]: https://github.com/opencontainers/runc/pull/774
-
--- 
-Aleksa Sarai (cyphar)
-www.cyphar.com
+> ---
+>  fs/super.c         | 3 ++-
+>  fs/sysfs/mount.c   | 3 ++-
+>  include/linux/fs.h | 1 +
+>  kernel/cgroup.c    | 4 ++--
+>  4 files changed, 7 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/super.c b/fs/super.c
+> index 092a7828442e..ead156b44bf8 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -472,7 +472,8 @@ retry:
+>  		hlist_for_each_entry(old, &type->fs_supers, s_instances) {
+>  			if (!test(old, data))
+>  				continue;
+> -			if (user_ns != old->s_user_ns) {
+> +			if (!(type->fs_flags & FS_USERNS_SHARE_SB) &&
+> +			    user_ns != old->s_user_ns) {
+>  				spin_unlock(&sb_lock);
+>  				if (s) {
+>  					up_write(&s->s_umount);
+> diff --git a/fs/sysfs/mount.c b/fs/sysfs/mount.c
+> index f3db82071cfb..9555accd4322 100644
+> --- a/fs/sysfs/mount.c
+> +++ b/fs/sysfs/mount.c
+> @@ -59,7 +59,8 @@ static struct file_system_type sysfs_fs_type = {
+>  	.name		= "sysfs",
+>  	.mount		= sysfs_mount,
+>  	.kill_sb	= sysfs_kill_sb,
+> -	.fs_flags	= FS_USERNS_VISIBLE | FS_USERNS_MOUNT,
+> +	.fs_flags	= FS_USERNS_VISIBLE | FS_USERNS_MOUNT |
+> +			  FS_USERNS_SHARE_SB,
+>  };
+>  
+>  int __init sysfs_init(void)
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index be0f8023e28c..66a639ec1bc4 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1988,6 +1988,7 @@ struct file_system_type {
+>  #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
+>  #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
+>  #define FS_USERNS_VISIBLE	32	/* FS must already be visible */
+> +#define FS_USERNS_SHARE_SB	64	/* Allow sharing sb between userns-es */
+>  #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+>  	struct dentry *(*mount) (struct file_system_type *, int,
+>  		       const char *, void *);
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index 671dc05c0b0f..9c9aa27e531a 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -2247,14 +2247,14 @@ static struct file_system_type cgroup_fs_type = {
+>  	.name = "cgroup",
+>  	.mount = cgroup_mount,
+>  	.kill_sb = cgroup_kill_sb,
+> -	.fs_flags = FS_USERNS_MOUNT,
+> +	.fs_flags = FS_USERNS_MOUNT | FS_USERNS_SHARE_SB,
+>  };
+>  
+>  static struct file_system_type cgroup2_fs_type = {
+>  	.name = "cgroup2",
+>  	.mount = cgroup_mount,
+>  	.kill_sb = cgroup_kill_sb,
+> -	.fs_flags = FS_USERNS_MOUNT,
+> +	.fs_flags = FS_USERNS_MOUNT | FS_USERNS_SHARE_SB,
+>  };
+>  
+>  static char *cgroup_path_ns_locked(struct cgroup *cgrp, char *buf, size_t buflen,
+> -- 
+> 1.9.1
