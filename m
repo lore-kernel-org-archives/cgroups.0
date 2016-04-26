@@ -1,7 +1,8 @@
 From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [PATCH v4 18/21] fuse: Add support for pid namespaces
-Date: Tue, 26 Apr 2016 14:30:41 -0500
-Message-ID: <1461699046-30485-19-git-send-email-seth.forshee@canonical.com>
+Subject: [PATCH v4 19/21] fuse: Support fuse filesystems outside of
+ init_user_ns
+Date: Tue, 26 Apr 2016 14:30:42 -0500
+Message-ID: <1461699046-30485-20-git-send-email-seth.forshee@canonical.com>
 References: <1461699046-30485-1-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -16,216 +17,290 @@ Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
 To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
 Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-When the userspace process servicing fuse requests is running in
-a pid namespace then pids passed via the fuse fd are not being
-translated into that process' namespace. Translation is necessary
-for the pid to be useful to that process.
+In order to support mounts from namespaces other than
+init_user_ns, fuse must translate uids and gids to/from the
+userns of the process servicing requests on /dev/fuse. This
+patch does that, with a couple of restrictions on the namespace:
 
-Since no use case currently exists for changing namespaces all
-translations can be done relative to the pid namespace in use
-when fuse_conn_init() is called. For fuse this translates to
-mount time, and for cuse this is when /dev/cuse is opened. IO for
-this connection from another namespace will return errors.
+ - The userns for the fuse connection is fixed to the namespace
+   from which /dev/fuse is opened.
 
-Requests from processes whose pid cannot be translated into the
-target namespace are not permitted, except for requests
-allocated via fuse_get_req_nofail_nopages. For no-fail requests
-in.h.pid will be 0 if the pid translation fails.
+ - The namespace must be the same as s_user_ns.
 
-File locking changes based on previous work done by Eric
-Biederman.
+These restrictions simplify the implementation by avoiding the
+need to pass around userns references and by allowing fuse to
+rely on the checks in inode_change_ok for ownership changes.
+Either restriction could be relaxed in the future if needed.
+
+For cuse the namespace used for the connection is also simply
+current_user_ns() at the time /dev/cuse is opened.
 
 Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Acked-by: Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- fs/fuse/dev.c    | 19 +++++++++++++++----
- fs/fuse/file.c   | 22 +++++++++++++++++-----
- fs/fuse/fuse_i.h |  4 ++++
- fs/fuse/inode.c  |  3 +++
- 4 files changed, 39 insertions(+), 9 deletions(-)
+ fs/fuse/cuse.c   |  3 ++-
+ fs/fuse/dev.c    | 13 ++++++++-----
+ fs/fuse/dir.c    | 14 +++++++-------
+ fs/fuse/fuse_i.h |  6 +++++-
+ fs/fuse/inode.c  | 33 +++++++++++++++++++++------------
+ 5 files changed, 43 insertions(+), 26 deletions(-)
 
+diff --git a/fs/fuse/cuse.c b/fs/fuse/cuse.c
+index c5b6b7165489..98ebd0f4fd4c 100644
+--- a/fs/fuse/cuse.c
++++ b/fs/fuse/cuse.c
+@@ -48,6 +48,7 @@
+ #include <linux/stat.h>
+ #include <linux/module.h>
+ #include <linux/uio.h>
++#include <linux/user_namespace.h>
+ 
+ #include "fuse_i.h"
+ 
+@@ -498,7 +499,7 @@ static int cuse_channel_open(struct inode *inode, struct file *file)
+ 	if (!cc)
+ 		return -ENOMEM;
+ 
+-	fuse_conn_init(&cc->fc);
++	fuse_conn_init(&cc->fc, current_user_ns());
+ 
+ 	fud = fuse_dev_alloc(&cc->fc);
+ 	if (!fud) {
 diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
-index cbece1221417..4e91b2ac25a7 100644
+index 4e91b2ac25a7..8fa1ce934df3 100644
 --- a/fs/fuse/dev.c
 +++ b/fs/fuse/dev.c
-@@ -19,6 +19,7 @@
- #include <linux/pipe_fs_i.h>
- #include <linux/swap.h>
- #include <linux/splice.h>
-+#include <linux/sched.h>
+@@ -127,8 +127,8 @@ static void __fuse_put_request(struct fuse_req *req)
  
- MODULE_ALIAS_MISCDEV(FUSE_MINOR);
- MODULE_ALIAS("devname:fuse");
-@@ -124,11 +125,11 @@ static void __fuse_put_request(struct fuse_req *req)
- 	atomic_dec(&req->count);
- }
- 
--static void fuse_req_init_context(struct fuse_req *req)
-+static void fuse_req_init_context(struct fuse_conn *fc, struct fuse_req *req)
+ static void fuse_req_init_context(struct fuse_conn *fc, struct fuse_req *req)
  {
- 	req->in.h.uid = from_kuid_munged(&init_user_ns, current_fsuid());
- 	req->in.h.gid = from_kgid_munged(&init_user_ns, current_fsgid());
--	req->in.h.pid = current->pid;
-+	req->in.h.pid = pid_nr_ns(task_pid(current), fc->pid_ns);
+-	req->in.h.uid = from_kuid_munged(&init_user_ns, current_fsuid());
+-	req->in.h.gid = from_kgid_munged(&init_user_ns, current_fsgid());
++	req->in.h.uid = from_kuid(fc->user_ns, current_fsuid());
++	req->in.h.gid = from_kgid(fc->user_ns, current_fsgid());
+ 	req->in.h.pid = pid_nr_ns(task_pid(current), fc->pid_ns);
  }
  
- void fuse_set_initialized(struct fuse_conn *fc)
-@@ -181,10 +182,14 @@ static struct fuse_req *__fuse_get_req(struct fuse_conn *fc, unsigned npages,
- 		goto out;
- 	}
- 
--	fuse_req_init_context(req);
-+	fuse_req_init_context(fc, req);
+@@ -186,7 +186,8 @@ static struct fuse_req *__fuse_get_req(struct fuse_conn *fc, unsigned npages,
  	__set_bit(FR_WAITING, &req->flags);
  	if (for_background)
  		__set_bit(FR_BACKGROUND, &req->flags);
-+	if (req->in.h.pid == 0) {
-+		fuse_put_request(fc, req);
-+		return ERR_PTR(-EOVERFLOW);
-+	}
- 
- 	return req;
- 
-@@ -274,7 +279,7 @@ struct fuse_req *fuse_get_req_nofail_nopages(struct fuse_conn *fc,
- 	if (!req)
- 		req = get_reserved_req(fc, file);
- 
--	fuse_req_init_context(req);
-+	fuse_req_init_context(fc, req);
- 	__set_bit(FR_WAITING, &req->flags);
- 	__clear_bit(FR_BACKGROUND, &req->flags);
- 	return req;
-@@ -1243,6 +1248,9 @@ static ssize_t fuse_dev_do_read(struct fuse_dev *fud, struct file *file,
+-	if (req->in.h.pid == 0) {
++	if (req->in.h.pid == 0 || req->in.h.uid == (uid_t)-1 ||
++	    req->in.h.gid == (gid_t)-1) {
+ 		fuse_put_request(fc, req);
+ 		return ERR_PTR(-EOVERFLOW);
+ 	}
+@@ -1248,7 +1249,8 @@ static ssize_t fuse_dev_do_read(struct fuse_dev *fud, struct file *file,
  	struct fuse_in *in;
  	unsigned reqsize;
  
-+	if (task_active_pid_ns(current) != fc->pid_ns)
-+		return -EIO;
-+
+-	if (task_active_pid_ns(current) != fc->pid_ns)
++	if (task_active_pid_ns(current) != fc->pid_ns ||
++	    current_user_ns() != fc->user_ns)
+ 		return -EIO;
+ 
   restart:
- 	spin_lock(&fiq->waitq.lock);
- 	err = -EAGAIN;
-@@ -1872,6 +1880,9 @@ static ssize_t fuse_dev_do_write(struct fuse_dev *fud,
+@@ -1880,7 +1882,8 @@ static ssize_t fuse_dev_do_write(struct fuse_dev *fud,
  	struct fuse_req *req;
  	struct fuse_out_header oh;
  
-+	if (task_active_pid_ns(current) != fc->pid_ns)
-+		return -EIO;
-+
+-	if (task_active_pid_ns(current) != fc->pid_ns)
++	if (task_active_pid_ns(current) != fc->pid_ns ||
++	    current_user_ns() != fc->user_ns)
+ 		return -EIO;
+ 
  	if (nbytes < sizeof(struct fuse_out_header))
- 		return -EINVAL;
- 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index 719924d6c706..b5c616c5ec98 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -2067,7 +2067,8 @@ static int fuse_direct_mmap(struct file *file, struct vm_area_struct *vma)
- 	return generic_file_mmap(file, vma);
+diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+index 4b855b65d457..ecba75bf6640 100644
+--- a/fs/fuse/dir.c
++++ b/fs/fuse/dir.c
+@@ -841,8 +841,8 @@ static void fuse_fillattr(struct inode *inode, struct fuse_attr *attr,
+ 	stat->ino = attr->ino;
+ 	stat->mode = (inode->i_mode & S_IFMT) | (attr->mode & 07777);
+ 	stat->nlink = attr->nlink;
+-	stat->uid = make_kuid(&init_user_ns, attr->uid);
+-	stat->gid = make_kgid(&init_user_ns, attr->gid);
++	stat->uid = make_kuid(fc->user_ns, attr->uid);
++	stat->gid = make_kgid(fc->user_ns, attr->gid);
+ 	stat->rdev = inode->i_rdev;
+ 	stat->atime.tv_sec = attr->atime;
+ 	stat->atime.tv_nsec = attr->atimensec;
+@@ -1459,17 +1459,17 @@ static bool update_mtime(unsigned ivalid, bool trust_local_mtime)
+ 	return true;
  }
  
--static int convert_fuse_file_lock(const struct fuse_file_lock *ffl,
-+static int convert_fuse_file_lock(struct fuse_conn *fc,
-+				  const struct fuse_file_lock *ffl,
- 				  struct file_lock *fl)
+-static void iattr_to_fattr(struct iattr *iattr, struct fuse_setattr_in *arg,
+-			   bool trust_local_cmtime)
++static void iattr_to_fattr(struct fuse_conn *fc, struct iattr *iattr,
++			   struct fuse_setattr_in *arg, bool trust_local_cmtime)
  {
- 	switch (ffl->type) {
-@@ -2082,7 +2083,14 @@ static int convert_fuse_file_lock(const struct fuse_file_lock *ffl,
+ 	unsigned ivalid = iattr->ia_valid;
  
- 		fl->fl_start = ffl->start;
- 		fl->fl_end = ffl->end;
--		fl->fl_pid = ffl->pid;
-+
-+		/*
-+		 * Convert pid into the caller's pid namespace. If the pid
-+		 * does not map into the namespace fl_pid will get set to 0.
-+		 */
-+		rcu_read_lock();
-+		fl->fl_pid = pid_vnr(find_pid_ns(ffl->pid, fc->pid_ns));
-+		rcu_read_unlock();
- 		break;
+ 	if (ivalid & ATTR_MODE)
+ 		arg->valid |= FATTR_MODE,   arg->mode = iattr->ia_mode;
+ 	if (ivalid & ATTR_UID)
+-		arg->valid |= FATTR_UID,    arg->uid = from_kuid(&init_user_ns, iattr->ia_uid);
++		arg->valid |= FATTR_UID,    arg->uid = from_kuid(fc->user_ns, iattr->ia_uid);
+ 	if (ivalid & ATTR_GID)
+-		arg->valid |= FATTR_GID,    arg->gid = from_kgid(&init_user_ns, iattr->ia_gid);
++		arg->valid |= FATTR_GID,    arg->gid = from_kgid(fc->user_ns, iattr->ia_gid);
+ 	if (ivalid & ATTR_SIZE)
+ 		arg->valid |= FATTR_SIZE,   arg->size = iattr->ia_size;
+ 	if (ivalid & ATTR_ATIME) {
+@@ -1629,7 +1629,7 @@ int fuse_do_setattr(struct inode *inode, struct iattr *attr,
  
- 	default:
-@@ -2131,7 +2139,7 @@ static int fuse_getlk(struct file *file, struct file_lock *fl)
- 	args.out.args[0].value = &outarg;
- 	err = fuse_simple_request(fc, &args);
- 	if (!err)
--		err = convert_fuse_file_lock(&outarg.lk, fl);
-+		err = convert_fuse_file_lock(fc, &outarg.lk, fl);
- 
- 	return err;
- }
-@@ -2143,7 +2151,8 @@ static int fuse_setlk(struct file *file, struct file_lock *fl, int flock)
- 	FUSE_ARGS(args);
- 	struct fuse_lk_in inarg;
- 	int opcode = (fl->fl_flags & FL_SLEEP) ? FUSE_SETLKW : FUSE_SETLK;
--	pid_t pid = fl->fl_type != F_UNLCK ? current->tgid : 0;
-+	struct pid *pid = fl->fl_type != F_UNLCK ? task_tgid(current) : NULL;
-+	pid_t pid_nr = pid_nr_ns(pid, fc->pid_ns);
- 	int err;
- 
- 	if (fl->fl_lmops && fl->fl_lmops->lm_grant) {
-@@ -2155,7 +2164,10 @@ static int fuse_setlk(struct file *file, struct file_lock *fl, int flock)
- 	if (fl->fl_flags & FL_CLOSE)
- 		return 0;
- 
--	fuse_lk_fill(&args, file, fl, opcode, pid, flock, &inarg);
-+	if (pid && pid_nr == 0)
-+		return -EOVERFLOW;
-+
-+	fuse_lk_fill(&args, file, fl, opcode, pid_nr, flock, &inarg);
- 	err = fuse_simple_request(fc, &args);
- 
- 	/* locking is restartable */
+ 	memset(&inarg, 0, sizeof(inarg));
+ 	memset(&outarg, 0, sizeof(outarg));
+-	iattr_to_fattr(attr, &inarg, trust_local_cmtime);
++	iattr_to_fattr(fc, attr, &inarg, trust_local_cmtime);
+ 	if (file) {
+ 		struct fuse_file *ff = file->private_data;
+ 		inarg.valid |= FATTR_FH;
 diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-index eddbe02c4028..9145445a759a 100644
+index 9145445a759a..9f4c3c82edd6 100644
 --- a/fs/fuse/fuse_i.h
 +++ b/fs/fuse/fuse_i.h
-@@ -23,6 +23,7 @@
- #include <linux/poll.h>
+@@ -24,6 +24,7 @@
  #include <linux/workqueue.h>
  #include <linux/kref.h>
-+#include <linux/pid_namespace.h>
+ #include <linux/pid_namespace.h>
++#include <linux/user_namespace.h>
  
  /** Max number of pages that can be used in a single read request */
  #define FUSE_MAX_PAGES_PER_REQ 32
-@@ -465,6 +466,9 @@ struct fuse_conn {
- 	/** The group id for this mount */
- 	kgid_t group_id;
+@@ -469,6 +470,9 @@ struct fuse_conn {
+ 	/** The pid namespace for this mount */
+ 	struct pid_namespace *pid_ns;
  
-+	/** The pid namespace for this mount */
-+	struct pid_namespace *pid_ns;
++	/** The user namespace for this mount */
++	struct user_namespace *user_ns;
 +
  	/** The fuse mount flags for this mount */
  	unsigned flags;
  
+@@ -867,7 +871,7 @@ struct fuse_conn *fuse_conn_get(struct fuse_conn *fc);
+ /**
+  * Initialize fuse_conn
+  */
+-void fuse_conn_init(struct fuse_conn *fc);
++void fuse_conn_init(struct fuse_conn *fc, struct user_namespace *user_ns);
+ 
+ /**
+  * Release reference to fuse_conn
 diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-index 1ce67668a8e1..eade0bfa4488 100644
+index eade0bfa4488..0a771145d853 100644
 --- a/fs/fuse/inode.c
 +++ b/fs/fuse/inode.c
-@@ -20,6 +20,7 @@
- #include <linux/random.h>
- #include <linux/sched.h>
- #include <linux/exportfs.h>
-+#include <linux/pid_namespace.h>
+@@ -167,8 +167,8 @@ void fuse_change_attributes_common(struct inode *inode, struct fuse_attr *attr,
+ 	inode->i_ino     = fuse_squash_ino(attr->ino);
+ 	inode->i_mode    = (inode->i_mode & S_IFMT) | (attr->mode & 07777);
+ 	set_nlink(inode, attr->nlink);
+-	inode->i_uid     = make_kuid(&init_user_ns, attr->uid);
+-	inode->i_gid     = make_kgid(&init_user_ns, attr->gid);
++	inode->i_uid     = make_kuid(fc->user_ns, attr->uid);
++	inode->i_gid     = make_kgid(fc->user_ns, attr->gid);
+ 	inode->i_blocks  = attr->blocks;
+ 	inode->i_atime.tv_sec   = attr->atime;
+ 	inode->i_atime.tv_nsec  = attr->atimensec;
+@@ -467,7 +467,8 @@ static int fuse_match_uint(substring_t *s, unsigned int *res)
+ 	return err;
+ }
  
- MODULE_AUTHOR("Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>");
- MODULE_DESCRIPTION("Filesystem in Userspace");
-@@ -609,6 +610,7 @@ void fuse_conn_init(struct fuse_conn *fc)
- 	fc->connected = 1;
+-static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev)
++static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev,
++			  struct user_namespace *user_ns)
+ {
+ 	char *p;
+ 	memset(d, 0, sizeof(struct fuse_mount_data));
+@@ -503,7 +504,7 @@ static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev)
+ 		case OPT_USER_ID:
+ 			if (fuse_match_uint(&args[0], &uv))
+ 				return 0;
+-			d->user_id = make_kuid(current_user_ns(), uv);
++			d->user_id = make_kuid(user_ns, uv);
+ 			if (!uid_valid(d->user_id))
+ 				return 0;
+ 			d->user_id_present = 1;
+@@ -512,7 +513,7 @@ static int parse_fuse_opt(char *opt, struct fuse_mount_data *d, int is_bdev)
+ 		case OPT_GROUP_ID:
+ 			if (fuse_match_uint(&args[0], &uv))
+ 				return 0;
+-			d->group_id = make_kgid(current_user_ns(), uv);
++			d->group_id = make_kgid(user_ns, uv);
+ 			if (!gid_valid(d->group_id))
+ 				return 0;
+ 			d->group_id_present = 1;
+@@ -555,8 +556,10 @@ static int fuse_show_options(struct seq_file *m, struct dentry *root)
+ 	struct super_block *sb = root->d_sb;
+ 	struct fuse_conn *fc = get_fuse_conn_super(sb);
+ 
+-	seq_printf(m, ",user_id=%u", from_kuid_munged(&init_user_ns, fc->user_id));
+-	seq_printf(m, ",group_id=%u", from_kgid_munged(&init_user_ns, fc->group_id));
++	seq_printf(m, ",user_id=%u",
++		   from_kuid_munged(fc->user_ns, fc->user_id));
++	seq_printf(m, ",group_id=%u",
++		   from_kgid_munged(fc->user_ns, fc->group_id));
+ 	if (fc->flags & FUSE_DEFAULT_PERMISSIONS)
+ 		seq_puts(m, ",default_permissions");
+ 	if (fc->flags & FUSE_ALLOW_OTHER)
+@@ -587,7 +590,7 @@ static void fuse_pqueue_init(struct fuse_pqueue *fpq)
+ 	fpq->connected = 1;
+ }
+ 
+-void fuse_conn_init(struct fuse_conn *fc)
++void fuse_conn_init(struct fuse_conn *fc, struct user_namespace *user_ns)
+ {
+ 	memset(fc, 0, sizeof(*fc));
+ 	spin_lock_init(&fc->lock);
+@@ -611,6 +614,7 @@ void fuse_conn_init(struct fuse_conn *fc)
  	fc->attr_version = 1;
  	get_random_bytes(&fc->scramble_key, sizeof(fc->scramble_key));
-+	fc->pid_ns = get_pid_ns(task_active_pid_ns(current));
+ 	fc->pid_ns = get_pid_ns(task_active_pid_ns(current));
++	fc->user_ns = get_user_ns(user_ns);
  }
  EXPORT_SYMBOL_GPL(fuse_conn_init);
  
-@@ -617,6 +619,7 @@ void fuse_conn_put(struct fuse_conn *fc)
- 	if (atomic_dec_and_test(&fc->count)) {
+@@ -620,6 +624,7 @@ void fuse_conn_put(struct fuse_conn *fc)
  		if (fc->destroy_req)
  			fuse_request_free(fc->destroy_req);
-+		put_pid_ns(fc->pid_ns);
+ 		put_pid_ns(fc->pid_ns);
++		put_user_ns(fc->user_ns);
  		fc->release(fc);
  	}
  }
+@@ -1046,7 +1051,7 @@ static int fuse_fill_super(struct super_block *sb, void *data, int silent)
+ 
+ 	sb->s_flags &= ~(MS_NOSEC | MS_I_VERSION);
+ 
+-	if (!parse_fuse_opt(data, &d, is_bdev))
++	if (!parse_fuse_opt(data, &d, is_bdev, sb->s_user_ns))
+ 		goto err;
+ 
+ 	if (is_bdev) {
+@@ -1070,8 +1075,12 @@ static int fuse_fill_super(struct super_block *sb, void *data, int silent)
+ 	if (!file)
+ 		goto err;
+ 
+-	if ((file->f_op != &fuse_dev_operations) ||
+-	    (file->f_cred->user_ns != &init_user_ns))
++	/*
++	 * Require mount to happen from the same user namespace which
++	 * opened /dev/fuse to prevent potential attacks.
++	 */
++	if (file->f_op != &fuse_dev_operations ||
++	    file->f_cred->user_ns != sb->s_user_ns)
+ 		goto err_fput;
+ 
+ 	fc = kmalloc(sizeof(*fc), GFP_KERNEL);
+@@ -1079,7 +1088,7 @@ static int fuse_fill_super(struct super_block *sb, void *data, int silent)
+ 	if (!fc)
+ 		goto err_fput;
+ 
+-	fuse_conn_init(fc);
++	fuse_conn_init(fc, sb->s_user_ns);
+ 	fc->release = fuse_free_conn;
+ 
+ 	fud = fuse_dev_alloc(fc);
 -- 
 2.7.4
 
