@@ -1,87 +1,79 @@
-From: Himadri Sarkar <s.himadri-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: blkio weights not honoured with lvm setup and on amazon ebs
-Date: Tue, 26 Apr 2016 23:02:48 +0530
-Message-ID: <CAGC20Lq+jswsqmDCHwh7sRx8zFEkgHPez5Yxn-yYqrSVz+9aMA@mail.gmail.com>
-References: <CAGC20LorhnUfchmB7OBNAHn+xMRRvwNRs_Dn0+P2eaga2Ds8ig@mail.gmail.com>
- <571E627B.40300@gmail.com>
+From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: [PATCH v4 10/21] fs: Check for invalid i_uid in may_follow_link()
+Date: Tue, 26 Apr 2016 14:30:33 -0500
+Message-ID: <1461699046-30485-11-git-send-email-seth.forshee@canonical.com>
+References: <1461699046-30485-1-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=57BqtxcT1FiLg5RkAeccAcMUTVe1j6jOOrJuFJ1XYOg=;
-        b=LfAIIENNo3q/9DBfe+tag9PZjMKI6xsC8zA4ybNUKzPrKU8M/KzojMtjMjlrKHSvnP
-         8vP3TNlA25u8/Wtdz3Vfi5zCoxg8wrYWuGVlCtnUgwUshA4efA/7ExLF4NRi/puwp+II
-         oU8Mn5kD7auOdh9zkMCUVA7MBwm0gc1KAVhAnzpmnm+e7iapEqSxThn/jyKnC4b40ysK
-         zFZxveWetVpyz0Z8407/rd9rv/cY6sq0eWUHp+SwzMQoUjXTgsS8wift1ELrIlCv245G
-         nkMBQow40CiCtv6lQUz5/9m+3muKcsUsXpvUdwQJIh3xIsHILnpzDC68cNxdCneV5BSE
-         cWvQ==
-In-Reply-To: <571E627B.40300-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: nborisov <n.borisov.lkml-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+In-Reply-To: <1461699046-30485-1-git-send-email-seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Post: <mailto:selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subject=help>
+Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Thanks for your reply.
-Does it also not work with Amazon EBS and SAN based storage?
-Regards
-- Himadri
+Filesystem uids which don't map into a user namespace may result
+in inode->i_uid being INVALID_UID. A symlink and its parent
+could have different owners in the filesystem can both get
+mapped to INVALID_UID, which may result in following a symlink
+when this would not have otherwise been permitted when protected
+symlinks are enabled.
 
+Add a new helper function, uid_valid_eq(), and use this to
+validate that the ids in may_follow_link() are both equal and
+valid. Also add an equivalent helper for gids, which is
+currently unused.
 
-On Tue, Apr 26, 2016 at 12:01 AM, nborisov <n.borisov.lkml-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
->
-> On 25.04.2016 20:53, Himadri Sarkar wrote:
->> Hi,
->>
->> I was doing some experiments to test out blkio with the following
->> setups and was unable to get the expected behavior. It will be great
->> if someone can help me understand what might have gone wrong with my
->> setup.
->>
->> Setup 1
->> hardware: d2.xlarge machine on aws (It has 3 * 2 TB hdd)
->> logical volume: setup an lvm to use 2 disks out of 3
->> file system: xfs
->> IO Scheduler: cfq
->> blkio weights: test1 has weight 1000, test2 has weight 500
->>
->> Now when I run the tests as given in
->> https://www.kernel.org/doc/Documentation/cgroup-v1/blkio-controller.txt
->> using dd (I only executed read tests on already written files)
->> I found that both the processes were getting equal time share
->> (blkio.time) and serviced bytes (blkio.io_service_bytes) irrespective
->> of differential weights.
->>
->> Now when I modified the setup by not having lvm setup and just
->> creating a 2TB file system out of a single hdd it worked i.e. serviced
->> bytes were in the ratio 2 : 1
->>
->> On the other hand when I tested read with fio
->>
->> specifically
->>
->> fio --randrepeat=1 --ioengine=libaio --direct=1 --gtod_reduce=1
->> --name=test2 --filename=file2 --bs=4k --iodepth=64 --size=4G
->> --readwrite=randrw --rwmixread=100
->>
->> Then also it worked even with the lvm setup. Which makes be believe
->> that with Setup 1 it is not working due to buffered reads. (But then
->> the same thing also worked without lvm)
->
-> This is a well-known limitation to LVM, which supposedly was fixed in a
-> recent kernel. For more information check this email thread:
-> https://www.redhat.com/archives/dm-devel/2016-February/msg00183.html
->
-> Then a patch was proposed in the following thread:
-> https://www.redhat.com/archives/dm-devel/2016-March/msg00006.html
->
-> This was tested by me and the proportional-based limits were working,
-> provided that the devices hosting the LVM VG were using CFQ as their io
-> scheduler.
->
-> Regards,
-> Nikolay
+Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+---
+ fs/namei.c             |  2 +-
+ include/linux/uidgid.h | 10 ++++++++++
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index a29094c6f4a1..6fe8b0d8ca90 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -915,7 +915,7 @@ static inline int may_follow_link(struct nameidata *nd)
+ 		return 0;
+ 
+ 	/* Allowed if parent directory and link owner match. */
+-	if (uid_eq(parent->i_uid, inode->i_uid))
++	if (uid_valid_eq(parent->i_uid, inode->i_uid))
+ 		return 0;
+ 
+ 	if (nd->flags & LOOKUP_RCU)
+diff --git a/include/linux/uidgid.h b/include/linux/uidgid.h
+index 03835522dfcb..e09529fe2668 100644
+--- a/include/linux/uidgid.h
++++ b/include/linux/uidgid.h
+@@ -117,6 +117,16 @@ static inline bool gid_valid(kgid_t gid)
+ 	return __kgid_val(gid) != (gid_t) -1;
+ }
+ 
++static inline bool uid_valid_eq(kuid_t left, kuid_t right)
++{
++	return uid_eq(left, right) && uid_valid(left);
++}
++
++static inline bool gid_valid_eq(kgid_t left, kgid_t right)
++{
++	return gid_eq(left, right) && gid_valid(left);
++}
++
+ #ifdef CONFIG_USER_NS
+ 
+ extern kuid_t make_kuid(struct user_namespace *from, uid_t uid);
+-- 
+2.7.4
+
+_______________________________________________
+Selinux mailing list
+Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
+To get help, send an email containing "help" to Selinux-request-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
