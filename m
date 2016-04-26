@@ -1,71 +1,61 @@
-From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [PATCH v4 16/21] fs: Allow superblock owner to access
-	do_remount_sb()
-Date: Tue, 26 Apr 2016 14:36:29 -0500
-Message-ID: <1461699396-33000-17-git-send-email-seth.forshee@canonical.com>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v4 05/21] block_dev: Check permissions towards block device inode when mounting
+Date: Tue, 26 Apr 2016 14:36:18 -0500
+Message-ID: <1461699396-33000-6-git-send-email-seth.forshee@canonical.com>
 References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=canonical-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=UHwmomD63z/RGnd7NeaL27R4JrM01/jEm5xMtjenPws=;
+        b=B8HIVwhrPuXoz7l43B03uyqFwMN2nLBg8/1QDFqGG3QIg4eUlQTV9ZRQvGDsDe3TnL
+         VOk9VYybs16BdJM9Uq0kC5NI7GPm71crin8wuRXAAVv1F2Nfy5OyRlTRM4f85wCYTbz/
+         9+B86FvjoyJxb2iruRM02GdFQvkLvh9kv9mNf9IV3CqUpKDF84M2su8fbSOhqpecEXWI
+         sA1spUWDYlfsRPObT/M9qGq2h/43/63pegJCbO41GCzfbBpAKZyssdilNi4r9gccxHSE
+         VGOv9vu4xRJHAwHR0B5Ux9TKdkRZAY6yQkCp0sinZnIg5zrxEl8tMCYaXcp8FzZE9MvA
+         Mr1w==
+In-Reply-To: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <1461699396-33000-1-git-send-email-seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
-	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=fuse-devel>
-List-Post: <mailto:fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
-	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+To: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
 
-Superblock level remounts are currently restricted to global
-CAP_SYS_ADMIN, as is the path for changing the root mount to
-read only on umount. Loosen both of these permission checks to
-also allow CAP_SYS_ADMIN in any namespace which is privileged
-towards the userns which originally mounted the filesystem.
+Unprivileged users should not be able to mount block devices when
+they lack sufficient privileges towards the block device inode.
+Update blkdev_get_by_path() to validate that the user has the
+required access to the inode at the specified path. The check
+will be skipped for CAP_SYS_ADMIN, so privileged mounts will
+continue working as before.
 
-Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Acked-by: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
 ---
- fs/namespace.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/block_dev.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/fs/namespace.c b/fs/namespace.c
-index 0ad8e4a4f50b..575e3f8b34fd 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -1510,7 +1510,7 @@ static int do_umount(struct mount *mnt, int flags)
- 		 * Special case for "unmounting" root ...
- 		 * we just try to remount it readonly.
- 		 */
--		if (!capable(CAP_SYS_ADMIN))
-+		if (!ns_capable(sb->s_user_ns, CAP_SYS_ADMIN))
- 			return -EPERM;
- 		down_write(&sb->s_umount);
- 		if (!(sb->s_flags & MS_RDONLY))
-@@ -2207,7 +2207,7 @@ static int do_remount(struct path *path, int flags, int mnt_flags,
- 	down_write(&sb->s_umount);
- 	if (flags & MS_BIND)
- 		err = change_mount_flags(path->mnt, flags);
--	else if (!capable(CAP_SYS_ADMIN))
-+	else if (!ns_capable(sb->s_user_ns, CAP_SYS_ADMIN))
- 		err = -EPERM;
- 	else
- 		err = do_remount_sb(sb, flags, data, 0);
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index e9b937845bdb..2007040afb7b 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1429,9 +1429,14 @@ struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
+ 					void *holder)
+ {
+ 	struct block_device *bdev;
++	int perm = 0;
+ 	int err;
+ 
+-	bdev = lookup_bdev(path, 0);
++	if (mode & FMODE_READ)
++		perm |= MAY_READ;
++	if (mode & FMODE_WRITE)
++		perm |= MAY_WRITE;
++	bdev = lookup_bdev(path, perm);
+ 	if (IS_ERR(bdev))
+ 		return bdev;
+ 
 -- 
 2.7.4
 
-
-------------------------------------------------------------------------------
-Find and fix application performance issues faster with Applications Manager
-Applications Manager provides deep performance insights into multiple tiers of
-your business applications. It resolves application problems quickly and
-reduces your MTTR. Get your free trial!
-https://ad.doubleclick.net/ddm/clk/302982198;130105516;z
--- 
-fuse-devel mailing list
-To unsubscribe or subscribe, visit https://lists.sourceforge.net/lists/listinfo/fuse-devel
