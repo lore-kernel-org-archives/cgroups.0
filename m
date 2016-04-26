@@ -1,189 +1,57 @@
-From: Ulrich Drepper <drepper@gmail.com>
-Subject: cpuset cleanup race
-Date: Tue, 26 Apr 2016 09:01:26 -0400
-Message-ID: <CAOPLpQfp9fwYyjv+9f8N9sikL7-+gPg7oq_CsTaRPvowPpXkyg@mail.gmail.com>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/2] mountinfo: implement show_path for kernfs and cgroup
+Date: Tue, 26 Apr 2016 09:36:23 -0500
+Message-ID: <20160426143622.GA11021@mail.hallyn.com>
+References: <1460923472-29370-1-git-send-email-serge.hallyn@ubuntu.com>
+ <1460923472-29370-3-git-send-email-serge.hallyn@ubuntu.com>
+ <20160418041126.GA424@mail.hallyn.com>
+ <87mvoqqu48.fsf@x220.int.ebiederm.org>
+ <20160419014419.GA19080@mail.hallyn.com>
+ <20160419040546.GA20350@mail.hallyn.com>
+ <20160426024207.GA2783@mail.hallyn.com>
+ <20160426102925.vkydkjtrsnibuc7c@ws.net.home>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=qb7+OhnwA7GvP6AzV+o2030Ewiwp14adhgaolv19lFk=;
-        b=FSKqbUu9f/E5ttqjriarKzg+oAXScMZAC92f/A/dqawooUxmp/utNzbq0q8YJvQPS6
-         CzuGVB+vpSJ07FISZnhI1oBmLMWqN1bxxSltADx1Et/dlmGqbQja6hwkh0tcIYwpB0w4
-         O5Z0kDwGwv4UbtbzWRnVn+h32ojqhm0woOqBKdSBIbsK5Jk70vyvnX3fkfCore7flu4m
-         ASUklhSaNWaTHCJARyLhuiogDG1WRjRmuDmMklIzGthChnI+/zmiFn/aaEe4mXly68qd
-         21x/nIBvYwINj4Ls1wJmsnLqY0og6IKSM7a54WNiEUhDRRqcdTdZZtTv9CSr4XJdlaCl
-         fdmw==
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160426102925.vkydkjtrsnibuc7c-xkT7n84Rsxv/9pzu0YdTqQ@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Karel Zak <kzak-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-I came across a problem with code which uses a cpuset CG and tries to
-be responsible and clean up after itself.  The code attached at the
-bottom illustrates the problem.  It's only long because it has no
-dependencies aside from the basic runtime and should work on all
-machines.  You need to run it with privileges high enough to create a
-CG.
+On Tue, Apr 26, 2016 at 12:29:25PM +0200, Karel Zak wrote:
+> On Mon, Apr 25, 2016 at 09:42:07PM -0500, Serge E. Hallyn wrote:
+> > > Looking at it another way...  The value we're talking about shows us
+> > > the path of the root dentry of a cgroup mount.  If a task in cgns2
+> > > rooted at /a/b/c mounts a cgroupfs, it will see '/' as the root dentry.
+> > > If a task in cgns1 rooted at /a/b looks at that mountinfo, '/' would
+> > > be misleading.  It really should be '/c'.
+> > 
+> > So I think that for cgroup mount entries in mountinfo to be useful (i.e.
+> > to criu) we either need the root dentry path to be given as relative to
+> > the reader's cgroup namespace (as I have it in this patchset), or else
+> > we need to add another piece of information in the mountinfo entry, such
+> > as the nsfd inode number of the cgroup namespace in which it was
+> > mounted.
+> 
+> In the ideal world there is no mountinfo file, but /proc/self/mountinfo/<id>/
+> directory with individual files, so every subsystem and filesystem has 
+> absolute freedom to store there all relevant information. The result will 
+> be also lucky kernel that does not have to always generate entire huge 
+> mountinfo file for all mountpoins... etc. :-)
 
-The code is really simple:
-- a (new) CG in cpuset is created
-- one of the cores of the root cpuset is selected
-- the thread (and therefore entire process) is switched to the cpuset
-- a thread is created which does nothing but terminate immediately
-- the parent waits for the thread
-- then the parent removes itself from the cpuset
-- finally the parent tries to remove the created cpuset
+Yeah mountinfo does seem like a big stick to swing around every time I want
+one little piece of information.  Also mght be good to have per-fstype
+directories so we can just look under /proc/self/mountsdir/cgroupfs/ for
+only cgroupfs <id>s.
 
-The last part is where things go wrong.  Usually* the rmdir() call
-made to remove the cpuset fails because the cpuset is still busy.  The
-program prints the members of the cpuset CG: it's the child thread.
+There we might also find open fds for source and mountdir, kinda fitting
+in with previous discussions of separating bdev_open() and mountat().
 
-* I wrote "usually" because slowing down the parent code will help.
-I.e., there is a race.  Successful slowdowns I found:
-- compile with -fsanitize=address (seems already enough)
-- very short wait, e.g., 1ns (you can see this by starting the program
-with the parameter "wait")
+BTW, assuming this would in fact report source and mountpoint location
+with fds, these would really (through realpath) be reported relative to
+the reader's namespace, as I'm doing and advocating here.
 
-You might want to compile the code with optimization.  It is a race, after all.
-
-
-The pthread_join() call made by the parent won't return until the
-kernel signals through the futex set up at clone() time that the
-thread has terminated.  From the perspective of the userlevel code the
-thread is gone.  But not all bookkeeping related to the terminated
-thread seems to has been finished, it seems.
-
-
-I didn't look at the code but I can imagine that the futex
-notification happens as soon as all observable aspects of the thread
-are gone.  This is of course good to not delay the waiter.  Hopefully
-the cgroup bookkeeping can also be moved before the notification.
-
-
-I tested it with a recent kernel (4.5.0-0.rc7) but I doubt it's a recent issue.
-
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#include <error.h>
-#include <errno.h>
-#include <mntent.h>
-#include <pthread.h>
-#include <sched.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
-
-static void *tf(void *p)
-{
-  return NULL;
-}
-
-int main(int argc, char *argv[])
-{
-  const char *csname = argc == 1 ? "test" : argv[1];
-
-  struct mntent *me;
-  FILE *fp = setmntent(_PATH_MOUNTED, "r");
-  if (fp == NULL)
-    error(1, errno, "cannot read mounted filesystem information");
-  while ((me = getmntent(fp)) != NULL) {
-    if (strcmp(me->mnt_type, "cgroup") == 0
-&& hasmntopt(me, "cpuset") != NULL)
-      break;
-  }
-  if (me == NULL)
-    error(1, 0, "cpuset filesystem not mounted");
-  endmntent(fp);
-
-  char *cshier = NULL;
-  asprintf(&cshier, "%s/%s", me->mnt_dir, csname);
-
-  if (mkdir(cshier, 0777) == 0)
-    printf("new cpuset control group: %s\n", cshier);
-  else if (errno != EEXIST)
-    error(1, errno, "cannot create cpuset group %s", cshier);
-
-  char *csrootmems;
-  asprintf(&csrootmems, "%s/cpuset.mems", me->mnt_dir);
-  fp = fopen(csrootmems, "r");
-  if (fp == NULL)
-    error(1, errno, "cannot read /cpuset.mems");
-  char *val = NULL;
-  size_t vallen = 0;
-  ssize_t n = getline(&val, &vallen, fp);
-  fclose(fp);
-  free(csrootmems);
-
-  char *testmems;
-  asprintf(&testmems, "%s/cpuset.mems", cshier);
-  fp = fopen(testmems, "w");
-  if (fp == NULL)
-    error(1, errno, "cannot read /%s/cpuset.mems", csname);
-  fwrite(val, n, 1, fp);
-  fclose(fp);
-  free(testmems);
-  free(val);
-
-  cpu_set_t cs;
-  int first = 0;
-  sched_getaffinity(0, sizeof(cs), &cs);
-  while (! CPU_ISSET(first, &cs))
-    ++first;
-
-  char *testcpus;
-  asprintf(&testcpus, "%s/cpuset.cpus", cshier);
-  fp = fopen(testcpus, "w");
-  if (fp == NULL)
-    error(1, errno, "cannot write /%s/cpuset.cpus", csname);
-  fprintf(fp, "%d", first);
-  fclose(fp);
-  free(testcpus);
-
-  char *testtasks;
-  asprintf(&testtasks, "%s/tasks", cshier);
-  fp = fopen(testtasks, "w");
-  if (fp == NULL)
-    error(1, errno, "cannot write /%s/tasks", csname);
-  fprintf(fp, "%d", (int) getpid());
-  fclose(fp);
-
-  pthread_t th;
-  pthread_create(&th, NULL, tf, NULL);
-
-  pthread_join(th, NULL);
-
-  char *roottasks;
-  asprintf(&roottasks, "%s/tasks", me->mnt_dir);
-  fp = fopen(roottasks, "w");
-  if (fp == NULL)
-    error(1, errno, "cannot write /tasks");
-  fprintf(fp, "%d", (int) getpid());
-  fclose(fp);
-  free(roottasks);
-
-  if (strcmp(csname, "wait") == 0) {
-    struct timespec s = { 0, 1 };
-    nanosleep(&s, NULL);
-  }
-
-  if (rmdir(cshier) != 0) {
-    printf("PID = %ld\nremaining = ", (long) getpid());
-    fp = fopen(testtasks, "r");
-    char *line = NULL;
-    size_t linelen = 0;
-    while ((n = getline(&line, &linelen, fp)) > 0)
-      fputs(line, stdout);
-    fclose(fp);
-    free(line);
-    error(1, errno, "couldn't remove cpuset %s", cshier);
-  }
-
-  free(cshier);
-  free(testtasks);
-
-  return 0;
-}
+-serge
