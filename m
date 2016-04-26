@@ -1,185 +1,104 @@
-From: "Serge E. Hallyn" <serge@hallyn.com>
-Subject: Re: [PATCH v3 14/21] fs: Allow superblock owner to change ownership
- of inodes with unmappable ids
-Date: Mon, 25 Apr 2016 15:30:47 -0500
-Message-ID: <20160425203047.GA29927@mail.hallyn.com>
-References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
- <1461339521-123191-15-git-send-email-seth.forshee@canonical.com>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/2] mountinfo: implement show_path for kernfs and cgroup
+Date: Mon, 25 Apr 2016 21:42:07 -0500
+Message-ID: <20160426024207.GA2783@mail.hallyn.com>
+References: <1460923472-29370-1-git-send-email-serge.hallyn@ubuntu.com>
+	<1460923472-29370-3-git-send-email-serge.hallyn@ubuntu.com>
+	<20160418041126.GA424@mail.hallyn.com>
+	<87mvoqqu48.fsf@x220.int.ebiederm.org>
+	<20160419014419.GA19080@mail.hallyn.com>
+	<20160419040546.GA20350@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1461339521-123191-15-git-send-email-seth.forshee@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160419040546.GA20350-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-Quoting Seth Forshee (seth.forshee@canonical.com):
-> In a userns mount some on-disk inodes may have ids which do not
-> map into s_user_ns, in which case the in-kernel inodes are owned
-> by invalid users. The superblock owner should be able to change
-> attributes of these inodes but cannot. However it is unsafe to
-> grant the superblock owner privileged access to all inodes in the
-> superblock since proc, sysfs, etc. use DAC to protect files which
-> may not belong to s_user_ns. The problem is restricted to only
-> inodes where the owner or group is an invalid user.
+Quoting Serge E. Hallyn (serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org):
+> Quoting Serge E. Hallyn (serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org):
+> > Quoting Eric W. Biederman (ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org):
+> > > "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> writes:
+> > > 
+> > > >> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> > > >> index 671dc05..9a0d7b3 100644
+> > > >> --- a/kernel/cgroup.c
+> > > >> +++ b/kernel/cgroup.c
+> > > >> @@ -1593,6 +1593,40 @@ static int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
+> > > >>  	return 0;
+> > > >>  }
+> > > >>  
+> > > >> +static int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+> > > >> +			    struct kernfs_root *kf_root)
+> > > >> +{
+> > > >> +	int len = 0, ret = 0;
+> > > >> +	char *buf = NULL;
+> > > >> +	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+> > > >> +	struct cgroup_root *kf_cgroot = cgroup_root_from_kf(kf_root);
+> > > >> +	struct cgroup *ns_cgroup;
+> > > >> +
+> > > >> +	mutex_lock(&cgroup_mutex);
+> > > >
+> > > > Hm, I can't grab the cgroup mutex here because I already have the
+> > > > namespace_sem.  But that's required by cset_cgroup_from_root().  Can
+> > > > I just call that under rcu_read_lock() instead?  (Not without
+> > > > changing the lockdep_assert_help()).  Is there another way to get the
+> > > > info needed here?
+> > > 
+> > > Do we need the current cgroup namespace information at all?
+> > > 
+> > > Could we not get the relevant cgroup namespace from the mount of
+> > > cgroupfs?
+> > 
+> > I don't think so.  That was my first inclination.  But at show_path()
+> > all we have is the vfsmunt->mnt_root.  Since all cgroup namespaces
+> > for a hierarchy share the same dentry tree and superblock, there's
+> > no way to tell where the mount's namespace root is supposed to be.
+> > 
+> > whether we did
+> > 
+> > # enter new cgroup namespace rooted at cgroup /user.slice/user-1000.slice
+> > mount -t cgroup -o freezer freezer /mnt
+> > 
+> > or
+> > 
+> > mount --bind /sys/fs/cgroup/freezer/user.slice/user-1000.slice /mnt
+> > 
+> > the mountinfo entry will be the same.
+> > 
+> > > In general the better path is not to have the contents of files depend on
+> > > who is reading the file.
 > 
-> We can work around this by allowing users with CAP_CHOWN in
-> s_user_ns to change an invalid owner or group id, so long as the
-> other id is either invalid or mappable in s_user_ns. After
-> changing ownership the user will be privileged towards the inode
-> and thus able to change other attributes.
+> And actually, while as i said above this was my first inclination, I now
+> think that's wrong.  /proc/$$/cgroup is virtualized per the reader.  The
+> point of this patch is to make mountinfo virtualized analogously to
+> /proc/$$/cgroup, so that we can be certain how a particular cgroup dentry
+> relates to a task's actual cgroup.  So the mountinfo dentry root path
+> should in fact depend on the reader.
 > 
-> As an precaution, checks for invalid ids are added to the proc
-> and kernfs setattr interfaces. These filesystems are not expected
-> to have inodes with invalid ids, but if it does happen any
-> setattr operations will return -EPERM.
-> 
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> Looking at it another way...  The value we're talking about shows us
+> the path of the root dentry of a cgroup mount.  If a task in cgns2
+> rooted at /a/b/c mounts a cgroupfs, it will see '/' as the root dentry.
+> If a task in cgns1 rooted at /a/b looks at that mountinfo, '/' would
+> be misleading.  It really should be '/c'.
 
-Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
+So I think that for cgroup mount entries in mountinfo to be useful (i.e.
+to criu) we either need the root dentry path to be given as relative to
+the reader's cgroup namespace (as I have it in this patchset), or else
+we need to add another piece of information in the mountinfo entry, such
+as the nsfd inode number of the cgroup namespace in which it was
+mounted.
 
-bug a request below,
-
-> ---
->  fs/attr.c             | 47 +++++++++++++++++++++++++++++++++++++++--------
->  fs/kernfs/inode.c     |  2 ++
->  fs/proc/base.c        |  2 ++
->  fs/proc/generic.c     |  3 +++
->  fs/proc/proc_sysctl.c |  2 ++
->  5 files changed, 48 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/attr.c b/fs/attr.c
-> index 3cfaaac4a18e..a8b0931654a5 100644
-> --- a/fs/attr.c
-> +++ b/fs/attr.c
-> @@ -16,6 +16,43 @@
->  #include <linux/evm.h>
->  #include <linux/ima.h>
->  
-> +static bool chown_ok(const struct inode *inode, kuid_t uid)
-> +{
-> +	struct user_namespace *user_ns;
-> +
-> +	if (uid_eq(current_fsuid(), inode->i_uid) && uid_eq(uid, inode->i_uid))
-> +		return true;
-> +	if (capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-> +		return true;
-> +
-> +	user_ns = inode->i_sb->s_user_ns;
-> +	if (!uid_valid(inode->i_uid) &&
-> +	    (!gid_valid(inode->i_gid) || kgid_has_mapping(user_ns, inode->i_gid)) &&
-
-This confused me to no end :)  Perhaps a "is_unmapped_valid_gid()" helper
-would make it clearer what this is meant to do?  Or else maybe a comment
-above chown_ok(), explaining that
-
-1. for a blockdev, the uid is converted at inode read so that it is
-either mapped or invalid
-2. for sysfs / etc, uid can be valid but not mapped into the userns
-
-> +	    ns_capable(user_ns, CAP_CHOWN))
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
-> +static bool chgrp_ok(const struct inode *inode, kgid_t gid)
-> +{
-> +	struct user_namespace *user_ns;
-> +
-> +	if (uid_eq(current_fsuid(), inode->i_uid) &&
-> +	    (in_group_p(gid) || gid_eq(gid, inode->i_gid)))
-> +		return true;
-> +	if (capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-> +		return true;
-> +
-> +	user_ns = inode->i_sb->s_user_ns;
-> +	if (!gid_valid(inode->i_gid) &&
-> +	    (!uid_valid(inode->i_uid) || kuid_has_mapping(user_ns, inode->i_uid)) &&
-> +	    ns_capable(user_ns, CAP_CHOWN))
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
->  /**
->   * inode_change_ok - check if attribute changes to an inode are allowed
->   * @inode:	inode to check
-> @@ -58,17 +95,11 @@ int inode_change_ok(const struct inode *inode, struct iattr *attr)
->  		return 0;
->  
->  	/* Make sure a caller can chown. */
-> -	if ((ia_valid & ATTR_UID) &&
-> -	    (!uid_eq(current_fsuid(), inode->i_uid) ||
-> -	     !uid_eq(attr->ia_uid, inode->i_uid)) &&
-> -	    !capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-> +	if ((ia_valid & ATTR_UID) && !chown_ok(inode, attr->ia_uid))
->  		return -EPERM;
->  
->  	/* Make sure caller can chgrp. */
-> -	if ((ia_valid & ATTR_GID) &&
-> -	    (!uid_eq(current_fsuid(), inode->i_uid) ||
-> -	    (!in_group_p(attr->ia_gid) && !gid_eq(attr->ia_gid, inode->i_gid))) &&
-> -	    !capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-> +	if ((ia_valid & ATTR_GID) && !chgrp_ok(inode, attr->ia_gid))
->  		return -EPERM;
->  
->  	/* Make sure a caller can chmod. */
-> diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
-> index 16405ae88d2d..2e97a337ee5f 100644
-> --- a/fs/kernfs/inode.c
-> +++ b/fs/kernfs/inode.c
-> @@ -117,6 +117,8 @@ int kernfs_iop_setattr(struct dentry *dentry, struct iattr *iattr)
->  
->  	if (!kn)
->  		return -EINVAL;
-> +	if (!uid_valid(inode->i_uid) || !gid_valid(inode->i_gid))
-> +		return -EPERM;
->  
->  	mutex_lock(&kernfs_mutex);
->  	error = inode_change_ok(inode, iattr);
-> diff --git a/fs/proc/base.c b/fs/proc/base.c
-> index b1755b23893e..648d623e2158 100644
-> --- a/fs/proc/base.c
-> +++ b/fs/proc/base.c
-> @@ -711,6 +711,8 @@ int proc_setattr(struct dentry *dentry, struct iattr *attr)
->  
->  	if (attr->ia_valid & ATTR_MODE)
->  		return -EPERM;
-> +	if (!uid_valid(inode->i_uid) || !gid_valid(inode->i_gid))
-> +		return -EPERM;
->  
->  	error = inode_change_ok(inode, attr);
->  	if (error)
-> diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-> index ff3ffc76a937..1461570c552c 100644
-> --- a/fs/proc/generic.c
-> +++ b/fs/proc/generic.c
-> @@ -105,6 +105,9 @@ static int proc_notify_change(struct dentry *dentry, struct iattr *iattr)
->  	struct proc_dir_entry *de = PDE(inode);
->  	int error;
->  
-> +	if (!uid_valid(inode->i_uid) || !gid_valid(inode->i_gid))
-> +		return -EPERM;
-> +
->  	error = inode_change_ok(inode, iattr);
->  	if (error)
->  		return error;
-> diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
-> index fe5b6e6c4671..f5d575157194 100644
-> --- a/fs/proc/proc_sysctl.c
-> +++ b/fs/proc/proc_sysctl.c
-> @@ -752,6 +752,8 @@ static int proc_sys_setattr(struct dentry *dentry, struct iattr *attr)
->  
->  	if (attr->ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID))
->  		return -EPERM;
-> +	if (!uid_valid(inode->i_uid) || !gid_valid(inode->i_gid))
-> +		return -EPERM;
->  
->  	error = inode_change_ok(inode, attr);
->  	if (error)
-> -- 
-> 1.9.1
+-serge
