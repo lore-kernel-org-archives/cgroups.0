@@ -1,72 +1,68 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v4 20/21] fuse: Restrict allow_other to the superblock's namespace or a descendant
-Date: Tue, 26 Apr 2016 14:36:33 -0500
-Message-ID: <1461699396-33000-21-git-send-email-seth.forshee@canonical.com>
+From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: [PATCH v4 12/21] fs: Refuse uid/gid changes which
+	don't map into s_user_ns
+Date: Tue, 26 Apr 2016 14:36:25 -0500
+Message-ID: <1461699396-33000-13-git-send-email-seth.forshee@canonical.com>
 References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=canonical-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=xVETxp19myjlkr9oWfx2dXb9pOJQfW/T7A25FZmF28w=;
-        b=Ibmdzzi0vCZxWRNsWTlYmiTfaY6ubAsX0D7k9/uJPjNl078Kef0TGKmsxoUYkdNX37
-         xohnPsrsmsEkVP1HUkXe0Ju9t5CE/p46rP5YofhT0kj5rmMtWjCUshVovzIW1NJi0/bZ
-         ws5lcZo8wK0acYG22OgKIkBJjYTCBAJcUmIam72CGmH3GeLu7iWbXILW+lSkLBZmppoR
-         3EdkAUfc63r0olvlyffBstvwbuyijCEKu7Uie1Jad4AsvapRRYKeI+UU2/B30maGKoAQ
-         A/3Shm8hqzaLZ6DdljQ/lo0iD/jZMWaACz2Gyl4JLf86SAbjcay+xLKUafcO4qiOne4p
-         FOgg==
-In-Reply-To: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
-Sender: linux-raid-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Miklos Szeredi <miklos@szeredi.hu>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
+Return-path: <fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+In-Reply-To: <1461699396-33000-1-git-send-email-seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
+	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=fuse-devel>
+List-Post: <mailto:fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
+	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Unprivileged users are normally restricted from mounting with the
-allow_other option by system policy, but this could be bypassed
-for a mount done with user namespace root permissions. In such
-cases allow_other should not allow users outside the userns
-to access the mount as doing so would give the unprivileged user
-the ability to manipulate processes it would otherwise be unable
-to manipulate. Restrict allow_other to apply to users in the same
-userns used at mount or a descendant of that namespace. Also
-export current_in_userns() for use by fuse when built as a
-module.
+Add checks to inode_change_ok to verify that uid and gid changes
+will map into the superblock's user namespace. If they do not
+fail with -EOVERFLOW. This cannot be overriden with ATTR_FORCE.
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
-Acked-by: Miklos Szeredi <mszeredi@redhat.com>
+Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 ---
- fs/fuse/dir.c           | 2 +-
- kernel/user_namespace.c | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ fs/attr.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index ecba75bf6640..1a6c5af49608 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1015,7 +1015,7 @@ int fuse_allow_current_process(struct fuse_conn *fc)
- 	const struct cred *cred;
- 
- 	if (fc->flags & FUSE_ALLOW_OTHER)
--		return 1;
-+		return current_in_userns(fc->user_ns);
- 
- 	cred = current_cred();
- 	if (uid_eq(cred->euid, fc->user_id) &&
-diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
-index 68f594212759..fa2294e14b77 100644
---- a/kernel/user_namespace.c
-+++ b/kernel/user_namespace.c
-@@ -951,6 +951,7 @@ bool current_in_userns(const struct user_namespace *target_ns)
+diff --git a/fs/attr.c b/fs/attr.c
+index 25b24d0f6c88..3cfaaac4a18e 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -42,6 +42,17 @@ int inode_change_ok(const struct inode *inode, struct iattr *attr)
+ 			return error;
  	}
- 	return false;
- }
-+EXPORT_SYMBOL(current_in_userns);
  
- static inline struct user_namespace *to_user_ns(struct ns_common *ns)
- {
++	/*
++	 * Verify that uid/gid changes are valid in the target namespace
++	 * of the superblock. This cannot be overriden using ATTR_FORCE.
++	 */
++	if (ia_valid & ATTR_UID &&
++	    from_kuid(inode->i_sb->s_user_ns, attr->ia_uid) == (uid_t)-1)
++		return -EOVERFLOW;
++	if (ia_valid & ATTR_GID &&
++	    from_kgid(inode->i_sb->s_user_ns, attr->ia_gid) == (gid_t)-1)
++		return -EOVERFLOW;
++
+ 	/* If force is set do it anyway. */
+ 	if (ia_valid & ATTR_FORCE)
+ 		return 0;
 -- 
 2.7.4
 
+
+------------------------------------------------------------------------------
+Find and fix application performance issues faster with Applications Manager
+Applications Manager provides deep performance insights into multiple tiers of
+your business applications. It resolves application problems quickly and
+reduces your MTTR. Get your free trial!
+https://ad.doubleclick.net/ddm/clk/302982198;130105516;z
+-- 
+fuse-devel mailing list
+To unsubscribe or subscribe, visit https://lists.sourceforge.net/lists/listinfo/fuse-devel
