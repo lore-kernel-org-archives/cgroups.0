@@ -1,82 +1,105 @@
-From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup namespace and user namespace interactions
-Date: Fri, 29 Apr 2016 15:54:03 +1000
-Message-ID: <CAOviyaj+hxAuu46sqpxNPxT37MBQo5OB_qfWVyr9uis3X5Sruw@mail.gmail.com>
-References: <CAOviyaiusbQya9KtcE5+RyY5qKq51DL5_VQtcHP7jVkehLmRyQ@mail.gmail.com>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 3/2] cgroup_show_path: use a new helper to get current
+ cgns css_set
+Date: Fri, 29 Apr 2016 16:42:54 -0500
+Message-ID: <20160429214254.GA13615@mail.hallyn.com>
+References: <1460923472-29370-1-git-send-email-serge.hallyn@ubuntu.com>
+ <1460923472-29370-3-git-send-email-serge.hallyn@ubuntu.com>
+ <20160418041126.GA424@mail.hallyn.com>
+ <20160418052905.GA3848@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cyphar-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc;
-        bh=B6xuy9MGGeNTL5BvKAAzK6ej/1X/hnNn4IZ0hIAER2g=;
-        b=aKhaNuKJYIMcWjxBxshv2S68zZVo4pOgqS5iWf5wAfFXMGU4sYz8v/swB5nsWshaQP
-         Q5xrK0yVtDXrqfdbu4rkh78adJqANjOIWzBFP3yWTfAa/6atTvX8wEBTTspi59Fw2ouY
-         8sJzp8cJhI9wLhtLm9w8CtQbOzN9pRR74gB/EndYQEZ6pSuOR+3oa12pgNd96FJKgOcx
-         /5k4srQY0Mjp6eHeZdj1BeXS4EufkYxDipuYZxCIgOyv1GdMdNGl8wj3nzeUp93HTbIC
-         NJSZK3Cn6SJVQh5d12XuJmebH9kTwY3OttZ3oHnH5nl/Y8NoNeVgU8U5ImDsmSCrT/FB
-         pLOA==
-In-Reply-To: <CAOviyaiusbQya9KtcE5+RyY5qKq51DL5_VQtcHP7jVkehLmRyQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160418052905.GA3848-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-> The new cgroup namespace currently only allows for superficial
-> interaction with the user namespace (it checks against the namespace
-> it was created in whether or not a user has the right capabilities
-> before allowing mounting, and things like that). However, there is one
-> glaring feature that appears to be missing from the new cgroup
-> namespace implementation: unprivileged user namespaces can't modify
-> their sub-hierarchy. This is particularly frustrating for the
-> containerisation community, where we are working on adding support for
-> "rootless containers" in runC (the execution driver of Docker)[1]. It
-> essentially means that we can't use cgroup resource limiting to limit
-> *the resources of our own processes*. It also makes things like the
-> freezer cgroup unusable.
->
-> Here follows how I think we can solve this issue: the most obvious way
-> of dealing with this would be (in the cgroupv1 view) to create a new
-> subtree in every controller when you CLONE_NEWCGROUP. This new subtree
-> is the root of the process's cgroup hierarchy. This doesn't affect any
-> resource control, but it will result in the process only being able to
-> affect its *own* resources. However, for cgroupv2 we have the "No
-> Internal Process Constraint". So, maybe we could also move all of the
-> other processes into a sibling subtree (with the *exact same* access
-> permissions as the parent). Thus, the operation would look like this:
->
-> - C0 - P00
->        \ P01
->        \ P02 (about to setns)
->
-> becomes
->
-> - C0 - C00 - P00
->                  \ P01
->        \ C01 - P02
->
-> But then we have C00 which is just a waste of cycles (it doesn't have
-> any resource settings). So maybe there's some optimisation we can do
-> there, but that's as far as I've gotten into thinking about how to
-> deal with the constraints of cgroupv2. After that's been solved we can
-> reuse how we store the user namespace the cgroup was created in
-> (cgroup_namespace.user_ns), and just check that whatever user is
-> trying to modify the cgroup has CAP_SYS_ADMIN in that user namespace.
->
-> Do you think this would work? Are there any recommendations on whether
-> we can make this work better? Also, can you clarify whether or not
-> CLONE_NEWCGROUP only works for cgroupv2 or does it also work on
-> cgroupv1 (we haven't yet transitioned to cgroupv2 in runC).
->
-> Thanks.
->
-> [1]: https://github.com/opencontainers/runc/pull/774
+[ I'm sorry, apparently I had sent the wrong version of this patch.  Here
+is the correct one from
+https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/commit/?h=2016-04-17/kernfs.show&id=79f784037098fddae92258579ef494537a12f1b2
+Thanks Michael for pointing that out
+]
 
+Since we're getting current's cgroup namespace info, and are
+not modifying it, we don't need the cgroup_mutex.
 
-Does anyone have an opinion on this proposal?
+Signed-off-by: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 40 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 36 insertions(+), 4 deletions(-)
 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 9a0d7b3..1243e3e 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1215,6 +1215,41 @@ static void cgroup_destroy_root(struct cgroup_root *root)
+ 	cgroup_free_root(root);
+ }
+ 
++/*
++ * look up cgroup associated with current task's cgroup namespace on the
++ * specified hierarchy
++ */
++static struct cgroup *
++current_cgns_cgroup_from_root(struct cgroup_root *root)
++{
++	struct cgroup *res = NULL;
++	struct css_set *cset;
++
++	lockdep_assert_held(&css_set_lock);
++
++	rcu_read_lock();
++
++	cset = current->nsproxy->cgroup_ns->root_cset;
++	if (cset == &init_css_set) {
++		res = &root->cgrp;
++	} else {
++		struct cgrp_cset_link *link;
++
++		list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
++			struct cgroup *c = link->cgrp;
++
++			if (c->root == root) {
++				res = c;
++				break;
++			}
++		}
++	}
++	rcu_read_unlock();
++
++	BUG_ON(!res);
++	return res;
++}
++
+ /* look up cgroup associated with given css_set on the specified hierarchy */
+ static struct cgroup *cset_cgroup_from_root(struct css_set *cset,
+ 					    struct cgroup_root *root)
+@@ -1598,13 +1633,11 @@ static int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ {
+ 	int len = 0, ret = 0;
+ 	char *buf = NULL;
+-	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+ 	struct cgroup_root *kf_cgroot = cgroup_root_from_kf(kf_root);
+ 	struct cgroup *ns_cgroup;
+ 
+-	mutex_lock(&cgroup_mutex);
+ 	spin_lock_bh(&css_set_lock);
+-	ns_cgroup = cset_cgroup_from_root(ns->root_cset, kf_cgroot);
++	ns_cgroup = current_cgns_cgroup_from_root(kf_cgroot);
+ 	len = kernfs_path_from_node(kf_node, ns_cgroup->kn, NULL, 0);
+ 	if (len > 0)
+ 		buf = kmalloc(len + 1, GFP_ATOMIC);
+@@ -1612,7 +1645,6 @@ static int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ 		ret = kernfs_path_from_node(kf_node, ns_cgroup->kn, buf, len + 1);
+ 
+ 	spin_unlock_bh(&css_set_lock);
+-	mutex_unlock(&cgroup_mutex);
+ 
+ 	if (len <= 0)
+ 		return len;
 -- 
-Aleksa Sarai (cyphar)
-www.cyphar.com
+2.7.4
