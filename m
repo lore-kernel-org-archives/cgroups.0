@@ -1,71 +1,82 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v4.6-rc5
-Date: Wed, 27 Apr 2016 12:01:35 -0400
-Message-ID: <20160427160135.GN7822@mtj.duckdns.org>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: Re: cgroup namespace and user namespace interactions
+Date: Fri, 29 Apr 2016 15:54:03 +1000
+Message-ID: <CAOviyaj+hxAuu46sqpxNPxT37MBQo5OB_qfWVyr9uis3X5Sruw@mail.gmail.com>
+References: <CAOviyaiusbQya9KtcE5+RyY5qKq51DL5_VQtcHP7jVkehLmRyQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=fDvoaennlzV+a77jXTDZbV10ZAxzZ7rJxUn3Sep9Dr0=;
-        b=nQISS58UXvSljVV3GPyvMNgfiRlzWxf2VXe2wVRScXdqaQzgsAy4jt9pMOpBMSqsMk
-         OoIJFvbDxLMkXZtcVxnzJKEHWnHtn1Edy+KxWAvrUpAj1f6spRfhc1ba9NPIaIDCGLCY
-         WO3MiLwMcbdn2t3gr84Eai0xoMyBvHwOZ9q+Lxjy125vagc+2is+7uM7mc2X2hr3Kgla
-         rz/o/5kftMU5x2lZLmLd2OCJy+etdslvxK+MJiarSJYxu04iv/95pMzGt6Vayft2KfuU
-         Qvb50s+r8loaMvBRNiqyqz0VV83Pu/lfBQWZfh5CmCFUWW4AeLh3bP9+xFSX1RJb6hAD
-         UrNg==
-Content-Disposition: inline
+        d=cyphar-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc;
+        bh=B6xuy9MGGeNTL5BvKAAzK6ej/1X/hnNn4IZ0hIAER2g=;
+        b=aKhaNuKJYIMcWjxBxshv2S68zZVo4pOgqS5iWf5wAfFXMGU4sYz8v/swB5nsWshaQP
+         Q5xrK0yVtDXrqfdbu4rkh78adJqANjOIWzBFP3yWTfAa/6atTvX8wEBTTspi59Fw2ouY
+         8sJzp8cJhI9wLhtLm9w8CtQbOzN9pRR74gB/EndYQEZ6pSuOR+3oa12pgNd96FJKgOcx
+         /5k4srQY0Mjp6eHeZdj1BeXS4EufkYxDipuYZxCIgOyv1GdMdNGl8wj3nzeUp93HTbIC
+         NJSZK3Cn6SJVQh5d12XuJmebH9kTwY3OttZ3oHnH5nl/Y8NoNeVgU8U5ImDsmSCrT/FB
+         pLOA==
+In-Reply-To: <CAOviyaiusbQya9KtcE5+RyY5qKq51DL5_VQtcHP7jVkehLmRyQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Linus.
+> The new cgroup namespace currently only allows for superficial
+> interaction with the user namespace (it checks against the namespace
+> it was created in whether or not a user has the right capabilities
+> before allowing mounting, and things like that). However, there is one
+> glaring feature that appears to be missing from the new cgroup
+> namespace implementation: unprivileged user namespaces can't modify
+> their sub-hierarchy. This is particularly frustrating for the
+> containerisation community, where we are working on adding support for
+> "rootless containers" in runC (the execution driver of Docker)[1]. It
+> essentially means that we can't use cgroup resource limiting to limit
+> *the resources of our own processes*. It also makes things like the
+> freezer cgroup unusable.
+>
+> Here follows how I think we can solve this issue: the most obvious way
+> of dealing with this would be (in the cgroupv1 view) to create a new
+> subtree in every controller when you CLONE_NEWCGROUP. This new subtree
+> is the root of the process's cgroup hierarchy. This doesn't affect any
+> resource control, but it will result in the process only being able to
+> affect its *own* resources. However, for cgroupv2 we have the "No
+> Internal Process Constraint". So, maybe we could also move all of the
+> other processes into a sibling subtree (with the *exact same* access
+> permissions as the parent). Thus, the operation would look like this:
+>
+> - C0 - P00
+>        \ P01
+>        \ P02 (about to setns)
+>
+> becomes
+>
+> - C0 - C00 - P00
+>                  \ P01
+>        \ C01 - P02
+>
+> But then we have C00 which is just a waste of cycles (it doesn't have
+> any resource settings). So maybe there's some optimisation we can do
+> there, but that's as far as I've gotten into thinking about how to
+> deal with the constraints of cgroupv2. After that's been solved we can
+> reuse how we store the user namespace the cgroup was created in
+> (cgroup_namespace.user_ns), and just check that whatever user is
+> trying to modify the cgroup has CAP_SYS_ADMIN in that user namespace.
+>
+> Do you think this would work? Are there any recommendations on whether
+> we can make this work better? Also, can you clarify whether or not
+> CLONE_NEWCGROUP only works for cgroupv2 or does it also work on
+> cgroupv1 (we haven't yet transitioned to cgroupv2 in runC).
+>
+> Thanks.
+>
+> [1]: https://github.com/opencontainers/runc/pull/774
 
-Two patches to fix a deadlock which can be easily triggered if memcg
-charge moving is used.  This bug was introduced while converting
-threadgroup locking to a global percpu_rwsem and is caused by cgroup
-controller task migration path depending on the ability to create new
-kthreads.  cpuset had a similar issue which was fixed by performing
-heavy-lifting operations asynchronous to task migration.  The two
-patches fix the same issue in memcg in a similar way.  The first patch
-makes the mechanism generic and the second relocates memcg charge
-moving outside the migration path.
 
-Given that we don't want to perform heavy operations while
-writelocking threadgroup lock anyway, moving them out of the way is a
-desirable solution.  One thing to note is that the problem was
-difficult to debug because lockdep couldn't figure out the deadlock
-condition.  Looking into how to improve that.
-
-Thanks.
-
-The following changes since commit bcc981e9ed84c678533299d7eff17d2c81e4d5de:
-
-  Merge branch 'linus' of git://git.kernel.org/pub/scm/linux/kernel/git/herbert/crypto-2.6 (2016-04-25 09:32:45 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.6-fixes
-
-for you to fetch changes up to 264a0ae164bc0e9144bebcd25ff030d067b1a878:
-
-  memcg: relocate charge moving from ->attach to ->post_attach (2016-04-25 15:45:14 -0400)
-
-----------------------------------------------------------------
-Tejun Heo (2):
-      cgroup, cpuset: replace cpuset_post_attach_flush() with cgroup_subsys->post_attach callback
-      memcg: relocate charge moving from ->attach to ->post_attach
-
- include/linux/cgroup-defs.h |  1 +
- include/linux/cpuset.h      |  6 ------
- kernel/cgroup.c             |  7 +++++--
- kernel/cpuset.c             |  4 ++--
- mm/memcontrol.c             | 37 +++++++++++++++++++------------------
- 5 files changed, 27 insertions(+), 28 deletions(-)
+Does anyone have an opinion on this proposal?
 
 -- 
-tejun
+Aleksa Sarai (cyphar)
+www.cyphar.com
