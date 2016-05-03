@@ -1,42 +1,55 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/2] cgroup_show_path: use a new helper to get current
- cgns css_set
-Date: Tue, 3 May 2016 09:26:58 -0500
-Message-ID: <20160503142658.GB6309@mail.hallyn.com>
-References: <1460923472-29370-1-git-send-email-serge.hallyn@ubuntu.com>
- <1460923472-29370-3-git-send-email-serge.hallyn@ubuntu.com>
- <20160418041126.GA424@mail.hallyn.com>
- <20160418052905.GA3848@mail.hallyn.com>
- <20160429214254.GA13615@mail.hallyn.com>
- <20160502163526.GW7822@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 2/2] cgroup: allow management of subtrees by new
+ cgroup namespaces
+Date: Tue, 3 May 2016 11:55:11 -0400
+Message-ID: <20160503155511.GA7110@mtj.duckdns.org>
+References: <1462197681-6879-1-git-send-email-asarai@suse.de>
+ <1462197681-6879-3-git-send-email-asarai@suse.de>
+ <20160502160604.GR7822@mtj.duckdns.org>
+ <57280456.1090106@suse.de>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=cJ4Nw2Vn2ripYTSbDlHkFZ8I4cnbHMZaIDnbr+1Wrk4=;
+        b=lzlYn+d8+jSkLF63HdLA/c39eyMaFM9B4XEUInUfmKOymPLzN/KRokLicgeofEcCmh
+         kkreAO9+5qS1O3j/PpV3iggL0HSe7XCeSeabXQWoOv66h304UrlVhkY23bDqxT6o228r
+         BRi5AZjDrXgMiZSyrhFstw805F4kjggiEIxRonZSjxXelbSsMsk1FpUbps8uz6YXC5Cj
+         EpZUU7Ng3E4Kd/w5YahpBlzTxbhLBMFlbz8/GURSGgviDBl3FNiGBQ+FmIouFzlnOSI7
+         87kJzlXA/lotY9533ZQ4+HfaY0HxB/XgjMjLKpyHN+CUkwG4HrGjBHtPbTDz8M5zFKgf
+         A/Lg==
 Content-Disposition: inline
-In-Reply-To: <20160502163526.GW7822-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <57280456.1090106-l3A5Bk7waGM@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> On Fri, Apr 29, 2016 at 04:42:54PM -0500, Serge E. Hallyn wrote:
-> > [ I'm sorry, apparently I had sent the wrong version of this patch.  Here
-> > is the correct one from
-> > https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/commit/?h=2016-04-17/kernfs.show&id=79f784037098fddae92258579ef494537a12f1b2
-> > Thanks Michael for pointing that out
-> > ]
-> > 
-> > Since we're getting current's cgroup namespace info, and are
-> > not modifying it, we don't need the cgroup_mutex.
-> > 
-> > Signed-off-by: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Hello, Aleksa.
+
+On Tue, May 03, 2016 at 11:52:22AM +1000, Aleksa Sarai wrote:
+> However, I agree with James that this patchset isn't ideal (it was my first
+> rough attempt). I think I'll get to work on properly virtualising
+> /sys/fs/cgroup, which will allow for a new cgroup namespace to modify
+> subtrees (but without allowing for cgroup escape) -- by pinning what pid
+> namespace the cgroup was created under. We can use the same type of
+> virtualization that /proc does (except instead of selectively showing the
+> dentries, we selectively show different owners of the dentries).
 > 
-> Can you please fold this into the previous patch?
+> Would that be acceptable?
 
-Will do, and will add the documentation Michael asked for.  In the
-middle of something still today, but will send this out this week.
+I'm still not sold on the idea.  For better or worse, the permission
+model is mostly based on vfs and I don't want to deviate too much as
+that's likely to become confusing pretty quickly.  If a sub-hierarchy
+is to be delegated, that's upto whomever is controlling cgroup
+hierarchy in the sub-domain.  We can expand the perm checks to
+consider user namespaces but I'd like to avoid going beyond that.
 
-thanks,
--serge
+Thanks.
+
+-- 
+tejun
