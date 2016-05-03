@@ -1,60 +1,77 @@
 From: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH v3 2/2] cgroup: allow management of subtrees by new cgroup
+Subject: Re: [PATCH v2] cgroup: allow management of subtrees by new cgroup
  namespaces
-Date: Tue, 3 May 2016 11:52:22 +1000
-Message-ID: <57280456.1090106@suse.de>
-References: <1462197681-6879-1-git-send-email-asarai@suse.de>
- <1462197681-6879-3-git-send-email-asarai@suse.de>
- <20160502160604.GR7822@mtj.duckdns.org>
+Date: Tue, 3 May 2016 11:59:25 +1000
+Message-ID: <572805FD.9080202@suse.de>
+References: <1462110065-4904-1-git-send-email-asarai@suse.de>
+ <1462110065-4904-2-git-send-email-asarai@suse.de>
+ <1462226406.3036.17.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160502160604.GR7822-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <1462226406.3036.17.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
 >> Change the mode of the cgroup directory for each cgroup association,
 >> allowing the process to create subtrees and modify the limits of the
->> subtrees *without* allowing the process to modify its own limits. Due to
->> the cgroup core restrictions and unix permission model, this allows for
->> processes to create new subtrees without breaking the cgroup limits for
->> the process.
+>> subtrees *without* allowing the process to modify its own limits. Due
+>> to the cgroup core restrictions and unix permission model, this
+>> allows for processes to create new subtrees without breaking the
+>> cgroup limits for the process.
 >
-> I don't get why this is necessary.  What's wrong with the parent
-> setting up permission correctly for the namespace?
+> Actually, that's not really what this patch does.  If you unshare
+> without having created any cgroups, it sets the other permission of the
+> entire top level hierarchy to o+rwx:
 
-The parent setting this up requires either:
+While that is odd, it makes sense (because that's the "current cgroup" 
+you are in). But I agree with your point that this patch is less than ideal.
 
-1. A privileged process giving the process write access to the cgroup 
-directory it is currently in. Since no software does this by default, 
-and in addition it might not always make sense (systemd doesn't like 
-processes messing around in their respective cgroups), this has to be 
-dealt with better.
+> ironically, this now makes the root group a permission denier (at least
+> for my distribution), because if I were in the root group (and not
+> root), the r-x on the group would rule the rwx on other ... I really
+> don't think that sounds correct.
 
-2. The process itself is a privileged process, which is not the usecase 
-I'm going for with rootless containers. If you have root, you can do 
-whatever you want in this regard and this feature doesn't affect you.
+You're right, that's odd. I'm confused why your root cgroups have u-w 
+though.
 
-The main reason for this patchset is because I would like to make sure 
-that unprivileged processes can take advantage of cgroup features (such 
-as the freezer cgroup, and to just do regular resource limiting). Since 
-cgroups are a hierarchy, I can see no fundamental reason why this is not 
-possible. And the cgroup namespace appears to be the perfect way of 
-doing it. I firmly believe there is a simple and safe way of allowing 
-unprivileged processes to create subtrees of their current cgroup.
+>
+> Perhaps what you should to be arguing then that the default permissions
+> of the cgroup directories need to be all rwx for everyone and then your
+> patch becomes unnecessary?
 
-However, I agree with James that this patchset isn't ideal (it was my 
-first rough attempt). I think I'll get to work on properly virtualising 
-/sys/fs/cgroup, which will allow for a new cgroup namespace to modify 
-subtrees (but without allowing for cgroup escape) -- by pinning what pid 
-namespace the cgroup was created under. We can use the same type of 
-virtualization that /proc does (except instead of selectively showing 
-the dentries, we selectively show different owners of the dentries).
+I don't think that would be the nicest way of dealing with this (then a 
+process can make very large numbers of cgroups all over the tree, which 
+might not cause huge issues but would still be a pain for administrators 
+and systemds alike).
 
-Would that be acceptable?
+> Alternatively, if the desire is fully to virtualize /sys/fs/cgroups,
+> then I think we have to decide how that would happen.  I think the
+> default requirements would be that a pid namespace be established (so
+> only the tasks in that pid namespace would be able to be controlled by
+> the cgroup namespace.  That, I think requires that any given cgroup
+> namespace "own" a pid namespace (being the one present when it was
+> created) but that it only gets a new virtual set of directories owned
+> by the userns owner if there's a pid namespace established for the
+> cgroup and cgroup->user_ns == pid_ns->user_ns (meaning we established a
+> user ns then a pid one then a cgroup one, so it's now safe to treat
+> root in the user_ns as owning the virtualized cgroup directories).
+
+I know this is probably a stupid question, but why couldn't we just 
+compare the user_ns with the tcred->user_ns? Or are you worried about a 
+process in a cgroup namespace moving processes to a subtree that isn't 
+in the same pid namespace (even though they're in the same user 
+namespace)? I don't mind implementing that this way (although we'd have 
+to change a bunch of the checks with pid_ns to use the 
+cgroup_ns->pid_ns), I'm just wondering if it's necessary.
+
+> We could do this in the same way that proc gets virtualized after
+> remounting (in a new mount namespace) on fork into a pid namespace.
+
+I actually really like this idea. I'll get to work on it.
 
 -- 
 Aleksa Sarai
