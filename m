@@ -1,133 +1,49 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mountinfo: implement show_path for kernfs and cgroup
-Date: Fri, 6 May 2016 14:32:59 -0500
-Message-ID: <20160506193259.GB3057@mail.hallyn.com>
-References: <20160505152058.GC13186@mail.hallyn.com>
- <6db5b7e5-3f15-39bd-cc9e-e3c296378e54@gmail.com>
- <20160506173356.GA1228@mail.hallyn.com>
- <CAKgNAkhCZrZevznOX_PqcckX0oJEMYbOir1tK7J+4qKtzUBwpg@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAKgNAkhCZrZevznOX_PqcckX0oJEMYbOir1tK7J+4qKtzUBwpg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: fix stale mem_cgroup_force_empty() comment
+Date: Fri,  6 May 2016 14:23:30 -0700
+Message-ID: <1462569810-54496-1-git-send-email-gthelen@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:date:message-id;
+        bh=5F48NB8zT8s6PjWcZTwNuNVpEcIXgRUVfllkkS5ZBIA=;
+        b=oWYHf4bMktM4EOByGAc+a7xebhaV42oqqbhennHz1TM15MUHNVgc6VOEzssGRdR72p
+         dUxnKItUQJroecfsKbCeMkmknB+2VYt9H7378UgJwUloskMTmty+wnkyuIy0uHMxAwCU
+         jp5BhhB+qvbZrfjlUYQ3OCSYctNgPCf61xRZhy81/g8PDLagsYpsnS05bbfC9euhiufV
+         3u9H0+Xo6YNWd40XuPLeJ6TJPnig0yomzZQQK1QJYTaF/42Iu6iVKDnYj+/b0UQHFKOD
+         n13oPxN8e2BXmMmBZMjzUGALvZn4u7apMkmeOKV94Z6eUrb7emXZhFSLgPaRGZjGIL+R
+         LKUA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Quoting Michael Kerrisk (man-pages) (mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org):
-> Hi Serge,
-> 
-> On 6 May 2016 at 19:33, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
-> > Quoting Michael Kerrisk (man-pages) (mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org):
-> >> Hi Serge,
-> >>
-> >> I'll add my own notes below, as much as anything in order to convince
-> >> myself that I understand what's going on.
-> >>
-> >> On 05/05/2016 05:20 PM, Serge E. Hallyn wrote:
-> >> > Short explanation:
-> >> >
-> >> > When showing a cgroupfs entry in mountinfo, show the path of the mount
-> >> > root dentry relative to the reader's cgroup namespace root.
-> >>
-> >> As part of the commit message, I think it would be useful to add a
-> >> sentence here explain why this is needed / which applications need it.
-> >>
-> >> > Long version:
-> >> >
-> >> > When a uid 0 task which is in freezer cgroup /a/b, unshares a new cgroup
-> >> > namespace, and then mounts a new instance of the freezer cgroup, the new
-> >> > mount will be rooted at /a/b.  The root dentry field of the mountinfo
-> >> > entry will show '/a/b'.
-> >>
-> >> So, the point is that if we create a new cgroup namespace,
-> >> then we want both /proc/self/cgroup and /proc/self/mountinfo
-> >> to show cgroup paths that are correctly virtualized with
-> >> respect to the cgroup mount point. Previous to this patch,
-> >> /proc/self/cgroup shows the right info, but
-> >> /proc/self/mountinfo does not. (Walk through in a moment.)
-> >>
-> >> Is the above a correct summary?
-> 
-> Feel free to add that piece to the commit message :-).
-> 
-> [...]
-> 
-> >> So, I applied your patch against a current (i.e., 4.6-rc6) kernel.
-> >> Same steps as before, and here's what I see:
-> >>
-> >> # mkdir -p /sys/fs/cgroup/freezer/a/b
-> >> # echo $$ > /sys/fs/cgroup/freezer/a/b/cgroup.procs
-> >> # ./cgroup_info.sh
-> >>       /proc/self/cgroup:      10:freezer:/a/b
-> >>       mountinfo:              /       /sys/fs/cgroup/freezer
-> >> # ~mtk/tlpi/code/ns/unshare -Cm bash
-> >> # ./cgroup_info.sh
-> >>       /proc/self/cgroup:      10:freezer:/
-> >>       mountinfo:              /../..  /sys/fs/cgroup/freezer
-> >> # mount --make-rslave /
-> >> # mkdir -p /mnt/freezer
-> >> # umount /sys/fs/cgroup/freezer
-> >> # mount -t cgroup -o freezer freezer /mnt/freezer/
-> >> # ./cgroup_info.sh
-> >>       /proc/self/cgroup:      10:freezer:/
-> >>       mountinfo:              /       /mnt/freezer
-> >>
-> >> Now the root directory path shown by mountinfo is correct,
-> >> and when we look inside the mount point, we see that things
-> >> look "right" (i.e., a cgroup root directory with no
-> >> subdirectories, and the PID of the shell run by unshare is
-> >> in the cgroup.procs file of this cgroup):
-> >>
-> >> # ls /mnt/freezer/
-> >> cgroup.clone_children  freezer.parent_freezing  freezer.state      tasks
-> >> cgroup.procs           freezer.self_freezing    notify_on_release
-> >> # echo $$
-> >> 3164
-> >> # cat /mnt/freezer/cgroup.procs
-> >> 2653                   # First shell that placed in this cgroup
-> >> 3164                   # Shell started by 'unshare'
-> >> 14197                  # cat(1)
-> >>
-> >> All makes sense to me.
-> >
-> > Right.  So in particular, docker wants to do something like:
-> >
-> > bindpath=`grep freezer /proc/self/mountinfo | tail -n 1 | awk '{ print $4 }'`
-> > mountpoint=`grep freezer /proc/self/mountinfo | tail -n 1 | awk '{ print $5 }'`
-> > mycg=`awk -F: '/freezer/ { print $3 }' /proc/self/cgroup`
-> > cat ${mountpoint}/${bindpath}/${mycg}/cgroup.procs
-> >
-> > and see its own task.
-> 
-> I think that'd be a great piece to include in the commit message, near
-> the top, as rationale for the patch
+commit f61c42a7d911 ("memcg: remove tasks/children test from
+mem_cgroup_force_empty()") removed memory reparenting from the function.
 
-Hang on I've messed that up :)  The above is not actually what docker
-does.  Rather it expects the $bindpath to be the same as the first part
-of $mycg, and and so appends the rest of $mycg to the $mountpoint and
-uses that.
+Fix the function's comment.
 
-> >> Tested-by: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >> Acked-by: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >>
-> >> (I did no review of the patch itself though.)
-> >
-> > Thanks, Michael.
-> 
-> You're welcome.
-> 
-> > I'll resend with corrections and a test script of
-> > some sort.
-> 
-> I think including some version of the two walk thoughs (without + with
-> patch) would also make for a great commit message :-).
-> 
-> Cheers,
-> 
-> Michael
-> 
-> [...]
+Signed-off-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index fe787f5c41bd..19fd76168a05 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2636,8 +2636,7 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
+ }
+ 
+ /*
+- * Reclaims as many pages from the given memcg as possible and moves
+- * the rest to the parent.
++ * Reclaims as many pages from the given memcg as possible.
+  *
+  * Caller is responsible for holding css reference for memcg.
+  */
+-- 
+2.8.0.rc3.226.g39d4020
