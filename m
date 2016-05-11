@@ -1,72 +1,50 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] Documentation/memcg: update kmem limit doc as codes
- behavior
-Date: Wed, 11 May 2016 08:40:19 +0200
-Message-ID: <20160511064018.GB16677@dhcp22.suse.cz>
-References: <572B0105.50503@huawei.com>
- <20160505083221.GD4386@dhcp22.suse.cz>
- <5732CC23.2060101@huawei.com>
-Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5732CC23.2060101@huawei.com>
-Sender: linux-doc-owner@vger.kernel.org
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: [PATCH] cgroup: remove an unused variable
+Date: Wed, 11 May 2016 14:57:22 +0200
+Message-ID: <1462971450-728759-1-git-send-email-arnd@arndb.de>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Qiang Huang <h.huangqiang@huawei.com>
-Cc: corbet@lwn.net, tj@kernel.org, Zefan Li <lizefan@huawei.com>, hannes@cmpxchg.org, akpm@linux-foundation.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Serge E . Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 11-05-16 14:07:31, Qiang Huang wrote:
-> The restriction of kmem setting is not there anymore because the
-> accounting is enabled by default even in the cgroup v1 - see
-> b313aeee2509 ("mm: memcontrol: enable kmem accounting for all
-> cgroups in the legacy hierarchy").
-> 
-> Update docs accordingly.
+The newly introduced cgroup_show_path has an extraneous variable
+that gcc warns about:
 
-I am pretty sure there will be other things out of date in that file but
-this is an improvemtn already.
+kernel/cgroup.c: In function 'cgroup_show_path':
+kernel/cgroup.c:1634:15: error: unused variable 'ret' [-Werror=unused-variable]
+  int len = 0, ret = 0;
 
-> Signed-off-by: Qiang Huang <h.huangqiang@huawei.com>
+This must have been left over from a previous version that was
+changed before it got committed. I checked the function and
+found that two other variables in the same function have an
+extraneous initialization, presumably another artifact from
+the same rework.
 
-Acked-by: Michal Hocko <mhocko@suse.com>
+This patch removes the useless warning and the extra initializations.
 
-Thanks!
+Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+---
+ kernel/cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> ---
->  Documentation/cgroup-v1/memory.txt | 14 +++-----------
->  1 file changed, 3 insertions(+), 11 deletions(-)
-> 
-> diff --git a/Documentation/cgroup-v1/memory.txt b/Documentation/cgroup-v1/memory.txt
-> index ff71e16..b14abf2 100644
-> --- a/Documentation/cgroup-v1/memory.txt
-> +++ b/Documentation/cgroup-v1/memory.txt
-> @@ -280,17 +280,9 @@ the amount of kernel memory used by the system. Kernel memory is fundamentally
->  different than user memory, since it can't be swapped out, which makes it
->  possible to DoS the system by consuming too much of this precious resource.
->  
-> -Kernel memory won't be accounted at all until limit on a group is set. This
-> -allows for existing setups to continue working without disruption.  The limit
-> -cannot be set if the cgroup have children, or if there are already tasks in the
-> -cgroup. Attempting to set the limit under those conditions will return -EBUSY.
-> -When use_hierarchy == 1 and a group is accounted, its children will
-> -automatically be accounted regardless of their limit value.
-> -
-> -After a group is first limited, it will be kept being accounted until it
-> -is removed. The memory limitation itself, can of course be removed by writing
-> --1 to memory.kmem.limit_in_bytes. In this case, kmem will be accounted, but not
-> -limited.
-> +Kernel memory accounting is enabled for all memory cgroups by default. But
-> +it can be disabled system-wide by passing cgroup.memory=nokmem to the kernel
-> +at boot time. In this case, kernel memory will not be accounted at all.
->  
->  Kernel memory limits are not imposed for the root cgroup. Usage for the root
->  cgroup may or may not be accounted. The memory used is accumulated into
-> -- 
-> 2.5.0
-> 
-
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index afea39eb7649..29ead73d2536 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1631,8 +1631,8 @@ static int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
+ static int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ 			    struct kernfs_root *kf_root)
+ {
+-	int len = 0, ret = 0;
+-	char *buf = NULL;
++	int len;
++	char *buf;
+ 	struct cgroup_root *kf_cgroot = cgroup_root_from_kf(kf_root);
+ 	struct cgroup *ns_cgroup;
+ 
 -- 
-Michal Hocko
-SUSE Labs
+2.7.0
