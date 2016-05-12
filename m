@@ -1,41 +1,51 @@
-From: Felipe Balbi <felipe.balbi@linux.intel.com>
-Subject: [PATCH] kernel: cgroup: fix compile warning:
-Date: Thu, 12 May 2016 12:34:38 +0300
-Message-ID: <1463045678-32436-1-git-send-email-felipe.balbi@linux.intel.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] kernel: cgroup: fix compile warning:
+Date: Thu, 12 May 2016 11:04:49 -0400
+Message-ID: <20160512150449.GQ4775@htj.duckdns.org>
+References: <1463045678-32436-1-git-send-email-felipe.balbi@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=Iiz1Kubxm2zTi8EtAz3v9fuFZ2uvUIWFISBqsyogpVk=;
+        b=tEMh/1buwM1hdfV5A+hGtEgzAeQ4RtjZYw1p5aSwLE4/xLz+fXN+XBODkrvUb4Yigv
+         tl8WU3nEgLCZOtOuCrJT1JVh/+OUbWND9PsEFfc+WJ1gMi1a8MFFrAxmblFwLQcPNFtd
+         UqnRip1efT8AXZTGipTFWCVuiJWAvxO3tvx+Tc432YNgjkinPxzdZ8kQSpZLFwS8F94w
+         t3kWEiVB1WFtlUghuySgyuBQp1Ogy2Hr9FfQNtbRHvpZewT5rKFXHRZ3XogBlapxapDg
+         5xXw/kHP046FX+wG/gNuBsOzv+qcu7KBCx0MGq2xGLp25Q3hED+t81NnGA88pXYBl4LI
+         8ieA==
+Content-Disposition: inline
+In-Reply-To: <1463045678-32436-1-git-send-email-felipe.balbi-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Felipe Balbi <felipe.balbi@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+To: Felipe Balbi <felipe.balbi-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Y29tbWl0IDRmNDFmYzU5NjIwZiAoImNncm91cCwga2VybmZzOiBtYWtlIG1vdW50aW5mbwogc2hv
-dyBwcm9wZXJseSBzY29wZWQgcGF0aCBmb3IgY2dyb3VwIG5hbWVzcGFjZXMiKQogYWRkZWQgdGhl
-IGZvbGxvd2luZyBjb21waWxlIHdhcm5pbmc6CgprZXJuZWwvY2dyb3VwLmM6IEluIGZ1bmN0aW9u
-IOKAmGNncm91cF9zaG93X3BhdGjigJk6Cmtlcm5lbC9jZ3JvdXAuYzoxNjM0OjE1OiB3YXJuaW5n
-OiB1bnVzZWQgdmFyaWFibGUg4oCYcmV04oCZIFstV3VudXNlZC12YXJpYWJsZV0KICBpbnQgbGVu
-ID0gMCwgcmV0ID0gMDsKICAgICAgICAgICAgICAgXgpmaXggaXQuCgpGaXhlczogNGY0MWZjNTk2
-MjBmICgiY2dyb3VwLCBrZXJuZnM6IG1ha2UgbW91bnRpbmZvCglzaG93IHByb3Blcmx5IHNjb3Bl
-ZCBwYXRoIGZvciBjZ3JvdXAKCW5hbWVzcGFjZXMiKQpTaWduZWQtb2ZmLWJ5OiBGZWxpcGUgQmFs
-YmkgPGZlbGlwZS5iYWxiaUBsaW51eC5pbnRlbC5jb20+Ci0tLQoga2VybmVsL2Nncm91cC5jIHwg
-MiArLQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZm
-IC0tZ2l0IGEva2VybmVsL2Nncm91cC5jIGIva2VybmVsL2Nncm91cC5jCmluZGV4IGFmZWEzOWVi
-NzY0OS4uODZjYjVjNmU4OTMyIDEwMDY0NAotLS0gYS9rZXJuZWwvY2dyb3VwLmMKKysrIGIva2Vy
-bmVsL2Nncm91cC5jCkBAIC0xNjMxLDcgKzE2MzEsNyBAQCBzdGF0aWMgaW50IHJlYmluZF9zdWJz
-eXN0ZW1zKHN0cnVjdCBjZ3JvdXBfcm9vdCAqZHN0X3Jvb3QsIHUxNiBzc19tYXNrKQogc3RhdGlj
-IGludCBjZ3JvdXBfc2hvd19wYXRoKHN0cnVjdCBzZXFfZmlsZSAqc2YsIHN0cnVjdCBrZXJuZnNf
-bm9kZSAqa2Zfbm9kZSwKIAkJCSAgICBzdHJ1Y3Qga2VybmZzX3Jvb3QgKmtmX3Jvb3QpCiB7Ci0J
-aW50IGxlbiA9IDAsIHJldCA9IDA7CisJaW50IGxlbiA9IDA7CiAJY2hhciAqYnVmID0gTlVMTDsK
-IAlzdHJ1Y3QgY2dyb3VwX3Jvb3QgKmtmX2Nncm9vdCA9IGNncm91cF9yb290X2Zyb21fa2Yoa2Zf
-cm9vdCk7CiAJc3RydWN0IGNncm91cCAqbnNfY2dyb3VwOwotLSAKMi44LjIKCi0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LQpJbnRlbCBGaW5sYW5kIE95ClJlZ2lzdGVyZWQgQWRkcmVzczogUEwgMjgxLCAwMDE4MSBIZWxz
-aW5raSAKQnVzaW5lc3MgSWRlbnRpdHkgQ29kZTogMDM1NzYwNiAtIDQgCkRvbWljaWxlZCBpbiBI
-ZWxzaW5raSAKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29u
-ZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lw
-aWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0cmljdGx5
-IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQsIHBsZWFz
-ZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29waWVzLgo=
+On Thu, May 12, 2016 at 12:34:38PM +0300, Felipe Balbi wrote:
+> commit 4f41fc59620f ("cgroup, kernfs: make mountinfo
+>  show properly scoped path for cgroup namespaces")
+>  added the following compile warning:
+>=20
+> kernel/cgroup.c: In function =E2=80=98cgroup_show_path=E2=80=99:
+> kernel/cgroup.c:1634:15: warning: unused variable =E2=80=98ret=E2=80=99=
+ [-Wunused-variable]
+>   int len =3D 0, ret =3D 0;
+>                ^
+> fix it.
+>=20
+> Fixes: 4f41fc59620f ("cgroup, kernfs: make mountinfo
+> 	show properly scoped path for cgroup
+> 	namespaces")
+> Signed-off-by: Felipe Balbi <felipe.balbi-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
+Applied to cgroup/for-4.6-fixes.
+
+Thanks.
+
+--=20
+tejun
