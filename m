@@ -1,59 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Documentation/memcg: update kmem limit doc as codes
- behavior
-Date: Thu, 12 May 2016 12:03:22 -0400
-Message-ID: <20160512160322.GU4775@htj.duckdns.org>
-References: <572B0105.50503@huawei.com>
- <20160505083221.GD4386@dhcp22.suse.cz>
- <5732CC23.2060101@huawei.com>
- <20160511064018.GB16677@dhcp22.suse.cz>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6g8krwBXN2v+yvuTS6BM6OZiYTpYzLvtlVdaMReBAAw=;
-        b=oKO0zG4/GC6hyECJ9jcIE6Kc3c6i/DS72ecfxlXMQKb3T/TdmZYzYKjPrRY5bQMcWj
-         v58vohXDcHDG2zL9nsaava8YIfUbXuFjt1lMZxGU7OTd5an+MewoGT9H8rYu3WVxne3n
-         wNqJ70hXxpw8fEA1Ykf66RkG7sa/Kp8/EoyJffk+wNOs/MEXuOgcmwbVRrVdVF1gyKY9
-         irG6JLi4Lv2M662FI+sBMdcxuwv+N/ZXZjHV544t5nAR8NJbe34AMKXZAv2qWoxjvCZS
-         bg5+etNF9hez/j38FDPY2ozhyRL7z12NI9aK9jvH3RetAU7ssPV0WnThrj+f+yv+fPUZ
-         iswQ==
-Content-Disposition: inline
-In-Reply-To: <20160511064018.GB16677@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+From: Wenwei Tao <wwtao0320-9Onoh4P/yGk@public.gmane.org>
+Subject: [RFC PATCH] cgroup: remove redundant cleanup in css_create
+Date: Fri, 13 May 2016 22:59:20 +0800
+Message-ID: <1463151560-5224-1-git-send-email-wwtao0320@163.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id; bh=5pKAMb6erMPxjNztQj
+	BmyKJzvFwfyEJyoqDIWrhQ5ek=; b=kBDVLKEsbcIy+pDWNmWpIR2LanfaSwZvzA
+	LYUKhENEyhuk8b8V3FUEDhGdfPHldMOyu+JbahTBEtdkhKWxTD0auo4XUEqR8X/7
+	yJFXeVGaPcbOQLj6ydzbZhnXsZoJ82V42jp5Q5fE/UGUqxJZpbR1+8/5p7yIfwgJ
+	wmRwh0rYE=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Qiang Huang <h.huangqiang@huawei.com>, corbet@lwn.net, Zefan Li <lizefan@huawei.com>, hannes@cmpxchg.org, akpm@linux-foundation.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, May 11, 2016 at 08:40:19AM +0200, Michal Hocko wrote:
-> On Wed 11-05-16 14:07:31, Qiang Huang wrote:
-> > The restriction of kmem setting is not there anymore because the
-> > accounting is enabled by default even in the cgroup v1 - see
-> > b313aeee2509 ("mm: memcontrol: enable kmem accounting for all
-> > cgroups in the legacy hierarchy").
-> > 
-> > Update docs accordingly.
-> 
-> I am pretty sure there will be other things out of date in that file but
-> this is an improvemtn already.
-> 
-> > Signed-off-by: Qiang Huang <h.huangqiang@huawei.com>
-> 
-> Acked-by: Michal Hocko <mhocko@suse.com>
+From: Wenwei Tao <ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Andrew, can you please pick this one up?
+When create css failed, before call css_free_rcu_fn,
+we remove the css id and exit the percpu_ref, but we
+will do these again in css_free_work_fn, so they are redundant.
+Especially the css id, that would cause problem if we
+remove it twice, since it may be assigned to another
+css after the first remove.
 
-Thanks!
+Signed-off-by: Wenwei Tao <ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 909a7d3..9df3a29 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5088,7 +5088,7 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+ 
+ 	err = cgroup_idr_alloc(&ss->css_idr, NULL, 2, 0, GFP_KERNEL);
+ 	if (err < 0)
+-		goto err_free_percpu_ref;
++		goto err_free_css;
+ 	css->id = err;
+ 
+ 	/* @css is ready to be brought online now, make it visible */
+@@ -5112,9 +5112,6 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+ 
+ err_list_del:
+ 	list_del_rcu(&css->sibling);
+-	cgroup_idr_remove(&ss->css_idr, css->id);
+-err_free_percpu_ref:
+-	percpu_ref_exit(&css->refcnt);
+ err_free_css:
+ 	call_rcu(&css->rcu_head, css_free_rcu_fn);
+ 	return ERR_PTR(err);
 -- 
-tejun
+1.8.3.1
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
