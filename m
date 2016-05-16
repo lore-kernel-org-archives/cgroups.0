@@ -1,73 +1,37 @@
-From: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH RFC 0/3] sched/fair: cpu time reserves for cgroups
-Date: Mon, 16 May 2016 15:22:22 +0300
-Message-ID: <5739BB7E.8010902@yandex-team.ru>
+Date: Mon, 16 May 2016 14:26:45 +0200
+Message-ID: <20160516122645.GO3193@twins.programming.kicks-ass.net>
 References: <146339085068.25295.7687045977863852568.stgit@buzz>
-	<20160516111849.GN3193@twins.programming.kicks-ass.net>
+ <20160516111849.GN3193@twins.programming.kicks-ass.net>
+ <5739BB7E.8010902@yandex-team.ru>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <5739BB7E.8010902-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru;
-	s=default; 
-	t=1463401347; bh=PyFnDZg+35x4jhWApSzmjcSrXnyxa0V3RlDQgu38Ahw=;
-	h=Subject:To:References:Cc:From:Message-ID:Date:User-Agent:
-	MIME-Version:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	b=SJrXV5YiPjEeVVjNA3/H90C7S98lkYIj5pz2iU1tJcs6obp9gcxKVGhrF4qbZOef2
-	6L3LOhcQhK0ZmB+2Y0NAuOOIotlQys4egmbD7JWv+ZWPMP3L0OcoyMl+IOpiA7H5cX
-	eNXLOEJJkrBW1lyiBp8FKX8ICfa6Bde/VCaKI/Pg=
-In-Reply-To: <20160516111849.GN3193-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On 16.05.2016 14:18, Peter Zijlstra wrote:
-> On Mon, May 16, 2016 at 12:36:19PM +0300, Konstantin Khlebnikov wrote:
->> This feature allows to change cpu cgroup weight for a limited time.
->>
->> Cgroup interface:
->> cpu.cfs_reserve_us      - reserved time for each cpu.cfs_period_us
->> cpu.cfs_reserve_shares  - group weight during reserved time
->>
->> While cfs group consumes reserved cpu time it has different weight,
->> thus it gets different vruntime penalty for that execution.
->>
->>          ^ weight
->>          |
->>          |
->> reserve |
->> shares  -------*
->>          |      |
->>          |      |
->>          |      |
->> shares  -      *-----------------*
->>          |                        |
->>          |                        |
->>          0------|-----------------|-----------> time
->>                 reserve           quota
->>
->> Reserve can work as a "low limit": boost weight for "guaranteed" time,
->> and as a "high limit": give normal weight for a limited time and allow
->> utilize cpu when nobody else needs it.
->>
+On Mon, May 16, 2016 at 03:22:22PM +0300, Konstantin Khlebnikov wrote:
+
+> >You forgot to explain why I should care about this.
 >
-> You forgot to explain why I should care about this.
+> As I told this works as low-limit or high-limit which allow to
+> control cpu time distribution without hard limits and throttling.
 
-As I told this works as low-limit or high-limit which allow to
-control cpu time distribution without hard limits and throttling.
+That's what it does; I get that. However nothing tells me why I should
+care about it. IOW, its a solution without a problem, and I tend to
+ignore those -- saves a lot of time on my end.
 
-Present quota/hard limit has well known problems when it throttle task
-inside kernel where it holds mutexes. Also it's too strict and doesn't
-allow utilization of unused cpu time.
+> Present quota/hard limit has well known problems when it throttle task
+> inside kernel where it holds mutexes. Also it's too strict and doesn't
+> allow utilization of unused cpu time.
 
--- 
-Konstantin
+See; now you're starting to make sense. You cannot have a patch if you
+don't have a problem. And this series didn't have a problem to solve.
+
+As for the latter; that's a feature for many people I'm told.
