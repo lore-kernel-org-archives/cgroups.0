@@ -1,78 +1,37 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH v4 03/21] fs: Allow sysfs and cgroupfs to share super
- blocks between user namespaces
-Date: Tue, 17 May 2016 18:58:34 -0500
-Message-ID: <20160517235834.GA104031@ubuntu-hedt>
-References: <1461699046-30485-1-git-send-email-seth.forshee@canonical.com>
- <1461699046-30485-4-git-send-email-seth.forshee@canonical.com>
- <87shxgxqai.fsf@x220.int.ebiederm.org>
-Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=canonical-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=SGWuviFGHudxz/LuBTx7rcX7VreI8g5U27Oat6nEH9k=;
-        b=FN7/KUWdzdCb3iwcssydXLnvyA8abXOQSYzYRZwyTPomj7MNIFIEvaca8iIDvl4PV8
-         BRuHA3jETBS89OzKv0pNFfw29cvRuiSXUNDIJrCYrFAldkWd5UOcsjeOoIl71LWy6wdE
-         el4y8LgtKlw5RcuOpdc6z8/n5vdli0YV1j/kbfqTXzNIRgpUPm8iUE9qw1yfgu53VP/H
-         UBty77Pp61t8/+GHMNrPICtEPpGaoG11ZgRgTresElLTbUoMJRIyEHyQPwtzFLeDGL1n
-         sxxbJkZpVgbDWbOV/HGtP3+0uVeCgb95M5J9CxFESqNv1OMMyPz4JW+/cejRFQ2BpJvR
-         nlZA==
-Content-Disposition: inline
-In-Reply-To: <87shxgxqai.fsf@x220.int.ebiederm.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+From: roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH] mm: memcontrol: fix the return in mem_cgroup_margin
+Date: Wed, 18 May 2016 15:24:15 +0800
+Message-ID: <1463556255-31892-1-git-send-email-roy.qing.li@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org
 
-On Tue, May 17, 2016 at 05:39:33PM -0500, Eric W. Biederman wrote:
-> Seth Forshee <seth.forshee@canonical.com> writes:
-> 
-> > Both of these filesystems already have use cases for mounting the
-> > same super block from multiple user namespaces. For sysfs this
-> > happens when using criu for snapshotting a container, where sysfs
-> > is mnounted in the containers network ns but the hosts user ns.
-> > The cgroup filesystem shares the same super block for all mounts
-> > of the same hierarchy regardless of the namespace.
-> >
-> > As a result, the restriction on mounting a super block from a
-> > single user namespace creates regressions for existing uses of
-> > these filesystems. For these specific filesystems this
-> > restriction isn't really necessary since the backing store is
-> > objects in kernel memory and thus the ids assigned from inodes
-> > is not subject to translation relative to s_user_ns.
-> >
-> > Add a new filesystem flag, FS_USERNS_SHARE_SB, which when set
-> > causes sget_userns() to skip the check of s_user_ns. Set this
-> > flag for the sysfs and cgroup filesystems to fix the
-> > regressions.
-> 
-> So this one needs to be sget_userns(..., &init_user_ns, ...).
-> And not a new special case.
+From: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-This is actually what I wanted to do, but based on a previous discussion
-where I had suggested doing this (for a different reason) I came away
-thinking you did not want it that way. So I'm happy with that change.
+when memory+swap is over limit, return 0
 
-But if we do that it violates some of the assumptions of the patch to
-rework MNT_NODEV on your testing branch (and also those behind patch 2
-in this series). Something will need to be changed there to prevent a
-regression in mount behavior when a user ns tries to mount without
-MNT_NODEV when the mount inherited from its parent has it set.
+Signed-off-by: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> Apologies for not catching this earlier.
-
-Actually this is a more recent patch, so you possibly hadn't seen it
-before.
-
-> I am looking at folding all of this into the patch that introduces
-> sget_userns so that even bisects won't have regresssions.
-
-That's fine with me.
-
-Thanks,
-Seth
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index fe787f5..e9211c2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1090,6 +1090,8 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
+ 		limit = READ_ONCE(memcg->memsw.limit);
+ 		if (count <= limit)
+ 			margin = min(margin, limit - count);
++		else
++			margin = 0;
+ 	}
+ 
+ 	return margin;
+-- 
+2.1.4
