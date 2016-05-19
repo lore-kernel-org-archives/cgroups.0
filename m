@@ -1,74 +1,40 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH v4 03/21] fs: Allow sysfs and cgroupfs to share super blocks between user namespaces
-Date: Wed, 18 May 2016 11:27:12 -0500
-Message-ID: <87bn43qqlb.fsf@x220.int.ebiederm.org>
-References: <1461699046-30485-1-git-send-email-seth.forshee@canonical.com>
-	<1461699046-30485-4-git-send-email-seth.forshee@canonical.com>
-	<87shxgxqai.fsf@x220.int.ebiederm.org>
-	<20160517235834.GA104031@ubuntu-hedt>
-	<8760ubs738.fsf@x220.int.ebiederm.org>
-	<20160518161618.GC129218@ubuntu-hedt>
+From: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: fix the return in mem_cgroup_margin
+Date: Thu, 19 May 2016 09:44:53 +0800
+Message-ID: <CAJFZqHwFtZa-Ec_0bie6ORTrgoW1kqGsq49-=ojsT-uyNUBhwg@mail.gmail.com>
+References: <1463556255-31892-1-git-send-email-roy.qing.li@gmail.com>
+	<20160518073253.GC21654@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20160518161618.GC129218@ubuntu-hedt> (Seth Forshee's message of
-	"Wed, 18 May 2016 11:16:18 -0500")
-Sender: linux-bcache-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc;
+        bh=z7nwa+NME6zt7qOKA8UWSsDWjepG2XyguxIp1Xe+0R8=;
+        b=hWIpMOUIoel4oF5pFSKYZXOo4USkHFiJnDcx54HtSunDbvUikCsKc4UX3ijIWn505n
+         xojdopEzXP730BcR/1lqSPVULcnj5Lmny2Y0Seu+AEQlAbAhhPGQ6mirHBoO354ShpwM
+         stMaYhfsI5EmdXBC07GV/q810VZeViuIJ8m1d1g1a66h06sP+S9AVQbAMuuAvLyopiIv
+         HbrbsespyP3++PIn+8aDAvQch0UzErZXiySh4JQblVtFxJj1goIw2cdkkffS3jc0v0ZN
+         AcFI8z+SKolp7V80JjlEciftM+hhqXS/D3+3APRH0e+k3yCgoZu5TotX6sS2IEKm0TjF
+         0hHA==
+In-Reply-To: <20160518073253.GC21654-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org
 
-Seth Forshee <seth.forshee@canonical.com> writes:
+On Wed, May 18, 2016 at 3:32 PM, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> count should always be smaller than memsw.limit (this is a hard limit).
+> Even if we have some temporary breach then the code should work as
+> expected because margin is initialized to 0 and memsw.limit >= limit.
 
-> On Wed, May 18, 2016 at 10:45:31AM -0500, Eric W. Biederman wrote:
->> > But if we do that it violates some of the assumptions of the patch to
->> > rework MNT_NODEV on your testing branch (and also those behind patch 2
->> > in this series). Something will need to be changed there to prevent a
->> > regression in mount behavior when a user ns tries to mount without
->> > MNT_NODEV when the mount inherited from its parent has it set.
->> 
->> Thank you for pointing that out.  I will look into that.
->> 
->> I believe I know exactly what you are talking about.  Of the choices I
->> think it is better to a minor localized change in the fs_fully_visible
->> logic than it is to cause problems elsewhere.
->
-> Agreed.
->
->> >> Apologies for not catching this earlier.
->> >
->> > Actually this is a more recent patch, so you possibly hadn't seen it
->> > before.
->> >
->> >> I am looking at folding all of this into the patch that introduces
->> >> sget_userns so that even bisects won't have regresssions.
->> >
->> > That's fine with me.
->> 
->> And thank you for keeping everything as separate patches.  That is at
->> least helping me catch up.  Even if I don't agree that these things
->> should be separate come merge time.
->
-> Honestly I probably would have squashed some of them into that first
-> patch myself if you hadn't already applied it to your testing branch, so
-> that's all just luck.
->
-> Keep in mind that I also have that patch for mqueue that isn't in this
-> series, and I haven't yet checked to see if the 4.7 merges introduce
-> anything which is going to require updating these patches. I was
-> planning to wait and send out updates after -rc1, but if you want that
-> stuff sooner just let me know.
+is it possible for this case? for example
 
-As unfortunately I don't have anything going into -rc1 I am working on
-this right now.
+memory count is 500, memory limit is 600; the margin is set to 100 firstly,
+then check memory+swap limit, its count(1100) is bigger than its limit(1000),
+then the margin 100 is returned wrongly.
 
-Let me finish sorting out the sget_userns and mnt nodev mess and I will
-push something out and then we can compare notes.  I think I have mqueue
-covered by other changes.  As it is in the set of filesystems that
-should just use sget_userns.
 
-I am sorting through the nodev corner of this now.  It should just be a
-day or two.
-
-Eric
+-Roy
