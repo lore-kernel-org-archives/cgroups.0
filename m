@@ -1,65 +1,42 @@
-From: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH v4 0/2] cgroup: allow management of subtrees by new cgroup
- namespaces
-Date: Sat, 21 May 2016 00:48:48 +1000
-Message-ID: <573F23D0.2030500@suse.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v4 0/2] cgroup: allow management of subtrees by new
+ cgroup namespaces
+Date: Fri, 20 May 2016 08:22:44 -0700
+Message-ID: <20160520152244.GB5632@htj.duckdns.org>
 References: <1463196000-13900-1-git-send-email-asarai@suse.de>
+ <573F23D0.2030500@suse.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1463196000-13900-1-git-send-email-asarai-l3A5Bk7waGM@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=znEGiDq68eKmEhQ/dkHwAPB+hMnq7WsS2qW6P8t29Yo=;
+        b=rbHnASE/UiDkj6miAyq3qYopIUAdWmlBOzBUR+WSmknY53Offundyy5VZVLXA5yblb
+         J1D0kmx6SPZFmW+CfB7Aa02BZv4QMZ33CXiqq5TNgswcOUK+LCaWSlfhNHpkWTBiNb6r
+         iTRmqp0YNr+e/y2a1NXGUwivAD52faEmVCLIs8rl1TZigHEvQ5GFR0je/7ShA1v64f4q
+         zGGlYZv7gEFhIPzT51276qIaeNBIoS3b6VmZdbo/K1RgKnClDbdYsiOqCRZMobQqrE18
+         f/A90BDV9AA58aDAiW8ik+UahYH80YrP4wVUZdNGNN+iCOMK/HsKyJx33nHp+g4+Plld
+         HKqg==
+Content-Disposition: inline
+In-Reply-To: <573F23D0.2030500-l3A5Bk7waGM@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
 
-> This is an updated (and rewritten) version of v3 of this patchset[1].
->
-> The main difference is that I changed how we the "allow management" is
-> implemented. Rather than just chmod-ing the cgroup directory (which
-> everyone agreed was quite an odd way of doing it),
-> unshare(CLONE_NEWCGROUP) will create a new subtree in every cgroup the
-> task is associated with. The task will then be migrated to those
-> subtrees (which form the root cset of the cgroup namespace). This change
-> will be transparent to namespaced processes, and they'll gain a new
-> ability (the ability to create cgroups).
->
-> The name of the cgroup is randomly generated to ensure we don't get
-> conflicts (but maybe this should be dealt with in a nicer way). In
-> addition, I've updated the cgroup.procs write permission checks to be
-> user namespace aware, but I also added an additional "permitted" case
-> (where all of the tasks are in the same cgroup namespace and %current
-> has CAP_SYS_ADMIN in all of the relevant user namespaces).
->
-> I'm not _completely_ convinced about the addition of that case, and
-> maybe we should drop it (but I might be biased since this all comes from
-> the requirements of rootless containers).
->
-> Also, I haven't added a way to disable the functionality on a per-cgroup
-> (or even global) basis. Maybe there should be a way to do that, but I'm
-> not sure how it should be done (a cgroup.ns_subtrees file that allows
-> administrators to change it on a per-cgroup basis, or just a sysctl?).
->
-> PTAL.
->
-> [1]: https://lkml.org/lkml/2016/5/2/280
->
-> Aleksa Sarai (2):
->    cgroup: make cgroup.procs permissions userns-aware
->    cgroup: implement subtree creation on copy_cgroup_ns()
->
->   kernel/cgroup.c | 149 +++++++++++++++++++++++++++++++++++++++++++++++---------
->   1 file changed, 126 insertions(+), 23 deletions(-)
->
+On Sat, May 21, 2016 at 12:48:48AM +1000, Aleksa Sarai wrote:
+> Are there any comments on this version of the patchset? I thought we had
+> reached an agreement that the underlying feature (allowing a process to
+> manage its own cgroups) was useful. Is there a better way of solving this
+> problem, that I don't know of?
 
-Are there any comments on this version of the patchset? I thought we had 
-reached an agreement that the underlying feature (allowing a process to 
-manage its own cgroups) was useful. Is there a better way of solving 
-this problem, that I don't know of?
+I still don't see why this is necessary.  Delegation is done through
+chmodding.  There's no reason to deviate for namespaces.
+
+Thanks.
 
 -- 
-Aleksa Sarai
-Software Engineer (Containers)
-SUSE Linux GmbH
-https://www.cyphar.com/
+tejun
