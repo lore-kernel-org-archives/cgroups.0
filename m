@@ -1,94 +1,65 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: move comments for get_mctgt_type to
- proper position
-Date: Thu, 19 May 2016 10:21:23 +0200
-Message-ID: <20160519082122.GG26110@dhcp22.suse.cz>
-References: <1463644638-7446-1-git-send-email-roy.qing.li@gmail.com>
+From: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH v4 0/2] cgroup: allow management of subtrees by new cgroup
+ namespaces
+Date: Sat, 21 May 2016 00:48:48 +1000
+Message-ID: <573F23D0.2030500@suse.de>
+References: <1463196000-13900-1-git-send-email-asarai@suse.de>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1463644638-7446-1-git-send-email-roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <1463196000-13900-1-git-send-email-asarai-l3A5Bk7waGM@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
 
-On Thu 19-05-16 15:57:18, roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
-> From: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> 
-> move the comments for get_mctgt_type before the get_mctgt_type function
+> This is an updated (and rewritten) version of v3 of this patchset[1].
+>
+> The main difference is that I changed how we the "allow management" is
+> implemented. Rather than just chmod-ing the cgroup directory (which
+> everyone agreed was quite an odd way of doing it),
+> unshare(CLONE_NEWCGROUP) will create a new subtree in every cgroup the
+> task is associated with. The task will then be migrated to those
+> subtrees (which form the root cset of the cgroup namespace). This change
+> will be transparent to namespaced processes, and they'll gain a new
+> ability (the ability to create cgroups).
+>
+> The name of the cgroup is randomly generated to ensure we don't get
+> conflicts (but maybe this should be dealt with in a nicer way). In
+> addition, I've updated the cgroup.procs write permission checks to be
+> user namespace aware, but I also added an additional "permitted" case
+> (where all of the tasks are in the same cgroup namespace and %current
+> has CAP_SYS_ADMIN in all of the relevant user namespaces).
+>
+> I'm not _completely_ convinced about the addition of that case, and
+> maybe we should drop it (but I might be biased since this all comes from
+> the requirements of rootless containers).
+>
+> Also, I haven't added a way to disable the functionality on a per-cgroup
+> (or even global) basis. Maybe there should be a way to do that, but I'm
+> not sure how it should be done (a cgroup.ns_subtrees file that allows
+> administrators to change it on a per-cgroup basis, or just a sysctl?).
+>
+> PTAL.
+>
+> [1]: https://lkml.org/lkml/2016/5/2/280
+>
+> Aleksa Sarai (2):
+>    cgroup: make cgroup.procs permissions userns-aware
+>    cgroup: implement subtree creation on copy_cgroup_ns()
+>
+>   kernel/cgroup.c | 149 +++++++++++++++++++++++++++++++++++++++++++++++---------
+>   1 file changed, 126 insertions(+), 23 deletions(-)
+>
 
-heh, it used to be much closer back then when introduced but we have
-grown quite some code since then...
-
-> Signed-off-by: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
-> ---
->  mm/memcontrol.c | 37 +++++++++++++++++++------------------
->  1 file changed, 19 insertions(+), 18 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index fe787f5..00981d2 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4290,24 +4290,6 @@ static int mem_cgroup_do_precharge(unsigned long count)
->  	return 0;
->  }
->  
-> -/**
-> - * get_mctgt_type - get target type of moving charge
-> - * @vma: the vma the pte to be checked belongs
-> - * @addr: the address corresponding to the pte to be checked
-> - * @ptent: the pte to be checked
-> - * @target: the pointer the target page or swap ent will be stored(can be NULL)
-> - *
-> - * Returns
-> - *   0(MC_TARGET_NONE): if the pte is not a target for move charge.
-> - *   1(MC_TARGET_PAGE): if the page corresponding to this pte is a target for
-> - *     move charge. if @target is not NULL, the page is stored in target->page
-> - *     with extra refcnt got(Callers should handle it).
-> - *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
-> - *     target for charge migration. if @target is not NULL, the entry is stored
-> - *     in target->ent.
-> - *
-> - * Called with pte lock held.
-> - */
->  union mc_target {
->  	struct page	*page;
->  	swp_entry_t	ent;
-> @@ -4496,6 +4478,25 @@ out:
->  	return ret;
->  }
->  
-> +/**
-> + * get_mctgt_type - get target type of moving charge
-> + * @vma: the vma the pte to be checked belongs
-> + * @addr: the address corresponding to the pte to be checked
-> + * @ptent: the pte to be checked
-> + * @target: the pointer the target page or swap ent will be stored(can be NULL)
-> + *
-> + * Returns
-> + *   0(MC_TARGET_NONE): if the pte is not a target for move charge.
-> + *   1(MC_TARGET_PAGE): if the page corresponding to this pte is a target for
-> + *     move charge. if @target is not NULL, the page is stored in target->page
-> + *     with extra refcnt got(Callers should handle it).
-> + *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
-> + *     target for charge migration. if @target is not NULL, the entry is stored
-> + *     in target->ent.
-> + *
-> + * Called with pte lock held.
-> + */
-> +
->  static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
->  		unsigned long addr, pte_t ptent, union mc_target *target)
->  {
-> -- 
-> 2.1.4
+Are there any comments on this version of the patchset? I thought we had 
+reached an agreement that the underlying feature (allowing a process to 
+manage its own cgroups) was useful. Is there a better way of solving 
+this problem, that I don't know of?
 
 -- 
-Michal Hocko
-SUSE Labs
+Aleksa Sarai
+Software Engineer (Containers)
+SUSE Linux GmbH
+https://www.cyphar.com/
