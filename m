@@ -1,102 +1,96 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH v4 0/2] cgroup: allow management of subtrees by new
- cgroup namespaces
-Date: Fri, 20 May 2016 13:28:46 -0400
-Message-ID: <1463765326.8091.42.camel@HansenPartnership.com>
+From: Aditya Kali <adityakali@google.com>
+Subject: Re: [PATCH v4 0/2] cgroup: allow management of subtrees by new cgroup namespaces
+Date: Fri, 20 May 2016 10:33:03 -0700
+Message-ID: <CAGr1F2H_hFbkAdLks29P+Gg9w6+vbQ-Tzk_OT3908hOX93bj0w@mail.gmail.com>
 References: <1463196000-13900-1-git-send-email-asarai@suse.de>
-	 <573F23D0.2030500@suse.de> <20160520152244.GB5632@htj.duckdns.org>
-	 <1463758258.8091.3.camel@HansenPartnership.com>
-	 <20160520160352.GC5632@htj.duckdns.org>
-	 <1463760550.8091.13.camel@HansenPartnership.com>
-	 <20160520161759.GD5632@htj.duckdns.org>
-	 <1463761509.8091.19.camel@HansenPartnership.com>
-	 <20160520165326.GE5632@htj.duckdns.org>
+ <573F23D0.2030500@suse.de> <20160520152244.GB5632@htj.duckdns.org>
+ <1463758258.8091.3.camel@HansenPartnership.com> <20160520160352.GC5632@htj.duckdns.org>
+ <1463760550.8091.13.camel@HansenPartnership.com> <20160520161759.GD5632@htj.duckdns.org>
+ <1463761509.8091.19.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-	s=20151216; t=1463765328;
-	bh=RiRO2KCcND1jl6AtQ0q7Ai2UQQjbazEbXJj63pM/ICg=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=lp5rRto1aV9kJDdlWOQSwmKLXZRDeHHvIfQ5UdnO8BV1ozvaU2EnRwXyPbhCyEDge
-	 fSkryZpjoT9QYPGopQ/Nmvb23P0IcxK4e8wVdSX0olMTlZkvGQZs90HGbzowY/sDi0
-	 xLxEmJyFpS98le97I7Jy1cTq2+q0xhQTlM4MV3xI=
-In-Reply-To: <20160520165326.GE5632-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=YKG8FKbD+jB7LEZBTb0OAeaGLQVC4zomYAvYLmbPDzk=;
+        b=LITnKan8MEMAz85JaCW4qo0/b8y1tXEvHdKQRhKospCag9t5mrTFy1vkchw5WmLB4i
+         j//cH9v0PT3Qgn+UF1+pnuGrjllZjXWlrfGpwKEXFlOC+ppPWAAyrLR1Ma2Nwvuu9qBA
+         qI4p9DlT1u2nkm65Ne9BsHUMs4GEQHnPoPjWnIeJDZBpWT5RKrBSi+kdR29s1iNb4LUG
+         tKUdzVZWdhpFCSE+EudFyKcmrMmRUsfgj2qhNf0waZrOwHt7PbIFtzVHs2L6xaluYIfX
+         ea1L/lgLAP0AZJQXsWBnLDx+veGhmJJ5E2/s7dfMFprnARmd0ZCK9uELYEAp7iVr34RE
+         4hNA==
+In-Reply-To: <1463761509.8091.19.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, Aleksa Sarai <asarai@suse.de>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Aleksa Sarai <cyphar@cyphar.com>, cgroups mailinglist <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dev@opencontainers.org
 
-On Fri, 2016-05-20 at 12:53 -0400, Tejun Heo wrote:
-> Hello,
-> 
-> On Fri, May 20, 2016 at 12:25:09PM -0400, James Bottomley wrote:
-> > OK, so is the only problem cleanup?  If so, what if I proposed that
-> > a
-> 
-> For generic cases, it's a much larger problem.  We'd have to change
-> delegation model completely so that delegations are allowed by
-> default, which btw can't be allowed on v1 hierarchies as some
-> controllers don't behave properly hierarchically in v1 and would 
-> allow unpriv users to escape the constraints of its ancestors.
+On Fri, May 20, 2016 at 9:25 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> On Fri, 2016-05-20 at 09:17 -0700, Tejun Heo wrote:
+> > Hello, James.
+> >
+> > On Fri, May 20, 2016 at 12:09:10PM -0400, James Bottomley wrote:
+> > > I think it's just different definitions.  If you take on our
+> > > definition of being able to set up a container without any admin
+> > > intervention, do you see our problem: we can't get the initial
+> > > delegation of the hierarchy.
+> >
+> > Yeah, I can see the difference but we can't solve that by special
+> > casing NS case.
+>
+> Great, we agree on the problem definition ... as I said, I'm not saying
+> this patch is the solution, but it gives us a starting point for
+> exploring whether there is a solution.
+>
+> >   This is stemming from the fact that an unpriv application can't
+> > create its sub-cgroups without explicit delegation from the root and
+> > that has always been an explicit design choice.
+> > It's tied to who's responsible for cleanup afterwards and what
+> > happens when the process gets migrated to a different cgroup.  The
+> > latter is an important issue on v1 hierarchies because migrating
+> > tasks sometimes is used as a way to control resource distribution.
+>
+> OK, so is the only problem cleanup?  If so, what if I proposed that a
+> cgroup directory could only be created by the owner of the userns
+> (which would be any old unprivileged user) iff they create a cgroup ns
+> and the cgroup ns would be responsible for removing it again, so the
+> cgroup subdirectory would be tied to the cgroup namespace as its holder
+> and we'd use release of the cgroup to remove all the directories?
+>
 
-Just so I'm clear: by delegation you mean create a subdirectory in the
-cgroup hierarchy with a non-root owner?  We may have a solution for the
-escape constraints problem: see below.
+cgroup namspace doesn't own the resources in the cgroupns-root, and so
+I am not sure how it will be able to do the cleanup either. I.e, even
+if all the processes in the cgroup ns die, it doesn't mean that the
+cgroupns-root they belonged to is available for cleanup. For this
+reason, one of the implicit design choice in cgroupns was that the
+cgroup-ns root should already exist and the target process should
+already be moved to it (presumably by some admin process) before
+creating the cgroupns.
 
-> > cgroup directory could only be created by the owner of the userns
-> > (which would be any old unprivileged user) iff they create a cgroup 
-> > ns and the cgroup ns would be responsible for removing it again, so
-> > the cgroup subdirectory would be tied to the cgroup namespace as 
-> > its holder and we'd use release of the cgroup to remove all the
-> > directories?
-> 
-> Unfortunately, cgroup hierarchy isn't designed to support this sort 
-> of automatic delegation.  Unpriv processes would be able to escape
-> constraints on v1 with some controllers and on v2 controllers have to
-> be explicitly enabled by root for delegated scope to have access to
-> them.
+Moreover, the subsystem controllers (cpu, memory, etc.) are oblivious
+to cgroup namespaces. So, for example, creating new cgroup namespace
+doesn't affect the reclaim behavior. But, allowing
+creation/modification of sub-cgroups affects it. So I think allowing
+any unprivileged process to do that cannot be considered safe for now.
+Explicit approval from some admin process will still be needed (which
+can be given by chmod/chown today).
 
-Not necessarily.  We also talked about pinning the cgroup tree so that
-once you enter the cgroup namespace, your current cgroup directory
-becomes your root, meaning you can't cd back into the ancestors and
-thus can't write their tasks file, meaning, I think, that it should be
-impossible to escape ancestor constraints.
 
->   We can try to isolate these delegated subtrees and make them
-> work transparently, which rgroup tried to do, but that collides
-> directly with the vfs conventions (rgroups don't show up in cgroup 
-> hierarchy at all so avoid this problem).
+>
+> James
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Well, let's see if we can solve it within the current framework first.
 
-> 
-> Why does an unpriv NS need to have cgroup delegated to it without
-> cooperation from cgroup manager?
+Thanks,
 
-There's actually many answers to this.  The one I'm insterested in is
-the ability for applications to make use of container features without
-having to ask permission from some orchestration engine.  The problem
-most people are looking at is how do I prevent the cgroup manager from
-running as root, because that's a security problem waiting to happen.
-
->   If for resource control, I'm pretty sure we don't want to allow 
-> that without explicit cooperation from the enclosing scope.
-
-The enclosing scope should be allowed to define the parameters (happens
-today with namespaces) but there shouldn't be an active "thing" which
-is the permission gateway.
-
->   Overall, it feels like this is trying to work around an issue which
-> should be solved from userland.
-
-So it's not impossible to have some setuid (or CAP_ scoped) universal
-binary do this.  We do this today for the user namespace range of uids
-problem.  However, it would have to be something that operated
-independently of the cgroup manager, since every container
-orchestration system wants to be their own cgroup manager, so there's
-no one true one.
-
-James
-
+-- 
+Aditya
