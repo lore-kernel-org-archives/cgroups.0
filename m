@@ -1,39 +1,44 @@
-From: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: fix the return in mem_cgroup_margin
-Date: Tue, 24 May 2016 11:07:16 +0800
-Message-ID: <CAJFZqHzwqjzRriawoP92_v2VYxamCiVg2QjGpP7mmL1A1f9Cnw@mail.gmail.com>
-References: <1463556255-31892-1-git-send-email-roy.qing.li@gmail.com>
-	<20160518073253.GC21654@dhcp22.suse.cz>
-	<CAJFZqHwFtZa-Ec_0bie6ORTrgoW1kqGsq49-=ojsT-uyNUBhwg@mail.gmail.com>
-	<20160523103758.GB7917@esperanza>
-	<20160523120620.GP2278@dhcp22.suse.cz>
-Mime-Version: 1.0
+From: roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH][V2] mm: memcontrol: fix the margin computation in mem_cgroup_margin
+Date: Tue, 24 May 2016 13:37:46 +0800
+Message-ID: <1464068266-27736-1-git-send-email-roy.qing.li@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc;
-        bh=W521ztuZtxlt/+F0a0xgcyT27wwOy2yJmSm95uqtRuE=;
-        b=R45Oovao4Pjyule5WraKSkbSqWH+jlnvrZXkDN8jLrhTKpJE6ZNkBlvtY0udqgO+jQ
-         t4aDSICgZ8/t+Smmg0HU59rLfpNtHKUf1n2+NfeHNQ2IxtAxlHy+30K2f2YSDxbADrv1
-         kJAjv90LaXD/ehq/65+6gWWnXvGoG47dUtliKLH7myGPzNLEtcpfcxOPsdpeGMCQwMz/
-         cVKLbCDEMhCiDikqhvtkKMCFPFeHhUzAgJB9Sam15jTQLl76GwK0ul4HYxZ0LFgUp3Gq
-         pYswno2KXMfWLRGeToLthdgzUQERFRT07NBtFYdKP1p2zboIAaXYMeP9XgJOWXJW0J75
-         T1HA==
-In-Reply-To: <20160523120620.GP2278-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org
 
-On Mon, May 23, 2016 at 8:06 PM, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Can we have updated patch with all this useful information in the
-> changelog, please?
+From: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+The margin may be set to the difference value between memory limit and
+memory count firstly. which maybe returned wrongly if memsw.count excess
+memsw.limit, because try_charge forces charging __GFP_NOFAIL allocations,
+which may result in memsw.limit excess. If we are below memory.limit
+and there's nothing to reclaim to reduce memsw.usage, might end up
+looping in try_charge forever.
 
-Ok, I will update this patch
+Signed-off-by: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+---
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
--Roy
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 00981d2..12aaadd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1090,6 +1090,8 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
+ 		limit = READ_ONCE(memcg->memsw.limit);
+ 		if (count <= limit)
+ 			margin = min(margin, limit - count);
++		else
++			margin = 0;
+ 	}
+ 
+ 	return margin;
+-- 
+2.1.4
