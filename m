@@ -1,85 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] cgroup: remove redundant cleanup in css_create
-Date: Thu, 26 May 2016 15:13:58 -0400
-Message-ID: <20160526191358.GB23194@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.7-fixes] cgroup: set css->id to -1 during init
+Date: Thu, 26 May 2016 15:42:13 -0400
+Message-ID: <20160526194213.GD23194@mtj.duckdns.org>
 References: <1463151560-5224-1-git-send-email-wwtao0320@163.com>
+ <20160526191358.GB23194@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=xqbwSFM5B8Q/iw0CvAeG+EJInkz+gJ5o6DbX047ayZk=;
-        b=fAqxO4W2mmWy7KxaEPhJNEGx9d7oHh3pTS+0YVzWPGcBnYom+fxmJ9YISCFIaump9p
-         gTJzsYYLlSQRKkS7u0vvekcyJnBeSaKGsYZRVK0txGJ1PiHMlEH1Ts1V/Fv/i3B2hKQy
-         KkBV//VJNhzMPUDqhgwLYTqKC8rF2/1BXGVHTUF0V4g6vjjjJQuFACeSeLljewUY7z1r
-         KqwkWMJw9MMgedjdXfjX5EZAYGvKsXDAjq48s15rPoUyrjvgAvsZyIyb7FaLfGjsODrl
-         Xa/jTeW/F9UkF1ZrRb0Q2T/ZsXyNy3Fm+XiUT2gMO+nCUtxa/QncTuxjfQNvaAHZsBiM
-         1Bag==
+        bh=dZJQ0hC6AIDXwyYlxVxRf9ZUk/oR3bOUOEozrOAuE04=;
+        b=G6P2LjcQ3Ho3RwK3Qrd4zo3ozFIvi/6rzfzwJ40N92QLNkKCCxi1sf7C4OCvrqzmYA
+         Ts+qMPR6K6yr31bxCYCFTnbRM9kB2H71tUwWEMxJsS5O5V5XaWdxexHqzfuDSA0agrsO
+         +OyYH6E6BpbDilGUZnLTe9cjp9zS782jyUAaiu5Hoi1gyj6OXFU4wmXPCGx3aHRpBCcA
+         pudBNMUgnXADr4owupi3tMbpPIVQHe/yxNuG8THRSIiBreKCq5zoiBKeTFCKilWNVY/z
+         Lc7OYqwUFkcUIiUAIzPe8HTB1Szm0MHnHcWAIyMy0addLGZtYGnBpg2la8kEsreFERjx
+         Lv1A==
 Content-Disposition: inline
-In-Reply-To: <1463151560-5224-1-git-send-email-wwtao0320@163.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160526191358.GB23194-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wenwei Tao <wwtao0320@163.com>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, ww.tao0320@gmail.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Wenwei Tao <wwtao0320-9Onoh4P/yGk@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hello,
 
-Nice catch.  I added more details to the changelog, tagged it for
--stable and applied it to cgroup/for-4.7-fixes.
+A follow-up patch.  Will queue in cgroup/for-4.7-fixes.
 
-Thanks!
-
+Thanks.
 ------ 8< ------
-From b00c52dae6d9ee8d0f2407118ef6544ae5524781 Mon Sep 17 00:00:00 2001
-From: Wenwei Tao <ww.tao0320@gmail.com>
-Date: Fri, 13 May 2016 22:59:20 +0800
+If percpu_ref initialization fails during css_create(), the free path
+can end up trying to free css->id of zero.  As ID 0 is unused, it
+doesn't cause a critical breakage but it does trigger a warning
+message.  Fix it by setting css->id to -1 from init_and_link_css().
 
-When create css failed, before call css_free_rcu_fn, we remove the css
-id and exit the percpu_ref, but we will do these again in
-css_free_work_fn, so they are redundant.  Especially the css id, that
-would cause problem if we remove it twice, since it may be assigned to
-another css after the first remove.
-
-tj: This was broken by two commits updating the free path without
-    synchronizing the creation failure path.  This can be easily
-    triggered by trying to create more than 64k memory cgroups.
-
-Signed-off-by: Wenwei Tao <ww.tao0320@gmail.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Vladimir Davydov <vdavydov@parallels.com>
-Fixes: 9a1049da9bd2 ("percpu-refcount: require percpu_ref to be exited explicitly")
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Wenwei Tao <ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Fixes: 01e586598b22 ("cgroup: release css->id after css_free")
-Cc: stable@vger.kernel.org # v3.17+
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v4.0+
 ---
- kernel/cgroup.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ kernel/cgroup.c |    1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 86cb5c6..789b84f 100644
+index 789b84f..688eb0c 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -5150,7 +5150,7 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
- 
- 	err = cgroup_idr_alloc(&ss->css_idr, NULL, 2, 0, GFP_KERNEL);
- 	if (err < 0)
--		goto err_free_percpu_ref;
-+		goto err_free_css;
- 	css->id = err;
- 
- 	/* @css is ready to be brought online now, make it visible */
-@@ -5174,9 +5174,6 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
- 
- err_list_del:
- 	list_del_rcu(&css->sibling);
--	cgroup_idr_remove(&ss->css_idr, css->id);
--err_free_percpu_ref:
--	percpu_ref_exit(&css->refcnt);
- err_free_css:
- 	call_rcu(&css->rcu_head, css_free_rcu_fn);
- 	return ERR_PTR(err);
--- 
-2.7.4
-
+@@ -5063,6 +5063,7 @@ static void init_and_link_css(struct cgroup_subsys_state *css,
+ 	memset(css, 0, sizeof(*css));
+ 	css->cgroup = cgrp;
+ 	css->ss = ss;
++	css->id = -1;
+ 	INIT_LIST_HEAD(&css->sibling);
+ 	INIT_LIST_HEAD(&css->children);
+ 	css->serial_nr = css_serial_nr_next++;
