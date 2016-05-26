@@ -1,68 +1,49 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH][V2] mm: memcontrol: fix the margin computation in
- mem_cgroup_margin
-Date: Wed, 25 May 2016 17:51:22 +0200
-Message-ID: <20160525155122.GK20132@dhcp22.suse.cz>
+From: Li RongQing <roy.qing.li@gmail.com>
+Subject: Re: [PATCH][V2] mm: memcontrol: fix the margin computation in mem_cgroup_margin
+Date: Thu, 26 May 2016 09:28:13 +0800
+Message-ID: <CAJFZqHwYC_BbTNG=5=LYxo+6q6HadEMDkVTcZS1eCqXoD=6HnA@mail.gmail.com>
 References: <1464068266-27736-1-git-send-email-roy.qing.li@gmail.com>
+	<20160525155122.GK20132@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1464068266-27736-1-git-send-email-roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc;
+        bh=o/Aj9cNHZwAH8yd4ua4WtSyz1V6ombgl6fYjXbzJvGc=;
+        b=BFFvPshydvPzbwVjeGoLGbpBTijwsCPOcetkojJK5laYr3oGjZY0vd1Ri8unBk4RY7
+         lOfp6Y3jaavzL/OycfhcfM5yfzdAx0Qc5f6Vj2w/qx6EMz4hvBhLbBTKs3VJfwgAsjtr
+         lublxVQGjBp5FPaRSKH5OppVjXuE4isQ3vTiYySskeSWSyf3ygTXHGC1EfEAmQGeqw8d
+         g7ZjLMIaPeBhIDtGLwLwTPPpMjHithBTbZOZ6Bi68BbQPdfLVrqG8H8lbFKdrE0zcCjN
+         UVUP87d9/rLUfbh5awAbNE2v+OS1Sg8b7c3IBCqiGR4bcUSR6Rz0DDYYowKja45IH7hi
+         78eQ==
+In-Reply-To: <20160525155122.GK20132@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov@virtuozzo.com>
 
-On Tue 24-05-16 13:37:46, roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
-> From: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> 
-> The margin may be set to the difference value between memory limit and
-> memory count firstly. which maybe returned wrongly if memsw.count excess
-> memsw.limit, because try_charge forces charging __GFP_NOFAIL allocations,
-> which may result in memsw.limit excess. If we are below memory.limit
-> and there's nothing to reclaim to reduce memsw.usage, might end up
-> looping in try_charge forever.
+On Wed, May 25, 2016 at 11:51 PM, Michal Hocko <mhocko@kernel.org> wrote:
+> This is quite hard for me to grasp. What would you say about the
+> following:
+> "
+> mem_cgroup_margin might return memory.limit - memory_count when
+> the memsw.limit is in excess. This
+> doesn't happen usually because we do not allow excess on hard limits and
+> memory.limit <= memsw.limit but __GFP_NOFAIL charges can force the charge
+> and cause the excess when no memory is really swapable (swap is full or
+> no anonymous memory is left).
 
-This is quite hard for me to grasp. What would you say about the
-following:
-"
-mem_cgroup_margin might return memory.limit - memory_count when
-the memsw.limit is in excess. This
-doesn't happen usually because we do not allow excess on hard limits and
-memory.limit <= memsw.limit but __GFP_NOFAIL charges can force the charge
-and cause the excess when no memory is really swapable (swap is full or
-no anonymous memory is left).
-"
 
-> 
-> Signed-off-by: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Acked-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Sorry for my poor English, thanks for your description, hope it can be
+into the log
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+-Roy
 
-> ---
->  mm/memcontrol.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 00981d2..12aaadd 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1090,6 +1090,8 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
->  		limit = READ_ONCE(memcg->memsw.limit);
->  		if (count <= limit)
->  			margin = min(margin, limit - count);
-> +		else
-> +			margin = 0;
->  	}
->  
->  	return margin;
-> -- 
-> 2.1.4
-
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
