@@ -1,78 +1,60 @@
 From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol.c: add memory allocation result check
-Date: Mon, 30 May 2016 13:22:18 +0200
-Message-ID: <20160530112218.GS22928@dhcp22.suse.cz>
-References: <1464597951-2976-1-git-send-email-wwtao0320@163.com>
- <20160530085311.GM22928@dhcp22.suse.cz>
- <CACygaLCupPNRMWUpRe3WSCHWtAFH3MYKzppbjaX3As6EKKnVQQ@mail.gmail.com>
+Subject: Re: [PATCH] memcg: add RCU locking around
+ css_for_each_descendant_pre() in memcg_offline_kmem()
+Date: Tue, 31 May 2016 11:33:51 +0200
+Message-ID: <20160531093351.GG26128@dhcp22.suse.cz>
+References: <20160526203018.GG23194@mtj.duckdns.org>
+ <20160526140202.077d611dbe0926ce290b4e53@linux-foundation.org>
+ <20160527153124.GT27686@dhcp22.suse.cz>
+ <20160527155140.GN23194@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CACygaLCupPNRMWUpRe3WSCHWtAFH3MYKzppbjaX3As6EKKnVQQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20160527155140.GN23194-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wenwei Tao <ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Wenwei Tao <wwtao0320-9Onoh4P/yGk@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon 30-05-16 17:28:40, Wenwei Tao wrote:
-> I think explicit BUG_ON may make the debug easier, since it can point
-> out the wrong line.
+Sorry for a late response.
 
-Does it? NULL ptr dereferencec 6 lines below sounds pretty close to me.
-I am not nacking this patch I just think it doesn't add much. If others
-think it will be useful I will not object.
-
-> 2016-05-30 16:53 GMT+08:00 Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
-> > On Mon 30-05-16 16:45:51, Wenwei Tao wrote:
-> >> From: Wenwei Tao <ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >>
-> >> The mem_cgroup_tree_per_node allocation might fail,
-> >> check that before continue the memcg init. Since it
-> >> is in the init phase, trigger the panic if that failure
-> >> happens.
-> >
-> > We would blow up in the very same function so what is the point of the
-> > explicit BUG_ON?
-> >
-> >> Signed-off-by: Wenwei Tao <ww.tao0320-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >> ---
-> >>  mm/memcontrol.c | 1 +
-> >>  1 file changed, 1 insertion(+)
-> >>
-> >> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> >> index 925b431..6385c62 100644
-> >> --- a/mm/memcontrol.c
-> >> +++ b/mm/memcontrol.c
-> >> @@ -5712,6 +5712,7 @@ static int __init mem_cgroup_init(void)
-> >>
-> >>               rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL,
-> >>                                   node_online(node) ? node : NUMA_NO_NODE);
-> >> +             BUG_ON(!rtpn);
-> >>
-> >>               for (zone = 0; zone < MAX_NR_ZONES; zone++) {
-> >>                       struct mem_cgroup_tree_per_zone *rtpz;
-> >> --
-> >> 1.8.3.1
-> >>
-> >>
-> >> --
-> >> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> >> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> >> see: http://www.linux-mm.org/ .
-> >> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
-> >
-> > --
-> > Michal Hocko
-> > SUSE Labs
+On Fri 27-05-16 11:51:40, Tejun Heo wrote:
+> On Fri, May 27, 2016 at 05:31:24PM +0200, Michal Hocko wrote:
+> > On Thu 26-05-16 14:02:02, Andrew Morton wrote:
+> > > On Thu, 26 May 2016 16:30:18 -0400 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > > 
+> > > > memcg_offline_kmem() may be called from memcg_free_kmem() after a css
+> > > > init failure.  memcg_free_kmem() is a ->css_free callback which is
+> > > > called without cgroup_mutex and memcg_offline_kmem() ends up using
+> > > > css_for_each_descendant_pre() without any locking.  Fix it by adding
+> > > > rcu read locking around it.
+> > > > 
+> > > >  mkdir: cannot create directory ___65530___: No space left on device
+> > > >  [  527.241361] ===============================
+> > > >  [  527.241845] [ INFO: suspicious RCU usage. ]
+> > > >  [  527.242367] 4.6.0-work+ #321 Not tainted
+> > > >  [  527.242730] -------------------------------
+> > > >  [  527.243220] kernel/cgroup.c:4008 cgroup_mutex or RCU read lock required!
+> > > 
+> > > cc:stable?
+> > 
+> > Also which kernel versions would be affected? I have tried to look and
+> > got lost in the indirection of the css_free path.
 > 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+> I think it's actually from 0b8f73e10428 ("mm: memcontrol: clean up
+> alloc, online, offline, free functions") which got merged during this
+> cycle, so no need for -stable.
 
+yes you are right! memcg_free_kmem didn't call memcg_offline_kmem before
+that commit. Thanks for the clarification.
+
+Anyway
+$ git describe --contains 0b8f73e10428
+v4.5-rc1~30^2~11
+
+So it would be stable # 4.5+
 -- 
 Michal Hocko
 SUSE Labs
