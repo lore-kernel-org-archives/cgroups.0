@@ -1,96 +1,95 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 0/2] cgroup: allow management of subtrees by new
- cgroup namespaces
-Date: Tue, 31 May 2016 14:18:04 -0400
-Message-ID: <20160531181804.GL29775@mtj.duckdns.org>
-References: <20160520152244.GB5632@htj.duckdns.org>
- <1463758258.8091.3.camel@HansenPartnership.com>
- <20160520160352.GC5632@htj.duckdns.org>
- <1463760550.8091.13.camel@HansenPartnership.com>
- <20160520161759.GD5632@htj.duckdns.org>
- <1463761509.8091.19.camel@HansenPartnership.com>
- <20160520165326.GE5632@htj.duckdns.org>
- <1463765326.8091.42.camel@HansenPartnership.com>
- <20160520174938.GF5632@htj.duckdns.org>
- <CAOviyag8PA2EqX_8tKq+KoOZ8m6osVyS49GzmuBzN5UDr6zVTA@mail.gmail.com>
+From: Parav Pandit <pandit.parav@gmail.com>
+Subject: Re: [PATCHv10 1/3] rdmacg: Added rdma cgroup controller
+Date: Fri, 3 Jun 2016 16:26:21 +0530
+Message-ID: <CAG53R5W3v4Jz+LFLFBfCV6kbX-Vy1xCTD1KLJPh3SGkaxitrdQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6EzhTbGpwMOMB64XVCjbyDcKtPLyHAXCE0IiRt3z2i0=;
-        b=i4MsER+61tc3UENSa15d1pCQ8Ykw3tGYl5BsLuckL69IW9RTGrg+5TW/ynMNAzCtDo
-         2y3IkSLLhNa6fpE3ar3LE71AtoDi5fsTnuziVbNfnuBjbvKEug2weWd4LwII/EPqC3cX
-         1Cuc/kYE1Qjp0LcOCJOko13Kn2fecPlAGC1QdAoJr7pvSfOilMOGRp/tM71/45HU6CLV
-         7Sy/vMjH7r3gIzPvadgW+AyvqLNtD2vvSv/ipdc/cqzDia5eb6aMCzldI+dmOEEEby6A
-         2FQgOJBXuO6lZYaJHjtlH2JPF6ra7yymZrO4XAVWw9dOYxxb8yRdFQdcdv8VvrE+8CB7
-         QZ5g==
-Content-Disposition: inline
-In-Reply-To: <CAOviyag8PA2EqX_8tKq+KoOZ8m6osVyS49GzmuBzN5UDr6zVTA@mail.gmail.com>
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=/2obJtbDc5ntoYklDHOVz8UrMUMYabwxXEUZ6IRcdN8=;
+        b=pDggxJ3/Pc+wRbqHI7qxZoV7wyoSx6ltkaoJ69dtpxpubVaMix2JDwGYdrTzvxEzqn
+         l44A3s/+Ud+8Ju+tJ4xfAb9W9MvPKTbYmPBvMSqshmlpdqm4J/gUgfQL3guwOzO+LXhL
+         QfGxjCRKj6hcvIZq35b0KiPHKdXXFCWmaz1rxROblJESYhJYKYoA1r2jy+H9+s/bFfZw
+         XmWIMCFVCxN/soJJwWtAUFtYnVtFcF083+wYJ8LHiNA9ARzmkdCIb4cRrDzObd63LS/l
+         I7iLVGkfBM3gcAlNYOTRzQ0v4GvjnxkvXZ1MKK9lB43N9UPdmbOmWqeM1OSeqcmBoq4A
+         j19w==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar@cyphar.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Aleksa Sarai <asarai@suse.de>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, dev <dev@opencontainers.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-Hello, Aleksa.
+Hi Christoph,
 
-On Sat, May 28, 2016 at 03:12:16PM +1000, Aleksa Sarai wrote:
-> I see two options here, which would allow us to have subtree
-> delegation without losing hierarchical structure:
-> 
-> 1. Don't enable subtree delegation on v1 hierarchies. This would be
-> the simplest solution, and would cut out most people from using this
-> feature today -- but it would mean less work around trying to figure
-> out which hierarchies are safe to delegate (we make it explicit that
-> when you enable a cgroup on v2 that it must be safe to delegate by an
-> unprivileged user). We also get the benefit of having the more strict
-> cgroup.procs write rules.
-> 2. Don't do subtree delegation on hierarchies that aren't
-> hierarchical. This would have to be done in collaboration with the
-> controllers (since cgroup core doesn't know which is hierarchical),
-> and would allow all users of cgroups today to get subtree delegation.
+Reopening thread for discussion so that I can proceed to generate next patch.
 
-Regardless of the above two, the proposed solution is too hacky and
-doesn't fit with the overall design.  At the moment, I'm not sure the
-problem is worth solving.
+Recap:
+rdma cgroup controller in the patch defines the framework so that RDMA
+subsystem can define the resources.
+This is similar to at least two functionality provided by core kernel.
 
-> >> > Why does an unpriv NS need to have cgroup delegated to it without
-> >> > cooperation from cgroup manager?
-> >>
-> >> There's actually many answers to this.  The one I'm insterested in is
-> >> the ability for applications to make use of container features without
-> >> having to ask permission from some orchestration engine.  The problem
-> >
-> > What's "container features"?  Do you mean resource control by that?
-> 
-> Yes. Also the device cgroup. And ignoring the container usecase, it
-> would be useful to regular programs if they could use cgroup resource
-> accounting as part of their regular operation. Regular processes can
-> use rlimits -- why can't they use cgroups without needing cooperation
-> from an admin process (which makes for security and administration
-> issues).
+(a) Block elevator defining framework and provides way to loadable
+kernel modules to define actual IO scheduler (out of the 3 or 4) that
+can be plugged-in since last many years.
+(b) VFS core defining framework for external loadable modules to load
+file system.
 
-The current VFS based interface simply isn't conducive to such usage.
-e.g. What if someone else relocates the process while it was trying to
-access its interface files?  What if the permission or ownership
-changes beneath the process.
+None of these core kernel functionality actually filter based on enum
+or names - which IO scheduler(s), file system(s) are
+allowed/disallowed.
+rdma cgroup controller and rdma subsystem follows similar design approach.
 
-> If I understand correctly, the security issues James is referring to
-> is that the cgroup manager could have a bug in it (and because the
-> cgroup interface is the filesystem, it would probably be some kind of
-> write-to-any-path bug). This is an intrinsic part of the model of "you
-> need to have cooperation with an admin process in order to use
-> resource limiting for your own processes".
+Therefore can I go ahead with current approach?
 
-Sure, that's the inherent characteristic of the interface that cgroup
-ended up with.  I'm not a big fan of it either but 1. it still is a
-workable model 2. adding mismatching hacks on top is highly likely to
-lead to interface disaster in the long term.
+Tejun also mentioned that he likes to see rdma resources to be defined
+by rdma cgroup rather than rdma subsystem in below thread primarily to
+reduce the complexity.
+https://lkml.org/lkml/2016/4/4/507
 
-Thanks.
+However submitted patch is fairly small for defining resource in rdma
+subsystem (instead of kernel).
+This also allows to provide fixes and features done in rdma subsystem
+in field at much faster pace and avoids complexity around back-porting
+on various OS and their kernel flavors.
+Please let me know your views.
 
--- 
-tejun
+Regards,
+Parav Pandit
+
+
+
+On Tue, Apr 19, 2016 at 2:26 PM, Parav Pandit <pandit.parav@gmail.com> wrote:
+> Hi Christoph,
+>
+> I was on travel. Sorry for the late inline response and question.
+>
+> Parav
+>
+>
+>
+> On Tue, Apr 5, 2016 at 10:57 PM, Christoph Hellwig <hch@infradead.org> wrote:
+>> On Tue, Apr 05, 2016 at 05:55:26AM -0700, Parav Pandit wrote:
+>>> Just because we add one more rdma resource, we need to ask someone to
+>>> upgrade kernel?
+>>
+>> Yes.  Just like when you need any other core kernel resource.
+>
+> By architecture Linux kernel allows
+> (a) plugin of any new block level IO scheduler as kernel module.
+> This is much more fundamental resource or functionality than rdma resource.
+> (b) plugin of any new file system as kernel module.
+>
+> Changing both in field and out of box can do be more harmful than
+> defining new rdma resource.
+>
+> RDMA Resource definition by IB core module is very similar to above
+> two functionality, where elevator and VFS provides basic support
+> framework and so rdma cgroup controller here.
+>
+> So can you please help me understand - which resource did you compare
+> against in your above comment for "core kernel resource"?
+> I compared it with similar functionality, flexibility given by (a)
+> block IO Scheduler and (b) VFS subsystem to implement them as kernel
+> module.
