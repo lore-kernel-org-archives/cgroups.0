@@ -1,67 +1,91 @@
-From: Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>
+From: Daniel Bristot de Oliveira <daolivei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] cgroup: disable irqs while holding css_set_lock
-Date: Tue, 7 Jun 2016 11:14:02 +0100
-Message-ID: <20160607101402.GP9340@e106622-lin>
+Date: Tue, 7 Jun 2016 09:39:13 -0300
+Message-ID: <bda9f957-6f4b-5b95-f752-1c6a9a26aa79@redhat.com>
 References: <aa70cd2645974808785960bfb0ddfebdec6e3095.1465243518.git.bristot@redhat.com>
+ <20160607101402.GP9340@e106622-lin>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <aa70cd2645974808785960bfb0ddfebdec6e3095.1465243518.git.bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20160607101402.GP9340@e106622-lin>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Luis Claudio R. Goncalves" <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+Ciao Juri,
 
-On 06/06/16 19:24, Daniel Bristot de Oliveira wrote:
-> While testing the deadline scheduler + cgroup setup I hit this
-> warning.
-> 
-> [  132.612935] ------------[ cut here ]------------
-> [  132.612951] WARNING: CPU: 5 PID: 0 at kernel/softirq.c:150 __local_bh_enable_ip+0x6b/0x80
-> [  132.612952] Modules linked in: (a ton of modules...)
-> [  132.612981] CPU: 5 PID: 0 Comm: swapper/5 Not tainted 4.7.0-rc2 #2
-> [  132.612981] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.8.2-20150714_191134- 04/01/2014
-> [  132.612982]  0000000000000086 45c8bb5effdd088b ffff88013fd43da0 ffffffff813d229e
-> [  132.612984]  0000000000000000 0000000000000000 ffff88013fd43de0 ffffffff810a652b
-> [  132.612985]  00000096811387b5 0000000000000200 ffff8800bab29d80 ffff880034c54c00
-> [  132.612986] Call Trace:
-> [  132.612987]  <IRQ>  [<ffffffff813d229e>] dump_stack+0x63/0x85
-> [  132.612994]  [<ffffffff810a652b>] __warn+0xcb/0xf0
-> [  132.612997]  [<ffffffff810e76a0>] ? push_dl_task.part.32+0x170/0x170
-> [  132.612999]  [<ffffffff810a665d>] warn_slowpath_null+0x1d/0x20
-> [  132.613000]  [<ffffffff810aba5b>] __local_bh_enable_ip+0x6b/0x80
-> [  132.613008]  [<ffffffff817d6c8a>] _raw_write_unlock_bh+0x1a/0x20
-> [  132.613010]  [<ffffffff817d6c9e>] _raw_spin_unlock_bh+0xe/0x10
-> [  132.613015]  [<ffffffff811388ac>] put_css_set+0x5c/0x60
-> [  132.613016]  [<ffffffff8113dc7f>] cgroup_free+0x7f/0xa0
-> [  132.613017]  [<ffffffff810a3912>] __put_task_struct+0x42/0x140
-> [  132.613018]  [<ffffffff810e776a>] dl_task_timer+0xca/0x250
-> [  132.613027]  [<ffffffff810e76a0>] ? push_dl_task.part.32+0x170/0x170
-> [  132.613030]  [<ffffffff8111371e>] __hrtimer_run_queues+0xee/0x270
-> [  132.613031]  [<ffffffff81113ec8>] hrtimer_interrupt+0xa8/0x190
-> [  132.613034]  [<ffffffff81051a58>] local_apic_timer_interrupt+0x38/0x60
-> [  132.613035]  [<ffffffff817d9b0d>] smp_apic_timer_interrupt+0x3d/0x50
-> [  132.613037]  [<ffffffff817d7c5c>] apic_timer_interrupt+0x8c/0xa0
-> [  132.613038]  <EOI>  [<ffffffff81063466>] ? native_safe_halt+0x6/0x10
-> [  132.613043]  [<ffffffff81037a4e>] default_idle+0x1e/0xd0
-> [  132.613044]  [<ffffffff810381cf>] arch_cpu_idle+0xf/0x20
-> [  132.613046]  [<ffffffff810e8fda>] default_idle_call+0x2a/0x40
-> [  132.613047]  [<ffffffff810e92d7>] cpu_startup_entry+0x2e7/0x340
-> [  132.613048]  [<ffffffff81050235>] start_secondary+0x155/0x190
-> [  132.613049] ---[ end trace f91934d162ce9977 ]---
-> 
-> The warn is the spin_(lock|unlock)_bh(&css_set_lock) in the interrupt
-> context. Converting the spin_lock_bh to spin_lock_irqsave to avoid this
-> problem - and other problems of sharing a spinlock with an interrupt.
-> 
+On 06/07/2016 07:14 AM, Juri Lelli wrote:
+> Interesting. And your test is using cpuset controller to partion
+> DEADLINE tasks and then modify groups concurrently?
 
-Interesting. And your test is using cpuset controller to partion
-DEADLINE tasks and then modify groups concurrently?
+Yes. I was studying the partitioning/admission control of the
+deadline scheduler, to document it.
 
-Best,
+I was using the minimal task from sched deadline's documentation
+as the load (the ./m in the bellow script). 
 
-- Juri
+Here is the script I was using in the test:
+-----------%<------------------------------------------------------------
+#!/bin/sh
+
+# I am running on a 8 cpus box, you need to adjust the
+# cpu mask to match to your cpu topology.
+
+cd /sys/fs/cgroup/cpuset
+
+# global settings
+# echo 1 > cpuset.cpu_exclusive
+echo 0 > cpuset.sched_load_balance
+
+# a cpuset to run ordinary load:
+
+if [ ! -d ordinary ]; then
+	mkdir ordinary
+	echo 0-3 > ordinary/cpuset.cpus
+	echo 0 > ordinary/cpuset.mems
+	echo 0 > ordinary/cpuset.cpu_exclusive
+	# the load balance can be enabled on this cpuset.
+	echo 1 > ordinary/cpuset.sched_load_balance
+fi
+
+# move all threads to ordinary cpuset 
+ps -eL -o lwp | while read tid; do
+	echo $tid >> ordinary/tasks 2> /dev/null || echo "thread $tid is pinned or died"
+done
+
+echo $$ > ordinary/tasks
+cat /proc/self/cpuset
+~/m &
+
+# a single cpu cpuset (partitioned)
+if [ ! -d partitioned ]; then
+	mkdir partitioned
+	echo 4 > partitioned/cpuset.cpus
+	echo 0 > partitioned/cpuset.mems
+	echo 0 > partitioned/cpuset.cpu_exclusive
+fi
+
+echo $$ > partitioned/tasks
+cat /proc/self/cpuset
+~/m &
+
+# a set of cpus (clustered)
+if [ ! -d clustered ]; then
+	mkdir clustered
+	echo 5-7 > clustered/cpuset.cpus
+	echo 0 > clustered/cpuset.mems
+	echo 0 > clustered/cpuset.cpu_exclusive
+	# the load balance can be enabled on this cpuset.
+	echo 1 > clustered/cpuset.sched_load_balance
+fi
+
+echo $$ > clustered/tasks
+cat /proc/self/cpuset
+~/m
+----------->%------------------------------------------------------------
+
+The problem rarely reproduces.
+
+-- Daniel
