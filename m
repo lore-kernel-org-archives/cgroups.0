@@ -1,23 +1,64 @@
-From: Daniel Bristot de Oliveira <daolivei@redhat.com>
-Subject: Re: [PATCH v2] cgroup: disable irqs while holding css_set_lock
-Date: Tue, 7 Jun 2016 17:05:05 -0300
-Message-ID: <6f15f27f-3757-5413-4292-1386e95bc278@redhat.com>
-References: <1465325475-30593-1-git-send-email-bristot@redhat.com>
- <20160607193008.GA31708@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160607193008.GA31708@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH] mm: memcontrol: fix documentation for compound parameter
+Date: Wed,  8 Jun 2016 14:43:36 +0800
+Message-ID: <1465368216-9393-1-git-send-email-roy.qing.li@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Rik van Riel <riel@redhat.com>, "Luis Claudio R. Goncalves" <lgoncalv@redhat.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Juri Lelli <juri.lelli@arm.com>, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org
 
-On 06/07/2016 04:30 PM, Tejun Heo wrote:
-> Is this something in mainline?  This forces all task free path to be
-> irq-safe, which *could* be fine but it's weird to make cgroup free
-> path irq-safe for something which isn't in mainline.
+From: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-you mean, mainline linux kernel? if so, yes it is. I was running the
-v4.7-rc2 from Linus, as is.... no external patches applied.
+commit f627c2f53786 ("memcg: adjust to support new THP refcounting")
+adds a compound parameter for several functions, and change one as
+compound for mem_cgroup_move_account but it does not change the
+comments.
+
+Signed-off-by: Li RongQing <roy.qing.li-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ mm/memcontrol.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index bc79b38..4d9a215 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4387,7 +4387,7 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
+ /**
+  * mem_cgroup_move_account - move account of the page
+  * @page: the page
+- * @nr_pages: number of regular pages (>1 for huge pages)
++ * @compound: charge the page as compound or small page
+  * @from: mem_cgroup which the page is moved from.
+  * @to:	mem_cgroup which the page is moved to. @from != @to.
+  *
+@@ -5249,6 +5249,7 @@ bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg)
+  * @mm: mm context of the victim
+  * @gfp_mask: reclaim mode
+  * @memcgp: charged memcg return
++ * @compound: charge the page as compound or small page
+  *
+  * Try to charge @page to the memcg that @mm belongs to, reclaiming
+  * pages according to @gfp_mask if necessary.
+@@ -5311,6 +5312,7 @@ out:
+  * @page: page to charge
+  * @memcg: memcg to charge the page to
+  * @lrucare: page might be on LRU already
++ * @compound: charge the page as compound or small page
+  *
+  * Finalize a charge transaction started by mem_cgroup_try_charge(),
+  * after page->mapping has been set up.  This must happen atomically
+@@ -5362,6 +5364,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+  * mem_cgroup_cancel_charge - cancel a page charge
+  * @page: page to charge
+  * @memcg: memcg to charge the page to
++ * @compound: charge the page as compound or small page
+  *
+  * Cancel a charge transaction started by mem_cgroup_try_charge().
+  */
+-- 
+2.1.4
