@@ -1,72 +1,96 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 02/18] cgroup_pids: track maximum pids
-Date: Mon, 13 Jun 2016 18:09:25 -0400
-Message-ID: <20160613220925.GI31708@htj.duckdns.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 03/18] memcontrol: present maximum used memory also for
+ cgroup-v2
+Date: Tue, 14 Jun 2016 09:01:31 +0200
+Message-ID: <20160614070130.GB5681@dhcp22.suse.cz>
 References: <1465847065-3577-1-git-send-email-toiwoton@gmail.com>
- <1465847065-3577-3-git-send-email-toiwoton@gmail.com>
- <20160613211227.GG31708@htj.duckdns.org>
- <17cb1a37-47b1-dbd4-6835-efad3cf6c12f@gmail.com>
- <20160613213354.GH31708@htj.duckdns.org>
- <15ef1041-35b6-cb31-ff98-8b0be7780bc3@gmail.com>
+ <1465847065-3577-4-git-send-email-toiwoton@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=r8F7ZuhGYmnp/OE7LooknIX72zXnQPFkv4ZGMwUhrNA=;
-        b=WC0y8UbLg1iEulcpOS0Mpe/iOoAvqahScZzLa3X3W+KF6CDtqRo+xwAYBOgTiNCZM1
-         K5s6gtJh2bEdf3B2hGVVV+FsMF67BMdyH9hVenc42W9AEwoLIKJtOyARR9JEmL6Jw1l0
-         Vd/NPur6iACmdxClMJZHXDFSvkZolIj8NPrd+j4ZmRW5jqKGjt933sgG+/4Pb5gtbOL+
-         fokBeE/R/RLa+TUzsZPIw1RFmBtHGsiC4FbbQ2tm+eUnPpedIOB86v/pFROxQlEZZSt2
-         N7i04bsIYNy+4fL4BLzgGhb5rFHy/v1ACM26EIHOZoz3QS10PFsBWEBDq2ZX9WubvyBZ
-         Jelg==
 Content-Disposition: inline
-In-Reply-To: <15ef1041-35b6-cb31-ff98-8b0be7780bc3-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <1465847065-3577-4-git-send-email-toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Mon, Jun 13, 2016 at 09:59:32PM +0000, Topi Miettinen wrote:
-> On 06/13/16 21:33, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Mon, Jun 13, 2016 at 09:29:32PM +0000, Topi Miettinen wrote:
-> >> I used fork callback as I don't want to lower the watermark in all cases
-> >> where the charge can be lowered, so I'd update the watermark only when
-> >> the fork really happens.
-> > 
-> > I don't think that would make a noticeable difference.  That's where
-> > we decide whether to grant fork or not after all and thus where the
-> > actual usage is.
-> > 
+On Mon 13-06-16 22:44:10, Topi Miettinen wrote:
+> Present maximum used memory in cgroup memory.current_max.
+
+It would be really much more preferable to present the usecase in the
+patch description. It is true that this information is presented in the
+v1 API but the current policy is to export new knobs only when there is
+a reasonable usecase for it.
+
+> Signed-off-by: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> ---
+>  include/linux/page_counter.h |  7 ++++++-
+>  mm/memcontrol.c              | 13 +++++++++++++
+>  2 files changed, 19 insertions(+), 1 deletion(-)
 > 
-> You mean, increment count on cgroup_can_fork()? But what if the fork()
-> fails after that (signal_pending case)?
-
-That number isn't gonna deviate by any significant amount and the
-counter is to estimate what the limit should be set to to begin with.
-It's logical to collect how close the usage got to can_attach failure
-due to limit breach.
-
-> >> Is there a better way to compare and set? I don't think atomic_cmpxchg()
-> >> does what's needed,
-> > 
-> > cmpxchg loop should do what's necessary although I'm not sure how much
-> > being strictly correct matters here.
-> 
-> These are not used for any decisions taken by kernel, but by the user. I
-> have to say I don't know where's the line between strict correctness and
-> less strict.
-
-Provided that cmpxchg is done only when the counter needs to be
-actually updated, it's not gonna be noticeably expensive.  Might as
-well make it correct.
-
-Thanks.
+> diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
+> index 7e62920..be4de17 100644
+> --- a/include/linux/page_counter.h
+> +++ b/include/linux/page_counter.h
+> @@ -9,9 +9,9 @@ struct page_counter {
+>  	atomic_long_t count;
+>  	unsigned long limit;
+>  	struct page_counter *parent;
+> +	unsigned long watermark;
+>  
+>  	/* legacy */
+> -	unsigned long watermark;
+>  	unsigned long failcnt;
+>  };
+>  
+> @@ -34,6 +34,11 @@ static inline unsigned long page_counter_read(struct page_counter *counter)
+>  	return atomic_long_read(&counter->count);
+>  }
+>  
+> +static inline unsigned long page_counter_read_watermark(struct page_counter *counter)
+> +{
+> +	return counter->watermark;
+> +}
+> +
+>  void page_counter_cancel(struct page_counter *counter, unsigned long nr_pages);
+>  void page_counter_charge(struct page_counter *counter, unsigned long nr_pages);
+>  bool page_counter_try_charge(struct page_counter *counter,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 75e7440..5513771 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4966,6 +4966,14 @@ static u64 memory_current_read(struct cgroup_subsys_state *css,
+>  	return (u64)page_counter_read(&memcg->memory) * PAGE_SIZE;
+>  }
+>  
+> +static u64 memory_current_max_read(struct cgroup_subsys_state *css,
+> +				   struct cftype *cft)
+> +{
+> +	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> +
+> +	return (u64)page_counter_read_watermark(&memcg->memory) * PAGE_SIZE;
+> +}
+> +
+>  static int memory_low_show(struct seq_file *m, void *v)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+> @@ -5179,6 +5187,11 @@ static struct cftype memory_files[] = {
+>  		.read_u64 = memory_current_read,
+>  	},
+>  	{
+> +		.name = "current_max",
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +		.read_u64 = memory_current_max_read,
+> +	},
+> +	{
+>  		.name = "low",
+>  		.flags = CFTYPE_NOT_ON_ROOT,
+>  		.seq_show = memory_low_show,
+> -- 
+> 2.8.1
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
