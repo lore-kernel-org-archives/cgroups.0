@@ -1,104 +1,30 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol: fix cgroup creation failure after many
- small jobs
-Date: Thu, 16 Jun 2016 16:06:17 -0400
-Message-ID: <20160616200617.GD3262@mtj.duckdns.org>
-References: <20160616034244.14839-1-hannes@cmpxchg.org>
+From: Daniel Bristot de Oliveira <daolivei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup: disable irqs while holding css_set_lock
+Date: Thu, 16 Jun 2016 18:48:56 -0300
+Message-ID: <38469b61-7cc5-5fec-4de3-0e9a616dfe95@redhat.com>
+References: <1465325475-30593-1-git-send-email-bristot@redhat.com>
+ <20160607193008.GA31708@htj.duckdns.org>
+ <6f15f27f-3757-5413-4292-1386e95bc278@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=H1sfn0WpaHQfnqkAECgbSyTPdSfWH9b96/BKfQdfkk0=;
-        b=TL95e/ma5I+8xzq1k4NtR2vQFvl3SbEIWGTWanPXVSxbwA5mLcV9+XNChlHxkeNFUR
-         5odYQ8zxh6FAc1u/74oXnrUvtBu66iu1tQs64JE5aptvKhk5igbn1zpP4VSO+3RzHUB8
-         LCZ7e/92lMhWhdM+BKU+j5ltLK6U51wBTYRURpPfaKvdNJWLqNto5kRwLoknyeqnbRp+
-         zqnVFs60U1iV8oG9S1BxoeoTPATodqZhdMMXbvqFru52ezDACrMGwBe72T3SFcBXQjYh
-         D4giE6bJX2+FUep5Lue4nF5oartI7W6SFIjCl9ysbDf2nYgCGdp/LPAOAj7b65UVjuug
-         NPCQ==
-Content-Disposition: inline
-In-Reply-To: <20160616034244.14839-1-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <6f15f27f-3757-5413-4292-1386e95bc278-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Michal Hocko <mhocko@suse.cz>, Li Zefan <lizefan@huawei.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Daniel Bristot de Oliveira <daolivei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Luis Claudio R. Goncalves" <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On 06/07/2016 05:05 PM, Daniel Bristot de Oliveira wrote:
+> On 06/07/2016 04:30 PM, Tejun Heo wrote:
+>> Is this something in mainline?  This forces all task free path to be
+>> irq-safe, which *could* be fine but it's weird to make cgroup free
+>> path irq-safe for something which isn't in mainline.
+> 
+> you mean, mainline linux kernel? if so, yes it is. I was running the
+> v4.7-rc2 from Linus, as is.... no external patches applied.
+> 
 
-Looks generally good to me.  Some comments below.
+is there any other question/objection about this patch?
 
-On Wed, Jun 15, 2016 at 11:42:44PM -0400, Johannes Weiner wrote:
-> @@ -6205,6 +6205,24 @@ struct cgroup *cgroup_get_from_path(const char *path)
->  }
->  EXPORT_SYMBOL_GPL(cgroup_get_from_path);
->  
-> +/**
-> + * css_id_free - relinquish an existing CSS's ID
-> + * @css: the CSS
-> + *
-> + * This releases the @css's ID and allows it to be recycled while the
-> + * CSS continues to exist. This is useful for controllers with state
-> + * that extends past a cgroup's lifetime but doesn't need precious ID
-> + * address space.
-> + *
-> + * This invalidates @css->id, and css_from_id() might return NULL or a
-> + * new css if the ID has been recycled in the meantime.
-> + */
-> +void css_id_free(struct cgroup_subsys_state *css)
-> +{
-> +	cgroup_idr_remove(&css->ss->css_idr, css->id);
-> +	css->id = 0;
-> +}
-
-I don't quite get why we're trying to free css->id earlier when memcg
-is gonna be using its private id anyway.  From cgroup core side, the
-id space isn't restricted.
-
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 75e74408cc8f..1d8a6dffdc25 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-...
-> +static void mem_cgroup_id_put(struct mem_cgroup *memcg)
-> +{
-> +	if (atomic_dec_and_test(&memcg->id.ref)) {
-> +		idr_remove(&mem_cgroup_idr, memcg->id.id);
-
-Maybe this should do "memcg->id.id = 0"?
-
-> +		css_id_free(&memcg->css);
-> +		css_put(&memcg->css);
-> +	}
-> +}
-> +
-> +/**
-> + * mem_cgroup_from_id - look up a memcg from a memcg id
-> + * @id: the memcg id to look up
-> + *
-> + * Caller must hold rcu_read_lock().
-> + */
-> +struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
-> +{
-> +	WARN_ON_ONCE(!rcu_read_lock_held());
-> +	return id > 0 ? idr_find(&mem_cgroup_idr, id) : NULL;
-> +}
-
-css_from_id() has it too but I don't think id > 0 test is necessary.
-We prolly should take it out of css_from_id() too.
-
-It might be useful to add comment explaining why memcg needs private
-ids.
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- Daniel
