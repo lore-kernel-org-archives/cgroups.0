@@ -1,67 +1,104 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 03/18] memcontrol: present maximum used memory also for
- cgroup-v2
-Date: Thu, 16 Jun 2016 12:27:50 +0200
-Message-ID: <20160616102750.GG6836@dhcp22.suse.cz>
-References: <1465847065-3577-1-git-send-email-toiwoton@gmail.com>
- <1465847065-3577-4-git-send-email-toiwoton@gmail.com>
- <20160614070130.GB5681@dhcp22.suse.cz>
- <b9d04ccd-28d2-993a-2a40-bbed7b6289d4@gmail.com>
- <20160614160410.GB14279@cmpxchg.org>
- <db6a51eb-d1f7-691b-11a6-ef0b7c1c9462@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] mm: memcontrol: fix cgroup creation failure after many
+ small jobs
+Date: Thu, 16 Jun 2016 16:06:17 -0400
+Message-ID: <20160616200617.GD3262@mtj.duckdns.org>
+References: <20160616034244.14839-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=H1sfn0WpaHQfnqkAECgbSyTPdSfWH9b96/BKfQdfkk0=;
+        b=TL95e/ma5I+8xzq1k4NtR2vQFvl3SbEIWGTWanPXVSxbwA5mLcV9+XNChlHxkeNFUR
+         5odYQ8zxh6FAc1u/74oXnrUvtBu66iu1tQs64JE5aptvKhk5igbn1zpP4VSO+3RzHUB8
+         LCZ7e/92lMhWhdM+BKU+j5ltLK6U51wBTYRURpPfaKvdNJWLqNto5kRwLoknyeqnbRp+
+         zqnVFs60U1iV8oG9S1BxoeoTPATodqZhdMMXbvqFru52ezDACrMGwBe72T3SFcBXQjYh
+         D4giE6bJX2+FUep5Lue4nF5oartI7W6SFIjCl9ysbDf2nYgCGdp/LPAOAj7b65UVjuug
+         NPCQ==
 Content-Disposition: inline
-In-Reply-To: <db6a51eb-d1f7-691b-11a6-ef0b7c1c9462-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20160616034244.14839-1-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Michal Hocko <mhocko@suse.cz>, Li Zefan <lizefan@huawei.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue 14-06-16 17:15:06, Topi Miettinen wrote:
-> On 06/14/16 16:04, Johannes Weiner wrote:
-[...]
-> > I didn't catch the coverletter, though. It makes sense to CC
-> > recipients of any of those patches on the full series, including the
-> > cover, since even though we are specialized in certain areas of the
-> > code, many of us are interested in the whole picture of addressing a
-> > problem, and not just the few bits in our area without more context.
-> > 
-> 
-> Thank you for this nice explanation. I suppose "git send-email
-> --cc-cmd=scripts/get_maintainer.pl" doesn't do this.
+Hello,
 
-No it doesn't. What I do for this kind of series is the following. Put
-an explicit CC (acked, reviews etc...) to each patch. git format-patch
-$RANGE and then
-$ git send-email --cc-cmd=./cc-cmd-only-cover.sh $DEFAULT_TO_CC --compose *.patch
+Looks generally good to me.  Some comments below.
 
-$ cat cc-cmd-only-cover.sh
-#!/bin/bash
+On Wed, Jun 15, 2016 at 11:42:44PM -0400, Johannes Weiner wrote:
+> @@ -6205,6 +6205,24 @@ struct cgroup *cgroup_get_from_path(const char *path)
+>  }
+>  EXPORT_SYMBOL_GPL(cgroup_get_from_path);
+>  
+> +/**
+> + * css_id_free - relinquish an existing CSS's ID
+> + * @css: the CSS
+> + *
+> + * This releases the @css's ID and allows it to be recycled while the
+> + * CSS continues to exist. This is useful for controllers with state
+> + * that extends past a cgroup's lifetime but doesn't need precious ID
+> + * address space.
+> + *
+> + * This invalidates @css->id, and css_from_id() might return NULL or a
+> + * new css if the ID has been recycled in the meantime.
+> + */
+> +void css_id_free(struct cgroup_subsys_state *css)
+> +{
+> +	cgroup_idr_remove(&css->ss->css_idr, css->id);
+> +	css->id = 0;
+> +}
 
-if [[ $1 == *gitsendemail.msg* || $1 == *cover-letter* ]]; then
-        grep '<.*@.*>' -h *.patch | sed 's/^.*: //' | sort | uniq
-fi
+I don't quite get why we're trying to free css->id earlier when memcg
+is gonna be using its private id anyway.  From cgroup core side, the
+id space isn't restricted.
 
-A bit error prone because you have to cleanup any previous patch files
-from the directory but works more or less well for me.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 75e74408cc8f..1d8a6dffdc25 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+...
+> +static void mem_cgroup_id_put(struct mem_cgroup *memcg)
+> +{
+> +	if (atomic_dec_and_test(&memcg->id.ref)) {
+> +		idr_remove(&mem_cgroup_idr, memcg->id.id);
 
-s 
-> > As far as the memcg part of this series goes, one concern is that page
-> > cache is trimmed back only when there is pressure, so in all but very
-> > few cases the high watermark you are introducing will be pegged to the
-> > configured limit. It doesn't give a whole lot of insight.
-> > 
-> 
-> So using the high watermark would not give a very useful starting point
-> for the user who wished to configure the memory limit? What else could
-> be used instead?
+Maybe this should do "memcg->id.id = 0"?
 
-we have an event notification mechanism. In v1 it is vmpressure and v2
-you will get a notification when the high/max limit is hit or when we
-hit the oom.
+> +		css_id_free(&memcg->css);
+> +		css_put(&memcg->css);
+> +	}
+> +}
+> +
+> +/**
+> + * mem_cgroup_from_id - look up a memcg from a memcg id
+> + * @id: the memcg id to look up
+> + *
+> + * Caller must hold rcu_read_lock().
+> + */
+> +struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
+> +{
+> +	WARN_ON_ONCE(!rcu_read_lock_held());
+> +	return id > 0 ? idr_find(&mem_cgroup_idr, id) : NULL;
+> +}
+
+css_from_id() has it too but I don't think id > 0 test is necessary.
+We prolly should take it out of css_from_id() too.
+
+It might be useful to add comment explaining why memcg needs private
+ids.
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
