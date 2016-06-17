@@ -1,57 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] cgroup: disable irqs while holding css_set_lock
-Date: Fri, 17 Jun 2016 01:36:25 -0400
-Message-ID: <20160617053625.GL31708@htj.duckdns.org>
-References: <1465325475-30593-1-git-send-email-bristot@redhat.com>
- <20160607193008.GA31708@htj.duckdns.org>
- <6f15f27f-3757-5413-4292-1386e95bc278@redhat.com>
- <38469b61-7cc5-5fec-4de3-0e9a616dfe95@redhat.com>
- <20160616220315.GH3262@mtj.duckdns.org>
- <20160616221434.GI3262@mtj.duckdns.org>
- <cf514889-8a4d-1ef4-cf4a-fd1a9b9bcb1d@redhat.com>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH] mm: memcontrol: fix cgroup creation failure after many
+ small jobs
+Date: Fri, 17 Jun 2016 12:06:55 +0300
+Message-ID: <20160617090655.GE13143@esperanza>
+References: <20160616034244.14839-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=7xkDIYw8xWXfJUzkkQ8cr0cQTbz9XF2hrq87FSWAwaU=;
-        b=vmHwB4ZRDO/e39186t1uAxxPdw8Ys1uoEV3K+1gizdFocr2e+WCN68ufc48mlXeZdC
-         kos+SVc7My11JhhJcq7awURe0+oOVR/wF43WKzOVTYhrVCaFEfQ2MhmDRIYwJIJhW2nw
-         EenzgcF8aA+wI4LvkPKkVq8hfp8bRrgSSDOI36NfSKYVKSADE7bKcFguc5tJDZbEqdRX
-         waczPJ8npnid7hhAzJTRXyAdiRDcOUT1bGEYOFYSxegxM9t/KlKObaug4izwOVGOZOqp
-         ZWLI2u8e+jKzO9XHhgQ5xeP7BJjtcH11AbCxYSzbzSvMosYtfy2M7mWOnHi/VFu7kMBI
-         JkMw==
-Content-Disposition: inline
-In-Reply-To: <cf514889-8a4d-1ef4-cf4a-fd1a9b9bcb1d@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=817h3Ito83TG7P9q9S8sDs3yogN6afIhbYrhxmfLBzc=;
+ b=IaU6Liag1FtOMr1lK+ESa9y3WXOUd0CL5VfEhrC/73kPJ+e77qygukagT+y9ioawsl75rBLXGvJd33+fEyWDZz7OTRjYl9cypyIVO2xreaRT/rJT7NhdyU4B7Mk20hBvweX1ssAjrNCo7XmN06WlRRQlkxc6M5ksQ2Kbg9jglQU=
+Content-Disposition: inline
+In-Reply-To: <20160616034244.14839-1-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Daniel Bristot de Oliveira <daolivei@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Rik van Riel <riel@redhat.com>, "Luis Claudio R. Goncalves" <lgoncalv@redhat.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Juri Lelli <juri.lelli@arm.com>, cgroups@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Li Zefan <lizefan@huawei.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hello,
-
-On Thu, Jun 16, 2016 at 09:12:32PM -0300, Daniel Bristot de Oliveira wrote:
-> The use of the irq spin_(un)lock_irq() assumes that the code is always
-> called with IRQs enabled. But that is not always true in this case, as
-> we call cgroup_free() in the hard IRQ context, and unconditionally
-> enable IRQ in this context is a problem. So we need to use irqsave/restore.
+On Wed, Jun 15, 2016 at 11:42:44PM -0400, Johannes Weiner wrote:
+> The memory controller has quite a bit of state that usually outlives
+> the cgroup and pins its CSS until said state disappears. At the same
+> time it imposes a 16-bit limit on the CSS ID space to economically
+> store IDs in the wild. Consequently, when we use cgroups to contain
+> frequent but small and short-lived jobs that leave behind some page
+> cache, we quickly run into the 64k limitations of outstanding CSSs.
+> Creating a new cgroup fails with -ENOSPC while there are only a few,
+> or even no user-visible cgroups in existence.
 > 
-> Discussing with rostedt, we figured that this needs to be IRQ safe
-> (using irqsave/restore) in the PREEMPT RT too, so I need to code a v3 of
-> this patch using raw_spin_*() functions to avoid this problem in the -rt
-> kernel as well.
+> Although pinning CSSs past cgroup removal is common, there are only
+> two instances that actually need a CSS ID after a cgroup is deleted:
+> cache shadow entries and swapout records.
 > 
-> Do you see any problems on this?
+> Cache shadow entries reference the ID weakly and can deal with the CSS
+> having disappeared when it's looked up later. They pose no hurdle.
+> 
+> Swap-out records do need to pin the css to hierarchically attribute
+> swapins after the cgroup has been deleted; though the only pages that
+> remain swapped out after a process exits are tmpfs/shmem pages. Those
+> references are under the user's control and thus manageable.
+> 
+> This patch introduces a private 16bit memcg ID and switches swap and
+> cache shadow entries over to using that. It then decouples the CSS
+> lifetime from the CSS ID lifetime, such that a CSS ID can be recycled
+> when the CSS is only pinned by common objects that don't need an ID.
 
-Use of raw_spin is fine but I don't see how, say, rebind_subsystems()
-or cgroup_setup_root() can ever be called with irq disabled given that
-they assume sleepable context.  Please use _irq and _irqsave
-appropriately depending on the circumstances.
+There's already id which is only used for online memory cgroups - it's
+kmemcg_id. May be, instead of introducing one more idr, we could name it
+generically and reuse it for shadow entries?
 
-Thanks.
+Regarding swap entries, would it really make much difference if we used
+4 bytes per swap page instead of 2? For a 100 GB swap it'd increase
+overhead from 50 MB up to 100 MB, which still doesn't seem too much IMO,
+so may be just use plain unrestricted css->id for swap entries?
 
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
