@@ -1,38 +1,34 @@
-From: Daniel Bristot de Oliveira <daolivei@redhat.com>
-Subject: Re: [PATCH v2] cgroup: disable irqs while holding css_set_lock
-Date: Fri, 17 Jun 2016 16:59:37 -0300
-Message-ID: <4353aea6-c1e9-80d2-be44-75340d0aaf01@redhat.com>
-References: <1465325475-30593-1-git-send-email-bristot@redhat.com>
- <20160607193008.GA31708@htj.duckdns.org>
- <6f15f27f-3757-5413-4292-1386e95bc278@redhat.com>
- <38469b61-7cc5-5fec-4de3-0e9a616dfe95@redhat.com>
- <20160616220315.GH3262@mtj.duckdns.org>
- <20160616221434.GI3262@mtj.duckdns.org>
- <cf514889-8a4d-1ef4-cf4a-fd1a9b9bcb1d@redhat.com>
- <20160617053625.GL31708@htj.duckdns.org>
+From: Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: question about cgroupv2
+Date: Sat, 18 Jun 2016 10:11:17 +0800
+Message-ID: <5764ADC5.20205@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160617053625.GL31708@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Daniel Bristot de Oliveira <daolivei@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Rik van Riel <riel@redhat.com>, "Luis Claudio R. Goncalves" <lgoncalv@redhat.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Juri Lelli <juri.lelli@arm.com>, cgroups@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+
+Hello,
+
+Sorry for disturbing.
+
+I want to test how to use cgroup v2 on kernel 4.6.2.
+And I have read https://www.kernel.org/doc/Documentation/cgroup-v2.txt
+According to the above document, I added kernel parameter cgroup_no_v1=1.
+But, system still automount the v1 cgroup.
+Then, I executed:
+# mount -t cgroup2 none /mnt
+
+But, cgroup.controllers in /mnt is empty.
+
+I'm not sure if I made something wrong or cgroup v2 is not supported on kernel 4.6.2?
 
 
-Hi Tejun,
-
-On 06/17/2016 02:36 AM, Tejun Heo wrote:
-> Please use _irq and _irqsave
-> appropriately depending on the circumstances.
-
-ack! I will do it!
-
-Cooking a v3:
-- using _irq and _irqsave appropriately, and
-- using raw_spin locks functions.
-
-Thanks! -- Daniel
-
+Thanks
+-- 
+Ma Shimiao
+Development Dept.I
+Nanjing Fujitsu Nanda Software Tech. Co., Ltd.(FNST)
 
