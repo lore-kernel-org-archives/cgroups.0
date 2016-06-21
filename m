@@ -1,72 +1,48 @@
-From: Kenny Yu <kennyyu@fb.com>
-Subject: Re: [PATCH v3] cgroup: Add pids controller event when fork fails
- because of pid limit
-Date: Tue, 21 Jun 2016 17:23:40 +0000
-Message-ID: <9874B6F0-99B8-4739-B099-B7EEE99478F3@fb.com>
-References: <20160621163402.GI3262@mtj.duckdns.org>
- <1466528198-3416939-1-git-send-email-kennyyu@fb.com>
- <20160621171212.GL3262@mtj.duckdns.org>
+From: Kenny Yu <kennyyu-b10kYP2dOMg@public.gmane.org>
+Subject: [PATCH] cgroup: Use lld instead of ld when printing pids controller events_limit
+Date: Tue, 21 Jun 2016 11:55:35 -0700
+Message-ID: <1466535335-3715145-1-git-send-email-kennyyu@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
- date : message-id : references : in-reply-to : content-type : content-id :
- content-transfer-encoding : mime-version; s=facebook;
- bh=f2tWm4mdknOZBEWabWlPKCct/HS29/ZcsI2VnQ3kaGU=;
- b=UN5catv8JEqEH/ziH+q5NMHCPkvnm/+3GIz+01F4NTjkAOGcoJ1r6c+oTXI3tsJvC0rh
- h3j7meLSfOS3UZ8SLterIvfOu2NDCT1i6gY/ScCgKc62bVHW+SmUI9C1ASWKIdNxkwLK
- z6U/O2IvKp0IRWNICmaDi7hC9mdoPdtkWLM= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=f2tWm4mdknOZBEWabWlPKCct/HS29/ZcsI2VnQ3kaGU=;
- b=Bbvr/EYjv5oqjk5QdEwJBS1AEfQ8VZF8T8AHNQFoMO+pAfedN1BNUD7eLmuKT6pwlqM5QAcQb+EdLEUM2AifbK7OO04hnqn+cIoXnY8K7x7EWv3EpVjkvVAJwTSdP+DBn0HGn7FUdx7Rj7Gdn/3b+BuxPEq2a6+clhT1/hGk6AM=
-In-Reply-To: <20160621171212.GL3262@mtj.duckdns.org>
-Content-Language: en-US
-Content-ID: <9F61BFCA10F55047AAF7E0935E7D8F93@namprd15.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+ date : message-id : mime-version : content-type; s=facebook;
+ bh=6yC1FDN9ZnmXjaFZ5ETHIU3Hv6z77So/xNJEO0D0zVM=;
+ b=ml4EnrQIHzedySmxtj3SARZqMuI0ToQH1ayJWRMS73c03M79UWIw74i0snverEA3/IxK
+ 0Tg8/77Cz6YumsIN1FEyUOgihovYGEbnpeqtlk2oijOq3HzMSftJ3o7Z9s7aFtd927jJ
+ OqjpvNexCZyUngUvy3PRqKZqDiP4zM+f8lg= 
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: "lizefan@huawei.com" <lizefan@huawei.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "cyphar@cyphar.com" <cyphar@cyphar.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org
+Cc: kennyyu-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-VGhhbmtzIGZvciB0aGUgZmVlZGJhY2sgVGVqdW4hDQoNCk9uIDYvMjEvMTYsIDE6MTIgUE0sICJU
-ZWp1biBIZW8iIDxodGVqdW5AZ21haWwuY29tIG9uIGJlaGFsZiBvZiB0akBrZXJuZWwub3JnPiB3
-cm90ZToNCg0KPkhlbGxvLA0KPg0KPkp1c3QgYSBjb3VwbGUgbml0cy4NCj4NCj5PbiBUdWUsIEp1
-biAyMSwgMjAxNiBhdCAwOTo1NjozOEFNIC0wNzAwLCBLZW5ueSBZdSB3cm90ZToNCj4+IFN1bW1h
-cnk6DQo+DQo+Tm8gbmVlZCBmb3IgIlN1bW1hcnk6IiB0YWcuDQo+DQo+PiBUaGlzIHBhdGNoIGFk
-ZHMgbW9yZSB2aXNpYmlsaXR5IGludG8gdGhlIHBpZHMgY29udHJvbGxlciB3aGVuIHRoZSBjb250
-cm9sbGVyDQo+PiByZWplY3RzIGEgZm9yayByZXF1ZXN0LiBXaGVuZXZlciBmb3JrIGZhaWxzIGJl
-Y2F1c2UgdGhlIGxpbWl0IG9uIHRoZSBudW1iZXIgb2YNCj4+IHBpZHMgaW4gdGhlIGNncm91cCBp
-cyByZWFjaGVkLCB0aGUgY29udHJvbGxlciB3aWxsIGxvZyB0aGlzIGFuZCBhbHNvIG5vdGlmeSB0
-aGUNCj4+IG5ld2x5IGFkZGVkIGNncm91cHMgZXZlbnRzIGZpbGUuIFRoZSBgbWF4YCBrZXkgaW4g
-dGhlIGV2ZW50cyBmaWxlIHJlcHJlc2VudHMNCj4+IHRoZSBudW1iZXIgb2YgdGltZXMgZm9yayBm
-YWlsZWQgYmVjYXVzZSBvZiB0aGUgcGlkcyBjb250cm9sbGVyLg0KPj4gDQo+PiBUaGlzIGNoYW5n
-ZSBhbHNvIGFkZHMgYW4gYXRvbWljIGJvb2xlYW4gdG8gcHJldmVudCBsb2dnaW5nIHRvbyBtdWNo
-IChlLmcuIGEgZm9yaw0KPj4gYm9tYikuIFRoZSBtZXNzYWdlIGlzIGxvZ2dlZCBvbmNlIHBlciBj
-Z3JvdXAgdW50aWwgdGhlIG5leHQgdGltZSB0aGUgcGlkcyBsaW1pdA0KPj4gY2hhbmdlcy4NCj4N
-Cj5UaGUgYWJvdmUgcGFyYWdyYXBoIGlzbid0IHVwdG9kYXRlIGFueW1vcmUuDQoNClRoYW5rcyEg
-V2lsbCBjaGFuZ2UuDQoNCj4NCj4+IEBAIC0yMTMsMTAgKzIyMCwyMyBAQCBzdGF0aWMgaW50IHBp
-ZHNfY2FuX2Zvcmsoc3RydWN0IHRhc2tfc3RydWN0ICp0YXNrKQ0KPj4gIHsNCj4+ICAJc3RydWN0
-IGNncm91cF9zdWJzeXNfc3RhdGUgKmNzczsNCj4+ICAJc3RydWN0IHBpZHNfY2dyb3VwICpwaWRz
-Ow0KPj4gKwlpbnQgZXJyOw0KPj4gKwlpbnQgZXZlbnRzX2xpbWl0Ow0KPj4gIA0KPj4gIAljc3Mg
-PSB0YXNrX2Nzc19jaGVjayhjdXJyZW50LCBwaWRzX2NncnBfaWQsIHRydWUpOw0KPj4gIAlwaWRz
-ID0gY3NzX3BpZHMoY3NzKTsNCj4+IC0JcmV0dXJuIHBpZHNfdHJ5X2NoYXJnZShwaWRzLCAxKTsN
-Cj4+ICsJZXJyID0gcGlkc190cnlfY2hhcmdlKHBpZHMsIDEpOw0KPj4gKwlpZiAoZXJyKSB7DQo+
-PiArCQlldmVudHNfbGltaXQgPSBhdG9taWM2NF9pbmNfcmV0dXJuKCZwaWRzLT5ldmVudHNfbGlt
-aXQpOw0KPj4gKwkJY2dyb3VwX2ZpbGVfbm90aWZ5KCZwaWRzLT5ldmVudHNfZmlsZSk7DQo+PiAr
-CQkvKiBPbmx5IGxvZyB0aGUgZmlyc3QgdGltZSBldmVudHNfbGltaXQgaXMgaW5jcmVtZW50ZWQu
-ICovDQo+PiArCQlpZiAoZXZlbnRzX2xpbWl0ID09IDEpIHsNCj4+ICsJCQlwcl9pbmZvKCJjZ3Jv
-dXA6IGZvcmsgcmVqZWN0ZWQgYnkgcGlkcyBjb250cm9sbGVyIGluICIpOw0KPj4gKwkJCXByX2Nv
-bnRfY2dyb3VwX3BhdGgodGFza19jZ3JvdXAoY3VycmVudCwgcGlkc19jZ3JwX2lkKSk7DQo+PiAr
-CQkJcHJfY29udCgiXG4iKTsNCj4+ICsJCX0NCj4+ICsJfQ0KPj4gKwlyZXR1cm4gZXJyOw0KPj4g
-IH0NCj4NCj5JdCdkIGJlIGJldHRlciB0byB1c2UgYXRvbWljNjRfaW5jX2FuZF90ZXN0KCkgaW5z
-dGVhZC4NCj4NCj4JaWYgKGVycikgew0KPgkJaWYgKGF0b21pYzY0X2luY19hbmRfdGVzdCgpKSB7
-DQo+CQkJcHJfeHh4Li4uOw0KPgkJfQ0KPgkJY2dyb3VwX2ZpbGVfbm90aWZ5KCZwaWRzLT5ldmVu
-dHNfZmlsZSk7DQo+CX0NCj4NCg0KQWNjb3JkaW5nIHRvIHRoZSBkb2NzIGh0dHBzOi8vd3d3Lmtl
-cm5lbC5vcmcvZG9jL0RvY3VtZW50YXRpb24vYXRvbWljX29wcy50eHQgLA0KaXQgbG9va3MgbGlr
-ZSBhdG9taWNfaW5jX2FuZF90ZXN0IHJldHVybnMgImEgYm9vbGVhbiBpbmRpY2F0aW5nIHdoZXRo
-ZXIgdGhlIHJlc3VsdGluZw0KY291bnRlciB2YWx1ZSB3YXMgemVybyBvciBub3QiLCB3aGljaCB3
-aWxsIG9ubHkgaGFwcGVuIHdoZW4gdGhlIGNvdW50ZXIgZ29lcyBmcm9tDQpuZWdhdGl2ZSB0byAw
-LiBJJ2xsIGtlZXAgaXQgYXMgYXRvbWljX2luY19yZXR1cm4gYW5kIGdldCByaWQgb2YgdGhlIHRl
-bXAgdmFyaWFibGUuDQoNCj5UaGFua3MuDQo+DQo+LS0gDQo+dGVqdW4NCg0KVGhhbmtzLA0KS2Vu
-bnkNCg0K
+The `events_limit` variable needs to be formatted with %lld and not %ld.
+This fixes the following warning discovered by kbuild test robot:
+
+   kernel/cgroup_pids.c: In function 'pids_events_show':
+   kernel/cgroup_pids.c:313:24: warning: format '%ld' expects argument of type
+   'long int', but argument 3 has type 'long long int' [-Wformat=]
+        seq_printf(sf, "max %ld\n", atomic64_read(&pids->events_limit));
+                                   ^
+
+Signed-off-by: Kenny Yu <kennyyu-b10kYP2dOMg@public.gmane.org>
+---
+ kernel/cgroup_pids.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup_pids.c b/kernel/cgroup_pids.c
+index bd2490b..1777d03 100644
+--- a/kernel/cgroup_pids.c
++++ b/kernel/cgroup_pids.c
+@@ -310,7 +310,7 @@ static int pids_events_show(struct seq_file *sf, void *v)
+ {
+ 	struct pids_cgroup *pids = css_pids(seq_css(sf));
+ 
+-	seq_printf(sf, "max %ld\n", atomic64_read(&pids->events_limit));
++	seq_printf(sf, "max %lld\n", atomic64_read(&pids->events_limit));
+ 	return 0;
+ }
+ 
+-- 
+2.8.0.rc2
