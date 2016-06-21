@@ -1,87 +1,114 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3] cgroup: Add pids controller event when fork fails
- because of pid limit
-Date: Tue, 21 Jun 2016 13:12:12 -0400
-Message-ID: <20160621171212.GL3262@mtj.duckdns.org>
-References: <20160621163402.GI3262@mtj.duckdns.org>
- <1466528198-3416939-1-git-send-email-kennyyu@fb.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] memcg: css_alloc should return an ERR_PTR value on error
+Date: Tue, 21 Jun 2016 19:09:18 +0200
+Message-ID: <20160621170917.GB24410@dhcp22.suse.cz>
+References: <20160621165740.GJ3262@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=7Azy0e6LShE2fSl7J7FZxOactGHM9QMnkY2PWHq9bns=;
-        b=0S3xibg3zv4fIRbJZosmVmDAwZY80lQAtfxD9Dn/kEQmwncG4EnXN1h4LiqVZAz72T
-         1JVOxpvzAVUY790Vsj9wSB4uk7LEiaQkshab24oSjbwJFmqX9J/8T4ha4UcFJFQy86Kd
-         dLdysjHbvT05rDR+JJJi0wJ4EfwTOsmXvSF7WeqisEyHCxbSzzS7dSWu3wFcBedj/KBL
-         ebkKn7Qi0WomA9RY/B0GM+Lz2ub00qwzoncZhb8gkM2SmBZmdXA/XjCbtH8eCzsGxoEA
-         82xVEtI96SRIXXIhcENDzKHxaU89NDhRWMgv8NHlwPsvKQoGdlQtUXIsusbWIDoAzBb4
-         XHnw==
 Content-Disposition: inline
-In-Reply-To: <1466528198-3416939-1-git-send-email-kennyyu-b10kYP2dOMg@public.gmane.org>
+In-Reply-To: <20160621165740.GJ3262-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kenny Yu <kennyyu-b10kYP2dOMg@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello,
-
-Just a couple nits.
-
-On Tue, Jun 21, 2016 at 09:56:38AM -0700, Kenny Yu wrote:
-> Summary:
-
-No need for "Summary:" tag.
-
-> This patch adds more visibility into the pids controller when the controller
-> rejects a fork request. Whenever fork fails because the limit on the number of
-> pids in the cgroup is reached, the controller will log this and also notify the
-> newly added cgroups events file. The `max` key in the events file represents
-> the number of times fork failed because of the pids controller.
+On Tue 21-06-16 12:57:40, Tejun Heo wrote:
+> mem_cgroup_css_alloc() was returning NULL on failure while cgroup core
+> expected it to return an ERR_PTR value leading to the following NULL
+> deref after a css allocation failure.  Fix it by return
+> ERR_PTR(-ENOMEM) instead.  I'll also update cgroup core so that it
+> can handle NULL returns.
 > 
-> This change also adds an atomic boolean to prevent logging too much (e.g. a fork
-> bomb). The message is logged once per cgroup until the next time the pids limit
-> changes.
+>   mkdir: page allocation failure: order:6, mode:0x240c0c0(GFP_KERNEL|__GFP_COMP|__GFP_ZERO)
+>   CPU: 0 PID: 8738 Comm: mkdir Not tainted 4.7.0-rc3+ #123
+>   ...
+>   Call Trace:
+>    [<ffffffff81321937>] dump_stack+0x68/0xa1
+>    [<ffffffff811522f6>] warn_alloc_failed+0xd6/0x130
+>    [<ffffffff81152816>] __alloc_pages_nodemask+0x4c6/0xf20
+>    [<ffffffff8119df86>] alloc_pages_current+0x66/0xe0
+>    [<ffffffff81153564>] alloc_kmem_pages+0x14/0x80
+>    [<ffffffff811705ca>] kmalloc_order_trace+0x2a/0x1a0
+>    [<ffffffff811a7a61>] __kmalloc+0x291/0x310
+>    [<ffffffff811718dc>] memcg_update_all_caches+0x6c/0x130
+>    [<ffffffff818d0290>] mem_cgroup_css_alloc+0x590/0x610
+>    [<ffffffff810f4c7b>] cgroup_apply_control_enable+0x18b/0x370
+>    [<ffffffff810f8afe>] cgroup_mkdir+0x1de/0x2e0
+>    [<ffffffff8123cf35>] kernfs_iop_mkdir+0x55/0x80
+>    [<ffffffff811c6599>] vfs_mkdir+0xb9/0x150
+>    [<ffffffff811cc666>] SyS_mkdir+0x66/0xd0
+>    [<ffffffff81002df3>] do_syscall_64+0x53/0x120
+>    [<ffffffff818d719a>] entry_SYSCALL64_slow_path+0x25/0x25
+>   ...
+>   BUG: unable to handle kernel NULL pointer dereference at 00000000000000d0
+>   IP: [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
+>   PGD 34b1e067 PUD 3a109067 PMD 0 
+>   Oops: 0002 [#1] SMP
+>   Modules linked in:
+>   CPU: 0 PID: 8738 Comm: mkdir Not tainted 4.7.0-rc3+ #123
+>   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.2-20160422_131301-anatol 04/01/2014
+>   task: ffff88007cbc5200 ti: ffff8800666d4000 task.ti: ffff8800666d4000
+>   RIP: 0010:[<ffffffff810f2ca7>]  [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
+>   RSP: 0018:ffff8800666d7d90  EFLAGS: 00010246
+>   RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+>   RDX: ffffffff810f2499 RSI: 0000000000000000 RDI: 0000000000000008
+>   RBP: ffff8800666d7db8 R08: 0000000000000003 R09: 0000000000000000
+>   R10: 0000000000000001 R11: 0000000000000000 R12: ffff88005a5fb400
+>   R13: ffffffff81f0f8a0 R14: ffff88005a5fb400 R15: 0000000000000010
+>   FS:  00007fc944689700(0000) GS:ffff88007fc00000(0000) knlGS:0000000000000000
+>   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>   CR2: 00007f3aed0d2b80 CR3: 000000003a1e8000 CR4: 00000000000006f0
+>   DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>   DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+>   Stack:
+>    ffffffff81f0f8a0 ffffffff81f0f8a0 ffff88005a5fb400 0000000000000000
+>    ffff88005a5fb400 ffff8800666d7e18 ffffffff810f4c9c ffff88005a5fb400
+>    ffffffff82d23470 ffff88007cbc57f0 ffff88007cbc5200 ffff88007d013000
+>   Call Trace:
+>    [<ffffffff810f4c9c>] cgroup_apply_control_enable+0x1ac/0x370
+>    [<ffffffff810f8afe>] cgroup_mkdir+0x1de/0x2e0
+>    [<ffffffff8123cf35>] kernfs_iop_mkdir+0x55/0x80
+>    [<ffffffff811c6599>] vfs_mkdir+0xb9/0x150
+>    [<ffffffff811cc666>] SyS_mkdir+0x66/0xd0
+>    [<ffffffff81002df3>] do_syscall_64+0x53/0x120
+>    [<ffffffff818d719a>] entry_SYSCALL64_slow_path+0x25/0x25
+>   Code: 89 f5 48 89 fb 49 89 d4 48 83 ec 08 8b 05 72 3b d8 00 85 c0 0f 85 60 01 00 00 4c 89 e7 e8 72 f7 ff ff 48 8d 7b 08 48 89 d9 31 c0 <48> c7 83 d0 00 00 00 00 00 00 00 48 83 e7 f8 48 29 f9 81 c1 d8 
+>   RIP  [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
+>    RSP <ffff8800666d7d90>
+>   CR2: 00000000000000d0
+>   ---[ end trace a2d8836ae1e852d1 ]---
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The above paragraph isn't uptodate anymore.
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-> @@ -213,10 +220,23 @@ static int pids_can_fork(struct task_struct *task)
->  {
->  	struct cgroup_subsys_state *css;
->  	struct pids_cgroup *pids;
-> +	int err;
-> +	int events_limit;
->  
->  	css = task_css_check(current, pids_cgrp_id, true);
->  	pids = css_pids(css);
-> -	return pids_try_charge(pids, 1);
-> +	err = pids_try_charge(pids, 1);
-> +	if (err) {
-> +		events_limit = atomic64_inc_return(&pids->events_limit);
-> +		cgroup_file_notify(&pids->events_file);
-> +		/* Only log the first time events_limit is incremented. */
-> +		if (events_limit == 1) {
-> +			pr_info("cgroup: fork rejected by pids controller in ");
-> +			pr_cont_cgroup_path(task_cgroup(current, pids_cgrp_id));
-> +			pr_cont("\n");
-> +		}
-> +	}
-> +	return err;
+I have tried to track down since when we are broken but it seems that
+it's for a long time. I got back to 2007 and ddbcc7e8e50ae and gave up.
+
+Thanks!
+
+> ---
+>  mm/memcontrol.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 75e7440..fbb8ba6 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4203,7 +4203,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+>  	return &memcg->css;
+>  fail:
+>  	mem_cgroup_free(memcg);
+> -	return NULL;
+> +	return ERR_PTR(-ENOMEM);
 >  }
-
-It'd be better to use atomic64_inc_and_test() instead.
-
-	if (err) {
-		if (atomic64_inc_and_test()) {
-			pr_xxx...;
-		}
-		cgroup_file_notify(&pids->events_file);
-	}
-
-Thanks.
+>  
+>  static int
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
