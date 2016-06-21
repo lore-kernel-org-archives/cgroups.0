@@ -1,48 +1,50 @@
-From: Kenny Yu <kennyyu-b10kYP2dOMg@public.gmane.org>
-Subject: [PATCH] cgroup: Use lld instead of ld when printing pids controller events_limit
-Date: Tue, 21 Jun 2016 11:55:35 -0700
-Message-ID: <1466535335-3715145-1-git-send-email-kennyyu@fb.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.8] cgroup: allow NULL return from
+ ss->css_alloc()
+Date: Tue, 21 Jun 2016 14:57:40 -0400
+Message-ID: <20160621185740.GR3262@mtj.duckdns.org>
+References: <20160621170624.GK3262@mtj.duckdns.org>
+ <20160621181404.GB4501@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
- date : message-id : mime-version : content-type; s=facebook;
- bh=6yC1FDN9ZnmXjaFZ5ETHIU3Hv6z77So/xNJEO0D0zVM=;
- b=ml4EnrQIHzedySmxtj3SARZqMuI0ToQH1ayJWRMS73c03M79UWIw74i0snverEA3/IxK
- 0Tg8/77Cz6YumsIN1FEyUOgihovYGEbnpeqtlk2oijOq3HzMSftJ3o7Z9s7aFtd927jJ
- OqjpvNexCZyUngUvy3PRqKZqDiP4zM+f8lg= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=dh9PdorzZzI1ykWPga6mhdeiybTdX7Kb8h+n77qU7+k=;
+        b=dyn0qaxUX7jPoYerJ06MWpOOCoP5Isa/b/stekwEC5hiNHbWgiYTbSOs/WUalDd+FF
+         qKNe87/tBJPAoAI4NhUaNwf51vlWtIUKW1tnnwzri9tkVQfEBgQ9RTtqp3lQZ3tTj6o0
+         hAsB+eo87jZW+kiRRY5bsv7VbfttH1E+UtLr3bhlOLylxYwrnAoWAXs2SUblDwbwVnYn
+         hnlAnmPq4i2OPttx5tHLxleSWw8KZ1PGNfYO63zuWFBPGNYDC+Gx5FSvO20mMQY8wcbo
+         LiOoveqJtpBw2lGr8RNGZq54H9B1EiiTreaPTtxrVukDbhXZLRk9hgtRxruwVfn6J0Ic
+         78Lg==
+Content-Disposition: inline
+In-Reply-To: <20160621181404.GB4501-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org
-Cc: kennyyu-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-The `events_limit` variable needs to be formatted with %lld and not %ld.
-This fixes the following warning discovered by kbuild test robot:
+Hello,
 
-   kernel/cgroup_pids.c: In function 'pids_events_show':
-   kernel/cgroup_pids.c:313:24: warning: format '%ld' expects argument of type
-   'long int', but argument 3 has type 'long long int' [-Wformat=]
-        seq_printf(sf, "max %ld\n", atomic64_read(&pids->events_limit));
-                                   ^
+On Tue, Jun 21, 2016 at 02:14:04PM -0400, Johannes Weiner wrote:
+> Would it be better to remove the error code instead and have everybody
+> return NULL? AFAICS, everybody is returning either the object or the
+> -ENOMEM error code right now.
+> 
+> What error condition is there for an allocation function?
 
-Signed-off-by: Kenny Yu <kennyyu-b10kYP2dOMg@public.gmane.org>
----
- kernel/cgroup_pids.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I already changed cgroup core to interpret NULL return as -ENOMEM.
+Maybe we can drop ERR_PTR handling altogether in the future but I'm
+not sure.  e.g. memcg's id allocation and -ENOSPC check could be in
+css_alloc.  The thing is css_online is only necessary if there are
+requirements around css id or iteration, so css_alloc can easily be
+the only alloc / init point and thus should be able to indicate
+different failure conditions.
 
-diff --git a/kernel/cgroup_pids.c b/kernel/cgroup_pids.c
-index bd2490b..1777d03 100644
---- a/kernel/cgroup_pids.c
-+++ b/kernel/cgroup_pids.c
-@@ -310,7 +310,7 @@ static int pids_events_show(struct seq_file *sf, void *v)
- {
- 	struct pids_cgroup *pids = css_pids(seq_css(sf));
- 
--	seq_printf(sf, "max %ld\n", atomic64_read(&pids->events_limit));
-+	seq_printf(sf, "max %lld\n", atomic64_read(&pids->events_limit));
- 	return 0;
- }
- 
+Thanks.
+
 -- 
-2.8.0.rc2
+tejun
