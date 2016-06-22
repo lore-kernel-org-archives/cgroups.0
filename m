@@ -1,136 +1,45 @@
-From: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
-Subject: [PATCH -next 3/4] cgroup: bpf: Add bpf_skb_in_cgroup_proto
-Date: Tue, 21 Jun 2016 17:23:21 -0700
-Message-ID: <1466555002-1316296-4-git-send-email-kafai@fb.com>
-References: <1466555002-1316296-1-git-send-email-kafai@fb.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: question about cgroupv2
+Date: Wed, 22 Jun 2016 08:44:20 +0800
+Message-ID: <5769DF64.1040406@huawei.com>
+References: <5764ADC5.20205@cn.fujitsu.com> <5768D36D.3060606@huawei.com>
+ <5768D8F5.1060107@cn.fujitsu.com>
+ <9B0331B6EBBD0E4684FBFAEDA55776F92CD6983C@HASMSX110.ger.corp.intel.com>
+ <5768FBF8.2060100@cn.fujitsu.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
- date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=tVL+yfjyTqluMAXEg6/8aPgVDRAZYGOc/oJ/toRKFMU=;
- b=di6vCj3hxNyh4O/7py1jBSxhWNdGmGzKC8SKFumurfSDtyjV/Nog40eauv6kw5+TYN39
- krbnOZ8HVxiBw9dHJQyNXirQZotewKUViB7VJBgd6JiubYUxH2r+x/ujyZ0txKkPVvOK
- kKJClEf2pUfr6MJLNTbY/V2ukPUeYgg9bvk= 
-In-Reply-To: <1466555002-1316296-1-git-send-email-kafai-b10kYP2dOMg@public.gmane.org>
+In-Reply-To: <5768FBF8.2060100-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Adds a bpf helper, bpf_skb_in_cgroup, to decide if a skb->sk
-belongs to a descendant of a cgroup2.  It is similar to the
-feature added in netfilter:
-commit c38c4597e4bf ("netfilter: implement xt_cgroup cgroup2 path match")
+On 2016/6/21 16:34, Ma Shimiao wrote:
+> Hi Rosen,
+> On 06/21/2016 03:38 PM, Rosen, Rami wrote:
+>> Hi, Ma,
+>>
+>>> Ah, it seems work, but I'm not sure.
+>>
+>>>> Then, I executed:
+>>>> # mount -t cgroup2 none /mnt
+>>
+>> It should work. The thing is, according to my trials from the past, it could be that systemd triggers mounting of cgroup V1 controllers. When I made trials with cgroup v2, eventually I turned on to disros which do not run systemd (namely, it was Ubuntu. You can set Ubuntu not to use systemd, even in most recent Ubuntu systems, where systemd became the default).
+>>
+>> What happens if you mount cgroup v2 now, after booting with cgroup_no_v1=all:
+>> mount -t cgroup2 none /mnt
+>>
+>> And then try to unmount cgroup v1 controllers like memory ? 
+>> Do you see anything under /mnt?
+> 
+> Yes, after booting with cgroup_no_v1, then execute
+> #mount -t cgroup2 none /mnt
+> #cat /mnt/cgroup.controllers 
+> io memory
+> 
+> There are controllers io and memory.
+> But, cgroup2 is not mounted in the system by default?
 
-The user is expected to populate a BPF_MAP_TYPE_CGROUP_ARRAY
-which will be used by the bpf_skb_in_cgroup.
-
-Modifications to the bpf verifier is to ensure BPF_MAP_TYPE_CGROUP_ARRAY
-and bpf_skb_in_cgroup() are always used together.
-
-Signed-off-by: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
-Cc: Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>
-Cc: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/uapi/linux/bpf.h |  1 +
- kernel/bpf/verifier.c    |  8 ++++++++
- net/core/filter.c        | 36 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 45 insertions(+)
-
-diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
-index ef4e386..a91714bd 100644
---- a/include/uapi/linux/bpf.h
-+++ b/include/uapi/linux/bpf.h
-@@ -314,6 +314,7 @@ enum bpf_func_id {
- 	 */
- 	BPF_FUNC_skb_get_tunnel_opt,
- 	BPF_FUNC_skb_set_tunnel_opt,
-+	BPF_FUNC_skb_in_cgroup,
- 	__BPF_FUNC_MAX_ID,
- };
- 
-diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
-index 668e079..68753e0 100644
---- a/kernel/bpf/verifier.c
-+++ b/kernel/bpf/verifier.c
-@@ -1062,6 +1062,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
- 		if (func_id != BPF_FUNC_get_stackid)
- 			goto error;
- 		break;
-+	case BPF_MAP_TYPE_CGROUP_ARRAY:
-+		if (func_id != BPF_FUNC_skb_in_cgroup)
-+			goto error;
-+		break;
- 	default:
- 		break;
- 	}
-@@ -1081,6 +1085,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
- 		if (map->map_type != BPF_MAP_TYPE_STACK_TRACE)
- 			goto error;
- 		break;
-+	case BPF_FUNC_skb_in_cgroup:
-+		if (map->map_type != BPF_MAP_TYPE_CGROUP_ARRAY)
-+			goto error;
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/net/core/filter.c b/net/core/filter.c
-index df6860c..410da89 100644
---- a/net/core/filter.c
-+++ b/net/core/filter.c
-@@ -2024,6 +2024,40 @@ bpf_get_skb_set_tunnel_proto(enum bpf_func_id which)
- 	}
- }
- 
-+static u64 bpf_skb_in_cgroup(u64 r1, u64 r2, u64 r3, u64 r4, u64 r5)
-+{
-+	struct sk_buff *skb = (struct sk_buff *)(long)r1;
-+	struct bpf_map *map = (struct bpf_map *)(long)r2;
-+	struct bpf_array *array = container_of(map, struct bpf_array, map);
-+	u32 i = (u32)r3;
-+	struct cgroup *cgrp;
-+	struct sock *sk;
-+
-+	WARN_ON_ONCE(!rcu_read_lock_held());
-+
-+	sk = skb->sk;
-+	if (!sk || !sk_fullsock(sk))
-+		return -ENOENT;
-+
-+	if (unlikely(i >= array->map.max_entries))
-+		return -E2BIG;
-+
-+	cgrp = READ_ONCE(array->ptrs[i]);
-+	if (unlikely(!cgrp))
-+		return -ENOENT;
-+
-+	return cgroup_is_descendant(sock_cgroup_ptr(&sk->sk_cgrp_data), cgrp);
-+}
-+
-+static const struct bpf_func_proto bpf_skb_in_cgroup_proto = {
-+	.func		= bpf_skb_in_cgroup,
-+	.gpl_only	= false,
-+	.ret_type	= RET_INTEGER,
-+	.arg1_type	= ARG_PTR_TO_CTX,
-+	.arg2_type	= ARG_CONST_MAP_PTR,
-+	.arg3_type	= ARG_ANYTHING,
-+};
-+
- static const struct bpf_func_proto *
- sk_filter_func_proto(enum bpf_func_id func_id)
- {
-@@ -2086,6 +2120,8 @@ tc_cls_act_func_proto(enum bpf_func_id func_id)
- 		return &bpf_get_route_realm_proto;
- 	case BPF_FUNC_perf_event_output:
- 		return bpf_get_event_output_proto();
-+	case BPF_FUNC_skb_in_cgroup:
-+		return &bpf_skb_in_cgroup_proto;
- 	default:
- 		return sk_filter_func_proto(func_id);
- 	}
--- 
-2.5.1
+because systemd hasn't supported cgroup2 yet.
