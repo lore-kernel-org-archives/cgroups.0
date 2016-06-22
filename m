@@ -1,51 +1,109 @@
-From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: question about cgroupv2
-Date: Wed, 22 Jun 2016 11:36:56 -0400
-Message-ID: <20160622153656.GX3262@mtj.duckdns.org>
-References: <5764ADC5.20205@cn.fujitsu.com>
- <5768D36D.3060606@huawei.com>
- <5768D8F5.1060107@cn.fujitsu.com>
- <9B0331B6EBBD0E4684FBFAEDA55776F92CD6983C@HASMSX110.ger.corp.intel.com>
- <5768FBF8.2060100@cn.fujitsu.com>
- <5769DF64.1040406@huawei.com>
- <9B0331B6EBBD0E4684FBFAEDA55776F92CD6A674@HASMSX110.ger.corp.intel.com>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH] memcg: css_alloc should return an ERR_PTR value on error
+Date: Wed, 22 Jun 2016 19:44:12 +0300
+Message-ID: <20160622164412.GD21652@esperanza>
+References: <20160621165740.GJ3262@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=EfGkhb0pnIYfbzc4+JfokVp8AhMF2TWmNiZpcaEbh8I=;
-        b=VgT/SJhN3osMuWyLFaFFR9rspY4RSDuWT59u8maXYmTgD/r10s0sc1w3FmSlJXG6Pm
-         47AksLQW3/b5vrIqLYPRXQiPBVC9Lv3yUFszK2NcQuQE69whpnbL946VkFu6JjqXnkLZ
-         HeWTegM316LHBt+dXfwHKNtCDV/NHyhwC9BgNp0jFme+py8158Fcg7fKWguCdFwK9DZd
-         7dwPkFtQ4DTBF49LIn/6lk8PJXyVfL5gpM5R/dpmzwLptUyhDN9abhnjuk7sRVhbjZWG
-         Oa4vOoElpvRXA5Kbvi1E3MokYd6rj5N+/V3pTe5JYmdbPgcNuEjdCkpFHkukWQ6eUGue
-         66QA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=9mV0FKOsCZrMpEI+5zeA7fIfxpp64x08WFkGMTEB9HA=;
+ b=Tue/nbghX7B07Cvrs5nNHL6KVx7IbUuDxjsolSoEhDO61bDDOP5nAN53D+YYp1oz2NrVQtdWKPLApSkU+jRO1rPftFRW/4rzFsdbcLm4j4VGr9L6j0AjZxc89EimPiAatiSuRqe/3BpLpBNCOqrSo2incJay1jnbw/c3reFddVE=
 Content-Disposition: inline
-In-Reply-To: <9B0331B6EBBD0E4684FBFAEDA55776F92CD6A674-cNwSTNrqBuVnIh7sxsoRyrfspsVTdybXVpNB7YpNyf8@public.gmane.org>
+In-Reply-To: <20160621165740.GJ3262-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Jun 22, 2016 at 07:13:07AM +0000, Rosen, Rami wrote:
-> Hi all,
+On Tue, Jun 21, 2016 at 12:57:40PM -0400, Tejun Heo wrote:
+> mem_cgroup_css_alloc() was returning NULL on failure while cgroup core
+> expected it to return an ERR_PTR value leading to the following NULL
+> deref after a css allocation failure.  Fix it by return
+> ERR_PTR(-ENOMEM) instead.  I'll also update cgroup core so that it
+> can handle NULL returns.
 > 
-> > because systemd hasn't supported cgroup2 yet.
+>   mkdir: page allocation failure: order:6, mode:0x240c0c0(GFP_KERNEL|__GFP_COMP|__GFP_ZERO)
+>   CPU: 0 PID: 8738 Comm: mkdir Not tainted 4.7.0-rc3+ #123
+>   ...
+>   Call Trace:
+>    [<ffffffff81321937>] dump_stack+0x68/0xa1
+>    [<ffffffff811522f6>] warn_alloc_failed+0xd6/0x130
+>    [<ffffffff81152816>] __alloc_pages_nodemask+0x4c6/0xf20
+>    [<ffffffff8119df86>] alloc_pages_current+0x66/0xe0
+>    [<ffffffff81153564>] alloc_kmem_pages+0x14/0x80
+>    [<ffffffff811705ca>] kmalloc_order_trace+0x2a/0x1a0
+>    [<ffffffff811a7a61>] __kmalloc+0x291/0x310
+>    [<ffffffff811718dc>] memcg_update_all_caches+0x6c/0x130
+>    [<ffffffff818d0290>] mem_cgroup_css_alloc+0x590/0x610
+>    [<ffffffff810f4c7b>] cgroup_apply_control_enable+0x18b/0x370
+>    [<ffffffff810f8afe>] cgroup_mkdir+0x1de/0x2e0
+>    [<ffffffff8123cf35>] kernfs_iop_mkdir+0x55/0x80
+>    [<ffffffff811c6599>] vfs_mkdir+0xb9/0x150
+>    [<ffffffff811cc666>] SyS_mkdir+0x66/0xd0
+>    [<ffffffff81002df3>] do_syscall_64+0x53/0x120
+>    [<ffffffff818d719a>] entry_SYSCALL64_slow_path+0x25/0x25
+>   ...
+>   BUG: unable to handle kernel NULL pointer dereference at 00000000000000d0
+>   IP: [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
+>   PGD 34b1e067 PUD 3a109067 PMD 0 
+>   Oops: 0002 [#1] SMP
+>   Modules linked in:
+>   CPU: 0 PID: 8738 Comm: mkdir Not tainted 4.7.0-rc3+ #123
+>   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.2-20160422_131301-anatol 04/01/2014
+>   task: ffff88007cbc5200 ti: ffff8800666d4000 task.ti: ffff8800666d4000
+>   RIP: 0010:[<ffffffff810f2ca7>]  [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
+>   RSP: 0018:ffff8800666d7d90  EFLAGS: 00010246
+>   RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+>   RDX: ffffffff810f2499 RSI: 0000000000000000 RDI: 0000000000000008
+>   RBP: ffff8800666d7db8 R08: 0000000000000003 R09: 0000000000000000
+>   R10: 0000000000000001 R11: 0000000000000000 R12: ffff88005a5fb400
+>   R13: ffffffff81f0f8a0 R14: ffff88005a5fb400 R15: 0000000000000010
+>   FS:  00007fc944689700(0000) GS:ffff88007fc00000(0000) knlGS:0000000000000000
+>   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>   CR2: 00007f3aed0d2b80 CR3: 000000003a1e8000 CR4: 00000000000006f0
+>   DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>   DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+>   Stack:
+>    ffffffff81f0f8a0 ffffffff81f0f8a0 ffff88005a5fb400 0000000000000000
+>    ffff88005a5fb400 ffff8800666d7e18 ffffffff810f4c9c ffff88005a5fb400
+>    ffffffff82d23470 ffff88007cbc57f0 ffff88007cbc5200 ffff88007d013000
+>   Call Trace:
+>    [<ffffffff810f4c9c>] cgroup_apply_control_enable+0x1ac/0x370
+>    [<ffffffff810f8afe>] cgroup_mkdir+0x1de/0x2e0
+>    [<ffffffff8123cf35>] kernfs_iop_mkdir+0x55/0x80
+>    [<ffffffff811c6599>] vfs_mkdir+0xb9/0x150
+>    [<ffffffff811cc666>] SyS_mkdir+0x66/0xd0
+>    [<ffffffff81002df3>] do_syscall_64+0x53/0x120
+>    [<ffffffff818d719a>] entry_SYSCALL64_slow_path+0x25/0x25
+>   Code: 89 f5 48 89 fb 49 89 d4 48 83 ec 08 8b 05 72 3b d8 00 85 c0 0f 85 60 01 00 00 4c 89 e7 e8 72 f7 ff ff 48 8d 7b 08 48 89 d9 31 c0 <48> c7 83 d0 00 00 00 00 00 00 00 48 83 e7 f8 48 29 f9 81 c1 d8 
+>   RIP  [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
+>    RSP <ffff8800666d7d90>
+>   CR2: 00000000000000d0
+>   ---[ end trace a2d8836ae1e852d1 ]---
 > 
-> This is indeed so; systemd has support, from v226 (September 2015) for the new cgroup API via a
-> kernel command-line option: 'systemd.unified_cgroup_hierarchy=1', which uses 
-> a (meanwhile) deprecated mount option of cgroups. See:
-> https://lists.freedesktop.org/archives/systemd-devel/2015-September/034177.html
-> 	
-> Probably  systemd will migrate to using cgroup v2 according to its current implementation 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-It's being worked on will be there in the next release.
+Reviewed-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Thanks.
-
--- 
-tejun
+> ---
+>  mm/memcontrol.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 75e7440..fbb8ba6 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4203,7 +4203,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+>  	return &memcg->css;
+>  fail:
+>  	mem_cgroup_free(memcg);
+> -	return NULL;
+> +	return ERR_PTR(-ENOMEM);
+>  }
+>  
+>  static int
