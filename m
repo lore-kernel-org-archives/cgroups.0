@@ -1,45 +1,39 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: question about cgroupv2
-Date: Wed, 22 Jun 2016 08:44:20 +0800
-Message-ID: <5769DF64.1040406@huawei.com>
-References: <5764ADC5.20205@cn.fujitsu.com> <5768D36D.3060606@huawei.com>
- <5768D8F5.1060107@cn.fujitsu.com>
- <9B0331B6EBBD0E4684FBFAEDA55776F92CD6983C@HASMSX110.ger.corp.intel.com>
- <5768FBF8.2060100@cn.fujitsu.com>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: [PATCH -next 2/4] cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY
+Date: Tue, 21 Jun 2016 18:15:57 -0700
+Message-ID: <20160622011555.GB97149@ast-mbp.thefacebook.com>
+References: <1466555002-1316296-1-git-send-email-kafai@fb.com>
+ <1466555002-1316296-3-git-send-email-kafai@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5768FBF8.2060100-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ic5jmGTJOZikpo4mTyQxVXgRMALGUZPfEJuGUZ7ElI0=;
+        b=uvGAAacw823ledJGC2+TuVLEerCL2H6CC1/Z2bnwemYKD7rAAY7zA8UUWPN+stkH6J
+         chlGYCieXaUxGLAmef/f9uTgjJZX25fQTcxsZwijB3/4pnHPKaAPTeuihv01u9zHGFd8
+         cEwT+Xr7YJHZtHaWl7cLsVu0vQUznvhJOtdLyaOJ1q2jDIeYY5NFV3rS0Ads3HYrvGhP
+         WQGdOaErwlGNAxnBEQgCJo2o9/3hUSWNEupHhIciw1igpdiCoI2rtVWyEofsVWbIVOhD
+         D5Tkb8Asw4gQnMZ/hPc5C1cMN+6H6MxatWzbP7/7XmwMe9YRkMESDSYiF6op/x9BgMIV
+         oqYA==
+Content-Disposition: inline
+In-Reply-To: <1466555002-1316296-3-git-send-email-kafai@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Martin KaFai Lau <kafai@fb.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Alexei Starovoitov <ast@fb.com>, Daniel Borkmann <daniel@iogearbox.net>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
 
-On 2016/6/21 16:34, Ma Shimiao wrote:
-> Hi Rosen,
-> On 06/21/2016 03:38 PM, Rosen, Rami wrote:
->> Hi, Ma,
->>
->>> Ah, it seems work, but I'm not sure.
->>
->>>> Then, I executed:
->>>> # mount -t cgroup2 none /mnt
->>
->> It should work. The thing is, according to my trials from the past, it could be that systemd triggers mounting of cgroup V1 controllers. When I made trials with cgroup v2, eventually I turned on to disros which do not run systemd (namely, it was Ubuntu. You can set Ubuntu not to use systemd, even in most recent Ubuntu systems, where systemd became the default).
->>
->> What happens if you mount cgroup v2 now, after booting with cgroup_no_v1=all:
->> mount -t cgroup2 none /mnt
->>
->> And then try to unmount cgroup v1 controllers like memory ? 
->> Do you see anything under /mnt?
+On Tue, Jun 21, 2016 at 05:23:20PM -0700, Martin KaFai Lau wrote:
+> Add a BPF_MAP_TYPE_CGROUP_ARRAY and its bpf_map_ops's implementations.
+> To update an element, the caller is expected to obtain a cgroup2 backed
+> fd by open(cgroup2_dir) and then update the array with that fd.
 > 
-> Yes, after booting with cgroup_no_v1, then execute
-> #mount -t cgroup2 none /mnt
-> #cat /mnt/cgroup.controllers 
-> io memory
-> 
-> There are controllers io and memory.
-> But, cgroup2 is not mounted in the system by default?
+> Signed-off-by: Martin KaFai Lau <kafai@fb.com>
+> Cc: Alexei Starovoitov <ast@fb.com>
+> Cc: Daniel Borkmann <daniel@iogearbox.net>
+> Cc: Tejun Heo <tj@kernel.org>
 
-because systemd hasn't supported cgroup2 yet.
+Acked-by: Alexei Starovoitov <ast@kernel.org>
