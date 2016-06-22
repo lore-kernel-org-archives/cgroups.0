@@ -1,109 +1,228 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH] memcg: css_alloc should return an ERR_PTR value on error
-Date: Wed, 22 Jun 2016 19:44:12 +0300
-Message-ID: <20160622164412.GD21652@esperanza>
-References: <20160621165740.GJ3262@mtj.duckdns.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH] mm: fix vm-scalability regression in cgroup-aware workingset code
+Date: Wed, 22 Jun 2016 14:20:19 -0400
+Message-ID: <20160622182019.24064-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=9mV0FKOsCZrMpEI+5zeA7fIfxpp64x08WFkGMTEB9HA=;
- b=Tue/nbghX7B07Cvrs5nNHL6KVx7IbUuDxjsolSoEhDO61bDDOP5nAN53D+YYp1oz2NrVQtdWKPLApSkU+jRO1rPftFRW/4rzFsdbcLm4j4VGr9L6j0AjZxc89EimPiAatiSuRqe/3BpLpBNCOqrSo2incJay1jnbw/c3reFddVE=
-Content-Disposition: inline
-In-Reply-To: <20160621165740.GJ3262-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Ye Xiaolong <xiaolong.ye@intel.com>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Jun 21, 2016 at 12:57:40PM -0400, Tejun Heo wrote:
-> mem_cgroup_css_alloc() was returning NULL on failure while cgroup core
-> expected it to return an ERR_PTR value leading to the following NULL
-> deref after a css allocation failure.  Fix it by return
-> ERR_PTR(-ENOMEM) instead.  I'll also update cgroup core so that it
-> can handle NULL returns.
-> 
->   mkdir: page allocation failure: order:6, mode:0x240c0c0(GFP_KERNEL|__GFP_COMP|__GFP_ZERO)
->   CPU: 0 PID: 8738 Comm: mkdir Not tainted 4.7.0-rc3+ #123
->   ...
->   Call Trace:
->    [<ffffffff81321937>] dump_stack+0x68/0xa1
->    [<ffffffff811522f6>] warn_alloc_failed+0xd6/0x130
->    [<ffffffff81152816>] __alloc_pages_nodemask+0x4c6/0xf20
->    [<ffffffff8119df86>] alloc_pages_current+0x66/0xe0
->    [<ffffffff81153564>] alloc_kmem_pages+0x14/0x80
->    [<ffffffff811705ca>] kmalloc_order_trace+0x2a/0x1a0
->    [<ffffffff811a7a61>] __kmalloc+0x291/0x310
->    [<ffffffff811718dc>] memcg_update_all_caches+0x6c/0x130
->    [<ffffffff818d0290>] mem_cgroup_css_alloc+0x590/0x610
->    [<ffffffff810f4c7b>] cgroup_apply_control_enable+0x18b/0x370
->    [<ffffffff810f8afe>] cgroup_mkdir+0x1de/0x2e0
->    [<ffffffff8123cf35>] kernfs_iop_mkdir+0x55/0x80
->    [<ffffffff811c6599>] vfs_mkdir+0xb9/0x150
->    [<ffffffff811cc666>] SyS_mkdir+0x66/0xd0
->    [<ffffffff81002df3>] do_syscall_64+0x53/0x120
->    [<ffffffff818d719a>] entry_SYSCALL64_slow_path+0x25/0x25
->   ...
->   BUG: unable to handle kernel NULL pointer dereference at 00000000000000d0
->   IP: [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
->   PGD 34b1e067 PUD 3a109067 PMD 0 
->   Oops: 0002 [#1] SMP
->   Modules linked in:
->   CPU: 0 PID: 8738 Comm: mkdir Not tainted 4.7.0-rc3+ #123
->   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.2-20160422_131301-anatol 04/01/2014
->   task: ffff88007cbc5200 ti: ffff8800666d4000 task.ti: ffff8800666d4000
->   RIP: 0010:[<ffffffff810f2ca7>]  [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
->   RSP: 0018:ffff8800666d7d90  EFLAGS: 00010246
->   RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
->   RDX: ffffffff810f2499 RSI: 0000000000000000 RDI: 0000000000000008
->   RBP: ffff8800666d7db8 R08: 0000000000000003 R09: 0000000000000000
->   R10: 0000000000000001 R11: 0000000000000000 R12: ffff88005a5fb400
->   R13: ffffffff81f0f8a0 R14: ffff88005a5fb400 R15: 0000000000000010
->   FS:  00007fc944689700(0000) GS:ffff88007fc00000(0000) knlGS:0000000000000000
->   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->   CR2: 00007f3aed0d2b80 CR3: 000000003a1e8000 CR4: 00000000000006f0
->   DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->   DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
->   Stack:
->    ffffffff81f0f8a0 ffffffff81f0f8a0 ffff88005a5fb400 0000000000000000
->    ffff88005a5fb400 ffff8800666d7e18 ffffffff810f4c9c ffff88005a5fb400
->    ffffffff82d23470 ffff88007cbc57f0 ffff88007cbc5200 ffff88007d013000
->   Call Trace:
->    [<ffffffff810f4c9c>] cgroup_apply_control_enable+0x1ac/0x370
->    [<ffffffff810f8afe>] cgroup_mkdir+0x1de/0x2e0
->    [<ffffffff8123cf35>] kernfs_iop_mkdir+0x55/0x80
->    [<ffffffff811c6599>] vfs_mkdir+0xb9/0x150
->    [<ffffffff811cc666>] SyS_mkdir+0x66/0xd0
->    [<ffffffff81002df3>] do_syscall_64+0x53/0x120
->    [<ffffffff818d719a>] entry_SYSCALL64_slow_path+0x25/0x25
->   Code: 89 f5 48 89 fb 49 89 d4 48 83 ec 08 8b 05 72 3b d8 00 85 c0 0f 85 60 01 00 00 4c 89 e7 e8 72 f7 ff ff 48 8d 7b 08 48 89 d9 31 c0 <48> c7 83 d0 00 00 00 00 00 00 00 48 83 e7 f8 48 29 f9 81 c1 d8 
->   RIP  [<ffffffff810f2ca7>] init_and_link_css+0x37/0x220
->    RSP <ffff8800666d7d90>
->   CR2: 00000000000000d0
->   ---[ end trace a2d8836ae1e852d1 ]---
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+23047a96d7cf ("mm: workingset: per-cgroup cache thrash detection")
+added a page->mem_cgroup lookup to the cache eviction, refault, and
+activation paths, as well as locking to the activation path, and the
+vm-scalability tests showed a regression of -23%. While the test in
+question is an artificial worst-case scenario that doesn't occur in
+real workloads - reading two sparse files in parallel at full CPU
+speed just to hammer the LRU paths - there is still some optimizations
+that can be done in those paths.
 
-Reviewed-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Inline the lookup functions to eliminate calls. Also, page->mem_cgroup
+doesn't need to be stabilized when counting an activation; we merely
+need to hold the RCU lock to prevent the memcg from being freed.
 
-> ---
->  mm/memcontrol.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 75e7440..fbb8ba6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4203,7 +4203,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  	return &memcg->css;
->  fail:
->  	mem_cgroup_free(memcg);
-> -	return NULL;
-> +	return ERR_PTR(-ENOMEM);
->  }
->  
->  static int
+This cuts down on overhead quite a bit:
+
+23047a96d7cfcfca 063f6715e77a7be5770d6081fe
+---------------- --------------------------
+         %stddev     %change         %stddev
+             \          |                \
+  21621405 =C2=B1  0%     +11.3%   24069657 =C2=B1  2%  vm-scalability.th=
+roughput
+
+Reported-by: Ye Xiaolong <xiaolong.ye@intel.com>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/memcontrol.h | 39 ++++++++++++++++++++++++++++++++++++++-
+ include/linux/mm.h         |  8 ++++++++
+ mm/memcontrol.c            | 39 ---------------------------------------
+ mm/workingset.c            | 10 ++++++----
+ 4 files changed, 52 insertions(+), 44 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index a221663687d5..16609ab1a032 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -310,7 +310,44 @@ void mem_cgroup_uncharge_list(struct list_head *page=
+_list);
+=20
+ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage);
+=20
+-struct lruvec *mem_cgroup_lruvec(struct pglist_data *, struct mem_cgroup=
+ *);
++static inline struct mem_cgroup_per_node *
++mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
++{
++	return memcg->nodeinfo[nid];
++}
++
++/**
++ * mem_cgroup_lruvec - get the lru list vector for a memcg node
++ * @node: node of the wanted lruvec
++ * @memcg: memcg of the wanted lruvec
++ *
++ * Returns the lru list vector holding pages for a given @node and @memc=
+g.
++ * This can be the node lruvec, if the memory controller is disabled.
++ */
++static inline struct lruvec *mem_cgroup_lruvec(struct pglist_data *pgdat=
+,
++					       struct mem_cgroup *memcg)
++{
++	struct mem_cgroup_per_node *mz;
++	struct lruvec *lruvec;
++
++	if (mem_cgroup_disabled()) {
++		lruvec =3D node_lruvec(pgdat);
++		goto out;
++	}
++
++	mz =3D mem_cgroup_nodeinfo(memcg, pgdat->node_id);
++	lruvec =3D &mz->lruvec;
++out:
++	/*
++	 * Since a node can be onlined after the mem_cgroup was created,
++	 * we have to be prepared to initialize lruvec->zone here;
++	 * and if offlined then reonlined, we need to reinitialize it.
++	 */
++	if (unlikely(lruvec->pgdat !=3D pgdat))
++		lruvec->pgdat =3D pgdat;
++	return lruvec;
++}
++
+ struct lruvec *mem_cgroup_page_lruvec(struct page *, struct pglist_data =
+*);
+=20
+ bool task_in_mem_cgroup(struct task_struct *task, struct mem_cgroup *mem=
+cg);
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 14de8810d02e..0f7a4d89b52a 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -978,11 +978,19 @@ static inline struct mem_cgroup *page_memcg(struct =
+page *page)
+ {
+ 	return page->mem_cgroup;
+ }
++static inline struct mem_cgroup *page_memcg_rcu(struct page *page)
++{
++	return READ_ONCE(page->mem_cgroup);
++}
+ #else
+ static inline struct mem_cgroup *page_memcg(struct page *page)
+ {
+ 	return NULL;
+ }
++static inline struct mem_cgroup *page_memcg_rcu(struct page *page)
++{
++	return NULL;
++}
+ #endif
+=20
+ /*
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2b6574a13d0e..603e9b030e46 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -319,12 +319,6 @@ EXPORT_SYMBOL(memcg_kmem_enabled_key);
+=20
+ #endif /* !CONFIG_SLOB */
+=20
+-static struct mem_cgroup_per_node *
+-mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
+-{
+-	return memcg->nodeinfo[nid];
+-}
+-
+ /**
+  * mem_cgroup_css_from_page - css of the memcg associated with a page
+  * @page: page of interest
+@@ -927,39 +921,6 @@ static void invalidate_reclaim_iterators(struct mem_=
+cgroup *dead_memcg)
+ 	     iter =3D mem_cgroup_iter(NULL, iter, NULL))
+=20
+ /**
+- * mem_cgroup_lruvec - get the lru list vector for a node or a memcg zon=
+e
+- * @node: node of the wanted lruvec
+- * @memcg: memcg of the wanted lruvec
+- *
+- * Returns the lru list vector holding pages for a given @node or a give=
+n
+- * @memcg and @zone. This can be the node lruvec, if the memory controll=
+er
+- * is disabled.
+- */
+-struct lruvec *mem_cgroup_lruvec(struct pglist_data *pgdat,
+-				 struct mem_cgroup *memcg)
+-{
+-	struct mem_cgroup_per_node *mz;
+-	struct lruvec *lruvec;
+-
+-	if (mem_cgroup_disabled()) {
+-		lruvec =3D node_lruvec(pgdat);
+-		goto out;
+-	}
+-
+-	mz =3D mem_cgroup_nodeinfo(memcg, pgdat->node_id);
+-	lruvec =3D &mz->lruvec;
+-out:
+-	/*
+-	 * Since a node can be onlined after the mem_cgroup was created,
+-	 * we have to be prepared to initialize lruvec->zone here;
+-	 * and if offlined then reonlined, we need to reinitialize it.
+-	 */
+-	if (unlikely(lruvec->pgdat !=3D pgdat))
+-		lruvec->pgdat =3D pgdat;
+-	return lruvec;
+-}
+-
+-/**
+  * mem_cgroup_page_lruvec - return lruvec for isolating/putting an LRU p=
+age
+  * @page: the page
+  * @zone: zone of the page
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 236493eaf480..d4c864066fde 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -302,9 +302,10 @@ bool workingset_refault(void *shadow)
+  */
+ void workingset_activation(struct page *page)
+ {
++	struct mem_cgroup *memcg;
+ 	struct lruvec *lruvec;
+=20
+-	lock_page_memcg(page);
++	rcu_read_lock();
+ 	/*
+ 	 * Filter non-memcg pages here, e.g. unmap can call
+ 	 * mark_page_accessed() on VDSO pages.
+@@ -312,12 +313,13 @@ void workingset_activation(struct page *page)
+ 	 * XXX: See workingset_refault() - this should return
+ 	 * root_mem_cgroup even for !CONFIG_MEMCG.
+ 	 */
+-	if (!mem_cgroup_disabled() && !page_memcg(page))
++	memcg =3D page_memcg_rcu(page);
++	if (!mem_cgroup_disabled() && !memcg)
+ 		goto out;
+-	lruvec =3D mem_cgroup_lruvec(page_pgdat(page), page_memcg(page));
++	lruvec =3D mem_cgroup_lruvec(page_pgdat(page), memcg);
+ 	atomic_long_inc(&lruvec->inactive_age);
+ out:
+-	unlock_page_memcg(page);
++	rcu_read_unlock();
+ }
+=20
+ /*
+--=20
+2.8.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
