@@ -1,68 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next 1/4] cgroup: Add cgroup_get_from_fd
-Date: Wed, 22 Jun 2016 11:35:07 -0400
-Message-ID: <20160622153507.GW3262@mtj.duckdns.org>
-References: <1466555002-1316296-1-git-send-email-kafai@fb.com>
- <1466555002-1316296-2-git-send-email-kafai@fb.com>
+From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: question about cgroupv2
+Date: Wed, 22 Jun 2016 11:36:56 -0400
+Message-ID: <20160622153656.GX3262@mtj.duckdns.org>
+References: <5764ADC5.20205@cn.fujitsu.com>
+ <5768D36D.3060606@huawei.com>
+ <5768D8F5.1060107@cn.fujitsu.com>
+ <9B0331B6EBBD0E4684FBFAEDA55776F92CD6983C@HASMSX110.ger.corp.intel.com>
+ <5768FBF8.2060100@cn.fujitsu.com>
+ <5769DF64.1040406@huawei.com>
+ <9B0331B6EBBD0E4684FBFAEDA55776F92CD6A674@HASMSX110.ger.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=xSezKpZRCZZf8qfROB7uIa8OV2VW6psEHWWUs89v8iE=;
-        b=gGPViCEwxt5DCUcat/YTwsdTAMuyx01F/XKklepxk7tjMhwdYythUIWYJu09/FopzF
-         RoLvdaWFZOTkH6IalNyC9uur38Jmb5JNid91mjgx8kg+h1VlzJcvTKr3BoNyA27Y8llY
-         9mvJYkDiA1jDrxtQo/jYg2p0GvYslg3aGyKMQkGHFZpt8HQpFJ+FeRu4n1Np6TGnZ3vl
-         9o4uj4bjn3UiM6eRMDbVNIYd5x8X4G+D8GRzob1u3gIjo3569F9BlFEueD5fKQd1BhIK
-         J61MmjQwT8M0a/aQInwZzbDqk+VYBZsR3FugQUoe1MiUJXkw5oTo0ca8UoEJBh5xD+Dm
-         ymGQ==
+        bh=EfGkhb0pnIYfbzc4+JfokVp8AhMF2TWmNiZpcaEbh8I=;
+        b=VgT/SJhN3osMuWyLFaFFR9rspY4RSDuWT59u8maXYmTgD/r10s0sc1w3FmSlJXG6Pm
+         47AksLQW3/b5vrIqLYPRXQiPBVC9Lv3yUFszK2NcQuQE69whpnbL946VkFu6JjqXnkLZ
+         HeWTegM316LHBt+dXfwHKNtCDV/NHyhwC9BgNp0jFme+py8158Fcg7fKWguCdFwK9DZd
+         7dwPkFtQ4DTBF49LIn/6lk8PJXyVfL5gpM5R/dpmzwLptUyhDN9abhnjuk7sRVhbjZWG
+         Oa4vOoElpvRXA5Kbvi1E3MokYd6rj5N+/V3pTe5JYmdbPgcNuEjdCkpFHkukWQ6eUGue
+         66QA==
 Content-Disposition: inline
-In-Reply-To: <1466555002-1316296-2-git-send-email-kafai@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <9B0331B6EBBD0E4684FBFAEDA55776F92CD6A674-cNwSTNrqBuVnIh7sxsoRyrfspsVTdybXVpNB7YpNyf8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Martin KaFai Lau <kafai@fb.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Alexei Starovoitov <ast@fb.com>, Daniel Borkmann <daniel@iogearbox.net>, kernel-team@fb.com
+To: "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Martin.
+On Wed, Jun 22, 2016 at 07:13:07AM +0000, Rosen, Rami wrote:
+> Hi all,
+> 
+> > because systemd hasn't supported cgroup2 yet.
+> 
+> This is indeed so; systemd has support, from v226 (September 2015) for the new cgroup API via a
+> kernel command-line option: 'systemd.unified_cgroup_hierarchy=1', which uses 
+> a (meanwhile) deprecated mount option of cgroups. See:
+> https://lists.freedesktop.org/archives/systemd-devel/2015-September/034177.html
+> 	
+> Probably  systemd will migrate to using cgroup v2 according to its current implementation 
 
-On Tue, Jun 21, 2016 at 05:23:19PM -0700, Martin KaFai Lau wrote:
-> @@ -6205,6 +6206,31 @@ struct cgroup *cgroup_get_from_path(const char *path)
->  }
->  EXPORT_SYMBOL_GPL(cgroup_get_from_path);
+It's being worked on will be there in the next release.
 
-Proper function comment would be nice.
-
-> +struct cgroup *cgroup_get_from_fd(int fd)
-> +{
-> +	struct cgroup_subsys_state *css;
-> +	struct cgroup *cgrp;
-> +	struct file *f;
-> +
-> +	f = fget_raw(fd);
-> +	if (!f)
-> +		return NULL;
-
-It returns NULL here.
-
-> +	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
-> +	fput(f);
-> +	if (IS_ERR(css))
-> +		return ERR_CAST(css);
-> +
-> +	cgrp = css->cgroup;
-> +	if (!cgroup_on_dfl(cgrp)) {
-> +		cgroup_put(cgrp);
-> +		return ERR_PTR(-EINVAL);
-
-But an ERR_PTR value here.  Is this intentional?  Also, wouldn't it
-make more sense to return -EBADF here, given that that's what
-css_tryget_online_from_dir() would return if the filesystem type is
-wrong?
-
-Thanks!
+Thanks.
 
 -- 
 tejun
