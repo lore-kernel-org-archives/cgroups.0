@@ -1,58 +1,72 @@
-From: Martin KaFai Lau <kafai@fb.com>
-Subject: Re: [PATCH net-next v2 3/4] cgroup: bpf: Add bpf_skb_in_cgroup_proto
-Date: Thu, 23 Jun 2016 14:41:40 -0700
-Message-ID: <20160623214140.GB90834@kafai-mba.DHCP.thefacebook.com>
-References: <1466630252-3822277-1-git-send-email-kafai@fb.com>
- <1466630252-3822277-4-git-send-email-kafai@fb.com>
- <576BB1AE.5080605@iogearbox.net>
- <20160623165449.GC82305@kafai-mba.local>
- <576C417F.6000301@iogearbox.net>
+From: Daniel Borkmann <daniel@iogearbox.net>
+Subject: Re: [PATCH net-next v2 2/4] cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY
+Date: Thu, 23 Jun 2016 23:50:08 +0200
+Message-ID: <576C5990.9000300@iogearbox.net>
+References: <1466630252-3822277-1-git-send-email-kafai@fb.com> <1466630252-3822277-3-git-send-email-kafai@fb.com> <576BAF07.4020302@iogearbox.net> <20160623212616.GA90834@kafai-mba.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=BWuxOK4yjProJ1oGh7W6EqZiPzvFEWSJ884HEVHQhXs=;
- b=HpeGkceW5CxMTVR+oFeVNedPtJdw+3NRYQsnYuugGC7IvyRfDCFtmWvbMZyPdbqyhU2l
- 3/aAU1aDbAWwjswpjVMkeYg7Q/cI2zDrH9pqbA/CHdmoBTjXLLGy379BxKvoquVv9nIx
- gtso6EFO2S7CBGuv6Ty/Z9inpoZfc4YnIaM= 
-Content-Disposition: inline
-In-Reply-To: <576C417F.6000301@iogearbox.net>
-Sender: netdev-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Daniel Borkmann <daniel@iogearbox.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160623212616.GA90834@kafai-mba.DHCP.thefacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Martin KaFai Lau <kafai@fb.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Alexei Starovoitov <ast@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
 
-On Thu, Jun 23, 2016 at 10:07:27PM +0200, Daniel Borkmann wrote:
-> On 06/23/2016 06:54 PM, Martin KaFai Lau wrote:
-> >On Thu, Jun 23, 2016 at 11:53:50AM +0200, Daniel Borkmann wrote:
-> >>>diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
-> >>>index 668e079..68753e0 100644
-> >>>--- a/kernel/bpf/verifier.c
-> >>>+++ b/kernel/bpf/verifier.c
-> >>>@@ -1062,6 +1062,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
-> >>>  		if (func_id != BPF_FUNC_get_stackid)
-> >>>  			goto error;
-> >>>  		break;
-> >>>+	case BPF_MAP_TYPE_CGROUP_ARRAY:
-> >>>+		if (func_id != BPF_FUNC_skb_in_cgroup)
-> >>>+			goto error;
-> >>>+		break;
-> >>
-> >>I think the BPF_MAP_TYPE_CGROUP_ARRAY case should have been fist here in
-> >>patch 2/4, but with unconditional goto error. And this one only adds the
-> >>'func_id != BPF_FUNC_skb_in_cgroup' test.
-> >I am not sure I understand.  Can you elaborate? I am probably missing
-> >something here.
+On 06/23/2016 11:26 PM, Martin KaFai Lau wrote:
+> On Thu, Jun 23, 2016 at 11:42:31AM +0200, Daniel Borkmann wrote:
+>> Hi Martin,
+>>
+>> [ sorry to jump late in here, on pto currently ]
+> Thanks for reviewing.
 >
-> If someone backports patch 2/4 as-is, but for some reason not 3/4, then you
-> could craft a program that calls f.e. bpf_map_update_elem() on a cgroup array
-> and would thus cause a NULL pointer deref, since verifier doesn't prevent it.
-> I'm just trying to say that it would probably make sense to add the above 'case
-> BPF_MAP_TYPE_CGROUP_ARRAY:' with an unconditional 'goto error' in patch 2/4
-> and extend upon it in patch 3/4 so result looks like here, so that the patches
-> are fine/complete each as stand-alone.
-I failed to connect some points in your last comment.  Thanks for explaining.
+>> Could you describe a bit more with regards to pinning maps and how this
+>> should interact with cgroups? The two specialized array maps we have (tail
+>> calls, perf events) have fairly complicated semantics for when to clean up
+>> map slots (see commits c9da161c6517ba1, 3b1efb196eee45b2f0c4).
+>>
+>> How is this managed with cgroups? Once a cgroup fd is placed into a map and
+>> the user removes the cgroup, will this be prevented due to 'being busy', or
+>> will the cgroup live further as long as a program is running with a cgroup
+>> map entry (but the cgroup itself is not visible from user space in any way
+>> anymore)?
+> Having a cgroup ptr stored in the bpf_map will not stop the user from
+> removing the cgroup (by rmdir /mnt/cgroup2/tc/test_cgrp).
 
-Make sense. I will spin v3.
+Right.
+
+> The cgroup ptr stored in the bpf_map holds a refcnt which answer the
+> second part.
+
+Yep, clear.
+
+> The situation is similar to the netfilter usecase in
+> commit 38c4597e4bf ("netfilter: implement xt_cgroup cgroup2 path match")
+>
+>> I presume it's a valid use case to pin a cgroup map, put fds into it and
+>> remove the pinned file expecting to continue to match on it, right? So
+>> lifetime is really until last prog using a cgroup map somewhere gets removed
+>> (even if not accessible from user space anymore, meaning no prog has fd and
+>> pinned file was removed).
+> Yes.
+>
+> We are still hatching out how to set this up in production. However, the
+> situation is similar to removing the pinned file.
+
+I presume you mean removing the last BPF program holding a reference on
+the cgroup array map. (Any user space visibility like struct files given
+from the anon inode and pinnings are tracked via uref, btw, which is
+needed to break possible complex dependencies among tail called programs.)
+But dropping cgroup ref at latest when the last map ref is dropped as you
+currently do seems fine. It makes cgroup array maps effectively no different
+from plain regular array maps.
+
+> We probably will not use tc and pin a bpf_map to do that.  Instead,
+> one process will setup eveything (e.g. create the cgroup, pouplate the
+> cgroup map, load the bpf to egress) and then go away.
+
+Yep, that seems a valid case as well, both use cases (pinned and non-pinned)
+should be fine with your code then.
+
+Thanks,
+Daniel
