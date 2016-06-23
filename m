@@ -1,35 +1,39 @@
-From: Martin KaFai Lau <kafai@fb.com>
-Subject: [PATCH net-next v2 0/4] cgroup: bpf: cgroup2 membership test on skb
-Date: Wed, 22 Jun 2016 14:17:28 -0700
-Message-ID: <1466630252-3822277-1-git-send-email-kafai@fb.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3] cgroup: Disable IRQs while holding css_set_lock
+Date: Thu, 23 Jun 2016 09:05:07 +0800
+Message-ID: <576B35C3.8070109@huawei.com>
+References: <1466627321-22137-1-git-send-email-bristot@redhat.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
- date : message-id : mime-version : content-type; s=facebook;
- bh=GDjsWDr6TkASKNk31Fy5Wl3TujYKyXS8P6N+ddLipJs=;
- b=Yq2Py5/aAPjFcM8Z73xs7BtTBwyuJauu3fIcWn+LpgmpHpBAOPlufevbwHPlNr8KUqZI
- B5zzvTNTObl3uO4DgraSnzNqMx8DlSvhk4U4O+xilu1LlyYR+MZ3pbA2aKsoDCdrhYq+
- kuH1PuZoPAkcaidGy7Nhqzy6tL5k0MBvhno= 
-Sender: netdev-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1466627321-22137-1-git-send-email-bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Cc: Alexei Starovoitov <ast@fb.com>, Daniel Borkmann <daniel@iogearbox.net>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+To: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Luis Claudio R. Goncalves" <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-v2:
-- Fix two return cases in cgroup_get_from_fd()
-- Fix compilation errors when CONFIG_CGROUPS is not used:
-  - arraymap.c: avoid registering BPF_MAP_TYPE_CGROUP_ARRAY
-  - filter.c: tc_cls_act_func_proto() returns NULL on BPF_FUNC_skb_in_cgroup
-- Add comments to BPF_FUNC_skb_in_cgroup and cgroup_get_from_fd()
+On 2016/6/23 4:28, Daniel Bristot de Oliveira wrote:
+> While testing the deadline scheduler + cgroup setup I hit this
+> warning.
+> 
+...
+> The warn is the spin_(lock|unlock)_bh(&css_set_lock) in the interrupt
+> context. Converting the spin_lock_bh to spin_lock_irq(save) to avoid
+> this problem - and other problems of sharing a spinlock with an
+> interrupt.
+> 
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>
+> Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 4.5+
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Reviewed-by: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: "Luis Claudio R. Goncalves" <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
 
-v1 cover letter:
-This series is to implement a bpf-way to
-check the cgroup2 membership of a skb (sk_buff).
-
-It is similar to the feature added in netfilter:
-c38c4597e4bf ("netfilter: implement xt_cgroup cgroup2 path match")
-
-The current target is the tc-like usage.
-
+Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
