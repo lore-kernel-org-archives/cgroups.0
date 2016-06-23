@@ -1,32 +1,55 @@
-From: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
-Subject: Re: [PATCH net-next v2 2/4] cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY
-Date: Thu, 23 Jun 2016 23:33:52 +0200
-Message-ID: <576C55C0.7040800@iogearbox.net>
-References: <1466630252-3822277-1-git-send-email-kafai@fb.com> <1466630252-3822277-3-git-send-email-kafai@fb.com> <576BAF07.4020302@iogearbox.net> <20160623211326.GK3262@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] capabilities: add capability cgroup controller
+Date: Thu, 23 Jun 2016 17:38:19 -0400
+Message-ID: <20160623213819.GP3262@mtj.duckdns.org>
+References: <1466694434-1420-1-git-send-email-toiwoton@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160623211326.GK3262-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=KG3Y36jQFSVKIe+5RMabtdGQTu/XTv2PK9hj2hB8Qqk=;
+        b=A3a/IHJiNWOKGPP7i2VLHm7FI2cyT3ohH6bWXb9IfwRUKVx1B5ilKQAe/YUn2LgDCW
+         0huRmIwYvSvTrYjrbMBfByvbo/t6iaPrVKDFWM3goAy7jgjeJ1axddG1BK7PnHfPg1Oq
+         7ESpLLzV3OQ2tBTP7c8vGw1eOYhbty05oMA+6vigrnBmOKHNZEvuteBGEWb8HOYGpb1v
+         WIoCNOgdBrAaa/iUN1YqB1ABFxbJEFdkCWafcbqxY7qbTFBpf9p4T0RwqP9b5C6UZgIi
+         zbb+h3GwwASBPGjZCmm4Dpbk09GtF0LZuwLtJ69nE73IaRlu0N60AAbjrCRmCUC1BZAa
+         J12g==
+Content-Disposition: inline
+In-Reply-To: <1466694434-1420-1-git-send-email-toiwoton@gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Topi Miettinen <toiwoton@gmail.com>
+Cc: linux-kernel@vger.kernel.org, luto@kernel.org, serge@hallyn.com, keescook@chromium.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Petr Mladek <pmladek@suse.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
 
-On 06/23/2016 11:13 PM, Tejun Heo wrote:
-> Hello,
->
-> On Thu, Jun 23, 2016 at 11:42:31AM +0200, Daniel Borkmann wrote:
->> I presume it's a valid use case to pin a cgroup map, put fds into it and
->> remove the pinned file expecting to continue to match on it, right? So
->> lifetime is really until last prog using a cgroup map somewhere gets removed
->> (even if not accessible from user space anymore, meaning no prog has fd and
->> pinned file was removed).
->
-> Yeap, from what I can see, the cgroup will stay around (even if it
-> gets deleted) as long as the bpf rule using it is around and that's
-> completely fine from cgroup side.
+Hello,
 
-Ok, thanks for confirming!
+On Thu, Jun 23, 2016 at 06:07:10PM +0300, Topi Miettinen wrote:
+> There are many basic ways to control processes, including capabilities,
+> cgroups and resource limits. However, there are far fewer ways to find
+> out useful values for the limits, except blind trial and error.
+> 
+> Currently, there is no way to know which capabilities are actually used.
+> Even the source code is only implicit, in-depth knowledge of each
+> capability must be used when analyzing a program to judge which
+> capabilities the program will exercise.
+> 
+> Add a new cgroup controller for monitoring of capabilities
+> in the cgroup.
+> 
+> Test case demonstrating basic capability monitoring and how the
+> capabilities are combined at next level (boot to rdshell):
 
-> Thanks.
+This doesn't have anything to do with resource control and I don't
+think it's a good idea to add arbitrary monitoring mechanisms to
+cgroup just because it's easy to add interface there.  Given that
+capabilities are inherited and modified through the process hierarchy,
+shouldn't this be part of that?
+
+Thanks.
+
+-- 
+tejun
