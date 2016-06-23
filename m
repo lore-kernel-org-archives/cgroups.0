@@ -1,59 +1,43 @@
-From: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
+From: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
 Subject: Re: [PATCH net-next v2 3/4] cgroup: bpf: Add bpf_skb_in_cgroup_proto
-Date: Thu, 23 Jun 2016 09:54:49 -0700
-Message-ID: <20160623165449.GC82305@kafai-mba.local>
-References: <1466630252-3822277-1-git-send-email-kafai@fb.com>
- <1466630252-3822277-4-git-send-email-kafai@fb.com>
- <576BB1AE.5080605@iogearbox.net>
+Date: Thu, 23 Jun 2016 22:07:27 +0200
+Message-ID: <576C417F.6000301@iogearbox.net>
+References: <1466630252-3822277-1-git-send-email-kafai@fb.com> <1466630252-3822277-4-git-send-email-kafai@fb.com> <576BB1AE.5080605@iogearbox.net> <20160623165449.GC82305@kafai-mba.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=FPq9yKbXMYBlSiD7DOoGNKZ8CxCDcCZNi6WvAVH23/A=;
- b=Ed+ASNbLZC+pEJqSaoWjtk22pPr3ue9oHtu8yL8G2Mai0EmIOG74VZNlnB/XVDrfyP0F
- kO0B99git9FXt2yfFZr/M84lp9WduJyOJY63NEB7mvIADsygf6IkJ3wtIfxJ7rhVBbgz
- VxhI99Lfoitk8ZS47wmMGa8G0JyOwm+Q3QY= 
-Content-Disposition: inline
-In-Reply-To: <576BB1AE.5080605-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+In-Reply-To: <20160623165449.GC82305-ik1955jzaFFGY1KPJGhogQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, Jun 23, 2016 at 11:53:50AM +0200, Daniel Borkmann wrote:
-> >diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
-> >index 668e079..68753e0 100644
-> >--- a/kernel/bpf/verifier.c
-> >+++ b/kernel/bpf/verifier.c
-> >@@ -1062,6 +1062,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
-> >  		if (func_id != BPF_FUNC_get_stackid)
-> >  			goto error;
-> >  		break;
-> >+	case BPF_MAP_TYPE_CGROUP_ARRAY:
-> >+		if (func_id != BPF_FUNC_skb_in_cgroup)
-> >+			goto error;
-> >+		break;
->
-> I think the BPF_MAP_TYPE_CGROUP_ARRAY case should have been fist here in
-> patch 2/4, but with unconditional goto error. And this one only adds the
-> 'func_id != BPF_FUNC_skb_in_cgroup' test.
-I am not sure I understand.  Can you elaborate? I am probably missing
-something here.
+On 06/23/2016 06:54 PM, Martin KaFai Lau wrote:
+> On Thu, Jun 23, 2016 at 11:53:50AM +0200, Daniel Borkmann wrote:
+>>> diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
+>>> index 668e079..68753e0 100644
+>>> --- a/kernel/bpf/verifier.c
+>>> +++ b/kernel/bpf/verifier.c
+>>> @@ -1062,6 +1062,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
+>>>   		if (func_id != BPF_FUNC_get_stackid)
+>>>   			goto error;
+>>>   		break;
+>>> +	case BPF_MAP_TYPE_CGROUP_ARRAY:
+>>> +		if (func_id != BPF_FUNC_skb_in_cgroup)
+>>> +			goto error;
+>>> +		break;
+>>
+>> I think the BPF_MAP_TYPE_CGROUP_ARRAY case should have been fist here in
+>> patch 2/4, but with unconditional goto error. And this one only adds the
+>> 'func_id != BPF_FUNC_skb_in_cgroup' test.
+> I am not sure I understand.  Can you elaborate? I am probably missing
+> something here.
 
->
-> >  	default:
-> >  		break;
-> >  	}
-> >@@ -1081,6 +1085,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
-> >  		if (map->map_type != BPF_MAP_TYPE_STACK_TRACE)
-> >  			goto error;
-> >  		break;
-> >+	case BPF_FUNC_skb_in_cgroup:
-> >+		if (map->map_type != BPF_MAP_TYPE_CGROUP_ARRAY)
-> >+			goto error;
-> >+		break;
-> >  	default:
-> >  		break;
-> >  	}
+If someone backports patch 2/4 as-is, but for some reason not 3/4, then you
+could craft a program that calls f.e. bpf_map_update_elem() on a cgroup array
+and would thus cause a NULL pointer deref, since verifier doesn't prevent it.
+I'm just trying to say that it would probably make sense to add the above 'case
+BPF_MAP_TYPE_CGROUP_ARRAY:' with an unconditional 'goto error' in patch 2/4
+and extend upon it in patch 3/4 so result looks like here, so that the patches
+are fine/complete each as stand-alone.
