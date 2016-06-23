@@ -1,112 +1,162 @@
 From: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
-Subject: Re: [PATCH net-next v2 2/4] cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY
-Date: Thu, 23 Jun 2016 11:42:31 +0200
-Message-ID: <576BAF07.4020302@iogearbox.net>
-References: <1466630252-3822277-1-git-send-email-kafai@fb.com> <1466630252-3822277-3-git-send-email-kafai@fb.com>
+Subject: Re: [PATCH net-next v2 3/4] cgroup: bpf: Add bpf_skb_in_cgroup_proto
+Date: Thu, 23 Jun 2016 11:53:50 +0200
+Message-ID: <576BB1AE.5080605@iogearbox.net>
+References: <1466630252-3822277-1-git-send-email-kafai@fb.com> <1466630252-3822277-4-git-send-email-kafai@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1466630252-3822277-3-git-send-email-kafai-b10kYP2dOMg@public.gmane.org>
+In-Reply-To: <1466630252-3822277-4-git-send-email-kafai-b10kYP2dOMg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hi Martin,
-
-[ sorry to jump late in here, on pto currently ]
-
 On 06/22/2016 11:17 PM, Martin KaFai Lau wrote:
-> Add a BPF_MAP_TYPE_CGROUP_ARRAY and its bpf_map_ops's implementations.
-> To update an element, the caller is expected to obtain a cgroup2 backed
-> fd by open(cgroup2_dir) and then update the array with that fd.
+> Adds a bpf helper, bpf_skb_in_cgroup, to decide if a skb->sk
+> belongs to a descendant of a cgroup2.  It is similar to the
+> feature added in netfilter:
+> commit c38c4597e4bf ("netfilter: implement xt_cgroup cgroup2 path match")
+>
+> The user is expected to populate a BPF_MAP_TYPE_CGROUP_ARRAY
+> which will be used by the bpf_skb_in_cgroup.
+>
+> Modifications to the bpf verifier is to ensure BPF_MAP_TYPE_CGROUP_ARRAY
+> and bpf_skb_in_cgroup() are always used together.
 >
 > Signed-off-by: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
 > Cc: Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>
 > Cc: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Acked-by: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> ---
+>   include/uapi/linux/bpf.h | 12 ++++++++++++
+>   kernel/bpf/verifier.c    |  8 ++++++++
+>   net/core/filter.c        | 40 ++++++++++++++++++++++++++++++++++++++++
+>   3 files changed, 60 insertions(+)
+>
+> diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
+> index ef4e386..bad309f 100644
+> --- a/include/uapi/linux/bpf.h
+> +++ b/include/uapi/linux/bpf.h
+> @@ -314,6 +314,18 @@ enum bpf_func_id {
+>   	 */
+>   	BPF_FUNC_skb_get_tunnel_opt,
+>   	BPF_FUNC_skb_set_tunnel_opt,
+> +
+> +	/**
+> +	 * bpf_skb_in_cgroup(skb, map, index) - Check cgroup2 membership of skb
+> +	 * @skb: pointer to skb
+> +	 * @map: pointer to bpf_map in BPF_MAP_TYPE_CGROUP_ARRAY type
+> +	 * @index: index of the cgroup in the bpf_map
+> +	 * Return:
+> +	 *   == 0 skb failed the cgroup2 descendant test
+> +	 *   == 1 skb succeeded the cgroup2 descendant test
+> +	 *    < 0 error
+> +	 */
+> +	BPF_FUNC_skb_in_cgroup,
+>   	__BPF_FUNC_MAX_ID,
+>   };
+>
+> diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
+> index 668e079..68753e0 100644
+> --- a/kernel/bpf/verifier.c
+> +++ b/kernel/bpf/verifier.c
+> @@ -1062,6 +1062,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
+>   		if (func_id != BPF_FUNC_get_stackid)
+>   			goto error;
+>   		break;
+> +	case BPF_MAP_TYPE_CGROUP_ARRAY:
+> +		if (func_id != BPF_FUNC_skb_in_cgroup)
+> +			goto error;
+> +		break;
 
-Could you describe a bit more with regards to pinning maps and how this
-should interact with cgroups? The two specialized array maps we have (tail
-calls, perf events) have fairly complicated semantics for when to clean up
-map slots (see commits c9da161c6517ba1, 3b1efb196eee45b2f0c4).
+I think the BPF_MAP_TYPE_CGROUP_ARRAY case should have been fist here in
+patch 2/4, but with unconditional goto error. And this one only adds the
+'func_id != BPF_FUNC_skb_in_cgroup' test.
 
-How is this managed with cgroups? Once a cgroup fd is placed into a map and
-the user removes the cgroup, will this be prevented due to 'being busy', or
-will the cgroup live further as long as a program is running with a cgroup
-map entry (but the cgroup itself is not visible from user space in any way
-anymore)?
-
-I presume it's a valid use case to pin a cgroup map, put fds into it and
-remove the pinned file expecting to continue to match on it, right? So
-lifetime is really until last prog using a cgroup map somewhere gets removed
-(even if not accessible from user space anymore, meaning no prog has fd and
-pinned file was removed).
-
-I assume that using struct file here doesn't make sense (commit e03e7ee34fdd1c3)
-either, right?
-
-[...]
+>   	default:
+>   		break;
+>   	}
+> @@ -1081,6 +1085,10 @@ static int check_map_func_compatibility(struct bpf_map *map, int func_id)
+>   		if (map->map_type != BPF_MAP_TYPE_STACK_TRACE)
+>   			goto error;
+>   		break;
+> +	case BPF_FUNC_skb_in_cgroup:
+> +		if (map->map_type != BPF_MAP_TYPE_CGROUP_ARRAY)
+> +			goto error;
+> +		break;
+>   	default:
+>   		break;
+>   	}
+> diff --git a/net/core/filter.c b/net/core/filter.c
+> index df6860c..a16f7d2 100644
+> --- a/net/core/filter.c
+> +++ b/net/core/filter.c
+> @@ -2024,6 +2024,42 @@ bpf_get_skb_set_tunnel_proto(enum bpf_func_id which)
+>   	}
+>   }
+>
 > +#ifdef CONFIG_CGROUPS
-> +static void *cgroup_fd_array_get_ptr(struct bpf_map *map,
-> +				     struct file *map_file /* not used */,
-> +				     int fd)
+> +static u64 bpf_skb_in_cgroup(u64 r1, u64 r2, u64 r3, u64 r4, u64 r5)
 > +{
-> +	return cgroup_get_from_fd(fd);
-> +}
+> +	struct sk_buff *skb = (struct sk_buff *)(long)r1;
+> +	struct bpf_map *map = (struct bpf_map *)(long)r2;
+> +	struct bpf_array *array = container_of(map, struct bpf_array, map);
+> +	struct cgroup *cgrp;
+> +	struct sock *sk;
+> +	u32 i = (u32)r3;
 > +
-> +static void cgroup_fd_array_put_ptr(void *ptr)
-> +{
-> +	/* cgroup_put free cgrp after a rcu grace period */
-> +	cgroup_put(ptr);
+> +	WARN_ON_ONCE(!rcu_read_lock_held());
 
-Yeah, as long as this respects freeing after RCU grace period, it's fine
-like this ...
+I think the WARN_ON_ONCE() test can be removed all-together. There are many
+other functions without it. We really rely on RCU read-lock being held for
+BPF programs (otherwise it would be horribly broken). F.e. it's kinda silly
+that for some map update/lookups we even have this WARN_ON_ONCE() test twice
+we go through in the fast-path (once from the generic eBPF helper function
+and then once again from the actual implementation since it could also be
+called from syscall). The actual invocation points are not that many and we
+can make sure that related call sites hold RCU read lock.
 
+Rest looks good to me, thanks.
+
+> +	sk = skb->sk;
+> +	if (!sk || !sk_fullsock(sk))
+> +		return -ENOENT;
+> +
+> +	if (unlikely(i >= array->map.max_entries))
+> +		return -E2BIG;
+> +
+> +	cgrp = READ_ONCE(array->ptrs[i]);
+> +	if (unlikely(!cgrp))
+> +		return -ENOENT;
+> +
+> +	return cgroup_is_descendant(sock_cgroup_ptr(&sk->sk_cgrp_data), cgrp);
 > +}
 > +
-> +static void cgroup_fd_array_free(struct bpf_map *map)
-> +{
-> +	bpf_fd_array_map_clear(map);
-> +	fd_array_map_free(map);
-> +}
-> +
-> +static const struct bpf_map_ops cgroup_array_ops = {
-> +	.map_alloc = fd_array_map_alloc,
-> +	.map_free = cgroup_fd_array_free,
-> +	.map_get_next_key = array_map_get_next_key,
-> +	.map_lookup_elem = fd_array_map_lookup_elem,
-> +	.map_delete_elem = fd_array_map_delete_elem,
-> +	.map_fd_get_ptr = cgroup_fd_array_get_ptr,
-> +	.map_fd_put_ptr = cgroup_fd_array_put_ptr,
+> +static const struct bpf_func_proto bpf_skb_in_cgroup_proto = {
+> +	.func		= bpf_skb_in_cgroup,
+> +	.gpl_only	= false,
+> +	.ret_type	= RET_INTEGER,
+> +	.arg1_type	= ARG_PTR_TO_CTX,
+> +	.arg2_type	= ARG_CONST_MAP_PTR,
+> +	.arg3_type	= ARG_ANYTHING,
 > +};
-> +
-> +static struct bpf_map_type_list cgroup_array_type __read_mostly = {
-> +	.ops = &cgroup_array_ops,
-> +	.type = BPF_MAP_TYPE_CGROUP_ARRAY,
-> +};
-> +
-> +static int __init register_cgroup_array_map(void)
-> +{
-> +	bpf_register_map_type(&cgroup_array_type);
-> +	return 0;
-> +}
-> +late_initcall(register_cgroup_array_map);
 > +#endif
-> diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-> index c23a4e93..cac13f1 100644
-> --- a/kernel/bpf/syscall.c
-> +++ b/kernel/bpf/syscall.c
-> @@ -393,7 +393,8 @@ static int map_update_elem(union bpf_attr *attr)
->   	} else if (map->map_type == BPF_MAP_TYPE_PERCPU_ARRAY) {
->   		err = bpf_percpu_array_update(map, key, value, attr->flags);
->   	} else if (map->map_type == BPF_MAP_TYPE_PERF_EVENT_ARRAY ||
-> -		   map->map_type == BPF_MAP_TYPE_PROG_ARRAY) {
-> +		   map->map_type == BPF_MAP_TYPE_PROG_ARRAY ||
-> +		   map->map_type == BPF_MAP_TYPE_CGROUP_ARRAY) {
->   		rcu_read_lock();
->   		err = bpf_fd_array_map_update_elem(map, f.file, key, value,
->   						   attr->flags);
+> +
+>   static const struct bpf_func_proto *
+>   sk_filter_func_proto(enum bpf_func_id func_id)
+>   {
+> @@ -2086,6 +2122,10 @@ tc_cls_act_func_proto(enum bpf_func_id func_id)
+>   		return &bpf_get_route_realm_proto;
+>   	case BPF_FUNC_perf_event_output:
+>   		return bpf_get_event_output_proto();
+> +#ifdef CONFIG_CGROUPS
+> +	case BPF_FUNC_skb_in_cgroup:
+> +		return &bpf_skb_in_cgroup_proto;
+> +#endif
+>   	default:
+>   		return sk_filter_func_proto(func_id);
+>   	}
 >
