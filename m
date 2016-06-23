@@ -1,39 +1,112 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3] cgroup: Disable IRQs while holding css_set_lock
-Date: Thu, 23 Jun 2016 09:05:07 +0800
-Message-ID: <576B35C3.8070109@huawei.com>
-References: <1466627321-22137-1-git-send-email-bristot@redhat.com>
+From: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+Subject: Re: [PATCH net-next v2 2/4] cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY
+Date: Thu, 23 Jun 2016 11:42:31 +0200
+Message-ID: <576BAF07.4020302@iogearbox.net>
+References: <1466630252-3822277-1-git-send-email-kafai@fb.com> <1466630252-3822277-3-git-send-email-kafai@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1466627321-22137-1-git-send-email-bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1466630252-3822277-3-git-send-email-kafai-b10kYP2dOMg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Luis Claudio R. Goncalves" <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On 2016/6/23 4:28, Daniel Bristot de Oliveira wrote:
-> While testing the deadline scheduler + cgroup setup I hit this
-> warning.
-> 
-...
-> The warn is the spin_(lock|unlock)_bh(&css_set_lock) in the interrupt
-> context. Converting the spin_lock_bh to spin_lock_irq(save) to avoid
-> this problem - and other problems of sharing a spinlock with an
-> interrupt.
-> 
+Hi Martin,
+
+[ sorry to jump late in here, on pto currently ]
+
+On 06/22/2016 11:17 PM, Martin KaFai Lau wrote:
+> Add a BPF_MAP_TYPE_CGROUP_ARRAY and its bpf_map_ops's implementations.
+> To update an element, the caller is expected to obtain a cgroup2 backed
+> fd by open(cgroup2_dir) and then update the array with that fd.
+>
+> Signed-off-by: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
+> Cc: Alexei Starovoitov <ast-b10kYP2dOMg@public.gmane.org>
+> Cc: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>
-> Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 4.5+
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Reviewed-by: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Reviewed-by: "Luis Claudio R. Goncalves" <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> 
+> Acked-by: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Could you describe a bit more with regards to pinning maps and how this
+should interact with cgroups? The two specialized array maps we have (tail
+calls, perf events) have fairly complicated semantics for when to clean up
+map slots (see commits c9da161c6517ba1, 3b1efb196eee45b2f0c4).
+
+How is this managed with cgroups? Once a cgroup fd is placed into a map and
+the user removes the cgroup, will this be prevented due to 'being busy', or
+will the cgroup live further as long as a program is running with a cgroup
+map entry (but the cgroup itself is not visible from user space in any way
+anymore)?
+
+I presume it's a valid use case to pin a cgroup map, put fds into it and
+remove the pinned file expecting to continue to match on it, right? So
+lifetime is really until last prog using a cgroup map somewhere gets removed
+(even if not accessible from user space anymore, meaning no prog has fd and
+pinned file was removed).
+
+I assume that using struct file here doesn't make sense (commit e03e7ee34fdd1c3)
+either, right?
+
+[...]
+> +#ifdef CONFIG_CGROUPS
+> +static void *cgroup_fd_array_get_ptr(struct bpf_map *map,
+> +				     struct file *map_file /* not used */,
+> +				     int fd)
+> +{
+> +	return cgroup_get_from_fd(fd);
+> +}
+> +
+> +static void cgroup_fd_array_put_ptr(void *ptr)
+> +{
+> +	/* cgroup_put free cgrp after a rcu grace period */
+> +	cgroup_put(ptr);
+
+Yeah, as long as this respects freeing after RCU grace period, it's fine
+like this ...
+
+> +}
+> +
+> +static void cgroup_fd_array_free(struct bpf_map *map)
+> +{
+> +	bpf_fd_array_map_clear(map);
+> +	fd_array_map_free(map);
+> +}
+> +
+> +static const struct bpf_map_ops cgroup_array_ops = {
+> +	.map_alloc = fd_array_map_alloc,
+> +	.map_free = cgroup_fd_array_free,
+> +	.map_get_next_key = array_map_get_next_key,
+> +	.map_lookup_elem = fd_array_map_lookup_elem,
+> +	.map_delete_elem = fd_array_map_delete_elem,
+> +	.map_fd_get_ptr = cgroup_fd_array_get_ptr,
+> +	.map_fd_put_ptr = cgroup_fd_array_put_ptr,
+> +};
+> +
+> +static struct bpf_map_type_list cgroup_array_type __read_mostly = {
+> +	.ops = &cgroup_array_ops,
+> +	.type = BPF_MAP_TYPE_CGROUP_ARRAY,
+> +};
+> +
+> +static int __init register_cgroup_array_map(void)
+> +{
+> +	bpf_register_map_type(&cgroup_array_type);
+> +	return 0;
+> +}
+> +late_initcall(register_cgroup_array_map);
+> +#endif
+> diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
+> index c23a4e93..cac13f1 100644
+> --- a/kernel/bpf/syscall.c
+> +++ b/kernel/bpf/syscall.c
+> @@ -393,7 +393,8 @@ static int map_update_elem(union bpf_attr *attr)
+>   	} else if (map->map_type == BPF_MAP_TYPE_PERCPU_ARRAY) {
+>   		err = bpf_percpu_array_update(map, key, value, attr->flags);
+>   	} else if (map->map_type == BPF_MAP_TYPE_PERF_EVENT_ARRAY ||
+> -		   map->map_type == BPF_MAP_TYPE_PROG_ARRAY) {
+> +		   map->map_type == BPF_MAP_TYPE_PROG_ARRAY ||
+> +		   map->map_type == BPF_MAP_TYPE_CGROUP_ARRAY) {
+>   		rcu_read_lock();
+>   		err = bpf_fd_array_map_update_elem(map, f.file, key, value,
+>   						   attr->flags);
+>
