@@ -1,33 +1,70 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3] cgroup: Disable IRQs while holding css_set_lock
-Date: Thu, 23 Jun 2016 17:20:51 -0400
-Message-ID: <20160623212051.GM3262@mtj.duckdns.org>
-References: <1466627321-22137-1-git-send-email-bristot@redhat.com>
+From: Martin KaFai Lau <kafai@fb.com>
+Subject: Re: [PATCH net-next v2 2/4] cgroup: bpf: Add
+ BPF_MAP_TYPE_CGROUP_ARRAY
+Date: Thu, 23 Jun 2016 14:26:16 -0700
+Message-ID: <20160623212616.GA90834@kafai-mba.DHCP.thefacebook.com>
+References: <1466630252-3822277-1-git-send-email-kafai@fb.com>
+ <1466630252-3822277-3-git-send-email-kafai@fb.com>
+ <576BAF07.4020302@iogearbox.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=OqbxH4roqv3OlDlGx9L7uzm6MpGMSgrBUMCH+bRk4DY=;
-        b=NDGwnAolhTu5ycax2fFJFitVZif3eW8xtfz3f0aOPbnUPnQcQGoLNLx2wuM6PFi/OK
-         Iih9l2riPN4aKbL5+K7N02t/g6v/hdOF8JJZwkN0K3XjKEyFXwQl9e6uHKkV34HGxBad
-         Y+UKtxRa0UYw1Cuu0RR776MCGUVsfKgy+Nr+vOBcJx8bjZ060gQs5aKTl8P3BGlQvDbq
-         46AC2XCQHik9sDz88Hf6YB0Ii1tAZdse2dJlczjMLaC7uZbYBfqUl1NV6m7nkGY+hNvn
-         yBm2i49MeCU6/aqGhHXrYv1XbbqhQNhN+vFMCbklwJwver2eRy8xPAbP0ZmaYcJjKoeL
-         Y3Xw==
-Content-Disposition: inline
-In-Reply-To: <1466627321-22137-1-git-send-email-bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=aQMLdSjCRZAA76azQMQ/V6SmVPMQmCpmWyc1NXMbRG0=;
+ b=qnSXkEH/gTuVInFzZuWpLdmGPfUej9DFAoK1n/HqwLNsTyxXMbZW7LZEgJLJRGstD++K
+ SclDirw0rRIgzMYJZff0Ks38tHL4cRYX7B2dZieLIjw0mDS4g0aniYLQUkJT74sKOY/h
+ gg9cDTigCFWWWD5YmA4A3JEec1EpXveWzKQ= 
+Content-Disposition: inline
+In-Reply-To: <576BAF07.4020302@iogearbox.net>
+Sender: netdev-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Luis Claudio R. Goncalves" <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Daniel Borkmann <daniel@iogearbox.net>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Alexei Starovoitov <ast@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
 
-Applied to cgroup/for-4.7-fixes.
+On Thu, Jun 23, 2016 at 11:42:31AM +0200, Daniel Borkmann wrote:
+> Hi Martin,
+>
+> [ sorry to jump late in here, on pto currently ]
+Thanks for reviewing.
 
-Thanks.
+> Could you describe a bit more with regards to pinning maps and how this
+> should interact with cgroups? The two specialized array maps we have (tail
+> calls, perf events) have fairly complicated semantics for when to clean up
+> map slots (see commits c9da161c6517ba1, 3b1efb196eee45b2f0c4).
+>
+> How is this managed with cgroups? Once a cgroup fd is placed into a map and
+> the user removes the cgroup, will this be prevented due to 'being busy', or
+> will the cgroup live further as long as a program is running with a cgroup
+> map entry (but the cgroup itself is not visible from user space in any way
+> anymore)?
+Having a cgroup ptr stored in the bpf_map will not stop the user from
+removing the cgroup (by rmdir /mnt/cgroup2/tc/test_cgrp).
 
--- 
-tejun
+The cgroup ptr stored in the bpf_map holds a refcnt which answer the
+second part.
+
+The situation is similar to the netfilter usecase in
+commit 38c4597e4bf ("netfilter: implement xt_cgroup cgroup2 path match")
+
+>
+> I presume it's a valid use case to pin a cgroup map, put fds into it and
+> remove the pinned file expecting to continue to match on it, right? So
+> lifetime is really until last prog using a cgroup map somewhere gets removed
+> (even if not accessible from user space anymore, meaning no prog has fd and
+> pinned file was removed).
+Yes.
+
+We are still hatching out how to set this up in production. However, the
+situation is similar to removing the pinned file.
+We probably will not use tc and pin a bpf_map to do that.  Instead,
+one process will setup eveything (e.g. create the cgroup, pouplate the
+cgroup map, load the bpf to egress) and then go away.
+
+I don't think we need a prog fd to remove the bpf prog.
+
+>
+> I assume that using struct file here doesn't make sense (commit e03e7ee34fdd1c3)
+> either, right?
+No. I don't think so. We eventually need a cgroup from the 'struct file'.
