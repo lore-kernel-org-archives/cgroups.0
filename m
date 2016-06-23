@@ -1,44 +1,35 @@
-From: Martin KaFai Lau <kafai@fb.com>
-Subject: Re: [PATCH net-next v2 2/4] cgroup: bpf: Add
- BPF_MAP_TYPE_CGROUP_ARRAY
-Date: Thu, 23 Jun 2016 15:10:15 -0700
-Message-ID: <20160623221015.GA93293@kafai-mba.DHCP.thefacebook.com>
-References: <1466630252-3822277-1-git-send-email-kafai@fb.com>
- <1466630252-3822277-3-git-send-email-kafai@fb.com>
- <576BAF07.4020302@iogearbox.net>
- <20160623212616.GA90834@kafai-mba.DHCP.thefacebook.com>
- <576C5990.9000300@iogearbox.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] capabilities: add capability cgroup controller
+Date: Thu, 23 Jun 2016 16:46:14 -0700
+Message-ID: <20160623164614.cc871a52402fca6179bef246@linux-foundation.org>
+References: <1466694434-1420-1-git-send-email-toiwoton@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=tOGdCkeRAwMAvhgd6GlfCKKcBC8P47+Ecm/8JUgqots=;
- b=RVItYYeZbDRm+povtvC7v2GZCdU0lwjac+q92lVQ+w368qHRUmsSiHNFpIS7cJDu3+xJ
- L3NSYkT1xx2BW2gtAszxHnH0SU7Rw0wfWgfKkqiZ362Kp+ZFsimmClRSrgt0vN/h8enh
- rPODDkpv6sEkm8D6JKpMWoOVUxb865QrkRI= 
-Content-Disposition: inline
-In-Reply-To: <576C5990.9000300@iogearbox.net>
+In-Reply-To: <1466694434-1420-1-git-send-email-toiwoton@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Daniel Borkmann <daniel@iogearbox.net>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Alexei Starovoitov <ast@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+Content-Type: text/plain; charset="us-ascii"
+To: Topi Miettinen <toiwoton@gmail.com>
+Cc: linux-kernel@vger.kernel.org, luto@kernel.org, serge@hallyn.com, keescook@chromium.org, Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Petr Mladek <pmladek@suse.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
 
-On Thu, Jun 23, 2016 at 11:50:08PM +0200, Daniel Borkmann wrote:
-> On 06/23/2016 11:26 PM, Martin KaFai Lau wrote:
-> >We are still hatching out how to set this up in production. However, the
-> >situation is similar to removing the pinned file.
-s/pinned file/pinned cgroup-array/
+On Thu, 23 Jun 2016 18:07:10 +0300 Topi Miettinen <toiwoton@gmail.com> wrote:
 
-> I presume you mean removing the last BPF program holding a reference on
-> the cgroup array map.
-Yes
+> There are many basic ways to control processes, including capabilities,
+> cgroups and resource limits. However, there are far fewer ways to find
+> out useful values for the limits, except blind trial and error.
+> 
+> Currently, there is no way to know which capabilities are actually used.
+> Even the source code is only implicit, in-depth knowledge of each
+> capability must be used when analyzing a program to judge which
+> capabilities the program will exercise.
+> 
+> Add a new cgroup controller for monitoring of capabilities
+> in the cgroup.
 
-> (Any user space visibility like struct files given
-> from the anon inode and pinnings are tracked via uref, btw, which is
-> needed to break possible complex dependencies among tail called programs.)
-Yep. Understood on prog_array use case.
+I'm having trouble understanding how valuable this feature is to our
+users, and that's a rather important thing!
 
-Thanks,
--- Martin
+Perhaps it would help if you were to explain your motivation:
+particular use cases which benefited from this, for example.
+
