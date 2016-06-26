@@ -1,45 +1,49 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] capabilities: add capability cgroup controller
-Date: Sun, 26 Jun 2016 18:26:17 -0400
-Message-ID: <CAOS58YMxz5HfJUayqjw+SPj485M+wquTqQouk367rV2mfvVRHg@mail.gmail.com>
-References: <1466694434-1420-1-git-send-email-toiwoton@gmail.com>
- <20160623213819.GP3262@mtj.duckdns.org> <53377cda-9afe-dad4-6bbb-26affd64cb3a@gmail.com>
- <20160624154830.GX3262@mtj.duckdns.org> <20160624155916.GA8759@mail.hallyn.com>
- <20160624163527.GZ3262@mtj.duckdns.org> <20160624165910.GA9675@mail.hallyn.com>
- <20160624172447.GA3262@mtj.duckdns.org> <47890d79-0891-dd13-4f60-e7e5f1f3fed3@gmail.com>
+Subject: Re: [PATCH 1/2] cgroup: pids: show number of failed forks since
+ limit reset
+Date: Sun, 26 Jun 2016 19:42:58 -0400
+Message-ID: <20160626234258.GJ9219@stj.duckdns.org>
+References: <20160624030049.13341-1-asarai@suse.de>
+ <20160624030049.13341-2-asarai@suse.de>
+ <20160624153151.GQ3262@mtj.duckdns.org>
+ <78d17b23-d712-7d9c-3655-34c646bc4897@suse.de>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=bRaVySIkeWoeCHqoC9ovKsRpZfrosF2yj3A47IFoaVM=;
-        b=if6MTKikE/TdHo7G3dLBzHKAdZI9yzl3xvRPtWlPaOAzYMB/nzM5JUHYWYVAen8vu7
-         vwMb6vOFgS0GexgLPWbYF8MQ44OMJEVC1n9rrM+sHjiOUHlwQMvoK59mHUbTCbNzuSDH
-         xAGrPcdcUSdiLIojIKzRZyPp7SCKazW8XNzCj+pZq9ZK446yJVKlS45Uxw23uOZn+U1r
-         m9hxvmotthqSNyKN61PbJrWkHat+7BUdUCsENpNbRqhFlBmVrp2WydTDQ6HuNtv8dxxM
-         yjfNB6PANm0g27dKKY0T01vM9IpBIL4xrHpKtZQjPk8mXdrAClaPtwkboceC8KQjkoOW
-         jsYw==
-In-Reply-To: <47890d79-0891-dd13-4f60-e7e5f1f3fed3@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=j5Oj2Z1CTipeli5S6qBY/28iXVuTZ6xFcLTwALqGT/4=;
+        b=P/ZUaGjq+9TQ3y6hMKoLF0V5g05RdfGOw0ZBO1oH+f3XKROWYy6mGqH54l4FcCG80+
+         8nOQeYh+ahQIVBRCPbSnib7+8Ypjy83p7WIXUoo2440cUki5KVXc3TyV+MvBsVTwCNKE
+         QyWTz+v7c43gJtBvLOelkjhiR9Y8KoR9m9W/jkD36sw2KVXXwmCLg4pLzUKVTnl2C/iV
+         R+AXpDi5fTP50KGrZCJEeYm04AqSMuNQf/xcERHLiDvhh5x0PIwmgxE0s6DXdskPHIDc
+         RrNggQgdpIwrNP/q0D3u1iKPcxSTf+sCq9S9bkUufuz56LwC2r/2pe1Ucm3iYx5BpGP+
+         h9fw==
+Content-Disposition: inline
+In-Reply-To: <78d17b23-d712-7d9c-3655-34c646bc4897@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Topi Miettinen <toiwoton@gmail.com>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>, lkml <linux-kernel@vger.kernel.org>, luto@kernel.org, Kees Cook <keescook@chromium.org>, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Petr Mladek <pmladek@suse.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
+To: Aleksa Sarai <asarai@suse.de>
+Cc: Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Kenny Yu <kennyyu@fb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Hello, Topi.
+Hello,
 
-On Sun, Jun 26, 2016 at 3:14 PM, Topi Miettinen <toiwoton@gmail.com> wrote:
-> The parent might be able do it if proc/pid/xyz files are still
-> accessible after child exit but before its exit status is collected. But
-> if the parent doesn't do it (and you are not able to change it to do it)
-> and it collects the exit status without collecting other info, can you
-> suggest a different way how another process could collect it 100% reliably?
+On Sun, Jun 26, 2016 at 09:34:41PM +1000, Aleksa Sarai wrote:
+> If a user has a setup where they wait for notifications on changes to
+> pids.event, and then auto-adjust the cgroup limits based on the number of
+> failures you have a race condition between reading the pids.event file and
+> then setting the new limit. Then, upon getting notified again there may have
+> been many failed forks with the old limit set, so you might decide to bump
+> up the limit again.
+> 
+> It's not a huge deal, I just though it could be useful to alleviate problems
+> like the above.
 
-I'm not saying that there's such mechanism now. I'm suggesting that
-that'd be a more fitting way of implementing a new mechanism to track
-capability usages.
+This is something which can easily be avoided from userland.  I don't
+think we need to add extra facilities for this.
 
 Thanks.
 
