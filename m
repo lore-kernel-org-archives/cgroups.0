@@ -1,69 +1,46 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH rebase] mm: fix vm-scalability regression in cgroup-aware
- workingset code
-Date: Mon, 27 Jun 2016 15:05:28 +0200
-Message-ID: <20160627130527.GK31799@dhcp22.suse.cz>
-References: <20160622182019.24064-1-hannes@cmpxchg.org>
- <20160624175101.GA3024@cmpxchg.org>
+From: "Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH] capabilities: add capability cgroup controller
+Date: Mon, 27 Jun 2016 09:54:57 -0500
+Message-ID: <20160627145457.GA26980@mail.hallyn.com>
+References: <1466694434-1420-1-git-send-email-toiwoton@gmail.com>
+ <20160623213819.GP3262@mtj.duckdns.org>
+ <53377cda-9afe-dad4-6bbb-26affd64cb3a@gmail.com>
+ <20160624154830.GX3262@mtj.duckdns.org>
+ <20160624155916.GA8759@mail.hallyn.com>
+ <20160624163527.GZ3262@mtj.duckdns.org>
+ <20160624165910.GA9675@mail.hallyn.com>
+ <20160624172447.GA3262@mtj.duckdns.org>
+ <47890d79-0891-dd13-4f60-e7e5f1f3fed3@gmail.com>
+ <CAOS58YMxz5HfJUayqjw+SPj485M+wquTqQouk367rV2mfvVRHg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20160624175101.GA3024@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <CAOS58YMxz5HfJUayqjw+SPj485M+wquTqQouk367rV2mfvVRHg@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Ye Xiaolong <xiaolong.ye@intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Topi Miettinen <toiwoton@gmail.com>, "Serge E. Hallyn" <serge@hallyn.com>, lkml <linux-kernel@vger.kernel.org>, luto@kernel.org, Kees Cook <keescook@chromium.org>, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Petr Mladek <pmladek@suse.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
 
-[Sorry for a late reply]
-
-On Fri 24-06-16 13:51:01, Johannes Weiner wrote:
-> This is a rebased version on top of mmots sans the nodelru stuff.
+Quoting Tejun Heo (tj@kernel.org):
+> Hello, Topi.
 > 
-> ---
+> On Sun, Jun 26, 2016 at 3:14 PM, Topi Miettinen <toiwoton@gmail.com> wrote:
+> > The parent might be able do it if proc/pid/xyz files are still
+> > accessible after child exit but before its exit status is collected. But
+> > if the parent doesn't do it (and you are not able to change it to do it)
+> > and it collects the exit status without collecting other info, can you
+> > suggest a different way how another process could collect it 100% reliably?
 > 
-> 23047a96d7cf ("mm: workingset: per-cgroup cache thrash detection")
-> added a page->mem_cgroup lookup to the cache eviction, refault, and
-> activation paths, as well as locking to the activation path, and the
-> vm-scalability tests showed a regression of -23%. While the test in
-> question is an artificial worst-case scenario that doesn't occur in
-> real workloads - reading two sparse files in parallel at full CPU
-> speed just to hammer the LRU paths - there is still some optimizations
-> that can be done in those paths.
-> 
-> Inline the lookup functions to eliminate calls. Also, page->mem_cgroup
-> doesn't need to be stabilized when counting an activation; we merely
-> need to hold the RCU lock to prevent the memcg from being freed.
-> 
-> This cuts down on overhead quite a bit:
-> 
-> 23047a96d7cfcfca 063f6715e77a7be5770d6081fe
-> ---------------- --------------------------
->          %stddev     %change         %stddev
->              \          |                \
->   21621405 +- 0%     +11.3%   24069657 +- 2%  vm-scalability.throughput
-> 
-> Reported-by: Ye Xiaolong <xiaolong.ye@intel.com>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> I'm not saying that there's such mechanism now. I'm suggesting that
+> that'd be a more fitting way of implementing a new mechanism to track
+> capability usages.
 
-Acked-by: Michal Hocko <mhocko@suse.com>
+Hi Topi,
 
-Minor note below
-
-> +static inline struct mem_cgroup *page_memcg_rcu(struct page *page)
-> +{
-
-I guess rcu_read_lock_held() here would be appropriate
-
-> +	return READ_ONCE(page->mem_cgroup);
-> +}
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I think Eric was right a few emails earlier that the audit subsystem is
+really the most appropriate answer to this.  (Perhaps sysctl-controllered?)
+Combined with taskstats it would give you what you need.  Or you could even
+use an empty new named cgroup controller, say 'none,name=caps', and then
+look only at audit results for cgroup '/myapp' in the caps hierarchy.
