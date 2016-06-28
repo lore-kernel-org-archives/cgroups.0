@@ -1,42 +1,105 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+From: ebiederm@xmission.com (Eric W. Biederman)
 Subject: Re: [PATCH] capabilities: add capability cgroup controller
-Date: Mon, 27 Jun 2016 14:49:41 -0500
-Message-ID: <20160627194941.GA31843@mail.hallyn.com>
-References: <20160624154830.GX3262@mtj.duckdns.org>
- <20160624155916.GA8759@mail.hallyn.com>
- <20160624163527.GZ3262@mtj.duckdns.org>
- <20160624165910.GA9675@mail.hallyn.com>
- <20160624172447.GA3262@mtj.duckdns.org>
- <47890d79-0891-dd13-4f60-e7e5f1f3fed3@gmail.com>
- <CAOS58YMxz5HfJUayqjw+SPj485M+wquTqQouk367rV2mfvVRHg@mail.gmail.com>
- <20160627145457.GA26980@mail.hallyn.com>
- <58938c8b-aca6-a5b8-9533-58e78d878e85@gmail.com>
- <CAOS58YM+h0w_UciXLbiJcKizPkXV66FL57LT7Mc+RRWspN+Y2Q@mail.gmail.com>
+Date: Mon, 27 Jun 2016 23:57:02 -0500
+Message-ID: <87por1syg1.fsf@x220.int.ebiederm.org>
+References: <1466694434-1420-1-git-send-email-toiwoton@gmail.com>
+	<20160623213819.GP3262@mtj.duckdns.org>
+	<53377cda-9afe-dad4-6bbb-26affd64cb3a@gmail.com>
+	<20160624154830.GX3262@mtj.duckdns.org>
+	<20160624155916.GA8759@mail.hallyn.com>
+	<20160624163527.GZ3262@mtj.duckdns.org>
+	<20160624165910.GA9675@mail.hallyn.com>
+	<87mvmaa4f6.fsf@x220.int.ebiederm.org>
+	<3003f67c-f998-8056-f25d-d4708eda44a0@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAOS58YM+h0w_UciXLbiJcKizPkXV66FL57LT7Mc+RRWspN+Y2Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <3003f67c-f998-8056-f25d-d4708eda44a0@gmail.com> (Topi
+	Miettinen's message of "Sun, 26 Jun 2016 19:03:11 +0000")
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Woodhouse <David.Woodhouse-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ard Biesheuvel <ard.biesheuvel-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CAPABILITIES" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Topi Miettinen <toiwoton@gmail.com>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, luto@kernel.org, keescook@chromium.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Petr Mladek <pmladek@suse.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> Hello,
-> 
-> On Mon, Jun 27, 2016 at 3:10 PM, Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > I'll have to study these more. But from what I saw so far, it looks to
-> > me that a separate tool would be needed to read taskstats and if that
-> > tool is not taken by distros, the users would not be any wiser, right?
-> > With cgroup (or /proc), no new tools would be needed.
-> 
-> That is a factor but shouldn't be a deciding factor in designing our
-> user-facing interfaces. Please also note that kernel source tree
-> already has tools/ subdirectory which contains userland tools which
-> are distributed along with the kernel.
+Topi Miettinen <toiwoton@gmail.com> writes:
 
-And, if you take audit+cgroup approach then no tools are needed.  So long
-as you can have audit print out the cgroups for a task as part of the
-capability audit record.
+> On 06/24/16 17:21, Eric W. Biederman wrote:
+>> "Serge E. Hallyn" <serge@hallyn.com> writes:
+>> 
+>>> Quoting Tejun Heo (tj@kernel.org):
+>>>> Hello,
+>>>>
+>>>> On Fri, Jun 24, 2016 at 10:59:16AM -0500, Serge E. Hallyn wrote:
+>>>>> Quoting Tejun Heo (tj@kernel.org):
+>>>>>> But isn't being recursive orthogonal to using cgroup?  Why not account
+>>>>>> usages recursively along the process hierarchy?  Capabilities don't
+>>>>>> have much to do with cgroup but everything with process hierarchy.
+>>>>>> That's how they're distributed and modified.  If monitoring their
+>>>>>> usages is necessary, it makes sense to do it in the same structure.
+>>>>>
+>>>>> That was my argument against using cgroups to enforce a new bounding
+>>>>> set.  For tracking though, the cgroup process tracking seems as applicable
+>>>>> to this as it does to systemd tracking of services.  It tracks a task and
+>>>>> the children it forks.
+>>>>
+>>>> Just monitoring is less jarring than implementing security enforcement
+>>>> via cgroup, but it is still jarring.  What's wrong with recursive
+>>>> process hierarchy monitoring which is in line with the whole facility
+>>>> is implemented anyway?
+>>>
+>>> As I think Topi pointed out, one shortcoming is that if there is a short-lived
+>>> child task, using its /proc/self/status is racy.  You might just miss that it
+>>> ever even existed, let alone that the "application" needed it.
+>>>
+>>> Another alternative we've both mentioned is to use systemtap.  That's not
+>>> as nice a solution as a cgroup, but then again this isn't really a common
+>>> case, so maybe it is precisely what a tracing infrastructure is meant for.
+>> 
+>> Hmm.
+>> 
+>> We have capability use wired up into auditing.  So we might be able to
+>> get away with just adding an appropriate audit message in
+>> commoncap.c:cap_capable that honors the audit flag and logs an audit
+>> message.  The hook in selinux already appears to do that.
+>> 
+>> Certainly audit sounds like the subsystem for this kind of work, as it's
+>> whole point in life is logging things, then something in userspace can
+>> just run over the audit longs and build a nice summary.
+>
+> Even simpler would be to avoid the complexity of audit subsystem and
+> just printk() when a task starts using a capability first time (not on
+> further uses by same task). There are not that many capability bits nor
+> privileged processes, meaning not too many log entries. I know as this
+> was actually my first approach. But it's also far less user friendly
+> than just reading a summarized value which could be directly fed back to
+> configuration.
+
+Your loss.
+
+> Logging/auditing approach also doesn't work well for other things I'd
+> like to present meaningful values for the user. For example, consider
+> RLIMIT_AS, where my goal is also to enable the users to be able to
+> configure this limit for a service. Should there be an audit message
+> whenever the address space limit grows (i.e. each mmap())? What about
+> when it shrinks? For RLIMIT_NOFILE we'd have to report each
+> open()/close()/dup()/socket()/etc. and track how many are opened at the
+> same time. I think it's better to store the fully cooked (meaningful to
+> user) value in kernel and present it only when asked.
+
+That doesn't have anything to do with anything.
+
+My suggestion was very much to do with capabilities which are already
+logged with the audit subsystem with selinux.  The idea was to move
+those audit calls into commoncap where they arguably belong allow anyone
+to use them for anything.
+
+That is a non-controversial code cleanup that happens to cover your
+special case.  That is enough to build a tool in userspace that will
+tell you which capabilities you need without penalizing the kernel, or
+the vast majority of everyone who does not use your feature.
+
+From what I have seen of this conversation there is not and will not be
+one interface to rule them all.
+
+Eric
