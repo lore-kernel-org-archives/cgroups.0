@@ -1,54 +1,50 @@
-From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: question about cgroupv2
-Date: Tue, 28 Jun 2016 12:45:04 -0400
-Message-ID: <20160628164504.GA5185@htj.duckdns.org>
-References: <5764ADC5.20205@cn.fujitsu.com>
- <5768D36D.3060606@huawei.com>
- <5768D8F5.1060107@cn.fujitsu.com>
- <9B0331B6EBBD0E4684FBFAEDA55776F92CD6983C@HASMSX110.ger.corp.intel.com>
- <1466991769.2241.28.camel@HansenPartnership.com>
+From: Aleksa Sarai <asarai@suse.de>
+Subject: Re: [PATCH 1/2] cgroup: pids: show number of failed forks since limit
+ reset
+Date: Wed, 29 Jun 2016 15:10:26 +1000
+Message-ID: <ec289e47-9761-ff21-b264-1391aa22cfd4@suse.de>
+References: <20160624030049.13341-1-asarai@suse.de>
+ <20160624030049.13341-2-asarai@suse.de>
+ <20160624153151.GQ3262@mtj.duckdns.org>
+ <78d17b23-d712-7d9c-3655-34c646bc4897@suse.de>
+ <20160626234258.GJ9219@stj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=UKPZfSCN4JArrnx5cPs8d6Yle0IK+YEBIxxvrjkQysI=;
-        b=p4l6tWaFApbXUzAMks0wxg8aKB7lXR/iF1qwkcauSh6gDgg7yS/wt5NgBTZSExoKPa
-         PUBFN54WcMALK7bUMVQio/KR6GPnzhSAE0Jz46+GlWS9t9rB25vp1umssYKuEPOTHHzN
-         b60191sKMjwG8HfPb+iXII7ZYFlD0biTooQtP8H8Nr94ZLqMc35t17NDGrz0QQWb4Czp
-         lBY1OxmsKF/K6EjU/PDdrcenkgbdSQKccRQa5vMj/UC2HidN4nsHS6me8FxXwih8g+7m
-         cbcTaqpK1ul4ymwsm4Vga5lj+rsxHSE4B1o9XtBWh9H8Or+uBRbw+qnAC9uRt+VCrI3R
-         hQGg==
-Content-Disposition: inline
-In-Reply-To: <1466991769.2241.28.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <20160626234258.GJ9219@stj.duckdns.org>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Kenny Yu <kennyyu@fb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Hello,
+> On Sun, Jun 26, 2016 at 09:34:41PM +1000, Aleksa Sarai wrote:
+>> If a user has a setup where they wait for notifications on changes to
+>> pids.event, and then auto-adjust the cgroup limits based on the number of
+>> failures you have a race condition between reading the pids.event file and
+>> then setting the new limit. Then, upon getting notified again there may have
+>> been many failed forks with the old limit set, so you might decide to bump
+>> up the limit again.
+>>
+>> It's not a huge deal, I just though it could be useful to alleviate problems
+>> like the above.
+>
+> This is something which can easily be avoided from userland.  I don't
+> think we need to add extra facilities for this.
 
-On Sun, Jun 26, 2016 at 06:42:49PM -0700, James Bottomley wrote:
-> This is the right answer.   I've spent ages trying to figure out how to
-> do it on my openSUSE laptop because I actually want to demo the v2 API.
->  However, it seems to be impossible.  You can't prevent systemd from
-> mounting the v1 hierarchies and that means you can't get v2 ones
-> running.  The only real way to do it on a modern laptop is to use a
-> virtual machine (sadly you can't use a container because systemd has
-> already contaminated the host kernel).  I tend to use debian because
-> they have an installation procedure for dumping systemd:
+Maybe I'm misunderstanding what the purpose of pids.events is meant to 
+be. If it's just meant to be a "hint" to the administrator, then that 
+seems like an awfully odd way of giving hints (the kernel logging should 
+be enough for that). If it's meant so that the administrator can make 
+policy decisions, then she won't know if the change in failures happened 
+before or after she adjusted the limit.
 
-* That's what cgroup_no_v1= option is for.
-
-* For a while systemd had a bug where it created sub cgroups even for
-  controllers which don't have any resource limits configured.  This
-  has been fixed for a while now and you should be able to umount
-  hierarchies with unused hierarchies now (it's ugly but does work).
-
-Thanks.
+I also don't see what you mean by "it can be avoided from userland". 
+There's a race between changing pids.max and a process forking that 
+causes pids.events to be updated.
 
 -- 
-tejun
+Aleksa Sarai
+Software Engineer (Containers)
+SUSE Linux GmbH
+https://www.cyphar.com/
