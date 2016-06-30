@@ -1,17 +1,15 @@
 From: Martin KaFai Lau <kafai@fb.com>
-Subject: [PATCH net-next v3 1/4] cgroup: Add cgroup_get_from_fd
-Date: Thu, 30 Jun 2016 10:28:42 -0700
-Message-ID: <1467307725-1948415-2-git-send-email-kafai@fb.com>
-References: <1467307725-1948415-1-git-send-email-kafai@fb.com>
+Subject: [PATCH net-next v3 0/4] cgroup: bpf: cgroup2 membership test on skb
+Date: Thu, 30 Jun 2016 10:28:41 -0700
+Message-ID: <1467307725-1948415-1-git-send-email-kafai@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
- date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=GBJMHLp1DrcjRBSGFKMTAacV9h96qENv8PoP+8IptzY=;
- b=WN9gwNMy06rg/LqWaWMlf+2IQk9wVsLcijp+vmkp5nUoIzCg3N5ENIVJrWF6UkUjtfjn
- AXf7B0cIfvQtQSjLTL0au56AE49x6+aEacV+oYDH/2vXjPnX1UqyDGrKaBg5AZSzlWAz
- xy5cpq9FOPJFv+USIqvvzbEE7e8UcegpmlM= 
-In-Reply-To: <1467307725-1948415-1-git-send-email-kafai@fb.com>
+ date : message-id : mime-version : content-type; s=facebook;
+ bh=WndIvkiJmiutuWeirBtnZa8wTnjkVF8s2iMPfeNdSeA=;
+ b=hgQZZRbil7/znP2Obg2uJEBAakao1J1mg69lEnscon6ArzI0sSPc0zWJggjznf1uScbk
+ 7wjJhwdm7w0G/8HHOxK3rL/cauT+bjtEzmxTOEj1YZlan+84erJNkhm6XeGwFeHtIdCn
+ k3BXmveF2TfT4VG9ZJrA5dG/k89GsU7OEjk= 
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -19,85 +17,40 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org
 Cc: Alexei Starovoitov <ast@fb.com>, Daniel Borkmann <daniel@iogearbox.net>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
 
-Add a helper function to get a cgroup2 from a fd.  It will be
-stored in a bpf array (BPF_MAP_TYPE_CGROUP_ARRAY) which will
-be introduced in the later patch.
+v3:
+- Remove WARN_ON_ONCE(!rcu_read_lock_held())
+- Stop BPF_MAP_TYPE_CGROUP_ARRAY usage in patch 2/4
+- Avoid mounting bpf fs manually in patch 4/4
 
-Signed-off-by: Martin KaFai Lau <kafai@fb.com>
-Cc: Alexei Starovoitov <ast@fb.com>
-Cc: Daniel Borkmann <daniel@iogearbox.net>
-Cc: Tejun Heo <tj@kernel.org>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- include/linux/cgroup.h |  1 +
- kernel/cgroup.c        | 35 +++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+)
+- Thanks for Daniel's review and the above suggestions
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index a20320c..984f73b 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -87,6 +87,7 @@ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
- 						       struct cgroup_subsys *ss);
- 
- struct cgroup *cgroup_get_from_path(const char *path);
-+struct cgroup *cgroup_get_from_fd(int fd);
- 
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 86cb5c6..14617968 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -62,6 +62,7 @@
- #include <linux/proc_ns.h>
- #include <linux/nsproxy.h>
- #include <linux/proc_ns.h>
-+#include <linux/file.h>
- #include <net/sock.h>
- 
- /*
-@@ -6205,6 +6206,40 @@ struct cgroup *cgroup_get_from_path(const char *path)
- }
- EXPORT_SYMBOL_GPL(cgroup_get_from_path);
- 
-+/**
-+ * cgroup_get_from_fd - get a cgroup pointer from a fd
-+ * @fd: fd obtained by open(cgroup2_dir)
-+ *
-+ * Find the cgroup from a fd which should be obtained
-+ * by opening a cgroup directory.  Returns a pointer to the
-+ * cgroup on success. ERR_PTR is returned if the cgroup
-+ * cannot be found.
-+ */
-+struct cgroup *cgroup_get_from_fd(int fd)
-+{
-+	struct cgroup_subsys_state *css;
-+	struct cgroup *cgrp;
-+	struct file *f;
-+
-+	f = fget_raw(fd);
-+	if (!f)
-+		return ERR_PTR(-EBADF);
-+
-+	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
-+	fput(f);
-+	if (IS_ERR(css))
-+		return ERR_CAST(css);
-+
-+	cgrp = css->cgroup;
-+	if (!cgroup_on_dfl(cgrp)) {
-+		cgroup_put(cgrp);
-+		return ERR_PTR(-EBADF);
-+	}
-+
-+	return cgrp;
-+}
-+EXPORT_SYMBOL_GPL(cgroup_get_from_fd);
-+
- /*
-  * sock->sk_cgrp_data handling.  For more info, see sock_cgroup_data
-  * definition in cgroup-defs.h.
--- 
-2.5.1
+- Check CONFIG_SOCK_CGROUP_DATA instead of CONFIG_CGROUPS.  Thanks to
+  the kbuild bot's report.
+  Patch 2/4 only needs CONFIG_CGROUPS while patch 3/4 needs
+  CONFIG_SOCK_CGROUP_DATA.  Since a single bpf cgrp2 array alone is
+  not useful for now, CONFIG_SOCK_CGROUP_DATA is also used in
+  patch 2/4.  We can fine tune it later if we find other use cases
+  for the cgrp2 array.
+- Return EAGAIN instead of ENOENT if the cgrp2 array entry is
+  NULL.  It is to distinguish these two cases: 1) the userland has
+  not populated this array entry yet. or 2) not finding cgrp2 from the skb.
+
+- Be-lated thanks to Alexei and Tejun on reviewing v1 and giving advice on
+  this work.
+
+v2:
+- Fix two return cases in cgroup_get_from_fd()
+- Fix compilation errors when CONFIG_CGROUPS is not used:
+  - arraymap.c: avoid registering BPF_MAP_TYPE_CGROUP_ARRAY
+  - filter.c: tc_cls_act_func_proto() returns NULL on BPF_FUNC_skb_in_cgroup
+- Add comments to BPF_FUNC_skb_in_cgroup and cgroup_get_from_fd()
+
+v1 cover letter:
+This series is to implement a bpf-way to
+check the cgroup2 membership of a skb (sk_buff).
+
+It is similar to the feature added in netfilter:
+c38c4597e4bf ("netfilter: implement xt_cgroup cgroup2 path match")
+
+The current target is the tc-like usage.
 
