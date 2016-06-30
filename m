@@ -1,64 +1,103 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup: pids: show number of failed forks since
- limit reset
-Date: Wed, 29 Jun 2016 11:33:49 -0400
-Message-ID: <20160629153349.GA28719@htj.duckdns.org>
-References: <20160624030049.13341-1-asarai@suse.de>
- <20160624030049.13341-2-asarai@suse.de>
- <20160624153151.GQ3262@mtj.duckdns.org>
- <78d17b23-d712-7d9c-3655-34c646bc4897@suse.de>
- <20160626234258.GJ9219@stj.duckdns.org>
- <ec289e47-9761-ff21-b264-1391aa22cfd4@suse.de>
+From: Martin KaFai Lau <kafai@fb.com>
+Subject: [PATCH net-next v3 1/4] cgroup: Add cgroup_get_from_fd
+Date: Thu, 30 Jun 2016 10:28:42 -0700
+Message-ID: <1467307725-1948415-2-git-send-email-kafai@fb.com>
+References: <1467307725-1948415-1-git-send-email-kafai@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=/ymrb4vsFDMgCAbFNexxJcXEeln8zrNAf9Evzwx/DKo=;
-        b=aGnLfFBx1uYTkQyvSMfB/295wzmjmeZ64DXiNs7HReEa+70/MKFTJ8TEC8MevkU5nS
-         LF/pQ250aDNJQ46pKWYEIjcUGw2TrTU8hNJzkJGGgnG60vT7sD9IzHNfFuKyKVTefpZm
-         oTsYcRaTUAdUruy1ozaPFCv+bf87h3zuO0+BPz2p86fTujPqRWkkivihApgs9Pv9Nfcr
-         kY0Uy59NDp+iTWWfpGYzEeC2mqrwpeqsXid7uXtc3xezJVZ3CjLfhnQLOA8u7bJyMjj9
-         h/PEH0BK1saGctjSpHHDJVrYwSGy5MTXuhyM2kxBn86xFs4XdqUMN4HzIQHQbt/K3Qmo
-         xUMg==
-Content-Disposition: inline
-In-Reply-To: <ec289e47-9761-ff21-b264-1391aa22cfd4-l3A5Bk7waGM@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
+ date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=GBJMHLp1DrcjRBSGFKMTAacV9h96qENv8PoP+8IptzY=;
+ b=WN9gwNMy06rg/LqWaWMlf+2IQk9wVsLcijp+vmkp5nUoIzCg3N5ENIVJrWF6UkUjtfjn
+ AXf7B0cIfvQtQSjLTL0au56AE49x6+aEacV+oYDH/2vXjPnX1UqyDGrKaBg5AZSzlWAz
+ xy5cpq9FOPJFv+USIqvvzbEE7e8UcegpmlM= 
+In-Reply-To: <1467307725-1948415-1-git-send-email-kafai@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
-Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Kenny Yu <kennyyu-b10kYP2dOMg@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Cc: Alexei Starovoitov <ast@fb.com>, Daniel Borkmann <daniel@iogearbox.net>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
 
-Hello, Aleksa.
+Add a helper function to get a cgroup2 from a fd.  It will be
+stored in a bpf array (BPF_MAP_TYPE_CGROUP_ARRAY) which will
+be introduced in the later patch.
 
-On Wed, Jun 29, 2016 at 03:10:26PM +1000, Aleksa Sarai wrote:
-> Maybe I'm misunderstanding what the purpose of pids.events is meant to be.
-> If it's just meant to be a "hint" to the administrator, then that seems like
-> an awfully odd way of giving hints (the kernel logging should be enough for
-> that). If it's meant so that the administrator can make policy decisions,
+Signed-off-by: Martin KaFai Lau <kafai@fb.com>
+Cc: Alexei Starovoitov <ast@fb.com>
+Cc: Daniel Borkmann <daniel@iogearbox.net>
+Cc: Tejun Heo <tj@kernel.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup.c        | 35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
 
-Kernel logging may be an enough hint for a human admin but is an awful
-mechanism for any programs trying to monitor.
-
-> then she won't know if the change in failures happened before or after she
-> adjusted the limit.
-> 
-> I also don't see what you mean by "it can be avoided from userland". There's
-> a race between changing pids.max and a process forking that causes
-> pids.events to be updated.
-
-First of all, a situation where a cgroup hits its limits and then can
-proceed normally after the limit is lifted would be very rare.
-Secondly, even in those corner cases, synchronization between config
-update and event counter doesn't matter.  For dynamic adjustments to
-work, fork failures have to be cleanly recoverable and thus the user
-can just start monitoring after the config is bumped up - if it fails
-again, adjust again; otherwise, it's all good.  It just doesn't
-matter.
-
-Thanks.
-
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index a20320c..984f73b 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -87,6 +87,7 @@ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
+ 						       struct cgroup_subsys *ss);
+ 
+ struct cgroup *cgroup_get_from_path(const char *path);
++struct cgroup *cgroup_get_from_fd(int fd);
+ 
+ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
+ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 86cb5c6..14617968 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -62,6 +62,7 @@
+ #include <linux/proc_ns.h>
+ #include <linux/nsproxy.h>
+ #include <linux/proc_ns.h>
++#include <linux/file.h>
+ #include <net/sock.h>
+ 
+ /*
+@@ -6205,6 +6206,40 @@ struct cgroup *cgroup_get_from_path(const char *path)
+ }
+ EXPORT_SYMBOL_GPL(cgroup_get_from_path);
+ 
++/**
++ * cgroup_get_from_fd - get a cgroup pointer from a fd
++ * @fd: fd obtained by open(cgroup2_dir)
++ *
++ * Find the cgroup from a fd which should be obtained
++ * by opening a cgroup directory.  Returns a pointer to the
++ * cgroup on success. ERR_PTR is returned if the cgroup
++ * cannot be found.
++ */
++struct cgroup *cgroup_get_from_fd(int fd)
++{
++	struct cgroup_subsys_state *css;
++	struct cgroup *cgrp;
++	struct file *f;
++
++	f = fget_raw(fd);
++	if (!f)
++		return ERR_PTR(-EBADF);
++
++	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
++	fput(f);
++	if (IS_ERR(css))
++		return ERR_CAST(css);
++
++	cgrp = css->cgroup;
++	if (!cgroup_on_dfl(cgrp)) {
++		cgroup_put(cgrp);
++		return ERR_PTR(-EBADF);
++	}
++
++	return cgrp;
++}
++EXPORT_SYMBOL_GPL(cgroup_get_from_fd);
++
+ /*
+  * sock->sk_cgrp_data handling.  For more info, see sock_cgroup_data
+  * definition in cgroup-defs.h.
 -- 
-tejun
+2.5.1
+
