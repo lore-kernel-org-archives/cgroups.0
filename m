@@ -1,344 +1,327 @@
-From: Topi Miettinen <toiwoton@gmail.com>
-Subject: Re: [PATCH] capabilities: add capability cgroup controller
-Date: Sun, 3 Jul 2016 15:08:07 +0000
-Message-ID: <218f2bef-5e5e-89c4-154b-24dc49c82c31@gmail.com>
-References: <20160624154830.GX3262@mtj.duckdns.org>
- <20160624155916.GA8759@mail.hallyn.com>
- <20160624163527.GZ3262@mtj.duckdns.org>
- <20160624165910.GA9675@mail.hallyn.com>
- <20160624172447.GA3262@mtj.duckdns.org>
- <47890d79-0891-dd13-4f60-e7e5f1f3fed3@gmail.com>
- <CAOS58YMxz5HfJUayqjw+SPj485M+wquTqQouk367rV2mfvVRHg@mail.gmail.com>
- <20160627145457.GA26980@mail.hallyn.com>
- <58938c8b-aca6-a5b8-9533-58e78d878e85@gmail.com>
- <CAOS58YM+h0w_UciXLbiJcKizPkXV66FL57LT7Mc+RRWspN+Y2Q@mail.gmail.com>
- <20160627194941.GA31843@mail.hallyn.com>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] capabilities: audit capability use
+Date: Mon, 4 Jul 2016 00:13:02 +0800
+Message-ID: <201607040047.vw38K6Gy%fengguang.wu@intel.com>
+References: <218f2bef-5e5e-89c4-154b-24dc49c82c31@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------B302B4BAD1EED0B052077B3E"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=subject:to:references:cc:from:openpgp:message-id:date:user-agent
-         :mime-version:in-reply-to;
-        bh=ixjbB3ZRBFYgOGoilXVLd3ANDbJMJgwOUJUAJfKf6QU=;
-        b=nOn4HESQHuJf96LWRUkiLfoRPa2415OyZS8Frhcc3QyAitoBXzPM2PsH75T9cR1eaB
-         7FMKW+7KbZ0Shckb+1+3qceqRjmVNAyvC7tY+owoaT0xBsTZw0FJ8v41115UK0qBUW8s
-         gvS9L/CPf3qhJFEw9c0q0X4PeLCN+zUye68mU3xWmJ2G+imNjxhCIJ1DsrtUFPdy1Ck8
-         rW5YvV+YZTa1HZeqbQipXFHTih8AxD03RB5wqjK+FFzwYUtL9tVfvhLTsISrbzkOBAbH
-         +Sz0P02Cn17/y6BN0nEgQliEBuCv3AFRR8EhPNWfmRMX8xEdxw2yS2DlEnDXl/7+uhH1
-         GMeA==
-In-Reply-To: <20160627194941.GA31843@mail.hallyn.com>
-Sender: linux-doc-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="pf9I7BMVVzbSWLtt"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <218f2bef-5e5e-89c4-154b-24dc49c82c31-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Tejun Heo <tj@kernel.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, luto@kernel.org, Kees Cook <keescook@chromium.org>, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Petr Mladek <pmladek@suse.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------B302B4BAD1EED0B052077B3E
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-
-On 06/27/16 19:49, Serge E. Hallyn wrote:
-> Quoting Tejun Heo (tj@kernel.org):
->> Hello,
->>
->> On Mon, Jun 27, 2016 at 3:10 PM, Topi Miettinen <toiwoton@gmail.com> wrote:
->>> I'll have to study these more. But from what I saw so far, it looks to
->>> me that a separate tool would be needed to read taskstats and if that
->>> tool is not taken by distros, the users would not be any wiser, right?
->>> With cgroup (or /proc), no new tools would be needed.
->>
->> That is a factor but shouldn't be a deciding factor in designing our
->> user-facing interfaces. Please also note that kernel source tree
->> already has tools/ subdirectory which contains userland tools which
->> are distributed along with the kernel.
-> 
-> And, if you take audit+cgroup approach then no tools are needed.  So long
-> as you can have audit print out the cgroups for a task as part of the
-> capability audit record.
-> 
-
-The attached patch would make any uses of capabilities generate audit
-messages. It works for simple tests as you can see from the commit
-message, but unfortunately the call to audit_cgroup_list() deadlocks the
-system when booting a full blown OS. There's no deadlock when the call
-is removed.
-
-I guess that in some cases, cgroup_mutex and/or css_set_lock could be
-already held earlier before entering audit_cgroup_list(). Holding the
-locks is however required by task_cgroup_from_root(). Is there any way
-to avoid this? For example, only print some kind of cgroup ID numbers
-(are there unique and stable IDs, available without locks?) for those
-cgroups where the task is registered in the audit message?
-
-I could remove the cgroup part from the audit message entirely, but then
-knowing which capabilities were used in what cgroup gets much more
-difficult. The rest of the patch would be useful without it and of
-course simpler.
-
-In my earlier versions a per-task cap_used variable summarized all uses
-of capabilities, but it was not clear when to reset the variable (fork?
-exec? capset?), so it's gone for now. This was also used to rate limit
-printing audit messages by only acting when each capability was first
-used by the task, but now all uses of capabilities trigger audit
-logging. Could that become a problem? I think it only makes sense to
-summarize capability use per cgroup (via taskstats).
-
--Topi
+To: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Woodhouse <David.Woodhouse-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ard Biesheuvel <ard.biesheuvel-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CAPABILITIES" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
 
---------------B302B4BAD1EED0B052077B3E
-Content-Type: text/x-patch;
- name="0001-capabilities-audit-capability-use.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0001-capabilities-audit-capability-use.patch"
+--pf9I7BMVVzbSWLtt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From 2d5248f91998873174dbcbcafe87e5b30c3858aa Mon Sep 17 00:00:00 2001
-From: Topi Miettinen <toiwoton@gmail.com>
-Date: Sat, 2 Jul 2016 16:25:20 +0300
-Subject: [PATCH] capabilities: audit capability use
+Hi,
 
-There are many basic ways to control processes, including capabilities,
-cgroups and resource limits. However, there are far fewer ways to find
-out useful values for the limits, except blind trial and error.
+[auto build test ERROR on cgroup/for-next]
+[also build test ERROR on v4.7-rc5]
+[cannot apply to next-20160701]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Currently, there is no way to know which capabilities are actually used.
-Even the source code is only implicit, in-depth knowledge of each
-capability must be used when analyzing a program to judge which
-capabilities the program will exercise.
+url:    https://github.com/0day-ci/linux/commits/Topi-Miettinen/capabilities-audit-capability-use/20160703-231120
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+config: microblaze-mmu_defconfig (attached as .config)
+compiler: microblaze-linux-gcc (GCC) 4.9.0
+reproduce:
+        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # save the attached .config to linux build tree
+        make.cross ARCH=microblaze 
 
-Generate an audit message when capabilities are used. This can then be
-used to configure capability sets for services by a software developer,
-maintainer or system administrator.
+All errors (new ones prefixed by >>):
 
-Test case demonstrating basic capability monitoring with the new
-message type 1330 and how the cgroups are displayed (boot to rdshell):
+>> kernel/audit.c:1713:6: error: redefinition of 'audit_log_cap_use'
+    void audit_log_cap_use(int cap)
+         ^
+   In file included from kernel/audit.c:59:0:
+   include/linux/audit.h:574:20: note: previous definition of 'audit_log_cap_use' was here
+    static inline void audit_log_cap_use(int cap)
+                       ^
+   kernel/audit.c: In function 'audit_log_cap_use':
+>> kernel/audit.c:1730:2: error: implicit declaration of function 'audit_cgroup_list' [-Werror=implicit-function-declaration]
+     audit_cgroup_list(ab);
+     ^
+   cc1: some warnings being treated as errors
 
-BusyBox v1.22.1 (Debian 1:1.22.0-19) built-in shell (ash)
-Enter 'help' for a list of built-in commands.
+vim +/audit_log_cap_use +1713 kernel/audit.c
 
-(initramfs) cd /sys/fs
-(initramfs) mount -t cgroup2 cgroup cgroup
-[   16.503902] audit_printk_skb: 4026 callbacks suppressed
-[   16.505059] audit: type=1330 audit(1467543885.733:469): cap_used=21 pid=214 auid=4294967295 uid=0 gid=0 ses=4294967295 cgroups=
-[   16.506845] audit: type=1330 audit(1467543885.733:469): cap_used=21 pid=214 auid=4294967295 uid=0 gid=0 ses=4294967295 cgroups=
-[   16.509234] audit: type=1300 audit(1467543885.733:469): arch=c000003e syscall=165 success=yes exit=0 a0=7ffc2f394e2d a1=7ffc2f394e34 a2=7ffc2f394e25 a3=8000 items=0 ppid=213 pid=214 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=ttyS0 ses=4294967295 comm="mount" exe="/bin/mount" key=(null)
-[   16.510134] audit: type=1327 audit(1467543885.733:469): proctitle=6D6F756E74002D74006367726F757032006367726F7570006367726F7570
-(initramfs) cd cgroup
-(initramfs) mkdir test; cd test
-[   16.533829] audit: type=1330 audit(1467543885.765:470): cap_used=1 pid=215 auid=4294967295 uid=0 gid=0 ses=4294967295 cgroups=:/;
-[   16.536587] audit: type=1300 audit(1467543885.765:470): arch=c000003e syscall=83 success=yes exit=0 a0=7ffe4f0bfe29 a1=1ff a2=0 a3=1e2 items=0 ppid=213 pid=215 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=ttyS0 ses=4294967295 comm="mkdir" exe="/bin/mkdir" key=(null)
-[   16.537263] audit: type=1327 audit(1467543885.765:470): proctitle=6D6B6469720074657374
-(initramfs) echo $$ >cgroup.procs
-(initramfs) mknod /dev/z_$$ c 1 2
-[   16.571516] audit: type=1330 audit(1467543885.801:471): cap_used=27 pid=216 auid=4294967295 uid=0 gid=0 ses=4294967295 cgroups=:/test;
-[   16.572812] audit: type=1300 audit(1467543885.801:471): arch=c000003e syscall=133 success=yes exit=0 a0=7ffe04fe3e11 a1=21b6 a2=102 a3=5c9 items=0 ppid=213 pid=216 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=ttyS0 ses=4294967295 comm="mknod" exe="/bin/mknod" key=(null)
-[   16.573571] audit: type=1327 audit(1467543885.801:471): proctitle=6D6B6E6F64002F6465762F7A5F323133006300310032
+  1707	
+  1708		if (log)
+  1709			audit_log_format(ab, " cap_fe=%d cap_fver=%x",
+  1710					 name->fcap.fE, name->fcap_ver);
+  1711	}
+  1712	
+> 1713	void audit_log_cap_use(int cap)
+  1714	{
+  1715		struct audit_context *context = current->audit_context;
+  1716		struct audit_buffer *ab;
+  1717		kuid_t uid;
+  1718		kgid_t gid;
+  1719	
+  1720		ab = audit_log_start(context, GFP_KERNEL, AUDIT_CAPABILITY);
+  1721		audit_log_format(ab, "cap_used=%d", cap);
+  1722		current_uid_gid(&uid, &gid);
+  1723		audit_log_format(ab, " pid=%d auid=%u uid=%u gid=%u ses=%u",
+  1724				 task_pid_nr(current),
+  1725				 from_kuid(&init_user_ns, audit_get_loginuid(current)),
+  1726				 from_kuid(&init_user_ns, uid),
+  1727				 from_kgid(&init_user_ns, gid),
+  1728				 audit_get_sessionid(current));
+  1729		audit_log_format(ab, " cgroups=");
+> 1730		audit_cgroup_list(ab);
+  1731		audit_log_end(ab);
+  1732	}
+  1733	
 
-Signed-off-by: Topi Miettinen <toiwoton@gmail.com>
 ---
- include/linux/audit.h      |  4 +++
- include/linux/cgroup.h     |  2 ++
- include/uapi/linux/audit.h |  1 +
- kernel/audit.c             | 22 ++++++++++++++++
- kernel/capability.c        |  5 ++--
- kernel/cgroup.c            | 62 ++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 94 insertions(+), 2 deletions(-)
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/include/linux/audit.h b/include/linux/audit.h
-index e38e3fc..971cb2e 100644
---- a/include/linux/audit.h
-+++ b/include/linux/audit.h
-@@ -438,6 +438,8 @@ static inline void audit_mmap_fd(int fd, int flags)
- 		__audit_mmap_fd(fd, flags);
- }
- 
-+extern void audit_log_cap_use(int cap);
-+
- extern int audit_n_rules;
- extern int audit_signals;
- #else /* CONFIG_AUDITSYSCALL */
-@@ -545,6 +547,8 @@ static inline void audit_mmap_fd(int fd, int flags)
- { }
- static inline void audit_ptrace(struct task_struct *t)
- { }
-+static inline void audit_log_cap_use(int cap)
-+{ }
- #define audit_n_rules 0
- #define audit_signals 0
- #endif /* CONFIG_AUDITSYSCALL */
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index a20320c..b5dc8aa 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -100,6 +100,8 @@ char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
- int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry);
- int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 		     struct pid *pid, struct task_struct *tsk);
-+struct audit_buffer;
-+void audit_cgroup_list(struct audit_buffer *ab);
- 
- void cgroup_fork(struct task_struct *p);
- extern int cgroup_can_fork(struct task_struct *p);
-diff --git a/include/uapi/linux/audit.h b/include/uapi/linux/audit.h
-index d820aa9..a5c9a73 100644
---- a/include/uapi/linux/audit.h
-+++ b/include/uapi/linux/audit.h
-@@ -111,6 +111,7 @@
- #define AUDIT_PROCTITLE		1327	/* Proctitle emit event */
- #define AUDIT_FEATURE_CHANGE	1328	/* audit log listing feature changes */
- #define AUDIT_REPLACE		1329	/* Replace auditd if this packet unanswerd */
-+#define AUDIT_CAPABILITY	1330	/* Record showing capability use */
- 
- #define AUDIT_AVC		1400	/* SE Linux avc denial or grant */
- #define AUDIT_SELINUX_ERR	1401	/* Internal SE Linux Errors */
-diff --git a/kernel/audit.c b/kernel/audit.c
-index 8d528f9..370beb7 100644
---- a/kernel/audit.c
-+++ b/kernel/audit.c
-@@ -54,6 +54,7 @@
- #include <linux/kthread.h>
- #include <linux/kernel.h>
- #include <linux/syscalls.h>
-+#include <linux/cgroup.h>
- 
- #include <linux/audit.h>
- 
-@@ -1709,6 +1710,27 @@ static void audit_log_fcaps(struct audit_buffer *ab, struct audit_names *name)
- 				 name->fcap.fE, name->fcap_ver);
- }
- 
-+void audit_log_cap_use(int cap)
-+{
-+	struct audit_context *context = current->audit_context;
-+	struct audit_buffer *ab;
-+	kuid_t uid;
-+	kgid_t gid;
-+
-+	ab = audit_log_start(context, GFP_KERNEL, AUDIT_CAPABILITY);
-+	audit_log_format(ab, "cap_used=%d", cap);
-+	current_uid_gid(&uid, &gid);
-+	audit_log_format(ab, " pid=%d auid=%u uid=%u gid=%u ses=%u",
-+			 task_pid_nr(current),
-+			 from_kuid(&init_user_ns, audit_get_loginuid(current)),
-+			 from_kuid(&init_user_ns, uid),
-+			 from_kgid(&init_user_ns, gid),
-+			 audit_get_sessionid(current));
-+	audit_log_format(ab, " cgroups=");
-+	audit_cgroup_list(ab);
-+	audit_log_end(ab);
-+}
-+
- static inline int audit_copy_fcaps(struct audit_names *name,
- 				   const struct dentry *dentry)
- {
-diff --git a/kernel/capability.c b/kernel/capability.c
-index 45432b5..d45d5b1 100644
---- a/kernel/capability.c
-+++ b/kernel/capability.c
-@@ -366,8 +366,8 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
-  * @ns:  The usernamespace we want the capability in
-  * @cap: The capability to be tested for
-  *
-- * Return true if the current task has the given superior capability currently
-- * available for use, false if not.
-+ * Return true if the current task has the given superior capability
-+ * currently available for use, false if not. Write an audit message.
-  *
-  * This sets PF_SUPERPRIV on the task if the capability is available on the
-  * assumption that it's about to be used.
-@@ -380,6 +380,7 @@ bool ns_capable(struct user_namespace *ns, int cap)
- 	}
- 
- 	if (security_capable(current_cred(), ns, cap) == 0) {
-+		audit_log_cap_use(cap);
- 		current->flags |= PF_SUPERPRIV;
- 		return true;
- 	}
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 75c0ff0..3b92e85 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -63,6 +63,7 @@
- #include <linux/nsproxy.h>
- #include <linux/proc_ns.h>
- #include <net/sock.h>
-+#include <linux/audit.h>
- 
- /*
-  * pidlists linger the following amount before being destroyed.  The goal
-@@ -5789,6 +5790,67 @@ out:
- 	return retval;
- }
- 
-+/*
-+ * audit_cgroup_list()
-+ *  - Print task's cgroup paths with audit_log_format()
-+ *  - Used for capability audit logging
-+ *  - Otherwise very similar to proc_cgroup_show().
-+ */
-+void audit_cgroup_list(struct audit_buffer *ab)
-+{
-+	char *buf, *path;
-+	struct cgroup_root *root;
-+
-+	buf = kmalloc(PATH_MAX, GFP_KERNEL);
-+	if (!buf)
-+		return;
-+
-+	mutex_lock(&cgroup_mutex);
-+	spin_lock_irq(&css_set_lock);
-+
-+	for_each_root(root) {
-+		struct cgroup_subsys *ss;
-+		struct cgroup *cgrp;
-+		int ssid, count = 0;
-+
-+		if (root == &cgrp_dfl_root && !cgrp_dfl_visible)
-+			continue;
-+
-+		if (root != &cgrp_dfl_root)
-+			for_each_subsys(ss, ssid)
-+				if (root->subsys_mask & (1 << ssid))
-+					audit_log_format(ab, "%s%s",
-+							 count++ ? "," : "",
-+							 ss->legacy_name);
-+		if (strlen(root->name))
-+			audit_log_format(ab, "%sname=%s", count ? "," : "",
-+					 root->name);
-+		audit_log_format(ab, ":");
-+
-+		cgrp = task_cgroup_from_root(current, root);
-+
-+		if (cgroup_on_dfl(cgrp) || !(current->flags & PF_EXITING)) {
-+			path = cgroup_path_ns_locked(cgrp, buf, PATH_MAX,
-+						current->nsproxy->cgroup_ns);
-+			if (!path)
-+				goto out_unlock;
-+		} else
-+			path = "/";
-+
-+		audit_log_format(ab, "%s", path);
-+
-+		if (cgroup_on_dfl(cgrp) && cgroup_is_dead(cgrp))
-+			audit_log_format(ab, " (deleted);");
-+		else
-+			audit_log_format(ab, ";");
-+	}
-+
-+out_unlock:
-+	spin_unlock_irq(&css_set_lock);
-+	mutex_unlock(&cgroup_mutex);
-+	kfree(buf);
-+}
-+
- /* Display information about each subsystem and each hierarchy */
- static int proc_cgroupstats_show(struct seq_file *m, void *v)
- {
--- 
-2.8.1
+--pf9I7BMVVzbSWLtt
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
+H4sICHs4eVcAAy5jb25maWcAjDxrb+M2kN/7K4z0cGiB667tPDbBIR9oirJY6xWSsp18EbyJ
+t2s0r7Oddvd+/c1Qki3KQ/sKFLvmDIdDct4c7a+//NpjH9u3l8V29bh4fv7Z+2v5ulwvtsun
+3rfV8/K/e0HWSzPTE4E0nwA5Xr1+/Pj8snpcv319Xvzvsnfx6cun/h/rx/PeZLl+XT73+Nvr
+t9VfH0Bj9fb6y6+/8CwN5bhMJFfZKGYP4vYn0KlH9YzlvdWm9/q27W2W2wZZzbRIyrFIhZK8
+1LlM44xPYGINf8hSUQYJa5NiikdlxHQp42w8LIvzYZuwF+3qgli/WTmaCTmOzH7hBsBZLEeK
+GeBCxOyeQNBFsh/VhvGJUYyLUhd5nqkWSdxZIPJDQCDCBkVqc3v2+Xn19fPL29PH83Lz+T+K
+lCWiVCIWTIvPnx7tqZ81c6W6K2eZah3ZqJBxYCTMEXPDRjFwUq0GV/Rrb2xv/RnP4ON9f2kj
+lU1EWmZpqZN8T0um0pQincJhInOJNLfnwwYI16x1ybMkl7G4PTvbH309VhqhDXHocBAsngql
+ZZbiPGK4ZIXJnBNiRWzKKNMGj+P27LfXt9fl77u5+l5PZc5bF1EN4J/cxPvxPNNyXiZ3hSgE
+PXowpdpnIpJM3ZfMwA1He2AYsTSIHVEvtACZIfbNCtCt5iLg4nqbj6+bn5vt8mV/EY1Y4b3m
+oEfiUOIQpKNs1romGAmyhMmUkE8UOzEVqdHN0mb1slxvqNWjhzKHWVkgeXtHaYYQCfskNc2C
+SUgESgWiq0uUR6XbOJYTnhefzWLzd28LLPUWr0+9zXax3fQWj49vH6/b1etfe96M5JMSJpSM
+86xIjUzHbR5HOsAD4wLuCjAMyY9hegIqag45Ubzo6cMDgVXuS4C1V4KfoFpwTpRs6w6yXRGn
+kPwgKeAnjlFlkiylmVZCWExrV7x0kCWQL1GOsozizNqFciTTYUtN5KT6y+GIPcy28UIKIQie
+DM3t4EtXzDSPRFAJW3v7fKyyItck0zCDT/JMpgZFxGTKI12g7zqHndNUqoXRXNilqCu516EG
+E5IrwcGQB46RcCDldOhcNFp8ctFRPIFpU2sfVUCsyXmZ5SD08kGUYaZQq+CPhKXcMRVdNA1/
+oXfgWCSWgoWUaRYI3bL7ebj/Ucnn/ncC1lOCYVKtzY+FSUA6LXUQwe6x7If3Z235aCAEoxMY
+1vdJi6tmpOyQ2o+PdBYXILbAMGj3EaLlCBygvRQjp23jrUCEHAfYEmcRh6Bbyjl1SycsyB2E
+wMq8NT3PnJOR45TFYUuErGFrD1hTawf26+XhkTPTEbiW1t3Klt9jwVRq0UzWHS+jrFMMKfnL
+uSzvCqkmrauAZUZMKdkWAhgSQWB1wprBOrTLl+tvb+uXxevjsif+Wb6CSWZgnDkaZXAde/s4
+TaoNl9Ykg4lvuU0IApiByKJ1NTpmI0eg4mJEa3Wc+QBsVIZgETFUKhU43yyhEe+1gdAyYIaV
+EFTIUIKKS4+JBVsXyhg8CnGUEZsK0FKL4fp5659pq2QnXV2MIHyCAHKcooni6JuOxKDoX0uU
+t1ILU7SiMEuMx5POCITFJcslGCJH4m3cO2NwJxj/5EyBADXBlmt6bLAKmzCCg/UlOEuyoIjB
+e4OsWUVC3Wvp3bgKL2OQAJDNocNcE323QiVwDhDMj2DNGVOBPm9BwKtDECFCuCSJ0hSGu2Bl
+zLPpH18XG8hT/q6E8339BhmLExvsYn3Erm9TdE2O5as5bDw8nkVCwXKUUoKYyTRsqaIyYETB
+NjgmFw2JTnCdQefM2gtXQ2jgIS2IM0YpbI1TpAj3Tq7ApMQBXn3LtETWdCA+2YXYrjk6wJTj
+Y2BUb9UR6FbIIhNgFuQmKCdou6l4xM304lHAQsdq1j52pGk+WvBOuE24aSPGShq/M+dJAOov
+KnVxVMEKYb5Yb1eY5vbMz/dly/4BvpHGnmYwRe/u3B0Dz5Puceg0FRKP4xiZDk/RSOSYncIx
+TMkTOAnjNEYD10Gm9xjd8DuQegJ6IzxiBcHSHJLf0XEeIBoARnU5v746wW0B9MCSiBPrxkFy
+gpAenzoYcLPq5D3p4tRdTxiEgCdwRHiKGUxtr65PILUE+hCrSkCznn78vsQqQ9ujy6yKqNMs
+axcC6tFAMEv3EMLDu7Y8NBl7M4GQpgbFMxMZODKrXvf27PHb/+zKACASqd02VpKstXTTEQwc
+Hij9fl5sMeDpvb2jlreOA8LzEswLxIUpr2W+A2E6aXxVsPy2erV2YtMDcr19Kay/pzgRKhVx
+5TtYEKjb/o+bfvVfgzLHWGTeqqT1yxB0PL6/Pftntd4uf1yeHUFFb51oBVZPG7V3TB7MnCf5
+/xMVo0cRn0QL5PQkTjTDlGQfM3jQwrw4igNkwJvdnn35NOh/ejqrL3P99rjcbOD8t2CsbVXh
+23Kx/Vg7hhskIclRylInqGvGp5CUpGAyaZdRY1HR4kM56PedsOOhHF726SjxoTzve0FAp0+u
+cAuQbgIcKayPUDY7KRrxHL0B6EDCG0sxyrJ20asaBfUC5Lfn5e12+7OI+/81GFwO+/2z7mQb
+nrTifMExPuhkFYe3kCqM/TSIy95P1X7UJsadYKZRssXHsx3AAlGlaYunfzBZeeo9tovSzWZ7
+i/Wy9wEhZKvSJcdu3hVnM/htM3DQyPOORkLmXrAY6xQCZMPGy4DV7+g0BNSQdPd/PHZmG5tm
+V5SvO7AQ0lmHERwoMbfHhA0W7iYCmMa5oZMzXE+109zQF+tCSBLjWotFxb15DClLbiwlezUX
+Tj7XsYEQdyjWDQXy6F5by1aaKgWigj9IF9sCM5UQX5sMcncncp7o5IgLSGCXGFZUZvSif3O1
+kysBApQLK13lJHHynliAfDFQGo/fZOT4Qw7qQUNGBR2RP9jMIOMksEr22FjYqt6kk3paQRc/
+lo8f28XX56V9oenZjHzb0h7MUBKDmZlT76jLHbtrwwipACPfHBtmchG4ZSdbr2lprmRuDkSH
+ZQVdUK2nJVJz4qJwbVx6Z4A+Nr2sa39yLls5JZd1JVuTg03+5gIPKlg4WLkLRzAhucSXFxAy
+2qrDrERLL8wm2l6oEva2S5HarBgrkl5cbTx1DwTKbOqF5crPXs60pCUxykweFxbrMPSBse9v
+my1azu367Rmiwd7TevVPFRQ6Z1cGszIH6+TjQNRnTkhCKnYPH+ly++/b+m8w3Ye+CAzMRDji
+V41ATMGo2gymAE5JBlMMD+48VI4hwN+2ikZux0IhWcGCjOR0FGBxKhNIG5OKiAELqcE700IH
+JwPu455gWKbuUci8KuNypukrAISd91SgsZ6tAVqe5l5mZC6PAcdoTkRSzI/glKZIU086pu9T
+sAvZRHoqZxWFqaHlHKFFcHQBRAkz+r0Fj7RkkR8mNL13WbGFPtAPt9d9hDOLdAg/IJGgBwe3
+kGr3nbiLYSl5wSMhunNRMzpDhufNsMsnnnJXk1wMhIIoQOaQ0fqBtOGv+5iO2PUOhxejtllv
+nFUDh0D04+vq8cylngSXvjIVyNCVTz7wwRxj1ISpiVeGcgMrx0xrGdLbawhBvGOfAUDRk7zj
+yNvIoYyPqGTAuUe0cvDKhoapwFN/A1H1VIHoank89KwwUjIYU5GijQusGGinO2Mas7S87g8H
+dyS9QHCYRPMQc7qTQ+a0sWGGxfT9zYeX9BIs9/jdKPOxJYUQuJ/LC6+o2BSM3i6n1wsglIFk
+IsN+B/rc4aaYrSrSNcFcpFM9k4bTxmyq8dXfeE0suOmJX72TPPY8a2iaW3sIlptA0AwjRnwO
+eYkGHSh9WNqmHfYh177c0JFEqeaYKNyX7uPc6C7uxBi97XJTNxG4qj0xEEd6Hm4SxQJJh26c
+0ZOkCuisYUSLFAthC8qnomE54VTaM5PYBKRbgfFMzE3phvt2yH265+EY5Xdw+9I6hdgO2Q6d
+pJMK7rdbT8TrEnGG+dSMqRRMnOdBv8HnQpndg1uZpQVV/29Rr0x97qR+OzAW71Vqk+9xQLXV
+7JeFazjsrtqB8WjaK8RyZAFU0YTx5sg6I/aVSbVOdwdQHHNR8IZtn0xBy8hhg0SZRlTW3Ebd
+JcFH16yxbs9eVq+b7Xr5XH7fnh0ggu+KSJYAoJsc1efZdsg2PYIpKfWIv8MCL2nfBWFkXtdE
+9rRmEkZpTxdOpOe9CjX6hvZenMmQBog8Kn3PRmlIa2Y8OxLcBRpU0VtWsI5STNHskodzX1VO
+K4x9Ofmf1eOyF+yysX0H3+qxHj7Mp4vqQT4Scd5+6XeGIa0ykdOyB0ubJA8pRYUbSwMWZ6nT
+c1GRC6VK7BuM7S5qFbFm9qGzzcAOVaZ1vazdrgIStsNwGNtRsrlaw38IuTa+JBPsYhY+s89+
+rfJDa58opIGSPsdbI4ip8jUc3esyugcmplKTr+a7zru8QDqSu6/B+PKsI9hmgA1VIfEagWWS
+J3v3TgoOf6Tel3rjPhqbwJp2z1MwQGF5rAfa9yE/VvsViRINxMmq10ndXZ+pL4fz7H6KDcht
+UvW32r4Ss168bp6rkm28+NkpPSAxW9r0slkVPhXttEPjMRs+gPRCVBh4yWkdBrTZ0Il3kj2/
+zNMfh8Dd8x1ISxU7HZymYslnlSWfw+fF5nvv8fvqnarf2NsM6aQaYX8KiMxtQ4vnmrHWOmIQ
+Nc5kYKJy0PI3h9DhUehFV1Q68Gsvl10m6AyPwHR7xN0zKWVnM3Zs2GXSjtI5wA7s5xxuyQ/z
+tDBZLRrpToeKvdVk8f6OFbT6pu0biL36xSO+fR3cfAYhvZjjqeTe8A0RMdiC6EOVaUabRyuU
+MTOd/dgF9fL52x9YRlysXpdPPUCtzZhPIPOEX14OvOtgBhBCBk6nOIihtRle+lVLx8eOPY+O
+QeH/Y2Brcoa4xe4pBKvN339kr39wvI4DF+5uMOPjc+8SKbhdv9VIRRduqcd5EKjef1Z/Dns5
+ZBIvy5e39U/fHVQTvCeYy6OiUIwkoViBaQXImdPVA96iSKXxfBkAUHz+wo7nNoFSMBXf0yB8
++3GSov2Y+7QA41LdOb/TdoUMfidBu/kSHVuHgC3Pd4h0XC+MZBBbdDqHm9gE+9QS/NKkqp9U
+DXp1vrIvRlRDxPy6oYlqk0qLOMYfdB5aI2GRXmsUbpmfD+d0qG37ofK7kks4Ql9iWxMMGL+5
+ol+wG5QiEbQaNQgcwrUj7e8NWtzpBznkRY1ofdkd0Qm4nl/7zxwteKvWsB+sWl9vB1cUzCY4
+14ObYSuMC8DeYwmCB1OaH2xZRRkqhaFNX90JAZGo74OAHQ8ntqz0ESGwZzZNxIGRSVabRypC
+ZcHl8HJeBnlG1z0gGE/uUYE8NTiWGl837xjfxTjtfo0MExvs0+Ec1zfnQ33Rpx2NSHmc6QLy
+Eo0hve8zgyjH78jo68oDfQPJLfMUzaSOhzf9Pm3oK+CQViFw/ZBi6NIA0qWnh6TBGUWDL9en
+Ub4cR7F7uenTMhEl/Or8kq7RBnpwdU2DjEQz8eVyQINHSd6/voSAi46eazA4IhJc6FFdeSxD
+zW4uPEeAngPutoQY97ysxuhz8Pl8Puya5OqNXuQYvW0+3t/f1tu2LlQQ0OUhLbR7OF2qruGx
+GDPP82ONkbD51fWXo0RuzvmcDpV3CPP5BY3BR18G/QPtqr4jW/5YbHoSC0sfL/Yjgc33xRoi
+vy3mc3ggvWeIBHtPYC5W7/jX9gEZfAY/oMmet8v1ohfmY9b7tlq//IutO09v/74+vy2eetVH
+kY7JwTcVhjWKPD4gJl+3y2fswrMpdRWENWUUzWVIDE/ByRyO7glF+FTuA/LF+olaxov/9r7r
+VdPbxXYJcf3r4q8lHmbvN57p5Pdu9Qf525HbXyOPPBXredVp6AXWnUvMo16IIkR0cLKaa9kE
+93vhb5QIgPgG2Q5TFJMBfjypfF9xefouLK3A05RjgfVrhs+T0qEr7RXDQpOdskKI3uD85qL3
+W7haL2fw/++UyodSCSzS07RrIITTmgoNYRv7YtF+7PDjpSwNfKVY619pPb8rWCwfPDUv+xAs
+fNkO4/imR8Kmcx8EZmlBW3RYDf6mM9/XpMLgu46XUfuFDPw2Cv7i2ZApPJ9SFmk5tadqv+n1
+cDD1xV1p7AtSIbDvvB9WgoH15701fHJ1GTLF7Xr19QO/wdf/rraP33tsDVn8dvmIfZIt9OYW
+TYTqalwJmYo0yFR5DjG08xAL/krQjtzc51FGdvi36LGA5UY43wHXQ7bPMewIOkFgLFzRFWZw
+PvB0B+0mgT132wkhxE2l56msMv5Gn+IkcT/LSILrwWDgDa9zvEuyYtSmqdyjUbwUIPQnJuEF
+Zk6plJnY8+8XmJiOWBFACy5CfCfl79dpeCtUpnwvrpwFovPtKmyWeo1rURypjAUdqRxd0OHQ
+iCdYN/d0GaZz+oy4TzKMHGcpHXEjMfowqk8Gu3FeeyKVk7sbxoNy9pv6jrSew9lUtv8FiTYo
+ErG2FYn9hquh0tCisQPTW9+B6TvYg6fhCaal5g5fXhUNOnd6SCtwbUzVIxVL6tuP9qz6oWy/
+UDykYwBdpAF2Hx2nJ5IiFk4v4UgMT/IuHngknfelaqRMc40942ACE3wm60o2QWnOlPNl7NDT
+gzCdk+04LVKR2/qdD8jPCFoTbNHX2cTA81WC6H6T4EI8CfiYfmaF8Sn9OivnvikA8Cxy0T9x
+LPJ6eDl3bvjP5MSUhKmpcD8iTaaJrzskwciCQcJKi+FkTHOuJ/cnXE0CPLA0c3hP4vlF6elh
+sTBvPQSgl0ehenYAJniSXLlCM9HX155ifgUC2nRUN9EP19cX8257Mr1odqBxKR9e/+kpQgJw
+PrwA6AkVSO6VdI4Xfg/6nhsLBYt9Xc4NwZRBVJI4NOsh2g/r6/Pr4Qkm4a8qS7NEkN7i+vym
+7xrS4eT0kaZTGUingc9+yhN0YqPDidlEurFdlPmCn7qHW6Rj6X5sFTEIIiL6RO4FvuOH8kSU
+ehdnY/cfq7mL2fncU9W8i70Rw13suW1YbC7S0juPbGttcwiZF5a3HR45+0J/3dWaiB8UGOE4
+uWvIQj1toggyGW2Z1PXg6ubUYqnQTJOSpQLngNVV/+IU69h9qEhimiXgkZ1+Y41WvRuNEzOF
+uKNJSjCPDkF+M+yfU41dziwnDoefNx7fBqDBjQcUnoj4daKdwxO55D7virg3g4EnOEXgxSkT
+oY21kc7GTILfdZ8+3iJ1dTPP7xMQQV9QNfY863BsmU49Zk5SvWFtJu7TLIc43NlAPVYGM7uN
+8i6jelFaVIyICuOYp2rkxCx3hix5Dq6QeYoEplP5OKQ3de0q/CxV1PkU2oFikyXv/CsFh2Rn
+8qHzYUg1Us4ufYK1Qzg/ZXN2H03VoPqlCTPbWBrHeNcgNpe+xLfGiGM4fsBwnEwQ0BICzj3/
+P8aupblxXFfv769wndVM1e0ZP2JbXsxCliibHb0iSn70RuVxPN2p6cQpJ6l7+t9fgJRkUSLo
+VE1XxvwgiuIDBEAQMI1Tut6HfFl7xkWcD6DE4l7gAtuNc+hUJDPrys5wsqPhyCexSiwkcR9U
+Og/P+Aj8AcUAEg3RgZfAPA76Jf1NGxgigXe6CRytJTDY3BMkCbIZEqwVeprAi+aw99pwZ27B
+uZeGBd24akck8Vg6HLv0yIB+PxruzBsoqL5ooRqORnQHKKmXHvgUpLg7x47P5tbqpXxLUgR8
+xywTE1STcsnzpUv56koC6OGo2JWrlFJk2lRRxEEZsFXnYagX3mEB3S4DFWCxmBJ2/DQ1D4no
+mAHkAscTmC9vT4+nQSGWtRleUp1OjxjN9HyRSH0HwH08vL6fLv1jiq2SGlq/rqbPqCN4QYlj
+dhXXnss1N2r4abkzCuiUOrUApCu6t9EF+dzs3rxfb3k4G4/MuwM8Nhqaa9x68WS2M6k6+mdH
+uiooC248ZDYOEia7u4nlHHSZeZGgph+CgXl7aremNmgZoJ51hKfbMbXTIjamsG14t5iZD2oB
+myzuSGzLA9Om2G1mBpKwJsMleC5q3mdZFhGuDun0zuaPk2ZcRPplKENzDKYT2L9Zlrvml9Zg
+mYOIhI7gZmaCHUEcakTb0DH5g2utYqDsqqVtQDO3a1TM8vHOKDJpj/X1tCwPnZFjehAQkJAz
+X7Rv40jyxZgK7qlQ4hC3QokrPIjOxxPXihImNfURDrO+14ICw3RNViSt74QmdMPPcmE8Imo/
+JDTp19uOxjfHSJftt+FoTJiqECKMBwA5JERYzNpt+Lb32wr29UbRVvAIpoNyKHmRAR+2T3gR
+5rf+XfnfB+9neMFp8P6jpjJIv1vqvDba4dGWmc0I3/xQvOm7+vKX14/3vgPAtbI4LfrHoevD
+5VE6dPA/kwE+ojVaYORhYwtWbsSM7jfej8PlcMTd/eqNVsu6+V7Tvkz2dwwXsABxLd+3xkXt
+NGRh5e43ns70loPUGSexuiuTmd0L4uRbQtn/ypUws7wqmLj54pDPNlrsGPh9rwoqh+zL0+Fn
+/xy5aq/0qvXa8VwqwBlPh8bCdqzcKj6Ppqm3KAPckExtbhN5yg/A/C7N+bYNxFlZyBsndyY0
+w9jQEWtIjK1juxwWJXFpV/sMQRhA2p2yvUkCG4njEIadFlmU7AhPF0WELsihm2Mo4d5aiM8v
+X7ASKJGjLsViw9KsqgLOMSENUW0SEzeuCLCLK7OAGSAHWL+02ipsPdFtzldihVSw8LyYUO0a
+itGMiznBwyuiyqfga+6u8Cs+QXqLjAe72Y44n6hIKktJKm5W5mbEJSMFZ6n5oLyCYTaXYXrr
+HfCL7TCArM9X3EtCwv8fOGwVe5kQhSNequj45ufXW0P83gqrOmS95Z4eySqbLGbm02s3TUM0
+u/QWRupFHncHR8Neca3W3douBeYe/EvNsag2Xfd9aHu478QYUpvm2OtroVwLxz72ymUC+4ce
+exaLVThlTQ/B0jUQE5fpEe/EaWkh1UXKKs9C075mi0YnyGtjq44ciAjLPxEvCF8B4vRoOiGU
+mhqfEdJIje8seOTPp2av1QpGNx8S5w7hEi5BQURWQDDlfGeehIjG8gSNCGUBuOBiOl3Q3QL4
+bEKokApezMwsDOENN+8gFZbqtySv81ImPhj8jVdPqztlvz3DMP/8NTg9/316RMvKnxXVF9hp
+8LLZ790B99BoRJqVkMJnGEJdXgM2bWQkLWELQTIWsQ3d2dbWJLjjEE77OMyee7uV6c61Ni+7
+n9CDBYJ/zky2CQQbW3wVDQ5Y1wvs6wD9qZbhobJsEcuvukYEqvVqbeb3SJW7iSiZQcRPQMO4
+tN7WmhrdN5HhzCQYuhvCZ0MOMl63pi9vNCRuuLJNKyRZGuNMiFTT/URqCOTWwtQt20aCTvkg
+OrxhL3tXfme4zoePKnnAvLMivOPyrzoHJ15fWW+7La7878i6r2uFJCFXAoIoGFBXLBBPPJkK
+hcRhFVBq8xUm1wmS4JExmr5JApDeHOCMQ0LAAYodWq2Ifu1HA8TSb/v4IUrL1UPn25uxTy/n
+9/Px/LOaBL0hh39kLBuA8c4ahinoZULSqPKQzcY7QkBMCY1xLQyx/FJhkvjTtC+LYFmVAex8
+6e/0eTo4/jwf/zVWl6flaOo4KttLr+bKgqEO7GT0XTJQVsuUcXh8lIGTgcHJF7/90YnuLzMa
+KJ0TRFSczOo8sDYRmAqqMA7adU0s7weE6C6OdiUyHUpz8qgu0z4fXl9hR5SPGZiifG5+t1PH
+J2abBpJYOIZq/5YKWCXhOtKEdZNSlBm5/CW+2TnTKdUB/bUji7/temOPkoR80em/rzDypl5x
+/XQKk8fSJz4RnFCioJPOqZjJVwLCwVcSwK6+mBJ7ckUQONO5hUDsRlPiipzE85R7Y0c/bVGT
+J/D73dNE4bzVcRZxVhIsc8o8qToGNNHELNNKPPO9yXjUH1NkgzeaBjN9RGhlrUGzND3yJhOH
+uLqnxoSLRPRjX2DbzpfPTLvIS8cTMTTPu625aWmyZZkMKBUSYcAlgQwKbcHdDXGldEtm/MLT
+Gdd4guZijLWkFcWxLuldFGqAONm6eyqAb0MluVyvg7eH9+OPx/N3SyADkQR5Uw09giYKXdlv
+fVvz6DfOM7wob62/Eo7sRP7WjuM1ysluZycCjTSaj4ajcusTEjVobkMmliRBxOLSHfcqqJlA
+lemm6Xa8UdiNw5t61jZCzWavTyEwmq0QfCnNa2oBnV+ejm8D8fTzCfT5wfJw/Pf150G/qAnP
+GWpbepjKolPd8nI+PB7Pz4O319Px6Z+n48CNlm67smUnwLbiix8/35/++Xg5yghAlpghgW/x
+XA4wx1LuLO6mxKU/JBCTOcFDa3hsFjBBDvPU5kVc1pbPu/nYmfevy+pEeDpeBiHbeVTgl4Zq
+HXpEVCGkgc6cLoYE05eV7NLxcEferZbf5LuLIbEdYhUIT8ekctAiod7SkJhNHjU8M/d7AxOB
+UhQ8Im7HIxx5I3QItn5CTWP7hjWf3cHKxU4z8/PckzG4PXNLEYbq09B86BCmABM2J8RIe5SM
+2CNAQSMbho3/6sbfSi9KyMsLQHPPIqp1CDtOGjmE6HXF6UGW+IwQnOQguLvR3XQ+txHM5zPL
++lMEDhEWqiFY0HNJEjiEH0pF4CyG1jY6C+JOf4Mvbjy/IAJJIZ7PJrbHWRyMR8vIPBPYN1TC
+CZcQfDxjuTlyNoIgGE9hHdJ9YxAhdTwXtBFAEUyHtvq9aT51LPi9Q0h4Eo2n+WxE44J5dsYt
++N18trtBE00JQVei93sHpjjN6dD90ix5LHfT4Y2NReRRakH3wqPyfgGcc9AwJpPprswFCFQ0
+JwnTycKyPsLUmRPqnZxDbhgRLkB5Kmaj4ZS4sgwg9Kx56SuQUNnkx0kCC19QBISTf0MwHtEL
+ryKgv1wSOITlviFYEJ/YIrDvtA2RbbsDIuDkE/NEzbfh3XBimWtAgFdA7JMRHWnmEztNGE2m
+luWee5Ops7B0GGVbQbBn0dAFo4x/S2LX2pM1ja0jt5FzZ9kSAZ6M7FJFRXLjJZPp8FYti4VZ
+A8/YqgjdnArihh5xddDknmC+uhxef6CC0Du23Kxc6KCWva0qkGF9VzKnU8tBxjf4K7heOvjN
+/Xh8Og+8c5Oz63e0s18zONX2keByeD4N/v745x80v3d9fQItqWwTaBY+zXQ3K1g22a1+tcri
+JOeB5jMEhT7BCAGS4VM3TBh7r/Uq+BfwMMyYl2vvQ8BL0j201O0BPHJXbBnyvNMexDIM5MZ3
+LBQYSne5J5KPACVemqnfbaOpm2GjaVpEEQWw0vkqLlkMM8q8z9RNoiKeIg7ziIrLHODsQhmW
+OLPDQXG9e/q8CyvA1Bjq7JusJOeh/NLclJVJm4k/6tNyg7KKo8WzjMg1BGgameUAfHC/ZNmY
+umsdYNJBHkIvk5/JI5GTICYPoE8+cRBG/oi8Q4lLRV4apdCMb0iMz+/Ib4rcPEvId2auzwjx
+Bfsj34/G5r1XoeSnmrcfRNyNS10AXuIpPNk7LIG1QuhigN/vqUjFy3LiB2QPbJLETxLzno1w
+7szG5NfkGfcZPV+oRChympKVem4WURfacLCXUbna5XdTo3suEPQPFvA7eJYXxLVDnCX1JWiS
+YAn9QM9dee9ArBlhssW+KJLyfkQFwZNjj9F0SVTA4iEURISjORUIr+ZdZej5pk2loQQeiVml
+zE0IE+KgXCRFbNoPMYResvZ4iSwvZBUDv25JMsReN6sCFjZZt9eeFl+n0A2GKuY3lJliIGF5
++uPX29Px8FPF/jbxUnwbeekrSSW+8xg3n8Qiqk65qMxvksL1V8SkKLbmDSki1OyIRaKbjvPa
+XrYtQ0Yk7lFJ4vkSFgbBs/B2RMyXVGzgLPdU1iIj6kduFWSsN0AALYuglZLtOm/2sYdiBBFz
+qNj5XKTmeLeFftYKP0uPm2LLIJL62QaPNLUAuwj4mLWyAbTaXCLGGGKCZV5C8Hf5Ppjy1Qkq
+SYOX/+kKYHMn5hOeOAUzIvSjTHapvA3747B5usAImBYBPqaaTdaKr+0oRVXA1uPl/Hb+532w
+/vV6unzZDL5/nN7eje7BOexdsemYxgvvqzi890U3KSlgmBMidfXUk3iJCLH6fMA7Pz+fXwae
+dC2QkhReb9CTHNTPAJudTohbGjrViAhnpBERgU9bRJ7vsfmQiIKpk1EGvjaZQPmtJKI1tAjR
+LQj+UgmJWpSUe3OLJCX8x9sk3JsQ0bSuRMkudvtzs3EOFa9PL3IMO9xcDaw4f1yOhvB1ULHI
+PBUQXC+SiQf0cGqRdBXJQDF2hoTDrzwhSQmNRKyrCrzoBkGUF4RPUU2RR2ajKGsaSaQrjFwe
+LnWZtmbj0NdFa1v9n3ZqFwkO0sP3k0r/KnTvnOz0fH4/YehQE5sQOZNaTlRmmAeqN4jZ6/Pb
+9+7ACSD8TSgf0AQWKHp3Xg/xTKe+RYzubFS4XCEdxoxQGqFbTpAxcxRotsPokNS2mhAJuTlh
+CYpz8869iVjXXfDawK3JiQw2nyryUGuKgpQvDR5x1k5hzTHgDVm9yiENP2wBLIOoP3AoAImP
+v5UPrubgULsBERIS+l2hm+rYiSP0GyMOA9tUIBARQqoXlfdoFUOK7hvrmtDtoeO3H3l9mTA9
+XWRO4xdgFrAtPL2fL6YdKaPsxWuQZ1m2TEJDGOGXx8v56VGLCBH7WUIkyMUo58REJhImqmO3
+vB8ZV0Yu1mxYreV7HV+k6j2KWZ7V8LaDfu7ycRlo96yqonKHAXWpVTQpA3O/AXZHYRnjIDZB
+1QT+lYZ2NLQKxJjClrnldTEPLY8GY/rJAFMXEBqcQL8FvgNh2+Riw3bIkoOW1yDKviX6OvK4
+5XgT4U2/HBhSF2+/iMVetpdOiyYNWPRtjr4qMjEghcg0WNpb3P4jDfhQJEQIZIl4RF4ivBUS
+CHKWBJisjMCq5BelwZnIOxx/6NduAtFLmaZg/wumNMIECbgormviuv5EspjNhlQrCj8wtcBP
+xJ+Bm/8Z51S9kQAaqtYNPEtO1bw3GRWTezt9PJ5lBvfe0sb9ubO0ZdE9cZtYgniOl7dznWOh
+zCQPwhuHCdmrDvat0M+YaQpi+O/2VK99Xa9MtpsUrkHWBajL4VK+mhAn8U+vV+qO5kJplSrq
+qvbSJHPjFaMXt+tbsIDGmFyMFLqmHwRIBqaheJilrUtLc2x81sL3wmRl7FIPpDF99MRD4Yo1
+NZstHDvimEn9Bijj7WyYzeKfRJZOTWnsId7dWdEZNa+y6pXXOa1K0LqGKff2KnWTdqewQ9DJ
+6kTSLRNjTDVFBopU70WpyKnjUFgFG5KZUd9aO9bry6gGO92Avzfjzu+JFjFSlnS3RR0mkiAD
+JLaEXwmAJrPjSl5sT/HSfytxJHZZ9ye8VW+2UlRbXKuIs1SLL6ZKLNF3ZAJQ8yri7V7DX2gT
+yY1lWpI4WbxlLqjYW5ni1PxipCpSzyWCoUq8J9i1QflRvRfLUkKvl/gnXisiQuqPvZSanF7i
+uzQvpiZu2J6YobjmqX16OzvOdPFl1EoBigTwGiY3ubuJ2bSuEc0/RUQkTdGIHMKxsENEdJtO
+9KnXfaLhDnGZvENkNp11iD7TcML1skNEcAad6DNdMDOb4DpEi9tEi8knalp8ZoAXhMVMJ7r7
+RJucOd1PINPi3CfyX2rVjMafaTYZ5QapXOFxIhhJqy308zUF3TM1BT19aorbfUJPnJqCHuua
+gl5aNQU9gE1/3P4YwhytkdCfc59wpyTStNSw2RqJMEZ6BfmDkMZqCo+FOWEFupLEOSuIg+qG
+KEtAArz1sn3Gw/DG61Yuu0mSMUacqFUUHL6LOhdraOKCMBhr3Xfro/Iiu+fEDo80RR5oq1iq
+gveny8vp5+DH4YgRnVqhiqQkxLOHIHRXomsUfr08vbz/Ky9SPj6f3r6bjuhUGA5pjDapWlUW
+d9AbQrZhYbPb3rXUFJkMWlXjs85pXn128wpK7Jf3p+fTABT5479vslFHVX5ptauqU12trEJZ
+XC0cTSkmoS48IghPiwx0L2LMWkT+1s0C4g6avyyFl/HUmMOaxe4yxMtDWdwKb3QVTyo8KjDB
++5p5reBxAShc6sm/RsNxqzdFDm8DDhuBXB9RljbXlxW7RFibIi4EQ7fdaJkQmQUlk0+2sTWV
+uVEAWzNMqS6aD+o8I5iHNitU0iO8a2SooUuiOjCJw32/OhkQoxKN8UQmJXzM0WsGNSE9QaRW
+VZM5vn0b1z/9/fH9u1pTeufIOE/dpF6d1iEhJo0nzOJYTZoA547JtFuymmT5FbrE1NlVn4bu
+0tDTUFqG0DOmQcKT1eqzIxYhVb+CGrG0DFQV774sBGWoUVQb8zRUoDp6gZVmXYhrvlpThvSq
+KetO9k9llsPxG4Tn478fr4qprA8v3zUOh4pgkUItOXRyYtKNFFSuixg4qitay7Rid1dIMsqk
+yP8ajYc6C0xdzNp6JUzdTtz/W7Tlxg0L9ler2u2D/U6hegxWUjcRvAlvqtfA+nOaYgHr2u8r
+iqoY2aXZBoGw1GtpuJpMLPYV77CMNbbqnrGUWjb10WnnfXLUcS5cl/Xgt7fqwPntfwfPH++n
+/57gf07vxz/++EMLQqNenOXArXO2Y5bFCK3qWmeqmd5/skOx3SoiWLvJNnWJJGKKFt9RWphL
+lmyaowPC1gcVYB9ZXuLmCV7kEyF09o22wGsw1yNw7zDAmBSUgRFDVoAMgmlx6dAVOBOk7GJ5
+6b1ii7ZmcaL+ijvzWxTCxpXl2QinnH2r6DMghzAMFh/2J2LmFcT2IocOYWPfAHMQEsa9A0Pz
+mpfArT6WFbAssFN8qhp6pBBlD8JiLasm/kO1k2f0Hl5F4pEzCDZfPOonxO1qYEqWZTJ88Vcl
+UBiJFf+204QgtsXePtezhLe30qCIlcwiu6KVnkRHV5mbrs00/j52cakFEu1WoOT4SAYIBfnO
+S7KWGIkgrr6eJ2VT1/Vr9XYavxa2UZEEgY1E8WsLQSXZ1tujoiTO2iVWithNxVrP7l3viJkb
+gxQIy0Ieh8aJnuqnLndjGHgZP1Q9QMWgrskxqb2NUG1Hlo+sE5ljXA5yBUj/oxJ0o5jgiPJR
+uZLLJcyyddRxmO4MsqqpjjWjGMnHi9Sc8tPbe4eV4LKVTK4UZO7BmtVKzm1Z6Msc1GQal6wI
+ZIjSTgYsBxY4jasdZ3bX7CPmTsPvWrOdX0TmfUkSoK4Ur6x3MiTdPRDmxP0ASSC1V3NCOYkv
+eR4RRxQSLwrCO0SiGVr0c1wwlm/tGP3rwSt4CNJY4gk9Z6gfuXIzpvmumhn3RGRg2WiBClWS
+Ugk/8LtTS6fUl6Usb+iZA64KG4vsg4+CC7DLe7YnVq+LnvRGBRU5qnQwvwf1vd1r+NusMC+F
+MSWPDHNc2Ta06PgA4HJ2++5D4nT8uDy9/+rbNPBTNL6GQfdFjkkeAcKZbLYxyJNn5veeh9+l
+v8YrOZlMXkL0E/OKjOd7dIUW0oUMFg0hVdW0VtBoFKg3guvbXK+vRdXoX//5z/XgGT6u4XTe
+5dfr+3lwPF9OGJznx+nnq8xWrhFjPD83bQV41orH/XLm+n89Gwr7pMDxPZ6u25t3F+k/hEvX
+WNgnzdpeQNcyI2Fjaus1vdWSZnTq54QpZ2wFqqyi/W+ryk31IY+4WWHpcyHFAakW9KpfBaOx
+ExVh70PiIjQX9vsDz6ofClYwQxvlHzP7rdt5m8Qt8jUsNRtJl18pb8GP9x8n2J6PB0zFzV6O
+OIPRc+//nt5/DNy3t/PxSUL+4f3Qm8meF/U6YCXLeh+5duG/8TBNwv1oMjQFXKsoBXvgm/9v
+7GqWE4dh8Kv0EZZCd+nRiUPjTghZO5SGS4ZOmZYDsBPgsG+//okTJ5bMnphBSvynyLKsT/Le
+msinWa4JJt2ODrc+nj9dMKxtK4q9BYhLDvUKdFp1TUbAamUcTnnekgvZeIj+jlhZLVnqxA0f
+7tRt+PnlGxvtkvjDTUdFx2zrd3r3NioXY1xUhy9puA2QClZw4ykCzHY57jCUkx8UBMZYedL6
+yV+7+5K0pDNfV9AnYF6kRZeSJKuxNDJWOy0pBrV0OJAr6p7jEcnc3HNMkUQv9hNJCVSPqafK
+FoBRSsITAsCzKuKFT56DHJti9AojF4c/30O8g92lBNAPkq8jFvjwpO0zAx6LdFFULLaklSei
+KgYjAN2OR5QIhqVn+Il3j4KDWujf4Ledki0JKnFBMkHCS2/1aPA1CXKx1NF5gQFiu70iOIXl
+ZjVeie6irNlfLiZ9wfgpaRBkGHTTatct7J9tyfNZUDizLQKH6sgpAArZnT7Px4f8dvzYNwaH
+YvMv+IIrVGlMDmPE2kHySKe6W3tbmKYgitnQ0MAphymGo6N6Dq/dV1bKk2+iQBdFBShSfY5S
+h7F77XeMorXg/ouZI+7dMZ+yaPGRpRto1pK3OmWLvP71jOTOIaJaKti0OYnVZVUAEdf75qqw
+PtLMuegSepfD12l3vTXtXe/IZRGxnPAKOHIb7/3ho9k1fx+a8+16OLnbtTyD80ThHkd1oO1h
+r6cDs8Db8o5Okt8W+aIqmK5L5kaVdaCYmCmwFSl80hCcKndhacoxJG2CpE6wDSuu/e17QGbl
+uoZ8ZtoyGPVh+gg6VYYMGYuTqJoDjxoKpgE0C+EbXAEpjgi55JNUOIQmY1HQDIrnwFDImrLS
+rsUA+6cJWhxM0YsgSteUEAnP2lZ2UF17KcXrtvS+lV8P/FpDqqP4Feq6EKuYmeBnwjmpXE+w
+UOLmFmUyf+lU/AMxVP/TpZP7hf52RDvPVAyoL7TW9eYC0VoYfueVUz1nC41yUX0ciMmKU2Qm
+KUVdzcrOhLAycl4XdJCjRrwEwjWEwoatEMiJHYVk0sccl+sfKPu/pb7IAAA=
 
---------------B302B4BAD1EED0B052077B3E--
+--pf9I7BMVVzbSWLtt--
