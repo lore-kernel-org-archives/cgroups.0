@@ -1,56 +1,91 @@
-From: Petr Mladek <pmladek@suse.com>
-Subject: Re: [PATCH] capabilities: add capability cgroup controller
-Date: Thu, 7 Jul 2016 11:16:46 +0200
-Message-ID: <20160707091645.GG3238@pathway.suse.cz>
-References: <20160624163527.GZ3262@mtj.duckdns.org>
- <20160624165910.GA9675@mail.hallyn.com>
- <20160624172447.GA3262@mtj.duckdns.org>
- <47890d79-0891-dd13-4f60-e7e5f1f3fed3@gmail.com>
- <CAOS58YMxz5HfJUayqjw+SPj485M+wquTqQouk367rV2mfvVRHg@mail.gmail.com>
- <20160627145457.GA26980@mail.hallyn.com>
- <58938c8b-aca6-a5b8-9533-58e78d878e85@gmail.com>
- <CAOS58YM+h0w_UciXLbiJcKizPkXV66FL57LT7Mc+RRWspN+Y2Q@mail.gmail.com>
- <20160627194941.GA31843@mail.hallyn.com>
- <218f2bef-5e5e-89c4-154b-24dc49c82c31@gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH rebase] mm: fix vm-scalability regression in cgroup-aware
+ workingset code
+Date: Thu, 7 Jul 2016 15:40:24 -0400
+Message-ID: <20160707194024.GA26580@cmpxchg.org>
+References: <20160622182019.24064-1-hannes@cmpxchg.org>
+ <20160624175101.GA3024@cmpxchg.org>
+ <20160627130527.GK31799@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=TKcLtVvt0tREayz8swQ8y6s6XntqXCmLVn7EWJlq5bs=; b=0LPI2Affs2QGm4DFnvmdN/w8Xv
+	vPjqvV+9OOuzYZHzVBe2/1VQBzxtX0fea9PxqEF56jpz4H/UHgKN/y44rsdD3oS4UQlDeZSZUwmbS
+	iBk1DbeX3xf86tfu4h6PLIu5lSSl3clysghuXQ7zpH/hG92zjWmkC7ceRcLJW7bKKn0Y=;
 Content-Disposition: inline
-In-Reply-To: <218f2bef-5e5e-89c4-154b-24dc49c82c31@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160627130527.GK31799@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Topi Miettinen <toiwoton@gmail.com>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Tejun Heo <tj@kernel.org>, lkml <linux-kernel@vger.kernel.org>, luto@kernel.org, Kees Cook <keescook@chromium.org>, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Ye Xiaolong <xiaolong.ye@intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Sun 2016-07-03 15:08:07, Topi Miettinen wrote:
-> The attached patch would make any uses of capabilities generate audit
-> messages. It works for simple tests as you can see from the commit
-> message, but unfortunately the call to audit_cgroup_list() deadlocks the
-> system when booting a full blown OS. There's no deadlock when the call
-> is removed.
+Hi Michal,
+
+[sorry for the delay, I was traveling with no connectivity]
+
+On Mon, Jun 27, 2016 at 03:05:28PM +0200, Michal Hocko wrote:
+> On Fri 24-06-16 13:51:01, Johannes Weiner wrote:
+>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+
+Thanks!
+
+> Minor note below
 > 
-> I guess that in some cases, cgroup_mutex and/or css_set_lock could be
-> already held earlier before entering audit_cgroup_list(). Holding the
-> locks is however required by task_cgroup_from_root(). Is there any way
-> to avoid this? For example, only print some kind of cgroup ID numbers
-> (are there unique and stable IDs, available without locks?) for those
-> cgroups where the task is registered in the audit message?
+> > +static inline struct mem_cgroup *page_memcg_rcu(struct page *page)
+> > +{
+> 
+> I guess rcu_read_lock_held() here would be appropriate
+> 
+> > +	return READ_ONCE(page->mem_cgroup);
 
-I am not sure if anyone know what really happens here. I suggest to
-enable lockdep. It might detect possible deadlock even before it
-really happens, see Documentation/locking/lockdep-design.txt
+Agreed.
 
-It can be enabled by
+Andrew, could you please fold this?
 
-   CONFIG_PROVE_LOCKING=y
+From ed49e364e47c933d84533a0d8bd355831b5ca9f1 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Thu, 7 Jul 2016 15:38:26 -0400
+Subject: [PATCH] mm: fix vm-scalability regression in cgroup-aware workingset
+ code fix
 
-It depends on
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/mm.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-    CONFIG_DEBUG_KERNEL=y
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index b21e5f30378e..97065e1f0237 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -975,6 +975,7 @@ static inline struct mem_cgroup *page_memcg(struct page *page)
+ }
+ static inline struct mem_cgroup *page_memcg_rcu(struct page *page)
+ {
++	WARN_ON_ONCE(!rcu_read_lock_held());
+ 	return READ_ONCE(page->mem_cgroup);
+ }
+ #else
+@@ -984,6 +985,7 @@ static inline struct mem_cgroup *page_memcg(struct page *page)
+ }
+ static inline struct mem_cgroup *page_memcg_rcu(struct page *page)
+ {
++	WARN_ON_ONCE(!rcu_read_lock_held());
+ 	return NULL;
+ }
+ #endif
+-- 
+2.9.0
 
-and maybe some more options, see lib/Kconfig.debug
-
-
-Best Regards,
-Petr
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
