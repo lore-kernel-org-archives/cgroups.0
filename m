@@ -1,64 +1,356 @@
-From: Shayan Pooya <shayan@liveve.org>
-Subject: bug in memcg oom-killer results in a hung syscall in another process
- in the same cgroup
-Date: Sat, 9 Jul 2016 16:49:32 -0700
-Message-ID: <CABAubThf6gbi243BqYgoCjqRW36sXJuJ6e_8zAqzkYRiu0GVtQ@mail.gmail.com>
+From: Topi Miettinen <toiwoton@gmail.com>
+Subject: Re: [PATCH] capabilities: add capability cgroup controller
+Date: Sun, 10 Jul 2016 09:04:19 +0000
+Message-ID: <5e3cd49c-2ae1-efc1-ea85-afa1ff7b22cb@gmail.com>
+References: <20160624172447.GA3262@mtj.duckdns.org>
+ <47890d79-0891-dd13-4f60-e7e5f1f3fed3@gmail.com>
+ <CAOS58YMxz5HfJUayqjw+SPj485M+wquTqQouk367rV2mfvVRHg@mail.gmail.com>
+ <20160627145457.GA26980@mail.hallyn.com>
+ <58938c8b-aca6-a5b8-9533-58e78d878e85@gmail.com>
+ <CAOS58YM+h0w_UciXLbiJcKizPkXV66FL57LT7Mc+RRWspN+Y2Q@mail.gmail.com>
+ <20160627194941.GA31843@mail.hallyn.com>
+ <218f2bef-5e5e-89c4-154b-24dc49c82c31@gmail.com>
+ <20160707091645.GG3238@pathway.suse.cz>
+ <e81401b8-a731-9c22-f5a3-ce25eefb1471@gmail.com>
+ <20160708091332.GD3556@pathway.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Content-Type: multipart/mixed;
+ boundary="------------623CDDCC64ABF2D697C31A55"
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=liveve-org.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=xTSIUcorV7Oeic+ZxfpFS3jBqoK+TEXvlucHwYImhVo=;
-        b=AHIolmuWRnm15JoX0/3CQrFvDfdTBJjsCAoRsn08iQz1CsgHygFuf+AnC2Kq74B/RS
-         ol/TY22u0Rls3ja12A8Ip0+IetfuaJB4u+OaFmNDkpNieEP7LwNtGoHiYV6egWWhvkuC
-         0OgvNg5ZRwAxRXv92nHu/YgmgSm4pzXWeVSovvAQeaDbopmEf9+RZqcrW2fl/pX+46rr
-         JnoPl0hl+IVosjLeBK+m8F7DLNyzEaz7sQBXU57Gz0jI9n68/DqoFfDiXnzT8fuPuDvR
-         NzvPzv26/ApC0CsV5UoxegfRvyTfv6KqGMagmwHHg8heynTSYIDwdie1ct/huJ5W7tRs
-         esKQ==
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=subject:to:references:cc:from:openpgp:message-id:date:user-agent
+         :mime-version:in-reply-to;
+        bh=gPnaAGzdtx3autrk4SGIGgkqokJWS5ms83GTBv+J0ug=;
+        b=F6REqyEWXq7M+aEjBg1GxA1bcWkJVnsvVcpohxBLdgkn2JijucSfAQlX/x9EgV/K0S
+         ymOdorHWVEZX9wvYjyCV3yi5NluNPHNCg/3QUKrn6xfoSCPe8Xyfia1CJnnpxJzyfpy+
+         T24b9kpxu2UjMDBynJy+Xj5hYDlocbPJB56Nx30EjAwRHSQB8IoEuKXznOWSj1UPqIUi
+         85te6FzF8IUTySPaPfzKZSZosm6TZii0mSqRZP/TLSxFGC5qWLlhXByGxDeWnyKRXGCY
+         nrYGlU9VD6wx0V2inaGfBI9Fyxl+klWbNVX3FW+iAQv33dYQxG+h7NYGlDZHEIZlywlY
+         i9+A==
+In-Reply-To: <20160708091332.GD3556@pathway.suse.cz>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+To: Petr Mladek <pmladek@suse.com>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Tejun Heo <tj@kernel.org>, lkml <linux-kernel@vger.kernel.org>, luto@kernel.org, Kees Cook <keescook@chromium.org>, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, James Morris <james.l.morris@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, David Howells <dhowells@redhat.com>, David Woodhouse <David.Woodhouse@intel.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
+
+This is a multi-part message in MIME format.
+--------------623CDDCC64ABF2D697C31A55
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-To: cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
 
-I came across the following issue in kernel 3.16 (Ubuntu 14.04) which
-was then reproduced in kernels 4.4 LTS:
-After a couple of of memcg oom-kills in a cgroup, a syscall in
-*another* process in the same cgroup hangs indefinitely.
+On 07/08/16 09:13, Petr Mladek wrote:
+> On Thu 2016-07-07 20:27:13, Topi Miettinen wrote:
+>> On 07/07/16 09:16, Petr Mladek wrote:
+>>> On Sun 2016-07-03 15:08:07, Topi Miettinen wrote:
+>>>> The attached patch would make any uses of capabilities generate audit
+>>>> messages. It works for simple tests as you can see from the commit
+>>>> message, but unfortunately the call to audit_cgroup_list() deadlocks the
+>>>> system when booting a full blown OS. There's no deadlock when the call
+>>>> is removed.
+>>>>
+>>>> I guess that in some cases, cgroup_mutex and/or css_set_lock could be
+>>>> already held earlier before entering audit_cgroup_list(). Holding the
+>>>> locks is however required by task_cgroup_from_root(). Is there any way
+>>>> to avoid this? For example, only print some kind of cgroup ID numbers
+>>>> (are there unique and stable IDs, available without locks?) for those
+>>>> cgroups where the task is registered in the audit message?
+>>>
+>>> I am not sure if anyone know what really happens here. I suggest to
+>>> enable lockdep. It might detect possible deadlock even before it
+>>> really happens, see Documentation/locking/lockdep-design.txt
+>>>
+>>> It can be enabled by
+>>>
+>>>    CONFIG_PROVE_LOCKING=y
+>>>
+>>> It depends on
+>>>
+>>>     CONFIG_DEBUG_KERNEL=y
+>>>
+>>> and maybe some more options, see lib/Kconfig.debug
+>>
+>> Thanks a lot! I caught this stack dump:
+>>
+>> starting version 230
+>> [    3.416647] ------------[ cut here ]------------
+>> [    3.417310] WARNING: CPU: 0 PID: 95 at
+>> /home/topi/d/linux.git/kernel/locking/lockdep.c:2871
+>> lockdep_trace_alloc+0xb4/0xc0
+>> [    3.417605] DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags))
+>> [    3.417923] Modules linked in:
+>> [    3.418288] CPU: 0 PID: 95 Comm: systemd-udevd Not tainted 4.7.0-rc5+ #97
+>> [    3.418444] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+>> BIOS Debian-1.8.2-1 04/01/2014
+>> [    3.418726]  0000000000000086 000000007970f3b0 ffff88000016fb00
+>> ffffffff813c9c45
+>> [    3.418993]  ffff88000016fb50 0000000000000000 ffff88000016fb40
+>> ffffffff81091e9b
+>> [    3.419176]  00000b3705e2c798 0000000000000046 0000000000000410
+>> 00000000ffffffff
+>> [    3.419374] Call Trace:
+>> [    3.419511]  [<ffffffff813c9c45>] dump_stack+0x67/0x92
+>> [    3.419644]  [<ffffffff81091e9b>] __warn+0xcb/0xf0
+>> [    3.419745]  [<ffffffff81091f1f>] warn_slowpath_fmt+0x5f/0x80
+>> [    3.419868]  [<ffffffff810e9a84>] lockdep_trace_alloc+0xb4/0xc0
+>> [    3.419988]  [<ffffffff8120dc42>] kmem_cache_alloc_node+0x42/0x600
+>> [    3.420156]  [<ffffffff8110432d>] ? debug_lockdep_rcu_enabled+0x1d/0x20
+>> [    3.420170]  [<ffffffff8163183b>] __alloc_skb+0x5b/0x1d0
+>> [    3.420170]  [<ffffffff81144f6b>] audit_log_start+0x29b/0x480
+>> [    3.420170]  [<ffffffff810a2925>] ? __lock_task_sighand+0x95/0x270
+>> [    3.420170]  [<ffffffff81145cc9>] audit_log_cap_use+0x39/0xf0
+>> [    3.420170]  [<ffffffff8109cd75>] ns_capable+0x45/0x70
+>> [    3.420170]  [<ffffffff8109cdb7>] capable+0x17/0x20
+>> [    3.420170]  [<ffffffff812a2f50>] oom_score_adj_write+0x150/0x2f0
+>> [    3.420170]  [<ffffffff81230997>] __vfs_write+0x37/0x160
+>> [    3.420170]  [<ffffffff810e33b7>] ? update_fast_ctr+0x17/0x30
+>> [    3.420170]  [<ffffffff810e3449>] ? percpu_down_read+0x49/0x90
+>> [    3.420170]  [<ffffffff81233d47>] ? __sb_start_write+0xb7/0xf0
+>> [    3.420170]  [<ffffffff81233d47>] ? __sb_start_write+0xb7/0xf0
+>> [    3.420170]  [<ffffffff81231048>] vfs_write+0xb8/0x1b0
+>> [    3.420170]  [<ffffffff812533c6>] ? __fget_light+0x66/0x90
+>> [    3.420170]  [<ffffffff81232078>] SyS_write+0x58/0xc0
+>> [    3.420170]  [<ffffffff81001f2c>] do_syscall_64+0x5c/0x300
+>> [    3.420170]  [<ffffffff81849c9a>] entry_SYSCALL64_slow_path+0x25/0x25
+>> [    3.420170] ---[ end trace fb586899fb556a5e ]---
+>> [    3.447922] random: systemd-udevd urandom read with 3 bits of entropy
+>> available
+>> [    4.014078] clocksource: Switched to clocksource tsc
+>> Begin: Loading essential drivers ... done.
+>>
+>> This is with qemu and the boot continues normally. With real computer,
+>> there's no such output and system just seems to freeze.
+>>
+>> Could it be possible that the deadlock happens because there's some IO
+>> towards /sys/fs/cgroup, which causes a capability check and that in turn
+>> causes locking problems when we try to print cgroup list?
+> 
+> The above warning is printed by the code from
+> kernel/locking/lockdep.c:2871
+> 
+> static void __lockdep_trace_alloc(gfp_t gfp_mask, unsigned long flags)
+> {
+> [...]
+> 	/* We're only interested __GFP_FS allocations for now */
+> 	if (!(gfp_mask & __GFP_FS))
+> 		return;
+> 
+> 	/*
+> 	 * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
+> 	 */
+> 	if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
+> 		return;
+> 
+> 
+> The backtrace shows that your new audit_log_cap_use() is called
+> from vfs_write(). You might try to use audit_log_start() with
+> GFP_NOFS instead of GFP_KERNEL.
+> 
+> Note that this is rather intuitive advice. I still need to learn a lot
+> about memory management and kernel in general to be more sure about
+> a correct solution.
+> 
+> Best Regards,
+> Petr
+> 
 
-Reproducing:
+With the attached patch, the system boots without deadlock. Locking
+problems still remain:
 
-# mkdir -p strace_run
-#  mkdir /sys/fs/cgroup/memory/1
-# echo 1073741824 > /sys/fs/cgroup/memory/1/memory.limit_in_bytes
-# echo 0 > /sys/fs/cgroup/memory/1/memory.swappiness
-# for i in $(seq 1000); do ./call-mem-hog
-/sys/fs/cgroup/memory/1/cgroup.procs & done
+[    3.652221] ======================================================
+[    3.652221] [ INFO: possible circular locking dependency detected ]
+[    3.652221] 4.7.0-rc5+ #101 Not tainted
+[    3.652221] -------------------------------------------------------
+[    3.652221] systemd/1 is trying to acquire lock:
+[    3.652221]  (tasklist_lock){.+.+..}, at: [<ffffffff81137ddd>]
+cgroup_mount+0x7ed/0xbc0
+[    3.652221]
+               but task is already holding lock:
+[    3.652221]  (css_set_lock){......}, at: [<ffffffff81137c59>]
+cgroup_mount+0x669/0xbc0
+[    3.652221]
+               which lock already depends on the new lock.
 
-Where call-mem-hog is:
-#!/bin/sh
-set -ex
-echo $$ > $1
-echo "Adding $$ to $1"
-strace -ff -tt ./mem-hog 2> strace_run/$$
+[    3.652221]
+               the existing dependency chain (in reverse order) is:
+[    3.652221]
+               -> #3 (css_set_lock){......}:
+[    3.652221]        [<ffffffff810e92b3>] lock_acquire+0xe3/0x1c0
+[    3.652221]        [<ffffffff8184e137>] _raw_spin_lock_irq+0x37/0x50
+[    3.652221]        [<ffffffff811374be>] cgroup_setup_root+0x19e/0x2d0
+[    3.652221]        [<ffffffff821911fc>] cgroup_init+0xec/0x41d
+[    3.652221]        [<ffffffff82171f68>] start_kernel+0x40c/0x465
+[    3.652221]        [<ffffffff82171294>]
+x86_64_start_reservations+0x2f/0x31
+[    3.652221]        [<ffffffff8217140e>] x86_64_start_kernel+0x178/0x18b
+[    3.652221]
+               -> #2 (cgroup_mutex){+.+...}:
+[    3.652221]        [<ffffffff810e92b3>] lock_acquire+0xe3/0x1c0
+[    3.652221]        [<ffffffff8184af5f>] mutex_lock_nested+0x5f/0x350
+[    3.652221]        [<ffffffff8113962a>] audit_cgroup_list+0x4a/0x2f0
+[    3.652221]        [<ffffffff81145d19>] audit_log_cap_use+0xd9/0xf0
+[    3.652221]        [<ffffffff8109cd75>] ns_capable+0x45/0x70
+[    3.652221]        [<ffffffff8109cdb7>] capable+0x17/0x20
+[    3.652221]        [<ffffffff812a2f00>] oom_score_adj_write+0x150/0x2f0
+[    3.652221]        [<ffffffff81230947>] __vfs_write+0x37/0x160
+[    3.652221]        [<ffffffff81230ff8>] vfs_write+0xb8/0x1b0
+[    3.652221]        [<ffffffff81232028>] SyS_write+0x58/0xc0
+[    3.652221]        [<ffffffff81001f2c>] do_syscall_64+0x5c/0x300
+[    3.652221]        [<ffffffff8184ea1a>] return_from_SYSCALL_64+0x0/0x7a
+[    3.652221]
+               -> #1 (&(&sighand->siglock)->rlock){+.+...}:
+[    3.652221]        [<ffffffff810e92b3>] lock_acquire+0xe3/0x1c0
+[    3.652221]        [<ffffffff8184dfc1>] _raw_spin_lock+0x31/0x40
+[    3.652221]        [<ffffffff810901d9>]
+copy_process.part.34+0x10f9/0x1b40
+[    3.652221]        [<ffffffff81090e23>] _do_fork+0xf3/0x6b0
+[    3.652221]        [<ffffffff81091409>] kernel_thread+0x29/0x30
+[    3.652221]        [<ffffffff810b71d7>] kthreadd+0x187/0x1e0
+[    3.652221]        [<ffffffff8184eb7f>] ret_from_fork+0x1f/0x40
+[    3.652221]
+               -> #0 (tasklist_lock){.+.+..}:
+[    3.652221]        [<ffffffff810e8dfb>] __lock_acquire+0x13cb/0x1440
+[    3.652221]        [<ffffffff810e92b3>] lock_acquire+0xe3/0x1c0
+[    3.652221]        [<ffffffff8184e3f4>] _raw_read_lock+0x34/0x50
+[    3.652221]        [<ffffffff81137ddd>] cgroup_mount+0x7ed/0xbc0
+[    3.652221]        [<ffffffff81234d98>] mount_fs+0x38/0x170
+[    3.652221]        [<ffffffff8125626b>] vfs_kern_mount+0x6b/0x150
+[    3.652221]        [<ffffffff81258f8c>] do_mount+0x24c/0xe30
+[    3.652221]        [<ffffffff81259ea5>] SyS_mount+0x95/0xe0
+[    3.652221]        [<ffffffff8184e965>]
+entry_SYSCALL_64_fastpath+0x18/0xa8
+[    3.652221]
+               other info that might help us debug this:
+
+[    3.652221] Chain exists of:
+                 tasklist_lock --> cgroup_mutex --> css_set_lock
+
+[    3.652221]  Possible unsafe locking scenario:
+
+[    3.652221]        CPU0                    CPU1
+[    3.652221]        ----                    ----
+[    3.652221]   lock(css_set_lock);
+[    3.652221]                                lock(cgroup_mutex);
+[    3.652221]                                lock(css_set_lock);
+[    3.652221]   lock(tasklist_lock);
+[    3.652221]
+                *** DEADLOCK ***
+
+[    3.652221] 1 lock held by systemd/1:
+[    3.652221]  #0:  (css_set_lock){......}, at: [<ffffffff81137c59>]
+cgroup_mount+0x669/0xbc0
+[    3.652221]
+               stack backtrace:
+[    3.652221] CPU: 0 PID: 1 Comm: systemd Not tainted 4.7.0-rc5+ #101
+[    3.652221] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS Debian-1.8.2-1 04/01/2014
+[    3.652221]  0000000000000086 0000000024b7c1ed ffff880006d13bb0
+ffffffff813c9bf5
+[    3.652221]  ffffffff829dbd20 ffffffff829cf2a0 ffff880006d13bf0
+ffffffff810e60a3
+[    3.652221]  ffff880006d13c30 ffff880006d067b0 ffff880006d06040
+0000000000000001
+[    3.652221] Call Trace:
+[    3.652221]  [<ffffffff813c9bf5>] dump_stack+0x67/0x92
+[    3.652221]  [<ffffffff810e60a3>] print_circular_bug+0x1e3/0x250
+[    3.652221]  [<ffffffff810e8dfb>] __lock_acquire+0x13cb/0x1440
+[    3.652221]  [<ffffffff81210bcd>] ? __kmalloc_track_caller+0x2bd/0x630
+[    3.652221]  [<ffffffff810e92b3>] lock_acquire+0xe3/0x1c0
+[    3.652221]  [<ffffffff81137ddd>] ? cgroup_mount+0x7ed/0xbc0
+[    3.652221]  [<ffffffff8184e3f4>] _raw_read_lock+0x34/0x50
+[    3.652221]  [<ffffffff81137ddd>] ? cgroup_mount+0x7ed/0xbc0
+[    3.652221]  [<ffffffff81137ddd>] cgroup_mount+0x7ed/0xbc0
+[    3.652221]  [<ffffffff810e5637>] ? lockdep_init_map+0x57/0x1f0
+[    3.652221]  [<ffffffff81234d98>] mount_fs+0x38/0x170
+[    3.652221]  [<ffffffff8125626b>] vfs_kern_mount+0x6b/0x150
+[    3.652221]  [<ffffffff81258f8c>] do_mount+0x24c/0xe30
+[    3.652221]  [<ffffffff812105bb>] ? kmem_cache_alloc_trace+0x28b/0x5e0
+[    3.652221]  [<ffffffff811cc176>] ? strndup_user+0x46/0x80
+[    3.652221]  [<ffffffff81259ea5>] SyS_mount+0x95/0xe0
+[    3.652221]  [<ffffffff8184e965>] entry_SYSCALL_64_fastpath+0x18/0xa8
+
+Rate limiting would not be a bad idea, there were 329 audit log entries
+about capability use.
+
+-Topi
 
 
-Initially I thought it was a userspace bug in dash as it only happened
-with /bin/sh (which points to dash) and not with bash. I see the
-following hanging processes:
+--------------623CDDCC64ABF2D697C31A55
+Content-Type: text/x-patch;
+ name="0001-cgroup-check-options-and-capabilities-before-locking.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-cgroup-check-options-and-capabilities-before-locking.pa";
+ filename*1="tch"
 
-USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root     20999  0.0  0.0   4508   100 pts/6    S    16:28   0:00
-/bin/sh ./call-mem-hog /sys/fs/cgroup/memory/1/cgroup.procs
+From b857ec7d436f6fbb8c33e8d6a16d2f16175517d8 Mon Sep 17 00:00:00 2001
+From: Topi Miettinen <toiwoton@gmail.com>
+Date: Sun, 10 Jul 2016 11:45:30 +0300
+Subject: [PATCH] cgroup: check options and capabilities before locking to
+ avoid a deadlock
 
-However, when using strace, I noticed that sometimes there is actually
-a mem-hog process hanging on sbrk syscall (Of course the
-memory.oom_control is 0 and this is not expected).
-Sending an ABRT signal to the waiting strace process then resulted in
-the mem-hog process getting oom-killed by the kernel.
+Signed-off-by: Topi Miettinen <toiwoton@gmail.com>
+---
+ kernel/cgroup.c | 30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 1931679..1190559 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2100,6 +2100,21 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		return ERR_PTR(-EPERM);
+ 	}
+ 
++	/* First find the desired set of subsystems */
++	ret = parse_cgroupfs_options(data, &opts);
++	if (ret)
++		goto out_free;
++
++	/*
++	 * We know this subsystem has not yet been bound.  Users in a non-init
++	 * user namespace may only mount hierarchies with no bound subsystems,
++	 * i.e. 'none,name=user1'
++	 */
++	if (!opts.none && !capable(CAP_SYS_ADMIN)) {
++		ret = -EPERM;
++		goto out_free;
++	}
++
+ 	/*
+ 	 * The first time anyone tries to mount a cgroup, enable the list
+ 	 * linking each css_set to its tasks and fix up all existing tasks.
+@@ -2121,11 +2136,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 
+ 	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
+ 
+-	/* First find the desired set of subsystems */
+-	ret = parse_cgroupfs_options(data, &opts);
+-	if (ret)
+-		goto out_unlock;
+-
+ 	/*
+ 	 * Destruction of cgroup root is asynchronous, so subsystems may
+ 	 * still be dying after the previous unmount.  Let's drain the
+@@ -2216,16 +2226,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		goto out_unlock;
+ 	}
+ 
+-	/*
+-	 * We know this subsystem has not yet been bound.  Users in a non-init
+-	 * user namespace may only mount hierarchies with no bound subsystems,
+-	 * i.e. 'none,name=user1'
+-	 */
+-	if (!opts.none && !capable(CAP_SYS_ADMIN)) {
+-		ret = -EPERM;
+-		goto out_unlock;
+-	}
+-
+ 	root = kzalloc(sizeof(*root), GFP_KERNEL);
+ 	if (!root) {
+ 		ret = -ENOMEM;
+-- 
+2.8.1
+
+
+--------------623CDDCC64ABF2D697C31A55--
