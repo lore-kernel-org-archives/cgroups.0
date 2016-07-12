@@ -1,56 +1,68 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] capabilities: audit capability use
-Date: Tue, 12 Jul 2016 10:59:36 -0400
-Message-ID: <20160712145936.GH3190@htj.duckdns.org>
-References: <1468235672-3745-1-git-send-email-toiwoton@gmail.com>
- <20160711170711.GB3337@htj.duckdns.org>
- <683cdbb9-c414-07c7-16d3-41c4138ddf8d@gmail.com>
+From: Shayan Pooya <shayan@liveve.org>
+Subject: Re: bug in memcg oom-killer results in a hung syscall in another
+ process in the same cgroup
+Date: Tue, 12 Jul 2016 08:35:06 -0700
+Message-ID: <CABAubTg91qrUd4DO7T2SiJQBK9ypuhP0+F-091ZxtmonjaaYWg@mail.gmail.com>
+References: <CABAubThf6gbi243BqYgoCjqRW36sXJuJ6e_8zAqzkYRiu0GVtQ@mail.gmail.com>
+ <20160711064150.GB5284@dhcp22.suse.cz> <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q@mail.gmail.com>
+ <CABAubTjGhUXMeAnFgW8LGck1tgvtu12Zb9fx5BRhDWNjZ7SYLQ@mail.gmail.com> <20160712071927.GD14586@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=+2ieaLoA/lyfNovAcl5Hr2Qzb5MTFvXhALQYbXnwVGs=;
-        b=iSKLOHr69JPsXrkF98NrzLg9lP88jbCTlL6yO99l8zoNYsucfqBnDt26Y8e0SZnOjJ
-         9smiIXM+DyKzEhGuxG81QHxldNU3E2HL7ItRqgdTR5Ky2spydZ5kjyF21+mdA7V07GXm
-         ZYTOx8gcMd1o07dtqMxaBzq/u8B12qDrjNjSEs43ogFVXGzLNygel3vcZpQkg/hNXBmJ
-         Lw57d90O8lh0+ur0hOqRCsB1GE9ZPpyxS7RzDmZmfM+1EYBQFBpMLVrP6l+qz13JplDc
-         BuXMZZkPdjnMn4WENjp0CMjqIygYae6VWCd1bWAWDLLmipcgwY+eK/HQxKtvQa0iZM4h
-         BisA==
-Content-Disposition: inline
-In-Reply-To: <683cdbb9-c414-07c7-16d3-41c4138ddf8d-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=liveve-org.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=91rX/u5/g0h99r2I8RRyrSLSa1ULMk2Q/t+Gh+fuRt0=;
+        b=Bmvo1bOIsTbVvAVO0ACCZSS8Zl63UvmvV7m+bhvMH98Zq8edVKdglN0QLPQu1HovqO
+         6dj/IJjyXurvi7VuBfEsdlEBgrnTiLdXqL+Rq32HFF9TNVMBUCnfCuE0jCH9VFEhr514
+         e32Pr5g2tH9yGlJ6KYPe31xR4fUg5bCtF3GKff58xOD6YHUqZdtutGybmZBVH7DMenri
+         KHvhngvg45ofoVKfeVHxtOoos1bHjwxZaTbECInoCMhH50wVZWHWkrfytOkvpiwtlHf1
+         9LPn6Y0QxMGZMA/JVfrqPwrYgIeiqYnCdUUDmBo1/m3CwrlpR76QJKBVn+THoqP5vrFy
+         zL2w==
+In-Reply-To: <20160712071927.GD14586@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, pmladek-IBi9RG/b67k@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "moderated list:AUDIT SUBSYSTEM" <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CAPABILITIES" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, koct9i@gmail.com
+Cc: cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
 
-On Mon, Jul 11, 2016 at 07:47:44PM +0000, Topi Miettinen wrote:
-> It's really critical to be able to associate a task in the logs to
-> cgroups which were valid that time. Or can we infer somehow what cgroups
+>> With strace, when running 500 concurrent mem-hog tasks on the same
+>> kernel, 33 of them failed with:
+>>
+>> strace: ../sysdeps/nptl/fork.c:136: __libc_fork: Assertion
+>> `THREAD_GETMEM (self, tid) != ppid' failed.
+>>
+>> Which is: https://sourceware.org/bugzilla/show_bug.cgi?id=15392
+>> And discussed before at: https://lkml.org/lkml/2015/2/6/470 but that
+>> patch was not accepted.
+>
+> OK, so the problem is that the oom killed task doesn't report the futex
+> release properly? If yes then I fail to see how that is memcg specific.
+> Could you try to clarify what you consider a bug again, please? I am not
+> really sure I understand this report.
 
-When is "that time"?  Without logging all operations, this is
-meaningless.
+It looks like it is just a very easy way to reproduce the problem that
+Konstantin described in that lkml thread. That patch was not accepted
+and I see no other fixes for that issue upstream. Here is a copy of
+his root-cause analysis from said thread:
 
-> a task was taking part, long time after task exit? Perhaps task cgroup
-> membership changes and changes in available cgroups should be logged too?
-> 
-> Some kind of cgroup IDs could be logged instead of long paths. Then
-> these IDs should be reliably resolvable to paths offline somehow.
+Whole sequence looks like: task calls fork, glibc calls syscall clone with
+CLONE_CHILD_SETTID and passes pointer to TLS THREAD_SELF->tid as argument.
+Child task gets read-only copy of VM including TLS. Child calls put_user()
+to handle CLONE_CHILD_SETTID from schedule_tail(). put_user() trigger page
+fault and it fails because do_wp_page()  hits memcg limit without invoking
+OOM-killer because this is page-fault from kernel-space.  Put_user returns
+-EFAULT, which is ignored.  Child returns into user-space and catches here
+assert (THREAD_GETMEM (self, tid) != ppid), glibc tries to print something
+but hangs on deadlock on internal locks. Halt and catch fire.
 
-I don't think that's doable.  That pretty much requires the kernel to
-remember paths of all past cgroups.
 
-> How usual migrations between cgroups are? Why would a task ever move
-> from (say) systemd/system.slice/smartd.service to anywhere else?
 
-In most cases, they won't move once set up initially but that's not
-the point of audit subsystem.  Logging this once one exit isn't gonna
-help anything for auditing the system.
+Regards
 
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
