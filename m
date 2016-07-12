@@ -1,39 +1,39 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH] capabilities: audit capability use
-Date: Mon, 11 Jul 2016 16:57:03 -0500
-Message-ID: <87vb0bbzyo.fsf@x220.int.ebiederm.org>
-References: <1468235672-3745-1-git-send-email-toiwoton@gmail.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: bug in memcg oom-killer results in a hung syscall in another
+ process in the same cgroup
+Date: Tue, 12 Jul 2016 09:17:01 +0200
+Message-ID: <20160712071701.GC14586@dhcp22.suse.cz>
+References: <CABAubThf6gbi243BqYgoCjqRW36sXJuJ6e_8zAqzkYRiu0GVtQ@mail.gmail.com>
+ <20160711064150.GB5284@dhcp22.suse.cz>
+ <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1468235672-3745-1-git-send-email-toiwoton@gmail.com> (Topi
-	Miettinen's message of "Mon, 11 Jul 2016 14:14:31 +0300")
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Topi Miettinen <toiwoton@gmail.com>
-Cc: linux-kernel@vger.kernel.org, mladek@suse.com, luto@kernel.org, serge@hallyn.com, keescook@chromium.org, Paul Moore <paul@paul-moore.com>, Eric Paris <eparis@redhat.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, "moderated list:AUDIT SUBSYSTEM" <linux-audit@redhat.com>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>, "open list:CAPABILITIES" <linux-security-module@vger.kernel.org>
+To: Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>
+Cc: cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Topi Miettinen <toiwoton@gmail.com> writes:
+On Mon 11-07-16 10:40:55, Shayan Pooya wrote:
+> >
+> > Could you post the stack trace of the hung oom victim? Also could you
+> > post the full kernel log?
+> 
+> Here is the stack of the process that lives (it is *not* the
+> oom-victim) in a run with 100 processes and *without* strace:
+> 
+> # cat /proc/7688/stack
+> [<ffffffff81100292>] futex_wait_queue_me+0xc2/0x120
+> [<ffffffff811005a6>] futex_wait+0x116/0x280
+> [<ffffffff81102d90>] do_futex+0x120/0x540
+> [<ffffffff81103231>] SyS_futex+0x81/0x180
+> [<ffffffff81825bf2>] entry_SYSCALL_64_fastpath+0x16/0x71
+> [<ffffffffffffffff>] 0xffffffffffffffff
 
-> There are many basic ways to control processes, including capabilities,
-> cgroups and resource limits. However, there are far fewer ways to find
-> out useful values for the limits, except blind trial and error.
->
-> Currently, there is no way to know which capabilities are actually used.
-> Even the source code is only implicit, in-depth knowledge of each
-> capability must be used when analyzing a program to judge which
-> capabilities the program will exercise.
->
-> Generate an audit message at system call exit, when capabilities are used.
-> This can then be used to configure capability sets for services by a
-> software developer, maintainer or system administrator.
->
-> Test case demonstrating basic capability monitoring with the new
-> message types 1330 and 1331 and how the cgroups are displayed (boot to
-> rdshell):
-
-You totally miss the interactions with the user namespace so this won't
-give you the information you are aiming for.
-
-Eric
+I am not sure I understand. Is this the hung task?
+-- 
+Michal Hocko
+SUSE Labs
