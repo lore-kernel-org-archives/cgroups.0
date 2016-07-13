@@ -1,57 +1,61 @@
-From: Shayan Pooya <shayan@liveve.org>
-Subject: Re: bug in memcg oom-killer results in a hung syscall in another
- process in the same cgroup
-Date: Tue, 12 Jul 2016 15:57:50 -0700
-Message-ID: <CABAubTiVb8j8wEbcr16FAJnBxxS7QzghpPiJUcmV+=Ji=QgL=A@mail.gmail.com>
-References: <CABAubThf6gbi243BqYgoCjqRW36sXJuJ6e_8zAqzkYRiu0GVtQ@mail.gmail.com>
- <20160711064150.GB5284@dhcp22.suse.cz> <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q@mail.gmail.com>
- <CABAubTjGhUXMeAnFgW8LGck1tgvtu12Zb9fx5BRhDWNjZ7SYLQ@mail.gmail.com>
- <20160712071927.GD14586@dhcp22.suse.cz> <CABAubTg91qrUd4DO7T2SiJQBK9ypuhP0+F-091ZxtmonjaaYWg@mail.gmail.com>
- <57851224.2020902@yandex-team.ru>
+From: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] capabilities: audit capability use
+Date: Wed, 13 Jul 2016 06:52:06 +0000
+Message-ID: <687b82c6-0e66-0ff1-30f1-a1d60f40f624@gmail.com>
+References: <1468235672-3745-1-git-send-email-toiwoton@gmail.com>
+ <20160711170711.GB3337@htj.duckdns.org>
+ <683cdbb9-c414-07c7-16d3-41c4138ddf8d@gmail.com>
+ <20160712145936.GH3190@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=liveve-org.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=bhGOE4fXXiwTg/UdhTgfRqjUrqIhRjgDFxiVUxy/sKo=;
-        b=nPTcnNBv14hR/3I6vvcwyeIkxmetRVJtSjvRnKPWHBHRnGIpsLthj6ySZ33k6PMWwJ
-         fC/d4OvIYqqts1cBDLpbbrB0cqWWVNo7s+ikrW4KV2RkUU2NjQ9oLgTdndDOH7mfinKM
-         ZDXtCLoCQVx+QFvPTWefxBGbMcxAKi32RfnryYw37YQIJx1BwYzGMgA/tCFiS0H41P3n
-         AX32P8xZmIPHD6MykvhhmVi6dQpT2GxQo6rB/nZXHJKfvh3mJQ0cZiqxmQ4VX0gLMgW6
-         pCYJfCQZeoJXv/mx5PB5qPezjqSAQH9XDNpCigrk222W7PFc+wmfNArKj8PXYPH1XMGk
-         DyOg==
-In-Reply-To: <57851224.2020902@yandex-team.ru>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=subject:to:references:cc:from:openpgp:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=HwYOqB9OAIuGJlndnsHL5F2GD/tuo06B4Z8hoMnUraI=;
+        b=UV8mHMQvJKXdch/CE0U9+e8hs3v/ezjvz426IDZsGY8skwKwgVTm3TFZcujeH0ETgx
+         I1UWTzN1KraTCKFt0kAmQxn7RSa46hhSUjnIKiB4sbtYGluWM54bZnfez3Iqh//JAnR5
+         otYDITD8XBdYUrPz1t5q6y1yrRFd+uwa0nWhXXrFbd/zdi246/CLG/z3hJg+jLzKMVIc
+         Uf8rhcGf6huSr6h8B010ZELEZncg1RImxMCzI98n3Lgk9s8xF2J9BZ91Q/YzQWXl4mWY
+         OVPgZEx9Wwh5Ok87hu2yWB4O6upM4FWxDtYF9luxtswiUJvWyZFBIdYr/3meGDFAQtnt
+         vLnQ==
+In-Reply-To: <20160712145936.GH3190-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: Michal Hocko <mhocko@kernel.org>, koct9i@gmail.com, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Oleg Nesterov <oleg@redhat.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, pmladek-IBi9RG/b67k@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "moderated list:AUDIT SUBSYSTEM" <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CAPABILITIES" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-> Yep. Bug still not fixed in upstream. In our kernel I've plugged it with
-> this:
->
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -2808,8 +2808,9 @@ asmlinkage __visible void schedule_tail(struct
-> task_struct *prev)
->         balance_callback(rq);
->         preempt_enable();
->
-> -       if (current->set_child_tid)
-> -               put_user(task_pid_vnr(current), current->set_child_tid);
-> +       if (current->set_child_tid &&
-> +           put_user(task_pid_vnr(current), current->set_child_tid))
-> +               force_sig(SIGSEGV, current);
->  }
+On 07/12/16 14:59, Tejun Heo wrote:
+> On Mon, Jul 11, 2016 at 07:47:44PM +0000, Topi Miettinen wrote:
+>> It's really critical to be able to associate a task in the logs to
+>> cgroups which were valid that time. Or can we infer somehow what cgroups
+> 
+> When is "that time"?  Without logging all operations, this is
+> meaningless.
+> 
+>> a task was taking part, long time after task exit? Perhaps task cgroup
+>> membership changes and changes in available cgroups should be logged too?
+>>
+>> Some kind of cgroup IDs could be logged instead of long paths. Then
+>> these IDs should be reliably resolvable to paths offline somehow.
+> 
+> I don't think that's doable.  That pretty much requires the kernel to
+> remember paths of all past cgroups.
 
-I just verified that with your patch there is no hung processes and I
-see processes getting SIGSEGV as expected.
-Thanks!
+That's a show stopper for audit approach for getting helpful information
+for configuration. I'll try something different, probably cgroupstats.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-Topi
+
+> 
+>> How usual migrations between cgroups are? Why would a task ever move
+>> from (say) systemd/system.slice/smartd.service to anywhere else?
+> 
+> In most cases, they won't move once set up initially but that's not
+> the point of audit subsystem.  Logging this once one exit isn't gonna
+> help anything for auditing the system.
+> 
+> Thanks.
+> 
