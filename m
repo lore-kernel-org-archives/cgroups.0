@@ -1,65 +1,50 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: bug in memcg oom-killer results in a hung syscall in another
- process in the same cgroup
-Date: Wed, 13 Jul 2016 10:08:58 +0200
-Message-ID: <20160713080858.GD28723@dhcp22.suse.cz>
-References: <CABAubThf6gbi243BqYgoCjqRW36sXJuJ6e_8zAqzkYRiu0GVtQ@mail.gmail.com>
- <20160711064150.GB5284@dhcp22.suse.cz>
- <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q@mail.gmail.com>
- <CABAubTjGhUXMeAnFgW8LGck1tgvtu12Zb9fx5BRhDWNjZ7SYLQ@mail.gmail.com>
- <20160712071927.GD14586@dhcp22.suse.cz>
- <CABAubTg91qrUd4DO7T2SiJQBK9ypuhP0+F-091ZxtmonjaaYWg@mail.gmail.com>
+From: John Garcia <john.garcia-+FQPb40bacfW/loQ7rKezA@public.gmane.org>
+Subject: CGroups: idr_remove called for id=65536 which is not allocated.
+Date: Wed, 13 Jul 2016 06:31:18 -0700
+Message-ID: <CAO2SnQ92vK2nn_8De_yq0vud=a+5k0WUGcx7jk3yHCRJ0MAsGQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <CABAubTg91qrUd4DO7T2SiJQBK9ypuhP0+F-091ZxtmonjaaYWg@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mesosphere.io; s=google;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=2BkXSM7Xx71A1+Uc2eUAyqi9/AesrOShbKwtTHhS/y0=;
+        b=cnRvyPlscRoFgO5DFojuDwQDJmPSEc96zIFywevOWBH9cDMe/NQcFoswupHYJLNfcj
+         0rcLvGKQE9qXTrHIX6y+GNo9FxDRVfraZI7m/yAIVtpn8w3SKV9Oao/KT5YYl+fNeKl0
+         5a3SIy9u+0U8M3YaXXXpLOVqYaC3GnJ8VJ828=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shayan Pooya <shayan@liveve.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, koct9i@gmail.com, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 12-07-16 08:35:06, Shayan Pooya wrote:
-> >> With strace, when running 500 concurrent mem-hog tasks on the same
-> >> kernel, 33 of them failed with:
-> >>
-> >> strace: ../sysdeps/nptl/fork.c:136: __libc_fork: Assertion
-> >> `THREAD_GETMEM (self, tid) != ppid' failed.
-> >>
-> >> Which is: https://sourceware.org/bugzilla/show_bug.cgi?id=15392
-> >> And discussed before at: https://lkml.org/lkml/2015/2/6/470 but that
-> >> patch was not accepted.
-> >
-> > OK, so the problem is that the oom killed task doesn't report the futex
-> > release properly? If yes then I fail to see how that is memcg specific.
-> > Could you try to clarify what you consider a bug again, please? I am not
-> > really sure I understand this report.
-> 
-> It looks like it is just a very easy way to reproduce the problem that
-> Konstantin described in that lkml thread. That patch was not accepted
-> and I see no other fixes for that issue upstream. Here is a copy of
-> his root-cause analysis from said thread:
-> 
-> Whole sequence looks like: task calls fork, glibc calls syscall clone with
-> CLONE_CHILD_SETTID and passes pointer to TLS THREAD_SELF->tid as argument.
-> Child task gets read-only copy of VM including TLS. Child calls put_user()
-> to handle CLONE_CHILD_SETTID from schedule_tail(). put_user() trigger page
-> fault and it fails because do_wp_page()  hits memcg limit without invoking
-> OOM-killer because this is page-fault from kernel-space.  Put_user returns
-> -EFAULT, which is ignored.  Child returns into user-space and catches here
-> assert (THREAD_GETMEM (self, tid) != ppid), glibc tries to print something
-> but hangs on deadlock on internal locks. Halt and catch fire.
+Hi esteemed kernel devs! Please be sure to CC answers to me personally
+so they're flagged for my attention.
 
-OK, I see! Thanks for the clarification. So the bug is that put_user
-return value is ignored. Let's see whether Konstantin's patch will be
-accepted or Oleg comes with something else.
+I've filed https://bugzilla.kernel.org/show_bug.cgi?id=124641 in
+Bugzilla, so I'll try not to repeat too many key details here; GKH has
+asked that I bring the conversation to email, LKML, and the cgroups
+list.
+
+Long story short, we see the behavior described in this LKML thread
+http://lkml.iu.edu/hypermail/linux/kernel/1606.2/00736.html and (we
+think) addressed by the patch therein - memory cgroups don't seem to
+be automatically garbage collected during runtime and must be manually
+released to allow space for new cgroups after the 65336 limit is
+reached. At this time, the only way we've found to release them is to
+send echo 1 > /proc/sys/vm/drop_caches
+to the kernel. The title of this message is the dmesg line we
+typically see in machines that have breached the limit, and are trying
+in vain to remove a cgroup beyond the 65536 ceiling.
+
+We've asked CoreOS to cut a build with the patch from LKML and we'll
+test it shortly to see if it alleviates the problem. We'll update this
+list with results of testing against that patch and also test against
+a 4.6.x kernel as soon as possible. Let us know if you need the full
+stack trace or other diagnostic info.
+
+Cheers!
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+John Garcia
+Technical Support Engineer
+Mesosphere.io
