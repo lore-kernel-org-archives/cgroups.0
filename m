@@ -1,72 +1,95 @@
-From: Shayan Pooya <shayan@liveve.org>
-Subject: Re: bug in memcg oom-killer results in a hung syscall in another
- process in the same cgroup
-Date: Thu, 14 Jul 2016 08:35:25 -0700
-Message-ID: <CABAubTh_5aLxaEYYyFivoatJLN35K8Gy1fHKG=8FL8XFrv61Sw@mail.gmail.com>
-References: <CABAubThf6gbi243BqYgoCjqRW36sXJuJ6e_8zAqzkYRiu0GVtQ@mail.gmail.com>
- <20160711064150.GB5284@dhcp22.suse.cz> <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q@mail.gmail.com>
- <CABAubTjGhUXMeAnFgW8LGck1tgvtu12Zb9fx5BRhDWNjZ7SYLQ@mail.gmail.com>
- <20160712071927.GD14586@dhcp22.suse.cz> <CABAubTg91qrUd4DO7T2SiJQBK9ypuhP0+F-091ZxtmonjaaYWg@mail.gmail.com>
- <57851224.2020902@yandex-team.ru> <CABAubTiVb8j8wEbcr16FAJnBxxS7QzghpPiJUcmV+=Ji=QgL=A@mail.gmail.com>
- <20160714132258.GA1333@redhat.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] mm: memcontrol: fix cgroup creation failure after many
+ small jobs
+Date: Thu, 14 Jul 2016 11:37:23 -0400
+Message-ID: <20160714153723.GA9840@cmpxchg.org>
+References: <20160616034244.14839-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=liveve-org.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=eT1ZEFkCpYB87IWc7HNd7gvyt/v2T/QhAR00871Sw1w=;
-        b=TliFuDRpu0r3NUcmKBi10hO2UCRCGkI1LhlbNIrwVrkWZmNigAxaRw+h7MdE15NSr3
-         XW8hVOI/5za3PwEg3+HHvy+6+kgQ0uY4hNsKHUXw7PQk9Byg5KTGOJAWm0e+vUfJxjrH
-         jnsOR9lCYYmlAa9P1gsgs/twwDHj6lpUnVysLIUTOJdHB2psaDbtrm2f4XaU2S0FJSjs
-         ZDWdkfdhzZkEFpVYM6yNGurBpQxTDZLgfzP23KqTM4xoeTNfZHJOPjy/TFEzCa+Kj0ke
-         Fe//kc/Wzjsz5RtinQEfmRwlnWNqnXZiFQXcauAHHpwLHp7a80hS6+aLAEbxuYZ8QlPz
-         D8Yg==
-In-Reply-To: <20160714132258.GA1333@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=qHmh5zBLmiDDhEMmBaD1AJaUw1qN002XIbBm+3Zumd0=; b=I0bi4aKMMn6+svBQAaCR3Y3qq/
+	cnjS8Db0TJ20qrCMyVgo/KR+7QQ/vZAgszYctl04MZ3bDspBz2Xxd6WQNtMVXKVE7Zvjyc1dHaNzG
+	YJ0CfTiv7nnRAdDLj4ds/Bc+oPTkcChprXIrhG/3W53a+Nl/v/bbqeWopKrNALXW7rqY=;
+Content-Disposition: inline
+In-Reply-To: <20160616034244.14839-1-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Michal Hocko <mhocko@kernel.org>, Konstantin Khlebnikov <koct9i@gmail.com>, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Michal Hocko <mhocko@suse.cz>, Li Zefan <lizefan@huawei.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-> Well, but we can't do this. And "as expected" is actually just wrong. I still
-> think that the whole FAULT_FLAG_USER logic is not right. This needs another email.
+Hi Andrew,
 
-I meant as expected from the content of the patch :) I think
-Konstantin agrees that this patch cannot be merged upstream.
+this issue dates back quite a bit and wasn't reported until now, so I
+didn't tag it for stable. However, it seems that larger scale setups
+are now running into this as they upgrade their kernels, and several
+people have run into this independently now. Could you please add:
 
-> fork() should not fail because there is a memory hog in the same memcg. Worse,
-> pthread_create() can kill the caller by the same reason. And we have the same
-> or even worse problem with ->clear_child_tid, pthread_join() can hang forever.
-> Unlikely we want to kill the application in this case ;)
->
-> And in fact I think that the problem has nothing to do with set/claer_child_tid
-> in particular.
->
-> I am just curious... can you reproduce the problem reliably? If yes, can you try
-> the patch below ? Just in case, this is not the real fix in any case...
+Reported-by: John Garcia <john.garcia@mesosphere.io>
+Fixes: b2052564e66d ("mm: memcontrol: continue cache reclaim from offlined groups")
+CC: stable@kernel.org # 3.19+
 
-Yes. It deterministically results in hung processes in vanilla kernel.
-I'll try this patch.
+and send it linusward?
 
+Thank you
 
-> --- x/kernel/sched/core.c
-> +++ x/kernel/sched/core.c
-> @@ -2793,8 +2793,11 @@ asmlinkage __visible void schedule_tail(struct task_struct *prev)
->         balance_callback(rq);
->         preempt_enable();
->
-> -       if (current->set_child_tid)
-> +       if (current->set_child_tid) {
-> +               mem_cgroup_oom_enable();
->                 put_user(task_pid_vnr(current), current->set_child_tid);
-> +               mem_cgroup_oom_disable();
-> +       }
->  }
->
->  /*
->
+On Wed, Jun 15, 2016 at 11:42:44PM -0400, Johannes Weiner wrote:
+> The memory controller has quite a bit of state that usually outlives
+> the cgroup and pins its CSS until said state disappears. At the same
+> time it imposes a 16-bit limit on the CSS ID space to economically
+> store IDs in the wild. Consequently, when we use cgroups to contain
+> frequent but small and short-lived jobs that leave behind some page
+> cache, we quickly run into the 64k limitations of outstanding CSSs.
+> Creating a new cgroup fails with -ENOSPC while there are only a few,
+> or even no user-visible cgroups in existence.
+> 
+> Although pinning CSSs past cgroup removal is common, there are only
+> two instances that actually need a CSS ID after a cgroup is deleted:
+> cache shadow entries and swapout records.
+> 
+> Cache shadow entries reference the ID weakly and can deal with the CSS
+> having disappeared when it's looked up later. They pose no hurdle.
+> 
+> Swap-out records do need to pin the css to hierarchically attribute
+> swapins after the cgroup has been deleted; though the only pages that
+> remain swapped out after a process exits are tmpfs/shmem pages. Those
+> references are under the user's control and thus manageable.
+> 
+> This patch introduces a private 16bit memcg ID and switches swap and
+> cache shadow entries over to using that. It then decouples the CSS
+> lifetime from the CSS ID lifetime, such that a CSS ID can be recycled
+> when the CSS is only pinned by common objects that don't need an ID.
+> 
+> This script demonstrates the problem by faulting one cache page in a
+> new cgroup and deleting it again:
+> 
+> set -e
+> mkdir -p pages
+> for x in `seq 128000`; do
+>   [ $((x % 1000)) -eq 0 ] && echo $x
+>   mkdir /cgroup/foo
+>   echo $$ >/cgroup/foo/cgroup.procs
+>   echo trex >pages/$x
+>   echo $$ >/cgroup/cgroup.procs
+>   rmdir /cgroup/foo
+> done
+> 
+> When run on an unpatched kernel, we eventually run out of possible CSS
+> IDs even though there is no visible cgroup existing anymore:
+> 
+> [root@ham ~]# ./cssidstress.sh
+> [...]
+> 65000
+> mkdir: cannot create directory '/cgroup/foo': No space left on device
+> 
+> After this patch, the CSS IDs get released upon cgroup destruction and
+> the cache and css objects get released once memory reclaim kicks in.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
