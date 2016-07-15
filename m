@@ -1,63 +1,106 @@
 From: Topi Miettinen <toiwoton@gmail.com>
-Subject: Re: [PATCH 02/14] resource limits: aggregate task highwater marks to
- cgroup level
-Date: Fri, 15 Jul 2016 17:15:41 +0000
-Message-ID: <f6f93ae6-48c4-bce9-08a2-5067919e8748@gmail.com>
+Subject: Re: [PATCH 00/14] Present useful limits to user (v2)
+Date: Fri, 15 Jul 2016 17:19:14 +0000
+Message-ID: <cf28b6b8-6d0d-8ce2-f3dc-953b9bee12d1@gmail.com>
 References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
- <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
- <20160715141058.GI3078@mtj.duckdns.org>
+ <5788F0E1.8090203@nod.at>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=subject:to:references:cc:from:openpgp:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=+TUS2Je7SuFMAUOI8TdtRU6VgE00oFWL7VcmzB988W0=;
-        b=dsqC1/dNVoYoQ79x1dddR2okesAW6qu73d/saGvSwWP/P3ylqTSnYtT6Cph0nP4v7D
-         dOypUJp6W3iZZivJpzfpGktr3U0uWJPAu+HUhuWIhpHCeuM88qxMQEiNZppTBIBEMFIB
-         dIchDJ3D1Q7BCVoFPqIHz0eIWg7d6DV62qJl3xJoYJXtbAV79ci0n6G1IuKt7oJmj/1V
-         bOO0z9J4i8QoD/N9xWwwx1OouoFbofjGZBrpIIL6RKSt4RoMf47/luVdyPzg5Svq8bBn
-         +PXO/HYko6lR3JMCzxO0uXLSPVqK1iDxbqtnMAe+G0ak7TnW7yGf2uoCjFmuk+U/d/zD
-         3aLA==
-In-Reply-To: <20160715141058.GI3078@mtj.duckdns.org>
-Sender: linux-doc-owner@vger.kernel.org
+        bh=wYfMOm2fLhnZoKkJMGJ29aNTNHK3edLosrq5Dz28mdM=;
+        b=P6uvyvkpUW2DqE2wXwuMEEbUSe2D6FzDhwtS6VOAxAHT6gI08NqlLvZm+HTpSNQbCJ
+         iR0KLkba0TFb79NqbztqnKtivbK27DyiACu4bMpJELAbQBqjIBl8j0AIfO8HGN2Y5loW
+         xWkhV8pNo/9+Si9KYc5RNGvWiBVAlYDFDXmxN6upHZXRtxGu7Xt5+1Xo2Vm3W8WtUzAi
+         QbrttSVd0CD6slUyybUZ1TDz7hMP4OikminaNfVMGxiEcwJSf2VK4O/BKYB/gk02g/pf
+         KHsG/XrwF7VniC7C0IWOaOmGaXHb4O+47CffiLzzQmVck9IWeSKQgj4Sw6JZRNsRH585
+         WpFA==
+In-Reply-To: <5788F0E1.8090203@nod.at>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Markus Elfring <elfring@users.sourceforge.net>, "David S. Miller" <davem@davemloft.net>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
+To: Richard Weinberger <richard@nod.at>, linux-kernel@vger.kernel.org
+Cc: Jonathan Corbet <corbet@lwn.net>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Alexander Graf <agraf@suse.com>, Paolo Bonzini <pbonzini@redhat.com>, =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro <dennis.dalessandro@intel.com>, Christian Benvenuti <benve@cisco.com>, Dave Goodell <dgoodell@cisco.com>, Sudeep Dutt <sudeep.dutt@intel.com>, Ashutosh Dixit <ashutosh.dixit@inte>
 
-On 07/15/16 14:10, Tejun Heo wrote:
-> Hello, Topi.
+On 07/15/16 14:19, Richard Weinberger wrote:
+> Hi!
 > 
-> On Fri, Jul 15, 2016 at 01:35:49PM +0300, Topi Miettinen wrote:
->> Collect resource usage highwater marks of a task to cgroup
->> statistics when the task exits.
+> Am 15.07.2016 um 12:35 schrieb Topi Miettinen:
+>> Hello,
+>>
+>> There are many basic ways to control processes, including capabilities,
+>> cgroups and resource limits. However, there are far fewer ways to find out
+>> useful values for the limits, except blind trial and error.
+>>
+>> This patch series attempts to fix that by giving at least a nice starting
+>> point from the highwater mark values of the resources in question.
+>> I looked where each limit is checked and added a call to update the mark
+>> nearby.
+>>
+>> Example run of program from Documentation/accounting/getdelauys.c:
+>>
+>> ./getdelays -R -p `pidof smartd`
+>> printing resource accounting
+>> RLIMIT_CPU=0
+>> RLIMIT_FSIZE=0
+>> RLIMIT_DATA=18198528
+>> RLIMIT_STACK=135168
+>> RLIMIT_CORE=0
+>> RLIMIT_RSS=0
+>> RLIMIT_NPROC=1
+>> RLIMIT_NOFILE=55
+>> RLIMIT_MEMLOCK=0
+>> RLIMIT_AS=130879488
+>> RLIMIT_LOCKS=0
+>> RLIMIT_SIGPENDING=0
+>> RLIMIT_MSGQUEUE=0
+>> RLIMIT_NICE=0
+>> RLIMIT_RTPRIO=0
+>> RLIMIT_RTTIME=0
+>>
+>> ./getdelays -R -C /sys/fs/cgroup/systemd/system.slice/smartd.service/
+>> printing resource accounting
+>> sleeping 1, blocked 0, running 0, stopped 0, uninterruptible 0
+>> RLIMIT_CPU=0
+>> RLIMIT_FSIZE=0
+>> RLIMIT_DATA=18198528
+>> RLIMIT_STACK=135168
+>> RLIMIT_CORE=0
+>> RLIMIT_RSS=0
+>> RLIMIT_NPROC=1
+>> RLIMIT_NOFILE=55
+>> RLIMIT_MEMLOCK=0
+>> RLIMIT_AS=130879488
+>> RLIMIT_LOCKS=0
+>> RLIMIT_SIGPENDING=0
+>> RLIMIT_MSGQUEUE=0
+>> RLIMIT_NICE=0
+>> RLIMIT_RTPRIO=0
+>> RLIMIT_RTTIME=0
+>>
+>> In this example, smartd is running as a non-root user. The presented
+>> values can be used as a starting point for giving new limits to the
+>> service.
 > 
-> I'm not sure how this makes sense.  The limits are enforced and
-> collected per user or along the process hierarchy which can be very
-> different from cgroup organization.  What does collecting high
-> watermarks from orthogonal structure, sometimes even combining
-> per-user numbers from different users, even mean?  These are numbers
-> without clear semantics.
+> I don't think it is worth sprinkling the kernel with update_resource_highwatermark()
+> calls just to get these metrics.
+> 
+> Can't we teach the existing perf infrastructure to collect these highwatermarks for us?
 
-There are clear semantics for the limits themselves, either they apply
-per task or per user. It makes sense to gather values according to these
-semantics. Then with systemd or other tools you can use the valuse to
-set the limits for a service regardless if the limit applies per task or
-per user and it works according to each limit's semantics.
-
-cgroups are used to aggregate values from a group of tasks, which still
-are related to one service. Because with systemd the services also are
-given a cgroup context, the values will completely make sense there too.
-
-It could be useful to introduce a new set of limits that apply only
-cgroup level. It would not remove the need to aggregate values from a
-group of tasks.
+I don't know. What kind of changes do you think would be needed?
 
 -Topi
 
 > 
-> Thanks.
+> Thanks,
+> //richard
 > 
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
