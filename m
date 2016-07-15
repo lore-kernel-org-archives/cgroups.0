@@ -1,7 +1,7 @@
 From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: [PATCH 1/3] cgroupns: Fix the locking in copy_cgroup_ns
-Date: Fri, 15 Jul 2016 00:15:46 -0500
-Message-ID: <8737nb4h31.fsf@x220.int.ebiederm.org>
+Subject: [PATCH 2/3] cgroupns: Close race between cgroup_post_fork and copy_cgroup_ns
+Date: Fri, 15 Jul 2016 00:16:34 -0500
+Message-ID: <87wpkn32h9.fsf@x220.int.ebiederm.org>
 References: <87h9br4h80.fsf@x220.int.ebiederm.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -15,52 +15,63 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
-If "clone(CLONE_NEWCGROUP...)" is called it results in a nice lockdep
-valid splat.
+In most code paths involving cgroup migration cgroup_threadgroup_rwsem
+is taken.  There are two exceptions:
 
-In __cgroup_proc_write the lock ordering is:
-     cgroup_mutex -- through cgroup_kn_lock_live
-     cgroup_threadgroup_rwsem
+- remove_tasks_in_empty_cpuset calls cgroup_transfer_tasks
+- vhost_attach_cgroups_work calls cgroup_attach_task_all
 
-In copy_process the guts of clone the lock ordering is:
-     cgroup_threadgroup_rwsem -- through threadgroup_change_begin
-     cgroup_mutex -- through copy_namespaces -- copy_cgroup_ns
+With cgroup_threadgroup_rwsem held it is guaranteed that cgroup_post_fork
+and copy_cgroup_ns will reference the same css_set from the process calling
+fork.
 
-lockdep reports some a different call chains for the first ordering of
-cgroup_mutex and cgroup_threadgroup_rwsem but it is harder to trace.
-This is most definitely deadlock potential under the right
-circumstances.
-
-Fix this by by skipping the cgroup_mutex and making the locking in
-copy_cgroup_ns mirror the locking in cgroup_post_fork which also runs
-during fork under the cgroup_threadgroup_rwsem.
+Without such an interlock there process after fork could reference one
+css_set from it's new cgroup namespace and another css_set from
+task->cgroups, which semantically is nonsensical.
 
 Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Fixes: a79a908fd2b0 ("cgroup: introduce cgroup namespaces")
 Signed-off-by: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 ---
- kernel/cgroup.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ kernel/cgroup.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 86cb5c6e8932..66d2441f6db2 100644
+index 66d2441f6db2..c99b0bcd2647 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -6305,14 +6305,11 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
- 	if (!ns_capable(user_ns, CAP_SYS_ADMIN))
- 		return ERR_PTR(-EPERM);
+@@ -2956,6 +2956,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 	int retval = 0;
  
--	mutex_lock(&cgroup_mutex);
-+	/* It is not safe to take cgroup_mutex here */
+ 	mutex_lock(&cgroup_mutex);
++	percpu_down_write(&cgroup_threadgroup_rwsem);
+ 	for_each_root(root) {
+ 		struct cgroup *from_cgrp;
+ 
+@@ -2970,6 +2971,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 		if (retval)
+ 			break;
+ 	}
++	percpu_up_write(&cgroup_threadgroup_rwsem);
+ 	mutex_unlock(&cgroup_mutex);
+ 
+ 	return retval;
+@@ -4337,6 +4339,8 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 
+ 	mutex_lock(&cgroup_mutex);
+ 
++	percpu_down_write(&cgroup_threadgroup_rwsem);
++
+ 	/* all tasks in @from are being moved, all csets are source */
  	spin_lock_bh(&css_set_lock);
--
- 	cset = task_css_set(current);
- 	get_css_set(cset);
--
- 	spin_unlock_bh(&css_set_lock);
--	mutex_unlock(&cgroup_mutex);
- 
- 	new_ns = alloc_cgroup_ns();
- 	if (IS_ERR(new_ns)) {
+ 	list_for_each_entry(link, &from->cset_links, cset_link)
+@@ -4365,6 +4369,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 	} while (task && !ret);
+ out_err:
+ 	cgroup_migrate_finish(&preloaded_csets);
++	percpu_up_write(&cgroup_threadgroup_rwsem);
+ 	mutex_unlock(&cgroup_mutex);
+ 	return ret;
+ }
 -- 
 2.8.3
