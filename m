@@ -1,77 +1,64 @@
-From: Topi Miettinen <toiwoton@gmail.com>
-Subject: Re: [PATCH 00/14] Present useful limits to user (v2)
-Date: Fri, 15 Jul 2016 16:57:00 +0000
-Message-ID: <485128c4-61c6-45ac-7ae2-2d4819697ec4@gmail.com>
-References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
- <20160715124330.GR30154@twins.programming.kicks-ass.net>
- <28b4b919-4f50-d9f6-c5e1-d1e92ea1ba1c@gmail.com>
- <20160715135956.GA3115@twins.programming.kicks-ass.net>
+From: Shayan Pooya <shayan@liveve.org>
+Subject: Re: bug in memcg oom-killer results in a hung syscall in another
+ process in the same cgroup
+Date: Fri, 15 Jul 2016 09:58:58 -0700
+Message-ID: <CABAubTjjD6nmAtMNze5O6-bE-ivMmb24Jd4u2mMpBZFBFR1CnA@mail.gmail.com>
+References: <CABAubThf6gbi243BqYgoCjqRW36sXJuJ6e_8zAqzkYRiu0GVtQ@mail.gmail.com>
+ <20160711064150.GB5284@dhcp22.suse.cz> <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q@mail.gmail.com>
+ <CABAubTjGhUXMeAnFgW8LGck1tgvtu12Zb9fx5BRhDWNjZ7SYLQ@mail.gmail.com>
+ <20160712071927.GD14586@dhcp22.suse.cz> <CABAubTg91qrUd4DO7T2SiJQBK9ypuhP0+F-091ZxtmonjaaYWg@mail.gmail.com>
+ <57851224.2020902@yandex-team.ru> <CABAubTiVb8j8wEbcr16FAJnBxxS7QzghpPiJUcmV+=Ji=QgL=A@mail.gmail.com>
+ <20160714132258.GA1333@redhat.com> <CABAubTh_5aLxaEYYyFivoatJLN35K8Gy1fHKG=8FL8XFrv61Sw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=subject:to:references:cc:from:openpgp:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=5BevCREnWZ5JqfW/fAsxwr96TCCJCBVeDbqKK/OUIkM=;
-        b=Er/EMx9KlYHsbgzid/NZwpUb0XMnKv9Cra8/kOyvCd85vOLzHLnzr1ziYBrhSYgTSr
-         Z3AnYdfUlcISPISB4mtlyMzBslqhj1NH81SA9OIRjIfIEfkvFOXS9eUdR9RHuX9D6ey7
-         OJ9YUlIZAfiB8l2YDmJG2onC0vOepJXiTEzio5fS6yBcPH6s0zf0+E0ua310dtg8YLvN
-         l9sP5jZBV+dv/yLkznrDqZXdam7bOJ27e1gQEr42f5nBRWOKB1GmcTr/RPILNbDM8W6P
-         bATIPK+mN6nJdD5ld3bCh7w3hu4qAvvkI9usm5sGBim5YxQQniHR1yAqo1rzZCMZ6bYy
-         Pgmg==
-In-Reply-To: <20160715135956.GA3115@twins.programming.kicks-ass.net>
+        d=liveve-org.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=M+MWb9KCF4ZVHdPz6eNAWLOG7JYqOHTWuCfTuUsz+L0=;
+        b=L0VnuBI3Vgly7j2uTZTM1/YbnHnf+drgBBgEKh+7nRKsfJdpvj2k19aSI1zFtGMBMf
+         TOK+KFrhGDRPL0DKGpTrBlFXtLe6sa4kf1tctZDk+f22annvv4VsY111NcYdLM5dt07v
+         DZpfzPpAzkbH/4xri4WuJqBgrcNyAWnC2ta5qK3eewa4H93bTMZOwegufPFWquOu7A3f
+         KIJA+l/7xGv2rZoUqU2lRfZQrTykq0LKZCSHNNETzzLDXxs0/o7vxWm7ODPcXNDcYCWP
+         iN3wJYlkRQ7GVvXbwvZBp3BKCb+C5ef7eKRt6CZbg+TPsBBo9XZPNLK9Jj/LPryRFhcb
+         hVRA==
+In-Reply-To: <CABAubTh_5aLxaEYYyFivoatJLN35K8Gy1fHKG=8FL8XFrv61Sw@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Alexander Graf <agraf@suse.com>, Paolo Bonzini <pbonzini@redhat.com>, Radim Kr??m???? <rkrcmar@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro <dennis.dalessandro@intel.com>, Christian Benvenuti <benve@cisco.com>, Dave Goodell <dgoodell@cisco.com>, Sudeep Dutt <sudeep.dutt@intel.com>, Ashutosh Dixit <ashut>
+Content-Transfer-Encoding: 7bit
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Michal Hocko <mhocko@kernel.org>, Konstantin Khlebnikov <koct9i@gmail.com>, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
 
-On 07/15/16 13:59, Peter Zijlstra wrote:
-> On Fri, Jul 15, 2016 at 01:52:48PM +0000, Topi Miettinen wrote:
->> On 07/15/16 12:43, Peter Zijlstra wrote:
->>> On Fri, Jul 15, 2016 at 01:35:47PM +0300, Topi Miettinen wrote:
->>>> Hello,
->>>>
->>>> There are many basic ways to control processes, including capabilities,
->>>> cgroups and resource limits. However, there are far fewer ways to find out
->>>> useful values for the limits, except blind trial and error.
->>>>
->>>> This patch series attempts to fix that by giving at least a nice starting
->>>> point from the highwater mark values of the resources in question.
->>>> I looked where each limit is checked and added a call to update the mark
->>>> nearby.
->>>
->>> And how is that useful? Setting things to the high watermark is
->>> basically the same as not setting the limit at all.
+>> I am just curious... can you reproduce the problem reliably? If yes, can you try
+>> the patch below ? Just in case, this is not the real fix in any case...
+>
+> Yes. It deterministically results in hung processes in vanilla kernel.
+> I'll try this patch.
+
+I'll have to correct this. I can reproduce this issue easily on
+high-end servers and normal laptops. But for some reason it does not
+happen very often in vmware guests (maybe related to lower
+parallelism).
+
+>> --- x/kernel/sched/core.c
+>> +++ x/kernel/sched/core.c
+>> @@ -2793,8 +2793,11 @@ asmlinkage __visible void schedule_tail(struct task_struct *prev)
+>>         balance_callback(rq);
+>>         preempt_enable();
 >>
->> What else would you use, too small limits?
-> 
-> That question doesn't make sense.
-> 
-> What's the point of setting a limit if it ends up being the same as
-> no-limit (aka unlimited).
+>> -       if (current->set_child_tid)
+>> +       if (current->set_child_tid) {
+>> +               mem_cgroup_oom_enable();
+>>                 put_user(task_pid_vnr(current), current->set_child_tid);
+>> +               mem_cgroup_oom_disable();
+>> +       }
+>>  }
+>>
+>>  /*
 
-Having a limit is not the same as not having any limits at all. You're
-in a way right that good limits don't affect the program normally. But
-they can make a difference if the flow is not normal. For example a
-successful exploit or a memory leak bug could cause RLIMIT_AS to trigger.
-
-> 
-> If you cannot explain; and you have not so far; what use these values
-> are, why would we look at the patches.
-> 
-
-The use case is to allow system administrators, distro maintainers and
-developers to configure systems to use the resource limits. The limits
-are not very useful right now, as there is no way to figure out what
-values to use. There are a few /proc files to look, for example current
-number of file descriptors (for RLIMIT_NOFILE) could be counted via
-/proc/pid/fd. But now there is no way to know if there were more in use
-at some point. Likewise, a program can use more address space when you
-are not looking. The source code does not tell these things explicitly.
-
--Topi
+I tried this patch and I still see the same stuck processes (assuming
+that's what you were curious about).
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
