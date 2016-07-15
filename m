@@ -1,309 +1,207 @@
 From: Topi Miettinen <toiwoton@gmail.com>
-Subject: [PATCH 00/14] Present useful limits to user (v2)
-Date: Fri, 15 Jul 2016 13:35:47 +0300
-Message-ID: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
-Return-path: <owner-linux-mm@kvack.org>
+Subject: [PATCH 02/14] resource limits: aggregate task highwater marks to cgroup level
+Date: Fri, 15 Jul 2016 13:35:49 +0300
+Message-ID: <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
+References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id;
-        bh=YOqPEugYhsftIC9FVy7Liq0hMipASs/3kJR354L7EpI=;
-        b=gbvGgKv2KULoZVymz3EPQr7S+gs5OqWWANJ+OWoC9j1E1U55MzNP35h7+105io3jUr
-         egfb+4oC/fQxdw8AyN13MlxIC/xD2IeQgh0s7QG57kaqGP2Z9+tGJxUdnmnu/uixk3z1
-         Efmnt7UVJpnPRfvB0jQAYEywBseVX8ppGOV+TrBD4PVTYQdMPKIDM83M84aBeAd2oh3t
-         nO0q/dvVfJvlXCpNm6VkfcJ9u575AwfaZpaySdByuHbY5vXQ3EAWqQK+zbopzhk/gVBQ
-         VtHn4F9JkAhktUPs7mzvRDdw2BwyAXtNSdIln0zacS7w7Vh6UiX8BK6KREmNLcp5QYsN
-         eV7A==
-Sender: owner-linux-mm@kvack.org
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=kOvFrcd5TuUbMlB28T62pt7jXSoKjZgFd1Tjcs0ytmE=;
+        b=L1iU4TKU4poPMdl7FZLOAJN1J7avhH5ajGtr36w0vySS6TYadL4B2Zgizm7lXbeHVj
+         iaGlejdDYJHzMiUAYzbwZqJGwWqQXrDxuovtUXI5X8lmrZWjNVk9lcqE1XbpKG4LT7Ex
+         QMoSraLqiUWRGcIJ3obD3keMWKbT7DEOJGMAgI53pOSSusQB6AiJ03aTQ7X+YW7Y3Pkk
+         1KT31kjWFqQ6wFu9U0rTc6t6Ap7zhdvFBtkKbYvF6/6Y6Z0mE6xq6He/8FF0aAZc4H3y
+         XWSrxyvfz/IpcAhyjJ/f9a8YEoL5J3WNxIphwI48UlDnfJbSmF0uTaE6XxTnQrGlEXvP
+         cuiA==
+In-Reply-To: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org
-Cc: Topi Miettinen <toiwoton@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Alexander Graf <agraf@suse.com>, Paolo Bonzini <pbonzini@redhat.com>, =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, "maintainer:X86 ARCHITECTURE 32-BIT AND 64-BIT" <x86@kernel.org>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro <dennis.dalessandro@intel.com>, Christian Benvenuti <benve@cisco.com>, Dave Goodell <dgoodell@cisco.com>, Sudeep Dutt <sudeep.d>
+Cc: Topi Miettinen <toiwoton@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Markus Elfring <elfring@users.sourceforge.net>, "David S. Miller" <davem@davemloft.net>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>
 
-Hello,
+Collect resource usage highwater marks of a task to cgroup
+statistics when the task exits.
 
-There are many basic ways to control processes, including capabilities,
-cgroups and resource limits. However, there are far fewer ways to find out
-useful values for the limits, except blind trial and error.
+Signed-off-by: Topi Miettinen <toiwoton@gmail.com>
+---
+ Documentation/accounting/getdelays.c | 10 ++++++-
+ include/linux/cgroup-defs.h          |  5 ++++
+ include/uapi/linux/cgroupstats.h     |  3 ++
+ kernel/cgroup.c                      | 55 ++++++++++++++++++++++++++++++++++++
+ 4 files changed, 72 insertions(+), 1 deletion(-)
 
-This patch series attempts to fix that by giving at least a nice starting
-point from the highwater mark values of the resources in question.
-I looked where each limit is checked and added a call to update the mark
-nearby.
-
-Example run of program from Documentation/accounting/getdelauys.c:
-
-./getdelays -R -p `pidof smartd`
-printing resource accounting
-RLIMIT_CPU=0
-RLIMIT_FSIZE=0
-RLIMIT_DATA=18198528
-RLIMIT_STACK=135168
-RLIMIT_CORE=0
-RLIMIT_RSS=0
-RLIMIT_NPROC=1
-RLIMIT_NOFILE=55
-RLIMIT_MEMLOCK=0
-RLIMIT_AS=130879488
-RLIMIT_LOCKS=0
-RLIMIT_SIGPENDING=0
-RLIMIT_MSGQUEUE=0
-RLIMIT_NICE=0
-RLIMIT_RTPRIO=0
-RLIMIT_RTTIME=0
-
-./getdelays -R -C /sys/fs/cgroup/systemd/system.slice/smartd.service/
-printing resource accounting
-sleeping 1, blocked 0, running 0, stopped 0, uninterruptible 0
-RLIMIT_CPU=0
-RLIMIT_FSIZE=0
-RLIMIT_DATA=18198528
-RLIMIT_STACK=135168
-RLIMIT_CORE=0
-RLIMIT_RSS=0
-RLIMIT_NPROC=1
-RLIMIT_NOFILE=55
-RLIMIT_MEMLOCK=0
-RLIMIT_AS=130879488
-RLIMIT_LOCKS=0
-RLIMIT_SIGPENDING=0
-RLIMIT_MSGQUEUE=0
-RLIMIT_NICE=0
-RLIMIT_RTPRIO=0
-RLIMIT_RTTIME=0
-
-In this example, smartd is running as a non-root user. The presented
-values can be used as a starting point for giving new limits to the
-service.
-
-There's one problem with the patch 07/13, kernel initialization calls
-create_worker() which seems to use different locking model or something:
-
-[    0.145410] =========================================================
-[    0.148000] [ INFO: possible irq lock inversion dependency detected ]
-[    0.148000] 4.7.0-rc7+ #155 Not tainted
-[    0.148000] ---------------------------------------------------------
-[    0.148000] swapper/0/1 just changed the state of lock:
-[    0.148000]  (&(&(&sig->stats_lock)->lock)->rlock){+.....}, at: [<ffffffff810bf769>] __sched_setscheduler+0x339/0xbd0
-[    0.148000] but this lock was taken by another, HARDIRQ-safe lock in the past:
-[    0.148000]  (&rq->lock){-.....}
-
-and interrupts could create inverse lock ordering between them.
-
-[    0.148000] 
-[    0.148000] other info that might help us debug this:
-[    0.148000]  Possible interrupt unsafe locking scenario:
-[    0.148000] 
-[    0.148000]        CPU0                    CPU1
-[    0.148000]        ----                    ----
-[    0.148000]   lock(&(&(&sig->stats_lock)->lock)->rlock);
-[    0.148000]                                local_irq_disable();
-[    0.148000]                                lock(&rq->lock);
-[    0.148000]                                lock(&(&(&sig->stats_lock)->lock)->rlock);
-[    0.148000]   <Interrupt>
-[    0.148000]     lock(&rq->lock);
-[    0.148000] 
-[    0.148000]  *** DEADLOCK ***
-[    0.148000] 
-[    0.148000] 2 locks held by swapper/0/1:
-[    0.148000]  #0:  (cpu_hotplug.lock){.+.+.+}, at: [<ffffffff81092824>] get_online_cpus+0x24/0x70
-[    0.148000]  #1:  (smpboot_threads_lock){+.+.+.}, at: [<ffffffff810ba517>] smpboot_register_percpu_thread_cpumask+0x37/0xf0
-[    0.148000] 
-[    0.148000] the shortest dependencies between 2nd lock and 1st lock:
-[    0.148000]  -> (&rq->lock){-.....} ops: 181 {
-[    0.148000]     IN-HARDIRQ-W at:
-[    0.148000]                       [<ffffffff810e8439>] __lock_acquire+0x6e9/0x1440
-[    0.148000]                       [<ffffffff810e95d3>] lock_acquire+0xe3/0x1c0
-[    0.148000]                       [<ffffffff818cf661>] _raw_spin_lock+0x31/0x40
-[    0.148000]                       [<ffffffff810c3a41>] scheduler_tick+0x41/0xd0
-[    0.148000]                       [<ffffffff81110471>] update_process_times+0x51/0x60
-[    0.148000]                       [<ffffffff8111fa4f>] tick_periodic+0x2f/0xc0
-[    0.148000]                       [<ffffffff8111fb05>] tick_handle_periodic+0x25/0x70
-[    0.148000]                       [<ffffffff8101ebf5>] timer_interrupt+0x15/0x20
-[    0.148000]                       [<ffffffff810fc731>] handle_irq_event_percpu+0x41/0x320
-[    0.148000]                       [<ffffffff810fca49>] handle_irq_event+0x39/0x60
-[    0.148000]                       [<ffffffff810ffe08>] handle_level_irq+0x88/0x110
-[    0.148000]                       [<ffffffff8101e58a>] handle_irq+0x1a/0x30
-[    0.148000]                       [<ffffffff818d2281>] do_IRQ+0x61/0x120
-[    0.148000]                       [<ffffffff818d0949>] ret_from_intr+0x0/0x19
-[    0.148000]                       [<ffffffff810fe969>] __setup_irq+0x3f9/0x5e0
-[    0.148000]                       [<ffffffff810feb96>] setup_irq+0x46/0xa0
-[    0.148000]                       [<ffffffff821878e2>] setup_default_timer_irq+0x1e/0x20
-[    0.148000]                       [<ffffffff821878fb>] hpet_time_init+0x17/0x19
-[    0.148000]                       [<ffffffff821878bd>] x86_late_time_init+0xa/0x11
-[    0.148000]                       [<ffffffff82181ef9>] start_kernel+0x39d/0x465
-[    0.148000]                       [<ffffffff82181294>] x86_64_start_reservations+0x2f/0x31
-[    0.148000]                       [<ffffffff8218140e>] x86_64_start_kernel+0x178/0x18b
-[    0.148000]     INITIAL USE at:
-[    0.148000]                      [<ffffffff810e7f90>] __lock_acquire+0x240/0x1440
-[    0.148000]                      [<ffffffff810e95d3>] lock_acquire+0xe3/0x1c0
-[    0.148000]                      [<ffffffff818cf82c>] _raw_spin_lock_irqsave+0x3c/0x50
-[    0.148000]                      [<ffffffff810bdc9d>] rq_attach_root+0x1d/0x100
-[    0.148000]                      [<ffffffff8219deab>] sched_init+0x2f5/0x44c
-[    0.148000]                      [<ffffffff82181d9d>] start_kernel+0x241/0x465
-[    0.148000]                      [<ffffffff82181294>] x86_64_start_reservations+0x2f/0x31
-[    0.148000]                      [<ffffffff8218140e>] x86_64_start_kernel+0x178/0x18b
-[    0.148000]   }
-[    0.148000]   ... key      at: [<ffffffff822f3ad0>] __key.60059+0x0/0x8
-[    0.148000]   ... acquired at:
-[    0.148000]    [<ffffffff810e95d3>] lock_acquire+0xe3/0x1c0
-[    0.148000]    [<ffffffff818cf661>] _raw_spin_lock+0x31/0x40
-[    0.148000]    [<ffffffff810c0514>] set_user_nice.part.92+0xf4/0x270
-[    0.148000]    [<ffffffff810c06b6>] set_user_nice+0x26/0x30
-[    0.148000]    [<ffffffff810aee10>] create_worker+0xf0/0x1a0
-[    0.148000]    [<ffffffff8219c195>] init_workqueues+0x317/0x51e
-[    0.148000]    [<ffffffff81000450>] do_one_initcall+0x50/0x180
-[    0.148000]    [<ffffffff821820d2>] kernel_init_freeable+0x111/0x25d
-[    0.148000]    [<ffffffff818c206e>] kernel_init+0xe/0x100
-[    0.148000]    [<ffffffff818d01ff>] ret_from_fork+0x1f/0x40
-[    0.148000] 
-[    0.148000] -> (&(&(&sig->stats_lock)->lock)->rlock){+.....} ops: 2 {
-[    0.148000]    HARDIRQ-ON-W at:
-[    0.148000]                     [<ffffffff810e82e0>] __lock_acquire+0x590/0x1440
-[    0.148000]                     [<ffffffff810e95d3>] lock_acquire+0xe3/0x1c0
-[    0.148000]                     [<ffffffff818cf661>] _raw_spin_lock+0x31/0x40
-[    0.148000]                     [<ffffffff810bf769>] __sched_setscheduler+0x339/0xbd0
-[    0.148000]                     [<ffffffff810c0076>] _sched_setscheduler+0x76/0x90
-[    0.148000]                     [<ffffffff810c1012>] sched_set_stop_task+0x62/0xb0
-[    0.148000]                     [<ffffffff81143983>] cpu_stop_create+0x23/0x30
-[    0.148000]                     [<ffffffff810ba48d>] __smpboot_create_thread.part.2+0xad/0x100
-[    0.148000]                     [<ffffffff810ba57f>] smpboot_register_percpu_thread_cpumask+0x9f/0xf0
-[    0.148000]                     [<ffffffff821a1708>] cpu_stop_init+0x7d/0xb8
-[    0.148000]                     [<ffffffff81000450>] do_one_initcall+0x50/0x180
-[    0.148000]                     [<ffffffff821820d2>] kernel_init_freeable+0x111/0x25d
-[    0.148000]                     [<ffffffff818c206e>] kernel_init+0xe/0x100
-[    0.148000]                     [<ffffffff818d01ff>] ret_from_fork+0x1f/0x40
-[    0.148000]    INITIAL USE at:
-[    0.148000]                    [<ffffffff810e7f90>] __lock_acquire+0x240/0x1440
-[    0.148000]                    [<ffffffff810e95d3>] lock_acquire+0xe3/0x1c0
-[    0.148000]                    [<ffffffff818cf661>] _raw_spin_lock+0x31/0x40
-[    0.148000]                    [<ffffffff810c0514>] set_user_nice.part.92+0xf4/0x270
-[    0.148000]                    [<ffffffff810c06b6>] set_user_nice+0x26/0x30
-[    0.148000]                    [<ffffffff810aee10>] create_worker+0xf0/0x1a0
-[    0.148000]                    [<ffffffff8219c195>] init_workqueues+0x317/0x51e
-[    0.148000]                    [<ffffffff81000450>] do_one_initcall+0x50/0x180
-[    0.148000]                    [<ffffffff821820d2>] kernel_init_freeable+0x111/0x25d
-[    0.148000]                    [<ffffffff818c206e>] kernel_init+0xe/0x100
-[    0.148000]                    [<ffffffff818d01ff>] ret_from_fork+0x1f/0x40
-[    0.148000]  }
-[    0.148000]  ... key      at: [<ffffffff822f2190>] __key.55894+0x0/0x8
-[    0.148000]  ... acquired at:
-[    0.148000]    [<ffffffff810e6885>] check_usage_backwards+0x155/0x160
-[    0.148000]    [<ffffffff810e7533>] mark_lock+0x333/0x610
-[    0.148000]    [<ffffffff810e82e0>] __lock_acquire+0x590/0x1440
-[    0.148000]    [<ffffffff810e95d3>] lock_acquire+0xe3/0x1c0
-[    0.148000]    [<ffffffff818cf661>] _raw_spin_lock+0x31/0x40
-[    0.148000]    [<ffffffff810bf769>] __sched_setscheduler+0x339/0xbd0
-[    0.148000]    [<ffffffff810c0076>] _sched_setscheduler+0x76/0x90
-[    0.148000]    [<ffffffff810c1012>] sched_set_stop_task+0x62/0xb0
-[    0.148000]    [<ffffffff81143983>] cpu_stop_create+0x23/0x30
-[    0.148000]    [<ffffffff810ba48d>] __smpboot_create_thread.part.2+0xad/0x100
-[    0.148000]    [<ffffffff810ba57f>] smpboot_register_percpu_thread_cpumask+0x9f/0xf0
-[    0.148000]    [<ffffffff821a1708>] cpu_stop_init+0x7d/0xb8
-[    0.148000]    [<ffffffff81000450>] do_one_initcall+0x50/0x180
-[    0.148000]    [<ffffffff821820d2>] kernel_init_freeable+0x111/0x25d
-[    0.148000]    [<ffffffff818c206e>] kernel_init+0xe/0x100
-[    0.148000]    [<ffffffff818d01ff>] ret_from_fork+0x1f/0x40
-[    0.148000] 
-[    0.148000] 
-[    0.148000] stack backtrace:
-[    0.148000] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.7.0-rc7+ #155
-[    0.148000] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Debian-1.8.2-1 04/01/2014
-[    0.148000]  0000000000000086 00000000aea03eae ffff88003de6ba60 ffffffff813cb2d5
-[    0.148000]  ffffffff82d48e60 ffff88003de6bac0 ffff88003de6baa0 ffffffff811a6b05
-[    0.148000]  ffff88003de647d8 ffff88003de647d8 ffff88003de64040 ffffffff81d531a7
-[    0.148000] Call Trace:
-[    0.148000]  [<ffffffff813cb2d5>] dump_stack+0x67/0x92
-[    0.148000]  [<ffffffff811a6b05>] print_irq_inversion_bug.part.38+0x1a4/0x1b0
-[    0.148000]  [<ffffffff810e6885>] check_usage_backwards+0x155/0x160
-[    0.148000]  [<ffffffff810e7533>] mark_lock+0x333/0x610
-[    0.148000]  [<ffffffff810e6730>] ? check_usage_forwards+0x160/0x160
-[    0.148000]  [<ffffffff810e82e0>] __lock_acquire+0x590/0x1440
-[    0.148000]  [<ffffffff810e7a6d>] ? trace_hardirqs_on+0xd/0x10
-[    0.148000]  [<ffffffff81104aad>] ? debug_lockdep_rcu_enabled+0x1d/0x20
-[    0.148000]  [<ffffffff810e95d3>] lock_acquire+0xe3/0x1c0
-[    0.148000]  [<ffffffff810bf769>] ? __sched_setscheduler+0x339/0xbd0
-[    0.148000]  [<ffffffff818cf661>] _raw_spin_lock+0x31/0x40
-[    0.148000]  [<ffffffff810bf769>] ? __sched_setscheduler+0x339/0xbd0
-[    0.148000]  [<ffffffff810bf769>] __sched_setscheduler+0x339/0xbd0
-[    0.148000]  [<ffffffff810c0076>] _sched_setscheduler+0x76/0x90
-[    0.148000]  [<ffffffff810c1012>] sched_set_stop_task+0x62/0xb0
-[    0.148000]  [<ffffffff81143983>] cpu_stop_create+0x23/0x30
-[    0.148000]  [<ffffffff810ba48d>] __smpboot_create_thread.part.2+0xad/0x100
-[    0.148000]  [<ffffffff810ba57f>] smpboot_register_percpu_thread_cpumask+0x9f/0xf0
-[    0.148000]  [<ffffffff821a1708>] cpu_stop_init+0x7d/0xb8
-[    0.148000]  [<ffffffff821a168b>] ? pid_namespaces_init+0x40/0x40
-[    0.148000]  [<ffffffff81000450>] do_one_initcall+0x50/0x180
-[    0.148000]  [<ffffffff8102c24d>] ? print_cpu_info+0x7d/0xe0
-[    0.148000]  [<ffffffff821820d2>] kernel_init_freeable+0x111/0x25d
-[    0.148000]  [<ffffffff818c206e>] kernel_init+0xe/0x100
-[    0.148000]  [<ffffffff818d01ff>] ret_from_fork+0x1f/0x40
-[    0.148000]  [<ffffffff818c2060>] ? rest_init+0x130/0x130
-
-In this v2, I tried to address all comments, thanks for reviews.
-
--Topi
-
-Topi Miettinen (14):
-  resource limits: foundation for resource highwater tracking
-  resource limits: aggregate task highwater marks to cgroup level
-  resource limits: track highwater mark of file sizes
-  resource limits: track highwater mark of VM data segment
-  resource limits: track highwater mark of stack size
-  resource limits: track highwater mark of cores dumped
-  resource limits: track highwater mark of user processes
-  resource limits: track highwater mark of number of files
-  resource limits: track highwater mark of locked memory
-  resource limits: track highwater mark of address space size
-  resource limits: track highwater mark of number of pending signals
-  resource limits: track highwater mark of size of message queues
-  resource limits: track highwater mark of niceness
-  resource limits: track highwater mark of RT priority
-
- Documentation/accounting/getdelays.c       | 62 ++++++++++++++++++++++--
- arch/ia64/kernel/perfmon.c                 |  1 +
- arch/powerpc/kvm/book3s_64_vio.c           |  2 +
- arch/powerpc/mm/mmu_context_iommu.c        |  2 +
- arch/x86/ia32/ia32_aout.c                  |  2 +
- drivers/infiniband/core/umem.c             |  1 +
- drivers/infiniband/hw/hfi1/user_pages.c    |  2 +
- drivers/infiniband/hw/qib/qib_user_pages.c |  2 +
- drivers/infiniband/hw/usnic/usnic_uiom.c   |  2 +
- drivers/misc/mic/scif/scif_rma.c           |  1 +
- drivers/vfio/vfio_iommu_spapr_tce.c        |  2 +
- drivers/vfio/vfio_iommu_type1.c            |  5 ++
- fs/attr.c                                  |  2 +
- fs/binfmt_aout.c                           |  2 +
- fs/binfmt_flat.c                           |  2 +
- fs/coredump.c                              | 11 +++--
- fs/file.c                                  |  4 ++
- include/linux/cgroup-defs.h                |  5 ++
- include/linux/sched.h                      | 61 +++++++++++++++++++++++
- include/linux/tsacct_kern.h                |  3 ++
- include/uapi/linux/cgroupstats.h           |  3 ++
- include/uapi/linux/taskstats.h             | 10 +++-
- ipc/mqueue.c                               |  1 +
- kernel/bpf/syscall.c                       |  8 +++
- kernel/cgroup.c                            | 78 ++++++++++++++++++++++++++++++
- kernel/cred.c                              |  1 +
- kernel/events/core.c                       |  1 +
- kernel/fork.c                              |  2 +
- kernel/sched/core.c                        |  6 +++
- kernel/signal.c                            |  2 +
- kernel/sys.c                               |  5 ++
- kernel/taskstats.c                         |  4 ++
- kernel/tsacct.c                            | 47 ++++++++++++++++++
- mm/mlock.c                                 |  8 +++
- mm/mmap.c                                  | 17 ++++++-
- mm/mremap.c                                |  7 +++
- 36 files changed, 365 insertions(+), 9 deletions(-)
-
+diff --git a/Documentation/accounting/getdelays.c b/Documentation/accounting/getdelays.c
+index 489f1b7..7c86279 100644
+--- a/Documentation/accounting/getdelays.c
++++ b/Documentation/accounting/getdelays.c
+@@ -27,7 +27,7 @@
+ 
+ #include <linux/genetlink.h>
+ #include "include/uapi/linux/taskstats.h"
+-#include <linux/cgroupstats.h>
++#include "include/uapi/linux/cgroupstats.h"
+ 
+ /*
+  * Generic macros for dealing with netlink sockets. Might be duplicated
+@@ -258,12 +258,20 @@ static const char *const rlimit_names[] = {
+ 
+ static void print_cgroupstats(struct cgroupstats *c)
+ {
++	int i;
++
+ 	printf("sleeping %llu, blocked %llu, running %llu, stopped %llu, "
+ 		"uninterruptible %llu\n", (unsigned long long)c->nr_sleeping,
+ 		(unsigned long long)c->nr_io_wait,
+ 		(unsigned long long)c->nr_running,
+ 		(unsigned long long)c->nr_stopped,
+ 		(unsigned long long)c->nr_uninterruptible);
++
++	if (print_resource_accounting)
++		for (i = 0; i < RLIM_NLIMITS; i++)
++			printf("%s=%llu\n",
++			       rlimit_names[i],
++			       (unsigned long long)c->resource_hiwater[i]);
+ }
+ 
+ 
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 5b17de6..86bbc08 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -16,6 +16,7 @@
+ #include <linux/percpu-refcount.h>
+ #include <linux/percpu-rwsem.h>
+ #include <linux/workqueue.h>
++#include <linux/cgroupstats.h>
+ 
+ #ifdef CONFIG_CGROUPS
+ 
+@@ -300,6 +301,10 @@ struct cgroup {
+ 	/* used to schedule release agent */
+ 	struct work_struct release_agent_work;
+ 
++#ifdef CONFIG_TASK_XACCT
++	struct cgroupstats stats;
++#endif
++
+ 	/* ids of the ancestors at each level including self */
+ 	int ancestor_ids[];
+ };
+diff --git a/include/uapi/linux/cgroupstats.h b/include/uapi/linux/cgroupstats.h
+index 3753c33..18b5b11 100644
+--- a/include/uapi/linux/cgroupstats.h
++++ b/include/uapi/linux/cgroupstats.h
+@@ -35,6 +35,9 @@ struct cgroupstats {
+ 	__u64	nr_uninterruptible;	/* Number of tasks in uninterruptible */
+ 					/* state */
+ 	__u64	nr_io_wait;		/* Number of tasks waiting on IO */
++	__u64   resource_hiwater[RLIM_NLIMITS]; /* high-watermark of
++						     RLIMIT
++						     resources */
+ };
+ 
+ /*
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 75c0ff0..9b2d805 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -247,6 +247,7 @@ static void kill_css(struct cgroup_subsys_state *css);
+ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
+ 			      struct cgroup *cgrp, struct cftype cfts[],
+ 			      bool is_add);
++static void cgroup_update_stats(void);
+ 
+ /**
+  * cgroup_ssid_enabled - cgroup subsys enabled test by subsys ID
+@@ -2609,6 +2610,8 @@ out_release_tset:
+ 		list_splice_tail_init(&cset->mg_tasks, &cset->tasks);
+ 		list_del_init(&cset->mg_node);
+ 	}
++	cgroup_update_stats();
++
+ 	spin_unlock_irq(&css_set_lock);
+ 	return ret;
+ }
+@@ -4657,6 +4660,53 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
+ 	return 0;
+ }
+ 
++/*
++ * Update cgroupstats based on the stats from exiting task
++ */
++static void cgroup_update_stats_from_task(struct cgroup *cgrp,
++					  struct task_struct *tsk)
++{
++	struct signal_struct *sig = tsk->signal;
++	int i;
++	unsigned int seq, nextseq;
++	unsigned long flags;
++
++	rcu_read_lock();
++	/* Attempt a lockless read on the first round. */
++	nextseq = 0;
++	do {
++		seq = nextseq;
++		flags = read_seqbegin_or_lock_irqsave(&sig->stats_lock, &seq);
++		for (i = 0; i < RLIM_NLIMITS; i++)
++			if (cgrp->stats.resource_hiwater[i] <
++			    sig->resource_highwatermark[i])
++				cgrp->stats.resource_hiwater[i] =
++					sig->resource_highwatermark[i];
++
++		/* If lockless access failed, take the lock. */
++		nextseq = 1;
++	} while (need_seqretry(&sig->stats_lock, seq));
++	done_seqretry_irqrestore(&sig->stats_lock, seq, flags);
++	rcu_read_unlock();
++}
++
++static void cgroup_update_stats(void)
++{
++	struct cgroup_root *root;
++
++	for_each_root(root) {
++		struct cgroup *cgrp;
++
++		if (root == &cgrp_dfl_root && !cgrp_dfl_visible)
++			continue;
++
++		cgrp = task_cgroup_from_root(current, root);
++
++		if (cgroup_on_dfl(cgrp))
++			cgroup_update_stats_from_task(cgrp, current);
++	}
++}
++
+ /**
+  * cgroupstats_build - build and fill cgroupstats
+  * @stats: cgroupstats to fill information into
+@@ -4672,6 +4722,7 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
+ 	struct cgroup *cgrp;
+ 	struct css_task_iter it;
+ 	struct task_struct *tsk;
++	int i;
+ 
+ 	/* it should be kernfs_node belonging to cgroupfs and is a directory */
+ 	if (dentry->d_sb->s_type != &cgroup_fs_type || !kn ||
+@@ -4714,9 +4765,13 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
+ 				stats->nr_io_wait++;
+ 			break;
+ 		}
++		cgroup_update_stats_from_task(cgrp, tsk);
+ 	}
+ 	css_task_iter_end(&it);
+ 
++	for (i = 0; i < RLIM_NLIMITS; i++)
++		stats->resource_hiwater[i] = cgrp->stats.resource_hiwater[i];
++
+ 	mutex_unlock(&cgroup_mutex);
+ 	return 0;
+ }
 -- 
 2.8.1
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
