@@ -1,50 +1,46 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 00/14] Present useful limits to user (v2)
-Date: Fri, 15 Jul 2016 15:59:56 +0200
-Message-ID: <20160715135956.GA3115@twins.programming.kicks-ass.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 02/14] resource limits: aggregate task highwater marks to
+ cgroup level
+Date: Fri, 15 Jul 2016 10:10:58 -0400
+Message-ID: <20160715141058.GI3078@mtj.duckdns.org>
 References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
- <20160715124330.GR30154@twins.programming.kicks-ass.net>
- <28b4b919-4f50-d9f6-c5e1-d1e92ea1ba1c@gmail.com>
+ <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=hCOrRQ+dET8kSpmGhAEUmFuk4rYQqvmZk4/BTZHrqWU=;
+        b=vbhPPY60Z374xrTYPYXJhO+iJjf0cbpqblCFN/h+wX9rrF70HMkVGK+Y1zgD8967GC
+         PsKicX8XykF3b2adlm8KQKeg2jRR+UJEtysZ/lOH7arbEB2bBHKqn/r810WD3ZlNEANm
+         Oz9cbwJ/02xddmKo9pJ3tHK9JzSbuYIsFoxP4HzMSBvy/UqKaEyaglIaMAb0/P2I8ctb
+         0TUyv3FghyfJSKdzFby7xXtUJMXuK/YAJ4VACenj6kuTZKNQv/H+aU0nhhUGtBp6JNde
+         ttH9EnmFVj797+i4vXNmON80FVPifoOtS2qdClyGxLKcTLzOupdwIqe7AuaYBerP+P2o
+         DClw==
 Content-Disposition: inline
-In-Reply-To: <28b4b919-4f50-d9f6-c5e1-d1e92ea1ba1c@gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Topi Miettinen <toiwoton@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Alexander Graf <agraf@suse.com>, Paolo Bonzini <pbonzini@redhat.com>, Radim Kr??m???? <rkrcmar@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro <dennis.dalessandro@intel.com>, Christian Benvenuti <benve@cisco.com>, Dave Goodell <dgoodell@cisco.com>, Sudeep Dutt <sudeep.dutt@intel.com>, Ashutosh Dixit <a>
+Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Markus Elfring <elfring@users.sourceforge.net>, "David S. Miller" <davem@davemloft.net>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
 
-On Fri, Jul 15, 2016 at 01:52:48PM +0000, Topi Miettinen wrote:
-> On 07/15/16 12:43, Peter Zijlstra wrote:
-> > On Fri, Jul 15, 2016 at 01:35:47PM +0300, Topi Miettinen wrote:
-> >> Hello,
-> >>
-> >> There are many basic ways to control processes, including capabilities,
-> >> cgroups and resource limits. However, there are far fewer ways to find out
-> >> useful values for the limits, except blind trial and error.
-> >>
-> >> This patch series attempts to fix that by giving at least a nice starting
-> >> point from the highwater mark values of the resources in question.
-> >> I looked where each limit is checked and added a call to update the mark
-> >> nearby.
-> > 
-> > And how is that useful? Setting things to the high watermark is
-> > basically the same as not setting the limit at all.
-> 
-> What else would you use, too small limits?
+Hello, Topi.
 
-That question doesn't make sense.
+On Fri, Jul 15, 2016 at 01:35:49PM +0300, Topi Miettinen wrote:
+> Collect resource usage highwater marks of a task to cgroup
+> statistics when the task exits.
 
-What's the point of setting a limit if it ends up being the same as
-no-limit (aka unlimited).
+I'm not sure how this makes sense.  The limits are enforced and
+collected per user or along the process hierarchy which can be very
+different from cgroup organization.  What does collecting high
+watermarks from orthogonal structure, sometimes even combining
+per-user numbers from different users, even mean?  These are numbers
+without clear semantics.
 
-If you cannot explain; and you have not so far; what use these values
-are, why would we look at the patches.
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
