@@ -1,7 +1,7 @@
 From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: [PATCH 2/3] cgroupns: Close race between cgroup_post_fork and copy_cgroup_ns
-Date: Fri, 15 Jul 2016 06:35:51 -0500
-Message-ID: <87mvlj16co.fsf_-_@x220.int.ebiederm.org>
+Subject: [PATCH 3/3] cgroupns: Only allow creation of hierarchies in the initial cgroup namespace
+Date: Fri, 15 Jul 2016 06:36:44 -0500
+Message-ID: <87h9br16b7.fsf@x220.int.ebiederm.org>
 References: <87h9br4h80.fsf@x220.int.ebiederm.org>
 	<87r3av32g1.fsf@x220.int.ebiederm.org>
 	<20160715111659.GB3078@mtj.duckdns.org>
@@ -18,63 +18,46 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
-In most code paths involving cgroup migration cgroup_threadgroup_rwsem
-is taken.  There are two exceptions:
+Unprivileged users can't use hierarchies if they create them as they do not
+have privilieges to the root directory.
 
-- remove_tasks_in_empty_cpuset calls cgroup_transfer_tasks
-- vhost_attach_cgroups_work calls cgroup_attach_task_all
+Which means the only thing a hiearchy created by an unprivileged user
+is good for is expanding the number of cgroup links in every css_set,
+which is a DOS attack.
 
-With cgroup_threadgroup_rwsem held it is guaranteed that cgroup_post_fork
-and copy_cgroup_ns will reference the same css_set from the process calling
-fork.
+We could allow hierarchies to be created in namespaces in the initial
+user namespace.  Unfortunately there is only a single namespace for
+the names of heirarchies, so that is likely to create more confusion
+than not.
 
-Without such an interlock there process after fork could reference one
-css_set from it's new cgroup namespace and another css_set from
-task->cgroups, which semantically is nonsensical.
+So do the simple thing and restrict hiearchy creation to the initial
+cgroup namespace.
 
 Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Fixes: a79a908fd2b0 ("cgroup: introduce cgroup namespaces")
 Signed-off-by: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 ---
- kernel/cgroup.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ kernel/cgroup.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 5f01e00cffc4..e75efa819911 100644
+index e75efa819911..e0be49fc382f 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2962,6 +2962,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
- 	int retval = 0;
- 
- 	mutex_lock(&cgroup_mutex);
-+	percpu_down_write(&cgroup_threadgroup_rwsem);
- 	for_each_root(root) {
- 		struct cgroup *from_cgrp;
- 
-@@ -2976,6 +2977,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
- 		if (retval)
- 			break;
+@@ -2215,12 +2215,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		goto out_unlock;
  	}
-+	percpu_up_write(&cgroup_threadgroup_rwsem);
- 	mutex_unlock(&cgroup_mutex);
  
- 	return retval;
-@@ -4343,6 +4345,8 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
- 
- 	mutex_lock(&cgroup_mutex);
- 
-+	percpu_down_write(&cgroup_threadgroup_rwsem);
-+
- 	/* all tasks in @from are being moved, all csets are source */
- 	spin_lock_irq(&css_set_lock);
- 	list_for_each_entry(link, &from->cset_links, cset_link)
-@@ -4371,6 +4375,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
- 	} while (task && !ret);
- out_err:
- 	cgroup_migrate_finish(&preloaded_csets);
-+	percpu_up_write(&cgroup_threadgroup_rwsem);
- 	mutex_unlock(&cgroup_mutex);
- 	return ret;
- }
+-	/*
+-	 * We know this subsystem has not yet been bound.  Users in a non-init
+-	 * user namespace may only mount hierarchies with no bound subsystems,
+-	 * i.e. 'none,name=user1'
+-	 */
+-	if (!opts.none && !capable(CAP_SYS_ADMIN)) {
++	/* Hierarchies may only be created in the initial cgroup namespace. */
++	if (ns != &init_cgroup_ns) {
+ 		ret = -EPERM;
+ 		goto out_unlock;
+ 	}
 -- 
 2.8.3
