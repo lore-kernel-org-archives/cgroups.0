@@ -1,14 +1,13 @@
 From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: [PATCH 3/3] cgroupns: Only allow creation of hierarchies in the initial cgroup namespace
-Date: Fri, 15 Jul 2016 06:16:02 -0500
-Message-ID: <8760s72lu5.fsf@x220.int.ebiederm.org>
+Subject: [PATCH 0/3] cgroupns: Locking and semantic fixes
+Date: Fri, 15 Jul 2016 06:34:37 -0500
+Message-ID: <87y45316eq.fsf@x220.int.ebiederm.org>
 References: <87h9br4h80.fsf@x220.int.ebiederm.org>
-	<87r3av32g1.fsf@x220.int.ebiederm.org>
-	<20160715111659.GB3078@mtj.duckdns.org>
+	<20160715111847.GC3078@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160715111659.GB3078-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org> (Tejun Heo's message of
-	"Fri, 15 Jul 2016 07:16:59 -0400")
+In-Reply-To: <20160715111847.GC3078-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org> (Tejun Heo's message of
+	"Fri, 15 Jul 2016 07:18:47 -0400")
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,37 +15,19 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
 
-> Hello, Eric.
->
-> On Fri, Jul 15, 2016 at 12:17:18AM -0500, Eric W. Biederman wrote:
->> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> index c99b0bcd2647..01f34edceb6b 100644
->> --- a/kernel/cgroup.c
->> +++ b/kernel/cgroup.c
->> @@ -2209,12 +2209,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
->>  		goto out_unlock;
->>  	}
->>  
->> -	/*
->> -	 * We know this subsystem has not yet been bound.  Users in a non-init
->> -	 * user namespace may only mount hierarchies with no bound subsystems,
->> -	 * i.e. 'none,name=user1'
->> -	 */
->> -	if (!opts.none && !capable(CAP_SYS_ADMIN)) {
->> +	/* Hierarchies may only be created in the initial cgroup namespace. */
->> +	if (ns != &init_cgroup_ns) {
->
-> Doesn't this allow any user in the init ns to create any hierarchies?
 
-To perform the mount you must be ns_capable(ns->user_ns, CAP_SYS_ADMIN),
-we check that at the top of cgroup_mount.
+While going through the cgroup namespace I found a couple of significant
+bugs.  The first bug I fix could cause a kernel deadlock. The second
+fixes a rare race that if it happens we get insane semantics.  The third
+removes an allowance that could not possibly be used.
 
-For init_cgroup_ns->user_ns == &init_user_ns.  Which means that when
-ns == &init_cgroup_ns we know that capable(CAP_SYS_ADMIN) is true.
+The patches have been respun against for-v4.7-fixes
 
-Or in short only root in the initial cgroup namespace is allowed to
-create hiearchies after this.
+Eric W. Biederman (3):
+      cgroupns: Fix the locking in copy_cgroup_ns
+      cgroupns: Close race between cgroup_post_fork and copy_cgroup_ns
+      cgroupns: Only allow creation of hierarchies in the initial cgroup namespace
 
-Eric
+ kernel/cgroup.c | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
