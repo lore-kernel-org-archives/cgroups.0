@@ -1,47 +1,48 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: bug in memcg oom-killer results in a hung syscall in another
-	process in the same cgroup
-Date: Mon, 18 Jul 2016 15:53:10 +0200
-Message-ID: <20160718135309.GC25380@redhat.com>
-References: <20160711064150.GB5284@dhcp22.suse.cz> <CABAubThHfngHTQW_AEuW71VCvLyD_9b5Z05tSud5bf8JKjuA9Q@mail.gmail.com> <CABAubTjGhUXMeAnFgW8LGck1tgvtu12Zb9fx5BRhDWNjZ7SYLQ@mail.gmail.com> <20160712071927.GD14586@dhcp22.suse.cz> <CABAubTg91qrUd4DO7T2SiJQBK9ypuhP0+F-091ZxtmonjaaYWg@mail.gmail.com> <57851224.2020902@yandex-team.ru> <CABAubTiVb8j8wEbcr16FAJnBxxS7QzghpPiJUcmV+=Ji=QgL=A@mail.gmail.com> <20160714132258.GA1333@redhat.com> <CABAubTh_5aLxaEYYyFivoatJLN35K8Gy1fHKG=8FL8XFrv61Sw@mail.gmail.com> <CABAubTjjD6nmAtMNze5O6-bE-ivMmb24Jd4u2mMpBZFBFR1CnA@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CABAubTjjD6nmAtMNze5O6-bE-ivMmb24Jd4u2mMpBZFBFR1CnA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Aleksa Sarai <asarai@suse.de>
+Subject: [PATCH v1 0/3] cgroup: allow for unprivileged management
+Date: Tue, 19 Jul 2016 02:18:13 +1000
+Message-ID: <20160718161816.13040-1-asarai@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>
-Cc: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Konstantin Khlebnikov <koct9i-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, "Serge E. Hallyn" <serge.hallyn@ubuntu.com>, Aditya Kali <adityakali@google.com>, Chris Wilson <chris@chris-wilson.co.uk>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Christian Brauner <cbrauner@suse.de>, Aleksa Sarai <asarai@suse.de>, dev@opencontainers.org
 
-On 07/15, Shayan Pooya wrote:
->
-> >> --- x/kernel/sched/core.c
-> >> +++ x/kernel/sched/core.c
-> >> @@ -2793,8 +2793,11 @@ asmlinkage __visible void schedule_tail(struct task_struct *prev)
-> >>         balance_callback(rq);
-> >>         preempt_enable();
-> >>
-> >> -       if (current->set_child_tid)
-> >> +       if (current->set_child_tid) {
-> >> +               mem_cgroup_oom_enable();
-> >>                 put_user(task_pid_vnr(current), current->set_child_tid);
-> >> +               mem_cgroup_oom_disable();
-> >> +       }
-> >>  }
-> >>
-> >>  /*
->
-> I tried this patch and I still see the same stuck processes (assuming
-> that's what you were curious about).
+This is a rewrite of my old cgroup unprivileged subtree management[1]
+patchset. Rather than magically creating a new cgroup, I've instead
+modified kernfs so that we can have custom permission hooks. The
+following only applies to cgroupv2 trees, due to the fact that cgroupv1
+doesn't explicitly require that cgroups be hierarchical.
 
-Of course. Because I am stupid. Firtsly, I forgot to include another
-change in fault.c. And now I see that change was wrong anyway.
+You can only create a new subtree if you either would traditionally have
+write access, or you are attempting to create a new cgroup under the
+root cgroup of your current cgroup namespace (and you have CAP_SYS_ADMIN
+in the user namespace pinned by the cgroup namespace). This means that
+users would only be able to create sub-cgroups of their current cgroup
+using this method.
 
-I'll try to make another debugging patch today later, but let me repeat
-that it won't fix the real problem anyway.
+In addition, I relaxed one of the ancestor restrictions so that you can
+move to direct descendants of the current cgroup without needing to be
+able to join the current cgroup you're in (because that restriction
+doesn't make much sense).
 
-Thanks, and sorry for wasting your time.
+[1]: http://marc.info/?l=linux-kernel&m=146319604331859
 
-Oleg.
+Cc: dev@opencontainers.org
+
+Aleksa Sarai (3):
+  kernfs: add support for custom per-sb permission hooks
+  cgroup: allow for unprivileged subtree management
+  cgroup: relax common ancestor restriction for direct descendants
+
+ fs/kernfs/inode.c      | 13 +++++++-
+ include/linux/kernfs.h |  3 ++
+ kernel/cgroup.c        | 86 +++++++++++++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 93 insertions(+), 9 deletions(-)
+
+-- 
+2.9.0
+
