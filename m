@@ -1,13 +1,14 @@
 From: Topi Miettinen <toiwoton@gmail.com>
-Subject: Re: [PATCH 02/14] resource limits: aggregate task highwater marks to
- cgroup level
-Date: Tue, 19 Jul 2016 16:57:10 +0000
-Message-ID: <08d85be0-5ac7-d7ea-0fec-ceb3970f264b@gmail.com>
-References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
- <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
- <20160715141058.GI3078@mtj.duckdns.org>
- <f6f93ae6-48c4-bce9-08a2-5067919e8748@gmail.com>
- <20160718225249.GM3078@mtj.duckdns.org>
+Subject: Re: [RFC 02/18] cgroup_pids: track maximum pids
+Date: Tue, 19 Jul 2016 16:59:18 +0000
+Message-ID: <45e50dcb-7446-d203-de6e-0a59dc09a874@gmail.com>
+References: <1465847065-3577-1-git-send-email-toiwoton@gmail.com>
+ <1465847065-3577-3-git-send-email-toiwoton@gmail.com>
+ <20160613211227.GG31708@htj.duckdns.org>
+ <17cb1a37-47b1-dbd4-6835-efad3cf6c12f@gmail.com>
+ <20160613213354.GH31708@htj.duckdns.org>
+ <3b03822f-c5d0-5b84-79c3-edeb8e78e2dd@gmail.com>
+ <20160719010931.GG3078@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -15,38 +16,41 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=subject:to:references:cc:from:openpgp:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=0YI90Sc4V696cETuzTKypgLVyqNWFj+si72IlDmuxN4=;
-        b=VaKrAlCfqYyIuWrYZrDJB3zMtnmqLBMfr2t2cRktrDT/FDfwuzlWaFfizohpyRmZzE
-         E01xRMLTd+Y+/aoIu4DHgIBJfLE7Yh+3oA1l95lNHBEAJLkVxTi8oU5oGVhbg8Vt/ti5
-         aydTEFfON+6QZ3G0dj62nDUuMUVpa4DLRfTYEgvY7Nf+bStRIi5aLtMCeyYhB/VCfUhu
-         cbp7+8AYxeo3x1dn30mnnE8L7xZK8X4yGyAGhr3AaGJN3c++8yX1ztZL+7X2WyR2+frL
-         vuSOtWLmdnEic/BwKHXAjvYdSOCS923betj8VwB4tNJm0VLfEKAnQ3Kh1evL5VQ1XCpa
-         12nQ==
-In-Reply-To: <20160718225249.GM3078@mtj.duckdns.org>
+        bh=m56YeQ4RNIUigbXDePIiUTLIyKrOED7t2EtURhECY4o=;
+        b=RIQupGIqBHsGsBs7IwM+Y2OlYLN5AsEw0/O0nvV4mO2JhhKD31g79dlWjRBO/uTKmZ
+         lVn3NpKLpTruAgvOcqoW8vuTSqF/5W7rBCbSDLw+/bC82/FE6p20mCNKJG5brtbKe34G
+         Cllbt+PDOpouQyYtr/9ZYKHxghPe3bqKo20GA6HX6UeSzP6gU2j/OoiSTE7+yqWEsUUz
+         EbGSVCPyPBgZ9vuOxaJnyCoINpdvhHlgZrFbikTV2zIKuejMxi6zwzONm50yexlyOK3d
+         Zqnzm4TFX7V8Bef6bahKSwz0qNwXI8ORRtAVCvcavuAjOzUu66crwZ91TAyp6De/Kdtg
+         nJyw==
+In-Reply-To: <20160719010931.GG3078@mtj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Markus Elfring <elfring@users.sourceforge.net>, "David S. Miller" <davem@davemloft.net>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
 
-On 07/18/16 22:52, Tejun Heo wrote:
-> On Fri, Jul 15, 2016 at 05:15:41PM +0000, Topi Miettinen wrote:
->> There are clear semantics for the limits themselves, either they apply
->> per task or per user. It makes sense to gather values according to these
->> semantics. Then with systemd or other tools you can use the valuse to
->> set the limits for a service regardless if the limit applies per task or
->> per user and it works according to each limit's semantics.
+On 07/19/16 01:09, Tejun Heo wrote:
+> On Sun, Jul 17, 2016 at 08:11:31PM +0000, Topi Miettinen wrote:
+>> On 06/13/16 21:33, Tejun Heo wrote:
+>>> Hello,
+>>>
+>>> On Mon, Jun 13, 2016 at 09:29:32PM +0000, Topi Miettinen wrote:
+>>>> I used fork callback as I don't want to lower the watermark in all cases
+>>>> where the charge can be lowered, so I'd update the watermark only when
+>>>> the fork really happens.
+>>>
+>>> I don't think that would make a noticeable difference.  That's where
+>>> we decide whether to grant fork or not after all and thus where the
+>>> actual usage is.
+>>
+>> I tried using only charge functions, but then the result was too low.
+>> With fork callback, the result was as expected.
 > 
-> What does it mean to collect the maximum of the high watermarks of
-> multiple users or the high water marks along process hierarchy which
-> is spread across multiple cgroups?  These are non-sensical numbers.
-> If you want to collect high watermarks per-cgroup, the numbers have to
-> be per-cgroup - how many fds are being used in that particular cgroup
-> and what's the high watermark of that number and so on.  You can't
-> just take maximum from process hierarchy or user watermarks.
+> Can you please elaborate in more details?
 
-Then there would need to be new limit checks at cgroup level. Would you
-see problems with that approach?
+With the example systemd-timesyncd case, I was only getting 1 as the
+highwatermark, but there were already two tasks.
 
 -Topi
 
