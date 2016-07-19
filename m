@@ -1,53 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 02/14] resource limits: aggregate task highwater marks to
- cgroup level
-Date: Tue, 19 Jul 2016 14:18:15 -0400
-Message-ID: <20160719181815.GI3078@mtj.duckdns.org>
-References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
- <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
- <20160715141058.GI3078@mtj.duckdns.org>
- <f6f93ae6-48c4-bce9-08a2-5067919e8748@gmail.com>
- <20160718225249.GM3078@mtj.duckdns.org>
- <08d85be0-5ac7-d7ea-0fec-ceb3970f264b@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next] cgroup: remove duplicated include from cgroup.c
+Date: Tue, 19 Jul 2016 14:29:10 -0400
+Message-ID: <20160719182910.GJ3078@mtj.duckdns.org>
+References: <1468929759-9088-1-git-send-email-weiyj_lk@163.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=2/6Z3w+cdy2Ed85d0Pb6iCjsfIIsQ6z1NhS8uHoQv/s=;
-        b=BwzGFxqJ7T6oe3YvMcGDdvxyQlWX6H0XfoZcBblDAujTYit4uP7WOY7taAHsxt4g8r
-         sSgVC9i/e+bZyGkXpwKO6tl8had68LADo6IMrVr47sxPCRiggSABPzTV5iAlLNDDA637
-         9qF+TtsJnzZZ4KX5uoTkBMw9udp3jL2DzX3FBHWJMdbKGV7Jp1hB4/erlapYmis3J1J4
-         ibtVlrrFw7kzyk65sn1RrUu2DMFxBf39uuOxwy5mvxlPQgby29fXHQKn3TRfH1NR+deO
-         E+n6wBrOEwpoqLZ46uCsX0jRI8hNnGw2tb1rBnhImnvWgAU+m2oDNkTvD9sOFbBRByF3
-         nlsg==
+        bh=oFmh9JA9pdRX+8a+TRzDCaBokn6iZCokd2kSgGjppGw=;
+        b=wkRVis652FR02Rtc0w+ptJT5PvpwdY5KsBKuKHjTYsCNXTDKHTsK5+3TxKYGUZoBnF
+         qd4DzcP49SYxn/yd/igqq2NpmmoLpDcsMP63SqXzv2q73ocsI9XnWhAdLO6wgaBmhv+y
+         FF0CC99LIX0n7NKh9tsNjBRcS7Xstdj5xPXHWYyd9nT6bsuD2uImF/zMj9ZFqOuFLEKl
+         AzZ8eQHUl/QX7JCvQ7anrN9GvDfF0o7cA/V9NIv1QZDP7KCDIohLpTd/ZFd/ERbQ8wJU
+         3CtSmMMyANUNZMrZMRmAMPMb1gOMJhVCzG1i3ksY1Tu361eLNu95oPI0kO03K4SW7e+H
+         Z8Uw==
 Content-Disposition: inline
-In-Reply-To: <08d85be0-5ac7-d7ea-0fec-ceb3970f264b@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <1468929759-9088-1-git-send-email-weiyj_lk-9Onoh4P/yGk@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Topi Miettinen <toiwoton@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Markus Elfring <elfring@users.sourceforge.net>, "David S. Miller" <davem@davemloft.net>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
+To: Wei Yongjun <weiyj_lk-9Onoh4P/yGk@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Topi.
+On Tue, Jul 19, 2016 at 12:02:39PM +0000, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>
+> 
+> Remove duplicated include.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>
 
-On Tue, Jul 19, 2016 at 04:57:10PM +0000, Topi Miettinen wrote:
-> Then there would need to be new limit checks at cgroup level. Would you
-> see problems with that approach?
-
-I'm worried that you're rushing this feature without thinking through
-it.  You were mixing up completely orthogonal planes of accounting and
-control without too much thought and are now suggesting something
-which is also strange.  What do you mean by "new limit checks at
-cgroup level"?  How would this be different from the resource
-accounting and control implemented in the existing controllers?
-
-Please take a step back and think through the overall design before
-proposing changes to userland visible interface.
-
-Thanks.
+Applied to cgroup/for-4.8.  Thanks.
 
 -- 
 tejun
