@@ -1,48 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 02/14] resource limits: aggregate task highwater marks to
- cgroup level
-Date: Mon, 18 Jul 2016 18:52:49 -0400
-Message-ID: <20160718225249.GM3078@mtj.duckdns.org>
-References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
- <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
- <20160715141058.GI3078@mtj.duckdns.org>
- <f6f93ae6-48c4-bce9-08a2-5067919e8748@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 02/18] cgroup_pids: track maximum pids
+Date: Mon, 18 Jul 2016 21:09:31 -0400
+Message-ID: <20160719010931.GG3078@mtj.duckdns.org>
+References: <1465847065-3577-1-git-send-email-toiwoton@gmail.com>
+ <1465847065-3577-3-git-send-email-toiwoton@gmail.com>
+ <20160613211227.GG31708@htj.duckdns.org>
+ <17cb1a37-47b1-dbd4-6835-efad3cf6c12f@gmail.com>
+ <20160613213354.GH31708@htj.duckdns.org>
+ <3b03822f-c5d0-5b84-79c3-edeb8e78e2dd@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=EZs6IQdnQ76eqKkkTkGMR+Pk8iQIVE6N6A5Nx/zF5pI=;
-        b=aVmwoWhnDBpala0phq7izCnYwpBl6pvEIBU7dqDfeTV5jlQzAFP7O+7J1CRyZPAJt0
-         Y0R1HZb2GQ7y1tQwC5OV0rn0bMtupJghpS/xjRFR+1c42UqQAYibMHgI/mPlqweQk1yJ
-         W6KZqJ+e/l/k4lmVfyLQOATuZUwVjcSPdcoYBf5jdeYn3qcOulAZCYXGgyEr28f8zTkR
-         l/x8O55l0YfayYga/OlGjqSqIqjtspspdiPEMVlwa/H3/Fwnf/Fe79zvj1aC5E6gi2WW
-         lPndQ8EEb4UNm/WV1w6nsZ4fFMZEL3vX8L5j2syoANNBgY1FIIYqPkymTiffEQBF8om6
-         r9iw==
+        bh=FnwqBWlsldw4SMmyLSDfrUDaGu6Fu3SabTR6+yAsuwA=;
+        b=iViQH8KjlTkoxlL/Asp+/xM8Rci9NNhG4yI4TMIOwkgq/zdDTLGDsHyQi72XidSFlS
+         QWaRg9qj1qCZHKDg/DPaOD3QR5gE3HPpHjwWC/Oa06XEKq0f/WpvdGU5V5KfTSEf2KVX
+         jfdiMxH1s069+wgLlITih5ImniCkk/ulSy8iu0YNApGpocbVJS+KYmPrBc3GM6HvMMeP
+         tKSpGH28elyqJMtI4Q2bZSKLNRbYC7orq22/jVvya+YEOPdMz5tQTzr86vW/svYfyc+1
+         +4c94EZHVWWfA3Yva1OyRUzwHekbLS0jRE9DchdbbaFQH4nZBQ3Wnvt0wYuUAP8Dtvdj
+         TaEg==
 Content-Disposition: inline
-In-Reply-To: <f6f93ae6-48c4-bce9-08a2-5067919e8748@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <3b03822f-c5d0-5b84-79c3-edeb8e78e2dd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Topi Miettinen <toiwoton@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Markus Elfring <elfring@users.sourceforge.net>, "David S. Miller" <davem@davemloft.net>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
+To: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Jul 15, 2016 at 05:15:41PM +0000, Topi Miettinen wrote:
-> There are clear semantics for the limits themselves, either they apply
-> per task or per user. It makes sense to gather values according to these
-> semantics. Then with systemd or other tools you can use the valuse to
-> set the limits for a service regardless if the limit applies per task or
-> per user and it works according to each limit's semantics.
+On Sun, Jul 17, 2016 at 08:11:31PM +0000, Topi Miettinen wrote:
+> On 06/13/16 21:33, Tejun Heo wrote:
+> > Hello,
+> > 
+> > On Mon, Jun 13, 2016 at 09:29:32PM +0000, Topi Miettinen wrote:
+> >> I used fork callback as I don't want to lower the watermark in all cases
+> >> where the charge can be lowered, so I'd update the watermark only when
+> >> the fork really happens.
+> > 
+> > I don't think that would make a noticeable difference.  That's where
+> > we decide whether to grant fork or not after all and thus where the
+> > actual usage is.
+> 
+> I tried using only charge functions, but then the result was too low.
+> With fork callback, the result was as expected.
 
-What does it mean to collect the maximum of the high watermarks of
-multiple users or the high water marks along process hierarchy which
-is spread across multiple cgroups?  These are non-sensical numbers.
-If you want to collect high watermarks per-cgroup, the numbers have to
-be per-cgroup - how many fds are being used in that particular cgroup
-and what's the high watermark of that number and so on.  You can't
-just take maximum from process hierarchy or user watermarks.
+Can you please elaborate in more details?
 
 Thanks.
 
