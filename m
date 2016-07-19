@@ -1,38 +1,70 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH -next] cgroup: remove duplicated include from cgroup.c
-Date: Tue, 19 Jul 2016 14:29:10 -0400
-Message-ID: <20160719182910.GJ3078@mtj.duckdns.org>
-References: <1468929759-9088-1-git-send-email-weiyj_lk@163.com>
+Subject: Re: [PATCH 1/2] cgroup_pids: track highwater mark of pids
+Date: Tue, 19 Jul 2016 15:07:08 -0400
+Message-ID: <20160719190708.GO3078@mtj.duckdns.org>
+References: <1468785820-3960-1-git-send-email-toiwoton@gmail.com>
+ <1468785820-3960-3-git-send-email-toiwoton@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=oFmh9JA9pdRX+8a+TRzDCaBokn6iZCokd2kSgGjppGw=;
-        b=wkRVis652FR02Rtc0w+ptJT5PvpwdY5KsBKuKHjTYsCNXTDKHTsK5+3TxKYGUZoBnF
-         qd4DzcP49SYxn/yd/igqq2NpmmoLpDcsMP63SqXzv2q73ocsI9XnWhAdLO6wgaBmhv+y
-         FF0CC99LIX0n7NKh9tsNjBRcS7Xstdj5xPXHWYyd9nT6bsuD2uImF/zMj9ZFqOuFLEKl
-         AzZ8eQHUl/QX7JCvQ7anrN9GvDfF0o7cA/V9NIv1QZDP7KCDIohLpTd/ZFd/ERbQ8wJU
-         3CtSmMMyANUNZMrZMRmAMPMb1gOMJhVCzG1i3ksY1Tu361eLNu95oPI0kO03K4SW7e+H
-         Z8Uw==
+        bh=TUsIVsqIdc672ZxbtRf2C6OC1KxnoOBxQLu2jEqWcW8=;
+        b=rnvG45JH9Z9u4xuHsULfzbXI8OLuZ9z2RGFuL0TzYLvh62W3O9+jgT2/71JwMCetIL
+         zIIoKYIyy0XuHvqQd3bxrAicoi6XFVLMh6opzWS5XIOCk7g057gbZH5fVbKjK4GzElBI
+         veWez8DWgTszSYe7rysq3mDu9vNLdIHiZ+mafv4Fz1e2euHw5S48cc4xYoyST6Rf3eiT
+         UV8GmJP9EyU/vFJ04IEN6A7t8r9yrr+M41SuqFqZfJVJlhXJ+uHlGyHq5LecPtX27bpp
+         ol/qH4dqCYWAIGBSyrWlayBYVryvLDWVvkENbYfDdpauaOuATcQdmYY9KW/btpA47VtZ
+         XjMw==
 Content-Disposition: inline
-In-Reply-To: <1468929759-9088-1-git-send-email-weiyj_lk-9Onoh4P/yGk@public.gmane.org>
+In-Reply-To: <1468785820-3960-3-git-send-email-toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yongjun <weiyj_lk-9Onoh4P/yGk@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Topi Miettinen <toiwoton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Jul 19, 2016 at 12:02:39PM +0000, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>
-> 
-> Remove duplicated include.
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>
+Hello,
 
-Applied to cgroup/for-4.8.  Thanks.
+On Sun, Jul 17, 2016 at 11:03:38PM +0300, Topi Miettinen wrote:
+> +static void pids_update_highwater_mark(struct pids_cgroup *p)
+> +{
+> +	while (1) {
+> +		int64_t old_mark, new_mark, cur_mark;
+> +
+> +		old_mark = atomic64_read(&p->highwater_mark);
+> +		new_mark = atomic64_read(&p->counter);
+> +		if (old_mark >= new_mark)
+> +			return;
+> +		cur_mark = atomic64_cmpxchg(&p->highwater_mark, old_mark,
+> +					    new_mark);
+> +
+> +		/* It's OK if the counter was decreased meanwhile */
+> +		if (cur_mark == old_mark &&
+> +		    atomic64_read(&p->counter) <= new_mark)
+> +			return;
+> +	}
+> +}
+
+I think it'd be better to make this part of pids_charge() - maybe use
+atomic64_add_return() to get the current value and track the maximum?
+
+> @@ -300,6 +341,11 @@ static struct cftype pids_files[] = {
+>  		.read_s64 = pids_current_read,
+>  		.flags = CFTYPE_NOT_ON_ROOT,
+>  	},
+> +	{
+> +		.name = "highwater_mark",
+> +		.read_s64 = pids_highwater_mark_read,
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +	},
+
+This should be an entry in the pids.stats file.  Please also update
+the documentation accordingly.
+
+Thanks.
 
 -- 
 tejun
