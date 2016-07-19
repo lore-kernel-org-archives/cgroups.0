@@ -1,231 +1,52 @@
 From: Topi Miettinen <toiwoton@gmail.com>
-Subject: Re: [PATCH 00/14] Present useful limits to user (v2)
-Date: Tue, 19 Jul 2016 16:53:50 +0000
-Message-ID: <be9195cf-85f8-b761-17f2-e0ed5c4a64bc@gmail.com>
+Subject: Re: [PATCH 02/14] resource limits: aggregate task highwater marks to
+ cgroup level
+Date: Tue, 19 Jul 2016 16:57:10 +0000
+Message-ID: <08d85be0-5ac7-d7ea-0fec-ceb3970f264b@gmail.com>
 References: <1468578983-28229-1-git-send-email-toiwoton@gmail.com>
- <20160715130458.GB21685@350D>
- <41b6ca51-1358-0fd7-b45a-dc29a1344865@gmail.com>
- <dc74346d-141b-d22c-72ac-de8f3ce5f766@redhat.com>
+ <1468578983-28229-3-git-send-email-toiwoton@gmail.com>
+ <20160715141058.GI3078@mtj.duckdns.org>
+ <f6f93ae6-48c4-bce9-08a2-5067919e8748@gmail.com>
+ <20160718225249.GM3078@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=subject:to:references:cc:from:openpgp:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=Awi7ezQOeC+SHAp6FXzM5y9iVk8R5L/vuUwfbiIoTzE=;
-        b=KeaRWgMCTdSIY2hlQoNGzKC49WGCcbL+4gWk2VhwqjOPOAF9Boz5hDukMs8yXhTVP2
-         W2FNv/XX7IJN5lSoZfwC+KtOqfs3hEYWJtM3qUyXZ6FFIaqhJLpGCb9xLiaTiYJShkWp
-         bBnrpPCYcaT4r+vFoDAIGII0EgW49E8SkOGwXaWdeFmZvkcyxn0iqFK6BaVxjIHsGACx
-         9xqCFckILMjtFjCBiEHHpCYrH0rHce9em+eFivMyld3RMRZt/2bJWfAyLRer9v8ZbYm5
-         MbDEpr3TkeFMGNgP7XuvogJH4eq5AQtAz/qHViirC8eOMv8HrcPunzFg3q+Wxiss5c13
-         NjFw==
-In-Reply-To: <dc74346d-141b-d22c-72ac-de8f3ce5f766@redhat.com>
-Sender: owner-linux-mm@kvack.org
+        bh=0YI90Sc4V696cETuzTKypgLVyqNWFj+si72IlDmuxN4=;
+        b=VaKrAlCfqYyIuWrYZrDJB3zMtnmqLBMfr2t2cRktrDT/FDfwuzlWaFfizohpyRmZzE
+         E01xRMLTd+Y+/aoIu4DHgIBJfLE7Yh+3oA1l95lNHBEAJLkVxTi8oU5oGVhbg8Vt/ti5
+         aydTEFfON+6QZ3G0dj62nDUuMUVpa4DLRfTYEgvY7Nf+bStRIi5aLtMCeyYhB/VCfUhu
+         cbp7+8AYxeo3x1dn30mnnE8L7xZK8X4yGyAGhr3AaGJN3c++8yX1ztZL+7X2WyR2+frL
+         vuSOtWLmdnEic/BwKHXAjvYdSOCS923betj8VwB4tNJm0VLfEKAnQ3Kh1evL5VQ1XCpa
+         12nQ==
+In-Reply-To: <20160718225249.GM3078@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Doug Ledford <dledford@redhat.com>, bsingharora@gmail.com
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Alexander Graf <agraf@suse.com>, Paolo Bonzini <pbonzini@redhat.com>, =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro <dennis.dalessandro@intel.com>, Christian Benvenuti <benve@cisco.com>, Dave Goodell <dgoodell@cisco.com>, Sudeep Dutt <sudeep.dutt@intel.com>, Ashutosh Dixit <ashutosh.dixit@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Markus Elfring <elfring@users.sourceforge.net>, "David S. Miller" <davem@davemloft.net>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
 
-On 07/18/16 22:05, Doug Ledford wrote:
-> On 7/15/2016 12:35 PM, Topi Miettinen wrote:
->> On 07/15/16 13:04, Balbir Singh wrote:
->>> On Fri, Jul 15, 2016 at 01:35:47PM +0300, Topi Miettinen wrote:
->>>> Hello,
->>>>
->>>> There are many basic ways to control processes, including capabilities,
->>>> cgroups and resource limits. However, there are far fewer ways to find out
->>>> useful values for the limits, except blind trial and error.
->>>>
->>>> This patch series attempts to fix that by giving at least a nice starting
->>>> point from the highwater mark values of the resources in question.
->>>> I looked where each limit is checked and added a call to update the mark
->>>> nearby.
->>>>
->>>> Example run of program from Documentation/accounting/getdelauys.c:
->>>>
->>>> ./getdelays -R -p `pidof smartd`
->>>> printing resource accounting
->>>> RLIMIT_CPU=0
->>>> RLIMIT_FSIZE=0
->>>> RLIMIT_DATA=18198528
->>>> RLIMIT_STACK=135168
->>>> RLIMIT_CORE=0
->>>> RLIMIT_RSS=0
->>>> RLIMIT_NPROC=1
->>>> RLIMIT_NOFILE=55
->>>> RLIMIT_MEMLOCK=0
->>>> RLIMIT_AS=130879488
->>>> RLIMIT_LOCKS=0
->>>> RLIMIT_SIGPENDING=0
->>>> RLIMIT_MSGQUEUE=0
->>>> RLIMIT_NICE=0
->>>> RLIMIT_RTPRIO=0
->>>> RLIMIT_RTTIME=0
->>>>
->>>> ./getdelays -R -C /sys/fs/cgroup/systemd/system.slice/smartd.service/
->>>> printing resource accounting
->>>> sleeping 1, blocked 0, running 0, stopped 0, uninterruptible 0
->>>> RLIMIT_CPU=0
->>>> RLIMIT_FSIZE=0
->>>> RLIMIT_DATA=18198528
->>>> RLIMIT_STACK=135168
->>>> RLIMIT_CORE=0
->>>> RLIMIT_RSS=0
->>>> RLIMIT_NPROC=1
->>>> RLIMIT_NOFILE=55
->>>> RLIMIT_MEMLOCK=0
->>>> RLIMIT_AS=130879488
->>>> RLIMIT_LOCKS=0
->>>> RLIMIT_SIGPENDING=0
->>>> RLIMIT_MSGQUEUE=0
->>>> RLIMIT_NICE=0
->>>> RLIMIT_RTPRIO=0
->>>> RLIMIT_RTTIME=0
->>>
->>> Does this mean that rlimit_data and rlimit_stack should be set to the
->>> values as specified by the data above?
->>
->> My plan is that either system administrator, distro maintainer or even
->> upstream developer can get reasonable values for the limits. They may
->> still be wrong, but things would be better than without any help to
->> configure the system.
+On 07/18/16 22:52, Tejun Heo wrote:
+> On Fri, Jul 15, 2016 at 05:15:41PM +0000, Topi Miettinen wrote:
+>> There are clear semantics for the limits themselves, either they apply
+>> per task or per user. It makes sense to gather values according to these
+>> semantics. Then with systemd or other tools you can use the valuse to
+>> set the limits for a service regardless if the limit applies per task or
+>> per user and it works according to each limit's semantics.
 > 
-> This is not necessarily true.  It seems like there is a disconnect
-> between what these various values are for and what you are positioning
-> them as.  Most of these limits are meant to protect the system from
-> resource starvation crashes.  They aren't meant to be any sort of double
-> check on a specific application.  The vast majority of applications can
-> have bugs, leak resources, and do all sorts of other bad things and
-> still not hit these limits.  A program that leaks a file handle an hour
-> but only normally has 50 handles in use would take 950 hours of constant
-> leaking before these limits would kick in to bring the program under
-> control.  That's over a month.  What's more though, the kernel couldn't
-> really care less that a single application leaked files until it got to
-> 1000 open.  The real point of the limit on file handles (since they are
-> cheap) is just not to let the system get brought down.  Someone could
-> maliciously fire up 1000 processes, and they could all attempt to open
-> up as many files as possible in order to drown the system in open
-> inodes.  The combination of the limit on maximum user processes and
-> maximum files per process are intended to prevent this.  They are not
-> intended to prevent a single, properly running application from
-> operating.  In fact, there are very few applications that are likely to
-> break the 1000 file per process limit.  It is outrageously high for most
-> applications.  They will leak files and do all sorts of bad things
-> without this ever stopping them.  But it does stop malicious programs.
-> And the process limit stops malicious users too.  The max locked memory
-> is used by almost no processes, and for the very few that use it, the
-> default is more than enough.  The major exception is the RDMA stack,
-> which uses it so much that we just disable it on large systems because
-> it's impossible to predict how much we'll need and we don't want a job
-> to get killed because it couldn't get the memory it needs for buffers.
-> The limit on POSIX message queues is another one where it's more than
-> enough for most applications which don't use this feature at all, and
-> the few systems that use this feature adjust the limit to something sane
-> on their system (we can't make the default sane for these special
-> systems or else it becomes an avenue for Denial of Service attack, so
-> the default must stay low and servers that make extensive use of this
-> feature must up their limit on a case by case basis).
-> 
->>>
->>> Do we expect a smart user space daemon to then tweak the RLIMIT values?
->>
->> Someone could write an autotuning daemon that checks if the system has
->> changed (for example due to upgrade) and then run some tests to
->> reconfigure the system. But the limits are a bit too fragile, or rather,
->> applications can't handle failure, so I don't know if that would really
->> work.
-> 
-> This misses the point of most of these limits.  They aren't there to
-> keep normal processes and normal users in check.  They are there to stop
-> runaway use.  This runaway situation might be accidental, or it might be
-> a nefarious users.  They are generally set exceedingly high for those
-> things every application uses, and fairly low for those things that
-> almost no application uses but which could be abused by the nefarious
-> user crowd.
-> 
-> Moreover, for a large percentage of applications, the highwatermark is a
-> source of great trickery.  For instance, if you have a web server that
-> is hosting web pages written in python, and therefore are using
-> mod_python in the httpd server (assuming apache here), then your
-> highwatermark will never be a reliable, stable thing.  If you get 1000
-> web requests in a minute, all utilizing the mod_python resource in the
-> web server, and you don't have your httpd configured to restart after
-> every few hundred requests handled, then mod_python in your httpd
-> process will grow seemingly without limit.  It will consume tons of
-> memory.  And the only limit on how much memory it will consume is
-> determined by how many web requests it handles in between its garbage
-> collection intervals * how much memory it allocates per request.  If you
-> don't happen to catch the absolute highest amount while you are
-> gathering your watermarks, then when you actually switch the system to
-> enforcing the limits you learned from all your highwatermarks (you are
-> planning on doing that aren't you?....I didn't see a copy of the patch
-> 1/14, so I don't know if this infrastructure ever goes back to enforcing
-> the limits or not, but I would assume so, what point is there in
-> learning what the limits should be if you then never turn around and
-> enforce them?), load spikes will cause random program failures.
-> 
-> Really, this looks like a solution in search of a problem.  Right now,
-> the limits are set where they are because they do two things:
-> 
-> 1) Stay out of the way of the vast majority of applications.  Those
-> applications that get tripped up by the defaults (like RDMA applications
-> getting stopped by memlock settings) have setup guides that spell out
-> which limits need changed and hints on what to change them too.
-> 
-> 2) Stop nefarious users or errant applications from a total runaway
-> situation on a machine.
-> 
-> If your applications run without fail unless they have already failed,
-> and the whole machine doesn't go down with your failed application, then
-> the limits are working as designed.  If your typical machine
-> configuration includes 256GB of RAM, then you could probably stand to
-> increase some of the limits safely if you wanted to.  But unless you
-> have applications getting killed because of these limits, why would you?
+> What does it mean to collect the maximum of the high watermarks of
+> multiple users or the high water marks along process hierarchy which
+> is spread across multiple cgroups?  These are non-sensical numbers.
+> If you want to collect high watermarks per-cgroup, the numbers have to
+> be per-cgroup - how many fds are being used in that particular cgroup
+> and what's the high watermark of that number and so on.  You can't
+> just take maximum from process hierarchy or user watermarks.
 
-Thanks for the long explanation. I'd suppose loose limits are also used
-because it's hard to know good tighter values. I was thinking of using
-tighter settings to make things less easy for exploit writers. With
-tight limits for RLIMIT_AS, RLIMIT_DATA and RLIMIT_STACK (also
-RLIMIT_FSIZE in case a daemon is not supposed to create new files) it
-would not so easy for the initial exploit to mmap() a large next stage
-payload.
-
-But there could be more direct ways to prevent that. For example, if
-there was a way for seccomp filters to access a share state, they could
-implement a state machine that could switch to a stricter mode after the
-application has entered the event loop. Most of the limits or the denial
-of service case are not interesting to me anyway.
-
-> Right now, I'm inclined to NAK the patch set.  I've only seen patch 9/14
-> since you didn't Cc: everyone on the patch 1/14 that added the
-> infrastructure.  But, as I mentioned in another email, I think this can
-> be accomplished via a systemtap script instead so we keep the clutter
-> out of the kernel.  And more importantly, these patches seem to be
-> thinking about these limits as though they are supposed to be some sort
-> of tight fitting container around applications that catch an errant
-> application as soon as it steps out of bounds.  Nothing could be further
-> from the truth, and if we actually implemented something of that sort,
-> programs susceptible to high resource usage during load spikes would
-> suddenly start failing on a frequent basis.  The proof that these limits
-> are working is given by the fact that we rarely hear from users about
-> their programs being killed for resource consumption, and yet we also
-> don't hear from users about their systems going down due to runaway
-> applications.  From what I can tell from these patches, I would suspect
-> complaints from one of those two issues to increase once these patches
-> are in place and put in use, and that doesn't seem like a good thing.
-> 
-
-Those complaints could increase either way if the users want to use
-tight limits, with kernel assistance or with systemtap. Again, the cause
-of lack of complaints could also be that users are unaware of how to get
-tight limits, so the users have no option but to either ignore the
-limits or to use loose settings.
+Then there would need to be new limit checks at cgroup level. Would you
+see problems with that approach?
 
 -Topi
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
