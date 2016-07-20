@@ -1,24 +1,25 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v1 2/3] cgroup: allow for unprivileged subtree management
-Date: Wed, 20 Jul 2016 11:45:57 -0400
-Message-ID: <20160720154557.GF4574@htj.duckdns.org>
+Subject: Re: [PATCH v1 3/3] cgroup: relax common ancestor restriction for
+ direct descendants
+Date: Wed, 20 Jul 2016 11:51:47 -0400
+Message-ID: <20160720155147.GG4574@htj.duckdns.org>
 References: <20160718161816.13040-1-asarai@suse.de>
- <20160718161816.13040-3-asarai@suse.de>
+ <20160718161816.13040-4-asarai@suse.de>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Nmm/Ki015oNYgZWnQwXjAh1PjbAFtuVNKZdz6LZ7qlg=;
-        b=rMxZhuf1Z2Awf34ZBH//3plPGr1k1RWOh5UX8c8LURbK9P49A2jthxr8ZpTT67U5DB
-         10453PK3tM6TsOYtrMwrjTsK0D/T86H4yTruHV0Xe+b9PhhLC5w1rS1gnYiy9iCLo72c
-         nidEbcqQd8L8sWo+KGoUUWyu4E8cVEfJ9Lrf5EQJfuj7Hqzf2IUwgpLjuciaCOL5Z2sT
-         uilSXAex81yNyIqk6dE2sdtN1xzc53WK4P3gbGsmIF0ELlTf5RBU61DECDUgclbEC6/i
-         E3lvZ8y6wnx/5cX5pWc4gkSMYwlNSnGi0WCJti7fD2cVAB1IzvWnDdTpq49me0RILXPL
-         MD3A==
+        bh=/eDcMA2cq4TuXRjGcbnWhY1M8C7zfAI9cPgjU0B7bzA=;
+        b=GCz8xT2+AeKilK7aPKEo+Cp0lEGDfasCg+I3XCqbJkSiTTqMHrtM5fuTn3Dc6W+R86
+         Zx7pgOucaYO5cRZiO8Bv51etRfe+v1sutB/1n6FEfaXtw+S/MDCi2C4hrmky0UumDaUu
+         Cb3LpH7qQPWp1EBeydFg5h9zppEYfwgLUeay+Wiy08kmAewFTLnptZet122B1jxOTO/2
+         kLxmpOxYhQFX5WujufEEpKj9ltttQ6Rt3sCP+CMTnlVtXPvzbzKzm2mV2jCpQq26OXjZ
+         NS/cWHZP3IMO0lyj7dXzzEU7p4m4rTO1ounRhKanUaXx5xU1zi//YLvPHUjmmIKmvhg0
+         jiqA==
 Content-Disposition: inline
-In-Reply-To: <20160718161816.13040-3-asarai-l3A5Bk7waGM@public.gmane.org>
+In-Reply-To: <20160718161816.13040-4-asarai-l3A5Bk7waGM@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,26 +29,22 @@ Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 
 Hello, Aleksa.
 
-On Tue, Jul 19, 2016 at 02:18:15AM +1000, Aleksa Sarai wrote:
-> +static int cgroup_permission(struct inode *inode, struct kernfs_node *kn,
-> +			     int mask)
-> +{
-> +	int ret;
-> +	struct cgroup *cgroup;
-> +	struct cgroup_namespace *cgroupns;
-> +
-> +	/*
-> +	 * First, compute the generic_permission return value. In most cases
-> +	 * this will succeed and we can also avoid duplicating this code.
-> +	 */
-> +
-> +	cgroup = kn->priv;
-> +	cgroup_get(cgroup);
+On Tue, Jul 19, 2016 at 02:18:16AM +1000, Aleksa Sarai wrote:
+> If we're moving from a parent to a direct descendant, the only end
+> result (on cgroupv2 hierarchies) is that the process experiences more
+> restrictive resource limits. Thus, there's no reason to restrict
+> processes from moving to direct descendants based on whether or not they
+> have cgroup.procs write access to their current cgroup.
+> 
+> This is important for unprivileged subtree management, as it allows
+> unprivileged processes to move to their newly create subtrees.
 
-This pattern which is repated for cgroupns doesn't make sense.  The
-code is already assuming that the cgroup is safe to deref.  Getting
-its reference doesn't do anything.  Getting it here would only make
-sense if the pointer is passed to an asynchronous context.
+I don't think we can do this as this allows a sub-cgroup to steal an
+ancestor's process whether the ancestor likes it or not.  A process
+being put in a context where it's more restricted without whatever is
+managing that part of cgroup hierarchy is not ok, at all.  Please also
+note that nobody expects its processes to be stolen underneath it.
+This would be a management nightmare.
 
 Thanks.
 
