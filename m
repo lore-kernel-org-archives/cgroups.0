@@ -1,52 +1,100 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v1 3/3] cgroup: relax common ancestor restriction for
- direct descendants
-Date: Wed, 20 Jul 2016 11:51:47 -0400
-Message-ID: <20160720155147.GG4574@htj.duckdns.org>
-References: <20160718161816.13040-1-asarai@suse.de>
- <20160718161816.13040-4-asarai@suse.de>
+From: Sheng Yang <sheng@yasker.org>
+Subject: Re: [PATCH v4 18/21] fuse: Add support for pid namespaces
+Date: Wed, 20 Jul 2016 15:28:21 -0700
+Message-ID: <CA+2rt423x-EiF=9x2zRTM35hzWOv=rH1urifRTCdpE_p=GO9FQ@mail.gmail.com>
+References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
+ <1461699396-33000-19-git-send-email-seth.forshee@canonical.com>
+ <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ@mail.gmail.com> <20160720125201.GA52079@ubuntu-hedt>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=/eDcMA2cq4TuXRjGcbnWhY1M8C7zfAI9cPgjU0B7bzA=;
-        b=GCz8xT2+AeKilK7aPKEo+Cp0lEGDfasCg+I3XCqbJkSiTTqMHrtM5fuTn3Dc6W+R86
-         Zx7pgOucaYO5cRZiO8Bv51etRfe+v1sutB/1n6FEfaXtw+S/MDCi2C4hrmky0UumDaUu
-         Cb3LpH7qQPWp1EBeydFg5h9zppEYfwgLUeay+Wiy08kmAewFTLnptZet122B1jxOTO/2
-         kLxmpOxYhQFX5WujufEEpKj9ltttQ6Rt3sCP+CMTnlVtXPvzbzKzm2mV2jCpQq26OXjZ
-         NS/cWHZP3IMO0lyj7dXzzEU7p4m4rTO1ounRhKanUaXx5xU1zi//YLvPHUjmmIKmvhg0
-         jiqA==
-Content-Disposition: inline
-In-Reply-To: <20160718161816.13040-4-asarai-l3A5Bk7waGM@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=yasker-org.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=trpL7CcXDZ8J+8z9DYe2UCs/acNqBHbLWd0Dxpnvb3s=;
+        b=imupu3/phN7aTLUI/aTaIKK6nZkFvIB3ABcgIl4nn+DlrCvVZ6YZ1XmlRfebvu8Qz7
+         M/BA5hp6CG2YB66IcxEgq1D2BtvyTM270Ia4Zij4+D8KjFizJPyPS6ozGK86mk5chzBS
+         wZKKAmg3azdyk48yaz/pfXF0ZW1F7UIr2hn1Bo5Z8j8CGFZdah/sJK8iOF4TtvqL83GU
+         a6vVz6D4ct2CDbrzLJOybAbXVz+DJkqQHOyBFlHuFkXWRonR7crVjM8bUFifGX2bH5LR
+         j3eHxgCPERBZUlL2oIHvQ6nLoIfeVWVj975WduwzNTKEyrJmEAC7lYD1K+0+UyvlwmQi
+         N/AA==
+In-Reply-To: <20160720125201.GA52079@ubuntu-hedt>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <cbrauner-l3A5Bk7waGM@public.gmane.org>, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Miklos Szeredi <miklos@szeredi.hu>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, kernel list <linux-kernel@vger.kernel.org>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
 
-Hello, Aleksa.
+On Wed, Jul 20, 2016 at 5:52 AM, Seth Forshee
+<seth.forshee@canonical.com> wrote:
+> On Tue, Jul 19, 2016 at 07:44:11PM -0700, Sheng Yang wrote:
+>> On Tue, Apr 26, 2016 at 12:36 PM, Seth Forshee
+>> <seth.forshee@canonical.com> wrote:
+>> > When the userspace process servicing fuse requests is running in
+>> > a pid namespace then pids passed via the fuse fd are not being
+>> > translated into that process' namespace. Translation is necessary
+>> > for the pid to be useful to that process.
+>> >
+>> > Since no use case currently exists for changing namespaces all
+>> > translations can be done relative to the pid namespace in use
+>> > when fuse_conn_init() is called. For fuse this translates to
+>> > mount time, and for cuse this is when /dev/cuse is opened. IO for
+>> > this connection from another namespace will return errors.
+>> >
+>> > Requests from processes whose pid cannot be translated into the
+>> > target namespace are not permitted, except for requests
+>> > allocated via fuse_get_req_nofail_nopages. For no-fail requests
+>> > in.h.pid will be 0 if the pid translation fails.
+>>
+>> Hi Seth,
+>>
+>> This patch caused a regression in our major container use case with
+>> FUSE in Ubuntu 16.04, as patch was checked in as Ubuntu Sauce in
+>> Ubuntu 4.4.0-6.21 kernel.
+>>
+>> The use case is:
+>> 1. Create a Docker container.
+>> 2. Inside the container, start the FUSE backend, and mounted fs.
+>> 3. Following step 2 in the container, create a loopback device to map
+>> a file in the mounted fuse to create a block device, which will be
+>> available to the whole system.
+>>
+>> It works well before this commit.
+>>
+>> The use case is broken because no matter which namespace losetup runs,
+>> the real request from loopback device seems always come from init ns,
+>> thus it will be in different ns running fuse backend. So the request
+>> will got denied, because the ns running fuse won't able to see the
+>> things from higher level(level 0 in fact) pid namespace.
+>>
+>> I think since init pid ns has ability to access any process in the
+>> system, it should able to access the fuse mounted by any pid namespace
+>> process as well.
+>>
+>> What you think?
+>
+> It sounds like we need to remove the restriction on accessing the
+> filesystem from a different pid namespace. I don't think this poses a
+> security problem. However there's no pid mapping that is usable by the
+> userspace fuse process, so what do we put in the fuse request? Probably
+> the only candidates are 0 and 0xffffffff.
 
-On Tue, Jul 19, 2016 at 02:18:16AM +1000, Aleksa Sarai wrote:
-> If we're moving from a parent to a direct descendant, the only end
-> result (on cgroupv2 hierarchies) is that the process experiences more
-> restrictive resource limits. Thus, there's no reason to restrict
-> processes from moving to direct descendants based on whether or not they
-> have cgroup.procs write access to their current cgroup.
-> 
-> This is important for unprivileged subtree management, as it allows
-> unprivileged processes to move to their newly create subtrees.
+Thanks Seth, I don't think it will be a security problem either, if we
+remove the restriction.
 
-I don't think we can do this as this allows a sub-cgroup to steal an
-ancestor's process whether the ancestor likes it or not.  A process
-being put in a context where it's more restricted without whatever is
-managing that part of cgroup hierarchy is not ok, at all.  Please also
-note that nobody expects its processes to be stolen underneath it.
-This would be a management nightmare.
+>
+> So a question for the fuse developers - is one value or the other
+> preferrable for fuse_in_header.pid when the pid cannot be mapped, and is
+> this going to cause problems for any fuse filesystems? I suspect that
+> few filesystems actually look at the pid anyway, and already for a
+> filesystem mounted in a pid namespace the values being given to
+> userspace won't be correct for the namespace of the fuse process.
+>
 
-Thanks.
+At least in our system we're not looking into the pid at all.
 
--- 
-tejun
+--Sheng
+
+> Seth
+>
