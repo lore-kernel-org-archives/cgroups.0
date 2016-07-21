@@ -1,72 +1,46 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v1 3/3] cgroup: relax common ancestor restriction for
- direct descendants
-Date: Wed, 20 Jul 2016 19:19:49 -0400
-Message-ID: <20160720231949.GB19588@mtj.duckdns.org>
-References: <20160718161816.13040-1-asarai@suse.de>
- <20160718161816.13040-4-asarai@suse.de>
- <20160720155147.GG4574@htj.duckdns.org>
- <6e975d80-4077-fb8b-ec84-708e37c8e149@suse.de>
- <20160720230228.GA19588@mtj.duckdns.org>
- <982fcf3a-3685-9bd7-dd95-7bff255c9421@suse.de>
+From: Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 18/21] fuse: Add support for pid namespaces
+Date: Thu, 21 Jul 2016 09:25:17 +0200
+Message-ID: <CAOssrKfJrQuf_exBVGtn-EBOBnRhhNWe+2P=VkEqtp3qmGYiFA@mail.gmail.com>
+References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
+ <1461699396-33000-19-git-send-email-seth.forshee@canonical.com>
+ <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ@mail.gmail.com> <20160720125201.GA52079@ubuntu-hedt>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=U1PySDEZI8Zstj3YiEi7iCeZVNg/l9dzWuUJU4JyohA=;
-        b=WBJ2aYSjxvQ2wFtx6ga3ZzPmaDwnRuXLty7nmEcPjzWP1NOVsg6wpQ/Ufr5I9r6qLH
-         FTfuNABK+IDySo8UjPVVoUbGKZgiIRDFbThrBUnvZ32OQQzeQjE3umInLGKkU8xE3npE
-         gnPEh6yVOagNOmKRJ1FHKFbEawpPWW6bgIf+mfTQTNRFEaeJY1zEQDdVC9ScGb409NbM
-         CwscGEVn0QQv8lg1R5t6TS0ajixpnd6MRzY/16uvD5OrDYexCCpyWlOA29yhF5xp54as
-         Yy4qLFT4TqvoFi6/9Zdn3n1x9itTOc5QQTYaTtK7fUVfndGX3vwR1Q1DBGuz1U8JNC8o
-         5U4A==
-Content-Disposition: inline
-In-Reply-To: <982fcf3a-3685-9bd7-dd95-7bff255c9421-l3A5Bk7waGM@public.gmane.org>
+In-Reply-To: <20160720125201.GA52079@ubuntu-hedt>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <cbrauner-l3A5Bk7waGM@public.gmane.org>, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+To: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: Sheng Yang <sheng-bA7cAZRAfhAdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Aleksa.
+On Wed, Jul 20, 2016 at 2:52 PM, Seth Forshee
+<seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> wrote:
 
-On Thu, Jul 21, 2016 at 09:18:59AM +1000, Aleksa Sarai wrote:
-> I feel like the permission model makes sense in certain cases (the common
-> ancestor restriction, as well as the ability for a parent to apply limits to
-> children by setting its own limits). Neither of those are violated (if you
-> read the commit that introduced the common ancestor restriction).
+> It sounds like we need to remove the restriction on accessing the
+> filesystem from a different pid namespace. I don't think this poses a
+> security problem. However there's no pid mapping that is usable by the
+> userspace fuse process, so what do we put in the fuse request? Probably
+> the only candidates are 0 and 0xffffffff.
 >
-> Maybe if you give me a usecase of when it might be important that a process
-> must not be able to move to a sub-cgroup of its current one, I might be able
-> to understand your concerns? From my perspective, I think that's actually
-> quite useful.
+> So a question for the fuse developers - is one value or the other
+> preferrable for fuse_in_header.pid when the pid cannot be mapped, and is
+> this going to cause problems for any fuse filesystems? I suspect that
+> few filesystems actually look at the pid anyway, and already for a
+> filesystem mounted in a pid namespace the values being given to
+> userspace won't be correct for the namespace of the fuse process.
 
-cgroup is used to keep track of which processes belong where and
-allowing processes to be moved out of its cgroup like this would be
-surprising to say the least.
+pid = 0 sounds good.
 
-> > Maybe I'm misunderstanding but I can't see how that would change the
-> > situation in a significant way.
-> 
-> Well, it would avoid the issue of a process being moved against *its* will.
-> The process would have to be complicit in joining (or unsharing) a cgroup
-> namespace. I'm not sure I really agree with the argument that a higher level
-> process should be able to stop a process from imposing more *stringent*
-> limits on itself if the process is complicit in setting those limits (see
-> above).
-> 
-> The reason I'm doing this is so that we might be able to _practically_ use
-> cgroups as an unprivileged user (something that will almost certainly be
-> useful to not just the container crowd, but people also planning on using
-> cgroups as advanced forms of rlimits).
+The pid from the request is used for example to get the auxiliary
+group list by libfuse (fuse_req_getgroups()).   That's not used by all
+filesystems and it will return an error in case it can't find the proc
+entry (which it won't for pid == 0).
 
-I don't get why we need this fragile dance with permissions at all
-when the same functionality can be achieved by delegating explicitly.
+It would be nice if we could transfer the group list through the
+userspace/kernel protocol, since then it wouldn't depend on proc and
+on being in the same pid namespace.  But that's another story.
 
-Thanks.
-
--- 
-tejun
+Thanks,
+Miklos
