@@ -1,61 +1,50 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
 Subject: Re: [PATCH v1 3/3] cgroup: relax common ancestor restriction for
  direct descendants
-Date: Thu, 21 Jul 2016 17:06:20 -0400
-Message-ID: <20160721210620.GD23759@htj.duckdns.org>
-References: <20160720231949.GB19588@mtj.duckdns.org>
+Date: Fri, 22 Jul 2016 18:24:25 +1000
+Message-ID: <7e004486-b402-6e01-9893-c8751bcdb316@suse.de>
+References: <20160718161816.13040-1-asarai@suse.de>
+ <20160718161816.13040-4-asarai@suse.de>
+ <20160720155147.GG4574@htj.duckdns.org>
+ <6e975d80-4077-fb8b-ec84-708e37c8e149@suse.de>
+ <20160720230228.GA19588@mtj.duckdns.org>
+ <982fcf3a-3685-9bd7-dd95-7bff255c9421@suse.de>
+ <20160720231949.GB19588@mtj.duckdns.org>
  <379e5b13-29d4-ca75-1935-0a64f3db8d27@suse.de>
  <20160721145242.GB22680@htj.duckdns.org>
  <1469113456.2331.16.camel@HansenPartnership.com>
  <20160721150740.GF22680@htj.duckdns.org>
- <1469114194.2331.20.camel@HansenPartnership.com>
- <20160721152648.GA23759@htj.duckdns.org>
- <1469115276.2331.23.camel@HansenPartnership.com>
- <20160721155046.GB23759@htj.duckdns.org>
- <1469125002.2331.54.camel@HansenPartnership.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=BvDG8aWw+NhEHeEuMI48TF9p0W0fjn99BN0uTsH9Lx8=;
-        b=PoHMtlqS0kfk81H8mtC3xudu0XKsZkBhpc17HKgwARLZH3YLZWDXfP6pK4e+8dfiHD
-         +3E0lNwqMxNgiLHXJQmSoNsEUfacbFR6aPjwblBxjrUx+TJ/tmMUlJuikSfxyUOw+RG5
-         bNTZBL7Cjbjzr3GYmA6NkpgzRSmh9qbqqlQSf6J2FTCjH5S1iSey6HIHxTmOcBuri330
-         KHhuyBF2aM6mrUd1LrV5uNydrI8ofU7QTiiyJdUXeCnhEqyDVLNSRosIGtmgFrvZWfRr
-         aNqVnrIKImNOpjHoNV/OHz4SIs6sIh+qK/RbBaMKrDD5402SBwre8vEMUv+EnhUtNkyW
-         kBRA==
-Content-Disposition: inline
-In-Reply-To: <1469125002.2331.54.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+In-Reply-To: <20160721150740.GF22680-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <cbrauner-l3A5Bk7waGM@public.gmane.org>, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <cbrauner-l3A5Bk7waGM@public.gmane.org>, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
 
-Hello,
+>>  It's about the debris left behind if the admin (or someone with
+>> delegated authority) moves the task to a wholly different cgroup.
+>>
+>> Now we have a cgroup directory in the old cgroup, which the current
+>> task has been removed from, for which the current user has permissions
+>> and could then move the task back to.  Is that the essence of the
+>> problem?
+>
+> That'd be one side.  The other side is the one moving.  Let's say the
+> system admin thing wants to move all processe from A proper to B.  It
+> would do that by draining processes from A's procs file into B's and
+> even that is multistep and can race.
 
-On Thu, Jul 21, 2016 at 11:16:42AM -0700, James Bottomley wrote:
-> OK so a theoretical (not saying it's implementable, we'll have to
-> explore that) way of fixing all of this is to have separate views of
-> the tree.  If the admin always saw everything in A, even if the
-> cgroupns had created subdirectories in its own namespace.  That way
-> there'd be no race ever in the admin's view (because it's the view they
-> created and would expect to see).  All sub cgroup activity would only
-> be visible to tasks in the new cgroupns (we'd probably have to have
-> them make this visible by mounting a new cgroup tree).
-
-Yeah, something like that.  The two domains of operation need to be
-transparent to each other so that things taking place at system level
-doesn't interfere with user level operations and vice-versa.  It's
-likely that implementing something like that within filesystem based
-interface won't work out too well.  There are too many expected
-behaviors from being a filesystem which don't quite agree with such
-abstraction.
-
-Thanks.
+Once freezer is ported, wouldn't that allow you to stop the processes so 
+you can drain them? I understand your concern with draining, but surely 
+the same races occur if you fork? How many times would you need to scan 
+cgroup.procs to make sure that you didn't miss anything (and if there's 
+enough processes then cgroup.procs reads aren't atomic either).
 
 -- 
-tejun
+Aleksa Sarai
+Software Engineer (Containers)
+SUSE Linux GmbH
+https://www.cyphar.com/
