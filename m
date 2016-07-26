@@ -1,71 +1,69 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v1 3/3] cgroup: relax common ancestor restriction for
- direct descendants
-Date: Mon, 25 Jul 2016 17:54:20 -0500
-Message-ID: <20160725225420.GA26761@mail.hallyn.com>
-References: <379e5b13-29d4-ca75-1935-0a64f3db8d27@suse.de>
- <20160721145242.GB22680@htj.duckdns.org>
- <1469113456.2331.16.camel@HansenPartnership.com>
- <20160721150740.GF22680@htj.duckdns.org>
- <1469114194.2331.20.camel@HansenPartnership.com>
- <20160721152648.GA23759@htj.duckdns.org>
- <1469115276.2331.23.camel@HansenPartnership.com>
- <20160721155046.GB23759@htj.duckdns.org>
- <177bbc17-5c75-1ff8-0b1f-0c5601fa7e6b@suse.de>
- <20160725183801.GE19588@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v4.8-rc1
+Date: Tue, 26 Jul 2016 13:10:41 -0400
+Message-ID: <20160726171041.GB4144@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=dGSwCMGycMmAGSB93+XQK+p/5Fc5dpCGvp9Yb92JG00=;
+        b=eP6r8Yl0VanpGAuu0LqSjc3NiSvHBOKFURIlyYVPMGdpaUp8Y0a09cZ3X3johKS8YK
+         bZFOJBDrkM7aYGDBaHH1a1Xi+fjR0LnJAMI+cU3FL1mg+SmzoakUbdi8k90MFTe+OiTa
+         SlEl4MCczkHlxDMTQPvke61GJEoDhElyfLLtjw+gBaJDqJxRCqAf2LGdEqpp4Up8idY8
+         3/eyXx6HB3UAT030Z8YbA5Y+/zdw0iTcLhBpJCoZN+gaDqpgNuzUIPRuGb3Lxw8REoj/
+         TkiJXiGx4V3AP0j1lJluW4zV6p23iK9ipcVoRbgZlXWW8yUKMfjXo2S41b+bjtl1i7Ff
+         V/XQ==
 Content-Disposition: inline
-In-Reply-To: <20160725183801.GE19588-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <cbrauner-l3A5Bk7waGM@public.gmane.org>, dev-IGmTWi+3HBZvNhPySn5qfx2eb7JE58TQ@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> Hello, Aleksa.
-> 
-> On Fri, Jul 22, 2016 at 06:30:07PM +1000, Aleksa Sarai wrote:
-> > Just to be clear, the "ns subdir operation" is a cgroup namespaced process
-> > moving A -> A_subdir which is racing against some administrative process
-> > moving everything from A -> B (but not wanting to move A -> A_subdir)?
-> 
-> Yes.
-> 
-> > So should there be policy within the kernel to not permit a process outside
-> > a cgroup namespace to move processes inside the namespace? Or would you be
-> > concerned about people escaping the administrator's attempts to reorganise
-> > the hierarchy?
-> 
-> Pushed that far, I frankly can't assess what the implications and
-> side-effects would be.
-> 
-> > What if we extended rename(2) so that it /does/ allow for reorganisation of
-> > the hierarchy? So an administrator could use rename to change the point at
-> > which a cgroupns root is rooted at, but not be able to move the actual
-> > processes within the cgroup namespace around? The administrator could also
-> > join the cgroupns (without needing to join the userns) and then just move
-> > things around that way?
-> > 
-> > Do any of those suggestions seem reasonable?
-> 
-> Unfortunately not.  I get what you're trying to do and am sure we can
-> make some specific scenarios work with the right set of hacks and
-> holes, but this type of approach is very dangerous in the long term.
-> 
-> The downside we have now is that we need an explicit delegation from
-> userland and that stems from the architectural constraints of
-> cgroupfs.  It's not ideal but an acceptable situation.  Let's please
-> not riddle the whole thing with holes that we don't understand for an
-> inconvenience which can be worked around otherwise.
+Hello, Linus.
 
-It's something which distros, post-machine-install scripts, and
- post-pkg-install scripts can all very easily setup.  They have to
-setup subuid and subgid too if you want safe unprivileged containers,
-so I really don't feel this is so arduous.  What is the use case where
-none of these are an option?  (I don't doubt that it exists since you
-are pushing pretty hard)
+Nothing too exciting.
 
--serge
+* Updates to the pids controller so that pid limit breaches can be
+  noticed and monitored from userland.
+
+* Cleanups and non-critical bug fixes.
+
+Thanks.
+
+The following changes since commit db06d759d6cf903aeda8c107fd3abd366dd80200:
+
+  Merge branch 'for-4.7-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/percpu (2016-06-13 19:54:46 -1000)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.8
+
+for you to fetch changes up to 55094f57535831883b60776de5eb78c6bfb3c16d:
+
+  cgroup: remove duplicated include from cgroup.c (2016-07-19 14:28:04 -0400)
+
+----------------------------------------------------------------
+Johannes Weiner (2):
+      cgroup: fix idr leak for the first cgroup root
+      cgroup: remove unnecessary 0 check from css_from_id()
+
+Kenny Yu (2):
+      cgroup: Add pids controller event when fork fails because of pid limit
+      cgroup: Use lld instead of ld when printing pids controller events_limit
+
+Tejun Heo (1):
+      cgroup: allow NULL return from ss->css_alloc()
+
+Wei Yongjun (1):
+      cgroup: remove duplicated include from cgroup.c
+
+ kernel/cgroup.c      | 13 ++++---------
+ kernel/cgroup_pids.c | 34 +++++++++++++++++++++++++++++++++-
+ 2 files changed, 37 insertions(+), 10 deletions(-)
+
+-- 
+tejun
