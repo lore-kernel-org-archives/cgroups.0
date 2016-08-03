@@ -1,56 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] more cgroup changes for v4.8-rc1
-Date: Fri, 29 Jul 2016 14:46:14 -0400
-Message-ID: <20160729184614.GY2542@mtj.duckdns.org>
+From: <chaixianping@huawei.com>
+Subject: [PATCH] Cgroup:Fix race between fork and update cpuset mask
+Date: Wed, 3 Aug 2016 19:50:57 +0800
+Message-ID: <1470225057-18557-1-git-send-email-chaixianping@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=r2um4OZ3CgqP52oRqSPlvLuuOzDP0wt3303KUSD6Z7M=;
-        b=lsUHxTMKvVGHxrMP683zopbzXCn3Y6DX4YwDAkykDIw9kq26CjL20UXcAtbf/Npuyh
-         csRduQqhuG2mfJUUDIpqJ347OxG+xczwi41WB7aPWg3oOA6NYlSOPuM4sJF/e/sQ8mYf
-         0kd6MNf3+OlgHlgy/nDb9ugM7UQyjhwijmyxipbmMZ+8cWeosLtePtYNzceBBEvYkVKz
-         i+JA47JBtoluod1PLAb34R2pBdK3xIANRDMfUa9kklV+0L5ysGRyZ1hZqVGMw26lq6xK
-         Jr+XHZWXyPZFK1B+jlbaTol8I/aL5sikB7st0ov7u3KNYWgRxt5prUJkiYuWf/gR9Z2H
-         zBMQ==
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>
+To: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: chaixianping <chaixianping@huawei.com>, Zhenghua Jia <jiazhenghua@huawei.com>, Leeyou <leeyou.li@huawei.com>, Lei Liu <lay.liu@huawei.com>
 
-Hello, Linus.
+From: chaixianping <chaixianping@huawei.com>
 
-I forgot to include the patches which got applied to for-4.7-fixes
-late during last cycle.  Eric's three patches fix bugs introduced with
-the namespace support.
+Fix the race between fork and update_cpumask or update_nodemask.
+Scenario as follows:
+1)A process fork a child process, the child process have
+inherited the parent process cpus_allowed,mems_allowed
+Before being added cset->tasks list.
+2)Update_cpumask or update_nodemask change the parent's allowed
+to a new value, *but the child still is the old value.
+after being added cset->tasks list.
 
-Thanks.
+Signed-off-by: Xianping Chai <chaixianping@huawei.com>
+Signed-off-by: Zhenghua Jia <jiazhenghua@huawei.com>
+Signed-off-by: Leeyou <leeyou.li@huawei.com>
+Signed-off-by: Lei Liu <lay.liu@huawei.com>
+---
+ kernel/cpuset.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-The following changes since commit 82d6489d0fed2ec8a8c48c19e8d8a04ac8e5bb26:
-
-  cgroup: Disable IRQs while holding css_set_lock (2016-06-23 17:23:12 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.7-fixes
-
-for you to fetch changes up to 726a4994b05ff5b6f83d64b5b43c3251217366ce:
-
-  cgroupns: Only allow creation of hierarchies in the initial cgroup namespace (2016-07-15 08:04:27 -0400)
-
-----------------------------------------------------------------
-Eric W. Biederman (3):
-      cgroupns: Fix the locking in copy_cgroup_ns
-      cgroupns: Close race between cgroup_post_fork and copy_cgroup_ns
-      cgroupns: Only allow creation of hierarchies in the initial cgroup namespace
-
- kernel/cgroup.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
-
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index c7fd277..090b700 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -1015,6 +1015,33 @@ static void cpuset_migrate_mm(struct mm_struct *mm, const nodemask_t *from,
+ 	}
+ }
+ 
++
++/*
++ *Fix the race between fork and update_cpumask or update_nodemask.
++ *Scenario as follows:
++ *1)A process fork a child process, the child process have
++ *inherited the parent process cpus_allowed,mems_allowed
++ *Before being added cset->tasks list.
++ *2)Update_cpumask or update_nodemask change the parent's allowed
++ *to a new value, *but the child still is the old value
++ *after being added cset->tasks list.
++ */
++static void cpuset_fork(struct task_struct *task)
++{
++	nodemask_t cpuset_mems_allowed;
++
++	mutex_lock(&cpuset_mutex);
++	rcu_read_lock();
++
++	do_set_cpus_allowed(task, task_cs(task)->effective_cpus);
++
++	guarantee_online_mems(task_cs(task), &cpuset_mems_allowed);
++	task->mems_allowed = cpuset_mems_allowed;
++
++	rcu_read_unlock();
++	mutex_unlock(&cpuset_mutex);
++}
++
+ static void cpuset_post_attach(void)
+ {
+ 	flush_workqueue(cpuset_migrate_mm_wq);
+@@ -2078,6 +2105,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+ 	.cancel_attach	= cpuset_cancel_attach,
+ 	.attach		= cpuset_attach,
+ 	.post_attach	= cpuset_post_attach,
++	.fork   = cpuset_fork,
+ 	.bind		= cpuset_bind,
+ 	.legacy_cftypes	= files,
+ 	.early_init	= true,
 -- 
-tejun
+2.6.2
+
