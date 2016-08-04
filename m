@@ -1,82 +1,63 @@
-From: <chaixianping@huawei.com>
-Subject: [PATCH] Cgroup:Fix race between fork and update cpuset mask
-Date: Thu, 4 Aug 2016 19:23:03 +0800
-Message-ID: <1470309783-11328-1-git-send-email-chaixianping@huawei.com>
+From: "Joshi, Venu" <Venu.Joshi-Iz5qeGvAONRWk0Htik3J/w@public.gmane.org>
+Subject: RE: cgroup kernel API question
+Date: Thu, 4 Aug 2016 18:59:51 +0000
+Message-ID: <CF4362088901AA4FAA2113B97CB826F0197B304A@SUSHDC8002.TD.TERADATA.COM>
+References: <CF4362088901AA4FAA2113B97CB826F0197B26CB@SUSHDC8002.TD.TERADATA.COM>
+ <20160804143446.GA4748@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, chaixianping <chaixianping@huawei.com>, Zhenghua Jia <jiazhenghua@huawei.com>, Leeyou <leeyou.li@huawei.com>, Lei Liu <liulei@huawei.com>
+Content-Transfer-Encoding: 8BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-From: chaixianping <chaixianping@huawei.com>
+Resend with the right cc email address.
 
-Fix the race between fork and update_cpumask or update_nodemask.
-Scenario as follows:
-1)A process fork a child process, the child process have
-inherited the parent process cpus_allowed,mems_allowed
-Before being added cset->tasks list.
-2)Update_cpumask or update_nodemask change the parent's allowed
-to a new value, *but the child still is the old value.
-after being added cset->tasks list.
+-----Original Message-----
+From: Joshi, Venu 
+Sent: Thursday, August 04, 2016 10:59 AM
+To: 'tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org'
+Cc: 'groups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org'
+Subject: RE: cgroup kernel API question
 
-Signed-off-by: Xianping Chai <chaixianping@huawei.com>
-Signed-off-by: Zhenghua Jia <jiazhenghua@huawei.com>
-Signed-off-by: Leeyou <leeyou.li@huawei.com>
-Signed-off-by: Lei Liu <liulei@huawei.com>
----
- kernel/cpuset.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+Thanks.
 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index c7fd277..ae3d092 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1015,6 +1015,34 @@ static void cpuset_migrate_mm(struct mm_struct *mm, const nodemask_t *from,
- 	}
- }
- 
-+
-+/*
-+ *Fix the race between fork and update_cpumask or update_nodemask.
-+ *Scenario as follows:
-+ *1)A process fork a child process, the child process have
-+ *inherited the parent process cpus_allowed,mems_allowed
-+ *Before being added cset->tasks list.
-+ *2)Update_cpumask or update_nodemask change the parent's allowed
-+ *to a new value, *but the child still is the old value
-+ *after being added cset->tasks list.
-+ */
-+static void cpuset_fork(struct task_struct *task)
-+{
-+	nodemask_t cpuset_mems_allowed;
-+
-+	mutex_lock(&cpuset_mutex);
-+	rcu_read_lock();
-+
-+	cpumask_copy(&task->cpus_allowed, task_cs(task)->effective_cpus);
-+	task->nr_cpus_allowed = cpumask_weight(task_cs(task)->effective_cpus);
-+
-+	guarantee_online_mems(task_cs(task), &cpuset_mems_allowed);
-+	task->mems_allowed = cpuset_mems_allowed;
-+
-+	rcu_read_unlock();
-+	mutex_unlock(&cpuset_mutex);
-+}
-+
- static void cpuset_post_attach(void)
- {
- 	flush_workqueue(cpuset_migrate_mm_wq);
-@@ -2078,6 +2106,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
- 	.cancel_attach	= cpuset_cancel_attach,
- 	.attach		= cpuset_attach,
- 	.post_attach	= cpuset_post_attach,
-+	.fork   = cpuset_fork,
- 	.bind		= cpuset_bind,
- 	.legacy_cftypes	= files,
- 	.early_init	= true,
--- 
-2.6.2
+Our database server creates a sub directory (say TeradataCgroup) under the root cgroup and manages all processes/tasks and ensures proper synchronization across multiple accessors.  These processes/tasks may create further sub-directories under /root-cgroup/TeradataCgroup/ with different cpu.share values.   The tasks constantly migrate to different cgroups at different hierarchical levels based on the priority of the user SQL/query/request.  All this happens when the tasks have trapped into the kernel mode via a syscall. 
 
+Our Teradata Database server is a highly parallel application and uses kernel mode synchronization APIs (spinlocks etc.,) via a kernel mode driver extension to achieve synchronization.   Hence we mostly try to use Kernel API for key operations.   In our application, cgroup operations are never done in userland to avoid the problem you mentioned below (severely confusing userland that is trying to use the cgroups too).
+
+Thanks
+Joshi
+
+
+-----Original Message-----
+From: Tejun Heo [mailto:htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org] On Behalf Of tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Sent: Thursday, August 04, 2016 7:35 AM
+To: Joshi, Venu
+Subject: Re: cgroup kernel API question
+
+Hello, Joshi.
+
+On Wed, Aug 03, 2016 at 09:59:14PM +0000, Joshi, Venu wrote:
+> I've seen the extensive work that you've done with cgroups (v1 and v2).
+> 
+> I work at Teradata and our database server uses cgroups pretty 
+> extensively.  We have a kernel driver that directly calls sched/cgroup 
+> API to create cgroups , assign tasks to these groups, set shares for 
+> these cgroups.  However, there is a limited support for Kernel drivers 
+> to directly use cgroups (and we have to hack around these unexported 
+> functions to call them in our kernel driver).
+> 
+> Do you know if there are any requests to provide an interface to work 
+> with cgroups in a kernel driver.  There are multiple options available 
+> for user mode applications to use the cgroups (system, libcgroup etc.)
+
+The inherent problem there is that cgroup itself doesn't provide any synchronization mechanisms among multiple accessors and most operations are multi-step.  So, if you add in-kernel cgroup operations, that can severely confuse userland which is trying to use cgroup.  I can't tell much without knowing details of your usage, but it's likely that there is a better of handling the issue than directly initiating cgroup operations from kernel side.  Also, please cc cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org in future messages.
+
+Thanks!
+
+--
+tejun
