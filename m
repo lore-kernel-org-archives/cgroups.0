@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/4] cgroup: make cgroup_path() and friends behave in the style of strlcpy()
-Date: Tue,  9 Aug 2016 01:23:24 -0400
-Message-ID: <1470720204-4605-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/4] kernfs: make kernfs_path*() behave in the style of strlcpy()
+Date: Tue,  9 Aug 2016 01:23:22 -0400
+Message-ID: <1470720204-4605-3-git-send-email-tj@kernel.org>
 References: <1470720204-4605-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=mCVU76A8WY5MUiI12BE1BDTKbWs9REEpKL092P2VMGI=;
-        b=MhlfABU6EuDjrzKiCw+L52lKdTxYiJB7LG81qt2vuTMgO+XQgxJVKo/4knpcfANQ8/
-         +/rG75183XRQ03tl71aViim2NpSKX8/kGqtcNZjhvG7V0H2mNGnzZf4Zi/H68ZkskJ5G
-         yAFPHC3SQDamZqPAJ2XEmD7yE9IgSc4GErggyaPRSUDOhwX4e2ayuwGlvztR39RQ1ltM
-         GInzZMB/k4CUm0V/cEhXCXOQHsRRAqYNQp3jqi0C/Tj9GdWXEsNGQyM4BpaKz6N9spN9
-         qM5un/SXH9sKuEbCn0A72N27wFHv27WRJk/wPV0LxKeTbaoxDUabQqfpXy/71oEQ6+ch
-         o7Mw==
+        bh=Hd8YhoDsKwLIfYL23sCs+jTa+8cF3Y/g5Ws9CaMSmsA=;
+        b=QZfzBNeaoYO3/JqR2M1Yg5es/9F0XLHqrTN1SQwZGAUX29dScok1rHsKaj36c/6HEt
+         wDc9rr6aqhQJKwXoJcb/ubjmIF1RKbFGK1JxjSaj5U6KhF+iTzMNfCrwPWYScAgQn3YI
+         15xLJs8NBxIwFrPkvceQ0H/CryP3aYnsiazChOaqmUH2ROTxlURzmOglT/pO1GSuYdrE
+         vvzTavqC88FGHeW+tRPReQv1gOGZsTLqGwt5i2zccJqXryllRuYLAiQmbKILJdmSVcsY
+         TlVhe2KnvotT578fZHleQtYhzJUjYKKQzzl/tGUlUJZc1KlQ1WdYAeBDmIFSSd96Fnbr
+         KOKQ==
 In-Reply-To: <1470720204-4605-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,262 +23,231 @@ Content-Transfer-Encoding: 7bit
 To: gregkh@linuxfoundation.org, serge.hallyn@ubuntu.com
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, hannes@cmpxchg.org, lizefan@huawei.com, Tejun Heo <tj@kernel.org>
 
-cgroup_path() and friends used to format the path from the end and
-thus the resulting path usually didn't start at the start of the
-passed in buffer.  Also, when the buffer was too small, the partial
-result was truncated from the head rather than tail and there was no
-way to tell how long the full path would be.  These make the functions
-less robust and more awkward to use.
+kernfs_path*() functions always return the length of the full path but
+the path content is undefined if the length is larger than the
+provided buffer.  This makes its behavior different from strlcpy() and
+requires error handling in all its users even when they don't care
+about truncation.  In addition, the implementation can actully be
+simplified by making it behave properly in strlcpy() style.
 
-With recent updates to kernfs_path(), cgroup_path() and friends can be
-made to behave in strlcpy() style.
+* Update kernfs_path_from_node_locked() to always fill up the buffer
+  with path.  If the buffer is not large enough, the output is
+  truncated and terminated.
 
-* cgroup_path(), cgroup_path_ns[_locked]() and task_cgroup_path() now
-  always return the length of the full path.  If buffer is too small,
-  it contains nul terminated truncated output.
+* kernfs_path() no longer needs error handling.  Make it a simple
+  inline wrapper around kernfs_path_from_node().
 
-* All users updated accordingly.
+* sysfs_warn_dup()'s use of kernfs_path() doesn't need error handling.
+  Updated accordingly.
+
+* cgroup_path()'s use of kernfs_path() updated to retain the old
+  behavior.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Serge Hallyn <serge.hallyn@ubuntu.com>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- include/linux/blk-cgroup.h | 11 +----------
- include/linux/cgroup.h     | 16 +++++-----------
- kernel/cgroup.c            | 48 +++++++++++++++++++++-------------------------
- kernel/cpuset.c            | 12 ++++++------
- 4 files changed, 34 insertions(+), 53 deletions(-)
+ fs/kernfs/dir.c        | 61 ++++++++++++++------------------------------------
+ fs/sysfs/dir.c         |  6 ++---
+ include/linux/cgroup.h |  7 +++++-
+ include/linux/kernfs.h | 21 ++++++++++++-----
+ 4 files changed, 42 insertions(+), 53 deletions(-)
 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 10648e3..4e8c215 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -343,16 +343,7 @@ static inline struct blkcg *cpd_to_blkcg(struct blkcg_policy_data *cpd)
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index e57174d..09242aa 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -110,8 +110,9 @@ static struct kernfs_node *kernfs_common_ancestor(struct kernfs_node *a,
+  * kn_to:   /n1/n2/n3         [depth=3]
+  * result:  /../..
+  *
+- * return value: length of the string.  If greater than buflen,
+- * then contents of buf are undefined.  On error, -1 is returned.
++ * Returns the length of the full path.  If the full length is equal to or
++ * greater than @buflen, @buf contains the truncated path with the trailing
++ * '\0'.  On error, -errno is returned.
   */
- static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
+ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
+ 					struct kernfs_node *kn_from,
+@@ -119,9 +120,8 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
  {
+ 	struct kernfs_node *kn, *common;
+ 	const char parent_str[] = "/..";
+-	size_t depth_from, depth_to, len = 0, nlen = 0;
 -	char *p;
+-	int i;
++	size_t depth_from, depth_to, len = 0;
++	int i, j;
+ 
+ 	if (!kn_from)
+ 		kn_from = kernfs_root(kn_to)->kn;
+@@ -131,7 +131,7 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
+ 
+ 	common = kernfs_common_ancestor(kn_from, kn_to);
+ 	if (WARN_ON(!common))
+-		return -1;
++		return -EINVAL;
+ 
+ 	depth_to = kernfs_depth(common, kn_to);
+ 	depth_from = kernfs_depth(common, kn_from);
+@@ -144,22 +144,16 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
+ 			       len < buflen ? buflen - len : 0);
+ 
+ 	/* Calculate how many bytes we need for the rest */
+-	for (kn = kn_to; kn != common; kn = kn->parent)
+-		nlen += strlen(kn->name) + 1;
 -
--	p = cgroup_path(blkg->blkcg->css.cgroup, buf, buflen);
--	if (!p) {
--		strncpy(buf, "<unavailable>", buflen);
--		return -ENAMETOOLONG;
--	}
+-	if (len + nlen >= buflen)
+-		return len + nlen;
 -
--	memmove(buf, p, buf + buflen - p);
--	return 0;
-+	return cgroup_path(blkg->blkcg->css.cgroup, buf, buflen);
+-	p = buf + len + nlen;
+-	*p = '\0';
+-	for (kn = kn_to; kn != common; kn = kn->parent) {
+-		size_t tmp = strlen(kn->name);
+-		p -= tmp;
+-		memcpy(p, kn->name, tmp);
+-		*(--p) = '/';
++	for (i = depth_to - 1; i >= 0; i--) {
++		for (kn = kn_to, j = 0; j < i; j++)
++			kn = kn->parent;
++		len += strlcpy(buf + len, "/",
++			       len < buflen ? buflen - len : 0);
++		len += strlcpy(buf + len, kn->name,
++			       len < buflen ? buflen - len : 0);
+ 	}
+ 
+-	return len + nlen;
++	return len;
  }
  
  /**
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 5a9abde..6df3636 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -97,7 +97,7 @@ int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
- int cgroup_rm_cftypes(struct cftype *cfts);
- void cgroup_file_notify(struct cgroup_file *cfile);
+@@ -220,8 +214,9 @@ size_t kernfs_path_len(struct kernfs_node *kn)
+  * path (which includes '..'s) as needed to reach from @from to @to is
+  * returned.
+  *
+- * If @buf isn't long enough, the return value will be greater than @buflen
+- * and @buf contents are undefined.
++ * Returns the length of the full path.  If the full length is equal to or
++ * greater than @buflen, @buf contains the truncated path with the trailing
++ * '\0'.  On error, -errno is returned.
+  */
+ int kernfs_path_from_node(struct kernfs_node *to, struct kernfs_node *from,
+ 			  char *buf, size_t buflen)
+@@ -237,28 +232,6 @@ int kernfs_path_from_node(struct kernfs_node *to, struct kernfs_node *from,
+ EXPORT_SYMBOL_GPL(kernfs_path_from_node);
  
--char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
-+int task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
- int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry);
- int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 		     struct pid *pid, struct task_struct *tsk);
-@@ -538,15 +538,9 @@ static inline int cgroup_name(struct cgroup *cgrp, char *buf, size_t buflen)
- 	return kernfs_name(cgrp->kn, buf, buflen);
- }
- 
--static inline char * __must_check cgroup_path(struct cgroup *cgrp, char *buf,
--					      size_t buflen)
-+static inline int cgroup_path(struct cgroup *cgrp, char *buf, size_t buflen)
- {
+ /**
+- * kernfs_path - build full path of a given node
+- * @kn: kernfs_node of interest
+- * @buf: buffer to copy @kn's name into
+- * @buflen: size of @buf
+- *
+- * Builds and returns the full path of @kn in @buf of @buflen bytes.  The
+- * path is built from the end of @buf so the returned pointer usually
+- * doesn't match @buf.  If @buf isn't long enough, @buf is nul terminated
+- * and %NULL is returned.
+- */
+-char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen)
+-{
 -	int ret;
 -
--	ret = kernfs_path(cgrp->kn, buf, buflen);
+-	ret = kernfs_path_from_node(kn, NULL, buf, buflen);
 -	if (ret < 0 || ret >= buflen)
 -		return NULL;
 -	return buf;
-+	return kernfs_path(cgrp->kn, buf, buflen);
+-}
+-EXPORT_SYMBOL_GPL(kernfs_path);
+-
+-/**
+  * pr_cont_kernfs_name - pr_cont name of a kernfs_node
+  * @kn: kernfs_node of interest
+  *
+diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
+index 94374e4..2b67bda 100644
+--- a/fs/sysfs/dir.c
++++ b/fs/sysfs/dir.c
+@@ -21,14 +21,14 @@ DEFINE_SPINLOCK(sysfs_symlink_target_lock);
+ 
+ void sysfs_warn_dup(struct kernfs_node *parent, const char *name)
+ {
+-	char *buf, *path = NULL;
++	char *buf;
+ 
+ 	buf = kzalloc(PATH_MAX, GFP_KERNEL);
+ 	if (buf)
+-		path = kernfs_path(parent, buf, PATH_MAX);
++		kernfs_path(parent, buf, PATH_MAX);
+ 
+ 	WARN(1, KERN_WARNING "sysfs: cannot create duplicate filename '%s/%s'\n",
+-	     path, name);
++	     buf, name);
+ 
+ 	kfree(buf);
+ }
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 984f73b..5a9abde 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -541,7 +541,12 @@ static inline int cgroup_name(struct cgroup *cgrp, char *buf, size_t buflen)
+ static inline char * __must_check cgroup_path(struct cgroup *cgrp, char *buf,
+ 					      size_t buflen)
+ {
+-	return kernfs_path(cgrp->kn, buf, buflen);
++	int ret;
++
++	ret = kernfs_path(cgrp->kn, buf, buflen);
++	if (ret < 0 || ret >= buflen)
++		return NULL;
++	return buf;
  }
  
  static inline void pr_cont_cgroup_name(struct cgroup *cgrp)
-@@ -639,8 +633,8 @@ struct cgroup_namespace *copy_cgroup_ns(unsigned long flags,
- 					struct user_namespace *user_ns,
- 					struct cgroup_namespace *old_ns);
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index 325954f..64358d2 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -272,7 +272,6 @@ int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen);
+ size_t kernfs_path_len(struct kernfs_node *kn);
+ int kernfs_path_from_node(struct kernfs_node *root_kn, struct kernfs_node *kn,
+ 			  char *buf, size_t buflen);
+-char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen);
+ void pr_cont_kernfs_name(struct kernfs_node *kn);
+ void pr_cont_kernfs_path(struct kernfs_node *kn);
+ struct kernfs_node *kernfs_get_parent(struct kernfs_node *kn);
+@@ -349,10 +348,6 @@ static inline int kernfs_path_from_node(struct kernfs_node *root_kn,
+ 					char *buf, size_t buflen);
+ { return -ENOSYS; }
  
--char *cgroup_path_ns(struct cgroup *cgrp, char *buf, size_t buflen,
--		     struct cgroup_namespace *ns);
-+int cgroup_path_ns(struct cgroup *cgrp, char *buf, size_t buflen,
-+		   struct cgroup_namespace *ns);
- 
- #else /* !CONFIG_CGROUPS */
- 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d1c51b7..3861161 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2315,22 +2315,18 @@ static struct file_system_type cgroup2_fs_type = {
- 	.fs_flags = FS_USERNS_MOUNT,
- };
- 
--static char *cgroup_path_ns_locked(struct cgroup *cgrp, char *buf, size_t buflen,
--				   struct cgroup_namespace *ns)
-+static int cgroup_path_ns_locked(struct cgroup *cgrp, char *buf, size_t buflen,
-+				 struct cgroup_namespace *ns)
- {
- 	struct cgroup *root = cset_cgroup_from_root(ns->root_cset, cgrp->root);
--	int ret;
- 
--	ret = kernfs_path_from_node(cgrp->kn, root->kn, buf, buflen);
--	if (ret < 0 || ret >= buflen)
--		return NULL;
--	return buf;
-+	return kernfs_path_from_node(cgrp->kn, root->kn, buf, buflen);
- }
- 
--char *cgroup_path_ns(struct cgroup *cgrp, char *buf, size_t buflen,
--		     struct cgroup_namespace *ns)
-+int cgroup_path_ns(struct cgroup *cgrp, char *buf, size_t buflen,
-+		   struct cgroup_namespace *ns)
- {
--	char *ret;
-+	int ret;
- 
- 	mutex_lock(&cgroup_mutex);
- 	spin_lock_irq(&css_set_lock);
-@@ -2357,12 +2353,12 @@ EXPORT_SYMBOL_GPL(cgroup_path_ns);
-  *
-  * Return value is the same as kernfs_path().
-  */
--char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen)
-+int task_cgroup_path(struct task_struct *task, char *buf, size_t buflen)
- {
- 	struct cgroup_root *root;
- 	struct cgroup *cgrp;
- 	int hierarchy_id = 1;
--	char *path = NULL;
-+	int ret;
- 
- 	mutex_lock(&cgroup_mutex);
- 	spin_lock_irq(&css_set_lock);
-@@ -2371,16 +2367,15 @@ char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen)
- 
- 	if (root) {
- 		cgrp = task_cgroup_from_root(task, root);
--		path = cgroup_path_ns_locked(cgrp, buf, buflen, &init_cgroup_ns);
-+		ret = cgroup_path_ns_locked(cgrp, buf, buflen, &init_cgroup_ns);
- 	} else {
- 		/* if no hierarchy exists, everyone is in "/" */
--		if (strlcpy(buf, "/", buflen) < buflen)
--			path = buf;
-+		ret = strlcpy(buf, "/", buflen);
- 	}
- 
- 	spin_unlock_irq(&css_set_lock);
- 	mutex_unlock(&cgroup_mutex);
--	return path;
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(task_cgroup_path);
- 
-@@ -5716,7 +5711,7 @@ core_initcall(cgroup_wq_init);
- int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 		     struct pid *pid, struct task_struct *tsk)
- {
--	char *buf, *path;
-+	char *buf;
- 	int retval;
- 	struct cgroup_root *root;
- 
-@@ -5759,18 +5754,18 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 		 * " (deleted)" is appended to the cgroup path.
- 		 */
- 		if (cgroup_on_dfl(cgrp) || !(tsk->flags & PF_EXITING)) {
--			path = cgroup_path_ns_locked(cgrp, buf, PATH_MAX,
-+			retval = cgroup_path_ns_locked(cgrp, buf, PATH_MAX,
- 						current->nsproxy->cgroup_ns);
--			if (!path) {
-+			if (retval >= PATH_MAX) {
- 				retval = -ENAMETOOLONG;
- 				goto out_unlock;
- 			}
-+
-+			seq_puts(m, buf);
- 		} else {
--			path = "/";
-+			seq_puts(m, "/");
- 		}
- 
--		seq_puts(m, path);
+-static inline char *kernfs_path(struct kernfs_node *kn, char *buf,
+-				size_t buflen)
+-{ return NULL; }
 -
- 		if (cgroup_on_dfl(cgrp) && cgroup_is_dead(cgrp))
- 			seq_puts(m, " (deleted)\n");
- 		else
-@@ -6035,8 +6030,9 @@ static void cgroup_release_agent(struct work_struct *work)
+ static inline void pr_cont_kernfs_name(struct kernfs_node *kn) { }
+ static inline void pr_cont_kernfs_path(struct kernfs_node *kn) { }
+ 
+@@ -441,6 +436,22 @@ static inline void kernfs_init(void) { }
+ 
+ #endif	/* CONFIG_KERNFS */
+ 
++/**
++ * kernfs_path - build full path of a given node
++ * @kn: kernfs_node of interest
++ * @buf: buffer to copy @kn's name into
++ * @buflen: size of @buf
++ *
++ * Builds and returns the full path of @kn in @buf of @buflen bytes.  The
++ * path is built from the end of @buf so the returned pointer usually
++ * doesn't match @buf.  If @buf isn't long enough, @buf is nul terminated
++ * and %NULL is returned.
++ */
++static inline int kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen)
++{
++	return kernfs_path_from_node(kn, NULL, buf, buflen);
++}
++
+ static inline struct kernfs_node *
+ kernfs_find_and_get(struct kernfs_node *kn, const char *name)
  {
- 	struct cgroup *cgrp =
- 		container_of(work, struct cgroup, release_agent_work);
--	char *pathbuf = NULL, *agentbuf = NULL, *path;
-+	char *pathbuf = NULL, *agentbuf = NULL;
- 	char *argv[3], *envp[3];
-+	int ret;
- 
- 	mutex_lock(&cgroup_mutex);
- 
-@@ -6046,13 +6042,13 @@ static void cgroup_release_agent(struct work_struct *work)
- 		goto out;
- 
- 	spin_lock_irq(&css_set_lock);
--	path = cgroup_path_ns_locked(cgrp, pathbuf, PATH_MAX, &init_cgroup_ns);
-+	ret = cgroup_path_ns_locked(cgrp, pathbuf, PATH_MAX, &init_cgroup_ns);
- 	spin_unlock_irq(&css_set_lock);
--	if (!path)
-+	if (ret >= PATH_MAX)
- 		goto out;
- 
- 	argv[0] = agentbuf;
--	argv[1] = path;
-+	argv[1] = pathbuf;
- 	argv[2] = NULL;
- 
- 	/* minimal command environment */
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index c7fd277..793ae6f 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -2689,7 +2689,7 @@ void __cpuset_memory_pressure_bump(void)
- int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
- 		     struct pid *pid, struct task_struct *tsk)
- {
--	char *buf, *p;
-+	char *buf;
- 	struct cgroup_subsys_state *css;
- 	int retval;
- 
-@@ -2700,18 +2700,18 @@ int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
- 
- 	retval = -ENAMETOOLONG;
- 	css = task_get_css(tsk, cpuset_cgrp_id);
--	p = cgroup_path_ns(css->cgroup, buf, PATH_MAX,
--			   current->nsproxy->cgroup_ns);
-+	retval = cgroup_path_ns(css->cgroup, buf, PATH_MAX,
-+				current->nsproxy->cgroup_ns);
- 	css_put(css);
--	if (!p)
-+	if (retval >= PATH_MAX)
- 		goto out_free;
--	seq_puts(m, p);
-+	seq_puts(m, buf);
- 	seq_putc(m, '\n');
- 	retval = 0;
- out_free:
- 	kfree(buf);
- out:
--	return retval;
-+	return 0;
- }
- #endif /* CONFIG_PROC_PID_CPUSET */
- 
 -- 
 2.7.4
 
