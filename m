@@ -1,49 +1,100 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCHSET] kernfs, cgroup: make kernfs_path*() and
- cgroup_path*() behave in strlcpy() style
-Date: Tue, 9 Aug 2016 10:18:19 +0200
-Message-ID: <20160809081819.GB10279@kroah.com>
-References: <1470720204-4605-1-git-send-email-tj@kernel.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC][PATCH] cgroup_threadgroup_rwsem - affects scalability and
+ OOM
+Date: Tue, 9 Aug 2016 17:00:59 +0800
+Message-ID: <57A99BCB.6070905@huawei.com>
+References: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1470720204-4605-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: serge.hallyn@ubuntu.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, hannes@cmpxchg.org, lizefan@huawei.com
+To: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Tue, Aug 09, 2016 at 01:23:20AM -0400, Tejun Heo wrote:
-> kernfs path formatting functions always return the length of full path
-> but the content of the output buffer is undefined when the length is
-> longer than the provided buffer.  Most cgroup path formatting
-> functions return the start of the output or NULL on errors including
-> overflow.  These inconsistent and rather peculiar behaviors developed
-> over time and make these functions unnecessarily difficult to use.
-> This patchset updates the formatting functions so that they all behave
-> in the style of strlcpy().
+> This almost stalls the system, this patch moves the threadgroup_change_begin
+> from before cgroup_fork() to just before cgroup_canfork(). Ideally we shouldn't
+> have to worry about threadgroup changes till the task is actually added to
+> the threadgroup. This avoids having to call reclaim with cgroup_threadgroup_rwsem
+> held.
 > 
-> Greg, these changes are used by cgroup tracepoint additions and
-> shouldn't affect other users much.  Would it be okay to route these
-> through the cgroup tree?
+> There are other theoretical issues with this semaphore
 > 
->  0001-kernfs-add-dummy-implementation-of-kernfs_path_from_.patch
->  0002-kernfs-make-kernfs_path-behave-in-the-style-of-strlc.patch
->  0003-kernfs-remove-kernfs_path_len.patch
->  0004-cgroup-make-cgroup_path-and-friends-behave-in-the-st.patch
+> systemd can do
 > 
-> The patches are also available in the following git branch.
+> 1. cgroup_mutex (cgroup_kn_lock_live)
+> 2. cgroup_threadgroup_rwsem (W) (__cgroup_procs_write)
 > 
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-kernfs_path-strlcpy
+> and other threads can go
 > 
-> diffstat follows.  Thanks.
+> 1. cgroup_threadgroup_rwsem (R) (copy_process)
+> 2. mem_cgroup_iter (as a part of reclaim) (cgroup_mutex -- rcu lock or cgroup_mutex)
+> 
+> However, I've not examined them in too much detail or looked at lockdep
+> wait chains for those paths.
+> 
+> I am sure there is a good reason for placing cgroup_threadgroup_rwsem
+> where it is today and I might be missing something. I am also surprised
+> no-one else has run into it so far.
+> 
+> Comments?
+> 
 
-It's fine with me if you take these yourself:
+We used to use cgroup_threadgroup_rwsem for syncronization between threads
+in the same threadgroup, but now it has evolved to ensure atomic operations
+across multi processes.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+For example, I'm trying to fix a race. See https://lkml.org/lkml/2016/8/8/900
 
-thanks,
+And the fix kind of relies on the fact that cgroup_post_fork() is placed
+inside the read section of cgroup_threadgroup_rwsem, so that cpuset_fork()
+won't race with cgroup migration.
 
-greg k-h
+> Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> 
+> Signed-off-by: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> ---
+>  kernel/fork.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/kernel/fork.c b/kernel/fork.c
+> index 5c2c355..0474fa8 100644
+> --- a/kernel/fork.c
+> +++ b/kernel/fork.c
+> @@ -1406,7 +1406,6 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+>  	p->real_start_time = ktime_get_boot_ns();
+>  	p->io_context = NULL;
+>  	p->audit_context = NULL;
+> -	threadgroup_change_begin(current);
+>  	cgroup_fork(p);
+>  #ifdef CONFIG_NUMA
+>  	p->mempolicy = mpol_dup(p->mempolicy);
+> @@ -1558,6 +1557,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+>  	INIT_LIST_HEAD(&p->thread_group);
+>  	p->task_works = NULL;
+>  
+> +	threadgroup_change_begin(current);
+>  	/*
+>  	 * Ensure that the cgroup subsystem policies allow the new process to be
+>  	 * forked. It should be noted the the new process's css_set can be changed
+> @@ -1658,6 +1658,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+>  bad_fork_cancel_cgroup:
+>  	cgroup_cancel_fork(p);
+>  bad_fork_free_pid:
+> +	threadgroup_change_end(current);
+>  	if (pid != &init_struct_pid)
+>  		free_pid(pid);
+>  bad_fork_cleanup_thread:
+> @@ -1690,7 +1691,6 @@ bad_fork_cleanup_policy:
+>  	mpol_put(p->mempolicy);
+>  bad_fork_cleanup_threadgroup_lock:
+>  #endif
+> -	threadgroup_change_end(current);
+>  	delayacct_tsk_free(p);
+>  bad_fork_cleanup_count:
+>  	atomic_dec(&p->cred->user->processes);
+> 
