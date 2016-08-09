@@ -1,10 +1,10 @@
 From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:review-tracepoints 1/5] include/linux/kernfs.h:350:1: error:
- expected identifier or '(' before '{' token
-Date: Tue, 9 Aug 2016 13:39:25 +0800
-Message-ID: <201608091323.Ury5GhW4%fengguang.wu@intel.com>
+Subject: [cgroup:review-tracepoints 2/5] include/linux/kernfs.h:346:19:
+ warning: 'kernfs_path_from_node' used but never defined
+Date: Tue, 9 Aug 2016 13:43:27 +0800
+Message-ID: <201608091324.Ax2GIazb%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="yrj/dFKFPuw6o+aM"
+Content-Type: multipart/mixed; boundary="BXVAT5kNtrzKuDFl"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -13,31 +13,31 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
---yrj/dFKFPuw6o+aM
+--BXVAT5kNtrzKuDFl
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-tracepoints
 head:   471f89b317a21a78dacaee85957984b9f11e79e4
-commit: 5f8ffbe607d1bb405d6f57735a4e214879b3d646 [1/5] kernfs: add dummy implementation of kernfs_path_from_node()
+commit: 66aacea034635a9486262044f8b270c99adf962b [2/5] kernfs: make kernfs_path*() behave in the style of strlcpy()
 config: i386-tinyconfig (attached as .config)
 compiler: gcc-6 (Debian 6.1.1-9) 6.1.1 20160705
 reproduce:
-        git checkout 5f8ffbe607d1bb405d6f57735a4e214879b3d646
+        git checkout 66aacea034635a9486262044f8b270c99adf962b
         # save the attached .config to linux build tree
         make ARCH=i386 
 
-All errors (new ones prefixed by >>):
+All warnings (new ones prefixed by >>):
 
    In file included from include/linux/cgroup.h:18:0,
                     from include/linux/memcontrol.h:22,
                     from include/linux/swap.h:8,
                     from include/linux/suspend.h:4,
                     from arch/x86/kernel/asm-offsets.c:12:
->> include/linux/kernfs.h:350:1: error: expected identifier or '(' before '{' token
+   include/linux/kernfs.h:349:1: error: expected identifier or '(' before '{' token
     { return -ENOSYS; }
     ^
-   include/linux/kernfs.h:347:19: warning: 'kernfs_path_from_node' declared 'static' but never defined [-Wunused-function]
+>> include/linux/kernfs.h:346:19: warning: 'kernfs_path_from_node' used but never defined
     static inline int kernfs_path_from_node(struct kernfs_node *root_kn,
                       ^~~~~~~~~~~~~~~~~~~~~
    make[2]: *** [arch/x86/kernel/asm-offsets.s] Error 1
@@ -46,29 +46,38 @@ All errors (new ones prefixed by >>):
    make[1]: Target 'prepare' not remade because of errors.
    make: *** [sub-make] Error 2
 
-vim +350 include/linux/kernfs.h
+vim +/kernfs_path_from_node +346 include/linux/kernfs.h
 
-   344	static inline size_t kernfs_path_len(struct kernfs_node *kn)
-   345	{ return 0; }
-   346	
-   347	static inline int kernfs_path_from_node(struct kernfs_node *root_kn,
-   348						struct kernfs_node *kn,
-   349						char *buf, size_t buflen);
- > 350	{ return -ENOSYS; }
-   351	
-   352	static inline char *kernfs_path(struct kernfs_node *kn, char *buf,
-   353					size_t buflen)
+3eef34ad Tejun Heo 2014-02-07  340  static inline int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen)
+3eef34ad Tejun Heo 2014-02-07  341  { return -ENOSYS; }
+3eef34ad Tejun Heo 2014-02-07  342  
+9acee9c5 Tejun Heo 2015-08-18  343  static inline size_t kernfs_path_len(struct kernfs_node *kn)
+9acee9c5 Tejun Heo 2015-08-18  344  { return 0; }
+9acee9c5 Tejun Heo 2015-08-18  345  
+5f8ffbe6 Tejun Heo 2016-08-09 @346  static inline int kernfs_path_from_node(struct kernfs_node *root_kn,
+5f8ffbe6 Tejun Heo 2016-08-09  347  					struct kernfs_node *kn,
+5f8ffbe6 Tejun Heo 2016-08-09  348  					char *buf, size_t buflen);
+5f8ffbe6 Tejun Heo 2016-08-09 @349  { return -ENOSYS; }
+5f8ffbe6 Tejun Heo 2016-08-09  350  
+3eef34ad Tejun Heo 2014-02-07  351  static inline void pr_cont_kernfs_name(struct kernfs_node *kn) { }
+3eef34ad Tejun Heo 2014-02-07  352  static inline void pr_cont_kernfs_path(struct kernfs_node *kn) { }
+
+:::::: The code at line 346 was first introduced by commit
+:::::: 5f8ffbe607d1bb405d6f57735a4e214879b3d646 kernfs: add dummy implementation of kernfs_path_from_node()
+
+:::::: TO: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+:::::: CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---yrj/dFKFPuw6o+aM
+--BXVAT5kNtrzKuDFl
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICERsqVcAAy5jb25maWcAjDxbc9s2s+/9FZz2PLQzp7nYjj93zvgBAkEJFUEyBCjJfuEo
+H4sICNxsqVcAAy5jb25maWcAjDxbc9s2s+/9FZz2PLQzp7nYjj93zvgBAkEJFUEyBCjJfuEo
 MpNoakv+dGmTf392AUq8LZR2JlMLu7jufbHgLz/9ErDjYfuyPKxXy+fn78GXalPtlofqKfi8
 fq7+LwjTIElNIEJp3gByvN4cv71dX9/dBjdv7t68+323eh9Mq92meg74dvN5/eUIvdfbzU+/
 ADZPk0iOy9ubkTTBeh9stodgXx1+qtsXd7fl9dX999bv5odMtMkLbmSalKHgaSjyBpgWJitM
@@ -187,4 +196,4 @@ AMLXoVQ6p7skJUPF85ZJe3BW9LPcCIZsuwQrVCG3eU4HI6dPFPhNQGOu3tlB2mGv+awwewl9
 acjgoiXOV7l0XeniJfwfvaXzBaOPoaoIxIfCGxYFv98hwUVReGsmgklgTH2K29zhQXima+Z1
 cE0ZaVkC8B+y2tbf3lkAAA==
 
---yrj/dFKFPuw6o+aM--
+--BXVAT5kNtrzKuDFl--
