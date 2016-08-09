@@ -1,63 +1,49 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [RFC][PATCH] cgroup_threadgroup_rwsem - affects scalability
-	and OOM
-Date: Tue, 9 Aug 2016 20:09:36 +0200
-Message-ID: <20160809180936.GE13840@redhat.com>
-References: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/4] kernfs: make kernfs_path*() behave in the style of
+ strlcpy()
+Date: Tue, 9 Aug 2016 15:58:13 -0400
+Message-ID: <20160809195813.GF4906@mtj.duckdns.org>
+References: <1470720204-4605-1-git-send-email-tj@kernel.org>
+ <1470720204-4605-3-git-send-email-tj@kernel.org>
+ <20160809153305.GB30775@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=pe2FNYQ26GARDit3JxoeZ2oTfFWFNU37U3G1Ny8mumg=;
+        b=TG9Y2HHIsWEmOxpQcfj2WoyRh7e9XhikWMpIcMttQGJ3xgCdstvpoFcaHzndGCSf8H
+         qafMvSSf2LybAnI++FNB1RWCqnCmQxMuK7gwPI27xpt3FKe0RSo5TF1t2Q5TEwMFfjM8
+         H4wEEtEN5bQ/fhknNDmmRELOwlXhpB54qjlBgs4O51knX7ZP+zb53aDW256X7zLrxW77
+         j/W0gQJh8c7mKxJ5W6CW3DJo9q9IjxorH8hLe1gg6XEFlTs83YwYM/xrrBS3Jg0kwxXW
+         SNShW0C/Z/9Te4TNHCVMalpG5zuomme9UnX02kczjKiMc3URKabIztI7dmu3omT5mo/l
+         dGgA==
 Content-Disposition: inline
-In-Reply-To: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec@gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20160809153305.GB30775-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Balbir Singh <bsingharora@gmail.com>
-Cc: cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On 08/09, Balbir Singh wrote:
->
-> --- a/kernel/fork.c
-> +++ b/kernel/fork.c
-> @@ -1406,7 +1406,6 @@ static struct task_struct *copy_process(unsigned long clone_flags,
->  	p->real_start_time = ktime_get_boot_ns();
->  	p->io_context = NULL;
->  	p->audit_context = NULL;
-> -	threadgroup_change_begin(current);
->  	cgroup_fork(p);
->  #ifdef CONFIG_NUMA
->  	p->mempolicy = mpol_dup(p->mempolicy);
-> @@ -1558,6 +1557,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
->  	INIT_LIST_HEAD(&p->thread_group);
->  	p->task_works = NULL;
->  
-> +	threadgroup_change_begin(current);
->  	/*
->  	 * Ensure that the cgroup subsystem policies allow the new process to be
->  	 * forked. It should be noted the the new process's css_set can be changed
-> @@ -1658,6 +1658,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
->  bad_fork_cancel_cgroup:
->  	cgroup_cancel_fork(p);
->  bad_fork_free_pid:
-> +	threadgroup_change_end(current);
->  	if (pid != &init_struct_pid)
->  		free_pid(pid);
->  bad_fork_cleanup_thread:
-> @@ -1690,7 +1691,6 @@ bad_fork_cleanup_policy:
->  	mpol_put(p->mempolicy);
->  bad_fork_cleanup_threadgroup_lock:
->  #endif
-> -	threadgroup_change_end(current);
->  	delayacct_tsk_free(p);
->  bad_fork_cleanup_count:
->  	atomic_dec(&p->cred->user->processes);
+Hello, Serge.
 
-I can't really review this change... but it looks good to me.
+On Tue, Aug 09, 2016 at 10:33:05AM -0500, Serge E. Hallyn wrote:
+> > +	for (i = depth_to - 1; i >= 0; i--) {
+> > +		for (kn = kn_to, j = 0; j < i; j++)
+> > +			kn = kn->parent;
+> 
+> This is O(n^2) where n is the path depth.  It's not a hot path, though, do
+> we care?
 
-Oleg.
+I don't think it matters.  It's a slow path and cgroup hierarchies
+aren't supposed to be super deep to begin with.  If it ever does, we
+can replace the cgroup->ancestor_ids[] array with ancestor pointer
+array and walk that instead.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
