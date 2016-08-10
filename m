@@ -1,44 +1,152 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: add tracepoints for basic operations
-Date: Wed, 10 Aug 2016 11:25:52 -0400
-Message-ID: <20160810152552.GL25053@mtj.duckdns.org>
-References: <20160809052703.GA4906@mtj.duckdns.org>
+Subject: Re: [RFC][PATCH] cgroup_threadgroup_rwsem - affects scalability and
+ OOM
+Date: Wed, 10 Aug 2016 15:43:06 -0400
+Message-ID: <20160810194306.GP25053@mtj.duckdns.org>
+References: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=QDXYm99nxtUU2LmClZDi2kAYfXqHF7jwgEcKsNEIr4E=;
-        b=JZcLTnpqNhJq1sJtoSlytQBWuSnm7dGbu9Vdyqtwrg628zQxHPOLeazU64YQM18xmG
-         B4C09PFmHu8B4iUvWZX94aP/G6RoKeJijB1R+J/8dWzHEPpftHa0XXXZZujzmZkcgzNY
-         dIX0T0xSvcZvGjFvcYNixrGJNdk3+fpx8WkUEY+Xg2rDqD3Lf1Yqq6wHar3YmVy9hvnC
-         NTzRyFE5UhrnFpP7OkX0ghkUhdaDQtlgaU0XZ1ZavXMc+lDLh6fOIZJZDsr8QS7tGyFZ
-         IB46k/GCsHVMIUax4/hW2pc320yzsktY2h7VLC/NKF0egr3oaFLbaR1/GQanp63YSXu4
-         ICEg==
+        bh=sQ6uhI4u03E6pKTG1PJiti6hisYkXUx6AxXU6LSzOVs=;
+        b=ef7/zQjMWeNgHYsb26PGTy0doDWB8TIaHMjK5YQpk5aQl/2ZD9nsORyN4D8m6XZxik
+         tqceT9D9FV/vbGB0rJOIgywBWtxYJBIccYQ/G/F57YMne/b08PNU3QnudmXUsYCNSvxK
+         cAMF3b3rwn9m9gmoyjEjstJXPVhpVg+I5rhAuTp3fSR0HwI2pk1h+5TPknAz8n4ffOaQ
+         F19rXXnou1y8kcpy/hpgQFvrNuE3iAD/ST9NWuYxFrV8y6EVcSajCIVU+c1Km525prl1
+         FjTYdU71EpkbIHdVJSzaxe8nGvNSaiUvGYi+f64OiR7Sb9DBcb7hAQ+/RYTPo+ofGJo2
+         UFhw==
 Content-Disposition: inline
-In-Reply-To: <20160809052703.GA4906@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec@gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Balbir Singh <bsingharora@gmail.com>
+Cc: cgroups@vger.kernel.org, Oleg Nesterov <oleg@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-On Tue, Aug 09, 2016 at 01:27:03AM -0400, Tejun Heo wrote:
-> From 471f89b317a21a78dacaee85957984b9f11e79e4 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj@kernel.org>
-> Date: Tue, 9 Aug 2016 01:11:13 -0400
-> 
-> Debugging what goes wrong with cgroup setup can get hairy.  Add
-> tracepoints for cgroup hierarchy mount, cgroup creation/destruction
-> and task migration operations for better visibility.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+Hello,
 
-Applied to cgroup/for-4.9.
+Edited subject and description and applied the patch to
+cgroup/for-4.8-fixes w/ stable cc'd.
 
 Thanks.
+------ 8< ------
+From b570e91aaa563673dc6cca58c14388d68c767353 Mon Sep 17 00:00:00 2001
+From: Balbir Singh <bsingharora@gmail.com>
+Date: Tue, 9 Aug 2016 14:19:01 +1000
+Subject: [PATCH] cgroup: reduce read locked section of
+ cgroup_threadgroup_rwsem during fork
 
+cgroup_threadgroup_rwsem is acquired in read mode during process exit
+and fork.  It is also grabbed in write mode during
+__cgroups_proc_write().  I've recently run into a scenario with lots
+of memory pressure and OOM and I am beginning to see
+
+systemd
+
+ __switch_to+0x1f8/0x350
+ __schedule+0x30c/0x990
+ schedule+0x48/0xc0
+ percpu_down_write+0x114/0x170
+ __cgroup_procs_write.isra.12+0xb8/0x3c0
+ cgroup_file_write+0x74/0x1a0
+ kernfs_fop_write+0x188/0x200
+ __vfs_write+0x6c/0xe0
+ vfs_write+0xc0/0x230
+ SyS_write+0x6c/0x110
+ system_call+0x38/0xb4
+
+This thread is waiting on the reader of cgroup_threadgroup_rwsem to
+exit.  The reader itself is under memory pressure and has gone into
+reclaim after fork. There are times the reader also ends up waiting on
+oom_lock as well.
+
+ __switch_to+0x1f8/0x350
+ __schedule+0x30c/0x990
+ schedule+0x48/0xc0
+ jbd2_log_wait_commit+0xd4/0x180
+ ext4_evict_inode+0x88/0x5c0
+ evict+0xf8/0x2a0
+ dispose_list+0x50/0x80
+ prune_icache_sb+0x6c/0x90
+ super_cache_scan+0x190/0x210
+ shrink_slab.part.15+0x22c/0x4c0
+ shrink_zone+0x288/0x3c0
+ do_try_to_free_pages+0x1dc/0x590
+ try_to_free_pages+0xdc/0x260
+ __alloc_pages_nodemask+0x72c/0xc90
+ alloc_pages_current+0xb4/0x1a0
+ page_table_alloc+0xc0/0x170
+ __pte_alloc+0x58/0x1f0
+ copy_page_range+0x4ec/0x950
+ copy_process.isra.5+0x15a0/0x1870
+ _do_fork+0xa8/0x4b0
+ ppc_clone+0x8/0xc
+
+In the meanwhile, all processes exiting/forking are blocked almost
+stalling the system.
+
+This patch moves the threadgroup_change_begin from before
+cgroup_fork() to just before cgroup_canfork().  There is no nee to
+worry about threadgroup changes till the task is actually added to the
+threadgroup.  This avoids having to call reclaim with
+cgroup_threadgroup_rwsem held.
+
+tj: Subject and description edits.
+
+Signed-off-by: Balbir Singh <bsingharora@gmail.com>
+Acked-by: Zefan Li <lizefan@huawei.com>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: stable@vger.kernel.org # v4.2+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/fork.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 52e725d..aaf7823 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -1404,7 +1404,6 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+ 	p->real_start_time = ktime_get_boot_ns();
+ 	p->io_context = NULL;
+ 	p->audit_context = NULL;
+-	threadgroup_change_begin(current);
+ 	cgroup_fork(p);
+ #ifdef CONFIG_NUMA
+ 	p->mempolicy = mpol_dup(p->mempolicy);
+@@ -1556,6 +1555,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+ 	INIT_LIST_HEAD(&p->thread_group);
+ 	p->task_works = NULL;
+ 
++	threadgroup_change_begin(current);
+ 	/*
+ 	 * Ensure that the cgroup subsystem policies allow the new process to be
+ 	 * forked. It should be noted the the new process's css_set can be changed
+@@ -1656,6 +1656,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+ bad_fork_cancel_cgroup:
+ 	cgroup_cancel_fork(p);
+ bad_fork_free_pid:
++	threadgroup_change_end(current);
+ 	if (pid != &init_struct_pid)
+ 		free_pid(pid);
+ bad_fork_cleanup_thread:
+@@ -1688,7 +1689,6 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+ 	mpol_put(p->mempolicy);
+ bad_fork_cleanup_threadgroup_lock:
+ #endif
+-	threadgroup_change_end(current);
+ 	delayacct_tsk_free(p);
+ bad_fork_cleanup_count:
+ 	atomic_dec(&p->cred->user->processes);
 -- 
-tejun
+2.7.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
