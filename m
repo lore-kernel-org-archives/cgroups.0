@@ -1,152 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC][PATCH] cgroup_threadgroup_rwsem - affects scalability and
- OOM
-Date: Wed, 10 Aug 2016 15:43:06 -0400
-Message-ID: <20160810194306.GP25053@mtj.duckdns.org>
-References: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET] kernfs, cgroup: make kernfs_path*() and
+ cgroup_path*() behave in strlcpy() style
+Date: Wed, 10 Aug 2016 11:25:09 -0400
+Message-ID: <20160810152505.GK25053@mtj.duckdns.org>
+References: <1470720204-4605-1-git-send-email-tj@kernel.org>
+ <20160809081819.GB10279@kroah.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=sQ6uhI4u03E6pKTG1PJiti6hisYkXUx6AxXU6LSzOVs=;
-        b=ef7/zQjMWeNgHYsb26PGTy0doDWB8TIaHMjK5YQpk5aQl/2ZD9nsORyN4D8m6XZxik
-         tqceT9D9FV/vbGB0rJOIgywBWtxYJBIccYQ/G/F57YMne/b08PNU3QnudmXUsYCNSvxK
-         cAMF3b3rwn9m9gmoyjEjstJXPVhpVg+I5rhAuTp3fSR0HwI2pk1h+5TPknAz8n4ffOaQ
-         F19rXXnou1y8kcpy/hpgQFvrNuE3iAD/ST9NWuYxFrV8y6EVcSajCIVU+c1Km525prl1
-         FjTYdU71EpkbIHdVJSzaxe8nGvNSaiUvGYi+f64OiR7Sb9DBcb7hAQ+/RYTPo+ofGJo2
-         UFhw==
+        bh=G57awYJsaG8+GdYeQmYotk1z/Vgw8t8BqOK8SLuVQ2M=;
+        b=kBYh008rAOfsVgRzroyB/nJaahx45+kyMaqNZNknN985lXwJpboDU8VvbiEN/novJJ
+         7pLFf0Jt4mYrjPqM4CuAtef3OypKWQW6j53z8uA97EZ1KBIwuSY8W72MLMgZ4t1htoXs
+         zaaFq3J2Tg12F1BDSIPp/uFw685bzDR84yC5QRGMew4qWPlhqmp9a7MFita3UA4ddmEd
+         SvWyqu/kNdz3j7Sc92zHPnU39conWsFjaYE3ynvj1Gs+4fmvuEUtAPzkmNiSCzP5iDLD
+         IU/q1u0FpzNgM2a8NUZfx5jGUDr4ryW1pwQvvR3A1woY/BF8St67u158QvhKqw2cRxtx
+         5mfQ==
 Content-Disposition: inline
-In-Reply-To: <4717ef90-ca86-4a34-c63a-94b8b4bfaaec@gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20160809081819.GB10279-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Balbir Singh <bsingharora@gmail.com>
-Cc: cgroups@vger.kernel.org, Oleg Nesterov <oleg@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Hello,
+On Tue, Aug 09, 2016 at 10:18:19AM +0200, Greg KH wrote:
+> On Tue, Aug 09, 2016 at 01:23:20AM -0400, Tejun Heo wrote:
+> > kernfs path formatting functions always return the length of full path
+> > but the content of the output buffer is undefined when the length is
+> > longer than the provided buffer.  Most cgroup path formatting
+> > functions return the start of the output or NULL on errors including
+> > overflow.  These inconsistent and rather peculiar behaviors developed
+> > over time and make these functions unnecessarily difficult to use.
+> > This patchset updates the formatting functions so that they all behave
+> > in the style of strlcpy().
+> > 
+> > Greg, these changes are used by cgroup tracepoint additions and
+> > shouldn't affect other users much.  Would it be okay to route these
+> > through the cgroup tree?
+> > 
+> >  0001-kernfs-add-dummy-implementation-of-kernfs_path_from_.patch
+> >  0002-kernfs-make-kernfs_path-behave-in-the-style-of-strlc.patch
+> >  0003-kernfs-remove-kernfs_path_len.patch
+> >  0004-cgroup-make-cgroup_path-and-friends-behave-in-the-st.patch
+> > 
+> > The patches are also available in the following git branch.
+> > 
+> >  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-kernfs_path-strlcpy
+> > 
+> > diffstat follows.  Thanks.
+> 
+> It's fine with me if you take these yourself:
+> 
+> Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 
-Edited subject and description and applied the patch to
-cgroup/for-4.8-fixes w/ stable cc'd.
+Applied 1-4 to cgroup/for-4.9.
 
 Thanks.
------- 8< ------
-From b570e91aaa563673dc6cca58c14388d68c767353 Mon Sep 17 00:00:00 2001
-From: Balbir Singh <bsingharora@gmail.com>
-Date: Tue, 9 Aug 2016 14:19:01 +1000
-Subject: [PATCH] cgroup: reduce read locked section of
- cgroup_threadgroup_rwsem during fork
 
-cgroup_threadgroup_rwsem is acquired in read mode during process exit
-and fork.  It is also grabbed in write mode during
-__cgroups_proc_write().  I've recently run into a scenario with lots
-of memory pressure and OOM and I am beginning to see
-
-systemd
-
- __switch_to+0x1f8/0x350
- __schedule+0x30c/0x990
- schedule+0x48/0xc0
- percpu_down_write+0x114/0x170
- __cgroup_procs_write.isra.12+0xb8/0x3c0
- cgroup_file_write+0x74/0x1a0
- kernfs_fop_write+0x188/0x200
- __vfs_write+0x6c/0xe0
- vfs_write+0xc0/0x230
- SyS_write+0x6c/0x110
- system_call+0x38/0xb4
-
-This thread is waiting on the reader of cgroup_threadgroup_rwsem to
-exit.  The reader itself is under memory pressure and has gone into
-reclaim after fork. There are times the reader also ends up waiting on
-oom_lock as well.
-
- __switch_to+0x1f8/0x350
- __schedule+0x30c/0x990
- schedule+0x48/0xc0
- jbd2_log_wait_commit+0xd4/0x180
- ext4_evict_inode+0x88/0x5c0
- evict+0xf8/0x2a0
- dispose_list+0x50/0x80
- prune_icache_sb+0x6c/0x90
- super_cache_scan+0x190/0x210
- shrink_slab.part.15+0x22c/0x4c0
- shrink_zone+0x288/0x3c0
- do_try_to_free_pages+0x1dc/0x590
- try_to_free_pages+0xdc/0x260
- __alloc_pages_nodemask+0x72c/0xc90
- alloc_pages_current+0xb4/0x1a0
- page_table_alloc+0xc0/0x170
- __pte_alloc+0x58/0x1f0
- copy_page_range+0x4ec/0x950
- copy_process.isra.5+0x15a0/0x1870
- _do_fork+0xa8/0x4b0
- ppc_clone+0x8/0xc
-
-In the meanwhile, all processes exiting/forking are blocked almost
-stalling the system.
-
-This patch moves the threadgroup_change_begin from before
-cgroup_fork() to just before cgroup_canfork().  There is no nee to
-worry about threadgroup changes till the task is actually added to the
-threadgroup.  This avoids having to call reclaim with
-cgroup_threadgroup_rwsem held.
-
-tj: Subject and description edits.
-
-Signed-off-by: Balbir Singh <bsingharora@gmail.com>
-Acked-by: Zefan Li <lizefan@huawei.com>
-Cc: Oleg Nesterov <oleg@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: stable@vger.kernel.org # v4.2+
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/fork.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 52e725d..aaf7823 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1404,7 +1404,6 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 	p->real_start_time = ktime_get_boot_ns();
- 	p->io_context = NULL;
- 	p->audit_context = NULL;
--	threadgroup_change_begin(current);
- 	cgroup_fork(p);
- #ifdef CONFIG_NUMA
- 	p->mempolicy = mpol_dup(p->mempolicy);
-@@ -1556,6 +1555,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 	INIT_LIST_HEAD(&p->thread_group);
- 	p->task_works = NULL;
- 
-+	threadgroup_change_begin(current);
- 	/*
- 	 * Ensure that the cgroup subsystem policies allow the new process to be
- 	 * forked. It should be noted the the new process's css_set can be changed
-@@ -1656,6 +1656,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- bad_fork_cancel_cgroup:
- 	cgroup_cancel_fork(p);
- bad_fork_free_pid:
-+	threadgroup_change_end(current);
- 	if (pid != &init_struct_pid)
- 		free_pid(pid);
- bad_fork_cleanup_thread:
-@@ -1688,7 +1689,6 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 	mpol_put(p->mempolicy);
- bad_fork_cleanup_threadgroup_lock:
- #endif
--	threadgroup_change_end(current);
- 	delayacct_tsk_free(p);
- bad_fork_cleanup_count:
- 	atomic_dec(&p->cred->user->processes);
 -- 
-2.7.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
