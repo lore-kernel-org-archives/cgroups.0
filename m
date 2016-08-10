@@ -1,41 +1,40 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Blkio not providing performance relative to the weights
-Date: Tue, 9 Aug 2016 23:42:04 -0400
-Message-ID: <20160810034204.GC25053@mtj.duckdns.org>
-References: <CAKpF0T4sLmp=U-RQTeOk6miLG9daarJnRk2v=gL6MvCaS+a4Kw@mail.gmail.com>
+Subject: Re: [PATCH] cpuset: make sure new tasks conform to the current
+ config of the cpuset
+Date: Tue, 9 Aug 2016 23:59:59 -0400
+Message-ID: <20160810035959.GF25053@mtj.duckdns.org>
+References: <57A94D0D.5040006@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=vHk1o4lfaZORV2Zo9rs2it/QGrY3louHMevGZKyl/qo=;
-        b=aq76OpG8nytI7hH0MEWEbRz4sSS1nCSAnZFLE+rMjLnEY+OFZo4UPEQz7eZ2AZJwji
-         rVAb+4E9CGvqjOURpFyFWESmQpOUWDvdVTOFm7Ci2D1Jof7NG6mGcpNewtd0g5bC/ZNa
-         Vm3UNyj8K524rw4gAQgS6aYHZh4dCbsZXjDKB2eIN2u0yGTEzgOEiB8ZyBLXzF0oYbIY
-         Y+OBPIOIdIe55ObL69cc++XKUYUNTtptLwDhV8Fs8ZpDMyML7SQojjsluOf/4Jd4l3sh
-         3XBXN1g6y3QrXQdE1mEr74Lib7PZZ4qPlAVkAogGmHU5Ek6nGB/yGNUR5sqAurghtFqu
-         pWKA==
+        bh=2T3McDy6zIdDTP/dM7lcUqWzZMqVrd7FJbii4w9fvF4=;
+        b=XopuHxK/S9llRiyU0reXC+KqpipWHKdPtXx2kE/dj78QO7z2FN/9MqGN49ScqrkbLY
+         9rb0W0MZaLLWBG5jBt8vwZ9lPXPKnXoLFysVnvFjcJ2pO8oP5+8+rSnjDVBtG2eXDTwu
+         MkNnDU+5OgDjF84uR04AzIt4IiJkCt+7jasUqpra8PLTFodkFJ5roOClVNaWN5hbtE5F
+         D45mh52ippI03VSoQ2iENQPN3QuaPVnFIqQp052Kti2Rue88urU1NMzwUFkWuWDAuCAN
+         HsSeV+doJRgwCSb5xdzAqQfOyeBzlyNQ28K8lLLadinp16NJNGftgHAgiw8knaj5D066
+         w1ew==
 Content-Disposition: inline
-In-Reply-To: <CAKpF0T4sLmp=U-RQTeOk6miLG9daarJnRk2v=gL6MvCaS+a4Kw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <57A94D0D.5040006-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ankur Khurana <ankur.kkhurana-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Ankur.
+On Tue, Aug 09, 2016 at 11:25:01AM +0800, Zefan Li wrote:
+> A new task inherits cpus_allowed and mems_allowed masks from its parent,
+> but if someone changes cpuset's config by writing to cpuset.cpus/cpuset.mems
+> before this new task is inserted into the cgroup's task list, the new task
+> won't be updated accordingly.
+> 
+> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Thu, Jul 28, 2016 at 02:55:39PM +0530, Ankur Khurana wrote:
-> My question is : Given that the bytes read were not in ratio of the
-> weights provided, Is this expected behavior ? if not, is it something
-> that I am possibly over looking while performing the experiments?
-
-Unfortunately, cfq's behavior isn't all that deterministic when it
-comes to proportional control.  The weights and actual sequential
-bandwidth do form postive correlation but that's about it and it
-doesn't look like cfq will get a lot better on this front.
+Applied to cgroup/for-4.8-fixes w/ stable cc'd.
 
 Thanks.
 
