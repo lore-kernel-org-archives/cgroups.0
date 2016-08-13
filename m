@@ -1,57 +1,62 @@
-From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 3/5] net: add udp limit to net cgroup
-Date: Fri, 12 Aug 2016 21:35:37 -0700
-Message-ID: <20160813043535.GB55856@ast-mbp.thefacebook.com>
-References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
- <1470876798-4024-4-git-send-email-anaravaram@google.com>
+From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Documentation] State of CPU controller in cgroup v2
+Date: Sat, 13 Aug 2016 07:08:33 +0200
+Message-ID: <1471064913.4047.85.camel@gmail.com>
+References: <20160805170752.GK2542@mtj.duckdns.org>
+	 <1470474291.4117.243.camel@gmail.com> <20160810220944.GB3085@cmpxchg.org>
+	 <1470896706.4116.146.camel@gmail.com> <20160812221742.GA24736@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=gA4ifge25llI5KaUH15w8xonQqPGjF9S/ei/rd7K16I=;
-        b=sxe5BDxONrQ01AcQ0fUrAeOv3ZoF5XwofPtGusoW2nXyjmpwULxtjMSU+SjGA+hCV7
-         43qQuKASNWqljR5VcR7CttJbj0dHll+g0XNqBZhGVSZqfRGQchmyHCLForX+4u7p+K4Z
-         8rJeLhP7/aNa/1pwkG/mfrZXcR3UKgWtRXx0IHwNSs7c2eVCJpaO5iPj2iMjfXX3uJQ9
-         CgypUkN+UI62GJTwQaeuRTfoXkWieHOWtkwOsYV34pigA6flK4Wtns0AM8H0kexmnoos
-         q9D0gPFHnbJadHvze9K2ryRO5/9pN54Ow+A/92t/KeRNVwonzgittKWKJ94Q389m3Ylg
-         utdg==
-Content-Disposition: inline
-In-Reply-To: <1470876798-4024-4-git-send-email-anaravaram-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Anoop Naravaram <anaravaram-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: corbet-T1hC0tSOHrs@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org, jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org, yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, maheshb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tom-BjP2VixgY4xUbtYUoyoikg@public.gmane.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=jNsa8E5UUpv/L5DnwVN9nRUvEFfVgVaPILxy6J+82mg=;
+        b=AXsgk8RvfGCHxhCfNbzqVCcVWZAbCsdI1xM7eDuBdX4mBSG6ewQeoHsQaYCey0AVt0
+         vuWz9MGoNGgH7iTF8wLJcPUshAAZpMSvl8c0FwhVa6mzMYhttIZTkT/R+Dl3HZG5+0pe
+         Ljo099XaEYuXwmi4kf5JTXS3m2bGE9Rftk5mlqo1KlZ5z608wzuVOf8jp2rBLX6bzANv
+         +tebxFiZxL7S+5TSZKe0qG3QOZnvDU28WFg+xlz6ATkQFhOb4da4cQ53GUIZA4H0Tn9R
+         dlUSGZN+4ueYeV2rJlVfsLgHBFgae5h1L7Jj2+s8aiG+DjOGGJl9BrNIWXvUPGm2daeP
+         lfGg==
+In-Reply-To: <20160812221742.GA24736-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Aug 10, 2016 at 05:53:16PM -0700, Anoop Naravaram wrote:
-> udp port limit
-> --------------
-> This property controls the limit of udp ports that can be used by the
-> processes in a cgroup. The controller manages udp statistics (usage,
-> limit, etc) for each cgroup. Every cgroup also keeps track of the udp
-> ports acquired by its descendants. If a process tries to acquire a port
-> when its cgroup has already reached its limit, it will fail with error
-> EACCES. It will also fail if one of the cgroup's ancestors has reached its
-> limit. There are 5 files exposed to userspace to configure this property:
+On Fri, 2016-08-12 at 18:17 -0400, Johannes Weiner wrote:
+
+> > > This argument that cgroup2 is not backward compatible is laughable.
+> > 
+> > Fine, you're entitled to your sense of humor.  I have one to, I find it
+> > laughable that threaded applications can only sit there like a lump of
+> > mud simply because they share more than applications written as a
+> > gaggle of tasks.  "Threads are like.. so yesterday, the future belongs
+> > to the process" tickles my funny-bone.  Whatever, to each his own.
 > 
-> * 'net.udp_usage': Reading this file gives the number of udp ports used by
-> processes in this cgroup and all its descendants.
-> * 'net.udp_limit': Writing this file sets the total number of udp ports
-> that can be used by processes in this cgroup and all
-> its descendants. This file can also be read.
-> * 'net.udp_maxusage': Reading this file gives the highest value of
-> net.udp_usage that has been seen for this cgroup.
-> * 'net.udp_failcnt': Reading this file gives the number of times a
-> process in this cgroup or one of its descendants has attempted to acquire
-> a udp port but failed because the limit of this cgroup was reached.
-> * 'net.udp_underflowcnt': Reading this file gives the number of times a
-> process in this cgroup or one of its descendants released a udp port when
-> the usage value of this cgroup was 0.
+> Who are you quoting here? This is such a grotesque misrepresentation
+> of what we have been saying and implementing, it's not even funny.
 
-I have similar concern here. I don't think we should bloat the kernel by
-trying implement every possible port restriction combination and count.
-For the same reasons we don't do all possible tcp stats that research
-community finds useful. This additional code is a maintenance headache.
+Agreed, it's not funny to me either.  Excluding threaded applications
+from doing.. anything.. implies to me that either someone thinks same
+do not need resource management facilities due to some magical property
+of threading itself, or someone doesn't realize that an application
+thread is a task, ie one and the same things which can be doing one and
+the same job.  No matter how I turn it, what I see is nonsense.
+
+> https://yourlogicalfallacyis.com/black-or-white
+> https://yourlogicalfallacyis.com/strawman
+> https://yourlogicalfallacyis.com/appeal-to-emotion
+
+Nope, plain ole sarcasm, an expression of shock and awe.
+
+> It's great that cgroup1 works for some of your customers, and they are
+> free to keep using it.
+
+If no third party can flush my customers investment down the toilet, I
+can cease to care.  Please don't CC me in future, you're unlikely to
+convince me that v2 is remotely sane, nor do you need to.  Lucky you. 
+ 
+	-Mike
