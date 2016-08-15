@@ -1,62 +1,61 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Sat, 13 Aug 2016 07:08:33 +0200
-Message-ID: <1471064913.4047.85.camel@gmail.com>
-References: <20160805170752.GK2542@mtj.duckdns.org>
-	 <1470474291.4117.243.camel@gmail.com> <20160810220944.GB3085@cmpxchg.org>
-	 <1470896706.4116.146.camel@gmail.com> <20160812221742.GA24736@cmpxchg.org>
+From: Mahesh Bandewar <maheshb@google.com>
+Subject: Re: [PATCH 3/5] net: add udp limit to net cgroup
+Date: Mon, 15 Aug 2016 12:16:17 -0700
+Message-ID: <CAF2d9jiq=MpT71Pzd5AdDbvnEaA3BD6pa_Ov6NZOFrQiHK5i4w@mail.gmail.com>
+References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
+ <1470876798-4024-4-git-send-email-anaravaram@google.com> <20160813043535.GB55856@ast-mbp.thefacebook.com>
 Mime-Version: 1.0
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=GMWudeSN3BcY7Ctln9InL5skwTR56lFfN08ls/X+6WE=;
+        b=iX41HvfZsVfcxzrb5Q9E6hKWYWg4uOuyTP5Op5jvIB8gFz1f84TMLDeGHKn/BkgB9E
+         XG5ydyWj6G0+NNj3zCjfH9rqwfwGJDxGio7hiyTAU51iWRcri+9l/XbYNK5ByQNTBLtK
+         Gv6berRqAa/HYGFjWZeYbZAoxx9y3hM39rfgHrMMgsKOK9Pk7b6ZZUo12iFhJCIkF/du
+         jRjmM5EVsicHvwR96u/22qhfQb93qc01+psj+pTOTTBuw9j5Ge3mNbVzcdtumEDkAg4E
+         4xNk7X6aBljbk1J709n9B+EGkNPbTT1oaX+mtnR5BazAOe+Xh2ZzjSybQWwtXvcM3jJE
+         5DZg==
+In-Reply-To: <20160813043535.GB55856@ast-mbp.thefacebook.com>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=jNsa8E5UUpv/L5DnwVN9nRUvEFfVgVaPILxy6J+82mg=;
-        b=AXsgk8RvfGCHxhCfNbzqVCcVWZAbCsdI1xM7eDuBdX4mBSG6ewQeoHsQaYCey0AVt0
-         vuWz9MGoNGgH7iTF8wLJcPUshAAZpMSvl8c0FwhVa6mzMYhttIZTkT/R+Dl3HZG5+0pe
-         Ljo099XaEYuXwmi4kf5JTXS3m2bGE9Rftk5mlqo1KlZ5z608wzuVOf8jp2rBLX6bzANv
-         +tebxFiZxL7S+5TSZKe0qG3QOZnvDU28WFg+xlz6ATkQFhOb4da4cQ53GUIZA4H0Tn9R
-         dlUSGZN+4ueYeV2rJlVfsLgHBFgae5h1L7Jj2+s8aiG+DjOGGJl9BrNIWXvUPGm2daeP
-         lfGg==
-In-Reply-To: <20160812221742.GA24736-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: Anoop Naravaram <anaravaram@google.com>, corbet@lwn.net, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, David Miller <davem@davemloft.net>, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, linux-netdev <netdev@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Wei Wang <weiwan@google.com>, tom@herbertland.com
 
-On Fri, 2016-08-12 at 18:17 -0400, Johannes Weiner wrote:
+On Fri, Aug 12, 2016 at 9:35 PM, Alexei Starovoitov
+<alexei.starovoitov@gmail.com> wrote:
+[...]
+>> * 'net.udp_usage': Reading this file gives the number of udp ports used by
+>> processes in this cgroup and all its descendants.
+>> * 'net.udp_limit': Writing this file sets the total number of udp ports
+>> that can be used by processes in this cgroup and all
+>> its descendants. This file can also be read.
+>> * 'net.udp_maxusage': Reading this file gives the highest value of
+>> net.udp_usage that has been seen for this cgroup.
+>> * 'net.udp_failcnt': Reading this file gives the number of times a
+>> process in this cgroup or one of its descendants has attempted to acquire
+>> a udp port but failed because the limit of this cgroup was reached.
+>> * 'net.udp_underflowcnt': Reading this file gives the number of times a
+>> process in this cgroup or one of its descendants released a udp port when
+>> the usage value of this cgroup was 0.
+>
+> I have similar concern here. I don't think we should bloat the kernel by
+> trying implement every possible port restriction combination and count.
+> For the same reasons we don't do all possible tcp stats that research
+> community finds useful. This additional code is a maintenance headache.
+>
+At this moment if a rampant process decides to just open a datagram
+socket and just binds (does not listen) and does this for all
+available ports, you are guaranteed to have machine becoming useless
+for some (totally unrelated) legitimate process trying to do useful
+things.
 
-> > > This argument that cgroup2 is not backward compatible is laughable.
-> > 
-> > Fine, you're entitled to your sense of humor.  I have one to, I find it
-> > laughable that threaded applications can only sit there like a lump of
-> > mud simply because they share more than applications written as a
-> > gaggle of tasks.  "Threads are like.. so yesterday, the future belongs
-> > to the process" tickles my funny-bone.  Whatever, to each his own.
-> 
-> Who are you quoting here? This is such a grotesque misrepresentation
-> of what we have been saying and implementing, it's not even funny.
+From kernel we can't control such user-space behavior, but at least
+restrict the damage to "a specific set of processes". This code
+provides that feature to restrict the damage.
 
-Agreed, it's not funny to me either.  Excluding threaded applications
-from doing.. anything.. implies to me that either someone thinks same
-do not need resource management facilities due to some magical property
-of threading itself, or someone doesn't realize that an application
-thread is a task, ie one and the same things which can be doing one and
-the same job.  No matter how I turn it, what I see is nonsense.
-
-> https://yourlogicalfallacyis.com/black-or-white
-> https://yourlogicalfallacyis.com/strawman
-> https://yourlogicalfallacyis.com/appeal-to-emotion
-
-Nope, plain ole sarcasm, an expression of shock and awe.
-
-> It's great that cgroup1 works for some of your customers, and they are
-> free to keep using it.
-
-If no third party can flush my customers investment down the toilet, I
-can cease to care.  Please don't CC me in future, you're unlikely to
-convince me that v2 is remotely sane, nor do you need to.  Lucky you. 
- 
-	-Mike
+Additional code is always a maintenance headache but that doesn't stop
+us from adding new code, isn't it? :)
