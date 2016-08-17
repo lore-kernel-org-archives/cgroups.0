@@ -1,101 +1,56 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: [PATCH 2/5] net: add bind/listen ranges to net cgroup
-Date: Tue, 16 Aug 2016 20:02:30 -0700
-Message-ID: <20160817030228.GA87567@ast-mbp.thefacebook.com>
-References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
- <1470876798-4024-3-git-send-email-anaravaram@google.com>
- <20160813042907.GA55856@ast-mbp.thefacebook.com>
- <CAF2d9jgbFNTm7oZ7kk0Xcjj7EAbMHE5wUpHgPQ8ZQ=D7FvFXcg@mail.gmail.com>
+From: Mike Galbraith <umgwanakikbuti@gmail.com>
+Subject: Re: [Documentation] State of CPU controller in cgroup v2
+Date: Wed, 17 Aug 2016 11:33:23 +0200
+Message-ID: <1471426403.4110.188.camel@gmail.com>
+References: <20160805170752.GK2542@mtj.duckdns.org>
+	 <1470474291.4117.243.camel@gmail.com> <20160810220944.GB3085@cmpxchg.org>
+	 <20160816140738.GW6879@twins.programming.kicks-ass.net>
+	 <20160816163045.GA16427@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=o/TCYO4DWNmMXX6JPD4si1m2GggeeA7KIdamL5Ovulc=;
-        b=Jw1uWEyHshDF5phTLBhqu0hIRsRPSgBGjDGBMui7zH3CzTihRMVRnbe1tWVXutnbDs
-         iPYyem9320MkbNRa8HxHWkNLpysDlPZb9LUIUXDTy7++EzN7iqzUX9BQ/OnXQDykltKs
-         PtQQqROeFE3ULwO71wMrzpkpgzapAegRu89XjBuNgkZ4+mLpvjV0QrDnZk1O1zp0Khuw
-         LnEHeZeI802uVtRGFNgz1/9tUXTTv5Wui2h93P8dffpn2xB9JkVgJ5sdVXEI0kUQxFj5
-         AFFb2VxZP0HWb9do95nyXtwzSMnTcyf0zzxUwuS5EYBnfGfeetX9TT6NHyHML66Nj4dy
-         vivg==
-Content-Disposition: inline
-In-Reply-To: <CAF2d9jgbFNTm7oZ7kk0Xcjj7EAbMHE5wUpHgPQ8ZQ=D7FvFXcg@mail.gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mahesh Bandewar <maheshb@google.com>
-Cc: Anoop Naravaram <anaravaram@google.com>, corbet@lwn.net, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, David Miller <davem@davemloft.net>, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, linux-netdev <netdev@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Wei Wang <weiwan@google.com>, tom@herbertland.com, Daniel Mack <daniel@zonque.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=9Wdg8VyN039KFglldgV83JTWXEeD20MjWawGj3ueqw8=;
+        b=Oh0eJsfdm6OgXzog2PxieX/6NBt8Kv0vVedKHraWkRUfRL4TmkQRieQbVWJpTq/6gy
+         dww7AfwONrh006n0zD48fZzj7TwjJ/Da5Ei2LTbz9d2nAaCxG+294TS41d37Ldeyjop6
+         6rq7B71vNt0RF8047whoSjsNYkWFU2qapwAwqoxLeBexYVkFFcBb66sOa92SBz+1pUeW
+         85AzzxEs0HOFTmdYXvPsBAbfA6bGZYSJsg4RMjXNlbOJl/TEb/PYfUsTvIJD+LrFjD6r
+         diB92aRtLgO2hcjusBGZyYjJEuOUQKnSKWA1WHWkw0JdH0tkGNqO/XT0w7CJYBZxJUWi
+         KKMA==
+In-Reply-To: <20160816163045.GA16427@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Paul Turner <pjt@google.com>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-api@vger.kernel.org, kernel-team@fb.com
 
-On Mon, Aug 15, 2016 at 12:05:40PM -0700, Mahesh Bandewar wrote:
-> On Fri, Aug 12, 2016 at 9:29 PM, Alexei Starovoitov
-> <alexei.starovoitov@gmail.com> wrote:
-> [...]
-> >> +static bool range_in_ranges(struct net_range *r, struct net_ranges *rs)
-> >> +{
-> >> +     int ri;
-> >> +
-> >> +     for (ri = 0; ri < rs->num_entries; ri++)
-> >> +             if (r->min_value >= rs->range[ri].min_value &&
-> >> +                 r->max_value <= rs->range[ri].max_value)
-> >> +                     return true;
-> >> +
-> >> +     return false;
-> >> +}
-> >> +
-> >> +/* Returns true if all the ranges in rs1 are subsets of at least one of the
-> >> + * ranges in rs2, ans returns false otherwise.
-> >> + */
-> >> +static bool ranges_in_ranges(struct net_ranges *rs1, struct net_ranges *rs2)
-> >> +{
-> >> +     int ri;
-> >> +
-> >> +     for (ri = 0; ri < rs1->num_entries; ri++)
-> >> +             if (!range_in_ranges(&rs1->range[ri], rs2))
-> >> +                     return false;
-> >> +
-> >> +     return true;
-> >> +}
-> >
-> > This is not a scalable implementation. The next step would be to
-> > do a binary search, hash table or something else here?
-> > I think the root of the problem is in hard coded checks
-> > that quickly become inefficient and inadequate as applicability
-> > of the feature grows.
-> > We already have BPF that can suite this purpose much better
-> > without bloating the kernel code with parsing and matching logic.
-> >
-> This is not a per packet cost and mostly paid once when you are
-> establishing the channel. Having said that I do agree with you that
-> the check can be optimized by doing something like a hash-table etc.
+On Tue, 2016-08-16 at 12:30 -0400, Johannes Weiner wrote:
+> On Tue, Aug 16, 2016 at 04:07:38PM +0200, Peter Zijlstra wrote:
+
+> > Also, the argument there seems unfair at best, you don't need cpu-v2 for
+> > buffered write control, you only need memcg and block co-mounted.
 > 
-> This is an ABI extension to the cgroup so having the code where it is
-> now makes sense to maintain that ABI compatibility. Implementing using
-> something else (e.g. eBPF etc.) would just mean that this code needs
-> to be just moved at a different place than the current place so the
-> net gain would be nothing.
+> Yes, memcg and block agreeing is enough for that case. But I mentioned
+> a whole bunch of these examples, to make the broader case for a common
+> controller model.
 
-In cgroup+bpf approach we don't need to extend abi every time new 
-port range style or new statistics needs to be added. These hundreds
-lines of hard coded checks can be avoided.
-Daniel Mack is working on cgroup+bpf patches that will allow
-attaching bpf to a cgroup. It will be new networking controller.
-The same approach should be used here. I'm proposing to do
-the same hooks as net_cgroup_bind_allowed() in inet_bind() and
-net_cgroup_listen_allowed() in inet_csk_listen_start(), but the
-code that does the check should be a bpf program that decides whether
-port permitted or not.
-New bpf program type can be trivially introduced that takes single
-'portno' argument. The user space will attach it to a cgroup and then
-free to do whatever port filtering logic and statistics by changing
-the program without ever touching abi. Including hash tables that
-are already part of bpf.
+The core issue I have with that model is that it defines context=mm,
+and declares context=task to be invalid, while in reality, both views
+are perfectly valid, useful, and in use.  That redefinition of context
+is demonstrably harmful when applied to scheduler related controllers,
+rendering a substantial portion of to be managed objects completely
+unmanageable.  You (collectively) know that full well.
 
-Daniel's slightly different approach to cgroup+bpf can do the same
-in more generic way by hooking next to sk_filter() and parsing
-the packet (it will work for any protocol), but it has
-per-packet cost which I understand you want to avoid here by
-adding hooks to inet_bind() and inet_csk_listen_start()
-which makes sense.
+AFAIKT, there is only one viable option, and that is to continue to
+allow both.  Whether you like the duality or not (who would), it's
+deeply embedded in what's under the controllers, and won't go away.
 
+I'll now go try a little harder while you ponder (or pop) this thought
+bubble, see if I can set a new personal best at the art of ignoring. 
+
+(CC did not help btw, your bad if you don't like bubble content)
+
+	-Mike
