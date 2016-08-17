@@ -1,95 +1,101 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Tue, 16 Aug 2016 17:59:29 -0400
-Message-ID: <20160816215929.GF9516@htj.duckdns.org>
-References: <20160805170752.GK2542@mtj.duckdns.org>
- <1470474291.4117.243.camel@gmail.com>
- <20160810220944.GB3085@cmpxchg.org>
- <20160816140738.GW6879@twins.programming.kicks-ass.net>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: [PATCH 2/5] net: add bind/listen ranges to net cgroup
+Date: Tue, 16 Aug 2016 20:02:30 -0700
+Message-ID: <20160817030228.GA87567@ast-mbp.thefacebook.com>
+References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
+ <1470876798-4024-3-git-send-email-anaravaram@google.com>
+ <20160813042907.GA55856@ast-mbp.thefacebook.com>
+ <CAF2d9jgbFNTm7oZ7kk0Xcjj7EAbMHE5wUpHgPQ8ZQ=D7FvFXcg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=2YLzpascAZf/1pNvyNJLG7ToIBFhGoI/tozqzB0Tm6U=;
-        b=wwVJvkMt4gUWLU0Q3YHaP+gzjvxQadCff1W6MHLB3NYGWggR3nw3yhqYHPZHmpaVGd
-         +OaGVe8EhHiYoZdW5TxIyOsImE4e7HF0+3YGNENANR7Mi1fdAmyl8k1jAEgyKmzeKiJn
-         qm64pOpxvHKFLCTVBBRkYEI/IleFxFY6c5AyxYCtcd2hFE/rEcVkcRlg1ec1M1sSVvZc
-         yYqtHjiOzaQjV9s9Zp0QJYeCB4tII6t79KXut+ILY1EGGufdczBAQI5LEwU6z99jOepD
-         CtmXXJ0JzQunKJ6Us9vbHyXUQ6/hEGHtqNNnEi1wHHulJuONkqtRvS6fqdnxyOkIcBWB
-         Dopg==
+        bh=o/TCYO4DWNmMXX6JPD4si1m2GggeeA7KIdamL5Ovulc=;
+        b=Jw1uWEyHshDF5phTLBhqu0hIRsRPSgBGjDGBMui7zH3CzTihRMVRnbe1tWVXutnbDs
+         iPYyem9320MkbNRa8HxHWkNLpysDlPZb9LUIUXDTy7++EzN7iqzUX9BQ/OnXQDykltKs
+         PtQQqROeFE3ULwO71wMrzpkpgzapAegRu89XjBuNgkZ4+mLpvjV0QrDnZk1O1zp0Khuw
+         LnEHeZeI802uVtRGFNgz1/9tUXTTv5Wui2h93P8dffpn2xB9JkVgJ5sdVXEI0kUQxFj5
+         AFFb2VxZP0HWb9do95nyXtwzSMnTcyf0zzxUwuS5EYBnfGfeetX9TT6NHyHML66Nj4dy
+         vivg==
 Content-Disposition: inline
-In-Reply-To: <20160816140738.GW6879-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAF2d9jgbFNTm7oZ7kk0Xcjj7EAbMHE5wUpHgPQ8ZQ=D7FvFXcg@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Mahesh Bandewar <maheshb@google.com>
+Cc: Anoop Naravaram <anaravaram@google.com>, corbet@lwn.net, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, David Miller <davem@davemloft.net>, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, linux-netdev <netdev@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Wei Wang <weiwan@google.com>, tom@herbertland.com, Daniel Mack <daniel@zonque.org>
 
-Hello, Peter.
-
-On Tue, Aug 16, 2016 at 04:07:38PM +0200, Peter Zijlstra wrote:
-> On Wed, Aug 10, 2016 at 06:09:44PM -0400, Johannes Weiner wrote:
+On Mon, Aug 15, 2016 at 12:05:40PM -0700, Mahesh Bandewar wrote:
+> On Fri, Aug 12, 2016 at 9:29 PM, Alexei Starovoitov
+> <alexei.starovoitov@gmail.com> wrote:
+> [...]
+> >> +static bool range_in_ranges(struct net_range *r, struct net_ranges *rs)
+> >> +{
+> >> +     int ri;
+> >> +
+> >> +     for (ri = 0; ri < rs->num_entries; ri++)
+> >> +             if (r->min_value >= rs->range[ri].min_value &&
+> >> +                 r->max_value <= rs->range[ri].max_value)
+> >> +                     return true;
+> >> +
+> >> +     return false;
+> >> +}
+> >> +
+> >> +/* Returns true if all the ranges in rs1 are subsets of at least one of the
+> >> + * ranges in rs2, ans returns false otherwise.
+> >> + */
+> >> +static bool ranges_in_ranges(struct net_ranges *rs1, struct net_ranges *rs2)
+> >> +{
+> >> +     int ri;
+> >> +
+> >> +     for (ri = 0; ri < rs1->num_entries; ri++)
+> >> +             if (!range_in_ranges(&rs1->range[ri], rs2))
+> >> +                     return false;
+> >> +
+> >> +     return true;
+> >> +}
+> >
+> > This is not a scalable implementation. The next step would be to
+> > do a binary search, hash table or something else here?
+> > I think the root of the problem is in hard coded checks
+> > that quickly become inefficient and inadequate as applicability
+> > of the feature grows.
+> > We already have BPF that can suite this purpose much better
+> > without bloating the kernel code with parsing and matching logic.
+> >
+> This is not a per packet cost and mostly paid once when you are
+> establishing the channel. Having said that I do agree with you that
+> the check can be optimized by doing something like a hash-table etc.
 > 
-> > [ That, and a disturbing number of emotional outbursts against
-> >   systemd, which has nothing to do with any of this. ]
-> 
-> Oh, so I'm entirely dreaming this then:
-> 
->   https://github.com/systemd/systemd/pull/3905
-> 
-> Completely unrelated.
+> This is an ABI extension to the cgroup so having the code where it is
+> now makes sense to maintain that ABI compatibility. Implementing using
+> something else (e.g. eBPF etc.) would just mean that this code needs
+> to be just moved at a different place than the current place so the
+> net gain would be nothing.
 
-We use centos in the fleet and are trying to control resources in base
-system which of course requires writeback control and thus cgroup v2.
-I'm working to solve the use cases people are facing and systemd is a
-piece of the puzzle.  There is no big conspiracy.
+In cgroup+bpf approach we don't need to extend abi every time new 
+port range style or new statistics needs to be added. These hundreds
+lines of hard coded checks can be avoided.
+Daniel Mack is working on cgroup+bpf patches that will allow
+attaching bpf to a cgroup. It will be new networking controller.
+The same approach should be used here. I'm proposing to do
+the same hooks as net_cgroup_bind_allowed() in inet_bind() and
+net_cgroup_listen_allowed() in inet_csk_listen_start(), but the
+code that does the check should be a bpf program that decides whether
+port permitted or not.
+New bpf program type can be trivially introduced that takes single
+'portno' argument. The user space will attach it to a cgroup and then
+free to do whatever port filtering logic and statistics by changing
+the program without ever touching abi. Including hash tables that
+are already part of bpf.
 
-As Johannes and Chris already pointed out, systemd is a user of cgroup
-v2, a pretty important one at this point.  While I of course care
-about it having a proper support for cgroup v2, systemd is just
-picking up the changes in cgroup v2.  cgroup v2 design wouldn't be
-different without systemd.  We'll just have something else playing its
-role in resource management.
+Daniel's slightly different approach to cgroup+bpf can do the same
+in more generic way by hooking next to sk_filter() and parsing
+the packet (it will work for any protocol), but it has
+per-packet cost which I understand you want to avoid here by
+adding hooks to inet_bind() and inet_csk_listen_start()
+which makes sense.
 
-> Also, the argument there seems unfair at best, you don't need cpu-v2 for
-> buffered write control, you only need memcg and block co-mounted.
-
-( Everything I'm gonna write below has already been extensively
-  documented in the posted documentation.  I'm gonna repeat the points
-  for completeness but if we're gonna start an actually technical
-  discussion, let's please start from the documentation instead of
-  jumping off of an one liner and trying to rebuild the entire
-  argument each time.
-
-  I'm not sure what you exactly meant by the above sentence and
-  assuming that you're saying that there are no new capabilities
-  gained by cpu controller being on the v2 hierarchy and thus the cpu
-  controller doesn't need to be on cgroup v2?  If I'm mistaken, please
-  let me know. )
-
-Just co-mounting isn't enough as it still leaves the problems with
-anonymous consumption, different handling of threads belonging to
-different cgroups, and whether it's acceptable to always require blkio
-to use memory controller.  cgroup v2 is what we got after working
-through all these issues.
-
-While it is true that cpu controller doesn't need to be on cgroup v2
-for writeback control to work, it misses the point about the larger
-design issues identified during writeback control work, which can be
-easily applied to the cpu controller - e.g. accounting cpu cycles
-spent for packet reception, memory reclaim, IO encryption and so on.
-
-In addition, it is an unnecessary inconvenience for users who want
-writeback control to require the complication of mixed v1 and v2
-hierarchies when their requirements can be easily served by v2,
-especially considering that the only blocked part is trivial changes
-to expose cpu controller interface on v2 and that enabling it on v2
-doesn't preclude it from being used on a v1 hierarchy if necessary.
-
-Thanks.
-
--- 
-tejun
