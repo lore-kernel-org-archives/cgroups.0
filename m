@@ -1,56 +1,200 @@
-From: Mike Galbraith <umgwanakikbuti@gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
 Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Wed, 17 Aug 2016 11:33:23 +0200
-Message-ID: <1471426403.4110.188.camel@gmail.com>
+Date: Wed, 17 Aug 2016 13:18:24 -0700
+Message-ID: <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ@mail.gmail.com>
 References: <20160805170752.GK2542@mtj.duckdns.org>
-	 <1470474291.4117.243.camel@gmail.com> <20160810220944.GB3085@cmpxchg.org>
-	 <20160816140738.GW6879@twins.programming.kicks-ass.net>
-	 <20160816163045.GA16427@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=9Wdg8VyN039KFglldgV83JTWXEeD20MjWawGj3ueqw8=;
-        b=Oh0eJsfdm6OgXzog2PxieX/6NBt8Kv0vVedKHraWkRUfRL4TmkQRieQbVWJpTq/6gy
-         dww7AfwONrh006n0zD48fZzj7TwjJ/Da5Ei2LTbz9d2nAaCxG+294TS41d37Ldeyjop6
-         6rq7B71vNt0RF8047whoSjsNYkWFU2qapwAwqoxLeBexYVkFFcBb66sOa92SBz+1pUeW
-         85AzzxEs0HOFTmdYXvPsBAbfA6bGZYSJsg4RMjXNlbOJl/TEb/PYfUsTvIJD+LrFjD6r
-         diB92aRtLgO2hcjusBGZyYjJEuOUQKnSKWA1WHWkw0JdH0tkGNqO/XT0w7CJYBZxJUWi
-         KKMA==
-In-Reply-To: <20160816163045.GA16427@cmpxchg.org>
+        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=X8Qo8gcfdUAzCBhxqMHQNjxt5nDVcGNF5EVkUW5kcAo=;
+        b=cGa1qCmMBksC6AQiFRxqSAgQq77ZldlqB/GvxOr3feH6AvFKNXRnzvTcJHNDMzDJsC
+         wgKvrasOWu1ORsqDgiPW/x7GjcyYUtIHLKWXwT3ynupT5ek4DcXVo/b5KWFIbflAQrXR
+         ZkWCEgsxCIdQOMhZdIsRF53N36MJV5vh/Q9/FzeirD3aoJSgSuSHWpzDvosDmcA2/eSO
+         2Au/F97pJyZvhNK9L5W7YwTE8jQNrZGE4Wzyh+BQzPpqyWRwpTgtvrrnNZT6XfFThggb
+         8l0PdiVVyspcLD/P96/SiOOuZ0UJc+BxJErIjJNnVwnVlp0r+bAq8BIcmKfxDTDyDwbj
+         HbMQ==
+In-Reply-To: <20160805170752.GK2542@mtj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Paul Turner <pjt@google.com>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-api@vger.kernel.org, kernel-team@fb.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-team@fb.com, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Paul Turner <pjt@google.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Tue, 2016-08-16 at 12:30 -0400, Johannes Weiner wrote:
-> On Tue, Aug 16, 2016 at 04:07:38PM +0200, Peter Zijlstra wrote:
+On Aug 5, 2016 7:07 PM, "Tejun Heo" <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> There have been several discussions around CPU controller support.
+> Unfortunately, no consensus was reached and cgroup v2 is sorely
+> lacking CPU controller support.  This document includes summary of the
+> situation and arguments along with an interim solution for parties who
+> want to use the out-of-tree patches for CPU controller cgroup v2
+> support.  I'll post the two patches as replies for reference.
+>
+> Thanks.
+>
+>
+> CPU Controller on Control Group v2
+>
+> August, 2016            Tejun Heo <tj@kernel.org>
+>
+>
+> While most controllers have support for cgroup v2 now, the CPU
+> controller support is not upstream yet due to objections from the
+> scheduler maintainers on the basic designs of cgroup v2.  This
+> document explains the current situation as well as an interim
+> solution, and details the disagreements and arguments.  The latest
+> version of this document can be found at the following URL.
+>
+>  https://git.kernel.org/cgit/linux/kernel/git/tj/cgroup.git/tree/Documentation/cgroup-v2-cpu.txt?h=cgroup-v2-cpu
+>
+>
+> CONTENTS
+>
+> 1. Current Situation and Interim Solution
+> 2. Disagreements and Arguments
+>   2-1. Contentious Restrictions
+>     2-1-1. Process Granularity
+>     2-1-2. No Internal Process Constraint
+>   2-2. Impact on CPU Controller
+>     2-2-1. Impact of Process Granularity
+>     2-2-2. Impact of No Internal Process Constraint
+>   2-3. Arguments for cgroup v2
+> 3. Way Forward
+> 4. References
+>
+>
+> 1. Current Situation and Interim Solution
+>
+> All objections from the scheduler maintainers apply to cgroup v2 core
+> design, and there are no known objections to the specifics of the CPU
+> controller cgroup v2 interface.  The only blocked part is changes to
+> expose the CPU controller interface on cgroup v2, which comprises the
+> following two patches:
+>
+>  [1] sched: Misc preps for cgroup unified hierarchy interface
+>  [2] sched: Implement interface for cgroup unified hierarchy
+>
+> The necessary changes are superficial and implement the interface
+> files on cgroup v2.  The combined diffstat is as follows.
+>
+>  kernel/sched/core.c    |  149 +++++++++++++++++++++++++++++++++++++++++++++++--
+>  kernel/sched/cpuacct.c |   57 ++++++++++++------
+>  kernel/sched/cpuacct.h |    5 +
+>  3 files changed, 189 insertions(+), 22 deletions(-)
+>
+> The patches are easy to apply and forward-port.  The following git
+> branch will always carry the two patches on top of the latest release
+> of the upstream kernel.
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/cgroup-v2-cpu
+>
+> There also are versioned branches going back to v4.4.
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/cgroup-v2-cpu-$KERNEL_VER
+>
+> While it's difficult to tell whether the CPU controller support will
+> be merged, there are crucial resource control features in cgroup v2
+> that are only possible due to the design choices that are being
+> objected to, and every effort will be made to ease enabling the CPU
+> controller cgroup v2 support out-of-tree for parties which choose to.
+>
+>
+> 2. Disagreements and Arguments
+>
+> There have been several lengthy discussion threads [3][4] on LKML
+> around the structural constraints of cgroup v2.  The two that affect
+> the CPU controller are process granularity and no internal process
+> constraint.  Both arise primarily from the need for common resource
+> domain definition across different resources.
+>
+> The common resource domain is a powerful concept in cgroup v2 that
+> allows controllers to make basic assumptions about the structural
+> organization of processes and controllers inside the cgroup hierarchy,
+> and thus solve problems spanning multiple types of resources.  The
+> prime example for this is page cache writeback: dirty page cache is
+> regulated through throttling buffered writers based on memory
+> availability, and initiating batched write outs to the disk based on
+> IO capacity.  Tracking and controlling writeback inside a cgroup thus
+> requires the direct cooperation of the memory and the IO controller.
+>
+> This easily extends to other areas, such as CPU cycles consumed while
+> performing memory reclaim or IO encryption.
+>
+>
+> 2-1. Contentious Restrictions
+>
+> For controllers of different resources to work together, they must
+> agree on a common organization.  This uniform model across controllers
+> imposes two contentious restrictions on the CPU controller: process
+> granularity and the no-internal-process constraint.
+>
+>
+>   2-1-1. Process Granularity
+>
+>   For memory, because an address space is shared between all threads
+>   of a process, the terminal consumer is a process, not a thread.
+>   Separating the threads of a single process into different memory
+>   control domains doesn't make semantical sense.  cgroup v2 ensures
+>   that all controller can agree on the same organization by requiring
+>   that threads of the same process belong to the same cgroup.
 
-> > Also, the argument there seems unfair at best, you don't need cpu-v2 for
-> > buffered write control, you only need memcg and block co-mounted.
-> 
-> Yes, memcg and block agreeing is enough for that case. But I mentioned
-> a whole bunch of these examples, to make the broader case for a common
-> controller model.
+I haven't followed all of the history here, but it seems to me that
+this argument is less accurate than it appears.  Linux, for better or
+for worse, has somewhat orthogonal concepts of thread groups
+(processes), mms, and file tables.  An mm has VMAs in it, and VMAs can
+reference things (files, etc) that hold resources.  (Two mms can share
+resources by mapping the same thing or using fork().)  File tables
+hold files, and files can use resources.  Both of these are, at best,
+moderately good approximations of what actually holds resources.
+Meanwhile, threads (tasks) do syscalls, take page faults, *allocate*
+resources, etc.
 
-The core issue I have with that model is that it defines context=mm,
-and declares context=task to be invalid, while in reality, both views
-are perfectly valid, useful, and in use.  That redefinition of context
-is demonstrably harmful when applied to scheduler related controllers,
-rendering a substantial portion of to be managed objects completely
-unmanageable.  You (collectively) know that full well.
+So I think it's not really true to say that the "terminal consumer" of
+anything is a process, not a thread.
 
-AFAIKT, there is only one viable option, and that is to continue to
-allow both.  Whether you like the duality or not (who would), it's
-deeply embedded in what's under the controllers, and won't go away.
+While it's certainly easier to think about assigning processes to
+cgroups, and I certainly agree that, in the common case, it's the
+right thing to do, I don't see why requiring it is a good idea.  Can
+we turn this around: what actually goes wrong if cgroup v2 were to
+allow assigning individual threads if a user specifically requests it?
 
-I'll now go try a little harder while you ponder (or pop) this thought
-bubble, see if I can set a new personal best at the art of ignoring. 
+>
+>   There are other reasons to enforce process granularity.  One
+>   important one is isolating system-level management operations from
+>   in-process application operations.  The cgroup interface, being a
+>   virtual filesystem, is very unfit for multiple independent
+>   operations taking place at the same time as most operations have to
+>   be multi-step and there is no way to synchronize multiple accessors.
+>   See also [5] Documentation/cgroup-v2.txt, "R-2. Thread Granularity"
 
-(CC did not help btw, your bad if you don't like bubble content)
+I don't buy this argument at all.  System-level code is likely to
+assign single process *trees*, which are a different beast entirely.
+I.e. you fork, move the child into a cgroup, and that child and its
+children stay in that cgroup.  I don't see how the thread/process
+distinction matters.
 
-	-Mike
+On the contrary: with cgroup namespaces, one could easily create a
+cgroup namespace, shove a process in it, and let that process delegate
+its threads to child cgroups however it likes.  (Well, children of the
+namespace root.)
+
+>
+>
+>   2-1-2. No Internal Process Constraint
+>
+>   cgroup v2 does not allow processes to belong to any cgroup which has
+>   child cgroups when resource controllers are enabled on it (the
+>   notable exception being the root cgroup itself).
+
+Can you elaborate on this exception?  How do you get any of the
+supposed benefits of not having processes and cgroups exist as
+siblings when you make an exception for the root?  Similarly, if you
+make an exception for the root, what do you do about cgroup namespaces
+where the apparent root isn't the global root?
+
+--Andy
