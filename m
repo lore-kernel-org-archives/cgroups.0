@@ -1,116 +1,66 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Sat, 20 Aug 2016 22:34:14 -0700
-Message-ID: <1471757654.2354.97.camel@HansenPartnership.com>
+Date: Mon, 22 Aug 2016 12:12:46 +0200
+Message-ID: <1471860766.4110.103.camel@gmail.com>
 References: <20160805170752.GK2542@mtj.duckdns.org>
          <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ@mail.gmail.com>
+         <20160820155659.GA16906@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1471757657;
-        bh=tkvHagTATHy923IVDOfLhrdb4LTlZeqoih/3oTX9dE0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=YV2gOyTpncE6hdooTlTqf8qfUZuj27Y1qKeiii5qur6M7LllPzGOiM5BX29YyIpjD
-         ZH7n/5LjBtKg6I54SkLjT32VP3Xej9h1FBtBTzkOvSedIpSm74USw9ImMBTAg0dk50
-         +5mdlBbqZzGc8OdAGpDQTozmkrbspYfd/mSMDcJs=
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1471757656;
-        bh=tkvHagTATHy923IVDOfLhrdb4LTlZeqoih/3oTX9dE0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=htQzOoK6NqON/0WieGVBFCUDfg7LBSUnxajeVEutfJw/LdUEDWbGSKbYB9FYZZtZC
-         VvXzmuIz7GIgtz3pdVMYFx/7SS5Kiv3wTQZVhqhF0P8g5lpJ0PKBJR/14c9jbiBTqx
-         gxBdG3bnknUTg5TqwthPWS87ShNKachWa0E8bLJg=
-In-Reply-To: <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=LlFr50B+dr1L6waAPgfqVNL4Y01Y5WwEv9vGEGAJOuo=;
+        b=NojrqLka52UuHNZIuYRiVaeMicYPWJg/AuXLy1HkLXKZr5COnTcW71M2dUe0iVmCHj
+         U+lifsIqAKczRHYVWSLh4sUm0CZLB6xNfOxCWJPs61cfbHct0ZKgTYwcG7VPjtxNzkFW
+         AOAZBtPZAhVG3ii2PQSHL8jzBbKA4DHSOPD/xH03HybxCp7zzUteEdfJQG9w/ruPfGWR
+         KDYtyc+h2rq/QjKMUzZxV2KaEF3VXZCLQkfMrtaoKhWKu81WdOAK4ddopyglHmtq9Zi7
+         8DYXtpGNXovfOTAioOCOVkwXaX/A6m+uOiGd3QdNS7gHacf8d8SkSvXA6pcewX5zFw8Q
+         192w==
+In-Reply-To: <20160820155659.GA16906-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Wed, 2016-08-17 at 13:18 -0700, Andy Lutomirski wrote:
-> On Aug 5, 2016 7:07 PM, "Tejun Heo" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-[...]
-> > 2. Disagreements and Arguments
+On Sat, 2016-08-20 at 11:56 -0400, Tejun Heo wrote:
+
+> > >   there are other reasons to enforce process granularity.  One
+> > >   important one is isolating system-level management operations from
+> > >   in-process application operations.  The cgroup interface, being a
+> > >   virtual filesystem, is very unfit for multiple independent
+> > >   operations taking place at the same time as most operations have to
+> > >   be multi-step and there is no way to synchronize multiple accessors.
+> > >   See also [5] Documentation/cgroup-v2.txt, "R-2. Thread Granularity"
 > > 
-> > There have been several lengthy discussion threads [3][4] on LKML
-> > around the structural constraints of cgroup v2.  The two that 
-> > affect the CPU controller are process granularity and no internal 
-> > process constraint.  Both arise primarily from the need for common 
-> > resource domain definition across different resources.
-> > 
-> > The common resource domain is a powerful concept in cgroup v2 that
-> > allows controllers to make basic assumptions about the structural
-> > organization of processes and controllers inside the cgroup 
-> > hierarchy, and thus solve problems spanning multiple types of 
-> > resources.  The prime example for this is page cache writeback: 
-> > dirty page cache is regulated through throttling buffered writers 
-> > based on memory availability, and initiating batched write outs to 
-> > the disk based on IO capacity.  Tracking and controlling writeback 
-> > inside a cgroup thus requires the direct cooperation of the memory 
-> > and the IO controller.
-> > 
-> > This easily extends to other areas, such as CPU cycles consumed 
-> > while performing memory reclaim or IO encryption.
-> > 
-> > 
-> > 2-1. Contentious Restrictions
-> > 
-> > For controllers of different resources to work together, they must
-> > agree on a common organization.  This uniform model across 
-> > controllers imposes two contentious restrictions on the CPU 
-> > controller: process granularity and the no-internal-process
-> > constraint.
-> > 
-> > 
-> >   2-1-1. Process Granularity
-> > 
-> >   For memory, because an address space is shared between all
-> > threads
-> >   of a process, the terminal consumer is a process, not a thread.
-> >   Separating the threads of a single process into different memory
-> >   control domains doesn't make semantical sense.  cgroup v2 ensures
-> >   that all controller can agree on the same organization by
-> > requiring
-> >   that threads of the same process belong to the same cgroup.
+> > I don't buy this argument at all.  System-level code is likely to
+> > assign single process *trees*, which are a different beast entirely.
+> > I.e. you fork, move the child into a cgroup, and that child and its
+> > children stay in that cgroup.  I don't see how the thread/process
+> > distinction matters.
 > 
-> I haven't followed all of the history here, but it seems to me that
-> this argument is less accurate than it appears.  Linux, for better or
-> for worse, has somewhat orthogonal concepts of thread groups
-> (processes), mms, and file tables.  An mm has VMAs in it, and VMAs 
-> can reference things (files, etc) that hold resources.  (Two mms can
-> share resources by mapping the same thing or using fork().)  File 
-> tables hold files, and files can use resources.  Both of these are, 
-> at best, moderately good approximations of what actually holds 
-> resources. Meanwhile, threads (tasks) do syscalls, take page faults, 
-> *allocate* resources, etc.
+> Good point on the multi-process issue, this is something which nagged
+> me a bit while working on rgroup, although I have to point out that
+> the issue here is one of not going far enough rather than the approach
+> being wrong.  There are limitations to scoping it to individual
+> processes but that doesn't negate the underlying problem or the
+> usefulness of in-process control.
 > 
-> So I think it's not really true to say that the "terminal consumer" 
-> of anything is a process, not a thread.
-> 
-> While it's certainly easier to think about assigning processes to
-> cgroups, and I certainly agree that, in the common case, it's the
-> right thing to do, I don't see why requiring it is a good idea.  Can
-> we turn this around: what actually goes wrong if cgroup v2 were to
-> allow assigning individual threads if a user specifically requests
-> it?
+> For system-level and process-level operations to not step on each
+> other's toes, they need to agree on the granularity boundary -
+> system-level should be able to treat an application hierarchy as a
+> single unit.  A possible solution is allowing rgroup hirearchies to
+> span across process boundaries and implementing cgroup migration
+> operations which treat such hierarchies as a single unit.  I'm not yet
+> sure whether the boundary should be at program groups or rgroups.
 
-A similar point from a different consumer: from the unprivileged
-containers point of view, I'm interested in a thread based interface as
-well.  The principle utility of unprivileged containers is to allow
-applications that wish to to use container properties (effectively to
-become self-containerising).  Some that use the producer/consumer model
-do use process pools (apache springs to mind instantly) but some use
-thread pools.  It is useful to the latter to preserve the concept of a
-thread as being the entity inhabiting the cgroup (but only where the
-granularity of the cgroup permits threads to participate) so we can
-easily modify them to be self containerising without forcing them to
-switch back from a thread pool model to a process pool model.
+Why is it not viable to predicate contentious lowest common denominator
+restrictions upon the set of enabled controllers?  If only thread
+granularity controllers are enabled, from that point onward, v2
+restrictions cease to make any sense, thus could be lifted, leaving
+nobody cast adrift in a leaky v1 lifeboat when v2 sets sail.  Or?
 
-I can see that process based is conceptually easier in v2 because you
-begin with a process tree, but it would really be a pity to lose the
-thread based controls we have now and permanently lose the ability to
-create more as we find uses for them.  I can't really see how improving
-"common resource domain" is a good tradeoff for this.
-
-James
+	-Mike
