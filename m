@@ -1,33 +1,47 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Parav Pandit <pandit.parav@gmail.com>
 Subject: Re: [PATCH 0/5] Networking cgroup controller
-Date: Tue, 23 Aug 2016 13:07:43 +0530
-Message-ID: <CAG53R5U_=c-7Uog78_1MJBuUXivopyqq8+Un9BgYTO4P3ytWRA@mail.gmail.com>
+Date: Tue, 23 Aug 2016 14:19:31 +0530
+Message-ID: <CAG53R5UY7TH3XiOHa1sEa-zGXKfLm9UYBPR6zwP1KHbDSZe4tg@mail.gmail.com>
 References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc;
-        bh=TQkAnZeaAsnaHNLHG9/NA2H5lbzy0kr0pKMV5RxfdkY=;
-        b=FPylDVnRZ+HLjp7zyp+MXV1e8tthLlTuHmA2bplOqdsY+sJJhn8tMFMZFQaOwrPCwm
-         bBb2PtPTjr+m/zw8swj30A5JTr+EOVrTH9zwwNuZiwVtp5uYs3YKG+QWeq/tWnkKx41F
-         1antku2cEHGCySvpV+gJr+im7mPNDeuTu0o62UFR0vFI2pB4KsDQOTFgSrf55JBOTMnq
-         wLx+SwRettWAE/mdHJ0i1Qp04DffHqiSaniPF33d8aRnE51PcGmzOqvLJ73RPpwQJ8Zx
-         qd1uoQuW12gS4qFlO1JyqOuBBZcbAE17RvyP7fhvX1x7kVJRgsUTQVAm56/+soa54bq0
-         EuWw==
-In-Reply-To: <1470876798-4024-1-git-send-email-anaravaram-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=iOjn+TbSwyOUFLd5tHKAjNXDWrFVkFI9CZMxYgEK0FI=;
+        b=NwNhWEYivlxU1m94JnZuDE7edFEz9fHv0K7i25dTx/0XPmlPO0J09A6sd2cr22gYt1
+         hPMTtHOhy+BGp4SC3FrcECUUninYfUsrnU+YUbRp4aE5/c/B+BehzsjnLls4XLlh3l3a
+         0v7uCt4bCGuwEidXB+8+tBb+9xk6pCZg5xhYeTSPbO3H0FbdjuNZF2cFtyCMnphLWw4l
+         n+1kwaLqmlgeV4/8tl4c332TBy9ss/b3iY1ouV2qStJTDdG0J3Ae1IN9Q8FsTflFeV4Q
+         OVku6qw85p4Dm1QlZGUrlFCZX7db0mQHufC3g+LipCa+jvPkP2pykQoI19xsN/d6ITRx
+         24OA==
+In-Reply-To: <1470876798-4024-1-git-send-email-anaravaram@google.com>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Anoop Naravaram <anaravaram-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org, jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org, yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, maheshb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tom-BjP2VixgY4xUbtYUoyoikg@public.gmane.org
+To: Anoop Naravaram <anaravaram@google.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, davem@davemloft.net, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, edumazet@google.com, maheshb@google.com, weiwan@google.com, tom@herbertland.com
 
 Hi Anoop,
 
+Regardless of usecase, I think this functionality is best handled as
+LSM functionality instead of cgroup.
 
-On Thu, Aug 11, 2016 at 6:23 AM, Anoop Naravaram <anaravaram-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+Tasks which are proposed in this patch are related to access control checks.
+LSM already has required hooks for socket operations such as bind(),
+listen() as few small examples.
+
+Refer to security_socket_listen() which invokes LSM specific hooks.
+This is invoked in source/net/socket.c as part of listen() system call.
+LSM hook callback can check whether a given a process can listen to
+requested UDP port or not.
+
+Parav
+
+
+On Thu, Aug 11, 2016 at 6:23 AM, Anoop Naravaram <anaravaram@google.com> wrote:
 > This patchset introduces a cgroup controller for the networking subsystem as a
 > whole. As of now, this controller will be used for:
 >
@@ -50,8 +64,37 @@ On Thu, Aug 11, 2016 at 6:23 AM, Anoop Naravaram <anaravaram-hpIqsD4AKlfQT0dZR+A
 > In the future, more networking-related properties may be added to this
 > controller.
 >
-
-Since network namespace allows process in each namespace to listen to
-same port range in their own namespace.
-What is the rationale or use case to limit certain process to view
-certain port range?
+> Anoop Naravaram (5):
+>   net: create the networking cgroup controller
+>   net: add bind/listen ranges to net cgroup
+>   net: add udp limit to net cgroup
+>   net: add dscp ranges to net cgroup
+>   net: add test for net cgroup
+>
+>  Documentation/cgroup-v1/net.txt   |  95 +++++
+>  include/linux/cgroup_subsys.h     |   4 +
+>  include/net/net_cgroup.h          | 103 ++++++
+>  net/Kconfig                       |  10 +
+>  net/core/Makefile                 |   1 +
+>  net/core/net_cgroup.c             | 706 ++++++++++++++++++++++++++++++++++++++
+>  net/ipv4/af_inet.c                |   8 +
+>  net/ipv4/inet_connection_sock.c   |   7 +
+>  net/ipv4/ip_sockglue.c            |  13 +
+>  net/ipv4/udp.c                    |   8 +
+>  net/ipv6/af_inet6.c               |   7 +
+>  net/ipv6/datagram.c               |   9 +
+>  net/ipv6/ipv6_sockglue.c          |   8 +
+>  scripts/cgroup/net_cgroup_test.py | 359 +++++++++++++++++++
+>  14 files changed, 1338 insertions(+)
+>  create mode 100644 Documentation/cgroup-v1/net.txt
+>  create mode 100644 include/net/net_cgroup.h
+>  create mode 100644 net/core/net_cgroup.c
+>  create mode 100755 scripts/cgroup/net_cgroup_test.py
+>
+> --
+> 2.8.0.rc3.226.g39d4020
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
