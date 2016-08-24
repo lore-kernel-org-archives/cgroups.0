@@ -1,20 +1,24 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
 Subject: Re: [PATCH] mm: memcontrol: avoid unused function warning
-Date: Wed, 24 Aug 2016 10:41:21 +0200
-Message-ID: <20160824084121.GF31179@dhcp22.suse.cz>
+Date: Wed, 24 Aug 2016 12:18:39 +0300
+Message-ID: <20160824091839.GE1863@esperanza>
 References: <20160824082301.632345-1-arnd@arndb.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=YZFtCDc5uHc0lbbXATHP+nPy95TworpFYPQALLpBYxE=;
+ b=VS2ONv4/kttm1X/ywBASD696w+/L2NGsrGpUWO51QRhSl5JHeSUtM+unNt6/DPLD4j/BD1EucYKiQ8O+HPADHVTsjwvRyTY8WiOcAbPN/nzJaerX1Wer1eH7USuF2AvcYKoWjwTzFvolhGb8ecaPIdsxu19yPZjCFmiU1u7VknM=
 Content-Disposition: inline
 In-Reply-To: <20160824082301.632345-1-arnd@arndb.de>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Wed 24-08-16 10:22:43, Arnd Bergmann wrote:
+On Wed, Aug 24, 2016 at 10:22:43AM +0200, Arnd Bergmann wrote:
 > A bugfix in v4.8-rc2 introduced a harmless warning when CONFIG_MEMCG_SWAP
 > is disabled but CONFIG_MEMCG is enabled:
 > 
@@ -23,51 +27,11 @@ On Wed 24-08-16 10:22:43, Arnd Bergmann wrote:
 > 
 > This adds an extra #ifdef that matches the one around the caller to
 > avoid the warning.
-
-Thanks for fixing that! Could you please move the function to the same
-ifdef section as its users please.
-
+> 
 > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 > Fixes: 1f47b61fb407 ("mm: memcontrol: fix swap counter leak on swapout from offline cgroup")
 
-Anyway
-Acked-by: Michal Hocko <mhocko@suse.com>
-> ---
->  mm/memcontrol.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2ff0289ad061..e8d787163b65 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4082,6 +4082,7 @@ static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
->  	atomic_add(n, &memcg->id.ref);
->  }
->  
-> +#ifdef CONFIG_MEMCG_SWAP
->  static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
->  {
->  	while (!atomic_inc_not_zero(&memcg->id.ref)) {
-> @@ -4099,6 +4100,7 @@ static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
->  	}
->  	return memcg;
->  }
-> +#endif
->  
->  static void mem_cgroup_id_put_many(struct mem_cgroup *memcg, unsigned int n)
->  {
-> -- 
-> 2.9.0
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
-
--- 
-Michal Hocko
-SUSE Labs
+Acked-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
