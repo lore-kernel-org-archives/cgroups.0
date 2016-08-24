@@ -1,44 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Rami Rosen <roszenrami@gmail.com>
 Subject: Re: [PATCHv11 3/3] rdmacg: Added documentation for rdmacg
-Date: Wed, 24 Aug 2016 17:18:24 -0400
-Message-ID: <20160824211824.GW8185@htj.duckdns.org>
-References: <1471869231-15576-1-git-send-email-pandit.parav@gmail.com>
- <1471869231-15576-4-git-send-email-pandit.parav@gmail.com>
+Date: Thu, 25 Aug 2016 01:55:37 +0300
+Message-ID: <CAKoUArnZvsost5pgysC9DL1_msBta0nmkXTjnk+0KxgwJAoR=Q@mail.gmail.com>
+References: <1471869231-15576-1-git-send-email-pandit.parav@gmail.com> <1471869231-15576-4-git-send-email-pandit.parav@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=z+XGvDXiwOvyTGQDECOEcF8j2sH0VPvNBJJbegvr7MU=;
-        b=GRFPGvcny8y1hVedyQ5aI4AUsvuRRQ1s6P9PwK1t7b1jR6d9ourJOrCz/kxVvUWuat
-         8gNymNdP5deuSNKcSIwin+G3SBzK7WGKwtfMae1m/z1vp2gBDgEPR9thhzf9EQpjrg0l
-         nB9XLBQdmyp5dIH39/q6HR0PlKHZnocSVrcEriD2h/WdYBnUxU7NS5u0duBnXoe35dP2
-         pLIL+qEJpnCIJdWZVTwnEEoSJkdKdpYjbROv14ISkXgCXWAjN16nKm/B1LanxbNN1cOV
-         PA2uRu14hkDTvG0ALlcHsvdocASGQZDqvkKQ8SgccRekEAsBgbxvzsDD6696PRD4quNv
-         Ts3A==
-Content-Disposition: inline
-In-Reply-To: <1471869231-15576-4-git-send-email-pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=vUq75q9oCXJzp2rlhEIdVrbmnPwyGGqMlJEzPlClQpY=;
+        b=Ely2StxAgG3BqP6+5XIKVlmtudBB58gHoFOwA5c7DRMqeFychRtkCLk/Ys4MZprHIJ
+         0YAAcCsz2hFPZlxkJCE7LSezZIkH61E5m7YoItHv27eI9NiH9nm7+M4rn6Fib9phlK3I
+         J9x3zmZlrq30cn5fzb6apJ8PBrlsueh9P7HsPe6lDk6LS2JwoVJ81NrxvpzQdjTf5WIK
+         CRR6q0YBIEU9ISb0yaPqYNx7YAHL7cffbMbtysk4MH+WtyWK9w6pZvtM/P3fh+oQSPmO
+         RD79RZQZRMhkho5T3NRRslgofQUk27Wq45jv02SeCa5+ocQJaeyH2PnWjONZzKwtDaT6
+         S8+w==
+In-Reply-To: <1471869231-15576-4-git-send-email-pandit.parav@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org, haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Parav Pandit <pandit.parav@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-rdma@vger.kernel.org, tj@kernel.org, Li Zefan <lizefan@huawei.com>, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com, corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, matanb@mellanox.com, Andrew Morton <akpm@linux-foundation.org>, linux-security-module@vger.kernel.org
 
-On Mon, Aug 22, 2016 at 06:03:51PM +0530, Parav Pandit wrote:
-> +  rdma.max
-> +	A readwrite file that exists for all the cgroups except root that
+Hi,
 
-Can you please add that it's a nested-keyed file?
+> +Whenever RDMA resource charing occurs, owner rdma cgroup is returned to
+Should be: charging instead of charing
 
-...
-> +  rdma.current
-> +	A read-only file that describes current resource usage.
+> +(b) Query resource limit:
+> +cat /sys/fs/cgroup/rdma/2/rdma.max
+> +#Output:
+> +mlx4_0 uctx=max pd=max ah=2 mr=100 mw=max cq=max srq=max qp=10 flow=max
+> +ocrdma1 uctx=1 pd=5 ah=1 mr=10 cq=10 srq=max qp=20 flow=max flow=max
 
-Ditto.
+Is this really so: double"flow=max" at the end of the ocrdma1 line?
+(flow=max flow=max)
 
-Thanks.
+> +5-4. RDMA
+> +
+> +The "rdma" controller regulates the distribution and accounting of
+> +of RDMA resources.
+"of of" should be only a single "of"
 
--- 
-tejun
+
+> +         mlx4_1 uctx=1 ah=0 pd=1 cq=4 qp=4 mr=100 srq=0 flow=10
+> +         ocrdma1 uctx=2 pd=2 ah=2 mr=20 mw=max cq=1 srq=1 qp=10 flow=10
+
+Seems to be inconsistency here: in the first line you have qp=4
+*before* srq=0, but in the second line you have qp=10 *after* srq=1.
+
+Keep on the good work!
+
+Regards,
+Rami Rosen
