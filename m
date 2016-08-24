@@ -1,100 +1,56 @@
-From: Parav Pandit <pandit.parav@gmail.com>
-Subject: Re: [PATCH 0/5] Networking cgroup controller
-Date: Tue, 23 Aug 2016 14:19:31 +0530
-Message-ID: <CAG53R5UY7TH3XiOHa1sEa-zGXKfLm9UYBPR6zwP1KHbDSZe4tg@mail.gmail.com>
-References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
-Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=iOjn+TbSwyOUFLd5tHKAjNXDWrFVkFI9CZMxYgEK0FI=;
-        b=NwNhWEYivlxU1m94JnZuDE7edFEz9fHv0K7i25dTx/0XPmlPO0J09A6sd2cr22gYt1
-         hPMTtHOhy+BGp4SC3FrcECUUninYfUsrnU+YUbRp4aE5/c/B+BehzsjnLls4XLlh3l3a
-         0v7uCt4bCGuwEidXB+8+tBb+9xk6pCZg5xhYeTSPbO3H0FbdjuNZF2cFtyCMnphLWw4l
-         n+1kwaLqmlgeV4/8tl4c332TBy9ss/b3iY1ouV2qStJTDdG0J3Ae1IN9Q8FsTflFeV4Q
-         OVku6qw85p4Dm1QlZGUrlFCZX7db0mQHufC3g+LipCa+jvPkP2pykQoI19xsN/d6ITRx
-         24OA==
-In-Reply-To: <1470876798-4024-1-git-send-email-anaravaram@google.com>
-Sender: netdev-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] mm: memcontrol: avoid unused function warning
+Date: Wed, 24 Aug 2016 10:22:43 +0200
+Message-ID: <20160824082301.632345-1-arnd@arndb.de>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Anoop Naravaram <anaravaram@google.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, davem@davemloft.net, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, edumazet@google.com, maheshb@google.com, weiwan@google.com, tom@herbertland.com
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Hi Anoop,
+A bugfix in v4.8-rc2 introduced a harmless warning when CONFIG_MEMCG_SWAP
+is disabled but CONFIG_MEMCG is enabled:
 
-Regardless of usecase, I think this functionality is best handled as
-LSM functionality instead of cgroup.
+mm/memcontrol.c:4085:27: error: 'mem_cgroup_id_get_online' defined but not used [-Werror=unused-function]
+ static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
 
-Tasks which are proposed in this patch are related to access control checks.
-LSM already has required hooks for socket operations such as bind(),
-listen() as few small examples.
+This adds an extra #ifdef that matches the one around the caller to
+avoid the warning.
 
-Refer to security_socket_listen() which invokes LSM specific hooks.
-This is invoked in source/net/socket.c as part of listen() system call.
-LSM hook callback can check whether a given a process can listen to
-requested UDP port or not.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 1f47b61fb407 ("mm: memcontrol: fix swap counter leak on swapout from offline cgroup")
+---
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Parav
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2ff0289ad061..e8d787163b65 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4082,6 +4082,7 @@ static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
+ 	atomic_add(n, &memcg->id.ref);
+ }
+ 
++#ifdef CONFIG_MEMCG_SWAP
+ static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
+ {
+ 	while (!atomic_inc_not_zero(&memcg->id.ref)) {
+@@ -4099,6 +4100,7 @@ static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
+ 	}
+ 	return memcg;
+ }
++#endif
+ 
+ static void mem_cgroup_id_put_many(struct mem_cgroup *memcg, unsigned int n)
+ {
+-- 
+2.9.0
 
-
-On Thu, Aug 11, 2016 at 6:23 AM, Anoop Naravaram <anaravaram@google.com> wrote:
-> This patchset introduces a cgroup controller for the networking subsystem as a
-> whole. As of now, this controller will be used for:
->
-> * Limiting the specific ports that a process in a cgroup is allowed to bind
->   to or listen on. For example, you can say that all the processes in a
->   cgroup can only bind to ports 1000-2000, and listen on ports 1000-1100, which
->   guarantees that the remaining ports will be available for other processes.
->
-> * Restricting which DSCP values processes can use with their sockets. For
->   example, you can say that all the processes in a cgroup can only send
->   packets with a DSCP tag between 48 and 63 (corresponding to TOS values of
->   192 to 255).
->
-> * Limiting the total number of udp ports that can be used by a process in a
->   cgroup. For example, you can say that all the processes in one cgroup are
->   allowed to use a total of up to 100 udp ports. Since the total number of udp
->   ports that can be used by all processes is limited, this is useful for
->   rationing out the ports to different process groups.
->
-> In the future, more networking-related properties may be added to this
-> controller.
->
-> Anoop Naravaram (5):
->   net: create the networking cgroup controller
->   net: add bind/listen ranges to net cgroup
->   net: add udp limit to net cgroup
->   net: add dscp ranges to net cgroup
->   net: add test for net cgroup
->
->  Documentation/cgroup-v1/net.txt   |  95 +++++
->  include/linux/cgroup_subsys.h     |   4 +
->  include/net/net_cgroup.h          | 103 ++++++
->  net/Kconfig                       |  10 +
->  net/core/Makefile                 |   1 +
->  net/core/net_cgroup.c             | 706 ++++++++++++++++++++++++++++++++++++++
->  net/ipv4/af_inet.c                |   8 +
->  net/ipv4/inet_connection_sock.c   |   7 +
->  net/ipv4/ip_sockglue.c            |  13 +
->  net/ipv4/udp.c                    |   8 +
->  net/ipv6/af_inet6.c               |   7 +
->  net/ipv6/datagram.c               |   9 +
->  net/ipv6/ipv6_sockglue.c          |   8 +
->  scripts/cgroup/net_cgroup_test.py | 359 +++++++++++++++++++
->  14 files changed, 1338 insertions(+)
->  create mode 100644 Documentation/cgroup-v1/net.txt
->  create mode 100644 include/net/net_cgroup.h
->  create mode 100644 net/core/net_cgroup.c
->  create mode 100755 scripts/cgroup/net_cgroup_test.py
->
-> --
-> 2.8.0.rc3.226.g39d4020
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
