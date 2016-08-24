@@ -1,106 +1,62 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2] mm: memcontrol: avoid unused function warning
-Date: Wed, 24 Aug 2016 14:16:31 +0200
-Message-ID: <20160824121630.GG31179@dhcp22.suse.cz>
-References: <20160824113733.2776701-1-arnd@arndb.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/5] Networking cgroup controller
+Date: Wed, 24 Aug 2016 17:03:57 -0400
+Message-ID: <20160824210357.GU8185@htj.duckdns.org>
+References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ULh22hdG2tOsh3CTx7e89ZoKS/Xehe0ZsBBnABqdrew=;
+        b=Jwvt1cwbkfK784TVL+Odc/vOw6/qTyZ12RJVbNqurLEA7+CWMvrHq5CjAzSGyEr1Gw
+         ULm04UtS68Ksb/Lzqa/Gk5nzxqQDUXvxtOjqUAFCv7fCwY4ZsUrVpAbdX0DNviFzfglf
+         I582Jl1wf8pGa9OJm9i8/L6xJzPu+BK3gqpOjPVSxAbVEZBeAQSBb1AVDx1bOBoZhRZV
+         lFv3dyOefGZlDAUQ+bKNLhmi8/tBZh56GaWSFyBi19Gx95jXdCHp4wmyGXpOHhUMsL/F
+         9UU4rmMCphUswWOH6VWsDi0qznGTxfdQfNpM7XKNbduc+9rjdIba5LThBVyYmYkcv//+
+         5W7Q==
 Content-Disposition: inline
-In-Reply-To: <20160824113733.2776701-1-arnd@arndb.de>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1470876798-4024-1-git-send-email-anaravaram@google.com>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Anoop Naravaram <anaravaram@google.com>
+Cc: corbet@lwn.net, lizefan@huawei.com, hannes@cmpxchg.org, davem@davemloft.net, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, edumazet@google.com, maheshb@google.com, weiwan@google.com, tom@herbertland.com
 
-On Wed 24-08-16 12:23:00, Arnd Bergmann wrote:
-> A bugfix in v4.8-rc2 introduced a harmless warning when CONFIG_MEMCG_SWAP
-> is disabled but CONFIG_MEMCG is enabled:
-> 
-> mm/memcontrol.c:4085:27: error: 'mem_cgroup_id_get_online' defined but not used [-Werror=unused-function]
->  static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
-> 
-> This moves the function inside of the #ifdef block that hides the
-> calling function, to avoid the warning.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 1f47b61fb407 ("mm: memcontrol: fix swap counter leak on swapout from offline cgroup")
-> Acked-by: Michal Hocko <mhocko@suse.com>
-> Acked-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+Hello, Anoop.
 
-Thanks a lot for respinning this Arnd!
+On Wed, Aug 10, 2016 at 05:53:13PM -0700, Anoop Naravaram wrote:
+> This patchset introduces a cgroup controller for the networking subsystem as a
+> whole. As of now, this controller will be used for:
+> 
+> * Limiting the specific ports that a process in a cgroup is allowed to bind
+>   to or listen on. For example, you can say that all the processes in a
+>   cgroup can only bind to ports 1000-2000, and listen on ports 1000-1100, which
+>   guarantees that the remaining ports will be available for other processes.
+> 
+> * Restricting which DSCP values processes can use with their sockets. For
+>   example, you can say that all the processes in a cgroup can only send
+>   packets with a DSCP tag between 48 and 63 (corresponding to TOS values of
+>   192 to 255).
+> 
+> * Limiting the total number of udp ports that can be used by a process in a
+>   cgroup. For example, you can say that all the processes in one cgroup are
+>   allowed to use a total of up to 100 udp ports. Since the total number of udp
+>   ports that can be used by all processes is limited, this is useful for
+>   rationing out the ports to different process groups.
+> 
+> In the future, more networking-related properties may be added to this
+> controller.
 
-> ---
->  mm/memcontrol.c | 36 ++++++++++++++++++------------------
->  1 file changed, 18 insertions(+), 18 deletions(-)
-> 
-> This is the alternative to the original patch, as suggested by Michal Hocko.
-> Andrew, please pick whichever version you like better.
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2ff0289ad061..9a6a51a7c416 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4082,24 +4082,6 @@ static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
->  	atomic_add(n, &memcg->id.ref);
->  }
->  
-> -static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
-> -{
-> -	while (!atomic_inc_not_zero(&memcg->id.ref)) {
-> -		/*
-> -		 * The root cgroup cannot be destroyed, so it's refcount must
-> -		 * always be >= 1.
-> -		 */
-> -		if (WARN_ON_ONCE(memcg == root_mem_cgroup)) {
-> -			VM_BUG_ON(1);
-> -			break;
-> -		}
-> -		memcg = parent_mem_cgroup(memcg);
-> -		if (!memcg)
-> -			memcg = root_mem_cgroup;
-> -	}
-> -	return memcg;
-> -}
-> -
->  static void mem_cgroup_id_put_many(struct mem_cgroup *memcg, unsigned int n)
->  {
->  	if (atomic_sub_and_test(n, &memcg->id.ref)) {
-> @@ -5821,6 +5803,24 @@ static int __init mem_cgroup_init(void)
->  subsys_initcall(mem_cgroup_init);
->  
->  #ifdef CONFIG_MEMCG_SWAP
-> +static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
-> +{
-> +	while (!atomic_inc_not_zero(&memcg->id.ref)) {
-> +		/*
-> +		 * The root cgroup cannot be destroyed, so it's refcount must
-> +		 * always be >= 1.
-> +		 */
-> +		if (WARN_ON_ONCE(memcg == root_mem_cgroup)) {
-> +			VM_BUG_ON(1);
-> +			break;
-> +		}
-> +		memcg = parent_mem_cgroup(memcg);
-> +		if (!memcg)
-> +			memcg = root_mem_cgroup;
-> +	}
-> +	return memcg;
-> +}
-> +
->  /**
->   * mem_cgroup_swapout - transfer a memsw charge to swap
->   * @page: page whose memsw charge to transfer
-> -- 
-> 2.9.0
+Thanks for working on this; however, I share the sentiment expressed
+by others that this looks like too piecemeal an approach.  If there
+are no alternatives, we surely should consider this but it at least
+*looks* like bpf should be able to cover the same functionalities
+without having to revise and extend in-kernel capabilities constantly.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
