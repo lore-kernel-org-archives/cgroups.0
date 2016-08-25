@@ -1,57 +1,54 @@
-From: Rami Rosen <roszenrami@gmail.com>
-Subject: Re: [PATCHv11 3/3] rdmacg: Added documentation for rdmacg
-Date: Thu, 25 Aug 2016 01:55:37 +0300
-Message-ID: <CAKoUArnZvsost5pgysC9DL1_msBta0nmkXTjnk+0KxgwJAoR=Q@mail.gmail.com>
-References: <1471869231-15576-1-git-send-email-pandit.parav@gmail.com> <1471869231-15576-4-git-send-email-pandit.parav@gmail.com>
+From: =?UTF-8?B?TWFoZXNoIEJhbmRld2FyICjgpK7gpLngpYfgpLYg4KSs4KSC4KSh4KWH4KS14KS+4KSwKQ==?= 
+        <maheshb@google.com>
+Subject: Re: [PATCH 0/5] Networking cgroup controller
+Date: Wed, 24 Aug 2016 17:28:48 -0700
+Message-ID: <CAF2d9jihrtUs870+K19zQWtvA4WOkX6ZfKC0BGTt1FQ3NVfxww@mail.gmail.com>
+References: <1470876798-4024-1-git-send-email-anaravaram@google.com> <CAG53R5UY7TH3XiOHa1sEa-zGXKfLm9UYBPR6zwP1KHbDSZe4tg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
+        d=google.com; s=20120113;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc;
-        bh=vUq75q9oCXJzp2rlhEIdVrbmnPwyGGqMlJEzPlClQpY=;
-        b=Ely2StxAgG3BqP6+5XIKVlmtudBB58gHoFOwA5c7DRMqeFychRtkCLk/Ys4MZprHIJ
-         0YAAcCsz2hFPZlxkJCE7LSezZIkH61E5m7YoItHv27eI9NiH9nm7+M4rn6Fib9phlK3I
-         J9x3zmZlrq30cn5fzb6apJ8PBrlsueh9P7HsPe6lDk6LS2JwoVJ81NrxvpzQdjTf5WIK
-         CRR6q0YBIEU9ISb0yaPqYNx7YAHL7cffbMbtysk4MH+WtyWK9w6pZvtM/P3fh+oQSPmO
-         RD79RZQZRMhkho5T3NRRslgofQUk27Wq45jv02SeCa5+ocQJaeyH2PnWjONZzKwtDaT6
-         S8+w==
-In-Reply-To: <1471869231-15576-4-git-send-email-pandit.parav@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=0i3TsYsv4Skjc8jC77E0OEAj8zZ4ze6EpXW/ZycS+Hk=;
+        b=fJk5hbiudUaSjQVnftwZpSkA/CeQsaU5xp7Pr+yxaADJEWouUIcG2BaUVvt93knj/A
+         4j1VB4TWx/b/XChhFBefxQ05tRIi1H/8lMcoEx2XPCN7vSyitUDLOTQhytDdbUycwdnU
+         OXmO0hkJz0SN6CuF30ykWFptyZdJZHmmOOkh/r9YMPeaENvgD+Oe9Q36cZWd6tT+7Ppj
+         7os6uBO1ilJIgGhLJseodQRw+Kbmw1S95zEvwc9DtxVvSjrSRS4D/hfX6dcSL7d8gS9z
+         xrspbovBHlH6AOWzwFDTWe6AocSKMBhLT6wecOlX93XuVrerGWy36hmy47p019PIPyQC
+         JYbg==
+In-Reply-To: <CAG53R5UY7TH3XiOHa1sEa-zGXKfLm9UYBPR6zwP1KHbDSZe4tg@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Parav Pandit <pandit.parav@gmail.com>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-rdma@vger.kernel.org, tj@kernel.org, Li Zefan <lizefan@huawei.com>, hannes@cmpxchg.org, dledford@redhat.com, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com, corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, matanb@mellanox.com, Andrew Morton <akpm@linux-foundation.org>, linux-security-module@vger.kernel.org
+Cc: Anoop Naravaram <anaravaram@google.com>, Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, David Miller <davem@davemloft.net>, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, linux-netdev <netdev@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Wei Wang <weiwan@google.com>, tom@herbertland.com
 
-Hi,
-
-> +Whenever RDMA resource charing occurs, owner rdma cgroup is returned to
-Should be: charging instead of charing
-
-> +(b) Query resource limit:
-> +cat /sys/fs/cgroup/rdma/2/rdma.max
-> +#Output:
-> +mlx4_0 uctx=max pd=max ah=2 mr=100 mw=max cq=max srq=max qp=10 flow=max
-> +ocrdma1 uctx=1 pd=5 ah=1 mr=10 cq=10 srq=max qp=20 flow=max flow=max
-
-Is this really so: double"flow=max" at the end of the ocrdma1 line?
-(flow=max flow=max)
-
-> +5-4. RDMA
-> +
-> +The "rdma" controller regulates the distribution and accounting of
-> +of RDMA resources.
-"of of" should be only a single "of"
+On Tue, Aug 23, 2016 at 1:49 AM, Parav Pandit <pandit.parav@gmail.com> wrote:
+> Hi Anoop,
+>
+> Regardless of usecase, I think this functionality is best handled as
+> LSM functionality instead of cgroup.
+>
+I'm not so sure about that. Cgroup APIs are useful and this is just an
+extension to it.
 
 
-> +         mlx4_1 uctx=1 ah=0 pd=1 cq=4 qp=4 mr=100 srq=0 flow=10
-> +         ocrdma1 uctx=2 pd=2 ah=2 mr=20 mw=max cq=1 srq=1 qp=10 flow=10
+> Tasks which are proposed in this patch are related to access control checks.
+> LSM already has required hooks for socket operations such as bind(),
+> listen() as few small examples.
+>
+> Refer to security_socket_listen() which invokes LSM specific hooks.
+> This is invoked in source/net/socket.c as part of listen() system call.
+> LSM hook callback can check whether a given a process can listen to
+> requested UDP port or not.
+>
+This has administrative overhead that is not addressed. The underlying
+cgroup infrastructure takes care of it in this (current)
+implementation.
 
-Seems to be inconsistency here: in the first line you have qp=4
-*before* srq=0, but in the second line you have qp=10 *after* srq=1.
-
-Keep on the good work!
-
-Regards,
-Rami Rosen
+> Parav
+>
+>
+[...]
