@@ -1,59 +1,41 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 0/5] Networking cgroup controller
-Date: Thu, 25 Aug 2016 12:09:20 -0400
-Message-ID: <20160825160920.GC20479@htj.duckdns.org>
+Date: Thu, 25 Aug 2016 12:11:13 -0400
+Message-ID: <20160825161113.GD20479@htj.duckdns.org>
 References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
  <20160824210357.GU8185@htj.duckdns.org>
  <CAF2d9jjXxjgJU1VWDERKkv4LRvmhpjpyx7Dx76egQx43aaXtmQ@mail.gmail.com>
+ <20160825160920.GC20479@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=yJz1SrvTTHoYRyOKRqobZjICdq3hO66M0y6vqKcGfII=;
-        b=0gA1jiC0z5Sex7mtZM68fk6jtfbyBvqIaTikb+zv4AjDJg+DczFN1NS4LumS8+fFZ9
-         CzJJVtKtGDz7+NW3DTBaelbm3eJ2BMCs9nvsaZjKu58V/LzuntUZt/SUBHF086tgusQO
-         t6SFqnN6xZmD2rR4Olxv/VtwnJNmUeEO75vj+GtAPpZNb5hNdNw0IulixMvofB2K+lV6
-         J66CiapJPEmTjXefPJEOkC4USEm2wI8WaffRa4/BY1WCBsCbX40bcJdP8j9vlazc+6Jx
-         D83ywwxeL990mCqiHwtBqObLj0ChqfXH5nAMcBIEIQNwLx3KioV6Ct7loi2l3qEUuslr
-         fm/w==
+         :content-disposition:in-reply-to:user-agent;
+        bh=O2ugIrl2WFZlViMsAP1dw7OWH5aL1wrU9USRinnaNh8=;
+        b=Jn/s12Ob+0dyrYT9WVGE0xOcJKGfve0Aj28dDNbautF4v9WRCyq9x64g7qGUQefX7N
+         OLsNnzDPhMtvVjratwlBbKXyRwVtfug/IVcMsQfLZXBDHJM54gC9OChc0TzyS6SLGUAe
+         eJMrC+ae/s/lZD+Lff8Q2Gw5Du/MYv36rw5Ik8RLiL8PbER7x1SmlwBgT67BmsijCFIb
+         9N6y65r4mJIbero2ogjXTl9xa8XfD1zbCPRa9twp2NCKzujCL4xPbpZVoVrYTNh25Vx6
+         RMIRXWUBh0viV5o+4g15LxtYBFpgPtSvZFc8pp6TjYOr/Q3MEl0nIwpsqw0MYL0myR0a
+         iGHA==
 Content-Disposition: inline
-In-Reply-To: <CAF2d9jjXxjgJU1VWDERKkv4LRvmhpjpyx7Dx76egQx43aaXtmQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20160825160920.GC20479@htj.duckdns.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Mahesh Bandewar =?utf-8?B?KOCkruCkueClh+CktiDgpKzgpILgpKHgpYfgpLXgpL4=?= =?utf-8?B?4KSwKQ==?= <maheshb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: corbet-T1hC0tSOHrs@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org, jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org, yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, tom-BjP2VixgY4xUbtYUoyoikg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Mahesh Bandewar =?utf-8?B?KOCkruCkueClh+CktiDgpKzgpILgpKHgpYfgpLXgpL4=?= =?utf-8?B?4KSwKQ==?= <maheshb@google.com>
+Cc: corbet@lwn.net, lizefan@huawei.com, hannes@cmpxchg.org, David Miller <davem@davemloft.net>, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, linux-netdev <netdev@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Wei Wang <weiwan@google.com>, tom@herbertland.com
 
-Hello, Mahesh.
-
-On Thu, Aug 25, 2016 at 08:54:19AM -0700, Mahesh Bandewar (महेश बंडेवार) wrote:
-> In short most of the associated problems are handled by the
-> cgroup-infra / APIs while all that need separate solution in
-> alternatives.  Tejun, feels like I'm advocating cgroup approach to you
-> ;)
-
-My concern here is that the proposed fixed mechanism isn't gonna be
-enough.  Port range matching wouldn't scale, so we'd need some hashmap
-style thing which may be too expensive for simple matches so either we
-do something adaptive or have different interfaces for the two and so
-on.  IOW, I think this approach is likely to replicate what iptables
-have been doing with its extensions.  I don't doubt that it is one of
-the workable approaches but hardly an attractive one especially at
-this point.
-
-ebpf approach does have its shortcomings for sure but mending them
-seems a lot more manageable and future-proof than going with fixed but
-constantly expanding set of operations.  e.g. We can add per-cgroup
-bpf programs which are called only on socket creation or other major
-events, or just let bpf programs which get called on bind(2), and add
-some per-cgroup state variables which are maintained by cgroup code
-which can be used from these bpf programs.
-
-Thanks.
+On Thu, Aug 25, 2016 at 12:09:20PM -0400, Tejun Heo wrote:
+> ebpf approach does have its shortcomings for sure but mending them
+> seems a lot more manageable and future-proof than going with fixed but
+> constantly expanding set of operations.  e.g. We can add per-cgroup
+> bpf programs which are called only on socket creation or other major
+> events, or just let bpf programs which get called on bind(2), and add
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	please ignore this part. half-assed edit.
 
 -- 
 tejun
