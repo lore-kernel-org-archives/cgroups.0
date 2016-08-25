@@ -1,41 +1,121 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHv11 0/3] rdmacg: IB/core: rdma controller support
-Date: Thu, 25 Aug 2016 13:30:55 +0530
-Message-ID: <CAG53R5UpqRYdngapS9Ti7A_=6sPZi3s357CuRk4xfnJg2-5L_Q@mail.gmail.com>
-References: <1471869231-15576-1-git-send-email-pandit.parav@gmail.com>
- <20160824211747.GV8185@htj.duckdns.org> <20160825073226.GA18183@lst.de>
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+Subject: Re: [RFC v2 09/10] landlock: Handle cgroups
+Date: Thu, 25 Aug 2016 16:44:13 +0200
+Message-ID: <57BF043D.4000300@digikod.net>
+References: <1472121165-29071-1-git-send-email-mic@digikod.net>
+ <1472121165-29071-10-git-send-email-mic@digikod.net>
+ <CALCETrVqfTaY4gfwNdwynBqWwYh6xsGHaqdoA3uc_jHogbkA-A@mail.gmail.com>
+Reply-To: kernel-hardening@lists.openwall.com
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=4TRyW13/XOel0EibbRqgl2qwUaqAfH/Zn+VTLitwHYw=;
-        b=h+jkM38TEtA3oRlmKhyiWmx6d07sEvyxpE/dHjLJxgmKu0BlXgmSRJg5+Vy3BhYr6x
-         OjgT+EtQP+jH3Ss7I4LL/At1Nhg8CgaRGtEzFtvYY+0h0GQ1C+2JZlvN38O6SoDdC/Af
-         XHHI4TCIyw7vu/ZRqO2U2R6mLT5xeCoCp7pBucLwH4F/X4s7qn277msJTG5kI8d1WWNH
-         pD2Dy9VJHbeyvXZkw2uATeh19XP52Aht7Q7I73H1WLBgv2wgArua0a+NTGE2wwHWqQGb
-         iEDqYmyPJ3XPV1Y9UuZcY9H3oYUwdmOUd42dnznHbgrzGYoO8KjL1gLMk9+ROUoRi89u
-         toLQ==
-In-Reply-To: <20160825073226.GA18183-jcswGhMUV9g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="fem93Duixaa7Puv1lVjAwOLiiCPLhog68"
+Return-path: <kernel-hardening-return-4468-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CALCETrVqfTaY4gfwNdwynBqWwYh6xsGHaqdoA3uc_jHogbkA-A@mail.gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: LKML <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Will Drewry <wad@chromium.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, Linux API <linux-api@vger.kernel.org>, LSM List <linux-security-module@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, cgroups@vger.kernel.org
 
-Hi Christoph,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--fem93Duixaa7Puv1lVjAwOLiiCPLhog68
+Content-Type: multipart/mixed; boundary="k0jrAKmG3iFl0mLHQhvH5VcJm2i7BKQmS"
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: LKML <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>,
+ Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>,
+ David Drysdale <drysdale@google.com>, "David S . Miller"
+ <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>,
+ James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>,
+ Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>,
+ "Serge E . Hallyn" <serge@hallyn.com>, Will Drewry <wad@chromium.org>,
+ Kernel Hardening <kernel-hardening@lists.openwall.com>,
+ Linux API <linux-api@vger.kernel.org>,
+ LSM List <linux-security-module@vger.kernel.org>,
+ Network Development <netdev@vger.kernel.org>, cgroups@vger.kernel.org
+Message-ID: <57BF043D.4000300@digikod.net>
+Subject: Re: [RFC v2 09/10] landlock: Handle cgroups
+References: <1472121165-29071-1-git-send-email-mic@digikod.net>
+ <1472121165-29071-10-git-send-email-mic@digikod.net>
+ <CALCETrVqfTaY4gfwNdwynBqWwYh6xsGHaqdoA3uc_jHogbkA-A@mail.gmail.com>
+In-Reply-To: <CALCETrVqfTaY4gfwNdwynBqWwYh6xsGHaqdoA3uc_jHogbkA-A@mail.gmail.com>
 
-On Thu, Aug 25, 2016 at 1:02 PM, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
-> On Wed, Aug 24, 2016 at 05:17:47PM -0400, Tejun Heo wrote:
->> Looks good to me.  I just have a nit in the documentation.  Christoph,
->> what do you think?
->
-> Looks reasonable from a quick look, but I didn't do a full review yet.
+--k0jrAKmG3iFl0mLHQhvH5VcJm2i7BKQmS
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the quick review.
-I need to generate new patch for 4 typo errors that Rami pointed out
-and documentation addition that Tejun asked.
-I will wait for your full review, in case if there are any comments,
-so I can cover them in one patch.
+
+On 25/08/2016 13:09, Andy Lutomirski wrote:
+> On Thu, Aug 25, 2016 at 3:32 AM, Micka=C3=ABl Sala=C3=BCn <mic@digikod.=
+net> wrote:
+>> Add an eBPF function bpf_landlock_cmp_cgroup_beneath(opt, map, map_op)=
+
+>> to compare the current process cgroup with a cgroup handle, The handle=
+
+>> can match the current cgroup if it is the same or a child. This allows=
+
+>> to make conditional rules according to the current cgroup.
+>>
+>> A cgroup handle is a map entry created from a file descriptor referrin=
+g
+>> a cgroup directory (e.g. by opening /sys/fs/cgroup/X). In this case, t=
+he
+>> map entry is of type BPF_MAP_HANDLE_TYPE_LANDLOCK_CGROUP_FD and the
+>> inferred array map is of type BPF_MAP_ARRAY_TYPE_LANDLOCK_CGROUP.
+>=20
+> Can you elaborate on why this is useful?  I.e. why not just supply
+> different policies to different subtrees.
+
+The main use case I see is to load the security policies at the start of
+a user session for all processes but not enforce them right away. The
+user can then keep a shell for Landlock administration tasks and lock
+the other processes with a dedicated cgroup on the fly. This allows the
+user to make unremovable Landlock security policies but only activate
+them when needed for specific processes.
+
+>=20
+> Also, how does this interact with the current cgroup v1 vs v2 mess?
+> As far as I can tell, no one can even really agree on what "what
+> cgroup am I in" means right now.
+
+I tested with cgroup-v2 but indeed, it seems a bit different with
+cgroup-v1 :)
+Does anyone know how to handle both cases?
+
+>=20
+>>
+>> An unprivileged process can create and manipulate cgroups thanks to
+>> cgroup delegation.
+>=20
+> What is cgroup delegation?
+
+This is simply the action of changing the owner of cgroup sysfs files to
+allow an unprivileged user to handle them (cf. Documentation/cgroup-v2.tx=
+t)
+
+ Micka=C3=ABl
+
+
+--k0jrAKmG3iFl0mLHQhvH5VcJm2i7BKQmS--
+
+--fem93Duixaa7Puv1lVjAwOLiiCPLhog68
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCgAGBQJXvwQ9AAoJECLe/t9zvWqVV9YH/2GeL+bwWnpzafOOxl7lEld5
+zQKWjoYZ56f4+eGjV7hteNfRt7ZaubLQ7brmPDtX+p4z7/PentK+HcsXRI/5gyK0
+FjtsATTSiH+xJiBDhH31FvYEsonHmH0CZsjWQGBiIUeJXVtUracGmJNsZf4WWiyF
+IHGBZZ6Gdzir+DyZmcMjNLXmCXi1tLLdoV/51gdBxt9hUg/Tf+fkd1ILxdimo3Rc
+oH5iyvJH65VycWFFm52nWZjBGvoy7rKZ8oxhiU2kt08P6TkYD3ENULho6b59BixL
+iK801B96L/HbPckcTOgbWXBNYXI8LWbSLsoiilv9P5CYm5sPYHu7vJBg/IJdvCI=
+=A8Yu
+-----END PGP SIGNATURE-----
+
+--fem93Duixaa7Puv1lVjAwOLiiCPLhog68--
