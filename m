@@ -1,84 +1,59 @@
-From: =?UTF-8?B?TWFoZXNoIEJhbmRld2FyICjgpK7gpLngpYfgpLYg4KSs4KSC4KSh4KWH4KS14KS+4KSwKQ==?= 
-        <maheshb@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 0/5] Networking cgroup controller
-Date: Thu, 25 Aug 2016 08:54:19 -0700
-Message-ID: <CAF2d9jjXxjgJU1VWDERKkv4LRvmhpjpyx7Dx76egQx43aaXtmQ@mail.gmail.com>
-References: <1470876798-4024-1-git-send-email-anaravaram@google.com> <20160824210357.GU8185@htj.duckdns.org>
+Date: Thu, 25 Aug 2016 12:09:20 -0400
+Message-ID: <20160825160920.GC20479@htj.duckdns.org>
+References: <1470876798-4024-1-git-send-email-anaravaram@google.com>
+ <20160824210357.GU8185@htj.duckdns.org>
+ <CAF2d9jjXxjgJU1VWDERKkv4LRvmhpjpyx7Dx76egQx43aaXtmQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=dE7pxuvCPAW//ISeW6XYEE2cnc2ef7K41s0ueTRUmDE=;
-        b=Q0X2NAax+dqKFPoo/hLgYrGSQKC8muboc/4Yoe47XGWTZWj5mAzOvb9+hXt2sNMnOr
-         hLDnFRXQSi12rErDZxzU8yAA+QtNgh3DOcvQDBdxMzm9ohw4ryvIxGCWBVNTZ/cwC4KD
-         juHjaDtL7KZIKPFRorFPdeJ7ZdnzgD36DBTgWpWh84C4j2/xAVuvKBGElWzfsxrF9V7c
-         BlMjT0+92p8N6KYtU8BP+KmxeR6XiDx3z0CN7qYV43azEXEoIWpcPbRwtc6S7MutDSBz
-         vZWXhSA6xBkdhG34GAOHIirlj/H04XUT4T6oZJxjv9L/+FEWZ6ZV7K7CaYLIN5mwAYiK
-         Es8g==
-In-Reply-To: <20160824210357.GU8185@htj.duckdns.org>
-Sender: linux-doc-owner@vger.kernel.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=yJz1SrvTTHoYRyOKRqobZjICdq3hO66M0y6vqKcGfII=;
+        b=0gA1jiC0z5Sex7mtZM68fk6jtfbyBvqIaTikb+zv4AjDJg+DczFN1NS4LumS8+fFZ9
+         CzJJVtKtGDz7+NW3DTBaelbm3eJ2BMCs9nvsaZjKu58V/LzuntUZt/SUBHF086tgusQO
+         t6SFqnN6xZmD2rR4Olxv/VtwnJNmUeEO75vj+GtAPpZNb5hNdNw0IulixMvofB2K+lV6
+         J66CiapJPEmTjXefPJEOkC4USEm2wI8WaffRa4/BY1WCBsCbX40bcJdP8j9vlazc+6Jx
+         D83ywwxeL990mCqiHwtBqObLj0ChqfXH5nAMcBIEIQNwLx3KioV6Ct7loi2l3qEUuslr
+         fm/w==
+Content-Disposition: inline
+In-Reply-To: <CAF2d9jjXxjgJU1VWDERKkv4LRvmhpjpyx7Dx76egQx43aaXtmQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: corbet@lwn.net, lizefan@huawei.com, hannes@cmpxchg.org, David Miller <davem@davemloft.net>, kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, linux-netdev <netdev@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Wei Wang <weiwan@google.com>, tom@herbertland.com
+Content-Type: text/plain; charset="utf-8"
+To: Mahesh Bandewar =?utf-8?B?KOCkruCkueClh+CktiDgpKzgpILgpKHgpYfgpLXgpL4=?= =?utf-8?B?4KSwKQ==?= <maheshb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: corbet-T1hC0tSOHrs@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org, jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org, yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, tom-BjP2VixgY4xUbtYUoyoikg@public.gmane.org
 
-On Wed, Aug 24, 2016 at 2:03 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello, Anoop.
->
-> On Wed, Aug 10, 2016 at 05:53:13PM -0700, Anoop Naravaram wrote:
->> This patchset introduces a cgroup controller for the networking subsystem as a
->> whole. As of now, this controller will be used for:
->>
->> * Limiting the specific ports that a process in a cgroup is allowed to bind
->>   to or listen on. For example, you can say that all the processes in a
->>   cgroup can only bind to ports 1000-2000, and listen on ports 1000-1100, which
->>   guarantees that the remaining ports will be available for other processes.
->>
->> * Restricting which DSCP values processes can use with their sockets. For
->>   example, you can say that all the processes in a cgroup can only send
->>   packets with a DSCP tag between 48 and 63 (corresponding to TOS values of
->>   192 to 255).
->>
->> * Limiting the total number of udp ports that can be used by a process in a
->>   cgroup. For example, you can say that all the processes in one cgroup are
->>   allowed to use a total of up to 100 udp ports. Since the total number of udp
->>   ports that can be used by all processes is limited, this is useful for
->>   rationing out the ports to different process groups.
->>
->> In the future, more networking-related properties may be added to this
->> controller.
->
-> Thanks for working on this; however, I share the sentiment expressed
-> by others that this looks like too piecemeal an approach.  If there
-> are no alternatives, we surely should consider this but it at least
-> *looks* like bpf should be able to cover the same functionalities
-> without having to revise and extend in-kernel capabilities constantly.
->
-My primary concern is the cost that need to be paid to get this functionality.
-(a) The suggested alternatives eBPF either can't solve the problem in
-the current form or need substantial work to get it done. e.g.
-udp-port-limit since there is no notion of "maintaining
-counters-per-group-of-processes". This is solved by the cgroup infra.
-(b) Also the hooks implemented are mostly with a per packet cost vs.
-once when you are establishing the channel. Also not sure if the LSM
-approach will allow some privileged user to over-ride the filters
-attached and thus override the limits imposed. This is on top of the
-administrative costs that currently don't have solution for and you
-get it for free with cgroup infra.
+Hello, Mahesh.
 
-In short most of the associated problems are handled by the
-cgroup-infra / APIs while all that need separate solution in
-alternatives.  Tejun, feels like I'm advocating cgroup approach to you
-;)
+On Thu, Aug 25, 2016 at 08:54:19AM -0700, Mahesh Bandewar (महेश बंडेवार) wrote:
+> In short most of the associated problems are handled by the
+> cgroup-infra / APIs while all that need separate solution in
+> alternatives.  Tejun, feels like I'm advocating cgroup approach to you
+> ;)
 
-Thanks,
---mahesh..
+My concern here is that the proposed fixed mechanism isn't gonna be
+enough.  Port range matching wouldn't scale, so we'd need some hashmap
+style thing which may be too expensive for simple matches so either we
+do something adaptive or have different interfaces for the two and so
+on.  IOW, I think this approach is likely to replicate what iptables
+have been doing with its extensions.  I don't doubt that it is one of
+the workable approaches but hardly an attractive one especially at
+this point.
 
+ebpf approach does have its shortcomings for sure but mending them
+seems a lot more manageable and future-proof than going with fixed but
+constantly expanding set of operations.  e.g. We can add per-cgroup
+bpf programs which are called only on socket creation or other major
+events, or just let bpf programs which get called on bind(2), and add
+some per-cgroup state variables which are maintained by cgroup code
+which can be used from these bpf programs.
 
-> Thanks.
->
-> --
-> tejun
+Thanks.
+
+-- 
+tejun
