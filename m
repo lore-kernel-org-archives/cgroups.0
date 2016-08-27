@@ -1,186 +1,162 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Subject: Re: [RFC v2 09/10] landlock: Handle cgroups
-Date: Sat, 27 Aug 2016 00:30:36 -0700
-Message-ID: <CALCETrVK1yQw=8ckLn3dcB4LuKft0NOrvQFoyFRs98ON00WgBw@mail.gmail.com>
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+Subject: Re: [RFC v2 09/10] landlock: Handle cgroups (performance)
+Date: Sat, 27 Aug 2016 16:06:38 +0200
+Message-ID: <57C19E6E.6040908@digikod.net>
 References: <1472121165-29071-1-git-send-email-mic@digikod.net>
- <1472121165-29071-10-git-send-email-mic@digikod.net> <20160826021432.GA8291@ast-mbp.thefacebook.com>
- <57C05BF0.8000706@digikod.net> <20160826230539.GA26683@ast-mbp.thefacebook.com>
+ <1472121165-29071-10-git-send-email-mic@digikod.net>
+ <20160826021432.GA8291@ast-mbp.thefacebook.com>
+ <57C05BF0.8000706@digikod.net>
+ <20160826230539.GA26683@ast-mbp.thefacebook.com>
+Reply-To: kernel-hardening@lists.openwall.com
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=CletWMbTcrHb14Ttrx4FU8mApcxuw1tyGJaqU03u488=;
-        b=Zzr8NTuZced1BRVUiCCl/Nm9vlFitva8vzOEXuGmZXDNxk5mpXNIvEGRFAEDG1dNBc
-         3ehQnUZmpy58j12XVDbbwf+p/g8hCyS7y9r4Et0b+Y5KWe/E97eAMoTrs7ZhQTBgZ6gH
-         UpfRbUKu+E3PfLH1eET7hXdB/grtC4UtQCDnxbbHONzWoyXJgqXS13xM/jkHDNJC8XZe
-         clQ/SFnlEbsusDvh0cmUfj7MluCwnwfqc5jZNKEdJng0T7TEIL4OXWvHL5zZLI8a67Lr
-         CAgh8v2l1uqh+3hQ/zaXdEGz+6UM8HrinWQgo8SCbWruWXV6z9iryy8K5IvK8sZZc/1u
-         DBXA==
-In-Reply-To: <20160826230539.GA26683-+o4/htvd0TDFYCXBM6kdu7fOX0fSgVTm@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="AVxQRIMeh71XXdwGkEpqNMl03tow7b3d9"
+Return-path: <kernel-hardening-return-4483-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org" <kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, LSM List <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+In-Reply-To: <20160826230539.GA26683@ast-mbp.thefacebook.com>
+To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, "David S . Miller" <davem@davemloft.net>, Kees Cook <keescook@chromium.org>, Sargun Dhillon <sargun@sargun.me>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, linux-security-module@vger.kernel.org, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-On Aug 27, 2016 1:05 AM, "Alexei Starovoitov"
-<alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Fri, Aug 26, 2016 at 05:10:40PM +0200, Micka=C3=ABl Sala=C3=BCn wrote:
-> >
->
-> trimming cc list again. When it's too big vger will consider it as spam.
->
-> > On 26/08/2016 04:14, Alexei Starovoitov wrote:
-> > > On Thu, Aug 25, 2016 at 12:32:44PM +0200, Micka=C3=ABl Sala=C3=BCn wr=
-ote:
-> > >> Add an eBPF function bpf_landlock_cmp_cgroup_beneath(opt, map, map_o=
-p)
-> > >> to compare the current process cgroup with a cgroup handle, The hand=
-le
-> > >> can match the current cgroup if it is the same or a child. This allo=
-ws
-> > >> to make conditional rules according to the current cgroup.
-> > >>
-> > >> A cgroup handle is a map entry created from a file descriptor referr=
-ing
-> > >> a cgroup directory (e.g. by opening /sys/fs/cgroup/X). In this case,=
- the
-> > >> map entry is of type BPF_MAP_HANDLE_TYPE_LANDLOCK_CGROUP_FD and the
-> > >> inferred array map is of type BPF_MAP_ARRAY_TYPE_LANDLOCK_CGROUP.
-> > >>
-> > >> An unprivileged process can create and manipulate cgroups thanks to
-> > >> cgroup delegation.
-> > >>
-> > >> Signed-off-by: Micka=C3=ABl Sala=C3=BCn <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-> > > ...
-> > >> +static inline u64 bpf_landlock_cmp_cgroup_beneath(u64 r1_option, u6=
-4 r2_map,
-> > >> +          u64 r3_map_op, u64 r4, u64 r5)
-> > >> +{
-> > >> +  u8 option =3D (u8) r1_option;
-> > >> +  struct bpf_map *map =3D (struct bpf_map *) (unsigned long) r2_map=
-;
-> > >> +  enum bpf_map_array_op map_op =3D r3_map_op;
-> > >> +  struct bpf_array *array =3D container_of(map, struct bpf_array, m=
-ap);
-> > >> +  struct cgroup *cg1, *cg2;
-> > >> +  struct map_landlock_handle *handle;
-> > >> +  int i;
-> > >> +
-> > >> +  /* ARG_CONST_PTR_TO_LANDLOCK_HANDLE_CGROUP is an arraymap */
-> > >> +  if (unlikely(!map)) {
-> > >> +          WARN_ON(1);
-> > >> +          return -EFAULT;
-> > >> +  }
-> > >> +  if (unlikely((option | _LANDLOCK_FLAG_OPT_MASK) !=3D _LANDLOCK_FL=
-AG_OPT_MASK))
-> > >> +          return -EINVAL;
-> > >> +
-> > >> +  /* for now, only handle OP_OR */
-> > >> +  switch (map_op) {
-> > >> +  case BPF_MAP_ARRAY_OP_OR:
-> > >> +          break;
-> > >> +  case BPF_MAP_ARRAY_OP_UNSPEC:
-> > >> +  case BPF_MAP_ARRAY_OP_AND:
-> > >> +  case BPF_MAP_ARRAY_OP_XOR:
-> > >> +  default:
-> > >> +          return -EINVAL;
-> > >> +  }
-> > >> +
-> > >> +  synchronize_rcu();
-> > >> +
-> > >> +  for (i =3D 0; i < array->n_entries; i++) {
-> > >> +          handle =3D (struct map_landlock_handle *)
-> > >> +                          (array->value + array->elem_size * i);
-> > >> +
-> > >> +          /* protected by the proto types, should not happen */
-> > >> +          if (unlikely(handle->type !=3D BPF_MAP_HANDLE_TYPE_LANDLO=
-CK_CGROUP_FD)) {
-> > >> +                  WARN_ON(1);
-> > >> +                  return -EFAULT;
-> > >> +          }
-> > >> +          if (unlikely(!handle->css)) {
-> > >> +                  WARN_ON(1);
-> > >> +                  return -EFAULT;
-> > >> +          }
-> > >> +
-> > >> +          if (option & LANDLOCK_FLAG_OPT_REVERSE) {
-> > >> +                  cg1 =3D handle->css->cgroup;
-> > >> +                  cg2 =3D task_css_set(current)->dfl_cgrp;
-> > >> +          } else {
-> > >> +                  cg1 =3D task_css_set(current)->dfl_cgrp;
-> > >> +                  cg2 =3D handle->css->cgroup;
-> > >> +          }
-> > >> +
-> > >> +          if (cgroup_is_descendant(cg1, cg2))
-> > >> +                  return 0;
-> > >> +  }
-> > >> +  return 1;
-> > >> +}
-> > >
-> > > - please take a loook at exisiting bpf_current_task_under_cgroup and
-> > > reuse BPF_MAP_TYPE_CGROUP_ARRAY as a minimum. Doing new cgroup array
-> > > is nothing but duplication of the code.
-> >
-> > Oh, I didn't know about this patchset and the new helper. Indeed, it
-> > looks a lot like mine except there is no static verification of the map
-> > type as I did with the arraymap of handles, and no batch mode either. I
-> > think the return value of bpf_current_task_under_cgroup is error-prone
-> > if an eBPF program do an "if(ret)" test on the value (because of the
-> > negative ERRNO return value). Inverting the 0 and 1 return values shoul=
-d
-> > fix this (0 =3D=3D succeed, 1 =3D=3D failed, <0 =3D=3D error).
->
-> nothing to fix. It's good as-is. Use if (ret > 0) instead.
->
-> >
-> > To sum up, there is four related patchsets:
-> > * "Landlock LSM: Unprivileged sandboxing" (this series)
-> > * "Add Checmate, BPF-driven minor LSM" (Sargun Dhillon)
-> > * "Networking cgroup controller" (Anoop Naravaram)
-> > * "Add eBPF hooks for cgroups" (Daniel Mack)
-> >
-> > The three other series (Sargun's, Anoop's and Daniel's) are mainly
-> > focused on network access-control via cgroup for *containers*. As far a=
-s
-> > I can tell, only a *root* user (CAP_SYS_ADMIN) can use them. Landlock's
-> > goal is to empower all processes (privileged or not) to create their ow=
-n
-> > sandbox. This also means, like explained in "[RFC v2 00/10] Landlock
-> > LSM: Unprivileged sandboxing", there is more constraints. For example,
-> > it is not acceptable to let a process probe the kernel memory as it
-> > wish. More details are in the Landlock cover-letter.
-> >
-> >
-> > Another important point is that supporting cgroup for Landlock is
-> > optional. It does not rely on cgroup to be usable but is only a feature
-> > available when (unprivileged) users can manage there own cgroup, which
-> > is an important constraint. Put another way, Landlock should not rely o=
-n
-> > cgroup to create sandboxes. Indeed, a process creating a sandbox do not
-> > necessarily have access to the cgroup mount point (directly or not).
->
-> cgroup is the common way to group multiple tasks.
-> Without cgroup only parent<->child relationship will be possible,
-> which will limit usability of such lsm to a master task that controls
-> its children. Such api restriction would have been ok, if we could
-> extend it in the future, but unfortunately task-centric won't allow it
-> without creating a parallel lsm that is cgroup based.
-> Therefore I think we have to go with cgroup-centric api and your
-> application has to use cgroups from the start though only parent-child
-> would have been enough.
-> Also I don't think the kernel can afford two bpf based lsm. One task
-> based and another cgroup based, so we have to find common ground
-> that suits both use cases.
-> Having unprivliged access is a subset. There is no strong reason why
-> cgroup+lsm+bpf should be limited to root only always.
-> When we can guarantee no pointer leaks, we can allow unpriv.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--AVxQRIMeh71XXdwGkEpqNMl03tow7b3d9
+Content-Type: multipart/mixed; boundary="T4O3NOIS7AeCL7l8sqMUmudTjxd5i4cGv"
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>,
+ Andy Lutomirski <luto@amacapital.net>, Daniel Borkmann
+ <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>,
+ "David S . Miller" <davem@davemloft.net>, Kees Cook <keescook@chromium.org>,
+ Sargun Dhillon <sargun@sargun.me>, kernel-hardening@lists.openwall.com,
+ linux-api@vger.kernel.org, linux-security-module@vger.kernel.org,
+ netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+Message-ID: <57C19E6E.6040908@digikod.net>
+Subject: Re: [RFC v2 09/10] landlock: Handle cgroups (performance)
+References: <1472121165-29071-1-git-send-email-mic@digikod.net>
+ <1472121165-29071-10-git-send-email-mic@digikod.net>
+ <20160826021432.GA8291@ast-mbp.thefacebook.com>
+ <57C05BF0.8000706@digikod.net>
+ <20160826230539.GA26683@ast-mbp.thefacebook.com>
+In-Reply-To: <20160826230539.GA26683@ast-mbp.thefacebook.com>
 
-I don't really understand what you mean.  In the context of landlock,
-which is a *sandbox*, can one of you explain a use case that
-materially benefits from this type of cgroup usage?  I haven't thought
-of one.
+--T4O3NOIS7AeCL7l8sqMUmudTjxd5i4cGv
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
+
+
+On 27/08/2016 01:05, Alexei Starovoitov wrote:
+> On Fri, Aug 26, 2016 at 05:10:40PM +0200, Micka=EBl Sala=FCn wrote:
+>>
+>>>
+>>> - I don't think such 'for' loop can scale. The solution needs to work=
+
+>>> with thousands of containers and thousands of cgroups.
+>>> In the patch 06/10 the proposal is to use 'current' as holder of
+>>> the programs:
+>>> +   for (prog =3D current->seccomp.landlock_prog;
+>>> +                   prog; prog =3D prog->prev) {
+>>> +           if (prog->filter =3D=3D landlock_ret->filter) {
+>>> +                   cur_ret =3D BPF_PROG_RUN(prog->prog, (void *)&ctx=
+);
+>>> +                   break;
+>>> +           }
+>>> +   }
+>>> imo that's the root of scalability issue.
+>>> I think to be able to scale the bpf programs have to be attached to
+>>> cgroups instead of tasks.
+>>> That would be very different api. seccomp doesn't need to be touched.=
+
+>>> But that is the only way I see to be able to scale.
+>>
+>> Landlock is inspired from seccomp which also use a BPF program per
+>> thread. For seccomp, each BPF programs are executed for each syscall.
+>> For Landlock, some BPF programs are executed for some LSM hooks. I don=
+'t
+>> see why it is a scale issue for Landlock comparing to seccomp. I also
+>> don't see why storing the BPF program list pointer in the cgroup struc=
+t
+>> instead of the task struct change a lot here. The BPF programs executi=
+on
+>> will be the same anyway (for each LSM hook). Kees should probably have=
+ a
+>> better opinion on this.
+>=20
+> seccomp has its own issues and copying them doesn't make this lsm any b=
+etter.
+> Like seccomp bpf programs are all gigantic switch statement that looks
+> for interesting syscall numbers. All syscalls of a task are paying
+> non-trivial seccomp penalty due to such design. If bpf was attached per=
+
+> syscall it would have been much cheaper. Of course doing it this way
+> for seccomp is not easy, but for lsm such facility is already there.
+> Blank call of a single bpf prog for all lsm hooks is unnecessary
+> overhead that can and should be avoided.
+
+It's probably a misunderstanding. Contrary to seccomp which run all the
+thread's BPF programs for any syscall, Landlock only run eBPF programs
+for the triggered LSM hooks, if their type match. Indeed, thanks to the
+multiple eBPF program types and contrary to seccomp, Landlock only run
+an eBPF program when needed. Landlock will have almost no performance
+overhead if the syscalls do not trigger the watched LSM hooks for the
+current process.
+
+
+>=20
+>>> May be another way of thinking about it is 'lsm cgroup controller'
+>>> that Sargun is proposing.
+>>> The lsm hooks will provide stable execution points and the programs
+>>> will be called like:
+>>> prog =3D task_css_set(current)->dfl_cgrp->bpf.prog_effective[lsm_hook=
+_id];
+>>> BPF_PROG_RUN(prog, ctx);
+>>> The delegation functionality and 'prog_effective' logic that
+>>> Daniel Mack is proposing will be fully reused here.
+>>> External container management software will be able to apply bpf
+>>> programs to control tasks under cgroup and such
+>>> bpf_landlock_cmp_cgroup_beneath() helper won't be necessary.
+>>> The user will be able to register different programs for different ls=
+m hooks.
+>>> If I understand the patch 6/10 correctly, there is one (or a list) pr=
+og for
+>>> all lsm hooks per task which is not flexible enough.
+>>
+>> For each LSM hook triggered by a thread, all of its Landlock eBPF
+>> programs (dedicated for this kind of hook) will be evaluated (if
+>> needed). This is the same behavior as seccomp (list of BPF programs
+>> attached to a process hierarchy) except the BPF programs are not
+>> evaluated for syscall but for LSM hooks. There is no way to make it mo=
+re
+>> fine-grained :)
+>=20
+> There is a way to attach different bpf program per cgroup
+> and per lsm hook. Such approach drastically reduces overhead
+> of sandboxed application.
+
+As said above, Landlock will not run an eBPF programs when not strictly
+needed. Attaching to a cgroup will have the same performance impact as
+attaching to a process hierarchy.
+
+
+--T4O3NOIS7AeCL7l8sqMUmudTjxd5i4cGv--
+
+--AVxQRIMeh71XXdwGkEpqNMl03tow7b3d9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCgAGBQJXwZ5vAAoJECLe/t9zvWqVLTIH/37D/wWb+itj90028SDPlWzL
+3eCNbSt1oDKIQjO6AxNTqe5+ZoIrILkxT7c22v+Ov5hdlx7AoorjXWTBrdUvZ4bX
+QnaH7Nyit40DoiG30Ay6Y02vN6mLpHp3eQ6zHk60ys8oRsaS9YFv4YbuvMZeUHhX
+Wlz4vREk2zAij4vjaagVjmRZK8dfYxJ2IlrRDqhpTE04a2AlkIbuon6PhxLh6BnR
+Jev/Bx9wWKU6AOo+uzOvxu8keOh+BlQadKt7/nFIiytsJGivY4/2Q0gkTm+2l9jy
+IKXM0uGy4gSE5VW3203QTw2Ad3AqPqVm07BLweUyhQMtA6jBf1HgRGlu4sYB6jU=
+=5+Ct
+-----END PGP SIGNATURE-----
+
+--AVxQRIMeh71XXdwGkEpqNMl03tow7b3d9--
