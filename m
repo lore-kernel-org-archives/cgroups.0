@@ -1,94 +1,253 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [net-next RFC v2 9/9] doc: Add LSM / BPF Checmate docs
-Date: Mon, 29 Aug 2016 09:50:34 -0700
-Message-ID: <2cc1f477-f06d-b5b4-09f0-d2e786ee2952@infradead.org>
-References: <20160829114756.GA20918@ircssh.c.rugged-nimbus-611.internal>
+From: Sargun Dhillon <sargun@sargun.me>
+Subject: Re: [net-next RFC v2 4/9] bpf, security: Add Checmate security LSM
+ and BPF program type
+Date: Mon, 29 Aug 2016 11:49:07 -0700
+Message-ID: <20160829184905.GA25396@ircssh.c.rugged-nimbus-611.internal>
+References: <20160829114705.GA20877@ircssh.c.rugged-nimbus-611.internal>
+ <20160829170118.GB28713@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160829114756.GA20918-I4sfFR6g6EicJoAdRrHjTrzMkBWIpU9tytq7g7fCXyjEk0E+pv7Png@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sargun.me; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=seC5lO+Q1mSKVt+yq0KdLXfYx1gXanWLZEzeNUg4PRc=;
+        b=u7fIao2HBrdJwQXLY8G0PjvChjp3lnfalVNzIKb0JLY+9Xm9X4ktn0t84K8D1NU2b5
+         CCgF5H6v+Ez2e1kgjmosOG6wk1BZng6Rmn865Ef96C/BI7Uoi4mJ+PMVsr8gsde70jaT
+         HaNzrsI9aWDcONoc5vkggNt6Wwl9aEF2WhlvA=
+Content-Disposition: inline
+In-Reply-To: <20160829170118.GB28713@mtj.duckdns.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, daniel@iogearbox.net, ast@fb.com
 
-On 08/29/16 04:47, Sargun Dhillon wrote:
-> This adds documentation on how to operate, and develop against the
-> Checmate LSM and Cgroup controller.
+On Mon, Aug 29, 2016 at 01:01:18PM -0400, Tejun Heo wrote:
+> Hello,
 > 
-> Signed-off-by: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
-> ---
->  Documentation/security/Checmate.txt | 54 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 54 insertions(+)
->  create mode 100644 Documentation/security/Checmate.txt
+> On Mon, Aug 29, 2016 at 04:47:07AM -0700, Sargun Dhillon wrote:
+> > This patch adds a minor LSM, Checmate. Checmate is a flexible programmable,
+> > extensible minor LSM that's coupled with cgroups and BPF. It is designed to
+> > enforce container-specific policies. It is also a cgroupv2 controller. By
+> > itself, it doesn't do very much, but in conjunction with a orchestrator
+> > complex policies can be installed on the cgroup hierarchy.
+> > 
+> > These cgroup programs are tied to the kernel ABI version. If one tries
+> > to load a BPF program compiled against a different kernel version,
+> > an error will be thrown.
 > 
-> diff --git a/Documentation/security/Checmate.txt b/Documentation/security/Checmate.txt
-> new file mode 100644
-> index 0000000..d409785
-> --- /dev/null
-> +++ b/Documentation/security/Checmate.txt
-> @@ -0,0 +1,54 @@
-> +--- What is Checmate? ---
-> +
-> +Checmate is a flexible programmable, extensible minor LSM that's coupled with
-> +cgroups and BPF. It is designed to enforce container-specific policies. By
-> +default, it does not enforce any policies. It is selectable at build time
-> +with CONFIG_SECURITY_CHECMATE, and it is controlled through the unified cgroups
-> +controller hierarchy.
-> +
-> +# How to use Checmate
-> +In order to use Checmate, you have to enable the controller on the cgroup2
-> +hierarchy. In order to prevent a centralized configuration daemon from mounting
-> +Checmate on the V1 hierarchy you may want to add 'cgroup_no_v1=checmate' to your
-> +boot command line.
-> +
-> +Enabling the controller:
-> +	mount -t cgroup2 none $MOUNT_POINT
-> +	cd $MOUNT_POINT
-> +	echo +checmate > cgroup.subtree_control
-> +
-> +Once you do this, immediate children of this node on the hierarchy will have a
-> +number of control files that begin with 'checmate.'. Each of these is mapped
-> +to an LSM hook by the same name. If you read the file, it will return the
-> +number of filters attached to that given hook. Details of the hooks can be
-> +found in lsm_hooks.h.
-> +
-> +All tasks which are members of a cgroup will have no only the checmate filters
+> First of all, please talk with people working on network cgroup bpf
+> and landlock.  I don't think it's a good idea to have N different ways
+> to implement cgroup-aware bpf mechanism.  There can be multiple
+> consumers but there gotta be a common mechanism instead of several
+> independent controllers.
+>
+I've talked to Daniel Mack, and Alexei. I agree with you that it makes sense not 
+to have an infinite number of these cgroup + bpf + lsm subsystems in the kernel. 
+I think that making sure we don't sacrifice capability is important.
 
-s/no/not/
+> > diff --git a/include/linux/checmate.h b/include/linux/checmate.h
+> > new file mode 100644
+> > index 0000000..4c4db4a
+> > --- /dev/null
+> > +++ b/include/linux/checmate.h
+> > @@ -0,0 +1,108 @@
+> > +#ifndef _LINUX_CHECMATE_H_
+> > +#define _LINUX_CHECMATE_H_ 1
+> > +#include <linux/security.h>
+> > +
+> > +enum checmate_hook_num {
+> > +	/* CONFIG_SECURITY_NET hooks */
+> > +	CHECMATE_HOOK_UNIX_STREAM_CONNECT,
+> > +	CHECMATE_HOOK_UNIX_MAY_SEND,
+> > +	CHECMATE_HOOK_SOCKET_CREATE,
+> > +	CHECMATE_HOOK_SOCKET_POST_CREATE,
+> > +	CHECMATE_HOOK_SOCKET_BIND,
+> > +	CHECMATE_HOOK_SOCKET_CONNECT,
+> > +	CHECMATE_HOOK_SOCKET_LISTEN,
+> > +	CHECMATE_HOOK_SOCKET_ACCEPT,
+> > +	CHECMATE_HOOK_SOCKET_SENDMSG,
+> > +	CHECMATE_HOOK_SOCKET_RECVMSG,
+> > +	CHECMATE_HOOK_SOCKET_GETSOCKNAME,
+> > +	CHECMATE_HOOK_SOCKET_GETPEERNAME,
+> > +	CHECMATE_HOOK_SOCKET_GETSOCKOPT,
+> > +	CHECMATE_HOOK_SOCKET_SETSOCKOPT,
+> > +	CHECMATE_HOOK_SOCKET_SHUTDOWN,
+> > +	CHECMATE_HOOK_SOCKET_SOCK_RCV_SKB,
+> > +	CHECMATE_HOOK_SK_FREE_SECURITY,
+> > +	__CHECMATE_HOOK_MAX,
+> > +};
+> 
+> Do we really want a separate hook for each call?  A logical extension
+> of this would be having a separate hook per syscall which feels kinda
+> horrible.
+> 
+It would be a separate hook per LSM hook. Why wouldn't we want a separate bpf 
+hook per lsm hook? I think if one program has to handle them all, the first 
+program would be looking up the hook program in a bpf prog array. If you think 
+it's better to have this logic in the BPF program, that makes sense. 
 
-> +at that level enforced, but all levels above as well. If there is a need
-> +to exempt a specific sub-cgroup, a program can use current_task_under_cgroup
-> +along with a bpf map.
-> +
-> +## Adding filters:
-> +If you would like to add a filter, you must compile a BPF_PROG_TYPE_CHECMATE BPF
-> +program. You can then write the '%d\n' formatted version of the BPF program
-> +file descriptor to the relevant control file.
-> +
-> +## Removing filters:
-> +If you would like to remove a specific filter, you can write the negative file
-> +descriptor of the BPF program to the control file (a la '-%d\n'). If you would
-> +like to do this, then it is recommended that you pin your programs.
-> +
-> +If you would like to remove all filters from a specific hook, simply write '0'
-> +to the control file. During normal operation, you shouldn't have the bpf syscall
-> +return '0' for a given program, please take proper precautions to work around
-> +this.
-> +
-> +# Caveats
-> +## Hook Limit:
-> +Each hook is limited to having MAX_CHECMATE_INSTANCES (32) hooks per level
-> +in the hierarchy. The write call will return ENOSPC if you hit this condition.
-> +
-> +## CGroup v2 interaction with CGroup v1:
-> +Because the cgroups subsystem is in transition, using the net_prio or the
-> +net_classid v1 cgroups will render Checmate inoperable on all network
-> +hooks that inspect sockets.
-> \ No newline at end of file
+I had a version of this patch that allowed you to attach a prog array instead, 
+but I think that it's cleaner attaching a program per lsm hook. In addition, 
+there's a performance impact that comes from these hooks, so I wouldn't want to 
+execute unneccessary code if it's avoidable.
 
+The prog array approach also makes stacking filters difficult. If people want 
+multiple filters per hook, the orchestrator would have to rewrite the existing 
+filters to be cooperative.
 
+> > +/* CONFIG_SECURITY_NET contexts */
+> > +struct checmate_unix_stream_connect_ctx {
+> > +	struct sock *sock;
+> > +	struct sock *other;
+> > +	struct sock *newsk;
+> > +};
+> ...
+> > +struct checmate_sk_free_security_ctx {
+> > +	struct sock *sk;
+> > +};
+> ...
+> > +struct checmate_ctx {
+> > +	int hook;
+> > +	union {
+> > +/* CONFIG_SECURITY_NET contexts */
+> > +		struct checmate_unix_stream_connect_ctx	unix_stream_connect;
+> > +		struct checmate_unix_may_send_ctx	unix_may_send;
+> > +		struct checmate_socket_create_ctx	socket_create;
+> > +		struct checmate_socket_bind_ctx		socket_bind;
+> > +		struct checmate_socket_connect_ctx	socket_connect;
+> > +		struct checmate_socket_listen_ctx	socket_listen;
+> > +		struct checmate_socket_accept_ctx	socket_accept;
+> > +		struct checmate_socket_sendmsg_ctx	socket_sendmsg;
+> > +		struct checmate_socket_recvmsg_ctx	socket_recvmsg;
+> > +		struct checmate_socket_sock_rcv_skb_ctx	socket_sock_rcv_skb;
+> > +		struct checmate_sk_free_security_ctx	sk_free_security;
+> > +	};
+> > +};
+> 
+> I'm not convinced about the approach.  It's an approach which pretty
+> much requires future extensions while being rigid.  Not a good
+> combination.
+> 
+Do you have an alternative recommendation? Maybe just a set of 5 u64s
+as the context object along with the hook ID?
 
--- 
-~Randy
+> > +/*
+> 
+> Please use /** for function comments.
+> 
+> > + * checmate_instance_cleanup_rcu - Cleans up a Checmate program instance
+> > + * @rp: rcu_head pointer to a Checmate instance
+> > + */
+> > +static void checmate_instance_cleanup_rcu(struct rcu_head *rp)
+> > +{
+> > +	struct checmate_instance *instance;
+> > +
+> > +	instance = container_of(rp, struct checmate_instance, rcu);
+> > +	bpf_prog_put(instance->prog);
+> > +	kfree(instance);
+> > +}
+> > +static struct cftype checmate_files[] = {
+> > +#ifdef CONFIG_SECURITY_NETWORK
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_UNIX_STREAM_CONNECT,
+> > +			"unix_stream_connect"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_UNIX_MAY_SEND,
+> > +			"unix_may_send"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_CREATE, "socket_create"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_BIND, "socket_bind"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_CONNECT, "socket_connect"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_LISTEN, "socket_listen"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_ACCEPT, "socket_accept"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_SENDMSG, "socket_sendmsg"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_RECVMSG, "socket_recvmsg"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_SHUTDOWN, "socket_shutdown"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SOCKET_SOCK_RCV_SKB,
+> > +			"socket_sock_rcv_skb"),
+> > +	CHECMATE_CFTYPE(CHECMATE_HOOK_SK_FREE_SECURITY, "sk_free_security"),
+> > +#endif /* CONFIG_SECURITY_NETWORK */
+> > +	{}
+> > +};
+> 
+> I don't think this is a good interface approach.
+> 
+Any other recommendations?
+> > +struct cgroup_subsys checmate_cgrp_subsys = {
+> > +	.css_alloc	= checmate_css_alloc,
+> > +	.css_free	= checmate_css_free,
+> > +	.dfl_cftypes	= checmate_files,
+> > +};
+> 
+> Unless this is properly delegatable, IOW, it's safe to fully delegate
+> to a lesser security domain for all operations including program
+> loading and assignment (I can't see how that'd be the case), making it
+> an explicit controller doens't work in terms of userland interface.
+> It's fine for bpf / lsm / whatever to attach to cgroups by extending
+> struct cgroup itself or implementing an implicit controller but to be
+> visible as an explicit controller it must be able to follow cgroup
+> interface rules including delegation.  If not, it's best to come
+> through the interface which enforces the required permission checks
+> and then talk to cgroup from there.  This was also an issue with
+> network cgroup bpf programs that Daniel Mack is working on.  Please
+> chat with him.
+>
+Program assignment is possible by lesser security domains. Program loading is 
+limited to CAP_SYS_ADMIN in init_user_ns. We could make it accessible to 
+CAP_SYS_ADMIN in any userns, but it the reasoning behind this is that Checmate
+BPF programs can leak kernel pointers. 
+
+Could we potentially restrict it to only CAP_MAC_OVERRIDE, while still meeting 
+cgroup delegation requirements?
+
+Filters which are higher up in the heirarchy will still be enforced during 
+delegation. This was an explicit design, as the "Orchestrator in Orchestrator" 
+use case needs to be supported.
+
+> > +static struct cgroup_subsys_state *css_from_sk(struct sock *sk)
+> > +{
+> > +	struct cgroup_subsys_state *css;
+> > +	struct cgroup *cgrp;
+> > +
+> > +	if (!sk_fullsock(sk))
+> > +		return ERR_PTR(-EINVAL);
+> > +	cgrp = sock_cgroup_ptr(&sk->sk_cgrp_data);
+> > +
+> > +	rcu_read_lock();
+> > +	do {
+> > +		css = rcu_dereference(cgrp->subsys[checmate_cgrp_id]);
+> > +		if (css)
+> > +			goto out;
+> > +		cgrp = cgroup_parent(cgrp);
+> > +	} while (cgrp);
+> > +
+> > +out:
+> > +	rcu_read_unlock();
+> > +
+> > +	return css;
+> 
+> This pattern cannot be right.  What protects the returned @css?
+>
+Thanks, I'll fix this and keep a reference. 
+> > +static struct cgroup_subsys_state *css_from_current(void)
+> > +{
+> > +	struct cgroup_subsys_state *css;
+> > +
+> > +	if (unlikely(in_interrupt()))
+> > +		return ERR_PTR(-ENOENT);
+> > +
+> > +	rcu_read_lock();
+> > +	css = task_css(current, checmate_cgrp_id);
+> > +	rcu_read_unlock();
+> > +
+> > +	return css;
+> 
+> Ditto here.  RCU readlock is what was protecting @css.  Returning @css
+> after releasing RCU readlock makes no sense.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+Thanks for your feedback Tejun. I'll look at making fixes to the above, and 
+touch base with Daniel, and Alexei.
