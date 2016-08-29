@@ -1,228 +1,170 @@
-From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
-Subject: Re: [net-next RFC v2 4/9] bpf, security: Add Checmate security LSM
- and BPF program type
-Date: Tue, 30 Aug 2016 00:19:32 +0200
-Message-ID: <57C4B4F4.8030304@digikod.net>
-References: <20160829114705.GA20877@ircssh.c.rugged-nimbus-611.internal>
- <20160829170118.GB28713@mtj.duckdns.org>
- <20160829184905.GA25396@ircssh.c.rugged-nimbus-611.internal>
- <20160829192443.GD28713@mtj.duckdns.org> <57C4ADDD.3070003@fb.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Documentation] State of CPU controller in cgroup v2
+Date: Mon, 29 Aug 2016 18:20:48 -0400
+Message-ID: <20160829222048.GH28713@mtj.duckdns.org>
+References: <20160805170752.GK2542@mtj.duckdns.org>
+ <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ@mail.gmail.com>
+ <20160820155659.GA16906@mtj.duckdns.org>
+ <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="iqr4RlMavXbW33RqUNp8eUO4QKHnGuEJt"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <57C4ADDD.3070003@fb.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=BotLV4bYWBkmqNNTblf6a/wXkv950qj/9p2GwW5ot+s=;
+        b=hjOPFwqpJw4k2BQYO3wXmlWysB00eivHyt+o2S+R+pU5lDV1e5ZlJ0TNXDbZBMDvw3
+         BMysIRyAyT74BifsNt4E81E+K3FPh5WfqWb996LUenP22KU9DIFTPlN+wAMGX1O5SP26
+         OSxawNVUbWjfC+d83XrAyE0MUg+aHTl+XNKNVdOBBlWY9HrAJsN9NC3FSeRp1afgLX+A
+         JWS+MlsNYhMRpZYYCr85D5YC7viTL1KMA+Fa6GYfywh9QWaRagar2ezycFPJU5HQLUGI
+         lNfMUwj0z4RUWOJXPxVf4IgniubSlyGXDItBI3hhnpl1qLmyB+xTlWz/aklZkaUlUpF6
+         lqjQ==
+Content-Disposition: inline
+In-Reply-To: <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Alexei Starovoitov <ast@fb.com>, Tejun Heo <tj@kernel.org>, Sargun Dhillon <sargun@sargun.me>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, Andy Lutomirski <luto@amacapital.net>, Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---iqr4RlMavXbW33RqUNp8eUO4QKHnGuEJt
-Content-Type: multipart/mixed; boundary="RlxcUurqI4tpfEWAGGLT5Eet6w0VxAfju"
-From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
-To: Alexei Starovoitov <ast@fb.com>, Tejun Heo <tj@kernel.org>,
- Sargun Dhillon <sargun@sargun.me>
-Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org,
- linux-security-module@vger.kernel.org, Daniel Borkmann
- <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>,
- Andy Lutomirski <luto@amacapital.net>, Kees Cook <keescook@chromium.org>
-Message-ID: <57C4B4F4.8030304@digikod.net>
-Subject: Re: [net-next RFC v2 4/9] bpf, security: Add Checmate security LSM
- and BPF program type
-References: <20160829114705.GA20877@ircssh.c.rugged-nimbus-611.internal>
- <20160829170118.GB28713@mtj.duckdns.org>
- <20160829184905.GA25396@ircssh.c.rugged-nimbus-611.internal>
- <20160829192443.GD28713@mtj.duckdns.org> <57C4ADDD.3070003@fb.com>
-In-Reply-To: <57C4ADDD.3070003@fb.com>
+Hello, Andy.
 
---RlxcUurqI4tpfEWAGGLT5Eet6w0VxAfju
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+Sorry about the delay.  Was kinda overwhelmed with other things.
 
+On Sat, Aug 20, 2016 at 11:45:55AM -0700, Andy Lutomirski wrote:
+> > This becomes clear whenever an entity is allocating memory on behalf
+> > of someone else - get_user_pages(), khugepaged, swapoff and so on (and
+> > likely userfaultfd too).  When a task is trying to add a page to a
+> > VMA, the task might not have any relationship with the VMA other than
+> > that it's operating on it for someone else.  The page has to be
+> > charged to whoever is responsible for the VMA and the only ownership
+> > which can be established is the containing mm_struct.
+> 
+> This surprises me a bit.  If I do access_process_vm(), then I would
+> have expected the charge to go the caller, not the mm being accessed.
 
-On 29/08/2016 23:49, Alexei Starovoitov wrote:
-> On 8/29/16 12:24 PM, Tejun Heo wrote:
->> Hello, Sargun.
->>
->> On Mon, Aug 29, 2016 at 11:49:07AM -0700, Sargun Dhillon wrote:
->>> It would be a separate hook per LSM hook. Why wouldn't we want a
->>> separate bpf
->>> hook per lsm hook? I think if one program has to handle them all, the=
+It does and should go the target mm.  Who faults in a page shouldn't
+be the final determinant in the ownership; otherwise, we end up in
+situations where the ownership changes due to, for example,
+fluctuations in page fault pattern.  It doesn't make semantical sense
+either.  If a kthread is doing PIO for a process, why would it get
+charged for the memory it's faulting in?
 
->>> first
->>> program would be looking up the hook program in a bpf prog array. If
->>> you think
->>> it's better to have this logic in the BPF program, that makes sense.
->>>
->>> I had a version of this patch that allowed you to attach a prog array=
+> What happens if a program calls read(2), though?  A page may be
+> inserted into page cache on behalf of an address_space without any
+> particular mm being involved.  There will usually be a calling task,
+> though.
 
->>> instead,
->>> but I think that it's cleaner attaching a program per lsm hook. In
->>> addition,
->>> there's a performance impact that comes from these hooks, so I
->>> wouldn't want to
->>> execute unneccessary code if it's avoidable.
->>
->> Hmm... it doesn't really matter how the backend part looks like and if=
+Most faults are synchronous and the faulting thread is a member of the
+mm to be charged, so this usually isn't an issue.  I don't think there
+are places where we populate an address_space without knowing who it
+is for (as opposed / in addition to who the operator is).
 
->> we need to implement per-call hooks to lower runtime overhead, sure.
->> I was mostly worried about the approach propagating through the
->> userland visible interface.
->>
->>> The prog array approach also makes stacking filters difficult. If
->>> people want
->>> multiple filters per hook, the orchestrator would have to rewrite the=
+> But this is all very memcg-specific.  What about other cgroups?  I/O
+> is per-task, right?  Scheduling is definitely per-task.
 
->>> existing
->>> filters to be cooperative.
->>
->> I'm not really sure "stacking" in the kernel side is a good idea.
->> Please see below.
->>
->>>> I'm not convinced about the approach.  It's an approach which pretty=
+They aren't separate.  Think about IOs to write out page cache, CPU
+cycles spent reclaiming memory or encrypting writeback IOs.  It's fine
+to get more granular with specific resources but the semantics gets
+messy for cross-resource accounting and control without proper
+scoping.
 
->>>> much requires future extensions while being rigid.  Not a good
->>>> combination.
->>>
->>> Do you have an alternative recommendation? Maybe just a set of 5 u64s=
+> > Consider the scenario where you have somebody faulting on behalf of a
+> > foreign VMA, but the thread who created and is actively using that VMA
+> > is in a different cgroup than the process leader.  Who are we going to
+> > charge?  All possible answers seem erratic.
+> 
+> Indeed, and this problem is probably not solvable in practice unless
+> you charge all involved cgroups.  But the caller's *mm* is entirely
+> irrelevant here, so I don't see how this implies that cgroups need to
+> keep tasks in the same process together.  The relevant entities are
+> the calling *task* and the target mm, and you're going to be
+> hard-pressed to ensure that they belong to the same cgroup, so I think
+> you need to be able handle weird cases in which there isn't an
+> obviously correct cgroup to charge.
 
->>> as the context object along with the hook ID?
->>
->> cgroup fs doesn't seem like the right interface for this but if it
->> were I'd go for named hook IDs instead of opaque numbers.
->>
->>>> Unless this is properly delegatable, IOW, it's safe to fully delegat=
-e
->>>> to a lesser security domain for all operations including program
->>>> loading and assignment (I can't see how that'd be the case), making =
-it
->>>> an explicit controller doens't work in terms of userland interface.
->>>> It's fine for bpf / lsm / whatever to attach to cgroups by extending=
+It is an erratic case which is caused by userland interface allowing
+non-sensical configuration.  We can accept it as a necessary trade-off
+given big enough benefits or unavoidable constraints but it isn't
+something to do willy-nilly.
 
->>>> struct cgroup itself or implementing an implicit controller but to b=
-e
->>>> visible as an explicit controller it must be able to follow cgroup
->>>> interface rules including delegation.  If not, it's best to come
->>>> through the interface which enforces the required permission checks
->>>> and then talk to cgroup from there.  This was also an issue with
->>>> network cgroup bpf programs that Daniel Mack is working on.  Please
->>>> chat with him.
->>>
->>> Program assignment is possible by lesser security domains. Program
->>> loading is
->>> limited to CAP_SYS_ADMIN in init_user_ns. We could make it accessible=
- to
->>> CAP_SYS_ADMIN in any userns, but it the reasoning behind this is that=
+> > For system-level and process-level operations to not step on each
+> > other's toes, they need to agree on the granularity boundary -
+> > system-level should be able to treat an application hierarchy as a
+> > single unit.  A possible solution is allowing rgroup hirearchies to
+> > span across process boundaries and implementing cgroup migration
+> > operations which treat such hierarchies as a single unit.  I'm not yet
+> > sure whether the boundary should be at program groups or rgroups.
+> 
+> I think that, if the system cgroup manager is moving processes around
+> after starting them and execing the final binary, there will be races
+> and confusion, and no about of granularity fiddling will fix that.
 
->>> Checmate
->>> BPF programs can leak kernel pointers.
->>
->> That doesn't make much sense to me.  Delegation doesn't mean much if a=
+I don't see how that statement is true.  For example, if you confine
+the hierarhcy to in-process, there is proper isolation and whether
+system agent migrates the process or not doesn't make any difference
+to the internal hierarchy.
 
->> delegatee can't load its own program (and I don't see how one can
->> delegate kernel pointer access to !root).  Also, unless there's
->> per-program fine control on who can load it, it seems pretty dangerous=
+> I know nothing about rgroups.  Are they upstream?
 
->> to let anyone load any program.
->>
->>> Could we potentially restrict it to only CAP_MAC_OVERRIDE, while
->>> still meeting
->>> cgroup delegation requirements?
->>
->> Wouldn't it make far more sense to pass cgroup fd to bpf syscall so
->> that "load this program" and "attach this program to the cgroup
->> identified by this fd" through the same interface and permission
->> checks?  cgroup participating in bpf operations is all fine but
->> splitting the userland interface across two domains seems like a bad
->> idea.
->>
->>> Filters which are higher up in the heirarchy will still be enforced
->>> during
->>> delegation. This was an explicit design, as the "Orchestrator in
->>> Orchestrator"
->>> use case needs to be supported.
->>
->> Given that program loading is restricted to root, wouldn't it be an a
->> lot more efficient approach to let userland multiplex multiple
->> programs?  Walking the tree executing bpf programs each time one of
->> these operations runs can be pretty expensive.  Imagine a tree like
->> the following.
->>
->>     A - B - C
->>           \ D
->>
->> Let's say program is currently loaded on D.  If someone wants to add a=
+It was linked from the original message.
 
->> program on B, userland can load the program on B, combine B's and D's
->> program and compile them into a single program and load it on D.  The
->> only thing kernel would need to do in terms of hierarchy is finding
->> what's the closest program to execute.  In the above example, C would
->> need to use B's program and that can be determined on program
->> assignment time rather than on each operation.
->=20
-> I think that's exactly what Daniel's patches are doing and imo
-> it makes sense to keep this style for lsm as well
-> and also apply the concept of hook_id.
-> Daniel adds two commands to bpf syscall to attach/detach from cgroup
-> with hook_id.
-> Initially two hooks will be for socket rx and tx.
-> Then all interesting lsm hooks can be added one by one.
-> Daniel's prog type will be bpf_prog_type_cgroup_socket_filter.
-> LSM's prog type will be bpf_prog_type_lsm.
-> And verifier can check type safety since the lsm hook_id will be
-> passed at the program load time.
-> See another thread we had with Mickael.
->=20
-> landlock and checmate are very similar and should really be
-> single lsm as long as we agree that both are cgroup based.
-> The main difference between the two:
-> - landlock is proposing unpriveleged mode
-> - checmate is proposing writing into arguments from the program
-> These differences can be flags/options to one lsm.
-> Implementations of course are different so far, but
-> instead of arguing landlock vs checmate, I'd like us
-> to focus on how we can make one lsm that solves all use cases.
+[7]  http://lkml.kernel.org/r/20160105154503.GC5995-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org
+     [RFD] cgroup: thread granularity support for cpu controller
+     Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Thanks for putting me in the loop. I am agree that both approaches can
-be combined and I'm working on a new RFC for Landlock in which it would
-be possible to manage unprivileged and privileged eBPF programs
-according to extra flags. Sargun's network manipulation and checks (from
-Checmate) could then sit on top of it.
+[8]  http://lkml.kernel.org/r/1457710888-31182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+     [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource group and PRIO_RGRP
+     Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-However, for this to work, I'm keeping the main Landlock design to be
-able to manage unprivileged rules, which is a touchy part. The next RFC
-will also contains cgroup handling thanks to Daniel Mack's
-BPF_PROG_ATTACH feature.
+[9]  http://lkml.kernel.org/r/20160311160522.GA24046-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org
+     Example program for PRIO_RGRP
+     Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Basically, the main constraints for an unprivileged LSM are:
-* must use and check no_new_priv for all impacted processes, including
-moving from and to a cgroup (which get more complicated when dealing
-with different privileged eBPF programs);
-* must stack/append rules and prohibit removal (need to deal with
-multiple processes and their different privileges/user).
+> > These base-system operations are special regardless of cgroup and we
+> > already have sometimes crude ways to affect their behaviors where
+> > necessary through sysctl knobs, priorities on specific kernel threads
+> > and so on.  cgroup doesn't change the situation all that much.  What
+> > gets left in the root cgroup usually are the base-system operations
+> > which are outside the scope of cgroup resource control in the first
+> > place and cgroup resource graph can treat the root as an opaque anchor
+> > point.
+> 
+> This seems to explain why the controllers need to be able to handle
+> things being charged to the root cgroup (or to an unidentifiable
+> cgroup, anyway).  That isn't quite the same thing as allowing, from an
+> ABI point of view, the root cgroup to contain processes and cgroups
+> but not allowing other cgroups to do the same thing.  Consider:
 
-Regards,
- Micka=EBl
+The points are 1. we need the root to be a special container anyway
+2. allowing it to be special and contain system-wide consumptions
+doesn't make the resource graph inconsistent once all non-system-wide
+consumptions are put in non-root cgroups, and 3. this is the most
+natural way to handle the situation both from implementation and
+interface standpoints as it makes non-cgroup configuration a natural
+degenerate case of cgroup configuration.
 
+> suppose that systemd (or some competing cgroup manager) is designed to
+> run in the root cgroup namespace.  It presumably expects *itself* to
+> be in the root cgroup.  Now try to run it using cgroups v2 in a
+> non-root namespace.  I don't see how it can possibly work if it the
+> hierarchy constraints don't permit it to create sub-cgroups while it's
+> still in the root.  In fact, this seems impossible to fix even with
+> user code changes.  The manager would need to simultaneously create a
+> new child cgroup to contain itself and assign itself to that child
+> cgroup, because the intermediate state is illegal.
 
---RlxcUurqI4tpfEWAGGLT5Eet6w0VxAfju--
+Please re-read the constraint.  It doesn't prevent any organizational
+operations before resource control is enabled.
 
---iqr4RlMavXbW33RqUNp8eUO4QKHnGuEJt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+> I really, really think that cgroup v2 should supply the same
+> *interface* inside and outside of a non-root namespace.  If this is
 
------BEGIN PGP SIGNATURE-----
+It *does*.  That's what I tried to explain, that it's exactly
+isomorhpic once you discount the system-wide consumptions.
 
-iQEcBAEBCgAGBQJXxLT0AAoJECLe/t9zvWqVPkoH/1MzXEhy6u033KNDU7xVIpGk
-y2df44WoJWvqTJHOAJi+wjSamGAHgD4AOT5W/cg33PTHjQ1gxOnzNEZFWWwcL4AI
-pAALip6nIHIzkcq1bbIIHA+mr6v7RZbdT846i1VUp/6WJCoiOO481F6gWgE7X1zJ
-EWLaLrnoPoURMOEilF//NYnLeRyR1miTWXiLkRBllN/RfF6mY7AN5li99i9Kt9sh
-WtAslF1I9Kct6v0A66vhB2/lQzi4TFfgThrvBLZuDI6GZU6svzyNMNxZt8Zwmrp9
-yo62b+UWPO5cn3HLjWggJlINV6ccVs26xmBEz5yWkS3D87D7H4eG6ifyiL2rmug=
-=6I7J
------END PGP SIGNATURE-----
+Thanks.
 
---iqr4RlMavXbW33RqUNp8eUO4QKHnGuEJt--
+-- 
+tejun
