@@ -1,181 +1,158 @@
-From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
-Subject: Re: [RFC v2 09/10] landlock: Handle cgroups (performance)
-Date: Sun, 28 Aug 2016 11:42:54 +0200
-Message-ID: <57C2B21E.9040705@digikod.net>
-References: <1472121165-29071-1-git-send-email-mic@digikod.net>
- <1472121165-29071-10-git-send-email-mic@digikod.net>
- <20160826021432.GA8291@ast-mbp.thefacebook.com>
- <57C05BF0.8000706@digikod.net>
- <20160826230539.GA26683@ast-mbp.thefacebook.com>
- <57C19E6E.6040908@digikod.net>
- <20160827180642.GA38754@ast-mbp.thefacebook.com>
- <57C1EB72.2050703@digikod.net>
- <20160827204307.GA43714@ast-mbp.thefacebook.com>
- <57C202BF.7000207@digikod.net>
- <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
-Reply-To: kernel-hardening@lists.openwall.com
+From: Sargun Dhillon <sargun@sargun.me>
+Subject: [net-next RFC v2 0/9] Add Checmate: BPF-driven minor LSM
+Date: Mon, 29 Aug 2016 04:45:44 -0700
+Message-ID: <20160829114542.GA20836@ircssh.c.rugged-nimbus-611.internal>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="8VGgT923NnlXF5ggRoLF96NvCxeSSDCo2"
-Return-path: <kernel-hardening-return-4500-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
+Return-path: <linux-security-module-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sargun.me; s=google;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=fOWOS/f5t94cIqceegXS1uIuBSrOrmf404ZKsxaO5lY=;
+        b=a4HZ4zezkKsTxynz0AQ1pn0MeWUk3+AjlNId4tAkUJB/Fl0oiX9NliN2sYYEI7+JA6
+         ufvw6mPOdJ6PyAUD7ByTBF0Y+KJP81TltsDdvfkMXMSV4uVcOTv0YBoNA9naUZyFUuZx
+         vl8a91Vs6MreV9qQWqL1x5slpOZeFbc2veNaY=
+Content-Disposition: inline
+Sender: owner-linux-security-module@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-In-Reply-To: <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, Alexei Starovoitov <ast@kernel.org>, Tejun Heo <tj@kernel.org>, Sargun Dhillon <sargun@sargun.me>, Network Development <netdev@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, Kees Cook <keescook@chromium.org>, LSM List <linux-security-module@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "David S . Miller" <davem@davemloft.net>, Daniel Mack <daniel@zonque.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Daniel Borkmann <daniel@iogearbox.net>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: netdev@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, daniel@iogearbox.net, ast@fb.com
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---8VGgT923NnlXF5ggRoLF96NvCxeSSDCo2
-Content-Type: multipart/mixed; boundary="5sDKDTKRdV9mc9kNsDnmIpOdQNF5CNNSf"
-From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: "kernel-hardening@lists.openwall.com"
- <kernel-hardening@lists.openwall.com>, Alexei Starovoitov <ast@kernel.org>,
- Tejun Heo <tj@kernel.org>, Sargun Dhillon <sargun@sargun.me>,
- Network Development <netdev@vger.kernel.org>,
- Linux API <linux-api@vger.kernel.org>, Kees Cook <keescook@chromium.org>,
- LSM List <linux-security-module@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>,
- "David S . Miller" <davem@davemloft.net>, Daniel Mack <daniel@zonque.org>,
- Alexei Starovoitov <alexei.starovoitov@gmail.com>,
- Daniel Borkmann <daniel@iogearbox.net>
-Message-ID: <57C2B21E.9040705@digikod.net>
-Subject: Re: [RFC v2 09/10] landlock: Handle cgroups (performance)
-References: <1472121165-29071-1-git-send-email-mic@digikod.net>
- <1472121165-29071-10-git-send-email-mic@digikod.net>
- <20160826021432.GA8291@ast-mbp.thefacebook.com>
- <57C05BF0.8000706@digikod.net>
- <20160826230539.GA26683@ast-mbp.thefacebook.com>
- <57C19E6E.6040908@digikod.net>
- <20160827180642.GA38754@ast-mbp.thefacebook.com>
- <57C1EB72.2050703@digikod.net>
- <20160827204307.GA43714@ast-mbp.thefacebook.com>
- <57C202BF.7000207@digikod.net>
- <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
-In-Reply-To: <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
+I've begun building out the skeleton of a Linux Security Module, and I'd like to
+get feedback on it. It's a skeleton, and I've only populated a few hooks, so I'm
+mostly looking for input on the general proposal, interest, and design. It's a
+minor LSM. My particular use case is one in which containers are being
+dynamically deployed to machines by internal developers in a different group.
+The point of Checmate is to act as an extensible bed for _safe_, complex
+security policies. It's nice to enable dynamic security policies that can be
+defined in C, and change as neccessary, without ever having to patch, or rebuild
+the kernel.
 
---5sDKDTKRdV9mc9kNsDnmIpOdQNF5CNNSf
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+This is the second reroll of this patchset, and it's quite different than the 
+first approach. Instead of being totally independent of the cgroups code, it is 
+now a cgroups controller. It relies on the LSM API to hook into points in the 
+kernel, and cgroups APIs to determine which policy to enforce. 
+
+Right now, it's meant to be applied to containers. It is expected that it'd be 
+configured by some kind of central management system. It's also expected that 
+the central management system would have a set of policies that ship as binary 
+images, and are controlled by BPF maps. Using this, one can have fairly complex 
+filters, without requiring an entire toolchain. Although the patchset currently 
+locks BPF programs to only working against the kernel they were compiled with, 
+there is nothing in the future that prevents us from changing this.
+
+To start, it only hooks into a subset of the LSM network API. The primary reason 
+behind his is simplicity, and rather than build out of the full infrastructure, 
+to start the comment process early. Also, there have been a number of patches 
+(LandLock, Network cgroups controller, Daniel Mack's BPF filters on cgroups) 
+that are similar, and these set of hooks solve many of the same problems.
 
 
+Although, at first, much of this sounds like seccomp, it's quite different. 
+First, you have access to kernel pointers, which allows you to dereference, and 
+read data like sockaddrs safely. Since the data has been copied into 
+kernelspace, you don't have to worry about TOC-TOU attacks.
 
-On 28/08/2016 10:13, Andy Lutomirski wrote:
-> On Aug 27, 2016 11:14 PM, "Micka=C3=ABl Sala=C3=BCn" <mic@digikod.net> =
-wrote:
->>
->>
->> On 27/08/2016 22:43, Alexei Starovoitov wrote:
->>> On Sat, Aug 27, 2016 at 09:35:14PM +0200, Micka=C3=ABl Sala=C3=BCn wr=
-ote:
->>>> On 27/08/2016 20:06, Alexei Starovoitov wrote:
->>>>> On Sat, Aug 27, 2016 at 04:06:38PM +0200, Micka=C3=ABl Sala=C3=BCn =
-wrote:
->>>>>> As said above, Landlock will not run an eBPF programs when not str=
-ictly
->>>>>> needed. Attaching to a cgroup will have the same performance impac=
-t as
->>>>>> attaching to a process hierarchy.
->>>>>
->>>>> Having a prog per cgroup per lsm_hook is the only scalable way I
->>>>> could come up with. If you see another way, please propose.
->>>>> current->seccomp.landlock_prog is not the answer.
->>>>
->>>> Hum, I don't see the difference from a performance point of view bet=
-ween
->>>> a cgroup-based or a process hierarchy-based system.
->>>>
->>>> Maybe a better option should be to use an array of pointers with N
->>>> entries, one for each supported hook, instead of a unique pointer li=
-st?
->>>
->>> yes, clearly array dereference is faster than link list walk.
->>> Now the question is where to keep this prog_array[num_lsm_hooks] ?
->>> Since we cannot keep it inside task_struct, we have to allocate it.
->>> Every time the task is creted then. What to do on the fork? That
->>> will require changes all over. Then the obvious optimization would be=
+The user-facing bits of the API are detailed in "Add LSM / BPF Checmate docs", 
+but a short summary is that Checmatate is a cgroups controller. You can enable
+it, and then write your BPF FDs to special control files. Once you do this,
+the programs are enforced on all processes in that cgroup, and below it.
 
->>> to share this allocated array of prog pointers across multiple tasks.=
-=2E.
->>> and little by little this new facility will look like cgroup.
->>> Hence the suggestion to put this array into cgroup from the start.
->>
->> I see your point :)
->>
->>>
->>>> Anyway, being able to attach an LSM hook program to a cgroup thanks =
-to
->>>> the new BPF_PROG_ATTACH seems a good idea (while keeping the possibi=
-lity
->>>> to use a process hierarchy). The downside will be to handle an LSM h=
-ook
->>>> program which is not triggered by a seccomp-filter, but this should =
-be
->>>> needed anyway to handle interruptions.
->>>
->>> what do you mean 'not triggered by seccomp' ?
->>> You're not suggesting that this lsm has to enable seccomp to be funct=
-ional?
->>> imo that's non starter due to overhead.
->>
->> Yes, for now, it is triggered by a new seccomp filter return value
->> RET_LANDLOCK, which can take a 16-bit value called cookie. This must n=
-ot
->> be needed but could be useful to bind a seccomp filter security policy=
+To answer the question of why not use IPTables - often times, there is an 
+overhead to using a 2nd network namespace that is unacceptable. Not because 
+network namespaces are inherently expensive, but many of us leverage 
+infrastructure that cannot handle multiple IPs, and therefore we have to do
+"weird" tricks to get multiple network NSs to work (NAT, mirroring, etc..).
 
->> with a Landlock one. Waiting for Kees's point of view=E2=80=A6
->>
->=20
-> I'm not Kees, but I'd be okay with that.  I still think that doing
-> this by process hierarchy a la seccomp will be easier to use and to
-> understand (which is quite important for this kind of work) than doing
-> it by cgroup.
->=20
-> A feature I've wanted to add for a while is to have an fd that
-> represents a seccomp layer, the idea being that you would set up your
-> seccomp layer (with syscall filter, landlock hooks, etc) and then you
-> would have a syscall to install that layer.  Then an unprivileged
-> sandbox manager could set up its layer and still be able to inject new
-> processes into it later on, no cgroups needed.
+Open Questions:
 
-A nice thing I didn't highlight about Landlock is that a process can
-prepare a layer of rules (arraymap of handles + Landlock programs) and
-pass the file descriptors of the Landlock programs to another process.
-This process could then apply this programs to get sandboxed. However,
-for now, because a Landlock program is only triggered by a seccomp
-filter (which do not follow the Landlock programs as a FD), they will be
-useless.
+1) Performance: 
 
-The FD referring to an arraymap of handles can also be used to update a
-map and change the behavior of a Landlock program. A master process can
-then add or remove restrictions to another process hierarchy on the fly.
+Right now, the patches aren't really performance optimized. For the task hooks, 
+it's cheap enough because it's 1 dereference from task->cgroup, and then a 
+matter of walking up the hierarchy. On the other hand, for SK's it can be 
+considerably more expensive.
 
-However, I think it would make more sense to use cgroups if we want to
-move an existing (unwilling) unsandoxed process into a sandboxed
-environment. Of course, some more no_new_privs checks would be needed.
+I am thinking that maybe it makes sense to add the security hook dynamically the 
+first time that someones writes a BPF program to that controller. This way, you 
+can have filters on syscalls that happen rarely, like bind, but you avoid
+paying the cost on expensive hooks liks rcv_skb.
+
+It would be really nice if sock_cgroup_data included pointers to the CSSs that 
+were effective for a given sock.
+
+Also, a minor point. The way that the Checmate struct are packed, we lose 4 
+bytes for every hook because of alignment. If we moved counts into the top
+level datastructure, we could work around this. I'd prefer not to do that.
+
+2) API
+
+The API right now tightly ties programs to the kernel version. I don't see a 
+good way around this unless we decide that a subset of the lsm hooks API is 
+immutable. That's a question for the LSM maintainers. 
+
+Thanks to Alexei, Daniel B, and Daniel Mack, and Tejun for input. I would love 
+to know what y'all think.
 
 
---5sDKDTKRdV9mc9kNsDnmIpOdQNF5CNNSf--
+Sargun Dhillon (9):
+  net: Make cgroup sk data present when calling security_sk_(alloc/free)
+  cgroups: move helper cgroup_parent to cgroup.h
+  bpf: move tracing helpers (probe_read, get_current_task) to shared
+    helpers
+  bpf, security: Add Checmate security LSM and BPF program type
+  bpf: Add bpf_probe_write_checmate helper
+  bpf: Share current_task_under_cgroup helper and expose to Checmate
+    programs
+  samples/bpf: Split out helper code from
+    test_current_task_under_cgroup_user
+  samples/bpf: Add limit_connections, remap_bind checmate examples /
+    tests
+  doc: Add LSM / BPF Checmate docs
 
---8VGgT923NnlXF5ggRoLF96NvCxeSSDCo2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+ Documentation/security/Checmate.txt               |  54 ++
+ include/linux/bpf.h                               |   3 +
+ include/linux/cgroup.h                            |  16 +
+ include/linux/cgroup_subsys.h                     |   4 +
+ include/linux/checmate.h                          | 108 ++++
+ include/uapi/linux/bpf.h                          |  12 +
+ kernel/bpf/helpers.c                              |  63 +++
+ kernel/bpf/syscall.c                              |   2 +-
+ kernel/cgroup.c                                   |   9 -
+ kernel/trace/bpf_trace.c                          |  61 ---
+ net/core/sock.c                                   |   5 +-
+ samples/bpf/Makefile                              |  12 +-
+ samples/bpf/bpf_helpers.h                         |   2 +
+ samples/bpf/bpf_load.c                            |  11 +-
+ samples/bpf/cgroup_helpers.c                      | 103 ++++
+ samples/bpf/cgroup_helpers.h                      |  15 +
+ samples/bpf/checmate_limit_connections_kern.c     | 146 ++++++
+ samples/bpf/checmate_limit_connections_user.c     | 113 ++++
+ samples/bpf/checmate_remap_bind_kern.c            |  28 +
+ samples/bpf/checmate_remap_bind_user.c            |  82 +++
+ samples/bpf/test_current_task_under_cgroup_user.c |  72 +--
+ security/Kconfig                                  |   1 +
+ security/Makefile                                 |   2 +
+ security/checmate/Kconfig                         |  11 +
+ security/checmate/Makefile                        |   3 +
+ security/checmate/checmate_bpf.c                  | 125 +++++
+ security/checmate/checmate_lsm.c                  | 610 ++++++++++++++++++++++
+ 27 files changed, 1534 insertions(+), 139 deletions(-)
+ create mode 100644 Documentation/security/Checmate.txt
+ create mode 100644 include/linux/checmate.h
+ create mode 100644 samples/bpf/cgroup_helpers.c
+ create mode 100644 samples/bpf/cgroup_helpers.h
+ create mode 100644 samples/bpf/checmate_limit_connections_kern.c
+ create mode 100644 samples/bpf/checmate_limit_connections_user.c
+ create mode 100644 samples/bpf/checmate_remap_bind_kern.c
+ create mode 100644 samples/bpf/checmate_remap_bind_user.c
+ create mode 100644 security/checmate/Kconfig
+ create mode 100644 security/checmate/Makefile
+ create mode 100644 security/checmate/checmate_bpf.c
+ create mode 100644 security/checmate/checmate_lsm.c
 
------BEGIN PGP SIGNATURE-----
+-- 
+2.7.4
 
-iQEcBAEBCgAGBQJXwrIeAAoJECLe/t9zvWqVtV0H/Ar1sHDLnuWGC3Y1c8vUmKLa
-XVyfAw62SUHnfcsjpg9zMQgRgPEg0NqUnBXs1dIvLQo2qNpKPTFQ/c3L/90M2r8g
-nLRYIR61F4UM6kST51f2NTBHYYlKqP32TZB2QKiUkSwvctD8vHWvpLBecxqggznc
-6HYUjyan8I2pBwIs4D03Modg15E8nGDtFIsPDvr80yKhbE8KBBT2yTcqQC+AmyA7
-9g3hHZmalHdZBAUKpmWNmuJYracRyQZW/u/MVjmSu2Slc963k1UxBfjG1zqRLYfx
-ew3w1NbkrGUUN1T5GFVnwp1iccB6wY0CpLQ9Aqazd23WYgOBfJHFZr2nZrhyzR8=
-=1WZN
------END PGP SIGNATURE-----
-
---8VGgT923NnlXF5ggRoLF96NvCxeSSDCo2--
