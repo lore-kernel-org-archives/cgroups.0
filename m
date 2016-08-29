@@ -1,95 +1,47 @@
-From: Sargun Dhillon <sargun@sargun.me>
-Subject: [net-next RFC v2 9/9] doc: Add LSM / BPF Checmate docs
-Date: Mon, 29 Aug 2016 04:47:57 -0700
-Message-ID: <20160829114756.GA20918@ircssh.c.rugged-nimbus-611.internal>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v2] mm: memcontrol: avoid unused function warning
+Date: Mon, 29 Aug 2016 09:51:42 -0400
+Message-ID: <20160829135142.GA2172@cmpxchg.org>
+References: <20160824113733.2776701-1-arnd@arndb.de>
 Mime-Version: 1.0
-Return-path: <linux-security-module-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sargun.me; s=google;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=Mx3x+jp3OatqMf+dtrZZWiTWlQ4vNpUaB/GDt3unDSo=;
-        b=KqymezqZfOUvwgIOVCfpv71geHIH65CUQTHxjB0cWzAgj+Di6HDSPewSHd3vSQpVm9
-         /hIHFObg4W7o1+Y4hbOZpfosMruaRW/iu1ADuPAGZoGL+eYscsApkEZ/+qDlJ2xUfdyp
-         88AnyPHbXc7/fD7kjoMydpyFrafF7PJ4PjC/c=
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=bi6yHFnAhgsVg1oljmnFwI+2bg6dfVd1lqSEcwq7I6s=; b=BibA5o4ipH32S+E7N/STXMSq5H
+	PtqrFjoKpRqbs1GFcA9wz0zQjx/d/HQVo2CN4d/QpB/KgZEweyZ1m4mIYxAyULJeuDxQztZHNH9ks
+	xnXvF9d8VXxwOSLUHAI/oSBMZ3k++oUtXxFodEEv0cyu3Rq/9qgWpg/2qZFJxQ4Ilkyg=;
 Content-Disposition: inline
-Sender: owner-linux-security-module@vger.kernel.org
+In-Reply-To: <20160824113733.2776701-1-arnd@arndb.de>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: netdev@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, daniel@iogearbox.net, ast@fb.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-This adds documentation on how to operate, and develop against the
-Checmate LSM and Cgroup controller.
+On Wed, Aug 24, 2016 at 12:23:00PM +0200, Arnd Bergmann wrote:
+> A bugfix in v4.8-rc2 introduced a harmless warning when CONFIG_MEMCG_SWAP
+> is disabled but CONFIG_MEMCG is enabled:
+> 
+> mm/memcontrol.c:4085:27: error: 'mem_cgroup_id_get_online' defined but not used [-Werror=unused-function]
+>  static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
+> 
+> This moves the function inside of the #ifdef block that hides the
+> calling function, to avoid the warning.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 1f47b61fb407 ("mm: memcontrol: fix swap counter leak on swapout from offline cgroup")
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Acked-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 
-Signed-off-by: Sargun Dhillon <sargun@sargun.me>
----
- Documentation/security/Checmate.txt | 54 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 54 insertions(+)
- create mode 100644 Documentation/security/Checmate.txt
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
-diff --git a/Documentation/security/Checmate.txt b/Documentation/security/Checmate.txt
-new file mode 100644
-index 0000000..d409785
---- /dev/null
-+++ b/Documentation/security/Checmate.txt
-@@ -0,0 +1,54 @@
-+--- What is Checmate? ---
-+
-+Checmate is a flexible programmable, extensible minor LSM that's coupled with
-+cgroups and BPF. It is designed to enforce container-specific policies. By
-+default, it does not enforce any policies. It is selectable at build time
-+with CONFIG_SECURITY_CHECMATE, and it is controlled through the unified cgroups
-+controller hierarchy.
-+
-+# How to use Checmate
-+In order to use Checmate, you have to enable the controller on the cgroup2
-+hierarchy. In order to prevent a centralized configuration daemon from mounting
-+Checmate on the V1 hierarchy you may want to add 'cgroup_no_v1=checmate' to your
-+boot command line.
-+
-+Enabling the controller:
-+	mount -t cgroup2 none $MOUNT_POINT
-+	cd $MOUNT_POINT
-+	echo +checmate > cgroup.subtree_control
-+
-+Once you do this, immediate children of this node on the hierarchy will have a
-+number of control files that begin with 'checmate.'. Each of these is mapped
-+to an LSM hook by the same name. If you read the file, it will return the
-+number of filters attached to that given hook. Details of the hooks can be
-+found in lsm_hooks.h.
-+
-+All tasks which are members of a cgroup will have no only the checmate filters
-+at that level enforced, but all levels above as well. If there is a need
-+to exempt a specific sub-cgroup, a program can use current_task_under_cgroup
-+along with a bpf map.
-+
-+## Adding filters:
-+If you would like to add a filter, you must compile a BPF_PROG_TYPE_CHECMATE BPF
-+program. You can then write the '%d\n' formatted version of the BPF program
-+file descriptor to the relevant control file.
-+
-+## Removing filters:
-+If you would like to remove a specific filter, you can write the negative file
-+descriptor of the BPF program to the control file (a la '-%d\n'). If you would
-+like to do this, then it is recommended that you pin your programs.
-+
-+If you would like to remove all filters from a specific hook, simply write '0'
-+to the control file. During normal operation, you shouldn't have the bpf syscall
-+return '0' for a given program, please take proper precautions to work around
-+this.
-+
-+# Caveats
-+## Hook Limit:
-+Each hook is limited to having MAX_CHECMATE_INSTANCES (32) hooks per level
-+in the hierarchy. The write call will return ENOSPC if you hit this condition.
-+
-+## CGroup v2 interaction with CGroup v1:
-+Because the cgroups subsystem is in transition, using the net_prio or the
-+net_classid v1 cgroups will render Checmate inoperable on all network
-+hooks that inspect sockets.
-\ No newline at end of file
--- 
-2.7.4
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
