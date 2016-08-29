@@ -1,170 +1,562 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Mon, 29 Aug 2016 18:20:48 -0400
-Message-ID: <20160829222048.GH28713@mtj.duckdns.org>
-References: <20160805170752.GK2542@mtj.duckdns.org>
- <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ@mail.gmail.com>
- <20160820155659.GA16906@mtj.duckdns.org>
- <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: [net-next RFC v2 8/9] samples/bpf: Add limit_connections,
+ remap_bind checmate examples / tests
+Date: Mon, 29 Aug 2016 15:30:43 -0700
+Message-ID: <20160829223041.GA52252@ast-mbp.thefacebook.com>
+References: <20160829114745.GA20912@ircssh.c.rugged-nimbus-611.internal>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-security-module-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=BotLV4bYWBkmqNNTblf6a/wXkv950qj/9p2GwW5ot+s=;
-        b=hjOPFwqpJw4k2BQYO3wXmlWysB00eivHyt+o2S+R+pU5lDV1e5ZlJ0TNXDbZBMDvw3
-         BMysIRyAyT74BifsNt4E81E+K3FPh5WfqWb996LUenP22KU9DIFTPlN+wAMGX1O5SP26
-         OSxawNVUbWjfC+d83XrAyE0MUg+aHTl+XNKNVdOBBlWY9HrAJsN9NC3FSeRp1afgLX+A
-         JWS+MlsNYhMRpZYYCr85D5YC7viTL1KMA+Fa6GYfywh9QWaRagar2ezycFPJU5HQLUGI
-         lNfMUwj0z4RUWOJXPxVf4IgniubSlyGXDItBI3hhnpl1qLmyB+xTlWz/aklZkaUlUpF6
-         lqjQ==
+        bh=BjROJDOfYor7M5lwkTKEXgE5bQVfw3oU8lDkKIz9ZqM=;
+        b=VRso9/m3tNFgkhVngdCq/VaQKyR5nQf3OmqiocwIWKJrlwXOkLjadyjuhCdmZ87SUh
+         Ue+5nOe+FT1qDhCbFdFKjiP0FtdGhEYXfPXW+bfdxztdE7C01CRYZfO/mQcp1HQbTSHw
+         j1S9jN7IKAhmncKKMfK6ZyYoivW+BfzdhSJ092/Gk8fGBkigbjVbI5NEukTLDvqeOnyh
+         vQ9r7OSu8LdbYwkRE+qIKnuZuVx+CI5ABkLj1mi9jOcJ3xP1OSFVQQ2KeUPhlI5wKqOM
+         i74JqRCnx8bl8lsBKNOFAFg9ve67wKoIY3uLL+abX+ijIqbYqfDOHW7+U3Qfao8dQGrp
+         oHqw==
 Content-Disposition: inline
-In-Reply-To: <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20160829114745.GA20912@ircssh.c.rugged-nimbus-611.internal>
+Sender: owner-linux-security-module@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Sargun Dhillon <sargun@sargun.me>
+Cc: netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, daniel@iogearbox.net, ast@fb.com, mic@digikod.net
 
-Hello, Andy.
-
-Sorry about the delay.  Was kinda overwhelmed with other things.
-
-On Sat, Aug 20, 2016 at 11:45:55AM -0700, Andy Lutomirski wrote:
-> > This becomes clear whenever an entity is allocating memory on behalf
-> > of someone else - get_user_pages(), khugepaged, swapoff and so on (and
-> > likely userfaultfd too).  When a task is trying to add a page to a
-> > VMA, the task might not have any relationship with the VMA other than
-> > that it's operating on it for someone else.  The page has to be
-> > charged to whoever is responsible for the VMA and the only ownership
-> > which can be established is the containing mm_struct.
+On Mon, Aug 29, 2016 at 04:47:46AM -0700, Sargun Dhillon wrote:
+> 1) limit_connections
+> This program performs connection limiting using a probablistic
+> datastructure. It ensures that for a given 2-tuple, there will never be
+> more than 10 connections. The parameters themselves are adjustable
+> to allow for trading off memory usage vs. collision likelihood. The
+> reason for not refcnting 2-tuples using atomic counters is the lack of
+> a safe free mechanism.
 > 
-> This surprises me a bit.  If I do access_process_vm(), then I would
-> have expected the charge to go the caller, not the mm being accessed.
-
-It does and should go the target mm.  Who faults in a page shouldn't
-be the final determinant in the ownership; otherwise, we end up in
-situations where the ownership changes due to, for example,
-fluctuations in page fault pattern.  It doesn't make semantical sense
-either.  If a kthread is doing PIO for a process, why would it get
-charged for the memory it's faulting in?
-
-> What happens if a program calls read(2), though?  A page may be
-> inserted into page cache on behalf of an address_space without any
-> particular mm being involved.  There will usually be a calling task,
-> though.
-
-Most faults are synchronous and the faulting thread is a member of the
-mm to be charged, so this usually isn't an issue.  I don't think there
-are places where we populate an address_space without knowing who it
-is for (as opposed / in addition to who the operator is).
-
-> But this is all very memcg-specific.  What about other cgroups?  I/O
-> is per-task, right?  Scheduling is definitely per-task.
-
-They aren't separate.  Think about IOs to write out page cache, CPU
-cycles spent reclaiming memory or encrypting writeback IOs.  It's fine
-to get more granular with specific resources but the semantics gets
-messy for cross-resource accounting and control without proper
-scoping.
-
-> > Consider the scenario where you have somebody faulting on behalf of a
-> > foreign VMA, but the thread who created and is actively using that VMA
-> > is in a different cgroup than the process leader.  Who are we going to
-> > charge?  All possible answers seem erratic.
+> In order to run this program, you may need to bump your ulimit -l.
 > 
-> Indeed, and this problem is probably not solvable in practice unless
-> you charge all involved cgroups.  But the caller's *mm* is entirely
-> irrelevant here, so I don't see how this implies that cgroups need to
-> keep tasks in the same process together.  The relevant entities are
-> the calling *task* and the target mm, and you're going to be
-> hard-pressed to ensure that they belong to the same cgroup, so I think
-> you need to be able handle weird cases in which there isn't an
-> obviously correct cgroup to charge.
+> 2) remap_bind
+> This program rewrites binds from 6789 to 12345. It is meant to mimic
+> the usage of DNAT.
 
-It is an erratic case which is caused by userland interface allowing
-non-sensical configuration.  We can accept it as a necessary trade-off
-given big enough benefits or unavoidable constraints but it isn't
-something to do willy-nilly.
+these two are great examples of what lsm+bpf can be capable of.
+Thanks!
 
-> > For system-level and process-level operations to not step on each
-> > other's toes, they need to agree on the granularity boundary -
-> > system-level should be able to treat an application hierarchy as a
-> > single unit.  A possible solution is allowing rgroup hirearchies to
-> > span across process boundaries and implementing cgroup migration
-> > operations which treat such hierarchies as a single unit.  I'm not yet
-> > sure whether the boundary should be at program groups or rgroups.
+> Signed-off-by: Sargun Dhillon <sargun@sargun.me>
+> ---
+>  samples/bpf/Makefile                          |  10 ++
+>  samples/bpf/bpf_helpers.h                     |   2 +
+>  samples/bpf/bpf_load.c                        |  11 +-
+>  samples/bpf/checmate_limit_connections_kern.c | 146 ++++++++++++++++++++++++++
+>  samples/bpf/checmate_limit_connections_user.c | 113 ++++++++++++++++++++
+>  samples/bpf/checmate_remap_bind_kern.c        |  28 +++++
+>  samples/bpf/checmate_remap_bind_user.c        |  82 +++++++++++++++
+>  7 files changed, 389 insertions(+), 3 deletions(-)
+>  create mode 100644 samples/bpf/checmate_limit_connections_kern.c
+>  create mode 100644 samples/bpf/checmate_limit_connections_user.c
+>  create mode 100644 samples/bpf/checmate_remap_bind_kern.c
+>  create mode 100644 samples/bpf/checmate_remap_bind_user.c
 > 
-> I think that, if the system cgroup manager is moving processes around
-> after starting them and execing the final binary, there will be races
-> and confusion, and no about of granularity fiddling will fix that.
-
-I don't see how that statement is true.  For example, if you confine
-the hierarhcy to in-process, there is proper isolation and whether
-system agent migrates the process or not doesn't make any difference
-to the internal hierarchy.
-
-> I know nothing about rgroups.  Are they upstream?
-
-It was linked from the original message.
-
-[7]  http://lkml.kernel.org/r/20160105154503.GC5995-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org
-     [RFD] cgroup: thread granularity support for cpu controller
-     Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-[8]  http://lkml.kernel.org/r/1457710888-31182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-     [PATCHSET RFC cgroup/for-4.6] cgroup, sched: implement resource group and PRIO_RGRP
-     Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-[9]  http://lkml.kernel.org/r/20160311160522.GA24046-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org
-     Example program for PRIO_RGRP
-     Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-> > These base-system operations are special regardless of cgroup and we
-> > already have sometimes crude ways to affect their behaviors where
-> > necessary through sysctl knobs, priorities on specific kernel threads
-> > and so on.  cgroup doesn't change the situation all that much.  What
-> > gets left in the root cgroup usually are the base-system operations
-> > which are outside the scope of cgroup resource control in the first
-> > place and cgroup resource graph can treat the root as an opaque anchor
-> > point.
+> diff --git a/samples/bpf/Makefile b/samples/bpf/Makefile
+> index 5d2c178..ee5de8c 100644
+> --- a/samples/bpf/Makefile
+> +++ b/samples/bpf/Makefile
+> @@ -25,6 +25,8 @@ hostprogs-y += test_cgrp2_array_pin
+>  hostprogs-y += xdp1
+>  hostprogs-y += xdp2
+>  hostprogs-y += test_current_task_under_cgroup
+> +hostprogs-y += checmate_remap_bind
+> +hostprogs-y += checmate_limit_connections
+>  
+>  test_verifier-objs := test_verifier.o libbpf.o
+>  test_maps-objs := test_maps.o libbpf.o
+> @@ -52,6 +54,10 @@ xdp1-objs := bpf_load.o libbpf.o xdp1_user.o
+>  xdp2-objs := bpf_load.o libbpf.o xdp1_user.o
+>  test_current_task_under_cgroup-objs := bpf_load.o libbpf.o cgroup_helpers.o \
+>  				       test_current_task_under_cgroup_user.o
+> +checmate_remap_bind-objs := bpf_load.o libbpf.o cgroup_helpers.o \
+> +			    checmate_remap_bind_user.o
+> +checmate_limit_connections-objs := bpf_load.o libbpf.o cgroup_helpers.o \
+> +				   checmate_limit_connections_user.o
+>  
+>  # Tell kbuild to always build the programs
+>  always := $(hostprogs-y)
+> @@ -79,6 +85,8 @@ always += test_cgrp2_tc_kern.o
+>  always += xdp1_kern.o
+>  always += xdp2_kern.o
+>  always += test_current_task_under_cgroup_kern.o
+> +always += checmate_remap_bind_kern.o
+> +always += checmate_limit_connections_kern.o
+>  
+>  HOSTCFLAGS += -I$(objtree)/usr/include
+>  
+> @@ -103,6 +111,8 @@ HOSTLOADLIBES_test_overhead += -lelf -lrt
+>  HOSTLOADLIBES_xdp1 += -lelf
+>  HOSTLOADLIBES_xdp2 += -lelf
+>  HOSTLOADLIBES_test_current_task_under_cgroup += -lelf
+> +HOSTLOADLIBES_checmate_remap_bind += -lelf
+> +HOSTLOADLIBES_checmate_limit_connections += -lelf
+>  
+>  # Allows pointing LLC/CLANG to a LLVM backend with bpf support, redefine on cmdline:
+>  #  make samples/bpf/ LLC=~/git/llvm/build/bin/llc CLANG=~/git/llvm/build/bin/clang
+> diff --git a/samples/bpf/bpf_helpers.h b/samples/bpf/bpf_helpers.h
+> index bbdf62a..da97ced 100644
+> --- a/samples/bpf/bpf_helpers.h
+> +++ b/samples/bpf/bpf_helpers.h
+> @@ -55,6 +55,8 @@ static int (*bpf_skb_get_tunnel_opt)(void *ctx, void *md, int size) =
+>  	(void *) BPF_FUNC_skb_get_tunnel_opt;
+>  static int (*bpf_skb_set_tunnel_opt)(void *ctx, void *md, int size) =
+>  	(void *) BPF_FUNC_skb_set_tunnel_opt;
+> +static int (*bpf_probe_write_checmate)(void *ctx, void *dst, void *src, int len) =
+> +	(void *) BPF_FUNC_probe_write_checmate;
+>  
+>  /* llvm builtin functions that eBPF C program may use to
+>   * emit BPF_LD_ABS and BPF_LD_IND instructions
+> diff --git a/samples/bpf/bpf_load.c b/samples/bpf/bpf_load.c
+> index 0cfda23..e12460a 100644
+> --- a/samples/bpf/bpf_load.c
+> +++ b/samples/bpf/bpf_load.c
+> @@ -51,6 +51,7 @@ static int load_and_attach(const char *event, struct bpf_insn *prog, int size)
+>  	bool is_kretprobe = strncmp(event, "kretprobe/", 10) == 0;
+>  	bool is_tracepoint = strncmp(event, "tracepoint/", 11) == 0;
+>  	bool is_xdp = strncmp(event, "xdp", 3) == 0;
+> +	bool is_checmate = strncmp(event, "checmate", 8) == 0;
+>  	enum bpf_prog_type prog_type;
+>  	char buf[256];
+>  	int fd, efd, err, id;
+> @@ -69,6 +70,8 @@ static int load_and_attach(const char *event, struct bpf_insn *prog, int size)
+>  		prog_type = BPF_PROG_TYPE_TRACEPOINT;
+>  	} else if (is_xdp) {
+>  		prog_type = BPF_PROG_TYPE_XDP;
+> +	} else if (is_checmate) {
+> +		prog_type = BPF_PROG_TYPE_CHECMATE;
+>  	} else {
+>  		printf("Unknown event '%s'\n", event);
+>  		return -1;
+> @@ -82,7 +85,7 @@ static int load_and_attach(const char *event, struct bpf_insn *prog, int size)
+>  
+>  	prog_fd[prog_cnt++] = fd;
+>  
+> -	if (is_xdp)
+> +	if (is_xdp || is_checmate)
+>  		return 0;
+>  
+>  	if (is_socket) {
+> @@ -326,7 +329,8 @@ int load_bpf_file(char *path)
+>  			    memcmp(shname_prog, "kretprobe/", 10) == 0 ||
+>  			    memcmp(shname_prog, "tracepoint/", 11) == 0 ||
+>  			    memcmp(shname_prog, "xdp", 3) == 0 ||
+> -			    memcmp(shname_prog, "socket", 6) == 0)
+> +			    memcmp(shname_prog, "socket", 6) == 0 ||
+> +			    memcmp(shname_prog, "checmate", 8) == 0)
+>  				load_and_attach(shname_prog, insns, data_prog->d_size);
+>  		}
+>  	}
+> @@ -344,7 +348,8 @@ int load_bpf_file(char *path)
+>  		    memcmp(shname, "kretprobe/", 10) == 0 ||
+>  		    memcmp(shname, "tracepoint/", 11) == 0 ||
+>  		    memcmp(shname, "xdp", 3) == 0 ||
+> -		    memcmp(shname, "socket", 6) == 0)
+> +		    memcmp(shname, "socket", 6) == 0 ||
+> +		    memcmp(shname, "checmate", 8) == 0)
+>  			load_and_attach(shname, data->d_buf, data->d_size);
+>  	}
+>  
+> diff --git a/samples/bpf/checmate_limit_connections_kern.c b/samples/bpf/checmate_limit_connections_kern.c
+> new file mode 100644
+> index 0000000..d191dcb
+> --- /dev/null
+> +++ b/samples/bpf/checmate_limit_connections_kern.c
+> @@ -0,0 +1,146 @@
+> +/* Copyright (c) 2016 Sargun Dhillon <sargun@sargun.me>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of version 2 of the GNU General Public
+> + * License as published by the Free Software Foundation.
+> + *
+> + * This program limits the usage of sockets connecting to a given ip:port.
+> + * At the moment it doesn't take protocol (SOCK_STREAM vs. SOCK_DGRAM) into
+> + * account, but doing so would just involve reading some more fields.
+> + *
+> + * Since proper refcnting would be fairly hard in eBPF, we do probablistic
+> + * refcnting. This means you're probablistically limited to 10 connections.
+> + * You may get fewer, but you'll never get more than 10.
+> + *
+> + * We hash the ip + port with fnv1a into a 22-bit space, and keep track of the
+> + * connection count. We also keep track of the dstaddr of a given socket in
+> + * another map as we already have to keep track of the sockets that qualified
+> + * themselves for tracking (those connecting to AF_INET in this case). We
+> + * could track less metadata, but this is an example.
+> + */
+> +
+> +#include <uapi/linux/bpf.h>
+> +#include <linux/socket.h>
+> +#include <linux/in.h>
+> +#include <linux/checmate.h>
+> +#include "bpf_helpers.h"
+> +#include <linux/version.h>
+> +#include <linux/net.h>
+> +
+> +#define HASH_BITS	22 /* 2**22 * 4 = 16777216 (16mb) */
+> +#define MASK		(((u32)1 << HASH_BITS) - 1)
+> +#define FNV1_32_INIT	2166136261
+> +#define FNV1_32_PRIME	16777619
+> +#define CONN_LIMIT	10
+> +
+> +struct bpf_map_def SEC("maps") sk_to_hash_map = {
+> +	.type			= BPF_MAP_TYPE_HASH,
+> +	.key_size		= sizeof(struct sock *),
+> +	.value_size		= sizeof(u32),
+> +	/* This only allows 16384 socket connections */
+> +	.max_entries		= 16384,
+> +};
+> +
+> +struct bpf_map_def SEC("maps") addr_refcnt = {
+> +	.type			= BPF_MAP_TYPE_ARRAY,
+> +	.key_size		= sizeof(int),
+> +	.value_size		= sizeof(u32),
+> +	.max_entries		= 1 << HASH_BITS,
+> +};
+> +
+> +static inline u32 fnv1a(struct sockaddr_in *addr)
+> +{
+> +	/*
+> +	 * The reason to take this approach, rather than hash the whole
+> +	 * structure is to avoid accidentally hashing the padding.
+> +	 * The reasoning to start at byte 2 is to skip sin_family,
+> +	 * and to stop at byte 8, because that's where sin_addr + sin_port end.
+> +	 */
+> +	u32 hash = FNV1_32_INIT;
+> +	u8 *data = (u8 *)addr;
+> +
+> +	hash = hash ^ (data[2] & 0xff);
+> +	hash = hash * FNV1_32_PRIME;
+> +	hash = hash ^ (data[3] & 0xff);
+> +	hash = hash * FNV1_32_PRIME;
+> +	hash = hash ^ (data[4] & 0xff);
+> +	hash = hash * FNV1_32_PRIME;
+> +	hash = hash ^ (data[5] & 0xff);
+> +	hash = hash * FNV1_32_PRIME;
+> +	hash = hash ^ (data[6] & 0xff);
+> +	hash = hash * FNV1_32_PRIME;
+> +	hash = hash ^ (data[7] & 0xff);
+> +	hash = hash * FNV1_32_PRIME;
+> +	hash = (hash >> HASH_BITS) ^ (hash & MASK);
+> +
+> +	return hash;
+> +}
+> +
+> +SEC("checmate/connect")
+> +int prog_connect(struct checmate_ctx *ctx)
+> +{
+> +	struct sockaddr_in addr_in = {};
+> +	struct sock *sk = 0;
+> +	int rc = 0;
+> +	u32 *refcnt;
+> +	u32 hash;
+> +
+> +	rc = bpf_probe_read(&addr_in, sizeof(addr_in),
+> +			    ctx->socket_connect.address);
+> +	if (rc)
+> +		return rc;
+> +
+> +	if (addr_in.sin_family != AF_INET)
+> +		return 0;
+> +
+> +	rc = bpf_probe_read(&sk, sizeof(sk), &ctx->socket_connect.sock->sk);
+> +	if (rc)
+> +		return rc;
+> +
+> +	hash = fnv1a(&addr_in);
+> +
+> +	refcnt = bpf_map_lookup_elem(&addr_refcnt, &hash);
+> +	if (!refcnt)
+> +		return -EINVAL;
+> +
+> +	if (*refcnt >= CONN_LIMIT)
+> +		return -EUSERS;
+> +
+> +	/* The only error we should get at this point is out of space */
+> +	rc = bpf_map_update_elem(&sk_to_hash_map, &sk, &hash, BPF_ANY);
+> +	if (rc)
+> +		return rc;
+> +
+> +	__sync_fetch_and_add(refcnt, 1);
+> +	return 0;
+> +}
+> +
+> +SEC("checmate/sk_free")
+> +int prog_sk_free(struct checmate_ctx *ctx)
+> +{
+> +	struct sock *sk = ctx->sk_free_security.sk;
+> +	struct sockaddr_in *addr;
+> +	u32 *refcnt, *hash;
+> +	/*
+> +	 * You cannot reuse map values as map keys, therefore we need to copy
+> +	 * the hash to the stack.
+> +	 */
+> +	u32 hash_as_key;
+> +
+> +	hash = bpf_map_lookup_elem(&sk_to_hash_map, &sk);
+> +	if (!hash)
+> +		return 0;
+> +
+> +	memcpy(&hash_as_key, hash, sizeof(hash_as_key));
+> +	refcnt = bpf_map_lookup_elem(&addr_refcnt, &hash_as_key);
+> +	if (!refcnt)
+> +		return -EINVAL;
+> +
+> +	__sync_fetch_and_add(refcnt, -1);
+> +	bpf_map_delete_elem(&sk_to_hash_map, &sk);
+> +
+> +	return 0;
+> +}
+> +
+> +char _license[] SEC("license") = "GPL";
+> +u32 _version SEC("version") = LINUX_VERSION_CODE;
+> diff --git a/samples/bpf/checmate_limit_connections_user.c b/samples/bpf/checmate_limit_connections_user.c
+> new file mode 100644
+> index 0000000..8834062
+> --- /dev/null
+> +++ b/samples/bpf/checmate_limit_connections_user.c
+> @@ -0,0 +1,113 @@
+> +/* Copyright (c) 2016 Sargun Dhillon <sargun@sargun.me>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of version 2 of the GNU General Public
+> + * License as published by the Free Software Foundation.
+> + */
+> +
+> +#include <linux/bpf.h>
+> +#include <stdio.h>
+> +#include <errno.h>
+> +#include <stdlib.h>
+> +#include "bpf_load.h"
+> +#include "libbpf.h"
+> +#include <netinet/in.h>
+> +#include <assert.h>
+> +#include <fcntl.h>
+> +#include <unistd.h>
+> +#include <sys/socket.h>
+> +#include <arpa/inet.h>
+> +#include "cgroup_helpers.h"
+> +
+> +#define CONN_LIMIT		10
+> +#define CGROUP_NAME		"limit_connections"
+> +#define CONTROL_FILE_CONNECT	"limit_connections/checmate.socket_connect"
+> +#define CONTROL_FILE_SK_FREE	"limit_connections/checmate.sk_free_security"
+> +
+> +int main(int ac, char **argv)
+> +{
+> +	int i, sock, connect_fd, sk_free_fd, rc = 0;
+> +	struct sockaddr_in addr;
+> +	int socks[CONN_LIMIT];
+> +	char filename[256];
+> +
+> +	snprintf(filename, sizeof(filename), "%s_kern.o", argv[0]);
+> +	if (load_bpf_file(filename)) {
+> +		printf("%s", bpf_log_buf);
+> +		return 1;
+> +	}
+> +	if (!(prog_fd[0] && prog_fd[1])) {
+> +		printf("load_bpf_file: %s\n", strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	if (setup_cgroups())
+> +		return 1;
+> +
+> +	if (add_controller("checmate"))
+> +		return 1;
+> +
+> +	if (mkdirp(CGROUP_NAME))
+> +		return 1;
+> +
+> +	if (join_cgroup(CGROUP_NAME)) {
+> +		log_err("Joining target group");
+> +		rc = 1;
+> +		goto leave_cgroup_err;
+> +	}
+> +
+> +	connect_fd = open(CONTROL_FILE_CONNECT, O_WRONLY);
+> +	sk_free_fd = open(CONTROL_FILE_SK_FREE, O_WRONLY);
+> +
+> +	if (connect_fd < 0 || sk_free_fd < 0) {
+> +		log_err("Unable to open checmate control file");
+> +		rc = 1;
+> +		goto leave_cgroup_err;
+> +	}
+> +
+> +	if (reset_bpf_hook(connect_fd))
+> +		goto leave_cgroup_err;
+> +	if (reset_bpf_hook(sk_free_fd))
+> +		goto leave_cgroup_err;
+> +
+> +	/* Install the programs */
+> +	assert(dprintf(connect_fd, "%d\n", prog_fd[0]) > 0);
+> +	assert(dprintf(sk_free_fd, "%d\n", prog_fd[1]) > 0);
+> +
+> +	addr.sin_family = AF_INET;
+> +	addr.sin_port = htons(1234);
+> +
+> +	/* Assigned as "TEST-NET" for use in documentation and examples */
+> +	addr.sin_addr.s_addr = inet_addr("192.0.2.0");
+> +
+> +	/* Create connections, and make sure they work */
+> +	for (i = 0; i < CONN_LIMIT; i++) {
+> +		socks[i] = socket(AF_INET, SOCK_DGRAM, 0);
+> +		assert(!connect(socks[i], (struct sockaddr *)&addr,
+> +				sizeof(addr)));
+> +	}
+> +
+> +	sock = socket(AF_INET, SOCK_DGRAM, 0);
+> +	/* This last connection should fail, but succeed later */
+> +	assert(connect(sock, (struct sockaddr *)&addr, sizeof(addr)));
+> +
+> +	/* Test is socket freeing works correctly */
+> +	for (i = 0; i < CONN_LIMIT; i++)
+> +		close(socks[i]);
+> +
+> +	/* Sockets are freed asynchronously, so we need to wait a moment */
+> +	usleep(100000);
+> +
+> +	/* Retry the connection with the same sk -- should succeed */
+> +	assert(!connect(sock, (struct sockaddr *)&addr, sizeof(addr)));
+> +
+> +	reset_bpf_hook(connect_fd);
+> +	reset_bpf_hook(sk_free_fd);
+> +	close(connect_fd);
+> +	close(sk_free_fd);
+> +
+> +leave_cgroup_err:
+> +	join_cgroup(".");
+> +	rmdir(CGROUP_NAME);
+> +	return rc;
+> +}
+> diff --git a/samples/bpf/checmate_remap_bind_kern.c b/samples/bpf/checmate_remap_bind_kern.c
+> new file mode 100644
+> index 0000000..9456e40
+> --- /dev/null
+> +++ b/samples/bpf/checmate_remap_bind_kern.c
+> @@ -0,0 +1,28 @@
+> +#include <linux/version.h>
+> +#include <uapi/linux/bpf.h>
+> +#include <linux/socket.h>
+> +#include <linux/in.h>
+> +#include <linux/checmate.h>
+> +#include "bpf_helpers.h"
+> +
+> +SEC("checmate/prog1")
+> +int prog1(struct checmate_ctx *ctx)
+> +{
+> +	struct sockaddr address = {};
+> +	struct sockaddr_in *in_addr = (struct sockaddr_in *) &address;
+> +
+> +	bpf_probe_read(&address, sizeof(struct sockaddr_in),
+> +		       ctx->socket_bind.address);
+> +
+> +	if (address.sa_family == AF_INET &&
+> +	    be16_to_cpu(in_addr->sin_port) == 6789) {
+> +		in_addr->sin_port = cpu_to_be16(12345);
+> +		bpf_probe_write_checmate(ctx, ctx->socket_bind.address,
+> +					 in_addr, sizeof(*in_addr));
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +char _license[] SEC("license") = "GPL";
+> +u32 _version SEC("version") = LINUX_VERSION_CODE;
+> diff --git a/samples/bpf/checmate_remap_bind_user.c b/samples/bpf/checmate_remap_bind_user.c
+> new file mode 100644
+> index 0000000..a53b20b
+> --- /dev/null
+> +++ b/samples/bpf/checmate_remap_bind_user.c
+> @@ -0,0 +1,82 @@
+> +#include <linux/bpf.h>
+> +#include <stdio.h>
+> +#include <errno.h>
+> +#include <stdlib.h>
+> +#include "bpf_load.h"
+> +#include "libbpf.h"
+> +#include <netinet/in.h>
+> +#include <assert.h>
+> +#include <fcntl.h>
+> +#include <unistd.h>
+> +#include "cgroup_helpers.h"
+> +
+> +#define CGROUP_NAME	"remap_bind_user"
+> +#define CONTROL_FILE	"remap_bind_user/checmate.socket_bind"
+> +
+> +int main(int ac, char **argv)
+> +{
+> +	struct sockaddr_in addr = {};
+> +	socklen_t len = sizeof(addr);
+> +	int sock, fd, rc = 0;
+> +	char filename[256];
+> +
+> +	snprintf(filename, sizeof(filename), "%s_kern.o", argv[0]);
+> +	if (load_bpf_file(filename)) {
+> +		printf("%s", bpf_log_buf);
+> +		return 1;
+> +	}
+> +	if (!prog_fd[0]) {
+> +		printf("load_bpf_file: %s\n", strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	if (setup_cgroups())
+> +		return 1;
+> +
+> +	if (add_controller("checmate"))
+> +		return 1;
+> +
+> +	if (mkdirp(CGROUP_NAME))
+> +		return 1;
+> +
+> +	if (join_cgroup(CGROUP_NAME)) {
+> +		log_err("Joining target group");
+> +		rc = 1;
+> +		goto leave_cgroup_err;
+> +	}
+> +
+> +	fd = open(CONTROL_FILE, O_WRONLY);
+> +
+> +	if (fd < 0) {
+> +		log_err("Unable to open checmate control file");
+> +		rc = 1;
+> +		goto leave_cgroup_err;
+> +	}
+> +
+> +	if (reset_bpf_hook(fd))
+> +		goto leave_cgroup_err;
+> +
+> +	/* Install program */
+> +	assert(dprintf(fd, "%d\n", prog_fd[0]) > 0);
+> +
+> +	sock = socket(AF_INET, SOCK_DGRAM, 0);
+> +	if (sock < 0) {
+> +		log_err("Creating socket");
+> +		rc = 1;
+> +		goto cleanup_hook_err;
+> +	}
+> +
+> +	addr.sin_family = AF_INET;
+> +	addr.sin_port = htons(6789);
+> +	assert(bind(sock, (const struct sockaddr *)&addr, sizeof(addr)) == 0);
+> +	assert(getsockname(sock, (struct sockaddr *)&addr, &len) == 0);
+> +	assert(addr.sin_port == htons(12345));
+> +
+> +cleanup_hook_err:
+> +	reset_bpf_hook(fd);
+> +	close(fd);
+> +leave_cgroup_err:
+> +	join_cgroup(".");
+> +	rmdir(CGROUP_NAME);
+> +	return rc;
+> +}
+> -- 
+> 2.7.4
 > 
-> This seems to explain why the controllers need to be able to handle
-> things being charged to the root cgroup (or to an unidentifiable
-> cgroup, anyway).  That isn't quite the same thing as allowing, from an
-> ABI point of view, the root cgroup to contain processes and cgroups
-> but not allowing other cgroups to do the same thing.  Consider:
-
-The points are 1. we need the root to be a special container anyway
-2. allowing it to be special and contain system-wide consumptions
-doesn't make the resource graph inconsistent once all non-system-wide
-consumptions are put in non-root cgroups, and 3. this is the most
-natural way to handle the situation both from implementation and
-interface standpoints as it makes non-cgroup configuration a natural
-degenerate case of cgroup configuration.
-
-> suppose that systemd (or some competing cgroup manager) is designed to
-> run in the root cgroup namespace.  It presumably expects *itself* to
-> be in the root cgroup.  Now try to run it using cgroups v2 in a
-> non-root namespace.  I don't see how it can possibly work if it the
-> hierarchy constraints don't permit it to create sub-cgroups while it's
-> still in the root.  In fact, this seems impossible to fix even with
-> user code changes.  The manager would need to simultaneously create a
-> new child cgroup to contain itself and assign itself to that child
-> cgroup, because the intermediate state is illegal.
-
-Please re-read the constraint.  It doesn't prevent any organizational
-operations before resource control is enabled.
-
-> I really, really think that cgroup v2 should supply the same
-> *interface* inside and outside of a non-root namespace.  If this is
-
-It *does*.  That's what I tried to explain, that it's exactly
-isomorhpic once you discount the system-wide consumptions.
-
-Thanks.
-
--- 
-tejun
