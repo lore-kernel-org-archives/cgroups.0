@@ -1,163 +1,70 @@
-From: Sargun Dhillon <sargun@sargun.me>
-Subject: Re: [net-next RFC v2 4/9] bpf, security: Add Checmate security LSM
- and BPF program type
-Date: Mon, 29 Aug 2016 21:25:00 -0700
-Message-ID: <20160830042459.GC25396@ircssh.c.rugged-nimbus-611.internal>
-References: <20160829114705.GA20877@ircssh.c.rugged-nimbus-611.internal>
- <20160829170118.GB28713@mtj.duckdns.org>
- <20160829184905.GA25396@ircssh.c.rugged-nimbus-611.internal>
- <20160829192443.GD28713@mtj.duckdns.org>
- <57C4ADDD.3070003@fb.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v4.8-rc4
+Date: Tue, 30 Aug 2016 11:57:42 -0400
+Message-ID: <20160830155742.GA12660@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-security-module-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sargun.me; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=fC0P7FKhdWW8Pp9vx4ESd1XviscYkL1ST0sK+aTx5VM=;
-        b=Z1UYBm2QHXf0BYscaSdFFkj/OGI0+R5x+r4Tn2eh7/NMKlKFzK/UcG/gEx0zaw7Yt7
-         INAXoF+AloX0amFLYv3LYgJZFPP557Dkwsp4OnSuUStAY9gCgFeqqsjCVn/QTCgiqc+z
-         Q0bI2K4mGLRt17ZnLIpodNABF+KeXSmAXEIp4=
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=plc/nfqJuQbUIkp7LR+F9KmxK9txt5jMRAZh8K9G4DA=;
+        b=AlXiLdQ5EffXEG6DfHCP+q79VW9dM4D1v8E/rTwv8ZK8/j9LZ1Ix/VhMYX6d/OZH9g
+         oUd2oUzV8P5B0r8zyy8uXvNHNtnBuwfRvU9nkg3kkWMEenepjQIjfyf/mi/BGz0poI1h
+         hxMSeixUGoW1j+Lihq0vcvEMR4Zjh9gHEuSPlHg2MvCyfofA8cmHHfWaiBBIfuoAz1V8
+         FJmOXdjnJwTZNMmC+5wA2rNkZN/N2DfURw2H1NDRvyJ7P57VRty8xZcdP8Fr3+e85oUi
+         i8AiD/e8GHcjwe0JpIUQGNoLDdaPWDjh9wEiweRU+7sQ8Oa43OUDzRw6xdoxoCh3Uea+
+         950A==
 Content-Disposition: inline
-In-Reply-To: <57C4ADDD.3070003@fb.com>
-Sender: owner-linux-security-module@vger.kernel.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <ast@fb.com>
-Cc: Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, Daniel Borkmann <daniel@iogearbox.net>, mic@digikod.net
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon, Aug 29, 2016 at 02:49:17PM -0700, Alexei Starovoitov wrote:
-> On 8/29/16 12:24 PM, Tejun Heo wrote:
-> >Hello, Sargun.
-> >
-> >On Mon, Aug 29, 2016 at 11:49:07AM -0700, Sargun Dhillon wrote:
-> >>It would be a separate hook per LSM hook. Why wouldn't we want a separate bpf
-> >>hook per lsm hook? I think if one program has to handle them all, the first
-> >>program would be looking up the hook program in a bpf prog array. If you think
-> >>it's better to have this logic in the BPF program, that makes sense.
-> >>
-> >>I had a version of this patch that allowed you to attach a prog array instead,
-> >>but I think that it's cleaner attaching a program per lsm hook. In addition,
-> >>there's a performance impact that comes from these hooks, so I wouldn't want to
-> >>execute unneccessary code if it's avoidable.
-> >
-> >Hmm... it doesn't really matter how the backend part looks like and if
-> >we need to implement per-call hooks to lower runtime overhead, sure.
-> >I was mostly worried about the approach propagating through the
-> >userland visible interface.
-> >
-> >>The prog array approach also makes stacking filters difficult. If people want
-> >>multiple filters per hook, the orchestrator would have to rewrite the existing
-> >>filters to be cooperative.
-> >
-> >I'm not really sure "stacking" in the kernel side is a good idea.
-> >Please see below.
-> >
-> >>>I'm not convinced about the approach.  It's an approach which pretty
-> >>>much requires future extensions while being rigid.  Not a good
-> >>>combination.
-> >>
-> >>Do you have an alternative recommendation? Maybe just a set of 5 u64s
-> >>as the context object along with the hook ID?
-> >
-> >cgroup fs doesn't seem like the right interface for this but if it
-> >were I'd go for named hook IDs instead of opaque numbers.
-> >
-> >>>Unless this is properly delegatable, IOW, it's safe to fully delegate
-> >>>to a lesser security domain for all operations including program
-> >>>loading and assignment (I can't see how that'd be the case), making it
-> >>>an explicit controller doens't work in terms of userland interface.
-> >>>It's fine for bpf / lsm / whatever to attach to cgroups by extending
-> >>>struct cgroup itself or implementing an implicit controller but to be
-> >>>visible as an explicit controller it must be able to follow cgroup
-> >>>interface rules including delegation.  If not, it's best to come
-> >>>through the interface which enforces the required permission checks
-> >>>and then talk to cgroup from there.  This was also an issue with
-> >>>network cgroup bpf programs that Daniel Mack is working on.  Please
-> >>>chat with him.
-> >>
-> >>Program assignment is possible by lesser security domains. Program loading is
-> >>limited to CAP_SYS_ADMIN in init_user_ns. We could make it accessible to
-> >>CAP_SYS_ADMIN in any userns, but it the reasoning behind this is that Checmate
-> >>BPF programs can leak kernel pointers.
-> >
-> >That doesn't make much sense to me.  Delegation doesn't mean much if a
-> >delegatee can't load its own program (and I don't see how one can
-> >delegate kernel pointer access to !root).  Also, unless there's
-> >per-program fine control on who can load it, it seems pretty dangerous
-> >to let anyone load any program.
-> >
-> >>Could we potentially restrict it to only CAP_MAC_OVERRIDE, while still meeting
-> >>cgroup delegation requirements?
-> >
-> >Wouldn't it make far more sense to pass cgroup fd to bpf syscall so
-> >that "load this program" and "attach this program to the cgroup
-> >identified by this fd" through the same interface and permission
-> >checks?  cgroup participating in bpf operations is all fine but
-> >splitting the userland interface across two domains seems like a bad
-> >idea.
-> >
-> >>Filters which are higher up in the heirarchy will still be enforced during
-> >>delegation. This was an explicit design, as the "Orchestrator in Orchestrator"
-> >>use case needs to be supported.
-> >
-> >Given that program loading is restricted to root, wouldn't it be an a
-> >lot more efficient approach to let userland multiplex multiple
-> >programs?  Walking the tree executing bpf programs each time one of
-> >these operations runs can be pretty expensive.  Imagine a tree like
-> >the following.
-> >
-> >	A - B - C
-> >	      \ D
-> >
-> >Let's say program is currently loaded on D.  If someone wants to add a
-> >program on B, userland can load the program on B, combine B's and D's
-> >program and compile them into a single program and load it on D.  The
-> >only thing kernel would need to do in terms of hierarchy is finding
-> >what's the closest program to execute.  In the above example, C would
-> >need to use B's program and that can be determined on program
-> >assignment time rather than on each operation.
-> 
-> I think that's exactly what Daniel's patches are doing and imo
-> it makes sense to keep this style for lsm as well
-> and also apply the concept of hook_id.
-> Daniel adds two commands to bpf syscall to attach/detach from cgroup
-> with hook_id.
-I have a couple outstanding question about Daniel's patches, but overall, I 
-think the approach works just as well. I've asked him these questions on that 
-thread.
+Hello, Linus.
 
-> Initially two hooks will be for socket rx and tx.
-> Then all interesting lsm hooks can be added one by one.
-> Daniel's prog type will be bpf_prog_type_cgroup_socket_filter.
-> LSM's prog type will be bpf_prog_type_lsm.
-> And verifier can check type safety since the lsm hook_id will be
-> passed at the program load time.
-> See another thread we had with Mickael.
-I read that thread, but I'm not entirely sure as to the reasoning behind the 
-verifier needing further analysis of the programs, at least in MVP. 
-bpf_probe_read / bpf_probe_(kernel_)write seem to be reasonable as a starter, 
-and then we can modify the verifier to allow for direct access to those fields.
+Two fixes for cgroup.
 
-I also realize that the verifier can be used to prevent pointers leakage, but 
-with my work, since it's meant to only be accessible to CAP_SYS_ADMIN, I'm not 
-really worried about that.
-> 
-> landlock and checmate are very similar and should really be
-> single lsm as long as we agree that both are cgroup based.
-> The main difference between the two:
-> - landlock is proposing unpriveleged mode
-> - checmate is proposing writing into arguments from the program
-> These differences can be flags/options to one lsm.
-> Implementations of course are different so far, but
-> instead of arguing landlock vs checmate, I'd like us
-> to focus on how we can make one lsm that solves all use cases.
-> 
-I think it probably makes sense to be able to mark a specific program an 
-unprivileged, and then the verifier can make sure it's safe. My fear with this, 
-and the approach that Daniel's patches have is that the unprivileged isolators 
-could interfere with privigleged isolators.
+* There still was a hole in enforcing cpuset rules, fixed by Li.
 
-What's the permission model by which unprivileged programs will be able to load 
-programs, and attach them to cgroups?
+* Recent switch to global percpu_rwseom for threadgroup locking
+  revealed a couple issues in how percpu_rwsem is implemented and used
+  by cgroup.  Balbir found that the read locking section was too wide
+  unnecessarily including operations which can often depend on IOs.
+  With percpu_rwsem updates (coming through a different tree) and
+  reduction of read locking section, all the reported locking latency
+  issues, including the android one, are resolved.
+
+  It looks like we can keep global percpu_rwsem locking for now.  If
+  there actually are cases which can't be resolved, we can go back to
+  more complex per-signal_struct locking.
+
+Thanks.
+
+The following changes since commit 29b4817d4018df78086157ea3a55c1d9424a7cfc:
+
+  Linux 4.8-rc1 (2016-08-07 18:18:00 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.8-fixes
+
+for you to fetch changes up to 568ac888215c7fb2fabe8ea739b00ec3c1f5d440:
+
+  cgroup: reduce read locked section of cgroup_threadgroup_rwsem during fork (2016-08-17 09:54:52 -0400)
+
+----------------------------------------------------------------
+Balbir Singh (1):
+      cgroup: reduce read locked section of cgroup_threadgroup_rwsem during fork
+
+Zefan Li (1):
+      cpuset: make sure new tasks conform to the current config of the cpuset
+
+ kernel/cpuset.c | 15 +++++++++++++++
+ kernel/fork.c   |  4 ++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+-- 
+tejun
