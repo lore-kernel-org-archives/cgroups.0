@@ -1,160 +1,243 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
 Subject: Re: [RFC v2 09/10] landlock: Handle cgroups (performance)
-Date: Tue, 30 Aug 2016 13:23:46 -0700
-Message-ID: <CALCETrWAYyx_5Axyeqiz6tQa0kqTeNTuHRrERcM2G8ROhaphVw@mail.gmail.com>
+Date: Tue, 30 Aug 2016 22:33:31 +0200
+Message-ID: <57C5ED9B.3040303@digikod.net>
 References: <1472121165-29071-1-git-send-email-mic@digikod.net>
- <1472121165-29071-10-git-send-email-mic@digikod.net> <20160826021432.GA8291@ast-mbp.thefacebook.com>
- <57C05BF0.8000706@digikod.net> <20160826230539.GA26683@ast-mbp.thefacebook.com>
- <57C19E6E.6040908@digikod.net> <20160827180642.GA38754@ast-mbp.thefacebook.com>
- <57C1EB72.2050703@digikod.net> <20160827204307.GA43714@ast-mbp.thefacebook.com>
- <57C202BF.7000207@digikod.net> <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
- <57C2B21E.9040705@digikod.net> <CALCETrXU64+UApeKL_NogpBYk5kN7zA7UwkypZt8SYfvkuQrbA@mail.gmail.com>
+ <1472121165-29071-10-git-send-email-mic@digikod.net>
+ <20160826021432.GA8291@ast-mbp.thefacebook.com>
+ <57C05BF0.8000706@digikod.net>
+ <20160826230539.GA26683@ast-mbp.thefacebook.com>
+ <57C19E6E.6040908@digikod.net>
+ <20160827180642.GA38754@ast-mbp.thefacebook.com>
+ <57C1EB72.2050703@digikod.net>
+ <20160827204307.GA43714@ast-mbp.thefacebook.com>
+ <57C202BF.7000207@digikod.net>
+ <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
+ <57C2B21E.9040705@digikod.net>
+ <CALCETrXU64+UApeKL_NogpBYk5kN7zA7UwkypZt8SYfvkuQrbA@mail.gmail.com>
  <57C5EAA3.5090901@digikod.net>
+ <CALCETrWAYyx_5Axyeqiz6tQa0kqTeNTuHRrERcM2G8ROhaphVw@mail.gmail.com>
+Reply-To: kernel-hardening@lists.openwall.com
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=WYp/lp13BOQB+v96xv7qctRePKV3/AJHApN0qICvpyE=;
-        b=pjZC0sKn+2sjkssJc7Jao1JUpzp4c5ZmJt5X8CKZwLorz71Q5+UO3Ra9zcEb7Fe2G9
-         7PV3Zajdp6Ej0/YDWpR3lLg1RsOeQAI6romzji8IZQ/H3ztLbnz4avk0k55Fzp91howA
-         lZrqhp2OeL65PJNPvOZ5Qe5Rdrnac7inO1l/w3am7XmLDXS61yOEvnDfQoLW8v1MolT0
-         v4dMYa6csUAEzloDDLGT7H+SF85N0ElB7wl9fRy3vYtY2elgcKlOwIt2bzSYUsJcY+/Z
-         BBWaSskIPeCdxHY3Fv5QUzd7vpNRkuIT3Aqqvpq5VWAK6U3TfoOA4L4MEO9oYFHRgmnj
-         xrUQ==
-In-Reply-To: <57C5EAA3.5090901-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="hDDIrGxJRpIt6vRfVGBWKpUs0EVaGh6mj"
+Return-path: <kernel-hardening-return-4515-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: "kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org" <kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, LSM List <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+In-Reply-To: <CALCETrWAYyx_5Axyeqiz6tQa0kqTeNTuHRrERcM2G8ROhaphVw@mail.gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, Alexei Starovoitov <ast@kernel.org>, Tejun Heo <tj@kernel.org>, Sargun Dhillon <sargun@sargun.me>, Network Development <netdev@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, Kees Cook <keescook@chromium.org>, LSM List <linux-security-module@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "David S . Miller" <davem@davemloft.net>, Daniel Mack <daniel@zonque.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Daniel Borkmann <daniel@iogearbox.net>
 
-On Tue, Aug 30, 2016 at 1:20 PM, Micka=C3=ABl Sala=C3=BCn <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>=
- wrote:
->
-> On 30/08/2016 20:55, Andy Lutomirski wrote:
->> On Sun, Aug 28, 2016 at 2:42 AM, Micka=C3=ABl Sala=C3=BCn <mic@digikod.n=
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--hDDIrGxJRpIt6vRfVGBWKpUs0EVaGh6mj
+Content-Type: multipart/mixed; boundary="KDabwbi0WRAbEcmcNH0So8fpj4a89pDO6";
+ protected-headers="v1"
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: "kernel-hardening@lists.openwall.com"
+ <kernel-hardening@lists.openwall.com>, Alexei Starovoitov <ast@kernel.org>,
+ Tejun Heo <tj@kernel.org>, Sargun Dhillon <sargun@sargun.me>,
+ Network Development <netdev@vger.kernel.org>,
+ Linux API <linux-api@vger.kernel.org>, Kees Cook <keescook@chromium.org>,
+ LSM List <linux-security-module@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>,
+ "David S . Miller" <davem@davemloft.net>, Daniel Mack <daniel@zonque.org>,
+ Alexei Starovoitov <alexei.starovoitov@gmail.com>,
+ Daniel Borkmann <daniel@iogearbox.net>
+Message-ID: <57C5ED9B.3040303@digikod.net>
+Subject: Re: [RFC v2 09/10] landlock: Handle cgroups (performance)
+References: <1472121165-29071-1-git-send-email-mic@digikod.net>
+ <1472121165-29071-10-git-send-email-mic@digikod.net>
+ <20160826021432.GA8291@ast-mbp.thefacebook.com>
+ <57C05BF0.8000706@digikod.net>
+ <20160826230539.GA26683@ast-mbp.thefacebook.com>
+ <57C19E6E.6040908@digikod.net>
+ <20160827180642.GA38754@ast-mbp.thefacebook.com>
+ <57C1EB72.2050703@digikod.net>
+ <20160827204307.GA43714@ast-mbp.thefacebook.com>
+ <57C202BF.7000207@digikod.net>
+ <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
+ <57C2B21E.9040705@digikod.net>
+ <CALCETrXU64+UApeKL_NogpBYk5kN7zA7UwkypZt8SYfvkuQrbA@mail.gmail.com>
+ <57C5EAA3.5090901@digikod.net>
+ <CALCETrWAYyx_5Axyeqiz6tQa0kqTeNTuHRrERcM2G8ROhaphVw@mail.gmail.com>
+In-Reply-To: <CALCETrWAYyx_5Axyeqiz6tQa0kqTeNTuHRrERcM2G8ROhaphVw@mail.gmail.com>
+
+--KDabwbi0WRAbEcmcNH0So8fpj4a89pDO6
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+On 30/08/2016 22:23, Andy Lutomirski wrote:
+> On Tue, Aug 30, 2016 at 1:20 PM, Micka=C3=ABl Sala=C3=BCn <mic@digikod.=
+net> wrote:
+>>
+>> On 30/08/2016 20:55, Andy Lutomirski wrote:
+>>> On Sun, Aug 28, 2016 at 2:42 AM, Micka=C3=ABl Sala=C3=BCn <mic@digiko=
+d.net> wrote:
+>>>>
+>>>>
+>>>> On 28/08/2016 10:13, Andy Lutomirski wrote:
+>>>>> On Aug 27, 2016 11:14 PM, "Micka=C3=ABl Sala=C3=BCn" <mic@digikod.n=
 et> wrote:
->>>
->>>
->>> On 28/08/2016 10:13, Andy Lutomirski wrote:
->>>> On Aug 27, 2016 11:14 PM, "Micka=C3=ABl Sala=C3=BCn" <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>=
- wrote:
->>>>>
->>>>>
->>>>> On 27/08/2016 22:43, Alexei Starovoitov wrote:
->>>>>> On Sat, Aug 27, 2016 at 09:35:14PM +0200, Micka=C3=ABl Sala=C3=BCn w=
-rote:
->>>>>>> On 27/08/2016 20:06, Alexei Starovoitov wrote:
->>>>>>>> On Sat, Aug 27, 2016 at 04:06:38PM +0200, Micka=C3=ABl Sala=C3=BCn=
- wrote:
->>>>>>>>> As said above, Landlock will not run an eBPF programs when not st=
-rictly
->>>>>>>>> needed. Attaching to a cgroup will have the same performance impa=
-ct as
->>>>>>>>> attaching to a process hierarchy.
+>>>>>>
+>>>>>>
+>>>>>> On 27/08/2016 22:43, Alexei Starovoitov wrote:
+>>>>>>> On Sat, Aug 27, 2016 at 09:35:14PM +0200, Micka=C3=ABl Sala=C3=BC=
+n wrote:
+>>>>>>>> On 27/08/2016 20:06, Alexei Starovoitov wrote:
+>>>>>>>>> On Sat, Aug 27, 2016 at 04:06:38PM +0200, Micka=C3=ABl Sala=C3=BC=
+n wrote:
+>>>>>>>>>> As said above, Landlock will not run an eBPF programs when not=
+ strictly
+>>>>>>>>>> needed. Attaching to a cgroup will have the same performance i=
+mpact as
+>>>>>>>>>> attaching to a process hierarchy.
+>>>>>>>>>
+>>>>>>>>> Having a prog per cgroup per lsm_hook is the only scalable way =
+I
+>>>>>>>>> could come up with. If you see another way, please propose.
+>>>>>>>>> current->seccomp.landlock_prog is not the answer.
 >>>>>>>>
->>>>>>>> Having a prog per cgroup per lsm_hook is the only scalable way I
->>>>>>>> could come up with. If you see another way, please propose.
->>>>>>>> current->seccomp.landlock_prog is not the answer.
+>>>>>>>> Hum, I don't see the difference from a performance point of view=
+ between
+>>>>>>>> a cgroup-based or a process hierarchy-based system.
+>>>>>>>>
+>>>>>>>> Maybe a better option should be to use an array of pointers with=
+ N
+>>>>>>>> entries, one for each supported hook, instead of a unique pointe=
+r list?
 >>>>>>>
->>>>>>> Hum, I don't see the difference from a performance point of view be=
-tween
->>>>>>> a cgroup-based or a process hierarchy-based system.
+>>>>>>> yes, clearly array dereference is faster than link list walk.
+>>>>>>> Now the question is where to keep this prog_array[num_lsm_hooks] =
+?
+>>>>>>> Since we cannot keep it inside task_struct, we have to allocate i=
+t.
+>>>>>>> Every time the task is creted then. What to do on the fork? That
+>>>>>>> will require changes all over. Then the obvious optimization woul=
+d be
+>>>>>>> to share this allocated array of prog pointers across multiple ta=
+sks...
+>>>>>>> and little by little this new facility will look like cgroup.
+>>>>>>> Hence the suggestion to put this array into cgroup from the start=
+=2E
+>>>>>>
+>>>>>> I see your point :)
+>>>>>>
 >>>>>>>
->>>>>>> Maybe a better option should be to use an array of pointers with N
->>>>>>> entries, one for each supported hook, instead of a unique pointer l=
-ist?
+>>>>>>>> Anyway, being able to attach an LSM hook program to a cgroup tha=
+nks to
+>>>>>>>> the new BPF_PROG_ATTACH seems a good idea (while keeping the pos=
+sibility
+>>>>>>>> to use a process hierarchy). The downside will be to handle an L=
+SM hook
+>>>>>>>> program which is not triggered by a seccomp-filter, but this sho=
+uld be
+>>>>>>>> needed anyway to handle interruptions.
+>>>>>>>
+>>>>>>> what do you mean 'not triggered by seccomp' ?
+>>>>>>> You're not suggesting that this lsm has to enable seccomp to be f=
+unctional?
+>>>>>>> imo that's non starter due to overhead.
 >>>>>>
->>>>>> yes, clearly array dereference is faster than link list walk.
->>>>>> Now the question is where to keep this prog_array[num_lsm_hooks] ?
->>>>>> Since we cannot keep it inside task_struct, we have to allocate it.
->>>>>> Every time the task is creted then. What to do on the fork? That
->>>>>> will require changes all over. Then the obvious optimization would b=
-e
->>>>>> to share this allocated array of prog pointers across multiple tasks=
-...
->>>>>> and little by little this new facility will look like cgroup.
->>>>>> Hence the suggestion to put this array into cgroup from the start.
->>>>>
->>>>> I see your point :)
->>>>>
+>>>>>> Yes, for now, it is triggered by a new seccomp filter return value=
+
+>>>>>> RET_LANDLOCK, which can take a 16-bit value called cookie. This mu=
+st not
+>>>>>> be needed but could be useful to bind a seccomp filter security po=
+licy
+>>>>>> with a Landlock one. Waiting for Kees's point of view=E2=80=A6
 >>>>>>
->>>>>>> Anyway, being able to attach an LSM hook program to a cgroup thanks=
- to
->>>>>>> the new BPF_PROG_ATTACH seems a good idea (while keeping the possib=
-ility
->>>>>>> to use a process hierarchy). The downside will be to handle an LSM =
-hook
->>>>>>> program which is not triggered by a seccomp-filter, but this should=
- be
->>>>>>> needed anyway to handle interruptions.
->>>>>>
->>>>>> what do you mean 'not triggered by seccomp' ?
->>>>>> You're not suggesting that this lsm has to enable seccomp to be func=
-tional?
->>>>>> imo that's non starter due to overhead.
 >>>>>
->>>>> Yes, for now, it is triggered by a new seccomp filter return value
->>>>> RET_LANDLOCK, which can take a 16-bit value called cookie. This must =
-not
->>>>> be needed but could be useful to bind a seccomp filter security polic=
-y
->>>>> with a Landlock one. Waiting for Kees's point of view=E2=80=A6
+>>>>> I'm not Kees, but I'd be okay with that.  I still think that doing
+>>>>> this by process hierarchy a la seccomp will be easier to use and to=
+
+>>>>> understand (which is quite important for this kind of work) than do=
+ing
+>>>>> it by cgroup.
 >>>>>
+>>>>> A feature I've wanted to add for a while is to have an fd that
+>>>>> represents a seccomp layer, the idea being that you would set up yo=
+ur
+>>>>> seccomp layer (with syscall filter, landlock hooks, etc) and then y=
+ou
+>>>>> would have a syscall to install that layer.  Then an unprivileged
+>>>>> sandbox manager could set up its layer and still be able to inject =
+new
+>>>>> processes into it later on, no cgroups needed.
 >>>>
->>>> I'm not Kees, but I'd be okay with that.  I still think that doing
->>>> this by process hierarchy a la seccomp will be easier to use and to
->>>> understand (which is quite important for this kind of work) than doing
->>>> it by cgroup.
+>>>> A nice thing I didn't highlight about Landlock is that a process can=
+
+>>>> prepare a layer of rules (arraymap of handles + Landlock programs) a=
+nd
+>>>> pass the file descriptors of the Landlock programs to another proces=
+s.
+>>>> This process could then apply this programs to get sandboxed. Howeve=
+r,
+>>>> for now, because a Landlock program is only triggered by a seccomp
+>>>> filter (which do not follow the Landlock programs as a FD), they wil=
+l be
+>>>> useless.
 >>>>
->>>> A feature I've wanted to add for a while is to have an fd that
->>>> represents a seccomp layer, the idea being that you would set up your
->>>> seccomp layer (with syscall filter, landlock hooks, etc) and then you
->>>> would have a syscall to install that layer.  Then an unprivileged
->>>> sandbox manager could set up its layer and still be able to inject new
->>>> processes into it later on, no cgroups needed.
+>>>> The FD referring to an arraymap of handles can also be used to updat=
+e a
+>>>> map and change the behavior of a Landlock program. A master process =
+can
+>>>> then add or remove restrictions to another process hierarchy on the =
+fly.
 >>>
->>> A nice thing I didn't highlight about Landlock is that a process can
->>> prepare a layer of rules (arraymap of handles + Landlock programs) and
->>> pass the file descriptors of the Landlock programs to another process.
->>> This process could then apply this programs to get sandboxed. However,
->>> for now, because a Landlock program is only triggered by a seccomp
->>> filter (which do not follow the Landlock programs as a FD), they will b=
-e
->>> useless.
+>>> Maybe this could be extended a little bit.  The fd could hold the
+>>> seccomp filter *and* the LSM hook filters.  FMODE_EXECUTE could give
+>>> the ability to install it and FMODE_WRITE could give the ability to
+>>> modify it.
 >>>
->>> The FD referring to an arraymap of handles can also be used to update a
->>> map and change the behavior of a Landlock program. A master process can
->>> then add or remove restrictions to another process hierarchy on the fly=
-.
 >>
->> Maybe this could be extended a little bit.  The fd could hold the
->> seccomp filter *and* the LSM hook filters.  FMODE_EXECUTE could give
->> the ability to install it and FMODE_WRITE could give the ability to
->> modify it.
+>> This is interesting! It should be possible to append the seccomp stack=
+
+>> of a source process to the seccomp stack of the target process when a
+>> Landlock program is passed and then activated through seccomp(2).
 >>
->
-> This is interesting! It should be possible to append the seccomp stack
-> of a source process to the seccomp stack of the target process when a
-> Landlock program is passed and then activated through seccomp(2).
->
-> For the FMODE_EXECUTE/FMODE_WRITE, are you suggesting to manage
-> permission of the eBPF program FD in a specific way?
->
+>> For the FMODE_EXECUTE/FMODE_WRITE, are you suggesting to manage
+>> permission of the eBPF program FD in a specific way?
+>>
+>=20
+> This wouldn't be an eBPF program FD -- it would be an FD encapsulating
+> an entire configuration including seccomp BPF program, whatever
+> landlock stuff is associated, and eventual seccomp monitor
+> configuration (once I write that code), etc.
+>=20
+> You wouldn't say "attach this process's seccomp stack to me" -- you'd
+> say "attach this seccomp layer to me".
+>=20
+> A decision that we'd have to make would be whether the FD links to the
+> parent layer or whether it can be attached without regard to what the
+> parent layer is.
 
-This wouldn't be an eBPF program FD -- it would be an FD encapsulating
-an entire configuration including seccomp BPF program, whatever
-landlock stuff is associated, and eventual seccomp monitor
-configuration (once I write that code), etc.
+OK, I like that, but I think it could be done on a second time. :)
 
-You wouldn't say "attach this process's seccomp stack to me" -- you'd
-say "attach this seccomp layer to me".
 
-A decision that we'd have to make would be whether the FD links to the
-parent layer or whether it can be attached without regard to what the
-parent layer is.
+--KDabwbi0WRAbEcmcNH0So8fpj4a89pDO6--
 
---Andy
+--hDDIrGxJRpIt6vRfVGBWKpUs0EVaGh6mj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCgAGBQJXxe2bAAoJECLe/t9zvWqVVE0IAJswaPMthFETHRBviRFW6dVw
+XIxJrXJf+qnSVqoMhiN9xWNEUxz0kCUAoGwx0pUEGzvxqn13/oMRfFEhEx8ssXaL
+TBzcuBa1dAFehh9wyrCIEmwmswcSnWnfJ28OHFHgLKplDc55jKnz+ysuikXzyXWg
++sIiLLqs6DmIGerft/1jHqAryYFm1iWPkgfYFja5o0IhqYH+Fwgz9TT+eg7t9OKD
+/1J3C3g+A9V2vrbcTf2sUHy8CUm7deXxwY7AdqCgkU63sqf20IZl1XvWzkGU5zhG
+/EJ3j6Wg0GLZa7nMTew/am78PHXAqsh9UaBDM/ZXIMWtSKO2m3NdQn17wLX+lhM=
+=yT1s
+-----END PGP SIGNATURE-----
+
+--hDDIrGxJRpIt6vRfVGBWKpUs0EVaGh6mj--
