@@ -1,88 +1,101 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol: Make the walk_page_range() limit obvious
-Date: Wed, 31 Aug 2016 17:17:30 +0200
-Message-ID: <20160831151730.GF21661@dhcp22.suse.cz>
-References: <1472655897-22532-1-git-send-email-james.morse@arm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [Documentation] State of CPU controller in cgroup v2
+Date: Wed, 31 Aug 2016 13:32:51 -0400
+Message-ID: <20160831173251.GY12660@htj.duckdns.org>
+References: <20160805170752.GK2542@mtj.duckdns.org>
+ <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ@mail.gmail.com>
+ <20160820155659.GA16906@mtj.duckdns.org>
+ <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
+ <20160829222048.GH28713@mtj.duckdns.org>
+ <CALCETrUEygWrJbG25wSfG3zMG_+TNeP8+gAkcbh4_=ZNWHQCkw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ILLlIuollQRqcK5olZ25R9SGFpmAxGLHGZMiEiIL2ns=;
+        b=GwhNnKfHdcnoHBNQ/kJ62/l+8CD3mQGNQP2kai1oukJk6y/2dhoV3z6hGAYhdMiR8V
+         l7uJGmnpAH5pT5GLZIIyIL7IwMBBSXltvoHE85dS2e4dFaUmtJxfiTu6JZGyq06og8kn
+         sESJn0Gy2g6iriZ+5BdUAjWa1/8ZMf/KFN8h9PpbGpLcM962VWAiGw7pGsbAdmHLPcnV
+         gNQp0dWWcqencvbW9Vlmpfbug6oi628um0MLUbAinmi15Z0ujyK0xpEB/kgOBsc49lIq
+         VCuUxZGSiTpa1/BH0AAK8njFoFGFUCPWVUU1FGZvsuWj+rlmOgJgBcLrqu8yOQG37XyP
+         bJyw==
 Content-Disposition: inline
-In-Reply-To: <1472655897-22532-1-git-send-email-james.morse@arm.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <CALCETrUEygWrJbG25wSfG3zMG_+TNeP8+gAkcbh4_=ZNWHQCkw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: James Morse <james.morse@arm.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Ingo Molnar <mingo@redhat.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-team@fb.com, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Paul Turner <pjt@google.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Wed 31-08-16 16:04:57, James Morse wrote:
-> Trying to walk all of virtual memory requires architecture specific
-> knowledge. On x86_64, addresses must be sign extended from bit 48,
-> whereas on arm64 the top VA_BITS of address space have their own set
-> of page tables.
-> 
-> mem_cgroup_count_precharge() and mem_cgroup_move_charge() both call
-> walk_page_range() on the range 0 to ~0UL, neither provide a pte_hole
-> callback, which causes the current implementation to skip non-vma regions.
-> 
-> As this call only expects to walk user address space, make it walk
-> 0 to  'highest_vm_end'.
-> 
-> Signed-off-by: James Morse <james.morse@arm.com>
-> Cc: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
-> ---
-> This is in preparation for a RFC series that allows walk_page_range() to
-> walk kernel page tables too.
+Hello, Andy.
 
-OK, so do I get it right that this is only needed with that change?
-Because AFAICS walk_page_range will be bound to the last vma->vm_end
-right now. If this is the case this should be mentioned in the changelog
-because the above might confuse somebody to think this is a bug fix.
+On Tue, Aug 30, 2016 at 08:42:20PM -0700, Andy Lutomirski wrote:
+> On Mon, Aug 29, 2016 at 3:20 PM, Tejun Heo <tj@kernel.org> wrote:
+> >> This seems to explain why the controllers need to be able to handle
+> >> things being charged to the root cgroup (or to an unidentifiable
+> >> cgroup, anyway).  That isn't quite the same thing as allowing, from an
+> >> ABI point of view, the root cgroup to contain processes and cgroups
+> >> but not allowing other cgroups to do the same thing.  Consider:
+> >
+> > The points are 1. we need the root to be a special container anyway
+> 
+> But you don't need to let userspace see that.
 
-Other than that this seams reasonable to me.
+I'm not saying that what cgroup v2 implements is the only solution.
+There of course can be other approaches which don't expose this
+particular detail to userland.  I was highlighting that there is an
+underlying condition to be dealt with and that what cgroup v2
+implements is one working solution for it.
 
+It's fine to have, say, aesthetical disgreements on the specifics of
+the chosen approach, and, while a bit late, we can still talk about
+pros and cons of different possible approaches and make improvements
+where it makes sense.  However, this isn't in any way a
+make-it-or-break-it issue as you implied before.
+
+> >> I really, really think that cgroup v2 should supply the same
+> >> *interface* inside and outside of a non-root namespace.  If this is
+> >
+> > It *does*.  That's what I tried to explain, that it's exactly
+> > isomorhpic once you discount the system-wide consumptions.
 > 
->  mm/memcontrol.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> I don't think I agree.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2ff0289ad061..bfd54b43beb9 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4712,7 +4712,8 @@ static unsigned long mem_cgroup_count_precharge(struct mm_struct *mm)
->  		.mm = mm,
->  	};
->  	down_read(&mm->mmap_sem);
-> -	walk_page_range(0, ~0UL, &mem_cgroup_count_precharge_walk);
-> +	walk_page_range(0, mm->highest_vm_end,
-> +			&mem_cgroup_count_precharge_walk);
->  	up_read(&mm->mmap_sem);
->  
->  	precharge = mc.precharge;
-> @@ -5000,7 +5001,8 @@ retry:
->  	 * When we have consumed all precharges and failed in doing
->  	 * additional charge, the page walk just aborts.
->  	 */
-> -	walk_page_range(0, ~0UL, &mem_cgroup_move_charge_walk);
-> +	walk_page_range(0, mc.mm->highest_vm_end, &mem_cgroup_move_charge_walk);
-> +
->  	up_read(&mc.mm->mmap_sem);
->  	atomic_dec(&mc.from->moving_account);
->  }
-> -- 
-> 2.8.0.rc3
+> Suppose I wrote an init program or a cgroup manager.  I can expect
+> that init program to be started in the root cgroup.  The program can
+> be lazy and write +io to /cgroup/cgroup.subtree_control and then
+> create some new cgroup /cgroup/a and it will work (I just tried it).
 > 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> Now I run that program in a namespace.  It will not work because it'll
+> get -EBUSY when it tries to write to cgroup.subtree_control.  (I just
+> tried this, too, only using cd instead of a namespace.)  So it's *not*
+> isomorphic.
+
+Yeah, it is possible to shoot yourself in the foot but both
+system-scope and namespace-scope can implement the exactly same
+behavior - move yourself out of root before enabling resource controls
+and get the same expected outcome, which BTW is how systemd behaves
+already.
+
+You can say that allowing the possibility of deviation isn't a good
+design choice but it is a design choice with other implications - on
+how we deal with configurations without cgroup at all, transitioning
+from v1, bootstrapping a system and avoiding surprising
+userland-visible behaviors (e.g. like creating magic preset cgroups
+and silently migrating process there on certain events).
+
+> It *also* won't work (I think) if subtree control is enabled on the
+> root, but I don't think this is a problem in practice because subtree
+> control won't be enabled on the namespace root by a sensible cgroup
+> manager.
+
+Exactly the same thing.  You can shoot yourself in the foot but it's
+easy not to.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
