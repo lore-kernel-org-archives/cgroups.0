@@ -1,158 +1,141 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Wed, 31 Aug 2016 12:57:46 -0700
-Message-ID: <CALCETrXDjVi5PreimyWR8MVOPQo+HyuvcG8bhM_g_MZ9EUCeaQ@mail.gmail.com>
-References: <20160805170752.GK2542@mtj.duckdns.org> <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ@mail.gmail.com>
- <20160820155659.GA16906@mtj.duckdns.org> <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
+Date: Wed, 31 Aug 2016 17:07:54 -0400
+Message-ID: <20160831210754.GZ12660@htj.duckdns.org>
+References: <20160805170752.GK2542@mtj.duckdns.org>
+ <CALCETrXvLNeds+ugZ8j3eD1Zg1RZYJSAET3Kguz5G2vqSLFCwQ@mail.gmail.com>
+ <20160820155659.GA16906@mtj.duckdns.org>
+ <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
  <20160829222048.GH28713@mtj.duckdns.org>
+ <CALCETrUEygWrJbG25wSfG3zMG_+TNeP8+gAkcbh4_=ZNWHQCkw@mail.gmail.com>
+ <20160831173251.GY12660@htj.duckdns.org>
+ <CALCETrUKOJZS+=QDPyQD+vxXpwyjoj4+Crg6wU7Xk8rP4prYkA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=aDi0EE4xzzpRiPOaWyUWR57DxxtEBXa4HZ3lXAwYM/g=;
-        b=E44vC6vAAOLmmPP89Byy2AIc6AXPWMCN6DyLMhyx74tawh0P4bzBRwwUjbIvHNuvDK
-         8WqW27esr6K4sUn/K0YyLgOIbw0ZdQcUpRmewj2xrjBmveQ2i08afq1fBo4eZ0ElXc7M
-         8gm7pOJSzrbJp1+UgO1s5YytZTLvRbGttX3trgvR3VjrLLPTCQsWUS5lGfLiSpcJUxzu
-         0YRHMEgADP93NhFBOT98DDlRcOXg8fIQtIzUu92UeeHhFXNkBSKiGRkmuz+w3NW0uhjL
-         ha+HVeUhnipKbFf2/+sUsu2+XnxHcGppcGNoLPhDh5JKNjaSUnO2Kyx5NXJzsGpMDNk0
-         qHAg==
-In-Reply-To: <20160829222048.GH28713-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=UEa3vGDlW+lhc9uSOIZdLUF7viLl0NBlbnsuFdFG5IA=;
+        b=ADSUxzUeolu0btCHs4myiWWUU/TwfteKLWfYiBxtN0Flmn2NoEuW7ETkolXWxmlpge
+         148EHfzxzafjzpUaHOho0f5J+oN0koXrlXKuQogpj/WVBkgdYujIgC09VX7IF0Chis6K
+         mYDK8+a52DJK4bMe7tB1x4vaRiOvE0CmXQ/q2K1jp712p+OExHH/DSPaYjxTwLtUuSHp
+         L2hxI1nf/X8rD+EzhKDycfbfV6sCehr7TtzHuGxzh8QobuqBTAzAdrAsGhObE6wCVhKw
+         dnIu4zPeSs4byce+twtVxQBF0TD1L6U3ecAwIg8tKfTUrqX2Ui7/vJfU2YfGJA2iR5UE
+         JFiQ==
+Content-Disposition: inline
+In-Reply-To: <CALCETrUKOJZS+=QDPyQD+vxXpwyjoj4+Crg6wU7Xk8rP4prYkA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
 Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-I'm replying separately to keep the two issues in separate emails.
+Hello,
 
-On Mon, Aug 29, 2016 at 3:20 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello, Andy.
->
-> Sorry about the delay.  Was kinda overwhelmed with other things.
->
-> On Sat, Aug 20, 2016 at 11:45:55AM -0700, Andy Lutomirski wrote:
->> > This becomes clear whenever an entity is allocating memory on behalf
->> > of someone else - get_user_pages(), khugepaged, swapoff and so on (and
->> > likely userfaultfd too).  When a task is trying to add a page to a
->> > VMA, the task might not have any relationship with the VMA other than
->> > that it's operating on it for someone else.  The page has to be
->> > charged to whoever is responsible for the VMA and the only ownership
->> > which can be established is the containing mm_struct.
->>
->> This surprises me a bit.  If I do access_process_vm(), then I would
->> have expected the charge to go the caller, not the mm being accessed.
->
-> It does and should go the target mm.  Who faults in a page shouldn't
-> be the final determinant in the ownership; otherwise, we end up in
-> situations where the ownership changes due to, for example,
-> fluctuations in page fault pattern.  It doesn't make semantical sense
-> either.  If a kthread is doing PIO for a process, why would it get
-> charged for the memory it's faulting in?
+On Wed, Aug 31, 2016 at 12:11:58PM -0700, Andy Lutomirski wrote:
+> > You can say that allowing the possibility of deviation isn't a good
+> > design choice but it is a design choice with other implications - on
+> > how we deal with configurations without cgroup at all, transitioning
+> > from v1, bootstrapping a system and avoiding surprising
+> > userland-visible behaviors (e.g. like creating magic preset cgroups
+> > and silently migrating process there on certain events).
+> 
+> Are there existing userspace programs that use cgroup2 and enable
+> subtree control on / when there are processes in /?  If the answer is
+> no, then I think you should change cgroup2 to just disallow it.  If
+> the answer is yes, then I think there's a problem and maybe you should
+> consider a breaking change.  Given that cgroup2 hasn't really launched
+> on a large scale, it seems worthwhile to get it right.
 
-OK, that makes sense.  Although, given that cgroup1 allows tasks in
-the same processes to be split up, how does this work in cgroup1?  Do
-you just pick the mm associated with the thread group leader?  If so,
-why can't cgroup2 do the same thing?
+Adding the restriction isn't difficult from implementation point of
+view and for a system agent which control the boot process
+implementing that wouldn't be difficult either but I can't see what
+the actual benefits of the extra restriction would be and there are
+tangible downsides to doing so.
 
-But even this is at best a vague approximation.  If you have
-MAP_SHARED mappings (libc.so, for example), then the cgroup you charge
-it to is more or less arbitrary.
+Consider a use case where the user isn't interested in fully
+accounting and dividing up system resources but wants to just cap
+resource usage from a subset of workloads.  There is no reason to
+require such usages to fully contain all processes in non-root
+cgroups.  Furthermore, it's not trivial to migrate all processes out
+of root to a sub-cgroup unless the agent is in full control of boot
+process.
 
->
->> What happens if a program calls read(2), though?  A page may be
->> inserted into page cache on behalf of an address_space without any
->> particular mm being involved.  There will usually be a calling task,
->> though.
->
-> Most faults are synchronous and the faulting thread is a member of the
-> mm to be charged, so this usually isn't an issue.  I don't think there
-> are places where we populate an address_space without knowing who it
-> is for (as opposed / in addition to who the operator is).
+At least up until this point in discussion, I can't see actual
+benefits of adding this restriction and the only reason for pushing it
+seems the initial misunderstanding and purism.
 
-True, but there's no *mm* involved in any fundamental sense.  You can
-look at the task and find the task's mm (or actually the task's thread
-group leader, since cgroup2 doesn't literally map mms to cgroups), but
-that seems to me to be a pretty poor reason to argue that tasks should
-have to be kept together.
+> I don't understand what you're talking about wrt silently migrating
+> processes.  Are you thinking about usermodehelper?  If so, maybe it
+> really does make sense to allow (or require?) the cgroup manager to
+> specify which cgroup these processes end up in.
 
->
->> But this is all very memcg-specific.  What about other cgroups?  I/O
->> is per-task, right?  Scheduling is definitely per-task.
->
-> They aren't separate.  Think about IOs to write out page cache, CPU
-> cycles spent reclaiming memory or encrypting writeback IOs.  It's fine
-> to get more granular with specific resources but the semantics gets
-> messy for cross-resource accounting and control without proper
-> scoping.
+That was from one of the ideas that I was considering way back where
+enabling resource control in an intermediate node automatically moves
+internal processes to a preset cgroup whether visible or hidden, which
+would be another way of addressing the problem.
 
-Page cache doesn't belong to a a specific mm.  Memory reclaim only has
-an mm associated if the memory being reclaimed belongs cleanly to an
-mm.  Encrypting writeback (I assume you mean the cpu usage) is just
-like page cache writeback IO -- there's no specific mm involved in
-general.
+None of these affects what cgroup v2 can do at all and the only thing
+the userland is asked to do under the current scheme is "if you wanna
+keep the whole system divided up and use the same mode of operations
+across system-scope and namespace-scope move out of root while setting
+yourself up, which also happens to be what you have to do inside
+namespaces anyway."
 
->
->> > Consider the scenario where you have somebody faulting on behalf of a
->> > foreign VMA, but the thread who created and is actively using that VMA
->> > is in a different cgroup than the process leader.  Who are we going to
->> > charge?  All possible answers seem erratic.
->>
->> Indeed, and this problem is probably not solvable in practice unless
->> you charge all involved cgroups.  But the caller's *mm* is entirely
->> irrelevant here, so I don't see how this implies that cgroups need to
->> keep tasks in the same process together.  The relevant entities are
->> the calling *task* and the target mm, and you're going to be
->> hard-pressed to ensure that they belong to the same cgroup, so I think
->> you need to be able handle weird cases in which there isn't an
->> obviously correct cgroup to charge.
->
-> It is an erratic case which is caused by userland interface allowing
-> non-sensical configuration.  We can accept it as a necessary trade-off
-> given big enough benefits or unavoidable constraints but it isn't
-> something to do willy-nilly.
->
->> > For system-level and process-level operations to not step on each
->> > other's toes, they need to agree on the granularity boundary -
->> > system-level should be able to treat an application hierarchy as a
->> > single unit.  A possible solution is allowing rgroup hirearchies to
->> > span across process boundaries and implementing cgroup migration
->> > operations which treat such hierarchies as a single unit.  I'm not yet
->> > sure whether the boundary should be at program groups or rgroups.
->>
->> I think that, if the system cgroup manager is moving processes around
->> after starting them and execing the final binary, there will be races
->> and confusion, and no about of granularity fiddling will fix that.
->
-> I don't see how that statement is true.  For example, if you confine
-> the hierarhcy to in-process, there is proper isolation and whether
-> system agent migrates the process or not doesn't make any difference
-> to the internal hierarchy.
+> But, given that all the controllers need to support the current magic
+> root exception (for genuinely unaccountable things if nothing else),
+> can you explain what would actually go wrong if you just removed the
+> restriction entirely?
 
-But hierarchy isn't always per process.  Some real-world services have
-threads and subprocesses.
+I have, multiple times.  Can you please read 2-1-2 of the document in
+the original post and take the discussion from there?
 
->
->> I know nothing about rgroups.  Are they upstream?
->
-> It was linked from the original message.
->
-> [7]  http://lkml.kernel.org/r/20160105154503.GC5995-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org
->      [RFD] cgroup: thread granularity support for cpu controller
->      Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Also, here's an idea to maybe make PeterZ happier: relax the
+> restriction a bit per-controller.  Currently (except for /), if you
+> have subtree control enabled you can't have any processes in the
+> cgroup.  Could you change this so it only applies to certain
+> controllers?  If the cpu controller is entirely happy to have
+> processes and cgroups as siblings, then maybe a cgroup with only cpu
+> subtree control enabled could allow processes to exist.
 
-I can see two issues here:
+The document lists several reasons for not doing this and also that
+there is no known real world use case for such configuration.
 
-1. You're allowing groups and tasks to be siblings.  If you're okay
-allowing that for rgroups, why not allow it for cgroup2 on the same
-set of controllers?
+Please also note that the behavior that you're describing is actually
+what rgroup implements.  It makes a lot more sense there because
+threads and groups share the same configuration mechanism and it only
+has to worry about competition among threads (anonymous consumption is
+out of scope for rgroup).
 
-2. It looks impossible to fork and keep a child in the same group as
-one of your non-leader threads.
+> >> It *also* won't work (I think) if subtree control is enabled on the
+> >> root, but I don't think this is a problem in practice because subtree
+> >> control won't be enabled on the namespace root by a sensible cgroup
+> >> manager.
+> >
+> > Exactly the same thing.  You can shoot yourself in the foot but it's
+> > easy not to.
+> 
+> Somewhat off-topic: this appears to be either a bug or a misfeature:
+> 
+> bash-4.3# mkdir foo
+> bash-4.3# ls foo
+> cgroup.controllers  cgroup.events  cgroup.procs  cgroup.subtree_control
+> bash-4.3# mkdir foo/io.max  <-- IMO this shouldn't have worked
+> bash-4.3# echo +io >cgroup.subtree_control
+> [   40.470712] cgroup: cgroup_addrm_files: failed to add max, err=-17
+> 
+> Shouldn't cgroups with names that potentially conflict with
+> kernel-provided dentries be disallowed?
 
-I think I'm starting to agree with PeterZ here.  Why not just make
-cgroup2 more flexible?
+Yeap, the name collisions suck.  I thought about disallowing all
+sub-cgroups which starts with "KNOWN_SUBSYS." but that has a
+non-trivial chance of breaking users which were happy before when a
+new controller gets added.  But, yeah, we at least should disallow the
+known filenames.  Will think more about it.
 
---Andy
+Thanks.
+
+-- 
+tejun
