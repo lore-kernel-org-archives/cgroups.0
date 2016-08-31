@@ -1,72 +1,99 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
 Subject: Re: [RFC v2 09/10] landlock: Handle cgroups (performance)
-Date: Tue, 30 Aug 2016 18:36:06 -0700
-Message-ID: <20160831013605.GB75654@ast-mbp.thefacebook.com>
+Date: Tue, 30 Aug 2016 20:29:17 -0700
+Message-ID: <CALCETrUeRH6bpY_7WQh_SKiURPEExtw67+Mj26u4aveV9EgWxA@mail.gmail.com>
 References: <20160827204307.GA43714@ast-mbp.thefacebook.com>
- <57C202BF.7000207@digikod.net>
- <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
- <57C2B21E.9040705@digikod.net>
- <CALCETrXU64+UApeKL_NogpBYk5kN7zA7UwkypZt8SYfvkuQrbA@mail.gmail.com>
- <57C5EAA3.5090901@digikod.net>
- <CALCETrWAYyx_5Axyeqiz6tQa0kqTeNTuHRrERcM2G8ROhaphVw@mail.gmail.com>
- <57C5ED9B.3040303@digikod.net>
- <20160830205552.GB71063@ast-mbp.thefacebook.com>
- <CALCETrX6hPFZwdnypkPA0p9VjdcK=ZFYpR8zXpzOYS6f=fx3_g@mail.gmail.com>
-Reply-To: kernel-hardening@lists.openwall.com
+ <57C202BF.7000207@digikod.net> <CALCETrXgQ+njtupXiKcOXG8ZRzD=n2LhT45NiJr1Ehob7bHskQ@mail.gmail.com>
+ <57C2B21E.9040705@digikod.net> <CALCETrXU64+UApeKL_NogpBYk5kN7zA7UwkypZt8SYfvkuQrbA@mail.gmail.com>
+ <57C5EAA3.5090901@digikod.net> <CALCETrWAYyx_5Axyeqiz6tQa0kqTeNTuHRrERcM2G8ROhaphVw@mail.gmail.com>
+ <57C5ED9B.3040303@digikod.net> <20160830205552.GB71063@ast-mbp.thefacebook.com>
+ <CALCETrX6hPFZwdnypkPA0p9VjdcK=ZFYpR8zXpzOYS6f=fx3_g@mail.gmail.com> <20160831013605.GB75654@ast-mbp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <kernel-hardening-return-4519-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=qOzxkAnOuqdMtunAHzaZYK4Pe6AziFvAILYt8rOFv8w=;
-        b=r+KKef9B5YWG4cl/k4dqR3KWchDmn2z4qdQ+BDdswdmttF9MjTwfdXYHhawsiL+meM
-         oQKj35T/j92iQufrRCgEcVmcvB1x9g70W15C58hp0z+hcGI4OGFOwFoWp5aSmSeDbUWk
-         BcIuoY+jW2DJxo/lQ8/JYp3T8/sorM/0zwwzQWaQVExvL6ipaQAJYY5P1iEK7BaDJ/Zz
-         0LrvptCoz4O6s1d37KKD5B/s8enaxMLyz5XiTPeCQku3MH2MUx11KZka0J+dmzWkf9eq
-         0rsv+2SmESouH20AJrUp2Qt/AyIP7fT275nRzDYJjcGHbApfEcksK7PeeQ1yU7nXyDh8
-         +02g==
-Content-Disposition: inline
-In-Reply-To: <CALCETrX6hPFZwdnypkPA0p9VjdcK=ZFYpR8zXpzOYS6f=fx3_g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: LSM List <linux-security-module@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Linux API <linux-api@vger.kernel.org>, Sargun Dhillon <sargun@sargun.me>, Tejun Heo <tj@kernel.org>, Kees Cook <keescook@chromium.org>, "David S . Miller" <davem@davemloft.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>, Daniel Mack <daniel@zonque.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, Daniel Borkmann <daniel@iogearbox.net>
+        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=iRjCaVP3PMmWaUluSyy/jR6u2GZ1+FS2USZXjFhWUos=;
+        b=eUWqG/kXdjSFiH1eBVMPKVGSv48Fyh0kvBEe9hcuRbm2kD+zIw8/v0YNRTR/aVRXI6
+         xUSBAXaFIaKkbga68+5NbH/bDgSGg8DIcyneiTnWuozcfy5pBRzqgbxRlW4ekvakoola
+         yxSYdj2EoMAqbb06xQQa0CQz2+/8d4F6yr/Mvu8Wz5Dyp8XWgKxLIzltq6tJSAIxF+Ca
+         oT7pIaV0f+w9IweFumMYtl5lovohs2nb9L1TXtqSk1dQK5XTb2Mapxc55dOpCcEoEnMG
+         6obM4Ivry+KRA1Zz98JXdoph62SbvRNxK/tLVKWzQLTBye1G5hKsU52heQxWumyD2h2Z
+         iRKg==
+In-Reply-To: <20160831013605.GB75654-+o4/htvd0TDFYCXBM6kdu7fOX0fSgVTm@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: LSM List <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org" <kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
 
-On Tue, Aug 30, 2016 at 02:45:14PM -0700, Andy Lutomirski wrote:
-> 
-> One might argue that landlock shouldn't be tied to seccomp (in theory,
-> attached progs could be given access to syscall_get_xyz()), but I
+On Tue, Aug 30, 2016 at 6:36 PM, Alexei Starovoitov
+<alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> On Tue, Aug 30, 2016 at 02:45:14PM -0700, Andy Lutomirski wrote:
+>>
+>> One might argue that landlock shouldn't be tied to seccomp (in theory,
+>> attached progs could be given access to syscall_get_xyz()), but I
+>
+> proposed lsm is way more powerful than syscall_get_xyz.
+> no need to dumb it down.
 
-proposed lsm is way more powerful than syscall_get_xyz.
-no need to dumb it down.
+I think you're misunderstanding me.
 
-> think that the seccomp attachment mechanism is the right way to
-> install unprivileged filters.  It handles the no_new_privs stuff, it
-> allows TSYNC, it's totally independent of systemwide policy, etc.
-> 
-> Trying to use cgroups or similar for this is going to be much nastier.
-> Some tighter sandboxes (Sandstorm, etc) aren't even going to dream of
-> putting cgroupfs in their containers, so requiring cgroups or similar
-> would be a mess for that type of application.
+Micka=C3=ABl's code allows one to make the LSM hook filters depend on the
+syscall using SECCOMP_RET_LANDLOCK.  I'm suggesting that a similar
+effect could be achieved by allowing the eBPF LSM hook to call
+syscall_get_xyz() if it wants to.
 
-I don't see why it is a 'mess'. cgroups are already used by majority
-of the systems, so I don't see why requiring a cgroup is such a big deal.
-But let's say we don't do them. How implementation is going to look like
-for task based hierarchy? Note that we need an array of bpf_prog pointers.
-One for each lsm hook. Where this array is going to be stored?
-We cannot put in task_struct, since it's too large. Cannot put it
-into 'struct seccomp' directly either, unless it will become a pointer.
-Is that the proposal?
-So now we will be wasting extra 1kbyte of memory per task. Not great.
-We'd want to optimize it by sharing this such struct seccomp with prog array
-across threads of the same task? Or dynimically allocating it when
-landlock is in use? May sound nice, but how to account for that kernel
-memory? I guess also solvable by charging memlock.
-With cgroup based approach we don't need to worry about all that.
+>
+>> think that the seccomp attachment mechanism is the right way to
+>> install unprivileged filters.  It handles the no_new_privs stuff, it
+>> allows TSYNC, it's totally independent of systemwide policy, etc.
+>>
+>> Trying to use cgroups or similar for this is going to be much nastier.
+>> Some tighter sandboxes (Sandstorm, etc) aren't even going to dream of
+>> putting cgroupfs in their containers, so requiring cgroups or similar
+>> would be a mess for that type of application.
+>
+> I don't see why it is a 'mess'. cgroups are already used by majority
+> of the systems, so I don't see why requiring a cgroup is such a big deal.
 
+Requiring cgroup to be configured in isn't a big deal.  Requiring
+
+> But let's say we don't do them. How implementation is going to look like
+> for task based hierarchy? Note that we need an array of bpf_prog pointers=
+.
+> One for each lsm hook. Where this array is going to be stored?
+> We cannot put in task_struct, since it's too large. Cannot put it
+> into 'struct seccomp' directly either, unless it will become a pointer.
+> Is that the proposal?
+
+It would go in struct seccomp_filter or in something pointed to from there.
+
+> So now we will be wasting extra 1kbyte of memory per task. Not great.
+> We'd want to optimize it by sharing this such struct seccomp with prog ar=
+ray
+> across threads of the same task? Or dynimically allocating it when
+> landlock is in use? May sound nice, but how to account for that kernel
+> memory? I guess also solvable by charging memlock.
+> With cgroup based approach we don't need to worry about all that.
+>
+
+The considerations are essentially identical either way.
+
+With cgroups, if you want to share the memory between multiple
+separate sandboxes (Firejail instances, Sandstorm grains, Chromium
+instances, xdg-apps, etc), you'd need to get them to all coordinate to
+share a cgroup.  With a seccomp-like interface, you'd need to get them
+to coordinate to share an installed layer (using my FD idea or
+similar).
+
+There would *not* be any duplication of this memory just because a
+sandboxed process called fork().
+
+--Andy
+
+--=20
+Andy Lutomirski
+AMA Capital Management, LLC
