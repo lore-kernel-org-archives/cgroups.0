@@ -1,65 +1,151 @@
-From: Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
-Date: Thu, 1 Sep 2016 10:25:40 +0300
-Message-ID: <9b6a346d-af4c-1e5f-0144-f68fb8e46c27@mellanox.com>
-References: <1472632647-1525-1-git-send-email-pandit.parav@gmail.com>
- <1472632647-1525-2-git-send-email-pandit.parav@gmail.com>
- <61101e8b-5776-c0bc-b3ea-d8b984eebabf@mellanox.com>
- <20160831211618.GA12660@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=gPotF1sfnj9+GvKexujffksiWwfMs2g6RJ1GLDkSe3E=;
- b=IQUa8rlllon3ZxozjSYYsVm/fKV6LEMCK4kWII1/+O9h15esadaGu+ZpH2ZQOrnI/F5rsPjifJkIlOHJzgyEV6dVbQTxJNzUJvDRcaW8PqRiMkFHu7EekjRIxhY8gPDh3Whr9Tjla11Ho76NkkxhnUwARgUVsXAg0mZwS+PxnX0=
-In-Reply-To: <20160831211618.GA12660-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "Huang, Ying" <ying.huang@intel.com>
+Subject: [PATCH -v2 02/10] mm, memcg: Add swap_cgroup_iter iterator
+Date: Thu,  1 Sep 2016 08:16:55 -0700
+Message-ID: <1472743023-4116-3-git-send-email-ying.huang@intel.com>
+References: <1472743023-4116-1-git-send-email-ying.huang@intel.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1472743023-4116-1-git-send-email-ying.huang@intel.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org, haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: tim.c.chen@intel.com, dave.hansen@intel.com, andi.kleen@intel.com, aaron.lu@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Huang Ying <ying.huang@intel.com>, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-On 01/09/2016 00:16, Tejun Heo wrote:
-> Hello,
->
-> On Wed, Aug 31, 2016 at 06:07:30PM +0300, Matan Barak wrote:
->> Currently, there are some discussions regarding the RDMA ABI. The current
->> proposed approach (after a lot of discussions in the OFVWG) is to have
->> driver dependent object types rather than the fixed set of IB object types
->> we have today.
->> AFAIK, some vendors might want to use the RDMA subsystem for a different
->> fabrics which has a different set of objects.
->> You could see RFCs for such concepts both from Mellanox and Intel on the
->> linux-rdma mailing list.
->>
->> Saying that, maybe we need to make the resource types a bit more flexible
->> and dynamic.
->
-> That'd be back to square one and Christoph was dead against it too,
-> so...
->
+From: Huang Ying <ying.huang@intel.com>
 
-Well, if I recall, the reason doing so last time was in order to allow 
-flexible updating of ib_core independently, which is obviously not a 
-good reason (to say the least).
+The swap cgroup uses a kind of discontinuous array to record the
+information for the swap entries.  lookup_swap_cgroup() provides a good
+encapsulation to access one element of the discontinuous array.  To make
+it easier to access multiple elements of the discontinuous array, an
+iterator for the swap cgroup named swap_cgroup_iter is added in this
+patch.
 
-Since the new ABI will probably define new object types (all recent 
-proposals go this way), the current approach could lead to either trying 
-to map new objects to existing cgroup resource types, which could lead 
-to some weird non 1:1 mapping, or having a split definitions - such that 
-each driver will declare its objects both in the cgroups mechanism and 
-in its driver dispatch table.
-Even worse than that, drivers could simply ignore the cgroups support 
-while implementing their own resource types and get a very broken 
-containers support.
+This will be used for transparent huge page (THP) swap support.  Where
+the swap_cgroup for multiple swap entries will be changed together.
 
+Cc: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
+---
+ mm/swap_cgroup.c | 62 +++++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 46 insertions(+), 16 deletions(-)
 
-> Thanks.
->
+diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+index 310ac0b..3563b8b 100644
+--- a/mm/swap_cgroup.c
++++ b/mm/swap_cgroup.c
+@@ -18,6 +18,13 @@ struct swap_cgroup {
+ };
+ #define SC_PER_PAGE	(PAGE_SIZE/sizeof(struct swap_cgroup))
+ 
++struct swap_cgroup_iter {
++	struct swap_cgroup_ctrl *ctrl;
++	struct swap_cgroup *sc;
++	swp_entry_t entry;
++	unsigned long flags;
++};
++
+ /*
+  * SwapCgroup implements "lookup" and "exchange" operations.
+  * In typical usage, this swap_cgroup is accessed via memcg's charge/uncharge
+@@ -75,6 +82,34 @@ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
+ 	return sc + offset % SC_PER_PAGE;
+ }
+ 
++static void swap_cgroup_iter_init(struct swap_cgroup_iter *iter, swp_entry_t ent)
++{
++	iter->entry = ent;
++	iter->sc = lookup_swap_cgroup(ent, &iter->ctrl);
++	spin_lock_irqsave(&iter->ctrl->lock, iter->flags);
++}
++
++static void swap_cgroup_iter_exit(struct swap_cgroup_iter *iter)
++{
++	spin_unlock_irqrestore(&iter->ctrl->lock, iter->flags);
++}
++
++/*
++ * swap_cgroup is stored in a kind of discontinuous array.  That is,
++ * they are continuous in one page, but not across page boundary.  And
++ * there is one lock for each page.
++ */
++static void swap_cgroup_iter_advance(struct swap_cgroup_iter *iter)
++{
++	iter->sc++;
++	iter->entry.val++;
++	if (!(((unsigned long)iter->sc) & PAGE_MASK)) {
++		spin_unlock_irqrestore(&iter->ctrl->lock, iter->flags);
++		iter->sc = lookup_swap_cgroup(iter->entry, &iter->ctrl);
++		spin_lock_irqsave(&iter->ctrl->lock, iter->flags);
++	}
++}
++
+ /**
+  * swap_cgroup_cmpxchg - cmpxchg mem_cgroup's id for this swp_entry.
+  * @ent: swap entry to be cmpxchged
+@@ -87,20 +122,18 @@ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
+ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
+ 					unsigned short old, unsigned short new)
+ {
+-	struct swap_cgroup_ctrl *ctrl;
+-	struct swap_cgroup *sc;
+-	unsigned long flags;
++	struct swap_cgroup_iter iter;
+ 	unsigned short retval;
+ 
+-	sc = lookup_swap_cgroup(ent, &ctrl);
++	swap_cgroup_iter_init(&iter, ent);
+ 
+-	spin_lock_irqsave(&ctrl->lock, flags);
+-	retval = sc->id;
++	retval = iter.sc->id;
+ 	if (retval == old)
+-		sc->id = new;
++		iter.sc->id = new;
+ 	else
+ 		retval = 0;
+-	spin_unlock_irqrestore(&ctrl->lock, flags);
++
++	swap_cgroup_iter_exit(&iter);
+ 	return retval;
+ }
+ 
+@@ -114,18 +147,15 @@ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
+  */
+ unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
+ {
+-	struct swap_cgroup_ctrl *ctrl;
+-	struct swap_cgroup *sc;
++	struct swap_cgroup_iter iter;
+ 	unsigned short old;
+-	unsigned long flags;
+ 
+-	sc = lookup_swap_cgroup(ent, &ctrl);
++	swap_cgroup_iter_init(&iter, ent);
+ 
+-	spin_lock_irqsave(&ctrl->lock, flags);
+-	old = sc->id;
+-	sc->id = id;
+-	spin_unlock_irqrestore(&ctrl->lock, flags);
++	old = iter.sc->id;
++	iter.sc->id = id;
+ 
++	swap_cgroup_iter_exit(&iter);
+ 	return old;
+ }
+ 
+-- 
+2.8.1
 
-Matan
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
