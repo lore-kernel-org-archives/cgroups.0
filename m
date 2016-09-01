@@ -1,60 +1,40 @@
-From: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
-Subject: Re: [PATCH] mm: memcontrol: Make the walk_page_range() limit obvious
-Date: Thu, 1 Sep 2016 00:24:39 +0000
-Message-ID: <20160901002438.GB9620@hori1.linux.bs1.fc.nec.co.jp>
-References: <1472655897-22532-1-git-send-email-james.morse@arm.com>
- <20160831151730.GF21661@dhcp22.suse.cz>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
+Date: Thu, 1 Sep 2016 10:44:06 +0200
+Message-ID: <20160901084406.GA4115@lst.de>
+References: <1472632647-1525-1-git-send-email-pandit.parav@gmail.com> <1472632647-1525-2-git-send-email-pandit.parav@gmail.com> <61101e8b-5776-c0bc-b3ea-d8b984eebabf@mellanox.com> <20160831211618.GA12660@htj.duckdns.org> <9b6a346d-af4c-1e5f-0144-f68fb8e46c27@mellanox.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20160831151730.GF21661@dhcp22.suse.cz>
-Content-Language: ja-JP
-Content-ID: <04683ED2C346F642AE6658F0EAE1963D@gisp.nec.co.jp>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <9b6a346d-af4c-1e5f-0144-f68fb8e46c27@mellanox.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: James Morse <james.morse@arm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov@virtuozzo.com>
+Content-Transfer-Encoding: 7bit
+To: Matan Barak <matanb@mellanox.com>
+Cc: Tejun Heo <tj@kernel.org>, Parav Pandit <pandit.parav@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, hch@lst.de, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com, corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-On Wed, Aug 31, 2016 at 05:17:30PM +0200, Michal Hocko wrote:
-> On Wed 31-08-16 16:04:57, James Morse wrote:
-> > Trying to walk all of virtual memory requires architecture specific
-> > knowledge. On x86_64, addresses must be sign extended from bit 48,
-> > whereas on arm64 the top VA_BITS of address space have their own set
-> > of page tables.
-> >=20
-> > mem_cgroup_count_precharge() and mem_cgroup_move_charge() both call
-> > walk_page_range() on the range 0 to ~0UL, neither provide a pte_hole
-> > callback, which causes the current implementation to skip non-vma regio=
-ns.
-> >=20
-> > As this call only expects to walk user address space, make it walk
-> > 0 to  'highest_vm_end'.
-> >=20
-> > Signed-off-by: James Morse <james.morse@arm.com>
-> > Cc: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
-> > ---
-> > This is in preparation for a RFC series that allows walk_page_range() t=
-o
-> > walk kernel page tables too.
->=20
-> OK, so do I get it right that this is only needed with that change?
-> Because AFAICS walk_page_range will be bound to the last vma->vm_end
-> right now.
+On Thu, Sep 01, 2016 at 10:25:40AM +0300, Matan Barak wrote:
+> Well, if I recall, the reason doing so last time was in order to allow 
+> flexible updating of ib_core independently, which is obviously not a good 
+> reason (to say the least).
+>
+> Since the new ABI will probably define new object types (all recent 
+> proposals go this way), the current approach could lead to either trying to 
+> map new objects to existing cgroup resource types, which could lead to some 
+> weird non 1:1 mapping, or having a split definitions - such that each 
+> driver will declare its objects both in the cgroups mechanism and in its 
+> driver dispatch table.
+> Even worse than that, drivers could simply ignore the cgroups support while 
+> implementing their own resource types and get a very broken containers 
+> support.
 
-I think this is correct, find_vma() in walk_page_range() does that.
+Sorry guys, but arbitrary extensibility for something not finished is the
+worst idea ever.  We have two options here:
 
-> If this is the case this should be mentioned in the changelog
-> because the above might confuse somebody to think this is a bug fix.
->=20
-> Other than that this seams reasonable to me.
+ a) delay cgroups support until the grand rewrite is done
+ b) add it now and deal with the consequences later
 
-I'm fine with this change.
-
-Acked-by: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>=
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+That being said, adding random non-Verbs hardwasre to the RDMA core is
+the second worst idea ever.  Guess I need to catch up with the
+discussion and start using the flame thrower.
