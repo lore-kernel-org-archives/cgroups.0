@@ -1,69 +1,109 @@
-From: "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: Why would cpu cgroup get disabled by the kernel?
-Date: Fri, 2 Sep 2016 09:44:25 +0000
-Message-ID: <9B0331B6EBBD0E4684FBFAEDA55776F92CE0E032@HASMSX110.ger.corp.intel.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: Why would cpu cgroup get disabled by the kernel?
+Date: Fri, 2 Sep 2016 17:59:26 +0800
+Message-ID: <57C94D7E.4090204@huawei.com>
 References: <CAGmahrS4P7kS6_5MOhHA=ge6mcq0C2f85iN9S3z5dgi+qsEh9g@mail.gmail.com>
+ <9B0331B6EBBD0E4684FBFAEDA55776F92CE0E032@HASMSX110.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAGmahrS4P7kS6_5MOhHA=ge6mcq0C2f85iN9S3z5dgi+qsEh9g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
+In-Reply-To: <9B0331B6EBBD0E4684FBFAEDA55776F92CE0E032-cNwSTNrqBuVnIh7sxsoRyrfspsVTdybXVpNB7YpNyf8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Sverd Johnsen <sverd.johnsen-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Sverd Johnsen <sverd.johnsen-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-SGksIFN2ZXJkLA0KDQpDb3VsZCBpdCBiZSB0aGF0IHlvdSBhcmUgdXNpbmcgdGhlIGNncm91cF9u
-b3YxPWFsbCBrZXJuZWwgb3B0aW9uIChvciBpbmNsdWRlIGNwdSBpbiBjZ3JvdXBfbm92MT0uLi4g
-Yml0bWFzayk/DQpXaGF0IGRvZXMgY2F0IC9wcm9jL2NtZGxpbmUgc2hvdyA/IA0KDQpSZWdhcmRz
-LA0KUmFtaSBSb3Nlbg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBjZ3Jv
-dXBzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmNncm91cHMtb3duZXJAdmdlci5rZXJu
-ZWwub3JnXSBPbiBCZWhhbGYgT2YgU3ZlcmQgSm9obnNlbg0KU2VudDogRnJpZGF5LCBTZXB0ZW1i
-ZXIgMDIsIDIwMTYgMTI6MTMNClRvOiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDog
-V2h5IHdvdWxkIGNwdSBjZ3JvdXAgZ2V0IGRpc2FibGVkIGJ5IHRoZSBrZXJuZWw/DQoNCkhpISBJ
-J2FtIG9uIDQuNC4xOSAoYXJtKSAgYW5kIHNlZW0gdG8gaGF2ZSBhbGwgcmVxdWlyZW1lbnRzIGZv
-ciBDUFUgY2dyb3VwcyBidWlsZCBpbnRvIHRoZSBrZXJuZWw6DQoNCiAjIHpncmVwIC1QICJDR1JP
-VVB8R1JPVVB8RkFJUiIgL3Byb2MvY29uZmlnLmd6IENPTkZJR19DR1JPVVBTPXkgIyBDT05GSUdf
-Q0dST1VQX0RFQlVHIGlzIG5vdCBzZXQgIyBDT05GSUdfQ0dST1VQX0ZSRUVaRVIgaXMgbm90IHNl
-dCBDT05GSUdfQ0dST1VQX1BJRFM9eSBDT05GSUdfQ0dST1VQX0RFVklDRT15IENPTkZJR19DR1JP
-VVBfQ1BVQUNDVD15ICMgQ09ORklHX0NHUk9VUF9QRVJGIGlzIG5vdCBzZXQgQ09ORklHX0NHUk9V
-UF9TQ0hFRD15IENPTkZJR19GQUlSX0dST1VQX1NDSEVEPXkgQ09ORklHX1JUX0dST1VQX1NDSEVE
-PXkgQ09ORklHX0JMS19DR1JPVVA9eSAjIENPTkZJR19ERUJVR19CTEtfQ0dST1VQIGlzIG5vdCBz
-ZXQgIyBDT05GSUdfU0NIRURfQVVUT0dST1VQIGlzIG5vdCBzZXQgQ09ORklHX0NGUV9HUk9VUF9J
-T1NDSEVEPXkgIyBDT05GSUdfTkVUX0NMU19DR1JPVVAgaXMgbm90IHNldCAjIENPTkZJR19DR1JP
-VVBfTkVUX1BSSU8gaXMgbm90IHNldCAjIENPTkZJR19DR1JPVVBfTkVUX0NMQVNTSUQgaXMgbm90
-IHNldCAjIENPTkZJR19USEVSTUFMX0RFRkFVTFRfR09WX0ZBSVJfU0hBUkUgaXMgbm90IHNldCAj
-IENPTkZJR19USEVSTUFMX0dPVl9GQUlSX1NIQVJFIGlzIG5vdCBzZXQNCg0KT3RoZXIgY2dyb3Vw
-cyBhbHNvIHdvcms6DQoNCiMgZmluZG1udCAtYQ0KVEFSR0VUICAgICAgICAgICAgICAgICAgICAg
-ICBTT1VSQ0UNCkZTVFlQRSAgICAgT1BUSU9OUw0KfC0vc3lzICAgICAgICAgICAgICAgICAgICAg
-ICBzeXNmcw0Kc3lzZnMgICAgICBydyxub3N1aWQsbm9kZXYsbm9leGVjLHJlbGF0aW1lDQp8IHwt
-L3N5cy9rZXJuZWwvc2VjdXJpdHkgICAgIHNlY3VyaXR5ZnMNCnNlY3VyaXR5ZnMgcncsbm9zdWlk
-LG5vZGV2LG5vZXhlYyxyZWxhdGltZQ0KfCB8LS9zeXMvZnMvY2dyb3VwICAgICAgICAgICB0bXBm
-cw0KdG1wZnMgICAgICBybyxub3N1aWQsbm9kZXYsbm9leGVjLG1vZGU9NzU1DQp8IHwgfC0vc3lz
-L2ZzL2Nncm91cC9zeXN0ZW1kIGNncm91cA0KY2dyb3VwICAgICBydyxub3N1aWQsbm9kZXYsbm9l
-eGVjLHJlbGF0aW1lLHhhdHRyLHJlbGVhc2VfYWdlbnQ9L3Vzci9saWIvc3lzdGVtZC9zeXN0ZW1k
-LWNncm91cHMtYWdlbnQsbmFtZT1zeXN0ZW1kDQp8IHwgfC0vc3lzL2ZzL2Nncm91cC9kZXZpY2Vz
-IGNncm91cA0KY2dyb3VwICAgICBydyxub3N1aWQsbm9kZXYsbm9leGVjLHJlbGF0aW1lLGRldmlj
-ZXMNCnwgfCB8LS9zeXMvZnMvY2dyb3VwL2Jsa2lvICAgY2dyb3VwDQpjZ3JvdXAgICAgIHJ3LG5v
-c3VpZCxub2Rldixub2V4ZWMscmVsYXRpbWUsYmxraW8NCnwgfCB8LS9zeXMvZnMvY2dyb3VwL3Bp
-ZHMgICAgY2dyb3VwDQpjZ3JvdXAgICAgIHJ3LG5vc3VpZCxub2Rldixub2V4ZWMscmVsYXRpbWUs
-cGlkcw0KfCB8IGAtL3N5cy9mcy9jZ3JvdXAvY3B1YWNjdCBjZ3JvdXANCmNncm91cCAgICAgcncs
-bm9zdWlkLG5vZGV2LG5vZXhlYyxyZWxhdGltZSxjcHVhY2N0DQoNCkhvd2V2ZXIgSSBnZXQgdGhp
-czoNCg0KIyBkbWVzZyB8IGVncmVwICJjZ3JvdXB8Y29udHJvbCBncm91cCINClsgICAgMC4wMDAw
-MDBdIEluaXRpYWxpemluZyBjZ3JvdXAgc3Vic3lzIGNwdQ0KWyAgICAwLjAwMDAwMF0gSW5pdGlh
-bGl6aW5nIGNncm91cCBzdWJzeXMgY3B1YWNjdA0KWyAgICAwLjAwMTI0Ml0gRGlzYWJsaW5nIGNw
-dSBjb250cm9sIGdyb3VwIHN1YnN5c3RlbQ0KWyAgICAwLjAwMTI2M10gSW5pdGlhbGl6aW5nIGNn
-cm91cCBzdWJzeXMgaW8NClsgICAgMC4wMDEyODldIEluaXRpYWxpemluZyBjZ3JvdXAgc3Vic3lz
-IGRldmljZXMNClsgICAgMC4wMDEzMDRdIEluaXRpYWxpemluZyBjZ3JvdXAgc3Vic3lzIHBpZHMN
-Cg0KIyBjb2x1bW4gLXQgL3Byb2MvY2dyb3Vwcw0KI3N1YnN5c19uYW1lICBoaWVyYXJjaHkgIG51
-bV9jZ3JvdXBzICBlbmFibGVkDQpjcHUgICAgICAgICAgIDAgICAgICAgICAgMSAgICAgICAgICAg
-IDANCmNwdWFjY3QgICAgICAgNSAgICAgICAgICA1OSAgICAgICAgICAgMQ0KYmxraW8gICAgICAg
-ICAzICAgICAgICAgIDkgICAgICAgICAgICAxDQpkZXZpY2VzICAgICAgIDIgICAgICAgICAgNTYg
-ICAgICAgICAgIDENCnBpZHMgICAgICAgICAgNCAgICAgICAgICA2NCAgICAgICAgICAgMQ0KDQpX
-aHk/IHJlYWxseSB3ZWlyZC4gSSBjb250cm9sIHRoZSBib290IHByb2Nlc3MgKHN5c3RlbWQgMjMx
-KSBhbmQgbm90aGluZyB0aGVyZSBhcHBhcmVudGx5IGRpc2FibGVzIGl0LiBXaGVuIEkgdHJ5IHRv
-IG1vdW50IGNwdSBjZ3JvdXAgbWFudWFsbHkgSSBqdXN0IGdldCBFTk9FTlQNCi0tDQpUbyB1bnN1
-YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgY2dyb3Vw
-cyIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcg
-TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8t
-aW5mby5odG1sDQo=
+On 2016/9/2 17:44, Rosen, Rami wrote:
+> Hi, Sverd,
+>=20
+> Could it be that you are using the cgroup_nov1=3Dall kernel option (or in=
+clude cpu in cgroup_nov1=3D... bitmask)?
+> What does cat /proc/cmdline show ?=20
+>=20
+
+If the kernel is valinna 4.4.19, there's no cgroup_nov1 option, and I think=
+ the only
+possibility is cgroup_disable=3Dcpu kernel option.
+
+> Regards,
+> Rami Rosen
+>=20
+>=20
+> -----Original Message-----
+> From: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org [mailto:cgrou=
+ps-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org] On Behalf Of Sverd Johnsen
+> Sent: Friday, September 02, 2016 12:13
+> To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Subject: Why would cpu cgroup get disabled by the kernel?
+>=20
+> Hi! I'am on 4.4.19 (arm)  and seem to have all requirements for CPU cgrou=
+ps build into the kernel:
+>=20
+>  # zgrep -P "CGROUP|GROUP|FAIR" /proc/config.gz CONFIG_CGROUPS=3Dy # CONF=
+IG_CGROUP_DEBUG is not set # CONFIG_CGROUP_FREEZER is not set CONFIG_CGROUP=
+_PIDS=3Dy CONFIG_CGROUP_DEVICE=3Dy CONFIG_CGROUP_CPUACCT=3Dy # CONFIG_CGROU=
+P_PERF is not set CONFIG_CGROUP_SCHED=3Dy CONFIG_FAIR_GROUP_SCHED=3Dy CONFI=
+G_RT_GROUP_SCHED=3Dy CONFIG_BLK_CGROUP=3Dy # CONFIG_DEBUG_BLK_CGROUP is not=
+ set # CONFIG_SCHED_AUTOGROUP is not set CONFIG_CFQ_GROUP_IOSCHED=3Dy # CON=
+FIG_NET_CLS_CGROUP is not set # CONFIG_CGROUP_NET_PRIO is not set # CONFIG_=
+CGROUP_NET_CLASSID is not set # CONFIG_THERMAL_DEFAULT_GOV_FAIR_SHARE is no=
+t set # CONFIG_THERMAL_GOV_FAIR_SHARE is not set
+>=20
+> Other cgroups also work:
+>=20
+> # findmnt -a
+> TARGET                       SOURCE
+> FSTYPE     OPTIONS
+> |-/sys                       sysfs
+> sysfs      rw,nosuid,nodev,noexec,relatime
+> | |-/sys/kernel/security     securityfs
+> securityfs rw,nosuid,nodev,noexec,relatime
+> | |-/sys/fs/cgroup           tmpfs
+> tmpfs      ro,nosuid,nodev,noexec,mode=3D755
+> | | |-/sys/fs/cgroup/systemd cgroup
+> cgroup     rw,nosuid,nodev,noexec,relatime,xattr,release_agent=3D/usr/lib=
+/systemd/systemd-cgroups-agent,name=3Dsystemd
+> | | |-/sys/fs/cgroup/devices cgroup
+> cgroup     rw,nosuid,nodev,noexec,relatime,devices
+> | | |-/sys/fs/cgroup/blkio   cgroup
+> cgroup     rw,nosuid,nodev,noexec,relatime,blkio
+> | | |-/sys/fs/cgroup/pids    cgroup
+> cgroup     rw,nosuid,nodev,noexec,relatime,pids
+> | | `-/sys/fs/cgroup/cpuacct cgroup
+> cgroup     rw,nosuid,nodev,noexec,relatime,cpuacct
+>=20
+> However I get this:
+>=20
+> # dmesg | egrep "cgroup|control group"
+> [    0.000000] Initializing cgroup subsys cpu
+> [    0.000000] Initializing cgroup subsys cpuacct
+> [    0.001242] Disabling cpu control group subsystem
+> [    0.001263] Initializing cgroup subsys io
+> [    0.001289] Initializing cgroup subsys devices
+> [    0.001304] Initializing cgroup subsys pids
+>=20
+> # column -t /proc/cgroups
+> #subsys_name  hierarchy  num_cgroups  enabled
+> cpu           0          1            0
+> cpuacct       5          59           1
+> blkio         3          9            1
+> devices       2          56           1
+> pids          4          64           1
+>=20
+> Why? really weird. I control the boot process (systemd 231) and nothing t=
+here apparently disables it. When I try to mount cpu cgroup manually I just=
+ get ENOENT
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in the=
+ body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Mor=
+e majordomo info at  http://vger.kernel.org/majordomo-info.html
+> =13=EF=BF=BD=EF=BF=BD=EC=B9=BB=1C=EF=BF=BD&=EF=BF=BD~=EF=BF=BD&=EF=BF=BD=
+=18=EF=BF=BD=EF=BF=BD+-=EF=BF=BD=EF=BF=BD=DD=B6=17=EF=BF=BD=EF=BF=BDw=EF=BF=
+=BD=EF=BF=BD=CB=9B=EF=BF=BD=EF=BF=BD=EF=BF=BDm=EF=BF=BD =EF=BF=BD=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD)=EF=BF=BD=EF=BF=BD=EF=BF=BDw*=1Fjg=EF=BF=BD=EF=BF=BD=EF=
+=BF=BD=1E=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=DD=A2j/=EF=BF=BD=EF=
+=BF=BD=EF=BF=BDz=EF=BF=BD=DE=96=EF=BF=BD=EF=BF=BD2=EF=BF=BD=DE=99=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD&=EF=BF=BD)=DF=A1=EF=BF=BDa=EF=BF=BD=EF=BF=BD=7F=EF=BF=BD=
+=EF=BF=BD=1E=EF=BF=BDG=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=0F=EF=BF=BDj:+v=
+=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BD=D9=A5
+>=20
