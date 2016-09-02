@@ -1,90 +1,69 @@
-From: Sverd Johnsen <sverd.johnsen-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
-Subject: Why would cpu cgroup get disabled by the kernel?
-Date: Fri, 2 Sep 2016 11:12:54 +0200
-Message-ID: <CAGmahrS4P7kS6_5MOhHA=ge6mcq0C2f85iN9S3z5dgi+qsEh9g@mail.gmail.com>
+From: "Rosen, Rami" <rami.rosen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: Why would cpu cgroup get disabled by the kernel?
+Date: Fri, 2 Sep 2016 09:44:25 +0000
+Message-ID: <9B0331B6EBBD0E4684FBFAEDA55776F92CE0E032@HASMSX110.ger.corp.intel.com>
+References: <CAGmahrS4P7kS6_5MOhHA=ge6mcq0C2f85iN9S3z5dgi+qsEh9g@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20120113;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=8B7JD0iR7tW/SgZLGJp3dv4n66l2fdSAFb81M+OArj4=;
-        b=vkN2hnBeIFZVEndNI3f6ZRLpakUf2xEnMEwX8wC1QPtStK1wazBGgpu8jl25p+aDyp
-         k35y5dQ+UOCNwAvshKkFkhd0UJE83ypQEcphLwShWaic1eV0ZltvZ/zhoCLu5sifNH9f
-         wTOOWA8YCWmR2DZ6Pkvs+WW9Mddk3K4bIa5VfSzRDqOSW+Y/WUQ8+ZpVrTr09/YdPwyY
-         3cUYPP+VInuvPDq0To1esXeOnTmJBmbRThAgBN2ng4ulqunitrN8jDVOHj/F/xtxeahE
-         HnTNRxy2GDwecAO6+qUZLXtiZLXQKcoltc4P59wKK4IzKbLE179iYKkHvr2nwmAo4+zF
-         pNqQ==
+In-Reply-To: <CAGmahrS4P7kS6_5MOhHA=ge6mcq0C2f85iN9S3z5dgi+qsEh9g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sverd Johnsen <sverd.johnsen-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi! I'am on 4.4.19 (arm)  and seem to have all requirements for CPU
-cgroups build into the kernel:
-
- # zgrep -P "CGROUP|GROUP|FAIR" /proc/config.gz
-CONFIG_CGROUPS=y
-# CONFIG_CGROUP_DEBUG is not set
-# CONFIG_CGROUP_FREEZER is not set
-CONFIG_CGROUP_PIDS=y
-CONFIG_CGROUP_DEVICE=y
-CONFIG_CGROUP_CPUACCT=y
-# CONFIG_CGROUP_PERF is not set
-CONFIG_CGROUP_SCHED=y
-CONFIG_FAIR_GROUP_SCHED=y
-CONFIG_RT_GROUP_SCHED=y
-CONFIG_BLK_CGROUP=y
-# CONFIG_DEBUG_BLK_CGROUP is not set
-# CONFIG_SCHED_AUTOGROUP is not set
-CONFIG_CFQ_GROUP_IOSCHED=y
-# CONFIG_NET_CLS_CGROUP is not set
-# CONFIG_CGROUP_NET_PRIO is not set
-# CONFIG_CGROUP_NET_CLASSID is not set
-# CONFIG_THERMAL_DEFAULT_GOV_FAIR_SHARE is not set
-# CONFIG_THERMAL_GOV_FAIR_SHARE is not set
-
-Other cgroups also work:
-
-# findmnt -a
-TARGET                       SOURCE
-FSTYPE     OPTIONS
-|-/sys                       sysfs
-sysfs      rw,nosuid,nodev,noexec,relatime
-| |-/sys/kernel/security     securityfs
-securityfs rw,nosuid,nodev,noexec,relatime
-| |-/sys/fs/cgroup           tmpfs
-tmpfs      ro,nosuid,nodev,noexec,mode=755
-| | |-/sys/fs/cgroup/systemd cgroup
-cgroup     rw,nosuid,nodev,noexec,relatime,xattr,release_agent=/usr/lib/systemd/systemd-cgroups-agent,name=systemd
-| | |-/sys/fs/cgroup/devices cgroup
-cgroup     rw,nosuid,nodev,noexec,relatime,devices
-| | |-/sys/fs/cgroup/blkio   cgroup
-cgroup     rw,nosuid,nodev,noexec,relatime,blkio
-| | |-/sys/fs/cgroup/pids    cgroup
-cgroup     rw,nosuid,nodev,noexec,relatime,pids
-| | `-/sys/fs/cgroup/cpuacct cgroup
-cgroup     rw,nosuid,nodev,noexec,relatime,cpuacct
-
-However I get this:
-
-# dmesg | egrep "cgroup|control group"
-[    0.000000] Initializing cgroup subsys cpu
-[    0.000000] Initializing cgroup subsys cpuacct
-[    0.001242] Disabling cpu control group subsystem
-[    0.001263] Initializing cgroup subsys io
-[    0.001289] Initializing cgroup subsys devices
-[    0.001304] Initializing cgroup subsys pids
-
-# column -t /proc/cgroups
-#subsys_name  hierarchy  num_cgroups  enabled
-cpu           0          1            0
-cpuacct       5          59           1
-blkio         3          9            1
-devices       2          56           1
-pids          4          64           1
-
-Why? really weird. I control the boot process (systemd 231)
-and nothing there apparently disables it. When I try to mount cpu
-cgroup manually I just
-get ENOENT
+SGksIFN2ZXJkLA0KDQpDb3VsZCBpdCBiZSB0aGF0IHlvdSBhcmUgdXNpbmcgdGhlIGNncm91cF9u
+b3YxPWFsbCBrZXJuZWwgb3B0aW9uIChvciBpbmNsdWRlIGNwdSBpbiBjZ3JvdXBfbm92MT0uLi4g
+Yml0bWFzayk/DQpXaGF0IGRvZXMgY2F0IC9wcm9jL2NtZGxpbmUgc2hvdyA/IA0KDQpSZWdhcmRz
+LA0KUmFtaSBSb3Nlbg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBjZ3Jv
+dXBzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmNncm91cHMtb3duZXJAdmdlci5rZXJu
+ZWwub3JnXSBPbiBCZWhhbGYgT2YgU3ZlcmQgSm9obnNlbg0KU2VudDogRnJpZGF5LCBTZXB0ZW1i
+ZXIgMDIsIDIwMTYgMTI6MTMNClRvOiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDog
+V2h5IHdvdWxkIGNwdSBjZ3JvdXAgZ2V0IGRpc2FibGVkIGJ5IHRoZSBrZXJuZWw/DQoNCkhpISBJ
+J2FtIG9uIDQuNC4xOSAoYXJtKSAgYW5kIHNlZW0gdG8gaGF2ZSBhbGwgcmVxdWlyZW1lbnRzIGZv
+ciBDUFUgY2dyb3VwcyBidWlsZCBpbnRvIHRoZSBrZXJuZWw6DQoNCiAjIHpncmVwIC1QICJDR1JP
+VVB8R1JPVVB8RkFJUiIgL3Byb2MvY29uZmlnLmd6IENPTkZJR19DR1JPVVBTPXkgIyBDT05GSUdf
+Q0dST1VQX0RFQlVHIGlzIG5vdCBzZXQgIyBDT05GSUdfQ0dST1VQX0ZSRUVaRVIgaXMgbm90IHNl
+dCBDT05GSUdfQ0dST1VQX1BJRFM9eSBDT05GSUdfQ0dST1VQX0RFVklDRT15IENPTkZJR19DR1JP
+VVBfQ1BVQUNDVD15ICMgQ09ORklHX0NHUk9VUF9QRVJGIGlzIG5vdCBzZXQgQ09ORklHX0NHUk9V
+UF9TQ0hFRD15IENPTkZJR19GQUlSX0dST1VQX1NDSEVEPXkgQ09ORklHX1JUX0dST1VQX1NDSEVE
+PXkgQ09ORklHX0JMS19DR1JPVVA9eSAjIENPTkZJR19ERUJVR19CTEtfQ0dST1VQIGlzIG5vdCBz
+ZXQgIyBDT05GSUdfU0NIRURfQVVUT0dST1VQIGlzIG5vdCBzZXQgQ09ORklHX0NGUV9HUk9VUF9J
+T1NDSEVEPXkgIyBDT05GSUdfTkVUX0NMU19DR1JPVVAgaXMgbm90IHNldCAjIENPTkZJR19DR1JP
+VVBfTkVUX1BSSU8gaXMgbm90IHNldCAjIENPTkZJR19DR1JPVVBfTkVUX0NMQVNTSUQgaXMgbm90
+IHNldCAjIENPTkZJR19USEVSTUFMX0RFRkFVTFRfR09WX0ZBSVJfU0hBUkUgaXMgbm90IHNldCAj
+IENPTkZJR19USEVSTUFMX0dPVl9GQUlSX1NIQVJFIGlzIG5vdCBzZXQNCg0KT3RoZXIgY2dyb3Vw
+cyBhbHNvIHdvcms6DQoNCiMgZmluZG1udCAtYQ0KVEFSR0VUICAgICAgICAgICAgICAgICAgICAg
+ICBTT1VSQ0UNCkZTVFlQRSAgICAgT1BUSU9OUw0KfC0vc3lzICAgICAgICAgICAgICAgICAgICAg
+ICBzeXNmcw0Kc3lzZnMgICAgICBydyxub3N1aWQsbm9kZXYsbm9leGVjLHJlbGF0aW1lDQp8IHwt
+L3N5cy9rZXJuZWwvc2VjdXJpdHkgICAgIHNlY3VyaXR5ZnMNCnNlY3VyaXR5ZnMgcncsbm9zdWlk
+LG5vZGV2LG5vZXhlYyxyZWxhdGltZQ0KfCB8LS9zeXMvZnMvY2dyb3VwICAgICAgICAgICB0bXBm
+cw0KdG1wZnMgICAgICBybyxub3N1aWQsbm9kZXYsbm9leGVjLG1vZGU9NzU1DQp8IHwgfC0vc3lz
+L2ZzL2Nncm91cC9zeXN0ZW1kIGNncm91cA0KY2dyb3VwICAgICBydyxub3N1aWQsbm9kZXYsbm9l
+eGVjLHJlbGF0aW1lLHhhdHRyLHJlbGVhc2VfYWdlbnQ9L3Vzci9saWIvc3lzdGVtZC9zeXN0ZW1k
+LWNncm91cHMtYWdlbnQsbmFtZT1zeXN0ZW1kDQp8IHwgfC0vc3lzL2ZzL2Nncm91cC9kZXZpY2Vz
+IGNncm91cA0KY2dyb3VwICAgICBydyxub3N1aWQsbm9kZXYsbm9leGVjLHJlbGF0aW1lLGRldmlj
+ZXMNCnwgfCB8LS9zeXMvZnMvY2dyb3VwL2Jsa2lvICAgY2dyb3VwDQpjZ3JvdXAgICAgIHJ3LG5v
+c3VpZCxub2Rldixub2V4ZWMscmVsYXRpbWUsYmxraW8NCnwgfCB8LS9zeXMvZnMvY2dyb3VwL3Bp
+ZHMgICAgY2dyb3VwDQpjZ3JvdXAgICAgIHJ3LG5vc3VpZCxub2Rldixub2V4ZWMscmVsYXRpbWUs
+cGlkcw0KfCB8IGAtL3N5cy9mcy9jZ3JvdXAvY3B1YWNjdCBjZ3JvdXANCmNncm91cCAgICAgcncs
+bm9zdWlkLG5vZGV2LG5vZXhlYyxyZWxhdGltZSxjcHVhY2N0DQoNCkhvd2V2ZXIgSSBnZXQgdGhp
+czoNCg0KIyBkbWVzZyB8IGVncmVwICJjZ3JvdXB8Y29udHJvbCBncm91cCINClsgICAgMC4wMDAw
+MDBdIEluaXRpYWxpemluZyBjZ3JvdXAgc3Vic3lzIGNwdQ0KWyAgICAwLjAwMDAwMF0gSW5pdGlh
+bGl6aW5nIGNncm91cCBzdWJzeXMgY3B1YWNjdA0KWyAgICAwLjAwMTI0Ml0gRGlzYWJsaW5nIGNw
+dSBjb250cm9sIGdyb3VwIHN1YnN5c3RlbQ0KWyAgICAwLjAwMTI2M10gSW5pdGlhbGl6aW5nIGNn
+cm91cCBzdWJzeXMgaW8NClsgICAgMC4wMDEyODldIEluaXRpYWxpemluZyBjZ3JvdXAgc3Vic3lz
+IGRldmljZXMNClsgICAgMC4wMDEzMDRdIEluaXRpYWxpemluZyBjZ3JvdXAgc3Vic3lzIHBpZHMN
+Cg0KIyBjb2x1bW4gLXQgL3Byb2MvY2dyb3Vwcw0KI3N1YnN5c19uYW1lICBoaWVyYXJjaHkgIG51
+bV9jZ3JvdXBzICBlbmFibGVkDQpjcHUgICAgICAgICAgIDAgICAgICAgICAgMSAgICAgICAgICAg
+IDANCmNwdWFjY3QgICAgICAgNSAgICAgICAgICA1OSAgICAgICAgICAgMQ0KYmxraW8gICAgICAg
+ICAzICAgICAgICAgIDkgICAgICAgICAgICAxDQpkZXZpY2VzICAgICAgIDIgICAgICAgICAgNTYg
+ICAgICAgICAgIDENCnBpZHMgICAgICAgICAgNCAgICAgICAgICA2NCAgICAgICAgICAgMQ0KDQpX
+aHk/IHJlYWxseSB3ZWlyZC4gSSBjb250cm9sIHRoZSBib290IHByb2Nlc3MgKHN5c3RlbWQgMjMx
+KSBhbmQgbm90aGluZyB0aGVyZSBhcHBhcmVudGx5IGRpc2FibGVzIGl0LiBXaGVuIEkgdHJ5IHRv
+IG1vdW50IGNwdSBjZ3JvdXAgbWFudWFsbHkgSSBqdXN0IGdldCBFTk9FTlQNCi0tDQpUbyB1bnN1
+YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgY2dyb3Vw
+cyIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcg
+TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8t
+aW5mby5odG1sDQo=
