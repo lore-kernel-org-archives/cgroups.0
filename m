@@ -1,106 +1,132 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Tue, 6 Sep 2016 12:29:50 +0200
-Message-ID: <20160906102950.GK10153@twins.programming.kicks-ass.net>
-References: <20160820155659.GA16906@mtj.duckdns.org>
- <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
- <20160829222048.GH28713@mtj.duckdns.org>
- <CALCETrUEygWrJbG25wSfG3zMG_+TNeP8+gAkcbh4_=ZNWHQCkw@mail.gmail.com>
- <20160831173251.GY12660@htj.duckdns.org>
- <CALCETrUKOJZS+=QDPyQD+vxXpwyjoj4+Crg6wU7Xk8rP4prYkA@mail.gmail.com>
- <20160831210754.GZ12660@htj.duckdns.org>
- <CALCETrXj2Z=-GMaWV_EpCvw_8C3t1vc=D53Ff2wdvo=At8ZF1Q@mail.gmail.com>
- <20160903220526.GA20784@mtj.duckdns.org>
- <CALCETrVcAjFWLQ1arjSP-g=4jRY_J7G-j9JJHrvTDgOnxApYPw@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CALCETrVcAjFWLQ1arjSP-g=4jRY_J7G-j9JJHrvTDgOnxApYPw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v4 0/6] Add eBPF hooks for cgroups
+Date: Tue,  6 Sep 2016 15:46:02 +0200
+Message-ID: <1473169568-30525-1-git-send-email-daniel@zonque.org>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: htejun@fb.com, daniel@iogearbox.net, ast@fb.com
+Cc: davem@davemloft.net, kafai@fb.com, fw@strlen.de, pablo@netfilter.org, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org, Daniel Mack <daniel@zonque.org>
 
-On Mon, Sep 05, 2016 at 10:37:55AM -0700, Andy Lutomirski wrote:
-> And I still think that, at least for cpu, nothing at all goes wrong if
-> you allow processes to exist in cgroups that have cpu set in
-> subtree-control.
+This is v4 of the patch set to allow eBPF programs for network
+filtering and accounting to be attached to cgroups, so that they apply
+to all sockets of all tasks placed in that cgroup. The logic also
+allows to be extendeded for other cgroup based eBPF logic.
 
-cpu, cpuset, perf, cpuacct (although we all agree that really should be
-part of cpu), pid, and possibly freezer (but I think we all agree
-freezer is 'broken').
-
-That's roughly half the controllers out there.
-
-They all work on tasks, and should therefore have no problems what so
-ever to allow the full hierarchy without silly exceptions and
-constraints.
+All the comments I got since v3 were addressed. FWIW, I left the
+egress hook in __dev_queue_xmit() for now, as I don't currently see
+any better place to put it. If we find one, we can still move the
+hook around, and relax the !sk and sk->sk_family checks.
 
 
+Changes from v3:
 
-The fundamental problem is that we have 2 different types of
-controllers, on the one hand these controllers above, that work on tasks
-and form groups of them and build up from that. Lets call them
-task-controllers.
+* Dropped the _FILTER suffix from BPF_PROG_TYPE_CGROUP_SOCKET_FILTER,
+  renamed BPF_ATTACH_TYPE_CGROUP_INET_{E,IN}GRESS to
+  BPF_CGROUP_INET_{IN,E}GRESS and alias BPF_MAX_ATTACH_TYPE to
+  __BPF_MAX_ATTACH_TYPE, as suggested by Daniel Borkmann.
 
-On the other hand we have controllers like memcg which take the 'system'
-as a whole and shrink it down into smaller bits. Lets call these
-system-controllers.
+* Dropped the attach_flags member from the anonymous struct for BPF
+  attach operations in union bpf_attr. They can be added later on via
+  CHECK_ATTR. Requested by Daniel Borkmann and Alexei.
 
+* Release old_prog at the end of __cgroup_bpf_update rather that at
+  the beginning to fix a race gap between program updates and their
+  users. Spotted by Daniel Borkmann.
 
-They are fundamentally at odds with capabilities, simply because of the
-granularity they can work on.
+* Plugged an skb leak when dropping packets on the egress path.
+  Spotted by Daniel Borkmann.
 
-Merging the two into a common hierarchy is a useful concept for
-containerization, no argument on that, esp. when also coupled with
-namespaces and the like.
+* Add cgroups@vger.kernel.org to the loop, as suggested by Rami Rosen.
 
-
-However, where I object _most_ strongly is having this one use dominate
-and destroy the capabilities (which are in use) of the task-controllers.
-
-
-> > I do.  It's a horrible userland API to expose to individual
-> > applications if the organization that a given application expects can
-> > be disturbed by system operations.  Imagine how this would be
-> > documented - "if this operation races with system operation, it may
-> > return -ENOENT.  Repeating the path lookup might make the operation
-> > succeed again."
-> 
-> It could be made to work without races, though, with minimal (or even
-> no) ABI change.  The managed program could grab an fd pointing to its
-> cgroup.  Then it would use openat, etc for all operations.  As long as
-> 'mv /cgroup/a/b /cgroup/c/" didn't cause that fd to stop working,
-> we're fine.
-
-I've mentioned openat() and related APIs several times, but so far never
-got good reasons why that wouldn't work.
+* Some minor coding style adoptions not worth mentioning in particular.
 
 
+Changes from v2:
 
-Also note that in order to partition the cpus with cpusets, you're
-required to generate a disjoint hierarchy (that is, one where the
-(common) parent is 'disabled' and the children have no overlap).
+* Fixed the RCU locking details Tejun pointed out.
 
-This is rather fundamental to partitioning, that by its very nature
-requires separation.
-
-The result is that if you want to place your RT threads (consider an
-application that consists of RT and !RT parts) in a different partition
-there is no common parent you can place the process in.
+* Assert bpf_attr.flags == 0 in BPF_PROG_DETACH syscall handler.
 
 
-cgroup-v2, by placing the system style controllers first and foremost,
-completely renders that scenario impossible. Note also that any proposed
-rgroup would not work for this, since that, per design, is a subtree,
-and therefore not disjoint.
+Changes from v1:
+
+* Moved all bpf specific cgroup code into its own file, and stub
+  out related functions for !CONFIG_CGROUP_BPF as static inline nops.
+  This way, the call sites are not cluttered with #ifdef guards while
+  the feature remains compile-time configurable.
+
+* Implemented the new scheme proposed by Tejun. Per cgroup, store one
+  set of pointers that are pinned to the cgroup, and one for the
+  programs that are effective. When a program is attached or detached,
+  the change is propagated to all the cgroup's descendants. If a
+  subcgroup has its own pinned program, skip the whole subbranch in
+  order to allow delegation models.
+
+* The hookup for egress packets is now done from __dev_queue_xmit().
+
+* A static key is now used in both the ingress and egress fast paths
+  to keep performance penalties close to zero if the feature is
+  not in use.
+
+* Overall cleanup to make the accessors use the program arrays.
+  This should make it much easier to add new program types, which
+  will then automatically follow the pinned vs. effective logic.
+
+* Fixed locking issues, as pointed out by Eric Dumazet and Alexei
+  Starovoitov. Changes to the program array are now done with
+  xchg() and are protected by cgroup_mutex.
+
+* eBPF programs are now expected to return 1 to let the packet pass,
+  not >= 0. Pointed out by Alexei.
+
+* Operation is now limited to INET sockets, so local AF_UNIX sockets
+  are not affected. The enum members are renamed accordingly. In case
+  other socket families should be supported, this can be extended in
+  the future.
+
+* The sample program learned to support both ingress and egress, and
+  can now optionally make the eBPF program drop packets by making it
+  return 0.
 
 
-So my objection to the whole cgroup-v2 model and implementation stems
-from the fact that it purports to be a 'better' and 'improved' system,
-while in actuality it neuters and destroys a lot of useful usecases.
+As always, feedback is much appreciated.
 
-It completely disregards all task-controllers and labels their use-cases
-as irrelevant.
+Thanks,
+Daniel
+
+Daniel Mack (6):
+  bpf: add new prog type for cgroup socket filtering
+  cgroup: add support for eBPF programs
+  bpf: add BPF_PROG_ATTACH and BPF_PROG_DETACH commands
+  net: filter: run cgroup eBPF ingress programs
+  net: core: run cgroup eBPF egress programs
+  samples: bpf: add userspace example for attaching eBPF programs to
+    cgroups
+
+ include/linux/bpf-cgroup.h      |  70 +++++++++++++++++
+ include/linux/cgroup-defs.h     |   4 +
+ include/uapi/linux/bpf.h        |  17 +++++
+ init/Kconfig                    |  12 +++
+ kernel/bpf/Makefile             |   1 +
+ kernel/bpf/cgroup.c             | 165 ++++++++++++++++++++++++++++++++++++++++
+ kernel/bpf/syscall.c            |  81 ++++++++++++++++++++
+ kernel/bpf/verifier.c           |   1 +
+ kernel/cgroup.c                 |  18 +++++
+ net/core/dev.c                  |   7 +-
+ net/core/filter.c               |  10 +++
+ samples/bpf/Makefile            |   2 +
+ samples/bpf/libbpf.c            |  21 +++++
+ samples/bpf/libbpf.h            |   3 +
+ samples/bpf/test_cgrp2_attach.c | 147 +++++++++++++++++++++++++++++++++++
+ 15 files changed, 558 insertions(+), 1 deletion(-)
+ create mode 100644 include/linux/bpf-cgroup.h
+ create mode 100644 kernel/bpf/cgroup.c
+ create mode 100644 samples/bpf/test_cgrp2_attach.c
+
+-- 
+2.5.5
+
