@@ -1,93 +1,72 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
-Date: Wed, 7 Sep 2016 13:25:13 +0530
-Message-ID: <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A@mail.gmail.com>
-References: <1472632647-1525-1-git-send-email-pandit.parav@gmail.com>
- <1472632647-1525-2-git-send-email-pandit.parav@gmail.com> <61101e8b-5776-c0bc-b3ea-d8b984eebabf@mellanox.com>
- <20160831211618.GA12660@htj.duckdns.org> <9b6a346d-af4c-1e5f-0144-f68fb8e46c27@mellanox.com>
- <20160901084406.GA4115@lst.de>
+From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v4 2/6] cgroup: add support for eBPF programs
+Date: Wed, 7 Sep 2016 10:04:38 +0200
+Message-ID: <50f28eb4-647b-9152-57af-2877c69589d2@zonque.org>
+References: <1473169568-30525-1-git-send-email-daniel@zonque.org>
+ <1473169568-30525-3-git-send-email-daniel@zonque.org>
+ <57CEFA48.6010101@iogearbox.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=XGV0giUoEKEwEdNDhS8Uv8pktyyavskJqStcgtha9ds=;
-        b=ITcpMMaQbbiYPRrreMoYi7QqlwOWKOn2Y4d1HUY8CBR+TNaOTklmdevEJ/Hgnoj+89
-         CpQwZIR4YtZKC+YcNumBg7mmsBTc+XgAgKYoaMMwb/DkwEYRU3oWRoKLiNPYd6h3maab
-         LTJycrAlcsAbaBijAycOkkB2gS5yefNvXMAbS+SzTPX+JQjqLo4gf102ZcB3Uv6a8axn
-         kBFAlAl7t7Z2nkN+vsdOS+TnSCWwnz8Z6I2qn5pNJZ2TC9eyTx5Ur6w7BBEpEb6xaR1Y
-         F0bxRMIFJnARiV7gH8Dg1xWgAXydTyM1kSCR//jEFLOYIPK1Ia6fY3ePI2g0FkIxbBM2
-         ImWQ==
-In-Reply-To: <20160901084406.GA4115-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <57CEFA48.6010101-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Matan,
-
-On Thu, Sep 1, 2016 at 2:14 PM, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
-> On Thu, Sep 01, 2016 at 10:25:40AM +0300, Matan Barak wrote:
->> Well, if I recall, the reason doing so last time was in order to allow
->> flexible updating of ib_core independently, which is obviously not a good
->> reason (to say the least).
+On 09/06/2016 07:18 PM, Daniel Borkmann wrote:
+> On 09/06/2016 03:46 PM, Daniel Mack wrote:
+>> This patch adds two sets of eBPF program pointers to struct cgroup.
+>> One for such that are directly pinned to a cgroup, and one for such
+>> that are effective for it.
 >>
->> Since the new ABI will probably define new object types (all recent
->> proposals go this way), the current approach could lead to either trying to
->> map new objects to existing cgroup resource types, which could lead to some
->> weird non 1:1 mapping, or having a split definitions - such that each
->> driver will declare its objects both in the cgroups mechanism and in its
->> driver dispatch table.
+>> To illustrate the logic behind that, assume the following example
+>> cgroup hierarchy.
+>>
+>>    A - B - C
+>>          \ D - E
+>>
+>> If only B has a program attached, it will be effective for B, C, D
+>> and E. If D then attaches a program itself, that will be effective for
+>> both D and E, and the program in B will only affect B and C. Only one
+>> program of a given type is effective for a cgroup.
+>>
+>> Attaching and detaching programs will be done through the bpf(2)
+>> syscall. For now, ingress and egress inet socket filtering are the
+>> only supported use-cases.
+>>
+>> Signed-off-by: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+> [...]
+>> +/**
+>> + * __cgroup_bpf_run_filter() - Run a program for packet filtering
+>> + * @sk: The socken sending or receiving traffic
+>> + * @skb: The skb that is being sent or received
+>> + * @type: The type of program to be exectuted
+>> + *
+>> + * If no socket is passed, or the socket is not of type INET or INET6,
+>> + * this function does nothing and returns 0.
+>> + *
+>> + * The program type passed in via @type must be suitable for network
+>> + * filtering. No further check is performed to assert that.
+>> + *
+>> + * This function will return %-EPERM if any if an attached program was found
+>> + * and if it returned != 1 during execution. In all other cases, 0 is returned.
+>> + */
+>> +int __cgroup_bpf_run_filter(struct sock *sk,
+>> +			    struct sk_buff *skb,
+>> +			    enum bpf_attach_type type)
+>> +{
+>> +	struct bpf_prog *prog;
+>> +	struct cgroup *cgrp;
+>> +	int ret = 0;
+>> +
+>> +	if (!sk)
+>> +		return 0;
+> 
+> Doesn't this also need to check || !sk_fullsock(sk)?
 
->> Even worse than that, drivers could simply ignore the cgroups support while
->> implementing their own resource types and get a very broken containers
->> support.
-If drivers are broken due to ignorance of not-calling cgroup APIs,
-that should be ok.
-That particular driver should fix it.
-If the resource creation using uverbs is using well defined rdma level
-resource, uverbs level will make sure to honor cgroup limits without
-involving hw drivers anyway.
+Ah, yes. We should limit it to full sockets. Thanks!
 
-RDMA Verb level resource is charged/uncharged by RDMA core.
-RDMA HW level resource is charged/uncharged by RDMA HW driver using
-well defined API and resource by cgroup core.
-This scheme ensures that there is 1:1 mapping.
 
-I don't think current definition of resource type is carved out on stone.
-They can be extended as we forward.
-As many of us agree that, they should be well defined and it should be
-agreed by cgroup and rdma community.
-
-For example, today we have RDMA_VERB_xxx resources.
-New well defined RDMA HW resources can be defined in rdma_cgroup.h
-file as RDMA_HW_xx in same enum table.
-
->
-> Sorry guys, but arbitrary extensibility for something not finished is the
-> worst idea ever.  We have two options here:
->
->  a) delay cgroups support until the grand rewrite is done
->  b) add it now and deal with the consequences later
->
-Can we do (b) now and differ adding any HW resources to cgroup until
-they are clearly called out.
-Architecture and APIs are already in place to support this.
-
-> That being said, adding random non-Verbs hardwasre to the RDMA core is
-> the second worst idea ever.
-
-We can differ adding HW resource to core and cgroup until they are
-clearly defined.
-In that case current architecture still holds good.
-
-> Guess I need to catch up with the
-> discussion and start using the flame thrower.
-
-Matan,
-Can you please point us to the new RFC/ABI email thread which
-describes the design, partitioning of code between core vs hw drivers
-etc.
+Daniel
