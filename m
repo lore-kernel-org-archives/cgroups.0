@@ -1,147 +1,34 @@
-From: "Huang, Ying" <ying.huang@intel.com>
-Subject: [PATCH -v3 02/10] mm, memcg: Add swap_cgroup_iter iterator
-Date: Wed,  7 Sep 2016 09:46:01 -0700
-Message-ID: <1473266769-2155-3-git-send-email-ying.huang@intel.com>
-References: <1473266769-2155-1-git-send-email-ying.huang@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1473266769-2155-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Subject: Re: [PATCH -v3 03/10] mm, memcg: Support to charge/uncharge multiple
+ swap entries
+Date: Thu, 08 Sep 2016 11:16:25 +0530
+Message-ID: <57D0FB31.7010605@linux.vnet.ibm.com>
+References: <1473266769-2155-1-git-send-email-ying.huang@intel.com> <1473266769-2155-4-git-send-email-ying.huang@intel.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: tim.c.chen@intel.com, dave.hansen@intel.com, andi.kleen@intel.com, aaron.lu@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Huang Ying <ying.huang@intel.com>, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1473266769-2155-4-git-send-email-ying.huang@intel.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: tim.c.chen@intel.com, dave.hansen@intel.com, andi.kleen@intel.com, aaron.lu@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-From: Huang Ying <ying.huang@intel.com>
+On 09/07/2016 10:16 PM, Huang, Ying wrote:
+> From: Huang Ying <ying.huang@intel.com>
+> 
+> This patch make it possible to charge or uncharge a set of continuous
+> swap entries in the swap cgroup.  The number of swap entries is
+> specified via an added parameter.
+> 
+> This will be used for the THP (Transparent Huge Page) swap support.
+> Where a swap cluster backing a THP may be allocated and freed as a
+> whole.  So a set of continuous swap entries (512 on x86_64) backing one
 
-The swap cgroup uses a kind of discontinuous array to record the
-information for the swap entries.  lookup_swap_cgroup() provides a good
-encapsulation to access one element of the discontinuous array.  To make
-it easier to access multiple elements of the discontinuous array, an
-iterator for the swap cgroup named swap_cgroup_iter is added in this
-patch.
+Please use HPAGE_SIZE / PAGE_SIZE instead of hard coded number like 512.
 
-This will be used for transparent huge page (THP) swap support.  Where
-the swap_cgroup for multiple swap entries will be changed together.
-
-Cc: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
----
- mm/swap_cgroup.c | 63 ++++++++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 47 insertions(+), 16 deletions(-)
-
-diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
-index 310ac0b..4ae3e7b 100644
---- a/mm/swap_cgroup.c
-+++ b/mm/swap_cgroup.c
-@@ -18,6 +18,13 @@ struct swap_cgroup {
- };
- #define SC_PER_PAGE	(PAGE_SIZE/sizeof(struct swap_cgroup))
- 
-+struct swap_cgroup_iter {
-+	struct swap_cgroup_ctrl *ctrl;
-+	struct swap_cgroup *sc;
-+	swp_entry_t entry;
-+	unsigned long flags;
-+};
-+
- /*
-  * SwapCgroup implements "lookup" and "exchange" operations.
-  * In typical usage, this swap_cgroup is accessed via memcg's charge/uncharge
-@@ -75,6 +82,35 @@ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
- 	return sc + offset % SC_PER_PAGE;
- }
- 
-+static void swap_cgroup_iter_init(struct swap_cgroup_iter *iter,
-+				  swp_entry_t ent)
-+{
-+	iter->entry = ent;
-+	iter->sc = lookup_swap_cgroup(ent, &iter->ctrl);
-+	spin_lock_irqsave(&iter->ctrl->lock, iter->flags);
-+}
-+
-+static void swap_cgroup_iter_exit(struct swap_cgroup_iter *iter)
-+{
-+	spin_unlock_irqrestore(&iter->ctrl->lock, iter->flags);
-+}
-+
-+/*
-+ * swap_cgroup is stored in a kind of discontinuous array.  That is,
-+ * they are continuous in one page, but not across page boundary.  And
-+ * there is one lock for each page.
-+ */
-+static void swap_cgroup_iter_advance(struct swap_cgroup_iter *iter)
-+{
-+	iter->sc++;
-+	iter->entry.val++;
-+	if (!(((unsigned long)iter->sc) & PAGE_MASK)) {
-+		spin_unlock_irqrestore(&iter->ctrl->lock, iter->flags);
-+		iter->sc = lookup_swap_cgroup(iter->entry, &iter->ctrl);
-+		spin_lock_irqsave(&iter->ctrl->lock, iter->flags);
-+	}
-+}
-+
- /**
-  * swap_cgroup_cmpxchg - cmpxchg mem_cgroup's id for this swp_entry.
-  * @ent: swap entry to be cmpxchged
-@@ -87,20 +123,18 @@ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
- unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- 					unsigned short old, unsigned short new)
- {
--	struct swap_cgroup_ctrl *ctrl;
--	struct swap_cgroup *sc;
--	unsigned long flags;
-+	struct swap_cgroup_iter iter;
- 	unsigned short retval;
- 
--	sc = lookup_swap_cgroup(ent, &ctrl);
-+	swap_cgroup_iter_init(&iter, ent);
- 
--	spin_lock_irqsave(&ctrl->lock, flags);
--	retval = sc->id;
-+	retval = iter.sc->id;
- 	if (retval == old)
--		sc->id = new;
-+		iter.sc->id = new;
- 	else
- 		retval = 0;
--	spin_unlock_irqrestore(&ctrl->lock, flags);
-+
-+	swap_cgroup_iter_exit(&iter);
- 	return retval;
- }
- 
-@@ -114,18 +148,15 @@ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
-  */
- unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
- {
--	struct swap_cgroup_ctrl *ctrl;
--	struct swap_cgroup *sc;
-+	struct swap_cgroup_iter iter;
- 	unsigned short old;
--	unsigned long flags;
- 
--	sc = lookup_swap_cgroup(ent, &ctrl);
-+	swap_cgroup_iter_init(&iter, ent);
- 
--	spin_lock_irqsave(&ctrl->lock, flags);
--	old = sc->id;
--	sc->id = id;
--	spin_unlock_irqrestore(&ctrl->lock, flags);
-+	old = iter.sc->id;
-+	iter.sc->id = id;
- 
-+	swap_cgroup_iter_exit(&iter);
- 	return old;
- }
- 
--- 
-2.8.1
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
