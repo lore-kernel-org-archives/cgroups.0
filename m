@@ -1,43 +1,33 @@
-From: "Huang\, Ying" <ying.huang@intel.com>
-Subject: Re: [PATCH -v3 03/10] mm, memcg: Support to charge/uncharge multiple swap entries
-Date: Thu, 08 Sep 2016 11:15:13 -0700
-Message-ID: <87wpim45se.fsf@yhuang-mobile.sh.intel.com>
-References: <1473266769-2155-1-git-send-email-ying.huang@intel.com>
-	<1473266769-2155-4-git-send-email-ying.huang@intel.com>
-	<57D12134.40604@linux.vnet.ibm.com>
+From: Guang Yang <guangyy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: throttle IO to multiple devices in one group
+Date: Thu, 8 Sep 2016 16:32:32 -0700
+Message-ID: <CAKtk8he8kEpbnnDL80LpigDZk-KyU6_o99D+k4iNWiUQ1AeOLQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <57D12134.40604@linux.vnet.ibm.com> (Anshuman Khandual's message
-	of "Thu, 8 Sep 2016 13:58:36 +0530")
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=BZebQUkHJhZIc2nis1Tz1WEM+88jEiPdWvTu7bO+tvQ=;
+        b=XxqNCafoEBmcf0nMFj/xWP2lcOYZG+UEDSXJVVoan5ulAdDtRfrOucRaz1xAA2t3QH
+         5SJ/LIyEFtuu4X0N07FYYmmmNQY/xFEUb1nioz9k5fdTvmDhq3jRN6If4eHz+u6gYhgo
+         G+HtPH2tMUeiNoKmNtGityoaYP+GL1ufmseN1MPqS0e5PKAtwEhYCRwq3KRp4pKMRYcD
+         OwaCmeujh6FB1MszCWRaTk7NOLcd4tGuyqOSWt0S42Xvrz9tL0YQxCSBq/JJc4GyzsFN
+         Q20f1hl9sXgiDbrENOlpP7Uscb+NKeZn6Co/voBbAwoj+8clEo6QrO7cFKoVoW0wS0+9
+         BAcg==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-Cc: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, tim.c.chen@intel.com, dave.hansen@intel.com, andi.kleen@intel.com, aaron.lu@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Anshuman Khandual <khandual@linux.vnet.ibm.com> writes:
+Hello,
+We are evaluating to use cgroups to isolate different applications on
+Linux. One use case of our application is that it reads/writes to
+multiple block devices and we would like throttle the IO for each
+application to each devices via blkio.throttle.read_iops_device.
+However, it looks like each group can only configure one device.
 
-> On 09/07/2016 10:16 PM, Huang, Ying wrote:
->> From: Huang Ying <ying.huang@intel.com>
->> 
->> This patch make it possible to charge or uncharge a set of continuous
->> swap entries in the swap cgroup.  The number of swap entries is
->> specified via an added parameter.
->> 
->> This will be used for the THP (Transparent Huge Page) swap support.
->> Where a swap cluster backing a THP may be allocated and freed as a
->> whole.  So a set of continuous swap entries (512 on x86_64) backing one
->
-> Please use HPAGE_SIZE / PAGE_SIZE instead of hard coded number like 512.
+Am I miss anything? Is there a way to support such semantic - limit
+the number of reads to multiple devices within one group?
 
-Sure.  Will change it.
-
-Best Regards,
-Huang, Ying
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks very much.
