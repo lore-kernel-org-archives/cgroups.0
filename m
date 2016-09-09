@@ -1,33 +1,111 @@
-From: Guang Yang <guangyy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: throttle IO to multiple devices in one group
-Date: Thu, 8 Sep 2016 16:32:32 -0700
-Message-ID: <CAKtk8he8kEpbnnDL80LpigDZk-KyU6_o99D+k4iNWiUQ1AeOLQ@mail.gmail.com>
-Mime-Version: 1.0
+From: Joonwoo Park <joonwoop-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: [PATCH] cpuset: handle race between CPU hotplug and cpuset_hotplug_work
+Date: Thu,  8 Sep 2016 17:41:24 -0700
+Message-ID: <1473381684-9537-1-git-send-email-joonwoop@codeaurora.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=BZebQUkHJhZIc2nis1Tz1WEM+88jEiPdWvTu7bO+tvQ=;
-        b=XxqNCafoEBmcf0nMFj/xWP2lcOYZG+UEDSXJVVoan5ulAdDtRfrOucRaz1xAA2t3QH
-         5SJ/LIyEFtuu4X0N07FYYmmmNQY/xFEUb1nioz9k5fdTvmDhq3jRN6If4eHz+u6gYhgo
-         G+HtPH2tMUeiNoKmNtGityoaYP+GL1ufmseN1MPqS0e5PKAtwEhYCRwq3KRp4pKMRYcD
-         OwaCmeujh6FB1MszCWRaTk7NOLcd4tGuyqOSWt0S42Xvrz9tL0YQxCSBq/JJc4GyzsFN
-         Q20f1hl9sXgiDbrENOlpP7Uscb+NKeZn6Co/voBbAwoj+8clEo6QrO7cFKoVoW0wS0+9
-         BAcg==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Joonwoo Park <joonwoop-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-We are evaluating to use cgroups to isolate different applications on
-Linux. One use case of our application is that it reads/writes to
-multiple block devices and we would like throttle the IO for each
-application to each devices via blkio.throttle.read_iops_device.
-However, it looks like each group can only configure one device.
+Discrepancy between cpu_online_mask and cpuset's effective CPU masks on
+cpuset hierarchy is inevitable since cpuset defers updating of
+effective CPU masks with workqueue while nothing prevents system from
+doing CPU hotplug.  For that reason guarantee_online_cpus() walks up
+the cpuset hierarchy until it finds intersection under the assumption
+that top cpuset's effective CPU mask intersects with cpu_online_mask
+even under such race.
 
-Am I miss anything? Is there a way to support such semantic - limit
-the number of reads to multiple devices within one group?
+However a sequence of CPU hotplugs can open a time window which is none
+of effective CPUs in the top cpuset intersects with cpu_online_mask.
 
-Thanks very much.
+For example when there are 4 possible CPUs 0-3 where only CPU0 is online:
+
+  ========================  ===========================
+   cpu_online_mask           top_cpuset.effective_cpus
+  ========================  ===========================
+   echo 1 > cpu2/online.
+   CPU hotplug notifier woke up hotplug work but not yet scheduled.
+      [0,2]                     [0]
+
+   echo 0 > cpu0/online.
+   The workqueue is still runnable.
+      [2]                       [0]
+  ========================  ===========================
+
+  Now there is no intersection between cpu_online_mask and
+  top_cpuset.effective_cpus.  Thus invoking sys_sched_setaffinity() at
+  this moment can cause following:
+
+   Unable to handle kernel NULL pointer dereference at virtual address 000000d0
+   ------------[ cut here ]------------
+   Kernel BUG at ffffffc0001389b0 [verbose debug info unavailable]
+   Internal error: Oops - BUG: 96000005 [#1] PREEMPT SMP
+   Modules linked in:
+   CPU: 2 PID: 1420 Comm: taskset Tainted: G        W       4.4.8+ #98
+   task: ffffffc06a5c4880 ti: ffffffc06e124000 task.ti: ffffffc06e124000
+   PC is at guarantee_online_cpus+0x2c/0x58
+   LR is at cpuset_cpus_allowed+0x4c/0x6c
+   <snip>
+   Process taskset (pid: 1420, stack limit = 0xffffffc06e124020)
+   Call trace:
+   [<ffffffc0001389b0>] guarantee_online_cpus+0x2c/0x58
+   [<ffffffc00013b208>] cpuset_cpus_allowed+0x4c/0x6c
+   [<ffffffc0000d61f0>] sched_setaffinity+0xc0/0x1ac
+   [<ffffffc0000d6374>] SyS_sched_setaffinity+0x98/0xac
+   [<ffffffc000085cb0>] el0_svc_naked+0x24/0x28
+
+The top cpuset's effective_cpus are guaranteed to be identical to online
+CPUs eventually.  Hence fall back to online CPU mask when there is no
+intersection between top cpuset's effective_cpus and online CPU mask.
+
+Signed-off-by: Joonwoo Park <joonwoop-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ kernel/cpuset.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index c7fd277..b5d2b73 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -325,8 +325,7 @@ static struct file_system_type cpuset_fs_type = {
+ /*
+  * Return in pmask the portion of a cpusets's cpus_allowed that
+  * are online.  If none are online, walk up the cpuset hierarchy
+- * until we find one that does have some online cpus.  The top
+- * cpuset always has some cpus online.
++ * until we find one that does have some online cpus.
+  *
+  * One way or another, we guarantee to return some non-empty subset
+  * of cpu_online_mask.
+@@ -335,8 +334,20 @@ static struct file_system_type cpuset_fs_type = {
+  */
+ static void guarantee_online_cpus(struct cpuset *cs, struct cpumask *pmask)
+ {
+-	while (!cpumask_intersects(cs->effective_cpus, cpu_online_mask))
++	while (!cpumask_intersects(cs->effective_cpus, cpu_online_mask)) {
+ 		cs = parent_cs(cs);
++		if (unlikely(!cs)) {
++			/*
++			 * The top cpuset doesn't have any online cpu in
++			 * consequence of race between cpuset_hotplug_work
++			 * and cpu hotplug notifier.  But we know the top
++			 * cpuset's effective_cpus is on its way to be same
++			 * with online cpus mask.
++			 */
++			cpumask_copy(pmask, cpu_online_mask);
++			return;
++		}
++	}
+ 	cpumask_and(pmask, cs->effective_cpus, cpu_online_mask);
+ }
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+hosted by The Linux Foundation
