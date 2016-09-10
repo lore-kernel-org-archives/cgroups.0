@@ -1,7 +1,7 @@
 From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Sat, 10 Sep 2016 10:54:57 +0200
-Message-ID: <1473497697.3857.161.camel@gmail.com>
+Date: Sat, 10 Sep 2016 12:08:57 +0200
+Message-ID: <1473502137.3857.218.camel@gmail.com>
 References: <20160820155659.GA16906@mtj.duckdns.org>
          <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
          <20160829222048.GH28713@mtj.duckdns.org>
@@ -21,13 +21,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=dRRstD7mwqXjJ2lYpTlhqbbQwzyhA0WlopPAcFdanns=;
-        b=zFNIxiyWZd1L9J4rXcSCE1JOGnluifWgqhyM12VvEnPuVK1dnKxZ2/M+1WK0ds1YmV
-         gU8Eommuhdx8Y2Px/IfUHncthIMF9+nJwiXE4smFh/3QuWIQaM/VFk0A0eqyxUyyf+Nk
-         4hitxUzZKqsAzSrw734W92VPBRTl5//lphnZP8Tu7RwLvoJs7SX4DfsqA1mkgzOPs9M5
-         h0U3jjXq1rXg/OFCF2Pk7DCEZfKXDsXv4oTxish09wnOJ6238YxO8SssHtpw8A2qT+4E
-         XUghSXyBm5VhZaTrzNGP0XRVcTr4wpsmIYm2s2jF4ViiK6Q4MrUA67VjqTXxToO1aVCN
-         Bcog==
+        bh=c33bhFvB7DfsuMvVXBzi+PavSdCLxMDQaNw0Gp4+bgM=;
+        b=Pg/Lzn7foudRET7ZdKeQJ2X/LJrXDV3i1/xsHWCrPg1UaG4Vf4O/uRZpqtqLigrLeS
+         xECOeaL/RlF50fcGQEy4Az6x5m1aHploBQqbNWyOKkZcm16ETPYz6J3HrKrJUDBqh/PK
+         nyv4umm9pGrPXGZP5hciTDe2mNVDCi7jZ2CHI+4/BaAqvdJ0JMjAt66QtA0KLKrY58qs
+         JThh9hEyLBq/eFz1nVPl0rIH+qY1UCDYOxCTNgCMvubI/3eq5VdlW7lHQSW5HxVG9rH/
+         G2kzJssrEsV773dgAE8llGWjQSBJNnKwP4bhr4vd6cCjo1v03TC6rekT98TEeajoa32M
+         SdaQ==
 In-Reply-To: <20160909225747.GA30105-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -36,36 +36,20 @@ Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u
 
 On Fri, 2016-09-09 at 18:57 -0400, Tejun Heo wrote:
 
-> But, whatever, let's go there: Given the arguments that I laid out for
-> the no-internal-tasks rule, how does the problem seem fixable through
-> relaxing the constraint?
+> > > As for your example, who performs the cgroup setup and configuration,
+> > > the application itself or an external entity?  If an external entity,
+> > > how does it know which thread is what?
+> > 
+> > In my case, it would be a little script that reads a config file that
+> > knows all kinds of internal information about the application and its
+> > threads.
+> 
+> I see.  One-of-a-kind custom setup.  This is a completely valid usage;
+> however, please also recognize that it's an extremely specific one
+> which is niche by definition.
 
-Well, for one thing, cpusets would cease to leak CPUs.  With the no
--internal-tasks constraint, no task can acquire affinity of exclusive
-set A if set B is an exclusive subset thereof, as there is one and only
-one spot where the affinity of set A exists: in the forbidden set A.
-
-Relaxing no-internal-tasks would fix that, but without also relaxing
-the process-only rule, cpusets would remain useless for the purpose for
-which it was created.  After all, it doesn't do much good to use the
-one and only dynamic partitioning tool to partition a box if you cannot
-subsequently place your tasks/threads properly therein.
-
-> What people do now with cgroup inside an application is extremely
-> limited.  Because there is no proper support for it, each use case has
-> to craft up a dedicated custom setup which is all but guaranteed to be
-> incompatible with what someone else would come up for another
-> application.  Everybody is in "this is mine, I control the entire
-> system" mindset, which is fine for those specific setups but
-> deterimental to making it widely available and useful.
-
-IMO, the problem with that making it available to the huddled masses
-bit is that it is a completely unrealistic fantasy.  Can hordes of
-programs really autonomously carve up a single set of resources?  I do
-not believe they can.  The system agent cannot autonomously do so
-either.  Intimate knowledge of local requirements is not optional, it
-is a prerequisite to sound decision making.  You have to have a well
-defined need before it makes any sense to turn these things on, they
-are not free, and impact is global.
+This is the same pigeon hole you placed Google into.  So Google, my
+(also decidedly non-petite) users, and now Andy are all sharing the one
+of a kind extremely specific niche.. it's becoming a tad crowded.
 
 	-Mike
