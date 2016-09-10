@@ -1,55 +1,27 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Sat, 10 Sep 2016 12:08:57 +0200
-Message-ID: <1473502137.3857.218.camel@gmail.com>
-References: <20160820155659.GA16906@mtj.duckdns.org>
-         <CALCETrUWn1ux-ZRJoMjFCuP1aQrPOo3oTPD7k-ojsaov29NsRw@mail.gmail.com>
-         <20160829222048.GH28713@mtj.duckdns.org>
-         <CALCETrUEygWrJbG25wSfG3zMG_+TNeP8+gAkcbh4_=ZNWHQCkw@mail.gmail.com>
-         <20160831173251.GY12660@htj.duckdns.org>
-         <CALCETrUKOJZS+=QDPyQD+vxXpwyjoj4+Crg6wU7Xk8rP4prYkA@mail.gmail.com>
-         <20160831210754.GZ12660@htj.duckdns.org>
-         <CALCETrXj2Z=-GMaWV_EpCvw_8C3t1vc=D53Ff2wdvo=At8ZF1Q@mail.gmail.com>
-         <20160903220526.GA20784@mtj.duckdns.org>
-         <CALCETrVcAjFWLQ1arjSP-g=4jRY_J7G-j9JJHrvTDgOnxApYPw@mail.gmail.com>
-         <20160909225747.GA30105@mtj.duckdns.org>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
+Date: Sat, 10 Sep 2016 18:12:28 +0200
+Message-ID: <20160910161228.GB29259@lst.de>
+References: <1472632647-1525-1-git-send-email-pandit.parav@gmail.com> <1472632647-1525-2-git-send-email-pandit.parav@gmail.com> <61101e8b-5776-c0bc-b3ea-d8b984eebabf@mellanox.com> <20160831211618.GA12660@htj.duckdns.org> <9b6a346d-af4c-1e5f-0144-f68fb8e46c27@mellanox.com> <20160901084406.GA4115@lst.de> <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=c33bhFvB7DfsuMvVXBzi+PavSdCLxMDQaNw0Gp4+bgM=;
-        b=Pg/Lzn7foudRET7ZdKeQJ2X/LJrXDV3i1/xsHWCrPg1UaG4Vf4O/uRZpqtqLigrLeS
-         xECOeaL/RlF50fcGQEy4Az6x5m1aHploBQqbNWyOKkZcm16ETPYz6J3HrKrJUDBqh/PK
-         nyv4umm9pGrPXGZP5hciTDe2mNVDCi7jZ2CHI+4/BaAqvdJ0JMjAt66QtA0KLKrY58qs
-         JThh9hEyLBq/eFz1nVPl0rIH+qY1UCDYOxCTNgCMvubI/3eq5VdlW7lHQSW5HxVG9rH/
-         G2kzJssrEsV773dgAE8llGWjQSBJNnKwP4bhr4vd6cCjo1v03TC6rekT98TEeajoa32M
-         SdaQ==
-In-Reply-To: <20160909225747.GA30105-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, 2016-09-09 at 18:57 -0400, Tejun Heo wrote:
+On Wed, Sep 07, 2016 at 01:25:13PM +0530, Parav Pandit wrote:
+> >  a) delay cgroups support until the grand rewrite is done
+> >  b) add it now and deal with the consequences later
+> >
+> Can we do (b) now and differ adding any HW resources to cgroup until
+> they are clearly called out.
+> Architecture and APIs are already in place to support this.
 
-> > > As for your example, who performs the cgroup setup and configuration,
-> > > the application itself or an external entity?  If an external entity,
-> > > how does it know which thread is what?
-> > 
-> > In my case, it would be a little script that reads a config file that
-> > knows all kinds of internal information about the application and its
-> > threads.
-> 
-> I see.  One-of-a-kind custom setup.  This is a completely valid usage;
-> however, please also recognize that it's an extremely specific one
-> which is niche by definition.
-
-This is the same pigeon hole you placed Google into.  So Google, my
-(also decidedly non-petite) users, and now Andy are all sharing the one
-of a kind extremely specific niche.. it's becoming a tad crowded.
-
-	-Mike
+Sounds fine to me.  The only thing I want to avoid is pie in the
+sky "future proofing" that leads to horrible architectures.  And I assume
+that's what Matan proposed.
