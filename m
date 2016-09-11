@@ -1,9 +1,8 @@
-From: Leon Romanovsky <leon@kernel.org>
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
-Date: Sun, 11 Sep 2016 17:35:22 +0300
-Message-ID: <20160911143522.GL6415@leon.nu>
-References: <1472632647-1525-2-git-send-email-pandit.parav@gmail.com>
- <61101e8b-5776-c0bc-b3ea-d8b984eebabf@mellanox.com>
+Date: Sun, 11 Sep 2016 11:14:09 -0600
+Message-ID: <20160911171409.GA13442@obsidianresearch.com>
+References: <61101e8b-5776-c0bc-b3ea-d8b984eebabf@mellanox.com>
  <20160831211618.GA12660@htj.duckdns.org>
  <9b6a346d-af4c-1e5f-0144-f68fb8e46c27@mellanox.com>
  <20160901084406.GA4115@lst.de>
@@ -12,84 +11,90 @@ References: <1472632647-1525-2-git-send-email-pandit.parav@gmail.com>
  <20160910161442.GC29259@lst.de>
  <20160910170151.GA5230@obsidianresearch.com>
  <20160911133421.GA23384@lst.de>
+ <20160911143522.GL6415@leon.nu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="OGW1Z2JKiS9bXo17"
-Return-path: <linux-security-module-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=obsidianresearch.com; s=rsa1;
+        h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=Ielgf79jhG+O0lu4IrkEgAoZKtj64Du7qbun/8dZeek=;
+        b=pjQihxiGHoFIgZf8RH+kMIJ7dN0/dI4wfYXUexQLT28FClB1VemkJzPHPJolt8D6q/5s/5bSUA3T2NmbLCMKQaDlL4LzYwKaMLwQ1mvhBOt0CACiYyVgoVuaEIA+nzCAgwPrBwiag1ztdm4mI/IlPVplC3Bpyy43UoWwkzbRURc=;
 Content-Disposition: inline
-In-Reply-To: <20160911133421.GA23384@lst.de>
-Sender: owner-linux-security-module@vger.kernel.org
+In-Reply-To: <20160911143522.GL6415@leon.nu>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Matan Barak <matanb@mellanox.com>, Parav Pandit <pandit.parav@gmail.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rdma@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-security-module@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Matan Barak <matanb@mellanox.com>, Parav Pandit <pandit.parav@gmail.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rdma@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-security-module@vger.kernel.org
 
+On Sun, Sep 11, 2016 at 05:35:22PM +0300, Leon Romanovsky wrote:
 
---OGW1Z2JKiS9bXo17
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Sun, Sep 11, 2016 at 03:34:21PM +0200, Christoph Hellwig wrote:
-> On Sat, Sep 10, 2016 at 11:01:51AM -0600, Jason Gunthorpe wrote:
-> > Sadly, it isn't a step backwards, it is status quo - at least as far
-> > as the uapi is concerned.
->
-> Sort of, see below:
->
-> > struct mlx5_create_cq {
-> >         struct ibv_create_cq            ibv_cmd;
-> >         __u64                           buf_addr;
-> >         __u64                           db_addr;
-> >         __u32				cqe_size;
-> > };
+> > We stil always have the common structure first.  And at least for
+> > cgroups supports that's what matters.
 > >
-> > struct iwch_create_cq {
-> >         struct ibv_create_cq ibv_cmd;
-> >         uint64_t user_rptr_addr;
-> > };
+> > Re the actual structures - we'll really need to make sure we
 > >
-> > Love to hear ideas on a way forward that doesn't involve rewriting
-> > everything :(
->
-> We stil always have the common structure first.  And at least for
-> cgroups supports that's what matters.
->
-> Re the actual structures - we'll really need to make sure we
->
->  a) expose proper userspace abi headers in the kernel for all code
->     in the RDMA subsystem
->  b) actually use that in the userspace components
->
-> I've posted some initial work toward a) a while ago, and once we
-> agree on adopting your common repo I'd really like to start through
-> with that work.  I think it's a pre-requisite for any major new
-> userspace ABI work.
+> >  a) expose proper userspace abi headers in the kernel for all code
+> >     in the RDMA subsystem
+> >  b) actually use that in the userspace components
+> >
+> > I've posted some initial work toward a) a while ago, and once we
 
-I started to work on it over weekend and it is worth do not do same work twice.
+Did it get merged? Do you have a pointer?
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > agree on adopting your common repo I'd really like to start through
+> > with that work.  I think it's a pre-requisite for any major new
+> > userspace ABI work.
+> 
+> I started to work on it over weekend and it is worth do not do same work twice.
 
---OGW1Z2JKiS9bXo17
-Content-Type: application/pgp-signature; name="signature.asc"
+Yes, I also agree that it is important before we tackle the uapi
+conversion to get this fully sorted.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+I've already done several cases working with the existing uapi headers:
 
-iQIcBAEBAgAGBQJX1WuqAAoJEORje4g2clinfoQP/3M+kGCupijOyPSS3+GMh3q/
-+DTtqRdLLAl3eKjYRCGmV5P2du0JxBdTAMKa8VlEoZxjZySLaiCCb6PdHZ3ct4+y
-mb1G5Q2gwoZVtxMI3ba7HNa1Oveh+q/svtHrtojzgTBf8Y5k5YKqm7KpjQt64Rl+
-3gPe112BiCg/sQ0yxFyd7G8VWmICdO1gbTSyM7ZjoM1wVlZPPXc8Q/3NgeDPP+Ir
-I+EQB1gSml6Rgb4Ka0TGIJPF0F9RxwfEgW+PdDIf4THgAAQK8uBnwiVzcOEsdR6c
-KBsVZFDZiX4/P1XugWb5slKJd3sE90VBqOvGGArBMANxbktI4NaTQ4bUkxPRPDJU
-5KMV8EzVRxsvK9vLHg+9Qw51E+i5n11GtbG/c29t/hcVPeX2J1BnRg+OOACQiN+1
-WJmOi6SLgp5ZpHaNIuOREJpdPPyltieopUJP0i2o67BTIRi6dtM8YGN7nVFVV0YY
-QRhki3JiMGzRKhmjS1o6SZ9Qsz3+/8n0y38QU6TgcK3JnDXNIYKJTsY3bN7M5uuN
-wRevrZIEgVwu/xMCUpBaATeBwmYV6SJSWR3fzOQWQmxvItsnDlYXss/zivrX5FDO
-pr3xfH9ku3vlChhqwoXZGqeuUusOicCMGpxkuFyc/hntcd6j7bPzOzVODClIHuUR
-Nz7oQ/JE4Jm78WD9errv
-=+G9z
------END PGP SIGNATURE-----
+https://github.com/jgunthorpe/rdma-plumbing/commit/f4f40689440dbc9c57b55548b04b15fe808a1767
+https://github.com/jgunthorpe/rdma-plumbing/commit/0cf1893dce4791dafa035bcb6ee045a6ce0ff3c3
+https://github.com/jgunthorpe/rdma-plumbing/commit/0522fc42aac4a5e8fc888dcca4341c9bc1dc58ca
 
---OGW1Z2JKiS9bXo17--
+[.. and this is a strong argument why we need the common repo, doing
+this without it would be very hard, as everything is cross-linked, I
+couldnn't unwind libibcm until I fixed a bit of verbs, and rdmacm can't
+even include its uapi header until the duplicate definitions in the
+verbs copy are delt with .. and I've also learned we are making
+changing to the kernel uapi header and since nothing uses them we never even
+compile test :( :( eg
+https://github.com/torvalds/linux/commit/b493d91d333e867a043f7ff1397bcba6e2d0dda2]
+
+However, everything under verbs is not straightforward. The files in
+userspace are not copies...
+
+user:
+
+struct ibv_query_device {
+       __u32 command;
+       __u16 in_words;
+       __u16 out_words;
+       __u64 response;
+       __u64 driver_data[0];
+};
+
+kernel:
+
+struct ib_uverbs_query_device {
+        __u64 response;
+        __u64 driver_data[0];
+};
+
+eg the userspace version stuffs the header into the struct and the
+kernel version does not. Presumably this is for efficiency so that no
+copies are required when marshaling. This impacts everything :(
+
+I'm thinking the best way forward might be to use a script and
+transform userspace into:
+
+struct ibv_query_device {
+	struct ib_uverbs_cmd_hdr hdr;
+	struct ib_uverbs_query_device cmd;
+};
+
+Jason
