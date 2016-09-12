@@ -1,119 +1,123 @@
-From: Joonwoo Park <joonwoop@codeaurora.org>
-Subject: [PATCH v2] cpuset: handle race between CPU hotplug and cpuset_hotplug_work
-Date: Sun, 11 Sep 2016 21:14:58 -0700
-Message-ID: <1473653698-29681-1-git-send-email-joonwoop@codeaurora.org>
-References: <20160912040547.k3qtivdcet6p4mel@codeaurora.org>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20160912040547.k3qtivdcet6p4mel@codeaurora.org>
-Sender: stable-owner@vger.kernel.org
+From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
+Date: Mon, 12 Sep 2016 08:07:17 +0300
+Message-ID: <20160912050717.GE8812@leon.nu>
+References: <20160901084406.GA4115@lst.de>
+ <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A@mail.gmail.com>
+ <ae3adcc4-253e-f87c-6ff6-202c91599f48@mellanox.com>
+ <20160910161442.GC29259@lst.de>
+ <20160910170151.GA5230@obsidianresearch.com>
+ <20160911133421.GA23384@lst.de>
+ <20160911143522.GL6415@leon.nu>
+ <20160911171409.GA13442@obsidianresearch.com>
+ <20160911172445.GA25953@lst.de>
+ <20160911175235.GB13442@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="Oiv9uiLrevHtW1RS"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160911175235.GB13442-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Joonwoo Park <joonwoop@codeaurora.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-A discrepancy between cpu_online_mask and cpuset's effective_cpus
-mask is inevitable during hotplug since cpuset defers updating of
-effective_cpus mask using a workqueue, during which time nothing
-prevents the system from more hotplug operations.  For that reason
-guarantee_online_cpus() walks up the cpuset hierarchy until it finds
-an intersection under the assumption that top cpuset's effective_cpus
-mask intersects with cpu_online_mask even with such a race occurring.
 
-However a sequence of CPU hotplugs can open a time window, during which
-none of the effective CPUs in the top cpuset intersect with
-cpu_online_mask.
+--Oiv9uiLrevHtW1RS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-For example when there are 4 possible CPUs 0-3 and only CPU0 is online:
+On Sun, Sep 11, 2016 at 11:52:35AM -0600, Jason Gunthorpe wrote:
+> On Sun, Sep 11, 2016 at 07:24:45PM +0200, Christoph Hellwig wrote:
+> > > > > I've posted some initial work toward a) a while ago, and once we
+> > >
+> > > Did it get merged? Do you have a pointer?
+> >
+> > http://www.spinics.net/lists/linux-rdma/msg31958.html
+>
+> Right, I remember that. Certainly the right direction
+>
+> > > However, everything under verbs is not straightforward. The files in
+> > > userspace are not copies...
+> > >
+> > > user:
+> > >
+> > > struct ibv_query_device {
+> > >        __u32 command;
+> > >        __u16 in_words;
+> > >        __u16 out_words;
+> > >        __u64 response;
+> > >        __u64 driver_data[0];
+> > > };
+> > >
+> > > kernel:
+> > >
+> > > struct ib_uverbs_query_device {
+> > >         __u64 response;
+> > >         __u64 driver_data[0];
+> > > };
+> >
+> > We'll obviously need different strutures for the libibvers API
+> > and the kernel interface in this case, and we'll need to figure out
+> > how to properly translate them.  I think a cast, plus compile time
+> > type checking ala BUILD_BUG_ON is the way to go.
+>
+> I'm not sure I follow, which would I cast?
+>
+> BUILD_BUG_ON(sizeof(ibv_query_device) == sizeof(ib_uverbs_cmd_hdr) +
+>              sizeof(ib_uverbs_query_device))
+>
+> ?
+>
+> > > I'm thinking the best way forward might be to use a script and
+> > > transform userspace into:
+> > >
+> > > struct ibv_query_device {
+> > > 	struct ib_uverbs_cmd_hdr hdr;
+> > > 	struct ib_uverbs_query_device cmd;
+> > > };
+> >
+> > That would break the users of the interface.
+>
+> Sorry, I mean doing this inside rdma-plumbing. Since the change is ABI
+> identical the modified libibverbs would still be binary compatible
+> with all providers but not source compatible. Since all kernel
+> supported providers are in rdma-plumbing we can add the '.cmd.' at the
+> same time.
+>
+> The kernel uapi header would stay the same.
+>
+> > However automatically generating the user ABI from the kernel one
+> > might still be a good idea in the long run.
+>
+> My preference would be to try and use the kernel headers directly.
 
-  ========================  ===========================
-   cpu_online_mask           top_cpuset.effective_cpus
-  ========================  ===========================
-   echo 1 > cpu2/online.
-   CPU hotplug notifier woke up hotplug work but not yet scheduled.
-      [0,2]                     [0]
+I thought the same, especially after realizing that they are almost
+copy/paste from the vendor *-abi.h files.
 
-   echo 0 > cpu0/online.
-   The workqueue is still runnable.
-      [2]                       [0]
-  ========================  ===========================
+>
+> Jason
 
-  Now there is no intersection between cpu_online_mask and
-  top_cpuset.effective_cpus.  Thus invoking sys_sched_setaffinity() at
-  this moment can cause following:
+--Oiv9uiLrevHtW1RS
+Content-Type: application/pgp-signature; name="signature.asc"
 
-   Unable to handle kernel NULL pointer dereference at virtual address 000000d0
-   ------------[ cut here ]------------
-   Kernel BUG at ffffffc0001389b0 [verbose debug info unavailable]
-   Internal error: Oops - BUG: 96000005 [#1] PREEMPT SMP
-   Modules linked in:
-   CPU: 2 PID: 1420 Comm: taskset Tainted: G        W       4.4.8+ #98
-   task: ffffffc06a5c4880 ti: ffffffc06e124000 task.ti: ffffffc06e124000
-   PC is at guarantee_online_cpus+0x2c/0x58
-   LR is at cpuset_cpus_allowed+0x4c/0x6c
-   <snip>
-   Process taskset (pid: 1420, stack limit = 0xffffffc06e124020)
-   Call trace:
-   [<ffffffc0001389b0>] guarantee_online_cpus+0x2c/0x58
-   [<ffffffc00013b208>] cpuset_cpus_allowed+0x4c/0x6c
-   [<ffffffc0000d61f0>] sched_setaffinity+0xc0/0x1ac
-   [<ffffffc0000d6374>] SyS_sched_setaffinity+0x98/0xac
-   [<ffffffc000085cb0>] el0_svc_naked+0x24/0x28
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-The top cpuset's effective_cpus are guaranteed to be identical to
-cpu_online_mask eventually.  Hence fall back to cpu_online_mask when
-there is no intersection between top cpuset's effective_cpus and
-cpu_online_mask.
+iQIcBAEBAgAGBQJX1jgFAAoJEORje4g2clinwkMP/11uVCZnr++BF25V91qYAo8R
+5f9mGW8KTRYAVNr8eEmsN7/BV1sjKxzeznHYgQ6HRiezOOMzcRGbFgSwujYSoo9m
++X2t2ynpD/Y6zco95+GrGPHjoznWk9Stc7ME00jFaON2Inzpzi2SiPSCXvgF4zF2
++woXeW1UHxk5VSQaZlLDlHBFRFvZciVkU9SKN1z8zvuUPjVqgHzlrhhvTU9hiMRy
+VPLXGu34bqtZqsKByDZc34zgh0b1EhxCYl8x3cIjisrL9UWpmKtOPzaRkVtDuUxb
+o/iBnoiwaS3/4+RjBSaHb/e9IxmZtUVwfgcd6hOUSKgoTyvD0ra9U27nBWqDbtLW
+9ogMbUK9lHxAba+zy64DcZt76s4K6hw4fcaTBrG5Zye4sQt6gArodQteHJB7ier3
+9ABeYpMkYrVE/BLUBowixYGIl3i24YQmM2ZxD50kpRxMu8Lv57NN/EzTLlQV3klr
+O0cGi42TDw+9zdkpszxfXfBEVB/tv8M7Z1vN90x3t/HIek7nKGvZsEpOTV4/ODze
+FgCs5ajuuau8s3WW8CqvwT0YxKpYEKTfcJ+SNnvmCClPSLi4E5Q5lUssEDWRkzJX
+nYD1OZL4g/ScGaUnTa6G6rTbLj+Iq2UPq6ybywI7gUdq+igh0icMqcTucqrHaFYq
++B98vS847xmahqYy/y+U
+=TV33
+-----END PGP SIGNATURE-----
 
-Signed-off-by: Joonwoo Park <joonwoop@codeaurora.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: <stable@vger.kernel.org> # 3.17+
----
- v2: fixed changelog and comment.
-
- kernel/cpuset.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 73e93e5..27c6d78 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -325,8 +325,7 @@ static struct file_system_type cpuset_fs_type = {
- /*
-  * Return in pmask the portion of a cpusets's cpus_allowed that
-  * are online.  If none are online, walk up the cpuset hierarchy
-- * until we find one that does have some online cpus.  The top
-- * cpuset always has some cpus online.
-+ * until we find one that does have some online cpus.
-  *
-  * One way or another, we guarantee to return some non-empty subset
-  * of cpu_online_mask.
-@@ -335,8 +334,20 @@ static struct file_system_type cpuset_fs_type = {
-  */
- static void guarantee_online_cpus(struct cpuset *cs, struct cpumask *pmask)
- {
--	while (!cpumask_intersects(cs->effective_cpus, cpu_online_mask))
-+	while (!cpumask_intersects(cs->effective_cpus, cpu_online_mask)) {
- 		cs = parent_cs(cs);
-+		if (unlikely(!cs)) {
-+			/*
-+			 * The top cpuset doesn't have any online cpu as a
-+			 * consequence of a race between cpuset_hotplug_work
-+			 * and cpu hotplug notifier.  But we know the top
-+			 * cpuset's effective_cpus is on its way to to be
-+			 * identical to cpu_online_mask.
-+			 */
-+			cpumask_copy(pmask, cpu_online_mask);
-+			return;
-+		}
-+	}
- 	cpumask_and(pmask, cs->effective_cpus, cpu_online_mask);
- }
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-hosted by The Linux Foundation
+--Oiv9uiLrevHtW1RS--
