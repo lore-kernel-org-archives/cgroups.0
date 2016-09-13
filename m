@@ -1,66 +1,61 @@
-From: Guang Yang <guangyy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: throttle IO to multiple devices in one group
-Date: Mon, 12 Sep 2016 15:11:27 -0700
-Message-ID: <CAKtk8hdg8FBmjfPbF9J0LxEv_DERb2R6vPueuH-o3hwcNHQxBA@mail.gmail.com>
-References: <CAKtk8he8kEpbnnDL80LpigDZk-KyU6_o99D+k4iNWiUQ1AeOLQ@mail.gmail.com>
- <57D256C9.60901@kyup.com>
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
+Date: Tue, 13 Sep 2016 13:56:27 +0200
+Message-ID: <20160913115627.GA4898@salvia>
+References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=4gspRiuTkwZp53X9fN5bHRqOo1S+nEJBxHy4W7vMLb0=;
-        b=gWGG2uL+wlP7/ggxidVo84sp+sR0fJifOt6A1tmqEIBB8viJZ/We1nl4x2thbm8T/s
-         O38yldV4qvuIpIapiws+BqFNTirg2T3bjUOuHn69sL5cOgxRHdcPesT7nY0I8dluzhl2
-         XcCM/Uwyfry4wEt2wn7spilZHvjpINAfY6I7bt4pnds9HAKlvCyUq5KmvgCc5VoUIzfY
-         rtaFNZg/t12ADFNsEsPRgoIFXYZp6Ki6bjYdXO+ly1XBhjNuiyw6Y5jOkRwaeCKkodJ4
-         AOldx08ROpYOc4T3O19yeW9SuYcUbT98m1GUNWp2XYU68ZbmrH4oQIGPB61WCQaQxO75
-         Uh0A==
-In-Reply-To: <57D256C9.60901-6AxghH7DbtA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1473696735-11269-1-git-send-email-daniel@zonque.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Daniel Mack <daniel@zonque.org>
+Cc: htejun@fb.com, daniel@iogearbox.net, ast@fb.com, davem@davemloft.net, kafai@fb.com, fw@strlen.de, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org
 
-Thanks for the reply, Nikolay. It works for me with 2.6.32 kernel too.
+Hi,
 
-Thanks,
-Guang
+On Mon, Sep 12, 2016 at 06:12:09PM +0200, Daniel Mack wrote:
+> This is v5 of the patch set to allow eBPF programs for network
+> filtering and accounting to be attached to cgroups, so that they apply
+> to all sockets of all tasks placed in that cgroup. The logic also
+> allows to be extendeded for other cgroup based eBPF logic.
 
-On Thu, Sep 8, 2016 at 11:29 PM, Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org> wrote:
->
->
-> On 09/09/2016 02:32 AM, Guang Yang wrote:
->> Hello,
->> We are evaluating to use cgroups to isolate different applications on
->> Linux. One use case of our application is that it reads/writes to
->> multiple block devices and we would like throttle the IO for each
->> application to each devices via blkio.throttle.read_iops_device.
->> However, it looks like each group can only configure one device.
->>
->> Am I miss anything? Is there a way to support such semantic - limit
->> the number of reads to multiple devices within one group?
->>
->> Thanks very much.
->> --
->> To unsubscribe from this list: send the line "unsubscribe cgroups" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
-> [root@kernighan c11]# cat blkio.throttle.read_bps_device
-> [root@kernighan c11]# echo "253:12 1600000" > blkio.throttle.read_bps_device
-> [root@kernighan c11]# echo "253:13 1600000" >> blkio.throttle.read_bps_device
-> [root@kernighan c11]# cat blkio.throttle.read_bps_device
-> 253:13 1600000
-> 253:12 1600000
->
->
-> It works just fine (this is on 4.4 kernel though)
->
-> Regards,
-> Nikolay
+1) This infrastructure can only be useful to systemd, or any similar
+   orchestration daemon. Look, you can only apply filtering policies
+   to processes that are launched by systemd, so this only works
+   for server processes. For client processes this infrastructure is
+   *racy*, you have to add new processes in runtime to the cgroup,
+   thus there will be time some little time where no filtering policy
+   will be applied. For quality of service, this may be an acceptable
+   race, but this is aiming to deploy a filtering policy.
+
+2) This aproach looks uninfrastructured to me. This provides a hook
+   to push a bpf blob at a place in the stack that deploys a filtering
+   policy that is not visible to others. We have interfaces that allows
+   us to dump the filtering policy that is being applied, report events
+   to enable cooperation between several processes with similar
+   capabilities and so on.  For the XDP thing, this ability to push
+   blobs may be fine as long as it will not interfer with the stack so
+   we can provide an alternative to DPDK in Linux. For tracing, that's
+   fine too since it is innocuous. And likely for other applications is
+   a good fit. But I don't think this is the case.
+
+> After chatting with Daniel Borkmann and Alexei off-list, we concluded
+> that __dev_queue_xmit() is the place where the egress hooks should live
+> when eBPF programs need access to the L2 bits of the skb.
+
+3) This egress hook is coming very late, the only reason I find to
+   place it at __dev_queue_xmit() is that bpf naturally works with
+   layer 2 information in place. But this new hook is placed in
+   _everyone's output ath_ that only works for the very specific
+   usecase I exposed above.
+
+The main concern during the workshop was that a hook only for cgroups
+is too specific, but this is actually even more specific than this.
+
+I have nothing against systemd or the needs for more
+programmability/flexibility in the stack, but I think this needs to
+fulfill some requirements to fit into the infrastructure that we have
+in the right way.
