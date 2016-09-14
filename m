@@ -1,97 +1,122 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 3/3] mm: memcontrol: consolidate cgroup socket tracking
-Date: Wed, 14 Sep 2016 15:17:14 -0700
-Message-ID: <20160914151714.f6d1b2a57da0619bf9e2372c@linux-foundation.org>
-References: <20160914194846.11153-3-hannes@cmpxchg.org>
-	<201609151357.bgs2EcXM%fengguang.wu@intel.com>
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+Subject: Re: [RFC v3 11/22] seccomp,landlock: Handle Landlock hooks per
+ process hierarchy
+Date: Thu, 15 Sep 2016 00:34:20 +0200
+Message-ID: <57D9D06C.2020007@digikod.net>
+References: <20160914072415.26021-1-mic@digikod.net>
+ <20160914072415.26021-12-mic@digikod.net>
+ <CALCETrXm18nNDY-a+toBEcjKKh+zOCVG0=t3ufkpROOHdqfqJQ@mail.gmail.com>
+Reply-To: kernel-hardening@lists.openwall.com
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <201609151357.bgs2EcXM%fengguang.wu@intel.com>
-Sender: owner-linux-mm@kvack.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="HkK2Hagt747JdCiFGBt2gCQ3Ep3q38USg"
+Return-path: <kernel-hardening-return-4638-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: kbuild test robot <lkp@intel.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, kbuild-all@01.org, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+In-Reply-To: <CALCETrXm18nNDY-a+toBEcjKKh+zOCVG0=t3ufkpROOHdqfqJQ@mail.gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, Linux API <linux-api@vger.kernel.org>
 
-On Thu, 15 Sep 2016 13:34:24 +0800 kbuild test robot <lkp@intel.com> wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--HkK2Hagt747JdCiFGBt2gCQ3Ep3q38USg
+Content-Type: multipart/mixed; boundary="Txd8a9wRdcl5jUFMcA00VdHwC6uwISSRi";
+ protected-headers="v1"
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Alexei Starovoitov <ast@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Casey Schaufler <casey@schaufler-ca.com>,
+ Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>,
+ David Drysdale <drysdale@google.com>, "David S . Miller"
+ <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>,
+ "Eric W . Biederman" <ebiederm@xmission.com>,
+ James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>,
+ Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>,
+ "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>,
+ Will Drewry <wad@chromium.org>,
+ "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>,
+ Linux API <linux-api@vger.kernel.org>,
+ LSM List <linux-security-module@vger.kernel.org>,
+ Network Development <netdev@vger.kernel.org>,
+ "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>
+Message-ID: <57D9D06C.2020007@digikod.net>
+Subject: Re: [RFC v3 11/22] seccomp,landlock: Handle Landlock hooks per
+ process hierarchy
+References: <20160914072415.26021-1-mic@digikod.net>
+ <20160914072415.26021-12-mic@digikod.net>
+ <CALCETrXm18nNDY-a+toBEcjKKh+zOCVG0=t3ufkpROOHdqfqJQ@mail.gmail.com>
+In-Reply-To: <CALCETrXm18nNDY-a+toBEcjKKh+zOCVG0=t3ufkpROOHdqfqJQ@mail.gmail.com>
 
-> Hi Johannes,
-> 
-> [auto build test ERROR on net/master]
-> [also build test ERROR on v4.8-rc6 next-20160914]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> [Suggest to use git(>=2.9.0) format-patch --base=<commit> (or --base=auto for convenience) to record what (public, well-known) commit your patch series was built on]
-> [Check https://git-scm.com/docs/git-format-patch for more information]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Johannes-Weiner/mm-memcontrol-make-per-cpu-charge-cache-IRQ-safe-for-socket-accounting/20160915-035634
-> config: m68k-sun3_defconfig (attached as .config)
-> compiler: m68k-linux-gcc (GCC) 4.9.0
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=m68k 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    net/built-in.o: In function `sk_alloc':
-> >> (.text+0x4076): undefined reference to `mem_cgroup_sk_alloc'
->    net/built-in.o: In function `__sk_destruct':
-> >> sock.c:(.text+0x457e): undefined reference to `mem_cgroup_sk_free'
->    net/built-in.o: In function `sk_clone_lock':
->    (.text+0x4f1c): undefined reference to `mem_cgroup_sk_alloc'
+--Txd8a9wRdcl5jUFMcA00VdHwC6uwISSRi
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-This?
 
---- a/mm/memcontrol.c~mm-memcontrol-consolidate-cgroup-socket-tracking-fix
-+++ a/mm/memcontrol.c
-@@ -5655,9 +5655,6 @@ void mem_cgroup_sk_alloc(struct sock *sk
- {
- 	struct mem_cgroup *memcg;
- 
--	if (!mem_cgroup_sockets_enabled)
--		return;
--
- 	/*
- 	 * Socket cloning can throw us here with sk_memcg already
- 	 * filled. It won't however, necessarily happen from
---- a/net/core/sock.c~mm-memcontrol-consolidate-cgroup-socket-tracking-fix
-+++ a/net/core/sock.c
-@@ -1385,7 +1385,8 @@ static void sk_prot_free(struct proto *p
- 	slab = prot->slab;
- 
- 	cgroup_sk_free(&sk->sk_cgrp_data);
--	mem_cgroup_sk_free(sk);
-+	if (mem_cgroup_sockets_enabled)
-+		mem_cgroup_sk_free(sk);
- 	security_sk_free(sk);
- 	if (slab != NULL)
- 		kmem_cache_free(slab, sk);
-@@ -1422,7 +1423,8 @@ struct sock *sk_alloc(struct net *net, i
- 		sock_net_set(sk, net);
- 		atomic_set(&sk->sk_wmem_alloc, 1);
- 
--		mem_cgroup_sk_alloc(sk);
-+		if (mem_cgroup_sockets_enabled)
-+			mem_cgroup_sk_alloc(sk);
- 		cgroup_sk_alloc(&sk->sk_cgrp_data);
- 		sock_update_classid(&sk->sk_cgrp_data);
- 		sock_update_netprioidx(&sk->sk_cgrp_data);
-@@ -1569,7 +1571,8 @@ struct sock *sk_clone_lock(const struct
- 		newsk->sk_incoming_cpu = raw_smp_processor_id();
- 		atomic64_set(&newsk->sk_cookie, 0);
- 
--		mem_cgroup_sk_alloc(newsk);
-+		if (mem_cgroup_sockets_enabled)
-+			mem_cgroup_sk_alloc(newsk);
- 		cgroup_sk_alloc(&newsk->sk_cgrp_data);
- 
- 		/*
-_
+On 14/09/2016 20:43, Andy Lutomirski wrote:
+> On Wed, Sep 14, 2016 at 12:24 AM, Micka=C3=ABl Sala=C3=BCn <mic@digikod=
+=2Enet> wrote:
+>> A Landlock program will be triggered according to its subtype/origin
+>> bitfield. The LANDLOCK_FLAG_ORIGIN_SECCOMP value will trigger the
+>> Landlock program when a seccomp filter will return RET_LANDLOCK.
+>> Moreover, it is possible to return a 16-bit cookie which will be
+>> readable by the Landlock programs in its context.
+>=20
+> Are you envisioning that the filters will return RET_LANDLOCK most of
+> the time or rarely?  If it's most of the time, then maybe this could
+> be simplified a bit by unconditionally calling the landlock filter and
+> letting the landlock filter access a struct seccomp_data if needed.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Exposing seccomp_data in a Landlock context may be a good idea. The main
+implication is that Landlock programs may then be architecture specific
+(if dealing with data) as seccomp filters are. Another point is that it
+remove any direct binding between seccomp filters and Landlock programs.
+I will try this (more simple) approach.
+
+>=20
+>>
+>> Only seccomp filters loaded from the same thread and before a Landlock=
+
+>> program can trigger it through LANDLOCK_FLAG_ORIGIN_SECCOMP. Multiple
+>> Landlock programs can be triggered by one or more seccomp filters. Thi=
+s
+>> way, each RET_LANDLOCK (with specific cookie) will trigger all the
+>> allowed Landlock programs once.
+>=20
+> This interface seems somewhat awkward.  Should we not have a way to
+> atomicaly install a whole pile of landlock filters and associated
+> seccomp filter all at once?
+
+I can change the seccomp(2) use in this way: instead of loading a
+Landlock program, (atomically) load an array of Landlock programs.
+
+However, exposing seccomp_data to Landlock programs looks like a better
+way to deal with it. This does not needs to manage an array of Landlock
+programs.
+
+ Micka=C3=ABl
+
+
+--Txd8a9wRdcl5jUFMcA00VdHwC6uwISSRi--
+
+--HkK2Hagt747JdCiFGBt2gCQ3Ep3q38USg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCgAGBQJX2dBsAAoJECLe/t9zvWqVBycIAJZFEnAjvsq6QOBLqfqCdKa8
+EcmGGeJ1ZN/hzJpPpLLn1O/YXrRsr2fuGQAsueR5CYbXCM+BCqnDEnuuWUZllre4
+5SnE3nV+kS0FvsInbE2PSmati7kNA76KeG1wwX5bUJcgI9ZUrE+jNZT4XBkcs57N
+b8MtQoJkvQ0RGVlitBbg9MGUifM/VP85LRG3IHr1ln5KGKcrTF/wAeWDDvhtVxo3
+V+WyhMuN/p5te4At+nr/E4wPuDyhfz+8wPSuHQ/5ra/NKDPADf+9FCpa76QC7QkB
+0zq4CDFS0Uw/HAMgkwmUgaCX2WYe8yLGrUrFBPwUmJ+pQiHTByG+1KmEnwsWg3U=
+=U+su
+-----END PGP SIGNATURE-----
+
+--HkK2Hagt747JdCiFGBt2gCQ3Ep3q38USg--
