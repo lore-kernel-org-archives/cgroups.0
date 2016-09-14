@@ -1,114 +1,119 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
-Date: Tue, 13 Sep 2016 21:42:19 -0700
-Message-ID: <20160914044217.GA44742@ast-mbp.thefacebook.com>
-References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
- <20160913115627.GA4898@salvia>
- <da300784-284c-0d1f-a82e-aa0a0f8ae116@zonque.org>
- <20160913172408.GC6138@salvia>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
+Date: Wed, 14 Sep 2016 12:36:19 +0530
+Message-ID: <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
+References: <20160901084406.GA4115@lst.de> <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A@mail.gmail.com>
+ <ae3adcc4-253e-f87c-6ff6-202c91599f48@mellanox.com> <20160910161442.GC29259@lst.de>
+ <20160910170151.GA5230@obsidianresearch.com> <20160911133421.GA23384@lst.de>
+ <20160911143522.GL6415@leon.nu> <20160911171409.GA13442@obsidianresearch.com>
+ <20160911172445.GA25953@lst.de> <20160911175235.GB13442@obsidianresearch.com> <20160912050717.GE8812@leon.nu>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=aZgm8h0KKk7pS5Dq7saZwVNKkGVD9bQ0j+JRztUM3/w=;
-        b=L08bO4tInGm1c4wlw0j6oi9Qb0/LWbF1JazG64BYuY5Jk+VCHEu6O7sekRMrCgvTxO
-         NHC6SobQS4oCqN1bPSsDkFMiPG83CLebmbsjt4ORl6ybSanNox8yLUnEQTO9gDcHfwxG
-         nlQvI62c2d24fkx2IVNCTyVoVXi8RUuvgf8oXyCApLofbcXLSwewGrzYIC//3SAPAhoj
-         LH5IqdFqd9DD5iMWlxaUQE1heHYjggwDiSWlei89but2LEhapq3v6TePk2LDJrpqnMAv
-         3W5Ik1W0zX0LhmxC+LT01j7NOYtOXeo5PvP2iS44ZQJO19RdMHJJz2rYJLpN9hApc6qo
-         8zvA==
-Content-Disposition: inline
-In-Reply-To: <20160913172408.GC6138@salvia>
-Sender: netdev-owner@vger.kernel.org
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=6g9rPEfDgCByBOTTegM8KDB+K/RYdI3CLfuRWOU5ITQ=;
+        b=WJ+80D8CilOXYVJMTLzF4caZTzyPuun3ypaTahhzqrFItkmJKZjjsqJMYtdtKqCKu4
+         4e+JDfEnADwioQ2EdcLp7sDhJfzO04jssJWT1bhopWpv21L3I6lwHDyX2a+sYVpSM7vx
+         x/PgReEZKm7HFYj5+trBWdFOV4OPLB1eQctfYlI/bYhoffbJc3u6qC7o9riLTN1H4Czm
+         8gwFhqGX5ChcJK/wxbrcbxT0hmaolkwKTsLd8642keeEOb+iwqe3NqeCgUgQdz+EWR7m
+         z+9AwIzssVYrZs7nX1EDCodUPI5vTjg+KBKAHAqg00cqmt7uZJ8+9GF8K5eThzocLF5Z
+         Mt9w==
+In-Reply-To: <20160912050717.GE8812-2ukJVAZIZ/Y@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Pablo Neira Ayuso <pablo@netfilter.org>
-Cc: Daniel Mack <daniel@zonque.org>, htejun@fb.com, daniel@iogearbox.net, ast@fb.com, davem@davemloft.net, kafai@fb.com, fw@strlen.de, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org
+To: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 13, 2016 at 07:24:08PM +0200, Pablo Neira Ayuso wrote:
-> On Tue, Sep 13, 2016 at 03:31:20PM +0200, Daniel Mack wrote:
-> > Hi,
-> > 
-> > On 09/13/2016 01:56 PM, Pablo Neira Ayuso wrote:
-> > > On Mon, Sep 12, 2016 at 06:12:09PM +0200, Daniel Mack wrote:
-> > >> This is v5 of the patch set to allow eBPF programs for network
-> > >> filtering and accounting to be attached to cgroups, so that they apply
-> > >> to all sockets of all tasks placed in that cgroup. The logic also
-> > >> allows to be extendeded for other cgroup based eBPF logic.
-> > > 
-> > > 1) This infrastructure can only be useful to systemd, or any similar
-> > >    orchestration daemon. Look, you can only apply filtering policies
-> > >    to processes that are launched by systemd, so this only works
-> > >    for server processes.
-> > 
-> > Sorry, but both statements aren't true. The eBPF policies apply to every
-> > process that is placed in a cgroup, and my example program in 6/6 shows
-> > how that can be done from the command line.
-> 
-> Then you have to explain me how can anyone else than systemd use this
-> infrastructure?
+Hi Dennis,
 
-Sounds like systemd and bpf phobia combined :)
-Jokes aside. I'm puzzled why systemd is even being mentioned here.
-Here we use tupperware (our internal container management system) that
-is heavily using cgroups and has nothing to do with systemd.
-we're working as part of open container initiative, so hopefully soon
-all container management systems will benefit from what we're building.
-cgroups and bpf are crucial part of this process.
+Do you know how would HFI1 driver would work along with rdma cgroup?
 
-> > Also, systemd is able to control userspace processes just fine, and
-> > it not limited to 'server processes'.
-> 
-> My main point is that those processes *need* to be launched by the
-> orchestrator, which is was refering as 'server processes'.
+Hi Matan, Leon, Jason,
+Apart from HFI1, is there any other concern?
+Or Patch is good to go?
 
-No experience in systemd, so cannot comment about it,
-but that statement is not true for our stuff.
+4.8 dates are close by (2 weeks) and there are two git trees involved
+(that might cause merge error to Linus) so if there are no issues, I
+would like to make request to Doug to consider it for 4.8 early on.
 
-> > > For client processes this infrastructure is
-> > >    *racy*, you have to add new processes in runtime to the cgroup,
-> > >    thus there will be time some little time where no filtering policy
-> > >    will be applied. For quality of service, this may be an acceptable
-> > >    race, but this is aiming to deploy a filtering policy.
-> > 
-> > That's a limitation that applies to many more control mechanisms in the
-> > kernel, and it's something that can easily be solved with fork+exec.
-> 
-> As long as you have control to launch the processes yes, but this
-> will not work in other scenarios. Just like cgroup net_cls and friends
-> are broken for filtering for things that you have no control to
-> fork+exec.
+Parav
 
-not true
-
-> To use this infrastructure from a non-launcher process, you'll have to
-> rely on the proc connection to subscribe to new process events, then
-> echo that pid to the cgroup, and that interface is asynchronous so
-> *adding new processes to the cgroup is subject to races*.
-
-in general not true either. have you worked with cgroups or just speculating?
- 
-> *You're proposing a socket filtering facility that hooks layer 2
-> output path*!
-
-flashback. Not too long ago you were beating drums about netfilter
-ingress hook operating at layer 2... sounds like nobody used it
-and that was a bad call? Should we remove that netfilter hook then?
-
-Our use case is different from Daniel's.
-For us this cgroup+bpf is _not_ for filterting and _not_ for security.
-We run a ton of tasks in cgroups that launch all sorts of
-things on their own. We need to monitor what they do from networking
-point of view. Therefore bpf programs need to monitor the traffic in
-particular part of cgroup hierarchy. Not globally and no pass/drop decisions.
-The monitoring itself is complicated. Like we need to group and
-aggregate within bpf program based on certain bits of ipv6 address
-and so on. bpf is only programmable engine that can do this job.
-nft is simply not flexible enough to do that.
-I'd really love to have an alternative to bpf for such tasks,
-but you seem to spend all the energy arguing against bpf whereas
-nft still has a lot to be desired.
-
+On Mon, Sep 12, 2016 at 10:37 AM, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> On Sun, Sep 11, 2016 at 11:52:35AM -0600, Jason Gunthorpe wrote:
+>> On Sun, Sep 11, 2016 at 07:24:45PM +0200, Christoph Hellwig wrote:
+>> > > > > I've posted some initial work toward a) a while ago, and once we
+>> > >
+>> > > Did it get merged? Do you have a pointer?
+>> >
+>> > http://www.spinics.net/lists/linux-rdma/msg31958.html
+>>
+>> Right, I remember that. Certainly the right direction
+>>
+>> > > However, everything under verbs is not straightforward. The files in
+>> > > userspace are not copies...
+>> > >
+>> > > user:
+>> > >
+>> > > struct ibv_query_device {
+>> > >        __u32 command;
+>> > >        __u16 in_words;
+>> > >        __u16 out_words;
+>> > >        __u64 response;
+>> > >        __u64 driver_data[0];
+>> > > };
+>> > >
+>> > > kernel:
+>> > >
+>> > > struct ib_uverbs_query_device {
+>> > >         __u64 response;
+>> > >         __u64 driver_data[0];
+>> > > };
+>> >
+>> > We'll obviously need different strutures for the libibvers API
+>> > and the kernel interface in this case, and we'll need to figure out
+>> > how to properly translate them.  I think a cast, plus compile time
+>> > type checking ala BUILD_BUG_ON is the way to go.
+>>
+>> I'm not sure I follow, which would I cast?
+>>
+>> BUILD_BUG_ON(sizeof(ibv_query_device) == sizeof(ib_uverbs_cmd_hdr) +
+>>              sizeof(ib_uverbs_query_device))
+>>
+>> ?
+>>
+>> > > I'm thinking the best way forward might be to use a script and
+>> > > transform userspace into:
+>> > >
+>> > > struct ibv_query_device {
+>> > >   struct ib_uverbs_cmd_hdr hdr;
+>> > >   struct ib_uverbs_query_device cmd;
+>> > > };
+>> >
+>> > That would break the users of the interface.
+>>
+>> Sorry, I mean doing this inside rdma-plumbing. Since the change is ABI
+>> identical the modified libibverbs would still be binary compatible
+>> with all providers but not source compatible. Since all kernel
+>> supported providers are in rdma-plumbing we can add the '.cmd.' at the
+>> same time.
+>>
+>> The kernel uapi header would stay the same.
+>>
+>> > However automatically generating the user ABI from the kernel one
+>> > might still be a good idea in the long run.
+>>
+>> My preference would be to try and use the kernel headers directly.
+>
+> I thought the same, especially after realizing that they are almost
+> copy/paste from the vendor *-abi.h files.
+>
+>>
+>> Jason
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
