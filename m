@@ -1,36 +1,59 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [RFC v3 00/22] Landlock LSM: Unprivileged sandboxing
-Date: Wed, 14 Sep 2016 14:36:40 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB00FC881@AcuExch.aculab.com>
-References: <20160914072415.26021-1-mic@digikod.net>
+From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
+Date: Wed, 14 Sep 2016 08:55:21 -0700
+Message-ID: <20160914155519.GA48309@ast-mbp.thefacebook.com>
+References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
+ <20160913115627.GA4898@salvia>
+ <da300784-284c-0d1f-a82e-aa0a0f8ae116@zonque.org>
+ <20160913172408.GC6138@salvia>
+ <6de6809a-13f5-4000-5639-c760dde30223@zonque.org>
+ <57D937B9.2090100@iogearbox.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20160914072415.26021-1-mic@digikod.net>
-Content-Language: en-US
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=2H6hKlBwgNBlXxkGamu7FFgTXGOiDB40ZcFE3+XO4P4=;
+        b=fR5N2ufiShZ8UHuMS+HL4guikfG43+Kr7Ow9H8Q0yM+GezcpUqntODHeQKAZrFS7ql
+         JZnPaP09v1p3UWR+b2zupdB+CSVqRqDZTUdgO4gA85WaeosgFHZH5jL96v50hxMk5Xs6
+         Q4dDpKzBr7x2J4cBaKBNrgdtRjHfYj+rPETPUFR2IOteYkUccOfUosuhF0XwasRZY9//
+         wp6NIwGYEg6xSAU9ZwFLLTuNm0fKrGkKNE8uszZJPufSabsTsoaSMeP4itTB7R/nUrZd
+         o4Z4chAXr4s6+RrYERQo/HwSLjw+F8yFRSIK+56gTOgFXS4PXL1wttEliMeTV4MokAF1
+         lYPA==
+Content-Disposition: inline
+In-Reply-To: <57D937B9.2090100-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: =?utf-8?B?J01pY2thw6tsIFNhbGHDvG4n?= <mic@digikod.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, "linux-api@vger.kernel.org" <>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+Cc: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-RnJvbTogTWlja2HDq2wgU2FsYcO8bg0KPiBTZW50OiAxNCBTZXB0ZW1iZXIgMjAxNiAwODoyNA0K
-Li4uDQo+ICMjIFdoeSBkb2VzIHNlY2NvbXAtZmlsdGVyIGlzIG5vdCBlbm91Z2g/DQo+IA0KPiBB
-IHNlY2NvbXAgZmlsdGVyIGNhbiBhY2Nlc3MgdG8gcmF3IHN5c2NhbGwgYXJndW1lbnRzIHdoaWNo
-IG1lYW5zIHRoYXQgaXQgaXMgbm90DQo+IHBvc3NpYmxlIHRvIGZpbHRlciBhY2NvcmRpbmcgdG8g
-cG9pbnRlZCBkYXRhIGFzIGEgZmlsZSBwYXRoLiBBcyBkZW1vbnN0cmF0ZWQNCj4gdGhlIGZpcnN0
-IHZlcnNpb24gb2YgdGhpcyBwYXRjaCBzZXJpZXMsIGZpbHRlcmluZyBhdCB0aGUgc3lzY2FsbCBs
-ZXZlbCBpcw0KPiBjb21wbGljYXRlZCAoZS5nLiBuZWVkIHRvIHRha2UgY2FyZSBvZiByYWNlIGNv
-bmRpdGlvbnMpLiBUaGlzIGlzIG1haW5seSBiZWNhdXNlDQo+IHRoZSBhY2Nlc3MgY29udHJvbCBj
-aGVja3BvaW50cyBvZiB0aGUga2VybmVsIGFyZSBub3QgYXQgdGhpcyBoaWdoLWxldmVsIGJ1dA0K
-PiBtb3JlIHVuZGVybmVhdGgsIGF0IExTTSBob29rcyBsZXZlbC4gVGhlIExTTSBob29rcyBhcmUg
-ZGVzaWduZWQgdG8gaGFuZGxlIHRoaXMNCj4ga2luZCBvZiBjaGVja3MuIFRoaXMgc2VyaWVzIHVz
-ZSB0aGlzIGFwcHJvYWNoIHRvIGxldmVyYWdlIHRoZSBhYmlsaXR5IG9mDQo+IHVucHJpdmlsZWdl
-ZCB1c2VycyB0byBsaW1pdCB0aGVtc2VsdmVzLg0KDQpZb3UgY2Fubm90IHZhbGlkYXRlIGZpbGUg
-cGF0aCBwYXJhbWV0ZXJzIGR1cmluZyBzeXNjYWxsIGVudHJ5Lg0KSXQgY2FuIG9ubHkgYmUgZG9u
-ZSBhZnRlciB0aGUgdXNlciBidWZmZXIgaGFzIGJlZW4gcmVhZCBpbnRvIGtlcm5lbCBtZW1vcnku
-DQooaWUgeW91IG11c3Qgb25seSBhY2Nlc3MgdGhlIGJ1ZmZlciBvbmNlLikNCg0KVGhpcyBoYXMg
-bm90aGluZyB0byBkbyB3aXRoIHdoZXJlIHRoZSBrZXJuZWwgZG9lcyBhbnkgYWNjZXNzIGNoZWNr
-cywNCmFuZCBldmVyeXRoaW5nIHRvIGRvIHdpdGggdGhlIGZhY3QgdGhhdCBhbm90aGVyIHRocmVh
-ZC9wcm9jZXNzIGNhbg0KbW9kaWZ5IHRoZSBidWZmZXIgYWZ0ZXIgeW91IGhhdmUgdmFsaWRhdGVk
-IGl0Lg0KDQoJRGF2aWQNCg0K
+On Wed, Sep 14, 2016 at 01:42:49PM +0200, Daniel Borkmann wrote:
+> >As I said, I'm open to discussing that. In order to make it work for L3,
+> >the LL_OFF issues need to be solved, as Daniel explained. Daniel,
+> >Alexei, any idea how much work that would be?
+> 
+> Not much. You simply need to declare your own struct bpf_verifier_ops
+> with a get_func_proto() handler that handles BPF_FUNC_skb_load_bytes,
+> and verifier in do_check() loop would need to handle that these ld_abs/
+> ld_ind are rejected for BPF_PROG_TYPE_CGROUP_SOCKET.
+
+yep. that part is solvable.
+I'm still torn between l2 and l3.
+On one side it sux to lose l2 information. yet we don't have a use case
+to look into l2 for our container monitoring, so the only thing
+lack of l2 will do is confuse byte accounting, since instead of
+skb->len, we'd need to do skb->len + ETH_HLEN...
+but I guess vlan handling messes it up as well.
+On the other side doing it at socket level we can drop these checks:
++       if (!sk || !sk_fullsock(sk))
++               return 0;
++
++       if (sk->sk_family != AF_INET &&
++           sk->sk_family != AF_INET6)
++               return 0;
+which will make it even faster when it's on.
+So I don't mind either l2 and l3. I guess if l3 approach will prove
+to be limiting, we can add l2 later?
