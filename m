@@ -1,36 +1,46 @@
-From: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
+From: Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
 Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
-Date: Wed, 14 Sep 2016 12:30:38 +0200
-Message-ID: <20160914103038.GA910@salvia>
+Date: Wed, 14 Sep 2016 13:06:29 +0200
+Message-ID: <20160914110629.GA12405@pox.localdomain>
 References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
  <20160913115627.GA4898@salvia>
  <da300784-284c-0d1f-a82e-aa0a0f8ae116@zonque.org>
  <20160913172408.GC6138@salvia>
  <20160914044217.GA44742@ast-mbp.thefacebook.com>
+ <20160914103038.GA910@salvia>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suug-ch.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=kRYO/EKsfcllpZXo0c+n/ppM5mFDTB6i87CQ/lHs1lQ=;
+        b=1RLKmu4DIkQXfGpwK9B6MseKtqhFd8EcrtA7C6pdDOh5d3Og5hLlaT0IzMW827qrPj
+         QblRYOixqIwK0sHztWcHJwQLwCNPtKBNH3W5NlmB5MnD47LJY9kANBcCUu8CG2/j9M31
+         FCPSFv1Hwmk0URYfk4NkDcyN70ArxAK+Bs8evvhWtUKwH1bErFgrDKvkpnyn4fHMtOkg
+         I4ujSE9oE3kKmsnfh/sbUel+r+LX+PnVyCtatmms4HSRzFqvP6QX5aX3xJAX9n38RI3I
+         548NJ1JLJeWNhfHbRFl+FkRym4vrBwMwkOgEYN3OV9iKAQ9uNPqI5/HWBzvd9a2RcNKf
+         qHHQ==
 Content-Disposition: inline
-In-Reply-To: <20160914044217.GA44742-+o4/htvd0TDFYCXBM6kdu7fOX0fSgVTm@public.gmane.org>
+In-Reply-To: <20160914103038.GA910@salvia>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
+Cc: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 13, 2016 at 09:42:19PM -0700, Alexei Starovoitov wrote:
-[...]
-> For us this cgroup+bpf is _not_ for filterting and _not_ for security.
+On 09/14/16 at 12:30pm, Pablo Neira Ayuso wrote:
+> On Tue, Sep 13, 2016 at 09:42:19PM -0700, Alexei Starovoitov wrote:
+> [...]
+> > For us this cgroup+bpf is _not_ for filterting and _not_ for security.
+> 
+> If your goal is monitoring, then convert these hooks not to allow to
+> issue a verdict on the packet, so this becomes inoquous in the same
+> fashion as the tracing infrastructure.
 
-If your goal is monitoring, then convert these hooks not to allow to
-issue a verdict on the packet, so this becomes inoquous in the same
-fashion as the tracing infrastructure.
-
-[...]
-> I'd really love to have an alternative to bpf for such tasks,
-> but you seem to spend all the energy arguing against bpf whereas
-> nft still has a lot to be desired.
-
-Please Alexei, stop that FUD. Anyone that has spent just one day using
-the bpf tooling and infrastructure knows you have problems to
-resolve...
+Why? How is this at all offensive? We have three parties voicing
+interest in this work for both monitoring and security. At least
+two specific use cases have been described.  It builds on top of
+existing infrastructure and nicely complements other ongoing work.
+Why not both?
