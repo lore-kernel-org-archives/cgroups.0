@@ -1,147 +1,130 @@
-From: Jann Horn <jann@thejh.net>
-Subject: Re: [RFC v3 07/22] landlock: Handle file comparisons
-Date: Wed, 14 Sep 2016 21:07:23 +0200
-Message-ID: <20160914190723.GB5617@pc.thejh.net>
-References: <20160914072415.26021-1-mic@digikod.net>
- <20160914072415.26021-8-mic@digikod.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="eJnRUKwClWJh1Khz"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160914072415.26021-8-mic@digikod.net>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 1/3] mm: memcontrol: make per-cpu charge cache IRQ-safe for socket accounting
+Date: Wed, 14 Sep 2016 15:48:44 -0400
+Message-ID: <20160914194846.11153-1-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:
+	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=rxW6k8avNikJZSy/cYzxY02f7FUz4rbsViwKzd5OXHE=; b=LaMetsHkHWcBGxNVv9UZYoCrS2
+	s5IzMHPCKngQkY7MmAiGQt+8lMAVsgr8tXuFp6RGPuGaxUK830EE7hrFFuuonD4kqq3lpHW/F71JS
+	TaJO7Rzdh3BK7L+O8g1Nk86oDPJy3h9R3Mslc0KXQ95LJvdAbnd19EE/NX7cpCZs0LeE=;
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>
-Cc: linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, linux-security-module@vger.kern
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
+From: Johannes Weiner <jweiner@fb.com>
 
---eJnRUKwClWJh1Khz
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+During cgroup2 rollout into production, we started encountering css
+refcount underflows and css access crashes in the memory controller.
+Splitting the heavily shared css reference counter into logical users
+narrowed the imbalance down to the cgroup2 socket memory accounting.
 
-On Wed, Sep 14, 2016 at 09:24:00AM +0200, Micka=EBl Sala=FCn wrote:
-> Add eBPF functions to compare file system access with a Landlock file
-> system handle:
-> * bpf_landlock_cmp_fs_prop_with_struct_file(prop, map, map_op, file)
->   This function allows to compare the dentry, inode, device or mount
->   point of the currently accessed file, with a reference handle.
-> * bpf_landlock_cmp_fs_beneath_with_struct_file(opt, map, map_op, file)
->   This function allows an eBPF program to check if the current accessed
->   file is the same or in the hierarchy of a reference handle.
-[...]
-> diff --git a/kernel/bpf/arraymap.c b/kernel/bpf/arraymap.c
-> index 94256597eacd..edaab4c87292 100644
-> --- a/kernel/bpf/arraymap.c
-> +++ b/kernel/bpf/arraymap.c
-> @@ -603,6 +605,9 @@ static void landlock_put_handle(struct map_landlock_h=
-andle *handle)
->  	enum bpf_map_handle_type handle_type =3D handle->type;
-> =20
->  	switch (handle_type) {
-> +	case BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD:
-> +		path_put(&handle->path);
-> +		break;
->  	case BPF_MAP_HANDLE_TYPE_UNSPEC:
->  	default:
->  		WARN_ON(1);
-[...]
-> diff --git a/security/landlock/checker_fs.c b/security/landlock/checker_f=
-s.c
-> new file mode 100644
-> index 000000000000..39eb85dc7d18
-> --- /dev/null
-> +++ b/security/landlock/checker_fs.c
-[...]
-> +static inline u64 bpf_landlock_cmp_fs_prop_with_struct_file(u64 r1_prope=
-rty,
-> +		u64 r2_map, u64 r3_map_op, u64 r4_file, u64 r5)
-> +{
-> +	u8 property =3D (u8) r1_property;
-> +	struct bpf_map *map =3D (struct bpf_map *) (unsigned long) r2_map;
-> +	enum bpf_map_array_op map_op =3D r3_map_op;
-> +	struct file *file =3D (struct file *) (unsigned long) r4_file;
-> +	struct bpf_array *array =3D container_of(map, struct bpf_array, map);
-> +	struct path *p1, *p2;
-> +	struct map_landlock_handle *handle;
-> +	int i;
+The problem turns out to be the per-cpu charge cache. Cgroup1 had a
+separate socket counter, but the new cgroup2 socket accounting goes
+through the common charge path that uses a shared per-cpu cache for
+all memory that is being tracked. Those caches are safe against
+scheduling preemption, but not against interrupts - such as the newly
+added packet receive path. When cache draining is interrupted by
+network RX taking pages out of the cache, the resuming drain operation
+will put references of in-use pages, thus causing the imbalance.
 
-Please don't use int when iterating over an array, use size_t.
+Disable IRQs during all per-cpu charge cache operations.
 
+Fixes: f7e1cb6ec51b ("mm: memcontrol: account socket memory in unified hierarchy memory controller")
+Cc: <stable@vger.kernel.org> # 4.5+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
-> +	/* for now, only handle OP_OR */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7a8d6624758a..60bb830abc34 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1710,17 +1710,22 @@ static DEFINE_MUTEX(percpu_charge_mutex);
+ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ {
+ 	struct memcg_stock_pcp *stock;
++	unsigned long flags;
+ 	bool ret = false;
+ 
+ 	if (nr_pages > CHARGE_BATCH)
+ 		return ret;
+ 
+-	stock = &get_cpu_var(memcg_stock);
++	local_irq_save(flags);
++
++	stock = this_cpu_ptr(&memcg_stock);
+ 	if (memcg == stock->cached && stock->nr_pages >= nr_pages) {
+ 		stock->nr_pages -= nr_pages;
+ 		ret = true;
+ 	}
+-	put_cpu_var(memcg_stock);
++
++	local_irq_restore(flags);
++
+ 	return ret;
+ }
+ 
+@@ -1741,15 +1746,18 @@ static void drain_stock(struct memcg_stock_pcp *stock)
+ 	stock->cached = NULL;
+ }
+ 
+-/*
+- * This must be called under preempt disabled or must be called by
+- * a thread which is pinned to local cpu.
+- */
+ static void drain_local_stock(struct work_struct *dummy)
+ {
+-	struct memcg_stock_pcp *stock = this_cpu_ptr(&memcg_stock);
++	struct memcg_stock_pcp *stock;
++	unsigned long flags;
++
++	local_irq_save(flags);
++
++	stock = this_cpu_ptr(&memcg_stock);
+ 	drain_stock(stock);
+ 	clear_bit(FLUSHING_CACHED_CHARGE, &stock->flags);
++
++	local_irq_restore(flags);
+ }
+ 
+ /*
+@@ -1758,14 +1766,19 @@ static void drain_local_stock(struct work_struct *dummy)
+  */
+ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ {
+-	struct memcg_stock_pcp *stock = &get_cpu_var(memcg_stock);
++	struct memcg_stock_pcp *stock;
++	unsigned long flags;
++
++	local_irq_save(flags);
+ 
++	stock = this_cpu_ptr(&memcg_stock);
+ 	if (stock->cached != memcg) { /* reset if necessary */
+ 		drain_stock(stock);
+ 		stock->cached = memcg;
+ 	}
+ 	stock->nr_pages += nr_pages;
+-	put_cpu_var(memcg_stock);
++
++	local_irq_restore(flags);
+ }
+ 
+ /*
+-- 
+2.9.3
 
-Is "OP_OR" an appropriate name for something that ANDs the success of
-checks?
-
-
-[...]
-> +	synchronize_rcu();
-
-Can you put a comment here that explains what's going on?
-
-
-> +	for (i =3D 0; i < array->n_entries; i++) {
-> +		bool result_dentry =3D !(property & LANDLOCK_FLAG_FS_DENTRY);
-> +		bool result_inode =3D !(property & LANDLOCK_FLAG_FS_INODE);
-> +		bool result_device =3D !(property & LANDLOCK_FLAG_FS_DEVICE);
-> +		bool result_mount =3D !(property & LANDLOCK_FLAG_FS_MOUNT);
-> +
-> +		handle =3D (struct map_landlock_handle *)
-> +				(array->value + array->elem_size * i);
-> +
-> +		if (handle->type !=3D BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD) {
-> +			WARN_ON(1);
-> +			return -EFAULT;
-> +		}
-> +		p1 =3D &handle->path;
-> +
-> +		if (!result_dentry && p1->dentry =3D=3D p2->dentry)
-> +			result_dentry =3D true;
-
-Why is this safe? As far as I can tell, this is not in an RCU read-side
-critical section (synchronize_rcu() was just called), and no lock has been
-taken. What prevents someone from removing the arraymap entry while we're
-looking at it? Am I missing something?
-
-
-[...]
-> +static inline u64 bpf_landlock_cmp_fs_beneath_with_struct_file(u64 r1_op=
-tion,
-> +		u64 r2_map, u64 r3_map_op, u64 r4_file, u64 r5)
-> +{
-> +	u8 option =3D (u8) r1_option;
-> +	struct bpf_map *map =3D (struct bpf_map *) (unsigned long) r2_map;
-> +	enum bpf_map_array_op map_op =3D r3_map_op;
-> +	struct file *file =3D (struct file *) (unsigned long) r4_file;
-> +	struct bpf_array *array =3D container_of(map, struct bpf_array, map);
-> +	struct path *p1, *p2;
-> +	struct map_landlock_handle *handle;
-> +	int i;
-
-As above, please use size_t.
-
---eJnRUKwClWJh1Khz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX2Z/rAAoJED4KNFJOeCOoWGsP/RLM9IzxJQAlajiOl519JMZY
-CUShWpHkxFYp0pedSuiP/qXtt/Oo1SiB0yIUES0nLtqAjmI7uMVvMP/9ucPBXXhG
-mgWDYQGxLkNNN+3VF+yq3J2IrlN51KyWCpMx1xwB97U++nrgxCFy+KMbyn52ITXI
-4ZjkxuAdr6URCAVE29dw6rkpfR9vUoc4Y4qQK3pO+EvgA+GKZLah+oi25AWy14cu
-Jc+Yv8vQK6OBSeXAKbRyFrvaW6/msVoFtJODYKLAn+5wlb9iLq1olpcZ70BsgsyR
-eETes5lhvsKkcRU07OMakaQAPua7/lEaDSu+TotdR5EPCa5kEihU0bJtY+i+cyJC
-KtGpC9s41eoBBlQV2y5E7icx9chG+Y5hdjHmbu2v77a4kVI/KjRSphf5/2EfzCKL
-mMidcIC+0M3rPhI5H+kXpXoq1NyeDeGye0QkVuiq6zvCU1SjPIvtFofCrxpPftXU
-XZawWJOAIA8PUTQHN25LHqXaeThfypNXZAxsup5D+qa6VQYiXI2cgOdg7ctPfy37
-LFJUQFCzZpuq/eR22Xi3OaxhA3nOqc9y2CsYVj62Pgotjejh7JoSDefW2VjbbBfG
-aKN5dD1im3EkyVW1csK7HluGD4e3jVoQSPqEXg99TH4ZiGNMw4GbA/6MnFYAgp0d
-dLFaCec50umi2qqO6eeq
-=yFuF
------END PGP SIGNATURE-----
-
---eJnRUKwClWJh1Khz--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
