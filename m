@@ -1,96 +1,147 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 3/3] mm: memcontrol: consolidate cgroup socket tracking
-Date: Thu, 15 Sep 2016 10:27:33 -0400
-Message-ID: <20160915142733.GA25519@cmpxchg.org>
-References: <20160914194846.11153-3-hannes@cmpxchg.org>
- <201609151357.bgs2EcXM%fengguang.wu@intel.com>
- <20160914151714.f6d1b2a57da0619bf9e2372c@linux-foundation.org>
+From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
+Date: Thu, 15 Sep 2016 21:56:29 +0300
+Message-ID: <20160915185629.GF26069@leon.nu>
+References: <ae3adcc4-253e-f87c-6ff6-202c91599f48@mellanox.com>
+ <20160910161442.GC29259@lst.de>
+ <20160910170151.GA5230@obsidianresearch.com>
+ <20160911133421.GA23384@lst.de>
+ <20160911143522.GL6415@leon.nu>
+ <20160911171409.GA13442@obsidianresearch.com>
+ <20160911172445.GA25953@lst.de>
+ <20160911175235.GB13442@obsidianresearch.com>
+ <20160912050717.GE8812@leon.nu>
+ <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=NPVKID9S0b4dhiPMCLN+Td9fHKOjGPmqcyTTe9kXSHc=; b=wiIavxvh+Xo5SJr38Zh4vIOND+
-        DOgWhVx2mWN+qhKB0DcSkfOPDH3Zi9jDvJeGPwTt5aur0z0Ox0Ue/RM+NiM4CooBvZ1Ev3kCJQfLq
-        fyxbaClHGDndwGUkEtVFiEoFLfUxJ5az/UofPXgQGNzpf5EQr6EfQUkv2z+MLrWBfRbs=;
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="PgLV2f+xYr9y+IUc"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20160914151714.f6d1b2a57da0619bf9e2372c@linux-foundation.org>
-Sender: netdev-owner@vger.kernel.org
+In-Reply-To: <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Sep 14, 2016 at 03:17:14PM -0700, Andrew Morton wrote:
-> On Thu, 15 Sep 2016 13:34:24 +0800 kbuild test robot <lkp@intel.com> wrote:
-> 
-> > Hi Johannes,
-> > 
-> > [auto build test ERROR on net/master]
-> > [also build test ERROR on v4.8-rc6 next-20160914]
-> > [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> > [Suggest to use git(>=2.9.0) format-patch --base=<commit> (or --base=auto for convenience) to record what (public, well-known) commit your patch series was built on]
-> > [Check https://git-scm.com/docs/git-format-patch for more information]
-> > 
-> > url:    https://github.com/0day-ci/linux/commits/Johannes-Weiner/mm-memcontrol-make-per-cpu-charge-cache-IRQ-safe-for-socket-accounting/20160915-035634
-> > config: m68k-sun3_defconfig (attached as .config)
-> > compiler: m68k-linux-gcc (GCC) 4.9.0
-> > reproduce:
-> >         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-> >         chmod +x ~/bin/make.cross
-> >         # save the attached .config to linux build tree
-> >         make.cross ARCH=m68k 
-> > 
-> > All errors (new ones prefixed by >>):
-> > 
-> >    net/built-in.o: In function `sk_alloc':
-> > >> (.text+0x4076): undefined reference to `mem_cgroup_sk_alloc'
-> >    net/built-in.o: In function `__sk_destruct':
-> > >> sock.c:(.text+0x457e): undefined reference to `mem_cgroup_sk_free'
-> >    net/built-in.o: In function `sk_clone_lock':
-> >    (.text+0x4f1c): undefined reference to `mem_cgroup_sk_alloc'
-> 
-> This?
 
-Thanks for fixing it up, Andrew.
+--PgLV2f+xYr9y+IUc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-I think it'd be nicer to declare the dummy functions for !CONFIG_MEMCG;
-it also doesn't look like a hotpath that would necessitate the jump
-label in that place. Dave, any preference either way?
+On Wed, Sep 14, 2016 at 12:36:19PM +0530, Parav Pandit wrote:
+> Hi Dennis,
+>
+> Do you know how would HFI1 driver would work along with rdma cgroup?
+>
+> Hi Matan, Leon, Jason,
+> Apart from HFI1, is there any other concern?
+> Or Patch is good to go?
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
+I didn't review it yet :(.
+Sorry
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index ca11b3e6dd65..61d20c17f3b7 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -773,13 +773,13 @@ static inline void mem_cgroup_wb_stats(struct bdi_writeback *wb,
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
- struct sock;
--void mem_cgroup_sk_alloc(struct sock *sk);
--void mem_cgroup_sk_free(struct sock *sk);
- bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
- void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
- #ifdef CONFIG_MEMCG
- extern struct static_key_false memcg_sockets_enabled_key;
- #define mem_cgroup_sockets_enabled static_branch_unlikely(&memcg_sockets_enabled_key)
-+void mem_cgroup_sk_alloc(struct sock *sk);
-+void mem_cgroup_sk_free(struct sock *sk);
- static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
- {
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_pressure)
-@@ -792,6 +792,8 @@ static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
- }
- #else
- #define mem_cgroup_sockets_enabled 0
-+static inline void mem_cgroup_sk_alloc(struct sock *sk) { };
-+static inline void mem_cgroup_sk_free(struct sock *sk) { };
- static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
- {
- 	return false;
+>
+> 4.8 dates are close by (2 weeks) and there are two git trees involved
+> (that might cause merge error to Linus) so if there are no issues, I
+> would like to make request to Doug to consider it for 4.8 early on.
+>
+> Parav
+>
+> On Mon, Sep 12, 2016 at 10:37 AM, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > On Sun, Sep 11, 2016 at 11:52:35AM -0600, Jason Gunthorpe wrote:
+> >> On Sun, Sep 11, 2016 at 07:24:45PM +0200, Christoph Hellwig wrote:
+> >> > > > > I've posted some initial work toward a) a while ago, and once we
+> >> > >
+> >> > > Did it get merged? Do you have a pointer?
+> >> >
+> >> > http://www.spinics.net/lists/linux-rdma/msg31958.html
+> >>
+> >> Right, I remember that. Certainly the right direction
+> >>
+> >> > > However, everything under verbs is not straightforward. The files in
+> >> > > userspace are not copies...
+> >> > >
+> >> > > user:
+> >> > >
+> >> > > struct ibv_query_device {
+> >> > >        __u32 command;
+> >> > >        __u16 in_words;
+> >> > >        __u16 out_words;
+> >> > >        __u64 response;
+> >> > >        __u64 driver_data[0];
+> >> > > };
+> >> > >
+> >> > > kernel:
+> >> > >
+> >> > > struct ib_uverbs_query_device {
+> >> > >         __u64 response;
+> >> > >         __u64 driver_data[0];
+> >> > > };
+> >> >
+> >> > We'll obviously need different strutures for the libibvers API
+> >> > and the kernel interface in this case, and we'll need to figure out
+> >> > how to properly translate them.  I think a cast, plus compile time
+> >> > type checking ala BUILD_BUG_ON is the way to go.
+> >>
+> >> I'm not sure I follow, which would I cast?
+> >>
+> >> BUILD_BUG_ON(sizeof(ibv_query_device) == sizeof(ib_uverbs_cmd_hdr) +
+> >>              sizeof(ib_uverbs_query_device))
+> >>
+> >> ?
+> >>
+> >> > > I'm thinking the best way forward might be to use a script and
+> >> > > transform userspace into:
+> >> > >
+> >> > > struct ibv_query_device {
+> >> > >   struct ib_uverbs_cmd_hdr hdr;
+> >> > >   struct ib_uverbs_query_device cmd;
+> >> > > };
+> >> >
+> >> > That would break the users of the interface.
+> >>
+> >> Sorry, I mean doing this inside rdma-plumbing. Since the change is ABI
+> >> identical the modified libibverbs would still be binary compatible
+> >> with all providers but not source compatible. Since all kernel
+> >> supported providers are in rdma-plumbing we can add the '.cmd.' at the
+> >> same time.
+> >>
+> >> The kernel uapi header would stay the same.
+> >>
+> >> > However automatically generating the user ABI from the kernel one
+> >> > might still be a good idea in the long run.
+> >>
+> >> My preference would be to try and use the kernel headers directly.
+> >
+> > I thought the same, especially after realizing that they are almost
+> > copy/paste from the vendor *-abi.h files.
+> >
+> >>
+> >> Jason
+
+--PgLV2f+xYr9y+IUc
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX2u7dAAoJEORje4g2clinAUwP/A7JrZrRHCi4FWn0NSNJiwsX
+epNvRd3PUZMasAy0a1d41kbnmhnjpeor/nOlgg9DP0zjLkRnD1MsQAQZxoI6q1XW
+6CCBqqbQVeMH43v51y8H9BYA4RdRPX1UdJidxrfsgkQrQt7kwmUaCdAZ3duzpfc8
+r0PlA6xBJ+jbhh93kuZM9YqRU8duNWoLVm94qs8In4NG+cNgiBz18I50qyKP5VIa
+EiBkUblJcsQaamg62IYXQYeJL/LvXo2FKY899SL1kag4XmjnwxTvRqpBwk3VgCZu
+LbTDQC4gX9d3XZywh+qMO0GkC6GSeJwWtjJrQo+xuDalcFRMj9aLJbpfIIU+Jetc
+aSN88W6XJOZeXdlvOR/dx3af0YDpmkRWzvnREWUokJE7EFI21AxOAGNjKD/mqkZ3
+D4I5BgBSgRm8atjCQpkRJf03SK/FZIJ//eq8n7hi/H5Qa/IPBj6oy8uCIUdKSXA4
+oRj3266En88ZND/rswjLP4v5bDGUAdX7LZYMgm6V4+yHRi3azdgUWXdp5KOKN8xX
+2o4K2UPkVMlMqHE0PAmSErWUG/BFWuNrYz8rRdCL2JpIR3K3eq+kC51PgcsYbmWC
+pFwdq6mgDPtuesDIdUK43L7DDmy1irFmfGwdLK6iXCvhdYbiQgD6ShiJlmB7sfFT
+6KIjXBN7rcWHTW61KiPR
+=mvEC
+-----END PGP SIGNATURE-----
+
+--PgLV2f+xYr9y+IUc--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
