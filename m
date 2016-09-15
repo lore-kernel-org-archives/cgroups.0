@@ -1,35 +1,29 @@
-From: Vincent Bernat <bernat@luffy.cx>
+From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
-Date: Thu, 15 Sep 2016 08:36:40 +0200
-Message-ID: <m3y42tlldz.fsf@neo.luffy.cx>
+Date: Thu, 15 Sep 2016 10:11:50 +0200
+Message-ID: <0e64ec7a-e75f-620a-d7b7-e646913c3514@zonque.org>
 References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
+ <m3y42tlldz.fsf@neo.luffy.cx>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=luffy.cx; h=from:to:cc
-        :subject:references:date:in-reply-to:message-id:mime-version
-        :content-type; s=postfix; bh=B9XeYvUROOwn8cf8rFGTXK1ut9s=; b=um/
-        UVhVq2lWf/Zk+7cQ0RMrmhIyk2PEpIko2vcENejn9Xqibhw1ybuAoU2hGgQdxCzp
-        /VXwG0UoL++FtoEC8uDjoA5ePfpYspOBPkO5XjaN76T2IRcR3OzcDAc0nuSCqarK
-        Mdd4Z9ponrIg83mPM0HgZBT7dtGSqK1mgNW6yio0=
-In-Reply-To: <1473696735-11269-1-git-send-email-daniel@zonque.org> (Daniel
-        Mack's message of "Mon, 12 Sep 2016 18:12:09 +0200")
-Sender: netdev-owner@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <m3y42tlldz.fsf-PiWSfznZvZU/eRriIvX0kg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Daniel Mack <daniel@zonque.org>
-Cc: htejun@fb.com, daniel@iogearbox.net, ast@fb.com, davem@davemloft.net, kafai@fb.com, fw@strlen.de, pablo@netfilter.org, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="macroman"
+To: Vincent Bernat <bernat-PWwKhitvBKI@public.gmane.org>
+Cc: htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
- =E2=9D=A6 12 septembre 2016 18:12 CEST, Daniel Mack <daniel@zonque.org>=C2=
-=A0:
-
-> * The sample program learned to support both ingress and egress, and
->   can now optionally make the eBPF program drop packets by making it
->   return 0.
-
-Ability to lock the eBPF program to avoid modification from a later
-program or in a subcgroup would be pretty interesting from a security
-perspective.
---=20
-Use recursive procedures for recursively-defined data structures.
-            - The Elements of Programming Style (Kernighan & Plauger)
+T24gMDkvMTUvMjAxNiAwODozNiBBTSwgVmluY2VudCBCZXJuYXQgd3JvdGU6Cj4gIOKdpiAxMiBz
+ZXB0ZW1icmUgMjAxNiAxODoxMiBDRVNULCBEYW5pZWwgTWFjayA8ZGFuaWVsLWNZclFQVmZab293
+ZG5tK3lST2ZFMEFAcHVibGljLmdtYW5lLm9yZz4gOgo+IAo+PiAqIFRoZSBzYW1wbGUgcHJvZ3Jh
+bSBsZWFybmVkIHRvIHN1cHBvcnQgYm90aCBpbmdyZXNzIGFuZCBlZ3Jlc3MsIGFuZAo+PiAgIGNh
+biBub3cgb3B0aW9uYWxseSBtYWtlIHRoZSBlQlBGIHByb2dyYW0gZHJvcCBwYWNrZXRzIGJ5IG1h
+a2luZyBpdAo+PiAgIHJldHVybiAwLgo+IAo+IEFiaWxpdHkgdG8gbG9jayB0aGUgZUJQRiBwcm9n
+cmFtIHRvIGF2b2lkIG1vZGlmaWNhdGlvbiBmcm9tIGEgbGF0ZXIKPiBwcm9ncmFtIG9yIGluIGEg
+c3ViY2dyb3VwIHdvdWxkIGJlIHByZXR0eSBpbnRlcmVzdGluZyBmcm9tIGEgc2VjdXJpdHkKPiBw
+ZXJzcGVjdGl2ZS4KCkZvciBub3csIHlvdSBjYW4gYWNoaWV2ZSB0aGF0IGJ5IGRyb3BwaW5nIENB
+UF9ORVRfQURNSU4gYWZ0ZXIgaW5zdGFsbGluZwphIHByb2dyYW0gYmV0d2VlbiBmb3JrIGFuZCBl
+eGVjLiBJIHRoaW5rIHRoYXQgc2hvdWxkIHN1ZmZpY2UgZm9yIGEgZmlyc3QKdmVyc2lvbi4gRmxh
+Z3MgdG8gZnVydGhlciBsaW1pdCB0aGF0IGNvdWxkIGJlIGJlIGFkZGVkIGxhdGVyLgoKClRoYW5r
+cywKRGFuaWVs
