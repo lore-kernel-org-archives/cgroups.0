@@ -1,46 +1,117 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: blkcg throttle settings page cache writes
-Date: Fri, 16 Sep 2016 11:57:36 -0400
-Message-ID: <20160916155736.GC26371@htj.duckdns.org>
-References: <57D9098D.3020403@kyup.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [Documentation] State of CPU controller in cgroup v2
+Date: Fri, 16 Sep 2016 18:19:51 +0200
+Message-ID: <20160916161951.GH5016@twins.programming.kicks-ass.net>
+References: <20160831210754.GZ12660@htj.duckdns.org>
+ <CALCETrXj2Z=-GMaWV_EpCvw_8C3t1vc=D53Ff2wdvo=At8ZF1Q@mail.gmail.com>
+ <20160903220526.GA20784@mtj.duckdns.org>
+ <CALCETrVcAjFWLQ1arjSP-g=4jRY_J7G-j9JJHrvTDgOnxApYPw@mail.gmail.com>
+ <20160909225747.GA30105@mtj.duckdns.org>
+ <CALCETrUhpPQdyZ-6WRjdB+iLbpGBduRZMWXQtCuS+R7Cq7rygg@mail.gmail.com>
+ <20160914200041.GB6832@htj.duckdns.org>
+ <CALCETrUA6_noue4kq9JLqr-V_yo7hB+v1Arhg6i6fFn0tyTrpw@mail.gmail.com>
+ <20160916075137.GK5012@twins.programming.kicks-ass.net>
+ <CALCETrXzrXJmZoFVfAXS1Zf9uNZjibnHizEhwgqdmRvnbJEksw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=nAGBm6m2PZHopifUNjHh/PdCKXsRYGi5VqrneCk+9kU=;
-        b=BHcdaca4gpzrilK3pYnGGJjA1ELDRPF3TrlyXODpBAvO8LjLvl/ddvfI0ohLFS0D53
-         3TP8kfLpbX5Vl6m+aeVk8uIyuE4yNt/bGyvmdCXJudy3IRRvZYehjD1EZ19yPcKi1q6w
-         gIKwscAj7NIMTBMV17fIrGGLXfYu+l4aLkudsIy5pr0tQU9okA8Ep3o3Lmh+ESITSAik
-         erR8Pw37XwtpUpduSQKSaPwHXSgUyXr0mCjvttLv1vwl0F33j6tbaQ/GjIeGc50iJrN5
-         xR83HfrWuzH7kWDs5In7tUzIU5aNGhe4LWxPOgeeJjBfn3bK7bmmyCnQdc7qF1hX+mf9
-         wRIA==
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <57D9098D.3020403-6AxghH7DbtA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CALCETrXzrXJmZoFVfAXS1Zf9uNZjibnHizEhwgqdmRvnbJEksw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, SiteGround Operations <operations-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hello,
+On Fri, Sep 16, 2016 at 08:12:58AM -0700, Andy Lutomirski wrote:
+> On Sep 16, 2016 12:51 AM, "Peter Zijlstra" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+> >
+> > On Thu, Sep 15, 2016 at 01:08:07PM -0700, Andy Lutomirski wrote:
+> > > BTW, Mike keeps mentioning exclusive cgroups as problematic with the
+> > > no-internal-tasks constraints.  Do exclusive cgroups still exist in
+> > > cgroup2?  Could we perhaps just remove that capability entirely?  I've
+> > > never understood what problem exlusive cpusets and such solve that
+> > > can't be more comprehensibly solved by just assigning the cpusets the
+> > > normal inclusive way.
+> >
+> > Without exclusive sets we cannot split the sched_domain structure.
+> > Which leads to not being able to actually partition things. That would
+> > break DL for one.
+> 
+> Can you sketch out a toy example? 
 
-On Wed, Sep 14, 2016 at 11:25:49AM +0300, Nikolay Borisov wrote:
-> Hello,
-> So Tejun, my question is what is the problem for the blkcg information
-> to be transferred alongside the bio (which I believed to be happening
-> with the blkcg_association calls) so that even buffered writes are
-> throttled via the cgroup policies? Or are the numbers I'm seeing in
-> iostat actually the writes to the page-cache and not the underlying
-> block device?
+[ Also see Documentation/cgroup-v1/cpusets.txt section 1.7 ]
 
-You gotta use cgroup v2 for that.  Controlling buffered writes
-requires coordination between memory and io controllers which isn't
-possible with cgroup v1.
 
-Thanks.
+  mkdir /cpuset
 
--- 
-tejun
+  mount -t cgroup -o cpuset none /cpuset
+
+  mkdir /cpuset/A
+  mkdir /cpuset/B
+
+  cat /sys/devices/system/node/node0/cpulist > /cpuset/A/cpuset.cpus
+  echo 0 > /cpuset/A/cpuset.mems
+
+  cat /sys/devices/system/node/node1/cpulist > /cpuset/B/cpuset.cpus
+  echo 1 > /cpuset/B/cpuset.mems
+
+  # move all movable tasks into A
+  cat /cpuset/tasks | while read task; do echo $task > /cpuset/A/tasks ; done
+
+  # kill machine wide load-balancing
+  echo 0 > /cpuset/cpuset.sched_load_balance
+
+  # now place 'special' tasks in B
+
+
+This partitions the scheduler into two, one for each node.
+
+Hereafter no task will be moved from one node to another. The
+load-balancer is split in two, one balances in A one balances in B
+nothing crosses. (It is important that A.cpus and B.cpus do not
+intersect.)
+
+Ideally no task would remain in the root group, back in the day we could
+actually do this (with exception of the cpu bound kernel threads), but
+this has significantly regressed :-(
+(still hate the workqueue affinity interface)
+
+As is, tasks that are left in the root group get balanced within
+whatever domain they ended up in.
+
+> And what's DL?
+
+SCHED_DEADLINE, its a 'Global'-EDF like scheduler that doesn't support
+CPU affinities (because that doesn't make sense). The only way to
+restrict it is to partition.
+
+'Global' because you can partition it. If you reduce your system to
+single CPU partitions you'll reduce to P-EDF.
+
+(The same is true of SCHED_FIFO, that's a 'Global'-FIFO on the same
+partition scheme, it however does support sched_affinity, but using it
+gives 'interesting' schedulability results -- call it a historic
+accident).
+
+
+Note that related, but differently, we have the isolcpus boot parameter
+which creates single CPU partitions for all listed CPUs and gives the
+rest to the root cpuset. Ideally we'd kill this option given its a boot
+time setting (for something which is trivially to do at runtime).
+
+But this cannot be done, because that would mean we'd have to start with
+a !0 cpuset layout:
+
+		'/'
+		load_balance=0
+            /              \
+	'system'	'isolated'
+	cpus=~isolcpus	cpus=isolcpus
+			load_balance=0
+
+And start with _everything_ in the /system group (inclding default IRQ
+affinities).
+
+Of course, that will break everything cgroup :-(
+
