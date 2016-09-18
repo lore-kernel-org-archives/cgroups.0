@@ -1,58 +1,56 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Sat, 17 Sep 2016 03:47:29 +0200
-Message-ID: <20160917014729.GN5016@twins.programming.kicks-ass.net>
-References: <20160909225747.GA30105@mtj.duckdns.org>
- <CALCETrUhpPQdyZ-6WRjdB+iLbpGBduRZMWXQtCuS+R7Cq7rygg@mail.gmail.com>
- <20160914200041.GB6832@htj.duckdns.org>
- <CALCETrUA6_noue4kq9JLqr-V_yo7hB+v1Arhg6i6fFn0tyTrpw@mail.gmail.com>
- <20160916075137.GK5012@twins.programming.kicks-ass.net>
- <CALCETrXzrXJmZoFVfAXS1Zf9uNZjibnHizEhwgqdmRvnbJEksw@mail.gmail.com>
- <20160916161951.GH5016@twins.programming.kicks-ass.net>
- <CALCETrXoTfhaDxZJ9_XcFknnniDvrYLY9SATVXj+tK1UdaWw4A@mail.gmail.com>
- <20160916165045.GJ5016@twins.programming.kicks-ass.net>
- <CALCETrVMw4Nd-QZER9qzOzRte5s48WrUaM8ZZzkY_g3B6s+5Ow@mail.gmail.com>
+From: "yingooyim" <ygyim@konkuk.ac.kr>
+Subject: [PATCH] cgroup/cpu: Fix tg_has_rt_task() malfunction
+Date: Sun, 18 Sep 2016 23:23:10 +0900
+Message-ID: <1474208588556845.0.mail@mail>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CALCETrVMw4Nd-QZER9qzOzRte5s48WrUaM8ZZzkY_g3B6s+5Ow-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; format="flowed"; charset="windows-1252"; reply-type="original"
+To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, jinh@konkuk.ac.kr
 
-On Fri, Sep 16, 2016 at 11:19:38AM -0700, Andy Lutomirski wrote:
-> On Fri, Sep 16, 2016 at 9:50 AM, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+Hi,
+I am a graduate student of System Software Lab. at Konkuk University
+(http://sslab.konkuk.ac.kr).
 
-> > {1,2} {3,4} {5} seem exclusive, did I miss something? (other than that 5
-> > cpu parts are 'rare').
-> 
-> There's no overlap, so they're logically exclusive, but it avoids
-> needing the "cpu_exclusive" parameter. 
+This patch is to fix the malfunction of tg_has_rt_tasks(). The
+tg_has_rt_tasks() function is supposed to determine whether a task
+group includes an "rt task" or not. However, it returns true for
+"dl task" too. The origin of this problem is that rt_task() called
+by tg_has_rt_tasks() returns true for dl tasks. Because of this
+problem, tg_rt_schedulable() that calls tg_has_rt_tasks() returns
+=E2=80=93EBUSY if we try to initialize an rt task group, while a dl task
+is running. That is, you cannot run an rt task group when there
+exists a dl task in the system. Our patch provided in this post
+simply makes the tg_has_rt_tasks() function return false for dl
+tasks by calling dl_task() in the conditional statement.
 
-I'd need to double check, but I don't think you _need_ that. That's more
-for enforcing nobody else steals your CPUs and 'accidentally' creates
-overlaps. But if you configure it right, non-overlap should be enough.
+Previously we have provided another patch for rt_task() (more
+precisely rt_prio()) to resolve this problem as follows:
+https://patchwork.kernel.org/patch/9299267/
+However, a dependency issue were raised. So, we think that it is
+better to modify tg_has_rt_tasks() instead of rt_task() itself.
 
-That is, generate_sched_domains() only uses cpusets_overlap() which is
-cpumask_intersects(). Then again, it is almost 4am, so who knows.
+Signed-off-by: Yin-goo Yim <ygyim@konkuk.ac.kr>
+----
+kernel/sched/core.c | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > So there's a problem with sticking kernel threads (and esp. kthreadd)
-> > into !root groups. For example if you place it in a cpuset that doesn't
-> > have all cpus, then binding your shiny new kthread to a cpu will fail.
-> >
-> > You can fix that of course, and we used to do exactly that, but we kept
-> > running into 'fun' cases like that.
-> 
-> Blech.  But may this *should* have that effect.  I'm sick of random
-> kernel crap being scheduled on my RT CPUs and on the CPUs that I
-> intend to be kept forcibly idle.
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 2a906f2..ee5ab2f 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7846,7 +7846,7 @@ static inline int tg_has_rt_tasks(struct task_group=20
+*tg)
+   return 0;
 
-Hehe, so ideally those threads don't do anything unless the tasks
-running on those CPUs explicitly ask for it. If you find any of the
-CPU-bound kernel tasks do work that is unrelated to the tasks running on
-that CPU, we should certainly look into it.
+   for_each_process_thread(g, p) {
+- if (rt_task(p) && task_group(p) =3D=3D tg)
++ if (rt_task(p) && !dl_task(p) && task_group(p) =3D=3D tg)
+   return 1;
+   }
 
-Personally I'm not much bothered by idle threads sitting about.
+
+
