@@ -1,61 +1,72 @@
-From: Parav Pandit <pandit.parav@gmail.com>
-Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
-Date: Mon, 19 Sep 2016 22:30:15 +0530
-Message-ID: <CAG53R5XZRtG4BeLv9wdLB4wW4iDLnEPHeoynaTPi_Sp6ht_3fA@mail.gmail.com>
-References: <20160901084406.GA4115@lst.de> <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A@mail.gmail.com>
- <ae3adcc4-253e-f87c-6ff6-202c91599f48@mellanox.com> <20160910161442.GC29259@lst.de>
- <20160910170151.GA5230@obsidianresearch.com> <20160911133421.GA23384@lst.de>
- <20160911143522.GL6415@leon.nu> <20160911171409.GA13442@obsidianresearch.com>
- <20160911172445.GA25953@lst.de> <20160911175235.GB13442@obsidianresearch.com>
- <20160912050717.GE8812@leon.nu> <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
- <1474290618.6520.23.camel@intel.com>
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Subject: Re: [PATCH v6 5/6] net: ipv4, ipv6: run cgroup eBPF egress programs
+Date: Mon, 19 Sep 2016 21:19:10 +0200
+Message-ID: <20160919191910.GA984@salvia>
+References: <1474303441-3745-1-git-send-email-daniel@zonque.org>
+ <1474303441-3745-6-git-send-email-daniel@zonque.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=DECjMuO9b+QAHgp9HQAuQBVDU8Jjzg92NJJaBo/LRFc=;
-        b=fkCk+UgVmOBkeVIOzmgD8rm2S36ibtZW8mofCjU1gwZOxU3Dklyz4rtnbQy3J7fDVr
-         ul7nKOiPYYB0UpE823fTNO2lv8C5ad6e1dhrOgrFCXUdTA4+yFN/PjsNFLZwLPNPiUCb
-         rZzi5idlRTgKw3WARu2Zakev2e5XaWFMLL2c49dJZ9lIE4+G6q6RfHrms8KAPKsnJ90W
-         ucZadFF/7B8MomOqX2bCCrfh1zocnq4/uU56Rs+3vG0W8SUT/xy6vjSevFLhIgE6sZ5o
-         1VEvAVFt2NYkteFuSOESDcbrImVlJRgXghUOvJOI4pV4YMw8I4jWz7K9PBnkB8Gz2r39
-         S4Yw==
-In-Reply-To: <1474290618.6520.23.camel@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1474303441-3745-6-git-send-email-daniel@zonque.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Dalessandro, Dennis" <dennis.dalessandro@intel.com>
-Cc: "leon@kernel.org" <leon@kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "corbet@lwn.net" <corbet@lwn.net>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "ogerlitz@mellanox.com" <ogerlitz@mellanox.com>, "hch@lst.de" <hch@lst.de>, "linux-security-module@vger.kernel.org" <linux-security-module@vger.kernel.org>, "haggaie@mellanox.com" <haggaie@mellanox.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "Hefty, Sean" <sean.hefty@intel.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "james.l.morris@oracle.com" <james.l.morris@oracle.com>, "tj@kernel.org" <tj@kernel.org>, "liranl@mellanox.com" <liranl@mellanox.com>
+To: Daniel Mack <daniel@zonque.org>
+Cc: htejun@fb.com, daniel@iogearbox.net, ast@fb.com, davem@davemloft.net, kafai@fb.com, fw@strlen.de, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org
 
-Hi Denny,
+On Mon, Sep 19, 2016 at 06:44:00PM +0200, Daniel Mack wrote:
+> diff --git a/net/ipv6/ip6_output.c b/net/ipv6/ip6_output.c
+> index 6001e78..5dc90aa 100644
+> --- a/net/ipv6/ip6_output.c
+> +++ b/net/ipv6/ip6_output.c
+> @@ -39,6 +39,7 @@
+>  #include <linux/module.h>
+>  #include <linux/slab.h>
+>  
+> +#include <linux/bpf-cgroup.h>
+>  #include <linux/netfilter.h>
+>  #include <linux/netfilter_ipv6.h>
+>  
+> @@ -143,6 +144,7 @@ int ip6_output(struct net *net, struct sock *sk, struct sk_buff *skb)
+>  {
+>  	struct net_device *dev = skb_dst(skb)->dev;
+>  	struct inet6_dev *idev = ip6_dst_idev(skb_dst(skb));
+> +	int ret;
+>  
+>  	if (unlikely(idev->cnf.disable_ipv6)) {
+>  		IP6_INC_STATS(net, idev, IPSTATS_MIB_OUTDISCARDS);
+> @@ -150,6 +152,12 @@ int ip6_output(struct net *net, struct sock *sk, struct sk_buff *skb)
+>  		return 0;
+>  	}
+>  
+> +	ret = cgroup_bpf_run_filter(sk, skb, BPF_CGROUP_INET_EGRESS);
+> +	if (ret) {
+> +		kfree_skb(skb);
+> +		return ret;
+> +	}
 
-On Mon, Sep 19, 2016 at 6:40 PM, Dalessandro, Dennis
-<dennis.dalessandro@intel.com> wrote:
-> On Wed, 2016-09-14 at 12:36 +0530, Parav Pandit wrote:
->> Hi Dennis,
->>
->> Do you know how would HFI1 driver would work along with rdma cgroup?
->
-> Keep in mind HFI1 driver has two "modes" of operation. We support
-> verbs, and would surely fall in line with whatever cgroups do for IB
-> core.
-Thanks for the feedback.
+1) If your goal is to filter packets, why so late? The sooner you
+   enforce your policy, the less cycles you waste.
 
-> For our psm interface, not sure how cgroups would come into play.
-> Psm is designed to expose the hw to user and avoid the kernel when
-> possible adding more kernel control is sort of contrary to that.
->
-Yes, PSM is currently out of RDMA cgroup and in future we can take a
-look on how things shape as subsystem if it does.
+Actually, did you look at Google's approach to this problem?  They
+want to control this at socket level, so you restrict what the process
+can actually bind. That is enforcing the policy way before you even
+send packets. On top of that, what they submitted is infrastructured
+so any process with CAP_NET_ADMIN can access that policy that is being
+applied and fetch a readable policy through kernel interface.
 
-> Now that being said, Christoph recently made mention of maybe having a
-> drivers/psm [1]. I really haven't had a chance to think about the
-> implications of that, but maybe it's worth considering, after all we
-> have two implementations, qib and hfi1. So anyway I'm not sure we need
-> to be too concerned about cgroups right now as far as psm side of
-> things goes.
->
-o.k.
+2) This will turn the stack into a nightmare to debug I predict. If
+   any process with CAP_NET_ADMIN can potentially attach bpf blobs
+   via these hooks, we will have to include in the network stack
+   traveling documentation something like: "Probably you have to check
+   that your orchestrator is not dropping your packets for some
+   reason". So I wonder how users will debug this and how the policy that
+   your orchestrator applies will be exposed to userspace.
+
+>  	return NF_HOOK_COND(NFPROTO_IPV6, NF_INET_POST_ROUTING,
+>  			    net, sk, skb, NULL, dev,
+>  			    ip6_finish_output,
+> -- 
+> 2.5.5
+> 
