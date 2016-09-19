@@ -1,110 +1,154 @@
-From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
-Date: Mon, 19 Sep 2016 18:34:28 +0200
-Message-ID: <1918ef04-f22f-dce3-4bb4-1275936111d0@zonque.org>
-References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
- <20160913115627.GA4898@salvia>
- <da300784-284c-0d1f-a82e-aa0a0f8ae116@zonque.org>
- <20160913172408.GC6138@salvia>
- <6de6809a-13f5-4000-5639-c760dde30223@zonque.org>
- <20160916195728.GA14736@ircssh.c.rugged-nimbus-611.internal>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160916195728.GA14736-I4sfFR6g6EicJoAdRrHjTrzMkBWIpU9tytq7g7fCXyjEk0E+pv7Png@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v6 0/6] Add eBPF hooks for cgroups
+Date: Mon, 19 Sep 2016 18:43:55 +0200
+Message-ID: <1474303441-3745-1-git-send-email-daniel@zonque.org>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
-Cc: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: htejun@fb.com, daniel@iogearbox.net, ast@fb.com
+Cc: davem@davemloft.net, kafai@fb.com, fw@strlen.de, pablo@netfilter.org, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org, Daniel Mack <daniel@zonque.org>
 
-Hi,
-
-On 09/16/2016 09:57 PM, Sargun Dhillon wrote:
-> On Wed, Sep 14, 2016 at 01:13:16PM +0200, Daniel Mack wrote:
-
->> I have no idea what makes you think this is limited to systemd. As I
->> said, I provided an example for userspace that works from the command
->> line. The same limitation apply as for all other users of cgroups.
->>
-> So, at least in my work, we have Mesos, but on nearly every machine that Mesos 
-> runs, people also have systemd. Now, there's recently become a bit of a battle 
-> of ownership of things like cgroups on these machines. We can usually solve it 
-> by nesting under systemd cgroups, and thus so far we've avoided making too many 
-> systemd-specific concessions.
-> 
-> The reason this works (mostly), is because everything we touch has a sense of 
-> nesting, where we can apply policy at a place lower in the hierarchy, and yet 
-> systemd's monitoring and policy still stays in place. 
-> 
-> Now, with this patch, we don't have that, but I think we can reasonably add some 
-> flag like "no override" when applying policies, or alternatively something like 
-> "no new privileges", to prevent children from applying policies that override 
-> top-level policy.
-
-Yes, but the API is already guarded by CAP_NET_ADMIN. Take that
-capability away from your children, and they can't tamper with the
-policy. Does that work for you?
-
-> I realize there is a speed concern as well, but I think for 
-> people who want nested policy, we're willing to make the tradeoff. The cost
-> of traversing a few extra pointers still outweighs the overhead of network
-> namespaces, iptables, etc.. for many of us. 
-
-Not sure. Have you tried it?
-
-> What do you think Daniel?
-
-I think we should look at an implementation once we really need it, and
-then revisit the performance impact. In any case, this can be changed
-under the hood, without touching the userspace API (except for adding
-flags if we need them).
-
->> Not necessarily. You can as well do it the inetd way, and pass the
->> socket to a process that is launched on demand, but do SO_ATTACH_FILTER
->> + SO_LOCK_FILTER  in the middle. What happens with payload on the socket
->> is not transparent to the launched binary at all. The proposed cgroup
->> eBPF solution implements a very similar behavior in that regard.
->
-> It would be nice to be able to see whether or not a filter is attached to a 
-> cgroup, but given this is going through syscalls, at least introspection
-> is possible as opposed to something like netlink.
-
-Sure, there are many ways. I implemented the bpf cgroup logic using an
-own cgroup controller once, which made it possible to read out the
-status. But as we agreed on attaching programs through the bpf(2) system
-call, I moved back to the implementation that directly stores the
-pointers in the cgroup.
-
-First enabling the controller through the fs-backed cgroup interface,
-then come back through the bpf(2) syscall and then go back to the fs
-interface to read out status values is a bit weird.
-
->> And FWIW, I agree with Thomas - there is nothing wrong with having
->> multiple options to use for such use-cases.
->
-> Right now, for containers, we have netfilter and network namespaces.
-> There's a lot of performance overhead that comes with this.
-
-Out of curiosity: Could you express that in numbers? And how exactly are
-you testing?
-
-> Not only
-> that, but iptables doesn't really have a simple way of usage by
-> automated infrastructure. We (firewalld, systemd, dockerd, mesos)
-> end up fighting with one another for ownership over firewall rules.
-
-Yes, that's a common problem.
-
-> Although, I have problems with this approach, I think that it's
-> a good baseline where we can have top level owned by systemd,
-> docker underneath that, and Mesos underneath that. We can add
-> additional hooks for things like Checmate and Landlock, and
-> with a little more work, we can do compositition, solving
-> all of our problems.
-
-It is supposed to be just a baseline, yes.
+This is v6 of the patch set to allow eBPF programs for network
+filtering and accounting to be attached to cgroups, so that they apply
+to all sockets of all tasks placed in that cgroup. The logic also
+allows to be extendeded for other cgroup based eBPF logic.
 
 
-Thanks for your feedback,
+Changes from v5:
+
+* The eBPF programs now operate on L3 rather than on L2 of the packets,
+  and the egress hooks were moved from __dev_queue_xmit() to
+  ip*_output().
+
+* For BPF_PROG_TYPE_CGROUP_SOCKET, disallow direct access to the skb
+  through BPF_LD_[ABS|IND] instructions, but hook up the
+  bpf_skb_load_bytes() access helper instead. Thanks to Daniel Borkmann
+  for the help.
+
+
+Changes from v4:
+
+* Plug an skb leak when dropping packets due to eBPF verdicts in
+  __dev_queue_xmit(). Spotted by Daniel Borkmann.
+
+* Check for sk_fullsock(sk) in __cgroup_bpf_run_filter() so we don't
+  operate on timewait or request sockets. Suggested by Daniel Borkmann.
+
+* Add missing @parent parameter in kerneldoc of __cgroup_bpf_update().
+  Spotted by Rami Rosen.
+
+* Include linux/jump_label.h from bpf-cgroup.h to fix a kbuild error.
+
+
+Changes from v3:
+
+* Dropped the _FILTER suffix from BPF_PROG_TYPE_CGROUP_SOCKET_FILTER,
+  renamed BPF_ATTACH_TYPE_CGROUP_INET_{E,IN}GRESS to
+  BPF_CGROUP_INET_{IN,E}GRESS and alias BPF_MAX_ATTACH_TYPE to
+  __BPF_MAX_ATTACH_TYPE, as suggested by Daniel Borkmann.
+
+* Dropped the attach_flags member from the anonymous struct for BPF
+  attach operations in union bpf_attr. They can be added later on via
+  CHECK_ATTR. Requested by Daniel Borkmann and Alexei.
+
+* Release old_prog at the end of __cgroup_bpf_update rather that at
+  the beginning to fix a race gap between program updates and their
+  users. Spotted by Daniel Borkmann.
+
+* Plugged an skb leak when dropping packets on the egress path.
+  Spotted by Daniel Borkmann.
+
+* Add cgroups@vger.kernel.org to the loop, as suggested by Rami Rosen.
+
+* Some minor coding style adoptions not worth mentioning in particular.
+
+
+Changes from v2:
+
+* Fixed the RCU locking details Tejun pointed out.
+
+* Assert bpf_attr.flags == 0 in BPF_PROG_DETACH syscall handler.
+
+
+Changes from v1:
+
+* Moved all bpf specific cgroup code into its own file, and stub
+  out related functions for !CONFIG_CGROUP_BPF as static inline nops.
+  This way, the call sites are not cluttered with #ifdef guards while
+  the feature remains compile-time configurable.
+
+* Implemented the new scheme proposed by Tejun. Per cgroup, store one
+  set of pointers that are pinned to the cgroup, and one for the
+  programs that are effective. When a program is attached or detached,
+  the change is propagated to all the cgroup's descendants. If a
+  subcgroup has its own pinned program, skip the whole subbranch in
+  order to allow delegation models.
+
+* The hookup for egress packets is now done from __dev_queue_xmit().
+
+* A static key is now used in both the ingress and egress fast paths
+  to keep performance penalties close to zero if the feature is
+  not in use.
+
+* Overall cleanup to make the accessors use the program arrays.
+  This should make it much easier to add new program types, which
+  will then automatically follow the pinned vs. effective logic.
+
+* Fixed locking issues, as pointed out by Eric Dumazet and Alexei
+  Starovoitov. Changes to the program array are now done with
+  xchg() and are protected by cgroup_mutex.
+
+* eBPF programs are now expected to return 1 to let the packet pass,
+  not >= 0. Pointed out by Alexei.
+
+* Operation is now limited to INET sockets, so local AF_UNIX sockets
+  are not affected. The enum members are renamed accordingly. In case
+  other socket families should be supported, this can be extended in
+  the future.
+
+* The sample program learned to support both ingress and egress, and
+  can now optionally make the eBPF program drop packets by making it
+  return 0.
+
+
+As always, feedback is much appreciated.
+
+Thanks,
 Daniel
+
+
+Daniel Mack (6):
+  bpf: add new prog type for cgroup socket filtering
+  cgroup: add support for eBPF programs
+  bpf: add BPF_PROG_ATTACH and BPF_PROG_DETACH commands
+  net: filter: run cgroup eBPF ingress programs
+  net: ipv4, ipv6: run cgroup eBPF egress programs
+  samples: bpf: add userspace example for attaching eBPF programs to
+    cgroups
+
+ include/linux/bpf-cgroup.h      |  71 +++++++++++++++++
+ include/linux/cgroup-defs.h     |   4 +
+ include/uapi/linux/bpf.h        |  17 ++++
+ init/Kconfig                    |  12 +++
+ kernel/bpf/Makefile             |   1 +
+ kernel/bpf/cgroup.c             | 166 ++++++++++++++++++++++++++++++++++++++++
+ kernel/bpf/syscall.c            |  81 ++++++++++++++++++++
+ kernel/cgroup.c                 |  18 +++++
+ net/core/filter.c               |  27 +++++++
+ net/ipv4/ip_output.c            |  15 ++++
+ net/ipv6/ip6_output.c           |   8 ++
+ samples/bpf/Makefile            |   2 +
+ samples/bpf/libbpf.c            |  21 +++++
+ samples/bpf/libbpf.h            |   3 +
+ samples/bpf/test_cgrp2_attach.c | 147 +++++++++++++++++++++++++++++++++++
+ 15 files changed, 593 insertions(+)
+ create mode 100644 include/linux/bpf-cgroup.h
+ create mode 100644 kernel/bpf/cgroup.c
+ create mode 100644 samples/bpf/test_cgrp2_attach.c
+
+-- 
+2.5.5
+
