@@ -1,106 +1,58 @@
-From: "Dalessandro, Dennis" <dennis.dalessandro-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
-Date: Mon, 19 Sep 2016 13:10:23 +0000
-Message-ID: <1474290618.6520.23.camel@intel.com>
-References: <20160901084406.GA4115@lst.de>
-         <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A@mail.gmail.com>
-         <ae3adcc4-253e-f87c-6ff6-202c91599f48@mellanox.com>
-         <20160910161442.GC29259@lst.de>
-         <20160910170151.GA5230@obsidianresearch.com>
-         <20160911133421.GA23384@lst.de> <20160911143522.GL6415@leon.nu>
-         <20160911171409.GA13442@obsidianresearch.com>
-         <20160911172445.GA25953@lst.de>
-         <20160911175235.GB13442@obsidianresearch.com>
-         <20160912050717.GE8812@leon.nu>
-         <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
+Subject: Re: [PATCH 1/3] mm: memcontrol: make per-cpu charge cache IRQ-safe
+ for socket accounting
+Date: Mon, 19 Sep 2016 18:35:45 +0300
+Message-ID: <20160919153545.GF1989@esperanza>
+References: <20160914194846.11153-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
-Content-ID: <584812C046C96144905E4C617261D9D5-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=9yjdp/QLbyOlQNYnOUzjPC8vjDUSot/pl2FCq4Ek5ow=;
+        b=Q3MRyoTJ7ni0kHcdVKDGLxCcGpx+JRD0Fi1u+AfsFvjJbQutoB37+rweSSKoyYRv7z
+         MzsCa6/RnmuPsaxaYoJlVNX1d6WTx4byuyFcrzo6RVdD67U+3gv7rLnoZp7VqOfPy57j
+         /hyKTdc+3K8WNLsR8X0qKhEdMRGLQn6C59PHEXyI2gvM1PHEGzevyjDS0bxjqpHuUCRI
+         EPaJX8B/seuR+gZ+bvVk9mlMtnHecQDwoCAZ0un1XgK9N6mwBVSAtR8m/TdDbQPQfPf9
+         cMzrzPq2YQqzCurpiFfbYvODHg+Y39Y7tlEeEB7XkXEZoBtTRywANjg1YE9aVFPPEOv7
+         dukA==
+Content-Disposition: inline
+In-Reply-To: <20160914194846.11153-1-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: "pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org" <jg>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-T24gV2VkLCAyMDE2LTA5LTE0IGF0IDEyOjM2ICswNTMwLCBQYXJhdiBQYW5kaXQgd3JvdGU6DQo+
-IEhpIERlbm5pcywNCj4gDQo+IERvIHlvdSBrbm93IGhvdyB3b3VsZCBIRkkxIGRyaXZlciB3b3Vs
-ZCB3b3JrIGFsb25nIHdpdGggcmRtYSBjZ3JvdXA/DQoNCktlZXAgaW4gbWluZCBIRkkxIGRyaXZl
-ciBoYXMgdHdvICJtb2RlcyIgb2Ygb3BlcmF0aW9uLiBXZSBzdXBwb3J0DQp2ZXJicywgYW5kIHdv
-dWxkIHN1cmVseSBmYWxsIGluIGxpbmUgd2l0aCB3aGF0ZXZlciBjZ3JvdXBzIGRvIGZvciBJQg0K
-Y29yZS4gRm9yIG91ciBwc20gaW50ZXJmYWNlLCBub3Qgc3VyZSBob3cgY2dyb3VwcyB3b3VsZCBj
-b21lIGludG8gcGxheS4NClBzbSBpcyBkZXNpZ25lZCB0byBleHBvc2UgdGhlIGh3IHRvIHVzZXIg
-YW5kIGF2b2lkIHRoZSBrZXJuZWwgd2hlbg0KcG9zc2libGUgYWRkaW5nIG1vcmUga2VybmVsIGNv
-bnRyb2wgaXMgc29ydCBvZiBjb250cmFyeSB0byB0aGF0Lg0KDQpOb3cgdGhhdCBiZWluZyBzYWlk
-LCBDaHJpc3RvcGggcmVjZW50bHkgbWFkZSBtZW50aW9uIG9mIG1heWJlIGhhdmluZyBhDQpkcml2
-ZXJzL3BzbSBbMV0uIEkgcmVhbGx5IGhhdmVuJ3QgaGFkIGEgY2hhbmNlIHRvIHRoaW5rIGFib3V0
-IHRoZQ0KaW1wbGljYXRpb25zIG9mIHRoYXQsIGJ1dCBtYXliZSBpdCdzIHdvcnRoIGNvbnNpZGVy
-aW5nLCBhZnRlciBhbGwgd2UNCmhhdmUgdHdvIGltcGxlbWVudGF0aW9ucywgcWliIGFuZCBoZmkx
-LiBTbyBhbnl3YXkgSSdtIG5vdCBzdXJlIHdlIG5lZWQNCnRvIGJlIHRvbyBjb25jZXJuZWQgYWJv
-dXQgY2dyb3VwcyByaWdodCBub3cgYXMgZmFyIGFzIHBzbSBzaWRlIG9mDQp0aGluZ3MgZ29lcy4N
-Cg0KRGVwZW5kaW5nIGhvdyB0aGluZ3Mgc2hha2Ugb3V0IGZvciB0aGUgdUFQSSByZXdyaXRlLCBv
-ciB2ZXJicyAyLjAgb3INCndoYXRldmVyIHdlIGFyZSBjYWxsaW5nIGl0IHRvZGF5IHRoaW5ncyBt
-YXkgY2hhbmdlLg0KDQpbMV3CoGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtcmRtYSZtPTE0NzQw
-MTcxNDMxMzgzMSZ3PTINCg0KLURlbm55DQoNCj4gSGkgTWF0YW4sIExlb24sIEphc29uLA0KPiBB
-cGFydCBmcm9tIEhGSTEsIGlzIHRoZXJlIGFueSBvdGhlciBjb25jZXJuPw0KPiBPciBQYXRjaCBp
-cyBnb29kIHRvIGdvPw0KPiANCj4gNC44IGRhdGVzIGFyZSBjbG9zZSBieSAoMiB3ZWVrcykgYW5k
-IHRoZXJlIGFyZSB0d28gZ2l0IHRyZWVzIGludm9sdmVkDQo+ICh0aGF0IG1pZ2h0IGNhdXNlIG1l
-cmdlIGVycm9yIHRvIExpbnVzKSBzbyBpZiB0aGVyZSBhcmUgbm8gaXNzdWVzLCBJDQo+IHdvdWxk
-IGxpa2UgdG8gbWFrZSByZXF1ZXN0IHRvIERvdWcgdG8gY29uc2lkZXIgaXQgZm9yIDQuOCBlYXJs
-eSBvbi4NCj4gDQo+IFBhcmF2DQo+IA0KPiBPbiBNb24sIFNlcCAxMiwgMjAxNiBhdCAxMDozNyBB
-TSwgTGVvbiBSb21hbm92c2t5IDxsZW9uQGtlcm5lbC5vcmc+DQo+IHdyb3RlOg0KPiA+IE9uIFN1
-biwgU2VwIDExLCAyMDE2IGF0IDExOjUyOjM1QU0gLTA2MDAsIEphc29uIEd1bnRob3JwZSB3cm90
-ZToNCj4gPiA+IE9uIFN1biwgU2VwIDExLCAyMDE2IGF0IDA3OjI0OjQ1UE0gKzAyMDAsIENocmlz
-dG9waCBIZWxsd2lnDQo+ID4gPiB3cm90ZToNCj4gPiA+ID4gPiA+ID4gSSd2ZSBwb3N0ZWQgc29t
-ZSBpbml0aWFsIHdvcmsgdG93YXJkIGEpIGEgd2hpbGUgYWdvLCBhbmQNCj4gPiA+ID4gPiA+ID4g
-b25jZSB3ZQ0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IERpZCBpdCBnZXQgbWVyZ2VkPyBEbyB5b3Ug
-aGF2ZSBhIHBvaW50ZXI/DQo+ID4gPiA+IA0KPiA+ID4gPiBodHRwOi8vd3d3LnNwaW5pY3MubmV0
-L2xpc3RzL2xpbnV4LXJkbWEvbXNnMzE5NTguaHRtbA0KPiA+ID4gDQo+ID4gPiBSaWdodCwgSSBy
-ZW1lbWJlciB0aGF0LiBDZXJ0YWlubHkgdGhlIHJpZ2h0IGRpcmVjdGlvbg0KPiA+ID4gDQo+ID4g
-PiA+ID4gSG93ZXZlciwgZXZlcnl0aGluZyB1bmRlciB2ZXJicyBpcyBub3Qgc3RyYWlnaHRmb3J3
-YXJkLiBUaGUNCj4gPiA+ID4gPiBmaWxlcyBpbg0KPiA+ID4gPiA+IHVzZXJzcGFjZSBhcmUgbm90
-IGNvcGllcy4uLg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IHVzZXI6DQo+ID4gPiA+ID4gDQo+ID4g
-PiA+ID4gc3RydWN0IGlidl9xdWVyeV9kZXZpY2Ugew0KPiA+ID4gPiA+IMKgwqDCoMKgwqDCoMKg
-X191MzIgY29tbWFuZDsNCj4gPiA+ID4gPiDCoMKgwqDCoMKgwqDCoF9fdTE2IGluX3dvcmRzOw0K
-PiA+ID4gPiA+IMKgwqDCoMKgwqDCoMKgX191MTYgb3V0X3dvcmRzOw0KPiA+ID4gPiA+IMKgwqDC
-oMKgwqDCoMKgX191NjQgcmVzcG9uc2U7DQo+ID4gPiA+ID4gwqDCoMKgwqDCoMKgwqBfX3U2NCBk
-cml2ZXJfZGF0YVswXTsNCj4gPiA+ID4gPiB9Ow0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IGtlcm5l
-bDoNCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBzdHJ1Y3QgaWJfdXZlcmJzX3F1ZXJ5X2RldmljZSB7
-DQo+ID4gPiA+ID4gwqDCoMKgwqDCoMKgwqDCoF9fdTY0IHJlc3BvbnNlOw0KPiA+ID4gPiA+IMKg
-wqDCoMKgwqDCoMKgwqBfX3U2NCBkcml2ZXJfZGF0YVswXTsNCj4gPiA+ID4gPiB9Ow0KPiA+ID4g
-PiANCj4gPiA+ID4gV2UnbGwgb2J2aW91c2x5IG5lZWQgZGlmZmVyZW50IHN0cnV0dXJlcyBmb3Ig
-dGhlIGxpYmlidmVycyBBUEkNCj4gPiA+ID4gYW5kIHRoZSBrZXJuZWwgaW50ZXJmYWNlIGluIHRo
-aXMgY2FzZSwgYW5kIHdlJ2xsIG5lZWQgdG8gZmlndXJlDQo+ID4gPiA+IG91dA0KPiA+ID4gPiBo
-b3cgdG8gcHJvcGVybHkgdHJhbnNsYXRlIHRoZW0uwqDCoEkgdGhpbmsgYSBjYXN0LCBwbHVzIGNv
-bXBpbGUNCj4gPiA+ID4gdGltZQ0KPiA+ID4gPiB0eXBlIGNoZWNraW5nIGFsYSBCVUlMRF9CVUdf
-T04gaXMgdGhlIHdheSB0byBnby4NCj4gPiA+IA0KPiA+ID4gSSdtIG5vdCBzdXJlIEkgZm9sbG93
-LCB3aGljaCB3b3VsZCBJIGNhc3Q/DQo+ID4gPiANCj4gPiA+IEJVSUxEX0JVR19PTihzaXplb2Yo
-aWJ2X3F1ZXJ5X2RldmljZSkgPT0NCj4gPiA+IHNpemVvZihpYl91dmVyYnNfY21kX2hkcikgKw0K
-PiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBzaXplb2YoaWJfdXZlcmJzX3F1ZXJ5X2Rl
-dmljZSkpDQo+ID4gPiANCj4gPiA+ID8NCj4gPiA+IA0KPiA+ID4gPiA+IEknbSB0aGlua2luZyB0
-aGUgYmVzdCB3YXkgZm9yd2FyZCBtaWdodCBiZSB0byB1c2UgYSBzY3JpcHQNCj4gPiA+ID4gPiBh
-bmQNCj4gPiA+ID4gPiB0cmFuc2Zvcm0gdXNlcnNwYWNlIGludG86DQo+ID4gPiA+ID4gDQo+ID4g
-PiA+ID4gc3RydWN0IGlidl9xdWVyeV9kZXZpY2Ugew0KPiA+ID4gPiA+IMKgIHN0cnVjdCBpYl91
-dmVyYnNfY21kX2hkciBoZHI7DQo+ID4gPiA+ID4gwqAgc3RydWN0IGliX3V2ZXJic19xdWVyeV9k
-ZXZpY2UgY21kOw0KPiA+ID4gPiA+IH07DQo+ID4gPiA+IA0KPiA+ID4gPiBUaGF0IHdvdWxkIGJy
-ZWFrIHRoZSB1c2VycyBvZiB0aGUgaW50ZXJmYWNlLg0KPiA+ID4gDQo+ID4gPiBTb3JyeSwgSSBt
-ZWFuIGRvaW5nIHRoaXMgaW5zaWRlIHJkbWEtcGx1bWJpbmcuIFNpbmNlIHRoZSBjaGFuZ2UNCj4g
-PiA+IGlzIEFCSQ0KPiA+ID4gaWRlbnRpY2FsIHRoZSBtb2RpZmllZCBsaWJpYnZlcmJzIHdvdWxk
-IHN0aWxsIGJlIGJpbmFyeQ0KPiA+ID4gY29tcGF0aWJsZQ0KPiA+ID4gd2l0aCBhbGwgcHJvdmlk
-ZXJzIGJ1dCBub3Qgc291cmNlIGNvbXBhdGlibGUuIFNpbmNlIGFsbCBrZXJuZWwNCj4gPiA+IHN1
-cHBvcnRlZCBwcm92aWRlcnMgYXJlIGluIHJkbWEtcGx1bWJpbmcgd2UgY2FuIGFkZCB0aGUgJy5j
-bWQuJw0KPiA+ID4gYXQgdGhlDQo+ID4gPiBzYW1lIHRpbWUuDQo+ID4gPiANCj4gPiA+IFRoZSBr
-ZXJuZWwgdWFwaSBoZWFkZXIgd291bGQgc3RheSB0aGUgc2FtZS4NCj4gPiA+IA0KPiA+ID4gPiBI
-b3dldmVyIGF1dG9tYXRpY2FsbHkgZ2VuZXJhdGluZyB0aGUgdXNlciBBQkkgZnJvbSB0aGUga2Vy
-bmVsDQo+ID4gPiA+IG9uZQ0KPiA+ID4gPiBtaWdodCBzdGlsbCBiZSBhIGdvb2QgaWRlYSBpbiB0
-aGUgbG9uZyBydW4uDQo+ID4gPiANCj4gPiA+IE15IHByZWZlcmVuY2Ugd291bGQgYmUgdG8gdHJ5
-IGFuZCB1c2UgdGhlIGtlcm5lbCBoZWFkZXJzDQo+ID4gPiBkaXJlY3RseS4NCj4gPiANCj4gPiBJ
-IHRob3VnaHQgdGhlIHNhbWUsIGVzcGVjaWFsbHkgYWZ0ZXIgcmVhbGl6aW5nIHRoYXQgdGhleSBh
-cmUgYWxtb3N0DQo+ID4gY29weS9wYXN0ZSBmcm9tIHRoZSB2ZW5kb3IgKi1hYmkuaCBmaWxlcy4N
-Cj4gPiANCj4gPiA+IA0KPiA+ID4gSmFzb24NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0
-aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJkbWEiIA0KPiBpbg0K
-PiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBN
-b3JlIG1ham9yZG9tbyBpbmZvIGF0wqDCoGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21v
-LWluZm8uaHRtbA==
+On Wed, Sep 14, 2016 at 03:48:44PM -0400, Johannes Weiner wrote:
+> From: Johannes Weiner <jweiner@fb.com>
+> 
+> During cgroup2 rollout into production, we started encountering css
+> refcount underflows and css access crashes in the memory controller.
+> Splitting the heavily shared css reference counter into logical users
+> narrowed the imbalance down to the cgroup2 socket memory accounting.
+> 
+> The problem turns out to be the per-cpu charge cache. Cgroup1 had a
+> separate socket counter, but the new cgroup2 socket accounting goes
+> through the common charge path that uses a shared per-cpu cache for
+> all memory that is being tracked. Those caches are safe against
+> scheduling preemption, but not against interrupts - such as the newly
+> added packet receive path. When cache draining is interrupted by
+> network RX taking pages out of the cache, the resuming drain operation
+> will put references of in-use pages, thus causing the imbalance.
+> 
+> Disable IRQs during all per-cpu charge cache operations.
+> 
+> Fixes: f7e1cb6ec51b ("mm: memcontrol: account socket memory in unified hierarchy memory controller")
+> Cc: <stable@vger.kernel.org> # 4.5+
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+
+Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
