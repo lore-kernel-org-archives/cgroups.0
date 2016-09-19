@@ -1,187 +1,106 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 3/3] mm: memcontrol: consolidate cgroup socket tracking
-Date: Mon, 19 Sep 2016 14:04:16 +0200
-Message-ID: <20160919120415.GO10785@dhcp22.suse.cz>
-References: <20160914194846.11153-1-hannes@cmpxchg.org>
- <20160914194846.11153-3-hannes@cmpxchg.org>
+From: "Dalessandro, Dennis" <dennis.dalessandro-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
+Date: Mon, 19 Sep 2016 13:10:23 +0000
+Message-ID: <1474290618.6520.23.camel@intel.com>
+References: <20160901084406.GA4115@lst.de>
+         <CAG53R5Ws4BJKqeEYfEoEx5kuaXUmhDKcXfH4Vx=LTMK6tKMG0A@mail.gmail.com>
+         <ae3adcc4-253e-f87c-6ff6-202c91599f48@mellanox.com>
+         <20160910161442.GC29259@lst.de>
+         <20160910170151.GA5230@obsidianresearch.com>
+         <20160911133421.GA23384@lst.de> <20160911143522.GL6415@leon.nu>
+         <20160911171409.GA13442@obsidianresearch.com>
+         <20160911172445.GA25953@lst.de>
+         <20160911175235.GB13442@obsidianresearch.com>
+         <20160912050717.GE8812@leon.nu>
+         <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20160914194846.11153-3-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+Content-ID: <584812C046C96144905E4C617261D9D5-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Vladimir Davydov <vdavydov.dev@gmail.com>
+To: "pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org" <jg>
 
-[Fixup Vladimir's email]
-
-same here I do not feel familiar with the code enough to give my ack but
-Vladimir might be in a better position
-
-On Wed 14-09-16 15:48:46, Johannes Weiner wrote:
-> The cgroup core and the memory controller need to track socket
-> ownership for different purposes, but the tracking sites being
-> entirely different is kind of ugly.
-> 
-> Be a better citizen and rename the memory controller callbacks to
-> match the cgroup core callbacks, then move them to the same place.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  include/linux/memcontrol.h |  4 ++--
->  mm/memcontrol.c            | 19 +++++++++++--------
->  net/core/sock.c            |  6 +++---
->  net/ipv4/tcp.c             |  2 --
->  net/ipv4/tcp_ipv4.c        |  3 ---
->  5 files changed, 16 insertions(+), 18 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 0710143723bc..ca11b3e6dd65 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -773,8 +773,8 @@ static inline void mem_cgroup_wb_stats(struct bdi_writeback *wb,
->  #endif	/* CONFIG_CGROUP_WRITEBACK */
->  
->  struct sock;
-> -void sock_update_memcg(struct sock *sk);
-> -void sock_release_memcg(struct sock *sk);
-> +void mem_cgroup_sk_alloc(struct sock *sk);
-> +void mem_cgroup_sk_free(struct sock *sk);
->  bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
->  void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
->  #ifdef CONFIG_MEMCG
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 60bb830abc34..2caf1ee86e78 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2939,7 +2939,7 @@ static int memcg_update_tcp_limit(struct mem_cgroup *memcg, unsigned long limit)
->  		/*
->  		 * The active flag needs to be written after the static_key
->  		 * update. This is what guarantees that the socket activation
-> -		 * function is the last one to run. See sock_update_memcg() for
-> +		 * function is the last one to run. See mem_cgroup_sk_alloc() for
->  		 * details, and note that we don't mark any socket as belonging
->  		 * to this memcg until that flag is up.
->  		 *
-> @@ -2948,7 +2948,7 @@ static int memcg_update_tcp_limit(struct mem_cgroup *memcg, unsigned long limit)
->  		 * as accounted, but the accounting functions are not patched in
->  		 * yet, we'll lose accounting.
->  		 *
-> -		 * We never race with the readers in sock_update_memcg(),
-> +		 * We never race with the readers in mem_cgroup_sk_alloc(),
->  		 * because when this value change, the code to process it is not
->  		 * patched in yet.
->  		 */
-> @@ -5651,11 +5651,15 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
->  DEFINE_STATIC_KEY_FALSE(memcg_sockets_enabled_key);
->  EXPORT_SYMBOL(memcg_sockets_enabled_key);
->  
-> -void sock_update_memcg(struct sock *sk)
-> +void mem_cgroup_sk_alloc(struct sock *sk)
->  {
->  	struct mem_cgroup *memcg;
->  
-> -	/* Socket cloning can throw us here with sk_cgrp already
-> +	if (!mem_cgroup_sockets_enabled)
-> +		return;
-> +
-> +	/*
-> +	 * Socket cloning can throw us here with sk_memcg already
->  	 * filled. It won't however, necessarily happen from
->  	 * process context. So the test for root memcg given
->  	 * the current task's memcg won't help us in this case.
-> @@ -5680,12 +5684,11 @@ void sock_update_memcg(struct sock *sk)
->  out:
->  	rcu_read_unlock();
->  }
-> -EXPORT_SYMBOL(sock_update_memcg);
->  
-> -void sock_release_memcg(struct sock *sk)
-> +void mem_cgroup_sk_free(struct sock *sk)
->  {
-> -	WARN_ON(!sk->sk_memcg);
-> -	css_put(&sk->sk_memcg->css);
-> +	if (sk->sk_memcg)
-> +		css_put(&sk->sk_memcg->css);
->  }
->  
->  /**
-> diff --git a/net/core/sock.c b/net/core/sock.c
-> index 038e660ef844..c73e28fc9c2a 100644
-> --- a/net/core/sock.c
-> +++ b/net/core/sock.c
-> @@ -1363,6 +1363,7 @@ static void sk_prot_free(struct proto *prot, struct sock *sk)
->  	slab = prot->slab;
->  
->  	cgroup_sk_free(&sk->sk_cgrp_data);
-> +	mem_cgroup_sk_free(sk);
->  	security_sk_free(sk);
->  	if (slab != NULL)
->  		kmem_cache_free(slab, sk);
-> @@ -1399,6 +1400,7 @@ struct sock *sk_alloc(struct net *net, int family, gfp_t priority,
->  		sock_net_set(sk, net);
->  		atomic_set(&sk->sk_wmem_alloc, 1);
->  
-> +		mem_cgroup_sk_alloc(sk);
->  		cgroup_sk_alloc(&sk->sk_cgrp_data);
->  		sock_update_classid(&sk->sk_cgrp_data);
->  		sock_update_netprioidx(&sk->sk_cgrp_data);
-> @@ -1545,6 +1547,7 @@ struct sock *sk_clone_lock(const struct sock *sk, const gfp_t priority)
->  		newsk->sk_incoming_cpu = raw_smp_processor_id();
->  		atomic64_set(&newsk->sk_cookie, 0);
->  
-> +		mem_cgroup_sk_alloc(newsk);
->  		cgroup_sk_alloc(&newsk->sk_cgrp_data);
->  
->  		/*
-> @@ -1569,9 +1572,6 @@ struct sock *sk_clone_lock(const struct sock *sk, const gfp_t priority)
->  		sk_set_socket(newsk, NULL);
->  		newsk->sk_wq = NULL;
->  
-> -		if (mem_cgroup_sockets_enabled && sk->sk_memcg)
-> -			sock_update_memcg(newsk);
-> -
->  		if (newsk->sk_prot->sockets_allocated)
->  			sk_sockets_allocated_inc(newsk);
->  
-> diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
-> index a13fcb369f52..fc76ef51a5f4 100644
-> --- a/net/ipv4/tcp.c
-> +++ b/net/ipv4/tcp.c
-> @@ -421,8 +421,6 @@ void tcp_init_sock(struct sock *sk)
->  	sk->sk_rcvbuf = sysctl_tcp_rmem[1];
->  
->  	local_bh_disable();
-> -	if (mem_cgroup_sockets_enabled)
-> -		sock_update_memcg(sk);
->  	sk_sockets_allocated_inc(sk);
->  	local_bh_enable();
->  }
-> diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
-> index 04b989328558..b8fc74a66299 100644
-> --- a/net/ipv4/tcp_ipv4.c
-> +++ b/net/ipv4/tcp_ipv4.c
-> @@ -1872,9 +1872,6 @@ void tcp_v4_destroy_sock(struct sock *sk)
->  	local_bh_disable();
->  	sk_sockets_allocated_dec(sk);
->  	local_bh_enable();
-> -
-> -	if (mem_cgroup_sockets_enabled && sk->sk_memcg)
-> -		sock_release_memcg(sk);
->  }
->  EXPORT_SYMBOL(tcp_v4_destroy_sock);
->  
-> -- 
-> 2.9.3
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+T24gV2VkLCAyMDE2LTA5LTE0IGF0IDEyOjM2ICswNTMwLCBQYXJhdiBQYW5kaXQgd3JvdGU6DQo+
+IEhpIERlbm5pcywNCj4gDQo+IERvIHlvdSBrbm93IGhvdyB3b3VsZCBIRkkxIGRyaXZlciB3b3Vs
+ZCB3b3JrIGFsb25nIHdpdGggcmRtYSBjZ3JvdXA/DQoNCktlZXAgaW4gbWluZCBIRkkxIGRyaXZl
+ciBoYXMgdHdvICJtb2RlcyIgb2Ygb3BlcmF0aW9uLiBXZSBzdXBwb3J0DQp2ZXJicywgYW5kIHdv
+dWxkIHN1cmVseSBmYWxsIGluIGxpbmUgd2l0aCB3aGF0ZXZlciBjZ3JvdXBzIGRvIGZvciBJQg0K
+Y29yZS4gRm9yIG91ciBwc20gaW50ZXJmYWNlLCBub3Qgc3VyZSBob3cgY2dyb3VwcyB3b3VsZCBj
+b21lIGludG8gcGxheS4NClBzbSBpcyBkZXNpZ25lZCB0byBleHBvc2UgdGhlIGh3IHRvIHVzZXIg
+YW5kIGF2b2lkIHRoZSBrZXJuZWwgd2hlbg0KcG9zc2libGUgYWRkaW5nIG1vcmUga2VybmVsIGNv
+bnRyb2wgaXMgc29ydCBvZiBjb250cmFyeSB0byB0aGF0Lg0KDQpOb3cgdGhhdCBiZWluZyBzYWlk
+LCBDaHJpc3RvcGggcmVjZW50bHkgbWFkZSBtZW50aW9uIG9mIG1heWJlIGhhdmluZyBhDQpkcml2
+ZXJzL3BzbSBbMV0uIEkgcmVhbGx5IGhhdmVuJ3QgaGFkIGEgY2hhbmNlIHRvIHRoaW5rIGFib3V0
+IHRoZQ0KaW1wbGljYXRpb25zIG9mIHRoYXQsIGJ1dCBtYXliZSBpdCdzIHdvcnRoIGNvbnNpZGVy
+aW5nLCBhZnRlciBhbGwgd2UNCmhhdmUgdHdvIGltcGxlbWVudGF0aW9ucywgcWliIGFuZCBoZmkx
+LiBTbyBhbnl3YXkgSSdtIG5vdCBzdXJlIHdlIG5lZWQNCnRvIGJlIHRvbyBjb25jZXJuZWQgYWJv
+dXQgY2dyb3VwcyByaWdodCBub3cgYXMgZmFyIGFzIHBzbSBzaWRlIG9mDQp0aGluZ3MgZ29lcy4N
+Cg0KRGVwZW5kaW5nIGhvdyB0aGluZ3Mgc2hha2Ugb3V0IGZvciB0aGUgdUFQSSByZXdyaXRlLCBv
+ciB2ZXJicyAyLjAgb3INCndoYXRldmVyIHdlIGFyZSBjYWxsaW5nIGl0IHRvZGF5IHRoaW5ncyBt
+YXkgY2hhbmdlLg0KDQpbMV3CoGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtcmRtYSZtPTE0NzQw
+MTcxNDMxMzgzMSZ3PTINCg0KLURlbm55DQoNCj4gSGkgTWF0YW4sIExlb24sIEphc29uLA0KPiBB
+cGFydCBmcm9tIEhGSTEsIGlzIHRoZXJlIGFueSBvdGhlciBjb25jZXJuPw0KPiBPciBQYXRjaCBp
+cyBnb29kIHRvIGdvPw0KPiANCj4gNC44IGRhdGVzIGFyZSBjbG9zZSBieSAoMiB3ZWVrcykgYW5k
+IHRoZXJlIGFyZSB0d28gZ2l0IHRyZWVzIGludm9sdmVkDQo+ICh0aGF0IG1pZ2h0IGNhdXNlIG1l
+cmdlIGVycm9yIHRvIExpbnVzKSBzbyBpZiB0aGVyZSBhcmUgbm8gaXNzdWVzLCBJDQo+IHdvdWxk
+IGxpa2UgdG8gbWFrZSByZXF1ZXN0IHRvIERvdWcgdG8gY29uc2lkZXIgaXQgZm9yIDQuOCBlYXJs
+eSBvbi4NCj4gDQo+IFBhcmF2DQo+IA0KPiBPbiBNb24sIFNlcCAxMiwgMjAxNiBhdCAxMDozNyBB
+TSwgTGVvbiBSb21hbm92c2t5IDxsZW9uQGtlcm5lbC5vcmc+DQo+IHdyb3RlOg0KPiA+IE9uIFN1
+biwgU2VwIDExLCAyMDE2IGF0IDExOjUyOjM1QU0gLTA2MDAsIEphc29uIEd1bnRob3JwZSB3cm90
+ZToNCj4gPiA+IE9uIFN1biwgU2VwIDExLCAyMDE2IGF0IDA3OjI0OjQ1UE0gKzAyMDAsIENocmlz
+dG9waCBIZWxsd2lnDQo+ID4gPiB3cm90ZToNCj4gPiA+ID4gPiA+ID4gSSd2ZSBwb3N0ZWQgc29t
+ZSBpbml0aWFsIHdvcmsgdG93YXJkIGEpIGEgd2hpbGUgYWdvLCBhbmQNCj4gPiA+ID4gPiA+ID4g
+b25jZSB3ZQ0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IERpZCBpdCBnZXQgbWVyZ2VkPyBEbyB5b3Ug
+aGF2ZSBhIHBvaW50ZXI/DQo+ID4gPiA+IA0KPiA+ID4gPiBodHRwOi8vd3d3LnNwaW5pY3MubmV0
+L2xpc3RzL2xpbnV4LXJkbWEvbXNnMzE5NTguaHRtbA0KPiA+ID4gDQo+ID4gPiBSaWdodCwgSSBy
+ZW1lbWJlciB0aGF0LiBDZXJ0YWlubHkgdGhlIHJpZ2h0IGRpcmVjdGlvbg0KPiA+ID4gDQo+ID4g
+PiA+ID4gSG93ZXZlciwgZXZlcnl0aGluZyB1bmRlciB2ZXJicyBpcyBub3Qgc3RyYWlnaHRmb3J3
+YXJkLiBUaGUNCj4gPiA+ID4gPiBmaWxlcyBpbg0KPiA+ID4gPiA+IHVzZXJzcGFjZSBhcmUgbm90
+IGNvcGllcy4uLg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IHVzZXI6DQo+ID4gPiA+ID4gDQo+ID4g
+PiA+ID4gc3RydWN0IGlidl9xdWVyeV9kZXZpY2Ugew0KPiA+ID4gPiA+IMKgwqDCoMKgwqDCoMKg
+X191MzIgY29tbWFuZDsNCj4gPiA+ID4gPiDCoMKgwqDCoMKgwqDCoF9fdTE2IGluX3dvcmRzOw0K
+PiA+ID4gPiA+IMKgwqDCoMKgwqDCoMKgX191MTYgb3V0X3dvcmRzOw0KPiA+ID4gPiA+IMKgwqDC
+oMKgwqDCoMKgX191NjQgcmVzcG9uc2U7DQo+ID4gPiA+ID4gwqDCoMKgwqDCoMKgwqBfX3U2NCBk
+cml2ZXJfZGF0YVswXTsNCj4gPiA+ID4gPiB9Ow0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IGtlcm5l
+bDoNCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBzdHJ1Y3QgaWJfdXZlcmJzX3F1ZXJ5X2RldmljZSB7
+DQo+ID4gPiA+ID4gwqDCoMKgwqDCoMKgwqDCoF9fdTY0IHJlc3BvbnNlOw0KPiA+ID4gPiA+IMKg
+wqDCoMKgwqDCoMKgwqBfX3U2NCBkcml2ZXJfZGF0YVswXTsNCj4gPiA+ID4gPiB9Ow0KPiA+ID4g
+PiANCj4gPiA+ID4gV2UnbGwgb2J2aW91c2x5IG5lZWQgZGlmZmVyZW50IHN0cnV0dXJlcyBmb3Ig
+dGhlIGxpYmlidmVycyBBUEkNCj4gPiA+ID4gYW5kIHRoZSBrZXJuZWwgaW50ZXJmYWNlIGluIHRo
+aXMgY2FzZSwgYW5kIHdlJ2xsIG5lZWQgdG8gZmlndXJlDQo+ID4gPiA+IG91dA0KPiA+ID4gPiBo
+b3cgdG8gcHJvcGVybHkgdHJhbnNsYXRlIHRoZW0uwqDCoEkgdGhpbmsgYSBjYXN0LCBwbHVzIGNv
+bXBpbGUNCj4gPiA+ID4gdGltZQ0KPiA+ID4gPiB0eXBlIGNoZWNraW5nIGFsYSBCVUlMRF9CVUdf
+T04gaXMgdGhlIHdheSB0byBnby4NCj4gPiA+IA0KPiA+ID4gSSdtIG5vdCBzdXJlIEkgZm9sbG93
+LCB3aGljaCB3b3VsZCBJIGNhc3Q/DQo+ID4gPiANCj4gPiA+IEJVSUxEX0JVR19PTihzaXplb2Yo
+aWJ2X3F1ZXJ5X2RldmljZSkgPT0NCj4gPiA+IHNpemVvZihpYl91dmVyYnNfY21kX2hkcikgKw0K
+PiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBzaXplb2YoaWJfdXZlcmJzX3F1ZXJ5X2Rl
+dmljZSkpDQo+ID4gPiANCj4gPiA+ID8NCj4gPiA+IA0KPiA+ID4gPiA+IEknbSB0aGlua2luZyB0
+aGUgYmVzdCB3YXkgZm9yd2FyZCBtaWdodCBiZSB0byB1c2UgYSBzY3JpcHQNCj4gPiA+ID4gPiBh
+bmQNCj4gPiA+ID4gPiB0cmFuc2Zvcm0gdXNlcnNwYWNlIGludG86DQo+ID4gPiA+ID4gDQo+ID4g
+PiA+ID4gc3RydWN0IGlidl9xdWVyeV9kZXZpY2Ugew0KPiA+ID4gPiA+IMKgIHN0cnVjdCBpYl91
+dmVyYnNfY21kX2hkciBoZHI7DQo+ID4gPiA+ID4gwqAgc3RydWN0IGliX3V2ZXJic19xdWVyeV9k
+ZXZpY2UgY21kOw0KPiA+ID4gPiA+IH07DQo+ID4gPiA+IA0KPiA+ID4gPiBUaGF0IHdvdWxkIGJy
+ZWFrIHRoZSB1c2VycyBvZiB0aGUgaW50ZXJmYWNlLg0KPiA+ID4gDQo+ID4gPiBTb3JyeSwgSSBt
+ZWFuIGRvaW5nIHRoaXMgaW5zaWRlIHJkbWEtcGx1bWJpbmcuIFNpbmNlIHRoZSBjaGFuZ2UNCj4g
+PiA+IGlzIEFCSQ0KPiA+ID4gaWRlbnRpY2FsIHRoZSBtb2RpZmllZCBsaWJpYnZlcmJzIHdvdWxk
+IHN0aWxsIGJlIGJpbmFyeQ0KPiA+ID4gY29tcGF0aWJsZQ0KPiA+ID4gd2l0aCBhbGwgcHJvdmlk
+ZXJzIGJ1dCBub3Qgc291cmNlIGNvbXBhdGlibGUuIFNpbmNlIGFsbCBrZXJuZWwNCj4gPiA+IHN1
+cHBvcnRlZCBwcm92aWRlcnMgYXJlIGluIHJkbWEtcGx1bWJpbmcgd2UgY2FuIGFkZCB0aGUgJy5j
+bWQuJw0KPiA+ID4gYXQgdGhlDQo+ID4gPiBzYW1lIHRpbWUuDQo+ID4gPiANCj4gPiA+IFRoZSBr
+ZXJuZWwgdWFwaSBoZWFkZXIgd291bGQgc3RheSB0aGUgc2FtZS4NCj4gPiA+IA0KPiA+ID4gPiBI
+b3dldmVyIGF1dG9tYXRpY2FsbHkgZ2VuZXJhdGluZyB0aGUgdXNlciBBQkkgZnJvbSB0aGUga2Vy
+bmVsDQo+ID4gPiA+IG9uZQ0KPiA+ID4gPiBtaWdodCBzdGlsbCBiZSBhIGdvb2QgaWRlYSBpbiB0
+aGUgbG9uZyBydW4uDQo+ID4gPiANCj4gPiA+IE15IHByZWZlcmVuY2Ugd291bGQgYmUgdG8gdHJ5
+IGFuZCB1c2UgdGhlIGtlcm5lbCBoZWFkZXJzDQo+ID4gPiBkaXJlY3RseS4NCj4gPiANCj4gPiBJ
+IHRob3VnaHQgdGhlIHNhbWUsIGVzcGVjaWFsbHkgYWZ0ZXIgcmVhbGl6aW5nIHRoYXQgdGhleSBh
+cmUgYWxtb3N0DQo+ID4gY29weS9wYXN0ZSBmcm9tIHRoZSB2ZW5kb3IgKi1hYmkuaCBmaWxlcy4N
+Cj4gPiANCj4gPiA+IA0KPiA+ID4gSmFzb24NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0
+aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJkbWEiIA0KPiBpbg0K
+PiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBN
+b3JlIG1ham9yZG9tbyBpbmZvIGF0wqDCoGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21v
+LWluZm8uaHRtbA==
