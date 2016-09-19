@@ -1,175 +1,139 @@
-From: Sargun Dhillon <sargun@sargun.me>
-Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
-Date: Mon, 19 Sep 2016 14:53:12 -0700
-Message-ID: <20160919215311.GA9723@ircssh.c.rugged-nimbus-611.internal>
-References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
- <20160913115627.GA4898@salvia>
- <da300784-284c-0d1f-a82e-aa0a0f8ae116@zonque.org>
- <20160913172408.GC6138@salvia>
- <6de6809a-13f5-4000-5639-c760dde30223@zonque.org>
- <20160916195728.GA14736@ircssh.c.rugged-nimbus-611.internal>
- <1918ef04-f22f-dce3-4bb4-1275936111d0@zonque.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Documentation] State of CPU controller in cgroup v2
+Date: Mon, 19 Sep 2016 17:53:40 -0400
+Message-ID: <20160919215340.GB4023@htj.duckdns.org>
+References: <20160831173251.GY12660@htj.duckdns.org>
+ <CALCETrUKOJZS+=QDPyQD+vxXpwyjoj4+Crg6wU7Xk8rP4prYkA@mail.gmail.com>
+ <20160831210754.GZ12660@htj.duckdns.org>
+ <CALCETrXj2Z=-GMaWV_EpCvw_8C3t1vc=D53Ff2wdvo=At8ZF1Q@mail.gmail.com>
+ <20160903220526.GA20784@mtj.duckdns.org>
+ <CALCETrVcAjFWLQ1arjSP-g=4jRY_J7G-j9JJHrvTDgOnxApYPw@mail.gmail.com>
+ <20160909225747.GA30105@mtj.duckdns.org>
+ <CALCETrUhpPQdyZ-6WRjdB+iLbpGBduRZMWXQtCuS+R7Cq7rygg@mail.gmail.com>
+ <20160914200041.GB6832@htj.duckdns.org>
+ <CALCETrUA6_noue4kq9JLqr-V_yo7hB+v1Arhg6i6fFn0tyTrpw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sargun.me; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=dmmr5IyYmlzmExNFjbHXowrQVtAWdHdXxZfGFkp/cZo=;
-        b=KpiUH2IgHzsOPEbw47A1+JzmmjZWU73i2Md25EFpXH+9l/+Q3KSuhafcP0cpUEPVs3
-         Ids+4ylb3ERo7Iksw3wVqXVEi46TcepRCDxj8h9DbkUSZ8Pj3CsNmffxTwH1fGzrMyrh
-         yJZ0BFQQvvR0rapLjQvt7+UkRhBq5+Krqpf9g=
+        bh=SbHwBgjFZAaRP3KH+QBH4urWfaKFkjbpfNMTBUUxGH8=;
+        b=Ey7tTFyZJdOOvtzFhBtU8B15vYw9ocqDX3bQmWbOKzl7gGr/4bUM4G15MmA1uBsyuQ
+         IjH5V+I9P0bWTkhqCOiWoeOXINnQlhLNhdj+n9wLJC/KsBKVCqPCO6Ho7M3wcbwVdNl4
+         unFyeeTUrkfnx4kuJeJQJR3lPAuAJSrSc9TPhL5COvANXHJhbal6W+J9xZKTDx1MxCHp
+         mf03mxLYJoe4+ps9yKrkXrHHoW8GZEiv5mFOHUqLMYh4xGcnYNkwY4vNfF9W83w7EEZB
+         WWw08o/xKDQyCsFT/TO0z0MPwBIgidoCkwHY3WT65tN9on7cJGXkB7edt2WJ1oqcL1Aa
+         7CmA==
 Content-Disposition: inline
-In-Reply-To: <1918ef04-f22f-dce3-4bb4-1275936111d0@zonque.org>
-Sender: netdev-owner@vger.kernel.org
+In-Reply-To: <CALCETrUA6_noue4kq9JLqr-V_yo7hB+v1Arhg6i6fFn0tyTrpw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Mack <daniel@zonque.org>
-Cc: Pablo Neira Ayuso <pablo@netfilter.org>, htejun@fb.com, daniel@iogearbox.net, ast@fb.com, davem@davemloft.net, kafai@fb.com, fw@strlen.de, harald@redhat.com, netdev@vger.kernel.org, cgroups@vger.kernel.org
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Mon, Sep 19, 2016 at 06:34:28PM +0200, Daniel Mack wrote:
-> Hi,
-> 
-> On 09/16/2016 09:57 PM, Sargun Dhillon wrote:
-> > On Wed, Sep 14, 2016 at 01:13:16PM +0200, Daniel Mack wrote:
-> 
-> >> I have no idea what makes you think this is limited to systemd. As I
-> >> said, I provided an example for userspace that works from the command
-> >> line. The same limitation apply as for all other users of cgroups.
-> >>
-> > So, at least in my work, we have Mesos, but on nearly every machine that Mesos 
-> > runs, people also have systemd. Now, there's recently become a bit of a battle 
-> > of ownership of things like cgroups on these machines. We can usually solve it 
-> > by nesting under systemd cgroups, and thus so far we've avoided making too many 
-> > systemd-specific concessions.
-> > 
-> > The reason this works (mostly), is because everything we touch has a sense of 
-> > nesting, where we can apply policy at a place lower in the hierarchy, and yet 
-> > systemd's monitoring and policy still stays in place. 
-> > 
-> > Now, with this patch, we don't have that, but I think we can reasonably add some 
-> > flag like "no override" when applying policies, or alternatively something like 
-> > "no new privileges", to prevent children from applying policies that override 
-> > top-level policy.
-> 
-> Yes, but the API is already guarded by CAP_NET_ADMIN. Take that
-> capability away from your children, and they can't tamper with the
-> policy. Does that work for you?
-> 
-No. This can be addressed in a follow-on patch, but the use-case is that I have 
-a container orchestrator (Docker, or Mesos), and systemd. The sysadmin controls 
-systemd, and Docker is controlled by devs. Typically, the system owner wants 
-some system level statistics, and filtering, and then we want to do 
-per-container filtering.
+Hello,
 
-We really want to be able to do nesting with userspace tools that are oblivious, 
-and we want to delegate a level of the cgroup hierarchy to the tool that created 
-it. I do not see Docker integrating with systemd any time soon, and that's 
-really the only other alternative.
+On Thu, Sep 15, 2016 at 01:08:07PM -0700, Andy Lutomirski wrote:
+> With regard to no-internal-tasks, I see (at least) three options:
+> 
+> 1. Keep the cgroup2 status quo.  Lots of distros and such are likely
+> to have their cgroup management fail if run in a container.  I really,
 
-> > I realize there is a speed concern as well, but I think for 
-> > people who want nested policy, we're willing to make the tradeoff. The cost
-> > of traversing a few extra pointers still outweighs the overhead of network
-> > namespaces, iptables, etc.. for many of us. 
-> 
-> Not sure. Have you tried it?
-> 
-Tried nested policies? Yes. I tried nested policy execution with syscalls, and I 
-tested with bind and connect. The performance overhead was pretty minimal, but 
-latency increased by 100 microseconds+ once the number of BPF hooks increased 
-beyond 30. The BPF programs were trivial, and essentially did a map lookup, and 
-returned 0.
+I don't know where you're getting this.  No-internal-tasks rule has
+*NOTHING* to do with how or how not cgroup v1 hierarchies can be used
+inside a namespace.  I suppose this is coming from the same
+misunderstanding that Austin has.  Please see my reply there for more
+details.
 
-I don't think that it's just raw cycles / execution time, but I didn't spend 
-enough time digging into it to determine the performance hit. I'm waiting
-for your patchset to land, and then I plan to work off of it.
+> really dislike this option.
 
-> > What do you think Daniel?
-> 
-> I think we should look at an implementation once we really need it, and
-> then revisit the performance impact. In any case, this can be changed
-> under the hood, without touching the userspace API (except for adding
-> flags if we need them).
-> 
-+1
-> >> Not necessarily. You can as well do it the inetd way, and pass the
-> >> socket to a process that is launched on demand, but do SO_ATTACH_FILTER
-> >> + SO_LOCK_FILTER  in the middle. What happens with payload on the socket
-> >> is not transparent to the launched binary at all. The proposed cgroup
-> >> eBPF solution implements a very similar behavior in that regard.
+Up until this point, you haven't supplied any valid technical reasons
+for your objection.  Repeating "really" doesn't add to the discussion
+at all.  If you're indicating that you don't like it on an aeshtetic
+ground, please just say so.
+
+> 2. Enforce no-internal-tasks for the root cgroup.  Un-cgroupable
+> thinks will still get accounted to the root cgroup even if subtree
+> control is on, but no tasks can be in the root cgroup if the root
+> cgroup has subtree control on.  (If some controllers removed the
+> no-internal-tasks restriction, this would apply to the root as well.)
+> I think this may annoy certain users.  If so, and if those users are
+> doing something valid, then I think that either those users should be
+> strongly encouraged or even forced to changed so namespacing works for
+> them or that we should do (3) instead.
+
+Theoretically, we can do that but what are the upsides and are they
+enough to justify the added inconveniences?  Up until now, the only
+argument you provided is that people may do certain things in
+system-root which might not work in namespace-root but that isn't a
+critical problem.  No real functionalities are lost by implementing
+the same behaviors both inside and outside namespaces.
+
+> 3. Remove the no-internal-tasks restriction entirely.  I can see this
+> resulting in a lot of configuration awkwardness, but I think it will
+> *work*, especially since all of the controllers already need to do
+> something vaguely intelligent when subtree control is on in the root
+> and there are tasks in the root.
+
+The reasons for no-internal-tasks restriction have been explained
+multiple times in the documentations and throughout this thread, and
+we also discussed how and why system-root is special and allowing
+system-root's special treatment doesn't break things.
+
+> What I'm trying to say is that I think that option (1) is sufficiently
+> bad that cgroup2 should do (2) or (3) instead.  If option (2) is
+> preferred and if it would break userspace, then I think we can work
+> around it by entirely deprecating cgroup2, renaming it to cgroup3, and
+> doing option (2) there.  You've given reasons you don't like options
+> (2) and (3).  I mostly agree with those reasons, but I don't think
+> they're strong enough to overcome the problems with (1).
+
+And you keep suggesting very drastic measures for an issue which isn't
+critical without providing any substantial technical reasons why such
+drastic measures would be necessary.  This part of discussion started
+with your misunderstanding of the implications of the system-root
+being special, and the only reason you presented in the previous
+message is still a, different, misunderstanding.
+
+The only thing which isn't changing here is your opinions on how it
+should be.  It is a baffling situation because your opinions don't
+seem to be affected at all by the validity of reasons for thinking so.
+
+> BTW, Mike keeps mentioning exclusive cgroups as problematic with the
+> no-internal-tasks constraints.  Do exclusive cgroups still exist in
+> cgroup2?  Could we perhaps just remove that capability entirely?  I've
+> never understood what problem exlusive cpusets and such solve that
+> can't be more comprehensibly solved by just assigning the cpusets the
+> normal inclusive way.
+
+This was explained before during the discussion.  Maybe it wasn't
+clear enough.  The knob is a config protector which protects oneself
+from changing its configs.  It doesn't really belong in the kernel.
+My guess is that it was added because delegation model wasn't properly
+established and people tried to delegate resource control knobs along
+with the cgroups and then wanted to prevent those knobs from changed
+in certain ways.
+
+> >> What kind of migration do you mean?  Having fds follow rename(2) around is
+> >> the normal vfs behavior, so I don't really know what you mean.
 > >
-> > It would be nice to be able to see whether or not a filter is attached to a 
-> > cgroup, but given this is going through syscalls, at least introspection
-> > is possible as opposed to something like netlink.
+> > Process or task migration by writing pid to cgroup.procs or tasks
+> > file.  cgroup never supported directory / cgroup level migrations.
 > 
-> Sure, there are many ways. I implemented the bpf cgroup logic using an
-> own cgroup controller once, which made it possible to read out the
-> status. But as we agreed on attaching programs through the bpf(2) system
-> call, I moved back to the implementation that directly stores the
-> pointers in the cgroup.
-> 
-> First enabling the controller through the fs-backed cgroup interface,
-> then come back through the bpf(2) syscall and then go back to the fs
-> interface to read out status values is a bit weird.
-> 
-Hrm, that makes sense. with the BPF syscall, would there be a way to get
-file descriptor of the currently attached BPF program?
+> Ugh.  Perhaps cgroup2 should start supporting this.  I think that
+> making rename(2) work is simpler than adding a whole new API for
+> rgroups, and I think it could solve a lot of the same problems that
+> rgroups are trying to solve.
 
-> >> And FWIW, I agree with Thomas - there is nothing wrong with having
-> >> multiple options to use for such use-cases.
-> >
-> > Right now, for containers, we have netfilter and network namespaces.
-> > There's a lot of performance overhead that comes with this.
-> 
-> Out of curiosity: Could you express that in numbers? And how exactly are
-> you testing?
-> 
-Sure. Our workload that we use as a baseline is Redis with redis-benchmark. We 
-reconnect after every connection, and we're running "isolation" between two 
-containers on the same machine to try to rule out any physical infrastructure 
-overhead.
+We haven't needed that yet and supporting rename(2) doesn't
+necessarily make the API safe in terms of migration atomicity.  Also,
+as pointed out in my previous reply (and rgroup documentation),
+atomicity is only one part of rationales for rgroup.
 
-So, we ran two tests with network namespaces. The first one was putting Redis 
-into its own network namespace, and using tc to do some basic shaping:
-Client--Veth---Host Namespace---Veth---Redis
+Thanks.
 
-The second was:
-Client--Veth--Host Namespace+Iptables filtering--Veth--Redis. 
-
-The second test required us to use conntrack, as we wanted stateful filtering.
-
-Ops/sec:
-Original: 4275
-Situation 1: 3823
-Situation 2: 1489
-
-Latency (milliseconds):
-Original: 0.69
-Situation 1: 0.82
-Situation 2: 2.11
-
-This was on a (KVM) machine with 16GB of RAM, and 8 Cores where the machine was 
-supposed to be dedicated to me. Given that it's not bare metal, take these 
-numbers with a grain of salt.
-
-> > Not only
-> > that, but iptables doesn't really have a simple way of usage by
-> > automated infrastructure. We (firewalld, systemd, dockerd, mesos)
-> > end up fighting with one another for ownership over firewall rules.
-> 
-> Yes, that's a common problem.
-> 
-> > Although, I have problems with this approach, I think that it's
-> > a good baseline where we can have top level owned by systemd,
-> > docker underneath that, and Mesos underneath that. We can add
-> > additional hooks for things like Checmate and Landlock, and
-> > with a little more work, we can do compositition, solving
-> > all of our problems.
-> 
-> It is supposed to be just a baseline, yes.
-> 
-> 
-> Thanks for your feedback,
-> Daniel
-> 
+-- 
+tejun
