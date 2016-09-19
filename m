@@ -1,139 +1,143 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Mon, 19 Sep 2016 17:53:40 -0400
-Message-ID: <20160919215340.GB4023@htj.duckdns.org>
-References: <20160831173251.GY12660@htj.duckdns.org>
- <CALCETrUKOJZS+=QDPyQD+vxXpwyjoj4+Crg6wU7Xk8rP4prYkA@mail.gmail.com>
- <20160831210754.GZ12660@htj.duckdns.org>
- <CALCETrXj2Z=-GMaWV_EpCvw_8C3t1vc=D53Ff2wdvo=At8ZF1Q@mail.gmail.com>
- <20160903220526.GA20784@mtj.duckdns.org>
- <CALCETrVcAjFWLQ1arjSP-g=4jRY_J7G-j9JJHrvTDgOnxApYPw@mail.gmail.com>
- <20160909225747.GA30105@mtj.duckdns.org>
- <CALCETrUhpPQdyZ-6WRjdB+iLbpGBduRZMWXQtCuS+R7Cq7rygg@mail.gmail.com>
- <20160914200041.GB6832@htj.duckdns.org>
- <CALCETrUA6_noue4kq9JLqr-V_yo7hB+v1Arhg6i6fFn0tyTrpw@mail.gmail.com>
+From: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
+Subject: [PATCH v1] cgroup,bpf: Add access check for cgroup_get_from_fd()
+Date: Tue, 20 Sep 2016 00:49:13 +0200
+Message-ID: <20160919224913.24808-1-mic@digikod.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=SbHwBgjFZAaRP3KH+QBH4urWfaKFkjbpfNMTBUUxGH8=;
-        b=Ey7tTFyZJdOOvtzFhBtU8B15vYw9ocqDX3bQmWbOKzl7gGr/4bUM4G15MmA1uBsyuQ
-         IjH5V+I9P0bWTkhqCOiWoeOXINnQlhLNhdj+n9wLJC/KsBKVCqPCO6Ho7M3wcbwVdNl4
-         unFyeeTUrkfnx4kuJeJQJR3lPAuAJSrSc9TPhL5COvANXHJhbal6W+J9xZKTDx1MxCHp
-         mf03mxLYJoe4+ps9yKrkXrHHoW8GZEiv5mFOHUqLMYh4xGcnYNkwY4vNfF9W83w7EEZB
-         WWw08o/xKDQyCsFT/TO0z0MPwBIgidoCkwHY3WT65tN9on7cJGXkB7edt2WJ1oqcL1Aa
-         7CmA==
-Content-Disposition: inline
-In-Reply-To: <CALCETrUA6_noue4kq9JLqr-V_yo7hB+v1Arhg6i6fFn0tyTrpw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+Add security access check for cgroup backed FD. The "cgroup.procs" file
+of the corresponding cgroup should be readable to identify the cgroup,
+and writable to prove that the current process can manage this cgroup
+(e.g. through delegation). This is similar to the check done by
+cgroup_procs_write_permission().
 
-On Thu, Sep 15, 2016 at 01:08:07PM -0700, Andy Lutomirski wrote:
-> With regard to no-internal-tasks, I see (at least) three options:
-> 
-> 1. Keep the cgroup2 status quo.  Lots of distros and such are likely
-> to have their cgroup management fail if run in a container.  I really,
+Fixes: 4ed8ec521ed5 ("cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY")
+Signed-off-by: Mickaël Salaün <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+Cc: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Cc: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ include/linux/cgroup.h |  2 +-
+ kernel/bpf/arraymap.c  |  2 +-
+ kernel/bpf/syscall.c   |  1 +
+ kernel/cgroup.c        | 34 +++++++++++++++++++++++++++-------
+ 4 files changed, 30 insertions(+), 9 deletions(-)
 
-I don't know where you're getting this.  No-internal-tasks rule has
-*NOTHING* to do with how or how not cgroup v1 hierarchies can be used
-inside a namespace.  I suppose this is coming from the same
-misunderstanding that Austin has.  Please see my reply there for more
-details.
-
-> really dislike this option.
-
-Up until this point, you haven't supplied any valid technical reasons
-for your objection.  Repeating "really" doesn't add to the discussion
-at all.  If you're indicating that you don't like it on an aeshtetic
-ground, please just say so.
-
-> 2. Enforce no-internal-tasks for the root cgroup.  Un-cgroupable
-> thinks will still get accounted to the root cgroup even if subtree
-> control is on, but no tasks can be in the root cgroup if the root
-> cgroup has subtree control on.  (If some controllers removed the
-> no-internal-tasks restriction, this would apply to the root as well.)
-> I think this may annoy certain users.  If so, and if those users are
-> doing something valid, then I think that either those users should be
-> strongly encouraged or even forced to changed so namespacing works for
-> them or that we should do (3) instead.
-
-Theoretically, we can do that but what are the upsides and are they
-enough to justify the added inconveniences?  Up until now, the only
-argument you provided is that people may do certain things in
-system-root which might not work in namespace-root but that isn't a
-critical problem.  No real functionalities are lost by implementing
-the same behaviors both inside and outside namespaces.
-
-> 3. Remove the no-internal-tasks restriction entirely.  I can see this
-> resulting in a lot of configuration awkwardness, but I think it will
-> *work*, especially since all of the controllers already need to do
-> something vaguely intelligent when subtree control is on in the root
-> and there are tasks in the root.
-
-The reasons for no-internal-tasks restriction have been explained
-multiple times in the documentations and throughout this thread, and
-we also discussed how and why system-root is special and allowing
-system-root's special treatment doesn't break things.
-
-> What I'm trying to say is that I think that option (1) is sufficiently
-> bad that cgroup2 should do (2) or (3) instead.  If option (2) is
-> preferred and if it would break userspace, then I think we can work
-> around it by entirely deprecating cgroup2, renaming it to cgroup3, and
-> doing option (2) there.  You've given reasons you don't like options
-> (2) and (3).  I mostly agree with those reasons, but I don't think
-> they're strong enough to overcome the problems with (1).
-
-And you keep suggesting very drastic measures for an issue which isn't
-critical without providing any substantial technical reasons why such
-drastic measures would be necessary.  This part of discussion started
-with your misunderstanding of the implications of the system-root
-being special, and the only reason you presented in the previous
-message is still a, different, misunderstanding.
-
-The only thing which isn't changing here is your opinions on how it
-should be.  It is a baffling situation because your opinions don't
-seem to be affected at all by the validity of reasons for thinking so.
-
-> BTW, Mike keeps mentioning exclusive cgroups as problematic with the
-> no-internal-tasks constraints.  Do exclusive cgroups still exist in
-> cgroup2?  Could we perhaps just remove that capability entirely?  I've
-> never understood what problem exlusive cpusets and such solve that
-> can't be more comprehensibly solved by just assigning the cpusets the
-> normal inclusive way.
-
-This was explained before during the discussion.  Maybe it wasn't
-clear enough.  The knob is a config protector which protects oneself
-from changing its configs.  It doesn't really belong in the kernel.
-My guess is that it was added because delegation model wasn't properly
-established and people tried to delegate resource control knobs along
-with the cgroups and then wanted to prevent those knobs from changed
-in certain ways.
-
-> >> What kind of migration do you mean?  Having fds follow rename(2) around is
-> >> the normal vfs behavior, so I don't really know what you mean.
-> >
-> > Process or task migration by writing pid to cgroup.procs or tasks
-> > file.  cgroup never supported directory / cgroup level migrations.
-> 
-> Ugh.  Perhaps cgroup2 should start supporting this.  I think that
-> making rename(2) work is simpler than adding a whole new API for
-> rgroups, and I think it could solve a lot of the same problems that
-> rgroups are trying to solve.
-
-We haven't needed that yet and supporting rename(2) doesn't
-necessarily make the API safe in terms of migration atomicity.  Also,
-as pointed out in my previous reply (and rgroup documentation),
-atomicity is only one part of rationales for rgroup.
-
-Thanks.
-
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index c4688742ddc4..5767d471e292 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -87,7 +87,7 @@ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
+ 						       struct cgroup_subsys *ss);
+ 
+ struct cgroup *cgroup_get_from_path(const char *path);
+-struct cgroup *cgroup_get_from_fd(int fd);
++struct cgroup *cgroup_get_from_fd(int fd, int access_mask);
+ 
+ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
+ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
+diff --git a/kernel/bpf/arraymap.c b/kernel/bpf/arraymap.c
+index a2ac051c342f..3d97c70134a0 100644
+--- a/kernel/bpf/arraymap.c
++++ b/kernel/bpf/arraymap.c
+@@ -543,7 +543,7 @@ static void *cgroup_fd_array_get_ptr(struct bpf_map *map,
+ 				     struct file *map_file /* not used */,
+ 				     int fd)
+ {
+-	return cgroup_get_from_fd(fd);
++	return cgroup_get_from_fd(fd, MAY_READ);
+ }
+ 
+ static void cgroup_fd_array_put_ptr(void *ptr)
+diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
+index 228f962447a5..cc7270eadcf7 100644
+--- a/kernel/bpf/syscall.c
++++ b/kernel/bpf/syscall.c
+@@ -17,6 +17,7 @@
+ #include <linux/license.h>
+ #include <linux/filter.h>
+ #include <linux/version.h>
++#include <linux/fs.h>
+ 
+ DEFINE_PER_CPU(int, bpf_prog_active);
+ 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index b0d727d26fc7..e02e0a531be9 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -6236,34 +6236,54 @@ EXPORT_SYMBOL_GPL(cgroup_get_from_path);
+ /**
+  * cgroup_get_from_fd - get a cgroup pointer from a fd
+  * @fd: fd obtained by open(cgroup2_dir)
++ * @access_mask: contains the permission mask
+  *
+  * Find the cgroup from a fd which should be obtained
+  * by opening a cgroup directory.  Returns a pointer to the
+  * cgroup on success. ERR_PTR is returned if the cgroup
+- * cannot be found.
++ * cannot be found or its access is denied.
+  */
+-struct cgroup *cgroup_get_from_fd(int fd)
++struct cgroup *cgroup_get_from_fd(int fd, int access_mask)
+ {
+ 	struct cgroup_subsys_state *css;
+ 	struct cgroup *cgrp;
+ 	struct file *f;
++	struct inode *inode;
++	int ret;
+ 
+ 	f = fget_raw(fd);
+ 	if (!f)
+ 		return ERR_PTR(-EBADF);
+ 
+ 	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
+-	fput(f);
+-	if (IS_ERR(css))
+-		return ERR_CAST(css);
++	if (IS_ERR(css)) {
++		ret = PTR_ERR(css);
++		goto put_f;
++	}
+ 
+ 	cgrp = css->cgroup;
+ 	if (!cgroup_on_dfl(cgrp)) {
+-		cgroup_put(cgrp);
+-		return ERR_PTR(-EBADF);
++		ret = -EBADF;
++		goto put_cgrp;
++	}
++
++	ret = -ENOMEM;
++	inode = kernfs_get_inode(f->f_path.dentry->d_sb, cgrp->procs_file.kn);
++	if (inode) {
++		ret = inode_permission(inode, access_mask);
++		iput(inode);
+ 	}
++	if (ret)
++		goto put_cgrp;
+ 
++	fput(f);
+ 	return cgrp;
++
++put_cgrp:
++	cgroup_put(cgrp);
++put_f:
++	fput(f);
++	return ERR_PTR(ret);
+ }
+ EXPORT_SYMBOL_GPL(cgroup_get_from_fd);
+ 
 -- 
-tejun
+2.9.3
