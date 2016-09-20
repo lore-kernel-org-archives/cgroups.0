@@ -1,98 +1,66 @@
-From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v1] cgroup,bpf: Add access check for cgroup_get_from_fd()
-Date: Mon, 19 Sep 2016 17:30:08 -0700
-Message-ID: <20160920003007.GB91808@ast-mbp.thefacebook.com>
-References: <20160919224913.24808-1-mic@digikod.net>
+From: Sargun Dhillon <sargun@sargun.me>
+Subject: Re: lsm naming dilemma. Re: [RFC v3 07/22] landlock: Handle file comparisons
+Date: Mon, 19 Sep 2016 18:10:52 -0700
+Message-ID: <CAMp4zn8_GhvL5gGLrkADVSTP9Z4VO78bXtX8wbzFSa1P7j-yfA@mail.gmail.com>
+References: <20160914072415.26021-1-mic@digikod.net> <20160914072415.26021-8-mic@digikod.net>
+ <20160914210649.GA57174@ast-mbp.thefacebook.com> <57D9D6FE.4090708@digikod.net>
+ <20160914232418.GD60248@ast-mbp.thefacebook.com> <57DB11B6.7090500@digikod.net>
+ <20160920001215.GA91808@ast-mbp.thefacebook.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=HF/M2tFXrXTa++xF5gMW1v2e9n3K5sJguBht9O6zUXM=;
-        b=MfCtyDOPFafGrG9hSbbgFzvuAEECk/LiDeNfvCsmDmn8W6alyriBirbOmniJW3vABm
-         aBsQDfrFO5Uypn7NrPImuLY4qxrzhg3hAuVs5EaFB/qUgQeR7QxcuZfodw1S5T6Hoefu
-         tTp83wDBVQeG/M0B/PLMCkIJ+YaT6MGIN14m5q9PQmmaAtSAkkAKlrG6xZmNPs5IhE7X
-         8ObsfJfTeMB+zPEMHAYFOtcBWqqXfy30XotwG+YSXBwFDCMrnvQVC8Ph25vy8eXRP63Q
-         J0b1lB0w19yfoFLrsZQfEDHFzuVWYGKwwRPauk6A/j+HQ4BZ+v2BkLic/OqcvgmVFOoc
-         KL/w==
-Content-Disposition: inline
-In-Reply-To: <20160919224913.24808-1-mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=sargun.me; s=google;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=G01wJWlT7VWx10WUHntWoBJKn0W1HkEgKtlsmvxdXDs=;
+        b=bgeD1gUS875wYspGyTB4Ll/VRG/aMVmorcodpLOK2kaDOqjXlAYJh5JP+hSJXQ6QQ6
+         VPIzf7ODTr3Gx/FMq0i2QWDyng54dT5TuXgzsEqpn+RmHPX8d5aTxbSuFfftXDxywIxY
+         FQqHElz+U1YurJZbeDCLs3/adn53KI1GGjYOA=
+In-Reply-To: <20160920001215.GA91808@ast-mbp.thefacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@digikod.net>, LKML <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org
 
-On Tue, Sep 20, 2016 at 12:49:13AM +0200, Micka=EBl Sala=FCn wrote:
-> Add security access check for cgroup backed FD. The "cgroup.procs" file
-> of the corresponding cgroup should be readable to identify the cgroup,
-> and writable to prove that the current process can manage this cgroup
-> (e.g. through delegation). This is similar to the check done by
-> cgroup_procs_write_permission().
->=20
-> Fixes: 4ed8ec521ed5 ("cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY")
+I'm fine giving up the Checmate name. Landlock seems easy enough to
+Google. I haven't gotten a chance to look through the entire patchset
+yet, but it does seem like they are somewhat similar.
 
-I don't understand what 'fixes' is about.
-Looks like new feature or tightening?
-Since cgroup was opened by the process and it got an fd,
-it had an access, so extra check here looks unnecessary.
-
-> -struct cgroup *cgroup_get_from_fd(int fd)
-> +struct cgroup *cgroup_get_from_fd(int fd, int access_mask)
->  {
->  	struct cgroup_subsys_state *css;
->  	struct cgroup *cgrp;
->  	struct file *f;
-> +	struct inode *inode;
-> +	int ret;
-> =20
->  	f =3D fget_raw(fd);
->  	if (!f)
->  		return ERR_PTR(-EBADF);
-> =20
->  	css =3D css_tryget_online_from_dir(f->f_path.dentry, NULL);
-> -	fput(f);
-
-why move it down?
-
-> -	if (IS_ERR(css))
-> -		return ERR_CAST(css);
-> +	if (IS_ERR(css)) {
-> +		ret =3D PTR_ERR(css);
-> +		goto put_f;
-> +	}
-> =20
->  	cgrp =3D css->cgroup;
->  	if (!cgroup_on_dfl(cgrp)) {
-> -		cgroup_put(cgrp);
-> -		return ERR_PTR(-EBADF);
-> +		ret =3D -EBADF;
-> +		goto put_cgrp;
-> +	}
-> +
-> +	ret =3D -ENOMEM;
-> +	inode =3D kernfs_get_inode(f->f_path.dentry->d_sb, cgrp->procs_file.kn);
-> +	if (inode) {
-> +		ret =3D inode_permission(inode, access_mask);
-> +		iput(inode);
->  	}
-> +	if (ret)
-> +		goto put_cgrp;
-> =20
-> +	fput(f);
->  	return cgrp;
-> +
-> +put_cgrp:
-> +	cgroup_put(cgrp);
-> +put_f:
-> +	fput(f);
-> +	return ERR_PTR(ret);
->  }
->  EXPORT_SYMBOL_GPL(cgroup_get_from_fd);
-> =20
-> --=20
-> 2.9.3
->=20
+On Mon, Sep 19, 2016 at 5:12 PM, Alexei Starovoitov
+<alexei.starovoitov@gmail.com> wrote:
+> On Thu, Sep 15, 2016 at 11:25:10PM +0200, Micka=C3=ABl Sala=C3=BCn wrote:
+>> >> Agreed. With this RFC, the Checmate features (i.e. network helpers)
+>> >> should be able to sit on top of Landlock.
+>> >
+>> > I think neither of them should be called fancy names for no technical =
+reason.
+>> > We will have only one bpf based lsm. That's it and it doesn't
+>> > need an obscure name. Directory name can be security/bpf/..stuff.c
+>>
+>> I disagree on an LSM named "BPF". I first started with the "seccomp LSM"
+>> name (first RFC) but I later realized that it is confusing because
+>> seccomp is associated to its syscall and the underlying features. Same
+>> thing goes for BPF. It is also artificially hard to grep on a name too
+>> used in the kernel source tree.
+>> Making an association between the generic eBPF mechanism and a security
+>> centric approach (i.e. LSM) seems a bit reductive (for BPF). Moreover,
+>> the seccomp interface [1] can still be used.
+>
+> agree with above.
+>
+>> Landlock is a nice name to depict a sandbox as an enclave (i.e. a
+>> landlocked country/state). I want to keep this name, which is simple,
+>> express the goal of Landlock nicely and is comparable to other sandbox
+>> mechanisms as Seatbelt or Pledge.
+>> Landlock should not be confused with the underlying eBPF implementation.
+>> Landlock could use more than only eBPF in the future and eBPF could be
+>> used in other LSM as well.
+>
+> there will not be two bpf based LSMs.
+> Therefore unless you can convince Sargun to give up his 'checmate' name,
+> nothing goes in.
+> The features you both need are 90% the same, so they must be done
+> as part of single LSM whatever you both agree to call it.
+>
