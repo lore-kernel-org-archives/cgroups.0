@@ -1,65 +1,145 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1] cgroup,bpf: Add access check for cgroup_get_from_fd()
-Date: Tue, 20 Sep 2016 12:58:17 -0400
-Message-ID: <20160920165817.GB17513@htj.duckdns.org>
-References: <20160919224913.24808-1-mic@digikod.net>
- <20160920003007.GB91808@ast-mbp.thefacebook.com>
- <57E1698F.1090106@digikod.net>
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+Subject: Re: lsm naming dilemma. Re: [RFC v3 07/22] landlock: Handle file
+ comparisons
+Date: Tue, 20 Sep 2016 18:58:20 +0200
+Message-ID: <57E16AAC.8000101@digikod.net>
+References: <20160914072415.26021-1-mic@digikod.net>
+ <20160914072415.26021-8-mic@digikod.net>
+ <20160914210649.GA57174@ast-mbp.thefacebook.com>
+ <57D9D6FE.4090708@digikod.net>
+ <20160914232418.GD60248@ast-mbp.thefacebook.com>
+ <57DB11B6.7090500@digikod.net>
+ <20160920001215.GA91808@ast-mbp.thefacebook.com>
+ <CAMp4zn8_GhvL5gGLrkADVSTP9Z4VO78bXtX8wbzFSa1P7j-yfA@mail.gmail.com>
+Reply-To: kernel-hardening@lists.openwall.com
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=h4ggeQw78imEXfEqaReD0C+MHPy6U0Wm9BH33tcLLig=;
-        b=a62IduV/aD81XtKHZr6ZP4w3tJDjdOyPHQkOm5to5WQ+r39o2ajA3tckPKWHtIb5ZG
-         q3YNNN9+e+96usZ+Sjx7i6G5RtDStCMrfLe74GTMe/yHOeLuuxvO06WefeCvDot5xrtM
-         SGLPuZRdt5DjVI+bzFNKTnylVgxRrzjdIPj+t7pAFPiZc9nYKjrk3fZwDlmVbLMNCl7W
-         xqvfDIn5tSO3g6ZzMT8lpA8jtuuHIQEz/0dUNyO34ka8woz026SiUDeZaJtkZZytRx/P
-         rFDPpLtUiuVh+zlxiQGGSXmOJ2d8xqNvdJ2X497Fq8DkL7V8ZizP6YBW9sz7LPsISEtf
-         VYYw==
-Content-Disposition: inline
-In-Reply-To: <57E1698F.1090106@digikod.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="olXKeO7SERQb9SwC8GIlRu3AmCR5wBDTQ"
+Return-path: <kernel-hardening-return-4693-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>
-Cc: Alexei Starovoitov <alexei.starovoitov@gmail.com>, linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, "David S . Miller" <davem@davemloft.net>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Martin KaFai Lau <kafai@fb.com>, cgroups@vger.kernel.org
+In-Reply-To: <CAMp4zn8_GhvL5gGLrkADVSTP9Z4VO78bXtX8wbzFSa1P7j-yfA@mail.gmail.com>
+To: Sargun Dhillon <sargun@sargun.me>, Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, LSM <linux-security-module@vger.kernel.org>, netdev <netdev@vger.kernel.org>, cgroups@vge
 
-On Tue, Sep 20, 2016 at 06:53:35PM +0200, Micka=EBl Sala=FCn wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--olXKeO7SERQb9SwC8GIlRu3AmCR5wBDTQ
+Content-Type: multipart/mixed; boundary="TX4QiTbiBRxLVmGRpQT3K1PJN0rUPWeHf";
+ protected-headers="v1"
+From: =?UTF-8?Q?Micka=c3=abl_Sala=c3=bcn?= <mic@digikod.net>
+To: Sargun Dhillon <sargun@sargun.me>,
+ Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>,
+ Andy Lutomirski <luto@amacapital.net>, Arnd Bergmann <arnd@arndb.de>,
+ Casey Schaufler <casey@schaufler-ca.com>,
+ Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>,
+ David Drysdale <drysdale@google.com>, "David S . Miller"
+ <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>,
+ "Eric W . Biederman" <ebiederm@xmission.com>,
+ James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>,
+ Paul Moore <pmoore@redhat.com>, "Serge E . Hallyn" <serge@hallyn.com>,
+ Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>,
+ kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org,
+ LSM <linux-security-module@vger.kernel.org>, netdev
+ <netdev@vger.kernel.org>, cgroups@vger.kernel.org
+Message-ID: <57E16AAC.8000101@digikod.net>
+Subject: Re: lsm naming dilemma. Re: [RFC v3 07/22] landlock: Handle file
+ comparisons
+References: <20160914072415.26021-1-mic@digikod.net>
+ <20160914072415.26021-8-mic@digikod.net>
+ <20160914210649.GA57174@ast-mbp.thefacebook.com>
+ <57D9D6FE.4090708@digikod.net>
+ <20160914232418.GD60248@ast-mbp.thefacebook.com>
+ <57DB11B6.7090500@digikod.net>
+ <20160920001215.GA91808@ast-mbp.thefacebook.com>
+ <CAMp4zn8_GhvL5gGLrkADVSTP9Z4VO78bXtX8wbzFSa1P7j-yfA@mail.gmail.com>
+In-Reply-To: <CAMp4zn8_GhvL5gGLrkADVSTP9Z4VO78bXtX8wbzFSa1P7j-yfA@mail.gmail.com>
+
+--TX4QiTbiBRxLVmGRpQT3K1PJN0rUPWeHf
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+On 20/09/2016 03:10, Sargun Dhillon wrote:
+> I'm fine giving up the Checmate name. Landlock seems easy enough to
+> Google. I haven't gotten a chance to look through the entire patchset
+> yet, but it does seem like they are somewhat similar.
+
+Excellent! I'm looking forward for your review.
+
+
 >=20
-> On 20/09/2016 02:30, Alexei Starovoitov wrote:
-> > On Tue, Sep 20, 2016 at 12:49:13AM +0200, Micka=EBl Sala=FCn wrote:
-> >> Add security access check for cgroup backed FD. The "cgroup.procs" file
-> >> of the corresponding cgroup should be readable to identify the cgroup,
-> >> and writable to prove that the current process can manage this cgroup
-> >> (e.g. through delegation). This is similar to the check done by
-> >> cgroup_procs_write_permission().
-> >>
-> >> Fixes: 4ed8ec521ed5 ("cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY")
-> >=20
-> > I don't understand what 'fixes' is about.
-> > Looks like new feature or tightening?
-> > Since cgroup was opened by the process and it got an fd,
-> > it had an access, so extra check here looks unnecessary.
+> On Mon, Sep 19, 2016 at 5:12 PM, Alexei Starovoitov
+> <alexei.starovoitov@gmail.com> wrote:
+>> On Thu, Sep 15, 2016 at 11:25:10PM +0200, Micka=C3=ABl Sala=C3=BCn wro=
+te:
+>>>>> Agreed. With this RFC, the Checmate features (i.e. network helpers)=
+
+>>>>> should be able to sit on top of Landlock.
+>>>>
+>>>> I think neither of them should be called fancy names for no technica=
+l reason.
+>>>> We will have only one bpf based lsm. That's it and it doesn't
+>>>> need an obscure name. Directory name can be security/bpf/..stuff.c
+>>>
+>>> I disagree on an LSM named "BPF". I first started with the "seccomp L=
+SM"
+>>> name (first RFC) but I later realized that it is confusing because
+>>> seccomp is associated to its syscall and the underlying features. Sam=
+e
+>>> thing goes for BPF. It is also artificially hard to grep on a name to=
+o
+>>> used in the kernel source tree.
+>>> Making an association between the generic eBPF mechanism and a securi=
+ty
+>>> centric approach (i.e. LSM) seems a bit reductive (for BPF). Moreover=
+,
+>>> the seccomp interface [1] can still be used.
+>>
+>> agree with above.
+>>
+>>> Landlock is a nice name to depict a sandbox as an enclave (i.e. a
+>>> landlocked country/state). I want to keep this name, which is simple,=
+
+>>> express the goal of Landlock nicely and is comparable to other sandbo=
+x
+>>> mechanisms as Seatbelt or Pledge.
+>>> Landlock should not be confused with the underlying eBPF implementati=
+on.
+>>> Landlock could use more than only eBPF in the future and eBPF could b=
+e
+>>> used in other LSM as well.
+>>
+>> there will not be two bpf based LSMs.
+>> Therefore unless you can convince Sargun to give up his 'checmate' nam=
+e,
+>> nothing goes in.
+>> The features you both need are 90% the same, so they must be done
+>> as part of single LSM whatever you both agree to call it.
+>>
 >=20
-> It may not be a "fix", but this patch tighten the access control. The
-> current cgroup_get_from_fd() only rely on the access check done on the
-> passed FD. However, this FD come from a cgroup directory, not a
-> "cgroup.procs" (in this directory). The "cgroup.procs" is used for
-> cgroup delegation by cgroup_procs_write_permission(). Checking
-> "cgroup.procs" is then more consistent with access checks done by other
-> part of the cgroup code. Being able to open a cgroup directory only
-> means that the current process is able to list the cgroup hierarchy, not
-> necessarily to list the tasks in this cgroups.
 
-Currently, bpf's access control and cgroup's are completely separate
-and intentionally so.  I don't see why this matters given the current
-model.
 
-Thanks.
+--TX4QiTbiBRxLVmGRpQT3K1PJN0rUPWeHf--
 
---=20
-tejun
+--olXKeO7SERQb9SwC8GIlRu3AmCR5wBDTQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCgAGBQJX4WqsAAoJECLe/t9zvWqVRWkH/28QYuU/mHfIatrXwvfwXu7y
+hkxNIv517JgeAtSIOwagTppbZRfBUtfAtRKvy/fOMd5Qac+qLx7oXq09Q3+hX8re
+GPvUvzmawwE4c7DHxNu34Xg0U0Ci8CKZ17pJkFvDPlfHm945j6x8leSuLTkMv84T
+F7JczUNtK6MM9PfMpdDeM1AWPGfzIxhCmwsSJpwP4oDcChpAwBvoYtyGf0NWN+Xa
+W3BTecftSlrO6WL5cTbRf3CoGy/cNIbPUbOBGmebXh8Amio/TE4rkES2YJCxwKdF
+5lB1bUvtuaVFBRo6Dr4wyk+I1dGpb5imYrxA8Gtt6xwzFzLNYVs5j2lwn+yOwNE=
+=KSgS
+-----END PGP SIGNATURE-----
+
+--olXKeO7SERQb9SwC8GIlRu3AmCR5wBDTQ--
