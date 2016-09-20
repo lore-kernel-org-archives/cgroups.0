@@ -1,143 +1,67 @@
-From: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Subject: [PATCH v1] cgroup,bpf: Add access check for cgroup_get_from_fd()
-Date: Tue, 20 Sep 2016 00:49:13 +0200
-Message-ID: <20160919224913.24808-1-mic@digikod.net>
+From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: lsm naming dilemma. Re: [RFC v3 07/22] landlock: Handle file
+ comparisons
+Date: Mon, 19 Sep 2016 17:12:16 -0700
+Message-ID: <20160920001215.GA91808@ast-mbp.thefacebook.com>
+References: <20160914072415.26021-1-mic@digikod.net>
+ <20160914072415.26021-8-mic@digikod.net>
+ <20160914210649.GA57174@ast-mbp.thefacebook.com>
+ <57D9D6FE.4090708@digikod.net>
+ <20160914232418.GD60248@ast-mbp.thefacebook.com>
+ <57DB11B6.7090500@digikod.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=0R/Li108icf46GvHuEsrGzop/9619VSX/rDGAb5v7vg=;
+        b=gg45fgdAlq1s6f4qhDw4xvjiQn2i36n91394bnTLty+1R5VEDeiZQKA+vZimZmtjCn
+         y+6AzXbg8mShD3CVKeDCS4ImGb6tWSlUo1Dmk68moYAAKz1XVycvUQ3sPy/pghPKuXDJ
+         uALD5HJmI2qe0jZwVLGFk45ujAigp1dI4kt0zqfw59WQ2izU8Ek1o1vlz6FdEEE6TxGg
+         Qhspqkydc38zfSNwGKIv6bxArO6i9tFNT8zHUwavNtpmhQD+eoJ7xZlQP/2iEIrp1nx4
+         VDG+UEULUbtaMxexlHrA5iC7CJ42PrhsWV5Kc3J3A5db8M94H7Kt0xNVPwfVbkU/dfBe
+         o/oQ==
+Content-Disposition: inline
+In-Reply-To: <57DB11B6.7090500-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Casey Schaufler <casey-iSGtlc1asvQWG2LlvL+J4A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, David Drysdale <drysdale-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Eric W . Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Will Drewry <wad-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29Tb/PtFMR13I2A@public.gmane.org
 
-Add security access check for cgroup backed FD. The "cgroup.procs" file
-of the corresponding cgroup should be readable to identify the cgroup,
-and writable to prove that the current process can manage this cgroup
-(e.g. through delegation). This is similar to the check done by
-cgroup_procs_write_permission().
+On Thu, Sep 15, 2016 at 11:25:10PM +0200, Micka=EBl Sala=FCn wrote:
+> >> Agreed. With this RFC, the Checmate features (i.e. network helpers)
+> >> should be able to sit on top of Landlock.
+> >=20
+> > I think neither of them should be called fancy names for no technical r=
+eason.
+> > We will have only one bpf based lsm. That's it and it doesn't
+> > need an obscure name. Directory name can be security/bpf/..stuff.c
+>=20
+> I disagree on an LSM named "BPF". I first started with the "seccomp LSM"
+> name (first RFC) but I later realized that it is confusing because
+> seccomp is associated to its syscall and the underlying features. Same
+> thing goes for BPF. It is also artificially hard to grep on a name too
+> used in the kernel source tree.
+> Making an association between the generic eBPF mechanism and a security
+> centric approach (i.e. LSM) seems a bit reductive (for BPF). Moreover,
+> the seccomp interface [1] can still be used.
 
-Fixes: 4ed8ec521ed5 ("cgroup: bpf: Add BPF_MAP_TYPE_CGROUP_ARRAY")
-Signed-off-by: Mickaël Salaün <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
-Cc: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
-Cc: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/linux/cgroup.h |  2 +-
- kernel/bpf/arraymap.c  |  2 +-
- kernel/bpf/syscall.c   |  1 +
- kernel/cgroup.c        | 34 +++++++++++++++++++++++++++-------
- 4 files changed, 30 insertions(+), 9 deletions(-)
+agree with above.
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index c4688742ddc4..5767d471e292 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -87,7 +87,7 @@ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
- 						       struct cgroup_subsys *ss);
- 
- struct cgroup *cgroup_get_from_path(const char *path);
--struct cgroup *cgroup_get_from_fd(int fd);
-+struct cgroup *cgroup_get_from_fd(int fd, int access_mask);
- 
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
-diff --git a/kernel/bpf/arraymap.c b/kernel/bpf/arraymap.c
-index a2ac051c342f..3d97c70134a0 100644
---- a/kernel/bpf/arraymap.c
-+++ b/kernel/bpf/arraymap.c
-@@ -543,7 +543,7 @@ static void *cgroup_fd_array_get_ptr(struct bpf_map *map,
- 				     struct file *map_file /* not used */,
- 				     int fd)
- {
--	return cgroup_get_from_fd(fd);
-+	return cgroup_get_from_fd(fd, MAY_READ);
- }
- 
- static void cgroup_fd_array_put_ptr(void *ptr)
-diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index 228f962447a5..cc7270eadcf7 100644
---- a/kernel/bpf/syscall.c
-+++ b/kernel/bpf/syscall.c
-@@ -17,6 +17,7 @@
- #include <linux/license.h>
- #include <linux/filter.h>
- #include <linux/version.h>
-+#include <linux/fs.h>
- 
- DEFINE_PER_CPU(int, bpf_prog_active);
- 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index b0d727d26fc7..e02e0a531be9 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -6236,34 +6236,54 @@ EXPORT_SYMBOL_GPL(cgroup_get_from_path);
- /**
-  * cgroup_get_from_fd - get a cgroup pointer from a fd
-  * @fd: fd obtained by open(cgroup2_dir)
-+ * @access_mask: contains the permission mask
-  *
-  * Find the cgroup from a fd which should be obtained
-  * by opening a cgroup directory.  Returns a pointer to the
-  * cgroup on success. ERR_PTR is returned if the cgroup
-- * cannot be found.
-+ * cannot be found or its access is denied.
-  */
--struct cgroup *cgroup_get_from_fd(int fd)
-+struct cgroup *cgroup_get_from_fd(int fd, int access_mask)
- {
- 	struct cgroup_subsys_state *css;
- 	struct cgroup *cgrp;
- 	struct file *f;
-+	struct inode *inode;
-+	int ret;
- 
- 	f = fget_raw(fd);
- 	if (!f)
- 		return ERR_PTR(-EBADF);
- 
- 	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
--	fput(f);
--	if (IS_ERR(css))
--		return ERR_CAST(css);
-+	if (IS_ERR(css)) {
-+		ret = PTR_ERR(css);
-+		goto put_f;
-+	}
- 
- 	cgrp = css->cgroup;
- 	if (!cgroup_on_dfl(cgrp)) {
--		cgroup_put(cgrp);
--		return ERR_PTR(-EBADF);
-+		ret = -EBADF;
-+		goto put_cgrp;
-+	}
-+
-+	ret = -ENOMEM;
-+	inode = kernfs_get_inode(f->f_path.dentry->d_sb, cgrp->procs_file.kn);
-+	if (inode) {
-+		ret = inode_permission(inode, access_mask);
-+		iput(inode);
- 	}
-+	if (ret)
-+		goto put_cgrp;
- 
-+	fput(f);
- 	return cgrp;
-+
-+put_cgrp:
-+	cgroup_put(cgrp);
-+put_f:
-+	fput(f);
-+	return ERR_PTR(ret);
- }
- EXPORT_SYMBOL_GPL(cgroup_get_from_fd);
- 
--- 
-2.9.3
+> Landlock is a nice name to depict a sandbox as an enclave (i.e. a
+> landlocked country/state). I want to keep this name, which is simple,
+> express the goal of Landlock nicely and is comparable to other sandbox
+> mechanisms as Seatbelt or Pledge.
+> Landlock should not be confused with the underlying eBPF implementation.
+> Landlock could use more than only eBPF in the future and eBPF could be
+> used in other LSM as well.
+
+there will not be two bpf based LSMs.
+Therefore unless you can convince Sargun to give up his 'checmate' name,
+nothing goes in.
+The features you both need are 90% the same, so they must be done
+as part of single LSM whatever you both agree to call it.
