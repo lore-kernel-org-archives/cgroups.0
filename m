@@ -1,43 +1,75 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v1] cgroup,bpf: Add access check for cgroup_get_from_fd()
-Date: Tue, 20 Sep 2016 09:53:08 -0400
-Message-ID: <20160920135308.GA17513@htj.duckdns.org>
-References: <20160919224913.24808-1-mic@digikod.net>
+From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v5 0/6] Add eBPF hooks for cgroups
+Date: Tue, 20 Sep 2016 16:25:47 +0200
+Message-ID: <4581ed78-24a0-de0e-b2d1-dbbfae975524@zonque.org>
+References: <1473696735-11269-1-git-send-email-daniel@zonque.org>
+ <20160913115627.GA4898@salvia>
+ <da300784-284c-0d1f-a82e-aa0a0f8ae116@zonque.org>
+ <20160913172408.GC6138@salvia>
+ <6de6809a-13f5-4000-5639-c760dde30223@zonque.org>
+ <20160916195728.GA14736@ircssh.c.rugged-nimbus-611.internal>
+ <1918ef04-f22f-dce3-4bb4-1275936111d0@zonque.org>
+ <20160919215311.GA9723@ircssh.c.rugged-nimbus-611.internal>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=IdGivqvArXZntvjs0+TlkrC+yqsWCljXWa5fV5CviPc=;
-        b=j80JSZVEM6E+ZYO6WOHLNEjFYKEsgiRvpI85GPXHF6v8C0PAZVTjG7KGEs6b+HKfVS
-         kyVNEJ/YVax7vBr+wH6WhuU+ig8ZdKzgF458trdpOOusp12Js4oojau3lKTFp/2dQkx3
-         2s6hmZpGXyLgX8FYKQGtXOoKrwWXii+v3UndQZnvjlaFZL94mGO7Zuxq49QSTdadiCCh
-         5auTppynad2IpP+/VcZLAbdWyvLPwkbEW7kIw9xZ2Piowbg+Pq5kpkrQ3XqwtwV5UE+o
-         djqtB0fBDli0r6xSCaarUwb9iUGnuoNqKMvMfyGszLQ1Esm6SlohZW8RnlXFkFMMMLma
-         dk0w==
-Content-Disposition: inline
-In-Reply-To: <20160919224913.24808-1-mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
+In-Reply-To: <20160919215311.GA9723-I4sfFR6g6EicJoAdRrHjTrzMkBWIpU9tytq7g7fCXyjEk0E+pv7Png@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
+Cc: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On 09/19/2016 11:53 PM, Sargun Dhillon wrote:
+> On Mon, Sep 19, 2016 at 06:34:28PM +0200, Daniel Mack wrote:
+>> On 09/16/2016 09:57 PM, Sargun Dhillon wrote:
 
-On Tue, Sep 20, 2016 at 12:49:13AM +0200, Micka=EBl Sala=FCn wrote:
-> Add security access check for cgroup backed FD. The "cgroup.procs" file
-> of the corresponding cgroup should be readable to identify the cgroup,
-> and writable to prove that the current process can manage this cgroup
-> (e.g. through delegation). This is similar to the check done by
-> cgroup_procs_write_permission().
+>>> Now, with this patch, we don't have that, but I think we can reasonably add some 
+>>> flag like "no override" when applying policies, or alternatively something like 
+>>> "no new privileges", to prevent children from applying policies that override 
+>>> top-level policy.
+>>
+>> Yes, but the API is already guarded by CAP_NET_ADMIN. Take that
+>> capability away from your children, and they can't tamper with the
+>> policy. Does that work for you?
+>
+> No. This can be addressed in a follow-on patch, but the use-case is that I have 
+> a container orchestrator (Docker, or Mesos), and systemd. The sysadmin controls 
+> systemd, and Docker is controlled by devs. Typically, the system owner wants 
+> some system level statistics, and filtering, and then we want to do 
+> per-container filtering.
+> 
+> We really want to be able to do nesting with userspace tools that are oblivious, 
+> and we want to delegate a level of the cgroup hierarchy to the tool that created 
+> it. I do not see Docker integrating with systemd any time soon, and that's 
+> really the only other alternative.
 
-Can you please explain why this change is beneficial?
+Then we'd need to find out whether you want to block other users from
+installing (thus overriding) an existing eBPF program, or if you want to
+allow that but execute them all. Both is possible.
 
-Thanks.
+[...]
 
---=20
-tejun
+>>> It would be nice to be able to see whether or not a filter is attached to a 
+>>> cgroup, but given this is going through syscalls, at least introspection
+>>> is possible as opposed to something like netlink.
+>>
+>> Sure, there are many ways. I implemented the bpf cgroup logic using an
+>> own cgroup controller once, which made it possible to read out the
+>> status. But as we agreed on attaching programs through the bpf(2) system
+>> call, I moved back to the implementation that directly stores the
+>> pointers in the cgroup.
+>>
+>> First enabling the controller through the fs-backed cgroup interface,
+>> then come back through the bpf(2) syscall and then go back to the fs
+>> interface to read out status values is a bit weird.
+>>
+> Hrm, that makes sense. with the BPF syscall, would there be a way to get
+> file descriptor of the currently attached BPF program?
+
+A file descriptor is local to a task, so we would need to install a new
+fd and return its number. But I'm not sure what we'd gain from that.
+
+
+Thanks,
+Daniel
