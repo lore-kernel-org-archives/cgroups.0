@@ -1,58 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
-Date: Wed, 21 Sep 2016 10:26:45 -0400
-Message-ID: <20160921142645.GB10734@htj.duckdns.org>
-References: <20160910170151.GA5230@obsidianresearch.com>
- <20160911133421.GA23384@lst.de>
- <20160911143522.GL6415@leon.nu>
- <20160911171409.GA13442@obsidianresearch.com>
- <20160911172445.GA25953@lst.de>
- <20160911175235.GB13442@obsidianresearch.com>
- <20160912050717.GE8812@leon.nu>
- <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
- <20160915185629.GF26069@leon.nu>
- <CAG53R5XBS0B5XaTzjKC3-zgoB2-fz2ctbk_E2YG76zBgzOfG-A@mail.gmail.com>
+From: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
+Subject: Re: [PATCH v6 5/6] net: ipv4, ipv6: run cgroup eBPF egress programs
+Date: Wed, 21 Sep 2016 17:45:33 +0200
+Message-ID: <20160921154533.GA13656@salvia>
+References: <1474303441-3745-1-git-send-email-daniel@zonque.org>
+ <1474303441-3745-6-git-send-email-daniel@zonque.org>
+ <20160919191910.GA984@salvia>
+ <ac88bb4c-ab7c-1f74-c7fd-79e523b50ae4@zonque.org>
+ <20160919203533.GA888@salvia>
+ <83afdc54-1bbe-3530-e5fd-b74fefe9a042@zonque.org>
+ <20160920142931.GA31438@salvia>
+ <6584b975-fa3e-8d98-f0c7-a2c6b194b2b6@zonque.org>
 Mime-Version: 1.0
-Return-path: <linux-security-module-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=u0VyqJgRV+4qFQid1xMDmofHoAopWjRX8MPAykBr9nw=;
-        b=ImnmBKHGzIRPZdmKjO2s0tHV2h4KOu0Lon2JnoKu+nXQIA97gfWNqCl4LhJzYGl4Hv
-         26ur0FNrh99Zz+aZSCrEH1SEc3btYMxcY41z/pzoyXjffcd+shOAqZ3vQT5J+3nPdOfv
-         OvNF6GyiysfZGAdh6ne31PWoFY6UZLsL1PmwBYGpVtNF8Zs7MjlWMTnkVbHbpb7bLQqX
-         Bn+mF6wrg5a6QvoSTrJvGhKY1DlA4bUDmDNzDjdRW6E1nB7O+ZprjrpN7Kp8k84SXvz6
-         Z8Slx3gIBJFpXrNlMUlcN3/VkoaJFo3aXzK09QGd/3GRCnR8HVT5GcvAVe7IZIRnA9gG
-         Rzkg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAG53R5XBS0B5XaTzjKC3-zgoB2-fz2ctbk_E2YG76zBgzOfG-A@mail.gmail.com>
-Sender: owner-linux-security-module@vger.kernel.org
+In-Reply-To: <6584b975-fa3e-8d98-f0c7-a2c6b194b2b6-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav@gmail.com>
-Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Christoph Hellwig <hch@lst.de>, Matan Barak <matanb@mellanox.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rdma@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-security-module@vger.kernel.org
+To: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Cc: htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Parav.
+Hi Daniel,
 
-On Wed, Sep 21, 2016 at 10:13:38AM +0530, Parav Pandit wrote:
-> We have completed review from Tejun, Christoph.
-> HFI driver folks also provided feedback for Intel drivers.
-> Matan's also doesn't have any more comments.
+On Tue, Sep 20, 2016 at 06:43:35PM +0200, Daniel Mack wrote:
+> Hi Pablo,
 > 
-> If possible, if you can also review, it will be helpful.
+> On 09/20/2016 04:29 PM, Pablo Neira Ayuso wrote:
+> > On Mon, Sep 19, 2016 at 10:56:14PM +0200, Daniel Mack wrote:
+> > [...]
+> >> Why would we artificially limit the use-cases of this implementation if
+> >> the way it stands, both filtering and introspection are possible?
+> > 
+> > Why should we place infrastructure in the kernel to filter packets so
+> > late, and why at postrouting btw, when we can do this way earlier
+> > before any packet is actually sent?
 > 
-> I have some more changes unrelated to cgroup in same files in both the git tree.
-> Pushing them now either results into merge conflict later on for
-> Doug/Tejun, or requires rebase and resending patch.
-> If you can review, we can avoid such rework.
+> The point is that from an application's perspective, restricting the
+> ability to bind a port and dropping packets that are being sent is a
+> very different thing. Applications will start to behave differently if
+> they can't bind to a port, and that's something we do not want to happen.
 
-My impression of the thread was that there doesn't seem to be enough
-of consensus around how rdma resources should be defined.  Is that
-part agreed upon now?
+What is exactly the problem? Applications are not checking for return
+value from bind? They should be fixed. If you want to collect
+statistics, I see no reason why you couldn't collect them for every
+EACCESS on each bind() call.
 
-Thanks.
+> Looking at packets and making a verdict on them is the only way to
+> implement what we have in mind. Given that's in line with what netfilter
+> does, it can't be all that wrong, can it?
 
--- 
-tejun
+That output hook was added ~20 years ago... At that time we didn't
+have anything better than dropping locally generated packets. Today we
+can probably do something better.
+
+> > No performance impact, no need for
+> > skbuff allocation and *no cycles wasted to evaluate if every packet is
+> > wanted or not*.
+> 
+> Hmm, not sure why this keeps coming up. As I said - for accounting,
+> there is no other option than to look at every packet and its size.
+> 
+> Regarding the performance concerns, are you saying a netfilter based
+> implementation that uses counters for that purpose would be more
+> efficient?
+
+> Because in my tests, just loading the netfilter modules with no
+> rules in place at all has more impact than running the code from 6/6
+> on every packet.
+
+You must be talking on iptables. When did you test this? We now have
+on-demand hook registration per-netns, anyway, in nftables you only
+register what you need.
+
+Everytime you mention about performance, it sounds like there is no
+room to improve what we have... and we indeed have room and ideas to
+get this flying faster, but keeping in mind good integration with our
+generic network stack and extensible interfaces, that's important too.
+On top of that, I started working on some preliminary patches to add
+nftables jit, will be talking on this during NetDev 1.2
+netfilter/nftables workshop. I would expect numbers close to what
+you're observing with this solution.
