@@ -1,60 +1,73 @@
-From: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [bug report] cgroup: make cgroup_path() and friends behave in the
- style of strlcpy()
-Date: Thu, 29 Sep 2016 12:27:22 +0300
-Message-ID: <20160929092722.GA5513@mwanda>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.9] cpuset: fix error error handling regression
+ in proc_cpuset_show()
+Date: Thu, 29 Sep 2016 11:58:36 +0200
+Message-ID: <20160929095836.GB24034@mtj.duckdns.org>
+References: <20160929092722.GA5513@mwanda>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=taLB+d4cPDybDhkmFfkv87/IwmXuiPUr/nDjNhGQopk=;
+        b=PQfYQwIVe/kmueqMcd6yULRsVbBII//RTq/iLJSPG3X7ZXUFHHbV2+snNXIpdmgilP
+         3/6DB2pWIQMLtVUTCuF9crwoBOpIAG/6dkvExotwXwSA5pv1hy7Hzy5Ji06H71YJstH/
+         wYqck2Yh6EfXAZ5Jy1LZh//OR5KKep54/+LFhRJ7leSxcbzbxbW+FcC6LzXSWBo+4LBS
+         J7mOHVY1WzOGF9feUy4Z0/0dfWsts1LuLKQgotL+zZh11IwVIDfZh5O4jPUMHV1gaAE/
+         cMqfzK7b2Wb+OB2qSkP6jpDdilszqt+u8TxF0It7Rk8FoSbG2/YrjFn/MfCt5dUHwB6T
+         LVPg==
 Content-Disposition: inline
+In-Reply-To: <20160929092722.GA5513@mwanda>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello Tejun Heo,
+4c737b41de7f ("cgroup: make cgroup_path() and friends behave in the
+style of strlcpy()") botched the conversion of proc_cpuset_show() and
+broke its error handling.  It made the function return 0 on failures
+and fail to handle error returns from cgroup_path_ns().  Fix it.
 
-The patch 4c737b41de7f: "cgroup: make cgroup_path() and friends
-behave in the style of strlcpy()" from Aug 10, 2016, leads to the
-following static checker warning:
+Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+Hello, Dan.
 
-	kernel/cpuset.c:2732 proc_cpuset_show()
-	warn: signed compare with PATH_MAX 'retval'
+Does this make the warning go away?
 
-kernel/cpuset.c
-  2715  int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
-  2716                       struct pid *pid, struct task_struct *tsk)
-  2717  {
-  2718          char *buf;
-  2719          struct cgroup_subsys_state *css;
-  2720          int retval;
-  2721  
-  2722          retval = -ENOMEM;
-  2723          buf = kmalloc(PATH_MAX, GFP_KERNEL);
-  2724          if (!buf)
-  2725                  goto out;
-  2726  
-  2727          retval = -ENAMETOOLONG;
-  2728          css = task_get_css(tsk, cpuset_cgrp_id);
-  2729          retval = cgroup_path_ns(css->cgroup, buf, PATH_MAX,
-  2730                                  current->nsproxy->cgroup_ns);
-  2731          css_put(css);
-  2732          if (retval >= PATH_MAX)
-  2733                  goto out_free;
-  2734          seq_puts(m, buf);
-  2735          seq_putc(m, '\n');
-  2736          retval = 0;
-  2737  out_free:
-  2738          kfree(buf);
-  2739  out:
-  2740          return 0;
+Thanks.
 
-Theoretically the out label should make this code totally future proof
-but something broke somehow.  The comments imply that cgroup_path_ns()
-returns negative error codes.
+ kernel/cpuset.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-  2741  }
-
-regards,
-dan carpenter
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 793ae6f..97dd8e1 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -2698,12 +2698,13 @@ int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
+ 	if (!buf)
+ 		goto out;
+ 
+-	retval = -ENAMETOOLONG;
+ 	css = task_get_css(tsk, cpuset_cgrp_id);
+ 	retval = cgroup_path_ns(css->cgroup, buf, PATH_MAX,
+ 				current->nsproxy->cgroup_ns);
+ 	css_put(css);
+ 	if (retval >= PATH_MAX)
++		retval = -ENAMETOOLONG;
++	if (retval < 0)
+ 		goto out_free;
+ 	seq_puts(m, buf);
+ 	seq_putc(m, '\n');
+@@ -2711,7 +2712,7 @@ int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
+ out_free:
+ 	kfree(buf);
+ out:
+-	return 0;
++	return retval;
+ }
+ #endif /* CONFIG_PROC_PID_CPUSET */
+ 
