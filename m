@@ -1,8 +1,8 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: Re: [RFC v3 07/22] landlock: Handle file comparisons
-Date: Mon, 3 Oct 2016 16:30:21 -0700
-Message-ID: <CAGXu5jLnVyeAMPWwP=ovZuE+vmmqxSd4WyZ6O1inA1ie107k8Q@mail.gmail.com>
-References: <20160914072415.26021-1-mic@digikod.net> <20160914072415.26021-8-mic@digikod.net>
+Subject: Re: [RFC v3 16/22] bpf/cgroup,landlock: Handle Landlock hooks per cgroup
+Date: Mon, 3 Oct 2016 16:43:26 -0700
+Message-ID: <CAGXu5jJ-Heb0nnLygYo0xHaJKSrQM5RSVRNYN2NnYddwGHtWkA@mail.gmail.com>
+References: <20160914072415.26021-1-mic@digikod.net> <20160914072415.26021-17-mic@digikod.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-security-module-owner@vger.kernel.org>
@@ -10,22 +10,22 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=mime-version:sender:in-reply-to:references:from:date:message-id
          :subject:to:cc:content-transfer-encoding;
-        bh=Lp0PZJ5lZDQDFitgg5h3TKHYKAN0/vXkWv3HZpZz3qQ=;
-        b=Offf2hK2DPZ5s1zO/QjaWUuRhk2lJRglKp38bGvkrZ8+llZ+NfoQLj7ZrjBqWR+os0
-         pHvMT8Q78PCs5+ZX3wO6kJtooWSLtrP3SEWr35ckUIH/NcJ4nU5Xs1oTcZVMnOn7Yh0A
-         lOVgagZd3z/A509mAqThMu9OE5mex9d53dApAjciV/G0u7ZA7rpgFKwV2wUjhrIGuIrS
-         0filM6dfjHfcFzUQdANPXCzOvdnBkvV3BnmY1Cu/VwqykBNQMtKNL9s2puVQp4XABIMW
-         zMCW4xT+J+d2zEUSyAU9CJ//yJuDUZXnn8UgX+f0aVB/xPPya1suW8SaHRZN433EVytj
-         7yXQ==
+        bh=5COvKxQLH4TKIw5WRidh4n7m/Qc0x7EOYFxDnw2V0aE=;
+        b=FTMvj4A6eEvjtybGwX95V+B9gqCM+cOZeQHWNkijww9pvExEW+2RKcGfvHnhW0F1ID
+         M0uVi5tcd5HFeDr5MAWoboJA2+unleYS6lGMaZwx7kJK3kVqtSby1/mOPKfbKOM2/ldS
+         b8lVdxk2RGXLUjGZTHWKx97c/d9aSCrnTJMUFUHFjTIP21FaJTFElSSfEtNTH3oQhnx5
+         EZa1+dlvd6oC+nwI6OH53Sf+BwUdpsnOEbntGQXlzzBxVE24cgAh+6IsxgQ7asAgzgOp
+         3v9F3chIgb1Sa6ooYgJbg8e902E1m03/7fCiIPwQ4qxo91onz3ocyLd63UaznyY78LkJ
+         ldnA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=mime-version:sender:in-reply-to:references:from:date:message-id
          :subject:to:cc:content-transfer-encoding;
-        bh=Lp0PZJ5lZDQDFitgg5h3TKHYKAN0/vXkWv3HZpZz3qQ=;
-        b=UfZVO+MeivNiEmeVlFsM8wbyA2BG2lb0IW7mqKwCkpTitEKWpQal9qG0VAzhPk2Lth
-         QbI1Uq6wHc9AWAE3EIMg05CC33m78E/uIKBjsf28DxBtHYLtnQODlhOfifOhTNXxJm1k
-         eKgfqfYt8tGpd7qYJ8hEsFx+txQgy/PbVb95g=
-In-Reply-To: <20160914072415.26021-8-mic@digikod.net>
+        bh=5COvKxQLH4TKIw5WRidh4n7m/Qc0x7EOYFxDnw2V0aE=;
+        b=QD13GFQwkbhq5oVt0E3J0RGnooG7AaoCUUe6/nMD7BCsk2w6oDI4Tv038HU3QtdQS4
+         J+QFjLbefeaalSqRXxbAYuBGpFNHwNF7bXVIow9z9SEn/nEuA1AUHWQEKlXVcyejkh9r
+         AQo1LZHwsbmqI4q4A4/n8+lCLEV00HieE/nqg=
+In-Reply-To: <20160914072415.26021-17-mic@digikod.net>
 Sender: owner-linux-security-module@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
@@ -34,157 +34,81 @@ Cc: LKML <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, An
 
 On Wed, Sep 14, 2016 at 12:24 AM, Micka=C3=ABl Sala=C3=BCn <mic@digikod.net=
 > wrote:
-> Add eBPF functions to compare file system access with a Landlock file
-> system handle:
-> * bpf_landlock_cmp_fs_prop_with_struct_file(prop, map, map_op, file)
->   This function allows to compare the dentry, inode, device or mount
->   point of the currently accessed file, with a reference handle.
-> * bpf_landlock_cmp_fs_beneath_with_struct_file(opt, map, map_op, file)
->   This function allows an eBPF program to check if the current accessed
->   file is the same or in the hierarchy of a reference handle.
->
-> The goal of file system handle is to abstract kernel objects such as a
-> struct file or a struct inode. Userland can create this kind of handle
-> thanks to the BPF_MAP_UPDATE_ELEM command. The element is a struct
-> landlock_handle containing the handle type (e.g.
-> BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD) and a file descriptor. This could
-> also be any descriptions able to match a struct file or a struct inode
-> (e.g. path or glob string).
+> This allows to add new eBPF programs to Landlock hooks dedicated to a
+> cgroup thanks to the BPF_PROG_ATTACH command. Like for socket eBPF
+> programs, the Landlock hooks attached to a cgroup are propagated to the
+> nested cgroups. However, when a new Landlock program is attached to one
+> of this nested cgroup, this cgroup hierarchy fork the Landlock hooks.
+> This design is simple and match the current CONFIG_BPF_CGROUP
+> inheritance. The difference lie in the fact that Landlock programs can
+> only be stacked but not removed. This match the append-only seccomp
+> behavior. Userland is free to handle Landlock hooks attached to a cgroup
+> in more complicated ways (e.g. continuous inheritance), but care should
+> be taken to properly handle error cases (e.g. memory allocation errors).
 >
 > Changes since v2:
-> * add MNT_INTERNAL check to only add file handle from user-visible FS
->   (e.g. no anonymous inode)
-> * replace struct file* with struct path* in map_landlock_handle
-> * add BPF protos
-> * fix bpf_landlock_cmp_fs_prop_with_struct_file()
+> * new design based on BPF_PROG_ATTACH (suggested by Alexei Starovoitov)
 >
 > Signed-off-by: Micka=C3=ABl Sala=C3=BCn <mic@digikod.net>
 > Cc: Alexei Starovoitov <ast@kernel.org>
 > Cc: Andy Lutomirski <luto@amacapital.net>
 > Cc: Daniel Borkmann <daniel@iogearbox.net>
+> Cc: Daniel Mack <daniel@zonque.org>
 > Cc: David S. Miller <davem@davemloft.net>
-> Cc: James Morris <james.l.morris@oracle.com>
 > Cc: Kees Cook <keescook@chromium.org>
-> Cc: Serge E. Hallyn <serge@hallyn.com>
-> Link: https://lkml.kernel.org/r/CALCETrWwTiz3kZTkEgOW24-DvhQq6LftwEXh77FD=
-2G5o71yD7g@mail.gmail.com
+> Cc: Tejun Heo <tj@kernel.org>
+> Link: https://lkml.kernel.org/r/20160826021432.GA8291@ast-mbp.thefacebook=
+.com
+> Link: https://lkml.kernel.org/r/20160827204307.GA43714@ast-mbp.thefaceboo=
+k.com
 > ---
->  include/linux/bpf.h            |  10 +++
->  include/uapi/linux/bpf.h       |  49 +++++++++++
->  kernel/bpf/arraymap.c          |  21 +++++
->  kernel/bpf/verifier.c          |   8 ++
->  security/landlock/Makefile     |   2 +-
->  security/landlock/checker_fs.c | 179 +++++++++++++++++++++++++++++++++++=
-++++++
->  security/landlock/checker_fs.h |  20 +++++
->  security/landlock/lsm.c        |   6 ++
->  8 files changed, 294 insertions(+), 1 deletion(-)
->  create mode 100644 security/landlock/checker_fs.c
->  create mode 100644 security/landlock/checker_fs.h
+>  include/linux/bpf-cgroup.h  |  7 +++++++
+>  include/linux/cgroup-defs.h |  2 ++
+>  include/linux/landlock.h    |  9 +++++++++
+>  include/uapi/linux/bpf.h    |  1 +
+>  kernel/bpf/cgroup.c         | 33 ++++++++++++++++++++++++++++++---
+>  kernel/bpf/syscall.c        | 11 +++++++++++
+>  security/landlock/lsm.c     | 40 +++++++++++++++++++++++++++++++++++++++=
+-
+>  security/landlock/manager.c | 32 ++++++++++++++++++++++++++++++++
+>  8 files changed, 131 insertions(+), 4 deletions(-)
+>
 > [...]
-> diff --git a/security/landlock/checker_fs.c b/security/landlock/checker_f=
-s.c
-> new file mode 100644
-> index 000000000000..39eb85dc7d18
-> --- /dev/null
-> +++ b/security/landlock/checker_fs.c
-> @@ -0,0 +1,179 @@
-> +/*
-> + * Landlock LSM - File System Checkers
-> + *
-> + * Copyright (C) 2016  Micka=C3=ABl Sala=C3=BCn <mic@digikod.net>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2, as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/bpf.h> /* enum bpf_map_array_op */
-> +#include <linux/errno.h>
-> +#include <linux/fs.h> /* path_is_under() */
-> +#include <linux/path.h> /* struct path */
-> +
-> +#include "checker_fs.h"
-> +
-> +#define EQUAL_NOT_NULL(a, b) (a && a =3D=3D b)
-> +
-> +/*
-> + * bpf_landlock_cmp_fs_prop_with_struct_file
-> + *
-> + * Cf. include/uapi/linux/bpf.h
-> + */
-> +static inline u64 bpf_landlock_cmp_fs_prop_with_struct_file(u64 r1_prope=
-rty,
-> +               u64 r2_map, u64 r3_map_op, u64 r4_file, u64 r5)
-> +{
-> +       u8 property =3D (u8) r1_property;
-> +       struct bpf_map *map =3D (struct bpf_map *) (unsigned long) r2_map=
-;
-> +       enum bpf_map_array_op map_op =3D r3_map_op;
-> +       struct file *file =3D (struct file *) (unsigned long) r4_file;
-> +       struct bpf_array *array =3D container_of(map, struct bpf_array, m=
-ap);
-> +       struct path *p1, *p2;
-> +       struct map_landlock_handle *handle;
-> +       int i;
-> +
-> +       /* ARG_CONST_PTR_TO_LANDLOCK_HANDLE_FS is an arraymap */
-> +       if (unlikely(!map)) {
-> +               WARN_ON(1);
-> +               return -EFAULT;
-> +       }
+> diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
+> index 7b75fa692617..1c18fe46958a 100644
+> --- a/kernel/bpf/cgroup.c
+> +++ b/kernel/bpf/cgroup.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/bpf.h>
+>  #include <linux/bpf-cgroup.h>
+>  #include <net/sock.h>
+> +#include <linux/landlock.h>
+>
+>  DEFINE_STATIC_KEY_FALSE(cgroup_bpf_enabled_key);
+>  EXPORT_SYMBOL(cgroup_bpf_enabled_key);
+> @@ -31,7 +32,15 @@ void cgroup_bpf_put(struct cgroup *cgrp)
+>                 union bpf_object pinned =3D cgrp->bpf.pinned[type];
+>
+>                 if (pinned.prog) {
+> -                       bpf_prog_put(pinned.prog);
+> +                       switch (type) {
+> +                       case BPF_CGROUP_LANDLOCK:
+> +#ifdef CONFIG_SECURITY_LANDLOCK
+> +                               put_landlock_hooks(pinned.hooks);
+> +                               break;
+> +#endif /* CONFIG_SECURITY_LANDLOCK */
+> +                       default:
+> +                               bpf_prog_put(pinned.prog);
+> +                       }
+>                         static_branch_dec(&cgroup_bpf_enabled_key);
+>                 }
+>         }
 
-Just some minor style/readability nits...
-
-This is more readable as:
-
-if (WARN_ON(!map))
-    return -EFAULT;
-
-(WARN_ON already includes the unlikely() and passes through the test result=
-.)
-
-> +       if (unlikely(!file))
-> +               return -ENOENT;
-> +       if (unlikely((property | _LANDLOCK_FLAG_FS_MASK) !=3D _LANDLOCK_F=
-LAG_FS_MASK))
-> +               return -EINVAL;
-> +
-> +       /* for now, only handle OP_OR */
-> +       switch (map_op) {
-> +       case BPF_MAP_ARRAY_OP_OR:
-> +               break;
-> +       case BPF_MAP_ARRAY_OP_UNSPEC:
-> +       case BPF_MAP_ARRAY_OP_AND:
-> +       case BPF_MAP_ARRAY_OP_XOR:
-> +       default:
-> +               return -EINVAL;
-> +       }
-> +       p2 =3D &file->f_path;
-> +
-> +       synchronize_rcu();
-> +
-> +       for (i =3D 0; i < array->n_entries; i++) {
-> +               bool result_dentry =3D !(property & LANDLOCK_FLAG_FS_DENT=
-RY);
-> +               bool result_inode =3D !(property & LANDLOCK_FLAG_FS_INODE=
-);
-> +               bool result_device =3D !(property & LANDLOCK_FLAG_FS_DEVI=
-CE);
-> +               bool result_mount =3D !(property & LANDLOCK_FLAG_FS_MOUNT=
-);
-> +
-> +               handle =3D (struct map_landlock_handle *)
-> +                               (array->value + array->elem_size * i);
-> +
-> +               if (handle->type !=3D BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD)=
- {
-> +                       WARN_ON(1);
-> +                       return -EFAULT;
-> +               }
-
-Same here... and in the other function (much of which seems to repeat
--- can some of these checks be put into common functions?)
+I get creeped out by type-controlled unions of pointers. :P I don't
+have a suggestion to improve this, but I don't like seeing a pointer
+type managed separately from the pointer itself as it tends to bypass
+a lot of both static and dynamic checking. A union is better than a
+cast of void *, but it still worries me. :)
 
 -Kees
 
