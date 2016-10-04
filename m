@@ -1,126 +1,92 @@
-From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: Re: [RFC v3 03/22] bpf,landlock: Add a new arraymap type to deal with
- (Landlock) handles
-Date: Mon, 3 Oct 2016 16:53:52 -0700
-Message-ID: <CAGXu5jLgkbMN0KszLx3dcHfmksW_TORzT7JxHiGJL2Xux5TVBA@mail.gmail.com>
-References: <20160914072415.26021-1-mic@digikod.net> <20160914072415.26021-4-mic@digikod.net>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: [RFC][PATCH 0/2] Another pass at Android style loosening of cgroup attach permissions
+Date: Mon,  3 Oct 2016 21:41:28 -0700
+Message-ID: <1475556090-6278-1-git-send-email-john.stultz@linaro.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc:content-transfer-encoding;
-        bh=OxrqXTfbAU8w6IZk41W1+963z0O+tB8I1L9p7cbb+H4=;
-        b=IuGbixW9XU9lumPheuzlqMwb8DDKiunXzY+pQqgngb0V9Rg7QvQkpfCZgHhAWmD8RL
-         ue1EzqQeGAjO1vWgSoNWlCEbuXb5v7BBoq4WBl+yKUxPNb2AYgWux7GneB+9f5bMAGA6
-         UP30/DQ8lb4VTWbG30QO88xtkwrNhCDL0FnIj6Wa/SmYVE3TvJlJIlh0oWdBNI4pDsfc
-         8PxoAozyTmKU0snA8aC9MUQt9zZ/gVefKmgrf4EQySFcj3ghG+zB/TI+3NWeay5EKm2b
-         ZYYFMtxznU13MxLZKnnaRvxtgl107oId5c48y8S/lB8PX5Tw5DLEnck9ZYp+/Bgq9eBP
-         Xi/A==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc:content-transfer-encoding;
-        bh=OxrqXTfbAU8w6IZk41W1+963z0O+tB8I1L9p7cbb+H4=;
-        b=eqozyNGPjMXZi2HZSE6nl8Spg6vQLGISEUY3oTpaX/xjeu7hWPrRZzxyTdMJmcW2+1
-         y8AAYQTLzNKG51g2ipChvdg3nENWOPVy+7K97SdF5KfkB119xEkxJs/Dil4a/GkVnTZg
-         Hj5yKIhshAZ3ECzDI6NBCe0+DsAR4Z9fUcvRE=
-In-Reply-To: <20160914072415.26021-4-mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=SbOiMLqSHNhxUChuurnoMYhpYke4OROGEO6Zz5KQNJo=;
+        b=QXwX1GqVT+Gbw0QuWk5aJRDcqpIp9LQ6a0ihZJQd3rSOpI7P49295MzsKCqPImNi9j
+         ZPzQfzSGKeBq5gHoz4Pyv2Z3n7dkOvUppA6v/4qiY03eQpmI6di+6mWQef85tbjfpdhD
+         zngFEOkaDsXLw+Bge04xNgMCCx+fslPMTOlSE=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Casey Schaufler <casey-iSGtlc1asvQWG2LlvL+J4A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, David Drysdale <drysdale-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Eric W . Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Will Drewry <wad-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org" <kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-On Wed, Sep 14, 2016 at 12:23 AM, Micka=C3=ABl Sala=C3=BCn <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org=
-> wrote:
-> This new arraymap looks like a set and brings new properties:
-> * strong typing of entries: the eBPF functions get the array type of
->   elements instead of CONST_PTR_TO_MAP (e.g.
->   CONST_PTR_TO_LANDLOCK_HANDLE_FS);
-> * force sequential filling (i.e. replace or append-only update), which
->   allow quick browsing of all entries.
->
-> This strong typing is useful to statically check if the content of a map
-> can be passed to an eBPF function. For example, Landlock use it to store
-> and manage kernel objects (e.g. struct file) instead of dealing with
-> userland raw data. This improve efficiency and ensure that an eBPF
-> program can only call functions with the right high-level arguments.
->
-> The enum bpf_map_handle_type list low-level types (e.g.
-> BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD) which are identified when
-> updating a map entry (handle). This handle types are used to infer a
-> high-level arraymap type which are listed in enum bpf_map_array_type
-> (e.g. BPF_MAP_ARRAY_TYPE_LANDLOCK_FS).
->
-> For now, this new arraymap is only used by Landlock LSM (cf. next
-> commits) but it could be useful for other needs.
->
-> Changes since v2:
-> * add a RLIMIT_NOFILE-based limit to the maximum number of arraymap
->   handle entries (suggested by Andy Lutomirski)
-> * remove useless checks
->
-> Changes since v1:
-> * arraymap of handles replace custom checker groups
-> * simpler userland API
->
-> Signed-off-by: Micka=C3=ABl Sala=C3=BCn <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-> Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-> Cc: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
-> Cc: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-> Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Link: https://lkml.kernel.org/r/CALCETrWwTiz3kZTkEgOW24-DvhQq6LftwEXh77FD=
-2G5o71yD7g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org
-> ---
->  include/linux/bpf.h      |  14 ++++
->  include/uapi/linux/bpf.h |  18 +++++
->  kernel/bpf/arraymap.c    | 203 +++++++++++++++++++++++++++++++++++++++++=
-++++++
->  kernel/bpf/verifier.c    |  12 ++-
->  4 files changed, 246 insertions(+), 1 deletion(-)
->
-> [...]
-> diff --git a/kernel/bpf/arraymap.c b/kernel/bpf/arraymap.c
-> index a2ac051c342f..94256597eacd 100644
-> --- a/kernel/bpf/arraymap.c
-> +++ b/kernel/bpf/arraymap.c
-> [...]
-> +       /*
-> +        * Limit number of entries in an arraymap of handles to the maxim=
-um
-> +        * number of open files for the current process. The maximum numb=
-er of
-> +        * handle entries (including all arraymaps) for a process is then
-> +        * (RLIMIT_NOFILE - 1) * RLIMIT_NOFILE. If the process' RLIMIT_NO=
-FILE
-> +        * is 0, then any entry update is forbidden.
-> +        *
-> +        * An eBPF program can inherit all the arraymap FD. The worse cas=
-e is
-> +        * to fill a bunch of arraymaps, create an eBPF program, close th=
-e
-> +        * arraymap FDs, and start again. The maximum number of arraymap
-> +        * entries can then be close to RLIMIT_NOFILE^3.
-> +        *
-> +        * FIXME: This should be improved... any idea?
-> +        */
-> +       if (unlikely(index >=3D rlimit(RLIMIT_NOFILE)))
-> +               return -EMFILE;
+As a heads up, this is just a first RFC and not a submission.
 
-I'm not sure what's best for resource management here. Landlock will
-be holding open path structs, for example, but how are you expecting
-to track things like network policies? An allowed IP address, for
-example, doesn't have a handle outside of doing a full
-socket()/connect() setup.
+I wanted to send this out again, as the last time I submitted this
+(https://marc.info/?l=linux-kernel&m=143217972215192&w=2) the
+discussion got out into the separate issue of how Android at one
+time abused memcg (but I believe now memcg is no longer used).
 
-I think an explicit design for resource management should be
-considered up front...
+So for this revision, I've removed any memcg usage so we can try
+to focus on just the actively used cpuset and cpuctrl cgroups.
 
--Kees
+Android currently loosens the cgroup attchment permissions, allowing
+tasks with CAP_SYS_NICE to be able to allow tasks to move arbitrary
+tasks across cgroups.
 
---=20
-Kees Cook
-Nexus Security
+Android currently uses cgroups to bound tasks in various states (ie:
+foreground applications, background applications, audio application,
+system audio, and system tasks), to specific cpus as well as to limit
+cpu time. This allows for things like audio applications to be
+SCHED_FIFO but not run-away hogging infinite cpu, and background task
+cpu usage to be similarly cputime limited, and kept to only low-power
+cpus.
+
+The migration of a task from the foreground to background, or to
+elevate a task to audio priority, may be done by system service that
+does not run as root. So this patch allows processes with CAP_SYS_NICE
+to be able to migrate tasks between cgroups.  I suspect if there was a
+specific cap (CAP_SYS_CHANGE_CGROUP) for this, it would be usable here,
+but in its absence, they've overloaded CAP_SYS_NICE for this use.
+
+At first glance, overloading CAP_SYS_NICE seems a bit hackish, but this
+shows that there is a active and widely deployed use for different cgroup
+attachment rules then what is currently available.
+
+I've tried to rework the patches so this attachment policy is build
+time configurable, and wanted to send them out for review so folks
+might give their thoughts on this implementation and what they might
+see as a better way to go about achieving the same goal.
+
+Thoughts and feedback would be appriciated!
+
+thanks
+-john
+
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>
+Cc: Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+
+Colin Cross (1):
+  cgroup: Add generic cgroup subsystem permission checks
+
+Rom Lemarchand (1):
+  cgroup: Add a allow_attach policy for Android
+
+ Documentation/cgroup-v1/cgroups.txt |  9 ++++++
+ include/linux/cgroup-defs.h         |  1 +
+ include/linux/cgroup.h              | 16 ++++++++++
+ init/Kconfig                        |  7 +++++
+ kernel/cgroup.c                     | 61 +++++++++++++++++++++++++++++++++++--
+ kernel/cpuset.c                     |  3 ++
+ kernel/sched/core.c                 |  3 ++
+ 7 files changed, 98 insertions(+), 2 deletions(-)
+
+-- 
+1.9.1
