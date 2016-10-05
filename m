@@ -1,82 +1,91 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [Documentation] State of CPU controller in cgroup v2
-Date: Wed, 5 Oct 2016 10:07:55 +0200
-Message-ID: <20161005080755.GE3142@twins.programming.kicks-ass.net>
-References: <20160829222048.GH28713@mtj.duckdns.org>
- <CALCETrUEygWrJbG25wSfG3zMG_+TNeP8+gAkcbh4_=ZNWHQCkw@mail.gmail.com>
- <20160831173251.GY12660@htj.duckdns.org>
- <CALCETrUKOJZS+=QDPyQD+vxXpwyjoj4+Crg6wU7Xk8rP4prYkA@mail.gmail.com>
- <20160831210754.GZ12660@htj.duckdns.org>
- <CALCETrXj2Z=-GMaWV_EpCvw_8C3t1vc=D53Ff2wdvo=At8ZF1Q@mail.gmail.com>
- <20160903220526.GA20784@mtj.duckdns.org>
- <CALCETrVcAjFWLQ1arjSP-g=4jRY_J7G-j9JJHrvTDgOnxApYPw@mail.gmail.com>
- <20160906102950.GK10153@twins.programming.kicks-ass.net>
- <20161004144717.GA4205@htj.duckdns.org>
+From: Leon Romanovsky <leon@kernel.org>
+Subject: Re: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
+Date: Wed, 5 Oct 2016 14:22:06 +0300
+Message-ID: <20161005112206.GC9282@leon.nu>
+References: <1472632647-1525-1-git-send-email-pandit.parav@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="JgQwtEuHJzHdouWu"
+Return-path: <linux-doc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161004144717.GA4205-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1472632647-1525-1-git-send-email-pandit.parav@gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Parav Pandit <pandit.parav@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, hch@lst.de, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com, corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-On Tue, Oct 04, 2016 at 10:47:17AM -0400, Tejun Heo wrote:
-> > cgroup-v2, by placing the system style controllers first and foremost,
-> > completely renders that scenario impossible. Note also that any proposed
-> > rgroup would not work for this, since that, per design, is a subtree,
-> > and therefore not disjoint.
-> 
-> If a use case absolutely requires disjoint resource hierarchies, the
-> only solution is to keep using multiple v1 hierarchies, which
-> necessarily excludes the possibility of doing anyting across different
-> resource types.
-> 
-> > So my objection to the whole cgroup-v2 model and implementation stems
-> > from the fact that it purports to be a 'better' and 'improved' system,
-> > while in actuality it neuters and destroys a lot of useful usecases.
-> > 
-> > It completely disregards all task-controllers and labels their use-cases
-> > as irrelevant.
-> 
-> Your objection then doesn't have much to do with the specifics of the
-> cgroup v2 model or implementation.
 
-It is too, I've stated multiple times that the no internal tasks thing
-is bad and that the root exception is an inexcusable wart that makes the
-whole thing internally inconsistent.
+--JgQwtEuHJzHdouWu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-But talking to you guys is pointless. You'll just keep moving air until
-the other party tires and gives up.
+On Wed, Aug 31, 2016 at 02:07:24PM +0530, Parav Pandit wrote:
+> rdmacg: IB/core: rdma controller support
+>
+> Patch is generated and tested against below Doug's linux-rdma
+> git tree.
+>
+> URL: git://git.kernel.org/pub/scm/linux/kernel/git/dledford/rdma.git
+> Branch: master
+>
+> Patchset is also compiled and tested against below Tejun's cgroup tree
+> using cgroup v2 mode.
+> URL: git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
+> Branch: master
+>
+> Overview:
+> Currently user space applications can easily take away all the rdma
+> device specific resources such as AH, CQ, QP, MR etc. Due to which other
+> applications in other cgroup or kernel space ULPs may not even get chance
+> to allocate any rdma resources. This results into service unavailibility.
+>
+> RDMA cgroup addresses this issue by allowing resource accounting,
+> limit enforcement on per cgroup, per rdma device basis.
+>
+> RDMA uverbs layer will enforce limits on well defined RDMA verb
+> resources without any HCA vendor device driver involvement.
+>
+> RDMA uverbs layer will not do limit enforcement of HCA hw vendor
+> specific resources. Instead rdma cgroup provides set of APIs
+> through which vendor specific drivers can do resource accounting
+> by making use of rdma cgroup.
 
-My NAK on v2 stands.
+Hi Parav,
+I want to propose an extension to the RDMA cgroup which can be done as
+follow-up patches.
 
-> It's an objection against
-> establishing common resource domains as that excludes building
-> orthogonal multiple hierarchies.  That, necessarily, can only be
-> achieved by having multiple hierarchies for different resource types
-> and thus giving up the benefits of common resource domains.
+Let's add new global type, which will control whole HCA (for example in percentages). It will
+allow natively define new objects without need to introduce them to the user.
 
-Yes, v2 not allowing that rules it out as a valid model.
+This HCA share will be overwritten by specific UVERBS types which you
+already defined.
 
-> Assuming that, I don't think your position is against cgroup v2 but
-> more toward keeping v1 around.  We're talking about two quite
-> different mutually exclusive classes of use cases.  You need unified
-> for one and disjoint for the other.  v1 is gonna be there and can
-> easily be used alongside v2 for different controller types, which
-> would in most cases be cpu and cpuset.
-> 
-> I can't see a reason why this would need to block properly supporting
-> containerization use cases.
+What do you think?
 
-I don't block that use-case, I block cgroup-v2, its shit.
+Except this proposal,
+Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
 
-The fact is, the naming "v2" suggests its a replacement and will
-deprecate "v1". Also the implementation is mutually exclusive with v1,
-you have to pick one and the other becomes inaccessible.
+Thanks.
 
-You cannot even pick another one inside a container, breaking the
-container invariant.
+--JgQwtEuHJzHdouWu
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX9OJeAAoJEORje4g2clinwwkQAMkFVwiNSyAPTQh5kESJCGrx
+LeHju2XSMeqYogYI7aNvNEO3J12Vmzax7u5xPCXjD6ZpZISf/F+sBKZ99UNnw8ZS
+/C4UTdYPG4L7hYMVPKJ8dYwZ2O8xuG2N5S1Xe5UrKcjFiqBo6CpUZBBhaZaKdAOf
+UVRZyviy2J6pbLYSoyd06US/x8nLdgyoQzfFcQ/+r/M/WKeql3pyT7qRhowRaJ3V
+3vmp2Bvp9VET5nuHPe3eJmE5g3LlqRbbSbBWFidJuIW61WyAFBISXJlcW5wbKPCo
+zwp5dKeEUI8ORZwVrGWRtZTu3geTzISOo6fVLGZtVrDUnp/znCu6kon8/0UtzlJE
+TsR0AiTCzRVYEL4FITl4g9aoxDZrgBPB+ZaGAyWSOZxkhekhJI3ktXYmQ1SyUp2X
+ms60OUXiSTdsSTRPtd+1ACxos89rFjQzM+ReMegmWfPpEMiE9uRU/szpslN2cNCr
+zRNtdJ/f/icvnNHbY0rZxRfJO+lnRTrZxTPuhiSUZrmACwk4hCQcEdaVPCzZkkyF
+M18sV32TzZQDcDyLzJwrT5R/ew8wz0ICmV7huEp5IhYc9DKCrN0lZ1zZbvv3rH7x
+QUwYg2KZqdiG/vt0QIUFCmDNQxR9cWFRs9RoseFwD3T800BXzXGUXsYPGHNfpmAm
+jTLHuKOZ29kjWVs/HkGv
+=rHQX
+-----END PGP SIGNATURE-----
+
+--JgQwtEuHJzHdouWu--
