@@ -1,68 +1,106 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC][PATCH 0/2] Another pass at Android style loosening of
- cgroup attach permissions
-Date: Tue, 4 Oct 2016 17:29:47 -0400
-Message-ID: <20161004212947.GM4205@htj.duckdns.org>
-References: <1475556090-6278-1-git-send-email-john.stultz@linaro.org>
- <20161004161630.GC4205@htj.duckdns.org>
- <CALAqxLUPMxpngbZCSFW9wS+LbZJbfSUxTDEXX2x-FUmuN4H+QQ@mail.gmail.com>
- <20161004193838.GH4205@htj.duckdns.org>
- <20161004201840.GA27018@mail.hallyn.com>
- <20161004203301.GK4205@htj.duckdns.org>
- <20161004212643.GA27842@mail.hallyn.com>
-Mime-Version: 1.0
+From: John Stultz <john.stultz@linaro.org>
+Subject: [RFC][PATCH] cgroup: Add new capability to allow a process to migrate other tasks between cgroups
+Date: Tue,  4 Oct 2016 17:21:14 -0700
+Message-ID: <1475626874-22949-1-git-send-email-john.stultz@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=thmYxwzUC3ocJVq3ODoSrpOMQ29TS4l1yev1CLR3A+E=;
-        b=Z2Wr6riIMmJiERVw7P2JaBrAv0LOlFkWHRCMSkdk6/AdNWTPl7a1xYbf9Vq1l1EhAw
-         WMkpu1fnK9vNsmSRN5fV565A9U67gVaBpo25x8M7zE6vF6vjb8DEgfuriPHHuygKbnIG
-         MXTwJc0kU93czW1HE/1N07zc47ZSwoZcZqoi/VdPEX8nPrwW2ZJv9yLx8R00b8Bt+l1X
-         yB4Wn1E6O+/5MzpJDO3ELhk7hOYiJx6TdI6YHoUhINkNHE+gfmOducCnEqS7reNoVT0R
-         2yruBeqimkwFR1E+7DdBO2UAXrD8vQkWq1KUH5U8fL/y6SHNyTYnCinPrpJnKkrGTryE
-         w/+w==
-Content-Disposition: inline
-In-Reply-To: <20161004212643.GA27842@mail.hallyn.com>
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=fUQ0GjMEQVYvJMvhpRm4pLlrvJk9OmLwMIkbO0C341E=;
+        b=T4QXomIVNfc+UTQ3SNEwHJt5AmSbbLDI3ipxufD3tJEB46qwiAI13ZF6uxbCFrEVtL
+         cbbcJjY5yDoBoeyO5s7DLaCFefDPgL3Jgqu38sz8l8hYMzR93lD0SISFxI9G9zYDwHbg
+         zL9rNkJhKLR2hRN5jmpOEfWfaIXFamB4hFYdo=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge@hallyn.com>
-Cc: John Stultz <john.stultz@linaro.org>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Todd Kjos <tkjos@google.com>, Christian Poetzsch <christian.potzsch@imgtec.com>, Amit Pundir <amit.pundir@linaro.org>
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: John Stultz <john.stultz@linaro.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Todd Kjos <tkjos@google.com>, Christian Poetzsch <christian.potzsch@imgtec.com>, Amit Pundir <amit.pundir@linaro.org>, "Serge E. Hallyn" <serge@hallyn.com>
 
-On Tue, Oct 04, 2016 at 04:26:43PM -0500, Serge E. Hallyn wrote:
-> Quoting Tejun Heo (tj@kernel.org):
-> > Hello, Serge.
-> > 
-> > On Tue, Oct 04, 2016 at 03:18:40PM -0500, Serge E. Hallyn wrote:
-> > > how about changing the GLOBAL_ROOT_UID check with a targeted
-> > > capability check, like
-> > > 
-> > > 	if (!ns_capable(tcred->user_ns, CAP_SYS_NICE) &&
-> > >             !uid_eq(cred->euid, tcred->uid) &&
-> > >             !uid_eq(cred->euid, tcred->suid))
-> > > 		ret = -EACCES;
-> > > 
-> > > where the actual capability to use may require some thought.
-> > 
-> > Yeah, that's the direction I'm thinking too.  We can't use
-> > CAP_SYS_NICE in general tho.  Let's see if a dedicated CAP sticks.
-> 
-> One possibility would be to let each cgroup subsystem define
-> a move_caps capability mask which is required over the target
-> task.  And add a new CAP_CGROUP which always suffices?
+This patch adds CAP_GROUP_MIGRATE_TASK and logic to allows a process
+to migrate other tasks between cgroups.
 
-As I wrote in another reply, I really don't wanna do that.  It brings
-in the question about control knob permissions too and makes the
-permission checks a lot more difficult to predit.  I'd much rather
-just get rid of the extra checks, at least on the v2 hierarchy.  The
-extra checks are protecting against pulling in random processes into a
-delegated subtree and v2 hierarchy already has a protection against
-that.
+In Android (where this feature originated), the ActivityManager tracks
+various application states (TOP_APP, FOREGROUND, BACKGROUND, SYSTEM,
+etc), and then as applications change states, the SchedPolicy logic
+will migrate the application tasks between different cgroups used
+to control the different application states (for example, there is a
+background cpuset cgroup which can limit background tasks to stay
+on one low-power cpu, and the bg_non_interactive cpuctrl cgroup can
+then further limit those background tasks to a small percentage of
+that one cpu's cpu time).
 
-Thanks.
+However, for security reasons, Android doesn't want to make the
+system_server (the process that runs the ActivityManager and
+SchedPolicy logic), run as root. So in the Android common.git
+kernel, they have some logic to allow cgroups to loosen their
+permissions so CAP_SYS_NICE tasks can migrate other tasks between
+cgroups.
 
+The approach taken there overloads CAP_SYS_NICE a bit much, and
+is maybe more complicated then needed.
+
+So this patch, as suggested by Tejun,  simply adds a new process
+capability flag (CAP_CGROUP_MIGRATE_TASK), and uses it when checking
+if a task can migrate other tasks between cgroups.
+
+I've tested this with AOSP master (though its a bit hacked in as I
+still need to properly get the selinux bits aware of the new
+capability bit) with selinux set to permissive and it seems to be
+working well.
+
+Thouhts and feedback would be appreciated!
+
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: cgroups@vger.kernel.org
+Cc: Android Kernel Team <kernel-team@android.com>
+Cc: Rom Lemarchand <romlem@android.com>
+Cc: Colin Cross <ccross@android.com>
+Cc: Dmitry Shmidt <dimitrysh@google.com>
+Cc: Todd Kjos <tkjos@google.com>
+Cc: Christian Poetzsch <christian.potzsch@imgtec.com>
+Cc: Amit Pundir <amit.pundir@linaro.org>
+Cc: Serge E. Hallyn <serge@hallyn.com>
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+---
+ include/uapi/linux/capability.h | 5 ++++-
+ kernel/cgroup.c                 | 3 ++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capability.h
+index 49bc062..e199ea0 100644
+--- a/include/uapi/linux/capability.h
++++ b/include/uapi/linux/capability.h
+@@ -349,8 +349,11 @@ struct vfs_cap_data {
+ 
+ #define CAP_AUDIT_READ		37
+ 
++/* Allow migrating tasks between cgroups */
+ 
+-#define CAP_LAST_CAP         CAP_AUDIT_READ
++#define CAP_CGROUP_MIGRATE_TASK	38
++
++#define CAP_LAST_CAP         CAP_CGROUP_MIGRATE_TASK
+ 
+ #define cap_valid(x) ((x) >= 0 && (x) <= CAP_LAST_CAP)
+ 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 9ba28310..a318956 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2847,7 +2847,8 @@ static int cgroup_procs_write_permission(struct task_struct *task,
+ 	 */
+ 	if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
+ 	    !uid_eq(cred->euid, tcred->uid) &&
+-	    !uid_eq(cred->euid, tcred->suid))
++	    !uid_eq(cred->euid, tcred->suid) &&
++	    !ns_capable(tcred->user_ns, CAP_CGROUP_MIGRATE_TASK))
+ 		ret = -EACCES;
+ 
+ 	if (!ret && cgroup_on_dfl(dst_cgrp)) {
 -- 
-tejun
+1.9.1
+
