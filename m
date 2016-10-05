@@ -1,63 +1,50 @@
-From: Leon Romanovsky <leon@kernel.org>
-Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
-Date: Wed, 5 Oct 2016 14:22:57 +0300
-Message-ID: <20161005112257.GD9282@leon.nu>
-References: <20160911172445.GA25953@lst.de>
- <20160911175235.GB13442@obsidianresearch.com>
- <20160912050717.GE8812@leon.nu>
- <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
- <20160915185629.GF26069@leon.nu>
- <CAG53R5XBS0B5XaTzjKC3-zgoB2-fz2ctbk_E2YG76zBgzOfG-A@mail.gmail.com>
- <20160921142645.GB10734@htj.duckdns.org>
- <CAG53R5WMuojhzFGmqk6nHfypd9Hq4dGsWRKjtUyMZ=RezU-LhQ@mail.gmail.com>
- <CAG53R5VqQ6UzsuzcovsD+ufv3HaEQEbUpaf3kDo4zLOrAf__8A@mail.gmail.com>
- <20161005063735.GC3086@lst.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC][PATCH] cgroup: Add new capability to allow a process to
+ migrate other tasks between cgroups
+Date: Wed, 5 Oct 2016 11:27:11 -0400
+Message-ID: <20161005152711.GB26977@htj.duckdns.org>
+References: <1475626874-22949-1-git-send-email-john.stultz@linaro.org>
+ <20161005003833.GA29239@mail.hallyn.com>
+ <CALAqxLU7qqKBVKO-bq_zKCUJqqvprNi8z5RpOb=Cec-VP=P4Yw@mail.gmail.com>
+ <20161005042529.GA30929@mail.hallyn.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="IDYEmSnFhs3mNXr+"
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=fGahAjq7DpFo8qZdx8MNtqxgGgjlOsI8zcPRLXSdVEI=;
+        b=bzSF9iPFiGY56BH3ccI4QLQnjMQBcOr841lQZAJcxKsCyqKJgWbaHkl9Qo4DaR+2vM
+         L3OLhLzk62gqBZYaooj9fM/YVnkyh4iX++okc/c741jdzClPd73ltH/bkBJ9Gmm371C9
+         mehqRf9uvE2a5mw7dBKy7n0yJE6IcpbdcG68z98CrnkIjg9q5igw7sB+KnoEnRcfptuR
+         yXln+h9KvoWqRQmJDlqqZleMHqzUR8ZBgHnYP93UsPCaEKM13d/JEEYMjNtmq0Zqe6SY
+         TheaGGvnNVi84ruwWMDZqk+3C1J57kRmNU8GP2wdPUdDnXqj+e42fOWvZUmssN27cLHM
+         ktqg==
 Content-Disposition: inline
-In-Reply-To: <20161005063735.GC3086@lst.de>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <20161005042529.GA30929-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Parav Pandit <pandit.parav@gmail.com>, Tejun Heo <tj@kernel.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Matan Barak <matanb@mellanox.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-rdma@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Liran Liss <liranl@mellanox.com>, "Hefty, Sean" <sean.hefty@intel.com>, Haggai Eran <haggaie@mellanox.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-security-module@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
+Hello,
 
---IDYEmSnFhs3mNXr+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Tue, Oct 04, 2016 at 11:25:29PM -0500, Serge E. Hallyn wrote:
+> > > If anything I'd say the GLOBAL_ROOT_UID check could be taken out since
+> > > otherwise a host-root task effectively cannot drop this capability.
+> > 
+> > Is this ok to leave for a separate patch?
+> 
+> Yeah.  And I'm not sure whether Tejun would object to that idea.
 
-On Wed, Oct 05, 2016 at 08:37:35AM +0200, Christoph Hellwig wrote:
-> FYI, the patches look fine to me:
->
-> Acked-by: Christoph Hellwig <hch@lst.de>
->
-> but we're past the merge window for 4.9 now unfortunately.
+With the capability, I think it'd be better to get rid of the explicit
+UID check, but can we please rename the cap to CAP_CGROUP_MIGRATE and
+loop in linux-api mailing list and ppl who are more familiar with
+CAPs?
 
-IMHO, it still can make it.
+Thanks!
 
-Thanks
-
---IDYEmSnFhs3mNXr+
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX9OKRAAoJEORje4g2clinT0IP/2Zb3F5ORMYnGaJtiwLBRKdc
-euN/Oc348US1G45fpQs9QCXLNRtWxsAfgwgVayfaQ1W4+dACAlDWteDAFgfjMU3O
-Q9PQoxX9qDjraUdeTSCmnkNXpVxzhdXpUu+zdUAPdtlwZqU9v/h85p6a533knLBz
-RIlZr77CqKuzYl5BmadmgWttcrFtNwf+PXYs9lqlSDVLtnqo+enUoQHJ88VsX7bY
-djT8ObwZurTRnnhax+NZWyPYy8xxmpqtxV8a0tdUHXOPrPJ1i/to7hbCQs0ZBBLz
-8L54/RLP2Q1zYM//jd+hGgA+orX+PPTaCWx60VBdijgk4V9hkGqGZbF2k4nt5HHJ
-2PEDLxnpz2cNwO94RRBu+uL5bDfoqIL0XjmtRmx50Rua8+cQ9GRPxxhKeYxlxcw0
-Wj5CxiI8GD7a6vYoz9w3M7z7cgQf2/MYGNb/kB/rI8Kbuv9xsVyW4JqyLNq3gpNU
-eiP4kHLSwFC2oyzN17J9fEOG7tgLeL9Ew/Hyheo0RpEhM3BQPyndRzjOCNXhkX6F
-m9dYPP2u0OBJa5XqnRfk4FBNkLPz262/DMElOeRR5O7OrMI3d1LexyhzG33OYgt4
-vUUIex7XPU9sf3Ki5NPuauO21djhuQ3Xv/nKfH/QKeTb4nu61aFavzJdp72uUbcB
-bAOVRR1gmEltWtVAeEry
-=Ldqq
------END PGP SIGNATURE-----
-
---IDYEmSnFhs3mNXr+--
+-- 
+tejun
