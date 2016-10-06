@@ -1,11 +1,11 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.7 001/141] cpuset: handle race between CPU hotplug and cpuset_hotplug_work
-Date: Thu,  6 Oct 2016 10:27:17 +0200
-Message-ID: <20161006074448.674330842@linuxfoundation.org>
-References: <20161006074448.608056610@linuxfoundation.org>
+Subject: [PATCH 4.4 01/93] cpuset: handle race between CPU hotplug and cpuset_hotplug_work
+Date: Thu,  6 Oct 2016 10:28:31 +0200
+Message-ID: <20161006074731.206736449@linuxfoundation.org>
+References: <20161006074731.150212126@linuxfoundation.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161006074448.608056610@linuxfoundation.org>
+In-Reply-To: <20161006074731.150212126@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -13,7 +13,7 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Joonwoo Park <joonwoop@codeaurora.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-4.7-stable review patch.  If anyone has any objections, please let me know.
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -88,7 +88,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -325,8 +325,7 @@ static struct file_system_type cpuset_fs
+@@ -324,8 +324,7 @@ static struct file_system_type cpuset_fs
  /*
   * Return in pmask the portion of a cpusets's cpus_allowed that
   * are online.  If none are online, walk up the cpuset hierarchy
@@ -98,7 +98,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
   *
   * One way or another, we guarantee to return some non-empty subset
   * of cpu_online_mask.
-@@ -335,8 +334,20 @@ static struct file_system_type cpuset_fs
+@@ -334,8 +333,20 @@ static struct file_system_type cpuset_fs
   */
  static void guarantee_online_cpus(struct cpuset *cs, struct cpumask *pmask)
  {
