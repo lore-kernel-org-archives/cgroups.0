@@ -1,124 +1,41 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.4 01/93] cpuset: handle race between CPU hotplug and cpuset_hotplug_work
-Date: Thu,  6 Oct 2016 10:28:31 +0200
-Message-ID: <20161006074731.206736449@linuxfoundation.org>
-References: <20161006074731.150212126@linuxfoundation.org>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv12 1/3] rdmacg: Added rdma cgroup controller
+Date: Thu, 6 Oct 2016 18:25:11 +0530
+Message-ID: <CAG53R5WdFE-Ck7iQrsqrVEAPn0OoL5DM4RNwa3Ayc+W0jggUEw@mail.gmail.com>
+References: <20160911171409.GA13442@obsidianresearch.com> <20160911172445.GA25953@lst.de>
+ <20160911175235.GB13442@obsidianresearch.com> <20160912050717.GE8812@leon.nu>
+ <CAG53R5X4stfy5+Jmg+XReUJqt56Z-zABK+UEswHW1dXhH-9cNw@mail.gmail.com>
+ <20160915185629.GF26069@leon.nu> <CAG53R5XBS0B5XaTzjKC3-zgoB2-fz2ctbk_E2YG76zBgzOfG-A@mail.gmail.com>
+ <20160921142645.GB10734@htj.duckdns.org> <CAG53R5WMuojhzFGmqk6nHfypd9Hq4dGsWRKjtUyMZ=RezU-LhQ@mail.gmail.com>
+ <CAG53R5VqQ6UzsuzcovsD+ufv3HaEQEbUpaf3kDo4zLOrAf__8A@mail.gmail.com> <20161005063735.GC3086@lst.de>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161006074731.150212126@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=ZcVLgQjwc+umJ7q4OTP5f6y7HwkkPqFUOY7ja1naT/w=;
+        b=OB2aIO9AEzQq8yy7vLs2zQTb5fH9liSA3KcEUYYGvbRIXMMp56PLlccNOq7AdMKVTW
+         g7dNAcfR9uDRHayEF1o9jybOX+TGkJ2/wn2Cpfv+U94pH8WvpDwQVd7v4yW7se3lWOvD
+         2ZOLMvLo6/cqHrmLf7YcEBqS+0Jkr+LGYGm7wptIKtvjR/ykcGXz/k8QOpF4f9IEtOce
+         x6v56/ZtxYFhjOmDQKs7Sl3oJmxLTEXDdPGVGmz5cwbF0Xz4MzBl5c2vImgb0955xGtb
+         +WtXktDHYP7DewsDjBvvzbczoWIcGjFE26UXFzx6bubnwVScUPYLq4iV0sNIJvIuLEla
+         Ul7Q==
+In-Reply-To: <20161005063735.GC3086-jcswGhMUV9g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Joonwoo Park <joonwoop@codeaurora.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
+Hi Christoph,
 
-------------------
+On Wed, Oct 5, 2016 at 12:07 PM, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
+> FYI, the patches look fine to me:
+>
+> Acked-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+>
+Thanks a lot for review.
 
-From: Joonwoo Park <joonwoop@codeaurora.org>
-
-commit 28b89b9e6f7b6c8fef7b3af39828722bca20cfee upstream.
-
-A discrepancy between cpu_online_mask and cpuset's effective_cpus
-mask is inevitable during hotplug since cpuset defers updating of
-effective_cpus mask using a workqueue, during which time nothing
-prevents the system from more hotplug operations.  For that reason
-guarantee_online_cpus() walks up the cpuset hierarchy until it finds
-an intersection under the assumption that top cpuset's effective_cpus
-mask intersects with cpu_online_mask even with such a race occurring.
-
-However a sequence of CPU hotplugs can open a time window, during which
-none of the effective CPUs in the top cpuset intersect with
-cpu_online_mask.
-
-For example when there are 4 possible CPUs 0-3 and only CPU0 is online:
-
-  ========================  ===========================
-   cpu_online_mask           top_cpuset.effective_cpus
-  ========================  ===========================
-   echo 1 > cpu2/online.
-   CPU hotplug notifier woke up hotplug work but not yet scheduled.
-      [0,2]                     [0]
-
-   echo 0 > cpu0/online.
-   The workqueue is still runnable.
-      [2]                       [0]
-  ========================  ===========================
-
-  Now there is no intersection between cpu_online_mask and
-  top_cpuset.effective_cpus.  Thus invoking sys_sched_setaffinity() at
-  this moment can cause following:
-
-   Unable to handle kernel NULL pointer dereference at virtual address 000000d0
-   ------------[ cut here ]------------
-   Kernel BUG at ffffffc0001389b0 [verbose debug info unavailable]
-   Internal error: Oops - BUG: 96000005 [#1] PREEMPT SMP
-   Modules linked in:
-   CPU: 2 PID: 1420 Comm: taskset Tainted: G        W       4.4.8+ #98
-   task: ffffffc06a5c4880 ti: ffffffc06e124000 task.ti: ffffffc06e124000
-   PC is at guarantee_online_cpus+0x2c/0x58
-   LR is at cpuset_cpus_allowed+0x4c/0x6c
-   <snip>
-   Process taskset (pid: 1420, stack limit = 0xffffffc06e124020)
-   Call trace:
-   [<ffffffc0001389b0>] guarantee_online_cpus+0x2c/0x58
-   [<ffffffc00013b208>] cpuset_cpus_allowed+0x4c/0x6c
-   [<ffffffc0000d61f0>] sched_setaffinity+0xc0/0x1ac
-   [<ffffffc0000d6374>] SyS_sched_setaffinity+0x98/0xac
-   [<ffffffc000085cb0>] el0_svc_naked+0x24/0x28
-
-The top cpuset's effective_cpus are guaranteed to be identical to
-cpu_online_mask eventually.  Hence fall back to cpu_online_mask when
-there is no intersection between top cpuset's effective_cpus and
-cpu_online_mask.
-
-Signed-off-by: Joonwoo Park <joonwoop@codeaurora.org>
-Acked-by: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- kernel/cpuset.c |   17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
-
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -324,8 +324,7 @@ static struct file_system_type cpuset_fs
- /*
-  * Return in pmask the portion of a cpusets's cpus_allowed that
-  * are online.  If none are online, walk up the cpuset hierarchy
-- * until we find one that does have some online cpus.  The top
-- * cpuset always has some cpus online.
-+ * until we find one that does have some online cpus.
-  *
-  * One way or another, we guarantee to return some non-empty subset
-  * of cpu_online_mask.
-@@ -334,8 +333,20 @@ static struct file_system_type cpuset_fs
-  */
- static void guarantee_online_cpus(struct cpuset *cs, struct cpumask *pmask)
- {
--	while (!cpumask_intersects(cs->effective_cpus, cpu_online_mask))
-+	while (!cpumask_intersects(cs->effective_cpus, cpu_online_mask)) {
- 		cs = parent_cs(cs);
-+		if (unlikely(!cs)) {
-+			/*
-+			 * The top cpuset doesn't have any online cpu as a
-+			 * consequence of a race between cpuset_hotplug_work
-+			 * and cpu hotplug notifier.  But we know the top
-+			 * cpuset's effective_cpus is on its way to to be
-+			 * identical to cpu_online_mask.
-+			 */
-+			cpumask_copy(pmask, cpu_online_mask);
-+			return;
-+		}
-+	}
- 	cpumask_and(pmask, cs->effective_cpus, cpu_online_mask);
- }
- 
-
-
+Parav
