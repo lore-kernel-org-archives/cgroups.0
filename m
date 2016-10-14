@@ -1,58 +1,78 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
-Date: Thu, 13 Oct 2016 19:14:13 -0400
-Message-ID: <20161013231413.GA32534@mtj.duckdns.org>
-References: <1472632647-1525-1-git-send-email-pandit.parav@gmail.com>
- <20161005112206.GC9282@leon.nu>
- <CAG53R5VNVb=8-LJbDRqjtOZG347ucPuc420bcfnDgBKMoKqU-w@mail.gmail.com>
- <20161010044623.GI9282@leon.nu>
- <CAG53R5UM6nSTZ7=0S9reKGX45CpNBi8soSDVZyXkN-z0_XXWWQ@mail.gmail.com>
- <20161010122545.GA27360@mtj.duckdns.org>
- <CAG53R5V5yE4PsDBjP9BieG_=39M0G1kx-AfBEzWK4LUCxNnYBA@mail.gmail.com>
- <20161010132014.GD29742@mtj.duckdns.org>
- <CAG53R5ULKCqtw45E6t4hYdRV+y_OQqVazf=7A7Ax_XAJ2K0_dw@mail.gmail.com>
+Subject: [GIT PULL] cgroup changes for v4.9-rc1
+Date: Thu, 13 Oct 2016 22:05:09 -0400
+Message-ID: <20161014020509.GM32534@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=WHsxgM9Ug7IyTaG9I7gvizd1+B6R+Oy2V4cLT/DozDk=;
-        b=pEgx328ECQfgXT3QKZLQ6nEuHTdzPJDDl0I6I9P5Q/oIBAIhTnoTUPtn3Tyu/n1njG
-         1hvwOmRarCLc0o+5GXZZVC7cqtqzD2R1WLSJGU25mMMbate91NbbZgDtArmozK+C5CKU
-         GUdf2s4a3RGtZ8D2X+p1qvmZd9HkDsvCXM9fos5S4Z4bo01z7+OBRW2+NxAaqiADnHSn
-         +E1glj6i5/yHORyavdIFO7WqKP5k/RAuqWgm+jszT8nXaFCu5Vgv3U0NoknEDmb57xbY
-         EL1VeUl+kgxq24yYgf3nXgEH+n1LJdhf3HJvPMAA0HEpKsVxLqxeGmisw1C/AmYMiQ+c
-         nJsg==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=CYgXtozaZDNo2v28j20QGgq6OOqWzn7Pw75FMDgBS6M=;
+        b=sRch0rB1lNbNzHTLhB95jBXu90dZs8kTlocunuT+lTuWV/yV18U/w95laNqL/cwjLN
+         cjzwAygF2cqMm2SWBKD7HHzDT+9DLCKzKmhoUSLqSqQuHiW7JWoXS2TrW2OUjYmD9dUu
+         Xy/L6d8+yE6EEZ0XCFLqYv0VEm97NiG9+CNDiNplW389sAUbFGhl9kYP2jVyyPlxhmLB
+         OgWP/hj0Aztd1N+bQ3apq0oo7DP1kWX18rxcLf0IkkmeSAoopjE90kzRnYpHmv4ISO2d
+         uXhhdHxJYcF4xrU35sFmxfxLjQZuVWVJSZjWrF0LQit19zSF+fULC5egcWUW7Ae8ElmB
+         zm4A==
 Content-Disposition: inline
-In-Reply-To: <CAG53R5ULKCqtw45E6t4hYdRV+y_OQqVazf=7A7Ax_XAJ2K0_dw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Parav.
+Hello, Linus.
 
-On Mon, Oct 10, 2016 at 07:02:11PM +0530, Parav Pandit wrote:
-> Give me some more time, I will think more and take feeback from Leon
-> and others on
-> (a) how can we implement or want to implement weight like
-> functionality for non-work-conversing resource
+cgroup changes for v4.9-rc1.
 
-I think what you want is just a way to specify absolute limits using
-percentages of what's available at the time of configuration -
-e.g. being able to say "allow upto 30% of what's available in the
-parent".  If so, the simplest way would be simply updating the
-existing knobs to accept % inputs in addition to absolute values on
-writes.
+* Tracepoints for basic cgroup management operations added.
+
+* kernfs and cgroup path formatting functions updated to behave in the
+  style of strlcpy().
+
+* Non-critical bug fixes.
 
 Thanks.
 
+The following changes since commit 29b4817d4018df78086157ea3a55c1d9424a7cfc:
+
+  Linux 4.8-rc1 (2016-08-07 18:18:00 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.9
+
+for you to fetch changes up to bbb427e342495df1cda10051d0566388697499c0:
+
+  blkcg: Unlock blkcg_pol_mutex only once when cpd == NULL (2016-09-30 10:31:20 +0200)
+
+----------------------------------------------------------------
+Bart Van Assche (1):
+      blkcg: Unlock blkcg_pol_mutex only once when cpd == NULL
+
+Tejun Heo (7):
+      kernfs: add dummy implementation of kernfs_path_from_node()
+      kernfs: make kernfs_path*() behave in the style of strlcpy()
+      kernfs: remove kernfs_path_len()
+      cgroup: make cgroup_path() and friends behave in the style of strlcpy()
+      cgroup: add tracepoints for basic operations
+      cpuset: fix error handling regression in proc_cpuset_show()
+      cgroup: fix error handling regressions in proc_cgroup_show() and cgroup_release_agent()
+
+ block/blk-cgroup.c            |   4 +-
+ fs/kernfs/dir.c               |  84 +++++-----------------
+ fs/sysfs/dir.c                |   6 +-
+ include/linux/blk-cgroup.h    |  11 +--
+ include/linux/cgroup.h        |   9 ++-
+ include/linux/kernfs.h        |  28 +++++---
+ include/trace/events/cgroup.h | 163 ++++++++++++++++++++++++++++++++++++++++++
+ kernel/cgroup.c               |  75 ++++++++++++-------
+ kernel/cpuset.c               |  13 ++--
+ kernel/sched/debug.c          |   3 +-
+ 10 files changed, 266 insertions(+), 130 deletions(-)
+ create mode 100644 include/trace/events/cgroup.h
+
 -- 
 tejun
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
