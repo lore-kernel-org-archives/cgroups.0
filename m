@@ -1,60 +1,79 @@
-From: Thomas Graf <tgraf@suug.ch>
-Subject: Re: [RFC v3 06/22] landlock: Add LSM hooks
-Date: Wed, 19 Oct 2016 17:19:06 +0200
-Message-ID: <20161019151906.GC22003@pox.localdomain>
-References: <20160914072415.26021-1-mic@digikod.net>
- <20160914072415.26021-7-mic@digikod.net>
-Reply-To: kernel-hardening@lists.openwall.com
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
+Date: Wed, 19 Oct 2016 15:04:52 +0530
+Message-ID: <CAG53R5UEvkPBM0yFrR=fvEzyCrku2q=rLZyDVrSs9q+3hgbSmQ@mail.gmail.com>
+References: <20161005112206.GC9282@leon.nu> <CAG53R5VNVb=8-LJbDRqjtOZG347ucPuc420bcfnDgBKMoKqU-w@mail.gmail.com>
+ <20161010044623.GI9282@leon.nu> <CAG53R5UM6nSTZ7=0S9reKGX45CpNBi8soSDVZyXkN-z0_XXWWQ@mail.gmail.com>
+ <20161010122545.GA27360@mtj.duckdns.org> <CAG53R5V5yE4PsDBjP9BieG_=39M0G1kx-AfBEzWK4LUCxNnYBA@mail.gmail.com>
+ <20161010132014.GD29742@mtj.duckdns.org> <CAG53R5ULKCqtw45E6t4hYdRV+y_OQqVazf=7A7Ax_XAJ2K0_dw@mail.gmail.com>
+ <20161013231413.GA32534@mtj.duckdns.org> <CAG53R5UciPpa5d8BWyR-tks3LBrBwRCN2NyBbbm1e3EE-OWSYQ@mail.gmail.com>
+ <20161018215134.GB2761@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <kernel-hardening-return-4949-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
-List-ID: <cgroups.vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suug-ch.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=oCS0uk0AAhkOR5/UYaqYkSLT3IPTpGgBLWOR6N3dqAc=;
-        b=n8ndafIoKGG3wGcUVENxkpzhRDg2v5jAblFgEeCJCvsZHVp8z+CwdJKInTOZvYp4jF
-         M2knn20zRXBhvMZfeN+TbStGzYLjjiSWmkAo7yEqEE36WT4H1OWz0UyCUa8edeQkMOMb
-         cWp1xL+7z1ey8HrGyzvrvM5rr1C3OZ5rrpt+CEwW1gnY802AkuuAwk5fDuUpHqcuNoyU
-         jbBgeo1gyHZy8hONaRz91vWL/7Qvj68ruPVXAYu6c2pUEhWERkCgrHGo2sUJBAgFnM7P
-         ykqrNRZoLtQa/oNMLpJAGrr+a0zZ6cRxsAgtN4JTWxt/17NWRbVBVmr+irGxl/6vJG0P
-         n9fA==
-Content-Disposition: inline
-In-Reply-To: <20160914072415.26021-7-mic@digikod.net>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>
-Cc: linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, linux-security-module@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=bvJoYXIVpKy4sfDIUMBzRe1Cz5PehQ1/tXLyBp8XJZM=;
+        b=CqLfWZiX+OgTKdo7ynsgLSuXnSlTSsHqt2fXBXS9ZryamNbE77TxTvDCg3FS8lw+DT
+         hZ5wncFKO8Q2bfiyYsUcG8BYIyajf8C6/akZRyMqWLt7dYYpkHYe25+Vc0MVTIpog+kS
+         PosC3QDJZ4otVXbdhqAfuvDViw77aCiHsA1Ac3Z5jyyXI9YWI5BZ65wfxUNkbRo/zfXD
+         dxQSvjtKbjPk7R31k1h8jfrhf8fVZ18MsgZxlp/IyYUQB+mK8oIYW0aYCuN+oV6ny2bR
+         Hx8W5XZcvveg7B4Ua/Zb+Xf+YjlNRCjfjYHFuYKy2SQ4vrC9Bcze8kROfefqazpV5ZNs
+         Z1BA==
+In-Reply-To: <20161018215134.GB2761-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 
-On 09/14/16 at 09:23am, Micka=EBl Sala=FCn wrote:
-> diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-> index 9aa01d9d3d80..36c3e482239c 100644
-> --- a/include/linux/bpf.h
-> +++ b/include/linux/bpf.h
-> @@ -85,6 +85,8 @@ enum bpf_arg_type {
-> =20
->  	ARG_PTR_TO_CTX,		/* pointer to context */
->  	ARG_ANYTHING,		/* any (initialized) argument is ok */
-> +
-> +	ARG_PTR_TO_STRUCT_FILE,		/* pointer to struct file */
+Hi Tejun,
 
-This should go into patch 7 I guess?
+On Wed, Oct 19, 2016 at 3:21 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello,
+>
+> On Wed, Oct 19, 2016 at 01:32:01AM +0530, Parav Pandit wrote:
+>> On Fri, Oct 14, 2016 at 4:44 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>> > I think what you want is just a way to specify absolute limits using
+>> > percentages of what's available at the time of configuration -
+>> > e.g. being able to say "allow upto 30% of what's available in the
+>> > parent".
+>>
+>> Yes. I am concerned about how to configure < 1% value to avoid
+>> floating point math in kernel as thats discouraged.
+>> Configuring in range of 1 to 100% for a given resource limits to only
+>> 100 or less cgroup instances which I think is not desired.
+>
+> Heh, we can go for per-mil and use %0 as the suffix if absolutely
+> necessary but is this a real issue?
+>
+We need to provide current version to exceed the 100 containers limit first. :-)
+Please let me know if such user interface already exist as reference point.
+I prefer to avoid introducing such configuration.
 
-> +void __init landlock_add_hooks(void)
-> +{
-> +	pr_info("landlock: Becoming ready for sandboxing\n");
-> +	security_add_hooks(landlock_hooks, ARRAY_SIZE(landlock_hooks));
-> +}
+>> > If so, the simplest way would be simply updating the
+>> > existing knobs to accept % inputs in addition to absolute values on
+>> > writes.
+>>
+>> I was not sure to overload rdma.max file for accepting % inputs as
+>> thats not done in other cgroups. So I was thinking more of weights
+>> interface which avoids floating point problem and also allows much
+>> wider configuration range.
+>
+> I think it's a lot more consistent to implement all absoulte limits
+> through max.
+I agree. I will implement reporting actual max values instead of
+reporting "max" string so that percentage configuration can be done by
+the user space tools.
+(post merging of v12).
+Waiting for direction from Doug.
 
-Can we add the hooks when we load the first BPF program for a hook? That
-would also allow to not make this conditional on a new config option
-which all all distros have to enable anyway.
-
-I would really like to see this patch split into the LSM part which
-allows running BPF progs at LSM and your specific sandboxing use case
-which requires the new BPF helpers, new reg type, etc.
+> weight is for actual proportional control which this
+> isn't.  It's just a fancy way of specifying absolute limits.
+>
+> Thanks.
+>
+> --
+> tejun
