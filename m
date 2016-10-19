@@ -1,66 +1,61 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
-Date: Thu, 20 Oct 2016 01:48:27 +0530
-Message-ID: <CAG53R5XkRKdo-SCaREZvov3AGp5MSd18RpQ+0HEu-htUzqwOOw@mail.gmail.com>
-References: <20161010132014.GD29742@mtj.duckdns.org> <CAG53R5ULKCqtw45E6t4hYdRV+y_OQqVazf=7A7Ax_XAJ2K0_dw@mail.gmail.com>
- <20161013231413.GA32534@mtj.duckdns.org> <CAG53R5UciPpa5d8BWyR-tks3LBrBwRCN2NyBbbm1e3EE-OWSYQ@mail.gmail.com>
- <20161018215134.GB2761@htj.duckdns.org> <CAG53R5UEvkPBM0yFrR=fvEzyCrku2q=rLZyDVrSs9q+3hgbSmQ@mail.gmail.com>
- <20161019143345.GA18532@htj.duckdns.org> <CAG53R5WUyA7JBn=PeivUc5F5k210xf_HccPXFt3r7ZGYHOPaGA@mail.gmail.com>
- <20161019192006.GB3044@htj.duckdns.org> <CAG53R5X5dyo7J-UkeMxi_mSxgv=c54fV=anuCZtmf9kaYwDbPw@mail.gmail.com>
- <20161019200536.GC3044@htj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: Add new capability to allow a process to migrate
+ other tasks between cgroups
+Date: Wed, 19 Oct 2016 16:51:11 -0400
+Message-ID: <20161019205111.GF3044@htj.duckdns.org>
+References: <1476743724-9104-1-git-send-email-john.stultz@linaro.org>
+ <CALCETrXrZpLH8NsSmaoH5ChW5+6Zb=nLsznj=x4jeWUjpQ-ecA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=i3BS/khetWeXWqSmdOBnpLPe09HGa0pk/W7n6U+osRo=;
-        b=sRbbQw0FgOrzd1+YABf72BGOA0YkLJOxeWwv2ElOzHtEI6QNWeOpsSrrBkIhp/eR2z
-         Q9TwBioO9CUYR2HNfSI5tr6bPL6asbtJ5pvMMZKwJEETXH9NGv7b1Q/zClqo5bGQpeGO
-         7SpPqk0rlGNvuUrY7mmrEawyB+HUtixsqWXwjmR4Kj0CrT4DmRcVSfeQhe+r+hsi4HlL
-         6l2Rn9a3UXydWniHuTTUYg9iZewtqamlyLiFmK2g3ekG6ORxFEmQq5VRlJictf4fdbdF
-         7U0/zNkLpwpZHvyarUMIshGoFI/cOCf+kRRsdtau2xqpG0Q+fsncHn/i1o+a5jNVWVng
-         WRgw==
-In-Reply-To: <20161019200536.GC3044-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=h5QkVo80tJR/nBlmKOTHij2ZOIbmEZGPhsBm7qGUwlQ=;
+        b=AaEkeGpXfgzFnyeDaugGdAK8TvfcD9sU0VHipagou3WLCqIxOlCXo2VCK4418lXvtd
+         Q0jC9bGlQ90iPheSy1IUf/5vl/ZYS64KCtsktBZ6vdHX7Jx6GUh9tOB11/lYXfssgtWL
+         LIkqTvQbn35Eo0qo9o8bexKOUg15emI81bCFLWDZhstsBoI1YqFW2pooTCKHXoW7bM26
+         Elgtv5oJf6bbZXCuwHHZy+xyNoVcCaIgRCxfzHwhozJ+BvSvT22m5G7YJQcCnokScZ2r
+         cO6tU+amNdJZHZqRCSLm4bn99WUfcqyEMLqUACXXcJkng8uOK+vjt1+kW8QUQSAavNa4
+         sDow==
+Content-Disposition: inline
+In-Reply-To: <CALCETrXrZpLH8NsSmaoH5ChW5+6Zb=nLsznj=x4jeWUjpQ-ecA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: John Stultz <john.stultz@linaro.org>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Ricky Zhou <rickyz@chromium.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Todd Kjos <tkjos@google.com>, Christian Poetzsch <christian.potzsch@imgtec.com>, Amit Pundir <amit.pundir@linaro.org>, "Serge E . Hallyn" <serge@hallyn.com>, Linux API <linux-api@vger.kernel.org>
 
-On Thu, Oct 20, 2016 at 1:35 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello, Parav.
->
-> On Thu, Oct 20, 2016 at 01:24:42AM +0530, Parav Pandit wrote:
->> userland can get the max numbers using other framework which is used
->> by control & data plane available in C library form or in form of
->> system tools.
->> I was preferring to get and set through same interface because,
->> It simplifies user land software which is often not written in C so
->> its likely that it needs to rely on system tools and parse the
->> content, iterate through devices etc.
->> Getting these info through rdma.max just makes it simple. There will
->> be logic built to read/write rdma.max in userland anyway, which can be
->> leveraged for percentage calculation instead of doing it from two
->> places.
->
-> Yeah, I get that this can be convenient in this case but it isn't a
-> generic approach.  I'd much prefer keeping it in line with other
-> resources.
->
-Hmm. we don't have /proc/sys/kernel/pid_max type of simple interface
-to get the max values for rdma resources.
-rdma.max is close to that simplicity.
+Hello, Andy.
 
+On Mon, Oct 17, 2016 at 03:40:37PM -0700, Andy Lutomirski wrote:
+> > @@ -2856,7 +2856,8 @@ static int cgroup_procs_write_permission(struct task_struct *task,
+> >          */
+> >         if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
+> >             !uid_eq(cred->euid, tcred->uid) &&
+> > -           !uid_eq(cred->euid, tcred->suid))
+> > +           !uid_eq(cred->euid, tcred->suid) &&
+> > +           !ns_capable(tcred->user_ns, CAP_CGROUP_MIGRATE))
+> >                 ret = -EACCES;
+> 
+> This logic seems rather confused to me.  Without this patch, a user
+> can write to procs if it's root *or* it matches the target uid *or* it
+> matches the target suid.  How does this make sense?  How about
+> ptrace_may_access(...) || ns_capable(tcred->user_ns,
+> CAP_CGROUP_MIGRATE)?
 
+Yeah, it's weird.  The problem is that there was no delegation model
+defined on v1 and it used a hybrid of file + ptracey access checks.
+The goal, I think, was disallowing !root user from pulling in random
+tasks into a cgroup it has write access to, which was possible because
+there was no isolation on the delegation boundary.
 
+Given how long it has been out in the wild, I don't think changing the
+logic is a good idea.  We should simply replace GLOBAL_ROOT_UID test
+with CAT_WHATEVER_WE_PICK test and just ignore the whole thing on v2.
 
-> Thanks.
->
-> --
-> tejun
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.
+
+-- 
+tejun
