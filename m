@@ -1,59 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH] cgroup: Add new capability to allow a process to migrate
  other tasks between cgroups
-Date: Wed, 19 Oct 2016 16:51:11 -0400
-Message-ID: <20161019205111.GF3044@htj.duckdns.org>
+Date: Wed, 19 Oct 2016 16:52:51 -0400
+Message-ID: <20161019205251.GG3044@htj.duckdns.org>
 References: <1476743724-9104-1-git-send-email-john.stultz@linaro.org>
  <CALCETrXrZpLH8NsSmaoH5ChW5+6Zb=nLsznj=x4jeWUjpQ-ecA@mail.gmail.com>
+ <CALAqxLW0_Xi0vrTkTN+Gmp3yKfOcmCYYCi5f4COgPiYY=odEJA@mail.gmail.com>
+ <CAKgNAkjTYu53ji=gP2qXRYpvUEdAP=gxg0BR40JJ54z+XBha-A@mail.gmail.com>
+ <CALAqxLW7XS3KyA=cCKvxJAuOYhkw_d0vUJ6=RpN0a=RL2fYm=w@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=h5QkVo80tJR/nBlmKOTHij2ZOIbmEZGPhsBm7qGUwlQ=;
-        b=AaEkeGpXfgzFnyeDaugGdAK8TvfcD9sU0VHipagou3WLCqIxOlCXo2VCK4418lXvtd
-         Q0jC9bGlQ90iPheSy1IUf/5vl/ZYS64KCtsktBZ6vdHX7Jx6GUh9tOB11/lYXfssgtWL
-         LIkqTvQbn35Eo0qo9o8bexKOUg15emI81bCFLWDZhstsBoI1YqFW2pooTCKHXoW7bM26
-         Elgtv5oJf6bbZXCuwHHZy+xyNoVcCaIgRCxfzHwhozJ+BvSvT22m5G7YJQcCnokScZ2r
-         cO6tU+amNdJZHZqRCSLm4bn99WUfcqyEMLqUACXXcJkng8uOK+vjt1+kW8QUQSAavNa4
-         sDow==
+        bh=us69KpnSrkGn5p6yE+Xpznxf35qh+0D1PF9hXAqss00=;
+        b=I3pPyuQLyLTcUw4nEdv9DSHHMCvvEM9Co/ChthUMOlcHgNPRYJ8nQwD2W4zpBXuesE
+         xVrEyqYJFwk2a4Kps22TzaXRVupyR9eOTG4OeNx3Gh3rQ+6zH7/5I5XPzFJ3ygChiLIa
+         2Sv1fGgUnzRzvWw78OCYVXjEfJtatFL0bAwAlJrMWFcKgGZswDVAU1dj3efPY1kOe2aw
+         YudLOan6jyxKLLAN23MWSlZOr8BMitYDMJrKOhOAI2c0z4NNCAilbyFfo5iT/6dygghM
+         1smS33LY+YqadoVdlVxAPRKv/rx8LCwDoW+oHS61kmWUrXZ3/svJVfBFlLzLEiFIa8sM
+         NWlA==
 Content-Disposition: inline
-In-Reply-To: <CALCETrXrZpLH8NsSmaoH5ChW5+6Zb=nLsznj=x4jeWUjpQ-ecA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CALAqxLW7XS3KyA=cCKvxJAuOYhkw_d0vUJ6=RpN0a=RL2fYm=w@mail.gmail.com>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: John Stultz <john.stultz@linaro.org>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Ricky Zhou <rickyz@chromium.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Todd Kjos <tkjos@google.com>, Christian Poetzsch <christian.potzsch@imgtec.com>, Amit Pundir <amit.pundir@linaro.org>, "Serge E . Hallyn" <serge@hallyn.com>, Linux API <linux-api@vger.kernel.org>
+To: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ricky Zhou <rickyz-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Andy.
+Hello,
 
-On Mon, Oct 17, 2016 at 03:40:37PM -0700, Andy Lutomirski wrote:
-> > @@ -2856,7 +2856,8 @@ static int cgroup_procs_write_permission(struct task_struct *task,
-> >          */
-> >         if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
-> >             !uid_eq(cred->euid, tcred->uid) &&
-> > -           !uid_eq(cred->euid, tcred->suid))
-> > +           !uid_eq(cred->euid, tcred->suid) &&
-> > +           !ns_capable(tcred->user_ns, CAP_CGROUP_MIGRATE))
-> >                 ret = -EACCES;
+On Tue, Oct 18, 2016 at 09:54:37AM -0700, John Stultz wrote:
+> > Also, CAP_SYS_RESOURCE deserves consideration (34 uses in capable()
+> > checks). I'd say, since cgroups are about resources, so there's
+> > something of a match there., so it's also worth considering.
 > 
-> This logic seems rather confused to me.  Without this patch, a user
-> can write to procs if it's root *or* it matches the target uid *or* it
-> matches the target suid.  How does this make sense?  How about
-> ptrace_may_access(...) || ns_capable(tcred->user_ns,
-> CAP_CGROUP_MIGRATE)?
+> I'll try to look into CAP_SYS_RESOURCE.
+> 
+> Colin/Todd: Any objection from the Android side on CAP_SYS_RESOURCE?
+> 
+> (Or we could just create a new 512bit CAP2_ capabilities interface! :P)
 
-Yeah, it's weird.  The problem is that there was no delegation model
-defined on v1 and it used a hybrid of file + ptracey access checks.
-The goal, I think, was disallowing !root user from pulling in random
-tasks into a cgroup it has write access to, which was possible because
-there was no isolation on the delegation boundary.
-
-Given how long it has been out in the wild, I don't think changing the
-logic is a good idea.  We should simply replace GLOBAL_ROOT_UID test
-with CAT_WHATEVER_WE_PICK test and just ignore the whole thing on v2.
+FWIW, if CAP_SYS_RESOURCE works, I'd be happy with that.
 
 Thanks.
 
