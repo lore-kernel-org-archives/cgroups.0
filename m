@@ -1,51 +1,49 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] IPC: account for kmem usage on mqueue and msg
-Date: Wed, 19 Oct 2016 09:55:05 +0200
-Message-ID: <20161019075505.GA7517@dhcp22.suse.cz>
-References: <1476806075-1210-1-git-send-email-arozansk@redhat.com>
- <20161018182619.GB27792@dhcp22.suse.cz>
- <20161018193021.GA2953@p183.telecom.by>
- <CAFtQ=dr2zGqeHtw84UGP8615TaWg92_n7nZPfn2qZkxDA1zN5Q@mail.gmail.com>
+From: Thomas Graf <tgraf@suug.ch>
+Subject: Re: [RFC v3 04/22] bpf: Set register type according to
+ is_valid_access()
+Date: Wed, 19 Oct 2016 16:54:20 +0200
+Message-ID: <20161019145420.GA22003@pox.localdomain>
+References: <20160914072415.26021-1-mic@digikod.net>
+ <20160914072415.26021-5-mic@digikod.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suug-ch.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=kbKMnMAPvxRRJskkTQ9F5uRfcPMYocbMZpxj85G3XMI=;
+        b=zWaD8BES+VaLo5gahGGfqGebAwHay4TbgAmphhM6KjyVrveLw4fVk1IfMW3eZ/UVgm
+         PbYMUZQYxs2BllTRn9Uw8CljpI7otugcvUoRMVmTSPwCkH/wrmeXERu3rgyMfZWVu7GE
+         pCyBSZ3axBEWokVmWNekTQsm7RS+8MhzjwPAlctUsI3OV8pvdLl2/iMIDN9UTZmavNUo
+         Ihav+A0jat/S1a2FJBRXwatdUOAUWts3igKoqiRqp5lEt77T1yj0ypcAkPYheLIZTrBQ
+         Flb3M7JD9/XJg3OoOg+X9z5ArQCO9Es80p5R0jzDm3O2b7vF9AECi3xrvycbngfRewhW
+         zmUA==
 Content-Disposition: inline
-In-Reply-To: <CAFtQ=dr2zGqeHtw84UGP8615TaWg92_n7nZPfn2qZkxDA1zN5Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20160914072415.26021-5-mic@digikod.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Stefan Schimanski <sttts-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Davidlohr Bueso <dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>
+Cc: linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, Elena Reshetova <elena.reshetova@intel.com>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, linux-security-module@vger.kern
 
-On Wed 19-10-16 09:46:58, Stefan Schimanski wrote:
-> The production use case at hand is that mqueues should be customizable via
-> sysctls in Docker containers in a Kubernetes cluster. This can only be
-> safely allowed to the users of the cluster (without the risk that they can
-> cause resource shortage on a node, influencing other users' containers) if
-> all resources they control are bounded, i.e. accounted for.
+On 09/14/16 at 09:23am, Micka=EBl Sala=FCn wrote:
+> This fix a pointer leak when an unprivileged eBPF program read a pointer
+> value from the context. Even if is_valid_access() returns a pointer
+> type, the eBPF verifier replace it with UNKNOWN_VALUE. The register
+> value containing an address is then allowed to leak. Moreover, this
+> prevented unprivileged eBPF programs to use functions with (legitimate)
+> pointer arguments.
+>=20
+> This bug was not a problem until now because the only unprivileged eBPF
+> program allowed is of type BPF_PROG_TYPE_SOCKET_FILTER and all the types
+> from its context are UNKNOWN_VALUE.
+>=20
+> Signed-off-by: Micka=EBl Sala=FCn <mic@digikod.net>
+> Fixes: 969bf05eb3ce ("bpf: direct packet access")
+> Cc: Alexei Starovoitov <ast@kernel.org>
+> Cc: Daniel Borkmann <daniel@iogearbox.net>
 
-THis is a valuable information and should be a part of the changelog
-IMHO. 
-
-> On Tue, Oct 18, 2016 at 9:30 PM, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> wrote:
-> 
-> > On Tue, Oct 18, 2016 at 08:26:19PM +0200, Michal Hocko wrote:
-> > > On Tue 18-10-16 11:54:35, Aristeu Rozanski wrote:
-> > > > When kmem accounting switched from account by default to only account
-> > if
-> > > > flagged by __GFP_ACCOUNT, IPC mqueue and messages was left out.
-> > >
-> > > I guess this was because ipv msgqueue shouldn't allow for memory
-> > > consumption runaways. The number of message queues and messages pending
-> > > in them is bounded and not a large amount of memory AFAIR. Anyway I do
-> > > not see anything unreasonable about accounting the memory to the caller.
-> >
-> > It should be accounted because receiver may not intentionally or
-> > unintentionally
-> > consume messages.
-> >
-
--- 
-Michal Hocko
-SUSE Labs
+Can you post this fix separately? It's valid and needed outside of the
+scope of this series.
