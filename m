@@ -1,92 +1,47 @@
-From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [RFC][PATCH v3] cgroup: Use CAP_SYS_RESOURCE to allow a process to migrate other tasks between cgroups
-Date: Thu, 20 Oct 2016 18:24:39 -0700
-Message-ID: <1477013079-23692-1-git-send-email-john.stultz@linaro.org>
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=qkpb20ACL6pgRHsJJmZObIcYJ8Fftiujv32jUVl7Y3M=;
-        b=gfNELPyPiq5nVsNaLhw4BI4baQYAf0ttbghg/S7jEQLdc7VNEgyCAMwDnII+XX5TPg
-         SOXN/eCGrxFSZATSAQYUGA5d3wC979AvCSyzdsfHjc4l9UAZMbEYAQhaerUgy4JvUcV3
-         gbXYy7Ome5edlDG2ItglUQ0JHIfg7dtEjozsA=
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: David Ahern <dsa-qUQiAmfTcIp+XZJcv9eMoEEOCMrvLtNR@public.gmane.org>
+Subject: Re: [PATCH v6 0/6] Add eBPF hooks for cgroups
+Date: Thu, 20 Oct 2016 23:32:11 -0600
+Message-ID: <455cf1d0-15c0-09f7-1460-d91be269d33c@cumulusnetworks.com>
+References: <1474303441-3745-1-git-send-email-daniel@zonque.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cumulusnetworks.com; s=google;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=KDBrZ5AqHDc3d/Odx6/ULqSqLEnJv17RZmuD5osMBtE=;
+        b=L8iYEjd079QhIGBOjraDTa1pQpaPKo8FyRJtW95AV1MASgpzz5BBQy1QDPyVg2Fkdc
+         +p6qwAzviIJTUPSoVibJ/75iRU7kaWuNVJyddfHWnVIIV8Fkdbx7p+YjNLzdnVj5eHMO
+         yqN48JMAZxhfZrHwpU27UWlG1gTJMkt206iU0=
+In-Reply-To: <1474303441-3745-1-git-send-email-daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch adds logic to allows a process to migrate other tasks
-between cgroups if they have CAP_SYS_RESOURCE.
+On 9/19/16 10:43 AM, Daniel Mack wrote:
+> This is v6 of the patch set to allow eBPF programs for network
+> filtering and accounting to be attached to cgroups, so that they apply
+> to all sockets of all tasks placed in that cgroup. The logic also
+> allows to be extendeded for other cgroup based eBPF logic.
+> 
+> 
+> Changes from v5:
+> 
+> * The eBPF programs now operate on L3 rather than on L2 of the packets,
+>   and the egress hooks were moved from __dev_queue_xmit() to
+>   ip*_output().
+> 
+> * For BPF_PROG_TYPE_CGROUP_SOCKET, disallow direct access to the skb
+>   through BPF_LD_[ABS|IND] instructions, but hook up the
+>   bpf_skb_load_bytes() access helper instead. Thanks to Daniel Borkmann
+>   for the help.
 
-In Android (where this feature originated), the ActivityManager tracks
-various application states (TOP_APP, FOREGROUND, BACKGROUND, SYSTEM,
-etc), and then as applications change states, the SchedPolicy logic
-will migrate the application tasks between different cgroups used
-to control the different application states (for example, there is a
-background cpuset cgroup which can limit background tasks to stay
-on one low-power cpu, and the bg_non_interactive cpuctrl cgroup can
-then further limit those background tasks to a small percentage of
-that one cpu's cpu time).
+It's been a month since the last response or update to this series. Any progress in resolving the resistance to hook locations?
 
-However, for security reasons, Android doesn't want to make the
-system_server (the process that runs the ActivityManager and
-SchedPolicy logic), run as root. So in the Android common.git
-kernel, they have some logic to allow cgroups to loosen their
-permissions so CAP_SYS_NICE tasks can migrate other tasks between
-cgroups.
+As I mentioned in Tokyo I need a solution for VRF that allows running processes in a VRF context -- meaning a process inherits a default sk_bound_dev_if for any AF_INET{6} sockets opened. Right now we (Cumulus) are using an l3mdev cgroup, something that Tejun pushed back on earlier this year. I strongly believe that cgroups provide the right infrastructure for this feature and looking at options. I'm sure a few people will chuckle about this, but I do have another solution that leverages this patchset -- a bpf program on a cgroup that sets sk_bound_dev_if. So, what's the likelihood of this patchset making 4.10 (or any other release)?
 
-I feel the approach taken there overloads CAP_SYS_NICE a bit much,
-and is maybe more complicated then needed.
-
-So this patch, as suggested by Michael Kerrisk, simply adds a
-check for CAP_SYS_RESOURCE.
-
-I've tested this with AOSP master, and this seems to work well
-as Zygote and system_server already use CAP_SYS_RESOURCE. I've
-also submitted patches against the android-4.4 kernel to change
-it to use CAP_SYS_RESOURCE, and the Android developers have
-seemed ok with this change.
-
-Thouhts and feedback would be appreciated!
-
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
-Cc: Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
-Cc: Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
-Cc: Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>
-Cc: Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Signed-off-by: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
----
-v2: Renamed to just CAP_CGROUP_MIGRATE as reccomended by Tejun
-v3: Switched to just using CAP_SYS_RESOURCE as suggested by Michael
----
- kernel/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 09f84d2..866059a 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2857,7 +2857,7 @@ static int cgroup_procs_write_permission(struct task_struct *task,
- 	if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
- 	    !uid_eq(cred->euid, tcred->uid) &&
- 	    !uid_eq(cred->euid, tcred->suid) &&
--	    !ns_capable(tcred->user_ns, CAP_CGROUP_MIGRATE))
-+	    !ns_capable(tcred->user_ns, CAP_SYS_RESOURCE))
- 		ret = -EACCES;
- 
- 	if (!ret && cgroup_on_dfl(dst_cgrp)) {
--- 
-2.7.4
+Thanks,
+David
