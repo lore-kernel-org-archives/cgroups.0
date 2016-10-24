@@ -1,42 +1,128 @@
-From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC][PATCH v3] cgroup: Use CAP_SYS_RESOURCE to allow a process
- to migrate other tasks between cgroups
-Date: Fri, 21 Oct 2016 11:06:56 -0700
-Message-ID: <CALAqxLX+Zz8uxbg0t7-RhtpSyxEsFh830ikBQ25N+T9eQxNfNw@mail.gmail.com>
-References: <1477013079-23692-1-git-send-email-john.stultz@linaro.org> <937568dd-61b8-ac09-3cdf-789ff14f5423@gmail.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=7k5/qgr+TN8Zmt4wO8FHnD2uIDCSoA9Hqfh3A9jHKXk=;
-        b=hIIuY4BZFFUA3NiSCmniRsGXdpu/L55r8hjwRt7GYBoSxhDjkld5daFw5WerE1CjEc
-         VvT45aEtshwfLRUPEBRccgfTqT+yxOCIssuNG67vDLbAbAckh6MezLSJdr8C3S4Yh90M
-         H7vXtKEAxvt/ycvYwOahNEaSZpvQdFMOtXdzI=
-In-Reply-To: <937568dd-61b8-ac09-3cdf-789ff14f5423-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH] mm: memcontrol: do not recurse in direct reclaim
+Date: Mon, 24 Oct 2016 16:30:05 -0400
+Message-ID: <20161024203005.5547-1-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:
+	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Nl9YrU46/n82hR+k9SJaiRdmcGgv2P1JAckG8LFmXoU=; b=ZkPqmQjZjHOZS2ahfVEe/5kXHK
+	TByw/ALzzUuEXnku/ZV1vLaviAOyDJXaI5NebD5ixfCY9+RK1f220UD7/OwLYQfBM4X8Ajo99OrUI
+	jW6jSHTp75pQi7cFdfbJb1gtf4nPzgthPDlLaYyhAmSMgFwBfyr4jMx55AGc5NqqZfA4=;
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Thu, Oct 20, 2016 at 11:42 PM, Michael Kerrisk (man-pages)
-<mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> Hi John,
->
-> On 10/21/2016 03:24 AM, John Stultz wrote:
->> This patch adds logic to allows a process to migrate other tasks
->> between cgroups if they have CAP_SYS_RESOURCE.
->
-> This appears to be a patch against your previous patch,
-> rather than against mainline. Was that intended?
+On 4.0, we saw a stack corruption from a page fault entering direct
+memory cgroup reclaim, calling into btrfs_releasepage(), which then
+tried to allocate an extent and recursed back into a kmem charge ad
+nauseam:
 
-Heh. Definitely not. Apologies. I thought I had folded things down
-(and the real patch is a similar looking one-liner).
+[...]
+[<ffffffff8136590c>] btrfs_releasepage+0x2c/0x30
+[<ffffffff811559a2>] try_to_release_page+0x32/0x50
+[<ffffffff81168cea>] shrink_page_list+0x6da/0x7a0
+[<ffffffff811693b5>] shrink_inactive_list+0x1e5/0x510
+[<ffffffff8116a0a5>] shrink_lruvec+0x605/0x7f0
+[<ffffffff8116a37e>] shrink_zone+0xee/0x320
+[<ffffffff8116a934>] do_try_to_free_pages+0x174/0x440
+[<ffffffff8116adf7>] try_to_free_mem_cgroup_pages+0xa7/0x130
+[<ffffffff811b738b>] try_charge+0x17b/0x830
+[<ffffffff811bb5b0>] memcg_charge_kmem+0x40/0x80
+[<ffffffff811a96a9>] new_slab+0x2d9/0x5a0
+[<ffffffff817b2547>] __slab_alloc+0x2fd/0x44f
+[<ffffffff811a9b03>] kmem_cache_alloc+0x193/0x1e0
+[<ffffffff813801e1>] alloc_extent_state+0x21/0xc0
+[<ffffffff813820c5>] __clear_extent_bit+0x2b5/0x400
+[<ffffffff81386d03>] try_release_extent_mapping+0x1a3/0x220
+[<ffffffff813658a1>] __btrfs_releasepage+0x31/0x70
+[<ffffffff8136590c>] btrfs_releasepage+0x2c/0x30
+[<ffffffff811559a2>] try_to_release_page+0x32/0x50
+[<ffffffff81168cea>] shrink_page_list+0x6da/0x7a0
+[<ffffffff811693b5>] shrink_inactive_list+0x1e5/0x510
+[<ffffffff8116a0a5>] shrink_lruvec+0x605/0x7f0
+[<ffffffff8116a37e>] shrink_zone+0xee/0x320
+[<ffffffff8116a934>] do_try_to_free_pages+0x174/0x440
+[<ffffffff8116adf7>] try_to_free_mem_cgroup_pages+0xa7/0x130
+[<ffffffff811b738b>] try_charge+0x17b/0x830
+[<ffffffff811bbfd5>] mem_cgroup_try_charge+0x65/0x1c0
+[<ffffffff8118338f>] handle_mm_fault+0x117f/0x1510
+[<ffffffff81041cf7>] __do_page_fault+0x177/0x420
+[<ffffffff81041fac>] do_page_fault+0xc/0x10
+[<ffffffff817c0182>] page_fault+0x22/0x30
 
-I'll re-send the proper patch on monday. :)
+On later kernels, kmem charging is opt-in rather than opt-out, and
+that particular kmem allocation in btrfs_releasepage() is no longer
+being charged and won't recurse and overrun the stack anymore. But
+it's not impossible for an accounted allocation to happen from the
+memcg direct reclaim context, and we needed to reproduce this crash
+many times before we even got a useful stack trace out of it.
 
-thanks
--john
+Like other direct reclaimers, mark tasks in memcg reclaim PF_MEMALLOC
+to avoid recursing into any other form of direct reclaim. Then let
+recursive charges from PF_MEMALLOC contexts bypass the cgroup limit.
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 9 +++++----
+ mm/vmscan.c     | 2 ++
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+Hey guys, can anyone think of a reason why this might not be a good
+idea? We've never really needed this in the past because page reclaim
+doesn't recurse into instantiating another LRU page, especially with
+GFP_NOFS. But with a wider variety of tracked allocations, it's no
+longer that obvious. It seems like a risky hole to leave around.
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ae052b5e3315..3dac6f4ba4cf 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1908,13 +1908,14 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 
+ 	/*
+ 	 * Unlike in global OOM situations, memcg is not in a physical
+-	 * memory shortage.  Allow dying and OOM-killed tasks to
+-	 * bypass the last charges so that they can exit quickly and
+-	 * free their memory.
++	 * memory shortage. Allow dying and OOM-killed tasks to bypass
++	 * the last charges so that they can exit quickly and free
++	 * their memory. The same applies for recursing reclaimers.
+ 	 */
+ 	if (unlikely(test_thread_flag(TIF_MEMDIE) ||
+ 		     fatal_signal_pending(current) ||
+-		     current->flags & PF_EXITING))
++		     current->flags & PF_EXITING ||
++		     current->flags & PF_MEMALLOC))
+ 		goto force;
+ 
+ 	if (unlikely(task_in_memcg_oom(current)))
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 744f926af442..76fda2268148 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3043,7 +3043,9 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 					    sc.gfp_mask,
+ 					    sc.reclaim_idx);
+ 
++	current->flags |= PF_MEMALLOC;
+ 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
++	current->flags &= ~PF_MEMALLOC;
+ 
+ 	trace_mm_vmscan_memcg_reclaim_end(nr_reclaimed);
+ 
+-- 
+2.10.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
