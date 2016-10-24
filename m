@@ -1,128 +1,96 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH] mm: memcontrol: do not recurse in direct reclaim
-Date: Mon, 24 Oct 2016 16:30:05 -0400
-Message-ID: <20161024203005.5547-1-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:
-	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=Nl9YrU46/n82hR+k9SJaiRdmcGgv2P1JAckG8LFmXoU=; b=ZkPqmQjZjHOZS2ahfVEe/5kXHK
-	TByw/ALzzUuEXnku/ZV1vLaviAOyDJXaI5NebD5ixfCY9+RK1f220UD7/OwLYQfBM4X8Ajo99OrUI
-	jW6jSHTp75pQi7cFdfbJb1gtf4nPzgthPDlLaYyhAmSMgFwBfyr4jMx55AGc5NqqZfA4=;
-Sender: owner-linux-mm@kvack.org
+From: John Stultz <john.stultz@linaro.org>
+Subject: [PATCH v4] cgroup: Use CAP_SYS_RESOURCE to allow a process to migrate other tasks between cgroups
+Date: Mon, 24 Oct 2016 13:37:00 -0700
+Message-ID: <1477341420-21857-1-git-send-email-john.stultz@linaro.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=3jV6/y9J+dFYuY3fcD8gcYrRGiJqO5R8lVl66P/iRb0=;
+        b=gZoU2NrIheau/8uX46xl1KE0KjBlZvKaPytPbFBHuQYenUhH6xmJ0OueRyG1OViDEJ
+         jZfBafrXPTap+3u+314yjQOu7lYA1woFMOhPffVvvKer+DjUcsvyxMxxuhNRV/cxOYGm
+         T3SJ2k/jVmivoeHz881RRAaNHedLmTnGwfDZw=
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: John Stultz <john.stultz@linaro.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Todd Kjos <tkjos@google.com>, Christian Poetzsch <christian.potzsch@imgtec.com>, Amit Pundir <amit.pundir@linaro.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Kees Cook <keescook@chromium.org>, "Serge E . Hallyn" <serge@hallyn.com>, linux-api@vger.kernel.org
 
-On 4.0, we saw a stack corruption from a page fault entering direct
-memory cgroup reclaim, calling into btrfs_releasepage(), which then
-tried to allocate an extent and recursed back into a kmem charge ad
-nauseam:
+This patch adds logic to allows a process to migrate other tasks
+between cgroups if they have CAP_SYS_RESOURCE.
 
-[...]
-[<ffffffff8136590c>] btrfs_releasepage+0x2c/0x30
-[<ffffffff811559a2>] try_to_release_page+0x32/0x50
-[<ffffffff81168cea>] shrink_page_list+0x6da/0x7a0
-[<ffffffff811693b5>] shrink_inactive_list+0x1e5/0x510
-[<ffffffff8116a0a5>] shrink_lruvec+0x605/0x7f0
-[<ffffffff8116a37e>] shrink_zone+0xee/0x320
-[<ffffffff8116a934>] do_try_to_free_pages+0x174/0x440
-[<ffffffff8116adf7>] try_to_free_mem_cgroup_pages+0xa7/0x130
-[<ffffffff811b738b>] try_charge+0x17b/0x830
-[<ffffffff811bb5b0>] memcg_charge_kmem+0x40/0x80
-[<ffffffff811a96a9>] new_slab+0x2d9/0x5a0
-[<ffffffff817b2547>] __slab_alloc+0x2fd/0x44f
-[<ffffffff811a9b03>] kmem_cache_alloc+0x193/0x1e0
-[<ffffffff813801e1>] alloc_extent_state+0x21/0xc0
-[<ffffffff813820c5>] __clear_extent_bit+0x2b5/0x400
-[<ffffffff81386d03>] try_release_extent_mapping+0x1a3/0x220
-[<ffffffff813658a1>] __btrfs_releasepage+0x31/0x70
-[<ffffffff8136590c>] btrfs_releasepage+0x2c/0x30
-[<ffffffff811559a2>] try_to_release_page+0x32/0x50
-[<ffffffff81168cea>] shrink_page_list+0x6da/0x7a0
-[<ffffffff811693b5>] shrink_inactive_list+0x1e5/0x510
-[<ffffffff8116a0a5>] shrink_lruvec+0x605/0x7f0
-[<ffffffff8116a37e>] shrink_zone+0xee/0x320
-[<ffffffff8116a934>] do_try_to_free_pages+0x174/0x440
-[<ffffffff8116adf7>] try_to_free_mem_cgroup_pages+0xa7/0x130
-[<ffffffff811b738b>] try_charge+0x17b/0x830
-[<ffffffff811bbfd5>] mem_cgroup_try_charge+0x65/0x1c0
-[<ffffffff8118338f>] handle_mm_fault+0x117f/0x1510
-[<ffffffff81041cf7>] __do_page_fault+0x177/0x420
-[<ffffffff81041fac>] do_page_fault+0xc/0x10
-[<ffffffff817c0182>] page_fault+0x22/0x30
+In Android (where this feature originated), the ActivityManager tracks
+various application states (TOP_APP, FOREGROUND, BACKGROUND, SYSTEM,
+etc), and then as applications change states, the SchedPolicy logic
+will migrate the application tasks between different cgroups used
+to control the different application states (for example, there is a
+background cpuset cgroup which can limit background tasks to stay
+on one low-power cpu, and the bg_non_interactive cpuctrl cgroup can
+then further limit those background tasks to a small percentage of
+that one cpu's cpu time).
 
-On later kernels, kmem charging is opt-in rather than opt-out, and
-that particular kmem allocation in btrfs_releasepage() is no longer
-being charged and won't recurse and overrun the stack anymore. But
-it's not impossible for an accounted allocation to happen from the
-memcg direct reclaim context, and we needed to reproduce this crash
-many times before we even got a useful stack trace out of it.
+However, for security reasons, Android doesn't want to make the
+system_server (the process that runs the ActivityManager and
+SchedPolicy logic), run as root. So in the Android common.git
+kernel, they have some logic to allow cgroups to loosen their
+permissions so CAP_SYS_NICE tasks can migrate other tasks between
+cgroups.
 
-Like other direct reclaimers, mark tasks in memcg reclaim PF_MEMALLOC
-to avoid recursing into any other form of direct reclaim. Then let
-recursive charges from PF_MEMALLOC contexts bypass the cgroup limit.
+I feel the approach taken there overloads CAP_SYS_NICE a bit much
+for non-android environments.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+So this patch, as suggested by Michael Kerrisk, simply adds a
+check for CAP_SYS_RESOURCE.
+
+I've tested this with AOSP master, and this seems to work well
+as Zygote and system_server already use CAP_SYS_RESOURCE. I've
+also submitted patches against the android-4.4 kernel to change
+it to use CAP_SYS_RESOURCE, and the Android developers just merged
+it.
+
+Thouhts and feedback would be appreciated!
+
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: cgroups@vger.kernel.org
+Cc: Android Kernel Team <kernel-team@android.com>
+Cc: Rom Lemarchand <romlem@android.com>
+Cc: Colin Cross <ccross@android.com>
+Cc: Dmitry Shmidt <dimitrysh@google.com>
+Cc: Todd Kjos <tkjos@google.com>
+Cc: Christian Poetzsch <christian.potzsch@imgtec.com>
+Cc: Amit Pundir <amit.pundir@linaro.org>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Serge E. Hallyn <serge@hallyn.com>
+Cc: linux-api@vger.kernel.org
+Acked-by: Serge Hallyn <serge@hallyn.com>
+Signed-off-by: John Stultz <john.stultz@linaro.org>
 ---
- mm/memcontrol.c | 9 +++++----
- mm/vmscan.c     | 2 ++
- 2 files changed, 7 insertions(+), 4 deletions(-)
+v2: Renamed to just CAP_CGROUP_MIGRATE as reccomended by Tejun
+v3: Switched to just using CAP_SYS_RESOURCE as suggested by Michael
+v4: Send out properly folded down version of the patch. :P
+---
+ kernel/cgroup.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Hey guys, can anyone think of a reason why this might not be a good
-idea? We've never really needed this in the past because page reclaim
-doesn't recurse into instantiating another LRU page, especially with
-GFP_NOFS. But with a wider variety of tracked allocations, it's no
-longer that obvious. It seems like a risky hole to leave around.
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ae052b5e3315..3dac6f4ba4cf 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1908,13 +1908,14 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 
- 	/*
- 	 * Unlike in global OOM situations, memcg is not in a physical
--	 * memory shortage.  Allow dying and OOM-killed tasks to
--	 * bypass the last charges so that they can exit quickly and
--	 * free their memory.
-+	 * memory shortage. Allow dying and OOM-killed tasks to bypass
-+	 * the last charges so that they can exit quickly and free
-+	 * their memory. The same applies for recursing reclaimers.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 85bc9be..866059a 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2856,7 +2856,8 @@ static int cgroup_procs_write_permission(struct task_struct *task,
  	 */
- 	if (unlikely(test_thread_flag(TIF_MEMDIE) ||
- 		     fatal_signal_pending(current) ||
--		     current->flags & PF_EXITING))
-+		     current->flags & PF_EXITING ||
-+		     current->flags & PF_MEMALLOC))
- 		goto force;
+ 	if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
+ 	    !uid_eq(cred->euid, tcred->uid) &&
+-	    !uid_eq(cred->euid, tcred->suid))
++	    !uid_eq(cred->euid, tcred->suid) &&
++	    !ns_capable(tcred->user_ns, CAP_SYS_RESOURCE))
+ 		ret = -EACCES;
  
- 	if (unlikely(task_in_memcg_oom(current)))
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 744f926af442..76fda2268148 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3043,7 +3043,9 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 					    sc.gfp_mask,
- 					    sc.reclaim_idx);
- 
-+	current->flags |= PF_MEMALLOC;
- 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
-+	current->flags &= ~PF_MEMALLOC;
- 
- 	trace_mm_vmscan_memcg_reclaim_end(nr_reclaimed);
- 
+ 	if (!ret && cgroup_on_dfl(dst_cgrp)) {
 -- 
-2.10.0
+2.7.4
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
