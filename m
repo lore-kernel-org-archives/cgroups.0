@@ -1,273 +1,141 @@
-From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v7 6/6] samples: bpf: add userspace example for attaching eBPF programs to cgroups
-Date: Tue, 25 Oct 2016 12:14:14 +0200
-Message-ID: <1477390454-12553-7-git-send-email-daniel@zonque.org>
-References: <1477390454-12553-1-git-send-email-daniel@zonque.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1477390454-12553-1-git-send-email-daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] mm: memcontrol: do not recurse in direct reclaim
+Date: Tue, 25 Oct 2016 10:10:50 -0400
+Message-ID: <20161025141050.GA13019@cmpxchg.org>
+References: <20161024203005.5547-1-hannes@cmpxchg.org>
+ <20161025090747.GD31137@dhcp22.suse.cz>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=6O7TowjhUk3ipoinM92mwv8qtOv2t9JF3QoGXs8/UgM=; b=cWHDQQF7M/oWLjWPxCTBfPc/EF
+	JLYPgQFcnkPcQLllw496PM0j86j14T2aSXFNvAShSaIRR5QL098OT+D3hvOoSzhhJQABGCGrpl599
+	27laiD99SiltFsOBEgIVm49DrDyrMoRxvx4/ug3rHF0MvswOlmCpVN0z0tOOvTEUhqY8=;
+Content-Disposition: inline
+In-Reply-To: <20161025090747.GD31137@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Add a simple userpace program to demonstrate the new API to attach eBPF
-programs to cgroups. This is what it does:
+On Tue, Oct 25, 2016 at 11:07:47AM +0200, Michal Hocko wrote:
+> Acked-by: Michal Hocko <mhocko@suse.com>
 
- * Create arraymap in kernel with 4 byte keys and 8 byte values
+Thank you.
 
- * Load eBPF program
+> I would prefer to have the PF_MEMALLOC condition in a check on its own
+> with a short explanation that we really do not want to recurse to the
+> reclaim due to stack overflows.
 
-   The eBPF program accesses the map passed in to store two pieces of
-   information. The number of invocations of the program, which maps
-   to the number of packets received, is stored to key 0. Key 1 is
-   incremented on each iteration by the number of bytes stored in
-   the skb.
+Okay, fair enough. I also added why we prefer temporarily breaching
+the limit over failing the allocation. How is this?
 
- * Detach any eBPF program previously attached to the cgroup
+From 9034d2e6a21036774df9a8e021511720cf432c82 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Mon, 24 Oct 2016 16:01:55 -0400
+Subject: [PATCH] mm: memcontrol: do not recurse in direct reclaim
 
- * Attach the new program to the cgroup using BPF_PROG_ATTACH
+On 4.0, we saw a stack corruption from a page fault entering direct
+memory cgroup reclaim, calling into btrfs_releasepage(), which then
+tried to allocate an extent and recursed back into a kmem charge ad
+nauseam:
 
- * Once a second, read map[0] and map[1] to see how many bytes and
-   packets were seen on any socket of tasks in the given cgroup.
+[...]
+[<ffffffff8136590c>] btrfs_releasepage+0x2c/0x30
+[<ffffffff811559a2>] try_to_release_page+0x32/0x50
+[<ffffffff81168cea>] shrink_page_list+0x6da/0x7a0
+[<ffffffff811693b5>] shrink_inactive_list+0x1e5/0x510
+[<ffffffff8116a0a5>] shrink_lruvec+0x605/0x7f0
+[<ffffffff8116a37e>] shrink_zone+0xee/0x320
+[<ffffffff8116a934>] do_try_to_free_pages+0x174/0x440
+[<ffffffff8116adf7>] try_to_free_mem_cgroup_pages+0xa7/0x130
+[<ffffffff811b738b>] try_charge+0x17b/0x830
+[<ffffffff811bb5b0>] memcg_charge_kmem+0x40/0x80
+[<ffffffff811a96a9>] new_slab+0x2d9/0x5a0
+[<ffffffff817b2547>] __slab_alloc+0x2fd/0x44f
+[<ffffffff811a9b03>] kmem_cache_alloc+0x193/0x1e0
+[<ffffffff813801e1>] alloc_extent_state+0x21/0xc0
+[<ffffffff813820c5>] __clear_extent_bit+0x2b5/0x400
+[<ffffffff81386d03>] try_release_extent_mapping+0x1a3/0x220
+[<ffffffff813658a1>] __btrfs_releasepage+0x31/0x70
+[<ffffffff8136590c>] btrfs_releasepage+0x2c/0x30
+[<ffffffff811559a2>] try_to_release_page+0x32/0x50
+[<ffffffff81168cea>] shrink_page_list+0x6da/0x7a0
+[<ffffffff811693b5>] shrink_inactive_list+0x1e5/0x510
+[<ffffffff8116a0a5>] shrink_lruvec+0x605/0x7f0
+[<ffffffff8116a37e>] shrink_zone+0xee/0x320
+[<ffffffff8116a934>] do_try_to_free_pages+0x174/0x440
+[<ffffffff8116adf7>] try_to_free_mem_cgroup_pages+0xa7/0x130
+[<ffffffff811b738b>] try_charge+0x17b/0x830
+[<ffffffff811bbfd5>] mem_cgroup_try_charge+0x65/0x1c0
+[<ffffffff8118338f>] handle_mm_fault+0x117f/0x1510
+[<ffffffff81041cf7>] __do_page_fault+0x177/0x420
+[<ffffffff81041fac>] do_page_fault+0xc/0x10
+[<ffffffff817c0182>] page_fault+0x22/0x30
 
-The program takes a cgroup path as 1st argument, and either "ingress"
-or "egress" as 2nd. Optionally, "drop" can be passed as 3rd argument,
-which will make the generated eBPF program return 0 instead of 1, so
-the kernel will drop the packet.
+On later kernels, kmem charging is opt-in rather than opt-out, and
+that particular kmem allocation in btrfs_releasepage() is no longer
+being charged and won't recurse and overrun the stack anymore. But
+it's not impossible for an accounted allocation to happen from the
+memcg direct reclaim context, and we needed to reproduce this crash
+many times before we even got a useful stack trace out of it.
 
-libbpf gained two new wrappers for the new syscall commands.
+Like other direct reclaimers, mark tasks in memcg reclaim PF_MEMALLOC
+to avoid recursing into any other form of direct reclaim. Then let
+recursive charges from PF_MEMALLOC contexts bypass the cgroup limit.
 
-Signed-off-by: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
-Acked-by: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Michal Hocko <mhocko@suse.com>
 ---
- samples/bpf/Makefile            |   2 +
- samples/bpf/libbpf.c            |  21 ++++++
- samples/bpf/libbpf.h            |   3 +
- samples/bpf/test_cgrp2_attach.c | 147 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 173 insertions(+)
- create mode 100644 samples/bpf/test_cgrp2_attach.c
+ mm/memcontrol.c | 9 +++++++++
+ mm/vmscan.c     | 2 ++
+ 2 files changed, 11 insertions(+)
 
-diff --git a/samples/bpf/Makefile b/samples/bpf/Makefile
-index 12b7304..e4cdc74 100644
---- a/samples/bpf/Makefile
-+++ b/samples/bpf/Makefile
-@@ -22,6 +22,7 @@ hostprogs-y += spintest
- hostprogs-y += map_perf_test
- hostprogs-y += test_overhead
- hostprogs-y += test_cgrp2_array_pin
-+hostprogs-y += test_cgrp2_attach
- hostprogs-y += xdp1
- hostprogs-y += xdp2
- hostprogs-y += test_current_task_under_cgroup
-@@ -49,6 +50,7 @@ spintest-objs := bpf_load.o libbpf.o spintest_user.o
- map_perf_test-objs := bpf_load.o libbpf.o map_perf_test_user.o
- test_overhead-objs := bpf_load.o libbpf.o test_overhead_user.o
- test_cgrp2_array_pin-objs := libbpf.o test_cgrp2_array_pin.o
-+test_cgrp2_attach-objs := libbpf.o test_cgrp2_attach.o
- xdp1-objs := bpf_load.o libbpf.o xdp1_user.o
- # reuse xdp1 source intentionally
- xdp2-objs := bpf_load.o libbpf.o xdp1_user.o
-diff --git a/samples/bpf/libbpf.c b/samples/bpf/libbpf.c
-index 9969e35..9ce707b 100644
---- a/samples/bpf/libbpf.c
-+++ b/samples/bpf/libbpf.c
-@@ -104,6 +104,27 @@ int bpf_prog_load(enum bpf_prog_type prog_type,
- 	return syscall(__NR_bpf, BPF_PROG_LOAD, &attr, sizeof(attr));
- }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ae052b5e3315..0f870ba43942 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1917,6 +1917,15 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 		     current->flags & PF_EXITING))
+ 		goto force;
  
-+int bpf_prog_attach(int prog_fd, int target_fd, enum bpf_attach_type type)
-+{
-+	union bpf_attr attr = {
-+		.target_fd = target_fd,
-+		.attach_bpf_fd = prog_fd,
-+		.attach_type = type,
-+	};
++	/*
++	 * Prevent unbounded recursion when reclaim operations need to
++	 * allocate memory. This might exceed the limits temporarily,
++	 * but we prefer facilitating memory reclaim and getting back
++	 * under the limit over triggering OOM kills in these cases.
++	 */
++	if (unlikely(current->flags & PF_MEMALLOC))
++		goto force;
 +
-+	return syscall(__NR_bpf, BPF_PROG_ATTACH, &attr, sizeof(attr));
-+}
-+
-+int bpf_prog_detach(int target_fd, enum bpf_attach_type type)
-+{
-+	union bpf_attr attr = {
-+		.target_fd = target_fd,
-+		.attach_type = type,
-+	};
-+
-+	return syscall(__NR_bpf, BPF_PROG_DETACH, &attr, sizeof(attr));
-+}
-+
- int bpf_obj_pin(int fd, const char *pathname)
- {
- 	union bpf_attr attr = {
-diff --git a/samples/bpf/libbpf.h b/samples/bpf/libbpf.h
-index ac6edb6..d0a799a 100644
---- a/samples/bpf/libbpf.h
-+++ b/samples/bpf/libbpf.h
-@@ -15,6 +15,9 @@ int bpf_prog_load(enum bpf_prog_type prog_type,
- 		  const struct bpf_insn *insns, int insn_len,
- 		  const char *license, int kern_version);
+ 	if (unlikely(task_in_memcg_oom(current)))
+ 		goto nomem;
  
-+int bpf_prog_attach(int prog_fd, int attachable_fd, enum bpf_attach_type type);
-+int bpf_prog_detach(int attachable_fd, enum bpf_attach_type type);
-+
- int bpf_obj_pin(int fd, const char *pathname);
- int bpf_obj_get(const char *pathname);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 744f926af442..76fda2268148 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3043,7 +3043,9 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 					    sc.gfp_mask,
+ 					    sc.reclaim_idx);
  
-diff --git a/samples/bpf/test_cgrp2_attach.c b/samples/bpf/test_cgrp2_attach.c
-new file mode 100644
-index 0000000..63ef208
---- /dev/null
-+++ b/samples/bpf/test_cgrp2_attach.c
-@@ -0,0 +1,147 @@
-+/* eBPF example program:
-+ *
-+ * - Creates arraymap in kernel with 4 bytes keys and 8 byte values
-+ *
-+ * - Loads eBPF program
-+ *
-+ *   The eBPF program accesses the map passed in to store two pieces of
-+ *   information. The number of invocations of the program, which maps
-+ *   to the number of packets received, is stored to key 0. Key 1 is
-+ *   incremented on each iteration by the number of bytes stored in
-+ *   the skb.
-+ *
-+ * - Detaches any eBPF program previously attached to the cgroup
-+ *
-+ * - Attaches the new program to a cgroup using BPF_PROG_ATTACH
-+ *
-+ * - Every second, reads map[0] and map[1] to see how many bytes and
-+ *   packets were seen on any socket of tasks in the given cgroup.
-+ */
-+
-+#define _GNU_SOURCE
-+
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <stddef.h>
-+#include <string.h>
-+#include <unistd.h>
-+#include <assert.h>
-+#include <errno.h>
-+#include <fcntl.h>
-+
-+#include <linux/bpf.h>
-+
-+#include "libbpf.h"
-+
-+enum {
-+	MAP_KEY_PACKETS,
-+	MAP_KEY_BYTES,
-+};
-+
-+static int prog_load(int map_fd, int verdict)
-+{
-+	struct bpf_insn prog[] = {
-+		BPF_MOV64_REG(BPF_REG_6, BPF_REG_1), /* save r6 so it's not clobbered by BPF_CALL */
-+
-+		/* Count packets */
-+		BPF_MOV64_IMM(BPF_REG_0, MAP_KEY_PACKETS), /* r0 = 0 */
-+		BPF_STX_MEM(BPF_W, BPF_REG_10, BPF_REG_0, -4), /* *(u32 *)(fp - 4) = r0 */
-+		BPF_MOV64_REG(BPF_REG_2, BPF_REG_10),
-+		BPF_ALU64_IMM(BPF_ADD, BPF_REG_2, -4), /* r2 = fp - 4 */
-+		BPF_LD_MAP_FD(BPF_REG_1, map_fd), /* load map fd to r1 */
-+		BPF_RAW_INSN(BPF_JMP | BPF_CALL, 0, 0, 0, BPF_FUNC_map_lookup_elem),
-+		BPF_JMP_IMM(BPF_JEQ, BPF_REG_0, 0, 2),
-+		BPF_MOV64_IMM(BPF_REG_1, 1), /* r1 = 1 */
-+		BPF_RAW_INSN(BPF_STX | BPF_XADD | BPF_DW, BPF_REG_0, BPF_REG_1, 0, 0), /* xadd r0 += r1 */
-+
-+		/* Count bytes */
-+		BPF_MOV64_IMM(BPF_REG_0, MAP_KEY_BYTES), /* r0 = 1 */
-+		BPF_STX_MEM(BPF_W, BPF_REG_10, BPF_REG_0, -4), /* *(u32 *)(fp - 4) = r0 */
-+		BPF_MOV64_REG(BPF_REG_2, BPF_REG_10),
-+		BPF_ALU64_IMM(BPF_ADD, BPF_REG_2, -4), /* r2 = fp - 4 */
-+		BPF_LD_MAP_FD(BPF_REG_1, map_fd),
-+		BPF_RAW_INSN(BPF_JMP | BPF_CALL, 0, 0, 0, BPF_FUNC_map_lookup_elem),
-+		BPF_JMP_IMM(BPF_JEQ, BPF_REG_0, 0, 2),
-+		BPF_LDX_MEM(BPF_W, BPF_REG_1, BPF_REG_6, offsetof(struct __sk_buff, len)), /* r1 = skb->len */
-+		BPF_RAW_INSN(BPF_STX | BPF_XADD | BPF_DW, BPF_REG_0, BPF_REG_1, 0, 0), /* xadd r0 += r1 */
-+
-+		BPF_MOV64_IMM(BPF_REG_0, verdict), /* r0 = verdict */
-+		BPF_EXIT_INSN(),
-+	};
-+
-+	return bpf_prog_load(BPF_PROG_TYPE_CGROUP_SKB,
-+			     prog, sizeof(prog), "GPL", 0);
-+}
-+
-+static int usage(const char *argv0)
-+{
-+	printf("Usage: %s <cg-path> <egress|ingress> [drop]\n", argv0);
-+	return EXIT_FAILURE;
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	int cg_fd, map_fd, prog_fd, key, ret;
-+	long long pkt_cnt, byte_cnt;
-+	enum bpf_attach_type type;
-+	int verdict = 1;
-+
-+	if (argc < 3)
-+		return usage(argv[0]);
-+
-+	if (strcmp(argv[2], "ingress") == 0)
-+		type = BPF_CGROUP_INET_INGRESS;
-+	else if (strcmp(argv[2], "egress") == 0)
-+		type = BPF_CGROUP_INET_EGRESS;
-+	else
-+		return usage(argv[0]);
-+
-+	if (argc > 3 && strcmp(argv[3], "drop") == 0)
-+		verdict = 0;
-+
-+	cg_fd = open(argv[1], O_DIRECTORY | O_RDONLY);
-+	if (cg_fd < 0) {
-+		printf("Failed to open cgroup path: '%s'\n", strerror(errno));
-+		return EXIT_FAILURE;
-+	}
-+
-+	map_fd = bpf_create_map(BPF_MAP_TYPE_ARRAY,
-+				sizeof(key), sizeof(byte_cnt),
-+				256, 0);
-+	if (map_fd < 0) {
-+		printf("Failed to create map: '%s'\n", strerror(errno));
-+		return EXIT_FAILURE;
-+	}
-+
-+	prog_fd = prog_load(map_fd, verdict);
-+	printf("Output from kernel verifier:\n%s\n-------\n", bpf_log_buf);
-+
-+	if (prog_fd < 0) {
-+		printf("Failed to load prog: '%s'\n", strerror(errno));
-+		return EXIT_FAILURE;
-+	}
-+
-+	ret = bpf_prog_detach(cg_fd, type);
-+	printf("bpf_prog_detach() returned '%s' (%d)\n", strerror(errno), errno);
-+
-+	ret = bpf_prog_attach(prog_fd, cg_fd, type);
-+	if (ret < 0) {
-+		printf("Failed to attach prog to cgroup: '%s'\n",
-+		       strerror(errno));
-+		return EXIT_FAILURE;
-+	}
-+
-+	while (1) {
-+		key = MAP_KEY_PACKETS;
-+		assert(bpf_lookup_elem(map_fd, &key, &pkt_cnt) == 0);
-+
-+		key = MAP_KEY_BYTES;
-+		assert(bpf_lookup_elem(map_fd, &key, &byte_cnt) == 0);
-+
-+		printf("cgroup received %lld packets, %lld bytes\n",
-+		       pkt_cnt, byte_cnt);
-+		sleep(1);
-+	}
-+
-+	return EXIT_SUCCESS;
-+}
++	current->flags |= PF_MEMALLOC;
+ 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
++	current->flags &= ~PF_MEMALLOC;
+ 
+ 	trace_mm_vmscan_memcg_reclaim_end(nr_reclaimed);
+ 
 -- 
-2.7.4
+2.10.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
