@@ -1,56 +1,67 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol: do not recurse in direct reclaim
-Date: Tue, 25 Oct 2016 17:07:59 +0200
-Message-ID: <20161025150758.GN31137@dhcp22.suse.cz>
-References: <20161024203005.5547-1-hannes@cmpxchg.org>
- <20161025090747.GD31137@dhcp22.suse.cz>
- <20161025141050.GA13019@cmpxchg.org>
- <20161025144543.GL31137@dhcp22.suse.cz>
- <20161025150142.GA31081@cmpxchg.org>
+From: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic@digikod.net>
+Subject: [RFC v4 02/18] bpf: Move u64_to_ptr() to BPF headers and inline it
+Date: Wed, 26 Oct 2016 08:56:38 +0200
+Message-ID: <20161026065654.19166-3-mic@digikod.net>
+References: <20161026065654.19166-1-mic@digikod.net>
+Reply-To: kernel-hardening@lists.openwall.com
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161025150142.GA31081@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <kernel-hardening-return-5015-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+List-Post: <mailto:kernel-hardening@lists.openwall.com>
+List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
+List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
+List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+In-Reply-To: <20161026065654.19166-1-mic@digikod.net>
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic@digikod.net>, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Jann Horn <jann@thejh.net>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Thomas Graf <tgraf@suug.ch>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, linux-security-module@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue 25-10-16 11:01:42, Johannes Weiner wrote:
-> On Tue, Oct 25, 2016 at 04:45:44PM +0200, Michal Hocko wrote:
-> > On Tue 25-10-16 10:10:50, Johannes Weiner wrote:
-> > > Like other direct reclaimers, mark tasks in memcg reclaim PF_MEMALLOC
-> > > to avoid recursing into any other form of direct reclaim. Then let
-> > > recursive charges from PF_MEMALLOC contexts bypass the cgroup limit.
-> > 
-> > Should we mark this for stable (up to 4.5) which changed the out-out to
-> > opt-in?
-> 
-> Yes, good point.
-> 
-> Internally, we're pulling it into our 4.6 tree as well. The commit
-> that fixes the particular bug we encountered in btrfs is a9bb7e620efd
-> ("memcg: only account kmem allocations marked as __GFP_ACCOUNT") in
-> 4.5+, so you could argue that we don't need the backport in kernels
-> with this commit. And I'm not aware of other manifestations of this
-> problem. But the unbounded recursion hole is still there, technically,
-> so we might just want to put it into all stable kernels and be safe.
-> 
-> So either
-> 
-> Cc: <stable@vger.kernel.org>	# up to and including 4.5
+This helper will be useful for arraymap (next commit).
 
-As the patch was released in 4.5 it shouldn't be needed in 4.5 stable
-tree but
+Signed-off-by: Mickaël Salaün <mic@digikod.net>
+Cc: Alexei Starovoitov <ast@kernel.org>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Daniel Borkmann <daniel@iogearbox.net>
+---
+ include/linux/bpf.h  | 6 ++++++
+ kernel/bpf/syscall.c | 6 ------
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-> or, and I'm leaning toward that, simply
-> 
-> Cc: <stable@vger.kernel.org>
-
-this sounds less confusing I guess.
-
+diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+index c201017b5730..cf87db6daf27 100644
+--- a/include/linux/bpf.h
++++ b/include/linux/bpf.h
+@@ -283,6 +283,12 @@ static inline void bpf_long_memcpy(void *dst, const void *src, u32 size)
+ 
+ /* verify correctness of eBPF program */
+ int bpf_check(struct bpf_prog **fp, union bpf_attr *attr);
++
++/* helper to convert user pointers passed inside __aligned_u64 fields */
++static inline void __user *u64_to_ptr(__u64 val)
++{
++	return (void __user *) (unsigned long) val;
++}
+ #else
+ static inline void bpf_register_prog_type(struct bpf_prog_type_list *tl)
+ {
+diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
+index 1814c010ace6..13149c9cb3a4 100644
+--- a/kernel/bpf/syscall.c
++++ b/kernel/bpf/syscall.c
+@@ -252,12 +252,6 @@ struct bpf_map *bpf_map_get_with_uref(u32 ufd)
+ 	return map;
+ }
+ 
+-/* helper to convert user pointers passed inside __aligned_u64 fields */
+-static void __user *u64_to_ptr(__u64 val)
+-{
+-	return (void __user *) (unsigned long) val;
+-}
+-
+ int __weak bpf_stackmap_copy(struct bpf_map *map, void *key, void *value)
+ {
+ 	return -ENOTSUPP;
 -- 
-Michal Hocko
-SUSE Labs
+2.9.3
+
