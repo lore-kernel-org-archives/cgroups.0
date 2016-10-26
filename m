@@ -1,132 +1,50 @@
-From: Jann Horn <jann-XZ1E9jl8jIdeoWH0uzbU5w@public.gmane.org>
-Subject: Re: [kernel-hardening] [RFC v4 03/18] bpf,landlock: Add a new
- arraymap type to deal with (Landlock) handles
-Date: Wed, 26 Oct 2016 21:01:47 +0200
-Message-ID: <20161026190147.GN3334@pc.thejh.net>
-References: <20161026065654.19166-1-mic@digikod.net>
- <20161026065654.19166-4-mic@digikod.net>
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Subject: Re: [PATCH v7 0/6] Add eBPF hooks for cgroups
+Date: Wed, 26 Oct 2016 21:59:33 +0200
+Message-ID: <20161026195933.GA2031@salvia>
+References: <1477390454-12553-1-git-send-email-daniel@zonque.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="K4LMwn8CgX2KMboP"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=thejh.net; s=s2016;
-        t=1477508509; bh=8PAKOZrcRDWQC7UWk65E6jC14PXG88ssI8XHXGnNxvg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HvVxmIO30O3mHD5VShKQM+aXIarGjZFrVFVV57ElP0tUaMAdPTO5kLqOSMK7uvfWE
-         EKptV8kneGWY7k1huiX1h+a/nwv44K+2T94w9YUTHN5R2dQ38txgryrB/GDk33albL
-         Y1dQ4ie7crJnLBuMtD4swizZdBW1+Lh9DpafGqpgixeXAg+OEngVuXdedxIgPcdeXP
-         m38Vu9ptGbY7qOmwczZhw6QHP8YdgFd0tfPtXTFJKqaYO2nb+zE+CDznTTOL2/1t13
-         PAQduZADeAq7k5ui3jCBZpP0KMI/7wLkW2GwGo9utuzyuTAglxB0LtpcQh4sXZtuES
-         6MvsE+T3UztJQ==
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161026065654.19166-4-mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1477390454-12553-1-git-send-email-daniel@zonque.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, David Drysdale <drysdale-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Eric W . Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Will Drewry <wad-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Daniel Mack <daniel@zonque.org>
+Cc: htejun@fb.com, daniel@iogearbox.net, ast@fb.com, davem@davemloft.net, kafai@fb.com, fw@strlen.de, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org
 
-
---K4LMwn8CgX2KMboP
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Oct 26, 2016 at 08:56:39AM +0200, Micka=EBl Sala=FCn wrote:
-> This new arraymap looks like a set and brings new properties:
-> * strong typing of entries: the eBPF functions get the array type of
->   elements instead of CONST_PTR_TO_MAP (e.g.
->   CONST_PTR_TO_LANDLOCK_HANDLE_FS);
-> * force sequential filling (i.e. replace or append-only update), which
->   allow quick browsing of all entries.
->=20
-> This strong typing is useful to statically check if the content of a map
-> can be passed to an eBPF function. For example, Landlock use it to store
-> and manage kernel objects (e.g. struct file) instead of dealing with
-> userland raw data. This improve efficiency and ensure that an eBPF
-> program can only call functions with the right high-level arguments.
->=20
-> The enum bpf_map_handle_type list low-level types (e.g.
-> BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD) which are identified when
-> updating a map entry (handle). This handle types are used to infer a
-> high-level arraymap type which are listed in enum bpf_map_array_type
-> (e.g. BPF_MAP_ARRAY_TYPE_LANDLOCK_FS).
->=20
-> For now, this new arraymap is only used by Landlock LSM (cf. next
-> commits) but it could be useful for other needs.
->=20
-> Changes since v3:
-> * make handle arraymap safe (RCU) and remove buggy synchronize_rcu()
-> * factor out the arraymay walk
->=20
-> Changes since v2:
-> * add a RLIMIT_NOFILE-based limit to the maximum number of arraymap
->   handle entries (suggested by Andy Lutomirski)
-> * remove useless checks
->=20
-> Changes since v1:
-> * arraymap of handles replace custom checker groups
-> * simpler userland API
+On Tue, Oct 25, 2016 at 12:14:08PM +0200, Daniel Mack wrote:
 [...]
-> +	case BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD:
-> +		handle_file =3D fget(handle->fd);
-> +		if (IS_ERR(handle_file))
-> +			return ERR_CAST(handle_file);
-> +		/* check if the FD is tied to a user mount point */
-> +		if (unlikely(handle_file->f_path.mnt->mnt_flags & MNT_INTERNAL)) {
-> +			fput(handle_file);
-> +			return ERR_PTR(-EINVAL);
-> +		}
-> +		path_get(&handle_file->f_path);
-> +		ret =3D kmalloc(sizeof(*ret), GFP_KERNEL);
-> +		ret->path =3D handle_file->f_path;
-> +		fput(handle_file);
+>   Dumping programs once they are installed is problematic because of
+>   the internal optimizations done to the eBPF program during its
+>   lifetime. Also, the references to maps etc. would need to be
+>   restored during the dump.
+> 
+>   Just exposing whether or not a program is attached would be
+>   trivial to do, however, most easily through another bpf(2)
+>   command. That can be added later on though.
 
-You can use fdget() and fdput() here because the reference to
-handle_file is dropped before the end of the syscall.
+I don't know if anyone told you, but during last netconf, this topic
+took a bit of time of discussion and it was controversial, I would say
+1/3 of netdev hackers there showed their concerns, and that's
+something that should not be skipped IMO.
 
+While xdp is pushing bpf programs at the very early packet path, not
+interfering with the stack, before even entering the generic ingress
+path. But this is adding hooks to push bpf programs in the middle of
+our generic stack, this is way different domain.
 
-> +		break;
-> +	case BPF_MAP_HANDLE_TYPE_UNSPEC:
-> +	default:
-> +		return ERR_PTR(-EINVAL);
-> +	}
-> +	ret->type =3D handle_type;
-> +	return ret;
-> +}
-> +
-> +static void *nop_map_lookup_elem(struct bpf_map *map, void *key)
-> +{
-> +	return ERR_PTR(-EINVAL);
-> +}
-> +
-> +/* called from syscall or from eBPF program */
-> +static int landlock_array_map_update_elem(struct bpf_map *map, void *key,
-> +		void *value, u64 map_flags)
-> +{
+I would really like to explore way earlier filtering, by extending
+socket lookup facilities. So far the problem seems to be that we need
+to lookup for broadcast/multicast UDP sockets and those cannot be
+attach via the usual skb->sk. I think it would be possible to wrap
+around this socket code in functions so we can invoke it. I guess
+filtering of UDP and TCP should be good for you at this stage. This
+would require more work though, but this would come with no hooks in
+the stack and packets will not have to consume *lots of cycles* just
+to be dropped before entering the socket queue.
 
-This being callable from eBPF context is IMO pretty surprising and should
-at least be well-documented. Also: What is the usecase here?
-
---K4LMwn8CgX2KMboP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJYEP2bAAoJED4KNFJOeCOoXs0QANR8eMzG7RvxyXZC6zHMmWfe
-yrRyDtTcXPmndGQHfU6YWsdl9vM6bHcb0gWl44k40QmrPPcVd7zu6wpkghMkJLRp
-h+pCrkpNx0gOpuxx0pTu6d8sHFmyh+lM+BlkbvTGvctUADLu5f+r0w/R/4cIPIB4
-NVGAY7wG3QrH/2VYc+0Uz4wb6JFMVxoRAYkvUD/tvVMXfwlfl4TDxL946Caw7XPP
-J2cCs1/FyZ9ahwnPLkI3tAkPkqFnR7Qh7cXks9ofTGtG1z8j2l+RCtrbZMWB2lsW
-VQvkFjkCUzuUVIRRuZE2E1zmekZxlOp4MvQpE5bCyWwKVcFPnsAPdcPQ8LBJ2Aak
-SSgvPc5jDp1ZzxDihwJ6Lr43k1w+MR6SF3x7uCkd5FOR+R3vBU/UUg4XUfQKqoIp
-jCysAr7wEqY/tdh4BkR/bDGaoOeEq6oFKaVu+VnySS76mq0YKFR7rcbz/tMe0gCT
-+lL6OkSmev/1NOiF86DUGEbRZv8ctK411/FxMz5adOrsU/jcTMwDfgu/ggZR7hoz
-v/kpOnrTsul/LTITxhwvXRt21AqDcq9qfVjS83BWy1nTWU3nmfDfy0Xbn14YLCXz
-hk9UNi3xndluRJ+lnPAoM9o+UpUbHoqyB1qYdObvf9FSlSxtQOX6AgPDjjJv/NkT
-TS0aueHFQqZvSkwk/0V/
-=LPFG
------END PGP SIGNATURE-----
-
---K4LMwn8CgX2KMboP--
+How useful can be to drop lots of unwanted traffic at such a late
+stage? How would the performance numbers to drop packets would look
+like? Extremely bad, I predict.
