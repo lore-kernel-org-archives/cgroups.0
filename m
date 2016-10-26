@@ -1,76 +1,58 @@
-From: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic@digikod.net>
-Subject: [RFC v4 12/18] bpf: Cosmetic change for bpf_prog_attach()
-Date: Wed, 26 Oct 2016 08:56:48 +0200
-Message-ID: <20161026065654.19166-13-mic@digikod.net>
-References: <20161026065654.19166-1-mic@digikod.net>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC v4 02/18] bpf: Move u64_to_ptr() to BPF headers and inline it
+Date: Wed, 26 Oct 2016 09:19:08 +0200
+Message-ID: <4045933.vGduYR3PCp@wuerfel>
+References: <20161026065654.19166-1-mic@digikod.net> <20161026065654.19166-3-mic@digikod.net>
 Reply-To: kernel-hardening@lists.openwall.com
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-hardening-return-5029-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <kernel-hardening-return-5036-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
 List-Post: <mailto:kernel-hardening@lists.openwall.com>
 List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
 List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
 List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
 List-ID: <cgroups.vger.kernel.org>
-In-Reply-To: <20161026065654.19166-1-mic@digikod.net>
-Content-Type: text/plain; charset="utf-8"
-To: linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic@digikod.net>, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Jann Horn <jann@thejh.net>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Thomas Graf <tgraf@suug.ch>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, linux-security-module@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org
+In-Reply-To: <20161026065654.19166-3-mic@digikod.net>
+To: =?ISO-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>
+Cc: linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Jann Horn <jann@thejh.net>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Thomas Graf <tgraf@suug.ch>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, linux-api@vger.kernel.org, linux-security-module@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org
 
-Move code outside a switch/case to ease code factoring (cf. next
-commit).
+On Wednesday, October 26, 2016 8:56:38 AM CEST Micka=EBl Sala=FCn wrote:
+>  include/linux/bpf.h  | 6 ++++++
+>  kernel/bpf/syscall.c | 6 ------
+>  2 files changed, 6 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+> index c201017b5730..cf87db6daf27 100644
+> --- a/include/linux/bpf.h
+> +++ b/include/linux/bpf.h
+> @@ -283,6 +283,12 @@ static inline void bpf_long_memcpy(void *dst, const =
+void *src, u32 size)
+> =20
+>  /* verify correctness of eBPF program */
+>  int bpf_check(struct bpf_prog **fp, union bpf_attr *attr);
+> +
+> +/* helper to convert user pointers passed inside __aligned_u64 fields */
+> +static inline void __user *u64_to_ptr(__u64 val)
+> +{
+> +       return (void __user *) (unsigned long) val;
+> +}
+>  #else
+>=20
 
-This apply on Daniel Mack's "Add eBPF hooks for cgroups" v7:
-https://lkml.kernel.org/r/1477390454-12553-1-git-send-email-daniel@zonque.org
 
-Signed-off-by: Mickaël Salaün <mic@digikod.net>
-Cc: Alexei Starovoitov <ast@kernel.org>
-Cc: Daniel Borkmann <daniel@iogearbox.net>
-Cc: Daniel Mack <daniel@zonque.org>
----
- kernel/bpf/syscall.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+We already have at least six copies of this helper:
 
-diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index 0f7faa9d2262..ac4cbb98596d 100644
---- a/kernel/bpf/syscall.c
-+++ b/kernel/bpf/syscall.c
-@@ -843,23 +843,24 @@ static int bpf_prog_attach(const union bpf_attr *attr)
- 	case BPF_CGROUP_INET_EGRESS:
- 		prog = bpf_prog_get_type(attr->attach_bpf_fd,
- 					 BPF_PROG_TYPE_CGROUP_SKB);
--		if (IS_ERR(prog))
--			return PTR_ERR(prog);
--
--		cgrp = cgroup_get_from_fd(attr->target_fd);
--		if (IS_ERR(cgrp)) {
--			bpf_prog_put(prog);
--			return PTR_ERR(cgrp);
--		}
--
--		cgroup_bpf_update(cgrp, prog, attr->attach_type);
--		cgroup_put(cgrp);
- 		break;
- 
- 	default:
- 		return -EINVAL;
- 	}
- 
-+	if (IS_ERR(prog))
-+		return PTR_ERR(prog);
-+
-+	cgrp = cgroup_get_from_fd(attr->target_fd);
-+	if (IS_ERR(cgrp)) {
-+		bpf_prog_put(prog);
-+		return PTR_ERR(cgrp);
-+	}
-+
-+	cgroup_bpf_update(cgrp, prog, attr->attach_type);
-+	cgroup_put(cgrp);
-+
- 	return 0;
- }
- 
--- 
-2.9.3
+fs/btrfs/qgroup.c:#define u64_to_ptr(x) ((struct btrfs_qgroup *)(uintptr_t)=
+x)
+kernel/bpf/syscall.c:static void __user *u64_to_ptr(__u64 val)
+drivers/staging/android/ion/ion_test.c:#define u64_to_uptr(x) ((void __user=
+ *)(unsigned long)(x))
+drivers/firewire/core-cdev.c:static void __user *u64_to_uptr(u64 value)
+drivers/staging/android/ion/ion_test.c:#define u64_to_uptr(x) ((void __user=
+ *)(unsigned long)(x))
+include/linux/kernel.h:#define u64_to_user_ptr(x) (            \
 
+Just use the one in linux/kernel.h
+
+	Arnd
