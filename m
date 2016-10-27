@@ -1,93 +1,83 @@
-From: CAI Qian <caiqian@redhat.com>
-Subject: local DoS - systemd hang or timeout with cgroup traces
-Date: Thu, 27 Oct 2016 08:52:32 -0400 (EDT)
-Message-ID: <1565579766.1600243.1477572752328.JavaMail.zimbra@redhat.com>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com> <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com> <774397084.821469.1475260403929.JavaMail.zimbra@redhat.com> <20161003013737.GR19539@ZenIV.linux.org.uk> <1937480340.100083.1475516965286.JavaMail.zimbra@redhat.com> <1812816839.401734.1475602751170.JavaMail.zimbra@redhat.com> <20161004214219.GN4205@htj.duckdns.org>
+From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 0/6] Add eBPF hooks for cgroups
+Date: Thu, 27 Oct 2016 10:40:14 +0200
+Message-ID: <c9683122-d770-355b-e275-7c446e6d1d0f@zonque.org>
+References: <1477390454-12553-1-git-send-email-daniel@zonque.org>
+ <20161026195933.GA2031@salvia>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161004214219.GN4205@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20161026195933.GA2031@salvia>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
+Cc: htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-So this can still be reproduced in 4.9-rc2 by running trinity as a non-root
-user within 30-minute on this machine on either ext4 or xfs. Below is the
-trace on ext4 and the sysrq-w report.
-
-http://people.redhat.com/qcai/tmp/dmesg-ext4-cgroup-hang
-
-    CAI Qian
-
------ Original Message -----
-> From: "tj" <tj@kernel.org>
-> Sent: Tuesday, October 4, 2016 5:42:19 PM
-> Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
+On 10/26/2016 09:59 PM, Pablo Neira Ayuso wrote:
+> On Tue, Oct 25, 2016 at 12:14:08PM +0200, Daniel Mack wrote:
+> [...]
+>>   Dumping programs once they are installed is problematic because of
+>>   the internal optimizations done to the eBPF program during its
+>>   lifetime. Also, the references to maps etc. would need to be
+>>   restored during the dump.
+>>
+>>   Just exposing whether or not a program is attached would be
+>>   trivial to do, however, most easily through another bpf(2)
+>>   command. That can be added later on though.
 > 
-> ...
-> > Not sure if related, but right after this lockdep happened and trinity
-> > running by a
-> > non-privileged user finished inside the container. The host's systemctl
-> > command just
-> > hang or timeout which renders the whole system unusable.
-> > 
-> > # systemctl status docker
-> > Failed to get properties: Connection timed out
-> > 
-> > # systemctl reboot (hang)
-> > 
-> ...
-> > [ 5535.893675] INFO: lockdep is turned off.
-> > [ 5535.898085] INFO: task kworker/45:4:146035 blocked for more than 120
-> > seconds.
-> > [ 5535.906059]       Tainted: G        W       4.8.0-rc8-fornext+ #1
-> > [ 5535.912865] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> > this message.
-> > [ 5535.921613] kworker/45:4    D ffff880853e9b950 14048 146035      2
-> > 0x00000080
-> > [ 5535.929630] Workqueue: cgroup_destroy css_killed_work_fn
-> > [ 5535.935582]  ffff880853e9b950 0000000000000000 0000000000000000
-> > ffff88086c6da000
-> > [ 5535.943882]  ffff88086c9e2000 ffff880853e9c000 ffff880853e9baa0
-> > ffff88086c9e2000
-> > [ 5535.952205]  ffff880853e9ba98 0000000000000001 ffff880853e9b968
-> > ffffffff817cdaaf
-> > [ 5535.960522] Call Trace:
-> > [ 5535.963265]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> > [ 5535.968817]  [<ffffffff817d33fb>] schedule_timeout+0x3db/0x6f0
-> > [ 5535.975346]  [<ffffffff817cf055>] ? wait_for_completion+0x45/0x130
-> > [ 5535.982256]  [<ffffffff817cf0d3>] wait_for_completion+0xc3/0x130
-> > [ 5535.988972]  [<ffffffff810d1fd0>] ? wake_up_q+0x80/0x80
-> > [ 5535.994804]  [<ffffffff8130de64>] drop_sysctl_table+0xc4/0xe0
-> > [ 5536.001227]  [<ffffffff8130de17>] drop_sysctl_table+0x77/0xe0
-> > [ 5536.007648]  [<ffffffff8130decd>] unregister_sysctl_table+0x4d/0xa0
-> > [ 5536.014654]  [<ffffffff8130deff>] unregister_sysctl_table+0x7f/0xa0
-> > [ 5536.021657]  [<ffffffff810f57f5>]
-> > unregister_sched_domain_sysctl+0x15/0x40
-> > [ 5536.029344]  [<ffffffff810d7704>] partition_sched_domains+0x44/0x450
-> > [ 5536.036447]  [<ffffffff817d0761>] ? __mutex_unlock_slowpath+0x111/0x1f0
-> > [ 5536.043844]  [<ffffffff81167684>] rebuild_sched_domains_locked+0x64/0xb0
-> > [ 5536.051336]  [<ffffffff8116789d>] update_flag+0x11d/0x210
-> > [ 5536.057373]  [<ffffffff817cf61f>] ? mutex_lock_nested+0x2df/0x450
-> > [ 5536.064186]  [<ffffffff81167acb>] ? cpuset_css_offline+0x1b/0x60
-> > [ 5536.070899]  [<ffffffff810fce3d>] ? trace_hardirqs_on+0xd/0x10
-> > [ 5536.077420]  [<ffffffff817cf61f>] ? mutex_lock_nested+0x2df/0x450
-> > [ 5536.084234]  [<ffffffff8115a9f5>] ? css_killed_work_fn+0x25/0x220
-> > [ 5536.091049]  [<ffffffff81167ae5>] cpuset_css_offline+0x35/0x60
-> > [ 5536.097571]  [<ffffffff8115aa2c>] css_killed_work_fn+0x5c/0x220
-> > [ 5536.104207]  [<ffffffff810bc83f>] process_one_work+0x1df/0x710
-> > [ 5536.110736]  [<ffffffff810bc7c0>] ? process_one_work+0x160/0x710
-> > [ 5536.117461]  [<ffffffff810bce9b>] worker_thread+0x12b/0x4a0
-> > [ 5536.123697]  [<ffffffff810bcd70>] ? process_one_work+0x710/0x710
-> > [ 5536.130426]  [<ffffffff810c3f7e>] kthread+0xfe/0x120
-> > [ 5536.135991]  [<ffffffff817d4baf>] ret_from_fork+0x1f/0x40
-> > [ 5536.142041]  [<ffffffff810c3e80>] ? kthread_create_on_node+0x230/0x230
+> I don't know if anyone told you, but during last netconf, this topic
+> took a bit of time of discussion and it was controversial, I would say
+> 1/3 of netdev hackers there showed their concerns, and that's
+> something that should not be skipped IMO.
 > 
-> This one seems to be the offender.  cgroup is trying to offline a
-> cpuset css, which takes place under cgroup_mutex.  The offlining ends
-> up trying to drain active usages of a sysctl table which apprently is
-> not happening.  Did something hang or crash while trying to generate
-> sysctl content?
+> While xdp is pushing bpf programs at the very early packet path, not
+> interfering with the stack, before even entering the generic ingress
+> path. But this is adding hooks to push bpf programs in the middle of
+> our generic stack, this is way different domain.
 
+It's not anything new. These hooks live on the very same level as
+SO_ATTACH_FILTER. The only differences are that the BPF programs are
+stored in the cgroup, and not in the socket, and that they exist for
+egress as well.
+
+> I would really like to explore way earlier filtering, by extending
+> socket lookup facilities. So far the problem seems to be that we need
+> to lookup for broadcast/multicast UDP sockets and those cannot be
+> attach via the usual skb->sk.
+
+We've been there. We've discussed all that. And we concluded that doing
+early demux in the input filter path is not the right approach. That was
+my very first take on that issue back in June 2015 (!), and it was
+rightfully turned down for good reasons.
+
+Adding it there would mean we need to early-demux *every* packet as soon
+as there is *any* such rule installed, and that renders many
+optimizations in the kernel to drop traffic that has no local receiver
+useless.
+
+> I think it would be possible to wrap
+> around this socket code in functions so we can invoke it. I guess
+> filtering of UDP and TCP should be good for you at this stage. This
+> would require more work though, but this would come with no hooks in
+> the stack and packets will not have to consume *lots of cycles* just
+> to be dropped before entering the socket queue.
+>
+> How useful can be to drop lots of unwanted traffic at such a late
+> stage? How would the performance numbers to drop packets would look
+> like? Extremely bad, I predict.
+
+I fear I'm repeating myself here, but this is unfounded. I'm not sure
+why you keep bringing it up. As I said weeks ago - just loading the
+netfilter modules without any rules deployed has more impact than
+running the example program in 6/6 on every packet in the test traffic.
+Please give it a shot yourself.
+
+Also, the eBPF programs can well be used in combination with existing
+netfilter setups. There is no reason to not combine the two levels of
+filtering. Both have their right to exist, and nobody is taking anything
+away.
+
+
+Thanks,
+Daniel
