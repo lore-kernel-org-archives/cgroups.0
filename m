@@ -1,130 +1,103 @@
-From: Jann Horn <jann-XZ1E9jl8jIdeoWH0uzbU5w@public.gmane.org>
-Subject: Re: [kernel-hardening] [RFC v4 03/18] bpf,landlock: Add a new
- arraymap type to deal with (Landlock) handles
-Date: Wed, 26 Oct 2016 22:16:00 +0200
-Message-ID: <20161026201559.GO3334@pc.thejh.net>
-References: <20161026065654.19166-1-mic@digikod.net>
- <20161026065654.19166-4-mic@digikod.net>
- <20161026190147.GN3334@pc.thejh.net>
- <58110BFD.5090005@digikod.net>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: [PATCH v7 0/6] Add eBPF hooks for cgroups
+Date: Wed, 26 Oct 2016 20:35:04 -0700
+Message-ID: <20161027033502.GA43960@ast-mbp.thefacebook.com>
+References: <1477390454-12553-1-git-send-email-daniel@zonque.org>
+ <20161026195933.GA2031@salvia>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="Sr6hGnsCY8KeifOY"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=thejh.net; s=s2016;
-        t=1477512961; bh=WnmuE3YuJesSP/BU0AWfzBXxzmTpmQAPKJSgXDyrN3U=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dJ6cZJymh5NrRx0Huvu6wAlft7b4FVdi4N3iZn1akXnlIx1rsMGJaNt5IIely35GY
-         bdIVdHOv1mB0pz1YkYwuEN5f3FKYzCDJjyTieLiAcK98hMAk7XjwAoCxt8a2k3vhEJ
-         KFkgn8DDwFkjGAyL1f1g8HCMtl3WnYdvXR//OnV9KIRlJHqOZGJb2T8fiww31Qqfuy
-         +dPbOt0p2WySc/QVcXkylUJF+lcI7Twc/6twm3WtZpSZ4TE46kKY3JFPism8dT7M0I
-         ufv+jppIbJSGKzJr+mcADPjsLl/lLr3LQaGsEGzSqAAd19xBiSfD94/2UeL7yi+CWF
-         vVvtHJ72l3g2Q==
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=UoRoie0ukkxgP5kd5agTmntZ/B59/GInN+hTEoIdWhs=;
+        b=aKO/qS5qwaD7CKK804k07XdEpIpgwmfPVY/K9utkra1IWM7K2hWs1cDYr22P1LG1y7
+         i6bPqExppfi0TgsoSw8H/8yvv6rni97lt9YnMDIbnODSb55LzUnbTPIcdcl7yKlMxRGG
+         1m1ttq2UplM1J3MwSuP1sUpNz/sT6U9A6UryGrfx7n/97Th4ldxC2qqozoQfCk1Y10gm
+         BTDYpVSu/Tnvr7K2FkmdQGP/B/O8AJdUN5xFvg95/4toGen8tr002i0I4qzzgFuObQkL
+         ywRH1fwLUH3dXfKl6ZTxselUchG70mVGmS1A7mGWkYtizY/IewIdDRhqXUOEGgIbV6/t
+         Qp9A==
 Content-Disposition: inline
-In-Reply-To: <58110BFD.5090005-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20161026195933.GA2031@salvia>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, David Drysdale <drysdale-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "Eric W . Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Will Drewry <wad-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: Daniel Mack <daniel@zonque.org>, htejun@fb.com, daniel@iogearbox.net, ast@fb.com, davem@davemloft.net, kafai@fb.com, fw@strlen.de, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org
 
+On Wed, Oct 26, 2016 at 09:59:33PM +0200, Pablo Neira Ayuso wrote:
+> On Tue, Oct 25, 2016 at 12:14:08PM +0200, Daniel Mack wrote:
+> [...]
+> >   Dumping programs once they are installed is problematic because of
+> >   the internal optimizations done to the eBPF program during its
+> >   lifetime. Also, the references to maps etc. would need to be
+> >   restored during the dump.
+> > 
+> >   Just exposing whether or not a program is attached would be
+> >   trivial to do, however, most easily through another bpf(2)
+> >   command. That can be added later on though.
+> 
+> I don't know if anyone told you, but during last netconf, this topic
+> took a bit of time of discussion and it was controversial, I would say
+> 1/3 of netdev hackers there showed their concerns, and that's
+> something that should not be skipped IMO.
 
---Sr6hGnsCY8KeifOY
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Though I attended netconf over hangouts, I think it was pretty
+clear that bpf needs 'introspection' of loaded bpf programs and it
+was a universal desire of everyone. Not 1/3 of hackers.
+As commit log says it's an orthogonal work and over the last
+month we've been discussing pros and cons of different approaches.
+The audit infra, tracepoints and other ideas.
+We kept the discussion in private because, unfortunately, public
+discussions are not fruitful due to threads like this one.
 
-On Wed, Oct 26, 2016 at 10:03:09PM +0200, Micka=EBl Sala=FCn wrote:
-> On 26/10/2016 21:01, Jann Horn wrote:
-> > On Wed, Oct 26, 2016 at 08:56:39AM +0200, Micka=EBl Sala=FCn wrote:
-> >> This new arraymap looks like a set and brings new properties:
-> >> * strong typing of entries: the eBPF functions get the array type of
-> >>   elements instead of CONST_PTR_TO_MAP (e.g.
-> >>   CONST_PTR_TO_LANDLOCK_HANDLE_FS);
-> >> * force sequential filling (i.e. replace or append-only update), which
-> >>   allow quick browsing of all entries.
-> >>
-> >> This strong typing is useful to statically check if the content of a m=
-ap
-> >> can be passed to an eBPF function. For example, Landlock use it to sto=
-re
-> >> and manage kernel objects (e.g. struct file) instead of dealing with
-> >> userland raw data. This improve efficiency and ensure that an eBPF
-> >> program can only call functions with the right high-level arguments.
-> >>
-> >> The enum bpf_map_handle_type list low-level types (e.g.
-> >> BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD) which are identified when
-> >> updating a map entry (handle). This handle types are used to infer a
-> >> high-level arraymap type which are listed in enum bpf_map_array_type
-> >> (e.g. BPF_MAP_ARRAY_TYPE_LANDLOCK_FS).
-> >>
-> >> For now, this new arraymap is only used by Landlock LSM (cf. next
-> >> commits) but it could be useful for other needs.
-> >>
-> >> Changes since v3:
-> >> * make handle arraymap safe (RCU) and remove buggy synchronize_rcu()
-> >> * factor out the arraymay walk
-> >>
-> >> Changes since v2:
-> >> * add a RLIMIT_NOFILE-based limit to the maximum number of arraymap
-> >>   handle entries (suggested by Andy Lutomirski)
-> >> * remove useless checks
-> >>
-> >> Changes since v1:
-> >> * arraymap of handles replace custom checker groups
-> >> * simpler userland API
-> > [...]
-> >> +	case BPF_MAP_HANDLE_TYPE_LANDLOCK_FS_FD:
-> >> +		handle_file =3D fget(handle->fd);
-> >> +		if (IS_ERR(handle_file))
-> >> +			return ERR_CAST(handle_file);
-> >> +		/* check if the FD is tied to a user mount point */
-> >> +		if (unlikely(handle_file->f_path.mnt->mnt_flags & MNT_INTERNAL)) {
-> >> +			fput(handle_file);
-> >> +			return ERR_PTR(-EINVAL);
-> >> +		}
-> >> +		path_get(&handle_file->f_path);
-> >> +		ret =3D kmalloc(sizeof(*ret), GFP_KERNEL);
-> >> +		ret->path =3D handle_file->f_path;
-> >> +		fput(handle_file);
-> >=20
-> > You can use fdget() and fdput() here because the reference to
-> > handle_file is dropped before the end of the syscall.
->=20
-> The reference to handle_file is dropped but not the reference to the
-> (inner) path thanks to path_get().
+The further points below were disputed many times in the past.
+Let's address them one more time:
 
-That's irrelevant. As long as you promise to fdput() any references
-acquired using fdget() before any of the following can happen, using
-fdget() is okay:
- - the syscall exits
- - the fd table is shared with a process that might write to it
- - an fd is closed by the kernel
-In other words, you must be able to prove that nobody can remove the
-struct file * from your fd table before you fdput().
+> path. But this is adding hooks to push bpf programs in the middle of
+> our generic stack, this is way different domain.
 
-Taking a long-term reference to an object pointed to by a struct file
-that was looked up with fdget() is fine.
+incorrect. look at socket filters, cls_bpf.
+bpf was running in the middle of the stack for years.
+Even unix pipe and netfilter can be filtered with bpf.
 
---Sr6hGnsCY8KeifOY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> around this socket code in functions so we can invoke it. I guess
+> filtering of UDP and TCP should be good for you at this stage.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+DanielM mentioned few times that it's not only about UDP and TCP.
 
-iQIcBAEBAgAGBQJYEQ7/AAoJED4KNFJOeCOoEFsP/RfNBa0kgGar2d0Pe7pFqsb1
-egAUR2bPYV/FWgrpiX0W0hTB6kjwDtSg8lw048hJA+d9Ns3HIZ2SNh+8l2hN0xrk
-Nxws8Gv4J4Ikrtu2ZmiG3mwlFKMBkGCyo5UehnvA2XrUyJTA13cyzGyPIxBNbQAJ
-HZFrGh9LgIIOTpeZWTdqf3DRsyzAx5CaoZZxDHR+WzTZ2rlsPe8Wt4KyIcfZkFDF
-XVsLEPbryxPvC9jWm4ucWxZsooVfLsdvuXtxOddkMpBn/BrfB6gIQ/fbcM+3EpOv
-NHw8fzZrvmuLiPu6sMVEMvrt2YWpBeiG1Go9dm/icuGhpeaiMXnv9ZaPGsGgERsQ
-Z1xjuuz3qIYuxrOCH1E9l9Nn5OXAy9dORedDN3jafyfSVe4+vyC6SagvgKak+PHP
-1j5bwv72O+FW/zQugD2t1jkPd+O6q4j7DC6hXogSreOTvD/9AC/Waa9jchs32eLR
-3qbTFRBSYZwfNnGtiChC1cfubis1UcLm54qzZ40IfPN3z5RG0PEM6OhVN32YaEkm
-eDiKDUATOL3rpph2vXyHd7+B1D6O1cvQEhyB/IuvjFJhjIgdxhLa1dnnEGe5mZMG
-/6KOKVT1h3AymGe0mMQLLmi9ZhuSrtRTzPBUHDm9c0L5OeLvkkUvvxWH99L9Ae/+
-AclBGkTlccYYtgpFot6x
-=LKSv
------END PGP SIGNATURE-----
+> This
+> would require more work though, but this would come with no hooks in
+> the stack and packets will not have to consume *lots of cycles* just
+> to be dropped before entering the socket queue.
 
---Sr6hGnsCY8KeifOY--
+packets don't consume 'lost of cycles'. This is not a typical
+n-tuple firewall framework. Not a DoS mitigation either. Please read
+the cover letter and earlier submissions.
+It's a framework centered around cgroups.
+_Nothing_ in the current stack provides cgroup based monitoring
+and application protection. Earlier cgroupv1 controllers don't
+scale and we really cannot have more of v1 net controllers.
+At the same time we've been brainstorming how this patch set
+can work with v1. It's not easy. We're not giving up though.
+For now it's v2 only.
+Note that another two patchsets depend on this core cgroup+bpf framework.
+It's not about hooks (socket/skb inspections points).
+Both rx and tx hooks _can_ be moved in the future.
+Unlike netfilter hooks, the hooks in patches 4 and 5 can be moved
+if we find better place for them. It won't affect userspace.
+The only assumption of BPF_CGROUP_INET_[E|IN]GRESS is that
+there will be some place in packet delivery from nic to userspace
+where bpf program can look at L3+ packet only if application is
+under particular cgroup. Patches 4 and 5 are the best places so far.
+It took months to converge on these points. Please see earlier
+discussions on pro/con of every other place we've tried.
+
+> How useful can be to drop lots of unwanted traffic at such a late
+> stage? How would the performance numbers to drop packets would look
+> like? Extremely bad, I predict.
+
+facts check please. Daniel provided numbers before that show
+excellent performance.
+
