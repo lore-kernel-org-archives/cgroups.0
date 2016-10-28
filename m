@@ -1,366 +1,127 @@
-From: "Huang, Ying" <ying.huang@intel.com>
-Subject: [PATCH -v4 RESEND 2/9] mm, memcg: Support to charge/uncharge multiple swap entries
-Date: Fri, 28 Oct 2016 13:56:01 +0800
-Message-ID: <20161028055608.1736-3-ying.huang@intel.com>
-References: <20161028055608.1736-1-ying.huang@intel.com>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20161028055608.1736-1-ying.huang@intel.com>
-Sender: owner-linux-mm@kvack.org
+From: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
+Subject: Re: [PATCH v7 0/6] Add eBPF hooks for cgroups
+Date: Fri, 28 Oct 2016 13:28:39 +0200
+Message-ID: <20161028112839.GA29798@salvia>
+References: <1477390454-12553-1-git-send-email-daniel@zonque.org>
+ <20161026195933.GA2031@salvia>
+ <20161027033502.GA43960@ast-mbp.thefacebook.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20161027033502.GA43960-+o4/htvd0TDFYCXBM6kdu7fOX0fSgVTm@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: tim.c.chen@intel.com, dave.hansen@intel.com, andi.kleen@intel.com, aaron.lu@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Huang Ying <ying.huang@intel.com>, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Huang Ying <ying.huang@intel.com>
+Hi Alexei,
 
-This patch make it possible to charge or uncharge a set of continuous
-swap entries in the swap cgroup.  The number of swap entries is
-specified via an added parameter.
+On Wed, Oct 26, 2016 at 08:35:04PM -0700, Alexei Starovoitov wrote:
+> On Wed, Oct 26, 2016 at 09:59:33PM +0200, Pablo Neira Ayuso wrote:
+> > On Tue, Oct 25, 2016 at 12:14:08PM +0200, Daniel Mack wrote:
+> > [...]
+> > >   Dumping programs once they are installed is problematic because of
+> > >   the internal optimizations done to the eBPF program during its
+> > >   lifetime. Also, the references to maps etc. would need to be
+> > >   restored during the dump.
+> > > 
+> > >   Just exposing whether or not a program is attached would be
+> > >   trivial to do, however, most easily through another bpf(2)
+> > >   command. That can be added later on though.
+> > 
+> > I don't know if anyone told you, but during last netconf, this topic
+> > took a bit of time of discussion and it was controversial, I would say
+> > 1/3 of netdev hackers there showed their concerns, and that's
+> > something that should not be skipped IMO.
+> 
+> Though I attended netconf over hangouts, I think it was pretty
+> clear that bpf needs 'introspection' of loaded bpf programs and it
+> was a universal desire of everyone. Not 1/3 of hackers.
 
-This will be used for the THP (Transparent Huge Page) swap support.
-Where a swap cluster backing a THP may be allocated and freed as a
-whole.  So a set of (HPAGE_PMD_NR) continuous swap entries backing one
-THP need to be charged or uncharged together.  This will batch the
-cgroup operations for the THP swap too.
+Introspection is a different thing, very useful, no doubt. But this
+infrastructure is allowing way more than simple innocuous introspection.
 
-Cc: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
----
- include/linux/swap.h        | 12 ++++++----
- include/linux/swap_cgroup.h |  6 +++--
- mm/memcontrol.c             | 55 +++++++++++++++++++++++++--------------------
- mm/shmem.c                  |  2 +-
- mm/swap_cgroup.c            | 40 ++++++++++++++++++++++++---------
- mm/swap_state.c             |  2 +-
- mm/swapfile.c               |  2 +-
- 7 files changed, 76 insertions(+), 43 deletions(-)
+> As commit log says it's an orthogonal work and over the last
+> month we've been discussing pros and cons of different approaches.
+> The audit infra, tracepoints and other ideas.
+> We kept the discussion in private because, unfortunately, public
+> discussions are not fruitful due to threads like this one.
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index a56523c..001b506 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -552,8 +552,10 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
- 
- #ifdef CONFIG_MEMCG_SWAP
- extern void mem_cgroup_swapout(struct page *page, swp_entry_t entry);
--extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry);
--extern void mem_cgroup_uncharge_swap(swp_entry_t entry);
-+extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
-+				      unsigned int nr_entries);
-+extern void mem_cgroup_uncharge_swap(swp_entry_t entry,
-+				     unsigned int nr_entries);
- extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
- extern bool mem_cgroup_swap_full(struct page *page);
- #else
-@@ -562,12 +564,14 @@ static inline void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- }
- 
- static inline int mem_cgroup_try_charge_swap(struct page *page,
--					     swp_entry_t entry)
-+					     swp_entry_t entry,
-+					     unsigned int nr_entries)
- {
- 	return 0;
- }
- 
--static inline void mem_cgroup_uncharge_swap(swp_entry_t entry)
-+static inline void mem_cgroup_uncharge_swap(swp_entry_t entry,
-+					    unsigned int nr_entries)
- {
- }
- 
-diff --git a/include/linux/swap_cgroup.h b/include/linux/swap_cgroup.h
-index 145306b..b2b8ec7 100644
---- a/include/linux/swap_cgroup.h
-+++ b/include/linux/swap_cgroup.h
-@@ -7,7 +7,8 @@
- 
- extern unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- 					unsigned short old, unsigned short new);
--extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id);
-+extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
-+					 unsigned int nr_ents);
- extern unsigned short lookup_swap_cgroup_id(swp_entry_t ent);
- extern int swap_cgroup_swapon(int type, unsigned long max_pages);
- extern void swap_cgroup_swapoff(int type);
-@@ -15,7 +16,8 @@ extern void swap_cgroup_swapoff(int type);
- #else
- 
- static inline
--unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
-+unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
-+				  unsigned int nr_ents)
- {
- 	return 0;
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ae052b5..581f705 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2383,10 +2383,9 @@ void mem_cgroup_split_huge_fixup(struct page *head)
- 
- #ifdef CONFIG_MEMCG_SWAP
- static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
--					 bool charge)
-+				       int nr_entries)
- {
--	int val = (charge) ? 1 : -1;
--	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], val);
-+	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], nr_entries);
- }
- 
- /**
-@@ -2412,8 +2411,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
- 	new_id = mem_cgroup_id(to);
- 
- 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
--		mem_cgroup_swap_statistics(from, false);
--		mem_cgroup_swap_statistics(to, true);
-+		mem_cgroup_swap_statistics(from, -1);
-+		mem_cgroup_swap_statistics(to, 1);
- 		return 0;
- 	}
- 	return -EINVAL;
-@@ -5433,7 +5432,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
- 		 * let's not wait for it.  The page already received a
- 		 * memory+swap charge, drop the swap entry duplicate.
- 		 */
--		mem_cgroup_uncharge_swap(entry);
-+		mem_cgroup_uncharge_swap(entry, nr_pages);
- 	}
- }
- 
-@@ -5844,9 +5843,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 	 * ancestor for the swap instead and transfer the memory+swap charge.
- 	 */
- 	swap_memcg = mem_cgroup_id_get_online(memcg);
--	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg));
-+	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg), 1);
- 	VM_BUG_ON_PAGE(oldid, page);
--	mem_cgroup_swap_statistics(swap_memcg, true);
-+	mem_cgroup_swap_statistics(swap_memcg, 1);
- 
- 	page->mem_cgroup = NULL;
- 
-@@ -5873,16 +5872,19 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 		css_put(&memcg->css);
- }
- 
--/*
-- * mem_cgroup_try_charge_swap - try charging a swap entry
-+/**
-+ * mem_cgroup_try_charge_swap - try charging a set of swap entries
-  * @page: page being added to swap
-- * @entry: swap entry to charge
-+ * @entry: the first swap entry to charge
-+ * @nr_entries: the number of swap entries to charge
-  *
-- * Try to charge @entry to the memcg that @page belongs to.
-+ * Try to charge @nr_entries swap entries starting from @entry to the
-+ * memcg that @page belongs to.
-  *
-  * Returns 0 on success, -ENOMEM on failure.
-  */
--int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
-+int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
-+			       unsigned int nr_entries)
- {
- 	struct mem_cgroup *memcg;
- 	struct page_counter *counter;
-@@ -5900,25 +5902,29 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
- 	memcg = mem_cgroup_id_get_online(memcg);
- 
- 	if (!mem_cgroup_is_root(memcg) &&
--	    !page_counter_try_charge(&memcg->swap, 1, &counter)) {
-+	    !page_counter_try_charge(&memcg->swap, nr_entries, &counter)) {
- 		mem_cgroup_id_put(memcg);
- 		return -ENOMEM;
- 	}
- 
--	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
-+	if (nr_entries > 1)
-+		mem_cgroup_id_get_many(memcg, nr_entries - 1);
-+	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg), nr_entries);
- 	VM_BUG_ON_PAGE(oldid, page);
--	mem_cgroup_swap_statistics(memcg, true);
-+	mem_cgroup_swap_statistics(memcg, nr_entries);
- 
- 	return 0;
- }
- 
- /**
-- * mem_cgroup_uncharge_swap - uncharge a swap entry
-- * @entry: swap entry to uncharge
-+ * mem_cgroup_uncharge_swap - uncharge a set of swap entries
-+ * @entry: the first swap entry to uncharge
-+ * @nr_entries: the number of swap entries to uncharge
-  *
-- * Drop the swap charge associated with @entry.
-+ * Drop the swap charge associated with @nr_entries swap entries
-+ * starting from @entry.
-  */
--void mem_cgroup_uncharge_swap(swp_entry_t entry)
-+void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_entries)
- {
- 	struct mem_cgroup *memcg;
- 	unsigned short id;
-@@ -5926,17 +5932,18 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry)
- 	if (!do_swap_account)
- 		return;
- 
--	id = swap_cgroup_record(entry, 0);
-+	id = swap_cgroup_record(entry, 0, nr_entries);
- 	rcu_read_lock();
- 	memcg = mem_cgroup_from_id(id);
- 	if (memcg) {
- 		if (!mem_cgroup_is_root(memcg)) {
- 			if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
--				page_counter_uncharge(&memcg->swap, 1);
-+				page_counter_uncharge(&memcg->swap, nr_entries);
- 			else
--				page_counter_uncharge(&memcg->memsw, 1);
-+				page_counter_uncharge(&memcg->memsw,
-+						      nr_entries);
- 		}
--		mem_cgroup_swap_statistics(memcg, false);
-+		mem_cgroup_swap_statistics(memcg, -nr_entries);
- 		mem_cgroup_id_put(memcg);
- 	}
- 	rcu_read_unlock();
-diff --git a/mm/shmem.c b/mm/shmem.c
-index ad7813d..51a0fa9 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1249,7 +1249,7 @@ static int shmem_writepage(struct page *page, struct writeback_control *wbc)
- 	if (!swap.val)
- 		goto redirty;
- 
--	if (mem_cgroup_try_charge_swap(page, swap))
-+	if (mem_cgroup_try_charge_swap(page, swap, 1))
- 		goto free_swap;
- 
- 	/*
-diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
-index 310ac0b..8cee2d1 100644
---- a/mm/swap_cgroup.c
-+++ b/mm/swap_cgroup.c
-@@ -58,21 +58,27 @@ static int swap_cgroup_prepare(int type)
- 	return -ENOMEM;
- }
- 
-+static struct swap_cgroup *__lookup_swap_cgroup(struct swap_cgroup_ctrl *ctrl,
-+						pgoff_t offset)
-+{
-+	struct page *mappage;
-+	struct swap_cgroup *sc;
-+
-+	mappage = ctrl->map[offset / SC_PER_PAGE];
-+	sc = page_address(mappage);
-+	return sc + offset % SC_PER_PAGE;
-+}
-+
- static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
- 					struct swap_cgroup_ctrl **ctrlp)
- {
- 	pgoff_t offset = swp_offset(ent);
- 	struct swap_cgroup_ctrl *ctrl;
--	struct page *mappage;
--	struct swap_cgroup *sc;
- 
- 	ctrl = &swap_cgroup_ctrl[swp_type(ent)];
- 	if (ctrlp)
- 		*ctrlp = ctrl;
--
--	mappage = ctrl->map[offset / SC_PER_PAGE];
--	sc = page_address(mappage);
--	return sc + offset % SC_PER_PAGE;
-+	return __lookup_swap_cgroup(ctrl, offset);
- }
- 
- /**
-@@ -105,25 +111,39 @@ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- }
- 
- /**
-- * swap_cgroup_record - record mem_cgroup for this swp_entry.
-- * @ent: swap entry to be recorded into
-+ * swap_cgroup_record - record mem_cgroup for a set of swap entries
-+ * @ent: the first swap entry to be recorded into
-  * @id: mem_cgroup to be recorded
-+ * @nr_ents: number of swap entries to be recorded
-  *
-  * Returns old value at success, 0 at failure.
-  * (Of course, old value can be 0.)
-  */
--unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
-+unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
-+				  unsigned int nr_ents)
- {
- 	struct swap_cgroup_ctrl *ctrl;
- 	struct swap_cgroup *sc;
- 	unsigned short old;
- 	unsigned long flags;
-+	pgoff_t offset = swp_offset(ent);
-+	pgoff_t end = offset + nr_ents;
- 
- 	sc = lookup_swap_cgroup(ent, &ctrl);
- 
- 	spin_lock_irqsave(&ctrl->lock, flags);
- 	old = sc->id;
--	sc->id = id;
-+	for (;;) {
-+		VM_BUG_ON(sc->id != old);
-+		sc->id = id;
-+		offset++;
-+		if (offset == end)
-+			break;
-+		if (offset % SC_PER_PAGE)
-+			sc++;
-+		else
-+			sc = __lookup_swap_cgroup(ctrl, offset);
-+	}
- 	spin_unlock_irqrestore(&ctrl->lock, flags);
- 
- 	return old;
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 35d7e0e..d3f047b 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -172,7 +172,7 @@ int add_to_swap(struct page *page, struct list_head *list)
- 	if (!entry.val)
- 		return 0;
- 
--	if (mem_cgroup_try_charge_swap(page, entry)) {
-+	if (mem_cgroup_try_charge_swap(page, entry, 1)) {
- 		swapcache_free(entry);
- 		return 0;
- 	}
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 18e247b..f3fc83f 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -806,7 +806,7 @@ static unsigned char swap_entry_free(struct swap_info_struct *p,
- 
- 	/* free if no reference */
- 	if (!usage) {
--		mem_cgroup_uncharge_swap(entry);
-+		mem_cgroup_uncharge_swap(entry, 1);
- 		dec_cluster_info_page(p, p->cluster_info, offset);
- 		if (offset < p->lowest_bit)
- 			p->lowest_bit = offset;
--- 
-2.9.3
+We need to understand what people are trying to solve and it what way.
+That's why we have all those conferences and places to meet and
+discuss too. Please, don't think like that, this is sending the wrong
+message to everyone here, that is kind of: bypass public discussions
+and don't take time to describe what you're doing since it is a waste
+of time. That's not good.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> The further points below were disputed many times in the past.
+> Let's address them one more time:
+> 
+> > path. But this is adding hooks to push bpf programs in the middle of
+> > our generic stack, this is way different domain.
+> 
+> incorrect. look at socket filters, cls_bpf.
+
+Classic socket filters don't allow you to deploy a global policy in
+such a fine grain way as this is doing. Then, cls_bpf is fine since it
+is visible via tc command, so sysadmins can use tools they are
+familiar with to inspect policies and say "oh look, some of the
+processes I'm deploying have installed filters via cls_bpf". However,
+this approach is visible in no way.
+
+[...]
+> > around this socket code in functions so we can invoke it. I guess
+> > filtering of UDP and TCP should be good for you at this stage.
+> 
+> DanielM mentioned few times that it's not only about UDP and TCP.
+
+OK, since this is limited to the scope of inet sockets, let's revisit
+what we have around: DCCP is hopeless, who cares. We also have SCTP,
+that is deployed by telcos in datacenters, it cannot reach that domain
+because many Internet gateways are broken for it, so you may not get
+too far with it. Arguably it would be good to have SCTP support at
+some point, but I guess this is not a priority now. Then, UDPlite
+almost comes for free since it relies on the existing UDP
+infrastructure, it's basically UDP with a bit more features. What
+else?
+
+> > This would require more work though, but this would come with no
+> > hooks in the stack and packets will not have to consume *lots of
+> > cycles* just to be dropped before entering the socket queue.
+> 
+> packets don't consume 'lost of cycles'. This is not a typical
+> n-tuple firewall framework. Not a DoS mitigation either. Please read
+> the cover letter and earlier submissions.
+> It's a framework centered around cgroups.
+> _Nothing_ in the current stack provides cgroup based monitoring
+> and application protection. Earlier cgroupv1 controllers don't
+> scale and we really cannot have more of v1 net controllers.
+> At the same time we've been brainstorming how this patch set
+> can work with v1. It's not easy. We're not giving up though.
+> For now it's v2 only.
+> Note that another two patchsets depend on this core cgroup+bpf framework.
+
+I saw those, I would really like to have a closer look at David
+Ahern's usecase since that skb iif mangling looks kludgy to me, and
+given this is exposing a new helper for general use, not only vrf, it
+would be good to make sure helpers provide something useful for
+everyone. So that new helper is questionable at this stage IMO. I'm
+concerned that people may start using bpf as the adhesive tape to glue
+things to solve probably design problems.
+
+The other patchset, I guess you refer to the new lsm module: I would
+suggest we address one thing at a time, I guess he can starts without
+relying on this chunk, as it can follow up later anyway.
+
+In general, I think bpf is very useful, but I think we have to
+accomodate new things in a way that makes sense into what we have. We
+have traditionally followed an "add in-kernel infrastructured +
+provide userspace interface as control plane" approach for long time.
+I have concerns (and my impression is that others were concerned in
+netconf too) on if we can go from the existing approach to a fully
+uninfrastructured use-bpf-everywhere, from one day to another without
+even taking the time to discuss the consequences of this decision.
+
+Thanks.
