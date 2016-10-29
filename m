@@ -1,44 +1,57 @@
-From: Lorenzo Colitti <lorenzo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH v7 0/6] Add eBPF hooks for cgroups
-Date: Sat, 29 Oct 2016 12:51:37 +0900
-Message-ID: <CAKD1Yr2aRDNUxX8onReZyURufphxGoSTek=Fjk3Wswq9WOVp4w@mail.gmail.com>
+Date: Fri, 28 Oct 2016 21:51:09 -0700
+Message-ID: <20161029045107.GA61294@ast-mbp.thefacebook.com>
 References: <1477390454-12553-1-git-send-email-daniel@zonque.org>
- <20161026195933.GA2031@salvia> <c9683122-d770-355b-e275-7c446e6d1d0f@zonque.org>
+ <20161026195933.GA2031@salvia>
+ <c9683122-d770-355b-e275-7c446e6d1d0f@zonque.org>
+ <CAKD1Yr2aRDNUxX8onReZyURufphxGoSTek=Fjk3Wswq9WOVp4w@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=+A77q7Q+ib5pg9uZCYuw/648ndS8MI/RUY9t1GPfmAc=;
-        b=g7B4M7NiZKDvjtBVLlSnfi/h0886vE/cESGIYNYcxGqfffAumhH8T3xIMdFvL23ltk
-         GhCGRn7vhfd+SZ84o7qz6Vv/Soex4QqCgQ1oGD+oNraRihve4iSVor3hn4UCiNGZ+1jl
-         BlDTd8neZ9tYOoxC/+DdyMfZae0ap6KdR1g5nmZorzI5wjHQ/uXb2+ERZxAdsECvl+Sq
-         VtIxdzkmWZzNU8qZkSUjI9HXathsl3+7+s8RGH622Ev4uA8u4Is+xHlCfgO6gYDm48W4
-         3l5fglDyd/ons02LUE82RY53NoCuknykj6vcaCjHGg7BtA9FkKfljSoWPIkGdIGYsSXo
-         9J/A==
-In-Reply-To: <c9683122-d770-355b-e275-7c446e6d1d0f-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Mwm+FGZcKv+Lm3y5CJGJCdiQ7HbRvyl6RfMTBMGcTBE=;
+        b=MmdhTHTvEzPy84bCJhNdNnbHsK5GxhTPBt9EIRQ2RbUfKmEnE2bmrTO3qlb7F48716
+         +ANK9qMEGtLMrz8BRfmDETKzYnu8JqqxpFzSZQQKfkY8oPvcoEEJUcCXFyxAmbAMR3En
+         4nW8ZW3OwjnpHTUQVSDTxqAqGM7ao5hml2at+7hBBh6ePQdHrDMrAF8a7pDS20A90J9g
+         aKjLzSA6oe89bKT8uzw4CSgzCSFtd20zL9lykNyxjzl/9W6Ti4QxJ0GgSduARCTHhrSg
+         SgIySRCKFiwCqyukD0sQy8hB44g4LG8A4KA/iaBOpnvkWA04GoEKlSiUxDsY9FC86a3+
+         wb+Q==
+Content-Disposition: inline
+In-Reply-To: <CAKD1Yr2aRDNUxX8onReZyURufphxGoSTek=Fjk3Wswq9WOVp4w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
-Cc: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, ast-b10kYP2dOMg@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kafai-b10kYP2dOMg@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Lorenzo Colitti <lorenzo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>, htejun-b10kYP2dOMg@public.gmane.org, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, ast-b10kYP2dOMg@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kafai-b10kYP2dOMg@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Oct 27, 2016 at 5:40 PM, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org> wrote:
-> It's not anything new. These hooks live on the very same level as
-> SO_ATTACH_FILTER. The only differences are that the BPF programs are
-> stored in the cgroup, and not in the socket, and that they exist for
-> egress as well.
+On Sat, Oct 29, 2016 at 12:51:37PM +0900, Lorenzo Colitti wrote:
+> On Thu, Oct 27, 2016 at 5:40 PM, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org> wrote:
+> > It's not anything new. These hooks live on the very same level as
+> > SO_ATTACH_FILTER. The only differences are that the BPF programs are
+> > stored in the cgroup, and not in the socket, and that they exist for
+> > egress as well.
+> 
+> What's the use case for egress?
+> 
+> We (android networking) are currently looking at implementing network
+> accounting via eBPF in order to replace the out-of-tree xt_qtaguid
+> code. A per-cgroup eBPF program run on all traffic would be great. But
+> when we looked at this patchset we realized it would not be useful for
+> accounting purposes because even if a packet is counted here, it might
+> still be dropped by netfilter hooks.
 
-What's the use case for egress?
+don't use out-of-tree and instead drop using this mechanism or
+any other in-kernel method? ;)
+We (facebook infrastructure) have been using iptables and bpf networking
+together with great success. They nicely co-exist and complement each other.
+There is no need to reinvent the wheel if existing solution works.
+iptables are great for their purpose.
 
-We (android networking) are currently looking at implementing network
-accounting via eBPF in order to replace the out-of-tree xt_qtaguid
-code. A per-cgroup eBPF program run on all traffic would be great. But
-when we looked at this patchset we realized it would not be useful for
-accounting purposes because even if a packet is counted here, it might
-still be dropped by netfilter hooks.
+> It seems like it would be much more useful to be able to do this in an
+> iptables rule.
 
-It seems like it would be much more useful to be able to do this in an
-iptables rule.
+there is iptables+cBPF support. It's being used in some cases already.
