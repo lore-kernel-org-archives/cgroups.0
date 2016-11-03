@@ -1,99 +1,70 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 03/25] mm/memcg: Convert to hotplug state machine
-Date: Thu,  3 Nov 2016 15:49:59 +0100
-Message-ID: <20161103145021.28528-4-bigeasy@linutronix.de>
-References: <20161103145021.28528-1-bigeasy@linutronix.de>
+From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
+Date: Thu, 3 Nov 2016 20:00:06 +0200
+Message-ID: <20161103180006.GL3617@leon.nu>
+References: <20161018215134.GB2761@htj.duckdns.org>
+ <CAG53R5UEvkPBM0yFrR=fvEzyCrku2q=rLZyDVrSs9q+3hgbSmQ@mail.gmail.com>
+ <20161019143345.GA18532@htj.duckdns.org>
+ <CAG53R5WUyA7JBn=PeivUc5F5k210xf_HccPXFt3r7ZGYHOPaGA@mail.gmail.com>
+ <20161019192006.GB3044@htj.duckdns.org>
+ <CAG53R5X5dyo7J-UkeMxi_mSxgv=c54fV=anuCZtmf9kaYwDbPw@mail.gmail.com>
+ <20161019200536.GC3044@htj.duckdns.org>
+ <CAG53R5XkRKdo-SCaREZvov3AGp5MSd18RpQ+0HEu-htUzqwOOw@mail.gmail.com>
+ <20161031065441.GY3617@leon.nu>
+ <CAG53R5VKwntDHX101+5aaGoyKMKQuiKQWam575iFAxhmKxhE1g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161103145021.28528-1-bigeasy@linutronix.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="Xsbw7+pkldUUnFG3"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAG53R5VKwntDHX101+5aaGoyKMKQuiKQWam575iFAxhmKxhE1g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org
-Cc: rt@linutronix.de, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Thomas Gleixner <tglx@linutronix.de>
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 
-Install the callbacks via the state machine.
 
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- include/linux/cpuhotplug.h |  1 +
- mm/memcontrol.c            | 24 ++++++++----------------
- 2 files changed, 9 insertions(+), 16 deletions(-)
+--Xsbw7+pkldUUnFG3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
-index 4174083280d7..c622ab349af3 100644
---- a/include/linux/cpuhotplug.h
-+++ b/include/linux/cpuhotplug.h
-@@ -32,6 +32,7 @@ enum cpuhp_state {
- 	CPUHP_BLK_MQ_DEAD,
- 	CPUHP_FS_BUFF_DEAD,
- 	CPUHP_PRINTK_DEAD,
-+	CPUHP_MM_MEMCQ_DEAD,
- 	CPUHP_WORKQUEUE_PREP,
- 	CPUHP_POWER_NUMA_PREPARE,
- 	CPUHP_HRTIMERS_PREPARE,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0f870ba43942..6c2043509fb5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1816,22 +1816,13 @@ static void drain_all_stock(struct mem_cgroup *root=
-_memcg)
- 	mutex_unlock(&percpu_charge_mutex);
- }
-=20
--static int memcg_cpu_hotplug_callback(struct notifier_block *nb,
--					unsigned long action,
--					void *hcpu)
-+static int memcg_hotplug_cpu_dead(unsigned int cpu)
- {
--	int cpu =3D (unsigned long)hcpu;
- 	struct memcg_stock_pcp *stock;
-=20
--	if (action =3D=3D CPU_ONLINE)
--		return NOTIFY_OK;
--
--	if (action !=3D CPU_DEAD && action !=3D CPU_DEAD_FROZEN)
--		return NOTIFY_OK;
--
- 	stock =3D &per_cpu(memcg_stock, cpu);
- 	drain_stock(stock);
--	return NOTIFY_OK;
-+	return 0;
- }
-=20
- static void reclaim_high(struct mem_cgroup *memcg,
-@@ -5774,16 +5765,17 @@ __setup("cgroup.memory=3D", cgroup_memory);
- /*
-  * subsys_initcall() for memory controller.
-  *
-- * Some parts like hotcpu_notifier() have to be initialized from this cont=
-ext
-- * because of lock dependencies (cgroup_lock -> cpu hotplug) but basically
-- * everything that doesn't depend on a specific mem_cgroup structure should
-- * be initialized from here.
-+ * Some parts like memcg_hotplug_cpu_dead() have to be initialized from th=
-is
-+ * context because of lock dependencies (cgroup_lock -> cpu hotplug) but
-+ * basically everything that doesn't depend on a specific mem_cgroup struc=
-ture
-+ * should be initialized from here.
-  */
- static int __init mem_cgroup_init(void)
- {
- 	int cpu, node;
-=20
--	hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
-+	cpuhp_setup_state_nocalls(CPUHP_MM_MEMCQ_DEAD, "mm/memctrl:dead", NULL,
-+				  memcg_hotplug_cpu_dead);
-=20
- 	for_each_possible_cpu(cpu)
- 		INIT_WORK(&per_cpu_ptr(&memcg_stock, cpu)->work,
---=20
-2.10.2
+On Tue, Nov 01, 2016 at 04:33:23PM +0530, Parav Pandit wrote:
+> So my opinion is:
+> (a) Let cgroup define the current standard objects and new reasonable
+> set of vendor specific objects in future.
+> (b) Add new rdma.percentage parameter so that any new standard object
+> or vendor specific object can be abstracted from average end user and
+> applications which are yet to catch up.
+> I believe this takes care of your point (1), (3), (4)?
 
+We (Tejun, Christoph, Matan and me) had a face-to-face talk during
+KS/LPC and decided that the best way to move forward is to export to
+user one object (global HCA like) only and don't export anything else.
+
+All internal calculations will be based on this percentage.
+
+Once the cgroups users will come with reasonable justification why they
+need to configure different unexposed objects, we will expose them.
+
+--Xsbw7+pkldUUnFG3
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJYG3slAAoJEORje4g2clinsF8QAK2K6TSU8wpObeLJ0M0BSQ3d
+BGu9r7PyK3HQiQMy0qjoT2/uQRFGh28xXKsRcci8y8EkQaiI/xsEXU8Nw27Ihe32
+9yMH5t6GjG00XjxCLQOQGpGjKyS4aSQGj1lsYUmhfeMThKj69uW2h6Ihzst3a9ST
+WVqr1P+XLstQI/8BlO7PhzD+ulJoTPUN5Dl92pUgmIF9Qsmz32V/DSb1zuw1ymuq
+M9DbJ/uU7WilsvTrxFFLmvlR3/Rpzon8YrL6p1xsEVh4LsO4iIzlpS5Jmrl1UYlc
+7zeuVVmI8udUuTmYBQF4jZ5K+PZ36KC3DaI/341S0VfEYZ7/3NUyywWnz4Urv3qz
+c3h+b0l0LgEpnaH0ahg+hhjPN12WHMAp9Nddyci1rRUu+zoLbs5GIMz7rwN4H6WY
+XFIpnNSUzXIE2hJqBXAJziUKjrmwv8Rod2Ua6icEC90Ty0CSA/lI6Hw5cPmKEj23
+TmSPKFEiKlR9GnBJ0O9GTbhOoNQGUIl64yvnSB2oCE4XcQLVnjv+JZZHRkYPa6i9
+eqr90dsn7pPTKFKvC4rg1EmoXZSVA3Arp3GUlc/4YmBuAVxQSiuQL8nl5mxCTVRh
+qrtYjYE/6Yd+MVzI/S/sFkGZ2h1JjjmZnMe1DeCgU3KhNeg59Joav+bdf6P6vCX3
+2IOHk54mfPC4RC4rMXgm
+=FK5S
+-----END PGP SIGNATURE-----
+
+--Xsbw7+pkldUUnFG3--
