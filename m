@@ -1,83 +1,91 @@
-From: Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: RE: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
-Date: Fri, 4 Nov 2016 05:06:58 +0000
-Message-ID: <AM4PR0501MB28025BE002CBA9D04675A5A5B1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
-References: <20161018215134.GB2761@htj.duckdns.org>
- <CAG53R5UEvkPBM0yFrR=fvEzyCrku2q=rLZyDVrSs9q+3hgbSmQ@mail.gmail.com>
- <20161019143345.GA18532@htj.duckdns.org>
- <CAG53R5WUyA7JBn=PeivUc5F5k210xf_HccPXFt3r7ZGYHOPaGA@mail.gmail.com>
- <20161019192006.GB3044@htj.duckdns.org>
- <CAG53R5X5dyo7J-UkeMxi_mSxgv=c54fV=anuCZtmf9kaYwDbPw@mail.gmail.com>
- <20161019200536.GC3044@htj.duckdns.org>
- <CAG53R5XkRKdo-SCaREZvov3AGp5MSd18RpQ+0HEu-htUzqwOOw@mail.gmail.com>
- <20161031065441.GY3617@leon.nu>
- <CAG53R5VKwntDHX101+5aaGoyKMKQuiKQWam575iFAxhmKxhE1g@mail.gmail.com>
- <20161103180006.GL3617@leon.nu>
- <AM4PR0501MB2802030EE9E359133E04439CB1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
+Date: Fri, 4 Nov 2016 11:14:23 +0530
+Message-ID: <CAG53R5WdauHpML66g-O6zj+j_DUYWJMPjmL1xDaSxwDmPPYm2A@mail.gmail.com>
+References: <20161018215134.GB2761@htj.duckdns.org> <CAG53R5UEvkPBM0yFrR=fvEzyCrku2q=rLZyDVrSs9q+3hgbSmQ@mail.gmail.com>
+ <20161019143345.GA18532@htj.duckdns.org> <CAG53R5WUyA7JBn=PeivUc5F5k210xf_HccPXFt3r7ZGYHOPaGA@mail.gmail.com>
+ <20161019192006.GB3044@htj.duckdns.org> <CAG53R5X5dyo7J-UkeMxi_mSxgv=c54fV=anuCZtmf9kaYwDbPw@mail.gmail.com>
+ <20161019200536.GC3044@htj.duckdns.org> <CAG53R5XkRKdo-SCaREZvov3AGp5MSd18RpQ+0HEu-htUzqwOOw@mail.gmail.com>
+ <20161031065441.GY3617@leon.nu> <CAG53R5VKwntDHX101+5aaGoyKMKQuiKQWam575iFAxhmKxhE1g@mail.gmail.com>
+ <20161103180006.GL3617@leon.nu> <AM4PR0501MB2802030EE9E359133E04439CB1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
  <CAG53R5Vd58wEBKgAajp9VvJmB5sO2Umii0JE4XaLYKbfrJrxyg@mail.gmail.com>
  <AM4PR0501MB2802E87F709F41DDEC20B7C9B1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
- <CAG53R5UyZPh9wduPZGRg2P09n2Og8oODqb+QW=7ryAPqJDa6Vw@mail.gmail.com>
+ <CAG53R5UyZPh9wduPZGRg2P09n2Og8oODqb+QW=7ryAPqJDa6Vw@mail.gmail.com> <AM4PR0501MB28025BE002CBA9D04675A5A5B1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=7LSb83klb5g9Pid3HA9+QI3sPhvAmklAxHTYJm5lyLc=;
- b=V5IEb9NrKmHIb1AIvcSgHuc9Ru17AB8UGMFXJIckKcSe6s9Z1ErCvTjBdZxRURIaz/emTfx/7YItY0kdg/fW1DEkNsVEXM78KsPHs02x7ytHsPbUPfAY1QB9QUbxA7jQSPLjf9eo/+Hpg0mKCH/MNcCb0bUxqpw2vVV1lbYsEY4=
-In-Reply-To: <CAG53R5UyZPh9wduPZGRg2P09n2Og8oODqb+QW=7ryAPqJDa6Vw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=Aao95wZSOCtonxm5hSRezC2sWFtiBkQQjuEqWISdcQ8=;
+        b=A2xZs/sE5pDG5yr5S8PUaxhV1aHkbKvpOlYBGV0CIUsgj4hdlUtItLABofFNWqcEHH
+         XV76M7Sr3KlbJEkZaGS45sa1ws0o/YxDtDNwfT4Gtwk51HI8K7IeHivFyUMZW/ObMktE
+         uGHhSIj8GdC7f5ozll7Vqf59xiqWvgtnRij/4MZKX45++4Ds0RIAYOzk7hNaAXBgbYgi
+         2i06FNHZo9eah9sKkxvjYjRdQY2tUxgxqT2GnjnMjfs5NveV+AW+X2bB/TxpUQKEKUhB
+         6IhGVB6kvWEZkDeXLr5NXbNrjT/KqazEb8lIyAI7X8EXSyW7YJXTcHjOKsMKLYz1TDqj
+         wUMA==
+In-Reply-To: <AM4PR0501MB28025BE002CBA9D04675A5A5B1A20-dp/nxUn679jTOi/YP668sMDSnupUy6xnnBOFsp37pqbUKgpGm//BTAC/G2K4zDHf@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 Cc: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 
-PiBGcm9tOiBQYXJhdiBQYW5kaXQgW21haWx0bzpwYW5kaXQucGFyYXZAZ21haWwuY29tXQ0KDQo+
-IA0KPiBPbiBGcmksIE5vdiA0LCAyMDE2IGF0IDEwOjIyIEFNLCBMaXJhbiBMaXNzIDxsaXJhbmxA
-bWVsbGFub3guY29tPiB3cm90ZToNCj4gPj4gRnJvbTogUGFyYXYgUGFuZGl0IFttYWlsdG86cGFu
-ZGl0LnBhcmF2QGdtYWlsLmNvbV0NCj4gPg0KPiA+PiA+DQo+ID4+ID4gQSBnbG9iYWwgSENBIG1l
-dHJpYyBpcyBpbmRlZWQgaW4gdGhlIHJpZ2h0IGRpcmVjdGlvbi4NCj4gPj4gPiBIb3dldmVyLCBy
-ZXRoaW5raW5nIHRoaXMsIEkgdGhpbmsgdGhhdCB3ZSBzaG91bGQgc3BlY2lmeSB0aGUgbWV0cmlj
-DQo+ID4+ID4gaW4gdGVybXMgb2YNCj4gPj4gUkRNQSBvYmplY3RzIHJhdGhlciB0aGFuIHBlcmNl
-bnRhZ2UuDQo+ID4+ID4gQmFzaWNhbGx5LCBhbnkgcmVzb3VyY2UgdGhhdCBjb25zdW1lcyBhbiBJ
-RFIgaXMgY2hhcmdlZC4NCj4gPj4gPg0KPiA+PiBJZiBtZXRyaWMgZGVmaW5pdGlvbiBpcyBiYXNl
-ZCBvbiBSRE1BIG9iamVjdHMgKGNvdW50KSBhbmQgbm90IGJhc2VkDQo+ID4+IG9uIHBlcmNlbnRh
-Z2UsIGhvdyB3b3VsZCB1c2VyIHNwZWNpZnkgdGhlIG1ldHJpYyB3aXRob3V0IHJlYWxseQ0KPiA+
-PiBzcGVjaWZ5aW5nIG9iamVjdCB0eXBlLg0KPiA+PiBDdXJyZW50IHBhdGNoIGRlZmluZXMgdGhl
-IG1ldHJpYyBhcyBhYnNvbHV0ZSBudW1iZXJzIGFuZCBvYmplY3RzIGFzIHdlbGwuDQo+ID4+DQo+
-ID4NCj4gPiBUaGF0IGlzIHRoZSByZXF1ZXN0ZWQgY2hhbmdlLiBUaGUgYWJzb2x1dGUgbnVtYmVy
-IHdvdWxkIGFjY291bnQgZm9yIGFueQ0KPiBvYmplY3QgYWxsb2NhdGlvbi4gV2Ugd29uJ3QgZGlz
-dGluZ3Vpc2ggYmV0d2VlbiB0eXBlcy4NCj4gPiBPbmx5IGEgc2luZ2xlIGNvdW50ZXIgKHBlciBk
-ZXZpY2UpLg0KPiA+DQo+IA0KPiBJbiB0aGF0IGNhc2UgdWNvbnRleHQgZGVzZXJ2ZSBhIGFkZGl0
-aW9uYWwgY291bnQuIEJlY2F1c2UgdGhhdCBpcyBoYW5kZnVsIGluDQo+IHJhbmdlIG9mIDI1NiB0
-byAxSy4NCj4gSWYgd2UgZ2l2ZSBhYnNvbHV0ZSBjb25zb2xpZGF0ZWQgbnVtYmVyIGFzIDIwMDAs
-IG9uZSBjb250YWluZXIgd2lsbCBhbGxvY2F0ZSBhbGwNCj4gdGhlIGRvb3JiZWxsIHVjdHggYW5k
-IG5vIG90aGVyIGNvbnRhaW5lciBjYW4gcnVuLg0KPiBQZXJjZW50YWdlIHdvcmtzIGZvciB0aGlz
-IHBhcnRpY3VsYXIgY2FzZS4NCj4gDQoNCkhtbS4uDQpJIGd1ZXNzIHRoYXQgeW91IGFyZSByaWdo
-dC4NCg0KU28gd2UgY2FuIGFkZCBhbm90aGVyIGNvdW50IGZvciAiSENBIGhhbmRsZXMiLCBvciBh
-bHRlcm5hdGl2ZWx5LCBlYWNoIHByb3ZpZGVyIHdpbGwgcmVzdHJpY3QgdGhlIG51bWJlciBvZiBo
-YW5kbGVzIHBlciBkZXZpY2UgdG8gYSByZWFzb25hYmxlIHNtYWxsIG51bWJlciAod2hpY2ggd29u
-J3QgYmUgdHJlYXRlZCBhcyBvbmUgb2YgdGhlICJIQ0EgcmVzb3VyY2VzIikuDQpUeXBpY2FsbHks
-IGEgcHJvY2VzcyBzaG91bGRuJ3QgbmVlZCB0byBvcGVuIG1vcmUgdGhhbiBhIHNpbmdsZSBoYW5k
-bGUuLi4NCg0KPiANCj4gPj4gQ29tbWVudCBmcm9tIExlb24gYWJvdXQgaGlzIGRpc2N1c3Npb24g
-d2l0aCBNYXRhbiwgVGVqdW4sIENocmlzdG9waA0KPiA+PiBzYXlzIG9wcG9zaXRlIG9mIHRoaXMg
-Zm9yIHVzZXIgbGV2ZWwgY29uZmlndXJhdGlvbi4NCj4gPj4gTWF5IGJlIEkgYW0gbWlzc2luZyBz
-b21ldGhpbmcuDQo+ID4+DQo+ID4+ID4gVGhlIHJlYXNvbnMgYXJlOg0KPiA+PiA+IC0gU29tZSBI
-Q0FzIGNhbiBoYXZlIGEgaHVnZSBhbW91bnQgb2YgcmVzb3VyY2VzIChtaWxsaW9ucyBvZg0KPiA+
-PiA+IG9iamVjdHMpLCBvZg0KPiA+PiB3aGljaCBldmVuIGEgc21hbGwgcGVyY2VudGFnZSBtYXkg
-Y29uc3VtZSBhIGNvbnNpZGVyYWJsZSBhbW91bnQgb2YNCj4gPj4ga2VybmVsIG1lbW9yeS4NCj4g
-Pj4gPiAtIFdlIGZvbGxvdyB0aGUgc2FtZSBub3Rpb24gYXMgRkQgbGltaXRzLCB3aGljaCBhY2Nv
-dW50cyBmb3INCj4gPj4gPiBudW1lcm91cyByZXNvdXJjZSB0eXBlcyB0aGF0IGNvbnN1bWUgZmls
-ZSBvYmplY3RzIGluIHRoZSBrZXJuZWwNCj4gPj4gPiAoZmlsZXMsIHBpcGVzLA0KPiA+PiA+IHNv
-Y2tldHMpDQo+ID4+ID4gLSBUaGUgbmFtZXNwYWNlcyBmb3IgUkRNQSByZXNvdXJjZXMgYXJlIGxh
-cmdlICh1c3VhbGx5IDI0IGJpdHMpLiBTbw0KPiA+PiA+IGV2ZW4gbGFyZ2UgcmVzb3VyY2UgY291
-bnRzIHdvbid0IGNvbWUgbm93aGVyZSBjbG9zZSBpbiBkZXBsZXRpbmcNCj4gPj4gPiB0aGUgbmFt
-ZXNwYWNlLiAoQ29tcGFyZSB0aGF0IHRvIHRoZSBtZXJlIDY0SyBzb2NrZXQgcG9ydCBzcGFjZS4u
-LikNCj4gPj4gPiAtIFRoZSBtZXRyaWMgbWVhc3VyZXMgdGhlIGFjdHVhbCBhcHBsaWNhdGlvbiB1
-c2FnZSBvZiByZXNvdXJjZXMsDQo+ID4+ID4gcmF0aGVyIHRoYW4NCj4gPj4gcHJvcG9ydGlvbmFs
-IHRvIHRoZSByZXNvdXJjZXMgb2YgYSBnaXZlbiBIQ0EgYWRhcHRlci4NCj4gPj4gPiAtIFdlIGNh
-biBjb250aW51ZSB0byB1c2UgdGhlIGNncm91cCBtZWNoYW5pc20gZm9yIGNoYXJnaW5nIChqdXN0
-IGFzDQo+ID4+ID4gaW4gdGhlIG9yaWdpbmFsIHByb3Bvc2FsKQ0KPiA+PiA+DQo+ID4+ID4gSSBo
-YXZlIGRpc2N1c3NlZCB0aGlzIG1hdHRlciB3aXRoIERvdWcgYW5kIE1hdGFuLCBhbmQgaXQgc2Vl
-bXMgbGlrZQ0KPiA+PiA+IHRoaXMgaXMgdGhlDQo+ID4+IHJpZ2h0IGRpcmVjdGlvbi4NCj4gPj4g
-PiAtLUxpcmFuDQo+ID4+ID4NCg==
+Hi Liran,
+
+On Fri, Nov 4, 2016 at 10:36 AM, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+>> From: Parav Pandit [mailto:pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org]
+>
+>>
+>> On Fri, Nov 4, 2016 at 10:22 AM, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+>> >> From: Parav Pandit [mailto:pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org]
+>> >
+>> >> >
+>> >> > A global HCA metric is indeed in the right direction.
+>> >> > However, rethinking this, I think that we should specify the metric
+>> >> > in terms of
+>> >> RDMA objects rather than percentage.
+>> >> > Basically, any resource that consumes an IDR is charged.
+>> >> >
+>> >> If metric definition is based on RDMA objects (count) and not based
+>> >> on percentage, how would user specify the metric without really
+>> >> specifying object type.
+>> >> Current patch defines the metric as absolute numbers and objects as well.
+>> >>
+>> >
+>> > That is the requested change. The absolute number would account for any
+>> object allocation. We won't distinguish between types.
+>> > Only a single counter (per device).
+>> >
+>>
+>> In that case ucontext deserve a additional count. Because that is handful in
+>> range of 256 to 1K.
+>> If we give absolute consolidated number as 2000, one container will allocate all
+>> the doorbell uctx and no other container can run.
+>> Percentage works for this particular case.
+>>
+>
+> Hmm..
+> I guess that you are right.
+>
+> So we can add another count for "HCA handles",
+I prefer this. This keeps it vendor agnostic and clean if we don't go
+percentage route.
+Would indirection table also fall in this category?
+
+> or alternatively, each provider will restrict the number of handles per device to a reasonable small number (which
+> won't be treated as one of the "HCA resources").
+This would require vendor drivers to get the understanding of cgroup
+object and pid and that breaks the modular approach. I like to avoid
+this.
+
+> Typically, a process shouldn't need to open more than a single handle...
+Right. well behaved application won't do multiple handles.
+
+
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
