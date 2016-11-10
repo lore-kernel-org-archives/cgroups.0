@@ -1,101 +1,85 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Re: [RESEND][PATCH v4] cgroup: Use CAP_SYS_RESOURCE to allow a
- process to migrate other tasks between cgroups
-Date: Tue, 8 Nov 2016 16:12:28 -0800
-Message-ID: <CALCETrW_mPHneTvcAM6HyBLCJqcwKmcYEoC+kseyuyQZzj2a=A@mail.gmail.com>
-References: <1478647728-30357-1-git-send-email-john.stultz@linaro.org>
- <CALCETrU5fCWoe0RXfKWuN7Zt9vLvoyHFcZnVqeqiKBpSKrMrxA@mail.gmail.com> <20161109000342.GA42532@ast-mbp.thefacebook.com>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv12 0/3] rdmacg: IB/core: rdma controller support
+Date: Thu, 10 Nov 2016 13:11:18 +0530
+Message-ID: <CAG53R5XqZwrYsdX=JQ1D4cDB0h65RDQVb=VCiaR5TXuf_uoO0Q@mail.gmail.com>
+References: <20161018215134.GB2761@htj.duckdns.org> <CAG53R5UEvkPBM0yFrR=fvEzyCrku2q=rLZyDVrSs9q+3hgbSmQ@mail.gmail.com>
+ <20161019143345.GA18532@htj.duckdns.org> <CAG53R5WUyA7JBn=PeivUc5F5k210xf_HccPXFt3r7ZGYHOPaGA@mail.gmail.com>
+ <20161019192006.GB3044@htj.duckdns.org> <CAG53R5X5dyo7J-UkeMxi_mSxgv=c54fV=anuCZtmf9kaYwDbPw@mail.gmail.com>
+ <20161019200536.GC3044@htj.duckdns.org> <CAG53R5XkRKdo-SCaREZvov3AGp5MSd18RpQ+0HEu-htUzqwOOw@mail.gmail.com>
+ <20161031065441.GY3617@leon.nu> <CAG53R5VKwntDHX101+5aaGoyKMKQuiKQWam575iFAxhmKxhE1g@mail.gmail.com>
+ <20161103180006.GL3617@leon.nu> <AM4PR0501MB2802030EE9E359133E04439CB1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
+ <CAG53R5Vd58wEBKgAajp9VvJmB5sO2Umii0JE4XaLYKbfrJrxyg@mail.gmail.com>
+ <AM4PR0501MB2802E87F709F41DDEC20B7C9B1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
+ <CAG53R5UyZPh9wduPZGRg2P09n2Og8oODqb+QW=7ryAPqJDa6Vw@mail.gmail.com>
+ <AM4PR0501MB28025BE002CBA9D04675A5A5B1A20@AM4PR0501MB2802.eurprd05.prod.outlook.com>
+ <CAG53R5WdauHpML66g-O6zj+j_DUYWJMPjmL1xDaSxwDmPPYm2A@mail.gmail.com> <HE1PR0501MB2812298C05431B08B0F408EEB1A60@HE1PR0501MB2812.eurprd05.prod.outlook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
+        d=gmail.com; s=20120113;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc;
-        bh=f2u/UizR7J8648Nyi1AkSTcX2kpNizLlbmybOcIc5OY=;
-        b=iUdv67GBOWxgOQ+/zYDfnKdastZ3xsFfL5iETyuLTGSnEUU0DGZEfuogvbsDiAdrXC
-         ShSCTxeofDSauOQc5rFjCfnMac12qy16fF7qGPLC8lCkSW+g7FzSm9zRYeVuzNRFVLiq
-         ALo4CI910DG900aBhexy4EB0ACTO+db/EcTS7oZyTau38jRFwssDirzYlOeA9ia/1bQF
-         jJ3q/yciwXxjn78C8B5jSGCUr4XurVeiunP02nrlTHk2KK5OlP/0coOzZQwhLApYyuiG
-         yHrnDZWbekP306UoCrPiIHfxJZUyZRzbQRaa3qMlc8Vmi3DOk9vJ7Oioa+U7JVvmDOjg
-         hrgg==
-In-Reply-To: <20161109000342.GA42532@ast-mbp.thefacebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=YVMGgK+nMMnakKcQNmkNZ8Lr47E4zpLMu6nr8KNgEbY=;
+        b=Ikd7TnJtCPNBtHXbQg4HkF3TGrAokURIw2vqy0B6PAMy6CuXN92nDeP/5r2LUncT51
+         sB/Jvv9jyiNmbysCZANpWjaJc7qyWyu83Zg8YA0Zs8785Fcibtjq6ArmbMNpe82HY/Pn
+         nbWajF5mggRmvHkVSA8x8wHyjbD8MRKevP1FhTSDg2TH5n/6cyXY0HFzYcxt5ZsNn04A
+         osRI+4+LjB/mvenc36hoLLAMfGdxYM0fKLDXYb1CUWLXMZTGoCiBhXVIYcnJ+yHoPleT
+         cmzt3mliiYRohJuyGsn6nIKv/D2VR81XAxhhwCM3MG3+9McQClxG2Gtp880XZbme6L1h
+         sZoQ==
+In-Reply-To: <HE1PR0501MB2812298C05431B08B0F408EEB1A60-692Kmc8YnlIVrnpjwTCbp8DSnupUy6xnnBOFsp37pqbUKgpGm//BTAC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Cc: Andy Lutomirski <luto@kernel.org>, John Stultz <john.stultz@linaro.org>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@digikod.net>, Daniel Mack <daniel@zonque.org>, "David S. Miller" <davem@davemloft.net>, kafai@fb.com, fw@strlen.de, Harald Hoyer <harald@redhat.com>, Network Development <netdev@vger.kernel.org>, Sargun Dhillon <sargun@sargun.me>, Pablo Neira Ayuso <pablo@netfilter.org>, lkml <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Todd Kjos <tkjos@google.co>
+To: Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 
-On Tue, Nov 8, 2016 at 4:03 PM, Alexei Starovoitov
-<alexei.starovoitov@gmail.com> wrote:
-> On Tue, Nov 08, 2016 at 03:51:40PM -0800, Andy Lutomirski wrote:
->> On Tue, Nov 8, 2016 at 3:28 PM, John Stultz <john.stultz@linaro.org> wrote:
->> > This patch adds logic to allows a process to migrate other tasks
->> > between cgroups if they have CAP_SYS_RESOURCE.
->> >
->> > In Android (where this feature originated), the ActivityManager tracks
->> > various application states (TOP_APP, FOREGROUND, BACKGROUND, SYSTEM,
->> > etc), and then as applications change states, the SchedPolicy logic
->> > will migrate the application tasks between different cgroups used
->> > to control the different application states (for example, there is a
->> > background cpuset cgroup which can limit background tasks to stay
->> > on one low-power cpu, and the bg_non_interactive cpuctrl cgroup can
->> > then further limit those background tasks to a small percentage of
->> > that one cpu's cpu time).
->> >
->> > However, for security reasons, Android doesn't want to make the
->> > system_server (the process that runs the ActivityManager and
->> > SchedPolicy logic), run as root. So in the Android common.git
->> > kernel, they have some logic to allow cgroups to loosen their
->> > permissions so CAP_SYS_NICE tasks can migrate other tasks between
->> > cgroups.
->> >
->> > I feel the approach taken there overloads CAP_SYS_NICE a bit much
->> > for non-android environments.
->> >
->> > So this patch, as suggested by Michael Kerrisk, simply adds a
->> > check for CAP_SYS_RESOURCE.
->> >
->> > I've tested this with AOSP master, and this seems to work well
->> > as Zygote and system_server already use CAP_SYS_RESOURCE. I've
->> > also submitted patches against the android-4.4 kernel to change
->> > it to use CAP_SYS_RESOURCE, and the Android developers just merged
->> > it.
->> >
->>
->> I hate to say it, but I think I may see a problem.  Current
->> developments are afoot to make cgroups do more than resource control.
->> For example, there's Landlock and there's Daniel's ingress/egress
->> filter thing.  Current cgroup controllers can mostly just DoS their
->> controlled processes.  These new controllers (or controller-like
->> things) can exfiltrate data and change semantics.
->>
->> Does anyone have a security model in mind for these controllers and
->> the cgroups that they're attached to?  I'm reasonably confident that
->> CAP_SYS_RESOURCE is not the answer...
+Hi Leon, Tejun, Christoph, Liran,  Doug, Matan,
+
+So are you ok with below proposal?
+
+1. Define two resources by rdmacg.
+(a) hca_handles (covers doorbell pages)
+(b) hca_resources (mr, pd, qp, srq, vendor defined, all consolidated count)
+Both cannot be combined as explained in [1].
+
+2. User configures absolute count for above two resources (similar to
+today's file descriptors, pid cgroup controller max limit)
+
+Leon,
+Let us know if you have any further discussions during LPC on
+questions of [2] in using percentage based scheme or otherwise.
+
+Parav
+
+[1] https://www.spinics.net/lists/linux-rdma/msg42771.html
+[2] https://www.spinics.net/lists/linux-rdma/msg42768.html
+
+
+
+On Tue, Nov 8, 2016 at 1:42 PM, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+>> From: Parav Pandit [mailto:pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org]
 >
-> and specifically the answer is... ?
-> Also would be great if you start with specifying the question first
-> and the problem you're trying to solve.
+>> >
+>> > Hmm..
+>> > I guess that you are right.
+>> >
+>> > So we can add another count for "HCA handles",
+>> I prefer this. This keeps it vendor agnostic and clean if we don't go percentage
+>> route.
 >
-
-I don't have a good answer right now.  Here are some constraints, though:
-
-1. An insufficiently privileged process should not be able to move a
-victim into a dangerous cgroup.
-
-2. An insufficiently privileged process should not be able to move
-itself into a dangerous cgroup and then use execve to gain privilege
-such that the execve'd program can be compromised.
-
-3. An insufficiently privileged process should not be able to make an
-existing cgroup dangerous in a way that could compromise a victim in
-that cgroup.
-
-4. An insufficiently privileged process should not be able to make a
-cgroup dangerous in a way that bypasses protections that would
-otherwise protect execve() as used by itself or some other process in
-that cgroup.
-
-Keep in mind that "dangerous" may apply to a cgroup's descendents in
-addition to the cgroup being controlled.
+> OK; let's do it.
+>
+>> Would indirection table also fall in this category?
+>>
+>
+> No. It's just another HCA resource...
+>
+>> > or alternatively, each provider will restrict the number of handles
+>> > per device to a reasonable small number (which won't be treated as one of the
+>> "HCA resources").
+>> This would require vendor drivers to get the understanding of cgroup object
+>> and pid and that breaks the modular approach. I like to avoid this.
+>>
+>> > Typically, a process shouldn't need to open more than a single handle...
+>> Right. well behaved application won't do multiple handles.
