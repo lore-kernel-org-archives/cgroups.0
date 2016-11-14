@@ -1,67 +1,110 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: [RFC v4 00/18] Landlock LSM: Unprivileged sandboxing
-Date: Sun, 13 Nov 2016 09:38:11 -0800
-Message-ID: <CAADnVQJURKRFbNiVTJ76XUWZ=P+DqyP0QMVZrCutzvS28bkhGw@mail.gmail.com>
-Reply-To: kernel-hardening@lists.openwall.com
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <kernel-hardening-return-5331-glkh-kernel-hardening=m.gmane.org@lists.openwall.com>
-List-Post: <mailto:kernel-hardening@lists.openwall.com>
-List-Help: <mailto:kernel-hardening-help@lists.openwall.com>
-List-Unsubscribe: <mailto:kernel-hardening-unsubscribe@lists.openwall.com>
-List-Subscribe: <mailto:kernel-hardening-subscribe@lists.openwall.com>
+From: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
+Subject: [PATCH nf-next,RFC] netfilter: nft_meta: add cgroup version 2 support
+Date: Mon, 14 Nov 2016 10:12:41 +0100
+Message-ID: <1479114761-19534-1-git-send-email-pablo@netfilter.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:from:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=Jd4/SjotRiJEQhOqwGvW8uMQo3jfELsEcnOdU++bawc=;
-        b=ywJcwyM4jWcE01Du6ZN/3bKSlAcQhb5YiCOVGgrIoILQNdWKd8Sr+Zjbe8a7ezYVH4
-         K2uALQa6tcsO12pvMxklYpwqg6RoiEFBfC09+gF8w0IbBEmDvvdkVyGAgNO0j6gZ1Jws
-         poSfvOs1Ux9rqRmYxYDf9Vn/wuJb57TY4o+K7ubAoPTk3Wq+PaIE2FsmTNNAnWjVnHyt
-         Cwj3Royg0wiqIHTTgy26JM6crdjWh/lIWtyk2vMWo5qsqENBCFwyPUtIeyweCHIngHm5
-         STgNCxiBCK6j2T+kLPjmZeQsGqEk77I11x8iPchITkxgMF49ajWjs921k55Kn84/CAvO
-         k9ng==
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@digikod.net>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Andy Lutomirski <luto@amacapital.net>, Daniel Borkmann <daniel@iogearbox.net>, Daniel Mack <daniel@zonque.org>, David Drysdale <drysdale@google.com>, "David S . Miller" <davem@davemloft.net>, "Eric W . Biederman" <ebiederm@xmission.com>, James Morris <james.l.morris@oracle.com>, Jann Horn <jann@thejh.net>, Kees Cook <keescook@chromium.org>, Paul Moore <pmoore@redhat.com>, Sargun Dhillon <sargun@sargun.me>, "Serge E . Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Thomas Graf <tgraf@suug.ch>, Will Drewry <wad@chromium.org>, kernel-hardening@lists.openwall.com, Linux API <linux-api@vger.kernel.org>, LSM List <linux-security-module@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org, htejun-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Nov 13, 2016 at 6:23 AM, Micka=C3=ABl Sala=C3=BCn <mic@digikod.net>=
- wrote:
-> Hi,
->
-> After the BoF at LPC last week, we came to a multi-step roadmap to
-> upstream Landlock.
->
-> A first patch series containing the basic properties needed for a
-> "minimum viable product", which means being able to test it, without
-> full features. The idea is to set in place the main components which
-> include the LSM part (some hooks with the manager logic) and the new
-> eBPF type. To have a minimum amount of code, the first userland entry
-> point will be the seccomp syscall. This doesn't imply non-upstream
-> patches and should be more simple. For the sake of simplicity and to
-> ease the review, this first series will only be dedicated to privileged
-> processes (i.e. with CAP_SYS_ADMIN). We may want to only allow one level
-> of rules at first, instead of dealing with more complex rule inheritance
-> (like seccomp-bpf can do).
->
-> The second series will focus on the cgroup manager. It will follow the
-> same rules of inheritance as the Daniel Mack's patches does.
->
-> The third series will try to bring a BPF map of handles for Landlock and
-> the dedicated BPF helpers.
->
-> Finally, the fourth series will bring back the unprivileged mode (with
-> no_new_privs), at least for process hierarchies (via seccomp). This also
-> imply to handle multi-level of rules.
->
-> Right now, an important point of attention is the userland ABI. We don't
-> want LSM hooks to be exposed "as is" to userland. This may have some
-> future implications if their semantic and/or enforcement point(s)
-> change. In the next series, I will propose a new abstraction over the
-> currently used LSM hooks. I'll also propose a new way to deal with
-> resource accountability. Finally, I plan to create a minimal (kernel)
-> developer documentation and a test suite.
+Add cgroup version 2 support to nf_tables.
 
-Thanks for the summary.
-That's exactly what we discussed and agreed upon.
+This extension allows us to fetch the cgroup i-node number from the
+cgroup socket data, place it in a register, then match it against any
+value specified by user. This approach scales up nicely since it
+integrates well in the existing nf_tables map infrastructure.
+
+Contrary to what iptables cgroup v2 match does, this patch doesn't use
+cgroup_is_descendant() because this call cannot guarantee that the cgroup
+hierarchy is honored in anyway given that the cgroup v2 field becomes yet
+another packet selector that you can use to build your filtering policy.
+
+Actually, using the i-node approach, it should be easy to build a policy
+that honors the hierarchy if you need this, eg.
+
+	meta cgroup2 vmap { "/A/B" : jump b-cgroup-chain,
+			    "/A/C" : jump c-cgroup-chain,
+			    "/A" : jump a-cgroup-chain }
+
+then, the b-cgroup-chain looks like:
+
+	jump a-cgroup-chain
+	... # specific policy b-cgroup-chain goes here
+
+similarly, the c-cgroup-chain looks like:
+
+	jump a-cgroup-chain
+	... # specific policy c-cgroup-chain goes here
+
+So both B and C would evaluate A's ruleset. Note that cgroup A would
+also jump to the root cgroup chain policy.
+
+Anyway, this cgroup i-node approach provides way more flexibility since
+it is up to the sysadmin to decide if he wants to honor the hierarchy or
+simply define a fast path to skip any further classification.
+
+Signed-off-by: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
+---
+ include/uapi/linux/netfilter/nf_tables.h |  2 ++
+ net/netfilter/nft_meta.c                 | 15 +++++++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/include/uapi/linux/netfilter/nf_tables.h b/include/uapi/linux/netfilter/nf_tables.h
+index 0da7ccf65511..5d4d08367a87 100644
+--- a/include/uapi/linux/netfilter/nf_tables.h
++++ b/include/uapi/linux/netfilter/nf_tables.h
+@@ -729,6 +729,7 @@ enum nft_exthdr_attributes {
+  * @NFT_META_OIFGROUP: packet output interface group
+  * @NFT_META_CGROUP: socket control group (skb->sk->sk_classid)
+  * @NFT_META_PRANDOM: a 32bit pseudo-random number
++ * @NFT_META_CGROUP2: socket control group v2 (skb->sk->sk_cgrp_data)
+  */
+ enum nft_meta_keys {
+ 	NFT_META_LEN,
+@@ -756,6 +757,7 @@ enum nft_meta_keys {
+ 	NFT_META_OIFGROUP,
+ 	NFT_META_CGROUP,
+ 	NFT_META_PRANDOM,
++	NFT_META_CGROUP2,
+ };
+ 
+ /**
+diff --git a/net/netfilter/nft_meta.c b/net/netfilter/nft_meta.c
+index 6c1e0246706e..1e793e133903 100644
+--- a/net/netfilter/nft_meta.c
++++ b/net/netfilter/nft_meta.c
+@@ -190,6 +190,18 @@ void nft_meta_get_eval(const struct nft_expr *expr,
+ 		*dest = prandom_u32_state(state);
+ 		break;
+ 	}
++#ifdef CONFIG_SOCK_CGROUP_DATA
++	case NFT_META_CGROUP2: {
++		struct cgroup *cgrp;
++
++		if (!skb->sk || !sk_fullsock(skb->sk))
++			goto err;
++
++		cgrp = sock_cgroup_ptr(&skb->sk->sk_cgrp_data);
++		*dest = cgrp->kn->ino;
++		break;
++	}
++#endif
+ 	default:
+ 		WARN_ON(1);
+ 		goto err;
+@@ -273,6 +285,9 @@ int nft_meta_get_init(const struct nft_ctx *ctx,
+ #ifdef CONFIG_CGROUP_NET_CLASSID
+ 	case NFT_META_CGROUP:
+ #endif
++#ifdef CONFIG_SOCK_CGROUP_DATA
++	case NFT_META_CGROUP2:
++#endif
+ 		len = sizeof(u32);
+ 		break;
+ 	case NFT_META_IIFNAME:
+-- 
+2.1.4
