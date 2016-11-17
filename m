@@ -1,139 +1,182 @@
-From: Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>
-Subject: Re: [PATCH nf-next,RFC] netfilter: nft_meta: add cgroup version 2
- support
-Date: Thu, 17 Nov 2016 12:02:06 +0100
-Message-ID: <20161117110206.GA3165@salvia>
-References: <1479114761-19534-1-git-send-email-pablo@netfilter.org>
- <e4e0bc59-5a97-118b-2d4e-af12c2055e7e@zonque.org>
-Mime-Version: 1.0
+From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v8 0/6] Add eBPF hooks for cgroups
+Date: Thu, 17 Nov 2016 19:27:03 +0100
+Message-ID: <1479407229-14861-1-git-send-email-daniel@zonque.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <e4e0bc59-5a97-118b-2d4e-af12c2055e7e-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
-Cc: netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, htejun-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
 
-Hi Daniel,
+This is v8 of the patch set to allow eBPF programs for network
+filtering and accounting to be attached to cgroups, so that they apply
+to all sockets of all tasks placed in that cgroup. The logic also
+allows to be extendeded for other cgroup based eBPF logic.
 
-On Mon, Nov 14, 2016 at 11:10:04AM +0100, Daniel Mack wrote:
-[...]
-> On 11/14/2016 10:12 AM, Pablo Neira Ayuso wrote:
-> > Add cgroup version 2 support to nf_tables.
-> > 
-> > This extension allows us to fetch the cgroup i-node number from the
-> > cgroup socket data, place it in a register, then match it against any
-> > value specified by user. This approach scales up nicely since it
-> > integrates well in the existing nf_tables map infrastructure.
-> > 
-> > Contrary to what iptables cgroup v2 match does, this patch doesn't use
-> > cgroup_is_descendant() because this call cannot guarantee that the cgroup
-> > hierarchy is honored in anyway given that the cgroup v2 field becomes yet
-> > another packet selector that you can use to build your filtering policy.
-> > 
-> > Actually, using the i-node approach, it should be easy to build a policy
-> > that honors the hierarchy if you need this, eg.
-> > 
-> > 	meta cgroup2 vmap { "/A/B" : jump b-cgroup-chain,
-> > 			    "/A/C" : jump c-cgroup-chain,
-> > 			    "/A" : jump a-cgroup-chain }
-> > 
-> > then, the b-cgroup-chain looks like:
-> > 
-> > 	jump a-cgroup-chain
-> > 	... # specific policy b-cgroup-chain goes here
-> > 
-> > similarly, the c-cgroup-chain looks like:
-> > 
-> > 	jump a-cgroup-chain
-> > 	... # specific policy c-cgroup-chain goes here
-> > 
-> > So both B and C would evaluate A's ruleset. Note that cgroup A would
-> > also jump to the root cgroup chain policy.
-> > 
-> > Anyway, this cgroup i-node approach provides way more flexibility since
-> > it is up to the sysadmin to decide if he wants to honor the hierarchy or
-> > simply define a fast path to skip any further classification.
-> 
-> I don't think this can work. The problem is that inodes in cgroupfs are
-> dynamically allocated when a cgroup is created, so the sysadmin cannot
-> install the jump rules before that. Worse yet, inode numbers in pseudo
-> filesystems are recycled, so if a cgroup goes away and a new one is
-> created, the latter may well end up having the same inode than the old
-> one.
->
-> As cgroupfs decoupled from netfilter tables, this will lead to
-> major chaos in the field.
+Again, only minor details are updated in this version.
 
-Do you really want tight coupling? Look:
 
- # mkdir /tmp/x
- # mount -t cgroup2 none /tmp/x
- # mkdir /tmp/x/x
- # echo 0 > /tmp/x/x/cgroup.procs
- # iptables -I INPUT -m cgroup --path "/"
- # iptables -I INPUT -m cgroup --path "/x"
- # rmdir /tmp/x/x/
- rmdir: failed to remove '/tmp/x/x/': Device or resource busy
+Thanks,
+Daniel
 
-As soon as there is a filtering policy in iptables, you cannot update
-cgroups. However, if you adopt a decoupled approach, you can update
-both sides anytime.
 
-Following the decoupled approach: If the cgroup is gone, the filtering
-policy would not match anymore. You only have to subscribe to events
-and perform an incremental updates to tear down the side of the
-filtering policy that you don't need anymore. If a new cgroup is
-created, you load the filtering policy for the new cgroup and then add
-processes to that cgroup. You only have to follow the right sequence
-to avoid problems.
+Changes from v7:
 
-> Note that this was different with the netclass controller in v1 that
-> would assign a user-controlled numeric value to each cgroup, so both
-> sides were in the control of the sysadmin. It is also different with the
-> path matching logic for v2 which does a full path string comparison.
-> That's potentially expensive, it does lead to predictable runtime behavior.
-> 
-> One way forward here would be to assign a atomically increasing 64-bit
-> sequence number to each cgroup and expose that. I've recently talked to
-> Tejun about that. While that won't solve the predictability issue, it
-> would at least make it practically impossible to have re-used IDs.
+* Replace the static inline function cgroup_bpf_run_filter() with
+  two specific macros for ingress and egress.  This addresses David
+  Miller's concern regarding skb->sk vs. sk in the egress path.
+  Thanks a lot to Daniel Borkmann and Alexei Starovoitov for the
+  suggestions.
 
-OK, so we need to make sure the ID is unique, an incremental ID should
-be fine. Probably the idr logic can be replaced by this new ID.  The
-tuple [ directory-name, id ] should be enough to uniquely identify a
-cgroup so it may be 32-bits after all, unless you think chances that
-we get the same directory-name and id is high, then avoid wraparounds
-via 64-bits.
 
-> Anyway - I think it would be great to have an alternative to the v2 path
-> matching here, but of course this patch does not solve the ingress issue
-> we've been discussing. It is still impossible to reliably determine the
-> cgroup of a local receiver at the time when the netfilter rules are
-> processed, even for unicast packets.
+Changes from v6:
 
-This is right if we rely on early demux, however we have explicit
-socket lookups in netfilter that we can reuse, see
-nf_sk_lookup_slow_v{4,6}() in nf-next. This would actually allow us to
-filter very early for the vast majority of usecases, using any
-combination of selectors, not only focusing this specifically on
-cgroups. This infrastructure supports UDP and TCP which is good start.
+* Rebased to 4.9-rc2
 
-The problem is specifically the many-cast socket path. Actually, if
-one single listener is available and the udp_hash2 chain is not too
-long we already get the destination via early_demux, so that path is
-already covered. The problem is the many-cast usecase with long chains
-(this we could trigger a longer lookup only from netfilter, only for
-people willing to filter packets) and the two-or-more many-cast socket
-listener destinations for UDP. Do you really need accounting for the
-many-cast case too?
+* Add EXPORT_SYMBOL(__cgroup_bpf_run_filter). The kbuild test robot
+  now succeeds in building this version of the patch set.
 
-Attaching several socket destinations to skbuff is a tricky, as we
-would need new specific infrastructure, something like a socket
-container object that keeps a list of destination sockets, all of them
-holding a reference to these socket which may be expensive. Another
-option is a specific many-cast input hook following the
-__udp4_lib_mcast_deliver() path. Any solution for many-cast filtering
-is going to be expensive.
+* Switch from bpf_prog_run_save_cb() to bpf_prog_run_clear_cb() to not
+  tamper with the contents of skb->cb[]. Pointed out by Daniel
+  Borkmann.
+
+* Use sk_to_full_sk() in the egress path, as suggested by Daniel
+  Borkmann.
+
+* Renamed BPF_PROG_TYPE_CGROUP_SOCKET to BPF_PROG_TYPE_CGROUP_SKB, as
+  requested by David Ahern.
+
+* Added Alexei's Acked-by tags.
+
+
+Changes from v5:
+
+* The eBPF programs now operate on L3 rather than on L2 of the packets,
+  and the egress hooks were moved from __dev_queue_xmit() to
+  ip*_output().
+
+* For BPF_PROG_TYPE_CGROUP_SOCKET, disallow direct access to the skb
+  through BPF_LD_[ABS|IND] instructions, but hook up the
+  bpf_skb_load_bytes() access helper instead. Thanks to Daniel Borkmann
+  for the help.
+
+
+Changes from v4:
+
+* Plug an skb leak when dropping packets due to eBPF verdicts in
+  __dev_queue_xmit(). Spotted by Daniel Borkmann.
+
+* Check for sk_fullsock(sk) in __cgroup_bpf_run_filter() so we don't
+  operate on timewait or request sockets. Suggested by Daniel Borkmann.
+
+* Add missing @parent parameter in kerneldoc of __cgroup_bpf_update().
+  Spotted by Rami Rosen.
+
+* Include linux/jump_label.h from bpf-cgroup.h to fix a kbuild error.
+
+
+Changes from v3:
+
+* Dropped the _FILTER suffix from BPF_PROG_TYPE_CGROUP_SOCKET_FILTER,
+  renamed BPF_ATTACH_TYPE_CGROUP_INET_{E,IN}GRESS to
+  BPF_CGROUP_INET_{IN,E}GRESS and alias BPF_MAX_ATTACH_TYPE to
+  __BPF_MAX_ATTACH_TYPE, as suggested by Daniel Borkmann.
+
+* Dropped the attach_flags member from the anonymous struct for BPF
+  attach operations in union bpf_attr. They can be added later on via
+  CHECK_ATTR. Requested by Daniel Borkmann and Alexei.
+
+* Release old_prog at the end of __cgroup_bpf_update rather that at
+  the beginning to fix a race gap between program updates and their
+  users. Spotted by Daniel Borkmann.
+
+* Plugged an skb leak when dropping packets on the egress path.
+  Spotted by Daniel Borkmann.
+
+* Add cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org to the loop, as suggested by Rami Rosen.
+
+* Some minor coding style adoptions not worth mentioning in particular.
+
+
+Changes from v2:
+
+* Fixed the RCU locking details Tejun pointed out.
+
+* Assert bpf_attr.flags == 0 in BPF_PROG_DETACH syscall handler.
+
+
+Changes from v1:
+
+* Moved all bpf specific cgroup code into its own file, and stub
+  out related functions for !CONFIG_CGROUP_BPF as static inline nops.
+  This way, the call sites are not cluttered with #ifdef guards while
+  the feature remains compile-time configurable.
+
+* Implemented the new scheme proposed by Tejun. Per cgroup, store one
+  set of pointers that are pinned to the cgroup, and one for the
+  programs that are effective. When a program is attached or detached,
+  the change is propagated to all the cgroup's descendants. If a
+  subcgroup has its own pinned program, skip the whole subbranch in
+  order to allow delegation models.
+
+* The hookup for egress packets is now done from __dev_queue_xmit().
+
+* A static key is now used in both the ingress and egress fast paths
+  to keep performance penalties close to zero if the feature is
+  not in use.
+
+* Overall cleanup to make the accessors use the program arrays.
+  This should make it much easier to add new program types, which
+  will then automatically follow the pinned vs. effective logic.
+
+* Fixed locking issues, as pointed out by Eric Dumazet and Alexei
+  Starovoitov. Changes to the program array are now done with
+  xchg() and are protected by cgroup_mutex.
+
+* eBPF programs are now expected to return 1 to let the packet pass,
+  not >= 0. Pointed out by Alexei.
+
+* Operation is now limited to INET sockets, so local AF_UNIX sockets
+  are not affected. The enum members are renamed accordingly. In case
+  other socket families should be supported, this can be extended in
+  the future.
+
+* The sample program learned to support both ingress and egress, and
+  can now optionally make the eBPF program drop packets by making it
+  return 0.
+
+
+Daniel Mack (6):
+  bpf: add new prog type for cgroup socket filtering
+  cgroup: add support for eBPF programs
+  bpf: add BPF_PROG_ATTACH and BPF_PROG_DETACH commands
+  net: filter: run cgroup eBPF ingress programs
+  net: ipv4, ipv6: run cgroup eBPF egress programs
+  samples: bpf: add userspace example for attaching eBPF programs to
+    cgroups
+
+ include/linux/bpf-cgroup.h      |  79 +++++++++++++++++++
+ include/linux/cgroup-defs.h     |   4 +
+ include/uapi/linux/bpf.h        |  17 ++++
+ init/Kconfig                    |  12 +++
+ kernel/bpf/Makefile             |   1 +
+ kernel/bpf/cgroup.c             | 167 ++++++++++++++++++++++++++++++++++++++++
+ kernel/bpf/syscall.c            |  81 +++++++++++++++++++
+ kernel/cgroup.c                 |  18 +++++
+ net/core/filter.c               |  27 +++++++
+ net/ipv4/ip_output.c            |  15 ++++
+ net/ipv6/ip6_output.c           |   8 ++
+ samples/bpf/Makefile            |   2 +
+ samples/bpf/libbpf.c            |  21 +++++
+ samples/bpf/libbpf.h            |   3 +
+ samples/bpf/test_cgrp2_attach.c | 147 +++++++++++++++++++++++++++++++++++
+ 15 files changed, 602 insertions(+)
+ create mode 100644 include/linux/bpf-cgroup.h
+ create mode 100644 kernel/bpf/cgroup.c
+ create mode 100644 samples/bpf/test_cgrp2_attach.c
+
+-- 
+2.7.4
