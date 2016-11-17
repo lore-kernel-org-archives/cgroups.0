@@ -1,363 +1,196 @@
-From: "Huang, Ying" <ying.huang@intel.com>
-Subject: [PATCH -v5 2/9] mm, memcg: Support to charge/uncharge multiple swap entries
-Date: Wed, 16 Nov 2016 11:10:50 +0800
-Message-ID: <20161116031057.12977-3-ying.huang@intel.com>
-References: <20161116031057.12977-1-ying.huang@intel.com>
+From: "Zhao Hui Ding" <dingzhh@cn.ibm.com>
+Subject: Re: memory.force_empty is deprecated
+Date: Thu, 17 Nov 2016 18:13:18 +0800
+Message-ID: <OF1D622B5E.2C033199-ON4825806E.0032B4F0-4825806E.00382767@notes.na.collabserv.com>
+References: <OF57AEC2D2.FA566D70-ON48258061.002C144F-48258061.002E2E50@notes.na.collabserv.com>
+ <20161104152103.GC8825@cmpxchg.org>
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_alternative 003826A54825806E_="
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20161116031057.12977-1-ying.huang@intel.com>
+In-Reply-To: <20161104152103.GC8825@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: tim.c.chen@intel.com, dave.hansen@intel.com, andi.kleen@intel.com, aaron.lu@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Huang Ying <ying.huang@intel.com>, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Xue Bin
+ Min <minxb@cn.ibm.com>
 
-From: Huang Ying <ying.huang@intel.com>
 
-This patch make it possible to charge or uncharge a set of continuous
-swap entries in the swap cgroup.  The number of swap entries is
-specified via an added parameter.
+--=_alternative 003826A54825806E_=
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="GB2312"
 
-This will be used for the THP (Transparent Huge Page) swap support.
-Where a swap cluster backing a THP may be allocated and freed as a
-whole.  So a set of (HPAGE_PMD_NR) continuous swap entries backing one
-THP need to be charged or uncharged together.  This will batch the
-cgroup operations for the THP swap too.
+VGhhbmtzIGZvciB0aGUgcmVwbHkuDQoNCldoZW4gdGhlIGpvYiBpcyBmaW5pc2hlZCwgInRhc2tz
+IiBpcyBlbXB0eSwgYnV0ICJtZW1vcnkuc3RhdCIgc3RpbGwgDQpjb250YWlucyBjYWNoZSwgYWN0
+aXZlX2ZpbGUuLi4NCiMgY2F0IHRhc2tzDQojIGNhdCBtZW1vcnkuc3RhdCANCmNhY2hlIDgxOTIw
+DQpyc3MgMA0KbWFwcGVkX2ZpbGUgMA0KcGdwZ2luIDk0NDANCnBncGdvdXQgOTQyMA0Kc3dhcCAw
+DQppbmFjdGl2ZV9hbm9uIDANCmFjdGl2ZV9hbm9uIDANCmluYWN0aXZlX2ZpbGUgNzc4MjQNCmFj
+dGl2ZV9maWxlIDQwOTYNCnVuZXZpY3RhYmxlIDANCmhpZXJhcmNoaWNhbF9tZW1vcnlfbGltaXQg
+OTIyMzM3MjAzNjg1NDc3NTgwNw0KaGllcmFyY2hpY2FsX21lbXN3X2xpbWl0IDkyMjMzNzIwMzY4
+NTQ3NzU4MDcNCnRvdGFsX2NhY2hlIDgxOTIwDQp0b3RhbF9yc3MgMA0KdG90YWxfbWFwcGVkX2Zp
+bGUgMA0KdG90YWxfcGdwZ2luIDk0NDANCnRvdGFsX3BncGdvdXQgOTQyMA0KdG90YWxfc3dhcCAw
+DQp0b3RhbF9pbmFjdGl2ZV9hbm9uIDANCnRvdGFsX2FjdGl2ZV9hbm9uIDANCnRvdGFsX2luYWN0
+aXZlX2ZpbGUgNzc4MjQNCnRvdGFsX2FjdGl2ZV9maWxlIDQwOTYNCnRvdGFsX3VuZXZpY3RhYmxl
+IDANCg0KQWZ0ZXIgZWNobyAwIHRvIG1lbW9yeS5mb3JjZV9lbXB0eSwgY2FjaGUgaXMgY2xlYW5l
+ZC4NCiMgZWNobyAwID4gbWVtb3J5LmZvcmNlX2VtcHR5IA0KIyBjYXQgbWVtb3J5LnN0YXQgDQpj
+YWNoZSAwDQpyc3MgMA0KbWFwcGVkX2ZpbGUgMA0KcGdwZ2luIDk0NDANCnBncGdvdXQgOTQ0MA0K
+c3dhcCAwDQppbmFjdGl2ZV9hbm9uIDANCmFjdGl2ZV9hbm9uIDANCmluYWN0aXZlX2ZpbGUgMA0K
+YWN0aXZlX2ZpbGUgMA0KdW5ldmljdGFibGUgMA0KaGllcmFyY2hpY2FsX21lbW9yeV9saW1pdCA5
+MjIzMzcyMDM2ODU0Nzc1ODA3DQpoaWVyYXJjaGljYWxfbWVtc3dfbGltaXQgOTIyMzM3MjAzNjg1
+NDc3NTgwNw0KdG90YWxfY2FjaGUgMA0KdG90YWxfcnNzIDANCnRvdGFsX21hcHBlZF9maWxlIDAN
+CnRvdGFsX3BncGdpbiA5NDQwDQp0b3RhbF9wZ3Bnb3V0IDk0NDANCnRvdGFsX3N3YXAgMA0KdG90
+YWxfaW5hY3RpdmVfYW5vbiAwDQp0b3RhbF9hY3RpdmVfYW5vbiAwDQp0b3RhbF9pbmFjdGl2ZV9m
+aWxlIDANCnRvdGFsX2FjdGl2ZV9maWxlIDANCnRvdGFsX3VuZXZpY3RhYmxlIDANCg0KV2UgY2Fu
+bm90IGxlYXZlIGl0IGxhemlseSBiZWNhdXNlIHdoZW4gbmV3IGpvYiByZXVzZSB0aGUgY2dyb3Vw
+LCAiY2FjaGUiIA0KZG9lc24ndCBiZSBjbGVhbmVkIGF1dG9tYXRpY2FsbHkuDQpXZSBuZWVkIGEg
+bWVjaGFuaXNtIHRoYXQgY2xlYW4gbWVtb3J5LnN0YXQuDQoNClRoYW5rcyAmIFJlZ2FyZHMsDQot
+LVpoYW9odWkNCg0KDQoNCkZyb206ICAgSm9oYW5uZXMgV2VpbmVyIDxoYW5uZXNAY21weGNoZy5v
+cmc+DQpUbzogICAgIFpoYW8gSHVpIERpbmcvQ2hpbmEvSUJNQElCTUNODQpDYzogICAgIFRlanVu
+IEhlbyA8dGpAa2VybmVsLm9yZz4sIGNncm91cHNAdmdlci5rZXJuZWwub3JnLCANCmxpbnV4LW1t
+QGt2YWNrLm9yZw0KRGF0ZTogICAyMDE2LTExLTA0IM/CzucgMTE6MjENClN1YmplY3Q6ICAgICAg
+ICBSZTogbWVtb3J5LmZvcmNlX2VtcHR5IGlzIGRlcHJlY2F0ZWQNCg0KDQoNCkhpLA0KDQpPbiBG
+cmksIE5vdiAwNCwgMjAxNiBhdCAwNDoyNDoyNVBNICswODAwLCBaaGFvIEh1aSBEaW5nIHdyb3Rl
+Og0KPiBIZWxsbywNCj4gDQo+IEknbSBaaGFvaHVpIGZyb20gSUJNIFNwZWN0cnVtIExTRiBkZXZl
+bG9wbWVudCB0ZWFtLiBJIGdvdCBiZWxvdyBtZXNzYWdlIA0KPiB3aGVuIHJ1bm5pbmcgTFNGIG9u
+IFNVU0UxMS40LCBzbyBJIHdvdWxkIGxpa2UgdG8gc2hhcmUgb3VyIHVzZSBzY2VuYXJpbyANCj4g
+YW5kIGFzayBmb3IgdGhlIHN1Z2dlc3Rpb25zIHdpdGhvdXQgdXNpbmcgbWVtb3J5LmZvcmNlX2Vt
+cHR5Lg0KPiANCj4gbWVtb3J5LmZvcmNlX2VtcHR5IGlzIGRlcHJlY2F0ZWQgYW5kIHdpbGwgYmUg
+cmVtb3ZlZC4gTGV0IHVzIGtub3cgaWYgaXQgDQppcyANCj4gbmVlZGVkIGluIHlvdXIgdXNlY2Fz
+ZSBhdCBsaW51eC1tbUBrdmFjay5vcmcNCj4gDQo+IExTRiBpcyBhIGJhdGNoIHdvcmtsb2FkIHNj
+aGVkdWxlciwgaXQgdXNlcyBjZ3JvdXAgdG8gZG8gYmF0Y2ggam9icyANCj4gcmVzb3VyY2UgZW5m
+b3JjZW1lbnQgYW5kIGFjY291bnRpbmcuIEZvciBlYWNoIGpvYiwgTFNGIGNyZWF0ZXMgYSBjZ3Jv
+dXAgDQo+IGRpcmVjdG9yeSBhbmQgcHV0IGpvYidzIFBJRHMgdG8gdGhlIGNncm91cC4NCj4gDQo+
+IFdoZW4gd2UgaW1wbGVtZW50IExTRiBjZ3JvdXAgaW50ZWdyYXRpb24sIHdlIGZvdW5kIGNyZWF0
+aW5nIGEgbmV3IGNncm91cCANCg0KPiBpcyBtdWNoIHNsb3dlciB0aGFuIHJlbmFtaW5nIGFuIGV4
+aXN0aW5nIGNncm91cCwgaXQncyBhYm91dCBodW5kcmVkcyBvZiANCj4gbWlsbGlzZWNvbmRzIHZz
+IGxlc3MgdGhhbiAxMCBtaWxsaXNlY29uZHMuDQoNCkNncm91cCBjcmVhdGlvbi9kZWxldGlvbiBp
+cyBub3QgZXhwZWN0ZWQgdG8gYmUgYW4gdWx0cmEtaG90IHBhdGgsIGJ1dA0KSSdtIHN1cnByaXNl
+ZCBpdCB0YWtlcyBsb25nZXIgdGhhbiBhY3R1YWxseSByZWNsYWltaW5nIGxlZnRvdmVyIHBhZ2Vz
+Lg0KDQpCeSB0aGUgdGltZSB0aGUgam9icyBjb25jbHVkZSwgaG93IG11Y2ggaXMgdXN1YWxseSBs
+ZWZ0IGluIHRoZSBncm91cD8NCg0KVGhhdCBzYWlkLCBpcyBpdCBldmVuIG5lY2Vzc2FyeSB0byBw
+cm8tYWN0aXZlbHkgcmVtb3ZlIHRoZSBsZWZ0b3Zlcg0KY2FjaGUgZnJvbSB0aGUgZ3JvdXAgYmVm
+b3JlIHN0YXJ0aW5nIHRoZSBuZXh0IGpvYj8gV2h5IG5vdCBsZWF2ZSBpdA0KZm9yIHRoZSBuZXh0
+IGpvYiB0byByZWNsYWltIGl0IGxhemlseSBzaG91bGQgbWVtb3J5IHByZXNzdXJlIGFyaXNlPw0K
+SXQncyBlYXN5IHRvIHJlY2xhaW0gcGFnZSBjYWNoZSwgYW5kIHRoZSBmaXJzdCB0byBnbyBhcyBp
+dCdzIGJlaGluZA0KdGhlIG5leHQgam9iJ3MgbWVtb3J5IG9uIHRoZSBMUlUgbGlzdC4NCg0KDQoN
+Cg0KDQo=
 
-Cc: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
----
- include/linux/swap.h        | 12 ++++++----
- include/linux/swap_cgroup.h |  6 +++--
- mm/memcontrol.c             | 55 +++++++++++++++++++++++++--------------------
- mm/shmem.c                  |  2 +-
- mm/swap_cgroup.c            | 40 ++++++++++++++++++++++++---------
- mm/swap_state.c             |  2 +-
- mm/swapfile.c               |  2 +-
- 7 files changed, 76 insertions(+), 43 deletions(-)
+--=_alternative 003826A54825806E_=
+Content-Transfer-Encoding: base64
+Content-Type: text/html; charset="GB2312"
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index bfee1af..35484c9 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -555,8 +555,10 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
- 
- #ifdef CONFIG_MEMCG_SWAP
- extern void mem_cgroup_swapout(struct page *page, swp_entry_t entry);
--extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry);
--extern void mem_cgroup_uncharge_swap(swp_entry_t entry);
-+extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
-+				      unsigned int nr_entries);
-+extern void mem_cgroup_uncharge_swap(swp_entry_t entry,
-+				     unsigned int nr_entries);
- extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
- extern bool mem_cgroup_swap_full(struct page *page);
- #else
-@@ -565,12 +567,14 @@ static inline void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- }
- 
- static inline int mem_cgroup_try_charge_swap(struct page *page,
--					     swp_entry_t entry)
-+					     swp_entry_t entry,
-+					     unsigned int nr_entries)
- {
- 	return 0;
- }
- 
--static inline void mem_cgroup_uncharge_swap(swp_entry_t entry)
-+static inline void mem_cgroup_uncharge_swap(swp_entry_t entry,
-+					    unsigned int nr_entries)
- {
- }
- 
-diff --git a/include/linux/swap_cgroup.h b/include/linux/swap_cgroup.h
-index 145306b..b2b8ec7 100644
---- a/include/linux/swap_cgroup.h
-+++ b/include/linux/swap_cgroup.h
-@@ -7,7 +7,8 @@
- 
- extern unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- 					unsigned short old, unsigned short new);
--extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id);
-+extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
-+					 unsigned int nr_ents);
- extern unsigned short lookup_swap_cgroup_id(swp_entry_t ent);
- extern int swap_cgroup_swapon(int type, unsigned long max_pages);
- extern void swap_cgroup_swapoff(int type);
-@@ -15,7 +16,8 @@ extern void swap_cgroup_swapoff(int type);
- #else
- 
- static inline
--unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
-+unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
-+				  unsigned int nr_ents)
- {
- 	return 0;
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 91dfc7c..a025dce 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2394,10 +2394,9 @@ void mem_cgroup_split_huge_fixup(struct page *head)
- 
- #ifdef CONFIG_MEMCG_SWAP
- static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
--					 bool charge)
-+				       int nr_entries)
- {
--	int val = (charge) ? 1 : -1;
--	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], val);
-+	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], nr_entries);
- }
- 
- /**
-@@ -2423,8 +2422,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
- 	new_id = mem_cgroup_id(to);
- 
- 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
--		mem_cgroup_swap_statistics(from, false);
--		mem_cgroup_swap_statistics(to, true);
-+		mem_cgroup_swap_statistics(from, -1);
-+		mem_cgroup_swap_statistics(to, 1);
- 		return 0;
- 	}
- 	return -EINVAL;
-@@ -5444,7 +5443,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
- 		 * let's not wait for it.  The page already received a
- 		 * memory+swap charge, drop the swap entry duplicate.
- 		 */
--		mem_cgroup_uncharge_swap(entry);
-+		mem_cgroup_uncharge_swap(entry, nr_pages);
- 	}
- }
- 
-@@ -5866,9 +5865,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 	 * ancestor for the swap instead and transfer the memory+swap charge.
- 	 */
- 	swap_memcg = mem_cgroup_id_get_online(memcg);
--	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg));
-+	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg), 1);
- 	VM_BUG_ON_PAGE(oldid, page);
--	mem_cgroup_swap_statistics(swap_memcg, true);
-+	mem_cgroup_swap_statistics(swap_memcg, 1);
- 
- 	page->mem_cgroup = NULL;
- 
-@@ -5895,16 +5894,19 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 		css_put(&memcg->css);
- }
- 
--/*
-- * mem_cgroup_try_charge_swap - try charging a swap entry
-+/**
-+ * mem_cgroup_try_charge_swap - try charging a set of swap entries
-  * @page: page being added to swap
-- * @entry: swap entry to charge
-+ * @entry: the first swap entry to charge
-+ * @nr_entries: the number of swap entries to charge
-  *
-- * Try to charge @entry to the memcg that @page belongs to.
-+ * Try to charge @nr_entries swap entries starting from @entry to the
-+ * memcg that @page belongs to.
-  *
-  * Returns 0 on success, -ENOMEM on failure.
-  */
--int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
-+int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
-+			       unsigned int nr_entries)
- {
- 	struct mem_cgroup *memcg;
- 	struct page_counter *counter;
-@@ -5922,25 +5924,29 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
- 	memcg = mem_cgroup_id_get_online(memcg);
- 
- 	if (!mem_cgroup_is_root(memcg) &&
--	    !page_counter_try_charge(&memcg->swap, 1, &counter)) {
-+	    !page_counter_try_charge(&memcg->swap, nr_entries, &counter)) {
- 		mem_cgroup_id_put(memcg);
- 		return -ENOMEM;
- 	}
- 
--	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
-+	if (nr_entries > 1)
-+		mem_cgroup_id_get_many(memcg, nr_entries - 1);
-+	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg), nr_entries);
- 	VM_BUG_ON_PAGE(oldid, page);
--	mem_cgroup_swap_statistics(memcg, true);
-+	mem_cgroup_swap_statistics(memcg, nr_entries);
- 
- 	return 0;
- }
- 
- /**
-- * mem_cgroup_uncharge_swap - uncharge a swap entry
-- * @entry: swap entry to uncharge
-+ * mem_cgroup_uncharge_swap - uncharge a set of swap entries
-+ * @entry: the first swap entry to uncharge
-+ * @nr_entries: the number of swap entries to uncharge
-  *
-- * Drop the swap charge associated with @entry.
-+ * Drop the swap charge associated with @nr_entries swap entries
-+ * starting from @entry.
-  */
--void mem_cgroup_uncharge_swap(swp_entry_t entry)
-+void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_entries)
- {
- 	struct mem_cgroup *memcg;
- 	unsigned short id;
-@@ -5948,17 +5954,18 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry)
- 	if (!do_swap_account)
- 		return;
- 
--	id = swap_cgroup_record(entry, 0);
-+	id = swap_cgroup_record(entry, 0, nr_entries);
- 	rcu_read_lock();
- 	memcg = mem_cgroup_from_id(id);
- 	if (memcg) {
- 		if (!mem_cgroup_is_root(memcg)) {
- 			if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
--				page_counter_uncharge(&memcg->swap, 1);
-+				page_counter_uncharge(&memcg->swap, nr_entries);
- 			else
--				page_counter_uncharge(&memcg->memsw, 1);
-+				page_counter_uncharge(&memcg->memsw,
-+						      nr_entries);
- 		}
--		mem_cgroup_swap_statistics(memcg, false);
-+		mem_cgroup_swap_statistics(memcg, -nr_entries);
- 		mem_cgroup_id_put(memcg);
- 	}
- 	rcu_read_unlock();
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 2c74186..83ee18f 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1249,7 +1249,7 @@ static int shmem_writepage(struct page *page, struct writeback_control *wbc)
- 	if (!swap.val)
- 		goto redirty;
- 
--	if (mem_cgroup_try_charge_swap(page, swap))
-+	if (mem_cgroup_try_charge_swap(page, swap, 1))
- 		goto free_swap;
- 
- 	/*
-diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
-index 310ac0b..8cee2d1 100644
---- a/mm/swap_cgroup.c
-+++ b/mm/swap_cgroup.c
-@@ -58,21 +58,27 @@ static int swap_cgroup_prepare(int type)
- 	return -ENOMEM;
- }
- 
-+static struct swap_cgroup *__lookup_swap_cgroup(struct swap_cgroup_ctrl *ctrl,
-+						pgoff_t offset)
-+{
-+	struct page *mappage;
-+	struct swap_cgroup *sc;
-+
-+	mappage = ctrl->map[offset / SC_PER_PAGE];
-+	sc = page_address(mappage);
-+	return sc + offset % SC_PER_PAGE;
-+}
-+
- static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
- 					struct swap_cgroup_ctrl **ctrlp)
- {
- 	pgoff_t offset = swp_offset(ent);
- 	struct swap_cgroup_ctrl *ctrl;
--	struct page *mappage;
--	struct swap_cgroup *sc;
- 
- 	ctrl = &swap_cgroup_ctrl[swp_type(ent)];
- 	if (ctrlp)
- 		*ctrlp = ctrl;
--
--	mappage = ctrl->map[offset / SC_PER_PAGE];
--	sc = page_address(mappage);
--	return sc + offset % SC_PER_PAGE;
-+	return __lookup_swap_cgroup(ctrl, offset);
- }
- 
- /**
-@@ -105,25 +111,39 @@ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- }
- 
- /**
-- * swap_cgroup_record - record mem_cgroup for this swp_entry.
-- * @ent: swap entry to be recorded into
-+ * swap_cgroup_record - record mem_cgroup for a set of swap entries
-+ * @ent: the first swap entry to be recorded into
-  * @id: mem_cgroup to be recorded
-+ * @nr_ents: number of swap entries to be recorded
-  *
-  * Returns old value at success, 0 at failure.
-  * (Of course, old value can be 0.)
-  */
--unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
-+unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
-+				  unsigned int nr_ents)
- {
- 	struct swap_cgroup_ctrl *ctrl;
- 	struct swap_cgroup *sc;
- 	unsigned short old;
- 	unsigned long flags;
-+	pgoff_t offset = swp_offset(ent);
-+	pgoff_t end = offset + nr_ents;
- 
- 	sc = lookup_swap_cgroup(ent, &ctrl);
- 
- 	spin_lock_irqsave(&ctrl->lock, flags);
- 	old = sc->id;
--	sc->id = id;
-+	for (;;) {
-+		VM_BUG_ON(sc->id != old);
-+		sc->id = id;
-+		offset++;
-+		if (offset == end)
-+			break;
-+		if (offset % SC_PER_PAGE)
-+			sc++;
-+		else
-+			sc = __lookup_swap_cgroup(ctrl, offset);
-+	}
- 	spin_unlock_irqrestore(&ctrl->lock, flags);
- 
- 	return old;
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 35d7e0e..d3f047b 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -172,7 +172,7 @@ int add_to_swap(struct page *page, struct list_head *list)
- 	if (!entry.val)
- 		return 0;
- 
--	if (mem_cgroup_try_charge_swap(page, entry)) {
-+	if (mem_cgroup_try_charge_swap(page, entry, 1)) {
- 		swapcache_free(entry);
- 		return 0;
- 	}
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 34888e5b..fe0a559 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -806,7 +806,7 @@ static unsigned char swap_entry_free(struct swap_info_struct *p,
- 
- 	/* free if no reference */
- 	if (!usage) {
--		mem_cgroup_uncharge_swap(entry);
-+		mem_cgroup_uncharge_swap(entry, 1);
- 		dec_cluster_info_page(p, p->cluster_info, offset);
- 		if (offset < p->lowest_bit)
- 			p->lowest_bit = offset;
--- 
-2.10.2
+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPlRoYW5rcyBmb3IgdGhlIHJlcGx5LjwvZm9u
+dD48YnI+PGJyPjxmb250IHNpemU9MiBmYWNlPSJzYW5zLXNlcmlmIj5XaGVuIHRoZSBqb2IgaXMg
+ZmluaXNoZWQsICZxdW90O3Rhc2tzJnF1b3Q7DQppcyBlbXB0eSwgYnV0ICZxdW90O21lbW9yeS5z
+dGF0JnF1b3Q7IHN0aWxsIGNvbnRhaW5zIGNhY2hlLCBhY3RpdmVfZmlsZS4uLjwvZm9udD48YnI+
+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPiMgY2F0IHRhc2tzPC9mb250Pjxicj48
+Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVndWxhciI+IyBjYXQgbWVtb3J5LnN0YXQgPC9mb250
+Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVndWxhciI+Y2FjaGUgODE5MjA8L2ZvbnQ+
+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj5yc3MgMDwvZm9udD48YnI+PGZv
+bnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPm1hcHBlZF9maWxlIDA8L2ZvbnQ+PGJyPjxm
+b250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj5wZ3BnaW4gOTQ0MDwvZm9udD48YnI+PGZv
+bnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnBncGdvdXQgOTQyMDwvZm9udD48YnI+PGZv
+bnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnN3YXAgMDwvZm9udD48YnI+PGZvbnQgc2l6
+ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPmluYWN0aXZlX2Fub24gMDwvZm9udD48YnI+PGZvbnQg
+c2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPmFjdGl2ZV9hbm9uIDA8L2ZvbnQ+PGJyPjxmb250
+IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj5pbmFjdGl2ZV9maWxlIDc3ODI0PC9mb250Pjxi
+cj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVndWxhciI+YWN0aXZlX2ZpbGUgNDA5NjwvZm9u
+dD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnVuZXZpY3RhYmxlIDA8L2Zv
+bnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj5oaWVyYXJjaGljYWxfbWVt
+b3J5X2xpbWl0IDkyMjMzNzIwMzY4NTQ3NzU4MDc8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNl
+PSJNZW5sby1SZWd1bGFyIj5oaWVyYXJjaGljYWxfbWVtc3dfbGltaXQgOTIyMzM3MjAzNjg1NDc3
+NTgwNzwvZm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX2Nh
+Y2hlIDgxOTIwPC9mb250Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVndWxhciI+dG90
+YWxfcnNzIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj50b3Rh
+bF9tYXBwZWRfZmlsZSAwPC9mb250Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVndWxh
+ciI+dG90YWxfcGdwZ2luIDk0NDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1S
+ZWd1bGFyIj50b3RhbF9wZ3Bnb3V0IDk0MjA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJN
+ZW5sby1SZWd1bGFyIj50b3RhbF9zd2FwIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJN
+ZW5sby1SZWd1bGFyIj50b3RhbF9pbmFjdGl2ZV9hbm9uIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9
+MiBmYWNlPSJNZW5sby1SZWd1bGFyIj50b3RhbF9hY3RpdmVfYW5vbiAwPC9mb250Pjxicj48Zm9u
+dCBzaXplPTIgZmFjZT0iTWVubG8tUmVndWxhciI+dG90YWxfaW5hY3RpdmVfZmlsZSA3NzgyNDwv
+Zm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX2FjdGl2ZV9m
+aWxlIDQwOTY8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj50b3Rh
+bF91bmV2aWN0YWJsZSAwPC9mb250Pjxicj48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2Vy
+aWYiPkFmdGVyIGVjaG8gMCB0byBtZW1vcnkuZm9yY2VfZW1wdHksDQpjYWNoZSBpcyBjbGVhbmVk
+LjwvZm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPiMgZWNobyAwICZn
+dDsgbWVtb3J5LmZvcmNlX2VtcHR5DQo8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5s
+by1SZWd1bGFyIj4jIGNhdCBtZW1vcnkuc3RhdCA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNl
+PSJNZW5sby1SZWd1bGFyIj5jYWNoZSAwPC9mb250Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVu
+bG8tUmVndWxhciI+cnNzIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1
+bGFyIj5tYXBwZWRfZmlsZSAwPC9mb250Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVn
+dWxhciI+cGdwZ2luIDk0NDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1
+bGFyIj5wZ3Bnb3V0IDk0NDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1
+bGFyIj5zd2FwIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj5p
+bmFjdGl2ZV9hbm9uIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFy
+Ij5hY3RpdmVfYW5vbiAwPC9mb250Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVndWxh
+ciI+aW5hY3RpdmVfZmlsZSAwPC9mb250Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8tUmVn
+dWxhciI+YWN0aXZlX2ZpbGUgMDwvZm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJl
+Z3VsYXIiPnVuZXZpY3RhYmxlIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1S
+ZWd1bGFyIj5oaWVyYXJjaGljYWxfbWVtb3J5X2xpbWl0IDkyMjMzNzIwMzY4NTQ3NzU4MDc8L2Zv
+bnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj5oaWVyYXJjaGljYWxfbWVt
+c3dfbGltaXQgOTIyMzM3MjAzNjg1NDc3NTgwNzwvZm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9
+Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX2NhY2hlIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNl
+PSJNZW5sby1SZWd1bGFyIj50b3RhbF9yc3MgMDwvZm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9
+Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX21hcHBlZF9maWxlIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9
+MiBmYWNlPSJNZW5sby1SZWd1bGFyIj50b3RhbF9wZ3BnaW4gOTQ0MDwvZm9udD48YnI+PGZvbnQg
+c2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX3BncGdvdXQgOTQ0MDwvZm9udD48YnI+
+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX3N3YXAgMDwvZm9udD48YnI+
+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX2luYWN0aXZlX2Fub24gMDwv
+Zm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9Ik1lbmxvLVJlZ3VsYXIiPnRvdGFsX2FjdGl2ZV9h
+bm9uIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFyIj50b3RhbF9p
+bmFjdGl2ZV9maWxlIDA8L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJNZW5sby1SZWd1bGFy
+Ij50b3RhbF9hY3RpdmVfZmlsZSAwPC9mb250Pjxicj48Zm9udCBzaXplPTIgZmFjZT0iTWVubG8t
+UmVndWxhciI+dG90YWxfdW5ldmljdGFibGUgMDwvZm9udD48YnI+PGJyPjxmb250IHNpemU9MiBm
+YWNlPSJzYW5zLXNlcmlmIj5XZSBjYW5ub3QgbGVhdmUgaXQgbGF6aWx5IGJlY2F1c2Ugd2hlbg0K
+bmV3IGpvYiByZXVzZSB0aGUgY2dyb3VwLCAmcXVvdDtjYWNoZSZxdW90OyBkb2Vzbid0IGJlIGNs
+ZWFuZWQgYXV0b21hdGljYWxseS48L2ZvbnQ+PGJyPjxmb250IHNpemU9MiBmYWNlPSJzYW5zLXNl
+cmlmIj5XZSBuZWVkIGEgbWVjaGFuaXNtIHRoYXQgY2xlYW4gbWVtb3J5LnN0YXQuPC9mb250Pjxi
+cj48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPlRoYW5rcyAmYW1wOyBSZWdhcmRz
+LDwvZm9udD48YnI+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPi0tWmhhb2h1aTwvZm9u
+dD48YnI+PGJyPjxicj48YnI+PGZvbnQgc2l6ZT0xIGNvbG9yPSM1ZjVmNWYgZmFjZT0ic2Fucy1z
+ZXJpZiI+RnJvbTogJm5ic3A7ICZuYnNwOyAmbmJzcDsNCiZuYnNwOzwvZm9udD48Zm9udCBzaXpl
+PTEgZmFjZT0ic2Fucy1zZXJpZiI+Sm9oYW5uZXMgV2VpbmVyICZsdDtoYW5uZXNAY21weGNoZy5v
+cmcmZ3Q7PC9mb250Pjxicj48Zm9udCBzaXplPTEgY29sb3I9IzVmNWY1ZiBmYWNlPSJzYW5zLXNl
+cmlmIj5UbzogJm5ic3A7ICZuYnNwOyAmbmJzcDsNCiZuYnNwOzwvZm9udD48Zm9udCBzaXplPTEg
+ZmFjZT0ic2Fucy1zZXJpZiI+WmhhbyBIdWkgRGluZy9DaGluYS9JQk1ASUJNQ048L2ZvbnQ+PGJy
+Pjxmb250IHNpemU9MSBjb2xvcj0jNWY1ZjVmIGZhY2U9InNhbnMtc2VyaWYiPkNjOiAmbmJzcDsg
+Jm5ic3A7ICZuYnNwOw0KJm5ic3A7PC9mb250Pjxmb250IHNpemU9MSBmYWNlPSJzYW5zLXNlcmlm
+Ij5UZWp1biBIZW8gJmx0O3RqQGtlcm5lbC5vcmcmZ3Q7LA0KY2dyb3Vwc0B2Z2VyLmtlcm5lbC5v
+cmcsIGxpbnV4LW1tQGt2YWNrLm9yZzwvZm9udD48YnI+PGZvbnQgc2l6ZT0xIGNvbG9yPSM1ZjVm
+NWYgZmFjZT0ic2Fucy1zZXJpZiI+RGF0ZTogJm5ic3A7ICZuYnNwOyAmbmJzcDsNCiZuYnNwOzwv
+Zm9udD48Zm9udCBzaXplPTEgZmFjZT0ic2Fucy1zZXJpZiI+MjAxNi0xMS0wNCDPws7nIDExOjIx
+PC9mb250Pjxicj48Zm9udCBzaXplPTEgY29sb3I9IzVmNWY1ZiBmYWNlPSJzYW5zLXNlcmlmIj5T
+dWJqZWN0OiAmbmJzcDsgJm5ic3A7DQombmJzcDsgJm5ic3A7PC9mb250Pjxmb250IHNpemU9MSBm
+YWNlPSJzYW5zLXNlcmlmIj5SZTogbWVtb3J5LmZvcmNlX2VtcHR5DQppcyBkZXByZWNhdGVkPC9m
+b250Pjxicj48aHIgbm9zaGFkZT48YnI+PGJyPjxicj48dHQ+PGZvbnQgc2l6ZT0yPkhpLDxicj48
+YnI+T24gRnJpLCBOb3YgMDQsIDIwMTYgYXQgMDQ6MjQ6MjVQTSArMDgwMCwgWmhhbyBIdWkgRGlu
+ZyB3cm90ZTo8YnI+Jmd0OyBIZWxsbyw8YnI+Jmd0OyA8YnI+Jmd0OyBJJ20gWmhhb2h1aSBmcm9t
+IElCTSBTcGVjdHJ1bSBMU0YgZGV2ZWxvcG1lbnQgdGVhbS4gSSBnb3QgYmVsb3cgbWVzc2FnZQ0K
+PGJyPiZndDsgd2hlbiBydW5uaW5nIExTRiBvbiBTVVNFMTEuNCwgc28gSSB3b3VsZCBsaWtlIHRv
+IHNoYXJlIG91ciB1c2Ugc2NlbmFyaW8NCjxicj4mZ3Q7IGFuZCBhc2sgZm9yIHRoZSBzdWdnZXN0
+aW9ucyB3aXRob3V0IHVzaW5nIG1lbW9yeS5mb3JjZV9lbXB0eS48YnI+Jmd0OyA8YnI+Jmd0OyBt
+ZW1vcnkuZm9yY2VfZW1wdHkgaXMgZGVwcmVjYXRlZCBhbmQgd2lsbCBiZSByZW1vdmVkLiBMZXQg
+dXMga25vdw0KaWYgaXQgaXMgPGJyPiZndDsgbmVlZGVkIGluIHlvdXIgdXNlY2FzZSBhdCBsaW51
+eC1tbUBrdmFjay5vcmc8YnI+Jmd0OyA8YnI+Jmd0OyBMU0YgaXMgYSBiYXRjaCB3b3JrbG9hZCBz
+Y2hlZHVsZXIsIGl0IHVzZXMgY2dyb3VwIHRvIGRvIGJhdGNoIGpvYnMNCjxicj4mZ3Q7IHJlc291
+cmNlIGVuZm9yY2VtZW50IGFuZCBhY2NvdW50aW5nLiBGb3IgZWFjaCBqb2IsIExTRiBjcmVhdGVz
+IGEgY2dyb3VwDQo8YnI+Jmd0OyBkaXJlY3RvcnkgYW5kIHB1dCBqb2IncyBQSURzIHRvIHRoZSBj
+Z3JvdXAuPGJyPiZndDsgPGJyPiZndDsgV2hlbiB3ZSBpbXBsZW1lbnQgTFNGIGNncm91cCBpbnRl
+Z3JhdGlvbiwgd2UgZm91bmQgY3JlYXRpbmcgYSBuZXcNCmNncm91cCA8YnI+Jmd0OyBpcyBtdWNo
+IHNsb3dlciB0aGFuIHJlbmFtaW5nIGFuIGV4aXN0aW5nIGNncm91cCwgaXQncyBhYm91dCBodW5k
+cmVkcw0Kb2YgPGJyPiZndDsgbWlsbGlzZWNvbmRzIHZzIGxlc3MgdGhhbiAxMCBtaWxsaXNlY29u
+ZHMuPGJyPjxicj5DZ3JvdXAgY3JlYXRpb24vZGVsZXRpb24gaXMgbm90IGV4cGVjdGVkIHRvIGJl
+IGFuIHVsdHJhLWhvdCBwYXRoLCBidXQ8YnI+SSdtIHN1cnByaXNlZCBpdCB0YWtlcyBsb25nZXIg
+dGhhbiBhY3R1YWxseSByZWNsYWltaW5nIGxlZnRvdmVyIHBhZ2VzLjxicj48YnI+QnkgdGhlIHRp
+bWUgdGhlIGpvYnMgY29uY2x1ZGUsIGhvdyBtdWNoIGlzIHVzdWFsbHkgbGVmdCBpbiB0aGUgZ3Jv
+dXA/PGJyPjxicj5UaGF0IHNhaWQsIGlzIGl0IGV2ZW4gbmVjZXNzYXJ5IHRvIHByby1hY3RpdmVs
+eSByZW1vdmUgdGhlIGxlZnRvdmVyPGJyPmNhY2hlIGZyb20gdGhlIGdyb3VwIGJlZm9yZSBzdGFy
+dGluZyB0aGUgbmV4dCBqb2I/IFdoeSBub3QgbGVhdmUgaXQ8YnI+Zm9yIHRoZSBuZXh0IGpvYiB0
+byByZWNsYWltIGl0IGxhemlseSBzaG91bGQgbWVtb3J5IHByZXNzdXJlIGFyaXNlPzxicj5JdCdz
+IGVhc3kgdG8gcmVjbGFpbSBwYWdlIGNhY2hlLCBhbmQgdGhlIGZpcnN0IHRvIGdvIGFzIGl0J3Mg
+YmVoaW5kPGJyPnRoZSBuZXh0IGpvYidzIG1lbW9yeSBvbiB0aGUgTFJVIGxpc3QuPGJyPjxicj48
+L2ZvbnQ+PC90dD48YnI+PGJyPjxCUj4NCg==
+--=_alternative 003826A54825806E_=--
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
