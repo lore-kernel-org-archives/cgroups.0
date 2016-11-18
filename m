@@ -1,405 +1,132 @@
-From: Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v8 2/6] cgroup: add support for eBPF programs
-Date: Thu, 17 Nov 2016 19:27:05 +0100
-Message-ID: <1479407229-14861-3-git-send-email-daniel@zonque.org>
-References: <1479407229-14861-1-git-send-email-daniel@zonque.org>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1479407229-14861-1-git-send-email-daniel@zonque.org>
-Sender: netdev-owner@vger.kernel.org
+From: "Zhao Hui Ding" <dingzhh@cn.ibm.com>
+Subject: Re: memory.force_empty is deprecated
+Date: Fri, 18 Nov 2016 14:28:21 +0800
+Message-ID: <OF4C17DCE5.3A69F6D5-ON4825806F.00234EAD-4825806F.00238F1A@notes.na.collabserv.com>
+References: <OF57AEC2D2.FA566D70-ON48258061.002C144F-48258061.002E2E50@notes.na.collabserv.com>
+ <20161104152103.GC8825@cmpxchg.org>
+ <5b03def0-2dc4-842f-0d0e-53cc2d94936f@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_alternative 00238EA34825806F_="
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <5b03def0-2dc4-842f-0d0e-53cc2d94936f@gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: htejun@fb.com, daniel@iogearbox.net, ast@fb.com
-Cc: davem@davemloft.net, kafai@fb.com, fw@strlen.de, pablo@netfilter.org, harald@redhat.com, netdev@vger.kernel.org, sargun@sargun.me, cgroups@vger.kernel.org, Daniel Mack <daniel@zonque.org>
+To: Balbir Singh <bsingharora@gmail.com>
+Cc: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>
 
-This patch adds two sets of eBPF program pointers to struct cgroup.
-One for such that are directly pinned to a cgroup, and one for such
-that are effective for it.
 
-To illustrate the logic behind that, assume the following example
-cgroup hierarchy.
+--=_alternative 00238EA34825806F_=
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="GB2312"
 
-  A - B - C
-        \ D - E
+VGhhbmsgeW91LiANCkRvIHlvdSBtZWFuIG1lbW9yeS5mb3JjZV9lbXB0eSB3b24ndCBiZSBkZXBy
+ZWNhdGVkIGFuZCByZW1vdmVkPw0KDQpSZWdhcmRzLA0KLS1aaGFvaHVpDQoNCg0KDQpGcm9tOiAg
+IEJhbGJpciBTaW5naCA8YnNpbmdoYXJvcmFAZ21haWwuY29tPg0KVG86ICAgICBKb2hhbm5lcyBX
+ZWluZXIgPGhhbm5lc0BjbXB4Y2hnLm9yZz4sIFpoYW8gSHVpIA0KRGluZy9DaGluYS9JQk1ASUJN
+Q04NCkNjOiAgICAgVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPiwgY2dyb3Vwc0B2Z2VyLmtlcm5l
+bC5vcmcsIA0KbGludXgtbW1Aa3ZhY2sub3JnDQpEYXRlOiAgIDIwMTYtMTEtMTcgz8LO5yAwNjoz
+OQ0KU3ViamVjdDogICAgICAgIFJlOiBtZW1vcnkuZm9yY2VfZW1wdHkgaXMgZGVwcmVjYXRlZA0K
+DQoNCg0KDQoNCk9uIDA1LzExLzE2IDAyOjIxLCBKb2hhbm5lcyBXZWluZXIgd3JvdGU6DQo+IEhp
+LA0KPiANCj4gT24gRnJpLCBOb3YgMDQsIDIwMTYgYXQgMDQ6MjQ6MjVQTSArMDgwMCwgWmhhbyBI
+dWkgRGluZyB3cm90ZToNCj4+IEhlbGxvLA0KPj4NCj4+IEknbSBaaGFvaHVpIGZyb20gSUJNIFNw
+ZWN0cnVtIExTRiBkZXZlbG9wbWVudCB0ZWFtLiBJIGdvdCBiZWxvdyBtZXNzYWdlIA0KDQo+PiB3
+aGVuIHJ1bm5pbmcgTFNGIG9uIFNVU0UxMS40LCBzbyBJIHdvdWxkIGxpa2UgdG8gc2hhcmUgb3Vy
+IHVzZSBzY2VuYXJpbyANCg0KPj4gYW5kIGFzayBmb3IgdGhlIHN1Z2dlc3Rpb25zIHdpdGhvdXQg
+dXNpbmcgbWVtb3J5LmZvcmNlX2VtcHR5Lg0KPj4NCj4+IG1lbW9yeS5mb3JjZV9lbXB0eSBpcyBk
+ZXByZWNhdGVkIGFuZCB3aWxsIGJlIHJlbW92ZWQuIExldCB1cyBrbm93IGlmIGl0IA0KaXMgDQo+
+PiBuZWVkZWQgaW4geW91ciB1c2VjYXNlIGF0IGxpbnV4LW1tQGt2YWNrLm9yZw0KPj4NCj4+IExT
+RiBpcyBhIGJhdGNoIHdvcmtsb2FkIHNjaGVkdWxlciwgaXQgdXNlcyBjZ3JvdXAgdG8gZG8gYmF0
+Y2ggam9icyANCj4+IHJlc291cmNlIGVuZm9yY2VtZW50IGFuZCBhY2NvdW50aW5nLiBGb3IgZWFj
+aCBqb2IsIExTRiBjcmVhdGVzIGEgY2dyb3VwIA0KDQo+PiBkaXJlY3RvcnkgYW5kIHB1dCBqb2In
+cyBQSURzIHRvIHRoZSBjZ3JvdXAuDQo+Pg0KPj4gV2hlbiB3ZSBpbXBsZW1lbnQgTFNGIGNncm91
+cCBpbnRlZ3JhdGlvbiwgd2UgZm91bmQgY3JlYXRpbmcgYSBuZXcgDQpjZ3JvdXAgDQo+PiBpcyBt
+dWNoIHNsb3dlciB0aGFuIHJlbmFtaW5nIGFuIGV4aXN0aW5nIGNncm91cCwgaXQncyBhYm91dCBo
+dW5kcmVkcyBvZiANCg0KPj4gbWlsbGlzZWNvbmRzIHZzIGxlc3MgdGhhbiAxMCBtaWxsaXNlY29u
+ZHMuDQo+IA0KDQpXZSBhZGRlZCBmb3JjZV9lbXB0eSBhIGxvbmcgdGltZSBiYWNrIHNvIHRoYXQg
+d2UgY291bGQgZm9yY2UgZGVsZXRlDQpjZ3JvdXBzLiBUaGVyZSB3YXMgbm8gZGVmaW5pdGl2ZSB3
+YXkgb2YgcmVtb3ZpbmcgcmVmZXJlbmNlcyB0byB0aGUgY2dyb3VwDQpmcm9tIHBhZ2VfY2dyb3Vw
+IG90aGVyd2lzZS4NCg0KPiBDZ3JvdXAgY3JlYXRpb24vZGVsZXRpb24gaXMgbm90IGV4cGVjdGVk
+IHRvIGJlIGFuIHVsdHJhLWhvdCBwYXRoLCBidXQNCj4gSSdtIHN1cnByaXNlZCBpdCB0YWtlcyBs
+b25nZXIgdGhhbiBhY3R1YWxseSByZWNsYWltaW5nIGxlZnRvdmVyIHBhZ2VzLg0KPiANCj4gQnkg
+dGhlIHRpbWUgdGhlIGpvYnMgY29uY2x1ZGUsIGhvdyBtdWNoIGlzIHVzdWFsbHkgbGVmdCBpbiB0
+aGUgZ3JvdXA/DQo+IA0KPiBUaGF0IHNhaWQsIGlzIGl0IGV2ZW4gbmVjZXNzYXJ5IHRvIHByby1h
+Y3RpdmVseSByZW1vdmUgdGhlIGxlZnRvdmVyDQo+IGNhY2hlIGZyb20gdGhlIGdyb3VwIGJlZm9y
+ZSBzdGFydGluZyB0aGUgbmV4dCBqb2I/IFdoeSBub3QgbGVhdmUgaXQNCj4gZm9yIHRoZSBuZXh0
+IGpvYiB0byByZWNsYWltIGl0IGxhemlseSBzaG91bGQgbWVtb3J5IHByZXNzdXJlIGFyaXNlPw0K
+PiBJdCdzIGVhc3kgdG8gcmVjbGFpbSBwYWdlIGNhY2hlLCBhbmQgdGhlIGZpcnN0IHRvIGdvIGFz
+IGl0J3MgYmVoaW5kDQo+IHRoZSBuZXh0IGpvYidzIG1lbW9yeSBvbiB0aGUgTFJVIGxpc3QuDQoN
+Ckl0IG1pZ2h0IGFjdHVhbGx5IG1ha2Ugc2Vuc2UgdG8gbWlncmF0ZSBhbGwgdGFza3Mgb3V0IGFu
+ZCBjaGVjayB3aGF0DQp0aGUgbGVmdCBvdmVycyBsb29rIGxpa2UgLS0gc2hvdWxkIGJlIGVhc3kg
+dG8gcmVjbGFpbS4gQWxzbyBiZSBtaW5kZnVsDQppZiB5b3UgYXJlIHVzaW5nIHYxIGFuZCBoYXZl
+IHVzZV9oaWVyYXJjaHkgc2V0Lg0KDQpCYWxiaXIgU2luZ2guDQoNCg0KDQoNCg0K
 
-If only B has a program attached, it will be effective for B, C, D
-and E. If D then attaches a program itself, that will be effective for
-both D and E, and the program in B will only affect B and C. Only one
-program of a given type is effective for a cgroup.
+--=_alternative 00238EA34825806F_=
+Content-Transfer-Encoding: base64
+Content-Type: text/html; charset="GB2312"
 
-Attaching and detaching programs will be done through the bpf(2)
-syscall. For now, ingress and egress inet socket filtering are the
-only supported use-cases.
+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPlRoYW5rIHlvdS4gPC9mb250Pjxicj48Zm9u
+dCBzaXplPTIgZmFjZT0ic2Fucy1zZXJpZiI+RG8geW91IG1lYW4gbWVtb3J5LmZvcmNlX2VtcHR5
+IHdvbid0DQpiZSBkZXByZWNhdGVkIGFuZCByZW1vdmVkPzwvZm9udD48YnI+PGJyPjxmb250IHNp
+emU9MiBmYWNlPSJzYW5zLXNlcmlmIj5SZWdhcmRzLDwvZm9udD48YnI+PGZvbnQgc2l6ZT0yIGZh
+Y2U9InNhbnMtc2VyaWYiPi0tWmhhb2h1aTwvZm9udD48YnI+PGJyPjxicj48YnI+PGZvbnQgc2l6
+ZT0xIGNvbG9yPSM1ZjVmNWYgZmFjZT0ic2Fucy1zZXJpZiI+RnJvbTogJm5ic3A7ICZuYnNwOyAm
+bmJzcDsNCiZuYnNwOzwvZm9udD48Zm9udCBzaXplPTEgZmFjZT0ic2Fucy1zZXJpZiI+QmFsYmly
+IFNpbmdoICZsdDtic2luZ2hhcm9yYUBnbWFpbC5jb20mZ3Q7PC9mb250Pjxicj48Zm9udCBzaXpl
+PTEgY29sb3I9IzVmNWY1ZiBmYWNlPSJzYW5zLXNlcmlmIj5UbzogJm5ic3A7ICZuYnNwOyAmbmJz
+cDsNCiZuYnNwOzwvZm9udD48Zm9udCBzaXplPTEgZmFjZT0ic2Fucy1zZXJpZiI+Sm9oYW5uZXMg
+V2VpbmVyICZsdDtoYW5uZXNAY21weGNoZy5vcmcmZ3Q7LA0KWmhhbyBIdWkgRGluZy9DaGluYS9J
+Qk1ASUJNQ048L2ZvbnQ+PGJyPjxmb250IHNpemU9MSBjb2xvcj0jNWY1ZjVmIGZhY2U9InNhbnMt
+c2VyaWYiPkNjOiAmbmJzcDsgJm5ic3A7ICZuYnNwOw0KJm5ic3A7PC9mb250Pjxmb250IHNpemU9
+MSBmYWNlPSJzYW5zLXNlcmlmIj5UZWp1biBIZW8gJmx0O3RqQGtlcm5lbC5vcmcmZ3Q7LA0KY2dy
+b3Vwc0B2Z2VyLmtlcm5lbC5vcmcsIGxpbnV4LW1tQGt2YWNrLm9yZzwvZm9udD48YnI+PGZvbnQg
+c2l6ZT0xIGNvbG9yPSM1ZjVmNWYgZmFjZT0ic2Fucy1zZXJpZiI+RGF0ZTogJm5ic3A7ICZuYnNw
+OyAmbmJzcDsNCiZuYnNwOzwvZm9udD48Zm9udCBzaXplPTEgZmFjZT0ic2Fucy1zZXJpZiI+MjAx
+Ni0xMS0xNyDPws7nIDA2OjM5PC9mb250Pjxicj48Zm9udCBzaXplPTEgY29sb3I9IzVmNWY1ZiBm
+YWNlPSJzYW5zLXNlcmlmIj5TdWJqZWN0OiAmbmJzcDsgJm5ic3A7DQombmJzcDsgJm5ic3A7PC9m
+b250Pjxmb250IHNpemU9MSBmYWNlPSJzYW5zLXNlcmlmIj5SZTogbWVtb3J5LmZvcmNlX2VtcHR5
+DQppcyBkZXByZWNhdGVkPC9mb250Pjxicj48aHIgbm9zaGFkZT48YnI+PGJyPjxicj48dHQ+PGZv
+bnQgc2l6ZT0yPjxicj48YnI+T24gMDUvMTEvMTYgMDI6MjEsIEpvaGFubmVzIFdlaW5lciB3cm90
+ZTo8YnI+Jmd0OyBIaSw8YnI+Jmd0OyA8YnI+Jmd0OyBPbiBGcmksIE5vdiAwNCwgMjAxNiBhdCAw
+NDoyNDoyNVBNICswODAwLCBaaGFvIEh1aSBEaW5nIHdyb3RlOjxicj4mZ3Q7Jmd0OyBIZWxsbyw8
+YnI+Jmd0OyZndDs8YnI+Jmd0OyZndDsgSSdtIFpoYW9odWkgZnJvbSBJQk0gU3BlY3RydW0gTFNG
+IGRldmVsb3BtZW50IHRlYW0uIEkgZ290IGJlbG93DQptZXNzYWdlIDxicj4mZ3Q7Jmd0OyB3aGVu
+IHJ1bm5pbmcgTFNGIG9uIFNVU0UxMS40LCBzbyBJIHdvdWxkIGxpa2UgdG8gc2hhcmUgb3VyIHVz
+ZQ0Kc2NlbmFyaW8gPGJyPiZndDsmZ3Q7IGFuZCBhc2sgZm9yIHRoZSBzdWdnZXN0aW9ucyB3aXRo
+b3V0IHVzaW5nIG1lbW9yeS5mb3JjZV9lbXB0eS48YnI+Jmd0OyZndDs8YnI+Jmd0OyZndDsgbWVt
+b3J5LmZvcmNlX2VtcHR5IGlzIGRlcHJlY2F0ZWQgYW5kIHdpbGwgYmUgcmVtb3ZlZC4gTGV0IHVz
+IGtub3cNCmlmIGl0IGlzIDxicj4mZ3Q7Jmd0OyBuZWVkZWQgaW4geW91ciB1c2VjYXNlIGF0IGxp
+bnV4LW1tQGt2YWNrLm9yZzxicj4mZ3Q7Jmd0Ozxicj4mZ3Q7Jmd0OyBMU0YgaXMgYSBiYXRjaCB3
+b3JrbG9hZCBzY2hlZHVsZXIsIGl0IHVzZXMgY2dyb3VwIHRvIGRvIGJhdGNoDQpqb2JzIDxicj4m
+Z3Q7Jmd0OyByZXNvdXJjZSBlbmZvcmNlbWVudCBhbmQgYWNjb3VudGluZy4gRm9yIGVhY2ggam9i
+LCBMU0YgY3JlYXRlcw0KYSBjZ3JvdXAgPGJyPiZndDsmZ3Q7IGRpcmVjdG9yeSBhbmQgcHV0IGpv
+YidzIFBJRHMgdG8gdGhlIGNncm91cC48YnI+Jmd0OyZndDs8YnI+Jmd0OyZndDsgV2hlbiB3ZSBp
+bXBsZW1lbnQgTFNGIGNncm91cCBpbnRlZ3JhdGlvbiwgd2UgZm91bmQgY3JlYXRpbmcgYQ0KbmV3
+IGNncm91cCA8YnI+Jmd0OyZndDsgaXMgbXVjaCBzbG93ZXIgdGhhbiByZW5hbWluZyBhbiBleGlz
+dGluZyBjZ3JvdXAsIGl0J3MgYWJvdXQgaHVuZHJlZHMNCm9mIDxicj4mZ3Q7Jmd0OyBtaWxsaXNl
+Y29uZHMgdnMgbGVzcyB0aGFuIDEwIG1pbGxpc2Vjb25kcy48YnI+Jmd0OyA8YnI+PGJyPldlIGFk
+ZGVkIGZvcmNlX2VtcHR5IGEgbG9uZyB0aW1lIGJhY2sgc28gdGhhdCB3ZSBjb3VsZCBmb3JjZSBk
+ZWxldGU8YnI+Y2dyb3Vwcy4gVGhlcmUgd2FzIG5vIGRlZmluaXRpdmUgd2F5IG9mIHJlbW92aW5n
+IHJlZmVyZW5jZXMgdG8gdGhlIGNncm91cDxicj5mcm9tIHBhZ2VfY2dyb3VwIG90aGVyd2lzZS48
+YnI+PGJyPiZndDsgQ2dyb3VwIGNyZWF0aW9uL2RlbGV0aW9uIGlzIG5vdCBleHBlY3RlZCB0byBi
+ZSBhbiB1bHRyYS1ob3QgcGF0aCwNCmJ1dDxicj4mZ3Q7IEknbSBzdXJwcmlzZWQgaXQgdGFrZXMg
+bG9uZ2VyIHRoYW4gYWN0dWFsbHkgcmVjbGFpbWluZyBsZWZ0b3ZlciBwYWdlcy48YnI+Jmd0OyA8
+YnI+Jmd0OyBCeSB0aGUgdGltZSB0aGUgam9icyBjb25jbHVkZSwgaG93IG11Y2ggaXMgdXN1YWxs
+eSBsZWZ0IGluIHRoZSBncm91cD88YnI+Jmd0OyA8YnI+Jmd0OyBUaGF0IHNhaWQsIGlzIGl0IGV2
+ZW4gbmVjZXNzYXJ5IHRvIHByby1hY3RpdmVseSByZW1vdmUgdGhlIGxlZnRvdmVyPGJyPiZndDsg
+Y2FjaGUgZnJvbSB0aGUgZ3JvdXAgYmVmb3JlIHN0YXJ0aW5nIHRoZSBuZXh0IGpvYj8gV2h5IG5v
+dCBsZWF2ZSBpdDxicj4mZ3Q7IGZvciB0aGUgbmV4dCBqb2IgdG8gcmVjbGFpbSBpdCBsYXppbHkg
+c2hvdWxkIG1lbW9yeSBwcmVzc3VyZSBhcmlzZT88YnI+Jmd0OyBJdCdzIGVhc3kgdG8gcmVjbGFp
+bSBwYWdlIGNhY2hlLCBhbmQgdGhlIGZpcnN0IHRvIGdvIGFzIGl0J3MgYmVoaW5kPGJyPiZndDsg
+dGhlIG5leHQgam9iJ3MgbWVtb3J5IG9uIHRoZSBMUlUgbGlzdC48YnI+PGJyPkl0IG1pZ2h0IGFj
+dHVhbGx5IG1ha2Ugc2Vuc2UgdG8gbWlncmF0ZSBhbGwgdGFza3Mgb3V0IGFuZCBjaGVjayB3aGF0
+PGJyPnRoZSBsZWZ0IG92ZXJzIGxvb2sgbGlrZSAtLSBzaG91bGQgYmUgZWFzeSB0byByZWNsYWlt
+LiBBbHNvIGJlIG1pbmRmdWw8YnI+aWYgeW91IGFyZSB1c2luZyB2MSBhbmQgaGF2ZSB1c2VfaGll
+cmFyY2h5IHNldC48YnI+PGJyPkJhbGJpciBTaW5naC48YnI+PGJyPjwvZm9udD48L3R0Pjxicj48
+YnI+PEJSPg0K
+--=_alternative 00238EA34825806F_=--
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
-Acked-by: Alexei Starovoitov <ast@kernel.org>
----
- include/linux/bpf-cgroup.h  |  79 +++++++++++++++++++++
- include/linux/cgroup-defs.h |   4 ++
- init/Kconfig                |  12 ++++
- kernel/bpf/Makefile         |   1 +
- kernel/bpf/cgroup.c         | 167 ++++++++++++++++++++++++++++++++++++++++++++
- kernel/cgroup.c             |  18 +++++
- 6 files changed, 281 insertions(+)
- create mode 100644 include/linux/bpf-cgroup.h
- create mode 100644 kernel/bpf/cgroup.c
-
-diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-new file mode 100644
-index 0000000..ec80d0c
---- /dev/null
-+++ b/include/linux/bpf-cgroup.h
-@@ -0,0 +1,79 @@
-+#ifndef _BPF_CGROUP_H
-+#define _BPF_CGROUP_H
-+
-+#include <linux/bpf.h>
-+#include <linux/jump_label.h>
-+#include <uapi/linux/bpf.h>
-+
-+struct sock;
-+struct cgroup;
-+struct sk_buff;
-+
-+#ifdef CONFIG_CGROUP_BPF
-+
-+extern struct static_key_false cgroup_bpf_enabled_key;
-+#define cgroup_bpf_enabled static_branch_unlikely(&cgroup_bpf_enabled_key)
-+
-+struct cgroup_bpf {
-+	/*
-+	 * Store two sets of bpf_prog pointers, one for programs that are
-+	 * pinned directly to this cgroup, and one for those that are effective
-+	 * when this cgroup is accessed.
-+	 */
-+	struct bpf_prog *prog[MAX_BPF_ATTACH_TYPE];
-+	struct bpf_prog *effective[MAX_BPF_ATTACH_TYPE];
-+};
-+
-+void cgroup_bpf_put(struct cgroup *cgrp);
-+void cgroup_bpf_inherit(struct cgroup *cgrp, struct cgroup *parent);
-+
-+void __cgroup_bpf_update(struct cgroup *cgrp,
-+			 struct cgroup *parent,
-+			 struct bpf_prog *prog,
-+			 enum bpf_attach_type type);
-+
-+/* Wrapper for __cgroup_bpf_update() protected by cgroup_mutex */
-+void cgroup_bpf_update(struct cgroup *cgrp,
-+		       struct bpf_prog *prog,
-+		       enum bpf_attach_type type);
-+
-+int __cgroup_bpf_run_filter(struct sock *sk,
-+			    struct sk_buff *skb,
-+			    enum bpf_attach_type type);
-+
-+/* Wrappers for __cgroup_bpf_run_filter() guarded by cgroup_bpf_enabled. */
-+#define BPF_CGROUP_RUN_PROG_INET_INGRESS(sk,skb)			\
-+({									\
-+	int __ret = 0;							\
-+	if (cgroup_bpf_enabled)						\
-+		__ret = __cgroup_bpf_run_filter(sk, skb,		\
-+						BPF_CGROUP_INET_INGRESS); \
-+									\
-+	__ret;								\
-+})
-+
-+#define BPF_CGROUP_RUN_PROG_INET_EGRESS(sk,skb)				\
-+({									\
-+	int __ret = 0;							\
-+	if (cgroup_bpf_enabled && sk && sk == skb->sk) {		\
-+		typeof(sk) __sk = sk_to_full_sk(sk);			\
-+		if (sk_fullsock(__sk))					\
-+			__ret = __cgroup_bpf_run_filter(__sk, skb,	\
-+						BPF_CGROUP_INET_EGRESS); \
-+	}								\
-+	__ret;								\
-+})
-+
-+#else
-+
-+struct cgroup_bpf {};
-+static inline void cgroup_bpf_put(struct cgroup *cgrp) {}
-+static inline void cgroup_bpf_inherit(struct cgroup *cgrp,
-+				      struct cgroup *parent) {}
-+
-+#define BPF_CGROUP_RUN_PROG_INET_INGRESS(sk,skb) ({ 0; })
-+#define BPF_CGROUP_RUN_PROG_INET_EGRESS(sk,skb) ({ 0; })
-+
-+#endif /* CONFIG_CGROUP_BPF */
-+
-+#endif /* _BPF_CGROUP_H */
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 5b17de6..861b467 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -16,6 +16,7 @@
- #include <linux/percpu-refcount.h>
- #include <linux/percpu-rwsem.h>
- #include <linux/workqueue.h>
-+#include <linux/bpf-cgroup.h>
- 
- #ifdef CONFIG_CGROUPS
- 
-@@ -300,6 +301,9 @@ struct cgroup {
- 	/* used to schedule release agent */
- 	struct work_struct release_agent_work;
- 
-+	/* used to store eBPF programs */
-+	struct cgroup_bpf bpf;
-+
- 	/* ids of the ancestors at each level including self */
- 	int ancestor_ids[];
- };
-diff --git a/init/Kconfig b/init/Kconfig
-index 34407f1..405120b 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1154,6 +1154,18 @@ config CGROUP_PERF
- 
- 	  Say N if unsure.
- 
-+config CGROUP_BPF
-+	bool "Support for eBPF programs attached to cgroups"
-+	depends on BPF_SYSCALL && SOCK_CGROUP_DATA
-+	help
-+	  Allow attaching eBPF programs to a cgroup using the bpf(2)
-+	  syscall command BPF_PROG_ATTACH.
-+
-+	  In which context these programs are accessed depends on the type
-+	  of attachment. For instance, programs that are attached using
-+	  BPF_CGROUP_INET_INGRESS will be executed on the ingress path of
-+	  inet sockets.
-+
- config CGROUP_DEBUG
- 	bool "Example controller"
- 	default n
-diff --git a/kernel/bpf/Makefile b/kernel/bpf/Makefile
-index eed911d..b22256b 100644
---- a/kernel/bpf/Makefile
-+++ b/kernel/bpf/Makefile
-@@ -5,3 +5,4 @@ obj-$(CONFIG_BPF_SYSCALL) += hashtab.o arraymap.o percpu_freelist.o
- ifeq ($(CONFIG_PERF_EVENTS),y)
- obj-$(CONFIG_BPF_SYSCALL) += stackmap.o
- endif
-+obj-$(CONFIG_CGROUP_BPF) += cgroup.o
-diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
-new file mode 100644
-index 0000000..a0ab43f
---- /dev/null
-+++ b/kernel/bpf/cgroup.c
-@@ -0,0 +1,167 @@
-+/*
-+ * Functions to manage eBPF programs attached to cgroups
-+ *
-+ * Copyright (c) 2016 Daniel Mack
-+ *
-+ * This file is subject to the terms and conditions of version 2 of the GNU
-+ * General Public License.  See the file COPYING in the main directory of the
-+ * Linux distribution for more details.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/atomic.h>
-+#include <linux/cgroup.h>
-+#include <linux/slab.h>
-+#include <linux/bpf.h>
-+#include <linux/bpf-cgroup.h>
-+#include <net/sock.h>
-+
-+DEFINE_STATIC_KEY_FALSE(cgroup_bpf_enabled_key);
-+EXPORT_SYMBOL(cgroup_bpf_enabled_key);
-+
-+/**
-+ * cgroup_bpf_put() - put references of all bpf programs
-+ * @cgrp: the cgroup to modify
-+ */
-+void cgroup_bpf_put(struct cgroup *cgrp)
-+{
-+	unsigned int type;
-+
-+	for (type = 0; type < ARRAY_SIZE(cgrp->bpf.prog); type++) {
-+		struct bpf_prog *prog = cgrp->bpf.prog[type];
-+
-+		if (prog) {
-+			bpf_prog_put(prog);
-+			static_branch_dec(&cgroup_bpf_enabled_key);
-+		}
-+	}
-+}
-+
-+/**
-+ * cgroup_bpf_inherit() - inherit effective programs from parent
-+ * @cgrp: the cgroup to modify
-+ * @parent: the parent to inherit from
-+ */
-+void cgroup_bpf_inherit(struct cgroup *cgrp, struct cgroup *parent)
-+{
-+	unsigned int type;
-+
-+	for (type = 0; type < ARRAY_SIZE(cgrp->bpf.effective); type++) {
-+		struct bpf_prog *e;
-+
-+		e = rcu_dereference_protected(parent->bpf.effective[type],
-+					      lockdep_is_held(&cgroup_mutex));
-+		rcu_assign_pointer(cgrp->bpf.effective[type], e);
-+	}
-+}
-+
-+/**
-+ * __cgroup_bpf_update() - Update the pinned program of a cgroup, and
-+ *                         propagate the change to descendants
-+ * @cgrp: The cgroup which descendants to traverse
-+ * @parent: The parent of @cgrp, or %NULL if @cgrp is the root
-+ * @prog: A new program to pin
-+ * @type: Type of pinning operation (ingress/egress)
-+ *
-+ * Each cgroup has a set of two pointers for bpf programs; one for eBPF
-+ * programs it owns, and which is effective for execution.
-+ *
-+ * If @prog is %NULL, this function attaches a new program to the cgroup and
-+ * releases the one that is currently attached, if any. @prog is then made
-+ * the effective program of type @type in that cgroup.
-+ *
-+ * If @prog is %NULL, the currently attached program of type @type is released,
-+ * and the effective program of the parent cgroup (if any) is inherited to
-+ * @cgrp.
-+ *
-+ * Then, the descendants of @cgrp are walked and the effective program for
-+ * each of them is set to the effective program of @cgrp unless the
-+ * descendant has its own program attached, in which case the subbranch is
-+ * skipped. This ensures that delegated subcgroups with own programs are left
-+ * untouched.
-+ *
-+ * Must be called with cgroup_mutex held.
-+ */
-+void __cgroup_bpf_update(struct cgroup *cgrp,
-+			 struct cgroup *parent,
-+			 struct bpf_prog *prog,
-+			 enum bpf_attach_type type)
-+{
-+	struct bpf_prog *old_prog, *effective;
-+	struct cgroup_subsys_state *pos;
-+
-+	old_prog = xchg(cgrp->bpf.prog + type, prog);
-+
-+	effective = (!prog && parent) ?
-+		rcu_dereference_protected(parent->bpf.effective[type],
-+					  lockdep_is_held(&cgroup_mutex)) :
-+		prog;
-+
-+	css_for_each_descendant_pre(pos, &cgrp->self) {
-+		struct cgroup *desc = container_of(pos, struct cgroup, self);
-+
-+		/* skip the subtree if the descendant has its own program */
-+		if (desc->bpf.prog[type] && desc != cgrp)
-+			pos = css_rightmost_descendant(pos);
-+		else
-+			rcu_assign_pointer(desc->bpf.effective[type],
-+					   effective);
-+	}
-+
-+	if (prog)
-+		static_branch_inc(&cgroup_bpf_enabled_key);
-+
-+	if (old_prog) {
-+		bpf_prog_put(old_prog);
-+		static_branch_dec(&cgroup_bpf_enabled_key);
-+	}
-+}
-+
-+/**
-+ * __cgroup_bpf_run_filter() - Run a program for packet filtering
-+ * @sk: The socken sending or receiving traffic
-+ * @skb: The skb that is being sent or received
-+ * @type: The type of program to be exectuted
-+ *
-+ * If no socket is passed, or the socket is not of type INET or INET6,
-+ * this function does nothing and returns 0.
-+ *
-+ * The program type passed in via @type must be suitable for network
-+ * filtering. No further check is performed to assert that.
-+ *
-+ * This function will return %-EPERM if any if an attached program was found
-+ * and if it returned != 1 during execution. In all other cases, 0 is returned.
-+ */
-+int __cgroup_bpf_run_filter(struct sock *sk,
-+			    struct sk_buff *skb,
-+			    enum bpf_attach_type type)
-+{
-+	struct bpf_prog *prog;
-+	struct cgroup *cgrp;
-+	int ret = 0;
-+
-+	if (!sk || !sk_fullsock(sk))
-+		return 0;
-+
-+	if (sk->sk_family != AF_INET &&
-+	    sk->sk_family != AF_INET6)
-+		return 0;
-+
-+	cgrp = sock_cgroup_ptr(&sk->sk_cgrp_data);
-+
-+	rcu_read_lock();
-+
-+	prog = rcu_dereference(cgrp->bpf.effective[type]);
-+	if (prog) {
-+		unsigned int offset = skb->data - skb_network_header(skb);
-+
-+		__skb_push(skb, offset);
-+		ret = bpf_prog_run_save_cb(prog, skb) == 1 ? 0 : -EPERM;
-+		__skb_pull(skb, offset);
-+	}
-+
-+	rcu_read_unlock();
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(__cgroup_bpf_run_filter);
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 85bc9be..2ee9ec3 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -5074,6 +5074,8 @@ static void css_release_work_fn(struct work_struct *work)
- 		if (cgrp->kn)
- 			RCU_INIT_POINTER(*(void __rcu __force **)&cgrp->kn->priv,
- 					 NULL);
-+
-+		cgroup_bpf_put(cgrp);
- 	}
- 
- 	mutex_unlock(&cgroup_mutex);
-@@ -5281,6 +5283,9 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	if (!cgroup_on_dfl(cgrp))
- 		cgrp->subtree_control = cgroup_control(cgrp);
- 
-+	if (parent)
-+		cgroup_bpf_inherit(cgrp, parent);
-+
- 	cgroup_propagate_control(cgrp);
- 
- 	/* @cgrp doesn't have dir yet so the following will only create csses */
-@@ -6495,6 +6500,19 @@ static __init int cgroup_namespaces_init(void)
- }
- subsys_initcall(cgroup_namespaces_init);
- 
-+#ifdef CONFIG_CGROUP_BPF
-+void cgroup_bpf_update(struct cgroup *cgrp,
-+		       struct bpf_prog *prog,
-+		       enum bpf_attach_type type)
-+{
-+	struct cgroup *parent = cgroup_parent(cgrp);
-+
-+	mutex_lock(&cgroup_mutex);
-+	__cgroup_bpf_update(cgrp, parent, prog, type);
-+	mutex_unlock(&cgroup_mutex);
-+}
-+#endif /* CONFIG_CGROUP_BPF */
-+
- #ifdef CONFIG_CGROUP_DEBUG
- static struct cgroup_subsys_state *
- debug_css_alloc(struct cgroup_subsys_state *parent_css)
--- 
-2.7.4
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
