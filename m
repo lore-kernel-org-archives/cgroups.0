@@ -1,87 +1,199 @@
-From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [RESEND][PATCH v4] cgroup: Use CAP_SYS_RESOURCE to allow a
- process to migrate other tasks between cgroups
-Date: Tue, 22 Nov 2016 16:57:48 -0800
-Message-ID: <CALAqxLXk+A9=A0oXGEduphXOQdbMg-wuGxmLkEk9cPHyn44X5Q@mail.gmail.com>
-References: <1478647728-30357-1-git-send-email-john.stultz@linaro.org>
- <CALCETrU5fCWoe0RXfKWuN7Zt9vLvoyHFcZnVqeqiKBpSKrMrxA@mail.gmail.com>
- <20161109000342.GA42532@ast-mbp.thefacebook.com> <CALCETrW_mPHneTvcAM6HyBLCJqcwKmcYEoC+kseyuyQZzj2a=A@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=nMDMiZdF0r6NuM8aqFSzidRsuetyw0CWLxM+C9PmUk0=;
-        b=Dmsn/was+ymXnrd1UcN3Ui6MxLdhL7HkheD91kZbDkEf7ZZmJ5jucRhU7RcPWoJNTC
-         IOgSUNjZZaS5G3PGTpCA7cKAI36ZNp3osnHVi9oFCP4tiPwVAmqkcGb97bOrjznW1eHb
-         y78KqQdt9Ug2DFC6Ojzo4fEsgagcNL+s+aiVA=
-In-Reply-To: <CALCETrW_mPHneTvcAM6HyBLCJqcwKmcYEoC+kseyuyQZzj2a=A@mail.gmail.com>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v9 0/6] Add eBPF hooks for cgroups
+Date: Wed, 23 Nov 2016 16:52:24 +0100
+Message-ID: <1479916350-28462-1-git-send-email-daniel@zonque.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kafai-b10kYP2dOMg@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, Harald Hoyer <harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh@google.>
+To: htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
 
-On Tue, Nov 8, 2016 at 4:12 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
-> On Tue, Nov 8, 2016 at 4:03 PM, Alexei Starovoitov
-> <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->> On Tue, Nov 08, 2016 at 03:51:40PM -0800, Andy Lutomirski wrote:
->>>
->>> I hate to say it, but I think I may see a problem.  Current
->>> developments are afoot to make cgroups do more than resource control.
->>> For example, there's Landlock and there's Daniel's ingress/egress
->>> filter thing.  Current cgroup controllers can mostly just DoS their
->>> controlled processes.  These new controllers (or controller-like
->>> things) can exfiltrate data and change semantics.
->>>
->>> Does anyone have a security model in mind for these controllers and
->>> the cgroups that they're attached to?  I'm reasonably confident that
->>> CAP_SYS_RESOURCE is not the answer...
->>
->> and specifically the answer is... ?
->> Also would be great if you start with specifying the question first
->> and the problem you're trying to solve.
->>
->
-> I don't have a good answer right now.  Here are some constraints, though:
->
-> 1. An insufficiently privileged process should not be able to move a
-> victim into a dangerous cgroup.
->
-> 2. An insufficiently privileged process should not be able to move
-> itself into a dangerous cgroup and then use execve to gain privilege
-> such that the execve'd program can be compromised.
->
-> 3. An insufficiently privileged process should not be able to make an
-> existing cgroup dangerous in a way that could compromise a victim in
-> that cgroup.
->
-> 4. An insufficiently privileged process should not be able to make a
-> cgroup dangerous in a way that bypasses protections that would
-> otherwise protect execve() as used by itself or some other process in
-> that cgroup.
->
-> Keep in mind that "dangerous" may apply to a cgroup's descendents in
-> addition to the cgroup being controlled.
+This is v9 of the patch set to allow eBPF programs for network
+filtering and accounting to be attached to cgroups, so that they apply
+to all sockets of all tasks placed in that cgroup. The logic also
+allows to be extendeded for other cgroup based eBPF logic.
 
-Sorry for taking awhile to get back to you here.  I'm a little
-befuddled as to what next steps I should consider (and honestly, I'm
-not totally sure I really grok your concern here, particularly what
-you mean with "dangrous cgroups").
+Again, only minor details are updated in this version.
 
-So is going back to the CAP_CGROUP_MIGRATE approach (to properly
-separate "sufficiently" from "insufficiently privileged") better?
 
-Or something closer to the original method Android used of each cgroup
-having an allow_attach() check which could determine what is
-sufficiently privledged for the respective level of danger the cgroup
-might poise?
+Thanks,
+Daniel
 
-Or just stepping back, what method would you imagine to be reasonable
-to allow a specified task to migrate other tasks between cgroups
-without it having to be root/suid?
 
-thanks
--john
+Changes from v8:
+
+* Move the egress hooks into ip_finish_output() and ip6_finish_output()
+  so they run after the netfilter hooks. For IPv4 multicast, add a new
+  ip_mc_finish_output() callback that is invoked on success by
+  netfilter, and call the eBPF program from there.
+
+
+Changes from v7:
+
+* Replace the static inline function cgroup_bpf_run_filter() with
+  two specific macros for ingress and egress.  This addresses David
+  Miller's concern regarding skb->sk vs. sk in the egress path.
+  Thanks a lot to Daniel Borkmann and Alexei Starovoitov for the
+  suggestions.
+
+
+Changes from v6:
+
+* Rebased to 4.9-rc2
+
+* Add EXPORT_SYMBOL(__cgroup_bpf_run_filter). The kbuild test robot
+  now succeeds in building this version of the patch set.
+
+* Switch from bpf_prog_run_save_cb() to bpf_prog_run_clear_cb() to not
+  tamper with the contents of skb->cb[]. Pointed out by Daniel
+  Borkmann.
+
+* Use sk_to_full_sk() in the egress path, as suggested by Daniel
+  Borkmann.
+
+* Renamed BPF_PROG_TYPE_CGROUP_SOCKET to BPF_PROG_TYPE_CGROUP_SKB, as
+  requested by David Ahern.
+
+* Added Alexei's Acked-by tags.
+
+
+Changes from v5:
+
+* The eBPF programs now operate on L3 rather than on L2 of the packets,
+  and the egress hooks were moved from __dev_queue_xmit() to
+  ip*_output().
+
+* For BPF_PROG_TYPE_CGROUP_SOCKET, disallow direct access to the skb
+  through BPF_LD_[ABS|IND] instructions, but hook up the
+  bpf_skb_load_bytes() access helper instead. Thanks to Daniel Borkmann
+  for the help.
+
+
+Changes from v4:
+
+* Plug an skb leak when dropping packets due to eBPF verdicts in
+  __dev_queue_xmit(). Spotted by Daniel Borkmann.
+
+* Check for sk_fullsock(sk) in __cgroup_bpf_run_filter() so we don't
+  operate on timewait or request sockets. Suggested by Daniel Borkmann.
+
+* Add missing @parent parameter in kerneldoc of __cgroup_bpf_update().
+  Spotted by Rami Rosen.
+
+* Include linux/jump_label.h from bpf-cgroup.h to fix a kbuild error.
+
+
+Changes from v3:
+
+* Dropped the _FILTER suffix from BPF_PROG_TYPE_CGROUP_SOCKET_FILTER,
+  renamed BPF_ATTACH_TYPE_CGROUP_INET_{E,IN}GRESS to
+  BPF_CGROUP_INET_{IN,E}GRESS and alias BPF_MAX_ATTACH_TYPE to
+  __BPF_MAX_ATTACH_TYPE, as suggested by Daniel Borkmann.
+
+* Dropped the attach_flags member from the anonymous struct for BPF
+  attach operations in union bpf_attr. They can be added later on via
+  CHECK_ATTR. Requested by Daniel Borkmann and Alexei.
+
+* Release old_prog at the end of __cgroup_bpf_update rather that at
+  the beginning to fix a race gap between program updates and their
+  users. Spotted by Daniel Borkmann.
+
+* Plugged an skb leak when dropping packets on the egress path.
+  Spotted by Daniel Borkmann.
+
+* Add cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org to the loop, as suggested by Rami Rosen.
+
+* Some minor coding style adoptions not worth mentioning in particular.
+
+
+Changes from v2:
+
+* Fixed the RCU locking details Tejun pointed out.
+
+* Assert bpf_attr.flags == 0 in BPF_PROG_DETACH syscall handler.
+
+
+Changes from v1:
+
+* Moved all bpf specific cgroup code into its own file, and stub
+  out related functions for !CONFIG_CGROUP_BPF as static inline nops.
+  This way, the call sites are not cluttered with #ifdef guards while
+  the feature remains compile-time configurable.
+
+* Implemented the new scheme proposed by Tejun. Per cgroup, store one
+  set of pointers that are pinned to the cgroup, and one for the
+  programs that are effective. When a program is attached or detached,
+  the change is propagated to all the cgroup's descendants. If a
+  subcgroup has its own pinned program, skip the whole subbranch in
+  order to allow delegation models.
+
+* The hookup for egress packets is now done from __dev_queue_xmit().
+
+* A static key is now used in both the ingress and egress fast paths
+  to keep performance penalties close to zero if the feature is
+  not in use.
+
+* Overall cleanup to make the accessors use the program arrays.
+  This should make it much easier to add new program types, which
+  will then automatically follow the pinned vs. effective logic.
+
+* Fixed locking issues, as pointed out by Eric Dumazet and Alexei
+  Starovoitov. Changes to the program array are now done with
+  xchg() and are protected by cgroup_mutex.
+
+* eBPF programs are now expected to return 1 to let the packet pass,
+  not >= 0. Pointed out by Alexei.
+
+* Operation is now limited to INET sockets, so local AF_UNIX sockets
+  are not affected. The enum members are renamed accordingly. In case
+  other socket families should be supported, this can be extended in
+  the future.
+
+* The sample program learned to support both ingress and egress, and
+  can now optionally make the eBPF program drop packets by making it
+  return 0.
+
+
+Daniel Mack (6):
+  bpf: add new prog type for cgroup socket filtering
+  cgroup: add support for eBPF programs
+  bpf: add BPF_PROG_ATTACH and BPF_PROG_DETACH commands
+  net: filter: run cgroup eBPF ingress programs
+  net: ipv4, ipv6: run cgroup eBPF egress programs
+  samples: bpf: add userspace example for attaching eBPF programs to
+    cgroups
+
+Daniel Mack (6):
+  bpf: add new prog type for cgroup socket filtering
+  cgroup: add support for eBPF programs
+  bpf: add BPF_PROG_ATTACH and BPF_PROG_DETACH commands
+  net: filter: run cgroup eBPF ingress programs
+  net: ipv4, ipv6: run cgroup eBPF egress programs
+  samples: bpf: add userspace example for attaching eBPF programs to
+    cgroups
+
+ include/linux/bpf-cgroup.h      |  79 +++++++++++++++++++
+ include/linux/cgroup-defs.h     |   4 +
+ include/uapi/linux/bpf.h        |  17 ++++
+ init/Kconfig                    |  12 +++
+ kernel/bpf/Makefile             |   1 +
+ kernel/bpf/cgroup.c             | 167 ++++++++++++++++++++++++++++++++++++++++
+ kernel/bpf/syscall.c            |  81 +++++++++++++++++++
+ kernel/cgroup.c                 |  18 +++++
+ net/core/filter.c               |  27 +++++++
+ net/ipv4/ip_output.c            |  26 ++++++-
+ net/ipv6/ip6_output.c           |   9 +++
+ samples/bpf/Makefile            |   2 +
+ samples/bpf/libbpf.c            |  21 +++++
+ samples/bpf/libbpf.h            |   3 +
+ samples/bpf/test_cgrp2_attach.c | 147 +++++++++++++++++++++++++++++++++++
+ 15 files changed, 612 insertions(+), 2 deletions(-)
+ create mode 100644 include/linux/bpf-cgroup.h
+ create mode 100644 kernel/bpf/cgroup.c
+ create mode 100644 samples/bpf/test_cgrp2_attach.c
+
+-- 
+2.7.4
