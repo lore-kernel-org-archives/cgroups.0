@@ -1,49 +1,27 @@
-From: Marat Khalili <mkh-CePww0+mnY4@public.gmane.org>
-Subject: cgroups and nice
-Date: Fri, 25 Nov 2016 17:34:37 +0300
-Message-ID: <8e909b7a-ad0f-431c-4981-3cafe2690da1@rqc.ru>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH v9 0/6] Add eBPF hooks for cgroups
+Date: Fri, 25 Nov 2016 18:15:44 -0500 (EST)
+Message-ID: <20161125.181544.427209012805564830.davem@davemloft.net>
+References: <1479916350-28462-1-git-send-email-daniel@zonque.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1479916350-28462-1-git-send-email-daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: Text/Plain; charset="us-ascii"
+To: daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org
+Cc: htejun-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-b10kYP2dOMg@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-I have a question as a cgroup cpu limits user: how does it interact with 
-nice? Documentation creates the impression that, as long as number of 
-processes demanding the cpu time exceeds number of available cores, time 
-allocated will be proportional to configured cpu.shares. However, in 
-practice I observe that group with niced processes significantly under 
-perform.
+From: Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>
+Date: Wed, 23 Nov 2016 16:52:24 +0100
 
-For example, suppose on a 6-core box /cgroup/cpu/group1/cpu.shares is 
-400, and /cgroup/cpu/group2/cpu.shares is 200.
-1) If I run `stress -c 6` in both groups, I should see approximately 
-400% of cpu time in group1 and 200% in group2 in top output, regardless 
-of their relative nice value.
-2) If I run `nice -n 19 stress -c 1` in cgroup1 and `stress -c 24` in 
-group2, I should see at least 100% of cpu time in group1.
+> This is v9 of the patch set to allow eBPF programs for network
+> filtering and accounting to be attached to cgroups, so that they apply
+> to all sockets of all tasks placed in that cgroup. The logic also
+> allows to be extendeded for other cgroup based eBPF logic.
+> 
+> Again, only minor details are updated in this version.
 
-What I see is significantly less cpu time in group1 if group1 processes 
-happen to have greater nice value, and especially if group2 have greater 
-number of processes involved: cpu load of group1 in example 2 can be as 
-low as 20%. It may create tensions among users in my case; how can this 
-be avoided except by renicing all processes to the same value?
-
-> $ uname -a
-> Linux redacted 2.6.32-642.11.1.el6.x86_64 #1 SMP Fri Nov 18 19:25:05 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
-
-> $ lsb_release -a
-> LSB Version:	:base-4.0-amd64:base-4.0-noarch:core-4.0-amd64:core-4.0-noarch:graphics-4.0-amd64:graphics-4.0-noarch:printing-4.0-amd64:printing-4.0-noarch
-> Distributor ID:	CentOS
-> Description:	CentOS release 6.8 (Final)
-> Release:	6.8
-> Codename:	Final
-
-(My apologies if I'm posting to incorrect list.)
-
---
-
-With Best Regards,
-Marat Khalili
+Series applied, thanks for working so hard to see this through
+to the very end.
