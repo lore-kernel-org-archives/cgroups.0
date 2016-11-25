@@ -1,38 +1,49 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH] cpuset: Remove unused 'struct cpuset*' variable
-Date: Fri, 25 Nov 2016 10:46:08 +0100
-Message-ID: <4410043.lxDXIbV3iK@wuerfel>
-References: <kirtika@chromium.org> <1480049712-17224-1-git-send-email-kirtika@chromium.org> <5837D01C.1070803@huawei.com>
+From: Marat Khalili <mkh-CePww0+mnY4@public.gmane.org>
+Subject: cgroups and nice
+Date: Fri, 25 Nov 2016 17:34:37 +0300
+Message-ID: <8e909b7a-ad0f-431c-4981-3cafe2690da1@rqc.ru>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5837D01C.1070803-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Kirtika Ruchandani <kirtika-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Friday, November 25, 2016 1:46:04 PM CET Zefan Li wrote:
-> On 2016/11/25 12:55, Kirtika Ruchandani wrote:
-> > 'struct cpuset* cs' that is set but not used, was introduced in commit
-> > 1f7dd3e5a6e4 ("cgroup: fix handling of multi-destination migration from subtree_control enabling").
-> > cpuset_cancel_attach() uses css_cs(css) instead. Compiling with W=1
-> > gives the folllowing harmless warning, which we'd like to fix to
-> > reduce the noise with W=1 in the kernel.
-> > 
-> > kernel/cpuset.c: In function ‘cpuset_cancel_attach’:
-> > kernel/cpuset.c:1502:17: warning: variable ‘cs’ set but not used [-Wunused-but-set-variable]
-> >   struct cpuset *cs;
-> >                  ^
-> > 
-> > Fixes: 1f7dd3e5a6e4 ("cgroup: fix handling of multi-destination migration from subtree_control enabling").
-> 
-> This isn't a bug, so I don't think this tag is proper.
+I have a question as a cgroup cpu limits user: how does it interact with 
+nice? Documentation creates the impression that, as long as number of 
+processes demanding the cpu time exceeds number of available cores, time 
+allocated will be proportional to configured cpu.shares. However, in 
+practice I observe that group with niced processes significantly under 
+perform.
 
-I think it's ok since the changelog makes it clear that the
-warning is harmless. It's still useful information to know
-what commit introduced the warning, and the warning is fixed
-by this patch.
+For example, suppose on a 6-core box /cgroup/cpu/group1/cpu.shares is 
+400, and /cgroup/cpu/group2/cpu.shares is 200.
+1) If I run `stress -c 6` in both groups, I should see approximately 
+400% of cpu time in group1 and 200% in group2 in top output, regardless 
+of their relative nice value.
+2) If I run `nice -n 19 stress -c 1` in cgroup1 and `stress -c 24` in 
+group2, I should see at least 100% of cpu time in group1.
 
-	Arnd
+What I see is significantly less cpu time in group1 if group1 processes 
+happen to have greater nice value, and especially if group2 have greater 
+number of processes involved: cpu load of group1 in example 2 can be as 
+low as 20%. It may create tensions among users in my case; how can this 
+be avoided except by renicing all processes to the same value?
+
+> $ uname -a
+> Linux redacted 2.6.32-642.11.1.el6.x86_64 #1 SMP Fri Nov 18 19:25:05 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
+
+> $ lsb_release -a
+> LSB Version:	:base-4.0-amd64:base-4.0-noarch:core-4.0-amd64:core-4.0-noarch:graphics-4.0-amd64:graphics-4.0-noarch:printing-4.0-amd64:printing-4.0-noarch
+> Distributor ID:	CentOS
+> Description:	CentOS release 6.8 (Final)
+> Release:	6.8
+> Codename:	Final
+
+(My apologies if I'm posting to incorrect list.)
+
+--
+
+With Best Regards,
+Marat Khalili
