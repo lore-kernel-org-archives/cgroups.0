@@ -1,19 +1,19 @@
 From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCHv13 1/3] rdmacg: Added rdma cgroup controller
-Date: Fri,  2 Dec 2016 19:07:15 +0000
-Message-ID: <1480705637-2986-2-git-send-email-pandit.parav@gmail.com>
+Subject: [PATCHv13 3/3] rdmacg: Added documentation for rdmacg
+Date: Fri,  2 Dec 2016 19:07:17 +0000
+Message-ID: <1480705637-2986-4-git-send-email-pandit.parav@gmail.com>
 References: <1480705637-2986-1-git-send-email-pandit.parav@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=dpBHGt2RxgXMZ5bAxPCMiCWUceLpXaNmSuJo24uavic=;
-        b=CnzdNLW1d/u9g3mRauSTgfU8q3Ah7e2/mqT66TkGiFMLZn5RvF1qc4Owq2VJY4uDP6
-         LbyzqXbEBRoC57Dg/V40RK2rOqdcdQ7P14F3jfnKbBdeQrE9jmj0YICH+s81f+csGtZD
-         +V8QW7iQ0qIePsS0xRC9FeCCI8O5jmsy9wo0E1cVLiOaS2OPlq0brVTWRZA71V54s3kI
-         EZMZloGiQaaVc3Lb7/vrFn8p7VwxfRvSr9Iiuw0hcPh0I4Rn5zIZkTtIzdBHYiwFXtzn
-         tNum1AyppGSshI8JpjnXjMJxio+OfErhMK4sXWvrOFkQzzJFh877fdh4gZQ+8DW+W1JS
-         cfJg==
+        bh=acG6YymFpYpiOJJU6BZQixcs4fqNqU0GzDC5BkjgF7s=;
+        b=PNbHcwIXcaV+RtSw4LPazMGw8o5WDUJDl576VFG8UHINKydSFZwwhOzNfk4n0TjOmf
+         IyFlaX17N2+oHZBe724YrW1VLThaRhnYSdjx9XM6I41i0t156UEZyPQhk/aEr6BRV1yA
+         btp33p5BThDxDnG9x3+k1HZPbmxczVjNXoPUeddOKZWidb1D/nxdiYY96owPIVIonYAt
+         jfjI1JTtIe/vzzShGVqlPCEd54v/oZt5HdQ8S9NeHHUKa9D+L7HMlHjABYI+zUtTWnCs
+         FCJeQqtZ0B6tuKcD68nMLjjtXvHphKUIpF/QyIz42DZN7ZyLDR7sL+z96mibpeltmCvb
+         2qhQ==
 In-Reply-To: <1480705637-2986-1-git-send-email-pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,768 +23,186 @@ Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org, haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org
 Cc: corbet-T1hC0tSOHrs@public.gmane.org, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Added rdma cgroup controller that does accounting, limit enforcement
-on rdma/IB resources.
-
-Added rdma cgroup header file which defines its APIs to perform
-charing/uncharing functionality. It also defined APIs for RDMA/IB
-stack for device registration. Devices which are registered will
-participate in controller functions of accounting and limit
-enforcements. It define rdmacg_device structure to bind IB stack
-and RDMA cgroup controller.
-
-RDMA resources are tracked using resource pool. Resource pool is per
-device, per cgroup entity which allows setting up accounting limits
-on per device basis.
-
-Currently resources are defined by the RDMA cgroup.
-
-Resource pool is created/destroyed dynamically whenever
-charging/uncharging occurs respectively and whenever user
-configuration is done. Its a tradeoff of memory vs little more code
-space that creates resource pool object whenever necessary, instead of
-creating them during cgroup creation and device registration time.
+Added documentation for v1 and v2 version describing high
+level design and usage examples on using rdma controller.
 
 Signed-off-by: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/cgroup_rdma.h   |  53 ++++
- include/linux/cgroup_subsys.h |   4 +
- init/Kconfig                  |  10 +
- kernel/Makefile               |   1 +
- kernel/cgroup_rdma.c          | 617 ++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 685 insertions(+)
- create mode 100644 include/linux/cgroup_rdma.h
- create mode 100644 kernel/cgroup_rdma.c
+ Documentation/cgroup-v1/rdma.txt | 109 +++++++++++++++++++++++++++++++++++++++
+ Documentation/cgroup-v2.txt      |  38 ++++++++++++++
+ 2 files changed, 147 insertions(+)
+ create mode 100644 Documentation/cgroup-v1/rdma.txt
 
-diff --git a/include/linux/cgroup_rdma.h b/include/linux/cgroup_rdma.h
+diff --git a/Documentation/cgroup-v1/rdma.txt b/Documentation/cgroup-v1/rdma.txt
 new file mode 100644
-index 0000000..e94290b
+index 0000000..af61817
 --- /dev/null
-+++ b/include/linux/cgroup_rdma.h
-@@ -0,0 +1,53 @@
-+/*
-+ * Copyright (C) 2016 Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-+ *
-+ * This file is subject to the terms and conditions of version 2 of the GNU
-+ * General Public License. See the file COPYING in the main directory of the
-+ * Linux distribution for more details.
-+ */
++++ b/Documentation/cgroup-v1/rdma.txt
+@@ -0,0 +1,109 @@
++				RDMA Controller
++				----------------
 +
-+#ifndef _CGROUP_RDMA_H
-+#define _CGROUP_RDMA_H
++Contents
++--------
 +
-+#include <linux/cgroup.h>
++1. Overview
++  1-1. What is RDMA controller?
++  1-2. Why RDMA controller needed?
++  1-3. How is RDMA controller implemented?
++2. Usage Examples
 +
-+enum rdmacg_resource_type {
-+	RDMACG_RESOURCE_HCA_HANDLE,
-+	RDMACG_RESOURCE_HCA_OBJECT,
-+	RDMACG_RESOURCE_MAX,
-+};
++1. Overview
 +
-+#ifdef CONFIG_CGROUP_RDMA
++1-1. What is RDMA controller?
++-----------------------------
 +
-+struct rdma_cgroup {
-+	struct cgroup_subsys_state	css;
++RDMA controller allows user to limit RDMA/IB specific resources that a given
++set of processes can use. These processes are grouped using RDMA controller.
 +
-+	/*
-+	 * head to keep track of all resource pools
-+	 * that belongs to this cgroup.
-+	 */
-+	struct list_head		rpools;
-+};
++RDMA controller defines two resources which can be limited for processes of a
++cgroup.
 +
-+struct rdmacg_device {
-+	struct list_head	dev_node;
-+	struct list_head	rpools;
-+	char			*name;
-+};
++1-2. Why RDMA controller needed?
++--------------------------------
 +
-+/*
-+ * APIs for RDMA/IB stack to publish when a device wants to
-+ * participate in resource accounting
-+ */
-+int rdmacg_register_device(struct rdmacg_device *device);
-+void rdmacg_unregister_device(struct rdmacg_device *device);
++Currently user space applications can easily take away all the rdma verb
++specific resources such as AH, CQ, QP, MR etc. Due to which other applications
++in other cgroup or kernel space ULPs may not even get chance to allocate any
++rdma resources. This can leads to service unavailability.
 +
-+/* APIs for RDMA/IB stack to charge/uncharge pool specific resources */
-+int rdmacg_try_charge(struct rdma_cgroup **rdmacg,
-+		      struct rdmacg_device *device,
-+		      enum rdmacg_resource_type index);
-+void rdmacg_uncharge(struct rdma_cgroup *cg,
-+		     struct rdmacg_device *device,
-+		     enum rdmacg_resource_type index);
-+#endif	/* CONFIG_CGROUP_RDMA */
-+#endif	/* _CGROUP_RDMA_H */
-diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
-index 0df0336a..d0e597c 100644
---- a/include/linux/cgroup_subsys.h
-+++ b/include/linux/cgroup_subsys.h
-@@ -56,6 +56,10 @@ SUBSYS(hugetlb)
- SUBSYS(pids)
- #endif
++Therefore RDMA controller is needed through which resource consumption
++of processes can be limited. Through this controller different rdma
++resources can be accounted.
++
++1-3. How is RDMA controller implemented?
++----------------------------------------
++
++RDMA cgroup allows limit configuration of resources. Rdma cgroup maintains
++resource accounting per cgroup, per device using resource pool structure.
++Each such resource pool is limited up to 64 resources in given resource pool
++by rdma cgroup, which can be extended later if required.
++
++This resource pool object is linked to the cgroup css. Typically there
++are 0 to 4 resource pool instances per cgroup, per device in most use cases.
++But nothing limits to have it more. At present hundreds of RDMA devices per
++single cgroup may not be handled optimally, however there is no
++known use case or requirement for such configuration either.
++
++Since RDMA resources can be allocated from any process and can be freed by any
++of the child processes which shares the address space, rdma resources are
++always owned by the creator cgroup css. This allows process migration from one
++to other cgroup without major complexity of transferring resource ownership;
++because such ownership is not really present due to shared nature of
++rdma resources. Linking resources around css also ensures that cgroups can be
++deleted after processes migrated. This allow progress migration as well with
++active resources, even though that is not a primary use case.
++
++Whenever RDMA resource charging occurs, owner rdma cgroup is returned to
++the caller. Same rdma cgroup should be passed while uncharging the resource.
++This also allows process migrated with active RDMA resource to charge
++to new owner cgroup for new resource. It also allows to uncharge resource of
++a process from previously charged cgroup which is migrated to new cgroup,
++even though that is not a primary use case.
++
++Resource pool object is created in following situations.
++(a) User sets the limit and no previous resource pool exist for the device
++of interest for the cgroup.
++(b) No resource limits were configured, but IB/RDMA stack tries to
++charge the resource. So that it correctly uncharge them when applications are
++running without limits and later on when limits are enforced during uncharging,
++otherwise usage count will drop to negative.
++
++Resource pool is destroyed if all the resource limits are set to max and
++it is the last resource getting deallocated.
++
++User should set all the limit to max value if it intents to remove/unconfigure
++the resource pool for a particular device.
++
++IB stack honors limits enforced by the rdma controller. When application
++query about maximum resource limits of IB device, it returns minimum of
++what is configured by user for a given cgroup and what is supported by
++IB device.
++
++Following resources can be accounted by rdma controller.
++  hca_handle	Maximum number of HCA Handles
++  hca_object 	Maximum number of HCA Objects
++
++2. Usage Examples
++-----------------
++
++(a) Configure resource limit:
++echo mlx4_0 hca_handle=2 hca_object=2000 > /sys/fs/cgroup/rdma/1/rdma.max
++echo ocrdma1 hca_handle=3 > /sys/fs/cgroup/rdma/2/rdma.max
++
++(b) Query resource limit:
++cat /sys/fs/cgroup/rdma/2/rdma.max
++#Output:
++mlx4_0 hca_handle=2 hca_object=2000
++ocrdma1 hca_handle=3 hca_object=max
++
++(c) Query current usage:
++cat /sys/fs/cgroup/rdma/2/rdma.current
++#Output:
++mlx4_0 hca_handle=1 hca_object=20
++ocrdma1 hca_handle=1 hca_object=23
++
++(d) Delete resource limit:
++echo echo mlx4_0 hca_handle=max hca_object=max > /sys/fs/cgroup/rdma/1/rdma.max
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 4cc07ce..94350d7 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -47,6 +47,8 @@ CONTENTS
+   5-3. IO
+     5-3-1. IO Interface Files
+     5-3-2. Writeback
++  5-4. RDMA
++    5-4-1. RDMA Interface Files
+ 6. Namespace
+   6-1. Basics
+   6-2. The Root and Views
+@@ -1119,6 +1121,42 @@ writeback as follows.
+ 	vm.dirty[_background]_ratio.
  
-+#if IS_ENABLED(CONFIG_CGROUP_RDMA)
-+SUBSYS(rdma)
-+#endif
-+
- /*
-  * The following subsystems are not supported on the default hierarchy.
-  */
-diff --git a/init/Kconfig b/init/Kconfig
-index 34407f1..351bcac 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1090,6 +1090,16 @@ config CGROUP_PIDS
- 	  since the PIDs limit only affects a process's ability to fork, not to
- 	  attach to a cgroup.
  
-+config CGROUP_RDMA
-+	bool "RDMA controller"
-+	help
-+	  Provides enforcement of RDMA resources defined by IB stack.
-+	  It is fairly easy for consumers to exhaust RDMA resources, which
-+	  can result into resource unavailability to other consumers.
-+	  RDMA controller is designed to stop this from happening.
-+	  Attaching processes with active RDMA resources to the cgroup
-+	  hierarchy is allowed even if can cross the hierarchy's limit.
++5-4. RDMA
 +
- config CGROUP_FREEZER
- 	bool "Freezer controller"
- 	help
-diff --git a/kernel/Makefile b/kernel/Makefile
-index eb26e12c..04b6f78 100644
---- a/kernel/Makefile
-+++ b/kernel/Makefile
-@@ -67,6 +67,7 @@ obj-$(CONFIG_COMPAT) += compat.o
- obj-$(CONFIG_CGROUPS) += cgroup.o
- obj-$(CONFIG_CGROUP_FREEZER) += cgroup_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += cgroup_pids.o
-+obj-$(CONFIG_CGROUP_RDMA) += cgroup_rdma.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
- obj-$(CONFIG_UTS_NS) += utsname.o
- obj-$(CONFIG_USER_NS) += user_namespace.o
-diff --git a/kernel/cgroup_rdma.c b/kernel/cgroup_rdma.c
-new file mode 100644
-index 0000000..38ce5bb
---- /dev/null
-+++ b/kernel/cgroup_rdma.c
-@@ -0,0 +1,617 @@
-+/*
-+ * RDMA resource limiting controller for cgroups.
-+ *
-+ * Used to allow a cgroup hierarchy to stop processes from consuming
-+ * additional RDMA resources after a certain limit is reached.
-+ *
-+ * Copyright (C) 2016 Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-+ *
-+ * This file is subject to the terms and conditions of version 2 of the GNU
-+ * General Public License. See the file COPYING in the main directory of the
-+ * Linux distribution for more details.
-+ */
++The "rdma" controller regulates the distribution and accounting of
++of RDMA resources.
 +
-+#include <linux/bitops.h>
-+#include <linux/slab.h>
-+#include <linux/seq_file.h>
-+#include <linux/cgroup.h>
-+#include <linux/parser.h>
-+#include <linux/cgroup_rdma.h>
++5-4-1. RDMA Interface Files
 +
-+#define RDMACG_MAX_STR "max"
++  rdma.max
++	A readwrite nested-keyed file that exists for all the cgroups
++	except root that describes current configured resource limit
++	for a RDMA/IB device.
 +
-+/*
-+ * Protects list of resource pools maintained on per cgroup basis
-+ * and rdma device list.
-+ */
-+static DEFINE_MUTEX(rdmacg_mutex);
-+static LIST_HEAD(rdmacg_devices);
++	Lines are keyed by device name and are not ordered.
++	Each line contains space separated resource name and its configured
++	limit that can be distributed.
 +
-+enum rdmacg_file_type {
-+	RDMACG_RESOURCE_TYPE_MAX,
-+	RDMACG_RESOURCE_TYPE_STAT,
-+};
++	The following nested keys are defined.
 +
-+/*
-+ * resource table definition as to be seen by the user.
-+ * Need to add entries to it when more resources are
-+ * added/defined at IB verb/core layer.
-+ */
-+static char const *rdmacg_resource_names[] = {
-+	[RDMACG_RESOURCE_HCA_HANDLE]	= "hca_handle",
-+	[RDMACG_RESOURCE_HCA_OBJECT]	= "hca_object",
-+};
++	  hca_handle	Maximum number of HCA Handles
++	  hca_object 	Maximum number of HCA Objects
 +
-+/* resource tracker for each resource of rdma cgroup */
-+struct rdmacg_resource {
-+	int max;
-+	int usage;
-+};
++	An example for mlx4 and ocrdma device follows.
 +
-+/*
-+ * resource pool object which represents per cgroup, per device
-+ * resources. There are multiple instances of this object per cgroup,
-+ * therefore it cannot be embedded within rdma_cgroup structure. It
-+ * is maintained as list.
-+ */
-+struct rdmacg_resource_pool {
-+	struct rdmacg_device	*device;
-+	struct rdmacg_resource	resources[RDMACG_RESOURCE_MAX];
++	  mlx4_0 hca_handle=2 hca_object=2000
++	  ocrdma1 hca_handle=3 hca_object=max
 +
-+	struct list_head	cg_node;
-+	struct list_head	dev_node;
++  rdma.current
++	A read-only file that describes current resource usage.
++	It exists for all the cgroup except root.
 +
-+	/* count active user tasks of this pool */
-+	u64			usage_sum;
-+	/* total number counts which are set to max */
-+	int			num_max_cnt;
-+};
++	An example for mlx4 and ocrdma device follows.
 +
-+static struct rdma_cgroup *css_rdmacg(struct cgroup_subsys_state *css)
-+{
-+	return container_of(css, struct rdma_cgroup, css);
-+}
++	  mlx4_0 hca_handle=1 hca_object=20
++	  ocrdma1 hca_handle=1 hca_object=23
 +
-+static struct rdma_cgroup *parent_rdmacg(struct rdma_cgroup *cg)
-+{
-+	return css_rdmacg(cg->css.parent);
-+}
 +
-+static inline struct rdma_cgroup *get_current_rdmacg(void)
-+{
-+	return css_rdmacg(task_get_css(current, rdma_cgrp_id));
-+}
-+
-+static void set_resource_limit(struct rdmacg_resource_pool *rpool,
-+			       int index, int new_max)
-+{
-+	if (new_max == S32_MAX) {
-+		if (rpool->resources[index].max != S32_MAX)
-+			rpool->num_max_cnt++;
-+	} else {
-+		if (rpool->resources[index].max == S32_MAX)
-+			rpool->num_max_cnt--;
-+	}
-+	rpool->resources[index].max = new_max;
-+}
-+
-+static void set_all_resource_max_limit(struct rdmacg_resource_pool *rpool)
-+{
-+	int i;
-+
-+	for (i = 0; i < RDMACG_RESOURCE_MAX; i++)
-+		set_resource_limit(rpool, i, S32_MAX);
-+}
-+
-+static void free_cg_rpool_locked(struct rdmacg_resource_pool *rpool)
-+{
-+	lockdep_assert_held(&rdmacg_mutex);
-+
-+	list_del(&rpool->cg_node);
-+	list_del(&rpool->dev_node);
-+	kfree(rpool);
-+}
-+
-+static struct rdmacg_resource_pool *
-+find_cg_rpool_locked(struct rdma_cgroup *cg,
-+		     struct rdmacg_device *device)
-+
-+{
-+	struct rdmacg_resource_pool *pool;
-+
-+	lockdep_assert_held(&rdmacg_mutex);
-+
-+	list_for_each_entry(pool, &cg->rpools, cg_node)
-+		if (pool->device == device)
-+			return pool;
-+
-+	return NULL;
-+}
-+
-+static struct rdmacg_resource_pool *
-+get_cg_rpool_locked(struct rdma_cgroup *cg, struct rdmacg_device *device)
-+{
-+	struct rdmacg_resource_pool *rpool;
-+
-+	rpool = find_cg_rpool_locked(cg, device);
-+	if (rpool)
-+		return rpool;
-+
-+	rpool = kzalloc(sizeof(*rpool), GFP_KERNEL);
-+	if (!rpool)
-+		return ERR_PTR(-ENOMEM);
-+
-+	rpool->device = device;
-+	set_all_resource_max_limit(rpool);
-+
-+	INIT_LIST_HEAD(&rpool->cg_node);
-+	INIT_LIST_HEAD(&rpool->dev_node);
-+	list_add_tail(&rpool->cg_node, &cg->rpools);
-+	list_add_tail(&rpool->dev_node, &device->rpools);
-+	return rpool;
-+}
-+
-+/**
-+ * uncharge_cg_locked - uncharge resource for rdma cgroup
-+ * @cg: pointer to cg to uncharge and all parents in hierarchy
-+ * @device: pointer to rdmacg device
-+ * @index: index of the resource to uncharge in cg (resource pool)
-+ *
-+ * It also frees the resource pool which was created as part of
-+ * charging operation when there are no resources attached to
-+ * resource pool.
-+ */
-+static void
-+uncharge_cg_locked(struct rdma_cgroup *cg,
-+		   struct rdmacg_device *device,
-+		   enum rdmacg_resource_type index)
-+{
-+	struct rdmacg_resource_pool *rpool;
-+
-+	rpool = find_cg_rpool_locked(cg, device);
-+
-+	/*
-+	 * rpool cannot be null at this stage. Let kernel operate in case
-+	 * if there a bug in IB stack or rdma controller, instead of crashing
-+	 * the system.
-+	 */
-+	if (unlikely(!rpool)) {
-+		pr_warn("Invalid device %p or rdma cgroup %p\n", cg, device);
-+		return;
-+	}
-+
-+	rpool->resources[index].usage--;
-+
-+	/*
-+	 * A negative count (or overflow) is invalid,
-+	 * it indicates a bug in the rdma controller.
-+	 */
-+	WARN_ON_ONCE(rpool->resources[index].usage < 0);
-+	rpool->usage_sum--;
-+	if (rpool->usage_sum == 0 &&
-+	    rpool->num_max_cnt == RDMACG_RESOURCE_MAX) {
-+		/*
-+		 * No user of the rpool and all entries are set to max, so
-+		 * safe to delete this rpool.
-+		 */
-+		free_cg_rpool_locked(rpool);
-+	}
-+}
-+
-+/**
-+ * rdmacg_uncharge_hirerchy - hierarchically uncharge rdma resource count
-+ * @device: pointer to rdmacg device
-+ * @stop_cg: while traversing hirerchy, when meet with stop_cg cgroup
-+ *           stop uncharging
-+ * @index: index of the resource to uncharge in cg in given resource pool
-+ */
-+static void rdmacg_uncharge_hirerchy(struct rdma_cgroup *cg,
-+				     struct rdmacg_device *device,
-+				     struct rdma_cgroup *stop_cg,
-+				     enum rdmacg_resource_type index)
-+{
-+	struct rdma_cgroup *p;
-+
-+	mutex_lock(&rdmacg_mutex);
-+
-+	for (p = cg; p != stop_cg; p = parent_rdmacg(p))
-+		uncharge_cg_locked(p, device, index);
-+
-+	mutex_unlock(&rdmacg_mutex);
-+
-+	css_put(&cg->css);
-+}
-+
-+/**
-+ * rdmacg_uncharge - hierarchically uncharge rdma resource count
-+ * @device: pointer to rdmacg device
-+ * @index: index of the resource to uncharge in cgroup in given resource pool
-+ */
-+void rdmacg_uncharge(struct rdma_cgroup *cg,
-+		     struct rdmacg_device *device,
-+		     enum rdmacg_resource_type index)
-+{
-+	if (index >= RDMACG_RESOURCE_MAX)
-+		return;
-+
-+	rdmacg_uncharge_hirerchy(cg, device, NULL, index);
-+}
-+EXPORT_SYMBOL(rdmacg_uncharge);
-+
-+/**
-+ * rdmacg_try_charge - hierarchically try to charge the rdma resource
-+ * @rdmacg: pointer to rdma cgroup which will own this resource
-+ * @device: pointer to rdmacg device
-+ * @index: index of the resource to charge in cgroup (resource pool)
-+ *
-+ * This function follows charging resource in hierarchical way.
-+ * It will fail if the charge would cause the new value to exceed the
-+ * hierarchical limit.
-+ * Returns 0 if the charge succeded, otherwise -EAGAIN, -ENOMEM or -EINVAL.
-+ * Returns pointer to rdmacg for this resource when charging is successful.
-+ *
-+ * Charger needs to account resources on two criteria.
-+ * (a) per cgroup & (b) per device resource usage.
-+ * Per cgroup resource usage ensures that tasks of cgroup doesn't cross
-+ * the configured limits. Per device provides granular configuration
-+ * in multi device usage. It allocates resource pool in the hierarchy
-+ * for each parent it come across for first resource. Later on resource
-+ * pool will be available. Therefore it will be much faster thereon
-+ * to charge/uncharge.
-+ */
-+int rdmacg_try_charge(struct rdma_cgroup **rdmacg,
-+		      struct rdmacg_device *device,
-+		      enum rdmacg_resource_type index)
-+{
-+	struct rdma_cgroup *cg, *p;
-+	struct rdmacg_resource_pool *rpool;
-+	s64 new;
-+	int ret = 0;
-+
-+	if (index >= RDMACG_RESOURCE_MAX)
-+		return -EINVAL;
-+
-+	/*
-+	 * hold on to css, as cgroup can be removed but resource
-+	 * accounting happens on css.
-+	 */
-+	cg = get_current_rdmacg();
-+
-+	mutex_lock(&rdmacg_mutex);
-+	for (p = cg; p; p = parent_rdmacg(p)) {
-+		rpool = get_cg_rpool_locked(p, device);
-+		if (IS_ERR(rpool)) {
-+			ret = PTR_ERR(rpool);
-+			goto err;
-+		} else {
-+			new = rpool->resources[index].usage + 1;
-+			if (new > rpool->resources[index].max) {
-+				ret = -EAGAIN;
-+				goto err;
-+			} else {
-+				rpool->resources[index].usage = new;
-+				rpool->usage_sum++;
-+			}
-+		}
-+	}
-+	mutex_unlock(&rdmacg_mutex);
-+
-+	*rdmacg = cg;
-+	return 0;
-+
-+err:
-+	mutex_unlock(&rdmacg_mutex);
-+	rdmacg_uncharge_hirerchy(cg, device, p, index);
-+	return ret;
-+}
-+EXPORT_SYMBOL(rdmacg_try_charge);
-+
-+/**
-+ * rdmacg_register_device - register rdmacg device to rdma controller.
-+ * @device: pointer to rdmacg device whose resources need to be accounted.
-+ *
-+ * If IB stack wish a device to participate in rdma cgroup resource
-+ * tracking, it must invoke this API to register with rdma cgroup before
-+ * any user space application can start using the RDMA resources.
-+ * Returns 0 on success or EINVAL when table length given is beyond
-+ * supported size.
-+ */
-+int rdmacg_register_device(struct rdmacg_device *device)
-+{
-+	INIT_LIST_HEAD(&device->dev_node);
-+	INIT_LIST_HEAD(&device->rpools);
-+
-+	mutex_lock(&rdmacg_mutex);
-+	list_add_tail(&device->dev_node, &rdmacg_devices);
-+	mutex_unlock(&rdmacg_mutex);
-+	return 0;
-+}
-+EXPORT_SYMBOL(rdmacg_register_device);
-+
-+/**
-+ * rdmacg_unregister_device - unregister rdmacg device from rdma controller.
-+ * @device: pointer to rdmacg device which was previously registered with rdma
-+ *          controller using rdmacg_register_device().
-+ *
-+ * IB stack must invoke this after all the resources of the IB device
-+ * are destroyed and after ensuring that no more resources will be created
-+ * when this API is invoked.
-+ */
-+void rdmacg_unregister_device(struct rdmacg_device *device)
-+{
-+	struct rdmacg_resource_pool *rpool, *tmp;
-+
-+	/*
-+	 * Synchronize with any active resource settings,
-+	 * usage query happening via configfs.
-+	 */
-+	mutex_lock(&rdmacg_mutex);
-+	list_del_init(&device->dev_node);
-+
-+	/*
-+	 * Now that this device is off the cgroup list, its safe to free
-+	 * all the rpool resources.
-+	 */
-+	list_for_each_entry_safe(rpool, tmp, &device->rpools, dev_node)
-+		free_cg_rpool_locked(rpool);
-+
-+	mutex_unlock(&rdmacg_mutex);
-+}
-+EXPORT_SYMBOL(rdmacg_unregister_device);
-+
-+static int parse_resource(char *c, int *intval)
-+{
-+	substring_t argstr;
-+	const char **table = &rdmacg_resource_names[0];
-+	char *name, *value = c;
-+	size_t len;
-+	int ret, i = 0;
-+
-+	name = strsep(&value, "=");
-+	if (!name || !value)
-+		return -EINVAL;
-+
-+	len = strlen(value);
-+
-+	for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
-+		if (strcmp(table[i], name))
-+			continue;
-+
-+		argstr.from = value;
-+		argstr.to = value + len;
-+
-+		ret = match_int(&argstr, intval);
-+		if (ret >= 0) {
-+			if (*intval < 0)
-+				break;
-+			return i;
-+		}
-+		if (strncmp(value, RDMACG_MAX_STR, len) == 0) {
-+			*intval = S32_MAX;
-+			return i;
-+		}
-+		break;
-+	}
-+	return -EINVAL;
-+}
-+
-+static int rdmacg_parse_limits(char *options,
-+			       int *new_limits, unsigned long *enables)
-+{
-+	char *c;
-+	int err = -EINVAL;
-+
-+	/* parse resource options */
-+	while ((c = strsep(&options, " ")) != NULL) {
-+		int index, intval;
-+
-+		index = parse_resource(c, &intval);
-+		if (index < 0)
-+			goto err;
-+
-+		new_limits[index] = intval;
-+		*enables |= BIT(index);
-+	}
-+	return 0;
-+
-+err:
-+	return err;
-+}
-+
-+static struct rdmacg_device *rdmacg_get_device_locked(const char *name)
-+{
-+	struct rdmacg_device *device;
-+
-+	lockdep_assert_held(&rdmacg_mutex);
-+
-+	list_for_each_entry(device, &rdmacg_devices, dev_node)
-+		if (!strcmp(name, device->name))
-+			return device;
-+
-+	return NULL;
-+}
-+
-+static ssize_t rdmacg_resource_set_max(struct kernfs_open_file *of,
-+				       char *buf, size_t nbytes, loff_t off)
-+{
-+	struct rdma_cgroup *cg = css_rdmacg(of_css(of));
-+	const char *dev_name;
-+	struct rdmacg_resource_pool *rpool;
-+	struct rdmacg_device *device;
-+	char *options = strstrip(buf);
-+	int *new_limits;
-+	unsigned long enables = 0;
-+	int i = 0, ret = 0;
-+
-+	/* extract the device name first */
-+	dev_name = strsep(&options, " ");
-+	if (!dev_name) {
-+		ret = -EINVAL;
-+		goto err;
-+	}
-+
-+	new_limits = kcalloc(RDMACG_RESOURCE_MAX, sizeof(int), GFP_KERNEL);
-+	if (!new_limits) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	ret = rdmacg_parse_limits(options, new_limits, &enables);
-+	if (ret)
-+		goto parse_err;
-+
-+	/* acquire lock to synchronize with hot plug devices */
-+	mutex_lock(&rdmacg_mutex);
-+
-+	device = rdmacg_get_device_locked(dev_name);
-+	if (!device) {
-+		ret = -ENODEV;
-+		goto dev_err;
-+	}
-+
-+	rpool = get_cg_rpool_locked(cg, device);
-+	if (IS_ERR(rpool)) {
-+		ret = PTR_ERR(rpool);
-+		goto dev_err;
-+	}
-+
-+	/* now set the new limits of the rpool */
-+	for_each_set_bit(i, &enables, RDMACG_RESOURCE_MAX)
-+		set_resource_limit(rpool, i, new_limits[i]);
-+
-+	if (rpool->usage_sum == 0 &&
-+	    rpool->num_max_cnt == RDMACG_RESOURCE_MAX) {
-+		/*
-+		 * No user of the rpool and all entries are set to max, so
-+		 * safe to delete this rpool.
-+		 */
-+		free_cg_rpool_locked(rpool);
-+	}
-+
-+dev_err:
-+	mutex_unlock(&rdmacg_mutex);
-+
-+parse_err:
-+	kfree(new_limits);
-+
-+err:
-+	return ret ?: nbytes;
-+}
-+
-+static void print_rpool_values(struct seq_file *sf,
-+			       struct rdmacg_resource_pool *rpool)
-+{
-+	enum rdmacg_file_type sf_type;
-+	int i;
-+	u32 value;
-+
-+	sf_type = seq_cft(sf)->private;
-+
-+	for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
-+		seq_puts(sf, rdmacg_resource_names[i]);
-+		seq_putc(sf, '=');
-+		if (sf_type == RDMACG_RESOURCE_TYPE_MAX) {
-+			if (rpool)
-+				value = rpool->resources[i].max;
-+			else
-+				value = S32_MAX;
-+		} else {
-+			if (rpool)
-+				value = rpool->resources[i].usage;
-+		}
-+
-+		if (value == S32_MAX)
-+			seq_puts(sf, RDMACG_MAX_STR);
-+		else
-+			seq_printf(sf, "%d", value);
-+		seq_putc(sf, ' ');
-+	}
-+}
-+
-+static int rdmacg_resource_read(struct seq_file *sf, void *v)
-+{
-+	struct rdmacg_device *device;
-+	struct rdmacg_resource_pool *rpool;
-+	struct rdma_cgroup *cg = css_rdmacg(seq_css(sf));
-+
-+	mutex_lock(&rdmacg_mutex);
-+
-+	list_for_each_entry(device, &rdmacg_devices, dev_node) {
-+		seq_printf(sf, "%s ", device->name);
-+
-+		rpool = find_cg_rpool_locked(cg, device);
-+		print_rpool_values(sf, rpool);
-+
-+		seq_putc(sf, '\n');
-+	}
-+
-+	mutex_unlock(&rdmacg_mutex);
-+	return 0;
-+}
-+
-+static struct cftype rdmacg_files[] = {
-+	{
-+		.name = "max",
-+		.write = rdmacg_resource_set_max,
-+		.seq_show = rdmacg_resource_read,
-+		.private = RDMACG_RESOURCE_TYPE_MAX,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{
-+		.name = "current",
-+		.seq_show = rdmacg_resource_read,
-+		.private = RDMACG_RESOURCE_TYPE_STAT,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{ }	/* terminate */
-+};
-+
-+static struct cgroup_subsys_state *
-+rdmacg_css_alloc(struct cgroup_subsys_state *parent)
-+{
-+	struct rdma_cgroup *cg;
-+
-+	cg = kzalloc(sizeof(*cg), GFP_KERNEL);
-+	if (!cg)
-+		return ERR_PTR(-ENOMEM);
-+
-+	INIT_LIST_HEAD(&cg->rpools);
-+	return &cg->css;
-+}
-+
-+static void rdmacg_css_free(struct cgroup_subsys_state *css)
-+{
-+	struct rdma_cgroup *cg = css_rdmacg(css);
-+
-+	kfree(cg);
-+}
-+
-+/**
-+ * rdmacg_css_offline - cgroup css_offline callback
-+ * @css: css of interest
-+ *
-+ * This function is called when @css is about to go away and responsible
-+ * for shooting down all rdmacg associated with @css. As part of that it
-+ * marks all the resource pool entries to max value, so that when resources are
-+ * uncharged, associated resource pool can be freed as well.
-+ */
-+static void rdmacg_css_offline(struct cgroup_subsys_state *css)
-+{
-+	struct rdma_cgroup *cg = css_rdmacg(css);
-+	struct rdmacg_resource_pool *rpool;
-+
-+	mutex_lock(&rdmacg_mutex);
-+
-+	list_for_each_entry(rpool, &cg->rpools, cg_node)
-+		set_all_resource_max_limit(rpool);
-+
-+	mutex_unlock(&rdmacg_mutex);
-+}
-+
-+struct cgroup_subsys rdma_cgrp_subsys = {
-+	.css_alloc	= rdmacg_css_alloc,
-+	.css_free	= rdmacg_css_free,
-+	.css_offline	= rdmacg_css_offline,
-+	.legacy_cftypes	= rdmacg_files,
-+	.dfl_cftypes	= rdmacg_files,
-+};
+ 6. Namespace
+ 
+ 6-1. Basics
 -- 
 2.7.4
