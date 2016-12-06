@@ -1,34 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv13 0/3] rdmacg: IB/core: rdma controller support
-Date: Mon, 5 Dec 2016 14:35:28 -0500
-Message-ID: <20161205193528.GC30331@mtj.duckdns.org>
-References: <1480705637-2986-1-git-send-email-pandit.parav@gmail.com>
+From: John Stultz <john.stultz@linaro.org>
+Subject: Re: [RESEND][PATCH v4] cgroup: Use CAP_SYS_RESOURCE to allow a
+ process to migrate other tasks between cgroups
+Date: Mon, 5 Dec 2016 16:28:54 -0800
+Message-ID: <CALAqxLW-mq4Lnudtn5KMBPdzBTg5bhTXV9QmUC2vfabVru+fUA@mail.gmail.com>
+References: <1478647728-30357-1-git-send-email-john.stultz@linaro.org>
+ <CALCETrU5fCWoe0RXfKWuN7Zt9vLvoyHFcZnVqeqiKBpSKrMrxA@mail.gmail.com>
+ <20161109000342.GA42532@ast-mbp.thefacebook.com> <CALCETrW_mPHneTvcAM6HyBLCJqcwKmcYEoC+kseyuyQZzj2a=A@mail.gmail.com>
+ <CALAqxLXk+A9=A0oXGEduphXOQdbMg-wuGxmLkEk9cPHyn44X5Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MVtR1wNvK4LU7FQkf4G/7iHbXsVoo3tmzxFUlXfBNOc=;
-        b=D0++MGSsmqalA/d6RUAwBaYVmCCmN8ycjW+LrUSeARTnAT/Kyqq+j+xVhKx/yid6PX
-         rclREJXSMA9GhXmSAIz2ldc1mxIABUTSZCCcJUyO6KNVkZF8oE4iDR2ARdvUcVVpx6x5
-         HwX9E3fKCER+f0wgXCJzE5WSN4XMGQ+Wn00kt0IoGTiQfrq46y3cDVSII50PY5xDPOdP
-         X2GoSROaildCGgBDF3m48HwIyqke6CrWNgt90a9fmOt9PmY39NISwOM8a70JTJLZ9ZjT
-         6geX9a9p5jJJv4HW9AHwMkx5XIg1Tc3a+DAo3/S3tAKpP5WfE2wBW1iZtf5q0N5x+P3e
-         diLQ==
-Content-Disposition: inline
-In-Reply-To: <1480705637-2986-1-git-send-email-pandit.parav@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+        d=linaro.org; s=google;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=Hs+6EnHENJj638dWRRCbhKm+wpu0aEjmL1lS8P9u6Zc=;
+        b=iM3a6aK/7AwlYJVRGGsZ57oceCkZurycwzgVL0d6RKt+mu8tKamln7+ipLouuGAF5n
+         wotGZ3A4YtFr1KPNH1BUr6WAziWcOrS3CmqziC89h8+FwS77pbYCZiA3yVOBQFWUTWdC
+         RV5JmCzxG+Fmn+iIqRtbanGfnGz8Un+LLjphA=
+In-Reply-To: <CALAqxLXk+A9=A0oXGEduphXOQdbMg-wuGxmLkEk9cPHyn44X5Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav@gmail.com>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, hch@lst.de, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com, corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Alexei Starovoitov <alexei.starovoitov@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic@digikod.net>, Daniel Mack <daniel@zonque.org>, "David S. Miller" <davem@davemloft.net>, kafai@fb.com, Florian Westphal <fw@strlen.de>, Harald Hoyer <harald@redhat.com>, Network Development <netdev@vger.kernel.org>, Sargun Dhillon <sargun@sargun.me>, Pablo Neira Ayuso <pablo@netfilter.org>, lkml <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.>
 
-Parav, it's a bit too late for this cycle.  Let's target v4.11.  I'll
-review the patches after the merge window.  Please ping me if I don't.
+On Tue, Nov 22, 2016 at 4:57 PM, John Stultz <john.stultz@linaro.org> wrote:
+> On Tue, Nov 8, 2016 at 4:12 PM, Andy Lutomirski <luto@amacapital.net> wrote:
+>> On Tue, Nov 8, 2016 at 4:03 PM, Alexei Starovoitov
+>> <alexei.starovoitov@gmail.com> wrote:
+>>> On Tue, Nov 08, 2016 at 03:51:40PM -0800, Andy Lutomirski wrote:
+>>>>
+>>>> I hate to say it, but I think I may see a problem.  Current
+>>>> developments are afoot to make cgroups do more than resource control.
+>>>> For example, there's Landlock and there's Daniel's ingress/egress
+>>>> filter thing.  Current cgroup controllers can mostly just DoS their
+>>>> controlled processes.  These new controllers (or controller-like
+>>>> things) can exfiltrate data and change semantics.
+>>>>
+>>>> Does anyone have a security model in mind for these controllers and
+>>>> the cgroups that they're attached to?  I'm reasonably confident that
+>>>> CAP_SYS_RESOURCE is not the answer...
+>>>
+>>> and specifically the answer is... ?
+>>> Also would be great if you start with specifying the question first
+>>> and the problem you're trying to solve.
+>>>
+>>
+>> I don't have a good answer right now.  Here are some constraints, though:
+>>
+>> 1. An insufficiently privileged process should not be able to move a
+>> victim into a dangerous cgroup.
+>>
+>> 2. An insufficiently privileged process should not be able to move
+>> itself into a dangerous cgroup and then use execve to gain privilege
+>> such that the execve'd program can be compromised.
+>>
+>> 3. An insufficiently privileged process should not be able to make an
+>> existing cgroup dangerous in a way that could compromise a victim in
+>> that cgroup.
+>>
+>> 4. An insufficiently privileged process should not be able to make a
+>> cgroup dangerous in a way that bypasses protections that would
+>> otherwise protect execve() as used by itself or some other process in
+>> that cgroup.
+>>
+>> Keep in mind that "dangerous" may apply to a cgroup's descendents in
+>> addition to the cgroup being controlled.
+>
+> Sorry for taking awhile to get back to you here.  I'm a little
+> befuddled as to what next steps I should consider (and honestly, I'm
+> not totally sure I really grok your concern here, particularly what
+> you mean with "dangrous cgroups").
+>
+> So is going back to the CAP_CGROUP_MIGRATE approach (to properly
+> separate "sufficiently" from "insufficiently privileged") better?
+>
+> Or something closer to the original method Android used of each cgroup
+> having an allow_attach() check which could determine what is
+> sufficiently privledged for the respective level of danger the cgroup
+> might poise?
+>
+> Or just stepping back, what method would you imagine to be reasonable
+> to allow a specified task to migrate other tasks between cgroups
+> without it having to be root/suid?
 
-Thanks.
+Any suggested feedback here?
 
--- 
-tejun
+thanks
+-john
