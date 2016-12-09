@@ -1,68 +1,59 @@
-From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [RESEND][PATCH v4] cgroup: Use CAP_SYS_RESOURCE to allow a
  process to migrate other tasks between cgroups
-Date: Thu, 8 Dec 2016 21:39:38 -0800
-Message-ID: <CALAqxLUkqSAEiHE038w+ZGUmhPgj2SpG7BLcPrrtU46VYcO=KA@mail.gmail.com>
-References: <CALCETrU5fCWoe0RXfKWuN7Zt9vLvoyHFcZnVqeqiKBpSKrMrxA@mail.gmail.com>
- <20161109000342.GA42532@ast-mbp.thefacebook.com> <CALCETrW_mPHneTvcAM6HyBLCJqcwKmcYEoC+kseyuyQZzj2a=A@mail.gmail.com>
+Date: Fri, 9 Dec 2016 08:27:21 -0500
+Message-ID: <20161209132721.GA30394@mtj.duckdns.org>
+References: <CALCETrW_mPHneTvcAM6HyBLCJqcwKmcYEoC+kseyuyQZzj2a=A@mail.gmail.com>
  <CALAqxLXk+A9=A0oXGEduphXOQdbMg-wuGxmLkEk9cPHyn44X5Q@mail.gmail.com>
  <CALAqxLW-mq4Lnudtn5KMBPdzBTg5bhTXV9QmUC2vfabVru+fUA@mail.gmail.com>
  <CALCETrWuKpmXQqoQmcy4Va8abdpfCnMBYHWSD0nK5pocj2nfXA@mail.gmail.com>
- <20161206165519.GA17648@mtj.duckdns.org> <CALCETrV3Yrq1hRcoGCTU_z-T-6hmq-gY-HytR2HGkvnRK-W1SQ@mail.gmail.com>
- <20161206181221.GA2625@mtj.duckdns.org> <CALCETrUmwPaWbN_U2XAsg6Z0UGBJ=Ou7BoD09-GZFdRVT5Y-EQ@mail.gmail.com>
+ <20161206165519.GA17648@mtj.duckdns.org>
+ <CALCETrV3Yrq1hRcoGCTU_z-T-6hmq-gY-HytR2HGkvnRK-W1SQ@mail.gmail.com>
+ <20161206181221.GA2625@mtj.duckdns.org>
+ <CALCETrUmwPaWbN_U2XAsg6Z0UGBJ=Ou7BoD09-GZFdRVT5Y-EQ@mail.gmail.com>
  <20161206182315.GB2625@mtj.duckdns.org>
+ <CALAqxLUkqSAEiHE038w+ZGUmhPgj2SpG7BLcPrrtU46VYcO=KA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=86lXF35R1pTiVVljGRD4Bz89rNhVIW6MUn649sQNhpg=;
-        b=aQu9pAOllur5IWEwYANVVHD6rPa/AhFxgTTztA3WhfRo5Ln732Y1KguF5PK7eMVbSJ
-         KAyofMX1bloQTxxAJyuTGVTsXqEVoXXTvJBJAJOAEmytgGkLzGUtMgxcNyetGJe2xGjQ
-         zubtCypJYgFKIqIbXAkA+xP/K095FOGA5G6ao=
-In-Reply-To: <20161206182315.GB2625-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=CRX8Zcbb2pYNXZsHcU5odm2DAUJP1Sadumzpvkovx/g=;
+        b=IcKPU99Y5zJKem9qDq/xi9bs1YPIo+cLFN7g38sOX8dvHDG45IlJFGQtioPF0vthIl
+         LQLy/XR9w6qKNjsjMR8h1U93C2CGNjsA9qKKfgi9ag0e4kTtd2gPOvukSX3XyNZ24FCX
+         ucnbIuJpjPs6WLyzx/coFXpiJr6Js1bRqWyzheiX5S02PWePIAh8mX6R8Ts6hk9BOruJ
+         5iSzdpw0kQ+GiGqNAD23wniBbUo96HPfRA2kci2bAAVOg4Oeutdi7FedH2xeHzc3HbGT
+         gTd4LUAIzF9XtNcpG3nOZ0lpmNdVLDndMisVs0zLYO0pRvyGdLsymmvduyGx93ffLnCD
+         REjg==
+Content-Disposition: inline
+In-Reply-To: <CALAqxLUkqSAEiHE038w+ZGUmhPgj2SpG7BLcPrrtU46VYcO=KA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?B?TWlja2HDq2wgU2FsYcO8bg==?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kafai-b10kYP2dOMg@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, Harald Hoyer <harald-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, Pablo Neira Ayuso <pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry
+To: John Stultz <john.stultz@linaro.org>
+Cc: Andy Lutomirski <luto@amacapital.net>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>, Daniel Mack <daniel@zonque.org>, "David S. Miller" <davem@davemloft.net>, kafai@fb.com, Florian Westphal <fw@strlen.de>, Harald Hoyer <harald@redhat.com>, Network Development <netdev@vger.kernel.org>, Sargun Dhillon <sargun@sargun.me>, Pablo Neira Ayuso <pablo@netfilter.org>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry
 
-On Tue, Dec 6, 2016 at 10:23 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
->
-> On Tue, Dec 06, 2016 at 10:13:53AM -0800, Andy Lutomirski wrote:
->> > Delegation is an explicit operation and reflected in the ownership of
->> > the subdirectories and cgroup interface files in them.  The
->> > subhierarchy containment is achieved by requiring the user who's
->> > trying to migrate a process to have write perm on cgroup.procs on the
->> > common ancestor of the source and target in addition to the target.
->>
->> OK, I see what you're doing.  That's interesting.
->
-> It's something born out of usages of cgroup v1.  People used it that
-> way (chowning files and directories) and combined with the uid checksn
-> it yielded something which is useful sometimes, but it always had
-> issues with hierarchical behaviors, which files to chmod and the weird
-> combination of uid checks.  cgroup v2 has a clear delegation model but
-> the uid checks are still left in as not changing was the default.
->
-> It's not necessary and I'm thinking about queueing something like the
-> following in the next cycle.
->
-> As for the android CAP discussion, I think it'd be nice to share an
-> existing CAP but if we can't find a good one to share, let's create a
-> new one.
+Hello, John.
 
-So just to clarify the discussion for my purposes and make sure I
-understood, per-cgroup CAP rules was not desired, and instead we
-should either utilize an existing cap (are there still objections to
-CAP_SYS_RESOURCE? - this isn't clear to me) or create a new one (ie,
-bring back the older CAP_CGROUP_MIGRATE patch).
+On Thu, Dec 08, 2016 at 09:39:38PM -0800, John Stultz wrote:
+> So just to clarify the discussion for my purposes and make sure I
+> understood, per-cgroup CAP rules was not desired, and instead we
+> should either utilize an existing cap (are there still objections to
+> CAP_SYS_RESOURCE? - this isn't clear to me) or create a new one (ie,
+> bring back the older CAP_CGROUP_MIGRATE patch).
 
-Tejun: Do you have a more finished version of your patch that I should
-add my changes on top of?
+Let's create a new one.  It looks to be a bit too different to share
+with an existing one.
 
-thanks
--john
+> Tejun: Do you have a more finished version of your patch that I should
+> add my changes on top of?
+
+Oh, just submit the patch on top of the current for-next.  I can queue
+mine on top of yours.  They are mostly orthogonal.
+
+Thanks.
+
+-- 
+tejun
