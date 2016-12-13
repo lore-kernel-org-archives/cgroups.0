@@ -1,95 +1,119 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-4.10] cgroup: cgroup_sk_alloc() is allowed to
- increase reference on a dead cgroup
-Date: Mon, 12 Dec 2016 16:48:11 -0500
-Message-ID: <20161212214811.GJ13864@htj.duckdns.org>
-References: <CAH=7=un56LL12Meu0j+6+ZRcdsnUHomfDLuq=raC6ZtQEwLqTA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v5] cgroup: Add new capability to allow a process to migrate other tasks between cgroups
+Date: Mon, 12 Dec 2016 17:39:03 -0800
+Message-ID: <1481593143-18756-1-git-send-email-john.stultz@linaro.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=bEL24Sfp+29qprC0Teb8yQhguKJogJqHI9CsnTQLRVg=;
-        b=HPxgFmLgkBrtH/mBgv6+SmAB7rxJdzR/vehvcf+Uh+XbJxm9DD7257uxIxT/Hu7rUQ
-         I5gxNGRYYWlEx7fJ5UP+8tWOuWBhSmyhv9DF6lbPtdmSC+Xropz1paXU9TBHspKtXiA/
-         BC/M8MrtdGp216OS3Rb63gPiBBIIL9kZiQ4OjB96butGfeoMjCGEk0JdJks4tvRjOlBc
-         hvLp4P2YXazWXDdKm2kuwUyF0t44rQ/nYVVunfmxAnF6+wNxX+zq0VpW4lT/Tdv/W3H5
-         W/k1YQypRThkWDRYzqMHoeol7ffJKZRtU8d0mwz2F8GgWEjbftH/kcP0gtgJFqWkJgO7
-         6Wmw==
-Content-Disposition: inline
-In-Reply-To: <CAH=7=un56LL12Meu0j+6+ZRcdsnUHomfDLuq=raC6ZtQEwLqTA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=sZpfRMlU+cPrR06RogZHc3KMNtFRSSfeu6smfh/3n4A=;
+        b=YP6dfeI5MzadmCdfhxQVUiYofUOEMoh4tvrfJFiomsBu8pEjxSfyAqiEDFpur7ZqGz
+         /D9CL5qowy5F49KkdEZQ0Yje+ZrDbvzdTZSd4Ol0jHDDT6NinuDkmwthABNMCZnTY6+x
+         0VdgjIUamfIZB0jPjvqd3mibcXmKT2PjxZWoE=
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?iso-8859-1?Q?Jes=FAs_Rodr=EDguez?= Acosta <jesus.rodriguez.acosta-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-Jes=FAs,
-
-I applied the following patch to cgroup/for-4.10 and will soon push
-out to Linus.  I'm pretty sure this is what you saw but can you please
-verify that the warning goes away with it applied?
-
-Thanks a lot for the report.
-
------- 8< ------
-From 89bb3eed858ec2ea36ceae822bbf81f1ef24e80d Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Mon, 12 Dec 2016 16:30:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=3DUTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-When a listening socket associated with a cgroup creates a new
-connection, it gets cloned and the reference on the cgroup is
-incremented by calling cgroup_get().  Such a socket can be left behind
-in an empty cgroup after processes are migrated away from it.  As an
-empty cgroup may be removed, the socket may end up trying to clone new
-sockets while associated with a removed cgroup.
+This patch adds CAP_GROUP_MIGRATE and logic to allows a process
+to migrate other tasks between cgroups.
 
-This doesn't break anything in terms of reference counting; however,
-as a precaution, cgroup_get() triggers WARN when it's called on a
-removed cgroup, which cgroup_sk_alloc() can trigger spuriously.
+In Android (where this feature originated), the ActivityManager
+tracks various application states (TOP_APP, FOREGROUND,
+BACKGROUND, SYSTEM, etc), and then as applications change
+states, the SchedPolicy logic will migrate the application tasks
+between different cgroups used to control the different
+application states (for example, there is a background cpuset
+cgroup which can limit background tasks to stay on one low-power
+cpu, and the bg_non_interactive cpuctrl cgroup can then further
+limit those background tasks to a small percentage of that one
+cpu's cpu time).
 
-We know this path is legit, open code cgroup_get() in
-cgroup_sk_alloc() without the sanity check to avoid spuriously
-triggering the warning.
+However, for security reasons, Android doesn't want to make the
+system_server (the process that runs the ActivityManager and
+SchedPolicy logic), run as root. So in the Android common.git
+kernel, they have some logic to allow cgroups to loosen their
+permissions so CAP_SYS_NICE tasks can migrate other tasks between
+cgroups.
 
-Reported-by: Jes=FAs Rodr=EDguez Acosta <jesus.rodriguez.acosta-Re5JQEeQqe8=
-AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Link: http://lkml.kernel.org/r/CAH=3D7=3Dun56LL12Meu0j+6+ZRcdsnUHomfDLuq=3D=
-raC6ZtQEwLqTA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org
-Fixes: d979a39d7242 ("cgroup: duplicate cgroup reference when cloning socke=
-ts")
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v4.5+
-Cc: Johannes Weiner <jweiner-b10kYP2dOMg@public.gmane.org>
+I feel the approach taken there overloads CAP_SYS_NICE a bit much
+for non-android environments. Efforts to re-use CAP_SYS_RESOURCE
+for this purpose (which Android has since adopted) was also
+stymied by concerns about risks from future cgroups that could be
+considered "dangerous" by how they might change system semantics.
+
+So to avoid overlapping usage, this patch adds a brand new
+process capability flag (CAP_CGROUP_MIGRATE), and uses it when
+checking if a task can migrate other tasks between cgroups.
+
+I've tested this with AOSP master (though its a bit hacked in as
+I still need to properly get the selinux bits aware of the new
+capability bit) with selinux set to permissive and it seems to be
+working well.
+
+Thoughts and feedback would be appreciated!
+
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>
+Cc: Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Acked-by: Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+v2: Renamed to just CAP_CGROUP_MIGRATE as reccomended by Tejun
+v3: Switched to just using CAP_SYS_RESOURCE as suggested by Michael
+v4: Send out properly folded down version of the patch. :P
+v5: Switch back to CAP_CGROUP_MIGRATE due to concerns from Andy
+---
+ include/uapi/linux/capability.h | 5 ++++-
+ kernel/cgroup.c                 | 3 ++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capability.h
+index 49bc062..32d3829 100644
+--- a/include/uapi/linux/capability.h
++++ b/include/uapi/linux/capability.h
+@@ -349,8 +349,11 @@ struct vfs_cap_data {
+ 
+ #define CAP_AUDIT_READ		37
+ 
++/* Allow migration of other tasks between cgroups */
+ 
+-#define CAP_LAST_CAP         CAP_AUDIT_READ
++#define CAP_CGROUP_MIGRATE	38
++
++#define CAP_LAST_CAP         CAP_CGROUP_MIGRATE
+ 
+ #define cap_valid(x) ((x) >= 0 && (x) <= CAP_LAST_CAP)
+ 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 85bc9be..7fe26595 100644
+index 2ee9ec3..784f115 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -6318,9 +6318,13 @@ void cgroup_sk_alloc(struct sock_cgroup_data *skcd)
- 	if (cgroup_sk_alloc_disabled)
- 		return;
-=20
--	/* Socket clone path */
-+	/*
-+	 * Socket clone path.  We open-code cgroup_get() here to avoid the
-+	 * cgroup_is_dead() sanity check as a listening socket left in a
-+	 * dead cgroup can still get cloned for new connections.
-+	 */
- 	if (skcd->val) {
--		cgroup_get(sock_cgroup_ptr(skcd));
-+		css_get(&sock_cgroup_ptr(skcd)->self);
- 		return;
- 	}
-=20
---=20
-2.9.3
+@@ -2856,7 +2856,8 @@ static int cgroup_procs_write_permission(struct task_struct *task,
+ 	 */
+ 	if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
+ 	    !uid_eq(cred->euid, tcred->uid) &&
+-	    !uid_eq(cred->euid, tcred->suid))
++	    !uid_eq(cred->euid, tcred->suid) &&
++	    !ns_capable(tcred->user_ns, CAP_CGROUP_MIGRATE))
+ 		ret = -EACCES;
+ 
+ 	if (!ret && cgroup_on_dfl(dst_cgrp)) {
+-- 
+2.7.4
