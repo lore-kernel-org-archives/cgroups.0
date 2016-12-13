@@ -1,59 +1,46 @@
-From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v5] cgroup: Add new capability to allow a process to
  migrate other tasks between cgroups
-Date: Tue, 13 Dec 2016 10:47:19 -0800
-Message-ID: <CALAqxLU=3CC3o6Z_-bzuvtOd6=GAZBfmgbEk9P1UP==PGyJ3bg@mail.gmail.com>
+Date: Tue, 13 Dec 2016 13:53:35 -0500
+Message-ID: <20161213185335.GD17672@htj.duckdns.org>
 References: <1481593143-18756-1-git-send-email-john.stultz@linaro.org>
  <CAKgNAkhGSYmtqLnCyXH8-dbmBJreo9mbVGRMyd_9hZ5D1F7q4g@mail.gmail.com>
- <CALAqxLVz4WH5T7mjD1U5XG1pWQCJqsO2LWYcpJ+xDPjRb9QMig@mail.gmail.com> <20161213184057.GA17672@htj.duckdns.org>
+ <CALAqxLVz4WH5T7mjD1U5XG1pWQCJqsO2LWYcpJ+xDPjRb9QMig@mail.gmail.com>
+ <20161213184057.GA17672@htj.duckdns.org>
+ <CALAqxLU=3CC3o6Z_-bzuvtOd6=GAZBfmgbEk9P1UP==PGyJ3bg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=b7BRPfDBMjNPVg3eW26Ef4D7DGTdG7IF1CrJ3k3wjqI=;
-        b=QVSL7LWm+L7usO4abHx6wwJdSqfqVXD8yvrhyq/seBTZbOITnFrHj6DyhSKJgYtifN
-         5kuq5C6OeNKKSbddQPgJQym1vBuHSj+UigD5e5/VahFP3qhCcU/d1QX5VSFvuE9DP5S2
-         NoZCR5xkRLWilxPGYV6pXu0GUh1YHLwDxCq9I=
-In-Reply-To: <20161213184057.GA17672-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=LTK+pIppSeyKci+Zi3vwkMbVheWElY8ySmCMjG6ZVdk=;
+        b=Nm1BdZ421BUuO1uGvvmmulFPENeTugMlue2TH3TwBoOOGhWc5VaryI/Z4qcmwSxwrp
+         oUysU1KHKeSawTJJ81lR1MxW7bIVl5BfXegBt03MEmZzz/znrecITCax6zJ9aUoABbLn
+         KJd7juHf3sucXH2SKXQ9tNaTD+0v/SEYWgwQSNlKaCTF03GA1TryIbxnmOiPlhlCdqMu
+         4J7ZLs4uH3iO5wunnItJKlR19lqJZIHosBJmMWA5qPnB5SVF7SoZINisrgKTV5jPZsIo
+         WGkjAbgMhMhy+2l5QwVRFSRjEHNDwYAZsgXKN/cm34/eCH4U9FxyuI3SiVfcl+x41CxJ
+         rqcQ==
+Content-Disposition: inline
+In-Reply-To: <CALAqxLU=3CC3o6Z_-bzuvtOd6=GAZBfmgbEk9P1UP==PGyJ3bg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: John Stultz <john.stultz@linaro.org>
+Cc: Michael Kerrisk <mtk.manpages@gmail.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Todd Kjos <tkjos@google.com>, Christian Poetzsch <christian.potzsch@imgtec.com>, Amit Pundir <amit.pundir@linaro.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Kees Cook <keescook@chromium.org>, "Serge E . Hallyn" <serge@hallyn.com>, Andy Lutomirski <luto@amacapital.net>, Linux API <linux-api@vger.kernel.org>
 
-On Tue, Dec 13, 2016 at 10:40 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
->
-> On Tue, Dec 13, 2016 at 08:08:16AM -0800, John Stultz wrote:
->> On Tue, Dec 13, 2016 at 1:47 AM, Michael Kerrisk (man-pages)
->> <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->> > On 13 December 2016 at 02:39, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
->> > So, back to the discussion of silos. I understand the argument for
->> > wanting a new silo. But, in that case can we at least try not to make
->> > it a single-use silo?
->> >
->> > How about CAP_CGROUP_CONTROL or some such, with the idea that this
->> > might be a capability that allows the holder to step outside usual
->> > cgroup rules? At the moment, that capability would allow only one such
->> > step, but maybe there would be others in the future.
->>
->> This sounds reasonable to me. Tejun/Andy: Objections?
->
-> Control group control?  The word control has a specific meaning for
-> cgroups and that second control doesn't make much sense to me.
+On Tue, Dec 13, 2016 at 10:47:19AM -0800, John Stultz wrote:
+> > Control group control?  The word control has a specific meaning for
+> > cgroups and that second control doesn't make much sense to me.
+> 
+> But this would go against the long tradition of RAS syndrome and
+> things like "struct task_struct".  :)
 
-But this would go against the long tradition of RAS syndrome and
-things like "struct task_struct".  :)
+Well, now that you put it that way, it's starting to look good. :)
+But, let's just go for CAP_CGROUP if everyone is okay with it.
 
->  Given
-> how this is mostly to patch up a hole in v1's delegation model and how
-> migration operations are different from others, I doubt that we will
-> end up overloading it.  Maybe just CAP_CGROUP?
+Thanks.
 
-Sounds ok to me.
-
-thanks
--john
+-- 
+tejun
