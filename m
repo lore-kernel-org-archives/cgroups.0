@@ -1,46 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5] cgroup: Add new capability to allow a process to
- migrate other tasks between cgroups
-Date: Tue, 13 Dec 2016 13:53:35 -0500
-Message-ID: <20161213185335.GD17672@htj.duckdns.org>
-References: <1481593143-18756-1-git-send-email-john.stultz@linaro.org>
- <CAKgNAkhGSYmtqLnCyXH8-dbmBJreo9mbVGRMyd_9hZ5D1F7q4g@mail.gmail.com>
- <CALAqxLVz4WH5T7mjD1U5XG1pWQCJqsO2LWYcpJ+xDPjRb9QMig@mail.gmail.com>
- <20161213184057.GA17672@htj.duckdns.org>
- <CALAqxLU=3CC3o6Z_-bzuvtOd6=GAZBfmgbEk9P1UP==PGyJ3bg@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=LTK+pIppSeyKci+Zi3vwkMbVheWElY8ySmCMjG6ZVdk=;
-        b=Nm1BdZ421BUuO1uGvvmmulFPENeTugMlue2TH3TwBoOOGhWc5VaryI/Z4qcmwSxwrp
-         oUysU1KHKeSawTJJ81lR1MxW7bIVl5BfXegBt03MEmZzz/znrecITCax6zJ9aUoABbLn
-         KJd7juHf3sucXH2SKXQ9tNaTD+0v/SEYWgwQSNlKaCTF03GA1TryIbxnmOiPlhlCdqMu
-         4J7ZLs4uH3iO5wunnItJKlR19lqJZIHosBJmMWA5qPnB5SVF7SoZINisrgKTV5jPZsIo
-         WGkjAbgMhMhy+2l5QwVRFSRjEHNDwYAZsgXKN/cm34/eCH4U9FxyuI3SiVfcl+x41CxJ
-         rqcQ==
-Content-Disposition: inline
-In-Reply-To: <CALAqxLU=3CC3o6Z_-bzuvtOd6=GAZBfmgbEk9P1UP==PGyJ3bg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: [PATCH] MAINTAINERS, mm: add IRC info and update include file list
+Date: Thu, 15 Dec 2016 09:08:48 +0100
+Message-ID: <20161215080848.18070-1-vbabka@suse.cz>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: John Stultz <john.stultz@linaro.org>
-Cc: Michael Kerrisk <mtk.manpages@gmail.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, Colin Cross <ccross@android.com>, Dmitry Shmidt <dimitrysh@google.com>, Todd Kjos <tkjos@google.com>, Christian Poetzsch <christian.potzsch@imgtec.com>, Amit Pundir <amit.pundir@linaro.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Kees Cook <keescook@chromium.org>, "Serge E . Hallyn" <serge@hallyn.com>, Andy Lutomirski <luto@amacapital.net>, Linux API <linux-api@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Rik van Riel <riel@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, Mel Gorman <mgorman@techsingularity.net>, Vlastimil Babka <vbabka@suse.cz>
 
-On Tue, Dec 13, 2016 at 10:47:19AM -0800, John Stultz wrote:
-> > Control group control?  The word control has a specific meaning for
-> > cgroups and that second control doesn't make much sense to me.
-> 
-> But this would go against the long tradition of RAS syndrome and
-> things like "struct task_struct".  :)
+There's a new C: entry for IRC or similar chat, so add the OFTC #mm channel.
+While at it, add more F: entries for least the more prominent include/ files
+related to mm.
 
-Well, now that you put it that way, it's starting to look good. :)
-But, let's just go for CAP_CGROUP if everyone is okay with it.
+Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
+---
+ MAINTAINERS | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Thanks.
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 59c9895d73d5..fd1ac4bfc2cd 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3355,6 +3355,7 @@ M:	Vladimir Davydov <vdavydov.dev@gmail.com>
+ L:	cgroups@vger.kernel.org
+ L:	linux-mm@kvack.org
+ S:	Maintained
++F:	include/linux/memcontrol.h
+ F:	mm/memcontrol.c
+ F:	mm/swap_cgroup.c
+ 
+@@ -8058,12 +8059,27 @@ F:	include/uapi/linux/membarrier.h
+ MEMORY MANAGEMENT
+ L:	linux-mm@kvack.org
+ W:	http://www.linux-mm.org
++C:	irc://irc.oftc.net/mm
+ S:	Maintained
+ F:	include/linux/mm.h
++F:	include/linux/mm_types.h
++F:	include/linux/mm_inline.h
++F:	include/linux/mmdebug.h
++F:	include/linux/compaction.h
++F:	include/linux/oom.h
+ F:	include/linux/gfp.h
+ F:	include/linux/mmzone.h
+ F:	include/linux/memory_hotplug.h
++F:	include/linux/mempolicy.h
++F:	include/linux/page-isolation.h
++F:	include/linux/page_ext.h
++F:	include/linux/page_owner.h
++F:	include/linux/migrate.h
++F:	include/linux/hugetlb.h
++F:	include/linux/rmap.h
+ F:	include/linux/vmalloc.h
++F:	include/linux/vmstat.h
++F:	include/linux/vm_event_item.h
+ F:	mm/
+ 
+ MEMORY TECHNOLOGY DEVICES (MTD)
 -- 
-tejun
+2.11.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
