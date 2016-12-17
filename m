@@ -1,81 +1,150 @@
-From: Vlastimil Babka <vbabka@suse.cz>
-Subject: Re: [PATCH] MAINTAINERS, mm: add IRC info and update include file
- list
-Date: Thu, 15 Dec 2016 19:29:36 +0100
-Message-ID: <4d2dcb5e-3908-880c-e8a7-128765f70b91@suse.cz>
-References: <20161215080848.18070-1-vbabka@suse.cz>
- <20161215140321.GB27758@node>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20161215140321.GB27758@node>
-Sender: owner-linux-mm@kvack.org
+From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] cgroup: Add new capability to allow a process to migrate other tasks between cgroups
+Date: Fri, 16 Dec 2016 20:43:46 -0800
+Message-ID: <1481949827-23613-1-git-send-email-john.stultz@linaro.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=0hOBGDyJviQMwmaRks0U1W3t661fZc7cCnjwGstr9r0=;
+        b=YwfRpYJxxByCRFLND73S4/v/cwBnJMlqGOZ6abW2h4Ry2t1vPhqpa5/AL1IgPF3vjs
+         eiwiTd9rgsAPSHOMhi9b3+bjxADdLN/Lo+68qmqn8B8OpRIezzG6npEQouW+Tjeq3gzv
+         4nSFw4SE/ORks1aztzgyr5hPlUtfijMUMGfWM=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Rik van Riel <riel@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, Mel Gorman <mgorman@techsingularity.net>
+Content-Transfer-Encoding: 7bit
+To: lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsthl2p70BpVqQ@public.gmane.org>
 
-On 15.12.2016 15:03, Kirill A. Shutemov wrote:
-> On Thu, Dec 15, 2016 at 09:08:48AM +0100, Vlastimil Babka wrote:
->> There's a new C: entry for IRC or similar chat, so add the OFTC #mm channel.
->> While at it, add more F: entries for least the more prominent include/ files
->> related to mm.
->>
->> Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
->> ---
->>  MAINTAINERS | 16 ++++++++++++++++
->>  1 file changed, 16 insertions(+)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 59c9895d73d5..fd1ac4bfc2cd 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -3355,6 +3355,7 @@ M:	Vladimir Davydov <vdavydov.dev@gmail.com>
->>  L:	cgroups@vger.kernel.org
->>  L:	linux-mm@kvack.org
->>  S:	Maintained
->> +F:	include/linux/memcontrol.h
->>  F:	mm/memcontrol.c
->>  F:	mm/swap_cgroup.c
->>  
->> @@ -8058,12 +8059,27 @@ F:	include/uapi/linux/membarrier.h
->>  MEMORY MANAGEMENT
->>  L:	linux-mm@kvack.org
->>  W:	http://www.linux-mm.org
->> +C:	irc://irc.oftc.net/mm
->>  S:	Maintained
->>  F:	include/linux/mm.h
->> +F:	include/linux/mm_types.h
->> +F:	include/linux/mm_inline.h
->> +F:	include/linux/mmdebug.h
->> +F:	include/linux/compaction.h
->> +F:	include/linux/oom.h
->>  F:	include/linux/gfp.h
->>  F:	include/linux/mmzone.h
->>  F:	include/linux/memory_hotplug.h
->> +F:	include/linux/mempolicy.h
->> +F:	include/linux/page-isolation.h
->> +F:	include/linux/page_ext.h
->> +F:	include/linux/page_owner.h
->> +F:	include/linux/migrate.h
->> +F:	include/linux/hugetlb.h
->> +F:	include/linux/rmap.h
->>  F:	include/linux/vmalloc.h
->> +F:	include/linux/vmstat.h
->> +F:	include/linux/vm_event_item.h
-> 
-> Maybe sort the list?
-> 
-> And the it is still incomplete very incomplete: huge_mm.h, page-flags*,
-> mman.h, etc.
+This patch adds CAP_GROUP and logic to allows a process to
+migrate other tasks between cgroups.
 
-Hmm I see.
-I wonder if this kind of list scales at all, and how much do we care to have it
-complete. Maybe we could use some special keyword with K: and mark the include
-files by that instead?
+In Android (where this feature originated), the ActivityManager
+tracks various application states (TOP_APP, FOREGROUND,
+BACKGROUND, SYSTEM, etc), and then as applications change
+states, the SchedPolicy logic will migrate the application tasks
+between different cgroups used to control the different
+application states (for example, there is a background cpuset
+cgroup which can limit background tasks to stay on one low-power
+cpu, and the bg_non_interactive cpuctrl cgroup can then further
+limit those background tasks to a small percentage of that one
+cpu's cpu time).
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+However, for security reasons, Android doesn't want to make the
+system_server (the process that runs the ActivityManager and
+SchedPolicy logic), run as root. So in the Android common.git
+kernel, they have some logic to allow cgroups to loosen their
+permissions so CAP_SYS_NICE tasks can migrate other tasks between
+cgroups.
+
+I feel the approach taken there overloads CAP_SYS_NICE a bit much
+for non-android environments. Efforts to re-use CAP_SYS_RESOURCE
+for this purpose (which Android has since adopted) was also
+stymied by concerns about risks from future cgroups that could be
+considered "dangerous" by how they might change system semantics.
+
+So to avoid overlapping usage, this patch adds a brand new
+process capability flag (CAP_CGROUP), and uses it when checking
+if a task can migrate other tasks between cgroups.
+
+I've tested this with AOSP master (though its a bit hacked in as
+I still need to properly get the selinux userspace bits aware of
+the new capability bit) with selinux set to permissive and it
+seems to be working well.
+
+Thoughts and feedback would be appreciated!
+
+(Note, I'm going on holiday break after today, so I may not
+respond to feedback immediately, but I figured it would be
+better to give folks the chance to review this rather then sit
+it for two weeks. I'll resend after the new-year, addressing any
+feedback I do get.)
+
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Cc: Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>
+Cc: Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
+Cc: Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+Cc: Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>
+Cc: James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Jeff Vander Stoep <jeffv-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Signed-off-by: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+---
+v2: Renamed to just CAP_CGROUP_MIGRATE as reccomended by Tejun
+v3: Switched to just using CAP_SYS_RESOURCE as suggested by Michael
+v4: Send out properly folded down version of the patch. :P
+v5: Switch back to CAP_CGROUP_MIGRATE due to concerns from Andy
+v6: Rename to CAP_CGROUP, as it might be used for other purposes
+    in the future. Also added selinux mappings for the new cap.
+---
+ include/uapi/linux/capability.h     | 5 ++++-
+ kernel/cgroup.c                     | 3 ++-
+ security/selinux/include/classmap.h | 4 ++--
+ 3 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capability.h
+index 49bc062..726f767 100644
+--- a/include/uapi/linux/capability.h
++++ b/include/uapi/linux/capability.h
+@@ -349,8 +349,11 @@ struct vfs_cap_data {
+ 
+ #define CAP_AUDIT_READ		37
+ 
++/* Allow migration of other tasks between cgroups */
+ 
+-#define CAP_LAST_CAP         CAP_AUDIT_READ
++#define CAP_CGROUP		38
++
++#define CAP_LAST_CAP         CAP_CGROUP
+ 
+ #define cap_valid(x) ((x) >= 0 && (x) <= CAP_LAST_CAP)
+ 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2ee9ec3..8b42ae3 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2856,7 +2856,8 @@ static int cgroup_procs_write_permission(struct task_struct *task,
+ 	 */
+ 	if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
+ 	    !uid_eq(cred->euid, tcred->uid) &&
+-	    !uid_eq(cred->euid, tcred->suid))
++	    !uid_eq(cred->euid, tcred->suid) &&
++	    !ns_capable(tcred->user_ns, CAP_CGROUP))
+ 		ret = -EACCES;
+ 
+ 	if (!ret && cgroup_on_dfl(dst_cgrp)) {
+diff --git a/security/selinux/include/classmap.h b/security/selinux/include/classmap.h
+index e2d4ad3a..ee8c1ed 100644
+--- a/security/selinux/include/classmap.h
++++ b/security/selinux/include/classmap.h
+@@ -22,9 +22,9 @@
+ 	    "audit_control", "setfcap"
+ 
+ #define COMMON_CAP2_PERMS  "mac_override", "mac_admin", "syslog", \
+-		"wake_alarm", "block_suspend", "audit_read"
++		"wake_alarm", "block_suspend", "audit_read", "cgroup"
+ 
+-#if CAP_LAST_CAP > CAP_AUDIT_READ
++#if CAP_LAST_CAP > CAP_CGROUP
+ #error New capability defined, please update COMMON_CAP2_PERMS.
+ #endif
+ 
+-- 
+2.7.4
