@@ -1,72 +1,70 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Add new capability to allow a process to migrate
- other tasks between cgroups
-Date: Mon, 19 Dec 2016 08:11:38 -0500
-Message-ID: <20161219131138.GA14837@mtj.duckdns.org>
-References: <1481949827-23613-1-git-send-email-john.stultz@linaro.org>
- <5855A8EB.8000005@digikod.net>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET] kernfs, cgroup: reimplement "cgroup.procs" reading for v2
+Date: Tue, 20 Dec 2016 11:10:48 -0500
+Message-ID: <20161220161053.14994-1-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=WDcpma2ffp6Cvlxi2HLMOs3w2NZ+/skspcYdhxbIwgY=;
-        b=jDMB8RCrcqCWq0wAcrlH/2w5W0QmkoYlNGObVBRHokzDDLZwDLcZpqAw4EdJr2MWKg
-         gDxN+Xo/J0TuvH/N8m0c+51Xoct8mD4JFYYd/BpuCE53UoQsNYd1ISUaEviP/kHbl5Xg
-         +3bzWnwpWewdtMYQLzUSgt4bhwpRDDRqwbOrMQQf5ajaflfWMNK5kbGFLdo5VhMwmjoa
-         EsZwiuARC+8FBsSxY9tFY7Ccf7/TYXu3sixmVC21Ij5qB23z+V5cUfZ0tnc3xB5/1viv
-         PqNWAlG5mnBeXUnHvh8BkvKagCk652VF/88L9f2ZadHGFP5eMoDN+1i0ooYizMIQVfxZ
-         Qv0Q==
-Content-Disposition: inline
-In-Reply-To: <5855A8EB.8000005-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=GqCq6bGOY3+z9hVrYy27xQv5aH8iB3qpmlXzIhF1fnM=;
+        b=jh8hLJ0Bf1BdJg6xqU9E7EYCGbW4lXc9/uP2LWn2lN9ZWpmyC3tTjumqvE/7trXkiz
+         IpwszwPmTZ5HjowW0+pv9xIhB4lFuuNBozmNaWEPcf1Q4Pnh2qQMasb2GtJsdU74aSxi
+         mOhrnRrR70aiB49bZaF64unLfz9uZX15N7Tr2LSdL9bkePPEo9AJYhAI5clvwxO4cgBO
+         k2wCkuOiViOLL2BS6K+w/iILRs3Goff8ydpDpIOMT8W6Zp7Y5q6s2nyFRd50Rps5LqX+
+         YAzO3cTXF2lnM7sUmejAgFB6/iSsKbSbk03sctTugIQyrD2YIb8nLSAHrB9xkTJCsrPU
+         7Ubw==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>
-Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christian Poetzsch <christian.potzsch-1AXoQHu6uovQT0dZR+AlfA@public.gmane.org>, Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "Serge E . Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, James Morris <james.>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: gregkh@linuxfoundation.org, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-Hello,
+On cgroup v1, the pid listings in "cgroup.procs" and "tasks" are
+sorted which adds a lot of complications and overhead.  v2 doesn't
+have such requirement and has been intentionally using a modified
+sorting order so that the output doesn't look sorted to users.
 
-On Sat, Dec 17, 2016 at 10:06:51PM +0100, Micka=EBl Sala=FCn wrote:
-> If I understand correctly, this patch is intended to add a delegation
-> feature to cgroup v1, which does not really make sense for the v2
+This patchset re-implements "cgroup.procs" reading for v2 which simply
+keeps a css_task_iter open while the file is being read.  Keeping the
+iterator open makes it unnecessary to skip to the right position on
+each read segment and associated errors - e.g. incorrectly skipping
+over pids because earlier pids disappeared between the reads.
 
-It's more about upstreaming a workaround for android somewhat like
-including binder into kernel.  It isn't adding actual cgroup
-delegation to v1.  It's just splitting a small piece of CAP_SYS_ADMIN
-to accomodate what android has been doing.
+Using persistent iterator across multiple read calls requires
+->release() callback to clean it up.  kernfs operations
+->open/release() are added and piped through cftype.
 
-> because of the clean cgroup-v2 delegation design. However, this new
-> capability impact both versions.
+This patchset contains the following five patches.
 
-In the same way but it's not about cgroup delegation.  It's just
-allowing splitting up CAP_SYS_ADMIN so that "no extra restrictions on
-cgroup" can be given away in a safer way.
+ 0001-kernfs-make-kernfs_open_file-mmapped-a-bitfield.patch
+ 0002-kernfs-add-kernfs_ops-open-release-callbacks.patch
+ 0003-cgroup-add-cftype-open-release-callbacks.patch
+ 0004-cgroup-reimplement-reading-cgroup.procs-on-cgroup-v2.patch
+ 0005-cgroup-remove-cgroup_pid_fry-and-friends.patch
 
-> However, even if a cgroup does not directly involve a limitation, it may
-> be used to identify a group of processes for a security critical purpose
-> (e.g. kill a group of process). It can then make sense to have a
-> dedicated capability CAP_CGROUP to allow a process *without the right to
-> write in cgroup.procs* to be allowed to move a process out of its
-> current cgroup. This is similar to CAP_DAC_OVERRIDE but only for
-> cgroup/controllers files (but not necessarily sufficient to modify all
-> cgroups). This does not means that CAP_CGROUP should allow to move any
-> process from any cgroup. The cgroup_procs_write_permission() should
-> compose the checks for CAP_CGROUP and/or CAP_SYS_RESOURCE and/or
-> CAP_SYS_ADMIN depending on the current use of the cgroup (i.e. cgroup
-> controller, BPF program type, netfilter).
+0001 is a misc kernfs patch and 0002 adds ->open/release() to kernfs.
+0003 pipes ->open/release() through cftype.  0004 implements the new
+cgroup.procs for v2 and 0005 removes the now unused sort order frying
+logic.
 
-There's no reason to invent a whole new set of security policies for
-cgroup.  It already got one which follows the filesystem permissions
-with some extra restrictions.  The CAP split is purely to accomodate
-android and that's it.  If that isn't good enough a reason, then
-android should just keep carrying the patches it needs.  This doesn't
-justify bolting on another permission model on cgroup in any way.
+Greg, would it be okay to route the kernfs patches through
+cgroup/for-4.11?
 
-Thanks.
+The patches are also available in the following git branch.
 
---=20
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-procs
+
+diffstat follows.  Thanks.
+
+ fs/kernfs/dir.c             |    2 
+ fs/kernfs/file.c            |   53 +++++++++++++++--
+ fs/kernfs/kernfs-internal.h |    2 
+ include/linux/cgroup-defs.h |    3 +
+ include/linux/kernfs.h      |   12 +++-
+ kernel/cgroup.c             |  130 +++++++++++++++++++++++++++++---------------
+ 6 files changed, 148 insertions(+), 54 deletions(-)
+
+--
 tejun
