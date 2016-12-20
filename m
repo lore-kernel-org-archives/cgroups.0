@@ -1,41 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] kernfs, cgroup: reimplement "cgroup.procs" reading
- for v2
-Date: Tue, 20 Dec 2016 11:17:00 -0500
-Message-ID: <20161220161700.GA15530@htj.duckdns.org>
-References: <20161220161053.14994-1-tj@kernel.org>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] cgroup: reorganize cgroup source files
+Date: Tue, 20 Dec 2016 16:08:19 -0500
+Message-ID: <20161220210827.11176-1-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=bzvxGLCBv3SVzMKyjCBFSieW57I8H/qRhPoN1c3X5Gk=;
-        b=ur7Me5yHKeww69ROvaqsyV9Q0r4ZvI7VzYkdihYTHDBVIwbzKoiOIOIbb2oed9CUjf
-         /PrpgRy66hMl+uvGYS2uApkBjWAUpeBtWuQPXJLPdLU3aAdh5tm+34BD23fVXCaC7GS+
-         DHab7c2WtLBL/iYDDKQfcj5w64Jfm7fV2iqVXLggMmy82p8R7mwzct8qeUnNhZAWSpJC
-         07jEtoTKhW3MvqhS8qaKmOysB98LWbJU8ViGStgxju28RZ5BSKMu907WwgAQNjVjY1up
-         pMkH6w6dWiuwpjECk8oiTShkXQOqX0N/BBKotGbMDH5MGxG/yZJOxaESHspd6f9ev0zw
-         zqvw==
-Content-Disposition: inline
-In-Reply-To: <20161220161053.14994-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=Ctg8cUkQnjFURbiTemPscmJ40fOc7o+T+eL/Ugqd3p8=;
+        b=Ml3xu2PAolBMv2waLMi3F6dhvfZoQ7JxTuzJ/bGbvchNagQ1eWfgUjw3xJgA3Ojmua
+         dqplaNcujs/7YgembX/bQfr4dW15/scolImuipCwYU8e2Yf0GCEmHlD+i4rq2HFnsNIF
+         /Ox5cIUvvCPkYKC604lmHVMHzzxMaC2BRaQHb0atGEz2ATWbvYVt9nAq4aAXg/PHPnnI
+         TZpaQmmgnMXabJPkTwqoF5GVohg0OdXvAAB21/Hl3VQvBtDDIJogWjBeUi9HY0i044nA
+         +6EIPpL36fIfp2fjGfKIyTioeJrvYYtwSOOJDO6koKuRozABJlRWo6NSZboL32t8Up4V
+         YEzw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: gregkh@linuxfoundation.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Dec 20, 2016 at 11:10:48AM -0500, Tejun Heo wrote:
-> On cgroup v1, the pid listings in "cgroup.procs" and "tasks" are
-> sorted which adds a lot of complications and overhead.  v2 doesn't
-> have such requirement and has been intentionally using a modified
-> sorting order so that the output doesn't look sorted to users.
+cgroup source files are getting a bit too unwieldy.  Let's reorganize
+them.
 
-Please ignore this thread.  git-send-email failed in the middle and I
-resent the series.
+* Move cgroup files in kernel to kernel/cgroup.
 
-Thanks.
+* Split cgroup.c into multiple files.
 
--- 
+The only functional change this patchset causes is loss of a
+WARN_ON(); otherwise, everything remains identical.
+
+This patchset contains the following eight patches.
+
+ 0001-cgroup-reorder-css_set-fields.patch
+ 0002-cgroup-move-cgroup-files-under-kernel-cgroup.patch
+ 0003-cgroup-move-cgroup-v1-specific-code-to-kernel-cgroup.patch
+ 0004-cgroup-refactor-mount-path-and-clearly-distinguish-v.patch
+ 0005-cgroup-separate-out-cgroup1_kf_syscall_ops.patch
+ 0006-cgroup-move-v1-mount-functions-to-kernel-cgroup-cgro.patch
+ 0007-cgroup-rename-functions-for-consistency.patch
+ 0008-cgroup-move-namespace-code-to-kernel-cgroup-namespac.patch
+
+The patchset is available in the following git branch
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-reorg
+
+and on top of the following git branch
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-procs
+
+diffstat follows.  Thanks.
+
+ include/linux/cgroup-defs.h     |   54 -
+ kernel/Makefile                 |    5 
+ kernel/cgroup/Makefile          |    5 
+ kernel/cgroup/cgroup-internal.h |  155 +++
+ kernel/cgroup/cgroup-v1.c       | 1395 ++++++++++++++++++++++++++++
+ kernel/cgroup/cgroup.c          | 1940 +++-------------------------------------
+ kernel/cgroup/namespace.c       |  155 +++
+ 7 files changed, 1907 insertions(+), 1802 deletions(-)
+
+--
 tejun
