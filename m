@@ -1,66 +1,127 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 1/5] kernfs: make kernfs_open_file->mmapped a bitfield
-Date: Tue, 20 Dec 2016 11:10:49 -0500
-Message-ID: <20161220161053.14994-2-tj@kernel.org>
-References: <20161220161053.14994-1-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 4/5] cgroup: reimplement reading "cgroup.procs" on cgroup v2
+Date: Tue, 20 Dec 2016 11:12:21 -0500
+Message-ID: <20161220161222.15234-5-tj@kernel.org>
+References: <20161220161222.15234-1-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=PWT8jyi+467bCCM466udrznCIcMTN1m5TFw7kY3OaZo=;
-        b=bpf0UUk4zLO415Wf9ED5Ycq8LQ6paTJVWzl0a8tfAg9fc9P0LOM4YBUko/l2qvmcvw
-         nUxzIg8bcW0HoKuPEN8xtYHXpAnxVCMOma/WwfcTuHQO+7eLNrqdsY2RxyezahtO2WZ1
-         XTz5vLClxgeJSV3p4CLoF2RWWa6hzvQ5Bqq0vz36YYVWGlIImPYzSMDcvqTuNpHZUgOK
-         lZUebpKtHg94bbpnlBKCJBTZ83Y9bL+ll/RdvvrNu7PQ3cugLj7n8x3STOueAEwrxzMt
-         nSmZqGscHtkMVDQ33A96rrRoZ0VFhI2U7mpnb8GdtFMy+eZzyUy+LVYFL6p8yrW/39U4
-         sOOg==
-In-Reply-To: <20161220161053.14994-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=adW0HtIwNOD5zq+BhUt9VIVxoywHdoWRvOFk1iqkkHI=;
+        b=h+Mpyrx8sxSaDPtfFTs2wIhiMizT12b4dNr2CH52hnchLBdQW33rK6H6audT6kvd8R
+         NyPZSFNVrIK5wGjsCts3owaNCtIDMzzaLRdkpZkIUok2dbjq5KG1CMhehXn0LX53Woav
+         hG7vF/FrS5Gl4EuFPYln4KclUgo2pOmaJ9aZdx0GTWwhQFxNGVxIFeY9MCwa6FRb6QW0
+         PREMy7r8YhTY9rbHMXTuvEmzJ+dzuTZcQuZStKj5Qh8BIdSJOnNp9K5rtNIVtRcax5dC
+         tVvOvDcDo90ygbXYmoq7iEF2uQbbO4VmO6R+dcjHxLgB2UcUMlCFOY5/MeG4nZmCVI07
+         8I4A==
+In-Reply-To: <20161220161222.15234-1-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: gregkh@linuxfoundation.org, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-More kernfs_open_file->mutex synchronized flags are planned to be
-added.  Convert ->mmapped to a bitfield in preparation.
+On v1, "tasks" and "cgroup.procs" are expected to be sorted which
+makes the implementation expensive and unnecessarily complicated
+involving result cache management.
 
-While at it, make kernfs_fop_mmap() use "true" instead of "1" on
-->mmapped.
+v2 doesn't have the sorting requirement, so it can just iterate and
+print processes one by one.  seq_files are either read sequentially or
+reset to position zero, so the implementation doesn't even need to
+worry about seeking.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+This keeps the css_task_iter across multiple read(2) calls and
+migrations of new processes always append won't miss processes which
+are newly migrated in before each read(2).
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/kernfs/file.c       | 2 +-
- include/linux/kernfs.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ kernel/cgroup.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 58 insertions(+), 5 deletions(-)
 
-diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
-index 78219d5..d0b6fb1 100644
---- a/fs/kernfs/file.c
-+++ b/fs/kernfs/file.c
-@@ -516,7 +516,7 @@ static int kernfs_fop_mmap(struct file *file, struct vm_area_struct *vma)
- 		goto out_put;
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 87167e4..fd684bfd 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4426,6 +4426,60 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 	return ret;
+ }
  
- 	rc = 0;
--	of->mmapped = 1;
-+	of->mmapped = true;
- 	of->vm_ops = vma->vm_ops;
- 	vma->vm_ops = &kernfs_vm_ops;
- out_put:
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index 7056238..afd4e5a 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -185,7 +185,7 @@ struct kernfs_open_file {
- 	char			*prealloc_buf;
- 
- 	size_t			atomic_write_len;
--	bool			mmapped;
-+	bool			mmapped:1;
- 	const struct vm_operations_struct *vm_ops;
- };
- 
++static void cgroup_procs_release(struct kernfs_open_file *of)
++{
++	if (of->priv) {
++		css_task_iter_end(of->priv);
++		kfree(of->priv);
++	}
++}
++
++static void *cgroup_procs_next(struct seq_file *s, void *v, loff_t *pos)
++{
++	struct kernfs_open_file *of = s->private;
++	struct css_task_iter *it = of->priv;
++	struct task_struct *task;
++
++	do {
++		task = css_task_iter_next(it);
++	} while (task && !thread_group_leader(task));
++
++	return task;
++}
++
++static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
++{
++	struct kernfs_open_file *of = s->private;
++	struct cgroup *cgrp = seq_css(s)->cgroup;
++	struct css_task_iter *it = of->priv;
++
++	/*
++	 * When a seq_file is seeked, it's always traversed sequentially
++	 * from position 0, so we can simply keep iterating on !0 *pos.
++	 */
++	if (!it) {
++		if (WARN_ON_ONCE((*pos)++))
++			return ERR_PTR(-EINVAL);
++
++		it = kzalloc(sizeof(*it), GFP_KERNEL);
++		if (!it)
++			return ERR_PTR(-ENOMEM);
++		of->priv = it;
++		css_task_iter_start(&cgrp->self, it);
++	} else if (!(*pos)++) {
++		css_task_iter_end(it);
++		css_task_iter_start(&cgrp->self, it);
++	}
++
++	return cgroup_procs_next(s, NULL, NULL);
++}
++
++static int cgroup_procs_show(struct seq_file *s, void *v)
++{
++	seq_printf(s, "%d\n", task_tgid_vnr(v));
++	return 0;
++}
++
+ /*
+  * Stuff for reading the 'tasks'/'procs' files.
+  *
+@@ -4914,11 +4968,10 @@ static struct cftype cgroup_dfl_base_files[] = {
+ 	{
+ 		.name = "cgroup.procs",
+ 		.file_offset = offsetof(struct cgroup, procs_file),
+-		.seq_start = cgroup_pidlist_start,
+-		.seq_next = cgroup_pidlist_next,
+-		.seq_stop = cgroup_pidlist_stop,
+-		.seq_show = cgroup_pidlist_show,
+-		.private = CGROUP_FILE_PROCS,
++		.release = cgroup_procs_release,
++		.seq_start = cgroup_procs_start,
++		.seq_next = cgroup_procs_next,
++		.seq_show = cgroup_procs_show,
+ 		.write = cgroup_procs_write,
+ 	},
+ 	{
 -- 
 2.9.3
+
