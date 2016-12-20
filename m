@@ -1,10 +1,10 @@
 From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:review-cgroup-reorg 8/13] kernel/cgroup/cgroup-v1.c:52:14:
- error: 'cgroup_mutex' undeclared
-Date: Wed, 21 Dec 2016 05:33:25 +0800
-Message-ID: <201612210521.9kvOPO7G%fengguang.wu@intel.com>
+Subject: [cgroup:review-cgroup-reorg 13/13]
+ kernel/cgroup/cgroup-internal.h:80:21: error: 'css_set_lock' undeclared
+Date: Wed, 21 Dec 2016 06:00:39 +0800
+Message-ID: <201612210637.uLws9zj4%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="r5Pyd7+fXNt84Ff3"
+Content-Type: multipart/mixed; boundary="rwEMma7ioTxnRzrJ"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -13,22 +13,109 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
---r5Pyd7+fXNt84Ff3
+--rwEMma7ioTxnRzrJ
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-reorg
 head:   8a6dc1a57dc250394be839aeb7741dc351e84da7
-commit: 183e7e19c8e2dec9a4f64a3b40fe1c01e7c47f50 [8/13] cgroup: move cgroup v1 specific code to kernel/cgroup/cgroup-v1.c
+commit: 8a6dc1a57dc250394be839aeb7741dc351e84da7 [13/13] cgroup: move namespace code to kernel/cgroup/namespace.c
 config: i386-randconfig-s1-201651 (attached as .config)
 compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
 reproduce:
-        git checkout 183e7e19c8e2dec9a4f64a3b40fe1c01e7c47f50
+        git checkout 8a6dc1a57dc250394be839aeb7741dc351e84da7
         # save the attached .config to linux build tree
         make ARCH=i386 
 
-All errors (new ones prefixed by >>):
+All error/warnings (new ones prefixed by >>):
 
+   In file included from include/linux/seqlock.h:35:0,
+                    from include/linux/time.h:5,
+                    from include/uapi/linux/timex.h:56,
+                    from include/linux/timex.h:56,
+                    from include/linux/sched.h:19,
+                    from include/linux/cgroup.h:11,
+                    from kernel/cgroup/cgroup-internal.h:4,
+                    from kernel/cgroup/cgroup.c:31:
+   kernel/cgroup/cgroup-internal.h: In function 'put_css_set':
+>> kernel/cgroup/cgroup-internal.h:80:21: error: 'css_set_lock' undeclared (first use in this function)
+     spin_lock_irqsave(&css_set_lock, flags);
+                        ^
+   include/linux/spinlock.h:208:34: note: in definition of macro 'raw_spin_lock_irqsave'
+      flags = _raw_spin_lock_irqsave(lock); \
+                                     ^~~~
+>> kernel/cgroup/cgroup-internal.h:80:2: note: in expansion of macro 'spin_lock_irqsave'
+     spin_lock_irqsave(&css_set_lock, flags);
+     ^~~~~~~~~~~~~~~~~
+   kernel/cgroup/cgroup-internal.h:80:21: note: each undeclared identifier is reported only once for each function it appears in
+     spin_lock_irqsave(&css_set_lock, flags);
+                        ^
+   include/linux/spinlock.h:208:34: note: in definition of macro 'raw_spin_lock_irqsave'
+      flags = _raw_spin_lock_irqsave(lock); \
+                                     ^~~~
+>> kernel/cgroup/cgroup-internal.h:80:2: note: in expansion of macro 'spin_lock_irqsave'
+     spin_lock_irqsave(&css_set_lock, flags);
+     ^~~~~~~~~~~~~~~~~
+--
+   In file included from include/linux/seqlock.h:35:0,
+                    from include/linux/time.h:5,
+                    from include/uapi/linux/timex.h:56,
+                    from include/linux/timex.h:56,
+                    from include/linux/sched.h:19,
+                    from include/linux/cgroup.h:11,
+                    from kernel/cgroup/cgroup-internal.h:4,
+                    from kernel/cgroup/namespace.c:1:
+   kernel/cgroup/cgroup-internal.h: In function 'put_css_set':
+>> kernel/cgroup/cgroup-internal.h:80:21: error: 'css_set_lock' undeclared (first use in this function)
+     spin_lock_irqsave(&css_set_lock, flags);
+                        ^
+   include/linux/spinlock.h:208:34: note: in definition of macro 'raw_spin_lock_irqsave'
+      flags = _raw_spin_lock_irqsave(lock); \
+                                     ^~~~
+>> kernel/cgroup/cgroup-internal.h:80:2: note: in expansion of macro 'spin_lock_irqsave'
+     spin_lock_irqsave(&css_set_lock, flags);
+     ^~~~~~~~~~~~~~~~~
+   kernel/cgroup/cgroup-internal.h:80:21: note: each undeclared identifier is reported only once for each function it appears in
+     spin_lock_irqsave(&css_set_lock, flags);
+                        ^
+   include/linux/spinlock.h:208:34: note: in definition of macro 'raw_spin_lock_irqsave'
+      flags = _raw_spin_lock_irqsave(lock); \
+                                     ^~~~
+>> kernel/cgroup/cgroup-internal.h:80:2: note: in expansion of macro 'spin_lock_irqsave'
+     spin_lock_irqsave(&css_set_lock, flags);
+     ^~~~~~~~~~~~~~~~~
+   kernel/cgroup/namespace.c: In function 'copy_cgroup_ns':
+>> kernel/cgroup/namespace.c:73:17: error: 'css_set_lock' undeclared (first use in this function)
+     spin_lock_irq(&css_set_lock);
+                    ^~~~~~~~~~~~
+--
+   In file included from include/linux/seqlock.h:35:0,
+                    from include/linux/time.h:5,
+                    from include/uapi/linux/timex.h:56,
+                    from include/linux/timex.h:56,
+                    from include/linux/sched.h:19,
+                    from include/linux/cgroup.h:11,
+                    from kernel/cgroup/cgroup-internal.h:4,
+                    from kernel/cgroup/cgroup-v1.c:1:
+   kernel/cgroup/cgroup-internal.h: In function 'put_css_set':
+>> kernel/cgroup/cgroup-internal.h:80:21: error: 'css_set_lock' undeclared (first use in this function)
+     spin_lock_irqsave(&css_set_lock, flags);
+                        ^
+   include/linux/spinlock.h:208:34: note: in definition of macro 'raw_spin_lock_irqsave'
+      flags = _raw_spin_lock_irqsave(lock); \
+                                     ^~~~
+>> kernel/cgroup/cgroup-internal.h:80:2: note: in expansion of macro 'spin_lock_irqsave'
+     spin_lock_irqsave(&css_set_lock, flags);
+     ^~~~~~~~~~~~~~~~~
+   kernel/cgroup/cgroup-internal.h:80:21: note: each undeclared identifier is reported only once for each function it appears in
+     spin_lock_irqsave(&css_set_lock, flags);
+                        ^
+   include/linux/spinlock.h:208:34: note: in definition of macro 'raw_spin_lock_irqsave'
+      flags = _raw_spin_lock_irqsave(lock); \
+                                     ^~~~
+>> kernel/cgroup/cgroup-internal.h:80:2: note: in expansion of macro 'spin_lock_irqsave'
+     spin_lock_irqsave(&css_set_lock, flags);
+     ^~~~~~~~~~~~~~~~~
    In file included from arch/x86/include/asm/mmu.h:5:0,
                     from include/linux/mm_types.h:17,
                     from include/linux/sched.h:27,
@@ -36,19 +123,13 @@ All errors (new ones prefixed by >>):
                     from kernel/cgroup/cgroup-internal.h:4,
                     from kernel/cgroup/cgroup-v1.c:1:
    kernel/cgroup/cgroup-v1.c: In function 'cgroup_attach_task_all':
->> kernel/cgroup/cgroup-v1.c:52:14: error: 'cgroup_mutex' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:54:14: error: 'cgroup_mutex' undeclared (first use in this function)
      mutex_lock(&cgroup_mutex);
                  ^
    include/linux/mutex.h:160:44: note: in definition of macro 'mutex_lock'
     #define mutex_lock(lock) mutex_lock_nested(lock, 0)
                                                ^~~~
-   kernel/cgroup/cgroup-v1.c:52:14: note: each undeclared identifier is reported only once for each function it appears in
-     mutex_lock(&cgroup_mutex);
-                 ^
-   include/linux/mutex.h:160:44: note: in definition of macro 'mutex_lock'
-    #define mutex_lock(lock) mutex_lock_nested(lock, 0)
-                                               ^~~~
->> kernel/cgroup/cgroup-v1.c:60:18: error: 'css_set_lock' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:62:18: error: 'css_set_lock' undeclared (first use in this function)
       spin_lock_irq(&css_set_lock);
                      ^~~~~~~~~~~~
    In file included from arch/x86/include/asm/mmu.h:5:0,
@@ -58,17 +139,17 @@ All errors (new ones prefixed by >>):
                     from kernel/cgroup/cgroup-internal.h:4,
                     from kernel/cgroup/cgroup-v1.c:1:
    kernel/cgroup/cgroup-v1.c: In function 'cgroup_transfer_tasks':
-   kernel/cgroup/cgroup-v1.c:100:14: error: 'cgroup_mutex' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:102:14: error: 'cgroup_mutex' undeclared (first use in this function)
      mutex_lock(&cgroup_mutex);
                  ^
    include/linux/mutex.h:160:44: note: in definition of macro 'mutex_lock'
     #define mutex_lock(lock) mutex_lock_nested(lock, 0)
                                                ^~~~
-   kernel/cgroup/cgroup-v1.c:105:17: error: 'css_set_lock' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:107:17: error: 'css_set_lock' undeclared (first use in this function)
      spin_lock_irq(&css_set_lock);
                     ^~~~~~~~~~~~
    kernel/cgroup/cgroup-v1.c: In function 'cgroup_task_count':
-   kernel/cgroup/cgroup-v1.c:342:17: error: 'css_set_lock' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:344:17: error: 'css_set_lock' undeclared (first use in this function)
      spin_lock_irq(&css_set_lock);
                     ^~~~~~~~~~~~
    In file included from arch/x86/include/asm/mmu.h:5:0,
@@ -78,27 +159,27 @@ All errors (new ones prefixed by >>):
                     from kernel/cgroup/cgroup-internal.h:4,
                     from kernel/cgroup/cgroup-v1.c:1:
    kernel/cgroup/cgroup-v1.c: In function 'proc_cgroupstats_show':
-   kernel/cgroup/cgroup-v1.c:642:14: error: 'cgroup_mutex' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:644:14: error: 'cgroup_mutex' undeclared (first use in this function)
      mutex_lock(&cgroup_mutex);
                  ^
    include/linux/mutex.h:160:44: note: in definition of macro 'mutex_lock'
     #define mutex_lock(lock) mutex_lock_nested(lock, 0)
                                                ^~~~
    kernel/cgroup/cgroup-v1.c: In function 'cgroupstats_build':
-   kernel/cgroup/cgroup-v1.c:687:14: error: 'cgroup_mutex' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:689:14: error: 'cgroup_mutex' undeclared (first use in this function)
      mutex_lock(&cgroup_mutex);
                  ^
    include/linux/mutex.h:160:44: note: in definition of macro 'mutex_lock'
     #define mutex_lock(lock) mutex_lock_nested(lock, 0)
                                                ^~~~
-   kernel/cgroup/cgroup-v1.c: In function 'cgroup_release_agent':
-   kernel/cgroup/cgroup-v1.c:768:14: error: 'cgroup_mutex' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c: In function 'cgroup1_release_agent':
+   kernel/cgroup/cgroup-v1.c:770:14: error: 'cgroup_mutex' undeclared (first use in this function)
      mutex_lock(&cgroup_mutex);
                  ^
    include/linux/mutex.h:160:44: note: in definition of macro 'mutex_lock'
     #define mutex_lock(lock) mutex_lock_nested(lock, 0)
                                                ^~~~
-   kernel/cgroup/cgroup-v1.c:775:17: error: 'css_set_lock' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c:777:17: error: 'css_set_lock' undeclared (first use in this function)
      spin_lock_irq(&css_set_lock);
                     ^~~~~~~~~~~~
    In file included from arch/x86/include/asm/mmu.h:5:0,
@@ -107,90 +188,118 @@ All errors (new ones prefixed by >>):
                     from include/linux/cgroup.h:11,
                     from kernel/cgroup/cgroup-internal.h:4,
                     from kernel/cgroup/cgroup-v1.c:1:
-   kernel/cgroup/cgroup-v1.c: In function 'cgroup_rename':
-   kernel/cgroup/cgroup-v1.c:829:14: error: 'cgroup_mutex' undeclared (first use in this function)
+   kernel/cgroup/cgroup-v1.c: In function 'cgroup1_rename':
+   kernel/cgroup/cgroup-v1.c:824:14: error: 'cgroup_mutex' undeclared (first use in this function)
      mutex_lock(&cgroup_mutex);
                  ^
    include/linux/mutex.h:160:44: note: in definition of macro 'mutex_lock'
     #define mutex_lock(lock) mutex_lock_nested(lock, 0)
                                                ^~~~
+   kernel/cgroup/cgroup-v1.c: In function 'cgroup1_remount':
+   kernel/cgroup/cgroup-v1.c:1049:16: error: 'cgroup_mutex' undeclared (first use in this function)
+     mutex_unlock(&cgroup_mutex);
+                   ^~~~~~~~~~~~
+   kernel/cgroup/cgroup-v1.c: In function 'cgroup1_mount':
+   kernel/cgroup/cgroup-v1.c:1093:18: error: 'cgroup_mutex' undeclared (first use in this function)
+       mutex_unlock(&cgroup_mutex);
+                     ^~~~~~~~~~~~
 
-vim +/cgroup_mutex +52 kernel/cgroup/cgroup-v1.c
+vim +/css_set_lock +80 kernel/cgroup/cgroup-internal.h
 
-   > 1	#include "cgroup-internal.h"
-     2	
-     3	#include <linux/kmod.h>
-     4	#include <linux/sort.h>
-     5	#include <linux/mm.h>
-     6	#include <linux/slab.h>
-     7	#include <linux/vmalloc.h>
-     8	#include <linux/delayacct.h>
-     9	#include <linux/pid_namespace.h>
-    10	#include <linux/cgroupstats.h>
-    11	
-    12	#include <trace/events/cgroup.h>
-    13	
-    14	/*
-    15	 * pidlists linger the following amount before being destroyed.  The goal
-    16	 * is avoiding frequent destruction in the middle of consecutive read calls
-    17	 * Expiring in the middle is a performance problem not a correctness one.
-    18	 * 1 sec should be enough.
-    19	 */
-    20	#define CGROUP_PIDLIST_DESTROY_DELAY	HZ
+     1	#ifndef __CGROUP_INTERNAL_H
+     2	#define __CGROUP_INTERNAL_H
+     3	
+   > 4	#include <linux/cgroup.h>
+     5	#include <linux/kernfs.h>
+     6	#include <linux/workqueue.h>
+     7	#include <linux/list.h>
+     8	
+     9	/*
+    10	 * A cgroup can be associated with multiple css_sets as different tasks may
+    11	 * belong to different cgroups on different hierarchies.  In the other
+    12	 * direction, a css_set is naturally associated with multiple cgroups.
+    13	 * This M:N relationship is represented by the following link structure
+    14	 * which exists for each association and allows traversing the associations
+    15	 * from both sides.
+    16	 */
+    17	struct cgrp_cset_link {
+    18		/* the cgroup and css_set this link associates */
+    19		struct cgroup		*cgrp;
+    20		struct css_set		*cset;
     21	
-    22	/* Controllers blocked by the commandline in v1 */
-    23	static u16 cgroup_no_v1_mask;
+    22		/* list of cgrp_cset_links anchored at cgrp->cset_links */
+    23		struct list_head	cset_link;
     24	
-    25	/*
-    26	 * pidlist destructions need to be flushed on cgroup destruction.  Use a
-    27	 * separate workqueue as flush domain.
-    28	 */
-    29	static struct workqueue_struct *cgroup_pidlist_destroy_wq;
-    30	
-    31	/*
-    32	 * Protects cgroup_subsys->release_agent_path.  Modifying it also requires
-    33	 * cgroup_mutex.  Reading requires either cgroup_mutex or this spinlock.
-    34	 */
-    35	DEFINE_SPINLOCK(release_agent_path_lock);
-    36	
-    37	bool cgroup_ssid_no_v1(int ssid)
-    38	{
-    39		return cgroup_no_v1_mask & (1 << ssid);
-    40	}
-    41	
-    42	/**
-    43	 * cgroup_attach_task_all - attach task 'tsk' to all cgroups of task 'from'
-    44	 * @from: attach to all cgroups of a given task
-    45	 * @tsk: the task to be attached
-    46	 */
-    47	int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
-    48	{
-    49		struct cgroup_root *root;
-    50		int retval = 0;
-    51	
-  > 52		mutex_lock(&cgroup_mutex);
-    53		percpu_down_write(&cgroup_threadgroup_rwsem);
-    54		for_each_root(root) {
-    55			struct cgroup *from_cgrp;
-    56	
-    57			if (root == &cgrp_dfl_root)
-    58				continue;
-    59	
-  > 60			spin_lock_irq(&css_set_lock);
-    61			from_cgrp = task_cgroup_from_root(from, root);
-    62			spin_unlock_irq(&css_set_lock);
-    63	
+    25		/* list of cgrp_cset_links anchored at css_set->cgrp_links */
+    26		struct list_head	cgrp_link;
+    27	};
+    28	
+    29	struct cgroup_sb_opts {
+    30		u16 subsys_mask;
+    31		unsigned int flags;
+    32		char *release_agent;
+    33		bool cpuset_clone_children;
+    34		char *name;
+    35		/* User explicitly requested empty subsystem */
+    36		bool none;
+    37	};
+    38	
+    39	extern struct cgroup_subsys *cgroup_subsys[];
+    40	extern struct list_head cgroup_roots;
+    41	extern struct file_system_type cgroup_fs_type;
+    42	
+    43	/* iterate across the hierarchies */
+    44	#define for_each_root(root)						\
+    45		list_for_each_entry((root), &cgroup_roots, root_list)
+    46	
+    47	/**
+    48	 * for_each_subsys - iterate all enabled cgroup subsystems
+    49	 * @ss: the iteration cursor
+    50	 * @ssid: the index of @ss, CGROUP_SUBSYS_COUNT after reaching the end
+    51	 */
+    52	#define for_each_subsys(ss, ssid)					\
+    53		for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT &&		\
+    54		     (((ss) = cgroup_subsys[ssid]) || true); (ssid)++)
+    55	
+    56	static inline bool cgroup_is_dead(const struct cgroup *cgrp)
+    57	{
+    58		return !(cgrp->self.flags & CSS_ONLINE);
+    59	}
+    60	
+    61	static inline bool notify_on_release(const struct cgroup *cgrp)
+    62	{
+    63		return test_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
+    64	}
+    65	
+    66	void put_css_set_locked(struct css_set *cset);
+    67	
+    68	static inline void put_css_set(struct css_set *cset)
+    69	{
+    70		unsigned long flags;
+    71	
+    72		/*
+    73		 * Ensure that the refcount doesn't hit zero while any readers
+    74		 * can see it. Similar to atomic_dec_and_lock(), but for an
+    75		 * rwlock
+    76		 */
+    77		if (atomic_add_unless(&cset->refcount, -1, 1))
+    78			return;
+    79	
+  > 80		spin_lock_irqsave(&css_set_lock, flags);
+    81		put_css_set_locked(cset);
+    82		spin_unlock_irqrestore(&css_set_lock, flags);
+    83	}
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---r5Pyd7+fXNt84Ff3
+--rwEMma7ioTxnRzrJ
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICBGjWVgAAy5jb25maWcAlFxbc+Q2rn7fX9E1ex52HzYzYzvOpE75gZKobqZFURGlbrdf
+H4sICFenWVgAAy5jb25maWcAlFxbc+Q2rn7fX9E1ex52HzYzYzvOpE75gZKobqZFURGlbrdf
 VI6nJ3GtL1nbs5ucX38AUBeSgjrZVCWxAPAiEgQ+AFT/9S9/XYmvb8+Pt2/3d7cPD7+vfj4+
 HV9u346fV1/uH47/u8rMqjTNSmaq+QaEi/unr7+9vz//dLm6+Ob7bz6stseXp+PDKn1++nL/
 81doef/89Je/gmRqylytu8uLRDWr+9fV0/Pb6vX49peefv3psjs/u/rde54eVGmbuk0bZcou
@@ -814,4 +923,4 @@ k+zOpX6yP9wiOIi6g4Ox+9vs1lWaRZX4fzHMvy78h69pccB6O56Aw2eyMpVlbgpgdYuOBjcZ
 Tp175WXhj0XmdI15aJRc5qCxvZuTBgNWi5y9E8NEPH6mFKNWG5wnL0vKgML74d7eLNuGMLAq
 k3XljKfR0R8A+Bc+cx9HhvkBAA==
 
---r5Pyd7+fXNt84Ff3--
+--rwEMma7ioTxnRzrJ--
