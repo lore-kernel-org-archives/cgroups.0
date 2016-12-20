@@ -1,70 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET] kernfs, cgroup: reimplement "cgroup.procs" reading for v2
-Date: Tue, 20 Dec 2016 11:10:48 -0500
-Message-ID: <20161220161053.14994-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 1/5] kernfs: make kernfs_open_file->mmapped a bitfield
+Date: Tue, 20 Dec 2016 11:10:49 -0500
+Message-ID: <20161220161053.14994-2-tj@kernel.org>
+References: <20161220161053.14994-1-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=GqCq6bGOY3+z9hVrYy27xQv5aH8iB3qpmlXzIhF1fnM=;
-        b=jh8hLJ0Bf1BdJg6xqU9E7EYCGbW4lXc9/uP2LWn2lN9ZWpmyC3tTjumqvE/7trXkiz
-         IpwszwPmTZ5HjowW0+pv9xIhB4lFuuNBozmNaWEPcf1Q4Pnh2qQMasb2GtJsdU74aSxi
-         mOhrnRrR70aiB49bZaF64unLfz9uZX15N7Tr2LSdL9bkePPEo9AJYhAI5clvwxO4cgBO
-         k2wCkuOiViOLL2BS6K+w/iILRs3Goff8ydpDpIOMT8W6Zp7Y5q6s2nyFRd50Rps5LqX+
-         YAzO3cTXF2lnM7sUmejAgFB6/iSsKbSbk03sctTugIQyrD2YIb8nLSAHrB9xkTJCsrPU
-         7Ubw==
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=PWT8jyi+467bCCM466udrznCIcMTN1m5TFw7kY3OaZo=;
+        b=bpf0UUk4zLO415Wf9ED5Ycq8LQ6paTJVWzl0a8tfAg9fc9P0LOM4YBUko/l2qvmcvw
+         nUxzIg8bcW0HoKuPEN8xtYHXpAnxVCMOma/WwfcTuHQO+7eLNrqdsY2RxyezahtO2WZ1
+         XTz5vLClxgeJSV3p4CLoF2RWWa6hzvQ5Bqq0vz36YYVWGlIImPYzSMDcvqTuNpHZUgOK
+         lZUebpKtHg94bbpnlBKCJBTZ83Y9bL+ll/RdvvrNu7PQ3cugLj7n8x3STOueAEwrxzMt
+         nSmZqGscHtkMVDQ33A96rrRoZ0VFhI2U7mpnb8GdtFMy+eZzyUy+LVYFL6p8yrW/39U4
+         sOOg==
+In-Reply-To: <20161220161053.14994-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: gregkh@linuxfoundation.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On cgroup v1, the pid listings in "cgroup.procs" and "tasks" are
-sorted which adds a lot of complications and overhead.  v2 doesn't
-have such requirement and has been intentionally using a modified
-sorting order so that the output doesn't look sorted to users.
+More kernfs_open_file->mutex synchronized flags are planned to be
+added.  Convert ->mmapped to a bitfield in preparation.
 
-This patchset re-implements "cgroup.procs" reading for v2 which simply
-keeps a css_task_iter open while the file is being read.  Keeping the
-iterator open makes it unnecessary to skip to the right position on
-each read segment and associated errors - e.g. incorrectly skipping
-over pids because earlier pids disappeared between the reads.
+While at it, make kernfs_fop_mmap() use "true" instead of "1" on
+->mmapped.
 
-Using persistent iterator across multiple read calls requires
-->release() callback to clean it up.  kernfs operations
-->open/release() are added and piped through cftype.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+---
+ fs/kernfs/file.c       | 2 +-
+ include/linux/kernfs.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-This patchset contains the following five patches.
-
- 0001-kernfs-make-kernfs_open_file-mmapped-a-bitfield.patch
- 0002-kernfs-add-kernfs_ops-open-release-callbacks.patch
- 0003-cgroup-add-cftype-open-release-callbacks.patch
- 0004-cgroup-reimplement-reading-cgroup.procs-on-cgroup-v2.patch
- 0005-cgroup-remove-cgroup_pid_fry-and-friends.patch
-
-0001 is a misc kernfs patch and 0002 adds ->open/release() to kernfs.
-0003 pipes ->open/release() through cftype.  0004 implements the new
-cgroup.procs for v2 and 0005 removes the now unused sort order frying
-logic.
-
-Greg, would it be okay to route the kernfs patches through
-cgroup/for-4.11?
-
-The patches are also available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-procs
-
-diffstat follows.  Thanks.
-
- fs/kernfs/dir.c             |    2 
- fs/kernfs/file.c            |   53 +++++++++++++++--
- fs/kernfs/kernfs-internal.h |    2 
- include/linux/cgroup-defs.h |    3 +
- include/linux/kernfs.h      |   12 +++-
- kernel/cgroup.c             |  130 +++++++++++++++++++++++++++++---------------
- 6 files changed, 148 insertions(+), 54 deletions(-)
-
---
-tejun
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index 78219d5..d0b6fb1 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -516,7 +516,7 @@ static int kernfs_fop_mmap(struct file *file, struct vm_area_struct *vma)
+ 		goto out_put;
+ 
+ 	rc = 0;
+-	of->mmapped = 1;
++	of->mmapped = true;
+ 	of->vm_ops = vma->vm_ops;
+ 	vma->vm_ops = &kernfs_vm_ops;
+ out_put:
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index 7056238..afd4e5a 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -185,7 +185,7 @@ struct kernfs_open_file {
+ 	char			*prealloc_buf;
+ 
+ 	size_t			atomic_write_len;
+-	bool			mmapped;
++	bool			mmapped:1;
+ 	const struct vm_operations_struct *vm_ops;
+ };
+ 
+-- 
+2.9.3
