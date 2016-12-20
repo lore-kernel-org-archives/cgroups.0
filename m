@@ -1,70 +1,106 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET] kernfs, cgroup: reimplement "cgroup.procs" reading for v2
-Date: Tue, 20 Dec 2016 11:12:17 -0500
-Message-ID: <20161220161222.15234-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 3/5] cgroup add cftype->open/release() callbacks
+Date: Tue, 20 Dec 2016 11:12:20 -0500
+Message-ID: <20161220161222.15234-4-tj@kernel.org>
+References: <20161220161222.15234-1-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=GqCq6bGOY3+z9hVrYy27xQv5aH8iB3qpmlXzIhF1fnM=;
-        b=F61coa6UitTkdu8KPuAhJVg0G/+6G5Tz/ggeAPuXCnEI0NoS9i//1N6N9ivQ8jpWyX
-         nXag5CJaws9tf5T7CKwK2tTaJI9pZ0RTCgL/iFCKl997CYm2M4gbxtDURm0YpkQZTMz4
-         dNDtuYLWxbt0IqwR9X4AeLHOBJE/0wjWCSgvLI7/XWMM8zPaIm9eOfim2QcBqoff+u7P
-         V9WkgCHjTDx47a+DchqWAzCO8LcnUs+ZEkASWSnvepoeWn5Q63HZKCabygbLA5wtuSim
-         btOyzfBrhBQy6pp1Lj9yEme+ypfd+5j4j2gZpvGmEgagUYmrKTEqEgyXK82w6Mgb97lY
-         vkmQ==
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=acdhV+QEyUAQAsXt4u9/5iK5vipmwEWhvbFbwW/Nd/0=;
+        b=WoUBJsuwS7DTk8Kb/lnqbPqBXZRmxOmfwmJYo2XWn5xb1SfswfU/wF6/afjsimVrtV
+         9OaRNn7O+JZetX+ONXut7EE0IuUZWv6dSz0QbPGcUQuows3OZqgqCE0noKz1q9fU4w2K
+         38e7QJJeP4gXs0hBfExqpTN1Y7Ko8dazNkUWGgpZasPh+n4tZDQ38nl4E7ardaYMqGjz
+         2GqtCwks58sT/OxLDhR8COUyrtIj1R3Mt6tX8fu7Oa/exXMKDKlHqFnxq5tCpVhZUoBz
+         +DS6DYY3aeb3AHvPdQ9fSZabkvbYkpDpSmzvz5WRBJvgnRYHhGWIOfauClvW/u524gQ4
+         caww==
+In-Reply-To: <20161220161222.15234-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: gregkh@linuxfoundation.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On cgroup v1, the pid listings in "cgroup.procs" and "tasks" are
-sorted which adds a lot of complications and overhead.  v2 doesn't
-have such requirement and has been intentionally using a modified
-sorting order so that the output doesn't look sorted to users.
+Pipe the newly added kernfs->open/release() callbacks through cftype.
+While at it, as cleanup operations now can be performed from
+->release() instead of ->seq_stop(), make the latter optional.
 
-This patchset re-implements "cgroup.procs" reading for v2 which simply
-keeps a css_task_iter open while the file is being read.  Keeping the
-iterator open makes it unnecessary to skip to the right position on
-each read segment and associated errors - e.g. incorrectly skipping
-over pids because earlier pids disappeared between the reads.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ include/linux/cgroup-defs.h |  3 +++
+ kernel/cgroup.c             | 24 +++++++++++++++++++++++-
+ 2 files changed, 26 insertions(+), 1 deletion(-)
 
-Using persistent iterator across multiple read calls requires
-->release() callback to clean it up.  kernfs operations
-->open/release() are added and piped through cftype.
-
-This patchset contains the following five patches.
-
- 0001-kernfs-make-kernfs_open_file-mmapped-a-bitfield.patch
- 0002-kernfs-add-kernfs_ops-open-release-callbacks.patch
- 0003-cgroup-add-cftype-open-release-callbacks.patch
- 0004-cgroup-reimplement-reading-cgroup.procs-on-cgroup-v2.patch
- 0005-cgroup-remove-cgroup_pid_fry-and-friends.patch
-
-0001 is a misc kernfs patch and 0002 adds ->open/release() to kernfs.
-0003 pipes ->open/release() through cftype.  0004 implements the new
-cgroup.procs for v2 and 0005 removes the now unused sort order frying
-logic.
-
-Greg, would it be okay to route the kernfs patches through
-cgroup/for-4.11?
-
-The patches are also available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-procs
-
-diffstat follows.  Thanks.
-
- fs/kernfs/dir.c             |    2 
- fs/kernfs/file.c            |   53 +++++++++++++++--
- fs/kernfs/kernfs-internal.h |    2 
- include/linux/cgroup-defs.h |    3 +
- include/linux/kernfs.h      |   12 +++-
- kernel/cgroup.c             |  130 +++++++++++++++++++++++++++++---------------
- 6 files changed, 148 insertions(+), 54 deletions(-)
-
---
-tejun
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 861b467..8a916dc 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -388,6 +388,9 @@ struct cftype {
+ 	struct list_head node;		/* anchored at ss->cfts */
+ 	struct kernfs_ops *kf_ops;
+ 
++	int (*open)(struct kernfs_open_file *of);
++	void (*release)(struct kernfs_open_file *of);
++
+ 	/*
+ 	 * read_u64() is a shortcut for the common case of returning a
+ 	 * single integer. Use it in place of read()
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2ee9ec3..87167e4 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3503,6 +3503,23 @@ static int cgroup_events_show(struct seq_file *seq, void *v)
+ 	return 0;
+ }
+ 
++static int cgroup_file_open(struct kernfs_open_file *of)
++{
++	struct cftype *cft = of->kn->priv;
++
++	if (cft->open)
++		return cft->open(of);
++	return 0;
++}
++
++static void cgroup_file_release(struct kernfs_open_file *of)
++{
++	struct cftype *cft = of->kn->priv;
++
++	if (cft->release)
++		cft->release(of);
++}
++
+ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+ 				 size_t nbytes, loff_t off)
+ {
+@@ -3553,7 +3570,8 @@ static void *cgroup_seqfile_next(struct seq_file *seq, void *v, loff_t *ppos)
+ 
+ static void cgroup_seqfile_stop(struct seq_file *seq, void *v)
+ {
+-	seq_cft(seq)->seq_stop(seq, v);
++	if (seq_cft(seq)->seq_stop)
++		seq_cft(seq)->seq_stop(seq, v);
+ }
+ 
+ static int cgroup_seqfile_show(struct seq_file *m, void *arg)
+@@ -3575,12 +3593,16 @@ static int cgroup_seqfile_show(struct seq_file *m, void *arg)
+ 
+ static struct kernfs_ops cgroup_kf_single_ops = {
+ 	.atomic_write_len	= PAGE_SIZE,
++	.open			= cgroup_file_open,
++	.release		= cgroup_file_release,
+ 	.write			= cgroup_file_write,
+ 	.seq_show		= cgroup_seqfile_show,
+ };
+ 
+ static struct kernfs_ops cgroup_kf_ops = {
+ 	.atomic_write_len	= PAGE_SIZE,
++	.open			= cgroup_file_open,
++	.release		= cgroup_file_release,
+ 	.write			= cgroup_file_write,
+ 	.seq_start		= cgroup_seqfile_start,
+ 	.seq_next		= cgroup_seqfile_next,
+-- 
+2.9.3
