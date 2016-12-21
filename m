@@ -1,62 +1,52 @@
-From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:review-cgroup-reorg 8/13] kernel/cgroup/cgroup-v1.c:695:16:
- sparse: incompatible types in comparison expression (different address
- spaces)
-Date: Wed, 21 Dec 2016 06:49:39 +0800
-Message-ID: <201612210629.LUq2MQnk%fengguang.wu@intel.com>
+From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCHSET] kernfs, cgroup: reimplement "cgroup.procs" reading
+ for v2
+Date: Wed, 21 Dec 2016 10:59:22 +0100
+Message-ID: <20161221095922.GF27395@kroah.com>
+References: <20161220161222.15234-1-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
+In-Reply-To: <20161220161222.15234-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-reorg
-head:   8a6dc1a57dc250394be839aeb7741dc351e84da7
-commit: 183e7e19c8e2dec9a4f64a3b40fe1c01e7c47f50 [8/13] cgroup: move cgroup v1 specific code to kernel/cgroup/cgroup-v1.c
-reproduce:
-        # apt-get install sparse
-        git checkout 183e7e19c8e2dec9a4f64a3b40fe1c01e7c47f50
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+On Tue, Dec 20, 2016 at 11:12:17AM -0500, Tejun Heo wrote:
+> On cgroup v1, the pid listings in "cgroup.procs" and "tasks" are
+> sorted which adds a lot of complications and overhead.  v2 doesn't
+> have such requirement and has been intentionally using a modified
+> sorting order so that the output doesn't look sorted to users.
+> 
+> This patchset re-implements "cgroup.procs" reading for v2 which simply
+> keeps a css_task_iter open while the file is being read.  Keeping the
+> iterator open makes it unnecessary to skip to the right position on
+> each read segment and associated errors - e.g. incorrectly skipping
+> over pids because earlier pids disappeared between the reads.
+> 
+> Using persistent iterator across multiple read calls requires
+> ->release() callback to clean it up.  kernfs operations
+> ->open/release() are added and piped through cftype.
+> 
+> This patchset contains the following five patches.
+> 
+>  0001-kernfs-make-kernfs_open_file-mmapped-a-bitfield.patch
+>  0002-kernfs-add-kernfs_ops-open-release-callbacks.patch
+>  0003-cgroup-add-cftype-open-release-callbacks.patch
+>  0004-cgroup-reimplement-reading-cgroup.procs-on-cgroup-v2.patch
+>  0005-cgroup-remove-cgroup_pid_fry-and-friends.patch
+> 
+> 0001 is a misc kernfs patch and 0002 adds ->open/release() to kernfs.
+> 0003 pipes ->open/release() through cftype.  0004 implements the new
+> cgroup.procs for v2 and 0005 removes the now unused sort order frying
+> logic.
+> 
+> Greg, would it be okay to route the kernfs patches through
+> cgroup/for-4.11?
 
+No objection from me at all:
 
-sparse warnings: (new ones prefixed by >>)
-
-   include/linux/compiler.h:253:8: sparse: attribute 'no_sanitize_address': unknown attribute
->> kernel/cgroup/cgroup-v1.c:695:16: sparse: incompatible types in comparison expression (different address spaces)
-
-vim +695 kernel/cgroup/cgroup-v1.c
-
-   679		struct css_task_iter it;
-   680		struct task_struct *tsk;
-   681	
-   682		/* it should be kernfs_node belonging to cgroupfs and is a directory */
-   683		if (dentry->d_sb->s_type != &cgroup_fs_type || !kn ||
-   684		    kernfs_type(kn) != KERNFS_DIR)
-   685			return -EINVAL;
-   686	
-   687		mutex_lock(&cgroup_mutex);
-   688	
-   689		/*
-   690		 * We aren't being called from kernfs and there's no guarantee on
-   691		 * @kn->priv's validity.  For this and css_tryget_online_from_dir(),
-   692		 * @kn->priv is RCU safe.  Let's do the RCU dancing.
-   693		 */
-   694		rcu_read_lock();
- > 695		cgrp = rcu_dereference(kn->priv);
-   696		if (!cgrp || cgroup_is_dead(cgrp)) {
-   697			rcu_read_unlock();
-   698			mutex_unlock(&cgroup_mutex);
-   699			return -ENOENT;
-   700		}
-   701		rcu_read_unlock();
-   702	
-   703		css_task_iter_start(&cgrp->self, &it);
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
