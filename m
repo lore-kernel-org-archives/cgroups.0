@@ -1,55 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/3] cgroup: cosmetic update to cgroup_taskset_add()
-Date: Thu, 29 Dec 2016 17:11:13 -0500
-Message-ID: <20161229221115.31995-2-tj@kernel.org>
-References: <20161229221115.31995-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=LVdylKTsij8YUc0IdnFq+GLVL6lHDfuOxcsMMT7FTs8=;
-        b=dWXeQQIn7cGeAvOqkVenvPaZK7ZI38N2NUiA1HOUphv2aAyQj6YbpH8f6gEI3U7h+f
-         3n05+rCPnpqYMV8PyYjGY11NFl0sZ6ocfHo8qVSJ30ceDNSCYlfI0y+AB62Q7Z4nQVK1
-         gmwZG7ma0/it7e3PTZsCLEUN1izwowNaugNFSYF+XzWDMmshawKjj37CjtUEAB9REfAy
-         nulMuqIvasxWfpChe6LPusoHNfcdLjB3KabAp6Azz60dbj/TWOVxN2Y89ypIOxIHKvEe
-         TwHl7H4Ff6H8yhll1+RZSH/8C98GCDkhhXFpLYeZntnwFC+u/tadPc2PoWNYTqtVdnC6
-         H5Zw==
-In-Reply-To: <20161229221115.31995-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: =?UTF-8?Q?Micha=c5=82_Zegan?= <webczat_200-wo4oW1Pw1HF3vZ0LZ0W7Rg@public.gmane.org>
+Subject: control groups and /proc/meminfo, /proc/cpuinfo etc
+Date: Thu, 5 Jan 2017 11:59:28 +0100
+Message-ID: <4636e5b6-b769-c14a-75cb-909403803498@poczta.onet.pl>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="IWCgDuGJX2xBqTSfve0w22jeo53fqDnjf"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.onet.pl;
+        s=2011; t=1483613973;
+        bh=AR8N9oxCTTd4HcwQ+shvVi5hQvLX7bOXI37AS7RGg8g=;
+        h=To:From:Subject:Date:From;
+        b=hT/KogRPGlJgWzW68LzsLMqxt0B8brwXHWnLOxlpCbYfwh4I7Bq0sfuxzCzu7PT5o
+         e12wgcUsumuSgrOPoivY1siEW7gQRsQ9v9tpNENFsHkHtPhmiwgHkaATXFhrKV6PaU
+         AnYgYR/svXN7GbnFrfhv3QsT80Vouq1eICDOrukg=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup_taskset_add() was using list_add_tail() when for source csets
-but list_move_tail() for destination.  As the operations are gated by
-list_empty() test, list_move_tail() is equivalent to list_add_tail()
-here.  Use list_add_tail() too for destination csets too.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--IWCgDuGJX2xBqTSfve0w22jeo53fqDnjf
+Content-Type: multipart/mixed; boundary="eaEP0ubvpLNNvkf64dLpBjmfo1GuXK6TA";
+ protected-headers="v1"
+From: =?UTF-8?Q?Micha=c5=82_Zegan?= <webczat_200-wo4oW1Pw1HF3vZ0LZ0W7Rg@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Message-ID: <4636e5b6-b769-c14a-75cb-909403803498-wo4oW1Pw1HF3vZ0LZ0W7Rg@public.gmane.org>
+Subject: control groups and /proc/meminfo, /proc/cpuinfo etc
 
-This doesn't cause any functional changes.
+--eaEP0ubvpLNNvkf64dLpBjmfo1GuXK6TA
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/cgroup/cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hello.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index d9d82e9..aed492e 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1980,8 +1980,8 @@ static void cgroup_taskset_add(struct task_struct *task,
- 	if (list_empty(&cset->mg_node))
- 		list_add_tail(&cset->mg_node, &tset->src_csets);
- 	if (list_empty(&cset->mg_dst_cset->mg_node))
--		list_move_tail(&cset->mg_dst_cset->mg_node,
--			       &tset->dst_csets);
-+		list_add_tail(&cset->mg_dst_cset->mg_node,
-+			      &tset->dst_csets);
- }
- 
- /**
--- 
-2.9.3
+Are there any plans to virtualize /proc/cpuinfo and /proc/meminfo and
+all other things? Don't cgroup namespaces give an opportunity to do that?=
 
+
+
+--eaEP0ubvpLNNvkf64dLpBjmfo1GuXK6TA--
+
+--IWCgDuGJX2xBqTSfve0w22jeo53fqDnjf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQFPBAEBCAA5FiEE8PeJXyv9t1Bfiq63mRxoPZnIFPkFAlhuJxAbHHdlYmN6YXRf
+MjAwQHBvY3p0YS5vbmV0LnBsAAoJEJkcaD2ZyBT5TfYH/3rbbkzV5KEqTzedwDPS
+02E0PMC1Q8qh0JTLuzaP+rqRrRjrNvEa7ZbKp5r4Xq+gQlKSzOteqgZouAocojHN
+u1verOjBnuWapRnBfa2LA+RszHmImvT07KiKQ2u/TmfbHvjSLkySAQKJ5CQOrDFW
+Lc9K5u1KntcDQBd3ETBLhSFm4NvcXlXNqmhzwUV5OF9M5/sIsS3Jyn51Evr2Y1HK
+iT7GrP+zdiE/NMs/qfHi8ln0IUIn61XPQBdrqXpHGUQGJSER2khHedlgr/XkUKnI
+JjpANlX+CKLPsqfNp3XSnnBArobA9QTZJ11BcxNE+E1lY5bzWUZQlLAfeGyw8/wK
+8vw=
+=QeGx
+-----END PGP SIGNATURE-----
+
+--IWCgDuGJX2xBqTSfve0w22jeo53fqDnjf--
