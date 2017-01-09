@@ -1,27 +1,42 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: control groups and /proc/meminfo, /proc/cpuinfo etc
-Date: Thu, 5 Jan 2017 16:25:58 +0100
-Message-ID: <20170105152558.GA29811@dhcp22.suse.cz>
-References: <4636e5b6-b769-c14a-75cb-909403803498@poczta.onet.pl>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHv13 1/3] rdmacg: Added rdma cgroup controller
+Date: Mon, 9 Jan 2017 07:58:58 -0500
+Message-ID: <20170109125858.GB10904@mtj.duckdns.org>
+References: <1480705637-2986-1-git-send-email-pandit.parav@gmail.com>
+ <1480705637-2986-2-git-send-email-pandit.parav@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=w3RXGUocxqxxVsO5wY52Can1n2X/+jTSUEAXcsRZcN0=;
+        b=jve3X6qwFmelo113c94mWOCNamdV1IFsuywvLhLqocfNk5JmXVSTOba13J5KC+takq
+         zzKaTtXiLpQx5Yio1WJxWpp/x9fQApZBqCT7ZTOXHRk0MxXISO4ldy3dCKIvB+/h8rUe
+         18z41DvlsMdJHgacGA6+7fB8ubwgCD4mQmxiQP8xwF2wzufjjLqKjcbNps0puhz1BBkM
+         IRulLZKS572J6vmrRFpGFi5BrAM0abOkcbBvSCIDe2vCy/lnaE67OAKpem5u0AQQwWDw
+         p1gQ7WPwohJKvi1fRy5NQDj2AHsC5jLsOGzKgfw2CEIrPgR0iESK6b54le/j7fifsgSD
+         xIZA==
 Content-Disposition: inline
-In-Reply-To: <4636e5b6-b769-c14a-75cb-909403803498-wo4oW1Pw1HF3vZ0LZ0W7Rg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1480705637-2986-2-git-send-email-pandit.parav@gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: =?utf-8?Q?Micha=C5=82?= Zegan <webczat_200-wo4oW1Pw1HF3vZ0LZ0W7Rg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Parav Pandit <pandit.parav@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com, hch@lst.de, liranl@mellanox.com, sean.hefty@intel.com, jgunthorpe@obsidianresearch.com, haggaie@mellanox.com, corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-On Thu 05-01-17 11:59:28, Micha=C5=82 Zegan wrote:
-> Hello.
->=20
-> Are there any plans to virtualize /proc/cpuinfo and /proc/meminfo and
-> all other things? Don't cgroup namespaces give an opportunity to do that?
+Hello, Parav.
 
-There are no plans AFAICT - at least for the meminfo part. There simply
-is no 1:1 mapping between memcg and global counters.
---=20
-Michal Hocko
-SUSE Labs
+Looks good to me.  Just one minor nit below.
+
+> +static void rdmacg_uncharge_hirerchy(struct rdma_cgroup *cg,
+
+ hierarchy
+
+Other than that, looks good to me.
+
+Thanks.
+
+-- 
+tejun
