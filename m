@@ -1,62 +1,50 @@
-From: Hans Ragas <hansr-b10kYP2dOMg@public.gmane.org>
-Subject: [PATCH] cgroup: Add missing cgroup-v2 PID controller documentation.
-Date: Tue, 10 Jan 2017 17:42:34 +0000
-Message-ID: <BC93EBA9-25A6-4445-8E0A-33DC6778A387@fb.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] rdmacg: Fixed uninitialized current resource usage
+Date: Tue, 10 Jan 2017 17:51:48 +0000
+Message-ID: <1484070708-5422-1-git-send-email-pandit.parav@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
- date : message-id : content-type : content-id : content-transfer-encoding
- : mime-version; s=facebook;
- bh=RR0d9ZqqnDL3bJIyCggzqj+BKZdwUGObJMVIz0nuFZI=;
- b=pUubOwdTZYCHkJvKWHfQqC6AiqCpwDcHoPGSUP79p7toVQ9fGZtCYvYGvxJbBgwwUUxt
- DZS6nYl1Aq5v9u9OzPotp2Z9xaSbUK6bnO6fBBUAUCsaayePstFhQaBPs337Ts7CNW8c
- DIa3N20KQ2/YWuZpnP2xhhR6x2A590LsISo= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=RR0d9ZqqnDL3bJIyCggzqj+BKZdwUGObJMVIz0nuFZI=;
- b=SF59yB574Au6p7EzbDkWTLYKeFFxqV5u+Yx6pAlEtHYDl653Yodx1v7f2ygngI94UDG2CrewXt+nl/SQnmbIDwTIBNr+OseIodycnkQQodNoCBrkOWPTV8FbU2cF/+FjbZohsbMHkDriV1JI+cw5JKFBNLhmuHc4+c2NmEsIL2A=
-Content-Language: en-US
-Content-ID: <A0E3B2EC13860B4AAB9C055ED0AB5D9E-JGF9Izt3QrScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=Cc0I26UA2zGU08gsUhbpXZAEK3uN8CydESV0c1RGzF0=;
+        b=dXKRfZfeQqOtdr+YOlvLtLrm/I03scrme0Vx3h49zxIyqvvc2R5jqsroWQ5jiTXDu9
+         GDt5AMZ3lKefKN2T6r4AasGAsNe5+m9YVssKQDpg44tV3o5Ugd3/HdSmIUSm5VTlJK2b
+         mUkRILBE1gjGi5X/C8EYYAG7gjv7V6pUFai6pXWz5oScx533FbePHFWwhF0a98QBJ5bs
+         X5ilGH0osuJIpAvJRuse1P7Pm7xbA3eqcMpKmB5T9M57yxzsx2EqR97NRZG0eU5MKRpv
+         ufGZElwloo2sHsrNC4ig6/sWFVnioL5r4nsdLhmAO5mI5cZAmPOa7iddJotFCa7nHy7A
+         VYSg==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-DQpTaWduZWQtb2ZmLWJ5OiBIYW5zIFJhZ2FzIDxoYW5zckBmYi5jb20+DQotLS0NCiBEb2N1bWVu
-dGF0aW9uL2Nncm91cC12Mi50eHQgfCA0MSArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKw0KIDEgZmlsZSBjaGFuZ2VkLCA0MSBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1n
-aXQgYS9Eb2N1bWVudGF0aW9uL2Nncm91cC12Mi50eHQgYi9Eb2N1bWVudGF0aW9uL2Nncm91cC12
-Mi50eHQNCmluZGV4IDRjYzA3Y2UuLmZkZmU5NDIgMTAwNjQ0DQotLS0gYS9Eb2N1bWVudGF0aW9u
-L2Nncm91cC12Mi50eHQNCisrKyBiL0RvY3VtZW50YXRpb24vY2dyb3VwLXYyLnR4dA0KQEAgLTQ3
-LDYgKzQ3LDggQEAgQ09OVEVOVFMNCiAgIDUtMy4gSU8NCiAgICAgNS0zLTEuIElPIEludGVyZmFj
-ZSBGaWxlcw0KICAgICA1LTMtMi4gV3JpdGViYWNrDQorICA1LTQuIFBJRA0KKyAgICA1LTQtMS4g
-UElEIEludGVyZmFjZSBGaWxlcw0KIDYuIE5hbWVzcGFjZQ0KICAgNi0xLiBCYXNpY3MNCiAgIDYt
-Mi4gVGhlIFJvb3QgYW5kIFZpZXdzDQpAQCAtMTExOSw2ICsxMTIxLDQ1IEBAIHdyaXRlYmFjayBh
-cyBmb2xsb3dzLg0KICB2bS5kaXJ0eVtfYmFja2dyb3VuZF1fcmF0aW8uDQoNCg0KKzUtNC4gUElE
-DQorDQorVGhlIHByb2Nlc3MgbnVtYmVyIGNvbnRyb2xsZXIgaXMgdXNlZCB0byBhbGxvdyBhIGNn
-cm91cCB0byBzdG9wIGFueQ0KK25ldyB0YXNrcyBmcm9tIGJlaW5nIGZvcmsoKSdkIG9yIGNsb25l
-KCknZCBhZnRlciBhIHNwZWNpZmllZCBsaW1pdCBpcw0KK3JlYWNoZWQuDQorDQorVGhlIG51bWJl
-ciBvZiB0YXNrcyBpbiBhIGNncm91cCBjYW4gYmUgZXhoYXVzdGVkIGluIHdheXMgd2hpY2ggb3Ro
-ZXINCitjb250cm9sbGVycyBjYW5ub3QgcHJldmVudCwgdGh1cyB3YXJyYW50aW5nIGl0cyBvd24g
-Y29udHJvbGxlci4gIEZvcg0KK2V4YW1wbGUsIGEgZm9yayBib21iIGlzIGxpa2VseSB0byBleGhh
-dXN0IHRoZSBudW1iZXIgb2YgdGFza3MgYmVmb3JlDQoraGl0dGluZyBtZW1vcnkgcmVzdHJpY3Rp
-b25zLg0KKw0KK05vdGUgdGhhdCBQSURzIHVzZWQgaW4gdGhpcyBjb250cm9sbGVyIHJlZmVyIHRv
-IFRJRHMsIHByb2Nlc3MgSURzIGFzDQordXNlZCBieSB0aGUga2VybmVsLg0KKw0KKzUtNC0xLiBQ
-SUQgSW50ZXJmYWNlIEZpbGVzDQorDQorICBwaWRzLm1heA0KKw0KKyBBIHJlYWQtd3JpdGUgc2lu
-Z2xlIHZhbHVlIGZpbGUgd2hpY2ggZXhpc3RzIG9uIG5vbi1yb290IGNncm91cHMuDQorIFRoZSBk
-ZWZhdWx0IGlzICJtYXgiLg0KKw0KKyBIYXJkIGxpbWl0IG9mIG51bWJlciBvZiBwcm9jZXNzZXMu
-DQorDQorICBwaWRzLmN1cnJlbnQNCisNCisgQSByZWFkLW9ubHkgc2luZ2xlIHZhbHVlIGZpbGUg
-d2hpY2ggZXhpc3RzIG9uIGFsbCBjZ3JvdXBzLg0KKw0KKyBUaGUgbnVtYmVyIG9mIHByb2Nlc3Nl
-cyBjdXJyZW50bHkgaW4gdGhlIGNncm91cCBhbmQgaXRzDQorIGRlc2NlbmRhbnRzLg0KKw0KK09y
-Z2FuaXNhdGlvbmFsIG9wZXJhdGlvbnMgYXJlIG5vdCBibG9ja2VkIGJ5IGNncm91cCBwb2xpY2ll
-cywgc28gaXQNCitpcyBwb3NzaWJsZSB0byBoYXZlIHBpZHMuY3VycmVudCA+IHBpZHMubWF4LiAg
-VGhpcyBjYW4gYmUgZG9uZSBieQ0KK2VpdGhlciBzZXR0aW5nIHRoZSBsaW1pdCB0byBiZSBzbWFs
-bGVyIHRoYW4gcGlkcy5jdXJyZW50LCBvcg0KK2F0dGFjaGluZyBlbm91Z2ggcHJvY2Vzc2VzIHRv
-IHRoZSBjZ3JvdXAgc3VjaCB0aGF0IHBpZHMuY3VycmVudCBpcw0KK2xhcmdlciB0aGFuIHBpZHMu
-bWF4LiAgSG93ZXZlciwgaXQgaXMgbm90IHBvc3NpYmxlIHRvIHZpb2xhdGUgYSBjZ3JvdXANCitQ
-SUQgcG9saWN5IHRocm91Z2ggZm9yaygpIG9yIGNsb25lKCkuIFRoZXNlIHdpbGwgcmV0dXJuIC1F
-QUdBSU4gaWYgdGhlDQorY3JlYXRpb24gb2YgYSBuZXcgcHJvY2VzcyB3b3VsZCBjYXVzZSBhIGNn
-cm91cCBwb2xpY3kgdG8gYmUgdmlvbGF0ZWQuDQorDQorDQogNi4gTmFtZXNwYWNlDQoNCiA2LTEu
-IEJhc2ljcw0KLS0NCjIuOS4zDQoNCg0K
+Fixed warning reported by kbuild test robot.
+When reading current resource usage value, when no resources are
+allocated, its possible that it can report a uninitialized value
+for current resource usage.
+This fix avoids it by initializing it to zero as no resource is
+allocated.
+
+Signed-off-by: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup/rdma.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/kernel/cgroup/rdma.c b/kernel/cgroup/rdma.c
+index 021bee7..defad3c 100644
+--- a/kernel/cgroup/rdma.c
++++ b/kernel/cgroup/rdma.c
+@@ -518,6 +518,8 @@ static void print_rpool_values(struct seq_file *sf,
+ 		} else {
+ 			if (rpool)
+ 				value = rpool->resources[i].usage;
++			else
++				value = 0;
+ 		}
+ 
+ 		if (value == S32_MAX)
+-- 
+2.7.4
