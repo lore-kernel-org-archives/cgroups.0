@@ -1,90 +1,62 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [cgroup:for-next 16/18] kernel/cgroup/rdma.c:526:4: warning:
- 'value' may be used uninitialized in this function
-Date: Tue, 10 Jan 2017 11:37:22 -0600
-Message-ID: <CAG53R5Wj3nJAEOX00jk0mYD5COdsFkPc_awf+bGxYH7JTrL5BQ@mail.gmail.com>
-References: <201701110136.ojmLaqcf%fengguang.wu@intel.com>
+From: Hans Ragas <hansr-b10kYP2dOMg@public.gmane.org>
+Subject: [PATCH] cgroup: Add missing cgroup-v2 PID controller documentation.
+Date: Tue, 10 Jan 2017 17:42:34 +0000
+Message-ID: <BC93EBA9-25A6-4445-8E0A-33DC6778A387@fb.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=o6ngeafLyKZsIM0Cb/mT5eZHPkCi3E2IQBIAdAwNIyk=;
-        b=vYWC1oSJI4MC5pDKv83EbqnXCJc3kc1vcG/i+TmA1kOYfGRdrYMv5Euf5McnUDXaS3
-         33H+zZCOg0Yu/o0yUtrphTdLYRHIEKF7/3kUH/hKSNd2VghSgvQR6fLGzkMqplFgtHgW
-         KBN5fBkfG9awmaSwYazbxHq7cDSqrUyxDclmwbNCtAmNG8pBlYvwetSlCdABv9mfGXnE
-         KNJnvT6JC1rNyNZWee4/CvjyWdeh3j4fISD3TA8d6o/sQZ4GrRAlo2GwOCiD6jVxYSYo
-         CYzXzNhjCicLQt9Sg8B5CQmWbK/HN+3d6ekYryJ35uHbPEr946Q4IP8dItUv9Mrj3Na3
-         kbWg==
-In-Reply-To: <201701110136.ojmLaqcf%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=from : to : cc : subject :
+ date : message-id : content-type : content-id : content-transfer-encoding
+ : mime-version; s=facebook;
+ bh=RR0d9ZqqnDL3bJIyCggzqj+BKZdwUGObJMVIz0nuFZI=;
+ b=pUubOwdTZYCHkJvKWHfQqC6AiqCpwDcHoPGSUP79p7toVQ9fGZtCYvYGvxJbBgwwUUxt
+ DZS6nYl1Aq5v9u9OzPotp2Z9xaSbUK6bnO6fBBUAUCsaayePstFhQaBPs337Ts7CNW8c
+ DIa3N20KQ2/YWuZpnP2xhhR6x2A590LsISo= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=RR0d9ZqqnDL3bJIyCggzqj+BKZdwUGObJMVIz0nuFZI=;
+ b=SF59yB574Au6p7EzbDkWTLYKeFFxqV5u+Yx6pAlEtHYDl653Yodx1v7f2ygngI94UDG2CrewXt+nl/SQnmbIDwTIBNr+OseIodycnkQQodNoCBrkOWPTV8FbU2cF/+FjbZohsbMHkDriV1JI+cw5JKFBNLhmuHc4+c2NmEsIL2A=
+Content-Language: en-US
+Content-ID: <A0E3B2EC13860B4AAB9C055ED0AB5D9E-JGF9Izt3QrScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-I reviewed the code. value initializing to zero is required. Sending
-the incremental patch.
-
-Parav
-
-On Tue, Jan 10, 2017 at 11:20 AM, kbuild test robot
-<fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-> head:   9c1e67f941019907034d7e5584c891603cce2d8e
-> commit: 39d3e7584a686541a3295ff1624d341e669e1afc [16/18] rdmacg: Added rdma cgroup controller
-> config: ia64-allmodconfig (attached as .config)
-> compiler: ia64-linux-gcc (GCC) 6.2.0
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout 39d3e7584a686541a3295ff1624d341e669e1afc
->         # save the attached .config to linux build tree
->         make.cross ARCH=ia64
->
-> Note: it may well be a FALSE warning. FWIW you are at least aware of it now.
-> http://gcc.gnu.org/wiki/Better_Uninitialized_Warnings
->
-> All warnings (new ones prefixed by >>):
->
->    kernel/cgroup/rdma.c: In function 'rdmacg_resource_read':
->>> kernel/cgroup/rdma.c:526:4: warning: 'value' may be used uninitialized in this function [-Wmaybe-uninitialized]
->        seq_printf(sf, "%d", value);
->        ^~~~~~~~~~~~~~~~~~~~~~~~~~~
->    kernel/cgroup/rdma.c:506:6: note: 'value' was declared here
->      u32 value;
->          ^~~~~
->
-> vim +/value +526 kernel/cgroup/rdma.c
->
->    510          for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
->    511                  seq_puts(sf, rdmacg_resource_names[i]);
->    512                  seq_putc(sf, '=');
->    513                  if (sf_type == RDMACG_RESOURCE_TYPE_MAX) {
->    514                          if (rpool)
->    515                                  value = rpool->resources[i].max;
->    516                          else
->    517                                  value = S32_MAX;
->    518                  } else {
->    519                          if (rpool)
->    520                                  value = rpool->resources[i].usage;
->    521                  }
->    522
->    523                  if (value == S32_MAX)
->    524                          seq_puts(sf, RDMACG_MAX_STR);
->    525                  else
->  > 526                          seq_printf(sf, "%d", value);
->    527                  seq_putc(sf, ' ');
->    528          }
->    529  }
->    530
->    531  static int rdmacg_resource_read(struct seq_file *sf, void *v)
->    532  {
->    533          struct rdmacg_device *device;
->    534          struct rdmacg_resource_pool *rpool;
->
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+DQpTaWduZWQtb2ZmLWJ5OiBIYW5zIFJhZ2FzIDxoYW5zckBmYi5jb20+DQotLS0NCiBEb2N1bWVu
+dGF0aW9uL2Nncm91cC12Mi50eHQgfCA0MSArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKw0KIDEgZmlsZSBjaGFuZ2VkLCA0MSBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1n
+aXQgYS9Eb2N1bWVudGF0aW9uL2Nncm91cC12Mi50eHQgYi9Eb2N1bWVudGF0aW9uL2Nncm91cC12
+Mi50eHQNCmluZGV4IDRjYzA3Y2UuLmZkZmU5NDIgMTAwNjQ0DQotLS0gYS9Eb2N1bWVudGF0aW9u
+L2Nncm91cC12Mi50eHQNCisrKyBiL0RvY3VtZW50YXRpb24vY2dyb3VwLXYyLnR4dA0KQEAgLTQ3
+LDYgKzQ3LDggQEAgQ09OVEVOVFMNCiAgIDUtMy4gSU8NCiAgICAgNS0zLTEuIElPIEludGVyZmFj
+ZSBGaWxlcw0KICAgICA1LTMtMi4gV3JpdGViYWNrDQorICA1LTQuIFBJRA0KKyAgICA1LTQtMS4g
+UElEIEludGVyZmFjZSBGaWxlcw0KIDYuIE5hbWVzcGFjZQ0KICAgNi0xLiBCYXNpY3MNCiAgIDYt
+Mi4gVGhlIFJvb3QgYW5kIFZpZXdzDQpAQCAtMTExOSw2ICsxMTIxLDQ1IEBAIHdyaXRlYmFjayBh
+cyBmb2xsb3dzLg0KICB2bS5kaXJ0eVtfYmFja2dyb3VuZF1fcmF0aW8uDQoNCg0KKzUtNC4gUElE
+DQorDQorVGhlIHByb2Nlc3MgbnVtYmVyIGNvbnRyb2xsZXIgaXMgdXNlZCB0byBhbGxvdyBhIGNn
+cm91cCB0byBzdG9wIGFueQ0KK25ldyB0YXNrcyBmcm9tIGJlaW5nIGZvcmsoKSdkIG9yIGNsb25l
+KCknZCBhZnRlciBhIHNwZWNpZmllZCBsaW1pdCBpcw0KK3JlYWNoZWQuDQorDQorVGhlIG51bWJl
+ciBvZiB0YXNrcyBpbiBhIGNncm91cCBjYW4gYmUgZXhoYXVzdGVkIGluIHdheXMgd2hpY2ggb3Ro
+ZXINCitjb250cm9sbGVycyBjYW5ub3QgcHJldmVudCwgdGh1cyB3YXJyYW50aW5nIGl0cyBvd24g
+Y29udHJvbGxlci4gIEZvcg0KK2V4YW1wbGUsIGEgZm9yayBib21iIGlzIGxpa2VseSB0byBleGhh
+dXN0IHRoZSBudW1iZXIgb2YgdGFza3MgYmVmb3JlDQoraGl0dGluZyBtZW1vcnkgcmVzdHJpY3Rp
+b25zLg0KKw0KK05vdGUgdGhhdCBQSURzIHVzZWQgaW4gdGhpcyBjb250cm9sbGVyIHJlZmVyIHRv
+IFRJRHMsIHByb2Nlc3MgSURzIGFzDQordXNlZCBieSB0aGUga2VybmVsLg0KKw0KKzUtNC0xLiBQ
+SUQgSW50ZXJmYWNlIEZpbGVzDQorDQorICBwaWRzLm1heA0KKw0KKyBBIHJlYWQtd3JpdGUgc2lu
+Z2xlIHZhbHVlIGZpbGUgd2hpY2ggZXhpc3RzIG9uIG5vbi1yb290IGNncm91cHMuDQorIFRoZSBk
+ZWZhdWx0IGlzICJtYXgiLg0KKw0KKyBIYXJkIGxpbWl0IG9mIG51bWJlciBvZiBwcm9jZXNzZXMu
+DQorDQorICBwaWRzLmN1cnJlbnQNCisNCisgQSByZWFkLW9ubHkgc2luZ2xlIHZhbHVlIGZpbGUg
+d2hpY2ggZXhpc3RzIG9uIGFsbCBjZ3JvdXBzLg0KKw0KKyBUaGUgbnVtYmVyIG9mIHByb2Nlc3Nl
+cyBjdXJyZW50bHkgaW4gdGhlIGNncm91cCBhbmQgaXRzDQorIGRlc2NlbmRhbnRzLg0KKw0KK09y
+Z2FuaXNhdGlvbmFsIG9wZXJhdGlvbnMgYXJlIG5vdCBibG9ja2VkIGJ5IGNncm91cCBwb2xpY2ll
+cywgc28gaXQNCitpcyBwb3NzaWJsZSB0byBoYXZlIHBpZHMuY3VycmVudCA+IHBpZHMubWF4LiAg
+VGhpcyBjYW4gYmUgZG9uZSBieQ0KK2VpdGhlciBzZXR0aW5nIHRoZSBsaW1pdCB0byBiZSBzbWFs
+bGVyIHRoYW4gcGlkcy5jdXJyZW50LCBvcg0KK2F0dGFjaGluZyBlbm91Z2ggcHJvY2Vzc2VzIHRv
+IHRoZSBjZ3JvdXAgc3VjaCB0aGF0IHBpZHMuY3VycmVudCBpcw0KK2xhcmdlciB0aGFuIHBpZHMu
+bWF4LiAgSG93ZXZlciwgaXQgaXMgbm90IHBvc3NpYmxlIHRvIHZpb2xhdGUgYSBjZ3JvdXANCitQ
+SUQgcG9saWN5IHRocm91Z2ggZm9yaygpIG9yIGNsb25lKCkuIFRoZXNlIHdpbGwgcmV0dXJuIC1F
+QUdBSU4gaWYgdGhlDQorY3JlYXRpb24gb2YgYSBuZXcgcHJvY2VzcyB3b3VsZCBjYXVzZSBhIGNn
+cm91cCBwb2xpY3kgdG8gYmUgdmlvbGF0ZWQuDQorDQorDQogNi4gTmFtZXNwYWNlDQoNCiA2LTEu
+IEJhc2ljcw0KLS0NCjIuOS4zDQoNCg0K
