@@ -1,50 +1,38 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] rdmacg: Fixed uninitialized current resource usage
-Date: Tue, 10 Jan 2017 17:51:48 +0000
-Message-ID: <1484070708-5422-1-git-send-email-pandit.parav@gmail.com>
+From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Add missing cgroup-v2 PID controller
+ documentation.
+Date: Tue, 10 Jan 2017 12:51:57 -0500
+Message-ID: <20170110175157.GA3814@htj.duckdns.org>
+References: <BC93EBA9-25A6-4445-8E0A-33DC6778A387@fb.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=Cc0I26UA2zGU08gsUhbpXZAEK3uN8CydESV0c1RGzF0=;
-        b=dXKRfZfeQqOtdr+YOlvLtLrm/I03scrme0Vx3h49zxIyqvvc2R5jqsroWQ5jiTXDu9
-         GDt5AMZ3lKefKN2T6r4AasGAsNe5+m9YVssKQDpg44tV3o5Ugd3/HdSmIUSm5VTlJK2b
-         mUkRILBE1gjGi5X/C8EYYAG7gjv7V6pUFai6pXWz5oScx533FbePHFWwhF0a98QBJ5bs
-         X5ilGH0osuJIpAvJRuse1P7Pm7xbA3eqcMpKmB5T9M57yxzsx2EqR97NRZG0eU5MKRpv
-         ufGZElwloo2sHsrNC4ig6/sWFVnioL5r4nsdLhmAO5mI5cZAmPOa7iddJotFCa7nHy7A
-         VYSg==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Dt6nFtTdwxKkrEuDlim2hz0TOZ3ITqKWyzZmgPJqfmw=;
+        b=cTNtxrAzfcLrDGEZkBxAqv8wtLEf9oFBTE+jHE5jWvD2cGi1ke/Bb5dSntehP/zzzB
+         ifQ5suAQWL/JGNG/ccfw7bOSVw7AH+csI3LmrpTWMwD34JMAswLJUPxch4FlGcMPkbHu
+         w2SsqRpaqsiipjJaPBflyc6Sid+ycmK3nBekDH79s3R52SGJil8rSTdOuE9c2XlXVcov
+         mMJfyYpJrbgKOk4RDqWbWglftb+EzXRk3SvUhMDV870jYNxmUbaNiLOuM61pSeCZqo+i
+         0TJd6Ujf5ITdA0ioDq//TmWEqz0Sdw1SC2FINcDp90Ai2WBCU7ZanyfM+OHoXRXC8B/x
+         Stew==
+Content-Disposition: inline
+In-Reply-To: <BC93EBA9-25A6-4445-8E0A-33DC6778A387-b10kYP2dOMg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Hans Ragas <hansr-b10kYP2dOMg@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Fixed warning reported by kbuild test robot.
-When reading current resource usage value, when no resources are
-allocated, its possible that it can report a uninitialized value
-for current resource usage.
-This fix avoids it by initializing it to zero as no resource is
-allocated.
+On Tue, Jan 10, 2017 at 05:42:34PM +0000, Hans Ragas wrote:
+> 
+> Signed-off-by: Hans Ragas <hansr-b10kYP2dOMg@public.gmane.org>
 
-Signed-off-by: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- kernel/cgroup/rdma.c | 2 ++
- 1 file changed, 2 insertions(+)
+Applied to cgroup/for-4.11 with minor adjustments.
 
-diff --git a/kernel/cgroup/rdma.c b/kernel/cgroup/rdma.c
-index 021bee7..defad3c 100644
---- a/kernel/cgroup/rdma.c
-+++ b/kernel/cgroup/rdma.c
-@@ -518,6 +518,8 @@ static void print_rpool_values(struct seq_file *sf,
- 		} else {
- 			if (rpool)
- 				value = rpool->resources[i].usage;
-+			else
-+				value = 0;
- 		}
- 
- 		if (value == S32_MAX)
+Thanks.
+
 -- 
-2.7.4
+tejun
