@@ -1,69 +1,42 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [patch] mm, memcg: do not retry precharge charges
-Date: Thu, 12 Jan 2017 11:17:12 +0100
-Message-ID: <20170112101712.GH2264@dhcp22.suse.cz>
-References: <alpine.DEB.2.10.1701112031250.94269@chino.kir.corp.google.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1701112031250.94269@chino.kir.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: "W. Trevor King" <wking-vJI2gpByivqcqzYg7KEe8g@public.gmane.org>
+Subject: [PATCH] Documentation: cpuset: Fix 'cpuset.tasks' -> 'tasks'
+Date: Thu, 12 Jan 2017 14:24:27 -0800
+Message-ID: <9dd9adef5fe4ae283d0510204f556b4390e5a897.1484259596.git.wking@tremily.us>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "W. Trevor King" <wking-vJI2gpByivqcqzYg7KEe8g@public.gmane.org>
 
-On Wed 11-01-17 20:32:12, David Rientjes wrote:
-[...]
-> This also restructures mem_cgroup_wait_acct_move() since it is not
-> possible for mc.moving_task to be current.
+This looks like it was accidentally caught up in e21a05cb (doc:
+cpuset: Update the cpuset flag file, 2010-02-24).
 
-thinking about this some more, I do not think this is the right way to
-go. It is true that we will not reach mem_cgroup_wait_acct_move if all
-the charges from the task moving code path are __GFP_NORETRY but that
-is quite subtle requirement IMHO.
+While I'm touching the line, also fix the posessive "cpusets" ->
+"cpuset's".
 
-> Fixes: 0029e19ebf84 ("mm: memcontrol: remove explicit OOM parameter in charge path")
-> Signed-off-by: David Rientjes <rientjes@google.com>
-> ---
->  mm/memcontrol.c | 32 +++++++++++++++++++-------------
->  1 file changed, 19 insertions(+), 13 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1125,18 +1125,19 @@ static bool mem_cgroup_under_move(struct mem_cgroup *memcg)
->  
->  static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
->  {
-> -	if (mc.moving_task && current != mc.moving_task) {
-> -		if (mem_cgroup_under_move(memcg)) {
-> -			DEFINE_WAIT(wait);
-> -			prepare_to_wait(&mc.waitq, &wait, TASK_INTERRUPTIBLE);
-> -			/* moving charge context might have finished. */
-> -			if (mc.moving_task)
-> -				schedule();
-> -			finish_wait(&mc.waitq, &wait);
-> -			return true;
-> -		}
-> +	DEFINE_WAIT(wait);
-> +
-> +	if (likely(!mem_cgroup_under_move(memcg)))
-> +		return false;
-> +
-> +	prepare_to_wait(&mc.waitq, &wait, TASK_INTERRUPTIBLE);
-> +	/* moving charge context might have finished. */
-> +	if (mc.moving_task) {
-> +		WARN_ON_ONCE(mc.moving_task == current);
-> +		schedule();
->  	}
-> -	return false;
-> +	finish_wait(&mc.waitq, &wait);
-> +	return true;
->  }
->  
->  #define K(x) ((x) << (PAGE_SHIFT-10))
+Signed-off-by: W. Trevor King <wking-vJI2gpByivqcqzYg7KEe8g@public.gmane.org>
+---
+ Documentation/cgroup-v1/cpusets.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+This patch is based on v4.9, but the lines I'm touching don't churn
+much so it should apply to any recent version.
+
+diff --git a/Documentation/cgroup-v1/cpusets.txt b/Documentation/cgroup-v1/cpusets.txt
+index e5ac5da86..8402dd6 100644
+--- a/Documentation/cgroup-v1/cpusets.txt
++++ b/Documentation/cgroup-v1/cpusets.txt
+@@ -615,7 +615,7 @@ to allocate a page of memory for that task.
+ 
+ If a cpuset has its 'cpuset.cpus' modified, then each task in that cpuset
+ will have its allowed CPU placement changed immediately.  Similarly,
+-if a task's pid is written to another cpusets 'cpuset.tasks' file, then its
++if a task's pid is written to another cpuset's 'tasks' file, then its
+ allowed CPU placement is changed immediately.  If such a task had been
+ bound to some subset of its cpuset using the sched_setaffinity() call,
+ the task will be allowed to run on any CPU allowed in its new cpuset,
 -- 
-Michal Hocko
-SUSE Labs
+2.1.0.60.g85f0837
