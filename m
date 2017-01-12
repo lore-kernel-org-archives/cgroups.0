@@ -1,42 +1,68 @@
-From: "W. Trevor King" <wking-vJI2gpByivqcqzYg7KEe8g@public.gmane.org>
-Subject: [PATCH] Documentation: cpuset: Fix 'cpuset.tasks' -> 'tasks'
-Date: Thu, 12 Jan 2017 14:24:27 -0800
-Message-ID: <9dd9adef5fe4ae283d0510204f556b4390e5a897.1484259596.git.wking@tremily.us>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: David Rientjes <rientjes@google.com>
+Subject: [patch v2] mm, memcg: do not retry precharge charges
+Date: Thu, 12 Jan 2017 14:46:34 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1701121446130.12738@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1701112031250.94269@chino.kir.corp.google.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=u4FyxcGe0l3FYz/6FRcgcv1Xk62nsoqFXLdIsWR4hqE=;
+        b=ZvhGpcTXC6LsUrBAogH7OnlXtio26DY+KIiwAwCeuGujcSGqXevm9YH6kkS9zo09nQ
+         HtgzbpksbhJM+c+lB1J/2ORP3K7UV5wPym1m5jYUi4nxRFOHCODsnGcuLnI+BO6dfWWE
+         JIE3VkmaFFbgOkiS41N2aB8tWmMEo4DxPDFo0dQfBxKSlkW9EkkcknVymWt9XbBqkl3z
+         MKiOR4xw0G7xajLqxhvDfeVGEQVPMvkE18Cp06e5muc1+E3p71h8fg/88UJEQgoOkhx7
+         OfrJBFAVdajb8lDYYgkaT56cirsmjQomgioAnrCO4Q+qMbgeMqRe0QF0mXVCWdkEg1TP
+         S0IA==
+In-Reply-To: <alpine.DEB.2.10.1701112031250.94269@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "W. Trevor King" <wking-vJI2gpByivqcqzYg7KEe8g@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-This looks like it was accidentally caught up in e21a05cb (doc:
-cpuset: Update the cpuset flag file, 2010-02-24).
+When memory.move_charge_at_immigrate is enabled and precharges are
+depleted during move, mem_cgroup_move_charge_pte_range() will attempt to
+increase the size of the precharge.
 
-While I'm touching the line, also fix the posessive "cpusets" ->
-"cpuset's".
+This can be allowed to do reclaim, but should not call the oom killer to
+oom kill a process.  It's better to fail the attach rather than oom kill
+a process attached to the memcg hierarchy.
 
-Signed-off-by: W. Trevor King <wking-vJI2gpByivqcqzYg7KEe8g@public.gmane.org>
+Prevent precharges from ever looping by setting __GFP_NORETRY.  This was
+probably the intention of the GFP_KERNEL & ~__GFP_NORETRY, which is
+pointless as written.
+
+Fixes: 0029e19ebf84 ("mm: memcontrol: remove explicit OOM parameter in charge path")
+Signed-off-by: David Rientjes <rientjes@google.com>
 ---
- Documentation/cgroup-v1/cpusets.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/memcontrol.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-This patch is based on v4.9, but the lines I'm touching don't churn
-much so it should apply to any recent version.
-
-diff --git a/Documentation/cgroup-v1/cpusets.txt b/Documentation/cgroup-v1/cpusets.txt
-index e5ac5da86..8402dd6 100644
---- a/Documentation/cgroup-v1/cpusets.txt
-+++ b/Documentation/cgroup-v1/cpusets.txt
-@@ -615,7 +615,7 @@ to allocate a page of memory for that task.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4353,9 +4353,12 @@ static int mem_cgroup_do_precharge(unsigned long count)
+ 		return ret;
+ 	}
  
- If a cpuset has its 'cpuset.cpus' modified, then each task in that cpuset
- will have its allowed CPU placement changed immediately.  Similarly,
--if a task's pid is written to another cpusets 'cpuset.tasks' file, then its
-+if a task's pid is written to another cpuset's 'tasks' file, then its
- allowed CPU placement is changed immediately.  If such a task had been
- bound to some subset of its cpuset using the sched_setaffinity() call,
- the task will be allowed to run on any CPU allowed in its new cpuset,
--- 
-2.1.0.60.g85f0837
+-	/* Try charges one by one with reclaim */
++	/*
++	 * Try charges one by one with reclaim, but do not retry.  This avoids
++	 * calling the oom killer when the precharge should just fail.
++	 */
+ 	while (count--) {
+-		ret = try_charge(mc.to, GFP_KERNEL & ~__GFP_NORETRY, 1);
++		ret = try_charge(mc.to, GFP_KERNEL | __GFP_NORETRY, 1);
+ 		if (ret)
+ 			return ret;
+ 		mc.precharge++;
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
