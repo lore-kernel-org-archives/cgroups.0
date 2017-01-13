@@ -1,62 +1,50 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch v2] mm, memcg: do not retry precharge charges
-Date: Fri, 13 Jan 2017 02:09:53 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1701130208510.69402@chino.kir.corp.google.com>
-References: <alpine.DEB.2.10.1701112031250.94269@chino.kir.corp.google.com> <alpine.DEB.2.10.1701121446130.12738@chino.kir.corp.google.com> <20170113084014.GB25212@dhcp22.suse.cz>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] Documentation: cpuset: Fix 'cpuset.tasks' -> 'tasks'
+Date: Fri, 13 Jan 2017 10:27:42 -0700
+Message-ID: <20170113102742.686b785c@lwn.net>
+References: <9dd9adef5fe4ae283d0510204f556b4390e5a897.1484259596.git.wking@tremily.us>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=4fxP14oAC2QqjTbPz63gS3/Gm7CshUhk/e0qb852LEQ=;
-        b=bOYfI35v9BAs3E6kI47BIn6kjezpOgl9Tkmuoe30TIaP5No/kj1a+ku4O46M/WTaTI
-         fszgfQ7z4HNoKFb3Q8qNbRtrRRFJWU7+5h55jmYbkvcyjdySseYwnsflszAUcqdJMvDh
-         Xyt3a8hKlvYRLiN8FAvFaixTh9+Pgh4lDd7BOdzcZSxViOsKEBSoIHgrk2t8rtJo8oey
-         Cz1+d2/48tM/tXmFk1vBNrTLGchcfHixnpkX/QNrjvr443pEFFYazBvB1O1uOp6i3NPK
-         +zUjsKZkKRrFSdx/VLBgvLVsC9C4hBRSUCmK6AniQsxJKYwdp0vf3etbZrpkYNRTVBN/
-         QIXg==
-In-Reply-To: <20170113084014.GB25212@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <9dd9adef5fe4ae283d0510204f556b4390e5a897.1484259596.git.wking@tremily.us>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+To: "W. Trevor King" <wking@tremily.us>
+Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-When memory.move_charge_at_immigrate is enabled and precharges are
-depleted during move, mem_cgroup_move_charge_pte_range() will attempt to
-increase the size of the precharge.
+On Thu, 12 Jan 2017 14:24:27 -0800
+"W. Trevor King" <wking@tremily.us> wrote:
 
-Prevent precharges from ever looping by setting __GFP_NORETRY.  This was
-probably the intention of the GFP_KERNEL & ~__GFP_NORETRY, which is
-pointless as written.
+> This looks like it was accidentally caught up in e21a05cb (doc:
+> cpuset: Update the cpuset flag file, 2010-02-24).
+> 
+> While I'm touching the line, also fix the posessive "cpusets" ->
+> "cpuset's".
+> 
+> Signed-off-by: W. Trevor King <wking@tremily.us>
+> ---
+>  Documentation/cgroup-v1/cpusets.txt | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> This patch is based on v4.9, but the lines I'm touching don't churn
+> much so it should apply to any recent version.
+> 
+> diff --git a/Documentation/cgroup-v1/cpusets.txt b/Documentation/cgroup-v1/cpusets.txt
+> index e5ac5da86..8402dd6 100644
+> --- a/Documentation/cgroup-v1/cpusets.txt
+> +++ b/Documentation/cgroup-v1/cpusets.txt
+> @@ -615,7 +615,7 @@ to allocate a page of memory for that task.
+>  
+>  If a cpuset has its 'cpuset.cpus' modified, then each task in that cpuset
+>  will have its allowed CPU placement changed immediately.  Similarly,
+> -if a task's pid is written to another cpusets 'cpuset.tasks' file, then its
+> +if a task's pid is written to another cpuset's 'tasks' file, then its
 
-Fixes: 0029e19ebf84 ("mm: memcontrol: remove explicit OOM parameter in charge path")
-Acked-by: Michal Hocko <mhocko@suse.com>
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+So I'll confess that I don't understand this change.  All of the control
+files are referred to as cpuset.whatever in this document; why should
+this one, in particular, be different?
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4353,9 +4353,9 @@ static int mem_cgroup_do_precharge(unsigned long count)
- 		return ret;
- 	}
- 
--	/* Try charges one by one with reclaim */
-+	/* Try charges one by one with reclaim, but do not retry */
- 	while (count--) {
--		ret = try_charge(mc.to, GFP_KERNEL & ~__GFP_NORETRY, 1);
-+		ret = try_charge(mc.to, GFP_KERNEL | __GFP_NORETRY, 1);
- 		if (ret)
- 			return ret;
- 		mc.precharge++;
+Thanks,
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+jon
