@@ -1,40 +1,209 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch v2] mm, memcg: do not retry precharge charges
-Date: Sat, 14 Jan 2017 11:22:38 -0500
-Message-ID: <20170114162238.GD26139@cmpxchg.org>
-References: <alpine.DEB.2.10.1701112031250.94269@chino.kir.corp.google.com>
- <alpine.DEB.2.10.1701121446130.12738@chino.kir.corp.google.com>
- <20170113084014.GB25212@dhcp22.suse.cz>
- <alpine.DEB.2.10.1701130208510.69402@chino.kir.corp.google.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=+c357wSM+RqbpiWBUUqLu2TSWXEJY+TZijQ/bTC/R9E=; b=PU5DZsx5SLint7NPUNrlXhwg/+
-        jzmh2k3Ki1twNtQuH0B6ZQMD50t96gKo1dxjUI9LtCFSeTzeUGjb9HitJJDgu7Qiq7DQM24KpCHLN
-        CcfbgrGW+cNl+BAbw1m/4kTl2mw26IvCpS7sKpNcdckUzlQNu0sO/vAxVYrmcHWCXCbQ=;
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1701130208510.69402-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/8] Revert "slub: move synchronize_sched out of slab_mutex on shrink"
+Date: Sat, 14 Jan 2017 13:48:27 -0500
+Message-ID: <20170114184834.8658-2-tj@kernel.org>
+References: <20170114184834.8658-1-tj@kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=CMlDcweSfhEOi4I8bg2DJzs2wX685tAEdylSkMCbEVM=;
+        b=G026ZEnoxIOZ+Ohn6CGBecYGIp0VSXZefDrcsth405eKa7616duUT+ubyyYtcYQ8gI
+         UqFn1r0CTImcGZrrIY4MRfTZBHr72kNFu8zsFXSgGGhYBCrctYBp+rDhyUUEojrCO+uq
+         1RJ9V3YhiVHof/8DWLtKnPD2DXEwXHoxKMiIi9kbvcJRlds9JV+lB9MJSNuz6e9ymJMC
+         IJkm4ScXeEflD2JC2/1/SwHiRkwC3G5kageCtZq3e5sd/D8LOc5yxWLO198P/MuO9mEB
+         kwvz6baGc+snyxIiLfItcqJgJ6tjoSb8ZV+fUUStXaRKrINTji2ush86dTyjWnr1nfxD
+         M+iw==
+In-Reply-To: <20170114184834.8658-1-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: vdavydov.dev@gmail.com, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org
+Cc: jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-On Fri, Jan 13, 2017 at 02:09:53AM -0800, David Rientjes wrote:
-> When memory.move_charge_at_immigrate is enabled and precharges are
-> depleted during move, mem_cgroup_move_charge_pte_range() will attempt to
-> increase the size of the precharge.
-> 
-> Prevent precharges from ever looping by setting __GFP_NORETRY.  This was
-> probably the intention of the GFP_KERNEL & ~__GFP_NORETRY, which is
-> pointless as written.
+This reverts commit 89e364db71fb5e7fc8d93228152abfa67daf35fa.
 
-The OOM killer livelock was the motivation for this patch. With that
-ruled out, what's the point of this patch? Try a bit less hard to move
-charges during task migration?
+With kmem cgroup support enabled, kmem_caches can be created and
+destroyed frequently and a great number of near empty kmem_caches can
+accumulate if there are a lot of transient cgroups and the system is
+not under memory pressure.  When memory reclaim starts under such
+conditions, it can lead to consecutive deactivation and destruction of
+many kmem_caches, easily hundreds of thousands on moderately large
+systems, exposing scalability issues in the current slab management
+code.  This is one of the patches to address the issue.
+
+Moving synchronize_sched() out of slab_mutex isn't enough as it's
+still inside cgroup_mutex.  The whole deactivation / release path will
+be updated to avoid all synchronous RCU operations.  Revert this
+insufficient optimization in preparation to ease future changes.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Jay Vana <jsvana@fb.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Christoph Lameter <cl@linux.com>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+ mm/slab.c        |  4 ++--
+ mm/slab.h        |  2 +-
+ mm/slab_common.c | 27 ++-------------------------
+ mm/slob.c        |  2 +-
+ mm/slub.c        | 19 +++++++++++++++++--
+ 5 files changed, 23 insertions(+), 31 deletions(-)
+
+diff --git a/mm/slab.c b/mm/slab.c
+index 29bc6c0..767e8e4 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -2314,7 +2314,7 @@ static int drain_freelist(struct kmem_cache *cache,
+ 	return nr_freed;
+ }
+ 
+-int __kmem_cache_shrink(struct kmem_cache *cachep)
++int __kmem_cache_shrink(struct kmem_cache *cachep, bool deactivate)
+ {
+ 	int ret = 0;
+ 	int node;
+@@ -2334,7 +2334,7 @@ int __kmem_cache_shrink(struct kmem_cache *cachep)
+ 
+ int __kmem_cache_shutdown(struct kmem_cache *cachep)
+ {
+-	return __kmem_cache_shrink(cachep);
++	return __kmem_cache_shrink(cachep, false);
+ }
+ 
+ void __kmem_cache_release(struct kmem_cache *cachep)
+diff --git a/mm/slab.h b/mm/slab.h
+index de6579d..4acc644 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -161,7 +161,7 @@ static inline unsigned long kmem_cache_flags(unsigned long object_size,
+ 
+ int __kmem_cache_shutdown(struct kmem_cache *);
+ void __kmem_cache_release(struct kmem_cache *);
+-int __kmem_cache_shrink(struct kmem_cache *);
++int __kmem_cache_shrink(struct kmem_cache *, bool);
+ void slab_kmem_cache_release(struct kmem_cache *);
+ 
+ struct seq_file;
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index ae32384..46ff746 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -579,29 +579,6 @@ void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+ 	get_online_cpus();
+ 	get_online_mems();
+ 
+-#ifdef CONFIG_SLUB
+-	/*
+-	 * In case of SLUB, we need to disable empty slab caching to
+-	 * avoid pinning the offline memory cgroup by freeable kmem
+-	 * pages charged to it. SLAB doesn't need this, as it
+-	 * periodically purges unused slabs.
+-	 */
+-	mutex_lock(&slab_mutex);
+-	list_for_each_entry(s, &slab_caches, list) {
+-		c = is_root_cache(s) ? cache_from_memcg_idx(s, idx) : NULL;
+-		if (c) {
+-			c->cpu_partial = 0;
+-			c->min_partial = 0;
+-		}
+-	}
+-	mutex_unlock(&slab_mutex);
+-	/*
+-	 * kmem_cache->cpu_partial is checked locklessly (see
+-	 * put_cpu_partial()). Make sure the change is visible.
+-	 */
+-	synchronize_sched();
+-#endif
+-
+ 	mutex_lock(&slab_mutex);
+ 	list_for_each_entry(s, &slab_caches, list) {
+ 		if (!is_root_cache(s))
+@@ -613,7 +590,7 @@ void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+ 		if (!c)
+ 			continue;
+ 
+-		__kmem_cache_shrink(c);
++		__kmem_cache_shrink(c, true);
+ 		arr->entries[idx] = NULL;
+ 	}
+ 	mutex_unlock(&slab_mutex);
+@@ -784,7 +761,7 @@ int kmem_cache_shrink(struct kmem_cache *cachep)
+ 	get_online_cpus();
+ 	get_online_mems();
+ 	kasan_cache_shrink(cachep);
+-	ret = __kmem_cache_shrink(cachep);
++	ret = __kmem_cache_shrink(cachep, false);
+ 	put_online_mems();
+ 	put_online_cpus();
+ 	return ret;
+diff --git a/mm/slob.c b/mm/slob.c
+index eac04d4..5ec1580 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -634,7 +634,7 @@ void __kmem_cache_release(struct kmem_cache *c)
+ {
+ }
+ 
+-int __kmem_cache_shrink(struct kmem_cache *d)
++int __kmem_cache_shrink(struct kmem_cache *d, bool deactivate)
+ {
+ 	return 0;
+ }
+diff --git a/mm/slub.c b/mm/slub.c
+index 067598a..68b84f9 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3883,7 +3883,7 @@ EXPORT_SYMBOL(kfree);
+  * being allocated from last increasing the chance that the last objects
+  * are freed in them.
+  */
+-int __kmem_cache_shrink(struct kmem_cache *s)
++int __kmem_cache_shrink(struct kmem_cache *s, bool deactivate)
+ {
+ 	int node;
+ 	int i;
+@@ -3895,6 +3895,21 @@ int __kmem_cache_shrink(struct kmem_cache *s)
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
++	if (deactivate) {
++		/*
++		 * Disable empty slabs caching. Used to avoid pinning offline
++		 * memory cgroups by kmem pages that can be freed.
++		 */
++		s->cpu_partial = 0;
++		s->min_partial = 0;
++
++		/*
++		 * s->cpu_partial is checked locklessly (see put_cpu_partial),
++		 * so we have to make sure the change is visible.
++		 */
++		synchronize_sched();
++	}
++
+ 	flush_all(s);
+ 	for_each_kmem_cache_node(s, node, n) {
+ 		INIT_LIST_HEAD(&discard);
+@@ -3951,7 +3966,7 @@ static int slab_mem_going_offline_callback(void *arg)
+ 
+ 	mutex_lock(&slab_mutex);
+ 	list_for_each_entry(s, &slab_caches, list)
+-		__kmem_cache_shrink(s);
++		__kmem_cache_shrink(s, false);
+ 	mutex_unlock(&slab_mutex);
+ 
+ 	return 0;
+-- 
+2.9.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
