@@ -1,65 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/9] slab: simplify shutdown_memcg_caches()
-Date: Sat, 14 Jan 2017 10:38:01 -0500
-Message-ID: <20170114153801.GB32693@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 6/9] slab: don't put memcg caches on slab_caches list
+Date: Sat, 14 Jan 2017 10:39:08 -0500
+Message-ID: <20170114153908.GC32693@mtj.duckdns.org>
 References: <20170114055449.11044-1-tj@kernel.org>
- <20170114055449.11044-4-tj@kernel.org>
- <20170114132722.GB2668@esperanza>
+ <20170114055449.11044-7-tj@kernel.org>
+ <20170114133918.GE2668@esperanza>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=5GZMUeo13f/KXXXlC8zyMSwDzNi9vhISsOzCgQPhSDU=;
-        b=s9zAACoW/mWTg74mOAb+c1sBsLGXxT/ZBMr4OrZOJjuZ8DOrBb+o8KhoieDDm+useh
-         Z6D7SzXBCoPk/agylkGRG/sASaQxORBQBnsvCrmmENlrBToFeazzeF2A4OKJqYPndXjx
-         Ry1agSgqCw5cY65lWHH+p1rGY5g2FZQvlGD80+FdK+CVGyZgkMFJeyTM4INZ5zRTkiVo
-         C2c165eVBvv79zBJ8SiZhIqJvGdftM6qrk1Cjq3YByHP7lyepaDvpfeU7si+20R8Tuyk
-         5HzEYSx30joPTE8sIwADHW2CLj4vCKHY2wpBSvYz5apYqO89dOFRi31mbASwbDLW5Ist
-         N2jA==
+        bh=q+59NOHP6huQZGE8cP3PpHeV7TuAyfip7D9BMkL33HY=;
+        b=K13cMgZHVadJX//riDjnSOxz99YtaQ6VBX7NJsRNrn/JeBoUZeFjfUfPSGuRJ5UFTi
+         iL6bAdjYS2PclnzFUahgNXpaAO39u3bnwM69VeHYNZmYNryJZuOrHuZSdoIyDQeac9en
+         68R0nIKWTh5hqTB0wdpakbUbrNU3LMr57qBGxdgqtpDRHyWCGz5MRCOP1TI5gxPc82rn
+         Xt+b9nN9oTvp8FNxgfMHJRriOWrCd3jsFF0xnoQjslM88TSXTC6Iys9n+cQ67GRu0qGu
+         mvJlEUoz+S8Hsv9wt0N7D4lNRSVZojjrJ3VPtNNzgrtodC//0EFAVMtFGEDBiVMz7H+h
+         b47Q==
 Content-Disposition: inline
-In-Reply-To: <20170114132722.GB2668@esperanza>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170114133918.GE2668@esperanza>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@tarantool.org>
-Cc: cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org, jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: Vladimir Davydov <vdavydov-mJ5StSI9eqKXDw4h08c5KA@public.gmane.org>
+Cc: cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, jsvana-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Sat, Jan 14, 2017 at 04:27:22PM +0300, Vladimir Davydov wrote:
-> > -	 * Second, shutdown all caches left from memory cgroups that are now
-> > -	 * offline.
-> > +	 * Shutdown all caches.
-> >  	 */
-> >  	list_for_each_entry_safe(c, c2, &s->memcg_params.list,
-> >  				 memcg_params.list)
-> >  		shutdown_cache(c);
-> 
-> The point of this complexity was to leave caches that happen to have
-> objects when kmem_cache_destroy() is called on the list, so that they
-> could be reused later. This behavior was inherited from the global
+On Sat, Jan 14, 2017 at 04:39:18PM +0300, Vladimir Davydov wrote:
+> IIRC the slab_caches list is also used on cpu/mem online/offline, so you
+> have to patch those places to ensure that memcg caches get updated too.
+> Other than that the patch looks good to me.
 
-Ah, right, I misread the branch.  I don't quite get how the cache can
-be reused later tho?  This is called when the memcg gets released and
-a clear error condition - the caller, kmem_cache_destroy(), handles it
-as an error condition too.
-
-> caches - if kmem_cache_destroy() is called on a cache that still has
-> object, we print a warning message and don't destroy the cache. This
-> patch changes this behavior.
-
-Hmm... yeah, we're missing the error return propagation.  I think
-that's the only meaningful difference tho, right?  Will update the
-patch.
-
-Thanks!
+Right, will update.  Thanks!
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
