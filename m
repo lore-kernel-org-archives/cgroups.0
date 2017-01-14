@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 7/8] slab: remove synchronous synchronize_sched() from memcg cache deactivation path
-Date: Sat, 14 Jan 2017 13:48:33 -0500
-Message-ID: <20170114184834.8658-8-tj@kernel.org>
+Subject: [PATCH 6/8] slab: introduce __kmemcg_cache_deactivate()
+Date: Sat, 14 Jan 2017 13:48:32 -0500
+Message-ID: <20170114184834.8658-7-tj@kernel.org>
 References: <20170114184834.8658-1-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=3Fog5KBuvtYXjLLdXWq4PcE2DRApH++AGRIIFkPCEHg=;
-        b=B63WGPafJHafEUKhnJuH0TJbRzmHz4b3pvU6AR5ooT6tWKwgjmj18obXDuNhcZqHBr
-         /Aew1tIunb6GVdcwwd4YN0RbsXQRN4RsJp79lpVW1KbqBOabsK/e0/1JhhoL12F/4eA0
-         7n0CDM/PUO2ZPEhMd5nN4auWvpJPTVhn0ToTid+PG7FqbW5a8IR/McMDoHsCoUaXQIKE
-         avfL3arcfkKPnC9vAKprOnpuCcmfPGIq0ov/nkGkKZaUuM4vqsLgd3Bw6f5wxvMiGiAC
-         wGau8WUUfy2QwC+hhKfZCfo3x2rlly2+k/ivjYnAYljHzsyhn2v5Vfzqpz+olNQeCoKo
-         1mtQ==
+        bh=xxNqoLbW9alLTc4scEBaoZgYB9WHDh24GoS4RdgvPdg=;
+        b=XzaMcyD6z/V7o6JVEY1Y3IUPPhLnzLPcdjNMrrHlkjCh9CRxm9mHglb3HNm6npZDAz
+         TSqIM/Sluu1MLx0skj4mRZLRV5dwb6GU0qfVjQL+1SNeS/K7DsXBrnq0jqkGEYaFDftC
+         nHuvlkHIlA0ubEuPqWo5tVDRv7ueg3Ydj/9wm6E38f9KEvozQux3VNUWSOwxqwYm/wSj
+         EA3nR3Cek/y12XaxFnOxBkfX4RGPf1McfbqUZKKpRO1EPMDpa/U+f8mICL3ygzIremKo
+         HyACtZDiCtQov2UCRNmg3MxmerxGmRzfz6AqpMNbmn8AlOHxfAY5Pb30DJVhoi6cUCcO
+         P9hA==
 In-Reply-To: <20170114184834.8658-1-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,31 +23,20 @@ Content-Transfer-Encoding: 7bit
 To: vdavydov.dev@gmail.com, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org
 Cc: jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-With kmem cgroup support enabled, kmem_caches can be created and
-destroyed frequently and a great number of near empty kmem_caches can
-accumulate if there are a lot of transient cgroups and the system is
-not under memory pressure.  When memory reclaim starts under such
-conditions, it can lead to consecutive deactivation and destruction of
-many kmem_caches, easily hundreds of thousands on moderately large
-systems, exposing scalability issues in the current slab management
-code.  This is one of the patches to address the issue.
+__kmem_cache_shrink() is called with %true @deactivate only for memcg
+caches.  Remove @deactivate from __kmem_cache_shrink() and introduce
+__kmemcg_cache_deactivate() instead.  Each memcg-supporting allocator
+should implement it and it should deactivate and drain the cache.
 
-slub uses synchronize_sched() to deactivate a memcg cache.
-synchronize_sched() is an expensive and slow operation and doesn't
-scale when a huge number of caches are destroyed back-to-back.  While
-there used to be a simple batching mechanism, the batching was too
-restricted to be helpful.
+This is to allow memcg cache deactivation behavior to further deviate
+from simple shrinking without messing up __kmem_cache_shrink().
 
-This patch implements slab_deactivate_memcg_cache_rcu_sched() which
-slub can use to schedule sched RCU callback instead of performing
-synchronize_sched() synchronously while holding cgroup_mutex.  While
-this adds online cpus, mems and slab_mutex operations, operating on
-these locks back-to-back from the same kworker, which is what's gonna
-happen when there are many to deactivate, isn't expensive at all and
-this gets rid of the scalability problem completely.
+This is pure reorganization and doesn't introduce any observable
+behavior changes.
+
+v2: Dropped unnecessary ifdef in mm/slab.h as suggested by Vladimir.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Jay Vana <jsvana@fb.com>
 Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Christoph Lameter <cl@linux.com>
 Cc: Pekka Enberg <penberg@kernel.org>
@@ -55,144 +44,163 @@ Cc: David Rientjes <rientjes@google.com>
 Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- include/linux/slab.h |  6 ++++++
- mm/slab.h            |  2 ++
- mm/slab_common.c     | 60 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- mm/slub.c            | 12 +++++++----
- 4 files changed, 76 insertions(+), 4 deletions(-)
+ mm/slab.c        | 11 +++++++++--
+ mm/slab.h        |  3 ++-
+ mm/slab_common.c |  4 ++--
+ mm/slob.c        |  2 +-
+ mm/slub.c        | 39 ++++++++++++++++++++++-----------------
+ 5 files changed, 36 insertions(+), 23 deletions(-)
 
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 41c49cc..5ca8778 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -582,6 +582,12 @@ struct memcg_cache_params {
- 			struct mem_cgroup *memcg;
- 			struct list_head children_node;
- 			struct list_head kmem_caches_node;
+diff --git a/mm/slab.c b/mm/slab.c
+index 767e8e4..65814f2 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -2314,7 +2314,7 @@ static int drain_freelist(struct kmem_cache *cache,
+ 	return nr_freed;
+ }
+ 
+-int __kmem_cache_shrink(struct kmem_cache *cachep, bool deactivate)
++int __kmem_cache_shrink(struct kmem_cache *cachep)
+ {
+ 	int ret = 0;
+ 	int node;
+@@ -2332,9 +2332,16 @@ int __kmem_cache_shrink(struct kmem_cache *cachep, bool deactivate)
+ 	return (ret ? 1 : 0);
+ }
+ 
++#ifdef CONFIG_MEMCG
++void __kmemcg_cache_deactivate(struct kmem_cache *cachep)
++{
++	__kmem_cache_shrink(cachep);
++}
++#endif
 +
-+			void (*deact_fn)(struct kmem_cache *);
-+			union {
-+				struct rcu_head deact_rcu_head;
-+				struct work_struct deact_work;
-+			};
- 		};
- 	};
- };
+ int __kmem_cache_shutdown(struct kmem_cache *cachep)
+ {
+-	return __kmem_cache_shrink(cachep, false);
++	return __kmem_cache_shrink(cachep);
+ }
+ 
+ void __kmem_cache_release(struct kmem_cache *cachep)
 diff --git a/mm/slab.h b/mm/slab.h
-index 0946d97..2fe07d7 100644
+index d4d9270..0946d97 100644
 --- a/mm/slab.h
 +++ b/mm/slab.h
-@@ -304,6 +304,8 @@ static __always_inline void memcg_uncharge_slab(struct page *page, int order,
+@@ -164,7 +164,8 @@ static inline unsigned long kmem_cache_flags(unsigned long object_size,
  
- extern void slab_init_memcg_params(struct kmem_cache *);
- extern void memcg_link_cache(struct kmem_cache *s);
-+extern void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
-+				void (*deact_fn)(struct kmem_cache *));
+ int __kmem_cache_shutdown(struct kmem_cache *);
+ void __kmem_cache_release(struct kmem_cache *);
+-int __kmem_cache_shrink(struct kmem_cache *, bool);
++int __kmem_cache_shrink(struct kmem_cache *);
++void __kmemcg_cache_deactivate(struct kmem_cache *s);
+ void slab_kmem_cache_release(struct kmem_cache *);
  
- #else /* CONFIG_MEMCG && !CONFIG_SLOB */
- 
+ struct seq_file;
 diff --git a/mm/slab_common.c b/mm/slab_common.c
-index cd81cad..4a0605c 100644
+index bae6a63..cd81cad 100644
 --- a/mm/slab_common.c
 +++ b/mm/slab_common.c
-@@ -592,6 +592,66 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+@@ -611,7 +611,7 @@ void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+ 		if (!c)
+ 			continue;
+ 
+-		__kmem_cache_shrink(c, true);
++		__kmemcg_cache_deactivate(c);
+ 		arr->entries[idx] = NULL;
+ 	}
+ 	mutex_unlock(&slab_mutex);
+@@ -759,7 +759,7 @@ int kmem_cache_shrink(struct kmem_cache *cachep)
+ 	get_online_cpus();
+ 	get_online_mems();
+ 	kasan_cache_shrink(cachep);
+-	ret = __kmem_cache_shrink(cachep, false);
++	ret = __kmem_cache_shrink(cachep);
+ 	put_online_mems();
  	put_online_cpus();
+ 	return ret;
+diff --git a/mm/slob.c b/mm/slob.c
+index 5ec1580..eac04d4 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -634,7 +634,7 @@ void __kmem_cache_release(struct kmem_cache *c)
+ {
  }
  
-+static void kmemcg_deactivate_workfn(struct work_struct *work)
-+{
-+	struct kmem_cache *s = container_of(work, struct kmem_cache,
-+					    memcg_params.deact_work);
-+
-+	get_online_cpus();
-+	get_online_mems();
-+
-+	mutex_lock(&slab_mutex);
-+
-+	s->memcg_params.deact_fn(s);
-+
-+	mutex_unlock(&slab_mutex);
-+
-+	put_online_mems();
-+	put_online_cpus();
-+
-+	/* done, put the ref from slab_deactivate_memcg_cache_rcu_sched() */
-+	css_put(&s->memcg_params.memcg->css);
-+}
-+
-+static void kmemcg_deactivate_rcufn(struct rcu_head *head)
-+{
-+	struct kmem_cache *s = container_of(head, struct kmem_cache,
-+					    memcg_params.deact_rcu_head);
-+
-+	/*
-+	 * We need to grab blocking locks.  Bounce to ->deact_work.  The
-+	 * work item shares the space with the RCU head and can't be
-+	 * initialized eariler.
-+	 */
-+	INIT_WORK(&s->memcg_params.deact_work, kmemcg_deactivate_workfn);
-+	schedule_work(&s->memcg_params.deact_work);
-+}
-+
-+/**
-+ * slab_deactivate_memcg_cache_rcu_sched - schedule deactivation after a
-+ *					   sched RCU grace period
-+ * @s: target kmem_cache
-+ * @deact_fn: deactivation function to call
-+ *
-+ * Schedule @deact_fn to be invoked with online cpus, mems and slab_mutex
-+ * held after a sched RCU grace period.  The slab is guaranteed to stay
-+ * alive until @deact_fn is finished.  This is to be used from
-+ * __kmemcg_cache_deactivate().
-+ */
-+void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
-+					   void (*deact_fn)(struct kmem_cache *))
-+{
-+	if (WARN_ON_ONCE(is_root_cache(s)) ||
-+	    WARN_ON_ONCE(s->memcg_params.deact_fn))
-+		return;
-+
-+	/* pin memcg so that @s doesn't get destroyed in the middle */
-+	css_get(&s->memcg_params.memcg->css);
-+
-+	s->memcg_params.deact_fn = deact_fn;
-+	call_rcu_sched(&s->memcg_params.deact_rcu_head, kmemcg_deactivate_rcufn);
-+}
-+
- void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+-int __kmem_cache_shrink(struct kmem_cache *d, bool deactivate)
++int __kmem_cache_shrink(struct kmem_cache *d)
  {
- 	int idx;
+ 	return 0;
+ }
 diff --git a/mm/slub.c b/mm/slub.c
-index c754ea0..184f80b 100644
+index 8f37896..c754ea0 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -3949,6 +3949,12 @@ int __kmem_cache_shrink(struct kmem_cache *s)
+@@ -3886,7 +3886,7 @@ EXPORT_SYMBOL(kfree);
+  * being allocated from last increasing the chance that the last objects
+  * are freed in them.
+  */
+-int __kmem_cache_shrink(struct kmem_cache *s, bool deactivate)
++int __kmem_cache_shrink(struct kmem_cache *s)
+ {
+ 	int node;
+ 	int i;
+@@ -3898,21 +3898,6 @@ int __kmem_cache_shrink(struct kmem_cache *s, bool deactivate)
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
+-	if (deactivate) {
+-		/*
+-		 * Disable empty slabs caching. Used to avoid pinning offline
+-		 * memory cgroups by kmem pages that can be freed.
+-		 */
+-		s->cpu_partial = 0;
+-		s->min_partial = 0;
+-
+-		/*
+-		 * s->cpu_partial is checked locklessly (see put_cpu_partial),
+-		 * so we have to make sure the change is visible.
+-		 */
+-		synchronize_sched();
+-	}
+-
+ 	flush_all(s);
+ 	for_each_kmem_cache_node(s, node, n) {
+ 		INIT_LIST_HEAD(&discard);
+@@ -3963,13 +3948,33 @@ int __kmem_cache_shrink(struct kmem_cache *s, bool deactivate)
+ 	return ret;
  }
  
- #ifdef CONFIG_MEMCG
-+static void kmemcg_cache_deact_after_rcu(struct kmem_cache *s)
++#ifdef CONFIG_MEMCG
++void __kmemcg_cache_deactivate(struct kmem_cache *s)
 +{
-+	/* called with all the locks held after a sched RCU grace period */
++	/*
++	 * Disable empty slabs caching. Used to avoid pinning offline
++	 * memory cgroups by kmem pages that can be freed.
++	 */
++	s->cpu_partial = 0;
++	s->min_partial = 0;
++
++	/*
++	 * s->cpu_partial is checked locklessly (see put_cpu_partial), so
++	 * we have to make sure the change is visible.
++	 */
++	synchronize_sched();
++
 +	__kmem_cache_shrink(s);
 +}
++#endif
 +
- void __kmemcg_cache_deactivate(struct kmem_cache *s)
+ static int slab_mem_going_offline_callback(void *arg)
  {
- 	/*
-@@ -3960,11 +3966,9 @@ void __kmemcg_cache_deactivate(struct kmem_cache *s)
+ 	struct kmem_cache *s;
  
- 	/*
- 	 * s->cpu_partial is checked locklessly (see put_cpu_partial), so
--	 * we have to make sure the change is visible.
-+	 * we have to make sure the change is visible before shrinking.
- 	 */
--	synchronize_sched();
--
--	__kmem_cache_shrink(s);
-+	slab_deactivate_memcg_cache_rcu_sched(s, kmemcg_cache_deact_after_rcu);
- }
- #endif
+ 	mutex_lock(&slab_mutex);
+ 	list_for_each_entry(s, &slab_caches, list)
+-		__kmem_cache_shrink(s, false);
++		__kmem_cache_shrink(s);
+ 	mutex_unlock(&slab_mutex);
  
+ 	return 0;
 -- 
 2.9.3
 
