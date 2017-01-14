@@ -1,26 +1,25 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/9] slab: remove synchronous rcu_barrier() call in memcg
- cache release path
-Date: Sat, 14 Jan 2017 10:19:21 -0500
-Message-ID: <20170114151921.GA32693@mtj.duckdns.org>
+Subject: Re: [PATCH 3/9] slab: simplify shutdown_memcg_caches()
+Date: Sat, 14 Jan 2017 10:38:01 -0500
+Message-ID: <20170114153801.GB32693@mtj.duckdns.org>
 References: <20170114055449.11044-1-tj@kernel.org>
- <20170114055449.11044-3-tj@kernel.org>
- <20170114131939.GA2668@esperanza>
+ <20170114055449.11044-4-tj@kernel.org>
+ <20170114132722.GB2668@esperanza>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=eMmD3jXw77Ozr6Eg6UFF0gXVIxZFJwRjgWqVdORcaYs=;
-        b=IFn9lI7XtmLwMXE6+zlfqcxmsYACdMsRoC0faHGj++/0I+zffFhNJp1orSJQvSrp/l
-         j2kYNzfEja+jMjJpQNsjYr5qBOtkOaRb0EiCM6fXOLZdfPVzHpvySw4LzOLTq0CkB8VB
-         tY6Ixo8Bq4RczDXioNWBk0pwULgd+oxQ/HGW/8pnbjQMH4QBzSXKsubjYwcUrh05T1dN
-         gyDqhoRT5klknLFC9nGBCmlpSdMLcYXTEH3BdeQKGI3G988Uwiw10ktnbWcs/YQMv1LR
-         E0afzrQQ64vmPmdP3gLRWKzE6s+yYglyvRQEh1YCtJGTHxuq+l6hYjYZNM+ZHRs33YCv
-         UglQ==
+        bh=5GZMUeo13f/KXXXlC8zyMSwDzNi9vhISsOzCgQPhSDU=;
+        b=s9zAACoW/mWTg74mOAb+c1sBsLGXxT/ZBMr4OrZOJjuZ8DOrBb+o8KhoieDDm+useh
+         Z6D7SzXBCoPk/agylkGRG/sASaQxORBQBnsvCrmmENlrBToFeazzeF2A4OKJqYPndXjx
+         Ry1agSgqCw5cY65lWHH+p1rGY5g2FZQvlGD80+FdK+CVGyZgkMFJeyTM4INZ5zRTkiVo
+         C2c165eVBvv79zBJ8SiZhIqJvGdftM6qrk1Cjq3YByHP7lyepaDvpfeU7si+20R8Tuyk
+         5HzEYSx30joPTE8sIwADHW2CLj4vCKHY2wpBSvYz5apYqO89dOFRi31mbASwbDLW5Ist
+         N2jA==
 Content-Disposition: inline
-In-Reply-To: <20170114131939.GA2668@esperanza>
+In-Reply-To: <20170114132722.GB2668@esperanza>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,26 +27,33 @@ Content-Transfer-Encoding: 7bit
 To: Vladimir Davydov <vdavydov@tarantool.org>
 Cc: cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org, jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-Hello, Vladimir.
-
-On Sat, Jan 14, 2017 at 04:19:39PM +0300, Vladimir Davydov wrote:
-> On Sat, Jan 14, 2017 at 12:54:42AM -0500, Tejun Heo wrote:
-> > This patch updates the cache release path so that it simply uses
-> > call_rcu() instead of the synchronous rcu_barrier() + custom batching.
-> > This doesn't cost more while being logically simpler and way more
-> > scalable.
+On Sat, Jan 14, 2017 at 04:27:22PM +0300, Vladimir Davydov wrote:
+> > -	 * Second, shutdown all caches left from memory cgroups that are now
+> > -	 * offline.
+> > +	 * Shutdown all caches.
+> >  	 */
+> >  	list_for_each_entry_safe(c, c2, &s->memcg_params.list,
+> >  				 memcg_params.list)
+> >  		shutdown_cache(c);
 > 
-> The point of rcu_barrier() is to wait until all rcu calls freeing slabs
-> from the cache being destroyed are over (rcu_free_slab, kmem_rcu_free).
-> I'm not sure if call_rcu() guarantees that for all rcu implementations
-> too. If it did, why would we need rcu_barrier() at all?
+> The point of this complexity was to leave caches that happen to have
+> objects when kmem_cache_destroy() is called on the list, so that they
+> could be reused later. This behavior was inherited from the global
 
-Yeah, I had a similar question and scanned its users briefly.  Looks
-like it's used in combination with ctors so that its users can
-opportunistically dereference objects and e.g. check ids / state /
-whatever without worrying about the objects' lifetimes.
+Ah, right, I misread the branch.  I don't quite get how the cache can
+be reused later tho?  This is called when the memcg gets released and
+a clear error condition - the caller, kmem_cache_destroy(), handles it
+as an error condition too.
 
-Thanks.
+> caches - if kmem_cache_destroy() is called on a cache that still has
+> object, we print a warning message and don't destroy the cache. This
+> patch changes this behavior.
+
+Hmm... yeah, we're missing the error return propagation.  I think
+that's the only meaningful difference tho, right?  Will update the
+patch.
+
+Thanks!
 
 -- 
 tejun
