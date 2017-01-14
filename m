@@ -1,63 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/9] slab: simplify shutdown_memcg_caches()
-Date: Sat, 14 Jan 2017 10:53:43 -0500
-Message-ID: <20170114155343.GA13589@mtj.duckdns.org>
-References: <20170114055449.11044-1-tj@kernel.org>
- <20170114055449.11044-4-tj@kernel.org>
- <20170114132722.GB2668@esperanza>
- <20170114153801.GB32693@mtj.duckdns.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch v2] mm, memcg: do not retry precharge charges
+Date: Sat, 14 Jan 2017 11:22:38 -0500
+Message-ID: <20170114162238.GD26139@cmpxchg.org>
+References: <alpine.DEB.2.10.1701112031250.94269@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1701121446130.12738@chino.kir.corp.google.com>
+ <20170113084014.GB25212@dhcp22.suse.cz>
+ <alpine.DEB.2.10.1701130208510.69402@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=yMexK7hyBwxJ71vyXI4fFPA/LqJ+M/hDl4wWVMnUZvU=;
-        b=rBh7VropopKy/Y6/fka3aHnuPnMSKLSGSb8SwGJTxYsrcUlajpLA4spNcH2ay4K3wa
-         E138MoOrpgoZnJ8H7y2Vh9JhLnyqGsmrPfyLAeKj80l5Ne6DQrPFzs6EC5NtA6RHSst4
-         nf4rPl9k+KSQZ0KRvjSpXT0de171XsnvWWf0NZ1QX3/kXHwM9flWGEfDPJfUdFm9gidB
-         Mnd/tWC9zroxgLD5crIPG12TRHhpOANkAoAqF7G7w0JKjT4G7oAXcmvlnxP6orPX36Jd
-         Ta2prLZD1jYfIqk4LlaybY+ZN3b6+LJVwhhpSTTXr3L+YK+in8wvV0LTWF4oO5tu1yq0
-         ILew==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=+c357wSM+RqbpiWBUUqLu2TSWXEJY+TZijQ/bTC/R9E=; b=PU5DZsx5SLint7NPUNrlXhwg/+
+        jzmh2k3Ki1twNtQuH0B6ZQMD50t96gKo1dxjUI9LtCFSeTzeUGjb9HitJJDgu7Qiq7DQM24KpCHLN
+        CcfbgrGW+cNl+BAbw1m/4kTl2mw26IvCpS7sKpNcdckUzlQNu0sO/vAxVYrmcHWCXCbQ=;
 Content-Disposition: inline
-In-Reply-To: <20170114153801.GB32693@mtj.duckdns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <alpine.DEB.2.10.1701130208510.69402-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@tarantool.org>
-Cc: cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org, jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Sat, Jan 14, 2017 at 10:38:01AM -0500, Tejun Heo wrote:
-> On Sat, Jan 14, 2017 at 04:27:22PM +0300, Vladimir Davydov wrote:
-> > > -	 * Second, shutdown all caches left from memory cgroups that are now
-> > > -	 * offline.
-> > > +	 * Shutdown all caches.
-> > >  	 */
-> > >  	list_for_each_entry_safe(c, c2, &s->memcg_params.list,
-> > >  				 memcg_params.list)
-> > >  		shutdown_cache(c);
-> > 
-> > The point of this complexity was to leave caches that happen to have
-> > objects when kmem_cache_destroy() is called on the list, so that they
-> > could be reused later. This behavior was inherited from the global
+On Fri, Jan 13, 2017 at 02:09:53AM -0800, David Rientjes wrote:
+> When memory.move_charge_at_immigrate is enabled and precharges are
+> depleted during move, mem_cgroup_move_charge_pte_range() will attempt to
+> increase the size of the precharge.
 > 
-> Ah, right, I misread the branch.  I don't quite get how the cache can
-> be reused later tho?  This is called when the memcg gets released and
-> a clear error condition - the caller, kmem_cache_destroy(), handles it
-> as an error condition too.
+> Prevent precharges from ever looping by setting __GFP_NORETRY.  This was
+> probably the intention of the GFP_KERNEL & ~__GFP_NORETRY, which is
+> pointless as written.
 
-I think I understand it now.  This is the alias being able to find and
-reuse the cache.  Heh, that's a weird optimization for a corner error
-case.  Anyways, I'll drop this patch.
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The OOM killer livelock was the motivation for this patch. With that
+ruled out, what's the point of this patch? Try a bit less hard to move
+charges during task migration?
