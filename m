@@ -1,25 +1,29 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] slab: make memcg slab destruction scalable
-Date: Sat, 14 Jan 2017 00:54:40 -0500
-Message-ID: <20170114055449.11044-1-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/9] Revert "slub: move synchronize_sched out of slab_mutex on shrink"
+Date: Sat, 14 Jan 2017 00:54:41 -0500
+Message-ID: <20170114055449.11044-2-tj@kernel.org>
+References: <20170114055449.11044-1-tj@kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=gnVzrysm2ge4jh2bCqRLyZUWbFZ3eKhJARTDEKzSBOY=;
-        b=KeLH4STULKEOrCDuGxjXl7mzvNMwyymWa0eYLn6Fjxx6yVPAo10PWSRriM7Kf8x3WN
-         +kO6fzJeYGitguVWGrOhroS95yzeBOkCxC3QDdfTAtzdKnRPfmOG9g2MfLATwaoKVj/j
-         O/r08pnISArsGNpeAX/tKO9C3tqSFfIhODfMVttrzWaU0DjKSApRn870+RrkgY1pumtX
-         ycF/dgVNEaS95GU2IcEsabonzJbPLVrgsxMDYexWn7e1MSP12oefuW9bTmZtIIuyh++N
-         Ej2l/ZREMqXSBn1uYzKE9HNTZRaxIlf7igyIeY4W5hDadQOK7lxBIRhkGEYqBYf5pT5T
-         2fgA==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=CMlDcweSfhEOi4I8bg2DJzs2wX685tAEdylSkMCbEVM=;
+        b=O1bK2we1DF7ZC32YsDgXa/3ymGMs6Xquztp2P71PlHSJnyOn9/M87eis2vNx9ivg1Y
+         6RVa/uun5TOGUp379JdCAqKdYIOTk9kV8KRSRw+DVuv0qEL8Bsn5m0Y8HfDGNZ+kEFqg
+         5N3Scts0EP08b6D8rx54AZ3Hd6CDgRV+i3jL0Hm0G/Mt/QkzO38LUJnCyxdhV58Blhu3
+         WDh6OygpsLjIYImJCiEpP8sf6uBSAV63eFvA/FBIk35xfHwUdYgPUsSX49vcnSkY3qkU
+         z+uwjm41T+fEG21jhfWQVfSLJO6LhdYYj76sWg1BikgWy9hmE3Umiq8JO0Yrys11zyAd
+         UV3Q==
+In-Reply-To: <20170114055449.11044-1-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: jsvana-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: vdavydov.dev@gmail.com, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org
+Cc: jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+
+This reverts commit 89e364db71fb5e7fc8d93228152abfa67daf35fa.
 
 With kmem cgroup support enabled, kmem_caches can be created and
 destroyed frequently and a great number of near empty kmem_caches can
@@ -28,70 +32,178 @@ not under memory pressure.  When memory reclaim starts under such
 conditions, it can lead to consecutive deactivation and destruction of
 many kmem_caches, easily hundreds of thousands on moderately large
 systems, exposing scalability issues in the current slab management
-code.
+code.  This is one of the patches to address the issue.
 
-I've seen machines which end up with hundred thousands of caches and
-many millions of kernfs_nodes.  The current code is O(N^2) on the
-total number of caches and has synchronous rcu_barrier() and
-synchronize_sched() in cgroup offline / release path which is executed
-while holding cgroup_mutex.  Combined, this leads to very expensive
-and slow cache destruction operations which can easily keep running
-for half a day.
+Moving synchronize_sched() out of slab_mutex isn't enough as it's
+still inside cgroup_mutex.  The whole deactivation / release path will
+be updated to avoid all synchronous RCU operations.  Revert this
+insufficient optimization in preparation to ease future changes.
 
-This also messes up /proc/slabinfo along with other cache iterating
-operations.  seq_file operates on 4k chunks and on each 4k boundary
-tries to seek to the last position in the list.  With a huge number of
-caches on the list, this becomes very slow and very prone to the list
-content changing underneath it leading to a lot of missing and/or
-duplicate entries.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Jay Vana <jsvana@fb.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Christoph Lameter <cl@linux.com>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+ mm/slab.c        |  4 ++--
+ mm/slab.h        |  2 +-
+ mm/slab_common.c | 27 ++-------------------------
+ mm/slob.c        |  2 +-
+ mm/slub.c        | 19 +++++++++++++++++--
+ 5 files changed, 23 insertions(+), 31 deletions(-)
 
-This patchset addresses the scalability problem.
-
-* Separate out root and memcg cache lists and add per-memcg list.
-  Update each user to use the appropriate list.
-
-* Replace rcu_barrier() and synchronize_rcu() with call_rcu() and
-  call_rcu_sched().
-
-* For dying empty slub caches, remove the sysfs files after
-  deactivation so that we don't end up with millions of sysfs files
-  without any useful information on them.
-
-This patchset contains the following nine patches.
-
- 0001-Revert-slub-move-synchronize_sched-out-of-slab_mutex.patch
- 0002-slab-remove-synchronous-rcu_barrier-call-in-memcg-ca.patch
- 0003-slab-simplify-shutdown_memcg_caches.patch
- 0004-slab-reorganize-memcg_cache_params.patch
- 0005-slab-link-memcg-kmem_caches-on-their-associated-memo.patch
- 0006-slab-don-t-put-memcg-caches-on-slab_caches-list.patch
- 0007-slab-introduce-__kmemcg_cache_deactivate.patch
- 0008-slab-remove-synchronous-synchronize_sched-from-memcg.patch
- 0009-slab-remove-slub-sysfs-interface-files-early-for-emp.patch
-
-0001 reverts an existing optimization to prepare for the following
-changes.  0002 replaces rcu_barrier() in release path with call_rcu().
-0003-0006 separate out the lists.  0007-0008 replace
-synchronize_sched() in slub destruction path with call_rcu_sched().
-0009 removes sysfs files early for empty dying caches.
-
-This patchset is on top of the current linus#master a121103c9228 and
-also available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git review-kmemcg-scalability
-
-diffstat follows.  Thanks.
-
- include/linux/memcontrol.h |    1 
- include/linux/slab.h       |   39 ++++-
- include/linux/slab_def.h   |    5 
- include/linux/slub_def.h   |    9 -
- mm/memcontrol.c            |    7 -
- mm/slab.c                  |    7 +
- mm/slab.h                  |   21 ++-
- mm/slab_common.c           |  306 ++++++++++++++++++++++++---------------------
- mm/slub.c                  |   54 +++++++
- 9 files changed, 283 insertions(+), 166 deletions(-)
+diff --git a/mm/slab.c b/mm/slab.c
+index 29bc6c0..767e8e4 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -2314,7 +2314,7 @@ static int drain_freelist(struct kmem_cache *cache,
+ 	return nr_freed;
+ }
+ 
+-int __kmem_cache_shrink(struct kmem_cache *cachep)
++int __kmem_cache_shrink(struct kmem_cache *cachep, bool deactivate)
+ {
+ 	int ret = 0;
+ 	int node;
+@@ -2334,7 +2334,7 @@ int __kmem_cache_shrink(struct kmem_cache *cachep)
+ 
+ int __kmem_cache_shutdown(struct kmem_cache *cachep)
+ {
+-	return __kmem_cache_shrink(cachep);
++	return __kmem_cache_shrink(cachep, false);
+ }
+ 
+ void __kmem_cache_release(struct kmem_cache *cachep)
+diff --git a/mm/slab.h b/mm/slab.h
+index de6579d..4acc644 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -161,7 +161,7 @@ static inline unsigned long kmem_cache_flags(unsigned long object_size,
+ 
+ int __kmem_cache_shutdown(struct kmem_cache *);
+ void __kmem_cache_release(struct kmem_cache *);
+-int __kmem_cache_shrink(struct kmem_cache *);
++int __kmem_cache_shrink(struct kmem_cache *, bool);
+ void slab_kmem_cache_release(struct kmem_cache *);
+ 
+ struct seq_file;
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index ae32384..46ff746 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -579,29 +579,6 @@ void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+ 	get_online_cpus();
+ 	get_online_mems();
+ 
+-#ifdef CONFIG_SLUB
+-	/*
+-	 * In case of SLUB, we need to disable empty slab caching to
+-	 * avoid pinning the offline memory cgroup by freeable kmem
+-	 * pages charged to it. SLAB doesn't need this, as it
+-	 * periodically purges unused slabs.
+-	 */
+-	mutex_lock(&slab_mutex);
+-	list_for_each_entry(s, &slab_caches, list) {
+-		c = is_root_cache(s) ? cache_from_memcg_idx(s, idx) : NULL;
+-		if (c) {
+-			c->cpu_partial = 0;
+-			c->min_partial = 0;
+-		}
+-	}
+-	mutex_unlock(&slab_mutex);
+-	/*
+-	 * kmem_cache->cpu_partial is checked locklessly (see
+-	 * put_cpu_partial()). Make sure the change is visible.
+-	 */
+-	synchronize_sched();
+-#endif
+-
+ 	mutex_lock(&slab_mutex);
+ 	list_for_each_entry(s, &slab_caches, list) {
+ 		if (!is_root_cache(s))
+@@ -613,7 +590,7 @@ void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+ 		if (!c)
+ 			continue;
+ 
+-		__kmem_cache_shrink(c);
++		__kmem_cache_shrink(c, true);
+ 		arr->entries[idx] = NULL;
+ 	}
+ 	mutex_unlock(&slab_mutex);
+@@ -784,7 +761,7 @@ int kmem_cache_shrink(struct kmem_cache *cachep)
+ 	get_online_cpus();
+ 	get_online_mems();
+ 	kasan_cache_shrink(cachep);
+-	ret = __kmem_cache_shrink(cachep);
++	ret = __kmem_cache_shrink(cachep, false);
+ 	put_online_mems();
+ 	put_online_cpus();
+ 	return ret;
+diff --git a/mm/slob.c b/mm/slob.c
+index eac04d4..5ec1580 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -634,7 +634,7 @@ void __kmem_cache_release(struct kmem_cache *c)
+ {
+ }
+ 
+-int __kmem_cache_shrink(struct kmem_cache *d)
++int __kmem_cache_shrink(struct kmem_cache *d, bool deactivate)
+ {
+ 	return 0;
+ }
+diff --git a/mm/slub.c b/mm/slub.c
+index 067598a..68b84f9 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3883,7 +3883,7 @@ EXPORT_SYMBOL(kfree);
+  * being allocated from last increasing the chance that the last objects
+  * are freed in them.
+  */
+-int __kmem_cache_shrink(struct kmem_cache *s)
++int __kmem_cache_shrink(struct kmem_cache *s, bool deactivate)
+ {
+ 	int node;
+ 	int i;
+@@ -3895,6 +3895,21 @@ int __kmem_cache_shrink(struct kmem_cache *s)
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
++	if (deactivate) {
++		/*
++		 * Disable empty slabs caching. Used to avoid pinning offline
++		 * memory cgroups by kmem pages that can be freed.
++		 */
++		s->cpu_partial = 0;
++		s->min_partial = 0;
++
++		/*
++		 * s->cpu_partial is checked locklessly (see put_cpu_partial),
++		 * so we have to make sure the change is visible.
++		 */
++		synchronize_sched();
++	}
++
+ 	flush_all(s);
+ 	for_each_kmem_cache_node(s, node, n) {
+ 		INIT_LIST_HEAD(&discard);
+@@ -3951,7 +3966,7 @@ static int slab_mem_going_offline_callback(void *arg)
+ 
+ 	mutex_lock(&slab_mutex);
+ 	list_for_each_entry(s, &slab_caches, list)
+-		__kmem_cache_shrink(s);
++		__kmem_cache_shrink(s, false);
+ 	mutex_unlock(&slab_mutex);
+ 
+ 	return 0;
+-- 
+2.9.3
 
 --
-tejun
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
