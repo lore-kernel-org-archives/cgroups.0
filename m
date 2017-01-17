@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/10] slab: link memcg kmem_caches on their associated memory cgroup
-Date: Tue, 17 Jan 2017 15:54:06 -0800
-Message-ID: <20170117235411.9408-6-tj@kernel.org>
+Subject: [PATCH 02/10] slub: separate out sysfs_slab_release() from sysfs_slab_remove()
+Date: Tue, 17 Jan 2017 15:54:03 -0800
+Message-ID: <20170117235411.9408-3-tj@kernel.org>
 References: <20170117235411.9408-1-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=AicVlQSV8NjjQu8yf3busp7ySvAp5/8R6/6FcOCjSno=;
-        b=cSu35tVg3KQ5sWmxCO63nVwMY+t+rVlgTVMobqRn12K/Jjdb4RKE05nmpi7iN9TD7Y
-         ok+LO9k9v8TJkg4D7Cb786ID/PUI5yZ0rry2beqzOox+KDa77mfi7UCrcEbT4RU+mN48
-         LUpiWkavmkn2VhvlFygKv2/ucKIrevK374y77QdVrpLn2nRo7Hqd2R0z3n4mdHR3EWSo
-         l9/p0A/NVrIDhb3OrAHlGUaWnfS3HrDINs8p8TNtJ1kI4Tjp1bws9NIicurbjCW2lU5O
-         XZsK50VUvKz/RmVEmzA0oQRGNEoS8InOMsBlS+VNzbaJnbHNz/I55JeRgigfxgO85YuK
-         9kMw==
+        bh=EnIzwd/Gkg6Zjc2wtLBqLLL8X8YwzSYRSZjVhTgtaQ0=;
+        b=FYrePSxocZV+Z3JY+iOTXPJZaxi+JUM10T8A0QK70qcFcTTl+ENPI+upnrKbdQR1FZ
+         k9Hcp/NQZPLaegalwXd4OeFqRVHGB6F9cnzMnfuDXxI9Wcyz5Kmg3zZYBEdr/Eega4V+
+         Z4SZ7cz4+0JWOiLUQM8nrzwhbT+sxHjElmL9TM2E+UFHDNVA1QYWRZZv0XhnMkMuw0hB
+         i1HSI3Jnny0AAYUXxFRNlk06Z1ZcpkMczdXqPddBa7SS7SlJGaH8LHcgcaTgRqii5r/p
+         Ullb4XoEEtvSz+tpNtMfS4BlBftdsy+5CrYuL0QIg1lTbZhW8IjiMLzxKEpyp7IuqY/b
+         OdOA==
 In-Reply-To: <20170117235411.9408-1-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,203 +23,99 @@ Content-Transfer-Encoding: 7bit
 To: vdavydov.dev@gmail.com, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org
 Cc: jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-With kmem cgroup support enabled, kmem_caches can be created and
-destroyed frequently and a great number of near empty kmem_caches can
-accumulate if there are a lot of transient cgroups and the system is
-not under memory pressure.  When memory reclaim starts under such
-conditions, it can lead to consecutive deactivation and destruction of
-many kmem_caches, easily hundreds of thousands on moderately large
-systems, exposing scalability issues in the current slab management
-code.  This is one of the patches to address the issue.
-
-While a memcg kmem_cache is listed on its root cache's ->children
-list, there is no direct way to iterate all kmem_caches which are
-assocaited with a memory cgroup.  The only way to iterate them is
-walking all caches while filtering out caches which don't match, which
-would be most of them.
-
-This makes memcg destruction operations O(N^2) where N is the total
-number of slab caches which can be huge.  This combined with the
-synchronous RCU operations can tie up a CPU and affect the whole
-machine for many hours when memory reclaim triggers offlining and
-destruction of the stale memcgs.
-
-This patch adds mem_cgroup->kmem_caches list which goes through
-memcg_cache_params->kmem_caches_node of all kmem_caches which are
-associated with the memcg.  All memcg specific iterations, including
-stat file access, are updated to use the new list instead.
-
-v2: Initial version made slab_{start|next|stop}() static; however,
-    mm/slab.c still needs them.  Leave them global.
+Separate out slub sysfs removal and release, and call the former
+earlier from __kmem_cache_shutdown().  There's no reason to defer
+sysfs removal through RCU and this will later allow us to remove sysfs
+files way earlier during memory cgroup offline instead of release.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Jay Vana <jsvana@fb.com>
-Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Christoph Lameter <cl@linux.com>
 Cc: Pekka Enberg <penberg@kernel.org>
 Cc: David Rientjes <rientjes@google.com>
 Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- include/linux/memcontrol.h |  1 +
- include/linux/slab.h       |  3 +++
- mm/memcontrol.c            |  7 ++++---
- mm/slab.h                  |  3 +++
- mm/slab_common.c           | 36 +++++++++++++++++++++++++++++-------
- 5 files changed, 40 insertions(+), 10 deletions(-)
+ include/linux/slub_def.h | 4 ++--
+ mm/slab_common.c         | 2 +-
+ mm/slub.c                | 9 ++++++++-
+ 3 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 61d20c1..4de925c 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -253,6 +253,7 @@ struct mem_cgroup {
-         /* Index in the kmem_cache->memcg_params.memcg_caches array */
- 	int kmemcg_id;
- 	enum memcg_kmem_state kmem_state;
-+	struct list_head kmem_caches;
- #endif
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index 75f56c2..07ef550 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -113,9 +113,9 @@ struct kmem_cache {
  
- 	int last_scanned_node;
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 2e83922..95b4d9d 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -565,6 +565,8 @@ struct memcg_cache_array {
-  * @memcg:	Pointer to the memcg this cache belongs to.
-  *
-  * @children_node: List node for @root_cache->children list.
-+ *
-+ * @kmem_caches_node: List node for @memcg->kmem_caches list.
-  */
- struct memcg_cache_params {
- 	struct kmem_cache *root_cache;
-@@ -576,6 +578,7 @@ struct memcg_cache_params {
- 		struct {
- 			struct mem_cgroup *memcg;
- 			struct list_head children_node;
-+			struct list_head kmem_caches_node;
- 		};
- 	};
- };
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4048897..a2b20f7f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2839,6 +2839,7 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
- 	 */
- 	memcg->kmemcg_id = memcg_id;
- 	memcg->kmem_state = KMEM_ONLINE;
-+	INIT_LIST_HEAD(&memcg->kmem_caches);
- 
- 	return 0;
+ #ifdef CONFIG_SYSFS
+ #define SLAB_SUPPORTS_SYSFS
+-void sysfs_slab_remove(struct kmem_cache *);
++void sysfs_slab_release(struct kmem_cache *);
+ #else
+-static inline void sysfs_slab_remove(struct kmem_cache *s)
++static inline void sysfs_slab_release(struct kmem_cache *s)
+ {
  }
-@@ -4004,9 +4005,9 @@ static struct cftype mem_cgroup_legacy_files[] = {
- #ifdef CONFIG_SLABINFO
- 	{
- 		.name = "kmem.slabinfo",
--		.seq_start = slab_start,
--		.seq_next = slab_next,
--		.seq_stop = slab_stop,
-+		.seq_start = memcg_slab_start,
-+		.seq_next = memcg_slab_next,
-+		.seq_stop = memcg_slab_stop,
- 		.seq_show = memcg_slab_show,
- 	},
  #endif
-diff --git a/mm/slab.h b/mm/slab.h
-index ce6b063..4cb67a3 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -488,6 +488,9 @@ static inline struct kmem_cache_node *get_node(struct kmem_cache *s, int node)
- void *slab_start(struct seq_file *m, loff_t *pos);
- void *slab_next(struct seq_file *m, void *p, loff_t *pos);
- void slab_stop(struct seq_file *m, void *p);
-+void *memcg_slab_start(struct seq_file *m, loff_t *pos);
-+void *memcg_slab_next(struct seq_file *m, void *p, loff_t *pos);
-+void memcg_slab_stop(struct seq_file *m, void *p);
- int memcg_slab_show(struct seq_file *m, void *p);
- 
- void ___cache_free(struct kmem_cache *cache, void *x, unsigned long addr);
 diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 76afe15..85292cc 100644
+index 46ff746..3bc4bb8 100644
 --- a/mm/slab_common.c
 +++ b/mm/slab_common.c
-@@ -154,6 +154,7 @@ static int init_memcg_params(struct kmem_cache *s,
- 		s->memcg_params.root_cache = root_cache;
- 		s->memcg_params.memcg = memcg;
- 		INIT_LIST_HEAD(&s->memcg_params.children_node);
-+		INIT_LIST_HEAD(&s->memcg_params.kmem_caches_node);
- 		return 0;
- 	}
+@@ -480,7 +480,7 @@ static void release_caches(struct list_head *release, bool need_rcu_barrier)
  
-@@ -224,6 +225,7 @@ int memcg_update_all_caches(int num_memcgs)
- static void unlink_memcg_cache(struct kmem_cache *s)
- {
- 	list_del(&s->memcg_params.children_node);
-+	list_del(&s->memcg_params.kmem_caches_node);
- }
+ 	list_for_each_entry_safe(s, s2, release, list) {
+ #ifdef SLAB_SUPPORTS_SYSFS
+-		sysfs_slab_remove(s);
++		sysfs_slab_release(s);
  #else
- static inline int init_memcg_params(struct kmem_cache *s,
-@@ -593,6 +595,7 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 		slab_kmem_cache_release(s);
+ #endif
+diff --git a/mm/slub.c b/mm/slub.c
+index 68b84f9..2b78c82 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -214,11 +214,13 @@ enum track_item { TRACK_ALLOC, TRACK_FREE };
+ static int sysfs_slab_add(struct kmem_cache *);
+ static int sysfs_slab_alias(struct kmem_cache *, const char *);
+ static void memcg_propagate_slab_attrs(struct kmem_cache *s);
++static void sysfs_slab_remove(struct kmem_cache *s);
+ #else
+ static inline int sysfs_slab_add(struct kmem_cache *s) { return 0; }
+ static inline int sysfs_slab_alias(struct kmem_cache *s, const char *p)
+ 							{ return 0; }
+ static inline void memcg_propagate_slab_attrs(struct kmem_cache *s) { }
++static inline void sysfs_slab_remove(struct kmem_cache *s) { }
+ #endif
  
- 	list_add(&s->memcg_params.children_node,
- 		 &root_cache->memcg_params.children);
-+	list_add(&s->memcg_params.kmem_caches_node, &memcg->kmem_caches);
- 
- 	/*
- 	 * Since readers won't lock (see cache_from_memcg_idx()), we need a
-@@ -648,9 +651,8 @@ void memcg_destroy_kmem_caches(struct mem_cgroup *memcg)
- 	get_online_mems();
- 
- 	mutex_lock(&slab_mutex);
--	list_for_each_entry_safe(s, s2, &slab_caches, list) {
--		if (is_root_cache(s) || s->memcg_params.memcg != memcg)
--			continue;
-+	list_for_each_entry_safe(s, s2, &memcg->kmem_caches,
-+				 memcg_params.kmem_caches_node) {
- 		/*
- 		 * The cgroup is about to be freed and therefore has no charges
- 		 * left. Hence, all its caches must be empty by now.
-@@ -1201,15 +1203,35 @@ static int slab_show(struct seq_file *m, void *p)
- }
- 
- #if defined(CONFIG_MEMCG) && !defined(CONFIG_SLOB)
-+void *memcg_slab_start(struct seq_file *m, loff_t *pos)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+
-+	mutex_lock(&slab_mutex);
-+	return seq_list_start(&memcg->kmem_caches, *pos);
-+}
-+
-+void *memcg_slab_next(struct seq_file *m, void *p, loff_t *pos)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+
-+	return seq_list_next(p, &memcg->kmem_caches, pos);
-+}
-+
-+void memcg_slab_stop(struct seq_file *m, void *p)
-+{
-+	mutex_unlock(&slab_mutex);
-+}
-+
- int memcg_slab_show(struct seq_file *m, void *p)
- {
--	struct kmem_cache *s = list_entry(p, struct kmem_cache, list);
-+	struct kmem_cache *s = list_entry(p, struct kmem_cache,
-+					  memcg_params.kmem_caches_node);
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
- 
--	if (p == slab_caches.next)
-+	if (p == memcg->kmem_caches.next)
- 		print_slabinfo_header(m);
--	if (!is_root_cache(s) && s->memcg_params.memcg == memcg)
--		cache_show(s, m);
-+	cache_show(s, m);
+ static inline void stat(const struct kmem_cache *s, enum stat_item si)
+@@ -3679,6 +3681,7 @@ int __kmem_cache_shutdown(struct kmem_cache *s)
+ 		if (n->nr_partial || slabs_node(s, node))
+ 			return 1;
+ 	}
++	sysfs_slab_remove(s);
  	return 0;
  }
+ 
+@@ -5629,7 +5632,7 @@ static int sysfs_slab_add(struct kmem_cache *s)
+ 	goto out;
+ }
+ 
+-void sysfs_slab_remove(struct kmem_cache *s)
++static void sysfs_slab_remove(struct kmem_cache *s)
+ {
+ 	if (slab_state < FULL)
+ 		/*
+@@ -5643,6 +5646,10 @@ void sysfs_slab_remove(struct kmem_cache *s)
  #endif
+ 	kobject_uevent(&s->kobj, KOBJ_REMOVE);
+ 	kobject_del(&s->kobj);
++}
++
++void sysfs_slab_release(struct kmem_cache *s)
++{
+ 	kobject_put(&s->kobj);
+ }
+ 
 -- 
 2.9.3
 
