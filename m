@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/10] slab: remove synchronous synchronize_sched() from memcg cache deactivation path
-Date: Tue, 17 Jan 2017 15:54:09 -0800
-Message-ID: <20170117235411.9408-9-tj@kernel.org>
+Subject: [PATCH 03/10] slab: remove synchronous rcu_barrier() call in memcg cache release path
+Date: Tue, 17 Jan 2017 15:54:04 -0800
+Message-ID: <20170117235411.9408-4-tj@kernel.org>
 References: <20170117235411.9408-1-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Wp4kDlP4upUHtDao6owUmCPLRXTX3kfQnrt+UPouLnc=;
-        b=Kup8PZP7yeRs9Zn+81GLTpz4BxCjSXRDRs++qHsJ6hRHaV0Hs4TYSRlCEQ+dkT0Sc+
-         8t5vffjTh4HLgLqBzWcivrUuilQkQbBdA70V4CZ3by1hoStkjtFfnrkbQGFpyuuWUyga
-         RGSJKCNG9Ye8DUM51i6f/rwkCQFybOtkK10t3KyYoZnqT3VENsYrCezhKdJY+FJg3Sfa
-         7qHCAzwyRciL7nPe2NbRG3o0KL47RwLHz7osGlQBk8QRL3s3QtOhww1QW3PcrqphZ/rr
-         jbjoNksv9GbiOCJFinSdWWjnKxhAKyDH4x+xr7mJ4Ej17N+9cfPdYxf2M1NxzLj7oRmt
-         ISKQ==
+        bh=4dyuUvyyeu53hPwNgZiKHjc+vMZBiSN2VTIgx9yiJug=;
+        b=axDtES3/RAr0+o/6QRd7rvEXWqzMImXU+0vQjPUUGmoXw08fXXA1k0rc8/EoQqmvA4
+         W9PQI0rmydFE1/cBaHf9dxBhR0F6I0jnY8uwIiLkT+CfDvFz1/NsRgR3Lf+eMqX3jH/e
+         qv6vgDEbnzbgFyj2ImXMbNz0xarEoF4p8bOfASew4F8PAUtr7skPHcTnlCjrovch5z8N
+         5cseSDDwD1Aj5kH0S9/Skc+fM37WuydpH3ZT0lbXNk/1NxYNMLjpyb0zIDfypBfCfsJ+
+         oA6Wvy2RMwwZHaYc0xFAGn+MZXNQwRI5vgIl3K9QE5+F+pvNsCHrsHE0EH7Zaw8J7VMU
+         5t7w==
 In-Reply-To: <20170117235411.9408-1-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -32,166 +32,254 @@ many kmem_caches, easily hundreds of thousands on moderately large
 systems, exposing scalability issues in the current slab management
 code.  This is one of the patches to address the issue.
 
-slub uses synchronize_sched() to deactivate a memcg cache.
-synchronize_sched() is an expensive and slow operation and doesn't
-scale when a huge number of caches are destroyed back-to-back.  While
-there used to be a simple batching mechanism, the batching was too
-restricted to be helpful.
+SLAB_DESTORY_BY_RCU caches need to flush all RCU operations before
+destruction because slab pages are freed through RCU and they need to
+be able to dereference the associated kmem_cache.  Currently, it's
+done synchronously with rcu_barrier().  As rcu_barrier() is expensive
+time-wise, slab implements a batching mechanism so that rcu_barrier()
+can be done for multiple caches at the same time.
 
-This patch implements slab_deactivate_memcg_cache_rcu_sched() which
-slub can use to schedule sched RCU callback instead of performing
-synchronize_sched() synchronously while holding cgroup_mutex.  While
-this adds online cpus, mems and slab_mutex operations, operating on
-these locks back-to-back from the same kworker, which is what's gonna
-happen when there are many to deactivate, isn't expensive at all and
-this gets rid of the scalability problem completely.
+Unfortunately, the rcu_barrier() is in synchronous path which is
+called while holding cgroup_mutex and the batching is too limited to
+be actually helpful.
+
+This patch updates the cache release path so that the batching is
+asynchronous and global.  All SLAB_DESTORY_BY_RCU caches are queued
+globally and a work item consumes the list.  The work item calls
+rcu_barrier() only once for all caches that are currently queued.
+
+* release_caches() is removed and shutdown_cache() now either directly
+  release the cache or schedules a RCU callback to do that.  This
+  makes the cache inaccessible once shutdown_cache() is called and
+  makes it impossible for shutdown_memcg_caches() to do memcg-specific
+  cleanups afterwards.  Move memcg-specific part into a helper,
+  unlink_memcg_cache(), and make shutdown_cache() call it directly.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Reported-by: Jay Vana <jsvana@fb.com>
-Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Christoph Lameter <cl@linux.com>
 Cc: Pekka Enberg <penberg@kernel.org>
 Cc: David Rientjes <rientjes@google.com>
 Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- include/linux/slab.h |  6 ++++++
- mm/slab.h            |  2 ++
- mm/slab_common.c     | 60 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- mm/slub.c            | 12 +++++++----
- 4 files changed, 76 insertions(+), 4 deletions(-)
+ mm/slab_common.c | 102 ++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 60 insertions(+), 42 deletions(-)
 
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 41c49cc..5ca8778 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -582,6 +582,12 @@ struct memcg_cache_params {
- 			struct mem_cgroup *memcg;
- 			struct list_head children_node;
- 			struct list_head kmem_caches_node;
-+
-+			void (*deact_fn)(struct kmem_cache *);
-+			union {
-+				struct rcu_head deact_rcu_head;
-+				struct work_struct deact_work;
-+			};
- 		};
- 	};
- };
-diff --git a/mm/slab.h b/mm/slab.h
-index be4434e..efa0d0a 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -301,6 +301,8 @@ static __always_inline void memcg_uncharge_slab(struct page *page, int order,
- 
- extern void slab_init_memcg_params(struct kmem_cache *);
- extern void memcg_link_cache(struct kmem_cache *s);
-+extern void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
-+				void (*deact_fn)(struct kmem_cache *));
- 
- #else /* CONFIG_MEMCG && !CONFIG_SLOB */
- 
 diff --git a/mm/slab_common.c b/mm/slab_common.c
-index cd4c952..32610d1 100644
+index 3bc4bb8..c6fd297 100644
 --- a/mm/slab_common.c
 +++ b/mm/slab_common.c
-@@ -624,6 +624,66 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+@@ -30,6 +30,11 @@ LIST_HEAD(slab_caches);
+ DEFINE_MUTEX(slab_mutex);
+ struct kmem_cache *kmem_cache;
+ 
++static LIST_HEAD(slab_caches_to_rcu_destroy);
++static void slab_caches_to_rcu_destroy_workfn(struct work_struct *work);
++static DECLARE_WORK(slab_caches_to_rcu_destroy_work,
++		    slab_caches_to_rcu_destroy_workfn);
++
+ /*
+  * Set of flags that will prevent slab merging
+  */
+@@ -215,6 +220,11 @@ int memcg_update_all_caches(int num_memcgs)
+ 	mutex_unlock(&slab_mutex);
+ 	return ret;
+ }
++
++static void unlink_memcg_cache(struct kmem_cache *s)
++{
++	list_del(&s->memcg_params.list);
++}
+ #else
+ static inline int init_memcg_params(struct kmem_cache *s,
+ 		struct mem_cgroup *memcg, struct kmem_cache *root_cache)
+@@ -225,6 +235,10 @@ static inline int init_memcg_params(struct kmem_cache *s,
+ static inline void destroy_memcg_params(struct kmem_cache *s)
+ {
+ }
++
++static inline void unlink_memcg_cache(struct kmem_cache *s)
++{
++}
+ #endif /* CONFIG_MEMCG && !CONFIG_SLOB */
+ 
+ /*
+@@ -458,33 +472,59 @@ kmem_cache_create(const char *name, size_t size, size_t align,
+ }
+ EXPORT_SYMBOL(kmem_cache_create);
+ 
+-static int shutdown_cache(struct kmem_cache *s,
+-		struct list_head *release, bool *need_rcu_barrier)
++static void slab_caches_to_rcu_destroy_workfn(struct work_struct *work)
+ {
+-	if (__kmem_cache_shutdown(s) != 0)
+-		return -EBUSY;
++	LIST_HEAD(to_destroy);
++	struct kmem_cache *s, *s2;
+ 
+-	if (s->flags & SLAB_DESTROY_BY_RCU)
+-		*need_rcu_barrier = true;
++	/*
++	 * On destruction, SLAB_DESTROY_BY_RCU kmem_caches are put on the
++	 * @slab_caches_to_rcu_destroy list.  The slab pages are freed
++	 * through RCU and and the associated kmem_cache are dereferenced
++	 * while freeing the pages, so the kmem_caches should be freed only
++	 * after the pending RCU operations are finished.  As rcu_barrier()
++	 * is a pretty slow operation, we batch all pending destructions
++	 * asynchronously.
++	 */
++	mutex_lock(&slab_mutex);
++	list_splice_init(&slab_caches_to_rcu_destroy, &to_destroy);
++	mutex_unlock(&slab_mutex);
+ 
+-	list_move(&s->list, release);
+-	return 0;
++	if (list_empty(&to_destroy))
++		return;
++
++	rcu_barrier();
++
++	list_for_each_entry_safe(s, s2, &to_destroy, list) {
++#ifdef SLAB_SUPPORTS_SYSFS
++		sysfs_slab_release(s);
++#else
++		slab_kmem_cache_release(s);
++#endif
++	}
+ }
+ 
+-static void release_caches(struct list_head *release, bool need_rcu_barrier)
++static int shutdown_cache(struct kmem_cache *s)
+ {
+-	struct kmem_cache *s, *s2;
++	if (__kmem_cache_shutdown(s) != 0)
++		return -EBUSY;
+ 
+-	if (need_rcu_barrier)
+-		rcu_barrier();
++	list_del(&s->list);
++	if (!is_root_cache(s))
++		unlink_memcg_cache(s);
+ 
+-	list_for_each_entry_safe(s, s2, release, list) {
++	if (s->flags & SLAB_DESTROY_BY_RCU) {
++		list_add_tail(&s->list, &slab_caches_to_rcu_destroy);
++		schedule_work(&slab_caches_to_rcu_destroy_work);
++	} else {
+ #ifdef SLAB_SUPPORTS_SYSFS
+ 		sysfs_slab_release(s);
+ #else
+ 		slab_kmem_cache_release(s);
+ #endif
+ 	}
++
++	return 0;
+ }
+ 
+ #if defined(CONFIG_MEMCG) && !defined(CONFIG_SLOB)
+@@ -599,22 +639,8 @@ void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
  	put_online_cpus();
  }
  
-+static void kmemcg_deactivate_workfn(struct work_struct *work)
-+{
-+	struct kmem_cache *s = container_of(work, struct kmem_cache,
-+					    memcg_params.deact_work);
-+
-+	get_online_cpus();
-+	get_online_mems();
-+
-+	mutex_lock(&slab_mutex);
-+
-+	s->memcg_params.deact_fn(s);
-+
-+	mutex_unlock(&slab_mutex);
-+
-+	put_online_mems();
-+	put_online_cpus();
-+
-+	/* done, put the ref from slab_deactivate_memcg_cache_rcu_sched() */
-+	css_put(&s->memcg_params.memcg->css);
-+}
-+
-+static void kmemcg_deactivate_rcufn(struct rcu_head *head)
-+{
-+	struct kmem_cache *s = container_of(head, struct kmem_cache,
-+					    memcg_params.deact_rcu_head);
-+
-+	/*
-+	 * We need to grab blocking locks.  Bounce to ->deact_work.  The
-+	 * work item shares the space with the RCU head and can't be
-+	 * initialized eariler.
-+	 */
-+	INIT_WORK(&s->memcg_params.deact_work, kmemcg_deactivate_workfn);
-+	schedule_work(&s->memcg_params.deact_work);
-+}
-+
-+/**
-+ * slab_deactivate_memcg_cache_rcu_sched - schedule deactivation after a
-+ *					   sched RCU grace period
-+ * @s: target kmem_cache
-+ * @deact_fn: deactivation function to call
-+ *
-+ * Schedule @deact_fn to be invoked with online cpus, mems and slab_mutex
-+ * held after a sched RCU grace period.  The slab is guaranteed to stay
-+ * alive until @deact_fn is finished.  This is to be used from
-+ * __kmemcg_cache_deactivate().
-+ */
-+void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
-+					   void (*deact_fn)(struct kmem_cache *))
-+{
-+	if (WARN_ON_ONCE(is_root_cache(s)) ||
-+	    WARN_ON_ONCE(s->memcg_params.deact_fn))
-+		return;
-+
-+	/* pin memcg so that @s doesn't get destroyed in the middle */
-+	css_get(&s->memcg_params.memcg->css);
-+
-+	s->memcg_params.deact_fn = deact_fn;
-+	call_rcu_sched(&s->memcg_params.deact_rcu_head, kmemcg_deactivate_rcufn);
-+}
-+
- void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
- {
- 	int idx;
-diff --git a/mm/slub.c b/mm/slub.c
-index c754ea0..184f80b 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -3949,6 +3949,12 @@ int __kmem_cache_shrink(struct kmem_cache *s)
- }
- 
- #ifdef CONFIG_MEMCG
-+static void kmemcg_cache_deact_after_rcu(struct kmem_cache *s)
-+{
-+	/* called with all the locks held after a sched RCU grace period */
-+	__kmem_cache_shrink(s);
-+}
-+
- void __kmemcg_cache_deactivate(struct kmem_cache *s)
- {
- 	/*
-@@ -3960,11 +3966,9 @@ void __kmemcg_cache_deactivate(struct kmem_cache *s)
- 
- 	/*
- 	 * s->cpu_partial is checked locklessly (see put_cpu_partial), so
--	 * we have to make sure the change is visible.
-+	 * we have to make sure the change is visible before shrinking.
- 	 */
--	synchronize_sched();
+-static int __shutdown_memcg_cache(struct kmem_cache *s,
+-		struct list_head *release, bool *need_rcu_barrier)
+-{
+-	BUG_ON(is_root_cache(s));
 -
--	__kmem_cache_shrink(s);
-+	slab_deactivate_memcg_cache_rcu_sched(s, kmemcg_cache_deact_after_rcu);
+-	if (shutdown_cache(s, release, need_rcu_barrier))
+-		return -EBUSY;
+-
+-	list_del(&s->memcg_params.list);
+-	return 0;
+-}
+-
+ void memcg_destroy_kmem_caches(struct mem_cgroup *memcg)
+ {
+-	LIST_HEAD(release);
+-	bool need_rcu_barrier = false;
+ 	struct kmem_cache *s, *s2;
+ 
+ 	get_online_cpus();
+@@ -628,18 +654,15 @@ void memcg_destroy_kmem_caches(struct mem_cgroup *memcg)
+ 		 * The cgroup is about to be freed and therefore has no charges
+ 		 * left. Hence, all its caches must be empty by now.
+ 		 */
+-		BUG_ON(__shutdown_memcg_cache(s, &release, &need_rcu_barrier));
++		BUG_ON(shutdown_cache(s));
+ 	}
+ 	mutex_unlock(&slab_mutex);
+ 
+ 	put_online_mems();
+ 	put_online_cpus();
+-
+-	release_caches(&release, need_rcu_barrier);
  }
- #endif
+ 
+-static int shutdown_memcg_caches(struct kmem_cache *s,
+-		struct list_head *release, bool *need_rcu_barrier)
++static int shutdown_memcg_caches(struct kmem_cache *s)
+ {
+ 	struct memcg_cache_array *arr;
+ 	struct kmem_cache *c, *c2;
+@@ -658,7 +681,7 @@ static int shutdown_memcg_caches(struct kmem_cache *s,
+ 		c = arr->entries[i];
+ 		if (!c)
+ 			continue;
+-		if (__shutdown_memcg_cache(c, release, need_rcu_barrier))
++		if (shutdown_cache(c))
+ 			/*
+ 			 * The cache still has objects. Move it to a temporary
+ 			 * list so as not to try to destroy it for a second
+@@ -681,7 +704,7 @@ static int shutdown_memcg_caches(struct kmem_cache *s,
+ 	 */
+ 	list_for_each_entry_safe(c, c2, &s->memcg_params.list,
+ 				 memcg_params.list)
+-		__shutdown_memcg_cache(c, release, need_rcu_barrier);
++		shutdown_cache(c);
+ 
+ 	list_splice(&busy, &s->memcg_params.list);
+ 
+@@ -694,8 +717,7 @@ static int shutdown_memcg_caches(struct kmem_cache *s,
+ 	return 0;
+ }
+ #else
+-static inline int shutdown_memcg_caches(struct kmem_cache *s,
+-		struct list_head *release, bool *need_rcu_barrier)
++static inline int shutdown_memcg_caches(struct kmem_cache *s)
+ {
+ 	return 0;
+ }
+@@ -711,8 +733,6 @@ void slab_kmem_cache_release(struct kmem_cache *s)
+ 
+ void kmem_cache_destroy(struct kmem_cache *s)
+ {
+-	LIST_HEAD(release);
+-	bool need_rcu_barrier = false;
+ 	int err;
+ 
+ 	if (unlikely(!s))
+@@ -728,9 +748,9 @@ void kmem_cache_destroy(struct kmem_cache *s)
+ 	if (s->refcount)
+ 		goto out_unlock;
+ 
+-	err = shutdown_memcg_caches(s, &release, &need_rcu_barrier);
++	err = shutdown_memcg_caches(s);
+ 	if (!err)
+-		err = shutdown_cache(s, &release, &need_rcu_barrier);
++		err = shutdown_cache(s);
+ 
+ 	if (err) {
+ 		pr_err("kmem_cache_destroy %s: Slab cache still has objects\n",
+@@ -742,8 +762,6 @@ void kmem_cache_destroy(struct kmem_cache *s)
+ 
+ 	put_online_mems();
+ 	put_online_cpus();
+-
+-	release_caches(&release, need_rcu_barrier);
+ }
+ EXPORT_SYMBOL(kmem_cache_destroy);
  
 -- 
 2.9.3
