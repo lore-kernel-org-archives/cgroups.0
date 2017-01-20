@@ -1,139 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH cgroup/for-4.11] cgroup: drop the matching uid requirement on
- migration for cgroup v2
-Date: Fri, 20 Jan 2017 11:29:54 -0500
-Message-ID: <20170120162954.GA30978@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.11] cgroup: misc cleanups
+Date: Fri, 20 Jan 2017 12:06:08 -0500
+Message-ID: <20170120170608.GB5093@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:mime-version
          :content-disposition:user-agent;
-        bh=B0t/H9q29FfuA6RvuN3c2C3chmC4DBuXE2MdDJ7Njs0=;
-        b=Sx4Xxl8uUhO8NITOdt9U9JVRvNwiQDpdQ52TyammmL8/G/7bswRpBsD/w0nvH2EPMr
-         fVGwQjA2HMLqqBdKU6FlsDSE4ExJmzPfR7DkmV+ncj+v+lYixq8u9AMDCrhBO0N/2/dw
-         n0Tu3x4fhOlhOMtrvBsBdL7nh3R5eMQEJyLzQqzJZ1xylyINtcvRHJe3hOcIYa6BjL2Q
-         nuNL33yLD8BC/DQnjm0WprgE/lhYXMD8dsMcs9NkZWWaZRfuEBpqkTDcr5CAE4/Kgc63
-         zUXlfTfHFWWXz1woNTFbPER84LAQv1LglZjHM+sASP5/lsZ21yqyGzTMXs3UK4hpR3mV
-         KRpA==
+        bh=Gw/+U8Z7v2NljuQCX0V8xbM7lPAk6Snv/aJ6UtpzFcM=;
+        b=Nhp99riHqMDDBUkUIFoXfjnWiTJ585DW9zoeeodVAeRPzHmylR936aC5lB7vcFlEU9
+         UM+Hjyf1t5hl4gPhZZtinYNZlxwwuOlXSjVgkuGs7ASmFJCh5S+uGSLBDuh2gfarVhDz
+         dMiBiMQBMiUVTi4VB++gztyT+d+d6FsGb+LLUgJUnN3mvy8X0C4OQciNruodMLJg0bb7
+         +OkpewyWp/acVC/Z/+sAcDtG9zc7GpppNuIkiPFEREX1CzFOu7gsP3PMh3Cx0J/kyqQv
+         GTT+SOLAGXL9lnk05EyDJ1fx3CY4yZIJ3LWDz3EbG1bxey0Dn2Ibb0xiVZSi+5lDGpXa
+         6sHQ==
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Along with the write access to the cgroup.procs or tasks file, cgroup
-has required the writer's euid, unless root, to match [s]uid of the
-target process or task.  On cgroup v1, this is necessary because
-there's nothing preventing a delegatee from pulling in tasks or
-processes from all over the system.
+* cgrp_dfl_implicit_ss_mask is ulong instead of u16 unlike other
+  ss_masks.  Make it a u16.
 
-If a user has a cgroup subdirectory delegated to it, the user would
-have write access to the cgroup.procs or tasks file.  If there are no
-further checks than file write access check, the user would be able to
-pull processes from all over the system into its subhierarchy which is
-clearly not the intended behavior.  The matching [s]uid requirement
-partially prevents this problem by allowing a delegatee to pull in the
-processes that belongs to it.  This isn't a sufficient protection
-however, because a user would still be able to jump processes across
-two disjoint sub-hierarchies that has been delegated to them.
+* Move have_canfork_callback together with other callback ss_masks.
 
-cgroup v2 resolves the issue by requiring the writer to have access to
-the common ancestor of the cgroup.procs file of the source and target
-cgroups.  This confines each delegatee to their own sub-hierarchy
-proper and bases all permission decisions on the cgroup filesystem
-rather than having to pull in explicit uid matching.
-
-cgroup v2 has still been applying the matching [s]uid requirement just
-for historical reasons.  On cgroup2, the requirement doesn't serve any
-purpose while unnecessarily complicating the permission model.  Let's
-drop it.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- Documentation/cgroup-v2.txt |   12 +++++-------
- kernel/cgroup/cgroup.c      |   27 ++++++++++++++-------------
- 2 files changed, 19 insertions(+), 20 deletions(-)
+ kernel/cgroup/cgroup.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -330,14 +330,12 @@ a process with a non-root euid to migrat
- cgroup by writing its PID to the "cgroup.procs" file, the following
- conditions must be met.
- 
--- The writer's euid must match either uid or suid of the target process.
--
- - The writer must have write access to the "cgroup.procs" file.
- 
- - The writer must have write access to the "cgroup.procs" file of the
-   common ancestor of the source and destination cgroups.
- 
--The above three constraints ensure that while a delegatee may migrate
-+The above two constraints ensure that while a delegatee may migrate
- processes around freely in the delegated sub-hierarchy it can't pull
- in from or push out to outside the sub-hierarchy.
- 
-@@ -352,10 +350,10 @@ all processes under C0 and C1 belong to
- 
- Let's also say U0 wants to write the PID of a process which is
- currently in C10 into "C00/cgroup.procs".  U0 has write access to the
--file and uid match on the process; however, the common ancestor of the
--source cgroup C10 and the destination cgroup C00 is above the points
--of delegation and U0 would not have write access to its "cgroup.procs"
--files and thus the write will be denied with -EACCES.
-+file; however, the common ancestor of the source cgroup C10 and the
-+destination cgroup C00 is above the points of delegation and U0 would
-+not have write access to its "cgroup.procs" files and thus the write
-+will be denied with -EACCES.
- 
- 
- 2-6. Guidelines
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -2352,20 +2352,9 @@ static int cgroup_procs_write_permission
- 					 struct cgroup *dst_cgrp,
- 					 struct kernfs_open_file *of)
- {
--	const struct cred *cred = current_cred();
--	const struct cred *tcred = get_task_cred(task);
- 	int ret = 0;
+@@ -159,7 +159,7 @@ static bool cgrp_dfl_visible;
+ static u16 cgrp_dfl_inhibit_ss_mask;
  
--	/*
--	 * even if we're attaching all tasks in the thread group, we only
--	 * need to check permissions on one of them.
--	 */
--	if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
--	    !uid_eq(cred->euid, tcred->uid) &&
--	    !uid_eq(cred->euid, tcred->suid))
--		ret = -EACCES;
+ /* some controllers are implicitly enabled on the default hierarchy */
+-static unsigned long cgrp_dfl_implicit_ss_mask;
++static u16 cgrp_dfl_implicit_ss_mask;
+ 
+ /* The list of hierarchy roots */
+ LIST_HEAD(cgroup_roots);
+@@ -178,13 +178,13 @@ static DEFINE_IDR(cgroup_hierarchy_idr);
+ static u64 css_serial_nr_next = 1;
+ 
+ /*
+- * These bitmask flags indicate whether tasks in the fork and exit paths have
+- * fork/exit handlers to call. This avoids us having to do extra work in the
+- * fork/exit path to check which subsystems have fork/exit callbacks.
++ * These bitmasks identify subsystems with specific features to avoid
++ * having to do iterative checks repeatedly.
+  */
+ static u16 have_fork_callback __read_mostly;
+ static u16 have_exit_callback __read_mostly;
+ static u16 have_free_callback __read_mostly;
++static u16 have_canfork_callback __read_mostly;
+ 
+ /* cgroup namespace for init task */
+ struct cgroup_namespace init_cgroup_ns = {
+@@ -195,9 +195,6 @@ struct cgroup_namespace init_cgroup_ns =
+ 	.root_cset	= &init_css_set,
+ };
+ 
+-/* Ditto for the can_fork callback. */
+-static u16 have_canfork_callback __read_mostly;
 -
--	if (!ret && cgroup_on_dfl(dst_cgrp)) {
-+	if (cgroup_on_dfl(dst_cgrp)) {
- 		struct super_block *sb = of->file->f_path.dentry->d_sb;
- 		struct cgroup *cgrp;
- 		struct inode *inode;
-@@ -2383,9 +2372,21 @@ static int cgroup_procs_write_permission
- 			ret = inode_permission(inode, MAY_WRITE);
- 			iput(inode);
- 		}
-+	} else {
-+		const struct cred *cred = current_cred();
-+		const struct cred *tcred = get_task_cred(task);
-+
-+		/*
-+		 * even if we're attaching all tasks in the thread group,
-+		 * we only need to check permissions on one of them.
-+		 */
-+		if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
-+		    !uid_eq(cred->euid, tcred->uid) &&
-+		    !uid_eq(cred->euid, tcred->suid))
-+			ret = -EACCES;
-+		put_cred(tcred);
- 	}
- 
--	put_cred(tcred);
- 	return ret;
- }
+ static struct file_system_type cgroup2_fs_type;
+ static struct cftype cgroup_base_files[];
  
