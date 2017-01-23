@@ -1,7 +1,7 @@
 From: Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Subject: Re: questions about cgroup devices
-Date: Mon, 23 Jan 2017 15:51:52 +0800
-Message-ID: <d55afb9b-5f20-0f82-027b-d83947980879@cn.fujitsu.com>
+Date: Mon, 23 Jan 2017 15:58:45 +0800
+Message-ID: <86ec1bca-c070-106e-21e1-27b2f3b23f25@cn.fujitsu.com>
 References: <d28bc963-4936-6574-c606-d2b0c475f0c9@cn.fujitsu.com>
  <5885B245.2030901@huawei.com>
 Mime-Version: 1.0
@@ -13,25 +13,19 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+Hi Li,
+
 On 01/23/2017 03:35 PM, Zefan Li wrote:
 > It's not a bug. It's a feature introduced by commit ad676077a2ae4af4bb.
-
-Oh, got it.
 > That said, I don't like this feature at all, because it's very confusing,
 > and obviously you are confused.
 
-Yes, I am really confused about this.
+I have another question.
+If devices.list does not react my settings,
+how to easily find out I have made the right setting for cgroup devices?
+For example, what has been allowed and what has been denied in cgroup devices.
 
-And, another problem is I can't allow/deny all devices.
-
-# echo a > /sys/fs/cgroup/devices/test/devices.deny 
--bash: echo: write error: Invalid argument
-# echo a > /sys/fs/cgroup/devices/test/devices.allow
--bash: echo: write error: Invalid argument
-
-Is this also a new feature?
-
-
+Thanks,
 -- 
 Ma Shimiao
 Development Dept.I
