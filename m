@@ -1,140 +1,101 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 02/10] slub: separate out sysfs_slab_release() from
- sysfs_slab_remove()
-Date: Mon, 23 Jan 2017 17:54:49 -0500
-Message-ID: <20170123225449.GA29940@htj.duckdns.org>
-References: <20170117235411.9408-1-tj@kernel.org>
- <20170117235411.9408-3-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-4.10-fixes] cgroup: don't online subsystems before
+ cgroup_name/path() are operational
+Date: Thu, 26 Jan 2017 16:50:31 -0500
+Message-ID: <20170126215031.GD32152@htj.duckdns.org>
+References: <148542370148.63697.501199781041713381.stgit@buzz>
+ <148542370808.63697.11031298116868200840.stgit@buzz>
+ <20170126193754.GC32152@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=0yVbFaUJ20sO+1idCY57TlRfs+ax7E0zV/z2INNnT6I=;
-        b=j4cQS5E0bUI8E+gYYtqHqgxbLsumAlKf/LIvW8FG7Y/zK0tHtm4w+ARGwyfxm02XUN
-         30aRwqc3537zXOIK+Q4fTvVEsxLPtZVIGQFTxceNXpAiMFDOtRPSiPS1c+MOu2KgBsZA
-         Xuvuueln/ZyBM9lEgz1tqpBCNZIxUnQ8Us9ekGMLyD2ahhLNVU28CQx709cM+48D7K95
-         R4ThW4wY5LX1lIWz7Cv3AZVfM8Lnaic4VrTPoCEn+lpbRkCXs6FnRPw5uAb7CmZR6P40
-         7DFh0gZzqOWXn0QvCIRAn4nxUbCR1b8d1AA8ED297UHDgxqD4HZMEiPOtugxgjWkBqyZ
-         DulQ==
+        bh=MnjzTAVnchYd6QeQatLAnqZrofby/dWHBfs5wLZ1nUg=;
+        b=NIWdaWuhfazSovF1KhQLSZKcP4LPk+xIAXZBVF235ZkSLnRmqCfkMxZ2hrm9FoUsVz
+         UPbjxR57aOV4iW4pKpCWS/b+xGkZUQUSb+xqnDbMxbWlQbGxVBXxl3Vz0w+ynJF8h+Tz
+         5VSRvEZQNUhfErfiSXDL7l0ScHXA0EWg+UfY4u7hJiD6+TDu/5HPmKAmKh+2YqdlWBy9
+         x73V8zvVy31Fmtu3ehH2jyp6L9yw6vl5dR0cxkFEuvBKLxICpP2ctEPRnU3tB8dPUxAg
+         RG1WTGVzs1eLKQKGbg5xPayRGNN4liEGT7zQIe++9qAimMJKnrh3d5Cj4R9nhiAbK0gy
+         ud7Q==
 Content-Disposition: inline
-In-Reply-To: <20170117235411.9408-3-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170126193754.GC32152@htj.duckdns.org>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: jsvana-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, kernel-team@fb.com
 
-From 3b0cdd93b2d9bdea62ea6681e612bdae7a40d883 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Mon, 23 Jan 2017 17:53:18 -0500
+From 07cd12945551b63ecb1a349d50a6d69d1d6feb4a Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Thu, 26 Jan 2017 16:47:28 -0500
 
-Separate out slub sysfs removal and release, and call the former
-earlier from __kmem_cache_shutdown().  There's no reason to defer
-sysfs removal through RCU and this will later allow us to remove sysfs
-files way earlier during memory cgroup offline instead of release.
+While refactoring cgroup creation, a5bca2152036 ("cgroup: factor out
+cgroup_create() out of cgroup_mkdir()") incorrectly onlined subsystems
+before the new cgroup is associated with it kernfs_node.  This is fine
+for cgroup proper but cgroup_name/path() depend on the associated
+kernfs_node and if a subsystem makes the new cgroup_subsys_state
+visible, which they're allowed to after onlining, it can lead to NULL
+dereference.
 
-v2: Add slab_state >= FULL test to sysfs_slab_release() so that
-    kobject_put() is skipped for caches which aren't fully initialized
-    as before.  This most likely leaks the kmem_cache on init failure
-    as we're skipping the only release path.  Let's fix that up later.
+The current code performs cgroup creation and subsystem onlining in
+cgroup_create() and cgroup_mkdir() makes the cgroup and subsystems
+visible afterwards.  There's no reason to online the subsystems early
+and we can simply drop cgroup_apply_control_enable() call from
+cgroup_create() so that the subsystems are onlined and made visible at
+the same time.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Fixes: a5bca2152036 ("cgroup: factor out cgroup_create() out of cgroup_mkdir()")
+Cc: stable@vger.kernel.org # v4.6+
 ---
-v2 of the patch.  Fixes boot failure reported by the test bot.
+Applied to cgroup/for-4.10-fixes.
 
 Thanks.
 
- include/linux/slub_def.h |  4 ++--
- mm/slab_common.c         |  2 +-
- mm/slub.c                | 12 ++++++++++--
- 3 files changed, 13 insertions(+), 5 deletions(-)
+ kernel/cgroup.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-index 75f56c2..07ef550 100644
---- a/include/linux/slub_def.h
-+++ b/include/linux/slub_def.h
-@@ -113,9 +113,9 @@ struct kmem_cache {
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2ee9ec3..688dd02 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5221,6 +5221,11 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+ 	return ERR_PTR(err);
+ }
  
- #ifdef CONFIG_SYSFS
- #define SLAB_SUPPORTS_SYSFS
--void sysfs_slab_remove(struct kmem_cache *);
-+void sysfs_slab_release(struct kmem_cache *);
- #else
--static inline void sysfs_slab_remove(struct kmem_cache *s)
-+static inline void sysfs_slab_release(struct kmem_cache *s)
++/*
++ * The returned cgroup is fully initialized including its control mask, but
++ * it isn't associated with its kernfs_node and doesn't have the control
++ * mask applied.
++ */
+ static struct cgroup *cgroup_create(struct cgroup *parent)
  {
- }
- #endif
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 46ff746..3bc4bb8 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -480,7 +480,7 @@ static void release_caches(struct list_head *release, bool need_rcu_barrier)
+ 	struct cgroup_root *root = parent->root;
+@@ -5288,11 +5293,6 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
  
- 	list_for_each_entry_safe(s, s2, release, list) {
- #ifdef SLAB_SUPPORTS_SYSFS
--		sysfs_slab_remove(s);
-+		sysfs_slab_release(s);
- #else
- 		slab_kmem_cache_release(s);
- #endif
-diff --git a/mm/slub.c b/mm/slub.c
-index 68b84f9..59ca718 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -214,11 +214,13 @@ enum track_item { TRACK_ALLOC, TRACK_FREE };
- static int sysfs_slab_add(struct kmem_cache *);
- static int sysfs_slab_alias(struct kmem_cache *, const char *);
- static void memcg_propagate_slab_attrs(struct kmem_cache *s);
-+static void sysfs_slab_remove(struct kmem_cache *s);
- #else
- static inline int sysfs_slab_add(struct kmem_cache *s) { return 0; }
- static inline int sysfs_slab_alias(struct kmem_cache *s, const char *p)
- 							{ return 0; }
- static inline void memcg_propagate_slab_attrs(struct kmem_cache *s) { }
-+static inline void sysfs_slab_remove(struct kmem_cache *s) { }
- #endif
+ 	cgroup_propagate_control(cgrp);
  
- static inline void stat(const struct kmem_cache *s, enum stat_item si)
-@@ -3679,6 +3681,7 @@ int __kmem_cache_shutdown(struct kmem_cache *s)
- 		if (n->nr_partial || slabs_node(s, node))
- 			return 1;
- 	}
-+	sysfs_slab_remove(s);
- 	return 0;
+-	/* @cgrp doesn't have dir yet so the following will only create csses */
+-	ret = cgroup_apply_control_enable(cgrp);
+-	if (ret)
+-		goto out_destroy;
+-
+ 	return cgrp;
+ 
+ out_cancel_ref:
+@@ -5300,9 +5300,6 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ out_free_cgrp:
+ 	kfree(cgrp);
+ 	return ERR_PTR(ret);
+-out_destroy:
+-	cgroup_destroy_locked(cgrp);
+-	return ERR_PTR(ret);
  }
  
-@@ -5629,7 +5632,7 @@ static int sysfs_slab_add(struct kmem_cache *s)
- 	goto out;
- }
- 
--void sysfs_slab_remove(struct kmem_cache *s)
-+static void sysfs_slab_remove(struct kmem_cache *s)
- {
- 	if (slab_state < FULL)
- 		/*
-@@ -5643,7 +5646,12 @@ void sysfs_slab_remove(struct kmem_cache *s)
- #endif
- 	kobject_uevent(&s->kobj, KOBJ_REMOVE);
- 	kobject_del(&s->kobj);
--	kobject_put(&s->kobj);
-+}
-+
-+void sysfs_slab_release(struct kmem_cache *s)
-+{
-+	if (slab_state >= FULL)
-+		kobject_put(&s->kobj);
- }
- 
- /*
+ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
 -- 
 2.9.3
