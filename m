@@ -1,101 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH cgroup/for-4.10-fixes] cgroup: don't online subsystems before
- cgroup_name/path() are operational
-Date: Thu, 26 Jan 2017 16:50:31 -0500
-Message-ID: <20170126215031.GD32152@htj.duckdns.org>
-References: <148542370148.63697.501199781041713381.stgit@buzz>
- <148542370808.63697.11031298116868200840.stgit@buzz>
- <20170126193754.GC32152@htj.duckdns.org>
+From: Vladimir Davydov <vdavydov@tarantool.org>
+Subject: Re: [PATCH v2 02/10] slub: separate out sysfs_slab_release() from
+ sysfs_slab_remove()
+Date: Fri, 27 Jan 2017 21:00:12 +0300
+Message-ID: <20170127180012.GA4332@esperanza>
+References: <20170117235411.9408-1-tj@kernel.org>
+ <20170117235411.9408-3-tj@kernel.org>
+ <20170123225449.GA29940@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MnjzTAVnchYd6QeQatLAnqZrofby/dWHBfs5wLZ1nUg=;
-        b=NIWdaWuhfazSovF1KhQLSZKcP4LPk+xIAXZBVF235ZkSLnRmqCfkMxZ2hrm9FoUsVz
-         UPbjxR57aOV4iW4pKpCWS/b+xGkZUQUSb+xqnDbMxbWlQbGxVBXxl3Vz0w+ynJF8h+Tz
-         5VSRvEZQNUhfErfiSXDL7l0ScHXA0EWg+UfY4u7hJiD6+TDu/5HPmKAmKh+2YqdlWBy9
-         x73V8zvVy31Fmtu3ehH2jyp6L9yw6vl5dR0cxkFEuvBKLxICpP2ctEPRnU3tB8dPUxAg
-         RG1WTGVzs1eLKQKGbg5xPayRGNN4liEGT7zQIe++9qAimMJKnrh3d5Cj4R9nhiAbK0gy
-         ud7Q==
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=tarantool.org; s=mailru;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=enjoeUK4hIR5fR0rkHPM3I7z2diat6hkZtcLphIRTUs=;
+	b=bBm1BW/AjY5x2XqmbTWWTipMsasOHTGdSBiNOPRq9fw36k+tgTR2yYLHeWfKewKUINzzlNXVhY4M0tD9y1UnCjoNZ7w23RV/G6KUTzPHkKWHShazM7Kk9OKKRMZWqZ/Whq7n3zSHCg7k1mz1Eesxj5kQJt1kfDHw7wZ3h3KwOT4=;
 Content-Disposition: inline
-In-Reply-To: <20170126193754.GC32152@htj.duckdns.org>
-Sender: stable-owner@vger.kernel.org
+In-Reply-To: <20170123225449.GA29940@htj.duckdns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org, jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-From 07cd12945551b63ecb1a349d50a6d69d1d6feb4a Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Thu, 26 Jan 2017 16:47:28 -0500
+On Mon, Jan 23, 2017 at 05:54:49PM -0500, Tejun Heo wrote:
+> From 3b0cdd93b2d9bdea62ea6681e612bdae7a40d883 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj@kernel.org>
+> Date: Mon, 23 Jan 2017 17:53:18 -0500
+> 
+> Separate out slub sysfs removal and release, and call the former
+> earlier from __kmem_cache_shutdown().  There's no reason to defer
+> sysfs removal through RCU and this will later allow us to remove sysfs
+> files way earlier during memory cgroup offline instead of release.
+> 
+> v2: Add slab_state >= FULL test to sysfs_slab_release() so that
+>     kobject_put() is skipped for caches which aren't fully initialized
+>     as before.  This most likely leaks the kmem_cache on init failure
+>     as we're skipping the only release path.  Let's fix that up later.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Christoph Lameter <cl@linux.com>
+> Cc: Pekka Enberg <penberg@kernel.org>
+> Cc: David Rientjes <rientjes@google.com>
+> Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
 
-While refactoring cgroup creation, a5bca2152036 ("cgroup: factor out
-cgroup_create() out of cgroup_mkdir()") incorrectly onlined subsystems
-before the new cgroup is associated with it kernfs_node.  This is fine
-for cgroup proper but cgroup_name/path() depend on the associated
-kernfs_node and if a subsystem makes the new cgroup_subsys_state
-visible, which they're allowed to after onlining, it can lead to NULL
-dereference.
+Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
 
-The current code performs cgroup creation and subsystem onlining in
-cgroup_create() and cgroup_mkdir() makes the cgroup and subsystems
-visible afterwards.  There's no reason to online the subsystems early
-and we can simply drop cgroup_apply_control_enable() call from
-cgroup_create() so that the subsystems are onlined and made visible at
-the same time.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Fixes: a5bca2152036 ("cgroup: factor out cgroup_create() out of cgroup_mkdir()")
-Cc: stable@vger.kernel.org # v4.6+
----
-Applied to cgroup/for-4.10-fixes.
-
-Thanks.
-
- kernel/cgroup.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 2ee9ec3..688dd02 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -5221,6 +5221,11 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
- 	return ERR_PTR(err);
- }
- 
-+/*
-+ * The returned cgroup is fully initialized including its control mask, but
-+ * it isn't associated with its kernfs_node and doesn't have the control
-+ * mask applied.
-+ */
- static struct cgroup *cgroup_create(struct cgroup *parent)
- {
- 	struct cgroup_root *root = parent->root;
-@@ -5288,11 +5293,6 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 
- 	cgroup_propagate_control(cgrp);
- 
--	/* @cgrp doesn't have dir yet so the following will only create csses */
--	ret = cgroup_apply_control_enable(cgrp);
--	if (ret)
--		goto out_destroy;
--
- 	return cgrp;
- 
- out_cancel_ref:
-@@ -5300,9 +5300,6 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- out_free_cgrp:
- 	kfree(cgrp);
- 	return ERR_PTR(ret);
--out_destroy:
--	cgroup_destroy_locked(cgrp);
--	return ERR_PTR(ret);
- }
- 
- static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
--- 
-2.9.3
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
