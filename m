@@ -1,50 +1,169 @@
-From: Vladimir Davydov <vdavydov@tarantool.org>
-Subject: Re: [PATCH 10/10] slab: use memcg_kmem_cache_wq for slab destruction
- operations
-Date: Sun, 29 Jan 2017 19:04:17 +0300
-Message-ID: <20170129160416.GA1795@esperanza>
-References: <20170117235411.9408-1-tj@kernel.org>
- <20170117235411.9408-11-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH REPOST 2/2] cgroup, perf_event: make perf_event controller
+ work on cgroup2 hierarchy
+Date: Sun, 29 Jan 2017 14:35:20 -0500
+Message-ID: <20170129193520.GA18336@mtj.duckdns.org>
+References: <1456351975-1899-1-git-send-email-tj@kernel.org>
+ <1456351975-1899-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=tarantool.org; s=mailru;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=IuVp4Lj06LEEpwKsq8E2ivZbWEhtyxGnndLW0TVDhT8=;
-	b=tF84qeTa06R+1U07WDt5z4zmXuDaJ6Fe+rGK5ZLcE73t37VdwhAJlTL7kFLXi4BzjDRR/HQC92+zM6qaRJc2qc8ctLEMDsCPti075CNZN5e3MZ6UVr1jUctFmwjlXivsFtFebZVqaFYrfRvl/biMHbJ3g+jw4ghGX3UEaR6D6EM=;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=2luogTptRqcgql2je1HgNu8xAyfRenUHvDEXWje3Yy4=;
+        b=pIeLJJcdANjJfxlOeHpnYrEmESHxm0PbR0XznweQPbiLMWeV85OMuvdFkByCuTKy1B
+         JsJD+jJACqPAsDkW4vSSRUl8XhAY5sQ2sn8E6QIfhacJSTfJGr1C+x9rSAxV4qztb0pA
+         dSSeXmGh1vQx5GmtXfEYY2xsjOHKMj05h2gd0cGHgZealh+tEoCzMFWRfo3kT69gNyqL
+         p6EwtIkbsxnJcAlYrw91sGDQB6dsEuVd5DhzcbJisSsoA+lI/bqe6luzgG69dIP7TP7y
+         h6id2VBSqNyZnx1/yMugRml8/JPyQhxi/s3+dAb7124xtZPdaLesvuwmzB45TaE1B/fc
+         WNgQ==
 Content-Disposition: inline
-In-Reply-To: <20170117235411.9408-11-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1456351975-1899-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org, jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Jan 17, 2017 at 03:54:11PM -0800, Tejun Heo wrote:
-> If there's contention on slab_mutex, queueing the per-cache
-> destruction work item on the system_wq can unnecessarily create and
-> tie up a lot of kworkers.
-> 
-> Rename memcg_kmem_cache_create_wq to memcg_kmem_cache_wq and make it
-> global and use that workqueue for the destruction work items too.
-> While at it, convert the workqueue from an unbound workqueue to a
-> per-cpu one with concurrency limited to 1.  It's generally preferable
-> to use per-cpu workqueues and concurrency limit of 1 is safe enough.
-> 
-> This is suggested by Joonsoo Kim.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Jay Vana <jsvana@fb.com>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Christoph Lameter <cl@linux.com>
-> Cc: Pekka Enberg <penberg@kernel.org>
-> Cc: David Rientjes <rientjes@google.com>
-> Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
+perf_event is a utility controller whose primary role is identifying
+cgroup membership to filter perf events; however, because it also
+tracks some per-css state, it can't be replaced by pure cgroup
+membership test.  Mark the controller as implicitly enabled on the
+default hierarchy so that perf events can always be filtered based on
+cgroup v2 path as long as the controller is not mounted on a legacy
+hierarchy.
 
-Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
+"perf record" is updated accordingly so that it searches for both v1
+and v2 hierarchies.  A v1 hierarchy is used if perf_event is mounted
+on it; otherwise, it uses the v2 hierarchy.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+v2: Doc updated to reflect more flexible rebinding behavior.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+Hello,
+
+This was posted months ago and acked by Peter.  I thought it was
+applied but apparently wasn't.  Peter asked Arnaldo whether the
+userspace part looked which didn't get replied and that probably was
+how it slipped through the crack.
+
+Peter, Arnanldo, how should we proceed?  Should I route this through
+the cgroup tree?
+
+Thanks.
+
+ Documentation/cgroup-v2.txt |   12 ++++++++++++
+ kernel/events/core.c        |    6 ++++++
+ tools/perf/util/cgroup.c    |   26 +++++++++++++++++++-------
+ 3 files changed, 37 insertions(+), 7 deletions(-)
+
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -49,6 +49,8 @@ CONTENTS
+     5-3-2. Writeback
+   5-4. PID
+     5-4-1. PID Interface Files
++  5-5. Misc
++    5-5-1. perf_event
+ 6. Namespace
+   6-1. Basics
+   6-2. The Root and Views
+@@ -1160,6 +1162,16 @@ through fork() or clone(). These will re
+ of a new process would cause a cgroup policy to be violated.
+ 
+ 
++5-5. Misc
++
++5-5-1. perf_event
++
++perf_event controller, if not mounted on a legacy hierarchy, is
++automatically enabled on the v2 hierarchy so that perf events can
++always be filtered by cgroup v2 path.  The controller can still be
++moved to a legacy hierarchy after v2 hierarchy is populated.
++
++
+ 6. Namespace
+ 
+ 6-1. Basics
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -10792,5 +10792,11 @@ struct cgroup_subsys perf_event_cgrp_sub
+ 	.css_alloc	= perf_cgroup_css_alloc,
+ 	.css_free	= perf_cgroup_css_free,
+ 	.attach		= perf_cgroup_attach,
++	/*
++	 * Implicitly enable on dfl hierarchy so that perf events can
++	 * always be filtered by cgroup2 path as long as perf_event
++	 * controller is not mounted on a legacy hierarchy.
++	 */
++	.implicit_on_dfl = true,
+ };
+ #endif /* CONFIG_CGROUP_PERF */
+--- a/tools/perf/util/cgroup.c
++++ b/tools/perf/util/cgroup.c
+@@ -12,8 +12,8 @@ cgroupfs_find_mountpoint(char *buf, size
+ {
+ 	FILE *fp;
+ 	char mountpoint[PATH_MAX + 1], tokens[PATH_MAX + 1], type[PATH_MAX + 1];
++	char path_v1[PATH_MAX + 1], path_v2[PATH_MAX + 2], *path;
+ 	char *token, *saved_ptr = NULL;
+-	int found = 0;
+ 
+ 	fp = fopen("/proc/mounts", "r");
+ 	if (!fp)
+@@ -24,31 +24,43 @@ cgroupfs_find_mountpoint(char *buf, size
+ 	 * and inspect every cgroupfs mount point to find one that has
+ 	 * perf_event subsystem
+ 	 */
++	path_v1[0] = '\0';
++	path_v2[0] = '\0';
++
+ 	while (fscanf(fp, "%*s %"STR(PATH_MAX)"s %"STR(PATH_MAX)"s %"
+ 				STR(PATH_MAX)"s %*d %*d\n",
+ 				mountpoint, type, tokens) == 3) {
+ 
+-		if (!strcmp(type, "cgroup")) {
++		if (!path_v1[0] && !strcmp(type, "cgroup")) {
+ 
+ 			token = strtok_r(tokens, ",", &saved_ptr);
+ 
+ 			while (token != NULL) {
+ 				if (!strcmp(token, "perf_event")) {
+-					found = 1;
++					strcpy(path_v1, mountpoint);
+ 					break;
+ 				}
+ 				token = strtok_r(NULL, ",", &saved_ptr);
+ 			}
+ 		}
+-		if (found)
++
++		if (!path_v2[0] && !strcmp(type, "cgroup2"))
++			strcpy(path_v2, mountpoint);
++
++		if (path_v1[0] && path_v2[0])
+ 			break;
+ 	}
+ 	fclose(fp);
+-	if (!found)
++
++	if (path_v1[0])
++		path = path_v1;
++	else if (path_v2[0])
++		path = path_v2;
++	else
+ 		return -1;
+ 
+-	if (strlen(mountpoint) < maxlen) {
+-		strcpy(buf, mountpoint);
++	if (strlen(path) < maxlen) {
++		strcpy(buf, path);
+ 		return 0;
+ 	}
+ 	return -1;
