@@ -1,16 +1,17 @@
 From: Vladimir Davydov <vdavydov@tarantool.org>
-Subject: Re: [PATCH 06/10] slab: implement slab_root_caches list
-Date: Fri, 27 Jan 2017 21:06:56 +0300
-Message-ID: <20170127180656.GC4332@esperanza>
+Subject: Re: [PATCH 10/10] slab: use memcg_kmem_cache_wq for slab destruction
+ operations
+Date: Sun, 29 Jan 2017 19:04:17 +0300
+Message-ID: <20170129160416.GA1795@esperanza>
 References: <20170117235411.9408-1-tj@kernel.org>
- <20170117235411.9408-7-tj@kernel.org>
+ <20170117235411.9408-11-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=tarantool.org; s=mailru;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=03CbqwjJAUzysCiREO0x2uujSUb2xohJBc5RYqHokOU=;
-	b=T0Fnnqr4r8UAJRPX3+huZjCDHW4HQ4K/+duBbETj7jeP33S7Mquwlsd6amK5mJiLWtN+4+MzZn35YfM2wkVyejfP3V7s7s3tpkfC0/A2DlBH7NZuDihCVGfVg1YNzCx4WMck++jOro+0x+CMRN016uOL0RCtmke+zSAKZqaB0Zo=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=IuVp4Lj06LEEpwKsq8E2ivZbWEhtyxGnndLW0TVDhT8=;
+	b=tF84qeTa06R+1U07WDt5z4zmXuDaJ6Fe+rGK5ZLcE73t37VdwhAJlTL7kFLXi4BzjDRR/HQC92+zM6qaRJc2qc8ctLEMDsCPti075CNZN5e3MZ6UVr1jUctFmwjlXivsFtFebZVqaFYrfRvl/biMHbJ3g+jw4ghGX3UEaR6D6EM=;
 Content-Disposition: inline
-In-Reply-To: <20170117235411.9408-7-tj@kernel.org>
+In-Reply-To: <20170117235411.9408-11-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -18,32 +19,18 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
 Cc: cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org, jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Jan 17, 2017 at 03:54:07PM -0800, Tejun Heo wrote:
-> With kmem cgroup support enabled, kmem_caches can be created and
-> destroyed frequently and a great number of near empty kmem_caches can
-> accumulate if there are a lot of transient cgroups and the system is
-> not under memory pressure.  When memory reclaim starts under such
-> conditions, it can lead to consecutive deactivation and destruction of
-> many kmem_caches, easily hundreds of thousands on moderately large
-> systems, exposing scalability issues in the current slab management
-> code.  This is one of the patches to address the issue.
+On Tue, Jan 17, 2017 at 03:54:11PM -0800, Tejun Heo wrote:
+> If there's contention on slab_mutex, queueing the per-cache
+> destruction work item on the system_wq can unnecessarily create and
+> tie up a lot of kworkers.
 > 
-> slab_caches currently lists all caches including root and memcg ones.
-> This is the only data structure which lists the root caches and
-> iterating root caches can only be done by walking the list while
-> skipping over memcg caches.  As there can be a huge number of memcg
-> caches, this can become very expensive.
+> Rename memcg_kmem_cache_create_wq to memcg_kmem_cache_wq and make it
+> global and use that workqueue for the destruction work items too.
+> While at it, convert the workqueue from an unbound workqueue to a
+> per-cpu one with concurrency limited to 1.  It's generally preferable
+> to use per-cpu workqueues and concurrency limit of 1 is safe enough.
 > 
-> This also can make /proc/slabinfo behave very badly.  seq_file
-> processes reads in 4k chunks and seeks to the previous Nth position on
-> slab_caches list to resume after each chunk.  With a lot of memcg
-> cache churns on the list, reading /proc/slabinfo can become very slow
-> and its content often ends up with duplicate and/or missing entries.
-> 
-> This patch adds a new list slab_root_caches which lists only the root
-> caches.  When memcg is not enabled, it becomes just an alias of
-> slab_caches.  memcg specific list operations are collected into
-> memcg_[un]link_cache().
+> This is suggested by Joonsoo Kim.
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
 > Reported-by: Jay Vana <jsvana@fb.com>
@@ -54,7 +41,7 @@ On Tue, Jan 17, 2017 at 03:54:07PM -0800, Tejun Heo wrote:
 > Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
 > Cc: Andrew Morton <akpm@linux-foundation.org>
 
-Acked-by: Vladimir Davydov <vdavydov@tarantool.org>
+Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
