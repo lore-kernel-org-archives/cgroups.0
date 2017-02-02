@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/5] cgroup: implement CSS_TASK_ITER_THREADED
-Date: Thu,  2 Feb 2017 15:06:31 -0500
-Message-ID: <20170202200632.13992-5-tj@kernel.org>
+Subject: [PATCH 2/5] cgroup: add @flags to css_task_iter_start() and implement CSS_TASK_ITER_PROCS
+Date: Thu,  2 Feb 2017 15:06:29 -0500
+Message-ID: <20170202200632.13992-3-tj@kernel.org>
 References: <20170202200632.13992-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=p3lgnvKLV/zenp5a07dmJnLIx6988vi4UcX07y+dEEw=;
-        b=JzSuHuThXwK9i5PKeY9t72aGbaOc1zbKDp0OenqE8faAZcjw7ShhEH/n0qcPtahELg
-         vHxPeowzMvZhwfQts/5iZEtgOo7L/vXdCfDILzYsRFPa6IiMMc5TTdYf6eZIt4HZwV2i
-         X2MwGBK6NO6SG4Kz77kH/HejeL9HgWYPLEPD5+1hziwkSvq9AKvmSX/sEq/FmCxRZA95
-         NEB8nfViAbkV2v0bZmJrwbER73SlauCmuQBkSyHROW0Gvn+Hp+XbrrEMTI+IxXWE7w87
-         pNfVwGkd3McACLm2sYES4TZbgSotoA9PfnKrDnlNoBD/xrdSayP4nhLjUzKSjFav1hgM
-         ZzKw==
+        bh=gBrIR892sw4Al8wwIGvK//2yGy7xe4MH4I3HFADAZsE=;
+        b=B8zPE8ywGrmojxyCZBk1QtJVYmvN/yyQhp0CtGOIiqjZxzJ6oPBc9eNUDM/TQ3nrJW
+         0CytwA63XR3BugjgR2dTYoSJOB+CQudnwdWx7vNGF3Pf4QUWQu3Vz8ZDQKzzoWDsC5uD
+         0xLI2Qng3ogyPg8o72lQ37a7t5ADwtDFzAb55gyqP0H4kQfu5zhQYHbkePYor+0DXJtf
+         gvAKxweztNyY/mbLAh2e3/ZY7CtjVPTrS+N2i2aqu50Ks2xB371rU4Z4+BApLqDuTitV
+         IpcSwl2JCR4khOYhSiapTF9B6zAbfty4SQRmHWnLU62RReFbmqXDnBRjd0pM3MUJYV3R
+         Jp3w==
 In-Reply-To: <20170202200632.13992-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,196 +23,267 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lvenanci@redhat.com, Tejun Heo <tj@kernel.org>
 
-cgroup v2 is in the process of growing thread granularity support.
-Once thread mode is enabled, the root cgroup of the subtree serves as
-the proc_cgrp to which the processes of the subtree conceptually
-belong and domain-level resource consumptions not tied to any specific
-task are charged.  In the subtree, threads won't be subject to process
-granularity or no-internal-task constraint and can be distributed
-arbitrarily across the subtree.
+css_task_iter currently always walks all tasks.  With the scheduled
+cgroup v2 thread support, the iterator would need to handle multiple
+types of iteration.  As a preparation, add @flags to
+css_task_iter_start() and implement CSS_TASK_ITER_PROCS.  If the flag
+is not specified, it walks all tasks as before.  When asserted, the
+iterator only walks the group leaders.
 
-This patch implements a new task iterator flag CSS_TASK_ITER_THREADED,
-which, when used on a proc_cgrp, makes the iteration include the tasks
-on all the associated threaded css_sets.  "cgroup.procs" read path is
-updated to use it so that reading the file on a proc_cgrp lists all
-processes.  This will also be used by controller implementations which
-need to walk processes or tasks at the resource domain level.
+For now, the only user of the flag is cgroup v2 "cgroup.procs" file
+which no longer needs to skip non-leader tasks in cgroup_procs_next().
+Note that cgroup v1 "cgroup.procs" can't use the group leader walk as
+v1 "cgroup.procs" doesn't mean "list all thread group leaders in the
+cgroup" but "list all thread group id's with any threads in the
+cgroup".
 
-Task iteration is implemented nested in css_set iteration.  If
-CSS_TASK_ITER_THREADED is specified, after walking tasks of each
-!threaded css_set, all the associated threaded css_sets are visited
-before moving onto the next !threaded css_set.
+While at it, update cgroup_procs_show() to use task_pid_vnr() instead
+of task_tgid_vnr().  As the iteration guarantees that the function
+only sees group leaders, this doesn't change the output and will allow
+sharing the function for thread iteration.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup.h |  6 ++++
- kernel/cgroup/cgroup.c | 81 +++++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 73 insertions(+), 14 deletions(-)
+ include/linux/cgroup.h       |  6 +++++-
+ kernel/cgroup/cgroup-v1.c    |  6 +++---
+ kernel/cgroup/cgroup.c       | 24 ++++++++++++++----------
+ kernel/cgroup/cpuset.c       |  6 +++---
+ kernel/cgroup/freezer.c      |  6 +++---
+ mm/memcontrol.c              |  2 +-
+ net/core/netclassid_cgroup.c |  2 +-
+ 7 files changed, 30 insertions(+), 22 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 20f6057..cd0be87 100644
+index f6b43fb..20f6057 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -38,6 +38,8 @@
+@@ -36,9 +36,13 @@
+ #define CGROUP_WEIGHT_DFL		100
+ #define CGROUP_WEIGHT_MAX		10000
  
- /* walk only threadgroup leaders */
- #define CSS_TASK_ITER_PROCS		(1U << 0)
-+/* walk threaded css_sets as part of their proc_csets */
-+#define CSS_TASK_ITER_THREADED		(1U << 1)
- 
++/* walk only threadgroup leaders */
++#define CSS_TASK_ITER_PROCS		(1U << 0)
++
  /* a css_task_iter should be treated as an opaque object */
  struct css_task_iter {
-@@ -47,11 +49,15 @@ struct css_task_iter {
+ 	struct cgroup_subsys		*ss;
++	unsigned int			flags;
+ 
  	struct list_head		*cset_pos;
  	struct list_head		*cset_head;
+@@ -129,7 +133,7 @@ struct task_struct *cgroup_taskset_first(struct cgroup_taskset *tset,
+ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset,
+ 					struct cgroup_subsys_state **dst_cssp);
  
-+	struct list_head		*tcset_pos;
-+	struct list_head		*tcset_head;
-+
- 	struct list_head		*task_pos;
- 	struct list_head		*tasks_head;
- 	struct list_head		*mg_tasks_head;
+-void css_task_iter_start(struct cgroup_subsys_state *css,
++void css_task_iter_start(struct cgroup_subsys_state *css, unsigned int flags,
+ 			 struct css_task_iter *it);
+ struct task_struct *css_task_iter_next(struct css_task_iter *it);
+ void css_task_iter_end(struct css_task_iter *it);
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 69146b3..de4939d 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -118,7 +118,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 	 * ->can_attach() fails.
+ 	 */
+ 	do {
+-		css_task_iter_start(&from->self, &it);
++		css_task_iter_start(&from->self, 0, &it);
+ 		task = css_task_iter_next(&it);
+ 		if (task)
+ 			get_task_struct(task);
+@@ -374,7 +374,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
+ 	if (!array)
+ 		return -ENOMEM;
+ 	/* now, populate the array */
+-	css_task_iter_start(&cgrp->self, &it);
++	css_task_iter_start(&cgrp->self, 0, &it);
+ 	while ((tsk = css_task_iter_next(&it))) {
+ 		if (unlikely(n == length))
+ 			break;
+@@ -750,7 +750,7 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
+ 	}
+ 	rcu_read_unlock();
  
- 	struct css_set			*cur_cset;
-+	struct css_set			*cur_pcset;
- 	struct task_struct		*cur_task;
- 	struct list_head		iters_node;	/* css_set->task_iters */
- };
+-	css_task_iter_start(&cgrp->self, &it);
++	css_task_iter_start(&cgrp->self, 0, &it);
+ 	while ((tsk = css_task_iter_next(&it))) {
+ 		switch (tsk->state) {
+ 		case TASK_RUNNING:
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 6c5658a..e73b3c3 100644
+index 2c37b436..a9df46c 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -3590,27 +3590,36 @@ bool css_has_online_children(struct cgroup_subsys_state *css)
- 	return ret;
- }
- 
--/**
-- * css_task_iter_advance_css_set - advance a task itererator to the next css_set
-- * @it: the iterator to advance
-- *
-- * Advance @it to the next css_set to walk.
-- */
--static void css_task_iter_advance_css_set(struct css_task_iter *it)
-+static struct css_set *css_task_iter_next_css_set(struct css_task_iter *it)
- {
--	struct list_head *l = it->cset_pos;
-+	bool threaded = it->flags & CSS_TASK_ITER_THREADED;
-+	struct list_head *l;
- 	struct cgrp_cset_link *link;
- 	struct css_set *cset;
- 
+@@ -3588,6 +3588,7 @@ static void css_task_iter_advance(struct css_task_iter *it)
  	lockdep_assert_held(&css_set_lock);
+ 	WARN_ON_ONCE(!l);
  
--	/* Advance to the next non-empty css_set */
-+	/* find the next threaded cset */
-+	if (it->tcset_pos) {
-+		l = it->tcset_pos->next;
-+
-+		if (l != it->tcset_head) {
-+			it->tcset_pos = l;
-+			return container_of(l, struct css_set,
-+					    threaded_csets_node);
-+		}
-+
-+		it->tcset_pos = NULL;
-+	}
-+
-+	/* find the next cset */
-+	l = it->cset_pos;
-+
- 	do {
- 		l = l->next;
- 		if (l == it->cset_head) {
- 			it->cset_pos = NULL;
--			it->task_pos = NULL;
--			return;
-+			return NULL;
- 		}
- 
- 		if (it->ss) {
-@@ -3620,10 +3629,50 @@ static void css_task_iter_advance_css_set(struct css_task_iter *it)
- 			link = list_entry(l, struct cgrp_cset_link, cset_link);
- 			cset = link->cset;
- 		}
--	} while (!css_set_populated(cset));
-+
-+		/*
-+		 * For threaded iterations, threaded csets are walked
-+		 * together with their proc_csets.  Skip here.
-+		 */
-+	} while (threaded && css_set_threaded(cset));
- 
- 	it->cset_pos = l;
- 
-+	/* initialize threaded cset walking */
-+	if (threaded) {
-+		if (it->cur_pcset)
-+			put_css_set_locked(it->cur_pcset);
-+		it->cur_pcset = cset;
-+		get_css_set(cset);
-+
-+		it->tcset_head = &cset->threaded_csets;
-+		it->tcset_pos = &cset->threaded_csets;
-+	}
-+
-+	return cset;
-+}
-+
-+/**
-+ * css_task_iter_advance_css_set - advance a task itererator to the next css_set
-+ * @it: the iterator to advance
-+ *
-+ * Advance @it to the next css_set to walk.
-+ */
-+static void css_task_iter_advance_css_set(struct css_task_iter *it)
-+{
-+	struct css_set *cset;
-+
-+	lockdep_assert_held(&css_set_lock);
-+
-+	/* Advance to the next non-empty css_set */
-+	do {
-+		cset = css_task_iter_next_css_set(it);
-+		if (!cset) {
-+			it->task_pos = NULL;
-+			return;
-+		}
-+	} while (!css_set_populated(cset));
-+
- 	if (!list_empty(&cset->tasks))
- 		it->task_pos = cset->tasks.next;
- 	else
-@@ -3766,6 +3815,9 @@ void css_task_iter_end(struct css_task_iter *it)
- 		spin_unlock_irq(&css_set_lock);
- 	}
- 
-+	if (it->cur_pcset)
-+		put_css_set(it->cur_pcset);
-+
- 	if (it->cur_task)
- 		put_task_struct(it->cur_task);
- }
-@@ -3791,6 +3843,7 @@ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
- 	struct kernfs_open_file *of = s->private;
- 	struct cgroup *cgrp = seq_css(s)->cgroup;
- 	struct css_task_iter *it = of->priv;
-+	unsigned iter_flags = CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED;
- 
++repeat:
  	/*
- 	 * When a seq_file is seeked, it's always traversed sequentially
-@@ -3804,10 +3857,10 @@ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
+ 	 * Advance iterator to find next entry.  cset->tasks is consumed
+ 	 * first and then ->mg_tasks.  After ->mg_tasks, we move onto the
+@@ -3602,11 +3603,18 @@ static void css_task_iter_advance(struct css_task_iter *it)
+ 		css_task_iter_advance_css_set(it);
+ 	else
+ 		it->task_pos = l;
++
++	/* if PROCS, skip over tasks which aren't group leaders */
++	if ((it->flags & CSS_TASK_ITER_PROCS) && it->task_pos &&
++	    !thread_group_leader(list_entry(it->task_pos, struct task_struct,
++					    cg_list)))
++		goto repeat;
+ }
+ 
+ /**
+  * css_task_iter_start - initiate task iteration
+  * @css: the css to walk tasks of
++ * @flags: CSS_TASK_ITER_* flags
+  * @it: the task iterator to use
+  *
+  * Initiate iteration through the tasks of @css.  The caller can call
+@@ -3614,7 +3622,7 @@ static void css_task_iter_advance(struct css_task_iter *it)
+  * returns NULL.  On completion of iteration, css_task_iter_end() must be
+  * called.
+  */
+-void css_task_iter_start(struct cgroup_subsys_state *css,
++void css_task_iter_start(struct cgroup_subsys_state *css, unsigned int flags,
+ 			 struct css_task_iter *it)
+ {
+ 	/* no one should try to iterate before mounting cgroups */
+@@ -3625,6 +3633,7 @@ void css_task_iter_start(struct cgroup_subsys_state *css,
+ 	spin_lock_irq(&css_set_lock);
+ 
+ 	it->ss = css->ss;
++	it->flags = flags;
+ 
+ 	if (it->ss)
+ 		it->cset_pos = &css->cgroup->e_csets[css->ss->id];
+@@ -3698,13 +3707,8 @@ static void *cgroup_procs_next(struct seq_file *s, void *v, loff_t *pos)
+ {
+ 	struct kernfs_open_file *of = s->private;
+ 	struct css_task_iter *it = of->priv;
+-	struct task_struct *task;
+-
+-	do {
+-		task = css_task_iter_next(it);
+-	} while (task && !thread_group_leader(task));
+ 
+-	return task;
++	return css_task_iter_next(it);
+ }
+ 
+ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
+@@ -3725,10 +3729,10 @@ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
  		if (!it)
  			return ERR_PTR(-ENOMEM);
  		of->priv = it;
--		css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS, it);
-+		css_task_iter_start(&cgrp->self, iter_flags, it);
+-		css_task_iter_start(&cgrp->self, it);
++		css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS, it);
  	} else if (!(*pos)++) {
  		css_task_iter_end(it);
--		css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS, it);
-+		css_task_iter_start(&cgrp->self, iter_flags, it);
+-		css_task_iter_start(&cgrp->self, it);
++		css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS, it);
  	}
  
  	return cgroup_procs_next(s, NULL, NULL);
+@@ -3736,7 +3740,7 @@ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
+ 
+ static int cgroup_procs_show(struct seq_file *s, void *v)
+ {
+-	seq_printf(s, "%d\n", task_tgid_vnr(v));
++	seq_printf(s, "%d\n", task_pid_vnr(v));
+ 	return 0;
+ }
+ 
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index b308888..35e7d43 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -859,7 +859,7 @@ static void update_tasks_cpumask(struct cpuset *cs)
+ 	struct css_task_iter it;
+ 	struct task_struct *task;
+ 
+-	css_task_iter_start(&cs->css, &it);
++	css_task_iter_start(&cs->css, 0, &it);
+ 	while ((task = css_task_iter_next(&it)))
+ 		set_cpus_allowed_ptr(task, cs->effective_cpus);
+ 	css_task_iter_end(&it);
+@@ -1104,7 +1104,7 @@ static void update_tasks_nodemask(struct cpuset *cs)
+ 	 * It's ok if we rebind the same mm twice; mpol_rebind_mm()
+ 	 * is idempotent.  Also migrate pages in each mm to new nodes.
+ 	 */
+-	css_task_iter_start(&cs->css, &it);
++	css_task_iter_start(&cs->css, 0, &it);
+ 	while ((task = css_task_iter_next(&it))) {
+ 		struct mm_struct *mm;
+ 		bool migrate;
+@@ -1297,7 +1297,7 @@ static void update_tasks_flags(struct cpuset *cs)
+ 	struct css_task_iter it;
+ 	struct task_struct *task;
+ 
+-	css_task_iter_start(&cs->css, &it);
++	css_task_iter_start(&cs->css, 0, &it);
+ 	while ((task = css_task_iter_next(&it)))
+ 		cpuset_update_task_spread_flag(cs, task);
+ 	css_task_iter_end(&it);
+diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/freezer.c
+index 1b72d56..0823679 100644
+--- a/kernel/cgroup/freezer.c
++++ b/kernel/cgroup/freezer.c
+@@ -268,7 +268,7 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
+ 	rcu_read_unlock();
+ 
+ 	/* are all tasks frozen? */
+-	css_task_iter_start(css, &it);
++	css_task_iter_start(css, 0, &it);
+ 
+ 	while ((task = css_task_iter_next(&it))) {
+ 		if (freezing(task)) {
+@@ -320,7 +320,7 @@ static void freeze_cgroup(struct freezer *freezer)
+ 	struct css_task_iter it;
+ 	struct task_struct *task;
+ 
+-	css_task_iter_start(&freezer->css, &it);
++	css_task_iter_start(&freezer->css, 0, &it);
+ 	while ((task = css_task_iter_next(&it)))
+ 		freeze_task(task);
+ 	css_task_iter_end(&it);
+@@ -331,7 +331,7 @@ static void unfreeze_cgroup(struct freezer *freezer)
+ 	struct css_task_iter it;
+ 	struct task_struct *task;
+ 
+-	css_task_iter_start(&freezer->css, &it);
++	css_task_iter_start(&freezer->css, 0, &it);
+ 	while ((task = css_task_iter_next(&it)))
+ 		__thaw_task(task);
+ 	css_task_iter_end(&it);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 4048897..9250128 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -945,7 +945,7 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
+ 		struct css_task_iter it;
+ 		struct task_struct *task;
+ 
+-		css_task_iter_start(&iter->css, &it);
++		css_task_iter_start(&iter->css, 0, &it);
+ 		while (!ret && (task = css_task_iter_next(&it)))
+ 			ret = fn(task, arg);
+ 		css_task_iter_end(&it);
+diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
+index 11fce17..e24ea8c 100644
+--- a/net/core/netclassid_cgroup.c
++++ b/net/core/netclassid_cgroup.c
+@@ -74,7 +74,7 @@ static void update_classid(struct cgroup_subsys_state *css, void *v)
+ 	struct css_task_iter it;
+ 	struct task_struct *p;
+ 
+-	css_task_iter_start(css, &it);
++	css_task_iter_start(css, 0, &it);
+ 	while ((p = css_task_iter_next(&it))) {
+ 		task_lock(p);
+ 		iterate_fd(p->files, 0, update_classid_sock, v);
 -- 
 2.9.3
 
