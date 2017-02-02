@@ -1,64 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH cgroup/for-4.11] cgroup: drop the matching uid
- requirement on migration for cgroup v2
-Date: Thu, 2 Feb 2017 13:48:14 -0500
-Message-ID: <20170202184814.GB7917@htj.duckdns.org>
-References: <20170120162954.GA30978@mtj.duckdns.org>
+From: Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+Subject: Re: [PATCH v2] security: selinux: allow changing labels for cgroupfs
+Date: Thu, 02 Feb 2017 14:46:45 -0500
+Message-ID: <1486064805.1887.82.camel@tycho.nsa.gov>
+References: <20170202152257.30220-1-runcom@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=tKFUqWkJz7GUsL757xjFBdW5E7/JCMwm+5ia9jNZqxU=;
-        b=J+xZvCd+eyXltunHB7C9+woagxg4+/MdjE8LYfGGin4aebs7QOgTUMPjKcxfMSaUE8
-         LcaU66tXWCDvK/uf9xGFhHz+VTXLjFStaUEnYBmgKv6yLckDbfc979x4+wwiNfzwqaPS
-         bw82w35piD3gNHEYWZxwUN4D4QWrMq0+I/3F7QsiZB5uoB8kxprjkf9YJU+mKMu1RZVL
-         oW4vUndoiLk8yMLqvRBbdA7XKtWS8ve8GnVhdeKMJxkUt5Jf/yNq13CmsRQKN/2VIRgf
-         b91PkwEhpl11fPsDJkaMWQC07+kChF4vckynXHSeSI7j1CVoPqjU0Hh7PMrSd0x+nXHd
-         ZvNw==
-Content-Disposition: inline
-In-Reply-To: <20170120162954.GA30978@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+In-Reply-To: <20170202152257.30220-1-runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Post: <mailto:selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subject=help>
+Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+To: Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Fri, Jan 20, 2017 at 11:29:54AM -0500, Tejun Heo wrote:
-> Along with the write access to the cgroup.procs or tasks file, cgroup
-> has required the writer's euid, unless root, to match [s]uid of the
-> target process or task.  On cgroup v1, this is necessary because
-> there's nothing preventing a delegatee from pulling in tasks or
-> processes from all over the system.
-> 
-> If a user has a cgroup subdirectory delegated to it, the user would
-> have write access to the cgroup.procs or tasks file.  If there are no
-> further checks than file write access check, the user would be able to
-> pull processes from all over the system into its subhierarchy which is
-> clearly not the intended behavior.  The matching [s]uid requirement
-> partially prevents this problem by allowing a delegatee to pull in the
-> processes that belongs to it.  This isn't a sufficient protection
-> however, because a user would still be able to jump processes across
-> two disjoint sub-hierarchies that has been delegated to them.
-> 
-> cgroup v2 resolves the issue by requiring the writer to have access to
-> the common ancestor of the cgroup.procs file of the source and target
-> cgroups.  This confines each delegatee to their own sub-hierarchy
-> proper and bases all permission decisions on the cgroup filesystem
-> rather than having to pull in explicit uid matching.
-> 
-> cgroup v2 has still been applying the matching [s]uid requirement just
-> for historical reasons.  On cgroup2, the requirement doesn't serve any
-> purpose while unnecessarily complicating the permission model.  Let's
-> drop it.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-
-Applied to cgroup/for-4.11.
-
-Thanks.
-
--- 
-tejun
+T24gVGh1LCAyMDE3LTAyLTAyIGF0IDE2OjIyICswMTAwLCBBbnRvbmlvIE11cmRhY2Egd3JvdGU6
+Cj4gVGhpcyBwYXRjaCBhbGxvd3MgY2hhbmdpbmcgbGFiZWxzIGZvciBjZ3JvdXAgbW91bnRzLiBQ
+cmV2aW91c2x5LAo+IHJ1bm5pbmcKPiBjaGNvbiBvbiBjZ3JvdXBmcyB3b3VsZCB0aHJvdyBhbiAi
+T3BlcmF0aW9uIG5vdCBzdXBwb3J0ZWQiLiBUaGlzCj4gcGF0Y2gKPiBzcGVjaWZpY2FsbHkgd2hp
+dGVsaXN0IGNncm91cGZzLgo+IAo+IFRoZSBwYXRjaCBjb3VsZCBhbHNvIGFsbG93IGNvbnRhaW5l
+cnMgdG8gd3JpdGUgb25seSB0byB0aGUgc3lzdGVtZAo+IGNncm91cAo+IGZvciBpbnN0YW5jZSwg
+d2hpbGUgdGhlIG90aGVyIGNncm91cHMgYXJlIGtlcHQgd2l0aCBjZ3JvdXBfdCBsYWJlbC4KPiAK
+PiBTaWduZWQtb2ZmLWJ5OiBBbnRvbmlvIE11cmRhY2EgPHJ1bmNvbUByZWRoYXQuY29tPgoKQWNr
+ZWQtYnk6IFN0ZXBoZW4gU21hbGxleSA8c2RzQHR5Y2hvLm5zYS5nb3Y+Cgo+IC0tLQo+IENoYW5n
+ZXMgaW4gdjI6Cj4gwqAgLSB3aGl0ZWxpc3QgY2dyb3VwMiBmcyB0eXBlCj4gCj4gwqBzZWN1cml0
+eS9zZWxpbnV4L2hvb2tzLmMgfCAyICsrCj4gwqAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25z
+KCspCj4gCj4gZGlmZiAtLWdpdCBhL3NlY3VyaXR5L3NlbGludXgvaG9va3MuYyBiL3NlY3VyaXR5
+L3NlbGludXgvaG9va3MuYwo+IGluZGV4IDNiOTU1YzYuLjI3ODlmMGEgMTAwNjQ0Cj4gLS0tIGEv
+c2VjdXJpdHkvc2VsaW51eC9ob29rcy5jCj4gKysrIGIvc2VjdXJpdHkvc2VsaW51eC9ob29rcy5j
+Cj4gQEAgLTQ4MCw2ICs0ODAsOCBAQCBzdGF0aWMgaW50IHNlbGludXhfaXNfc2JsYWJlbF9tbnQo
+c3RydWN0Cj4gc3VwZXJfYmxvY2sgKnNiKQo+IMKgCQlzYnNlYy0+YmVoYXZpb3IgPT0gU0VDVVJJ
+VFlfRlNfVVNFX05BVElWRSB8fAo+IMKgCQkvKiBTcGVjaWFsIGhhbmRsaW5nLiBHZW5mcyBidXQg
+YWxzbyBpbi1jb3JlIHNldHhhdHRyCj4gaGFuZGxlciAqLwo+IMKgCQkhc3RyY21wKHNiLT5zX3R5
+cGUtPm5hbWUsICJzeXNmcyIpIHx8Cj4gKwkJIXN0cmNtcChzYi0+c190eXBlLT5uYW1lLCAiY2dy
+b3VwIikgfHwKPiArCQkhc3RyY21wKHNiLT5zX3R5cGUtPm5hbWUsICJjZ3JvdXAyIikgfHwKPiDC
+oAkJIXN0cmNtcChzYi0+c190eXBlLT5uYW1lLCAicHN0b3JlIikgfHwKPiDCoAkJIXN0cmNtcChz
+Yi0+c190eXBlLT5uYW1lLCAiZGVidWdmcyIpIHx8Cj4gwqAJCSFzdHJjbXAoc2ItPnNfdHlwZS0+
+bmFtZSwgInRyYWNlZnMiKSB8fApfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpTZWxpbnV4IG1haWxpbmcgbGlzdApTZWxpbnV4QHR5Y2hvLm5zYS5nb3YKVG8g
+dW5zdWJzY3JpYmUsIHNlbmQgZW1haWwgdG8gU2VsaW51eC1sZWF2ZUB0eWNoby5uc2EuZ292LgpU
+byBnZXQgaGVscCwgc2VuZCBhbiBlbWFpbCBjb250YWluaW5nICJoZWxwIiB0byBTZWxpbnV4LXJl
+cXVlc3RAdHljaG8ubnNhLmdvdi4=
