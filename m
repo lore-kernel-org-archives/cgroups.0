@@ -1,58 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET v3] slab: make memcg slab destruction scalable
-Date: Fri, 3 Feb 2017 12:43:46 -0500
-Message-ID: <20170203174346.GA26336@mtj.duckdns.org>
-References: <20170117235411.9408-1-tj@kernel.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
+Date: Fri, 3 Feb 2017 21:20:48 +0100
+Message-ID: <20170203202048.GD6515@twins.programming.kicks-ass.net>
+References: <20170202200632.13992-1-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=1RoWXxW8J8M4Z7kFtgSFYWyjV6i+xU0J0lMgwIMW+Is=;
-        b=jf3E/Lp9FRL+fed/0CidzugLf7mVl/9GeAi8f4j0KF1EhsT6GV66j2YIT0WrAOoP/g
-         Ps1kF86OJVSFD+SD/9tkmVlb/ubPvchSiTRAaIwlOjEJeDPVlC0yWWRu5JnlNgSECm2N
-         3EEW6m3lHm6KNuhsazf/Xfd4YTkqWhGB/qFxLqtPXH+6PsnG0pKaLMWBNyStJFJWTeMR
-         nG3MonGdJes3ev0ly569IiEHrWgvJ3eAVAlywgjE/lODJR4FF51Vic/NAxtR13zbqD2U
-         kumH1DpjLaeJsfUtkgaohzbmwZq8XeUYt546UTaq7t65JMU5cApFfA/Z98UcqkMMFbEX
-         X5+w==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20170117235411.9408-1-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170202200632.13992-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: vdavydov.dev@gmail.com, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, akpm@linux-foundation.org
-Cc: jsvana@fb.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello,
-
-On Tue, Jan 17, 2017 at 03:54:01PM -0800, Tejun Heo wrote:
-> Changes from [V2] to V3.
+On Thu, Feb 02, 2017 at 03:06:27PM -0500, Tejun Heo wrote:
+> Hello,
 > 
-> * 0002-slub-separate-out-sysfs_slab_release-from-sysfs_slab.patch
->   separated out from
->   0002-slab-remove-synchronous-rcu_barrier-call-in-memcg-ca.patch.
+> This patchset implements cgroup v2 thread mode.  It is largely based
+> on the discussions that we had at the plumbers last year.  Here's the
+> rough outline.
 > 
-> * 0002-slab-remove-synchronous-rcu_barrier-call-in-memcg-ca.patch
->   replaced with
->   0003-slab-remove-synchronous-rcu_barrier-call-in-memcg-ca.patch.
->   It now keeps rcu_barrier() in the kmem_cache destruction path.
+> * Thread mode is explicitly enabled on a cgroup by writing "enable"
+>   into "cgroup.threads" file.  The cgroup shouldn't have any child
+>   cgroups or enabled controllers.
 > 
-> * 0010-slab-memcg-wq.patch added to limit concurrency on destruction
->   work items.
+> * Once enabled, arbitrary sub-hierarchy can be created and threads can
+>   be put anywhere in the subtree by writing TIDs into "cgroup.threads"
+>   file.  Process granularity and no-internal-process constraint don't
+>   apply in a threaded subtree.
+> 
+> * To be used in a threaded subtree, controllers should explicitly
+>   declare thread mode support and should be able to handle internal
+>   competition in some way.
+> 
+> * The root of a threaded subtree serves as the resource domain for the
+>   whole subtree.  This is where all the controllers are guaranteed to
+>   have a common ground and resource consumptions in the threaded
+>   subtree which aren't tied to a specific thread are charged.
+>   Non-threaded controllers never see beyond thread root and can assume
+>   that all controllers will follow the same rules upto that point.
+> 
+> This allows threaded controllers to implement thread granular resource
+> control without getting in the way of system level resource
+> partitioning.
 
-Are there more concerns on this patchset?  If not, Andrew, can you
-please route these patches?  On certain setups, this can cause serious
-performance and scalability issues.
 
-Thanks.
+I'm still confused. So suppose I mark my root cgroup as such, because I
+run RT tasks there. Does this then mean I cannot later start a VM and
+have that containered properly? That is, I think threaded controllers
+very much get in the way of system level source partitioning this way.
 
--- 
-tejun
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+So my proposal was to do the inverse of what you propose here. Instead
+of marking special 'thread' subtrees, explicitly mark resource domains
+in the tree.
+
+So always allow arbitrary hierarchies and allow threads to be assigned
+to cgroups, as long as they're all in the same resource domain.
+
+Controllers that do not support things, fallback to mapping everything
+to the nearest resource domain.
