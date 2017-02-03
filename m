@@ -1,60 +1,83 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
 Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
-Date: Fri, 3 Feb 2017 15:59:55 -0500
-Message-ID: <20170203205955.GA9886@mtj.duckdns.org>
-References: <20170202200632.13992-1-tj@kernel.org>
- <20170203202048.GD6515@twins.programming.kicks-ass.net>
+Date: Fri, 3 Feb 2017 13:10:21 -0800
+Message-ID: <CALCETrXrsejLG4Kuu4PawxWST-8S-LC_8U6_po-ORbZCy03sdw@mail.gmail.com>
+References: <20170202200632.13992-1-tj@kernel.org> <CALCETrW6Mqj9VLogd0XaLgVAzEqsZ+VnZjN5NROCqr0ssdYaKg@mail.gmail.com>
+ <20170202215229.GA27231@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=CgVtg+HW+jlycZwcNN3ikKC4FamuFJHStZ8y6VSLb/c=;
-        b=ett5/tck4RKcYgf2YOZs15Ixnp7mddE7jBJf30PuhsiWxnncrmGNCUeKP1QdYZ7byC
-         4PYa8Hwc5DSPF1S1Dmfrjh/Fu62UefOMKTVah9nM8sSxv8tvzWsNo5apDE/NzOPJskcC
-         +G6CxQ2wPzvfXmmt6o0PNwRedTjpoG3mxaj5KunLENIIfSJg0j5wH4NBpwNLZ83eY3to
-         CD9vNXciGpZIZZNdqQ51QELMhabrvFLHUheT+GS4vp2BXoG26g6U4P5856PCtNQin8Oa
-         YhgOAjdDLncN+Cexq7oINSEjcAjrivz4HeRR3kc5wEq4aQIwFr0cuzLpWB9fwjMUsu9X
-         tB/A==
-Content-Disposition: inline
-In-Reply-To: <20170203202048.GD6515-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=YGJFTuR5fFbdJ24kIvvc4Wo60jwdpQGp6//sbIzOeTU=;
+        b=1ZqKlmeG5IJCOZkfdfz8ewdQ20yJQCXJbZx7TxVLhrHzriC4szAzP5KStf336h8le+
+         sBQU6jiuPlFn32icx+sTRXZFCvs8IGNcY6yr9pmHFsUkTuO8kjKzb/4i6ewECI3WMDt+
+         atgkuFaEr93zoX5CPJuF0IqxLsmuAoQfECadgRF+xDbjYptRYeJ3sVb+IzXnVzxLxQ05
+         jQhJS/71y+8PLpXEBHAxqwVu+U1NtVgUxHAKbNwg7w5LvK8hZ6ag6on3RUppLt2fPj4B
+         S3S3Hga2w+JpB+XTTXTKxW4wLnjkXLDYeozL/WTvyfJu4y41CtjDgkJa0qYH3BR+irBx
+         xvKQ==
+In-Reply-To: <20170202215229.GA27231-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello, Peter.
+On Thu, Feb 2, 2017 at 1:52 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello,
+>
+> On Thu, Feb 02, 2017 at 01:32:19PM -0800, Andy Lutomirski wrote:
+>> > * Thread mode is explicitly enabled on a cgroup by writing "enable"
+>> >   into "cgroup.threads" file.  The cgroup shouldn't have any child
+>> >   cgroups or enabled controllers.
+>>
+>> Why do you need to manually turn it on?  That is, couldn't it be
+>> automatic based on what controllers are enabled?
+>
+> This came up already but it's not like some controllers are inherently
+> thread-only.  Consider CPU, all in-context CPU cycle consumptions are
+> tied to the thread; however, we also want to be able to account for
+> CPU cycles consumed for, for example, memory reclaim or encryption
+> during writeback.
+>
 
-On Fri, Feb 03, 2017 at 09:20:48PM +0100, Peter Zijlstra wrote:
-> So my proposal was to do the inverse of what you propose here. Instead
-> of marking special 'thread' subtrees, explicitly mark resource domains
-> in the tree.
-> 
-> So always allow arbitrary hierarchies and allow threads to be assigned
-> to cgroups, as long as they're all in the same resource domain.
-> 
-> Controllers that do not support things, fallback to mapping everything
-> to the nearest resource domain.
+Is this flexible enough for the real-world usecases?  For my use case
+(if I actually ported over to this), it would mean that I'd have to
+enable thread mode on the root.  What about letting a given process
+(actually mm, perhaps) live in a cgroup but let the threads be in
+different cgroups without any particular constraints.  Then
+process-wide stuff would be accounted to the cgroup that owns the
+process.
 
-That sounds counter-intuitive as all controllers can do resource
-domains and only a subset of them can do thread mode.  Also, thread
-subtrees are necessarily a sub-hierarchy of a resource domain.  Also,
-expanding resource domains from the root after the trees are populated
-would make the behaviors surprising as the resource domains that these
-subtrees belong to would change dynamically.
+>
+>> > * Once enabled, arbitrary sub-hierarchy can be created and threads can
+>> >   be put anywhere in the subtree by writing TIDs into "cgroup.threads"
+>> >   file.  Process granularity and no-internal-process constraint don't
+>> >   apply in a threaded subtree.
+>>
+>> I'm a bit worried that this conflates two different things.  There's
+>> thread support, i.e. allowing individual threads to be placed into
+>> cgroups.  There's also more flexible sub-hierarchy support, i.e.
+>> relaxing no-internal-process constraints.  For the "cpuacct"
+>> controller, for example, both of these make sense.  But what if
+>> someone writes a controller (directio, for example, just to make
+>> something up) for which thread granularity makes sense but relaxing
+>> no-internal-process constraints does not?
+>
+> If a controller can't possibly define how internal competition should
+> be handled, which is unlikely - the problem is being consistent and
+> sensible, defining something isn't difficult - the controller can
+> simply error out those cases either on configuration or migration.
+> Again, I'm very doubtful we'll need that but if we ever need that
+> denying specific configurations is the best we can do anyway.
+>
 
-In practice, how would this work?  To enable memcg, the user has to
-first create the subtree and then explicitly have to make that a
-domain and then enable memcg?  If so, that would be a completely
-unnecessary deviation from the current behavior while not achieving
-any more functionalities, right?  It's just flipping the default value
-the other way around and the default wouldn't be supported by many of
-the controllers.  I can't see how that is a better option.
+I'm not sure I follow.
 
-Thanks.
+I'm suggesting something quite simple: let controllers that don't need
+the no-internal-process constraints set a flag so that the constraints
+don't apply if all enabled controllers have the flag set.
 
--- 
-tejun
+--Andy
