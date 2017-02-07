@@ -1,141 +1,85 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
-Date: Mon, 6 Feb 2017 13:49:43 +0100
-Message-ID: <20170206124943.GJ6515@twins.programming.kicks-ass.net>
-References: <20170202200632.13992-1-tj@kernel.org>
- <20170203202048.GD6515@twins.programming.kicks-ass.net>
- <20170203205955.GA9886@mtj.duckdns.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] slub: make sysfs directories for memcg sub-caches
+ optional
+Date: Mon, 6 Feb 2017 16:22:13 -0800
+Message-ID: <20170206162213.30f909b5ce4c681e2217fb4f@linux-foundation.org>
+References: <20170204145203.GB26958@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170203205955.GA9886-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20170204145203.GB26958@mtj.duckdns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, kernel-team@fb.com
 
-On Fri, Feb 03, 2017 at 03:59:55PM -0500, Tejun Heo wrote:
-> Hello, Peter.
+On Sat, 4 Feb 2017 09:52:03 -0500 Tejun Heo <tj@kernel.org> wrote:
+
+> SLUB creates a per-cache directory under /sys/kernel/slab which hosts
+> a bunch of debug files.  Usually, there aren't that many caches on a
+> system and this doesn't really matter; however, if memcg is in use,
+> each cache can have per-cgroup sub-caches.  SLUB creates the same
+> directories for these sub-caches under /sys/kernel/slab/$CACHE/cgroup.
 > 
-> On Fri, Feb 03, 2017 at 09:20:48PM +0100, Peter Zijlstra wrote:
-> > So my proposal was to do the inverse of what you propose here. Instead
-> > of marking special 'thread' subtrees, explicitly mark resource domains
-> > in the tree.
-> > 
-> > So always allow arbitrary hierarchies and allow threads to be assigned
-> > to cgroups, as long as they're all in the same resource domain.
-> > 
-> > Controllers that do not support things, fallback to mapping everything
-> > to the nearest resource domain.
+> Unfortunately, because there can be a lot of cgroups, active or
+> draining, the product of the numbers of caches, cgroups and files in
+> each directory can reach a very high number - hundreds of thousands is
+> commonplace.  Millions and beyond aren't difficult to reach either.
 > 
-> That sounds counter-intuitive as all controllers can do resource
-> domains and only a subset of them can do thread mode.
+> What's under /sys/kernel/slab is primarily for debugging and the
+> information and control on the a root cache already cover its
+> sub-caches.  While having a separate directory for each sub-cache can
+> be helpful for development, it doesn't make much sense to pay this
+> amount of overhead by default.
+> 
+> This patch introduces a boot parameter slub_memcg_sysfs which
+> determines whether to create sysfs directories for per-memcg
+> sub-caches.  It also adds CONFIG_SLUB_MEMCG_SYSFS_ON which determines
+> the boot parameter's default value and defaults to 0.
+> 
+> ...
+>
+>  #ifdef CONFIG_MEMCG
+> -	if (is_root_cache(s)) {
+> +	if (is_root_cache(s) && memcg_sysfs_enabled) {
 
-But to me the resource domain is your primary new construct; so it makes
-more sense to explicitly mark that.
+This could be turned on and off after bootup but I guess the result
+could be pretty confusing.
 
-(FWIW note that your whole initial cgroup-v2 thing is counter intuitive
-to me, as someone who has only ever dealt with thread capable
-controllers.)
+However there would be useful use cases?  The user would normally have
+this disabled but if he wants to do a bit of debugging then turn this
+on, create a memcg, have a poke around then turn the feature off again.
 
-> Also, thread subtrees are necessarily a sub-hierarchy of a resource domain.
+>  		s->memcg_kset = kset_create_and_add("cgroup", NULL, &s->kobj);
+>  		if (!s->memcg_kset) {
+>  			err = -ENOMEM;
+> @@ -5673,7 +5695,8 @@ static void sysfs_slab_remove(struct kme
+>  		return;
+>  
+>  #ifdef CONFIG_MEMCG
+> -	kset_unregister(s->memcg_kset);
+> +	if (s->memcg_kset)
+> +		kset_unregister(s->memcg_kset);
 
-Sure, don't see how that is relevant though. Or rather, I don't see it
-being an argument one way or the other.
+kset_unregister(NULL) is legal
 
-> Also,
-> expanding resource domains from the root after the trees are populated
-> would make the behaviors surprising as the resource domains that these
-> subtrees belong to would change dynamically.
+--- a/mm/slub.c~slub-make-sysfs-directories-for-memcg-sub-caches-optional-fix
++++ a/mm/slub.c
+@@ -5699,8 +5699,7 @@ static void sysfs_slab_remove(struct kme
+ 		return;
+ 
+ #ifdef CONFIG_MEMCG
+-	if (s->memcg_kset)
+-		kset_unregister(s->memcg_kset);
++	kset_unregister(s->memcg_kset);
+ #endif
+ 	kobject_uevent(&s->kobj, KOBJ_REMOVE);
+ 	kobject_del(&s->kobj);
+_
 
-Uh what? I cannot parse that.
-
-My question was, if you have root.threads=1, can you then still create
-(sub) resource domains? Can I create a child cgroup and clear "threads"
-again?
-
-(I'm assuming "threads" is inherited when creating new groups).
-
-Now, _if_ we can do the above, then "threads" is not sufficient to
-uniquely identify resource domains, which I think was your point in the
-other email. Which argues against the interface. Because a group can be
-a resource domain _and_ have threads sub-trees.
-
-OTOH, if you can _not_ do this, then this proposal is
-insufficient/inadequate.
-
-> In practice, how would this work?  To enable memcg, the user has to
-> first create the subtree and then explicitly have to make that a
-> domain and then enable memcg?  If so, that would be a completely
-> unnecessary deviation from the current behavior while not achieving
-> any more functionalities, right?  It's just flipping the default value
-> the other way around and the default wouldn't be supported by many of
-> the controllers.  I can't see how that is a better option.
-
-OK, so I'm entirely unaware of this enabling of controllers. What's that
-about? I thought the whole point of cgroup-v2 was to have all
-controllers enabled over the entire tree, this is not so?
-
-In any case, yes, more or less like that, except of course, not at all
-:-) If we make this flag inherited (which I think it should be), you
-don't need to do anything different from today, because the root group
-must be a resource domain, any new sub-group will automagically also be.
-
-Only once you clear the flag somewhere do you get 'new' behaviour. Note
-that the only extra constraint is that all threads of a process must
-stay within the same resource domain, anything else goes.
-
-Task based controllers operate on the actual cgroup, resource domain
-controllers always map it back to the resource group. Finding a random
-task's resource domain is trivial; simply walk up the hierarchy until
-you find a group with the flag set. 
-
-
-
-So, just to recap, my proposal is as follows:
-
- 1) each cgroup will have a new flag, indicating if this is a resource
-    domain.
-
-    a) this flag will be inherited; when creating a new cgroup, the
-       state of the flag will be set to the value of the parent cgroup.
-
-    b) the root cgroup is a resource domain per definition, will
-       have it set (cannot be cleared).
-
- 2) all tasks of a process shall be part of the same resource domain
-
- 3) controllers come in two types:
-
-    a) task based controllers; these use the direct cgroup the task
-       is assigned to.
-
-    b) resource controllers; these use the effective resource group
-       of the task, which is the first parent group with our new
-       flag set.
-
-
-With an optional:
-
- 1c) this flag can only be changed on empty groups
-
-to ease implementation.
-
-
-
-From these rules it follows that:
-
-- 1a and 1b together ensure no change in behaviour per default
-  for cgroup-v2.
-
-- 2 and 3a together ensure resource groups automagically work for task
-  based controllers (under the assumption that the controller is
-  strictly hierarchical).
-
-
-For example, cpuacct does the accounting strictly hierarchical, it adds
-the cpu usage to each parent group. Therefore the total cpu usage
-accounted to the resource group is the same as if all tasks were part of
-that group.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
