@@ -1,80 +1,70 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] slub: make sysfs directories for memcg sub-caches
- optional
-Date: Tue, 7 Feb 2017 12:10:06 -0500
-Message-ID: <20170207171006.GB6164@htj.duckdns.org>
-References: <20170204145203.GB26958@mtj.duckdns.org>
- <20170206162213.30f909b5ce4c681e2217fb4f@linux-foundation.org>
+From: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
+Subject: Re: [PATCH v2] security: selinux: allow changing labels for cgroupfs
+Date: Tue, 7 Feb 2017 22:29:13 -0500
+Message-ID: <CAHC9VhR1yu6G4H0UYNY-4UNxs9Byg=2CMckMH+pE_HYiDf-Ugg@mail.gmail.com>
+References: <20170202152257.30220-1-runcom@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=RfrNCjkVTdyda8uuHQVwrrKiD534+WB0g6RDrBMO+8Q=;
-        b=Lfuig8Oz5bFadL+ARHlRRpYXlNP4fPRShYZxGci0TTBTerzmL1jqckz9AwK2ocbpOm
-         dkaAP21WgP+vhfUhhSHksog02Eo3peUi4ObNJv9irPLoSXhYVo0XOs8TG7100iIeJjtS
-         L+8lj8pAy3L0n9TxcGDbVAfh/NcKgtyyvg3AG10Kf+7/pO2AV4J9ObUaGFPtSh3ayXE0
-         R9QunR25mKsmgVr7ZSENHWRDuBF0ypwsDMPoCIjJTbLXZl1V+JjZ5oK2h13yte9lChAk
-         9GfTeGYjnhRmnv538YO47B8KwzD1PQy4Tz1BfiqZjNtX9FduonZ/g13yyqNLzxeX22SQ
-         s6vw==
-Content-Disposition: inline
-In-Reply-To: <20170206162213.30f909b5ce4c681e2217fb4f-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+Return-path: <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
+ h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+ :cc; bh=cGcvLM6E0vcmT8mO+kRxEePb6OQItp/dlwI71x0a2bA=;
+ b=DFgvc9jtaVTPiVp7C2dwuxgPyhlsb5kiYQztGLEOboQMK7VzpDG9WZb/ViddpHBC4+
+ zYYv/+7V3a+DGculpG/Ap7gyePxG2xXgmLlcnPq83QOnCf/HgxeUTD4+7ngFFNHO5SPn
+ iL8dLlf9ePEuzF0+w5g8/wqiGeG1q+9X1CBxKMsMU99ngFwF6bEu4wgxDf0+EElVs+wi
+ lO74gJ4Uq7TNfoPpdNgBmoZboMyfaDfXIj6U4aH+xNqrxo+Eg5xQX3kGBQmMW4O2YXOK
+ 1vC3eMmMrpFjX1XlacfbOkw86/KkSZKG2R/Nl5VFTiIh1Xcm1iBWAvnIVKVv9AlQoSQS
+ wzrA==
+In-Reply-To: <20170202152257.30220-1-runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Post: <mailto:selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subject=help>
+Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+To: Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello, Andrew.
+On Thu, Feb 2, 2017 at 10:22 AM, Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> This patch allows changing labels for cgroup mounts. Previously, running
+> chcon on cgroupfs would throw an "Operation not supported". This patch
+> specifically whitelist cgroupfs.
+>
+> The patch could also allow containers to write only to the systemd cgroup
+> for instance, while the other cgroups are kept with cgroup_t label.
+>
+> Signed-off-by: Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+> Changes in v2:
+>   - whitelist cgroup2 fs type
+>
+>  security/selinux/hooks.c | 2 ++
+>  1 file changed, 2 insertions(+)
 
-On Mon, Feb 06, 2017 at 04:22:13PM -0800, Andrew Morton wrote:
-> >  #ifdef CONFIG_MEMCG
-> > -	if (is_root_cache(s)) {
-> > +	if (is_root_cache(s) && memcg_sysfs_enabled) {
-> 
-> This could be turned on and off after bootup but I guess the result
-> could be pretty confusing.
-> 
-> However there would be useful use cases?  The user would normally have
-> this disabled but if he wants to do a bit of debugging then turn this
-> on, create a memcg, have a poke around then turn the feature off again.
+Merged into selinux/next, thanks.
 
-Hmm... maybe.  It's somewhat nasty to do after-the-fact.  You would
-have to re-walk all the caches to create and destroy the sysfs
-entries.  Given that it's a pretty fringe debug feature, I'm not sure
-the added complexity would be justified.
-
-> >  		s->memcg_kset = kset_create_and_add("cgroup", NULL, &s->kobj);
-> >  		if (!s->memcg_kset) {
-> >  			err = -ENOMEM;
-> > @@ -5673,7 +5695,8 @@ static void sysfs_slab_remove(struct kme
-> >  		return;
-> >  
-> >  #ifdef CONFIG_MEMCG
-> > -	kset_unregister(s->memcg_kset);
-> > +	if (s->memcg_kset)
-> > +		kset_unregister(s->memcg_kset);
-> 
-> kset_unregister(NULL) is legal
-> 
-> --- a/mm/slub.c~slub-make-sysfs-directories-for-memcg-sub-caches-optional-fix
-> +++ a/mm/slub.c
-> @@ -5699,8 +5699,7 @@ static void sysfs_slab_remove(struct kme
->  		return;
->  
->  #ifdef CONFIG_MEMCG
-> -	if (s->memcg_kset)
-> -		kset_unregister(s->memcg_kset);
-> +	kset_unregister(s->memcg_kset);
->  #endif
->  	kobject_uevent(&s->kobj, KOBJ_REMOVE);
->  	kobject_del(&s->kobj);
-
-Ah, of course, looks good to me.
-
-Thanks.
+> diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+> index 3b955c6..2789f0a 100644
+> --- a/security/selinux/hooks.c
+> +++ b/security/selinux/hooks.c
+> @@ -480,6 +480,8 @@ static int selinux_is_sblabel_mnt(struct super_block *sb)
+>                 sbsec->behavior == SECURITY_FS_USE_NATIVE ||
+>                 /* Special handling. Genfs but also in-core setxattr handler */
+>                 !strcmp(sb->s_type->name, "sysfs") ||
+> +               !strcmp(sb->s_type->name, "cgroup") ||
+> +               !strcmp(sb->s_type->name, "cgroup2") ||
+>                 !strcmp(sb->s_type->name, "pstore") ||
+>                 !strcmp(sb->s_type->name, "debugfs") ||
+>                 !strcmp(sb->s_type->name, "tracefs") ||
+> --
+> 2.9.3
 
 -- 
-tejun
+paul moore
+www.paul-moore.com
+_______________________________________________
+Selinux mailing list
+Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
+To get help, send an email containing "help" to Selinux-request-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
