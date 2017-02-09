@@ -1,36 +1,46 @@
-From: Mike Galbraith <efault@gmx.de>
-Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
-Date: Thu, 09 Feb 2017 16:08:55 +0100
-Message-ID: <1486652935.3787.5.camel@gmx.de>
-References: <20170202200632.13992-1-tj@kernel.org>
-         <CAPM31RKHsM1-iWb5B6jkOtLomLhiOARtgMOTWZ8p1yjEn-ZK0A@mail.gmail.com>
-         <20170209144704.GD6515@twins.programming.kicks-ass.net>
+From: Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] security: selinux: allow per-file labeling for cgroupfs
+Date: Thu,  9 Feb 2017 16:58:23 +0100
+Message-ID: <20170209155823.22148-1-runcom@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170209144704.GD6515@twins.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-To: Peter Zijlstra <peterz@infradead.org>, Paul Turner <pjt@google.com>
-Cc: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, Andy Lutomirski <luto@amacapital.net>, cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>, lvenanci@redhat.com, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Post: <mailto:selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subject=help>
+Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+To: selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Thu, 2017-02-09 at 15:47 +0100, Peter Zijlstra wrote:
-> On Thu, Feb 09, 2017 at 05:07:16AM -0800, Paul Turner wrote:
-> > The only case that this does not support vs ".threads" would be some
-> > hybrid where we co-mingle threads from different processes (with the
-> > processes belonging to the same node in the hierarchy).  I'm not aware
-> > of any usage that looks like this.
-> 
-> If I understand you right; this is a fairly common thing with RT where
-> we would stuff all the !rt threads of the various processes in a 'misc'
-> bucket.
-> 
-> Similarly, it happens that we stuff the various rt threads of processes
-> in a specific (shared) 'rt' bucket.
-> 
-> So I would certainly not like to exclude that setup.
+This patch allows genfscon per-file labeling for cgroupfs. For instance,
+this allows to label the "release_agent" file within each
+cgroup mount and limit writes to it.
 
-Absolutely, you just described my daily bread performance setup.
+Signed-off-by: Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ security/selinux/hooks.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-	-Mike
+diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+index 9a8f12f..5a3138e 100644
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -808,6 +808,8 @@ static int selinux_set_mnt_opts(struct super_block *sb,
+ 
+ 	if (!strcmp(sb->s_type->name, "debugfs") ||
+ 	    !strcmp(sb->s_type->name, "sysfs") ||
++	    !strcmp(sb->s_type->name, "cgroup") ||
++	    !strcmp(sb->s_type->name, "cgroup2") ||
+ 	    !strcmp(sb->s_type->name, "pstore"))
+ 		sbsec->flags |= SE_SBGENFS;
+ 
+-- 
+2.9.3
+
+_______________________________________________
+Selinux mailing list
+Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
+To get help, send an email containing "help" to Selinux-request-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
