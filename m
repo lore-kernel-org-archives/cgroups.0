@@ -1,7 +1,7 @@
 From: Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: [PATCH] security: selinux: allow per-file labeling for cgroupfs
-Date: Thu,  9 Feb 2017 16:58:23 +0100
-Message-ID: <20170209155823.22148-1-runcom@redhat.com>
+Date: Thu,  9 Feb 2017 17:02:42 +0100
+Message-ID: <20170209160242.23405-1-amurdaca@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -12,13 +12,15 @@ List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subje
 Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
 Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
 To: selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+
+From: Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 This patch allows genfscon per-file labeling for cgroupfs. For instance,
 this allows to label the "release_agent" file within each
 cgroup mount and limit writes to it.
 
-Signed-off-by: Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
  security/selinux/hooks.c | 2 ++
  1 file changed, 2 insertions(+)
