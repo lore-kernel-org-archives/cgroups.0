@@ -1,79 +1,78 @@
-From: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
-Subject: Re: [PATCH] security: selinux: allow per-file labeling for cgroupfs
-Date: Thu, 9 Feb 2017 18:04:57 -0500
-Message-ID: <CAHC9VhTMxN5sqk+BL6f4-V7o3ez=7fMHBWFRAvj+j5iD+VkiMA@mail.gmail.com>
-References: <20170209160242.23405-1-amurdaca@redhat.com>
- <CAHC9VhRFxDuRJHYEuRs7kc4ivgaT=-SxdU-o5Lq7H-O+5JJRxQ@mail.gmail.com>
- <CALKLTGTc7U7ohxd44MHOuzVomW-oUsumqUqr0MKaUohw1NpSsg@mail.gmail.com>
- <CAHC9VhSj4ztDZwxfcuugaD5-OJrBVaJ=TQS=t4=jfL0+ZdbdYQ@mail.gmail.com>
- <CALKLTGTjpBYd5-M9RiO-Q4H_SokEiPJYptbxktg_aPccws59Jw@mail.gmail.com>
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [LSF/MM TOPIC] cpuset vs mempolicy related issues
+Date: Fri, 10 Feb 2017 12:52:25 +0100
+Message-ID: <b137d135-124a-136c-65aa-95889cc62693@suse.cz>
+References: <4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
- h=mime-version:in-reply-to:references:from:date:message-id:subject:to
- :cc; bh=mtlJ6tOOiM0xOUIWSfGsr5C7j0T/qElGOGw0OcnqemI=;
- b=Pgc7mIVd8t6R29UrrsqsqKsLs2kXjsfZqSNqusEs5tsZJ81TJfcVOsccAqtX2QW/vc
- R1qVpwt3z6KwfzZqZq2sZq/hPwzVFhmPI2mRcqJfbv/4REA3HuZ5QyY5/vfXam6SV0IM
- yOSVL6wKrSMZmcvodplXJI7R8GXIEKHnizn15NbfNlTW6J7LQM9dqPbqmV4gsnTvnEGU
- LwZ7oHZuIlwvLDkqgeRndfLxhG2XP2GazS2bF+bJYyTcrYgmk8nG4LjzXyu8sKbupBl3
- m7kO+1RnanZya4YD9hvBFh4AKTLom+SutbS4nOWHmSFw7efYiAdEHbN+Adq1qNkxuCJ+
- 12eQ==
-In-Reply-To: <CALKLTGTjpBYd5-M9RiO-Q4H_SokEiPJYptbxktg_aPccws59Jw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Post: <mailto:selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
-List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subject=help>
-Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
-Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
-To: Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: lsf-pc@lists.linux-foundation.org, "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, David Rientjes <rientjes@google.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Mel Gorman <mgorman@techsingularity.net>
 
-On Thu, Feb 9, 2017 at 5:32 PM, Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+On 02/03/2017 10:17 AM, Vlastimil Babka wrote:
+> Possible fix approach
 >
+> Cpuset updates will rebind nodemasks only of those mempolicies that need it wrt
+> their relative nodes semantics (those are either created with the flag
+> MPOL_F_RELATIVE_NODES, or with neither RELATIVE nor STATIC flag). The others
+> (created with the STATIC flag) we can leave untouched. For mempolicies that we
+> keep rebinding, adopt the approach of mbind() that swaps an updated copy
+> instead of in-place changes. We can leave get_page_from_freelist() as it is and
+> nodes will be filtered orthogonally with mempolicy nodemask and cpuset check.
 >
-> On Feb 9, 2017 20:23, "Paul Moore" <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org> wrote:
+> This will give us stable nodemask throughout the whole allocation without a
+> need for an on-stack copy. The next question is what to do with
+> current->mems_allowed. Do we keep the parallel modifications with seqlock
+> protection or e.g. try to go back to the synchronous copy approach?
 >
-> On Thu, Feb 9, 2017 at 12:39 PM, Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> wrote:
->> On Feb 9, 2017 17:14, "Paul Moore" <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org> wrote:
->> On Thu, Feb 9, 2017 at 11:02 AM, Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> wrote:
->>> From: Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>>
->>> This patch allows genfscon per-file labeling for cgroupfs. For instance,
->>> this allows to label the "release_agent" file within each
->>> cgroup mount and limit writes to it.
->>>
->>> Signed-off-by: Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>> ---
->>>  security/selinux/hooks.c | 2 ++
->>>  1 file changed, 2 insertions(+)
->>
->> This was already merged ... ?
->>
->>
->> This is adding cgroup and cgroup2 to the other whitelist (afaict).
+> Related to that is a remaining corner case with alloc_pages_vma() which has its
+> own seqlock-protected scope. There it calls policy_nodemask() which might
+> detect that there's no intersection between the mempolicy and cpuset and return
+> NULL nodemask. However, __alloc_pages_slowpath() has own seqlock scope, so if a
+> modification to mems_allowed (resulting in no intersection with mempolicy)
+> happens between the check in policy_nodemask() and reaching
+> __alloc_pages_slowpath(), the latter won't detect the modification and invoke
+> OOM before it can return with a failed allocation to alloc_pages_vma() and let
+> it detect a seqlock update and retry. One solution as shown in the RFC patch [3]
+> is to add another check for the cpuset/nodemask intersection before OOM. That
+> works, but it's a bit hacky and still produces an allocation failure warning.
 >
-> Yes, my apologies, I read this patch too quickly and confused it with
-> the previous cgroups patch.
->
-> Just to set expectations, this patch is too late for the upcoming
-> merge window, we can consider it in a few weeks once the merge window
-> has closed.  This should give you some time to do some further testing
-> (hint, hint).
->
->
-> Sure, I'm going to test this and add tests in selinux-testsuite as well
+> On the other hand, we might also want to make things more robust in general and
+> prevent spurious OOMs due to no nodes being eligible for also any other reason,
+> such as buggy driver passing a wrong nodemask (which doesn't necessarily come
+> from a mempolicy).
 
-Great, thank you.
+It occured to me that it could be possible to convert cpuset handling from 
+nodemask based to zonelist based, which means each cpuset would have its own set 
+of zonelists where only the allowed nodes (for hardwall) would be present. For 
+softwall we could have another set, where allowed nodes are prioritised, but all 
+would be present... or we would just use the system zonelists.
 
--- 
-paul moore
-www.paul-moore.com
-_______________________________________________
-Selinux mailing list
-Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
-To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
-To get help, send an email containing "help" to Selinux-request-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
+This means some extra memory overhead for each cpuset, but I'd expect the amount 
+of cpusets in the system should be relatively limited anyway. (Mempolicies used 
+to be based on zonelists in the past, but there the overhead might have been 
+more significant.)
+
+We could then get rid of the task->mems_allowed and the related seqlock. Cpuset 
+updates would allocate new set of zonelists and then swap it. This would need 
+either refcounting or some rwsem to free the old version safely.
+
+This together with reworked updating of mempolicies would provide the guarantee 
+that once we obtain the cpuset's zonelist and mempolicy's nodemask, we can check 
+it once for intersection, and then that result remains valid during the whole 
+allocation.
+
+Another advantage is that for_next_zone_zonelist_nodemask() then provides the 
+complete filtering and we don't have to call __cpuset_zone_allowed().
+
+Thoughts?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
