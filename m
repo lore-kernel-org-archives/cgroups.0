@@ -1,102 +1,39 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [LSF/MM TOPIC] cpuset vs mempolicy related issues
-Date: Fri, 10 Feb 2017 13:26:43 +0100
-Message-ID: <20170210122643.GJ10893@dhcp22.suse.cz>
-References: <4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz>
- <b137d135-124a-136c-65aa-95889cc62693@suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
+Date: Fri, 10 Feb 2017 10:46:14 -0500
+Message-ID: <20170210154614.GB16097@mtj.duckdns.org>
+References: <20170202200632.13992-1-tj@kernel.org>
+ <CAPM31RKHsM1-iWb5B6jkOtLomLhiOARtgMOTWZ8p1yjEn-ZK0A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=EjzILj/vvuU8OFK2WQQ8S6rVzXNrrt3WhnaEyBniVHI=;
+        b=UIJXPhHIoxUvtLDI01Gn8AdO7wG5h9YdP5hKbOTL5/LpFBhWBFo8MN8Li95qa/mVTf
+         4nNcg22EV7CvJ1tSgOB1n2V6sRnzFjSNSjHI4OkgPioRAXx2Py0fnDi5OXNHs9Mk1B8f
+         +M/bpEhu2BPYv8+NZM8h3oFQp7l9Qna2+DCNqYu2ChAsJzbjCS99GM7UazUm8eBFrEhl
+         YjpkRCqUFvutlpdTGAJtLetU2Q2+00/9ZXDxV5VhNyD8IvdryHh5ahK2+GeCp3PXHuuz
+         VHFRkkPpIMbG0xmG/Jtj8H7sjzeOqH5FkazwoJ0Kj0whSP6IK+8EmVTjpetnHmPoD2In
+         o9Yw==
 Content-Disposition: inline
-In-Reply-To: <b137d135-124a-136c-65aa-95889cc62693@suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <CAPM31RKHsM1-iWb5B6jkOtLomLhiOARtgMOTWZ8p1yjEn-ZK0A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: lsf-pc@lists.linux-foundation.org, "linux-mm@kvack.org" <linux-mm@kvack.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, David Rientjes <rientjes@google.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Mel Gorman <mgorman@techsingularity.net>
+To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Fri 10-02-17 12:52:25, Vlastimil Babka wrote:
-> On 02/03/2017 10:17 AM, Vlastimil Babka wrote:
-> > Possible fix approach
-> > 
-> > Cpuset updates will rebind nodemasks only of those mempolicies that need it wrt
-> > their relative nodes semantics (those are either created with the flag
-> > MPOL_F_RELATIVE_NODES, or with neither RELATIVE nor STATIC flag). The others
-> > (created with the STATIC flag) we can leave untouched. For mempolicies that we
-> > keep rebinding, adopt the approach of mbind() that swaps an updated copy
-> > instead of in-place changes. We can leave get_page_from_freelist() as it is and
-> > nodes will be filtered orthogonally with mempolicy nodemask and cpuset check.
-> > 
-> > This will give us stable nodemask throughout the whole allocation without a
-> > need for an on-stack copy. The next question is what to do with
-> > current->mems_allowed. Do we keep the parallel modifications with seqlock
-> > protection or e.g. try to go back to the synchronous copy approach?
-> > 
-> > Related to that is a remaining corner case with alloc_pages_vma() which has its
-> > own seqlock-protected scope. There it calls policy_nodemask() which might
-> > detect that there's no intersection between the mempolicy and cpuset and return
-> > NULL nodemask. However, __alloc_pages_slowpath() has own seqlock scope, so if a
-> > modification to mems_allowed (resulting in no intersection with mempolicy)
-> > happens between the check in policy_nodemask() and reaching
-> > __alloc_pages_slowpath(), the latter won't detect the modification and invoke
-> > OOM before it can return with a failed allocation to alloc_pages_vma() and let
-> > it detect a seqlock update and retry. One solution as shown in the RFC patch [3]
-> > is to add another check for the cpuset/nodemask intersection before OOM. That
-> > works, but it's a bit hacky and still produces an allocation failure warning.
-> > 
-> > On the other hand, we might also want to make things more robust in general and
-> > prevent spurious OOMs due to no nodes being eligible for also any other reason,
-> > such as buggy driver passing a wrong nodemask (which doesn't necessarily come
-> > from a mempolicy).
-> 
-> It occured to me that it could be possible to convert cpuset handling from
-> nodemask based to zonelist based, which means each cpuset would have its own
-> set of zonelists where only the allowed nodes (for hardwall) would be
-> present. For softwall we could have another set, where allowed nodes are
-> prioritised, but all would be present... or we would just use the system
-> zonelists.
+On Thu, Feb 09, 2017 at 05:07:16AM -0800, Paul Turner wrote:
+> What are the motivations that you see for forcing this all onto one
+> mount-point via .threads sub-tree tags?
 
-sounds like a good idea to me!
- 
-> This means some extra memory overhead for each cpuset, but I'd expect the
-> amount of cpusets in the system should be relatively limited anyway.
-> (Mempolicies used to be based on zonelists in the past, but there the
-> overhead might have been more significant.)
+So, you wanted rgroup but with /proc interface?  I'm afraid it's too
+late for that.
 
-I do not think this would ever be a problem.
+Thanks.
 
-> We could then get rid of the task->mems_allowed and the related seqlock.
-> Cpuset updates would allocate new set of zonelists and then swap it. This
-> would need either refcounting or some rwsem to free the old version safely.
-
-yes, refcounting sounds reasonably.
-
-> This together with reworked updating of mempolicies would provide the
-> guarantee that once we obtain the cpuset's zonelist and mempolicy's
-> nodemask, we can check it once for intersection, and then that result
-> remains valid during the whole allocation.
-
-I would really like to drop all/most of the mempolicy rebinding code
-which is called when the cpuset is chaged. I guess we cannot avoid that
-for MPOL_F_RELATIVE_NODES but other than that we should rely on
-policy_nodemask I believe. If the intersection between nodemask and
-cpuset is empty we can return NULL nodemask (we are doing that already
-for MPOL_BIND) and then rely on zonelists to do the right thing.
-
-> Another advantage is that for_next_zone_zonelist_nodemask() then provides
-> the complete filtering and we don't have to call __cpuset_zone_allowed().
-
-yes it would be also more natural and easier to understand. All the
-subtle details are really hidden now. I wasn't really aware of
-policy_nodemask returning NULL nodemask on empty intersection until recently
-and then you still have to keep in mind that there is __cpuset_zone_allowed
-at a place which does the cpuset part... This is really non-obvious.
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
