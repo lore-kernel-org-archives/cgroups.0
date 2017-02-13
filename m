@@ -1,43 +1,73 @@
 From: Mike Galbraith <efault@gmx.de>
 Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
-Date: Mon, 13 Feb 2017 06:28:50 +0100
-Message-ID: <1486963730.5912.89.camel@gmx.de>
+Date: Mon, 13 Feb 2017 06:45:07 +0100
+Message-ID: <1486964707.5912.93.camel@gmx.de>
 References: <20170202200632.13992-1-tj@kernel.org>
-         <CAPM31RKHsM1-iWb5B6jkOtLomLhiOARtgMOTWZ8p1yjEn-ZK0A@mail.gmail.com>
-         <20170209144704.GD6515@twins.programming.kicks-ass.net>
-         <CAPM31RJaJjFwenC36Abij+EdzO3KBm-DEjQ_crSmzrtrrn2N2A@mail.gmail.com>
+         <20170203202048.GD6515@twins.programming.kicks-ass.net>
+         <20170203205955.GA9886@mtj.duckdns.org>
+         <20170206124943.GJ6515@twins.programming.kicks-ass.net>
+         <20170208230819.GD25826@htj.duckdns.org>
+         <20170209102909.GC6515@twins.programming.kicks-ass.net>
+         <20170210154508.GA16097@mtj.duckdns.org>
+         <20170210175145.GJ6515@twins.programming.kicks-ass.net>
+         <20170212050544.GJ29323@mtj.duckdns.org> <1486882799.24462.25.camel@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPM31RJaJjFwenC36Abij+EdzO3KBm-DEjQ_crSmzrtrrn2N2A@mail.gmail.com>
+In-Reply-To: <1486882799.24462.25.camel@gmx.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Paul Turner <pjt@google.com>, Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, Andy Lutomirski <luto@amacapital.net>, cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>, "lvenanci@redhat.com" <lvenanci@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, pjt@google.com, luto@amacapital.net, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lvenanci@redhat.com, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Sun, 2017-02-12 at 13:16 -0800, Paul Turner wrote:
+On Sun, 2017-02-12 at 07:59 +0100, Mike Galbraith wrote:
+> On Sun, 2017-02-12 at 14:05 +0900, Tejun Heo wrote:
 > 
+> > > I think cgroup tree depth is a more significant issue; because of
+> > > hierarchy we often do tree walks (uo-to-root or down-to-task).
+> > > 
+> > > So creating elaborate trees is something I try not to do.
+> > 
+> > So, as long as the depth stays reasonable (single digit or lower),
+> > what we try to do is keeping tree traversal operations aggregated or
+> > located on slow paths.  There still are places that this overhead
+> > shows up (e.g. the block controllers aren't too optimized) but it
+> > isn't particularly difficult to make a handful of layers not matter at
+> > all.
 > 
-> On Thursday, February 9, 2017, Peter Zijlstra <peterz@infradead.org> wrote:
-> > On Thu, Feb 09, 2017 at 05:07:16AM -0800, Paul Turner wrote:
-> > > The only case that this does not support vs ".threads" would be some
-> > > hybrid where we co-mingle threads from different processes (with the
-> > > processes belonging to the same node in the hierarchy).  I'm not aware
-> > > of any usage that looks like this.
-> > 
-> > If I understand you right; this is a fairly common thing with RT where
-> > we would stuff all the !rt threads of the various processes in a 'misc'
-> > bucket.
-> > 
-> > Similarly, it happens that we stuff the various rt threads of processes
-> > in a specific (shared) 'rt' bucket.
-> > 
-> > So I would certainly not like to exclude that setup.
-> > 
-> 
-> Unless you're using rt groups I'm not sure this one really changes.  
-> Whether the "misc" threads exist at the parent level or one below
-> should not matter.
+> A handful of cpu bean counting layers stings considerably.
 
-(with exclusive cpusets, a mask can exist at one and only one location)
+BTW, that overhead is also why merging cpu/cpuacct is not really as
+wonderful as it may seem on paper.  If you only want to account, you
+may not have anything to gain from group scheduling (in fact it may
+wreck performance), but you'll pay for it.
+ 
+> homer:/abuild # pipe-test 1                          
+> 2.010057 usecs/loop -- avg 2.010057 995.0 KHz
+> 2.006630 usecs/loop -- avg 2.009714 995.2 KHz
+> 2.127118 usecs/loop -- avg 2.021455 989.4 KHz
+> 2.256244 usecs/loop -- avg 2.044934 978.0 KHz
+> 1.993693 usecs/loop -- avg 2.039810 980.5 KHz
+> ^C
+> homer:/abuild # cgexec -g cpu:hurt pipe-test 1
+> 2.771641 usecs/loop -- avg 2.771641 721.6 KHz
+> 2.432333 usecs/loop -- avg 2.737710 730.5 KHz
+> 2.750493 usecs/loop -- avg 2.738988 730.2 KHz
+> 2.663203 usecs/loop -- avg 2.731410 732.2 KHz
+> 2.762564 usecs/loop -- avg 2.734525 731.4 KHz
+> ^C
+> homer:/abuild # cgexec -g cpu:hurt/pain pipe-test 1
+> 2.967201 usecs/loop -- avg 2.967201 674.0 KHz
+> 3.049012 usecs/loop -- avg 2.975382 672.2 KHz
+> 3.031226 usecs/loop -- avg 2.980966 670.9 KHz
+> 2.954259 usecs/loop -- avg 2.978296 671.5 KHz
+> 2.933432 usecs/loop -- avg 2.973809 672.5 KHz
+> ^C
+> ...
+> homer:/abuild # cgexec -g cpu:hurt/pain/ouch/moan/groan pipe-test 1
+> 4.417044 usecs/loop -- avg 4.417044 452.8 KHz
+> 4.494913 usecs/loop -- avg 4.424831 452.0 KHz
+> 4.253861 usecs/loop -- avg 4.407734 453.7 KHz
+> 4.378059 usecs/loop -- avg 4.404766 454.1 KHz
+> 4.179895 usecs/loop -- avg 4.382279 456.4 KHz
