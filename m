@@ -1,171 +1,86 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
-Date: Tue, 14 Feb 2017 11:35:41 +0100
-Message-ID: <20170214103541.GS6515@twins.programming.kicks-ass.net>
-References: <20170202200632.13992-1-tj@kernel.org>
- <20170203202048.GD6515@twins.programming.kicks-ass.net>
- <20170203205955.GA9886@mtj.duckdns.org>
- <20170206124943.GJ6515@twins.programming.kicks-ass.net>
- <20170208230819.GD25826@htj.duckdns.org>
- <20170209102909.GC6515@twins.programming.kicks-ass.net>
- <20170210154508.GA16097@mtj.duckdns.org>
- <20170210175145.GJ6515@twins.programming.kicks-ass.net>
- <20170212050544.GJ29323@mtj.duckdns.org>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=mj4CJjzsIanQ9dP5+Hvy+vkoH2eQPY8Ldw5+rO0PrDo=; b=E6kJTihIU3E3A/PT6eiCX0JHy
-        9R4RsvZVY8KWffZBvTqAbnY2wXXDI5nIf6QlHCvB8ZDqHEr8OLLXqujrDeRA7JsUhcX0ixCcDfiFo
-        otsPk+4Cyj4NTp9qi8fQNkl6WpUdD4mNfTYqt3tLpem8t0p66oDRskVDW4nT5V8oLz18UkLTmtCPB
-        66WoSWCOrNa9I93o3ocEK6dVmEx5LuxXnfuLfSW0FG1WNXQ9bXErTmqL3SYLwARr3czo8CyEWkEdM
-        gfL9uuwalsm3BYOA3xIcDOLRqeAovKj8DuoRoEyTkg2KuxADzNZ35JQCT6uISjoXrbGlAstL863XO
-    
-Content-Disposition: inline
-In-Reply-To: <20170212050544.GJ29323@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Laurent Dufour <ldufour-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH] mm/cgroup: avoid panic when init with low memory
+Date: Wed, 15 Feb 2017 11:36:09 +0100
+Message-ID: <1487154969-6704-1-git-send-email-ldufour@linux.vnet.ibm.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lvenanci@redhat.com, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Feb 12, 2017 at 02:05:44PM +0900, Tejun Heo wrote:
-> Hello,
-> 
-> On Fri, Feb 10, 2017 at 06:51:45PM +0100, Peter Zijlstra wrote:
-> > Sure, we're past that. This isn't about what memcg can or cannot do.
-> > Previous discussions established that controllers come in two shapes:
-> > 
-> >  - task based controllers; these are build on per task properties and
-> >    groups are aggregates over sets of tasks. Since per definition inter
-> >    task competition is already defined on individual tasks, its fairly
-> >    trivial to extend the same rules to sets of tasks etc..
-> > 
-> >    Examples: cpu, cpuset, cpuacct, perf, pid, (freezer)
-> >
-> >  - system controllers; instead of building from tasks upwards, they
-> >    split what previously would be machine wide / global state. For these
-> >    there is no natural competition rule vs tasks, and hence your
-> >    no-internal-task rule.
-> > 
-> >    Examples: memcg, io, hugetlb
-> 
-> This is a bit of delta but as I wrote before, at least cpu (and
-> accordingly cpuacct) won't stay purely task-based as we should account
-> for resource consumptions which aren't tied to specific tasks to the
-> matching domain (e.g. CPU consumption during writeback, disk
-> encryption or CPU cycles spent to receive packets).
+The system may panic when initialisation is done when almost all the
+memory is assigned to the huge pages using the kernel command line
+parameter hugepage=xxxx. Panic may occur like this:
 
-We should probably do that in another thread, but I'd probably insist on
-separate controllers that co-operate to get that done.
+[    0.082289] Unable to handle kernel paging request for data at address 0x00000000
+[    0.082338] Faulting instruction address: 0xc000000000302b88
+[    0.082377] Oops: Kernel access of bad area, sig: 11 [#1]
+[    0.082408] SMP NR_CPUS=2048 [    0.082424] NUMA
+[    0.082440] pSeries
+[    0.082457] Modules linked in:
+[    0.082490] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-15-generic #16-Ubuntu
+[    0.082536] task: c00000021ed01600 task.stack: c00000010d108000
+[    0.082575] NIP: c000000000302b88 LR: c000000000270e04 CTR: c00000000016cfd0
+[    0.082621] REGS: c00000010d10b2c0 TRAP: 0300   Not tainted (4.9.0-15-generic)
+[    0.082666] MSR: 8000000002009033 <SF,VEC,EE,ME,IR,DR,RI,LE>[ 0.082770]   CR: 28424422  XER: 00000000
+[    0.082793] CFAR: c0000000003d28b8 DAR: 0000000000000000 DSISR: 40000000 SOFTE: 1
+GPR00: c000000000270e04 c00000010d10b540 c00000000141a300 c00000010fff6300
+GPR04: 0000000000000000 00000000026012c0 c00000010d10b630 0000000487ab0000
+GPR08: 000000010ee90000 c000000001454fd8 0000000000000000 0000000000000000
+GPR12: 0000000000004400 c00000000fb80000 00000000026012c0 00000000026012c0
+GPR16: 00000000026012c0 0000000000000000 0000000000000000 0000000000000002
+GPR20: 000000000000000c 0000000000000000 0000000000000000 00000000024200c0
+GPR24: c0000000016eef48 0000000000000000 c00000010fff7d00 00000000026012c0
+GPR28: 0000000000000000 c00000010fff7d00 c00000010fff6300 c00000010d10b6d0
+NIP [c000000000302b88] mem_cgroup_soft_limit_reclaim+0xf8/0x4f0
+[    0.083456] LR [c000000000270e04] do_try_to_free_pages+0x1b4/0x450
+[    0.083494] Call Trace:
+[    0.083511] [c00000010d10b540] [c00000010d10b640] 0xc00000010d10b640 (unreliable)
+[    0.083567] [c00000010d10b610] [c000000000270e04] do_try_to_free_pages+0x1b4/0x450
+[    0.083622] [c00000010d10b6b0] [c000000000271198] try_to_free_pages+0xf8/0x270
+[    0.083676] [c00000010d10b740] [c000000000259dd8] __alloc_pages_nodemask+0x7a8/0xff0
+[    0.083729] [c00000010d10b960] [c0000000002dd274] new_slab+0x104/0x8e0
+[    0.083776] [c00000010d10ba40] [c0000000002e03d0] ___slab_alloc+0x620/0x700
+[    0.083822] [c00000010d10bb70] [c0000000002e04e4] __slab_alloc+0x34/0x60
+[    0.083868] [c00000010d10bba0] [c0000000002e101c] kmem_cache_alloc_node_trace+0xdc/0x310
+[    0.083947] [c00000010d10bc00] [c000000000eb8120] mem_cgroup_init+0x158/0x1c8
+[    0.083994] [c00000010d10bc40] [c00000000000dde8] do_one_initcall+0x68/0x1d0
+[    0.084041] [c00000010d10bd00] [c000000000e84184] kernel_init_freeable+0x278/0x360
+[    0.084094] [c00000010d10bdc0] [c00000000000e714] kernel_init+0x24/0x170
+[    0.084143] [c00000010d10be30] [c00000000000c0e8] ret_from_kernel_thread+0x5c/0x74
+[    0.084195] Instruction dump:
+[    0.084220] eb81ffe0 eba1ffe8 ebc1fff0 ebe1fff8 4e800020 3d230001 e9499a42 3d220004
+[    0.084300] 3929acd8 794a1f24 7d295214 eac90100 <e9360000> 2fa90000 419eff74 3b200000
+[    0.084382] ---[ end trace 342f5208b00d01b6 ]---
 
-> > > And here's another point, currently, all controllers are enabled
-> > > consecutively from root.  If we have leaf thread subtrees, this still
-> > > works fine.  Resource domain controllers won't be enabled into thread
-> > > subtrees.  If we allow switching back and forth, what do we do in the
-> > > middle while we're in the thread part?
-> > 
-> > From what I understand you cannot re-enable a controller once its been
-> > disabled, right? If you disable it, its dead for the entire subtree.
-> 
-> cgroups on creation don't enable controllers by default and users can
-> enable and disable controllers dynamically as long as the conditions
-> are met.  So, they can be disable and re-enabled.
+This is a chicken and egg issue where the kernel try to get free
+memory when allocating per node data in mem_cgroup_init(), but in that
+path mem_cgroup_soft_limit_reclaim() is called which assumes that
+these data are allocated.
 
-I was talking in a hierarchical sense, your section 2-4-2. Top-Down
-constraint seems to state similar things to what I meant.
+As mem_cgroup_soft_limit_reclaim() is best effort, it should return
+when these data are not yet allocated.
 
-Once you disable a controller it cannot be re-enabled in a subtree.
+Signed-off-by: Laurent Dufour <ldufour-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+---
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > > No matter what we do, it's
-> > > gonna be more confusing and we lose basic invariants like "parent
-> > > always has superset of control knobs that its child has".
-> > 
-> > No, exactly that. I don't think I ever proposed something different.
-> >
-> > The "resource domain" flag I proposed violates the no-internal-processes
-> > thing, but it doesn't violate that rule afaict.
-> 
-> If we go to thread mode and back to domain mode, the control knobs for
-> domain controllers don't make sense on the thread part of the tree and
-> they won't have cgroup_subsys_state to correspond to either.  For
-> example,
-> 
->  A - T - B
-> 
-> B's memcg knobs would control memory distribution from A and cgroups
-> in T can't have memcg knobs.  It'd be weird to indicate that memcg is
-> enabled in those cgroups too.
-
-But memcg _is_ enabled for T. All the tasks are mapped onto A for
-purpose of the system controller (memcg) and are subject to its
-constraints.
-
-> We can make it work somehow.  It's just weird-ass interface.
-
-You could make these control files (read-only?) symlinks back to A's
-actual control files. To more explicitly show this.
-
-> > > As for the runtime overhead, if you get affected by adding a top-level
-> > > cgroup in any measureable way, we need to fix that.  That's not a
-> > > valid argument for messing up the interface.
-> > 
-> > I think cgroup tree depth is a more significant issue; because of
-> > hierarchy we often do tree walks (uo-to-root or down-to-task).
-> > 
-> > So creating elaborate trees is something I try not to do.
-> 
-> So, as long as the depth stays reasonable (single digit or lower),
-> what we try to do is keeping tree traversal operations aggregated or
-> located on slow paths. 
-
-While at the same time you allowed that BPF cgroup thing to not be
-hierarchical because iterating the tree was too expensive; or did I
-misunderstand?
-
-Also, I think Mike showed you the pain and hurt are quite visible for
-even a few levels.
-
-Batching is tricky, you need to somehow bound the error function in
-order to not become too big a factor on behaviour. Esp. for cpu, cpuacct
-obviously doesn't care much as it doesn't enforce anything.
-
-> In general, I think it's important to ensure that this in general is
-> the case so that users can use the logical layouts matching the actual
-> resource hierarchy rather than having to twist the layout for
-> optimization.
-
-One does what one can.. But it is important to understand the
-constraints, nothing comes for free.
-
-> > > Even if we allow switching back and forth, we can't make the same
-> > > cgroup both resource domain && thread root.  Not in a sane way at
-> > > least.
-> > 
-> > The back and forth thing yes, but even with a single level, the one
-> > resource domain you tag will be both resource domain and thread root.
-> 
-> Ah, you're right.
-
-Also, there is the one giant wart in v2 wrt no-internal-processes;
-namely the root group is allowed to have them.
-
-Now I understand why this is so; so don't feel compelled to explain that
-again, but it does make the model very ugly and has a real problem, see
-below. OTOH, since it is there, I would very much like to make use of
-this 'feature' and allow a thread-group on the root group.
-
-And since you then _can_ have nested thread groups, it again becomes
-very important to be able to find the resource domains, which brings me
-back to my proposal; albeit with an addition constraint.
-
-Now on to the problem of the no-internal-processes wart; how does
-cgroup-v2 currently implement the whole container invariant? Because by
-that invariant, a container's 'root' group must also allow
-internal-processes.
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1fd6affcdde7..213f96b2f601 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2556,7 +2556,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ 	 * is empty. Do it lockless to prevent lock bouncing. Races
+ 	 * are acceptable as soft limit is best effort anyway.
+ 	 */
+-	if (RB_EMPTY_ROOT(&mctz->rb_root))
++	if (!mctz || RB_EMPTY_ROOT(&mctz->rb_root))
+ 		return 0;
+ 
+ 	/*
+-- 
+2.7.4
