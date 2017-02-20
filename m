@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 18/19] kernel: convert futex_pi_state.refcount from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:19:07 +0200
-Message-ID: <1487585948-6401-19-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 19/19] kernel: convert kcov.refcount from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:19:08 +0200
+Message-ID: <1487585948-6401-20-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,84 +24,54 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- kernel/futex.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ kernel/kcov.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/futex.c b/kernel/futex.c
-index b687cb2..4ef9c10 100644
---- a/kernel/futex.c
-+++ b/kernel/futex.c
-@@ -65,6 +65,7 @@
- #include <linux/freezer.h>
- #include <linux/bootmem.h>
- #include <linux/fault-inject.h>
+diff --git a/kernel/kcov.c b/kernel/kcov.c
+index 85e5546..b8506c3 100644
+--- a/kernel/kcov.c
++++ b/kernel/kcov.c
+@@ -19,6 +19,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/uaccess.h>
+ #include <linux/kcov.h>
 +#include <linux/refcount.h>
+ #include <asm/setup.h>
  
- #include <asm/futex.h>
+ /*
+@@ -35,7 +36,7 @@ struct kcov {
+ 	 *  - opened file descriptor
+ 	 *  - task with enabled coverage (we can't unwire it from another task)
+ 	 */
+-	atomic_t		refcount;
++	refcount_t		refcount;
+ 	/* The lock protects mode, size, area and t. */
+ 	spinlock_t		lock;
+ 	enum kcov_mode		mode;
+@@ -101,12 +102,12 @@ EXPORT_SYMBOL(__sanitizer_cov_trace_pc);
  
-@@ -207,7 +208,7 @@ struct futex_pi_state {
- 	struct rt_mutex pi_mutex;
+ static void kcov_get(struct kcov *kcov)
+ {
+-	atomic_inc(&kcov->refcount);
++	refcount_inc(&kcov->refcount);
+ }
  
- 	struct task_struct *owner;
--	atomic_t refcount;
-+	refcount_t refcount;
- 
- 	union futex_key key;
- };
-@@ -792,7 +793,7 @@ static int refill_pi_state_cache(void)
- 	INIT_LIST_HEAD(&pi_state->list);
- 	/* pi_mutex gets initialized later */
- 	pi_state->owner = NULL;
--	atomic_set(&pi_state->refcount, 1);
-+	refcount_set(&pi_state->refcount, 1);
- 	pi_state->key = FUTEX_KEY_INIT;
- 
- 	current->pi_state_cache = pi_state;
-@@ -821,7 +822,7 @@ static void put_pi_state(struct futex_pi_state *pi_state)
- 	if (!pi_state)
- 		return;
- 
--	if (!atomic_dec_and_test(&pi_state->refcount))
-+	if (!refcount_dec_and_test(&pi_state->refcount))
- 		return;
- 
- 	/*
-@@ -845,7 +846,7 @@ static void put_pi_state(struct futex_pi_state *pi_state)
- 		 * refcount is at 0 - put it back to 1.
- 		 */
- 		pi_state->owner = NULL;
--		atomic_set(&pi_state->refcount, 1);
-+		refcount_set(&pi_state->refcount, 1);
- 		current->pi_state_cache = pi_state;
+ static void kcov_put(struct kcov *kcov)
+ {
+-	if (atomic_dec_and_test(&kcov->refcount)) {
++	if (refcount_dec_and_test(&kcov->refcount)) {
+ 		vfree(kcov->area);
+ 		kfree(kcov);
  	}
- }
-@@ -989,7 +990,7 @@ static int attach_to_pi_state(u32 uval, struct futex_pi_state *pi_state,
- 	if (unlikely(!pi_state))
- 		return -EINVAL;
- 
--	WARN_ON(!atomic_read(&pi_state->refcount));
-+	WARN_ON(!refcount_read(&pi_state->refcount));
- 
- 	/*
- 	 * Handle the owner died case:
-@@ -1040,7 +1041,7 @@ static int attach_to_pi_state(u32 uval, struct futex_pi_state *pi_state,
- 	if (pid != task_pid_vnr(pi_state->owner))
- 		return -EINVAL;
- out_state:
--	atomic_inc(&pi_state->refcount);
-+	refcount_inc(&pi_state->refcount);
- 	*ps = pi_state;
- 	return 0;
- }
-@@ -1907,7 +1908,7 @@ static int futex_requeue(u32 __user *uaddr1, unsigned int flags,
- 			 * refcount on the pi_state and store the pointer in
- 			 * the futex_q object of the waiter.
- 			 */
--			atomic_inc(&pi_state->refcount);
-+			refcount_inc(&pi_state->refcount);
- 			this->pi_state = pi_state;
- 			ret = rt_mutex_start_proxy_lock(&pi_state->pi_mutex,
- 							this->rt_waiter,
+@@ -182,7 +183,7 @@ static int kcov_open(struct inode *inode, struct file *filep)
+ 	kcov = kzalloc(sizeof(*kcov), GFP_KERNEL);
+ 	if (!kcov)
+ 		return -ENOMEM;
+-	atomic_set(&kcov->refcount, 1);
++	refcount_set(&kcov->refcount, 1);
+ 	spin_lock_init(&kcov->lock);
+ 	filep->private_data = kcov;
+ 	return nonseekable_open(inode, filep);
 -- 
 2.7.4
 
