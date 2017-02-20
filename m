@@ -1,17 +1,17 @@
-From: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 05/19] kernel: convert task_struct.stack_refcount from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:18:54 +0200
-Message-ID: <1487585948-6401-6-git-send-email-elena.reshetova@intel.com>
+From: Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 04/19] kernel: convert task_struct.usage from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:18:53 +0200
+Message-ID: <1487585948-6401-5-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, paul@paul-moore.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 
 refcount_t type and corresponding API should be
 used instead of atomic_t when the variable is used as
@@ -19,89 +19,80 @@ a reference counter. This allows to avoid accidental
 refcounter overflows that might lead to use-after-free
 situations.
 
-Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- include/linux/init_task.h | 3 ++-
- include/linux/sched.h     | 4 ++--
- kernel/fork.c             | 6 +++---
- 3 files changed, 7 insertions(+), 6 deletions(-)
+ include/linux/init_task.h | 2 +-
+ include/linux/sched.h     | 6 +++---
+ kernel/fork.c             | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/include/linux/init_task.h b/include/linux/init_task.h
-index 1c6df0b..c452c57 100644
+index 1f160b2..1c6df0b 100644
 --- a/include/linux/init_task.h
 +++ b/include/linux/init_task.h
-@@ -12,6 +12,7 @@
- #include <linux/securebits.h>
- #include <linux/seqlock.h>
- #include <linux/rbtree.h>
-+#include <linux/refcount.h>
- #include <net/net_namespace.h>
- #include <linux/sched/rt.h>
- 
-@@ -205,7 +206,7 @@ extern struct task_group root_task_group;
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- # define INIT_TASK_TI(tsk)			\
- 	.thread_info = INIT_THREAD_INFO(tsk),	\
--	.stack_refcount = ATOMIC_INIT(1),
-+	.stack_refcount = REFCOUNT_INIT(1),
- #else
- # define INIT_TASK_TI(tsk)
- #endif
+@@ -219,7 +219,7 @@ extern struct task_group root_task_group;
+ 	INIT_TASK_TI(tsk)						\
+ 	.state		= 0,						\
+ 	.stack		= init_stack,					\
+-	.usage		= ATOMIC_INIT(2),				\
++	.usage		= REFCOUNT_INIT(2),				\
+ 	.flags		= PF_KTHREAD,					\
+ 	.prio		= MAX_PRIO-20,					\
+ 	.static_prio	= MAX_PRIO-20,					\
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index d760ad6..41a2e52 100644
+index e90396f..d760ad6 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -1969,7 +1969,7 @@ struct task_struct {
+@@ -1489,7 +1489,7 @@ struct task_struct {
  #endif
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- 	/* A live task holds one reference. */
--	atomic_t stack_refcount;
-+	refcount_t stack_refcount;
- #endif
- /* CPU-specific state of this task */
- 	struct thread_struct thread;
-@@ -3260,7 +3260,7 @@ static inline unsigned long *end_of_stack(struct task_struct *p)
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- static inline void *try_get_task_stack(struct task_struct *tsk)
+ 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
+ 	void *stack;
+-	atomic_t usage;
++	refcount_t usage;
+ 	unsigned int flags;	/* per process flags, defined below */
+ 	unsigned int ptrace;
+ 
+@@ -2220,13 +2220,13 @@ static inline int is_global_init(struct task_struct *tsk)
+ extern struct pid *cad_pid;
+ 
+ extern void free_task(struct task_struct *tsk);
+-#define get_task_struct(tsk) do { atomic_inc(&(tsk)->usage); } while(0)
++#define get_task_struct(tsk) do { refcount_inc(&(tsk)->usage); } while(0)
+ 
+ extern void __put_task_struct(struct task_struct *t);
+ 
+ static inline void put_task_struct(struct task_struct *t)
  {
--	return atomic_inc_not_zero(&tsk->stack_refcount) ?
-+	return refcount_inc_not_zero(&tsk->stack_refcount) ?
- 		task_stack_page(tsk) : NULL;
+-	if (atomic_dec_and_test(&t->usage))
++	if (refcount_dec_and_test(&t->usage))
+ 		__put_task_struct(t);
  }
  
 diff --git a/kernel/fork.c b/kernel/fork.c
-index b9b3296..31c887c 100644
+index b432d1c..b9b3296 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -331,7 +331,7 @@ static void release_task_stack(struct task_struct *tsk)
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- void put_task_stack(struct task_struct *tsk)
+@@ -383,7 +383,7 @@ static inline void put_signal_struct(struct signal_struct *sig)
+ void __put_task_struct(struct task_struct *tsk)
  {
--	if (atomic_dec_and_test(&tsk->stack_refcount))
-+	if (refcount_dec_and_test(&tsk->stack_refcount))
- 		release_task_stack(tsk);
- }
- #endif
-@@ -349,7 +349,7 @@ void free_task(struct task_struct *tsk)
- 	 * If the task had a separate stack allocation, it should be gone
- 	 * by now.
- 	 */
--	WARN_ON_ONCE(atomic_read(&tsk->stack_refcount) != 0);
-+	WARN_ON_ONCE(refcount_read(&tsk->stack_refcount) != 0);
- #endif
- 	rt_mutex_debug_task_free(tsk);
- 	ftrace_graph_exit_task(tsk);
-@@ -504,7 +504,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
- 	tsk->stack_vm_area = stack_vm_area;
- #endif
- #ifdef CONFIG_THREAD_INFO_IN_TASK
--	atomic_set(&tsk->stack_refcount, 1);
-+	refcount_set(&tsk->stack_refcount, 1);
- #endif
+ 	WARN_ON(!tsk->exit_state);
+-	WARN_ON(atomic_read(&tsk->usage));
++	WARN_ON(refcount_read(&tsk->usage));
+ 	WARN_ON(tsk == current);
  
- 	if (err)
+ 	cgroup_free(tsk);
+@@ -533,7 +533,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
+ 	 * One for us, one for whoever does the "release_task()" (usually
+ 	 * parent)
+ 	 */
+-	atomic_set(&tsk->usage, 2);
++	refcount_set(&tsk->usage, 2);
+ #ifdef CONFIG_BLK_DEV_IO_TRACE
+ 	tsk->btrace_seq = 0;
+ #endif
 -- 
 2.7.4
+
