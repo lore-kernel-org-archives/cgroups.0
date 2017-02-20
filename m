@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:19:04 +0200
-Message-ID: <1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 17/19] kernel: convert numa_group.refcount from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:19:06 +0200
+Message-ID: <1487585948-6401-18-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,46 +24,46 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- kernel/audit_tree.c | 8 ++++----
+ kernel/sched/fair.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/audit_tree.c b/kernel/audit_tree.c
-index 7b44195..7ed617b 100644
---- a/kernel/audit_tree.c
-+++ b/kernel/audit_tree.c
-@@ -9,7 +9,7 @@ struct audit_tree;
- struct audit_chunk;
- 
- struct audit_tree {
--	atomic_t count;
-+	refcount_t count;
- 	int goner;
- 	struct audit_chunk *root;
- 	struct list_head chunks;
-@@ -77,7 +77,7 @@ static struct audit_tree *alloc_tree(const char *s)
- 
- 	tree = kmalloc(sizeof(struct audit_tree) + strlen(s) + 1, GFP_KERNEL);
- 	if (tree) {
--		atomic_set(&tree->count, 1);
-+		refcount_set(&tree->count, 1);
- 		tree->goner = 0;
- 		INIT_LIST_HEAD(&tree->chunks);
- 		INIT_LIST_HEAD(&tree->rules);
-@@ -91,12 +91,12 @@ static struct audit_tree *alloc_tree(const char *s)
- 
- static inline void get_tree(struct audit_tree *tree)
- {
--	atomic_inc(&tree->count);
-+	refcount_inc(&tree->count);
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 274c747..69405a0 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -1133,7 +1133,7 @@ static void account_numa_dequeue(struct rq *rq, struct task_struct *p)
  }
  
- static inline void put_tree(struct audit_tree *tree)
+ struct numa_group {
+-	atomic_t refcount;
++	refcount_t refcount;
+ 
+ 	spinlock_t lock; /* nr_tasks, tasks */
+ 	int nr_tasks;
+@@ -2181,12 +2181,12 @@ static void task_numa_placement(struct task_struct *p)
+ 
+ static inline int get_numa_group(struct numa_group *grp)
  {
--	if (atomic_dec_and_test(&tree->count))
-+	if (refcount_dec_and_test(&tree->count))
- 		kfree_rcu(tree, head);
+-	return atomic_inc_not_zero(&grp->refcount);
++	return refcount_inc_not_zero(&grp->refcount);
  }
  
+ static inline void put_numa_group(struct numa_group *grp)
+ {
+-	if (atomic_dec_and_test(&grp->refcount))
++	if (refcount_dec_and_test(&grp->refcount))
+ 		kfree_rcu(grp, rcu);
+ }
+ 
+@@ -2207,7 +2207,7 @@ static void task_numa_group(struct task_struct *p, int cpupid, int flags,
+ 		if (!grp)
+ 			return;
+ 
+-		atomic_set(&grp->refcount, 1);
++		refcount_set(&grp->refcount, 1);
+ 		grp->active_nodes = 1;
+ 		grp->max_faults_cpu = 0;
+ 		spin_lock_init(&grp->lock);
 -- 
 2.7.4
 
