@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 11/19] kernel: convert cgroup_namespace.count from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:19:00 +0200
-Message-ID: <1487585948-6401-12-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 13/19] kernel: convert group_info.usage from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:19:02 +0200
+Message-ID: <1487585948-6401-14-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,72 +24,75 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- include/linux/cgroup.h    | 7 ++++---
- kernel/cgroup/cgroup.c    | 2 +-
- kernel/cgroup/namespace.c | 2 +-
+ include/linux/cred.h | 7 ++++---
+ kernel/cred.c        | 2 +-
+ kernel/groups.c      | 2 +-
  3 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index f6b43fb..4412979 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -22,6 +22,7 @@
- #include <linux/ns_common.h>
- #include <linux/nsproxy.h>
- #include <linux/user_namespace.h>
+diff --git a/include/linux/cred.h b/include/linux/cred.h
+index f0e70a1..c837f2d 100644
+--- a/include/linux/cred.h
++++ b/include/linux/cred.h
+@@ -17,6 +17,7 @@
+ #include <linux/key.h>
+ #include <linux/selinux.h>
+ #include <linux/atomic.h>
 +#include <linux/refcount.h>
+ #include <linux/uidgid.h>
  
- #include <linux/cgroup-defs.h>
- 
-@@ -640,7 +641,7 @@ static inline void cgroup_sk_free(struct sock_cgroup_data *skcd) {}
- #endif	/* CONFIG_CGROUP_DATA */
- 
- struct cgroup_namespace {
--	atomic_t		count;
-+	refcount_t		count;
- 	struct ns_common	ns;
- 	struct user_namespace	*user_ns;
- 	struct ucounts		*ucounts;
-@@ -675,12 +676,12 @@ copy_cgroup_ns(unsigned long flags, struct user_namespace *user_ns,
- static inline void get_cgroup_ns(struct cgroup_namespace *ns)
+ struct user_struct;
+@@ -27,7 +28,7 @@ struct inode;
+  * COW Supplementary groups list
+  */
+ struct group_info {
+-	atomic_t	usage;
++	refcount_t	usage;
+ 	int		ngroups;
+ 	kgid_t		gid[0];
+ };
+@@ -43,7 +44,7 @@ struct group_info {
+  */
+ static inline struct group_info *get_group_info(struct group_info *gi)
  {
- 	if (ns)
--		atomic_inc(&ns->count);
-+		refcount_inc(&ns->count);
+-	atomic_inc(&gi->usage);
++	refcount_inc(&gi->usage);
+ 	return gi;
  }
  
- static inline void put_cgroup_ns(struct cgroup_namespace *ns)
- {
--	if (ns && atomic_dec_and_test(&ns->count))
-+	if (ns && refcount_dec_and_test(&ns->count))
- 		free_cgroup_ns(ns);
- }
+@@ -53,7 +54,7 @@ static inline struct group_info *get_group_info(struct group_info *gi)
+  */
+ #define put_group_info(group_info)			\
+ do {							\
+-	if (atomic_dec_and_test(&(group_info)->usage))	\
++	if (refcount_dec_and_test(&(group_info)->usage))	\
+ 		groups_free(group_info);		\
+ } while (0)
  
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index ffcb310..5b94c79 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -188,7 +188,7 @@ static u16 have_canfork_callback __read_mostly;
+diff --git a/kernel/cred.c b/kernel/cred.c
+index 5f264fb..3afeea6 100644
+--- a/kernel/cred.c
++++ b/kernel/cred.c
+@@ -35,7 +35,7 @@ do {									\
+ static struct kmem_cache *cred_jar;
  
- /* cgroup namespace for init task */
- struct cgroup_namespace init_cgroup_ns = {
--	.count		= { .counter = 2, },
-+	.count		= REFCOUNT_INIT(2),
- 	.user_ns	= &init_user_ns,
- 	.ns.ops		= &cgroupns_operations,
- 	.ns.inum	= PROC_CGROUP_INIT_INO,
-diff --git a/kernel/cgroup/namespace.c b/kernel/cgroup/namespace.c
-index cff7ea6..86e9bbe 100644
---- a/kernel/cgroup/namespace.c
-+++ b/kernel/cgroup/namespace.c
-@@ -31,7 +31,7 @@ static struct cgroup_namespace *alloc_cgroup_ns(void)
- 		kfree(new_ns);
- 		return ERR_PTR(ret);
- 	}
--	atomic_set(&new_ns->count, 1);
-+	refcount_set(&new_ns->count, 1);
- 	new_ns->ns.ops = &cgroupns_operations;
- 	return new_ns;
+ /* init to 2 - one for init_task, one to ensure it is never freed */
+-struct group_info init_groups = { .usage = ATOMIC_INIT(2) };
++struct group_info init_groups = { .usage = REFCOUNT_INIT(2) };
+ 
+ /*
+  * The initial credentials for the initial task
+diff --git a/kernel/groups.c b/kernel/groups.c
+index 8dd7a61..455267f 100644
+--- a/kernel/groups.c
++++ b/kernel/groups.c
+@@ -22,7 +22,7 @@ struct group_info *groups_alloc(int gidsetsize)
+ 	if (!gi)
+ 		return NULL;
+ 
+-	atomic_set(&gi->usage, 1);
++	refcount_set(&gi->usage, 1);
+ 	gi->ngroups = gidsetsize;
+ 	return gi;
  }
 -- 
 2.7.4
