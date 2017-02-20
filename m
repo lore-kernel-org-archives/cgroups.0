@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 16/19] kernel: convert audit_watch.count from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:19:05 +0200
-Message-ID: <1487585948-6401-17-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:19:04 +0200
+Message-ID: <1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,46 +24,46 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- kernel/audit_watch.c | 8 ++++----
+ kernel/audit_tree.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/audit_watch.c b/kernel/audit_watch.c
-index f79e465..8ca9e6c 100644
---- a/kernel/audit_watch.c
-+++ b/kernel/audit_watch.c
-@@ -46,7 +46,7 @@
-  */
+diff --git a/kernel/audit_tree.c b/kernel/audit_tree.c
+index 7b44195..7ed617b 100644
+--- a/kernel/audit_tree.c
++++ b/kernel/audit_tree.c
+@@ -9,7 +9,7 @@ struct audit_tree;
+ struct audit_chunk;
  
- struct audit_watch {
--	atomic_t		count;	/* reference count */
-+	refcount_t		count;	/* reference count */
- 	dev_t			dev;	/* associated superblock device */
- 	char			*path;	/* insertion path */
- 	unsigned long		ino;	/* associated inode number */
-@@ -111,12 +111,12 @@ static inline struct audit_parent *audit_find_parent(struct inode *inode)
+ struct audit_tree {
+-	atomic_t count;
++	refcount_t count;
+ 	int goner;
+ 	struct audit_chunk *root;
+ 	struct list_head chunks;
+@@ -77,7 +77,7 @@ static struct audit_tree *alloc_tree(const char *s)
  
- void audit_get_watch(struct audit_watch *watch)
+ 	tree = kmalloc(sizeof(struct audit_tree) + strlen(s) + 1, GFP_KERNEL);
+ 	if (tree) {
+-		atomic_set(&tree->count, 1);
++		refcount_set(&tree->count, 1);
+ 		tree->goner = 0;
+ 		INIT_LIST_HEAD(&tree->chunks);
+ 		INIT_LIST_HEAD(&tree->rules);
+@@ -91,12 +91,12 @@ static struct audit_tree *alloc_tree(const char *s)
+ 
+ static inline void get_tree(struct audit_tree *tree)
  {
--	atomic_inc(&watch->count);
-+	refcount_inc(&watch->count);
+-	atomic_inc(&tree->count);
++	refcount_inc(&tree->count);
  }
  
- void audit_put_watch(struct audit_watch *watch)
+ static inline void put_tree(struct audit_tree *tree)
  {
--	if (atomic_dec_and_test(&watch->count)) {
-+	if (refcount_dec_and_test(&watch->count)) {
- 		WARN_ON(watch->parent);
- 		WARN_ON(!list_empty(&watch->rules));
- 		kfree(watch->path);
-@@ -178,7 +178,7 @@ static struct audit_watch *audit_init_watch(char *path)
- 		return ERR_PTR(-ENOMEM);
+-	if (atomic_dec_and_test(&tree->count))
++	if (refcount_dec_and_test(&tree->count))
+ 		kfree_rcu(tree, head);
+ }
  
- 	INIT_LIST_HEAD(&watch->rules);
--	atomic_set(&watch->count, 1);
-+	refcount_set(&watch->count, 1);
- 	watch->path = path;
- 	watch->dev = AUDIT_DEV_UNSET;
- 	watch->ino = AUDIT_INO_UNSET;
 -- 
 2.7.4
 
