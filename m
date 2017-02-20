@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 04/19] kernel: convert task_struct.usage from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:18:53 +0200
-Message-ID: <1487585948-6401-5-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 01/19] kernel: convert sighand_struct.count from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:18:50 +0200
+Message-ID: <1487585948-6401-2-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,75 +24,107 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
+ fs/exec.c                 | 4 ++--
  include/linux/init_task.h | 2 +-
- include/linux/sched.h     | 6 +++---
- kernel/fork.c             | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ include/linux/sched.h     | 3 ++-
+ kernel/fork.c             | 8 ++++----
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
+diff --git a/fs/exec.c b/fs/exec.c
+index 698a860..3f78ff2 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -1174,7 +1174,7 @@ static int de_thread(struct task_struct *tsk)
+ 	flush_itimer_signals();
+ #endif
+ 
+-	if (atomic_read(&oldsighand->count) != 1) {
++	if (refcount_read(&oldsighand->count) != 1) {
+ 		struct sighand_struct *newsighand;
+ 		/*
+ 		 * This ->sighand is shared with the CLONE_SIGHAND
+@@ -1184,7 +1184,7 @@ static int de_thread(struct task_struct *tsk)
+ 		if (!newsighand)
+ 			return -ENOMEM;
+ 
+-		atomic_set(&newsighand->count, 1);
++		refcount_set(&newsighand->count, 1);
+ 		memcpy(newsighand->action, oldsighand->action,
+ 		       sizeof(newsighand->action));
+ 
 diff --git a/include/linux/init_task.h b/include/linux/init_task.h
-index 1f160b2..1c6df0b 100644
+index 3a85d61..1f160b2 100644
 --- a/include/linux/init_task.h
 +++ b/include/linux/init_task.h
-@@ -219,7 +219,7 @@ extern struct task_group root_task_group;
- 	INIT_TASK_TI(tsk)						\
- 	.state		= 0,						\
- 	.stack		= init_stack,					\
--	.usage		= ATOMIC_INIT(2),				\
-+	.usage		= REFCOUNT_INIT(2),				\
- 	.flags		= PF_KTHREAD,					\
- 	.prio		= MAX_PRIO-20,					\
- 	.static_prio	= MAX_PRIO-20,					\
+@@ -82,7 +82,7 @@ extern struct fs_struct init_fs;
+ extern struct nsproxy init_nsproxy;
+ 
+ #define INIT_SIGHAND(sighand) {						\
+-	.count		= ATOMIC_INIT(1), 				\
++	.count		= REFCOUNT_INIT(1), 				\
+ 	.action		= { { { .sa_handler = SIG_DFL, } }, },		\
+ 	.siglock	= __SPIN_LOCK_UNLOCKED(sighand.siglock),	\
+ 	.signalfd_wqh	= __WAIT_QUEUE_HEAD_INITIALIZER(sighand.signalfd_wqh),	\
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index e90396f..d760ad6 100644
+index 0f0d497..a0430aa 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -1489,7 +1489,7 @@ struct task_struct {
- #endif
- 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
- 	void *stack;
--	atomic_t usage;
-+	refcount_t usage;
- 	unsigned int flags;	/* per process flags, defined below */
- 	unsigned int ptrace;
+@@ -42,6 +42,7 @@ struct sched_param {
+ #include <linux/seccomp.h>
+ #include <linux/rcupdate.h>
+ #include <linux/rculist.h>
++#include <linux/refcount.h>
+ #include <linux/rtmutex.h>
  
-@@ -2220,13 +2220,13 @@ static inline int is_global_init(struct task_struct *tsk)
- extern struct pid *cad_pid;
+ #include <linux/time.h>
+@@ -527,7 +528,7 @@ static inline int get_dumpable(struct mm_struct *mm)
+ #define MMF_INIT_MASK		(MMF_DUMPABLE_MASK | MMF_DUMP_FILTER_MASK)
  
- extern void free_task(struct task_struct *tsk);
--#define get_task_struct(tsk) do { atomic_inc(&(tsk)->usage); } while(0)
-+#define get_task_struct(tsk) do { refcount_inc(&(tsk)->usage); } while(0)
- 
- extern void __put_task_struct(struct task_struct *t);
- 
- static inline void put_task_struct(struct task_struct *t)
- {
--	if (atomic_dec_and_test(&t->usage))
-+	if (refcount_dec_and_test(&t->usage))
- 		__put_task_struct(t);
- }
- 
+ struct sighand_struct {
+-	atomic_t		count;
++	refcount_t		count;
+ 	struct k_sigaction	action[_NSIG];
+ 	spinlock_t		siglock;
+ 	wait_queue_head_t	signalfd_wqh;
 diff --git a/kernel/fork.c b/kernel/fork.c
-index b432d1c..b9b3296 100644
+index e96e256..9488f01 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -383,7 +383,7 @@ static inline void put_signal_struct(struct signal_struct *sig)
- void __put_task_struct(struct task_struct *tsk)
- {
- 	WARN_ON(!tsk->exit_state);
--	WARN_ON(atomic_read(&tsk->usage));
-+	WARN_ON(refcount_read(&tsk->usage));
- 	WARN_ON(tsk == current);
+@@ -1285,7 +1285,7 @@ static int copy_sighand(unsigned long clone_flags, struct task_struct *tsk)
+ 	struct sighand_struct *sig;
  
- 	cgroup_free(tsk);
-@@ -533,7 +533,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
- 	 * One for us, one for whoever does the "release_task()" (usually
- 	 * parent)
- 	 */
--	atomic_set(&tsk->usage, 2);
-+	refcount_set(&tsk->usage, 2);
- #ifdef CONFIG_BLK_DEV_IO_TRACE
- 	tsk->btrace_seq = 0;
- #endif
+ 	if (clone_flags & CLONE_SIGHAND) {
+-		atomic_inc(&current->sighand->count);
++		refcount_inc(&current->sighand->count);
+ 		return 0;
+ 	}
+ 	sig = kmem_cache_alloc(sighand_cachep, GFP_KERNEL);
+@@ -1293,14 +1293,14 @@ static int copy_sighand(unsigned long clone_flags, struct task_struct *tsk)
+ 	if (!sig)
+ 		return -ENOMEM;
+ 
+-	atomic_set(&sig->count, 1);
++	refcount_set(&sig->count, 1);
+ 	memcpy(sig->action, current->sighand->action, sizeof(sig->action));
+ 	return 0;
+ }
+ 
+ void __cleanup_sighand(struct sighand_struct *sighand)
+ {
+-	if (atomic_dec_and_test(&sighand->count)) {
++	if (refcount_dec_and_test(&sighand->count)) {
+ 		signalfd_cleanup(sighand);
+ 		/*
+ 		 * sighand_cachep is SLAB_DESTROY_BY_RCU so we can free it
+@@ -2170,7 +2170,7 @@ static int check_unshare_flags(unsigned long unshare_flags)
+ 			return -EINVAL;
+ 	}
+ 	if (unshare_flags & (CLONE_SIGHAND | CLONE_VM)) {
+-		if (atomic_read(&current->sighand->count) > 1)
++		if (refcount_read(&current->sighand->count) > 1)
+ 			return -EINVAL;
+ 	}
+ 	if (unshare_flags & CLONE_VM) {
 -- 
 2.7.4
 
