@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 08/19] kernel: convert ring_buffer.aux_refcount from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:18:57 +0200
-Message-ID: <1487585948-6401-9-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 09/19] kernel: convert uprobe.ref from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:18:58 +0200
+Message-ID: <1487585948-6401-10-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,68 +24,47 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- kernel/events/core.c        | 2 +-
- kernel/events/internal.h    | 2 +-
- kernel/events/ring_buffer.c | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ kernel/events/uprobes.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index e1c337d..32add6c 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -5114,7 +5114,7 @@ static void perf_mmap_close(struct vm_area_struct *vma)
+diff --git a/kernel/events/uprobes.c b/kernel/events/uprobes.c
+index b62d6fe..a4b33f8 100644
+--- a/kernel/events/uprobes.c
++++ b/kernel/events/uprobes.c
+@@ -64,7 +64,7 @@ static struct percpu_rw_semaphore dup_mmap_sem;
  
- 		/* this has to be the last one */
- 		rb_free_aux(rb);
--		WARN_ON_ONCE(atomic_read(&rb->aux_refcount));
-+		WARN_ON_ONCE(refcount_read(&rb->aux_refcount));
+ struct uprobe {
+ 	struct rb_node		rb_node;	/* node in the rb tree */
+-	atomic_t		ref;
++	refcount_t		ref;
+ 	struct rw_semaphore	register_rwsem;
+ 	struct rw_semaphore	consumer_rwsem;
+ 	struct list_head	pending_list;
+@@ -369,13 +369,13 @@ set_orig_insn(struct arch_uprobe *auprobe, struct mm_struct *mm, unsigned long v
  
- 		mutex_unlock(&event->mmap_mutex);
- 	}
-diff --git a/kernel/events/internal.h b/kernel/events/internal.h
-index b8e6fdf..fb55716 100644
---- a/kernel/events/internal.h
-+++ b/kernel/events/internal.h
-@@ -48,7 +48,7 @@ struct ring_buffer {
- 	atomic_t			aux_mmap_count;
- 	unsigned long			aux_mmap_locked;
- 	void				(*free_aux)(void *);
--	atomic_t			aux_refcount;
-+	refcount_t			aux_refcount;
- 	void				**aux_pages;
- 	void				*aux_priv;
- 
-diff --git a/kernel/events/ring_buffer.c b/kernel/events/ring_buffer.c
-index 8de1664..c501d4e 100644
---- a/kernel/events/ring_buffer.c
-+++ b/kernel/events/ring_buffer.c
-@@ -344,7 +344,7 @@ void *perf_aux_output_begin(struct perf_output_handle *handle,
- 	if (!atomic_read(&rb->aux_mmap_count))
- 		goto err;
- 
--	if (!atomic_inc_not_zero(&rb->aux_refcount))
-+	if (!refcount_inc_not_zero(&rb->aux_refcount))
- 		goto err;
- 
- 	/*
-@@ -636,7 +636,7 @@ int rb_alloc_aux(struct ring_buffer *rb, struct perf_event *event,
- 	 * we keep a refcount here to make sure either of the two can
- 	 * reference them safely.
- 	 */
--	atomic_set(&rb->aux_refcount, 1);
-+	refcount_set(&rb->aux_refcount, 1);
- 
- 	rb->aux_overwrite = overwrite;
- 	rb->aux_watermark = watermark;
-@@ -655,7 +655,7 @@ int rb_alloc_aux(struct ring_buffer *rb, struct perf_event *event,
- 
- void rb_free_aux(struct ring_buffer *rb)
+ static struct uprobe *get_uprobe(struct uprobe *uprobe)
  {
--	if (atomic_dec_and_test(&rb->aux_refcount))
-+	if (refcount_dec_and_test(&rb->aux_refcount))
- 		__rb_free_aux(rb);
+-	atomic_inc(&uprobe->ref);
++	refcount_inc(&uprobe->ref);
+ 	return uprobe;
  }
  
+ static void put_uprobe(struct uprobe *uprobe)
+ {
+-	if (atomic_dec_and_test(&uprobe->ref))
++	if (refcount_dec_and_test(&uprobe->ref))
+ 		kfree(uprobe);
+ }
+ 
+@@ -457,7 +457,7 @@ static struct uprobe *__insert_uprobe(struct uprobe *uprobe)
+ 	rb_link_node(&uprobe->rb_node, parent, p);
+ 	rb_insert_color(&uprobe->rb_node, &uprobes_tree);
+ 	/* get access + creation ref */
+-	atomic_set(&uprobe->ref, 2);
++	refcount_set(&uprobe->ref, 2);
+ 
+ 	return u;
+ }
 -- 
 2.7.4
 
