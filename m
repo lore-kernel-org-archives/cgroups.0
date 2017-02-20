@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 12/19] kernel: convert css_set.refcount from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:19:01 +0200
-Message-ID: <1487585948-6401-13-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 11/19] kernel: convert cgroup_namespace.count from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:19:00 +0200
+Message-ID: <1487585948-6401-12-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,130 +24,73 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- include/linux/cgroup-defs.h     |  3 ++-
- kernel/cgroup/cgroup-internal.h | 10 +++++++---
- kernel/cgroup/cgroup-v1.c       |  4 ++--
- kernel/cgroup/cgroup.c          |  8 ++++----
- 4 files changed, 15 insertions(+), 10 deletions(-)
+ include/linux/cgroup.h    | 7 ++++---
+ kernel/cgroup/cgroup.c    | 2 +-
+ kernel/cgroup/namespace.c | 2 +-
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 3c02404..e2f4b31 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -13,6 +13,7 @@
- #include <linux/wait.h>
- #include <linux/mutex.h>
- #include <linux/rcupdate.h>
-+#include <linux/refcount.h>
- #include <linux/percpu-refcount.h>
- #include <linux/percpu-rwsem.h>
- #include <linux/workqueue.h>
-@@ -156,7 +157,7 @@ struct css_set {
- 	struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
- 
- 	/* reference count */
--	atomic_t refcount;
-+	refcount_t refcount;
- 
- 	/* the default cgroup associated with this css_set */
- 	struct cgroup *dfl_cgrp;
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index 9203bfb..22d87ca 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -5,6 +5,7 @@
- #include <linux/kernfs.h>
- #include <linux/workqueue.h>
- #include <linux/list.h>
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index f6b43fb..4412979 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -22,6 +22,7 @@
+ #include <linux/ns_common.h>
+ #include <linux/nsproxy.h>
+ #include <linux/user_namespace.h>
 +#include <linux/refcount.h>
  
- /*
-  * A cgroup can be associated with multiple css_sets as different tasks may
-@@ -134,10 +135,13 @@ static inline void put_css_set(struct css_set *cset)
- 	 * can see it. Similar to atomic_dec_and_lock(), but for an
- 	 * rwlock
- 	 */
--	if (atomic_add_unless(&cset->refcount, -1, 1))
-+	spin_lock_irqsave(&css_set_lock, flags);
-+	if (refcount_read(&cset->refcount) != 1) {
-+		WARN_ON(refcount_dec_and_test(&cset->refcount));
-+		spin_unlock_irqrestore(&css_set_lock, flags);
- 		return;
-+	}
+ #include <linux/cgroup-defs.h>
  
--	spin_lock_irqsave(&css_set_lock, flags);
- 	put_css_set_locked(cset);
- 	spin_unlock_irqrestore(&css_set_lock, flags);
- }
-@@ -147,7 +151,7 @@ static inline void put_css_set(struct css_set *cset)
-  */
- static inline void get_css_set(struct css_set *cset)
+@@ -640,7 +641,7 @@ static inline void cgroup_sk_free(struct sock_cgroup_data *skcd) {}
+ #endif	/* CONFIG_CGROUP_DATA */
+ 
+ struct cgroup_namespace {
+-	atomic_t		count;
++	refcount_t		count;
+ 	struct ns_common	ns;
+ 	struct user_namespace	*user_ns;
+ 	struct ucounts		*ucounts;
+@@ -675,12 +676,12 @@ copy_cgroup_ns(unsigned long flags, struct user_namespace *user_ns,
+ static inline void get_cgroup_ns(struct cgroup_namespace *ns)
  {
--	atomic_inc(&cset->refcount);
-+	refcount_inc(&cset->refcount);
+ 	if (ns)
+-		atomic_inc(&ns->count);
++		refcount_inc(&ns->count);
  }
  
- bool cgroup_ssid_enabled(int ssid);
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index fc34bcf..9269179 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -343,7 +343,7 @@ static int cgroup_task_count(const struct cgroup *cgrp)
- 
- 	spin_lock_irq(&css_set_lock);
- 	list_for_each_entry(link, &cgrp->cset_links, cset_link)
--		count += atomic_read(&link->cset->refcount);
-+		count += refcount_read(&link->cset->refcount);
- 	spin_unlock_irq(&css_set_lock);
- 	return count;
+ static inline void put_cgroup_ns(struct cgroup_namespace *ns)
+ {
+-	if (ns && atomic_dec_and_test(&ns->count))
++	if (ns && refcount_dec_and_test(&ns->count))
+ 		free_cgroup_ns(ns);
  }
-@@ -1283,7 +1283,7 @@ static u64 current_css_set_refcount_read(struct cgroup_subsys_state *css,
- 	u64 count;
  
- 	rcu_read_lock();
--	count = atomic_read(&task_css_set(current)->refcount);
-+	count = refcount_read(&task_css_set(current)->refcount);
- 	rcu_read_unlock();
- 	return count;
- }
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 5b94c79..59aba84 100644
+index ffcb310..5b94c79 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -553,7 +553,7 @@ EXPORT_SYMBOL_GPL(of_css);
-  * haven't been created.
-  */
- struct css_set init_css_set = {
--	.refcount		= ATOMIC_INIT(1),
-+	.refcount		= REFCOUNT_INIT(1),
- 	.tasks			= LIST_HEAD_INIT(init_css_set.tasks),
- 	.mg_tasks		= LIST_HEAD_INIT(init_css_set.mg_tasks),
- 	.task_iters		= LIST_HEAD_INIT(init_css_set.task_iters),
-@@ -723,7 +723,7 @@ void put_css_set_locked(struct css_set *cset)
+@@ -188,7 +188,7 @@ static u16 have_canfork_callback __read_mostly;
  
- 	lockdep_assert_held(&css_set_lock);
- 
--	if (!atomic_dec_and_test(&cset->refcount))
-+	if (!refcount_dec_and_test(&cset->refcount))
- 		return;
- 
- 	/* This css_set is dead. unlink it and release cgroup and css refs */
-@@ -976,7 +976,7 @@ static struct css_set *find_css_set(struct css_set *old_cset,
- 		return NULL;
+ /* cgroup namespace for init task */
+ struct cgroup_namespace init_cgroup_ns = {
+-	.count		= { .counter = 2, },
++	.count		= REFCOUNT_INIT(2),
+ 	.user_ns	= &init_user_ns,
+ 	.ns.ops		= &cgroupns_operations,
+ 	.ns.inum	= PROC_CGROUP_INIT_INO,
+diff --git a/kernel/cgroup/namespace.c b/kernel/cgroup/namespace.c
+index cff7ea6..86e9bbe 100644
+--- a/kernel/cgroup/namespace.c
++++ b/kernel/cgroup/namespace.c
+@@ -31,7 +31,7 @@ static struct cgroup_namespace *alloc_cgroup_ns(void)
+ 		kfree(new_ns);
+ 		return ERR_PTR(ret);
  	}
- 
--	atomic_set(&cset->refcount, 1);
-+	refcount_set(&cset->refcount, 1);
- 	INIT_LIST_HEAD(&cset->tasks);
- 	INIT_LIST_HEAD(&cset->mg_tasks);
- 	INIT_LIST_HEAD(&cset->task_iters);
-@@ -5064,4 +5064,4 @@ int cgroup_bpf_update(struct cgroup *cgrp, struct bpf_prog *prog,
- 	mutex_unlock(&cgroup_mutex);
- 	return ret;
+-	atomic_set(&new_ns->count, 1);
++	refcount_set(&new_ns->count, 1);
+ 	new_ns->ns.ops = &cgroupns_operations;
+ 	return new_ns;
  }
--#endif /* CONFIG_CGROUP_BPF */
-+#endif /* CONFIG_CGROUP_BPF */
-\ No newline at end of file
 -- 
 2.7.4
 
