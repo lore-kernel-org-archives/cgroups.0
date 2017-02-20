@@ -1,17 +1,17 @@
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 02/19] kernel: convert signal_struct.sigcnt from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:18:51 +0200
-Message-ID: <1487585948-6401-3-git-send-email-elena.reshetova@intel.com>
+From: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 05/19] kernel: convert task_struct.stack_refcount from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:18:54 +0200
+Message-ID: <1487585948-6401-6-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, paul@paul-moore.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 refcount_t type and corresponding API should be
 used instead of atomic_t when the variable is used as
@@ -19,59 +19,89 @@ a reference counter. This allows to avoid accidental
 refcounter overflows that might lead to use-after-free
 situations.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
+Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/sched.h | 2 +-
- kernel/fork.c         | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ include/linux/init_task.h | 3 ++-
+ include/linux/sched.h     | 4 ++--
+ kernel/fork.c             | 6 +++---
+ 3 files changed, 7 insertions(+), 6 deletions(-)
 
+diff --git a/include/linux/init_task.h b/include/linux/init_task.h
+index 1c6df0b..c452c57 100644
+--- a/include/linux/init_task.h
++++ b/include/linux/init_task.h
+@@ -12,6 +12,7 @@
+ #include <linux/securebits.h>
+ #include <linux/seqlock.h>
+ #include <linux/rbtree.h>
++#include <linux/refcount.h>
+ #include <net/net_namespace.h>
+ #include <linux/sched/rt.h>
+ 
+@@ -205,7 +206,7 @@ extern struct task_group root_task_group;
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ # define INIT_TASK_TI(tsk)			\
+ 	.thread_info = INIT_THREAD_INFO(tsk),	\
+-	.stack_refcount = ATOMIC_INIT(1),
++	.stack_refcount = REFCOUNT_INIT(1),
+ #else
+ # define INIT_TASK_TI(tsk)
+ #endif
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index a0430aa..6aad885 100644
+index d760ad6..41a2e52 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -659,7 +659,7 @@ struct autogroup;
-  * the locking of signal_struct.
-  */
- struct signal_struct {
--	atomic_t		sigcnt;
-+	refcount_t		sigcnt;
- 	atomic_t		live;
- 	int			nr_threads;
- 	struct list_head	thread_head;
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 9488f01..b432d1c 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -376,7 +376,7 @@ static inline void free_signal_struct(struct signal_struct *sig)
- 
- static inline void put_signal_struct(struct signal_struct *sig)
+@@ -1969,7 +1969,7 @@ struct task_struct {
+ #endif
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ 	/* A live task holds one reference. */
+-	atomic_t stack_refcount;
++	refcount_t stack_refcount;
+ #endif
+ /* CPU-specific state of this task */
+ 	struct thread_struct thread;
+@@ -3260,7 +3260,7 @@ static inline unsigned long *end_of_stack(struct task_struct *p)
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ static inline void *try_get_task_stack(struct task_struct *tsk)
  {
--	if (atomic_dec_and_test(&sig->sigcnt))
-+	if (refcount_dec_and_test(&sig->sigcnt))
- 		free_signal_struct(sig);
+-	return atomic_inc_not_zero(&tsk->stack_refcount) ?
++	return refcount_inc_not_zero(&tsk->stack_refcount) ?
+ 		task_stack_page(tsk) : NULL;
  }
  
-@@ -1347,7 +1347,7 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
+diff --git a/kernel/fork.c b/kernel/fork.c
+index b9b3296..31c887c 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -331,7 +331,7 @@ static void release_task_stack(struct task_struct *tsk)
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ void put_task_stack(struct task_struct *tsk)
+ {
+-	if (atomic_dec_and_test(&tsk->stack_refcount))
++	if (refcount_dec_and_test(&tsk->stack_refcount))
+ 		release_task_stack(tsk);
+ }
+ #endif
+@@ -349,7 +349,7 @@ void free_task(struct task_struct *tsk)
+ 	 * If the task had a separate stack allocation, it should be gone
+ 	 * by now.
+ 	 */
+-	WARN_ON_ONCE(atomic_read(&tsk->stack_refcount) != 0);
++	WARN_ON_ONCE(refcount_read(&tsk->stack_refcount) != 0);
+ #endif
+ 	rt_mutex_debug_task_free(tsk);
+ 	ftrace_graph_exit_task(tsk);
+@@ -504,7 +504,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
+ 	tsk->stack_vm_area = stack_vm_area;
+ #endif
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+-	atomic_set(&tsk->stack_refcount, 1);
++	refcount_set(&tsk->stack_refcount, 1);
+ #endif
  
- 	sig->nr_threads = 1;
- 	atomic_set(&sig->live, 1);
--	atomic_set(&sig->sigcnt, 1);
-+	refcount_set(&sig->sigcnt, 1);
- 
- 	/* list_add(thread_node, thread_head) without INIT_LIST_HEAD() */
- 	sig->thread_head = (struct list_head)LIST_HEAD_INIT(tsk->thread_node);
-@@ -1826,7 +1826,7 @@ static __latent_entropy struct task_struct *copy_process(
- 		} else {
- 			current->signal->nr_threads++;
- 			atomic_inc(&current->signal->live);
--			atomic_inc(&current->signal->sigcnt);
-+			refcount_inc(&current->signal->sigcnt);
- 			list_add_tail_rcu(&p->thread_group,
- 					  &p->group_leader->thread_group);
- 			list_add_tail_rcu(&p->thread_node,
+ 	if (err)
 -- 
 2.7.4
-
