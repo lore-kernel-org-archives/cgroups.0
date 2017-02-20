@@ -1,130 +1,42 @@
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 01/19] kernel: convert sighand_struct.count from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:18:50 +0200
-Message-ID: <1487585948-6401-2-git-send-email-elena.reshetova@intel.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 06/19] kernel: convert perf_event_context.refcount from
+ atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 11:28:25 +0100
+Message-ID: <20170220102825.GL6500@twins.programming.kicks-ass.net>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+ <1487585948-6401-7-git-send-email-elena.reshetova@intel.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=rUQUjBhHDwEfvm+hEQsRZIoi7bn47E+tHKQ+D0hkMwo=; b=I/1Ri3Gne/VNvKjNNvOw5O7Eo
+        CjTfXPsa3nbi5PTXxvBQ1DKBr9ryHHJsW6TWdT8nintb9qBrJYNB7pwUSloWfYHwvrURcAfv/A+7o
+        JkODnZp2PD536kQxB7YaBKUOhJxk1kmFz+F9e3zegkJIe2qrn4zY72/ghlJIbUK8YKqGsAJPudibQ
+        RAA3eRxCYF1TTJBdh+p20/irfIfKZvGZ4y1iF2BQ5K0p5lAzs5mR2CMmibm8EQ53MWCMf8K12Ep3+
+        N376bajoaPU1+6PprVpkUPzj+UWlx3uKHxQHaorolx4B4OX7PREbjB301UBOX4CtAe8mr7bNyja0F
+      
+Content-Disposition: inline
+In-Reply-To: <1487585948-6401-7-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, paul@paul-moore.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On Mon, Feb 20, 2017 at 12:18:55PM +0200, Elena Reshetova wrote:
+> +++ b/kernel/events/core.c
+> @@ -1108,7 +1108,7 @@ static void perf_event_ctx_deactivate(struct perf_event_context *ctx)
+>  
+>  static void get_ctx(struct perf_event_context *ctx)
+>  {
+> -	WARN_ON(!atomic_inc_not_zero(&ctx->refcount));
+> +	WARN_ON(!refcount_inc_not_zero(&ctx->refcount));
+>  }
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/exec.c                 | 4 ++--
- include/linux/init_task.h | 2 +-
- include/linux/sched.h     | 3 ++-
- kernel/fork.c             | 8 ++++----
- 4 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/fs/exec.c b/fs/exec.c
-index 698a860..3f78ff2 100644
---- a/fs/exec.c
-+++ b/fs/exec.c
-@@ -1174,7 +1174,7 @@ static int de_thread(struct task_struct *tsk)
- 	flush_itimer_signals();
- #endif
- 
--	if (atomic_read(&oldsighand->count) != 1) {
-+	if (refcount_read(&oldsighand->count) != 1) {
- 		struct sighand_struct *newsighand;
- 		/*
- 		 * This ->sighand is shared with the CLONE_SIGHAND
-@@ -1184,7 +1184,7 @@ static int de_thread(struct task_struct *tsk)
- 		if (!newsighand)
- 			return -ENOMEM;
- 
--		atomic_set(&newsighand->count, 1);
-+		refcount_set(&newsighand->count, 1);
- 		memcpy(newsighand->action, oldsighand->action,
- 		       sizeof(newsighand->action));
- 
-diff --git a/include/linux/init_task.h b/include/linux/init_task.h
-index 3a85d61..1f160b2 100644
---- a/include/linux/init_task.h
-+++ b/include/linux/init_task.h
-@@ -82,7 +82,7 @@ extern struct fs_struct init_fs;
- extern struct nsproxy init_nsproxy;
- 
- #define INIT_SIGHAND(sighand) {						\
--	.count		= ATOMIC_INIT(1), 				\
-+	.count		= REFCOUNT_INIT(1), 				\
- 	.action		= { { { .sa_handler = SIG_DFL, } }, },		\
- 	.siglock	= __SPIN_LOCK_UNLOCKED(sighand.siglock),	\
- 	.signalfd_wqh	= __WAIT_QUEUE_HEAD_INITIALIZER(sighand.signalfd_wqh),	\
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0f0d497..a0430aa 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -42,6 +42,7 @@ struct sched_param {
- #include <linux/seccomp.h>
- #include <linux/rcupdate.h>
- #include <linux/rculist.h>
-+#include <linux/refcount.h>
- #include <linux/rtmutex.h>
- 
- #include <linux/time.h>
-@@ -527,7 +528,7 @@ static inline int get_dumpable(struct mm_struct *mm)
- #define MMF_INIT_MASK		(MMF_DUMPABLE_MASK | MMF_DUMP_FILTER_MASK)
- 
- struct sighand_struct {
--	atomic_t		count;
-+	refcount_t		count;
- 	struct k_sigaction	action[_NSIG];
- 	spinlock_t		siglock;
- 	wait_queue_head_t	signalfd_wqh;
-diff --git a/kernel/fork.c b/kernel/fork.c
-index e96e256..9488f01 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1285,7 +1285,7 @@ static int copy_sighand(unsigned long clone_flags, struct task_struct *tsk)
- 	struct sighand_struct *sig;
- 
- 	if (clone_flags & CLONE_SIGHAND) {
--		atomic_inc(&current->sighand->count);
-+		refcount_inc(&current->sighand->count);
- 		return 0;
- 	}
- 	sig = kmem_cache_alloc(sighand_cachep, GFP_KERNEL);
-@@ -1293,14 +1293,14 @@ static int copy_sighand(unsigned long clone_flags, struct task_struct *tsk)
- 	if (!sig)
- 		return -ENOMEM;
- 
--	atomic_set(&sig->count, 1);
-+	refcount_set(&sig->count, 1);
- 	memcpy(sig->action, current->sighand->action, sizeof(sig->action));
- 	return 0;
- }
- 
- void __cleanup_sighand(struct sighand_struct *sighand)
- {
--	if (atomic_dec_and_test(&sighand->count)) {
-+	if (refcount_dec_and_test(&sighand->count)) {
- 		signalfd_cleanup(sighand);
- 		/*
- 		 * sighand_cachep is SLAB_DESTROY_BY_RCU so we can free it
-@@ -2170,7 +2170,7 @@ static int check_unshare_flags(unsigned long unshare_flags)
- 			return -EINVAL;
- 	}
- 	if (unshare_flags & (CLONE_SIGHAND | CLONE_VM)) {
--		if (atomic_read(&current->sighand->count) > 1)
-+		if (refcount_read(&current->sighand->count) > 1)
- 			return -EINVAL;
- 	}
- 	if (unshare_flags & CLONE_VM) {
--- 
-2.7.4
-
+You can change that to refcount_inc(), as that has the exact same
+semantics.
