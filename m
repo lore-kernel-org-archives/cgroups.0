@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 13/19] kernel: convert group_info.usage from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 12:19:02 +0200
-Message-ID: <1487585948-6401-14-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 16/19] kernel: convert audit_watch.count from atomic_t to refcount_t
+Date: Mon, 20 Feb 2017 12:19:05 +0200
+Message-ID: <1487585948-6401-17-git-send-email-elena.reshetova@intel.com>
 References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
@@ -24,76 +24,46 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- include/linux/cred.h | 7 ++++---
- kernel/cred.c        | 2 +-
- kernel/groups.c      | 2 +-
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ kernel/audit_watch.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/cred.h b/include/linux/cred.h
-index f0e70a1..c837f2d 100644
---- a/include/linux/cred.h
-+++ b/include/linux/cred.h
-@@ -17,6 +17,7 @@
- #include <linux/key.h>
- #include <linux/selinux.h>
- #include <linux/atomic.h>
-+#include <linux/refcount.h>
- #include <linux/uidgid.h>
+diff --git a/kernel/audit_watch.c b/kernel/audit_watch.c
+index f79e465..8ca9e6c 100644
+--- a/kernel/audit_watch.c
++++ b/kernel/audit_watch.c
+@@ -46,7 +46,7 @@
+  */
  
- struct user_struct;
-@@ -27,7 +28,7 @@ struct inode;
-  * COW Supplementary groups list
-  */
- struct group_info {
--	atomic_t	usage;
-+	refcount_t	usage;
- 	int		ngroups;
- 	kgid_t		gid[0];
- };
-@@ -43,7 +44,7 @@ struct group_info {
-  */
- static inline struct group_info *get_group_info(struct group_info *gi)
+ struct audit_watch {
+-	atomic_t		count;	/* reference count */
++	refcount_t		count;	/* reference count */
+ 	dev_t			dev;	/* associated superblock device */
+ 	char			*path;	/* insertion path */
+ 	unsigned long		ino;	/* associated inode number */
+@@ -111,12 +111,12 @@ static inline struct audit_parent *audit_find_parent(struct inode *inode)
+ 
+ void audit_get_watch(struct audit_watch *watch)
  {
--	atomic_inc(&gi->usage);
-+	refcount_inc(&gi->usage);
- 	return gi;
+-	atomic_inc(&watch->count);
++	refcount_inc(&watch->count);
  }
  
-@@ -53,7 +54,7 @@ static inline struct group_info *get_group_info(struct group_info *gi)
-  */
- #define put_group_info(group_info)			\
- do {							\
--	if (atomic_dec_and_test(&(group_info)->usage))	\
-+	if (refcount_dec_and_test(&(group_info)->usage))	\
- 		groups_free(group_info);		\
- } while (0)
+ void audit_put_watch(struct audit_watch *watch)
+ {
+-	if (atomic_dec_and_test(&watch->count)) {
++	if (refcount_dec_and_test(&watch->count)) {
+ 		WARN_ON(watch->parent);
+ 		WARN_ON(!list_empty(&watch->rules));
+ 		kfree(watch->path);
+@@ -178,7 +178,7 @@ static struct audit_watch *audit_init_watch(char *path)
+ 		return ERR_PTR(-ENOMEM);
  
-diff --git a/kernel/cred.c b/kernel/cred.c
-index 5f264fb..3afeea6 100644
---- a/kernel/cred.c
-+++ b/kernel/cred.c
-@@ -35,7 +35,7 @@ do {									\
- static struct kmem_cache *cred_jar;
- 
- /* init to 2 - one for init_task, one to ensure it is never freed */
--struct group_info init_groups = { .usage = ATOMIC_INIT(2) };
-+struct group_info init_groups = { .usage = REFCOUNT_INIT(2) };
- 
- /*
-  * The initial credentials for the initial task
-diff --git a/kernel/groups.c b/kernel/groups.c
-index 8dd7a61..455267f 100644
---- a/kernel/groups.c
-+++ b/kernel/groups.c
-@@ -22,7 +22,7 @@ struct group_info *groups_alloc(int gidsetsize)
- 	if (!gi)
- 		return NULL;
- 
--	atomic_set(&gi->usage, 1);
-+	refcount_set(&gi->usage, 1);
- 	gi->ngroups = gidsetsize;
- 	return gi;
- }
+ 	INIT_LIST_HEAD(&watch->rules);
+-	atomic_set(&watch->count, 1);
++	refcount_set(&watch->count, 1);
+ 	watch->path = path;
+ 	watch->dev = AUDIT_DEV_UNSET;
+ 	watch->ino = AUDIT_INO_UNSET;
 -- 
 2.7.4
 
