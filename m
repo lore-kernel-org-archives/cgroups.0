@@ -1,89 +1,66 @@
-From: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
-Subject: Re: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to refcount_t
-Date: Mon, 20 Feb 2017 17:07:25 -0500
-Message-ID: <CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw@mail.gmail.com>
-References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com> <1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
+From: "Reshetova, Elena" <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to
+ refcount_t
+Date: Tue, 21 Feb 2017 07:15:53 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C4DE27@IRSMSX102.ger.corp.intel.com>
+References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
+ <1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
+ <CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=VZjLo6zRcggeWX4AjQJK4zTcw7T9S/3nyXcAivzhV0U=;
-        b=2Qdg5fTQ/s2nxJmmT0oxUeCoUv+jsAddVcwBn0WEKYB+urP8T6yIBBkIl5krwasImk
-         6qyaOi0M5420efbrHcqdISlfS4Yks1Ysubn9rqQQ9op0CtAS7hU3MsvRCwbpUwar/Gyb
-         os9jZQ8bf3x9jpPgzbeVobuthoAuuGTKZyCUYsm0huxX8WT7PjPNk8mA97KEDWG8DMpS
-         lCQJd+RTiJQc3L+DzLU4l+/TF52azW6SYC8ObszMHnjweDq/pCS80euMz5uspZRRr8q/
-         FQNpI2hA+vGY9mfwrYfowJVP/YCmLNMBn2EsEg75kOyqyj2SuIiUnDtdoc4aW/hbBi23
-         kYCA==
-In-Reply-To: <1487585948-6401-16-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
+Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "arnd-r2nGTMty4D4@public.gmane.org" <>
 
-On Mon, Feb 20, 2017 at 5:19 AM, Elena Reshetova
-<elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
->
-> Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  kernel/audit_tree.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-
-No objection on my end, same for patch 16/19.
-
-I have no problem merging both these patches into the audit/next
-branch after the merge window, is that your goal or are you merging
-these via a different tree?
-
-> diff --git a/kernel/audit_tree.c b/kernel/audit_tree.c
-> index 7b44195..7ed617b 100644
-> --- a/kernel/audit_tree.c
-> +++ b/kernel/audit_tree.c
-> @@ -9,7 +9,7 @@ struct audit_tree;
->  struct audit_chunk;
->
->  struct audit_tree {
-> -       atomic_t count;
-> +       refcount_t count;
->         int goner;
->         struct audit_chunk *root;
->         struct list_head chunks;
-> @@ -77,7 +77,7 @@ static struct audit_tree *alloc_tree(const char *s)
->
->         tree = kmalloc(sizeof(struct audit_tree) + strlen(s) + 1, GFP_KERNEL);
->         if (tree) {
-> -               atomic_set(&tree->count, 1);
-> +               refcount_set(&tree->count, 1);
->                 tree->goner = 0;
->                 INIT_LIST_HEAD(&tree->chunks);
->                 INIT_LIST_HEAD(&tree->rules);
-> @@ -91,12 +91,12 @@ static struct audit_tree *alloc_tree(const char *s)
->
->  static inline void get_tree(struct audit_tree *tree)
->  {
-> -       atomic_inc(&tree->count);
-> +       refcount_inc(&tree->count);
->  }
->
->  static inline void put_tree(struct audit_tree *tree)
->  {
-> -       if (atomic_dec_and_test(&tree->count))
-> +       if (refcount_dec_and_test(&tree->count))
->                 kfree_rcu(tree, head);
->  }
->
-
--- 
-paul moore
-www.paul-moore.com
+PiBPbiBNb24sIEZlYiAyMCwgMjAxNyBhdCA1OjE5IEFNLCBFbGVuYSBSZXNoZXRvdmENCj4gPGVs
+ZW5hLnJlc2hldG92YUBpbnRlbC5jb20+IHdyb3RlOg0KPiA+IHJlZmNvdW50X3QgdHlwZSBhbmQg
+Y29ycmVzcG9uZGluZyBBUEkgc2hvdWxkIGJlDQo+ID4gdXNlZCBpbnN0ZWFkIG9mIGF0b21pY190
+IHdoZW4gdGhlIHZhcmlhYmxlIGlzIHVzZWQgYXMNCj4gPiBhIHJlZmVyZW5jZSBjb3VudGVyLiBU
+aGlzIGFsbG93cyB0byBhdm9pZCBhY2NpZGVudGFsDQo+ID4gcmVmY291bnRlciBvdmVyZmxvd3Mg
+dGhhdCBtaWdodCBsZWFkIHRvIHVzZS1hZnRlci1mcmVlDQo+ID4gc2l0dWF0aW9ucy4NCj4gPg0K
+PiA+IFNpZ25lZC1vZmYtYnk6IEVsZW5hIFJlc2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVs
+LmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBIYW5zIExpbGplc3RyYW5kIDxpc2hrYW1pZWxAZ21h
+aWwuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEtlZXMgQ29vayA8a2Vlc2Nvb2tAY2hyb21pdW0u
+b3JnPg0KPiA+IFNpZ25lZC1vZmYtYnk6IERhdmlkIFdpbmRzb3IgPGR3aW5kc29yQGdtYWlsLmNv
+bT4NCj4gPiAtLS0NCj4gPiAga2VybmVsL2F1ZGl0X3RyZWUuYyB8IDggKysrKy0tLS0NCj4gPiAg
+MSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4gDQo+IE5v
+IG9iamVjdGlvbiBvbiBteSBlbmQsIHNhbWUgZm9yIHBhdGNoIDE2LzE5Lg0KPiANCj4gSSBoYXZl
+IG5vIHByb2JsZW0gbWVyZ2luZyBib3RoIHRoZXNlIHBhdGNoZXMgaW50byB0aGUgYXVkaXQvbmV4
+dA0KPiBicmFuY2ggYWZ0ZXIgdGhlIG1lcmdlIHdpbmRvdywgaXMgdGhhdCB5b3VyIGdvYWwgb3Ig
+YXJlIHlvdSBtZXJnaW5nDQo+IHRoZXNlIHZpYSBhIGRpZmZlcmVudCB0cmVlPw0KDQpUaGFuayB5
+b3UgUGF1bCEgSSB0aGluayBpdCBpcyBiZXR0ZXIgaWYgdGhleSBnbyB0aHJvdWdoIHRoZSB0cmVl
+cyB0aGV5IHN1cHBvc2VkIHRvIGdvIHRocm91Z2gNCnNpbmNlIHRoaXMgd2F5IHRoZXkgd291bGQg
+Z2V0IG1vcmUgdGVzdGluZyBhbmQgZXRjLiBTbywgcGxlYXNlIHRha2UgdGhlIHJlbGV2YW50IG9u
+ZXMgdG8geW91ciB0cmVlIHdoZW4gdGhlIHRpbWUgaXMgcmlnaHQuIA0KDQpBZnRlciB0aGUgZmly
+c3Qgcm91bmQsIEkgZ3Vlc3Mgd2Ugd2lsbCBzZWUgd2hhdCBwYXRjaGVzIGFyZSBub3QgcHJvcGFn
+YXRpbmcgYW5kIHRoZW4gbWF5YmUgdGFrZSB0aGVtIHZpYSBLZWVzIHRyZWUuIA0KDQpCZXN0IFJl
+Z2FyZHMsDQpFbGVuYS4NCg0KPiANCj4gPiBkaWZmIC0tZ2l0IGEva2VybmVsL2F1ZGl0X3RyZWUu
+YyBiL2tlcm5lbC9hdWRpdF90cmVlLmMNCj4gPiBpbmRleCA3YjQ0MTk1Li43ZWQ2MTdiIDEwMDY0
+NA0KPiA+IC0tLSBhL2tlcm5lbC9hdWRpdF90cmVlLmMNCj4gPiArKysgYi9rZXJuZWwvYXVkaXRf
+dHJlZS5jDQo+ID4gQEAgLTksNyArOSw3IEBAIHN0cnVjdCBhdWRpdF90cmVlOw0KPiA+ICBzdHJ1
+Y3QgYXVkaXRfY2h1bms7DQo+ID4NCj4gPiAgc3RydWN0IGF1ZGl0X3RyZWUgew0KPiA+IC0gICAg
+ICAgYXRvbWljX3QgY291bnQ7DQo+ID4gKyAgICAgICByZWZjb3VudF90IGNvdW50Ow0KPiA+ICAg
+ICAgICAgaW50IGdvbmVyOw0KPiA+ICAgICAgICAgc3RydWN0IGF1ZGl0X2NodW5rICpyb290Ow0K
+PiA+ICAgICAgICAgc3RydWN0IGxpc3RfaGVhZCBjaHVua3M7DQo+ID4gQEAgLTc3LDcgKzc3LDcg
+QEAgc3RhdGljIHN0cnVjdCBhdWRpdF90cmVlICphbGxvY190cmVlKGNvbnN0IGNoYXIgKnMpDQo+
+ID4NCj4gPiAgICAgICAgIHRyZWUgPSBrbWFsbG9jKHNpemVvZihzdHJ1Y3QgYXVkaXRfdHJlZSkg
+KyBzdHJsZW4ocykgKyAxLCBHRlBfS0VSTkVMKTsNCj4gPiAgICAgICAgIGlmICh0cmVlKSB7DQo+
+ID4gLSAgICAgICAgICAgICAgIGF0b21pY19zZXQoJnRyZWUtPmNvdW50LCAxKTsNCj4gPiArICAg
+ICAgICAgICAgICAgcmVmY291bnRfc2V0KCZ0cmVlLT5jb3VudCwgMSk7DQo+ID4gICAgICAgICAg
+ICAgICAgIHRyZWUtPmdvbmVyID0gMDsNCj4gPiAgICAgICAgICAgICAgICAgSU5JVF9MSVNUX0hF
+QUQoJnRyZWUtPmNodW5rcyk7DQo+ID4gICAgICAgICAgICAgICAgIElOSVRfTElTVF9IRUFEKCZ0
+cmVlLT5ydWxlcyk7DQo+ID4gQEAgLTkxLDEyICs5MSwxMiBAQCBzdGF0aWMgc3RydWN0IGF1ZGl0
+X3RyZWUgKmFsbG9jX3RyZWUoY29uc3QgY2hhciAqcykNCj4gPg0KPiA+ICBzdGF0aWMgaW5saW5l
+IHZvaWQgZ2V0X3RyZWUoc3RydWN0IGF1ZGl0X3RyZWUgKnRyZWUpDQo+ID4gIHsNCj4gPiAtICAg
+ICAgIGF0b21pY19pbmMoJnRyZWUtPmNvdW50KTsNCj4gPiArICAgICAgIHJlZmNvdW50X2luYygm
+dHJlZS0+Y291bnQpOw0KPiA+ICB9DQo+ID4NCj4gPiAgc3RhdGljIGlubGluZSB2b2lkIHB1dF90
+cmVlKHN0cnVjdCBhdWRpdF90cmVlICp0cmVlKQ0KPiA+ICB7DQo+ID4gLSAgICAgICBpZiAoYXRv
+bWljX2RlY19hbmRfdGVzdCgmdHJlZS0+Y291bnQpKQ0KPiA+ICsgICAgICAgaWYgKHJlZmNvdW50
+X2RlY19hbmRfdGVzdCgmdHJlZS0+Y291bnQpKQ0KPiA+ICAgICAgICAgICAgICAgICBrZnJlZV9y
+Y3UodHJlZSwgaGVhZCk7DQo+ID4gIH0NCj4gPg0KPiANCj4gLS0NCj4gcGF1bCBtb29yZQ0KPiB3
+d3cucGF1bC1tb29yZS5jb20NCg==
