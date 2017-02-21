@@ -1,66 +1,170 @@
-From: "Reshetova, Elena" <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to
- refcount_t
-Date: Tue, 21 Feb 2017 07:15:53 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C4DE27@IRSMSX102.ger.corp.intel.com>
-References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
- <1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
- <CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH] mm: memcontrol: provide shmem statistics
+Date: Tue, 21 Feb 2017 11:43:43 -0500
+Message-ID: <20170221164343.32252-1-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:
+	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=KfTk/h9m/fFazPEA/JqQLB3angMS+ZfJw1CUb0RwODo=; b=rr48EfJCUp8auzm59LYl1+BWcT
+	lfcAh4KwqERwXCcpaBfovzwdY5ku+6OOGFvtRtfy2lOcRT5ZGRNvLG23/XgJmOK5lR92sZ6gtgy77
+	ZQoLmYy90btaEj59r7WuDKeS5+Cf8dSVnsoRrhOZBemqSxlcwUfaevmUj9M3b6SDiqhs=;
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "arnd-r2nGTMty4D4@public.gmane.org" <>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov.dev@gmail.com>, Chris Down <cdown@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-PiBPbiBNb24sIEZlYiAyMCwgMjAxNyBhdCA1OjE5IEFNLCBFbGVuYSBSZXNoZXRvdmENCj4gPGVs
-ZW5hLnJlc2hldG92YUBpbnRlbC5jb20+IHdyb3RlOg0KPiA+IHJlZmNvdW50X3QgdHlwZSBhbmQg
-Y29ycmVzcG9uZGluZyBBUEkgc2hvdWxkIGJlDQo+ID4gdXNlZCBpbnN0ZWFkIG9mIGF0b21pY190
-IHdoZW4gdGhlIHZhcmlhYmxlIGlzIHVzZWQgYXMNCj4gPiBhIHJlZmVyZW5jZSBjb3VudGVyLiBU
-aGlzIGFsbG93cyB0byBhdm9pZCBhY2NpZGVudGFsDQo+ID4gcmVmY291bnRlciBvdmVyZmxvd3Mg
-dGhhdCBtaWdodCBsZWFkIHRvIHVzZS1hZnRlci1mcmVlDQo+ID4gc2l0dWF0aW9ucy4NCj4gPg0K
-PiA+IFNpZ25lZC1vZmYtYnk6IEVsZW5hIFJlc2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVs
-LmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBIYW5zIExpbGplc3RyYW5kIDxpc2hrYW1pZWxAZ21h
-aWwuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEtlZXMgQ29vayA8a2Vlc2Nvb2tAY2hyb21pdW0u
-b3JnPg0KPiA+IFNpZ25lZC1vZmYtYnk6IERhdmlkIFdpbmRzb3IgPGR3aW5kc29yQGdtYWlsLmNv
-bT4NCj4gPiAtLS0NCj4gPiAga2VybmVsL2F1ZGl0X3RyZWUuYyB8IDggKysrKy0tLS0NCj4gPiAg
-MSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4gDQo+IE5v
-IG9iamVjdGlvbiBvbiBteSBlbmQsIHNhbWUgZm9yIHBhdGNoIDE2LzE5Lg0KPiANCj4gSSBoYXZl
-IG5vIHByb2JsZW0gbWVyZ2luZyBib3RoIHRoZXNlIHBhdGNoZXMgaW50byB0aGUgYXVkaXQvbmV4
-dA0KPiBicmFuY2ggYWZ0ZXIgdGhlIG1lcmdlIHdpbmRvdywgaXMgdGhhdCB5b3VyIGdvYWwgb3Ig
-YXJlIHlvdSBtZXJnaW5nDQo+IHRoZXNlIHZpYSBhIGRpZmZlcmVudCB0cmVlPw0KDQpUaGFuayB5
-b3UgUGF1bCEgSSB0aGluayBpdCBpcyBiZXR0ZXIgaWYgdGhleSBnbyB0aHJvdWdoIHRoZSB0cmVl
-cyB0aGV5IHN1cHBvc2VkIHRvIGdvIHRocm91Z2gNCnNpbmNlIHRoaXMgd2F5IHRoZXkgd291bGQg
-Z2V0IG1vcmUgdGVzdGluZyBhbmQgZXRjLiBTbywgcGxlYXNlIHRha2UgdGhlIHJlbGV2YW50IG9u
-ZXMgdG8geW91ciB0cmVlIHdoZW4gdGhlIHRpbWUgaXMgcmlnaHQuIA0KDQpBZnRlciB0aGUgZmly
-c3Qgcm91bmQsIEkgZ3Vlc3Mgd2Ugd2lsbCBzZWUgd2hhdCBwYXRjaGVzIGFyZSBub3QgcHJvcGFn
-YXRpbmcgYW5kIHRoZW4gbWF5YmUgdGFrZSB0aGVtIHZpYSBLZWVzIHRyZWUuIA0KDQpCZXN0IFJl
-Z2FyZHMsDQpFbGVuYS4NCg0KPiANCj4gPiBkaWZmIC0tZ2l0IGEva2VybmVsL2F1ZGl0X3RyZWUu
-YyBiL2tlcm5lbC9hdWRpdF90cmVlLmMNCj4gPiBpbmRleCA3YjQ0MTk1Li43ZWQ2MTdiIDEwMDY0
-NA0KPiA+IC0tLSBhL2tlcm5lbC9hdWRpdF90cmVlLmMNCj4gPiArKysgYi9rZXJuZWwvYXVkaXRf
-dHJlZS5jDQo+ID4gQEAgLTksNyArOSw3IEBAIHN0cnVjdCBhdWRpdF90cmVlOw0KPiA+ICBzdHJ1
-Y3QgYXVkaXRfY2h1bms7DQo+ID4NCj4gPiAgc3RydWN0IGF1ZGl0X3RyZWUgew0KPiA+IC0gICAg
-ICAgYXRvbWljX3QgY291bnQ7DQo+ID4gKyAgICAgICByZWZjb3VudF90IGNvdW50Ow0KPiA+ICAg
-ICAgICAgaW50IGdvbmVyOw0KPiA+ICAgICAgICAgc3RydWN0IGF1ZGl0X2NodW5rICpyb290Ow0K
-PiA+ICAgICAgICAgc3RydWN0IGxpc3RfaGVhZCBjaHVua3M7DQo+ID4gQEAgLTc3LDcgKzc3LDcg
-QEAgc3RhdGljIHN0cnVjdCBhdWRpdF90cmVlICphbGxvY190cmVlKGNvbnN0IGNoYXIgKnMpDQo+
-ID4NCj4gPiAgICAgICAgIHRyZWUgPSBrbWFsbG9jKHNpemVvZihzdHJ1Y3QgYXVkaXRfdHJlZSkg
-KyBzdHJsZW4ocykgKyAxLCBHRlBfS0VSTkVMKTsNCj4gPiAgICAgICAgIGlmICh0cmVlKSB7DQo+
-ID4gLSAgICAgICAgICAgICAgIGF0b21pY19zZXQoJnRyZWUtPmNvdW50LCAxKTsNCj4gPiArICAg
-ICAgICAgICAgICAgcmVmY291bnRfc2V0KCZ0cmVlLT5jb3VudCwgMSk7DQo+ID4gICAgICAgICAg
-ICAgICAgIHRyZWUtPmdvbmVyID0gMDsNCj4gPiAgICAgICAgICAgICAgICAgSU5JVF9MSVNUX0hF
-QUQoJnRyZWUtPmNodW5rcyk7DQo+ID4gICAgICAgICAgICAgICAgIElOSVRfTElTVF9IRUFEKCZ0
-cmVlLT5ydWxlcyk7DQo+ID4gQEAgLTkxLDEyICs5MSwxMiBAQCBzdGF0aWMgc3RydWN0IGF1ZGl0
-X3RyZWUgKmFsbG9jX3RyZWUoY29uc3QgY2hhciAqcykNCj4gPg0KPiA+ICBzdGF0aWMgaW5saW5l
-IHZvaWQgZ2V0X3RyZWUoc3RydWN0IGF1ZGl0X3RyZWUgKnRyZWUpDQo+ID4gIHsNCj4gPiAtICAg
-ICAgIGF0b21pY19pbmMoJnRyZWUtPmNvdW50KTsNCj4gPiArICAgICAgIHJlZmNvdW50X2luYygm
-dHJlZS0+Y291bnQpOw0KPiA+ICB9DQo+ID4NCj4gPiAgc3RhdGljIGlubGluZSB2b2lkIHB1dF90
-cmVlKHN0cnVjdCBhdWRpdF90cmVlICp0cmVlKQ0KPiA+ICB7DQo+ID4gLSAgICAgICBpZiAoYXRv
-bWljX2RlY19hbmRfdGVzdCgmdHJlZS0+Y291bnQpKQ0KPiA+ICsgICAgICAgaWYgKHJlZmNvdW50
-X2RlY19hbmRfdGVzdCgmdHJlZS0+Y291bnQpKQ0KPiA+ICAgICAgICAgICAgICAgICBrZnJlZV9y
-Y3UodHJlZSwgaGVhZCk7DQo+ID4gIH0NCj4gPg0KPiANCj4gLS0NCj4gcGF1bCBtb29yZQ0KPiB3
-d3cucGF1bC1tb29yZS5jb20NCg==
+Cgroups currently don't report how much shmem they use, which can be
+useful data to have, in particular since shmem is included in the
+cache/file item while being reclaimed like anonymous memory.
+
+Add a counter to track shmem pages during charging and uncharging.
+
+Reported-by: Chris Down <cdown@fb.com>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ Documentation/cgroup-v2.txt |  5 +++++
+ include/linux/memcontrol.h  |  1 +
+ mm/memcontrol.c             | 28 ++++++++++++++++++++--------
+ 3 files changed, 26 insertions(+), 8 deletions(-)
+
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 4cc07ce3b8dd..d99389ce7b01 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -867,6 +867,11 @@ PAGE_SIZE multiple when read back.
+ 
+ 		Amount of memory used in network transmission buffers
+ 
++	  shmem
++
++		Amount of cached filesystem data that is swap-backed,
++		such as tmpfs, shm segments, shared anonymous mmap()s
++
+ 	  file_mapped
+ 
+ 		Amount of cached filesystem data mapped with mmap()
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 61d20c17f3b7..47bdf727d1ad 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -46,6 +46,7 @@ enum mem_cgroup_stat_index {
+ 	MEM_CGROUP_STAT_CACHE,		/* # of pages charged as cache */
+ 	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
+ 	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
++	MEM_CGROUP_STAT_SHMEM,		/* # of pages charged as shmem */
+ 	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
+ 	MEM_CGROUP_STAT_DIRTY,          /* # of dirty pages in page cache */
+ 	MEM_CGROUP_STAT_WRITEBACK,	/* # of pages under writeback */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9c9cde768d40..49409f5c0238 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -102,6 +102,7 @@ static const char * const mem_cgroup_stat_names[] = {
+ 	"cache",
+ 	"rss",
+ 	"rss_huge",
++	"shmem",
+ 	"mapped_file",
+ 	"dirty",
+ 	"writeback",
+@@ -601,9 +602,13 @@ static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
+ 	if (PageAnon(page))
+ 		__this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_RSS],
+ 				nr_pages);
+-	else
++	else {
+ 		__this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_CACHE],
+ 				nr_pages);
++		if (PageSwapBacked(page))
++			__this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SHMEM],
++				       nr_pages);
++	}
+ 
+ 	if (compound) {
+ 		VM_BUG_ON_PAGE(!PageTransHuge(page), page);
+@@ -5200,6 +5205,8 @@ static int memory_stat_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "sock %llu\n",
+ 		   (u64)stat[MEMCG_SOCK] * PAGE_SIZE);
+ 
++	seq_printf(m, "shmem %llu\n",
++		   (u64)stat[MEM_CGROUP_STAT_SHMEM] * PAGE_SIZE);
+ 	seq_printf(m, "file_mapped %llu\n",
+ 		   (u64)stat[MEM_CGROUP_STAT_FILE_MAPPED] * PAGE_SIZE);
+ 	seq_printf(m, "file_dirty %llu\n",
+@@ -5468,8 +5475,8 @@ void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg,
+ 
+ static void uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
+ 			   unsigned long nr_anon, unsigned long nr_file,
+-			   unsigned long nr_huge, unsigned long nr_kmem,
+-			   struct page *dummy_page)
++			   unsigned long nr_kmem, unsigned long nr_huge,
++			   unsigned long nr_shmem, struct page *dummy_page)
+ {
+ 	unsigned long nr_pages = nr_anon + nr_file + nr_kmem;
+ 	unsigned long flags;
+@@ -5487,6 +5494,7 @@ static void uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
+ 	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_RSS], nr_anon);
+ 	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_CACHE], nr_file);
+ 	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_RSS_HUGE], nr_huge);
++	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_SHMEM], nr_shmem);
+ 	__this_cpu_add(memcg->stat->events[MEM_CGROUP_EVENTS_PGPGOUT], pgpgout);
+ 	__this_cpu_add(memcg->stat->nr_page_events, nr_pages);
+ 	memcg_check_events(memcg, dummy_page);
+@@ -5499,6 +5507,7 @@ static void uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
+ static void uncharge_list(struct list_head *page_list)
+ {
+ 	struct mem_cgroup *memcg = NULL;
++	unsigned long nr_shmem = 0;
+ 	unsigned long nr_anon = 0;
+ 	unsigned long nr_file = 0;
+ 	unsigned long nr_huge = 0;
+@@ -5531,9 +5540,9 @@ static void uncharge_list(struct list_head *page_list)
+ 		if (memcg != page->mem_cgroup) {
+ 			if (memcg) {
+ 				uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+-					       nr_huge, nr_kmem, page);
+-				pgpgout = nr_anon = nr_file =
+-					nr_huge = nr_kmem = 0;
++					       nr_kmem, nr_huge, nr_shmem, page);
++				pgpgout = nr_anon = nr_file = nr_kmem = 0;
++				nr_huge = nr_shmem = 0;
+ 			}
+ 			memcg = page->mem_cgroup;
+ 		}
+@@ -5547,8 +5556,11 @@ static void uncharge_list(struct list_head *page_list)
+ 			}
+ 			if (PageAnon(page))
+ 				nr_anon += nr_pages;
+-			else
++			else {
+ 				nr_file += nr_pages;
++				if (PageSwapBacked(page))
++					nr_shmem += nr_pages;
++			}
+ 			pgpgout++;
+ 		} else {
+ 			nr_kmem += 1 << compound_order(page);
+@@ -5560,7 +5572,7 @@ static void uncharge_list(struct list_head *page_list)
+ 
+ 	if (memcg)
+ 		uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+-			       nr_huge, nr_kmem, page);
++			       nr_kmem, nr_huge, nr_shmem, page);
+ }
+ 
+ /**
+-- 
+2.11.1
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
