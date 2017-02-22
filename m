@@ -1,65 +1,72 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: provide shmem statistics
-Date: Wed, 22 Feb 2017 14:24:44 +0100
-Message-ID: <20170222132444.GK5753@dhcp22.suse.cz>
-References: <20170221164343.32252-1-hannes@cmpxchg.org>
- <20170222081230.GC5753@dhcp22.suse.cz>
- <20170222124501.GA9184@cmpxchg.org>
+From: Laurent Dufour <ldufour@linux.vnet.ibm.com>
+Subject: Re: [PATCH] mm/cgroup: avoid panic when init with low memory
+Date: Wed, 22 Feb 2017 15:02:54 +0100
+Message-ID: <9414873a-6c64-7b96-6251-f0ddba2b256e@linux.vnet.ibm.com>
+References: <1487154969-6704-1-git-send-email-ldufour@linux.vnet.ibm.com>
+ <20170220130123.GI2431@dhcp22.suse.cz>
+ <934d40ec-060b-4794-2fdc-35a7ea1dc9e2@linux.vnet.ibm.com>
+ <20170220174258.GA31541@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170222124501.GA9184-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20170220174258.GA31541@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Chris Down <cdown-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Wed 22-02-17 07:45:01, Johannes Weiner wrote:
-> On Wed, Feb 22, 2017 at 09:12:31AM +0100, Michal Hocko wrote:
-> > On Tue 21-02-17 11:43:43, Johannes Weiner wrote:
-> > > Cgroups currently don't report how much shmem they use, which can be
-> > > useful data to have, in particular since shmem is included in the
-> > > cache/file item while being reclaimed like anonymous memory.
-> > > 
-> > > Add a counter to track shmem pages during charging and uncharging.
-> > 
-> > Yes this is indeed useful. Accounting shmem to the page cache was a
-> > mistake because this is more than confusing. Sad we cannot fix that.
+On 20/02/2017 18:42, Michal Hocko wrote:
+> On Mon 20-02-17 18:09:43, Laurent Dufour wrote:
+>> On 20/02/2017 14:01, Michal Hocko wrote:
+>>> On Wed 15-02-17 11:36:09, Laurent Dufour wrote:
+>>>> The system may panic when initialisation is done when almost all the
+>>>> memory is assigned to the huge pages using the kernel command line
+>>>> parameter hugepage=xxxx. Panic may occur like this:
+>>>
+>>> I am pretty sure the system might blow up in many other ways when you
+>>> misconfigure it and pull basically all the memory out. Anyway...
+>>>
+>>> [...]
+>>>
+>>>> This is a chicken and egg issue where the kernel try to get free
+>>>> memory when allocating per node data in mem_cgroup_init(), but in that
+>>>> path mem_cgroup_soft_limit_reclaim() is called which assumes that
+>>>> these data are allocated.
+>>>>
+>>>> As mem_cgroup_soft_limit_reclaim() is best effort, it should return
+>>>> when these data are not yet allocated.
+>>>
+>>> ... this makes some sense. Especially when there is no soft limit
+>>> configured. So this is a good step. I would just like to ask you to go
+>>> one step further. Can we make the whole soft reclaim thing uninitialized
+>>> until the soft limit is actually set? Soft limit is not used in cgroup
+>>> v2 at all and I would strongly discourage it in v1 as well. We will save
+>>> few bytes as a bonus.
+>>
+>> Hi Michal, and thanks for the review.
+>>
+>> I'm not familiar with that part of the kernel, so to be sure we are on
+>> the same line, are you suggesting to set soft_limit_tree at the first
+>> time mem_cgroup_write() is called to set a soft_limit field ?
 > 
-> Agreed, this continues to cause confusion with many Linux users :(
+> yes
 > 
-> > I would have just one concern with this patch. You are relying on
-> > PageSwapBacked check but it looks like we are going to implement
-> > MADV_FREE by dropping this flag. I know we do not support MADV_FREE
-> > on shared mappings but if we ever do then the accounting will become
-> > subtly broken. Can/Should we rely on shmem_mapping() check instead?
+>> Obviously, all callers to soft_limit_tree_node() and
+>> soft_limit_tree_from_page() will have to check for the return pointer to
+>> be NULL.
 > 
-> Yes, right now we do MADV_FREE only on private pages, so this patch is
-> safe with Shaohua's changes to how we use PG_swapbacked.
-> 
-> Should we support MADV_FREE on shared mappings in the future, using
-> shmem_mapping() for memcg accounting won't work unfortunately, because
-> shared pages are truncated from the page cache before uncharging, and
-> that clears the page->mapping pointer.
+> All callers that need to access the tree unconditionally, yes. Which is
+> the case anyway, right? I haven't checked the check you have added is
+> sufficient, but we shouldn't have that many of them because some code
+> paths are called only when the soft limit is enabled.
 
-You are right!
+You're right there are not so much callers to fix.
+I'll send a new series containing the previous patch fixing the initial
+panic and another one delaying the data allocation.
 
-> However, in that case we could
-> probably unaccount the pages from shmem at the time of MADV_FREE, when
-> we clear the PG_swapbacked bit.
-
-Or we can just keep the code as is and add a comment to
-madvise_free_single_vma to remind that memcg charging would have to be
-handled properly if we want to drop vma_is_anonymous check there. It is
-really hard to tell whether we ever get a support for MADV_FREE for
-shared pages.
-
-> > Other than that the patch looks good to me.
-> 
-> Thanks!
-
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
