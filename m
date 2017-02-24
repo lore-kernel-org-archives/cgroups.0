@@ -1,23 +1,33 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Balbir Singh <bsingharora@gmail.com>
 Subject: Re: [PATCH v2 1/2] mm/cgroup: avoid panic when init with low memory
-Date: Fri, 24 Feb 2017 12:10:56 +0100
-Message-ID: <20170224111056.GF19161@dhcp22.suse.cz>
+Date: Sat, 25 Feb 2017 00:42:57 +1100
+Message-ID: <ef0066da-417f-f926-4af8-43f0ce28750f@gmail.com>
 References: <1487856999-16581-1-git-send-email-ldufour@linux.vnet.ibm.com>
  <1487856999-16581-2-git-send-email-ldufour@linux.vnet.ibm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=Gr7dkzF9HMFcGQbA/sU4zTvf7CUH8OtxP/ItdBprk+A=;
+        b=pAdcTHDVxFwVunKQgiHN6uj0nad3DYIeyM3Xvcb0pizzdXYnqyeVglcRf/A9Z25Rt9
+         HJxsfASnK9aJitHnQNInCWATFNI9xiMmCK5OxknO2pVo9xhiTftUfW/RQCVnf+Kn6qoG
+         IvEciboJrsXM2VoagV8zcBXFHc1EkYe+8Uxy9wN+F5b4o9pHYDpqu1bdK+P84uQswWL9
+         5W7BVlk5vymYn331USkFUm2cvbPr+pBOQshigIpPdKDGGR/TdipGA+CE2/nOD3qFKAhU
+         H009TjHjBNt74SekHJUA7iC28SdgSLuK6x/AxiGSA3NijZouyFv0vfPBHWXz1w/2HS9F
+         tXkw==
 In-Reply-To: <1487856999-16581-2-git-send-email-ldufour@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Laurent Dufour <ldufour@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Laurent Dufour <ldufour@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Andrew, could you pick up this patch?
 
-On Thu 23-02-17 14:36:38, Laurent Dufour wrote:
+
+On 24/02/17 00:36, Laurent Dufour wrote:
 > The system may panic when initialisation is done when almost all the
 > memory is assigned to the huge pages using the kernel command line
 > parameter hugepage=xxxx. Panic may occur like this:
@@ -76,47 +86,7 @@ On Thu 23-02-17 14:36:38, Laurent Dufour wrote:
 > 
 > Signed-off-by: Laurent Dufour <ldufour@linux.vnet.ibm.com>
 > ---
->  mm/memcontrol.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 45867e439d31..a9f10fde44a6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -465,6 +465,8 @@ static void mem_cgroup_update_tree(struct mem_cgroup *memcg, struct page *page)
->  	struct mem_cgroup_tree_per_node *mctz;
->  
->  	mctz = soft_limit_tree_from_page(page);
-> +	if (!mctz)
-> +		return;
->  	/*
->  	 * Necessary to update all ancestors when hierarchy is used.
->  	 * because their event counter is not touched.
-> @@ -502,7 +504,8 @@ static void mem_cgroup_remove_from_trees(struct mem_cgroup *memcg)
->  	for_each_node(nid) {
->  		mz = mem_cgroup_nodeinfo(memcg, nid);
->  		mctz = soft_limit_tree_node(nid);
-> -		mem_cgroup_remove_exceeded(mz, mctz);
-> +		if (mctz)
-> +			mem_cgroup_remove_exceeded(mz, mctz);
->  	}
->  }
->  
-> @@ -2557,7 +2560,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
->  	 * is empty. Do it lockless to prevent lock bouncing. Races
->  	 * are acceptable as soft limit is best effort anyway.
->  	 */
-> -	if (RB_EMPTY_ROOT(&mctz->rb_root))
-> +	if (!mctz || RB_EMPTY_ROOT(&mctz->rb_root))
->  		return 0;
->  
->  	/*
-> -- 
-> 2.7.4
-
--- 
-Michal Hocko
-SUSE Labs
+Acked-by: Balbir Singh <bsingharora@gmail.com>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
