@@ -1,48 +1,122 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2 2/2] mm/cgroup: delay soft limit data allocation
-Date: Thu, 23 Feb 2017 14:03:13 -0500
-Message-ID: <20170223190313.GB6088@cmpxchg.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v2 1/2] mm/cgroup: avoid panic when init with low memory
+Date: Fri, 24 Feb 2017 12:10:56 +0100
+Message-ID: <20170224111056.GF19161@dhcp22.suse.cz>
 References: <1487856999-16581-1-git-send-email-ldufour@linux.vnet.ibm.com>
- <1487856999-16581-3-git-send-email-ldufour@linux.vnet.ibm.com>
- <20170223153107.GD29056@dhcp22.suse.cz>
+ <1487856999-16581-2-git-send-email-ldufour@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=LfqzPD4Fwee/0dPxRYunaaYpLCTefiRNbqL4x1obO1Y=; b=P/13gaHIuMzi/mE/vGvc050YDY
-	7z5+kAVKc7SMj4imIsfrbvehyr5k2H3iJ2fYrI3kq7nNAodFrKbKR/w9/ym527Psv89fKGmIo2qll
-	EM0/5rXVZKFBoxBb1wQ3LIIA6sWLDeZp3OZnRk/WNoPwfTRYJukm/TpUFmuAG8a8PB+4=;
 Content-Disposition: inline
-In-Reply-To: <20170223153107.GD29056@dhcp22.suse.cz>
+In-Reply-To: <1487856999-16581-2-git-send-email-ldufour@linux.vnet.ibm.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Laurent Dufour <ldufour@linux.vnet.ibm.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Laurent Dufour <ldufour@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Balbir Singh <bsingharora@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Feb 23, 2017 at 04:31:07PM +0100, Michal Hocko wrote:
-> On Thu 23-02-17 14:36:39, Laurent Dufour wrote:
-> > Until a soft limit is set to a cgroup, the soft limit data are useless
-> > so delay this allocation when a limit is set.
-> 
-> Hmm, I am still undecided whether this is actually worth it. On one hand
-> distribution kernels tend to have quite large NUMA_SHIFT (e.g. SLES has
-> NUMA_SHIFT=10 and then we will save 8kB+12kB which is not hell of a lot
-> but always good if we can save that, especially for a rarely used
-> feature. The code grown on the other hand (it was in __init section
-> previously) which is a minus, on the other hand.
-> 
-> What do you think Johannes?
+Andrew, could you pick up this patch?
 
-Hohumm, saving 5 pages on a NUMA machine vs. the additional complexity
-and the increased risk of memory problems when somebody sets up a soft
-limit after some uptime... I don't think I can give a strong yes or no
-on this one, so inertia wins for me; I'd just leave it alone.
+On Thu 23-02-17 14:36:38, Laurent Dufour wrote:
+> The system may panic when initialisation is done when almost all the
+> memory is assigned to the huge pages using the kernel command line
+> parameter hugepage=xxxx. Panic may occur like this:
+> 
+> [    0.082289] Unable to handle kernel paging request for data at address 0x00000000
+> [    0.082338] Faulting instruction address: 0xc000000000302b88
+> [    0.082377] Oops: Kernel access of bad area, sig: 11 [#1]
+> [    0.082408] SMP NR_CPUS=2048 [    0.082424] NUMA
+> [    0.082440] pSeries
+> [    0.082457] Modules linked in:
+> [    0.082490] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.9.0-15-generic #16-Ubuntu
+> [    0.082536] task: c00000021ed01600 task.stack: c00000010d108000
+> [    0.082575] NIP: c000000000302b88 LR: c000000000270e04 CTR: c00000000016cfd0
+> [    0.082621] REGS: c00000010d10b2c0 TRAP: 0300   Not tainted (4.9.0-15-generic)
+> [    0.082666] MSR: 8000000002009033 <SF,VEC,EE,ME,IR,DR,RI,LE>[ 0.082770]   CR: 28424422  XER: 00000000
+> [    0.082793] CFAR: c0000000003d28b8 DAR: 0000000000000000 DSISR: 40000000 SOFTE: 1
+> GPR00: c000000000270e04 c00000010d10b540 c00000000141a300 c00000010fff6300
+> GPR04: 0000000000000000 00000000026012c0 c00000010d10b630 0000000487ab0000
+> GPR08: 000000010ee90000 c000000001454fd8 0000000000000000 0000000000000000
+> GPR12: 0000000000004400 c00000000fb80000 00000000026012c0 00000000026012c0
+> GPR16: 00000000026012c0 0000000000000000 0000000000000000 0000000000000002
+> GPR20: 000000000000000c 0000000000000000 0000000000000000 00000000024200c0
+> GPR24: c0000000016eef48 0000000000000000 c00000010fff7d00 00000000026012c0
+> GPR28: 0000000000000000 c00000010fff7d00 c00000010fff6300 c00000010d10b6d0
+> NIP [c000000000302b88] mem_cgroup_soft_limit_reclaim+0xf8/0x4f0
+> [    0.083456] LR [c000000000270e04] do_try_to_free_pages+0x1b4/0x450
+> [    0.083494] Call Trace:
+> [    0.083511] [c00000010d10b540] [c00000010d10b640] 0xc00000010d10b640 (unreliable)
+> [    0.083567] [c00000010d10b610] [c000000000270e04] do_try_to_free_pages+0x1b4/0x450
+> [    0.083622] [c00000010d10b6b0] [c000000000271198] try_to_free_pages+0xf8/0x270
+> [    0.083676] [c00000010d10b740] [c000000000259dd8] __alloc_pages_nodemask+0x7a8/0xff0
+> [    0.083729] [c00000010d10b960] [c0000000002dd274] new_slab+0x104/0x8e0
+> [    0.083776] [c00000010d10ba40] [c0000000002e03d0] ___slab_alloc+0x620/0x700
+> [    0.083822] [c00000010d10bb70] [c0000000002e04e4] __slab_alloc+0x34/0x60
+> [    0.083868] [c00000010d10bba0] [c0000000002e101c] kmem_cache_alloc_node_trace+0xdc/0x310
+> [    0.083947] [c00000010d10bc00] [c000000000eb8120] mem_cgroup_init+0x158/0x1c8
+> [    0.083994] [c00000010d10bc40] [c00000000000dde8] do_one_initcall+0x68/0x1d0
+> [    0.084041] [c00000010d10bd00] [c000000000e84184] kernel_init_freeable+0x278/0x360
+> [    0.084094] [c00000010d10bdc0] [c00000000000e714] kernel_init+0x24/0x170
+> [    0.084143] [c00000010d10be30] [c00000000000c0e8] ret_from_kernel_thread+0x5c/0x74
+> [    0.084195] Instruction dump:
+> [    0.084220] eb81ffe0 eba1ffe8 ebc1fff0 ebe1fff8 4e800020 3d230001 e9499a42 3d220004
+> [    0.084300] 3929acd8 794a1f24 7d295214 eac90100 <e9360000> 2fa90000 419eff74 3b200000
+> [    0.084382] ---[ end trace 342f5208b00d01b6 ]---
+> 
+> This is a chicken and egg issue where the kernel try to get free
+> memory when allocating per node data in mem_cgroup_init(), but in that
+> path mem_cgroup_soft_limit_reclaim() is called which assumes that
+> these data are allocated.
+> 
+> As mem_cgroup_soft_limit_reclaim() is best effort, it should return
+> when these data are not yet allocated.
+> 
+> This patch also fixes potential null pointer access in
+> mem_cgroup_remove_from_trees() and mem_cgroup_update_tree().
+> 
+> Signed-off-by: Laurent Dufour <ldufour@linux.vnet.ibm.com>
+> ---
+>  mm/memcontrol.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 45867e439d31..a9f10fde44a6 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -465,6 +465,8 @@ static void mem_cgroup_update_tree(struct mem_cgroup *memcg, struct page *page)
+>  	struct mem_cgroup_tree_per_node *mctz;
+>  
+>  	mctz = soft_limit_tree_from_page(page);
+> +	if (!mctz)
+> +		return;
+>  	/*
+>  	 * Necessary to update all ancestors when hierarchy is used.
+>  	 * because their event counter is not touched.
+> @@ -502,7 +504,8 @@ static void mem_cgroup_remove_from_trees(struct mem_cgroup *memcg)
+>  	for_each_node(nid) {
+>  		mz = mem_cgroup_nodeinfo(memcg, nid);
+>  		mctz = soft_limit_tree_node(nid);
+> -		mem_cgroup_remove_exceeded(mz, mctz);
+> +		if (mctz)
+> +			mem_cgroup_remove_exceeded(mz, mctz);
+>  	}
+>  }
+>  
+> @@ -2557,7 +2560,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+>  	 * is empty. Do it lockless to prevent lock bouncing. Races
+>  	 * are acceptable as soft limit is best effort anyway.
+>  	 */
+> -	if (RB_EMPTY_ROOT(&mctz->rb_root))
+> +	if (!mctz || RB_EMPTY_ROOT(&mctz->rb_root))
+>  		return 0;
+>  
+>  	/*
+> -- 
+> 2.7.4
+
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
