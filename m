@@ -1,150 +1,173 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v4.11-rc1
-Date: Mon, 27 Feb 2017 15:21:29 -0500
-Message-ID: <20170227202129.GE8707@htj.duckdns.org>
+From: Balbir Singh <bsingharora@gmail.com>
+Subject: Re: [LSF/MM TOPIC] cpuset vs mempolicy related issues
+Date: Wed, 1 Mar 2017 07:34:24 +1100
+Message-ID: <d2e2c672-8f56-49a6-79d1-c5d2276db4a3@gmail.com>
+References: <4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=jJiE30PoxKbOZqJvepqNMoppXller4kvwezqK9XsxCg=;
-        b=KhqaSw6+NE0IwNs7YoqlsC5eOCxHAVN3vr4LzHjLZ8q6p3TralJkE8ni/i/mnbwC4j
-         Ba47lgNSQg/m3cTB/9ZC5arVA2x/go2p62MsQDjmDKyY2d9lMmmYmTnJptoPn5tmO90d
-         cfFse3RU+QOIh/0Cl/wiWxaBAkjNI6wZchop4WQIOe19HtUDRnbZ7HJBcj+Ubd4nx73M
-         dHralzlX7qF3aJy/xtTN4h6TdlGcCe5h8/bUu4oHHRBAWA5nUQOLWdCylpfl/siTSWYu
-         TJghv/4q5C/iWbvG9eBs9pUN6tDpTpKqSg475aNcCzg5JvlItdUgvf+D+BDxmOlsuACw
-         uYRg==
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=Jw4fimGsMnaRe8a7QuFTbzHQwxNJw72mJ7kORF96jvY=;
+        b=RNpVXYro5xU2HQA+48nsRrvdcmJj8gw2Aih8jw59yzSuGT8usSj4lyGOZ6708MhsPk
+         LFLSr4i7kcQDZ/1kecc0nLpRv3Y6DQ699agUpzQzbvT2KCbgfnG2OswnCFgwpjE63Yey
+         JAplXqY+Qk2USpEu+NyD8xk6YgUe+sCKYzd8aZmhCBKLCL73CTMAZoo0NqCryCKcYmn/
+         /q7LWTkuJ1oVzxwaQ2+ijrsJwmrCO+NyIr46gRXNytBAGUGVn0tTBFehd9caqQpLtvWb
+         seof6LMrs4K4R54AsIrV4vUtJ/LzrCOTDKWAyei4vcZ/wYt9ISy0GVYMfgwa++ANLwUW
+         HEHQ==
+In-Reply-To: <4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Parav Pandit <parav-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+To: Vlastimil Babka <vbabka@suse.cz>, lsf-pc@lists.linux-foundation.org, "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, David Rientjes <rientjes@google.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Mel Gorman <mgorman@techsingularity.net>
 
-Hello, Linus.
 
-cgroup changes for v4.11.  Several noteworthy changes.
 
-* Parav's rdma controller is finally merged.  It is very straight
-  forward and can limit the abosolute numbers of common rdma
-  constructs used by different cgroups.
+On 03/02/17 20:17, Vlastimil Babka wrote:
+> Hi,
+> 
+> this mail tries to summarize the problems with current cpusets implementation
+> wrt memory restrictions, especially when used together with mempolicies.
+> The issues were initially discovered when working on the series fixing recent
+> premature OOM regressions [1] and then there was more staring at the code and
+> git archeology.
+> 
+> Possible spurious OOMs
+> 
+> Spurious OOM kills can happen due to updating cpuset's mems (or reattaching
+> task to different cpuset) racing with page allocation for a vma with mempolicy.
+> This probably originates with commit 19770b32609b ("mm: filter based on a
+> nodemask as well as a gfp_mask") or 58568d2a8215 ("cpuset,mm: update tasks'
+> mems_allowed in time"). Before the former commit, mempolicy node restrictions
+> were reflected with a custom zonelist, which was replaced by a simple pointer
+> swap when updated due to cpuset changes. After the commit, the nodemask used
+> by allocation is concurrently updated. Before the latter commit,
+> task->mems_allowed was protected by a generation counter and updated
+> synchronously. After the commit, it's updated concurrently.
+> These concurrent updates may cause page allocation to see all nodes as not
+> available due to mempolicy and cpusets, and lead to OOM.
+> 
+> This has already happened in the past and commit 708c1bbc9d0c ("mempolicy:
+> restructure rebinding-mempolicy functions") was fixing this by more complex
+> update protocol, which was then adjusted to use a seq-lock with cc9a6c877661
+> ("cpuset: mm: reduce large amounts of memory barrier related damage v3").
+> However this only protects the task->mems_allowed updated and per-task
+> mempolicy updates. Per-vma mempolicy updates happen outside these protections
+> and the possibility of OOM was verified by testing [2].
+> 
+> Code complexity
+> 
+> As mentioned above, concurrent updates to task->mems_allowed and mempolicy are
+> rather complexi, see e.g. mpol_rebind_policy() and
+> cpuset_change_task_nodemask(). Fixing the spurious OOM problem with the current
+> approach [3] will introduce even more subtlety. This all comes from the
+> parallel updates. Originally, task->mems_allowed was a snapshot updated
+> synchronously.  For mempolicy nodemask updates, we probably should not take an
+> on-stack snapshot of the nodemask in allocation path. But we can look at how
+> mbind() itself updates existing mempolicies, which is done by swapping in an
+> updated copy. One obvious idea is also to not touch mempolicy nodemask from
+> cpuset, because we check __cpuset_node_allowed() explicitly anyway (see next
+> point). That however doesn't seem feasible for all mempolicies because of the
+> relative nodes semantics (see also the semantics discussion).
+> 
+> Code efficiency
+> 
+> The get_page_from_freelist() function gets the nodemask parameter, which is
+> typically obtained from a task or vma mempolicy. Additionally, it will check
+> __cpuset_node_allowed when cpusets are enabled. This additional check is
+> wasteful when the cpuset restrictions were already applied to the mempolicy's
+> nodemask.
+> 
 
-* kernel/cgroup.c got too chubby and disorganized.  Created
-  kernel/cgroup/ subdirectory and moved all cgroup related files under
-  kernel/ there and reorganized the core code.  This hurts for
-  backporting patches but was long overdue.
+I suspect the allocator has those checks for kernel allocations and policies control
+user mode pages faulted in. I've been playing around with coherent memory and find
+that cpusets/mempolicies/zonelists are so tightly bound that they are difficult
+to extend for other purposes.
 
-* cgroup v2 process listing reimplemented so that it no longer depends
-  on allocating a buffer large enough to cache the entire result to
-  sort and uniq the output.  v2 has always mangled the sort order to
-  ensure that users don't depend on the sorted output, so this
-  shouldn't surprise anybody.  This makes the pid listing functions
-  use the same iterators that are used internally, which have to have
-  the same iterating capabilities anyway.
 
-* perf cgroup filtering now works automatically on cgroup v2.  This
-  patch was posted a long time ago but somehow fell through the
-  cracks.
+> Issues with semantics
+> 
+> The __cpuset_node_allowed() function is not a simple check for
+> current->mems_allowed. It allows any node in interrupt, TIF_MEMDIE, PF_EXITING
+> or cpuset ancestors (without __GFP_HARDWALL).
 
-* Misc fixes asnd documentation updates.
+I think this is how cpusets that are hardwalled, control allocations and allow
+them to come from an ancestor in the hierarchy
 
-Thanks.
+ This works as intended if there
+> is no mempolicy, but once there is a nodemask from a mempolicy, the cpuset
+> restrictions are already applied to it, so the for_next_zone_zonelist_nodemask()
+> loop already filters the nodes and the __cpuset_node_allowed() decisions cannot
+> apply.
 
-The following changes since commit 07cd12945551b63ecb1a349d50a6d69d1d6feb4a:
+Again I think the difference is the mempolicy is for user space fault handling
+and the allocator is for common allocation.
 
-  cgroup: don't online subsystems before cgroup_name/path() are operational (2017-01-26 16:47:28 -0500)
+ It's true that allocations with mempolicies are typically user-space
+> pagefaults, thus __GFP_HARDWALL, not in interrupt, etc, but it's subtle. And
+> there is a number of driver allocations using alloc_pages() that implicitly use
+> tasks's mempolicy and thus can be affected by this discrepancy.
+> 
+> A related question is why we allow an allocation to escape cpuset restrictions,
+> but not also mempolicy restrictions. This includes allocations where we allow
+> dipping into memory reserves by ALLOC_NO_WATERMARKS, because
+> gfp_pfmemalloc_allowed(). It seems wrong to keep restricting such critical
+> allocations due to current task's mempolicy. We could set ac->nodemask to NULL
+> in such situations, but can we distinguish nodemasks coming from mempolicies
+> from nodemasks coming from e.g. HW restrictions on the memory placement?
+> 
 
-are available in the git repository at:
+I think that is a real good question. The only time I've seen a nodemask come
+from a mempolicy is when the policy is MPOL_BIND, IIRC. That like you said
+is already filtered with cpusets
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.11
+> Possible fix approach
+> 
+> Cpuset updates will rebind nodemasks only of those mempolicies that need it wrt
+> their relative nodes semantics (those are either created with the flag
+> MPOL_F_RELATIVE_NODES, or with neither RELATIVE nor STATIC flag). The others
+> (created with the STATIC flag) we can leave untouched. For mempolicies that we
+> keep rebinding, adopt the approach of mbind() that swaps an updated copy
+> instead of in-place changes. We can leave get_page_from_freelist() as it is and
+> nodes will be filtered orthogonally with mempolicy nodemask and cpuset check.
+> 
+> This will give us stable nodemask throughout the whole allocation without a
+> need for an on-stack copy. The next question is what to do with
+> current->mems_allowed. Do we keep the parallel modifications with seqlock
+> protection or e.g. try to go back to the synchronous copy approach?
+> 
+> Related to that is a remaining corner case with alloc_pages_vma() which has its
+> own seqlock-protected scope. There it calls policy_nodemask() which might
+> detect that there's no intersection between the mempolicy and cpuset and return
+> NULL nodemask. However, __alloc_pages_slowpath() has own seqlock scope, so if a
+> modification to mems_allowed (resulting in no intersection with mempolicy)
+> happens between the check in policy_nodemask() and reaching
+> __alloc_pages_slowpath(), the latter won't detect the modification and invoke
+> OOM before it can return with a failed allocation to alloc_pages_vma() and let
+> it detect a seqlock update and retry. One solution as shown in the RFC patch [3]
+> is to add another check for the cpuset/nodemask intersection before OOM. That
+> works, but it's a bit hacky and still produces an allocation failure warning.
+> 
+> On the other hand, we might also want to make things more robust in general and
+> prevent spurious OOMs due to no nodes being eligible for also any other reason,
+> such as buggy driver passing a wrong nodemask (which doesn't necessarily come
+> from a mempolicy).
+> 
+> [1] https://lkml.kernel.org/r/20170120103843.24587-1-vbabka@suse.cz
+> [2] https://lkml.kernel.org/r/a3bc44cd-3c81-c20e-aecb-525eb73b9bfe@suse.cz
+> [3] https://lkml.kernel.org/r/7c459f26-13a6-a817-e508-b65b903a8378@suse.cz
+> 
+Thanks for looking into this. I suspect cpuset is quite static in nature today
+(setup and use) and most applications are happy to live with it and cpusets.
+But you are right that this needs fixing.
 
-for you to fetch changes up to f83f3c515654474e19c7fc86e3b06564bb5cb4d4:
+Balbir
 
-  kernfs: fix locking around kernfs_ops->release() callback (2017-02-21 15:49:25 -0500)
-
-----------------------------------------------------------------
-Geliang Tang (1):
-      cgroup: fix a comment typo
-
-Hans Ragas (1):
-      cgroup: Add missing cgroup-v2 PID controller documentation.
-
-Parav Pandit (4):
-      rdmacg: Added rdma cgroup controller
-      IB/core: added support to use rdma cgroup controller
-      rdmacg: Added documentation for rdmacg
-      rdmacg: Fixed uninitialized current resource usage
-
-Tejun Heo (23):
-      kernfs: make kernfs_open_file->mmapped a bitfield
-      kernfs: add kernfs_ops->open/release() callbacks
-      cgroup add cftype->open/release() callbacks
-      cgroup: reimplement reading "cgroup.procs" on cgroup v2
-      cgroup: remove cgroup_pid_fry() and friends
-      cgroup: reorder css_set fields
-      cgroup: move cgroup files under kernel/cgroup/
-      cgroup: move cgroup v1 specific code to kernel/cgroup/cgroup-v1.c
-      cgroup: refactor mount path and clearly distinguish v1 and v2 paths
-      cgroup: separate out cgroup1_kf_syscall_ops
-      cgroup: move v1 mount functions to kernel/cgroup/cgroup-v1.c
-      cgroup: rename functions for consistency
-      cgroup: move namespace code to kernel/cgroup/namespace.c
-      cgroup: fix RCU related sparse warnings
-      cgroup: cosmetic update to cgroup_taskset_add()
-      cgroup: track migration context in cgroup_mgctx
-      cgroup: call subsys->*attach() only for subsystems which are actually affected by migration
-      Merge branch 'for-4.10-fixes' into for-4.11
-      cgroup: misc cleanups
-      cgroup, perf_event: make perf_event controller work on cgroup2 hierarchy
-      cgroup: drop the matching uid requirement on migration for cgroup v2
-      Merge branch 'cgroup/for-4.11-rdmacg' into cgroup/for-4.11
-      kernfs: fix locking around kernfs_ops->release() callback
-
- Documentation/cgroup-v1/rdma.txt              |  109 ++
- Documentation/cgroup-v2.txt                   |  103 +-
- drivers/infiniband/core/Makefile              |    1 +
- drivers/infiniband/core/cgroup.c              |   62 +
- drivers/infiniband/core/core_priv.h           |   30 +
- drivers/infiniband/core/device.c              |   10 +
- drivers/infiniband/core/uverbs_cmd.c          |  102 +-
- drivers/infiniband/core/uverbs_main.c         |   20 +
- fs/kernfs/dir.c                               |    2 +-
- fs/kernfs/file.c                              |   62 +-
- fs/kernfs/kernfs-internal.h                   |    2 +-
- include/linux/cgroup-defs.h                   |   57 +-
- include/linux/cgroup.h                        |    2 +-
- include/linux/cgroup_rdma.h                   |   53 +
- include/linux/cgroup_subsys.h                 |    4 +
- include/linux/kernfs.h                        |   12 +-
- include/rdma/ib_verbs.h                       |   14 +
- init/Kconfig                                  |   10 +
- kernel/Makefile                               |    5 +-
- kernel/cgroup/Makefile                        |    6 +
- kernel/cgroup/cgroup-internal.h               |  214 +++
- kernel/cgroup/cgroup-v1.c                     | 1395 ++++++++++++++++
- kernel/{ => cgroup}/cgroup.c                  | 2165 ++++---------------------
- kernel/{ => cgroup}/cpuset.c                  |    0
- kernel/{cgroup_freezer.c => cgroup/freezer.c} |    0
- kernel/cgroup/namespace.c                     |  155 ++
- kernel/{cgroup_pids.c => cgroup/pids.c}       |    0
- kernel/cgroup/rdma.c                          |  619 +++++++
- kernel/events/core.c                          |    6 +
- tools/perf/util/cgroup.c                      |   26 +-
- 30 files changed, 3306 insertions(+), 1940 deletions(-)
- create mode 100644 Documentation/cgroup-v1/rdma.txt
- create mode 100644 drivers/infiniband/core/cgroup.c
- create mode 100644 include/linux/cgroup_rdma.h
- create mode 100644 kernel/cgroup/Makefile
- create mode 100644 kernel/cgroup/cgroup-internal.h
- create mode 100644 kernel/cgroup/cgroup-v1.c
- rename kernel/{ => cgroup}/cgroup.c (72%)
- rename kernel/{ => cgroup}/cpuset.c (100%)
- rename kernel/{cgroup_freezer.c => cgroup/freezer.c} (100%)
- create mode 100644 kernel/cgroup/namespace.c
- rename kernel/{cgroup_pids.c => cgroup/pids.c} (100%)
- create mode 100644 kernel/cgroup/rdma.c
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
