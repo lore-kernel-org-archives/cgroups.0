@@ -1,173 +1,76 @@
-From: Balbir Singh <bsingharora@gmail.com>
-Subject: Re: [LSF/MM TOPIC] cpuset vs mempolicy related issues
-Date: Wed, 1 Mar 2017 07:34:24 +1100
-Message-ID: <d2e2c672-8f56-49a6-79d1-c5d2276db4a3@gmail.com>
-References: <4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz>
+From: Paul Moore <paul@paul-moore.com>
+Subject: Re: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to
+	refcount_t
+Date: Tue, 28 Feb 2017 17:11:05 -0500
+Message-ID: <CAHC9VhQBB9srK85meAi41pxD0Vse3NiX1-zmKGXcoYh0vB_=9A@mail.gmail.com>
+References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
+	<1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
+	<CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw@mail.gmail.com>
+	<2236FBA76BA1254E88B949DDB74E612B41C4DE27@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=Jw4fimGsMnaRe8a7QuFTbzHQwxNJw72mJ7kORF96jvY=;
-        b=RNpVXYro5xU2HQA+48nsRrvdcmJj8gw2Aih8jw59yzSuGT8usSj4lyGOZ6708MhsPk
-         LFLSr4i7kcQDZ/1kecc0nLpRv3Y6DQ699agUpzQzbvT2KCbgfnG2OswnCFgwpjE63Yey
-         JAplXqY+Qk2USpEu+NyD8xk6YgUe+sCKYzd8aZmhCBKLCL73CTMAZoo0NqCryCKcYmn/
-         /q7LWTkuJ1oVzxwaQ2+ijrsJwmrCO+NyIr46gRXNytBAGUGVn0tTBFehd9caqQpLtvWb
-         seof6LMrs4K4R54AsIrV4vUtJ/LzrCOTDKWAyei4vcZ/wYt9ISy0GVYMfgwa++ANLwUW
-         HEHQ==
-In-Reply-To: <4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vlastimil Babka <vbabka@suse.cz>, lsf-pc@lists.linux-foundation.org, "linux-mm@kvack.org" <linux-mm@kvack.org>
-Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, David Rientjes <rientjes@google.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Mel Gorman <mgorman@techsingularity.net>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-audit-bounces@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
+	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+	:cc; bh=jXoa570F/8MxlKmf6EAF7aISRMikEUcMPUrH6yxNAuc=;
+	b=Rui44qPRf2kuU8pWQ2cFJWymlKp1tTzwcy19Diu0Csvh/RONde69ApjgNwYC9Zmxku
+	icglH2xJU3CrhaVGVR+xrj6Ck7E5t4bnKSCkSgp2C118AMGMDFfWzl6hbz66Sa5JHH/3
+	U7U8AsEEog4J2wp1NAOn91wlaCgMWJADgTThnydd2q/tmoayXhV/NLfAavGty/yrXpbB
+	48Itaq/4VuywcTqbn72ROqvadLyvZS+316SSBX/5cNGqtKX1a4VQGpmi7UgAjipvJEzJ
+	Qf1KpEQcbvYmib0xhx3uD4NDOs8oltrtw0xxuXaxoDO1vn8qaBm74sFeR/LWWRUU2iUG
+	osBg==
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C4DE27@IRSMSX102.ger.corp.intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/linux-audit>,
+	<mailto:linux-audit-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/linux-audit>
+List-Post: <mailto:linux-audit@redhat.com>
+List-Help: <mailto:linux-audit-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-audit>,
+	<mailto:linux-audit-request@redhat.com?subject=subscribe>
+Sender: linux-audit-bounces@redhat.com
+Errors-To: linux-audit-bounces@redhat.com
+To: "Reshetova, Elena" <elena.reshetova@intel.com>
+Cc: "lizefan@huawei.com" <lizefan@huawei.com>, "arnd@arndb.de" <arnd@arndb.de>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Hans Liljestrand <ishkamiel@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "acme@kernel.org" <acme@kernel.org>, "tj@kernel.org" <tj@kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, "linux-audit@redhat.com" <linux-audit@redhat.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "luto@kernel.org" <luto@kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 
+On Tue, Feb 21, 2017 at 2:15 AM, Reshetova, Elena
+<elena.reshetova@intel.com> wrote:
+>> On Mon, Feb 20, 2017 at 5:19 AM, Elena Reshetova
+>> <elena.reshetova@intel.com> wrote:
+>> > refcount_t type and corresponding API should be
+>> > used instead of atomic_t when the variable is used as
+>> > a reference counter. This allows to avoid accidental
+>> > refcounter overflows that might lead to use-after-free
+>> > situations.
+>> >
+>> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+>> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+>> > Signed-off-by: Kees Cook <keescook@chromium.org>
+>> > Signed-off-by: David Windsor <dwindsor@gmail.com>
+>> > ---
+>> >  kernel/audit_tree.c | 8 ++++----
+>> >  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> No objection on my end, same for patch 16/19.
+>>
+>> I have no problem merging both these patches into the audit/next
+>> branch after the merge window, is that your goal or are you merging
+>> these via a different tree?
+>
+> Thank you Paul! I think it is better if they go through the trees they supposed to go through
+> since this way they would get more testing and etc. So, please take the relevant ones to your tree when the time is right.
+>
+> After the first round, I guess we will see what patches are not propagating and then maybe take them via Kees tree.
 
+I just realized that include/linux/refcount.h didn't make it into
+v4.10 which means there is going to be delay until I merge them into
+the audit tree (I don't base the tree on -rc releases except under
+extreme circumstances).  I've got the patches queued up in a private
+holding branch (I added #includes BTW) so I won't forget, but as a
+FYI, they likely won't make it in until v4.12.
 
-On 03/02/17 20:17, Vlastimil Babka wrote:
-> Hi,
-> 
-> this mail tries to summarize the problems with current cpusets implementation
-> wrt memory restrictions, especially when used together with mempolicies.
-> The issues were initially discovered when working on the series fixing recent
-> premature OOM regressions [1] and then there was more staring at the code and
-> git archeology.
-> 
-> Possible spurious OOMs
-> 
-> Spurious OOM kills can happen due to updating cpuset's mems (or reattaching
-> task to different cpuset) racing with page allocation for a vma with mempolicy.
-> This probably originates with commit 19770b32609b ("mm: filter based on a
-> nodemask as well as a gfp_mask") or 58568d2a8215 ("cpuset,mm: update tasks'
-> mems_allowed in time"). Before the former commit, mempolicy node restrictions
-> were reflected with a custom zonelist, which was replaced by a simple pointer
-> swap when updated due to cpuset changes. After the commit, the nodemask used
-> by allocation is concurrently updated. Before the latter commit,
-> task->mems_allowed was protected by a generation counter and updated
-> synchronously. After the commit, it's updated concurrently.
-> These concurrent updates may cause page allocation to see all nodes as not
-> available due to mempolicy and cpusets, and lead to OOM.
-> 
-> This has already happened in the past and commit 708c1bbc9d0c ("mempolicy:
-> restructure rebinding-mempolicy functions") was fixing this by more complex
-> update protocol, which was then adjusted to use a seq-lock with cc9a6c877661
-> ("cpuset: mm: reduce large amounts of memory barrier related damage v3").
-> However this only protects the task->mems_allowed updated and per-task
-> mempolicy updates. Per-vma mempolicy updates happen outside these protections
-> and the possibility of OOM was verified by testing [2].
-> 
-> Code complexity
-> 
-> As mentioned above, concurrent updates to task->mems_allowed and mempolicy are
-> rather complexi, see e.g. mpol_rebind_policy() and
-> cpuset_change_task_nodemask(). Fixing the spurious OOM problem with the current
-> approach [3] will introduce even more subtlety. This all comes from the
-> parallel updates. Originally, task->mems_allowed was a snapshot updated
-> synchronously.  For mempolicy nodemask updates, we probably should not take an
-> on-stack snapshot of the nodemask in allocation path. But we can look at how
-> mbind() itself updates existing mempolicies, which is done by swapping in an
-> updated copy. One obvious idea is also to not touch mempolicy nodemask from
-> cpuset, because we check __cpuset_node_allowed() explicitly anyway (see next
-> point). That however doesn't seem feasible for all mempolicies because of the
-> relative nodes semantics (see also the semantics discussion).
-> 
-> Code efficiency
-> 
-> The get_page_from_freelist() function gets the nodemask parameter, which is
-> typically obtained from a task or vma mempolicy. Additionally, it will check
-> __cpuset_node_allowed when cpusets are enabled. This additional check is
-> wasteful when the cpuset restrictions were already applied to the mempolicy's
-> nodemask.
-> 
-
-I suspect the allocator has those checks for kernel allocations and policies control
-user mode pages faulted in. I've been playing around with coherent memory and find
-that cpusets/mempolicies/zonelists are so tightly bound that they are difficult
-to extend for other purposes.
-
-
-> Issues with semantics
-> 
-> The __cpuset_node_allowed() function is not a simple check for
-> current->mems_allowed. It allows any node in interrupt, TIF_MEMDIE, PF_EXITING
-> or cpuset ancestors (without __GFP_HARDWALL).
-
-I think this is how cpusets that are hardwalled, control allocations and allow
-them to come from an ancestor in the hierarchy
-
- This works as intended if there
-> is no mempolicy, but once there is a nodemask from a mempolicy, the cpuset
-> restrictions are already applied to it, so the for_next_zone_zonelist_nodemask()
-> loop already filters the nodes and the __cpuset_node_allowed() decisions cannot
-> apply.
-
-Again I think the difference is the mempolicy is for user space fault handling
-and the allocator is for common allocation.
-
- It's true that allocations with mempolicies are typically user-space
-> pagefaults, thus __GFP_HARDWALL, not in interrupt, etc, but it's subtle. And
-> there is a number of driver allocations using alloc_pages() that implicitly use
-> tasks's mempolicy and thus can be affected by this discrepancy.
-> 
-> A related question is why we allow an allocation to escape cpuset restrictions,
-> but not also mempolicy restrictions. This includes allocations where we allow
-> dipping into memory reserves by ALLOC_NO_WATERMARKS, because
-> gfp_pfmemalloc_allowed(). It seems wrong to keep restricting such critical
-> allocations due to current task's mempolicy. We could set ac->nodemask to NULL
-> in such situations, but can we distinguish nodemasks coming from mempolicies
-> from nodemasks coming from e.g. HW restrictions on the memory placement?
-> 
-
-I think that is a real good question. The only time I've seen a nodemask come
-from a mempolicy is when the policy is MPOL_BIND, IIRC. That like you said
-is already filtered with cpusets
-
-> Possible fix approach
-> 
-> Cpuset updates will rebind nodemasks only of those mempolicies that need it wrt
-> their relative nodes semantics (those are either created with the flag
-> MPOL_F_RELATIVE_NODES, or with neither RELATIVE nor STATIC flag). The others
-> (created with the STATIC flag) we can leave untouched. For mempolicies that we
-> keep rebinding, adopt the approach of mbind() that swaps an updated copy
-> instead of in-place changes. We can leave get_page_from_freelist() as it is and
-> nodes will be filtered orthogonally with mempolicy nodemask and cpuset check.
-> 
-> This will give us stable nodemask throughout the whole allocation without a
-> need for an on-stack copy. The next question is what to do with
-> current->mems_allowed. Do we keep the parallel modifications with seqlock
-> protection or e.g. try to go back to the synchronous copy approach?
-> 
-> Related to that is a remaining corner case with alloc_pages_vma() which has its
-> own seqlock-protected scope. There it calls policy_nodemask() which might
-> detect that there's no intersection between the mempolicy and cpuset and return
-> NULL nodemask. However, __alloc_pages_slowpath() has own seqlock scope, so if a
-> modification to mems_allowed (resulting in no intersection with mempolicy)
-> happens between the check in policy_nodemask() and reaching
-> __alloc_pages_slowpath(), the latter won't detect the modification and invoke
-> OOM before it can return with a failed allocation to alloc_pages_vma() and let
-> it detect a seqlock update and retry. One solution as shown in the RFC patch [3]
-> is to add another check for the cpuset/nodemask intersection before OOM. That
-> works, but it's a bit hacky and still produces an allocation failure warning.
-> 
-> On the other hand, we might also want to make things more robust in general and
-> prevent spurious OOMs due to no nodes being eligible for also any other reason,
-> such as buggy driver passing a wrong nodemask (which doesn't necessarily come
-> from a mempolicy).
-> 
-> [1] https://lkml.kernel.org/r/20170120103843.24587-1-vbabka@suse.cz
-> [2] https://lkml.kernel.org/r/a3bc44cd-3c81-c20e-aecb-525eb73b9bfe@suse.cz
-> [3] https://lkml.kernel.org/r/7c459f26-13a6-a817-e508-b65b903a8378@suse.cz
-> 
-Thanks for looking into this. I suspect cpuset is quite static in nature today
-(setup and use) and most applications are happy to live with it and cpusets.
-But you are right that this needs fixing.
-
-Balbir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+paul moore
+www.paul-moore.com
