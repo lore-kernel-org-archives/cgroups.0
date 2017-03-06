@@ -1,37 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Fix indenting in PID controller documentation
-Date: Mon, 6 Mar 2017 14:46:57 -0500
-Message-ID: <20170306194657.GC19696@htj.duckdns.org>
-References: <20170217174411.8475-1-tklauser@distanz.ch>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 11/19] kernel: convert cgroup_namespace.count from
+ atomic_t to refcount_t
+Date: Mon, 6 Mar 2017 14:55:58 -0500
+Message-ID: <20170306195558.GE19696@htj.duckdns.org>
+References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
+ <1487585948-6401-12-git-send-email-elena.reshetova@intel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=NNpfVcYXm+qJ5xlna766LP5WJNz95MNqwWARhzMjJWw=;
-        b=Obcos+wXkgNK1bbCqSnQqY4d5HL2WC9yjBA1p/q2Xg2UL55pO7SoobQ/duvlGSlbO4
-         Y1FSn5ukPIXXE1YaTbLEH5PztZpt+AmUS1LN5mferZY7z5EK05TIYyq0of8rI9UPGcjI
-         OG59PRM+PDJ+THytdCDQE+CbGWHyUdSHjjeG/yAqF0uDiA2V10cyp3oLQj9fe923JYQm
-         xYk+yok2+yobrX1HNtp9cn6yyL49oLSrtee6kS2d6pB4nb82+IHUUtNHZv2aUpp3w1IA
-         27SfFRfNJ4B8X6MHyesnMWGBY1gXBf58pZcSOBpOTTjkptUQXfvopD/Dqc3Sak2MPdpa
-         TE1w==
+        bh=5MBlFUwJP9Ip1C25ge+H/ES33Dxr9fTyfom2WCtYVkg=;
+        b=BWZwZQ1MeGfOq9P+udlPvEFfOlm9eN6c0/4FJ9oR5QwqivFZnbhR8dI5nALYiEcKGH
+         MJyGSTfWWzgOZFMVWQjyXS3+oqb+dgBaTlkEAO03MbZfmcmaN5u2mmrONknjAPknW9G4
+         vNfP2VyySyjVpde8VKZ9/WDYskB2F8uoQE3adBMj7HGMDzVWfvs/MTXLw5zhVoEOrayV
+         kvDk/HJaRDDgrT8Dw92wLXSKrwOdDEwJJnUuelAq4rC9zPHhY4/HbCLb6KNMAbcoU9rh
+         1a6scLPGsc0FYpNSK5O8pwEhuf1d8sdpvl5MN56Sh5uT1q1C2m69HwiIEJH7QqUfnCTG
+         vX1Q==
 Content-Disposition: inline
-In-Reply-To: <20170217174411.8475-1-tklauser-93Khv+1bN0NyDzI6CaY1VQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1487585948-6401-12-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tobias Klauser <tklauser-93Khv+1bN0NyDzI6CaY1VQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, paul@paul-moore.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 
-On Fri, Feb 17, 2017 at 06:44:11PM +0100, Tobias Klauser wrote:
-> Follow the common documentation style in the file and indent the
-> interface file description by a tab instead of just a space.
+On Mon, Feb 20, 2017 at 12:19:00PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
 > 
-> Signed-off-by: Tobias Klauser <tklauser-93Khv+1bN0NyDzI6CaY1VQ@public.gmane.org>
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
 
-Applied to cgroup/for-4.11-fixes.
+Applied to cgroup/for-4.12.
 
 Thanks.
 
