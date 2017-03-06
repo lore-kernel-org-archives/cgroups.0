@@ -1,105 +1,55 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: do not call mem_cgroup_free() from within
- mem_cgroup_alloc()
-Date: Mon, 6 Mar 2017 14:59:48 +0100
-Message-ID: <20170306135947.GF27953@dhcp22.suse.cz>
-References: <20170304025356.12265-1-tahsin@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: counting file descriptors with a cgroup controller
+Date: Mon, 6 Mar 2017 13:58:20 -0500
+Message-ID: <20170306185820.GA19696@htj.duckdns.org>
+References: <CGME20170217093725eucas1p12478baf297d25303f3020f4973fbf3b0@eucas1p1.samsung.com>
+ <87poihtaya.fsf%l.stelmach@samsung.com>
+ <9a57890c-d9e9-5719-e155-ce1161795a02@samsung.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ej82faQH4mmwoZlkiJErnOrhHYu5eTmm5ow8ViJMzNo=;
+        b=K1v6bG7uBqh/i+OMdlAfIn067IAzv0RjOTymZZyKTgoWHE3k8qWqGMDdVsazh1uAQy
+         RxgCxMR85YWrMDR6EsksVjr+usSIHJMkCzSdSCPWD9nsOWTgZpI28/qfYcV4qGgm7WSh
+         WuAlisfV93qoK2erWS4IdOQFByZP3CdF9dZS2QO4L2/xcEEnpSQrAipIz0ASdR2XU0Cs
+         e2/bBFCYAaqqtNVtUgzYgbpyMzT41BmQV+nwEvsnNTmftaYMQ/EemkUT+3X8G37n3t/i
+         bH5bHRbpISq5EEkNi23qR15JUN08BqqwDpOwIzstYvvDlAZ778XdATioF1XucSd29LHX
+         6RFw==
 Content-Disposition: inline
-In-Reply-To: <20170304025356.12265-1-tahsin@google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <9a57890c-d9e9-5719-e155-ce1161795a02-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tahsin Erdogan <tahsin@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Krzysztof Opasiak <k.opasiak-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, =?utf-8?Q?=C5=81ukasz?= Stelmach <l.stelmach-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Karol Lewandowski <k.lewandowsk-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 03-03-17 18:53:56, Tahsin Erdogan wrote:
-> mem_cgroup_free() indirectly calls wb_domain_exit() which is not
-> prepared to deal with a struct wb_domain object that hasn't executed
-> wb_domain_init(). For instance, the following warning message is
-> printed by lockdep if alloc_percpu() fails in mem_cgroup_alloc():
-> 
->   INFO: trying to register non-static key.
->   the code is fine but needs lockdep annotation.
->   turning off the locking correctness validator.
->   CPU: 1 PID: 1950 Comm: mkdir Not tainted 4.10.0+ #151
->   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
->   Call Trace:
->    dump_stack+0x67/0x99
->    register_lock_class+0x36d/0x540
->    __lock_acquire+0x7f/0x1a30
->    ? irq_work_queue+0x73/0x90
->    ? wake_up_klogd+0x36/0x40
->    ? console_unlock+0x45d/0x540
->    ? vprintk_emit+0x211/0x2e0
->    lock_acquire+0xcc/0x200
->    ? try_to_del_timer_sync+0x60/0x60
->    del_timer_sync+0x3c/0xc0
->    ? try_to_del_timer_sync+0x60/0x60
->    wb_domain_exit+0x14/0x20
->    mem_cgroup_free+0x14/0x40
->    mem_cgroup_css_alloc+0x3f9/0x620
->    cgroup_apply_control_enable+0x190/0x390
->    cgroup_mkdir+0x290/0x3d0
->    kernfs_iop_mkdir+0x58/0x80
->    vfs_mkdir+0x10e/0x1a0
->    SyS_mkdirat+0xa8/0xd0
->    SyS_mkdir+0x14/0x20
->    entry_SYSCALL_64_fastpath+0x18/0xad
-> 
-> Fix mem_cgroup_alloc() by doing more granular clean up in case of
-> failures.
-> 
-> Fixes: 0b8f73e104285 ("mm: memcontrol: clean up alloc, online, offline, free functions")
-> Signed-off-by: Tahsin Erdogan <tahsin@google.com>
+Hello,
 
-Please do not duplicate mem_cgroup_free code and rather add
-__mem_cgroup_free which does everything except for wb_domain_exit.
-An alternative would be to teach memcg_wb_domain_exit to not call
-wb_domain_exit if it hasn't been initialized yet. The first option seems
-easier.
+On Fri, Feb 17, 2017 at 12:37:11PM +0100, Krzysztof Opasiak wrote:
+> > We need to limit and monitor the number of file descriptors processes
+> > keep open. If a process exceeds certain limit we'd like to terminate it
+> > and restart it or reboot the whole system. Currently the RLIMIT API
+> > allows limiting the number of file descriptors but to achieve our goals
+> > we'd need to make sure all programmes we run handle EMFILE errno
+> > properly. That is why we consider developing a cgroup controller that
+> > limits the number of open file descriptors of its members (similar to
+> >  memory controler).
+> > 
+> > Any comments? Is there any alternative that:
+> > 
+> > + does not require modifications of user-land code,
+> > + enables other process (e.g. init) to be notified and apply policy.
 
-Thanks!
+Hmm... I'm not quite sure fds qualify as an independent system-wide
+resource.  We did that for pids because pids are globally limited and
+can run out way earlier than memory backing it.  I don't think we have
+similar restructions for fds, do we?
 
-> ---
->  mm/memcontrol.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c52ec893e241..9a9d5630df91 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4194,9 +4194,12 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
->  	idr_replace(&mem_cgroup_idr, memcg, memcg->id.id);
->  	return memcg;
->  fail:
-> +	for_each_node(node)
-> +		free_mem_cgroup_per_node_info(memcg, node);
-> +	free_percpu(memcg->stat);
->  	if (memcg->id.id > 0)
->  		idr_remove(&mem_cgroup_idr, memcg->id.id);
-> -	mem_cgroup_free(memcg);
-> +	kfree(memcg);
->  	return NULL;
->  }
->  
-> -- 
-> 2.12.0.rc1.440.g5b76565f74-goog
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
