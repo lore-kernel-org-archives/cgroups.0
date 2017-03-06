@@ -1,47 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 11/19] kernel: convert cgroup_namespace.count from
- atomic_t to refcount_t
-Date: Mon, 6 Mar 2017 14:55:58 -0500
-Message-ID: <20170306195558.GE19696@htj.duckdns.org>
-References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
- <1487585948-6401-12-git-send-email-elena.reshetova@intel.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.10-fixes] cgroup/pids: remove spurious
+ suspicious RCU usage warning
+Date: Mon, 6 Mar 2017 15:12:00 -0500
+Message-ID: <20170306201200.GI19696@htj.duckdns.org>
+References: <1487585723.8499.5.camel@gmx.de>
+ <20170301174452.GE3662@htj.duckdns.org>
+ <1488391071.4812.2.camel@gmx.de>
+ <20170301203907.GF3662@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=5MBlFUwJP9Ip1C25ge+H/ES33Dxr9fTyfom2WCtYVkg=;
-        b=BWZwZQ1MeGfOq9P+udlPvEFfOlm9eN6c0/4FJ9oR5QwqivFZnbhR8dI5nALYiEcKGH
-         MJyGSTfWWzgOZFMVWQjyXS3+oqb+dgBaTlkEAO03MbZfmcmaN5u2mmrONknjAPknW9G4
-         vNfP2VyySyjVpde8VKZ9/WDYskB2F8uoQE3adBMj7HGMDzVWfvs/MTXLw5zhVoEOrayV
-         kvDk/HJaRDDgrT8Dw92wLXSKrwOdDEwJJnUuelAq4rC9zPHhY4/HbCLb6KNMAbcoU9rh
-         1a6scLPGsc0FYpNSK5O8pwEhuf1d8sdpvl5MN56Sh5uT1q1C2m69HwiIEJH7QqUfnCTG
-         vX1Q==
+        bh=h3IwCvIcOLxM9ICKEpGcnI6w0nNg71KSIsufjb0M1B8=;
+        b=jTzVTimYYhz1It/XKracg0b/fT0Iql1WxITwhRx3RnXhw1fiWn1PewUZzm9hvetcRj
+         mqGYQ8GUrRQAFDCnK+FnkHjyW7vkZ4EoOGfI3f+LZW9364EK89nxJQ875kbnBaPDJajN
+         lGAggnzURZ2il/kfjc/J64Osa1hCnlzeLCfSOKzwK72poRyHBgtCCvCcjaip0JMmATQe
+         RZBmcAm9p4cHcWPQvcNF0MkhtrF2srcpp/eAAlybJuYdHdrM4n2BNx0Sbmj7bPmJE9dr
+         WqeT7SqjmS89L4heBT33MRRehFQi3xFHE+QPffi0xyJnI58Mw7XgPRuVaHfa8ITu5CHC
+         y2uQ==
 Content-Disposition: inline
-In-Reply-To: <1487585948-6401-12-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170301203907.GF3662-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, paul@paul-moore.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon, Feb 20, 2017 at 12:19:00PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
+On Wed, Mar 01, 2017 at 03:39:07PM -0500, Tejun Heo wrote:
+> pids_can_fork() is special in that the css association is guaranteed
+> to be stable throughout the function and thus doesn't need RCU
+> protection around task_css access.  When determining the css to charge
+> the pid, task_css_check() is used to override the RCU sanity check.
 > 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> While adding a warning message on fork rejection from pids limit,
+> 135b8b37bd91 ("cgroup: Add pids controller event when fork fails
+> because of pid limit") incorrectly added a task_css access which is
+> neither RCU protected or explicitly annotated.  This triggers the
+> following suspicious RCU usage warning when RCU debugging is enabled.
 
-Applied to cgroup/for-4.12.
-
-Thanks.
+Applied to cgroup/for-4.11-fixes.
 
 -- 
 tejun
