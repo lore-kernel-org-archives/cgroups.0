@@ -1,88 +1,102 @@
-From: Tahsin Erdogan <tahsin@google.com>
-Subject: [PATCH] mm: do not call mem_cgroup_free() from within mem_cgroup_alloc()
-Date: Fri,  3 Mar 2017 18:53:56 -0800
-Message-ID: <20170304025356.12265-1-tahsin@google.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] mm: do not call mem_cgroup_free() from within
+ mem_cgroup_alloc()
+Date: Mon, 6 Mar 2017 14:59:48 +0100
+Message-ID: <20170306135947.GF27953@dhcp22.suse.cz>
+References: <20170304025356.12265-1-tahsin@google.com>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=zyyoCXGSafT1AVpQNkgPkCpnK683zLQjJFLj3ezVzqA=;
-        b=UQxMcfPmWNzHqHierIw+wuZw3ZV/ZYld2ySeeJQKWsYILhyM01dLQel8fZGu6kvmEv
-         2hmX02EfnCA7DXD9obArMMOYuTIK3GdupiiaOYI1nXXwwWhdsZpAIaX+m6vdTT8ui8vN
-         eK0kcZM9tgnBHBYvAv4V+67NXzqeQPwYBxNUgDZ2ckPu+lLpiMoSX37aDDA07sXQx/7k
-         LnSaDvVGOlQHBU+HviZz+pp0pYFtrJ2WryjZ5HxtZqSydvBtNZlBem6bMci6hSJBoMC8
-         O8GwbMHmpu0W+5GesubqhuoDUtca1fbIo881Eb+snN+d2MHeftrwNn/fNLrnyposE99A
-         LNgQ==
+Content-Disposition: inline
+In-Reply-To: <20170304025356.12265-1-tahsin@google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tahsin Erdogan <tahsin@google.com>
+To: Tahsin Erdogan <tahsin@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-mem_cgroup_free() indirectly calls wb_domain_exit() which is not
-prepared to deal with a struct wb_domain object that hasn't executed
-wb_domain_init(). For instance, the following warning message is
-printed by lockdep if alloc_percpu() fails in mem_cgroup_alloc():
+On Fri 03-03-17 18:53:56, Tahsin Erdogan wrote:
+> mem_cgroup_free() indirectly calls wb_domain_exit() which is not
+> prepared to deal with a struct wb_domain object that hasn't executed
+> wb_domain_init(). For instance, the following warning message is
+> printed by lockdep if alloc_percpu() fails in mem_cgroup_alloc():
+> 
+>   INFO: trying to register non-static key.
+>   the code is fine but needs lockdep annotation.
+>   turning off the locking correctness validator.
+>   CPU: 1 PID: 1950 Comm: mkdir Not tainted 4.10.0+ #151
+>   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+>   Call Trace:
+>    dump_stack+0x67/0x99
+>    register_lock_class+0x36d/0x540
+>    __lock_acquire+0x7f/0x1a30
+>    ? irq_work_queue+0x73/0x90
+>    ? wake_up_klogd+0x36/0x40
+>    ? console_unlock+0x45d/0x540
+>    ? vprintk_emit+0x211/0x2e0
+>    lock_acquire+0xcc/0x200
+>    ? try_to_del_timer_sync+0x60/0x60
+>    del_timer_sync+0x3c/0xc0
+>    ? try_to_del_timer_sync+0x60/0x60
+>    wb_domain_exit+0x14/0x20
+>    mem_cgroup_free+0x14/0x40
+>    mem_cgroup_css_alloc+0x3f9/0x620
+>    cgroup_apply_control_enable+0x190/0x390
+>    cgroup_mkdir+0x290/0x3d0
+>    kernfs_iop_mkdir+0x58/0x80
+>    vfs_mkdir+0x10e/0x1a0
+>    SyS_mkdirat+0xa8/0xd0
+>    SyS_mkdir+0x14/0x20
+>    entry_SYSCALL_64_fastpath+0x18/0xad
+> 
+> Fix mem_cgroup_alloc() by doing more granular clean up in case of
+> failures.
+> 
+> Fixes: 0b8f73e104285 ("mm: memcontrol: clean up alloc, online, offline, free functions")
+> Signed-off-by: Tahsin Erdogan <tahsin@google.com>
 
-  INFO: trying to register non-static key.
-  the code is fine but needs lockdep annotation.
-  turning off the locking correctness validator.
-  CPU: 1 PID: 1950 Comm: mkdir Not tainted 4.10.0+ #151
-  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-  Call Trace:
-   dump_stack+0x67/0x99
-   register_lock_class+0x36d/0x540
-   __lock_acquire+0x7f/0x1a30
-   ? irq_work_queue+0x73/0x90
-   ? wake_up_klogd+0x36/0x40
-   ? console_unlock+0x45d/0x540
-   ? vprintk_emit+0x211/0x2e0
-   lock_acquire+0xcc/0x200
-   ? try_to_del_timer_sync+0x60/0x60
-   del_timer_sync+0x3c/0xc0
-   ? try_to_del_timer_sync+0x60/0x60
-   wb_domain_exit+0x14/0x20
-   mem_cgroup_free+0x14/0x40
-   mem_cgroup_css_alloc+0x3f9/0x620
-   cgroup_apply_control_enable+0x190/0x390
-   cgroup_mkdir+0x290/0x3d0
-   kernfs_iop_mkdir+0x58/0x80
-   vfs_mkdir+0x10e/0x1a0
-   SyS_mkdirat+0xa8/0xd0
-   SyS_mkdir+0x14/0x20
-   entry_SYSCALL_64_fastpath+0x18/0xad
+Please do not duplicate mem_cgroup_free code and rather add
+__mem_cgroup_free which does everything except for wb_domain_exit.
+An alternative would be to teach memcg_wb_domain_exit to not call
+wb_domain_exit if it hasn't been initialized yet. The first option seems
+easier.
 
-Fix mem_cgroup_alloc() by doing more granular clean up in case of
-failures.
+Thanks!
 
-Fixes: 0b8f73e104285 ("mm: memcontrol: clean up alloc, online, offline, free functions")
-Signed-off-by: Tahsin Erdogan <tahsin@google.com>
----
- mm/memcontrol.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> ---
+>  mm/memcontrol.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c52ec893e241..9a9d5630df91 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4194,9 +4194,12 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+>  	idr_replace(&mem_cgroup_idr, memcg, memcg->id.id);
+>  	return memcg;
+>  fail:
+> +	for_each_node(node)
+> +		free_mem_cgroup_per_node_info(memcg, node);
+> +	free_percpu(memcg->stat);
+>  	if (memcg->id.id > 0)
+>  		idr_remove(&mem_cgroup_idr, memcg->id.id);
+> -	mem_cgroup_free(memcg);
+> +	kfree(memcg);
+>  	return NULL;
+>  }
+>  
+> -- 
+> 2.12.0.rc1.440.g5b76565f74-goog
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c52ec893e241..9a9d5630df91 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4194,9 +4194,12 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 	idr_replace(&mem_cgroup_idr, memcg, memcg->id.id);
- 	return memcg;
- fail:
-+	for_each_node(node)
-+		free_mem_cgroup_per_node_info(memcg, node);
-+	free_percpu(memcg->stat);
- 	if (memcg->id.id > 0)
- 		idr_remove(&mem_cgroup_idr, memcg->id.id);
--	mem_cgroup_free(memcg);
-+	kfree(memcg);
- 	return NULL;
- }
- 
 -- 
-2.12.0.rc1.440.g5b76565f74-goog
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
