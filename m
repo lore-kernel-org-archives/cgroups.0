@@ -1,39 +1,119 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroups: censor kernel pointer in debug files
-Date: Mon, 6 Mar 2017 15:16:35 -0500
-Message-ID: <20170306201635.GJ19696@htj.duckdns.org>
-References: <20170225095648.GA4917@beast>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v2] mm: do not call mem_cgroup_free() from within
+ mem_cgroup_alloc()
+Date: Tue, 7 Mar 2017 10:18:51 +0100
+Message-ID: <20170307091851.GA28642@dhcp22.suse.cz>
+References: <20170306135947.GF27953@dhcp22.suse.cz>
+ <20170306192122.24262-1-tahsin@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MPyy6KlBWkntRLq17IhCOMMB1BFSYuR/88yZzEKgPIk=;
-        b=Jlf2MYu1CCtC0GYI2vmGLD7rjMIHRKUd2DT3Xew6KUWphHNzD5ShMI94J4NDMsGy7f
-         D3oWDSXTJNAK506NhR0Xle2+uFyvru1QFbJAdS+Yw5zTjuAXWM331todhTaHRzZrob4U
-         WQ1veqyskrGcI3saf00gLLHelPMYZI7ls8P6OYtyTufHEujBg62b1T6v/BdLbBlsY6Ab
-         SYPeuUZAqIj91LIxIGnBUgWoNySm0siAQI0eigXmwj5WUzYVPTQtXkbM68jXgDb16tM1
-         0Te3g3jjPTYzrOBlz0YYgLGgCtlxnu4agoWQnTuXrP1BEf/rF5yM9YpWxYUI3fdU9lGt
-         rreg==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20170225095648.GA4917@beast>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170306192122.24262-1-tahsin@google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-hardening-ZwoEplunGu1jrUoiu81ncdBPR1lH4CV8@public.gmane.org
+To: Tahsin Erdogan <tahsin@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Sat, Feb 25, 2017 at 01:56:48AM -0800, Kees Cook wrote:
-> As found in grsecurity, this avoids exposing a kernel pointer through
-> the cgroup debug entries.
+On Mon 06-03-17 11:21:22, Tahsin Erdogan wrote:
+> mem_cgroup_free() indirectly calls wb_domain_exit() which is not
+> prepared to deal with a struct wb_domain object that hasn't executed
+> wb_domain_init(). For instance, the following warning message is
+> printed by lockdep if alloc_percpu() fails in mem_cgroup_alloc():
 > 
-> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+>   INFO: trying to register non-static key.
+>   the code is fine but needs lockdep annotation.
+>   turning off the locking correctness validator.
+>   CPU: 1 PID: 1950 Comm: mkdir Not tainted 4.10.0+ #151
+>   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+>   Call Trace:
+>    dump_stack+0x67/0x99
+>    register_lock_class+0x36d/0x540
+>    __lock_acquire+0x7f/0x1a30
+>    ? irq_work_queue+0x73/0x90
+>    ? wake_up_klogd+0x36/0x40
+>    ? console_unlock+0x45d/0x540
+>    ? vprintk_emit+0x211/0x2e0
+>    lock_acquire+0xcc/0x200
+>    ? try_to_del_timer_sync+0x60/0x60
+>    del_timer_sync+0x3c/0xc0
+>    ? try_to_del_timer_sync+0x60/0x60
+>    wb_domain_exit+0x14/0x20
+>    mem_cgroup_free+0x14/0x40
+>    mem_cgroup_css_alloc+0x3f9/0x620
+>    cgroup_apply_control_enable+0x190/0x390
+>    cgroup_mkdir+0x290/0x3d0
+>    kernfs_iop_mkdir+0x58/0x80
+>    vfs_mkdir+0x10e/0x1a0
+>    SyS_mkdirat+0xa8/0xd0
+>    SyS_mkdir+0x14/0x20
+>    entry_SYSCALL_64_fastpath+0x18/0xad
+> 
+> Add __mem_cgroup_free() which skips wb_domain_exit(). This is
+> used by both mem_cgroup_free() and mem_cgroup_alloc() clean up.
+> 
+> Fixes: 0b8f73e104285 ("mm: memcontrol: clean up alloc, online, offline, free functions")
+> Signed-off-by: Tahsin Erdogan <tahsin@google.com>
 
-Applied to cgroup/for-4.11-fixes.
+Acked-by: Michal Hocko <mhocko@suse.com>
 
-Thanks.
+Thanks!
+
+> ---
+> v2:
+>   Added __mem_cgroup_free()
+> 
+>  mm/memcontrol.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c52ec893e241..e7d900c5f2d0 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4135,17 +4135,22 @@ static void free_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+>  	kfree(memcg->nodeinfo[node]);
+>  }
+>  
+> -static void mem_cgroup_free(struct mem_cgroup *memcg)
+> +static void __mem_cgroup_free(struct mem_cgroup *memcg)
+>  {
+>  	int node;
+>  
+> -	memcg_wb_domain_exit(memcg);
+>  	for_each_node(node)
+>  		free_mem_cgroup_per_node_info(memcg, node);
+>  	free_percpu(memcg->stat);
+>  	kfree(memcg);
+>  }
+>  
+> +static void mem_cgroup_free(struct mem_cgroup *memcg)
+> +{
+> +	memcg_wb_domain_exit(memcg);
+> +	__mem_cgroup_free(memcg);
+> +}
+> +
+>  static struct mem_cgroup *mem_cgroup_alloc(void)
+>  {
+>  	struct mem_cgroup *memcg;
+> @@ -4196,7 +4201,7 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+>  fail:
+>  	if (memcg->id.id > 0)
+>  		idr_remove(&mem_cgroup_idr, memcg->id.id);
+> -	mem_cgroup_free(memcg);
+> +	__mem_cgroup_free(memcg);
+>  	return NULL;
+>  }
+>  
+> -- 
+> 2.12.0.rc1.440.g5b76565f74-goog
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
