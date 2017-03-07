@@ -1,62 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: counting file descriptors with a cgroup controller
-Date: Tue, 7 Mar 2017 14:41:34 -0500
-Message-ID: <20170307194134.GE31179@htj.duckdns.org>
-References: <CGME20170217093725eucas1p12478baf297d25303f3020f4973fbf3b0@eucas1p1.samsung.com>
- <87poihtaya.fsf%l.stelmach@samsung.com>
- <9a57890c-d9e9-5719-e155-ce1161795a02@samsung.com>
- <20170306185820.GA19696@htj.duckdns.org>
- <7fbd9c4c-76ca-4073-9afa-1ab54364ec79@samsung.com>
+Subject: Re: [PATCH 12/19] kernel: convert css_set.refcount from atomic_t to
+ refcount_t
+Date: Tue, 7 Mar 2017 14:21:54 -0500
+Message-ID: <20170307192154.GB31179@htj.duckdns.org>
+References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
+ <1487585948-6401-13-git-send-email-elena.reshetova@intel.com>
+ <20170306195439.GD19696@htj.duckdns.org>
+ <2236FBA76BA1254E88B949DDB74E612B41C55AD8@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=gx5+vZEbLrW5ijT086dCD5sXQ0IP8vDsLAOhkDovRVs=;
-        b=fXluCWckjX8+TBuG5UoVnRpLAQVHUFUrVuqDXXmKL0IN1theAK46wp05lxljebwn+r
-         IaSRre9gKty8C6iDgi0RWFFzTOT5g8v8SnR8TXlOjRrCT1MQGIboLEdWBpxKivKGRmoE
-         hyynDIX/9rCY+TF0McRKzORkHvRVbhOjzAxGw0OGWOeXKmigpu83l0xLCOeveLqT+pcO
-         835rpm4CWVgCQenel6O6VqOrWrH8ehrh9e9HBnKbLXGM5iAYQPvwas6pgT0NlveZlHuS
-         jGD0v6pb0V7WPfy/DAD1Pc/zCKRRLip2Ngr/OuLeyr0FdfHVkFzgl4EN0oD1WX+/Ttji
-         f93Q==
+        bh=9kQU2T9d/cFDW01O/L+qVx/LcakvxMwgY+gMQKYiubw=;
+        b=Lhdrymr042gQe036NXIrVJ11WaTdyZvjpq6uf+naifsdxit1gbmHYx/LP6u1m+Y+uh
+         rRqlfuZnkhjSvtEUoZ+hkHybBd9tAZkjL5m7zDEe18IgUlGA53ZxYQJGU/qDOEckpzzh
+         ANRWOJhNhZRvxhiz/RA8ZAlIpsAf9xdjCTVCYRj9J38wWy2MY1bhz2GQASgjHcxy/pC7
+         CmjbGWcveoEx1ZNJoiARy70z7wBsQzoucswAvonuJbWHKJ3FEXcJGNPNiDr09zNtVhPt
+         gxP3OOMTDL7pu5DYa5jPRS4asHTcNxGgCA7lMs2keLCUrAPT2dT+dKC1glWufcINmnLn
+         GtYQ==
 Content-Disposition: inline
-In-Reply-To: <7fbd9c4c-76ca-4073-9afa-1ab54364ec79@samsung.com>
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C55AD8@IRSMSX102.ger.corp.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Krzysztof Opasiak <k.opasiak@samsung.com>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, =?utf-8?Q?=C5=81ukasz?= Stelmach <l.stelmach@samsung.com>, linux-kernel@vger.kernel.org, Karol Lewandowski <k.lewandowsk@samsung.com>, cgroups@vger.kernel.org
+To: "Reshetova, Elena" <elena.reshetova@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-audit@redhat.com" <linux-audit@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "mingo@redhat.com" <mingo@redhat.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "acme@kernel.org" <acme@kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, "paul@paul-moore.com" <paul@paul-moore.com>, "eparis@redhat.com" <eparis@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 
-Hello, Krzysztof.
+Hello,
 
-On Tue, Mar 07, 2017 at 12:19:52PM +0100, Krzysztof Opasiak wrote:
-> So maybe let me clarify our use case so we can have some more discussion
-> about this. We are dealing with task of monitoring system services on an IoT
-> system. So this system needs to run as long as possible without reboot just
-> like server. In server world almost whole system state is being monitored by
-> services like nagios. They measure each parameter (like cpu, memory etc)
-> with some interval. Unfortunately we cannot use this it in an embedded
-> system due to power consumption.
+On Tue, Mar 07, 2017 at 07:12:51PM +0000, Reshetova, Elena wrote:
+> Do you want me to resend or could you modify the patch while applying?
 
-So, we don't add controllers for specific use case scenarios.  The
-target actually has to be a fundamental resource which can't be
-isolated in a different way.
+Can you please send the updated patch?
 
-The use case you're describing is more about working around
-shortcomings in userspace by implemneting a major kernel feature, when
-the said shortcomings can easily be controlled and mitigated from
-userspace - e.g. if running out of fds can't be handled reliably from
-the target application for some reason and the application may lock up
-from the condition, protect the base resources so that a monitoring
-process can always reliably run and let that take a corrective action
-when such condition is detected.
-
-This doesn't really seem to qualify as a dedicated kernel
-functionality.
-
-Thanks.
+Thanks!
 
 -- 
 tejun
