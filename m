@@ -1,8 +1,8 @@
 From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH v2] mm: do not call mem_cgroup_free() from within
  mem_cgroup_alloc()
-Date: Tue, 7 Mar 2017 10:18:51 +0100
-Message-ID: <20170307091851.GA28642@dhcp22.suse.cz>
+Date: Tue, 7 Mar 2017 12:40:16 +0100
+Message-ID: <20170307114016.GH28642@dhcp22.suse.cz>
 References: <20170306135947.GF27953@dhcp22.suse.cz>
  <20170306192122.24262-1-tahsin@google.com>
 Mime-Version: 1.0
@@ -14,7 +14,9 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tahsin Erdogan <tahsin@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+
+[CC Andrew]
 
 On Mon 06-03-17 11:21:22, Tahsin Erdogan wrote:
 > mem_cgroup_free() indirectly calls wb_domain_exit() which is not
@@ -55,11 +57,6 @@ On Mon 06-03-17 11:21:22, Tahsin Erdogan wrote:
 > 
 > Fixes: 0b8f73e104285 ("mm: memcontrol: clean up alloc, online, offline, free functions")
 > Signed-off-by: Tahsin Erdogan <tahsin@google.com>
-
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-Thanks!
-
 > ---
 > v2:
 >   Added __mem_cgroup_free()
