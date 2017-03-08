@@ -1,63 +1,368 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: counting file descriptors with a cgroup controller
-Date: Tue, 7 Mar 2017 20:59:39 -0600
-Message-ID: <CAG53R5VQrm-c-F8GdqJ9fx4n+=QU5n3gT-9adx4HqRO_R8BOaw@mail.gmail.com>
-References: <CGME20170217093725eucas1p12478baf297d25303f3020f4973fbf3b0@eucas1p1.samsung.com>
- <87poihtaya.fsf%l.stelmach@samsung.com> <9a57890c-d9e9-5719-e155-ce1161795a02@samsung.com>
- <20170306185820.GA19696@htj.duckdns.org> <7fbd9c4c-76ca-4073-9afa-1ab54364ec79@samsung.com>
- <20170307194134.GE31179@htj.duckdns.org> <9ee62e45-6645-454b-11b5-85be746bc81a@samsung.com>
- <20170307204825.GH31179@htj.duckdns.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=4O/8zKmmnHjAhYmjJye7q1ey9EMn7pmWXs16j6E3qyE=;
-        b=QvjhvyUdpzCmigbdLHoheDylUt02iKJNk2PoNyy0kouC9VLYYOz/J4N1cTH8frgErq
-         YXMF5Zw8RbTPOSfqE/sbF3sPIrUsIC/HczT/JHQ0JcOW+f+vlPkSgm/46v3Zs5psJ4ax
-         F3pOM0FOpt4ZYRHo23JRVgE8ulIRZJjzXvto8KHxyH9x1eajLyrdCJMUXWR146Z2yTBw
-         O4FYyeWgLkiiQv7ZVfoDJUStU01RTFOnv2gdR2Sz9u6WWlUjH8eafZriKQDguEdkibvw
-         fNKoUXrXHXlGoZC0tQfwbcpyrTXfG80VGfv+17i+iiyWMSygkDtRM2erwmd12OeamVUs
-         kzQg==
-In-Reply-To: <20170307204825.GH31179-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "Huang, Ying" <ying.huang@intel.com>
+Subject: [PATCH -mm -v6 2/9] mm, memcg: Support to charge/uncharge multiple swap entries
+Date: Wed,  8 Mar 2017 15:26:06 +0800
+Message-ID: <20170308072613.17634-3-ying.huang@intel.com>
+References: <20170308072613.17634-1-ying.huang@intel.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20170308072613.17634-1-ying.huang@intel.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Krzysztof Opasiak <k.opasiak-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?UTF-8?Q?=C5=81ukasz_Stelmach?= <l.stelmach-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karol Lewandowski <k.lewandowsk-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Huang Ying <ying.huang@intel.com>, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-Hi,
+From: Huang Ying <ying.huang@intel.com>
 
-On Tue, Mar 7, 2017 at 2:48 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Hello,
->
-> On Tue, Mar 07, 2017 at 09:06:49PM +0100, Krzysztof Opasiak wrote:
-> > Personally, I don't want to use rlimit for this as it ends up returning
-> > error code from for example open() when we hit the limit. This may lead to
-> > some unpredictable crashes in  services (esp. those poor proprietary binary
-> > blobs). Instead of injecting errors to service we would like to just get
-> > notification that this service has more opened fds than it should and ask it
-> > to restart in a polite way.
-> >
+This patch make it possible to charge or uncharge a set of continuous
+swap entries in the swap cgroup.  The number of swap entries is
+specified via an added parameter.
 
-How does those poor proprietary binary blobs remain polite after restart?
-Do you mean you want to keep restarting them when it reaches the limit?
+This will be used for the THP (Transparent Huge Page) swap support.
+Where a swap cluster backing a THP may be allocated and freed as a
+whole.  So a set of (HPAGE_PMD_NR) continuous swap entries backing one
+THP need to be charged or uncharged together.  This will batch the
+cgroup operations for the THP swap too.
 
-> > For memory seems to be quite easy to achieve as we can just get eventfd
-> > notification when application passes given memory usage using memory cgroup
-> > controller. Maybe you know some efficient method to do the same for fds?
->
-> So, if all you wanna do is reliably detecting open(2) failures, can't
-> you do that with bpf tracing?
->
-> Thanks.
->
-> --
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cc: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
+---
+ include/linux/swap.h        | 12 ++++++----
+ include/linux/swap_cgroup.h |  6 +++--
+ mm/memcontrol.c             | 57 +++++++++++++++++++++++++--------------------
+ mm/shmem.c                  |  2 +-
+ mm/swap_cgroup.c            | 40 +++++++++++++++++++++++--------
+ mm/swap_state.c             |  2 +-
+ mm/swapfile.c               |  2 +-
+ 7 files changed, 77 insertions(+), 44 deletions(-)
+
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 486494e6b2fc..278e1349a424 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -550,8 +550,10 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
+ 
+ #ifdef CONFIG_MEMCG_SWAP
+ extern void mem_cgroup_swapout(struct page *page, swp_entry_t entry);
+-extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry);
+-extern void mem_cgroup_uncharge_swap(swp_entry_t entry);
++extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
++				      unsigned int nr_entries);
++extern void mem_cgroup_uncharge_swap(swp_entry_t entry,
++				     unsigned int nr_entries);
+ extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+ extern bool mem_cgroup_swap_full(struct page *page);
+ #else
+@@ -560,12 +562,14 @@ static inline void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ }
+ 
+ static inline int mem_cgroup_try_charge_swap(struct page *page,
+-					     swp_entry_t entry)
++					     swp_entry_t entry,
++					     unsigned int nr_entries)
+ {
+ 	return 0;
+ }
+ 
+-static inline void mem_cgroup_uncharge_swap(swp_entry_t entry)
++static inline void mem_cgroup_uncharge_swap(swp_entry_t entry,
++					    unsigned int nr_entries)
+ {
+ }
+ 
+diff --git a/include/linux/swap_cgroup.h b/include/linux/swap_cgroup.h
+index 145306bdc92f..b2b8ec7bda3f 100644
+--- a/include/linux/swap_cgroup.h
++++ b/include/linux/swap_cgroup.h
+@@ -7,7 +7,8 @@
+ 
+ extern unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
+ 					unsigned short old, unsigned short new);
+-extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id);
++extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
++					 unsigned int nr_ents);
+ extern unsigned short lookup_swap_cgroup_id(swp_entry_t ent);
+ extern int swap_cgroup_swapon(int type, unsigned long max_pages);
+ extern void swap_cgroup_swapoff(int type);
+@@ -15,7 +16,8 @@ extern void swap_cgroup_swapoff(int type);
+ #else
+ 
+ static inline
+-unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
++unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
++				  unsigned int nr_ents)
+ {
+ 	return 0;
+ }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 537362e4108e..2b0b6012ad22 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2393,10 +2393,9 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+ 
+ #ifdef CONFIG_MEMCG_SWAP
+ static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
+-					 bool charge)
++				       int nr_entries)
+ {
+-	int val = (charge) ? 1 : -1;
+-	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], val);
++	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], nr_entries);
+ }
+ 
+ /**
+@@ -2422,8 +2421,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
+ 	new_id = mem_cgroup_id(to);
+ 
+ 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
+-		mem_cgroup_swap_statistics(from, false);
+-		mem_cgroup_swap_statistics(to, true);
++		mem_cgroup_swap_statistics(from, -1);
++		mem_cgroup_swap_statistics(to, 1);
+ 		return 0;
+ 	}
+ 	return -EINVAL;
+@@ -5446,7 +5445,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+ 		 * let's not wait for it.  The page already received a
+ 		 * memory+swap charge, drop the swap entry duplicate.
+ 		 */
+-		mem_cgroup_uncharge_swap(entry);
++		mem_cgroup_uncharge_swap(entry, nr_pages);
+ 	}
+ }
+ 
+@@ -5874,9 +5873,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	 * ancestor for the swap instead and transfer the memory+swap charge.
+ 	 */
+ 	swap_memcg = mem_cgroup_id_get_online(memcg);
+-	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg));
++	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg), 1);
+ 	VM_BUG_ON_PAGE(oldid, page);
+-	mem_cgroup_swap_statistics(swap_memcg, true);
++	mem_cgroup_swap_statistics(swap_memcg, 1);
+ 
+ 	page->mem_cgroup = NULL;
+ 
+@@ -5903,16 +5902,19 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 		css_put(&memcg->css);
+ }
+ 
+-/*
+- * mem_cgroup_try_charge_swap - try charging a swap entry
++/**
++ * mem_cgroup_try_charge_swap - try charging a set of swap entries
+  * @page: page being added to swap
+- * @entry: swap entry to charge
++ * @entry: the first swap entry to charge
++ * @nr_entries: the number of swap entries to charge
+  *
+- * Try to charge @entry to the memcg that @page belongs to.
++ * Try to charge @nr_entries swap entries starting from @entry to the
++ * memcg that @page belongs to.
+  *
+  * Returns 0 on success, -ENOMEM on failure.
+  */
+-int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
++int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
++			       unsigned int nr_entries)
+ {
+ 	struct mem_cgroup *memcg;
+ 	struct page_counter *counter;
+@@ -5930,25 +5932,29 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
+ 	memcg = mem_cgroup_id_get_online(memcg);
+ 
+ 	if (!mem_cgroup_is_root(memcg) &&
+-	    !page_counter_try_charge(&memcg->swap, 1, &counter)) {
++	    !page_counter_try_charge(&memcg->swap, nr_entries, &counter)) {
+ 		mem_cgroup_id_put(memcg);
+ 		return -ENOMEM;
+ 	}
+ 
+-	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
++	if (nr_entries > 1)
++		mem_cgroup_id_get_many(memcg, nr_entries - 1);
++	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg), nr_entries);
+ 	VM_BUG_ON_PAGE(oldid, page);
+-	mem_cgroup_swap_statistics(memcg, true);
++	mem_cgroup_swap_statistics(memcg, nr_entries);
+ 
+ 	return 0;
+ }
+ 
+ /**
+- * mem_cgroup_uncharge_swap - uncharge a swap entry
+- * @entry: swap entry to uncharge
++ * mem_cgroup_uncharge_swap - uncharge a set of swap entries
++ * @entry: the first swap entry to uncharge
++ * @nr_entries: the number of swap entries to uncharge
+  *
+- * Drop the swap charge associated with @entry.
++ * Drop the swap charge associated with @nr_entries swap entries
++ * starting from @entry.
+  */
+-void mem_cgroup_uncharge_swap(swp_entry_t entry)
++void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_entries)
+ {
+ 	struct mem_cgroup *memcg;
+ 	unsigned short id;
+@@ -5956,18 +5962,19 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry)
+ 	if (!do_swap_account)
+ 		return;
+ 
+-	id = swap_cgroup_record(entry, 0);
++	id = swap_cgroup_record(entry, 0, nr_entries);
+ 	rcu_read_lock();
+ 	memcg = mem_cgroup_from_id(id);
+ 	if (memcg) {
+ 		if (!mem_cgroup_is_root(memcg)) {
+ 			if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+-				page_counter_uncharge(&memcg->swap, 1);
++				page_counter_uncharge(&memcg->swap, nr_entries);
+ 			else
+-				page_counter_uncharge(&memcg->memsw, 1);
++				page_counter_uncharge(&memcg->memsw,
++						      nr_entries);
+ 		}
+-		mem_cgroup_swap_statistics(memcg, false);
+-		mem_cgroup_id_put(memcg);
++		mem_cgroup_swap_statistics(memcg, -nr_entries);
++		mem_cgroup_id_put_many(memcg, nr_entries);
+ 	}
+ 	rcu_read_unlock();
+ }
+diff --git a/mm/shmem.c b/mm/shmem.c
+index e67d6ba4e98e..effe07ef5c26 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1294,7 +1294,7 @@ static int shmem_writepage(struct page *page, struct writeback_control *wbc)
+ 	if (!swap.val)
+ 		goto redirty;
+ 
+-	if (mem_cgroup_try_charge_swap(page, swap))
++	if (mem_cgroup_try_charge_swap(page, swap, 1))
+ 		goto free_swap;
+ 
+ 	/*
+diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+index 310ac0b8f974..8cee2d125815 100644
+--- a/mm/swap_cgroup.c
++++ b/mm/swap_cgroup.c
+@@ -58,21 +58,27 @@ static int swap_cgroup_prepare(int type)
+ 	return -ENOMEM;
+ }
+ 
++static struct swap_cgroup *__lookup_swap_cgroup(struct swap_cgroup_ctrl *ctrl,
++						pgoff_t offset)
++{
++	struct page *mappage;
++	struct swap_cgroup *sc;
++
++	mappage = ctrl->map[offset / SC_PER_PAGE];
++	sc = page_address(mappage);
++	return sc + offset % SC_PER_PAGE;
++}
++
+ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
+ 					struct swap_cgroup_ctrl **ctrlp)
+ {
+ 	pgoff_t offset = swp_offset(ent);
+ 	struct swap_cgroup_ctrl *ctrl;
+-	struct page *mappage;
+-	struct swap_cgroup *sc;
+ 
+ 	ctrl = &swap_cgroup_ctrl[swp_type(ent)];
+ 	if (ctrlp)
+ 		*ctrlp = ctrl;
+-
+-	mappage = ctrl->map[offset / SC_PER_PAGE];
+-	sc = page_address(mappage);
+-	return sc + offset % SC_PER_PAGE;
++	return __lookup_swap_cgroup(ctrl, offset);
+ }
+ 
+ /**
+@@ -105,25 +111,39 @@ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
+ }
+ 
+ /**
+- * swap_cgroup_record - record mem_cgroup for this swp_entry.
+- * @ent: swap entry to be recorded into
++ * swap_cgroup_record - record mem_cgroup for a set of swap entries
++ * @ent: the first swap entry to be recorded into
+  * @id: mem_cgroup to be recorded
++ * @nr_ents: number of swap entries to be recorded
+  *
+  * Returns old value at success, 0 at failure.
+  * (Of course, old value can be 0.)
+  */
+-unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
++unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
++				  unsigned int nr_ents)
+ {
+ 	struct swap_cgroup_ctrl *ctrl;
+ 	struct swap_cgroup *sc;
+ 	unsigned short old;
+ 	unsigned long flags;
++	pgoff_t offset = swp_offset(ent);
++	pgoff_t end = offset + nr_ents;
+ 
+ 	sc = lookup_swap_cgroup(ent, &ctrl);
+ 
+ 	spin_lock_irqsave(&ctrl->lock, flags);
+ 	old = sc->id;
+-	sc->id = id;
++	for (;;) {
++		VM_BUG_ON(sc->id != old);
++		sc->id = id;
++		offset++;
++		if (offset == end)
++			break;
++		if (offset % SC_PER_PAGE)
++			sc++;
++		else
++			sc = __lookup_swap_cgroup(ctrl, offset);
++	}
+ 	spin_unlock_irqrestore(&ctrl->lock, flags);
+ 
+ 	return old;
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 473b71e052a8..3c248f0a0abc 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -182,7 +182,7 @@ int add_to_swap(struct page *page, struct list_head *list)
+ 	if (!entry.val)
+ 		return 0;
+ 
+-	if (mem_cgroup_try_charge_swap(page, entry)) {
++	if (mem_cgroup_try_charge_swap(page, entry, 1)) {
+ 		swapcache_free(entry);
+ 		return 0;
+ 	}
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 2396e1a350c8..a744604384ff 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -1012,7 +1012,7 @@ static void swap_entry_free(struct swap_info_struct *p, swp_entry_t entry)
+ 	dec_cluster_info_page(p, p->cluster_info, offset);
+ 	unlock_cluster(ci);
+ 
+-	mem_cgroup_uncharge_swap(entry);
++	mem_cgroup_uncharge_swap(entry, 1);
+ 	if (offset < p->lowest_bit)
+ 		p->lowest_bit = offset;
+ 	if (offset > p->highest_bit) {
+-- 
+2.11.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
