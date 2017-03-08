@@ -1,137 +1,55 @@
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH] kernel: convert css_set.refcount from atomic_t to refcount_t
-Date: Wed,  8 Mar 2017 10:00:40 +0200
-Message-ID: <1488960040-24741-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Krzysztof Opasiak <k.opasiak-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: counting file descriptors with a cgroup controller
+Date: Wed, 08 Mar 2017 11:19:31 +0100
+Message-ID: <607306a7-c075-b2e0-777d-d5a4c790527e@samsung.com>
+References: <CGME20170217093725eucas1p12478baf297d25303f3020f4973fbf3b0@eucas1p1.samsung.com>
+ <87poihtaya.fsf%l.stelmach@samsung.com>
+ <9a57890c-d9e9-5719-e155-ce1161795a02@samsung.com>
+ <20170306185820.GA19696@htj.duckdns.org>
+ <7fbd9c4c-76ca-4073-9afa-1ab54364ec79@samsung.com>
+ <20170307194134.GE31179@htj.duckdns.org>
+ <9ee62e45-6645-454b-11b5-85be746bc81a@samsung.com>
+ <20170307204825.GH31179@htj.duckdns.org>
+ <CAG53R5VQrm-c-F8GdqJ9fx4n+=QU5n3gT-9adx4HqRO_R8BOaw@mail.gmail.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <CAG53R5VQrm-c-F8GdqJ9fx4n+=QU5n3gT-9adx4HqRO_R8BOaw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?UTF-8?Q?=c5=81ukasz_Stelmach?= <l.stelmach-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karol Lewandowski <k.lewandowsk-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- include/linux/cgroup-defs.h     | 3 ++-
- kernel/cgroup/cgroup-internal.h | 5 +++--
- kernel/cgroup/cgroup-v1.c       | 4 ++--
- kernel/cgroup/cgroup.c          | 6 +++---
- 4 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 3c02404..e2f4b31 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -13,6 +13,7 @@
- #include <linux/wait.h>
- #include <linux/mutex.h>
- #include <linux/rcupdate.h>
-+#include <linux/refcount.h>
- #include <linux/percpu-refcount.h>
- #include <linux/percpu-rwsem.h>
- #include <linux/workqueue.h>
-@@ -156,7 +157,7 @@ struct css_set {
- 	struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
- 
- 	/* reference count */
--	atomic_t refcount;
-+	refcount_t refcount;
- 
- 	/* the default cgroup associated with this css_set */
- 	struct cgroup *dfl_cgrp;
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index 9203bfb..4567f12 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -5,6 +5,7 @@
- #include <linux/kernfs.h>
- #include <linux/workqueue.h>
- #include <linux/list.h>
-+#include <linux/refcount.h>
- 
- /*
-  * A cgroup can be associated with multiple css_sets as different tasks may
-@@ -134,7 +135,7 @@ static inline void put_css_set(struct css_set *cset)
- 	 * can see it. Similar to atomic_dec_and_lock(), but for an
- 	 * rwlock
- 	 */
--	if (atomic_add_unless(&cset->refcount, -1, 1))
-+	if (refcount_dec_not_one(&cset->refcount))
- 		return;
- 
- 	spin_lock_irqsave(&css_set_lock, flags);
-@@ -147,7 +148,7 @@ static inline void put_css_set(struct css_set *cset)
-  */
- static inline void get_css_set(struct css_set *cset)
- {
--	atomic_inc(&cset->refcount);
-+	refcount_inc(&cset->refcount);
- }
- 
- bool cgroup_ssid_enabled(int ssid);
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index fc34bcf..9269179 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -343,7 +343,7 @@ static int cgroup_task_count(const struct cgroup *cgrp)
- 
- 	spin_lock_irq(&css_set_lock);
- 	list_for_each_entry(link, &cgrp->cset_links, cset_link)
--		count += atomic_read(&link->cset->refcount);
-+		count += refcount_read(&link->cset->refcount);
- 	spin_unlock_irq(&css_set_lock);
- 	return count;
- }
-@@ -1283,7 +1283,7 @@ static u64 current_css_set_refcount_read(struct cgroup_subsys_state *css,
- 	u64 count;
- 
- 	rcu_read_lock();
--	count = atomic_read(&task_css_set(current)->refcount);
-+	count = refcount_read(&task_css_set(current)->refcount);
- 	rcu_read_unlock();
- 	return count;
- }
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 5b94c79..8db26fd 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -553,7 +553,7 @@ EXPORT_SYMBOL_GPL(of_css);
-  * haven't been created.
-  */
- struct css_set init_css_set = {
--	.refcount		= ATOMIC_INIT(1),
-+	.refcount		= REFCOUNT_INIT(1),
- 	.tasks			= LIST_HEAD_INIT(init_css_set.tasks),
- 	.mg_tasks		= LIST_HEAD_INIT(init_css_set.mg_tasks),
- 	.task_iters		= LIST_HEAD_INIT(init_css_set.task_iters),
-@@ -723,7 +723,7 @@ void put_css_set_locked(struct css_set *cset)
- 
- 	lockdep_assert_held(&css_set_lock);
- 
--	if (!atomic_dec_and_test(&cset->refcount))
-+	if (!refcount_dec_and_test(&cset->refcount))
- 		return;
- 
- 	/* This css_set is dead. unlink it and release cgroup and css refs */
-@@ -976,7 +976,7 @@ static struct css_set *find_css_set(struct css_set *old_cset,
- 		return NULL;
- 	}
- 
--	atomic_set(&cset->refcount, 1);
-+	refcount_set(&cset->refcount, 1);
- 	INIT_LIST_HEAD(&cset->tasks);
- 	INIT_LIST_HEAD(&cset->mg_tasks);
- 	INIT_LIST_HEAD(&cset->task_iters);
+On 03/08/2017 03:59 AM, Parav Pandit wrote:
+> Hi,
+>
+> On Tue, Mar 7, 2017 at 2:48 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>>
+>> Hello,
+>>
+>> On Tue, Mar 07, 2017 at 09:06:49PM +0100, Krzysztof Opasiak wrote:
+>>> Personally, I don't want to use rlimit for this as it ends up returning
+>>> error code from for example open() when we hit the limit. This may lead to
+>>> some unpredictable crashes in  services (esp. those poor proprietary binary
+>>> blobs). Instead of injecting errors to service we would like to just get
+>>> notification that this service has more opened fds than it should and ask it
+>>> to restart in a polite way.
+>>>
+>
+> How does those poor proprietary binary blobs remain polite after restart?
+
+They wont.
+
+> Do you mean you want to keep restarting them when it reaches the limit?
+
+We'd like to restart them each time when they reach limit declared by 
+developer.
+
+Best regards,
 -- 
-2.7.4
-
+Krzysztof Opasiak
+Samsung R&D Institute Poland
+Samsung Electronics
