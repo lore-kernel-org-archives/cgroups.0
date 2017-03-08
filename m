@@ -1,55 +1,52 @@
-From: Krzysztof Opasiak <k.opasiak-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: counting file descriptors with a cgroup controller
-Date: Wed, 08 Mar 2017 11:19:31 +0100
-Message-ID: <607306a7-c075-b2e0-777d-d5a4c790527e@samsung.com>
-References: <CGME20170217093725eucas1p12478baf297d25303f3020f4973fbf3b0@eucas1p1.samsung.com>
- <87poihtaya.fsf%l.stelmach@samsung.com>
- <9a57890c-d9e9-5719-e155-ce1161795a02@samsung.com>
- <20170306185820.GA19696@htj.duckdns.org>
- <7fbd9c4c-76ca-4073-9afa-1ab54364ec79@samsung.com>
- <20170307194134.GE31179@htj.duckdns.org>
- <9ee62e45-6645-454b-11b5-85be746bc81a@samsung.com>
- <20170307204825.GH31179@htj.duckdns.org>
- <CAG53R5VQrm-c-F8GdqJ9fx4n+=QU5n3gT-9adx4HqRO_R8BOaw@mail.gmail.com>
+From: Balbir Singh <bsingharora@gmail.com>
+Subject: Re: [PATCH -mm -v6 2/9] mm, memcg: Support to charge/uncharge
+ multiple swap entries
+Date: Wed, 08 Mar 2017 22:37:56 +1100
+Message-ID: <1488973076.13674.5.camel@gmail.com>
+References: <20170308072613.17634-1-ying.huang@intel.com>
+	 <20170308072613.17634-3-ying.huang@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <CAG53R5VQrm-c-F8GdqJ9fx4n+=QU5n3gT-9adx4HqRO_R8BOaw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=7a9xFlCgiwbvXAEdN3gdDJqWvjSPPrn3CSYL5tF+mNU=;
+        b=ItLl79uuM4/q9fy6a3kwB58W05dJAer9s+jaYfmfsRoIXP944J2Mstz+RcRYlyTFNT
+         SrgV+HKvzFzmYORgLB9rECK1Z65I3Wh9KzNGZGSiPj16bjX/quq5aFgSU0GCJJFiKSJ2
+         30t/PB+C9CZzrA7ITqCQcplXw4Yk0vTNSLGb7Tpyg4zPPpRXS0KpGALjYy/wl4o3V4us
+         z4cylyY7FINIR5jFnWsQXxbSqfJhrVRkuZL1GCTVsrfV0Lgq4TWkpAyBL/oN36kNMRwW
+         rTvVYEVblD8kR7U8AXL2e+xC61iuEno7cUSE+uJCZbxKWm8eCQT4LGCV3UvVdU157b+3
+         1IXg==
+In-Reply-To: <20170308072613.17634-3-ying.huang@intel.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?UTF-8?Q?=c5=81ukasz_Stelmach?= <l.stelmach-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karol Lewandowski <k.lewandowsk-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
+On Wed, 2017-03-08 at 15:26 +0800, Huang, Ying wrote:
+> From: Huang Ying <ying.huang@intel.com>
+> 
+> This patch make it possible to charge or uncharge a set of continuous
+> swap entries in the swap cgroup.  The number of swap entries is
+> specified via an added parameter.
+> 
+> This will be used for the THP (Transparent Huge Page) swap support.
+> Where a swap cluster backing a THP may be allocated and freed as a
+> whole.  So a set of (HPAGE_PMD_NR) continuous swap entries backing one
+> THP need to be charged or uncharged together.  This will batch the
+> cgroup operations for the THP swap too.
 
+A quick look at the patches makes it look sane. I wonder if we would
+make sense to track THP swapout separately as well
+(from a memory.stat perspective)
 
-On 03/08/2017 03:59 AM, Parav Pandit wrote:
-> Hi,
->
-> On Tue, Mar 7, 2017 at 2:48 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->>
->> Hello,
->>
->> On Tue, Mar 07, 2017 at 09:06:49PM +0100, Krzysztof Opasiak wrote:
->>> Personally, I don't want to use rlimit for this as it ends up returning
->>> error code from for example open() when we hit the limit. This may lead to
->>> some unpredictable crashes in  services (esp. those poor proprietary binary
->>> blobs). Instead of injecting errors to service we would like to just get
->>> notification that this service has more opened fds than it should and ask it
->>> to restart in a polite way.
->>>
->
-> How does those poor proprietary binary blobs remain polite after restart?
+Balbir Singh
 
-They wont.
-
-> Do you mean you want to keep restarting them when it reaches the limit?
-
-We'd like to restart them each time when they reach limit declared by 
-developer.
-
-Best regards,
--- 
-Krzysztof Opasiak
-Samsung R&D Institute Poland
-Samsung Electronics
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
