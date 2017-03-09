@@ -1,57 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Used void functions follows non void
-Date: Thu, 9 Mar 2017 13:29:01 -0500
-Message-ID: <20170309182901.GF28982@htj.duckdns.org>
-References: <65a50f47-b87a-790d-cc16-0b873bffdc97@marian1000.go.ro>
+From: Balbir Singh <bsingharora@gmail.com>
+Subject: Re: [PATCH -mm -v6 2/9] mm, memcg: Support to charge/uncharge
+ multiple swap entries
+Date: Fri, 10 Mar 2017 08:22:28 +1100
+Message-ID: <CAKTCnzneq1JZnSQnxNBJCxJEfk65N8GPL=K6T8Lg44t7hjtV1A@mail.gmail.com>
+References: <20170308072613.17634-1-ying.huang@intel.com> <20170308072613.17634-3-ying.huang@intel.com>
+ <1488973076.13674.5.camel@gmail.com> <87o9xbi6gb.fsf@yhuang-dev.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=7gQW3Sk1WIX7Y4kgZstjOrh0G9rDT4HhRemGXedIl2U=;
-        b=jfk+8lD6NaG32WvQ/hNlqgydHGm+F20HMptl7laek0WGeesdzXTTuNtPlriF/7VMlz
-         uTeXNjlWBj1NuDcg7z7y5fEgoUYPT19Uzvznrstbk79nfmsziWMFkmczj6dQfCcL5o7t
-         V+aYftsj94kp9Uh1RmLFUdpHtmcjaZbqFqguXNOyfhcvF4aSakxGrlmURY3VRObTzrx9
-         LnFdzS0I9MgkfYmAMFkw4UIq7eX0YDSHeuA7vbeXubWpy7H94YSB+Fj0ED28tt6cFXzc
-         jRQJO3Ndzh+eSzAxp+us3qt20nNSrA6CRWCV8Fkq4Of/nzuk+2FUJYYk9cqZwz2RKnM2
-         0rSw==
-Content-Disposition: inline
-In-Reply-To: <65a50f47-b87a-790d-cc16-0b873bffdc97-jrA/B3VWHiL2D7C+UIOg5A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=x8bz7cb0hBvxN0xJHFvyZomKWrUTsCumna0Y7sdaNDI=;
+        b=iFnSWmNjezr4ggxQ/fw5DFPJc8msrmCnF2YbwKsmq2155iNSxDp5HS09v5JcccUYY5
+         RIv/ImV57eAvJtwZHaejhUcr6hH8jAHMKF2FUOnYCeLSzBLDwaunLUOYQdsH8PUpyTrL
+         mlqnGOQVsWiOpSs/eEL6vsphy9yHIAQmPcdezD9TOeimXdaI+iMnIU8wVwputDUBxGM6
+         ARZpWru6BRGvF0FbHLqcoGsE0+V2gdpKO/dM6kA/Kuk47eTM70nFN11fNou44ImMc04Q
+         R3i7hB2NLjJneLcpeZVEvCggHM0i+IUjBWIns9qSJYmy52xZoym2aApeoBJwwXTS9Fc+
+         +QyA==
+In-Reply-To: <87o9xbi6gb.fsf@yhuang-dev.intel.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Corcodel Marian <asd-jrA/B3VWHiL2D7C+UIOg5A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Huang, Ying" <ying.huang@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-On Thu, Mar 09, 2017 at 04:39:10PM +0200, Corcodel Marian wrote:
-> 
-> Make compiler to print errors message ;
-> run make;
->  Bellow is  errors message from compiler:
-> include/linux/cgroup.h:424:2: warning: ‘return’ with no value, in function
-> returning non-void [-Wreturn-type]
->   return task_css_set_check(task, false);
->   ^
-> include/linux/cgroup.h: In function ‘task_css’:
-> include/linux/cgroup.h:414:35: error: expected expression before ‘->’ token
->   task_css_set_check((task), (__c))->subsys[(subsys_id)]
->                                    ^
-> include/linux/cgroup.h:437:9: note: in expansion of macro ‘task_css_check’
->   return task_css_check(task, subsys_id, false);
->          ^
-> include/linux/cgroup.h: In function ‘task_css_is_root’:
-> include/linux/cgroup.h:414:35: error: expected expression before ‘->’ token
->   task_css_set_check((task), (__c))->subsys[(subsys_id)]
->                                    ^
-> include/linux/cgroup.h:475:9: note: in expansion of macro ‘task_css_check’
->   return task_css_check(task, subsys_id, true) ==
+On Thu, Mar 9, 2017 at 12:28 PM, Huang, Ying <ying.huang@intel.com> wrote:
+> Balbir Singh <bsingharora@gmail.com> writes:
+>
+>> On Wed, 2017-03-08 at 15:26 +0800, Huang, Ying wrote:
+>>> From: Huang Ying <ying.huang@intel.com>
+>>>
+>>> This patch make it possible to charge or uncharge a set of continuous
+>>> swap entries in the swap cgroup.  The number of swap entries is
+>>> specified via an added parameter.
+>>>
+>>> This will be used for the THP (Transparent Huge Page) swap support.
+>>> Where a swap cluster backing a THP may be allocated and freed as a
+>>> whole.  So a set of (HPAGE_PMD_NR) continuous swap entries backing one
+>>> THP need to be charged or uncharged together.  This will batch the
+>>> cgroup operations for the THP swap too.
+>>
+>> A quick look at the patches makes it look sane. I wonder if we would
+>> make sense to track THP swapout separately as well
+>> (from a memory.stat perspective)
+>
+> The patchset is just the first step of THP swap optimization.  So the
+> THP will still be split after putting the THP into the swap cache.  This
+> makes it unnecessary to change mem_cgroup_swapout().  I am working on a
+> following up patchset to further delaying THP splitting after swapping
+> out the THP to the disk.  In that patchset, I will change
+> mem_cgroup_swapout() too.
 
-Can you please share the .config used and the kernel version?
 
-Thanks.
+Fair enough
 
--- 
-tejun
+Thanks,
+Balbir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
