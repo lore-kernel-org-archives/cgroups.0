@@ -1,46 +1,54 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] kernel: convert css_set.refcount from atomic_t to
- refcount_t
-Date: Wed, 8 Mar 2017 17:47:19 -0500
-Message-ID: <20170308224719.GA21117@htj.duckdns.org>
-References: <1488960040-24741-1-git-send-email-elena.reshetova@intel.com>
+From: "Huang\, Ying" <ying.huang@intel.com>
+Subject: Re: [PATCH -mm -v6 2/9] mm, memcg: Support to charge/uncharge multiple swap entries
+Date: Thu, 09 Mar 2017 09:28:52 +0800
+Message-ID: <87o9xbi6gb.fsf@yhuang-dev.intel.com>
+References: <20170308072613.17634-1-ying.huang@intel.com>
+	<20170308072613.17634-3-ying.huang@intel.com>
+	<1488973076.13674.5.camel@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=hRa6nC1a2lo3QHm/M2f1LW/A4C+cIF/F0S9Rss0FS8A=;
-        b=l6VfHpiGOQ8l56xQieRagMHNHHFifRbIJjmDknzI9Ki7YgbrvSFh9PxHoqkpBmErr6
-         PnfhGnySSbocS5Tf41xe7lFhjFOJ6TVj39iLqc6L6kr2Purrc96n3EQOdorIVbElrK2D
-         gS8fNWI7a4cy9QGiGvNMpyknkddIHTkSXMIqDulCV+2wTo5NawHaW3UbgCKwOBc7czAQ
-         Uv7mIfGqVNAv3dHwk46Wm9CYTz3Y1uu7+qfebUqDBMMFONWnvrhXm8zmjkT6Y35K8WBh
-         M4u5VhKStd27KH3CWuygoNuQqSlbjHLmIkJja/WI6BaMtZJ+upEdqhznvI+U9fjMHbBF
-         5e6Q==
-Content-Disposition: inline
-In-Reply-To: <1488960040-24741-1-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1488973076.13674.5.camel@gmail.com> (Balbir Singh's message of
+	"Wed, 8 Mar 2017 22:37:56 +1100")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Balbir Singh <bsingharora@gmail.com>
+Cc: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Vladimir Davydov <vdavydov@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-On Wed, Mar 08, 2017 at 10:00:40AM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Balbir Singh <bsingharora@gmail.com> writes:
 
-Applied to cgroup/for-4.12.
+> On Wed, 2017-03-08 at 15:26 +0800, Huang, Ying wrote:
+>> From: Huang Ying <ying.huang@intel.com>
+>> 
+>> This patch make it possible to charge or uncharge a set of continuous
+>> swap entries in the swap cgroup.  The number of swap entries is
+>> specified via an added parameter.
+>> 
+>> This will be used for the THP (Transparent Huge Page) swap support.
+>> Where a swap cluster backing a THP may be allocated and freed as a
+>> whole.  So a set of (HPAGE_PMD_NR) continuous swap entries backing one
+>> THP need to be charged or uncharged together.  This will batch the
+>> cgroup operations for the THP swap too.
+>
+> A quick look at the patches makes it look sane. I wonder if we would
+> make sense to track THP swapout separately as well
+> (from a memory.stat perspective)
 
-Thanks.
+The patchset is just the first step of THP swap optimization.  So the
+THP will still be split after putting the THP into the swap cache.  This
+makes it unnecessary to change mem_cgroup_swapout().  I am working on a
+following up patchset to further delaying THP splitting after swapping
+out the THP to the disk.  In that patchset, I will change
+mem_cgroup_swapout() too.
 
--- 
-tejun
+Best Regards,
+Huang, Ying
+
+> Balbir Singh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
