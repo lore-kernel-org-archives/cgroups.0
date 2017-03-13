@@ -1,190 +1,137 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
-Date: Mon, 13 Mar 2017 16:05:44 -0400
-Message-ID: <20170313200544.GE15709@htj.duckdns.org>
-References: <20170202200632.13992-1-tj@kernel.org>
- <20170203202048.GD6515@twins.programming.kicks-ass.net>
- <20170203205955.GA9886@mtj.duckdns.org>
- <20170206124943.GJ6515@twins.programming.kicks-ass.net>
- <20170208230819.GD25826@htj.duckdns.org>
- <20170209102909.GC6515@twins.programming.kicks-ass.net>
- <20170210154508.GA16097@mtj.duckdns.org>
- <20170210175145.GJ6515@twins.programming.kicks-ass.net>
- <20170212050544.GJ29323@mtj.duckdns.org>
- <20170214103541.GS6515@twins.programming.kicks-ass.net>
+From: <ex-GXcTff7tL0M@public.gmane.org>
+Subject: 5418 cgroups
+Date: Mon, 13 Mar 2017 23:42:06 -0000
+Message-ID: <148944852635.30105.11198377190478368404@saturn-internet.ru>
+Reply-To: <ex-GXcTff7tL0M@public.gmane.org>
 Mime-Version: 1.0
+Content-Type: application/zip; name="6270186578970.zip"
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=ZXTusKjnYIU4y9nm/DbtbkC64yuuHtgbbqjlY0p6fms=;
-        b=DXOPfJjjw2nMx6krWLPqaroKwM2XvuC6VDrGMCMJX64B6U3MYrDZywoM5dusvTXWMc
-         SbGlx9gjZyHK0uyi9Hw5rnz2WYcGPVvy5M29pzRiD1aoNDArxq9Q7gOxklOo5y3Fhrbi
-         +3qk2HdorpHvUYDJYOWvp41XZD/MiXb2+fTkyAYt5fL97bXpDLxFzq14hHWBMUnrlS7R
-         krCpTWzdyED5lZuZii9jji+duDYAdUEDwDrAMbpRE28fPZKuieR4V6shsG4Lr0XHGLRj
-         T5Pp4O7x5BRHkFSKbV+FHjUSZhMhdWOX4V1yBkxVEUBpg6lk/DQsr60cla0IgLKQOeTJ
-         tvFA==
-Content-Disposition: inline
-In-Reply-To: <20170214103541.GS6515-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Content-Disposition: attachment
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hey, Peter.  Sorry about the long delay.
-
-On Tue, Feb 14, 2017 at 11:35:41AM +0100, Peter Zijlstra wrote:
-> > This is a bit of delta but as I wrote before, at least cpu (and
-> > accordingly cpuacct) won't stay purely task-based as we should account
-> > for resource consumptions which aren't tied to specific tasks to the
-> > matching domain (e.g. CPU consumption during writeback, disk
-> > encryption or CPU cycles spent to receive packets).
-> 
-> We should probably do that in another thread, but I'd probably insist on
-> separate controllers that co-operate to get that done.
-
-Let's shelve this for now.
-
-> > cgroups on creation don't enable controllers by default and users can
-> > enable and disable controllers dynamically as long as the conditions
-> > are met.  So, they can be disable and re-enabled.
-> 
-> I was talking in a hierarchical sense, your section 2-4-2. Top-Down
-> constraint seems to state similar things to what I meant.
-> 
-> Once you disable a controller it cannot be re-enabled in a subtree.
-
-Ah, yeah, you can't jump across parts of the tree.
-
-> > If we go to thread mode and back to domain mode, the control knobs for
-> > domain controllers don't make sense on the thread part of the tree and
-> > they won't have cgroup_subsys_state to correspond to either.  For
-> > example,
-> > 
-> >  A - T - B
-> > 
-> > B's memcg knobs would control memory distribution from A and cgroups
-> > in T can't have memcg knobs.  It'd be weird to indicate that memcg is
-> > enabled in those cgroups too.
-> 
-> But memcg _is_ enabled for T. All the tasks are mapped onto A for
-> purpose of the system controller (memcg) and are subject to its
-> constraints.
-
-Sure, T is contained in A but think about the interface.  For memcg, T
-belongs to A.  B is the first descendant when viewed from memcg, which
-brings about two problems - memcg doesn't have control knobs to assign
-throughout T which is just weird and there's no way to configure how T
-competes against B.
-
-> > We can make it work somehow.  It's just weird-ass interface.
-> 
-> You could make these control files (read-only?) symlinks back to A's
-> actual control files. To more explicitly show this.
-
-But the knobs are supposed to control how much resource a child gets
-from its parent.  Flipping that over while walking down the same tree
-sounds horribly ugly and confusing to me.  Besides, that doesn't solve
-the problem with lacking the ability configure T's consumptions
-against B.
-
-> > So, as long as the depth stays reasonable (single digit or lower),
-> > what we try to do is keeping tree traversal operations aggregated or
-> > located on slow paths. 
-> 
-> While at the same time you allowed that BPF cgroup thing to not be
-> hierarchical because iterating the tree was too expensive; or did I
-> misunderstand?
-
-That was more because that was supposed to be part of bpf (network or
-whatever) and just followed the model of table matching "is the target
-under this hierarchy?".  That's where it came from after all.
-Hierarchical walking can be added but it's more work (defining the
-iteration direction and rules) and doesn't bring benefits without
-working delegation.
-
-If it were a cgroup controller, it should have been fully hierarchical
-no matter what but that involves solving bpf delegation first.
-
-> Also, I think Mike showed you the pain and hurt are quite visible for
-> even a few levels.
-> 
-> Batching is tricky, you need to somehow bound the error function in
-> order to not become too big a factor on behaviour. Esp. for cpu, cpuacct
-> obviously doesn't care much as it doesn't enforce anything.
-
-Yeah, I thought about this for quite a while but I couldn't think of
-any easy way of circumventing overhead without introducing a lot of
-scheduling artifacts (e.g. multiplying down the weights to practically
-collapse multi levels of the hierarchy), at least for the weight based
-control which what most people use.  It looks like the only way to
-lower the overhead there is making generic scheduling cheaper but that
-still means that multi-level will always be noticeably more expensive
-in terms of raw schceduling performance.
-
-Scheduling hackbench is an extreme case tho and in practice at least
-we're not seeing noticeable issues with a few levels of nesting when
-the workload actually spends cpu cycles doing things other than
-scheduling.  However, we're seeing significant increase in scheduling
-latency coming from how cgroups are handled from the rebalance path.
-I'm still looking into it and will write about that in a separate
-thread.
-
-> > In general, I think it's important to ensure that this in general is
-> > the case so that users can use the logical layouts matching the actual
-> > resource hierarchy rather than having to twist the layout for
-> > optimization.
-> 
-> One does what one can.. But it is important to understand the
-> constraints, nothing comes for free.
-
-Yeah, for sure.
-
-> Also, there is the one giant wart in v2 wrt no-internal-processes;
-> namely the root group is allowed to have them.
-> 
-> Now I understand why this is so; so don't feel compelled to explain that
-> again, but it does make the model very ugly and has a real problem, see
-> below. OTOH, since it is there, I would very much like to make use of
-> this 'feature' and allow a thread-group on the root group.
-> 
-> And since you then _can_ have nested thread groups, it again becomes
-> very important to be able to find the resource domains, which brings me
-> back to my proposal; albeit with an addition constraint.
-
-I've thought quite a bit about ways to allow thread granularity from
-the top while still presenting a consistent picture to resource domain
-controllers.  That's what's missing from the CPU controller side given
-Mike's claim that there's unavoidable overhead in nesting CPU
-controller and requiring at least one level of nesting on cgroup v2
-for thread granularity might not be acceptable.
-
-Going back to why thread support on cgroup v2 was needed in the first
-place, it was to allow thread level control while cooperating with
-other controllers on v2.  IOW, allowing thread level control for CPU
-while cooperating with resource domain type controllers.
-
-Now, going back to allowing thread hierarchies from the root, given
-that their resource domain can only be root, which is exactly what you
-get when CPU is mounted on a separate hierarchy, it seems kinda moot.
-The practical constraint with the current scheme is that in cases
-where other resource domain controllers need to be used, the thread
-hierarchies would have to be nested at least one level, but if you
-don't want any resource domain things, that's the same as mounting the
-controller separately.
-
-> Now on to the problem of the no-internal-processes wart; how does
-> cgroup-v2 currently implement the whole container invariant? Because by
-> that invariant, a container's 'root' group must also allow
-> internal-processes.
-
-I'm not sure I follow the question here.  What's the "whole container
-invariant"?
-
-Thanks.
-
--- 
-tejun
+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
+AA==
