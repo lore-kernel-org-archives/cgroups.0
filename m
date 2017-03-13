@@ -1,92 +1,83 @@
-From: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
-Subject: Re: [PATCH] security: selinux: allow per-file labeling for cgroupfs
-Date: Fri, 10 Mar 2017 15:21:07 -0500
-Message-ID: <CAHC9VhSL1dm9b7ZohYyCU0PjKbbtYLe7XX7Xv3CsQQx4CtG_Fw@mail.gmail.com>
-References: <20170209155823.22148-1-runcom@redhat.com> <CAHC9VhSL3ZS3R2r39+qzYmvU1=8-jC2nzqkXNQ0Yk3+okKd7jw@mail.gmail.com>
- <1489177036.6824.57.camel@tycho.nsa.gov>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET for-4.11] cgroup: implement cgroup v2 thread mode
+Date: Mon, 13 Mar 2017 15:26:21 -0400
+Message-ID: <20170313192621.GD15709@htj.duckdns.org>
+References: <20170203202048.GD6515@twins.programming.kicks-ass.net>
+ <20170203205955.GA9886@mtj.duckdns.org>
+ <20170206124943.GJ6515@twins.programming.kicks-ass.net>
+ <20170208230819.GD25826@htj.duckdns.org>
+ <20170209102909.GC6515@twins.programming.kicks-ass.net>
+ <20170210154508.GA16097@mtj.duckdns.org>
+ <20170210175145.GJ6515@twins.programming.kicks-ass.net>
+ <20170212050544.GJ29323@mtj.duckdns.org>
+ <1486882799.24462.25.camel@gmx.de>
+ <1486964707.5912.93.camel@gmx.de>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=FcjE4Mq/rr+KzwjxpuMT+Tg/gx+DRyoUVq6GSpfI7+c=;
-        b=TbdCnjkdSrrdvrvYqE9FJY4MMk7PqLHWdnzRtdhzqGtueGlTBiP47vaHixvHEblBF5
-         4Xpumydzfwgb9vcLz2vxA1su2D7anrfdv0KOUotSYg1Y/IX4GFEx69tL2aJ5PeMlUykl
-         i+Lx1is0NsBfoO9dbP6CN4V3PbvG2unbd0df5nJWefll7ZKQ7C1Pzxcydu428Ux8oNJb
-         VfzRw4XdHqy04Z5z/3R08+BmCHoAeX1GA+UUk4AP1siUj6g6KCqw6xihJF801f9qHYgu
-         Y1lB98DhWnPuw12fvjkkT5uoWth0Ikfy4rV/1v42v04HbATG3cg0qSRLfQScgsQx7jga
-         ShFg==
-In-Reply-To: <1489177036.6824.57.camel-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=A858m5CkQbNJa5f/6O6Hi2TjefSfhztvBu51rPf1CpU=;
+        b=omj7P9i/Q1F/Shxl8zYARGBypVd4Kuh5mehpY9Swai6NVkhzADh2C2NqpajgjFu7Co
+         pX/03yCudF5eWVgGY7t3H4EJJ8jwfoVMlSUMb+5SJDXrjVdi3DAakbAxU/3TAhFLGjiz
+         MrgMg3V2HcEkXcevPW20pBAZJwHawJjuzdVSGYGiF95pwWRUs0TNwojwYgIIEYWXk35i
+         YqBvkfLTAU0y2oByGuoxFNTVwFHjU5cYSCquIatd4kqeKJ3DUqU/LZSqF7VQqLLqwIsO
+         nV8YcrgE1FoN6Qps/UTXFhU28BwCVOZN/phk/L+Yd9mrL1yMWUoNLo0KquEuYrmF9+2/
+         2wow==
+Content-Disposition: inline
+In-Reply-To: <1486964707.5912.93.camel-Mmb7MZpHnFY@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>, Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Fri, Mar 10, 2017 at 3:17 PM, Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org> wrote:
-> On Fri, 2017-03-10 at 15:01 -0500, Paul Moore wrote:
->> On Thu, Feb 9, 2017 at 10:58 AM, Antonio Murdaca <amurdaca-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
->> > wrote:
->> >
->> > This patch allows genfscon per-file labeling for cgroupfs. For
->> > instance,
->> > this allows to label the "release_agent" file within each
->> > cgroup mount and limit writes to it.
->> >
->> > Signed-off-by: Antonio Murdaca <runcom-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> > ---
->> >  security/selinux/hooks.c | 2 ++
->> >  1 file changed, 2 insertions(+)
->>
->> Now that the merge window is behind us, let's get this merged, but
->> could you update it to use the selinux_policycap_cgroupseclabel
->> policy
->> capability?  See 2651225b5ebcdde ("selinux: wrap cgroup seclabel
->> support with its own policy capability") for more information.
->
-> I don't think that is necessary.  This change unlike the other one
-> should not yield any difference in behavior with existing policy; it
-> just allows one to specify fine-grained labeling for cgroup nodes in
-> future policy.  It doesn't affect any userspace interface.
+Hello, Mike.
 
-Yes, I thought about that, and if the policy capability was already
-present in a released kernel then I wouldn't worry about it much, but
-since the policy capability still only lives in the v4.11-rcX kernels
-I'd prefer to see this code wrapped with the policy capability ...
-even if all it really does is give me that warm fuzzy feeling.
+Sorry about the long delay.
 
->> Also, how goes the testing?
->>
->> >
->> > diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
->> > index 9a8f12f..5a3138e 100644
->> > --- a/security/selinux/hooks.c
->> > +++ b/security/selinux/hooks.c
->> > @@ -808,6 +808,8 @@ static int selinux_set_mnt_opts(struct
->> > super_block *sb,
->> >
->> >         if (!strcmp(sb->s_type->name, "debugfs") ||
->> >             !strcmp(sb->s_type->name, "sysfs") ||
->> > +           !strcmp(sb->s_type->name, "cgroup") ||
->> > +           !strcmp(sb->s_type->name, "cgroup2") ||
->> >             !strcmp(sb->s_type->name, "pstore"))
->> >                 sbsec->flags |= SE_SBGENFS;
->> >
->> > --
->> > 2.9.3
->> >
->> > _______________________________________________
->> > Selinux mailing list
->> > Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
->> > To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
->> > To get help, send an email containing "help" to Selinux-request@tyc
->> > ho.nsa.gov.
->>
+On Mon, Feb 13, 2017 at 06:45:07AM +0100, Mike Galbraith wrote:
+> > > So, as long as the depth stays reasonable (single digit or lower),
+> > > what we try to do is keeping tree traversal operations aggregated or
+> > > located on slow paths.  There still are places that this overhead
+> > > shows up (e.g. the block controllers aren't too optimized) but it
+> > > isn't particularly difficult to make a handful of layers not matter at
+> > > all.
+> > 
+> > A handful of cpu bean counting layers stings considerably.
 
+Hmm... yeah, I was trying to think about ways to avoid full scheduling
+overhead at each layer (the scheduler does a lot per each layer of
+scheduling) but don't think it's possible to circumvent that without
+introducing a whole lot of scheduling artifacts.
 
+In a lot of workloads, the added overhead from several layers of CPU
+controllers doesn't seem to get in the way too much (most threads do
+something other than scheduling after all).  The only major issue that
+we're seeing in the fleet is the cgroup iteration in idle rebalancing
+code pushing up the scheduling latency too much but that's a different
+issue.
+
+Anyways, I understand that there are cases where people would want to
+avoid any extra layers.  I'll continue on PeterZ's message.
+
+> BTW, that overhead is also why merging cpu/cpuacct is not really as
+> wonderful as it may seem on paper.  If you only want to account, you
+> may not have anything to gain from group scheduling (in fact it may
+> wreck performance), but you'll pay for it.
+
+There's another reason why we would want accounting separate - because
+weight based controllers, cpu and io currently, can't be enabled
+without affecting the scheduling behavior.  However, they're different
+from CPU controllers in that all the heavy part of operations can be
+shifted to the readers (we just need to do per-cpu updates from hot
+paths), so we might as well publish those stats by default on the v2
+hierarchy.  We couldn't do the same in v1 because the number of
+hierarchies were not limited.
+
+Thanks.
 
 -- 
-paul moore
-www.paul-moore.com
+tejun
