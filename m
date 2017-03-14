@@ -1,122 +1,150 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v4.11-rc2
-Date: Tue, 14 Mar 2017 17:01:47 -0400
-Message-ID: <20170314210147.GD15132@htj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH v4.11] cgroup, net_cls: iterate the fds of only the tasks
+ which are being migrated
+Date: Tue, 14 Mar 2017 19:25:56 -0400
+Message-ID: <20170314232556.GE15132@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:mime-version
          :content-disposition:user-agent;
-        bh=CZyzzcAMaAhrGhBCYh2ADJorn/iFryxRJ0JiyVs0qE0=;
-        b=gLmqHdK0bHfEmHyI9AKzWluHTz2Edm/OhWQSDJuspEiMrgicjxhhX7suKY6mvkXlTN
-         3/QMCkgo/3dKmwP1vA6GW7+Sqwkw7Pma1LLXzShCjyT+KvMPZUiUxTz1VIESB7MXMTik
-         Tq1zEeQJwgJWuJQogJ0V/qVuVi4TQ1szQ/BfyV0t0BVDwfwBACxjghhmLKNzvc6w7rbe
-         Slv76VlC8/hZ3E8uIWrjFZFqWMcr5RaV4yPGxlI0rE+tsJQYjJEEGgmYJsyaYrDEqpcv
-         tsHxoljJmSp0UAch3eg5u5VaiB8CLGHAwaPVwivy//VKTNYFFCBKdQ7QajPs7Q7hdm9a
-         tE9Q==
+        bh=oaLY5X4XwcTN57cWfoAXl4xhkikSNUKlpKUiFFQmtBY=;
+        b=RUp0LqRWXu1LGSPifbfxyq6d4t75vH0FAgWNI1ZpoQs3/Ru2MWgpw6jmKXcpUYccuz
+         mnWi4EC7bJBADve9d1Vm1rtyTPWqAraYOFvewc+Fq6mbfgk5s0VZb2aHEFuZC/dSDgzp
+         8NXBsSU9b6CX0tmUW1Fb0UTsJ3sRfqiEQpU9UpqZbxpdRt5PdWkIZJlnBUfyoYP6HtTT
+         Rb6cqR+D5li0nK4qM+VWDWWLiOdWBoDEl8zHJ4PzE1dLDIoSh8eZpehWNXMCYbYSpU2s
+         Yw2Pa10wZ3RL8g31QPVcPAgoi3G9Z0oZtB8NYCyT8cjKryiTnkLqc9fCVeSN38XJlB2m
+         HRcQ==
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, Nina Schiff <ninasc@fb.com>, David Goode <dgoode@fb.com>
 
-Hello, Linus.
+The net_cls controller controls the classid field of each socket which
+is associated with the cgroup.  Because the classid is per-socket
+attribute, when a task migrates to another cgroup or the configured
+classid of the cgroup changes, the controller needs to walk all
+sockets and update the classid value, which was implemented by
+3b13758f51de ("cgroups: Allow dynamically changing net_classid").
 
-Three cgroup fixes.  Nothing critical.
+While the approach is not scalable, migrating tasks which have a lot
+of fds attached to them is rare and the cost is born by the ones
+initiating the operations.  However, for simplicity, both the
+migration and classid config change paths call update_classid() which
+scans all fds of all tasks in the target css.  This is an overkill for
+the migration path which only needs to cover a much smaller subset of
+tasks which are actually getting migrated in.
 
-* The pids controller could trigger suspicious RCU warning spuriously.
-  Fixed.
+On cgroup v1, this can lead to unexpected scalability issues when one
+tries to migrate a task or process into a net_cls cgroup which already
+contains a lot of fds.  Even if the migration traget doesn't have many
+to get scanned, update_classid() ends up scanning all fds in the
+target cgroup which can be extremely numerous.
 
-* In the debug controller, %p -> %pK to protect kernel pointer from
-  getting exposed.
+Unfortunately, on cgroup v2 which doesn't use net_cls, the problem is
+even worse.  Before bfc2cf6f61fc ("cgroup: call subsys->*attach() only
+for subsystems which are actually affected by migration"), cgroup core
+would call the ->css_attach callback even for controllers which don't
+see actual migration to a different css.
 
-* Documentation formatting fix.
+As net_cls is always disabled but still mounted on cgroup v2, whenever
+a process is migrated on the cgroup v2 hierarchy, net_cls sees
+identity migration from root to root and cgroup core used to call
+->css_attach callback for those.  The net_cls ->css_attach ends up
+calling update_classid() on the root net_cls css to which all
+processes on the system belong to as the controller isn't used.  This
+makes any cgroup v2 migration O(total_number_of_fds_on_the_system)
+which is horrible and easily leads to noticeable stalls triggering RCU
+stall warnings and so on.
+
+The worst symptom is already fixed in upstream by bfc2cf6f61fc
+("cgroup: call subsys->*attach() only for subsystems which are
+actually affected by migration"); however, backporting that commit is
+too invasive and we want to avoid other cases too.
+
+This patch updates net_cls's cgrp_attach() to iterate fds of only the
+processes which are actually getting migrated.  This removes the
+surprising migration cost which is dependent on the total number of
+fds in the target cgroup.  As this leaves write_classid() the only
+user of update_classid(), open-code the helper into write_classid().
+
+Reported-by: David Goode <dgoode@fb.com>
+Fixes: 3b13758f51de ("cgroups: Allow dynamically changing net_classid")
+Cc: stable@vger.kernel.org # v4.4+
+Cc: Nina Schiff <ninasc@fb.com>
+Cc: David S. Miller <davem@davemloft.net>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Hello, Dave.
+
+Can you please route this fix for v4.11?  I can also take it through
+cgroup/for-4.11-fixes, if that's preferable.
 
 Thanks.
 
-The following changes since commit c1ae3cfa0e89fa1a7ecc4c99031f5e9ae99d9201:
+ net/core/netclassid_cgroup.c |   32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-  Linux 4.11-rc1 (2017-03-05 12:59:56 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.11-fixes
-
-for you to fetch changes up to b6a6759daf55dade2b65089957832759d502acfb:
-
-  cgroups: censor kernel pointer in debug files (2017-03-06 15:16:03 -0500)
-
-----------------------------------------------------------------
-Kees Cook (1):
-      cgroups: censor kernel pointer in debug files
-
-Tejun Heo (1):
-      cgroup/pids: remove spurious suspicious RCU usage warning
-
-Tobias Klauser (1):
-      cgroup: Fix indenting in PID controller documentation
-
- Documentation/cgroup-v2.txt | 11 ++++++-----
- kernel/cgroup/cgroup-v1.c   |  2 +-
- kernel/cgroup/pids.c        |  2 +-
- 3 files changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 3b8449f..49d7c99 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -1142,16 +1142,17 @@ used by the kernel.
+--- a/net/core/netclassid_cgroup.c
++++ b/net/core/netclassid_cgroup.c
+@@ -69,27 +69,17 @@ static int update_classid_sock(const voi
+ 	return 0;
+ }
  
-   pids.max
+-static void update_classid(struct cgroup_subsys_state *css, void *v)
++static void cgrp_attach(struct cgroup_taskset *tset)
+ {
+-	struct css_task_iter it;
++	struct cgroup_subsys_state *css;
+ 	struct task_struct *p;
  
-- A read-write single value file which exists on non-root cgroups.  The
-- default is "max".
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "max".
+-	css_task_iter_start(css, &it);
+-	while ((p = css_task_iter_next(&it))) {
++	cgroup_taskset_for_each(p, css, tset) {
+ 		task_lock(p);
+-		iterate_fd(p->files, 0, update_classid_sock, v);
++		iterate_fd(p->files, 0, update_classid_sock,
++			   (void *)(unsigned long)css_cls_state(css)->classid);
+ 		task_unlock(p);
+ 	}
+-	css_task_iter_end(&it);
+-}
+-
+-static void cgrp_attach(struct cgroup_taskset *tset)
+-{
+-	struct cgroup_subsys_state *css;
+-
+-	cgroup_taskset_first(tset, &css);
+-	update_classid(css,
+-		       (void *)(unsigned long)css_cls_state(css)->classid);
+ }
  
-- Hard limit of number of processes.
-+	Hard limit of number of processes.
+ static u64 read_classid(struct cgroup_subsys_state *css, struct cftype *cft)
+@@ -101,12 +91,22 @@ static int write_classid(struct cgroup_s
+ 			 u64 value)
+ {
+ 	struct cgroup_cls_state *cs = css_cls_state(css);
++	struct css_task_iter it;
++	struct task_struct *p;
  
-   pids.current
+ 	cgroup_sk_alloc_disable();
  
-- A read-only single value file which exists on all cgroups.
-+	A read-only single value file which exists on all cgroups.
+ 	cs->classid = (u32)value;
  
-- The number of processes currently in the cgroup and its descendants.
-+	The number of processes currently in the cgroup and its
-+	descendants.
+-	update_classid(css, (void *)(unsigned long)cs->classid);
++	css_task_iter_start(css, &it);
++	while ((p = css_task_iter_next(&it))) {
++		task_lock(p);
++		iterate_fd(p->files, 0, update_classid_sock,
++			   (void *)(unsigned long)cs->classid);
++		task_unlock(p);
++	}
++	css_task_iter_end(&it);
++
+ 	return 0;
+ }
  
- Organisational operations are not blocked by cgroup policies, so it is
- possible to have pids.current > pids.max.  This can be done by either
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 56eba9c..1dc22f6 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -1329,7 +1329,7 @@ static int cgroup_css_links_read(struct seq_file *seq, void *v)
- 		struct task_struct *task;
- 		int count = 0;
- 
--		seq_printf(seq, "css_set %p\n", cset);
-+		seq_printf(seq, "css_set %pK\n", cset);
- 
- 		list_for_each_entry(task, &cset->tasks, cg_list) {
- 			if (count++ > MAX_TASKS_SHOWN_PER_CSS)
-diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
-index e756dae..2237201 100644
---- a/kernel/cgroup/pids.c
-+++ b/kernel/cgroup/pids.c
-@@ -229,7 +229,7 @@ static int pids_can_fork(struct task_struct *task)
- 		/* Only log the first time events_limit is incremented. */
- 		if (atomic64_inc_return(&pids->events_limit) == 1) {
- 			pr_info("cgroup: fork rejected by pids controller in ");
--			pr_cont_cgroup_path(task_cgroup(current, pids_cgrp_id));
-+			pr_cont_cgroup_path(css->cgroup);
- 			pr_cont("\n");
- 		}
- 		cgroup_file_notify(&pids->events_file);
-
--- 
-tejun
