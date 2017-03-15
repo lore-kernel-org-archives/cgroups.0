@@ -1,150 +1,161 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v4.11] cgroup, net_cls: iterate the fds of only the tasks
- which are being migrated
-Date: Tue, 14 Mar 2017 19:25:56 -0400
-Message-ID: <20170314232556.GE15132@htj.duckdns.org>
+Subject: [PATCH 2/2] kthread, cgroup: close race window where new kthreads
+ can be migrated to non-root cgroups
+Date: Wed, 15 Mar 2017 19:19:20 -0400
+Message-ID: <20170315231920.GB13656@htj.duckdns.org>
+References: <20170315231827.GA13656@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=oaLY5X4XwcTN57cWfoAXl4xhkikSNUKlpKUiFFQmtBY=;
-        b=RUp0LqRWXu1LGSPifbfxyq6d4t75vH0FAgWNI1ZpoQs3/Ru2MWgpw6jmKXcpUYccuz
-         mnWi4EC7bJBADve9d1Vm1rtyTPWqAraYOFvewc+Fq6mbfgk5s0VZb2aHEFuZC/dSDgzp
-         8NXBsSU9b6CX0tmUW1Fb0UTsJ3sRfqiEQpU9UpqZbxpdRt5PdWkIZJlnBUfyoYP6HtTT
-         Rb6cqR+D5li0nK4qM+VWDWWLiOdWBoDEl8zHJ4PzE1dLDIoSh8eZpehWNXMCYbYSpU2s
-         Yw2Pa10wZ3RL8g31QPVcPAgoi3G9Z0oZtB8NYCyT8cjKryiTnkLqc9fCVeSN38XJlB2m
-         HRcQ==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=908GQbytM2R9XiXkpbUk2wND6MCaA3w5W12f4lBPVwo=;
+        b=l5cOXY0JzHqnEaGxlVD3SEHAUrjcz+Cv4JtgQzwiBQ/rRGaNNzT/zK1pjTDnFsngsE
+         u1yTmPDftD91Z2eMhwuRf+z6vgvLz8IubTZ/FcNp5bsLAAC5JrDuX8E5TAU2EkqOY3gD
+         mixiGfCX0FgYw3vCPkBtD3RMsLPqRm9aY+vGYASR8L5L9sGDDVs+pNydr1nYqQMVTWnH
+         uXr1RlbzoWCTtgLbWzy8v5fhJ4UGmJgSWj5rU2AUzuFuTp+czySTsJZFASuzb5BhlaVK
+         u2FBfo/uQdpZBa0k28b+iewATXLtSs2GSp3padMK1IQBZpw6R6lZyEDKER7/e5vCZTtm
+         KqEA==
 Content-Disposition: inline
+In-Reply-To: <20170315231827.GA13656@htj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "David S. Miller" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, Nina Schiff <ninasc@fb.com>, David Goode <dgoode@fb.com>
+To: Oleg Nesterov <oleg@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@linutronix.de>, Chris Mason <clm@fb.com>, linux-kernel@vger.kernel.org, kernel-team@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-The net_cls controller controls the classid field of each socket which
-is associated with the cgroup.  Because the classid is per-socket
-attribute, when a task migrates to another cgroup or the configured
-classid of the cgroup changes, the controller needs to walk all
-sockets and update the classid value, which was implemented by
-3b13758f51de ("cgroups: Allow dynamically changing net_classid").
+Creation of a kthread goes through a couple interlocked stages between
+the kthread itself and its creator.  Once the new kthread starts
+running, it initializes itself and wakes up the creator.  The creator
+then can further configure the kthread and then let it start doing its
+job by waking it up.
 
-While the approach is not scalable, migrating tasks which have a lot
-of fds attached to them is rare and the cost is born by the ones
-initiating the operations.  However, for simplicity, both the
-migration and classid config change paths call update_classid() which
-scans all fds of all tasks in the target css.  This is an overkill for
-the migration path which only needs to cover a much smaller subset of
-tasks which are actually getting migrated in.
+In this configuration-by-creator stage, the creator is the only one
+that can wake it up but the kthread is visible to userland.  When
+altering the kthread's attributes from userland is allowed, this is
+fine; however, for cases where CPU affinity is critical,
+kthread_bind() is used to first disable affinity changes from userland
+and then set the affinity.  This also prevents the kthread from being
+migrated into non-root cgroups as that can affect the CPU affinity and
+many other things.
 
-On cgroup v1, this can lead to unexpected scalability issues when one
-tries to migrate a task or process into a net_cls cgroup which already
-contains a lot of fds.  Even if the migration traget doesn't have many
-to get scanned, update_classid() ends up scanning all fds in the
-target cgroup which can be extremely numerous.
+Unfortunately, the cgroup side of protection is racy.  While the
+PF_NO_SETAFFINITY flag prevents further migrations, userland can win
+the race before the creator sets the flag with kthread_bind() and put
+the kthread in a non-root cgroup, which can lead to all sorts of
+problems including incorrect CPU affinity and starvation.
 
-Unfortunately, on cgroup v2 which doesn't use net_cls, the problem is
-even worse.  Before bfc2cf6f61fc ("cgroup: call subsys->*attach() only
-for subsystems which are actually affected by migration"), cgroup core
-would call the ->css_attach callback even for controllers which don't
-see actual migration to a different css.
+This bug got triggered by userland which periodically tries to migrate
+all processes in the root cpuset cgroup to a non-root one.  Per-cpu
+workqueue workers got caught while being created and ended up with
+incorrected CPU affinity breaking concurrency management and sometimes
+stalling workqueue execution.
 
-As net_cls is always disabled but still mounted on cgroup v2, whenever
-a process is migrated on the cgroup v2 hierarchy, net_cls sees
-identity migration from root to root and cgroup core used to call
-->css_attach callback for those.  The net_cls ->css_attach ends up
-calling update_classid() on the root net_cls css to which all
-processes on the system belong to as the controller isn't used.  This
-makes any cgroup v2 migration O(total_number_of_fds_on_the_system)
-which is horrible and easily leads to noticeable stalls triggering RCU
-stall warnings and so on.
+This patch introduces KTHREAD_INITIALIZED which is set after the
+kthread finishes initialization.  cgroup core closes the race window
+by testing kthread_initialized() and rejecting migration accordingly.
 
-The worst symptom is already fixed in upstream by bfc2cf6f61fc
-("cgroup: call subsys->*attach() only for subsystems which are
-actually affected by migration"); however, backporting that commit is
-too invasive and we want to avoid other cases too.
+It'd be better to wait for the initialization instead of failing but I
+couldn't think of a way of implementing that without adding either a
+new PF flag, or sleeping and retrying from waiting side.  Even if
+userland depends on changing cgroup membership of a kthread, it either
+has to be synchronized with kthread_create() or periodically repeat,
+so it's unlikely that this would break anything.
 
-This patch updates net_cls's cgrp_attach() to iterate fds of only the
-processes which are actually getting migrated.  This removes the
-surprising migration cost which is dependent on the total number of
-fds in the target cgroup.  As this leaves write_classid() the only
-user of update_classid(), open-code the helper into write_classid().
-
-Reported-by: David Goode <dgoode@fb.com>
-Fixes: 3b13758f51de ("cgroups: Allow dynamically changing net_classid")
-Cc: stable@vger.kernel.org # v4.4+
-Cc: Nina Schiff <ninasc@fb.com>
-Cc: David S. Miller <davem@davemloft.net>
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Peter Zijlstra (Intel) <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Reported-and-debugged-by: Chris Mason <clm@fb.com>
+Cc: stable@vger.kernel.org # v4.3+ (we can't close the race < v4.3)
 ---
-Hello, Dave.
+ include/linux/kthread.h |    1 +
+ kernel/cgroup/cgroup.c  |   10 ++++++----
+ kernel/kthread.c        |   21 ++++++++++++++++++++-
+ 3 files changed, 27 insertions(+), 5 deletions(-)
 
-Can you please route this fix for v4.11?  I can also take it through
-cgroup/for-4.11-fixes, if that's preferable.
-
-Thanks.
-
- net/core/netclassid_cgroup.c |   32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
-
---- a/net/core/netclassid_cgroup.c
-+++ b/net/core/netclassid_cgroup.c
-@@ -69,27 +69,17 @@ static int update_classid_sock(const voi
- 	return 0;
- }
+--- a/include/linux/kthread.h
++++ b/include/linux/kthread.h
+@@ -49,6 +49,7 @@ struct task_struct *kthread_create_on_cp
+ })
  
--static void update_classid(struct cgroup_subsys_state *css, void *v)
-+static void cgrp_attach(struct cgroup_taskset *tset)
- {
--	struct css_task_iter it;
-+	struct cgroup_subsys_state *css;
- 	struct task_struct *p;
+ void free_kthread_struct(struct task_struct *k);
++bool kthread_initialized(struct task_struct *k);
+ void kthread_bind(struct task_struct *k, unsigned int cpu);
+ void kthread_bind_mask(struct task_struct *k, const struct cpumask *mask);
+ int kthread_stop(struct task_struct *k);
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2425,11 +2425,13 @@ ssize_t __cgroup_procs_write(struct kern
+ 		tsk = tsk->group_leader;
  
--	css_task_iter_start(css, &it);
--	while ((p = css_task_iter_next(&it))) {
-+	cgroup_taskset_for_each(p, css, tset) {
- 		task_lock(p);
--		iterate_fd(p->files, 0, update_classid_sock, v);
-+		iterate_fd(p->files, 0, update_classid_sock,
-+			   (void *)(unsigned long)css_cls_state(css)->classid);
- 		task_unlock(p);
+ 	/*
+-	 * Workqueue threads may acquire PF_NO_SETAFFINITY and become
+-	 * trapped in a cpuset, or RT worker may be born in a cgroup
+-	 * with no rt_runtime allocated.  Just say no.
++	 * kthreads may acquire PF_NO_SETAFFINITY during initialization.
++	 * If userland migrates such kthread to a non-root cgroup, it can
++	 * become trapped in a cpuset, or RT kthread may be born in a
++	 * cgroup with no rt_runtime allocated.  Just say no.
+ 	 */
+-	if (tsk == kthreadd_task || (tsk->flags & PF_NO_SETAFFINITY)) {
++	if (tsk == kthreadd_task || (tsk->flags & PF_NO_SETAFFINITY) ||
++	    ((tsk->flags & PF_KTHREAD) && !kthread_initialized(tsk))) {
+ 		ret = -EINVAL;
+ 		goto out_unlock_rcu;
  	}
--	css_task_iter_end(&it);
--}
--
--static void cgrp_attach(struct cgroup_taskset *tset)
--{
--	struct cgroup_subsys_state *css;
--
--	cgroup_taskset_first(tset, &css);
--	update_classid(css,
--		       (void *)(unsigned long)css_cls_state(css)->classid);
- }
+--- a/kernel/kthread.c
++++ b/kernel/kthread.c
+@@ -50,6 +50,7 @@ struct kthread {
  
- static u64 read_classid(struct cgroup_subsys_state *css, struct cftype *cft)
-@@ -101,12 +91,22 @@ static int write_classid(struct cgroup_s
- 			 u64 value)
+ enum KTHREAD_BITS {
+ 	KTHREAD_IS_PER_CPU = 0,
++	KTHREAD_INITIALIZED,
+ 	KTHREAD_SHOULD_STOP,
+ 	KTHREAD_SHOULD_PARK,
+ 	KTHREAD_IS_PARKED,
+@@ -57,7 +58,7 @@ enum KTHREAD_BITS {
+ 
+ static inline void set_kthread_struct(void *kthread)
  {
- 	struct cgroup_cls_state *cs = css_cls_state(css);
-+	struct css_task_iter it;
-+	struct task_struct *p;
+-	/* paired with smp_read_data_barrier_depends() in to_kthread() */
++	/* paired with smp_read_barrier_depends() in to_kthread() */
+ 	smp_wmb();
  
- 	cgroup_sk_alloc_disable();
- 
- 	cs->classid = (u32)value;
- 
--	update_classid(css, (void *)(unsigned long)cs->classid);
-+	css_task_iter_start(css, &it);
-+	while ((p = css_task_iter_next(&it))) {
-+		task_lock(p);
-+		iterate_fd(p->files, 0, update_classid_sock,
-+			   (void *)(unsigned long)cs->classid);
-+		task_unlock(p);
-+	}
-+	css_task_iter_end(&it);
-+
- 	return 0;
+ 	/*
+@@ -95,6 +96,23 @@ void free_kthread_struct(struct task_str
  }
  
+ /**
++ * kthread_initialized - has the kthread finished initialization?
++ * @k: thread created by kthread_create().
++ *
++ * Test whether @k, which must be a kthread, finished initialization and is
++ * ready to execute the threadfn.  The kthread owner finishes
++ * initialization by waking up the new kthread for the first time.  If this
++ * function returns %false, the kthread owner could still be configuring
++ * the kthread.
++ */
++bool kthread_initialized(struct task_struct *k)
++{
++	struct kthread *kthread = to_kthread(k);
++
++	return kthread && test_bit(KTHREAD_INITIALIZED, &kthread->flags);
++}
++
++/**
+  * kthread_should_stop - should this kthread return now?
+  *
+  * When someone calls kthread_stop() on your kthread, it will be woken
+@@ -238,6 +256,7 @@ static int kthread(void *_create)
+ 	create->result = current;
+ 	complete(done);
+ 	schedule();
++	set_bit(KTHREAD_INITIALIZED, &self->flags);
+ 
+ 	ret = -EINTR;
+ 	if (!test_bit(KTHREAD_SHOULD_STOP, &self->flags)) {
