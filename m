@@ -1,63 +1,49 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/2] kthread, cgroup: close race window where new
-        kthreads can be migrated to non-root cgroups
-Date: Thu, 16 Mar 2017 17:31:59 +0100
-Message-ID: <20170316163158.GB27613@redhat.com>
-References: <20170315231827.GA13656@htj.duckdns.org> <20170315231920.GB13656@htj.duckdns.org> <20170316150233.GB24478@redhat.com> <20170316153925.GA26391@redhat.com> <20170316160734.GD15810@htj.duckdns.org>
+ kthreads can be migrated to non-root cgroups
+Date: Thu, 16 Mar 2017 13:03:21 -0400
+Message-ID: <20170316170321.GF15810@htj.duckdns.org>
+References: <20170315231827.GA13656@htj.duckdns.org>
+ <20170315231920.GB13656@htj.duckdns.org>
+ <20170316150233.GB24478@redhat.com>
+ <20170316160544.GC15810@htj.duckdns.org>
+ <20170316161756.GA27613@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com A12F64E357
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=8fTaYgupoocr2wNE6TQwmWVKvMlf2xi3T+a118FwNjQ=;
+        b=kBaUhewQZPEH2oTA4RhZfWPXl7CVZKPoGVA+5X45O075FlXSfoGkaV4SgvPw6bVApS
+         OvGHlNmBAArENTqlUQY70BmKWw6xe9FxVeXdZmvSY+0lLwtE7j5FbS4pasvvu4Q/0sE8
+         auspNVf2Q+9ncydTs84SvFq6fCXrq344rtQ3TSGnoEaJ0iEjkDkjClFjwNlvGZh00HR4
+         7kEZnGzWxC0zZYwniHMAJabOsVPrUg1fUtZOR6QEhjDUvWbixVJR0VsBlTrXVNuxZOxf
+         dAKFH/tR+nAVvViFVg0DGIlWonaSBhKJX0paDr0CqWLcjA+qyAPHHBpl23bqWnH9Z5fk
+         9AwQ==
 Content-Disposition: inline
-In-Reply-To: <20170316160734.GD15810-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170316161756.GA27613@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Chris Mason <clm-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@linutronix.de>, Chris Mason <clm@fb.com>, linux-kernel@vger.kernel.org, kernel-team@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-On 03/16, Tejun Heo wrote:
->
-> > --- x/kernel/kthread.c
-> > +++ x/kernel/kthread.c
-> > @@ -226,6 +226,7 @@
-> >  	ret = -EINTR;
-> >  	if (!test_bit(KTHREAD_SHOULD_STOP, &self->flags)) {
-> >  		__kthread_parkme(self);
-> > +		current->flags &= ~PF_IDONTLIKECGROUPS;
-> >  		ret = threadfn(data);
-> >  	}
-> >  	do_exit(ret);
-> > @@ -537,7 +538,7 @@
-> >  	set_cpus_allowed_ptr(tsk, cpu_all_mask);
-> >  	set_mems_allowed(node_states[N_MEMORY]);
-> >
-> > -	current->flags |= PF_NOFREEZE;
-> > +	current->flags |= (PF_NOFREEZE | PF_IDONTLIKECGROUPS);
-> >
-> >  	for (;;) {
-> >  		set_current_state(TASK_INTERRUPTIBLE);
-> > --- x/kernel/cgroup/cgroup.c
-> > +++ x/kernel/cgroup/cgroup.c
-> > @@ -2429,7 +2429,7 @@
-> >  	 * trapped in a cpuset, or RT worker may be born in a cgroup
-> >  	 * with no rt_runtime allocated.  Just say no.
-> >  	 */
-> > -	if (tsk == kthreadd_task || (tsk->flags & PF_NO_SETAFFINITY)) {
-> > +	if (tsk->flags & (PF_NO_SETAFFINITY | PF_IDONTLIKECGROUPS)) {
-> >  		ret = -EINVAL;
-> >  		goto out_unlock_rcu;
-> >  	}
->
-> Absolutely.  If we're willing to spend a PF flag on it, we can
-> properly wait for it too instead of failing it.
+Hello,
 
-Or we can add another "unsigned no_cgroups:1" bit into task_struct,
-not sure.
+On Thu, Mar 16, 2017 at 05:17:57PM +0100, Oleg Nesterov wrote:
+> But this also means that __cgroup_procs_write() will always fail if
+> this task is a kernel thread which was not created by kthread_create().
+> 
+> Currently you can use kernel_thread() (although you shouldn't) and it
+> can be migrated, this won't work after your patch.
 
-Anyway, I do not understand the PF_NO_SETAFFINITY check in
-__cgroup_procs_write(). task_can_attach() checks it too, so cgroups
-can't change the affinity. Imo something explicit like no_cgroups
-makes more sense.
+I see what you mean now.  The only users seem to be init/main.c and
+kernel/kmod.c.  I'll see if there's a way we can do this only for
+kthread_create() users.
 
-Oleg.
+Thanks.
+
+-- 
+tejun
