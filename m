@@ -1,131 +1,107 @@
-From: Kyungmin Park <kmpark@infradead.org>
+From: Vinayak Menon <vinmenon@codeaurora.org>
 Subject: Re: [RFC 0/1] add support for reclaiming priorities per mem cgroup
-Date: Mon, 20 Mar 2017 17:18:55 +0900
-Message-ID: <CAH9JG2U6idQHCeXTaLhx813pkhBsJU--HH1U-SKYafeGrM+wbA@mail.gmail.com>
+Date: Mon, 20 Mar 2017 19:28:53 +0530
+Message-ID: <3023449c-8012-333d-1da9-81f18d3f8540@codeaurora.org>
 References: <20170317231636.142311-1-timmurray@google.com>
+ <20170320055930.GA30167@bbox>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc:content-transfer-encoding;
-        bh=YiMJi8f+J+yhEschcPJKINJ+x8NWYU1jHmVHeA2Xi9E=;
-        b=qAkTi1HL9u9oQIxSCOMkmhp+5HC3X7tm2cm3besdhodWEh3HbB13tm2Z/pT9VSqQx9
-         IEoSJWhdb3HGby6u6bHLShW8AcaThqbu7E/Uli5fXAc1ORj7mOy7pTY86hqOvoS5lGNH
-         fv+EJhDEUQwxaTX283lSFkWSUEy9r0I79peJK9IyA/YwUJ0LdeBGF+mRJ2Bfqo6IkUPA
-         sCPMGo/2OD4covDXIH0vmTeTgRyftZzv1dBbk5nis+xJ228wb29YuHZKlxLFdNo6AQXR
-         iumDSEHdu+GuuiKSnusL6W80tG8ss+sSCFzjfVHbCdOiHW7yYHDWd3PMwpISkFBVMMC6
-         IHCA==
-In-Reply-To: <20170317231636.142311-1-timmurray@google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+	s=default; t=1490018344;
+	bh=bsBTZaN09vVYh7LceErRFb3LJ11IfpKkGgpNcDQRACE=;
+	h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+	b=IEFPMSKbDOIVCi6dzwCprIqTikfy8frpUXXC5ymM7imEUT40bP/ZhmcyGWUajy3aD
+	 NrfdxlHIxM/lQbbwyi4Oau+5VAzk0nLVolKh5txNxjcXl/Wfd/zMwv3fwOWU4x0eCi
+	 SQkw8YW5jUrhysTuxDeXoqP22gU0MhsfqeataV2Y=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+	s=default; t=1490018340;
+	bh=bsBTZaN09vVYh7LceErRFb3LJ11IfpKkGgpNcDQRACE=;
+	h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+	b=nRL02PbXz7IdKWmsCHH8YMWBsUx7HcLQdrblMvA4XLp7CqWN2MBm0QA1kjfE20Evt
+	 Jtuk10BiXCsMSEAJOpwPQd9vvG+Pu3XUPGyRW/N8FFkGG6n3dZfzzFATa1p4m+BnUD
+	 cln0IoV6kNgLs9yWKLVYhpaZaBZiKuZZvH43As0c=
+In-Reply-To: <20170320055930.GA30167@bbox>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tim Murray <timmurray@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, linux-mm <linux-mm@kvack.org>, surenb@google.com, totte@google.com, Android Kernel Team <kernel-team@android.com>, Kyungmin Park <kyungmin.park@samsung.com>
+To: Minchan Kim <minchan@kernel.org>, Tim Murray <timmurray@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, surenb@google.com, totte@google.com, kernel-team@android.com
 
-On Sat, Mar 18, 2017 at 8:16 AM, Tim Murray <timmurray@google.com> wrote:
-> Hi all,
->
-> I've been working to improve Android's memory management and drop lowmemo=
-rykiller from the kernel, and I'd like to get some feedback on a small patc=
-h with a lot of side effects.
->
-> Currently, when an Android device is under memory pressure, one of three =
-things will happen from kswapd:
->
-> 1. Compress an anonymous page to ZRAM.
-> 2. Evict a file page.
-> 3. Kill a process via lowmemorykiller.
->
-> The first two are cheap and per-page, the third is relatively cheap in th=
-e short term, frees many pages, and may cause power and performance penalti=
-es later on when the process has to be started again. For lots of reasons, =
-I'd like a better balance between reclamation and killing on Android.
->
-> One of the nice things about Android from an optimization POV is that the=
- execution model is more constrained than a generic Linux machine. There ar=
-e only a limited number of processes that need to execute quickly for the d=
-evice to appear to have good performance, and a userspace daemon (called Ac=
-tivityManagerService) knows exactly what those processes are at any given t=
-ime. We've made use of that in the past via cpusets and schedtune to limit =
-the CPU resources available to background processes, and I think we can app=
-ly the same concept to memory.
->
-> This patch adds a new tunable to mem cgroups, memory.priority. A mem cgro=
-up with a non-zero priority will not be eligible for scanning until the sca=
-n_control's priority is greater than zero. Once the mem cgroup is eligible =
-for scanning, the priority acts as a bias to reduce the number of pages tha=
-t should be scanned.
 
-Here's old discussion to support app-per-memcg reclaim
+On Fri, Mar 17, 2017 at 04:16:35PM -0700, Tim Murray wrote:
 
-"[PATCH] memcg: Add force_reclaim to reclaim tasks' memory in memcg."
-http://www.spinics.net/lists/cgroups/msg07874.html
+Hi Tim,
+>> Hi all,
+>>
+>> I've been working to improve Android's memory management and drop lowmemorykiller from the kernel, and I'd like to get some feedback on a small patch with a lot of side effects. 
+>>
+>> Currently, when an Android device is under memory pressure, one of three things will happen from kswapd:
+>>
+>> 1. Compress an anonymous page to ZRAM.
+>> 2. Evict a file page.
+>> 3. Kill a process via lowmemorykiller.
+>>
+>> The first two are cheap and per-page, the third is relatively cheap in the short term, frees many pages, and may cause power and performance penalties later on when the process has to be started again. For lots of reasons, I'd like a better balance between reclamation and killing on Android.
+>>
+>> One of the nice things about Android from an optimization POV is that the execution model is more constrained than a generic Linux machine. There are only a limited number of processes that need to execute quickly for the device to appear to have good performance, and a userspace daemon (called ActivityManagerService) knows exactly what those processes are at any given time. We've made use of that in the past via cpusets and schedtune to limit the CPU resources available to background processes, and I think we can apply the same concept to memory.
+>> This patch adds a new tunable to mem cgroups, memory.priority. A mem cgroup with a non-zero priority will not be eligible for scanning until the scan_control's priority is greater than zero. Once the mem cgroup is eligible for scanning, the priority acts as a bias to reduce the number of pages that should be scanned.
+From the discussions @ https://lkml.org/lkml/2017/3/3/752, I assume you are trying
+per-app memcg. We were trying to implement per app memory cgroups and were
+encountering some issues (https://www.spinics.net/lists/linux-mm/msg121665.html) .
+I am curious if you have seen similar issues and would like to know if the patch also
+address some of these problems.
 
-unlike existing interface, it can reclaim the memory while process is
-still in memcg.
+The major issues were:
+(1) Because of multiple per-app memcgs, the per memcg LRU size is so small and
+results in kswapd priority drop. This results in sudden increase in scan at lower priorities.
+And kswapd ends up consuming around 3 times more time.
+(2) Due to kswapd taking more time in freeing up memory, allocstalls are high and for
+similar reasons stated above direct reclaim path consumes 2.5 times more time.
+(3) Because of multiple LRUs, the aging of pages is affected and this results in wrong
+pages being evicted resulting in higher number of major faults.
 
-In our case, it's used for reclaim and swap out pages for that app.
+Since soft reclaim was not of much help in mitigating the problem, I was trying out
+something similar to memcg priority. But what I have seen is that this aggravates the
+above mentioned problems. I think this is because, even though the high priority tasks
+(foreground) are having pages which are used at the moment, there are idle pages too
+which could be reclaimed. But due to the high priority of foreground memcg, it requires
+the kswapd priority to drop down much to reclaim these idle pages. This results in excessive
+reclaim from background apps resulting in increased major faults, pageins and thus increased
+launch latency when these apps are later brought back to foreground.
 
-Thank you,
-Kyungmin Park
->
-> We've seen cases on Android where the global LRU isn't sufficient. For ex=
-ample, notifications in Android are rendered as part of a separate process =
-that runs infrequently. However, when a notification appears and the user s=
-lides down the notification tray, we'll often see dropped frames due to pag=
-e faults if there has been severe memory pressure. There are similar issues=
- with other persistent processes.
->
-> The goal on an Android device is to aggressively evict from very low-prio=
-rity background tasks that are likely to be killed anyway, since this will =
-reduce the likelihood of lowmemorykiller running in the first place. It wil=
-l still evict some from foreground and persistent processes, but it should =
-help ensure that background processes are effectively reduced to the size o=
-f their heaps before evicting from more critical tasks. This should mean fe=
-wer background processes end up killed, which should improve performance an=
-d power on Android across the board (since it costs significantly less to p=
-age things back in than to replay the entirety of application startup).
->
-> The follow-on that I'm also experimenting with is how to improve vmpressu=
-re such that userspace can have some idea when low-priority memory cgroups =
-are about as small as they can get. The correct time for Android to kill a =
-background process under memory pressure is when there is evidence that a p=
-rocess has to be killed in order to alleviate memory pressure. If the devic=
-e is below the low memory watermark and we know that there's probably no wa=
-y to reclaim any more from background processes, then a userspace daemon sh=
-ould kill one or more background processes to fix that. Per-cgroup priority=
- could be the first step toward that information.
->
-> I've tested a version of this patch on a Pixel running 3.18 along with an=
- overhauled version of lmkd (the Android userspace lowmemorykiller daemon),=
- and it does seem to work fine. I've ported it forward but have not yet rig=
-orously tested it at TOT, since I don't have an Android test setup running =
-TOT. While I'm getting my tests ported over, I would like some feedback on =
-adding another tunable as well as what the tunable's interface should be--I=
- really don't like the 0-10 priority scheme I have in the patch but I don't=
- have a better idea.
->
-> Thanks,
-> Tim
->
-> Tim Murray (1):
->   mm, memcg: add prioritized reclaim
->
->  include/linux/memcontrol.h | 20 +++++++++++++++++++-
->  mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
->  mm/vmscan.c                |  3 ++-
->  3 files changed, 54 insertions(+), 2 deletions(-)
->
-> --
-> 2.12.0.367.g23dc2f6d3c-goog
->
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+One thing which is found to fix the above problems is to have both global LRU and the per-memcg LRU.
+Global reclaim can use the global LRU thus fixing the above 3 issues. The memcg LRUs can then be used
+for soft reclaim or a proactive reclaim similar to Minchan's Per process reclaim for the background or
+low priority tasks. I have been trying this change on 4.4 kernel (yet to try the per-app
+reclaim/soft reclaim part). One downside is the extra list_head in struct page and the memory it consumes.
+>> We've seen cases on Android where the global LRU isn't sufficient. For example, notifications in Android are rendered as part of a separate process that runs infrequently. However, when a notification appears and the user slides down the notification tray, we'll often see dropped frames due to page faults if there has been severe memory pressure. There are similar issues with other persistent processes.
+>>
+>> The goal on an Android device is to aggressively evict from very low-priority background tasks that are likely to be killed anyway, since this will reduce the likelihood of lowmemorykiller running in the first place. It will still evict some from foreground and persistent processes, but it should help ensure that background processes are effectively reduced to the size of their heaps before evicting from more critical tasks. This should mean fewer background processes end up killed, which should improve performance and power on Android across the board (since it costs significantly less to page things back in than to replay the entirety of application startup).
+>>
+>> The follow-on that I'm also experimenting with is how to improve vmpressure such that userspace can have some idea when low-priority memory cgroups are about as small as they can get. The correct time for Android to kill a background process under memory pressure is when there is evidence that a process has to be killed in order to alleviate memory pressure. If the device is below the low memory watermark and we know that there's probably no way to reclaim any more from background processes, then a userspace daemon should kill one or more background processes to fix that. Per-cgroup priority could be the first step toward that information.
+>>
+>> I've tested a version of this patch on a Pixel running 3.18 along with an overhauled version of lmkd (the Android userspace lowmemorykiller daemon), and it does seem to work fine. I've ported it forward but have not yet rigorously tested it at TOT, since I don't have an Android test setup running TOT. While I'm getting my tests ported over, I would like some feedback on adding another tunable as well as what the tunable's interface should be--I really don't like the 0-10 priority scheme I have in the patch but I don't have a better idea.
+>>
+>> Thanks,
+>> Tim
+>>
+>> Tim Murray (1):
+>>   mm, memcg: add prioritized reclaim
+>>
+>>  include/linux/memcontrol.h | 20 +++++++++++++++++++-
+>>  mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
+>>  mm/vmscan.c                |  3 ++-
+>>  3 files changed, 54 insertions(+), 2 deletions(-)
+>>
+>> -- 
+>> 2.12.0.367.g23dc2f6d3c-goog
+>>
+>> --
+>> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+>> the body to majordomo@kvack.org.  For more info on Linux MM,
+>> see: http://www.linux-mm.org/ .
+>> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
