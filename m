@@ -1,107 +1,233 @@
-From: Vinayak Menon <vinmenon@codeaurora.org>
-Subject: Re: [RFC 0/1] add support for reclaiming priorities per mem cgroup
-Date: Mon, 20 Mar 2017 19:28:53 +0530
-Message-ID: <3023449c-8012-333d-1da9-81f18d3f8540@codeaurora.org>
-References: <20170317231636.142311-1-timmurray@google.com>
- <20170320055930.GA30167@bbox>
+From: vinayak menon <vinayakm.list@gmail.com>
+Subject: Re: [RFC 1/1] mm, memcg: add prioritized reclaim
+Date: Mon, 20 Mar 2017 20:11:53 +0530
+Message-ID: <CAOaiJ-mS6jFzyBgzrMWKgYvSTSp-=g9bzTo1N3KGX5fJHBPrsw@mail.gmail.com>
+References: <20170317231636.142311-1-timmurray@google.com> <20170317231636.142311-2-timmurray@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-	s=default; t=1490018344;
-	bh=bsBTZaN09vVYh7LceErRFb3LJ11IfpKkGgpNcDQRACE=;
-	h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
-	b=IEFPMSKbDOIVCi6dzwCprIqTikfy8frpUXXC5ymM7imEUT40bP/ZhmcyGWUajy3aD
-	 NrfdxlHIxM/lQbbwyi4Oau+5VAzk0nLVolKh5txNxjcXl/Wfd/zMwv3fwOWU4x0eCi
-	 SQkw8YW5jUrhysTuxDeXoqP22gU0MhsfqeataV2Y=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-	s=default; t=1490018340;
-	bh=bsBTZaN09vVYh7LceErRFb3LJ11IfpKkGgpNcDQRACE=;
-	h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
-	b=nRL02PbXz7IdKWmsCHH8YMWBsUx7HcLQdrblMvA4XLp7CqWN2MBm0QA1kjfE20Evt
-	 Jtuk10BiXCsMSEAJOpwPQd9vvG+Pu3XUPGyRW/N8FFkGG6n3dZfzzFATa1p4m+BnUD
-	 cln0IoV6kNgLs9yWKLVYhpaZaBZiKuZZvH43As0c=
-In-Reply-To: <20170320055930.GA30167@bbox>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=jMwAbrlPQTZ36yyQHsc21tO9kCeIClOdzsYxIrcQzTY=;
+        b=mLU5B6K93VHe2iKvvKhL/XHRiujwDovXAZo/kqf/vzx2d9YlB/eW4BIK8PJZ6cETtH
+         Sil7+fuL4LnQirDBaOGaOP9niOW7QGyaNpujASbZw0B2qvfWzINYQCmc+Fndi2OxQU9v
+         VIEdD+jYQgQodHNU3+uQDlk0IJWsSS2/YfVZvTp/OX7iDmChA1aJozXTZn8dKKLRRCRQ
+         VRtTeXJFv3XqOQHbyWiTcbcInibrxxSncv8/aC7lx3J9WomXEJMaWocmz3Z0Xn/oZtFX
+         TpsbfF6PpMF42e0d5Z8ZikvTg7jStMbFwD0DPhyTbsceCQScmKxLuPwGeZ5NbJKZMJ/f
+         l47A==
+In-Reply-To: <20170317231636.142311-2-timmurray@google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Minchan Kim <minchan@kernel.org>, Tim Murray <timmurray@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, surenb@google.com, totte@google.com, kernel-team@android.com
+Content-Transfer-Encoding: 7bit
+To: Tim Murray <timmurray@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>, surenb@google.com, totte@google.com, kernel-team@android.com, Vinayak Menon <vinmenon@codeaurora.org>
+
+On Sat, Mar 18, 2017 at 4:46 AM, Tim Murray <timmurray@google.com> wrote:
+> When a system is under memory pressure, it may be beneficial to prioritize
+> some memory cgroups to keep their pages resident ahead of other cgroups'
+> pages. Add a new interface to memory cgroups, memory.priority, that enables
+> kswapd and direct reclaim to scan more pages in lower-priority cgroups
+> before looking at higher-priority cgroups.
+>
+> Signed-off-by: Tim Murray <timmurray@google.com>
+> ---
+>  include/linux/memcontrol.h | 20 +++++++++++++++++++-
+>  mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
+>  mm/vmscan.c                |  3 ++-
+>  3 files changed, 54 insertions(+), 2 deletions(-)
+>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 5af377303880..0d0f95839a8d 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -206,7 +206,9 @@ struct mem_cgroup {
+>         bool            oom_lock;
+>         int             under_oom;
+>
+> -       int     swappiness;
+> +       int             swappiness;
+> +       int             priority;
+> +
+>         /* OOM-Killer disable */
+>         int             oom_kill_disable;
+>
+> @@ -487,6 +489,16 @@ static inline bool task_in_memcg_oom(struct task_struct *p)
+>
+>  bool mem_cgroup_oom_synchronize(bool wait);
+>
+> +static inline int mem_cgroup_priority(struct mem_cgroup *memcg)
+> +{
+> +       /* root ? */
+> +       if (mem_cgroup_disabled() || !memcg->css.parent)
+> +               return 0;
+> +
+> +       return memcg->priority;
+> +}
+> +
+> +
+>  #ifdef CONFIG_MEMCG_SWAP
+>  extern int do_swap_account;
+>  #endif
+> @@ -766,6 +778,12 @@ static inline
+>  void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
+>  {
+>  }
+> +
+> +static inline int mem_cgroup_priority(struct mem_cgroup *memcg)
+> +{
+> +       return 0;
+> +}
+> +
+>  #endif /* CONFIG_MEMCG */
+>
+>  #ifdef CONFIG_CGROUP_WRITEBACK
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2bd7541d7c11..7343ca106a36 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -81,6 +81,8 @@ struct mem_cgroup *root_mem_cgroup __read_mostly;
+>
+>  #define MEM_CGROUP_RECLAIM_RETRIES     5
+>
+> +#define MEM_CGROUP_PRIORITY_MAX        10
+> +
+>  /* Socket memory accounting disabled? */
+>  static bool cgroup_memory_nosocket;
+>
+> @@ -241,6 +243,7 @@ enum res_type {
+>         _OOM_TYPE,
+>         _KMEM,
+>         _TCP,
+> +       _PRIO,
+>  };
+>
+>  #define MEMFILE_PRIVATE(x, val)        ((x) << 16 | (val))
+> @@ -842,6 +845,10 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>                  */
+>                 memcg = mem_cgroup_from_css(css);
+>
+> +               if (reclaim && reclaim->priority &&
+> +                   (DEF_PRIORITY - memcg->priority) < reclaim->priority)
+> +                       continue;
+> +
+This as I understand will skip say a priority 0 memcg until scan
+priority is less
+than 3. Considering a case of foreground task at memcg priority 0, and
+large number of background tasks each consuming very small amount of
+memory (and thus tiny LRUs) and at priority 10. Also assume that
+a large part of memory is occupied by these small apps (which I think is a valid
+scenario on android). Because of the small LRU sizes of BG apps, the
+kswapd priority will
+drop fast and we would eventually reach priority 2. And at 2 or 1, a
+lot of pages
+would get scanned from both foreground and background tasks. The foreground
+LRU will get excessively scanned, even though most of the memory is occupied
+by the large number of small BG apps. No ?
 
 
-On Fri, Mar 17, 2017 at 04:16:35PM -0700, Tim Murray wrote:
+>                 if (css == &root->css)
+>                         break;
+>
+> @@ -2773,6 +2780,7 @@ enum {
+>         RES_MAX_USAGE,
+>         RES_FAILCNT,
+>         RES_SOFT_LIMIT,
+> +       RES_PRIORITY,
+>  };
+>
+>  static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+> @@ -2783,6 +2791,7 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+>
+>         switch (MEMFILE_TYPE(cft->private)) {
+>         case _MEM:
+> +       case _PRIO:
+>                 counter = &memcg->memory;
+>                 break;
+>         case _MEMSWAP:
+> @@ -2813,6 +2822,8 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+>                 return counter->failcnt;
+>         case RES_SOFT_LIMIT:
+>                 return (u64)memcg->soft_limit * PAGE_SIZE;
+> +       case RES_PRIORITY:
+> +               return (u64)memcg->priority;
+>         default:
+>                 BUG();
+>         }
+> @@ -2966,6 +2977,22 @@ static int memcg_update_tcp_limit(struct mem_cgroup *memcg, unsigned long limit)
+>         return ret;
+>  }
+>
+> +static ssize_t mem_cgroup_update_prio(struct kernfs_open_file *of,
+> +                                     char *buf, size_t nbytes, loff_t off)
+> +{
+> +       struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+> +       unsigned long long prio = -1;
+> +
+> +       buf = strstrip(buf);
+> +       prio = memparse(buf, NULL);
+> +
+> +       if (prio >= 0 && prio <= MEM_CGROUP_PRIORITY_MAX) {
+> +               memcg->priority = (int)prio;
+> +               return nbytes;
+> +       }
+> +       return -EINVAL;
+> +}
+> +
+>  /*
+>   * The user of this function is...
+>   * RES_LIMIT.
+> @@ -3940,6 +3967,12 @@ static struct cftype mem_cgroup_legacy_files[] = {
+>                 .read_u64 = mem_cgroup_read_u64,
+>         },
+>         {
+> +               .name = "priority",
+> +               .private = MEMFILE_PRIVATE(_PRIO, RES_PRIORITY),
+> +               .write = mem_cgroup_update_prio,
+> +               .read_u64 = mem_cgroup_read_u64,
+> +       },
+> +       {
+>                 .name = "stat",
+>                 .seq_show = memcg_stat_show,
+>         },
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index bc8031ef994d..c47b21326ab0 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2116,6 +2116,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+>                            unsigned long *lru_pages)
+>  {
+>         int swappiness = mem_cgroup_swappiness(memcg);
+> +       int priority = mem_cgroup_priority(memcg);
+>         struct zone_reclaim_stat *reclaim_stat = &lruvec->reclaim_stat;
+>         u64 fraction[2];
+>         u64 denominator = 0;    /* gcc */
+> @@ -2287,7 +2288,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+>                         unsigned long scan;
+>
+>                         size = lruvec_lru_size(lruvec, lru, sc->reclaim_idx);
+> -                       scan = size >> sc->priority;
+> +                       scan = size >> (sc->priority + priority);
+If most of the apps in background (with memcg priortiy near 10) are
+smaller ones in terms of LRU size,
+this would result in a priority drop because of increasing the
+priority ? And this would also cause some
+small LRUs never to be scanned i.e. when (size >>
+MEM_CGROUP_PRIORITY_MAX) is 0 (or when
+scan is > 0, but SCAN_FRACT makes it 0) ?
 
-Hi Tim,
->> Hi all,
->>
->> I've been working to improve Android's memory management and drop lowmemorykiller from the kernel, and I'd like to get some feedback on a small patch with a lot of side effects. 
->>
->> Currently, when an Android device is under memory pressure, one of three things will happen from kswapd:
->>
->> 1. Compress an anonymous page to ZRAM.
->> 2. Evict a file page.
->> 3. Kill a process via lowmemorykiller.
->>
->> The first two are cheap and per-page, the third is relatively cheap in the short term, frees many pages, and may cause power and performance penalties later on when the process has to be started again. For lots of reasons, I'd like a better balance between reclamation and killing on Android.
->>
->> One of the nice things about Android from an optimization POV is that the execution model is more constrained than a generic Linux machine. There are only a limited number of processes that need to execute quickly for the device to appear to have good performance, and a userspace daemon (called ActivityManagerService) knows exactly what those processes are at any given time. We've made use of that in the past via cpusets and schedtune to limit the CPU resources available to background processes, and I think we can apply the same concept to memory.
->> This patch adds a new tunable to mem cgroups, memory.priority. A mem cgroup with a non-zero priority will not be eligible for scanning until the scan_control's priority is greater than zero. Once the mem cgroup is eligible for scanning, the priority acts as a bias to reduce the number of pages that should be scanned.
-From the discussions @ https://lkml.org/lkml/2017/3/3/752, I assume you are trying
-per-app memcg. We were trying to implement per app memory cgroups and were
-encountering some issues (https://www.spinics.net/lists/linux-mm/msg121665.html) .
-I am curious if you have seen similar issues and would like to know if the patch also
-address some of these problems.
-
-The major issues were:
-(1) Because of multiple per-app memcgs, the per memcg LRU size is so small and
-results in kswapd priority drop. This results in sudden increase in scan at lower priorities.
-And kswapd ends up consuming around 3 times more time.
-(2) Due to kswapd taking more time in freeing up memory, allocstalls are high and for
-similar reasons stated above direct reclaim path consumes 2.5 times more time.
-(3) Because of multiple LRUs, the aging of pages is affected and this results in wrong
-pages being evicted resulting in higher number of major faults.
-
-Since soft reclaim was not of much help in mitigating the problem, I was trying out
-something similar to memcg priority. But what I have seen is that this aggravates the
-above mentioned problems. I think this is because, even though the high priority tasks
-(foreground) are having pages which are used at the moment, there are idle pages too
-which could be reclaimed. But due to the high priority of foreground memcg, it requires
-the kswapd priority to drop down much to reclaim these idle pages. This results in excessive
-reclaim from background apps resulting in increased major faults, pageins and thus increased
-launch latency when these apps are later brought back to foreground.
-
-One thing which is found to fix the above problems is to have both global LRU and the per-memcg LRU.
-Global reclaim can use the global LRU thus fixing the above 3 issues. The memcg LRUs can then be used
-for soft reclaim or a proactive reclaim similar to Minchan's Per process reclaim for the background or
-low priority tasks. I have been trying this change on 4.4 kernel (yet to try the per-app
-reclaim/soft reclaim part). One downside is the extra list_head in struct page and the memory it consumes.
->> We've seen cases on Android where the global LRU isn't sufficient. For example, notifications in Android are rendered as part of a separate process that runs infrequently. However, when a notification appears and the user slides down the notification tray, we'll often see dropped frames due to page faults if there has been severe memory pressure. There are similar issues with other persistent processes.
->>
->> The goal on an Android device is to aggressively evict from very low-priority background tasks that are likely to be killed anyway, since this will reduce the likelihood of lowmemorykiller running in the first place. It will still evict some from foreground and persistent processes, but it should help ensure that background processes are effectively reduced to the size of their heaps before evicting from more critical tasks. This should mean fewer background processes end up killed, which should improve performance and power on Android across the board (since it costs significantly less to page things back in than to replay the entirety of application startup).
->>
->> The follow-on that I'm also experimenting with is how to improve vmpressure such that userspace can have some idea when low-priority memory cgroups are about as small as they can get. The correct time for Android to kill a background process under memory pressure is when there is evidence that a process has to be killed in order to alleviate memory pressure. If the device is below the low memory watermark and we know that there's probably no way to reclaim any more from background processes, then a userspace daemon should kill one or more background processes to fix that. Per-cgroup priority could be the first step toward that information.
->>
->> I've tested a version of this patch on a Pixel running 3.18 along with an overhauled version of lmkd (the Android userspace lowmemorykiller daemon), and it does seem to work fine. I've ported it forward but have not yet rigorously tested it at TOT, since I don't have an Android test setup running TOT. While I'm getting my tests ported over, I would like some feedback on adding another tunable as well as what the tunable's interface should be--I really don't like the 0-10 priority scheme I have in the patch but I don't have a better idea.
->>
->> Thanks,
->> Tim
->>
->> Tim Murray (1):
->>   mm, memcg: add prioritized reclaim
->>
->>  include/linux/memcontrol.h | 20 +++++++++++++++++++-
->>  mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
->>  mm/vmscan.c                |  3 ++-
->>  3 files changed, 54 insertions(+), 2 deletions(-)
->>
->> -- 
->> 2.12.0.367.g23dc2f6d3c-goog
->>
->> --
->> To unsubscribe, send a message with 'unsubscribe linux-mm' in
->> the body to majordomo@kvack.org.  For more info on Linux MM,
->> see: http://www.linux-mm.org/ .
->> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>
+>                         if (!scan && pass && force_scan)
+>                                 scan = min(size, SWAP_CLUSTER_MAX);
+> --
+> 2.12.0.367.g23dc2f6d3c-goog
+>
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
