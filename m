@@ -1,63 +1,97 @@
-From: <ex-GXcTff7tL0M@public.gmane.org>
-Subject: 17832 cgroups
-Date: Mon, 20 Mar 2017 04:21:16 -0000
-Message-ID: <148998367618.3565.11757809719215849454@ruscomp.net>
-Reply-To: <ex-GXcTff7tL0M@public.gmane.org>
+From: Minchan Kim <minchan@kernel.org>
+Subject: Re: [RFC 0/1] add support for reclaiming priorities per mem cgroup
+Date: Mon, 20 Mar 2017 14:59:30 +0900
+Message-ID: <20170320055930.GA30167@bbox>
+References: <20170317231636.142311-1-timmurray@google.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="98689122990.zip"
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: attachment
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20170317231636.142311-1-timmurray@google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tim Murray <timmurray@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, surenb@google.com, totte@google.com, kernel-team@android.com, vinmenon@codeaurora.org
 
-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
-AEcKAAAAAA==
+Hello,
+
+On Fri, Mar 17, 2017 at 04:16:35PM -0700, Tim Murray wrote:
+> Hi all,
+> 
+> I've been working to improve Android's memory management and drop lowmemorykiller from the kernel, and I'd like to get some feedback on a small patch with a lot of side effects. 
+> 
+> Currently, when an Android device is under memory pressure, one of three things will happen from kswapd:
+> 
+> 1. Compress an anonymous page to ZRAM.
+> 2. Evict a file page.
+> 3. Kill a process via lowmemorykiller.
+> 
+> The first two are cheap and per-page, the third is relatively cheap in the short term, frees many pages, and may cause power and performance penalties later on when the process has to be started again. For lots of reasons, I'd like a better balance between reclamation and killing on Android.
+> 
+> One of the nice things about Android from an optimization POV is that the execution model is more constrained than a generic Linux machine. There are only a limited number of processes that need to execute quickly for the device to appear to have good performance, and a userspace daemon (called ActivityManagerService) knows exactly what those processes are at any given time. We've made use of that in the past via cpusets and schedtune to limit the CPU resources available to background processes, and I think we can apply the same concept to memory.
+> 
+
+AFAIK, many platforms as well as android have done it. IOW, they know what
+processes are important while others are not critical for user-response.
+
+> This patch adds a new tunable to mem cgroups, memory.priority. A mem cgroup with a non-zero priority will not be eligible for scanning until the scan_control's priority is greater than zero. Once the mem cgroup is eligible for scanning, the priority acts as a bias to reduce the number of pages that should be scanned.
+
+First of all, the concept makes sense to me. The problem with cgroup-per-app
+model is that it's really hard to predict how many of memory a group needs to
+make system smooth although we know what processes are important.
+Because of it, it's hard to tune memcg low/high/max proactively.
+
+So, it would be great if admin can give more priority some groups like
+graphic mamager, laucher and killer applications like TV manager, Dial
+manager and so (ie, when memory pressure happens, please reclaim more pages
+from low priority groups).
+
+However, I'm not sure your approach is good. It seems your approach just
+reclaims pages from groups (DEF_PRIORITY - memcg->priority) >= sc->priority.
+IOW, it is based on *temporal* memory pressure fluctuation sc->priority.
+
+Rather than it, I guess pages to be reclaimed should be distributed by
+memcg->priority. Namely, if global memory pressure happens and VM want to
+reclaim 100 pages, VM should reclaim 90 pages from memcg-A(priority-10)
+and 10 pages from memcg-B(prioirty-90).
+
+Anyway, it's really desireble approach so memcg maintainers, Please, have a
+look.
+
+Thanks.
+
+> 
+> We've seen cases on Android where the global LRU isn't sufficient. For example, notifications in Android are rendered as part of a separate process that runs infrequently. However, when a notification appears and the user slides down the notification tray, we'll often see dropped frames due to page faults if there has been severe memory pressure. There are similar issues with other persistent processes.
+> 
+> The goal on an Android device is to aggressively evict from very low-priority background tasks that are likely to be killed anyway, since this will reduce the likelihood of lowmemorykiller running in the first place. It will still evict some from foreground and persistent processes, but it should help ensure that background processes are effectively reduced to the size of their heaps before evicting from more critical tasks. This should mean fewer background processes end up killed, which should improve performance and power on Android across the board (since it costs significantly less to page things back in than to replay the entirety of application startup).
+> 
+> The follow-on that I'm also experimenting with is how to improve vmpressure such that userspace can have some idea when low-priority memory cgroups are about as small as they can get. The correct time for Android to kill a background process under memory pressure is when there is evidence that a process has to be killed in order to alleviate memory pressure. If the device is below the low memory watermark and we know that there's probably no way to reclaim any more from background processes, then a userspace daemon should kill one or more background processes to fix that. Per-cgroup priority could be the first step toward that information.
+> 
+> I've tested a version of this patch on a Pixel running 3.18 along with an overhauled version of lmkd (the Android userspace lowmemorykiller daemon), and it does seem to work fine. I've ported it forward but have not yet rigorously tested it at TOT, since I don't have an Android test setup running TOT. While I'm getting my tests ported over, I would like some feedback on adding another tunable as well as what the tunable's interface should be--I really don't like the 0-10 priority scheme I have in the patch but I don't have a better idea.
+> 
+> Thanks,
+> Tim
+> 
+> Tim Murray (1):
+>   mm, memcg: add prioritized reclaim
+> 
+>  include/linux/memcontrol.h | 20 +++++++++++++++++++-
+>  mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
+>  mm/vmscan.c                |  3 ++-
+>  3 files changed, 54 insertions(+), 2 deletions(-)
+> 
+> -- 
+> 2.12.0.367.g23dc2f6d3c-goog
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
