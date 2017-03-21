@@ -1,71 +1,219 @@
-From: <elettropavan-nc/lrvXPQ4s@public.gmane.org>
-Subject: 34641 cgroups
-Date: Tue, 21 Mar 2017 15:47:21 -0000
-Message-ID: <149011124169.16099.15601167404238511450@fibertel.com.ar>
-Reply-To: <elettropavan-nc/lrvXPQ4s@public.gmane.org>
+From: Tim Murray <timmurray@google.com>
+Subject: Re: [RFC 0/1] add support for reclaiming priorities per mem cgroup
+Date: Tue, 21 Mar 2017 10:18:26 -0700
+Message-ID: <CAEe=SxnYXGg+s15imF4D93DVzvhVT+yo5fvAvDtKrQKdXz2kyA@mail.gmail.com>
+References: <20170317231636.142311-1-timmurray@google.com> <20170320055930.GA30167@bbox>
 Mime-Version: 1.0
-Content-Type: application/zip; name="77529776.zip"
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: attachment
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=BQbX2LBXZg5cqVhlJUOCW8Mn8/5lPDoCXKLYUsbmnik=;
+        b=Gq/+7GL59rYUb2ET8B32sISTpox3SdstzjBTdDxV/I6GKPXwX8YSc1H2RkC1JIjFtQ
+         Wf91kfQIf05xlFgO3uma8ENaZh4iODibh4k+haK6Jqi4LD4QKR3NnYryc40fkW1maHjI
+         Cev50UlgjHqL3NOCClp35CgPrVZmKY2athHLwiRYAm4zDfIcKB9GiZwavExrNJcIxi5v
+         gXuVE5hD+FDdOwQ6HBokuKxHdzptLz48LbhS+6FmGVO4MHwY5UuXw+F1E10qli0xbY9y
+         WjNCWqvP+DZFbCyswKqT/7Fy4gK+P8A/A2PIwDfklreRXjBALsU9P16Xdwpfod1id5rU
+         B3Aw==
+In-Reply-To: <20170320055930.GA30167@bbox>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Minchan Kim <minchan@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, Suren Baghdasaryan <surenb@google.com>, Patrik Torstensson <totte@google.com>, Android Kernel Team <kernel-team@android.com>, vinmenon@codeaurora.org
 
-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
-AAABAAEAUwAAAB8MAAAAAA==
+On Sun, Mar 19, 2017 at 10:59 PM, Minchan Kim <minchan@kernel.org> wrote:
+> However, I'm not sure your approach is good. It seems your approach just
+> reclaims pages from groups (DEF_PRIORITY - memcg->priority) >=3D sc->prio=
+rity.
+> IOW, it is based on *temporal* memory pressure fluctuation sc->priority.
+>
+> Rather than it, I guess pages to be reclaimed should be distributed by
+> memcg->priority. Namely, if global memory pressure happens and VM want to
+> reclaim 100 pages, VM should reclaim 90 pages from memcg-A(priority-10)
+> and 10 pages from memcg-B(prioirty-90).
+
+This is what I debated most while writing this patch. If I'm
+understanding your concern correctly, I think I'm doing more than
+skipping high-priority cgroups:
+
+- If the scan isn't high priority yet, then skip high-priority cgroups.
+- When the scan is high priority, scan fewer pages from
+higher-priority cgroups (using the priority to modify the shift in
+get_scan_count).
+
+This is tightly coupled with the question of what to do with
+vmpressure. The right thing to do on an Android device under memory
+pressure is probably something like this:
+
+1. Reclaim aggressively from low-priority background processes. The
+goal here is to reduce the pages used by background processes to the
+size of their heaps (or smaller with ZRAM) but zero file pages.
+They're already likely to be killed by userspace and we're keeping
+them around opportunistically, so a performance hit if they run and
+have to do IO to restore some of that working set is okay.
+2. Reclaim a small amount from persistent processes. These often have
+a performance-critical subset of pages that we absolutely don't want
+paged out, but some reclaim of these processes is fine. They're large,
+some of them only run sporadically and don't impact performance, it's
+okay to touch these sometimes.
+3. If there still aren't enough free pages, notify userspace to kill
+any processes it can. If I put my "Android performance engineer
+working on userspace" hat on, what I'd want to know from userspace is
+that kswapd/direct reclaim probably has to scan foreground processes
+in order to reclaim enough free pages to satisfy watermarks. That's a
+signal I could directly act on from userspace.
+4. If that still isn't enough, reclaim from foreground processes,
+since those processes are performance-critical.
+
+As a result, I like not being fair about which cgroups are scanned
+initially. Some cgroups are strictly more important than others. (With
+that said, I'm not tied to enforcing unfairness in scanning. Android
+would probably use different priority levels for each app level for
+fair scanning vs unfair scanning, but my guess is that the actual
+reclaiming behavior would look similar in both schemes.)
+
+Mem cgroup priority suggests a useful signal for vmpressure. If
+scanning is starting to touch cgroups at a higher priority than
+persistent processes, then the userspace lowmemorykiller could kill
+one or more background processes (which would be in low-priority
+cgroups that have already been scanned aggressively). The current lmk
+hand-tuned watermarks would be gone, and tuning the /proc/sys/vm knobs
+would be all that's required to make an Android device do the right
+thing in terms of memory.
+
+On Sun, Mar 19, 2017 at 10:59 PM, Minchan Kim <minchan@kernel.org> wrote:
+> Hello,
+>
+> On Fri, Mar 17, 2017 at 04:16:35PM -0700, Tim Murray wrote:
+>> Hi all,
+>>
+>> I've been working to improve Android's memory management and drop lowmem=
+orykiller from the kernel, and I'd like to get some feedback on a small pat=
+ch with a lot of side effects.
+>>
+>> Currently, when an Android device is under memory pressure, one of three=
+ things will happen from kswapd:
+>>
+>> 1. Compress an anonymous page to ZRAM.
+>> 2. Evict a file page.
+>> 3. Kill a process via lowmemorykiller.
+>>
+>> The first two are cheap and per-page, the third is relatively cheap in t=
+he short term, frees many pages, and may cause power and performance penalt=
+ies later on when the process has to be started again. For lots of reasons,=
+ I'd like a better balance between reclamation and killing on Android.
+>>
+>> One of the nice things about Android from an optimization POV is that th=
+e execution model is more constrained than a generic Linux machine. There a=
+re only a limited number of processes that need to execute quickly for the =
+device to appear to have good performance, and a userspace daemon (called A=
+ctivityManagerService) knows exactly what those processes are at any given =
+time. We've made use of that in the past via cpusets and schedtune to limit=
+ the CPU resources available to background processes, and I think we can ap=
+ply the same concept to memory.
+>>
+>
+> AFAIK, many platforms as well as android have done it. IOW, they know wha=
+t
+> processes are important while others are not critical for user-response.
+>
+>> This patch adds a new tunable to mem cgroups, memory.priority. A mem cgr=
+oup with a non-zero priority will not be eligible for scanning until the sc=
+an_control's priority is greater than zero. Once the mem cgroup is eligible=
+ for scanning, the priority acts as a bias to reduce the number of pages th=
+at should be scanned.
+>
+> First of all, the concept makes sense to me. The problem with cgroup-per-=
+app
+> model is that it's really hard to predict how many of memory a group need=
+s to
+> make system smooth although we know what processes are important.
+> Because of it, it's hard to tune memcg low/high/max proactively.
+>
+> So, it would be great if admin can give more priority some groups like
+> graphic mamager, laucher and killer applications like TV manager, Dial
+> manager and so (ie, when memory pressure happens, please reclaim more pag=
+es
+> from low priority groups).
+>
+> However, I'm not sure your approach is good. It seems your approach just
+> reclaims pages from groups (DEF_PRIORITY - memcg->priority) >=3D sc->prio=
+rity.
+> IOW, it is based on *temporal* memory pressure fluctuation sc->priority.
+>
+> Rather than it, I guess pages to be reclaimed should be distributed by
+> memcg->priority. Namely, if global memory pressure happens and VM want to
+> reclaim 100 pages, VM should reclaim 90 pages from memcg-A(priority-10)
+> and 10 pages from memcg-B(prioirty-90).
+>
+> Anyway, it's really desireble approach so memcg maintainers, Please, have=
+ a
+> look.
+>
+> Thanks.
+>
+>>
+>> We've seen cases on Android where the global LRU isn't sufficient. For e=
+xample, notifications in Android are rendered as part of a separate process=
+ that runs infrequently. However, when a notification appears and the user =
+slides down the notification tray, we'll often see dropped frames due to pa=
+ge faults if there has been severe memory pressure. There are similar issue=
+s with other persistent processes.
+>>
+>> The goal on an Android device is to aggressively evict from very low-pri=
+ority background tasks that are likely to be killed anyway, since this will=
+ reduce the likelihood of lowmemorykiller running in the first place. It wi=
+ll still evict some from foreground and persistent processes, but it should=
+ help ensure that background processes are effectively reduced to the size =
+of their heaps before evicting from more critical tasks. This should mean f=
+ewer background processes end up killed, which should improve performance a=
+nd power on Android across the board (since it costs significantly less to =
+page things back in than to replay the entirety of application startup).
+>>
+>> The follow-on that I'm also experimenting with is how to improve vmpress=
+ure such that userspace can have some idea when low-priority memory cgroups=
+ are about as small as they can get. The correct time for Android to kill a=
+ background process under memory pressure is when there is evidence that a =
+process has to be killed in order to alleviate memory pressure. If the devi=
+ce is below the low memory watermark and we know that there's probably no w=
+ay to reclaim any more from background processes, then a userspace daemon s=
+hould kill one or more background processes to fix that. Per-cgroup priorit=
+y could be the first step toward that information.
+>>
+>> I've tested a version of this patch on a Pixel running 3.18 along with a=
+n overhauled version of lmkd (the Android userspace lowmemorykiller daemon)=
+, and it does seem to work fine. I've ported it forward but have not yet ri=
+gorously tested it at TOT, since I don't have an Android test setup running=
+ TOT. While I'm getting my tests ported over, I would like some feedback on=
+ adding another tunable as well as what the tunable's interface should be--=
+I really don't like the 0-10 priority scheme I have in the patch but I don'=
+t have a better idea.
+>>
+>> Thanks,
+>> Tim
+>>
+>> Tim Murray (1):
+>>   mm, memcg: add prioritized reclaim
+>>
+>>  include/linux/memcontrol.h | 20 +++++++++++++++++++-
+>>  mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
+>>  mm/vmscan.c                |  3 ++-
+>>  3 files changed, 54 insertions(+), 2 deletions(-)
+>>
+>> --
+>> 2.12.0.367.g23dc2f6d3c-goog
+>>
+>> --
+>> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+>> the body to majordomo@kvack.org.  For more info on Linux MM,
+>> see: http://www.linux-mm.org/ .
+>> Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
