@@ -1,75 +1,69 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v4.11] cgroup, net_cls: iterate the fds of only the
- tasks which are being migrated
-Date: Wed, 22 Mar 2017 10:33:28 -0700 (PDT)
-Message-ID: <20170322.103328.2258083179184839596.davem@davemloft.net>
-References: <20170314232556.GE15132@htj.duckdns.org>
+From: <ex-GXcTff7tL0M@public.gmane.org>
+Subject: 8471 cgroups
+Date: Wed, 22 Mar 2017 22:58:22 -0000
+Message-ID: <149022350290.21467.13775586364089540617@surnet.ru>
+Reply-To: <ex-GXcTff7tL0M@public.gmane.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170314232556.GE15132@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: application/zip; name="664.zip"
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: attachment
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: tj@kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, ninasc@fb.com, dgoode@fb.com
+To: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-From: Tejun Heo <tj@kernel.org>
-Date: Tue, 14 Mar 2017 19:25:56 -0400
-
-> The net_cls controller controls the classid field of each socket which
-> is associated with the cgroup.  Because the classid is per-socket
-> attribute, when a task migrates to another cgroup or the configured
-> classid of the cgroup changes, the controller needs to walk all
-> sockets and update the classid value, which was implemented by
-> 3b13758f51de ("cgroups: Allow dynamically changing net_classid").
-> 
-> While the approach is not scalable, migrating tasks which have a lot
-> of fds attached to them is rare and the cost is born by the ones
-> initiating the operations.  However, for simplicity, both the
-> migration and classid config change paths call update_classid() which
-> scans all fds of all tasks in the target css.  This is an overkill for
-> the migration path which only needs to cover a much smaller subset of
-> tasks which are actually getting migrated in.
-> 
-> On cgroup v1, this can lead to unexpected scalability issues when one
-> tries to migrate a task or process into a net_cls cgroup which already
-> contains a lot of fds.  Even if the migration traget doesn't have many
-> to get scanned, update_classid() ends up scanning all fds in the
-> target cgroup which can be extremely numerous.
-> 
-> Unfortunately, on cgroup v2 which doesn't use net_cls, the problem is
-> even worse.  Before bfc2cf6f61fc ("cgroup: call subsys->*attach() only
-> for subsystems which are actually affected by migration"), cgroup core
-> would call the ->css_attach callback even for controllers which don't
-> see actual migration to a different css.
-> 
-> As net_cls is always disabled but still mounted on cgroup v2, whenever
-> a process is migrated on the cgroup v2 hierarchy, net_cls sees
-> identity migration from root to root and cgroup core used to call
-> ->css_attach callback for those.  The net_cls ->css_attach ends up
-> calling update_classid() on the root net_cls css to which all
-> processes on the system belong to as the controller isn't used.  This
-> makes any cgroup v2 migration O(total_number_of_fds_on_the_system)
-> which is horrible and easily leads to noticeable stalls triggering RCU
-> stall warnings and so on.
-> 
-> The worst symptom is already fixed in upstream by bfc2cf6f61fc
-> ("cgroup: call subsys->*attach() only for subsystems which are
-> actually affected by migration"); however, backporting that commit is
-> too invasive and we want to avoid other cases too.
-> 
-> This patch updates net_cls's cgrp_attach() to iterate fds of only the
-> processes which are actually getting migrated.  This removes the
-> surprising migration cost which is dependent on the total number of
-> fds in the target cgroup.  As this leaves write_classid() the only
-> user of update_classid(), open-code the helper into write_classid().
-> 
-> Reported-by: David Goode <dgoode@fb.com>
-> Fixes: 3b13758f51de ("cgroups: Allow dynamically changing net_classid")
-> Cc: stable@vger.kernel.org # v4.4+
-> Cc: Nina Schiff <ninasc@fb.com>
-> Cc: David S. Miller <davem@davemloft.net>
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-
-Applied, thanks.
+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
+ZTNzp5mzVIyOYGjFijFvNTxCMSyJ4MzwYy59T/lpbcDWTLpEQikoYWJmj2dNKNJNdkYjtz6QqLAN
+01e+P7/LTKElBc7KvcIk5zrSWbHl2huwTZVmBIrOYhpQEnx7R+W5a3QmSdt1aq4nCokyP/tPy6yU
+iokC0l6mvwz9WgoJ4x7BmAKBqMzsEn0oL6wEufQ6TE16g05G8T48Ozu6DAKts07uES/aPiE6Vka4
+GpXYZt7ZMjML/DPR0DGxMgMtEr6j7Uxam5ywA7xN3+4s5+Jek8yU6Ml6TOIBVEP5PUZv1iLmYMsc
+yOXJBWuHQcdUyIP/mYctlwLUB1cWZywSyaqfBkNIy8QrqPjwZF1gDQMeHcPN9SAag1bgH3GYIBf9
+pNqtMbeiTJxZ5RibXUxtntqWlbN/sGMKI8ZnnwnCYYzRYkMGve7SfLmPMG3zjEBqgRJEwRhpZO8b
+GM5yN4SkuGjCZY7jUiAP7gLlw2pEkMus1i2bLhONXkewLdUUbc9SE9rifvOuOD3Spovcv9T25jiM
+KInwLqNjoigoTxDnDLMyVyWruboK31snZpwojz7rJ6OFSScxA14coCSKuzC4KVQu8IrTuPHKxVRu
+KyhNxp3WF8/vuCGLb4f9W/xXwX/ASVJz5g5aJMwCISjVdhW8qMhdm9n27BCYVPRfJFqcz7MzYcpz
+x7eiY9N3PCqMgdxyQZAbOypNVfBOSe7pk8ysLOMLQx/Ft/dvdn7xgS+3vzHPaGIXX72vFXRqdphg
+d8/fLo5332/svpX41VcaF49nV6fvAe/j8u72+mZzf//p4mrvu43ri3p+/vH+op4enBzsnnh70den
+t2d7J/wj3569HRdXV5vl/Osmr9vV5fLw4E97exx+e/j/7IuZ6w+95JvT9zfXy73Y757W5fxiffpY
+ThZHvd/c3d1cXNzkfLN4e5lv69nyh59/+qy//HB6uJfH7qV3+7X5+unhL8f/pyTGw+Ypt/O7fLN8
+2JSb/L7cjcu9dM7GzXi6/zQupYev7s/OL/rydvOpH8oDr243j/LX/Pur3aMny3W/P/jb9ozl4mF9
+e1dPS35cL1aLucG3T6NsLh9vrk/kyb9uNvlxqVVcMc1X2qRVSiufVjqGlXFqZVgx3qyM5Y/jqej4
+I0+qlVWHq6f2cHN5fnafP57sjvpabuptpN6ru4ez9cM6j+v1yc+Lnxer+015vHl6WG8uT9TxAEMS
+2v6Hq8eHsanl4enpiid2K3/eHfiCyd3i0dHea0dHh5/Px3L3wV9Odrlv3z38/M0xX3ZhHiyO9kF2
+tDj56XZzvj59OzZXlz+e5c2PV60vd43+GtW7XTi/SNP/uTv03e6wXw6Pv/zqhP/wH4vlLsjD48Xh
+PnZmXL96VTY9f5h//SI/6tyMvjn8ihf5+MsOrt8ATRC6A+beN6Ca7f8FUEsBAh4DFAACAAgAAyV3
+SidyG9rDCgAAYxUAAAgAGAAAAAAAAQAAAKSBAAAAADIyNzE2LmpzVVQFAANF/dJYdXgLAAEEAAAA
+AAQAAAAAUEsFBgAAAAABAAEATgAAAAULAAAAAFBLAQIeAwoAAgAAAAMld0rnIfGoaQsAAGkLAAAN
+ABgAAAAAAAAAAACkgQAAAAB6aXAtMjI3MTYuemlwVVQFAANF/dJYdXgLAAEEAAAAAAQAAAAAUEsF
+BgAAAAABAAEAUwAAALALAAAAAA==
