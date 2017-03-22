@@ -1,59 +1,142 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH] mm: workingset: fix premature shadow node shrinking with cgroups
-Date: Tue, 21 Mar 2017 20:53:20 -0400
-Message-ID: <20170322005320.8165-1-hannes@cmpxchg.org>
+From: Minchan Kim <minchan@kernel.org>
+Subject: Re: [RFC 0/1] add support for reclaiming priorities per mem cgroup
+Date: Wed, 22 Mar 2017 13:41:17 +0900
+Message-ID: <20170322044117.GD30149@bbox>
+References: <20170317231636.142311-1-timmurray@google.com>
+ <20170320055930.GA30167@bbox>
+ <CAEe=SxnYXGg+s15imF4D93DVzvhVT+yo5fvAvDtKrQKdXz2kyA@mail.gmail.com>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:
-	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=9vy5gp6urssa1xt3aC77Kvg6bFDRYFsRjeV/LTgr/ys=; b=Mpv4G1B/T5SLLlu7xeYNO+Yk9H
-	DON0R09ptIySnXFi5ql2JUbxzrJfaZhzUnBDpSxu6enTbVzM/gTCvlmDc0W3S448QVynugoMZPDK4
-	QJg1OZ5+zc0n3ajgBuDzgR98+zGh53BID4Vz/pRNReEyGM8F61x+tBx4yO4oecMYFLEs=;
+Content-Disposition: inline
+In-Reply-To: <CAEe=SxnYXGg+s15imF4D93DVzvhVT+yo5fvAvDtKrQKdXz2kyA@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Tim Murray <timmurray@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, Suren Baghdasaryan <surenb@google.com>, Patrik Torstensson <totte@google.com>, Android Kernel Team <kernel-team@android.com>, vinmenon@codeaurora.org
 
-0a6b76dd23fa ("mm: workingset: make shadow node shrinker memcg aware")
-enabled cgroup-awareness in the shadow node shrinker, but forgot to
-also enable cgroup-awareness in the list_lru the shadow nodes sit on.
+Hi Tim,
 
-Consequently, all shadow nodes are sitting on a global (per-NUMA node)
-list, while the shrinker applies the limits according to the amount of
-cache in the cgroup its shrinking. The result is excessive pressure on
-the shadow nodes from cgroups that have very little cache.
+On Tue, Mar 21, 2017 at 10:18:26AM -0700, Tim Murray wrote:
+> On Sun, Mar 19, 2017 at 10:59 PM, Minchan Kim <minchan@kernel.org> wrote:
+> > However, I'm not sure your approach is good. It seems your approach just
+> > reclaims pages from groups (DEF_PRIORITY - memcg->priority) >= sc->priority.
+> > IOW, it is based on *temporal* memory pressure fluctuation sc->priority.
+> >
+> > Rather than it, I guess pages to be reclaimed should be distributed by
+> > memcg->priority. Namely, if global memory pressure happens and VM want to
+> > reclaim 100 pages, VM should reclaim 90 pages from memcg-A(priority-10)
+> > and 10 pages from memcg-B(prioirty-90).
+> 
+> This is what I debated most while writing this patch. If I'm
+> understanding your concern correctly, I think I'm doing more than
+> skipping high-priority cgroups:
 
-Enable memcg-mode on the shadow node LRUs, such that per-cgroup limits
-are applied to per-cgroup lists.
+Yes, that is my concern. It could give too much pressure lower-priority
+group. You already reduced scanning window for high-priority group so
+I guess it would be enough for working.
 
-Fixes: 0a6b76dd23fa ("mm: workingset: make shadow node shrinker memcg aware")
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: <stable@vger.kernel.org> # 4.6+
----
- mm/workingset.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The rationale from my thining is high-priority group can have cold pages(
+for instance, used-once pages, madvise_free pages and so on) so, VM should
+age every groups to reclaim cold pages but we can reduce scanning window
+for high-priority group to keep more workingset as you did. By that, we
+already give more pressure to lower priority group than high-prioirty group.
 
-diff --git a/mm/workingset.c b/mm/workingset.c
-index ac839fca0e76..eda05c71fa49 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -532,7 +532,7 @@ static int __init workingset_init(void)
- 	pr_info("workingset: timestamp_bits=%d max_order=%d bucket_order=%u\n",
- 	       timestamp_bits, max_order, bucket_order);
- 
--	ret = list_lru_init_key(&shadow_nodes, &shadow_nodes_key);
-+	ret = __list_lru_init(&shadow_nodes, true, &shadow_nodes_key);
- 	if (ret)
- 		goto err;
- 	ret = register_shrinker(&workingset_shadow_shrinker);
--- 
-2.12.0
+> 
+> - If the scan isn't high priority yet, then skip high-priority cgroups.
+
+This part is the one I think it's too much ;-)
+I think no need to skip but just reduce scanning window by the group's
+prioirty.
+
+> - When the scan is high priority, scan fewer pages from
+> higher-priority cgroups (using the priority to modify the shift in
+> get_scan_count).
+
+That sounds lkie a good idea but need to tune more.
+
+How about this?
+
+get_scan_count for memcg-A:
+        ..
+        size = lruvec_lru_size(lruvec, lru, sc->reclaim_idx) *
+                        (memcg-A / sum(memcg all priorities))
+
+get_scan_count for memcg-B:
+        ..
+        size = lruvec_lru_size(lruvec, lru, sc->reclaim_idx) *
+                        (memcg-B / sum(memcg all priorities))
+
+By that, can't it support memcg-hierarchy as well? I don't know. ;(
+Hope memcg guys give more thought.
+
+> 
+> This is tightly coupled with the question of what to do with
+> vmpressure. The right thing to do on an Android device under memory
+> pressure is probably something like this:
+> 
+> 1. Reclaim aggressively from low-priority background processes. The
+> goal here is to reduce the pages used by background processes to the
+> size of their heaps (or smaller with ZRAM) but zero file pages.
+> They're already likely to be killed by userspace and we're keeping
+> them around opportunistically, so a performance hit if they run and
+> have to do IO to restore some of that working set is okay.
+> 2. Reclaim a small amount from persistent processes. These often have
+> a performance-critical subset of pages that we absolutely don't want
+> paged out, but some reclaim of these processes is fine. They're large,
+> some of them only run sporadically and don't impact performance, it's
+> okay to touch these sometimes.
+
+That's why I wanted to age LRU from all of memcg but slow for high-priority
+group via reduing scanning window, which means high-priority group's
+pages makes more chance to be activated. So, it's already prioirty-boost.
+
+> 3. If there still aren't enough free pages, notify userspace to kill
+> any processes it can. If I put my "Android performance engineer
+> working on userspace" hat on, what I'd want to know from userspace is
+> that kswapd/direct reclaim probably has to scan foreground processes
+> in order to reclaim enough free pages to satisfy watermarks. That's a
+> signal I could directly act on from userspace.
+
+Hmm, could you tell us how many of memcg groups do you thinking now?
+
+background, foreground? Just two?
+
+The reason I ask is if you want to make foregroud/background memcg
+and move apps between them back and forth when the status changed,
+we need to remember lru pages are not moved from originated memcg
+so it wouldn't work as expected.
+
+
+> 4. If that still isn't enough, reclaim from foreground processes,
+> since those processes are performance-critical.
+> 
+> As a result, I like not being fair about which cgroups are scanned
+> initially. Some cgroups are strictly more important than others. (With
+
+Yeb, *initially* is arguable point. I hope only reducing scanning
+window would work. However, just my two cent. If it have a problem,
+yes, need more thing.
+
+
+> that said, I'm not tied to enforcing unfairness in scanning. Android
+> would probably use different priority levels for each app level for
+> fair scanning vs unfair scanning, but my guess is that the actual
+> reclaiming behavior would look similar in both schemes.)
+> 
+> Mem cgroup priority suggests a useful signal for vmpressure. If
+> scanning is starting to touch cgroups at a higher priority than
+> persistent processes, then the userspace lowmemorykiller could kill
+> one or more background processes (which would be in low-priority
+> cgroups that have already been scanned aggressively). The current lmk
+> hand-tuned watermarks would be gone, and tuning the /proc/sys/vm knobs
+> would be all that's required to make an Android device do the right
+> thing in terms of memory.
+
+Yes, it's better way. I think.
+
+Thanks.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
