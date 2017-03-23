@@ -1,69 +1,65 @@
-From: <ex-GXcTff7tL0M@public.gmane.org>
-Subject: 8471 cgroups
-Date: Wed, 22 Mar 2017 22:58:22 -0000
-Message-ID: <149022350290.21467.13775586364089540617@surnet.ru>
-Reply-To: <ex-GXcTff7tL0M@public.gmane.org>
+From: Vladimir Davydov <vdavydov@tarantool.org>
+Subject: Re: [PATCH] mm: workingset: fix premature shadow node shrinking with
+ cgroups
+Date: Thu, 23 Mar 2017 11:28:22 +0300
+Message-ID: <20170323082822.GA17625@esperanza>
+References: <20170322005320.8165-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: application/zip; name="664.zip"
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: attachment
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=tarantool.org; s=mailru;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=UwJksYM29U/4hvcaOVl/RokullR7bgc39taDUvDxqZ4=;
+	b=eNzdci6FQPKLF+UiZ9PFAdeA9HMJtY7KneQANmUTR1SJDmaZ5d/9sDz7E1xXdCX0UmV3e9EAAnyZWhrn/MGKyUt9bwJWjHLHolpMf/GYMfyr+Eiu0clHA6nxSNuqBKstKhOFq9z47tpYEQN8kkxq2IQE2Q4ZNt+F0kBM1ze7zrM=;
+Content-Disposition: inline
+In-Reply-To: <20170322005320.8165-1-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-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
-ZTNzp5mzVIyOYGjFijFvNTxCMSyJ4MzwYy59T/lpbcDWTLpEQikoYWJmj2dNKNJNdkYjtz6QqLAN
-01e+P7/LTKElBc7KvcIk5zrSWbHl2huwTZVmBIrOYhpQEnx7R+W5a3QmSdt1aq4nCokyP/tPy6yU
-iokC0l6mvwz9WgoJ4x7BmAKBqMzsEn0oL6wEufQ6TE16g05G8T48Ozu6DAKts07uES/aPiE6Vka4
-GpXYZt7ZMjML/DPR0DGxMgMtEr6j7Uxam5ywA7xN3+4s5+Jek8yU6Ml6TOIBVEP5PUZv1iLmYMsc
-yOXJBWuHQcdUyIP/mYctlwLUB1cWZywSyaqfBkNIy8QrqPjwZF1gDQMeHcPN9SAag1bgH3GYIBf9
-pNqtMbeiTJxZ5RibXUxtntqWlbN/sGMKI8ZnnwnCYYzRYkMGve7SfLmPMG3zjEBqgRJEwRhpZO8b
-GM5yN4SkuGjCZY7jUiAP7gLlw2pEkMus1i2bLhONXkewLdUUbc9SE9rifvOuOD3Spovcv9T25jiM
-KInwLqNjoigoTxDnDLMyVyWruboK31snZpwojz7rJ6OFSScxA14coCSKuzC4KVQu8IrTuPHKxVRu
-KyhNxp3WF8/vuCGLb4f9W/xXwX/ASVJz5g5aJMwCISjVdhW8qMhdm9n27BCYVPRfJFqcz7MzYcpz
-x7eiY9N3PCqMgdxyQZAbOypNVfBOSe7pk8ysLOMLQx/Ft/dvdn7xgS+3vzHPaGIXX72vFXRqdphg
-d8/fLo5332/svpX41VcaF49nV6fvAe/j8u72+mZzf//p4mrvu43ri3p+/vH+op4enBzsnnh70den
-t2d7J/wj3569HRdXV5vl/Osmr9vV5fLw4E97exx+e/j/7IuZ6w+95JvT9zfXy73Y757W5fxiffpY
-ThZHvd/c3d1cXNzkfLN4e5lv69nyh59/+qy//HB6uJfH7qV3+7X5+unhL8f/pyTGw+Ypt/O7fLN8
-2JSb/L7cjcu9dM7GzXi6/zQupYev7s/OL/rydvOpH8oDr243j/LX/Pur3aMny3W/P/jb9ozl4mF9
-e1dPS35cL1aLucG3T6NsLh9vrk/kyb9uNvlxqVVcMc1X2qRVSiufVjqGlXFqZVgx3qyM5Y/jqej4
-I0+qlVWHq6f2cHN5fnafP57sjvpabuptpN6ru4ez9cM6j+v1yc+Lnxer+015vHl6WG8uT9TxAEMS
-2v6Hq8eHsanl4enpiid2K3/eHfiCyd3i0dHea0dHh5/Px3L3wV9Odrlv3z38/M0xX3ZhHiyO9kF2
-tDj56XZzvj59OzZXlz+e5c2PV60vd43+GtW7XTi/SNP/uTv03e6wXw6Pv/zqhP/wH4vlLsjD48Xh
-PnZmXL96VTY9f5h//SI/6tyMvjn8ihf5+MsOrt8ATRC6A+beN6Ca7f8FUEsBAh4DFAACAAgAAyV3
-SidyG9rDCgAAYxUAAAgAGAAAAAAAAQAAAKSBAAAAADIyNzE2LmpzVVQFAANF/dJYdXgLAAEEAAAA
-AAQAAAAAUEsFBgAAAAABAAEATgAAAAULAAAAAFBLAQIeAwoAAgAAAAMld0rnIfGoaQsAAGkLAAAN
-ABgAAAAAAAAAAACkgQAAAAB6aXAtMjI3MTYuemlwVVQFAANF/dJYdXgLAAEEAAAAAAQAAAAAUEsF
-BgAAAAABAAEAUwAAALALAAAAAA==
+On Tue, Mar 21, 2017 at 08:53:20PM -0400, Johannes Weiner wrote:
+> 0a6b76dd23fa ("mm: workingset: make shadow node shrinker memcg aware")
+> enabled cgroup-awareness in the shadow node shrinker, but forgot to
+> also enable cgroup-awareness in the list_lru the shadow nodes sit on.
+> 
+> Consequently, all shadow nodes are sitting on a global (per-NUMA node)
+> list, while the shrinker applies the limits according to the amount of
+> cache in the cgroup its shrinking. The result is excessive pressure on
+> the shadow nodes from cgroups that have very little cache.
+> 
+> Enable memcg-mode on the shadow node LRUs, such that per-cgroup limits
+> are applied to per-cgroup lists.
+> 
+> Fixes: 0a6b76dd23fa ("mm: workingset: make shadow node shrinker memcg aware")
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: <stable@vger.kernel.org> # 4.6+
+
+Acked-by: Vladimir Davydov <vdavydov@tarantool.org>
+
+> ---
+>  mm/workingset.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/workingset.c b/mm/workingset.c
+> index ac839fca0e76..eda05c71fa49 100644
+> --- a/mm/workingset.c
+> +++ b/mm/workingset.c
+> @@ -532,7 +532,7 @@ static int __init workingset_init(void)
+>  	pr_info("workingset: timestamp_bits=%d max_order=%d bucket_order=%u\n",
+>  	       timestamp_bits, max_order, bucket_order);
+>  
+> -	ret = list_lru_init_key(&shadow_nodes, &shadow_nodes_key);
+> +	ret = __list_lru_init(&shadow_nodes, true, &shadow_nodes_key);
+>  	if (ret)
+>  		goto err;
+>  	ret = register_shrinker(&workingset_shadow_shrinker);
+> -- 
+> 2.12.0
+> 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
