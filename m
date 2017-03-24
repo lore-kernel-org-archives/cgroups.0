@@ -1,45 +1,52 @@
-From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH] mm: rmap: fix huge file mmap accounting in the memcg
  stats
-Date: Fri, 24 Mar 2017 14:07:55 +0300
-Message-ID: <20170324110755.evvbeetf44h72p43@node.shutemov.name>
+Date: Fri, 24 Mar 2017 09:46:07 -0400
+Message-ID: <20170324134607.GA9994@cmpxchg.org>
 References: <20170322005111.3156-1-hannes@cmpxchg.org>
+ <20170324110755.evvbeetf44h72p43@node.shutemov.name>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shutemov-name.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Dx1TLzTRuUJQAPuhToJ1sAX/8x1qtCBJiQM4OWeb8Tk=;
-        b=C9yFH/Sef6VcfFqezW1pLaNTcMjOPPBbSdFcSpjOxHnX2Z4j9uLvRmP+N05+ntu94r
-         Y5uBU9R91zgj2mtubcrFPR++X5y1q/mhM1XKDQqkuC05xh0ntH4ebyBnAdTTX4xAaklx
-         +9oratlOyh9svTNzomuny4QzmMy086XxhVqVnkLN7baSdrT3fuJacfYRFXLECmYWbI2T
-         1cx73wHq7oPajDnXXvqxf9f4lhsJ57SDtr1PPb7lUZXWtoBnApaAvgA276qNmBDmofwv
-         Zbsl6J6GKJAYdT/8emWxi+DpZW2UZN1VeB6t6J8Vn2tILKLwJ0eSJZY4RB8+hO8C5Lg1
-         dDxQ==
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Zm81PCmSmX4UGkZEUi9+sDSMH42jNwugxj8+mqdwEPc=; b=seYsxKHtuv8wNXrj9MZj7AiaJb
+	072nSr95hUlLgwPcE+pZrwd8qvzZyf3WYp/7OflJxyZH6SP/Jl0xXECENRRccZhUPsJgUFU5YYawU
+	aXSswB9ZV/UW7yICScPDl1AWqoQnEOmj68WLmanpTqGq5Ps1cpM5pzvLsr+9i8u3hwlg=;
 Content-Disposition: inline
-In-Reply-To: <20170322005111.3156-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170324110755.evvbeetf44h72p43@node.shutemov.name>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Mar 21, 2017 at 08:51:11PM -0400, Johannes Weiner wrote:
-> Huge pages are accounted as single units in the memcg's "file_mapped"
-> counter. Account the correct number of base pages, like we do in the
-> corresponding node counter.
+On Fri, Mar 24, 2017 at 02:07:55PM +0300, Kirill A. Shutemov wrote:
+> On Tue, Mar 21, 2017 at 08:51:11PM -0400, Johannes Weiner wrote:
+> > Huge pages are accounted as single units in the memcg's "file_mapped"
+> > counter. Account the correct number of base pages, like we do in the
+> > corresponding node counter.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 > 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Sorry for missing that:
+> 
+> Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 
-Sorry for missing that:
+Thanks!
 
-Reviewed-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Do we want it into stable?
+> 
+> Cc: <stable@vger.kernel.org>	[4.8+]
 
-Do we want it into stable?
+Yep, that makes sense.
 
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>	[4.8+]
-
--- 
- Kirill A. Shutemov
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
