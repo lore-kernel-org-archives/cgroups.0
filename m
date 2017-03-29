@@ -1,85 +1,54 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: rmap: fix huge file mmap accounting in the memcg
- stats
-Date: Tue, 28 Mar 2017 16:52:46 +0200
-Message-ID: <20170328145245.GL18241@dhcp22.suse.cz>
-References: <20170322005111.3156-1-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH -mm -v7 2/9] mm, memcg: Support to charge/uncharge
+ multiple swap entries
+Date: Wed, 29 Mar 2017 12:57:22 -0400
+Message-ID: <20170329165722.GB31821@cmpxchg.org>
+References: <20170328053209.25876-1-ying.huang@intel.com>
+ <20170328053209.25876-3-ying.huang@intel.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=OmFyFwrC1gVjLWTtvjPg55E4ggS7eLJRCXumQyEfWBc=; b=ok6xeSVUOrLdy2wtXvaA4i+74Q
+        XNYjxNRWo+5i6jj+2YFHhGLQO0yTIMitwVcW3pdNcJ7aimkx3MaltZusL0R1G4BBpLGc86mFKUcax
+        Csfhy7oJ6go7xC2InfBuB8rmVZk46wImN5/tkAXzq0SqKLsjuOT8DeELx0t8npy67L0g=;
 Content-Disposition: inline
-In-Reply-To: <20170322005111.3156-1-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170328053209.25876-3-ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "Kirill A. Shutemov" <kirill@shutemov.name>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 21-03-17 20:51:11, Johannes Weiner wrote:
-> Huge pages are accounted as single units in the memcg's "file_mapped"
-> counter. Account the correct number of base pages, like we do in the
-> corresponding node counter.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-
-with the CC: stable 
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-thanks!
-> ---
->  include/linux/memcontrol.h | 6 ++++++
->  mm/rmap.c                  | 4 ++--
->  2 files changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index baa274150210..c5ebb32fef49 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -741,6 +741,12 @@ static inline bool mem_cgroup_oom_synchronize(bool wait)
->  	return false;
+On Tue, Mar 28, 2017 at 01:32:02PM +0800, Huang, Ying wrote:
+> @@ -5908,16 +5907,19 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+>  		css_put(&memcg->css);
 >  }
 >  
-> +static inline void mem_cgroup_update_page_stat(struct page *page,
-> +					       enum mem_cgroup_stat_index idx,
-> +					       int nr)
-> +{
-> +}
-> +
->  static inline void mem_cgroup_inc_page_stat(struct page *page,
->  					    enum mem_cgroup_stat_index idx)
->  {
-> diff --git a/mm/rmap.c b/mm/rmap.c
-> index 1d82057144ba..f514cdd84482 100644
-> --- a/mm/rmap.c
-> +++ b/mm/rmap.c
-> @@ -1154,7 +1154,7 @@ void page_add_file_rmap(struct page *page, bool compound)
->  			goto out;
->  	}
->  	__mod_node_page_state(page_pgdat(page), NR_FILE_MAPPED, nr);
-> -	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
-> +	mem_cgroup_update_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED, nr);
->  out:
->  	unlock_page_memcg(page);
->  }
-> @@ -1194,7 +1194,7 @@ static void page_remove_file_rmap(struct page *page, bool compound)
->  	 * pte lock(a spinlock) is held, which implies preemption disabled.
->  	 */
->  	__mod_node_page_state(page_pgdat(page), NR_FILE_MAPPED, -nr);
-> -	mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
-> +	mem_cgroup_update_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED, -nr);
->  
->  	if (unlikely(PageMlocked(page)))
->  		clear_page_mlock(page);
-> -- 
-> 2.12.0
-> 
+> -/*
+> - * mem_cgroup_try_charge_swap - try charging a swap entry
+> +/**
+> + * mem_cgroup_try_charge_swap - try charging a set of swap entries
+>   * @page: page being added to swap
+> - * @entry: swap entry to charge
+> + * @entry: the first swap entry to charge
+> + * @nr_entries: the number of swap entries to charge
+>   *
+> - * Try to charge @entry to the memcg that @page belongs to.
+> + * Try to charge @nr_entries swap entries starting from @entry to the
+> + * memcg that @page belongs to.
+>   *
+>   * Returns 0 on success, -ENOMEM on failure.
+>   */
+> -int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
+> +int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
+> +			       unsigned int nr_entries)
 
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I've pointed this out before, but there doesn't seem to be a reason to
+pass @nr_entries when we have the struct page. Why can't this function
+just check PageTransHuge() by itself?
