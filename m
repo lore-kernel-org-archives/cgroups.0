@@ -1,68 +1,64 @@
-From: "Huang\, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH -mm -v7 2/9] mm, memcg: Support to charge/uncharge multiple swap entries
-Date: Thu, 30 Mar 2017 08:53:50 +0800
-Message-ID: <87k277twip.fsf@yhuang-dev.intel.com>
-References: <20170328053209.25876-1-ying.huang@intel.com>
-        <20170328053209.25876-3-ying.huang@intel.com>
-        <20170329165722.GB31821@cmpxchg.org>
+From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 0/1] add support for reclaiming priorities per mem cgroup
+Date: Thu, 30 Mar 2017 14:59:08 +0900
+Message-ID: <20170330055908.GA6603@bbox>
+References: <20170317231636.142311-1-timmurray@google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=intel;
-  t=1490835235; x=1522371235;
-  h=from:to:cc:subject:references:date:in-reply-to:
-   message-id:mime-version;
-  bh=HOhwSZ7SpOsTsiPCarG5CTTbLQJ32Wrxzq+3g/HgQLk=;
-  b=Ht+/Brtk4DbYcDa5tQMPcnaBW4CFFDSS3oltpwZ78VXcTlzCL+KSvpU4
-   imnggheLLNouHossN9I4PIesQ8EGvg==;
-In-Reply-To: <20170329165722.GB31821-druUgvl0LCNAfugRpC6u6w@public.gmane.org> (Johannes Weiner's message
-        of "Wed, 29 Mar 2017 12:57:22 -0400")
+In-Reply-To: <20170317231636.142311-1-timmurray-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tim Murray <timmurray-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, totte-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> writes:
+To memcg maintainer,
 
-> On Tue, Mar 28, 2017 at 01:32:02PM +0800, Huang, Ying wrote:
->> @@ -5908,16 +5907,19 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->>  		css_put(&memcg->css);
->>  }
->>  
->> -/*
->> - * mem_cgroup_try_charge_swap - try charging a swap entry
->> +/**
->> + * mem_cgroup_try_charge_swap - try charging a set of swap entries
->>   * @page: page being added to swap
->> - * @entry: swap entry to charge
->> + * @entry: the first swap entry to charge
->> + * @nr_entries: the number of swap entries to charge
->>   *
->> - * Try to charge @entry to the memcg that @page belongs to.
->> + * Try to charge @nr_entries swap entries starting from @entry to the
->> + * memcg that @page belongs to.
->>   *
->>   * Returns 0 on success, -ENOMEM on failure.
->>   */
->> -int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
->> +int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry,
->> +			       unsigned int nr_entries)
->
-> I've pointed this out before,
+Could you comment about this topic?
 
-Yes.  And I have replied to your original comments too :-)
-
-> but there doesn't seem to be a reason to
-> pass @nr_entries when we have the struct page. Why can't this function
-> just check PageTransHuge() by itself?
-
-Because sometimes we need to charge one swap entry for a THP.  Please
-take a look at the original add_to_swap() implementation.  For a THP,
-one swap entry will be allocated and charged to the mem cgroup before
-the THP is split.  And I think it is not easy to change this, because we
-don't want to split THP if the mem cgroup for swap exceeds its limit.
-
-Best Regards,
-Huang, Ying
+On Fri, Mar 17, 2017 at 04:16:35PM -0700, Tim Murray wrote:
+> Hi all,
+> 
+> I've been working to improve Android's memory management and drop lowmemorykiller from the kernel, and I'd like to get some feedback on a small patch with a lot of side effects. 
+> 
+> Currently, when an Android device is under memory pressure, one of three things will happen from kswapd:
+> 
+> 1. Compress an anonymous page to ZRAM.
+> 2. Evict a file page.
+> 3. Kill a process via lowmemorykiller.
+> 
+> The first two are cheap and per-page, the third is relatively cheap in the short term, frees many pages, and may cause power and performance penalties later on when the process has to be started again. For lots of reasons, I'd like a better balance between reclamation and killing on Android.
+> 
+> One of the nice things about Android from an optimization POV is that the execution model is more constrained than a generic Linux machine. There are only a limited number of processes that need to execute quickly for the device to appear to have good performance, and a userspace daemon (called ActivityManagerService) knows exactly what those processes are at any given time. We've made use of that in the past via cpusets and schedtune to limit the CPU resources available to background processes, and I think we can apply the same concept to memory.
+> 
+> This patch adds a new tunable to mem cgroups, memory.priority. A mem cgroup with a non-zero priority will not be eligible for scanning until the scan_control's priority is greater than zero. Once the mem cgroup is eligible for scanning, the priority acts as a bias to reduce the number of pages that should be scanned.
+> 
+> We've seen cases on Android where the global LRU isn't sufficient. For example, notifications in Android are rendered as part of a separate process that runs infrequently. However, when a notification appears and the user slides down the notification tray, we'll often see dropped frames due to page faults if there has been severe memory pressure. There are similar issues with other persistent processes.
+> 
+> The goal on an Android device is to aggressively evict from very low-priority background tasks that are likely to be killed anyway, since this will reduce the likelihood of lowmemorykiller running in the first place. It will still evict some from foreground and persistent processes, but it should help ensure that background processes are effectively reduced to the size of their heaps before evicting from more critical tasks. This should mean fewer background processes end up killed, which should improve performance and power on Android across the board (since it costs significantly less to page things back in than to replay the entirety of application startup).
+> 
+> The follow-on that I'm also experimenting with is how to improve vmpressure such that userspace can have some idea when low-priority memory cgroups are about as small as they can get. The correct time for Android to kill a background process under memory pressure is when there is evidence that a process has to be killed in order to alleviate memory pressure. If the device is below the low memory watermark and we know that there's probably no way to reclaim any more from background processes, then a userspace daemon should kill one or more background processes to fix that. Per-cgroup priority could be the first step toward that information.
+> 
+> I've tested a version of this patch on a Pixel running 3.18 along with an overhauled version of lmkd (the Android userspace lowmemorykiller daemon), and it does seem to work fine. I've ported it forward but have not yet rigorously tested it at TOT, since I don't have an Android test setup running TOT. While I'm getting my tests ported over, I would like some feedback on adding another tunable as well as what the tunable's interface should be--I really don't like the 0-10 priority scheme I have in the patch but I don't have a better idea.
+> 
+> Thanks,
+> Tim
+> 
+> Tim Murray (1):
+>   mm, memcg: add prioritized reclaim
+> 
+>  include/linux/memcontrol.h | 20 +++++++++++++++++++-
+>  mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
+>  mm/vmscan.c                |  3 ++-
+>  3 files changed, 54 insertions(+), 2 deletions(-)
+> 
+> -- 
+> 2.12.0.367.g23dc2f6d3c-goog
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
