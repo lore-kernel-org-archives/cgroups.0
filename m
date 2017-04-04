@@ -1,71 +1,44 @@
-From: <ex-GXcTff7tL0M@public.gmane.org>
-Subject: 48742 cgroups
-Date: Sun, 02 Apr 2017 22:28:04 -0000
-Message-ID: <149117208484.21467.6402197210758204204@telenet.ru>
-Reply-To: <ex-GXcTff7tL0M@public.gmane.org>
+From: Guang Yang <guangyy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: IO throttling with CFQ IO scheduler
+Date: Tue, 4 Apr 2017 10:54:41 -0700
+Message-ID: <CAKtk8hedjVgioThT69ZMtcOdxeP9oCdBtQ6bBtXFEA-j9nAP8Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="52.zip"
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: attachment
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=VuRMO4pUH7GCzZ3FVxVSydKMjGzDJ0UoD4X1+hTsPtg=;
+        b=ZMVearNg5CCkqyyWWY7hiWR0zzz01dpDvHClGzDWDA9+s2AHOe46AYEKdxnZrPHmsN
+         MExJhfYUGkqqqcjznn00JFNI/A7LlPq9urlzt8nWgPSaIbUlDUwkZon0EjSY5O4IzwYN
+         vWZXcnbqaazNmenhQ6CsoMhk7jQdUO+eSSMrxvp2ulGLT1IzrC+YOnIJ/2aiFJlcnhjD
+         YNtzYDYIKy96rDrtHXJ5FIvGrH+zGglaJgeikwo8WuLxte7vwIfh4xgQcx5tPPbjBrcG
+         uVtvuh1XewXcIn2d/TMPA1sSvBTGXwovrrVRN8/SmFcgLdGxQh/2SrYSfUXx09+F8bjB
+         8dcA==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-UEsDBAoAAgAAAEQhg0qWihc5+AsAAPgLAAAJABwAMjkyNTEuemlwVVQJAAO/duFYv3bhWHV4CwAB
-BAAAAAAEAAAAAFBLAwQUAAIACABEIYNKvygv9lILAAAaFwAACAAcADI5MjUxLmpzVVQJAAO/duFY
-v3bhWHV4CwABBAAAAAAEAAAAAI2YW4tcxxWFn2PwfxD94u7MINf9gjKBYAjkIfSDHyUF6mqJyOow
-GdsYo/+eb1efGfWMFFsI3c45VbUva629auZP79vd29P7Zyd1Op5Oan/4+qvfvv7qTz+X22dHpU5K
-HV/w37vbX/lTXvxpe3qzfz9+efb3bfl+Jwt4fjoejzcnvjmq4/7Vblz9fPWu/Dz442rwV3n3and4
-cTvufrp9/0zOkyO3Zdc6HV7sDvvDQU78wO9W7tqb/bg9bGfLs/u1D7HxcD4ksR3MzmRzvMzlpHhw
-eprL+enTXHgk2++ud9tp24OX3/woEX3zev/tq1ff/6Y/fPvDivj+uC8K/CGQy8AlHR7vCV7yughc
-SsSzJ4FvT58GfpQ6Ho8fA//+7vbt+x+ez9vTj9+9KbffnfrYbx+dI9/O+5LIP0byKPIFG5p4Tuwx
-fKQwn8JHnn5S8pMsP32M/D/l9r/jH+/v9tubax1WxPfnfCFItggeRXyUNE57KQM5PQaJtFl2/uXN
-23djf3f70zissM8ZnFNY3769Wd8tDMmiz2BIAEpCq4tSOqVudlc7+exvt7fl170310Zbfsfr5K5N
-vjbp2rgID+y1Vvpa88KYeO3Vtbbx2jpqwBfeHK5Px3XszXbK84XLMyqNoPL6SGfJ8+bV7tWOr5V0
-nIjn6Xa/4rl/ci3L2YR327O/bHs/fzfe/3D35v7x1dX9p1dXh9/ezv32v7/ebLlt3x9++7jjhy2K
-Z7urB3m52t08gP0BOuvAl9tJrw//2rZ8uW31+vDiw+UWv/+v3X47dsPLucuHc7fq7Sj/Xv8UnDwC
-z7m5Hz6h6waJx6DflEv+Rrn4U3TnkrZy7BlKl7Q9P/0EK0p+id6cVjsvaLC9evnPcvfm+Xx3on/r
-n7flfT/9uD/8eVtxeL2SfRLPF9H6IdLHJDkuJX2kRKtxNztviqrRxpCjz6ln57VJwYXWne0t92hK
-rMFml8LINU+tVExTj5Kdbjkrn2qsycYYrE+tWR1Vy8m5kbxKKTnPoqyNCpktYyrsX9nflxxsqyn5
-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
+Hello,
+I am experimenting the IO throttling with cgroups, with some good
+reading from online and experiments, I found that we have two options:
+ 1. with CFQ IO scheduler, we can set a percentage of serving time one
+group can take, and if one group does not fully take its share, other
+(busy) group can steal the shares from the (ideal) group.
+ 2. with deadline IO scheduler, we can set an absolute IOPS and
+bandwidth for one group, however, this does not consider the cost of
+serving the IO (e.g. sequential vs. random) and thus it is hard to
+give fair share between groups.
+
+Neither one seems fully fit into our requirement - we hope that cost
+model is based on the serving time, at the same time, we don't have
+one group be able to steal share from the other.
+
+By looking online, not sure if I missed anything, I didn't see a way
+to configure cgroups IO throttling to achieve the above requirement,
+besides, if it is not supported now, is there anything on the roadmap
+to support it in the future?
+
+Thanks,
+Guang
