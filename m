@@ -1,64 +1,75 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] mm: vmscan: fix IO/refault regression in cache
  workingset transition
-Date: Tue, 4 Apr 2017 18:29:52 -0400
-Message-ID: <20170404222952.GA28930@cmpxchg.org>
+Date: Wed, 05 Apr 2017 18:11:04 -0400
+Message-ID: <1491430264.16856.43.camel@redhat.com>
 References: <20170404220052.27593-1-hannes@cmpxchg.org>
- <20170404150703.742c49d73921df6369ed3dbd@linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-ZVQRuuSzGMtMeuKPGMPj"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=ZgTmYVQ5yGsluxvbsFSFKVnQPGMTI0oR5LNHITjszLI=; b=0rIjDRzh/5Mze7RFlm75Gui96/
-        3TNz4IddVjE/OgpCsrwOs5uw5MdJPPQE2OUXvSHMNYSPv+d1b7c0ufzurUaf8nvGUs5ZS8ZIPFeQM
-        GvhMQpSWFJd6U+8u8gvrLhepuYjL/0Adv9dbN/+t0HF9fA2GUu98LbkjZXNNeyL0XZLM=;
-Content-Disposition: inline
-In-Reply-To: <20170404150703.742c49d73921df6369ed3dbd-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 334F73DBCB
+In-Reply-To: <20170404220052.27593-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+
+
+--=-ZVQRuuSzGMtMeuKPGMPj
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2017-04-04 at 18:00 -0400, Johannes Weiner wrote:
+
+> +
+> +	/*
+> +	=C2=A0* When refaults are being observed, it means a new
+> workingset
+> +	=C2=A0* is being established. Disable active list protection to
+> get
+> +	=C2=A0* rid of the stale workingset quickly.
+> +	=C2=A0*/
+
+This looks a little aggressive. What is this
+expected to do when you have multiple workloads
+sharing the same LRU, and one of the workloads
+is doing refaults, while the other workload is
+continuing to use the same working set as before?
+
+I have been trying to wrap my mind around that for
+the past day or so, and figure I should just ask
+the question :)
+
+> +	if (file && actual_reclaim && lruvec->refaults !=3D refaults)
+> {
+> +		inactive_ratio =3D 0;
+> +	} else {
+> +		gb =3D (inactive + active) >> (30 - PAGE_SHIFT);
+> +		if (gb)
+> +			inactive_ratio =3D int_sqrt(10 * gb);
+> +		else
+> +			inactive_ratio =3D 1;
+> +	}
+
+--=20
+All rights reversed
+
+--=-ZVQRuuSzGMtMeuKPGMPj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Apr 04, 2017 at 03:07:03PM -0700, Andrew Morton wrote:
-> On Tue,  4 Apr 2017 18:00:52 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> 
-> > Since 59dc76b0d4df ("mm: vmscan: reduce size of inactive file list")
-> > we noticed bigger IO spikes during changes in cache access patterns.
-> > 
-> > The patch in question shrunk the inactive list size to leave more room
-> > for the current workingset in the presence of streaming IO. However,
-> > workingset transitions that previously happened on the inactive list
-> > are now pushed out of memory and incur more refaults to complete.
-> > 
-> > This patch disables active list protection when refaults are being
-> > observed. This accelerates workingset transitions, and allows more of
-> > the new set to establish itself from memory, without eating into the
-> > ability to protect the established workingset during stable periods.
-> > 
-> > Fixes: 59dc76b0d4df ("mm: vmscan: reduce size of inactive file list")
-> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> > Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 4.7+
-> 
-> That's a pretty large patch and the problem has been there for a year. 
-> I'm not sure that it's 4.11 material, let alone -stable.  Care to
-> explain further?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-The problem statement is a little terse, my apologies.
+iQEcBAABCAAGBQJY5Wt4AAoJEM553pKExN6DwZEH/3vYvvFtryLqCOy63GZcK9lS
+ytfChfTSDqflsX9lIj06z1LVyQZbeDHO/NcKV8iQa7g2XKYq21piJEm4yfGfR9fT
+bn0kyKZUhxYB7z8U4qV4mBG5gle2u1O5jxX83c2LGFf4FhueLpJdRZJtXBPb/aBR
+ojSd+qAF/iVaFrjDlt21eEa0PB5K6QAKHZ2NrA+jGNHeWUVxh1mJUhrIVep+8kfj
+/4WendQKIZNy5tMzvQWA4mxiV04+gpRMH/4DkKgBzpepCRC3jzKmc8QZi4DYmK1m
+3vBJ+Gy3W6M9gKlnFJvFcBlnrynX3ChhKtLpsb1hszKgw43Y/5lHbWCJLB0arfw=
+=qtdw
+-----END PGP SIGNATURE-----
 
-The workloads that were measurably affected for us were hit pretty bad
-by it, with refault/majfault rates doubling and tripling during cache
-transitions, and the machines sustaining half-hour periods of 100% IO
-utilization, where they'd previously have sub-minute peaks at 60-90%.
-
-Stateful services that handle user data tend to be more conservative
-with kernel upgrades. As a result we hit most page cache issues with
-some delay, as was the case here.
-
-The severity seemed to warrant a stable tag, but I agree that holding
-out until 4.11.1 is probably better, given the invasiveness of this.
+--=-ZVQRuuSzGMtMeuKPGMPj--
