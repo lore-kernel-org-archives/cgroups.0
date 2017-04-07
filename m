@@ -1,27 +1,27 @@
 From: Todd Poynor <toddpoynor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] cgroup: move cgroup_subsys_state partner field for cache locality
-Date: Thu,  6 Apr 2017 17:00:00 -0700
-Message-ID: <1491523200-32174-1-git-send-email-todd@tjlinux.dyndns.org>
+Subject: [PATCH v2] cgroup: move cgroup_subsys_state parent field for cache locality
+Date: Thu,  6 Apr 2017 18:47:57 -0700
+Message-ID: <1491529677-707-1-git-send-email-todd@tjlinux.dyndns.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
-        bh=COR6h7K1qZXqB7exmqqViqzrDNc2zV/dqJs9fh4RZD0=;
-        b=Jo4xCacl7fp432iKvYOskRf8bV34jN85FJLTPUm4V+GlMjrtUhMLm7cEeEa+vcFIio
-         2RoZ43Y9XsazsROxYFTuAmNTIQ75fA73xVeQl0NgiQyKev4sXRV5AB5s1lGnjU7fjx60
-         S9qUFpDaEJmronvKd79mhlgcRB49wkM0XUrKiLJ4ZnpndMncNcmjdr32DyVWSYSjyhA8
-         prMABFa8kFYv11YiJ8rQeh5BDfVg0kkq/MAtBi4l9xN/6cwkYgQtU46em5IXolIN+dAE
-         40mQVQ3nQ8JoYyUtLwhKW5SHzcaNhgatszaitSv1r2uKpkEbQLg7jrqCNgQqpY14CYZV
-         tF/Q==
+        bh=k5HQeNjxoMeMmxBcTN4U5e+gXiJ2fvn6/Pvjzwo1De4=;
+        b=I8mvhksoz5E23Apbk2R3KPjbav2wwcj9ob1G2LRIHnbCgo7t5PruU58KcU83Wq8bcr
+         DRMAX0NE1Udkg9FQoIH1V4j/JtBAPPqvtwqUIiSt8oisgsMry8Nv0jHq/i3+P+OuF75P
+         QorUT/v+77cd44SRUxJgP8E6N/J9a3CDe7v5EoP+cN6NIzBj7TQK4cVKUKA2OY7gzL7c
+         vHCwdoyQyyG6HzTvVajOqEqcQGhj3ydmGnAeidM6ske4utfdASeqMNyBKJj8XVO0++xe
+         EplxjZkn7crDoK++yREs2mC/oJISEYYt++QThFxi4Aq7OpkqJXiQYBGVimbfIi31B7g/
+         X/TQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Todd Poynor <toddpoynor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-From: Todd Poynor <toddpoynor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
 Various structures embed a struct cgroup_subsys_state, typically at
 the top of the containing structure.  It is common for code that
@@ -34,7 +34,7 @@ Move the parent css pointer field to the end of the structure to
 increase the chances of residing in the same cache line as the data
 from the containing structure.
 
-Signed-off-by: Todd Poynor <toddpoynor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
  include/linux/cgroup-defs.h | 9 ++++++---
  1 file changed, 6 insertions(+), 3 deletions(-)
@@ -49,6 +49,8 @@ access code.
 Instead, could move the parent field to the top of css, and have hot
 code paths use __cacheline_aligned with hot data prior to css... or
 open to suggestions, thanks.
+
+v2 fixes subject line.
 
 diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
 index 6a3f850cabab..53c698207ad0 100644
