@@ -1,83 +1,99 @@
-From: Todd Poynor <toddpoynor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2] cgroup: move cgroup_subsys_state parent field for cache locality
-Date: Thu,  6 Apr 2017 18:47:57 -0700
-Message-ID: <1491529677-707-1-git-send-email-todd@tjlinux.dyndns.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: avoid attaching a cgroup root to two different
+ superblocks
+Date: Fri, 7 Apr 2017 16:51:55 +0800
+Message-ID: <58E7532B.4030505@huawei.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=k5HQeNjxoMeMmxBcTN4U5e+gXiJ2fvn6/Pvjzwo1De4=;
-        b=I8mvhksoz5E23Apbk2R3KPjbav2wwcj9ob1G2LRIHnbCgo7t5PruU58KcU83Wq8bcr
-         DRMAX0NE1Udkg9FQoIH1V4j/JtBAPPqvtwqUIiSt8oisgsMry8Nv0jHq/i3+P+OuF75P
-         QorUT/v+77cd44SRUxJgP8E6N/J9a3CDe7v5EoP+cN6NIzBj7TQK4cVKUKA2OY7gzL7c
-         vHCwdoyQyyG6HzTvVajOqEqcQGhj3ydmGnAeidM6ske4utfdASeqMNyBKJj8XVO0++xe
-         EplxjZkn7crDoK++yREs2mC/oJISEYYt++QThFxi4Aq7OpkqJXiQYBGVimbfIi31B7g/
-         X/TQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-From: Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Run this:
 
-Various structures embed a struct cgroup_subsys_state, typically at
-the top of the containing structure.  It is common for code that
-accesses the structures to perform operations that iterate over the
-chain of parent css pointers, also accessing data in each containing
-structure.  In particular, struct cpuacct is used by fairly hot code
-paths in the scheduler such as cpuacct_charge().
+    touch file0
+    for ((; ;))
+    {
+        mount -t cpuset xxx file0
+    }
 
-Move the parent css pointer field to the end of the structure to
-increase the chances of residing in the same cache line as the data
-from the containing structure.
+And this concurrently:
 
-Signed-off-by: Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+    touch file1
+    for ((; ;))
+    {
+        mount -t cpuset xxx file1
+    }
+
+We'll trigger a warning like this:
+
+ ------------[ cut here ]------------
+ WARNING: CPU: 1 PID: 4675 at lib/percpu-refcount.c:317 percpu_ref_kill_and_confirm+0x92/0xb0
+ percpu_ref_kill_and_confirm called more than once on css_release!
+ CPU: 1 PID: 4675 Comm: mount Not tainted 4.11.0-rc5+ #5
+ Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
+ Call Trace:
+  dump_stack+0x63/0x84
+  __warn+0xd1/0xf0
+  warn_slowpath_fmt+0x5f/0x80
+  percpu_ref_kill_and_confirm+0x92/0xb0
+  cgroup_kill_sb+0x95/0xb0
+  deactivate_locked_super+0x43/0x70
+  deactivate_super+0x46/0x60
+ ...
+ ---[ end trace a79f61c2a2633700 ]---
+
+Here's a race:
+
+  Thread A				Thread B
+
+  cgroup1_mount()
+    # alloc a new cgroup root
+    cgroup_setup_root()
+					cgroup1_mount()
+					  # no sb yet, returns NULL
+					  kernfs_pin_sb()
+
+					  # but succeeds in getting the refcnt,
+					  # so re-use cgroup root
+					  percpu_ref_tryget_live()
+    # alloc sb with cgroup root
+    cgroup_do_mount()
+
+  cgroup_kill_sb()
+					  # alloc another sb with same root
+					  cgroup_do_mount()
+
+					cgroup_kill_sb()
+
+We end up using the same cgroup root for two different superblocks,
+so percpu_ref_kill() will be called twice on the same root when the
+two superblocks are destroyed.
+
+We should fix to make sure the superblock pinning is really successful.
+
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.16+
+Reported-by: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup-defs.h | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ kernel/cgroup/cgroup-v1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-root_cpuacct fields .cpuusage and. css.parent show up as frequently-
-accessed memory in separate cache lines (and usually the only thing
-accessed in those cache lines until eviction) in armv8 simulations.
-A quick search turned up struct blkcg, struct mem_cgroup, and
-struct freezer as other examples using a similar struct layout and
-access code.
-
-Instead, could move the parent field to the top of css, and have hot
-code paths use __cacheline_aligned with hot data prior to css... or
-open to suggestions, thanks.
-
-v2 fixes subject line.
-
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 6a3f850cabab..53c698207ad0 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -106,9 +106,6 @@ struct cgroup_subsys_state {
- 	/* reference count - access via css_[try]get() and css_put() */
- 	struct percpu_ref refcnt;
- 
--	/* PI: the parent css */
--	struct cgroup_subsys_state *parent;
--
- 	/* siblings list anchored at the parent's ->children */
- 	struct list_head sibling;
- 	struct list_head children;
-@@ -138,6 +135,12 @@ struct cgroup_subsys_state {
- 	/* percpu_ref killing and RCU release */
- 	struct rcu_head rcu_head;
- 	struct work_struct destroy_work;
-+
-+	/*
-+	 * PI: the parent css.	Placed here for cache proximity to following
-+	 * fields of the containing structure.
-+	 */
-+	struct cgroup_subsys_state *parent;
- };
- 
- /*
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 1dc22f6..12e19f0 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -1146,7 +1146,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 		 * path is super cold.  Let's just sleep a bit and retry.
+ 		 */
+ 		pinned_sb = kernfs_pin_sb(root->kf_root, NULL);
+-		if (IS_ERR(pinned_sb) ||
++		if (IS_ERR_OR_NULL(pinned_sb) ||
+ 		    !percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
+ 			mutex_unlock(&cgroup_mutex);
+ 			if (!IS_ERR_OR_NULL(pinned_sb))
 -- 
-2.12.2.715.g7642488e1d-goog
+1.8.3.1
