@@ -1,52 +1,86 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup: move cgroup_subsys_state parent field for
- cache locality
-Date: Tue, 11 Apr 2017 09:05:23 +0900
-Message-ID: <20170411000523.GD28603@wtj.duckdns.org>
-References: <1491529677-707-1-git-send-email-todd@tjlinux.dyndns.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 2/4] mm: memcontrol: re-use global VM event enum
+Date: Tue, 11 Apr 2017 14:30:26 +0200
+Message-ID: <20170411123025.GL6729@dhcp22.suse.cz>
+References: <20170404220148.28338-1-hannes@cmpxchg.org>
+ <20170404220148.28338-2-hannes@cmpxchg.org>
+ <20170407124702.GE16413@dhcp22.suse.cz>
+ <20170410141334.GA16119@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=uFbis0etues0ofpyza2t/g3Xx6gmSeKAR6/IOVoQ7xY=;
-        b=KnY6yWW8mMl0ZD4tADPaiOC9i2w0+jLVzkf8baoCr9BwQH1EnAEusG+Q1VgLgpmod4
-         NjtQ9g5QEEBzCeGIrbZ+e+MguKXy2wJT/D3RsfYEwNR52crFjokMwjNqKbBVDZIBolk/
-         ibQlb2DM+Z7/OHUsFK5H20VrVjeClPbFdkawYBKy9kFIF9R7WHU9ijzKOEGyDceZxWU5
-         +XzuK2/F3OAviuwcljt79A5vYwoTXFOGsmVkGNdAwNtGM+VumXKX/P+p0oMaort9mCYU
-         MpWoTo8F2TOOvqze8XGY9mwxeCNJaWIVdGorse2uBpBVDT1afMsCm9F6bVdntWhI8mvS
-         wDoQ==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1491529677-707-1-git-send-email-todd-PpDmNYGCFmmZ9vWoFJJngh2eb7JE58TQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170410141334.GA16119@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Todd Poynor <toddpoynor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hello,
-
-On Thu, Apr 06, 2017 at 06:47:57PM -0700, Todd Poynor wrote:
-> From: Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On Mon 10-04-17 10:13:34, Johannes Weiner wrote:
+> On Fri, Apr 07, 2017 at 02:47:02PM +0200, Michal Hocko wrote:
+> > I do agree that we should share global and memcg specific events constants
+> > but I am not sure we want to share all of them. Would it make sense to
+> > reorganize the global enum and put those that are shared to the
+> > beginning? We wouldn't need the memcg specific translation then.
 > 
-> Various structures embed a struct cgroup_subsys_state, typically at
-> the top of the containing structure.  It is common for code that
-> accesses the structures to perform operations that iterate over the
-> chain of parent css pointers, also accessing data in each containing
-> structure.  In particular, struct cpuacct is used by fairly hot code
-> paths in the scheduler such as cpuacct_charge().
+> I'm not sure I follow. Which translation?
+
+Sorry, I should have said s@translation@filtering@ by memcg1_events*
+
+> > Anyway, two comments on the current implementation.
+> > 
+> > On Tue 04-04-17 18:01:46, Johannes Weiner wrote:
+> > [...]
+> > > +/* Cgroup-specific events, on top of universal VM events */
+> > > +enum memcg_event_item {
+> > > +	MEMCG_LOW = NR_VM_EVENT_ITEMS,
+> > > +	MEMCG_HIGH,
+> > > +	MEMCG_MAX,
+> > > +	MEMCG_OOM,
+> > > +	MEMCG_NR_EVENTS,
+> > > +};
+> > 
+> > The above should mention that each supported global VM event should
+> > provide the corresponding translation
+> > 
+> > [...]
+> > 
+> > here...
+> > > +/* Universal VM events cgroup1 shows, original sort order */
+> > > +unsigned int memcg1_events[] = {
+> > > +	PGPGIN,
+> > > +	PGPGOUT,
+> > > +	PGFAULT,
+> > > +	PGMAJFAULT,
+> > > +};
+> > > +
+> > > +static const char *const memcg1_event_names[] = {
+> > > +	"pgpgin",
+> > > +	"pgpgout",
+> > > +	"pgfault",
+> > > +	"pgmajfault",
+> > > +};
+> > 
+> > the naming doesn't make it easier to undestand why we need this.
+> > global2memcg_event?
 > 
-> Move the parent css pointer field to the end of the structure to
-> increase the chances of residing in the same cache line as the data
-> from the containing structure.
+> This is just to keep the file order consistent. It could have been
+> done like memory.stat in cgroup2, where we simply do
 > 
-> Signed-off-by: Todd Poynor <toddpoynor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>    seq_printf(s, "pgmajfault %lu\n", stat[PGMAJFAULT]);
+> 
+> but I didn't want to change the v1 code too much. So these two arrays
+> are just a sorted list of global VM events shown in v1's memory.stat.
 
-Applied to cgroup/for-4.12.
-
-Thanks.
-
+You would still have to know which are the relevant parts of the global
+starts that we account for memcg.
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
