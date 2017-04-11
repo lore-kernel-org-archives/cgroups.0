@@ -1,44 +1,50 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [RFC 2/6] mm, mempolicy: stop adjusting current->il_next in
- mpol_rebind_nodemask()
-Date: Tue, 11 Apr 2017 12:32:29 -0500 (CDT)
-Message-ID: <alpine.DEB.2.20.1704111227080.25069@east.gentwo.org>
-References: <20170411140609.3787-1-vbabka@suse.cz> <20170411140609.3787-3-vbabka@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20170411140609.3787-3-vbabka@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race with
+ cpuset update
+Date: Tue, 11 Apr 2017 21:00:21 +0200
+Message-ID: <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz>
+References: <20170411140609.3787-1-vbabka@suse.cz>
+ <20170411140609.3787-2-vbabka@suse.cz>
+ <alpine.DEB.2.20.1704111152170.25069@east.gentwo.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.20.1704111152170.25069-wcBtFHqTun5QOdAKl3ChDw@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 11 Apr 2017, Vlastimil Babka wrote:
++CC linux-api
 
-> The task->il_next variable remembers the last allocation node for task's
-> MPOL_INTERLEAVE policy. mpol_rebind_nodemask() updates interleave and
-> bind mempolicies due to changing cpuset mems. Currently it also tries to
-> make sure that current->il_next is valid within the updated nodemask. This is
-> bogus, because 1) we are updating potentially any task's mempolicy, not just
-> current, and 2) we might be updating per-vma mempolicy, not task one.
->
-> The interleave_nodes() function that uses il_next can cope fine with the value
-> not being within the currently allowed nodes, so this hasn't manifested as an
-> actual issue. Thus it also won't be an issue if we just remove this adjustment
-> completely.
+On 11.4.2017 19:24, Christoph Lameter wrote:
+> On Tue, 11 Apr 2017, Vlastimil Babka wrote:
+> 
+>> The root of the problem is that the cpuset's mems_allowed and mempolicy's
+>> nodemask can temporarily have no intersection, thus get_page_from_freelist()
+>> cannot find any usable zone. The current semantic for empty intersection is to
+>> ignore mempolicy's nodemask and honour cpuset restrictions. This is checked in
+>> node_zonelist(), but the racy update can happen after we already passed the
+> 
+> The fallback was only intended for a cpuset on which boundaries are not enforced
+> in critical conditions (softwall). A hardwall cpuset (CS_MEM_HARDWALL)
+> should fail the allocation.
 
-Well, interleave_nodes() will then potentially return a node outside of
-the allowed memory policy when its called for the first time after
-mpol_rebind_.. . But thenn it will find the next node within the
-nodemask and work correctly for the next invocations.
+Hmm just to clarify - I'm talking about ignoring the *mempolicy's* nodemask on
+the basis of cpuset having higher priority, while you seem to be talking about
+ignoring a (softwall) cpuset nodemask, right? man set_mempolicy says "... if
+required nodemask contains no nodes that are allowed by the process's current
+cpuset context, the memory  policy reverts to local allocation" which does come
+down to ignoring mempolicy's nodemask.
 
-But yea the race can probably be ignored. The idea was that the
-application has a stable memory footprint during rebinding.
+>> This patch fixes the issue by having __alloc_pages_slowpath() check for empty
+>> intersection of cpuset and ac->nodemask before OOM or allocation failure. If
+>> it's indeed empty, the nodemask is ignored and allocation retried, which mimics
+>> node_zonelist(). This works fine, because almost all callers of
+> 
+> Well that would need to be subject to the hardwall flag. Allocation needs
+> to fail for a hardwall cpuset.
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+They still do, if no hardwall cpuset node can satisfy the allocation with
+mempolicy ignored.
