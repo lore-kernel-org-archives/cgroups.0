@@ -1,83 +1,74 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 2/4] mm: memcontrol: re-use global VM event enum
-Date: Tue, 11 Apr 2017 14:30:26 +0200
-Message-ID: <20170411123025.GL6729@dhcp22.suse.cz>
-References: <20170404220148.28338-1-hannes@cmpxchg.org>
- <20170404220148.28338-2-hannes@cmpxchg.org>
- <20170407124702.GE16413@dhcp22.suse.cz>
- <20170410141334.GA16119@cmpxchg.org>
-Mime-Version: 1.0
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: [RFC 0/6] cpuset/mempolicies related fixes and cleanups
+Date: Tue, 11 Apr 2017 16:06:03 +0200
+Message-ID: <20170411140609.3787-1-vbabka@suse.cz>
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20170410141334.GA16119@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Vlastimil Babka <vbabka@suse.cz>
 
-On Mon 10-04-17 10:13:34, Johannes Weiner wrote:
-> On Fri, Apr 07, 2017 at 02:47:02PM +0200, Michal Hocko wrote:
-> > I do agree that we should share global and memcg specific events constants
-> > but I am not sure we want to share all of them. Would it make sense to
-> > reorganize the global enum and put those that are shared to the
-> > beginning? We wouldn't need the memcg specific translation then.
-> 
-> I'm not sure I follow. Which translation?
+I've recently summarized the cpuset/mempolicy issues in a LSF/MM proposal [1]
+and the discussion itself [2]. I've been trying to rewrite the handling as
+proposed, with the idea that changing semantics to make all mempolicies static
+wrt cpuset updates (and discarding the relative and default modes) can be tried
+on top, as there's a high risk of being rejected/reverted because somebody
+might still care about the removed modes.
 
-Sorry, I should have said s@translation@filtering@ by memcg1_events*
+However I haven't yet figured out how to properly:
 
-> > Anyway, two comments on the current implementation.
-> > 
-> > On Tue 04-04-17 18:01:46, Johannes Weiner wrote:
-> > [...]
-> > > +/* Cgroup-specific events, on top of universal VM events */
-> > > +enum memcg_event_item {
-> > > +	MEMCG_LOW = NR_VM_EVENT_ITEMS,
-> > > +	MEMCG_HIGH,
-> > > +	MEMCG_MAX,
-> > > +	MEMCG_OOM,
-> > > +	MEMCG_NR_EVENTS,
-> > > +};
-> > 
-> > The above should mention that each supported global VM event should
-> > provide the corresponding translation
-> > 
-> > [...]
-> > 
-> > here...
-> > > +/* Universal VM events cgroup1 shows, original sort order */
-> > > +unsigned int memcg1_events[] = {
-> > > +	PGPGIN,
-> > > +	PGPGOUT,
-> > > +	PGFAULT,
-> > > +	PGMAJFAULT,
-> > > +};
-> > > +
-> > > +static const char *const memcg1_event_names[] = {
-> > > +	"pgpgin",
-> > > +	"pgpgout",
-> > > +	"pgfault",
-> > > +	"pgmajfault",
-> > > +};
-> > 
-> > the naming doesn't make it easier to undestand why we need this.
-> > global2memcg_event?
-> 
-> This is just to keep the file order consistent. It could have been
-> done like memory.stat in cgroup2, where we simply do
-> 
->    seq_printf(s, "pgmajfault %lu\n", stat[PGMAJFAULT]);
-> 
-> but I didn't want to change the v1 code too much. So these two arrays
-> are just a sorted list of global VM events shown in v1's memory.stat.
+1) make mempolicies swappable instead of rebinding in place. I thought mbind()
+already works that way and uses refcounting to avoid use-after-free of the old
+policy by a parallel allocation, but turns out true refcounting is only done
+for shared (shmem) mempolicies, and the actual protection for mbind() comes
+from mmap_sem. Extending the refcounting means more overhead in allocator hot
+path. Also swapping whole mempolicies means that we have to allocate the new
+ones, which can fail, and reverting of the partially done work also means
+allocating (note that mbind() doesn't care and will just leave part of the
+range updated and part not updated when returning -ENOMEM...).
 
-You would still have to know which are the relevant parts of the global
-starts that we account for memcg.
+2) make cpuset's task->mems_allowed also swappable (after converting it from
+nodemask to zonelist, which is the easy part) for mostly the same reasons.
+
+The good news is that while trying to do the above, I've at least figured out
+how to hopefully close the remaining premature OOM's, and do a buch of cleanups
+on top, removing quite some of the code that was also supposed to prevent the
+cpuset update races, but doesn't work anymore nowadays. This should fix the
+most pressing concerns with this topic and give us a better baseline before
+either proceeding with the original proposal, or pushing a change of semantics
+that removes the problem 1) above. I'd be then fine with trying to change the
+semantic first and rewrite later.
+
+Patchset is based on next-20170411 and has been tested with the LTP cpuset01
+stress test.
+
+[1] https://lkml.kernel.org/r/4c44a589-5fd8-08d0-892c-e893bb525b71@suse.cz
+[2] https://lwn.net/Articles/717797/
+
+Vlastimil Babka (6):
+  mm, page_alloc: fix more premature OOM due to race with cpuset update
+  mm, mempolicy: stop adjusting current->il_next in
+    mpol_rebind_nodemask()
+  mm, page_alloc: pass preferred nid instead of zonelist to allocator
+  mm, mempolicy: simplify rebinding mempolicies when updating cpusets
+  mm, cpuset: always use seqlock when changing task's nodemask
+  mm, mempolicy: don't check cpuset seqlock where it doesn't matter
+
+ include/linux/gfp.h            |  11 ++-
+ include/linux/mempolicy.h      |  12 ++-
+ include/uapi/linux/mempolicy.h |   8 --
+ kernel/cgroup/cpuset.c         |  33 ++-------
+ mm/hugetlb.c                   |  15 ++--
+ mm/memory_hotplug.c            |   6 +-
+ mm/mempolicy.c                 | 165 +++++++++--------------------------------
+ mm/page_alloc.c                |  61 ++++++++++-----
+ 8 files changed, 109 insertions(+), 202 deletions(-)
+
 -- 
-Michal Hocko
-SUSE Labs
+2.12.2
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
