@@ -1,126 +1,64 @@
-From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 0/1] add support for reclaiming priorities per mem cgroup
-Date: Thu, 13 Apr 2017 13:30:47 +0900
-Message-ID: <20170413043047.GA16783@bbox>
-References: <20170317231636.142311-1-timmurray@google.com>
- <20170330155123.GA3929@cmpxchg.org>
- <CAEe=SxmpXD=f9N_i+xe6gFUKKUefJYvBd8dSwxSM+7rbBBTniw@mail.gmail.com>
+From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race with
+ cpuset update
+Date: Thu, 13 Apr 2017 11:12:16 +0530
+Message-ID: <95469f35-56e9-7dc4-b7fd-a3e8c25bdff3@linux.vnet.ibm.com>
+References: <20170411140609.3787-1-vbabka@suse.cz>
+ <20170411140609.3787-2-vbabka@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAEe=SxmpXD=f9N_i+xe6gFUKKUefJYvBd8dSwxSM+7rbBBTniw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Tim Murray <timmurray-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Patrik Torstensson <totte-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20170411140609.3787-2-vbabka@suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Vlastimil Babka <vbabka@suse.cz>, linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-On Thu, Mar 30, 2017 at 12:40:32PM -0700, Tim Murray wrote:
-> On Thu, Mar 30, 2017 at 8:51 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > In cgroup2, we've added a memory.low knob, where groups within their
-> > memory.low setting are not reclaimed.
-> >
-> > You can set that knob on foreground groups to the amount of memory
-> > they need to function properly, and set it to 0 on background groups.
-> >
-> > Have you tried doing that?
-> 
-> I have not, but I'm trying to get that working now to evaluate it on Android.
-> 
-> However, based on other experiences, I don't think it will work well.
-> We've experimented a lot with different limits in different places
-> (Java heap limits, hard_reclaim, soft_reclaim) at different times in
-> the process lifecycle, and the problem has always been that there's no
-> way for us to know what limit is reasonable. memory.low will have the
-> same problem. If memory.low is higher than the actual working set of a
-> foreground process, the system wastes memory (eg, file pages loaded
-> during app startup that are never used again won't be reclaimed under
-> pressure). If memory.low is less than the actual working set,
-> foreground processes will still get hit by thrashing.
-> 
-> Another issue is that the working set varies tremendously from app to
-> app. An email client's working set may be 1/10 or 1/20 of a camera
-> running a computational photography pipeline with multiple captures in
-> flight. I can imagine a case where it makes sense for a foreground
-> application to take 50-75% of a device's physical memory (the camera
-> case or something similar), but I hope that's an extreme outlier
-> compared to most apps on the system. However, high-memory apps are
-> often the most performance-sensitive, so reclaim is more likely to
-> cause problems.
-> 
-> As a result, I think there's still a need for relative priority
-> between mem cgroups, not just an absolute limit.
-> 
-> Does that make sense?
+On 04/11/2017 07:36 PM, Vlastimil Babka wrote:
+> Commit e47483bca2cc ("mm, page_alloc: fix premature OOM when racing with cpuset
+> mems update") has fixed known recent regressions found by LTP's cpuset01
+> testcase. I have however found that by modifying the testcase to use per-vma
+> mempolicies via bind(2) instead of per-task mempolicies via set_mempolicy(2),
+> the premature OOM still happens and the issue is much older.
 
-I agree with it.
-
-Recently, embedded platform's workload for smart things would be much
-diverse(from game to alarm) so it's hard to handle the absolute limit
-proactively and userspace has more hints about what workloads are
-more important(ie, greedy) compared to others although it would be
-harmful for something(e.g., it's not visible effect to user)
-
-As a such point of view, I support this idea as basic approach.
-And with thrashing detector from Johannes, we can do fine-tune of
-LRU balancing and vmpressure shooting time better.
-
-Johannes,
-
-Do you have any concern about this memcg prority idea?
-Or
-Do you think the patchset you are preparing solve this situation?
+Meanwhile while we are discussing this RFC, will it be better to WARN
+out these situations where we dont have node in the intersection,
+hence no usable zone during allocation. That might actually give
+a hint to the user before a premature OOM/allocation failure comes.
 
 > 
-> > Both vmpressure and priority levels are based on reclaim efficiency,
-> > which is problematic on solid state storage because page reads have
-> > very low latency. It's rare that pages are still locked from the
-> > read-in by the time reclaim gets to them on the LRU, so efficiency
-> > tends to stay at 100%, until the system is essentially livelocked.
-> >
-> > On solid state storage, the bigger problem when you don't have enough
-> > memory is that you can reclaim just fine but wait a significant amount
-> > of time to refault the recently evicted pages, i.e. on thrashing.
-> >
-> > A more useful metric for memory pressure at this point is quantifying
-> > that time you spend thrashing: time the job spends in direct reclaim
-> > and on the flipside time the job waits for recently evicted pages to
-> > come back. Combined, that gives you a good measure of overhead from
-> > memory pressure; putting that in relation to a useful baseline of
-> > meaningful work done gives you a portable scale of how effictively
-> > your job is running.
+> The root of the problem is that the cpuset's mems_allowed and mempolicy's
+> nodemask can temporarily have no intersection, thus get_page_from_freelist()
+> cannot find any usable zone. The current semantic for empty intersection is to
+> ignore mempolicy's nodemask and honour cpuset restrictions. This is checked in
+> node_zonelist(), but the racy update can happen after we already passed the
+> check. Such races should be protected by the seqlock task->mems_allowed_seq,
+> but it doesn't work here, because 1) mpol_rebind_mm() does not happen under
+> seqlock for write, and doing so would lead to deadlock, as it takes mmap_sem
+> for write, while the allocation can have mmap_sem for read when it's taking the
+> seqlock for read. And 2) the seqlock cookie of callers of node_zonelist()
+> (alloc_pages_vma() and alloc_pages_current()) is different than the one of
+> __alloc_pages_slowpath(), so there's still a potential race window.
 > 
-> This sounds fantastic, and it matches the behavior I've seen around
-> pagecache thrashing on Android.
-> 
-> On Android, I think there are three different times where userspace
-> would do something useful for memory:
-> 
-> 1. scan priority is creeping up, scanned/reclaim ratio is getting
-> worse, system is exhibiting signs of approaching severe memory
-> pressure. userspace should probably kill something if it's got
-> something it can kill cheaply.
-> 2. direct reclaim is happening, system is thrashing, things are bad.
-> userspace should aggressively kill non-critical processes because
-> performance has already gotten worse.
-> 3. something's gone horribly wrong, oom_killer is imminent: userspace
-> should kill everything it possibly can to keep the system stable.
-> 
-> My vmpressure experiments have focused on #1 because it integrates
-> nicely with memcg priorities. However, it doesn't seem like a good
-> approach for #2 or #3. Time spent thrashing sounds ideal for #2. I'm
-> not sure what to do for #3. The current critical vmpressure event
-> hasn't been that successful in avoiding oom-killer (on 3.18, at
-> least)--I've been able to get oom-killer to trigger without a
-> vmpressure event.
-> 
-> Assuming that memcg priorities are reasonable, would you be open to
-> using scan priority info as a vmpressure signal for a low amount of
-> memory pressure?
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+> This patch fixes the issue by having __alloc_pages_slowpath() check for empty
+> intersection of cpuset and ac->nodemask before OOM or allocation failure. If
+> it's indeed empty, the nodemask is ignored and allocation retried, which mimics
+> node_zonelist(). This works fine, because almost all callers of
+> __alloc_pages_nodemask are obtaining the nodemask via node_zonelist(). The only
+> exception is new_node_page() from hotplug, where the potential violation of
+> nodemask isn't an issue, as there's already a fallback allocation attempt
+> without any nodemask. If there's a future caller that needs to have its specific
+> nodemask honoured over task's cpuset restrictions, we'll have to e.g. add a gfp
+> flag for that.
+
+Did you really mean node_zonelist() in both the instances above. Because
+that function just picks up either FALLBACK_ZONELIST or NOFALLBACK_ZONELIST
+depending upon the passed GFP flags in the allocation request and does not
+deal with ignoring the passed nodemask.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
