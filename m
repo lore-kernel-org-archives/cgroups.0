@@ -1,72 +1,136 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
- with cpuset update
-Date: Fri, 14 Apr 2017 15:37:54 -0500 (CDT)
-Message-ID: <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org>
-References: <20170411140609.3787-1-vbabka@suse.cz> <20170411140609.3787-2-vbabka@suse.cz> <alpine.DEB.2.20.1704111152170.25069@east.gentwo.org> <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz> <alpine.DEB.2.20.1704121617040.28335@east.gentwo.org>
- <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz>
-Sender: owner-linux-mm@kvack.org
+From: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: cgroup: avoid attaching a cgroup root to two different
+ superblocks
+Date: Fri, 14 Apr 2017 16:27:38 -0700
+Message-ID: <20170414232737.GC20350@outlook.office365.com>
+References: <58E7532B.4030505@huawei.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=9wJ51yKg39gYm8Q0lDbJidfw7h2sXsji2VtiRFnmuog=;
+ b=dWwAyAc/9R1stCohlOKHS1oYGUFxerHz2Lptb5WFeSXJScbNOAd/v2TwrVKbaJim8RAOoS4/RFAXb7Kikwzp3ZCBvqLZv79Nto2I/XbvDKNEijpTfhyMgiO2b4eAvoTcihrA5CedJ984woEp4AIu2aVijRF2xIHNE2uO+wPVYjo=
+Content-Disposition: inline
+In-Reply-To: <58E7532B.4030505-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-api@vger.kernel.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, 13 Apr 2017, Vlastimil Babka wrote:
+Hello,
 
->
-> I doubt we can change that now, because that can break existing
-> programs. It also makes some sense at least to me, because a task can
-> control its own mempolicy (for performance reasons), but cpuset changes
-> are admin decisions that the task cannot even anticipate. I think it's
-> better to continue working with suboptimal performance than start
-> failing allocations?
+One of our CRIU tests hangs with this patch.
 
-If the expected semantics (hardwall) are that allocations should fail then
-lets be consistent and do so.
+Steps to reproduce:
+curl -o cgroupns.c https://gist.githubusercontent.com/avagin/f87c8a8bd2a0de9afcc74976327786bc/raw/5843701ef3679f50dd2427cf57a80871082eb28c/gistfile1.txt
+gcc cgroupns.c -o cgroupns
+./cgroupns
+./cgroupns
 
-Adding more and more exceptions gets this convoluted mess into an even
-worse shape. Adding the static binding of nodes was already a screwball
-if used within a cpuset because now one has to anticipate how a user would
-move the nodes of a cpuset and how the static bindings would work in such
-a context.
+[root@fc24 ~]# strace -s 256 -fe clone,unshare,setns,mount ./cgroupns 
+mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = 0
+unshare(CLONE_NEWCGROUP)                = 0
+clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, child_tidptr=0x7fe5da0b89d0) = 529
+strace: Process 529 attached
+[pid   529] setns(3, CLONE_NEWCGROUP)   = 0
+[pid   529] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=529, si_uid=0, si_status=0, si_utime=0, si_stime=0} ---
++++ exited with 0 +++
+[root@fc24 ~]# strace -s 256 -fe clone,unshare,setns,mount ./cgroupns 
+mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
+mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
+mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
+mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
+mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
+mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
+....
 
-The admin basically needs to know how the application has used memory
-policies if one still wants to move the applications within a cpuset with
-the fixed bindings.
+Thanks,
+Andrei
 
-Maybe the best way to handle this is to give up on cpuset migration of
-live applications? After all this can be done with a script in the same
-way as the kernel is doing:
-
-1. Extend the cpuset to include the new nodes.
-
-2. Loop over the processes and use the migrate_pages() to move the apps
-one by one.
-
-3. Remove the nodes no longer to be used.
-
-Then forget about translating memory policies. If an application that is
-supposed to run in a cpuset and supposed to be moveable has fixed bindings
-then the application should be aware of that and be equipped with
-some logic to rebind its memory on its own.
-
-Such an application typically already has such logic and executes a
-binding after discovering its numa node configuration on startup. It would
-have to be modified to redo that action when it gets some sort of a signal
-from the script telling it that the node config would be changed.
-
-Having this logic in the application instead of the kernel avoids all the
-kernel messes that we keep on trying to deal with and IMHO is much
-cleaner.
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On Fri, Apr 07, 2017 at 04:51:55PM +0800, Li Zefan wrote:
+> Run this:
+> 
+>     touch file0
+>     for ((; ;))
+>     {
+>         mount -t cpuset xxx file0
+>     }
+> 
+> And this concurrently:
+> 
+>     touch file1
+>     for ((; ;))
+>     {
+>         mount -t cpuset xxx file1
+>     }
+> 
+> We'll trigger a warning like this:
+> 
+>  ------------[ cut here ]------------
+>  WARNING: CPU: 1 PID: 4675 at lib/percpu-refcount.c:317 percpu_ref_kill_and_confirm+0x92/0xb0
+>  percpu_ref_kill_and_confirm called more than once on css_release!
+>  CPU: 1 PID: 4675 Comm: mount Not tainted 4.11.0-rc5+ #5
+>  Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
+>  Call Trace:
+>   dump_stack+0x63/0x84
+>   __warn+0xd1/0xf0
+>   warn_slowpath_fmt+0x5f/0x80
+>   percpu_ref_kill_and_confirm+0x92/0xb0
+>   cgroup_kill_sb+0x95/0xb0
+>   deactivate_locked_super+0x43/0x70
+>   deactivate_super+0x46/0x60
+>  ...
+>  ---[ end trace a79f61c2a2633700 ]---
+> 
+> Here's a race:
+> 
+>   Thread A				Thread B
+> 
+>   cgroup1_mount()
+>     # alloc a new cgroup root
+>     cgroup_setup_root()
+> 					cgroup1_mount()
+> 					  # no sb yet, returns NULL
+> 					  kernfs_pin_sb()
+> 
+> 					  # but succeeds in getting the refcnt,
+> 					  # so re-use cgroup root
+> 					  percpu_ref_tryget_live()
+>     # alloc sb with cgroup root
+>     cgroup_do_mount()
+> 
+>   cgroup_kill_sb()
+> 					  # alloc another sb with same root
+> 					  cgroup_do_mount()
+> 
+> 					cgroup_kill_sb()
+> 
+> We end up using the same cgroup root for two different superblocks,
+> so percpu_ref_kill() will be called twice on the same root when the
+> two superblocks are destroyed.
+> 
+> We should fix to make sure the superblock pinning is really successful.
+> 
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.16+
+> Reported-by: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>  kernel/cgroup/cgroup-v1.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+> index 1dc22f6..12e19f0 100644
+> --- a/kernel/cgroup/cgroup-v1.c
+> +++ b/kernel/cgroup/cgroup-v1.c
+> @@ -1146,7 +1146,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+>  		 * path is super cold.  Let's just sleep a bit and retry.
+>  		 */
+>  		pinned_sb = kernfs_pin_sb(root->kf_root, NULL);
+> -		if (IS_ERR(pinned_sb) ||
+> +		if (IS_ERR_OR_NULL(pinned_sb) ||
+>  		    !percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
+>  			mutex_unlock(&cgroup_mutex);
+>  			if (!IS_ERR_OR_NULL(pinned_sb))
