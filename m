@@ -1,146 +1,95 @@
-From: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: cgroup: avoid attaching a cgroup root to two different
- superblocks
-Date: Fri, 14 Apr 2017 16:32:34 -0700
-Message-ID: <20170414233233.GA8183@outlook.office365.com>
-References: <58E7532B.4030505@huawei.com>
- <20170414232737.GC20350@outlook.office365.com>
+From: "Huang\, Ying" <ying.huang@intel.com>
+Subject: Re: [PATCH -mm -v8 1/3] mm, THP, swap: Delay splitting THP during swap out
+Date: Sat, 15 Apr 2017 09:17:04 +0800
+Message-ID: <87k26mzcz3.fsf@yhuang-dev.intel.com>
+References: <20170406053515.4842-1-ying.huang@intel.com>
+	<20170406053515.4842-2-ying.huang@intel.com>
+	<20170414145856.GA9812@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=QPKahfpFeLxvkS8v6bvjkYBKC/PoeE789rwItSmCV0A=;
- b=JI7cN9VW1Osjkvd3QU0KWqjHxsoAp8HzSQtK7XhZSKUWb+Ttrjn/2Fn9RxJ9pd1M67D3OhLaIDPkEDFZ0bI61YSrA0GdHMktJVKmGvuCnqjfOg3t+lXrsLgMd4Mle1QdVe8gq7hd0plHnb6uUuJ991y9kpE4scHpXnnwM5/a0t0=
-Content-Disposition: inline
-In-Reply-To: <20170414232737.GC20350-1ViLX0X+lBJGNQ1M2rI3KwRV3xvJKrda@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20170414145856.GA9812@cmpxchg.org> (Johannes Weiner's message of
+	"Fri, 14 Apr 2017 10:58:56 -0400")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, Ebru Akagunduz <ebru.akagunduz@gmail.com>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Shaohua Li <shli@kernel.org>, Minchan Kim <minchan@kernel.org>, Rik van Riel <riel@redhat.com>, cgroups@vger.kernel.org
 
-On Fri, Apr 14, 2017 at 04:27:37PM -0700, Andrei Vagin wrote:
-> Hello,
-> 
-> One of our CRIU tests hangs with this patch.
-> 
-> Steps to reproduce:
-> curl -o cgroupns.c https://gist.githubusercontent.com/avagin/f87c8a8bd2a0de9afcc74976327786bc/raw/5843701ef3679f50dd2427cf57a80871082eb28c/gistfile1.txt
-> gcc cgroupns.c -o cgroupns
-> ./cgroupns
-> ./cgroupns
+Hi, Johannes,
 
-I've found a trivial reproducer:
-mkdir /tmp/xxx
-mount -t cgroup -o none,name=zdtmtst xxx /tmp/xxx
-mkdir /tmp/xxx/xxx
-umount /tmp/xxx
-mount -t cgroup -o none,name=zdtmtst xxx /tmp/xxx
+Johannes Weiner <hannes@cmpxchg.org> writes:
 
-> 
-> [root@fc24 ~]# strace -s 256 -fe clone,unshare,setns,mount ./cgroupns 
-> mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = 0
-> unshare(CLONE_NEWCGROUP)                = 0
-> clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, child_tidptr=0x7fe5da0b89d0) = 529
-> strace: Process 529 attached
-> [pid   529] setns(3, CLONE_NEWCGROUP)   = 0
-> [pid   529] +++ exited with 0 +++
-> --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=529, si_uid=0, si_status=0, si_utime=0, si_stime=0} ---
-> +++ exited with 0 +++
-> [root@fc24 ~]# strace -s 256 -fe clone,unshare,setns,mount ./cgroupns 
-> mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
-> mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
-> mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
-> mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
-> mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
-> mount("none", "/tmp/cgroupns.test/zdtmtst", "cgroup", 0, "none,name=zdtmtst") = ? ERESTARTNOINTR (To be restarted)
-> ....
-> 
-> Thanks,
-> Andrei
-> 
-> On Fri, Apr 07, 2017 at 04:51:55PM +0800, Li Zefan wrote:
-> > Run this:
-> > 
-> >     touch file0
-> >     for ((; ;))
-> >     {
-> >         mount -t cpuset xxx file0
-> >     }
-> > 
-> > And this concurrently:
-> > 
-> >     touch file1
-> >     for ((; ;))
-> >     {
-> >         mount -t cpuset xxx file1
-> >     }
-> > 
-> > We'll trigger a warning like this:
-> > 
-> >  ------------[ cut here ]------------
-> >  WARNING: CPU: 1 PID: 4675 at lib/percpu-refcount.c:317 percpu_ref_kill_and_confirm+0x92/0xb0
-> >  percpu_ref_kill_and_confirm called more than once on css_release!
-> >  CPU: 1 PID: 4675 Comm: mount Not tainted 4.11.0-rc5+ #5
-> >  Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
-> >  Call Trace:
-> >   dump_stack+0x63/0x84
-> >   __warn+0xd1/0xf0
-> >   warn_slowpath_fmt+0x5f/0x80
-> >   percpu_ref_kill_and_confirm+0x92/0xb0
-> >   cgroup_kill_sb+0x95/0xb0
-> >   deactivate_locked_super+0x43/0x70
-> >   deactivate_super+0x46/0x60
-> >  ...
-> >  ---[ end trace a79f61c2a2633700 ]---
-> > 
-> > Here's a race:
-> > 
-> >   Thread A				Thread B
-> > 
-> >   cgroup1_mount()
-> >     # alloc a new cgroup root
-> >     cgroup_setup_root()
-> > 					cgroup1_mount()
-> > 					  # no sb yet, returns NULL
-> > 					  kernfs_pin_sb()
-> > 
-> > 					  # but succeeds in getting the refcnt,
-> > 					  # so re-use cgroup root
-> > 					  percpu_ref_tryget_live()
-> >     # alloc sb with cgroup root
-> >     cgroup_do_mount()
-> > 
-> >   cgroup_kill_sb()
-> > 					  # alloc another sb with same root
-> > 					  cgroup_do_mount()
-> > 
-> > 					cgroup_kill_sb()
-> > 
-> > We end up using the same cgroup root for two different superblocks,
-> > so percpu_ref_kill() will be called twice on the same root when the
-> > two superblocks are destroyed.
-> > 
-> > We should fix to make sure the superblock pinning is really successful.
-> > 
-> > Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.16+
-> > Reported-by: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > ---
-> >  kernel/cgroup/cgroup-v1.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> > index 1dc22f6..12e19f0 100644
-> > --- a/kernel/cgroup/cgroup-v1.c
-> > +++ b/kernel/cgroup/cgroup-v1.c
-> > @@ -1146,7 +1146,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
-> >  		 * path is super cold.  Let's just sleep a bit and retry.
-> >  		 */
-> >  		pinned_sb = kernfs_pin_sb(root->kf_root, NULL);
-> > -		if (IS_ERR(pinned_sb) ||
-> > +		if (IS_ERR_OR_NULL(pinned_sb) ||
-> >  		    !percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
-> >  			mutex_unlock(&cgroup_mutex);
-> >  			if (!IS_ERR_OR_NULL(pinned_sb))
+> Hi Huang,
+>
+> I reviewed this patch based on the feedback I already provided, but
+> eventually gave up and rewrote it. Please take review feedback more
+> seriously in the future.
+
+Thanks a lot for your help!  I do respect all your review and effort.
+The -v8 patch doesn't take all your comments, just because I thought we
+have not reach consensus for some points and I want to use -v8 patch to
+discuss them.
+
+One concern I have before is whether to split THP firstly when swap
+space or memcg swap is used up.  Now I think your solution is
+acceptable. And if we receive any regression report for that in the
+future, it's not very hard to deal with.
+
+> Attached below is the reworked patch. Most changes are to the layering
+> (page functions, cluster functions, range functions) so that we don't
+> make the lowest swap range code require a notion of huge pages, or
+> make the memcg page functions take size information that can be
+> gathered from the page itself. I turned the config symbol into a
+> generic THP_SWAP that can later be extended when we add 2MB IO. The
+> rest is function naming, #ifdef removal etc.
+
+For some #ifdef in swapfile.c, it is to avoid unnecessary code size
+increase for !CONFIG_TRANSPARENT_HUGEPAGE or platform with THP swap
+optimization disabled.  Is it an issue?
+
+> Please review whether this is an acceptable version for you.
+
+Yes.  It is good for me.  I will give it more test on next Monday.
+
+[...]
+
+> diff --git a/mm/Kconfig b/mm/Kconfig
+> index c89f472b658c..660fb765bf7d 100644
+> --- a/mm/Kconfig
+> +++ b/mm/Kconfig
+> @@ -447,6 +447,18 @@ choice
+>  	  benefit.
+>  endchoice
+>  
+> +config ARCH_WANTS_THP_SWAP
+> +       def_bool n
+> +
+> +config THP_SWAP
+> +	def_bool y
+> +	depends on TRANSPARENT_HUGEPAGE && ARCH_WANTS_THP_SWAP
+> +	help
+> +	  Swap transparent huge pages in one piece, without splitting.
+> +	  XXX: For now this only does clustered swap space allocation.
+
+Is 'XXX' here intended.
+
+> +
+> +	  For selection by architectures with reasonable THP sizes.
+> +
+>  config	TRANSPARENT_HUGE_PAGECACHE
+>  	def_bool y
+>  	depends on TRANSPARENT_HUGEPAGE
+> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> index d14dd961f626..4a5c1ca21894 100644
+
+[...]
+
+Best Regards,
+Huang, Ying
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
