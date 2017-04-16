@@ -1,95 +1,46 @@
-From: "Huang\, Ying" <ying.huang@intel.com>
-Subject: Re: [PATCH -mm -v8 1/3] mm, THP, swap: Delay splitting THP during swap out
-Date: Sat, 15 Apr 2017 09:17:04 +0800
-Message-ID: <87k26mzcz3.fsf@yhuang-dev.intel.com>
-References: <20170406053515.4842-1-ying.huang@intel.com>
-	<20170406053515.4842-2-ying.huang@intel.com>
-	<20170414145856.GA9812@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: cgroup: avoid attaching a cgroup root to two different
+ superblocks
+Date: Mon, 17 Apr 2017 00:24:41 +0900
+Message-ID: <20170416152441.GA27278@wtj.duckdns.org>
+References: <58E7532B.4030505@huawei.com>
+ <20170414232737.GC20350@outlook.office365.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20170414145856.GA9812@cmpxchg.org> (Johannes Weiner's message of
-	"Fri, 14 Apr 2017 10:58:56 -0400")
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=qsYP7pW1xad5ezMHYYsCrKKlEo+hERiL5RizK7kPP0M=;
+        b=ru5ZHEGBMr3tHNxK3q84wy+Ci6Kqw0nHt4GuZ8ouxKhOlCX+cfU8I9S/f2uuMDiQ5m
+         jIGazIQ2ZbihL7b1lk2FapR2EwG4deBR8CyxIYGfM6hEK5P4nkl3uTynC9GbUzZtdXfs
+         Z3gCRAD/2p4RWJADBaFFJS8sasXRs0/MFKZeG8vrxE71l3kA3sfcITdHULQUr4C0aRYf
+         EAyd64G3MDhx18beoFRLrjZEc+27bRyKwAYCS+ZJGDZ0TVsD7xP3T6Cier9pi87Zg9yA
+         olbvLtoVK8sAPGDRsAiuB/jgeAcmVX/mH3kNLsX/p9od1boetG/dz0OTBGk/IWNrS3hM
+         R5WA==
+Content-Disposition: inline
+In-Reply-To: <20170414232737.GC20350-1ViLX0X+lBJGNQ1M2rI3KwRV3xvJKrda@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, Ebru Akagunduz <ebru.akagunduz@gmail.com>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Shaohua Li <shli@kernel.org>, Minchan Kim <minchan@kernel.org>, Rik van Riel <riel@redhat.com>, cgroups@vger.kernel.org
+To: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi, Johannes,
+On Fri, Apr 14, 2017 at 04:27:38PM -0700, Andrei Vagin wrote:
+> Hello,
+> 
+> One of our CRIU tests hangs with this patch.
+> 
+> Steps to reproduce:
+> curl -o cgroupns.c https://gist.githubusercontent.com/avagin/f87c8a8bd2a0de9afcc74976327786bc/raw/5843701ef3679f50dd2427cf57a80871082eb28c/gistfile1.txt
+> gcc cgroupns.c -o cgroupns
+> ./cgroupns
+> ./cgroupns
 
-Johannes Weiner <hannes@cmpxchg.org> writes:
+Reverted the patch for now.  Let's try again later.
 
-> Hi Huang,
->
-> I reviewed this patch based on the feedback I already provided, but
-> eventually gave up and rewrote it. Please take review feedback more
-> seriously in the future.
+Thanks.
 
-Thanks a lot for your help!  I do respect all your review and effort.
-The -v8 patch doesn't take all your comments, just because I thought we
-have not reach consensus for some points and I want to use -v8 patch to
-discuss them.
-
-One concern I have before is whether to split THP firstly when swap
-space or memcg swap is used up.  Now I think your solution is
-acceptable. And if we receive any regression report for that in the
-future, it's not very hard to deal with.
-
-> Attached below is the reworked patch. Most changes are to the layering
-> (page functions, cluster functions, range functions) so that we don't
-> make the lowest swap range code require a notion of huge pages, or
-> make the memcg page functions take size information that can be
-> gathered from the page itself. I turned the config symbol into a
-> generic THP_SWAP that can later be extended when we add 2MB IO. The
-> rest is function naming, #ifdef removal etc.
-
-For some #ifdef in swapfile.c, it is to avoid unnecessary code size
-increase for !CONFIG_TRANSPARENT_HUGEPAGE or platform with THP swap
-optimization disabled.  Is it an issue?
-
-> Please review whether this is an acceptable version for you.
-
-Yes.  It is good for me.  I will give it more test on next Monday.
-
-[...]
-
-> diff --git a/mm/Kconfig b/mm/Kconfig
-> index c89f472b658c..660fb765bf7d 100644
-> --- a/mm/Kconfig
-> +++ b/mm/Kconfig
-> @@ -447,6 +447,18 @@ choice
->  	  benefit.
->  endchoice
->  
-> +config ARCH_WANTS_THP_SWAP
-> +       def_bool n
-> +
-> +config THP_SWAP
-> +	def_bool y
-> +	depends on TRANSPARENT_HUGEPAGE && ARCH_WANTS_THP_SWAP
-> +	help
-> +	  Swap transparent huge pages in one piece, without splitting.
-> +	  XXX: For now this only does clustered swap space allocation.
-
-Is 'XXX' here intended.
-
-> +
-> +	  For selection by architectures with reasonable THP sizes.
-> +
->  config	TRANSPARENT_HUGE_PAGECACHE
->  	def_bool y
->  	depends on TRANSPARENT_HUGEPAGE
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index d14dd961f626..4a5c1ca21894 100644
-
-[...]
-
-Best Regards,
-Huang, Ying
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
