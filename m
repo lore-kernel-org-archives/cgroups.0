@@ -1,163 +1,250 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup: avoid attaching a cgroup root to two different
- superblocks
-Date: Mon, 17 Apr 2017 18:41:38 +0800
-Message-ID: <58F49BE2.8080200@huawei.com>
-References: <58E7532B.4030505@huawei.com>
- <20170414232737.GC20350@outlook.office365.com>
- <20170414233233.GA8183@outlook.office365.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH -mm -v8 1/3] mm, THP, swap: Delay splitting THP during
+ swap out
+Date: Mon, 17 Apr 2017 14:24:10 -0400
+Message-ID: <20170417182410.GA26500@cmpxchg.org>
+References: <20170406053515.4842-1-ying.huang@intel.com>
+ <20170406053515.4842-2-ying.huang@intel.com>
+ <20170414145856.GA9812@cmpxchg.org>
+ <87k26mzcz3.fsf@yhuang-dev.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170414233233.GA8183-1ViLX0X+lBJGNQ1M2rI3KwRV3xvJKrda@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=SHT7PgacDKDNDLZt89BcQ8+ZU1JEmhm5vs0gdhmzhlQ=; b=u8cxPY5bWRJRoX8ajlM2V0f2iT
+	qKg9R1A7msn5ZWW4jAxCuGqY/irv/5y2j4ddi9CDqcibFCY+4OJH7dO+gCF/f9gfI9V/s2pWUb9mG
+	7E+Ew8wT42ex7SdUGWt2mHYNqPBNjHLt/xpb7P38Vsll9DwvBbYBDZtq6o3ae4pj2GjI=;
+Content-Disposition: inline
+In-Reply-To: <87k26mzcz3.fsf@yhuang-dev.intel.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: "Huang, Ying" <ying.huang@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, Ebru Akagunduz <ebru.akagunduz@gmail.com>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Shaohua Li <shli@kernel.org>, Minchan Kim <minchan@kernel.org>, Rik van Riel <riel@redhat.com>, cgroups@vger.kernel.org
 
-On 2017/4/15 7:32, Andrei Vagin wrote:
-> On Fri, Apr 14, 2017 at 04:27:37PM -0700, Andrei Vagin wrote:
->> Hello,
->>
->> One of our CRIU tests hangs with this patch.
->>
->> Steps to reproduce:
->> curl -o cgroupns.c https://gist.githubusercontent.com/avagin/f87c8a8bd2a0de9afcc74976327786bc/raw/5843701ef3679f50dd2427cf57a80871082eb28c/gistfile1.txt
->> gcc cgroupns.c -o cgroupns
->> ./cgroupns
->> ./cgroupns
+On Sat, Apr 15, 2017 at 09:17:04AM +0800, Huang, Ying wrote:
+> Hi, Johannes,
 > 
-> I've found a trivial reproducer:
-> mkdir /tmp/xxx
-> mount -t cgroup -o none,name=zdtmtst xxx /tmp/xxx
-> mkdir /tmp/xxx/xxx
-> umount /tmp/xxx
-> mount -t cgroup -o none,name=zdtmtst xxx /tmp/xxx
+> Johannes Weiner <hannes@cmpxchg.org> writes:
 > 
+> > Hi Huang,
+> >
+> > I reviewed this patch based on the feedback I already provided, but
+> > eventually gave up and rewrote it. Please take review feedback more
+> > seriously in the future.
+> 
+> Thanks a lot for your help!  I do respect all your review and effort.
+> The -v8 patch doesn't take all your comments, just because I thought we
+> have not reach consensus for some points and I want to use -v8 patch to
+> discuss them.
+> 
+> One concern I have before is whether to split THP firstly when swap
+> space or memcg swap is used up.  Now I think your solution is
+> acceptable. And if we receive any regression report for that in the
+> future, it's not very hard to deal with.
 
-Now I remember why it didn't check NULL pointer... Could you try the following fix?
-It also reverts my previous patch. I would appreciate if you run the full test suit,
-to make sure it won't break anything.
+If you look at get_scan_count(), we'll stop scanning anonymous pages
+altogether when swap space runs out. So it might happen to a few THP,
+but it shouldn't be a big deal.
 
-PS: Tejun, I found recently I can no longer receive your emails. Don't know why...
+And yes, in that case I'd really rather wait for any real problems to
+materialize before we complicate things.
 
-=======
+> > Attached below is the reworked patch. Most changes are to the layering
+> > (page functions, cluster functions, range functions) so that we don't
+> > make the lowest swap range code require a notion of huge pages, or
+> > make the memcg page functions take size information that can be
+> > gathered from the page itself. I turned the config symbol into a
+> > generic THP_SWAP that can later be extended when we add 2MB IO. The
+> > rest is function naming, #ifdef removal etc.
+> 
+> For some #ifdef in swapfile.c, it is to avoid unnecessary code size
+> increase for !CONFIG_TRANSPARENT_HUGEPAGE or platform with THP swap
+> optimization disabled.  Is it an issue?
 
-[PATCH] cgruop: avoid attaching a cgroup root to two different superblocks, take 2
+It saves some code size, but it looks like the biggest cost comes from
+bloating PageSwapCache(). This is mm/builtin.o with !CONFIG_THP:
 
-Commit bfb0b80db5f9 is broken. Now we try to fix the race by delaying
-the initialization of cgroup root refcnt until a superblock has been
-allocated.
+add/remove: 1/0 grow/shrink: 34/5 up/down: 920/-311 (609)
+function                                     old     new   delta
+__free_cluster                                 -     106    +106
+get_swap_pages                               465     555     +90
+migrate_page_move_mapping                   1404    1479     +75
+shrink_page_list                            3573    3632     +59
+__delete_from_swap_cache                     235     293     +58
+__test_set_page_writeback                    626     678     +52
+__swap_writepage                             766     812     +46
+try_to_unuse                                1763    1795     +32
+madvise_free_pte_range                       882     912     +30
+__set_page_dirty_nobuffers                   245     268     +23
+migrate_page_copy                            565     587     +22
+swap_slot_free_notify                        133     151     +18
+shmem_replace_page                           616     633     +17
+try_to_free_swap                             135     151     +16
+test_clear_page_writeback                    512     528     +16
+swap_set_page_dirty                          109     125     +16
+swap_readpage                                384     400     +16
+shmem_unuse                                 1535    1551     +16
+reuse_swap_page                              340     356     +16
+page_mapping                                 144     160     +16
+migrate_huge_page_move_mapping               483     499     +16
+free_swap_and_cache                          409     425     +16
+free_pages_and_swap_cache                    161     177     +16
+free_page_and_swap_cache                     145     161     +16
+do_swap_page                                1216    1232     +16
+__remove_mapping                             408     424     +16
+__page_file_mapping                           82      98     +16
+__page_file_index                             70      85     +15
+try_to_unmap_one                            1324    1337     +13
+shmem_getpage_gfp.isra                      2358    2371     +13
+add_to_swap_cache                             47      60     +13
+inc_cluster_info_page                        204     210      +6
+get_swap_page                                411     415      +4
+shmem_writepage                              922     925      +3
+sys_swapon                                  4210    4211      +1
+swapcache_free_entries                       786     768     -18
+__add_to_swap_cache                          445     406     -39
+delete_from_swap_cache                       149     104     -45
+scan_swap_map_slots                         1953    1889     -64
+swap_do_scheduled_discard                    713     568    -145
+Total: Before=454535, After=455144, chg +0.13%
 
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.16+
-Reported-by: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reported-by: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup-internal.h |  2 +-
- kernel/cgroup/cgroup-v1.c       | 18 ++++++++++++++++--
- kernel/cgroup/cgroup.c          |  8 ++++----
- 3 files changed, 21 insertions(+), 7 deletions(-)
+If I make the compound_head() in there conditional, this patch
+actually ends up shrinking the code due to the refactoring of the
+cluster functions:
 
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index 9203bfb..e470268 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -163,7 +163,7 @@ int cgroup_path_ns_locked(struct cgroup *cgrp, char *buf, size_t buflen,
+add/remove: 1/0 grow/shrink: 10/5 up/down: 302/-327 (-25)
+function                                     old     new   delta
+__free_cluster                                 -     106    +106
+get_swap_pages                               465     555     +90
+__delete_from_swap_cache                     235     277     +42
+shmem_replace_page                           616     633     +17
+migrate_page_move_mapping                   1404    1418     +14
+add_to_swap_cache                             47      60     +13
+migrate_page_copy                            565     571      +6
+inc_cluster_info_page                        204     210      +6
+get_swap_page                                411     415      +4
+shmem_writepage                              922     925      +3
+sys_swapon                                  4210    4211      +1
+swapcache_free_entries                       786     768     -18
+delete_from_swap_cache                       149     104     -45
+__add_to_swap_cache                          445     390     -55
+scan_swap_map_slots                         1953    1889     -64
+swap_do_scheduled_discard                    713     568    -145
+Total: Before=454535, After=454510, chg -0.01%
+
+But PageSwapCache() is somewhat ugly either way. Even with THP_SWAP
+compiled in, it seems like most callsites wouldn't test tailpages?
+Can we get rid of the compound_head() and annotate any callsites
+working on potential tail pages?
+
+> > Please review whether this is an acceptable version for you.
+> 
+> Yes.  It is good for me.  I will give it more test on next Monday.
+
+Thanks
+
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index f4acd6c4f808..d33e3280c8ad 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -326,7 +326,9 @@ PAGEFLAG_FALSE(HighMem)
+ #ifdef CONFIG_SWAP
+ static __always_inline int PageSwapCache(struct page *page)
+ {
++#ifdef CONFIG_THP_SWAP
+ 	page = compound_head(page);
++#endif
+ 	return PageSwapBacked(page) && test_bit(PG_swapcache, &page->flags);
  
- void cgroup_free_root(struct cgroup_root *root);
- void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts);
--int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask);
-+int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask, int ref_flags);
- int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask);
- struct dentry *cgroup_do_mount(struct file_system_type *fs_type, int flags,
- 			       struct cgroup_root *root, unsigned long magic,
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 12e19f0..6ca9b12 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -1072,6 +1072,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
- 	struct cgroup_subsys *ss;
- 	struct dentry *dentry;
- 	int i, ret;
-+	bool new_root = false;
- 
- 	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
- 
-@@ -1146,7 +1147,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
- 		 * path is super cold.  Let's just sleep a bit and retry.
- 		 */
- 		pinned_sb = kernfs_pin_sb(root->kf_root, NULL);
--		if (IS_ERR_OR_NULL(pinned_sb) ||
-+		if (IS_ERR(pinned_sb) ||
- 		    !percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
- 			mutex_unlock(&cgroup_mutex);
- 			if (!IS_ERR_OR_NULL(pinned_sb))
-@@ -1181,10 +1182,11 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
- 		ret = -ENOMEM;
- 		goto out_unlock;
- 	}
-+	new_root = true;
- 
- 	init_cgroup_root(root, &opts);
- 
--	ret = cgroup_setup_root(root, opts.subsys_mask);
-+	ret = cgroup_setup_root(root, opts.subsys_mask, PERCPU_REF_INIT_DEAD);
- 	if (ret)
- 		cgroup_free_root(root);
- 
-@@ -1201,6 +1203,18 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
- 				 CGROUP_SUPER_MAGIC, ns);
- 
- 	/*
-+	 * There's a race window after we release cgroup_mutex and before
-+	 * allocating a superblock. Make sure a concurrent process won't
-+	 * be able to re-use the root during this window by delaying the
-+	 * initialization of root refcnt.
-+	 */
-+	if (new_root) {
-+		mutex_lock(&cgroup_mutex);
-+		percpu_ref_reinit(&root->cgrp.self.refcnt);
-+		mutex_unlock(&cgroup_mutex);
-+	}
-+
-+	/*
- 	 * If @pinned_sb, we're reusing an existing root and holding an
- 	 * extra ref on its sb.  Mount is complete.  Put the extra ref.
- 	 */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 4885132..0f98010 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1640,7 +1640,7 @@ void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts)
- 		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->cgrp.flags);
+ }
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 34adac6e9457..a4dba6975e7b 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -401,7 +401,6 @@ extern int swap_duplicate(swp_entry_t);
+ extern int swapcache_prepare(swp_entry_t);
+ extern void swap_free(swp_entry_t);
+ extern void swapcache_free(swp_entry_t);
+-extern void swapcache_free_cluster(swp_entry_t);
+ extern void swapcache_free_entries(swp_entry_t *entries, int n);
+ extern int free_swap_and_cache(swp_entry_t);
+ extern int swap_type_of(dev_t, sector_t, struct block_device **);
+@@ -467,10 +466,6 @@ static inline void swapcache_free(swp_entry_t swp)
+ {
  }
  
--int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
-+int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask, int ref_flags)
+-static inline void swapcache_free_cluster(swp_entry_t swp)
+-{
+-}
+-
+ static inline struct page *swapin_readahead(swp_entry_t swp, gfp_t gfp_mask,
+ 			struct vm_area_struct *vma, unsigned long addr)
  {
- 	LIST_HEAD(tmp_links);
- 	struct cgroup *root_cgrp = &root->cgrp;
-@@ -1656,8 +1656,8 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
- 	root_cgrp->id = ret;
- 	root_cgrp->ancestor_ids[0] = ret;
+@@ -592,5 +587,13 @@ static inline bool mem_cgroup_swap_full(struct page *page)
+ }
+ #endif
  
--	ret = percpu_ref_init(&root_cgrp->self.refcnt, css_release, 0,
--			      GFP_KERNEL);
-+	ret = percpu_ref_init(&root_cgrp->self.refcnt, css_release,
-+			      ref_flags, GFP_KERNEL);
- 	if (ret)
- 		goto out;
++#ifdef CONFIG_THP_SWAP
++extern void swapcache_free_cluster(swp_entry_t);
++#else
++static inline void swapcache_free_cluster(swp_entry_t swp)
++{
++}
++#endif
++
+ #endif /* __KERNEL__*/
+ #endif /* _LINUX_SWAP_H */
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index f597cabcaab7..eeaf145b2a20 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -825,6 +825,7 @@ static int scan_swap_map_slots(struct swap_info_struct *si,
+ 	return n_ret;
+ }
  
-@@ -4512,7 +4512,7 @@ int __init cgroup_init(void)
- 	hash_add(css_set_table, &init_css_set.hlist,
- 		 css_set_hash(init_css_set.subsys));
++#ifdef CONFIG_THP_SWAP
+ static int swap_alloc_cluster(struct swap_info_struct *si, swp_entry_t *slot)
+ {
+ 	unsigned long idx;
+@@ -862,6 +863,13 @@ static void swap_free_cluster(struct swap_info_struct *si, unsigned long idx)
+ 	unlock_cluster(ci);
+ 	swap_range_free(si, offset, SWAPFILE_CLUSTER);
+ }
++#else
++static int swap_alloc_cluster(struct swap_info_struct *si, swp_entry_t *slot)
++{
++	VM_WARN_ON_ONCE(1);
++	return 0;
++}
++#endif /* CONFIG_THP_SWAP */
  
--	BUG_ON(cgroup_setup_root(&cgrp_dfl_root, 0));
-+	BUG_ON(cgroup_setup_root(&cgrp_dfl_root, 0, 0));
+ static unsigned long scan_swap_map(struct swap_info_struct *si,
+ 				   unsigned char usage)
+@@ -1145,6 +1153,7 @@ void swapcache_free(swp_entry_t entry)
+ 	}
+ }
  
- 	mutex_unlock(&cgroup_mutex);
++#ifdef CONFIG_THP_SWAP
+ void swapcache_free_cluster(swp_entry_t entry)
+ {
+ 	unsigned long offset = swp_offset(entry);
+@@ -1170,6 +1179,7 @@ void swapcache_free_cluster(swp_entry_t entry)
+ 	swap_free_cluster(si, idx);
+ 	spin_unlock(&si->lock);
+ }
++#endif /* CONFIG_THP_SWAP */
  
--- 
-1.8.3.1
+ void swapcache_free_entries(swp_entry_t *entries, int n)
+ {
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
