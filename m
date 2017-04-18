@@ -1,64 +1,53 @@
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to
- refcount_t
-Date: Tue, 18 Apr 2017 06:33:41 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C8C33F@IRSMSX102.ger.corp.intel.com>
-References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
- <1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
- <CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw@mail.gmail.com>
- <2236FBA76BA1254E88B949DDB74E612B41C4DE27@IRSMSX102.ger.corp.intel.com>
- <CAHC9VhQBB9srK85meAi41pxD0Vse3NiX1-zmKGXcoYh0vB_=9A@mail.gmail.com>
- <CAHC9VhQUKFRcXAF=fdb5YByb=5L+rwEwwAExVLoc3zXFgAOTjQ@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: cgroup: avoid attaching a cgroup root to two different
+ superblocks
+Date: Tue, 18 Apr 2017 15:39:27 +0900
+Message-ID: <20170418063927.GA3899@wtj.duckdns.org>
+References: <58E7532B.4030505@huawei.com>
+ <20170414232737.GC20350@outlook.office365.com>
+ <20170414233233.GA8183@outlook.office365.com>
+ <58F49BE2.8080200@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <CAHC9VhQUKFRcXAF=fdb5YByb=5L+rwEwwAExVLoc3zXFgAOTjQ@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-fsdevel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=FjdDlfgd7SujriRtwVQvbodQuBR47cAvYeAvF6BH2h0=;
+        b=CvqWR5P7c2tYfnsqpJbZ6e1L5gImkUt6oIKzZkwMnJPhGxE8tx9sqtTfbB7lJ8YwlH
+         T7PDHC1ui6LGUaPgnOhk/ov8tTb5qtb3sV3QkMlc+crvTAhgwVFGh8aaal+ubcP1y7lP
+         FAxd3Xxtw1yHksKMAJZcj7832hzz+o+ABFcT9XeOpv8FLmlAVvx5fwvD8TI/1UVJ9Vcg
+         eztsBrmlXD9EQXe0P1MQ8/cXAYqiyVsNpA9nGsQWna2RXyaSnRIr5WpssFGVWtSYQxOe
+         W7WhbdA/lZiJEJLADhrSFYje/+I5PkG+x9NrBVrFqItsK/IHNC3DWIv+Vnc7qCsWnfMB
+         /sQA==
+Content-Disposition: inline
+In-Reply-To: <58F49BE2.8080200-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Paul Moore <paul@paul-moore.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-audit@redhat.com" <linux-audit@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "tj@kernel.org" <tj@kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "acme@kernel.org" <acme@kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, Eric Paris <eparis@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "arnd@arndb.de" <>
+Content-Transfer-Encoding: 7bit
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-PiBPbiBUdWUsIEZlYiAyOCwgMjAxNyBhdCA1OjExIFBNLCBQYXVsIE1vb3JlIDxwYXVsQHBhdWwt
-bW9vcmUuY29tPiB3cm90ZToNCj4gPiBPbiBUdWUsIEZlYiAyMSwgMjAxNyBhdCAyOjE1IEFNLCBS
-ZXNoZXRvdmEsIEVsZW5hDQo+ID4gPGVsZW5hLnJlc2hldG92YUBpbnRlbC5jb20+IHdyb3RlOg0K
-PiA+Pj4gT24gTW9uLCBGZWIgMjAsIDIwMTcgYXQgNToxOSBBTSwgRWxlbmEgUmVzaGV0b3ZhDQo+
-ID4+PiA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4gd3JvdGU6DQo+ID4+PiA+IHJlZmNvdW50
-X3QgdHlwZSBhbmQgY29ycmVzcG9uZGluZyBBUEkgc2hvdWxkIGJlDQo+ID4+PiA+IHVzZWQgaW5z
-dGVhZCBvZiBhdG9taWNfdCB3aGVuIHRoZSB2YXJpYWJsZSBpcyB1c2VkIGFzDQo+ID4+PiA+IGEg
-cmVmZXJlbmNlIGNvdW50ZXIuIFRoaXMgYWxsb3dzIHRvIGF2b2lkIGFjY2lkZW50YWwNCj4gPj4+
-ID4gcmVmY291bnRlciBvdmVyZmxvd3MgdGhhdCBtaWdodCBsZWFkIHRvIHVzZS1hZnRlci1mcmVl
-DQo+ID4+PiA+IHNpdHVhdGlvbnMuDQo+ID4+PiA+DQo+ID4+PiA+IFNpZ25lZC1vZmYtYnk6IEVs
-ZW5hIFJlc2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4NCj4gPj4+ID4gU2lnbmVk
-LW9mZi1ieTogSGFucyBMaWxqZXN0cmFuZCA8aXNoa2FtaWVsQGdtYWlsLmNvbT4NCj4gPj4+ID4g
-U2lnbmVkLW9mZi1ieTogS2VlcyBDb29rIDxrZWVzY29va0BjaHJvbWl1bS5vcmc+DQo+ID4+PiA+
-IFNpZ25lZC1vZmYtYnk6IERhdmlkIFdpbmRzb3IgPGR3aW5kc29yQGdtYWlsLmNvbT4NCj4gPj4+
-ID4gLS0tDQo+ID4+PiA+ICBrZXJuZWwvYXVkaXRfdHJlZS5jIHwgOCArKysrLS0tLQ0KPiA+Pj4g
-PiAgMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4gPj4+
-DQo+ID4+PiBObyBvYmplY3Rpb24gb24gbXkgZW5kLCBzYW1lIGZvciBwYXRjaCAxNi8xOS4NCj4g
-Pj4+DQo+ID4+PiBJIGhhdmUgbm8gcHJvYmxlbSBtZXJnaW5nIGJvdGggdGhlc2UgcGF0Y2hlcyBp
-bnRvIHRoZSBhdWRpdC9uZXh0DQo+ID4+PiBicmFuY2ggYWZ0ZXIgdGhlIG1lcmdlIHdpbmRvdywg
-aXMgdGhhdCB5b3VyIGdvYWwgb3IgYXJlIHlvdSBtZXJnaW5nDQo+ID4+PiB0aGVzZSB2aWEgYSBk
-aWZmZXJlbnQgdHJlZT8NCj4gPj4NCj4gPj4gVGhhbmsgeW91IFBhdWwhIEkgdGhpbmsgaXQgaXMg
-YmV0dGVyIGlmIHRoZXkgZ28gdGhyb3VnaCB0aGUgdHJlZXMgdGhleSBzdXBwb3NlZCB0bw0KPiBn
-byB0aHJvdWdoDQo+ID4+IHNpbmNlIHRoaXMgd2F5IHRoZXkgd291bGQgZ2V0IG1vcmUgdGVzdGlu
-ZyBhbmQgZXRjLiBTbywgcGxlYXNlIHRha2UgdGhlIHJlbGV2YW50DQo+IG9uZXMgdG8geW91ciB0
-cmVlIHdoZW4gdGhlIHRpbWUgaXMgcmlnaHQuDQo+ID4+DQo+ID4+IEFmdGVyIHRoZSBmaXJzdCBy
-b3VuZCwgSSBndWVzcyB3ZSB3aWxsIHNlZSB3aGF0IHBhdGNoZXMgYXJlIG5vdCBwcm9wYWdhdGlu
-ZyBhbmQNCj4gdGhlbiBtYXliZSB0YWtlIHRoZW0gdmlhIEtlZXMgdHJlZS4NCj4gPg0KPiA+IEkg
-anVzdCByZWFsaXplZCB0aGF0IGluY2x1ZGUvbGludXgvcmVmY291bnQuaCBkaWRuJ3QgbWFrZSBp
-dCBpbnRvDQo+ID4gdjQuMTAgd2hpY2ggbWVhbnMgdGhlcmUgaXMgZ29pbmcgdG8gYmUgZGVsYXkg
-dW50aWwgSSBtZXJnZSB0aGVtIGludG8NCj4gPiB0aGUgYXVkaXQgdHJlZSAoSSBkb24ndCBiYXNl
-IHRoZSB0cmVlIG9uIC1yYyByZWxlYXNlcyBleGNlcHQgdW5kZXINCj4gPiBleHRyZW1lIGNpcmN1
-bXN0YW5jZXMpLiAgSSd2ZSBnb3QgdGhlIHBhdGNoZXMgcXVldWVkIHVwIGluIGEgcHJpdmF0ZQ0K
-PiA+IGhvbGRpbmcgYnJhbmNoIChJIGFkZGVkICNpbmNsdWRlcyBCVFcpIHNvIEkgd29uJ3QgZm9y
-Z2V0LCBidXQgYXMgYQ0KPiA+IEZZSSwgdGhleSBsaWtlbHkgd29uJ3QgbWFrZSBpdCBpbiB1bnRp
-bCB2NC4xMi4NCj4gDQo+IFF1aWNrIHVwZGF0ZSBvbiB0aGlzOiBJIG5lZWRlZCB0byByZWJhc2Ug
-dGhlIGF1ZGl0L25leHQgYnJhbmNoIGZvcg0KPiBvdGhlciByZWFzb25zIHNvIEkndmUgZ29uZSBh
-aGVhZCBhbmQgbWVyZ2VkIDE1LzE5IGFuZCAxNi8xOSBpbnRvDQo+IGF1ZGl0L25leHQ7IHRoZXkg
-c2hvdWxkIGdvIHRvIExpbnVzIGR1cmluZyB0aGUgbmV4dCBtZXJnZSB3aW5kb3cuDQo+IFRoYW5r
-cyBmb3IgeW91ciBwYXRpZW5jZS4NCg0KVGhhbmsgeW91IHZlcnkgbXVjaCBQYXVsIQ0KSSBqdXN0
-IGdvdCBiYWNrIGZyb20gaG9saWRheXMsIHNvIGNhdGNoaW5nIHVwIHdpdGggdGhlIG1haWwgc2xv
-d2x5Lg0KDQpCZXN0IFJlZ2FyZHMsDQpFbGVuYS4NCj4gDQo+IC0tDQo+IHBhdWwgbW9vcmUNCj4g
-d3d3LnBhdWwtbW9vcmUuY29tDQo=
+Hello, Li.
+
+On Mon, Apr 17, 2017 at 06:41:38PM +0800, Zefan Li wrote:
+> Now I remember why it didn't check NULL pointer... Could you try the following fix?
+> It also reverts my previous patch. I would appreciate if you run the full test suit,
+> to make sure it won't break anything.
+
+Can you please refresh the patch on top of cgroup/for-next which
+already has the original patch reverted?  Let's apply this one for
+for-4.12 w/o -stable.  The bug isn't too likely to trigger in the wild
+and the fix is kinda subtle.  If necessary, we can last ask Greg to
+pick it up once we know that the patch is safe.
+
+> PS: Tejun, I found recently I can no longer receive your emails. Don't know why...
+
+Hah, no idea.  I didn't change anything on my side - all emails are
+sent through gmail.com.
+
+Thanks.
+
+-- 
+tejun
