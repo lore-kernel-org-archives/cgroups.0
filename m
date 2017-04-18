@@ -1,51 +1,64 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup: avoid attaching a cgroup root to two different
- superblocks
-Date: Tue, 18 Apr 2017 15:39:27 +0900
-Message-ID: <20170418063927.GA3899@wtj.duckdns.org>
-References: <58E7532B.4030505@huawei.com>
- <20170414232737.GC20350@outlook.office365.com>
- <20170414233233.GA8183@outlook.office365.com>
- <58F49BE2.8080200@huawei.com>
+Subject: Re: IO throttling with CFQ IO scheduler
+Date: Tue, 18 Apr 2017 16:15:45 +0900
+Message-ID: <20170418071545.GC3899@wtj.duckdns.org>
+References: <CAKtk8hedjVgioThT69ZMtcOdxeP9oCdBtQ6bBtXFEA-j9nAP8Q@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=FjdDlfgd7SujriRtwVQvbodQuBR47cAvYeAvF6BH2h0=;
-        b=CvqWR5P7c2tYfnsqpJbZ6e1L5gImkUt6oIKzZkwMnJPhGxE8tx9sqtTfbB7lJ8YwlH
-         T7PDHC1ui6LGUaPgnOhk/ov8tTb5qtb3sV3QkMlc+crvTAhgwVFGh8aaal+ubcP1y7lP
-         FAxd3Xxtw1yHksKMAJZcj7832hzz+o+ABFcT9XeOpv8FLmlAVvx5fwvD8TI/1UVJ9Vcg
-         eztsBrmlXD9EQXe0P1MQ8/cXAYqiyVsNpA9nGsQWna2RXyaSnRIr5WpssFGVWtSYQxOe
-         W7WhbdA/lZiJEJLADhrSFYje/+I5PkG+x9NrBVrFqItsK/IHNC3DWIv+Vnc7qCsWnfMB
-         /sQA==
+        bh=7saJ4Vb0B5ND9SmAr2yW+WMD4xTV5FPb6h76u/BFwjw=;
+        b=oii1Xlerz2g4ohb7uabuv8r3p4sxBUwsOSh3ps4pxlacXe6ozbAqmPqeYQ0u60juFD
+         kFyG9IRBJrCr8B0eU0V5uncasMqvtxIPvPciHn3OPd1p4i8OpcUtd4hunAJqmsJLBzxQ
+         HVoaQPEzDje3penTmo1VxLkUr6wrX7zo43d9J0L0CiSt4R3IUxRAzZFpYKJj7DnMxdpP
+         4O8GeGYcBqNSmKu6B2mKfcaoRB3oTII5MIqJ1OEBPFhJRrXL2w2J+nwKyRM1KF6BopPE
+         Rs4Od98emNPVmH1dK+jNn2aqavFMwiArZN+k+1vLNe0bclFa1n5EBbjp4bmIEuAJ5di+
+         MqWQ==
 Content-Disposition: inline
-In-Reply-To: <58F49BE2.8080200-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAKtk8hedjVgioThT69ZMtcOdxeP9oCdBtQ6bBtXFEA-j9nAP8Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Guang Yang <guangyy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Li.
+Hello,
 
-On Mon, Apr 17, 2017 at 06:41:38PM +0800, Zefan Li wrote:
-> Now I remember why it didn't check NULL pointer... Could you try the following fix?
-> It also reverts my previous patch. I would appreciate if you run the full test suit,
-> to make sure it won't break anything.
+On Tue, Apr 04, 2017 at 10:54:41AM -0700, Guang Yang wrote:
+> I am experimenting the IO throttling with cgroups, with some good
+> reading from online and experiments, I found that we have two options:
+>  1. with CFQ IO scheduler, we can set a percentage of serving time one
+> group can take, and if one group does not fully take its share, other
+> (busy) group can steal the shares from the (ideal) group.
+>  2. with deadline IO scheduler, we can set an absolute IOPS and
+> bandwidth for one group, however, this does not consider the cost of
+> serving the IO (e.g. sequential vs. random) and thus it is hard to
+> give fair share between groups.
 
-Can you please refresh the patch on top of cgroup/for-next which
-already has the original patch reverted?  Let's apply this one for
-for-4.12 w/o -stable.  The bug isn't too likely to trigger in the wild
-and the fix is kinda subtle.  If necessary, we can last ask Greg to
-pick it up once we know that the patch is safe.
+Yeah, that's correct.
 
-> PS: Tejun, I found recently I can no longer receive your emails. Don't know why...
+> Neither one seems fully fit into our requirement - we hope that cost
+> model is based on the serving time, at the same time, we don't have
+> one group be able to steal share from the other.
 
-Hah, no idea.  I didn't change anything on my side - all emails are
-sent through gmail.com.
+I see.  You want time based control which isn't work-conserving.
+
+> By looking online, not sure if I missed anything, I didn't see a way
+> to configure cgroups IO throttling to achieve the above requirement,
+> besides, if it is not supported now, is there anything on the roadmap
+> to support it in the future?
+
+It currently isn't supported and I don't think anyone is working on
+implementing something like that.  For SSDs, we haven't found a way to
+estimate the "serving time" in a scalable manner, so the outlook for
+the time based scheduling / control doesn't look too bright.
+
+It's a lot more cumbersome to configure but in a lot of cases limiting
+both bandwidth and IOPS can be good enough in limiting usage to some
+proportion across different workloads.
 
 Thanks.
 
