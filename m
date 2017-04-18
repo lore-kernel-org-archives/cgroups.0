@@ -1,176 +1,64 @@
-From: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: cgroup: avoid attaching a cgroup root to two different
- superblocks
-Date: Mon, 17 Apr 2017 21:09:10 -0700
-Message-ID: <20170418040909.GA5546@outlook.office365.com>
-References: <58E7532B.4030505@huawei.com>
- <20170414232737.GC20350@outlook.office365.com>
- <20170414233233.GA8183@outlook.office365.com>
- <58F49BE2.8080200@huawei.com>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+Subject: RE: [PATCH 15/19] kernel: convert audit_tree.count from atomic_t to
+ refcount_t
+Date: Tue, 18 Apr 2017 06:33:41 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C8C33F@IRSMSX102.ger.corp.intel.com>
+References: <1487585948-6401-1-git-send-email-elena.reshetova@intel.com>
+ <1487585948-6401-16-git-send-email-elena.reshetova@intel.com>
+ <CAHC9VhQW7xFHBLNQOQRKMftStu_aHjbUmp96VJrcfWzxuzE_kw@mail.gmail.com>
+ <2236FBA76BA1254E88B949DDB74E612B41C4DE27@IRSMSX102.ger.corp.intel.com>
+ <CAHC9VhQBB9srK85meAi41pxD0Vse3NiX1-zmKGXcoYh0vB_=9A@mail.gmail.com>
+ <CAHC9VhQUKFRcXAF=fdb5YByb=5L+rwEwwAExVLoc3zXFgAOTjQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=eMqtjCLtKgEoxQefpo9jdSb1fDpqzRwfAFKQ0FO6fpg=;
- b=CclKszAWAZe1RYekQgMRuFb0G5QF22dqqzUPP8cmeIeXcN4pARQOpXj+GW5pjDoRoUQPUmjM00Gmm3XjwJHJvP917dJMTvIWIAZ7CWD8Br6kjpltTSI9pV/FblOI4HucBdfwe1Z2Zm15ZS37Dq2hXZkOqrUmJRCR+M1NIWKkI8g=
-Content-Disposition: inline
-In-Reply-To: <58F49BE2.8080200-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <CAHC9VhQUKFRcXAF=fdb5YByb=5L+rwEwwAExVLoc3zXFgAOTjQ@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Paul Moore <paul@paul-moore.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-audit@redhat.com" <linux-audit@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "tj@kernel.org" <tj@kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "acme@kernel.org" <acme@kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, Eric Paris <eparis@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "arnd@arndb.de" <>
 
-On Mon, Apr 17, 2017 at 06:41:38PM +0800, Zefan Li wrote:
-> On 2017/4/15 7:32, Andrei Vagin wrote:
-> > On Fri, Apr 14, 2017 at 04:27:37PM -0700, Andrei Vagin wrote:
-> >> Hello,
-> >>
-> >> One of our CRIU tests hangs with this patch.
-> >>
-> >> Steps to reproduce:
-> >> curl -o cgroupns.c https://gist.githubusercontent.com/avagin/f87c8a8bd2a0de9afcc74976327786bc/raw/5843701ef3679f50dd2427cf57a80871082eb28c/gistfile1.txt
-> >> gcc cgroupns.c -o cgroupns
-> >> ./cgroupns
-> >> ./cgroupns
-> > 
-> > I've found a trivial reproducer:
-> > mkdir /tmp/xxx
-> > mount -t cgroup -o none,name=zdtmtst xxx /tmp/xxx
-> > mkdir /tmp/xxx/xxx
-> > umount /tmp/xxx
-> > mount -t cgroup -o none,name=zdtmtst xxx /tmp/xxx
-> > 
-> 
-> Now I remember why it didn't check NULL pointer... Could you try the following fix?
-> It also reverts my previous patch. I would appreciate if you run the full test suit,
-> to make sure it won't break anything.
-
-It works for me. Thanks.
-
-Tested-by: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-
-> 
-> PS: Tejun, I found recently I can no longer receive your emails. Don't know why...
-> 
-> =======
-> 
-> [PATCH] cgruop: avoid attaching a cgroup root to two different superblocks, take 2
-> 
-> Commit bfb0b80db5f9 is broken. Now we try to fix the race by delaying
-> the initialization of cgroup root refcnt until a superblock has been
-> allocated.
-> 
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.16+
-> Reported-by: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Reported-by: Andrei Vagin <avagin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  kernel/cgroup/cgroup-internal.h |  2 +-
->  kernel/cgroup/cgroup-v1.c       | 18 ++++++++++++++++--
->  kernel/cgroup/cgroup.c          |  8 ++++----
->  3 files changed, 21 insertions(+), 7 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-> index 9203bfb..e470268 100644
-> --- a/kernel/cgroup/cgroup-internal.h
-> +++ b/kernel/cgroup/cgroup-internal.h
-> @@ -163,7 +163,7 @@ int cgroup_path_ns_locked(struct cgroup *cgrp, char *buf, size_t buflen,
->  
->  void cgroup_free_root(struct cgroup_root *root);
->  void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts);
-> -int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask);
-> +int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask, int ref_flags);
->  int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask);
->  struct dentry *cgroup_do_mount(struct file_system_type *fs_type, int flags,
->  			       struct cgroup_root *root, unsigned long magic,
-> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> index 12e19f0..6ca9b12 100644
-> --- a/kernel/cgroup/cgroup-v1.c
-> +++ b/kernel/cgroup/cgroup-v1.c
-> @@ -1072,6 +1072,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
->  	struct cgroup_subsys *ss;
->  	struct dentry *dentry;
->  	int i, ret;
-> +	bool new_root = false;
->  
->  	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
->  
-> @@ -1146,7 +1147,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
->  		 * path is super cold.  Let's just sleep a bit and retry.
->  		 */
->  		pinned_sb = kernfs_pin_sb(root->kf_root, NULL);
-> -		if (IS_ERR_OR_NULL(pinned_sb) ||
-> +		if (IS_ERR(pinned_sb) ||
->  		    !percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
->  			mutex_unlock(&cgroup_mutex);
->  			if (!IS_ERR_OR_NULL(pinned_sb))
-> @@ -1181,10 +1182,11 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
->  		ret = -ENOMEM;
->  		goto out_unlock;
->  	}
-> +	new_root = true;
->  
->  	init_cgroup_root(root, &opts);
->  
-> -	ret = cgroup_setup_root(root, opts.subsys_mask);
-> +	ret = cgroup_setup_root(root, opts.subsys_mask, PERCPU_REF_INIT_DEAD);
->  	if (ret)
->  		cgroup_free_root(root);
->  
-> @@ -1201,6 +1203,18 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
->  				 CGROUP_SUPER_MAGIC, ns);
->  
->  	/*
-> +	 * There's a race window after we release cgroup_mutex and before
-> +	 * allocating a superblock. Make sure a concurrent process won't
-> +	 * be able to re-use the root during this window by delaying the
-> +	 * initialization of root refcnt.
-> +	 */
-> +	if (new_root) {
-> +		mutex_lock(&cgroup_mutex);
-> +		percpu_ref_reinit(&root->cgrp.self.refcnt);
-> +		mutex_unlock(&cgroup_mutex);
-> +	}
-> +
-> +	/*
->  	 * If @pinned_sb, we're reusing an existing root and holding an
->  	 * extra ref on its sb.  Mount is complete.  Put the extra ref.
->  	 */
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 4885132..0f98010 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -1640,7 +1640,7 @@ void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts)
->  		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->cgrp.flags);
->  }
->  
-> -int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
-> +int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask, int ref_flags)
->  {
->  	LIST_HEAD(tmp_links);
->  	struct cgroup *root_cgrp = &root->cgrp;
-> @@ -1656,8 +1656,8 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
->  	root_cgrp->id = ret;
->  	root_cgrp->ancestor_ids[0] = ret;
->  
-> -	ret = percpu_ref_init(&root_cgrp->self.refcnt, css_release, 0,
-> -			      GFP_KERNEL);
-> +	ret = percpu_ref_init(&root_cgrp->self.refcnt, css_release,
-> +			      ref_flags, GFP_KERNEL);
->  	if (ret)
->  		goto out;
->  
-> @@ -4512,7 +4512,7 @@ int __init cgroup_init(void)
->  	hash_add(css_set_table, &init_css_set.hlist,
->  		 css_set_hash(init_css_set.subsys));
->  
-> -	BUG_ON(cgroup_setup_root(&cgrp_dfl_root, 0));
-> +	BUG_ON(cgroup_setup_root(&cgrp_dfl_root, 0, 0));
->  
->  	mutex_unlock(&cgroup_mutex);
->  
-> -- 
-> 1.8.3.1
-> 
+PiBPbiBUdWUsIEZlYiAyOCwgMjAxNyBhdCA1OjExIFBNLCBQYXVsIE1vb3JlIDxwYXVsQHBhdWwt
+bW9vcmUuY29tPiB3cm90ZToNCj4gPiBPbiBUdWUsIEZlYiAyMSwgMjAxNyBhdCAyOjE1IEFNLCBS
+ZXNoZXRvdmEsIEVsZW5hDQo+ID4gPGVsZW5hLnJlc2hldG92YUBpbnRlbC5jb20+IHdyb3RlOg0K
+PiA+Pj4gT24gTW9uLCBGZWIgMjAsIDIwMTcgYXQgNToxOSBBTSwgRWxlbmEgUmVzaGV0b3ZhDQo+
+ID4+PiA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4gd3JvdGU6DQo+ID4+PiA+IHJlZmNvdW50
+X3QgdHlwZSBhbmQgY29ycmVzcG9uZGluZyBBUEkgc2hvdWxkIGJlDQo+ID4+PiA+IHVzZWQgaW5z
+dGVhZCBvZiBhdG9taWNfdCB3aGVuIHRoZSB2YXJpYWJsZSBpcyB1c2VkIGFzDQo+ID4+PiA+IGEg
+cmVmZXJlbmNlIGNvdW50ZXIuIFRoaXMgYWxsb3dzIHRvIGF2b2lkIGFjY2lkZW50YWwNCj4gPj4+
+ID4gcmVmY291bnRlciBvdmVyZmxvd3MgdGhhdCBtaWdodCBsZWFkIHRvIHVzZS1hZnRlci1mcmVl
+DQo+ID4+PiA+IHNpdHVhdGlvbnMuDQo+ID4+PiA+DQo+ID4+PiA+IFNpZ25lZC1vZmYtYnk6IEVs
+ZW5hIFJlc2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4NCj4gPj4+ID4gU2lnbmVk
+LW9mZi1ieTogSGFucyBMaWxqZXN0cmFuZCA8aXNoa2FtaWVsQGdtYWlsLmNvbT4NCj4gPj4+ID4g
+U2lnbmVkLW9mZi1ieTogS2VlcyBDb29rIDxrZWVzY29va0BjaHJvbWl1bS5vcmc+DQo+ID4+PiA+
+IFNpZ25lZC1vZmYtYnk6IERhdmlkIFdpbmRzb3IgPGR3aW5kc29yQGdtYWlsLmNvbT4NCj4gPj4+
+ID4gLS0tDQo+ID4+PiA+ICBrZXJuZWwvYXVkaXRfdHJlZS5jIHwgOCArKysrLS0tLQ0KPiA+Pj4g
+PiAgMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4gPj4+
+DQo+ID4+PiBObyBvYmplY3Rpb24gb24gbXkgZW5kLCBzYW1lIGZvciBwYXRjaCAxNi8xOS4NCj4g
+Pj4+DQo+ID4+PiBJIGhhdmUgbm8gcHJvYmxlbSBtZXJnaW5nIGJvdGggdGhlc2UgcGF0Y2hlcyBp
+bnRvIHRoZSBhdWRpdC9uZXh0DQo+ID4+PiBicmFuY2ggYWZ0ZXIgdGhlIG1lcmdlIHdpbmRvdywg
+aXMgdGhhdCB5b3VyIGdvYWwgb3IgYXJlIHlvdSBtZXJnaW5nDQo+ID4+PiB0aGVzZSB2aWEgYSBk
+aWZmZXJlbnQgdHJlZT8NCj4gPj4NCj4gPj4gVGhhbmsgeW91IFBhdWwhIEkgdGhpbmsgaXQgaXMg
+YmV0dGVyIGlmIHRoZXkgZ28gdGhyb3VnaCB0aGUgdHJlZXMgdGhleSBzdXBwb3NlZCB0bw0KPiBn
+byB0aHJvdWdoDQo+ID4+IHNpbmNlIHRoaXMgd2F5IHRoZXkgd291bGQgZ2V0IG1vcmUgdGVzdGlu
+ZyBhbmQgZXRjLiBTbywgcGxlYXNlIHRha2UgdGhlIHJlbGV2YW50DQo+IG9uZXMgdG8geW91ciB0
+cmVlIHdoZW4gdGhlIHRpbWUgaXMgcmlnaHQuDQo+ID4+DQo+ID4+IEFmdGVyIHRoZSBmaXJzdCBy
+b3VuZCwgSSBndWVzcyB3ZSB3aWxsIHNlZSB3aGF0IHBhdGNoZXMgYXJlIG5vdCBwcm9wYWdhdGlu
+ZyBhbmQNCj4gdGhlbiBtYXliZSB0YWtlIHRoZW0gdmlhIEtlZXMgdHJlZS4NCj4gPg0KPiA+IEkg
+anVzdCByZWFsaXplZCB0aGF0IGluY2x1ZGUvbGludXgvcmVmY291bnQuaCBkaWRuJ3QgbWFrZSBp
+dCBpbnRvDQo+ID4gdjQuMTAgd2hpY2ggbWVhbnMgdGhlcmUgaXMgZ29pbmcgdG8gYmUgZGVsYXkg
+dW50aWwgSSBtZXJnZSB0aGVtIGludG8NCj4gPiB0aGUgYXVkaXQgdHJlZSAoSSBkb24ndCBiYXNl
+IHRoZSB0cmVlIG9uIC1yYyByZWxlYXNlcyBleGNlcHQgdW5kZXINCj4gPiBleHRyZW1lIGNpcmN1
+bXN0YW5jZXMpLiAgSSd2ZSBnb3QgdGhlIHBhdGNoZXMgcXVldWVkIHVwIGluIGEgcHJpdmF0ZQ0K
+PiA+IGhvbGRpbmcgYnJhbmNoIChJIGFkZGVkICNpbmNsdWRlcyBCVFcpIHNvIEkgd29uJ3QgZm9y
+Z2V0LCBidXQgYXMgYQ0KPiA+IEZZSSwgdGhleSBsaWtlbHkgd29uJ3QgbWFrZSBpdCBpbiB1bnRp
+bCB2NC4xMi4NCj4gDQo+IFF1aWNrIHVwZGF0ZSBvbiB0aGlzOiBJIG5lZWRlZCB0byByZWJhc2Ug
+dGhlIGF1ZGl0L25leHQgYnJhbmNoIGZvcg0KPiBvdGhlciByZWFzb25zIHNvIEkndmUgZ29uZSBh
+aGVhZCBhbmQgbWVyZ2VkIDE1LzE5IGFuZCAxNi8xOSBpbnRvDQo+IGF1ZGl0L25leHQ7IHRoZXkg
+c2hvdWxkIGdvIHRvIExpbnVzIGR1cmluZyB0aGUgbmV4dCBtZXJnZSB3aW5kb3cuDQo+IFRoYW5r
+cyBmb3IgeW91ciBwYXRpZW5jZS4NCg0KVGhhbmsgeW91IHZlcnkgbXVjaCBQYXVsIQ0KSSBqdXN0
+IGdvdCBiYWNrIGZyb20gaG9saWRheXMsIHNvIGNhdGNoaW5nIHVwIHdpdGggdGhlIG1haWwgc2xv
+d2x5Lg0KDQpCZXN0IFJlZ2FyZHMsDQpFbGVuYS4NCj4gDQo+IC0tDQo+IHBhdWwgbW9vcmUNCj4g
+d3d3LnBhdWwtbW9vcmUuY29tDQo=
