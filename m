@@ -1,60 +1,71 @@
-From: =?UTF-8?B?5byg5pys6b6Z?= <zblgeqian-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: cgroup writeback support
-Date: Wed, 19 Apr 2017 17:58:56 +0800
-Message-ID: <CAEC-ZVGrPu6_BZJX3SBbysMnccOHiCXAzskwqZnRhK1=bN7dbg@mail.gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH -mm -v9 1/3] mm, THP, swap: Delay splitting THP during
+ swap out
+Date: Wed, 19 Apr 2017 11:52:52 -0400
+Message-ID: <20170419155252.GA3376@cmpxchg.org>
+References: <20170419070625.19776-1-ying.huang@intel.com>
+ <20170419070625.19776-2-ying.huang@intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=z1k+giqvZkpjdr1A0Kly0MUEZLuKpvVtrSC9ZwOMIew=;
-        b=eOL1kWP9F23FxNejHfLM75D3DgrsZFCeHsho1AJpeaT1BIc/lBQf+HQeMGv4oC/g8G
-         3z62DSu9k+BGRwy316r6y6cwmx8cEG0zXicwYYHQHe4eBJANg6p8fpXJmQnw3aXUbySf
-         25WE1s659JIDp7dgeePez61ODF1GXt/SXv5aON9LUDi9ssPuxHw9j1j1AaF4Ng0TdwTo
-         mh0v8IPSQZVq+bX316epUocyD3chjP/31PAMorGgoCdhI+CNZl1M3RVFXHe8oOrDfrrk
-         L+xMedXtoSIHlUapjTXVCgFE5D4MZ1lnuWQQrgNQOkCQk4tnmRxSjJObZI7tfRmSSxWh
-         JSWQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=m1lQxGSwdWgHzKq2ioNTAhmU3BWNzs7CLmclCv8WNoc=; b=pbY63qJOkKimJL7XOfgpc+mkSN
+        LqJzZ3ZuJfLdRlTlgWpg2TGB+u9uwlmyYO+qg12MTeUKiOoiy6LlKQ6jMDFxgYlrPC7ps4aucNzW0
+        vf3IZH7clNXgq9+9r6ufwW3ouRc25WPfmKkvc6tbPzSuGruoc0nV8+OQ5fc5Is8FpyTU=;
+Content-Disposition: inline
+In-Reply-To: <20170419070625.19776-2-ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ebru Akagunduz <ebru.akagunduz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello Tejun & cgroup,
+On Wed, Apr 19, 2017 at 03:06:23PM +0800, Huang, Ying wrote:
+> @@ -206,17 +212,34 @@ int add_to_swap(struct page *page, struct list_head *list)
+>  	 */
+>  	err = add_to_swap_cache(page, entry,
+>  			__GFP_HIGH|__GFP_NOMEMALLOC|__GFP_NOWARN);
+> -
+> -	if (!err) {
+> -		return 1;
+> -	} else {	/* -ENOMEM radix-tree allocation failure */
+> +	/* -ENOMEM radix-tree allocation failure */
+> +	if (err)
+>  		/*
+>  		 * add_to_swap_cache() doesn't return -EEXIST, so we can safely
+>  		 * clear SWAP_HAS_CACHE flag.
+>  		 */
+> -		swapcache_free(entry);
+> -		return 0;
+> +		goto fail_free;
+> +
+> +	if (unlikely(PageTransHuge(page))) {
+> +		err = split_huge_page_to_list(page, list);
+> +		if (err) {
+> +			delete_from_swap_cache(page);
+> +			return 0;
+> +		}
+>  	}
+> +
+> +	return 1;
+> +
+> +fail_free:
+> +	if (unlikely(PageTransHuge(page)))
+> +		swapcache_free_cluster(entry);
+> +	else
+> +		swapcache_free(entry);
+> +fail:
+> +	if (unlikely(PageTransHuge(page)) &&
+> +	    !split_huge_page_to_list(page, list))
+> +		goto retry;
 
-I encountered several questions playing with cgroup that I really hope
-to get your answers.
+May I ask why you added the unlikelies there? Can you generally say
+THPs are unlikely in this path? Is the swap-out path so hot that
+branch layout is critical? I doubt either is true.
 
-I referred to this LWN article for writeback support
-https://lwn.net/Articles/628631/ and did following steps:
-- clone git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
-and checkout branch review-cgroup-writeback-20150106
-- compile and boot with option cgroup__DEVEL__legacy_files_on_dfl
-- umount all subsys then do mount -t cgroup -o __DEVEL__sane_behavior
-cgroup /sys/fs/cgroup/
-- found blkio memory already in cgroup.subtree_control as default
-- created new group /sys/fs/cgroup/bash, and play with IO throttling
-both with iops and wbps, both on my sda ext4 and sdb ext2
-Then I found it's not working... I realized the article states only
-ext2 was adapted but it's not working either : )
-
-Then I turned to this page
-https://kernelnewbies.org/Linux_4.2#head-8f54d7519fca6b2504f5f26290f46081d6cb6927
-saying Linux-4.2 has writeback support. I did similar steps as above
-except cloning from linux-stable.git, and it's not working either. I
-noticed this code is largely different from the
-review-cgroup-writeback-20150106 branch based on 3.19.0 (e.g.,
-dirty_context).
-
-However Linux-4.3.3 and Linux-4.10.0 really works, except that control
-files have changed in 4.3.3 and we can directly use cgroup2 in 4.10.0.
-
-Is it because I did something wrong or missed anything? As I find many
-branches exist in kernel/git/tj/cgroup.tj, it would be great if you
-could help explain the roles of the different branches and how the
-repo works in general. Especially, I want to know the first repo
-branch/linux release that has writeback support so it's easier to
-learn how it's built up step by step from the commit log.
-
-Thank you very much!
-Benlong
+Also please mention changes like these in the changelog next time.
