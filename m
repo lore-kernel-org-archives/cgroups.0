@@ -1,7 +1,8 @@
 From: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: blk-cgroup: fix wrong unlock order when parse per blkg config
-Date: Fri, 21 Apr 2017 09:23:54 +0800
-Message-ID: <d38c2fef-428e-9fb1-aee4-82490a359773@gmail.com>
+Subject: [PATCH RESEND] blk-cgroup: fix wrong unlock order when parse per blkg
+ config
+Date: Fri, 21 Apr 2017 09:27:56 +0800
+Message-ID: <f972bd1e-7318-e842-1fa4-613bf50c1578@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -9,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=to:cc:from:subject:message-id:date:user-agent:mime-version
          :content-transfer-encoding;
-        bh=6Ec1uLbpdWew/mzDIST7adoFX/+jyqyT9MUH28bOapw=;
-        b=BTXBtn2frjWeBfghL5gzndv+Tthku2okDeRf0GN0NDOQ/xy0MujaF8Wq336J72hr/N
-         YHUSBtCh0Y2ZKWfhwL7Q5IfKC1CqZYFDx3jn+Sly/+y0OJTFj33EHHgLtCoR/K699C7S
-         gI69DJcbm89Ot13Pz5qWazmHsD0oV/cFCYBWiaJSY+oc2hCA2/8MekJaj3qKW+FDA9UO
-         Rqi7wfUBMtDsuQ2cXvQ+NuPuQPoQbZrGAK2r25ZugLuNcpZcKLzQYLwU298P2sCJBIwz
-         Je1QYlzCnjnNj9tg6UyWrrx3cTL/0Ien+KEzC60YRxPRCT6Y4M/q1MMd64LQDfCb8tyw
-         cLpw==
+        bh=D9TKMHKhbRyXr/tIf4nR3ViwnUAyTmaNubl8WUGe290=;
+        b=J9LVeYSDWPf4HPjLFrzL9zOz82c5QgFj75xGZMkEtjVXGwz6UYUNa1csTVH1MZm2uA
+         bdZVCWurgojPqCSGPWpNaYgyuh/Sz/XUat5gr8uuK0/Zltju7fP7B0SJ8BkeOrOS582c
+         nKyNy1K6Z9mCPvY3C15pQZzY6XapJ/aZL+IzEteHSx5ow1dRWJHhP/zTOijJeLLWexPX
+         Zo+yKI/N8nAjqoFCBCCWDApb8gzistcz238+qtZrIc16TyGY2wS3DjORYLJXkoxtlw3A
+         FxvS68o5rCTRryA050YUwaPbX8uyk3xJcX1COWYhbsFxt/+aAAI+L4tT1m5oLFup33kZ
+         4KlQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -26,6 +27,7 @@ In case of error blkg in blkg_conf_prep, we should unlock
 queue->queue_lock first and then rcu, just like blkg_conf_finish.
 
 Signed-off-by: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
  block/blk-cgroup.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
