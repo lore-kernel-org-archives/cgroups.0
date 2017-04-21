@@ -1,53 +1,47 @@
-From: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: about CPU QoS in KVM
-Date: Thu, 20 Apr 2017 16:00:50 +0200
-Message-ID: <8a5470cd-0cb2-5019-c7d3-7c407e6a6005@redhat.com>
-References: <33183CC9F5247A488A2544077AF19020DA237684@DGGEMA505-MBS.china.huawei.com>
+From: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: blk-cgroup: fix wrong unlock order when parse per blkg config
+Date: Fri, 21 Apr 2017 09:23:54 +0800
+Message-ID: <d38c2fef-428e-9fb1-aee4-82490a359773@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=phQlsnG9P0TluTj7P1k5HiPpNbEFoDSgq6/5IZTcfnY=;
-        b=lr0YYjOU0aGgXj0NcjzvSKINuqhghZJCbvH1SAG02SfuhG9+L47kFfdWkl6U0yAAsp
-         DFwYwIkc3r3MGegw7CPqxKEfG2EqAoIZktm1gUzSfPRkwMx6/PDP5Uc6aTiL4iEMl5fH
-         HgFfGhhEsUhL9uTTBPmOo7ybDUNDBfXQeNmN895hJiHSJfjylCl9dpLhRLj1MhxBzxOs
-         8sFVDp2e5rhn5kMbt3YvPhVKOoOhw/AX4iglonCHV/nfGPU/sbqYU7MpgY31L5sydNLc
-         t2ZMRbAfPcQ32qvObz4dIX1FJsWx5yjW5LwayF279z+y0pnOiO6vkw0TlhGBqdqj01Kb
-         U42A==
-In-Reply-To: <33183CC9F5247A488A2544077AF19020DA237684-CArPBO0LKVoFkbVBhwfq5wK1hpo4iccwjNknBlVQO8k@public.gmane.org>
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-transfer-encoding;
+        bh=6Ec1uLbpdWew/mzDIST7adoFX/+jyqyT9MUH28bOapw=;
+        b=BTXBtn2frjWeBfghL5gzndv+Tthku2okDeRf0GN0NDOQ/xy0MujaF8Wq336J72hr/N
+         YHUSBtCh0Y2ZKWfhwL7Q5IfKC1CqZYFDx3jn+Sly/+y0OJTFj33EHHgLtCoR/K699C7S
+         gI69DJcbm89Ot13Pz5qWazmHsD0oV/cFCYBWiaJSY+oc2hCA2/8MekJaj3qKW+FDA9UO
+         Rqi7wfUBMtDsuQ2cXvQ+NuPuQPoQbZrGAK2r25ZugLuNcpZcKLzQYLwU298P2sCJBIwz
+         Je1QYlzCnjnNj9tg6UyWrrx3cTL/0Ien+KEzC60YRxPRCT6Y4M/q1MMd64LQDfCb8tyw
+         cLpw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: KVM list <kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Gonglei <arei.gonglei-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "Jason Wang (jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org)" <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Huangweidong (C)" <weidong.huang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linqiangmin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Adding Rik.
+In case of error blkg in blkg_conf_prep, we should unlock
+queue->queue_lock first and then rcu, just like blkg_conf_finish.
 
-Paolo
+Signed-off-by: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+ block/blk-cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 20/04/2017 15:32, Gonglei (Arei) wrote:
-> Hi all,
-> 
-> Currently, KVM do the CPU resource reservation by the cgroup mechanism
-> which can't do entire accurate separation because the capacity of the Linux
-> scheduler. Take the public cloud as an example, some customers rent one vm
-> with 8 CPUs paid by enough money, they want to get enough response
-> speed on CPU scheduling. So we (the cloud platform providers ) reserve 1GHz
-> CPU resources by cgroup for those VM's vcpu/pcpu. 
-> 
-> But the actual effects can't meet those requirements because the cgroup is
-> limiting share usage of other processes in order to attach the reservation proportion,
-> but the scheduler can't assure that. This mechanism is different with Xen,
-> We can directly change the CPU weight on Xen hypervisor so that we can
-> get entire accurate control on CPU resources based on accurate capacity (upper limit),
-> share (weight) and reservation.
-> 
-> So my question is do we have a good method to do CPU reservation in KVM?
-> 
-> Thanks,
-> -Gonglei
-> 
-> 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index bbe7ee0..cc017b2 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -823,8 +823,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 
+ 	if (IS_ERR(blkg)) {
+ 		ret = PTR_ERR(blkg);
+-		rcu_read_unlock();
+ 		spin_unlock_irq(disk->queue->queue_lock);
++		rcu_read_unlock();
+ 		owner = disk->fops->owner;
+ 		put_disk(disk);
+ 		module_put(owner);
+-- 
+1.9.4
