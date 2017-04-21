@@ -1,12 +1,12 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH 08/14] cgroup: Keep accurate count of tasks in each css_set
-Date: Fri, 21 Apr 2017 10:04:06 -0400
-Message-ID: <1492783452-12267-9-git-send-email-longman@redhat.com>
+Subject: [RFC PATCH 06/14] cgroup: Fix reference counting bug in cgroup_procs_write()
+Date: Fri, 21 Apr 2017 10:04:04 -0400
+Message-ID: <1492783452-12267-7-git-send-email-longman@redhat.com>
 References: <1492783452-12267-1-git-send-email-longman@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 32069C09FAB3
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com AA1AEC0567B2
 In-Reply-To: <1492783452-12267-1-git-send-email-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,123 +14,97 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, Waiman Long <longman@redhat.com>
 
-The reference count in the css_set data structure was used as a
-proxy of the number of tasks attached to that css_set. However, that
-count is actually not an accurate measure especially with thread mode
-support. So a new variable task_count is added to the css_set to keep
-track of the actual task count. This new variable is protected by
-the css_set_lock. Functions that require the actual task count are
-updated to use the new variable.
+The cgroup_procs_write_start() took a reference to the task structure
+which was not properly released within cgroup_procs_write() and so
+on. So a put_task_struct() call is added to cgroup_procs_write_finish()
+to match the get_task_struct() in cgroup_procs_write_start() to fix
+this reference counting error.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- include/linux/cgroup-defs.h | 3 +++
- kernel/cgroup/cgroup-v1.c   | 6 +-----
- kernel/cgroup/cgroup.c      | 5 +++++
- kernel/cgroup/debug.c       | 6 +-----
- 4 files changed, 10 insertions(+), 10 deletions(-)
+ kernel/cgroup/cgroup-internal.h |  2 +-
+ kernel/cgroup/cgroup-v1.c       |  2 +-
+ kernel/cgroup/cgroup.c          | 10 ++++++----
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index bb4752a..7be1a90 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -158,6 +158,9 @@ struct css_set {
- 	/* reference count */
- 	atomic_t refcount;
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index 6ef662a..bea3928 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -181,7 +181,7 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
+ 		       bool threadgroup);
+ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup)
+ 	__acquires(&cgroup_threadgroup_rwsem);
+-void cgroup_procs_write_finish(void)
++void cgroup_procs_write_finish(struct task_struct *task)
+ 	__releases(&cgroup_threadgroup_rwsem);
  
-+	/* internal task count, protected by css_set_lock */
-+	int task_count;
-+
- 	/*
- 	 * If not threaded, the following points to self.  If threaded, to
- 	 * a cset which belongs to the top cgroup of the threaded subtree.
+ void cgroup_lock_and_drain_offline(struct cgroup *cgrp);
 diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 6757a50..6d69796 100644
+index b837e1a..e80bc8e 100644
 --- a/kernel/cgroup/cgroup-v1.c
 +++ b/kernel/cgroup/cgroup-v1.c
-@@ -334,10 +334,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
- /**
-  * cgroup_task_count - count the number of tasks in a cgroup.
-  * @cgrp: the cgroup in question
-- *
-- * Return the number of tasks in the cgroup.  The returned number can be
-- * higher than the actual number of tasks due to css_set references from
-- * namespace roots and temporary usages.
-  */
- static int cgroup_task_count(const struct cgroup *cgrp)
- {
-@@ -346,7 +342,7 @@ static int cgroup_task_count(const struct cgroup *cgrp)
+@@ -549,7 +549,7 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
+ 	ret = cgroup_attach_task(cgrp, task, threadgroup);
  
- 	spin_lock_irq(&css_set_lock);
- 	list_for_each_entry(link, &cgrp->cset_links, cset_link)
--		count += atomic_read(&link->cset->refcount);
-+		count += link->cset->task_count;
- 	spin_unlock_irq(&css_set_lock);
- 	return count;
- }
+ out_finish:
+-	cgroup_procs_write_finish();
++	cgroup_procs_write_finish(task);
+ out_unlock:
+ 	cgroup_kn_unlock(of->kn);
+ 
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index d48eedd..3186b1f 100644
+index 6748207..d48eedd 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -1671,6 +1671,7 @@ static void cgroup_enable_task_cg_lists(void)
- 				css_set_update_populated(cset, true);
- 			list_add_tail(&p->cg_list, &cset->tasks);
- 			get_css_set(cset);
-+			cset->task_count++;
- 		}
- 		spin_unlock(&p->sighand->siglock);
- 	} while_each_thread(g, p);
-@@ -2154,8 +2155,10 @@ static int cgroup_migrate_execute(struct cgroup_mgctx *mgctx)
- 			struct css_set *to_cset = cset->mg_dst_cset;
- 
- 			get_css_set(to_cset);
-+			to_cset->task_count++;
- 			css_set_move_task(task, from_cset, to_cset, true);
- 			put_css_set_locked(from_cset);
-+			from_cset->task_count--;
- 		}
- 	}
- 	spin_unlock_irq(&css_set_lock);
-@@ -5150,6 +5153,7 @@ void cgroup_post_fork(struct task_struct *child)
- 		cset = task_css_set(current);
- 		if (list_empty(&child->cg_list)) {
- 			get_css_set(cset);
-+			cset->task_count++;
- 			css_set_move_task(child, NULL, cset, false);
- 		}
- 		spin_unlock_irq(&css_set_lock);
-@@ -5199,6 +5203,7 @@ void cgroup_exit(struct task_struct *tsk)
- 	if (!list_empty(&tsk->cg_list)) {
- 		spin_lock_irq(&css_set_lock);
- 		css_set_move_task(tsk, cset, NULL, false);
-+		cset->task_count--;
- 		spin_unlock_irq(&css_set_lock);
- 	} else {
- 		get_css_set(cset);
-diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-index 9146461..c8f7590 100644
---- a/kernel/cgroup/debug.c
-+++ b/kernel/cgroup/debug.c
-@@ -23,10 +23,6 @@ static void debug_css_free(struct cgroup_subsys_state *css)
- /*
-  * debug_taskcount_read - return the number of tasks in a cgroup.
-  * @cgrp: the cgroup in question
-- *
-- * Return the number of tasks in the cgroup.  The returned number can be
-- * higher than the actual number of tasks due to css_set references from
-- * namespace roots and temporary usages.
-  */
- static u64 debug_taskcount_read(struct cgroup_subsys_state *css,
- 				struct cftype *cft)
-@@ -37,7 +33,7 @@ static u64 debug_taskcount_read(struct cgroup_subsys_state *css,
- 
- 	spin_lock_irq(&css_set_lock);
- 	list_for_each_entry(link, &cgrp->cset_links, cset_link)
--		count += atomic_read(&link->cset->refcount);
-+		count += link->cset->task_count;
- 	spin_unlock_irq(&css_set_lock);
- 	return count;
+@@ -2487,12 +2487,15 @@ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup)
+ 	return tsk;
  }
+ 
+-void cgroup_procs_write_finish(void)
++void cgroup_procs_write_finish(struct task_struct *task)
+ 	__releases(&cgroup_threadgroup_rwsem)
+ {
+ 	struct cgroup_subsys *ss;
+ 	int ssid;
+ 
++	/* release reference from cgroup_procs_write_start() */
++	put_task_struct(task);
++
+ 	percpu_up_write(&cgroup_threadgroup_rwsem);
+ 	for_each_subsys(ss, ssid)
+ 		if (ss->post_attach)
+@@ -3295,7 +3298,6 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
+ 
+ static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
+ {
+-	LIST_HEAD(pending);
+ 	struct cgroup_subsys *ss = cfts[0].ss;
+ 	struct cgroup *root = &ss->root->cgrp;
+ 	struct cgroup_subsys_state *css;
+@@ -4060,7 +4062,7 @@ static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
+ 	ret = cgroup_attach_task(cgrp, task, true);
+ 
+ out_finish:
+-	cgroup_procs_write_finish();
++	cgroup_procs_write_finish(task);
+ out_unlock:
+ 	cgroup_kn_unlock(of->kn);
+ 
+@@ -4130,7 +4132,7 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
+ 	ret = cgroup_attach_task(cgrp, task, false);
+ 
+ out_finish:
+-	cgroup_procs_write_finish();
++	cgroup_procs_write_finish(task);
+ out_unlock:
+ 	cgroup_kn_unlock(of->kn);
+ 
 -- 
 1.8.3.1
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
