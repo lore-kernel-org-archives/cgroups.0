@@ -1,155 +1,54 @@
-From: "Huang\, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH -mm -v9 1/3] mm, THP, swap: Delay splitting THP during swap out
-Date: Sat, 22 Apr 2017 08:07:12 +0800
-Message-ID: <87bmrpe24v.fsf@yhuang-dev.intel.com>
-References: <20170419070625.19776-1-ying.huang@intel.com>
-        <20170419070625.19776-2-ying.huang@intel.com>
-        <1492755096.24636.2.camel@gmail.com>
-        <20170421140812.GA15918@cmpxchg.org>
+From: <ex-GXcTff7tL0M@public.gmane.org>
+Subject: 36228 cgroups
+Date: Sat, 22 Apr 2017 01:03:24 -0000
+Message-ID: <149282300420.15557.8091178284097016132@asianet.co.th>
 Mime-Version: 1.0
+Content-Type: application/zip; name="41970338512.zip"
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170421140812.GA15918-druUgvl0LCNAfugRpC6u6w@public.gmane.org> (Johannes Weiner's message
-        of "Fri, 21 Apr 2017 10:08:12 -0400")
+Content-Disposition: attachment
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ebru Akagunduz <ebru.akagunduz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> writes:
-
-> On Fri, Apr 21, 2017 at 04:11:36PM +1000, Balbir Singh wrote:
->> > In the future of THP swap optimization, some information of the
->> > swapped out THP (such as compound map count) will be recorded in the
->> > swap_cluster_info data structure.
->> > 
->> > The mem cgroup swap accounting functions are enhanced to support
->> > charge or uncharge a swap cluster backing a THP as a whole.
->> 
->> Thanks and in the future it will be good to add stats to indicate
->> the number of THP swapped out for tracking.
->
-> Agreed. Huang, can you include stats from your test that show how many
-> times we succeed and how many times we fall back to splitting?
-
-Sorry, I don't fully understand your words.  If my understanding were
-correct, Balbir is asking some stats in /proc/vmstat.  For now, the
-stats we can provide is how many success swap cluster allocations and
-swap cache addings, and how many fails for them.  And in the next step
-(to split THP after swapping out), we can add stats for how many THP
-swapped out (written with 2M IO and reclaimed).  So I suggest to add two
-stats, thp_swpout and thp_swpout_fallback in the next step.  What do you
-think about that?
-
->> > With the patch, the swap out throughput improves 11.5% (from about
->> > 3.73GB/s to about 4.16GB/s) in the vm-scalability swap-w-seq test case
->> > with 8 processes.  The test is done on a Xeon E5 v3 system.  The swap
->> > device used is a RAM simulated PMEM (persistent memory) device. 
->> 
->> I am not sure if RAM simulating PMEM is a fair way to test, its just
->> memcpy and no swap out.
->
-> It would be good to know exactly what simulating PMEM means. Does it
-> add some artificial delay, or is it a simple ramfs that holds a swap
-> file?
-
-No artificial delay, just a RAM simulated block device implemented with
-memcpy.
-
-> IMO, this patch isn't a pure cycles-optimization anyway in the "reduce
-> instructions involved in this path" sense. It's the groundwork to make
-> swapping THP-native. So slimming down the cycles is great, but the
-> infrastructure work to later do 2MB TLB shootdown and swap with 2MB IO
-> holds more weight for me.
-
-Yes.  Performance improvement is not the emphasis of this step, but will
-be of the next step.
-
->> > @@ -326,11 +326,14 @@ PAGEFLAG_FALSE(HighMem)
->> >  #ifdef CONFIG_SWAP
->> >  static __always_inline int PageSwapCache(struct page *page)
->> >  {
->> > +#ifdef CONFIG_THP_SWAP
->> > +	page = compound_head(page);
->> > +#endif
->> 
->> Can we please add a static inline THPSwapPage() that returns page_compound(page)
->> for CONFIG_THP_SWAP and page otherwise?
->
-> Where else would it be used?
->
-> I think it'd be preferable to leave this #ifdef wart as a reminder
-> that we need to revisit this.
->
->> > @@ -5929,25 +5929,26 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
->> >  	memcg = mem_cgroup_id_get_online(memcg);
->> >  
->> >  	if (!mem_cgroup_is_root(memcg) &&
->> > -	    !page_counter_try_charge(&memcg->swap, 1, &counter)) {
->> > +	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
->> >  		mem_cgroup_id_put(memcg);
->> >  		return -ENOMEM;
->> >  	}
->> >  
->> > -	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
->> > +	if (nr_pages > 1)
->> > +		mem_cgroup_id_get_many(memcg, nr_pages - 1);
->> 
->> The nr_pages -1 is not initutive, a comment about mem_cgroup_id_get_online()
->> getting 1 would help.
->
-> Agreed. Something like this might help:
->
-> 	/* Get references for the tail pages, too */
-
-Good suggestion!  I will add this.
-
->> > @@ -1066,6 +1155,33 @@ void swapcache_free(swp_entry_t entry)
->> >  	}
->> >  }
->> >  
->> > +#ifdef CONFIG_THP_SWAP
->> > +void swapcache_free_cluster(swp_entry_t entry)
->> > +{
->> > +	unsigned long offset = swp_offset(entry);
->> > +	unsigned long idx = offset / SWAPFILE_CLUSTER;
->> > +	struct swap_cluster_info *ci;
->> > +	struct swap_info_struct *si;
->> > +	unsigned char *map;
->> > +	unsigned int i;
->> > +
->> > +	si = swap_info_get(entry);
->> > +	if (!si)
->> > +		return;
->> > +
->> > +	ci = lock_cluster(si, offset);
->> > +	map = si->swap_map + offset;
->> > +	for (i = 0; i < SWAPFILE_CLUSTER; i++) {
->> > +		VM_BUG_ON(map[i] != SWAP_HAS_CACHE);
->> > +		map[i] = 0;
->> > +	}
->> > +	unlock_cluster(ci);
->> > +	mem_cgroup_uncharge_swap(entry, SWAPFILE_CLUSTER);
->> > +	swap_free_cluster(si, idx);
->> > +	spin_unlock(&si->lock);
->> > +}
->> > +#endif /* CONFIG_THP_SWAP */
->> > +
->> >  static int swp_entry_cmp(const void *ent1, const void *ent2)
->> >  {
->> >  	const swp_entry_t *e1 = ent1, *e2 = ent2;
->> 
->> 
->> This is a massive patch, I presume you've got recommendations to keep it
->> this way?
->
-> It used to be split into patches that introduce API and helpers on one
-> hand and patches that use these functions on the other hand. That was
-> impossible to review, because you had to jump between emails.
->
-> If you have ideas about which parts could be split out and be
-> stand-alone changes in their own right, I'd be all for that.
-
-Best Regards,
-Huang, Ying
+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
