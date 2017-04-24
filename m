@@ -1,40 +1,51 @@
-From: <ex-GXcTff7tL0M@public.gmane.org>
-Subject: 45830 cgroups
-Date: Sun, 23 Apr 2017 17:12:59 -0000
-Message-ID: <149296757931.20069.13634114846729954771@224.dynamic-n253.in72.ru>
+From: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] blk-cgroup: fix wrong unlock order when parse per blkg config
+Date: Mon, 24 Apr 2017 18:52:05 +0800
+Message-ID: <be8d9709-84fe-d2df-f294-a12701675e27@gmail.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="080.zip"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: attachment
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:subject:to:cc:message-id:date:user-agent:mime-version
+         :content-transfer-encoding;
+        bh=/wKtdaizoWzbZ3jnv04hNUIEvjzD6M6uKH849ToXZb0=;
+        b=XKT1HNxG9s0dnoDip4lszzj65Ssyq+8np2X9CSN7xMA51DZyc3wQHK3CmNHQNLGn1z
+         UJAN7YfWslk3mqK+gkNZnMeaRveFXASLoZYO5j+tq9XsIzawitdypjJIX3edav43fWW+
+         6BGTT/lsdFwkkzo3jK8BVO1KZ34E1yyHtK9KJqBs5C3orUNJX+mmAWrU06FLu0WEBx3y
+         DrP5A6yReiJQDAwmwWV66AyafSxKOVpDbtUpoTQ6AkiZj/ARAlzXN6G82PL0wwSCDpoF
+         qrWL20szDLoie5YK+46fI2fDFPs1zlJXnZARX59Xd+87ZlXMfpywc0ha/Z3mnKDXV/M/
+         1GHw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, wenqing.lz-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, boyu.mt-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org
 
-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
+From: Joseph Qi <qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org>
+
+In case of error blkg in blkg_conf_prep, we should unlock
+queue->queue_lock first and then rcu, just like blkg_conf_finish.
+
+Signed-off-by: Joseph Qi <qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org>
+Signed-off-by: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ block/blk-cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index bbe7ee0..cc017b2 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -823,8 +823,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 
+ 	if (IS_ERR(blkg)) {
+ 		ret = PTR_ERR(blkg);
+-		rcu_read_unlock();
+ 		spin_unlock_irq(disk->queue->queue_lock);
++		rcu_read_unlock();
+ 		owner = disk->fops->owner;
+ 		put_disk(disk);
+ 		module_put(owner);
+-- 
+1.9.4
