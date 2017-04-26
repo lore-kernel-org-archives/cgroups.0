@@ -1,103 +1,105 @@
-From: Luca Abeni <luca.abeni@santannapisa.it>
-Subject: Re: about CPU QoS in KVM
-Date: Wed, 26 Apr 2017 09:48:28 +0200
-Message-ID: <20170426094828.560fcf10@luca>
-References: <33183CC9F5247A488A2544077AF19020DA237684@DGGEMA505-MBS.china.huawei.com>
-        <8a5470cd-0cb2-5019-c7d3-7c407e6a6005@redhat.com>
-        <20170425101303.GA17999@e106622-lin>
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race with
+ cpuset update
+Date: Wed, 26 Apr 2017 10:07:32 +0200
+Message-ID: <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
+References: <20170411140609.3787-1-vbabka@suse.cz>
+ <20170411140609.3787-2-vbabka@suse.cz>
+ <alpine.DEB.2.20.1704111152170.25069@east.gentwo.org>
+ <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz>
+ <alpine.DEB.2.20.1704121617040.28335@east.gentwo.org>
+ <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz>
+ <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170425101303.GA17999@e106622-lin>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Juri Lelli <juri.lelli@arm.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, KVM list <kvm@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Gonglei <arei.gonglei@huawei.com>, "Jason Wang (jasowang@redhat.com)" <jasowang@redhat.com>, "Huangweidong (C)" <weidong.huang@huawei.com>, linqiangmin@huawei.com, Rik van Riel <riel@redhat.com>, Tommaso Cucinotta <tommaso.cucinotta@santannapisa.it>, carlo.vitucci@ericsson.com
+To: Christoph Lameter <cl@linux.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-api@vger.kernel.org
 
-Hi all,
-
-On Tue, 25 Apr 2017 11:13:03 +0100
-Juri Lelli <juri.lelli@arm.com> wrote:
-[...]
-> > > Currently, KVM do the CPU resource reservation by the cgroup
-> > > mechanism which can't do entire accurate separation because the
-> > > capacity of the Linux scheduler. Take the public cloud as an
-> > > example, some customers rent one vm with 8 CPUs paid by enough
-> > > money, they want to get enough response speed on CPU scheduling.
-> > > So we (the cloud platform providers ) reserve 1GHz CPU resources
-> > > by cgroup for those VM's vcpu/pcpu. 
-> > > 
-> > > But the actual effects can't meet those requirements because the
-> > > cgroup is limiting share usage of other processes in order to
-> > > attach the reservation proportion, but the scheduler can't assure
-> > > that. This mechanism is different with Xen, We can directly
-> > > change the CPU weight on Xen hypervisor so that we can get entire
-> > > accurate control on CPU resources based on accurate capacity
-> > > (upper limit), share (weight) and reservation.
-> > > 
-> > > So my question is do we have a good method to do CPU reservation
-> > > in KVM?
-> > > 
-> > > Thanks,
-> > > -Gonglei  
+On 04/14/2017 10:37 PM, Christoph Lameter wrote:
+> On Thu, 13 Apr 2017, Vlastimil Babka wrote:
 > 
-> Not entirely sure what your particular requirements are Gonglei, but
-> you might be interested to know that there has been research work
-> [1,2,3, just to name a few] that used a mainline real-time scheduling
-> policy (SCHED_DEADLINE) to provide Qos support to virtual machines
-> (KVM).
+>>
+>> I doubt we can change that now, because that can break existing
+>> programs. It also makes some sense at least to me, because a task can
+>> control its own mempolicy (for performance reasons), but cpuset changes
+>> are admin decisions that the task cannot even anticipate. I think it's
+>> better to continue working with suboptimal performance than start
+>> failing allocations?
 > 
-> I won't enter in too much detail, but the basic idea is to use
-> reservation based scheduling mechanisms to enforce temporal isolation
-> and guaranteed CPU bandwidth to VM's vcpu(s).
+> If the expected semantics (hardwall) are that allocations should fail then
+> lets be consistent and do so.
 
-Since I've been CC-ed, I add some details to what Juri wrote:
-if the guest workload is mostly CPU intensive, just scheduling the vCPU
-threads with SCHED_DEADLINE allows deterministic CPU allocation.
+It's not "expected" right now. The documented semantics is that (static,
+as the others are rebound) mempolicy is ignored when it's not compatible
+with cpuset. I'm just reusing the same existing semantic for race
+situations. We can discuss whether we can change the semantics now, but
+I don't think it should block this fix.
 
-I recently showed some experiments about this to some students: if some
-periodic real-time tasks are executed in the guest and KVM's vCPU
-threads are scheduled with SCHED_DEADLINE, then the number of missed
-deadlines measured in the guest matches with the number of missed
-deadlines expected from theoretical analysis (using real-time
-hierarchical scheduling analysis).
-[I can provide more details if needed: here is a quick and incomplete
-summary I wrote for the students:
-http://retis.sssup.it/~luca/CBSD/h-sched_experiments.txt
-up to item 4 it is just theoretical schedulability analysis; the
-interesting parts start from item 5]
+> Adding more and more exceptions gets this convoluted mess into an even
+> worse shape.
 
-I think this shows that (for CPU-intensive workloads) it is possible to
-deterministically control the QoS of a KVM-based VM by using
-SCHED_DEADLINE.
+Again, it's not a new exception semantics-wise, but I agree that the
+code of __alloc_pages_slowpath() is even more subtle. But I don't see
+any other easy fix.
 
+> Adding the static binding of nodes was already a screwball
+> if used within a cpuset because now one has to anticipate how a user would
+> move the nodes of a cpuset and how the static bindings would work in such
+> a context.
 
-If your guest workload includes more I/O, then you have to schedule
-more threads with SCHED_DEADLINE (for example, I have some experiments
-with a lot of network traffic in the guest; I used vhost-net and I've
-been able to control the network throughput by scheduling the vhost-net
-kernel thread with SCHED_DEADLINE and changing the runtime and period
-associated to thread).
+On the other hand, static mempolicy is the only one that does not need
+rebinding, and removing the other modes would allow much simpler
+implementation. I thought the outcome of LSF/MM session was that we
+should try to go that way.
 
-
-
-				Luca
-
+> The admin basically needs to know how the application has used memory
+> policies if one still wants to move the applications within a cpuset with
+> the fixed bindings.
 > 
-> I'm Cc-ing Tommaso, Luca and Carlo, whom can provide more information
-> as needed.
+> Maybe the best way to handle this is to give up on cpuset migration of
+> live applications? After all this can be done with a script in the same
+> way as the kernel is doing:
 > 
-> Best,
+> 1. Extend the cpuset to include the new nodes.
 > 
-> - Juri
+> 2. Loop over the processes and use the migrate_pages() to move the apps
+> one by one.
 > 
-> [1] - http://retis.sssup.it/~nino/publication/rtlws14sdnnfs.pdf
-> [2] - http://retis.sssup.it/~tommaso/publications/VHPC-2010.pdf
-> [3] - http://retis.sssup.it/~tommaso/publications/RTSOAA-2009-RTV.pdf
+> 3. Remove the nodes no longer to be used.
 > 
-> Skimming through Tommaso and Luca publications might be interesting as
-> well. I'm pretty sure I missed the most importants papers. :)
-> http://retis.sssup.it/~tommaso/eng/publications.html
-> https://scholar.google.co.uk/citations?user=C3a6glEAAAAJ&hl=en
+> Then forget about translating memory policies. If an application that is
+> supposed to run in a cpuset and supposed to be moveable has fixed bindings
+> then the application should be aware of that and be equipped with
+> some logic to rebind its memory on its own.
+> 
+> Such an application typically already has such logic and executes a
+> binding after discovering its numa node configuration on startup. It would
+> have to be modified to redo that action when it gets some sort of a signal
+> from the script telling it that the node config would be changed.
+> 
+> Having this logic in the application instead of the kernel avoids all the
+> kernel messes that we keep on trying to deal with and IMHO is much
+> cleaner.
 
+That would be much simpler for us indeed. But we still IMHO can't
+abruptly start denying page fault allocations for existing applications
+that don't have the necessary awareness.
+
+
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
