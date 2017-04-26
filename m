@@ -1,102 +1,122 @@
-From: Vlastimil Babka <vbabka@suse.cz>
-Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race with
- cpuset update
-Date: Wed, 26 Apr 2017 10:07:32 +0200
-Message-ID: <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
-References: <20170411140609.3787-1-vbabka@suse.cz>
- <20170411140609.3787-2-vbabka@suse.cz>
- <alpine.DEB.2.20.1704111152170.25069@east.gentwo.org>
- <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz>
- <alpine.DEB.2.20.1704121617040.28335@east.gentwo.org>
- <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz>
- <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [RFC PATCH 00/14] cgroup: Implement cgroup v2 thread mode & CPU
+ controller
+Date: Wed, 26 Apr 2017 12:05:27 -0400
+Message-ID: <fa35c889-85a8-8b85-c836-4c5070cd7cdc@redhat.com>
+References: <1492783452-12267-1-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 210BFC04BD30
+In-Reply-To: <1492783452-12267-1-git-send-email-longman@redhat.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl@linux.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-api@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-On 04/14/2017 10:37 PM, Christoph Lameter wrote:
-> On Thu, 13 Apr 2017, Vlastimil Babka wrote:
-> 
->>
->> I doubt we can change that now, because that can break existing
->> programs. It also makes some sense at least to me, because a task can
->> control its own mempolicy (for performance reasons), but cpuset changes
->> are admin decisions that the task cannot even anticipate. I think it's
->> better to continue working with suboptimal performance than start
->> failing allocations?
-> 
-> If the expected semantics (hardwall) are that allocations should fail then
-> lets be consistent and do so.
+On 04/21/2017 10:03 AM, Waiman Long wrote:
+> This patchset incorporates the following 2 patchsets from Tejun Heo:
+>
+>  1) cgroup v2 thread mode patchset (5 patches)
+>     https://lkml.org/lkml/2017/2/2/592
+>  2) CPU Controller on Control Group v2 (2 patches)
+>     https://lkml.org/lkml/2016/8/5/368
+>
+> Additional patches are then layered on top to implement the following
+> new features:
+>
+>  1) An enhanced v2 thread mode where a thread root (root of a threaded
+>     subtree) can have non-threaded children with non-threaded
+>     controllers enabled and no internal process constraint does
+>     not apply.
+>  2) An enhanced debug controller which dumps out more information
+>     relevant to the debugging and testing of cgroup v2 in general.
+>  3) Separate control knobs for resource domain controllers can be
+>     enabled in a thread root to manage all the internal processes in
+>     the threaded subtree.
+>
+> Patches 1-5 are Tejun's cgroup v2 thread mode patchset.
+>
+> Patch 6 fixes a task_struct reference counting bug introduced in
+> patch 1.
+>
+> Patch 7 moves the debug cgroup out from cgroup_v1.c into its own
+> file.
+>
+> Patch 8 keeps more accurate counts of the number of tasks associated
+> with each css_set.
+>
+> Patch 9 enhances the debug controller to provide more information
+> relevant to the cgroup v2 thread mode to ease debugging effort.
+>
+> Patch 10 implements the enhanced cgroup v2 thread mode with the
+> following enhancements:
+>
+>  1) Thread roots are treated differently from threaded cgroups.
+>  2) Thread root can now have non-threaded controllers enabled as well
+>     as non-threaded children.
+>
+> Patches 11-12 are Tejun's CPU controller on control group v2 patchset.
+>
+> Patch 13 makes both cpu and cpuacct controllers threaded.
+>
+> Patch 14 enables the creation of a special "cgroup.self" directory
+> under the thread root to hold resource control knobs for controllers
+> that don't want resource competiton between internal processes and
+> non-threaded child cgroups.
+>
+> Preliminary testing was done with the debug controller enabled. Things
+> seemed to work fine so far. More rigorous testing will be needed, and
+> any suggestions are welcome.
+>
+> Tejun Heo (7):
+>   cgroup: reorganize cgroup.procs / task write path
+>   cgroup: add @flags to css_task_iter_start() and implement
+>     CSS_TASK_ITER_PROCS
+>   cgroup: introduce cgroup->proc_cgrp and threaded css_set handling
+>   cgroup: implement CSS_TASK_ITER_THREADED
+>   cgroup: implement cgroup v2 thread support
+>   sched: Misc preps for cgroup unified hierarchy interface
+>   sched: Implement interface for cgroup unified hierarchy
+>
+> Waiman Long (7):
+>   cgroup: Fix reference counting bug in cgroup_procs_write()
+>   cgroup: Move debug cgroup to its own file
+>   cgroup: Keep accurate count of tasks in each css_set
+>   cgroup: Make debug cgroup support v2 and thread mode
+>   cgroup: Implement new thread mode semantics
+>   sched: Make cpu/cpuacct threaded controllers
+>   cgroup: Enable separate control knobs for thread root internal
+>     processes
+>
+>  Documentation/cgroup-v2.txt     | 114 +++++-
+>  include/linux/cgroup-defs.h     |  56 +++
+>  include/linux/cgroup.h          |  12 +-
+>  kernel/cgroup/Makefile          |   1 +
+>  kernel/cgroup/cgroup-internal.h |  18 +-
+>  kernel/cgroup/cgroup-v1.c       | 217 +++-------
+>  kernel/cgroup/cgroup.c          | 862 ++++++++++++++++++++++++++++++++++------
+>  kernel/cgroup/cpuset.c          |   6 +-
+>  kernel/cgroup/debug.c           | 284 +++++++++++++
+>  kernel/cgroup/freezer.c         |   6 +-
+>  kernel/cgroup/pids.c            |   1 +
+>  kernel/events/core.c            |   1 +
+>  kernel/sched/core.c             | 150 ++++++-
+>  kernel/sched/cpuacct.c          |  55 ++-
+>  kernel/sched/cpuacct.h          |   5 +
+>  mm/memcontrol.c                 |   3 +-
+>  net/core/netclassid_cgroup.c    |   2 +-
+>  17 files changed, 1478 insertions(+), 315 deletions(-)
+>  create mode 100644 kernel/cgroup/debug.c
+>
+Does anyone has time to take a look at these patches?
 
-It's not "expected" right now. The documented semantics is that (static,
-as the others are rebound) mempolicy is ignored when it's not compatible
-with cpuset. I'm just reusing the same existing semantic for race
-situations. We can discuss whether we can change the semantics now, but
-I don't think it should block this fix.
+As the merge window is going to open up next week, I am not going to
+bother you guys when the merge window opens.
 
-> Adding more and more exceptions gets this convoluted mess into an even
-> worse shape.
-
-Again, it's not a new exception semantics-wise, but I agree that the
-code of __alloc_pages_slowpath() is even more subtle. But I don't see
-any other easy fix.
-
-> Adding the static binding of nodes was already a screwball
-> if used within a cpuset because now one has to anticipate how a user would
-> move the nodes of a cpuset and how the static bindings would work in such
-> a context.
-
-On the other hand, static mempolicy is the only one that does not need
-rebinding, and removing the other modes would allow much simpler
-implementation. I thought the outcome of LSF/MM session was that we
-should try to go that way.
-
-> The admin basically needs to know how the application has used memory
-> policies if one still wants to move the applications within a cpuset with
-> the fixed bindings.
-> 
-> Maybe the best way to handle this is to give up on cpuset migration of
-> live applications? After all this can be done with a script in the same
-> way as the kernel is doing:
-> 
-> 1. Extend the cpuset to include the new nodes.
-> 
-> 2. Loop over the processes and use the migrate_pages() to move the apps
-> one by one.
-> 
-> 3. Remove the nodes no longer to be used.
-> 
-> Then forget about translating memory policies. If an application that is
-> supposed to run in a cpuset and supposed to be moveable has fixed bindings
-> then the application should be aware of that and be equipped with
-> some logic to rebind its memory on its own.
-> 
-> Such an application typically already has such logic and executes a
-> binding after discovering its numa node configuration on startup. It would
-> have to be modified to redo that action when it gets some sort of a signal
-> from the script telling it that the node config would be changed.
-> 
-> Having this logic in the application instead of the kernel avoids all the
-> kernel messes that we keep on trying to deal with and IMHO is much
-> cleaner.
-
-That would be much simpler for us indeed. But we still IMHO can't
-abruptly start denying page fault allocations for existing applications
-that don't have the necessary awareness.
-
-
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
-> 
+Cheers,
+Longman
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
