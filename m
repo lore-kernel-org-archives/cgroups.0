@@ -1,96 +1,53 @@
-From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/2] mm/memcontrol: inc reclaim gen if restarting walk in mem_cgroup_iter()
-Date: Fri, 28 Apr 2017 14:55:47 -0700
-Message-ID: <1493416547-19212-3-git-send-email-sean.j.christopherson@intel.com>
-References: <1493416547-19212-1-git-send-email-sean.j.christopherson@intel.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1493416547-19212-1-git-send-email-sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: avoid attaching a cgroup root to two different
+ superblocks, take 2
+Date: Fri, 28 Apr 2017 18:07:20 -0400
+Message-ID: <20170428220720.GJ22354@htj.duckdns.org>
+References: <58F6C85F.10706@huawei.com>
+Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=b1nhqtFuCf8mNIcpVYQhjqLBfstsvUfILPMQhjG/A8A=;
+        b=LMRCtDpk4ABIvPuAdtnzU3mzhbiiHgckzqIK4l8ypXd062+Q8sK8eGCb4Ys7YQYmpa
+         SZCdHe2ld8obe/J7PBjPbhElRotPznTN+BcQpTi0ftzHCOv/MRBf7MfyUlplsE3Mx4+e
+         4/EQMBkF3DU02tIQnhIVBO4C87EH5jKENx8OGtQwPktiMxSiwzdz1RtzfZ18XbPRRrQq
+         dNIQ10L416tSDvYeujdoZw4hgbabIJ05MsZWjk1S+clZQI0etSh0Ib+i81X5/Nsn56yY
+         TqeQb5YqnTo49QQvEyMcIZX7frhyDW0yJTHrHsMgbea7nLyokLYNzztc87G654CatUi/
+         bqhQ==
+Content-Disposition: inline
+In-Reply-To: <58F6C85F.10706@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: Zefan Li <lizefan@huawei.com>
+Cc: avagin@virtuozzo.com, Dmitry Vyukov <dvyukov@google.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-Increment iter->generation if a reclaimer reaches the end of the tree,
-even if it restarts the hierarchy walk instead of returning NULL, i.e.
-this is the reclaimer's initial call to mem_cgroup_iter().  If we don't
-increment the generation, other threads that are part of the current
-reclaim generation will incorrectly continue to walk the tree since
-iter->generation won't be updated until one of the reclaimers reaches
-the end of the hierarchy a second time.
+On Wed, Apr 19, 2017 at 10:15:59AM +0800, Zefan Li wrote:
+> Commit bfb0b80db5f9 is broken. Now we try to fix the race by delaying
+> the initialization of cgroup root refcnt until a superblock has been
+> allocated.
+>
+> Cc: stable@vger.kernel.org # 3.16+
+> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+> Reported-by: Andrei Vagin <avagin@virtuozzo.com>
+> Tested-by: Andrei Vagin <avagin@virtuozzo.com>
+> Signed-off-by: Zefan Li <lizefan@huawei.com>
 
-Move the put_css(&pos->css) call below the iter->generation update
-to minimize the window where a thread can see a stale generation but
-consume an updated position, as iter->generation and iter->position
-are not updated atomically.
+Applied to cgroup/for-4.12 w/o the stable tag.  Let's wait this one
+out.  It's unlikely to trigger in real use cases and if we decide that
+this needs to be in -stable, we can ask Greg later.
 
-Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
----
- mm/memcontrol.c | 31 ++++++++++++++++++++++++++-----
- 1 file changed, 26 insertions(+), 5 deletions(-)
+> Again I didn't receive your reply. I believe the problem is in my side.
+> I'll see if there's some network administrator who can look into this
+> issue, but I don't have much hope...
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6a7ca3c..b858245 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -740,6 +740,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 	struct cgroup_subsys_state *css = NULL;
- 	struct mem_cgroup *memcg = NULL;
- 	struct mem_cgroup *pos = NULL;
-+	bool inc_gen = false;
- 
- 	if (mem_cgroup_disabled())
- 		return NULL;
-@@ -791,6 +792,14 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 		css = css_next_descendant_pre(css, &root->css);
- 		if (!css) {
- 			/*
-+			 * Increment the generation as the next call to
-+			 * css_next_descendant_pre will restart at root.
-+			 * Do not update iter->generation directly as we
-+			 * should only do so if we update iter->position.
-+			 */
-+			inc_gen = true;
-+
-+			/*
- 			 * Reclaimers share the hierarchy walk, and a
- 			 * new one might jump in right at the end of
- 			 * the hierarchy - make sure they see at least
-@@ -838,16 +847,28 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 				css_put(&pos->css);
- 			css = NULL;
- 			memcg = NULL;
-+			inc_gen = false;
- 			goto start;
- 		}
- 
--		if (pos)
--			css_put(&pos->css);
--
--		if (!memcg)
-+		/*
-+		 * Update iter->generation asap to minimize the window where
-+		 * a different thread compares against a stale generation but
-+		 * consumes an updated position.
-+		 */
-+		if (inc_gen)
- 			iter->generation++;
--		else if (!prev)
-+
-+		/*
-+		 * Initialize the reclaimer's generation after the potential
-+		 * update to iter->generation; if we restarted the hierarchy
-+		 * walk then we are part of the new generation.
-+		 */
-+		if (!prev)
- 			reclaim->generation = iter->generation;
-+
-+		if (pos)
-+			css_put(&pos->css);
- 	}
- 
- out_unlock:
+Bummer.  Is there another address I can cc? :(
+
+Thanks.
+
 -- 
-2.7.4
+tejun
