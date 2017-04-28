@@ -1,50 +1,42 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup writeback support
-Date: Fri, 28 Apr 2017 17:19:20 -0400
-Message-ID: <20170428211920.GC22354@htj.duckdns.org>
-References: <CAEC-ZVGrPu6_BZJX3SBbysMnccOHiCXAzskwqZnRhK1=bN7dbg@mail.gmail.com>
+Subject: Re: [PATCH] blk-cgroup: fix wrong unlock order when parse per blkg
+ config
+Date: Fri, 28 Apr 2017 17:22:33 -0400
+Message-ID: <20170428212233.GE22354@htj.duckdns.org>
+References: <be8d9709-84fe-d2df-f294-a12701675e27@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=jNMllhbs1THPkJllOLw+xFy/hrLtezDqv/cDw+zr9Ys=;
-        b=GgAiQ70Hqfe1U3rM+T9R0a3HzVlv8+5j6/3Mv05NFxtz6YdDHcT+6GBpTCBcXOXQS4
-         thThQ1AQGs7Y36CA2BOeHu6VOlLj6hAsAvLlkSdu8nAWvTj016a/uKdSSwL4+57opjSi
-         0bXWDOhulLtPTZvUo/O5/WLHwqjC0dEtSDOeNg7xdjVZ70SsDd9MrVOVa4yKMF2EkP/Q
-         X0t0Ki6GpQg/wuGluU1mqk9Wdr7NRrwesgre4TFYISBiNYNpaxFEy1XAkBuD3guVxt2k
-         PNJi6Prw8fpvQ9YNe03deUT6Qg7FStpjy7eHPEqfs07G0vtqeRAXExSz1ujN/BXDBII1
-         Wq6A==
+         :content-disposition:in-reply-to:user-agent;
+        bh=zOL4vghtrZRyI0a2sVomafH9e/Z4+DcqI5nmbxa1PAk=;
+        b=fvIZWEn5NpoRx0I0Pp1hkFli4AYULA+nId+5H9c6bhuZHAzAz4IeFD0NT00T8P3Tw+
+         9y79CYXg2Z2WMjrxvxMu43+P1LJdgU2V+ZKjyG63aj8u/kOJy49SfVZXexyrchT9SkCG
+         jL0Ubzm5UZCP3oeJkpntwNMiRDWYwPMLRX3nXAWCD6l/QtRsCEy+tz3HT4X6T+4MroP0
+         AkABg2eSpeYhnriBh7BwbKNF3BaSzzy24V5WFMMg4at3k1UooWVX4rhE/P/UAZWKC3Oh
+         OD4jKvLw8B85D+76k3YunjJyLW2HSixoA0APkZ0IDbJfUw+Zl1jGpu2V90P7mChP1WWS
+         I13Q==
 Content-Disposition: inline
-In-Reply-To: <CAEC-ZVGrPu6_BZJX3SBbysMnccOHiCXAzskwqZnRhK1=bN7dbg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <be8d9709-84fe-d2df-f294-a12701675e27-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?utf-8?B?5byg5pys6b6Z?= <zblgeqian-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, wenqing.lz-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, boyu.mt-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org
 
 Hello,
 
-On Wed, Apr 19, 2017 at 05:58:56PM +0800, 张本龙 wrote:
-> Is it because I did something wrong or missed anything? As I find many
-> branches exist in kernel/git/tj/cgroup.tj, it would be great if you
-> could help explain the roles of the different branches and how the
+On Mon, Apr 24, 2017 at 06:52:05PM +0800, Joseph Qi wrote:
+> From: Joseph Qi <qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org>
+> 
+> In case of error blkg in blkg_conf_prep, we should unlock
+> queue->queue_lock first and then rcu, just like blkg_conf_finish.
 
-Heh, those are from a long time ago.  These are all work-in-progress
-branches and trying to chase down which branch was for what won't be
-easy.  They're mostly ad-hoc.
-
-> repo works in general. Especially, I want to know the first repo
-> branch/linux release that has writeback support so it's easier to
-> learn how it's built up step by step from the commit log.
-
-If it's for tracking down the commits to help understanding the code,
-I'd recommend tracking down the history with git whatchanged on the
-main files (fs/fs-writeback.c and mm/backing-dev.c and
-mm/page-writeback.c) and then browse the commits from there.
+I get that this is inconsistent but why is this wrong?  If this is for
+consistency, can you please explain so in the commit so that people
+don't confuse it for an actual bug fix?
 
 Thanks.
 
