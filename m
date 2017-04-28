@@ -1,44 +1,51 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] blk-cgroup: fix wrong unlock order when parse per blkg
- config
-Date: Fri, 28 Apr 2017 17:22:33 -0400
-Message-ID: <20170428212233.GE22354@htj.duckdns.org>
-References: <be8d9709-84fe-d2df-f294-a12701675e27@gmail.com>
-Mime-Version: 1.0
+From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 0/2] mm/memcontrol: fix reclaim bugs in mem_cgroup_iter
+Date: Fri, 28 Apr 2017 14:55:45 -0700
+Message-ID: <1493416547-19212-1-git-send-email-sean.j.christopherson@intel.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=zOL4vghtrZRyI0a2sVomafH9e/Z4+DcqI5nmbxa1PAk=;
-        b=fvIZWEn5NpoRx0I0Pp1hkFli4AYULA+nId+5H9c6bhuZHAzAz4IeFD0NT00T8P3Tw+
-         9y79CYXg2Z2WMjrxvxMu43+P1LJdgU2V+ZKjyG63aj8u/kOJy49SfVZXexyrchT9SkCG
-         jL0Ubzm5UZCP3oeJkpntwNMiRDWYwPMLRX3nXAWCD6l/QtRsCEy+tz3HT4X6T+4MroP0
-         AkABg2eSpeYhnriBh7BwbKNF3BaSzzy24V5WFMMg4at3k1UooWVX4rhE/P/UAZWKC3Oh
-         OD4jKvLw8B85D+76k3YunjJyLW2HSixoA0APkZ0IDbJfUw+Zl1jGpu2V90P7mChP1WWS
-         I13Q==
-Content-Disposition: inline
-In-Reply-To: <be8d9709-84fe-d2df-f294-a12701675e27-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Joseph Qi <jiangqi903-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, wenqing.lz-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, boyu.mt-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org
+To: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-Hello,
+This patch set contains two bug fixes for mem_cgroup_iter().  The bugs
+were found by code inspection and were confirmed via synthetic testing
+that forcefully setup the failing conditions.
 
-On Mon, Apr 24, 2017 at 06:52:05PM +0800, Joseph Qi wrote:
-> From: Joseph Qi <qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org>
-> 
-> In case of error blkg in blkg_conf_prep, we should unlock
-> queue->queue_lock first and then rcu, just like blkg_conf_finish.
+Bug #1 is a race condition where mem_cgroup_iter() incorrectly returns
+the same memcg to multiple threads reclaiming from the same root, zone,
+priority and generation.  mem_cgroup_iter() doesn't check the result of
+cmpxchg(iter->pos...) when setting the new pos, and so fails to detect
+that it will return the same memcg as the thread that successfully set
+iter->position.  If multiple threads read the same iter->position value,
+then they will call css_next_descendant_pre() with the same css and will
+compute the same memcg (unless they see different versions of the tree
+due to an RCU update).
 
-I get that this is inconsistent but why is this wrong?  If this is for
-consistency, can you please explain so in the commit so that people
-don't confuse it for an actual bug fix?
+Bug #2 is also a race condition of sorts, with the same setup conditions
+as bug #1.  If a reclaimer's initial call to mem_cgroup_iter() triggers
+a restart of the hierarchy walk, i.e. css_next_descendant_pre() returns
+NULL and prev == NULL, mem_cgroup_iter() fails to increment iter->gen...
+even though it has started a new walk of the hierarchy.  This technically
+isn't a bug for the thread that triggered the restart as it's reasonable
+for that thread to perform a full walk of the tree, but other threads
+in the current reclaim generation will incorrectly continue to walk the
+tree since iter->generation won't be updated until one of the reclaimers
+reaches the end of the hierarchy a second time.
 
-Thanks.
+The two patches can be applied independently, but I included them in a
+single series as the fix for bug #1 can theoretically exacerbate bug #2,
+and bug #2 is likely more serious as it results in a duplicate walk of
+the entire tree as opposed to a duplicate reclaim of a single memcg.
 
--- 
-tejun
+
+Sean Christopherson (2):
+  mm/memcontrol: check cmpxchg(iter->pos...) result in mem_cgroup_iter()
+  mm/memcontrol: inc reclaim gen if restarting walk in mem_cgroup_iter()
+
+ mm/memcontrol.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 47 insertions(+), 9 deletions(-)
+
