@@ -1,53 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: avoid attaching a cgroup root to two different
- superblocks, take 2
-Date: Fri, 28 Apr 2017 18:07:20 -0400
-Message-ID: <20170428220720.GJ22354@htj.duckdns.org>
-References: <58F6C85F.10706@huawei.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=b1nhqtFuCf8mNIcpVYQhjqLBfstsvUfILPMQhjG/A8A=;
-        b=LMRCtDpk4ABIvPuAdtnzU3mzhbiiHgckzqIK4l8ypXd062+Q8sK8eGCb4Ys7YQYmpa
-         SZCdHe2ld8obe/J7PBjPbhElRotPznTN+BcQpTi0ftzHCOv/MRBf7MfyUlplsE3Mx4+e
-         4/EQMBkF3DU02tIQnhIVBO4C87EH5jKENx8OGtQwPktiMxSiwzdz1RtzfZ18XbPRRrQq
-         dNIQ10L416tSDvYeujdoZw4hgbabIJ05MsZWjk1S+clZQI0etSh0Ib+i81X5/Nsn56yY
-         TqeQb5YqnTo49QQvEyMcIZX7frhyDW0yJTHrHsMgbea7nLyokLYNzztc87G654CatUi/
-         bqhQ==
-Content-Disposition: inline
-In-Reply-To: <58F6C85F.10706@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
+ with cpuset update
+Date: Sun, 30 Apr 2017 16:33:10 -0500 (CDT)
+Message-ID: <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org>
+References: <20170411140609.3787-1-vbabka@suse.cz> <20170411140609.3787-2-vbabka@suse.cz> <alpine.DEB.2.20.1704111152170.25069@east.gentwo.org> <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz> <alpine.DEB.2.20.1704121617040.28335@east.gentwo.org>
+ <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz> <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org> <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan@huawei.com>
-Cc: avagin@virtuozzo.com, Dmitry Vyukov <dvyukov@google.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-api@vger.kernel.org
 
-On Wed, Apr 19, 2017 at 10:15:59AM +0800, Zefan Li wrote:
-> Commit bfb0b80db5f9 is broken. Now we try to fix the race by delaying
-> the initialization of cgroup root refcnt until a superblock has been
-> allocated.
+On Wed, 26 Apr 2017, Vlastimil Babka wrote:
+
+> > Such an application typically already has such logic and executes a
+> > binding after discovering its numa node configuration on startup. It would
+> > have to be modified to redo that action when it gets some sort of a signal
+> > from the script telling it that the node config would be changed.
+> >
+> > Having this logic in the application instead of the kernel avoids all the
+> > kernel messes that we keep on trying to deal with and IMHO is much
+> > cleaner.
 >
-> Cc: stable@vger.kernel.org # 3.16+
-> Reported-by: Dmitry Vyukov <dvyukov@google.com>
-> Reported-by: Andrei Vagin <avagin@virtuozzo.com>
-> Tested-by: Andrei Vagin <avagin@virtuozzo.com>
-> Signed-off-by: Zefan Li <lizefan@huawei.com>
+> That would be much simpler for us indeed. But we still IMHO can't
+> abruptly start denying page fault allocations for existing applications
+> that don't have the necessary awareness.
 
-Applied to cgroup/for-4.12 w/o the stable tag.  Let's wait this one
-out.  It's unlikely to trigger in real use cases and if we decide that
-this needs to be in -stable, we can ask Greg later.
+We certainly can do that. The failure of the page faults are due to the
+admin trying to move an application that is not aware of this and is using
+mempols. That could be an error. Trying to move an application that
+contains both absolute and relative node numbers is definitely something
+that is potentiall so screwed up that the kernel should not muck around
+with such an app.
 
-> Again I didn't receive your reply. I believe the problem is in my side.
-> I'll see if there's some network administrator who can look into this
-> issue, but I don't have much hope...
+Also user space can determine if the application is using memory policies
+and can then take appropriate measures (message to the sysadmin to eval
+tge situation f.e.) or mess aroud with the processes memory policies on
+its own.
 
-Bummer.  Is there another address I can cc? :(
+So this is certainly a way out of this mess.
 
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
