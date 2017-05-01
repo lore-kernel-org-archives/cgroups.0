@@ -1,40 +1,65 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH -mm -v10 1/3] mm, THP, swap: Delay splitting THP during
- swap out
-Date: Mon, 1 May 2017 12:44:30 +0200
-Message-ID: <20170501104430.GA16306@cmpxchg.org>
-References: <20170425125658.28684-1-ying.huang@intel.com>
- <20170425125658.28684-2-ying.huang@intel.com>
- <20170427053141.GA1925@bbox>
- <87mvb21fz1.fsf@yhuang-dev.intel.com>
- <20170428084044.GB19510@bbox>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-4.12] cgroup: mark cgroup_get() with __maybe_unused
+Date: Mon, 1 May 2017 15:41:32 -0400
+Message-ID: <20170501194132.GF8921@htj.duckdns.org>
+References: <20170501145340.17e8ef86@canb.auug.org.au>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=+Egf5RZfiX9Mrx9qmRiyEHW7X9sw9DV6IVHbx+6GND0=; b=msEJwgJXfKS+q9vYgwfrEn5+fp
-        h9X4chkdMDBqg0EMs8r8no3Ym35hyFC2sBNDKn/gqUfq/azr14mI8J1asqb+EBmX63yudPCSpgBy3
-        XKFIeikUAcCtkOwoIiEkuqWD5XPdq6dDehaICD3bafr3a4A+/lkw15NlZesJtNmWMDbA=;
+Return-path: <linux-next-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=wGPZ/dyvg2U0Ut+5mALy0DmcPv66BKyyePVsH69U678=;
+        b=pKGAPKToEN/kozrMUGUoBKe7kimHiQitcavmDGNh0FhFEBb5N41LDGf6sAHc6Xq6Z9
+         zscR8ZHlFz8ZArDk2hYKetvpGu8X8In8p7gwJ60grlS47Adi2A/XTKg6eTIHtztz7io0
+         KFXZTF3gL3S09+nv/dyN88JNZiUFQtJLAJ7mfU5x/FGRHd8Ru1en/0tzqrN+Hd8kG7lr
+         6tZvobyYlf0VVYYX2JijOLUhfHRpawLhdKwRN6EYT7DQ+IFwHKD+I4zkzYlYboseLMO4
+         jOa4+Wt4X9NzPedRfpSpVLnCocFdsmVT2bfJjW0kLvBS674AoTz90Rc4QIczKXlumtSa
+         yDjQ==
 Content-Disposition: inline
-In-Reply-To: <20170428084044.GB19510@bbox>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170501145340.17e8ef86@canb.auug.org.au>
+Sender: linux-next-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ebru Akagunduz <ebru.akagunduz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-On Fri, Apr 28, 2017 at 05:40:44PM +0900, Minchan Kim wrote:
-> However, get_swap_page is ugly now. The caller should take care of
-> failure and should retry after split. I hope get_swap_page includes
-> split and retry logic in itself without reling on the caller.
+From 310b4816a5d8082416b4ab83e5a7b3cb92883a4d Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Mon, 1 May 2017 15:24:14 -0400
 
-I think this makes the interface terrible. It's an allocation function
-to which you pass a reference object for size - and if the allocation
-doesn't succeed it'll split your reference object to make it fit?
+a590b90d472f ("cgroup: fix spurious warnings on cgroup_is_dead() from
+cgroup_sk_alloc()") converted most cgroup_get() usages to
+cgroup_get_live() leaving cgroup_sk_alloc() the sole user of
+cgroup_get().  When !CONFIG_SOCK_CGROUP_DATA, this ends up triggering
+unused warning for cgroup_get().
 
-That's a nasty side effect for this function to have.
+Silence the warning by adding __maybe_unused to cgroup_get().
+
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Link: http://lkml.kernel.org/r/20170501145340.17e8ef86@canb.auug.org.au
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Applied to cgroup/for-4.12.
+
+Thanks!
+
+ kernel/cgroup/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 38d9386..f2bcc11 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -436,7 +436,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
+ 	return css;
+ }
+ 
+-static void cgroup_get(struct cgroup *cgrp)
++static void __maybe_unused cgroup_get(struct cgroup *cgrp)
+ {
+ 	css_get(&cgrp->self);
+ }
+-- 
+2.9.3
