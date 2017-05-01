@@ -1,51 +1,40 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
- with cpuset update
-Date: Sun, 30 Apr 2017 16:33:10 -0500 (CDT)
-Message-ID: <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org>
-References: <20170411140609.3787-1-vbabka@suse.cz> <20170411140609.3787-2-vbabka@suse.cz> <alpine.DEB.2.20.1704111152170.25069@east.gentwo.org> <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz> <alpine.DEB.2.20.1704121617040.28335@east.gentwo.org>
- <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz> <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org> <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
-Sender: owner-linux-mm@kvack.org
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH -mm -v10 1/3] mm, THP, swap: Delay splitting THP during
+ swap out
+Date: Mon, 1 May 2017 12:44:30 +0200
+Message-ID: <20170501104430.GA16306@cmpxchg.org>
+References: <20170425125658.28684-1-ying.huang@intel.com>
+ <20170425125658.28684-2-ying.huang@intel.com>
+ <20170427053141.GA1925@bbox>
+ <87mvb21fz1.fsf@yhuang-dev.intel.com>
+ <20170428084044.GB19510@bbox>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=+Egf5RZfiX9Mrx9qmRiyEHW7X9sw9DV6IVHbx+6GND0=; b=msEJwgJXfKS+q9vYgwfrEn5+fp
+        h9X4chkdMDBqg0EMs8r8no3Ym35hyFC2sBNDKn/gqUfq/azr14mI8J1asqb+EBmX63yudPCSpgBy3
+        XKFIeikUAcCtkOwoIiEkuqWD5XPdq6dDehaICD3bafr3a4A+/lkw15NlZesJtNmWMDbA=;
+Content-Disposition: inline
+In-Reply-To: <20170428084044.GB19510@bbox>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-api@vger.kernel.org
+To: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ebru Akagunduz <ebru.akagunduz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 26 Apr 2017, Vlastimil Babka wrote:
+On Fri, Apr 28, 2017 at 05:40:44PM +0900, Minchan Kim wrote:
+> However, get_swap_page is ugly now. The caller should take care of
+> failure and should retry after split. I hope get_swap_page includes
+> split and retry logic in itself without reling on the caller.
 
-> > Such an application typically already has such logic and executes a
-> > binding after discovering its numa node configuration on startup. It would
-> > have to be modified to redo that action when it gets some sort of a signal
-> > from the script telling it that the node config would be changed.
-> >
-> > Having this logic in the application instead of the kernel avoids all the
-> > kernel messes that we keep on trying to deal with and IMHO is much
-> > cleaner.
->
-> That would be much simpler for us indeed. But we still IMHO can't
-> abruptly start denying page fault allocations for existing applications
-> that don't have the necessary awareness.
+I think this makes the interface terrible. It's an allocation function
+to which you pass a reference object for size - and if the allocation
+doesn't succeed it'll split your reference object to make it fit?
 
-We certainly can do that. The failure of the page faults are due to the
-admin trying to move an application that is not aware of this and is using
-mempols. That could be an error. Trying to move an application that
-contains both absolute and relative node numbers is definitely something
-that is potentiall so screwed up that the kernel should not muck around
-with such an app.
-
-Also user space can determine if the application is using memory policies
-and can then take appropriate measures (message to the sysadmin to eval
-tge situation f.e.) or mess aroud with the processes memory policies on
-its own.
-
-So this is certainly a way out of this mess.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+That's a nasty side effect for this function to have.
