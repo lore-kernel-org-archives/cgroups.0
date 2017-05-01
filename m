@@ -1,65 +1,82 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH cgroup/for-4.12] cgroup: mark cgroup_get() with __maybe_unused
-Date: Mon, 1 May 2017 15:41:32 -0400
-Message-ID: <20170501194132.GF8921@htj.duckdns.org>
-References: <20170501145340.17e8ef86@canb.auug.org.au>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v4.12-rc1
+Date: Mon, 1 May 2017 15:58:23 -0400
+Message-ID: <20170501195823.GA19079@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-next-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=wGPZ/dyvg2U0Ut+5mALy0DmcPv66BKyyePVsH69U678=;
-        b=pKGAPKToEN/kozrMUGUoBKe7kimHiQitcavmDGNh0FhFEBb5N41LDGf6sAHc6Xq6Z9
-         zscR8ZHlFz8ZArDk2hYKetvpGu8X8In8p7gwJ60grlS47Adi2A/XTKg6eTIHtztz7io0
-         KFXZTF3gL3S09+nv/dyN88JNZiUFQtJLAJ7mfU5x/FGRHd8Ru1en/0tzqrN+Hd8kG7lr
-         6tZvobyYlf0VVYYX2JijOLUhfHRpawLhdKwRN6EYT7DQ+IFwHKD+I4zkzYlYboseLMO4
-         jOa4+Wt4X9NzPedRfpSpVLnCocFdsmVT2bfJjW0kLvBS674AoTz90Rc4QIczKXlumtSa
-         yDjQ==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=xf+fXkuzVNO8lJHWNkK1YiKP9tYHQoLle0V5zJb5BUw=;
+        b=TUR7oRJfO+ACv/IZt8lECwF6TrgNIChJmWoAlUKdj85vKicyck/c8F87fff8PlVSd2
+         VlaZYHdluZ/yDAxTmkxulo9UO+LKt00Crx8HG8KNbpipqPFUDkaCRykCFCFTdyDnY5uo
+         DISSWyKSfjwKHDZioL6gRXU7f0VTGGTlHi5euIjIsylSpwzzzle1b5A0nqnD+jCs5VGB
+         14aS3f4kmlNYd/PCcjCDfkqHJ6AU3oKeIETjSodZC6Cg64WAEsYq/ksXJqmxvarcHTLF
+         qL9OKOJ9B1KMSIxOFfhkcavFziCw34osZOHhiE7hYTp0gTVmsIovaDrNnD0bF/+tCqqn
+         R9PA==
 Content-Disposition: inline
-In-Reply-To: <20170501145340.17e8ef86@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From 310b4816a5d8082416b4ab83e5a7b3cb92883a4d Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Mon, 1 May 2017 15:24:14 -0400
+Hello,
 
-a590b90d472f ("cgroup: fix spurious warnings on cgroup_is_dead() from
-cgroup_sk_alloc()") converted most cgroup_get() usages to
-cgroup_get_live() leaving cgroup_sk_alloc() the sole user of
-cgroup_get().  When !CONFIG_SOCK_CGROUP_DATA, this ends up triggering
-unused warning for cgroup_get().
+Nothing major.  Two notable fixes are Li's second stab at fixing the
+long-standing race condition in the mount path and suppression of
+spurious warning from cgroup_get().  All other changes are trivial.
 
-Silence the warning by adding __maybe_unused to cgroup_get().
+Thanks.
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Link: http://lkml.kernel.org/r/20170501145340.17e8ef86@canb.auug.org.au
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
-Applied to cgroup/for-4.12.
+The following changes since commit c1ae3cfa0e89fa1a7ecc4c99031f5e9ae99d9201:
 
-Thanks!
+  Linux 4.11-rc1 (2017-03-05 12:59:56 -0800)
 
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+are available in the git repository at:
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 38d9386..f2bcc11 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -436,7 +436,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
- 	return css;
- }
- 
--static void cgroup_get(struct cgroup *cgrp)
-+static void __maybe_unused cgroup_get(struct cgroup *cgrp)
- {
- 	css_get(&cgrp->self);
- }
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.12
+
+for you to fetch changes up to 310b4816a5d8082416b4ab83e5a7b3cb92883a4d:
+
+  cgroup: mark cgroup_get() with __maybe_unused (2017-05-01 15:24:14 -0400)
+
+----------------------------------------------------------------
+Elena Reshetova (2):
+      kernel: convert cgroup_namespace.count from atomic_t to refcount_t
+      kernel: convert css_set.refcount from atomic_t to refcount_t
+
+Geliang Tang (1):
+      cgroup: drop duplicate header nsproxy.h
+
+Nicholas Mc Guire (1):
+      cgroup: switch to BUG_ON()
+
+Rakib Mullick (1):
+      cpuset: Remove cpuset_update_active_cpus()'s parameter.
+
+Tejun Heo (2):
+      cgroup: fix spurious warnings on cgroup_is_dead() from cgroup_sk_alloc()
+      cgroup: mark cgroup_get() with __maybe_unused
+
+Todd Poynor (1):
+      cgroup: move cgroup_subsys_state parent field for cache locality
+
+Zefan Li (1):
+      cgroup: avoid attaching a cgroup root to two different superblocks, take 2
+
+ include/linux/cgroup-defs.h     | 12 ++++++++----
+ include/linux/cgroup.h          |  8 ++++----
+ include/linux/cpuset.h          |  4 ++--
+ kernel/cgroup/cgroup-internal.h |  7 ++++---
+ kernel/cgroup/cgroup-v1.c       | 20 +++++++++++++++++---
+ kernel/cgroup/cgroup.c          | 40 +++++++++++++++++++++++++---------------
+ kernel/cgroup/cpuset.c          | 11 ++++-------
+ kernel/cgroup/namespace.c       |  2 +-
+ kernel/sched/core.c             |  4 ++--
+ 9 files changed, 67 insertions(+), 41 deletions(-)
+
 -- 
-2.9.3
+tejun
