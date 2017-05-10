@@ -1,100 +1,156 @@
-From: <ex-GXcTff7tL0M@public.gmane.org>
-Subject: 7548 cgroups
-Date: Sat, 06 May 2017 16:16:45 -0000
-Message-ID: <149408740599.31455.5104245803926455458@saturn-internet.ru>
+From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -mm -v10 1/3] mm, THP, swap: Delay splitting THP during
+ swap out
+Date: Wed, 10 May 2017 10:03:57 +0900
+Message-ID: <20170510010357.GA23404@bbox>
+References: <20170425125658.28684-1-ying.huang@intel.com>
+ <20170425125658.28684-2-ying.huang@intel.com>
+ <20170427053141.GA1925@bbox>
+ <87mvb21fz1.fsf@yhuang-dev.intel.com>
+ <20170428084044.GB19510@bbox>
+ <87d1bwvi26.fsf@yhuang-dev.intel.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="30757584.zip"
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: attachment
+Content-Disposition: inline
+In-Reply-To: <87d1bwvi26.fsf-5/hDr2MS57EDqwDYnZuMFFaTQe2KTcn/@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ebru Akagunduz <ebru.akagunduz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-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
-AAAAAA==
+Hi Huang,
+
+On Fri, Apr 28, 2017 at 08:21:37PM +0800, Huang, Ying wrote:
+> Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+> 
+> > On Thu, Apr 27, 2017 at 03:12:34PM +0800, Huang, Ying wrote:
+> >> Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+> >> 
+> >> > On Tue, Apr 25, 2017 at 08:56:56PM +0800, Huang, Ying wrote:
+> >> >> From: Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> >> >> 
+> >> >> In this patch, splitting huge page is delayed from almost the first
+> >> >> step of swapping out to after allocating the swap space for the
+> >> >> THP (Transparent Huge Page) and adding the THP into the swap cache.
+> >> >> This will batch the corresponding operation, thus improve THP swap out
+> >> >> throughput.
+> >> >> 
+> >> >> This is the first step for the THP swap optimization.  The plan is to
+> >> >> delay splitting the THP step by step and avoid splitting the THP
+> >> >> finally.
+> >> >> 
+> >> >> The advantages of the THP swap support include:
+> >> >> 
+> >> >> - Batch the swap operations for the THP and reduce lock
+> >> >>   acquiring/releasing, including allocating/freeing the swap space,
+> >> >>   adding/deleting to/from the swap cache, and writing/reading the swap
+> >> >>   space, etc.  This will help to improve the THP swap performance.
+> >> >> 
+> >> >> - The THP swap space read/write will be 2M sequential IO.  It is
+> >> >>   particularly helpful for the swap read, which usually are 4k random
+> >> >>   IO.  This will help to improve the THP swap performance.
+> >> >> 
+> >> >> - It will help the memory fragmentation, especially when the THP is
+> >> >>   heavily used by the applications.  The 2M continuous pages will be
+> >> >>   free up after the THP swapping out.
+> >> >> 
+> >> >> - It will improve the THP utilization on the system with the swap
+> >> >>   turned on.  Because the speed for khugepaged to collapse the normal
+> >> >>   pages into the THP is quite slow.  After the THP is split during the
+> >> >>   swapping out, it will take quite long time for the normal pages to
+> >> >>   collapse back into the THP after being swapped in.  The high THP
+> >> >>   utilization helps the efficiency of the page based memory management
+> >> >>   too.
+> >> >> 
+> >> >> There are some concerns regarding THP swap in, mainly because possible
+> >> >> enlarged read/write IO size (for swap in/out) may put more overhead on
+> >> >> the storage device.  To deal with that, the THP swap in should be
+> >> >> turned on only when necessary.  For example, it can be selected via
+> >> >> "always/never/madvise" logic, to be turned on globally, turned off
+> >> >> globally, or turned on only for VMA with MADV_HUGEPAGE, etc.
+> >> >> 
+> >> >> In this patch, one swap cluster is used to hold the contents of each
+> >> >> THP swapped out.  So, the size of the swap cluster is changed to that
+> >> >> of the THP (Transparent Huge Page) on x86_64 architecture (512).  For
+> >> >> other architectures which want such THP swap optimization,
+> >> >> ARCH_USES_THP_SWAP_CLUSTER needs to be selected in the Kconfig file
+> >> >> for the architecture.  In effect, this will enlarge swap cluster size
+> >> >> by 2 times on x86_64.  Which may make it harder to find a free cluster
+> >> >> when the swap space becomes fragmented.  So that, this may reduce the
+> >> >> continuous swap space allocation and sequential write in theory.  The
+> >> >> performance test in 0day shows no regressions caused by this.
+> >> >
+> >> > What about other architecures?
+> >> >
+> >> > I mean THP page size on every architectures would be various.
+> >> > If THP page size is much bigger than 2M, the architecture should
+> >> > have big swap cluster size for supporting THP swap-out feature.
+> >> > It means fast empty-swap cluster consumption so that it can suffer
+> >> > from fragmentation easily which causes THP swap void and swap slot
+> >> > allocations slow due to not being able to use per-cpu.
+> >> >
+> >> > What I suggested was contiguous multiple swap cluster allocations
+> >> > to meet THP page size. If some of architecure's THP size is 64M
+> >> > and SWAP_CLUSTER_SIZE is 2M, it should allocate 32 contiguos
+> >> > swap clusters. For that, swap layer need to manage clusters sort
+> >> > in order which would be more overhead in CONFIG_THP_SWAP case
+> >> > but I think it's tradeoff. With that, every architectures can
+> >> > support THP swap easily without arch-specific something.
+> >> 
+> >> That may be a good solution for other architectures.  But I am afraid I
+> >> am not the right person to work on that.  Because I don't know the
+> >> requirement of other architectures, and I have no other architectures
+> >> machines to work on and measure the performance.
+> >
+> > IMO, THP swapout is good thing for every architecture so I dobut
+> > you need to know other architecture's requirement.
+> >
+> >> 
+> >> And the swap clusters aren't sorted in order now intentionally to avoid
+> >> cache line false sharing between the spinlock of struct
+> >> swap_cluster_info.  If we want to sort clusters in order, we need a
+> >> solution for that.
+> >
+> > Does it really matter for this work? IOW, if we couldn't solve it,
+> > cannot we support THP swapout? I don't think so. That's the least
+> > of your worries.
+> > Also, if we have sorted cluster data structure, we need to change
+> > current single linked list of swap cluster to other one so we would
+> > need to revisit to see whether it's really problem.
+> >
+> >> 
+> >> > If (PAGE_SIZE * 512) swap cluster size were okay for most of
+> >> > architecture, just increase it. It's orthogonal work regardless of
+> >> > THP swapout. Then, we don't need to manage swap clusters sort
+> >> > in order in x86_64 which SWAP_CLUSTER_SIZE is equal to
+> >> > THP_PAGE_SIZE. It's just a bonus by side-effect.
+> >> 
+> >> Andrew suggested to make swap cluster size = huge page size (or turn on
+> >> THP swap optimization) only if we enabled CONFIG_THP_SWAP.  So that, THP
+> >> swap optimization will not be turned on unintentionally.
+> >> 
+> >> We may adjust default swap cluster size, but I don't think it need to be
+> >> in this patchset.
+> >
+> > That's it. This feature shouldn't be aware of swap cluster size. IOW,
+> > it would be better to work with every swap cluster size if the align
+> > between THP and swap cluster size is matched at least.
+> 
+> Using one swap cluster for each THP is simpler, so why not start from
+> the simple design?  Complex design may be necessary in the future, but
+> we can work on that at that time.
+
+If it were really architecture specific issue, I'm okay with such simple
+start with major architecture first. However, I don't think it's the case.
+
+THP swap: I don't think it's a architecure issue. It's generally good thing
+once system supports THP. It is also good thing for HDD swap as well as SSD.
+(In fact, I don't understand why we should have CONFIG_THP_SWAP. I think
+ it should work with CONFIG_TRANSPARENT_HUGEPAGE automatically).
+
+Current design is selected for just *simple implementation" and put the
+heavy drift to make it generalize to others in the future.
+I don't think it's good thing. But others might have different opinions
+so I'm not insisting.
