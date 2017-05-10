@@ -1,156 +1,119 @@
-From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH -mm -v10 1/3] mm, THP, swap: Delay splitting THP during
  swap out
-Date: Wed, 10 May 2017 10:03:57 +0900
-Message-ID: <20170510010357.GA23404@bbox>
+Date: Wed, 10 May 2017 09:56:54 -0400
+Message-ID: <20170510135654.GD17121@cmpxchg.org>
 References: <20170425125658.28684-1-ying.huang@intel.com>
  <20170425125658.28684-2-ying.huang@intel.com>
  <20170427053141.GA1925@bbox>
  <87mvb21fz1.fsf@yhuang-dev.intel.com>
  <20170428084044.GB19510@bbox>
- <87d1bwvi26.fsf@yhuang-dev.intel.com>
+ <20170501104430.GA16306@cmpxchg.org>
+ <20170501235332.GA4411@bbox>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=mkrwtKsGyebRuN8t6Pnc+5UtmiP1rbOlM+2O5P8jOIw=; b=l2vs20uqBFROrgnR9YcAtpYFrn
+	mwIOPipj7z0G2V2RALMYzsivJhTwapdEI/hizftzjYxHwpmElQumVZgCgCNuASvLoB7Ek2U3o3uxh
+	VqbQbYhLu9OIRqDwMS41dtrbBVqytmvjtiQyc1z412CxGgV/wHwdUubbWOsoHCKR0WWo=;
 Content-Disposition: inline
-In-Reply-To: <87d1bwvi26.fsf-5/hDr2MS57EDqwDYnZuMFFaTQe2KTcn/@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170501235332.GA4411@bbox>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ebru Akagunduz <ebru.akagunduz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Minchan Kim <minchan@kernel.org>
+Cc: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, Ebru Akagunduz <ebru.akagunduz@gmail.com>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Shaohua Li <shli@kernel.org>, Rik van Riel <riel@redhat.com>, cgroups@vger.kernel.org
 
-Hi Huang,
+Hi Michan,
 
-On Fri, Apr 28, 2017 at 08:21:37PM +0800, Huang, Ying wrote:
-> Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
-> 
-> > On Thu, Apr 27, 2017 at 03:12:34PM +0800, Huang, Ying wrote:
-> >> Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
-> >> 
-> >> > On Tue, Apr 25, 2017 at 08:56:56PM +0800, Huang, Ying wrote:
-> >> >> From: Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> >> >> 
-> >> >> In this patch, splitting huge page is delayed from almost the first
-> >> >> step of swapping out to after allocating the swap space for the
-> >> >> THP (Transparent Huge Page) and adding the THP into the swap cache.
-> >> >> This will batch the corresponding operation, thus improve THP swap out
-> >> >> throughput.
-> >> >> 
-> >> >> This is the first step for the THP swap optimization.  The plan is to
-> >> >> delay splitting the THP step by step and avoid splitting the THP
-> >> >> finally.
-> >> >> 
-> >> >> The advantages of the THP swap support include:
-> >> >> 
-> >> >> - Batch the swap operations for the THP and reduce lock
-> >> >>   acquiring/releasing, including allocating/freeing the swap space,
-> >> >>   adding/deleting to/from the swap cache, and writing/reading the swap
-> >> >>   space, etc.  This will help to improve the THP swap performance.
-> >> >> 
-> >> >> - The THP swap space read/write will be 2M sequential IO.  It is
-> >> >>   particularly helpful for the swap read, which usually are 4k random
-> >> >>   IO.  This will help to improve the THP swap performance.
-> >> >> 
-> >> >> - It will help the memory fragmentation, especially when the THP is
-> >> >>   heavily used by the applications.  The 2M continuous pages will be
-> >> >>   free up after the THP swapping out.
-> >> >> 
-> >> >> - It will improve the THP utilization on the system with the swap
-> >> >>   turned on.  Because the speed for khugepaged to collapse the normal
-> >> >>   pages into the THP is quite slow.  After the THP is split during the
-> >> >>   swapping out, it will take quite long time for the normal pages to
-> >> >>   collapse back into the THP after being swapped in.  The high THP
-> >> >>   utilization helps the efficiency of the page based memory management
-> >> >>   too.
-> >> >> 
-> >> >> There are some concerns regarding THP swap in, mainly because possible
-> >> >> enlarged read/write IO size (for swap in/out) may put more overhead on
-> >> >> the storage device.  To deal with that, the THP swap in should be
-> >> >> turned on only when necessary.  For example, it can be selected via
-> >> >> "always/never/madvise" logic, to be turned on globally, turned off
-> >> >> globally, or turned on only for VMA with MADV_HUGEPAGE, etc.
-> >> >> 
-> >> >> In this patch, one swap cluster is used to hold the contents of each
-> >> >> THP swapped out.  So, the size of the swap cluster is changed to that
-> >> >> of the THP (Transparent Huge Page) on x86_64 architecture (512).  For
-> >> >> other architectures which want such THP swap optimization,
-> >> >> ARCH_USES_THP_SWAP_CLUSTER needs to be selected in the Kconfig file
-> >> >> for the architecture.  In effect, this will enlarge swap cluster size
-> >> >> by 2 times on x86_64.  Which may make it harder to find a free cluster
-> >> >> when the swap space becomes fragmented.  So that, this may reduce the
-> >> >> continuous swap space allocation and sequential write in theory.  The
-> >> >> performance test in 0day shows no regressions caused by this.
-> >> >
-> >> > What about other architecures?
-> >> >
-> >> > I mean THP page size on every architectures would be various.
-> >> > If THP page size is much bigger than 2M, the architecture should
-> >> > have big swap cluster size for supporting THP swap-out feature.
-> >> > It means fast empty-swap cluster consumption so that it can suffer
-> >> > from fragmentation easily which causes THP swap void and swap slot
-> >> > allocations slow due to not being able to use per-cpu.
-> >> >
-> >> > What I suggested was contiguous multiple swap cluster allocations
-> >> > to meet THP page size. If some of architecure's THP size is 64M
-> >> > and SWAP_CLUSTER_SIZE is 2M, it should allocate 32 contiguos
-> >> > swap clusters. For that, swap layer need to manage clusters sort
-> >> > in order which would be more overhead in CONFIG_THP_SWAP case
-> >> > but I think it's tradeoff. With that, every architectures can
-> >> > support THP swap easily without arch-specific something.
-> >> 
-> >> That may be a good solution for other architectures.  But I am afraid I
-> >> am not the right person to work on that.  Because I don't know the
-> >> requirement of other architectures, and I have no other architectures
-> >> machines to work on and measure the performance.
-> >
-> > IMO, THP swapout is good thing for every architecture so I dobut
-> > you need to know other architecture's requirement.
-> >
-> >> 
-> >> And the swap clusters aren't sorted in order now intentionally to avoid
-> >> cache line false sharing between the spinlock of struct
-> >> swap_cluster_info.  If we want to sort clusters in order, we need a
-> >> solution for that.
-> >
-> > Does it really matter for this work? IOW, if we couldn't solve it,
-> > cannot we support THP swapout? I don't think so. That's the least
-> > of your worries.
-> > Also, if we have sorted cluster data structure, we need to change
-> > current single linked list of swap cluster to other one so we would
-> > need to revisit to see whether it's really problem.
-> >
-> >> 
-> >> > If (PAGE_SIZE * 512) swap cluster size were okay for most of
-> >> > architecture, just increase it. It's orthogonal work regardless of
-> >> > THP swapout. Then, we don't need to manage swap clusters sort
-> >> > in order in x86_64 which SWAP_CLUSTER_SIZE is equal to
-> >> > THP_PAGE_SIZE. It's just a bonus by side-effect.
-> >> 
-> >> Andrew suggested to make swap cluster size = huge page size (or turn on
-> >> THP swap optimization) only if we enabled CONFIG_THP_SWAP.  So that, THP
-> >> swap optimization will not be turned on unintentionally.
-> >> 
-> >> We may adjust default swap cluster size, but I don't think it need to be
-> >> in this patchset.
-> >
-> > That's it. This feature shouldn't be aware of swap cluster size. IOW,
-> > it would be better to work with every swap cluster size if the align
-> > between THP and swap cluster size is matched at least.
-> 
-> Using one swap cluster for each THP is simpler, so why not start from
-> the simple design?  Complex design may be necessary in the future, but
-> we can work on that at that time.
+On Tue, May 02, 2017 at 08:53:32AM +0900, Minchan Kim wrote:
+> @@ -1144,7 +1144,7 @@ void swap_free(swp_entry_t entry)
+>  /*
+>   * Called after dropping swapcache to decrease refcnt to swap entries.
+>   */
+> -void swapcache_free(swp_entry_t entry)
+> +void __swapcache_free(swp_entry_t entry)
+>  {
+>  	struct swap_info_struct *p;
+>  
+> @@ -1156,7 +1156,7 @@ void swapcache_free(swp_entry_t entry)
+>  }
+>  
+>  #ifdef CONFIG_THP_SWAP
+> -void swapcache_free_cluster(swp_entry_t entry)
+> +void __swapcache_free_cluster(swp_entry_t entry)
+>  {
+>  	unsigned long offset = swp_offset(entry);
+>  	unsigned long idx = offset / SWAPFILE_CLUSTER;
+> @@ -1182,6 +1182,14 @@ void swapcache_free_cluster(swp_entry_t entry)
+>  }
+>  #endif /* CONFIG_THP_SWAP */
+>  
+> +void swapcache_free(struct page *page, swp_entry_t entry)
+> +{
+> +	if (!PageTransHuge(page))
+> +		__swapcache_free(entry);
+> +	else
+> +		__swapcache_free_cluster(entry);
+> +}
 
-If it were really architecture specific issue, I'm okay with such simple
-start with major architecture first. However, I don't think it's the case.
+I don't think this is cleaner :/
 
-THP swap: I don't think it's a architecure issue. It's generally good thing
-once system supports THP. It is also good thing for HDD swap as well as SSD.
-(In fact, I don't understand why we should have CONFIG_THP_SWAP. I think
- it should work with CONFIG_TRANSPARENT_HUGEPAGE automatically).
+On your second patch:
 
-Current design is selected for just *simple implementation" and put the
-heavy drift to make it generalize to others in the future.
-I don't think it's good thing. But others might have different opinions
-so I'm not insisting.
+> @@ -1125,8 +1125,28 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+>  		    !PageSwapCache(page)) {
+>  			if (!(sc->gfp_mask & __GFP_IO))
+>  				goto keep_locked;
+> -			if (!add_to_swap(page, page_list))
+> +swap_retry:
+> +			/*
+> +			 * Retry after split if we fail to allocate
+> +			 * swap space of a THP.
+> +			 */
+> +			if (!add_to_swap(page)) {
+> +				if (!PageTransHuge(page) ||
+> +				    split_huge_page_to_list(page, page_list))
+> +					goto activate_locked;
+> +				goto swap_retry;
+> +			}
+
+This is definitely better.
+
+However, I think it'd be cleaner without the label here:
+
+			if (!add_to_swap(page)) {
+				if (!PageTransHuge(page))
+					goto activate_locked;
+				/* Split THP and swap individual base pages */
+				if (split_huge_page_to_list(page, page_list))
+					goto activate_locked;
+				if (!add_to_swap(page))
+					goto activate_locked;
+			}
+
+> +			/*
+> +			 * Got swap space successfully. But unfortunately,
+> +			 * we don't support a THP page writeout so split it.
+> +			 */
+> +			if (PageTransHuge(page) &&
+> +				  split_huge_page_to_list(page, page_list)) {
+> +				delete_from_swap_cache(page);
+>  				goto activate_locked;
+> +			}
+
+Pulling this out of add_to_swap() is an improvement for sure. Add an
+XXX: before that "we don't support THP writes" comment for good
+measure :)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
