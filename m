@@ -1,61 +1,107 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH] mm, docs: update memory.stat description with workingset* entries
-Date: Thu, 11 May 2017 20:18:13 +0100
-Message-ID: <1494530293-31236-1-git-send-email-guro@fb.com>
-Return-path: <linux-doc-owner@vger.kernel.org>
-Sender: linux-doc-owner@vger.kernel.org
+From: Minchan Kim <minchan@kernel.org>
+Subject: Re: [PATCH -mm -v10 1/3] mm, THP, swap: Delay splitting THP during
+ swap out
+Date: Fri, 12 May 2017 10:34:16 +0900
+Message-ID: <20170512013416.GA9545@bbox>
+References: <20170425125658.28684-2-ying.huang@intel.com>
+ <20170427053141.GA1925@bbox>
+ <87mvb21fz1.fsf@yhuang-dev.intel.com>
+ <20170428084044.GB19510@bbox>
+ <20170501104430.GA16306@cmpxchg.org>
+ <20170501235332.GA4411@bbox>
+ <20170510135654.GD17121@cmpxchg.org>
+ <20170510232556.GA26521@bbox>
+ <20170511012213.GA27659@bbox>
+ <20170511104058.GD6244@cmpxchg.org>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20170511104058.GD6244@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Huang, Ying" <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, Ebru Akagunduz <ebru.akagunduz@gmail.com>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Shaohua Li <shli@kernel.org>, Rik van Riel <riel@redhat.com>, cgroups@vger.kernel.org
 
-Commit 4b4cea91691d ("mm: vmscan: fix IO/refault regression in
-cache workingset transition") introduced three new entries in memory
-stat file:
-     - workingset_refault,
-     - workingset_activate,
-     - workingset_nodereclaim.
+Hi Hannes,
 
-This commit adds a corresponding description to the cgroup v2 docs.
+On Thu, May 11, 2017 at 06:40:58AM -0400, Johannes Weiner wrote:
+> On Thu, May 11, 2017 at 10:22:13AM +0900, Minchan Kim wrote:
+> > On Thu, May 11, 2017 at 08:25:56AM +0900, Minchan Kim wrote:
+> > > On Wed, May 10, 2017 at 09:56:54AM -0400, Johannes Weiner wrote:
+> > > > Hi Michan,
+> > > > 
+> > > > On Tue, May 02, 2017 at 08:53:32AM +0900, Minchan Kim wrote:
+> > > > > @@ -1144,7 +1144,7 @@ void swap_free(swp_entry_t entry)
+> > > > >  /*
+> > > > >   * Called after dropping swapcache to decrease refcnt to swap entries.
+> > > > >   */
+> > > > > -void swapcache_free(swp_entry_t entry)
+> > > > > +void __swapcache_free(swp_entry_t entry)
+> > > > >  {
+> > > > >  	struct swap_info_struct *p;
+> > > > >  
+> > > > > @@ -1156,7 +1156,7 @@ void swapcache_free(swp_entry_t entry)
+> > > > >  }
+> > > > >  
+> > > > >  #ifdef CONFIG_THP_SWAP
+> > > > > -void swapcache_free_cluster(swp_entry_t entry)
+> > > > > +void __swapcache_free_cluster(swp_entry_t entry)
+> > > > >  {
+> > > > >  	unsigned long offset = swp_offset(entry);
+> > > > >  	unsigned long idx = offset / SWAPFILE_CLUSTER;
+> > > > > @@ -1182,6 +1182,14 @@ void swapcache_free_cluster(swp_entry_t entry)
+> > > > >  }
+> > > > >  #endif /* CONFIG_THP_SWAP */
+> > > > >  
+> > > > > +void swapcache_free(struct page *page, swp_entry_t entry)
+> > > > > +{
+> > > > > +	if (!PageTransHuge(page))
+> > > > > +		__swapcache_free(entry);
+> > > > > +	else
+> > > > > +		__swapcache_free_cluster(entry);
+> > > > > +}
+> > > > 
+> > > > I don't think this is cleaner :/
+> > 
+> > Let's see a example add_to_swap. Without it, it looks like that.
+> > 
+> > int add_to_swap(struct page *page)
+> > {
+> >         entry = get_swap_page(page);
+> >         ..
+> >         ..
+> > fail:
+> >         if (PageTransHuge(page))
+> >                 swapcache_free_cluster(entry);
+> >         else
+> >                 swapcache_free(entry);
+> > }
+> > 
+> > It doesn't looks good to me because get_swap_page hides
+> > where entry allocation is from cluster or slot but when
+> > we free the entry allocated, we should be aware of the
+> > internal and call right function. :(
+> 
+> This could be nicer indeed. I just don't like the underscore versions
+> much, but symmetry with get_swap_page() would be nice.
+> 
+> How about put_swap_page()? :)
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- Documentation/cgroup-v2.txt | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Good idea. It's the best one I can do now.
+Actually, get_swap_page is awkward to me. Maybe it would be nicer to
+rename it with get_swap_[slot|entry] but, I will postpone it if someone
+would be on same page with me in future.
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index e50b95c..dc5e2dc 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -918,6 +918,18 @@ PAGE_SIZE multiple when read back.
- 
- 		Number of major page faults incurred
- 
-+	  workingset_refault
-+
-+		Number of refaults of previously evicted pages
-+
-+	  workingset_activate
-+
-+		Number of refaulted pages that were immediately activated
-+
-+	  workingset_nodereclaim
-+
-+		Number of times a shadow node has been reclaimed
-+
-   memory.swap.current
- 
- 	A read-only single value file which exists on non-root
--- 
-2.7.4
+> 
+> That can call the appropriate swapcache_free function then.
 
+Yub.
+Thanks for the review!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
