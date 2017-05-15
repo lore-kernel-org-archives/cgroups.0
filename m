@@ -1,10 +1,10 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH v2 14/17] cgroup: Enable printing of v2 controllers' cgroup hierarchy
-Date: Mon, 15 May 2017 09:34:13 -0400
-Message-ID: <1494855256-12558-15-git-send-email-longman@redhat.com>
+Subject: [RFC PATCH v2 17/17] sched: Make cpu/cpuacct threaded controllers
+Date: Mon, 15 May 2017 09:34:16 -0400
+Message-ID: <1494855256-12558-18-git-send-email-longman@redhat.com>
 References: <1494855256-12558-1-git-send-email-longman@redhat.com>
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 02641C057FA9
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 0E73380C24
 In-Reply-To: <1494855256-12558-1-git-send-email-longman@redhat.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -14,173 +14,36 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, longman@redhat.com
 
-This patch add a new debug control file on the cgroup v2 root directory
-to print out the cgroup hierarchy for each of the v2 controllers.
+Make cpu and cpuacct cgroup controllers usable within a threaded cgroup.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/debug.c | 141 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 141 insertions(+)
+ kernel/sched/core.c    | 1 +
+ kernel/sched/cpuacct.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-index a2dbf77..3adb26a 100644
---- a/kernel/cgroup/debug.c
-+++ b/kernel/cgroup/debug.c
-@@ -268,6 +268,141 @@ static int cgroup_masks_read(struct seq_file *seq, void *v)
- 	return 0;
- }
- 
-+/*
-+ * Print out all the child cgroup names that doesn't have a css for the
-+ * corresponding cgroup_subsys. If a child cgroup has a css, put that into
-+ * the given cglist to be processed in the next iteration.
-+ */
-+#define CGLIST_MAX	16
-+static void print_hierarchy(struct seq_file *seq,
-+			    struct cgroup *cgrp,
-+			    struct cgroup_subsys *ss,
-+			    struct cgroup_subsys_state *css,
-+			    struct cgroup **cglist,
-+			    int *cgcnt)
-+{
-+	struct cgroup *child;
-+	struct cgroup_subsys_state *child_css;
-+	char cgname[64];
-+
-+	cgname[sizeof(cgname) - 1] = '\0';
-+	/*
-+	 * Iterate all live children of the given cgroup.
-+	 */
-+	list_for_each_entry(child, &cgrp->self.children, self.sibling) {
-+		if (cgroup_is_dead(child))
-+			continue;
-+
-+		child_css = rcu_dereference_check(child->subsys[ss->id], true);
-+		if (child_css) {
-+			WARN_ON(child_css->parent != css);
-+			if (*cgcnt < CGLIST_MAX) {
-+				cglist[*cgcnt] = child;
-+				(*cgcnt)++;
-+			}
-+			continue;
-+		}
-+
-+		/*
-+		 * Skip resource domain cgroup
-+		 */
-+		if (test_bit(CGRP_RESOURCE_DOMAIN, &child->flags))
-+			continue;
-+
-+		cgroup_name(child, cgname, sizeof(cgname)-1);
-+		seq_putc(seq, ',');
-+		seq_puts(seq, cgname);
-+		print_hierarchy(seq, child, ss, css, cglist, cgcnt);
-+	}
-+}
-+
-+/*
-+ * Print the hierachies with respect to each controller for the default
-+ * hierarchy.
-+ *
-+ * Each child level is printed on a separate line. Set of cgroups that
-+ * have the same css will be grouped together and separated by comma.
-+ * Process in those cgroups will be in the same node (css) in the
-+ * controller's hierarchy. There is an exception that for resource
-+ * domain cgroup, the processes associated with its parent and its
-+ * affiliates will be mapped to the css of that resource domain cgroup
-+ * instead.
-+ *
-+ * If there are more than CGLIST_MAX sets of cgroups in each level,
-+ * the extra ones will be skipped.
-+ */
-+static int controller_hierachies_read(struct seq_file *seq, void *v)
-+{
-+	struct cgroup *root = seq_css(seq)->cgroup;
-+	struct cgroup_subsys *ss;
-+	struct cgroup_subsys_state *css;
-+	struct cgroup *cgrp;
-+	struct cgroup *cglist[CGLIST_MAX];
-+	struct cgroup *cg2list[CGLIST_MAX];
-+	int i, idx, cgnum, cg2num;
-+	char cgname[64];
-+
-+	cgname[sizeof(cgname) - 1] = '\0';
-+	mutex_lock(&cgroup_mutex);
-+	for_each_subsys(ss, i) {
-+		if (!(root->root->subsys_mask & (1 << ss->id)))
-+			continue;
-+		seq_puts(seq, ss->name);
-+		seq_puts(seq, ":\n");
-+
-+		cgnum = 1;
-+		cg2num = 0;
-+		cglist[0] = root;
-+		idx = 0;
-+		while (cgnum) {
-+			if (idx)
-+				seq_putc(seq, ' ');
-+			cgrp = cglist[idx];
-+			if (test_bit(CGRP_RESOURCE_DOMAIN, &cgrp->flags)) {
-+				struct cgroup *parent;
-+
-+				parent = container_of(cgrp->self.parent,
-+						      struct cgroup, self);
-+				cgroup_name(parent, cgname, sizeof(cgname)-1);
-+				seq_printf(seq, "%s.rd", cgname);
-+			} else {
-+				cgroup_name(cgrp, cgname, sizeof(cgname)-1);
-+				seq_puts(seq, cgname);
-+			}
-+			css = rcu_dereference_check(cgrp->subsys[ss->id], true);
-+			WARN_ON(!css);
-+
-+			if (cgrp == root)
-+				seq_printf(seq, "[%d]", css->id);
-+			else
-+				seq_printf(seq, "[%d:P=%d]", css->id,
-+					   css->parent->id);
-+
-+			/*
-+			 * List all the cgroups that use the current
-+			 * css.
-+			 */
-+			print_hierarchy(seq, cgrp, ss, css, cg2list, &cg2num);
-+
-+			if (++idx < cgnum)
-+				continue;
-+
-+			/*
-+			 * Move cg2list to cglist.
-+			 */
-+			cgnum = cg2num;
-+			idx = cg2num = 0;
-+			if (cgnum)
-+				memcpy(cglist, cg2list,
-+				       cgnum * sizeof(cglist[0]));
-+			seq_putc(seq, '\n');
-+		}
-+		seq_putc(seq, '\n');
-+	}
-+	mutex_unlock(&cgroup_mutex);
-+	return 0;
-+}
-+
- static u64 releasable_read(struct cgroup_subsys_state *css, struct cftype *cft)
- {
- 	return (!cgroup_is_populated(css->cgroup) &&
-@@ -314,6 +449,12 @@ static u64 releasable_read(struct cgroup_subsys_state *css, struct cftype *cft)
- 	},
- 
- 	{
-+		.name = "controller_hierachies",
-+		.seq_show = controller_hierachies_read,
-+		.flags = CFTYPE_ONLY_ON_ROOT|__CFTYPE_ONLY_ON_DFL,
-+	},
-+
-+	{
- 		.name = "releasable",
- 		.read_u64 = releasable_read,
- 	},
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index b041081..479f69e 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7453,6 +7453,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
+ 	.legacy_cftypes	= cpu_legacy_files,
+ 	.dfl_cftypes	= cpu_files,
+ 	.early_init	= true,
++	.threaded	= true,
+ #ifdef CONFIG_CGROUP_CPUACCT
+ 	/*
+ 	 * cpuacct is enabled together with cpu on the unified hierarchy
+diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
+index fc1cf13..853d18a 100644
+--- a/kernel/sched/cpuacct.c
++++ b/kernel/sched/cpuacct.c
+@@ -414,4 +414,5 @@ struct cgroup_subsys cpuacct_cgrp_subsys = {
+ 	.css_free	= cpuacct_css_free,
+ 	.legacy_cftypes	= files,
+ 	.early_init	= true,
++	.threaded	= true,
+ };
 -- 
 1.8.3.1
 
