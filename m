@@ -1,54 +1,49 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH v2 17/17] sched: Make cpu/cpuacct threaded controllers
-Date: Mon, 15 May 2017 09:34:16 -0400
-Message-ID: <1494855256-12558-18-git-send-email-longman@redhat.com>
-References: <1494855256-12558-1-git-send-email-longman@redhat.com>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 0E73380C24
-In-Reply-To: <1494855256-12558-1-git-send-email-longman@redhat.com>
-Sender: owner-linux-mm@kvack.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] mm, docs: update memory.stat description with
+ workingset* entries
+Date: Mon, 15 May 2017 09:56:37 -0400
+Message-ID: <20170515135637.GB24783@cmpxchg.org>
+References: <1494530293-31236-1-git-send-email-guro@fb.com>
+Mime-Version: 1.0
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=UWvIhJf6r0DB3Fet0lGJ4lbg7YEpw+Em2+ZLtZxuE88=; b=bsoGmCEQNeJq+WWHKhCr8Kabr7
+        Sl9s8UD7uGfnh0TcfQAH8XJ1qjSawXCLt8qg5go7yN2zVQJEC0NiEgrBeYC64+GYry68yXM+e/w0Z
+        9WVgzdTLndTtScjY0Ys8Y9f1ABgS707bUrrTXZiZ5DrWzCYmoHOYosanVHEcx2a6dgxA=;
+Content-Disposition: inline
+In-Reply-To: <1494530293-31236-1-git-send-email-guro@fb.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, longman@redhat.com
+To: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Make cpu and cpuacct cgroup controllers usable within a threaded cgroup.
+On Thu, May 11, 2017 at 08:18:13PM +0100, Roman Gushchin wrote:
+> Commit 4b4cea91691d ("mm: vmscan: fix IO/refault regression in
+> cache workingset transition") introduced three new entries in memory
+> stat file:
+>      - workingset_refault,
+>      - workingset_activate,
+>      - workingset_nodereclaim.
+> 
+> This commit adds a corresponding description to the cgroup v2 docs.
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Li Zefan <lizefan@huawei.com>
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/sched/core.c    | 1 +
- kernel/sched/cpuacct.c | 1 +
- 2 files changed, 2 insertions(+)
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index b041081..479f69e 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -7453,6 +7453,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
- 	.legacy_cftypes	= cpu_legacy_files,
- 	.dfl_cftypes	= cpu_files,
- 	.early_init	= true,
-+	.threaded	= true,
- #ifdef CONFIG_CGROUP_CPUACCT
- 	/*
- 	 * cpuacct is enabled together with cpu on the unified hierarchy
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index fc1cf13..853d18a 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -414,4 +414,5 @@ struct cgroup_subsys cpuacct_cgrp_subsys = {
- 	.css_free	= cpuacct_css_free,
- 	.legacy_cftypes	= files,
- 	.early_init	= true,
-+	.threaded	= true,
- };
--- 
-1.8.3.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks Roman!
