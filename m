@@ -1,73 +1,52 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm, docs: update memory.stat description with
- workingset* entries
-Date: Tue, 16 May 2017 11:17:26 +0200
-Message-ID: <20170516091726.GE2481@dhcp22.suse.cz>
-References: <1494530293-31236-1-git-send-email-guro@fb.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] mm: per-cgroup memory reclaim stats
+Date: Tue, 16 May 2017 11:29:56 +0200
+Message-ID: <20170516092956.GF2481@dhcp22.suse.cz>
+References: <1494530183-30808-1-git-send-email-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1494530293-31236-1-git-send-email-guro@fb.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <1494530183-30808-1-git-send-email-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu 11-05-17 20:18:13, Roman Gushchin wrote:
-> Commit 4b4cea91691d ("mm: vmscan: fix IO/refault regression in
-> cache workingset transition") introduced three new entries in memory
-> stat file:
->      - workingset_refault,
->      - workingset_activate,
->      - workingset_nodereclaim.
+On Thu 11-05-17 20:16:23, Roman Gushchin wrote:
+> Track the following reclaim counters for every memory cgroup:
+> PGREFILL, PGSCAN, PGSTEAL, PGACTIVATE, PGDEACTIVATE, PGLAZYFREE and
+> PGLAZYFREED.
+
+yes, those are definitely useful. I have an old patch to add them as
+well but never managed to clean it up and post...
+
+> These values are exposed using the memory.stats interface of cgroup v2.
+
+Is there any reason to not add them to v1? This should be rather trivial
+after recent changes from Johannes.
+
+> The meaning of each value is the same as for global counters,
+> available using /proc/vmstat.
 > 
-> This commit adds a corresponding description to the cgroup v2 docs.
+> Also, for consistency, rename mem_cgroup_count_vm_event() to
+> count_memcg_event_mm().
 > 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Missed this one. Sorry about that
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-> ---
->  Documentation/cgroup-v2.txt | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-> index e50b95c..dc5e2dc 100644
-> --- a/Documentation/cgroup-v2.txt
-> +++ b/Documentation/cgroup-v2.txt
-> @@ -918,6 +918,18 @@ PAGE_SIZE multiple when read back.
->  
->  		Number of major page faults incurred
->  
-> +	  workingset_refault
-> +
-> +		Number of refaults of previously evicted pages
-> +
-> +	  workingset_activate
-> +
-> +		Number of refaulted pages that were immediately activated
-> +
-> +	  workingset_nodereclaim
-> +
-> +		Number of times a shadow node has been reclaimed
-> +
->    memory.swap.current
->  
->  	A read-only single value file which exists on non-root
-> -- 
-> 2.7.4
-
+the patch itself looks good to me. I will have to double check it after
+I am done with what I am doing currently and then will add my Acked-by
 -- 
 Michal Hocko
 SUSE Labs
