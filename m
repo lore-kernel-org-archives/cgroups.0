@@ -1,52 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH v2 07/17] cgroup: Prevent kill_css() from being
- called more than once
-Date: Wed, 17 May 2017 15:23:57 -0400
-Message-ID: <20170517192357.GC942@htj.duckdns.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH v2 07/17] cgroup: Prevent kill_css() from being called
+ more than once
+Date: Wed, 17 May 2017 16:24:32 -0400
+Message-ID: <c541638f-b302-8c96-0dcd-f4b758a4a81f@redhat.com>
 References: <1494855256-12558-1-git-send-email-longman@redhat.com>
  <1494855256-12558-8-git-send-email-longman@redhat.com>
+ <20170517192357.GC942@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=3s+xZUzISTlfFZ5e63T0VXaDu/noxMW8Vv480St2His=;
-        b=XrUiKQGzV7EIUtduhEezbdaEI4lUIVMKAdsUrnaYo7RV3+z00E/1saRAi9McpBm9Mt
-         r+mDcNpI8ABTCEBj34Jbn1N5jDv3AC7MVMNG+k0NsJavhnBAX2qyS5yYTmKMxaNuPHzY
-         yKHuUtYh1ariCHIkPi2O4kE4OrbmSPgsGZyjX/7OQ+87aTLpRx2SZbpMBB9K8r2MlP+i
-         PfTbm221/WeyeXLuznHMcydB5FNYfOB3A2yWKhewt0IbTyATQD7R8Huo4yqJyD0JnZQd
-         lPG1ZcI5LSE98WCBf89mT60gH/6dcJ6zaOLPQs9/8teQIX70XnvkmTMuJ84GzsCArgu+
-         2EyA==
-Content-Disposition: inline
-In-Reply-To: <1494855256-12558-8-git-send-email-longman@redhat.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 353C37F4A5
+In-Reply-To: <20170517192357.GC942-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org
 
-Hello,
+On 05/17/2017 03:23 PM, Tejun Heo wrote:
+> Hello,
+>
+> On Mon, May 15, 2017 at 09:34:06AM -0400, Waiman Long wrote:
+>> The kill_css() function may be called more than once under the condition
+>> that the css was killed but not physically removed yet followed by the
+>> removal of the cgroup that is hosting the css. This patch prevents any
+>> harmm from being done when that happens.
+>>
+>> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> So, this is a bug fix which isn't really related to this patchset.
+> I'm applying it to cgroup/for-4.12-fixes w/ stable cc'd.
+>
+> Thanks.
+>
+Actually, this bug can be easily triggered with the resource domain
+patch later in the series. I guess it can also happen in the current
+code base, but I don't have a test that can reproduce it.
 
-On Mon, May 15, 2017 at 09:34:06AM -0400, Waiman Long wrote:
-> The kill_css() function may be called more than once under the condition
-> that the css was killed but not physically removed yet followed by the
-> removal of the cgroup that is hosting the css. This patch prevents any
-> harmm from being done when that happens.
-> 
-> Signed-off-by: Waiman Long <longman@redhat.com>
-
-So, this is a bug fix which isn't really related to this patchset.
-I'm applying it to cgroup/for-4.12-fixes w/ stable cc'd.
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Regards,
+Longman
