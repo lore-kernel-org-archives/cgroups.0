@@ -1,44 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH v2 06/17] cgroup: Fix reference counting bug in
- cgroup_procs_write()
-Date: Wed, 17 May 2017 15:20:19 -0400
-Message-ID: <20170517192019.GB942@htj.duckdns.org>
+Subject: Re: [RFC PATCH v2 07/17] cgroup: Prevent kill_css() from being
+ called more than once
+Date: Wed, 17 May 2017 15:23:57 -0400
+Message-ID: <20170517192357.GC942@htj.duckdns.org>
 References: <1494855256-12558-1-git-send-email-longman@redhat.com>
- <1494855256-12558-7-git-send-email-longman@redhat.com>
+ <1494855256-12558-8-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=cOSUM7C3I81ygIB3+HmNcXQzttR8YvIlTqLEsE1xXcE=;
-        b=Iq7PzQXudXG1SXKHOi4ekhmHSEhRCrYl5TvpEcPCn9aAlJ1oN/iGELqr7kp1opUyoF
-         IiyJpEl+QFE4rFK0jE1025kRtWH7rXcSYhNzsVGxCgtJjbdUDB/cXgIakKYej+YsLwC4
-         wG7TJyAALMGhpvDe9wpFU2BwJi1RWoKK7xTjFMMWpz78VM6vyALnDlqKlCRgegqeFokj
-         8/kzPrCsg23M0Vi8oaBT70ch4dH3YGKPOceX8VHcDVNObTdcamvQaeD6rx0WQSEv8u11
-         Q4U1TQwGqkER4LiLXkDKLKU3xhlNJfb613GzH3vbWs8RrAaiI8LCna3IWcdwZFfqIWWD
-         tOxg==
+        bh=3s+xZUzISTlfFZ5e63T0VXaDu/noxMW8Vv480St2His=;
+        b=XrUiKQGzV7EIUtduhEezbdaEI4lUIVMKAdsUrnaYo7RV3+z00E/1saRAi9McpBm9Mt
+         r+mDcNpI8ABTCEBj34Jbn1N5jDv3AC7MVMNG+k0NsJavhnBAX2qyS5yYTmKMxaNuPHzY
+         yKHuUtYh1ariCHIkPi2O4kE4OrbmSPgsGZyjX/7OQ+87aTLpRx2SZbpMBB9K8r2MlP+i
+         PfTbm221/WeyeXLuznHMcydB5FNYfOB3A2yWKhewt0IbTyATQD7R8Huo4yqJyD0JnZQd
+         lPG1ZcI5LSE98WCBf89mT60gH/6dcJ6zaOLPQs9/8teQIX70XnvkmTMuJ84GzsCArgu+
+         2EyA==
 Content-Disposition: inline
-In-Reply-To: <1494855256-12558-7-git-send-email-longman@redhat.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <1494855256-12558-8-git-send-email-longman@redhat.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Waiman Long <longman@redhat.com>
 Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-On Mon, May 15, 2017 at 09:34:05AM -0400, Waiman Long wrote:
-> The cgroup_procs_write_start() took a reference to the task structure
-> which was not properly released within cgroup_procs_write() and so
-> on. So a put_task_struct() call is added to cgroup_procs_write_finish()
-> to match the get_task_struct() in cgroup_procs_write_start() to fix
-> this reference counting error.
+Hello,
+
+On Mon, May 15, 2017 at 09:34:06AM -0400, Waiman Long wrote:
+> The kill_css() function may be called more than once under the condition
+> that the css was killed but not physically removed yet followed by the
+> removal of the cgroup that is hosting the css. This patch prevents any
+> harmm from being done when that happens.
 > 
 > Signed-off-by: Waiman Long <longman@redhat.com>
 
-Acked-by: Tejun Heo <tj@kernel.org>
+So, this is a bug fix which isn't really related to this patchset.
+I'm applying it to cgroup/for-4.12-fixes w/ stable cc'd.
 
-Thanks!
+Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
