@@ -1,32 +1,57 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
- with cpuset update
-Date: Wed, 17 May 2017 10:27:55 -0500 (CDT)
-Message-ID: <alpine.DEB.2.20.1705171026590.9487@east.gentwo.org>
-References: <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz> <alpine.DEB.2.20.1704121617040.28335@east.gentwo.org> <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz> <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org> <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
- <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org> <20170517092042.GH18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705170855430.7925@east.gentwo.org> <20170517140501.GM18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705170943090.8714@east.gentwo.org>
- <20170517145645.GO18247@dhcp22.suse.cz>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH] mm: per-cgroup memory reclaim stats
+Date: Wed, 17 May 2017 16:50:42 +0100
+Message-ID: <20170517155042.GA4133@castle>
+References: <1494530183-30808-1-git-send-email-guro@fb.com>
+ <1494555922.21563.1.camel@gmail.com>
+ <20170512164206.GA22367@cmpxchg.org>
+ <CAKTCnz=vj9-C2-XPcijB=fZOVVdxvqZvLEA93xXtRZmF+y3-Lg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20170517145645.GO18247@dhcp22.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=z1doGtAMvh20bGpjKPD0QqgsWEeYoRCDUaFLBrxeB7c=;
+ b=pLC17+GvyjD6flq4QmjcV5vg2YV8J3eP0gR/xbMrXZ5UYshiSuZwZxejh3N0vG2TnE15
+ OMMUpsv68QYu31/A3tH6GzdrFlNqa8lHTEP0u1PzwFyBYVQVF5LP2opd5S5XjR8Z0+XX
+ i7A7xUvzSRHVdQ8GFiIxM+olXp59PtYbM1k= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=z1doGtAMvh20bGpjKPD0QqgsWEeYoRCDUaFLBrxeB7c=;
+ b=FNP797el9aNYGRLonCRWMLvUAy8uAOfVPREbaPmcn0gf2pvzE2bUa2Eog/ATOQjbomWkEZtqbjMKhXWbwfdAAC+AiaRvdNAQ6ggnBrkxSVkr+x3VcYXClaMumoZ3v+/lqNj8YFxKw+TPKafdIPWNIft6PEvhwlsTPMWFEYOCLVE=
+Content-Disposition: inline
+In-Reply-To: <CAKTCnz=vj9-C2-XPcijB=fZOVVdxvqZvLEA93xXtRZmF+y3-Lg@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Vlastimil Babka <vbabka@suse.cz>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-api@vger.kernel.org
+To: Balbir Singh <bsingharora@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
 
-On Wed, 17 May 2017, Michal Hocko wrote:
+On Wed, May 17, 2017 at 08:03:03AM +1000, Balbir Singh wrote:
+> On Sat, May 13, 2017 at 2:42 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+> > On Fri, May 12, 2017 at 12:25:22PM +1000, Balbir Singh wrote:
+> >>
+> >> It sounds like memcg accumlates both global and memcg reclaim driver
+> >> counts -- is this what we want?
+> >
+> > Yes.
+> >
+> > Consider a fully containerized system that is using only memory.low
+> > and thus exclusively global reclaim to enforce the partitioning, NOT
+> > artificial limits and limit reclaim. In this case, we still want to
+> > know how much reclaim activity each group is experiencing.
+> 
+> But its also confusing to see memcg.stat's value being greater
+> than the global value? At-least for me. For example PGSTEAL_DIRECT
+> inside a memcg > global value of PGSTEAL_DIRECT. Do we make
+> memcg.stat values sum of all impact on memcg or local to memcg?
 
-> > The race is where? If you expand the node set during the move of the
-> > application then you are safe in terms of the legacy apps that did not
-> > include static bindings.
->
-> I am pretty sure it is describe in those changelogs and I won't repeat
-> it here.
+Yes, I think that global counters should include both results of
+global and per-cgroup reclaim. I will prepare a separate patch for this.
 
-I cannot figure out what you are referring to. There are numerous
-patches and discussions about OOM scenarios in this context.
+Thank you!
+
+Roman
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
