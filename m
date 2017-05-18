@@ -1,81 +1,52 @@
-From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 3/6] mm, page_alloc: pass preferred nid instead of
- zonelist to allocator
-Date: Thu, 18 May 2017 12:25:03 +0200
-Message-ID: <c748a22c-9a94-52cb-2247-afc281cc5d78@suse.cz>
-References: <20170517081140.30654-1-vbabka@suse.cz>
- <20170517081140.30654-4-vbabka@suse.cz>
- <alpine.DEB.2.20.1705171009340.8714@east.gentwo.org>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [RFC PATCH v2 08/17] cgroup: Move debug cgroup to its own file
+Date: Thu, 18 May 2017 11:29:10 -0400
+Message-ID: <03fe182f-92d5-0996-2d9c-d92c878dce35@redhat.com>
+References: <1494855256-12558-1-git-send-email-longman@redhat.com>
+ <1494855256-12558-9-git-send-email-longman@redhat.com>
+ <20170517213603.GE942@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.DEB.2.20.1705171009340.8714-wcBtFHqTun5QOdAKl3ChDw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 870E8C04B92C
+In-Reply-To: <20170517213603.GE942@htj.duckdns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Dimitri Sivanich <sivanich-sJ/iWh9BUns@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-On 05/17/2017 05:19 PM, Christoph Lameter wrote:
-> On Wed, 17 May 2017, Vlastimil Babka wrote:
-> 
->>  struct page *
->> -__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
->> -		       struct zonelist *zonelist, nodemask_t *nodemask);
->> +__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
->> +							nodemask_t *nodemask);
+On 05/17/2017 05:36 PM, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> On Mon, May 15, 2017 at 09:34:07AM -0400, Waiman Long wrote:
+>> The debug cgroup currently resides within cgroup-v1.c and is enabled
+>> only for v1 cgroup. To enable the debug cgroup also for v2, it
+>> makes sense to put the code into its own file as it will no longer
+>> be v1 specific. The only change in this patch is the expansion of
+>> cgroup_task_count() within the debug_taskcount_read() function.
 >>
->>  static inline struct page *
->> -__alloc_pages(gfp_t gfp_mask, unsigned int order,
->> -		struct zonelist *zonelist)
->> +__alloc_pages(gfp_t gfp_mask, unsigned int order, int preferred_nid)
->>  {
->> -	return __alloc_pages_nodemask(gfp_mask, order, zonelist, NULL);
->> +	return __alloc_pages_nodemask(gfp_mask, order, preferred_nid, NULL);
->>  }
-> 
-> Maybe use nid instead of preferred_nid like in __alloc_pages? Otherwise
-> there may be confusion with the MPOL_PREFER policy.
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+> I don't mind enabling the debug controller for v2 but let's please
+> hide it behind an unwieldy boot param / controller name so that it's
+> clear that its interface isn't expected to be stable.
+>
+> Thanks.
+>
+The controller name is "debug". So it is pretty obvious what it is for.
+However, the config prompt of "Example controller" is indeed a bit
+vague. So I think we can make the prompt more descriptive here. As for
+boot param, are you saying something like "cgroup_debug" has to be
+specified in the command line also to have this controller activated
+even if the CGROUP_DEBUG config parameter is specified? I am fine with
+that if you think it is necessary.
 
-I'll think about that.
+Regards,
+Longman
 
->> @@ -1963,8 +1960,8 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
->>  {
->>  	struct mempolicy *pol;
->>  	struct page *page;
->> +	int preferred_nid;
->>  	unsigned int cpuset_mems_cookie;
->> -	struct zonelist *zl;
->>  	nodemask_t *nmask;
-> 
-> Same here.
-> 
->> @@ -4012,8 +4012,8 @@ static inline void finalise_ac(gfp_t gfp_mask,
->>   * This is the 'heart' of the zoned buddy allocator.
->>   */
->>  struct page *
->> -__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
->> -			struct zonelist *zonelist, nodemask_t *nodemask)
->> +__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
->> +							nodemask_t *nodemask)
->>  {
-> 
-> and here
-> 
-> This looks clean to me. Still feel a bit uneasy about this since I do
-> remember that we had a reason to use zonelists instead of nodes back then
-> but cannot remember what that reason was....
 
-My history digging showed me that mempolicies used to have a custom
-zonelist attached, not nodemask. So I supposed that's why.
-
-> CCing Dimitri at SGI. This may break a lot of legacy SGIapps. If you read
-> this Dimitri then please review this patchset and the discussions around
-> it.
-
-Break how? This shouldn't break any apps AFAICS, just out-of-tree kernel
-patches/modules as usual when APIs change.
-
-> Reviewed-by: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-
-Thanks!
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
