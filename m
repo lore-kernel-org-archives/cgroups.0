@@ -1,63 +1,58 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
- with cpuset update
-Date: Thu, 18 May 2017 19:24:24 +0200
-Message-ID: <20170518172424.GB30148@dhcp22.suse.cz>
-References: <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
- <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org>
- <20170517092042.GH18247@dhcp22.suse.cz>
- <alpine.DEB.2.20.1705170855430.7925@east.gentwo.org>
- <20170517140501.GM18247@dhcp22.suse.cz>
- <alpine.DEB.2.20.1705170943090.8714@east.gentwo.org>
- <20170517145645.GO18247@dhcp22.suse.cz>
- <alpine.DEB.2.20.1705171021570.9487@east.gentwo.org>
- <20170518090846.GD25462@dhcp22.suse.cz>
- <alpine.DEB.2.20.1705181154450.27641@east.gentwo.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
+Date: Thu, 18 May 2017 19:30:04 +0200
+Message-ID: <20170518173002.GC30148@dhcp22.suse.cz>
+References: <1495124884-28974-1-git-send-email-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1705181154450.27641-wcBtFHqTun5QOdAKl3ChDw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1495124884-28974-1-git-send-email-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Thu 18-05-17 11:57:55, Cristopher Lameter wrote:
-> On Thu, 18 May 2017, Michal Hocko wrote:
+On Thu 18-05-17 17:28:04, Roman Gushchin wrote:
+> Traditionally, the OOM killer is operating on a process level.
+> Under oom conditions, it finds a process with the highest oom score
+> and kills it.
 > 
-> > > Nope. The OOM in a cpuset gets the process doing the alloc killed. Or what
-> > > that changed?
+> This behavior doesn't suit well the system with many running
+> containers. There are two main issues:
 > 
-> !!!!!
+> 1) There is no fairness between containers. A small container with
+> a few large processes will be chosen over a large one with huge
+> number of small processes.
 > 
-> > >
-> > > At this point you have messed up royally and nothing is going to rescue
-> > > you anyways. OOM or not does not matter anymore. The app will fail.
-> >
-> > Not really. If you can trick the system to _think_ that the intersection
-> > between mempolicy and the cpuset is empty then the OOM killer might
-> > trigger an innocent task rather than the one which tricked it into that
-> > situation.
+> 2) Containers often do not expect that some random process inside
+> will be killed. So, in general, a much safer behavior is
+> to kill the whole cgroup. Traditionally, this was implemented
+> in userspace, but doing it in the kernel has some advantages,
+> especially in a case of a system-wide OOM.
 > 
-> See above. OOM Kill in a cpuset does not kill an innocent task but a task
-> that does an allocation in that specific context meaning a task in that
-> cpuset that also has a memory policty.
+> To address these issues, cgroup-aware OOM killer is introduced.
+> Under OOM conditions, it looks for a memcg with highest oom score,
+> and kills all processes inside.
+> 
+> Memcg oom score is calculated as a size of active and inactive
+> anon LRU lists, unevictable LRU list and swap size.
+> 
+> For a cgroup-wide OOM, only cgroups belonging to the subtree of
+> the OOMing cgroup are considered.
 
-No, the oom killer will chose the largest task in the specific NUMA
-domain. If you just fail such an allocation then a page fault would get
-VM_FAULT_OOM and pagefault_out_of_memory would kill a task regardless of
-the cpusets.
- 
-> Regardless of that the point earlier was that the moving logic can avoid
-> creating temporary situations of empty sets of nodes by analysing the
-> memory policies etc and only performing moves when doing so is safe.
-
-How are you going to do that in a raceless way? Moreover the whole
-discussion is about _failing_ allocations on an empty cpuset and
-mempolicy intersection.
-
+While this might make sense for some workloads/setups it is not a
+generally acceptable policy IMHO. We have discussed that different OOM
+policies might be interesting few years back at LSFMM but there was no
+real consensus on how to do that. One possibility was to allow bpf like
+mechanisms. Could you explore that path?
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
