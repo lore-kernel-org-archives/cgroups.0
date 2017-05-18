@@ -1,89 +1,107 @@
-From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
- with cpuset update
-Date: Thu, 18 May 2017 14:07:45 -0500 (CDT)
-Message-ID: <alpine.DEB.2.20.1705181351120.29348@east.gentwo.org>
-References: <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz> <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org> <20170517092042.GH18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705170855430.7925@east.gentwo.org> <20170517140501.GM18247@dhcp22.suse.cz>
- <alpine.DEB.2.20.1705170943090.8714@east.gentwo.org> <20170517145645.GO18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705171021570.9487@east.gentwo.org> <20170518090846.GD25462@dhcp22.suse.cz> <alpine.DEB.2.20.1705181154450.27641@east.gentwo.org>
- <20170518172424.GB30148@dhcp22.suse.cz>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170518172424.GB30148-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
+Date: Thu, 18 May 2017 20:20:50 +0100
+Message-ID: <20170518192050.GA1648@castle>
+References: <1495124884-28974-1-git-send-email-guro@fb.com>
+ <20170518173002.GC30148@dhcp22.suse.cz>
+ <CAKTCnzkBNV9bsQSg4kzhxY=i=-y3x78StbbXfV9mvXLsJhGHig@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=i+DVzCpW95wmWqvw97G+bS0rbFG6z2GYEQEW5c/hYog=;
+ b=oOf823D9vT+y1SSwZwhLJxyzYhVUK5ZDPdDsmgfrWWO7sEFXPFBQ9fderFUNNO1hm17l
+ UfImSYl62vfmC955muJJCrMRkOnaStPrZJ8wHPQuY4hNMMTOfQkDtlyh9xGIt31QKPag
+ z9G1P4ZOzFPzTG8kaapRrivTQhSomRMPuqI= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=i+DVzCpW95wmWqvw97G+bS0rbFG6z2GYEQEW5c/hYog=;
+ b=WZ4qvR01PAq7kp8QNjuUBwWEgqvZkfGkUb/aJEQQDGQ2ZWgIKrweKAitkUBszHDHkY973m7rZYX3O/5hRFpjxW/rL0ml2Jx/+wF9ZYqXpH/fZ8VlSb4GR8OtkIrwzp0AEfYHGLtXb97p5hQvT9uuqNihkZo7P2qPwDw3IUh4Ikw=
+Content-Disposition: inline
+In-Reply-To: <CAKTCnzkBNV9bsQSg4kzhxY=i=-y3x78StbbXfV9mvXLsJhGHig@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Balbir Singh <bsingharora@gmail.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
 
-On Thu, 18 May 2017, Michal Hocko wrote:
+On Fri, May 19, 2017 at 04:37:27AM +1000, Balbir Singh wrote:
+> On Fri, May 19, 2017 at 3:30 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> > On Thu 18-05-17 17:28:04, Roman Gushchin wrote:
+> >> Traditionally, the OOM killer is operating on a process level.
+> >> Under oom conditions, it finds a process with the highest oom score
+> >> and kills it.
+> >>
+> >> This behavior doesn't suit well the system with many running
+> >> containers. There are two main issues:
+> >>
+> >> 1) There is no fairness between containers. A small container with
+> >> a few large processes will be chosen over a large one with huge
+> >> number of small processes.
+> >>
+> >> 2) Containers often do not expect that some random process inside
+> >> will be killed. So, in general, a much safer behavior is
+> >> to kill the whole cgroup. Traditionally, this was implemented
+> >> in userspace, but doing it in the kernel has some advantages,
+> >> especially in a case of a system-wide OOM.
+> >>
+> >> To address these issues, cgroup-aware OOM killer is introduced.
+> >> Under OOM conditions, it looks for a memcg with highest oom score,
+> >> and kills all processes inside.
+> >>
+> >> Memcg oom score is calculated as a size of active and inactive
+> >> anon LRU lists, unevictable LRU list and swap size.
+> >>
+> >> For a cgroup-wide OOM, only cgroups belonging to the subtree of
+> >> the OOMing cgroup are considered.
+> >
+> > While this might make sense for some workloads/setups it is not a
+> > generally acceptable policy IMHO. We have discussed that different OOM
+> > policies might be interesting few years back at LSFMM but there was no
+> > real consensus on how to do that. One possibility was to allow bpf like
+> > mechanisms. Could you explore that path?
+> 
+> I agree, I think it needs more thought. I wonder if the real issue is something
+> else. For example
+> 
+> 1. Did we overcommit a particular container too much?
 
-> > See above. OOM Kill in a cpuset does not kill an innocent task but a task
-> > that does an allocation in that specific context meaning a task in that
-> > cpuset that also has a memory policty.
->
-> No, the oom killer will chose the largest task in the specific NUMA
-> domain. If you just fail such an allocation then a page fault would get
-> VM_FAULT_OOM and pagefault_out_of_memory would kill a task regardless of
-> the cpusets.
+Imagine, you have a machine with multiple containers,
+each with it's own process tree, and the machine is overcommited,
+i.e. sum of container's memory limits is larger the amount available RAM.
 
-Ok someone screwed up that code. There still is the determination that we
-have a constrained alloc:
+In a case of a system-wide OOM some random container will be affected.
 
-oom_kill:
-	/*
-         * Check if there were limitations on the allocation (only relevant for
-         * NUMA and memcg) that may require different handling.
-         */
-        constraint = constrained_alloc(oc);
-        if (constraint != CONSTRAINT_MEMORY_POLICY)
-                oc->nodemask = NULL;
-        check_panic_on_oom(oc, constraint);
+Historically, this problem was solving by some user-space daemon,
+which was monitoring OOM events and cleaning up affected containers.
+But this approach can't solve the main problem: non-optimal selection
+of a victim. 
 
--- Ok. A constrained failing alloc used to terminate the allocating
-	process here. But it falls through to selecting a "bad process"
+> 2. Do we need something like https://urldefense.proofpoint.com/v2/url?u=https-3A__lwn.net_Articles_604212_&d=DwIBaQ&c=5VD0RTtNlTh3ycd41b3MUw&r=jJYgtDM7QT-W-Fz_d29HYQ&m=9jV4id5lmsjFJj1kQjJk0auyQ3bzL27-f6Ur6ZNw36c&s=ElsS25CoZSPba6ke7O-EIsR7lN0psP6tDVyLnGqCMfs&e=  to solve
+> the problem?
 
+I don't think it's related.
 
-        if (!is_memcg_oom(oc) && sysctl_oom_kill_allocating_task &&
-            current->mm && !oom_unkillable_task(current, NULL, oc->nodemask) &&
-            current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
-                get_task_struct(current);
-                oc->chosen = current;
-                oom_kill_process(oc, "Out of memory (oom_kill_allocating_task)");
-                return true;
-        }
+> 3. We have oom notifiers now, could those be used (assuming you are interested
+> in non memcg related OOM's affecting a container
 
---  A constrained allocation should not get here but fail the process that
-	attempts the alloc.
+They can be used to inform an userspace daemon about an already happened OOM,
+but they do not affect victim selection.
 
-        select_bad_process(oc);
+> 4. How do we determine limits for these containers? From a fariness
+> perspective
 
+Limits are usually set from some high-level understanding of the nature
+of tasks which are working inside, but overcommiting the machine is
+a common place, I assume.
 
-Can we restore the old behavior? If I just specify the right memory policy
-I can cause other processes to just be terminated?
+Thank you!
 
+Roman
 
-> > Regardless of that the point earlier was that the moving logic can avoid
-> > creating temporary situations of empty sets of nodes by analysing the
-> > memory policies etc and only performing moves when doing so is safe.
->
-> How are you going to do that in a raceless way? Moreover the whole
-> discussion is about _failing_ allocations on an empty cpuset and
-> mempolicy intersection.
-
-Again this is only working for processes that are well behaved and it
-never worked in a different way before. There was always the assumption
-that a process does not allocate in the areas that have allocation
-constraints and that the process does not change memory policies nor
-store them somewhere for late etc etc. HPC apps typically allocate memory
-on startup and then go through long times of processing and I/O.
-
-The idea that cpuset node to node migration will work with a running
-process that does abitrary activity is a pipe dream that we should give
-up. There must be constraints on a process in order to allow this to work
-and as far as I can tell this is best done in userspace with a library and
-by putting requirements on the applications that desire to be movable that
-way.
-
-F.e. an application that does not use memory policies or other allocation
-constraints should be fine. That has been working.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
