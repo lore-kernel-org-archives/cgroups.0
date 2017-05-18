@@ -1,104 +1,50 @@
-From: "Huang\, Ying" <ying.huang@intel.com>
-Subject: Re: [PATCH -mm -v11 1/5] mm, THP, swap: Delay splitting THP during swap out
-Date: Thu, 18 May 2017 13:33:47 +0800
-Message-ID: <87k25ed8zo.fsf@yhuang-dev.intel.com>
-References: <20170515112522.32457-1-ying.huang@intel.com>
-	<20170515112522.32457-2-ying.huang@intel.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
+ with cpuset update
+Date: Thu, 18 May 2017 11:08:47 +0200
+Message-ID: <20170518090846.GD25462@dhcp22.suse.cz>
+References: <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz>
+ <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org>
+ <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz>
+ <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org>
+ <20170517092042.GH18247@dhcp22.suse.cz>
+ <alpine.DEB.2.20.1705170855430.7925@east.gentwo.org>
+ <20170517140501.GM18247@dhcp22.suse.cz>
+ <alpine.DEB.2.20.1705170943090.8714@east.gentwo.org>
+ <20170517145645.GO18247@dhcp22.suse.cz>
+ <alpine.DEB.2.20.1705171021570.9487@east.gentwo.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20170515112522.32457-2-ying.huang@intel.com> (Ying Huang's
-	message of "Mon, 15 May 2017 19:25:18 +0800")
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.20.1705171021570.9487-wcBtFHqTun5QOdAKl3ChDw@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrea Arcangeli <aarcange@redhat.com>, Ebru Akagunduz <ebru.akagunduz@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Shaohua Li <shli@kernel.org>, Minchan Kim <minchan@kernel.org>, Rik van Riel <riel@redhat.com>, cgroups@vger.kernel.org
+To: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+On Wed 17-05-17 10:25:09, Cristopher Lameter wrote:
+> On Wed, 17 May 2017, Michal Hocko wrote:
+> 
+> > > If you have screwy things like static mbinds in there then you are
+> > > hopelessly lost anyways. You may have moved the process to another set
+> > > of nodes but the static bindings may refer to a node no longer
+> > > available. Thus the OOM is legitimate.
+> >
+> > The point is that you do _not_ want such a process to trigger the OOM
+> > because it can cause other processes being killed.
+> 
+> Nope. The OOM in a cpuset gets the process doing the alloc killed. Or what
+> that changed?
+> 
+> At this point you have messed up royally and nothing is going to rescue
+> you anyways. OOM or not does not matter anymore. The app will fail.
 
-"Huang, Ying" <ying.huang@intel.com> writes:
-
-> From: Huang Ying <ying.huang@intel.com>
->
-> In this patch, splitting huge page is delayed from almost the first
-> step of swapping out to after allocating the swap space for the
-> THP (Transparent Huge Page) and adding the THP into the swap cache.
-> This will batch the corresponding operation, thus improve THP swap out
-> throughput.
->
-> This is the first step for the THP swap optimization.  The plan is to
-> delay splitting the THP step by step and avoid splitting the THP
-> finally.
->
-
-I found two issues in this patch, could you fold the following fix patch
-into the original patch?
-
-Best Regards,
-Huang, Ying
-
-------------------------------------------------------------->
-From: Huang Ying <ying.huang@intel.com>
-Subject: [PATCH] mm, THP, swap: Fix two issues in THP optimize patch
-
-When changing the logic for cluster allocation for THP in
-get_swap_page(), I made a mistake so that a normal swap slot may be
-allocated for a THP instead of return with failure.  This is fixed in
-the patch.
-
-And I found two likely/unlikely annotation is wrong in
-get_swap_pages(), because that is slow path, I just removed the
-likely/unlikely annotation.
-
-Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Minchan Kim <minchan@kernel.org>
----
- mm/swap_slots.c | 5 +++--
- mm/swapfile.c   | 4 ++--
- 2 files changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/mm/swap_slots.c b/mm/swap_slots.c
-index 78047d1efedd..90c1032a8ac3 100644
---- a/mm/swap_slots.c
-+++ b/mm/swap_slots.c
-@@ -309,8 +309,9 @@ swp_entry_t get_swap_page(struct page *page)
- 
- 	entry.val = 0;
- 
--	if (IS_ENABLED(CONFIG_THP_SWAP) && PageTransHuge(page)) {
--		get_swap_pages(1, true, &entry);
-+	if (PageTransHuge(page)) {
-+		if (IS_ENABLED(CONFIG_THP_SWAP))
-+			get_swap_pages(1, true, &entry);
- 		return entry;
- 	}
- 
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index f4c0f2a92bf0..984f0dd94948 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -937,13 +937,13 @@ int get_swap_pages(int n_goal, bool cluster, swp_entry_t swp_entries[])
- 			spin_unlock(&si->lock);
- 			goto nextsi;
- 		}
--		if (likely(cluster))
-+		if (cluster)
- 			n_ret = swap_alloc_cluster(si, swp_entries);
- 		else
- 			n_ret = scan_swap_map_slots(si, SWAP_HAS_CACHE,
- 						    n_goal, swp_entries);
- 		spin_unlock(&si->lock);
--		if (n_ret || unlikely(cluster))
-+		if (n_ret || cluster)
- 			goto check_out;
- 		pr_debug("scan_swap_map of si %d failed to find offset\n",
- 			si->type);
+Not really. If you can trick the system to _think_ that the intersection
+between mempolicy and the cpuset is empty then the OOM killer might
+trigger an innocent task rather than the one which tricked it into that
+situation.
 -- 
-2.11.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
