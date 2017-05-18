@@ -1,30 +1,29 @@
-From: Roman Gushchin <guro@fb.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
-Date: Thu, 18 May 2017 20:20:50 +0100
-Message-ID: <20170518192050.GA1648@castle>
+Date: Thu, 18 May 2017 15:22:40 -0400
+Message-ID: <20170518192240.GA29914@cmpxchg.org>
 References: <1495124884-28974-1-git-send-email-guro@fb.com>
  <20170518173002.GC30148@dhcp22.suse.cz>
  <CAKTCnzkBNV9bsQSg4kzhxY=i=-y3x78StbbXfV9mvXLsJhGHig@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=i+DVzCpW95wmWqvw97G+bS0rbFG6z2GYEQEW5c/hYog=;
- b=oOf823D9vT+y1SSwZwhLJxyzYhVUK5ZDPdDsmgfrWWO7sEFXPFBQ9fderFUNNO1hm17l
- UfImSYl62vfmC955muJJCrMRkOnaStPrZJ8wHPQuY4hNMMTOfQkDtlyh9xGIt31QKPag
- z9G1P4ZOzFPzTG8kaapRrivTQhSomRMPuqI= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=i+DVzCpW95wmWqvw97G+bS0rbFG6z2GYEQEW5c/hYog=;
- b=WZ4qvR01PAq7kp8QNjuUBwWEgqvZkfGkUb/aJEQQDGQ2ZWgIKrweKAitkUBszHDHkY973m7rZYX3O/5hRFpjxW/rL0ml2Jx/+wF9ZYqXpH/fZ8VlSb4GR8OtkIrwzp0AEfYHGLtXb97p5hQvT9uuqNihkZo7P2qPwDw3IUh4Ikw=
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=FRwOI+KiByHR0mcpoNvJFbKdXbz/GZuappuKMcUM2TM=; b=U5kn6n+4G1WG3pyyT0PhS1WpUc
+        +TkGwDw5j2nqApgqDdm71Qe0flGN1lAMYoXjbyRuXAPpdH8o8e+OkrKTFqEPj4sAB7Lo76JPhBndk
+        Fiq2YLuNe324CO5JpSfanD2ea+AiRXZLPQzXiuzTD0sqhSk5Z0nhF7duFUPqYhtx7XOo=;
 Content-Disposition: inline
 In-Reply-To: <CAKTCnzkBNV9bsQSg4kzhxY=i=-y3x78StbbXfV9mvXLsJhGHig@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Balbir Singh <bsingharora@gmail.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
 
 On Fri, May 19, 2017 at 04:37:27AM +1000, Balbir Singh wrote:
 > On Fri, May 19, 2017 at 3:30 AM, Michal Hocko <mhocko@kernel.org> wrote:
@@ -66,42 +65,38 @@ On Fri, May 19, 2017 at 04:37:27AM +1000, Balbir Singh wrote:
 > else. For example
 > 
 > 1. Did we overcommit a particular container too much?
-
-Imagine, you have a machine with multiple containers,
-each with it's own process tree, and the machine is overcommited,
-i.e. sum of container's memory limits is larger the amount available RAM.
-
-In a case of a system-wide OOM some random container will be affected.
-
-Historically, this problem was solving by some user-space daemon,
-which was monitoring OOM events and cleaning up affected containers.
-But this approach can't solve the main problem: non-optimal selection
-of a victim. 
-
-> 2. Do we need something like https://urldefense.proofpoint.com/v2/url?u=https-3A__lwn.net_Articles_604212_&d=DwIBaQ&c=5VD0RTtNlTh3ycd41b3MUw&r=jJYgtDM7QT-W-Fz_d29HYQ&m=9jV4id5lmsjFJj1kQjJk0auyQ3bzL27-f6Ur6ZNw36c&s=ElsS25CoZSPba6ke7O-EIsR7lN0psP6tDVyLnGqCMfs&e=  to solve
+> 2. Do we need something like https://lwn.net/Articles/604212/ to solve
 > the problem?
 
-I don't think it's related.
+The occasional OOM kill is an unavoidable reality on our systems (and
+I bet on most deployments). If we tried not to overcommit, we'd waste
+a *lot* of memory.
+
+The problem is when OOM happens, we really want the biggest *job* to
+get killed. Before cgroups, we assumed jobs were processes. But with
+cgroups, the user is able to define a group of processes as a job, and
+then an individual process is no longer a first-class memory consumer.
+
+Without a patch like this, the OOM killer will compare the sizes of
+the random subparticles that the jobs in the system are composed of
+and kill the single biggest particle, leaving behind the incoherent
+remains of one of the jobs. That doesn't make a whole lot of sense.
+
+If you want to determine the most expensive car in a parking lot, you
+can't go off and compare the price of one car's muffler with the door
+handle of another, then point to a wind shield and yell "This is it!"
+
+You need to compare the cars as a whole with each other.
 
 > 3. We have oom notifiers now, could those be used (assuming you are interested
 > in non memcg related OOM's affecting a container
 
-They can be used to inform an userspace daemon about an already happened OOM,
-but they do not affect victim selection.
+Right now, we watch for OOM notifications and then have userspace kill
+the rest of a job. That works - somewhat. What remains is the problem
+that I described above, that comparing individual process sizes is not
+meaningful when the terminal memory consumer is a cgroup.
 
 > 4. How do we determine limits for these containers? From a fariness
 > perspective
 
-Limits are usually set from some high-level understanding of the nature
-of tasks which are working inside, but overcommiting the machine is
-a common place, I assume.
-
-Thank you!
-
-Roman
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+How do you mean?
