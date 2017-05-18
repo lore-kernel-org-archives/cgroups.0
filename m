@@ -1,68 +1,78 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
- with cpuset update
-Date: Thu, 18 May 2017 12:07:25 -0500 (CDT)
-Message-ID: <alpine.DEB.2.20.1705181158250.27641@east.gentwo.org>
-References: <20170411140609.3787-2-vbabka@suse.cz> <alpine.DEB.2.20.1704111152170.25069@east.gentwo.org> <a86ae57a-3efc-6ae5-ddf0-fd64c53c20fa@suse.cz> <alpine.DEB.2.20.1704121617040.28335@east.gentwo.org> <cf9628e9-20ed-68b0-6cbd-48af5133138c@suse.cz>
- <alpine.DEB.2.20.1704141526260.17435@east.gentwo.org> <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz> <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org> <20170517092042.GH18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705170855430.7925@east.gentwo.org>
- <20170517140501.GM18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705170943090.8714@east.gentwo.org> <8889d67a-adab-91e1-c320-d8bd88d7e1e0@suse.cz>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
+Date: Thu, 18 May 2017 13:21:02 -0400
+Message-ID: <5fd96236-532a-964f-f130-c93272edbc8e@redhat.com>
+References: <1494855256-12558-1-git-send-email-longman@redhat.com>
+ <1494855256-12558-12-git-send-email-longman@redhat.com>
+ <20170517214718.GH942@htj.duckdns.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <8889d67a-adab-91e1-c320-d8bd88d7e1e0@suse.cz>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com BDCA07247C
+In-Reply-To: <20170517214718.GH942@htj.duckdns.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Mel Gorman <mgorman@techsingularity.net>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-api@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-On Thu, 18 May 2017, Vlastimil Babka wrote:
-
-> > The race is where? If you expand the node set during the move of the
-> > application then you are safe in terms of the legacy apps that did not
-> > include static bindings.
+On 05/17/2017 05:47 PM, Tejun Heo wrote:
+> Hello, Waiman.
 >
-> No, that expand/shrink by itself doesn't work against parallel
+> On Mon, May 15, 2017 at 09:34:10AM -0400, Waiman Long wrote:
+>> The current thread mode semantics aren't sufficient to fully support
+>> threaded controllers like cpu. The main problem is that when thread
+>> mode is enabled at root (mainly for performance reason), all the
+>> non-threaded controllers cannot be supported at all.
+>>
+>> To alleviate this problem, the roles of thread root and threaded
+>> cgroups are now further separated. Now thread mode can only be enabled=
 
-Parallel? I think we are clear that ithis is inherently racy against the
-app changing policies etc etc? There is a huge issue there already. The
-app needs to be well behaved in some heretofore undefined way in order to
-make moves clean.
+>> on a non-root leaf cgroup whose parent will then become the thread
+>> root. All the descendants of a threaded cgroup will still need to be
+>> threaded. All the non-threaded resource will be accounted for in the
+>> thread root. Unlike the previous thread mode, however, a thread root
+>> can have non-threaded children where system resources like memory
+>> can be further split down the hierarchy.
+>>
+>> Now we could have something like
+>>
+>> 	R -- A -- B
+>> 	 \
+>> 	  T1 -- T2
+>>
+>> where R is the thread root, A and B are non-threaded cgroups, T1 and
+>> T2 are threaded cgroups. The cgroups R, T1, T2 form a threaded subtree=
 
-> get_page_from_freelist going through a zonelist. Moving from node 0 to
-> 1, with zonelist containing nodes 1 and 0 in that order:
+>> where all the non-threaded resources are accounted for in R.  The no
+>> internal process constraint does not apply in the threaded subtree.
+>> Non-threaded controllers need to properly handle the competition
+>> between internal processes and child cgroups at the thread root.
+>>
+>> This model will be flexible enough to support the need of the threaded=
+
+>> controllers.
+> I do like the approach and it does address the issue with requiring at
+> least one level of nesting for the thread mode to be used with other
+> controllers.  I need to think a bit more about it and mull over what
+> Peterz was suggesting in the old thread.  I'll get back to you soon
+> but I'd really prefer this and the earlier related patches to be in
+> its own patchset so that we aren't dealing with different things at
+> the same time.
 >
-> - mempolicy mask is 0
-> - zonelist iteration checks node 1, it's not allowed, skip
+> Thanks.
+>
+I have studied the email exchanges with your original thread mode
+patchset. This patchset is aimed to hopefully address all the concerns
+that Peterz has. This enhanced thread mode should address a big part of
+the concern. However, I am not sure if this patch, by itself, is enough
+to address all his concerns. That is why I also include 2 other major
+changes in the next 2 patches. My goal is to move forward to allow all
+controllers to be enabled for v2 eventually. We are not there yet, but I
+hope this patchset can move thing forward meaningfully.
 
-There is an allocation from node 1? This is not allowed before the move.
-So it should fail. Not skipping to another node.
-
-> - mempolicy mask is 0,1 (expand)
-> - mempolicy mask is 1 (shrink)
-> - zonelist iteration checks node 0, it's not allowed, skip
-> - OOM
-
-Are you talking about a race here between zonelist scanning and the
-moving? That has been there forever.
-
-And frankly there are gazillions of these races. The best thing to do is
-to get the cpuset moving logic out of the kernel and into user space.
-
-Understand that this is a heuristic and maybe come up with a list of
-restrictions that make an app safe. An safe app that can be moved must f.e
-
-1. Not allocate new memory while its being moved
-2. Not change memory policies after its initialization and while its being
-moved.
-3. Not save memory policy state in some variable (because the logic to
-translate the memory policies for the new context cannot find it).
-
-...
-
-Again cpuset process migration  is a huge mess that you do not want to
-have in the kernel and AFAICT this is a corner case with difficult
-semantics. Better have that in user space...
+Regards,
+Longman
 
 
 --
