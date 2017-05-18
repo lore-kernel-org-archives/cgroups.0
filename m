@@ -1,75 +1,89 @@
-From: Balbir Singh <bsingharora@gmail.com>
-Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
-Date: Fri, 19 May 2017 04:37:27 +1000
-Message-ID: <CAKTCnzkBNV9bsQSg4kzhxY=i=-y3x78StbbXfV9mvXLsJhGHig@mail.gmail.com>
-References: <1495124884-28974-1-git-send-email-guro@fb.com> <20170518173002.GC30148@dhcp22.suse.cz>
-Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=2io6QN7phSNOr3V1c/S3zKvs5Qo1aQrA9bncru0SeyQ=;
-        b=R+D+TJ2MoSchfAdU0l3mJUZhkC8rmu9HAnG4ACJEW8TPMPFl0b0ziPJpeXN5OZ1QEs
-         DtSg+LvZVVEuB43StMIZSAmjWxihhDuTATOS6oUvanvdUCH5WyzXvxaBZEdqRHljja5O
-         QhcXYDBBeXUAx32zgf0s5sXHvsHrpg6jwD3wVsP1neSkfSoB01elG0Axw3ELqFPpNwLQ
-         +K2LF7mKFVFZ29xAibZvZ//0m10gOPWM9IzERfJHoKogLFOcLqiiyzECE9VZeuZtLEsv
-         wlyvZK6fb/CBXtCcixwrSEvZ7IgtT8U22OPKj6buiIaiS9npFHmlTKuXfwnyXlAoQmGC
-         JkHA==
-In-Reply-To: <20170518173002.GC30148@dhcp22.suse.cz>
-Sender: linux-doc-owner@vger.kernel.org
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC 1/6] mm, page_alloc: fix more premature OOM due to race
+ with cpuset update
+Date: Thu, 18 May 2017 14:07:45 -0500 (CDT)
+Message-ID: <alpine.DEB.2.20.1705181351120.29348@east.gentwo.org>
+References: <fda99ddc-94f5-456e-6560-d4991da452a6@suse.cz> <alpine.DEB.2.20.1704301628460.21533@east.gentwo.org> <20170517092042.GH18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705170855430.7925@east.gentwo.org> <20170517140501.GM18247@dhcp22.suse.cz>
+ <alpine.DEB.2.20.1705170943090.8714@east.gentwo.org> <20170517145645.GO18247@dhcp22.suse.cz> <alpine.DEB.2.20.1705171021570.9487@east.gentwo.org> <20170518090846.GD25462@dhcp22.suse.cz> <alpine.DEB.2.20.1705181154450.27641@east.gentwo.org>
+ <20170518172424.GB30148@dhcp22.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20170518172424.GB30148-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 19, 2017 at 3:30 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> On Thu 18-05-17 17:28:04, Roman Gushchin wrote:
->> Traditionally, the OOM killer is operating on a process level.
->> Under oom conditions, it finds a process with the highest oom score
->> and kills it.
->>
->> This behavior doesn't suit well the system with many running
->> containers. There are two main issues:
->>
->> 1) There is no fairness between containers. A small container with
->> a few large processes will be chosen over a large one with huge
->> number of small processes.
->>
->> 2) Containers often do not expect that some random process inside
->> will be killed. So, in general, a much safer behavior is
->> to kill the whole cgroup. Traditionally, this was implemented
->> in userspace, but doing it in the kernel has some advantages,
->> especially in a case of a system-wide OOM.
->>
->> To address these issues, cgroup-aware OOM killer is introduced.
->> Under OOM conditions, it looks for a memcg with highest oom score,
->> and kills all processes inside.
->>
->> Memcg oom score is calculated as a size of active and inactive
->> anon LRU lists, unevictable LRU list and swap size.
->>
->> For a cgroup-wide OOM, only cgroups belonging to the subtree of
->> the OOMing cgroup are considered.
+On Thu, 18 May 2017, Michal Hocko wrote:
+
+> > See above. OOM Kill in a cpuset does not kill an innocent task but a task
+> > that does an allocation in that specific context meaning a task in that
+> > cpuset that also has a memory policty.
 >
-> While this might make sense for some workloads/setups it is not a
-> generally acceptable policy IMHO. We have discussed that different OOM
-> policies might be interesting few years back at LSFMM but there was no
-> real consensus on how to do that. One possibility was to allow bpf like
-> mechanisms. Could you explore that path?
+> No, the oom killer will chose the largest task in the specific NUMA
+> domain. If you just fail such an allocation then a page fault would get
+> VM_FAULT_OOM and pagefault_out_of_memory would kill a task regardless of
+> the cpusets.
 
-I agree, I think it needs more thought. I wonder if the real issue is something
-else. For example
+Ok someone screwed up that code. There still is the determination that we
+have a constrained alloc:
 
-1. Did we overcommit a particular container too much?
-2. Do we need something like https://lwn.net/Articles/604212/ to solve
-the problem?
-3. We have oom notifiers now, could those be used (assuming you are interested
-in non memcg related OOM's affecting a container
-4. How do we determine limits for these containers? From a fariness
-perspective
+oom_kill:
+	/*
+         * Check if there were limitations on the allocation (only relevant for
+         * NUMA and memcg) that may require different handling.
+         */
+        constraint = constrained_alloc(oc);
+        if (constraint != CONSTRAINT_MEMORY_POLICY)
+                oc->nodemask = NULL;
+        check_panic_on_oom(oc, constraint);
 
-Just trying to understand what leads to the issues you are seeing
+-- Ok. A constrained failing alloc used to terminate the allocating
+	process here. But it falls through to selecting a "bad process"
 
-Balbir
+
+        if (!is_memcg_oom(oc) && sysctl_oom_kill_allocating_task &&
+            current->mm && !oom_unkillable_task(current, NULL, oc->nodemask) &&
+            current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
+                get_task_struct(current);
+                oc->chosen = current;
+                oom_kill_process(oc, "Out of memory (oom_kill_allocating_task)");
+                return true;
+        }
+
+--  A constrained allocation should not get here but fail the process that
+	attempts the alloc.
+
+        select_bad_process(oc);
+
+
+Can we restore the old behavior? If I just specify the right memory policy
+I can cause other processes to just be terminated?
+
+
+> > Regardless of that the point earlier was that the moving logic can avoid
+> > creating temporary situations of empty sets of nodes by analysing the
+> > memory policies etc and only performing moves when doing so is safe.
+>
+> How are you going to do that in a raceless way? Moreover the whole
+> discussion is about _failing_ allocations on an empty cpuset and
+> mempolicy intersection.
+
+Again this is only working for processes that are well behaved and it
+never worked in a different way before. There was always the assumption
+that a process does not allocate in the areas that have allocation
+constraints and that the process does not change memory policies nor
+store them somewhere for late etc etc. HPC apps typically allocate memory
+on startup and then go through long times of processing and I/O.
+
+The idea that cpuset node to node migration will work with a running
+process that does abitrary activity is a pipe dream that we should give
+up. There must be constraints on a process in order to allow this to work
+and as far as I can tell this is best done in userspace with a library and
+by putting requirements on the applications that desire to be movable that
+way.
+
+F.e. an application that does not use memory policies or other allocation
+constraints should be fine. That has been working.
