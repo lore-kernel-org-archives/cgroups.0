@@ -1,52 +1,92 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 06/31] cgroup-v2.txt: standardize document format
-Date: Fri, 19 May 2017 10:59:21 -0400
-Message-ID: <20170519145921.GB7174@wtj.duckdns.org>
-References: <cover.1495156488.git.mchehab@s-opensource.com>
- <1f0804f2263073287d2a106c12f88f295a30cec5.1495156488.git.mchehab@s-opensource.com>
+From: Roman Guschin <guroan@gmail.com>
+Subject: Re: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
+Date: Fri, 19 May 2017 17:34:18 +0100
+Message-ID: <CALo0P1123MROxgveCdX6YFpWDwG4qrAyHu3Xd1F+ckaFBnF4dQ@mail.gmail.com>
+References: <149520375057.74196.2843113275800730971.stgit@buzz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=bqLjw3MUFr9cY11Uh/xFKiC36fsUNAOv0k9xP39Q2Co=;
-        b=DWKDYRDZ/Q0xk/9oLkvb2hE+iAc+l+alClhFhYhSFKMjDAcewG7ZUDSBhH5u3k03xY
-         NTnDpIS8SJxFKvjEJComvkUjad+5DCTfv1L1QIZz272ypFFUapplb4dJwZ1c5Fny45if
-         pQ5urOdpMfczzYRcBf4LfbNpwvyblrspf2O6olonug5Dnw+iiOPhDlHZPZDh4OqVRWdh
-         UBjgoDVGYjq1MlLrRMWM8XDvBhtQxFTM+Kn7Yc3wx3fuPg8HU/6Qrkpr4XLLtVx/7T4P
-         A2+cdxSRqqGipS2qAMws/ukqtRa6I9NQswvbYC/8l0RlpGK4DFoEAJMxxiMcfcBdd5tY
-         JJuA==
-Content-Disposition: inline
-In-Reply-To: <1f0804f2263073287d2a106c12f88f295a30cec5.1495156488.git.mchehab-JsYNTwtnfakRB7SZvlqPiA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=N9yq8bFqWmTyMq0fjbXfRIdMBeZty+4uXHIM5Qc36RQ=;
+        b=mMSWEVi/x7Egmi1kqtYMEiHpTfvDsNQTMTPmVe3tFCKpry55IfzGhbgaIRXaVOvPEx
+         i1DbEPPCNlSVy/LqaYkF9nP/P22jt0HSox5ln7rsS4O631E/wN8xWipiEClkep4yemEz
+         NL6/F6o2LMsGmIj/pRM5p9dCZRMScfd2zTn27fc7efvLdeiHl7w7Uej8DPBNiNVyPsIx
+         G4NUHBOjbdSjWdVYWOv9GkbYvJmWTSS7fxopsHT8sk0NdZcYfKM+8dmKJgaQ1XgyVLeT
+         o4fEGYOoIb8pg0dlme1KOG67r4le0sYqyq0ydqEHvDmbb9QLYLoX8vrPvzes5wGKPzpa
+         7PBg==
+In-Reply-To: <149520375057.74196.2843113275800730971.stgit@buzz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mauro Carvalho Chehab <mchehab-JsYNTwtnfakRB7SZvlqPiA@public.gmane.org>
-Cc: Linux Doc Mailing List <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mauro Carvalho Chehab <mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Cyrille Pitchen <cyrille.pitchen-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@kernel.org>, hannes@cmpxchg.org
 
-Hello, Mauro.
+2017-05-19 15:22 GMT+01:00 Konstantin Khlebnikov <khlebnikov@yandex-team.ru>:
+> Show count of global oom killer invocations in /proc/vmstat and
+> count of oom kills inside memory cgroup in knob "memory.events"
+> (in memory.oom_control for v1 cgroup).
+>
+> Also describe difference between "oom" and "oom_kill" in memory
+> cgroup documentation. Currently oom in memory cgroup kills tasks
+> iff shortage has happened inside page fault.
+>
+> These counters helps in monitoring oom kills - for now
+> the only way is grepping for magic words in kernel log.
+>
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+> ---
+>  Documentation/cgroup-v2.txt   |   12 +++++++++++-
+>  include/linux/memcontrol.h    |    1 +
+>  include/linux/vm_event_item.h |    1 +
+>  mm/memcontrol.c               |    2 ++
+>  mm/oom_kill.c                 |    6 ++++++
+>  mm/vmstat.c                   |    1 +
+>  6 files changed, 22 insertions(+), 1 deletion(-)
+>
+> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+> index dc5e2dcdbef4..a742008d76aa 100644
+> --- a/Documentation/cgroup-v2.txt
+> +++ b/Documentation/cgroup-v2.txt
+> @@ -830,9 +830,19 @@ PAGE_SIZE multiple when read back.
+>
+>           oom
+>
+> +               The number of time the cgroup's memory usage was
+> +               reached the limit and allocation was about to fail.
+> +               Result could be oom kill, -ENOMEM from any syscall or
+> +               completely ignored in cases like disk readahead.
+> +               For now oom in memory cgroup kills tasks iff shortage
+> +               has happened inside page fault.
 
-On Thu, May 18, 2017 at 10:22:11PM -0300, Mauro Carvalho Chehab wrote:
-> Each text file under Documentation follows a different
-> format. Some doesn't even have titles!
-> 
-> Change its representation to follow the adopted standard,
-> using ReST markups for it to be parseable by Sphinx:
-> 
-> - Comment the internal index;
-> - Use :Date: and :Author: for authorship;
-> - Mark titles;
-> - Mark literal blocks;
-> - Adjust witespaces;
-> - Mark notes;
-> - Use table notation for the existing tables.
+From a user's point of view the difference between "oom" and "max"
+becomes really vague here,
+assuming that "max" is described almost in the same words:
 
-If this is the direction we're taking for all docs, looks good to me.
-Do you want me to take the patch through the cgroup tree?
+"The number of times the cgroup's memory usage was
+about to go over the max boundary.  If direct reclaim
+fails to bring it down, the OOM killer is invoked."
 
-Thanks.
+I wonder, if it's better to fix the existing "oom" value  to show what
+it has to show, according to docs,
+rather than to introduce a new one?
 
--- 
-tejun
+> +
+> +         oom_kill
+> +
+>                 The number of times the OOM killer has been invoked in
+>                 the cgroup.  This may not exactly match the number of
+> -               processes killed but should generally be close.
+> +               processes killed but should generally be close: each
+> +               invocation could kill several processes at once.
+>
+>    memory.stat
+>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
