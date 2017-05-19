@@ -1,92 +1,54 @@
-From: Roman Guschin <guroan@gmail.com>
-Subject: Re: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
-Date: Fri, 19 May 2017 17:34:18 +0100
-Message-ID: <CALo0P1123MROxgveCdX6YFpWDwG4qrAyHu3Xd1F+ckaFBnF4dQ@mail.gmail.com>
-References: <149520375057.74196.2843113275800730971.stgit@buzz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH v2 08/17] cgroup: Move debug cgroup to its own file
+Date: Fri, 19 May 2017 15:21:46 -0400
+Message-ID: <20170519192146.GA9741@wtj.duckdns.org>
+References: <1494855256-12558-1-git-send-email-longman@redhat.com>
+ <1494855256-12558-9-git-send-email-longman@redhat.com>
+ <20170517213603.GE942@htj.duckdns.org>
+ <ee36d4f8-9e9d-a5c7-2174-56c21aaf75af@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=N9yq8bFqWmTyMq0fjbXfRIdMBeZty+4uXHIM5Qc36RQ=;
-        b=mMSWEVi/x7Egmi1kqtYMEiHpTfvDsNQTMTPmVe3tFCKpry55IfzGhbgaIRXaVOvPEx
-         i1DbEPPCNlSVy/LqaYkF9nP/P22jt0HSox5ln7rsS4O631E/wN8xWipiEClkep4yemEz
-         NL6/F6o2LMsGmIj/pRM5p9dCZRMScfd2zTn27fc7efvLdeiHl7w7Uej8DPBNiNVyPsIx
-         G4NUHBOjbdSjWdVYWOv9GkbYvJmWTSS7fxopsHT8sk0NdZcYfKM+8dmKJgaQ1XgyVLeT
-         o4fEGYOoIb8pg0dlme1KOG67r4le0sYqyq0ydqEHvDmbb9QLYLoX8vrPvzes5wGKPzpa
-         7PBg==
-In-Reply-To: <149520375057.74196.2843113275800730971.stgit@buzz>
-Sender: owner-linux-mm@kvack.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=OfxMhYVHOgK0YiGB8iPSATNSY8R3yKPDwoBh0VVtptw=;
+        b=YEe2qX/4tV30xucEKiNrNKNnBY9Z2vJ2qs3piNu8bX+y5Qu+iluWCPK+TgICoV6Mwr
+         ULnWu/MFg03EH9Yqgjkz/ONCo0ZxyDD7b4p9jnT2Oi15S8nxApSKbaMVU4k8ZV9Qctvo
+         07hAvDc3/tX8nSq1n6t1fJ0ATllhFkE/waLyBUd9XF9wyqixu13rBjd7DkeWINczoCxc
+         v+N36/IDstIfQwJLA2aUuYHeOYWqDKZyZkZr5CTxXo9WCAq4ruAVyouSKOI3g9z5mk0p
+         NEsd63KU7A+yuOmC1n+I6ZmswOzyvlgtP+X2WlDWwP0gUwS0FIlPxNoDUuiLD0Qc+Pe8
+         oAKQ==
+Content-Disposition: inline
+In-Reply-To: <ee36d4f8-9e9d-a5c7-2174-56c21aaf75af-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@kernel.org>, hannes@cmpxchg.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org
 
-2017-05-19 15:22 GMT+01:00 Konstantin Khlebnikov <khlebnikov@yandex-team.ru>:
-> Show count of global oom killer invocations in /proc/vmstat and
-> count of oom kills inside memory cgroup in knob "memory.events"
-> (in memory.oom_control for v1 cgroup).
->
-> Also describe difference between "oom" and "oom_kill" in memory
-> cgroup documentation. Currently oom in memory cgroup kills tasks
-> iff shortage has happened inside page fault.
->
-> These counters helps in monitoring oom kills - for now
-> the only way is grepping for magic words in kernel log.
->
-> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-> ---
->  Documentation/cgroup-v2.txt   |   12 +++++++++++-
->  include/linux/memcontrol.h    |    1 +
->  include/linux/vm_event_item.h |    1 +
->  mm/memcontrol.c               |    2 ++
->  mm/oom_kill.c                 |    6 ++++++
->  mm/vmstat.c                   |    1 +
->  6 files changed, 22 insertions(+), 1 deletion(-)
->
-> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-> index dc5e2dcdbef4..a742008d76aa 100644
-> --- a/Documentation/cgroup-v2.txt
-> +++ b/Documentation/cgroup-v2.txt
-> @@ -830,9 +830,19 @@ PAGE_SIZE multiple when read back.
->
->           oom
->
-> +               The number of time the cgroup's memory usage was
-> +               reached the limit and allocation was about to fail.
-> +               Result could be oom kill, -ENOMEM from any syscall or
-> +               completely ignored in cases like disk readahead.
-> +               For now oom in memory cgroup kills tasks iff shortage
-> +               has happened inside page fault.
+Hello, Waiman.
 
-From a user's point of view the difference between "oom" and "max"
-becomes really vague here,
-assuming that "max" is described almost in the same words:
+On Thu, May 18, 2017 at 11:52:18AM -0400, Waiman Long wrote:
+> The controller name is "debug" and so it is obvious what this controller
+> is for. However, the config prompt "Example controller" is indeed vague
 
-"The number of times the cgroup's memory usage was
-about to go over the max boundary.  If direct reclaim
-fails to bring it down, the OOM killer is invoked."
+Yeah but it also shows up as an integral part of stable interface
+rather than e.g. /sys/kernel/debug.  This isn't of any interest to
+people who aren't developing cgroup core code.  There is no reason to
+risk growing dependencies on it.
 
-I wonder, if it's better to fix the existing "oom" value  to show what
-it has to show, according to docs,
-rather than to introduce a new one?
+> in meaning. So we can make the prompt more descriptive here. As for the
+> boot param, are you saying something like "cgroup_debug" has to be
+> specified in the command line even if CGROUP_DEBUG config is there for
+> the debug controller to be enabled? I am fine with that if you think it
+> is necessary.
 
-> +
-> +         oom_kill
-> +
->                 The number of times the OOM killer has been invoked in
->                 the cgroup.  This may not exactly match the number of
-> -               processes killed but should generally be close.
-> +               processes killed but should generally be close: each
-> +               invocation could kill several processes at once.
->
->    memory.stat
->
+Yeah, I think that'd be a good idea.  cgroup_debug should do.  While
+at it, can you also please make CGROUP_DEBUG depend on DEBUG_KERNEL?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
