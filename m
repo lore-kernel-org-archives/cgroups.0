@@ -1,337 +1,144 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 3/6] mm, page_alloc: pass preferred nid instead of
- zonelist to allocator
-Date: Fri, 19 May 2017 13:59:19 +0200
-Message-ID: <20170519115919.GC29839@dhcp22.suse.cz>
-References: <20170517081140.30654-1-vbabka@suse.cz>
- <20170517081140.30654-4-vbabka@suse.cz>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
+Date: Fri, 19 May 2017 17:22:30 +0300
+Message-ID: <149520375057.74196.2843113275800730971.stgit@buzz>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170517081140.30654-4-vbabka-AlSwsSmVLrQ@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+	t=1495203754; bh=AIhTdhR269Bspb5DJwDlMbPXo4JJU75U37t2UkLgujQ=;
+	h=Subject:From:To:Cc:Date:Message-ID;
+	b=yZXLN0tQr4uvG9ucPpx9n+IbW3LOXwsarKpmW+FGqmkaBodBYSgWCx7uNvEwvZBdq
+	 uRX9lonC3Rz1Hp90XFhLeHXJ9Qrb1GtFMq9etHEoZwFGE/P8b9Iy9CDHW0MI9Wgafj
+	 G+uZK1qXVw+N4miuAXDKufH8acTej2J/CsyNVNa0=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@kernel.org>
 
-On Wed 17-05-17 10:11:37, Vlastimil Babka wrote:
-> The main allocator function __alloc_pages_nodemask() takes a zonelist pointer
-> as one of its parameters. All of its callers directly or indirectly obtain the
-> zonelist via node_zonelist() using a preferred node id and gfp_mask. We can
-> make the code a bit simpler by doing the zonelist lookup in
-> __alloc_pages_nodemask(), passing it a preferred node id instead (gfp_mask is
-> already another parameter).
-> 
-> There are some code size benefits thanks to removal of inlined node_zonelist():
-> 
-> bloat-o-meter add/remove: 2/2 grow/shrink: 4/36 up/down: 399/-1351 (-952)
-> 
-> This will also make things simpler if we proceed with converting cpusets to
-> zonelists.
-> 
-> Signed-off-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Show count of global oom killer invocations in /proc/vmstat and
+count of oom kills inside memory cgroup in knob "memory.events"
+(in memory.oom_control for v1 cgroup).
 
-Makes sense to me
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Also describe difference between "oom" and "oom_kill" in memory
+cgroup documentation. Currently oom in memory cgroup kills tasks
+iff shortage has happened inside page fault.
 
-> ---
->  include/linux/gfp.h       | 11 +++++------
->  include/linux/mempolicy.h |  6 +++---
->  mm/hugetlb.c              | 15 +++++++++------
->  mm/memory_hotplug.c       |  6 ++----
->  mm/mempolicy.c            | 41 +++++++++++++++++++----------------------
->  mm/page_alloc.c           | 10 +++++-----
->  6 files changed, 43 insertions(+), 46 deletions(-)
-> 
-> diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-> index 2b1a44f5bdb6..666af3c39d00 100644
-> --- a/include/linux/gfp.h
-> +++ b/include/linux/gfp.h
-> @@ -432,14 +432,13 @@ static inline void arch_alloc_page(struct page *page, int order) { }
->  #endif
->  
->  struct page *
-> -__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
-> -		       struct zonelist *zonelist, nodemask_t *nodemask);
-> +__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
-> +							nodemask_t *nodemask);
->  
->  static inline struct page *
-> -__alloc_pages(gfp_t gfp_mask, unsigned int order,
-> -		struct zonelist *zonelist)
-> +__alloc_pages(gfp_t gfp_mask, unsigned int order, int preferred_nid)
->  {
-> -	return __alloc_pages_nodemask(gfp_mask, order, zonelist, NULL);
-> +	return __alloc_pages_nodemask(gfp_mask, order, preferred_nid, NULL);
->  }
->  
->  /*
-> @@ -452,7 +451,7 @@ __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
->  	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
->  	VM_WARN_ON(!node_online(nid));
->  
-> -	return __alloc_pages(gfp_mask, order, node_zonelist(nid, gfp_mask));
-> +	return __alloc_pages(gfp_mask, order, nid);
->  }
->  
->  /*
-> diff --git a/include/linux/mempolicy.h b/include/linux/mempolicy.h
-> index 5f4d8281832b..ecb6cbeede5a 100644
-> --- a/include/linux/mempolicy.h
-> +++ b/include/linux/mempolicy.h
-> @@ -146,7 +146,7 @@ extern void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new,
->  				enum mpol_rebind_step step);
->  extern void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new);
->  
-> -extern struct zonelist *huge_zonelist(struct vm_area_struct *vma,
-> +extern int huge_node(struct vm_area_struct *vma,
->  				unsigned long addr, gfp_t gfp_flags,
->  				struct mempolicy **mpol, nodemask_t **nodemask);
->  extern bool init_nodemask_of_mempolicy(nodemask_t *mask);
-> @@ -269,13 +269,13 @@ static inline void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new)
->  {
->  }
->  
-> -static inline struct zonelist *huge_zonelist(struct vm_area_struct *vma,
-> +static inline int huge_node(struct vm_area_struct *vma,
->  				unsigned long addr, gfp_t gfp_flags,
->  				struct mempolicy **mpol, nodemask_t **nodemask)
->  {
->  	*mpol = NULL;
->  	*nodemask = NULL;
-> -	return node_zonelist(0, gfp_flags);
-> +	return 0;
->  }
->  
->  static inline bool init_nodemask_of_mempolicy(nodemask_t *m)
-> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> index e5828875f7bb..9f1f399bb913 100644
-> --- a/mm/hugetlb.c
-> +++ b/mm/hugetlb.c
-> @@ -904,6 +904,8 @@ static struct page *dequeue_huge_page_vma(struct hstate *h,
->  	struct page *page = NULL;
->  	struct mempolicy *mpol;
->  	nodemask_t *nodemask;
-> +	gfp_t gfp_mask;
-> +	int nid;
->  	struct zonelist *zonelist;
->  	struct zone *zone;
->  	struct zoneref *z;
-> @@ -924,12 +926,13 @@ static struct page *dequeue_huge_page_vma(struct hstate *h,
->  
->  retry_cpuset:
->  	cpuset_mems_cookie = read_mems_allowed_begin();
-> -	zonelist = huge_zonelist(vma, address,
-> -					htlb_alloc_mask(h), &mpol, &nodemask);
-> +	gfp_mask = htlb_alloc_mask(h);
-> +	nid = huge_node(vma, address, gfp_mask, &mpol, &nodemask);
-> +	zonelist = node_zonelist(nid, gfp_mask);
->  
->  	for_each_zone_zonelist_nodemask(zone, z, zonelist,
->  						MAX_NR_ZONES - 1, nodemask) {
-> -		if (cpuset_zone_allowed(zone, htlb_alloc_mask(h))) {
-> +		if (cpuset_zone_allowed(zone, gfp_mask)) {
->  			page = dequeue_huge_page_node(h, zone_to_nid(zone));
->  			if (page) {
->  				if (avoid_reserve)
-> @@ -1545,13 +1548,13 @@ static struct page *__hugetlb_alloc_buddy_huge_page(struct hstate *h,
->  	do {
->  		struct page *page;
->  		struct mempolicy *mpol;
-> -		struct zonelist *zl;
-> +		int nid;
->  		nodemask_t *nodemask;
->  
->  		cpuset_mems_cookie = read_mems_allowed_begin();
-> -		zl = huge_zonelist(vma, addr, gfp, &mpol, &nodemask);
-> +		nid = huge_node(vma, addr, gfp, &mpol, &nodemask);
->  		mpol_cond_put(mpol);
-> -		page = __alloc_pages_nodemask(gfp, order, zl, nodemask);
-> +		page = __alloc_pages_nodemask(gfp, order, nid, nodemask);
->  		if (page)
->  			return page;
->  	} while (read_mems_allowed_retry(cpuset_mems_cookie));
-> diff --git a/mm/memory_hotplug.c b/mm/memory_hotplug.c
-> index 717c5e301aa8..ba9e09817f37 100644
-> --- a/mm/memory_hotplug.c
-> +++ b/mm/memory_hotplug.c
-> @@ -1596,11 +1596,9 @@ static struct page *new_node_page(struct page *page, unsigned long private,
->  		gfp_mask |= __GFP_HIGHMEM;
->  
->  	if (!nodes_empty(nmask))
-> -		new_page = __alloc_pages_nodemask(gfp_mask, 0,
-> -					node_zonelist(nid, gfp_mask), &nmask);
-> +		new_page = __alloc_pages_nodemask(gfp_mask, 0, nid, &nmask);
->  	if (!new_page)
-> -		new_page = __alloc_pages(gfp_mask, 0,
-> -					node_zonelist(nid, gfp_mask));
-> +		new_page = __alloc_pages(gfp_mask, 0, nid);
->  
->  	return new_page;
->  }
-> diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-> index d77177c7283b..c60807625fd5 100644
-> --- a/mm/mempolicy.c
-> +++ b/mm/mempolicy.c
-> @@ -1669,9 +1669,9 @@ static nodemask_t *policy_nodemask(gfp_t gfp, struct mempolicy *policy)
->  	return NULL;
->  }
->  
-> -/* Return a zonelist indicated by gfp for node representing a mempolicy */
-> -static struct zonelist *policy_zonelist(gfp_t gfp, struct mempolicy *policy,
-> -	int nd)
-> +/* Return the node id preferred by the given mempolicy, or the given id */
-> +static int policy_node(gfp_t gfp, struct mempolicy *policy,
-> +								int nd)
->  {
->  	if (policy->mode == MPOL_PREFERRED && !(policy->flags & MPOL_F_LOCAL))
->  		nd = policy->v.preferred_node;
-> @@ -1684,7 +1684,7 @@ static struct zonelist *policy_zonelist(gfp_t gfp, struct mempolicy *policy,
->  		WARN_ON_ONCE(policy->mode == MPOL_BIND && (gfp & __GFP_THISNODE));
->  	}
->  
-> -	return node_zonelist(nd, gfp);
-> +	return nd;
->  }
->  
->  /* Do dynamic interleaving for a process */
-> @@ -1791,38 +1791,37 @@ static inline unsigned interleave_nid(struct mempolicy *pol,
->  
->  #ifdef CONFIG_HUGETLBFS
->  /*
-> - * huge_zonelist(@vma, @addr, @gfp_flags, @mpol)
-> + * huge_node(@vma, @addr, @gfp_flags, @mpol)
->   * @vma: virtual memory area whose policy is sought
->   * @addr: address in @vma for shared policy lookup and interleave policy
->   * @gfp_flags: for requested zone
->   * @mpol: pointer to mempolicy pointer for reference counted mempolicy
->   * @nodemask: pointer to nodemask pointer for MPOL_BIND nodemask
->   *
-> - * Returns a zonelist suitable for a huge page allocation and a pointer
-> + * Returns a nid suitable for a huge page allocation and a pointer
->   * to the struct mempolicy for conditional unref after allocation.
->   * If the effective policy is 'BIND, returns a pointer to the mempolicy's
->   * @nodemask for filtering the zonelist.
->   *
->   * Must be protected by read_mems_allowed_begin()
->   */
-> -struct zonelist *huge_zonelist(struct vm_area_struct *vma, unsigned long addr,
-> -				gfp_t gfp_flags, struct mempolicy **mpol,
-> -				nodemask_t **nodemask)
-> +int huge_node(struct vm_area_struct *vma, unsigned long addr, gfp_t gfp_flags,
-> +				struct mempolicy **mpol, nodemask_t **nodemask)
->  {
-> -	struct zonelist *zl;
-> +	int nid;
->  
->  	*mpol = get_vma_policy(vma, addr);
->  	*nodemask = NULL;	/* assume !MPOL_BIND */
->  
->  	if (unlikely((*mpol)->mode == MPOL_INTERLEAVE)) {
-> -		zl = node_zonelist(interleave_nid(*mpol, vma, addr,
-> -				huge_page_shift(hstate_vma(vma))), gfp_flags);
-> +		nid = interleave_nid(*mpol, vma, addr,
-> +					huge_page_shift(hstate_vma(vma)));
->  	} else {
-> -		zl = policy_zonelist(gfp_flags, *mpol, numa_node_id());
-> +		nid = policy_node(gfp_flags, *mpol, numa_node_id());
->  		if ((*mpol)->mode == MPOL_BIND)
->  			*nodemask = &(*mpol)->v.nodes;
->  	}
-> -	return zl;
-> +	return nid;
->  }
->  
->  /*
-> @@ -1924,12 +1923,10 @@ bool mempolicy_nodemask_intersects(struct task_struct *tsk,
->  static struct page *alloc_page_interleave(gfp_t gfp, unsigned order,
->  					unsigned nid)
->  {
-> -	struct zonelist *zl;
->  	struct page *page;
->  
-> -	zl = node_zonelist(nid, gfp);
-> -	page = __alloc_pages(gfp, order, zl);
-> -	if (page && page_zone(page) == zonelist_zone(&zl->_zonerefs[0]))
-> +	page = __alloc_pages(gfp, order, nid);
-> +	if (page && page_to_nid(page) == nid)
->  		inc_zone_page_state(page, NUMA_INTERLEAVE_HIT);
->  	return page;
->  }
-> @@ -1963,8 +1960,8 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
->  {
->  	struct mempolicy *pol;
->  	struct page *page;
-> +	int preferred_nid;
->  	unsigned int cpuset_mems_cookie;
-> -	struct zonelist *zl;
->  	nodemask_t *nmask;
->  
->  retry_cpuset:
-> @@ -2007,8 +2004,8 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
->  	}
->  
->  	nmask = policy_nodemask(gfp, pol);
-> -	zl = policy_zonelist(gfp, pol, node);
-> -	page = __alloc_pages_nodemask(gfp, order, zl, nmask);
-> +	preferred_nid = policy_node(gfp, pol, node);
-> +	page = __alloc_pages_nodemask(gfp, order, preferred_nid, nmask);
->  	mpol_cond_put(pol);
->  out:
->  	if (unlikely(!page && read_mems_allowed_retry(cpuset_mems_cookie)))
-> @@ -2055,7 +2052,7 @@ struct page *alloc_pages_current(gfp_t gfp, unsigned order)
->  		page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
->  	else
->  		page = __alloc_pages_nodemask(gfp, order,
-> -				policy_zonelist(gfp, pol, numa_node_id()),
-> +				policy_node(gfp, pol, numa_node_id()),
->  				policy_nodemask(gfp, pol));
->  
->  	if (unlikely(!page && read_mems_allowed_retry(cpuset_mems_cookie)))
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index 43aa767c3188..0aceca1076dc 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -3962,12 +3962,12 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
->  }
->  
->  static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
-> -		struct zonelist *zonelist, nodemask_t *nodemask,
-> +		int preferred_nid, nodemask_t *nodemask,
->  		struct alloc_context *ac, gfp_t *alloc_mask,
->  		unsigned int *alloc_flags)
->  {
->  	ac->high_zoneidx = gfp_zone(gfp_mask);
-> -	ac->zonelist = zonelist;
-> +	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
->  	ac->nodemask = nodemask;
->  	ac->migratetype = gfpflags_to_migratetype(gfp_mask);
->  
-> @@ -4012,8 +4012,8 @@ static inline void finalise_ac(gfp_t gfp_mask,
->   * This is the 'heart' of the zoned buddy allocator.
->   */
->  struct page *
-> -__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
-> -			struct zonelist *zonelist, nodemask_t *nodemask)
-> +__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order, int preferred_nid,
-> +							nodemask_t *nodemask)
->  {
->  	struct page *page;
->  	unsigned int alloc_flags = ALLOC_WMARK_LOW;
-> @@ -4021,7 +4021,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
->  	struct alloc_context ac = { };
->  
->  	gfp_mask &= gfp_allowed_mask;
-> -	if (!prepare_alloc_pages(gfp_mask, order, zonelist, nodemask, &ac, &alloc_mask, &alloc_flags))
-> +	if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
->  		return NULL;
->  
->  	finalise_ac(gfp_mask, order, &ac);
-> -- 
-> 2.12.2
+These counters helps in monitoring oom kills - for now
+the only way is grepping for magic words in kernel log.
 
--- 
-Michal Hocko
-SUSE Labs
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+---
+ Documentation/cgroup-v2.txt   |   12 +++++++++++-
+ include/linux/memcontrol.h    |    1 +
+ include/linux/vm_event_item.h |    1 +
+ mm/memcontrol.c               |    2 ++
+ mm/oom_kill.c                 |    6 ++++++
+ mm/vmstat.c                   |    1 +
+ 6 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index dc5e2dcdbef4..a742008d76aa 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -830,9 +830,19 @@ PAGE_SIZE multiple when read back.
+ 
+ 	  oom
+ 
++		The number of time the cgroup's memory usage was
++		reached the limit and allocation was about to fail.
++		Result could be oom kill, -ENOMEM from any syscall or
++		completely ignored in cases like disk readahead.
++		For now oom in memory cgroup kills tasks iff shortage
++		has happened inside page fault.
++
++	  oom_kill
++
+ 		The number of times the OOM killer has been invoked in
+ 		the cgroup.  This may not exactly match the number of
+-		processes killed but should generally be close.
++		processes killed but should generally be close:	each
++		invocation could kill several processes at once.
+ 
+   memory.stat
+ 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 899949bbb2f9..2cdcebb78b58 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -55,6 +55,7 @@ enum memcg_event_item {
+ 	MEMCG_HIGH,
+ 	MEMCG_MAX,
+ 	MEMCG_OOM,
++	MEMCG_OOM_KILL,
+ 	MEMCG_NR_EVENTS,
+ };
+ 
+diff --git a/include/linux/vm_event_item.h b/include/linux/vm_event_item.h
+index d84ae90ccd5c..1707e0a7d943 100644
+--- a/include/linux/vm_event_item.h
++++ b/include/linux/vm_event_item.h
+@@ -41,6 +41,7 @@ enum vm_event_item { PGPGIN, PGPGOUT, PSWPIN, PSWPOUT,
+ 		KSWAPD_LOW_WMARK_HIT_QUICKLY, KSWAPD_HIGH_WMARK_HIT_QUICKLY,
+ 		PAGEOUTRUN, PGROTATED,
+ 		DROP_PAGECACHE, DROP_SLAB,
++		OOM_KILL,
+ #ifdef CONFIG_NUMA_BALANCING
+ 		NUMA_PTE_UPDATES,
+ 		NUMA_HUGE_PTE_UPDATES,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 94172089f52f..416024837b81 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3574,6 +3574,7 @@ static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
+ 
+ 	seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
+ 	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
++	seq_printf(sf, "oom_kill %lu\n", memcg_sum_events(memcg, MEMCG_OOM_KILL));
+ 	return 0;
+ }
+ 
+@@ -5165,6 +5166,7 @@ static int memory_events_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "high %lu\n", memcg_sum_events(memcg, MEMCG_HIGH));
+ 	seq_printf(m, "max %lu\n", memcg_sum_events(memcg, MEMCG_MAX));
+ 	seq_printf(m, "oom %lu\n", memcg_sum_events(memcg, MEMCG_OOM));
++	seq_printf(m, "oom_kill %lu\n", memcg_sum_events(memcg, MEMCG_OOM_KILL));
+ 
+ 	return 0;
+ }
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 04c9143a8625..c50bff3c3409 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -873,6 +873,12 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
+ 		victim = p;
+ 	}
+ 
++	/* Raise event before sending signal: reaper must see this */
++	if (!is_memcg_oom(oc))
++		count_vm_event(OOM_KILL);
++	else
++		mem_cgroup_event(oc->memcg, MEMCG_OOM_KILL);
++
+ 	/* Get a reference to safely compare mm after task_unlock(victim) */
+ 	mm = victim->mm;
+ 	mmgrab(mm);
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 76f73670200a..fe80b81a86e0 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -1018,6 +1018,7 @@ const char * const vmstat_text[] = {
+ 
+ 	"drop_pagecache",
+ 	"drop_slab",
++	"oom_kill",
+ 
+ #ifdef CONFIG_NUMA_BALANCING
+ 	"numa_pte_updates",
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
