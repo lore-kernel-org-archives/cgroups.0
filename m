@@ -1,151 +1,52 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
-Date: Fri, 19 May 2017 16:32:46 +0200
-Message-ID: <20170519143246.GJ29839@dhcp22.suse.cz>
-References: <149520375057.74196.2843113275800730971.stgit@buzz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 06/31] cgroup-v2.txt: standardize document format
+Date: Fri, 19 May 2017 10:59:21 -0400
+Message-ID: <20170519145921.GB7174@wtj.duckdns.org>
+References: <cover.1495156488.git.mchehab@s-opensource.com>
+ <1f0804f2263073287d2a106c12f88f295a30cec5.1495156488.git.mchehab@s-opensource.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=bqLjw3MUFr9cY11Uh/xFKiC36fsUNAOv0k9xP39Q2Co=;
+        b=DWKDYRDZ/Q0xk/9oLkvb2hE+iAc+l+alClhFhYhSFKMjDAcewG7ZUDSBhH5u3k03xY
+         NTnDpIS8SJxFKvjEJComvkUjad+5DCTfv1L1QIZz272ypFFUapplb4dJwZ1c5Fny45if
+         pQ5urOdpMfczzYRcBf4LfbNpwvyblrspf2O6olonug5Dnw+iiOPhDlHZPZDh4OqVRWdh
+         UBjgoDVGYjq1MlLrRMWM8XDvBhtQxFTM+Kn7Yc3wx3fuPg8HU/6Qrkpr4XLLtVx/7T4P
+         A2+cdxSRqqGipS2qAMws/ukqtRa6I9NQswvbYC/8l0RlpGK4DFoEAJMxxiMcfcBdd5tY
+         JJuA==
 Content-Disposition: inline
-In-Reply-To: <149520375057.74196.2843113275800730971.stgit@buzz>
+In-Reply-To: <1f0804f2263073287d2a106c12f88f295a30cec5.1495156488.git.mchehab-JsYNTwtnfakRB7SZvlqPiA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Mauro Carvalho Chehab <mchehab-JsYNTwtnfakRB7SZvlqPiA@public.gmane.org>
+Cc: Linux Doc Mailing List <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mauro Carvalho Chehab <mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Cyrille Pitchen <cyrille.pitchen-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-[CC Vladimir and Johannes as this involves memcg]
+Hello, Mauro.
 
-i will get to this early next week but from a quick look it seems
-acceptable.
+On Thu, May 18, 2017 at 10:22:11PM -0300, Mauro Carvalho Chehab wrote:
+> Each text file under Documentation follows a different
+> format. Some doesn't even have titles!
+> 
+> Change its representation to follow the adopted standard,
+> using ReST markups for it to be parseable by Sphinx:
+> 
+> - Comment the internal index;
+> - Use :Date: and :Author: for authorship;
+> - Mark titles;
+> - Mark literal blocks;
+> - Adjust witespaces;
+> - Mark notes;
+> - Use table notation for the existing tables.
 
-On Fri 19-05-17 17:22:30, Konstantin Khlebnikov wrote:
-> Show count of global oom killer invocations in /proc/vmstat and
-> count of oom kills inside memory cgroup in knob "memory.events"
-> (in memory.oom_control for v1 cgroup).
-> 
-> Also describe difference between "oom" and "oom_kill" in memory
-> cgroup documentation. Currently oom in memory cgroup kills tasks
-> iff shortage has happened inside page fault.
-> 
-> These counters helps in monitoring oom kills - for now
-> the only way is grepping for magic words in kernel log.
-> 
-> Signed-off-by: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-> ---
->  Documentation/cgroup-v2.txt   |   12 +++++++++++-
->  include/linux/memcontrol.h    |    1 +
->  include/linux/vm_event_item.h |    1 +
->  mm/memcontrol.c               |    2 ++
->  mm/oom_kill.c                 |    6 ++++++
->  mm/vmstat.c                   |    1 +
->  6 files changed, 22 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-> index dc5e2dcdbef4..a742008d76aa 100644
-> --- a/Documentation/cgroup-v2.txt
-> +++ b/Documentation/cgroup-v2.txt
-> @@ -830,9 +830,19 @@ PAGE_SIZE multiple when read back.
->  
->  	  oom
->  
-> +		The number of time the cgroup's memory usage was
-> +		reached the limit and allocation was about to fail.
-> +		Result could be oom kill, -ENOMEM from any syscall or
-> +		completely ignored in cases like disk readahead.
-> +		For now oom in memory cgroup kills tasks iff shortage
-> +		has happened inside page fault.
-> +
-> +	  oom_kill
-> +
->  		The number of times the OOM killer has been invoked in
->  		the cgroup.  This may not exactly match the number of
-> -		processes killed but should generally be close.
-> +		processes killed but should generally be close:	each
-> +		invocation could kill several processes at once.
->  
->    memory.stat
->  
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 899949bbb2f9..2cdcebb78b58 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -55,6 +55,7 @@ enum memcg_event_item {
->  	MEMCG_HIGH,
->  	MEMCG_MAX,
->  	MEMCG_OOM,
-> +	MEMCG_OOM_KILL,
->  	MEMCG_NR_EVENTS,
->  };
->  
-> diff --git a/include/linux/vm_event_item.h b/include/linux/vm_event_item.h
-> index d84ae90ccd5c..1707e0a7d943 100644
-> --- a/include/linux/vm_event_item.h
-> +++ b/include/linux/vm_event_item.h
-> @@ -41,6 +41,7 @@ enum vm_event_item { PGPGIN, PGPGOUT, PSWPIN, PSWPOUT,
->  		KSWAPD_LOW_WMARK_HIT_QUICKLY, KSWAPD_HIGH_WMARK_HIT_QUICKLY,
->  		PAGEOUTRUN, PGROTATED,
->  		DROP_PAGECACHE, DROP_SLAB,
-> +		OOM_KILL,
->  #ifdef CONFIG_NUMA_BALANCING
->  		NUMA_PTE_UPDATES,
->  		NUMA_HUGE_PTE_UPDATES,
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 94172089f52f..416024837b81 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3574,6 +3574,7 @@ static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
->  
->  	seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
->  	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
-> +	seq_printf(sf, "oom_kill %lu\n", memcg_sum_events(memcg, MEMCG_OOM_KILL));
->  	return 0;
->  }
->  
-> @@ -5165,6 +5166,7 @@ static int memory_events_show(struct seq_file *m, void *v)
->  	seq_printf(m, "high %lu\n", memcg_sum_events(memcg, MEMCG_HIGH));
->  	seq_printf(m, "max %lu\n", memcg_sum_events(memcg, MEMCG_MAX));
->  	seq_printf(m, "oom %lu\n", memcg_sum_events(memcg, MEMCG_OOM));
-> +	seq_printf(m, "oom_kill %lu\n", memcg_sum_events(memcg, MEMCG_OOM_KILL));
->  
->  	return 0;
->  }
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index 04c9143a8625..c50bff3c3409 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -873,6 +873,12 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
->  		victim = p;
->  	}
->  
-> +	/* Raise event before sending signal: reaper must see this */
-> +	if (!is_memcg_oom(oc))
-> +		count_vm_event(OOM_KILL);
-> +	else
-> +		mem_cgroup_event(oc->memcg, MEMCG_OOM_KILL);
-> +
->  	/* Get a reference to safely compare mm after task_unlock(victim) */
->  	mm = victim->mm;
->  	mmgrab(mm);
-> diff --git a/mm/vmstat.c b/mm/vmstat.c
-> index 76f73670200a..fe80b81a86e0 100644
-> --- a/mm/vmstat.c
-> +++ b/mm/vmstat.c
-> @@ -1018,6 +1018,7 @@ const char * const vmstat_text[] = {
->  
->  	"drop_pagecache",
->  	"drop_slab",
-> +	"oom_kill",
->  
->  #ifdef CONFIG_NUMA_BALANCING
->  	"numa_pte_updates",
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+If this is the direction we're taking for all docs, looks good to me.
+Do you want me to take the patch through the cgroup tree?
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
