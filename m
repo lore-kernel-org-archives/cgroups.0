@@ -1,237 +1,192 @@
-From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 8/9] Honour CONTAINER_NEW_EMPTY_FS_NS
-Date: Mon, 22 May 2017 17:23:32 +0100
-Message-ID: <149547021255.10599.1836759405907841397.stgit@warthog.procyon.org.uk>
+From: David Howells <dhowells@redhat.com>
+Subject: [PATCH 9/9] Sample program for driving container objects
+Date: Mon, 22 May 2017 17:23:40 +0100
+Message-ID: <149547022026.10599.11739060904213051113.stgit@warthog.procyon.org.uk>
 References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 14E23C05678D
-In-Reply-To: <149547014649.10599.12025037906646164347.stgit-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com B3C86665A
+In-Reply-To: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org
-Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+To: trondmy@primarydata.com
+Cc: mszeredi@redhat.com, linux-nfs@vger.kernel.org, jlayton@redhat.com, linux-kernel@vger.kernel.org, dhowells@redhat.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, ebiederm@xmission.com
 
-Allow a container to be created with an empty mount namespace, as specified
-by passing CONTAINER_NEW_EMPTY_FS_NS to container_create(), and allow a
-root filesystem to be mounted into the container:
 
-	cfd = container_create("foo", CONTAINER_NEW_EMPTY_FS_NS);
-	fd = fsopen("ext3", cfd, 0);
-	write(fd, "o foo");
-	...
-	fsmount(fd, -1, "/", AT_FSMOUNT_CONTAINER_ROOT, 0);
-	close(fd);
-	fd = fsopen("proc", cfd, 0);
-	fsmount(fd, cfd, "/proc", 0, 0);
-	close(fd);
 ---
 
- fs/namespace.c             |   84 ++++++++++++++++++++++++++++++++++++--------
- include/linux/mount.h      |    3 +-
- include/uapi/linux/fcntl.h |    2 +
- kernel/container.c         |    6 +++
- kernel/fork.c              |    5 ++-
- security/selinux/hooks.c   |    2 +
- 6 files changed, 85 insertions(+), 17 deletions(-)
+ samples/containers/test-container.c |  162 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 162 insertions(+)
+ create mode 100644 samples/containers/test-container.c
 
-diff --git a/fs/namespace.c b/fs/namespace.c
-index 9ca8b9f49f80..a365a7cba3ad 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -2458,6 +2458,38 @@ static int do_add_mount(struct mount *newmnt, struct path *path, int mnt_flags,
- }
- 
- static bool mount_too_revealing(struct vfsmount *mnt, int *new_mnt_flags);
-+static struct mnt_namespace *create_mnt_ns(struct vfsmount *m);
-+
-+/*
-+ * Create a mount namespace for a container and set the root mount in it.
+diff --git a/samples/containers/test-container.c b/samples/containers/test-container.c
+new file mode 100644
+index 000000000000..c467b447c63d
+--- /dev/null
++++ b/samples/containers/test-container.c
+@@ -0,0 +1,162 @@
++/* Container test.
++ *
++ * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
++ * Written by David Howells (dhowells@redhat.com)
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public Licence
++ * as published by the Free Software Foundation; either version
++ * 2 of the Licence, or (at your option) any later version.
 + */
-+static int set_container_root(struct sb_config *sc, struct vfsmount *mnt)
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <errno.h>
++#include <sys/wait.h>
++#include <sys/prctl.h>
++
++#define PR_ERRMSG_ENABLE		48
++#define PR_ERRMSG_READ			49
++
++#define E(x) do { if ((x) == -1) { perror(#x); exit(1); } } while(0)
++
++static __attribute__((noreturn))
++void display_error(const char *s)
 +{
-+	struct container *container = sc->container;
-+	struct mnt_namespace *mnt_ns;
-+	int ret = -EBUSY;
++	char buf[4096];
++	int err, n, perr;
 +
-+	mnt_ns = create_mnt_ns(mnt);
-+	if (IS_ERR(mnt_ns))
-+		return PTR_ERR(mnt_ns);
-+
-+	spin_lock(&container->lock);
-+	if (!container->ns->mnt_ns) {
-+		container->ns->mnt_ns = mnt_ns;
-+		write_seqcount_begin(&container->seq);
-+		container->root.mnt = mnt;
-+		container->root.dentry = mnt->mnt_root;
-+		write_seqcount_end(&container->seq);
-+		path_get(&container->root);
-+		mnt_ns = NULL;
-+		ret = 0;
-+	}
-+	spin_unlock(&container->lock);
-+
-+	if (ret < 0)
-+		put_mnt_ns(mnt_ns);
-+	return ret;
-+}
- 
- /*
-  * Create a new mount using a superblock configuration and request it
-@@ -2479,8 +2511,12 @@ static int do_new_mount_sc(struct sb_config *sc, struct path *mountpoint,
- 		goto err_mnt;
- 	}
- 
--	ret = do_add_mount(real_mount(mnt), mountpoint, mnt_flags,
--			   sc->container ? sc->container->ns->mnt_ns : NULL);
-+	if (mnt_flags & MNT_CONTAINER_ROOT)
-+		ret = set_container_root(sc, mnt);
-+	else
-+		ret = do_add_mount(real_mount(mnt), mountpoint, mnt_flags,
-+				   sc->container ? sc->container->ns->mnt_ns : NULL);
-+
- 	if (ret < 0) {
- 		errorf("VFS: Failed to add mount");
- 		goto err_mnt;
-@@ -3262,10 +3298,17 @@ SYSCALL_DEFINE5(fsmount, int, fs_fd, int, dfd, const char __user *, dir_name,
- 	struct fd f;
- 	unsigned int lookup_flags, mnt_flags = 0;
- 	long ret;
-+	char buf[2];
- 
- 	if ((at_flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
--			  AT_EMPTY_PATH)) != 0)
-+			  AT_EMPTY_PATH | AT_FSMOUNT_CONTAINER_ROOT)) != 0)
- 		return -EINVAL;
-+	if (at_flags & AT_FSMOUNT_CONTAINER_ROOT) {
-+		if (strncpy_from_user(buf, dir_name, 2) < 0)
-+			return -EFAULT;
-+		if (buf[0] != '/' || buf[1] != '\0')
-+			return -EINVAL;
-+	}
- 
- 	if (flags & ~(MS_RDONLY | MS_NOSUID | MS_NODEV | MS_NOEXEC |
- 		      MS_NOATIME | MS_NODIRATIME | MS_RELATIME | MS_STRICTATIME))
-@@ -3317,18 +3360,29 @@ SYSCALL_DEFINE5(fsmount, int, fs_fd, int, dfd, const char __user *, dir_name,
- 	if (ret < 0)
- 		goto err_fsfd;
- 
--	/* Find the mountpoint.  A container can be specified in dfd. */
--	lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
--	if (at_flags & AT_SYMLINK_NOFOLLOW)
--		lookup_flags &= ~LOOKUP_FOLLOW;
--	if (at_flags & AT_NO_AUTOMOUNT)
--		lookup_flags &= ~LOOKUP_AUTOMOUNT;
--	if (at_flags & AT_EMPTY_PATH)
--		lookup_flags |= LOOKUP_EMPTY;
--	ret = user_path_at(dfd, dir_name, lookup_flags, &mountpoint);
--	if (ret < 0) {
--		errorf("VFS: Mountpoint lookup failed");
--		goto err_fsfd;
-+	if (at_flags & AT_FSMOUNT_CONTAINER_ROOT) {
-+		/* We're mounting the root of the container that was specified
-+		 * to sys_fsopen().  The dir_name should be specified as "/"
-+		 * and dfd is ignored.
-+		 */
-+		mountpoint.mnt = NULL;
-+		mountpoint.dentry = NULL;
-+		mnt_flags |= MNT_CONTAINER_ROOT;
-+	} else {
-+		/* Find the mountpoint.  A container can be specified in dfd. */
-+		lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
-+
-+		if (at_flags & AT_SYMLINK_NOFOLLOW)
-+			lookup_flags &= ~LOOKUP_FOLLOW;
-+		if (at_flags & AT_NO_AUTOMOUNT)
-+			lookup_flags &= ~LOOKUP_AUTOMOUNT;
-+		if (at_flags & AT_EMPTY_PATH)
-+			lookup_flags |= LOOKUP_EMPTY;
-+		ret = user_path_at(dfd, dir_name, lookup_flags, &mountpoint);
-+		if (ret < 0) {
-+			errorf("VFS: Mountpoint lookup failed");
-+			goto err_fsfd;
++	do {
++		err = errno;
++		errno = 0;
++		n = prctl(PR_ERRMSG_READ, buf, sizeof(buf));
++		perr = errno;
++		errno = err;
++		if (n > 0) {
++			fprintf(stderr, "Error: '%s': %*.*s: %m\n", s, n, n, buf);
++		} else {
++			fprintf(stderr, "%s: %m\n", s);
 +		}
- 	}
- 
- 	ret = security_sb_mountpoint(sc, &mountpoint);
-diff --git a/include/linux/mount.h b/include/linux/mount.h
-index 265e9aa2ab0b..480c6b4061e0 100644
---- a/include/linux/mount.h
-+++ b/include/linux/mount.h
-@@ -51,7 +51,8 @@ struct sb_config;
- #define MNT_INTERNAL_FLAGS (MNT_SHARED | MNT_WRITE_HOLD | MNT_INTERNAL | \
- 			    MNT_DOOMED | MNT_SYNC_UMOUNT | MNT_MARKED)
- 
--#define MNT_INTERNAL	0x4000
-+#define MNT_INTERNAL		0x4000
-+#define MNT_CONTAINER_ROOT	0x8000		/* Mounting a container root */
- 
- #define MNT_LOCK_ATIME		0x040000
- #define MNT_LOCK_NOEXEC		0x080000
-diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
-index 813afd6eee71..747af8704bbf 100644
---- a/include/uapi/linux/fcntl.h
-+++ b/include/uapi/linux/fcntl.h
-@@ -68,5 +68,7 @@
- #define AT_STATX_FORCE_SYNC	0x2000	/* - Force the attributes to be sync'd with the server */
- #define AT_STATX_DONT_SYNC	0x4000	/* - Don't sync attributes with the server */
- 
++	} while (perr == 0);
++
++	exit(1);
++}
++
++#define E_write(fd, s)							\
++	do {								\
++		if (write(fd, s, sizeof(s) - 1) == -1)			\
++			display_error(s);				\
++	} while (0)
++
++#define CONTAINER_NEW_FS_NS		0x00000001 /* Dup current fs namespace */
++#define CONTAINER_NEW_EMPTY_FS_NS	0x00000002 /* Provide new empty fs namespace */
++#define CONTAINER_NEW_CGROUP_NS		0x00000004 /* Dup current cgroup namespace [priv] */
++#define CONTAINER_NEW_UTS_NS		0x00000008 /* Dup current uts namespace */
++#define CONTAINER_NEW_IPC_NS		0x00000010 /* Dup current ipc namespace */
++#define CONTAINER_NEW_USER_NS		0x00000020 /* Dup current user namespace */
++#define CONTAINER_NEW_PID_NS		0x00000040 /* Dup current pid namespace */
++#define CONTAINER_NEW_NET_NS		0x00000080 /* Dup current net namespace */
++#define CONTAINER_KILL_ON_CLOSE		0x00000100 /* Kill all member processes when fd closed */
++#define CONTAINER_FD_CLOEXEC		0x00000200 /* Close the fd on exec */
++#define CONTAINER__FLAG_MASK		0x000003ff
++
 +#define AT_FSMOUNT_CONTAINER_ROOT	0x2000
 +
- 
- #endif /* _UAPI_LINUX_FCNTL_H */
-diff --git a/kernel/container.c b/kernel/container.c
-index 5ebbf548f01a..68276603d255 100644
---- a/kernel/container.c
-+++ b/kernel/container.c
-@@ -23,6 +23,7 @@
- #include <linux/printk.h>
- #include <linux/security.h>
- #include <linux/proc_fs.h>
-+#include <linux/mnt_namespace.h>
- #include "namespaces.h"
- 
- struct container init_container = {
-@@ -500,6 +501,11 @@ static struct container *create_container(const char *name, unsigned int flags)
- 	fs->root.mnt = NULL;
- 	fs->root.dentry = NULL;
- 
-+	if (flags & CONTAINER_NEW_EMPTY_FS_NS) {
-+		put_mnt_ns(ns->mnt_ns);
-+		ns->mnt_ns = NULL;
++static inline int fsopen(const char *fs_name, int containerfd, int flags)
++{
++	return syscall(333, fs_name, containerfd, flags);
++}
++
++static inline int fsmount(int fsfd, int dfd, const char *path,
++			  unsigned int at_flags, unsigned int flags)
++{
++	return syscall(334, fsfd, dfd, path, at_flags, flags);
++}
++
++static inline int container_create(const char *name, unsigned int mask)
++{
++	return syscall(335, name, mask, 0, 0, 0);
++}
++
++static inline int fork_into_container(int containerfd)
++{
++	return syscall(336, containerfd);
++}
++
++int main()
++{
++	pid_t pid;
++	int mfd, cfd, ws;
++
++	if (prctl(PR_ERRMSG_ENABLE, 1) < 0) {
++		perror("prctl/en");
++		exit(1);
 +	}
 +
- 	ret = security_container_alloc(c, flags);
- 	if (ret < 0)
- 		goto err_fs;
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 68cd7367fcd5..e5111d4bcc1c 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -2169,7 +2169,10 @@ SYSCALL_DEFINE1(fork_into_container, int, containerfd)
- 	if (is_container_file(f.file)) {
- 		struct container *c = f.file->private_data;
- 
--		ret = _do_fork(SIGCHLD, 0, 0, NULL, NULL, 0, c);
-+		if (!c->ns->mnt_ns)
-+			ret = -ENOENT;
-+		else
-+			ret = _do_fork(SIGCHLD, 0, 0, NULL, NULL, 0, c);
- 	}
- 	fdput(f);
- 	return ret;
-diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 23bdbb0c2de5..f6b994b15a4d 100644
---- a/security/selinux/hooks.c
-+++ b/security/selinux/hooks.c
-@@ -2975,6 +2975,8 @@ static int selinux_sb_mountpoint(struct sb_config *sc, struct path *mountpoint)
- 	const struct cred *cred = current_cred();
- 	int ret;
- 
-+	if (!mountpoint->mnt)
-+		return 0; /* This is the root in an empty namespace */
- 	ret = path_has_perm(cred, mountpoint, FILE__MOUNTON);
- 	if (ret < 0)
- 		errorf("SELinux: Mount on mountpoint not permitted");
++	cfd = container_create("foo-test",
++			       CONTAINER_NEW_EMPTY_FS_NS |
++			       CONTAINER_NEW_UTS_NS |
++			       CONTAINER_NEW_IPC_NS |
++			       CONTAINER_NEW_USER_NS |
++			       CONTAINER_NEW_PID_NS |
++			       CONTAINER_KILL_ON_CLOSE |
++			       CONTAINER_FD_CLOEXEC);
++	if (cfd == -1) {
++		perror("container_create");
++		exit(1);
++	}
++
++	system("cat /proc/containers");
++
++	/* Open the filesystem that's going to form the container root. */
++	mfd = fsopen("nfs4", cfd, 0);
++	if (mfd == -1) {
++		perror("fsopen/root");
++		exit(1);
++	}
++
++	E_write(mfd, "s foo:/bar");
++	E_write(mfd, "o fsc");
++	E_write(mfd, "o sync");
++	E_write(mfd, "o intr");
++	E_write(mfd, "o vers=4.2");
++	E_write(mfd, "o addr=192.168.1.1");
++	E_write(mfd, "o clientaddr=192.168.1.1");
++	E_write(mfd, "x create");
++
++	/* Mount the container root */
++	if (fsmount(mfd, cfd, "/", AT_FSMOUNT_CONTAINER_ROOT, 0) < 0)
++		display_error("fsmount");
++	E(close(mfd));
++
++	/* Mount procfs within the container */
++	mfd = fsopen("proc", cfd, 0);
++	if (mfd == -1) {
++		perror("fsopen/proc");
++		exit(1);
++	}
++	E_write(mfd, "x create");
++	if (fsmount(mfd, cfd, "proc", 0, 0) < 0)
++		display_error("fsmount");
++	E(close(mfd));
++
++	switch ((pid = fork_into_container(cfd))) {
++	case -1:
++		perror("fork_into_container");
++		exit(1);
++	case 0:
++		close(cfd);
++		setenv("PS1", "container>", 1);
++		execl("/bin/bash", "bash", NULL);
++		perror("execl");
++		exit(1);
++	default:
++		if (waitpid(pid, &ws, 0) < 0) {
++			perror("waitpid");
++			exit(1);
++		}
++	}
++	E(close(cfd));
++	exit(0);
++}
+
