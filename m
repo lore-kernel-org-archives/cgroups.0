@@ -1,285 +1,142 @@
-From: Jessica Frazelle <me-XvZkT8t+Da5Wk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Mon, 22 May 2017 18:11:46 +0100
-Message-ID: <CAEk6tEyjk4=rHfsJUZ7dYPpdSa-=QX6QAm8ni8-ySpHmjUMwTg@mail.gmail.com>
-References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
+Date: Mon, 22 May 2017 13:13:16 -0400
+Message-ID: <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
+References: <1494855256-12558-1-git-send-email-longman@redhat.com>
+ <1494855256-12558-12-git-send-email-longman@redhat.com>
+ <20170519202624.GA15279@wtj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jessfraz.com; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=R2ZzPS0CK2dXCtnfWboIMIzatY2qEJBA49P5+ZOXdPM=;
-        b=DJ/IXgOPFEOwl41oDGjQJNcUUUCLbWhJrO2L9wQM2Iqc+F7u5KWI5ndoGSsIroFhpM
-         2bYZ4o8SP+Op62beY3JMkxdMLh/t2KVVFfPqiHnNi3L6ax6IQ43DwE4uZBjIQTaneQ6X
-         vZdu98i2zIIqO9akMtNaLxMuMVQsUK9ZfuoxI=
-In-Reply-To: <149547014649.10599.12025037906646164347.stgit-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com B0AE250140
+In-Reply-To: <20170519202624.GA15279-U58pm7aPsJ1N0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org
 
-This is interesting...
+On 05/19/2017 04:26 PM, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> On Mon, May 15, 2017 at 09:34:10AM -0400, Waiman Long wrote:
+>> Now we could have something like
+>>
+>> 	R -- A -- B
+>> 	 \
+>> 	  T1 -- T2
+>>
+>> where R is the thread root, A and B are non-threaded cgroups, T1 and
+>> T2 are threaded cgroups. The cgroups R, T1, T2 form a threaded subtree
+>> where all the non-threaded resources are accounted for in R.  The no
+>> internal process constraint does not apply in the threaded subtree.
+>> Non-threaded controllers need to properly handle the competition
+>> between internal processes and child cgroups at the thread root.
+>>
+>> This model will be flexible enough to support the need of the threaded
+>> controllers.
+> Maybe I'm misunderstanding the design, but this seems to push the
+> processes which belong to the threaded subtree to the parent which is
+> part of the usual resource domain hierarchy thus breaking the no
+> internal competition constraint.  I'm not sure this is something we'd
+> want.  Given that the limitation of the original threaded mode was the
+> required nesting below root and that we treat root special anyway
+> (exactly in the way necessary), I wonder whether it'd be better to
+> simply allow root to be both domain and thread root.
 
-Adding a container object seems a bit odd to me because there are so
-many different ways to make containers, aka not all namespaces are
-always used as well as not all cgroups, various LSM objects sometimes
-apply, mounts blah blah blah. The OCI spec was made to cover all these
-things so why a kernel object? I don't exactly see a future where the
-container runtimes convert to this unless it covers all the same mods
-as the mods in the OCI spec, not saying it needs to abide by the spec,
-just saying it should allow all the same things. Which really just
-seems, imo, like a pain for the kernel to have to maintain.
-
-On Mon, May 22, 2017 at 5:22 PM, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->
-> Here are a set of patches to define a container object for the kernel and
-> to provide some methods to create and manipulate them.
->
-> The reason I think this is necessary is that the kernel has no idea how to
-> direct upcalls to what userspace considers to be a container - current
-> Linux practice appears to make a "container" just an arbitrarily chosen
-> junction of namespaces, control groups and files, which may be changed
-> individually within the "container".
->
-> The kernel upcall mechanism then needs to decide which set of namespaces,
-> etc., it must exec the appropriate upcall program.  Examples of this
-> include:
->
->  (1) The DNS resolver.  The DNS cache in the kernel should probably be
->      per-network namespace, but in userspace the program, its libraries and
->      its config data are associated with a mount tree and a user namespace
->      and it gets run in a particular pid namespace.
->
->  (2) NFS ID mapper.  The NFS ID mapping cache should also probably be
->      per-network namespace.
->
->  (3) nfsdcltrack.  A way for NFSD to access stable storage for tracking
->      of persistent state.  Again, network-namespace dependent, but also
->      perhaps mount-namespace dependent.
->
->  (4) General request-key upcalls.  Not particularly namespace dependent,
->      apart from keyrings being somewhat governed by the user namespace and
->      the upcall being configured by the mount namespace.
-
-Can't these all become namespace-aware without adding the notion of a
-"container" to the kernel.
+Yes, root can be both domain and thread root. I haven't placed any
+restriction on that.
 
 >
-> These patches are built on top of the mount context patchset so that
-> namespaces can be properly propagated over submounts/automounts.
+> Specific review points below but we'd probably want to discuss the
+> overall design first.
 >
-> These patches implement a container object that holds the following things:
->
->  (1) Namespaces.
->
->  (2) A root directory.
->
->  (3) A set of processes, including a designated 'init' process.
->
->  (4) The creator's credentials, including ownership.
->
->  (5) A place to hang security for the container, allowing policies to be
->      set per-container.
->
-> I also want to add:
->
->  (6) Control groups.
->
->  (7) A per-container keyring that can be added to from outside of the
->      container, even once the container is live, for the provision of
->      filesystem authentication/encryption keys in advance of the container
->      being started.
->
-> You can get a list of containers by examining /proc/containers - but I'm
-> not sure how much value this gets you.  Note that the container in which
-> you are running is called "<current>" and you can only see other containers
-> that were started from within yours.  Containers are therefore effectively
-> hierarchical and an init_container is set up when the system boots.
->
->
-> Some management operations are provided:
->
->  (1) int fd = container_create(const char *name, unsigned int flags);
->
->      Create a container of the given name and return a handle to it as a
->      file descriptor.  flags indicates what namespaces should be inherited
->      from the caller and what should be replaced new.  It is possible to
->      set up a container with a null root filesystem that can be mounted
->      later.
->
->  (2) int fsfd = fsopen(const char *fsname, int container_fd,
->                        unsigned int flags);
->
->      Prepare a mount context inside the container.  This uses all the
->      containers namespaces instead of the caller's.
->
->  (3) fsmount(int fsfd, int dfd, const char *path, unsigned int at_flags,
->              unsigned int flags);
->
->      Mount a prepared superblock.  dfd can be given container_fd to use the
->      container to which it refers as the root of the pathwalk.
->
->      If path is "/" and at_flags is AT_FSMOUNT_CONTAINER_ROOT, then this
->      will attempt to mount the root of the container and create a mount
->      namespace for it.  The container must've been created with
->      CONTAINER_NEW_EMPTY_FS_NS.
->
->  (4) pid_t pid = fork_into_container(int container_fd);
->
->      Create the init process in a container.  The process uses that
->      container's namespaces instead of the caller's.
->
->  (5) int sfd = container_socket(int container_fd,
->                                 int domain, int type, int protocol);
->
->      Create a socket inside a container.  The socket gets the container's
->      namespaces.  This allows netlink operations to be called within that
->      container to set it up from outside (at least in theory).
->
->  (6) mkdirat(int dfd, ...);
->      mknodat(int dfd, ...);
->      openat(int dfd, ...);
->
->      Supplying a container fd as dfd makes the pathwalk happen relative to
->      the root of the container.  Note that the path must be *relative*.
->
-> And some need to be/could be added:
->
->  (7) Directly set a container's namespaces to allow cross-container
->      sharing.
->
->  (8) Adjust the control group membership of a container.
->
->  (9) Add a key inside a container keyring.
->
-> (10) Kill/suspend/freeze/reboot container, both from inside and out.
->
-> (11) Set container's root dir.
->
-> (12) Set the container's security policy.
->
-> (13) Allow overlayfs to access filesystems outside of the container in
->      which it is being created.
->
->
-> Kernel upcalls are invoked in the root of the container that incurs them
-> rather than in the init namespace context.  There's still some awkwardness
-> here if you, say, share a network namespace between containers.  Either the
-> upcall binaries and configuration must be duplicated between sharing
-> containers or a container must be elected as the one in which such upcalls
-> will be done.
->
->
-> Some further thoughts:
->
->  (*) Should there be an AT_IN_CONTAINER flag to provide to syscalls that
->      take a container in lieu of AT_FDCWD or a directory fd?  The problem
->      is that such as mkdirat() and openat() don't have an at_flags
->      argument.
->
->  (*) Should there be a container hierarchy at all?  It seems that this is
->      only really necessary for /proc/containers.  Do we want to allow
->      containers-within-containers?
->
->  (*) Should each container automatically have its own pid namespace such
->      that its 'init' process always appears as pid 1?
->
->  (*) Does this allow kernel upcalls to be accounted against the correct
->      control group?
->
->  (*) Should each container have a 'list' of accessible device numbers such
->      that certain device files can be made usable within a container?  And
->      can devtmpfs/udev be made to show the correct file set for each
->      container?
->
->
-> The patches can be found here also:
->
->         http://git.kernel.org/cgit/linux/kernel/git/dhowells/linux-fs.git/log/?h=container
->
-> Note that this is dependent on the mount-context branch.
->
-> David
-> ---
-> David Howells (9):
->       containers: Rename linux/container.h to linux/container_dev.h
->       Implement containers as kernel objects
->       Provide /proc/containers
->       Allow processes to be forked and upcalled into a container
->       Open a socket inside a container
->       Allow fs syscall dfd arguments to take a container fd
->       Make fsopen() able to initiate mounting into a container
->       Honour CONTAINER_NEW_EMPTY_FS_NS
->       Sample program for driving container objects
->
->
->  arch/x86/entry/syscalls/syscall_32.tbl |    3
->  arch/x86/entry/syscalls/syscall_64.tbl |    3
->  drivers/acpi/container.c               |    2
->  drivers/base/container.c               |    2
->  fs/fsopen.c                            |   33 +-
->  fs/libfs.c                             |    3
->  fs/namei.c                             |   52 ++-
->  fs/namespace.c                         |  108 +++++-
->  fs/nfs/namespace.c                     |    2
->  fs/nfs/nfs4namespace.c                 |    4
->  fs/proc/root.c                         |   13 +
->  fs/sb_config.c                         |   29 +-
->  include/linux/container.h              |   91 ++++-
->  include/linux/container_dev.h          |   25 +
->  include/linux/cred.h                   |    3
->  include/linux/init_task.h              |    4
->  include/linux/kmod.h                   |    1
->  include/linux/lsm_hooks.h              |   25 +
->  include/linux/mount.h                  |    5
->  include/linux/nsproxy.h                |    7
->  include/linux/pid.h                    |    5
->  include/linux/proc_ns.h                |    3
->  include/linux/sb_config.h              |    5
->  include/linux/sched.h                  |    3
->  include/linux/sched/task.h             |    4
->  include/linux/security.h               |   20 +
->  include/linux/syscalls.h               |    6
->  include/uapi/linux/container.h         |   28 ++
->  include/uapi/linux/fcntl.h             |    2
->  include/uapi/linux/magic.h             |    1
->  init/Kconfig                           |    7
->  init/main.c                            |    4
->  kernel/Makefile                        |    2
->  kernel/container.c                     |  576 ++++++++++++++++++++++++++++++++
->  kernel/cred.c                          |   45 ++-
->  kernel/exit.c                          |    1
->  kernel/fork.c                          |  117 ++++++-
->  kernel/kmod.c                          |   13 +
->  kernel/kthread.c                       |    3
->  kernel/namespaces.h                    |   15 +
->  kernel/nsproxy.c                       |   34 +-
->  kernel/pid.c                           |    4
->  kernel/sys_ni.c                        |    5
->  net/socket.c                           |   37 ++
->  samples/containers/test-container.c    |  162 +++++++++
->  security/security.c                    |   18 +
->  security/selinux/hooks.c               |    5
->  47 files changed, 1408 insertions(+), 132 deletions(-)
->  create mode 100644 include/linux/container_dev.h
->  create mode 100644 include/uapi/linux/container.h
->  create mode 100644 kernel/container.c
->  create mode 100644 kernel/namespaces.h
->  create mode 100644 samples/containers/test-container.c
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> +static inline bool cgroup_is_threaded(const struct cgroup *cgrp)
+>> +{
+>> +	return cgrp->proc_cgrp && (cgrp->proc_cgrp != cgrp);
+>> +}
+>> +
+>> +static inline bool cgroup_is_thread_root(const struct cgroup *cgrp)
+>> +{
+>> +	return cgrp->proc_cgrp == cgrp;
+>> +}
+> Maybe add a bit of comments explaining what's going on with
+> ->proc_cgrp?
 
+Sure, will do that.
 
+>>  /**
+>> + * threaded_children_count - returns # of threaded children
+>> + * @cgrp: cgroup to be tested
+>> + *
+>> + * cgroup_mutex must be held by the caller.
+>> + */
+>> +static int threaded_children_count(struct cgroup *cgrp)
+>> +{
+>> +	struct cgroup *child;
+>> +	int count = 0;
+>> +
+>> +	lockdep_assert_held(&cgroup_mutex);
+>> +	cgroup_for_each_live_child(child, cgrp)
+>> +		if (cgroup_is_threaded(child))
+>> +			count++;
+>> +	return count;
+>> +}
+> It probably would be a good idea to keep track of the count so that we
+> don't have to count them each time.  There are cases where people end
+> up creating a very high number of cgroups and we've already been
+> bitten a couple times with silly complexity issues.
 
--- 
+Thanks for the suggestion, I can keep a count in the cgroup strcture to
+avoid doing that repetitively.
 
+>
+>> @@ -2982,22 +3010,48 @@ static int cgroup_enable_threaded(struct cgroup *cgrp)
+>>  	LIST_HEAD(csets);
+>>  	struct cgrp_cset_link *link;
+>>  	struct css_set *cset, *cset_next;
+>> +	struct cgroup *child;
+>>  	int ret;
+>> +	u16 ss_mask;
+>>  
+>>  	lockdep_assert_held(&cgroup_mutex);
+>>  
+>>  	/* noop if already threaded */
+>> -	if (cgrp->proc_cgrp)
+>> +	if (cgroup_is_threaded(cgrp))
+>>  		return 0;
+>>  
+>> -	/* allow only if there are neither children or enabled controllers */
+>> -	if (css_has_online_children(&cgrp->self) || cgrp->subtree_control)
+>> +	/*
+>> +	 * Allow only if it is not the root and there are:
+>> +	 * 1) no children,
+>> +	 * 2) no non-threaded controllers are enabled, and
+>> +	 * 3) no attached tasks.
+>> +	 *
+>> +	 * With no attached tasks, it is assumed that no css_sets will be
+>> +	 * linked to the current cgroup. This may not be true if some dead
+>> +	 * css_sets linger around due to task_struct leakage, for example.
+>> +	 */
+> It doesn't look like the code is actually making this (incorrect)
+> assumption.  I suppose the comment is from before
+> cgroup_is_populated() was added?
 
-Jessie Frazelle
-4096R / D4C4 DD60 0D66 F65A 8EFC  511E 18F3 685C 0022 BFF3
-pgp.mit.edu
+Yes, it is a bug. I should have checked the tasks_count instead of using
+cgroup_is_populated. Thanks for catching that.
+
+>
+>>  	spin_lock_irq(&css_set_lock);
+>>  	list_for_each_entry(link, &cgrp->cset_links, cset_link) {
+>>  		cset = link->cset;
+>> +		if (cset->dead)
+>> +			continue;
+> Hmm... is this a bug fix which is necessary regardless of whether we
+> change the threadroot semantics or not?
+
+That is true. I put it there because the the reference counting bug
+fixed in patch 6 caused a lot of dead csets hanging around before the
+fix. I can pull this out as a separate patch.
+
+Cheers,
+Longman
