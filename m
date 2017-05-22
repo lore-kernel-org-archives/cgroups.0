@@ -1,139 +1,60 @@
-From: Jessica Frazelle <me-XvZkT8t+Da5Wk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Mon, 22 May 2017 18:27:53 +0100
-Message-ID: <CAEk6tEzou62YU205fnumaO8m5Hpg24Nt3yCKdNU1FD0wavdA1w@mail.gmail.com>
-References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
- <1495472039.2757.19.camel@HansenPartnership.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
+Date: Mon, 22 May 2017 13:32:20 -0400
+Message-ID: <71ce8f1c-3d92-64f2-085d-8900b8576d25@redhat.com>
+References: <1494855256-12558-1-git-send-email-longman@redhat.com>
+ <1494855256-12558-12-git-send-email-longman@redhat.com>
+ <20170519202624.GA15279@wtj.duckdns.org>
+ <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jessfraz.com; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=BMa/RGwfXNn1gTg+SQjN5hyrxrqm034A1tA1RfoFXBs=;
-        b=aHu33OVdZTiaOlEE8PSUo0lT3R/yACrCFqV7lwN0ghM1RJ1BZEPQ1tHSFhplLR/49D
-         MYA5/WVaEVu5jTOJTDa3gBlBfxzfwx84O3mlD2JExuFx22/x1Oi+xP12GhptJa3xkuK8
-         KsGgcQnx3IQoQ0F1N/q71Mdcnm94T2nnVz0uQ=
-In-Reply-To: <1495472039.2757.19.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com E31E530C426
+In-Reply-To: <b1d02881-f522-8baa-5ebe-9b1ad74a03e4-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org
 
-I had replied but not to the thread with the containers mailing list.
-See https://marc.info/?l=linux-cgroups&m=149547317006676&w=2
+On 05/22/2017 01:13 PM, Waiman Long wrote:
+> On 05/19/2017 04:26 PM, Tejun Heo wrote:
+>>> @@ -2982,22 +3010,48 @@ static int cgroup_enable_threaded(struct cgroup *cgrp)
+>>>  	LIST_HEAD(csets);
+>>>  	struct cgrp_cset_link *link;
+>>>  	struct css_set *cset, *cset_next;
+>>> +	struct cgroup *child;
+>>>  	int ret;
+>>> +	u16 ss_mask;
+>>>  
+>>>  	lockdep_assert_held(&cgroup_mutex);
+>>>  
+>>>  	/* noop if already threaded */
+>>> -	if (cgrp->proc_cgrp)
+>>> +	if (cgroup_is_threaded(cgrp))
+>>>  		return 0;
+>>>  
+>>> -	/* allow only if there are neither children or enabled controllers */
+>>> -	if (css_has_online_children(&cgrp->self) || cgrp->subtree_control)
+>>> +	/*
+>>> +	 * Allow only if it is not the root and there are:
+>>> +	 * 1) no children,
+>>> +	 * 2) no non-threaded controllers are enabled, and
+>>> +	 * 3) no attached tasks.
+>>> +	 *
+>>> +	 * With no attached tasks, it is assumed that no css_sets will be
+>>> +	 * linked to the current cgroup. This may not be true if some dead
+>>> +	 * css_sets linger around due to task_struct leakage, for example.
+>>> +	 */
+>> It doesn't look like the code is actually making this (incorrect)
+>> assumption.  I suppose the comment is from before
+>> cgroup_is_populated() was added?
+> Yes, it is a bug. I should have checked the tasks_count instead of using
+> cgroup_is_populated. Thanks for catching that.
 
-On Mon, May 22, 2017 at 5:53 PM, James Bottomley
-<James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
-> [Added missing cc to containers list]
-> On Mon, 2017-05-22 at 17:22 +0100, David Howells wrote:
->> Here are a set of patches to define a container object for the kernel
->> and to provide some methods to create and manipulate them.
->>
->> The reason I think this is necessary is that the kernel has no idea
->> how to direct upcalls to what userspace considers to be a container -
->> current Linux practice appears to make a "container" just an
->> arbitrarily chosen junction of namespaces, control groups and files,
->> which may be changed individually within the "container".
->
-> This sounds like a step in the wrong direction: the strength of the
-> current container interfaces in Linux is that people who set up
-> containers don't have to agree what they look like.  So I can set up a
-> user namespace without a mount namespace or an architecture emulation
-> container with only a mount namespace.
->
-> But ignoring my fun foibles with containers and to give a concrete
-> example in terms of a popular orchestration system: in kubernetes,
-> where certain namespaces are shared across pods, do you imagine the
-> kernel's view of the "container" to be the pod or what kubernetes
-> thinks of as the container?  This is important, because half the
-> examples you give below are network related and usually pods share a
-> network namespace.
+Sorry, I would like to take it back. I think cgroup_is_populated() will
+be set if there is any task attached to the cgroup. So I think it is
+doing the right thing with regard to (3).
 
-I am glad you pointed this out because I was trying to make the same
-point, various definitions of containers differ and who is to say
-whether the various container runtimes (runc, rkt, systemd-nspawn) or
-consumers of containers (kubernetes) won't modify their definition in
-the future. How will this scale as new LSMs like Landlock or new
-namespaces are added in the future will they be included in the
-container kernel object as well...
-
-Seems like a lot more maintenance for something that is really just
-making the keyring namespace-aware... unless there are other things I
-missed.
-
->
->> The kernel upcall mechanism then needs to decide which set of
->> namespaces, etc., it must exec the appropriate upcall program.
->>  Examples of this include:
->>
->>  (1) The DNS resolver.  The DNS cache in the kernel should probably
->> be per-network namespace, but in userspace the program, its
->> libraries and its config data are associated with a mount tree and a
->> user namespace and it gets run in a particular pid namespace.
->
-> All persistent (written to fs data) has to be mount ns associated;
-> there are no ifs, ands and buts to that.  I agree this implies that if
-> you want to run a separate network namespace, you either take DNS from
-> the parent (a lot of containers do) or you set up a daemon to run
-> within the mount namespace.  I agree the latter is a slightly fiddly
-> operation you have to get right, but that's why we have orchestration
-> systems.
->
-> What is it we could do with the above that we cannot do today?
->
->>  (2) NFS ID mapper.  The NFS ID mapping cache should also probably be
->>      per-network namespace.
->
-> I think this is a view but not the only one:  Right at the moment, NFS
-> ID mapping is used as the one of the ways we can get the user namespace
-> ID mapping writes to file problems fixed ... that makes it a property
-> of the mount namespace for a lot of containers.  There are many other
-> instances where they do exactly as you say, but what I'm saying is that
-> we don't want to lose the flexibility we currently have.
->
->>  (3) nfsdcltrack.  A way for NFSD to access stable storage for
->> tracking of persistent state.  Again, network-namespace dependent,
->> but also perhaps mount-namespace dependent.
->
-> So again, given we can set this up to work today, this sounds like more
-> a restriction that will bite us than an enhancement that gives us extra
-> features.
->
->>  (4) General request-key upcalls.  Not particularly namespace
->> dependent, apart from keyrings being somewhat governed by the user
->> namespace and the upcall being configured by the mount namespace.
->
-> All mount namespaces have an owning user namespace, so the data
-> relations are already there in the kernel, is the problem simply
-> finding them?
->
->> These patches are built on top of the mount context patchset so that
->> namespaces can be properly propagated over submounts/automounts.
->
-> I'll stop here ... you get the idea that I think this is imposing a set
-> of restrictions that will come back to bite us later.  If this is just
-> for the sake of figuring out how to get keyring upcalls to work, then
-> I'm sure we can come up with something.
->
-> James
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-
-
-Jessie Frazelle
-4096R / D4C4 DD60 0D66 F65A 8EFC  511E 18F3 685C 0022 BFF3
-pgp.mit.edu
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Longman
