@@ -1,60 +1,68 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
-Date: Mon, 22 May 2017 13:32:20 -0400
-Message-ID: <71ce8f1c-3d92-64f2-085d-8900b8576d25@redhat.com>
-References: <1494855256-12558-1-git-send-email-longman@redhat.com>
- <1494855256-12558-12-git-send-email-longman@redhat.com>
- <20170519202624.GA15279@wtj.duckdns.org>
- <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
+From: Roman Guschin <guroan@gmail.com>
+Subject: Re: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
+Date: Mon, 22 May 2017 19:05:51 +0100
+Message-ID: <CALo0P10LM4LYWidrNKGkw=6Bcrq198gmwPbpUBD7yt4C=jJ0pQ@mail.gmail.com>
+References: <149520375057.74196.2843113275800730971.stgit@buzz>
+ <CALo0P1123MROxgveCdX6YFpWDwG4qrAyHu3Xd1F+ckaFBnF4dQ@mail.gmail.com> <ecd4a7ea-06c0-f549-a1bf-6d2d3c0af719@yandex-team.ru>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com E31E530C426
-In-Reply-To: <b1d02881-f522-8baa-5ebe-9b1ad74a03e4-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=t1ObjOtPxhRgbCuuCyVcbZ/yb4aNzDUHvE4iXks38DU=;
+        b=MmZS9GKUznFfqCcsLupFPmMKClBw8TbjrloAo6J0UL1N7mBju6S/942X8/LI9T1Aiw
+         iRcQAIymCMdMEpSZVLIM6rdWONrDqOsDMY85eaWBV+8lgkZqBlrQP6ecbpf/Ien9M8s1
+         6eFpMmEyy2f+puBdihgJJIJoTgGC2LTaY0ONGSZFMOPvmqe8CPRTsa9U6z8boEdBNrJc
+         J0an7Yy4P5GK0/ZFslp/gROKW1156OuHTCJpERC3bL/t1uIs/dH1nlwzJao72HWaoaAh
+         4ERuFftQIgG3bbVsS7EjK5TrekWUqTh4PwysO6BK8ehNEh91wE+cKdNEULPSdmrsFk75
+         wZ9g==
+In-Reply-To: <ecd4a7ea-06c0-f549-a1bf-6d2d3c0af719@yandex-team.ru>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
 
-On 05/22/2017 01:13 PM, Waiman Long wrote:
-> On 05/19/2017 04:26 PM, Tejun Heo wrote:
->>> @@ -2982,22 +3010,48 @@ static int cgroup_enable_threaded(struct cgroup *cgrp)
->>>  	LIST_HEAD(csets);
->>>  	struct cgrp_cset_link *link;
->>>  	struct css_set *cset, *cset_next;
->>> +	struct cgroup *child;
->>>  	int ret;
->>> +	u16 ss_mask;
->>>  
->>>  	lockdep_assert_held(&cgroup_mutex);
->>>  
->>>  	/* noop if already threaded */
->>> -	if (cgrp->proc_cgrp)
->>> +	if (cgroup_is_threaded(cgrp))
->>>  		return 0;
->>>  
->>> -	/* allow only if there are neither children or enabled controllers */
->>> -	if (css_has_online_children(&cgrp->self) || cgrp->subtree_control)
->>> +	/*
->>> +	 * Allow only if it is not the root and there are:
->>> +	 * 1) no children,
->>> +	 * 2) no non-threaded controllers are enabled, and
->>> +	 * 3) no attached tasks.
->>> +	 *
->>> +	 * With no attached tasks, it is assumed that no css_sets will be
->>> +	 * linked to the current cgroup. This may not be true if some dead
->>> +	 * css_sets linger around due to task_struct leakage, for example.
->>> +	 */
->> It doesn't look like the code is actually making this (incorrect)
->> assumption.  I suppose the comment is from before
->> cgroup_is_populated() was added?
-> Yes, it is a bug. I should have checked the tasks_count instead of using
-> cgroup_is_populated. Thanks for catching that.
+2017-05-22 10:11 GMT+01:00 Konstantin Khlebnikov <khlebnikov@yandex-team.ru>:
+>
+>
+> On 19.05.2017 19:34, Roman Guschin wrote:
+>>
+>> 2017-05-19 15:22 GMT+01:00 Konstantin Khlebnikov
+>> <khlebnikov@yandex-team.ru>:
+>>  From a user's point of view the difference between "oom" and "max"
+>> becomes really vague here,
+>> assuming that "max" is described almost in the same words:
+>>
+>> "The number of times the cgroup's memory usage was
+>> about to go over the max boundary.  If direct reclaim
+>> fails to bring it down, the OOM killer is invoked."
+>>
+>> I wonder, if it's better to fix the existing "oom" value  to show what
+>> it has to show, according to docs,
+>> rather than to introduce a new one?
+>>
+>
+> Nope, they are different. I think we should rephase documentation somehow
+>
+> low - count of reclaims below low level
+> high - count of post-allocation reclaims above high level
+> max - count of direct reclaims
+> oom - count of failed direct reclaims
+> oom_kill - count of oom killer invocations and killed processes
 
-Sorry, I would like to take it back. I think cgroup_is_populated() will
-be set if there is any task attached to the cgroup. So I think it is
-doing the right thing with regard to (3).
+Definitely worth it.
 
-Cheers,
-Longman
+Also, I would prefer to reserve "oom" for number of oom victims,
+and introduce something like "reclaim_failed".
+It will be consistent with existing vmstat.
+
+Thanks!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
