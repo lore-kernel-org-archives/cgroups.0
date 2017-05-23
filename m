@@ -1,72 +1,73 @@
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: Re: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
-Date: Tue, 23 May 2017 13:32:17 +0300
-Message-ID: <0f67046d-cdf6-1264-26f6-11c82978c621@yandex-team.ru>
-References: <149520375057.74196.2843113275800730971.stgit@buzz>
- <CALo0P1123MROxgveCdX6YFpWDwG4qrAyHu3Xd1F+ckaFBnF4dQ@mail.gmail.com>
- <ecd4a7ea-06c0-f549-a1bf-6d2d3c0af719@yandex-team.ru>
- <alpine.DEB.2.10.1705230044590.50796@chino.kir.corp.google.com>
+From: Ian Kent <raven-PKsaG3nR2I+sTnJN9+BGXg@public.gmane.org>
+Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
+Date: Tue, 23 May 2017 18:35:30 +0800
+Message-ID: <1495535730.2564.5.camel@themaw.net>
+References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+         <1495472039.2757.19.camel@HansenPartnership.com>
+         <1495478092.2816.17.camel@redhat.com>
+         <1495480860.9050.18.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-	t=1495535538; bh=RotTMT5+2TqGgzUFWoEsLYbwtYYwpiav66+NADvtVrU=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:In-Reply-To;
-	b=DpdrNdVJ1+w5kCBI1haNs7U/ebeDcK9JAE7wII5VNFerFzgXDbZErV/q3/r7KBRJX
-	 HMSxdzZjpb6j82NgkKG83yr/ti+g9WHMIhI6JDS8VK3YCDGVQCJaHuwk7EmapFBmaA
-	 /aCYnMq7IYsyNq86tGHks9j2wsNErpGaHlJFPGrQ=
-In-Reply-To: <alpine.DEB.2.10.1705230044590.50796@chino.kir.corp.google.com>
-Content-Language: en-US
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=cc
+        :content-transfer-encoding:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-sender
+        :x-me-sender:x-sasl-enc:x-sasl-enc; s=fm1; bh=H0DVoL0ivws71bf4AA
+        Sjp2mNqA2+bKxVro3FKCqDNLI=; b=ETmUp87BezsIKGakeZKtdYjUtEgsRqvP70
+        wA2l9c4CCsiv09PNpHPqWiJRYfHcmT6XRGNIM48j5FPsPU5GwpfvUa0JDr2opSIH
+        1HmpUC+lX1isWSeblQR16q/hZ4328aGJ/DTsZFse2QjJY+ttUrGhqQAUCc05/s9p
+        ksbIEVZ3gMQj82EN2o9c7VZtLnaTPm01QiYPzP4f2Osp2YRFs5bRH/jaimLLYD+k
+        OL8geDBOp9QeM6zbMaHNLRkMAiaCSHUauHlB+JEu3oyWlQmqNP5nLRFXc/gLE0jf
+        NBFJ2flRpaiDfIb0x76PYcPUaUxnl8o+Oc/nMo7qxa8yN7f9VT5g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-sender:x-me-sender:x-sasl-enc:x-sasl-enc; s=
+        fm1; bh=H0DVoL0ivws71bf4AASjp2mNqA2+bKxVro3FKCqDNLI=; b=IEpgX5we
+        l6RWPkfY4ugS2DU/CFK+G+laPSAzpKHPxjwvRjN2PnhyUpqidaRhkpKMxJ1SgmqB
+        XyOX0AQD52BvsRw4wD6Njy4eZaPUnEoO16uAL5/+rKAhxWI+8eV3/a4+CknmydRK
+        6uP6WMQ36MHmHiIa9LyhlvSJhh9ZkvCkETGEqa5iiMtBGPwAFLRV7uELMEPC13cX
+        opCuWY6PplEtxsqOi3VKhvWz5jOv+Dnro98WSSUNOYM2Tx50WNbQZMO6tVo1l9e7
+        m0fuwxbCMIQlHV3brDhI/62JSD3nT7xq8JUrBgJdXIAvBkEOgsQqZ4OuVq3sFhPm
+        fSxq8BB0JcUltQ==
+In-Reply-To: <1495480860.9050.18.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: David Rientjes <rientjes@google.com>
-Cc: Roman Guschin <guroan@gmail.com>, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@kernel.org>, hannes@cmpxchg.org
+Content-Type: text/plain; charset="utf-8"
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org
+Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-
-
-On 23.05.2017 10:49, David Rientjes wrote:
-> On Mon, 22 May 2017, Konstantin Khlebnikov wrote:
+On Mon, 2017-05-22 at 12:21 -0700, James Bottomley wrote:
 > 
->> Nope, they are different. I think we should rephase documentation somehow
->>
->> low - count of reclaims below low level
->> high - count of post-allocation reclaims above high level
->> max - count of direct reclaims
->> oom - count of failed direct reclaims
->> oom_kill - count of oom killer invocations and killed processes
->>
+> > > >  (3) nfsdcltrack.  A way for NFSD to access stable storage for 
+> > > > tracking of persistent state.  Again, network-namespace 
+> > > > dependent, but also perhaps mount-namespace dependent.
+> > 
+> > Definitely mount-namespace dependent.
+> > 
+> > > 
+> > > So again, given we can set this up to work today, this sounds like 
+> > > more a restriction that will bite us than an enhancement that gives 
+> > > us extra features.
+> > > 
+> > 
+> > How do you set this up to work today?
 > 
-> In our kernel, we've maintained counts of oom kills per memcg for years as
-> part of memory.oom_control for memcg v1, but we've also found it helpful
-> to complement that with another count that specifies the number of
-> processes oom killed that were attached to that exact memcg.
+> Well, as above, it spawns into the root, you jump it to where it should
+> be and re-execute or simply handle in the host. 
 > 
-> In your patch, oom_kill in memory.oom_control specifies that number of oom
-> events that resulted in an oom kill of a process from that hierarchy, but
-> not the number of processes killed from a specific memcg (the difference
-> between oc->memcg and mem_cgroup_from_task(victim)).  Not sure if you
-> would also find it helpful.
+> > AFAIK, if you want to run knfsd in a container today, you're out of 
+> > luck for any non-trivial configuration.
 > 
+> Well "running knfsd in a container" is actually different from having a
+> containerised nfs export.  My understanding was that thanks to the work
+> of Stas Kinsbursky, the latter has mostly worked since the 3.9 kernel
+> for v3 and below.  I assume the current issue is that there's a problem
+> with v4?
 
-This is worth addition. Let's call it "oom_victim" for short.
+Oh, ok, I thought that, say, a docker (NFS) volumes-from a container to another
+container didn't work for any version of NFS.
 
-It allows to locate leaky part if they are spread over sub-containers within common limit.
-But doesn't tell which limit caused this kill. For hierarchical limits this might be not so easy.
+Certainly didn't work last time I tried, it was a while ago though.
 
-I think oom_kill better suits for automatic actions - restart affected hierarchy, increase limits, e.t.c.
-But oom_victim allows to determine container affected by global oom killer.
-
-So, probably it's worth to merge them together and increment oom_kill by global killer for victim memcg:
-
-	if (!is_memcg_oom(oc)) {
-		count_vm_event(OOM_KILL);
-		mem_cgroup_count_vm_event(mm, OOM_KILL);
-	} else
-		mem_cgroup_event(oc->memcg, OOM_KILL);
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Ian
