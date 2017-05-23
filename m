@@ -1,151 +1,105 @@
-From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Djalal Harouni <tixxdz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Tue, 23 May 2017 14:52:09 +0100
-Message-ID: <32556.1495547529@warthog.procyon.org.uk>
-References: <1495472039.2757.19.camel@HansenPartnership.com> <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+Date: Tue, 23 May 2017 16:23:55 +0200
+Message-ID: <CAEiveUchdQVvFCVxSVcvpxnT0gj=sidfsJfW5mOOWKL6LWddYQ@mail.gmail.com>
+References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+ <87lgpoww67.fsf@xmission.com> <1495491733.25946.3.camel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com CB174C05681A
-In-Reply-To: <1495472039.2757.19.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Content-ID: <32555.1495547529.1-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=Q0AoP/PkJ+iu06hwzT1Vxe2+uhBabqo/7W7+tM2spTs=;
+        b=hXMfHYuaMm/9a5096klUmcy1Fo5IDf9gz5BDP8BRldZo3v2mApE1ON/IgMUMjzCywE
+         Lg/KY0hW6mVVtQKbCcxo2Ji/CbqtOkTrugVTITIrT4pCJtCUaeUvZc96UJn/nXdADyxc
+         cUjFNUjbiCWTPwEqQqgvF0L+45luh6JF0IvQU4ilwzf5+hpiGpSpQFKXINyl/6i80gWy
+         KDzjx2Mb3dDyuc7sxmhiYo2R1VFbf5j3nfiPGLIM90q2tLRmSHaJljviyWyroEeVWHKl
+         juh8G5j6/ogYLPtQxCozMAUQ447N60mNSwtdEPCXwKjGQuxK/XX6De0jHhEPhxrrWLCX
+         EToA==
+In-Reply-To: <1495491733.25946.3.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
+On Tue, May 23, 2017 at 12:22 AM, Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> On Mon, 2017-05-22 at 14:04 -0500, Eric W. Biederman wrote:
+>> David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+>>
+>> > Here are a set of patches to define a container object for the kernel and
+>> > to provide some methods to create and manipulate them.
+>> >
+>> > The reason I think this is necessary is that the kernel has no idea how to
+>> > direct upcalls to what userspace considers to be a container - current
+>> > Linux practice appears to make a "container" just an arbitrarily chosen
+>> > junction of namespaces, control groups and files, which may be changed
+>> > individually within the "container".
+>> >
+>>
+>> I think this might possibly be a useful abstraction for solving the
+>> keyring upcalls if it was something created implicitly.
+>>
+>> fork_into_container for use by keyring upcalls is currently a security
+>> vulnerability as it allows escaping all of a containers cgroups.  But
+>> you have that on your list of things to fix.  However you don't have
+>> seccomp and a few other things.
+>>
+>> Before we had kthreadd in the kernel upcalls always had issues because
+>> the code to reset all of the userspace bits and make the forked
+>> task suitable for running upcalls was always missing some detail.  It is
+>> a very bug-prone kind of idiom that you are talking about.  It is doubly
+>> bug-prone because the wrongness is visible to userspace and as such
+>> might get become a frozen KABI guarantee.
+>>
+>> Let me suggest a concrete alternative:
+>>
+>> - At the time of mount observer the mounters user namespace.
+>> - Find the mounters pid namespace.
+>> - If the mounters pid namespace is owned by the mounters user namespace
+>>   walk up the pid namespace tree to the first pid namespace owned by
+>>   that user namespace.
+>> - If the mounters pid namespace is not owned by the mounters user
+>>   namespace fail the mount it is going to need to make upcalls as
+>>   will not be possible.
+>> - Hold a reference to the pid namespace that was found.
+>>
+>> Then when an upcall needs to be made fork a child of the init process
+>> of the specified pid namespace.  Or fail if the init process of the
+>> pid namespace has died.
+>>
+>> That should always work and it does not require keeping expensive state
+>> where we did not have it previously.  Further because the semantics are
+>> fork a child of a particular pid namespace's init as features get added
+>> to the kernel this code remains well defined.
+>>
+>> For ordinary request-key upcalls we should be able to use the same rules
+>> and just not save/restore things in the kernel.
+>>
+>
+> OK, that does seem like a reasonable idea. Note that it's not just
+> request-key upcalls here that we're interested in, but anything that
+> we'd typically spawn from kthreadd otherwise.
 
-> This sounds like a step in the wrong direction: the strength of the
-> current container interfaces in Linux is that people who set up
-> containers don't have to agree what they look like.
-
-It may be a strength, but it is also a problem.
-
-> So I can set up a user namespace without a mount namespace or an
-> architecture emulation container with only a mount namespace.
-
-(I presume you mean with only the mount namespace separate)
-
-Yep.  You can do that with this too.
-
-> But ignoring my fun foibles with containers and to give a concrete
-> example in terms of a popular orchestration system: in kubernetes,
-> where certain namespaces are shared across pods, do you imagine the
-> kernel's view of the "container" to be the pod or what kubernetes
-> thinks of as the container?
-
-Why not both?  If the net_ns is created in the pod container, then probably
-network-related upcalls should be directed there.  Unless instructed
-otherwise, upon creation a container object will inherit the caller's
-namespaces.
-
-> This is important, because half the examples you give below are network
-> related and usually pods share a network namespace.
-
-Yeah - I'm more familiar with upcalls made by NFS, AFS and keyrings.
-
-> >  (1) The DNS resolver.  ...
-> 
-> All persistent (written to fs data) has to be mount ns associated;
-> there are no ifs, ands and buts to that.  I agree this implies that if
-> you want to run a separate network namespace, you either take DNS from
-> the parent (a lot of containers do)
-
-My intention is to make the DNS cache per-network namespace within the kernel.
-Currently, there's only one and it's shared between all namespaces, but that
-won't work if you end up with two net namespaces that direct the same
-addresses to different things.
-
-> or you set up a daemon to run within the mount namespace.
-
-That's not currently an option: the DNS service upcalls only, and
-/sbin/request-key is invoked in the init_ns.  This performs the network
-accesses in the wrong network namespace.
-
-> I agree the latter is a slightly fiddly operation you have to get right, but
-> that's why we have orchestration systems.
-
-An orchestration system can use this.  This is not a replacement for
-Kubernetes or Docker or whatever.
-
-> What is it we could do with the above that we cannot do today?
-
-Upcall into an appropriate set of namespaces and keep the results separate by
-network namespace.
-
-> >  (2) NFS ID mapper.  The NFS ID mapping cache should also probably be
-> >      per-network namespace.
-> 
-> I think this is a view but not the only one:  Right at the moment, NFS
-> ID mapping is used as the one of the ways we can get the user namespace
-> ID mapping writes to file problems fixed ... that makes it a property
-> of the mount namespace for a lot of containers.
-
-In some ways it's really a property of the server, and two different servers
-may appear in two separate network namespaces with the same apparent name and
-address.
-
-It's not a property of the mount namespace because mount namespaces share
-superblocks, and this is done at the superblock level.
-
-Possibly it should be done on the vfsmount, as a filter on the interaction
-between userspace and kernel.
-
-> There are many other instances where they do exactly as you say, but what
-> I'm saying is that we don't want to lose the flexibility we currently have.
-
-You don't really lose any flexibility; if anything, you gain it.
-
-(Note that in case your objection is that I haven't yet implemented the
-ability to set namespaces arbitrarily in a namespace, that's on list of things
-to do that I included, as is adjusting the control groups.)
-
-> All mount namespaces have an owning user namespace, so the data
-> relations are already there in the kernel, is the problem simply
-> finding them?
-
-The superblocks used by the vfsmounts in a mount namespace aren't all
-necessarily in the same user_ns, so none of:
-
-	sb->s_user_ns == current_user_ns()
-	sb->s_user_ns == current->ns->mnt_ns->user_ns
-	current->ns->mnt_ns->user_ns == current_user_ns()
-
-need hold true that I can see.
-
-> > These patches are built on top of the mount context patchset so that
-> > namespaces can be properly propagated over submounts/automounts.
-> 
-> I'll stop here ... you get the idea that I think this is imposing a set
-> of restrictions that will come back to bite us later.
-
-What restrictions am I imposing?
-
-> If this is just for the sake of figuring out how to get keyring upcalls to
-> work, then I'm sure we can come up with something.
-
-No, it's not just for that, though, admittedly, all of the upcall mechanisms I
-outlined use request_key() at the core.
+Generalizing it will expose the kernel to exploits, today containers
+setup the mount namespace for images from the net, outdated
+filesystems, and users just do it,  it is easy. Having kthread running
+inside such contexts is not a good idea. That's today usecases.
 
 
-Really, a container is an anchor for the resources you need to make an upcall,
-but it can also be used to anchor other things.
+> That said, I worry a little about this. If the init process does a setns
+> at the wrong time, suddenly you're doing the upcall in different
+> namespaces than you intended.
 
-One thing I've been asked for by a number of people is a per-container keyring
-for the provision of authentication keys, fs decryption keys and other things
-- but there's no actual container off which this can be hung.
+That init process or whatever process inside owns that context and files.
 
-Another thing that could be useful is a list of what device files a container
-may access, so that we can allow limited mounting by the container root user
-within the container.
+Maybe for some cases it is better to use userspace that you can talk
+to through a standard kernel bus endpoint and request a resource as it
+is done within modern apps. The application at the other end acts
+using kthread helpers in the appropriate context.
 
-Now these could be made into their own namespaces or added to one that already
-exists - perhaps the mount namespace being the most logical.
 
-David
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tixxdz
