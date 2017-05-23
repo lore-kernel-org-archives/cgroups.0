@@ -1,58 +1,72 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+From: David Howells <dhowells@redhat.com>
 Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Tue, 23 May 2017 08:44:27 -0700
-Message-ID: <1495554267.27369.9.camel@HansenPartnership.com>
-References: <87zie3mxkc.fsf@xmission.com>
-         <f167feeb-e653-12e3-eec8-24162f7f7c07@suse.de>
-         <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
-         <1495472039.2757.19.camel@HansenPartnership.com>
-         <2446.1495551216@warthog.procyon.org.uk>
-         <2961.1495552481@warthog.procyon.org.uk> <87bmqjmwl5.fsf@xmission.com>
+Date: Tue, 23 May 2017 17:13:18 +0100
+Message-ID: <3612.1495555998@warthog.procyon.org.uk>
+References: <87lgpoww67.fsf@xmission.com> <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1495554270;
-        bh=FnBTPEn0SFG7rVAfpSF7z+fthMtc6hLqU6zgZ0T+gAo=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=AchztV89wBzCBKWzxuyEKZKdWfjYaTTi0wl5qS7nTq6t7jqYhNJNrndW5Ffxxlkuw
-         EX3dVR87aUX5pkoH8bCsmdpxCvzPeET2x51e9e/m4+s4ldspDaZfDLbgTXjCnproBC
-         Bc8gSNDjMB6fdtzbpQxmWxiK/E24XnJKXCmQNtVI=
-In-Reply-To: <87bmqjmwl5.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 148D53D956
+In-Reply-To: <87lgpoww67.fsf@xmission.com>
+Content-ID: <3611.1495555998.1@warthog.procyon.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: dhowells@redhat.com, trondmy@primarydata.com, mszeredi@redhat.com, linux-nfs@vger.kernel.org, jlayton@redhat.com, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, 2017-05-23 at 10:17 -0500, Eric W. Biederman wrote:
-> David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> > Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
-> > > It does solve this in userspace rather simply.
-> > 
-> > Ummm...  How?  The kernel DNS resolver is not namespace aware.
+Eric W. Biederman <ebiederm@xmission.com> wrote:
+
+> Let me suggest a concrete alternative:
 > 
-> But it works fine if called in the proper context and we have a 
-> defacto standard for where to put all of the files (the tricky part) 
-> if you are dealing with multiple network namespaces simultaneously.
+> - At the time of mount observer the mounters user namespace.
 
-I think you're missing each other's points slightly.
+Looking at sget(), I don't think a mounter can see a superblock outside of
+their namespace.  There is something icky in there whereby all automounts are
+currently transferred into the init_user_ns though (something to fix in my
+mount-context series) :-/
 
-What David is pointing out is that the kernel has a DNS cache
-(net/dns_resolver/) it can do name to IP translations, but isn't
-namespaced.  Once it has one entry all containers would see it if they
-cause a lookup to go through the kernel cache, so going through the
-cache you can't have a name resolving to different IP addresses on a
-per container basis.
+> - Find the mounters pid namespace.
+> - If the mounters pid namespace is owned by the mounters user namespace
+>   walk up the pid namespace tree to the first pid namespace owned by
+>   that user namespace.
+> - If the mounters pid namespace is not owned by the mounters user
+>   namespace fail the mount it is going to need to make upcalls as
+>   will not be possible.
 
-I think Eric's point is that if you need the same DNS names resolving
-to different IP addresses on a per container basis, you can do this in
-userspace today but you have to disable the in-kernel DNS cache.
+Take the following scenario:
 
-James
+ (1) Create a process with a new network namespace.  Set up the network to
+     route out of ethernet port 1.
 
+ (2) Create a child process with new network and user namespaces.  Set up the
+     network to route out of ethernet port 2.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ (3) Mount an NFS volume in the process created in (2).
+
+The mount in (3) will fail unconditionally.
+
+> - Hold a reference to the pid namespace that was found.
+
+Take the following scenario:
+
+ (1) Create a process with new network and pid namespaces.  Set up the network
+     to route out of ethernet port 1.
+
+ (2) Create a child process with new network and pid namespaces.  Set up the
+     network to route out of ethernet port 2.
+
+ (3) Mount an NFS volume in the process created in (2).
+
+ (4) Create another child process with new network and pid namespaces.  Set up
+     the network to route out of ethernet port 3.
+
+ (5) In the process created in (4), access the NFS volume created in (3).
+
+The user namespace is the same all the way through.
+
+Now you're holding a ref to the pid namespace created in (1) - but that is of
+no use to you.  The upcall must take place in the network namespace that
+routes out through port 2.
+
+David
