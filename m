@@ -1,99 +1,72 @@
-From: Ian Kent <raven-PKsaG3nR2I+sTnJN9+BGXg@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Tue, 23 May 2017 18:09:53 +0800
-Message-ID: <1495534193.2564.3.camel@themaw.net>
-References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: Re: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
+Date: Tue, 23 May 2017 13:32:17 +0300
+Message-ID: <0f67046d-cdf6-1264-26f6-11c82978c621@yandex-team.ru>
+References: <149520375057.74196.2843113275800730971.stgit@buzz>
+ <CALo0P1123MROxgveCdX6YFpWDwG4qrAyHu3Xd1F+ckaFBnF4dQ@mail.gmail.com>
+ <ecd4a7ea-06c0-f549-a1bf-6d2d3c0af719@yandex-team.ru>
+ <alpine.DEB.2.10.1705230044590.50796@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=cc
-        :content-transfer-encoding:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-sender
-        :x-me-sender:x-sasl-enc:x-sasl-enc; s=fm1; bh=onCnbn6DUZtHfa/mXi
-        WmcxZLsW1iJrBYbKIuhvnpMx4=; b=mI27vTdBrIfdPpxQL4qheyqVidbTFhS4gR
-        XNkpbUpHEf4oOCcwdN/ECAuJGoDdeUvat6PDbySk1oCYfpnOSqXgq+e5nPTwJWtQ
-        cw6hMkv4O4T7C1j/RUmPGS82imjIIGCa89lAFfYVMfMigMZmoVZC6Ah69ZKG6Vjx
-        G53LCIFRCjNAgl/SRLrHsVr6fFCEG1CwzA9dpXZyHjPCXmWdb4MTChw2OSF1WQGl
-        9Unj/+ozFee+iRXYar3oLCKFlJvsLJrYmUeBReOUwPdsc0d+IDgN1/oD0YdUPWxl
-        nsWUZNZLk14Ogubnylt3/Q3kexshpDFz9hxI0KTxq//CPQFdhl4Q==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-sender:x-me-sender:x-sasl-enc:x-sasl-enc; s=
-        fm1; bh=onCnbn6DUZtHfa/mXiWmcxZLsW1iJrBYbKIuhvnpMx4=; b=QRFyMLcA
-        OarAosR6cE1I5jkD3vBFkYxXO3z8e9gnG0byEf8TsJ4KUzOJqVgndh+RbJlMze1m
-        oqXgz+ylDKG5Gne+VdgC/JEzYSkxtj5LVP/divSmDuoEU5HQnpayZLPcYIHl53F/
-        tM6g+Nb6zN7yRmY1MAeVCdrDJSDukxUys/pqKv8rRaogngoSGcFtQ2Mya5IXNLY6
-        +7e+FH5qSvn4YiIu2RpLiKukr+Ne/K3BM4qLkugiJe0BPyow/5WYPQWjyKqeJDIY
-        r+U2X9jqeEhWqub7gm75/2F9BB0FZSd7aPjQ1FkruK6Uk9L7DhJsYopBrSyvtZyx
-        DzCAfX2EPPCppA==
-In-Reply-To: <149547014649.10599.12025037906646164347.stgit-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+	t=1495535538; bh=RotTMT5+2TqGgzUFWoEsLYbwtYYwpiav66+NADvtVrU=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:In-Reply-To;
+	b=DpdrNdVJ1+w5kCBI1haNs7U/ebeDcK9JAE7wII5VNFerFzgXDbZErV/q3/r7KBRJX
+	 HMSxdzZjpb6j82NgkKG83yr/ti+g9WHMIhI6JDS8VK3YCDGVQCJaHuwk7EmapFBmaA
+	 /aCYnMq7IYsyNq86tGHks9j2wsNErpGaHlJFPGrQ=
+In-Reply-To: <alpine.DEB.2.10.1705230044590.50796@chino.kir.corp.google.com>
+Content-Language: en-US
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org
-Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes@google.com>
+Cc: Roman Guschin <guroan@gmail.com>, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@kernel.org>, hannes@cmpxchg.org
 
-On Mon, 2017-05-22 at 17:22 +0100, David Howells wrote:
-> Here are a set of patches to define a container object for the kernel and
-> to provide some methods to create and manipulate them.
-> 
-> The reason I think this is necessary is that the kernel has no idea how to
-> direct upcalls to what userspace considers to be a container - current
-> Linux practice appears to make a "container" just an arbitrarily chosen
-> junction of namespaces, control groups and files, which may be changed
-> individually within the "container".
-> 
-> The kernel upcall mechanism then needs to decide which set of namespaces,
-> etc., it must exec the appropriate upcall program.  Examples of this
-> include:
-> 
->  (1) The DNS resolver.  The DNS cache in the kernel should probably be
->      per-network namespace, but in userspace the program, its libraries and
->      its config data are associated with a mount tree and a user namespace
->      and it gets run in a particular pid namespace.
-> 
->  (2) NFS ID mapper.  The NFS ID mapping cache should also probably be
->      per-network namespace.
-> 
->  (3) nfsdcltrack.  A way for NFSD to access stable storage for tracking
->      of persistent state.  Again, network-namespace dependent, but also
->      perhaps mount-namespace dependent.
-> 
->  (4) General request-key upcalls.  Not particularly namespace dependent,
->      apart from keyrings being somewhat governed by the user namespace and
->      the upcall being configured by the mount namespace.
-> 
-> These patches are built on top of the mount context patchset so that
-> namespaces can be properly propagated over submounts/automounts.
-> 
-> These patches implement a container object that holds the following things:
-> 
->  (1) Namespaces.
-> 
->  (2) A root directory.
-> 
->  (3) A set of processes, including a designated 'init' process.
-> 
->  (4) The creator's credentials, including ownership.
-> 
->  (5) A place to hang security for the container, allowing policies to be
->      set per-container.
-> 
-> I also want to add:
-> 
->  (6) Control groups.
-> 
->  (7) A per-container keyring that can be added to from outside of the
->      container, even once the container is live, for the provision of
->      filesystem authentication/encryption keys in advance of the container
->      being started.
 
-It's hard to decide which of these has higher priority, I think both essential
-to a container implementation.
 
-Ian
+On 23.05.2017 10:49, David Rientjes wrote:
+> On Mon, 22 May 2017, Konstantin Khlebnikov wrote:
+> 
+>> Nope, they are different. I think we should rephase documentation somehow
+>>
+>> low - count of reclaims below low level
+>> high - count of post-allocation reclaims above high level
+>> max - count of direct reclaims
+>> oom - count of failed direct reclaims
+>> oom_kill - count of oom killer invocations and killed processes
+>>
+> 
+> In our kernel, we've maintained counts of oom kills per memcg for years as
+> part of memory.oom_control for memcg v1, but we've also found it helpful
+> to complement that with another count that specifies the number of
+> processes oom killed that were attached to that exact memcg.
+> 
+> In your patch, oom_kill in memory.oom_control specifies that number of oom
+> events that resulted in an oom kill of a process from that hierarchy, but
+> not the number of processes killed from a specific memcg (the difference
+> between oc->memcg and mem_cgroup_from_task(victim)).  Not sure if you
+> would also find it helpful.
+> 
+
+This is worth addition. Let's call it "oom_victim" for short.
+
+It allows to locate leaky part if they are spread over sub-containers within common limit.
+But doesn't tell which limit caused this kill. For hierarchical limits this might be not so easy.
+
+I think oom_kill better suits for automatic actions - restart affected hierarchy, increase limits, e.t.c.
+But oom_victim allows to determine container affected by global oom killer.
+
+So, probably it's worth to merge them together and increment oom_kill by global killer for victim memcg:
+
+	if (!is_memcg_oom(oc)) {
+		count_vm_event(OOM_KILL);
+		mem_cgroup_count_vm_event(mm, OOM_KILL);
+	} else
+		mem_cgroup_event(oc->memcg, OOM_KILL);
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
