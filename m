@@ -1,51 +1,80 @@
-From: Colin Walters <walters-gPq2gbYjIk8dnm+yROfE0A@public.gmane.org>
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
 Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Tue, 23 May 2017 10:54:52 -0400
-Message-ID: <1495551292.2742620.985957224.3FCF254A@webmail.messagingengine.com>
-References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
- <87lgpoww67.fsf@xmission.com> <1495491733.25946.3.camel@redhat.com>
- <874lwbraxh.fsf@xmission.com>
- <CAEiveUcbmm5m4=11ZppxAWppeoFWUBFpLC7dAZRuBCTFHR548g@mail.gmail.com>
+Date: Tue, 23 May 2017 08:02:31 -0700
+Message-ID: <1495551751.10876.17.camel@HansenPartnership.com>
+References: <1495472039.2757.19.camel@HansenPartnership.com>
+         <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+         <32556.1495547529@warthog.procyon.org.uk>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=x04t/f
-        C4OvRVtz3F3kzRPdc/9jLYOF/dYfohcLgViDc=; b=JWBr89NIHiIXTUue1ai9qL
-        T/t/3jci3TaigXWTfRAxsseCoOhG6+dd+ZX4w2Y0Fxp4OyfYmlHS/QVS7i9jOamS
-        35bGLtID3wQuHWmhYcNWCdIhYDvJvUOvLyiHqCvxadJLJ2Cli2Teq3aVWsLLKiYR
-        K9tF2fjvh2N2wRTLQTUhefxaW+YemoC4MtkCgyPD8AjsSDDFSnIPbFu13eoTsLiF
-        +QhJal9hc/c6bXIRke5cig9Lcj3ZbLTS/nAxrud6EJiRMqeVx0ZEf9yYrMMi5ivH
-        ESaBBT6lYPeXUJ96QKArGILBcCsuatvgyXSCJAoiBhD3U7VVkyMkXxcpMhrDkRzA
-        ==
-In-Reply-To: <CAEiveUcbmm5m4=11ZppxAWppeoFWUBFpLC7dAZRuBCTFHR548g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1495551753;
+        bh=gHww/yf79orRz4b3aul40lboEjv3n3GlPItmzvB//Z0=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=qgSJF+/CIzjsE0wwHhSUOEi28zyABkohtCX8yxz4t6hjeSj4k15En137mZwPC4Maj
+         htH68RbW6knG0vHc7S5boYs7iQPlrsE8IiVuMDoJo/JlhBh89EyxZSPwL1KPPKHA8C
+         Adu7pqlFaWyg4xz90sX+kDhBgas3i8jLe7ZO6zMg=
+In-Reply-To: <32556.1495547529-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
 Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Djalal Harouni <tixxdz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-On Tue, May 23, 2017, at 10:30 AM, Djalal Harouni wrote:
->
-> Maybe it depends on the cases, a general approach can be too difficult
-> to handle especially from the security point. Maybe it is better to
-> identify what operations need what context, and a userspace
-> service/proxy can act using kthreadd with the right context... at
-> least the shift to this model has been done for years now in the
-> mobile industry.
+On Tue, 2017-05-23 at 14:52 +0100, David Howells wrote:
+> James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
+> 
+> > This sounds like a step in the wrong direction: the strength of the
+> > current container interfaces in Linux is that people who set up
+> > containers don't have to agree what they look like.
+> 
+> It may be a strength, but it is also a problem.
+> 
+> > So I can set up a user namespace without a mount namespace or an
+> > architecture emulation container with only a mount namespace.
+> 
+> (I presume you mean with only the mount namespace separate)
+> 
+> Yep.  You can do that with this too.
+> 
+> > But ignoring my fun foibles with containers and to give a concrete
+> > example in terms of a popular orchestration system: in kubernetes,
+> > where certain namespaces are shared across pods, do you imagine the
+> > kernel's view of the "container" to be the pod or what kubernetes
+> > thinks of as the container?
+> 
+> Why not both?  If the net_ns is created in the pod container, then
+> probably
+> network-related upcalls should be directed there.  Unless instructed
+> otherwise, upon creation a container object will inherit the caller's
+> namespaces.
 
-Why not drop the upcall model in favor of having userspace
-monitor events via a (more efficient) protocol and react to them on its own?
-It's just generally more flexible and avoids all of those issues like
-replicating the seccomp configuration, etc.
+The pod isn't a container, it's a collection of containers.  Lets say
+each container has a separate mount namespace but shares a network
+namespace (this is a gross simplification, there are many other ways
+you can set up a pod, but this one illustrates the point).  For your
+upcall you'd have to pick a kubernetes container and you don't have the
+information to do that, even with your current patches, because what
+kubernetes has done.  This is where your view of "container" doesn't
+match the kubernetes view.
 
-Something like inotify/signalfd could be a precedent around having a read()/poll()able
-fd.  /proc/keys-requests ?
+> > This is important, because half the examples you give below are 
+> > network related and usually pods share a network namespace.
+> 
+> Yeah - I'm more familiar with upcalls made by NFS, AFS and keyrings.
 
-Then if you create a new user namespace, and open /proc/keys-requests, the
-kernel will always write to that instead of calling /sbin/request-key.
+OK, so rather than getting into the technical back and forth below can
+we agree that the kernel can't have a unitary view of "container"
+because the current use cases (the orchestration systems) don't have
+one?  Then the next step becomes how can we add an abstraction that
+gives you what you want (as far as I can tell basically identifying a
+set of namespaces for an upcall) in a way that doesn't bind the kernel
+to have a unitary view of a container? And then we can tack the ideas
+on to the Jeff/Eric subthread.
+
+James
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
