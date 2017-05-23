@@ -1,127 +1,61 @@
-From: Djalal Harouni <tixxdz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: David Howells <dhowells@redhat.com>
 Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Tue, 23 May 2017 16:30:33 +0200
-Message-ID: <CAEiveUcbmm5m4=11ZppxAWppeoFWUBFpLC7dAZRuBCTFHR548g@mail.gmail.com>
-References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
- <87lgpoww67.fsf@xmission.com> <1495491733.25946.3.camel@redhat.com> <874lwbraxh.fsf@xmission.com>
+Date: Tue, 23 May 2017 15:53:36 +0100
+Message-ID: <2446.1495551216@warthog.procyon.org.uk>
+References: <f167feeb-e653-12e3-eec8-24162f7f7c07@suse.de> <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk> <1495472039.2757.19.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=jT/L4f6TBUC9NtkF9Pvr/pHjyE+WiZM4Ht9e2N2ipYk=;
-        b=Kp3LNDTFLBJO+d/UXys0ElLbTR64e6J7D5ZdLokcyZigmLZ85zmFp6s2Rf18EEYt6O
-         TVjDtGprrzXviwd5EhVqMqyYlIdfFERSYeP9NQEl0tE2Bqx9b6MjvorrLkHAI7z8y7MA
-         k9qXK5/kmpzyWkUiA/DB4Mdip8TXTWdPYqvgINHLZtnnnnjUuHkKgrViS2u0bzfeDpMb
-         t+Cwdi4L4QKCUgVlk2W31iw9PWaDiKL0jcrVQWDZSexj0eUOF2PQp9seVxrUq50wo3+e
-         wSYqthfjf9Nj4lEJLbi2jFfAH/SD4j7PeOFmfQYZdMZ2Zr3G/fCNvJUun+GWH9+lt0Nu
-         qlOw==
-In-Reply-To: <874lwbraxh.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 9535061D22
+In-Reply-To: <f167feeb-e653-12e3-eec8-24162f7f7c07@suse.de>
+Content-ID: <2442.1495551216.1@warthog.procyon.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Aleksa Sarai <asarai@suse.de>
+Cc: dhowells@redhat.com, James Bottomley <James.Bottomley@HansenPartnership.com>, trondmy@primarydata.com, mszeredi@redhat.com, linux-nfs@vger.kernel.org, jlayton@redhat.com, Linux Containers <containers@lists.linux-foundation.org>, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, ebiederm@xmission.com
 
-On Tue, May 23, 2017 at 2:54 PM, Eric W. Biederman
-<ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
-> Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
->
->> On Mon, 2017-05-22 at 14:04 -0500, Eric W. Biederman wrote:
->>> David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
->>>
->>> > Here are a set of patches to define a container object for the kernel and
->>> > to provide some methods to create and manipulate them.
->>> >
->>> > The reason I think this is necessary is that the kernel has no idea how to
->>> > direct upcalls to what userspace considers to be a container - current
->>> > Linux practice appears to make a "container" just an arbitrarily chosen
->>> > junction of namespaces, control groups and files, which may be changed
->>> > individually within the "container".
->>> >
->>>
->>> I think this might possibly be a useful abstraction for solving the
->>> keyring upcalls if it was something created implicitly.
->>>
->>> fork_into_container for use by keyring upcalls is currently a security
->>> vulnerability as it allows escaping all of a containers cgroups.  But
->>> you have that on your list of things to fix.  However you don't have
->>> seccomp and a few other things.
->>>
->>> Before we had kthreadd in the kernel upcalls always had issues because
->>> the code to reset all of the userspace bits and make the forked
->>> task suitable for running upcalls was always missing some detail.  It is
->>> a very bug-prone kind of idiom that you are talking about.  It is doubly
->>> bug-prone because the wrongness is visible to userspace and as such
->>> might get become a frozen KABI guarantee.
->>>
->>> Let me suggest a concrete alternative:
->>>
->>> - At the time of mount observer the mounters user namespace.
->>> - Find the mounters pid namespace.
->>> - If the mounters pid namespace is owned by the mounters user namespace
->>>   walk up the pid namespace tree to the first pid namespace owned by
->>>   that user namespace.
->>> - If the mounters pid namespace is not owned by the mounters user
->>>   namespace fail the mount it is going to need to make upcalls as
->>>   will not be possible.
->>> - Hold a reference to the pid namespace that was found.
->>>
->>> Then when an upcall needs to be made fork a child of the init process
->>> of the specified pid namespace.  Or fail if the init process of the
->>> pid namespace has died.
->>>
->>> That should always work and it does not require keeping expensive state
->>> where we did not have it previously.  Further because the semantics are
->>> fork a child of a particular pid namespace's init as features get added
->>> to the kernel this code remains well defined.
->>>
->>> For ordinary request-key upcalls we should be able to use the same rules
->>> and just not save/restore things in the kernel.
->>>
->>
->> OK, that does seem like a reasonable idea. Note that it's not just
->> request-key upcalls here that we're interested in, but anything that
->> we'd typically spawn from kthreadd otherwise.
->
-> General user mode helper *Nod*.
->
->> That said, I worry a little about this. If the init process does a setns
->> at the wrong time, suddenly you're doing the upcall in different
->> namespaces than you intended.
->>
->> Might it be better to use the init process of the container as the
->> template like you suggest, but snapshot its "context" at a particular
->> point in time instead?
->>
->> knfsd could do this when it's started, for instance...
->
-> The danger of a snapshot it time is something important (like cgroup
-> membership) might change.
->
-> It might be necessary to have this be an opt-in.   Perhaps even to the
-> point of starting a dedicated kthreadd.
->
-> Right now I think we need to figure out what it will take to solve this
-> in the kernel because I strongly suspect that solving this in userspace
-> is a cop out and we really aren't providing enough information to
-> userspace to run the helper in the proper context.    And I strongly
-> suspect that providing enough information from the kernel will be
-> roughly equivalent to solving this in the kernel.
+Aleksa Sarai <asarai@suse.de> wrote:
 
-Maybe it depends on the cases, a general approach can be too difficult
-to handle especially from the security point. Maybe it is better to
-identify what operations need what context, and a userspace
-service/proxy can act using kthreadd with the right context... at
-least the shift to this model has been done for years now in the
-mobile industry.
+> >> The reason I think this is necessary is that the kernel has no idea
+> >> how to direct upcalls to what userspace considers to be a container -
+> >> current Linux practice appears to make a "container" just an
+> >> arbitrarily chosen junction of namespaces, control groups and files,
+> >> which may be changed individually within the "container".
+> 
+> Just want to point out that if the kernel APIs for containers massively
+> change, then the OCI will have to completely rework how we describe containers
+> (and so will all existing runtimes).
+> 
+> Not to mention that while I don't like how hard it is (from a runtime
+> perspective) to actually set up a container securely, there are undoubtedly
+> benefits to having namespaces split out. The network namespace being separate
+> means that in certain contexts you actually don't want to create a new network
+> namespace when creating a container.
 
+Yep, I quite agree.
 
--- 
-tixxdz
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+However, certain things need to be made per-net namespace that *aren't*.  DNS
+results, for instance.
+
+As an example, I could set up a client machine with two ethernet ports, set up
+two DNS+NFS servers, each of which think they're called "foo.bar" and attach
+each server to a different port on the client machine.  Then I could create a
+pair of containers on the client machine and route the network in each
+container to a different port.  Now there's a problem because the names of the
+cached DNS records for each port overlap.
+
+Further, the NFS idmapper needs to be able to direct its calls to the
+appropriate network.
+
+> I had some ideas about how you could implement bridging in userspace (as an
+> unprivileged user, for rootless containers) but if you can't join namespaces
+> individually then such a setup is not practically possible.
+
+I'm not proposing to take away the ability to arbitrarily set the namespaces
+in a container.  I haven't implemented it yet, but it was on the to-do list:
+
+ (7) Directly set a container's namespaces to allow cross-container
+     sharing.
+
+David
