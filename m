@@ -1,98 +1,112 @@
-From: Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Mon, 22 May 2017 18:22:13 -0400
-Message-ID: <1495491733.25946.3.camel@redhat.com>
-References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
-         <87lgpoww67.fsf@xmission.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
+Date: Tue, 23 May 2017 09:07:47 +0200
+Message-ID: <20170523070747.GF12813@dhcp22.suse.cz>
+References: <1495124884-28974-1-git-send-email-guro@fb.com>
+ <20170520183729.GA3195@esperanza>
+ <20170522170116.GB22625@castle>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <87lgpoww67.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170522170116.GB22625@castle>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: Vladimir Davydov <vdavydov@tarantool.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, 2017-05-22 at 14:04 -0500, Eric W. Biederman wrote:
-> David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+On Mon 22-05-17 18:01:16, Roman Gushchin wrote:
+> On Sat, May 20, 2017 at 09:37:29PM +0300, Vladimir Davydov wrote:
+> > Hello Roman,
 > 
-> > Here are a set of patches to define a container object for the kernel and
-> > to provide some methods to create and manipulate them.
+> Hi Vladimir!
+> 
 > > 
-> > The reason I think this is necessary is that the kernel has no idea how to
-> > direct upcalls to what userspace considers to be a container - current
-> > Linux practice appears to make a "container" just an arbitrarily chosen
-> > junction of namespaces, control groups and files, which may be changed
-> > individually within the "container".
+> > On Thu, May 18, 2017 at 05:28:04PM +0100, Roman Gushchin wrote:
+> > ...
+> > > +5-2-4. Cgroup-aware OOM Killer
+> > > +
+> > > +Cgroup v2 memory controller implements a cgroup-aware OOM killer.
+> > > +It means that it treats memory cgroups as memory consumers
+> > > +rather then individual processes. Under the OOM conditions it tries
+> > > +to find an elegible leaf memory cgroup, and kill all processes
+> > > +in this cgroup. If it's not possible (e.g. all processes belong
+> > > +to the root cgroup), it falls back to the traditional per-process
+> > > +behaviour.
 > > 
+> > I agree that the current OOM victim selection algorithm is totally
+> > unfair in a system using containers and it has been crying for rework
+> > for the last few years now, so it's great to see this finally coming.
+> > 
+> > However, I don't reckon that killing a whole leaf cgroup is always the
+> > best practice. It does make sense when cgroups are used for
+> > containerizing services or applications, because a service is unlikely
+> > to remain operational after one of its processes is gone, but one can
+> > also use cgroups to containerize processes started by a user. Kicking a
+> > user out for one of her process has gone mad doesn't sound right to me.
 > 
-> I think this might possibly be a useful abstraction for solving the
-> keyring upcalls if it was something created implicitly.
-> 
-> fork_into_container for use by keyring upcalls is currently a security
-> vulnerability as it allows escaping all of a containers cgroups.  But
-> you have that on your list of things to fix.  However you don't have
-> seccomp and a few other things.
-> 
-> Before we had kthreadd in the kernel upcalls always had issues because
-> the code to reset all of the userspace bits and make the forked
-> task suitable for running upcalls was always missing some detail.  It is
-> a very bug-prone kind of idiom that you are talking about.  It is doubly
-> bug-prone because the wrongness is visible to userspace and as such
-> might get become a frozen KABI guarantee.
-> 
-> Let me suggest a concrete alternative:
-> 
-> - At the time of mount observer the mounters user namespace.
-> - Find the mounters pid namespace.
-> - If the mounters pid namespace is owned by the mounters user namespace
->   walk up the pid namespace tree to the first pid namespace owned by
->   that user namespace.
-> - If the mounters pid namespace is not owned by the mounters user
->   namespace fail the mount it is going to need to make upcalls as
->   will not be possible.
-> - Hold a reference to the pid namespace that was found.
-> 
-> Then when an upcall needs to be made fork a child of the init process
-> of the specified pid namespace.  Or fail if the init process of the
-> pid namespace has died.
-> 
-> That should always work and it does not require keeping expensive state
-> where we did not have it previously.  Further because the semantics are
-> fork a child of a particular pid namespace's init as features get added
-> to the kernel this code remains well defined.
-> 
-> For ordinary request-key upcalls we should be able to use the same rules
-> and just not save/restore things in the kernel.
-> 
+> I agree, that it's not always a best practise, if you're not allowed
+> to change the cgroup configuration (e.g. create new cgroups).
+> IMHO, this case is mostly covered by using the v1 cgroup interface,
+> which remains unchanged.
 
-OK, that does seem like a reasonable idea. Note that it's not just
-request-key upcalls here that we're interested in, but anything that
-we'd typically spawn from kthreadd otherwise.
+But there are features which are v2 only and users might really want to
+use it. So I really do not buy this v2-only argument.
 
-That said, I worry a little about this. If the init process does a setns
-at the wrong time, suddenly you're doing the upcall in different
-namespaces than you intended.
+> If you do have control over cgroups, you can put processes into
+> separate cgroups, and obtain control over OOM victim selection and killing.
 
-Might it be better to use the init process of the container as the
-template like you suggest, but snapshot its "context" at a particular
-point in time instead?
+Usually you do not have that control because there is a global daemon
+doing the placement for you.
 
-knfsd could do this when it's started, for instance...
-
-
-> A huge advantage of my alternative (other than not being a bit-rot
-> magnet) is that it should drop into existing container infrastructure
-> without problems.  The rule for container implementors is simple to use
-> security key infrastructure you need to have created a pid namespace in
-> your user namespace.
+> > Another example when the policy you're suggesting fails in my opinion is
+> > in case a service (cgroup) consists of sub-services (sub-cgroups) that
+> > run processes. The main service may stop working normally if one of its
+> > sub-services is killed. So it might make sense to kill not just an
+> > individual process or a leaf cgroup, but the whole main service with all
+> > its sub-services.
 > 
-> Eric
+> I agree, although I do not pretend for solving all possible
+> userspace problems caused by an OOM.
+> 
+> How to react on an OOM - is definitely a policy, which depends
+> on the workload. Nothing is changing here from how it's working now,
+> except now kernel will choose a victim cgroup, and kill the victim cgroup
+> rather than a process.
 
+There is a _big_ difference. The current implementation just tries
+to recover from the OOM situation without carying much about the
+consequences on the workload. This is the last resort and a services for
+the _system_ to get back to sane state. You are trying to make it more
+clever and workload aware and that is inevitable going to depend on the
+specific workload. I really do think we cannot simply hardcode any
+policy into the kernel for this purpose and that is why I would like to
+see a discussion about how to do that in a more extensible way. This
+might be harder to implement now but it I believe it will turn out
+better longerm.
+
+> > And both kinds of workloads (services/applications and individual
+> > processes run by users) can co-exist on the same host - consider the
+> > default systemd setup, for instance.
+> > 
+> > IMHO it would be better to give users a choice regarding what they
+> > really want for a particular cgroup in case of OOM - killing the whole
+> > cgroup or one of its descendants. For example, we could introduce a
+> > per-cgroup flag that would tell the kernel whether the cgroup can
+> > tolerate killing a descendant or not. If it can, the kernel will pick
+> > the fattest sub-cgroup or process and check it. If it cannot, it will
+> > kill the whole cgroup and all its processes and sub-cgroups.
+> 
+> The last thing we want to do, is to compare processes with cgroups.
+> I agree, that we can have some option to disable the cgroup-aware OOM at all,
+> mostly for backward-compatibility. But I don't think it should be a
+> per-cgroup configuration option, which we will support forever.
+
+I can clearly see a demand for "this is definitely more important
+container than others so do not kill" usecases. I can also see demand
+for "do not kill this container running for X days". And more are likely
+to pop out.
 -- 
-Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Michal Hocko
+SUSE Labs
