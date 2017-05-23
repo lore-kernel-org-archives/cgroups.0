@@ -1,57 +1,51 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+From: David Howells <dhowells@redhat.com>
 Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
-Date: Tue, 23 May 2017 10:17:26 -0500
-Message-ID: <87bmqjmwl5.fsf@xmission.com>
-References: <87zie3mxkc.fsf@xmission.com>
-	<f167feeb-e653-12e3-eec8-24162f7f7c07@suse.de>
-	<149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
-	<1495472039.2757.19.camel@HansenPartnership.com>
-	<2446.1495551216@warthog.procyon.org.uk>
-	<2961.1495552481@warthog.procyon.org.uk>
+Date: Tue, 23 May 2017 16:30:19 +0100
+Message-ID: <3118.1495553419@warthog.procyon.org.uk>
+References: <1495551292.2742620.985957224.3FCF254A@webmail.messagingengine.com> <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk> <87lgpoww67.fsf@xmission.com> <1495491733.25946.3.camel@redhat.com> <874lwbraxh.fsf@xmission.com> <CAEiveUcbmm5m4=11ZppxAWppeoFWUBFpLC7dAZRuBCTFHR548g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <2961.1495552481-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org> (David Howells's message
-	of "Tue, 23 May 2017 16:14:41 +0100")
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 849A872482
+In-Reply-To: <1495551292.2742620.985957224.3FCF254A@webmail.messagingengine.com>
+Content-ID: <3117.1495553419.1@warthog.procyon.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Colin Walters <walters@verbum.org>
+Cc: dhowells@redhat.com, Djalal Harouni <tixxdz@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Jeff Layton <jlayton@redhat.com>, trondmy@primarydata.com, Miklos Szeredi <mszeredi@redhat.com>, linux-nfs@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
 
-David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+Colin Walters <walters@verbum.org> wrote:
 
-> Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
+> Why not drop the upcall model in favor of having userspace monitor events
+> via a (more efficient) protocol and react to them on its own?
+
+ (1) That's not necessarily more efficient.  You now have the overhead of a
+     permanently running userspace daemon in every relevant namespace
+     combination.
+
+ (2) You then have to work out how to route to the appropriate daemon.
+
+> It's just generally more flexible
+
+Actually, it's less flexible.  You can't easily get at the caller's
+namespaces.
+
+> and avoids all of those issues like replicating the seccomp configuration,
+> etc.
+
+So does my container implementation.
+
+> Something like inotify/signalfd could be a precedent around having a read()/poll()able
+> fd.  /proc/keys-requests ?
 >
->> > As an example, I could set up a client machine with two ethernet ports,
->> > set up two DNS+NFS servers, each of which think they're called "foo.bar"
->> > and attach each server to a different port on the client machine.  Then I
->> > could create a pair of containers on the client machine and route the
->> > network in each container to a different port.  Now there's a problem
->> > because the names of the cached DNS records for each port overlap.
->> 
->> Please look at ip netns add.
->
-> 	warthog>man ip | grep setns
-> 	warthog1>
+> Then if you create a new user namespace, and open /proc/keys-requests, the
+> kernel will always write to that instead of calling /sbin/request-key.
 
-Not setns netns
+That's not good enough.  You're basically making it one daemon per user
+namespace and ignoring all the other namespaces.
 
+[Also note that the kernel would have to paste a temporary authorisation key
+ into the daemon's session keyring for each key that requires instantiation].
 
->> It does solve this in userspace rather simply.
->
-> Ummm...  How?  The kernel DNS resolver is not namespace aware.
-
-But it works fine if called in the proper context and we have a defacto
-standard for where to put all of the files (the tricky part) if you are
-dealing with multiple network namespaces simultaneously.
-
-Eric
+David
