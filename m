@@ -1,67 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
-Date: Wed, 24 May 2017 16:36:16 -0400
-Message-ID: <20170524203616.GO24798@htj.duckdns.org>
-References: <1494855256-12558-1-git-send-email-longman@redhat.com>
- <1494855256-12558-12-git-send-email-longman@redhat.com>
- <20170519202624.GA15279@wtj.duckdns.org>
- <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH] mm/oom_kill: count global and memory cgroup oom kills
+Date: Wed, 24 May 2017 13:43:28 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1705241338120.49680@chino.kir.corp.google.com>
+References: <149520375057.74196.2843113275800730971.stgit@buzz> <CALo0P1123MROxgveCdX6YFpWDwG4qrAyHu3Xd1F+ckaFBnF4dQ@mail.gmail.com> <ecd4a7ea-06c0-f549-a1bf-6d2d3c0af719@yandex-team.ru> <alpine.DEB.2.10.1705230044590.50796@chino.kir.corp.google.com>
+ <0f67046d-cdf6-1264-26f6-11c82978c621@yandex-team.ru>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=sGUu5MfcItqMImtrtAv4NaEl+jWtJUsKryukDtcf+QQ=;
-        b=HUQtNaRqBffvYNmT6EZv6wGJMHVSe3S8kQodthn9xTwALZ1FWdU8kQ6qJeIUitOB65
-         YHhxLsNflnqg2i7vAk5JJFwOc+9ltVWAg0vJvqu9ga/pR4ABavX+eLtyLxg8OqNMFQ8x
-         mzLZqKlJXK7pwigs+dPs4DV7eCiLG3nNUz7bzFjN/u5WPl+nBUHbMWFjRg00fEJ2AYWC
-         fbc5byBZ5YXa2cVRlu/gzviS/dEylJY+ebWVR5pRjF34WtSqFkbMqkDJECsxoCMfxEVP
-         JgYRdO6tl4lmN2XqVuphDe+zmgXg1zzp44+NdeLQStnFc1I9uhaim1/isShjivwJxDsf
-         UDLQ==
-Content-Disposition: inline
-In-Reply-To: <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
-Sender: linux-doc-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=t2nP4PM8UAD8Y7K3SvqS/1o+sZp+Gsh7sly2gAtixeE=;
+        b=qHyEyzj9W6+2GxMLlxeSq07KPlyUqb9jYtnMNuPM8AZx1Vd7mJIqQhwSLRkTEV+WO5
+         7Sj6YtsATIIjUVN6q5VSJqgPMOGPGVeybOrIMbfJnMdpYBQAYWECaVEFWNLB5wJN9VBb
+         xqiU1BwZtVs9+caVq5SRdIcI5Z05JXNDpoWB15J2qmDC2yFQ4ZqdVytwPAKC2bl+7A26
+         exAMkmgDxzPr8NDlkfuxPDIWmxiyN1Ub2aQoD+8xZXmPiaY4K9/KM/qyQEyYnZlKuKbD
+         3L0iChRQEUJ0CCnZ/xc6u1mH3zOUdUbQQ9wTniuLcuUU3rVuu8rNp2c3JGjqoYOMGIT5
+         0kJw==
+In-Reply-To: <0f67046d-cdf6-1264-26f6-11c82978c621@yandex-team.ru>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: Roman Guschin <guroan@gmail.com>, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@kernel.org>, hannes@cmpxchg.org
 
-Hello, Waiman.
+On Tue, 23 May 2017, Konstantin Khlebnikov wrote:
 
-On Mon, May 22, 2017 at 01:13:16PM -0400, Waiman Long wrote:
-> > Maybe I'm misunderstanding the design, but this seems to push the
-> > processes which belong to the threaded subtree to the parent which is
-> > part of the usual resource domain hierarchy thus breaking the no
-> > internal competition constraint.  I'm not sure this is something we'd
-> > want.  Given that the limitation of the original threaded mode was the
-> > required nesting below root and that we treat root special anyway
-> > (exactly in the way necessary), I wonder whether it'd be better to
-> > simply allow root to be both domain and thread root.
+> This is worth addition. Let's call it "oom_victim" for short.
 > 
-> Yes, root can be both domain and thread root. I haven't placed any
-> restriction on that.
+> It allows to locate leaky part if they are spread over sub-containers within
+> common limit.
+> But doesn't tell which limit caused this kill. For hierarchical limits this
+> might be not so easy.
+> 
+> I think oom_kill better suits for automatic actions - restart affected
+> hierarchy, increase limits, e.t.c.
+> But oom_victim allows to determine container affected by global oom killer.
+> 
+> So, probably it's worth to merge them together and increment oom_kill by
+> global killer for victim memcg:
+> 
+> 	if (!is_memcg_oom(oc)) {
+> 		count_vm_event(OOM_KILL);
+> 		mem_cgroup_count_vm_event(mm, OOM_KILL);
+> 	} else
+> 		mem_cgroup_event(oc->memcg, OOM_KILL);
+> 
 
-I've been playing with the proposed "make the parent resource domain".
-Unfortunately, the parent - child relationship becomes weird.
+Our complete solution is that we have a complementary 
+memory.oom_kill_control that allows users to register for eventfd(2) 
+notification when the kernel oom killer kills a victim, but this is 
+because we have had complete support for userspace oom handling for years.  
+When read, it exports three classes of information:
 
-The parent becomes the thread root, which means that its
-cgroup.threads file becomes writable and threads can be put in there.
-It's really weird to write to a child's interface and have the
-parent's behavior changed.  This becomes weirder with delegation.  If
-a cgroup is delegated, its cgroup.threads should be delegated too but
-if the child enables threaded mode, that makes the undelegated parent
-thread root, which means that either 1. the delegatee can't migrate
-threads to the thread root or 2. if the parent's cgroup.threads is
-writeable, the delegatee can mass with other descendants under it
-which shouldn't be allowed.
+ - the "total" (hierarchical) and "local" (memcg specific) number of oom
+   kills for system oom conditions (overcommit),
 
-I think the operation of making a cgroup a thread root should happen
-on the cgroup where that's requested; otherwise, nesting becomes too
-twisted.  This should be solvable.  Will think more about it.
+ - the "total" and "local" number of oom kills for memcg oom conditions, 
+   and
+ 
+ - the total number of processes in the hierarchy where an oom victim was
+   reaped successfully and unsuccessfully.
 
-Thanks.
+One benefit of this is that it prevents us from having to scrape the 
+kernel log for oom events which has been troublesome in the past, but 
+userspace can easily do so when the eventfd triggers for the kill 
+notification.
 
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
