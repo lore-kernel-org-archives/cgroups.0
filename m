@@ -1,64 +1,67 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH v2 12/17] cgroup: Remove cgroup v2 no internal process
- constraint
-Date: Wed, 24 May 2017 14:19:12 -0400
-Message-ID: <97996c22-57c3-aea4-c06a-5a57e8520f36@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
+Date: Wed, 24 May 2017 16:36:16 -0400
+Message-ID: <20170524203616.GO24798@htj.duckdns.org>
 References: <1494855256-12558-1-git-send-email-longman@redhat.com>
- <1494855256-12558-13-git-send-email-longman@redhat.com>
- <20170519203824.GC15279@wtj.duckdns.org>
- <93a69664-4ba6-9ee8-e4ea-ce76b6682c77@redhat.com>
- <20170524170527.GH24798@htj.duckdns.org>
+ <1494855256-12558-12-git-send-email-longman@redhat.com>
+ <20170519202624.GA15279@wtj.duckdns.org>
+ <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 899AA7F6AA
-In-Reply-To: <20170524170527.GH24798-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=sGUu5MfcItqMImtrtAv4NaEl+jWtJUsKryukDtcf+QQ=;
+        b=HUQtNaRqBffvYNmT6EZv6wGJMHVSe3S8kQodthn9xTwALZ1FWdU8kQ6qJeIUitOB65
+         YHhxLsNflnqg2i7vAk5JJFwOc+9ltVWAg0vJvqu9ga/pR4ABavX+eLtyLxg8OqNMFQ8x
+         mzLZqKlJXK7pwigs+dPs4DV7eCiLG3nNUz7bzFjN/u5WPl+nBUHbMWFjRg00fEJ2AYWC
+         fbc5byBZ5YXa2cVRlu/gzviS/dEylJY+ebWVR5pRjF34WtSqFkbMqkDJECsxoCMfxEVP
+         JgYRdO6tl4lmN2XqVuphDe+zmgXg1zzp44+NdeLQStnFc1I9uhaim1/isShjivwJxDsf
+         UDLQ==
+Content-Disposition: inline
+In-Reply-To: <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-On 05/24/2017 01:05 PM, Tejun Heo wrote:
-> Hello,
->
-> On Mon, May 22, 2017 at 12:56:08PM -0400, Waiman Long wrote:
->> All controllers can use the special sub-directory if userland chooses to
->> do so. The problem that I am trying to address in this patch is to allow
->> more natural hierarchy that reflect a certain purpose, like the task
->> classification done by systemd. Restricting tasks only to leaf nodes
->> makes the hierarchy unnatural and probably difficult to manage.
-> I see but how is this different from userland just creating the leaf
-> cgroup?  I'm not sure what this actually enables in terms of what can
-> be achieved with cgroup.  I suppose we can argue that this is more
-> convenient but I'd like to keep the interface orthogonal as much as
-> reasonably possible.
->
-> Thanks.
->
-I am just thinking that it is a bit more natural with the concept of the
-special resource domain sub-directory. You are right that the same
-effect can be achieved by proper placement of tasks and enabling of
-controllers.
+Hello, Waiman.
 
-A (cpu,memory) [T1] - B(cpu,memory) [T2]
-                                  \ cgroups.resource_domain (memory)
+On Mon, May 22, 2017 at 01:13:16PM -0400, Waiman Long wrote:
+> > Maybe I'm misunderstanding the design, but this seems to push the
+> > processes which belong to the threaded subtree to the parent which is
+> > part of the usual resource domain hierarchy thus breaking the no
+> > internal competition constraint.  I'm not sure this is something we'd
+> > want.  Given that the limitation of the original threaded mode was the
+> > required nesting below root and that we treat root special anyway
+> > (exactly in the way necessary), I wonder whether it'd be better to
+> > simply allow root to be both domain and thread root.
+> 
+> Yes, root can be both domain and thread root. I haven't placed any
+> restriction on that.
 
-A (cpu,memory)  - B(cpu,memory) [T2]
-                            \ C (memory) [T1]
+I've been playing with the proposed "make the parent resource domain".
+Unfortunately, the parent - child relationship becomes weird.
 
-With respect to the tasks T1 and T2, the above 2 configurations are the
-same.
+The parent becomes the thread root, which means that its
+cgroup.threads file becomes writable and threads can be put in there.
+It's really weird to write to a child's interface and have the
+parent's behavior changed.  This becomes weirder with delegation.  If
+a cgroup is delegated, its cgroup.threads should be delegated too but
+if the child enables threaded mode, that makes the undelegated parent
+thread root, which means that either 1. the delegatee can't migrate
+threads to the thread root or 2. if the parent's cgroup.threads is
+writeable, the delegatee can mass with other descendants under it
+which shouldn't be allowed.
 
-I am OK to drop this patch. However, I still think the current
-no-internal process constraint is too restricting. I will suggest either
+I think the operation of making a cgroup a thread root should happen
+on the cgroup where that's requested; otherwise, nesting becomes too
+twisted.  This should be solvable.  Will think more about it.
 
- 1. Allow internal processes and document the way to avoid internal
-    process competition as shown above from the userland, or
- 2. Mark only certain controllers as not allowing internal processes
-    when they are enabled.
+Thanks.
 
-What do you think about this?
-
-Cheers,
-Longman
+-- 
+tejun
