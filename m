@@ -1,184 +1,105 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
-Date: Thu, 25 May 2017 13:08:05 -0400
-Message-ID: <20170525170805.GA5631@cmpxchg.org>
-References: <1495124884-28974-1-git-send-email-guro@fb.com>
- <20170520183729.GA3195@esperanza>
- <20170522170116.GB22625@castle>
- <20170523070747.GF12813@dhcp22.suse.cz>
- <20170523132544.GA13145@cmpxchg.org>
- <20170525153819.GA7349@dhcp22.suse.cz>
+From: Trond Myklebust <trondmy@primarydata.com>
+Subject: Re: [RFC][PATCH 0/9] Make containers kernel objects
+Date: Sat, 27 May 2017 17:45:35 +0000
+Message-ID: <1495907132.4591.3.camel@primarydata.com>
+References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+         <87lgpoww67.fsf@xmission.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=hjPiHiKY/9xh5hViGAdgBh1ZOc1qDEyyF/Z3ENY8Npw=; b=foSGFY0IzjYr+FtcqbhWvdrCUr
-        Wm9/enV/Wdw2AeKcjAokdff+y46EbMgOxK+eY9nnaoxW/jQsv0WmHLwyHa/EZD1ogue29FFsOzaq9
-        u8LusHfG6U0jzIUSgTIvlcMiJOh/Uto49a0uuEaLgqQf0KYF2Im71Tiadm0prcEACDPs=;
-Content-Disposition: inline
-In-Reply-To: <20170525153819.GA7349-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=PrimaryData.onmicrosoft.com; s=selector1-primarydata-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=R1lgNZ+mJXcrR6oREjKDDG3t2iR3UBAkvA/Hg/5G8Iw=;
+ b=H/0+puJxzFKzbIACkl74NqrVCLBReUf/CIXe64n2zsIxB2XUFKUwmUOa7PrgoB5fh+bFWrmx07Ihq3EPfsug/bpoAgFO7lxZE+9hEm9oTKrEBPvQlbuBXIFj1TWtLLpAqazOcAlTIYiWwZGjeu66vFMq5627fY9uV3JV+EbXw8I=
+In-Reply-To: <87lgpoww67.fsf@xmission.com>
+Content-Language: en-US
+Content-ID: <8457A65D62DDFD4787F9A4EB3152F736@namprd11.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Vladimir Davydov <vdavydov-mJ5StSI9eqKXDw4h08c5KA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: "ebiederm@xmission.com" <ebiederm@xmission.com>, "dhowells@redhat.com" <dhowells@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jlayton@redhat.com" <jlayton@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "mszeredi@redhat.com" <mszeredi@redhat.com>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
-On Thu, May 25, 2017 at 05:38:19PM +0200, Michal Hocko wrote:
-> On Tue 23-05-17 09:25:44, Johannes Weiner wrote:
-> > On Tue, May 23, 2017 at 09:07:47AM +0200, Michal Hocko wrote:
-> > > On Mon 22-05-17 18:01:16, Roman Gushchin wrote:
-> [...]
-> > > > How to react on an OOM - is definitely a policy, which depends
-> > > > on the workload. Nothing is changing here from how it's working now,
-> > > > except now kernel will choose a victim cgroup, and kill the victim cgroup
-> > > > rather than a process.
-> > > 
-> > > There is a _big_ difference. The current implementation just tries
-> > > to recover from the OOM situation without carying much about the
-> > > consequences on the workload. This is the last resort and a services for
-> > > the _system_ to get back to sane state. You are trying to make it more
-> > > clever and workload aware and that is inevitable going to depend on the
-> > > specific workload. I really do think we cannot simply hardcode any
-> > > policy into the kernel for this purpose and that is why I would like to
-> > > see a discussion about how to do that in a more extensible way. This
-> > > might be harder to implement now but it I believe it will turn out
-> > > better longerm.
-> > 
-> > And that's where I still maintain that this isn't really a policy
-> > change. Because what this code does ISN'T more clever, and the OOM
-> > killer STILL IS a last-resort thing.
-> 
-> The thing I wanted to point out is that what and how much to kill
-> definitely depends on the usecase. We currently kill all tasks which
-> share the mm struct because that is the smallest unit that can unpin
-> user memory. And that makes a lot of sense to me as a general default.
-> I would call any attempt to guess tasks belonging to the same
-> workload/job as a "more clever".
+T24gTW9uLCAyMDE3LTA1LTIyIGF0IDE0OjA0IC0wNTAwLCBFcmljIFcuIEJpZWRlcm1hbiB3cm90
+ZToNCj4gRGF2aWQgSG93ZWxscyA8ZGhvd2VsbHNAcmVkaGF0LmNvbT4gd3JpdGVzOg0KPiANCj4g
+PiBIZXJlIGFyZSBhIHNldCBvZiBwYXRjaGVzIHRvIGRlZmluZSBhIGNvbnRhaW5lciBvYmplY3Qg
+Zm9yIHRoZQ0KPiA+IGtlcm5lbCBhbmQNCj4gPiB0byBwcm92aWRlIHNvbWUgbWV0aG9kcyB0byBj
+cmVhdGUgYW5kIG1hbmlwdWxhdGUgdGhlbS4NCj4gPiANCj4gPiBUaGUgcmVhc29uIEkgdGhpbmsg
+dGhpcyBpcyBuZWNlc3NhcnkgaXMgdGhhdCB0aGUga2VybmVsIGhhcyBubyBpZGVhDQo+ID4gaG93
+IHRvDQo+ID4gZGlyZWN0IHVwY2FsbHMgdG8gd2hhdCB1c2Vyc3BhY2UgY29uc2lkZXJzIHRvIGJl
+IGEgY29udGFpbmVyIC0NCj4gPiBjdXJyZW50DQo+ID4gTGludXggcHJhY3RpY2UgYXBwZWFycyB0
+byBtYWtlIGEgImNvbnRhaW5lciIganVzdCBhbiBhcmJpdHJhcmlseQ0KPiA+IGNob3Nlbg0KPiA+
+IGp1bmN0aW9uIG9mIG5hbWVzcGFjZXMsIGNvbnRyb2wgZ3JvdXBzIGFuZCBmaWxlcywgd2hpY2gg
+bWF5IGJlDQo+ID4gY2hhbmdlZA0KPiA+IGluZGl2aWR1YWxseSB3aXRoaW4gdGhlICJjb250YWlu
+ZXIiLg0KPiA+IA0KPiANCj4gSSB0aGluayB0aGlzIG1pZ2h0IHBvc3NpYmx5IGJlIGEgdXNlZnVs
+IGFic3RyYWN0aW9uIGZvciBzb2x2aW5nIHRoZQ0KPiBrZXlyaW5nIHVwY2FsbHMgaWYgaXQgd2Fz
+IHNvbWV0aGluZyBjcmVhdGVkIGltcGxpY2l0bHkuDQo+IA0KPiBmb3JrX2ludG9fY29udGFpbmVy
+IGZvciB1c2UgYnkga2V5cmluZyB1cGNhbGxzIGlzIGN1cnJlbnRseSBhDQo+IHNlY3VyaXR5DQo+
+IHZ1bG5lcmFiaWxpdHkgYXMgaXQgYWxsb3dzIGVzY2FwaW5nIGFsbCBvZiBhIGNvbnRhaW5lcnMg
+Y2dyb3Vwcy7CoMKgQnV0DQo+IHlvdSBoYXZlIHRoYXQgb24geW91ciBsaXN0IG9mIHRoaW5ncyB0
+byBmaXguwqDCoEhvd2V2ZXIgeW91IGRvbid0IGhhdmUNCj4gc2VjY29tcCBhbmQgYSBmZXcgb3Ro
+ZXIgdGhpbmdzLg0KPiANCj4gQmVmb3JlIHdlIGhhZCBrdGhyZWFkZCBpbiB0aGUga2VybmVsIHVw
+Y2FsbHMgYWx3YXlzIGhhZCBpc3N1ZXMNCj4gYmVjYXVzZQ0KPiB0aGUgY29kZSB0byByZXNldCBh
+bGwgb2YgdGhlIHVzZXJzcGFjZSBiaXRzIGFuZCBtYWtlIHRoZSBmb3JrZWQNCj4gdGFzayBzdWl0
+YWJsZSBmb3IgcnVubmluZyB1cGNhbGxzIHdhcyBhbHdheXMgbWlzc2luZyBzb21lIGRldGFpbC7C
+oMKgSXQNCj4gaXMNCj4gYSB2ZXJ5IGJ1Zy1wcm9uZSBraW5kIG9mIGlkaW9tIHRoYXQgeW91IGFy
+ZSB0YWxraW5nIGFib3V0LsKgwqBJdCBpcw0KPiBkb3VibHkNCj4gYnVnLXByb25lIGJlY2F1c2Ug
+dGhlIHdyb25nbmVzcyBpcyB2aXNpYmxlIHRvIHVzZXJzcGFjZSBhbmQgYXMgc3VjaA0KPiBtaWdo
+dCBnZXQgYmVjb21lIGEgZnJvemVuIEtBQkkgZ3VhcmFudGVlLg0KPiANCj4gTGV0IG1lIHN1Z2dl
+c3QgYSBjb25jcmV0ZSBhbHRlcm5hdGl2ZToNCj4gDQo+IC0gQXQgdGhlIHRpbWUgb2YgbW91bnQg
+b2JzZXJ2ZXIgdGhlIG1vdW50ZXJzIHVzZXIgbmFtZXNwYWNlLg0KPiAtIEZpbmQgdGhlIG1vdW50
+ZXJzIHBpZCBuYW1lc3BhY2UuDQo+IC0gSWYgdGhlIG1vdW50ZXJzIHBpZCBuYW1lc3BhY2UgaXMg
+b3duZWQgYnkgdGhlIG1vdW50ZXJzIHVzZXINCj4gbmFtZXNwYWNlDQo+IMKgIHdhbGsgdXAgdGhl
+IHBpZCBuYW1lc3BhY2UgdHJlZSB0byB0aGUgZmlyc3QgcGlkIG5hbWVzcGFjZSBvd25lZCBieQ0K
+PiDCoCB0aGF0IHVzZXIgbmFtZXNwYWNlLg0KPiAtIElmIHRoZSBtb3VudGVycyBwaWQgbmFtZXNw
+YWNlIGlzIG5vdCBvd25lZCBieSB0aGUgbW91bnRlcnMgdXNlcg0KPiDCoCBuYW1lc3BhY2UgZmFp
+bCB0aGUgbW91bnQgaXQgaXMgZ29pbmcgdG8gbmVlZCB0byBtYWtlIHVwY2FsbHMgYXMNCj4gwqAg
+d2lsbCBub3QgYmUgcG9zc2libGUuDQo+IC0gSG9sZCBhIHJlZmVyZW5jZSB0byB0aGUgcGlkIG5h
+bWVzcGFjZSB0aGF0IHdhcyBmb3VuZC4NCj4gDQo+IFRoZW4gd2hlbiBhbiB1cGNhbGwgbmVlZHMg
+dG8gYmUgbWFkZSBmb3JrIGEgY2hpbGQgb2YgdGhlIGluaXQgcHJvY2Vzcw0KPiBvZiB0aGUgc3Bl
+Y2lmaWVkIHBpZCBuYW1lc3BhY2UuwqDCoE9yIGZhaWwgaWYgdGhlIGluaXQgcHJvY2VzcyBvZiB0
+aGUNCj4gcGlkIG5hbWVzcGFjZSBoYXMgZGllZC4NCj4gDQo+IFRoYXQgc2hvdWxkIGFsd2F5cyB3
+b3JrIGFuZCBpdCBkb2VzIG5vdCByZXF1aXJlIGtlZXBpbmcgZXhwZW5zaXZlDQo+IHN0YXRlDQo+
+IHdoZXJlIHdlIGRpZCBub3QgaGF2ZSBpdCBwcmV2aW91c2x5LsKgwqBGdXJ0aGVyIGJlY2F1c2Ug
+dGhlIHNlbWFudGljcw0KPiBhcmUNCj4gZm9yayBhIGNoaWxkIG9mIGEgcGFydGljdWxhciBwaWQg
+bmFtZXNwYWNlJ3MgaW5pdCBhcyBmZWF0dXJlcyBnZXQNCj4gYWRkZWQNCj4gdG8gdGhlIGtlcm5l
+bCB0aGlzIGNvZGUgcmVtYWlucyB3ZWxsIGRlZmluZWQuDQo+IA0KPiBGb3Igb3JkaW5hcnkgcmVx
+dWVzdC1rZXkgdXBjYWxscyB3ZSBzaG91bGQgYmUgYWJsZSB0byB1c2UgdGhlIHNhbWUNCj4gcnVs
+ZXMNCj4gYW5kIGp1c3Qgbm90IHNhdmUvcmVzdG9yZSB0aGluZ3MgaW4gdGhlIGtlcm5lbC4NCj4g
+DQo+IEEgaHVnZSBhZHZhbnRhZ2Ugb2YgbXkgYWx0ZXJuYXRpdmUgKG90aGVyIHRoYW4gbm90IGJl
+aW5nIGEgYml0LXJvdA0KPiBtYWduZXQpIGlzIHRoYXQgaXQgc2hvdWxkIGRyb3AgaW50byBleGlz
+dGluZyBjb250YWluZXIgaW5mcmFzdHJ1Y3R1cmUNCj4gd2l0aG91dCBwcm9ibGVtcy7CoMKgVGhl
+IHJ1bGUgZm9yIGNvbnRhaW5lciBpbXBsZW1lbnRvcnMgaXMgc2ltcGxlIHRvDQo+IHVzZQ0KPiBz
+ZWN1cml0eSBrZXkgaW5mcmFzdHJ1Y3R1cmUgeW91IG5lZWQgdG8gaGF2ZSBjcmVhdGVkIGEgcGlk
+IG5hbWVzcGFjZQ0KPiBpbg0KPiB5b3VyIHVzZXIgbmFtZXNwYWNlLg0KPiANCg0KV2hpbGUgdGhp
+cyBtYXkgYmUgcGFydCBvZiBhIHNvbHV0aW9uLCBJIGRvbid0IHNlZSBob3cgaXQgY2FuIGRlYWwg
+d2l0aA0KaXNzdWVzIHN1Y2ggYXMgdGhlIG5lZWQgdG8gc2V0IHVwIGFuIFJQQ1NFQ19HU1Mgc2Vz
+c2lvbiBvbiBiZWhhbGYgb2YNCnRoZSB1c2VyLiBUaGUgaXNzdWUgdGhlcmUgaXMgdGhhdCB3aGls
+ZSB0aGUgbW91bnQgbWF5IGhhdmUgYmVlbiBjcmVhdGVkDQppbiBhIHBhcmVudCBuYW1lc3BhY2Us
+IHRoZSBhY3R1YWwgY2FsbCB0byBraW5pdCB0byBzZXQgdXAgYSBrZXJiZXJvcw0KY29udGV4dCBp
+cyBsaWtlbHkgdG8gaGF2ZSBiZWVuIG1hZGUgaW5zaWRlIHRoZSBjb250YWluZXIuIEl0IG1heSBl
+dmVuDQpoYXZlIGJlZW4gZG9uZSB1c2luZyBhIGNvbXBsZXRlbHkgc2VwYXJhdGUgbmV0IG5hbWVz
+cGFjZS4gU28gaW4gb3JkZXINCnRvIHNldCB1cCBteSBSUENTRUNfR1NTIHNlc3Npb24sIEkgbWF5
+IG5lZWQgdG8gZG8gc28gZnJvbSBpbnNpZGUgdGhlDQp1c2VyIGNvbnRhaW5lci4NCg0KSW4gdGhh
+dCBraW5kIG9mIGVudmlyb25tZW50LCBtaWdodCBpdCBwZXJoYXBzIG1ha2Ugc2Vuc2UgdG8ganVz
+dCBhbGxvdw0KYW4gdXBjYWxsIGV4ZWN1dGFibGUgcnVubmluZyBpbiB0aGUgcm9vdCBpbml0IG5h
+bWVzcGFjZSB0byB0dW5uZWwNCnRocm91Z2ggKHVzaW5nIHNldG5zKCkpIHNvIGl0IGNhbiBhY3R1
+YWxseSBleGVjdXRlIGluIHRoZSBjb250ZXh0IG9mDQp0aGUgY2hpbGQgY29udGFpbmVyPyBUaGF0
+IHdvdWxkIGtlZXAgc2VjdXJpdHkgcG9saWN5IHdpdGggdGhlIGluaXQNCm5hbWVzcGFjZSwgYnV0
+IHdvdWxkIGFsc28gZW5zdXJlIHRoYXQgdGhlIGNvbnRhaW5lciBlbnZpcm9ubWVudCBydWxlcw0K
+bWF5IGJlIGFwcGxpZWQgaWYgYW5kIHdoZW4gYXBwcm9wcmlhdGUuDQoNCkluIGFkZGl0aW9uIHRv
+IHRvZGF5J3MgdXBjYWxsIG1lY2hhbmlzbSwgd2Ugd291bGQgbmVlZCB0aGUgYWJpbGl0eSB0bw0K
+cGFzcyBpbiB0aGUgbnNwcm94eSAoYW5kIHJvb3QgZGlyZWN0b3J5KSBmb3IgdGhlIGNvbmZpbmVk
+IHByb2Nlc3MgdGhhdA0KdHJpZ2dlcmVkIHRoZSB1cGNhbGwgYW5kL29yIHRoZSBuYW1lc3BhY2Ug
+Zm9yIHRoZSBtb3VudHBvaW50LiBJJ20NCmFzc3VtaW5nIHRoYXQgY291bGQgYmUgZG9uZSBieSBw
+YXNzaW5nIGluIGEgZmlsZSBkZXNjcmlwdG9yIHRvIHRoZQ0KYXBwcm9wcmlhdGUgL3Byb2MgZW50
+cmllcz8NCg0KVGhlIGRvd25zaWRlIG9mIGFuIGFwcHJvYWNoIGxpa2UgdGhpcyBpcyB0aGF0IGl0
+IHJlcXVpcmVzIGNvbnRhaW5lcg0KYXdhcmVuZXNzIGluIHRoZSB1cGNhbGwgZXhlY3V0YWJsZXMg
+dGhlbXNlbHZlcy4gSWYgdGhlIGV4ZWN1dGFibGVzDQpkb24ndCBrbm93IHdoYXQgdGhleSBhcmUg
+ZG9pbmcsIHRoZXkgY291bGQgZW5kIHVwIGxlYWtpbmcgaW5mb3JtYXRpb24NCmZyb20gdGhlIGlu
+aXQgbmFtZXNwYWNlIHRvIHRoZSBwcm9jZXNzIHJ1bm5pbmcgaW4gdGhlIGNvbnRhaW5lciB2aWEg
+dGhlDQprZXlyaW5nLg0KDQpDaGVlcnMNCiAgVHJvbmQNCg0KLS0gDQpUcm9uZCBNeWtsZWJ1c3QN
+CkxpbnV4IE5GUyBjbGllbnQgbWFpbnRhaW5lciwgUHJpbWFyeURhdGENCnRyb25kLm15a2xlYnVz
+dEBwcmltYXJ5ZGF0YS5jb20NCg==
 
-Yeah, I agree it needs to be configurable. But a memory domain is not
-a random guess. It's a core concept of the VM at this point. The fact
-that the OOM killer cannot handle it is pretty weird and goes way
-beyond "I wish we could have some smarter heuristics to choose from."
-
-> > We don't need any elaborate
-> > just-in-time evaluation of what each entity is worth. We just want to
-> > kill the biggest job, not the biggest MM. Just like you wouldn't want
-> > just the biggest VMA unmapped and freed, since it leaves your process
-> > incoherent, killing one process leaves a job incoherent.
-> > 
-> > I understand that making it fully configurable is a tempting thought,
-> > because you'd offload all responsibility to userspace.
-> 
-> It is not only tempting it is also the only place which can define
-> a more advanced OOM semantic sanely IMHO.
-
-Why do you think that?
-
-Everything the user would want to dynamically program in the kernel,
-say with bpf, they could do in userspace and then update the scores
-for each group and task periodically.
-
-The only limitation is that you have to recalculate and update the
-scoring tree every once in a while, whereas a bpf program could
-evaluate things just-in-time. But for that to matter in practice, OOM
-kills would have to be a fairly hot path.
-
-> > > > > And both kinds of workloads (services/applications and individual
-> > > > > processes run by users) can co-exist on the same host - consider the
-> > > > > default systemd setup, for instance.
-> > > > > 
-> > > > > IMHO it would be better to give users a choice regarding what they
-> > > > > really want for a particular cgroup in case of OOM - killing the whole
-> > > > > cgroup or one of its descendants. For example, we could introduce a
-> > > > > per-cgroup flag that would tell the kernel whether the cgroup can
-> > > > > tolerate killing a descendant or not. If it can, the kernel will pick
-> > > > > the fattest sub-cgroup or process and check it. If it cannot, it will
-> > > > > kill the whole cgroup and all its processes and sub-cgroups.
-> > > > 
-> > > > The last thing we want to do, is to compare processes with cgroups.
-> > > > I agree, that we can have some option to disable the cgroup-aware OOM at all,
-> > > > mostly for backward-compatibility. But I don't think it should be a
-> > > > per-cgroup configuration option, which we will support forever.
-> > > 
-> > > I can clearly see a demand for "this is definitely more important
-> > > container than others so do not kill" usecases. I can also see demand
-> > > for "do not kill this container running for X days". And more are likely
-> > > to pop out.
-> > 
-> > That can all be done with scoring.
-> 
-> Maybe. But that requires somebody to tweak the scoring which can be hard
-> from trivial.
-
-Why is sorting and picking in userspace harder than sorting and
-picking in the kernel?
-
-> > This was 10 years ago, and nobody has missed anything critical enough
-> > to implement something beyond scoring. So I don't see why we'd need to
-> > do it for cgroups all of a sudden.
-> > 
-> > They're nothing special, they just group together things we have been
-> > OOM killing for ages. So why shouldn't we use the same config model?
-> > 
-> > It seems to me, what we need for this patch is 1) a way to toggle
-> > whether the processes and subgroups of a group are interdependent or
-> > independent and 2) configurable OOM scoring per cgroup analogous to
-> > what we have per process already. If a group is marked interdependent
-> > we stop descending into it and evaluate it as one entity. Otherwise,
-> > we go look for victims in its subgroups and individual processes.
-> 
-> This would be an absolute minimum, yes.
-> 
-> But I am still not convinced we should make this somehow "hardcoded" in
-> the core oom killer handler.  Why cannot we allow a callback for modules
-> and implement all these non-default OOM strategies in modules? We have
-> oom_notify_list already but that doesn't get the full oom context which
-> could be fixable but I suspect this is not the greatest interface at
-> all. We do not really need multiple implementations of the OOM handling
-> at the same time and a simple callback should be sufficient
-> 
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index 04c9143a8625..926a36625322 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -995,6 +995,13 @@ bool out_of_memory(struct oom_control *oc)
->  	}
->  
->  	/*
-> +	 * Try a registered oom handler to run and fallback to the default
-> +	 * implementation if it cannot handle the current oom context
-> +	 */
-> +	if (oom_handler && oom_handler(oc))
-> +		return true;
-
-I think this would take us back to the dark days where memcg entry
-points where big opaque branches in the generic VM code, which then
-implemented their own thing, redundant locking, redundant LRU lists,
-which was all very hard to maintain.
-
-> +	/*
->  	 * If current has a pending SIGKILL or is exiting, then automatically
->  	 * select it.  The goal is to allow it to allocate so that it may
->  	 * quickly exit and free its memory.
-> 
-> Please note that I haven't explored how much of the infrastructure
-> needed for the OOM decision making is available to modules. But we can
-> export a lot of what we currently have in oom_kill.c. I admit it might
-> turn out that this is simply not feasible but I would like this to be at
-> least explored before we go and implement yet another hardcoded way to
-> handle (see how I didn't use policy ;)) OOM situation.
-
-;)
-
-My doubt here is mainly that we'll see many (or any) real-life cases
-materialize that cannot be handled with cgroups and scoring. These are
-powerful building blocks on which userspace can implement all kinds of
-policy and sorting algorithms.
-
-So this seems like a lot of churn and complicated code to handle one
-extension. An extension that implements basic functionality.
