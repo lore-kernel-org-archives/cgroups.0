@@ -1,131 +1,28 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 6/6] mm: memcontrol: account slab stats per lruvec
-Date: Tue, 30 May 2017 14:17:24 -0400
-Message-ID: <20170530181724.27197-7-hannes@cmpxchg.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/6] mm: vmscan: delete unused pgdat_reclaimable_pages()
+Date: Tue, 30 May 2017 14:50:29 -0700
+Message-ID: <20170530145029.59cef9048c3c254c9357eff1@linux-foundation.org>
 References: <20170530181724.27197-1-hannes@cmpxchg.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:
-        Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=9929RBm7dIYHPIPrVpDNEc2XVN34So3MzyUIzZlD6lY=; b=wWS/mUEA9SymV/Th12HrwTuzGC
-        lLRQ9TnNR25P9BVtpA2spRiJBSoxXTI49j5b3kYJMIl1Lp32ms3+S3xAejccbJljXhbNdfjLVVHU+
-        djC1PuGAfokf0RYmEWEHhuyb9LGsmEvR2wEibutAPD3KziN+1uxBobaXfUkd0nrqMps4=;
-In-Reply-To: <20170530181724.27197-1-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	<20170530181724.27197-2-hannes@cmpxchg.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Rik van Riel <riel@redhat.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20170530181724.27197-2-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Josef Bacik <josef@toxicpanda.com>, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Rik van Riel <riel@redhat.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Josef's redesign of the balancing between slab caches and the page
-cache requires slab cache statistics at the lruvec level.
+On Tue, 30 May 2017 14:17:19 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/slab.c | 12 ++++--------
- mm/slab.h | 18 +-----------------
- mm/slub.c |  4 ++--
- 3 files changed, 7 insertions(+), 27 deletions(-)
+> -extern unsigned long pgdat_reclaimable_pages(struct pglist_data *pgdat);
 
-diff --git a/mm/slab.c b/mm/slab.c
-index b55853399559..908908aa8250 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -1425,11 +1425,9 @@ static struct page *kmem_getpages(struct kmem_cache *cachep, gfp_t flags,
- 
- 	nr_pages = (1 << cachep->gfporder);
- 	if (cachep->flags & SLAB_RECLAIM_ACCOUNT)
--		add_node_page_state(page_pgdat(page),
--			NR_SLAB_RECLAIMABLE, nr_pages);
-+		mod_lruvec_page_state(page, NR_SLAB_RECLAIMABLE, nr_pages);
- 	else
--		add_node_page_state(page_pgdat(page),
--			NR_SLAB_UNRECLAIMABLE, nr_pages);
-+		mod_lruvec_page_state(page, NR_SLAB_UNRECLAIMABLE, nr_pages);
- 
- 	__SetPageSlab(page);
- 	/* Record if ALLOC_NO_WATERMARKS was set when allocating the slab */
-@@ -1459,11 +1457,9 @@ static void kmem_freepages(struct kmem_cache *cachep, struct page *page)
- 	kmemcheck_free_shadow(page, order);
- 
- 	if (cachep->flags & SLAB_RECLAIM_ACCOUNT)
--		sub_node_page_state(page_pgdat(page),
--				NR_SLAB_RECLAIMABLE, nr_freed);
-+		mod_lruvec_page_state(page, NR_SLAB_RECLAIMABLE, -nr_freed);
- 	else
--		sub_node_page_state(page_pgdat(page),
--				NR_SLAB_UNRECLAIMABLE, nr_freed);
-+		mod_lruvec_page_state(page, NR_SLAB_UNRECLAIMABLE, -nr_freed);
- 
- 	BUG_ON(!PageSlab(page));
- 	__ClearPageSlabPfmemalloc(page);
-diff --git a/mm/slab.h b/mm/slab.h
-index 7b84e3839dfe..6885e1192ec5 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -274,22 +274,11 @@ static __always_inline int memcg_charge_slab(struct page *page,
- 					     gfp_t gfp, int order,
- 					     struct kmem_cache *s)
- {
--	int ret;
--
- 	if (!memcg_kmem_enabled())
- 		return 0;
- 	if (is_root_cache(s))
- 		return 0;
--
--	ret = memcg_kmem_charge_memcg(page, gfp, order, s->memcg_params.memcg);
--	if (ret)
--		return ret;
--
--	mod_memcg_page_state(page,
--			     (s->flags & SLAB_RECLAIM_ACCOUNT) ?
--			     NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
--			     1 << order);
--	return 0;
-+	return memcg_kmem_charge_memcg(page, gfp, order, s->memcg_params.memcg);
- }
- 
- static __always_inline void memcg_uncharge_slab(struct page *page, int order,
-@@ -297,11 +286,6 @@ static __always_inline void memcg_uncharge_slab(struct page *page, int order,
- {
- 	if (!memcg_kmem_enabled())
- 		return;
--
--	mod_memcg_page_state(page,
--			     (s->flags & SLAB_RECLAIM_ACCOUNT) ?
--			     NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
--			     -(1 << order));
- 	memcg_kmem_uncharge(page, order);
- }
- 
-diff --git a/mm/slub.c b/mm/slub.c
-index 673e72698d9b..edaf102284e8 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -1615,7 +1615,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
- 	if (!page)
- 		return NULL;
- 
--	mod_node_page_state(page_pgdat(page),
-+	mod_lruvec_page_state(page,
- 		(s->flags & SLAB_RECLAIM_ACCOUNT) ?
- 		NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
- 		1 << oo_order(oo));
-@@ -1655,7 +1655,7 @@ static void __free_slab(struct kmem_cache *s, struct page *page)
- 
- 	kmemcheck_free_shadow(page, compound_order(page));
- 
--	mod_node_page_state(page_pgdat(page),
-+	mod_lruvec_page_state(page,
- 		(s->flags & SLAB_RECLAIM_ACCOUNT) ?
- 		NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
- 		-pages);
--- 
-2.12.2
+Josef's "mm: make kswapd try harder to keep active pages in cache"
+added a new callsite.
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
