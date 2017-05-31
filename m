@@ -1,51 +1,122 @@
-From: Yury Norov <ynorov@caviumnetworks.com>
-Subject: Re: [PATCH 2/6] mm: vmstat: move slab statistics from zone to node
- counters
-Date: Wed, 31 May 2017 20:11:51 +0300
-Message-ID: <20170531171151.e4zh7ffzbl4w33gd@yury-thinkpad>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 5/6] mm: memcontrol: per-lruvec stats infrastructure
+Date: Wed, 31 May 2017 13:14:50 -0400
+Message-ID: <20170531171450.GA10481@cmpxchg.org>
 References: <20170530181724.27197-1-hannes@cmpxchg.org>
- <20170530181724.27197-3-hannes@cmpxchg.org>
- <20170531091256.GA5914@osiris>
- <20170531113900.GB5914@osiris>
+ <20170530181724.27197-6-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=CAVIUMNETWORKS.onmicrosoft.com; s=selector1-cavium-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=2D7mfEJmt7KA+rORPbsIvkb1+eFZA3NGkzGzX+BTQBU=;
- b=MQB7z9P57oN7aWjjL7VoFMFuU/sUMJ8HaqoJSGpVI5lu2p/0UWRlRDlPSzLxxW5jaIxFh/GRp8/ueM6K2gEiB3LY8LCVo7zBjFkFNHC2d/NRQkZjUo8tbkGfkv8vM/eZWt17pdKk0C6X7pZclooDHzRvK2au6zpxy8tcpLuYJrc=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=6ep+qqeZ+4hMg7WWimvThQEVUnhlKFPKlZERJ6GOXaY=; b=AA+F+OQWFA73NuxJFFvEnN0lZy
+	zj+V2KHhbuC6s5UNPsLfvOeqIBafj5Q8qmD0VAuJfaz7jzD0VE0y8sLv4mTCJQum1iDbkFHeWGIdp
+	XTM8t3VFmKyrVVRDM8Dr1SD1mrENgTJmoV5T2ZMIvBAgMyGZZUIwE95S8w2pZOaV+x2Q=;
 Content-Disposition: inline
-In-Reply-To: <20170531113900.GB5914@osiris>
+In-Reply-To: <20170530181724.27197-6-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Rik van Riel <riel@redhat.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, linux-s390@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Josef Bacik <josef@toxicpanda.com>, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Rik van Riel <riel@redhat.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Wed, May 31, 2017 at 01:39:00PM +0200, Heiko Carstens wrote:
-> On Wed, May 31, 2017 at 11:12:56AM +0200, Heiko Carstens wrote:
-> > On Tue, May 30, 2017 at 02:17:20PM -0400, Johannes Weiner wrote:
-> > > To re-implement slab cache vs. page cache balancing, we'll need the
-> > > slab counters at the lruvec level, which, ever since lru reclaim was
-> > > moved from the zone to the node, is the intersection of the node, not
-> > > the zone, and the memcg.
-> > > 
-> > > We could retain the per-zone counters for when the page allocator
-> > > dumps its memory information on failures, and have counters on both
-> > > levels - which on all but NUMA node 0 is usually redundant. But let's
-> > > keep it simple for now and just move them. If anybody complains we can
-> > > restore the per-zone counters.
-> > > 
-> > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > 
-> > This patch causes an early boot crash on s390 (linux-next as of today).
-> > CONFIG_NUMA on/off doesn't make any difference. I haven't looked any
-> > further into this yet, maybe you have an idea?
+Andrew, the 0day tester found a crash with this when special pages get
+faulted. They're not charged to any cgroup and we'll deref NULL.
 
-The same on arm64.
+Can you include the following fix on top of this patch please? Thanks!
 
-Yury
+---
+
+From 0ea9bdb1b425a6c943a65c02164d4ca51815fdc4 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Wed, 31 May 2017 12:57:28 -0400
+Subject: [PATCH] mm: memcontrol: per-lruvec stats infrastructure fix
+
+Fix the following crash in the new cgroup stat keeping code:
+
+Freeing unused kernel memory: 856K
+Write protecting the kernel read-only data: 8192k
+Freeing unused kernel memory: 1104K
+Freeing unused kernel memory: 588K
+page:ffffea000005d8c0 count:2 mapcount:1 mapping:          (null) index:0x0
+flags: 0x800000000000801(locked|reserved)
+raw: 0800000000000801 0000000000000000 0000000000000000 0000000200000000
+raw: ffffea000005d8e0 ffffea000005d8e0 0000000000000000 0000000000000000
+page dumped because: not cgrouped, will crash
+BUG: unable to handle kernel NULL pointer dereference at 00000000000004d8
+IP: page_add_file_rmap+0x56/0xf0
+PGD 0
+P4D 0
+Oops: 0000 [#1] SMP
+CPU: 0 PID: 1 Comm: init Not tainted 4.12.0-rc2-00065-g390160f076be-dirty #326
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-20170228_101828-anatol 04/01/2014
+task: ffff88007d380000 task.stack: ffffc9000031c000
+RIP: 0010:page_add_file_rmap+0x56/0xf0
+RSP: 0000:ffffc9000031fd88 EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffffea000005d8c0 RCX: 0000000000000006
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88007ffde000
+RBP: ffffc9000031fd98 R08: 0000000000000003 R09: 0000000000000000
+R10: ffffc9000031fd18 R11: 0000000000000000 R12: ffff88007ffdfab8
+R13: ffffea000005d8c0 R14: ffff88007c76d508 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88007fc00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000000004d8 CR3: 000000007c76c000 CR4: 00000000000006b0
+Call Trace:
+ alloc_set_pte+0xb5/0x2f0
+ finish_fault+0x2b/0x50
+ __handle_mm_fault+0x3e5/0xb90
+ handle_mm_fault+0x284/0x340
+ __do_page_fault+0x1fb/0x410
+ do_page_fault+0xc/0x10
+ page_fault+0x22/0x30
+
+This is a special page being faulted, and these will never be charged
+to a cgroup. Assume the root cgroup for uncharged pages to fix this.
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/memcontrol.h | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index a282eb2a6cc3..bea6f08e9e16 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -585,18 +585,26 @@ static inline void mod_lruvec_state(struct lruvec *lruvec,
+ static inline void __mod_lruvec_page_state(struct page *page,
+ 					   enum node_stat_item idx, int val)
+ {
++	struct mem_cgroup *memcg;
+ 	struct lruvec *lruvec;
+ 
+-	lruvec = mem_cgroup_lruvec(page_pgdat(page), page->mem_cgroup);
++	/* Special pages in the VM aren't charged, use root */
++	memcg = page->mem_cgroup ? : root_mem_cgroup;
++
++	lruvec = mem_cgroup_lruvec(page_pgdat(page), memcg);
+ 	__mod_lruvec_state(lruvec, idx, val);
+ }
+ 
+ static inline void mod_lruvec_page_state(struct page *page,
+ 					 enum node_stat_item idx, int val)
+ {
++	struct mem_cgroup *memcg;
+ 	struct lruvec *lruvec;
+ 
+-	lruvec = mem_cgroup_lruvec(page_pgdat(page), page->mem_cgroup);
++	/* Special pages in the VM aren't charged, use root */
++	memcg = page->mem_cgroup ? : root_mem_cgroup;
++
++	lruvec = mem_cgroup_lruvec(page_pgdat(page), memcg);
+ 	mod_lruvec_state(lruvec, idx, val);
+ }
+ 
+-- 
+2.13.0
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
