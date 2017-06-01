@@ -1,56 +1,45 @@
-From: Yu Zhao <yuzhao@google.com>
-Subject: [PATCH] swap: cond_resched in swap_cgroup_prepare()
-Date: Thu,  1 Jun 2017 12:56:35 -0700
-Message-ID: <20170601195635.20744-1-yuzhao@google.com>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=e6OMTWJB065jkdIptZPjGKpFsjPrnMqEOVupln6PY3o=;
-        b=uQVANCzvuo6Vndg9/aymu7ViirgdVnfV2dVwZ6iHLh/KkV3d2PdosxXFwTfdScYoqr
-         C6ImolmT3TrYCX8DGSU1pra4JRjInP7MzGwATZcQmeT36YA5G4scJkW1Xn8DbKsDFdo1
-         0NwCHJ6Iub/KZTYjF4FqxzaXZJxJROvjD9KnksZrK+SQtVodwsT1OlxLW4KWx2qUAsYl
-         J3pGEPAXm9KI94U9T3EMyG9eLFh+7sl6Gf2A6X06/ILF3y30uEhF1mQsVo10Aqod7Bq/
-         MSKFT22BMoKk2m4Hh8cyWtTn30E3g9AQ5mFUEqqUsGKM3kugA1eq/q1H646O/srRpnTO
-         VOlQ==
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
+Date: Thu, 1 Jun 2017 16:15:34 -0400
+Message-ID: <732a13ba-517d-c7d3-56a3-c34b51a8f6fd@redhat.com>
+References: <1494855256-12558-1-git-send-email-longman@redhat.com>
+ <1494855256-12558-12-git-send-email-longman@redhat.com>
+ <20170519202624.GA15279@wtj.duckdns.org>
+ <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
+ <20170524203616.GO24798@htj.duckdns.org>
+ <9b147a7e-fec3-3b78-7587-3890efcd42f2@redhat.com>
+ <20170524212745.GP24798@htj.duckdns.org>
+ <20170601145042.GA3494@htj.duckdns.org>
+ <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Yu Zhao <yuzhao@google.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 8F3407E9CA
+In-Reply-To: <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-Saw need_resched() warnings when swapping on large swapfile (TBs)
-because page allocation in swap_cgroup_prepare() took too long.
+On 06/01/2017 11:10 AM, Peter Zijlstra wrote:
+> On Thu, Jun 01, 2017 at 10:50:42AM -0400, Tejun Heo wrote:
+>> Hello, Waiman.
+>>
+>> A short update.  I tried making root special while keeping the
+>> existing threaded semantics but I didn't really like it because we
+>> have to couple controller enables/disables with threaded
+>> enables/disables.  I'm now trying a simpler, albeit a bit more
+>> tedious, approach which should leave things mostly symmetrical.  I'm
+>> hoping to be able to post mostly working patches this week.
+> I've not had time to look at any of this. But the question I'm most
+> curious about is how cgroup-v2 preserves the container invariant.
 
-We already cond_resched when freeing page in swap_cgroup_swapoff().
-Do the same for the page allocation.
+If you don't have much time to look at the patch, I will suggest just
+looking at the cover letter as well as changes to the cgroup-v2.txt
+file. You will get a pretty good overview of what this patchset is about.
 
-Signed-off-by: Yu Zhao <yuzhao@google.com>
----
- mm/swap_cgroup.c | 3 +++
- 1 file changed, 3 insertions(+)
+Cheers,
+Longman
 
-diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
-index ac6318a064d3..3405b4ee1757 100644
---- a/mm/swap_cgroup.c
-+++ b/mm/swap_cgroup.c
-@@ -48,6 +48,9 @@ static int swap_cgroup_prepare(int type)
- 		if (!page)
- 			goto not_enough_page;
- 		ctrl->map[idx] = page;
-+
-+		if (!(idx % SWAP_CLUSTER_MAX))
-+			cond_resched();
- 	}
- 	return 0;
- not_enough_page:
--- 
-2.13.0.219.gdb65acc882-goog
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
