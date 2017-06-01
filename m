@@ -1,91 +1,120 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [RFC PATCH v2 3/7] mm, oom: export oom_evaluate_task() and select_bad_process()
-Date: Thu, 1 Jun 2017 19:35:11 +0100
-Message-ID: <1496342115-3974-4-git-send-email-guro@fb.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: [RFC PATCH v2 5/7] mm, oom: introduce oom_score_adj for memory cgroups
+Date: Thu, 1 Jun 2017 19:35:13 +0100
+Message-ID: <1496342115-3974-6-git-send-email-guro@fb.com>
 References: <1496342115-3974-1-git-send-email-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=AW9jDmm2n8HdakAK6yqyWyHPHUfnwVgpBiWOjoOrIx4=;
- b=Hl81yqU1UBTbQctVV+5KLrvmXXNQSrjF8se9ApT1g1ordlrq9IpYKazSanCvd8DbqzXq
- WFs8oe+pme4U5HL17iXNcUKFR+vnsspcGIxWgmA7JOj8DkAdjWLZQHef7N5ykBi6BYeY
- vOiX+N9wPktAAiwWBDyjPm5iJ0kY3s9uxEg= 
+ content-type; s=facebook; bh=P2R7TbEXwc/klqFxE8fmwUmJVSSyu8gJn9ehf8qCmCA=;
+ b=ltMjT7EszeHrL+oGS+JVTzNVD+zfMMQA1qmlDakKyjyAOYnT1XGEkPCJT8+B1VWuA1oM
+ rf0aVGoAqanMI527DT1QzFhFJGS1OdVHFF+spPShcDwXYr6wY15OBd2VI5SyOSLfdWKF
+ CJwqVDjcgQuVMDNgBDcscu80L7AylFjgZiU= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=AW9jDmm2n8HdakAK6yqyWyHPHUfnwVgpBiWOjoOrIx4=;
- b=cHwN5jua3/z8thZXbFQ/UNKSPzyiYqZRgiCiOm8+vnjoyMKcgC4Fszh+klNcFT88HICjgzHyhBgVC97fxBioXPPLPfKjFT9yDhJNAJQIlJK6cSNXBY6Vz+nBU2jGPWrRydMyCG6S0pYPJxUfXYQaorT6Nr4H7dgkmMOJipRHFcU=
-In-Reply-To: <1496342115-3974-1-git-send-email-guro@fb.com>
-Sender: owner-linux-mm@kvack.org
+ bh=P2R7TbEXwc/klqFxE8fmwUmJVSSyu8gJn9ehf8qCmCA=;
+ b=dhvykvaCQ4dxUkW2ZjmXJ8vTAnG34B/0rh8jFk4ux2BuSv/Pl+aPkk9u9pjzR8+Mo7q4cuGa0/PVpmBHVfrtNvwVlXnjsT0b9spZOXLhpWA4R26hwDP/7TphPy5j2qutea77iI8APGvxFmPi4BUqp2qtdpRPEP7oEz3aj1NWR/U=
+In-Reply-To: <1496342115-3974-1-git-send-email-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Export the oom_evaluate_task() and select_bad_process()
-functions to reuse them for victim selection logic
-in the cgroup-aware OOM killer.
+Introduce a per-memory-cgroup oom_score_adj setting.
+A read-write single value file which exits on non-root
+cgroups. The default is "0".
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
+It will have a similar meaning to a per-process value,
+available via /proc/<pid>/oom_score_adj.
+Should be in a range [-1000, 1000].
+
+Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Cc: kernel-team-b10kYP2dOMg@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 ---
- include/linux/oom.h | 3 +++
- mm/oom_kill.c       | 5 ++---
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ include/linux/memcontrol.h |  3 +++
+ mm/memcontrol.c            | 36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 39 insertions(+)
 
-diff --git a/include/linux/oom.h b/include/linux/oom.h
-index 47d9495..edf7a77 100644
---- a/include/linux/oom.h
-+++ b/include/linux/oom.h
-@@ -80,6 +80,9 @@ extern void oom_killer_enable(void);
- extern struct task_struct *find_lock_task_mm(struct task_struct *p);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 8a308c9..818a42e 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -198,6 +198,9 @@ struct mem_cgroup {
+ 	/* kill all tasks below in case of OOM */
+ 	bool oom_kill_all_tasks;
  
- extern void __oom_kill_process(struct task_struct *victim);
-+extern int oom_evaluate_task(struct task_struct *task, void *arg);
-+extern void select_bad_process(struct oom_control *oc,
-+			       struct mem_cgroup *memcg);
++	/* OOM kill score adjustment */
++	short oom_score_adj;
++
+ 	/* handle for "memory.events" */
+ 	struct cgroup_file events_file;
  
- /* sysctls */
- extern int sysctl_oom_dump_tasks;
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 11b60a5..8cf77fb 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -288,7 +288,7 @@ static enum oom_constraint constrained_alloc(struct oom_control *oc)
- 	return CONSTRAINT_NONE;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d4ffa79..f979ac7 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5183,6 +5183,36 @@ static ssize_t memory_oom_kill_all_tasks_write(struct kernfs_open_file *of,
+ 	return nbytes;
  }
  
--static int oom_evaluate_task(struct task_struct *task, void *arg)
-+int oom_evaluate_task(struct task_struct *task, void *arg)
++static int memory_oom_score_adj_show(struct seq_file *m, void *v)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
++	short oom_score_adj = memcg->oom_score_adj;
++
++	seq_printf(m, "%d\n", oom_score_adj);
++
++	return 0;
++}
++
++static ssize_t memory_oom_score_adj_write(struct kernfs_open_file *of,
++				char *buf, size_t nbytes, loff_t off)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	int oom_score_adj;
++	int err;
++
++	err = kstrtoint(strstrip(buf), 0, &oom_score_adj);
++	if (err)
++		return err;
++
++	if (oom_score_adj < OOM_SCORE_ADJ_MIN ||
++			oom_score_adj > OOM_SCORE_ADJ_MAX)
++		return -EINVAL;
++
++	memcg->oom_score_adj = (short)oom_score_adj;
++
++	return nbytes;
++}
++
+ static int memory_events_show(struct seq_file *m, void *v)
  {
- 	struct oom_control *oc = arg;
- 	unsigned long points;
-@@ -343,8 +343,7 @@ static int oom_evaluate_task(struct task_struct *task, void *arg)
-  * Simple selection loop. We choose the process with the highest number of
-  * 'points'. In case scan was aborted, oc->chosen is set to -1.
-  */
--static void select_bad_process(struct oom_control *oc,
--			       struct mem_cgroup *memcg)
-+void select_bad_process(struct oom_control *oc, struct mem_cgroup *memcg)
- {
- 	if (memcg)
- 		mem_cgroup_scan_tasks(memcg, oom_evaluate_task, oc);
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+@@ -5298,6 +5328,12 @@ static struct cftype memory_files[] = {
+ 		.write = memory_oom_kill_all_tasks_write,
+ 	},
+ 	{
++		.name = "oom_score_adj",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = memory_oom_score_adj_show,
++		.write = memory_oom_score_adj_write,
++	},
++	{
+ 		.name = "events",
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.file_offset = offsetof(struct mem_cgroup, events_file),
 -- 
 2.7.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
