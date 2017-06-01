@@ -1,20 +1,20 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [RFC PATCH v2 2/7] mm, oom: split oom_kill_process() and export __oom_kill_process()
-Date: Thu, 1 Jun 2017 19:35:10 +0100
-Message-ID: <1496342115-3974-3-git-send-email-guro@fb.com>
+Subject: [RFC PATCH v2 4/7] mm, oom: introduce oom_kill_all_tasks option for memory cgroups
+Date: Thu, 1 Jun 2017 19:35:12 +0100
+Message-ID: <1496342115-3974-5-git-send-email-guro@fb.com>
 References: <1496342115-3974-1-git-send-email-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=Frb7QoA0lRmxN8q352MXT2dx2oA7pdwNNGI/Hdmr0d8=;
- b=meOAxXTTs6PoMAHqch/CBjj7AiYPDnhlPkFDI7b92L9z5HX77TOUuqayXIyeNr4TdSnT
- PaH9b+NNUdTVeWMBes3tKZam0GdQcrKQgCJPYtiGAhIiA7tw3koOyef33Ki4aSa1z/2s
- n8nlIDil1tba2yD9HHCF/Bk6nBeyhYsPiP8= 
+ content-type; s=facebook; bh=08JcrNYaiC/U2G2kJuC1DIMkSCuSN0QHX7lk81R64jg=;
+ b=X5Ed/KSM4xgwn39dlMdHmxL8TQp4LBcJhWf7J/1DtnfKM1tiAEIfiaBsD8zcSReYhrUK
+ SgXZz7x2UAggr++y5W+OvKliGmO87aB6EGcxuGLRD/lQipZUANU4QjIKs+7HIRsZQSAj
+ q7Jz/Dkzithekj6gD7M+pDJVy3rHPPfk118= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Frb7QoA0lRmxN8q352MXT2dx2oA7pdwNNGI/Hdmr0d8=;
- b=gfP44ZoZxdsF58CA6pafTtaQxpAT0GiglBlfldCxS6tAWdbD4p1Lz07kUhQ7mB/qXFphWcN7kmm9grmri1zLKWG57SCTCS2iVBBHH3phAqeLZBUzwtfebJdApJvPhiPgzAv2+RZg5xp2dPaLNBaBIhXUYOOqKfWYf7tefhuYTy8=
+ bh=08JcrNYaiC/U2G2kJuC1DIMkSCuSN0QHX7lk81R64jg=;
+ b=MteoTEmzZH0nEx1QuxRs4JTMjgi7VG/Aul1i1JXTdtpRZfJOWvF4qSMf8DwVCtzJyfc3CwHoCGFn2p0TC0f3r+CvVKVlEhKwE5FoF6X0YuUw9F6dKRzvgr6AFwG473T7ASp1iD99HbSEbY9PqJxiCDOxCDm7luU+LqYkYZLqLz8=
 In-Reply-To: <1496342115-3974-1-git-send-email-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,15 +23,14 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The oom_kill_process() function consists of two logical parts:
-a first one is responsible for considering task's children as
-a potential victim and some debug output.
-The second half is responsible for sending SIGKILL to all
-tasks sharing mm with the given victim.
+This option defines whether a cgroup should be treated
+as a single entity by the OOM killer.
 
-This commit splits the oom_kill_process() function
-and exports __oom_kill_process (second half) to reuse it
-from the memory cgroup code.
+If set, the OOM killer will compare the whole cgroup with other
+memory consumers (other cgroups and tasks in the root cgroup),
+and in case of an OOM will kill all belonging tasks.
+
+Disabled by default.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Tejun Heo <tj@kernel.org>
@@ -46,166 +45,75 @@ Cc: linux-doc@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- include/linux/oom.h |   2 +
- mm/oom_kill.c       | 121 +++++++++++++++++++++++++++-------------------------
- 2 files changed, 66 insertions(+), 57 deletions(-)
+ include/linux/memcontrol.h |  3 +++
+ mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
 
-diff --git a/include/linux/oom.h b/include/linux/oom.h
-index 8a266e2..47d9495 100644
---- a/include/linux/oom.h
-+++ b/include/linux/oom.h
-@@ -79,6 +79,8 @@ extern void oom_killer_enable(void);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 899949b..8a308c9 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -195,6 +195,9 @@ struct mem_cgroup {
+ 	/* OOM-Killer disable */
+ 	int		oom_kill_disable;
  
- extern struct task_struct *find_lock_task_mm(struct task_struct *p);
- 
-+extern void __oom_kill_process(struct task_struct *victim);
++	/* kill all tasks below in case of OOM */
++	bool oom_kill_all_tasks;
 +
- /* sysctls */
- extern int sysctl_oom_dump_tasks;
- extern int sysctl_oom_kill_allocating_task;
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index f8b0fb1..11b60a5 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -803,67 +803,12 @@ static bool task_will_free_mem(struct task_struct *task)
- 	return ret;
+ 	/* handle for "memory.events" */
+ 	struct cgroup_file events_file;
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c131f7e..d4ffa79 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5156,6 +5156,33 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+ 	return nbytes;
  }
  
--static void oom_kill_process(struct oom_control *oc, const char *message)
-+void __oom_kill_process(struct task_struct *victim)
- {
--	struct task_struct *p = oc->chosen;
--	unsigned int points = oc->chosen_points;
--	struct task_struct *victim = p;
--	struct task_struct *child;
--	struct task_struct *t;
-+	struct task_struct *p;
- 	struct mm_struct *mm;
--	unsigned int victim_points = 0;
--	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
--					      DEFAULT_RATELIMIT_BURST);
- 	bool can_oom_reap = true;
- 
--	/*
--	 * If the task is already exiting, don't alarm the sysadmin or kill
--	 * its children or threads, just set TIF_MEMDIE so it can die quickly
--	 */
--	task_lock(p);
--	if (task_will_free_mem(p)) {
--		mark_oom_victim(p);
--		wake_oom_reaper(p);
--		task_unlock(p);
--		put_task_struct(p);
--		return;
--	}
--	task_unlock(p);
--
--	if (__ratelimit(&oom_rs))
--		dump_header(oc, p);
--
--	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
--		message, task_pid_nr(p), p->comm, points);
--
--	/*
--	 * If any of p's children has a different mm and is eligible for kill,
--	 * the one with the highest oom_badness() score is sacrificed for its
--	 * parent.  This attempts to lose the minimal amount of work done while
--	 * still freeing memory.
--	 */
--	read_lock(&tasklist_lock);
--	for_each_thread(p, t) {
--		list_for_each_entry(child, &t->children, sibling) {
--			unsigned int child_points;
--
--			if (process_shares_mm(child, p->mm))
--				continue;
--			/*
--			 * oom_badness() returns 0 if the thread is unkillable
--			 */
--			child_points = oom_badness(child,
--				oc->memcg, oc->nodemask, oc->totalpages);
--			if (child_points > victim_points) {
--				put_task_struct(victim);
--				victim = child;
--				victim_points = child_points;
--				get_task_struct(victim);
--			}
--		}
--	}
--	read_unlock(&tasklist_lock);
--
- 	p = find_lock_task_mm(victim);
- 	if (!p) {
- 		put_task_struct(victim);
-@@ -930,6 +875,68 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
- 	mmdrop(mm);
- 	put_task_struct(victim);
- }
-+
-+static void oom_kill_process(struct oom_control *oc, const char *message)
++static int memory_oom_kill_all_tasks_show(struct seq_file *m, void *v)
 +{
-+	struct task_struct *p = oc->chosen;
-+	unsigned int points = oc->chosen_points;
-+	struct task_struct *victim = p;
-+	struct task_struct *child;
-+	struct task_struct *t;
-+	unsigned int victim_points = 0;
-+	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
-+					      DEFAULT_RATELIMIT_BURST);
++	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
++	bool oom_kill_all_tasks = memcg->oom_kill_all_tasks;
 +
-+	/*
-+	 * If the task is already exiting, don't alarm the sysadmin or kill
-+	 * its children or threads, just set TIF_MEMDIE so it can die quickly
-+	 */
-+	task_lock(p);
-+	if (task_will_free_mem(p)) {
-+		mark_oom_victim(p);
-+		wake_oom_reaper(p);
-+		task_unlock(p);
-+		put_task_struct(p);
-+		return;
-+	}
-+	task_unlock(p);
++	seq_printf(m, "%d\n", oom_kill_all_tasks);
 +
-+	if (__ratelimit(&oom_rs))
-+		dump_header(oc, p);
-+
-+	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
-+		message, task_pid_nr(p), p->comm, points);
-+
-+	/*
-+	 * If any of p's children has a different mm and is eligible for kill,
-+	 * the one with the highest oom_badness() score is sacrificed for its
-+	 * parent.  This attempts to lose the minimal amount of work done while
-+	 * still freeing memory.
-+	 */
-+	read_lock(&tasklist_lock);
-+	for_each_thread(p, t) {
-+		list_for_each_entry(child, &t->children, sibling) {
-+			unsigned int child_points;
-+
-+			if (process_shares_mm(child, p->mm))
-+				continue;
-+			/*
-+			 * oom_badness() returns 0 if the thread is unkillable
-+			 */
-+			child_points = oom_badness(child,
-+				oc->memcg, oc->nodemask, oc->totalpages);
-+			if (child_points > victim_points) {
-+				put_task_struct(victim);
-+				victim = child;
-+				victim_points = child_points;
-+				get_task_struct(victim);
-+			}
-+		}
-+	}
-+	read_unlock(&tasklist_lock);
-+
-+	__oom_kill_process(victim);
++	return 0;
 +}
- #undef K
- 
- /*
++
++static ssize_t memory_oom_kill_all_tasks_write(struct kernfs_open_file *of,
++					       char *buf, size_t nbytes,
++					       loff_t off)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	int oom_kill_all_tasks;
++	int err;
++
++	err = kstrtoint(strstrip(buf), 0, &oom_kill_all_tasks);
++	if (err)
++		return err;
++
++	memcg->oom_kill_all_tasks = !!oom_kill_all_tasks;
++
++	return nbytes;
++}
++
+ static int memory_events_show(struct seq_file *m, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+@@ -5265,6 +5292,12 @@ static struct cftype memory_files[] = {
+ 		.write = memory_max_write,
+ 	},
+ 	{
++		.name = "oom_kill_all_tasks",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = memory_oom_kill_all_tasks_show,
++		.write = memory_oom_kill_all_tasks_write,
++	},
++	{
+ 		.name = "events",
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.file_offset = offsetof(struct mem_cgroup, events_file),
 -- 
 2.7.4
 
