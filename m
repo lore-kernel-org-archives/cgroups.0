@@ -1,7 +1,7 @@
-From: Waiman Long <longman@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
-Date: Thu, 1 Jun 2017 14:44:48 -0400
-Message-ID: <ffa991a3-074d-ffd5-7a6a-556d6cdd08fe@redhat.com>
+Date: Thu, 1 Jun 2017 14:47:40 -0400
+Message-ID: <20170601184740.GC3494@htj.duckdns.org>
 References: <1494855256-12558-1-git-send-email-longman@redhat.com>
  <1494855256-12558-12-git-send-email-longman@redhat.com>
  <20170519202624.GA15279@wtj.duckdns.org>
@@ -11,41 +11,48 @@ References: <1494855256-12558-1-git-send-email-longman@redhat.com>
  <20170524212745.GP24798@htj.duckdns.org>
  <20170601145042.GA3494@htj.duckdns.org>
  <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
+ <ffa991a3-074d-ffd5-7a6a-556d6cdd08fe@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com AB6383DBDE
-In-Reply-To: <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=2F4HN0qrjNf1ZX5TqBZtvCFa56kDah8rlpWfurm4p4g=;
+        b=qA5zn3+RlBp+Dj0i36mspZMyhdjngOpD7QeeVwld5Y2BkQj2u6UAyG69tY1cVdji3z
+         g5y/Mm7vn5wq1gUVn+NTxYYOVsHgmU/N6/t5Elw4e1gvbSW2cjk4Ow82nM6Atb8rr54+
+         JjmeefTV9XSu3xcrFwwE8GG8vqSdshXU4aEJx4IFbK58PJM+4Zbq7ht87HLnK2PUv9P7
+         JdjLXx54uRRqAOrNXO17KAMQw41NujuzXeIykyHcQw7Rr9DIDQssJNoKxxptD5RxUpuw
+         qzbfW3LrhLhhEdlR4Tith0PFDZ5dJicps3Tm9tGRFZhjKixz+MN9PcwO2777z9cuss+P
+         Gwtg==
+Content-Disposition: inline
+In-Reply-To: <ffa991a3-074d-ffd5-7a6a-556d6cdd08fe@redhat.com>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-On 06/01/2017 11:10 AM, Peter Zijlstra wrote:
-> On Thu, Jun 01, 2017 at 10:50:42AM -0400, Tejun Heo wrote:
->> Hello, Waiman.
->>
->> A short update.  I tried making root special while keeping the
->> existing threaded semantics but I didn't really like it because we
->> have to couple controller enables/disables with threaded
->> enables/disables.  I'm now trying a simpler, albeit a bit more
->> tedious, approach which should leave things mostly symmetrical.  I'm
->> hoping to be able to post mostly working patches this week.
-> I've not had time to look at any of this. But the question I'm most
-> curious about is how cgroup-v2 preserves the container invariant.
->
-> That is, each container (namespace) should look like a 'real' machine.
-> So just like userns allows to have a uid-0 (aka root) for each container
-> and pidns allows a pid-1 for each container, cgroupns should provide a
-> root group for each container.
->
-> And cgroup-v2 has this 'exception' (aka wart) for the root group which
-> needs to be replicated for each namespace.
+Hello, Waiman.
 
-One of the changes that I proposed in my patches was to get rid of the
-no internal process constraint. I think that will solve a big part of
-the container invariant problem that we have with cgroup v2.
+On Thu, Jun 01, 2017 at 02:44:48PM -0400, Waiman Long wrote:
+> > And cgroup-v2 has this 'exception' (aka wart) for the root group which
+> > needs to be replicated for each namespace.
+> 
+> One of the changes that I proposed in my patches was to get rid of the
+> no internal process constraint. I think that will solve a big part of
+> the container invariant problem that we have with cgroup v2.
 
-Cheers,
-Longman
+I'm not sure.  It just masks it without actually solving it.  I mean,
+the constraint is thereq for a reason.  "Solving" it would defeat one
+of the main capabilities for resource domains and masking it from
+kernel side doesn't make whole lot of sense to me given that it's
+something which can be easily done from userland.  If we take out that
+part, for controllers which don't care about resource domains,
+wouldn't thread mode be a sufficient solution?
+
+Thanks.
+
+-- 
+tejun
