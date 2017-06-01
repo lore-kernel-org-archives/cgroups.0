@@ -1,72 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
-Date: Thu, 1 Jun 2017 11:35:28 -0400
-Message-ID: <20170601153528.GB3494@htj.duckdns.org>
-References: <1494855256-12558-1-git-send-email-longman@redhat.com>
- <1494855256-12558-12-git-send-email-longman@redhat.com>
- <20170519202624.GA15279@wtj.duckdns.org>
- <b1d02881-f522-8baa-5ebe-9b1ad74a03e4@redhat.com>
- <20170524203616.GO24798@htj.duckdns.org>
- <9b147a7e-fec3-3b78-7587-3890efcd42f2@redhat.com>
- <20170524212745.GP24798@htj.duckdns.org>
- <20170601145042.GA3494@htj.duckdns.org>
- <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
+From: Roman Gushchin <guro@fb.com>
+Subject: [RFC PATCH v2 3/7] mm, oom: export oom_evaluate_task() and select_bad_process()
+Date: Thu, 1 Jun 2017 19:35:11 +0100
+Message-ID: <1496342115-3974-4-git-send-email-guro@fb.com>
+References: <1496342115-3974-1-git-send-email-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=y0MKgZ2Bis6BmsdaE3Xdd30hC1Vaf8Bz+UoSv0pLXlM=;
-        b=LofrmMkQD4I+MRlZTdNNP9467FSddP8u220q/h7lFcESbJCoSsI9PqAFqx97oGj6Cb
-         FijePgfMll8WyteQgT2nkHTg4AMSw0XiBPnHc/LnQMdByEovI0R7ZMt0LM7QA1T0oND5
-         zHDF/oG5lLzDs7BYoXBxJ0BONtkHBT4UmdkU6l52SBTtPBxjodNqADpOMyxa7n25OnBG
-         B9QcBh0Tik7unMjmgKuS0gE5dyr+FwkI56ZakXzQ2DLh3uQ3m9HIXfikDAC+hQymLz2z
-         RaPzHZzqcaAoKLN8F7lGgt3uPYoSffQT1YvE72rmnlkEfLLDM+6QuLxfCGpf82CD4aGe
-         tVYA==
-Content-Disposition: inline
-In-Reply-To: <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=AW9jDmm2n8HdakAK6yqyWyHPHUfnwVgpBiWOjoOrIx4=;
+ b=Hl81yqU1UBTbQctVV+5KLrvmXXNQSrjF8se9ApT1g1ordlrq9IpYKazSanCvd8DbqzXq
+ WFs8oe+pme4U5HL17iXNcUKFR+vnsspcGIxWgmA7JOj8DkAdjWLZQHef7N5ykBi6BYeY
+ vOiX+N9wPktAAiwWBDyjPm5iJ0kY3s9uxEg= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=AW9jDmm2n8HdakAK6yqyWyHPHUfnwVgpBiWOjoOrIx4=;
+ b=cHwN5jua3/z8thZXbFQ/UNKSPzyiYqZRgiCiOm8+vnjoyMKcgC4Fszh+klNcFT88HICjgzHyhBgVC97fxBioXPPLPfKjFT9yDhJNAJQIlJK6cSNXBY6Vz+nBU2jGPWrRydMyCG6S0pYPJxUfXYQaorT6Nr4H7dgkmMOJipRHFcU=
+In-Reply-To: <1496342115-3974-1-git-send-email-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Waiman Long <longman@redhat.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Peter.
+Export the oom_evaluate_task() and select_bad_process()
+functions to reuse them for victim selection logic
+in the cgroup-aware OOM killer.
 
-On Thu, Jun 01, 2017 at 05:10:45PM +0200, Peter Zijlstra wrote:
-> I've not had time to look at any of this. But the question I'm most
-> curious about is how cgroup-v2 preserves the container invariant.
-> 
-> That is, each container (namespace) should look like a 'real' machine.
-> So just like userns allows to have a uid-0 (aka root) for each container
-> and pidns allows a pid-1 for each container, cgroupns should provide a
-> root group for each container.
-> 
-> And cgroup-v2 has this 'exception' (aka wart) for the root group which
-> needs to be replicated for each namespace.
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+---
+ include/linux/oom.h | 3 +++
+ mm/oom_kill.c       | 5 ++---
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-The goal has never been that a container must be indistinguishible
-from a real machine.  For certain things, things simply don't have
-exact equivalents due to sharing (memory stats or journal writes for
-example) and those things are exactly why people prefer containers
-over VMs for certain use cases.  If one wants full replication, VM
-would be the way to go.
-
-The goal is allowing enough container invariant so that appropriate
-workloads can be contained and co-exist in useful ways.  This also
-means that the contained workload is usually either a bit illiterate
-w.r.t. to the system details (doesn't care) or makes some adjustments
-for running inside a container (most quasi-full-system ones already
-do).
-
-System root is inherently different from all other nested roots.
-Making some exceptions for the root isn't about taking away from other
-roots but more reflecting the inherent differences - there are things
-which are inherently system / bare-metal.
-
-Thanks.
-
+diff --git a/include/linux/oom.h b/include/linux/oom.h
+index 47d9495..edf7a77 100644
+--- a/include/linux/oom.h
++++ b/include/linux/oom.h
+@@ -80,6 +80,9 @@ extern void oom_killer_enable(void);
+ extern struct task_struct *find_lock_task_mm(struct task_struct *p);
+ 
+ extern void __oom_kill_process(struct task_struct *victim);
++extern int oom_evaluate_task(struct task_struct *task, void *arg);
++extern void select_bad_process(struct oom_control *oc,
++			       struct mem_cgroup *memcg);
+ 
+ /* sysctls */
+ extern int sysctl_oom_dump_tasks;
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 11b60a5..8cf77fb 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -288,7 +288,7 @@ static enum oom_constraint constrained_alloc(struct oom_control *oc)
+ 	return CONSTRAINT_NONE;
+ }
+ 
+-static int oom_evaluate_task(struct task_struct *task, void *arg)
++int oom_evaluate_task(struct task_struct *task, void *arg)
+ {
+ 	struct oom_control *oc = arg;
+ 	unsigned long points;
+@@ -343,8 +343,7 @@ static int oom_evaluate_task(struct task_struct *task, void *arg)
+  * Simple selection loop. We choose the process with the highest number of
+  * 'points'. In case scan was aborted, oc->chosen is set to -1.
+  */
+-static void select_bad_process(struct oom_control *oc,
+-			       struct mem_cgroup *memcg)
++void select_bad_process(struct oom_control *oc, struct mem_cgroup *memcg)
+ {
+ 	if (memcg)
+ 		mem_cgroup_scan_tasks(memcg, oom_evaluate_task, oc);
 -- 
-tejun
+2.7.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
