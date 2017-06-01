@@ -1,64 +1,162 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
-Date: Thu, 1 Jun 2017 17:18:23 -0400
-Message-ID: <20170601211823.GC13390@htj.duckdns.org>
-References: <20170524212745.GP24798@htj.duckdns.org>
- <20170601145042.GA3494@htj.duckdns.org>
- <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
- <ffa991a3-074d-ffd5-7a6a-556d6cdd08fe@redhat.com>
- <20170601184740.GC3494@htj.duckdns.org>
- <ca834386-c41c-2797-702f-91516b06779f@redhat.com>
- <20170601203815.GA13390@htj.duckdns.org>
- <e65745c2-3b07-eb8b-b638-04e9bb1ed1e6@redhat.com>
- <20170601205203.GB13390@htj.duckdns.org>
- <1e775dcf-61b2-29d5-a214-350dc81c632b@redhat.com>
-Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+From: Yu Zhao <yuzhao@google.com>
+Subject: [PATCH] memcg: refactor mem_cgroup_resize_limit()
+Date: Thu,  1 Jun 2017 16:02:12 -0700
+Message-ID: <20170601230212.30578-1-yuzhao@google.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=BF4wFyH3ZfnvLX9gEZnes+VCdvF1eVxsLVf0g5iFIXg=;
-        b=O03XR1tbHJvhZEJYS7hdKV0BHTnpKKGzuGuDG3FxLtH44c3xbNOs0OclY9Ub/memFs
-         z406T9tDuVNpgLXktF8nCu7ux287nomWoeos8gkKjJsKP6iaCM1by+alr9bdcRfdzZs5
-         l4WZwPye8cmr0TZ6sa63mjcd7VtoYdURq3/iGY6C+v72EEGFYbgbQSGAtbsQJuhJGnWS
-         hNFaswsTBy82TmXFisjlN7XX6SfuP4pTLW5fxonQm6EaXcQsh5XuCqJlAquvA2CrpazN
-         U0wTdji87VWPtzxxVdu1O4snO6NrAML4JTCXoAhIIKHXsUsOKrBbXd/F30ZIm6wKBisZ
-         Ra6g==
-Content-Disposition: inline
-In-Reply-To: <1e775dcf-61b2-29d5-a214-350dc81c632b@redhat.com>
-Sender: linux-doc-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=sdJDxqCEoYUFE33ACtUNBdmXAlXGqpj2noPtNLCvFRc=;
+        b=fAEDQprp6ySitU4r32knptzuZ11gN4WRhmr4O2VQwhTqoeqMjJ4k8uFUL2zA72477z
+         5EO9o6Anjt17v7zvIIR7mpLFsPUDKdnGNBQnJOVcG7J5TREE7eCRfGMiK+eL+Q6ixEGo
+         Avra3VkhgwY0R67XSclC5FN9oTPCGBm7Psrzwz0ON+ncWuIFIMJKiOwVu6T/c5Broq81
+         Nh1akb66oUc7UolChvnjNFuFyNG8k1VWB0qtmkn/J0/+7RoKOPYH3YtfKWYmhEm+xsQW
+         6y5UOzT4XVGon4MB33xgYT3d+WpSFQ9GsM4gfHJEeGcDs7CzC0lBQ6drgT1c/SD1YJA/
+         Dz9A==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Yu Zhao <yuzhao@google.com>
 
-Hello,
+mem_cgroup_resize_limit() and mem_cgroup_resize_memsw_limit() have
+identical logics. Refactor code so we don't need to keep two pieces
+of code that does same thing.
 
-On Thu, Jun 01, 2017 at 05:12:42PM -0400, Waiman Long wrote:
-> Are you referring to keeping the no internal process restriction and
-> document how to work around that instead? I would like to hear what
-> workarounds are currently being used.
+Signed-off-by: Yu Zhao <yuzhao@google.com>
+---
+ mm/memcontrol.c | 71 +++++++++------------------------------------------------
+ 1 file changed, 11 insertions(+), 60 deletions(-)
 
-What we've been talking about all along - just creating explicit leaf
-nodes.
-
-> Anyway, you currently allow internal process in thread mode, but not in
-> non-thread mode. I would prefer no such restriction in both thread and
-> non-thread mode.
-
-Heh, so, these aren't arbitrary.  The contraint is tied to
-implementing resource domains and thread subtree doesn't have resource
-domains in them, so they don't need the constraint.  I'm sorry about
-the short replies but I'm kinda really tied up right now.  I'm gonna
-do the thread mode so that it can be agnostic w.r.t. the internal
-process constraint and I think it could be helpful to decouple these
-discussions.  We've been having this discussion for a couple years now
-and it looks like we're gonna go through it all over, which is fine,
-but let's at least keep that separate.
-
-Thanks.
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 94172089f52f..a4f0daaff704 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2422,13 +2422,14 @@ static inline int mem_cgroup_move_swap_account(swp_entry_t entry,
+ static DEFINE_MUTEX(memcg_limit_mutex);
+ 
+ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+-				   unsigned long limit)
++				   unsigned long limit, bool memsw)
+ {
+ 	unsigned long curusage;
+ 	unsigned long oldusage;
+ 	bool enlarge = false;
+ 	int retry_count;
+ 	int ret;
++	struct page_counter *counter = memsw ? &memcg->memsw : &memcg->memory;
+ 
+ 	/*
+ 	 * For keeping hierarchical_reclaim simple, how long we should retry
+@@ -2438,58 +2439,7 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+ 		      mem_cgroup_count_children(memcg);
+ 
+-	oldusage = page_counter_read(&memcg->memory);
+-
+-	do {
+-		if (signal_pending(current)) {
+-			ret = -EINTR;
+-			break;
+-		}
+-
+-		mutex_lock(&memcg_limit_mutex);
+-		if (limit > memcg->memsw.limit) {
+-			mutex_unlock(&memcg_limit_mutex);
+-			ret = -EINVAL;
+-			break;
+-		}
+-		if (limit > memcg->memory.limit)
+-			enlarge = true;
+-		ret = page_counter_limit(&memcg->memory, limit);
+-		mutex_unlock(&memcg_limit_mutex);
+-
+-		if (!ret)
+-			break;
+-
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
+-
+-		curusage = page_counter_read(&memcg->memory);
+-		/* Usage is reduced ? */
+-		if (curusage >= oldusage)
+-			retry_count--;
+-		else
+-			oldusage = curusage;
+-	} while (retry_count);
+-
+-	if (!ret && enlarge)
+-		memcg_oom_recover(memcg);
+-
+-	return ret;
+-}
+-
+-static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+-					 unsigned long limit)
+-{
+-	unsigned long curusage;
+-	unsigned long oldusage;
+-	bool enlarge = false;
+-	int retry_count;
+-	int ret;
+-
+-	/* see mem_cgroup_resize_res_limit */
+-	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+-		      mem_cgroup_count_children(memcg);
+-
+-	oldusage = page_counter_read(&memcg->memsw);
++	oldusage = page_counter_read(counter);
+ 
+ 	do {
+ 		if (signal_pending(current)) {
+@@ -2498,22 +2448,23 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 		}
+ 
+ 		mutex_lock(&memcg_limit_mutex);
+-		if (limit < memcg->memory.limit) {
++		if (memsw ? limit < memcg->memory.limit :
++			    limit > memcg->memsw.limit) {
+ 			mutex_unlock(&memcg_limit_mutex);
+ 			ret = -EINVAL;
+ 			break;
+ 		}
+-		if (limit > memcg->memsw.limit)
++		if (limit > counter->limit)
+ 			enlarge = true;
+-		ret = page_counter_limit(&memcg->memsw, limit);
++		ret = page_counter_limit(counter, limit);
+ 		mutex_unlock(&memcg_limit_mutex);
+ 
+ 		if (!ret)
+ 			break;
+ 
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
++		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, !memsw);
+ 
+-		curusage = page_counter_read(&memcg->memsw);
++		curusage = page_counter_read(counter);
+ 		/* Usage is reduced ? */
+ 		if (curusage >= oldusage)
+ 			retry_count--;
+@@ -2975,10 +2926,10 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
+ 		}
+ 		switch (MEMFILE_TYPE(of_cft(of)->private)) {
+ 		case _MEM:
+-			ret = mem_cgroup_resize_limit(memcg, nr_pages);
++			ret = mem_cgroup_resize_limit(memcg, nr_pages, false);
+ 			break;
+ 		case _MEMSWAP:
+-			ret = mem_cgroup_resize_memsw_limit(memcg, nr_pages);
++			ret = mem_cgroup_resize_limit(memcg, nr_pages, true);
+ 			break;
+ 		case _KMEM:
+ 			ret = memcg_update_kmem_limit(memcg, nr_pages);
 -- 
-tejun
+2.13.0.506.g27d5fe0cd-goog
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
