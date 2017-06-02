@@ -1,182 +1,69 @@
-From: "Christopherson, Sean J" <sean.j.christopherson@intel.com>
-Subject: RE: [PATCH] mm/memcontrol: exclude @root from checks in
- mem_cgroup_low
-Date: Fri, 2 Jun 2017 20:22:50 +0000
-Message-ID: <37306EFA9975BE469F115FDE982C075BC6112095@ORSMSX108.amr.corp.intel.com>
-References: <1496434412-21005-1-git-send-email-sean.j.christopherson@intel.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
+Date: Fri, 2 Jun 2017 16:36:22 -0400
+Message-ID: <cf47d637-204c-49ea-94ec-c2bf0cf10614@redhat.com>
+References: <20170524212745.GP24798@htj.duckdns.org>
+ <20170601145042.GA3494@htj.duckdns.org>
+ <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
+ <ffa991a3-074d-ffd5-7a6a-556d6cdd08fe@redhat.com>
+ <20170601184740.GC3494@htj.duckdns.org>
+ <ca834386-c41c-2797-702f-91516b06779f@redhat.com>
+ <20170601203815.GA13390@htj.duckdns.org>
+ <e65745c2-3b07-eb8b-b638-04e9bb1ed1e6@redhat.com>
+ <20170601205203.GB13390@htj.duckdns.org>
+ <1e775dcf-61b2-29d5-a214-350dc81c632b@redhat.com>
+ <20170601211823.GC13390@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1496434412-21005-1-git-send-email-sean.j.christopherson@intel.com>
-Content-Language: en-US
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 1BDCED0A82
+In-Reply-To: <20170601211823.GC13390@htj.duckdns.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: "mhocko@kernel.org" <mhocko@kernel.org>
-Cc: "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-Christopherson, Sean J <sean.j.christopherson@intel.com> wrote:
-> Make @root exclusive in mem_cgroup_low; it is never considered low
-> when looked at directly and is not checked when traversing the tree.
-> In effect, @root is handled identically to how root_mem_cgroup was
-> previously handled by mem_cgroup_low.
->=20
-> If @root is not excluded from the checks, a cgroup underneath @root
-> will never be considered low during targeted reclaim of @root, e.g.
-> due to memory.current > memory.high, unless @root is misconfigured
-> to have memory.low > memory.high.
->=20
-> Excluding @root enables using memory.low to prioritize memory usage
-> between cgroups within a subtree of the hierarchy that is limited by
-> memory.high or memory.max, e.g. when ROOT owns @root's controls but
-> delegates the @root directory to a USER so that USER can create and
-> administer children of @root.
->=20
-> For example, given cgroup A with children B and C:
->=20
->     A
->    / \
->   B   C
->=20
-> and
->=20
->   1. A/memory.current > A/memory.high
->   2. A/B/memory.current < A/B/memory.low
->   3. A/C/memory.current >=3D A/C/memory.low
->=20
-> As 'A' is high, i.e. triggers reclaim from 'A', and 'B' is low, we
-> should reclaim from 'C' until 'A' is no longer high or until we can
-> no longer reclaim from 'C'.  If 'A', i.e. @root, isn't excluded by
-> mem_cgroup_low when reclaming from 'A', then 'B' won't be considered
-> low and we will reclaim indiscriminately from both 'B' and 'C'.
->=20
-> Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+On 06/01/2017 05:18 PM, Tejun Heo wrote:
+> Hello,
+>
+> On Thu, Jun 01, 2017 at 05:12:42PM -0400, Waiman Long wrote:
+>> Are you referring to keeping the no internal process restriction and
+>> document how to work around that instead? I would like to hear what
+>> workarounds are currently being used.
+> What we've been talking about all along - just creating explicit leaf
+> nodes.
+>
+>> Anyway, you currently allow internal process in thread mode, but not i=
+n
+>> non-thread mode. I would prefer no such restriction in both thread and=
 
-Here is the test I used to confirm the bug and the patch.
+>> non-thread mode.
+> Heh, so, these aren't arbitrary.  The contraint is tied to
+> implementing resource domains and thread subtree doesn't have resource
+> domains in them, so they don't need the constraint.  I'm sorry about
+> the short replies but I'm kinda really tied up right now.  I'm gonna
+> do the thread mode so that it can be agnostic w.r.t. the internal
+> process constraint and I think it could be helpful to decouple these
+> discussions.  We've been having this discussion for a couple years now
+> and it looks like we're gonna go through it all over, which is fine,
+> but let's at least keep that separate.
 
-20:00:55@sjchrist-vm ? ~ $ cat ~/.bin/memcg_low_test
-#!/bin/bash
+I wouldn't argue further on that if you insist. However, I still want to
+relax the constraint somewhat by abandoning the no internal process
+constraint  when only threaded controllers (non-resource domains) are
+enabled even when thread mode has not been explicitly enabled. It is a
+modified version my second alternative. Now the question is which
+controllers are considered to be resource domains. I think memory and
+blkio are in the list. What else do you think should be considered
+resource domains?
 
-x62mb=3D$((62<<20))
-x66mb=3D$((66<<20))
-x94mb=3D$((94<<20))
-x98mb=3D$((98<<20))
-
-setup() {
-    set -e
-
-    if [[ -n $DEBUG ]]; then
-        set -x
-    fi
-
-    trap teardown EXIT HUP INT TERM
-
-    if [[ ! -e /mnt/1gb.swap ]]; then
-        sudo fallocate -l 1G /mnt/1gb.swap > /dev/null
-        sudo mkswap /mnt/1gb.swap > /dev/null
-    fi
-    if ! swapon --show=3DNAME | grep -q "/mnt/1gb.swap"; then
-        sudo swapon /mnt/1gb.swap
-    fi
-
-    if [[ ! -e /cgroup/cgroup.controllers ]]; then
-        sudo mount -t cgroup2 none /cgroup
-    fi
-
-    grep -q memory /cgroup/cgroup.controllers
-
-    sudo sh -c "echo '+memory' > /cgroup/cgroup.subtree_control"
-
-    sudo mkdir /cgroup/A && sudo chown $USER:$USER /cgroup/A
-    sudo sh -c "echo '+memory' > /cgroup/A/cgroup.subtree_control"
-    sudo sh -c "echo '96m' > /cgroup/A/memory.high"
-
-    mkdir /cgroup/A/0
-    mkdir /cgroup/A/1
-
-    echo 64m > /cgroup/A/0/memory.low
-}
-
-teardown() {
-    set +e
-
-    trap - EXIT HUP INT TERM
-
-    if [[ -z $1 ]]; then
-        printf "\n"
-        printf "%0.s*" {1..35}
-        printf "\nFAILED!\n\n"
-        tail /cgroup/A/**/memory.current
-        printf "%0.s*" {1..35}
-        printf "\n\n"
-    fi
-
-    ps | grep stress | tr -s ' ' | cut -f 2 -d ' ' | xargs -I % kill %
-
-    sleep 2
-
-    if [[ -e /cgroup/A/0 ]]; then
-        rmdir /cgroup/A/0
-    fi
-    if [[ -e /cgroup/A/1 ]]; then
-        rmdir /cgroup/A/1
-    fi
-    if [[ -e /cgroup/A ]]; then
-        sudo rmdir /cgroup/A
-    fi
-}
+Cheers,
+Longman
 
 
-stress_test() {
-    sudo sh -c "echo $$ > /cgroup/A/$1/cgroup.procs"
-    stress --vm 1 --vm-bytes 64M --vm-keep > /dev/null &
 
-    sudo sh -c "echo $$ > /cgroup/A/$2/cgroup.procs"
-    stress --vm 1 --vm-bytes 64M --vm-keep > /dev/null &
-
-    sudo sh -c "echo $$ > /cgroup/cgroup.procs"
-
-    sleep 1
-
-    # A/0 should be consuming more memory than A/1
-    [[ $(cat /cgroup/A/0/memory.current) -ge $(cat /cgroup/A/1/memory.curre=
-nt) ]]
-
-    # A/0 should be consuming ~64mb
-    [[ $(cat /cgroup/A/0/memory.current) -ge $x62mb ]] && [[ $(cat /cgroup/=
-A/0/memory.current) -le $x66mb ]]
-
-    # A should cumulatively be consuming ~96mb
-    [[ $(cat /cgroup/A/memory.current) -ge $x94mb ]] && [[ $(cat /cgroup/A/=
-memory.current) -le $x98mb ]]
-
-    # Stop the stressors
-    ps | grep stress | tr -s ' ' | cut -f 2 -d ' ' | xargs -I % kill %
-}
-
-
-teardown 1
-setup
-
-for ((i=3D1;i<=3D$1;i++)); do
-    printf "ITERATION $i of $1 - stress_test 0 1"
-    stress_test 0 1
-    printf "\x1b[2K\r"
-
-    printf "ITERATION $i of $1 - stress_test 1 0"
-    stress_test 1 0
-    printf "\x1b[2K\r"
-
-    printf "ITERATION $i of $1 - PASSED\n"
-done
-
-teardown 1
-
-
-echo PASSED!
-
-
-20:11:26@sjchrist-vm ? ~ $ memcg_low_test 10
+any of the resource domains (!threaded) controllers are enabled.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
