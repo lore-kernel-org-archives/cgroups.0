@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Roman Gushchin <guro@fb.com>
 Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
-Date: Fri, 2 Jun 2017 10:43:33 +0200
-Message-ID: <20170602084333.GF29840@dhcp22.suse.cz>
+Date: Fri, 2 Jun 2017 16:18:52 +0100
+Message-ID: <20170602151852.GA21305@castle>
 References: <1495124884-28974-1-git-send-email-guro@fb.com>
  <20170520183729.GA3195@esperanza>
  <20170522170116.GB22625@castle>
@@ -11,153 +11,120 @@ References: <1495124884-28974-1-git-send-email-guro@fb.com>
  <20170525170805.GA5631@cmpxchg.org>
  <20170531162504.GX27783@dhcp22.suse.cz>
  <20170531180145.GB10481@cmpxchg.org>
+ <20170602084333.GF29840@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=DTzlFbgvUmGi+tljAl6xGWKlUdhSJorRzmsy37/t0DY=;
+ b=pNaCzXSn/3rrSCXDysOQni6ugmRWEvtxQFx5YGYo3NHv828Mc1QD+UHRp3qPKI9C3Lpr
+ 0sPg4xbd/HoiyxxZnoREVHRUYZEkkb2M+RMSKaF6XJkniXRiV94il8UJp46IXLQ8BcRT
+ 60tdZ5EYITIMHXQLaCTRLz1s0+P4NQTKdAc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=DTzlFbgvUmGi+tljAl6xGWKlUdhSJorRzmsy37/t0DY=;
+ b=k2RL7k8HhWAmxQxKJilyoPeRShESWDOlNmzFMY+8oc8cZxhHDz3k5+VxxkvIrVn1bt75m89ePNItgXd/+67cIGuWDB9+X3jIxAWNG2AUssjlc4LUt/F1Itic32ymTGT/4ExLppGrxT6klNuk2tmCy2S+XzufSQjtvT/iF3NieyE=
 Content-Disposition: inline
-In-Reply-To: <20170531180145.GB10481@cmpxchg.org>
+In-Reply-To: <20170602084333.GF29840@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov@tarantool.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov@tarantool.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed 31-05-17 14:01:45, Johannes Weiner wrote:
-> On Wed, May 31, 2017 at 06:25:04PM +0200, Michal Hocko wrote:
-> > On Thu 25-05-17 13:08:05, Johannes Weiner wrote:
-> > > Everything the user would want to dynamically program in the kernel,
-> > > say with bpf, they could do in userspace and then update the scores
-> > > for each group and task periodically.
-> > 
-> > I am rather skeptical about dynamic scores. oom_{score_}adj has turned
-> > to mere oom disable/enable knobs from my experience.
-> 
-> That doesn't necessarily have to be a deficiency with the scoring
-> system. I suspect that most people simply don't care as long as the
-> the picks for OOM victims aren't entirely stupid.
-> 
-> For example, we have a lot of machines that run one class of job. If
-> we run OOM there isn't much preference we'd need to express; just kill
-> one job - the biggest, whatever - and move on. (The biggest makes
-> sense because if all jobs are basically equal it's as good as any
-> other victim, but if one has a runaway bug it goes for that.)
-> 
-> Where we have more than one job class, it actually is mostly one hipri
-> and one lopri, in which case setting a hard limit on the lopri or the
-> -1000 OOM score trick is enough.
-> 
-> How many systems run more than two clearly distinguishable classes of
-> workloads concurrently?
-
-What about those which run different containers on a large physical
-machine?
-
-> I'm sure they exist. I'm just saying it doesn't surprise me that
-> elaborate OOM scoring isn't all that wide-spread.
-> 
-> > > The only limitation is that you have to recalculate and update the
-> > > scoring tree every once in a while, whereas a bpf program could
-> > > evaluate things just-in-time. But for that to matter in practice, OOM
-> > > kills would have to be a fairly hot path.
-> > 
-> > I am not really sure how to reliably implement "kill the memcg with the
-> > largest process" strategy. And who knows how many others strategies will
-> > pop out.
-> 
-> That seems fairly contrived.
-> 
-> What does it mean to divide memory into subdomains, but when you run
-> out of physical memory you kill based on biggest task?
-
-Well, the biggest task might be the runaway one and so killing it first
-before you kill other innocent ones makes some sense to me.
-
-> Sure, it frees memory and gets the system going again, so it's as good
-> as any answer to overcommit gone wrong, I guess. But is that something
-> you'd intentionally want to express from a userspace perspective?
-> 
-[...]
-> > > > Maybe. But that requires somebody to tweak the scoring which can be hard
-> > > > from trivial.
-> > > 
-> > > Why is sorting and picking in userspace harder than sorting and
-> > > picking in the kernel?
-> > 
-> > Because the userspace score based approach would be much more racy
-> > especially in the busy system. This could lead to unexpected behavior
-> > when OOM killer would kill a different than a run-away memcgs.
-> 
-> How would it be easier to weigh priority against runaway detection
-> inside the kernel?
-
-You have better chances to catch such a process at the time of the OOM
-because you do the check at the time of the OOM rather than sometimes
-back in time when your monitor was able to run and check all the
-existing processes (which alone can be rather time consuming so you do
-not want to do that very often).
-
-> > > > +	/*
-> > > >  	 * If current has a pending SIGKILL or is exiting, then automatically
-> > > >  	 * select it.  The goal is to allow it to allocate so that it may
-> > > >  	 * quickly exit and free its memory.
+On Fri, Jun 02, 2017 at 10:43:33AM +0200, Michal Hocko wrote:
+> On Wed 31-05-17 14:01:45, Johannes Weiner wrote:
+> > On Wed, May 31, 2017 at 06:25:04PM +0200, Michal Hocko wrote:
+> > > > > +	/*
+> > > > >  	 * If current has a pending SIGKILL or is exiting, then automatically
+> > > > >  	 * select it.  The goal is to allow it to allocate so that it may
+> > > > >  	 * quickly exit and free its memory.
+> > > > > 
+> > > > > Please note that I haven't explored how much of the infrastructure
+> > > > > needed for the OOM decision making is available to modules. But we can
+> > > > > export a lot of what we currently have in oom_kill.c. I admit it might
+> > > > > turn out that this is simply not feasible but I would like this to be at
+> > > > > least explored before we go and implement yet another hardcoded way to
+> > > > > handle (see how I didn't use policy ;)) OOM situation.
 > > > > 
-> > > > Please note that I haven't explored how much of the infrastructure
-> > > > needed for the OOM decision making is available to modules. But we can
-> > > > export a lot of what we currently have in oom_kill.c. I admit it might
-> > > > turn out that this is simply not feasible but I would like this to be at
-> > > > least explored before we go and implement yet another hardcoded way to
-> > > > handle (see how I didn't use policy ;)) OOM situation.
+> > > > ;)
+> > > > 
+> > > > My doubt here is mainly that we'll see many (or any) real-life cases
+> > > > materialize that cannot be handled with cgroups and scoring. These are
+> > > > powerful building blocks on which userspace can implement all kinds of
+> > > > policy and sorting algorithms.
+> > > > 
+> > > > So this seems like a lot of churn and complicated code to handle one
+> > > > extension. An extension that implements basic functionality.
 > > > 
-> > > ;)
-> > > 
-> > > My doubt here is mainly that we'll see many (or any) real-life cases
-> > > materialize that cannot be handled with cgroups and scoring. These are
-> > > powerful building blocks on which userspace can implement all kinds of
-> > > policy and sorting algorithms.
-> > > 
-> > > So this seems like a lot of churn and complicated code to handle one
-> > > extension. An extension that implements basic functionality.
+> > > Well, as I've said I didn't get to explore this path so I have only a
+> > > very vague idea what we would have to export to implement e.g. the
+> > > proposed oom killing strategy suggested in this thread. Unfortunatelly I
+> > > do not have much time for that. I do not want to block a useful work
+> > > which you have a usecase for but I would be really happy if we could
+> > > consider longer term plans before diving into a "hardcoded"
+> > > implementation. We didn't do that previously and we are left with
+> > > oom_kill_allocating_task and similar one off things.
 > > 
-> > Well, as I've said I didn't get to explore this path so I have only a
-> > very vague idea what we would have to export to implement e.g. the
-> > proposed oom killing strategy suggested in this thread. Unfortunatelly I
-> > do not have much time for that. I do not want to block a useful work
-> > which you have a usecase for but I would be really happy if we could
-> > consider longer term plans before diving into a "hardcoded"
-> > implementation. We didn't do that previously and we are left with
-> > oom_kill_allocating_task and similar one off things.
+> > As I understand it, killing the allocating task was simply the default
+> > before the OOM killer and was added as a compat knob. I really doubt
+> > anybody is using it at this point, and we could probably delete it.
 > 
-> As I understand it, killing the allocating task was simply the default
-> before the OOM killer and was added as a compat knob. I really doubt
-> anybody is using it at this point, and we could probably delete it.
+> I might misremember but my recollection is that SGI simply had too
+> large machines with too many processes and so the task selection was
+> very expensinve.
 
-I might misremember but my recollection is that SGI simply had too
-large machines with too many processes and so the task selection was
-very expensinve.
+Cgroup-aware OOM killer can be much better in case of large number of processes,
+as we don't have to iterate over all processes locking each mm, and
+can select an appropriate cgroup based mostly on lockless counters.
+Of course, it depends on concrete setup, but it can be much more efficient
+under right circumstances.
 
-> I appreciate your concern of being too short-sighted here, but the
-> fact that I cannot point to more usecases isn't for lack of trying. I
-> simply don't see the endless possibilities of usecases that you do.
 > 
-> It's unlikely for more types of memory domains to pop up besides MMs
-> and cgroups. (I mentioned vmas, but that just seems esoteric. And we
-> have panic_on_oom for whole-system death. What else could there be?)
+> > I appreciate your concern of being too short-sighted here, but the
+> > fact that I cannot point to more usecases isn't for lack of trying. I
+> > simply don't see the endless possibilities of usecases that you do.
+> > 
+> > It's unlikely for more types of memory domains to pop up besides MMs
+> > and cgroups. (I mentioned vmas, but that just seems esoteric. And we
+> > have panic_on_oom for whole-system death. What else could there be?)
+> > 
+> > And as I pointed out, there is no real evidence that the current
+> > system for configuring preferences isn't sufficient in practice.
+> > 
+> > That's my thoughts on exploring. I'm not sure what else to do before
+> > it feels like running off into fairly contrived hypotheticals.
 > 
-> And as I pointed out, there is no real evidence that the current
-> system for configuring preferences isn't sufficient in practice.
-> 
-> That's my thoughts on exploring. I'm not sure what else to do before
-> it feels like running off into fairly contrived hypotheticals.
+> Yes, I do not want hypotheticals to block an otherwise useful feature,
+> of course. But I haven't heard a strong argument why a module based
+> approach would be a more maintenance burden longterm. From a very quick
+> glance over patches Roman has posted yesterday it seems that a large
+> part of the existing oom infrastructure can be reused reasonably.
 
-Yes, I do not want hypotheticals to block an otherwise useful feature,
-of course. But I haven't heard a strong argument why a module based
-approach would be a more maintenance burden longterm. From a very quick
-glance over patches Roman has posted yesterday it seems that a large
-part of the existing oom infrastructure can be reused reasonably.
+I have nothing against module based approach, but I don't think that a module
+should implement anything rather than then oom score calculation
+(for a process and a cgroup).
+Maybe only some custom method for killing, but I can't really imagine anything
+reasonable except killing one "worst" process or killing whole cgroup(s).
+In case of a system wide OOM, we have to free some memory quickly,
+and this means we can't do anything much more complex,
+than killing some process(es).
 
--- 
-Michal Hocko
-SUSE Labs
+So, in my understanding, what you're suggesting is not against the proposed
+approach at all. We still need to iterate over cgroups, somehow define
+their badness, find the worst one and destroy it. In my v2 I've tried
+to separate these two potentially customizable areas in two simple functions:
+mem_cgroup_oom_badness() and mem_cgroup_kill_oom_victim().
+So we can add an ability to customize these functions (and similar stuff
+for processes), if we'll have some real examples of where the proposed
+functionality is insufficient.
+
+Do you have any examples which can't be covered by this approach?
+
+Thanks!
+
+Roman
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
