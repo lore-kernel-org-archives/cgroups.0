@@ -1,90 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
-Date: Sat, 3 Jun 2017 06:33:03 -0400
-Message-ID: <20170603103303.GA28145@wtj.duckdns.org>
-References: <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
- <ffa991a3-074d-ffd5-7a6a-556d6cdd08fe@redhat.com>
- <20170601184740.GC3494@htj.duckdns.org>
- <ca834386-c41c-2797-702f-91516b06779f@redhat.com>
- <20170601203815.GA13390@htj.duckdns.org>
- <e65745c2-3b07-eb8b-b638-04e9bb1ed1e6@redhat.com>
- <20170601205203.GB13390@htj.duckdns.org>
- <1e775dcf-61b2-29d5-a214-350dc81c632b@redhat.com>
- <20170601211823.GC13390@htj.duckdns.org>
- <cf47d637-204c-49ea-94ec-c2bf0cf10614@redhat.com>
+From: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] swap: cond_resched in swap_cgroup_prepare()
+Date: Sat, 3 Jun 2017 17:58:26 +0300
+Message-ID: <20170603145826.GA15130@esperanza>
+References: <20170601195635.20744-1-yuzhao@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=lVRun+YtDHC/Sk02CiMRHD3E08umKN8KWhiOtreIeQ4=;
-        b=KPtJRJnDH8bqy9YGzGf9g0KS9+DQk140gk594ChjzQ3l8TPVal3AqH1CK3ApUBD4Gs
-         uiUt/AMYxsxf93h/iZWaoaY2Kd7WRiRpEAmBRGa2MXz3Ffo9U/i2nr/FeaTZd6ViG3ME
-         4OeSfI91+EPRJOi2yYixECuBYZcQzLanWa9ik1GKpuRZ7OZLg7z1476EpvcnbVwtO4Dh
-         bdR2ONZip59u+bTJST2MHLft6mOkAzHb/aCmm8r4wVC5WW1h4BG9VzTrhdXPZiaHowK3
-         WSnqFIY5MoTsuXmw52X6ySRi8s2kH4qN4Byu2UjUpW5A3MKKOollaHzYLr2epUkrkS3D
-         Liow==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=UUsyf5QzAXgojmxUabJo1wwb4NpXBXMuYTVdQkVKoUc=;
+        b=Cy9SkEKrcjhTmd4Frx/lR9bjjuRZH/vNpF10UH3XZLpY7sgc4eHeHr3eO+je7r5DwZ
+         JDsntAJqeS/bIQIuKJREW5+11DplE2dQWxT5W89YnmO4CxGtBRl73W6IkPPK9+rPg0kW
+         y6LpIm6YpgRiSDveyASBN2nAhbgbwYFsUQccuj9vX1vPrXaJdauU/GgeFoyKxyuxhL4w
+         8DAoDEHzvxUHl7hm9N3rf0nMxtFn+syMXKv6bKfb3+8xiaCvIdqQfxeOJmwZNM0cBP5N
+         OGBVtygS7UoAA5ViD1j0Y57C0r136aWEq5rIUUVYjz7RJhdX/6H3Mrva+eweqMqP1HHt
+         N9bA==
 Content-Disposition: inline
-In-Reply-To: <cf47d637-204c-49ea-94ec-c2bf0cf10614@redhat.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170601195635.20744-1-yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
+To: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Thu, Jun 01, 2017 at 12:56:35PM -0700, Yu Zhao wrote:
+> Saw need_resched() warnings when swapping on large swapfile (TBs)
+> because page allocation in swap_cgroup_prepare() took too long.
+> 
+> We already cond_resched when freeing page in swap_cgroup_swapoff().
+> Do the same for the page allocation.
+> 
+> Signed-off-by: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Jun 02, 2017 at 04:36:22PM -0400, Waiman Long wrote:
-> I wouldn't argue further on that if you insist. However, I still want to
+Acked-by: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Oh, please don't get me wrong.  I'm not trying to shut down the
-discussion or anything.  It's just that whole-scope discussions can
-get very meandering and time-consuming when these two issues can be
-decoupled from each other without compromising on either.  Let's
-approach these issues separately.
+> ---
+>  mm/swap_cgroup.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+> index ac6318a064d3..3405b4ee1757 100644
+> --- a/mm/swap_cgroup.c
+> +++ b/mm/swap_cgroup.c
+> @@ -48,6 +48,9 @@ static int swap_cgroup_prepare(int type)
+>  		if (!page)
+>  			goto not_enough_page;
+>  		ctrl->map[idx] = page;
+> +
+> +		if (!(idx % SWAP_CLUSTER_MAX))
+> +			cond_resched();
+>  	}
+>  	return 0;
+>  not_enough_page:
 
-> relax the constraint somewhat by abandoning the no internal process
-> constraint  when only threaded controllers (non-resource domains) are
-> enabled even when thread mode has not been explicitly enabled. It is a
-> modified version my second alternative. Now the question is which
-> controllers are considered to be resource domains. I think memory and
-> blkio are in the list. What else do you think should be considered
-> resource domains?
-
-And we're now a bit into repeating ourselves but for controlling of
-any significant resources (mostly cpu, memory, io), there gotta be
-significant portion of resource consumption which isn't tied to
-spcific processes or threads that should be accounted for.  Both
-memory and io already do this to a certain extent, but not completely.
-cpu doesn't do it at all yet but we usually can't / shouldn't declare
-a resource category to be domain-free.
-
-There are exceptions - controllers which are only used for membership
-identification (perf and the old net controllers), pids which is
-explicitly tied to tasks (note that CPU cycles aren't), cpuset which
-is an attribute propagating / restricting controller.
-
-Out of those, the identification uses already aren't affected by the
-constraint as they're now all either direct membership test against
-the hierarchy or implicit controllers which aren't subject to the
-constraint.  That leaves pids and cpuset.  We can exempt them from the
-constraint but I'm not quite sure what that buys us given that neither
-is affected by requiring explicit leaf nodes.  It'd just make the
-rules more complicated without actual benefits.
-
-That said, we can exempt those two.  I don't see much point in it but
-we can definitely discuss the pros and cons, and it's likely that it's
-not gonna make much difference wichever way we choose.
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+We should probably do the same on the error path.
