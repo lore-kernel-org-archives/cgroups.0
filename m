@@ -1,10 +1,8 @@
-From: Waiman Long <longman@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [RFC PATCH v2 11/17] cgroup: Implement new thread mode semantics
-Date: Fri, 2 Jun 2017 16:36:22 -0400
-Message-ID: <cf47d637-204c-49ea-94ec-c2bf0cf10614@redhat.com>
-References: <20170524212745.GP24798@htj.duckdns.org>
- <20170601145042.GA3494@htj.duckdns.org>
- <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
+Date: Sat, 3 Jun 2017 06:33:03 -0400
+Message-ID: <20170603103303.GA28145@wtj.duckdns.org>
+References: <20170601151045.xhsv7jauejjis3mi@hirez.programming.kicks-ass.net>
  <ffa991a3-074d-ffd5-7a6a-556d6cdd08fe@redhat.com>
  <20170601184740.GC3494@htj.duckdns.org>
  <ca834386-c41c-2797-702f-91516b06779f@redhat.com>
@@ -13,57 +11,77 @@ References: <20170524212745.GP24798@htj.duckdns.org>
  <20170601205203.GB13390@htj.duckdns.org>
  <1e775dcf-61b2-29d5-a214-350dc81c632b@redhat.com>
  <20170601211823.GC13390@htj.duckdns.org>
+ <cf47d637-204c-49ea-94ec-c2bf0cf10614@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 1BDCED0A82
-In-Reply-To: <20170601211823.GC13390@htj.duckdns.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=lVRun+YtDHC/Sk02CiMRHD3E08umKN8KWhiOtreIeQ4=;
+        b=KPtJRJnDH8bqy9YGzGf9g0KS9+DQk140gk594ChjzQ3l8TPVal3AqH1CK3ApUBD4Gs
+         uiUt/AMYxsxf93h/iZWaoaY2Kd7WRiRpEAmBRGa2MXz3Ffo9U/i2nr/FeaTZd6ViG3ME
+         4OeSfI91+EPRJOi2yYixECuBYZcQzLanWa9ik1GKpuRZ7OZLg7z1476EpvcnbVwtO4Dh
+         bdR2ONZip59u+bTJST2MHLft6mOkAzHb/aCmm8r4wVC5WW1h4BG9VzTrhdXPZiaHowK3
+         WSnqFIY5MoTsuXmw52X6ySRi8s2kH4qN4Byu2UjUpW5A3MKKOollaHzYLr2epUkrkS3D
+         Liow==
+Content-Disposition: inline
+In-Reply-To: <cf47d637-204c-49ea-94ec-c2bf0cf10614@redhat.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
 Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de
 
-On 06/01/2017 05:18 PM, Tejun Heo wrote:
-> Hello,
->
-> On Thu, Jun 01, 2017 at 05:12:42PM -0400, Waiman Long wrote:
->> Are you referring to keeping the no internal process restriction and
->> document how to work around that instead? I would like to hear what
->> workarounds are currently being used.
-> What we've been talking about all along - just creating explicit leaf
-> nodes.
->
->> Anyway, you currently allow internal process in thread mode, but not i=
-n
->> non-thread mode. I would prefer no such restriction in both thread and=
+Hello,
 
->> non-thread mode.
-> Heh, so, these aren't arbitrary.  The contraint is tied to
-> implementing resource domains and thread subtree doesn't have resource
-> domains in them, so they don't need the constraint.  I'm sorry about
-> the short replies but I'm kinda really tied up right now.  I'm gonna
-> do the thread mode so that it can be agnostic w.r.t. the internal
-> process constraint and I think it could be helpful to decouple these
-> discussions.  We've been having this discussion for a couple years now
-> and it looks like we're gonna go through it all over, which is fine,
-> but let's at least keep that separate.
+On Fri, Jun 02, 2017 at 04:36:22PM -0400, Waiman Long wrote:
+> I wouldn't argue further on that if you insist. However, I still want to
 
-I wouldn't argue further on that if you insist. However, I still want to
-relax the constraint somewhat by abandoning the no internal process
-constraint  when only threaded controllers (non-resource domains) are
-enabled even when thread mode has not been explicitly enabled. It is a
-modified version my second alternative. Now the question is which
-controllers are considered to be resource domains. I think memory and
-blkio are in the list. What else do you think should be considered
-resource domains?
+Oh, please don't get me wrong.  I'm not trying to shut down the
+discussion or anything.  It's just that whole-scope discussions can
+get very meandering and time-consuming when these two issues can be
+decoupled from each other without compromising on either.  Let's
+approach these issues separately.
 
-Cheers,
-Longman
+> relax the constraint somewhat by abandoning the no internal process
+> constraint  when only threaded controllers (non-resource domains) are
+> enabled even when thread mode has not been explicitly enabled. It is a
+> modified version my second alternative. Now the question is which
+> controllers are considered to be resource domains. I think memory and
+> blkio are in the list. What else do you think should be considered
+> resource domains?
 
+And we're now a bit into repeating ourselves but for controlling of
+any significant resources (mostly cpu, memory, io), there gotta be
+significant portion of resource consumption which isn't tied to
+spcific processes or threads that should be accounted for.  Both
+memory and io already do this to a certain extent, but not completely.
+cpu doesn't do it at all yet but we usually can't / shouldn't declare
+a resource category to be domain-free.
 
+There are exceptions - controllers which are only used for membership
+identification (perf and the old net controllers), pids which is
+explicitly tied to tasks (note that CPU cycles aren't), cpuset which
+is an attribute propagating / restricting controller.
 
-any of the resource domains (!threaded) controllers are enabled.
+Out of those, the identification uses already aren't affected by the
+constraint as they're now all either direct membership test against
+the hierarchy or implicit controllers which aren't subject to the
+constraint.  That leaves pids and cpuset.  We can exempt them from the
+constraint but I'm not quite sure what that buys us given that neither
+is affected by requiring explicit leaf nodes.  It'd just make the
+rules more complicated without actual benefits.
+
+That said, we can exempt those two.  I don't see much point in it but
+we can definitely discuss the pros and cons, and it's likely that it's
+not gonna make much difference wichever way we choose.
+
+Thanks.
+
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
