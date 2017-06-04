@@ -1,166 +1,106 @@
-From: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3] memcg: refactor mem_cgroup_resize_limit()
-Date: Sun,  4 Jun 2017 14:18:07 -0700
-Message-ID: <20170604211807.32685-1-yuzhao@google.com>
-References: <20170601230212.30578-1-yuzhao@google.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [RFC PATCH v2 1/7] mm, oom: refactor select_bad_process() to
+ take memcg as an argument
+Date: Sun, 4 Jun 2017 15:50:37 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1706041550290.24226@chino.kir.corp.google.com>
+References: <1496342115-3974-1-git-send-email-guro@fb.com> <1496342115-3974-2-git-send-email-guro@fb.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=GQFV1judAvYFC25E98s5/+1X8gyjtu/xWOVl3Eq5ds8=;
-        b=wE8ooYxCh3xWnqATNoDC4XyLFKtUn3UVIYpiBI1neWXA5zwl7q6EfSC3jEBDPBwsOO
-         FOIVjoT0nDNC9TPhzB2fgaaGdbdbsTF4KFOGwEi1iakXEUng1jfdzo+pRMeNI7eoOO+g
-         P7gucl9x63OvF+V87Vf7dL8chhkkzQx+WA+fHgk1oY89GccDvGJh8VBBnQ8JNf1OF25E
-         y/yYIjBz4hVhXThtjdvu2VILmXg4U8IqJRGVWznZ6B4Zsx2vTQhKIuwmoNhZqI2qU6xA
-         P85eVE5anssBWFpWvkSp237P0FhP/0ctR5Y8U4HlD2ujQbXpabcj5C0YyVRGiHE4pIwT
-         5oYA==
-In-Reply-To: <20170601230212.30578-1-yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=ar7L6ONsC5spq53eApxpSuXWueHuBAYHnTdg4WZMcvw=;
+        b=up64L6VsMhm7ol0lEyrS7mQqkrMZN8ww+56VBeXLee21hwzreq9/jhog59bh43dUTq
+         AlS8KcJNFWb/wjhprrffGofffePMezgFUTWxQiPZg9srA1C/9SRYaqufKqf+Ysm7k4mH
+         qLIY8MF4TRv23hcGJ4dycV/bWN5SlG6MWkhBD/1lIVONEi1l72KFQjp4E4XPZPryIgrl
+         VYH4L2hCxzgYTdin47GX6BIsi8FwVtpwzyA3HLz36w3ylBHnvm1A7Lja9jDbbUXhFszC
+         cQuu4gCbVX3GIi/VEZCh7yWfJSfhYnRRnkpV5NNRbf73RKqE0F6KwotrdwbdQgrXQ0oK
+         jKSg==
+In-Reply-To: <1496342115-3974-2-git-send-email-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, n.borisov.lkml-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-mem_cgroup_resize_limit() and mem_cgroup_resize_memsw_limit() have
-identical logics. Refactor code so we don't need to keep two pieces
-of code that does same thing.
+We use a heavily modified system and memcg oom killer and I'm wondering
+if there is some opportunity for collaboration because we may have some
+shared goals.
 
-Signed-off-by: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
-Changelog since v1:
-* minor style change
-Changelog since v2:
-* fix build error
+I can summarize how we currently use the oom killer at a high level so
+that it is not overwhelming with implementation details and give some
+rationale for why we have converged onto this strategy over the period of
+a few years.
 
- mm/memcontrol.c | 73 ++++++++++-----------------------------------------------
- 1 file changed, 13 insertions(+), 60 deletions(-)
+For victim selection, we have strict priority based oom killing both at
+the memcg level and the process level.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 94172089f52f..08a97a381b2a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2422,13 +2422,15 @@ static inline int mem_cgroup_move_swap_account(swp_entry_t entry,
- static DEFINE_MUTEX(memcg_limit_mutex);
- 
- static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
--				   unsigned long limit)
-+				   unsigned long limit, bool memsw)
- {
- 	unsigned long curusage;
- 	unsigned long oldusage;
- 	bool enlarge = false;
- 	int retry_count;
- 	int ret;
-+	bool inverted;
-+	struct page_counter *counter = memsw ? &memcg->memsw : &memcg->memory;
- 
- 	/*
- 	 * For keeping hierarchical_reclaim simple, how long we should retry
-@@ -2438,58 +2440,7 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
- 	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
- 		      mem_cgroup_count_children(memcg);
- 
--	oldusage = page_counter_read(&memcg->memory);
--
--	do {
--		if (signal_pending(current)) {
--			ret = -EINTR;
--			break;
--		}
--
--		mutex_lock(&memcg_limit_mutex);
--		if (limit > memcg->memsw.limit) {
--			mutex_unlock(&memcg_limit_mutex);
--			ret = -EINVAL;
--			break;
--		}
--		if (limit > memcg->memory.limit)
--			enlarge = true;
--		ret = page_counter_limit(&memcg->memory, limit);
--		mutex_unlock(&memcg_limit_mutex);
--
--		if (!ret)
--			break;
--
--		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
--
--		curusage = page_counter_read(&memcg->memory);
--		/* Usage is reduced ? */
--		if (curusage >= oldusage)
--			retry_count--;
--		else
--			oldusage = curusage;
--	} while (retry_count);
--
--	if (!ret && enlarge)
--		memcg_oom_recover(memcg);
--
--	return ret;
--}
--
--static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
--					 unsigned long limit)
--{
--	unsigned long curusage;
--	unsigned long oldusage;
--	bool enlarge = false;
--	int retry_count;
--	int ret;
--
--	/* see mem_cgroup_resize_res_limit */
--	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
--		      mem_cgroup_count_children(memcg);
--
--	oldusage = page_counter_read(&memcg->memsw);
-+	oldusage = page_counter_read(counter);
- 
- 	do {
- 		if (signal_pending(current)) {
-@@ -2498,22 +2449,24 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
- 		}
- 
- 		mutex_lock(&memcg_limit_mutex);
--		if (limit < memcg->memory.limit) {
-+		inverted = memsw ? limit < memcg->memory.limit :
-+				   limit > memcg->memsw.limit;
-+		if (inverted) {
- 			mutex_unlock(&memcg_limit_mutex);
- 			ret = -EINVAL;
- 			break;
- 		}
--		if (limit > memcg->memsw.limit)
-+		if (limit > counter->limit)
- 			enlarge = true;
--		ret = page_counter_limit(&memcg->memsw, limit);
-+		ret = page_counter_limit(counter, limit);
- 		mutex_unlock(&memcg_limit_mutex);
- 
- 		if (!ret)
- 			break;
- 
--		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
-+		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, !memsw);
- 
--		curusage = page_counter_read(&memcg->memsw);
-+		curusage = page_counter_read(counter);
- 		/* Usage is reduced ? */
- 		if (curusage >= oldusage)
- 			retry_count--;
-@@ -2975,10 +2928,10 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
- 		}
- 		switch (MEMFILE_TYPE(of_cft(of)->private)) {
- 		case _MEM:
--			ret = mem_cgroup_resize_limit(memcg, nr_pages);
-+			ret = mem_cgroup_resize_limit(memcg, nr_pages, false);
- 			break;
- 		case _MEMSWAP:
--			ret = mem_cgroup_resize_memsw_limit(memcg, nr_pages);
-+			ret = mem_cgroup_resize_limit(memcg, nr_pages, true);
- 			break;
- 		case _KMEM:
- 			ret = memcg_update_kmem_limit(memcg, nr_pages);
--- 
-2.13.0.506.g27d5fe0cd-goog
+Each process has its own "badness" value that is independent of
+oom_score_adj, although some conversion is done if a third-party thread
+chooses to disable itself from oom killing for backwards compatibility.
+Lower values are more preferable victims, but that detail should not
+matter significantly.  If two processes share the same badness value,
+tiebreaks are done by selecting the largest rss.
+
+Each memcg in a hierarchy also has its own badness value which
+semantically means the same as the per-process value, although it
+considers the entire memcg as a unit, similar to your approach, when
+iterating the hierarchy to choose a process.  The benefit of the
+per-memcg and per-process approach is that you can kill the lowest
+priority process from the lowest priority memcg.
+
+The above scoring is enabled with a VM sysctl for the system and is used
+for both system (global) and memcg oom kills.  For system overcommit,
+this means we can kill the lowest priority job on the system; for memcg,
+we can allow users to define their oom kill priorities at each level of
+their own hierarchy.
+
+When the system or root of an oom memcg hierarchy encounters its limit,
+we iterate each level of the memcg hierarchy to find the lowest priority
+job.  This is done by comparing the badness of the sibling memcgs at
+each level, finding the lowest, and iterating that subtree.  If there are
+lower priority processes per the per-process badness value compared to
+all sibling memcgs, that process is killed.
+
+We also have complete userspace oom handling support.  This complements
+the existing memory.oom_control notification when a memcg is oom with a
+separate notifier that notifies when the kernel has oom killed a process.
+It is possible to delay the oom killer from killing a process for memcg
+oom kills with a configurable, per-memcg, oom delay.  If set, the kernel
+will wait for userspace to respond to its oom notification and effect its
+own policy decisions until memory is uncharged to that memcg hierarchy,
+or the oom delay expires.  If the oom delay expires, the kernel oom
+killer kills a process based on badness.
+
+Our oom kill notification file used to get an fd to register with
+cgroup.event_control also provides oom kill statistics based on system,
+memcg, local, hierarchical, and user-induced oom kills when read().
+
+We also have a convenient "kill all" knob that userspace can write when
+handling oom conditions to iterate all threads attached to a particular
+memcg and kill them.  This is merely to prevent races where userspace
+does the oom killing itself, which is not problematic in itself, but
+additional tasks continue to be attached to an oom memcg.
+
+A caveat here is that we also support fully inclusive kmem accounting to
+memcg hierarchies, so we call the oom killer as part of the memcg charge
+path rather than only upon returning from fault with VM_FAULT_OOM.  We
+have our own oom killer livelock detection that isn't necessarily
+important in this thread, but we haven't encountered a situation where we
+livelock by calling the oom killer during charge, and this is a
+requirement for memcg charging as part of slab allocation.
+
+I could post many patches to implement all of this functionality that we
+have used for a few years, but I first wanted to send this email to see
+if there is any common ground or to better understand your methodology
+for using the kernel oom killer for both system and memcg oom kills.
+
+Otherwise, very interesting stuff!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
