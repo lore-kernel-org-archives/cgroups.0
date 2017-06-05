@@ -1,130 +1,66 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RFC PATCH] mm, oom: cgroup-aware OOM-killer
-Date: Mon, 5 Jun 2017 10:27:23 +0200
-Message-ID: <20170605082722.GI9248@dhcp22.suse.cz>
-References: <20170520183729.GA3195@esperanza>
- <20170522170116.GB22625@castle>
- <20170523070747.GF12813@dhcp22.suse.cz>
- <20170523132544.GA13145@cmpxchg.org>
- <20170525153819.GA7349@dhcp22.suse.cz>
- <20170525170805.GA5631@cmpxchg.org>
- <20170531162504.GX27783@dhcp22.suse.cz>
- <20170531180145.GB10481@cmpxchg.org>
- <20170602084333.GF29840@dhcp22.suse.cz>
- <20170602151852.GA21305@castle>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: exclude @root from checks in
+ mem_cgroup_low
+Date: Mon, 5 Jun 2017 11:16:22 -0400
+Message-ID: <20170605151622.GB10679@cmpxchg.org>
+References: <1496434412-21005-1-git-send-email-sean.j.christopherson@intel.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=cpuYlQJ63+e7jijrDDtnR407ptuhwTNqPYBgWu3xvyw=; b=bYPrUSOGUStJK8bzR+/LUdZavO
+        j32uK9bF467JkR2wdCsO/u55WOWakDBZhJbpWZ2Ia+SLaVU7+eWSPLPB1iCg2eIMWP5hVDnzueRu/
+        Z1H46vhxodNHnNcW0RfV9jWhO3CBcOkLLcRw8DITfa85SlEaMpikj+QU+pDQK9Hr9OYY=;
 Content-Disposition: inline
-In-Reply-To: <20170602151852.GA21305@castle>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1496434412-21005-1-git-send-email-sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov@tarantool.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Fri 02-06-17 16:18:52, Roman Gushchin wrote:
-> On Fri, Jun 02, 2017 at 10:43:33AM +0200, Michal Hocko wrote:
-> > On Wed 31-05-17 14:01:45, Johannes Weiner wrote:
-> > > On Wed, May 31, 2017 at 06:25:04PM +0200, Michal Hocko wrote:
-> > > > > > +	/*
-> > > > > >  	 * If current has a pending SIGKILL or is exiting, then automatically
-> > > > > >  	 * select it.  The goal is to allow it to allocate so that it may
-> > > > > >  	 * quickly exit and free its memory.
-> > > > > > 
-> > > > > > Please note that I haven't explored how much of the infrastructure
-> > > > > > needed for the OOM decision making is available to modules. But we can
-> > > > > > export a lot of what we currently have in oom_kill.c. I admit it might
-> > > > > > turn out that this is simply not feasible but I would like this to be at
-> > > > > > least explored before we go and implement yet another hardcoded way to
-> > > > > > handle (see how I didn't use policy ;)) OOM situation.
-> > > > > 
-> > > > > ;)
-> > > > > 
-> > > > > My doubt here is mainly that we'll see many (or any) real-life cases
-> > > > > materialize that cannot be handled with cgroups and scoring. These are
-> > > > > powerful building blocks on which userspace can implement all kinds of
-> > > > > policy and sorting algorithms.
-> > > > > 
-> > > > > So this seems like a lot of churn and complicated code to handle one
-> > > > > extension. An extension that implements basic functionality.
-> > > > 
-> > > > Well, as I've said I didn't get to explore this path so I have only a
-> > > > very vague idea what we would have to export to implement e.g. the
-> > > > proposed oom killing strategy suggested in this thread. Unfortunatelly I
-> > > > do not have much time for that. I do not want to block a useful work
-> > > > which you have a usecase for but I would be really happy if we could
-> > > > consider longer term plans before diving into a "hardcoded"
-> > > > implementation. We didn't do that previously and we are left with
-> > > > oom_kill_allocating_task and similar one off things.
-> > > 
-> > > As I understand it, killing the allocating task was simply the default
-> > > before the OOM killer and was added as a compat knob. I really doubt
-> > > anybody is using it at this point, and we could probably delete it.
-> > 
-> > I might misremember but my recollection is that SGI simply had too
-> > large machines with too many processes and so the task selection was
-> > very expensinve.
+On Fri, Jun 02, 2017 at 01:13:32PM -0700, Sean Christopherson wrote:
+> Make @root exclusive in mem_cgroup_low; it is never considered low
+> when looked at directly and is not checked when traversing the tree.
+> In effect, @root is handled identically to how root_mem_cgroup was
+> previously handled by mem_cgroup_low.
 > 
-> Cgroup-aware OOM killer can be much better in case of large number of processes,
-> as we don't have to iterate over all processes locking each mm, and
-> can select an appropriate cgroup based mostly on lockless counters.
-> Of course, it depends on concrete setup, but it can be much more efficient
-> under right circumstances.
-
-Yes, I agree with that.
-
-> > > I appreciate your concern of being too short-sighted here, but the
-> > > fact that I cannot point to more usecases isn't for lack of trying. I
-> > > simply don't see the endless possibilities of usecases that you do.
-> > > 
-> > > It's unlikely for more types of memory domains to pop up besides MMs
-> > > and cgroups. (I mentioned vmas, but that just seems esoteric. And we
-> > > have panic_on_oom for whole-system death. What else could there be?)
-> > > 
-> > > And as I pointed out, there is no real evidence that the current
-> > > system for configuring preferences isn't sufficient in practice.
-> > > 
-> > > That's my thoughts on exploring. I'm not sure what else to do before
-> > > it feels like running off into fairly contrived hypotheticals.
-> > 
-> > Yes, I do not want hypotheticals to block an otherwise useful feature,
-> > of course. But I haven't heard a strong argument why a module based
-> > approach would be a more maintenance burden longterm. From a very quick
-> > glance over patches Roman has posted yesterday it seems that a large
-> > part of the existing oom infrastructure can be reused reasonably.
+> If @root is not excluded from the checks, a cgroup underneath @root
+> will never be considered low during targeted reclaim of @root, e.g.
+> due to memory.current > memory.high, unless @root is misconfigured
+> to have memory.low > memory.high.
 > 
-> I have nothing against module based approach, but I don't think that a module
-> should implement anything rather than then oom score calculation
-> (for a process and a cgroup).
-> Maybe only some custom method for killing, but I can't really imagine anything
-> reasonable except killing one "worst" process or killing whole cgroup(s).
-> In case of a system wide OOM, we have to free some memory quickly,
-> and this means we can't do anything much more complex,
-> than killing some process(es).
+> Excluding @root enables using memory.low to prioritize memory usage
+> between cgroups within a subtree of the hierarchy that is limited by
+> memory.high or memory.max, e.g. when ROOT owns @root's controls but
+> delegates the @root directory to a USER so that USER can create and
+> administer children of @root.
 > 
-> So, in my understanding, what you're suggesting is not against the proposed
-> approach at all. We still need to iterate over cgroups, somehow define
-> their badness, find the worst one and destroy it. In my v2 I've tried
-> to separate these two potentially customizable areas in two simple functions:
-> mem_cgroup_oom_badness() and mem_cgroup_kill_oom_victim().
+> For example, given cgroup A with children B and C:
+> 
+>     A
+>    / \
+>   B   C
+> 
+> and
+> 
+>   1. A/memory.current > A/memory.high
+>   2. A/B/memory.current < A/B/memory.low
+>   3. A/C/memory.current >= A/C/memory.low
+> 
+> As 'A' is high, i.e. triggers reclaim from 'A', and 'B' is low, we
+> should reclaim from 'C' until 'A' is no longer high or until we can
+> no longer reclaim from 'C'.  If 'A', i.e. @root, isn't excluded by
+> mem_cgroup_low when reclaming from 'A', then 'B' won't be considered
+> low and we will reclaim indiscriminately from both 'B' and 'C'.
+> 
+> Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-As I've said, I didn't get to look closer at your v2 yet. My point was
-that we shouldn't hardcode the memcg specific selection nor the killing
-strategy into the oom proper. Instead we could reuse the existing
-infrastructure we already have. And yes from a quick look, you are
-already doing something I have had in mind. I will look more closely
-sometimes this week. The biggest concern I've had so far is to have
-something hardcoded in the oom proper now if we can make this a module.
+Good catch, thank you Sean.
 
-I will follow up in your v2 email thread.
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
