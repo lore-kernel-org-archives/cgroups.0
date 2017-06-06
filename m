@@ -1,59 +1,304 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 2/6] mm: vmstat: move slab statistics from zone to node
- counters
-Date: Tue, 6 Jun 2017 10:33:49 -0400
-Message-ID: <20170606143349.GB1602@cmpxchg.org>
-References: <20170530181724.27197-1-hannes@cmpxchg.org>
- <20170530181724.27197-3-hannes@cmpxchg.org>
- <20170531091256.GA5914@osiris>
- <20170531113900.GB5914@osiris>
- <20170531171151.e4zh7ffzbl4w33gd@yury-thinkpad>
- <87mv9s2f8f.fsf@concordia.ellerman.id.au>
- <20170605183511.GA8915@cmpxchg.org>
- <87k24prb3u.fsf@concordia.ellerman.id.au>
- <87mv9lpdsr.fsf@concordia.ellerman.id.au>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [RFC PATCH v2 6/7] mm, oom: cgroup-aware OOM killer
+Date: Tue, 6 Jun 2017 16:59:48 +0100
+Message-ID: <20170606155948.GA752@castle>
+References: <1496342115-3974-1-git-send-email-guro@fb.com>
+ <1496342115-3974-7-git-send-email-guro@fb.com>
+ <20170604204333.GD19980@esperanza>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=iFPbLElzwRxDNu75g6CJbK0jfkrJeZsg7qWSQIvzH7I=; b=NUEWlyOOKe+biYBtJZlW2lGO62
-        pjbxQQNtlqpevpf7Od1kH0i099f4if1qCuKLozINOezb9LSwZ8EWfB2dsDKSUZyLYoeyDZuk7E87k
-        ICECJc0PTkkbzAcJj55m4DM0BQfIgyPPlP/u9ulBhA95aQgc6RvnKM/IJS2+9dBQCLU8=;
-Content-Disposition: inline
-In-Reply-To: <87mv9lpdsr.fsf-W0DJWXSxmBNbyGPkN3NxC2scP1bn1w/D@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=yq3makyIm3iEs0CUIBVaSeReu5PopPePG5crRCLI2cc=;
+ b=REDS5+3Cd3eSJWxgFwU1VEOOujLW1kjZNjqeZRBpFr7HjJeAFHQ9tZSHzf6dQ6/B5x/W
+ jZHzOoNFDv8vEMGrMVzFOKHdvFt14zbyz2fqN4SRUlFPHpt+4J17opIkPD0eaH/lsz6F
+ S8mDXLcFagYFVx1yxITqR41SQoK4WQlprJw= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=yq3makyIm3iEs0CUIBVaSeReu5PopPePG5crRCLI2cc=;
+ b=Ryl+tyV7DnDwaMRzklRbW+hVo/y+1gdovGRKnaugQ5OC8+tRAbtsbeewhEIU9tvegU6x3N1BRat2pukjR8d5SkJfDJO1NJQBf9VxlHDoXB81oyRReiMPv2xBpaC7cEj3Tw8ToOwU1rIpPllJir33y1SOs/k2qEfe9tWP1ZeIGDc=
+Content-Disposition: inline
+In-Reply-To: <20170604204333.GD19980@esperanza>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>
-Cc: Yury Norov <ynorov-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>, Heiko Carstens <heiko.carstens-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jun 06, 2017 at 09:15:48PM +1000, Michael Ellerman wrote:
-> But today's linux-next is OK. So I must have missed a fix when testing
-> this in isolation.
-> 
-> commit d94b69d9a3f8139e6d5f5d03c197d8004de3905a
-> Author:     Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> AuthorDate: Tue Jun 6 09:19:50 2017 +1000
-> Commit:     Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
-> CommitDate: Tue Jun 6 09:19:50 2017 +1000
-> 
->     mm: vmstat: move slab statistics from zone to node counters fix
->     
->     Unable to handle kernel paging request at virtual address 2e116007
->     pgd = c0004000
->     [2e116007] *pgd=00000000
->     Internal error: Oops: 5 [#1] SMP ARM
-> 
+On Sun, Jun 04, 2017 at 11:43:33PM +0300, Vladimir Davydov wrote:
+> On Thu, Jun 01, 2017 at 07:35:14PM +0100, Roman Gushchin wrote:
 > ...
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index f979ac7..855d335 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2625,6 +2625,184 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
+> >  	return ret;
+> >  }
+> >  
+> > +static long mem_cgroup_oom_badness(struct mem_cgroup *memcg,
+> > +				   const nodemask_t *nodemask)
+> > +{
+> > +	long points = 0;
+> > +	int nid;
+> > +	struct mem_cgroup *iter;
+> > +
+> > +	for_each_mem_cgroup_tree(iter, memcg) {
 > 
-> Booted to userspace:
-> 
-> $ uname -a
-> Linux buildroot 4.12.0-rc4-gcc-5.4.1-00130-gd94b69d9a3f8 #354 SMP Tue Jun 6 20:44:42 AEST 2017 ppc64le GNU/Linux
+> AFAIU this function is called on every iteration over the cgroup tree,
+> which might be costly in case of a deep hierarchy, as it has quadratic
+> complexity at worst. We could eliminate the nested loop by computing
+> badness of all eligible cgroups before starting looking for a victim and
+> saving the values in struct mem_cgroup. Not sure if it's worth it, as
+> OOM is a pretty cold path.
 
-Thanks for verifying!
+I've thought about it, but it really not obvious that we want to pay
+with some additional memory usage (and code complexity) for optimization
+of this path. So, I decided to leave it simple now, and postpone
+all optimizations after we'll agree on everything else.
+
+> 
+> > +		for_each_node_state(nid, N_MEMORY) {
+> > +			if (nodemask && !node_isset(nid, *nodemask))
+> > +				continue;
+> > +
+> > +			points += mem_cgroup_node_nr_lru_pages(iter, nid,
+> > +					LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> 
+> Hmm, is there a reason why we shouldn't take into account file pages?
+
+Because under the OOM conditions we should not have too much pagecache,
+and killing a process will unlikely help us to release any additional memory.
+But maybe I'm missing something... Lazy free?
+
+> 
+> > +		}
+> > +
+> > +		points += mem_cgroup_get_nr_swap_pages(iter);
+> 
+> AFAICS mem_cgroup_get_nr_swap_pages() returns the number of pages that
+> can still be charged to the cgroup. IIUC we want to account pages that
+> have already been charged to the cgroup, i.e. the value of the 'swap'
+> page counter or MEMCG_SWAP stat counter.
+
+Ok, I'll check it. Thank you!
+
+> 
+> > +		points += memcg_page_state(iter, MEMCG_KERNEL_STACK_KB) /
+> > +			(PAGE_SIZE / 1024);
+> > +		points += memcg_page_state(iter, MEMCG_SLAB_UNRECLAIMABLE);
+> > +		points += memcg_page_state(iter, MEMCG_SOCK);
+> > +	}
+> > +
+> > +	return points;
+> > +}
+> > +
+> > +bool mem_cgroup_select_oom_victim(struct oom_control *oc)
+> > +{
+> > +	struct cgroup_subsys_state *css = NULL;
+> > +	struct mem_cgroup *iter = NULL;
+> > +	struct mem_cgroup *chosen_memcg = NULL;
+> > +	struct mem_cgroup *parent = root_mem_cgroup;
+> > +	unsigned long totalpages = oc->totalpages;
+> > +	long chosen_memcg_points = 0;
+> > +	long points = 0;
+> > +
+> > +	oc->chosen = NULL;
+> > +	oc->chosen_memcg = NULL;
+> > +
+> > +	if (mem_cgroup_disabled())
+> > +		return false;
+> > +
+> > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> > +		return false;
+> > +
+> > +	pr_info("Choosing a victim memcg because of the %s",
+> > +		oc->memcg ?
+> > +		"memory limit reached of cgroup " :
+> > +		"system-wide OOM\n");
+> > +	if (oc->memcg) {
+> > +		pr_cont_cgroup_path(oc->memcg->css.cgroup);
+> > +		pr_cont("\n");
+> > +
+> > +		chosen_memcg = oc->memcg;
+> > +		parent = oc->memcg;
+> > +	}
+> > +
+> > +	rcu_read_lock();
+> > +
+> > +	for (;;) {
+> > +		css = css_next_child(css, &parent->css);
+> > +		if (css) {
+> > +			iter = mem_cgroup_from_css(css);
+> > +
+> > +			points = mem_cgroup_oom_badness(iter, oc->nodemask);
+> > +			points += iter->oom_score_adj * (totalpages / 1000);
+> > +
+> > +			pr_info("Cgroup ");
+> > +			pr_cont_cgroup_path(iter->css.cgroup);
+> > +			pr_cont(": %ld\n", points);
+> 
+> Not sure if everyone wants to see these messages in the log.
+
+What do you suggest? Remove debug output at all (probably, we still want some),
+ratelimit it, make optional?
+
+> 
+> > +
+> > +			if (points > chosen_memcg_points) {
+> > +				chosen_memcg = iter;
+> > +				chosen_memcg_points = points;
+> > +				oc->chosen_points = points;
+> > +			}
+> > +
+> > +			continue;
+> > +		}
+> > +
+> > +		if (chosen_memcg && !chosen_memcg->oom_kill_all_tasks) {
+> > +			/* Go deeper in the cgroup hierarchy */
+> > +			totalpages = chosen_memcg_points;
+> 
+> We set 'totalpages' to the target cgroup limit (or the total RAM
+> size) when computing a victim score. Why do you prefer to use
+> chosen_memcg_points here instead? Why not the limit of the chosen
+> cgroup?
+
+Because I'm trying to implement hierarchical oom_score_adj, so that if
+a parent cgroup has oom_score_adj set to -1000, it's successors will
+(almost) never selected.
+
+> > +			chosen_memcg_points = 0;
+> > +
+> > +			parent = chosen_memcg;
+> > +			chosen_memcg = NULL;
+> > +
+> > +			continue;
+> > +		}
+> > +
+> > +		if (!chosen_memcg && parent != root_mem_cgroup)
+> > +			chosen_memcg = parent;
+> > +
+> > +		break;
+> > +	}
+> > +
+> 
+> > +	if (!oc->memcg) {
+> > +		/*
+> > +		 * We should also consider tasks in the root cgroup
+> > +		 * with badness larger than oc->chosen_points
+> > +		 */
+> > +
+> > +		struct css_task_iter it;
+> > +		struct task_struct *task;
+> > +		int ret = 0;
+> > +
+> > +		css_task_iter_start(&root_mem_cgroup->css, &it);
+> > +		while (!ret && (task = css_task_iter_next(&it)))
+> > +			ret = oom_evaluate_task(task, oc);
+> > +		css_task_iter_end(&it);
+> > +	}
+> 
+> IMHO it isn't quite correct to compare tasks from the root cgroup with
+> leaf cgroups, because they are at different levels. Shouldn't we compare
+> their scores only with the top level cgroups?
+
+Not sure I follow your idea...
+Of course, comparing tasks and cgroups is not really precise,
+but hopefully should be good enough for the task.
+ 
+> As an alternative approach, may be, we could remove this branch
+> altogether and ignore root tasks here (i.e. have any root task a higher
+> priority a priori)? Perhaps, it could be acceptable, because normally
+> the root cgroup only hosts kernel processes and init (at least this is
+> the default systemd setup IIRC).
+> 
+> > +
+> > +	if (!oc->chosen && chosen_memcg) {
+> > +		pr_info("Chosen cgroup ");
+> > +		pr_cont_cgroup_path(chosen_memcg->css.cgroup);
+> > +		pr_cont(": %ld\n", oc->chosen_points);
+> > +
+> > +		if (chosen_memcg->oom_kill_all_tasks) {
+> > +			css_get(&chosen_memcg->css);
+> > +			oc->chosen_memcg = chosen_memcg;
+> > +		} else {
+> > +			/*
+> > +			 * If we don't need to kill all tasks in the cgroup,
+> > +			 * let's select the biggest task.
+> > +			 */
+> > +			oc->chosen_points = 0;
+> 
+> > +			select_bad_process(oc, chosen_memcg);
+> 
+> I think we'd better use mem_cgroup_scan_task() here directly, without
+> exporting select_bad_process() from oom_kill.c. IMHO it would be more
+> straightforward, because select_bad_process() has a branch handling the
+> global OOM, which isn't used in this case. Come to think of it, wouldn't
+> it be better to return the chosen cgroup in @oc and let out_of_memory()
+> select a process within it or kill it as a whole depending on the value
+> of the oom_kill_all_tasks flag?
+> 
+> Also, if the chosen cgroup has no tasks (which is perfectly possible if
+> all memory within the cgroup is consumed by shmem e.g.), shouldn't we
+> retry the cgroup selection?
+
+Good point. Whould we retry the cgroup selection or just ignore
+non-populated cgroups during selection?
+
+> 
+> > +		}
+> > +	} else if (oc->chosen)
+> > +		pr_info("Chosen task %s (%d) in root cgroup: %ld\n",
+> > +			oc->chosen->comm, oc->chosen->pid, oc->chosen_points);
+> > +
+> > +	rcu_read_unlock();
+> > +
+> > +	oc->chosen_points = 0;
+> > +	return !!oc->chosen || !!oc->chosen_memcg;
+> > +}
+> > +
+> > +static int __oom_kill_task(struct task_struct *tsk, void *arg)
+> > +{
+> > +	if (!is_global_init(tsk) && !(tsk->flags & PF_KTHREAD)) {
+> > +		get_task_struct(tsk);
+> > +		__oom_kill_process(tsk);
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> > +bool mem_cgroup_kill_oom_victim(struct oom_control *oc)
+> 
+> I think it'd be OK to define this function in oom_kill.c - we
+> have everything we need for that. We wouldn't have to export
+> __oom_kill_process without oom_kill_process then, which is kinda
+> ugly IMHO.
+> 
+> > +{
+> > +	if (oc->chosen_memcg) {
+> > +		/*
+> > +		 * Kill all tasks in the cgroup hierarchy
+> > +		 */
+> > +		mem_cgroup_scan_tasks(oc->chosen_memcg,
+> > +				      __oom_kill_task, NULL);
+> > +
+> > +		/*
+> > +		 * Release oc->chosen_memcg
+> > +		 */
+> > +		css_put(&oc->chosen_memcg->css);
+> > +		oc->chosen_memcg = NULL;
+> > +	}
+> > +
+> > +	if (oc->chosen && oc->chosen != (void *)-1UL) {
+> 
+> > +		__oom_kill_process(oc->chosen);
+> 
+> Why don't you use oom_kill_process (without leading underscores) here?
+
+Because oom_kill_process() has some unwanted side-effects:
+1) it can kill other than specified process, we don't need this optimization here,
+2) bulky debug output.
+
+Thank you for review!
+
+Roman
