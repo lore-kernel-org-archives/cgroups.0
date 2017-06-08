@@ -1,61 +1,73 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/6] mm: vmstat: move slab statistics from zone to node
- counters
-Date: Wed, 7 Jun 2017 12:20:13 -0400
-Message-ID: <20170607162013.GA25280@cmpxchg.org>
-References: <20170530181724.27197-1-hannes@cmpxchg.org>
- <20170530181724.27197-3-hannes@cmpxchg.org>
- <20170531091256.GA5914@osiris>
- <20170531113900.GB5914@osiris>
- <20170531171151.e4zh7ffzbl4w33gd@yury-thinkpad>
- <87mv9s2f8f.fsf@concordia.ellerman.id.au>
- <20170605183511.GA8915@cmpxchg.org>
- <20170605143831.dac73f489bfe2644e103d2b3@linux-foundation.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [RFC PATCH v2 1/7] mm, oom: refactor select_bad_process() to
+ take memcg as an argument
+Date: Thu, 8 Jun 2017 16:59:57 +0100
+Message-ID: <20170608155957.GA13161@castle>
+References: <1496342115-3974-1-git-send-email-guro@fb.com>
+ <1496342115-3974-2-git-send-email-guro@fb.com>
+ <alpine.DEB.2.10.1706041550290.24226@chino.kir.corp.google.com>
+ <20170606162007.GB752@castle>
+ <alpine.DEB.2.10.1706061339410.23608@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=NGKcMgNsYwdujaWm0H03HqaoRVOhtO3OD6O7v18W2pc=; b=fLybsAzW2qY12tO8M5R4kn+4eg
-	055p6BdiK673yf89TBHHWIMe4SkoOiiIq8Rmbk0TWvgH5ZVgVILpgrUfPHuEr8/3DMubd0AFNFvDz
-	HvPIesLtuiuyHkwuKFDYLifKtz7L56X5qwv9nuRz3ZMFj8y6AmtZvJZWk1YRsPvVpdpw=;
-Content-Disposition: inline
-In-Reply-To: <20170605143831.dac73f489bfe2644e103d2b3@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=SCMEti1LggjJ1a48MKJKMj+osojAU8AByYG96rQLyDo=;
+ b=kylPA70ojzL0Rkhp3K84dFWb/QR1mx6ImJ0Yxm+y13FgHy5Fiy+//QCMOTs8a0o5vxnh
+ Ewip/vs6ny2sI6RG9volnLUSvuMBEhG5mC5tDuDnEIGbKTOH6KK83oQQXgN9m8ATcKcf
+ xz4SC+ol2jbXi5cmxHjN+3sGdBi7Qjs5+JA= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=SCMEti1LggjJ1a48MKJKMj+osojAU8AByYG96rQLyDo=;
+ b=VCY/7+R5qUfAVrxhYjdDeRO6iHdFnemtSFRq/w8Sg/FsI3o2eahZNyJzrpPO+VZnUesPDmf9htEdCvg36k+Hzl/DiQ7OqSv3+2MinnnJ4oSP8ohucCQ26+1G4aRJnxrGzpw6sf1LUTq/mfJLmm86S2wUolBlqPmdzdkzYYjUZd8=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1706061339410.23608@chino.kir.corp.google.com>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>, Yury Norov <ynorov@caviumnetworks.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Josef Bacik <josef@toxicpanda.com>, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Rik van Riel <riel@redhat.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, linux-s390@vger.kernel.org
+To: David Rientjes <rientjes@google.com>
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 05, 2017 at 02:38:31PM -0700, Andrew Morton wrote:
-> On Mon, 5 Jun 2017 14:35:11 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+On Tue, Jun 06, 2017 at 01:42:29PM -0700, David Rientjes wrote:
+> On Tue, 6 Jun 2017, Roman Gushchin wrote:
 > 
-> > --- a/mm/page_alloc.c
-> > +++ b/mm/page_alloc.c
-> > @@ -5107,6 +5107,7 @@ static void build_zonelists(pg_data_t *pgdat)
-> >   */
-> >  static void setup_pageset(struct per_cpu_pageset *p, unsigned long batch);
-> >  static DEFINE_PER_CPU(struct per_cpu_pageset, boot_pageset);
-> > +static DEFINE_PER_CPU(struct per_cpu_nodestat, boot_nodestats);
-> >  static void setup_zone_pageset(struct zone *zone);
+> > Hi David!
+> > 
+> > Thank you for sharing this!
+> > 
+> > It's very interesting, and it looks like,
+> > it's not that far from what I've suggested.
+> > 
+> > So we definitily need to come up with some common solution.
+> > 
 > 
-> There's a few kb there.  It just sits evermore unused after boot?
 
-It's not the greatest, but it's nothing new. All the node stats we
-have now used to be in the zone, i.e. the then bigger boot_pageset,
-before we moved them to the node level. It just re-adds static boot
-time space for them now.
+Hi David,
 
-Of course, if somebody has an idea on how to elegantly reuse that
-memory after boot, that'd be cool. But we've lived with that footprint
-for the longest time, so I don't think it's a showstopper.
+> Yes, definitely.  I could post a series of patches to do everything that 
+> was listed in my email sans the fully inclusive kmem accounting, which may 
+> be pursued at a later date, if it would be helpful to see where there is 
+> common ground?
+> 
+> Another question is what you think about userspace oom handling?  We 
+> implement our own oom kill policies in userspace for both the system and 
+> for user-controlled memcg hierarchies because it often does not match the 
+> kernel implementation and there is some action that can be taken other 
+> than killing a process.  Have you tried to implement functionality to do 
+> userspace oom handling, or are you considering it?  This is the main 
+> motivation behind allowing an oom delay to be configured.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+cgroup v2 memory controller is built on the idea of preventing OOMs
+by using the memory.high limit. This allows an userspace app to get notified
+before OOM happens (by looking at memory.events control), so there is (hopefully)
+no need in things like oom delay.
+
+Actually, I'm trying to implement some minimal functionality in the kernel,
+which will simplify and make more consistent the userspace part of the job.
+But, of course, the main goal of the patchset is to fix the unfairness
+of the current victim selection.
+
+Thanks!
+
+Roman
