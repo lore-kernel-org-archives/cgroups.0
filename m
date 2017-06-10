@@ -1,59 +1,138 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 10/10] sched: Make cpu/cpuacct threaded controllers
-Date: Sat, 10 Jun 2017 10:03:51 -0400
-Message-ID: <20170610140351.10703-11-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 08/10] sched: Misc preps for cgroup unified hierarchy interface
+Date: Sat, 10 Jun 2017 10:03:49 -0400
+Message-ID: <20170610140351.10703-9-tj@kernel.org>
 References: <20170610140351.10703-1-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=4wgk2IvDMI6yahhtFO556YSl73IstdMRe0XVfZNYamQ=;
-        b=KUg03yEfCLNxzXPs8OlINmsf697j8AEouRdjHh5KLCd1q2NxES7lhErMrU70reTxLl
-         v1r16MukTOJGRWsmfz1taSWTvs8fIMvrfQq3oZki/wb2RjksNxAMxyjcpMGhqsjJXxG6
-         n8yxvisUQYEBD7MXkTkkKP4KK6FdevR4tbjkny0EenWcwCyTtPBnuYcrzFkbPhlw/y5b
-         gfHLeBB6+kK0LtHSKQ83VJK4EEmROZfOnqiBCdw8xtdU1yGLhPcPX5xXxoVWajW848kS
-         R3VcPorDef2xjRGL8daGSMidBFtJMRRW0mWq29mDUTa3sEZyt9lliLUoNa2LFUrRB556
-         l8Jg==
-In-Reply-To: <20170610140351.10703-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=lRQlhNzyf/qoof+Bar5Ls1RkOQzrj4OCjOzDnkiLwk4=;
+        b=l3DyNrNmRhy3OM5QKu00w/UoJqEJTwGK5tyjckTeYc2ulgq0skg1uR1fJ6/LX6LoY9
+         qnylBr/BNfvKFkwKaWYM/SZqIT8IGDk9as6TWXj5CXJnIYKgk+k5OeMz6aq2ffi34rTD
+         vpmFOm7pcPV8GObDb7VhRC9pTi2mJsgotu+pmxZcInOGw7mKiNEb24sdjegoDVyKanSd
+         2dlixXSknmGFrNtIBEYiNgJYo6yFqPDnXQ0IgjHFibKqzkqcHhPGtKggkKIltSYUq5Dc
+         FUpeaZaxcAcvMU+xzQGG7RdhfpB4DbNow/PRhWGD1r+/dWh+pqHyROjVZ0zB9KdCLipG
+         lsNw==
+In-Reply-To: <20170610140351.10703-1-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, longman@redhat.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Tejun Heo <tj@kernel.org>
 
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Make the following changes in preparation for the cpu controller
+interface implementation for the unified hierarchy.  This patch
+doesn't cause any functional differences.
 
-Make cpu and cpuacct cgroup controllers usable within a threaded cgroup.
+* s/cpu_stats_show()/cpu_cfs_stats_show()/
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+* s/cpu_files/cpu_legacy_files/
+
+* Separate out cpuacct_stats_read() from cpuacct_stats_show().  While
+  at it, make the @val array u64 for consistency.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 ---
- kernel/sched/core.c    | 1 +
- kernel/sched/cpuacct.c | 1 +
- 2 files changed, 2 insertions(+)
+ kernel/sched/core.c    |  8 ++++----
+ kernel/sched/cpuacct.c | 29 ++++++++++++++++++-----------
+ 2 files changed, 22 insertions(+), 15 deletions(-)
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index c86ab2c4ed3b..85e5358da560 100644
+index 803c3bc274c4..016c3552a2b4 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -7469,6 +7469,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
- 	.legacy_cftypes	= cpu_legacy_files,
- 	.dfl_cftypes	= cpu_files,
+@@ -7246,7 +7246,7 @@ static int __cfs_schedulable(struct task_group *tg, u64 period, u64 quota)
+ 	return ret;
+ }
+ 
+-static int cpu_stats_show(struct seq_file *sf, void *v)
++static int cpu_cfs_stats_show(struct seq_file *sf, void *v)
+ {
+ 	struct task_group *tg = css_tg(seq_css(sf));
+ 	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
+@@ -7286,7 +7286,7 @@ static u64 cpu_rt_period_read_uint(struct cgroup_subsys_state *css,
+ }
+ #endif /* CONFIG_RT_GROUP_SCHED */
+ 
+-static struct cftype cpu_files[] = {
++static struct cftype cpu_legacy_files[] = {
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 	{
+ 		.name = "shares",
+@@ -7307,7 +7307,7 @@ static struct cftype cpu_files[] = {
+ 	},
+ 	{
+ 		.name = "stat",
+-		.seq_show = cpu_stats_show,
++		.seq_show = cpu_cfs_stats_show,
+ 	},
+ #endif
+ #ifdef CONFIG_RT_GROUP_SCHED
+@@ -7333,7 +7333,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
+ 	.fork		= cpu_cgroup_fork,
+ 	.can_attach	= cpu_cgroup_can_attach,
+ 	.attach		= cpu_cgroup_attach,
+-	.legacy_cftypes	= cpu_files,
++	.legacy_cftypes	= cpu_legacy_files,
  	.early_init	= true,
-+	.threaded	= true,
- #ifdef CONFIG_CGROUP_CPUACCT
- 	/*
- 	 * cpuacct is enabled together with cpu on the unified hierarchy
+ };
+ 
 diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index 07ed36cc2600..ee4976a5dde0 100644
+index f95ab29a45d0..6151c23f722f 100644
 --- a/kernel/sched/cpuacct.c
 +++ b/kernel/sched/cpuacct.c
-@@ -412,4 +412,5 @@ struct cgroup_subsys cpuacct_cgrp_subsys = {
- 	.css_free	= cpuacct_css_free,
- 	.legacy_cftypes	= files,
- 	.early_init	= true,
-+	.threaded	= true,
- };
+@@ -276,26 +276,33 @@ static int cpuacct_all_seq_show(struct seq_file *m, void *V)
+ 	return 0;
+ }
+ 
+-static int cpuacct_stats_show(struct seq_file *sf, void *v)
++static void cpuacct_stats_read(struct cpuacct *ca,
++			       u64 (*val)[CPUACCT_STAT_NSTATS])
+ {
+-	struct cpuacct *ca = css_ca(seq_css(sf));
+-	s64 val[CPUACCT_STAT_NSTATS];
+ 	int cpu;
+-	int stat;
+ 
+-	memset(val, 0, sizeof(val));
++	memset(val, 0, sizeof(*val));
++
+ 	for_each_possible_cpu(cpu) {
+ 		u64 *cpustat = per_cpu_ptr(ca->cpustat, cpu)->cpustat;
+ 
+-		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_USER];
+-		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_NICE];
+-		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SYSTEM];
+-		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_IRQ];
+-		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SOFTIRQ];
++		(*val)[CPUACCT_STAT_USER]   += cpustat[CPUTIME_USER];
++		(*val)[CPUACCT_STAT_USER]   += cpustat[CPUTIME_NICE];
++		(*val)[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SYSTEM];
++		(*val)[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_IRQ];
++		(*val)[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SOFTIRQ];
+ 	}
++}
++
++static int cpuacct_stats_show(struct seq_file *sf, void *v)
++{
++	u64 val[CPUACCT_STAT_NSTATS];
++	int stat;
++
++	cpuacct_stats_read(css_ca(seq_css(sf)), &val);
+ 
+ 	for (stat = 0; stat < CPUACCT_STAT_NSTATS; stat++) {
+-		seq_printf(sf, "%s %lld\n",
++		seq_printf(sf, "%s %llu\n",
+ 			   cpuacct_stat_desc[stat],
+ 			   (long long)nsec_to_clock_t(val[stat]));
+ 	}
 -- 
 2.13.0
+
