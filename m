@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 06/10] cgroup: implement CSS_TASK_ITER_THREADED
-Date: Sat, 10 Jun 2017 10:03:47 -0400
-Message-ID: <20170610140351.10703-7-tj@kernel.org>
+Subject: [PATCH 07/10] cgroup: implement cgroup v2 thread support
+Date: Sat, 10 Jun 2017 10:03:48 -0400
+Message-ID: <20170610140351.10703-8-tj@kernel.org>
 References: <20170610140351.10703-1-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=9u5mW5024Sggk5ToyI4mXEeoWYGa5+yxhh89DFJiZjw=;
-        b=VanxsxOapF/M42qAnzW7ai6PrkSPlzS90Pflw8yg+ciQ+QHpscJQCOc96mVKvTH5ur
-         YPz9gDWDNqhzDrNXFsKpjrkxdUXYqBXW/Q6HdxJxMrD3r3IzheQRuohmEmRCjhvR65XU
-         Bw1KXz4ZofqD9Kp3jqRnz+U03ELPBhflCdppaMGmJz2bQSBxwnt7tzXK2wZrEyCfm+Jo
-         dg/8w9ZBg1tLyd1gQzqNMC9cz73oqO5tyPEprnnI0rOsAZF0FUpkm4RcwDbKNIYiemEN
-         wrxpk6YBcss9Xx0TG+laGnEesBtTj9Kfdjqhov2OART36ddGpQbi4eOWPZaRqvMDMJhD
-         dHrg==
+        bh=TMBFWdER1DrNvqh5rc+/XQHxBG5VP4k4+1eoH4XLobE=;
+        b=lZWhIQw6a7NRrs/89cwJcd3n6necwiYv2FTr1+AYxndQqVefqcLR2qjFupiaLO2EmL
+         XYPqxt/ciQjvkmTaj0FRh9few8KFQkr3sUVt1eo8N6Eidq8bievmxuvcXdFarJSbfNnc
+         H8H/5DsTwhQwocpq28qPQ1vEXHZwQpngumiZ1tbgnNgY7t9JoKaailkBJSNYcqHzWOH2
+         batpmTZkcDEmXy9jFB4Rjq1VE4Gyy3ghun4HklgPNLKTMvPN1boSZ7gCQJVCb4hmexx7
+         FIZPFjI59mwNYiQK043dDAwzRzqG+VURGVBruq2iUh1Tn8JWk8fkZ6Wcyca048F7/7+x
+         M1Jw==
 In-Reply-To: <20170610140351.10703-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,195 +23,670 @@ Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-cgroup v2 is in the process of growing thread granularity support.
-Once thread mode is enabled, the root cgroup of the subtree serves as
-the proc_cgrp to which the processes of the subtree conceptually
-belong and domain-level resource consumptions not tied to any specific
-task are charged.  In the subtree, threads won't be subject to process
-granularity or no-internal-task constraint and can be distributed
-arbitrarily across the subtree.
+This patch implements cgroup v2 thread support.  The goal of the
+thread mode is supporting hierarchical accounting and control at
+thread granularity while staying inside the resource domain model
+which allows coordination across different resource controllers and
+handling of anonymous resource consumptions.
 
-This patch implements a new task iterator flag CSS_TASK_ITER_THREADED,
-which, when used on a proc_cgrp, makes the iteration include the tasks
-on all the associated threaded css_sets.  "cgroup.procs" read path is
-updated to use it so that reading the file on a proc_cgrp lists all
-processes.  This will also be used by controller implementations which
-need to walk processes or tasks at the resource domain level.
+Once thread mode is enabled on a cgroup, the threads of the processes
+which are in its subtree can be placed inside the subtree without
+being restricted by process granularity or no-internal-process
+constraint.  Note that the threads aren't allowed to escape to a
+different threaded subtree.  To be used inside a threaded subtree, a
+controller should explicitly support threaded mode and be able to
+handle internal competition in the way which is appropriate for the
+resource.
 
-Task iteration is implemented nested in css_set iteration.  If
-CSS_TASK_ITER_THREADED is specified, after walking tasks of each
-!threaded css_set, all the associated threaded css_sets are visited
-before moving onto the next !threaded css_set.
+The root of a threaded subtree, where thread mode is enabled in the
+first place, is called the thread root and serves as the resource
+domain for the whole subtree.  This is the last cgroup where
+non-threaded controllers are operational and where all the
+domain-level resource consumptions in the subtree are accounted.  This
+allows threaded controllers to operate at thread granularity when
+requested while staying inside the scope of system-level resource
+distribution.
+
+As the root cgroup is exempt from the no-internal-process constraint,
+it can serve as both a thread root and a parent to normal cgroups.
+The root cgroup supports mixed cgroup mode which can be enabled and
+disabled anytime as long as there aren't any threaded children.  First
+level child cgroups can selectively join the mixed threaded subtree.
+
+Internally, in a threaded subtree, each css_set has its ->proc_cset
+pointing to a matching css_set which belongs to the thread root.  This
+ensures that thread root level cgroup_subsys_state for all threaded
+controllers are readily accessible for domain-level operations.
+
+This patch enables threaded mode for the pids and perf_events
+controllers.  Neither has to worry about domain-level resource
+consumptions and it's enough to simply set the flag.
+
+For more details on the interface and behavior of the thread mode,
+please refer to the section 2-2-2 in Documentation/cgroup-v2.txt added
+by this patch.  Note that the documentation update is not complete as
+the rest of the documentation needs to be updated accordingly.
+Rolling those updates into this patch can be confusing so that will be
+separate patches.
+
+v2: - After discussions with Waiman, support for mixed thread mode is
+      added.  This should address the issue that Peter pointed out
+      where any nesting should be avoided for thread subtrees while
+      coexisting with other domain cgroups.
+
+    - Enabling / disabling thread mode now piggy backs on the existing
+      control mask update mechanism.
+
+    - Bug fixes and cleanup.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup.h |  6 ++++
- kernel/cgroup/cgroup.c | 81 +++++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 73 insertions(+), 14 deletions(-)
+ Documentation/cgroup-v2.txt |  99 +++++++++++++-
+ include/linux/cgroup-defs.h |  12 ++
+ kernel/cgroup/cgroup.c      | 323 ++++++++++++++++++++++++++++++++++++++++++--
+ kernel/cgroup/pids.c        |   1 +
+ kernel/events/core.c        |   1 +
+ 5 files changed, 420 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 8755eb5ece18..05da7cc9ea2d 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -38,6 +38,8 @@
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index dc5e2dcdbef4..96db84005cb2 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -16,7 +16,9 @@ CONTENTS
+   1-2. What is cgroup?
+ 2. Basic Operations
+   2-1. Mounting
+-  2-2. Organizing Processes
++  2-2. Organizing Processes and Threads
++    2-2-1. Processes
++    2-2-2. Threads
+   2-3. [Un]populated Notification
+   2-4. Controlling Controllers
+     2-4-1. Enabling and Disabling
+@@ -150,7 +152,9 @@ and experimenting easier, the kernel parameter cgroup_no_v1= allows
+ disabling controllers in v1 and make them always available in v2.
  
- /* walk only threadgroup leaders */
- #define CSS_TASK_ITER_PROCS		(1U << 0)
-+/* walk threaded css_sets as part of their proc_csets */
-+#define CSS_TASK_ITER_THREADED		(1U << 1)
  
- /* a css_task_iter should be treated as an opaque object */
- struct css_task_iter {
-@@ -47,11 +49,15 @@ struct css_task_iter {
- 	struct list_head		*cset_pos;
- 	struct list_head		*cset_head;
- 
-+	struct list_head		*tcset_pos;
-+	struct list_head		*tcset_head;
+-2-2. Organizing Processes
++2-2. Organizing Processes and Threads
 +
- 	struct list_head		*task_pos;
- 	struct list_head		*tasks_head;
- 	struct list_head		*mg_tasks_head;
++2-2-1. Processes
  
- 	struct css_set			*cur_cset;
-+	struct css_set			*cur_pcset;
- 	struct task_struct		*cur_task;
- 	struct list_head		iters_node;	/* css_set->task_iters */
- };
+ Initially, only the root cgroup exists to which all processes belong.
+ A child cgroup can be created by creating a sub-directory.
+@@ -201,6 +205,97 @@ is removed subsequently, " (deleted)" is appended to the path.
+   0::/test-cgroup/test-cgroup-nested (deleted)
+ 
+ 
++2-2-2. Threads
++
++cgroup v2 supports thread granularity for a subset of controllers to
++support use cases requiring hierarchical resource distribution across
++the threads of a group of processes.  By default, all threads of a
++process belong to the same cgroup, which also serves as the resource
++domain to host resource consumptions which are not specific to a
++process or thread.  The thread mode allows threads to be spread across
++a subtree while still maintaining the common resource domain for them.
++
++Enabling thread mode on a subtree makes it threaded.  The root of a
++threaded subtree is called thread root and serves as the resource
++domain for the entire subtree.  In a threaded subtree, threads of a
++process can be put in different cgroups and are not subject to the no
++internal process constraint - threaded controllers can be enabled on
++non-leaf cgroups whether they have threads in them or not.
++
++Because the root cgroup is not subject to no internal process
++constraint, it can serve both as a thread root and a parent to normal
++cgroups.  This is called mixed thread mode.
++
++Thread mode can be enabled by writing "enable" to "cgroup.threads"
++file.
++
++  # echo enable > cgroup.threads
++
++On a non-root cgroup, to enable the thread mode, the following
++conditions must be met.
++
++- The thread root doesn't have any child cgroups.
++
++- The thread root doesn't have any controllers enabled.
++
++On the root cgroup, only the mixed thread mode is supported and there
++isn't any restriction on enabling it.  On enable, unlike the normal
++thread mode, the whole subtree is not turned into thread subtree.  The
++first level children have to explicitly join the thread subtree.  A
++cgroup can join the existing mixed threaded subtree by writing "join"
++to "cgroup.threads" file.
++
++  # echo join > cgroup.threads
++
++In addition to the usual enable conditions, the following extra
++condition must met for joining.
++
++- The first level child doesn't have any tasks.
++
++Inside a threaded subtree, "cgroup.threads" can be read and contains
++the list of the thread IDs of all threads in the cgroup.  Except that
++the operations are per-thread instead of per-process, "cgroup.threads"
++has the same format and behaves the same way as "cgroup.procs".
++
++The thread root serves as the resource domain for the whole subtree,
++and, while the threads can be scattered across the subtree, all the
++processes are considered to be in the thread root.  "cgroup.procs" in
++a thread root contains the PIDs of all processes in the subtree and is
++not readable in the subtree proper.  However, "cgroup.procs" can be
++written to from anywhere in the subtree to migrate all threads of the
++matching process to the cgroup.
++
++Only threaded controllers can be enabled in a threaded subtree.  When
++a threaded controller is enabled inside a threaded subtree, it only
++accounts for and controls resource consumptions associated with the
++threads in the cgroup and its descendants.  All consumptions which
++aren't tied to a specific thread belong to the thread root.
++
++Because a threaded subtree is exempt from no internal process
++constraint, a threaded controller must be able to handle competition
++between threads in a non-leaf cgroup and its child cgroups.  Each
++threaded controller defines how such competitions are handled.
++
++Thread mode can be disabled by writing "disable" to "cgroup.threads"
++file.
++
++  # echo disable > cgroup.threads
++
++Disabling requires the same conditions as enabling and the following
++extra.
++
++For a non-mixed threaded subtree:
++
++- The cgroup must be the thread root.  Thread mode can't be disabled
++  partially in the subtree.
++
++For the root cgroup:
++
++- There can't be any child cgroup which is a part of the mixed thread
++  subtree.  All first level children must be either non-threaded or
++  thread roots.
++
++
+ 2-3. [Un]populated Notification
+ 
+ Each non-root cgroup has a "cgroup.events" file which contains
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 471773792557..fb694b9fd533 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -502,6 +502,18 @@ struct cgroup_subsys {
+ 	bool implicit_on_dfl:1;
+ 
+ 	/*
++	 * If %true, the controller, supports threaded mode on the default
++	 * hierarchy.  In a threaded subtree, both process granularity and
++	 * no-internal-process constraint are ignored and a threaded
++	 * controllers should be able to handle that.
++	 *
++	 * Note that as an implicit controller is automatically enabled on
++	 * all cgroups on the default hierarchy, it should also be
++	 * threaded.  implicit && !threaded is not supported.
++	 */
++	bool threaded:1;
++
++	/*
+ 	 * If %false, this subsystem is properly hierarchical -
+ 	 * configuration, resource accounting and restriction on a parent
+ 	 * cgroup cover those of its children.  If %true, hierarchy support
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 0fa4ffe84933..765c1c27c879 100644
+index 765c1c27c879..d319438348c4 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -3610,27 +3610,36 @@ bool css_has_online_children(struct cgroup_subsys_state *css)
- 	return ret;
+@@ -162,6 +162,9 @@ static u16 cgrp_dfl_inhibit_ss_mask;
+ /* some controllers are implicitly enabled on the default hierarchy */
+ static u16 cgrp_dfl_implicit_ss_mask;
+ 
++/* some controllers can be threaded on the default hierarchy */
++static u16 cgrp_dfl_threaded_ss_mask;
++
+ /* The list of hierarchy roots */
+ LIST_HEAD(cgroup_roots);
+ static int cgroup_root_count;
+@@ -331,14 +334,60 @@ static bool cgroup_is_threaded(struct cgroup *cgrp)
+ 	return cgrp->proc_cgrp;
  }
  
--/**
-- * css_task_iter_advance_css_set - advance a task itererator to the next css_set
-- * @it: the iterator to advance
-- *
-- * Advance @it to the next css_set to walk.
-- */
--static void css_task_iter_advance_css_set(struct css_task_iter *it)
-+static struct css_set *css_task_iter_next_css_set(struct css_task_iter *it)
- {
--	struct list_head *l = it->cset_pos;
-+	bool threaded = it->flags & CSS_TASK_ITER_THREADED;
-+	struct list_head *l;
- 	struct cgrp_cset_link *link;
- 	struct css_set *cset;
- 
- 	lockdep_assert_held(&css_set_lock);
- 
--	/* Advance to the next non-empty css_set */
-+	/* find the next threaded cset */
-+	if (it->tcset_pos) {
-+		l = it->tcset_pos->next;
-+
-+		if (l != it->tcset_head) {
-+			it->tcset_pos = l;
-+			return container_of(l, struct css_set,
-+					    threaded_csets_node);
-+		}
-+
-+		it->tcset_pos = NULL;
-+	}
-+
-+	/* find the next cset */
-+	l = it->cset_pos;
-+
- 	do {
- 		l = l->next;
- 		if (l == it->cset_head) {
- 			it->cset_pos = NULL;
--			it->task_pos = NULL;
--			return;
-+			return NULL;
- 		}
- 
- 		if (it->ss) {
-@@ -3640,10 +3649,50 @@ static void css_task_iter_advance_css_set(struct css_task_iter *it)
- 			link = list_entry(l, struct cgrp_cset_link, cset_link);
- 			cset = link->cset;
- 		}
--	} while (!css_set_populated(cset));
-+
-+		/*
-+		 * For threaded iterations, threaded csets are walked
-+		 * together with their proc_csets.  Skip here.
-+		 */
-+	} while (threaded && css_set_threaded(cset));
- 
- 	it->cset_pos = l;
- 
-+	/* initialize threaded cset walking */
-+	if (threaded) {
-+		if (it->cur_pcset)
-+			put_css_set_locked(it->cur_pcset);
-+		it->cur_pcset = cset;
-+		get_css_set(cset);
-+
-+		it->tcset_head = &cset->threaded_csets;
-+		it->tcset_pos = &cset->threaded_csets;
-+	}
-+
-+	return cset;
++/* is @cgrp root of a threaded subtree? */
++static bool cgroup_is_thread_root(struct cgroup *cgrp)
++{
++	return cgrp->proc_cgrp == cgrp;
 +}
 +
-+/**
-+ * css_task_iter_advance_css_set - advance a task itererator to the next css_set
-+ * @it: the iterator to advance
-+ *
-+ * Advance @it to the next css_set to walk.
-+ */
-+static void css_task_iter_advance_css_set(struct css_task_iter *it)
++/* if threaded, would @cgrp become root of a mixed threaded subtree? */
++static bool cgroup_is_mixable(struct cgroup *cgrp)
 +{
-+	struct css_set *cset;
++	/*
++	 * Root isn't under domain level resource control exempting it from
++	 * the no-internal-process constraint, so it can serve as a thread
++	 * root and a parent of resource domains at the same time.
++	 */
++	return !cgroup_parent(cgrp);
++}
 +
-+	lockdep_assert_held(&css_set_lock);
++/* is @cgrp root of a mixed threaded subtree */
++static bool cgroup_is_mixed_root(struct cgroup *cgrp)
++{
++	return cgroup_is_thread_root(cgrp) && cgroup_is_mixable(cgrp);
++}
 +
-+	/* Advance to the next non-empty css_set */
-+	do {
-+		cset = css_task_iter_next_css_set(it);
-+		if (!cset) {
-+			it->task_pos = NULL;
-+			return;
-+		}
-+	} while (!css_set_populated(cset));
++/* is @cgrp's parent a mixed thread root? */
++static bool cgroup_has_mixed_parent(struct cgroup *cgrp)
++{
++	struct cgroup *parent = cgroup_parent(cgrp);
 +
- 	if (!list_empty(&cset->tasks))
- 		it->task_pos = cset->tasks.next;
- 	else
-@@ -3786,6 +3835,9 @@ void css_task_iter_end(struct css_task_iter *it)
- 		spin_unlock_irq(&css_set_lock);
++	return parent && cgroup_is_mixed_root(parent);
++}
++
++/* is @cgrp the first level child of a mixed threaded subtree */
++static bool cgroup_is_mixed_child(struct cgroup *cgrp)
++{
++	struct cgroup *parent = cgroup_parent(cgrp);
++
++	return parent && cgrp->proc_cgrp == parent &&
++		cgroup_is_mixed_root(parent);
++}
++
+ /* subsystems visibly enabled on a cgroup */
+ static u16 cgroup_control(struct cgroup *cgrp)
+ {
+ 	struct cgroup *parent = cgroup_parent(cgrp);
+ 	u16 root_ss_mask = cgrp->root->subsys_mask;
+ 
+-	if (parent)
+-		return parent->subtree_control;
++	if (parent) {
++		u16 ss_mask = parent->subtree_control;
++
++		/* mixed child can only have threaded subset of controllers */
++		if (cgroup_is_mixed_child(cgrp))
++			ss_mask &= cgrp_dfl_threaded_ss_mask;
++		return ss_mask;
++	}
+ 
+ 	if (cgroup_on_dfl(cgrp))
+ 		root_ss_mask &= ~(cgrp_dfl_inhibit_ss_mask |
+@@ -351,8 +400,14 @@ static u16 cgroup_ss_mask(struct cgroup *cgrp)
+ {
+ 	struct cgroup *parent = cgroup_parent(cgrp);
+ 
+-	if (parent)
+-		return parent->subtree_ss_mask;
++	if (parent) {
++		u16 ss_mask = parent->subtree_ss_mask;
++
++		/* mixed child can only have threaded subset of controllers */
++		if (cgroup_is_mixed_child(cgrp))
++			ss_mask &= cgrp_dfl_threaded_ss_mask;
++		return ss_mask;
++	}
+ 
+ 	return cgrp->root->subsys_mask;
+ }
+@@ -2233,14 +2288,14 @@ static int cgroup_migrate_execute(struct cgroup_mgctx *mgctx)
+  * cgroup_may_migrate_to - verify whether a cgroup can be migration destination
+  * @dst_cgrp: destination cgroup to test
+  *
+- * On the default hierarchy, except for the root, subtree_control must be
+- * zero for migration destination cgroups with tasks so that child cgroups
+- * don't compete against tasks.
++ * On the default hierarchy, except for the mixable and threaded cgroups,
++ * subtree_control must be zero for migration destination cgroups with
++ * tasks so that child cgroups don't compete against tasks.
+  */
+ bool cgroup_may_migrate_to(struct cgroup *dst_cgrp)
+ {
+-	return !cgroup_on_dfl(dst_cgrp) || !cgroup_parent(dst_cgrp) ||
+-		!dst_cgrp->subtree_control;
++	return !cgroup_on_dfl(dst_cgrp) || cgroup_is_mixable(dst_cgrp) ||
++		cgroup_is_threaded(dst_cgrp) || !dst_cgrp->subtree_control;
+ }
+ 
+ /**
+@@ -2949,11 +3004,20 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 		goto out_unlock;
  	}
  
-+	if (it->cur_pcset)
-+		put_css_set(it->cur_pcset);
++	/* can't enable !threaded controllers on a threaded cgroup */
++	if (cgroup_is_threaded(cgrp) && !cgroup_is_mixed_root(cgrp) &&
++	    (enable & ~cgrp_dfl_threaded_ss_mask)) {
++		ret = -EBUSY;
++		goto out_unlock;
++	}
 +
- 	if (it->cur_task)
- 		put_task_struct(it->cur_task);
+ 	/*
+-	 * Except for the root, subtree_control must be zero for a cgroup
+-	 * with tasks so that child cgroups don't compete against tasks.
++	 * Except for mixable and threaded cgroups, subtree_control must be
++	 * zero for a cgroup with tasks so that child cgroups don't compete
++	 * against tasks.
+ 	 */
+-	if (enable && cgroup_parent(cgrp) && cgroup_has_tasks(cgrp)) {
++	if (enable && !cgroup_is_mixable(cgrp) && !cgroup_is_threaded(cgrp) &&
++	    cgroup_has_tasks(cgrp)) {
+ 		ret = -EBUSY;
+ 		goto out_unlock;
+ 	}
+@@ -2975,6 +3039,130 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	return ret ?: nbytes;
  }
-@@ -3811,6 +3863,7 @@ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
+ 
++enum thread_mode_op {
++	THREAD_MODE_ENABLE,
++	THREAD_MODE_JOIN,
++	THREAD_MODE_DISABLE,
++};
++
++static int cgroup_vet_thread_mode_op(struct cgroup *cgrp, enum thread_mode_op op)
++{
++	/* verify join conditions first and convert it to ENABLE */
++	if (op == THREAD_MODE_JOIN) {
++		/* can't join if it isn't there */
++		if (!cgroup_has_mixed_parent(cgrp))
++			return -EINVAL;
++		/* avoid needing implicit domain controller migrations */
++		if (cgroup_has_tasks(cgrp))
++			return -EBUSY;
++		/* and follow the same restrictions as enable */
++		op = THREAD_MODE_ENABLE;
++	}
++
++	/*
++	 * The only restriction a mixable root is subject to is that it
++	 * can't end the mixed threaded subtree while there are member
++	 * descendant cgroups in it.
++	 */
++	if (cgroup_is_mixable(cgrp)) {
++		if (op == THREAD_MODE_DISABLE) {
++			struct cgroup *child;
++
++			cgroup_for_each_live_child(child, cgrp)
++				if (cgroup_is_mixed_child(child))
++					return -EBUSY;
++		}
++
++		return 0;
++	}
++
++	/*
++	 * @cgrp is starting or ending a normal threaded subtree.  Make
++	 * sure the subtree is empty and avoid needing implicit domain
++	 * controller migrations.
++	 */
++	if (css_has_online_children(&cgrp->self) || cgrp->subtree_control)
++		return -EBUSY;
++
++	/* no partial disable */
++	if (op == THREAD_MODE_DISABLE && !cgroup_is_thread_root(cgrp))
++		return -EBUSY;
++
++	return 0;
++}
++
++static int cgroup_enable_threaded(struct cgroup *cgrp, bool is_join)
++{
++	struct cgroup *proc_cgrp;
++	int ret;
++
++	lockdep_assert_held(&cgroup_mutex);
++
++	/* noop if already threaded */
++	if (cgroup_is_threaded(cgrp))
++		return 0;
++
++	ret = cgroup_vet_thread_mode_op(cgrp, is_join ? THREAD_MODE_JOIN :
++							THREAD_MODE_ENABLE);
++	if (ret)
++		return ret;
++
++	if (is_join)
++		proc_cgrp = cgroup_parent(cgrp);
++	else
++		proc_cgrp = cgrp;
++
++	cgroup_save_control(cgrp);
++
++	/*
++	 * Mark it threaded.  This makes cgroup_control() and
++	 * cgroup_ss_mask() skip domain controllers.  In turn, the
++	 * following control operations migrate tasks to the matching
++	 * threaded csets.
++	 */
++	cgrp->proc_cgrp = proc_cgrp;
++
++	ret = cgroup_apply_control(cgrp);
++	if (ret)
++		cgrp->proc_cgrp = NULL;
++
++	cgroup_finalize_control(cgrp, ret);
++
++	return ret;
++}
++
++static int cgroup_disable_threaded(struct cgroup *cgrp)
++{
++	struct cgroup *proc_cgrp = cgrp->proc_cgrp;
++	int ret;
++
++	lockdep_assert_held(&cgroup_mutex);
++
++	/* noop if already !threaded */
++	if (!cgroup_is_threaded(cgrp))
++		return 0;
++
++	ret = cgroup_vet_thread_mode_op(cgrp, THREAD_MODE_DISABLE);
++	if (ret)
++		return ret;
++
++	cgroup_save_control(cgrp);
++
++	/*
++	 * Mark it !threaded.  This restores cgroup_control() and
++	 * cgroup_ss_mask() behavior.  See cgroup_enabled_threaded().
++	 */
++	cgrp->proc_cgrp = NULL;
++
++	ret = cgroup_apply_control(cgrp);
++	if (ret)
++		cgrp->proc_cgrp = proc_cgrp;
++
++	cgroup_finalize_control(cgrp, ret);
++
++	return ret;
++}
++
+ static int cgroup_events_show(struct seq_file *seq, void *v)
+ {
+ 	seq_printf(seq, "populated %d\n",
+@@ -3858,12 +4046,12 @@ static void *cgroup_procs_next(struct seq_file *s, void *v, loff_t *pos)
+ 	return css_task_iter_next(it);
+ }
+ 
+-static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
++static void *__cgroup_procs_start(struct seq_file *s, loff_t *pos,
++				  unsigned int iter_flags)
+ {
  	struct kernfs_open_file *of = s->private;
  	struct cgroup *cgrp = seq_css(s)->cgroup;
  	struct css_task_iter *it = of->priv;
-+	unsigned iter_flags = CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED;
+-	unsigned iter_flags = CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED;
  
  	/*
  	 * When a seq_file is seeked, it's always traversed sequentially
-@@ -3824,10 +3877,10 @@ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
- 		if (!it)
- 			return ERR_PTR(-ENOMEM);
- 		of->priv = it;
--		css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS, it);
-+		css_task_iter_start(&cgrp->self, iter_flags, it);
- 	} else if (!(*pos)++) {
- 		css_task_iter_end(it);
--		css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS, it);
-+		css_task_iter_start(&cgrp->self, iter_flags, it);
- 	}
- 
+@@ -3886,6 +4074,23 @@ static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
  	return cgroup_procs_next(s, NULL, NULL);
+ }
+ 
++static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
++{
++	struct cgroup *cgrp = seq_css(s)->cgroup;
++
++	/*
++	 * All processes of a threaded subtree are in the top threaded
++	 * cgroup.  Only threads can be distributed across the subtree.
++	 * Reject reads on cgroup.procs in the subtree proper.  They're
++	 * always empty anyway.
++	 */
++	if (cgroup_is_threaded(cgrp) && !cgroup_is_thread_root(cgrp))
++		return ERR_PTR(-EINVAL);
++
++	return __cgroup_procs_start(s, pos, CSS_TASK_ITER_PROCS |
++					    CSS_TASK_ITER_THREADED);
++}
++
+ static int cgroup_procs_show(struct seq_file *s, void *v)
+ {
+ 	seq_printf(s, "%d\n", task_pid_vnr(v));
+@@ -3940,6 +4145,79 @@ static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
+ 	return ret ?: nbytes;
+ }
+ 
++static void *cgroup_threads_start(struct seq_file *s, loff_t *pos)
++{
++	struct cgroup *cgrp = seq_css(s)->cgroup;
++
++	if (!cgroup_is_threaded(cgrp))
++		return ERR_PTR(-EINVAL);
++
++	return __cgroup_procs_start(s, pos, 0);
++}
++
++static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
++				    char *buf, size_t nbytes, loff_t off)
++{
++	struct super_block *sb = of->file->f_path.dentry->d_sb;
++	struct cgroup *cgrp, *common_ancestor;
++	struct task_struct *task;
++	ssize_t ret;
++
++	buf = strstrip(buf);
++
++	cgrp = cgroup_kn_lock_live(of->kn, false);
++	if (!cgrp)
++		return -ENODEV;
++
++	/* cgroup.procs determines delegation, require permission on it too */
++	ret = cgroup_procs_write_permission(cgrp, sb);
++	if (ret)
++		goto out_unlock;
++
++	/* enable or disable? */
++	if (!strcmp(buf, "enable")) {
++		ret = cgroup_enable_threaded(cgrp, false);
++		goto out_unlock;
++	} else if (!strcmp(buf, "join")) {
++		ret = cgroup_enable_threaded(cgrp, true);
++		goto out_unlock;
++	} else if (!strcmp(buf, "disable")) {
++		ret = cgroup_disable_threaded(cgrp);
++		goto out_unlock;
++	}
++
++	/* thread migration */
++	ret = -EINVAL;
++	if (!cgroup_is_threaded(cgrp))
++		goto out_unlock;
++
++	task = cgroup_procs_write_start(buf, false);
++	ret = PTR_ERR_OR_ZERO(task);
++	if (ret)
++		goto out_unlock;
++
++	common_ancestor = cgroup_migrate_common_ancestor(task, cgrp);
++
++	/* can't migrate across disjoint threaded subtrees */
++	ret = -EACCES;
++	if (common_ancestor->proc_cgrp != cgrp->proc_cgrp)
++		goto out_finish;
++
++	/* and follow the cgroup.procs delegation rule */
++	ret = cgroup_procs_write_permission(common_ancestor, sb);
++	if (ret)
++		goto out_finish;
++
++	ret = cgroup_attach_task(cgrp, task, false);
++
++out_finish:
++	cgroup_procs_write_finish(task);
++out_unlock:
++	cgroup_kn_unlock(of->kn);
++
++	return ret ?: nbytes;
++}
++
+ /* cgroup core interface files for the default hierarchy */
+ static struct cftype cgroup_base_files[] = {
+ 	{
+@@ -3952,6 +4230,14 @@ static struct cftype cgroup_base_files[] = {
+ 		.write = cgroup_procs_write,
+ 	},
+ 	{
++		.name = "cgroup.threads",
++		.release = cgroup_procs_release,
++		.seq_start = cgroup_threads_start,
++		.seq_next = cgroup_procs_next,
++		.seq_show = cgroup_procs_show,
++		.write = cgroup_threads_write,
++	},
++	{
+ 		.name = "cgroup.controllers",
+ 		.seq_show = cgroup_controllers_show,
+ 	},
+@@ -4266,6 +4552,9 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	cgrp->root = root;
+ 	cgrp->level = level;
+ 
++	if (!cgroup_has_mixed_parent(cgrp))
++		cgrp->proc_cgrp = parent->proc_cgrp;
++
+ 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp))
+ 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
+ 
+@@ -4712,11 +5001,17 @@ int __init cgroup_init(void)
+ 
+ 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
+ 
++		/* implicit controllers must be threaded too */
++		WARN_ON(ss->implicit_on_dfl && !ss->threaded);
++
+ 		if (ss->implicit_on_dfl)
+ 			cgrp_dfl_implicit_ss_mask |= 1 << ss->id;
+ 		else if (!ss->dfl_cftypes)
+ 			cgrp_dfl_inhibit_ss_mask |= 1 << ss->id;
+ 
++		if (ss->threaded)
++			cgrp_dfl_threaded_ss_mask |= 1 << ss->id;
++
+ 		if (ss->dfl_cftypes == ss->legacy_cftypes) {
+ 			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
+ 		} else {
+diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
+index 2237201d66d5..9829c67ebc0a 100644
+--- a/kernel/cgroup/pids.c
++++ b/kernel/cgroup/pids.c
+@@ -345,4 +345,5 @@ struct cgroup_subsys pids_cgrp_subsys = {
+ 	.free		= pids_free,
+ 	.legacy_cftypes	= pids_files,
+ 	.dfl_cftypes	= pids_files,
++	.threaded	= true,
+ };
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index 6e75a5c9412d..62878f3fa67a 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -11134,5 +11134,6 @@ struct cgroup_subsys perf_event_cgrp_subsys = {
+ 	 * controller is not mounted on a legacy hierarchy.
+ 	 */
+ 	.implicit_on_dfl = true,
++	.threaded	= true,
+ };
+ #endif /* CONFIG_CGROUP_PERF */
 -- 
 2.13.0
