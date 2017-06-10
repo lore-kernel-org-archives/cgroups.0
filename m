@@ -1,126 +1,106 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v2
-Date: Sat, 10 Jun 2017 10:03:41 -0400
-Message-ID: <20170610140351.10703-1-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 01/10] cgroup: separate out cgroup_has_tasks()
+Date: Sat, 10 Jun 2017 10:03:42 -0400
+Message-ID: <20170610140351.10703-2-tj@kernel.org>
+References: <20170610140351.10703-1-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=eVt26OwX+nEushmJaB2YKADFRzbGeye/fVTxqmQQ48Q=;
-        b=ScbG/dfVaYzblmttVsp0EuMQ1RRgkULP5D63yTnvdGxkdIKnLG2lMakNz3MbUw0dq+
-         JhCx8y8pqqAVvtQPMJ2UoCvd46SPPCIA/Y73Bp5hrWNlmJ53lopIKZl8dePL28afCqSy
-         EtRNBsMzwXxkRfycAkUYjZoSmJIwtjqTeUYBXyJp52LLCdMIZ9ILrhketwBRph0lopxK
-         bhHa6VD2Vd5Zkwm8/F2MWAbAT03A/c2ewVnvKxl+HatcjSyT71zsvDOk1pO83pFsGnex
-         mpu6QkCBh5/pDF53y9aMieVc0KDkJIavFtoORm4OobkPbXLWtfERDzr1xPQqEEa+n4C2
-         vqug==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=DoTcx1AOvVHzNQiNd9HnQv3OzHT37WLBE+7npyJ8Wz0=;
+        b=KhyyAT8ZoS1InuAwKrHH/ieuY+LZp4m3XKWH3SwXpnlmzKWZiU5touswshpSEJ7GSr
+         mICPBLSW0r0Stklqieo2TE98rvu9GgHqWsOfYY2ff4WqvsEocOBuW6vz6C5+VCUrHpq4
+         tC8vFK9SsVwrxsau9ItN7524wI5dZGmpNIp/r6t3pH0vtbBy77ZrcV6KHu+ctnWmoO2q
+         umE169s6OB/YFxquMgecJWYRs8/vRRyJ7DhVdVmlnjZ0EMjkospNBo/Ld9uX9DUG9enO
+         EE9mo3NaAAuxdtJYdgb1D+GQVf34ekMWF5IIr/5jp1AmTpgrs4kuibRKxdRwLHOXdOji
+         oPhg==
+In-Reply-To: <20170610140351.10703-1-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, longman@redhat.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Tejun Heo <tj@kernel.org>
 
-Hello,
+Separate out cgroup_has_tasks() test from
+cgroup_subtree_control_write().  This will be used by the following
+changes.
 
-This is v2 of cgroup2 thread mode patchset.  The changes from the last
-take[L] are
+This patch doesn't cause any behavior changes.
 
-* Support for mixed thread mode for the root cgroup added.  This
-  allows the root cgroup to serve as both a thread root and a parent
-  to domain cgroups.  This allows users to use thread mode without any
-  nesting while not interfering with domain level cgroup operations.
-  Note that this simply makes use of the fact that the system root has
-  always been exempt from no-internal-process constraint.  The whole
-  resource hierarchy still follows the same basic rules
-  w.r.t. resource domains.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup/cgroup.c | 49 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 27 insertions(+), 22 deletions(-)
 
-* Thread mode enable / disable now piggy backs on the existing control
-  mask update mechanism rather than implementing manual css_set update
-  mechanism of its own.  This makes the mechanism simpler and more
-  flexible.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 8d4e85eae42c..dcd120af4084 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -581,6 +581,30 @@ static bool css_set_populated(struct css_set *cset)
+ 	return !list_empty(&cset->tasks) || !list_empty(&cset->mg_tasks);
+ }
+ 
++static bool cgroup_has_tasks(struct cgroup *cgrp)
++{
++	struct cgrp_cset_link *link;
++	bool has_tasks = false;
++
++	/*
++	 * Because namespaces pin csets too, @cgrp->cset_links
++	 * might not be empty even when @cgrp is empty.  Walk and
++	 * verify each cset.
++	 */
++	spin_lock_irq(&css_set_lock);
++
++	list_for_each_entry(link, &cgrp->cset_links, cset_link) {
++		if (css_set_populated(link->cset)) {
++			has_tasks = true;
++			break;
++		}
++	}
++
++	spin_unlock_irq(&css_set_lock);
++
++	return has_tasks;
++}
++
+ /**
+  * cgroup_update_populated - updated populated count of a cgroup
+  * @cgrp: the target cgroup
+@@ -2886,28 +2910,9 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	 * Except for the root, subtree_control must be zero for a cgroup
+ 	 * with tasks so that child cgroups don't compete against tasks.
+ 	 */
+-	if (enable && cgroup_parent(cgrp)) {
+-		struct cgrp_cset_link *link;
+-
+-		/*
+-		 * Because namespaces pin csets too, @cgrp->cset_links
+-		 * might not be empty even when @cgrp is empty.  Walk and
+-		 * verify each cset.
+-		 */
+-		spin_lock_irq(&css_set_lock);
+-
+-		ret = 0;
+-		list_for_each_entry(link, &cgrp->cset_links, cset_link) {
+-			if (css_set_populated(link->cset)) {
+-				ret = -EBUSY;
+-				break;
+-			}
+-		}
+-
+-		spin_unlock_irq(&css_set_lock);
+-
+-		if (ret)
+-			goto out_unlock;
++	if (enable && cgroup_parent(cgrp) && cgroup_has_tasks(cgrp)) {
++		ret = -EBUSY;
++		goto out_unlock;
+ 	}
+ 
+ 	/* save and update control masks and prepare csses */
+-- 
+2.13.0
 
-* Fixes and cleanups, including a fix from Waiman.
-
-It is largely based on the discussions that we had at the plumbers
-last year.  Here's the rough outline.
-
-* Thread mode is explicitly enabled on a cgroup by writing "enable"
-  into "cgroup.threads" file.  The cgroup shouldn't have any child
-  cgroups or enabled controllers.
-
-* Once enabled, arbitrary sub-hierarchy can be created and threads can
-  be put anywhere in the subtree by writing TIDs into "cgroup.threads"
-  file.  Process granularity and no-internal-process constraint don't
-  apply in a threaded subtree.
-
-* To be used in a threaded subtree, controllers should explicitly
-  declare thread mode support and should be able to handle internal
-  competition in some way.
-
-* The root of a threaded subtree serves as the resource domain for the
-  whole subtree.  This is where all the controllers are guaranteed to
-  have a common ground and resource consumptions in the threaded
-  subtree which aren't tied to a specific thread are charged.
-  Non-threaded controllers never see beyond thread root and can assume
-  that all controllers will follow the same rules upto that point.
-
-* Root cgroup can enable thread mode anytime and a first level child
-  can opt-in to that thread subtree anchored at root by writing "join"
-  to "cgroup.threads" files, start its own thread subtree or just be a
-  normal cgroup.
-
-This allows threaded controllers to implement thread granular resource
-control without getting in the way of system level resource
-partitioning.
-
-This patchset contains the following ten patches.  For more details on
-the interface and behavior, please refer to 0007.
-
- 0001-cgroup-separate-out-cgroup_has_tasks.patch
- 0002-cgroup-reorganize-cgroup.procs-task-write-path.patch
- 0003-cgroup-Fix-reference-counting-bug-in-cgroup_procs_wr.patch
- 0004-cgroup-add-flags-to-css_task_iter_start-and-implemen.patch
- 0005-cgroup-introduce-cgroup-proc_cgrp-and-threaded-css_s.patch
- 0006-cgroup-implement-CSS_TASK_ITER_THREADED.patch
- 0007-cgroup-implement-cgroup-v2-thread-support.patch
- 0008-sched-Misc-preps-for-cgroup-unified-hierarchy-interf.patch
- 0009-sched-Implement-interface-for-cgroup-unified-hierarc.patch
- 0010-sched-Make-cpu-cpuacct-threaded-controllers.patch
-
-0001-0007 implement cgroup2 thread mode.  0008-0010 enable CPU
-controller on cgroup2 and mark them as supporting thread mode.
-0008-0010 are included for reference.
-
-The patchset is based on the current master 179145e6312b ("Merge tag
-'iommu-fixes-v4.12-rc4' of
-git://git.kernel.org/pub/scm/linux/kernel/git/joro/iommu") and also
-available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-threads-v2
-
-diffstat follows.
-
- Documentation/cgroup-v2.txt     |   99 +++++
- include/linux/cgroup-defs.h     |   34 +
- include/linux/cgroup.h          |   12 
- kernel/cgroup/cgroup-internal.h |    8 
- kernel/cgroup/cgroup-v1.c       |   64 +++
- kernel/cgroup/cgroup.c          |  727 ++++++++++++++++++++++++++++++++--------
- kernel/cgroup/cpuset.c          |    6 
- kernel/cgroup/freezer.c         |    6 
- kernel/cgroup/pids.c            |    1 
- kernel/events/core.c            |    1 
- kernel/sched/core.c             |  150 ++++++++
- kernel/sched/cpuacct.c          |   53 ++
- kernel/sched/cpuacct.h          |    5 
- mm/memcontrol.c                 |    2 
- net/core/netclassid_cgroup.c    |    2 
- 15 files changed, 992 insertions(+), 178 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[L] http://lkml.kernel.org/r/20170202200632.13992-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
