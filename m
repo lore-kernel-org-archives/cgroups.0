@@ -1,108 +1,116 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/10] cgroup: Fix reference counting bug in cgroup_procs_write()
-Date: Sat, 10 Jun 2017 10:03:44 -0400
-Message-ID: <20170610140351.10703-4-tj@kernel.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v2
+Date: Mon, 12 Jun 2017 14:31:50 +0200
+Message-ID: <20170612123150.scopfxela7v26dct@hirez.programming.kicks-ass.net>
 References: <20170610140351.10703-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+DpFh76kS7Zcs2FMQFIyXncvc1CXPEw/lB9vTs70VYk=;
-        b=MltinqGVXkIHrcdQi/cznonrt3bVc9tx+EWsxYfDf+3VQcERwFJMNrKYZ8Mf/x9Mm2
-         CVGfaiwJ64EHsFqMyXYS8gVOghLTui5agwsxttm0cRyfBMs0gQbCdCfa5QZSN11aqRaq
-         zW+zvEERrngg+uIVllN5F91ke6Om1KAHTSN2nvHYMy68ihEhBYKxVx4JvNJqrLyWHsdA
-         rRdqUpgz+c31lZi84GJGA9m6VZSMTwIzPqw6pM79SWG16r1Z8MjiAwaoR+v6s0xfhm27
-         fTSvo4SZjm6qI4ZnkIikUbejlifq3CZXLqR1QKt13ZTHF6ibp8p/XZBLd4zC9Qa/L4KW
-         AQGA==
-In-Reply-To: <20170610140351.10703-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=z8vXwMgBdwIRGNllsexOKrcEn/RzIpfiVDB4lWwwR1M=; b=jID/SHtYqbQWCF9gqN3+0cdyr
+        dRp/4+TPUZrBCw+FMivtEnGcstpwySiNzXr6HW/W6wHFC2iuDapuH3LD/QoncGKW1Rxo+qG/ecv+i
+        YEabW1fLXK7kFP7nMODH3HKExlPSwpcsy3NmsaICoAHsD1gWTGZgGpiG8hYcsmBdHlcJp7hHVn6ea
+        U76gQwctkxRXXRzvA0rMpycsAeQ1IAQ85mkQJhodePIMo7JutjbUcL6OazLBkRrOb24N+K8wjnyI0
+        yBM8zELhfr7bUwHcL+KoR9ETsZwRmyl+qIVLCJbGHbl7Ja75jGeTtz7Q0gsryl/W88uZT+Qvao9ZW
+      
+Content-Disposition: inline
+In-Reply-To: <20170610140351.10703-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, longman@redhat.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-From: Waiman Long <longman@redhat.com>
 
-The cgroup_procs_write_start() took a reference to the task structure
-which was not properly released within cgroup_procs_write() and so
-on. So a put_task_struct() call is added to cgroup_procs_write_finish()
-to match the get_task_struct() in cgroup_procs_write_start() to fix
-this reference counting error.
+Please don't rush this; also, I might not be around much the coming
+weeks due to taking some leave 'soon' (kid #3 is imminent).
 
-Signed-off-by: Waiman Long <longman@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/cgroup/cgroup-internal.h | 2 +-
- kernel/cgroup/cgroup-v1.c       | 2 +-
- kernel/cgroup/cgroup.c          | 8 +++++---
- 3 files changed, 7 insertions(+), 5 deletions(-)
+And I really need more time to look at this (and re-read the old
+discussions, because I've forgot most everything again).
 
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index f0a0dba97bad..2c8e3a949fc5 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -182,7 +182,7 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
- 		       bool threadgroup);
- struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup)
- 	__acquires(&cgroup_threadgroup_rwsem);
--void cgroup_procs_write_finish(void)
-+void cgroup_procs_write_finish(struct task_struct *task)
- 	__releases(&cgroup_threadgroup_rwsem);
- 
- void cgroup_lock_and_drain_offline(struct cgroup *cgrp);
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index f13ccab992c7..f6dba423e8ff 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -549,7 +549,7 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
- 	ret = cgroup_attach_task(cgrp, task, threadgroup);
- 
- out_finish:
--	cgroup_procs_write_finish();
-+	cgroup_procs_write_finish(task);
- out_unlock:
- 	cgroup_kn_unlock(of->kn);
- 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 78a2c9788d40..ddcbfda642cd 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2438,12 +2438,15 @@ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup)
- 	return tsk;
- }
- 
--void cgroup_procs_write_finish(void)
-+void cgroup_procs_write_finish(struct task_struct *task)
- 	__releases(&cgroup_threadgroup_rwsem)
- {
- 	struct cgroup_subsys *ss;
- 	int ssid;
- 
-+	/* release reference from cgroup_procs_write_start() */
-+	put_task_struct(task);
-+
- 	percpu_up_write(&cgroup_threadgroup_rwsem);
- 	for_each_subsys(ss, ssid)
- 		if (ss->post_attach)
-@@ -3102,7 +3105,6 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
- 
- static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
- {
--	LIST_HEAD(pending);
- 	struct cgroup_subsys *ss = cfts[0].ss;
- 	struct cgroup *root = &ss->root->cgrp;
- 	struct cgroup_subsys_state *css;
-@@ -3793,7 +3795,7 @@ static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
- 	ret = cgroup_attach_task(cgrp, task, true);
- 
- out_finish:
--	cgroup_procs_write_finish();
-+	cgroup_procs_write_finish(task);
- out_unlock:
- 	cgroup_kn_unlock(of->kn);
- 
--- 
-2.13.0
+On Sat, Jun 10, 2017 at 10:03:41AM -0400, Tejun Heo wrote:
 
+> * Thread mode is explicitly enabled on a cgroup by writing "enable"
+>   into "cgroup.threads" file.  The cgroup shouldn't have any child
+>   cgroups or enabled controllers.
+> 
+> * Once enabled, arbitrary sub-hierarchy can be created and threads can
+>   be put anywhere in the subtree by writing TIDs into "cgroup.threads"
+>   file.  Process granularity and no-internal-process constraint don't
+>   apply in a threaded subtree.
+> 
+> * To be used in a threaded subtree, controllers should explicitly
+>   declare thread mode support and should be able to handle internal
+>   competition in some way.
+> 
+> * The root of a threaded subtree serves as the resource domain for the
+>   whole subtree.  This is where all the controllers are guaranteed to
+>   have a common ground and resource consumptions in the threaded
+>   subtree which aren't tied to a specific thread are charged.
+>   Non-threaded controllers never see beyond thread root and can assume
+>   that all controllers will follow the same rules upto that point.
+> 
+> * Root cgroup can enable thread mode anytime and a first level child
+>   can opt-in to that thread subtree anchored at root by writing "join"
+>   to "cgroup.threads" files, start its own thread subtree or just be a
+>   normal cgroup.
+
+Yuck... this again is a consequence of tagging the 'wrong' thing. Again,
+the primary construct is the resource domain.
+
+If you use that as a tag, you don't need this weird join crap. Because
+as soon as you clear the 'resource domain' flag on a group, it instantly
+becomes a thread group and 'obviously' connects to the first parent that
+is a resource domain.
+
+And, as per the last time, this threaded marker isn't uniquely
+identifying things, so it hard prohibits from ever extending the model
+to allow resource domains nested in a thread subtree. Now I understand
+why you don't implement that now -- you were struggling with the views
+API, but that is no excuse to create an API that permanently disables
+that feature.
+
+I cannot at this time remember if there was a strong use-case for that
+scenario -- like said, I really need to re-read the email threads, but I
+might not have enough time to do so now.
+
+Again, please don't rush this.
+
+> This allows threaded controllers to implement thread granular resource
+> control without getting in the way of system level resource
+> partitioning.
+> 
+> This patchset contains the following ten patches.  For more details on
+> the interface and behavior, please refer to 0007.
+> 
+>  0001-cgroup-separate-out-cgroup_has_tasks.patch
+>  0002-cgroup-reorganize-cgroup.procs-task-write-path.patch
+>  0003-cgroup-Fix-reference-counting-bug-in-cgroup_procs_wr.patch
+>  0004-cgroup-add-flags-to-css_task_iter_start-and-implemen.patch
+>  0005-cgroup-introduce-cgroup-proc_cgrp-and-threaded-css_s.patch
+>  0006-cgroup-implement-CSS_TASK_ITER_THREADED.patch
+>  0007-cgroup-implement-cgroup-v2-thread-support.patch
+>  0008-sched-Misc-preps-for-cgroup-unified-hierarchy-interf.patch
+>  0009-sched-Implement-interface-for-cgroup-unified-hierarc.patch
+>  0010-sched-Make-cpu-cpuacct-threaded-controllers.patch
+> 
+> 0001-0007 implement cgroup2 thread mode.  0008-0010 enable CPU
+> controller on cgroup2 and mark them as supporting thread mode.
+> 0008-0010 are included for reference.
+
+So I really regret the 'shares' interface; we really should have done a
+nice thing.
+
+  https://lkml.kernel.org/r/20170410073622.2y6tnpcd2ssuoztz-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org
+
+So I would like to change to that instead of the weird 100 thing.
+
+As for the RT thing, the runtime/period thing is not a MAX but a MIN
+limit (conceptually -- in practise its both).
+
+Also, we need cpuset to be a thread controller.
