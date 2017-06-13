@@ -1,63 +1,57 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH-cgroup 3/5] cgroup: Make Kconfig prompt of debug cgroup more accurate
-Date: Tue, 13 Jun 2017 17:18:03 -0400
-Message-ID: <1497388685-31207-4-git-send-email-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-cgroup 5/5] cgroup: Enable debug controller only with cgroup_debug boot option
+Date: Tue, 13 Jun 2017 17:18:05 -0400
+Message-ID: <1497388685-31207-6-git-send-email-longman@redhat.com>
 References: <1497388685-31207-1-git-send-email-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com C960D30312C
-In-Reply-To: <1497388685-31207-1-git-send-email-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 87BB3723A1
+In-Reply-To: <1497388685-31207-1-git-send-email-longman@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Waiman Long <longman@redhat.com>
 
-The Kconfig prompt and description of the debug cgroup controller
-more accurate by saying that it is for debug purpose only and its
-interfaces are unstable.
+As suggested by Tejun, the debug controller will be activated only when
+the "cgroup_debug" option is specified in the kernel boot command line.
+Hopefully, that will discourage people from using the debug controller
+for any purpose other than cgroup core debugging.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- init/Kconfig          | 7 +++++--
- kernel/cgroup/debug.c | 6 ++++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ kernel/cgroup/debug.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 1d3475f..5f9d139 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1205,11 +1205,14 @@ config CGROUP_BPF
- 	  inet sockets.
- 
- config CGROUP_DEBUG
--	bool "Example controller"
-+	bool "Debug controller"
- 	default n
-+	depends on DEBUG_KERNEL
- 	help
- 	  This option enables a simple controller that exports
--	  debugging information about the cgroups framework.
-+	  debugging information about the cgroups framework. This
-+	  controller is for control cgroup debugging only. Its
-+	  interfaces are not stable.
- 
- 	  Say N.
- 
 diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-index 1c209aa..cbe77a2 100644
+index 82e5cbd..be901c0 100644
 --- a/kernel/cgroup/debug.c
 +++ b/kernel/cgroup/debug.c
-@@ -1,3 +1,9 @@
+@@ -320,3 +320,23 @@ struct cgroup_subsys debug_cgrp_subsys = {
+ 	.dfl_cftypes	= debug_files,
+ 	.threaded	= true,
+ };
++
 +/*
-+ * Debug controller
-+ *
-+ * WARNING: This controller is for cgroup core debugging only.
-+ * Its interfaces are unstable and subject to changes at any time.
++ * Disable the debug controller by hiding the debug cgroup control files
++ * if the kernel boot parameter "cgroup_debug" isn't set.
 + */
- #include <linux/ctype.h>
- #include <linux/mm.h>
- #include <linux/slab.h>
++static bool cgroup_debug_enable __initdata;
++static int __init enable_cgroup_debug(char *str)
++{
++	cgroup_debug_enable = true;
++	return 1;
++}
++__setup("cgroup_debug", enable_cgroup_debug);
++
++static int __init debug_init(void)
++{
++	if (!cgroup_debug_enable)
++		debug_files[0].name[0] = '\0';
++	return 0;
++}
++core_initcall(debug_init);
 -- 
 1.8.3.1
+
