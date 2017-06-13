@@ -1,62 +1,65 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Bug in cgroup_do_mount()?
-Date: Tue, 13 Jun 2017 11:11:43 -0400
-Message-ID: <20170613151143.GD28327@htj.duckdns.org>
-References: <25030.1497364047@warthog.procyon.org.uk>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=u0syEBK5ANXUNMTK9FoVvjS6PIhjMYIAsWiXYWFYHRA=;
-        b=npypFqKF7IWsktyJSi38KYiByu3f2at5tjlR11/DoqYG1afak0WLBiwcrXx0USgK8O
-         7zcxXEdoPLiVZQB5bNLqSSmO4bRa53rqEm1mEEorbjM1MpY1TvuVcG7b2lQxIRfh17NH
-         muaHhZSJH2NNF5Tjjg3VNLvMbZw70bE/xJdXdGGGsTovHBhy/xlWIYQg79gV8bgucEEi
-         pmk7RAm8v2V57Z+3abhuGAUb8QCG5dL19geU+Ksdtx3cdDQb5z+IggHuRaMLnISDlK8n
-         oryEymYKeuNolY+/k0uvXPnbY3W/qPW+Z4tT1fJeU/God8A1ANWAN9TzyGGs8Klujkdu
-         YxiQ==
-Content-Disposition: inline
-In-Reply-To: <25030.1497364047-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-cgroup 0/5] cgroup: Make debug controller useful for debugging
+Date: Tue, 13 Jun 2017 17:18:00 -0400
+Message-ID: <1497388685-31207-1-git-send-email-longman@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com A498A7D4E4
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Waiman Long <longman@redhat.com>
 
-Hello, David.
+The current debug controller is vaguely called an "Example controller"
+at the Kconfig prompt, and it is just not that useful for debugging
+purpose.
 
-On Tue, Jun 13, 2017 at 03:27:27PM +0100, David Howells wrote:
-> I'm having a go at converting cgroups to use my fs_context stuff, and I've
-> spotted a potential bug in the existing code.  In cgroup_do_mount(), there is
-> the following snippet:
-> 
-> 		mutex_lock(&cgroup_mutex);
-> 		spin_lock_irq(&css_set_lock);
-> 
-> 		cgrp = cset_cgroup_from_root(ns->root_cset, root);
-> 
-> 		spin_unlock_irq(&css_set_lock);
-> 		mutex_unlock(&cgroup_mutex);
-> 
-> 		nsdentry = kernfs_node_dentry(cgrp->kn, dentry->d_sb);
-> 
-> Given that locks must be taken to call cset_cgroup_from_root(), is the value
-> of cgrp trustworthy once the locks are dropped?
+This patchset aims to make the debug controller useful again for
+debugging the cgroup core, especially for cgroup v2 and the thread
+mode support.
 
-Heh, yeah, that does look suspicious.  The css_set_lock is protecting
-the list structure itself and cgroup_mutex is required to exclude
-cgroup destruction and migration; however, the ns is pinning the
-root_cset which is immutable and in turn pins the cgroups which are
-associated with it, so the cgroup will stay pinned even after the
-mutex is dropped.
+This patchset is based on top of the Tejun's cgroup v2 thread mode
+patchset:
 
-The mutex lock there is to satisfy the lockdep assertion inside
-cset_cgroup_from_root().  We definitely should add a comment there
-explaining what's going on.
+  https://lkml.org/lkml/2017/6/10/93
 
-Thanks.
+which is available in the following git branch.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-threads-v2
+
+Patch 1 adds a new field to css_set to make accurate count of the
+number of tasks in a css_set.
+
+Patch 2 moves the existing debug controller code in cgroup-v1.c into
+a new debug.c file.
+
+Patch 3 changes the Kconfig prompt to "Debug controller".
+
+Patch 4 enhances the debug information displayed by the debug
+controller to make them more useful for debugging purpose.
+
+Patch 5 hides the debug control files of the debug controller unless
+the "cgroup_debug" kernel command line option is specified.
+
+Waiman Long (5):
+  cgroup: Keep accurate count of tasks in each css_set
+  cgroup: Move debug cgroup to its own file
+  cgroup: Make Kconfig prompt of debug cgroup more accurate
+  cgroup: Make debug cgroup support v2 and thread mode
+  cgroup: Enable debug controller only with cgroup_debug boot option
+
+ include/linux/cgroup-defs.h     |   3 +
+ init/Kconfig                    |   7 +-
+ kernel/cgroup/Makefile          |   1 +
+ kernel/cgroup/cgroup-internal.h |   2 +
+ kernel/cgroup/cgroup-v1.c       | 155 +-----------------
+ kernel/cgroup/cgroup.c          |  12 +-
+ kernel/cgroup/debug.c           | 342 ++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 366 insertions(+), 156 deletions(-)
+ create mode 100644 kernel/cgroup/debug.c
 
 -- 
-tejun
+1.8.3.1
+
