@@ -1,10 +1,10 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH-cgroup 2/6] cgroup: Enable bypass mode in cgroup v2
-Date: Wed, 14 Jun 2017 11:05:33 -0400
-Message-ID: <1497452737-11125-3-git-send-email-longman@redhat.com>
+Subject: [RFC PATCH-cgroup 4/6] cgroup: Introduce subtree root mode
+Date: Wed, 14 Jun 2017 11:05:35 -0400
+Message-ID: <1497452737-11125-5-git-send-email-longman@redhat.com>
 References: <1497452737-11125-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 27E55285C1
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com EBD365F7B6
 In-Reply-To: <1497452737-11125-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -14,574 +14,317 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Waiman Long <longman@redhat.com>
 
-For cgroup v1, different controllers can be binded to different cgroup
-hierarchies optimized for their own use cases. That is not currently
-the case for cgroup v2 where combining all these controllers into
-the same hierarchy will probably require more levels than is needed
-by each individual controller.
+Subtree root mode is a new cgroup mode which applies the following
+restrictions when turned on:
 
-By not enabling a controller in a cgroup and its descendants, we can
-effectively trim the hierarchy as seen by a controller from the leafs
-up. However, there is currently no way to compress the hierarchy in
-the intermediate levels.
+ 1) Controllers are only allowed to be passed to the children in
+    bypass mode except those with the "enable_on_root" flag on.
+ 2) Only 1 child cgroup is allowed.
 
-This patch implements a new bypass mechanism to allow a controller to
-skip some intermediate levels in a hierarchy and effectively flatten
-the hierarchy as seen by that controller.
+That lone child can be used as the pseudo root of a container cgroup
+hierarchy.  All the resources, if controlled, are in the parent
+cgroup. There will be no control knobs in the child. That makes it
+look and feel like a root.
 
-Controllers enabled by the parent's "cgroup.subtree_control"
-file can now be set into a special bypass mode by writing to the
-"cgroup.controllers" file with the special '#' prefix attached to the
-controller name.  In that mode, the controller is disabled for that
-cgroup but it allows its children to have that controller enabled or in
-bypass mode again. The bypass mode is removed by using the '+' prefix.
+That pseudo root is also considered to be mixable and so can become
+root of a mixed threaded subtree. The no internal process constraint
+also does not apply.
 
-With this change, each controller can now have a unique view of their
-virtual process hierarchy that can be quite different from other
-controllers.  We now have the freedom and flexibility to create the
-right hierarchy for each controller to suit their own needs without
-performance loss when compared with cgroup v1.
+The subtree root mode and thread mode are mutually exclusive.
+
+The subtree root mode is enabled by doing:
+
+  # echo root > cgroup.subtree_control
+
+It is disabled by:
+
+  # echo nonroot > cgroup.subtree_control
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- Documentation/cgroup-v2.txt |  98 ++++++++++++++++----
- include/linux/cgroup-defs.h |   8 ++
- kernel/cgroup/cgroup.c      | 211 ++++++++++++++++++++++++++++++++++++--------
- 3 files changed, 263 insertions(+), 54 deletions(-)
+ Documentation/cgroup-v2.txt | 43 +++++++++++++++++++----
+ include/linux/cgroup-defs.h | 12 +++++++
+ kernel/cgroup/cgroup.c      | 86 +++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 129 insertions(+), 12 deletions(-)
 
 diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 98f92b1..0df06ba 100644
+index 55bee8a..bc2913c 100644
 --- a/Documentation/cgroup-v2.txt
 +++ b/Documentation/cgroup-v2.txt
-@@ -323,25 +323,28 @@ both cgroups.
- 2-4-1. Enabling and Disabling
- 
- Each cgroup has a "cgroup.controllers" file which lists all
--controllers available for the cgroup to enable.
-+controllers available for the cgroup to enable for its children.
- 
-   # cat cgroup.controllers
-   cpu io memory
- 
--No controller is enabled by default.  Controllers can be enabled and
--disabled by writing to the "cgroup.subtree_control" file.
-+No controller is enabled by default.  Controllers can be
-+enabled and disabled on the child cgroups by writing to the
-+"cgroup.subtree_control" file.  A '+' prefix enables the controller,
-+and a '-' prefix disables it.
- 
-   # echo "+cpu +memory -io" > cgroup.subtree_control
- 
--Only controllers which are listed in "cgroup.controllers" can be
--enabled.  When multiple operations are specified as above, either they
--all succeed or fail.  If multiple operations on the same controller
--are specified, the last one is effective.
-+Only controllers which are listed in "cgroup.controllers" can
-+be enabled in the "cgroup.subtree_control" file.  When multiple
-+operations are specified as above, either they all succeed or fail.
-+If multiple operations on the same controller are specified, the last
-+one is effective.
- 
- Enabling a controller in a cgroup indicates that the distribution of
- the target resource across its immediate children will be controlled.
--Consider the following sub-hierarchy.  The enabled controllers are
--listed in parentheses.
-+Consider the following sub-hierarchy.  The enabled controllers in the
-+"cgroup.subtree_control" file are listed in parentheses.
- 
-   A(cpu,memory) - B(memory) - C()
-                             \ D()
-@@ -351,6 +354,17 @@ of CPU cycles and memory to its children, in this case, B.  As B has
- "memory" enabled but not "CPU", C and D will compete freely on CPU
- cycles but their division of memory available to B will be controlled.
- 
-+By not enabling a controller in a cgroup and its descendants, we can
-+effectively trim the hierarchy as seen by a controller from the leafs
-+up.  From the perspective of the cpu controller, the hierarchy is:
-+
-+  A - B|C|D
-+
-+From the perspective of the memory controller, the hierarchy becomes:
-+
-+  A - B - C
-+        \ D
-+
- As a controller regulates the distribution of the target resource to
- the cgroup's children, enabling it creates the controller's interface
- files in the child cgroups.  In the above example, enabling "cpu" on B
-@@ -358,7 +372,55 @@ would create the "cpu." prefixed controller interface files in C and
- D.  Likewise, disabling "memory" from B would remove the "memory."
- prefixed controller interface files from C and D.  This means that the
- controller interface files - anything which doesn't start with
--"cgroup." are owned by the parent rather than the cgroup itself.
-+"cgroup." can be considered to be owned by the parent under this
-+control scheme.
-+
-+Enabling controllers via the "cgroup.subtree_control" file is
-+relatively coarse-grained.  Finer-grained control of the controllers
-+in a non-root cgroup can be done by writing a controller name with
-+either a '#' or '+' prefix to its "cgroup.controllers" file directly.
-+
-+Writing the special prefix '#' with the controller name
-+into "cgroup.controllers" is used to mark that controller in
-+bypass mode.  Only controllers that are enabled at the parent's
-+"cgroup.subtree_control" file can be used.  In this mode, the
-+controller is disabled in the cgroup effectively collapsing it with
-+its parent from the perspective of that controller.  However, it allows
-+the enablement of that controller in the "cgroup.subtree_control"
-+file and hence enabled in the child cgroups.  The bypass mode can be
-+disabled by using the '+' prefix to re-enable the controller.
-+
-+In the example below, '+' corresponds to an enabled controller and
-+corresponds to a bypassed controller.
-+
-+   +   #   #   #   +
-+   A - B - C - D - E
-+         \ F
-+	   +
-+In this case, the effective hiearchy is:
-+
-+	A|B|C|D - E
-+	        \ F
-+
-+The use of the special '#' prefix allows the users to trim away layers
-+in the middle of the hierarchy, thus flattening the tree from the
-+perspective of that particular controller.  As a result, different
-+controllers can have quite different views of their virtual process
-+hierarchy that can best fit their own needs.
-+
-+In the diagram below, the controller name in the parenthesis represents
-+controller enabled as shown in the "cgroup.controllers" file.
-+
-+  A(cpu,memory) - B(cpu,#memory) - C()
-+                                 \ D(memory)
-+
-+From the memory controller's perspective, the hierarchy looks like:
-+
-+   A|B|C - D
-+
-+For the CPU controller, the hierarchy is:
-+
-+   A - B|C|D
+@@ -23,7 +23,8 @@ CONTENTS
+   2-4. Controlling Controllers
+     2-4-1. Enabling and Disabling
+     2-4-2. Top-down Constraint
+-    2-4-3. No Internal Process Constraint
++    2-4-3. Subtree root mode
++    2-4-4. No Internal Process Constraint
+   2-5. Delegation
+     2-5-1. Model of Delegation
+     2-5-2. Delegation Containment
+@@ -439,7 +440,33 @@ the parent has the controller enabled ('+' or '#') and a controller
+ can't be disabled if one or more children have it enabled.
  
  
- 2-4-2. Top-down Constraint
-@@ -368,8 +430,8 @@ a resource only if the resource has been distributed to it from the
- parent.  This means that all non-root "cgroup.subtree_control" files
- can only contain controllers which are enabled in the parent's
- "cgroup.subtree_control" file.  A controller can be enabled only if
--the parent has the controller enabled and a controller can't be
--disabled if one or more children have it enabled.
-+the parent has the controller enabled ('+' or '#') and a controller
-+can't be disabled if one or more children have it enabled.
- 
- 
- 2-4-3. No Internal Process Constraint
-@@ -725,11 +787,17 @@ All cgroup core files are prefixed with "cgroup."
- 
-   cgroup.controllers
- 
--	A read-only space separated values file which exists on all
-+	A read-write space separated values file which exists on all
- 	cgroups.
- 
--	It shows space separated list of all controllers available to
--	the cgroup.  The controllers are not ordered.
-+	When read, it shows space separated list of all controllers
-+	available to the cgroup.  The controllers are not ordered.
+-2-4-3. No Internal Process Constraint
++2-4-3. Subtree root mode
 +
-+	Space separated list of controllers prefixed with '+' or '#'
-+	can be written to re-enable or set the controllers in bypass
-+	mode.  If a controller appears more than once on the list,
-+	the last one is effective.  When multiple re-enable and bypass
-+	operations are specified, either all succeed or all fail.
++Subtree root mode is a special cgroup mode that restricts the passing
++of most controllers in bypass mode only.  Only controllers that
++have the special "enabled_on_root" flag on can be directly enabled.
++It also allows only one child cgroup to be created.  That child cgroup
++can be used as the pseudo root of a container cgroup hierarchy.
++
++This pseudo root will look and feel like a root cgroup as resources
++that are not controllable in a real root will not be controllable in
++the pseudo root.  Instead, those resources can be controlled in the
++parent of the pseudo root.
++
++The pseudo root can be the root of a mixed threaded subtree, and the
++no internal process contraint does not apply.  Subtree root mode and
++thread mode are mutually exclusive.
++
++Subtree root is enabled by writing "root" to "cgroup.subtree_control".
++
++  # echo root > cgroup.subtree_control
++
++It is disabled by writing "nonroot" to "cgroup.subtree_control".
++
++  # echo nonroot > cgroup.subtree_control
++
++
++2-4-4. No Internal Process Constraint
  
-   cgroup.subtree_control
+ When a non-root cgroup distributes resources to their children while
+ having processes of its own, its internal processes will then compete
+@@ -817,10 +844,14 @@ All cgroup core files are prefixed with "cgroup."
+ 	or '#' can be written to enable or disable controllers as
+ 	well as setting them into bypass mode.	A controller name
+ 	prefixed with '+' enables the controller and '-' disables.
+-	The '#' prefix sets the controller into bypass mode.  If a
+-	controller appears more than once on the list, the last
+-	one is effective.  When multiple operations are specified,
+-	either all succeed or all fail.
++	The '#' prefix sets the controller into bypass mode.
++
++	The special keywords "root" and "nonroot" can be written to
++	enable and disable the subtree root mode respectively.
++
++	If a controller or a keyword appears more than once on the
++	list, the last one is effective.  When multiple operations
++	are specified, either all succeed or all fail.
+ 
+   cgroup.events
  
 diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index ea3218a..f5c1e36 100644
+index 14fdddb..72d51ec 100644
 --- a/include/linux/cgroup-defs.h
 +++ b/include/linux/cgroup-defs.h
-@@ -289,6 +289,14 @@ struct cgroup {
- 	u16 old_subtree_control;
- 	u16 old_subtree_ss_mask;
- 
+@@ -61,6 +61,12 @@ enum {
+ 	 * specified at mount time and thus is implemented here.
+ 	 */
+ 	CGRP_CPUSET_CLONE_CHILDREN,
 +	/*
-+	 * The bitmasks of subsystems in bypass mode on the current cgroup.
-+	 * The bypass mode can only be set if a controller is enabled at
-+	 * the parent subtree_control mask.
++	 * Enforce passing controllers in bypass mode and one child only.
++	 * This child becomes a pseudo root that can serve as the root of
++	 * a container.
 +	 */
-+	u16 bypass_ss_mask;
-+	u16 old_bypass_ss_mask;
-+
- 	/* Private pointers for each registered subsystem */
- 	struct cgroup_subsys_state __rcu *subsys[CGROUP_SUBSYS_COUNT];
++	CGRP_SUBTREE_ROOT_MODE,
+ };
  
+ /* cgroup_root->flags */
+@@ -529,6 +535,12 @@ struct cgroup_subsys {
+ 	bool threaded:1;
+ 
+ 	/*
++	 * If %true, the subsystem can be enabled on root or pseudo root on
++	 * the default heirarchy.
++	 */
++	bool enabled_on_root:1;
++
++	/*
+ 	 * If %false, this subsystem is properly hierarchical -
+ 	 * configuration, resource accounting and restriction on a parent
+ 	 * cgroup cover those of its children.  If %true, hierarchy support
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index f72dce1..7d1326e 100644
+index 901314b..f0bea32 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -2598,15 +2598,18 @@ void cgroup_procs_write_finish(struct task_struct *task)
- 			ss->post_attach();
+@@ -165,6 +165,9 @@ struct cgroup_subsys *cgroup_subsys[] = {
+ /* some controllers can be threaded on the default hierarchy */
+ static u16 cgrp_dfl_threaded_ss_mask;
+ 
++/* some controllers can be enabled on pseudo root */
++static u16 cgrp_dfl_enabled_on_root;
++
+ /* The list of hierarchy roots */
+ LIST_HEAD(cgroup_roots);
+ static int cgroup_root_count;
+@@ -340,6 +343,14 @@ static bool cgroup_is_thread_root(struct cgroup *cgrp)
+ 	return cgrp->proc_cgrp == cgrp;
  }
  
--static void cgroup_print_ss_mask(struct seq_file *seq, u16 ss_mask)
-+static void cgroup_print_ss_mask(struct seq_file *seq, u16 ss_mask,
-+				 u16 bypass_mask)
++/* is @cgrp a pseudo root (i.e. parent in subtree root mode)? */
++static bool cgroup_is_pseudo_root(struct cgroup *cgrp)
++{
++	struct cgroup *parent = cgroup_parent(cgrp);
++
++	return parent && test_bit(CGRP_SUBTREE_ROOT_MODE, &parent->flags);
++}
++
+ /* if threaded, would @cgrp become root of a mixed threaded subtree? */
+ static bool cgroup_is_mixable(struct cgroup *cgrp)
  {
- 	struct cgroup_subsys *ss;
- 	bool printed = false;
- 	int ssid;
- 
--	do_each_subsys_mask(ss, ssid, ss_mask) {
-+	do_each_subsys_mask(ss, ssid, ss_mask|bypass_mask) {
- 		if (printed)
- 			seq_putc(seq, ' ');
-+		if (bypass_mask & (1 << ssid))
-+			seq_putc(seq, '#');
- 		seq_printf(seq, "%s", ss->name);
- 		printed = true;
- 	} while_each_subsys_mask();
-@@ -2619,7 +2622,7 @@ static int cgroup_controllers_show(struct seq_file *seq, void *v)
- {
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
- 
--	cgroup_print_ss_mask(seq, cgroup_control(cgrp));
-+	cgroup_print_ss_mask(seq, cgroup_control(cgrp), cgrp->bypass_ss_mask);
- 	return 0;
+@@ -347,8 +358,10 @@ static bool cgroup_is_mixable(struct cgroup *cgrp)
+ 	 * Root isn't under domain level resource control exempting it from
+ 	 * the no-internal-process constraint, so it can serve as a thread
+ 	 * root and a parent of resource domains at the same time.
++	 *
++	 * A pseudo root is also considered to be mixable.
+ 	 */
+-	return !cgroup_parent(cgrp);
++	return !cgroup_parent(cgrp) || cgroup_is_pseudo_root(cgrp);
  }
  
-@@ -2628,7 +2631,7 @@ static int cgroup_subtree_control_show(struct seq_file *seq, void *v)
- {
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
- 
--	cgroup_print_ss_mask(seq, cgrp->subtree_control);
-+	cgroup_print_ss_mask(seq, cgrp->subtree_control, 0);
- 	return 0;
- }
- 
-@@ -2741,6 +2744,7 @@ static void cgroup_save_control(struct cgroup *cgrp)
- 	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
- 		dsct->old_subtree_control = dsct->subtree_control;
- 		dsct->old_subtree_ss_mask = dsct->subtree_ss_mask;
-+		dsct->old_bypass_ss_mask = dsct->bypass_ss_mask;
- 	}
- }
- 
-@@ -2758,10 +2762,11 @@ static void cgroup_propagate_control(struct cgroup *cgrp)
- 	struct cgroup_subsys_state *d_css;
- 
- 	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
--		dsct->subtree_control &= cgroup_control(dsct);
-+		dsct->subtree_control &= cgroup_control(dsct)|
-+					 dsct->bypass_ss_mask;
- 		dsct->subtree_ss_mask =
- 			cgroup_calc_subtree_ss_mask(dsct->subtree_control,
--						    cgroup_ss_mask(dsct));
-+				cgroup_ss_mask(dsct)|dsct->bypass_ss_mask);
- 	}
- }
- 
-@@ -2780,6 +2785,7 @@ static void cgroup_restore_control(struct cgroup *cgrp)
- 	cgroup_for_each_live_descendant_post(dsct, d_css, cgrp) {
- 		dsct->subtree_control = dsct->old_subtree_control;
- 		dsct->subtree_ss_mask = dsct->old_subtree_ss_mask;
-+		dsct->bypass_ss_mask = dsct->old_bypass_ss_mask;
- 	}
- }
- 
-@@ -2821,7 +2827,8 @@ static int cgroup_apply_control_enable(struct cgroup *cgrp)
- 
- 			WARN_ON_ONCE(css && percpu_ref_is_dying(&css->refcnt));
- 
--			if (!(cgroup_ss_mask(dsct) & (1 << ss->id)))
-+			if (!(cgroup_ss_mask(dsct) & (1 << ss->id)) ||
-+			    (dsct->bypass_ss_mask & (1 << ss->id)))
- 				continue;
- 
- 			if (!css) {
-@@ -2871,7 +2878,8 @@ static void cgroup_apply_control_disable(struct cgroup *cgrp)
- 				continue;
- 
- 			if (css->parent &&
--			    !(cgroup_ss_mask(dsct) & (1 << ss->id))) {
-+			    (!(cgroup_ss_mask(dsct) & (1 << ss->id)) ||
-+			    (dsct->bypass_ss_mask & (1 << ss->id)))) {
- 				kill_css(css);
- 			} else if (!css_visible(css)) {
- 				css_clear_dir(css);
-@@ -2944,6 +2952,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 					    loff_t off)
- {
- 	u16 enable = 0, disable = 0;
-+	u16 child_enable = 0, child_bypass = 0;
+ /* is @cgrp root of a mixed threaded subtree */
+@@ -2964,6 +2977,8 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
  	struct cgroup *cgrp, *child;
  	struct cgroup_subsys *ss;
  	char *tok;
-@@ -2981,31 +2990,31 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	if (!cgrp)
- 		return -ENODEV;
++	int subtree_root_mode = 0;
++	int nr_children = 0;
+ 	int ssid, ret;
  
--	for_each_subsys(ss, ssid) {
--		if (enable & (1 << ssid)) {
--			if (cgrp->subtree_control & (1 << ssid)) {
--				enable &= ~(1 << ssid);
--				continue;
--			}
-+	/*
-+	 * We cannot use controllers that are not enabled.
-+	 */
-+	if (~cgroup_control(cgrp) & (enable|disable)) {
-+		ret = -ENOENT;
-+		goto out_unlock;
-+	}
- 
--			if (!(cgroup_control(cgrp) & (1 << ssid))) {
--				ret = -ENOENT;
--				goto out_unlock;
--			}
--		} else if (disable & (1 << ssid)) {
--			if (!(cgrp->subtree_control & (1 << ssid))) {
--				disable &= ~(1 << ssid);
--				continue;
--			}
-+	cgroup_for_each_live_child(child, cgrp) {
-+		child_enable |= child->subtree_control;
-+		child_bypass |= child->bypass_ss_mask;
-+	}
- 
--			/* a child has it enabled? */
--			cgroup_for_each_live_child(child, cgrp) {
--				if (child->subtree_control & (1 << ssid)) {
--					ret = -EBUSY;
--					goto out_unlock;
--				}
--			}
--		}
-+	/*
-+	 * Strip out redundant bits.
-+	 */
-+	enable  &= ~cgrp->subtree_control;
-+	disable &=  cgrp->subtree_control;
+ 	/*
+@@ -2974,6 +2989,14 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	while ((tok = strsep(&buf, " "))) {
+ 		if (tok[0] == '\0')
+ 			continue;
 +
-+	/*
-+	 * We cannot disable controllers that are enabled in a child cgroup.
-+	 */
-+	if (disable & child_enable) {
-+		ret = -EBUSY;
-+		goto out_unlock;
++		if (!strcmp(tok, "root")) {
++			subtree_root_mode = 1;
++			continue;
++		} else if (!strcmp(tok, "nonroot")) {
++			subtree_root_mode = -1;
++			continue;
++		}
+ 		do_each_subsys_mask(ss, ssid, ~cgrp_dfl_inhibit_ss_mask) {
+ 			if (!cgroup_ssid_enabled(ssid) ||
+ 			    strcmp(tok + 1, ss->name))
+@@ -3015,6 +3038,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	cgroup_for_each_live_child(child, cgrp) {
+ 		child_enable |= child->subtree_control|child->subtree_bypass;
+ 		child_bypass |= child->bypass_ss_mask;
++		nr_children++;
  	}
  
- 	if (!enable && !disable) {
-@@ -3037,6 +3046,15 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	cgrp->subtree_control |= enable;
- 	cgrp->subtree_control &= ~disable;
+ 	/*
+@@ -3025,16 +3049,33 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	disable &= (cgrp->subtree_control|cgrp->subtree_bypass);
  
-+	/*
-+	 * Clear the child's bypass_ss_mask for those bits that are disabled
-+	 * in subtree_control.
-+	 */
-+	if (child_bypass & disable) {
-+		cgroup_for_each_live_child(child, cgrp)
-+			child->bypass_ss_mask &= ~disable;
-+	}
-+
- 	ret = cgroup_apply_control(cgrp);
+ 	/*
+-	 * We cannot disable controllers or change the bypass state of
+-	 * controllers that are enabled in a child cgroup.
++	 * We cannot enable or disable subtree root mode if it is root,
++	 * there is any child cgroups or when thread mode is on.
+ 	 */
+-	if ((enable|bypass|disable) & child_enable) {
++	if (subtree_root_mode &&
++	   (!cgroup_parent(cgrp) || nr_children || cgroup_is_threaded(cgrp))) {
+ 		ret = -EBUSY;
+ 		goto out_unlock;
+ 	}
  
- 	cgroup_finalize_control(cgrp, ret);
-@@ -3054,6 +3072,104 @@ enum thread_mode_op {
- 	THREAD_MODE_DISABLE,
- };
- 
-+/*
-+ * Change the bypass controllers for a cgroup in the default hierarchy.
-+ */
-+static ssize_t cgroup_controllers_write(struct kernfs_open_file *of,
-+					char *buf, size_t nbytes,
-+					loff_t off)
-+{
-+	u16 reenable = 0, bypass = 0;
-+	struct cgroup *cgrp, *parent;
-+	struct cgroup_subsys *ss;
-+	char *tok;
-+	int ssid, ret;
-+
+-	if (!(enable|bypass|disable)) {
+-		ret = 0;
 +	/*
-+	 * Parse input - space separated list of subsystem names prefixed
-+	 * with either + or #.
++	 * We can't have any controllers enabled directly when in subtree
++	 * root mode except those with the enabled_on_root flag on.
 +	 */
-+	buf = strstrip(buf);
-+	while ((tok = strsep(&buf, " "))) {
-+		if (tok[0] == '\0')
-+			continue;
-+		do_each_subsys_mask(ss, ssid, ~cgrp_dfl_inhibit_ss_mask) {
-+			if (!cgroup_ssid_enabled(ssid) ||
-+			    strcmp(tok + 1, ss->name))
-+				continue;
-+
-+			if (*tok == '+') {
-+				reenable |= 1 << ssid;
-+				bypass &= ~(1 << ssid);
-+			} else if (*tok == '#') {
-+				bypass |= 1 << ssid;
-+				reenable &= ~(1 << ssid);
-+			} else {
-+				return -EINVAL;
-+			}
-+			break;
-+		} while_each_subsys_mask();
-+		if (ssid == CGROUP_SUBSYS_COUNT)
-+			return -EINVAL;
-+	}
-+
-+	cgrp = cgroup_kn_lock_live(of->kn, true);
-+	if (!cgrp)
-+		return -ENODEV;
-+
-+	/*
-+	 * Write to root cgroup's controllers file is not allowed.
-+	 */
-+	parent = cgroup_parent(cgrp);
-+	if (!parent) {
++	if ((test_bit(CGRP_SUBTREE_ROOT_MODE, &cgrp->flags) ||
++	    (subtree_root_mode > 0)) &&
++	   ((enable|cgrp->subtree_control) & ~cgrp_dfl_enabled_on_root
++					   & ~disable)) {
 +		ret = -EINVAL;
 +		goto out_unlock;
 +	}
 +
 +	/*
-+	 * Only controllers enabled by the parent can be specified here.
++	 * We cannot disable controllers or change the bypass state of
++	 * controllers that are enabled in a child cgroup.
 +	 */
-+	if (~cgroup_control(cgrp) & (reenable|bypass)) {
-+		ret = -ENOENT;
-+		goto out_unlock;
-+	}
-+
-+	/*
-+	 * Mask off irrelevant bits.
-+	 */
-+	bypass   &= ~cgrp->bypass_ss_mask;
-+	reenable &=  cgrp->bypass_ss_mask;
-+
-+	if (!bypass && !reenable) {
-+		ret = 0;
-+		goto out_unlock;
-+	}
-+
-+	/*
-+	 * We cannot change the bypass state of a controller that is enabled
-+	 * in subtree_control.
-+	 */
-+	if (cgrp->subtree_control & (reenable|bypass)) {
++	if ((enable|bypass|disable) & child_enable) {
 +		ret = -EBUSY;
-+		goto out_unlock;
-+	}
-+
-+	/* Save and update control masks and prepare csses */
-+	cgroup_save_control(cgrp);
-+
-+	cgrp->bypass_ss_mask |= bypass;
-+	cgrp->bypass_ss_mask &= ~reenable;
-+
-+	ret = cgroup_apply_control(cgrp);
-+	cgroup_finalize_control(cgrp, ret);
-+	kernfs_activate(cgrp->kn);
-+	ret = 0;
-+
-+out_unlock:
-+	cgroup_kn_unlock(of->kn);
-+	return ret ?: nbytes;
-+}
-+
- static int cgroup_vet_thread_mode_op(struct cgroup *cgrp, enum thread_mode_op op)
- {
- 	/* verify join conditions first and convert it to ENABLE */
-@@ -3087,11 +3203,12 @@ static int cgroup_vet_thread_mode_op(struct cgroup *cgrp, enum thread_mode_op op
- 
- 	/*
- 	 * @cgrp is starting or ending a normal threaded subtree.  Make
--	 * sure the subtree has no !threaded controller enabled and avoid
--	 * needing implicit domain controller migrations.
-+	 * sure the subtree has no !threaded controller enabled or bypassed
-+	 * and avoid needing implicit domain controller migrations.
- 	 */
- 	if (css_has_online_children(&cgrp->self) ||
--	   (cgrp->subtree_control & ~cgrp_dfl_threaded_ss_mask))
-+	   ((cgrp->subtree_control|cgrp->bypass_ss_mask) &
-+			~cgrp_dfl_threaded_ss_mask))
- 		return -EBUSY;
- 
- 	/* no partial disable */
-@@ -4250,6 +4367,7 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
- 	{
- 		.name = "cgroup.controllers",
- 		.seq_show = cgroup_controllers_show,
-+		.write = cgroup_controllers_write,
- 	},
- 	{
- 		.name = "cgroup.subtree_control",
-@@ -4396,7 +4514,8 @@ static void css_release(struct percpu_ref *ref)
- }
- 
- static void init_and_link_css(struct cgroup_subsys_state *css,
--			      struct cgroup_subsys *ss, struct cgroup *cgrp)
-+			      struct cgroup_subsys *ss, struct cgroup *cgrp,
-+			      struct cgroup_subsys_state *parent_css)
- {
- 	lockdep_assert_held(&cgroup_mutex);
- 
-@@ -4412,7 +4531,7 @@ static void init_and_link_css(struct cgroup_subsys_state *css,
- 	atomic_set(&css->online_cnt, 0);
- 
- 	if (cgroup_parent(cgrp)) {
--		css->parent = cgroup_css(cgroup_parent(cgrp), ss);
-+		css->parent = parent_css;
- 		css_get(css->parent);
+ 		goto out_unlock;
  	}
  
-@@ -4475,19 +4594,33 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
- 					      struct cgroup_subsys *ss)
- {
- 	struct cgroup *parent = cgroup_parent(cgrp);
--	struct cgroup_subsys_state *parent_css = cgroup_css(parent, ss);
-+	struct cgroup_subsys_state *parent_css;
- 	struct cgroup_subsys_state *css;
- 	int err;
+@@ -3056,6 +3097,13 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 		goto out_unlock;
+ 	}
  
- 	lockdep_assert_held(&cgroup_mutex);
++	if (!(enable|bypass|disable)) {
++		ret = 0;
++		if (subtree_root_mode)
++			goto set_root_mode;
++		goto out_unlock;
++	}
++
+ 	/* save and update control masks and prepare csses */
+ 	cgroup_save_control(cgrp);
+ 
+@@ -3077,6 +3125,14 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 
+ 	cgroup_finalize_control(cgrp, ret);
+ 
++	if (!ret && subtree_root_mode) {
++set_root_mode:
++		if (subtree_root_mode > 0)
++			set_bit(CGRP_SUBTREE_ROOT_MODE, &cgrp->flags);
++		else
++			clear_bit(CGRP_SUBTREE_ROOT_MODE, &cgrp->flags);
++	}
++
+ 	kernfs_activate(cgrp->kn);
+ 	ret = 0;
+ out_unlock:
+@@ -3190,6 +3246,12 @@ static ssize_t cgroup_controllers_write(struct kernfs_open_file *of,
+ 
+ static int cgroup_vet_thread_mode_op(struct cgroup *cgrp, enum thread_mode_op op)
+ {
++	/*
++	 * Thread mode and subtree root mode are mutually exclusive.
++	 */
++	if (test_bit(CGRP_SUBTREE_ROOT_MODE, &cgrp->flags))
++		return -EINVAL;
++
+ 	/* verify join conditions first and convert it to ENABLE */
+ 	if (op == THREAD_MODE_JOIN) {
+ 		/* can't join if it isn't there */
+@@ -4773,6 +4835,15 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
+ 	if (!parent)
+ 		return -ENODEV;
  
 +	/*
-+	 * Need to skip over ancestor cgroups with NULL CSS.
++	 * A cgroup in subtree root mode cannot have more than one child.
 +	 */
-+	for (; parent; parent = cgroup_parent(parent)) {
-+		parent_css = cgroup_css(parent, ss);
-+		if (parent_css)
-+			break;
++	if (test_bit(CGRP_SUBTREE_ROOT_MODE, &parent->flags) &&
++	   !list_empty(&parent->self.children)) {
++		ret = -EINVAL;
++		goto out_unlock;
 +	}
 +
-+	if (!parent) {
-+		WARN_ON_ONCE(1);
-+		return ERR_PTR(-EINVAL);
-+	}
+ 	cgrp = cgroup_create(parent);
+ 	if (IS_ERR(cgrp)) {
+ 		ret = PTR_ERR(cgrp);
+@@ -5173,6 +5244,9 @@ int __init cgroup_init(void)
+ 		if (ss->threaded)
+ 			cgrp_dfl_threaded_ss_mask |= 1 << ss->id;
+ 
++		if (ss->enabled_on_root)
++			cgrp_dfl_enabled_on_root |= 1 << ss->id;
 +
- 	css = ss->css_alloc(parent_css);
- 	if (!css)
- 		css = ERR_PTR(-ENOMEM);
- 	if (IS_ERR(css))
- 		return css;
- 
--	init_and_link_css(css, ss, cgrp);
-+	init_and_link_css(css, ss, cgrp, parent_css);
- 
- 	err = percpu_ref_init(&css->refcnt, css_release, 0, GFP_KERNEL);
- 	if (err)
-@@ -4866,7 +4999,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
- 	css = ss->css_alloc(cgroup_css(&cgrp_dfl_root.cgrp, ss));
- 	/* We don't handle early failures gracefully */
- 	BUG_ON(IS_ERR(css));
--	init_and_link_css(css, ss, &cgrp_dfl_root.cgrp);
-+	init_and_link_css(css, ss, &cgrp_dfl_root.cgrp, NULL);
- 
- 	/*
- 	 * Root csses are never destroyed and we can't initialize
+ 		if (ss->dfl_cftypes == ss->legacy_cftypes) {
+ 			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
+ 		} else {
 -- 
 1.8.3.1
 
