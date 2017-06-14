@@ -1,44 +1,169 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [HMM-CDM 0/5] Cache coherent device memory (CDM) with HMM
-Date: Thu, 15 Jun 2017 08:07:56 +1000
-Message-ID: <1497478076.2897.46.camel@kernel.crashing.org>
-References: <20170614201144.9306-1-jglisse@redhat.com>
-	 <8219f8fb-65bb-7c6b-6c4c-acc0601c1e0f@intel.com>
-	 <20170614213800.GD4160@redhat.com>
-	 <3a617630-2406-da49-707c-4959a2afd8e1@intel.com>
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 27/27] ... and the intel_rdt driver
+Date: Wed, 14 Jun 2017 23:31:36 +0100
+Message-ID: <10464.1497479496@warthog.procyon.org.uk>
+References: <149745355907.10897.10073768158664960494.stgit@warthog.procyon.org.uk> <149745330648.10897.9605870130502083184.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <3a617630-2406-da49-707c-4959a2afd8e1@intel.com>
-Sender: owner-linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-security-module-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 069FA80B22
+In-Reply-To: <149745355907.10897.10073768158664960494.stgit@warthog.procyon.org.uk>
+Content-ID: <10463.1497479496.1@warthog.procyon.org.uk>
+Sender: owner-linux-security-module@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Dave Hansen <dave.hansen@intel.com>, Jerome Glisse <jglisse@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, John Hubbard <jhubbard@nvidia.com>, David Nellans <dnellans@nvidia.com>, cgroups@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Balbir Singh <balbirs@au1.ibm.com>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>
+To: mszeredi@redhat.com, viro@zeniv.linux.org.uk
+Cc: dhowells@redhat.com, linux-nfs@vger.kernel.org, jlayton@redhat.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, fenghua.yu@intel.com
 
-On Wed, 2017-06-14 at 14:58 -0700, Dave Hansen wrote:
-> > > http://www.uefi.org/sites/default/files/resources/ACPI_6_2.pdf
-> >=20
-> > It doesn't interact with that. HMM-CDM is a set of helper that don't
-> > do anything unless instructed so. So for device memory to be presented
-> > as HMM-CDM you need to hotplug it as ZONE_DEVICE(DEVICE_PUBLIC) which
-> > can be done with the helper introduced in patch 2 of this patchset.
->=20
-> I guess I'm asking whether we *should* instruct HMM-CDM to manage all
-> coherent device memory.=C2=A0 If not, where do we draw the line for what =
-we
-> use HMM-CDM, and for what we use the core MM?
+This also needs the attached addition to fix the intel_rdt driver.
 
-Well, if you want the features of HMM ... It basically boils down to
-whether you have some kind of coherent processing unit close to that
-memory and want to manage transparent migration of pages between system
-and device memory, that sort of thing.
-
-Cheers,
-Ben.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+David
+---
+diff --git a/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c b/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c
+index f5af0cc7eb0d..d026701894fd 100644
+--- a/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c
++++ b/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c
+@@ -35,6 +35,11 @@
+ #include <asm/intel_rdt.h>
+ #include <asm/intel_rdt_common.h>
+ 
++struct rdt_fs_context {
++	struct kernfs_fs_context kfc;
++	bool	enable_cdp;
++};
++
+ DEFINE_STATIC_KEY_FALSE(rdt_enable_key);
+ struct kernfs_root *rdt_root;
+ struct rdtgroup rdtgroup_default;
+@@ -743,22 +748,6 @@ static void cdp_disable(void)
+ 	}
+ }
+ 
+-static int parse_rdtgroupfs_options(char *data)
+-{
+-	char *token, *o = data;
+-	int ret = 0;
+-
+-	while ((token = strsep(&o, ",")) != NULL) {
+-		if (!*token)
+-			return -EINVAL;
+-
+-		if (!strcmp(token, "cdp"))
+-			ret = cdp_enable();
+-	}
+-
+-	return ret;
+-}
+-
+ /*
+  * We don't allow rdtgroup directories to be created anywhere
+  * except the root directory. Thus when looking for the rdtgroup
+@@ -823,11 +812,9 @@ void rdtgroup_kn_unlock(struct kernfs_node *kn)
+ 	}
+ }
+ 
+-static struct dentry *rdt_mount(struct file_system_type *fs_type,
+-				int flags, const char *unused_dev_name,
+-				void *data)
++static int rdt_get_tree(struct fs_context *fc)
+ {
+-	struct dentry *dentry;
++	struct rdt_fs_context *ctx = container_of(fc, struct rdt_fs_context, kfc.fc);
+ 	int ret;
+ 
+ 	mutex_lock(&rdtgroup_mutex);
+@@ -835,27 +822,25 @@ static struct dentry *rdt_mount(struct file_system_type *fs_type,
+ 	 * resctrl file system can only be mounted once.
+ 	 */
+ 	if (static_branch_unlikely(&rdt_enable_key)) {
+-		dentry = ERR_PTR(-EBUSY);
++		errorf("intel_rdt: Can only mount once");
++		ret = -EBUSY;
+ 		goto out;
+ 	}
+ 
+-	ret = parse_rdtgroupfs_options(data);
+-	if (ret) {
+-		dentry = ERR_PTR(ret);
+-		goto out_cdp;
++	if (ctx->enable_cdp) {
++		ret = cdp_enable();
++		if (ret < 0)
++			goto out_cdp;
+ 	}
+ 
+ 	closid_init();
+ 
+ 	ret = rdtgroup_create_info_dir(rdtgroup_default.kn);
+-	if (ret) {
+-		dentry = ERR_PTR(ret);
++	if (ret < 0)
+ 		goto out_cdp;
+-	}
+ 
+-	dentry = kernfs_mount(fs_type, flags, rdt_root,
+-			      RDTGROUP_SUPER_MAGIC, NULL);
+-	if (IS_ERR(dentry))
++	ret = kernfs_get_tree(&ctx->kfc);
++	if (ret < 0)
+ 		goto out_cdp;
+ 
+ 	static_branch_enable(&rdt_enable_key);
+@@ -865,8 +850,42 @@ static struct dentry *rdt_mount(struct file_system_type *fs_type,
+ 	cdp_disable();
+ out:
+ 	mutex_unlock(&rdtgroup_mutex);
++	return ret;
++}
++
++static int rdt_parse_option(struct fs_context *fc, char *p)
++{
++	struct rdt_fs_context *ctx = container_of(fc, struct rdt_fs_context, kfc.fc);
+ 
+-	return dentry;
++	if (strcmp(p, "cdp") == 0) {
++		ctx->enable_cdp = true;
++		return 0;
++	}
++
++	return invalf("intel_rdt: Unknown option");
++}
++
++static void rdt_fs_context_free(struct fs_context *fc)
++{
++	struct rdt_fs_context *ctx = container_of(fc, struct rdt_fs_context, kfc.fc);
++
++	kernfs_free_fs_context(&ctx->kfc);
++}
++
++static const struct fs_context_operations rdt_fs_context_ops = {
++	.free		= rdt_fs_context_free,
++	.parse_option	= rdt_parse_option,
++	.get_tree	= rdt_get_tree,
++};
++
++static int rdt_init_fs_context(struct fs_context *fc, struct super_block *src_sb)
++{
++	struct rdt_fs_context *ctx = container_of(fc, struct rdt_fs_context, kfc.fc);
++
++	ctx->kfc.root = rdt_root;
++	ctx->kfc.magic = RDTGROUP_SUPER_MAGIC;
++	ctx->kfc.fc.ops = &rdt_fs_context_ops;
++	return 0;
+ }
+ 
+ static int reset_all_ctrls(struct rdt_resource *r)
+@@ -994,9 +1013,10 @@ static void rdt_kill_sb(struct super_block *sb)
+ }
+ 
+ static struct file_system_type rdt_fs_type = {
+-	.name    = "resctrl",
+-	.mount   = rdt_mount,
+-	.kill_sb = rdt_kill_sb,
++	.name			= "resctrl",
++	.fs_context_size	= sizeof(struct rdt_fs_context),
++	.init_fs_context	= rdt_init_fs_context,
++	.kill_sb		= rdt_kill_sb,
+ };
+ 
+ static int rdtgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
