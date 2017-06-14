@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/7] cgroup: Make Kconfig prompt of debug cgroup more accurate
-Date: Wed, 14 Jun 2017 16:08:38 -0400
-Message-ID: <20170614200842.15174-4-tj@kernel.org>
+Subject: [PATCH 1/7] cgroup: Keep accurate count of tasks in each css_set
+Date: Wed, 14 Jun 2017 16:08:36 -0400
+Message-ID: <20170614200842.15174-2-tj@kernel.org>
 References: <20170614200842.15174-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=IwbQePC3cKGMaWJdnK7rb8J5cg6fKUs8NAGlOdq+m7I=;
-        b=a0hDI0mtW0aFDrjiTqte/yzkRIjiYFTNwqhSL6Dhrw0pCJ0XAya1yWCECsoTLcnoBo
-         //UzLufXIGgPUWr3YbwqZSuDIEIpKEvLgD39gAg5M5j9QmeWysoVUS734Cp0ikh0lzIo
-         AAAcXFSWD3e1VDU+I4+yD9I/U1Vq+iqivwDEy0+1XdKZA3hPyNW10zCwW1uDzHzwniKm
-         5FAU8den4krpNqSN9Gci1usmgGdmt45gWM86vjeJqs5WcrQB/AT69Ls+ZA8y858Pz49d
-         09vy3PMl6/YAYx5ErfM26SXeIEER3aG8rTx327qEHL1zGAjutFORxNEXhaUDMHmiCkAv
-         ltpQ==
+        bh=80GTTmysLAjwm9KDZZ9Wi+ePopPQpD7EP0REk1Jzjdk=;
+        b=ALi8GLaGIVeu/HL29ehqXh0nJxuBHsq2WQNy86mZFvyDojVvG49yKz2fC25pjejdNm
+         mUihfyYX6GRKKsBhtUYVvK+xm/gYYVtQ989oZ7MP1YCnVUmKEfx9AnoCk2YH79VzIn8o
+         Z2/1aY+kg6ZxpAbN2NC6X3CXuwGRKCb6lxQyrkCZPg6uj8v7UW2wfnc5C155MiD5DTq6
+         dib6hi64tyKk/FDMzEOIn7AgIe7Vv21W44KHH1z7gbfjmG/v9fgnmngWNLPZOZq2T3R/
+         l08onpObpGwEMJVLLFiI8dZOwyLPlBWVmvSfzjvyPAeRB+eG8AU1Nqi1WnzjWJwdIsEr
+         PuZw==
 In-Reply-To: <20170614200842.15174-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,52 +25,115 @@ Cc: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.c
 
 From: Waiman Long <longman@redhat.com>
 
-The Kconfig prompt and description of the debug cgroup controller
-more accurate by saying that it is for debug purpose only and its
-interfaces are unstable.
+The reference count in the css_set data structure was used as a
+proxy of the number of tasks attached to that css_set. However, that
+count is actually not an accurate measure especially with thread mode
+support. So a new variable nr_tasks is added to the css_set to keep
+track of the actual task count. This new variable is protected by
+the css_set_lock. Functions that require the actual task count are
+updated to use the new variable.
+
+tj: s/task_count/nr_tasks/ for consistency with cgroup_root->nr_cgrps.
+    Refreshed on top of cgroup/for-v4.13 which dropped on
+    css_set_populated() -> nr_tasks conversion.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- init/Kconfig          | 7 +++++--
- kernel/cgroup/debug.c | 6 ++++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ include/linux/cgroup-defs.h |  3 +++
+ kernel/cgroup/cgroup-v1.c   |  6 +-----
+ kernel/cgroup/cgroup.c      | 10 ++++++++++
+ 3 files changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 1d3475fc9496..5f9d13929ae0 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1205,11 +1205,14 @@ config CGROUP_BPF
- 	  inet sockets.
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index ec47101cb1bf..3bc4196bf217 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -166,6 +166,9 @@ struct css_set {
+ 	/* the default cgroup associated with this css_set */
+ 	struct cgroup *dfl_cgrp;
  
- config CGROUP_DEBUG
--	bool "Example controller"
-+	bool "Debug controller"
- 	default n
-+	depends on DEBUG_KERNEL
- 	help
- 	  This option enables a simple controller that exports
--	  debugging information about the cgroups framework.
-+	  debugging information about the cgroups framework. This
-+	  controller is for control cgroup debugging only. Its
-+	  interfaces are not stable.
++	/* internal task count, protected by css_set_lock */
++	int nr_tasks;
++
+ 	/*
+ 	 * Lists running through all tasks using this cgroup group.
+ 	 * mg_tasks lists tasks which belong to this cset but are in the
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 85d75152402d..e9ea5f201fac 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -334,10 +334,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
+ /**
+  * cgroup_task_count - count the number of tasks in a cgroup.
+  * @cgrp: the cgroup in question
+- *
+- * Return the number of tasks in the cgroup.  The returned number can be
+- * higher than the actual number of tasks due to css_set references from
+- * namespace roots and temporary usages.
+  */
+ static int cgroup_task_count(const struct cgroup *cgrp)
+ {
+@@ -346,7 +342,7 @@ static int cgroup_task_count(const struct cgroup *cgrp)
  
- 	  Say N.
- 
-diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-index 1c209aa43733..cbe77a2087c5 100644
---- a/kernel/cgroup/debug.c
-+++ b/kernel/cgroup/debug.c
-@@ -1,3 +1,9 @@
-+/*
-+ * Debug controller
+ 	spin_lock_irq(&css_set_lock);
+ 	list_for_each_entry(link, &cgrp->cset_links, cset_link)
+-		count += refcount_read(&link->cset->refcount);
++		count += link->cset->nr_tasks;
+ 	spin_unlock_irq(&css_set_lock);
+ 	return count;
+ }
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 8d4e85eae42c..dbfd7028b1c6 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -573,6 +573,11 @@ static int css_set_count	= 1;	/* 1 for init_css_set */
+ /**
+  * css_set_populated - does a css_set contain any tasks?
+  * @cset: target css_set
 + *
-+ * WARNING: This controller is for cgroup core debugging only.
-+ * Its interfaces are unstable and subject to changes at any time.
-+ */
- #include <linux/ctype.h>
- #include <linux/mm.h>
- #include <linux/slab.h>
++ * css_set_populated() should be the same as !!cset->nr_tasks at steady
++ * state. However, css_set_populated() can be called while a task is being
++ * added to or removed from the linked list before the nr_tasks is
++ * properly updated. Hence, we can't just look at ->nr_tasks here.
+  */
+ static bool css_set_populated(struct css_set *cset)
+ {
+@@ -1598,6 +1603,7 @@ static void cgroup_enable_task_cg_lists(void)
+ 				css_set_update_populated(cset, true);
+ 			list_add_tail(&p->cg_list, &cset->tasks);
+ 			get_css_set(cset);
++			cset->nr_tasks++;
+ 		}
+ 		spin_unlock(&p->sighand->siglock);
+ 	} while_each_thread(g, p);
+@@ -2064,8 +2070,10 @@ static int cgroup_migrate_execute(struct cgroup_mgctx *mgctx)
+ 			struct css_set *to_cset = cset->mg_dst_cset;
+ 
+ 			get_css_set(to_cset);
++			to_cset->nr_tasks++;
+ 			css_set_move_task(task, from_cset, to_cset, true);
+ 			put_css_set_locked(from_cset);
++			from_cset->nr_tasks--;
+ 		}
+ 	}
+ 	spin_unlock_irq(&css_set_lock);
+@@ -4789,6 +4797,7 @@ void cgroup_post_fork(struct task_struct *child)
+ 		cset = task_css_set(current);
+ 		if (list_empty(&child->cg_list)) {
+ 			get_css_set(cset);
++			cset->nr_tasks++;
+ 			css_set_move_task(child, NULL, cset, false);
+ 		}
+ 		spin_unlock_irq(&css_set_lock);
+@@ -4838,6 +4847,7 @@ void cgroup_exit(struct task_struct *tsk)
+ 	if (!list_empty(&tsk->cg_list)) {
+ 		spin_lock_irq(&css_set_lock);
+ 		css_set_move_task(tsk, cset, NULL, false);
++		cset->nr_tasks--;
+ 		spin_unlock_irq(&css_set_lock);
+ 	} else {
+ 		get_css_set(cset);
 -- 
 2.13.0
 
