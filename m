@@ -1,390 +1,97 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/7] cgroup: Move debug cgroup to its own file
-Date: Wed, 14 Jun 2017 16:08:37 -0400
-Message-ID: <20170614200842.15174-3-tj@kernel.org>
-References: <20170614200842.15174-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=QT0qdPP63VYoHLyU0wxfUl8r7MXZYitQHtET5reQ6nY=;
-        b=per0eM8ZzGCf9OvVleDQmBI8/AJCU4SoIr7pCFymWIieRjfwvFjgBzZmtK36Ns6008
-         U6h0sV/8UuLebIH8cgbka6Xn9ZbG3F3itvZR9XILA+juE/zy1v+7PBdnSF0RrRyNLPkQ
-         hSME3LUpxFkM2sWKcddNoQX7NHaziXFRkCzPrR90pElyZTFjs893OuaQrRDf3Pat8/xV
-         GI6GSXLxxxzphNMXkMjmWJ2r92QVCEJQDmlh+1B/uT72HUPnqn5uddIPnUihhyy/TKp8
-         +5/NHNve3JRomp65vvzWKUOVb+qlxrE1qFRnGcfz3lLCtJAtDsLEz6kJr0MakNoRBXm6
-         UhLg==
-In-Reply-To: <20170614200842.15174-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [HMM-CDM 0/5] Cache coherent device memory (CDM) with HMM
+Date: Wed, 14 Jun 2017 16:11:39 -0400
+Message-ID: <20170614201144.9306-1-jglisse@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 43A6880464
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: John Hubbard <jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, David Nellans <dnellans-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Balbir Singh <balbirs-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>, Aneesh Kumar <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Paul E . McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
 
-From: Waiman Long <longman@redhat.com>
+Cache coherent device memory apply to architecture with system bus
+like CAPI or CCIX. Device connected to such system bus can expose
+their memory to the system and allow cache coherent access to it
+from the CPU.
 
-The debug cgroup currently resides within cgroup-v1.c and is enabled
-only for v1 cgroup. To enable the debug cgroup also for v2, it makes
-sense to put the code into its own file as it will no longer be v1
-specific. There is no change to the debug cgroup specific code.
+Even if for all intent and purposes device memory behave like regular
+memory, we still want to manage it in isolation from regular memory.
+Several reasons for that, first and foremost this memory is less
+reliable than regular memory if the device hangs because of invalid
+commands we can loose access to device memory. Second CPU access to
+this memory is expected to be slower than to regular memory. Third
+having random memory into device means that some of the bus bandwith
+wouldn't be available to the device but would be use by CPU access.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/cgroup/Makefile          |   1 +
- kernel/cgroup/cgroup-internal.h |   2 +
- kernel/cgroup/cgroup-v1.c       | 149 +-------------------------------------
- kernel/cgroup/debug.c           | 153 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 157 insertions(+), 148 deletions(-)
- create mode 100644 kernel/cgroup/debug.c
+This is why we want to manage such memory in isolation from regular
+memory. Kernel should not try to use this memory as last resort
+when running out of memory, at least for now.
 
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index 387348a40c64..ce693ccb8c58 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -4,3 +4,4 @@ obj-$(CONFIG_CGROUP_FREEZER) += freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
- obj-$(CONFIG_CGROUP_RDMA) += rdma.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
-+obj-$(CONFIG_CGROUP_DEBUG) += debug.o
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index 00f4d6bf048f..793565c05742 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -192,6 +192,8 @@ int cgroup_rmdir(struct kernfs_node *kn);
- int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
- 		     struct kernfs_root *kf_root);
- 
-+int cgroup_task_count(const struct cgroup *cgrp);
-+
- /*
-  * namespace.c
-  */
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index e9ea5f201fac..7bf4b1533f34 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -335,7 +335,7 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
-  * cgroup_task_count - count the number of tasks in a cgroup.
-  * @cgrp: the cgroup in question
-  */
--static int cgroup_task_count(const struct cgroup *cgrp)
-+int cgroup_task_count(const struct cgroup *cgrp)
- {
- 	int count = 0;
- 	struct cgrp_cset_link *link;
-@@ -1259,150 +1259,3 @@ static int __init cgroup_no_v1(char *str)
- 	return 1;
- }
- __setup("cgroup_no_v1=", cgroup_no_v1);
--
--
--#ifdef CONFIG_CGROUP_DEBUG
--static struct cgroup_subsys_state *
--debug_css_alloc(struct cgroup_subsys_state *parent_css)
--{
--	struct cgroup_subsys_state *css = kzalloc(sizeof(*css), GFP_KERNEL);
--
--	if (!css)
--		return ERR_PTR(-ENOMEM);
--
--	return css;
--}
--
--static void debug_css_free(struct cgroup_subsys_state *css)
--{
--	kfree(css);
--}
--
--static u64 debug_taskcount_read(struct cgroup_subsys_state *css,
--				struct cftype *cft)
--{
--	return cgroup_task_count(css->cgroup);
--}
--
--static u64 current_css_set_read(struct cgroup_subsys_state *css,
--				struct cftype *cft)
--{
--	return (u64)(unsigned long)current->cgroups;
--}
--
--static u64 current_css_set_refcount_read(struct cgroup_subsys_state *css,
--					 struct cftype *cft)
--{
--	u64 count;
--
--	rcu_read_lock();
--	count = refcount_read(&task_css_set(current)->refcount);
--	rcu_read_unlock();
--	return count;
--}
--
--static int current_css_set_cg_links_read(struct seq_file *seq, void *v)
--{
--	struct cgrp_cset_link *link;
--	struct css_set *cset;
--	char *name_buf;
--
--	name_buf = kmalloc(NAME_MAX + 1, GFP_KERNEL);
--	if (!name_buf)
--		return -ENOMEM;
--
--	spin_lock_irq(&css_set_lock);
--	rcu_read_lock();
--	cset = rcu_dereference(current->cgroups);
--	list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
--		struct cgroup *c = link->cgrp;
--
--		cgroup_name(c, name_buf, NAME_MAX + 1);
--		seq_printf(seq, "Root %d group %s\n",
--			   c->root->hierarchy_id, name_buf);
--	}
--	rcu_read_unlock();
--	spin_unlock_irq(&css_set_lock);
--	kfree(name_buf);
--	return 0;
--}
--
--#define MAX_TASKS_SHOWN_PER_CSS 25
--static int cgroup_css_links_read(struct seq_file *seq, void *v)
--{
--	struct cgroup_subsys_state *css = seq_css(seq);
--	struct cgrp_cset_link *link;
--
--	spin_lock_irq(&css_set_lock);
--	list_for_each_entry(link, &css->cgroup->cset_links, cset_link) {
--		struct css_set *cset = link->cset;
--		struct task_struct *task;
--		int count = 0;
--
--		seq_printf(seq, "css_set %pK\n", cset);
--
--		list_for_each_entry(task, &cset->tasks, cg_list) {
--			if (count++ > MAX_TASKS_SHOWN_PER_CSS)
--				goto overflow;
--			seq_printf(seq, "  task %d\n", task_pid_vnr(task));
--		}
--
--		list_for_each_entry(task, &cset->mg_tasks, cg_list) {
--			if (count++ > MAX_TASKS_SHOWN_PER_CSS)
--				goto overflow;
--			seq_printf(seq, "  task %d\n", task_pid_vnr(task));
--		}
--		continue;
--	overflow:
--		seq_puts(seq, "  ...\n");
--	}
--	spin_unlock_irq(&css_set_lock);
--	return 0;
--}
--
--static u64 releasable_read(struct cgroup_subsys_state *css, struct cftype *cft)
--{
--	return (!cgroup_is_populated(css->cgroup) &&
--		!css_has_online_children(&css->cgroup->self));
--}
--
--static struct cftype debug_files[] =  {
--	{
--		.name = "taskcount",
--		.read_u64 = debug_taskcount_read,
--	},
--
--	{
--		.name = "current_css_set",
--		.read_u64 = current_css_set_read,
--	},
--
--	{
--		.name = "current_css_set_refcount",
--		.read_u64 = current_css_set_refcount_read,
--	},
--
--	{
--		.name = "current_css_set_cg_links",
--		.seq_show = current_css_set_cg_links_read,
--	},
--
--	{
--		.name = "cgroup_css_links",
--		.seq_show = cgroup_css_links_read,
--	},
--
--	{
--		.name = "releasable",
--		.read_u64 = releasable_read,
--	},
--
--	{ }	/* terminate */
--};
--
--struct cgroup_subsys debug_cgrp_subsys = {
--	.css_alloc = debug_css_alloc,
--	.css_free = debug_css_free,
--	.legacy_cftypes = debug_files,
--};
--#endif /* CONFIG_CGROUP_DEBUG */
-diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-new file mode 100644
-index 000000000000..1c209aa43733
---- /dev/null
-+++ b/kernel/cgroup/debug.c
-@@ -0,0 +1,153 @@
-+#include <linux/ctype.h>
-+#include <linux/mm.h>
-+#include <linux/slab.h>
-+
-+#include "cgroup-internal.h"
-+
-+static struct cgroup_subsys_state *
-+debug_css_alloc(struct cgroup_subsys_state *parent_css)
-+{
-+	struct cgroup_subsys_state *css = kzalloc(sizeof(*css), GFP_KERNEL);
-+
-+	if (!css)
-+		return ERR_PTR(-ENOMEM);
-+
-+	return css;
-+}
-+
-+static void debug_css_free(struct cgroup_subsys_state *css)
-+{
-+	kfree(css);
-+}
-+
-+/*
-+ * debug_taskcount_read - return the number of tasks in a cgroup.
-+ * @cgrp: the cgroup in question
-+ */
-+static u64 debug_taskcount_read(struct cgroup_subsys_state *css,
-+				struct cftype *cft)
-+{
-+	return cgroup_task_count(css->cgroup);
-+}
-+
-+static u64 current_css_set_read(struct cgroup_subsys_state *css,
-+				struct cftype *cft)
-+{
-+	return (u64)(unsigned long)current->cgroups;
-+}
-+
-+static u64 current_css_set_refcount_read(struct cgroup_subsys_state *css,
-+					 struct cftype *cft)
-+{
-+	u64 count;
-+
-+	rcu_read_lock();
-+	count = refcount_read(&task_css_set(current)->refcount);
-+	rcu_read_unlock();
-+	return count;
-+}
-+
-+static int current_css_set_cg_links_read(struct seq_file *seq, void *v)
-+{
-+	struct cgrp_cset_link *link;
-+	struct css_set *cset;
-+	char *name_buf;
-+
-+	name_buf = kmalloc(NAME_MAX + 1, GFP_KERNEL);
-+	if (!name_buf)
-+		return -ENOMEM;
-+
-+	spin_lock_irq(&css_set_lock);
-+	rcu_read_lock();
-+	cset = rcu_dereference(current->cgroups);
-+	list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
-+		struct cgroup *c = link->cgrp;
-+
-+		cgroup_name(c, name_buf, NAME_MAX + 1);
-+		seq_printf(seq, "Root %d group %s\n",
-+			   c->root->hierarchy_id, name_buf);
-+	}
-+	rcu_read_unlock();
-+	spin_unlock_irq(&css_set_lock);
-+	kfree(name_buf);
-+	return 0;
-+}
-+
-+#define MAX_TASKS_SHOWN_PER_CSS 25
-+static int cgroup_css_links_read(struct seq_file *seq, void *v)
-+{
-+	struct cgroup_subsys_state *css = seq_css(seq);
-+	struct cgrp_cset_link *link;
-+
-+	spin_lock_irq(&css_set_lock);
-+	list_for_each_entry(link, &css->cgroup->cset_links, cset_link) {
-+		struct css_set *cset = link->cset;
-+		struct task_struct *task;
-+		int count = 0;
-+
-+		seq_printf(seq, "css_set %pK\n", cset);
-+
-+		list_for_each_entry(task, &cset->tasks, cg_list) {
-+			if (count++ > MAX_TASKS_SHOWN_PER_CSS)
-+				goto overflow;
-+			seq_printf(seq, "  task %d\n", task_pid_vnr(task));
-+		}
-+
-+		list_for_each_entry(task, &cset->mg_tasks, cg_list) {
-+			if (count++ > MAX_TASKS_SHOWN_PER_CSS)
-+				goto overflow;
-+			seq_printf(seq, "  task %d\n", task_pid_vnr(task));
-+		}
-+		continue;
-+	overflow:
-+		seq_puts(seq, "  ...\n");
-+	}
-+	spin_unlock_irq(&css_set_lock);
-+	return 0;
-+}
-+
-+static u64 releasable_read(struct cgroup_subsys_state *css, struct cftype *cft)
-+{
-+	return (!cgroup_is_populated(css->cgroup) &&
-+		!css_has_online_children(&css->cgroup->self));
-+}
-+
-+static struct cftype debug_files[] =  {
-+	{
-+		.name = "taskcount",
-+		.read_u64 = debug_taskcount_read,
-+	},
-+
-+	{
-+		.name = "current_css_set",
-+		.read_u64 = current_css_set_read,
-+	},
-+
-+	{
-+		.name = "current_css_set_refcount",
-+		.read_u64 = current_css_set_refcount_read,
-+	},
-+
-+	{
-+		.name = "current_css_set_cg_links",
-+		.seq_show = current_css_set_cg_links_read,
-+	},
-+
-+	{
-+		.name = "cgroup_css_links",
-+		.seq_show = cgroup_css_links_read,
-+	},
-+
-+	{
-+		.name = "releasable",
-+		.read_u64 = releasable_read,
-+	},
-+
-+	{ }	/* terminate */
-+};
-+
-+struct cgroup_subsys debug_cgrp_subsys = {
-+	.css_alloc = debug_css_alloc,
-+	.css_free = debug_css_free,
-+	.legacy_cftypes = debug_files,
-+};
+This patchset add a new type of ZONE_DEVICE memory (DEVICE_PUBLIC)
+that is use to represent CDM memory. This patchset build on top of
+the HMM patchset that already introduce a new type of ZONE_DEVICE
+memory for private device memory (see HMM patchset).
+
+The end result is that with this patch if a device is in use in
+a process you might have private anonymous memory or file back
+page memory using ZONE_DEVICE (MEMORY_PUBLIC). Thus care must be
+taken to not overwritte lru fields of such pages.
+
+Hence all core mm changes are done to address assumption that any
+process memory is back by a regular struct page that is part of
+the lru. ZONE_DEVICE page are not on the lru and the lru pointer
+of struct page are use to store device specific informations.
+
+Thus this patch update all code path that would make assumptions
+about lruness of a process page.
+
+patch 01 - deals with all the core mm functions
+patch 02 - add an helper to HMM for hotplug of CDM memory
+patch 03 - preparatory patch for memory controller changes
+patch 04 - update memory controller to properly handle
+           ZONE_DEVICE pages when uncharging
+patch 05 - kernel configuration updates and cleanup
+
+git tree:
+https://cgit.freedesktop.org/~glisse/linux/log/?h=hmm-cdm-v2
+
+
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Balbir Singh <balbirs-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>
+Cc: Aneesh Kumar <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: Paul E. McKenney <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+
+Jérôme Glisse (5):
+  mm/device-public-memory: device memory cache coherent with CPU
+  mm/hmm: add new helper to hotplug CDM memory region
+  mm/memcontrol: allow to uncharge page without using page->lru field
+  mm/memcontrol: support MEMORY_DEVICE_PRIVATE and MEMORY_DEVICE_PUBLIC
+  mm/hmm: simplify kconfig and enable HMM and DEVICE_PUBLIC for ppc64
+
+ fs/proc/task_mmu.c       |   2 +-
+ include/linux/hmm.h      |   7 +-
+ include/linux/ioport.h   |   1 +
+ include/linux/memremap.h |  21 +++++
+ include/linux/mm.h       |  16 ++--
+ kernel/memremap.c        |  13 ++-
+ mm/Kconfig               |  30 +++----
+ mm/gup.c                 |   7 ++
+ mm/hmm.c                 |  89 +++++++++++++++++--
+ mm/madvise.c             |   2 +-
+ mm/memcontrol.c          | 226 ++++++++++++++++++++++++++++++-----------------
+ mm/memory.c              |  46 ++++++++--
+ mm/migrate.c             |  60 ++++++++-----
+ mm/swap.c                |  11 +++
+ 14 files changed, 389 insertions(+), 142 deletions(-)
+
 -- 
-2.13.0
-
+2.9.3
