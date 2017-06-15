@@ -1,161 +1,285 @@
-From: Balbir Singh <bsingharora@gmail.com>
-Subject: Re: [HMM-CDM 4/5] mm/memcontrol: support MEMORY_DEVICE_PRIVATE and
- MEMORY_DEVICE_PUBLIC
-Date: Thu, 15 Jun 2017 13:10:30 +1000
-Message-ID: <20170615131030.35fe8d57@firefly.ozlabs.ibm.com>
+From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [HMM-CDM 3/5] mm/memcontrol: allow to uncharge page without
+ using page->lru field
+Date: Thu, 15 Jun 2017 13:31:28 +1000
+Message-ID: <20170615133128.2fe2c33f@firefly.ozlabs.ibm.com>
 References: <20170614201144.9306-1-jglisse@redhat.com>
-	<20170614201144.9306-5-jglisse@redhat.com>
-	<20170615114159.11a1eece@firefly.ozlabs.ibm.com>
-	<20170615020454.GA4666@redhat.com>
+        <20170614201144.9306-4-jglisse@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=dp4qL4z7rd5dYkoLmb79ZkGrPsvI1ABTkMuTf7cBjeI=;
-        b=cTjJBqJ3pEuA832ar8IZq8+XUsQ56XcUVTnXWgmdjPprclU3Lfn6v1vMDGuZTdPG44
-         VTXDLiwykRWcvFnUqKxIXZYFpyu4B3xMPfavz5n8bgVH0Eaxn3WXxyuPpxG+s3FBwuKJ
-         mF/V0ZLkQcWIc3tQ1fj+GxObw7ehcjJ6OW04TdnvlLvqS5a0AeaRXC7jxaQwhFLXLo3O
-         0akVek91ayPKtgiW/ex90ewqOSXBpaQh4APak7I5ym/TOXeRZfrTh90cgscK22SatyL+
-         3o4Gbh6Pa8V5N2LA5GC16j1r6MPW8cGSxpQSMWmq3+iWcTGvYTgLgSO1TNYO+nrB054d
-         KI1w==
-In-Reply-To: <20170615020454.GA4666@redhat.com>
-Sender: owner-linux-mm@kvack.org
+        bh=e0exmiue7cWbpT75TZAnVn+dFfHtOwqEvsfBxr0Ytgk=;
+        b=TdrYsOJf3dIf73737vgTr7z97Bal9wZ94IozX/Ei+yx/9YO11givcW4aDMtuuXmM/W
+         avadx3LRQxiMKKEQeLzyxqUE2lFpUtQVSBuP7y2G9xYzU3oxlj0F/MHS3s1Tjnbt2qbk
+         rOqMavbQ/Lxaz6icP8CP08eK0fSmq823SWrM6hL+4LR7RrC7nxl8qQ2teqTtkm3uOv4h
+         QNtJAymMYu3oSdwLjmeqrLuS6xxVFruhKuTMA+wkqztNxv51avcYJ+LIrr421dwdhn49
+         a6vcT3F5jWwt8wk2q/U6jE/qNSmO0bASje0D5/xeUiaPLxmzpAqFsCP8RSi9OQA5F9vC
+         AaKw==
+In-Reply-To: <20170614201144.9306-4-jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, John Hubbard <jhubbard@nvidia.com>, David Nellans <dnellans@nvidia.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
+To: =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, John Hubbard <jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, David Nellans <dnellans-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 14 Jun 2017 22:04:55 -0400
-Jerome Glisse <jglisse@redhat.com> wrote:
+On Wed, 14 Jun 2017 16:11:42 -0400
+J=C3=A9r=C3=B4me Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
 
-> On Thu, Jun 15, 2017 at 11:41:59AM +1000, Balbir Singh wrote:
-> > On Wed, 14 Jun 2017 16:11:43 -0400
-> > J=C3=A9r=C3=B4me Glisse <jglisse@redhat.com> wrote:
-> >  =20
-> > > HMM pages (private or public device pages) are ZONE_DEVICE page and
-> > > thus need special handling when it comes to lru or refcount. This
-> > > patch make sure that memcontrol properly handle those when it face
-> > > them. Those pages are use like regular pages in a process address
-> > > space either as anonymous page or as file back page. So from memcg
-> > > point of view we want to handle them like regular page for now at
-> > > least.
-> > >=20
-> > > Signed-off-by: J=C3=A9r=C3=B4me Glisse <jglisse@redhat.com>
-> > > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > > Cc: Michal Hocko <mhocko@kernel.org>
-> > > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> > > Cc: cgroups@vger.kernel.org
-> > > ---
-> > >  kernel/memremap.c |  2 ++
-> > >  mm/memcontrol.c   | 58 +++++++++++++++++++++++++++++++++++++++++++++=
-+++++-----
-> > >  2 files changed, 55 insertions(+), 5 deletions(-)
-> > >=20
-> > > diff --git a/kernel/memremap.c b/kernel/memremap.c
-> > > index da74775..584984c 100644
-> > > --- a/kernel/memremap.c
-> > > +++ b/kernel/memremap.c
-> > > @@ -479,6 +479,8 @@ void put_zone_device_private_or_public_page(struc=
-t page *page)
-> > >  		__ClearPageActive(page);
-> > >  		__ClearPageWaiters(page);
-> > > =20
-> > > +		mem_cgroup_uncharge(page);
-> > > + =20
-> >=20
-> > A zone device page could have a mem_cgroup charge if
-> >=20
-> > 1. The old page was charged to a cgroup and the new page from ZONE_DEVI=
-CE then
-> > gets the charge that we need to drop here
-> >=20
-> > And should not be charged
-> >=20
-> > 2. If the driver allowed mmap based allocation (these pages are not on =
-LRU
-> >=20
-> >=20
-> > Since put_zone_device_private_or_public_page() is called from release_p=
-ages(),
-> > I think the assumption is that 2 is not a problem? I've not tested the =
-mmap
-> > bits yet. =20
+> HMM pages (private or public device pages) are ZONE_DEVICE page and
+> thus you can not use page->lru fields of those pages. This patch
+> re-arrange the uncharge to allow single page to be uncharge without
+> modifying the lru field of the struct page.
 >=20
-> Well that is one of the big question. Do we care about memory cgroup desp=
-ite
-> page not being on lru and thus not being reclaimable through the usual pa=
-th ?
+> There is no change to memcontrol logic, it is the same as it was
+> before this patch.
 >=20
-> I believe we do want to keep charging ZONE_DEVICE page against memory cgr=
-oup
-> so that userspace limit are enforced. This is important especialy for dev=
-ice
-> private when migrating back to system memory due to CPU page fault. We do=
- not
-> want the migration back to fail because of memory cgroup limit.
+> Signed-off-by: J=C3=A9r=C3=B4me Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> ---
+>  mm/memcontrol.c | 168 +++++++++++++++++++++++++++++++-------------------=
+------
+>  1 file changed, 92 insertions(+), 76 deletions(-)
 >=20
-> Hence why i do want to charge ZONE_DEVICE page just like regular page. If=
- we
-> have people that run into OOM because of this then we can start thinking =
-about
-> how to account those pages slightly differently inside the memory cgroup.
->=20
-> For now i believe we do want this patch.
->=20
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index e3fe4d0..b93f5fe 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5509,48 +5509,102 @@ void mem_cgroup_cancel_charge(struct page *page,=
+ struct mem_cgroup *memcg,
+>  	cancel_charge(memcg, nr_pages);
+>  }
+> =20
+> -static void uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgo=
+ut,
+> -			   unsigned long nr_anon, unsigned long nr_file,
+> -			   unsigned long nr_kmem, unsigned long nr_huge,
+> -			   unsigned long nr_shmem, struct page *dummy_page)
+> +struct uncharge_gather {
+> +	struct mem_cgroup *memcg;
+> +	unsigned long pgpgout;
+> +	unsigned long nr_anon;
+> +	unsigned long nr_file;
+> +	unsigned long nr_kmem;
+> +	unsigned long nr_huge;
+> +	unsigned long nr_shmem;
+> +	struct page *dummy_page;
+> +};
+> +
+> +static inline void uncharge_gather_clear(struct uncharge_gather *ug)
+>  {
+> -	unsigned long nr_pages =3D nr_anon + nr_file + nr_kmem;
+> +	memset(ug, 0, sizeof(*ug));
+> +}
+> +
+> +static void uncharge_batch(const struct uncharge_gather *ug)
+> +{
 
-Yes, we do need the patch, I was trying to check if we'll end up trying to =
-uncharge
-a page that is not charged, just double checking
+Can we pass page as an argument so that we can do check events on the page?
 
->=20
-> [...]
->=20
-> > > @@ -4610,6 +4637,9 @@ static enum mc_target_type get_mctgt_type(struc=
-t vm_area_struct *vma,
-> > >  		 */
-> > >  		if (page->mem_cgroup =3D=3D mc.from) {
-> > >  			ret =3D MC_TARGET_PAGE;
-> > > +			if (is_device_private_page(page) ||
-> > > +			    is_device_public_page(page))
-> > > +				ret =3D MC_TARGET_DEVICE;
-> > >  			if (target)
-> > >  				target->page =3D page;
-> > >  		}
-> > > @@ -4669,6 +4699,11 @@ static int mem_cgroup_count_precharge_pte_rang=
-e(pmd_t *pmd,
-> > > =20
-> > >  	ptl =3D pmd_trans_huge_lock(pmd, vma);
-> > >  	if (ptl) {
-> > > +		/*
-> > > +		 * Note their can not be MC_TARGET_DEVICE for now as we do not =20
-> >                         there =20
-> > > +		 * support transparent huge page with MEMORY_DEVICE_PUBLIC or
-> > > +		 * MEMORY_DEVICE_PRIVATE but this might change. =20
-> >=20
-> > I am trying to remind myself why THP and MEMORY_DEVICE_* pages don't wo=
-rk well
-> > together today, the driver could allocate a THP size set of pages and m=
-igrate it.
-> > There are patches to do THP migration, not upstream yet. Could you remi=
-nd me
-> > of any other limitations? =20
->=20
-> No there is nothing that would be problematic AFAICT. Persistent memory a=
-lready
-> use huge page so we should be in the clear. But i would rather enable tha=
-t as
-> a separate patchset alltogether and have proper testing specificaly for s=
-uch
-> scenario.
+> +	unsigned long nr_pages =3D ug->nr_anon + ug->nr_file + ug->nr_kmem;
+>  	unsigned long flags;
+> =20
+> -	if (!mem_cgroup_is_root(memcg)) {
+> -		page_counter_uncharge(&memcg->memory, nr_pages);
+> +	if (!mem_cgroup_is_root(ug->memcg)) {
+> +		page_counter_uncharge(&ug->memcg->memory, nr_pages);
+>  		if (do_memsw_account())
+> -			page_counter_uncharge(&memcg->memsw, nr_pages);
+> -		if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && nr_kmem)
+> -			page_counter_uncharge(&memcg->kmem, nr_kmem);
+> -		memcg_oom_recover(memcg);
+> +			page_counter_uncharge(&ug->memcg->memsw, nr_pages);
+> +		if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && ug->nr_kmem)
+> +			page_counter_uncharge(&ug->memcg->kmem, ug->nr_kmem);
+> +		memcg_oom_recover(ug->memcg);
+>  	}
+> =20
+>  	local_irq_save(flags);
+> -	__this_cpu_sub(memcg->stat->count[MEMCG_RSS], nr_anon);
+> -	__this_cpu_sub(memcg->stat->count[MEMCG_CACHE], nr_file);
+> -	__this_cpu_sub(memcg->stat->count[MEMCG_RSS_HUGE], nr_huge);
+> -	__this_cpu_sub(memcg->stat->count[NR_SHMEM], nr_shmem);
+> -	__this_cpu_add(memcg->stat->events[PGPGOUT], pgpgout);
+> -	__this_cpu_add(memcg->stat->nr_page_events, nr_pages);
+> -	memcg_check_events(memcg, dummy_page);
+> +	__this_cpu_sub(ug->memcg->stat->count[MEMCG_RSS], ug->nr_anon);
+> +	__this_cpu_sub(ug->memcg->stat->count[MEMCG_CACHE], ug->nr_file);
+> +	__this_cpu_sub(ug->memcg->stat->count[MEMCG_RSS_HUGE], ug->nr_huge);
+> +	__this_cpu_sub(ug->memcg->stat->count[NR_SHMEM], ug->nr_shmem);
+> +	__this_cpu_add(ug->memcg->stat->events[PGPGOUT], ug->pgpgout);
+> +	__this_cpu_add(ug->memcg->stat->nr_page_events, nr_pages);
+> +	memcg_check_events(ug->memcg, ug->dummy_page);
+>  	local_irq_restore(flags);
+> =20
+> -	if (!mem_cgroup_is_root(memcg))
+> -		css_put_many(&memcg->css, nr_pages);
+> +	if (!mem_cgroup_is_root(ug->memcg))
+> +		css_put_many(&ug->memcg->css, nr_pages);
+> +}
+> +
+> +static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+> +{
+> +	VM_BUG_ON_PAGE(PageLRU(page), page);
+> +	VM_BUG_ON_PAGE(!PageHWPoison(page) && page_count(page), page);
+> +
+> +	if (!page->mem_cgroup)
+> +		return;
+> +
+> +	/*
+> +	 * Nobody should be changing or seriously looking at
+> +	 * page->mem_cgroup at this point, we have fully
+> +	 * exclusive access to the page.
+> +	 */
+> +
+> +	if (ug->memcg !=3D page->mem_cgroup) {
+> +		if (ug->memcg) {
+> +			uncharge_batch(ug);
 
-Agreed
+What is ug->dummy_page set to at this point? ug->dummy_page is assigned bel=
+ow
+
+> +			uncharge_gather_clear(ug);
+> +		}
+> +		ug->memcg =3D page->mem_cgroup;
+> +	}
+> +
+> +	if (!PageKmemcg(page)) {
+> +		unsigned int nr_pages =3D 1;
+> +
+> +		if (PageTransHuge(page)) {
+> +			nr_pages <<=3D compound_order(page);
+> +			ug->nr_huge +=3D nr_pages;
+> +		}
+> +		if (PageAnon(page))
+> +			ug->nr_anon +=3D nr_pages;
+> +		else {
+> +			ug->nr_file +=3D nr_pages;
+> +			if (PageSwapBacked(page))
+> +				ug->nr_shmem +=3D nr_pages;
+> +		}
+> +		ug->pgpgout++;
+> +	} else {
+> +		ug->nr_kmem +=3D 1 << compound_order(page);
+> +		__ClearPageKmemcg(page);
+> +	}
+> +
+> +	ug->dummy_page =3D page;
+> +	page->mem_cgroup =3D NULL;
+>  }
+> =20
+>  static void uncharge_list(struct list_head *page_list)
+>  {
+> -	struct mem_cgroup *memcg =3D NULL;
+> -	unsigned long nr_shmem =3D 0;
+> -	unsigned long nr_anon =3D 0;
+> -	unsigned long nr_file =3D 0;
+> -	unsigned long nr_huge =3D 0;
+> -	unsigned long nr_kmem =3D 0;
+> -	unsigned long pgpgout =3D 0;
+> +	struct uncharge_gather ug;
+>  	struct list_head *next;
+> -	struct page *page;
+> +
+> +	uncharge_gather_clear(&ug);
+> =20
+>  	/*
+>  	 * Note that the list can be a single page->lru; hence the
+> @@ -5558,57 +5612,16 @@ static void uncharge_list(struct list_head *page_=
+list)
+>  	 */
+>  	next =3D page_list->next;
+>  	do {
+> +		struct page *page;
+> +
+
+Nit pick
+
+VM_WARN_ON(is_zone_device_page(page));
+
+>  		page =3D list_entry(next, struct page, lru);
+>  		next =3D page->lru.next;
+> =20
+> -		VM_BUG_ON_PAGE(PageLRU(page), page);
+> -		VM_BUG_ON_PAGE(!PageHWPoison(page) && page_count(page), page);
+> -
+> -		if (!page->mem_cgroup)
+> -			continue;
+> -
+> -		/*
+> -		 * Nobody should be changing or seriously looking at
+> -		 * page->mem_cgroup at this point, we have fully
+> -		 * exclusive access to the page.
+> -		 */
+> -
+> -		if (memcg !=3D page->mem_cgroup) {
+> -			if (memcg) {
+> -				uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+> -					       nr_kmem, nr_huge, nr_shmem, page);
+> -				pgpgout =3D nr_anon =3D nr_file =3D nr_kmem =3D 0;
+> -				nr_huge =3D nr_shmem =3D 0;
+> -			}
+> -			memcg =3D page->mem_cgroup;
+> -		}
+> -
+> -		if (!PageKmemcg(page)) {
+> -			unsigned int nr_pages =3D 1;
+> -
+> -			if (PageTransHuge(page)) {
+> -				nr_pages <<=3D compound_order(page);
+> -				nr_huge +=3D nr_pages;
+> -			}
+> -			if (PageAnon(page))
+> -				nr_anon +=3D nr_pages;
+> -			else {
+> -				nr_file +=3D nr_pages;
+> -				if (PageSwapBacked(page))
+> -					nr_shmem +=3D nr_pages;
+> -			}
+> -			pgpgout++;
+> -		} else {
+> -			nr_kmem +=3D 1 << compound_order(page);
+> -			__ClearPageKmemcg(page);
+> -		}
+> -
+> -		page->mem_cgroup =3D NULL;
+> +		uncharge_page(page, &ug);
+>  	} while (next !=3D page_list);
+> =20
+> -	if (memcg)
+> -		uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+> -			       nr_kmem, nr_huge, nr_shmem, page);
+> +	if (ug.memcg)
+> +		uncharge_batch(&ug);
+>  }
+> =20
+>  /**
+> @@ -5620,6 +5633,8 @@ static void uncharge_list(struct list_head *page_li=
+st)
+>   */
+>  void mem_cgroup_uncharge(struct page *page)
+>  {
+> +	struct uncharge_gather ug;
+> +
+>  	if (mem_cgroup_disabled())
+>  		return;
+> =20
+> @@ -5627,8 +5642,9 @@ void mem_cgroup_uncharge(struct page *page)
+>  	if (!page->mem_cgroup)
+>  		return;
+> =20
+> -	INIT_LIST_HEAD(&page->lru);
+> -	uncharge_list(&page->lru);
+> +	uncharge_gather_clear(&ug);
+> +	uncharge_page(page, &ug);
+> +	uncharge_batch(&ug);
+>  }
+
+
 Balbir Singh.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
