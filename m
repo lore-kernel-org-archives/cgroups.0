@@ -1,64 +1,198 @@
-From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [HMM-CDM 0/5] Cache coherent device memory (CDM) with HMM
-Date: Thu, 15 Jun 2017 09:40:43 +1000
-Message-ID: <CAKTCnz=4AKGnfF5HtcyMQot6zMgtOc+eRiZ5=G+MDYWAFN1bEg@mail.gmail.com>
-References: <20170614201144.9306-1-jglisse@redhat.com> <8219f8fb-65bb-7c6b-6c4c-acc0601c1e0f@intel.com>
- <20170614213800.GD4160@redhat.com> <3a617630-2406-da49-707c-4959a2afd8e1@intel.com>
+From: Balbir Singh <bsingharora@gmail.com>
+Subject: Re: [HMM-CDM 4/5] mm/memcontrol: support MEMORY_DEVICE_PRIVATE and
+ MEMORY_DEVICE_PUBLIC
+Date: Thu, 15 Jun 2017 11:41:59 +1000
+Message-ID: <20170615114159.11a1eece@firefly.ozlabs.ibm.com>
+References: <20170614201144.9306-1-jglisse@redhat.com>
+	<20170614201144.9306-5-jglisse@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=ZNmWJZokLhknfGInBjEUE1ugdxF0kCL5E+xENPLXWqk=;
-        b=ek5H0IbULDiDe9B00ZoRiA3xF2vUpBtndqAO7R0nrYvTjjYQFo0DQ/Rs7ME1qpbJW5
-         bYBodshpv7Eg5RpLpz5QyuIk/lpSmTRPxZj747RnlKmBeQhFsGVUi+dGQvYLufI4PgvS
-         Ezm6Z6HcQhRzYtvhH7hfBfk2/Zy/7r0nORnd3dXDPgC150BkgMVe0HbvJKveXqpjUtXL
-         JWfljBR+ZJOQuhfKWzIEiKZBTCD98qPDGSaTvbW5YjydIPK1KWJJPhM630FQUxlbQqIw
-         YCGx72mpDc+4uQyrDDAc24GvNEnK5ZhCiW3wkdQq43J0lSHYQCVOuUEkIAvKvU0r3D5T
-         iDxg==
-In-Reply-To: <3a617630-2406-da49-707c-4959a2afd8e1-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=date:from:to:cc:subject:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=K3mWAQc+E7l2reoC7E7j5NfjwMsfslZjuWrry9Fbwd0=;
+        b=tnJ9wVickvHR8tAJmQtM25kiteV2vPmu7ahMqd5yDvoMsQ2L5keU3E1NlNpB/r+Pg3
+         tbHuTpKVDFv/dONFDlyMQlJQZLbRBMLDrkKlmrR0jURumZyJSSHinBidjkjQrEb07OMJ
+         yOoWX/iBv3Ykjx15KR7thKN3WY2wto345KHJ4FQhH2FhDvfolnDWiJGzI+yA8wTX5fgb
+         74y/XB6bQTRVGeV0BOIAcakusZ5z1Mmvx2Isl3ZUUHUNWevEb5MX8D+y22eWdMRuPMHS
+         4bEZd9NEcOBPPQtNBrXdN2e4/thhnpIm1JQdpyzJHo4GvCcos7vJ25QcsoURslxyE5/0
+         ot1Q==
+In-Reply-To: <20170614201144.9306-5-jglisse@redhat.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, John Hubbard <jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, David Nellans <dnellans-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Aneesh Kumar <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Paul E . McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+To: =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, John Hubbard <jhubbard@nvidia.com>, David Nellans <dnellans@nvidia.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
 
-On Thu, Jun 15, 2017 at 7:58 AM, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
-> On 06/14/2017 02:38 PM, Jerome Glisse wrote:
->> On Wed, Jun 14, 2017 at 02:20:23PM -0700, Dave Hansen wrote:
->>> On 06/14/2017 01:11 PM, J=C3=A9r=C3=B4me Glisse wrote:
->>>> Cache coherent device memory apply to architecture with system bus
->>>> like CAPI or CCIX. Device connected to such system bus can expose
->>>> their memory to the system and allow cache coherent access to it
->>>> from the CPU.
->>> How does this interact with device memory that's enumerated in the new
->>> ACPI 6.2 HMAT?  That stuff is also in the normal e820 and, by default,
->>> treated as normal system RAM.  Would this mechanism be used for those
->>> devices as well?
->>>
->>> http://www.uefi.org/sites/default/files/resources/ACPI_6_2.pdf
->> It doesn't interact with that. HMM-CDM is a set of helper that don't
->> do anything unless instructed so. So for device memory to be presented
->> as HMM-CDM you need to hotplug it as ZONE_DEVICE(DEVICE_PUBLIC) which
->> can be done with the helper introduced in patch 2 of this patchset.
->
+On Wed, 14 Jun 2017 16:11:43 -0400
+J=C3=A9r=C3=B4me Glisse <jglisse@redhat.com> wrote:
 
-[Removing my cc'd email id and responding from a different address]
+> HMM pages (private or public device pages) are ZONE_DEVICE page and
+> thus need special handling when it comes to lru or refcount. This
+> patch make sure that memcontrol properly handle those when it face
+> them. Those pages are use like regular pages in a process address
+> space either as anonymous page or as file back page. So from memcg
+> point of view we want to handle them like regular page for now at
+> least.
+>=20
+> Signed-off-by: J=C3=A9r=C3=B4me Glisse <jglisse@redhat.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: cgroups@vger.kernel.org
+> ---
+>  kernel/memremap.c |  2 ++
+>  mm/memcontrol.c   | 58 +++++++++++++++++++++++++++++++++++++++++++++++++=
++-----
+>  2 files changed, 55 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/kernel/memremap.c b/kernel/memremap.c
+> index da74775..584984c 100644
+> --- a/kernel/memremap.c
+> +++ b/kernel/memremap.c
+> @@ -479,6 +479,8 @@ void put_zone_device_private_or_public_page(struct pa=
+ge *page)
+>  		__ClearPageActive(page);
+>  		__ClearPageWaiters(page);
+> =20
+> +		mem_cgroup_uncharge(page);
+> +
 
-> I guess I'm asking whether we *should* instruct HMM-CDM to manage all
-> coherent device memory.  If not, where do we draw the line for what we
-> use HMM-CDM, and for what we use the core MM?
->
+A zone device page could have a mem_cgroup charge if
 
-If you believe the memory is managed by the device (and owned by a device
-driver) I'd suggest using HMM-CDM. The idea behind HMM-CDM was that
-it enables transparent migration of pages and its preferred when
-locality of computation
-and locality of memory access is the preferred model.
+1. The old page was charged to a cgroup and the new page from ZONE_DEVICE t=
+hen
+gets the charge that we need to drop here
 
-The other model was N_COHERENT_MEMORY that used the core MM, but
-there were objections to exposing device memory using that technology.
+And should not be charged
 
-Balbir Singh.
+2. If the driver allowed mmap based allocation (these pages are not on LRU
+
+
+Since put_zone_device_private_or_public_page() is called from release_pages=
+(),
+I think the assumption is that 2 is not a problem? I've not tested the mmap
+bits yet.
+
+>  		page->pgmap->page_free(page, page->pgmap->data);
+>  	}
+>  	else if (!count)
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index b93f5fe..171b638 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4391,12 +4391,13 @@ enum mc_target_type {
+>  	MC_TARGET_NONE =3D 0,
+>  	MC_TARGET_PAGE,
+>  	MC_TARGET_SWAP,
+> +	MC_TARGET_DEVICE,
+>  };
+> =20
+>  static struct page *mc_handle_present_pte(struct vm_area_struct *vma,
+>  						unsigned long addr, pte_t ptent)
+>  {
+> -	struct page *page =3D vm_normal_page(vma, addr, ptent);
+> +	struct page *page =3D _vm_normal_page(vma, addr, ptent, true);
+> =20
+>  	if (!page || !page_mapped(page))
+>  		return NULL;
+> @@ -4407,13 +4408,20 @@ static struct page *mc_handle_present_pte(struct =
+vm_area_struct *vma,
+>  		if (!(mc.flags & MOVE_FILE))
+>  			return NULL;
+>  	}
+> -	if (!get_page_unless_zero(page))
+> +	if (is_device_public_page(page)) {
+> +		/*
+> +		 * MEMORY_DEVICE_PUBLIC means ZONE_DEVICE page and which have a
+> +		 * refcount of 1 when free (unlike normal page)
+> +		 */
+> +		if (!page_ref_add_unless(page, 1, 1))
+> +			return NULL;
+> +	} else if (!get_page_unless_zero(page))
+>  		return NULL;
+> =20
+>  	return page;
+>  }
+> =20
+> -#ifdef CONFIG_SWAP
+> +#if defined(CONFIG_SWAP) || defined(CONFIG_DEVICE_PRIVATE)
+>  static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
+>  			pte_t ptent, swp_entry_t *entry)
+>  {
+> @@ -4422,6 +4430,23 @@ static struct page *mc_handle_swap_pte(struct vm_a=
+rea_struct *vma,
+> =20
+>  	if (!(mc.flags & MOVE_ANON) || non_swap_entry(ent))
+>  		return NULL;
+> +
+> +	/*
+> +	 * Handle MEMORY_DEVICE_PRIVATE which are ZONE_DEVICE page belonging to
+> +	 * a device and because they are not accessible by CPU they are store
+> +	 * as special swap entry in the CPU page table.
+> +	 */
+> +	if (is_device_private_entry(ent)) {
+> +		page =3D device_private_entry_to_page(ent);
+> +		/*
+> +		 * MEMORY_DEVICE_PRIVATE means ZONE_DEVICE page and which have
+> +		 * a refcount of 1 when free (unlike normal page)
+> +		 */
+> +		if (!page_ref_add_unless(page, 1, 1))
+> +			return NULL;
+> +		return page;
+> +	}
+> +
+>  	/*
+>  	 * Because lookup_swap_cache() updates some statistics counter,
+>  	 * we call find_get_page() with swapper_space directly.
+> @@ -4582,6 +4607,8 @@ static int mem_cgroup_move_account(struct page *pag=
+e,
+>   *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
+>   *     target for charge migration. if @target is not NULL, the entry is=
+ stored
+>   *     in target->ent.
+> + *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE=
+_PUBLIC
+> + *     or MEMORY_DEVICE_PRIVATE (so ZONE_DEVICE page and thus not on the=
+ lru).
+>   *
+>   * Called with pte lock held.
+>   */
+> @@ -4610,6 +4637,9 @@ static enum mc_target_type get_mctgt_type(struct vm=
+_area_struct *vma,
+>  		 */
+>  		if (page->mem_cgroup =3D=3D mc.from) {
+>  			ret =3D MC_TARGET_PAGE;
+> +			if (is_device_private_page(page) ||
+> +			    is_device_public_page(page))
+> +				ret =3D MC_TARGET_DEVICE;
+>  			if (target)
+>  				target->page =3D page;
+>  		}
+> @@ -4669,6 +4699,11 @@ static int mem_cgroup_count_precharge_pte_range(pm=
+d_t *pmd,
+> =20
+>  	ptl =3D pmd_trans_huge_lock(pmd, vma);
+>  	if (ptl) {
+> +		/*
+> +		 * Note their can not be MC_TARGET_DEVICE for now as we do not
+                        there
+> +		 * support transparent huge page with MEMORY_DEVICE_PUBLIC or
+> +		 * MEMORY_DEVICE_PRIVATE but this might change.
+
+I am trying to remind myself why THP and MEMORY_DEVICE_* pages don't work w=
+ell
+together today, the driver could allocate a THP size set of pages and migra=
+te it.
+There are patches to do THP migration, not upstream yet. Could you remind me
+of any other limitations?
+
+Balbir Singh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
