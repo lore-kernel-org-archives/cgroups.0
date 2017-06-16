@@ -1,40 +1,45 @@
-From: Alice Ferrazzi <alicef-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
-Subject: [RFC] ubsan: signed integer overflow in mem_cgroup_event_ratelimit
-Date: Fri, 16 Jun 2017 21:26:53 +0900
-Message-ID: <20170616122653.GF20222@alitoo>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC] ubsan: signed integer overflow in
+ mem_cgroup_event_ratelimit
+Date: Fri, 16 Jun 2017 17:00:57 +0200
+Message-ID: <20170616150057.GQ30580@dhcp22.suse.cz>
+References: <20170616122653.GF20222@alitoo>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="jkO+KyKz7TfD21mV"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
+In-Reply-To: <20170616122653.GF20222@alitoo>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alice Ferrazzi <alicef-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
+[CC Andrew]
 
---jkO+KyKz7TfD21mV
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Fri 16-06-17 21:26:53, Alice Ferrazzi wrote:
+> Hello,
+> 
+> a user reported a UBSAN signed integer overflow in memcontrol.c
+> Shall we change something in mem_cgroup_event_ratelimit()?
 
-Hello,
+It took me quite some staring but it seems the report is correct.
+---
+From 5683a96c2bfe694b66c54206aabbc36fbbf621bf Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Date: Fri, 16 Jun 2017 16:56:55 +0200
+Subject: [PATCH] mm, memcg: fix potential undefined behavior in
+ mem_cgroup_event_ratelimit
 
-a user reported a UBSAN signed integer overflow in memcontrol.c
-Shall we change something in mem_cgroup_event_ratelimit()?
-
-================================================================================
+Alice has reported the following UBSAN splat:
 kernel: UBSAN: Undefined behaviour in mm/memcontrol.c:661:17
 kernel: signed integer overflow:
-kernel: -2147483644 - 2147483525 cannot be represented in type 'long
-int'
-kernel: CPU: 1 PID: 11758 Comm: mybibtex2filena Tainted: P           O
-4.9.25-gentoo #4
+kernel: -2147483644 - 2147483525 cannot be represented in type 'long int'
+kernel: CPU: 1 PID: 11758 Comm: mybibtex2filena Tainted: P           O 4.9.25-gentoo #4
 kernel: Hardware name: XXXXXX, BIOS YYYYYY
-kernel: e9a3bd64 d1f444f2 00000007 e9a3bd94 7fffff85 e9a3bd74 d1fc8ffe
-e9a3bd74
-kernel: d2b4ef1c e9a3bdf8 d1fc934b d28b15c0 e9a3bd98 0000002d e9a3bdc0
-d2b4ef1c
-kernel: 0000002d 00000002 3431322d 33383437 00343436 d1700ca2 00000000
-ecb4effc
+kernel: e9a3bd64 d1f444f2 00000007 e9a3bd94 7fffff85 e9a3bd74 d1fc8ffe e9a3bd74
+kernel: d2b4ef1c e9a3bdf8 d1fc934b d28b15c0 e9a3bd98 0000002d e9a3bdc0 d2b4ef1c
+kernel: 0000002d 00000002 3431322d 33383437 00343436 d1700ca2 00000000 ecb4effc
 kernel: Call Trace:
 kernel: [<d1f444f2>] dump_stack+0x59/0x87
 kernel: [<d1fc8ffe>] ubsan_epilogue+0xe/0x40
@@ -56,30 +61,32 @@ kernel: [<d16a1e27>] ? SyS_clone+0x27/0x30
 kernel: [<d168a400>] ? __do_page_fault+0x8a0/0x8a0
 kernel: [<d168a41a>] do_page_fault+0x1a/0x20
 kernel: [<d265a35b>] error_code+0x67/0x6c
-kernel:
-================================================================================
 
-Thanks,
-Alice'
+the reason is that we subtract two signed types. Let's fix this by truly
+mimicing time_after and cast the result of the subtraction.
 
---jkO+KyKz7TfD21mV
-Content-Type: application/pgp-signature; name="signature.asc"
+Reported-by: Alice Ferrazzi <alicef-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+---
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
------BEGIN PGP SIGNATURE-----
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e3fe4d0913b3..544d47e5cbbd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -631,7 +631,7 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
+ 	val = __this_cpu_read(memcg->stat->nr_page_events);
+ 	next = __this_cpu_read(memcg->stat->targets[target]);
+ 	/* from time_after() in jiffies.h */
+-	if ((long)next - (long)val < 0) {
++	if ((long)(next - val) < 0) {
+ 		switch (target) {
+ 		case MEM_CGROUP_TARGET_THRESH:
+ 			next = val + THRESHOLDS_EVENTS_TARGET;
+-- 
+2.11.0
 
-iQIzBAABCAAdFiEELk4IVkYcBYUTNvSWViGmsoY4eBoFAllDzmwACgkQViGmsoY4
-eBrq3g//YmzS4vfXDoASyBQlICFQxFCZUkKvYjUsJhZUR4Qn7AvibklaBro1o+dR
-BCzv4f7IswkXN/RJOfN0nTaBvjAnhrI9BO2nhpU7A7pBAGVjs3Nz0jnXPJZwyzZK
-LETLxVZx2c4N84Jt4YOANB7Ie2ajTnLHnw8j4FJ4Up/78E5ovlO41VvJkmwonbSi
-dJ4OnNa55qSYN11kvD+UJJtYp3u3N0l4+g/GaHXMZfNyQrBz+W93r+5WFJ+h4Omj
-M4rkdamP3waX15Xr/tOhJbJQJv7wIps1SR0NNXo8RsBxgzGDNO7jE2zRc8TfZO3a
-gRvDvO2tHcRGsjrRGNZtGKtazANvNWTI5hOYYMBsUHvhaMpeIcpPVfPGQ+4s3g7Q
-yYdrJ5c22PaMGwX+u6tjyJYsc965ZmHGFuwzehiDtW8JMMgSaq1fG31pjHIy3YrN
-2KafEyaBCAr5fJyLFSzC4JHfQdTcxACUyJ517x2oouWxG45GYCySAMX/LcEfuZt4
-Tk9uS9hHza1vgx5n3qGF9GKVFiwHhR9b1W16v1i3IaFG2IORl3tBRojP5StzFZfY
-2n7xl6JqEsluRseA6tM+x5GaKxc1of0MsEFNQqnIn6EWR9kWIm8o25ux5/f72fRy
-XwKGSGX5lLY74JiJAaMBM9dXFzT+RBVmWYERWBi8cyiefKRtzQU=
-=DWiB
------END PGP SIGNATURE-----
-
---jkO+KyKz7TfD21mV--
+-- 
+Michal Hocko
+SUSE Labs
