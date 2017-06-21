@@ -1,87 +1,64 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [RFC PATCH-cgroup 1/6] cgroup: Relax the no internal process
- constraint
-Date: Wed, 21 Jun 2017 17:37:00 -0400
-Message-ID: <0c752151-f4aa-cda0-ba36-77cdc7dc25c6@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH-cgroup 4/6] cgroup: Introduce subtree root mode
+Date: Wed, 21 Jun 2017 17:38:07 -0400
+Message-ID: <20170621213807.GC14720@htj.duckdns.org>
 References: <1497452737-11125-1-git-send-email-longman@redhat.com>
- <1497452737-11125-2-git-send-email-longman@redhat.com>
- <20170621204050.GA14720@htj.duckdns.org>
+ <1497452737-11125-5-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com B59A230315C
-In-Reply-To: <20170621204050.GA14720@htj.duckdns.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=7oDBhRXk/wJHqPBi9EXeIh7qz/QlExClfkJlx5spBOc=;
+        b=SfEOp5Zo4bqKWSMI+LtVu5WGBosT0bQ9mCEo+dZS0b/AAvJLdezNzt23G+mg9RO0Wp
+         Lrjm5cEIkHt26Dy+FB7LXUkX9OSyf+vpc/MSsV9sCbiUfJV8CKDN8HRbws93XQqzV2QX
+         iUp1S3C4uPMPv1DZ+qIWWo8tynDI7iExILCYuXE7CSnWNlediLiYLel+ZILddWSe4xG5
+         hysiIMoEW+RazlWXJr7vBpNN5ebRaRSDcUV/ulcmNuscCyv8C4neCc9wHN0ynxfTUsBW
+         rYGs4pOhdHa/bc2JxcPOZ0LZTeaqG7SciHnrGpScepascw1TkzQeXZTfKajZuAgcTRku
+         BwVQ==
+Content-Disposition: inline
+In-Reply-To: <1497452737-11125-5-git-send-email-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-On 06/21/2017 04:40 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Wed, Jun 14, 2017 at 11:05:32AM -0400, Waiman Long wrote:
->>  2-4-3. No Internal Process Constraint
->>  
->> +When a non-root cgroup distributes resources to their children while
->> +having processes of its own, its internal processes will then compete
->> +against its children in term of resource allocation.  For some resource
->> +types, that is not a problem and the controllers are able to handle
->> +them correctly.  For others, the controllers may not be able to handle
->> +internal process competition correctly.  This type of controllers are
->> +called resource domain controllers in this document.
->> +
->> +Internal processes are not allowed on non-root cgroups which has
->> +any one of those resource domain controllers enabled.  Currently all
->> +controllers that are allowed in a threaded cgroup will be considered
->> +as a non-resource domain controller and hence will not block internal
->> +processes.  In other words, only cgroups which don't contain any
-> This isn't on this patch but I'm not sure this is a good way to define
-> resource domain controllers.  We probably should first define resource
-> domains and walk our way in to the accompanying restrictions and then
-> the distinction between the controller types.
+Hello, Waiman.
 
-This patch essentially allows internal process when non of the resource
-domain controllers are enabled in the sense that they are activated by
-the subtree_control file of the parent. I do agree that we should
-probably define resource domain as a separate topic in this document. It
-is true that a resource domain controller is not technically equivalent
-to the !threaded controller, but this is the best that we have unless we
-introduce another controller attribute for resource domain. I have tried
-to do that in some of my past patches. I think PeterZ had suggested too.
+On Wed, Jun 14, 2017 at 11:05:35AM -0400, Waiman Long wrote:
+> Subtree root mode is a new cgroup mode which applies the following
+> restrictions when turned on:
+> 
+>  1) Controllers are only allowed to be passed to the children in
+>     bypass mode except those with the "enable_on_root" flag on.
+>  2) Only 1 child cgroup is allowed.
+> 
+> That lone child can be used as the pseudo root of a container cgroup
+> hierarchy.  All the resources, if controlled, are in the parent
+> cgroup. There will be no control knobs in the child. That makes it
+> look and feel like a root.
 
-The main purpose to not make thread mode special for internal process
-handling. Instead, internal processes are allowed because no resource
-domain controllers are enabled whether or not thread mode is enabled or
-not. I think that is more consistent than treating thread mode as special.
+I'm not sure not having the control files in the child makes that much
+difference.
 
-> ...
->> +Note that the restriction doesn't get in the way if there is no resource
->> +domain controller enabled in the cgroup's "cgroup.subtree_control".
->> +This is important as otherwise it wouldn't be possible to create
->> +children of a populated cgroup.  To control resource distribution
->> +of a cgroup, the cgroup must create children and transfer all
->> +its processes to the children before enabling controllers in its
->> +"cgroup.subtree_control" file.
-> What happens when we add domain handling to CPU so that it is both a
-> domain and resource controller?  Even if that somehow can be resolved,
-> wouldn't that come with a rather surprising userland behavior changes?
-> Also, I'm not sure what we're achieving by doing this.  It doesn't
-> really relax the restriction.  It just turns it off implicitly when
-> certain conditions are met, which doesn't really allow any real
-> capabilities and at least to me the behaviors feel more subtle and
-> complicated than before.
->
-> Thanks.
+> That pseudo root is also considered to be mixable and so can become
+> root of a mixed threaded subtree. The no internal process constraint
+> also does not apply.
 
-I think CPU isn't a good example for that.
+Heh, you can't just declare a non-root cgroup to be a mixed root but
+if you're special casing this and making the kernel play a masquerade
+with special node, you can make cgroup provide a mixed root while
+hosting the internal processes in a dedicated leaf cgroup which isn't
+visible to the nested root, right?
 
-Another alternative is to treat no internal process as a controller
-attribute. Then we don't need to worry about this intricate question and
-let the  controllers decide if they will allow internal processes.
+It's all a game of masquerading tho and doesn't actually enable
+anything which isn't possible now.  This would definitely be useful
+for testing.
 
-Cheers,
-Longman
+Thanks.
 
-
+-- 
+tejun
