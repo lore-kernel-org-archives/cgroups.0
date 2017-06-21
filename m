@@ -1,55 +1,82 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH-cgroup 1/6] cgroup: Relax the no internal process
- constraint
-Date: Wed, 21 Jun 2017 17:39:05 -0400
-Message-ID: <20170621213905.GD14720@htj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH-cgroup 5/6] cgroup: Skip dying css in
+ cgroup_apply_control_{enable,disable}
+Date: Wed, 21 Jun 2017 17:42:16 -0400
+Message-ID: <20170621214216.GE14720@htj.duckdns.org>
 References: <1497452737-11125-1-git-send-email-longman@redhat.com>
- <1497452737-11125-2-git-send-email-longman@redhat.com>
- <20170621204050.GA14720@htj.duckdns.org>
- <0c752151-f4aa-cda0-ba36-77cdc7dc25c6@redhat.com>
+ <1497452737-11125-6-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=rR9rkN4WUhokwWZwOoaQEppL2XwIaDPl0+upfTO9j3M=;
-        b=AZMPfEOJAFOHmz4XFAoo5GoPtxBQoJC4/RVfAGKjhKvKXpPbYvfwT/tBjCL4gs7eE8
-         DHZOXx+mNU2hHHIIu4wcsuFWZuC0eQnnMi9ICewirrL49VSrqZqpQNAPH8klXdGL+GrL
-         GdsHTMcsR3OPJEChvJHF1l8aWlXwb1Q7Dxxx9Wfvi2g+jaJQtTAjZRSl1PUr3OuYc7iN
-         0jD/M4DMJNL4QrR5Ph6HZUZsk5dqimTVGp8QmN66drAKFbFsIktdcnHb9vN17t5DbO02
-         iyoo2zIeGzOISK7Ujf3km0qXZoWT7F01dv4NWEYHFHjnQU7TKw6+7hJOvDV7nPOjI4ki
-         pnxQ==
+        bh=HG9ZbJj3r34QjAO/Wm+kY0HZTweM3cyaq3dgEB6GnOs=;
+        b=BsGnDuoTsfl+gc6l5d0lYgMRCCfHzdnvM+7KudB5oUWDtDnV/yhZdOmcZw3fNFVdTf
+         0xIDXjkpF9z6ZS8jKkYSXrpqSJ1Vm2xnljHApxXq7T17bmbjI0m4bML/ULaxDel/4yXQ
+         2e+E4kCDFEXIQ2wt2rNubVnOjoxWzqrTlaxopmVm7jihdGnj3kxpuRg4eNKQy0Ow7C2C
+         1AkWEoIiLnjLA11uVJ07jQxhNBT0kUxd0ePjfj5GrjPhFBYjlgvCPyQY1+TJATHiJW7k
+         iLzlrHSt5jTSot8F7nVesFWxE65Onu7W0V1KyTr4npuxG9FCzS8oKWu2dQC7PdpjgfTp
+         yM+Q==
 Content-Disposition: inline
-In-Reply-To: <0c752151-f4aa-cda0-ba36-77cdc7dc25c6-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1497452737-11125-6-git-send-email-longman@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org
 
 Hello,
 
-On Wed, Jun 21, 2017 at 05:37:00PM -0400, Waiman Long wrote:
-> > What happens when we add domain handling to CPU so that it is both a
-> > domain and resource controller?  Even if that somehow can be resolved,
-> > wouldn't that come with a rather surprising userland behavior changes?
-> > Also, I'm not sure what we're achieving by doing this.  It doesn't
-> > really relax the restriction.  It just turns it off implicitly when
-> > certain conditions are met, which doesn't really allow any real
-> > capabilities and at least to me the behaviors feel more subtle and
-> > complicated than before.
+On Wed, Jun 14, 2017 at 11:05:36AM -0400, Waiman Long wrote:
+> While constantly turning on and off controllers, it is possible to
+> trigger the dying CSS warnings in cgroup_apply_control_enable() and
+> cgroup_apply_control_disable(). The current code, however, proceeds
+> after the warning leading to other secondary warnings and maybe even
+> data corruption, like
 > 
-> I think CPU isn't a good example for that.
+>   cgroup: cgroup_addrm_files: failed to add current, err=-17
+> 
+> To avoid the secondary errors, the dying CSS is now ignored or skipped
+> so as not to cause other problem.
+> 
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  kernel/cgroup/cgroup.c | 20 +++++++++++++++-----
+>  1 file changed, 15 insertions(+), 5 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index f0bea32..2a5bd49 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -2846,12 +2846,24 @@ static int cgroup_apply_control_enable(struct cgroup *cgrp)
+>  		for_each_subsys(ss, ssid) {
+>  			struct cgroup_subsys_state *css = cgroup_css(dsct, ss);
+>  
+> -			WARN_ON_ONCE(css && percpu_ref_is_dying(&css->refcnt));
+> -
+>  			if (!(cgroup_ss_mask(dsct, false) & (1 << ss->id)) ||
+>  			    (dsct->bypass_ss_mask & (1 << ss->id)))
+>  				continue;
+>  
+> +			/*
+> +			 * If the css is dying, we will just skip it after
+> +			 * warning.
+> +			 */
+> +			if (css && (css->flags & CSS_DYING)) {
+> +				char name[NAME_MAX+1];
+> +
+> +				cgroup_name(cgrp, name, NAME_MAX);
+> +				pr_warn("%s: %s css of cgroup %s is dying!\n",
+> +					__func__, ss->name, name);
+> +				WARN_ON_ONCE(1);
+> +				continue;
+> +			}
 
-Can you please elaborate?
-
-> Another alternative is to treat no internal process as a controller
-> attribute. Then we don't need to worry about this intricate question and
-> let the  controllers decide if they will allow internal processes.
-
-Isn't that what "threaded" is?
+Can you trigger this without your patches because this triggering
+means that the code screwed up before it reached this point.  We
+should be fixing that bug rather than masking it up here.
 
 Thanks.
 
