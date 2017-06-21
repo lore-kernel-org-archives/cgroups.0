@@ -1,71 +1,81 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH-cgroup 2/6] cgroup: Enable bypass mode in cgroup v2
-Date: Wed, 21 Jun 2017 17:17:01 -0400
-Message-ID: <20170621211701.GB14720@htj.duckdns.org>
-References: <1497452737-11125-1-git-send-email-longman@redhat.com>
- <1497452737-11125-3-git-send-email-longman@redhat.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [v3 1/6] mm, oom: use oom_victims counter to synchronize oom victim selection
+Date: Wed, 21 Jun 2017 22:19:11 +0100
+Message-ID: <1498079956-24467-2-git-send-email-guro@fb.com>
+References: <1498079956-24467-1-git-send-email-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=NpQsAUN5BV9aQZT+XiQqedHCMsDsRUS0/abYQ3KsO1Y=;
-        b=qVnMFd0vcAeV1iahevs0jVI85bMdQ+Yg8rWIxpU33r5S/CWBZiYTU4ScV50zQcop6X
-         6PA4EL72Iiy18qOru0Oqbq89tWvhhvBydxBlICFP2zxdvZi1jfi+FZDhD7EbTqdQaNTT
-         AXkFkJ6ZHNjqRbWYQGux47HIwSP6cjNNrceB1ChUTCWRLOnMniJMaiSpS/lZrLjYJkAA
-         C9E0RaVv8S3Vve8QdsKg0iuDUANWajc2fx8IwC17xHIkVu17zPWr/ZZNP8ZmWfxUTidT
-         oExO22w7LLw/i3DWiG6wv65D0k5wWWhQdhxrvHq2eiHp4JCBrOtAsdReySzF93vj3sWr
-         KPgA==
-Content-Disposition: inline
-In-Reply-To: <1497452737-11125-3-git-send-email-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=lBmEEH/8J16gVDaGeVUhv4fng8WLg2xMm3SVkRzkBTM=;
+ b=PDMfbC0D1MBO1VCAW588HCa7Poz+HPTjBfIvo2ZswZdFFxuYLrPbSb69/LReWVHcO26m
+ O9GrxObzCnYUfVIzsNmUBnWT8GXCA8elkiJQDWwVxptgaf9XtqTJNE6F8GaFLxxtgPkT
+ GJ9L0ygq5GzCGDwvWWKCumabeHQBJ2L0d30= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=lBmEEH/8J16gVDaGeVUhv4fng8WLg2xMm3SVkRzkBTM=;
+ b=Iro6FICLqZb9WIgdmyqXppJyEKUl9sQ94n4xH/FZze3akJqPsyTfaYVy/rxCKMuwnsCxbqKYBK2C/tf8vUl8Et3/Z92kGLI5zehPcsZ7DnY9s2cUESUglWRbUS2MNhwxSNqqRLjxJ2f7JHWWyKHAFDHdmv3Td4dVU5+AMpohDuo=
+In-Reply-To: <1498079956-24467-1-git-send-email-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Waiman.
+Oom killer should avoid unnecessary kills. To prevent them, during
+the tasks list traverse we check for task which was previously
+selected as oom victims. If there is such a task, new victim
+is not selected.
 
-Let's first talk about and make sense of high level semantics.
+This approach is sub-optimal (we're doing costly iteration over the task
+list every time) and will not work for the cgroup-aware oom killer.
 
-On Wed, Jun 14, 2017 at 11:05:33AM -0400, Waiman Long wrote:
-> +In the example below, '+' corresponds to an enabled controller and
-> +corresponds to a bypassed controller.
-> +
-> +   +   #   #   #   +
-> +   A - B - C - D - E
-> +         \ F
-> +	   +
-> +In this case, the effective hiearchy is:
-> +
-> +	A|B|C|D - E
-> +	        \ F
+We already have oom_victims counter, which can be effectively used
+for the task.
 
-I think that this definitely has potential.  While different
-controllers may see differently abbreviated versions of the tree, they
-can still be mapped to the same hierarchy and we can implement
-cross-controller operations in a meaningful way, I think; however, it
-does make some things really weird.
+If there are victims in flight, don't do anything; if the counter
+falls to 0, there are no more oom victims left.
+So, it's a good time to start looking for a new victim.
 
-In the above example, how would A's resources be distributed.  Let's
-say the resource knob in question is memory.high.  Because from memory
-controller's point of view A|B|C|D are all bunched up and have E and F
-as children, memory.high resource knobs on E and F would control how
-A's memory gets distributed, right?
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+---
+ mm/oom_kill.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-So, once a parent skips a controller with #, you can only determine
-how its resources are actually distributed by scanning the entire
-subtree to determine the span of '#' on the controller and any sort of
-delegation - whether implicit or explicit - wouldn't be possible in
-the middle, right?
-
-Can you please think of / explain how this would work with delegation?
-Making things clear with delegation is really helpful because it can
-serve as the canary for the usual hierarchical operations.
-
-Thanks.
-
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 0e2c925..e3aaf5c8 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -992,6 +992,13 @@ bool out_of_memory(struct oom_control *oc)
+ 	if (oom_killer_disabled)
+ 		return false;
+ 
++	/*
++	 * If there are oom victims in flight, we don't need to select
++	 * a new victim.
++	 */
++	if (atomic_read(&oom_victims) > 0)
++		return true;
++
+ 	if (!is_memcg_oom(oc)) {
+ 		blocking_notifier_call_chain(&oom_notify_list, 0, &freed);
+ 		if (freed > 0)
 -- 
-tejun
+2.7.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
