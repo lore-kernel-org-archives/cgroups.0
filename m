@@ -1,102 +1,85 @@
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: Re: [PATCH] mm: Refactor conversion of pages to bytes macro
- definitions
-Date: Thu, 22 Jun 2017 09:58:17 +0300
-Message-ID: <5d46bcf4-1988-1abd-eec7-dc11c182810f@suse.com>
-References: <1497971668-30685-1-git-send-email-nborisov@suse.com>
- <20170622064454.GA14308@dhcp22.suse.cz>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [v3 1/6] mm, oom: use oom_victims counter to synchronize oom
+ victim selection
+Date: Thu, 22 Jun 2017 17:58:58 +0100
+Message-ID: <20170622165858.GA30035@castle>
+References: <1498079956-24467-1-git-send-email-guro@fb.com>
+ <1498079956-24467-2-git-send-email-guro@fb.com>
+ <201706220040.v5M0eSnK074332@www262.sakura.ne.jp>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20170622064454.GA14308@dhcp22.suse.cz>
-Content-Language: en-US
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, mgorman@techsingularity.net, cmetcalf@mellanox.com, minchan@kernel.org, vbabka@suse.cz, kirill.shutemov@linux.intel.com, tj@kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=JSqPHgizVFP1sqDHGqtUVVMgKhBf2gg31qL4JUshYUY=;
+ b=HPIyO6UXn1+xMGEMMRZEXUzJ8acAwWM+HERthSGwCrW2sN8MY7e4pGVjNVuqM+Q8rMuN
+ 0Q/mvQrO+hq3q7OtUEw58c5UaE+Wben9azUGSyydswbv4S4g1oc3zR1VgZD0kd8UAgGL
+ X9fpzQVW+YaQiPdSw9QeCk8UwpkmqcM/FNQ= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=JSqPHgizVFP1sqDHGqtUVVMgKhBf2gg31qL4JUshYUY=;
+ b=DLF6XpQ8KXlY4vh6PVXpSlUhxHJg0i/n7lyjOENqQPRszU3pZfxlF/Uh7CWWDSDuW8ItWHFqEnvftzbMlA4t3CapnUlZn2tdg+Qaw51icDBpW0o0LCOemYouWSCBAL1szLXQGVAo+ygUecg5bo0hxLx+ayjpfw5NwSkvEGM+LFM=
+Content-Disposition: inline
+In-Reply-To: <201706220040.v5M0eSnK074332-etx+eQDEXHD7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-
-
-On 22.06.2017 09:44, Michal Hocko wrote:
-> On Tue 20-06-17 18:14:28, Nikolay Borisov wrote:
->> Currently there are a multiple files with the following code:
->>  #define K(x) ((x) << (PAGE_SHIFT - 10))
->>  ... some code..
->>  #undef K
->>
->> This is mainly used to print out some memory-related statistics, where X is
->> given in pages and the macro just converts it to kilobytes. In the future
->> there is going to be more macros since there are intention to introduce
->> byte-based memory counters [1]. This could lead to proliferation of
->> multiple duplicated definition of various macros used to convert a quantity
->> from one unit to another. Let's try and consolidate such definition in the
->> mm.h header since currently it's being included in all files which exhibit
->> this pattern. Also let's rename it to something a bit more verbose.
->>
->> This patch doesn't introduce any functional changes
->>
->> [1] https://patchwork.kernel.org/patch/9395205/
->>
->> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
->> ---
->>  arch/tile/mm/pgtable.c      |  2 --
->>  drivers/base/node.c         | 66 ++++++++++++++++++-------------------
->>  include/linux/mm.h          |  2 ++
->>  kernel/debug/kdb/kdb_main.c |  3 +-
->>  mm/backing-dev.c            | 22 +++++--------
->>  mm/memcontrol.c             | 17 +++++-----
->>  mm/oom_kill.c               | 19 +++++------
->>  mm/page_alloc.c             | 80 ++++++++++++++++++++++-----------------------
->>  8 files changed, 100 insertions(+), 111 deletions(-)
+On Thu, Jun 22, 2017 at 09:40:28AM +0900, Tetsuo Handa wrote:
+> Roman Gushchin wrote:
+> > --- a/mm/oom_kill.c
+> > +++ b/mm/oom_kill.c
+> > @@ -992,6 +992,13 @@ bool out_of_memory(struct oom_control *oc)
+> >  	if (oom_killer_disabled)
+> >  		return false;
+> >  
+> > +	/*
+> > +	 * If there are oom victims in flight, we don't need to select
+> > +	 * a new victim.
+> > +	 */
+> > +	if (atomic_read(&oom_victims) > 0)
+> > +		return true;
+> > +
+> >  	if (!is_memcg_oom(oc)) {
+> >  		blocking_notifier_call_chain(&oom_notify_list, 0, &freed);
+> >  		if (freed > 0)
 > 
-> Those macros are quite trivial and we do not really save much code while
-> this touches a lot of code potentially causing some conflicts. So do we
-> really need this? I am usually very keen on removing duplication but
-> this doesn't seem to be worth all the troubles IMHO.
+> Above in this patch and below in patch 5 are wrong.
 > 
+> > --- a/mm/oom_kill.c
+> > +++ b/mm/oom_kill.c
+> > @@ -665,7 +672,13 @@ static void mark_oom_victim(struct task_struct *tsk)
+> >  	 * that TIF_MEMDIE tasks should be ignored.
+> >  	 */
+> >  	__thaw_task(tsk);
+> > -	atomic_inc(&oom_victims);
+> > +
+> > +	/*
+> > +	 * If there are no oom victims in flight,
+> > +	 * give the task an access to the memory reserves.
+> > +	 */
+> > +	if (atomic_inc_return(&oom_victims) == 1)
+> > +		set_tsk_thread_flag(tsk, TIF_MEMDIE);
+> >  }
+> >  
+> >  /**
+> 
+> The OOM reaper is not available for CONFIG_MMU=n kernels, and timeout based
+> giveup is not permitted, but a multithreaded process might be selected as
+> an OOM victim. Not setting TIF_MEMDIE to all threads sharing an OOM victim's
+> mm increases possibility of preventing some OOM victim thread from terminating
+> (e.g. one of them cannot leave __alloc_pages_slowpath() with mmap_sem held for
+> write due to waiting for the TIF_MEMDIE thread to call exit_oom_victim() when
+> the TIF_MEMDIE thread is waiting for the thread with mmap_sem held for write).
 
-There are 2 problems I see: 
+I agree, that CONFIG_MMU=n is a special case, and the proposed approach can't
+be used directly. But can you, please, why do you find the first  chunk wrong?
+Basically, it's exactly what we do now: we increment oom_victims for every oom
+victim, and every process decrements this counter during it's exit path.
+If there is at least one existing victim, we will select it again, so it's just
+an optimization. Am I missing something? Why should we start new victim selection
+if there processes that will likely quit and release memory soon?
 
-1. K is in fact used for other macros than converting pages to kbytes. 
-Simple grep before my patch is applied yields the following: 
-
-arch/tile/mm/pgtable.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-arch/x86/crypto/serpent-sse2-i586-asm_32.S:#define K(x0, x1, x2, x3, x4, i) \
-crypto/serpent_generic.c:#define K(x0, x1, x2, x3, i) ({                                \
-drivers/base/node.c:#define K(x) ((x) << (PAGE_SHIFT - 10))
-drivers/net/hamradio/scc.c:#define K(x) kiss->x
-include/uapi/linux/keyboard.h:#define K(t,v)            (((t)<<8)|(v))
-kernel/debug/kdb/kdb_main.c:#define K(x) ((x) << (PAGE_SHIFT - 10))
-mm/backing-dev.c:#define K(x) ((x) << (PAGE_SHIFT - 10))
-mm/backing-dev.c:#define K(pages) ((pages) << (PAGE_SHIFT - 10))
-mm/memcontrol.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-mm/oom_kill.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-mm/page_alloc.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-
-
-Furthermore, I intend on sending another patchset which introduces 2 more macros:
-drivers/base/node.c:#define BtoK(x) ((x) >> 10)
-drivers/video/fbdev/intelfb/intelfb.h:#define BtoKB(x)          ((x) / 1024)
-mm/backing-dev.c:#define BtoK(x) ((x) >> 10)
-mm/page_alloc.c:#define BtoK(x) ((x) >> 10)
-
-fs/fs-writeback.c:#define BtoP(x) ((x) >> PAGE_SHIFT)
-include/trace/events/writeback.h:#define BtoP(x) ((x) >> PAGE_SHIFT)
-mm/page_alloc.c:#define BtoP(x) ((x) >> PAGE_SHIFT)
-
-As you can see this ends up in spreading those macros. Ideally 
-they should be in a header which is shared among all affected 
-files. This was inspired by the feedback that Tejun has given 
-here: https://patchwork.kernel.org/patch/9395205/ and I believe
-he is right. 
-
-
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks!
