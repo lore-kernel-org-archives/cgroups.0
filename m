@@ -1,63 +1,110 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH-cgroup 4/6] cgroup: Introduce subtree root mode
-Date: Thu, 22 Jun 2017 16:27:14 -0400
-Message-ID: <7e59ea28-76df-9c9f-02f5-e2847216f1dc@redhat.com>
-References: <1497452737-11125-1-git-send-email-longman@redhat.com>
- <1497452737-11125-5-git-send-email-longman@redhat.com>
- <20170621213807.GC14720@htj.duckdns.org>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: Re: [v3 1/6] mm, oom: use oom_victims counter to synchronize oom victim selection
+Date: Fri, 23 Jun 2017 05:37:50 +0900
+Message-ID: <201706230537.IDB21366.SQHJVFOOFOMFLt@I-love.SAKURA.ne.jp>
+References: <1498079956-24467-1-git-send-email-guro@fb.com>
+        <1498079956-24467-2-git-send-email-guro@fb.com>
+        <201706220040.v5M0eSnK074332@www262.sakura.ne.jp>
+        <20170622165858.GA30035@castle>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 48FE47A17D
-In-Reply-To: <20170621213807.GC14720-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170622165858.GA30035@castle>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: guro@fb.com
+Cc: linux-mm@kvack.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hannes@cmpxchg.org, tj@kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 06/21/2017 05:38 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Wed, Jun 14, 2017 at 11:05:35AM -0400, Waiman Long wrote:
->> Subtree root mode is a new cgroup mode which applies the following
->> restrictions when turned on:
->>
->>  1) Controllers are only allowed to be passed to the children in
->>     bypass mode except those with the "enable_on_root" flag on.
->>  2) Only 1 child cgroup is allowed.
->>
->> That lone child can be used as the pseudo root of a container cgroup
->> hierarchy.  All the resources, if controlled, are in the parent
->> cgroup. There will be no control knobs in the child. That makes it
->> look and feel like a root.
-> I'm not sure not having the control files in the child makes that much
-> difference.
+Roman Gushchin wrote:
+> On Thu, Jun 22, 2017 at 09:40:28AM +0900, Tetsuo Handa wrote:
+> > Roman Gushchin wrote:
+> > > --- a/mm/oom_kill.c
+> > > +++ b/mm/oom_kill.c
+> > > @@ -992,6 +992,13 @@ bool out_of_memory(struct oom_control *oc)
+> > >  	if (oom_killer_disabled)
+> > >  		return false;
+> > >  
+> > > +	/*
+> > > +	 * If there are oom victims in flight, we don't need to select
+> > > +	 * a new victim.
+> > > +	 */
+> > > +	if (atomic_read(&oom_victims) > 0)
+> > > +		return true;
+> > > +
+> > >  	if (!is_memcg_oom(oc)) {
+> > >  		blocking_notifier_call_chain(&oom_notify_list, 0, &freed);
+> > >  		if (freed > 0)
+> > 
+> > Above in this patch and below in patch 5 are wrong.
+> > 
+> > > --- a/mm/oom_kill.c
+> > > +++ b/mm/oom_kill.c
+> > > @@ -665,7 +672,13 @@ static void mark_oom_victim(struct task_struct *tsk)
+> > >  	 * that TIF_MEMDIE tasks should be ignored.
+> > >  	 */
+> > >  	__thaw_task(tsk);
+> > > -	atomic_inc(&oom_victims);
+> > > +
+> > > +	/*
+> > > +	 * If there are no oom victims in flight,
+> > > +	 * give the task an access to the memory reserves.
+> > > +	 */
+> > > +	if (atomic_inc_return(&oom_victims) == 1)
+> > > +		set_tsk_thread_flag(tsk, TIF_MEMDIE);
+> > >  }
+> > >  
+> > >  /**
+> > 
+> > The OOM reaper is not available for CONFIG_MMU=n kernels, and timeout based
+> > giveup is not permitted, but a multithreaded process might be selected as
+> > an OOM victim. Not setting TIF_MEMDIE to all threads sharing an OOM victim's
+> > mm increases possibility of preventing some OOM victim thread from terminating
+> > (e.g. one of them cannot leave __alloc_pages_slowpath() with mmap_sem held for
+> > write due to waiting for the TIF_MEMDIE thread to call exit_oom_victim() when
+> > the TIF_MEMDIE thread is waiting for the thread with mmap_sem held for write).
+> 
+> I agree, that CONFIG_MMU=n is a special case, and the proposed approach can't
+> be used directly. But can you, please, why do you find the first  chunk wrong?
 
-It is more a look and feel thing than being useful. The sole purpose is
-to make the container root looks like a real root as much as possible.
+Since you are checking oom_victims before checking task_will_free_mem(current),
+only one thread can get TIF_MEMDIE. This is where a multithreaded OOM victim without
+the OOM reaper can get stuck forever.
 
->> That pseudo root is also considered to be mixable and so can become
->> root of a mixed threaded subtree. The no internal process constraint
->> also does not apply.
-> Heh, you can't just declare a non-root cgroup to be a mixed root but
-> if you're special casing this and making the kernel play a masquerade
-> with special node, you can make cgroup provide a mixed root while
-> hosting the internal processes in a dedicated leaf cgroup which isn't
-> visible to the nested root, right?
+> Basically, it's exactly what we do now: we increment oom_victims for every oom
+> victim, and every process decrements this counter during it's exit path.
+> If there is at least one existing victim, we will select it again, so it's just
+> an optimization. Am I missing something? Why should we start new victim selection
+> if there processes that will likely quit and release memory soon?
 
-That is true.
-
-> It's all a game of masquerading tho and doesn't actually enable
-> anything which isn't possible now.  This would definitely be useful
-> for testing.
-You are right about that. As mentioned in another email, having bypass
-mode in subtree_control is useful, I think. The concept of subtree root
-mode, however, is more toward satisfying PeterZ's idea of container
-invariant. I won't mind leaving it out if others have no objection to that.
-
-Cheers,
-Longman
+If you check oom_victims like
+http://lkml.kernel.org/r/201706220053.v5M0rmOU078764@www262.sakura.ne.jp does,
+all threads in a multithreaded OOM victim will have a chance to get TIF_MEMDIE.
 
 
+
+By the way, below in patch 5 is also wrong.
+You are not permitted to set TIF_MEMDIE if oom_killer_disabled == true.
+
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -556,8 +556,18 @@ static void oom_reap_task(struct task_struct *tsk)
+ 	struct mm_struct *mm = tsk->signal->oom_mm;
+ 
+ 	/* Retry the down_read_trylock(mmap_sem) a few times */
+-	while (attempts++ < MAX_OOM_REAP_RETRIES && !__oom_reap_task_mm(tsk, mm))
++	while (attempts++ < MAX_OOM_REAP_RETRIES &&
++	       !__oom_reap_task_mm(tsk, mm)) {
++
++		/*
++		 * If the task has no access to the memory reserves,
++		 * grant it to help the task to exit.
++		 */
++		if (!test_tsk_thread_flag(tsk, TIF_MEMDIE))
++			set_tsk_thread_flag(tsk, TIF_MEMDIE);
++
+ 		schedule_timeout_idle(HZ/10);
++	}
+ 
+ 	if (attempts <= MAX_OOM_REAP_RETRIES)
+ 		goto done;
