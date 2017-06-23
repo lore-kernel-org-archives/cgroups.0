@@ -1,107 +1,111 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: Refactor conversion of pages to bytes macro
- definitions
-Date: Fri, 23 Jun 2017 13:48:07 +0200
-Message-ID: <20170623114807.GP5308@dhcp22.suse.cz>
-References: <1497971668-30685-1-git-send-email-nborisov@suse.com>
- <20170622064454.GA14308@dhcp22.suse.cz>
- <5d46bcf4-1988-1abd-eec7-dc11c182810f@suse.com>
+From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 27/27] kernfs, sysfs, cgroup: Support fs_context [ver #5]
+Date: Fri, 23 Jun 2017 16:29:28 +0100
+Message-ID: <6414.1498231768@warthog.procyon.org.uk>
+References: <20170614175426.GA26229@htj.duckdns.org> <149745330648.10897.9605870130502083184.stgit@warthog.procyon.org.uk> <149745355907.10897.10073768158664960494.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <5d46bcf4-1988-1abd-eec7-dc11c182810f@suse.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com DAA627C83B
+In-Reply-To: <20170614175426.GA26229-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-mm@kvack.org, mgorman@techsingularity.net, cmetcalf@mellanox.com, minchan@kernel.org, vbabka@suse.cz, kirill.shutemov@linux.intel.com, tj@kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 22-06-17 09:58:17, Nikolay Borisov wrote:
-> 
-> 
-> On 22.06.2017 09:44, Michal Hocko wrote:
-> > On Tue 20-06-17 18:14:28, Nikolay Borisov wrote:
-> >> Currently there are a multiple files with the following code:
-> >>  #define K(x) ((x) << (PAGE_SHIFT - 10))
-> >>  ... some code..
-> >>  #undef K
-> >>
-> >> This is mainly used to print out some memory-related statistics, where X is
-> >> given in pages and the macro just converts it to kilobytes. In the future
-> >> there is going to be more macros since there are intention to introduce
-> >> byte-based memory counters [1]. This could lead to proliferation of
-> >> multiple duplicated definition of various macros used to convert a quantity
-> >> from one unit to another. Let's try and consolidate such definition in the
-> >> mm.h header since currently it's being included in all files which exhibit
-> >> this pattern. Also let's rename it to something a bit more verbose.
-> >>
-> >> This patch doesn't introduce any functional changes
-> >>
-> >> [1] https://patchwork.kernel.org/patch/9395205/
-> >>
-> >> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> >> ---
-> >>  arch/tile/mm/pgtable.c      |  2 --
-> >>  drivers/base/node.c         | 66 ++++++++++++++++++-------------------
-> >>  include/linux/mm.h          |  2 ++
-> >>  kernel/debug/kdb/kdb_main.c |  3 +-
-> >>  mm/backing-dev.c            | 22 +++++--------
-> >>  mm/memcontrol.c             | 17 +++++-----
-> >>  mm/oom_kill.c               | 19 +++++------
-> >>  mm/page_alloc.c             | 80 ++++++++++++++++++++++-----------------------
-> >>  8 files changed, 100 insertions(+), 111 deletions(-)
-> > 
-> > Those macros are quite trivial and we do not really save much code while
-> > this touches a lot of code potentially causing some conflicts. So do we
-> > really need this? I am usually very keen on removing duplication but
-> > this doesn't seem to be worth all the troubles IMHO.
-> > 
-> 
-> There are 2 problems I see: 
-> 
-> 1. K is in fact used for other macros than converting pages to kbytes. 
-> Simple grep before my patch is applied yields the following: 
-> 
-> arch/tile/mm/pgtable.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-> arch/x86/crypto/serpent-sse2-i586-asm_32.S:#define K(x0, x1, x2, x3, x4, i) \
-> crypto/serpent_generic.c:#define K(x0, x1, x2, x3, i) ({                                \
-> drivers/base/node.c:#define K(x) ((x) << (PAGE_SHIFT - 10))
-> drivers/net/hamradio/scc.c:#define K(x) kiss->x
-> include/uapi/linux/keyboard.h:#define K(t,v)            (((t)<<8)|(v))
-> kernel/debug/kdb/kdb_main.c:#define K(x) ((x) << (PAGE_SHIFT - 10))
-> mm/backing-dev.c:#define K(x) ((x) << (PAGE_SHIFT - 10))
-> mm/backing-dev.c:#define K(pages) ((pages) << (PAGE_SHIFT - 10))
-> mm/memcontrol.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-> mm/oom_kill.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-> mm/page_alloc.c:#define K(x) ((x) << (PAGE_SHIFT-10))
-> 
-> 
-> Furthermore, I intend on sending another patchset which introduces 2 more macros:
-> drivers/base/node.c:#define BtoK(x) ((x) >> 10)
-> drivers/video/fbdev/intelfb/intelfb.h:#define BtoKB(x)          ((x) / 1024)
-> mm/backing-dev.c:#define BtoK(x) ((x) >> 10)
-> mm/page_alloc.c:#define BtoK(x) ((x) >> 10)
-> 
-> fs/fs-writeback.c:#define BtoP(x) ((x) >> PAGE_SHIFT)
-> include/trace/events/writeback.h:#define BtoP(x) ((x) >> PAGE_SHIFT)
-> mm/page_alloc.c:#define BtoP(x) ((x) >> PAGE_SHIFT)
-> 
-> As you can see this ends up in spreading those macros. Ideally 
-> they should be in a header which is shared among all affected 
-> files. This was inspired by the feedback that Tejun has given 
-> here: https://patchwork.kernel.org/patch/9395205/ and I believe
-> he is right. 
+Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 
-Fair enough, if this is part of a larger work then I would incline to do
-all of them in a single series.
+> > Make kernfs support superblock creation/mount/remount with fs_context.
+> >=20
+> > This requires that sysfs and cgroup, which are built on kernfs, be made=
+ to
+> > support fs_context also.
+>=20
+> Can you please include a brief rationale for doing this and include a
+> pointer to the fuller description on what's going on?
 
--- 
-Michal Hocko
-SUSE Labs
+The overview is that I'm trying to create a method by which mount creation =
+can
+be better parameterised.  This includes:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+ (1) Improved option passing from userspace.  We're limited to what we can
+     cram into a single page and we have to pass all the options in one go.
+
+     I was impressed by Mikl=C3=B3s's idea that he presented at LSF/MM for =
+opening
+     an fd to the filesystem driver, passing the parameters individually by
+     write() and then performing a mount from that, so I could permit:
+
+     (a) Allow each individual option to exceed PAGE_SIZE in size.
+
+     (b) Allow options to contain binary data as no characters need to be
+     	 reserved for parsing tokens (NUL terminators, commas).
+
+     (c) Allow feedback on individual options.
+
+     (d) Allow the filesystem to ask for information, such as passwords.
+
+     (e) Allow selection of a subtree of the "device" to actually use
+     	 (ie. combine a bind mount with the mount).
+
+ (2) Loading a context from an already mounted filesystem, thereby providin=
+g a
+     better way of doing:
+
+     (a) Bind mounts
+
+     (b) Filesystem reconfiguration.
+
+     (c) Parameter propagation to automounts/submounts.
+
+ (3) Up-front parameter parsing and resource allocation.  This allows
+     parameters to be parsed validated and resources to be allocated before=
+ we
+     begin the super_block initialisation/creation/loading/whatever process,
+     allowing us to get some error handling out of the way earlier.
+
+     Ext4 has an interesting issue here: it will load the parameters from
+     disk, then overlay them with the parameters given to sys_mount() as it
+     parses them - but this will leave you with a half-set-up superblock if=
+ a
+     parse error occurs.  I *think* the new-mount branch just discards the
+     superblock in that case, but in the case of remount, only *some* of the
+     changes will be applied - which is bad.
+
+ (4) Better handling of namespaces - the fs_context gives us somewhere to
+     anchor namespaces and potentially configure these before mounting.
+     Certainly, it would give somewhere to pass namespace information to a
+     submount.
+
+     This would potentially make it possible to mount directly into someone
+     else's namespaces for container handing.
+
+
+I'd also like to make it possible to return better error messages from the
+kernel as a lot of different things can go wrong during a mount and we only
+have a small integer to convey this - plus dmesg, which might be inaccessib=
+le
+and may mixed up with other things.
+
+Originally, I implemented the supplementary error message handling as hangi=
+ng
+off the fs_context struct, but that got tricky with NFS because NFS4 create=
+s a
+mount for the root on a server and then invokes pathwalk to the intended pa=
+th
+from within the ->mount() function.
+
+This pathwalk is expected to trip one or more automount points as changes in
+FSID are detected - but they have no access to the parent fs_context struct=
+ in
+which to supplement any error that is incurred.
+
+So I've moved this to task_struct and provided a couple of prctls to manage=
+ it
+- this also has the added bonus of making it more widely available and also
+making it potentially useful to determine what happened in the case of an
+automount failure.  However, Al would prefer me to move it back to the
+fs_struct as it's too generic otherwise.
+
+David
