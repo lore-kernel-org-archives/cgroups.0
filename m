@@ -1,22 +1,23 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [1/3] cgroup: "cgroup.subtree_control" should be writeable by
- delegatee
-Date: Sun, 25 Jun 2017 00:27:17 -0400
-Message-ID: <20170625042717.GA14158@htj.duckdns.org>
+Subject: [PATCH 2/3] cgroup: restructure cgroup_procs_write_permission()
+Date: Sun, 25 Jun 2017 00:27:59 -0400
+Message-ID: <20170625042759.GA9644@htj.duckdns.org>
+References: <20170625042717.GA14158@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=95Mfe0S+ZKtLIyYzm4npCQTeAECToQBOubGYJ5tScO8=;
-        b=oYv9bLOPapOW4yiNcyCA6ewkY0jtCrSWm/5xGp+NJo/EevL4xb4A7VPvrrNkqxwQCx
-         uNXuBPXZNtNClHcPKdzWYwEuUSXeCSQq+lKSV7eFIHSPMSq1Vi5Wz21R2/1SDcL01Atj
-         Br9BhrVyKZywhGXsHvXLFIA4zq3webrn7vcvIfgN8lv3+I4nMR84+WllkRK/yIpejFWb
-         kenVF5Yz4EjOhKKRls6yvIJXkdRe8vtYHOFKEjp20uXZs+Mernu9w/GZhFPS7tunRunY
-         RBwmYPJPsNNslXixD2dVyuLBKy8XF1yM12GWuhZu+PklRnp7TjuKLP89qAUSlbNNc7AP
-         DjJA==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=OUTuzRgKnzmDI+PVdahfrUJV3CrDv64gTF5m8vQG7ww=;
+        b=mB1pPZQHezBV0272M6j+DYqeI5dLhtNco9+PgXxTnEtW4TGrwk8I/2hOAp/JKDD3tB
+         iL4oHyJXhrnfgUE3JHeWK2k06hcDtqjbU8HsUMxuNX71xhzJg1VqSAh4BfKz8AQpbcoC
+         kE/XfWatVS2xdfhR7nLeXR2ghjIhYQ5YJ5njX0o/bR4Pe7d4SgzomzTqmmFpNcttz+7X
+         yKhOb6mSB5ia0GyJL/L1jcXP3ppeQWI6p7HBJpm+MZjb5tfmGEspPm0KL/RcjFWD7o4/
+         Yb3+GbnTM+uggewMZp1eHnN4TqNxSS3WtKiCTKLeeYrBI26qx/OtHm4/LIqaMDdFe/pM
+         C8LQ==
 Content-Disposition: inline
+In-Reply-To: <20170625042717.GA14158-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -24,33 +25,91 @@ Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aravind Anbudurai <aru7-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-"cgroup.subtree_control" determines which resource types a cgroup
-wants to control.  Unlike actual resource knobs, this is an attribute
-which belongs to the cgroup itself instead of its parent and thus
-should be writeable by the delegatee in a delegated cgroup.
+Restructure cgroup_procs_write_permission() to make extending
+permission logic easier.
 
-Update delegation documentation accordingly.
+This patch doesn't cause any functional changes.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- Documentation/cgroup-v2.txt |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ kernel/cgroup/cgroup.c |   57 ++++++++++++++++++++++++++++---------------------
+ 1 file changed, 33 insertions(+), 24 deletions(-)
 
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -309,10 +309,11 @@ file.
- 2-5-1. Model of Delegation
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2363,27 +2363,12 @@ static int cgroup_procs_write_permission
+ 					 struct cgroup *dst_cgrp,
+ 					 struct kernfs_open_file *of)
+ {
+-	int ret = 0;
++	struct super_block *sb = of->file->f_path.dentry->d_sb;
++	struct cgroup *src_cgrp, *com_cgrp;
++	struct inode *inode;
++	int ret;
  
- A cgroup can be delegated to a less privileged user by granting write
--access of the directory and its "cgroup.procs" file to the user.  Note
--that resource control interface files in a given directory control the
--distribution of the parent's resources and thus must not be delegated
--along with the directory.
-+access of the directory and its "cgroup.procs" and
-+"cgroup.subtree_control" files to the user.  Note that resource
-+control interface files in a given directory control the distribution
-+of the parent's resources and thus must not be delegated along with
-+the directory.
+-	if (cgroup_on_dfl(dst_cgrp)) {
+-		struct super_block *sb = of->file->f_path.dentry->d_sb;
+-		struct cgroup *cgrp;
+-		struct inode *inode;
+-
+-		spin_lock_irq(&css_set_lock);
+-		cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
+-		spin_unlock_irq(&css_set_lock);
+-
+-		while (!cgroup_is_descendant(dst_cgrp, cgrp))
+-			cgrp = cgroup_parent(cgrp);
+-
+-		ret = -ENOMEM;
+-		inode = kernfs_get_inode(sb, cgrp->procs_file.kn);
+-		if (inode) {
+-			ret = inode_permission(inode, MAY_WRITE);
+-			iput(inode);
+-		}
+-	} else {
++	if (!cgroup_on_dfl(dst_cgrp)) {
+ 		const struct cred *cred = current_cred();
+ 		const struct cred *tcred = get_task_cred(task);
  
- Once delegated, the user can build sub-hierarchy under the directory,
- organize processes as it sees fit and further distribute the resources
+@@ -2391,14 +2376,38 @@ static int cgroup_procs_write_permission
+ 		 * even if we're attaching all tasks in the thread group,
+ 		 * we only need to check permissions on one of them.
+ 		 */
+-		if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
+-		    !uid_eq(cred->euid, tcred->uid) &&
+-		    !uid_eq(cred->euid, tcred->suid))
++		if (uid_eq(cred->euid, GLOBAL_ROOT_UID) ||
++		    uid_eq(cred->euid, tcred->uid) ||
++		    uid_eq(cred->euid, tcred->suid))
++			ret = 0;
++		else
+ 			ret = -EACCES;
++
+ 		put_cred(tcred);
++		return ret;
+ 	}
+ 
+-	return ret;
++	/* find the source cgroup */
++	spin_lock_irq(&css_set_lock);
++	src_cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
++	spin_unlock_irq(&css_set_lock);
++
++	/* and the common ancestor */
++	com_cgrp = src_cgrp;
++	while (!cgroup_is_descendant(dst_cgrp, com_cgrp))
++		com_cgrp = cgroup_parent(com_cgrp);
++
++	/* %current should be authorized to migrate to the common ancestor */
++	inode = kernfs_get_inode(sb, com_cgrp->procs_file.kn);
++	if (!inode)
++		return -ENOMEM;
++
++	ret = inode_permission(inode, MAY_WRITE);
++	iput(inode);
++	if (ret)
++		return ret;
++
++	return 0;
+ }
+ 
+ /*
