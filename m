@@ -1,111 +1,56 @@
-From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 27/27] kernfs, sysfs, cgroup: Support fs_context [ver #5]
-Date: Fri, 23 Jun 2017 16:29:28 +0100
-Message-ID: <6414.1498231768@warthog.procyon.org.uk>
-References: <20170614175426.GA26229@htj.duckdns.org> <149745330648.10897.9605870130502083184.stgit@warthog.procyon.org.uk> <149745355907.10897.10073768158664960494.stgit@warthog.procyon.org.uk>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [1/3] cgroup: "cgroup.subtree_control" should be writeable by
+ delegatee
+Date: Sun, 25 Jun 2017 00:27:17 -0400
+Message-ID: <20170625042717.GA14158@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com DAA627C83B
-In-Reply-To: <20170614175426.GA26229-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=95Mfe0S+ZKtLIyYzm4npCQTeAECToQBOubGYJ5tScO8=;
+        b=oYv9bLOPapOW4yiNcyCA6ewkY0jtCrSWm/5xGp+NJo/EevL4xb4A7VPvrrNkqxwQCx
+         uNXuBPXZNtNClHcPKdzWYwEuUSXeCSQq+lKSV7eFIHSPMSq1Vi5Wz21R2/1SDcL01Atj
+         Br9BhrVyKZywhGXsHvXLFIA4zq3webrn7vcvIfgN8lv3+I4nMR84+WllkRK/yIpejFWb
+         kenVF5Yz4EjOhKKRls6yvIJXkdRe8vtYHOFKEjp20uXZs+Mernu9w/GZhFPS7tunRunY
+         RBwmYPJPsNNslXixD2dVyuLBKy8XF1yM12GWuhZu+PklRnp7TjuKLP89qAUSlbNNc7AP
+         DjJA==
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aravind Anbudurai <aru7-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+"cgroup.subtree_control" determines which resource types a cgroup
+wants to control.  Unlike actual resource knobs, this is an attribute
+which belongs to the cgroup itself instead of its parent and thus
+should be writeable by the delegatee in a delegated cgroup.
 
-> > Make kernfs support superblock creation/mount/remount with fs_context.
-> >=20
-> > This requires that sysfs and cgroup, which are built on kernfs, be made=
- to
-> > support fs_context also.
->=20
-> Can you please include a brief rationale for doing this and include a
-> pointer to the fuller description on what's going on?
+Update delegation documentation accordingly.
 
-The overview is that I'm trying to create a method by which mount creation =
-can
-be better parameterised.  This includes:
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ Documentation/cgroup-v2.txt |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
- (1) Improved option passing from userspace.  We're limited to what we can
-     cram into a single page and we have to pass all the options in one go.
-
-     I was impressed by Mikl=C3=B3s's idea that he presented at LSF/MM for =
-opening
-     an fd to the filesystem driver, passing the parameters individually by
-     write() and then performing a mount from that, so I could permit:
-
-     (a) Allow each individual option to exceed PAGE_SIZE in size.
-
-     (b) Allow options to contain binary data as no characters need to be
-     	 reserved for parsing tokens (NUL terminators, commas).
-
-     (c) Allow feedback on individual options.
-
-     (d) Allow the filesystem to ask for information, such as passwords.
-
-     (e) Allow selection of a subtree of the "device" to actually use
-     	 (ie. combine a bind mount with the mount).
-
- (2) Loading a context from an already mounted filesystem, thereby providin=
-g a
-     better way of doing:
-
-     (a) Bind mounts
-
-     (b) Filesystem reconfiguration.
-
-     (c) Parameter propagation to automounts/submounts.
-
- (3) Up-front parameter parsing and resource allocation.  This allows
-     parameters to be parsed validated and resources to be allocated before=
- we
-     begin the super_block initialisation/creation/loading/whatever process,
-     allowing us to get some error handling out of the way earlier.
-
-     Ext4 has an interesting issue here: it will load the parameters from
-     disk, then overlay them with the parameters given to sys_mount() as it
-     parses them - but this will leave you with a half-set-up superblock if=
- a
-     parse error occurs.  I *think* the new-mount branch just discards the
-     superblock in that case, but in the case of remount, only *some* of the
-     changes will be applied - which is bad.
-
- (4) Better handling of namespaces - the fs_context gives us somewhere to
-     anchor namespaces and potentially configure these before mounting.
-     Certainly, it would give somewhere to pass namespace information to a
-     submount.
-
-     This would potentially make it possible to mount directly into someone
-     else's namespaces for container handing.
-
-
-I'd also like to make it possible to return better error messages from the
-kernel as a lot of different things can go wrong during a mount and we only
-have a small integer to convey this - plus dmesg, which might be inaccessib=
-le
-and may mixed up with other things.
-
-Originally, I implemented the supplementary error message handling as hangi=
-ng
-off the fs_context struct, but that got tricky with NFS because NFS4 create=
-s a
-mount for the root on a server and then invokes pathwalk to the intended pa=
-th
-from within the ->mount() function.
-
-This pathwalk is expected to trip one or more automount points as changes in
-FSID are detected - but they have no access to the parent fs_context struct=
- in
-which to supplement any error that is incurred.
-
-So I've moved this to task_struct and provided a couple of prctls to manage=
- it
-- this also has the added bonus of making it more widely available and also
-making it potentially useful to determine what happened in the case of an
-automount failure.  However, Al would prefer me to move it back to the
-fs_struct as it's too generic otherwise.
-
-David
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -309,10 +309,11 @@ file.
+ 2-5-1. Model of Delegation
+ 
+ A cgroup can be delegated to a less privileged user by granting write
+-access of the directory and its "cgroup.procs" file to the user.  Note
+-that resource control interface files in a given directory control the
+-distribution of the parent's resources and thus must not be delegated
+-along with the directory.
++access of the directory and its "cgroup.procs" and
++"cgroup.subtree_control" files to the user.  Note that resource
++control interface files in a given directory control the distribution
++of the parent's resources and thus must not be delegated along with
++the directory.
+ 
+ Once delegated, the user can build sub-hierarchy under the directory,
+ organize processes as it sees fit and further distribute the resources
