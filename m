@@ -1,188 +1,348 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v2
-Date: Tue, 27 Jun 2017 09:01:43 +0200
-Message-ID: <20170627070143.GB4114@worktop>
-References: <20170610140351.10703-1-tj@kernel.org>
- <20170612123150.scopfxela7v26dct@hirez.programming.kicks-ass.net>
- <20170612212753.GN19206@htj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 3/3] cgroup: implement "nsdelegate" mount option
+Date: Tue, 27 Jun 2017 14:30:28 -0400
+Message-ID: <20170627183028.GF2289@htj.duckdns.org>
+References: <20170625042717.GA14158@htj.duckdns.org>
+ <20170625042759.GA9644@htj.duckdns.org>
+ <20170625042838.GB9644@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=4zXQMgTEuCIOfUFAqGn3joP98RSpCgdBvT7ci9KTZ1k=; b=dDClyX6MGvTvccMwxlMkIB6B4
-        C+2BhVS/LaL3nF73kBptoMsaJmnd5wMbBcnID35TTlx/V4AZ8pOHN7JA2spjCcQtgBtFfLi+PYSO1
-        CSpuq5IwY8FVF03L3NpANWDuuo43P+E7qDy4bJoJravOl9Ja0NuibO0hyqfCXbSf2ePlaqGI1iP90
-        cxtU1oxoqIUSDX0JppH1QS/B3rjcW0ullofvLkHhlNBUL3wO2Pk9YJVt7RNur11/uzludBGBrBvaf
-        qQN6tbvgjLfLgxGCVhZb86A9+VQi94Gg0bdxzoKIWA3g5knE0c103JEb+GyBsSxGAzFQIYVLLyrZq
-    
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ryjGwW8+gOsvPAk86tVqrK+V+KPSCxrvY34vly/u5yQ=;
+        b=ewJOm+44MqrguoQTB/bwLdsYFc+WZGYZrR4SSG6+qdPaKHgDLLux2aMmykdi1vzxro
+         a4USA+w62J7dsrQexRV6EEJP6xaLtM18cD90ILKN4eNXGoREG/3B8L7WCUA2n61wmm6s
+         Kht5BULtuIqcfNS7RvwRy9UrwQ+72ZjMu7B7KjuFUDlMv7h8xpxz8woQPCnsfkfYDnug
+         f0GVLgCql/RVNiL8PPbIHRelOPRlQLEwhUh37Fwobyd5Y/Aw8c9wt548a5ecXJxwkohB
+         PcZh4GA5LV+pjqGnweYnE36zE31G/Yf2r92hKgBHCYOQJFKav+uCr3EoEE5+0WZ5rFA7
+         fAsQ==
 Content-Disposition: inline
-In-Reply-To: <20170612212753.GN19206-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20170625042838.GB9644-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aravind Anbudurai <aru7-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Eric Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 
+Currently, cgroup only supports delegation to !root users and cgroup
+namespaces don't get any special treatments.  This limits the
+usefulness of cgroup namespaces as they by themselves can't be safe
+delegation boundaries.  A process inside a cgroup can change the
+resource control knobs of the parent in the namespace root and may
+move processes in and out of the namespace if cgroups outside its
+namespace are visible somehow.
 
-I'm slowly getting back to things...
+This patch adds a new mount option "nsdelegate" which makes cgroup
+namespaces delegation boundaries.  If set, cgroup behaves as if write
+permission based delegation took place at namespace boundaries -
+writes to the resource control knobs from the namespace root are
+denied and migration crossing the namespace boundary aren't allowed
+from inside the namespace.
 
-On Mon, Jun 12, 2017 at 05:27:53PM -0400, Tejun Heo wrote:
+This allows cgroup namespace to function as a delegation boundary by
+itself.
 
-> > > * Root cgroup can enable thread mode anytime and a first level child
-> > >   can opt-in to that thread subtree anchored at root by writing "join"
-> > >   to "cgroup.threads" files, start its own thread subtree or just be a
-> > >   normal cgroup.
-> > 
-> > Yuck... this again is a consequence of tagging the 'wrong' thing. Again,
-> > the primary construct is the resource domain.
-> > 
-> > If you use that as a tag, you don't need this weird join crap. Because
-> > as soon as you clear the 'resource domain' flag on a group, it instantly
-> > becomes a thread group and 'obviously' connects to the first parent that
-> > is a resource domain.
-> 
-> It has nothing to do with whether we mark domain or threaded subtrees.
-> It is solely from whether you wanna express cases where a thread root
-> is right below another thread root.  Tn's are member cgroup of thread
-> subtrees where the same number means the same threaded subtree, D's
-> are of domain cgroups.
-> 
-> The following is straight forward.
-> 
-> 	  T0
->        /  \
->       T0   D
-> 
-> The following is too.
-> 
-> 	  T0
->        /  \
->       T0   D
->             \
-> 	       T1
-> 
-> The question is whether to allow something like the following.
-> 
-> 	  T0
->        /  \
->       T0  T1
-> 
-> That's where the "join" thing comes from because we wanna be able to
-> tell apart whether a cgroup is gonna be a part of the existing thread
-> subtree or starting its own thread subtree.  There sure are multiple
-> ways to express that but one way or the other, if you wanna support
-> topologies like the last one, you have to distinguish the two.
+v2: Silently ignore nsdelegate specified on !init mounts.
 
-Hmm,.. I had not considered that. I was strictly considering the root to
-always be a resource domain. What use-case or scenario did you have
-to want to do this?
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Aravind Anbudurai <aru7-b10kYP2dOMg@public.gmane.org>
+Cc: Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: Eric Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+---
+ Documentation/cgroup-v2.txt |   61 +++++++++++++++++++++---------
+ include/linux/cgroup-defs.h |    9 ++++
+ kernel/cgroup/cgroup.c      |   88 +++++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 135 insertions(+), 23 deletions(-)
 
-That is, what is the meaning of having T1 be a separate 'root' if its
-not also a resource domain?
-
-> > And, as per the last time, this threaded marker isn't uniquely
-> > identifying things, so it hard prohibits from ever extending the model
-> > to allow resource domains nested in a thread subtree. Now I understand
-> > why you don't implement that now -- you were struggling with the views
-> > API, but that is no excuse to create an API that permanently disables
-> > that feature.
-> 
-> Hmmm?  We can just allow disabling thread mode if we ever get to that.
-> We can't make arbitrary graphs out of these nodes.  Whatever mode we
-> put them in, they have to fall in with the overall tree structure, so
-> I don't think the interface is unnecessarily restricting in that
-> direction.
-
-IIRC the problem with the 'threaded' marker is that it doesn't clearly
-capture what a resource domain is.
-
-That is, assuming that a thread root is always a resource domain, we get
-the following problem:
-
-If we set 'threaded' on the root group in order to create a thread
-(sub)group. If we then want to create another domain group, we'd have to
-clear 'threaded' on that.
-
-	R (t=1)
-       / \
-(t=1) T   D (t=0)
-
-So far so good. However, now we want to create another thread group
-under our domain group D, so we have to set its 'threaded' marker again:
-
-	R (t=1)
-       / \
-(t=1) T   D (t=1)
-         /
-	T (t=1)
-
-And we can no longer identify D as a resource domain. If OTOH we mark
-'domain' we get:
-
-	R (d=1)
-       / \
-(d=0) T   D (d=1)
-         /
-	T (d=0)
-
-Which clearly identifies the domains and the thread only groups.
-
-
-Your objections to doing this were representing the resource controllers
-in the intermediate thread-only groups like:
-
-   R
-    \
-     T  -- what to do with eg. memcg here?
-      \
-       D
-        \
-	 T
-
-I suggested having all resource controllers represented with a soft-link
-back into the (thread-root) resource domain. But you were not convinced
-and worried people were going to be confused.
-
-
-Your current proposal treats the resource controllers as disabled in
-thread subgroups -- which is perfectly fine given the constraint that we
-cannot have new domains in a thread sub-tree. My worry is that we don't
-paint ourselves in a corner and create an interface where we can never
-extend to allow this.
-
-The immediate use-case for wanting this would be allowing tasks in a
-thread-group to start a VM or container (which would then want a
-(sub) resource domain).
-
-
-> > So I really regret the 'shares' interface; we really should have done a
-> > nice thing.
-> > 
-> >   https://lkml.kernel.org/r/20170410073622.2y6tnpcd2ssuoztz-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org
-> > 
-> > So I would like to change to that instead of the weird 100 thing.
-> 
-> Is it?  Relative weights are pretty fundamental and clearly defined in
-> expressing work-conserving resource distribution.  Do you have more
-> details on what you have on mind?
-
-I'm not wanting to change the relative weight thing. I merely wish to
-change the interface for setting the group weight to match that of the
-task weight, since both directly compete against one another.
-
-That is, a group weight is the same kind of weight as a task weight.
-Therefore it would make much more sense to set then in equal units too.
-Not having done that from the beginning was rather silly.
-
-By having a 100 based weight it becomes very hard to match the weight of
-nice()'ed tasks (something that was already tricky with the current
-shares interface because we'd need to share the nice weight table with
-userspace).
-
-By having both in nice units, its both conceptually clear that they're
-the same kind of weight and easier to match weights.
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -149,6 +149,16 @@ during boot, before manual intervention
+ and experimenting easier, the kernel parameter cgroup_no_v1= allows
+ disabling controllers in v1 and make them always available in v2.
+ 
++cgroup v2 currently supports the following mount options.
++
++  nsdelegate
++
++	Consider cgroup namespaces as delegation boundaries.  This
++	option is system wide and can only be set on mount or modified
++	through remount from the init namespace.  The mount option is
++	ignored on non-init namespace mounts.  Please refer to the
++	Delegation section for details.
++
+ 
+ 2-2. Organizing Processes
+ 
+@@ -308,19 +318,27 @@ file.
+ 
+ 2-5-1. Model of Delegation
+ 
+-A cgroup can be delegated to a less privileged user by granting write
+-access of the directory and its "cgroup.procs" and
+-"cgroup.subtree_control" files to the user.  Note that resource
+-control interface files in a given directory control the distribution
+-of the parent's resources and thus must not be delegated along with
+-the directory.
+-
+-Once delegated, the user can build sub-hierarchy under the directory,
+-organize processes as it sees fit and further distribute the resources
+-it received from the parent.  The limits and other settings of all
+-resource controllers are hierarchical and regardless of what happens
+-in the delegated sub-hierarchy, nothing can escape the resource
+-restrictions imposed by the parent.
++A cgroup can be delegated in two ways.  First, to a less privileged
++user by granting write access of the directory and its "cgroup.procs"
++and "cgroup.subtree_control" files to the user.  Second, if the
++"nsdelegate" mount option is set, automatically to a cgroup namespace
++on namespace creation.
++
++Because the resource control interface files in a given directory
++control the distribution of the parent's resources, the delegatee
++shouldn't be allowed to write to them.  For the first method, this is
++achieved by not granting access to these files.  For the second, the
++kernel rejects writes to all files other than "cgroup.procs" and
++"cgroup.subtree_control" on a namespace root from inside the
++namespace.
++
++The end results are equivalent for both delegation types.  Once
++delegated, the user can build sub-hierarchy under the directory,
++organize processes inside it as it sees fit and further distribute the
++resources it received from the parent.  The limits and other settings
++of all resource controllers are hierarchical and regardless of what
++happens in the delegated sub-hierarchy, nothing can escape the
++resource restrictions imposed by the parent.
+ 
+ Currently, cgroup doesn't impose any restrictions on the number of
+ cgroups in or nesting depth of a delegated sub-hierarchy; however,
+@@ -330,10 +348,12 @@ this may be limited explicitly in the fu
+ 2-5-2. Delegation Containment
+ 
+ A delegated sub-hierarchy is contained in the sense that processes
+-can't be moved into or out of the sub-hierarchy by the delegatee.  For
+-a process with a non-root euid to migrate a target process into a
+-cgroup by writing its PID to the "cgroup.procs" file, the following
+-conditions must be met.
++can't be moved into or out of the sub-hierarchy by the delegatee.
++
++For delegations to a less privileged user, this is achieved by
++requiring the following conditions for a process with a non-root euid
++to migrate a target process into a cgroup by writing its PID to the
++"cgroup.procs" file.
+ 
+ - The writer must have write access to the "cgroup.procs" file.
+ 
+@@ -360,6 +380,11 @@ destination cgroup C00 is above the poin
+ not have write access to its "cgroup.procs" files and thus the write
+ will be denied with -EACCES.
+ 
++For delegations to namespaces, containment is achieved by requiring
++that both the source and destination cgroups are reachable from the
++namespace of the process which is attempting the migration.  If either
++is not reachable, the migration is rejected with -ENOENT.
++
+ 
+ 2-6. Guidelines
+ 
+@@ -1414,7 +1439,7 @@ D. Deprecated v1 Core Features
+ 
+ - Multiple hierarchies including named ones are not supported.
+ 
+-- All mount options and remounting are not supported.
++- All v1 mount options are not supported.
+ 
+ - The "tasks" file is removed and "cgroup.procs" is not sorted.
+ 
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -67,12 +67,21 @@ enum {
+ enum {
+ 	CGRP_ROOT_NOPREFIX	= (1 << 1), /* mounted subsystems have no named prefix */
+ 	CGRP_ROOT_XATTR		= (1 << 2), /* supports extended attributes */
++
++	/*
++	 * Consider namespaces as delegation boundaries.  If this flag is
++	 * set, controller specific interface files in a namespace root
++	 * aren't writeable from inside the namespace.
++	 */
++	CGRP_ROOT_NS_DELEGATE	= (1 << 3),
+ };
+ 
+ /* cftype->flags */
+ enum {
+ 	CFTYPE_ONLY_ON_ROOT	= (1 << 0),	/* only create on root cgrp */
+ 	CFTYPE_NOT_ON_ROOT	= (1 << 1),	/* don't create on root cgrp */
++	CFTYPE_NS_DELEGATABLE	= (1 << 2),	/* writeable beyond delegation boundaries */
++
+ 	CFTYPE_NO_PREFIX	= (1 << 3),	/* (DON'T USE FOR NEW FILES) no subsys prefix */
+ 	CFTYPE_WORLD_WRITABLE	= (1 << 4),	/* (DON'T USE FOR NEW FILES) S_IWUGO */
+ 
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1547,10 +1547,56 @@ int cgroup_show_path(struct seq_file *sf
+ 	return len;
+ }
+ 
++static int parse_cgroup_root_flags(char *data, unsigned int *root_flags)
++{
++	char *token;
++
++	*root_flags = 0;
++
++	if (!data)
++		return 0;
++
++	while ((token = strsep(&data, ",")) != NULL) {
++		if (!strcmp(token, "nsdelegate")) {
++			*root_flags |= CGRP_ROOT_NS_DELEGATE;
++			continue;
++		}
++
++		pr_err("cgroup2: unknown option \"%s\"\n", token);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static void apply_cgroup_root_flags(unsigned int root_flags)
++{
++	if (current->nsproxy->cgroup_ns == &init_cgroup_ns) {
++		if (root_flags & CGRP_ROOT_NS_DELEGATE)
++			cgrp_dfl_root.flags |= CGRP_ROOT_NS_DELEGATE;
++		else
++			cgrp_dfl_root.flags &= ~CGRP_ROOT_NS_DELEGATE;
++	}
++}
++
++static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root)
++{
++	if (cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE)
++		seq_puts(seq, ",nsdelegate");
++	return 0;
++}
++
+ static int cgroup_remount(struct kernfs_root *kf_root, int *flags, char *data)
+ {
+-	pr_err("remount is not allowed\n");
+-	return -EINVAL;
++	unsigned int root_flags;
++	int ret;
++
++	ret = parse_cgroup_root_flags(data, &root_flags);
++	if (ret)
++		return ret;
++
++	apply_cgroup_root_flags(root_flags);
++	return 0;
+ }
+ 
+ /*
+@@ -1790,6 +1836,7 @@ static struct dentry *cgroup_mount(struc
+ {
+ 	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+ 	struct dentry *dentry;
++	int ret;
+ 
+ 	get_cgroup_ns(ns);
+ 
+@@ -1807,16 +1854,21 @@ static struct dentry *cgroup_mount(struc
+ 		cgroup_enable_task_cg_lists();
+ 
+ 	if (fs_type == &cgroup2_fs_type) {
+-		if (data) {
+-			pr_err("cgroup2: unknown option \"%s\"\n", (char *)data);
++		unsigned int root_flags;
++
++		ret = parse_cgroup_root_flags(data, &root_flags);
++		if (ret) {
+ 			put_cgroup_ns(ns);
+-			return ERR_PTR(-EINVAL);
++			return ERR_PTR(ret);
+ 		}
++
+ 		cgrp_dfl_visible = true;
+ 		cgroup_get_live(&cgrp_dfl_root.cgrp);
+ 
+ 		dentry = cgroup_do_mount(&cgroup2_fs_type, flags, &cgrp_dfl_root,
+ 					 CGROUP2_SUPER_MAGIC, ns);
++		if (!IS_ERR(dentry))
++			apply_cgroup_root_flags(root_flags);
+ 	} else {
+ 		dentry = cgroup1_mount(&cgroup_fs_type, flags, data,
+ 				       CGROUP_SUPER_MAGIC, ns);
+@@ -2364,6 +2416,8 @@ static int cgroup_procs_write_permission
+ 					 struct kernfs_open_file *of)
+ {
+ 	struct super_block *sb = of->file->f_path.dentry->d_sb;
++	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
++	struct cgroup *root_cgrp = ns->root_cset->dfl_cgrp;
+ 	struct cgroup *src_cgrp, *com_cgrp;
+ 	struct inode *inode;
+ 	int ret;
+@@ -2407,6 +2461,15 @@ static int cgroup_procs_write_permission
+ 	if (ret)
+ 		return ret;
+ 
++	/*
++	 * If namespaces are delegation boundaries, %current must be able
++	 * to see both source and destination cgroups from its namespace.
++	 */
++	if ((cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE) &&
++	    (!cgroup_is_descendant(src_cgrp, root_cgrp) ||
++	     !cgroup_is_descendant(dst_cgrp, root_cgrp)))
++		return -ENOENT;
++
+ 	return 0;
+ }
+ 
+@@ -2971,11 +3034,23 @@ static void cgroup_file_release(struct k
+ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+ 				 size_t nbytes, loff_t off)
+ {
++	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+ 	struct cgroup *cgrp = of->kn->parent->priv;
+ 	struct cftype *cft = of->kn->priv;
+ 	struct cgroup_subsys_state *css;
+ 	int ret;
+ 
++	/*
++	 * If namespaces are delegation boundaries, disallow writes to
++	 * files in an non-init namespace root from inside the namespace
++	 * except for the files explicitly marked delegatable -
++	 * cgroup.procs and cgroup.subtree_control.
++	 */
++	if ((cgrp->root->flags & CGRP_ROOT_NS_DELEGATE) &&
++	    !(cft->flags & CFTYPE_NS_DELEGATABLE) &&
++	    ns != &init_cgroup_ns && ns->root_cset->dfl_cgrp == cgrp)
++		return -EPERM;
++
+ 	if (cft->write)
+ 		return cft->write(of, buf, nbytes, off);
+ 
+@@ -3809,6 +3884,7 @@ static int cgroup_procs_show(struct seq_
+ static struct cftype cgroup_base_files[] = {
+ 	{
+ 		.name = "cgroup.procs",
++		.flags = CFTYPE_NS_DELEGATABLE,
+ 		.file_offset = offsetof(struct cgroup, procs_file),
+ 		.release = cgroup_procs_release,
+ 		.seq_start = cgroup_procs_start,
+@@ -3822,6 +3898,7 @@ static struct cftype cgroup_base_files[]
+ 	},
+ 	{
+ 		.name = "cgroup.subtree_control",
++		.flags = CFTYPE_NS_DELEGATABLE,
+ 		.seq_show = cgroup_subtree_control_show,
+ 		.write = cgroup_subtree_control_write,
+ 	},
+@@ -4410,6 +4487,7 @@ int cgroup_rmdir(struct kernfs_node *kn)
+ }
+ 
+ static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
++	.show_options		= cgroup_show_options,
+ 	.remount_fs		= cgroup_remount,
+ 	.mkdir			= cgroup_mkdir,
+ 	.rmdir			= cgroup_rmdir,
