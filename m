@@ -1,104 +1,56 @@
-From: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: kmemleaks reports a lot of cases around memcg_create_kmem_cache
-Date: Thu, 29 Jun 2017 11:04:01 -0700
-Message-ID: <CANaxB-x=xgLq116VReo4Og+jFsAB+ehx3xThnXoCx8pR3YXPSA@mail.gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v3 5/6] mm, oom: don't mark all oom victims tasks with
+ TIF_MEMDIE
+Date: Thu, 29 Jun 2017 14:45:13 -0400
+Message-ID: <20170629184513.GA27714@castle>
+References: <1498079956-24467-1-git-send-email-guro@fb.com>
+ <1498079956-24467-6-git-send-email-guro@fb.com>
+ <20170629085357.GF31603@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=OPKvwccvU3DQQn/0eSpwIDeb3P8dZia+GQHlt3slsM8=;
-        b=HErjzm5LBvTEJo1FEezC59ippYFI1NEh8ql4pulUi8Pp0IysNxvJJVQP5arZz6doYo
-         UagrWeMB+tu7QpmcSEcrB9mhcVHhMGDXvut1cdLDJQKS4/WysihdIs24qIHjvwUqRc1z
-         t6/SsNfcc41qlbdx1WnRi/xWcLZM41/tyLR+8XNjUxuixAqwRnhdntwkB8KzLsBL6oMf
-         Gng5i1x/MegJrAuonHiknSeY04o8fLC5q6mbAWLavpkI2pb3oCu2v+fgIhvPbMTBTDv1
-         R7uYUF6nE5LdUWhLlhuz8a0LcPF8JLQOe91Lkqm5UPevLa3a74OQ68mI9MO6MzzrLuhF
-         8fUw==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=XcTxE1uPRHk8hp2pv7bhIF0zFoI7O37p0HS/D2HE4AY=;
+ b=FAaubxU1s1jp8TzINH8oBNxrR0ITYV1k5s53JIFN7L+LfO9l7DQ/ovbjmBrJ11V+3hx+
+ 7hlxsgIO6K4FfOYS/1K7YzLk/of+N3FsXP3vDBXCeedzbrf2D6HVPFw4f6II9fuoi4RF
+ TyeaZ2yrVG3llfP1ky+iHnYLMhC+a2NCu1A= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=XcTxE1uPRHk8hp2pv7bhIF0zFoI7O37p0HS/D2HE4AY=;
+ b=NQ04TibBnR6BL1XPIq+Pj8GMzBwgnDlMGjVBejrO0V3KOBPdzFtM8KzrvsmHR7yYgvAPowrPhRid8pDz+SdkY/nXrNjEPIEBnsjVL4TuzhAlQ/XwK05jwWC0p3IHMwOK7lcxG53Ihny/JjtRaayLo2y56LY6YpTJQdSKuu8nolE=
+Content-Disposition: inline
+In-Reply-To: <20170629085357.GF31603@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Thu, Jun 29, 2017 at 10:53:57AM +0200, Michal Hocko wrote:
+> On Wed 21-06-17 22:19:15, Roman Gushchin wrote:
+> > We want to limit the number of tasks which are having an access
+> > to the memory reserves. To ensure the progress it's enough
+> > to have one such process at the time.
+> > 
+> > If we need to kill the whole cgroup, let's give an access to the
+> > memory reserves only to the first process in the list, which is
+> > (usually) the biggest process.
+> > This will give us good chances that all other processes will be able
+> > to quit without an access to the memory reserves.
+> 
+> I don't like this to be honest. Is there any reason to go the reduced
+> memory reserves access to oom victims I was suggesting earlier [1]?
+> 
+> [1] http://lkml.kernel.org/r/http://lkml.kernel.org/r/1472723464-22866-2-git-send-email-mhocko@kernel.org
 
-We run CRIU tests on the linus' tree and found that kmemleak reports
-unreferenced objects which are allocated from memcg_create_kmem_cache:
+I've nothing against your approach. What's the state of this patchset?
+Do you plan to bring it upstream?
 
-unreferenced object 0xffff9f79442cd980 (size 112):
-  comm "kworker/1:4", pid 15416, jiffies 4307432421 (age 28687.562s)
-  hex dump (first 32 bytes):
-    00 00 00 00 ad 4e ad de ff ff ff ff 00 00 00 00  .....N..........
-    ff ff ff ff ff ff ff ff b8 39 1b 97 ff ff ff ff  .........9......
-  backtrace:
-    [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
-    [<ffffffff95276198>] kmem_cache_alloc_node+0x168/0x2a0
-    [<ffffffff95279f28>] __kmem_cache_create+0x2b8/0x5c0
-    [<ffffffff9522ff57>] create_cache+0xb7/0x1e0
-    [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
-    [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
-    [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
-    [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
-    [<ffffffff950d5169>] kthread+0x109/0x140
-    [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
-    [<ffffffffffffffff>] 0xffffffffffffffff
-unreferenced object 0xffff9f798a79f540 (size 32):
-  comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.554s)
-  hex dump (first 32 bytes):
-    6b 6d 61 6c 6c 6f 63 2d 31 36 28 31 35 39 39 3a  kmalloc-16(1599:
-    6e 65 77 72 6f 6f 74 29 00 23 6b c0 ff ff ff ff  newroot).#k.....
-  backtrace:
-    [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
-    [<ffffffff9527a378>] __kmalloc_track_caller+0x148/0x2c0
-    [<ffffffff95499466>] kvasprintf+0x66/0xd0
-    [<ffffffff954995a9>] kasprintf+0x49/0x70
-    [<ffffffff952305c6>] memcg_create_kmem_cache+0xe6/0x160
-    [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
-    [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
-    [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
-    [<ffffffff950d5169>] kthread+0x109/0x140
-    [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
-    [<ffffffffffffffff>] 0xffffffffffffffff
-unreferenced object 0xffff9f79b6136840 (size 416):
-  comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
-  hex dump (first 32 bytes):
-    40 fb 80 c2 3e 33 00 00 00 00 00 40 00 00 00 00  @...>3.....@....
-    00 00 00 00 00 00 00 00 10 00 00 00 10 00 00 00  ................
-  backtrace:
-    [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
-    [<ffffffff95275bc8>] kmem_cache_alloc+0x128/0x280
-    [<ffffffff9522fedb>] create_cache+0x3b/0x1e0
-    [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
-    [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
-    [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
-    [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
-    [<ffffffff950d5169>] kthread+0x109/0x140
-    [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
-    [<ffffffffffffffff>] 0xffffffffffffffff
-unreferenced object 0xffff9f798cac8000 (size 1024):
-  comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
-  hex dump (first 32 bytes):
-    10 00 00 00 70 09 00 00 20 09 00 00 00 09 00 00  ....p... .......
-    80 02 00 00 b0 03 00 00 30 06 00 00 50 02 00 00  ........0...P...
-  backtrace:
-    [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
-    [<ffffffff952766b8>] __kmalloc+0x158/0x2c0
-    [<ffffffff95230a5f>] cache_random_seq_create+0x6f/0x130
-    [<ffffffff952714da>] init_cache_random_seq+0x3a/0x90
-    [<ffffffff95279d70>] __kmem_cache_create+0x100/0x5c0
-    [<ffffffff9522ff57>] create_cache+0xb7/0x1e0
-    [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
-    [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
-    [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
-    [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
-    [<ffffffff950d5169>] kthread+0x109/0x140
-    [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
-    [<ffffffffffffffff>] 0xffffffffffffffff
-unreferenced object 0xffff9f79442cd800 (size 112):
+Roman
 
-[root@zdtm linux]# git describe HEAD
-v4.12-rc7-26-gb216759
-
-[root@zdtm linux]# uname -a
-Linux zdtm.openvz.org 4.12.0-rc7+ #9 SMP Thu Jun 29 08:28:18 CEST 2017
-x86_64 x86_64 x86_64 GNU/Linux
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
