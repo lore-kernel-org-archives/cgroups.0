@@ -1,42 +1,41 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v3 5/6] mm, oom: don't mark all oom victims tasks with
- TIF_MEMDIE
-Date: Thu, 29 Jun 2017 10:53:57 +0200
-Message-ID: <20170629085357.GF31603@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [v3 1/6] mm, oom: use oom_victims counter to synchronize oom
+ victim selection
+Date: Thu, 29 Jun 2017 11:04:31 +0200
+Message-ID: <20170629090431.GG31603@dhcp22.suse.cz>
 References: <1498079956-24467-1-git-send-email-guro@fb.com>
- <1498079956-24467-6-git-send-email-guro@fb.com>
+ <1498079956-24467-2-git-send-email-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1498079956-24467-6-git-send-email-guro@fb.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1498079956-24467-2-git-send-email-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 21-06-17 22:19:15, Roman Gushchin wrote:
-> We want to limit the number of tasks which are having an access
-> to the memory reserves. To ensure the progress it's enough
-> to have one such process at the time.
+On Wed 21-06-17 22:19:11, Roman Gushchin wrote:
+> Oom killer should avoid unnecessary kills. To prevent them, during
+> the tasks list traverse we check for task which was previously
+> selected as oom victims. If there is such a task, new victim
+> is not selected.
 > 
-> If we need to kill the whole cgroup, let's give an access to the
-> memory reserves only to the first process in the list, which is
-> (usually) the biggest process.
-> This will give us good chances that all other processes will be able
-> to quit without an access to the memory reserves.
+> This approach is sub-optimal (we're doing costly iteration over the task
+> list every time) and will not work for the cgroup-aware oom killer.
+> 
+> We already have oom_victims counter, which can be effectively used
+> for the task.
 
-I don't like this to be honest. Is there any reason to go the reduced
-memory reserves access to oom victims I was suggesting earlier [1]?
+A global counter will not work properly, I am afraid. a) you should
+consider the oom domain and do not block oom on unrelated domains and b)
+you have no guarantee that the oom victim will terminate reasonably.
+That is why we have MMF_OOM_SKIP check in oom_evaluate_task.
 
-[1] http://lkml.kernel.org/r/http://lkml.kernel.org/r/1472723464-22866-2-git-send-email-mhocko@kernel.org
+I think you should have something similar for your memcg victim selection.
+If you see a memcg in the oom hierarchy with oom victims which are alive
+and not MMF_OOM_SKIP, you should abort the scanning.
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
