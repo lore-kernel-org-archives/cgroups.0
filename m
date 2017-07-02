@@ -1,176 +1,190 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v2
-Date: Fri, 30 Jun 2017 09:23:24 -0400
-Message-ID: <20170630132324.GA18669@htj.duckdns.org>
-References: <20170610140351.10703-1-tj@kernel.org>
- <20170612123150.scopfxela7v26dct@hirez.programming.kicks-ass.net>
- <20170612212753.GN19206@htj.duckdns.org>
- <20170627070143.GB4114@worktop>
+From: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: kmemleaks reports a lot of cases around memcg_create_kmem_cache
+Date: Sun, 2 Jul 2017 21:50:17 +0300
+Message-ID: <20170702185017.ew5cn4altyw7nomi@esperanza>
+References: <CANaxB-x=xgLq116VReo4Og+jFsAB+ehx3xThnXoCx8pR3YXPSA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=XhW3L+Z2kFpxhWmPQ8SIiF+oK9/JUk9NsigyiAqBQuM=;
-        b=N/JGq+DuniQEWbTdEQXWYG9ye/3dHr01ZVbNae4P+z2jGbvpblARRZ85chxXUJA5if
-         MX+HfZznAJMgw+idH6kFxT9+SwX7NszC3A7wlH8H8krDUke0exG/8WlZqgqWNLEfqkLs
-         AnBs7A45UL3efXJ3Ps491+roxBHDJVu6z8DP7ddh5yCMCM7e28L7rYFNYMlCDWbULyIC
-         ZrCedOkkEUDzXMyCpI2Ie/4CsbvkbEgEBNlrVJ+HCyKcvYMzSf+z6MxcDCGc9X6tpDT9
-         oE414hdrjFbNM6gWlSe+C8CEydyHw5p1MC8GaENjTw1v+N0scYoVLDnWbAOey/MfVgJw
-         Sy9A==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=6csoGmvG7YbwV57hujsouPsbqp2qh2s1mG8PyxyhzS0=;
+        b=jckztXuqof3hck4jI/vsMvJXQwQpoM5ndSbQEgIJOoU29CxF3E3Qj3J/qETSFToB+3
+         jS3B2a55i+TuL1ApEA/6qDVPaYggUe1htK5dwWxSCVTPT87+8YgD5710DjF5ujN34uda
+         kf3aV/MWgbiE55MzeIEcliNHcRFci1ylK4oV3GeXloINlvWfC+bp3MM3Ii3lbLgJNcKb
+         BRhucHGtopyjlhv2x3FeYmzmRDkhFQ3FNTcpy8pjkg1OtWz/uRYIpzYmWUtf2vN7H6eA
+         BREn5otFVUG7OU/OaGHshuAfDDvgRKIYe3jOgQc7R8rnN5p4RneTVR0EExQ/2sooNcrt
+         PRhA==
 Content-Disposition: inline
-In-Reply-To: <20170627070143.GB4114@worktop>
+In-Reply-To: <CANaxB-x=xgLq116VReo4Og+jFsAB+ehx3xThnXoCx8pR3YXPSA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello, Peter.
-
-On Tue, Jun 27, 2017 at 09:01:43AM +0200, Peter Zijlstra wrote:
+On Thu, Jun 29, 2017 at 11:04:01AM -0700, Andrei Vagin wrote:
+> Hello,
 > 
-> I'm slowly getting back to things...
-
-Welcome back.
-
-> On Mon, Jun 12, 2017 at 05:27:53PM -0400, Tejun Heo wrote:
-> > That's where the "join" thing comes from because we wanna be able to
-> > tell apart whether a cgroup is gonna be a part of the existing thread
-> > subtree or starting its own thread subtree.  There sure are multiple
-> > ways to express that but one way or the other, if you wanna support
-> > topologies like the last one, you have to distinguish the two.
+> We run CRIU tests on the linus' tree and found that kmemleak reports
+> unreferenced objects which are allocated from memcg_create_kmem_cache:
 > 
-> Hmm,.. I had not considered that. I was strictly considering the root to
-> always be a resource domain. What use-case or scenario did you have
-> to want to do this?
-
-I don't have any really.  It's mostly just from interface
-completeness.
-
-> That is, what is the meaning of having T1 be a separate 'root' if its
-> not also a resource domain?
-
-T1 is a resource domain.  Hmm... I think I see what you mean.  Let's
-continue below.
-
-> IIRC the problem with the 'threaded' marker is that it doesn't clearly
-> capture what a resource domain is.
+> unreferenced object 0xffff9f79442cd980 (size 112):
+>   comm "kworker/1:4", pid 15416, jiffies 4307432421 (age 28687.562s)
+>   hex dump (first 32 bytes):
+>     00 00 00 00 ad 4e ad de ff ff ff ff 00 00 00 00  .....N..........
+>     ff ff ff ff ff ff ff ff b8 39 1b 97 ff ff ff ff  .........9......
+>   backtrace:
+>     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
+>     [<ffffffff95276198>] kmem_cache_alloc_node+0x168/0x2a0
+>     [<ffffffff95279f28>] __kmem_cache_create+0x2b8/0x5c0
+>     [<ffffffff9522ff57>] create_cache+0xb7/0x1e0
+>     [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
+>     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
+>     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
+>     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
+>     [<ffffffff950d5169>] kthread+0x109/0x140
+>     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
+>     [<ffffffffffffffff>] 0xffffffffffffffff
+> unreferenced object 0xffff9f798a79f540 (size 32):
+>   comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.554s)
+>   hex dump (first 32 bytes):
+>     6b 6d 61 6c 6c 6f 63 2d 31 36 28 31 35 39 39 3a  kmalloc-16(1599:
+>     6e 65 77 72 6f 6f 74 29 00 23 6b c0 ff ff ff ff  newroot).#k.....
+>   backtrace:
+>     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
+>     [<ffffffff9527a378>] __kmalloc_track_caller+0x148/0x2c0
+>     [<ffffffff95499466>] kvasprintf+0x66/0xd0
+>     [<ffffffff954995a9>] kasprintf+0x49/0x70
+>     [<ffffffff952305c6>] memcg_create_kmem_cache+0xe6/0x160
+>     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
+>     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
+>     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
+>     [<ffffffff950d5169>] kthread+0x109/0x140
+>     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
+>     [<ffffffffffffffff>] 0xffffffffffffffff
+> unreferenced object 0xffff9f79b6136840 (size 416):
+>   comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
+>   hex dump (first 32 bytes):
+>     40 fb 80 c2 3e 33 00 00 00 00 00 40 00 00 00 00  @...>3.....@....
+>     00 00 00 00 00 00 00 00 10 00 00 00 10 00 00 00  ................
+>   backtrace:
+>     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
+>     [<ffffffff95275bc8>] kmem_cache_alloc+0x128/0x280
+>     [<ffffffff9522fedb>] create_cache+0x3b/0x1e0
+>     [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
+>     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
+>     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
+>     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
+>     [<ffffffff950d5169>] kthread+0x109/0x140
+>     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
+>     [<ffffffffffffffff>] 0xffffffffffffffff
+> unreferenced object 0xffff9f798cac8000 (size 1024):
+>   comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
+>   hex dump (first 32 bytes):
+>     10 00 00 00 70 09 00 00 20 09 00 00 00 09 00 00  ....p... .......
+>     80 02 00 00 b0 03 00 00 30 06 00 00 50 02 00 00  ........0...P...
+>   backtrace:
+>     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
+>     [<ffffffff952766b8>] __kmalloc+0x158/0x2c0
+>     [<ffffffff95230a5f>] cache_random_seq_create+0x6f/0x130
+>     [<ffffffff952714da>] init_cache_random_seq+0x3a/0x90
+>     [<ffffffff95279d70>] __kmem_cache_create+0x100/0x5c0
+>     [<ffffffff9522ff57>] create_cache+0xb7/0x1e0
+>     [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
+>     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
+>     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
+>     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
+>     [<ffffffff950d5169>] kthread+0x109/0x140
+>     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
+>     [<ffffffffffffffff>] 0xffffffffffffffff
+> unreferenced object 0xffff9f79442cd800 (size 112):
 > 
-> That is, assuming that a thread root is always a resource domain, we get
-> the following problem:
+> [root@zdtm linux]# git describe HEAD
+> v4.12-rc7-26-gb216759
 > 
-> If we set 'threaded' on the root group in order to create a thread
-> (sub)group. If we then want to create another domain group, we'd have to
-> clear 'threaded' on that.
-> 
-> 	R (t=1)
->        / \
-> (t=1) T   D (t=0)
-> 
-> So far so good. However, now we want to create another thread group
-> under our domain group D, so we have to set its 'threaded' marker again:
-> 
-> 	R (t=1)
->        / \
-> (t=1) T   D (t=1)
->          /
-> 	T (t=1)
-> 
-> And we can no longer identify D as a resource domain. If OTOH we mark
-> 'domain' we get:
-> 
-> 	R (d=1)
->        / \
-> (d=0) T   D (d=1)
->          /
-> 	T (d=0)
-> 
-> Which clearly identifies the domains and the thread only groups.
+> [root@zdtm linux]# uname -a
+> Linux zdtm.openvz.org 4.12.0-rc7+ #9 SMP Thu Jun 29 08:28:18 CEST 2017
+> x86_64 x86_64 x86_64 GNU/Linux
 
-So, the difference between the two interfaces is that the one I
-proposed is marking the thread root which makes all its descendants
-threaded while the above is marking each individual cgroup as being
-whether a resource domain or threaded.
+Could you check if the patch below fixes the issue?
+--
+From: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] slub: fix per memcg cache leak on css offline
 
-> Your objections to doing this were representing the resource controllers
-> in the intermediate thread-only groups like:
-> 
->    R
->     \
->      T  -- what to do with eg. memcg here?
->       \
->        D
->         \
-> 	 T
+To avoid a possible deadlock, sysfs_slab_remove() schedules an
+asynchronous work to delete sysfs entries corresponding to the kmem
+cache. To ensure the cache isn't freed before the work function is
+called, it takes a reference to the cache kobject. The reference is
+supposed to be released by the work function. However, the work function
+(sysfs_slab_remove_workfn()) does nothing in case the cache sysfs entry
+has already been deleted, leaking the kobject and the corresponding
+cache. This may happen on a per memcg cache destruction, because sysfs
+entries of a per memcg cache are deleted on memcg offline if the cache
+is empty (see __kmemcg_cache_deactivate()).
 
-And that's a perfectly valid point and as you pointed out the downside
-of marking each node separately is that the interface would allow
-configurations which aren't supported (at least for now) and that
-there's just more to configure - the user has to set the mode on each
-node after creation which is just the natural cost of being able to
-express more.
+The kmemleak report looks like this:
 
-> I suggested having all resource controllers represented with a soft-link
-> back into the (thread-root) resource domain. But you were not convinced
-> and worried people were going to be confused.
+  unreferenced object 0xffff9f798a79f540 (size 32):
+    comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.554s)
+    hex dump (first 32 bytes):
+      6b 6d 61 6c 6c 6f 63 2d 31 36 28 31 35 39 39 3a  kmalloc-16(1599:
+      6e 65 77 72 6f 6f 74 29 00 23 6b c0 ff ff ff ff  newroot).#k.....
+    backtrace:
+      [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
+      [<ffffffff9527a378>] __kmalloc_track_caller+0x148/0x2c0
+      [<ffffffff95499466>] kvasprintf+0x66/0xd0
+      [<ffffffff954995a9>] kasprintf+0x49/0x70
+      [<ffffffff952305c6>] memcg_create_kmem_cache+0xe6/0x160
+      [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
+      [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
+      [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
+      [<ffffffff950d5169>] kthread+0x109/0x140
+      [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
+      [<ffffffffffffffff>] 0xffffffffffffffff
+  unreferenced object 0xffff9f79b6136840 (size 416):
+    comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
+    hex dump (first 32 bytes):
+      40 fb 80 c2 3e 33 00 00 00 00 00 40 00 00 00 00  @...>3.....@....
+      00 00 00 00 00 00 00 00 10 00 00 00 10 00 00 00  ................
+    backtrace:
+      [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
+      [<ffffffff95275bc8>] kmem_cache_alloc+0x128/0x280
+      [<ffffffff9522fedb>] create_cache+0x3b/0x1e0
+      [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
+      [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
+      [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
+      [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
+      [<ffffffff950d5169>] kthread+0x109/0x140
+      [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
+      [<ffffffffffffffff>] 0xffffffffffffffff
 
-There's more to it than just confusion because resource interface
-files belong to the parent cgroup rather than the cgroup which hosts
-the files.  This becomes clear when thinking about which files a
-container should be granted write access to when delegating a cgroup
-subtree to it.  I'm sure we can get around it some way but we need to
-be careful here.
+Fix the leak by adding the missing call to kobject_put() to
+sysfs_slab_remove_workfn().
 
-> Your current proposal treats the resource controllers as disabled in
-> thread subgroups -- which is perfectly fine given the constraint that we
-> cannot have new domains in a thread sub-tree. My worry is that we don't
-> paint ourselves in a corner and create an interface where we can never
-> extend to allow this.
+Reported-by: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Fixes: 3b7b314053d02 ("slub: make sysfs file removal asynchronous")
 
-Understood.  We can err out on unsupported configurations and expand
-in the future as necessary.
-
-> I'm not wanting to change the relative weight thing. I merely wish to
-> change the interface for setting the group weight to match that of the
-> task weight, since both directly compete against one another.
-> 
-> That is, a group weight is the same kind of weight as a task weight.
-> Therefore it would make much more sense to set then in equal units too.
-> Not having done that from the beginning was rather silly.
-> 
-> By having a 100 based weight it becomes very hard to match the weight of
-> nice()'ed tasks (something that was already tricky with the current
-> shares interface because we'd need to share the nice weight table with
-> userspace).
-> 
-> By having both in nice units, its both conceptually clear that they're
-> the same kind of weight and easier to match weights.
-
-I think there is another side to it.  If you just think about threads,
-nice levels is the only thing we have.  It's a relative interface
-which isn't defined rigidly and that can be a plus in that it allows
-the kernel the room to maneuver with evolving implentations,
-heuristics and so on.
-
-Unfortunaltey, viewed from containerized resource control side, this
-is very difficult to deal with.  The scale isn't strictly defined,
-rather coarse and in generally difficult to work with - e.g. what do
-you do when the system is split 20%, 80% and then you wanna add
-another workload so that it becomes 20%, 50%, 30%?  And then there is
-the problem with consistency with other resource types which may also
-use proportional distribution.
-
-But, it doesn't have to be this or that.  We can easily support both
-units by simply allowing, say, "-5n" to be written to cpu.weight file
-and interpret that as the nice value and exposing the closest nice
-value in the cpu.stat file.
-
-Does that sound workable?
-
-Thanks.
-
--- 
-tejun
+diff --git a/mm/slub.c b/mm/slub.c
+index 8addc535bcdc..a0f3c56611c6 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -5637,13 +5637,14 @@ static void sysfs_slab_remove_workfn(struct work_struct *work)
+ 		 * A cache is never shut down before deactivation is
+ 		 * complete, so no need to worry about synchronization.
+ 		 */
+-		return;
++		goto out;
+ 
+ #ifdef CONFIG_MEMCG
+ 	kset_unregister(s->memcg_kset);
+ #endif
+ 	kobject_uevent(&s->kobj, KOBJ_REMOVE);
+ 	kobject_del(&s->kobj);
++out:
+ 	kobject_put(&s->kobj);
+ }
+ 
