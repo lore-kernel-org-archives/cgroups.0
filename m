@@ -1,190 +1,260 @@
-From: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: kmemleaks reports a lot of cases around memcg_create_kmem_cache
-Date: Sun, 2 Jul 2017 21:50:17 +0300
-Message-ID: <20170702185017.ew5cn4altyw7nomi@esperanza>
-References: <CANaxB-x=xgLq116VReo4Og+jFsAB+ehx3xThnXoCx8pR3YXPSA@mail.gmail.com>
+From: =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>
+Subject: [PATCH 4/5] mm/memcontrol: allow to uncharge page without using page->lru field
+Date: Mon,  3 Jul 2017 17:14:14 -0400
+Message-ID: <20170703211415.11283-5-jglisse@redhat.com>
+References: <20170703211415.11283-1-jglisse@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=6csoGmvG7YbwV57hujsouPsbqp2qh2s1mG8PyxyhzS0=;
-        b=jckztXuqof3hck4jI/vsMvJXQwQpoM5ndSbQEgIJOoU29CxF3E3Qj3J/qETSFToB+3
-         jS3B2a55i+TuL1ApEA/6qDVPaYggUe1htK5dwWxSCVTPT87+8YgD5710DjF5ujN34uda
-         kf3aV/MWgbiE55MzeIEcliNHcRFci1ylK4oV3GeXloINlvWfC+bp3MM3Ii3lbLgJNcKb
-         BRhucHGtopyjlhv2x3FeYmzmRDkhFQ3FNTcpy8pjkg1OtWz/uRYIpzYmWUtf2vN7H6eA
-         BREn5otFVUG7OU/OaGHshuAfDDvgRKIYe3jOgQc7R8rnN5p4RneTVR0EExQ/2sooNcrt
-         PRhA==
-Content-Disposition: inline
-In-Reply-To: <CANaxB-x=xgLq116VReo4Og+jFsAB+ehx3xThnXoCx8pR3YXPSA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 5F53F85A07
+In-Reply-To: <20170703211415.11283-1-jglisse@redhat.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: John Hubbard <jhubbard@nvidia.com>, David Nellans <dnellans@nvidia.com>, Dan Williams <dan.j.williams@intel.com>, Balbir Singh <bsingharora@gmail.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
 
-On Thu, Jun 29, 2017 at 11:04:01AM -0700, Andrei Vagin wrote:
-> Hello,
-> 
-> We run CRIU tests on the linus' tree and found that kmemleak reports
-> unreferenced objects which are allocated from memcg_create_kmem_cache:
-> 
-> unreferenced object 0xffff9f79442cd980 (size 112):
->   comm "kworker/1:4", pid 15416, jiffies 4307432421 (age 28687.562s)
->   hex dump (first 32 bytes):
->     00 00 00 00 ad 4e ad de ff ff ff ff 00 00 00 00  .....N..........
->     ff ff ff ff ff ff ff ff b8 39 1b 97 ff ff ff ff  .........9......
->   backtrace:
->     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
->     [<ffffffff95276198>] kmem_cache_alloc_node+0x168/0x2a0
->     [<ffffffff95279f28>] __kmem_cache_create+0x2b8/0x5c0
->     [<ffffffff9522ff57>] create_cache+0xb7/0x1e0
->     [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
->     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
->     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
->     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
->     [<ffffffff950d5169>] kthread+0x109/0x140
->     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
->     [<ffffffffffffffff>] 0xffffffffffffffff
-> unreferenced object 0xffff9f798a79f540 (size 32):
->   comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.554s)
->   hex dump (first 32 bytes):
->     6b 6d 61 6c 6c 6f 63 2d 31 36 28 31 35 39 39 3a  kmalloc-16(1599:
->     6e 65 77 72 6f 6f 74 29 00 23 6b c0 ff ff ff ff  newroot).#k.....
->   backtrace:
->     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
->     [<ffffffff9527a378>] __kmalloc_track_caller+0x148/0x2c0
->     [<ffffffff95499466>] kvasprintf+0x66/0xd0
->     [<ffffffff954995a9>] kasprintf+0x49/0x70
->     [<ffffffff952305c6>] memcg_create_kmem_cache+0xe6/0x160
->     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
->     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
->     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
->     [<ffffffff950d5169>] kthread+0x109/0x140
->     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
->     [<ffffffffffffffff>] 0xffffffffffffffff
-> unreferenced object 0xffff9f79b6136840 (size 416):
->   comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
->   hex dump (first 32 bytes):
->     40 fb 80 c2 3e 33 00 00 00 00 00 40 00 00 00 00  @...>3.....@....
->     00 00 00 00 00 00 00 00 10 00 00 00 10 00 00 00  ................
->   backtrace:
->     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
->     [<ffffffff95275bc8>] kmem_cache_alloc+0x128/0x280
->     [<ffffffff9522fedb>] create_cache+0x3b/0x1e0
->     [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
->     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
->     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
->     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
->     [<ffffffff950d5169>] kthread+0x109/0x140
->     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
->     [<ffffffffffffffff>] 0xffffffffffffffff
-> unreferenced object 0xffff9f798cac8000 (size 1024):
->   comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
->   hex dump (first 32 bytes):
->     10 00 00 00 70 09 00 00 20 09 00 00 00 09 00 00  ....p... .......
->     80 02 00 00 b0 03 00 00 30 06 00 00 50 02 00 00  ........0...P...
->   backtrace:
->     [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
->     [<ffffffff952766b8>] __kmalloc+0x158/0x2c0
->     [<ffffffff95230a5f>] cache_random_seq_create+0x6f/0x130
->     [<ffffffff952714da>] init_cache_random_seq+0x3a/0x90
->     [<ffffffff95279d70>] __kmem_cache_create+0x100/0x5c0
->     [<ffffffff9522ff57>] create_cache+0xb7/0x1e0
->     [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
->     [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
->     [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
->     [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
->     [<ffffffff950d5169>] kthread+0x109/0x140
->     [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
->     [<ffffffffffffffff>] 0xffffffffffffffff
-> unreferenced object 0xffff9f79442cd800 (size 112):
-> 
-> [root@zdtm linux]# git describe HEAD
-> v4.12-rc7-26-gb216759
-> 
-> [root@zdtm linux]# uname -a
-> Linux zdtm.openvz.org 4.12.0-rc7+ #9 SMP Thu Jun 29 08:28:18 CEST 2017
-> x86_64 x86_64 x86_64 GNU/Linux
+HMM pages (private or public device pages) are ZONE_DEVICE page and
+thus you can not use page->lru fields of those pages. This patch
+re-arrange the uncharge to allow single page to be uncharge without
+modifying the lru field of the struct page.
 
-Could you check if the patch below fixes the issue?
---
-From: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] slub: fix per memcg cache leak on css offline
+There is no change to memcontrol logic, it is the same as it was
+before this patch.
 
-To avoid a possible deadlock, sysfs_slab_remove() schedules an
-asynchronous work to delete sysfs entries corresponding to the kmem
-cache. To ensure the cache isn't freed before the work function is
-called, it takes a reference to the cache kobject. The reference is
-supposed to be released by the work function. However, the work function
-(sysfs_slab_remove_workfn()) does nothing in case the cache sysfs entry
-has already been deleted, leaking the kobject and the corresponding
-cache. This may happen on a per memcg cache destruction, because sysfs
-entries of a per memcg cache are deleted on memcg offline if the cache
-is empty (see __kmemcg_cache_deactivate()).
+Signed-off-by: Jérôme Glisse <jglisse@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: cgroups@vger.kernel.org
+---
+ mm/memcontrol.c | 168 +++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 92 insertions(+), 76 deletions(-)
 
-The kmemleak report looks like this:
-
-  unreferenced object 0xffff9f798a79f540 (size 32):
-    comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.554s)
-    hex dump (first 32 bytes):
-      6b 6d 61 6c 6c 6f 63 2d 31 36 28 31 35 39 39 3a  kmalloc-16(1599:
-      6e 65 77 72 6f 6f 74 29 00 23 6b c0 ff ff ff ff  newroot).#k.....
-    backtrace:
-      [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
-      [<ffffffff9527a378>] __kmalloc_track_caller+0x148/0x2c0
-      [<ffffffff95499466>] kvasprintf+0x66/0xd0
-      [<ffffffff954995a9>] kasprintf+0x49/0x70
-      [<ffffffff952305c6>] memcg_create_kmem_cache+0xe6/0x160
-      [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
-      [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
-      [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
-      [<ffffffff950d5169>] kthread+0x109/0x140
-      [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
-      [<ffffffffffffffff>] 0xffffffffffffffff
-  unreferenced object 0xffff9f79b6136840 (size 416):
-    comm "kworker/1:4", pid 15416, jiffies 4307432429 (age 28687.573s)
-    hex dump (first 32 bytes):
-      40 fb 80 c2 3e 33 00 00 00 00 00 40 00 00 00 00  @...>3.....@....
-      00 00 00 00 00 00 00 00 10 00 00 00 10 00 00 00  ................
-    backtrace:
-      [<ffffffff9591d28a>] kmemleak_alloc+0x4a/0xa0
-      [<ffffffff95275bc8>] kmem_cache_alloc+0x128/0x280
-      [<ffffffff9522fedb>] create_cache+0x3b/0x1e0
-      [<ffffffff952305f8>] memcg_create_kmem_cache+0x118/0x160
-      [<ffffffff9528eaf0>] memcg_kmem_cache_create_func+0x20/0x110
-      [<ffffffff950cd6c5>] process_one_work+0x205/0x5d0
-      [<ffffffff950cdade>] worker_thread+0x4e/0x3a0
-      [<ffffffff950d5169>] kthread+0x109/0x140
-      [<ffffffff9592b8fa>] ret_from_fork+0x2a/0x40
-      [<ffffffffffffffff>] 0xffffffffffffffff
-
-Fix the leak by adding the missing call to kobject_put() to
-sysfs_slab_remove_workfn().
-
-Reported-by: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Fixes: 3b7b314053d02 ("slub: make sysfs file removal asynchronous")
-
-diff --git a/mm/slub.c b/mm/slub.c
-index 8addc535bcdc..a0f3c56611c6 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -5637,13 +5637,14 @@ static void sysfs_slab_remove_workfn(struct work_struct *work)
- 		 * A cache is never shut down before deactivation is
- 		 * complete, so no need to worry about synchronization.
- 		 */
--		return;
-+		goto out;
- 
- #ifdef CONFIG_MEMCG
- 	kset_unregister(s->memcg_kset);
- #endif
- 	kobject_uevent(&s->kobj, KOBJ_REMOVE);
- 	kobject_del(&s->kobj);
-+out:
- 	kobject_put(&s->kobj);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3df3c04d73ab..c709fdceac13 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5509,48 +5509,102 @@ void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg,
+ 	cancel_charge(memcg, nr_pages);
  }
  
+-static void uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
+-			   unsigned long nr_anon, unsigned long nr_file,
+-			   unsigned long nr_kmem, unsigned long nr_huge,
+-			   unsigned long nr_shmem, struct page *dummy_page)
++struct uncharge_gather {
++	struct mem_cgroup *memcg;
++	unsigned long pgpgout;
++	unsigned long nr_anon;
++	unsigned long nr_file;
++	unsigned long nr_kmem;
++	unsigned long nr_huge;
++	unsigned long nr_shmem;
++	struct page *dummy_page;
++};
++
++static inline void uncharge_gather_clear(struct uncharge_gather *ug)
+ {
+-	unsigned long nr_pages = nr_anon + nr_file + nr_kmem;
++	memset(ug, 0, sizeof(*ug));
++}
++
++static void uncharge_batch(const struct uncharge_gather *ug)
++{
++	unsigned long nr_pages = ug->nr_anon + ug->nr_file + ug->nr_kmem;
+ 	unsigned long flags;
+ 
+-	if (!mem_cgroup_is_root(memcg)) {
+-		page_counter_uncharge(&memcg->memory, nr_pages);
++	if (!mem_cgroup_is_root(ug->memcg)) {
++		page_counter_uncharge(&ug->memcg->memory, nr_pages);
+ 		if (do_memsw_account())
+-			page_counter_uncharge(&memcg->memsw, nr_pages);
+-		if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && nr_kmem)
+-			page_counter_uncharge(&memcg->kmem, nr_kmem);
+-		memcg_oom_recover(memcg);
++			page_counter_uncharge(&ug->memcg->memsw, nr_pages);
++		if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && ug->nr_kmem)
++			page_counter_uncharge(&ug->memcg->kmem, ug->nr_kmem);
++		memcg_oom_recover(ug->memcg);
+ 	}
+ 
+ 	local_irq_save(flags);
+-	__this_cpu_sub(memcg->stat->count[MEMCG_RSS], nr_anon);
+-	__this_cpu_sub(memcg->stat->count[MEMCG_CACHE], nr_file);
+-	__this_cpu_sub(memcg->stat->count[MEMCG_RSS_HUGE], nr_huge);
+-	__this_cpu_sub(memcg->stat->count[NR_SHMEM], nr_shmem);
+-	__this_cpu_add(memcg->stat->events[PGPGOUT], pgpgout);
+-	__this_cpu_add(memcg->stat->nr_page_events, nr_pages);
+-	memcg_check_events(memcg, dummy_page);
++	__this_cpu_sub(ug->memcg->stat->count[MEMCG_RSS], ug->nr_anon);
++	__this_cpu_sub(ug->memcg->stat->count[MEMCG_CACHE], ug->nr_file);
++	__this_cpu_sub(ug->memcg->stat->count[MEMCG_RSS_HUGE], ug->nr_huge);
++	__this_cpu_sub(ug->memcg->stat->count[NR_SHMEM], ug->nr_shmem);
++	__this_cpu_add(ug->memcg->stat->events[PGPGOUT], ug->pgpgout);
++	__this_cpu_add(ug->memcg->stat->nr_page_events, nr_pages);
++	memcg_check_events(ug->memcg, ug->dummy_page);
+ 	local_irq_restore(flags);
+ 
+-	if (!mem_cgroup_is_root(memcg))
+-		css_put_many(&memcg->css, nr_pages);
++	if (!mem_cgroup_is_root(ug->memcg))
++		css_put_many(&ug->memcg->css, nr_pages);
++}
++
++static void uncharge_page(struct page *page, struct uncharge_gather *ug)
++{
++	VM_BUG_ON_PAGE(PageLRU(page), page);
++	VM_BUG_ON_PAGE(!PageHWPoison(page) && page_count(page), page);
++
++	if (!page->mem_cgroup)
++		return;
++
++	/*
++	 * Nobody should be changing or seriously looking at
++	 * page->mem_cgroup at this point, we have fully
++	 * exclusive access to the page.
++	 */
++
++	if (ug->memcg != page->mem_cgroup) {
++		if (ug->memcg) {
++			uncharge_batch(ug);
++			uncharge_gather_clear(ug);
++		}
++		ug->memcg = page->mem_cgroup;
++	}
++
++	if (!PageKmemcg(page)) {
++		unsigned int nr_pages = 1;
++
++		if (PageTransHuge(page)) {
++			nr_pages <<= compound_order(page);
++			ug->nr_huge += nr_pages;
++		}
++		if (PageAnon(page))
++			ug->nr_anon += nr_pages;
++		else {
++			ug->nr_file += nr_pages;
++			if (PageSwapBacked(page))
++				ug->nr_shmem += nr_pages;
++		}
++		ug->pgpgout++;
++	} else {
++		ug->nr_kmem += 1 << compound_order(page);
++		__ClearPageKmemcg(page);
++	}
++
++	ug->dummy_page = page;
++	page->mem_cgroup = NULL;
+ }
+ 
+ static void uncharge_list(struct list_head *page_list)
+ {
+-	struct mem_cgroup *memcg = NULL;
+-	unsigned long nr_shmem = 0;
+-	unsigned long nr_anon = 0;
+-	unsigned long nr_file = 0;
+-	unsigned long nr_huge = 0;
+-	unsigned long nr_kmem = 0;
+-	unsigned long pgpgout = 0;
++	struct uncharge_gather ug;
+ 	struct list_head *next;
+-	struct page *page;
++
++	uncharge_gather_clear(&ug);
+ 
+ 	/*
+ 	 * Note that the list can be a single page->lru; hence the
+@@ -5558,57 +5612,16 @@ static void uncharge_list(struct list_head *page_list)
+ 	 */
+ 	next = page_list->next;
+ 	do {
++		struct page *page;
++
+ 		page = list_entry(next, struct page, lru);
+ 		next = page->lru.next;
+ 
+-		VM_BUG_ON_PAGE(PageLRU(page), page);
+-		VM_BUG_ON_PAGE(!PageHWPoison(page) && page_count(page), page);
+-
+-		if (!page->mem_cgroup)
+-			continue;
+-
+-		/*
+-		 * Nobody should be changing or seriously looking at
+-		 * page->mem_cgroup at this point, we have fully
+-		 * exclusive access to the page.
+-		 */
+-
+-		if (memcg != page->mem_cgroup) {
+-			if (memcg) {
+-				uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+-					       nr_kmem, nr_huge, nr_shmem, page);
+-				pgpgout = nr_anon = nr_file = nr_kmem = 0;
+-				nr_huge = nr_shmem = 0;
+-			}
+-			memcg = page->mem_cgroup;
+-		}
+-
+-		if (!PageKmemcg(page)) {
+-			unsigned int nr_pages = 1;
+-
+-			if (PageTransHuge(page)) {
+-				nr_pages <<= compound_order(page);
+-				nr_huge += nr_pages;
+-			}
+-			if (PageAnon(page))
+-				nr_anon += nr_pages;
+-			else {
+-				nr_file += nr_pages;
+-				if (PageSwapBacked(page))
+-					nr_shmem += nr_pages;
+-			}
+-			pgpgout++;
+-		} else {
+-			nr_kmem += 1 << compound_order(page);
+-			__ClearPageKmemcg(page);
+-		}
+-
+-		page->mem_cgroup = NULL;
++		uncharge_page(page, &ug);
+ 	} while (next != page_list);
+ 
+-	if (memcg)
+-		uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+-			       nr_kmem, nr_huge, nr_shmem, page);
++	if (ug.memcg)
++		uncharge_batch(&ug);
+ }
+ 
+ /**
+@@ -5620,6 +5633,8 @@ static void uncharge_list(struct list_head *page_list)
+  */
+ void mem_cgroup_uncharge(struct page *page)
+ {
++	struct uncharge_gather ug;
++
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
+@@ -5627,8 +5642,9 @@ void mem_cgroup_uncharge(struct page *page)
+ 	if (!page->mem_cgroup)
+ 		return;
+ 
+-	INIT_LIST_HEAD(&page->lru);
+-	uncharge_list(&page->lru);
++	uncharge_gather_clear(&ug);
++	uncharge_page(page, &ug);
++	uncharge_batch(&ug);
+ }
+ 
+ /**
+-- 
+2.13.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
