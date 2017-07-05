@@ -1,66 +1,55 @@
-From: Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH 4/5] mm/memcontrol: allow to uncharge page without using
- page->lru field
-Date: Wed, 5 Jul 2017 10:35:29 -0400
-Message-ID: <20170705143528.GB3305@redhat.com>
-References: <20170703211415.11283-1-jglisse@redhat.com>
- <20170703211415.11283-5-jglisse@redhat.com>
- <20170704125113.GC14727@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: kmemleaks reports a lot of cases around memcg_create_kmem_cache
+Date: Wed, 5 Jul 2017 10:47:43 -0400
+Message-ID: <20170705144743.GA19330@htj.duckdns.org>
+References: <CANaxB-x=xgLq116VReo4Og+jFsAB+ehx3xThnXoCx8pR3YXPSA@mail.gmail.com>
+ <20170702185017.ew5cn4altyw7nomi@esperanza>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 91D784E4D9
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=K8aruXhlmQg9wAjKh7cJ2UZpy4GEXsUfntM6UUR871U=;
+        b=d4NXlML7qyyLMx0cQqaNBelDDSTnZWnjFMW5YN7t/fxYvXHdvDVs1wKww6YjntIytn
+         N5/ytc/iqJG6zNIwUs7kp4ywyxpL7uR3TgiVpWPKizjJ3ASCeWuIE/IR7lSNWBgiIuhs
+         a6MdFRsP6z9fcoAjsUgvefvgO0vG9s7PrCttrKe5pJtv9KSZrfpOy81eJoaZT3znfRzO
+         pI5jFe4lZaPEHD5/fmrwpuya/HCxfs/AIrTczJjyDnRDr4urjKPvlusw19qmY9hKtDR2
+         E1ipZBb55C2cYtNMzOoiNIqnydgdgD4GzbLhbid/sX+xJNov76RaoAZnnSyM5Z1i6plZ
+         a/dg==
 Content-Disposition: inline
-In-Reply-To: <20170704125113.GC14727@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170702185017.ew5cn4altyw7nomi@esperanza>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, John Hubbard <jhubbard@nvidia.com>, David Nellans <dnellans@nvidia.com>, Dan Williams <dan.j.williams@intel.com>, Balbir Singh <bsingharora@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Tue, Jul 04, 2017 at 02:51:13PM +0200, Michal Hocko wrote:
-> On Mon 03-07-17 17:14:14, J=E9r=F4me Glisse wrote:
-> > HMM pages (private or public device pages) are ZONE_DEVICE page and
-> > thus you can not use page->lru fields of those pages. This patch
-> > re-arrange the uncharge to allow single page to be uncharge without
-> > modifying the lru field of the struct page.
-> >=20
-> > There is no change to memcontrol logic, it is the same as it was
-> > before this patch.
->=20
-> What is the memcg semantic of the memory? Why is it even charged? AFAIR
-> this is not a reclaimable memory. If yes how are we going to deal with
-> memory limits? What should happen if go OOM? Does killing an process
-> actually help to release that memory? Isn't it pinned by a device?
->=20
-> For the patch itself. It is quite ugly but I haven't spotted anything
-> obviously wrong with it. It is the memcg semantic with this class of
-> memory which makes me worried.
+On Sun, Jul 02, 2017 at 09:50:17PM +0300, Vladimir Davydov wrote:
+> From: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Subject: [PATCH] slub: fix per memcg cache leak on css offline
+> 
+> To avoid a possible deadlock, sysfs_slab_remove() schedules an
+> asynchronous work to delete sysfs entries corresponding to the kmem
+> cache. To ensure the cache isn't freed before the work function is
+> called, it takes a reference to the cache kobject. The reference is
+> supposed to be released by the work function. However, the work function
+> (sysfs_slab_remove_workfn()) does nothing in case the cache sysfs entry
+> has already been deleted, leaking the kobject and the corresponding
+> cache. This may happen on a per memcg cache destruction, because sysfs
+> entries of a per memcg cache are deleted on memcg offline if the cache
+> is empty (see __kmemcg_cache_deactivate()).
+...
+> Reported-by: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Fixes: 3b7b314053d02 ("slub: make sysfs file removal asynchronous")
 
-So i am facing 3 choices. First one not account device memory at all.
-Second one is account device memory like any other memory inside a
-process. Third one is account device memory as something entirely new.
+Oops,
 
-I pick the second one for two reasons. First because when migrating
-back from device memory it means that migration can not fail because
-of memory cgroup limit, this simplify an already complex migration
-code. Second because i assume that device memory usage is a transient
-state ie once device is done with its computation the most likely
-outcome is memory is migrated back. From this assumption it means
-that you do not want to allow a process to overuse regular memory
-while it is using un-accounted device memory. It sounds safer to
-account device memory and to keep the process within its memcg
-boundary.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Admittedly here i am making an assumption and i can be wrong. Thing
-is we do not have enough real data of how this will be use and how
-much of an impact device memory will have. That is why for now i
-would rather restrict myself to either not account it or account it
-as usual.
+Thanks.
 
-If you prefer not accounting it until we have more experience on how
-it is use and how it impacts memory resource management i am fine with
-that too. It will make the migration code slightly more complex.
-
-Cheers,
-J=E9r=F4me
+-- 
+tejun
