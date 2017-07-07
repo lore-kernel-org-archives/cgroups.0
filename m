@@ -1,17 +1,17 @@
-From: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 03/15] kernel: convert user_struct.__count from atomic_t to refcount_t
-Date: Fri,  7 Jul 2017 12:04:17 +0300
-Message-ID: <1499418269-3686-4-git-send-email-elena.reshetova@intel.com>
+From: Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 05/15] kernel: convert task_struct.stack_refcount from atomic_t to refcount_t
+Date: Fri,  7 Jul 2017 12:04:19 +0300
+Message-ID: <1499418269-3686-6-git-send-email-elena.reshetova@intel.com>
 References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>
 
 refcount_t type and corresponding API should be
 used instead of atomic_t when the variable is used as
@@ -19,84 +19,95 @@ a reference counter. This allows to avoid accidental
 refcounter overflows that might lead to use-after-free
 situations.
 
-Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- include/linux/sched/user.h | 5 +++--
- kernel/user.c              | 8 ++++----
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ include/linux/init_task.h        | 3 ++-
+ include/linux/sched.h            | 2 +-
+ include/linux/sched/task_stack.h | 2 +-
+ kernel/fork.c                    | 6 +++---
+ 4 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/sched/user.h b/include/linux/sched/user.h
-index 5d5415e..0a9953d 100644
---- a/include/linux/sched/user.h
-+++ b/include/linux/sched/user.h
-@@ -3,6 +3,7 @@
- 
- #include <linux/uidgid.h>
- #include <linux/atomic.h>
+diff --git a/include/linux/init_task.h b/include/linux/init_task.h
+index 348466a..96802198 100644
+--- a/include/linux/init_task.h
++++ b/include/linux/init_task.h
+@@ -12,6 +12,7 @@
+ #include <linux/securebits.h>
+ #include <linux/seqlock.h>
+ #include <linux/rbtree.h>
 +#include <linux/refcount.h>
- 
- struct key;
- 
-@@ -10,7 +11,7 @@ struct key;
-  * Some day this will be a full-fledged user tracking system..
-  */
- struct user_struct {
--	atomic_t __count;	/* reference count */
-+	refcount_t __count;	/* reference count */
- 	atomic_t processes;	/* How many processes does this user have? */
- 	atomic_t sigpending;	/* How many pending signals does this user have? */
- #ifdef CONFIG_FANOTIFY
-@@ -53,7 +54,7 @@ extern struct user_struct root_user;
- extern struct user_struct * alloc_uid(kuid_t);
- static inline struct user_struct *get_uid(struct user_struct *u)
+ #include <linux/sched/autogroup.h>
+ #include <net/net_namespace.h>
+ #include <linux/sched/rt.h>
+@@ -208,7 +209,7 @@ extern struct cred init_cred;
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ # define INIT_TASK_TI(tsk)			\
+ 	.thread_info = INIT_THREAD_INFO(tsk),	\
+-	.stack_refcount = ATOMIC_INIT(1),
++	.stack_refcount = REFCOUNT_INIT(1),
+ #else
+ # define INIT_TASK_TI(tsk)
+ #endif
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 6a01517..73be022 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1070,7 +1070,7 @@ struct task_struct {
+ #endif
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ 	/* A live task holds one reference: */
+-	atomic_t			stack_refcount;
++	refcount_t			stack_refcount;
+ #endif
+ #ifdef CONFIG_LIVEPATCH
+ 	int patch_state;
+diff --git a/include/linux/sched/task_stack.h b/include/linux/sched/task_stack.h
+index df6ea66..aab3809 100644
+--- a/include/linux/sched/task_stack.h
++++ b/include/linux/sched/task_stack.h
+@@ -60,7 +60,7 @@ static inline unsigned long *end_of_stack(struct task_struct *p)
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ static inline void *try_get_task_stack(struct task_struct *tsk)
  {
--	atomic_inc(&u->__count);
-+	refcount_inc(&u->__count);
- 	return u;
+-	return atomic_inc_not_zero(&tsk->stack_refcount) ?
++	return refcount_inc_not_zero(&tsk->stack_refcount) ?
+ 		task_stack_page(tsk) : NULL;
  }
- extern void free_uid(struct user_struct *);
-diff --git a/kernel/user.c b/kernel/user.c
-index 00281ad..c072348 100644
---- a/kernel/user.c
-+++ b/kernel/user.c
-@@ -90,7 +90,7 @@ static DEFINE_SPINLOCK(uidhash_lock);
  
- /* root_user.__count is 1, for init task cred */
- struct user_struct root_user = {
--	.__count	= ATOMIC_INIT(1),
-+	.__count	= REFCOUNT_INIT(1),
- 	.processes	= ATOMIC_INIT(1),
- 	.sigpending	= ATOMIC_INIT(0),
- 	.locked_shm     = 0,
-@@ -116,7 +116,7 @@ static struct user_struct *uid_hash_find(kuid_t uid, struct hlist_head *hashent)
+diff --git a/kernel/fork.c b/kernel/fork.c
+index c549b0b..1e0e14e 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -354,7 +354,7 @@ static void release_task_stack(struct task_struct *tsk)
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ void put_task_stack(struct task_struct *tsk)
+ {
+-	if (atomic_dec_and_test(&tsk->stack_refcount))
++	if (refcount_dec_and_test(&tsk->stack_refcount))
+ 		release_task_stack(tsk);
+ }
+ #endif
+@@ -372,7 +372,7 @@ void free_task(struct task_struct *tsk)
+ 	 * If the task had a separate stack allocation, it should be gone
+ 	 * by now.
+ 	 */
+-	WARN_ON_ONCE(atomic_read(&tsk->stack_refcount) != 0);
++	WARN_ON_ONCE(refcount_read(&tsk->stack_refcount) != 0);
+ #endif
+ 	rt_mutex_debug_task_free(tsk);
+ 	ftrace_graph_exit_task(tsk);
+@@ -532,7 +532,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
+ 	tsk->stack_vm_area = stack_vm_area;
+ #endif
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+-	atomic_set(&tsk->stack_refcount, 1);
++	refcount_set(&tsk->stack_refcount, 1);
+ #endif
  
- 	hlist_for_each_entry(user, hashent, uidhash_node) {
- 		if (uid_eq(user->uid, uid)) {
--			atomic_inc(&user->__count);
-+			refcount_inc(&user->__count);
- 			return user;
- 		}
- 	}
-@@ -163,7 +163,7 @@ void free_uid(struct user_struct *up)
- 		return;
- 
- 	local_irq_save(flags);
--	if (atomic_dec_and_lock(&up->__count, &uidhash_lock))
-+	if (refcount_dec_and_lock(&up->__count, &uidhash_lock))
- 		free_user(up, flags);
- 	else
- 		local_irq_restore(flags);
-@@ -184,7 +184,7 @@ struct user_struct *alloc_uid(kuid_t uid)
- 			goto out_unlock;
- 
- 		new->uid = uid;
--		atomic_set(&new->__count, 1);
-+		refcount_set(&new->__count, 1);
- 
- 		/*
- 		 * Before adding this, check whether we raced
+ 	if (err)
 -- 
 2.7.4
+
