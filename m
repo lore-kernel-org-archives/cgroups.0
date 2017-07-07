@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 08/15] kernel: convert ring_buffer.aux_refcount from atomic_t to refcount_t
-Date: Fri,  7 Jul 2017 12:04:22 +0300
-Message-ID: <1499418269-3686-9-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 10/15] kernel: convert nsproxy.count from atomic_t to refcount_t
+Date: Fri,  7 Jul 2017 12:04:24 +0300
+Message-ID: <1499418269-3686-11-git-send-email-elena.reshetova@intel.com>
 References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
@@ -24,66 +24,69 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- kernel/events/core.c        | 2 +-
- kernel/events/internal.h    | 2 +-
- kernel/events/ring_buffer.c | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ include/linux/nsproxy.h | 6 +++---
+ kernel/nsproxy.c        | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index 890c3a8..aaea75b 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -5124,7 +5124,7 @@ static void perf_mmap_close(struct vm_area_struct *vma)
+diff --git a/include/linux/nsproxy.h b/include/linux/nsproxy.h
+index ac0d65b..f862ba8 100644
+--- a/include/linux/nsproxy.h
++++ b/include/linux/nsproxy.h
+@@ -28,7 +28,7 @@ struct fs_struct;
+  * nsproxy is copied.
+  */
+ struct nsproxy {
+-	atomic_t count;
++	refcount_t count;
+ 	struct uts_namespace *uts_ns;
+ 	struct ipc_namespace *ipc_ns;
+ 	struct mnt_namespace *mnt_ns;
+@@ -74,14 +74,14 @@ int __init nsproxy_cache_init(void);
  
- 		/* this has to be the last one */
- 		rb_free_aux(rb);
--		WARN_ON_ONCE(atomic_read(&rb->aux_refcount));
-+		WARN_ON_ONCE(refcount_read(&rb->aux_refcount));
- 
- 		mutex_unlock(&event->mmap_mutex);
- 	}
-diff --git a/kernel/events/internal.h b/kernel/events/internal.h
-index b8e6fdf..fb55716 100644
---- a/kernel/events/internal.h
-+++ b/kernel/events/internal.h
-@@ -48,7 +48,7 @@ struct ring_buffer {
- 	atomic_t			aux_mmap_count;
- 	unsigned long			aux_mmap_locked;
- 	void				(*free_aux)(void *);
--	atomic_t			aux_refcount;
-+	refcount_t			aux_refcount;
- 	void				**aux_pages;
- 	void				*aux_priv;
- 
-diff --git a/kernel/events/ring_buffer.c b/kernel/events/ring_buffer.c
-index 3353572..ba12fd2 100644
---- a/kernel/events/ring_buffer.c
-+++ b/kernel/events/ring_buffer.c
-@@ -357,7 +357,7 @@ void *perf_aux_output_begin(struct perf_output_handle *handle,
- 	if (!atomic_read(&rb->aux_mmap_count))
- 		goto err;
- 
--	if (!atomic_inc_not_zero(&rb->aux_refcount))
-+	if (!refcount_inc_not_zero(&rb->aux_refcount))
- 		goto err;
- 
- 	/*
-@@ -648,7 +648,7 @@ int rb_alloc_aux(struct ring_buffer *rb, struct perf_event *event,
- 	 * we keep a refcount here to make sure either of the two can
- 	 * reference them safely.
- 	 */
--	atomic_set(&rb->aux_refcount, 1);
-+	refcount_set(&rb->aux_refcount, 1);
- 
- 	rb->aux_overwrite = overwrite;
- 	rb->aux_watermark = watermark;
-@@ -667,7 +667,7 @@ int rb_alloc_aux(struct ring_buffer *rb, struct perf_event *event,
- 
- void rb_free_aux(struct ring_buffer *rb)
+ static inline void put_nsproxy(struct nsproxy *ns)
  {
--	if (atomic_dec_and_test(&rb->aux_refcount))
-+	if (refcount_dec_and_test(&rb->aux_refcount))
- 		__rb_free_aux(rb);
+-	if (atomic_dec_and_test(&ns->count)) {
++	if (refcount_dec_and_test(&ns->count)) {
+ 		free_nsproxy(ns);
+ 	}
+ }
+ 
+ static inline void get_nsproxy(struct nsproxy *ns)
+ {
+-	atomic_inc(&ns->count);
++	refcount_inc(&ns->count);
+ }
+ 
+ #endif
+diff --git a/kernel/nsproxy.c b/kernel/nsproxy.c
+index f6c5d33..5bfe691 100644
+--- a/kernel/nsproxy.c
++++ b/kernel/nsproxy.c
+@@ -31,7 +31,7 @@
+ static struct kmem_cache *nsproxy_cachep;
+ 
+ struct nsproxy init_nsproxy = {
+-	.count			= ATOMIC_INIT(1),
++	.count			= REFCOUNT_INIT(1),
+ 	.uts_ns			= &init_uts_ns,
+ #if defined(CONFIG_POSIX_MQUEUE) || defined(CONFIG_SYSVIPC)
+ 	.ipc_ns			= &init_ipc_ns,
+@@ -52,7 +52,7 @@ static inline struct nsproxy *create_nsproxy(void)
+ 
+ 	nsproxy = kmem_cache_alloc(nsproxy_cachep, GFP_KERNEL);
+ 	if (nsproxy)
+-		atomic_set(&nsproxy->count, 1);
++		refcount_set(&nsproxy->count, 1);
+ 	return nsproxy;
+ }
+ 
+@@ -225,7 +225,7 @@ void switch_task_namespaces(struct task_struct *p, struct nsproxy *new)
+ 	p->nsproxy = new;
+ 	task_unlock(p);
+ 
+-	if (ns && atomic_dec_and_test(&ns->count))
++	if (ns && refcount_dec_and_test(&ns->count))
+ 		free_nsproxy(ns);
  }
  
 -- 
