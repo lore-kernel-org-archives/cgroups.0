@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 11/15] kernel: convert group_info.usage from atomic_t to refcount_t
-Date: Fri,  7 Jul 2017 12:04:25 +0300
-Message-ID: <1499418269-3686-12-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 14/15] kernel: convert futex_pi_state.refcount from atomic_t to refcount_t
+Date: Fri,  7 Jul 2017 12:04:28 +0300
+Message-ID: <1499418269-3686-15-git-send-email-elena.reshetova@intel.com>
 References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
@@ -24,76 +24,75 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- include/linux/cred.h | 7 ++++---
- kernel/cred.c        | 2 +-
- kernel/groups.c      | 2 +-
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ kernel/futex.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/cred.h b/include/linux/cred.h
-index 099058e..00948dd 100644
---- a/include/linux/cred.h
-+++ b/include/linux/cred.h
-@@ -17,6 +17,7 @@
- #include <linux/key.h>
- #include <linux/selinux.h>
- #include <linux/atomic.h>
+diff --git a/kernel/futex.c b/kernel/futex.c
+index 16dbe4c..7458dfc 100644
+--- a/kernel/futex.c
++++ b/kernel/futex.c
+@@ -67,6 +67,7 @@
+ #include <linux/freezer.h>
+ #include <linux/bootmem.h>
+ #include <linux/fault-inject.h>
 +#include <linux/refcount.h>
- #include <linux/uidgid.h>
- #include <linux/sched.h>
- #include <linux/sched/user.h>
-@@ -28,7 +29,7 @@ struct inode;
-  * COW Supplementary groups list
-  */
- struct group_info {
--	atomic_t	usage;
-+	refcount_t	usage;
- 	int		ngroups;
- 	kgid_t		gid[0];
+ 
+ #include <asm/futex.h>
+ 
+@@ -209,7 +210,7 @@ struct futex_pi_state {
+ 	struct rt_mutex pi_mutex;
+ 
+ 	struct task_struct *owner;
+-	atomic_t refcount;
++	refcount_t refcount;
+ 
+ 	union futex_key key;
  } __randomize_layout;
-@@ -44,7 +45,7 @@ struct group_info {
-  */
- static inline struct group_info *get_group_info(struct group_info *gi)
+@@ -794,7 +795,7 @@ static int refill_pi_state_cache(void)
+ 	INIT_LIST_HEAD(&pi_state->list);
+ 	/* pi_mutex gets initialized later */
+ 	pi_state->owner = NULL;
+-	atomic_set(&pi_state->refcount, 1);
++	refcount_set(&pi_state->refcount, 1);
+ 	pi_state->key = FUTEX_KEY_INIT;
+ 
+ 	current->pi_state_cache = pi_state;
+@@ -814,7 +815,7 @@ static struct futex_pi_state *alloc_pi_state(void)
+ 
+ static void get_pi_state(struct futex_pi_state *pi_state)
  {
--	atomic_inc(&gi->usage);
-+	refcount_inc(&gi->usage);
- 	return gi;
+-	WARN_ON_ONCE(!atomic_inc_not_zero(&pi_state->refcount));
++	WARN_ON_ONCE(!refcount_inc_not_zero(&pi_state->refcount));
  }
- 
-@@ -54,7 +55,7 @@ static inline struct group_info *get_group_info(struct group_info *gi)
-  */
- #define put_group_info(group_info)			\
- do {							\
--	if (atomic_dec_and_test(&(group_info)->usage))	\
-+	if (refcount_dec_and_test(&(group_info)->usage))	\
- 		groups_free(group_info);		\
- } while (0)
- 
-diff --git a/kernel/cred.c b/kernel/cred.c
-index ecf0365..8122d7c 100644
---- a/kernel/cred.c
-+++ b/kernel/cred.c
-@@ -36,7 +36,7 @@ do {									\
- static struct kmem_cache *cred_jar;
- 
- /* init to 2 - one for init_task, one to ensure it is never freed */
--struct group_info init_groups = { .usage = ATOMIC_INIT(2) };
-+struct group_info init_groups = { .usage = REFCOUNT_INIT(2) };
  
  /*
-  * The initial credentials for the initial task
-diff --git a/kernel/groups.c b/kernel/groups.c
-index 434f666..5fc6e21 100644
---- a/kernel/groups.c
-+++ b/kernel/groups.c
-@@ -23,7 +23,7 @@ struct group_info *groups_alloc(int gidsetsize)
- 	if (!gi)
- 		return NULL;
+@@ -828,7 +829,7 @@ static void put_pi_state(struct futex_pi_state *pi_state)
+ 	if (!pi_state)
+ 		return;
  
--	atomic_set(&gi->usage, 1);
-+	refcount_set(&gi->usage, 1);
- 	gi->ngroups = gidsetsize;
- 	return gi;
+-	if (!atomic_dec_and_test(&pi_state->refcount))
++	if (!refcount_dec_and_test(&pi_state->refcount))
+ 		return;
+ 
+ 	/*
+@@ -852,7 +853,7 @@ static void put_pi_state(struct futex_pi_state *pi_state)
+ 		 * refcount is at 0 - put it back to 1.
+ 		 */
+ 		pi_state->owner = NULL;
+-		atomic_set(&pi_state->refcount, 1);
++		refcount_set(&pi_state->refcount, 1);
+ 		current->pi_state_cache = pi_state;
+ 	}
  }
+@@ -1046,7 +1047,7 @@ static int attach_to_pi_state(u32 __user *uaddr, u32 uval,
+ 	 * and futex_wait_requeue_pi() as it cannot go to 0 and consequently
+ 	 * free pi_state before we can take a reference ourselves.
+ 	 */
+-	WARN_ON(!atomic_read(&pi_state->refcount));
++	WARN_ON(!refcount_read(&pi_state->refcount));
+ 
+ 	/*
+ 	 * Now that we have a pi_state, we can acquire wait_lock
 -- 
 2.7.4
 
