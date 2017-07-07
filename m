@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 10/15] kernel: convert nsproxy.count from atomic_t to refcount_t
-Date: Fri,  7 Jul 2017 12:04:24 +0300
-Message-ID: <1499418269-3686-11-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 13/15] kernel: convert numa_group.refcount from atomic_t to refcount_t
+Date: Fri,  7 Jul 2017 12:04:27 +0300
+Message-ID: <1499418269-3686-14-git-send-email-elena.reshetova@intel.com>
 References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
@@ -24,71 +24,46 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- include/linux/nsproxy.h | 6 +++---
- kernel/nsproxy.c        | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ kernel/sched/fair.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/nsproxy.h b/include/linux/nsproxy.h
-index ac0d65b..f862ba8 100644
---- a/include/linux/nsproxy.h
-+++ b/include/linux/nsproxy.h
-@@ -28,7 +28,7 @@ struct fs_struct;
-  * nsproxy is copied.
-  */
- struct nsproxy {
--	atomic_t count;
-+	refcount_t count;
- 	struct uts_namespace *uts_ns;
- 	struct ipc_namespace *ipc_ns;
- 	struct mnt_namespace *mnt_ns;
-@@ -74,14 +74,14 @@ int __init nsproxy_cache_init(void);
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 008c514..6e5b714 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -1130,7 +1130,7 @@ static void account_numa_dequeue(struct rq *rq, struct task_struct *p)
+ }
  
- static inline void put_nsproxy(struct nsproxy *ns)
+ struct numa_group {
+-	atomic_t refcount;
++	refcount_t refcount;
+ 
+ 	spinlock_t lock; /* nr_tasks, tasks */
+ 	int nr_tasks;
+@@ -2177,12 +2177,12 @@ static void task_numa_placement(struct task_struct *p)
+ 
+ static inline int get_numa_group(struct numa_group *grp)
  {
--	if (atomic_dec_and_test(&ns->count)) {
-+	if (refcount_dec_and_test(&ns->count)) {
- 		free_nsproxy(ns);
- 	}
+-	return atomic_inc_not_zero(&grp->refcount);
++	return refcount_inc_not_zero(&grp->refcount);
  }
  
- static inline void get_nsproxy(struct nsproxy *ns)
+ static inline void put_numa_group(struct numa_group *grp)
  {
--	atomic_inc(&ns->count);
-+	refcount_inc(&ns->count);
+-	if (atomic_dec_and_test(&grp->refcount))
++	if (refcount_dec_and_test(&grp->refcount))
+ 		kfree_rcu(grp, rcu);
  }
  
- #endif
-diff --git a/kernel/nsproxy.c b/kernel/nsproxy.c
-index f6c5d33..5bfe691 100644
---- a/kernel/nsproxy.c
-+++ b/kernel/nsproxy.c
-@@ -31,7 +31,7 @@
- static struct kmem_cache *nsproxy_cachep;
+@@ -2203,7 +2203,7 @@ static void task_numa_group(struct task_struct *p, int cpupid, int flags,
+ 		if (!grp)
+ 			return;
  
- struct nsproxy init_nsproxy = {
--	.count			= ATOMIC_INIT(1),
-+	.count			= REFCOUNT_INIT(1),
- 	.uts_ns			= &init_uts_ns,
- #if defined(CONFIG_POSIX_MQUEUE) || defined(CONFIG_SYSVIPC)
- 	.ipc_ns			= &init_ipc_ns,
-@@ -52,7 +52,7 @@ static inline struct nsproxy *create_nsproxy(void)
- 
- 	nsproxy = kmem_cache_alloc(nsproxy_cachep, GFP_KERNEL);
- 	if (nsproxy)
--		atomic_set(&nsproxy->count, 1);
-+		refcount_set(&nsproxy->count, 1);
- 	return nsproxy;
- }
- 
-@@ -225,7 +225,7 @@ void switch_task_namespaces(struct task_struct *p, struct nsproxy *new)
- 	p->nsproxy = new;
- 	task_unlock(p);
- 
--	if (ns && atomic_dec_and_test(&ns->count))
-+	if (ns && refcount_dec_and_test(&ns->count))
- 		free_nsproxy(ns);
- }
- 
+-		atomic_set(&grp->refcount, 1);
++		refcount_set(&grp->refcount, 1);
+ 		grp->active_nodes = 1;
+ 		grp->max_faults_cpu = 0;
+ 		spin_lock_init(&grp->lock);
 -- 
 2.7.4
 
