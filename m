@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 13/15] kernel: convert numa_group.refcount from atomic_t to refcount_t
-Date: Fri,  7 Jul 2017 12:04:27 +0300
-Message-ID: <1499418269-3686-14-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 11/15] kernel: convert group_info.usage from atomic_t to refcount_t
+Date: Fri,  7 Jul 2017 12:04:25 +0300
+Message-ID: <1499418269-3686-12-git-send-email-elena.reshetova@intel.com>
 References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
@@ -24,46 +24,76 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- kernel/sched/fair.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/linux/cred.h | 7 ++++---
+ kernel/cred.c        | 2 +-
+ kernel/groups.c      | 2 +-
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 008c514..6e5b714 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -1130,7 +1130,7 @@ static void account_numa_dequeue(struct rq *rq, struct task_struct *p)
- }
- 
- struct numa_group {
--	atomic_t refcount;
-+	refcount_t refcount;
- 
- 	spinlock_t lock; /* nr_tasks, tasks */
- 	int nr_tasks;
-@@ -2177,12 +2177,12 @@ static void task_numa_placement(struct task_struct *p)
- 
- static inline int get_numa_group(struct numa_group *grp)
+diff --git a/include/linux/cred.h b/include/linux/cred.h
+index 099058e..00948dd 100644
+--- a/include/linux/cred.h
++++ b/include/linux/cred.h
+@@ -17,6 +17,7 @@
+ #include <linux/key.h>
+ #include <linux/selinux.h>
+ #include <linux/atomic.h>
++#include <linux/refcount.h>
+ #include <linux/uidgid.h>
+ #include <linux/sched.h>
+ #include <linux/sched/user.h>
+@@ -28,7 +29,7 @@ struct inode;
+  * COW Supplementary groups list
+  */
+ struct group_info {
+-	atomic_t	usage;
++	refcount_t	usage;
+ 	int		ngroups;
+ 	kgid_t		gid[0];
+ } __randomize_layout;
+@@ -44,7 +45,7 @@ struct group_info {
+  */
+ static inline struct group_info *get_group_info(struct group_info *gi)
  {
--	return atomic_inc_not_zero(&grp->refcount);
-+	return refcount_inc_not_zero(&grp->refcount);
+-	atomic_inc(&gi->usage);
++	refcount_inc(&gi->usage);
+ 	return gi;
  }
  
- static inline void put_numa_group(struct numa_group *grp)
- {
--	if (atomic_dec_and_test(&grp->refcount))
-+	if (refcount_dec_and_test(&grp->refcount))
- 		kfree_rcu(grp, rcu);
+@@ -54,7 +55,7 @@ static inline struct group_info *get_group_info(struct group_info *gi)
+  */
+ #define put_group_info(group_info)			\
+ do {							\
+-	if (atomic_dec_and_test(&(group_info)->usage))	\
++	if (refcount_dec_and_test(&(group_info)->usage))	\
+ 		groups_free(group_info);		\
+ } while (0)
+ 
+diff --git a/kernel/cred.c b/kernel/cred.c
+index ecf0365..8122d7c 100644
+--- a/kernel/cred.c
++++ b/kernel/cred.c
+@@ -36,7 +36,7 @@ do {									\
+ static struct kmem_cache *cred_jar;
+ 
+ /* init to 2 - one for init_task, one to ensure it is never freed */
+-struct group_info init_groups = { .usage = ATOMIC_INIT(2) };
++struct group_info init_groups = { .usage = REFCOUNT_INIT(2) };
+ 
+ /*
+  * The initial credentials for the initial task
+diff --git a/kernel/groups.c b/kernel/groups.c
+index 434f666..5fc6e21 100644
+--- a/kernel/groups.c
++++ b/kernel/groups.c
+@@ -23,7 +23,7 @@ struct group_info *groups_alloc(int gidsetsize)
+ 	if (!gi)
+ 		return NULL;
+ 
+-	atomic_set(&gi->usage, 1);
++	refcount_set(&gi->usage, 1);
+ 	gi->ngroups = gidsetsize;
+ 	return gi;
  }
- 
-@@ -2203,7 +2203,7 @@ static void task_numa_group(struct task_struct *p, int cpupid, int flags,
- 		if (!grp)
- 			return;
- 
--		atomic_set(&grp->refcount, 1);
-+		refcount_set(&grp->refcount, 1);
- 		grp->active_nodes = 1;
- 		grp->max_faults_cpu = 0;
- 		spin_lock_init(&grp->lock);
 -- 
 2.7.4
 
