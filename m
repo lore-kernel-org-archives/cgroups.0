@@ -1,113 +1,63 @@
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 05/15] kernel: convert task_struct.stack_refcount from atomic_t to refcount_t
-Date: Fri,  7 Jul 2017 12:04:19 +0300
-Message-ID: <1499418269-3686-6-git-send-email-elena.reshetova@intel.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 14/15] kernel: convert futex_pi_state.refcount from
+ atomic_t to refcount_t
+Date: Fri, 7 Jul 2017 11:26:03 +0200
+Message-ID: <20170707092603.rmt4ne4c75k5qg56@hirez.programming.kicks-ass.net>
 References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
+ <1499418269-3686-15-git-send-email-elena.reshetova@intel.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=HMOtWvJnRz+LVVyF27oepqPyIX8SWyCXYRBC2H/uwBg=; b=JxIPWd37wuJnlchVv7+/6cFlt
+        jd9jLUv8eOcey9LuqN66Ur5PPcDtPMJmzSdn2T59JWcgYIhDesD+MdnwCQ0KHg2F38abASqM8Q9dh
+        mp58PHjhCyLETTbfCf7WGwQ7K8ZMr5jSYb6/hG9t2HtFGI+8HBjwRBdcsJDCRgetFBEewJ9W4JDuw
+        OUqx7WFreu1ikrHBGuZgBCDlXFCysPlOPXX2zhPQF9N3fuv064n5TOX/PIOfGbqKXPqM11IBSjK2J
+        ItamlTDEc8CyIiotL8f9TUfpUnlZGQOObg1Ev/gP+lgXFROgMZyX4YczU+piQ8/++zk0ArbYpXid3
+    
+Content-Disposition: inline
+In-Reply-To: <1499418269-3686-15-git-send-email-elena.reshetova@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, keescook@chromium.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, Thomas Gleixner <tglx@linutronix.de>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On Fri, Jul 07, 2017 at 12:04:28PM +0300, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- include/linux/init_task.h        | 3 ++-
- include/linux/sched.h            | 2 +-
- include/linux/sched/task_stack.h | 2 +-
- kernel/fork.c                    | 6 +++---
- 4 files changed, 7 insertions(+), 6 deletions(-)
+I'll let tglx comment on the SoB chain, I know he likes those :-) You
+did Cc him right, seeing how he's the maintainer of this stuff..
 
-diff --git a/include/linux/init_task.h b/include/linux/init_task.h
-index 348466a..96802198 100644
---- a/include/linux/init_task.h
-+++ b/include/linux/init_task.h
-@@ -12,6 +12,7 @@
- #include <linux/securebits.h>
- #include <linux/seqlock.h>
- #include <linux/rbtree.h>
-+#include <linux/refcount.h>
- #include <linux/sched/autogroup.h>
- #include <net/net_namespace.h>
- #include <linux/sched/rt.h>
-@@ -208,7 +209,7 @@ extern struct cred init_cred;
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- # define INIT_TASK_TI(tsk)			\
- 	.thread_info = INIT_THREAD_INFO(tsk),	\
--	.stack_refcount = ATOMIC_INIT(1),
-+	.stack_refcount = REFCOUNT_INIT(1),
- #else
- # define INIT_TASK_TI(tsk)
- #endif
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 6a01517..73be022 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1070,7 +1070,7 @@ struct task_struct {
- #endif
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- 	/* A live task holds one reference: */
--	atomic_t			stack_refcount;
-+	refcount_t			stack_refcount;
- #endif
- #ifdef CONFIG_LIVEPATCH
- 	int patch_state;
-diff --git a/include/linux/sched/task_stack.h b/include/linux/sched/task_stack.h
-index df6ea66..aab3809 100644
---- a/include/linux/sched/task_stack.h
-+++ b/include/linux/sched/task_stack.h
-@@ -60,7 +60,7 @@ static inline unsigned long *end_of_stack(struct task_struct *p)
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- static inline void *try_get_task_stack(struct task_struct *tsk)
- {
--	return atomic_inc_not_zero(&tsk->stack_refcount) ?
-+	return refcount_inc_not_zero(&tsk->stack_refcount) ?
- 		task_stack_page(tsk) : NULL;
- }
- 
-diff --git a/kernel/fork.c b/kernel/fork.c
-index c549b0b..1e0e14e 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -354,7 +354,7 @@ static void release_task_stack(struct task_struct *tsk)
- #ifdef CONFIG_THREAD_INFO_IN_TASK
- void put_task_stack(struct task_struct *tsk)
- {
--	if (atomic_dec_and_test(&tsk->stack_refcount))
-+	if (refcount_dec_and_test(&tsk->stack_refcount))
- 		release_task_stack(tsk);
- }
- #endif
-@@ -372,7 +372,7 @@ void free_task(struct task_struct *tsk)
- 	 * If the task had a separate stack allocation, it should be gone
- 	 * by now.
- 	 */
--	WARN_ON_ONCE(atomic_read(&tsk->stack_refcount) != 0);
-+	WARN_ON_ONCE(refcount_read(&tsk->stack_refcount) != 0);
- #endif
- 	rt_mutex_debug_task_free(tsk);
- 	ftrace_graph_exit_task(tsk);
-@@ -532,7 +532,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
- 	tsk->stack_vm_area = stack_vm_area;
- #endif
- #ifdef CONFIG_THREAD_INFO_IN_TASK
--	atomic_set(&tsk->stack_refcount, 1);
-+	refcount_set(&tsk->stack_refcount, 1);
- #endif
- 
- 	if (err)
--- 
-2.7.4
+*sigh* you didn't :-( After so many patches send you _really_ should
+know to Cc the right people.
+
+> ---
+>  kernel/futex.c | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+
+> @@ -814,7 +815,7 @@ static struct futex_pi_state *alloc_pi_state(void)
+>  
+>  static void get_pi_state(struct futex_pi_state *pi_state)
+>  {
+> -	WARN_ON_ONCE(!atomic_inc_not_zero(&pi_state->refcount));
+> +	WARN_ON_ONCE(!refcount_inc_not_zero(&pi_state->refcount));
+>  }
+
+I think we have refcount_inc() for just that case, no?
+
 
