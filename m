@@ -1,82 +1,77 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 00/15] v2 kernel core refcount conversions
-Date: Fri,  7 Jul 2017 12:04:14 +0300
-Message-ID: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 02/15] kernel: convert signal_struct.sigcnt from atomic_t to refcount_t
+Date: Fri,  7 Jul 2017 12:04:16 +0300
+Message-ID: <1499418269-3686-3-git-send-email-elena.reshetova@intel.com>
+References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>
+Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>
 
-Changes in v2:
- * dropped already merged patches
- * rebase on top of linux-next/master
- * Now by default refcount_t = atomic_t (*) and uses all atomic
-   standard operations unless CONFIG_REFCOUNT_FULL is enabled.
-   This is a compromise for the systems that are critical on
-   performance (such as net) and cannot accept even slight delay
-   on the refcounter operations.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-This series, for core kernel components, replaces atomic_t reference
-counters with the new refcount_t type and API (see include/linux/refcount.h).
-By doing this we prevent intentional or accidental
-underflows or overflows that can led to use-after-free vulnerabilities.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ include/linux/sched/signal.h | 2 +-
+ kernel/fork.c                | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-The patches are fully independent and can be cherry-picked separately.
-If there are no objections to the patches, please merge them via respective trees.
-
-If you want to test with refcount_t protection enabled, CONFIG_REFCOUNT_FULL
-must be enabled.
-
-* The respective change is currently merged into -next as
-  "locking/refcount: Create unchecked atomic_t implementation".
-
-Elena Reshetova (15):
-  kernel: convert sighand_struct.count from atomic_t to refcount_t
-  kernel: convert signal_struct.sigcnt from atomic_t to refcount_t
-  kernel: convert user_struct.__count from atomic_t to refcount_t
-  kernel: convert task_struct.usage from atomic_t to refcount_t
-  kernel: convert task_struct.stack_refcount from atomic_t to refcount_t
-  kernel: convert perf_event_context.refcount from atomic_t to
-    refcount_t
-  kernel: convert ring_buffer.refcount from atomic_t to refcount_t
-  kernel: convert ring_buffer.aux_refcount from atomic_t to refcount_t
-  kernel: convert uprobe.ref from atomic_t to refcount_t
-  kernel: convert nsproxy.count from atomic_t to refcount_t
-  kernel: convert group_info.usage from atomic_t to refcount_t
-  kernel: convert cred.usage from atomic_t to refcount_t
-  kernel: convert numa_group.refcount from atomic_t to refcount_t
-  kernel: convert futex_pi_state.refcount from atomic_t to refcount_t
-  kernel: convert kcov.refcount from atomic_t to refcount_t
-
- fs/exec.c                        |  4 ++--
- fs/proc/task_nommu.c             |  2 +-
- include/linux/cred.h             | 13 ++++++------
- include/linux/init_task.h        |  7 +++---
- include/linux/nsproxy.h          |  6 +++---
- include/linux/perf_event.h       |  3 ++-
- include/linux/sched.h            |  5 +++--
- include/linux/sched/signal.h     |  5 +++--
- include/linux/sched/task.h       |  4 ++--
- include/linux/sched/task_stack.h |  2 +-
- include/linux/sched/user.h       |  5 +++--
- kernel/cred.c                    | 46 ++++++++++++++++++++--------------------
- kernel/events/core.c             | 18 ++++++++--------
- kernel/events/internal.h         |  5 +++--
- kernel/events/ring_buffer.c      |  8 +++----
- kernel/events/uprobes.c          |  8 +++----
- kernel/fork.c                    | 24 ++++++++++-----------
- kernel/futex.c                   | 13 ++++++------
- kernel/groups.c                  |  2 +-
- kernel/kcov.c                    |  9 ++++----
- kernel/nsproxy.c                 |  6 +++---
- kernel/sched/fair.c              |  8 +++----
- kernel/user.c                    |  8 +++----
- 23 files changed, 110 insertions(+), 101 deletions(-)
-
+diff --git a/include/linux/sched/signal.h b/include/linux/sched/signal.h
+index 4d5cdf1..c5f1a67 100644
+--- a/include/linux/sched/signal.h
++++ b/include/linux/sched/signal.h
+@@ -77,7 +77,7 @@ struct thread_group_cputimer {
+  * the locking of signal_struct.
+  */
+ struct signal_struct {
+-	atomic_t		sigcnt;
++	refcount_t		sigcnt;
+ 	atomic_t		live;
+ 	int			nr_threads;
+ 	struct list_head	thread_head;
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 4e28f50..a9763f6 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -399,7 +399,7 @@ static inline void free_signal_struct(struct signal_struct *sig)
+ 
+ static inline void put_signal_struct(struct signal_struct *sig)
+ {
+-	if (atomic_dec_and_test(&sig->sigcnt))
++	if (refcount_dec_and_test(&sig->sigcnt))
+ 		free_signal_struct(sig);
+ }
+ 
+@@ -1379,7 +1379,7 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
+ 
+ 	sig->nr_threads = 1;
+ 	atomic_set(&sig->live, 1);
+-	atomic_set(&sig->sigcnt, 1);
++	refcount_set(&sig->sigcnt, 1);
+ 
+ 	/* list_add(thread_node, thread_head) without INIT_LIST_HEAD() */
+ 	sig->thread_head = (struct list_head)LIST_HEAD_INIT(tsk->thread_node);
+@@ -1888,7 +1888,7 @@ static __latent_entropy struct task_struct *copy_process(
+ 		} else {
+ 			current->signal->nr_threads++;
+ 			atomic_inc(&current->signal->live);
+-			atomic_inc(&current->signal->sigcnt);
++			refcount_inc(&current->signal->sigcnt);
+ 			list_add_tail_rcu(&p->thread_group,
+ 					  &p->group_leader->thread_group);
+ 			list_add_tail_rcu(&p->thread_node,
 -- 
 2.7.4
 
