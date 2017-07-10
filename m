@@ -1,79 +1,78 @@
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 14/15] kernel: convert futex_pi_state.refcount from
- atomic_t to refcount_t
-Date: Fri, 7 Jul 2017 15:22:53 +0200
-Message-ID: <20170707132253.GB15245@kroah.com>
-References: <1499418269-3686-1-git-send-email-elena.reshetova@intel.com>
- <1499418269-3686-15-git-send-email-elena.reshetova@intel.com>
- <20170707092603.rmt4ne4c75k5qg56@hirez.programming.kicks-ass.net>
- <alpine.DEB.2.20.1707071149500.1871@nanos>
- <2236FBA76BA1254E88B949DDB74E612B6FF21DCD@IRSMSX102.ger.corp.intel.com>
- <20170707103516.d2xvqvijaomj342j@gmail.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 4/5] mm/memcontrol: allow to uncharge page without using
+ page->lru field
+Date: Mon, 10 Jul 2017 10:28:06 +0200
+Message-ID: <20170710082805.GD19185@dhcp22.suse.cz>
+References: <20170703211415.11283-1-jglisse@redhat.com>
+ <20170703211415.11283-5-jglisse@redhat.com>
+ <20170704125113.GC14727@dhcp22.suse.cz>
+ <20170705143528.GB3305@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20170707103516.d2xvqvijaomj342j@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170705143528.GB3305@redhat.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Ingo Molnar <mingo@kernel.org>
-Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, Thomas Gleixner <tglx@linutronix.de>, Peter Zijlstra <peterz@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-audit@redhat.com" <linux-audit@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "tj@kernel.org" <tj@kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "acme@kernel.org" <acme@kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, "eparis@redhat.com" <eparis@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-founda>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, John Hubbard <jhubbard@nvidia.com>, David Nellans <dnellans@nvidia.com>, Dan Williams <dan.j.williams@intel.com>, Balbir Singh <bsingharora@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
 
-On Fri, Jul 07, 2017 at 12:35:16PM +0200, Ingo Molnar wrote:
-> 
-> * Reshetova, Elena <elena.reshetova@intel.com> wrote:
-> 
-> > > On Fri, 7 Jul 2017, Peter Zijlstra wrote:
-> > > 
-> > > > On Fri, Jul 07, 2017 at 12:04:28PM +0300, Elena Reshetova wrote:
-> > > > > refcount_t type and corresponding API should be
-> > > > > used instead of atomic_t when the variable is used as
-> > > > > a reference counter. This allows to avoid accidental
-> > > > > refcounter overflows that might lead to use-after-free
-> > > > > situations.
-> > > > >
-> > > > > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > > > > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > > > > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > > > > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > > >
-> > > > I'll let tglx comment on the SoB chain, I know he likes those :-) You
-> > > > did Cc him right, seeing how he's the maintainer of this stuff..
-> > > 
-> > > Right, that SOB chain is crap. It suggests that the patch was written by
-> > > Elena and then carried on by Hans, handed over to Kees and from there to
-> > > David. And now it's resent by Elena. Circular dependencies or what?
-> > 
-> > I will fix SOB on all patches and resend. 
-> 
-> Please don't resend any of these until the merge window is over! This is probably 
-> the worst possible moment to seek review feedback and merging...
-> 
-> Thanks,
-> 
-> 	Ingo
+On Wed 05-07-17 10:35:29, Jerome Glisse wrote:
+> On Tue, Jul 04, 2017 at 02:51:13PM +0200, Michal Hocko wrote:
+> > On Mon 03-07-17 17:14:14, J=E9r=F4me Glisse wrote:
+> > > HMM pages (private or public device pages) are ZONE_DEVICE page and
+> > > thus you can not use page->lru fields of those pages. This patch
+> > > re-arrange the uncharge to allow single page to be uncharge without
+> > > modifying the lru field of the struct page.
+> > >=20
+> > > There is no change to memcontrol logic, it is the same as it was
+> > > before this patch.
+> >=20
+> > What is the memcg semantic of the memory? Why is it even charged? AFAIR
+> > this is not a reclaimable memory. If yes how are we going to deal with
+> > memory limits? What should happen if go OOM? Does killing an process
+> > actually help to release that memory? Isn't it pinned by a device?
+> >=20
+> > For the patch itself. It is quite ugly but I haven't spotted anything
+> > obviously wrong with it. It is the memcg semantic with this class of
+> > memory which makes me worried.
+>=20
+> So i am facing 3 choices. First one not account device memory at all.
+> Second one is account device memory like any other memory inside a
+> process. Third one is account device memory as something entirely new.
+>=20
+> I pick the second one for two reasons. First because when migrating
+> back from device memory it means that migration can not fail because
+> of memory cgroup limit, this simplify an already complex migration
+> code. Second because i assume that device memory usage is a transient
+> state ie once device is done with its computation the most likely
+> outcome is memory is migrated back. From this assumption it means
+> that you do not want to allow a process to overuse regular memory
+> while it is using un-accounted device memory. It sounds safer to
+> account device memory and to keep the process within its memcg
+> boundary.
+>=20
+> Admittedly here i am making an assumption and i can be wrong. Thing
+> is we do not have enough real data of how this will be use and how
+> much of an impact device memory will have. That is why for now i
+> would rather restrict myself to either not account it or account it
+> as usual.
+>=20
+> If you prefer not accounting it until we have more experience on how
+> it is use and how it impacts memory resource management i am fine with
+> that too. It will make the migration code slightly more complex.
 
-Ah, you need a "I'm ignoring your patches for two weeks" email bot,
-feel free to steal the text of mine below :)
+I can see why you want to do this but the semantic _has_ to be clear.
+And as such make sure that the exiting task will simply unpin and
+invalidate all the device memory (assuming this memory is not shared
+which I am not sure is even possible).
+--=20
+Michal Hocko
+SUSE Labs
 
-----------------------
-
-Hi,
-
-This is the friendly semi-automated patch-bot of Greg Kroah-Hartman.
-You have sent him a patch that has triggered this response.
-
-Right now, the development tree you have sent a patch for is "closed"
-due to the timing of the merge window.  Don't worry, the patch(es) you
-have sent are not lost, and will be looked at after the merge window is
-over (after the -rc1 kernel is released by Linus).
-
-So thank you for your patience and your patches will be reviewed at this
-later time, you do not have to do anything further, this is just a short
-note to let you know the patch status and so you don't worry they didn't
-make it through.
-
-thanks,
-
-greg k-h's patch email bot
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
