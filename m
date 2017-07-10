@@ -1,143 +1,95 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v2
-Date: Mon, 10 Jul 2017 10:32:00 +0200
-Message-ID: <20170710083200.poevcjo7x47hy5ni@hirez.programming.kicks-ass.net>
-References: <20170610140351.10703-1-tj@kernel.org>
- <20170612123150.scopfxela7v26dct@hirez.programming.kicks-ass.net>
- <20170612212753.GN19206@htj.duckdns.org>
- <20170627070143.GB4114@worktop>
- <20170630132324.GA18669@htj.duckdns.org>
+From: Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 4/5] mm/memcontrol: allow to uncharge page without using
+ page->lru field
+Date: Mon, 10 Jul 2017 11:32:23 -0400
+Message-ID: <20170710153222.GA4964@redhat.com>
+References: <20170703211415.11283-1-jglisse@redhat.com>
+ <20170703211415.11283-5-jglisse@redhat.com>
+ <20170704125113.GC14727@dhcp22.suse.cz>
+ <20170705143528.GB3305@redhat.com>
+ <20170710082805.GD19185@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=ZzAkyrdVP0Wdlh+yzO0tHdos6U2/le7xSmltMBDDfkM=; b=D/AqLGXzWMK5ZVpB/7kcH3noA
-        QcgULpy41nsnwK8R2e++d0yu+nQxYK0R7N3FuLy2JTtqQB03WnCSBkfFfPhyG03lXxqJ50iMJOH1j
-        8YnZXKHo0Ey+iMs+u46WxV4/hvz4GtaE//jvjdWRpjLw/97yEAFWXgt8W+Iti5gRriAcdBdZygrtA
-        +/YcOz9xdkJQb7BFrCoO3JYecnQet+vuCehohfF/OoF/sZJPA11fmjrQdWUclRAe/Sy7aTIjv3R+C
-        VdJlyOOKypSbTBFABJEZTTuTIlXlCFDdpdCpau3usHJXKMQMDPVqPS4wj2/xMLYgmgRxBCWVM6NrL
-    
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 69BCAC04B940
 Content-Disposition: inline
-In-Reply-To: <20170630132324.GA18669@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170710082805.GD19185-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, John Hubbard <jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, David Nellans <dnellans-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Jun 30, 2017 at 09:23:24AM -0400, Tejun Heo wrote:
-> On Tue, Jun 27, 2017 at 09:01:43AM +0200, Peter Zijlstra wrote:
-> > On Mon, Jun 12, 2017 at 05:27:53PM -0400, Tejun Heo wrote:
+On Mon, Jul 10, 2017 at 10:28:06AM +0200, Michal Hocko wrote:
+> On Wed 05-07-17 10:35:29, Jerome Glisse wrote:
+> > On Tue, Jul 04, 2017 at 02:51:13PM +0200, Michal Hocko wrote:
+> > > On Mon 03-07-17 17:14:14, J=E9r=F4me Glisse wrote:
+> > > > HMM pages (private or public device pages) are ZONE_DEVICE page and
+> > > > thus you can not use page->lru fields of those pages. This patch
+> > > > re-arrange the uncharge to allow single page to be uncharge without
+> > > > modifying the lru field of the struct page.
+> > > >=20
+> > > > There is no change to memcontrol logic, it is the same as it was
+> > > > before this patch.
+> > >=20
+> > > What is the memcg semantic of the memory? Why is it even charged? AFA=
+IR
+> > > this is not a reclaimable memory. If yes how are we going to deal with
+> > > memory limits? What should happen if go OOM? Does killing an process
+> > > actually help to release that memory? Isn't it pinned by a device?
+> > >=20
+> > > For the patch itself. It is quite ugly but I haven't spotted anything
+> > > obviously wrong with it. It is the memcg semantic with this class of
+> > > memory which makes me worried.
+> >=20
+> > So i am facing 3 choices. First one not account device memory at all.
+> > Second one is account device memory like any other memory inside a
+> > process. Third one is account device memory as something entirely new.
+> >=20
+> > I pick the second one for two reasons. First because when migrating
+> > back from device memory it means that migration can not fail because
+> > of memory cgroup limit, this simplify an already complex migration
+> > code. Second because i assume that device memory usage is a transient
+> > state ie once device is done with its computation the most likely
+> > outcome is memory is migrated back. From this assumption it means
+> > that you do not want to allow a process to overuse regular memory
+> > while it is using un-accounted device memory. It sounds safer to
+> > account device memory and to keep the process within its memcg
+> > boundary.
+> >=20
+> > Admittedly here i am making an assumption and i can be wrong. Thing
+> > is we do not have enough real data of how this will be use and how
+> > much of an impact device memory will have. That is why for now i
+> > would rather restrict myself to either not account it or account it
+> > as usual.
+> >=20
+> > If you prefer not accounting it until we have more experience on how
+> > it is use and how it impacts memory resource management i am fine with
+> > that too. It will make the migration code slightly more complex.
+>=20
+> I can see why you want to do this but the semantic _has_ to be clear.
+> And as such make sure that the exiting task will simply unpin and
+> invalidate all the device memory (assuming this memory is not shared
+> which I am not sure is even possible).
 
-> > IIRC the problem with the 'threaded' marker is that it doesn't clearly
-> > capture what a resource domain is.
-> > 
-> > That is, assuming that a thread root is always a resource domain, we get
-> > the following problem:
-> > 
-> > If we set 'threaded' on the root group in order to create a thread
-> > (sub)group. If we then want to create another domain group, we'd have to
-> > clear 'threaded' on that.
-> > 
-> > 	R (t=1)
-> >        / \
-> > (t=1) T   D (t=0)
-> > 
-> > So far so good. However, now we want to create another thread group
-> > under our domain group D, so we have to set its 'threaded' marker again:
-> > 
-> > 	R (t=1)
-> >        / \
-> > (t=1) T   D (t=1)
-> >          /
-> > 	T (t=1)
-> > 
-> > And we can no longer identify D as a resource domain. If OTOH we mark
-> > 'domain' we get:
-> > 
-> > 	R (d=1)
-> >        / \
-> > (d=0) T   D (d=1)
-> >          /
-> > 	T (d=0)
-> > 
-> > Which clearly identifies the domains and the thread only groups.
-> 
-> So, the difference between the two interfaces is that the one I
-> proposed is marking the thread root which makes all its descendants
-> threaded while the above is marking each individual cgroup as being
-> whether a resource domain or threaded.
+So there is 2 differents path out of device memory:
+  - munmap/process exiting: memory will get uncharge from its memory
+    cgroup just like regular memory
+  - migration to non device memory, the memory cgroup charge get
+    transfer to the new page just like for any other page
 
-You start by marking the thread root, but then continue to mark all
-'threaded' (including root). This then leads to the problem described
-above where you cannot (easily) (re)discover what the actual root is.
+Do you want me to document all this in any specific place ? I will
+add a comment in memory_control.c and in HMM documentations for this
+but should i add it anywhere else ?
 
-My proposal differs in that we retain a clear difference between
-resource domain / root and threaded (sub)trees.
+Note that the device memory is not pin. The whole point of HMM is to
+do away with any pining. Thought as device page are not on lru they
+are not reclaim like any other page. However we expect that device
+driver might implement something akin to device memory reclaim to
+make room for more important data base on statistic collected by the
+device driver. If there is enough commonality accross devices then
+we might implement a more generic mechanisms but at this point i
+rather grow as we learn.
 
-> > Your objections to doing this were representing the resource controllers
-> > in the intermediate thread-only groups like:
-> > 
-> >    R
-> >     \
-> >      T  -- what to do with eg. memcg here?
-> >       \
-> >        D
-> >         \
-> > 	     T
-> 
-> And that's a perfectly valid point and as you pointed out the downside
-> of marking each node separately is that the interface would allow
-> configurations which aren't supported (at least for now) and that
-> there's just more to configure - the user has to set the mode on each
-> node after creation which is just the natural cost of being able to
-> express more.
-
-I'm not sure my proposal results in _more_ configuration per-se. Yes
-there are some differences, but they go both ways, with the threaded tag
-its easier to create multiple threaded subgroups, but with the domain
-tag its easier to create multiple domain subgroups.
-
-And I think the bias for the domain tag -- easier to create more domains
--- is the right one. The whole threaded thing is fairly special purpose.
-
-In any case; I'm fine with initially not supporting domains nested under
-thread groups -- although I do think there's valid use-cases for doing
-so.
-
-> > I suggested having all resource controllers represented with a soft-link
-> > back into the (thread-root) resource domain. But you were not convinced
-> > and worried people were going to be confused.
-> 
-> There's more to it than just confusion because resource interface
-> files belong to the parent cgroup rather than the cgroup which hosts
-> the files.  This becomes clear when thinking about which files a
-> container should be granted write access to when delegating a cgroup
-> subtree to it.  I'm sure we can get around it some way but we need to
-> be careful here.
-
-I would suggest having all the back-links be RO. That way you can never
-grant write permission, can never actually change things that don't make
-'sense', but get a really good clue where you need to go.
-
-> > By having both in nice units, its both conceptually clear that they're
-> > the same kind of weight and easier to match weights.
-
-> But, it doesn't have to be this or that.  We can easily support both
-> units by simply allowing, say, "-5n" to be written to cpu.weight file
-> and interpret that as the nice value and exposing the closest nice
-> value in the cpu.stat file.
-> 
-> Does that sound workable?
-
-Not sure; reading the value would become somewhat awkward I suppose. But
-maybe we can simply do two files, whichever is written to last takes
-precedence. And when a !nice weight is written, the nice file returns
--EINVAL or something.
-
-Not particularly pretty though...
+Cheers,
+J=E9r=F4me
