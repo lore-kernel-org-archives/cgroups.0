@@ -1,165 +1,143 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v3 2/6] mm, oom: cgroup-aware OOM killer
-Date: Tue, 11 Jul 2017 13:56:30 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1707111342190.60183@chino.kir.corp.google.com>
-References: <1498079956-24467-1-git-send-email-guro@fb.com> <1498079956-24467-3-git-send-email-guro@fb.com> <alpine.DEB.2.10.1707101547010.116811@chino.kir.corp.google.com> <20170711125124.GA12406@castle>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v2
+Date: Tue, 11 Jul 2017 17:12:39 -0400
+Message-ID: <0659619a-067d-b542-918c-e468c51feb23@redhat.com>
+References: <20170610140351.10703-1-tj@kernel.org>
+ <20170612123150.scopfxela7v26dct@hirez.programming.kicks-ass.net>
+ <20170612212753.GN19206@htj.duckdns.org> <20170627070143.GB4114@worktop>
+ <20170630132324.GA18669@htj.duckdns.org>
+ <20170710083200.poevcjo7x47hy5ni@hirez.programming.kicks-ass.net>
+ <8f9c83d7-cadf-3a41-8e56-5828d5abfa26@redhat.com>
+ <20170711121527.imshmmoe4cj7dkig@hirez.programming.kicks-ass.net>
+ <a554d16c-af40-756e-a611-a453451c40a9@redhat.com>
+ <20170711165233.xx6wko4pdxk4rb72@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=kDJriSSLXn0hH6wpdmlj1jOYm5pX+CYVVpVDvUlywcc=;
-        b=npqjw/hz/muUEAd9SKW0YM6VMikXQQgvOLHChWyQuG/imP7uJ7d4tBllq4vOHzmHv4
-         PUpYYj3s6+wb8SkLE2CDhq7GECUzdb8SnEzhI/pg8Ca/GyYF19RXKxP13nnPWbeGB3bP
-         Hj9JlEQ/dbFf9T/g8QwEd5bU/ewD6e+TvjJRI6zIAqIe/93rhWE47OtjXWXrp3GQ2dLn
-         2N6qz10Dqz3olwel5Zs4RVMWHxLdrvUsVhuVy5DD9CAMiggFn7hYafz2KZx+FAPF37mb
-         xYr6OAumjQeYEjBljVpaDqNI0WA19xkDm5XtAEjybdMLW06/Ho/rmnhh8QHIJ5p7K7SR
-         EXMA==
-In-Reply-To: <20170711125124.GA12406@castle>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com D626BC04B31C
+In-Reply-To: <20170711165233.xx6wko4pdxk4rb72-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-On Tue, 11 Jul 2017, Roman Gushchin wrote:
+On 07/11/2017 12:52 PM, Peter Zijlstra wrote:
+> On Tue, Jul 11, 2017 at 10:14:42AM -0400, Waiman Long wrote:
+>
+>> The "join" was a special op for the children of cgroup root to join the
+>> root as part of a threaded subtree. The children can instead use the
+>> "enable" option to become a thread root which was the configuration
+>> shown above.  This behavior applied only to children of root. Down the
+>> hierarchy, you can't have configuration like:
+>>
+>>      R (t=0)
+>>     / \
+>>        D (t=1)
+>>       / \
+>>      T   D (t=1)
+> Why not?
+>
+> First you create:
+>
+>       R (t=0)
+>      / \
+>         D (t=1)
+>        / \
+>       T   T (t=1)
+>
+> Then you flip t=0 like:
+>
+>       R (t=0)
+>      / \
+>         D (t=1)
+>        / \
+>       T   D (t=0)
+>
+> And then you flip t=1 again:
+>
+>       R (t=0)
+>      / \
+>         D (t=1)
+>        / \
+>       T   D (t=1)
 
-> > Yes, the original motivation was to limit killing to a single process, if 
-> > possible.  To do that, we kill the process with the largest rss to free 
-> > the most memory and rely on the user to configure /proc/pid/oom_score_adj 
-> > if something else should be prioritized.
-> > 
-> > With containerization and overcommit of system memory, we concur that 
-> > killing the single largest process isn't always preferable and neglects 
-> > the priority of its memcg.  Your motivation seems to be to provide 
-> > fairness between one memcg with a large process and one memcg with a large 
-> > number of small processes; I'm curious if you are concerned about the 
-> > priority of a memcg hierarchy (how important that "job" is) or whether you 
-> > are strictly concerned with "largeness" of memcgs relative to each other.
-> 
-> I'm pretty sure we should provide some way to prioritize some cgroups
-> over other (in terms of oom killer preferences), but I'm not 100% sure yet,
-> what's the best way to do it. I've suggested something similar to the existing
-> oom_score_adj for tasks, mostly to folow the existing design.
-> 
-> One of the questions to answer in priority-based model is
-> how to compare tasks in the root cgroup with cgroups?
-> 
+Tejun's thread mode patch has constraints on what operations are allowed
+and what aren't. For a threaded subtree, thread mode cannot be disabled
+in the middle of the tree. You have to remove all the child cgroups in
+the subtree before you can disable thread mode at the thread root level.
+So the second step will not be allowed. We can certainly argue if it is
+a good thing or not. What I am talking about is the current behavior of
+the patch.
 
-We do this with an alternate scoring mechanism, that is purely priority 
-based and tiebreaks based on largest rss.  An additional tunable is added 
-for each process, under /proc/pid, and also to the memcg hierarchy, and is 
-enabled via a system-wide sysctl.  I way to mesh the two scoring 
-mechanisms together would be helpful, but for our purposes we don't use 
-oom_score_adj at all, other than converting OOM_SCORE_ADJ_MIN to still be 
-oom disabled when written by third party apps.
+>> With Tejun's v3 patch, the "join" operation was removed and "enable"
+> I've no clue what 'enable' is... :-(
 
-For memcg oom conditions, iteration of the hierarchy begins at the oom 
-memcg.  For system oom conditions, this is the root memcg.
+The keywords to turn on and off thread mode are:
 
-All processes attached to the oom memcg have their priority based value 
-and this is compared to all child memcg's priority value at that level.  
-If a process has the lowest priority, it is killed and we're done; we 
-could implement a "kill all" mechanism for this memcg that is checked 
-before the process is killed.
+enable: t=1
+disable: t=0
 
-If a memcg has the lowest priority compared to attached processes, it is 
-iterated as well, and so on throughout the memcg hierarchy until we find 
-the lowest priority process in the lowest priority leaf memcg.  This way, 
-we can fully control which process is killed for both system and memcg oom 
-conditions.  I can easily post patches for this, we have used it for 
-years.
+As discussed above, there are constraints on when that transition is
+allowed to happen.
 
-> > These are two different things, right?  We can adjust how the system oom 
-> > killer chooses victims when memcg hierarchies overcommit the system to not 
-> > strictly prefer the single process with the largest rss without killing 
-> > everything attached to the memcg.
-> 
-> They are different, and I thought about providing two independent knobs.
-> But after all I haven't found enough real life examples, where it can be useful.
-> Can you provide something here?
-> 
+>> behaved like "join" in joining the threaded subtree of the root. I was
+>> wrong in saying that the configuration listed in your example was not
+>> possible. It was, but it depends on the order of activating the thread
+>> mode. If we enables thread mode on a child of root first followed by the
+>> root itself, we can have your configuration, but not in the reverse
+>> order. It was possible in the reverse order in the previous patch.
+> Just create a T child, then flip t=0 to convert it to D, then flip it to
+> 1 again to create a new thread-root, no?
 
-Yes, we have users who we chown their memcg hierarchy to and have full 
-control over setting up their hierarchy however we want.  Our "Activity 
-Manager", using Documentation/cgroup-v1/memory.txt terminology, only is 
-aware of the top level memcg that was chown'd to the user.  That user runs 
-a series of batch jobs that are submitted to it and each job is 
-represented as a subcontainer to enforce strict limits on the amount of 
-memory that job can use.  When it becomes oom, we have found that it is 
-preferable to oom kill the entire batch job rather than leave it in an 
-inconsistent state, so enabling such a knob here would be helpful.
+The constraints are there to make it easier to code and observe
+guidelines like no internal process constraint. So what you said above
+is not current allowed.
 
-Other top-level jobs are fine with individual processes being oom killed.  
-It can be a low priority process for which they have full control over 
-defining the priority through the new per-process and per-memcg value 
-described above.  Easy example is scraping logs periodically or other 
-best-effort tasks like cleanup.  They can happily be oom killed and 
-rescheduled without taking down the entire first-class job.
+>>> And this is detection by inference, which breaks the moment you disable
+>>> all resource domain controllers, because at that point those files will
+>>> not be present.
+>> It is true that there is no external marker to find out if a threaded
+>> cgroup is a root or not when the parent of a thread root is also a
+>> thread root of a separate threaded subtree if the domain controller
+>> files are not present. However, we can always add a status file to
+>> indicate the state of threaded-ness of a cgroup if we want to.
+> Why add status files when a simple change in marker can readily provide
+> this information?
 
-> Also, they are different only for non-leaf cgroups; leaf cgroups
-> are always treated as indivisible memory consumers during victim selection.
-> 
-> I assume, that containerized systems will always set oom_kill_all_tasks for
-> top-level container memory cgroups. By default it's turned off
-> to provide backward compatibility with current behavior and avoid
-> excessive kills and support oom_score_adj==-1000 (I've added this to v4,
-> will post soon).
-> 
+For thread mode, the only way to find out if a cgroup is in that mode is
+to dump out the content of the cgroup.procs and cgroup.threads files.
+Reading cgroup.threads will return error if thread mode is not enabled.
+Reading cgroup.procs is allowed in the thread root, but not in the rest
+of the threaded subtree. So there is a way to find out, but kind of
+indirect.
 
-We certainly would not be enabling it for top-level memcgs, there would be 
-no way that we could because we have best-effort processes, but we would 
-like to enable it for small batch jobs that are run on behalf of a user in 
-their own subcontainer.  We have had this usecase for ~3 years and solely 
-because of the problem that you pointed out earlier: it is often much more 
-reliable for the kernel to do oom killing of multiple processes rather 
-than userspace.
 
-> > In our methodology, each memcg is assigned a priority value and the 
-> > iteration of the hierarchy simply compares and visits the memcg with the 
-> > lowest priority at each level and then selects the largest process to 
-> > kill.  This could also support a "kill-all" knob.
-> > 
-> > 	struct mem_cgroup *memcg = root_mem_cgroup;
-> > 	struct mem_cgroup *low_memcg;
-> > 	unsigned long low_priority;
-> > 
-> > next:
-> > 	low_memcg = NULL;
-> > 	low_priority = ULONG_MAX;
-> > 	for_each_child_of_memcg(memcg) {
-> > 		unsigned long prio = memcg_oom_priority(memcg);
-> > 
-> > 		if (prio < low_priority) {
-> > 			low_memcg = memcg;
-> > 			low_priority = prio;
-> > 		}		
-> > 	}
-> > 	if (low_memcg)
-> > 		goto next;
-> > 	oom_kill_process_from_memcg(memcg);
-> > 
-> > So this is a priority based model that is different than your aggregate 
-> > usage model but I think it allows userspace to define a more powerful 
-> > policy.  We certainly may want to kill from a memcg with a single large 
-> > process, or we may want to kill from a memcg with several small processes, 
-> > it depends on the importance of that job.
-> 
-> I believe, that both models have some advantages.
-> Priority-based model is more powerful, but requires support from the userspace
-> to set up these priorities (and, probably, adjust them dynamically).
+>> Tejun's patch makes resource domain the default and threaded-ness as an
+>> additional attribute that needs to be specified. Your proposal make
+>> non-resource domain where threads can exist as the default and resource
+>> domain as something that needs to be explicitly specified.
+> Not so. My proposal has resource domains as the default (remember, root
+> _MUST_ be a resource domain, therefore we must start start with
+> root.d=1). Therefore, any new subgroup will be a resource domain by
+> default and if you ignore the new attribute it will work exactly like
+> cgroup-v2 does today.
+>
+> Only if you clear the new attribute do you get a thread subgroup.
 
-It's a no-op if nobody sets up priorities or the system-wide sysctl is 
-disabled.  Presumably, as in our model, the Activity Manager sets the 
-sysctl and is responsible for configuring the priorities if present.  All 
-memcgs at the sibling level or subcontainer level remain the default if 
-not defined by the chown'd user, so this falls back to an rss model for 
-backwards compatibility.
+OK.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>> They are just
+>> different ways of partitioning a cgroup hierarchy into different
+>> domains. Tejun's patch has a well defined boundary for threaded subtree
+>> where threads can be migrated from one part of a subtree to another.
+>> Your proposal is less clear-cut on how to handle thread migration. 
+> Disagree again. We have the exact same boundaries. Just ensure the
+> migration doesn't escape the resource domain.
+>
+Agreed.
+
+Cheers,
+Longman
+
