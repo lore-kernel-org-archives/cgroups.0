@@ -1,142 +1,151 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v3 2/6] mm, oom: cgroup-aware OOM killer
-Date: Tue, 11 Jul 2017 13:51:24 +0100
-Message-ID: <20170711125124.GA12406@castle>
-References: <1498079956-24467-1-git-send-email-guro@fb.com>
- <1498079956-24467-3-git-send-email-guro@fb.com>
- <alpine.DEB.2.10.1707101547010.116811@chino.kir.corp.google.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v2
+Date: Tue, 11 Jul 2017 10:14:42 -0400
+Message-ID: <a554d16c-af40-756e-a611-a453451c40a9@redhat.com>
+References: <20170610140351.10703-1-tj@kernel.org>
+ <20170612123150.scopfxela7v26dct@hirez.programming.kicks-ass.net>
+ <20170612212753.GN19206@htj.duckdns.org> <20170627070143.GB4114@worktop>
+ <20170630132324.GA18669@htj.duckdns.org>
+ <20170710083200.poevcjo7x47hy5ni@hirez.programming.kicks-ass.net>
+ <8f9c83d7-cadf-3a41-8e56-5828d5abfa26@redhat.com>
+ <20170711121527.imshmmoe4cj7dkig@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=z9nOuBCTulURp0XOXc2w4AZzqJ9BWzm6G7DxfztWNsY=;
- b=AtYyPpXDZOXuX00T01/HlBuh3dqYOuVtpRw7b/tMWg/2SrytKmc1+RFmdOGFMfUpsQx2
- BcsFCijX7Y9u3vu4VF6UiBVyYHBWFbm5WT3gmjGoqEXDw8cXW1d7d/LApRRuNg0UmVo3
- kbVPx4RhPGG3XPa4n7Dpu29jGr64j4g2aoI= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=z9nOuBCTulURp0XOXc2w4AZzqJ9BWzm6G7DxfztWNsY=;
- b=MIvIaGNUgxchuG3OraUVEa7MSqyJfPqZ/g9W9Z5Hsp4Caop0XuWAR3764KBooClqENMzlSuI9mIYD0d1D2md1uThhXujKZNkOgmBdRDceX9bPro1AKjmkQjCe8FK3+oRnRRbKCRVGIJmw/ta0+WsdQzyv0Y/orzKStsUI263WyU=
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1707101547010.116811@chino.kir.corp.google.com>
-Sender: linux-doc-owner@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 23A843DEE4
+In-Reply-To: <20170711121527.imshmmoe4cj7dkig-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-On Mon, Jul 10, 2017 at 04:05:49PM -0700, David Rientjes wrote:
-> On Wed, 21 Jun 2017, Roman Gushchin wrote:
-> 
-> > Traditionally, the OOM killer is operating on a process level.
-> > Under oom conditions, it finds a process with the highest oom score
-> > and kills it.
-> > 
-> > This behavior doesn't suit well the system with many running
-> > containers. There are two main issues:
-> > 
-> > 1) There is no fairness between containers. A small container with
-> > few large processes will be chosen over a large one with huge
-> > number of small processes.
-> > 
-> 
-> Yes, the original motivation was to limit killing to a single process, if 
-> possible.  To do that, we kill the process with the largest rss to free 
-> the most memory and rely on the user to configure /proc/pid/oom_score_adj 
-> if something else should be prioritized.
-> 
-> With containerization and overcommit of system memory, we concur that 
-> killing the single largest process isn't always preferable and neglects 
-> the priority of its memcg.  Your motivation seems to be to provide 
-> fairness between one memcg with a large process and one memcg with a large 
-> number of small processes; I'm curious if you are concerned about the 
-> priority of a memcg hierarchy (how important that "job" is) or whether you 
-> are strictly concerned with "largeness" of memcgs relative to each other.
+On 07/11/2017 08:15 AM, Peter Zijlstra wrote:
+> On Mon, Jul 10, 2017 at 05:01:19PM -0400, Waiman Long wrote:
+>> On 07/10/2017 04:32 AM, Peter Zijlstra wrote:
+>>> On Fri, Jun 30, 2017 at 09:23:24AM -0400, Tejun Heo wrote:
+>>>> On Tue, Jun 27, 2017 at 09:01:43AM +0200, Peter Zijlstra wrote:
+>>>>> On Mon, Jun 12, 2017 at 05:27:53PM -0400, Tejun Heo wrote:
+>>>>> IIRC the problem with the 'threaded' marker is that it doesn't clearly
+>>>>> capture what a resource domain is.
+>>>>>
+>>>>> That is, assuming that a thread root is always a resource domain, we get
+>>>>> the following problem:
+>>>>>
+>>>>> If we set 'threaded' on the root group in order to create a thread
+>>>>> (sub)group. If we then want to create another domain group, we'd have to
+>>>>> clear 'threaded' on that.
+>>>>>
+>>>>> 	R (t=1)
+>>>>>        / \
+>>>>> (t=1) T   D (t=0)
+>>>>>
+>>>>> So far so good. However, now we want to create another thread group
+>>>>> under our domain group D, so we have to set its 'threaded' marker again:
+>>>>>
+>>>>> 	R (t=1)
+>>>>>        / \
+>>>>> (t=1) T   D (t=1)
+>>>>>          /
+>>>>> 	T (t=1)
+>> This configuration is actually not possible with Tejun's latest v3 patch
+>> which took out the "join" operation. Maybe we should keep the "join"
+>> operation if this configuration is likely to happen.
+> Wait what? Why not? That's a fairly fundamental setup that needs to be
+> possible. I understood the 'join' thing was for something else entirely.
+> TJ said the 'join' was to allow thread-roots that were not domain
+> controllers -- which I didn't get the point of.
 
-I'm pretty sure we should provide some way to prioritize some cgroups
-over other (in terms of oom killer preferences), but I'm not 100% sure yet,
-what's the best way to do it. I've suggested something similar to the existing
-oom_score_adj for tasks, mostly to folow the existing design.
+The "join" was a special op for the children of cgroup root to join the
+root as part of a threaded subtree. The children can instead use the
+"enable" option to become a thread root which was the configuration
+shown above.  This behavior applied only to children of root. Down the
+hierarchy, you can't have configuration like:
 
-One of the questions to answer in priority-based model is
-how to compare tasks in the root cgroup with cgroups?
+     R (t=0)
+    / \
+       D (t=1)
+      / \
+     T   D (t=1)
+       
+Instead, you can have
 
-> > ...
-> > By default, it will look for the biggest leaf cgroup, and kill
-> > the largest task inside.
-> > 
-> > But a user can change this behavior by enabling the per-cgroup
-> > oom_kill_all_tasks option. If set, it causes the OOM killer treat
-> > the whole cgroup as an indivisible memory consumer. In case if it's
-> > selected as on OOM victim, all belonging tasks will be killed.
-> > 
-> 
-> These are two different things, right?  We can adjust how the system oom 
-> killer chooses victims when memcg hierarchies overcommit the system to not 
-> strictly prefer the single process with the largest rss without killing 
-> everything attached to the memcg.
+     R (t=0)
+    / \
+       D (t=0)
+      / \
+(t=1)D   D(t=1)
 
-They are different, and I thought about providing two independent knobs.
-But after all I haven't found enough real life examples, where it can be useful.
-Can you provide something here?
+With Tejun's v3 patch, the "join" operation was removed and "enable"
+behaved like "join" in joining the threaded subtree of the root. I was
+wrong in saying that the configuration listed in your example was not
+possible. It was, but it depends on the order of activating the thread
+mode. If we enables thread mode on a child of root first followed by the
+root itself, we can have your configuration, but not in the reverse
+order. It was possible in the reverse order in the previous patch.
 
-Also, they are different only for non-leaf cgroups; leaf cgroups
-are always treated as indivisible memory consumers during victim selection.
+>>>>> And we can no longer identify D as a resource domain. If OTOH we mark
+>>>>> 'domain' we get:
+>>>>>
+>>>>> 	R (d=1)
+>>>>>        / \
+>>>>> (d=0) T   D (d=1)
+>>>>>          /
+>>>>> 	T (d=0)
+>>>>>
+>>>>> Which clearly identifies the domains and the thread only groups.
+>>>> So, the difference between the two interfaces is that the one I
+>>>> proposed is marking the thread root which makes all its descendants
+>>>> threaded while the above is marking each individual cgroup as being
+>>>> whether a resource domain or threaded.
+>>> You start by marking the thread root, but then continue to mark all
+>>> 'threaded' (including root). This then leads to the problem described
+>>> above where you cannot (easily) (re)discover what the actual root is.
+>> I don't think that is true. Internally, we can always find out if a
+>> cgroup is a thread root. Externally, the presence of resource domain
+>> control knobs in a threaded cgroup will indicate that it is a thread root.
+> You're confusing thread root with resource domain. While a resource
+> domain must be a thread root the reverse is not necessarily so (this is
+> what I understood the 'join' thing to be for).
 
-I assume, that containerized systems will always set oom_kill_all_tasks for
-top-level container memory cgroups. By default it's turned off
-to provide backward compatibility with current behavior and avoid
-excessive kills and support oom_score_adj==-1000 (I've added this to v4,
-will post soon).
+I know the difference between thread root and resource domain. In the
+current scheme, all the cgroups which are not threaded under a thread
+root are resource domain.
 
-> Separately: do you not intend to support memcg priorities at all, but 
-> rather strictly consider the "largeness" of a memcg versus other memcgs?
+> And this is detection by inference, which breaks the moment you disable
+> all resource domain controllers, because at that point those files will
+> not be present.
 
-Answered upper.
+It is true that there is no external marker to find out if a threaded
+cgroup is a root or not when the parent of a thread root is also a
+thread root of a separate threaded subtree if the domain controller
+files are not present. However, we can always add a status file to
+indicate the state of threaded-ness of a cgroup if we want to.
 
-> In our methodology, each memcg is assigned a priority value and the 
-> iteration of the hierarchy simply compares and visits the memcg with the 
-> lowest priority at each level and then selects the largest process to 
-> kill.  This could also support a "kill-all" knob.
-> 
-> 	struct mem_cgroup *memcg = root_mem_cgroup;
-> 	struct mem_cgroup *low_memcg;
-> 	unsigned long low_priority;
-> 
-> next:
-> 	low_memcg = NULL;
-> 	low_priority = ULONG_MAX;
-> 	for_each_child_of_memcg(memcg) {
-> 		unsigned long prio = memcg_oom_priority(memcg);
-> 
-> 		if (prio < low_priority) {
-> 			low_memcg = memcg;
-> 			low_priority = prio;
-> 		}		
-> 	}
-> 	if (low_memcg)
-> 		goto next;
-> 	oom_kill_process_from_memcg(memcg);
-> 
-> So this is a priority based model that is different than your aggregate 
-> usage model but I think it allows userspace to define a more powerful 
-> policy.  We certainly may want to kill from a memcg with a single large 
-> process, or we may want to kill from a memcg with several small processes, 
-> it depends on the importance of that job.
+>>> My proposal differs in that we retain a clear difference between
+>>> resource domain / root and threaded (sub)trees.
+>> For me, I have no preference of using either the threaded or the domain
+>> marker as long as some kind of join operation that allows the
+>> configuration above is present in the thread mode. They both looks good
+>> to me. It is just a matter of which aspect of the cgroup we want to
+>> emphasize. I would suggest we reach a consensus ASAP and move forward to
+>> other more substantial issues in cgroup v2.
+> I think you're confused on join. Join should not be needed.
 
-I believe, that both models have some advantages.
-Priority-based model is more powerful, but requires support from the userspace
-to set up these priorities (and, probably, adjust them dynamically).
-Size-based model is limited, but provides reasonable behavior
-without any additional configuration.
+Tejun's patch makes resource domain the default and threaded-ness as an
+additional attribute that needs to be specified. Your proposal make
+non-resource domain where threads can exist as the default and resource
+domain as something that needs to be explicitly specified. They are just
+different ways of partitioning a cgroup hierarchy into different
+domains. Tejun's patch has a well defined boundary for threaded subtree
+where threads can be migrated from one part of a subtree to another.
+Your proposal is less clear-cut on how to handle thread migration. 
 
-I will agree here with Michal Hocko, that bpf like mechanism can be used
-here to provide an option for writing some custom oom policies. After we will
-have necessary infrastructure to iterate over cgroup tree, select a cgroup
-with largest oom score, and kill a biggest task/all the tasks there,
-we can add an ability to customize the cgroup (and maybe tasks) evaluation.
+Yes, the "join" operation may not be needed. It is just a matter of how
+much flexibility we want to specify the desirable cgroup configuration.
 
-Thanks!
+Cheers,
+Longman
 
-Roman
+
