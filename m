@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 15/15] kernel: convert kcov.refcount from atomic_t to refcount_t
-Date: Mon, 17 Jul 2017 13:43:26 +0300
-Message-ID: <1500288206-12074-16-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 14/15] kernel: convert futex_pi_state.refcount from atomic_t to refcount_t
+Date: Mon, 17 Jul 2017 13:43:25 +0300
+Message-ID: <1500288206-12074-15-git-send-email-elena.reshetova@intel.com>
 References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
@@ -24,54 +24,75 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- kernel/kcov.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ kernel/futex.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/kcov.c b/kernel/kcov.c
-index cd77199..a6c7df3 100644
---- a/kernel/kcov.c
-+++ b/kernel/kcov.c
-@@ -19,6 +19,7 @@
- #include <linux/debugfs.h>
- #include <linux/uaccess.h>
- #include <linux/kcov.h>
+diff --git a/kernel/futex.c b/kernel/futex.c
+index 16dbe4c..1cc7641 100644
+--- a/kernel/futex.c
++++ b/kernel/futex.c
+@@ -67,6 +67,7 @@
+ #include <linux/freezer.h>
+ #include <linux/bootmem.h>
+ #include <linux/fault-inject.h>
 +#include <linux/refcount.h>
- #include <asm/setup.h>
  
- /*
-@@ -35,7 +36,7 @@ struct kcov {
- 	 *  - opened file descriptor
- 	 *  - task with enabled coverage (we can't unwire it from another task)
- 	 */
--	atomic_t		refcount;
-+	refcount_t		refcount;
- 	/* The lock protects mode, size, area and t. */
- 	spinlock_t		lock;
- 	enum kcov_mode		mode;
-@@ -94,12 +95,12 @@ EXPORT_SYMBOL(__sanitizer_cov_trace_pc);
+ #include <asm/futex.h>
  
- static void kcov_get(struct kcov *kcov)
+@@ -209,7 +210,7 @@ struct futex_pi_state {
+ 	struct rt_mutex pi_mutex;
+ 
+ 	struct task_struct *owner;
+-	atomic_t refcount;
++	refcount_t refcount;
+ 
+ 	union futex_key key;
+ } __randomize_layout;
+@@ -794,7 +795,7 @@ static int refill_pi_state_cache(void)
+ 	INIT_LIST_HEAD(&pi_state->list);
+ 	/* pi_mutex gets initialized later */
+ 	pi_state->owner = NULL;
+-	atomic_set(&pi_state->refcount, 1);
++	refcount_set(&pi_state->refcount, 1);
+ 	pi_state->key = FUTEX_KEY_INIT;
+ 
+ 	current->pi_state_cache = pi_state;
+@@ -814,7 +815,7 @@ static struct futex_pi_state *alloc_pi_state(void)
+ 
+ static void get_pi_state(struct futex_pi_state *pi_state)
  {
--	atomic_inc(&kcov->refcount);
-+	refcount_inc(&kcov->refcount);
+-	WARN_ON_ONCE(!atomic_inc_not_zero(&pi_state->refcount));
++	refcount_inc(&pi_state->refcount);
  }
  
- static void kcov_put(struct kcov *kcov)
- {
--	if (atomic_dec_and_test(&kcov->refcount)) {
-+	if (refcount_dec_and_test(&kcov->refcount)) {
- 		vfree(kcov->area);
- 		kfree(kcov);
+ /*
+@@ -828,7 +829,7 @@ static void put_pi_state(struct futex_pi_state *pi_state)
+ 	if (!pi_state)
+ 		return;
+ 
+-	if (!atomic_dec_and_test(&pi_state->refcount))
++	if (!refcount_dec_and_test(&pi_state->refcount))
+ 		return;
+ 
+ 	/*
+@@ -852,7 +853,7 @@ static void put_pi_state(struct futex_pi_state *pi_state)
+ 		 * refcount is at 0 - put it back to 1.
+ 		 */
+ 		pi_state->owner = NULL;
+-		atomic_set(&pi_state->refcount, 1);
++		refcount_set(&pi_state->refcount, 1);
+ 		current->pi_state_cache = pi_state;
  	}
-@@ -175,7 +176,7 @@ static int kcov_open(struct inode *inode, struct file *filep)
- 	kcov = kzalloc(sizeof(*kcov), GFP_KERNEL);
- 	if (!kcov)
- 		return -ENOMEM;
--	atomic_set(&kcov->refcount, 1);
-+	refcount_set(&kcov->refcount, 1);
- 	spin_lock_init(&kcov->lock);
- 	filep->private_data = kcov;
- 	return nonseekable_open(inode, filep);
+ }
+@@ -1046,7 +1047,7 @@ static int attach_to_pi_state(u32 __user *uaddr, u32 uval,
+ 	 * and futex_wait_requeue_pi() as it cannot go to 0 and consequently
+ 	 * free pi_state before we can take a reference ourselves.
+ 	 */
+-	WARN_ON(!atomic_read(&pi_state->refcount));
++	WARN_ON(!refcount_read(&pi_state->refcount));
+ 
+ 	/*
+ 	 * Now that we have a pi_state, we can acquire wait_lock
 -- 
 2.7.4
 
