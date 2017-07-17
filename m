@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 02/15] kernel: convert signal_struct.sigcnt from atomic_t to refcount_t
-Date: Mon, 17 Jul 2017 13:43:13 +0300
-Message-ID: <1500288206-12074-3-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 03/15] kernel: convert user_struct.__count from atomic_t to refcount_t
+Date: Mon, 17 Jul 2017 13:43:14 +0300
+Message-ID: <1500288206-12074-4-git-send-email-elena.reshetova@intel.com>
 References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
@@ -24,54 +24,80 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- include/linux/sched/signal.h | 2 +-
- kernel/fork.c                | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ include/linux/sched/user.h | 5 +++--
+ kernel/user.c              | 8 ++++----
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/sched/signal.h b/include/linux/sched/signal.h
-index 4d5cdf1..c5f1a67 100644
---- a/include/linux/sched/signal.h
-+++ b/include/linux/sched/signal.h
-@@ -77,7 +77,7 @@ struct thread_group_cputimer {
-  * the locking of signal_struct.
+diff --git a/include/linux/sched/user.h b/include/linux/sched/user.h
+index 5d5415e..0a9953d 100644
+--- a/include/linux/sched/user.h
++++ b/include/linux/sched/user.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/uidgid.h>
+ #include <linux/atomic.h>
++#include <linux/refcount.h>
+ 
+ struct key;
+ 
+@@ -10,7 +11,7 @@ struct key;
+  * Some day this will be a full-fledged user tracking system..
   */
- struct signal_struct {
--	atomic_t		sigcnt;
-+	refcount_t		sigcnt;
- 	atomic_t		live;
- 	int			nr_threads;
- 	struct list_head	thread_head;
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 60bd7bf..337904a 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -399,7 +399,7 @@ static inline void free_signal_struct(struct signal_struct *sig)
- 
- static inline void put_signal_struct(struct signal_struct *sig)
+ struct user_struct {
+-	atomic_t __count;	/* reference count */
++	refcount_t __count;	/* reference count */
+ 	atomic_t processes;	/* How many processes does this user have? */
+ 	atomic_t sigpending;	/* How many pending signals does this user have? */
+ #ifdef CONFIG_FANOTIFY
+@@ -53,7 +54,7 @@ extern struct user_struct root_user;
+ extern struct user_struct * alloc_uid(kuid_t);
+ static inline struct user_struct *get_uid(struct user_struct *u)
  {
--	if (atomic_dec_and_test(&sig->sigcnt))
-+	if (refcount_dec_and_test(&sig->sigcnt))
- 		free_signal_struct(sig);
+-	atomic_inc(&u->__count);
++	refcount_inc(&u->__count);
+ 	return u;
  }
+ extern void free_uid(struct user_struct *);
+diff --git a/kernel/user.c b/kernel/user.c
+index 00281ad..c072348 100644
+--- a/kernel/user.c
++++ b/kernel/user.c
+@@ -90,7 +90,7 @@ static DEFINE_SPINLOCK(uidhash_lock);
  
-@@ -1379,7 +1379,7 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
+ /* root_user.__count is 1, for init task cred */
+ struct user_struct root_user = {
+-	.__count	= ATOMIC_INIT(1),
++	.__count	= REFCOUNT_INIT(1),
+ 	.processes	= ATOMIC_INIT(1),
+ 	.sigpending	= ATOMIC_INIT(0),
+ 	.locked_shm     = 0,
+@@ -116,7 +116,7 @@ static struct user_struct *uid_hash_find(kuid_t uid, struct hlist_head *hashent)
  
- 	sig->nr_threads = 1;
- 	atomic_set(&sig->live, 1);
--	atomic_set(&sig->sigcnt, 1);
-+	refcount_set(&sig->sigcnt, 1);
+ 	hlist_for_each_entry(user, hashent, uidhash_node) {
+ 		if (uid_eq(user->uid, uid)) {
+-			atomic_inc(&user->__count);
++			refcount_inc(&user->__count);
+ 			return user;
+ 		}
+ 	}
+@@ -163,7 +163,7 @@ void free_uid(struct user_struct *up)
+ 		return;
  
- 	/* list_add(thread_node, thread_head) without INIT_LIST_HEAD() */
- 	sig->thread_head = (struct list_head)LIST_HEAD_INIT(tsk->thread_node);
-@@ -1888,7 +1888,7 @@ static __latent_entropy struct task_struct *copy_process(
- 		} else {
- 			current->signal->nr_threads++;
- 			atomic_inc(&current->signal->live);
--			atomic_inc(&current->signal->sigcnt);
-+			refcount_inc(&current->signal->sigcnt);
- 			list_add_tail_rcu(&p->thread_group,
- 					  &p->group_leader->thread_group);
- 			list_add_tail_rcu(&p->thread_node,
+ 	local_irq_save(flags);
+-	if (atomic_dec_and_lock(&up->__count, &uidhash_lock))
++	if (refcount_dec_and_lock(&up->__count, &uidhash_lock))
+ 		free_user(up, flags);
+ 	else
+ 		local_irq_restore(flags);
+@@ -184,7 +184,7 @@ struct user_struct *alloc_uid(kuid_t uid)
+ 			goto out_unlock;
+ 
+ 		new->uid = uid;
+-		atomic_set(&new->__count, 1);
++		refcount_set(&new->__count, 1);
+ 
+ 		/*
+ 		 * Before adding this, check whether we raced
 -- 
 2.7.4
 
