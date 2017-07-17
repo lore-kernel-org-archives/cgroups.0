@@ -1,55 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] cgroup: update outdated cgroup.procs documentation
-Date: Sun, 16 Jul 2017 21:36:44 -0400
-Message-ID: <20170717013644.GG2969123@devbig577.frc2.facebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-4.14] cgroup: remove now unused list_head @pending
+ in cgroup_apply_cftypes()
+Date: Sun, 16 Jul 2017 21:39:29 -0400
+Message-ID: <20170717013929.GH2969123@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:mime-version
          :content-disposition:user-agent;
-        bh=OW2Pm+PqY99vd89Kq7z87qv8+rqtj3mALzHK6AGas/4=;
-        b=M5QAtsQ45mkLq/AeJd2iBVxdsPPN/dlTvhyBYicyRSDnpsis2X+TnAuN2kybRNxYPs
-         CbWeGCa8Ar7VTt4mBdbPwDeCdsy218mB+COIvkwFyjQx0qAwdtr2sDIKjxbMYQy+WgYr
-         InavBFWvmagbKtRDnXrVSAtjuO28fk2e3Dgu7gyvxGyYiHF9Dwkrxi9eX0+GabWwNtLZ
-         4+tfLURqlK1H+kg9n3dyFqABIVZJIrgPR5LKzTllSKiAC+xEt6hIZ/+cgCHHV0LazYff
-         xK3agrb9aw7mnTJekMvXTRB7IZkcaL27Bl9C4Uj7Gd/l7n+qOMRrWOFe/F6XnT5uU2tW
-         VybQ==
+        bh=UtwfawcScA4zCt/SvQxnLXiPY8QbAZEJ4BmoHjdYrPM=;
+        b=p3XrcnFppP1PXjn85jIGWoDBb/ZJCiOSkJKK1tEFa4Yp6nLPmNS8jnxQNieZ8mmGvl
+         Q3pHiRoUGtMSMoM7jiWbhNkRJyJIUByKWTG+4T0wCNESC84YfQOxVUY20PxqsMYXdvwP
+         rE3QYydpdJdSz0k8BLRp7l0PbI6JPxapt31Jv0LDaq0Efb0G05dATpoQkH6orNDT/ZHO
+         SAqty7S9OLWMR45TCwfO8h4LQ8+TP5JIHXlA2JB0/KFgCsOpxaHuo3961Qu/0nYWyVl+
+         hFuEUWcYLopvZ6GK+L0808M7howhD5wokoEAFeApmUJgUC6T6x2T2zXhEQ1iGnMBSChG
+         /izw==
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+To: cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, kernel-team@fb.com
 
-576dd464505f ("cgroup: drop the matching uid requirement on migration
-for cgroup v2") dropped the uid match requirement from "cgroup.procs"
-perm check but forgot to update the matching entry in the
-documentation.  Update it.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
-Applying to cgroup/vor-4.14.
+Applying to cgroup/for-4.14.
 
 Thanks.
 
- Documentation/cgroup-v2.txt | 3 ---
- 1 file changed, 3 deletions(-)
+ kernel/cgroup/cgroup.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index bde1771..f01f831 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -658,9 +658,6 @@ All cgroup core files are prefixed with "cgroup."
- 	the PID to the cgroup.  The writer should match all of the
- 	following conditions.
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3230,7 +3230,6 @@ restart:
  
--	- Its euid is either root or must match either uid or suid of
--          the target process.
--
- 	- It must have write access to the "cgroup.procs" file.
- 
- 	- It must have write access to the "cgroup.procs" file of the
--- 
-2.9.3
+ static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
+ {
+-	LIST_HEAD(pending);
+ 	struct cgroup_subsys *ss = cfts[0].ss;
+ 	struct cgroup *root = &ss->root->cgrp;
+ 	struct cgroup_subsys_state *css;
