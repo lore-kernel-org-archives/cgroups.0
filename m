@@ -1,77 +1,51 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
-Date: Mon, 17 Jul 2017 16:14:09 +0200
-Message-ID: <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
-References: <20170717020721.3612468-1-tj@kernel.org>
- <20170717020721.3612468-6-tj@kernel.org>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 14/15] kernel: convert futex_pi_state.refcount from
+ atomic_t to refcount_t
+Date: Mon, 17 Jul 2017 16:25:36 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1707171607050.2185@nanos>
+References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com> <1500288206-12074-15-git-send-email-elena.reshetova@intel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=aJ/TDYz+uRkTfQRjhH1KaL4q+b0Ez6XvzQFC47mS0Ww=; b=o9vFFkuqmQu2eh184aHG/qohL
-        h4K7e5Ge3B6VuKgxXMfdzffRPvpzWAdJ2U4vhhqblZz3Qv/KYuX0GVgjP2lryQNLwOMao2qPBzqXD
-        XqCYv4foWL84sdhI7bpFFmQZ7+XMoNcICWQNF3EGzQCb3ByPcpeA+Tn38gU0pntFbcVohPXWcYRmb
-        F0wudialYCYtYFNEPm8WfL1DdgE6Q8CQv+tFJbBbISBHWHMzKowGDK8Y30X+FI/z1PfDnF542rbnu
-        rbXiYe79fb2wb3G+OsaieJpVmOaIgE7ZuIDi/gnfSt8M3d08S+z7OTre68Vam8l6mkB5BgYSplOD5
-    
-Content-Disposition: inline
-In-Reply-To: <20170717020721.3612468-6-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1500288206-12074-15-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, keescook@chromium.org
 
-On Sun, Jul 16, 2017 at 10:07:20PM -0400, Tejun Heo wrote:
-> 
-> v4: - Updated to marking each cgroup threaded as suggested by PeterZ.
-> 
+On Mon, 17 Jul 2017, Elena Reshetova wrote:
 
-> +On creation, a cgroup is always a domain cgroup and can be made
-> +threaded by writing "threaded" to the "cgroup.type" file.  The
-> +operation is single direction::
-> +
-> +  # echo threaded > cgroup.type
-> +
-> +Once threaded, the cgroup can't be made a domain again.  To enable the
-> +thread mode, the following conditions must be met.
-> +
-> +- As the cgroup will join the parent's resource domain.  The parent
-> +  must either be a valid (threaded) domain or a threaded cgroup.
-> +
-> +- The cgroup must be empty.  No enabled controllers, child cgroups or
-> +  processes.
-> +
-> +Topology-wise, a cgroup can be in an invalid state.  Please consider
-> +the following toplogy::
-> +
-> +  A (threaded domain) - B (threaded) - C (domain, just created)
-> +
-> +C is created as a domain but isn't connected to a parent which can
-> +host child domains.  C can't be used until it is turned into a
-> +threaded cgroup.  "cgroup.type" file will report "domain (invalid)" in
-> +these cases.  Operations which fail due to invalid topology use
-> +EOPNOTSUPP as the errno.
-> +
-> +A domain cgroup is turned into a threaded domain when one of its child
-> +cgroup becomes threaded or threaded controllers are enabled in the
-> +"cgroup.subtree_control" file while there are processes in the cgroup.
-> +A threaded domain reverts to a normal domain when the conditions
-> +clear.
+> Subject: kernel: convert futex_pi_state.refcount from atomic_t to refcount_t
 
-AFAICT this is not in fact what I suggested... :/
+Several people including myself told you already, that subjects consist of
 
-My proposal did not have that invalid state. It would simply refuse to
-change the type from thread to domain in the case where the parent is
-not a domain.
+SUBSYSTEMPREFIX: Concise description
 
-Also, my proposal maintained the normal property inheritance rules. A
-child cgroup's creation 'type' would be that of its parent and not
-always be 'domain'.
+It's easy enough to figure the prefix out by looking at the output of 'git
+log path/of/changed/file'.
 
-Let me read more (and more careful) to see if there's other things.
+Concise descriptions are not lengthy sentences with implementation
+details. They should merily describe the problem/concept of change. The
+details go into the changelog. IOW, something like:
+
+	"PROPERPREFIX: Convert to refcount API"
+
+would be sufficient.
+
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+
+Copying the same sentence over and over avoids thinking about a proper
+changelog, right? You fail to explain, how you come to the conclusion that
+futex_pi_state.refcount is a pure reference counter (aside of the name) and
+therefor can be safely converted to refcount_t.
+
+Other than that, the patch itself is fine.
+
+Thanks,
+
+	tglx
