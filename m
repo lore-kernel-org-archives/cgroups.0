@@ -1,57 +1,87 @@
-From: Balbir Singh <bsingharora@gmail.com>
-Subject: Re: [PATCH 5/6] mm/memcontrol: support MEMORY_DEVICE_PRIVATE and
- MEMORY_DEVICE_PUBLIC v3
-Date: Mon, 17 Jul 2017 19:15:38 +1000
-Message-ID: <1500282938.8256.9.camel@gmail.com>
-References: <20170713211532.970-1-jglisse@redhat.com>
-	 <20170713211532.970-6-jglisse@redhat.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=A4zpS19rDw07ZTc5n+UabKnGPD7uk04h8qFSKwN/XWM=;
-        b=LhnLwKWQHT97/ExOjpEWcH6pX8DJt09OQ1O4qxFDK5s9owFk+KJcWoparosm7mJpBr
-         /NkmDXfSNfOvgMcgUATjsrE7+NwZTAArQLJQglpRBjXHPRbqXTyEqvBKldutQbDl+3BA
-         SZEesMa4Bb6zbHRShfaCxGM1Fre4WOTpALN/jIfmDxXrdDHPDI5izWigjtHcaw6wqs/5
-         M0UKyMBI2g78FrcL633ybzUMuop4MjKeAMvxdq5ve0zlDZSPKjts6GYzjIfL1+LDfQA8
-         x5QJo7PGMBP/l+UL+DRHK7wjipkSv97D42KFpEU7Ly8Xke1i4vWbzqhKHTlDBUXEd18o
-         EMxA==
-In-Reply-To: <20170713211532.970-6-jglisse@redhat.com>
-Sender: owner-linux-mm@kvack.org
+From: Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 00/15] v3 kernel core pieces refcount conversions
+Date: Mon, 17 Jul 2017 13:43:11 +0300
+Message-ID: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Cc: John Hubbard <jhubbard@nvidia.com>, David Nellans <dnellans@nvidia.com>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, viro@zeniv.linux.org.uk, tj@kernel.org, mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, acme@kernel.org, alexander.shishkin@linux.intel.com, eparis@redhat.com, akpm@linux-foundation.org, arnd@arndb.de, luto@kernel.org, keescook@chromium.org, tglx@linutronix.de, Elena Reshetova <elena.reshetova@intel.com>
 
-On Thu, 2017-07-13 at 17:15 -0400, Jérôme Glisse wrote:
-> HMM pages (private or public device pages) are ZONE_DEVICE page and
-> thus need special handling when it comes to lru or refcount. This
-> patch make sure that memcontrol properly handle those when it face
-> them. Those pages are use like regular pages in a process address
-> space either as anonymous page or as file back page. So from memcg
-> point of view we want to handle them like regular page for now at
-> least.
-> 
-> Changed since v2:
->   - s/host/public
-> Changed since v1:
->   - s/public/host
->   - add comments explaining how device memory behave and why
-> 
-> Signed-off-by: Jérôme Glisse <jglisse@redhat.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: cgroups@vger.kernel.org
-> ---
+Changes in v3:
+ * SoB chain corrected
+ * minor corrections based on v2 feedback
+ * rebase on linux-next/master as of today
 
-Acked-by: Balbir Singh <bsingharora@gmail.com>
+Changes in v2:
+ * dropped already merged patches
+ * rebase on top of linux-next/master
+ * Now by default refcount_t = atomic_t (*) and uses all atomic
+   standard operations unless CONFIG_REFCOUNT_FULL is enabled.
+   This is a compromise for the systems that are critical on
+   performance (such as net) and cannot accept even slight delay
+   on the refcounter operations.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+This series, for core kernel components, replaces atomic_t reference
+counters with the new refcount_t type and API (see include/linux/refcount.h).
+By doing this we prevent intentional or accidental
+underflows or overflows that can led to use-after-free vulnerabilities.
+
+The patches are fully independent and can be cherry-picked separately.
+If there are no objections to the patches, please merge them via respective trees.
+
+If you want to test with refcount_t protection enabled, CONFIG_REFCOUNT_FULL
+must be enabled.
+
+* The respective change is currently merged into -next as
+  "locking/refcount: Create unchecked atomic_t implementation".
+
+Elena Reshetova (15):
+  kernel: convert sighand_struct.count from atomic_t to refcount_t
+  kernel: convert signal_struct.sigcnt from atomic_t to refcount_t
+  kernel: convert user_struct.__count from atomic_t to refcount_t
+  kernel: convert task_struct.usage from atomic_t to refcount_t
+  kernel: convert task_struct.stack_refcount from atomic_t to refcount_t
+  kernel: convert perf_event_context.refcount from atomic_t to
+    refcount_t
+  kernel: convert ring_buffer.refcount from atomic_t to refcount_t
+  kernel: convert ring_buffer.aux_refcount from atomic_t to refcount_t
+  kernel: convert uprobe.ref from atomic_t to refcount_t
+  kernel: convert nsproxy.count from atomic_t to refcount_t
+  kernel: convert group_info.usage from atomic_t to refcount_t
+  kernel: convert cred.usage from atomic_t to refcount_t
+  sched: convert numa_group.refcount from atomic_t to refcount_t
+  kernel: convert futex_pi_state.refcount from atomic_t to refcount_t
+  kernel: convert kcov.refcount from atomic_t to refcount_t
+
+ fs/exec.c                        |  4 ++--
+ fs/proc/task_nommu.c             |  2 +-
+ include/linux/cred.h             | 13 ++++++------
+ include/linux/init_task.h        |  7 +++---
+ include/linux/nsproxy.h          |  6 +++---
+ include/linux/perf_event.h       |  3 ++-
+ include/linux/sched.h            |  5 +++--
+ include/linux/sched/signal.h     |  5 +++--
+ include/linux/sched/task.h       |  4 ++--
+ include/linux/sched/task_stack.h |  2 +-
+ include/linux/sched/user.h       |  5 +++--
+ kernel/cred.c                    | 46 ++++++++++++++++++++--------------------
+ kernel/events/core.c             | 18 ++++++++--------
+ kernel/events/internal.h         |  5 +++--
+ kernel/events/ring_buffer.c      |  8 +++----
+ kernel/events/uprobes.c          |  8 +++----
+ kernel/fork.c                    | 24 ++++++++++-----------
+ kernel/futex.c                   | 13 ++++++------
+ kernel/groups.c                  |  2 +-
+ kernel/kcov.c                    |  9 ++++----
+ kernel/nsproxy.c                 |  6 +++---
+ kernel/sched/fair.c              |  8 +++----
+ kernel/user.c                    |  8 +++----
+ 23 files changed, 110 insertions(+), 101 deletions(-)
+
+-- 
+2.7.4
+
