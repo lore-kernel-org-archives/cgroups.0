@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 07/15] kernel: convert ring_buffer.refcount from atomic_t to refcount_t
-Date: Mon, 17 Jul 2017 13:43:18 +0300
-Message-ID: <1500288206-12074-8-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 10/15] kernel: convert nsproxy.count from atomic_t to refcount_t
+Date: Mon, 17 Jul 2017 13:43:21 +0300
+Message-ID: <1500288206-12074-11-git-send-email-elena.reshetova@intel.com>
 References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
@@ -24,66 +24,71 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- kernel/events/core.c        | 4 ++--
- kernel/events/internal.h    | 3 ++-
- kernel/events/ring_buffer.c | 2 +-
- 3 files changed, 5 insertions(+), 4 deletions(-)
+ include/linux/nsproxy.h | 6 +++---
+ kernel/nsproxy.c        | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index faf9925..9147397 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -5049,7 +5049,7 @@ struct ring_buffer *ring_buffer_get(struct perf_event *event)
- 	rcu_read_lock();
- 	rb = rcu_dereference(event->rb);
- 	if (rb) {
--		if (!atomic_inc_not_zero(&rb->refcount))
-+		if (!refcount_inc_not_zero(&rb->refcount))
- 			rb = NULL;
- 	}
- 	rcu_read_unlock();
-@@ -5059,7 +5059,7 @@ struct ring_buffer *ring_buffer_get(struct perf_event *event)
+diff --git a/include/linux/nsproxy.h b/include/linux/nsproxy.h
+index ac0d65b..f862ba8 100644
+--- a/include/linux/nsproxy.h
++++ b/include/linux/nsproxy.h
+@@ -28,7 +28,7 @@ struct fs_struct;
+  * nsproxy is copied.
+  */
+ struct nsproxy {
+-	atomic_t count;
++	refcount_t count;
+ 	struct uts_namespace *uts_ns;
+ 	struct ipc_namespace *ipc_ns;
+ 	struct mnt_namespace *mnt_ns;
+@@ -74,14 +74,14 @@ int __init nsproxy_cache_init(void);
  
- void ring_buffer_put(struct ring_buffer *rb)
+ static inline void put_nsproxy(struct nsproxy *ns)
  {
--	if (!atomic_dec_and_test(&rb->refcount))
-+	if (!refcount_dec_and_test(&rb->refcount))
- 		return;
+-	if (atomic_dec_and_test(&ns->count)) {
++	if (refcount_dec_and_test(&ns->count)) {
+ 		free_nsproxy(ns);
+ 	}
+ }
  
- 	WARN_ON_ONCE(!list_empty(&rb->event_list));
-diff --git a/kernel/events/internal.h b/kernel/events/internal.h
-index 486fd78..b8e6fdf 100644
---- a/kernel/events/internal.h
-+++ b/kernel/events/internal.h
-@@ -3,13 +3,14 @@
+ static inline void get_nsproxy(struct nsproxy *ns)
+ {
+-	atomic_inc(&ns->count);
++	refcount_inc(&ns->count);
+ }
  
- #include <linux/hardirq.h>
- #include <linux/uaccess.h>
-+#include <linux/refcount.h>
+ #endif
+diff --git a/kernel/nsproxy.c b/kernel/nsproxy.c
+index f6c5d33..5bfe691 100644
+--- a/kernel/nsproxy.c
++++ b/kernel/nsproxy.c
+@@ -31,7 +31,7 @@
+ static struct kmem_cache *nsproxy_cachep;
  
- /* Buffer handling */
+ struct nsproxy init_nsproxy = {
+-	.count			= ATOMIC_INIT(1),
++	.count			= REFCOUNT_INIT(1),
+ 	.uts_ns			= &init_uts_ns,
+ #if defined(CONFIG_POSIX_MQUEUE) || defined(CONFIG_SYSVIPC)
+ 	.ipc_ns			= &init_ipc_ns,
+@@ -52,7 +52,7 @@ static inline struct nsproxy *create_nsproxy(void)
  
- #define RING_BUFFER_WRITABLE		0x01
+ 	nsproxy = kmem_cache_alloc(nsproxy_cachep, GFP_KERNEL);
+ 	if (nsproxy)
+-		atomic_set(&nsproxy->count, 1);
++		refcount_set(&nsproxy->count, 1);
+ 	return nsproxy;
+ }
  
- struct ring_buffer {
--	atomic_t			refcount;
-+	refcount_t			refcount;
- 	struct rcu_head			rcu_head;
- #ifdef CONFIG_PERF_USE_VMALLOC
- 	struct work_struct		work;
-diff --git a/kernel/events/ring_buffer.c b/kernel/events/ring_buffer.c
-index ee97196..3353572 100644
---- a/kernel/events/ring_buffer.c
-+++ b/kernel/events/ring_buffer.c
-@@ -284,7 +284,7 @@ ring_buffer_init(struct ring_buffer *rb, long watermark, int flags)
- 	else
- 		rb->overwrite = 1;
+@@ -225,7 +225,7 @@ void switch_task_namespaces(struct task_struct *p, struct nsproxy *new)
+ 	p->nsproxy = new;
+ 	task_unlock(p);
  
--	atomic_set(&rb->refcount, 1);
-+	refcount_set(&rb->refcount, 1);
+-	if (ns && atomic_dec_and_test(&ns->count))
++	if (ns && refcount_dec_and_test(&ns->count))
+ 		free_nsproxy(ns);
+ }
  
- 	INIT_LIST_HEAD(&rb->event_list);
- 	spin_lock_init(&rb->event_lock);
 -- 
 2.7.4
 
