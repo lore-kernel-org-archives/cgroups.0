@@ -1,78 +1,90 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
-Date: Mon, 17 Jul 2017 10:26:09 -0400
-Message-ID: <20170717142609.GC3519177@devbig577.frc2.facebook.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v3
+Date: Mon, 17 Jul 2017 10:48:44 -0400
+Message-ID: <f6cdb0b7-4c73-ff4c-6693-fd1cb17015c0@redhat.com>
 References: <20170717020721.3612468-1-tj@kernel.org>
- <20170717020721.3612468-6-tj@kernel.org>
- <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=BmCqRZh9H08raT8AFjfI63RjjWRJgFuc9J4VQIFqG9s=;
-        b=vdkxR7PleCxtnYDBYdqnsWpl1KS+nI+6mDH6apWiaXTUoB97Oa5VdKFwHm3Au5OkCq
-         wO/K2Xg1tEQKZBpljT1WDFQQxQpGEjkiKzT0ebio2kF8NqYZkBDUZS/sJGLYweg8bsZA
-         ESmnggRJ419egAIrH3JEc8lSh7OL2X3d05wilCNF4KdLP65XfmAoSCUM0wl7qY7qNEcG
-         C/ed9rL71OC5kSFZwQuSIjqNDbssQL0IpatL5zgHu+MqsiE3JoIUez54wcp+XfVxaJfN
-         HCdJ+UtRXbKaMjN1FcC8+/QpdUpw0l1T1CRLWrmLHgvcpVAmOJ/WarRsWTODIGz77iBz
-         SRyw==
-Content-Disposition: inline
-In-Reply-To: <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com AC0647F3F3
+In-Reply-To: <20170717020721.3612468-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
 
-Hello, Peter.
+On 07/16/2017 10:07 PM, Tejun Heo wrote:
+> Hello,
+>
+> This is v3 of cgroup2 thread mode patchset.  The changes from v2[L]
+> are
+>
+> * Switched to marking each cgroup threaded instead of doing it
+>   per-subtree as suggested by PeterZ.  This allows more flexibility
+>   and removes certain interface quirks.
+>
+> * Dropped RFC tag and excluded cpu controller patches from this
+>   patchset as threaded mode behaviors can easily be verified with the
+>   pid controller.  Will follow up with cpu controller patchset later.
+>
+> It is largely based on the discussions that we had at the plumbers
+> last year.  Here's the rough outline.
+>
+> * Thread mode is explicitly enabled on a cgroup by writing "threaded"
+>   into "cgroup.type" file.  The cgroup shouldn't have any processes or
+>   child cgroups.  A threaded cgroup joins the the parent's resource
+>   domain and becomes a part of the threaded subtree anchored at the
+>   nearest domain ancestor, which is called the threaded domain cgroup
+>   of the subtree.
+>
+> * Threads can be put anywhere in a threaded subtree by writing TIDs
+>   into "cgroup.threads" file.  Process granularity and
+>   no-internal-process constraint don't apply in a threaded subtree.
+>
+> * To be used in a threaded subtree, controllers should explicitly
+>   declare thread mode support and should be able to handle internal
+>   competition in some way.
+>
+> * The threaded domain cgroup of a threaded subtree serves as the
+>   resource domain for the whole subtree.  This is where all the
+>   controllers are guaranteed to have a common ground and resource
+>   consumptions in the threaded subtree which aren't tied to a specific
+>   thread are charged.  Non-threaded controllers never see beyond
+>   thread root and can assume that all controllers will follow the same
+>   rules upto that point.
+>
+> * Unlike other cgroups, the system root cgroup can serve as parent to
+>   domain child cgroups and threaded domains to threaded subtrees.
+>
+> This allows threaded controllers to implement thread granular resource
+> control without getting in the way of system level resource
+> partitioning.
+>
+> For more details on the interface and behavior, please refer to 0005.
+>
+> This patchset contains the following six patches.
+>
+>  0001-cgroup-reorganize-cgroup.procs-task-write-path.patch
+>  0002-cgroup-add-flags-to-css_task_iter_start-and-implemen.patch
+>  0003-cgroup-introduce-cgroup-dom_cgrp-and-threaded-css_se.patch
+>  0004-cgroup-implement-CSS_TASK_ITER_THREADED.patch
+>  0005-cgroup-implement-cgroup-v2-thread-support.patch
+>  0006-cgroup-update-debug-controller-to-print-out-thread-m.patch
+>
+> 0001-0005 implement cgroup2 thread mode.  0006 enables debug
+> controller on it.
+>
+> The patchset is based on the current cgroup/for-4.14 27f26753f8c0
+> ("cgroup: replace css_set walking populated test with testing
+> cgrp->nr_populated_csets") and also available in the following git
+> branch.
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-threads-v3
 
-On Mon, Jul 17, 2017 at 04:14:09PM +0200, Peter Zijlstra wrote:
-> AFAICT this is not in fact what I suggested... :/
+Your new patches don't seem to be pushed to your git tree yet. I
+couldn't find them there.
 
-Heh, sorry about misattributing that.  I was mostly referring to the
-overall idea of marking each cgroup domain or threaded rather than
-subtree.
-
-> My proposal did not have that invalid state. It would simply refuse to
-> change the type from thread to domain in the case where the parent is
-> not a domain.
-> 
-> Also, my proposal maintained the normal property inheritance rules. A
-> child cgroup's creation 'type' would be that of its parent and not
-> always be 'domain'.
-
-But aren't both of the above get weird when the parent can host both
-domain and threaded children?
-
-	 R
-       / 
-      A(D)
-
-If you create another child B under R, it's naturally gonna be a
-domain.  Let's say you turn that to threaded.
-
-	 R
-       /   \
-     A(D) B(T)
-
-And now try to create another child C, should that be a domain or
-threaded?
-
-If we only inherit from the second level on, which is in itself
-already confusing, that still leads to invalid configs for non-root
-thread roots.
-
-I don't think whether we fail the transition or put the cgroup in an
-invalid state is all that material.  The simpler the better.
-
-> Let me read more (and more careful) to see if there's other things.
-
-Sure thing.
-
-Thanks!
-
--- 
-tejun
+Cheers,
+Longman
