@@ -1,96 +1,133 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 6/6] cgroup: update debug controller to print out thread
- mode information
-Date: Mon, 17 Jul 2017 17:19:16 -0400
-Message-ID: <f6025fbf-bd53-dcd7-a5f7-d7e7a97da788@redhat.com>
-References: <20170717020721.3612468-1-tj@kernel.org>
- <20170717020721.3612468-7-tj@kernel.org>
+From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:review-cgroup2-threads-v3 10/10]
+ kernel/cgroup/debug.c:137:21: sparse: incompatible types in comparison
+ expression (different address spaces)
+Date: Tue, 18 Jul 2017 07:07:55 +0800
+Message-ID: <201707180750.LyrRAyBE%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 4F2D380F90
-In-Reply-To: <20170717020721.3612468-7-tj@kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 07/16/2017 10:07 PM, Tejun Heo wrote:
-> From: Waiman Long <longman@redhat.com>
->
-> Update debug controller so that it prints out debug info about thread
-> mode.
->
->  1) The relationship between proc_cset and threaded_csets are displayed.
->  2) The status of being a thread root or threaded cgroup is displayed.
->
-> This patch is extracted from Waiman's larger patch.
->
-> Patch-originally-by: Waiman Long <longman@redhat.com>
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  kernel/cgroup/cgroup-internal.h |  2 ++
->  kernel/cgroup/cgroup.c          |  4 +--
->  kernel/cgroup/debug.c           | 58 +++++++++++++++++++++++++++++++----------
->  3 files changed, 48 insertions(+), 16 deletions(-)
->
-> diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-> index f10eb19..c167a40 100644
-> --- a/kernel/cgroup/cgroup-internal.h
-> +++ b/kernel/cgroup/cgroup-internal.h
-> @@ -153,6 +153,8 @@ static inline void get_css_set(struct css_set *cset)
->  
->  bool cgroup_ssid_enabled(int ssid);
->  bool cgroup_on_dfl(const struct cgroup *cgrp);
-> +bool cgroup_is_thread_root(struct cgroup *cgrp);
-> +bool cgroup_is_threaded(struct cgroup *cgrp);
->  
->  struct cgroup_root *cgroup_root_from_kf(struct kernfs_root *kf_root);
->  struct cgroup *task_cgroup_from_root(struct task_struct *task,
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 7097ce4..2f34020 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -333,7 +333,7 @@ static bool cgroup_has_tasks(struct cgroup *cgrp)
->  	return cgrp->nr_populated_csets;
->  }
->  
-> -static bool cgroup_is_threaded(struct cgroup *cgrp)
-> +bool cgroup_is_threaded(struct cgroup *cgrp)
->  {
->  	return cgrp->dom_cgrp != cgrp;
->  }
-> @@ -372,7 +372,7 @@ static bool cgroup_can_be_thread_root(struct cgroup *cgrp)
->  }
->  
->  /* is @cgrp root of a threaded subtree? */
-> -static bool cgroup_is_thread_root(struct cgroup *cgrp)
-> +bool cgroup_is_thread_root(struct cgroup *cgrp)
->  {
->  	/* thread root should be a domain */
->  	if (cgroup_is_threaded(cgrp))
-> diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-> index dac46af..062904f 100644
-> --- a/kernel/cgroup/debug.c
-> +++ b/kernel/cgroup/debug.c
-> @@ -114,27 +114,54 @@ static int cgroup_css_links_read(struct seq_file *seq, void *v)
->  {
->  	struct cgroup_subsys_state *css = seq_css(seq);
->  	struct cgrp_cset_link *link;
-> -	int dead_cnt = 0, extra_refs = 0;
-> +	int dead_cnt = 0, extra_refs = 0, threaded_csets = 0;
->  
->  	spin_lock_irq(&css_set_lock);
-> +
-> +	if (cgroup_is_thread_root(css->cgroup))
-> +		seq_puts(seq, "[thread root]\n");
-> +	else if (cgroup_is_threaded(css->cgroup))
-> +		seq_puts(seq, "[threaded]\n");
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-threads-v3
+head:   6fb1273ffe28c2f094c7816768854a74312bf1ed
+commit: 6fb1273ffe28c2f094c7816768854a74312bf1ed [10/10] cgroup: update debug controller to print out thread mode information
+reproduce:
+        # apt-get install sparse
+        git checkout 6fb1273ffe28c2f094c7816768854a74312bf1ed
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
-The cgroup status will not be needed anymore as you have introduced the
-cgroup.type control file that returns the proper information.
 
-Cheers,
-Longman
+sparse warnings: (new ones prefixed by >>)
+
+   include/linux/compiler.h:260:8: sparse: attribute 'no_sanitize_address': unknown attribute
+>> kernel/cgroup/debug.c:137:21: sparse: incompatible types in comparison expression (different address spaces)
+
+vim +137 kernel/cgroup/debug.c
+
+   111	
+   112	#define MAX_TASKS_SHOWN_PER_CSS 25
+   113	static int cgroup_css_links_read(struct seq_file *seq, void *v)
+   114	{
+   115		struct cgroup_subsys_state *css = seq_css(seq);
+   116		struct cgrp_cset_link *link;
+   117		int dead_cnt = 0, extra_refs = 0, threaded_csets = 0;
+   118	
+   119		spin_lock_irq(&css_set_lock);
+   120	
+   121		if (cgroup_is_thread_root(css->cgroup))
+   122			seq_puts(seq, "[thread root]\n");
+   123		else if (cgroup_is_threaded(css->cgroup))
+   124			seq_puts(seq, "[threaded]\n");
+   125	
+   126		list_for_each_entry(link, &css->cgroup->cset_links, cset_link) {
+   127			struct css_set *cset = link->cset;
+   128			struct task_struct *task;
+   129			int count = 0;
+   130			int refcnt = refcount_read(&cset->refcount);
+   131	
+   132			/*
+   133			 * Print out the proc_cset and threaded_cset relationship
+   134			 * and highlight difference between refcount and task_count.
+   135			 */
+   136			seq_printf(seq, "css_set %pK", cset);
+ > 137			if (rcu_dereference_protected(cset->dom_cset, 1) != cset) {
+   138				threaded_csets++;
+   139				seq_printf(seq, "=>%pK", cset->dom_cset);
+   140			}
+   141			if (!list_empty(&cset->threaded_csets)) {
+   142				struct css_set *tcset;
+   143				int idx = 0;
+   144	
+   145				list_for_each_entry(tcset, &cset->threaded_csets,
+   146						    threaded_csets_node) {
+   147					seq_puts(seq, idx ? "," : "<=");
+   148					seq_printf(seq, "%pK", tcset);
+   149					idx++;
+   150				}
+   151			} else {
+   152				seq_printf(seq, " %d", refcnt);
+   153				if (refcnt - cset->nr_tasks > 0) {
+   154					int extra = refcnt - cset->nr_tasks;
+   155	
+   156					seq_printf(seq, " +%d", extra);
+   157					/*
+   158					 * Take out the one additional reference in
+   159					 * init_css_set.
+   160					 */
+   161					if (cset == &init_css_set)
+   162						extra--;
+   163					extra_refs += extra;
+   164				}
+   165			}
+   166			seq_puts(seq, "\n");
+   167	
+   168			list_for_each_entry(task, &cset->tasks, cg_list) {
+   169				if (count++ <= MAX_TASKS_SHOWN_PER_CSS)
+   170					seq_printf(seq, "  task %d\n",
+   171						   task_pid_vnr(task));
+   172			}
+   173	
+   174			list_for_each_entry(task, &cset->mg_tasks, cg_list) {
+   175				if (count++ <= MAX_TASKS_SHOWN_PER_CSS)
+   176					seq_printf(seq, "  task %d\n",
+   177						   task_pid_vnr(task));
+   178			}
+   179			/* show # of overflowed tasks */
+   180			if (count > MAX_TASKS_SHOWN_PER_CSS)
+   181				seq_printf(seq, "  ... (%d)\n",
+   182					   count - MAX_TASKS_SHOWN_PER_CSS);
+   183	
+   184			if (cset->dead) {
+   185				seq_puts(seq, "    [dead]\n");
+   186				dead_cnt++;
+   187			}
+   188	
+   189			WARN_ON(count != cset->nr_tasks);
+   190		}
+   191		spin_unlock_irq(&css_set_lock);
+   192	
+   193		if (!dead_cnt && !extra_refs && !threaded_csets)
+   194			return 0;
+   195	
+   196		seq_puts(seq, "\n");
+   197		if (threaded_csets)
+   198			seq_printf(seq, "threaded css_sets = %d\n", threaded_csets);
+   199		if (extra_refs)
+   200			seq_printf(seq, "extra references = %d\n", extra_refs);
+   201		if (dead_cnt)
+   202			seq_printf(seq, "dead css_sets = %d\n", dead_cnt);
+   203	
+   204		return 0;
+   205	}
+   206	
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
