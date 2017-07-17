@@ -1,14 +1,15 @@
 From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
-Date: Mon, 17 Jul 2017 17:12:31 -0400
-Message-ID: <199bfed8-de84-da6d-6623-c45524443aaa@redhat.com>
+Subject: Re: [PATCH 6/6] cgroup: update debug controller to print out thread
+ mode information
+Date: Mon, 17 Jul 2017 17:19:16 -0400
+Message-ID: <f6025fbf-bd53-dcd7-a5f7-d7e7a97da788@redhat.com>
 References: <20170717020721.3612468-1-tj@kernel.org>
- <20170717020721.3612468-6-tj@kernel.org>
+ <20170717020721.3612468-7-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com CA8F9356ED
-In-Reply-To: <20170717020721.3612468-6-tj@kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 4F2D380F90
+In-Reply-To: <20170717020721.3612468-7-tj@kernel.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -17,76 +18,79 @@ To: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, hannes@cmpxchg.org, peterz@in
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
 On 07/16/2017 10:07 PM, Tejun Heo wrote:
+> From: Waiman Long <longman@redhat.com>
+>
+> Update debug controller so that it prints out debug info about thread
+> mode.
+>
+>  1) The relationship between proc_cset and threaded_csets are displayed.
+>  2) The status of being a thread root or threaded cgroup is displayed.
+>
+> This patch is extracted from Waiman's larger patch.
+>
+> Patch-originally-by: Waiman Long <longman@redhat.com>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  kernel/cgroup/cgroup-internal.h |  2 ++
+>  kernel/cgroup/cgroup.c          |  4 +--
+>  kernel/cgroup/debug.c           | 58 +++++++++++++++++++++++++++++++----------
+>  3 files changed, 48 insertions(+), 16 deletions(-)
+>
+> diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+> index f10eb19..c167a40 100644
+> --- a/kernel/cgroup/cgroup-internal.h
+> +++ b/kernel/cgroup/cgroup-internal.h
+> @@ -153,6 +153,8 @@ static inline void get_css_set(struct css_set *cset)
 >  
-> +Threads
-> +~~~~~~~
+>  bool cgroup_ssid_enabled(int ssid);
+>  bool cgroup_on_dfl(const struct cgroup *cgrp);
+> +bool cgroup_is_thread_root(struct cgroup *cgrp);
+> +bool cgroup_is_threaded(struct cgroup *cgrp);
+>  
+>  struct cgroup_root *cgroup_root_from_kf(struct kernfs_root *kf_root);
+>  struct cgroup *task_cgroup_from_root(struct task_struct *task,
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 7097ce4..2f34020 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -333,7 +333,7 @@ static bool cgroup_has_tasks(struct cgroup *cgrp)
+>  	return cgrp->nr_populated_csets;
+>  }
+>  
+> -static bool cgroup_is_threaded(struct cgroup *cgrp)
+> +bool cgroup_is_threaded(struct cgroup *cgrp)
+>  {
+>  	return cgrp->dom_cgrp != cgrp;
+>  }
+> @@ -372,7 +372,7 @@ static bool cgroup_can_be_thread_root(struct cgroup *cgrp)
+>  }
+>  
+>  /* is @cgrp root of a threaded subtree? */
+> -static bool cgroup_is_thread_root(struct cgroup *cgrp)
+> +bool cgroup_is_thread_root(struct cgroup *cgrp)
+>  {
+>  	/* thread root should be a domain */
+>  	if (cgroup_is_threaded(cgrp))
+> diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
+> index dac46af..062904f 100644
+> --- a/kernel/cgroup/debug.c
+> +++ b/kernel/cgroup/debug.c
+> @@ -114,27 +114,54 @@ static int cgroup_css_links_read(struct seq_file *seq, void *v)
+>  {
+>  	struct cgroup_subsys_state *css = seq_css(seq);
+>  	struct cgrp_cset_link *link;
+> -	int dead_cnt = 0, extra_refs = 0;
+> +	int dead_cnt = 0, extra_refs = 0, threaded_csets = 0;
+>  
+>  	spin_lock_irq(&css_set_lock);
 > +
-> +cgroup v2 supports thread granularity for a subset of controllers to
-> +support use cases requiring hierarchical resource distribution across
-> +the threads of a group of processes.  By default, all threads of a
-> +process belong to the same cgroup, which also serves as the resource
-> +domain to host resource consumptions which are not specific to a
-> +process or thread.  The thread mode allows threads to be spread across
-> +a subtree while still maintaining the common resource domain for them.
-> +
-> +Controllers which support thread mode are called threaded controllers.
-> +The ones which don't are called domain controllers.
-> +
-> +Marking a cgroup threaded makes it join the resource domain of its
-> +parent as a threaded cgroup.  The parent may be another threaded
-> +cgroup whose resource domain is further up in the hierarchy.  The root
-> +of a threaded subtree, that is, the nearest ancestor which is not
-> +threaded, is called threaded domain and serves as the resource domain
-> +for the entire subtree.
+> +	if (cgroup_is_thread_root(css->cgroup))
+> +		seq_puts(seq, "[thread root]\n");
+> +	else if (cgroup_is_threaded(css->cgroup))
+> +		seq_puts(seq, "[threaded]\n");
 
-The cgroup code uses the term "thread root" in quite a number of places.
-So a developer may be confused when comparing the code and the
-documentation. I would recommend either introducing "thread root" as an
-alias for threaded domain here in the documentation or documenting that
-"threaded domain = thread root" in the code.
-
-> +  cgroup.type
-> +
-> +	A read-write single value file which exists on non-root
-> +	cgroups.
-> +
-> +	When read, it indicates the current type of the cgroup, which
-> +	can be one of the following values.
-> +
-> +	- "domain" : A normal valid domain cgroup.
-> +
-> +	- "domain (threaded)" : A threaded domain cgroup which is
-> +          serving as the root of a threaded subtree.
-> +
-> +	- "domain (invalid)" : A cgroup which is in an invalid state.
-> +	  It can't be populated or have controllers enabled.  It may
-> +	  be allowed to become a threaded cgroup.
-> +
-> +	- "threaded" : A threaded cgroup which is a member of a
-> +          threaded subtree.
-> +
-> +	A cgroup can be turned into a threaded cgroup by writing
-> +	"threaded" to this file.
-> +
->    cgroup.procs
->  	A read-write new-line separated values file which exists on
->  	all cgroups.
-
-Do we need to document that cgroup.procs isn't writable in a threaded
-cgroup?
-
-> @@ -4301,6 +4606,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
->  	cgrp->self.parent = &parent->self;
->  	cgrp->root = root;
->  	cgrp->level = level;
-> +	cgrp->dom_cgrp = cgrp->dom_cgrp;
-
-It is a no-op. I think it is better to modify it to
-
-+    cgrp->dom_cgrp = cgroup_is_threaded(parent) ? parent->dom_cgrp : cgrp;
-
-Then we won't have an invalid domain state.
+The cgroup status will not be needed anymore as you have introduced the
+cgroup.type control file that returns the proper information.
 
 Cheers,
 Longman
-
