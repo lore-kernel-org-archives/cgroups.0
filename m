@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 13/15] sched: convert numa_group.refcount from atomic_t to refcount_t
-Date: Mon, 17 Jul 2017 13:43:24 +0300
-Message-ID: <1500288206-12074-14-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 15/15] kernel: convert kcov.refcount from atomic_t to refcount_t
+Date: Mon, 17 Jul 2017 13:43:26 +0300
+Message-ID: <1500288206-12074-16-git-send-email-elena.reshetova@intel.com>
 References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
@@ -24,46 +24,54 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- kernel/sched/fair.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ kernel/kcov.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index c95880e..5f7f997 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -1130,7 +1130,7 @@ static void account_numa_dequeue(struct rq *rq, struct task_struct *p)
- }
+diff --git a/kernel/kcov.c b/kernel/kcov.c
+index cd77199..a6c7df3 100644
+--- a/kernel/kcov.c
++++ b/kernel/kcov.c
+@@ -19,6 +19,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/uaccess.h>
+ #include <linux/kcov.h>
++#include <linux/refcount.h>
+ #include <asm/setup.h>
  
- struct numa_group {
--	atomic_t refcount;
-+	refcount_t refcount;
+ /*
+@@ -35,7 +36,7 @@ struct kcov {
+ 	 *  - opened file descriptor
+ 	 *  - task with enabled coverage (we can't unwire it from another task)
+ 	 */
+-	atomic_t		refcount;
++	refcount_t		refcount;
+ 	/* The lock protects mode, size, area and t. */
+ 	spinlock_t		lock;
+ 	enum kcov_mode		mode;
+@@ -94,12 +95,12 @@ EXPORT_SYMBOL(__sanitizer_cov_trace_pc);
  
- 	spinlock_t lock; /* nr_tasks, tasks */
- 	int nr_tasks;
-@@ -2177,12 +2177,12 @@ static void task_numa_placement(struct task_struct *p)
- 
- static inline int get_numa_group(struct numa_group *grp)
+ static void kcov_get(struct kcov *kcov)
  {
--	return atomic_inc_not_zero(&grp->refcount);
-+	return refcount_inc_not_zero(&grp->refcount);
+-	atomic_inc(&kcov->refcount);
++	refcount_inc(&kcov->refcount);
  }
  
- static inline void put_numa_group(struct numa_group *grp)
+ static void kcov_put(struct kcov *kcov)
  {
--	if (atomic_dec_and_test(&grp->refcount))
-+	if (refcount_dec_and_test(&grp->refcount))
- 		kfree_rcu(grp, rcu);
- }
- 
-@@ -2203,7 +2203,7 @@ static void task_numa_group(struct task_struct *p, int cpupid, int flags,
- 		if (!grp)
- 			return;
- 
--		atomic_set(&grp->refcount, 1);
-+		refcount_set(&grp->refcount, 1);
- 		grp->active_nodes = 1;
- 		grp->max_faults_cpu = 0;
- 		spin_lock_init(&grp->lock);
+-	if (atomic_dec_and_test(&kcov->refcount)) {
++	if (refcount_dec_and_test(&kcov->refcount)) {
+ 		vfree(kcov->area);
+ 		kfree(kcov);
+ 	}
+@@ -175,7 +176,7 @@ static int kcov_open(struct inode *inode, struct file *filep)
+ 	kcov = kzalloc(sizeof(*kcov), GFP_KERNEL);
+ 	if (!kcov)
+ 		return -ENOMEM;
+-	atomic_set(&kcov->refcount, 1);
++	refcount_set(&kcov->refcount, 1);
+ 	spin_lock_init(&kcov->lock);
+ 	filep->private_data = kcov;
+ 	return nonseekable_open(inode, filep);
 -- 
 2.7.4
 
