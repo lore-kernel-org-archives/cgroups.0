@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 04/15] kernel: convert task_struct.usage from atomic_t to refcount_t
-Date: Mon, 17 Jul 2017 13:43:15 +0300
-Message-ID: <1500288206-12074-5-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 06/15] kernel: convert perf_event_context.refcount from atomic_t to refcount_t
+Date: Mon, 17 Jul 2017 13:43:17 +0300
+Message-ID: <1500288206-12074-7-git-send-email-elena.reshetova@intel.com>
 References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
@@ -24,88 +24,89 @@ Reviewed-by: David Windsor <dwindsor@gmail.com>
 Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
 ---
- include/linux/init_task.h  | 2 +-
- include/linux/sched.h      | 3 ++-
- include/linux/sched/task.h | 4 ++--
- kernel/fork.c              | 4 ++--
- 4 files changed, 7 insertions(+), 6 deletions(-)
+ include/linux/perf_event.h |  3 ++-
+ kernel/events/core.c       | 12 ++++++------
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/init_task.h b/include/linux/init_task.h
-index 61777d6..7ba3fca 100644
---- a/include/linux/init_task.h
-+++ b/include/linux/init_task.h
-@@ -234,7 +234,7 @@ extern struct cred init_cred;
- 	INIT_TASK_TI(tsk)						\
- 	.state		= 0,						\
- 	.stack		= init_stack,					\
--	.usage		= ATOMIC_INIT(2),				\
-+	.usage		= REFCOUNT_INIT(2),				\
- 	.flags		= PF_KTHREAD,					\
- 	.prio		= MAX_PRIO-20,					\
- 	.static_prio	= MAX_PRIO-20,					\
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 8337e2d..9380e44 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -20,6 +20,7 @@
- #include <linux/seccomp.h>
- #include <linux/nodemask.h>
- #include <linux/rcupdate.h>
+diff --git a/include/linux/perf_event.h b/include/linux/perf_event.h
+index a3b873f..f7a9802 100644
+--- a/include/linux/perf_event.h
++++ b/include/linux/perf_event.h
+@@ -54,6 +54,7 @@ struct perf_guest_info_callbacks {
+ #include <linux/perf_regs.h>
+ #include <linux/workqueue.h>
+ #include <linux/cgroup.h>
 +#include <linux/refcount.h>
- #include <linux/resource.h>
- #include <linux/latencytop.h>
- #include <linux/sched/prio.h>
-@@ -534,7 +535,7 @@ struct task_struct {
- 	randomized_struct_fields_start
+ #include <asm/local.h>
  
- 	void				*stack;
--	atomic_t			usage;
-+	refcount_t			usage;
- 	/* Per task flags (PF_*), defined further below: */
- 	unsigned int			flags;
- 	unsigned int			ptrace;
-diff --git a/include/linux/sched/task.h b/include/linux/sched/task.h
-index c97e5f0..afd5e58 100644
---- a/include/linux/sched/task.h
-+++ b/include/linux/sched/task.h
-@@ -86,13 +86,13 @@ extern void sched_exec(void);
- #define sched_exec()   {}
- #endif
+ struct perf_callchain_entry {
+@@ -750,7 +751,7 @@ struct perf_event_context {
+ 	int				nr_stat;
+ 	int				nr_freq;
+ 	int				rotate_disable;
+-	atomic_t			refcount;
++	refcount_t			refcount;
+ 	struct task_struct		*task;
  
--#define get_task_struct(tsk) do { atomic_inc(&(tsk)->usage); } while(0)
-+#define get_task_struct(tsk) do { refcount_inc(&(tsk)->usage); } while(0)
+ 	/*
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index dbb4f68..faf9925 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -1109,7 +1109,7 @@ static void perf_event_ctx_deactivate(struct perf_event_context *ctx)
  
- extern void __put_task_struct(struct task_struct *t);
- 
- static inline void put_task_struct(struct task_struct *t)
+ static void get_ctx(struct perf_event_context *ctx)
  {
--	if (atomic_dec_and_test(&t->usage))
-+	if (refcount_dec_and_test(&t->usage))
- 		__put_task_struct(t);
+-	WARN_ON(!atomic_inc_not_zero(&ctx->refcount));
++	refcount_inc(&ctx->refcount);
  }
  
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 337904a..cfd8a42 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -406,7 +406,7 @@ static inline void put_signal_struct(struct signal_struct *sig)
- void __put_task_struct(struct task_struct *tsk)
- {
- 	WARN_ON(!tsk->exit_state);
--	WARN_ON(atomic_read(&tsk->usage));
-+	WARN_ON(refcount_read(&tsk->usage));
- 	WARN_ON(tsk == current);
+ static void free_ctx(struct rcu_head *head)
+@@ -1123,7 +1123,7 @@ static void free_ctx(struct rcu_head *head)
  
- 	cgroup_free(tsk);
-@@ -561,7 +561,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
- 	 * One for us, one for whoever does the "release_task()" (usually
- 	 * parent)
- 	 */
--	atomic_set(&tsk->usage, 2);
-+	refcount_set(&tsk->usage, 2);
- #ifdef CONFIG_BLK_DEV_IO_TRACE
- 	tsk->btrace_seq = 0;
- #endif
+ static void put_ctx(struct perf_event_context *ctx)
+ {
+-	if (atomic_dec_and_test(&ctx->refcount)) {
++	if (refcount_dec_and_test(&ctx->refcount)) {
+ 		if (ctx->parent_ctx)
+ 			put_ctx(ctx->parent_ctx);
+ 		if (ctx->task && ctx->task != TASK_TOMBSTONE)
+@@ -1201,7 +1201,7 @@ perf_event_ctx_lock_nested(struct perf_event *event, int nesting)
+ again:
+ 	rcu_read_lock();
+ 	ctx = ACCESS_ONCE(event->ctx);
+-	if (!atomic_inc_not_zero(&ctx->refcount)) {
++	if (!refcount_inc_not_zero(&ctx->refcount)) {
+ 		rcu_read_unlock();
+ 		goto again;
+ 	}
+@@ -1329,7 +1329,7 @@ perf_lock_task_context(struct task_struct *task, int ctxn, unsigned long *flags)
+ 		}
+ 
+ 		if (ctx->task == TASK_TOMBSTONE ||
+-		    !atomic_inc_not_zero(&ctx->refcount)) {
++		    !refcount_inc_not_zero(&ctx->refcount)) {
+ 			raw_spin_unlock(&ctx->lock);
+ 			ctx = NULL;
+ 		} else {
+@@ -3760,7 +3760,7 @@ static void __perf_event_init_context(struct perf_event_context *ctx)
+ 	INIT_LIST_HEAD(&ctx->pinned_groups);
+ 	INIT_LIST_HEAD(&ctx->flexible_groups);
+ 	INIT_LIST_HEAD(&ctx->event_list);
+-	atomic_set(&ctx->refcount, 1);
++	refcount_set(&ctx->refcount, 1);
+ }
+ 
+ static struct perf_event_context *
+@@ -9770,7 +9770,7 @@ __perf_event_ctx_lock_double(struct perf_event *group_leader,
+ again:
+ 	rcu_read_lock();
+ 	gctx = READ_ONCE(group_leader->ctx);
+-	if (!atomic_inc_not_zero(&gctx->refcount)) {
++	if (!refcount_inc_not_zero(&gctx->refcount)) {
+ 		rcu_read_unlock();
+ 		goto again;
+ 	}
 -- 
 2.7.4
 
