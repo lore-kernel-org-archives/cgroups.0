@@ -1,84 +1,63 @@
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 14/15] kernel: convert futex_pi_state.refcount from
- atomic_t to refcount_t
-Date: Tue, 18 Jul 2017 09:39:27 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B6FF26A5A@IRSMSX102.ger.corp.intel.com>
-References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
- <1500288206-12074-15-git-send-email-elena.reshetova@intel.com>
- <alpine.DEB.2.20.1707171607050.2185@nanos>
- <2236FBA76BA1254E88B949DDB74E612B6FF265B9@IRSMSX102.ger.corp.intel.com>
- <alpine.DEB.2.20.1707171938070.2185@nanos>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
+Date: Tue, 18 Jul 2017 10:37:41 -0400
+Message-ID: <5fa00590-551f-85d2-511b-ef4033781228@redhat.com>
+References: <20170717020721.3612468-1-tj@kernel.org>
+ <20170717020721.3612468-6-tj@kernel.org>
+ <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
+ <825f2eaa-568a-a156-f04d-9235b20e2614@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1707171938070.2185@nanos>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 04D9D80480
+In-Reply-To: <825f2eaa-568a-a156-f04d-9235b20e2614@redhat.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-audit@redhat.com" <linux-audit@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "tj@kernel.org" <tj@kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "acme@kernel.org" <acme@kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, "eparis@redhat.com" <eparis@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, arnd@ar
+Content-Type: text/plain; charset="us-ascii"
+To: Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-> On Mon, 17 Jul 2017, Reshetova, Elena wrote:
-> > > On Mon, 17 Jul 2017, Elena Reshetova wrote:
-> > > > refcount_t type and corresponding API should be
-> > > > used instead of atomic_t when the variable is used as
-> > > > a reference counter. This allows to avoid accidental
-> > > > refcounter overflows that might lead to use-after-free
-> > > > situations.
-> > >
-> > > Copying the same sentence over and over avoids thinking about a proper
-> > > changelog, right? You fail to explain, how you come to the conclusion that
-> > > futex_pi_state.refcount is a pure reference counter (aside of the name) and
-> > > therefor can be safely converted to refcount_t.
-> 
-> > OK, this is not very useful for many cases. Yes, I am using automated log
-> > on these patches, because I used to have 240 of them and writing manual
-> > logs for them would be fun.
-> 
-> Been there, done that.
-> 
-> > Moreover, in many cases, writing manual logs don't bring any value since
-> > I would have to repeat the same things all over again: xyz conversions
-> > was found by using *.cocci pattern first, then looked at manually and it
-> > looked like a standard reference counter that frees the things after
-> > calling refcount_dec_and_test() (or its variation with lock which is
-> > rare).  Other things also looked correct, like I didn't see increments
-> > from zero, counter starts at 1 etc.  I would really have to repeat the
-> > same thing in each changelog. Does it really bring value?
-> 
-> You don't have to go into that level of detail, but you can provide enough
-> information with a template as well, e.g.:
-> 
->    atomic_t variables are often used to implement pure reference counters:
->      - starting at 1
->      - freeing a resource after reaching zero
->      - only using basic atomic operations (init, inc, dec_and_test)
-> 
->    These variables should be converted to refcount_t because the refcount_t
->    operations can catch and prevent accidental underflows and overflows.
-> 
->    The variable FOO is used as a pure reference counter. Convert it to
->    refcount_t and fix up the operations.
-> 
-> That gives enough context for someone who looks at a patch because then the
-> reviewer can look for:
-> 
->    starts at 1, frees at 0, does not use any fancy operations
-> 
-> and has not to use Gurgle to figure out what your understanding of
-> reference counters is.
-> 
-> Replacing FOO with the real variable name can be done with a script easy
-> enough.
+On 07/17/2017 04:56 PM, Waiman Long wrote:
+> On 07/17/2017 10:14 AM, Peter Zijlstra wrote:
+>> On Sun, Jul 16, 2017 at 10:07:20PM -0400, Tejun Heo wrote:
+>>> v4: - Updated to marking each cgroup threaded as suggested by PeterZ.
+>>>
+>>> +On creation, a cgroup is always a domain cgroup and can be made
+>>> +threaded by writing "threaded" to the "cgroup.type" file.  The
+>>> +operation is single direction::
+>>> +
+>>> +  # echo threaded > cgroup.type
+>>> +
+>>> +Once threaded, the cgroup can't be made a domain again.  To enable the
+>>> +thread mode, the following conditions must be met.
+>>> +
+>>> +- As the cgroup will join the parent's resource domain.  The parent
+>>> +  must either be a valid (threaded) domain or a threaded cgroup.
+>>> +
+>>> +- The cgroup must be empty.  No enabled controllers, child cgroups or
+>>> +  processes.
+>>> +
+>>> +Topology-wise, a cgroup can be in an invalid state.  Please consider
+>>> +the following toplogy::
+>>> +
+>>> +  A (threaded domain) - B (threaded) - C (domain, just created)
+>>> +
 
-Ok, let me try updating the commits messages in the above way. As soon as I
-don't have to write them manually, I am fine with anything :) 
+Thinking about it some more. There is a place for invalid domain. It is
+not the child of a threaded cgroup. It is the siblings of a threaded
+cgroup whose parent is not root.
 
-Best Regards,
-Elena.
+       Root - A (domain) - B (domain)
+                         \ C (domain)
 
-> 
-> Thanks,
-> 
-> 	tglx
+With "echo threaded > B/cgroup.type":
+
+       Root - A (threaded domain) - B (threaded)
+                                  \ C (domain, invalid)
+
+Any children of a threaded cgroup should be threaded.
+
+Cheers,
+Longman
+
