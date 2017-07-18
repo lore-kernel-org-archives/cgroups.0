@@ -1,72 +1,50 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
-Date: Tue, 18 Jul 2017 13:54:56 -0400
-Message-ID: <20170718175456.GH585283@devbig577.frc2.facebook.com>
+Date: Tue, 18 Jul 2017 20:41:35 +0200
+Message-ID: <20170718184135.auf6d2clsdxseka3@hirez.programming.kicks-ass.net>
 References: <20170717020721.3612468-1-tj@kernel.org>
  <20170717020721.3612468-6-tj@kernel.org>
  <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
  <20170717142609.GC3519177@devbig577.frc2.facebook.com>
  <20170718172801.f56273tzgzn3xkne@hirez.programming.kicks-ass.net>
+ <20170718175456.GH585283@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=YdzUiGLFuCIMtmsFwXYxfYa26v5ognERungovzXxWr4=;
-        b=pBeT/Ox3lzRCmSQlu7lqL8RD7DGZgMZ7mllYRP2HSQjxatLvftFsmjlBprzkLOdMFE
-         NXfhBz8foHfJ+8nIejV2BgzD2lKo5LqTdhxtNlKVFgLGHwD48VtyAVaHRuzHAfuTy80/
-         kuYGX4t8HURqj99ru7PeP6oUEyN3uN4588m+ZfkTYaghq0xkD/CPX2VexOdYwMLZvRvF
-         Kwy4KHvQorrrVBz9moDVxd3htE8X+Uo0GPjRvSSSaVDVoG3x8aj6z79lerwI3W/2o4+g
-         9ap2mV50DsQYYvDFZ/qp9FvJ0uHrvs78Qq0icKBWg3Bb/WGMakU87rRdFt/6e7hYBppY
-         MF7Q==
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=7S78YSjd49axN6msAdUc8rzV7aCOHtDdMpUXRSrwv7E=; b=Afx0AJBh4afhksJRwycAL6xfB
+        JHyiYuE9P4dnf9XIt0QbJHiDx48eMkFe2kGnjffmsgbII/bwQjfi80hGJQ28AxxofpvQ9oDiTEeN4
+        0umqKnByRGq6NjvXPAPO4DrVonkX+5vggChp279ishurbk35MMwa+Ou/RN/AjEyx/31+ZYQN764uE
+        DU3Yoj4OBokclh8jp+Six5obnWQdjcwtXAW3+ZVkk5ybttKK3Ip2V5utweyrHh0CuvN2JotXYVPwn
+        0RxOG70RYo3951pWIHSsBKclWjOBpjUpUqfzUIPFEeNTAX7bohMxB1tQEvqoD4UoKzM/AlQ/DVQf0
+    
 Content-Disposition: inline
-In-Reply-To: <20170718172801.f56273tzgzn3xkne-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170718175456.GH585283@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-Hello, Peter.
+On Tue, Jul 18, 2017 at 01:54:56PM -0400, Tejun Heo wrote:
 
-On Tue, Jul 18, 2017 at 07:28:01PM +0200, Peter Zijlstra wrote:
-> > And now try to create another child C, should that be a domain or
-> > threaded?
-> 
-> Domain of course, as R must be a domain, and hence all its children
-> start out as such.
-
-I don't think it's a matter of course as R also is the root of a
-threaded subtree, but this is more or less bikeshedding.
-
-> > If we only inherit from the second level on, which is in itself
-> > already confusing, that still leads to invalid configs for non-root
-> > thread roots.
-> 
-> I don't see how. I don't get the example Waiman gave, what is wrong
-> with:
+> Okay, we're kinda off the rails now.  Just to verify that we're on the
+> same page, are you also saying that the following should be a valid
+> configuration?
 > 
 > 	R (D)
-> 	|
-> 	A (D)
->        / \
->      C(D) B(T) 
+>         |
+> 	A (D and has processes in it and controllers enabled)
+>         |
+>         C (D and has processes in it) 
 > 
-> ? Afaict that's a perfectly valid configuration.
 
-Okay, we're kinda off the rails now.  Just to verify that we're on the
-same page, are you also saying that the following should be a valid
-configuration?
+Argh, the no internal process thing again -- I completely forgot about
+that :-(
 
-	R (D)
-        |
-	A (D and has processes in it and controllers enabled)
-        |
-        C (D and has processes in it) 
 
-Thanks.
-
--- 
-tejun
