@@ -1,56 +1,86 @@
-From: Waiman Long <longman@redhat.com>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
-Date: Tue, 18 Jul 2017 13:23:14 -0400
-Message-ID: <df14a222-f1f8-3415-b29a-2712c9e77f94@redhat.com>
+Date: Tue, 18 Jul 2017 19:28:01 +0200
+Message-ID: <20170718172801.f56273tzgzn3xkne@hirez.programming.kicks-ass.net>
 References: <20170717020721.3612468-1-tj@kernel.org>
  <20170717020721.3612468-6-tj@kernel.org>
  <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
- <825f2eaa-568a-a156-f04d-9235b20e2614@redhat.com>
- <5fa00590-551f-85d2-511b-ef4033781228@redhat.com>
- <20170718171034.GE585283@devbig577.frc2.facebook.com>
+ <20170717142609.GC3519177@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 1C3814A6E6
-In-Reply-To: <20170718171034.GE585283@devbig577.frc2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=6x8BF3x7ZUtpdadnDcXZhEBsHy3itFBE4fLUnIf40gQ=; b=H25bTidgeMdkYdBBZn3L1Ko+l
+        D1cIXQmW477G+OVuZ5/Nq5VYxMu4AF+rc4jv0Ui1vfnfRJUWXrSGvfKfRWGNMVp+8XR1swxypOXsL
+        ZwKbm9lVQXk5C4KIlnqCFP3JugasOKNhlf0XUFvWjjI+lt6/+gbvH4Eeut4Qj293CY7jJqfmJpV8s
+        y3S/TEKQGh3DPFjFY2mGkTEdunvUNSkVC+Jn4HavF0NaFX6R/lYgtsWvKZ+WTg4ifoxLvxsN8LoaP
+        55FwxVRLR2IfGQEtKEMvYzBDl3zb4WET/6QNDDr0kE48DwcKvySI2ZSoli275ua00K2Qk50Ny83v5
+    
+Content-Disposition: inline
+In-Reply-To: <20170717142609.GC3519177@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-On 07/18/2017 01:10 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Tue, Jul 18, 2017 at 10:37:41AM -0400, Waiman Long wrote:
->> Thinking about it some more. There is a place for invalid domain. It is
->> not the child of a threaded cgroup. It is the siblings of a threaded
->> cgroup whose parent is not root.
->>
->>        Root - A (domain) - B (domain)
->>                          \ C (domain)
->>
->> With "echo threaded > B/cgroup.type":
->>
->>        Root - A (threaded domain) - B (threaded)
->>                                   \ C (domain, invalid)
-> Yes, I noted that when I was replying to Peter.
->
->> Any children of a threaded cgroup should be threaded.
-> It's really difficult to discuss if you just declare that something
-> should be a certain way without giving rationale for thinking so.
->
-> If we could get rid of the invalid state completely that way, I'd
-> completely agree with you but that isn't the case here as you noted
-> yourself, so the choice between the two isn't something trivially
-> clear.  Both choices come with their pros and cons.  We can absoultely
-> discuss them comparing the pros and cons.
-I am not advocating on removing the invalid state now as I note about
-sibling cgroups. I am just saying that there is no point in not doing an
-automatic conversion to threaded for newly created children of threaded
-cgroups (not thread root). I don't see any cons in doing that.
+On Mon, Jul 17, 2017 at 10:26:09AM -0400, Tejun Heo wrote:
+> Hello, Peter.
+> 
+> On Mon, Jul 17, 2017 at 04:14:09PM +0200, Peter Zijlstra wrote:
+> > AFAICT this is not in fact what I suggested... :/
+> 
+> Heh, sorry about misattributing that.  I was mostly referring to the
+> overall idea of marking each cgroup domain or threaded rather than
+> subtree.
+> 
+> > My proposal did not have that invalid state. It would simply refuse to
+> > change the type from thread to domain in the case where the parent is
+> > not a domain.
+> > 
+> > Also, my proposal maintained the normal property inheritance rules. A
+> > child cgroup's creation 'type' would be that of its parent and not
+> > always be 'domain'.
+> 
+> But aren't both of the above get weird when the parent can host both
+> domain and threaded children?
+> 
+> 	  R
+>        /
+>       A(D)
+> 
+> If you create another child B under R, it's naturally gonna be a
+> domain.  Let's say you turn that to threaded.
+> 
+> 	   R
+>        /   \
+>      A(D) B(T)
+> 
+> And now try to create another child C, should that be a domain or
+> threaded?
 
-Cheers,
-Longman
+Domain of course, as R must be a domain, and hence all its children
+start out as such.
+
+> If we only inherit from the second level on, which is in itself
+> already confusing, that still leads to invalid configs for non-root
+> thread roots.
+
+I don't see how. I don't get the example Waiman gave, what is wrong
+with:
+
+	R (D)
+	|
+	A (D)
+       / \
+     C(D) B(T) 
+
+? Afaict that's a perfectly valid configuration.
+
+
 
