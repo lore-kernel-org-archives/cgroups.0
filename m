@@ -1,133 +1,84 @@
-From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:review-cgroup2-threads-v3 10/10]
- kernel/cgroup/debug.c:137:21: sparse: incompatible types in comparison
- expression (different address spaces)
-Date: Tue, 18 Jul 2017 07:07:55 +0800
-Message-ID: <201707180750.LyrRAyBE%fengguang.wu@intel.com>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+Subject: RE: [PATCH 14/15] kernel: convert futex_pi_state.refcount from
+ atomic_t to refcount_t
+Date: Tue, 18 Jul 2017 09:39:27 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B6FF26A5A@IRSMSX102.ger.corp.intel.com>
+References: <1500288206-12074-1-git-send-email-elena.reshetova@intel.com>
+ <1500288206-12074-15-git-send-email-elena.reshetova@intel.com>
+ <alpine.DEB.2.20.1707171607050.2185@nanos>
+ <2236FBA76BA1254E88B949DDB74E612B6FF265B9@IRSMSX102.ger.corp.intel.com>
+ <alpine.DEB.2.20.1707171938070.2185@nanos>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.20.1707171938070.2185@nanos>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-audit@redhat.com" <linux-audit@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "tj@kernel.org" <tj@kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "acme@kernel.org" <acme@kernel.org>, "alexander.shishkin@linux.intel.com" <alexander.shishkin@linux.intel.com>, "eparis@redhat.com" <eparis@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, arnd@ar
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-threads-v3
-head:   6fb1273ffe28c2f094c7816768854a74312bf1ed
-commit: 6fb1273ffe28c2f094c7816768854a74312bf1ed [10/10] cgroup: update debug controller to print out thread mode information
-reproduce:
-        # apt-get install sparse
-        git checkout 6fb1273ffe28c2f094c7816768854a74312bf1ed
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+> On Mon, 17 Jul 2017, Reshetova, Elena wrote:
+> > > On Mon, 17 Jul 2017, Elena Reshetova wrote:
+> > > > refcount_t type and corresponding API should be
+> > > > used instead of atomic_t when the variable is used as
+> > > > a reference counter. This allows to avoid accidental
+> > > > refcounter overflows that might lead to use-after-free
+> > > > situations.
+> > >
+> > > Copying the same sentence over and over avoids thinking about a proper
+> > > changelog, right? You fail to explain, how you come to the conclusion that
+> > > futex_pi_state.refcount is a pure reference counter (aside of the name) and
+> > > therefor can be safely converted to refcount_t.
+> 
+> > OK, this is not very useful for many cases. Yes, I am using automated log
+> > on these patches, because I used to have 240 of them and writing manual
+> > logs for them would be fun.
+> 
+> Been there, done that.
+> 
+> > Moreover, in many cases, writing manual logs don't bring any value since
+> > I would have to repeat the same things all over again: xyz conversions
+> > was found by using *.cocci pattern first, then looked at manually and it
+> > looked like a standard reference counter that frees the things after
+> > calling refcount_dec_and_test() (or its variation with lock which is
+> > rare).  Other things also looked correct, like I didn't see increments
+> > from zero, counter starts at 1 etc.  I would really have to repeat the
+> > same thing in each changelog. Does it really bring value?
+> 
+> You don't have to go into that level of detail, but you can provide enough
+> information with a template as well, e.g.:
+> 
+>    atomic_t variables are often used to implement pure reference counters:
+>      - starting at 1
+>      - freeing a resource after reaching zero
+>      - only using basic atomic operations (init, inc, dec_and_test)
+> 
+>    These variables should be converted to refcount_t because the refcount_t
+>    operations can catch and prevent accidental underflows and overflows.
+> 
+>    The variable FOO is used as a pure reference counter. Convert it to
+>    refcount_t and fix up the operations.
+> 
+> That gives enough context for someone who looks at a patch because then the
+> reviewer can look for:
+> 
+>    starts at 1, frees at 0, does not use any fancy operations
+> 
+> and has not to use Gurgle to figure out what your understanding of
+> reference counters is.
+> 
+> Replacing FOO with the real variable name can be done with a script easy
+> enough.
 
+Ok, let me try updating the commits messages in the above way. As soon as I
+don't have to write them manually, I am fine with anything :) 
 
-sparse warnings: (new ones prefixed by >>)
+Best Regards,
+Elena.
 
-   include/linux/compiler.h:260:8: sparse: attribute 'no_sanitize_address': unknown attribute
->> kernel/cgroup/debug.c:137:21: sparse: incompatible types in comparison expression (different address spaces)
-
-vim +137 kernel/cgroup/debug.c
-
-   111	
-   112	#define MAX_TASKS_SHOWN_PER_CSS 25
-   113	static int cgroup_css_links_read(struct seq_file *seq, void *v)
-   114	{
-   115		struct cgroup_subsys_state *css = seq_css(seq);
-   116		struct cgrp_cset_link *link;
-   117		int dead_cnt = 0, extra_refs = 0, threaded_csets = 0;
-   118	
-   119		spin_lock_irq(&css_set_lock);
-   120	
-   121		if (cgroup_is_thread_root(css->cgroup))
-   122			seq_puts(seq, "[thread root]\n");
-   123		else if (cgroup_is_threaded(css->cgroup))
-   124			seq_puts(seq, "[threaded]\n");
-   125	
-   126		list_for_each_entry(link, &css->cgroup->cset_links, cset_link) {
-   127			struct css_set *cset = link->cset;
-   128			struct task_struct *task;
-   129			int count = 0;
-   130			int refcnt = refcount_read(&cset->refcount);
-   131	
-   132			/*
-   133			 * Print out the proc_cset and threaded_cset relationship
-   134			 * and highlight difference between refcount and task_count.
-   135			 */
-   136			seq_printf(seq, "css_set %pK", cset);
- > 137			if (rcu_dereference_protected(cset->dom_cset, 1) != cset) {
-   138				threaded_csets++;
-   139				seq_printf(seq, "=>%pK", cset->dom_cset);
-   140			}
-   141			if (!list_empty(&cset->threaded_csets)) {
-   142				struct css_set *tcset;
-   143				int idx = 0;
-   144	
-   145				list_for_each_entry(tcset, &cset->threaded_csets,
-   146						    threaded_csets_node) {
-   147					seq_puts(seq, idx ? "," : "<=");
-   148					seq_printf(seq, "%pK", tcset);
-   149					idx++;
-   150				}
-   151			} else {
-   152				seq_printf(seq, " %d", refcnt);
-   153				if (refcnt - cset->nr_tasks > 0) {
-   154					int extra = refcnt - cset->nr_tasks;
-   155	
-   156					seq_printf(seq, " +%d", extra);
-   157					/*
-   158					 * Take out the one additional reference in
-   159					 * init_css_set.
-   160					 */
-   161					if (cset == &init_css_set)
-   162						extra--;
-   163					extra_refs += extra;
-   164				}
-   165			}
-   166			seq_puts(seq, "\n");
-   167	
-   168			list_for_each_entry(task, &cset->tasks, cg_list) {
-   169				if (count++ <= MAX_TASKS_SHOWN_PER_CSS)
-   170					seq_printf(seq, "  task %d\n",
-   171						   task_pid_vnr(task));
-   172			}
-   173	
-   174			list_for_each_entry(task, &cset->mg_tasks, cg_list) {
-   175				if (count++ <= MAX_TASKS_SHOWN_PER_CSS)
-   176					seq_printf(seq, "  task %d\n",
-   177						   task_pid_vnr(task));
-   178			}
-   179			/* show # of overflowed tasks */
-   180			if (count > MAX_TASKS_SHOWN_PER_CSS)
-   181				seq_printf(seq, "  ... (%d)\n",
-   182					   count - MAX_TASKS_SHOWN_PER_CSS);
-   183	
-   184			if (cset->dead) {
-   185				seq_puts(seq, "    [dead]\n");
-   186				dead_cnt++;
-   187			}
-   188	
-   189			WARN_ON(count != cset->nr_tasks);
-   190		}
-   191		spin_unlock_irq(&css_set_lock);
-   192	
-   193		if (!dead_cnt && !extra_refs && !threaded_csets)
-   194			return 0;
-   195	
-   196		seq_puts(seq, "\n");
-   197		if (threaded_csets)
-   198			seq_printf(seq, "threaded css_sets = %d\n", threaded_csets);
-   199		if (extra_refs)
-   200			seq_printf(seq, "extra references = %d\n", extra_refs);
-   201		if (dead_cnt)
-   202			seq_printf(seq, "dead css_sets = %d\n", dead_cnt);
-   203	
-   204		return 0;
-   205	}
-   206	
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> 
+> Thanks,
+> 
+> 	tglx
