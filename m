@@ -1,55 +1,119 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
-Date: Wed, 19 Jul 2017 13:48:42 -0400
-Message-ID: <20170719174842.GR3365493@devbig577.frc2.facebook.com>
-References: <20170717020721.3612468-1-tj@kernel.org>
- <20170717020721.3612468-6-tj@kernel.org>
- <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
- <825f2eaa-568a-a156-f04d-9235b20e2614@redhat.com>
- <5fa00590-551f-85d2-511b-ef4033781228@redhat.com>
- <20170718171034.GE585283@devbig577.frc2.facebook.com>
- <df14a222-f1f8-3415-b29a-2712c9e77f94@redhat.com>
- <20170719162937.GP3365493@devbig577.frc2.facebook.com>
- <e6a9daf1-461d-080c-a301-12cdad5e2b73@redhat.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET for-4.13] cgroup: implement cgroup2 thread mode, v4
+Date: Wed, 19 Jul 2017 15:44:33 -0400
+Message-ID: <20170719194439.2915602-1-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=D/ZJltHrr3k2oUkc+EDWL2qkusvOcM0y9E47zTks7Ks=;
-        b=okVR4yqfxJ1JBmfMqupc2C3X5MOvgU46kXCe1BQJ0cMWdL5kJ68kWGxl29MOjC1mgs
-         SbYPcCOLRLZoecbhNDQLithfsradSF+uBRvV36jVZBXArzaENmorYfxUmMBCEqdOttpq
-         7DSyXLrFBRGyXZs24ezCqoGVEAO1C5G51+u3WWTQDM6mvRgjGldhyxsKwa4twJ+UG65K
-         IjFKLKfbyVbIoqoDLiIkDvxSvpwnyrdraVkIuoIlVcsRnyVGEtK2sr5DQTAq1K7/dtbA
-         L6iLbC1IJ0jkHZcQMUiuVdWnjrsW993HPHxtDbKBlhlbkC7x6AiKJABpZet/Hk3psb9Y
-         BhIQ==
-Content-Disposition: inline
-In-Reply-To: <e6a9daf1-461d-080c-a301-12cdad5e2b73-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=DOebJNkneyG8N2XsHJX+fFbrIa2UW25HsL/OkjmM8zs=;
+        b=HSQPTlhDaLOfluwE+9aJzwm+B6pNEqNN1jm/Y3GcYYPHnAvgtcbmPx9xBBSOiF+ItD
+         C/Id6H5+/UazNFTTFDEmgpdqFho5omTvdeNutkYFGvroi89hiVc6Pdq/AoShIoF/vYbD
+         vLhggbAS5OJ/RZXe5QnULC5SzTGkAWJO9e56Td39PcG9OT985N8++D+nALxm364Q/54+
+         d4hTuIKsTJQbeZOeeUVrBMW8gYeRXwoan68e8kcuRgRWAIbgVsBZKQNoTM5lRe5DEMyX
+         3dhVcPqjbWtYk5uftUDVLA7QzJ3/bAQ4wwQnR5GQyJDLySTZxoD7p5CWkQzcqex6XnOD
+         DWLA==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, longman@redhat.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-Hello, Waiman.
+Hello,
 
-On Wed, Jul 19, 2017 at 01:09:38PM -0400, Waiman Long wrote:
-> For me, that is the only good reason why we should keep the current
-> behavior. So I am fine with that.
-> 
-> + cgrp->dom_cgrp = cgrp->dom_cgrp;
-> 
-> However, I am still puzzled by above line of code, should it be just
-> 
->   cgrp->dom_cgrp = cgrp;
+This is v4 of cgroup2 thread mode patchset.  The changes from v3[L]
+are all fairly minor.  Peter and Waiman are okay with the approach and
+I'll apply these patches to cgorup/for-4.14 unless there are further
+objections.  Please speak up if there are any further concerns.
 
-Oh I see.  Yeah, that's just a silly (harmless) bug.  The field gets
-properly initialized in init_cgroup_housekeeping().  I'll remove that
-line.
+* Documentation updates as suggested by Waiman.
 
-Thanks!
+* () dropped from cgroup.type output.
 
--- 
+* Other minor fixes and updates.
+
+* Tried to add "threaded" column to /proc/cgroups but systemd fails to
+  parse and boot if the field is added.  I don't think we can ever add
+  new field to that file.  I'll probably add
+  cgroup.threaded_controllers file.  It's nicer to contain the
+  information inside cgroupfs anyway.  Will follow up on this.
+
+It is largely based on the discussions that we had at the plumbers
+last year.  Here's the rough outline.
+
+* Thread mode is explicitly enabled on a cgroup by writing "threaded"
+  into "cgroup.type" file.  The cgroup shouldn't have any processes or
+  child cgroups.  A threaded cgroup joins the the parent's resource
+  domain and becomes a part of the threaded subtree anchored at the
+  nearest domain ancestor, which is called the threaded domain cgroup
+  of the subtree.
+
+* Threads can be put anywhere in a threaded subtree by writing TIDs
+  into "cgroup.threads" file.  Process granularity and
+  no-internal-process constraint don't apply in a threaded subtree.
+
+* To be used in a threaded subtree, controllers should explicitly
+  declare thread mode support and should be able to handle internal
+  competition in some way.
+
+* The threaded domain cgroup of a threaded subtree serves as the
+  resource domain for the whole subtree.  This is where all the
+  controllers are guaranteed to have a common ground and resource
+  consumptions in the threaded subtree which aren't tied to a specific
+  thread are charged.  Non-threaded controllers never see beyond
+  thread root and can assume that all controllers will follow the same
+  rules upto that point.
+
+* Unlike other cgroups, the system root cgroup can serve as parent to
+  domain child cgroups and threaded domains to threaded subtrees.
+
+This allows threaded controllers to implement thread granular resource
+control without getting in the way of system level resource
+partitioning.
+
+For more details on the interface and behavior, please refer to 0005.
+
+This patchset contains the following six patches.
+
+ 0001-cgroup-reorganize-cgroup.procs-task-write-path.patch
+ 0002-cgroup-add-flags-to-css_task_iter_start-and-implemen.patch
+ 0003-cgroup-introduce-cgroup-dom_cgrp-and-threaded-css_se.patch
+ 0004-cgroup-implement-CSS_TASK_ITER_THREADED.patch
+ 0005-cgroup-implement-cgroup-v2-thread-support.patch
+ 0006-cgroup-update-debug-controller-to-print-out-thread-m.patch
+
+0001-0005 implement cgroup2 thread mode.  0006 enables debug
+controller on it.
+
+The patchset is based on the current cgroup/for-4.14 27f26753f8c0
+("cgroup: replace css_set walking populated test with testing
+cgrp->nr_populated_csets") and also available in the following git
+branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-threads-v4
+
+diffstat follows.
+
+ Documentation/cgroup-v2.txt     |  185 +++++++++-
+ include/linux/cgroup-defs.h     |   45 ++
+ include/linux/cgroup.h          |   15 
+ kernel/cgroup/cgroup-internal.h |   12 
+ kernel/cgroup/cgroup-v1.c       |   69 +++
+ kernel/cgroup/cgroup.c          |  711 +++++++++++++++++++++++++++++++---------
+ kernel/cgroup/cpuset.c          |    6 
+ kernel/cgroup/debug.c           |   53 ++
+ kernel/cgroup/freezer.c         |    6 
+ kernel/cgroup/pids.c            |    1 
+ kernel/events/core.c            |    1 
+ mm/memcontrol.c                 |    2 
+ net/core/netclassid_cgroup.c    |    2 
+ 13 files changed, 904 insertions(+), 204 deletions(-)
+
+Thanks.
+
+--
 tejun
+
+[L] http://lkml.kernel.org/r/20170717020721.3612468-1-tj@kernel.org
