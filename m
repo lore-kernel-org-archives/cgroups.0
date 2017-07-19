@@ -1,48 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-4.13-fixes] cgroup: create dfl_root files on
- subsys registration
-Date: Tue, 18 Jul 2017 18:11:14 -0400
-Message-ID: <20170718221114.GI3365493@devbig577.frc2.facebook.com>
-References: <1500406336-29512-1-git-send-email-longman@redhat.com>
- <20170718195148.GC3365493@devbig577.frc2.facebook.com>
- <539870d2-8b85-2f54-61bd-4ba068e75ce0@redhat.com>
- <20170718201229.GD3365493@devbig577.frc2.facebook.com>
- <255cc198-2c10-af76-98ca-086807d11540@redhat.com>
- <20170718205009.GE3365493@devbig577.frc2.facebook.com>
- <20170718210658.GF3365493@devbig577.frc2.facebook.com>
- <20170718215746.GG3365493@devbig577.frc2.facebook.com>
- <d44b7b53-0be6-7019-169a-aa45b4d02598@redhat.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 5/6] cgroup: implement cgroup v2 thread support
+Date: Wed, 19 Jul 2017 16:07:28 +0200
+Message-ID: <20170719140728.3mcg6uemqyy5muc4@hirez.programming.kicks-ass.net>
+References: <20170717020721.3612468-1-tj@kernel.org>
+ <20170717020721.3612468-6-tj@kernel.org>
+ <20170717141409.sqafufjupsiffnri@hirez.programming.kicks-ass.net>
+ <20170717142609.GC3519177@devbig577.frc2.facebook.com>
+ <20170718172801.f56273tzgzn3xkne@hirez.programming.kicks-ass.net>
+ <20170718175456.GH585283@devbig577.frc2.facebook.com>
+ <20170718184135.auf6d2clsdxseka3@hirez.programming.kicks-ass.net>
+ <20170718184714.GA3365493@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=+9+8jlETWQ3DPJ2aQELwuBKIcGKwq2n6rdZ2LZLEf5g=;
-        b=IPGIlAzb6IMZn6g89jEhfJEhFqP/FaIUP03Pb/Lia21eDjXXL+qUxbQEACK7k0MDBR
-         EYNTmMQEpWjOOPfoxieNw99wwYx29u7CpDkQWeUGagLDjWeojx1+vpPsCaqUD4LybdLY
-         0urm7NrAqMcloMjAblP2nA6t4wYTsfQgMmJM9SRe8wrOJhHrKDj99eWcw82epifXzNh6
-         8FEqMXycrFpJSMDRZZ4rOO+f3qN+iJLdR5q/wBZN+95hdtN33XlZDjYbu7I2Voi1rQ4N
-         HLOWeVYSz+jDFnlqYS5EH6pzwKalQwFB04tg7eTg/trDspLXUb6ksA+9dBi5U/EYqPm2
-         spEw==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=atInUPFEZOM0dzoNG3Z/aX8Lc+1P04Udi0zYTdDwkwM=; b=hL3juR8EU7PKWV17i6bpj2dtR
+        25ANVZwx6FRr40Q9kXI626VpDIkxOOdj85hGzN18buKxdLEwlt1iGt21azaCigqVyxkslf/PJbbth
+        tnHHZUpHaG7DTBjLTdqVbfiUWVG7xDqo/7BiKyQ9TUx9XuZce7RoUIow269drwMUS5TMBzYkSo4WU
+        /kagOrdCRvOP4MPCcO8J4KDmNluW6RaLl/RhUou/VWWoUJ5I5d9QuuaPNa3hNjFmKrq9wqp/VkIQh
+        p8gt3nM+sce4nFiDJD7WF8MDXBm1TH0Oq5X14WsauNXB9JVbs8qnrkVDyPzAZdjqNVwTxgHs0oDzt
+    
 Content-Disposition: inline
-In-Reply-To: <d44b7b53-0be6-7019-169a-aa45b4d02598-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20170718184714.GA3365493-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
 
-On Tue, Jul 18, 2017 at 06:09:16PM -0400, Waiman Long wrote:
-> On 07/18/2017 05:57 PM, Tejun Heo wrote:
-> Yes, this patch fix the problem.
-> 
-> Tested-by:  Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Tue, Jul 18, 2017 at 02:47:14PM -0400, Tejun Heo wrote:
+> Were there other things that caught your eyes?
 
-Great, will route the patch through cgroup/for-4.13-fixes.
+I didn't immediately see the point of "domain (threaded" output, and I
+think it might be useful to have a "threaded" column in /proc/cgroups.
+But no, I've been over this a few times now and I think we're good.
 
-Thanks for spotting the subtle bug!
-
--- 
-tejun
+Yes, I think we can work with this. Thanks!
