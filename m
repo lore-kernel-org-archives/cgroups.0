@@ -1,22 +1,24 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH cgroup/for-4.13-fixes] cgroup: fix error return value from
- cgroup_subtree_control()
-Date: Sun, 23 Jul 2017 08:14:15 -0400
-Message-ID: <20170723121415.GA1498614@devbig577.frc2.facebook.com>
+Subject: Re: [PATCH cgroup/for-4.13-fixes] cgroup: fix error return value
+ from cgroup_subtree_control()
+Date: Sun, 23 Jul 2017 08:15:48 -0400
+Message-ID: <20170723121548.GB1498614@devbig577.frc2.facebook.com>
+References: <20170723121415.GA1498614@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=mQD4IbCKKJ3MlxFOTjZ291wgChu7weyeAFUa7OabOuY=;
-        b=p0w1PFLswOpu/QwYGV4mEtP8+TKN9lFz363i5T8enpW9uT3AAITjbmMiTV1kZLp0ex
-         jihGEYiTXtJg+VRzqhDrsrju4c8hzEoEuW3rbw9JtuBSQQM/C/liMKnqpGVvNH1/EmD3
-         YqrWNYU3Wo0Xel48Px5wiIgSlDSvOJHc9nQawwpNoMlI2QUAR4uPofIcuVChwMcmEq7l
-         Kv9nxX0YKwVIcJTFVvJdaz4UQpkKeFyfsVZhXXZwNm9lwpwKdAzPCO09Bv4u3DrROYyD
-         4ePYqQPuCgZxOxCYPVvmN0RxDgg28T6w/vZQeLPC1AusGMCcGEXNJzlqJDxYrGA1Ppl7
-         RWgA==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=omv/bn6x33h8sG/zOYRSPtQwCOKZ1BTJETWkziBCMeg=;
+        b=h7cgk+QGhyGRw8GcyUhn1Bb9pVqbmBIlsBhNZykwZ3Gl7mCe5oZFqOKOMorpmRRcxP
+         OxzzVETpeo8yFcRNB8Uvb0QR5j2ZOffyCcVkaLdCkla4OrlKoMf3MWCbCcOgm1ZRreT9
+         Y/vftvEWDV+l+elWZ4pGrP6WvPcvjhMKZCrhNwp4qgyXDrdnSiggkjuG/xYEBsYJwrBb
+         /xbETIqWyq0Jb9EdiqVAWY3z2/7xFW60NXtu6iJOu0a0hmq8wTr+G8N8XfIN3Xy0LXHZ
+         93AmLEnfvnpkGWsHSxkpr9xLQlmxZpiHgl1pqFvaUPuh60M9vtu/7NUEyeDOTkv0x8Wb
+         qjEA==
 Content-Disposition: inline
+In-Reply-To: <20170723121415.GA1498614@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -24,31 +26,19 @@ Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
 Cc: cgroups@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org
 
-While refactoring, f7b2814bb9b6 ("cgroup: factor out
-cgroup_{apply|finalize}_control() from
-cgroup_subtree_control_write()") broke error return value from the
-function.  The return value from the last operation is always
-overridden to zero.  Fix it.
+On Sun, Jul 23, 2017 at 08:14:15AM -0400, Tejun Heo wrote:
+> While refactoring, f7b2814bb9b6 ("cgroup: factor out
+> cgroup_{apply|finalize}_control() from
+> cgroup_subtree_control_write()") broke error return value from the
+> function.  The return value from the last operation is always
+> overridden to zero.  Fix it.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: stable@vger.kernel.org # v4.6+
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: stable@vger.kernel.org # v4.6+
----
- kernel/cgroup/cgroup.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Applying to cgroup/for-4.13-fixes.
 
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3119,11 +3119,11 @@ static ssize_t cgroup_subtree_control_wr
- 	cgrp->subtree_control &= ~disable;
- 
- 	ret = cgroup_apply_control(cgrp);
--
- 	cgroup_finalize_control(cgrp, ret);
-+	if (ret)
-+		goto out_unlock;
- 
- 	kernfs_activate(cgrp->kn);
--	ret = 0;
- out_unlock:
- 	cgroup_kn_unlock(of->kn);
- 	return ret ?: nbytes;
+Thanks.
+
+-- 
+tejun
