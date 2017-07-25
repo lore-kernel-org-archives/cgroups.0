@@ -1,32 +1,32 @@
 From: Roman Gushchin <guro@fb.com>
 Subject: Re: [PATCH] mm, memcg: reset low limit during memcg offlining
-Date: Tue, 25 Jul 2017 13:06:42 +0100
-Message-ID: <20170725120642.GA12635@castle.DHCP.thefacebook.com>
+Date: Tue, 25 Jul 2017 13:31:13 +0100
+Message-ID: <20170725123113.GB12635@castle.DHCP.thefacebook.com>
 References: <20170725114047.4073-1-guro@fb.com>
- <20170725115808.GE26723@dhcp22.suse.cz>
+ <20170725120537.o4kgzjhcjcjmopzc@esperanza>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=9JoxCtqbgG1KC0ocGfXW5RByGSICi1xalngtyPSz6xQ=;
- b=YpYKsPik87+xM5usFIRhppwHK9j+swv8pQNh3k1GCZETP+q/9AEFTCf4XxdLO+/9JMnO
- T35ElQJVT2UA3x0dc6t01MzEWYJ/3PMhF+O/ywcV0KDA7Y+dgIUnAmiuTg4OOKSfzbXD
- aYY5433uEuEKDTM4XLuyHjiFJU/7DfZcBdk= 
+ in-reply-to; s=facebook; bh=XvI/+FciB05AMUe1xSJptC59/0B/8I/dBFdGMr9QJbE=;
+ b=gAvLKDN9F4xfmxuZydqYh+Et8I/aJ2YhMiSOFRAnqHJcttzjZ0mXZutKUVPZc/1tALbj
+ dlEiIzRd7w2HRA533x2OHMvQOIIq59YAej64fGPIQQ/gIw3osmkQ0f4zNeAn0TXlqX18
+ 6yB0XsrUvfFJKOdD2fKESMxUfbkwGV2cCKc= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=9JoxCtqbgG1KC0ocGfXW5RByGSICi1xalngtyPSz6xQ=;
- b=azRa9g+Iqj+HSTOazR6xKSAx7sp8A9+AOan2sOszxjCtYz1WNWQR8Y2n6xhK1HAu295s+bbnMO4MOtQBLphA0yLxIsx4Mp24Saphg+1Xzk2BBf/XKEBLNBShuzwq4Go+wZwRdvv9ZAMp4jufz7FJdwflzALPoEjf3ZyZgONsS6M=
+ bh=XvI/+FciB05AMUe1xSJptC59/0B/8I/dBFdGMr9QJbE=;
+ b=Gi2MAZFmKUFSoc7Mxge89/C+BtllClDnuASwUOK+dB2An+sWLKyJf14HA2vc+8lnAk7bLy9BPtP6iYM+BdhGswj7Uu57kKJyotugpQZLT6XcIeWscOzLGdzo6wa0T4AlSjC4qjI1PGiwp1gJ0gHPCxHWkHKyE97d0Fsey0mOIe8=
 Content-Disposition: inline
-In-Reply-To: <20170725115808.GE26723@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170725120537.o4kgzjhcjcjmopzc@esperanza>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jul 25, 2017 at 01:58:08PM +0200, Michal Hocko wrote:
-> On Tue 25-07-17 12:40:47, Roman Gushchin wrote:
+On Tue, Jul 25, 2017 at 03:05:37PM +0300, Vladimir Davydov wrote:
+> On Tue, Jul 25, 2017 at 12:40:47PM +0100, Roman Gushchin wrote:
 > > A removed memory cgroup with a defined low limit and some belonging
 > > pagecache has very low chances to be freed.
 > > 
@@ -40,21 +40,52 @@ On Tue, Jul 25, 2017 at 01:58:08PM +0200, Michal Hocko wrote:
 > > system resources.
 > > 
 > > Fix this issue by zeroing memcg->low during memcg offlining.
+> > 
+> > Signed-off-by: Roman Gushchin <guro@fb.com>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: Johannes Weiner <hannes@cmpxchg.org>
+> > Cc: Michal Hocko <mhocko@kernel.org>
+> > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> > Cc: kernel-team@fb.com
+> > Cc: cgroups@vger.kernel.org
+> > Cc: linux-mm@kvack.org
+> > Cc: linux-kernel@vger.kernel.org
+> > ---
+> >  mm/memcontrol.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index aed11b2d0251..2aa204b8f9fd 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -4300,6 +4300,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+> >  	}
+> >  	spin_unlock(&memcg->event_list_lock);
+> >  
+> > +	memcg->low = 0;
+> > +
+> >  	memcg_offline_kmem(memcg);
+> >  	wb_memcg_offline(memcg);
+> >  
 > 
-> Very well spotted! This goes all the way down to low limit inclusion
-> AFAICS. I would be even tempted to mark it for stable because hiding
-> some memory from reclaim basically indefinitely is not good. We might
-> have been just lucky nobody has noticed that yet.
+> We already have that - see mem_cgroup_css_reset().
 
-I believe it's because there are not so many actual low limit users,
-and those who do, are using some offstream patches to mitigate this issue.
+Hm, I see...
 
-Thanks!
+But are you sure, that calling mem_cgroup_css_reset() from offlining path
+is always a good idea?
+
+As I understand, css_reset() callback is intended to _completely_ disable all
+limits, as if there were no cgroup at all. And it's main purpose to be called
+when controllers are detached from the hierarhy.
+
+Offlining is different: some limits make perfect sence after offlining
+(e.g. we want to limit the writeback speed), and other might be tweaked
+(e.g. we can set soft limit to prioritize reclaiming of abandoned cgroups).
+
+So, I'd prefer to move this code to the offlining callback,
+and not to call css_reset.
+
+But, anyway, thanks for pointing at the mem_cgroup_css_reset().
 
 Roman
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
