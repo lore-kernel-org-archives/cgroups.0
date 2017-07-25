@@ -1,97 +1,71 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: remove unnecessary empty check when enabling
- threaded mode
-Date: Mon, 24 Jul 2017 15:14:56 -0400
-Message-ID: <c2637f47-3e90-a322-f84b-0c913da14977@redhat.com>
-References: <1500669293-21792-1-git-send-email-longman@redhat.com>
- <1500669293-21792-2-git-send-email-longman@redhat.com>
- <20170722134358.GB3329631@devbig577.frc2.facebook.com>
- <20170723121826.GC1498614@devbig577.frc2.facebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH] mm, memcg: reset low limit during memcg offlining
+Date: Tue, 25 Jul 2017 12:40:47 +0100
+Message-ID: <20170725114047.4073-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.redhat.com 8DB44883D1
-In-Reply-To: <20170723121826.GC1498614-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=oFVNGX+6MZFqcakdJ1+ZlD5PMslt3MhkTMrXtkv/DCM=;
+ b=byTJjg7Bin8ikRUzjWF1VSIEJr41OsUF049W/WFpTuY5q23bypQr1UyElPwm/EmGH/y/
+ V1ESrlYNbzpxbb5s1end9xJCWx4VAwi8w1GxbVWrT3NcHijKqDsKtJqderfaEk5yxzPD
+ 0o9wIK/QO6HwN/sGVv6Ruuth4laAoJrJomM= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=oFVNGX+6MZFqcakdJ1+ZlD5PMslt3MhkTMrXtkv/DCM=;
+ b=gsUGVlRlhDPME3LjioLIqsBUIi0S92ylGOFewgaFSjZibvWpTtiAV6ObEH4JWc8mGUATzuvfgD/rLjQVtnoEjAnM0uTX4DPEw7EzPOQh54Qw2CEYcxMh2AqErNYlPAKEqQr0QSO1EZaut70GytStHLNdZlLu3RFBQf0znr2av5M=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/23/2017 08:18 AM, Tejun Heo wrote:
-> cgroup_enable_threaded() checks that the cgroup doesn't have any tasks
-> or children and fails the operation if so.  This test is unnecessary
-> because the first part is already checked by
-> cgroup_can_be_thread_root() and the latter is unnecessary.  The latter
-> actually cause a behavioral oddity.  Please consider the following
-> hierarchy.  All cgroups are domains.
->
->     A
->    / \
->   B   C
->        \
->         D
->
-> If B is made threaded, C and D becomes invalid domains.  Due to the no
-> children restriction, threaded mode can't be enabled on C.  For C and
-> D, the only thing the user can do is removal.
->
-> There is no reason for this restriction.  Remove it.
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
-> Hello,
->
-> So, the only thing inconsistent there was the extra restriction when
-> enabling threaded mode when all the necessary conditions are already
-> checked by when verifying the parent's domain.
->
-> Thanks.
->
->  Documentation/cgroup-v2.txt |    5 +++--
->  kernel/cgroup/cgroup.c      |    7 -------
->  2 files changed, 3 insertions(+), 9 deletions(-)
->
-> --- a/Documentation/cgroup-v2.txt
-> +++ b/Documentation/cgroup-v2.txt
-> @@ -274,8 +274,9 @@ thread mode, the following conditions mu
->  - As the cgroup will join the parent's resource domain.  The parent
->    must either be a valid (threaded) domain or a threaded cgroup.
->  
-> -- The cgroup must be empty.  No enabled controllers, child cgroups or
-> -  processes.
-> +- When the parent is an unthreaded domain, it must not have any domain
-> +  controllers enabled or populated domain children.  The root is
-> +  exempt from this requirement.
->  
->  Topology-wise, a cgroup can be in an invalid state.  Please consider
->  the following toplogy::
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -3147,13 +3147,6 @@ static int cgroup_enable_threaded(struct
->  		return -EOPNOTSUPP;
->  
->  	/*
-> -	 * Allow enabling thread mode only on empty cgroups to avoid
-> -	 * implicit migrations and recursive operations.
-> -	 */
-> -	if (cgroup_has_tasks(cgrp) || css_has_online_children(&cgrp->self))
-> -		return -EBUSY;
-> -
-> -	/*
->  	 * The following shouldn't cause actual migrations and should
->  	 * always succeed.
->  	 */
+A removed memory cgroup with a defined low limit and some belonging
+pagecache has very low chances to be freed.
 
-Acked-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+If a cgroup has been removed, there is likely no memory pressure inside
+the cgroup, and the pagecache is protected from the external pressure
+by the defined low limit. The cgroup will be freed only after
+the reclaim of all belonging pages. And it will not happen until
+there are any reclaimable memory in the system. That means,
+there is a good chance, that a cold pagecache will reside
+in the memory for an undefined amount of time, wasting
+system resources.
 
-While you are at it, the one comment that I have with
-cgroup_enable_threaded() is that it does not check to see if the cgroup
-parent exists. I thought for a while the first time I saw it, but then
-realized that cgroup.type wasn't show in root. I think a comment about
-this will make the code less puzzling to causal reader.
+Fix this issue by zeroing memcg->low during memcg offlining.
 
-Cheers,
-Longman
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+---
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index aed11b2d0251..2aa204b8f9fd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4300,6 +4300,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	}
+ 	spin_unlock(&memcg->event_list_lock);
+ 
++	memcg->low = 0;
++
+ 	memcg_offline_kmem(memcg);
+ 	wb_memcg_offline(memcg);
+ 
+-- 
+2.13.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
