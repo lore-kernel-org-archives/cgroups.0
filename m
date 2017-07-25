@@ -1,20 +1,31 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
 Subject: Re: [PATCH] mm, memcg: reset low limit during memcg offlining
-Date: Tue, 25 Jul 2017 13:58:08 +0200
-Message-ID: <20170725115808.GE26723@dhcp22.suse.cz>
+Date: Tue, 25 Jul 2017 15:05:37 +0300
+Message-ID: <20170725120537.o4kgzjhcjcjmopzc@esperanza>
 References: <20170725114047.4073-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=TT/N27Fo53oEDUocUTBO2TKm8H6OdAv3Z5DJmlAAgCA=;
+        b=ftO7rOcvpvYrlykUAHd/EEmbJKdSMDTJ8kVd7FeL+yDGAQGe3DaZd9trAKPD/hlyoc
+         XBS3WLX7L/9LH71PH9RTZhSGNyD5aVSY06gAEDMLhWZ4S+ZmQR4F9aW3ul/0bD6oYsVb
+         Aaxe46HRUXeKm2Io1a2cOWf9StR3nCo6ei0sjKUr6WAtsY70BiyIh5Tn+G7CitMypOx8
+         /AjK83VuJ3194PXsITm/e70zbrBnAHp7okFzXowZ8BAaE4ok8Vtti5PM/zJPzh1x1tFY
+         sQm5Ch1z4VYCtQALO/0OETvuiIVGw8kk2YSBU+a5J+bb5rC38ul8Q453U6LTulRbFT3m
+         w6fg==
 Content-Disposition: inline
 In-Reply-To: <20170725114047.4073-1-guro@fb.com>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 25-07-17 12:40:47, Roman Gushchin wrote:
+On Tue, Jul 25, 2017 at 12:40:47PM +0100, Roman Gushchin wrote:
 > A removed memory cgroup with a defined low limit and some belonging
 > pagecache has very low chances to be freed.
 > 
@@ -28,14 +39,7 @@ On Tue 25-07-17 12:40:47, Roman Gushchin wrote:
 > system resources.
 > 
 > Fix this issue by zeroing memcg->low during memcg offlining.
-
-Very well spotted! This goes all the way down to low limit inclusion
-AFAICS. I would be even tempted to mark it for stable because hiding
-some memory from reclaim basically indefinitely is not good. We might
-have been just lucky nobody has noticed that yet.
-
-Fixes: 241994ed8649 ("mm: memcontrol: default hierarchy interface for memory")
-
+> 
 > Signed-off-by: Roman Gushchin <guro@fb.com>
 > Cc: Tejun Heo <tj@kernel.org>
 > Cc: Johannes Weiner <hannes@cmpxchg.org>
@@ -45,11 +49,6 @@ Fixes: 241994ed8649 ("mm: memcontrol: default hierarchy interface for memory")
 > Cc: cgroups@vger.kernel.org
 > Cc: linux-mm@kvack.org
 > Cc: linux-kernel@vger.kernel.org
-
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-Thanks!
-
 > ---
 >  mm/memcontrol.c | 2 ++
 >  1 file changed, 2 insertions(+)
@@ -67,15 +66,5 @@ Thanks!
 >  	memcg_offline_kmem(memcg);
 >  	wb_memcg_offline(memcg);
 >  
-> -- 
-> 2.13.3
 
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+We already have that - see mem_cgroup_css_reset().
