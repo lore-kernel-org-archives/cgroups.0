@@ -1,88 +1,82 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm, memcg: reset low limit during memcg offlining
-Date: Tue, 25 Jul 2017 14:44:19 +0200
-Message-ID: <20170725124419.GG26723@dhcp22.suse.cz>
-References: <20170725114047.4073-1-guro@fb.com>
- <20170725120537.o4kgzjhcjcjmopzc@esperanza>
- <20170725123113.GB12635@castle.DHCP.thefacebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/4] cgroup: Allow bypass mode in subtree_control
+Date: Tue, 25 Jul 2017 13:13:44 -0400
+Message-ID: <20170725171343.GB3216015@devbig577.frc2.facebook.com>
+References: <1500669293-21792-1-git-send-email-longman@redhat.com>
+ <1500669293-21792-3-git-send-email-longman@redhat.com>
+ <20170722135030.GC3329631@devbig577.frc2.facebook.com>
+ <3cf09046-7eac-82fe-8bd2-6aef1125b10c@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=cf29bDclH3IOXV64L9jZJbX3iMBxzJXGBoGYU4VXQX4=;
+        b=Eav0sfO8ExyF3CUj5HnbGWlpqmupo3KI25RiK+ufZSnuiZirOP5haL6TDk5B/qqWDj
+         4iFv8VJhgEAo2ERIH8Xt2JmmqgXaodBB2k2mKOdvwKzqQE8a2OXG9VHYnbdk+M6efIus
+         h2HgzuW9KZE+rF4SVs7mhf5vMQFuLBPOzLV7g/jWdX9ax0z9I9IMx2hAYzo9oHpKiCg8
+         4+OTkKotxbFo9xpQOALAJNNOucbIO0o06jYsUUp0J+vDNtUo8c3d76PKxL/u8LE5hS/W
+         FFvWJ/ggUdvU1AGQVzihxsXQbWDZS2DrYAWZr1SUCln7wjn97FkLXXqeuWsgqIUG3iPv
+         DATg==
 Content-Disposition: inline
-In-Reply-To: <20170725123113.GB12635@castle.DHCP.thefacebook.com>
+In-Reply-To: <3cf09046-7eac-82fe-8bd2-6aef1125b10c@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-On Tue 25-07-17 13:31:13, Roman Gushchin wrote:
-> On Tue, Jul 25, 2017 at 03:05:37PM +0300, Vladimir Davydov wrote:
-> > On Tue, Jul 25, 2017 at 12:40:47PM +0100, Roman Gushchin wrote:
-> > > A removed memory cgroup with a defined low limit and some belonging
-> > > pagecache has very low chances to be freed.
-> > > 
-> > > If a cgroup has been removed, there is likely no memory pressure inside
-> > > the cgroup, and the pagecache is protected from the external pressure
-> > > by the defined low limit. The cgroup will be freed only after
-> > > the reclaim of all belonging pages. And it will not happen until
-> > > there are any reclaimable memory in the system. That means,
-> > > there is a good chance, that a cold pagecache will reside
-> > > in the memory for an undefined amount of time, wasting
-> > > system resources.
-> > > 
-> > > Fix this issue by zeroing memcg->low during memcg offlining.
-> > > 
-> > > Signed-off-by: Roman Gushchin <guro@fb.com>
-> > > Cc: Tejun Heo <tj@kernel.org>
-> > > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > > Cc: Michal Hocko <mhocko@kernel.org>
-> > > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> > > Cc: kernel-team@fb.com
-> > > Cc: cgroups@vger.kernel.org
-> > > Cc: linux-mm@kvack.org
-> > > Cc: linux-kernel@vger.kernel.org
-> > > ---
-> > >  mm/memcontrol.c | 2 ++
-> > >  1 file changed, 2 insertions(+)
-> > > 
-> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > index aed11b2d0251..2aa204b8f9fd 100644
-> > > --- a/mm/memcontrol.c
-> > > +++ b/mm/memcontrol.c
-> > > @@ -4300,6 +4300,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
-> > >  	}
-> > >  	spin_unlock(&memcg->event_list_lock);
-> > >  
-> > > +	memcg->low = 0;
-> > > +
-> > >  	memcg_offline_kmem(memcg);
-> > >  	wb_memcg_offline(memcg);
-> > >  
-> > 
-> > We already have that - see mem_cgroup_css_reset().
+Hello, Waiman.
+
+On Mon, Jul 24, 2017 at 02:20:59PM -0400, Waiman Long wrote:
+> As said in patch 3, enabling bypass mode at subtree_control delegate the
+> authority of enabling controllers to the children. The children own the
+> resource control files directly. It will be more straight forward to
+
+But that doesn't work at all because such child would end up
+controlling the distribution of an ancestor's resources.  It breaks a
+fundamental property of the hierarchy.
+
+> explain if bypass mode can only be used consistently from the root down.
+> Having a mix of regular enable and bypass down the tree will be more
+> tricky to talk about.
+
+Hmmm... it isn't just being tricky.  As proposed, it is in direct
+conflict with the basic semantics of the resource hierarchy.
+
+> > * While the idea is interesting, I think we need more concrete
+> >   usecases to justify the addition and make sure that we aren't doing
+> >   something misguided.  Can you please illustrate / give examples of
+> >   how this would be useful?
 > 
-> Hm, I see...
+> Bypass mode targets mainly non-domain controllers and controllers that
+> have cost associated with each additional level of hierarchy (e.g. cpu).
+> I believe the end goal of cgroup v2 is to have all controllers migrated
+> to it eventually. Consider the following:
 > 
-> But are you sure, that calling mem_cgroup_css_reset() from offlining path
-> is always a good idea?
+>     A
+>    / \
+>   B   C
+>  / \ / \
+> D  E F G
+> 
+> Controller X may want (A, B, C) to be controlled as one group with one
+> set of control files whereas D, E, F, G will have their own control
+> files. Controller Y may want all of them have their own control files.
+> Bypass mode allows us to do that. With more and more controllers enabled
+> in v2, the chance of this kind of configuration conflicts is going up.
 
-Well, originally I wanted to suggest the same but then I asked the very
-same question and couldn't answer it myself. memcg_offline_kmem feels
-much more generic.
+I think I understand what it wants to do but I think it's still
+lacking justfications given how invasive the change is to the basic
+operation and usage.  We need more than one can think of this and it
+can help with certain hypothetical use cases.  ie. along the line of
+what the actual use cases are, what our overhead looks like and why,
+and why the problem can't be solved in a different, hopefully less
+intrusive, way.
 
-> As I understand, css_reset() callback is intended to _completely_ disable all
-> limits, as if there were no cgroup at all. And it's main purpose to be called
-> when controllers are detached from the hierarhy.
+Thanks.
 
-yes, that is my understanding as well.
- 
-> Offlining is different: some limits make perfect sence after offlining
-> (e.g. we want to limit the writeback speed), and other might be tweaked
-> (e.g. we can set soft limit to prioritize reclaiming of abandoned cgroups).
-
-and the writeback path was exactly the one that triggered my
-suspicious...
 -- 
-Michal Hocko
-SUSE Labs
+tejun
