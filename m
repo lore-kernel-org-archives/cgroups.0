@@ -1,109 +1,141 @@
-From: Wenwei Tao <wenwei.tww@gmail.com>
-Subject: [RFC PATCH] mm: memcg: fix css double put in mem_cgroup_iter
-Date: Wed, 26 Jul 2017 21:07:42 +0800
-Message-ID: <20170726130742.5976-1-wenwei.tww@gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [v4 1/4] mm, oom: refactor the TIF_MEMDIE usage
+Date: Wed, 26 Jul 2017 14:27:15 +0100
+Message-ID: <20170726132718.14806-2-guro@fb.com>
+References: <20170726132718.14806-1-guro@fb.com>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=wey2B9wxBdSzorYM4NRWDhl+pED9C1gdElXv6+Vwv2Q=;
-        b=t5R9ST3DyFhKF8DtZetrAnCroxCVhX79F9+fk0wDQHegkw+fy8H2IbfrHCJ1Jm0AsT
-         wAGcbBQ8vdxdFsResal5v9o8istJ2xZXBk2luUtT+FBtJtK5qs78Ekey/C7C2cn/7N1y
-         DDPS88NQy1b5HfzSONhPUcSSOYm6i07siKBhTspL7Qx9P9OKR3DNB7W5RqlMQbuKtwQi
-         EK/L1pSda9SvuhUFbqb7I2Ml4V7vE5HTzqhsSKACKYD9ytSdz6506YC485LrssUpxqEL
-         elQJEpB8ItFapecig5P9ketN6h1eQcZ5AG5PMbbina/lfgCH32UBfxORHuFF9Eb1s9R/
-         REoA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=9ZaAOR4ChrSL8WdnMlf7mf3cRfDrzy5OiSR9JxnZnwg=;
+ b=cdquXjUZRaJSPLQpqSJNXvZKuvDi/9nVzMM0mDl/UastsEoYpFDWGFsRrOdVRtHxcPt5
+ dBzNEjFbDdyIq6uYAOvcne8/H+hGYFzLLrtRIIdMqkN/TH7Oiop4OApTg3P7LE1Jd3b+
+ THMhh9aUpA0FsmDDlmaedq/kTmiE++SRLJ0= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=9ZaAOR4ChrSL8WdnMlf7mf3cRfDrzy5OiSR9JxnZnwg=;
+ b=AcSwamt1gjtgZJrqbYU2Jj/JoIBiL2opt2b+mJSaKeSHdnXT3+VJNFyB/YUjgP4jxxklM6myvNT8PlBUprOZP7OOoeJo+L720P8MWrwjpC2OfjFgo5usaj4btswwdH5M1ptN6uFlOALT1iiew29aU6gHgjmb36bTIAiqA6VWe+I=
+In-Reply-To: <20170726132718.14806-1-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
-Cc: yuwang.yuwang@alibaba-inc.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Wenwei Tao <wenwei.tww@alibaba-inc.com>
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Wenwei Tao <wenwei.tww@alibaba-inc.com>
+First, separate tsk_is_oom_victim() and TIF_MEMDIE flag checks:
+let the first one indicate that a task is killed by the OOM killer,
+and the second one indicate that a task has an access to the memory
+reserves (with a hope to eliminate it later).
 
-By removing the child cgroup while the parent cgroup is
-under reclaim, we could trigger the following kernel panic
-on kernel 3.10:
-------------------------------------------------------------------------
-kernel BUG at kernel/cgroup.c:893!
- invalid opcode: 0000 [#1] SMP
- CPU: 1 PID: 22477 Comm: kworker/1:1 Not tainted 3.10.107 #1
- Workqueue: cgroup_destroy css_dput_fn
- task: ffff8817959a5780 ti: ffff8817e8886000 task.ti: ffff8817e8886000
- RIP: 0010:[<ffffffff810cd6e0>]  [<ffffffff810cd6e0>]
-cgroup_diput+0xc0/0xf0
- RSP: 0000:ffff8817e8887da0  EFLAGS: 00010246
- RAX: 0000000000000000 RBX: ffff8817a5dd5d40 RCX: dead000000000200
- RDX: 0000000000000000 RSI: ffff8817973a6910 RDI: ffff8817f54c2a00
- RBP: ffff8817e8887dc8 R08: ffff8817a5dd5dd0 R09: df9fb35794b01820
- R10: df9fb35794b01820 R11: 00007fa95b1efcda R12: ffff8817a5dd5d9c
- R13: ffff8817f38b3a40 R14: ffff8817973a6910 R15: ffff8817973a6910
- FS:  0000000000000000(0000) GS:ffff88181f220000(0000)
-knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 00007fa6e6234000 CR3: 000000179f19d000 CR4: 00000000000407e0
- DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
- DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
- Stack:
-  ffff8817a5dd5d40 ffff8817a5dd5d9c ffff8817f38b3a40 ffff8817973a6910
-  0000000000000040 ffff8817e8887df8 ffffffff811b37c2 ffff8817fa23c000
-  ffff8817f57dbb80 ffff88181f232ac0 ffff88181f237500 ffff8817e8887e10
- Call Trace:
-  [<ffffffff811b37c2>] dput+0x1a2/0x2f0
-  [<ffffffff810cbacc>] cgroup_dput.isra.21+0x1c/0x30
-  [<ffffffff810cbafd>] css_dput_fn+0x1d/0x20
-  [<ffffffff81078ebc>] process_one_work+0x17c/0x460
-  [<ffffffff81079b66>] worker_thread+0x116/0x3b0
-  [<ffffffff81079a50>] ? manage_workers.isra.25+0x290/0x290
-  [<ffffffff81080330>] kthread+0xc0/0xd0
-  [<ffffffff81080270>] ? insert_kthread_work+0x40/0x40
-  [<ffffffff815b1e08>] ret_from_fork+0x58/0x90
-  [<ffffffff81080270>] ? insert_kthread_work+0x40/0x40
- Code: 41 5e 41 5f 5d c3 0f 1f 44 00 00 48 8b 7f 78 48 8b 07 a8 01 74 15
-48 81 c7 30 01 00 00 48 c7 c6 a0 a7 0c 81 e8 b2 83 02 00 eb c8 <0f> 0b
-49 8b 4e 18 48 c7 c2 7e f1 7a 81 be 85 03 00 00 48 c7 c7
- RIP  [<ffffffff810cd6e0>] cgroup_diput+0xc0/0xf0
- RSP <ffff8817e8887da0>
- ---[ end trace 85eeea5212c44f51 ]---
-------------------------------------------------------------------------
+Second, set TIF_MEMDIE to all threads of an OOM victim process.
 
-I think there is a css double put in mem_cgroup_iter. Under reclaim,
-we call mem_cgroup_iter the first time with prev == NULL, and we get
-last_visited memcg from per zone's reclaim_iter then call __mem_cgroup_iter_next
-try to get next alive memcg, __mem_cgroup_iter_next could return NULL
-if last_visited is already the last one so we put the last_visited's
-memcg css and continue to the next while loop, this time we might not
-do css_tryget(&last_visited->css) if the dead_count is changed, but
-we still do css_put(&last_visited->css), we put it twice, this could
-trigger the BUG_ON at kernel/cgroup.c:893.
+Third, to limit the number of processes which have an access to memory
+reserves, let's keep an atomic pointer to a task, which grabbed it.
 
-Reported-by: Wang Yu <yuwang.yuwang@alibaba-inc.com>
-Tested-by: Wang Yu <yuwang.yuwang@alibaba-inc.com>
-Signed-off-by: Wenwei Tao <wenwei.tww@alibaba-inc.com>
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/memcontrol.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ kernel/exit.c   |  2 +-
+ mm/memcontrol.c |  2 +-
+ mm/oom_kill.c   | 30 +++++++++++++++++++++++++-----
+ 3 files changed, 27 insertions(+), 7 deletions(-)
 
+diff --git a/kernel/exit.c b/kernel/exit.c
+index 8f40bee5ba9d..d5f372a2a363 100644
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -542,7 +542,7 @@ static void exit_mm(void)
+ 	task_unlock(current);
+ 	mm_update_next_owner(mm);
+ 	mmput(mm);
+-	if (test_thread_flag(TIF_MEMDIE))
++	if (tsk_is_oom_victim(current))
+ 		exit_oom_victim();
+ }
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 437ae2c..3d7a046 100644
+index d61133e6af99..9085e55eb69f 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1230,8 +1230,10 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 		memcg = __mem_cgroup_iter_next(root, last_visited);
+@@ -1896,7 +1896,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * bypass the last charges so that they can exit quickly and
+ 	 * free their memory.
+ 	 */
+-	if (unlikely(test_thread_flag(TIF_MEMDIE) ||
++	if (unlikely(tsk_is_oom_victim(current) ||
+ 		     fatal_signal_pending(current) ||
+ 		     current->flags & PF_EXITING))
+ 		goto force;
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 9e8b4f030c1c..72de01be4d33 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -435,6 +435,8 @@ static DECLARE_WAIT_QUEUE_HEAD(oom_victims_wait);
  
- 		if (reclaim) {
--			if (last_visited && last_visited != root)
-+			if (last_visited && last_visited != root) {
- 				css_put(&last_visited->css);
-+				last_visited = NULL;
-+			}
+ static bool oom_killer_disabled __read_mostly;
  
- 			iter->last_visited = memcg;
- 			smp_wmb();
++static struct task_struct *tif_memdie_owner;
++
+ #define K(x) ((x) << (PAGE_SHIFT-10))
+ 
+ /*
+@@ -656,13 +658,24 @@ static void mark_oom_victim(struct task_struct *tsk)
+ 	struct mm_struct *mm = tsk->mm;
+ 
+ 	WARN_ON(oom_killer_disabled);
+-	/* OOM killer might race with memcg OOM */
+-	if (test_and_set_tsk_thread_flag(tsk, TIF_MEMDIE))
++
++	if (!cmpxchg(&tif_memdie_owner, NULL, current)) {
++		struct task_struct *t;
++
++		rcu_read_lock();
++		for_each_thread(current, t)
++			set_tsk_thread_flag(t, TIF_MEMDIE);
++		rcu_read_unlock();
++	}
++
++	/*
++	 * OOM killer might race with memcg OOM.
++	 * oom_mm is bound to the signal struct life time.
++	 */
++	if (cmpxchg(&tsk->signal->oom_mm, NULL, mm))
+ 		return;
+ 
+-	/* oom_mm is bound to the signal struct life time. */
+-	if (!cmpxchg(&tsk->signal->oom_mm, NULL, mm))
+-		mmgrab(tsk->signal->oom_mm);
++	mmgrab(tsk->signal->oom_mm);
+ 
+ 	/*
+ 	 * Make sure that the task is woken up from uninterruptible sleep
+@@ -682,6 +695,13 @@ void exit_oom_victim(void)
+ {
+ 	clear_thread_flag(TIF_MEMDIE);
+ 
++	/*
++	 * If current tasks if a thread, which initially
++	 * received TIF_MEMDIE, clear tif_memdie_owner to
++	 * give a next process a chance to capture it.
++	 */
++	cmpxchg(&tif_memdie_owner, current, NULL);
++
+ 	if (!atomic_dec_return(&oom_victims))
+ 		wake_up_all(&oom_victims_wait);
+ }
 -- 
-1.8.3.1
+2.13.3
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
