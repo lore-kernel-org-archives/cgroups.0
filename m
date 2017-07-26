@@ -1,121 +1,110 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/4] cgroup: Allow bypass mode in subtree_control
-Date: Tue, 25 Jul 2017 15:10:04 -0400
-Message-ID: <7bdced01-c186-dc33-f68f-e66bee97b865@redhat.com>
-References: <1500669293-21792-1-git-send-email-longman@redhat.com>
- <1500669293-21792-3-git-send-email-longman@redhat.com>
- <20170722135030.GC3329631@devbig577.frc2.facebook.com>
- <3cf09046-7eac-82fe-8bd2-6aef1125b10c@redhat.com>
- <20170725171343.GB3216015@devbig577.frc2.facebook.com>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
+Subject: Re: [PATCH] mm, memcg: reset low limit during memcg offlining
+Date: Wed, 26 Jul 2017 11:30:17 +0300
+Message-ID: <20170726083017.3yzeucmi7lcj46qd@esperanza>
+References: <20170725114047.4073-1-guro@fb.com>
+ <20170725120537.o4kgzjhcjcjmopzc@esperanza>
+ <20170725123113.GB12635@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170725171343.GB3216015-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=5L4bfYlvLJIbqdz3lyaFHzdts+OfmULocZagpXhqJO4=;
+        b=UXliWwP+OGDQlCqdEZ9jXzZfFDch+zqRwFjhfaE6Y1Wp1E/LXzFI9tCRRnf1usThfI
+         dgkY33I7BFQB3n+bOndkfeeD9q/Cgv2ekMBgLNVpvSKTL+u/wLcqrof9wqIeWWrSm4CZ
+         V6lmpVWTCPadtKqV7VfeBIlvO4FK+MgtRLQz0N56BcdlO92+bXp5aPVoRwctKLcRxwt9
+         T8WncJI7fk/eJ+aFHRmyfwXxjHPyzfh+dNLZ+FPYPFs6KZpGShLdg+4wyg/yiCDaDnfC
+         9agk/T0LWIqwVKL/xcLz6Vt0ZI82YY51rFkSpdxmtxPuLZ9ANbVriq+pqmzR39HFPvz2
+         cOpg==
+Content-Disposition: inline
+In-Reply-To: <20170725123113.GB12635@castle.DHCP.thefacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/25/2017 01:13 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Mon, Jul 24, 2017 at 02:20:59PM -0400, Waiman Long wrote:
->> As said in patch 3, enabling bypass mode at subtree_control delegate the
->> authority of enabling controllers to the children. The children own the
->> resource control files directly. It will be more straight forward to
-> But that doesn't work at all because such child would end up
-> controlling the distribution of an ancestor's resources.  It breaks a
-> fundamental property of the hierarchy.
->
->> explain if bypass mode can only be used consistently from the root down.
->> Having a mix of regular enable and bypass down the tree will be more
->> tricky to talk about.
-> Hmmm... it isn't just being tricky.  As proposed, it is in direct
-> conflict with the basic semantics of the resource hierarchy.
->
->>> * While the idea is interesting, I think we need more concrete
->>>   usecases to justify the addition and make sure that we aren't doing
->>>   something misguided.  Can you please illustrate / give examples of
->>>   how this would be useful?
->> Bypass mode targets mainly non-domain controllers and controllers that
->> have cost associated with each additional level of hierarchy (e.g. cpu).
->> I believe the end goal of cgroup v2 is to have all controllers migrated
->> to it eventually. Consider the following:
->>
->>     A
->>    / \
->>   B   C
->>  / \ / \
->> D  E F G
->>
->> Controller X may want (A, B, C) to be controlled as one group with one
->> set of control files whereas D, E, F, G will have their own control
->> files. Controller Y may want all of them have their own control files.
->> Bypass mode allows us to do that. With more and more controllers enabled
->> in v2, the chance of this kind of configuration conflicts is going up.
-> I think I understand what it wants to do but I think it's still
-> lacking justfications given how invasive the change is to the basic
-> operation and usage.  We need more than one can think of this and it
-> can help with certain hypothetical use cases.  ie. along the line of
-> what the actual use cases are, what our overhead looks like and why,
-> and why the problem can't be solved in a different, hopefully less
-> intrusive, way.
+On Tue, Jul 25, 2017 at 01:31:13PM +0100, Roman Gushchin wrote:
+> On Tue, Jul 25, 2017 at 03:05:37PM +0300, Vladimir Davydov wrote:
+> > On Tue, Jul 25, 2017 at 12:40:47PM +0100, Roman Gushchin wrote:
+> > > A removed memory cgroup with a defined low limit and some belonging
+> > > pagecache has very low chances to be freed.
+> > > 
+> > > If a cgroup has been removed, there is likely no memory pressure inside
+> > > the cgroup, and the pagecache is protected from the external pressure
+> > > by the defined low limit. The cgroup will be freed only after
+> > > the reclaim of all belonging pages. And it will not happen until
+> > > there are any reclaimable memory in the system. That means,
+> > > there is a good chance, that a cold pagecache will reside
+> > > in the memory for an undefined amount of time, wasting
+> > > system resources.
+> > > 
+> > > Fix this issue by zeroing memcg->low during memcg offlining.
+> > > 
+> > > Signed-off-by: Roman Gushchin <guro@fb.com>
+> > > Cc: Tejun Heo <tj@kernel.org>
+> > > Cc: Johannes Weiner <hannes@cmpxchg.org>
+> > > Cc: Michal Hocko <mhocko@kernel.org>
+> > > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> > > Cc: kernel-team@fb.com
+> > > Cc: cgroups@vger.kernel.org
+> > > Cc: linux-mm@kvack.org
+> > > Cc: linux-kernel@vger.kernel.org
+> > > ---
+> > >  mm/memcontrol.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index aed11b2d0251..2aa204b8f9fd 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -4300,6 +4300,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+> > >  	}
+> > >  	spin_unlock(&memcg->event_list_lock);
+> > >  
+> > > +	memcg->low = 0;
+> > > +
+> > >  	memcg_offline_kmem(memcg);
+> > >  	wb_memcg_offline(memcg);
+> > >  
+> > 
+> > We already have that - see mem_cgroup_css_reset().
+> 
+> Hm, I see...
+> 
+> But are you sure, that calling mem_cgroup_css_reset() from offlining path
+> is always a good idea?
+> 
+> As I understand, css_reset() callback is intended to _completely_ disable all
+> limits, as if there were no cgroup at all.
 
-As I said above that bypass mode can be useful for non-domain
-controllers. For example, controllers like net_cls, net_prio just
-provides an ID for classification. There is no resource for the parent
-to control or distribute. We can, of course, make them implicit like
-perf_event and activate them in all the cgroups. Alternatively, we can
-use bypass and what let whatever cgroups that need it activate one for
-themselves to avoid proliferation of unused IDs.
+But that's exactly what cgroup offline is: deletion of a cgroup as if it
+never existed. The fact that we leave the zombie dangling until all
+pages charged to the cgroup are gone is an implementation detail. IIRC
+we would "reparent" those charges and delete the mem_cgroup right away
+if it were not inherently racy.
 
-Another use case is the cpu controller. As discussed a while before,
-scheduler intensive workload wills suffer with each additional level of
-hierarchy even if nothing is running at the same time. Image the
-following hierarchy:
+> And it's main purpose to be called
+> when controllers are detached from the hierarhy.
+> 
+> Offlining is different: some limits make perfect sence after offlining
+> (e.g. we want to limit the writeback speed), and other might be tweaked
+> (e.g. we can set soft limit to prioritize reclaiming of abandoned cgroups).
 
-    R
-   / \
-  A   B
- / \ / \
-X  Y W Z
+The user can't tweak limits of an offline cgroup, because the cgroup
+directory no longer exist. So IMHO resetting all limits is reasonable.
+If you want to keep the cgroup limits effective, you shouldn't have
+deleted it in the first place, I suppose.
 
-Supoose that memory consumption is the bottleneck and we use memory
-controller to distribute memory resources to tasks in X, Y, W, Z. Also
-suppose we have sufficient CPU resources available that we don't care
-much about how much CPU they uses. Now, if tasks in cgroup X want to use
-cpu controller to restrict the amount of CPU available to a subgroup of
-tasks. Currently, the only way to do that is to have cpu controller
-enabled all the way down from the root. Now all the tasks in Y, W & Z
-will have to suffer the additional performance overhead of this extra
-levels of cpu controller hierarchy. We also need to figure out how much
-CPU resource will need to be partitioned among cgroups.
+You might also want to check out this:
 
-With bypass mode, you only need to activate the CPU controllers where it
-is needed. The tasks in the other cgroups can just compete directly with
-each other without worrying about resource partition and hierarchical
-overhead. This is one example of the conflict of hierarchy problem I
-mentioned before.
+  http://www.spinics.net/lists/linux-mm/msg102995.html
 
-Even though I wrote that the children own the control files in their
-cgroup in bypass mode, it is mainly a conceptual framework for
-discussion purpose from my perspective. In reality, it is a matter of
-who has the permission to write to cgroup.controller to re-enable a
-bypassed controller and the corresponding controller files. So we can
-define it either ways (by parent or by child) to  best fit the narrative
-that we want to convey to the cgroup users. I don't care much about the
-narrative. I care more about what capability and flexibility that can be
-made available to the cgroup users.
-
-In your nsdelegate mount option patch, only cgroup.procs and
-cgroup.subtree_control are to be written by delegatees. So unless we
-extend it to other control files, those other files are still
-practically owned by the parent.
-
-Cheers,
-Longman
-
-
-
+> 
+> So, I'd prefer to move this code to the offlining callback,
+> and not to call css_reset.
+> 
+> But, anyway, thanks for pointing at the mem_cgroup_css_reset().
