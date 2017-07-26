@@ -1,178 +1,92 @@
-From: Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH] mm: memcontrol: Cast mismatched enum types passed to memcg state and event functions
-Date: Wed, 26 Jul 2017 12:23:56 -0700
-Message-ID: <20170726192356.18420-1-mka@chromium.org>
+From: Dima Zavin <dmitriyz@waymo.com>
+Subject: Re: [RFC PATCH] mm/slub: fix a deadlock due to incomplete patching of cpusets_enabled()
+Date: Wed, 26 Jul 2017 12:52:56 -0700
+Message-ID: <CAPz4a6AtLNf8sJzA2Ux-ta4B+_YLdG7OWEMvJij_Zguo0Q1sjw@mail.gmail.com>
+References: <20170726165022.10326-1-dmitriyz@waymo.com> <alpine.DEB.2.20.1707261158560.9311@nuc-kabylake>
+Reply-To: dmitriyz@waymo.com
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="001a114b42406c89a005553dcb01"
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=waymo.com; s=google;
+        h=mime-version:reply-to:in-reply-to:references:from:date:message-id
+         :subject:to:cc;
+        bh=xTnj7GHcM0fCyfaJDY86U7kf9eMxuBmc34Jq7ICbkU8=;
+        b=VXzpC22uIL0TDFHnBtL1OGOOSlf2VE8vY4lnaxSFLz6W6jcpnJPLrx66PyZJ4ZHcGz
+         MKZK5Y9tTxzaeUp2kzxfRkiKUaQXm/S24SzZCheqbgUwyKVCCy5gL5buMn6a1ZiZ0o5v
+         tz3EmH4M3Fy6CKc19FISXQmfUm8mlSTDS8yYc=
+In-Reply-To: <alpine.DEB.2.20.1707261158560.9311@nuc-kabylake>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Doug Anderson <dianders@chromium.org>, Matthias Kaehlcke <mka@chromium.org>
+To: Christopher Lameter <cl@linux.com>
+Cc: Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cliff Spradlin <cspradlin@waymo.com>
 
-In multiple instances enum values of an incorrect type are passed to
-mod_memcg_state() and other memcg functions. Apparently this is
-intentional, however clang rightfully generates tons of warnings about
-the mismatched types. Cast the offending values to the type expected
-by the called function. The casts add noise, but this seems preferable
-over losing the typesafe interface or/and disabling the warning.
+--001a114b42406c89a005553dcb01
+Content-Type: text/plain; charset="UTF-8"
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
----
- include/linux/memcontrol.h | 11 ++++++-----
- mm/memcontrol.c            | 11 +++++++----
- mm/swap.c                  |  2 +-
- mm/vmscan.c                | 12 ++++++++----
- 4 files changed, 22 insertions(+), 14 deletions(-)
+On Wed, Jul 26, 2017 at 10:02 AM, Christopher Lameter <cl@linux.com> wrote:
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 3914e3dd6168..66a0c92a9869 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -576,7 +576,7 @@ static inline void __mod_lruvec_state(struct lruvec *lruvec,
- 	if (mem_cgroup_disabled())
- 		return;
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	__mod_memcg_state(pn->memcg, idx, val);
-+	__mod_memcg_state(pn->memcg, (enum memcg_stat_item)idx, val);
- 	__this_cpu_add(pn->lruvec_stat->count[idx], val);
- }
- 
-@@ -589,7 +589,7 @@ static inline void mod_lruvec_state(struct lruvec *lruvec,
- 	if (mem_cgroup_disabled())
- 		return;
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	mod_memcg_state(pn->memcg, idx, val);
-+	mod_memcg_state(pn->memcg, (enum memcg_stat_item)idx, val);
- 	this_cpu_add(pn->lruvec_stat->count[idx], val);
- }
- 
-@@ -601,7 +601,7 @@ static inline void __mod_lruvec_page_state(struct page *page,
- 	__mod_node_page_state(page_pgdat(page), idx, val);
- 	if (mem_cgroup_disabled() || !page->mem_cgroup)
- 		return;
--	__mod_memcg_state(page->mem_cgroup, idx, val);
-+	__mod_memcg_state(page->mem_cgroup, (enum memcg_stat_item)idx, val);
- 	pn = page->mem_cgroup->nodeinfo[page_to_nid(page)];
- 	__this_cpu_add(pn->lruvec_stat->count[idx], val);
- }
-@@ -614,7 +614,7 @@ static inline void mod_lruvec_page_state(struct page *page,
- 	mod_node_page_state(page_pgdat(page), idx, val);
- 	if (mem_cgroup_disabled() || !page->mem_cgroup)
- 		return;
--	mod_memcg_state(page->mem_cgroup, idx, val);
-+	mod_memcg_state(page->mem_cgroup, (enum memcg_stat_item)idx, val);
- 	pn = page->mem_cgroup->nodeinfo[page_to_nid(page)];
- 	this_cpu_add(pn->lruvec_stat->count[idx], val);
- }
-@@ -635,7 +635,8 @@ static inline void count_memcg_page_event(struct page *page,
- 					  enum memcg_stat_item idx)
- {
- 	if (page->mem_cgroup)
--		count_memcg_events(page->mem_cgroup, idx, 1);
-+		count_memcg_events(page->mem_cgroup,
-+			(enum vm_event_item)idx, 1);
- }
- 
- static inline void count_memcg_event_mm(struct mm_struct *mm,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3df3c04d73ab..8b7b700cd53c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3573,7 +3573,8 @@ static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
- 
- 	seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
- 	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
--	seq_printf(sf, "oom_kill %lu\n", memcg_sum_events(memcg, OOM_KILL));
-+	seq_printf(sf, "oom_kill %lu\n",
-+		memcg_sum_events(memcg, (enum memcg_event_item)OOM_KILL));
- 	return 0;
- }
- 
-@@ -3650,10 +3651,11 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
- 	struct mem_cgroup *parent;
- 
--	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
-+	*pdirty = memcg_page_state(memcg, (enum memcg_stat_item)NR_FILE_DIRTY);
- 
- 	/* this should eventually include NR_UNSTABLE_NFS */
--	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
-+	*pwriteback = memcg_page_state(memcg,
-+			(enum memcg_stat_item)NR_WRITEBACK);
- 	*pfilepages = mem_cgroup_nr_lru_pages(memcg, (1 << LRU_INACTIVE_FILE) |
- 						     (1 << LRU_ACTIVE_FILE));
- 	*pheadroom = PAGE_COUNTER_MAX;
-@@ -5174,7 +5176,8 @@ static int memory_events_show(struct seq_file *m, void *v)
- 	seq_printf(m, "high %lu\n", memcg_sum_events(memcg, MEMCG_HIGH));
- 	seq_printf(m, "max %lu\n", memcg_sum_events(memcg, MEMCG_MAX));
- 	seq_printf(m, "oom %lu\n", memcg_sum_events(memcg, MEMCG_OOM));
--	seq_printf(m, "oom_kill %lu\n", memcg_sum_events(memcg, OOM_KILL));
-+	seq_printf(m, "oom_kill %lu\n",
-+		memcg_sum_events(memcg, (enum memcg_event_item)OOM_KILL));
- 
- 	return 0;
- }
-diff --git a/mm/swap.c b/mm/swap.c
-index 60b1d2a75852..be08c0e27259 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -591,7 +591,7 @@ static void lru_lazyfree_fn(struct page *page, struct lruvec *lruvec,
- 		add_page_to_lru_list(page, lruvec, LRU_INACTIVE_FILE);
- 
- 		__count_vm_events(PGLAZYFREE, hpage_nr_pages(page));
--		count_memcg_page_event(page, PGLAZYFREE);
-+		count_memcg_page_event(page, (enum memcg_stat_item)PGLAZYFREE);
- 		update_page_reclaim_stat(lruvec, 1, 0);
- 	}
- }
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index a1af041930a6..14c465395b39 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1294,7 +1294,8 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 			}
- 
- 			count_vm_event(PGLAZYFREED);
--			count_memcg_page_event(page, PGLAZYFREED);
-+			count_memcg_page_event(page,
-+				(enum memcg_stat_item)PGLAZYFREED);
- 		} else if (!mapping || !__remove_mapping(mapping, page, true))
- 			goto keep_locked;
- 		/*
-@@ -1324,7 +1325,8 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 		if (!PageMlocked(page)) {
- 			SetPageActive(page);
- 			pgactivate++;
--			count_memcg_page_event(page, PGACTIVATE);
-+			count_memcg_page_event(page,
-+				(enum memcg_stat_item)PGACTIVATE);
- 		}
- keep_locked:
- 		unlock_page(page);
-@@ -2099,7 +2101,8 @@ static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
- 	active = lruvec_lru_size(lruvec, active_lru, sc->reclaim_idx);
- 
- 	if (memcg)
--		refaults = memcg_page_state(memcg, WORKINGSET_ACTIVATE);
-+		refaults = memcg_page_state(memcg,
-+				(enum memcg_stat_item)WORKINGSET_ACTIVATE);
- 	else
- 		refaults = node_page_state(pgdat, WORKINGSET_ACTIVATE);
- 
-@@ -2795,7 +2798,8 @@ static void snapshot_refaults(struct mem_cgroup *root_memcg, pg_data_t *pgdat)
- 		struct lruvec *lruvec;
- 
- 		if (memcg)
--			refaults = memcg_page_state(memcg, WORKINGSET_ACTIVATE);
-+			refaults = memcg_page_state(memcg,
-+			    (enum memcg_stat_item)WORKINGSET_ACTIVATE);
- 		else
- 			refaults = node_page_state(pgdat, WORKINGSET_ACTIVATE);
- 
--- 
-2.14.0.rc0.400.g1c36432dff-goog
+> On Wed, 26 Jul 2017, Dima Zavin wrote:
+>
+> > The fix is to cache the value that's returned by cpusets_enabled() at the
+> > top of the loop, and only operate on the seqlock (both begin and retry)
+> if
+> > it was true.
+>
+> I think the proper fix would be to ensure that the calls to
+> read_mems_allowed_{begin,retry} cannot cause the deadlock. Otherwise you
+> have to fix this in multiple places.
+>
+> Maybe read_mems_allowed_* can do some form of synchronization or *_retry
+> can implictly rely on the results of cpusets_enabled() by *_begin?
+>
+
+Thanks for the quick reply!
+
+I can turn the cookie into a uint64, put the sequence into the low order 32
+bits and put the enabled state into bit 33 (or 63 :) ). Then retry will not
+query cpusets_enabled() and will just look at the enabled bit. This means
+that *_retry will always have a conditional jump (i.e. lose the whole
+static_branch optimization) but maybe that's ok since that's pretty rare
+and the *_begin() will still benefit from it?
+
+--Dima
+
+--001a114b42406c89a005553dcb01
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
+te">On Wed, Jul 26, 2017 at 10:02 AM, Christopher Lameter <span dir=3D"ltr"=
+>&lt;<a href=3D"mailto:cl@linux.com" target=3D"_blank">cl@linux.com</a>&gt;=
+</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .=
+8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D"">On Wed, 2=
+6 Jul 2017, Dima Zavin wrote:<br>
+<br>
+&gt; The fix is to cache the value that&#39;s returned by cpusets_enabled()=
+ at the<br>
+&gt; top of the loop, and only operate on the seqlock (both begin and retry=
+) if<br>
+&gt; it was true.<br>
+<br>
+</span>I think the proper fix would be to ensure that the calls to<br>
+read_mems_allowed_{begin,<wbr>retry} cannot cause the deadlock. Otherwise y=
+ou<br>
+have to fix this in multiple places.<br>
+<br>
+Maybe read_mems_allowed_* can do some form of synchronization or *_retry<br=
+>
+can implictly rely on the results of cpusets_enabled() by *_begin?<br></blo=
+ckquote><div><br></div><div>Thanks for the quick reply!</div><div><br></div=
+><div>I can turn the cookie into a uint64, put the sequence into the low or=
+der 32 bits and put the enabled state into bit 33 (or 63 :) ). Then retry w=
+ill not query cpusets_enabled() and will just look at the enabled bit. This=
+ means that *_retry will always have a conditional jump (i.e. lose the whol=
+e static_branch optimization) but maybe that&#39;s ok since that&#39;s pret=
+ty rare and the *_begin() will still benefit from it?</div><div><br></div><=
+div>--Dima</div></div></div></div>
+
+--001a114b42406c89a005553dcb01--
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
