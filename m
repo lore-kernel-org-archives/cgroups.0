@@ -1,53 +1,94 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: add cgroup.stat interface with basic hierarchy
- stats
-Date: Thu, 27 Jul 2017 13:55:57 -0400
-Message-ID: <da7c5db5-355b-28aa-dbf8-9a0b6eb6c66e@redhat.com>
-References: <20170727161420.2552-1-guro@fb.com>
- <6a72e074-e01f-b93f-2c03-2bd0366d005b@redhat.com>
- <20170727174613.GA6457@castle.DHCP.thefacebook.com>
+From: Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: Cast mismatched enum types passed to
+ memcg state and event functions
+Date: Thu, 27 Jul 2017 12:46:28 -0700
+Message-ID: <20170727194628.GB84665@google.com>
+References: <20170726192356.18420-1-mka@chromium.org>
+ <20170726142309.ac40faf5eb99568e6edb064c@linux-foundation.org>
+ <20170726214914.GA84665@google.com>
+ <20170726150332.313e48837d97046924ddaa16@linux-foundation.org>
+ <20170727072451.GH20970@dhcp22.suse.cz>
+ <20170727141742.GA19738@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170727174613.GA6457-B3w7+ongkCiLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=+n+1e/86qprJQo0hEoSxvaiszfNl9zK1JTDvSABPlaI=;
+        b=DljWoze84mny4qIFZcK4dvJQJLijaiP+445B6ts6u6ZPXFkVIAwR5qkLxusIHEYnSl
+         FbAd7Jbywf+x5tSWNpZDwy53+2pbPS/nm4i4cnJvPEDFliYuuGask8rbcd2eTp06+wes
+         K3xEh/472wvCxwno2TvB1KNeBohcRqhKbXiag=
+Content-Disposition: inline
+In-Reply-To: <20170727141742.GA19738-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Doug Anderson <dianders-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-On 07/27/2017 01:46 PM, Roman Gushchin wrote:
-> On Thu, Jul 27, 2017 at 01:38:55PM -0400, Waiman Long wrote:
->> On 07/27/2017 12:14 PM, Roman Gushchin wrote:
->>> Add a cgroup.stat interface to the base cgroup control files
->>> with the following metrics:
->>>
->>> nr_descendants		total number of descendant cgroups
->>> nr_dying_descendants	total number of dying descendant cgroups
->>> max_descendant_depth	maximum descent depth below the current cgroup
->> Both nr_descendants and max_descendant_depth can be found easily from
->> userspace by scanning the cgroup directory. nr_dying_descendants is a
->> transient figure and it should be 0 most of the time. So I wonder how
->> useful it can be.
->>
->> This new interface file will be more useful if it can reveal information
->> that cannot be easily obtained by looking from userspace alone.
-> A cgroup can be in dying state for substantional amount of time
-> (imagine a memcg which holds a page mlocked by a process in an other cgroup).
->
-> The total amount of cgroups, as well as tree depth include dying cgroups,
-> which are not visible from the userspace.
->
-> The main purpose of this interface is to have a reasonable way to check if
-> there are no leaks/refcounting issues, which prevents cgroups from being
-> completely freed.
->
+El Thu, Jul 27, 2017 at 10:17:42AM -0400 Johannes Weiner ha dit:
 
-If that is the use case, I am OK with that. However, you may want to
-document that either in the commit log or in the comment. Maybe you can
-also list the full path of the offlined cgroups if it is what you are
-looking for.
+> On Thu, Jul 27, 2017 at 09:24:51AM +0200, Michal Hocko wrote:
+> > On Wed 26-07-17 15:03:32, Andrew Morton wrote:
+> > > On Wed, 26 Jul 2017 14:49:14 -0700 Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
+> > > 
+> > > > El Wed, Jul 26, 2017 at 02:23:09PM -0700 Andrew Morton ha dit:
+> > > > 
+> > > > > On Wed, 26 Jul 2017 12:23:56 -0700 Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
+> > > > > 
+> > > > > > In multiple instances enum values of an incorrect type are passed to
+> > > > > > mod_memcg_state() and other memcg functions. Apparently this is
+> > > > > > intentional, however clang rightfully generates tons of warnings about
+> > > > > > the mismatched types. Cast the offending values to the type expected
+> > > > > > by the called function. The casts add noise, but this seems preferable
+> > > > > > over losing the typesafe interface or/and disabling the warning.
+> > > > > > 
+> > > > > > ...
+> > > > > >
+> > > > > > --- a/include/linux/memcontrol.h
+> > > > > > +++ b/include/linux/memcontrol.h
+> > > > > > @@ -576,7 +576,7 @@ static inline void __mod_lruvec_state(struct lruvec *lruvec,
+> > > > > >  	if (mem_cgroup_disabled())
+> > > > > >  		return;
+> > > > > >  	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+> > > > > > -	__mod_memcg_state(pn->memcg, idx, val);
+> > > > > > +	__mod_memcg_state(pn->memcg, (enum memcg_stat_item)idx, val);
+> > > > > >  	__this_cpu_add(pn->lruvec_stat->count[idx], val);
+> > > > > >  }
+> > > > > 
+> > > > > __mod_memcg_state()'s `idx' arg can be either enum memcg_stat_item or
+> > > > > enum memcg_stat_item.  I think it would be better to just admit to
+> > > > > ourselves that __mod_memcg_state() is more general than it appears, and
+> > > > > change it to take `int idx'.  I assume that this implicit cast of an
+> > > > > enum to an int will not trigger a clang warning?
+> > > > 
+> > > > Sure, no warnings are raised for implicit casts from enum to
+> > > > int.
+> > > > 
+> > > > __mod_memcg_state() is not the only function though, all these
+> > > > functions are called with conflicting types:
+> > > > 
+> > > > memcg_page_state()
+> > > > __mod_memcg_state()
+> > > > mod_memcg_state()
+> > > > count_memcg_events()
+> > > > count_memcg_page_event()
+> > > > memcg_sum_events()
+> > > > 
+> > > > Should we change all of them to reveice an int instead of an enum?
+> > > 
+> > > I suspect so - the current implementation is denying reality and your
+> > > original proposal is a bit of a fudge.  But I'll await input from the
+> > > memcg peeps.
+> > 
+> > well, those enums do not help type safety much I am afraid so turining
+> > the idx to int sounds like a more preferable way to me. Johannes?
+> 
+> I agree, turning the parameter into an int makes for much nicer code
+> than the casts.
+> 
+> Matthias, would you care to update your patch to change these over?
 
-Cheers,
-Longman
+Ok, I'll respin the patch to use ints as parameters.
