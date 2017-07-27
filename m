@@ -1,78 +1,76 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: Cast mismatched enum types passed to
- memcg state and event functions
-Date: Thu, 27 Jul 2017 09:24:51 +0200
-Message-ID: <20170727072451.GH20970@dhcp22.suse.cz>
-References: <20170726192356.18420-1-mka@chromium.org>
- <20170726142309.ac40faf5eb99568e6edb064c@linux-foundation.org>
- <20170726214914.GA84665@google.com>
- <20170726150332.313e48837d97046924ddaa16@linux-foundation.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH 1/2] mm, memcg: reset memory.low during memcg offlining
+Date: Thu, 27 Jul 2017 14:04:27 +0100
+Message-ID: <20170727130428.28856-1-guro@fb.com>
+References: <20170726083017.3yzeucmi7lcj46qd@esperanza>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170726150332.313e48837d97046924ddaa16-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=GZrdh9NA7cYNBsxPnA59GnPXWGuOyLWyHZU6QtC6K0s=;
+ b=QiFwp/0lczUhQ1eysafO4n5ABmO0N3WZtHdx5kRoQm3YpFXIrHhsS3+xWqVOGXNynzcT
+ 7hhTS/qyalR1rjJ0M0haNmLHBb44TUf4opd5RP7U5QfiQZVlJDmUI/HW+hzpd2bn+HNl
+ HBKi8ITuREOJP72WOMuvi2LCf8ewwbXtQTM= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=GZrdh9NA7cYNBsxPnA59GnPXWGuOyLWyHZU6QtC6K0s=;
+ b=h25gebyDJCIFPr0NMc7p4P6NR1uOaOJHJxl3CvP+LrKvE2mD8Xp/a1kC+yxye9csSgRy+9skQao4zOW25vLFCB6CJVhGybOqBF3dzRs0FphsyBNHda2QWKL0M7db8lOM8b1y+pVekMOGSSwcXtm1CPgrYQC1FfJ2DODUMegm0Go=
+In-Reply-To: <20170726083017.3yzeucmi7lcj46qd@esperanza>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Doug Anderson <dianders-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Wed 26-07-17 15:03:32, Andrew Morton wrote:
-> On Wed, 26 Jul 2017 14:49:14 -0700 Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
-> 
-> > El Wed, Jul 26, 2017 at 02:23:09PM -0700 Andrew Morton ha dit:
-> > 
-> > > On Wed, 26 Jul 2017 12:23:56 -0700 Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
-> > > 
-> > > > In multiple instances enum values of an incorrect type are passed to
-> > > > mod_memcg_state() and other memcg functions. Apparently this is
-> > > > intentional, however clang rightfully generates tons of warnings about
-> > > > the mismatched types. Cast the offending values to the type expected
-> > > > by the called function. The casts add noise, but this seems preferable
-> > > > over losing the typesafe interface or/and disabling the warning.
-> > > > 
-> > > > ...
-> > > >
-> > > > --- a/include/linux/memcontrol.h
-> > > > +++ b/include/linux/memcontrol.h
-> > > > @@ -576,7 +576,7 @@ static inline void __mod_lruvec_state(struct lruvec *lruvec,
-> > > >  	if (mem_cgroup_disabled())
-> > > >  		return;
-> > > >  	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-> > > > -	__mod_memcg_state(pn->memcg, idx, val);
-> > > > +	__mod_memcg_state(pn->memcg, (enum memcg_stat_item)idx, val);
-> > > >  	__this_cpu_add(pn->lruvec_stat->count[idx], val);
-> > > >  }
-> > > 
-> > > __mod_memcg_state()'s `idx' arg can be either enum memcg_stat_item or
-> > > enum memcg_stat_item.  I think it would be better to just admit to
-> > > ourselves that __mod_memcg_state() is more general than it appears, and
-> > > change it to take `int idx'.  I assume that this implicit cast of an
-> > > enum to an int will not trigger a clang warning?
-> > 
-> > Sure, no warnings are raised for implicit casts from enum to
-> > int.
-> > 
-> > __mod_memcg_state() is not the only function though, all these
-> > functions are called with conflicting types:
-> > 
-> > memcg_page_state()
-> > __mod_memcg_state()
-> > mod_memcg_state()
-> > count_memcg_events()
-> > count_memcg_page_event()
-> > memcg_sum_events()
-> > 
-> > Should we change all of them to reveice an int instead of an enum?
-> 
-> I suspect so - the current implementation is denying reality and your
-> original proposal is a bit of a fudge.  But I'll await input from the
-> memcg peeps.
+A removed memory cgroup with a defined memory.low and some belonging
+pagecache has very low chances to be freed.
 
-well, those enums do not help type safety much I am afraid so turining
-the idx to int sounds like a more preferable way to me. Johannes?
+If a cgroup has been removed, there is likely no memory pressure inside
+the cgroup, and the pagecache is protected from the external pressure
+by the defined low limit. The cgroup will be freed only after
+the reclaim of all belonging pages. And it will not happen until
+there are any reclaimable memory in the system. That means,
+there is a good chance, that a cold pagecache will reside
+in the memory for an undefined amount of time, wasting
+system resources.
 
+This problem was fixed earlier by commit fa06235b8eb0
+("cgroup: reset css on destruction"), but it's not a best way
+to do it, as we can't really reset all limits/counters during
+cgroup offlining.
+
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+---
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d61133e6af99..7b24210596ea 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4300,6 +4300,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	}
+ 	spin_unlock(&memcg->event_list_lock);
+ 
++	memcg->low = 0;
++
+ 	memcg_offline_kmem(memcg);
+ 	wb_memcg_offline(memcg);
+ 
 -- 
-Michal Hocko
-SUSE Labs
+2.13.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
