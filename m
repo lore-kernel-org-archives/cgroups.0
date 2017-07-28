@@ -1,74 +1,92 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v2] cpuset: fix a deadlock due to incomplete patching of
- cpusets_enabled()
-Date: Fri, 28 Jul 2017 11:30:47 +0200
-Message-ID: <20170728093047.ykgbufjj74xa5x3r@hirez.programming.kicks-ass.net>
-References: <alpine.DEB.2.20.1707261158560.9311@nuc-kabylake>
- <20170727164608.12701-1-dmitriyz@waymo.com>
- <41954034-9de1-de8e-f915-51a4b0334f98@suse.cz>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH] cgroup: add cgroup.stat interface with basic hierarchy
+ stats
+Date: Fri, 28 Jul 2017 14:01:55 +0100
+Message-ID: <20170728130155.GA13728@castle.dhcp.TheFacebook.com>
+References: <20170727161420.2552-1-guro@fb.com>
+ <20170727162243.GF742618@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=MPYyK31pZMbHMAhmbHVyohgHNebwCWc/GMKPULrFcck=; b=cKIpvpuMydjcFw+WABO2yxrMW
-	KZjf+CEEWQIUV/2JuoCvDZnWVVJKaQbmvFJu3poomjafrXdU0dzVDvk/+ODx6rfTU4ha7qHt3cYzh
-	12cIKlBlQrkFgR5yURw3wpXTJq87uLIv+AvRzdNvmjamA6sVY1KjrspNE1xIpeXpBsuKDTLrsNyiL
-	0rfjKx2wow6ibYjKbjns8tGweu5rkOoxCHvP5SaUE8WaAhKpxnfzrhvJVTA+oUOPwEed0l/HRzm/7
-	RKCo2rMNsP06ark9RDwaZSgDfk4v7/tXWugwa5rA0bNwy8sEmefA3HMkF90wf7IDfunpa1JXi8EUR
-	/Ti5dH0eQ==;
-Content-Disposition: inline
-In-Reply-To: <41954034-9de1-de8e-f915-51a4b0334f98@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=NRZLbhd/WCmpXJh8sKtHMqwwRkKrxlGAW0sVo2CMJqI=;
+ b=EDw9uKk/9wkz5p8XWDlnfGR7yF8Rh0ZuiTBqXYyVTODL/HAB1bIrRYX/sBNg3ZVUA546
+ H8UMD3Fg5eIlWaFtAfY5zVVvnEgMRc8eEv4jjqZwGvyNdyi3yTg0t+vGly66LWYpSkAu
+ NAJAIDq2TmKYYeudD7ac8969ekTgUa3Bphc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=NRZLbhd/WCmpXJh8sKtHMqwwRkKrxlGAW0sVo2CMJqI=;
+ b=AFkfJMjwo9ANEVYRKVuruVWzLN6fcSCsKNM1Vo4Ym1wy+k2ZudWJg+YnpyV3w4aW3pjFYckKK18yvlcPC9nvVDH+Ouv+v6KTKBhpgdNNLaIsvKbqA4UsMzEy2nJpz7xLJqd4PgQaIEqMStR0VNQCpfdciKqcbuvhseeFuEPI4WM=
+Content-Disposition: inline
+In-Reply-To: <20170727162243.GF742618@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Dima Zavin <dmitriyz@waymo.com>, Christopher Lameter <cl@linux.com>, Li Zefan <lizefan@huawei.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Cliff Spradlin <cspradlin@waymo.com>, Mel Gorman <mgorman@techsingularity.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, Zefan Li <lizefan@huawei.com>, Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jul 28, 2017 at 09:45:16AM +0200, Vlastimil Babka wrote:
-> [+CC PeterZ]
+On Thu, Jul 27, 2017 at 12:22:43PM -0400, Tejun Heo wrote:
+> Hello,
 > 
-> On 07/27/2017 06:46 PM, Dima Zavin wrote:
-> > In codepaths that use the begin/retry interface for reading
-> > mems_allowed_seq with irqs disabled, there exists a race condition that
-> > stalls the patch process after only modifying a subset of the
-> > static_branch call sites.
+> On Thu, Jul 27, 2017 at 05:14:20PM +0100, Roman Gushchin wrote:
+> > Add a cgroup.stat interface to the base cgroup control files
+> > with the following metrics:
 > > 
-> > This problem manifested itself as a dead lock in the slub
-> > allocator, inside get_any_partial. The loop reads
-> > mems_allowed_seq value (via read_mems_allowed_begin),
-> > performs the defrag operation, and then verifies the consistency
-> > of mem_allowed via the read_mems_allowed_retry and the cookie
-> > returned by xxx_begin. The issue here is that both begin and retry
-> > first check if cpusets are enabled via cpusets_enabled() static branch.
-> > This branch can be rewritted dynamically (via cpuset_inc) if a new
-> > cpuset is created. The x86 jump label code fully synchronizes across
-> > all CPUs for every entry it rewrites. If it rewrites only one of the
-> > callsites (specifically the one in read_mems_allowed_retry) and then
-> > waits for the smp_call_function(do_sync_core) to complete while a CPU is
-> > inside the begin/retry section with IRQs off and the mems_allowed value
-> > is changed, we can hang. This is because begin() will always return 0
-> > (since it wasn't patched yet) while retry() will test the 0 against
-> > the actual value of the seq counter.
+> > nr_descendants		total number of descendant cgroups
+> > nr_dying_descendants	total number of dying descendant cgroups
+> > max_descendant_depth	maximum descent depth below the current cgroup
 > 
-> Hm I wonder if there are other static branch users potentially having
-> similar problem. Then it would be best to fix this at static branch
-> level. Any idea, Peter? An inelegant solution would be to have indicate
-> static_branch_(un)likely() callsites ordering for the patching. I.e.
-> here we would make sure that read_mems_allowed_begin() callsites are
-> patched before read_mems_allowed_retry() when enabling the static key,
-> and the opposite order when disabling the static key.
+> Yeah, this'd be great to have.  Some comments below.
+> 
+> > +  cgroup.stat
+> > +	A read-only flat-keyed file with the following entries:
+> > +
+> > +	  nr_descendants
+> > +		Total number of descendant cgroups.
+> > +
+> > +	  nr_dying_descendants
+> > +		Total number of dying descendant cgroups.
+> 
+> Can you please go into more detail on what's going on with dying
+> descendants here?
 
-I'm not aware of any other sure ordering requirements. But you can
-manually create this order by using 2 static keys. Then flip them in the
-desired order.
+Sure.
+Don't we plan do describe cgroup/css lifecycle in details
+in a separate section?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> > +static int cgroup_stats_show(struct seq_file *seq, void *v)
+> > +{
+> > +	struct cgroup_subsys_state *css;
+> > +	unsigned long total = 0;
+> > +	unsigned long offline = 0;
+> > +	int max_level = 0;
+> > +
+> > +	rcu_read_lock();
+> > +	css_for_each_descendant_pre(css, seq_css(seq)) {
+> > +		if (css == seq_css(seq))
+> > +			continue;
+> > +		++total;
+> 
+> Let's do post increment for consistency.
+
+Ok.
+
+> 
+> > +		if (!(css->flags & CSS_ONLINE))
+> > +			++offline;
+> > +		if (css->cgroup->level > max_level)
+> > +			max_level = css->cgroup->level;
+> > +	}
+> > +	rcu_read_unlock();
+> 
+> I wonder whether we want to keep these counters in sync instead of
+> trying to gather the number on read.  Walking all descendants can get
+> expensive pretty quickly and things like nr_descendants will be useful
+> for other purposes too.
+
+Ok, assuming that I'm working on adding an ability to set limits
+on cgroup hierarchy, it seems very reasonable. I'll implement this
+and post the updated path as a part of a patchset.
+
+Thanks!
