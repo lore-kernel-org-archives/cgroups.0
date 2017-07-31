@@ -1,229 +1,63 @@
-From: Dima Zavin <dmitriyz@waymo.com>
-Subject: Re: [PATCH v3] cpuset: fix a deadlock due to incomplete patching of cpusets_enabled()
-Date: Mon, 31 Jul 2017 02:05:19 -0700
-Message-ID: <CAPz4a6C3GohQQ-T-_sMX5ZKF_pnVsHpogetTm-5y0R8nPAOgdg@mail.gmail.com>
-References: <9e14ff85-1680-e76d-1b71-22301c16c286@suse.cz> <20170731040113.14197-1-dmitriyz@waymo.com>
- <7e68a8ed-af45-e288-3461-f80ffaa542ae@suse.cz>
-Reply-To: dmitriyz@waymo.com
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup fixes for v4.13-rc3
+Date: Mon, 31 Jul 2017 08:43:53 -0700
+Message-ID: <20170731154353.GD447614@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=waymo.com; s=google;
-        h=mime-version:reply-to:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=z9eozSQ7ju6zJHIqa2rAwU0uXy33GyTDvGPEHXVbWkY=;
-        b=bPnPIsaglcA7hPA47LGz58mCtBBI/lnjr8wZ9vX8BrgK7NHjt1Slq1JvpGmvJnFs2Q
-         4ytKhKxOmU8TZ9oIw73ejbPuDetHGrEik4tqvhHcaLF1ZmJQXi9OT5uQjtcdxPGap6TS
-         mPaOdqOq21RKauQK+DYw9J9uYYMOTHHQgB6W0=
-In-Reply-To: <7e68a8ed-af45-e288-3461-f80ffaa542ae@suse.cz>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=L5R/WoE5BqU2tFM4WVR6+WRtT5/D5caTkZBJRoOoyvE=;
+        b=Xnw8qMfRgctXwrB5We7jpdGmm4JAi7UpPKQpF4j0IkzQ3nbti1KapbcWLF5KZUYuKY
+         pwm4XcrsNNIE+wxmTX7dMQVLVbRexnHd1eHfLUUTtI3VZLeStzO4IY+KfWF6kkitZvlD
+         R3DPrW7gTzybzy7IqTImOme3jEjt4pT796iEWWYjU4J2IK3KciUyaMPJQ0qd323F/hwC
+         QUVLa5WV4uCYZpE371335b6e8IOWYsX9bnXeHBeahKA6QX2cO1598qLBJweOHkIFfqA3
+         ubZwKSjR0v7zNPg9YYH9jRNLl3URJ2ErThv+JWHDtv00bKOGvkuZtTK8JYYWl2R/p22l
+         JwBA==
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Peter Zijlstra <peterz@infradead.org>, Christopher Lameter <cl@linux.com>, Li Zefan <lizefan@huawei.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Mel Gorman <mgorman@techsingularity.net>, Cliff Spradlin <cspradlin@waymo.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On Mon, Jul 31, 2017 at 1:02 AM, Vlastimil Babka <vbabka@suse.cz> wrote:
-> On 07/31/2017 06:01 AM, Dima Zavin wrote:
->> In codepaths that use the begin/retry interface for reading
->> mems_allowed_seq with irqs disabled, there exists a race condition that
->> stalls the patch process after only modifying a subset of the
->> static_branch call sites.
->>
->> This problem manifested itself as a dead lock in the slub
->> allocator, inside get_any_partial. The loop reads
->> mems_allowed_seq value (via read_mems_allowed_begin),
->> performs the defrag operation, and then verifies the consistency
->> of mem_allowed via the read_mems_allowed_retry and the cookie
->> returned by xxx_begin. The issue here is that both begin and retry
->> first check if cpusets are enabled via cpusets_enabled() static branch.
->> This branch can be rewritted dynamically (via cpuset_inc) if a new
->> cpuset is created. The x86 jump label code fully synchronizes across
->> all CPUs for every entry it rewrites. If it rewrites only one of the
->> callsites (specifically the one in read_mems_allowed_retry) and then
->> waits for the smp_call_function(do_sync_core) to complete while a CPU is
->> inside the begin/retry section with IRQs off and the mems_allowed value
->> is changed, we can hang. This is because begin() will always return 0
->> (since it wasn't patched yet) while retry() will test the 0 against
->> the actual value of the seq counter.
->>
->> The fix is to use two different static keys: one for begin
->> (pre_enable_key) and one for retry (enable_key). In cpuset_inc(), we
->> first bump the pre_enable key to ensure that cpuset_mems_allowed_begin()
->> always return a valid seqcount if are enabling cpusets. Similarly,
->> when disabling cpusets via cpuset_dec(), we first ensure that callers
->> of cpuset_mems_allowed_retry() will start ignoring the seqcount
->> value before we let cpuset_mems_allowed_begin() return 0.
->>
->> The relevant stack traces of the two stuck threads:
->>
->>   CPU: 1 PID: 1415 Comm: mkdir Tainted: G L  4.9.36-00104-g540c51286237 #4
->>   Hardware name: Default string Default string/Hardware, BIOS 4.29.1-20170526215256 05/26/2017
->>   task: ffff8817f9c28000 task.stack: ffffc9000ffa4000
->>   RIP: smp_call_function_many+0x1f9/0x260
->>   Call Trace:
->>     ? setup_data_read+0xa0/0xa0
->>     ? ___slab_alloc+0x28b/0x5a0
->>     smp_call_function+0x3b/0x70
->>     ? setup_data_read+0xa0/0xa0
->>     on_each_cpu+0x2f/0x90
->>     ? ___slab_alloc+0x28a/0x5a0
->>     ? ___slab_alloc+0x28b/0x5a0
->>     text_poke_bp+0x87/0xd0
->>     ? ___slab_alloc+0x28a/0x5a0
->>     arch_jump_label_transform+0x93/0x100
->>     __jump_label_update+0x77/0x90
->>     jump_label_update+0xaa/0xc0
->>     static_key_slow_inc+0x9e/0xb0
->>     cpuset_css_online+0x70/0x2e0
->>     online_css+0x2c/0xa0
->>     cgroup_apply_control_enable+0x27f/0x3d0
->>     cgroup_mkdir+0x2b7/0x420
->>     kernfs_iop_mkdir+0x5a/0x80
->>     vfs_mkdir+0xf6/0x1a0
->>     SyS_mkdir+0xb7/0xe0
->>     entry_SYSCALL_64_fastpath+0x18/0xad
->>
->>   ...
->>
->>   CPU: 2 PID: 1 Comm: init Tainted: G L  4.9.36-00104-g540c51286237 #4
->>   Hardware name: Default string Default string/Hardware, BIOS 4.29.1-20170526215256 05/26/2017
->>   task: ffff8818087c0000 task.stack: ffffc90000030000
->>   RIP: int3+0x39/0x70
->>   Call Trace:
->>     <#DB> ? ___slab_alloc+0x28b/0x5a0
->>     <EOE> ? copy_process.part.40+0xf7/0x1de0
->>     ? __slab_alloc.isra.80+0x54/0x90
->>     ? copy_process.part.40+0xf7/0x1de0
->>     ? copy_process.part.40+0xf7/0x1de0
->>     ? kmem_cache_alloc_node+0x8a/0x280
->>     ? copy_process.part.40+0xf7/0x1de0
->>     ? _do_fork+0xe7/0x6c0
->>     ? _raw_spin_unlock_irq+0x2d/0x60
->>     ? trace_hardirqs_on_caller+0x136/0x1d0
->>     ? entry_SYSCALL_64_fastpath+0x5/0xad
->>     ? do_syscall_64+0x27/0x350
->>     ? SyS_clone+0x19/0x20
->>     ? do_syscall_64+0x60/0x350
->>     ? entry_SYSCALL64_slow_path+0x25/0x25
->>
->> Reported-by: Cliff Spradlin <cspradlin@waymo.com>
->> Signed-off-by: Dima Zavin <dmitriyz@waymo.com>
->
-> Looks good. Could you verify it fixes the issue, or was it too hard to
-> reproduce? Also is this a stable candidate patch, and can you identify
-> an exact commit hash it fixes?
+Hello, Linus.
 
-It's tough to reproduce but this fix works as well as the original
-hack. I think the problematic commit must have been:
+Several cgroup bug fixes.
 
-commit 46e700abc44ce215acb4341d9702ce3972eda571
-Author: Mel Gorman <mgorman@techsingularity.net>
-Date:   Fri Nov 6 16:28:15 2015 -0800
-    mm, page_alloc: remove unnecessary taking of a seqlock when
-cpusets are disabled
+* cgroup core was calling a migration callback on empty migrations,
+  which could make cpuset crash.
 
-It's probably stable worthy, but I don't know who can make the call on that.
+* There was a very subtle bug where the controller interface files
+  aren't created directly when cgroup2 is mounted.  Because later
+  operations create them, this bug didn't get noticed earlier.
 
-Thanks for the reviews!
+* Failed writes to cgroup.subtree_control were incorrectly returning
+  0.
 
---Dima
+The following changes since commit cee37d83e6d9ada1c2254c73bac7955f9e048d22:
 
->
-> Acked-by: Vlastimil Babka <vbabka@suse.cz>
->
->> ---
->>
->> v3:
->>  - Changed the implementation based on Peter Zijlstra's suggestion. Now
->>    using two keys for begin/retry instead of hacking the state into the
->>    cookie.
->>  - Rebased and tested on top of v4.13-rc3.
->>
->> v4:
->>  - Moved the cached cpusets_enabled() state into the cookie, turned
->>    the cookie into a struct and updated all the other call sites.
->>  - Applied on top of v4.12 since one of the callers in page_alloc.c changed.
->>    Still only tested on v4.9.36 and compile tested against v4.12.
->>
->>  include/linux/cpuset.h | 19 +++++++++++++++++--
->>  kernel/cgroup/cpuset.c |  1 +
->>  2 files changed, 18 insertions(+), 2 deletions(-)
->>
->> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
->> index 119a3f9604b0..e5a684c04c70 100644
->> --- a/include/linux/cpuset.h
->> +++ b/include/linux/cpuset.h
->> @@ -18,6 +18,19 @@
->>
->>  #ifdef CONFIG_CPUSETS
->>
->> +/*
->> + * Static branch rewrites can happen in an arbitrary order for a given
->> + * key. In code paths where we need to loop with read_mems_allowed_begin() and
->> + * read_mems_allowed_retry() to get a consistent view of mems_allowed, we need
->> + * to ensure that begin() always gets rewritten before retry() in the
->> + * disabled -> enabled transition. If not, then if local irqs are disabled
->> + * around the loop, we can deadlock since retry() would always be
->> + * comparing the latest value of the mems_allowed seqcount against 0 as
->> + * begin() still would see cpusets_enabled() as false. The enabled -> disabled
->> + * transition should happen in reverse order for the same reasons (want to stop
->> + * looking at real value of mems_allowed.sequence in retry() first).
->> + */
->> +extern struct static_key_false cpusets_pre_enable_key;
->>  extern struct static_key_false cpusets_enabled_key;
->>  static inline bool cpusets_enabled(void)
->>  {
->> @@ -32,12 +45,14 @@ static inline int nr_cpusets(void)
->>
->>  static inline void cpuset_inc(void)
->>  {
->> +     static_branch_inc(&cpusets_pre_enable_key);
->>       static_branch_inc(&cpusets_enabled_key);
->>  }
->>
->>  static inline void cpuset_dec(void)
->>  {
->>       static_branch_dec(&cpusets_enabled_key);
->> +     static_branch_dec(&cpusets_pre_enable_key);
->>  }
->>
->>  extern int cpuset_init(void);
->> @@ -115,7 +130,7 @@ extern void cpuset_print_current_mems_allowed(void);
->>   */
->>  static inline unsigned int read_mems_allowed_begin(void)
->>  {
->> -     if (!cpusets_enabled())
->> +     if (!static_branch_unlikely(&cpusets_pre_enable_key))
->>               return 0;
->>
->>       return read_seqcount_begin(&current->mems_allowed_seq);
->> @@ -129,7 +144,7 @@ static inline unsigned int read_mems_allowed_begin(void)
->>   */
->>  static inline bool read_mems_allowed_retry(unsigned int seq)
->>  {
->> -     if (!cpusets_enabled())
->> +     if (!static_branch_unlikely(&cpusets_enabled_key))
->>               return false;
->>
->>       return read_seqcount_retry(&current->mems_allowed_seq, seq);
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index ca8376e5008c..8d5151688504 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -63,6 +63,7 @@
->>  #include <linux/cgroup.h>
->>  #include <linux/wait.h>
->>
->> +DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
->>  DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
->>
->>  /* See "Frequency meter" comments, below. */
->>
->
+  Merge branch 'work.read_write' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs (2017-07-07 21:48:15 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.13-fixes
+
+for you to fetch changes up to 3c74541777302eec43a0d1327c4d58b8659a776b:
+
+  cgroup: fix error return value from cgroup_subtree_control() (2017-07-23 08:15:17 -0400)
+
+----------------------------------------------------------------
+Tejun Heo (3):
+      cgroup: don't call migration methods if there are no tasks to migrate
+      cgroup: create dfl_root files on subsys registration
+      cgroup: fix error return value from cgroup_subtree_control()
+
+ kernel/cgroup/cgroup-internal.h |  3 ++
+ kernel/cgroup/cgroup.c          | 66 +++++++++++++++++++++++------------------
+ 2 files changed, 40 insertions(+), 29 deletions(-)
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
