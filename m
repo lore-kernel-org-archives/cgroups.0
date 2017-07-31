@@ -1,33 +1,27 @@
-From: Dima Zavin <dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3] cpuset: fix a deadlock due to incomplete patching of cpusets_enabled()
-Date: Sun, 30 Jul 2017 21:04:20 -0700
-Message-ID: <CAPz4a6C2OaV6T44J3R4dygrN+=CKnznQKRoiLUjni6kb_Uc4xQ@mail.gmail.com>
-References: <9e14ff85-1680-e76d-1b71-22301c16c286@suse.cz> <20170731040113.14197-1-dmitriyz@waymo.com>
-Reply-To: dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@public.gmane.org
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [PATCH v3] cpuset: fix a deadlock due to incomplete patching of
+ cpusets_enabled()
+Date: Mon, 31 Jul 2017 10:02:20 +0200
+Message-ID: <7e68a8ed-af45-e288-3461-f80ffaa542ae@suse.cz>
+References: <9e14ff85-1680-e76d-1b71-22301c16c286@suse.cz>
+ <20170731040113.14197-1-dmitriyz@waymo.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=waymo.com; s=google;
-        h=mime-version:reply-to:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=U3ArprRQeOe5VP1s92fA6bNhf65NYgdD0fbXUI1pZLk=;
-        b=bi6iF2Eqoqc27CsUixL1yw4Q5sXuH/Z+we9tzg9dW6Qky8Cl4qaNR/xAhgtn1XpVF5
-         m/VM/2UZy3NvFIvfSr/ryVsxWf7o/T5xO2ArWu28uaHbrmBJxZeemGQaOxGBPtzgK0Jn
-         qd9YhZwRsbnjRgfB5OpS8aiqkHCqdYY1imYmc=
-In-Reply-To: <20170731040113.14197-1-dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20170731040113.14197-1-dmitriyz@waymo.com>
+Content-Language: en-US
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christopher Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Cliff Spradlin <cspradlin-FA3Td6GO0iIAvxtiuMwx3w@public.gmane.org>
+To: Dima Zavin <dmitriyz@waymo.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Christopher Lameter <cl@linux.com>, Li Zefan <lizefan@huawei.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Mel Gorman <mgorman@techsingularity.net>, Cliff Spradlin <cspradlin@waymo.com>
 
-On Sun, Jul 30, 2017 at 9:01 PM, Dima Zavin <dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@public.gmane.org> wrote:
+On 07/31/2017 06:01 AM, Dima Zavin wrote:
 > In codepaths that use the begin/retry interface for reading
 > mems_allowed_seq with irqs disabled, there exists a race condition that
 > stalls the patch process after only modifying a subset of the
 > static_branch call sites.
->
+> 
 > This problem manifested itself as a dead lock in the slub
 > allocator, inside get_any_partial. The loop reads
 > mems_allowed_seq value (via read_mems_allowed_begin),
@@ -44,7 +38,7 @@ On Sun, Jul 30, 2017 at 9:01 PM, Dima Zavin <dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@pub
 > is changed, we can hang. This is because begin() will always return 0
 > (since it wasn't patched yet) while retry() will test the 0 against
 > the actual value of the seq counter.
->
+> 
 > The fix is to use two different static keys: one for begin
 > (pre_enable_key) and one for retry (enable_key). In cpuset_inc(), we
 > first bump the pre_enable key to ensure that cpuset_mems_allowed_begin()
@@ -52,9 +46,9 @@ On Sun, Jul 30, 2017 at 9:01 PM, Dima Zavin <dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@pub
 > when disabling cpusets via cpuset_dec(), we first ensure that callers
 > of cpuset_mems_allowed_retry() will start ignoring the seqcount
 > value before we let cpuset_mems_allowed_begin() return 0.
->
+> 
 > The relevant stack traces of the two stuck threads:
->
+> 
 >   CPU: 1 PID: 1415 Comm: mkdir Tainted: G L  4.9.36-00104-g540c51286237 #4
 >   Hardware name: Default string Default string/Hardware, BIOS 4.29.1-20170526215256 05/26/2017
 >   task: ffff8817f9c28000 task.stack: ffffc9000ffa4000
@@ -81,9 +75,9 @@ On Sun, Jul 30, 2017 at 9:01 PM, Dima Zavin <dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@pub
 >     vfs_mkdir+0xf6/0x1a0
 >     SyS_mkdir+0xb7/0xe0
 >     entry_SYSCALL_64_fastpath+0x18/0xad
->
+> 
 >   ...
->
+> 
 >   CPU: 2 PID: 1 Comm: init Tainted: G L  4.9.36-00104-g540c51286237 #4
 >   Hardware name: Default string Default string/Hardware, BIOS 4.29.1-20170526215256 05/26/2017
 >   task: ffff8818087c0000 task.stack: ffffc90000030000
@@ -104,40 +98,42 @@ On Sun, Jul 30, 2017 at 9:01 PM, Dima Zavin <dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@pub
 >     ? SyS_clone+0x19/0x20
 >     ? do_syscall_64+0x60/0x350
 >     ? entry_SYSCALL64_slow_path+0x25/0x25
->
-> Reported-by: Cliff Spradlin <cspradlin-FA3Td6GO0iIAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Dima Zavin <dmitriyz-FA3Td6GO0iIAvxtiuMwx3w@public.gmane.org>
+> 
+> Reported-by: Cliff Spradlin <cspradlin@waymo.com>
+> Signed-off-by: Dima Zavin <dmitriyz@waymo.com>
+
+Looks good. Could you verify it fixes the issue, or was it too hard to
+reproduce? Also is this a stable candidate patch, and can you identify
+an exact commit hash it fixes?
+
+Acked-by: Vlastimil Babka <vbabka@suse.cz>
+
 > ---
->
+> 
 > v3:
 >  - Changed the implementation based on Peter Zijlstra's suggestion. Now
 >    using two keys for begin/retry instead of hacking the state into the
 >    cookie.
 >  - Rebased and tested on top of v4.13-rc3.
->
+> 
 > v4:
-
-Doh, latest patch is v3, I obviously meant v2 here instead of v4. Sigh. Sorry.
-
---Dima
-
 >  - Moved the cached cpusets_enabled() state into the cookie, turned
 >    the cookie into a struct and updated all the other call sites.
 >  - Applied on top of v4.12 since one of the callers in page_alloc.c changed.
 >    Still only tested on v4.9.36 and compile tested against v4.12.
->
+> 
 >  include/linux/cpuset.h | 19 +++++++++++++++++--
 >  kernel/cgroup/cpuset.c |  1 +
 >  2 files changed, 18 insertions(+), 2 deletions(-)
->
+> 
 > diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
 > index 119a3f9604b0..e5a684c04c70 100644
 > --- a/include/linux/cpuset.h
 > +++ b/include/linux/cpuset.h
 > @@ -18,6 +18,19 @@
->
+>  
 >  #ifdef CONFIG_CPUSETS
->
+>  
 > +/*
 > + * Static branch rewrites can happen in an arbitrary order for a given
 > + * key. In code paths where we need to loop with read_mems_allowed_begin() and
@@ -155,38 +151,38 @@ Doh, latest patch is v3, I obviously meant v2 here instead of v4. Sigh. Sorry.
 >  static inline bool cpusets_enabled(void)
 >  {
 > @@ -32,12 +45,14 @@ static inline int nr_cpusets(void)
->
+>  
 >  static inline void cpuset_inc(void)
 >  {
-> +       static_branch_inc(&cpusets_pre_enable_key);
->         static_branch_inc(&cpusets_enabled_key);
+> +	static_branch_inc(&cpusets_pre_enable_key);
+>  	static_branch_inc(&cpusets_enabled_key);
 >  }
->
+>  
 >  static inline void cpuset_dec(void)
 >  {
->         static_branch_dec(&cpusets_enabled_key);
-> +       static_branch_dec(&cpusets_pre_enable_key);
+>  	static_branch_dec(&cpusets_enabled_key);
+> +	static_branch_dec(&cpusets_pre_enable_key);
 >  }
->
+>  
 >  extern int cpuset_init(void);
 > @@ -115,7 +130,7 @@ extern void cpuset_print_current_mems_allowed(void);
 >   */
 >  static inline unsigned int read_mems_allowed_begin(void)
 >  {
-> -       if (!cpusets_enabled())
-> +       if (!static_branch_unlikely(&cpusets_pre_enable_key))
->                 return 0;
->
->         return read_seqcount_begin(&current->mems_allowed_seq);
+> -	if (!cpusets_enabled())
+> +	if (!static_branch_unlikely(&cpusets_pre_enable_key))
+>  		return 0;
+>  
+>  	return read_seqcount_begin(&current->mems_allowed_seq);
 > @@ -129,7 +144,7 @@ static inline unsigned int read_mems_allowed_begin(void)
 >   */
 >  static inline bool read_mems_allowed_retry(unsigned int seq)
 >  {
-> -       if (!cpusets_enabled())
-> +       if (!static_branch_unlikely(&cpusets_enabled_key))
->                 return false;
->
->         return read_seqcount_retry(&current->mems_allowed_seq, seq);
+> -	if (!cpusets_enabled())
+> +	if (!static_branch_unlikely(&cpusets_enabled_key))
+>  		return false;
+>  
+>  	return read_seqcount_retry(&current->mems_allowed_seq, seq);
 > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
 > index ca8376e5008c..8d5151688504 100644
 > --- a/kernel/cgroup/cpuset.c
@@ -194,11 +190,15 @@ Doh, latest patch is v3, I obviously meant v2 here instead of v4. Sigh. Sorry.
 > @@ -63,6 +63,7 @@
 >  #include <linux/cgroup.h>
 >  #include <linux/wait.h>
->
+>  
 > +DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
 >  DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
->
+>  
 >  /* See "Frequency meter" comments, below. */
-> --
-> 2.14.0.rc0.400.g1c36432dff-goog
->
+> 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
