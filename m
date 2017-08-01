@@ -1,91 +1,133 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v2 2/4] cgroup: Allow bypass mode in subtree_control
-Date: Tue, 1 Aug 2017 10:29:44 -0400
-Message-ID: <a5f95e93-2708-12a4-b794-99b9cabc7fc3@redhat.com>
-References: <1500669293-21792-1-git-send-email-longman@redhat.com>
- <1500669293-21792-3-git-send-email-longman@redhat.com>
- <20170722135030.GC3329631@devbig577.frc2.facebook.com>
- <3cf09046-7eac-82fe-8bd2-6aef1125b10c@redhat.com>
- <20170725171343.GB3216015@devbig577.frc2.facebook.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [v4 2/4] mm, oom: cgroup-aware OOM killer
+Date: Tue, 1 Aug 2017 16:54:35 +0200
+Message-ID: <20170801145435.GN15774@dhcp22.suse.cz>
+References: <20170726132718.14806-1-guro@fb.com>
+ <20170726132718.14806-3-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170725171343.GB3216015@devbig577.frc2.facebook.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20170726132718.14806-3-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/25/2017 01:13 PM, Tejun Heo wrote:
->>
->> Bypass mode targets mainly non-domain controllers and controllers that
->> have cost associated with each additional level of hierarchy (e.g. cpu).
->> I believe the end goal of cgroup v2 is to have all controllers migrated
->> to it eventually. Consider the following:
->>
->>     A
->>    / \
->>   B   C
->>  / \ / \
->> D  E F G
->>
->> Controller X may want (A, B, C) to be controlled as one group with one
->> set of control files whereas D, E, F, G will have their own control
->> files. Controller Y may want all of them have their own control files.
->> Bypass mode allows us to do that. With more and more controllers enabled
->> in v2, the chance of this kind of configuration conflicts is going up.
-> I think I understand what it wants to do but I think it's still
-> lacking justfications given how invasive the change is to the basic
-> operation and usage.  We need more than one can think of this and it
+On Wed 26-07-17 14:27:16, Roman Gushchin wrote:
+[...]
+> +static long memcg_oom_badness(struct mem_cgroup *memcg,
+> +			      const nodemask_t *nodemask)
+> +{
+> +	long points = 0;
+> +	int nid;
+> +
+> +	for_each_node_state(nid, N_MEMORY) {
+> +		if (nodemask && !node_isset(nid, *nodemask))
+> +			continue;
+> +
+> +		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> +				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> +	}
+> +
+> +	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
+> +		(PAGE_SIZE / 1024);
+> +	points += memcg_page_state(memcg, NR_SLAB_UNRECLAIMABLE);
+> +	points += memcg_page_state(memcg, MEMCG_SOCK);
+> +	points += memcg_page_state(memcg, MEMCG_SWAP);
+> +
+> +	return points;
 
-I don't think it is as invasive as you have suggested. The latest patch
-doesn't change the semantics of the cgroup control operation as long as
-the bypass mode isn't used in subtree_control.
+I am wondering why are you diverging from the global oom_badness
+behavior here. Although doing per NUMA accounting sounds like a better
+idea but then you just end up mixing this with non NUMA numbers and the
+whole thing is harder to understand without great advantages.
 
-A major feature enabled by this mode is that instead of enabling a
-controller in all its children, the bypass mode allows us to choose
-which children will have the controller enabled. As for the ownership
-question, I am going to change the description so that control files in
-the children are still going to be owned by the parent to minimize
-changes to basic operation.
+> +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+> +{
+> +	struct mem_cgroup *iter, *parent;
+> +
+> +	for_each_mem_cgroup_tree(iter, root) {
+> +		if (memcg_has_children(iter)) {
+> +			iter->oom_score = 0;
+> +			continue;
+> +		}
+> +
+> +		iter->oom_score = oom_evaluate_memcg(iter, oc->nodemask);
+> +		if (iter->oom_score == -1) {
+> +			oc->chosen_memcg = (void *)-1UL;
+> +			mem_cgroup_iter_break(root, iter);
+> +			return;
+> +		}
+> +
+> +		if (!iter->oom_score)
+> +			continue;
+> +
+> +		for (parent = parent_mem_cgroup(iter); parent && parent != root;
+> +		     parent = parent_mem_cgroup(parent))
+> +			parent->oom_score += iter->oom_score;
+> +	}
+> +
+> +	for (;;) {
+> +		struct cgroup_subsys_state *css;
+> +		struct mem_cgroup *memcg = NULL;
+> +		long score = LONG_MIN;
+> +
+> +		css_for_each_child(css, &root->css) {
+> +			struct mem_cgroup *iter = mem_cgroup_from_css(css);
+> +
+> +			if (iter->oom_score > score) {
+> +				memcg = iter;
+> +				score = iter->oom_score;
+> +			}
+> +		}
+> +
+> +		if (!memcg) {
+> +			if (oc->memcg && root == oc->memcg) {
+> +				oc->chosen_memcg = oc->memcg;
+> +				css_get(&oc->chosen_memcg->css);
+> +				oc->chosen_points = oc->memcg->oom_score;
+> +			}
+> +			break;
+> +		}
+> +
+> +		if (memcg->oom_kill_all_tasks || !memcg_has_children(memcg)) {
+> +			oc->chosen_memcg = memcg;
+> +			css_get(&oc->chosen_memcg->css);
+> +			oc->chosen_points = score;
+> +			break;
+> +		}
+> +
+> +		root = memcg;
+> +	}
+> +}
 
-> can help with certain hypothetical use cases.  ie. along the line of
-> what the actual use cases are, what our overhead looks like and why,
-> and why the problem can't be solved in a different, hopefully less
-> intrusive, way.
+This and the rest of the victim selection code is really hairy and hard
+to follow.
 
-A common use case is an application that want to use cpuset, for
-example, to bind some worker threads to individual cpus. At the same
-time, the application may also want to use cpu controller to limit the
-amount of cpu consumed by some other threads. Right now, the only way to
-do that with the current v2 control scheme is to create child cgroups
-with both cpu and cpuset controllers enabled and put the desired
-processes or threads into those child cgroups. The cost of enabling
-cpuset on a task that need cpu controller is negligible. However, the
-cost of enabling cpu controller on tasks that only need cpuset can be
-noticeable. The performance difference may become a concern for users to
-move from cgroup v1 to v2. If our goal is to retire cgroup v1
-eventually, we need to make cgroup v2 as performant as cgroup v1.
+I would reap out the oom_kill_process into a separate patch.
 
-The cpu controller also have a higher memory cost than other cgroup
-controller due to the fact that it requires percpu runqueue structure
-that is pretty big especially on system with many cpus. As a result,
-more memory will be wasted on tasks that only need cpuset.
+> -static void oom_kill_process(struct oom_control *oc, const char *message)
+> +static void __oom_kill_process(struct task_struct *victim)
 
-With bypass mode, you can put tasks that need cpu controller into a
-child cgroups with only cpu controller enabled and put tasks that need
-cpuset into child cgroups with only cpuset enabled, similar to what
-users can now do on cgroup v1.
+To the rest of the patch. I have to say I do not quite like how it is
+implemented. I was hoping for something much simpler which would hook
+into oom_evaluate_task. If a task belongs to a memcg with kill-all flag
+then we would update the cumulative memcg badness (more specifically the
+badness of the topmost parent with kill-all flag). Memcg will then
+compete with existing self contained tasks (oom_badness will have to
+tell whether points belong to a task or a memcg to allow the caller to
+deal with it). But it shouldn't be much more complex than that.
 
-I think there is enough justification to have the bypass mode feature in
-cgroup v2. I would like to know what other concern do you have with this
-feature.
+Or is there something that I am missing and that would prevent such a
+simple approach?
+-- 
+Michal Hocko
+SUSE Labs
 
-Cheers,
-Longman
-
-
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
