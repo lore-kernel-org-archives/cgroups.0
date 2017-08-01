@@ -1,85 +1,98 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v4 2/4] mm, oom: cgroup-aware OOM killer
-Date: Tue, 1 Aug 2017 19:13:52 +0100
-Message-ID: <20170801181352.GA26074@castle.DHCP.thefacebook.com>
-References: <20170726132718.14806-1-guro@fb.com>
- <20170726132718.14806-3-guro@fb.com>
- <20170801145435.GN15774@dhcp22.suse.cz>
- <20170801152548.GA29502@castle.dhcp.TheFacebook.com>
- <20170801170302.GB15518@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] sched: Implement interface for cgroup unified
+ hierarchy
+Date: Tue, 1 Aug 2017 13:17:45 -0700
+Message-ID: <20170801201745.GA2311718@devbig577.frc2.facebook.com>
+References: <20170720184808.1433868-1-tj@kernel.org>
+ <20170720184808.1433868-3-tj@kernel.org>
+ <20170729091707.lobbicnw253wzltu@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=rvkACtVxQMab7szVtvD8o/RY0eFEJrhpTFYSGvuVmYE=;
- b=n7YeNuJ9hb+Zl7LpnaiCGeSQNUMompB5QFkAEl9aJ51IEtTHJ7J48f/knkwqtZ0DTh5l
- AE7aRJ6j6Ft4PAs7xCnabxeiYqp1SZN/5waVEZvUwDztCkY/MuJ8vL/qkpCZV12xM2cB
- wsH2oQwx0Q+k0eeFGHyAdr+zkBXirayv+yg= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=rvkACtVxQMab7szVtvD8o/RY0eFEJrhpTFYSGvuVmYE=;
- b=SnUvq0n2kEgmflpA2uavzjyPU4NTCmqfBwo2HbqGaY/0D/TsxNgn9fw6szNvHUeluLX4RSCEtkdWWSfdLNn5jjawgMMHRemun89TBMwPwa4gIYbMv999QX43EI0Zd0q/AQ3Gxst6pGyuJoeCX/hjVsrT8jHrq73oA7IFQSQ4K8M=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=2WwxcmTTWSDpk42ovhddN68SpY2KTFhZmgdT8+oEBv0=;
+        b=LGfjiMfTsInq0p7RQUbSz5po/c/zUyiX2RnxaD99pCgzWbOfRanaPIsg3nI/GxhV2z
+         VEPo0yrQhF+6EGxytI4Sc3Te8dgpVTkofYNPx5JogoetyMxd1tMG7Rh1u4VEc1Zus1qy
+         GgHBSvBSmamT43+Ud+4MRDKuyzT29O6I2EyF6pM4zeJnG9NNNXa7jaPV4JAqj9/ZHu0m
+         MKggMJFlNT4HOEifM0xZFy/50KB29FINH/hch8uH3qBJVt9RrQRODVQY6kBdJlWzUtub
+         DpE5PN654oHGUvjCQ/CfkAUEX7c6AQDnQokkpt/D5TdWeVPX+wW7GGP3NVxywSCfYm0H
+         vg2A==
 Content-Disposition: inline
-In-Reply-To: <20170801170302.GB15518@dhcp22.suse.cz>
+In-Reply-To: <20170729091707.lobbicnw253wzltu@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-On Tue, Aug 01, 2017 at 07:03:03PM +0200, Michal Hocko wrote:
-> On Tue 01-08-17 16:25:48, Roman Gushchin wrote:
-> > On Tue, Aug 01, 2017 at 04:54:35PM +0200, Michal Hocko wrote:
-> [...]
-> > > I would reap out the oom_kill_process into a separate patch.
-> > 
-> > It was a separate patch, I've merged it based on Vladimir's feedback.
-> > No problems, I can divide it back.
+Hello, Peter.
+
+On Sat, Jul 29, 2017 at 11:17:07AM +0200, Peter Zijlstra wrote:
+> > * "cpu.shares" is replaced with "cpu.weight" and operates on the
+> >   standard scale defined by CGROUP_WEIGHT_MIN/DFL/MAX (1, 100, 10000).
+> >   The weight is scaled to scheduler weight so that 100 maps to 1024
+> >   and the ratio relationship is preserved - if weight is W and its
+> >   scaled value is S, W / 100 == S / 1024.  While the mapped range is a
+> >   bit smaller than the orignal scheduler weight range, the dead zones
+> >   on both sides are relatively small and covers wider range than the
+> >   nice value mappings.  This file doesn't make sense in the root
+> >   cgroup and isn't create on root.
 > 
-> It would make the review slightly more easier
-> > 
-> > > > -static void oom_kill_process(struct oom_control *oc, const char *message)
-> > > > +static void __oom_kill_process(struct task_struct *victim)
-> > > 
-> > > To the rest of the patch. I have to say I do not quite like how it is
-> > > implemented. I was hoping for something much simpler which would hook
-> > > into oom_evaluate_task. If a task belongs to a memcg with kill-all flag
-> > > then we would update the cumulative memcg badness (more specifically the
-> > > badness of the topmost parent with kill-all flag). Memcg will then
-> > > compete with existing self contained tasks (oom_badness will have to
-> > > tell whether points belong to a task or a memcg to allow the caller to
-> > > deal with it). But it shouldn't be much more complex than that.
-> > 
-> > I'm not sure, it will be any simpler. Basically I'm doing the same:
-> > the difference is that you want to iterate over tasks and for each
-> > task traverse the memcg tree, update per-cgroup oom score and find
-> > the corresponding memcg(s) with the kill-all flag. I'm doing the opposite:
-> > traverse the cgroup tree, and for each leaf cgroup iterate over processes.
+> s/create/&d/
+
+Updated, thanks.
+
+> > * "cpu.rt_runtime_us" and "cpu.rt_period_us" are replaced by
+> >   "cpu.rt.max" which contains both runtime and period.
 > 
-> Yeah but this doesn't fit very well to the existing scheme so we would
-> need two different schemes which is not ideal from maint. point of view.
-> We also do not have to duplicate all the tricky checks we already do in
-> oom_evaluate_task. So I would prefer if we could try to hook there and
-> do the special handling there.
-
-I hope, that iterating over all tasks just to check if there are
-in-flight OOM victims might be optimized at some point.
-That means, we would be able to choose a victim much cheaper.
-It's not easy, but it feels as a right direction to go.
-
-Also, adding new tricks to the oom_evaluate_task() will make the code
-even more hairy. Some of the existing tricks are useless for memcg selection.
-
+> So we've been looking at overhauling the whole RT stuff. But sadly we've
+> not been able to find something that works with all the legacy
+> constraints (like RT tasks having arbitrary affinities).
 > 
-> > Also, please note, that even without the kill-all flag the decision is made
-> > on per-cgroup level (except tasks in the root cgroup).
+> Lets just hope we can preserve this interface :/
+
+Ah, should have dropped this from the description.  Yeah, we can wait
+till the RT side settles down and go for a better matching interface
+as necessary.
+
+> > v3: - Added "cpu.weight.nice" to allow using nice values when
+> >       configuring the weight.  The feature is requested by PeterZ.
+> >     - Merge the patch to enable threaded support on cpu and cpuacct.
 > 
-> Yeah and I am not sure this is a reasonable behavior. Why should we
-> consider memcgs which are not kill-all as a single entity?
+> >     - Dropped the bits about getting rid of cpuacct from patch
+> >       description as there is a pretty strong case for making cpuacct
+> >       an implicit controller so that basic cpu usage stats are always
+> >       available.
+> 
+> What about the whole double accounting thing? Because currently cpuacct
+> and cpu do a fair bit of duplication. It would be very good to get rid
+> of that.
 
-I think, it's reasonable to choose a cgroup/container to blow off based on
-the cgroup oom_priority/size (including hierarchical settings), and then
-kill one biggest or all tasks depending on cgroup settings.
+I'm not that sure at this point.  Here are my current thoughts on
+cpuacct.
 
-Thanks!
+* It is useful to have basic cpu statistics on cgroup without having
+  to enable the cpu controller, especially because enabling cpu
+  controller always changes how cpu cycles are distributed and
+  currently comes at some performance overhead.
+
+* On cgroup2, there is only one hierarchy.  It'd be great to have
+  basic resource accounting enabled by default on all cgroups.  Note
+  that we couldn't do that on v1 because there could be any number of
+  hierarchies and the cost would increase with the number of
+  hierarchies.
+
+* It is bothersome that we're walking up the tree each time for
+  cpuacct although being percpu && just walking up the tree makes it
+  relatively cheap.  Anyways, I'm thinking about shifting the
+  aggregation to the reader side so that the hot path always only
+  updates local counters in a way which can scale even when there are
+  a lot of (idle) cgroups.  Will follow up on this later.
+
+Thanks.
+
+-- 
+tejun
