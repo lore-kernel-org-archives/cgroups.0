@@ -1,50 +1,39 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 2/4] cgroup: implement hierarchy limits
-Date: Wed, 2 Aug 2017 11:44:17 -0700
-Message-ID: <20170802184416.GK2311718@devbig577.frc2.facebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC 4/4] cgroup: re-use the parent pointer in
+ cgroup_destroy_locked()
+Date: Wed, 2 Aug 2017 11:50:24 -0700
+Message-ID: <20170802185023.GL2311718@devbig577.frc2.facebook.com>
 References: <20170802165532.22277-1-guro@fb.com>
- <20170802165532.22277-3-guro@fb.com>
+ <20170802165532.22277-5-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=DML40S6RJZiE7HNyMdyIx3VwJpbPjvXnGBIABMLUTAc=;
-        b=Hja+dNtbolizb7idLUe6V4aBlI9ZHiCyXc6lhqZih1LVdEF4lfTzJsmQ3V5JI45MHo
-         v2VOa9WxPYFuRrc+S6YAf7OrZSkNrqkNQzmelh9iqf59uMmzjnDkhEZaAho1HWL45S9c
-         bnb6MZ3ibYhf22GRANMYaYNiVO367Hy8kDoyPAAvFWYeCyY1v8osX17o3CxX6X9hZPzo
-         axjTFC4KM0HnhSW+fD51jF8NUFSi3D7mRWoNvFMe286uaBRt8Yrr9gaywDTqied5KZCl
-         XbjZtAMxkiiXTuKIqEhrIkACYfgHkcjVSB2gs4lMvnazM728ymbs1CZctKr0s4UDZOCy
-         Hj3Q==
+        bh=BFzcaPDLsuvzU8+rAUhR2KsNMD/C0teDOlRyiou1AQg=;
+        b=OW6Z0nY1ly2033sQZTwoSF9sAJCfaHBPU+hBUTT8W49gGdnkxzbqoa11qa9i6SIgrh
+         JtAW2l4T95JTZnz41TgwJKOAL1yBNCDE3kdPpKt9xgJApSW3/7GVhWqgUaxy9fsqmGtd
+         X7vQPit5Xcmfg+i2u0i2mZvcLecmQWHjXDjLMUqMigdTKT9mvmlg0T3iT5bA/X+diOxM
+         FF0mIeANcvgdpHQtXUgE5xeGfmGJd0RBD/6S1aUsmv9T3ETpB+RGu1Ryr1p5r50Gwkcx
+         sS1YxAIs5kZ86dVTP3NaDxfyukOpf0dCNLxoZ2H6BhfNAfcPv4iDCkVXZZy3kkBdQHrP
+         r6EQ==
 Content-Disposition: inline
-In-Reply-To: <20170802165532.22277-3-guro-b10kYP2dOMg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170802165532.22277-5-guro@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roman Gushchin <guro@fb.com>
+Cc: cgroups@vger.kernel.org, Zefan Li <lizefan@huawei.com>, Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, linux-kernel@vger.kernel.org
 
-Hello, Roman.
+On Wed, Aug 02, 2017 at 05:55:32PM +0100, Roman Gushchin wrote:
+> As we already have a pointer to the parent cgroup in
+> cgroup_destroy_locked(), we don't need to calculate it again
+> to pass as an argument for cgroup1_check_for_release().
 
-Generally looks good to me.  One minor nit.
-
-On Wed, Aug 02, 2017 at 05:55:30PM +0100, Roman Gushchin wrote:
-> +static ssize_t cgroup_max_descendants_write(struct kernfs_open_file *of,
-> +					   char *buf, size_t nbytes, loff_t off)
-> +{
-> +	struct cgroup *cgrp;
-> +	int descendants;
-> +	ssize_t ret;
-> +
-> +	buf = strstrip(buf);
-> +	if (!strcmp(buf, "max")) {
-> +		descendants = INT_MAX;
-> +	} else {
-> +		ret = kstrtouint(buf, 0, &descendants);
-                     ^^^^^^^^^^^
-		     shouldn't this be kstrtoint?
+Except for the minor nit earlier, everything in the series looks good
+to me.
 
 Thanks.
 
