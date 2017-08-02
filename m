@@ -1,86 +1,74 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 2/2] sched: Implement interface for cgroup unified
  hierarchy
-Date: Wed, 2 Aug 2017 08:41:35 -0700
-Message-ID: <20170802154135.GI2311718@devbig577.frc2.facebook.com>
+Date: Wed, 2 Aug 2017 18:05:11 +0200
+Message-ID: <20170802160511.cb7yl65t4nmctf3y@hirez.programming.kicks-ass.net>
 References: <20170720184808.1433868-1-tj@kernel.org>
  <20170720184808.1433868-3-tj@kernel.org>
  <20170729091707.lobbicnw253wzltu@hirez.programming.kicks-ass.net>
  <20170801201745.GA2311718@devbig577.frc2.facebook.com>
  <20170801214038.sp4lw6lrnl3votte@hirez.programming.kicks-ass.net>
+ <20170802154135.GI2311718@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=abNcUbzoBhWAdZCHn8IsuRABPE1x2d7AipZ+lQJEGRE=;
-        b=ha1vk/legvysAPgqQzO+lqUBK5sksVwyT0A1n/ohEOWzlWze50aGMb/qPyBY7Sd58q
-         Xxgh1s/A84E7hEtsq5aUG44YNPZJRM0SwZ/LKrDtgg3k+9fJpiGgt0d0DthJSxRsOOFP
-         gbPRtyJdhdswq49g2TO9Y78jXJkvnOlMc68dn5tPvMrYHEYxdupY3Oe91QT7yX/1dgwe
-         evuAUXejxdwVoLo7f4sLQIdAw5ZVKLcImoneQ96eiiuxwYT2hBBU6hZJwNAe9pzj3NsZ
-         pRXLuav+Em3jBk/JUmJ2u+/EVhLD37IyPfeNMjwJWLCJXSkfWwiesm44FjJm3jAm7+ZF
-         N/gg==
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=sbudj1/bAbmyvlkha5nCRldKQzmfTibbF9RsA/euaMM=; b=bJZgXYu/eXTS9iowfaxxcgbet
+        DzDWnOtSaLcrT4JMHMPFy0/3de+OlYKAloDspRbs5QRbZVQjdjWHZjU5/fMvGHXdc/Fu6KQoFief3
+        MuW8il2JWx0MM0StgQm5t3NmG4DYLw8qdzQMEsKxLA8NxAKruv+tSuOG/63948nPj5QoAjvheu3Da
+        Fvc9CHV8h0anCii1ppOkn+FBgj2sXtcJPsJMtD4pR+rr7zga2A2FYGSfxzhvLd+VqzEoyMhnJCwHU
+        e15lW9qTa75YSDJuyIPGaUQ6KklKEMG0hGLAR+Jym/AVre/4hH22HabJKA8MKXGjd+tnEhgmgaOeh
+      
 Content-Disposition: inline
-In-Reply-To: <20170801214038.sp4lw6lrnl3votte-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170802154135.GI2311718@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-Hello, Peter.
-
-On Tue, Aug 01, 2017 at 11:40:38PM +0200, Peter Zijlstra wrote:
-> > * On cgroup2, there is only one hierarchy.  It'd be great to have
-> >   basic resource accounting enabled by default on all cgroups.  Note
-> >   that we couldn't do that on v1 because there could be any number of
-> >   hierarchies and the cost would increase with the number of
-> >   hierarchies.
+On Wed, Aug 02, 2017 at 08:41:35AM -0700, Tejun Heo wrote:
+> > Not entirely sure I follow, we currently only update the current cgroup
+> > and its immediate parents, no? Or are you looking to only account into
+> > the current cgroup and propagate into the parents on reading?
 > 
-> Yes, the whole single hierarchy thing makes doing away with the double
-> accounting possible.
+> Yeah, shifting the cost to the readers and being smart with
+> propagation so that reading isn't O(nr_descendants) but
+> O(nr_descendants_which_have_run_since_last_read).  That way, we can
+> show the basic stats without taxing the hot paths with reasonable
+> scalability.
 
-Yeah, we can either do that or make it cheaper so that we can have
-basic stats by default.
+Right, that would be good.
 
-> > * It is bothersome that we're walking up the tree each time for
-> >   cpuacct although being percpu && just walking up the tree makes it
-> >   relatively cheap.
+> I have a couple questions about cpuacct tho.
 > 
-> So even if its only CPU local accounting, you still have all the pointer
-> chasing and misses, not to mention that a faster O(depth) is still
-> O(depth).
-> 
-> >		Anyways, I'm thinking about shifting the
-> >   aggregation to the reader side so that the hot path always only
-> >   updates local counters in a way which can scale even when there are
-> >   a lot of (idle) cgroups.  Will follow up on this later.
-> 
-> Not entirely sure I follow, we currently only update the current cgroup
-> and its immediate parents, no? Or are you looking to only account into
-> the current cgroup and propagate into the parents on reading?
+> * The stat file is sampling based and the usage files are calculated
+>   from actual scheduling events.  Is this because the latter is more
+>   accurate?
 
-Yeah, shifting the cost to the readers and being smart with
-propagation so that reading isn't O(nr_descendants) but
-O(nr_descendants_which_have_run_since_last_read).  That way, we can
-show the basic stats without taxing the hot paths with reasonable
-scalability.
+So I actually don't know the history of this stuff too well. But I would
+think so. This all looks rather dodgy.
 
-I have a couple questions about cpuacct tho.
+> * Why do we have user/sys breakdown in usage numbers?  It tries to
+>   distinguish user or sys by looking at task_pt_regs().  I can't see
+>   how this would work (e.g. interrupt handlers never schedule) and w/o
+>   kernel preemption, the sys part is always zero.  What is this number
+>   supposed to mean?
 
-* The stat file is sampling based and the usage files are calculated
-  from actual scheduling events.  Is this because the latter is more
-  accurate?
+For normal scheduler stuff we account the total runtime in ns and use
+the user/kernel tick samples to divide it into user/kernel time parts.
+See cputime_adjust().
 
-* Why do we have user/sys breakdown in usage numbers?  It tries to
-  distinguish user or sys by looking at task_pt_regs().  I can't see
-  how this would work (e.g. interrupt handlers never schedule) and w/o
-  kernel preemption, the sys part is always zero.  What is this number
-  supposed to mean?
+But looking at the cpuacct I have no clue, that looks wonky at best.
 
-Thanks.
+Ideally we'd reuse the normal cputime code and do the same thing
+per-cgroup, but clearly that isn't happening now.
 
--- 
-tejun
+I never really looked further than that cpuacct_charge() doing _another_
+cgroup iteration, even though we already account that delta to each
+cgroup (modulo scheduling class crud).
