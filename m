@@ -1,20 +1,20 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [RFC 1/4] cgroup: keep track of number of descent cgroups
-Date: Wed, 2 Aug 2017 17:55:29 +0100
-Message-ID: <20170802165532.22277-2-guro@fb.com>
+Subject: [RFC 3/4] cgroup: add cgroup.stat interface with basic hierarchy stats
+Date: Wed, 2 Aug 2017 17:55:31 +0100
+Message-ID: <20170802165532.22277-4-guro@fb.com>
 References: <20170802165532.22277-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=6EmvzNCsS9/6ea7/tFUD3Q4dX1LSDMfpazxXxF4fIDk=;
- b=CBsmW1SuAUf90KXInBRm9EygfGTLNQxUgzVt0PVnEkC4tnVlKyPozQ2uQtY2f4FDiQvM
- whW3h3Du5LHqsqtXwesfaQQm8n7jaA5Az3RjI1jfftxPj1zJSo8S40nn5/M6nbXOr3+W
- CFqTprvNfcHwkGzhmopxUCXt2DAe3J3RwwU= 
+ content-type; s=facebook; bh=WLxPRuSMEvM/EDq/oTfzm+MI1nmr5B6mxp7VPZk/Rmg=;
+ b=rMcHgWulsi3ZE6LdH+XknltiYf6SkvjYmbSyjGeD9VsAf2dKO4Dn8S4W5OsFixv/4UaP
+ TMyK9ZSNIQlRw0gCTGfSsgCrV63X0j67h5iODtRMsKpOKNHsAkvQVvMKu9ZWgXLAIfbC
+ 9RXoidSm2p5ufAT4bKQ+CVCWMxJiv2ytGDM= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=6EmvzNCsS9/6ea7/tFUD3Q4dX1LSDMfpazxXxF4fIDk=;
- b=KbBmeK/rhGuIF8TYLD+2swWTXp51lLk3gEz8ShzOj5hxzRsxLrX6IVYyH7IvaKevPpP976cqNJZlu2mQGPWRTogfWg7YRd4u7QgLb6rHTzBn6Gk0ZpsYLgD7OXw7pcEffmlH/w+qAw045CxJWNRBjOVtZAW2X0B58DkO+emon9k=
+ bh=WLxPRuSMEvM/EDq/oTfzm+MI1nmr5B6mxp7VPZk/Rmg=;
+ b=XPdGfEk9f5Yn4enTZ+vNyonhTed7z6ruEgD5zpICxyUODMdEta45Rdbvzf5sRH5yl/1RLIqUDTjlpRuCa5f7FPqzB3tnFdfJDYPXcHMlVj7XRvi5xAlE/CN6p4JewgPF1sfHhmD2slFoCe5/U5Sve+xNokBguXudex5DQUTGlSo=
 In-Reply-To: <20170802165532.22277-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,11 +23,26 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
 Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan@huawei.com>, Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Keep track of the number of online and dying descent cgroups.
+A cgroup can consume resources even after being deleted by a user.
+For example, writing back dirty pages should be accounted and
+limited, despite the corresponding cgroup might contain no processes
+and being deleted by a user.
 
-This data will be used later to add an ability to control cgroup
-hierarchy (limit the depth and the number of descent cgroups)
-and display hierarchy stats.
+In the current implementation a cgroup can remain in such "dying" state
+for an undefined amount of time. For instance, if a memory cgroup
+contains a pge, mlocked by a process belonging to an other cgroup.
+
+Although the lifecycle of a dying cgroup is out of user's control,
+it's important to have some insight of what's going on under the hood.
+
+In particular, it's handy to have a counter which will allow
+to detect css leaks.
+
+To solve this problem, add a cgroup.stat interface to
+the base cgroup control files with the following metrics:
+
+nr_descendants		total number of visible descendant cgroups
+nr_dying_descendants	total number of dying descendant cgroups
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Suggested-by: Tejun Heo <tj@kernel.org>
@@ -40,85 +55,73 @@ Cc: cgroups@vger.kernel.org
 Cc: linux-doc@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 ---
- include/linux/cgroup-defs.h |  8 ++++++++
- kernel/cgroup/cgroup.c      | 19 +++++++++++++++++--
- 2 files changed, 25 insertions(+), 2 deletions(-)
+ Documentation/cgroup-v2.txt | 18 ++++++++++++++++++
+ kernel/cgroup/cgroup.c      | 16 ++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 9d741959f218..58b4c425a155 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -274,6 +274,14 @@ struct cgroup {
- 	int level;
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 46ec3f76211c..dc44785dc0fa 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -868,6 +868,24 @@ All cgroup core files are prefixed with "cgroup."
+ 	If the actual descent depth is equal or larger,
+ 	an attempt to create a new child cgroup will fail.
  
- 	/*
-+	 * Keep track of total numbers of visible and dying descent cgroups.
-+	 * Dying cgroups are cgroups which were deleted by a user,
-+	 * but are still existing because someone else is holding a reference.
-+	 */
-+	int nr_descendants;
-+	int nr_dying_descendants;
++  cgroup.stat
++	A read-only flat-keyed file with the following entries:
 +
-+	/*
- 	 * Each non-empty css_set associated with this cgroup contributes
- 	 * one to nr_populated_csets.  The counter is zero iff this cgroup
- 	 * doesn't have any tasks.
++	  nr_descendants
++		Total number of visible descendant cgroups.
++
++	  nr_dying_descendants
++		Total number of dying descendant cgroups. A cgroup becomes
++		dying after being deleted by a user. The cgroup will remain
++		in dying state for some time undefined time (which can depend
++		on system load) before being completely destroyed.
++
++		A process can't enter a dying cgroup under any circumstances,
++		a dying cgroup can't revive.
++
++		A dying cgroup can consume system resources not exceeding
++		limits, which were active at the moment of cgroup deletion.
++
+ 
+ Controllers
+ ===========
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 85f6a112344b..cfdbb1e780de 100644
+index 9d53d69e44bb..f58e1fe8bebd 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -4408,9 +4408,15 @@ static void css_release_work_fn(struct work_struct *work)
- 		if (ss->css_released)
- 			ss->css_released(css);
- 	} else {
-+		struct cgroup *tcgrp;
+@@ -3304,6 +3304,18 @@ static int cgroup_events_show(struct seq_file *seq, void *v)
+ 	return 0;
+ }
+ 
++static int cgroup_stats_show(struct seq_file *seq, void *v)
++{
++	struct cgroup *cgroup = seq_css(seq)->cgroup;
 +
- 		/* cgroup release path */
- 		trace_cgroup_release(cgrp);
- 
-+		for (tcgrp = cgroup_parent(cgrp); tcgrp;
-+		     tcgrp = cgroup_parent(tcgrp))
-+			tcgrp->nr_dying_descendants--;
++	seq_printf(seq, "nr_descendants %d\n",
++		   cgroup->nr_descendants);
++	seq_printf(seq, "nr_dying_descendants %d\n",
++		   cgroup->nr_dying_descendants);
 +
- 		cgroup_idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
- 		cgrp->id = -1;
- 
-@@ -4609,9 +4615,13 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	cgrp->root = root;
- 	cgrp->level = level;
- 
--	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp))
-+	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
-+		if (tcgrp != cgrp)
-+			tcgrp->nr_descendants++;
-+	}
++	return 0;
++}
 +
- 	if (notify_on_release(parent))
- 		set_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
- 
-@@ -4817,7 +4827,7 @@ static void kill_css(struct cgroup_subsys_state *css)
- static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	__releases(&cgroup_mutex) __acquires(&cgroup_mutex)
+ static int cgroup_file_open(struct kernfs_open_file *of)
  {
--	struct cgroup *parent = cgroup_parent(cgrp);
-+	struct cgroup *tcgrp, *parent = cgroup_parent(cgrp);
- 	struct cgroup_subsys_state *css;
- 	struct cgrp_cset_link *link;
- 	int ssid;
-@@ -4865,6 +4875,11 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	if (parent && cgroup_is_threaded(cgrp))
- 		parent->nr_threaded_children--;
+ 	struct cftype *cft = of->kn->priv;
+@@ -4407,6 +4419,10 @@ static struct cftype cgroup_base_files[] = {
+ 		.seq_show = cgroup_max_depth_show,
+ 		.write = cgroup_max_depth_write,
+ 	},
++	{
++		.name = "cgroup.stat",
++		.seq_show = cgroup_stats_show,
++	},
+ 	{ }	/* terminate */
+ };
  
-+	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
-+		tcgrp->nr_descendants--;
-+		tcgrp->nr_dying_descendants++;
-+	}
-+
- 	cgroup1_check_for_release(cgroup_parent(cgrp));
- 
- 	/* put the base reference */
 -- 
 2.13.3
 
