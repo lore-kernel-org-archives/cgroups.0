@@ -1,57 +1,72 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [RFC 4/4] cgroup: re-use the parent pointer in cgroup_destroy_locked()
-Date: Wed, 2 Aug 2017 17:55:32 +0100
-Message-ID: <20170802165532.22277-5-guro@fb.com>
-References: <20170802165532.22277-1-guro@fb.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] sched: Implement interface for cgroup unified
+ hierarchy
+Date: Wed, 2 Aug 2017 11:16:00 -0700
+Message-ID: <20170802181600.GJ2311718@devbig577.frc2.facebook.com>
+References: <20170720184808.1433868-1-tj@kernel.org>
+ <20170720184808.1433868-3-tj@kernel.org>
+ <20170729091707.lobbicnw253wzltu@hirez.programming.kicks-ass.net>
+ <20170801201745.GA2311718@devbig577.frc2.facebook.com>
+ <20170801214038.sp4lw6lrnl3votte@hirez.programming.kicks-ass.net>
+ <20170802154135.GI2311718@devbig577.frc2.facebook.com>
+ <20170802160511.cb7yl65t4nmctf3y@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=Tw//oB6GP94ozc+xQqOsNzlRkmMGncezgcyIjEZK/FE=;
- b=PsYYIL4gM+KjDRqmOjVUaBM/ABZ7H18qKSYMdtYZLJscOjWr/DlZNsoN43h6aDIjgbZl
- JcOoEE/iHwfpof5tHAslKNtlFLE2W6KMSskTfv952bKv5wV6TF5K/MGwNadaNhSB4x3k
- jPBZFOVwWLzCH70axHrIMxFKakRBnTZibuI= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Tw//oB6GP94ozc+xQqOsNzlRkmMGncezgcyIjEZK/FE=;
- b=DhTIbz9TjAmYSpsg55b3FWFkVTNZKareeOObzzBrdfE4oCKfPbqWydgQWTvYO1Y2St1p6Pl9Lkg7/Wcho9NJvl6wKK7j/eaQIpExKTj5nqLdH4qYu5gdEr73M2X/pT3bAyIdId9ZKj5LR/I+CyRj5qBFmf4sThHEHCVNafkwrFw=
-In-Reply-To: <20170802165532.22277-1-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=VagTq7wuiC54OxkB9uKcdSP2u5g+EoDeKlAYdbAMJt0=;
+        b=AQ2DvVpc2U4UGnSM6F2qUNCagOA8GgIWo0xYg7sPc55y7I+L3MLCO4qw8e1sUWp2Cm
+         YmLeSpBYoFA8KNZ786iQU0ZDjiHpYrXfiw2W2qDtWQwbHQejO+uGe72dRk5HI4KgWUHK
+         /+Y2HUJ4lk17JisE5W6ZFw4OzwUXYU+RqiJ1nu2qbfJWzMDDIDLP2kpXNwJVjwZcahMc
+         1UBF+/r93LDp0aBuk9HXS/KBcNl3P23CM7SLX2qVuFikXsReNThzeQRBbhInzAnKV9RT
+         2pKOnEyBS5+iEdt/KbmDrIqKCtxDe/CLn8VzJ4D9GKzr9z2PI/JNEvDlEHY+lpLxS5x3
+         RaWg==
+Content-Disposition: inline
+In-Reply-To: <20170802160511.cb7yl65t4nmctf3y@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan@huawei.com>, Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, linux-kernel@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-As we already have a pointer to the parent cgroup in
-cgroup_destroy_locked(), we don't need to calculate it again
-to pass as an argument for cgroup1_check_for_release().
+Hello, Peter.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Suggested-by: Tejun Heo <tj@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan@huawei.com>
-Cc: Waiman Long <longman@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: kernel-team@fb.com
-Cc: linux-kernel@vger.kernel.org
----
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Aug 02, 2017 at 06:05:11PM +0200, Peter Zijlstra wrote:
+> > * The stat file is sampling based and the usage files are calculated
+> >   from actual scheduling events.  Is this because the latter is more
+> >   accurate?
+> 
+> So I actually don't know the history of this stuff too well. But I would
+> think so. This all looks rather dodgy.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index f58e1fe8bebd..2d9de4ec7727 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5022,7 +5022,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 		tcgrp->nr_dying_descendants++;
- 	}
- 
--	cgroup1_check_for_release(cgroup_parent(cgrp));
-+	cgroup1_check_for_release(parent);
- 
- 	/* put the base reference */
- 	percpu_ref_kill(&cgrp->self.refcnt);
+I see.
+
+> > * Why do we have user/sys breakdown in usage numbers?  It tries to
+> >   distinguish user or sys by looking at task_pt_regs().  I can't see
+> >   how this would work (e.g. interrupt handlers never schedule) and w/o
+> >   kernel preemption, the sys part is always zero.  What is this number
+> >   supposed to mean?
+> 
+> For normal scheduler stuff we account the total runtime in ns and use
+> the user/kernel tick samples to divide it into user/kernel time parts.
+> See cputime_adjust().
+> 
+> But looking at the cpuacct I have no clue, that looks wonky at best.
+> 
+> Ideally we'd reuse the normal cputime code and do the same thing
+> per-cgroup, but clearly that isn't happening now.
+> 
+> I never really looked further than that cpuacct_charge() doing _another_
+> cgroup iteration, even though we already account that delta to each
+> cgroup (modulo scheduling class crud).
+
+Yeah, it's kinda silly.  I'll see if I can just kill cpuacct for
+cgroup2.
+
+Thanks.
+
 -- 
-2.13.3
-
+tejun
