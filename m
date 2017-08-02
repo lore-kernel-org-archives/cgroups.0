@@ -1,94 +1,86 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v4 2/4] mm, oom: cgroup-aware OOM killer
-Date: Wed, 2 Aug 2017 09:29:01 +0200
-Message-ID: <20170802072900.GA2524@dhcp22.suse.cz>
-References: <20170726132718.14806-1-guro@fb.com>
- <20170726132718.14806-3-guro@fb.com>
- <20170801145435.GN15774@dhcp22.suse.cz>
- <20170801152548.GA29502@castle.dhcp.TheFacebook.com>
- <20170801170302.GB15518@dhcp22.suse.cz>
- <20170801181352.GA26074@castle.DHCP.thefacebook.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] sched: Implement interface for cgroup unified
+ hierarchy
+Date: Wed, 2 Aug 2017 08:41:35 -0700
+Message-ID: <20170802154135.GI2311718@devbig577.frc2.facebook.com>
+References: <20170720184808.1433868-1-tj@kernel.org>
+ <20170720184808.1433868-3-tj@kernel.org>
+ <20170729091707.lobbicnw253wzltu@hirez.programming.kicks-ass.net>
+ <20170801201745.GA2311718@devbig577.frc2.facebook.com>
+ <20170801214038.sp4lw6lrnl3votte@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=abNcUbzoBhWAdZCHn8IsuRABPE1x2d7AipZ+lQJEGRE=;
+        b=ha1vk/legvysAPgqQzO+lqUBK5sksVwyT0A1n/ohEOWzlWze50aGMb/qPyBY7Sd58q
+         Xxgh1s/A84E7hEtsq5aUG44YNPZJRM0SwZ/LKrDtgg3k+9fJpiGgt0d0DthJSxRsOOFP
+         gbPRtyJdhdswq49g2TO9Y78jXJkvnOlMc68dn5tPvMrYHEYxdupY3Oe91QT7yX/1dgwe
+         evuAUXejxdwVoLo7f4sLQIdAw5ZVKLcImoneQ96eiiuxwYT2hBBU6hZJwNAe9pzj3NsZ
+         pRXLuav+Em3jBk/JUmJ2u+/EVhLD37IyPfeNMjwJWLCJXSkfWwiesm44FjJm3jAm7+ZF
+         N/gg==
 Content-Disposition: inline
-In-Reply-To: <20170801181352.GA26074@castle.DHCP.thefacebook.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170801214038.sp4lw6lrnl3votte-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
 
-On Tue 01-08-17 19:13:52, Roman Gushchin wrote:
-> On Tue, Aug 01, 2017 at 07:03:03PM +0200, Michal Hocko wrote:
-> > On Tue 01-08-17 16:25:48, Roman Gushchin wrote:
-> > > On Tue, Aug 01, 2017 at 04:54:35PM +0200, Michal Hocko wrote:
-> > [...]
-> > > > I would reap out the oom_kill_process into a separate patch.
-> > > 
-> > > It was a separate patch, I've merged it based on Vladimir's feedback.
-> > > No problems, I can divide it back.
-> > 
-> > It would make the review slightly more easier
-> > > 
-> > > > > -static void oom_kill_process(struct oom_control *oc, const char *message)
-> > > > > +static void __oom_kill_process(struct task_struct *victim)
-> > > > 
-> > > > To the rest of the patch. I have to say I do not quite like how it is
-> > > > implemented. I was hoping for something much simpler which would hook
-> > > > into oom_evaluate_task. If a task belongs to a memcg with kill-all flag
-> > > > then we would update the cumulative memcg badness (more specifically the
-> > > > badness of the topmost parent with kill-all flag). Memcg will then
-> > > > compete with existing self contained tasks (oom_badness will have to
-> > > > tell whether points belong to a task or a memcg to allow the caller to
-> > > > deal with it). But it shouldn't be much more complex than that.
-> > > 
-> > > I'm not sure, it will be any simpler. Basically I'm doing the same:
-> > > the difference is that you want to iterate over tasks and for each
-> > > task traverse the memcg tree, update per-cgroup oom score and find
-> > > the corresponding memcg(s) with the kill-all flag. I'm doing the opposite:
-> > > traverse the cgroup tree, and for each leaf cgroup iterate over processes.
-> > 
-> > Yeah but this doesn't fit very well to the existing scheme so we would
-> > need two different schemes which is not ideal from maint. point of view.
-> > We also do not have to duplicate all the tricky checks we already do in
-> > oom_evaluate_task. So I would prefer if we could try to hook there and
-> > do the special handling there.
+Hello, Peter.
+
+On Tue, Aug 01, 2017 at 11:40:38PM +0200, Peter Zijlstra wrote:
+> > * On cgroup2, there is only one hierarchy.  It'd be great to have
+> >   basic resource accounting enabled by default on all cgroups.  Note
+> >   that we couldn't do that on v1 because there could be any number of
+> >   hierarchies and the cost would increase with the number of
+> >   hierarchies.
 > 
-> I hope, that iterating over all tasks just to check if there are
-> in-flight OOM victims might be optimized at some point.
-> That means, we would be able to choose a victim much cheaper.
-> It's not easy, but it feels as a right direction to go.
+> Yes, the whole single hierarchy thing makes doing away with the double
+> accounting possible.
 
-You would have to count per each oom domain and that sounds quite
-unfeasible to me.
- 
-> Also, adding new tricks to the oom_evaluate_task() will make the code
-> even more hairy. Some of the existing tricks are useless for memcg selection.
+Yeah, we can either do that or make it cheaper so that we can have
+basic stats by default.
 
-Not sure what you mean but oom_evaluate_task has been usable for both
-global and memcg oom paths so far. I do not see any reason why this
-shouldn't hold for a different oom killing strategy.
-
-> > > Also, please note, that even without the kill-all flag the decision is made
-> > > on per-cgroup level (except tasks in the root cgroup).
-> > 
-> > Yeah and I am not sure this is a reasonable behavior. Why should we
-> > consider memcgs which are not kill-all as a single entity?
+> > * It is bothersome that we're walking up the tree each time for
+> >   cpuacct although being percpu && just walking up the tree makes it
+> >   relatively cheap.
 > 
-> I think, it's reasonable to choose a cgroup/container to blow off based on
-> the cgroup oom_priority/size (including hierarchical settings), and then
-> kill one biggest or all tasks depending on cgroup settings.
+> So even if its only CPU local accounting, you still have all the pointer
+> chasing and misses, not to mention that a faster O(depth) is still
+> O(depth).
+> 
+> >		Anyways, I'm thinking about shifting the
+> >   aggregation to the reader side so that the hot path always only
+> >   updates local counters in a way which can scale even when there are
+> >   a lot of (idle) cgroups.  Will follow up on this later.
+> 
+> Not entirely sure I follow, we currently only update the current cgroup
+> and its immediate parents, no? Or are you looking to only account into
+> the current cgroup and propagate into the parents on reading?
 
-But that doesn't mean you have to treat even !kill-all memcgs like a
-single entity. In fact we should compare killable entities which is
-either a task or the whole memcg if configured that way.
+Yeah, shifting the cost to the readers and being smart with
+propagation so that reading isn't O(nr_descendants) but
+O(nr_descendants_which_have_run_since_last_read).  That way, we can
+show the basic stats without taxing the hot paths with reasonable
+scalability.
+
+I have a couple questions about cpuacct tho.
+
+* The stat file is sampling based and the usage files are calculated
+  from actual scheduling events.  Is this because the latter is more
+  accurate?
+
+* Why do we have user/sys breakdown in usage numbers?  It tries to
+  distinguish user or sys by looking at task_pt_regs().  I can't see
+  how this would work (e.g. interrupt handlers never schedule) and w/o
+  kernel preemption, the sys part is always zero.  What is this number
+  supposed to mean?
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
