@@ -1,70 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] sched: Implement interface for cgroup unified
- hierarchy
-Date: Wed, 2 Aug 2017 11:16:00 -0700
-Message-ID: <20170802181600.GJ2311718@devbig577.frc2.facebook.com>
-References: <20170720184808.1433868-1-tj@kernel.org>
- <20170720184808.1433868-3-tj@kernel.org>
- <20170729091707.lobbicnw253wzltu@hirez.programming.kicks-ass.net>
- <20170801201745.GA2311718@devbig577.frc2.facebook.com>
- <20170801214038.sp4lw6lrnl3votte@hirez.programming.kicks-ass.net>
- <20170802154135.GI2311718@devbig577.frc2.facebook.com>
- <20170802160511.cb7yl65t4nmctf3y@hirez.programming.kicks-ass.net>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 2/4] cgroup: implement hierarchy limits
+Date: Wed, 2 Aug 2017 11:44:17 -0700
+Message-ID: <20170802184416.GK2311718@devbig577.frc2.facebook.com>
+References: <20170802165532.22277-1-guro@fb.com>
+ <20170802165532.22277-3-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=VagTq7wuiC54OxkB9uKcdSP2u5g+EoDeKlAYdbAMJt0=;
-        b=AQ2DvVpc2U4UGnSM6F2qUNCagOA8GgIWo0xYg7sPc55y7I+L3MLCO4qw8e1sUWp2Cm
-         YmLeSpBYoFA8KNZ786iQU0ZDjiHpYrXfiw2W2qDtWQwbHQejO+uGe72dRk5HI4KgWUHK
-         /+Y2HUJ4lk17JisE5W6ZFw4OzwUXYU+RqiJ1nu2qbfJWzMDDIDLP2kpXNwJVjwZcahMc
-         1UBF+/r93LDp0aBuk9HXS/KBcNl3P23CM7SLX2qVuFikXsReNThzeQRBbhInzAnKV9RT
-         2pKOnEyBS5+iEdt/KbmDrIqKCtxDe/CLn8VzJ4D9GKzr9z2PI/JNEvDlEHY+lpLxS5x3
-         RaWg==
+        bh=DML40S6RJZiE7HNyMdyIx3VwJpbPjvXnGBIABMLUTAc=;
+        b=Hja+dNtbolizb7idLUe6V4aBlI9ZHiCyXc6lhqZih1LVdEF4lfTzJsmQ3V5JI45MHo
+         v2VOa9WxPYFuRrc+S6YAf7OrZSkNrqkNQzmelh9iqf59uMmzjnDkhEZaAho1HWL45S9c
+         bnb6MZ3ibYhf22GRANMYaYNiVO367Hy8kDoyPAAvFWYeCyY1v8osX17o3CxX6X9hZPzo
+         axjTFC4KM0HnhSW+fD51jF8NUFSi3D7mRWoNvFMe286uaBRt8Yrr9gaywDTqied5KZCl
+         XbjZtAMxkiiXTuKIqEhrIkACYfgHkcjVSB2gs4lMvnazM728ymbs1CZctKr0s4UDZOCy
+         Hj3Q==
 Content-Disposition: inline
-In-Reply-To: <20170802160511.cb7yl65t4nmctf3y@hirez.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170802165532.22277-3-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Peter.
+Hello, Roman.
 
-On Wed, Aug 02, 2017 at 06:05:11PM +0200, Peter Zijlstra wrote:
-> > * The stat file is sampling based and the usage files are calculated
-> >   from actual scheduling events.  Is this because the latter is more
-> >   accurate?
-> 
-> So I actually don't know the history of this stuff too well. But I would
-> think so. This all looks rather dodgy.
+Generally looks good to me.  One minor nit.
 
-I see.
-
-> > * Why do we have user/sys breakdown in usage numbers?  It tries to
-> >   distinguish user or sys by looking at task_pt_regs().  I can't see
-> >   how this would work (e.g. interrupt handlers never schedule) and w/o
-> >   kernel preemption, the sys part is always zero.  What is this number
-> >   supposed to mean?
-> 
-> For normal scheduler stuff we account the total runtime in ns and use
-> the user/kernel tick samples to divide it into user/kernel time parts.
-> See cputime_adjust().
-> 
-> But looking at the cpuacct I have no clue, that looks wonky at best.
-> 
-> Ideally we'd reuse the normal cputime code and do the same thing
-> per-cgroup, but clearly that isn't happening now.
-> 
-> I never really looked further than that cpuacct_charge() doing _another_
-> cgroup iteration, even though we already account that delta to each
-> cgroup (modulo scheduling class crud).
-
-Yeah, it's kinda silly.  I'll see if I can just kill cpuacct for
-cgroup2.
+On Wed, Aug 02, 2017 at 05:55:30PM +0100, Roman Gushchin wrote:
+> +static ssize_t cgroup_max_descendants_write(struct kernfs_open_file *of,
+> +					   char *buf, size_t nbytes, loff_t off)
+> +{
+> +	struct cgroup *cgrp;
+> +	int descendants;
+> +	ssize_t ret;
+> +
+> +	buf = strstrip(buf);
+> +	if (!strcmp(buf, "max")) {
+> +		descendants = INT_MAX;
+> +	} else {
+> +		ret = kstrtouint(buf, 0, &descendants);
+                     ^^^^^^^^^^^
+		     shouldn't this be kstrtoint?
 
 Thanks.
 
