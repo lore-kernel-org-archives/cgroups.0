@@ -1,50 +1,120 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-4.14] cgroup: short-circuit
- cset_cgroup_from_root() on the default hierarchy
-Date: Wed, 2 Aug 2017 15:39:00 -0700
-Message-ID: <20170802223900.GN2311718@devbig577.frc2.facebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v4 2/4] mm, oom: cgroup-aware OOM killer
+Date: Thu, 3 Aug 2017 13:47:51 +0100
+Message-ID: <20170803124751.GA24563@castle.dhcp.TheFacebook.com>
+References: <20170726132718.14806-1-guro@fb.com>
+ <20170726132718.14806-3-guro@fb.com>
+ <20170801145435.GN15774@dhcp22.suse.cz>
+ <20170801152548.GA29502@castle.dhcp.TheFacebook.com>
+ <20170801170302.GB15518@dhcp22.suse.cz>
+ <20170801181352.GA26074@castle.DHCP.thefacebook.com>
+ <20170802072900.GA2524@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=aqhZFrIKDhGY3MbLN/ga7AtQXBNHREjl/J9v8vey4zE=;
-        b=LegtKVAGOuBPzqqFZfOiITgY0P5Pl9+1Pk0H572axbI7HSCXA269+R9Mz/2dcYBrTJ
-         WrlKriKo1AN/yYFC7ebi7tqDeczyVFwjSe0jlfvpnHlojtmww3IkWrIPJ0fc6QJb+VSf
-         LuXARdnG7RS5BtKBE4nV+XRX13UhvQdG2fNObMjHaLwK+ngGreUc1iMRcKl13t+JYSNO
-         OX5G6IpdrXoSLmO7LyXl/11FDqncS2bWSFslLXFrbCrpXxS9CDY3r+orEEwzygY1CxHs
-         9XUec5YVFq/LwhtkZHBWZfK83CL4xZmctbdftn9FOxqyVwTCtN0qOzjOFGFCU3pXgm1m
-         4sIg==
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=scLRsaC/R6oyd0yxODY6ARn27Kb/0FmtGhyah1Of/bU=;
+ b=IYWAuhCtc6K6TcMo0ekIaDatslNJonq3hDYIoju+akkZ4qBQ7XbXUoVIxBU+jpLP107s
+ kcueU1lB6laHT+RE7kVRC5rtLVAnWN6f8yda4LhN1E3pLY49bZ+r6Q0QsvROyAJs37Lx
+ KVg1GyOJVxxDdJsCb/cWLMTqpRndkKFfTLw= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=scLRsaC/R6oyd0yxODY6ARn27Kb/0FmtGhyah1Of/bU=;
+ b=DKVzBDDkFnxSeOKG9YkzL9013oYsjYDjT0pFWQpBrTlB0gSOQBMcgnFOBW9li3/32oB++uyRjZz920pcElxXioOty2kWGbiBDpAuxOlbSwe+nv/eDe6tvRUa/wnVapRRbBvzTB8lO9yKZ4rZZoHUf0Xavvvwc3HW/LLT0TIj+Iw=
+Content-Disposition: inline
+In-Reply-To: <20170802072900.GA2524@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Each css_set directly points to the default cgroup it belongs to, so
-there's no reason to walk the cgrp_links list on the default
-hierarchy.
+On Wed, Aug 02, 2017 at 09:29:01AM +0200, Michal Hocko wrote:
+> On Tue 01-08-17 19:13:52, Roman Gushchin wrote:
+> > On Tue, Aug 01, 2017 at 07:03:03PM +0200, Michal Hocko wrote:
+> > > On Tue 01-08-17 16:25:48, Roman Gushchin wrote:
+> > > > On Tue, Aug 01, 2017 at 04:54:35PM +0200, Michal Hocko wrote:
+> > > [...]
+> > > > > I would reap out the oom_kill_process into a separate patch.
+> > > > 
+> > > > It was a separate patch, I've merged it based on Vladimir's feedback.
+> > > > No problems, I can divide it back.
+> > > 
+> > > It would make the review slightly more easier
+> > > > 
+> > > > > > -static void oom_kill_process(struct oom_control *oc, const char *message)
+> > > > > > +static void __oom_kill_process(struct task_struct *victim)
+> > > > > 
+> > > > > To the rest of the patch. I have to say I do not quite like how it is
+> > > > > implemented. I was hoping for something much simpler which would hook
+> > > > > into oom_evaluate_task. If a task belongs to a memcg with kill-all flag
+> > > > > then we would update the cumulative memcg badness (more specifically the
+> > > > > badness of the topmost parent with kill-all flag). Memcg will then
+> > > > > compete with existing self contained tasks (oom_badness will have to
+> > > > > tell whether points belong to a task or a memcg to allow the caller to
+> > > > > deal with it). But it shouldn't be much more complex than that.
+> > > > 
+> > > > I'm not sure, it will be any simpler. Basically I'm doing the same:
+> > > > the difference is that you want to iterate over tasks and for each
+> > > > task traverse the memcg tree, update per-cgroup oom score and find
+> > > > the corresponding memcg(s) with the kill-all flag. I'm doing the opposite:
+> > > > traverse the cgroup tree, and for each leaf cgroup iterate over processes.
+> > > 
+> > > Yeah but this doesn't fit very well to the existing scheme so we would
+> > > need two different schemes which is not ideal from maint. point of view.
+> > > We also do not have to duplicate all the tricky checks we already do in
+> > > oom_evaluate_task. So I would prefer if we could try to hook there and
+> > > do the special handling there.
+> > 
+> > I hope, that iterating over all tasks just to check if there are
+> > in-flight OOM victims might be optimized at some point.
+> > That means, we would be able to choose a victim much cheaper.
+> > It's not easy, but it feels as a right direction to go.
+> 
+> You would have to count per each oom domain and that sounds quite
+> unfeasible to me.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Minor optimization.  Applying to cgroup/for-4.14.
+It's hard, but traversing the whole cgroup tree from bottom to top
+for each task is just not scalable.
 
-Thanks.
+This is exactly why I've choosen a compromise right now: let's
+iterate over all tasks, but do it by iterating over the cgroup tree.
 
- kernel/cgroup/cgroup.c |    2 ++
- 1 file changed, 2 insertions(+)
+>  
+> > Also, adding new tricks to the oom_evaluate_task() will make the code
+> > even more hairy. Some of the existing tricks are useless for memcg selection.
+> 
+> Not sure what you mean but oom_evaluate_task has been usable for both
+> global and memcg oom paths so far. I do not see any reason why this
+> shouldn't hold for a different oom killing strategy.
 
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1311,6 +1311,8 @@ static struct cgroup *cset_cgroup_from_r
- 
- 	if (cset == &init_css_set) {
- 		res = &root->cgrp;
-+	} else if (root == &cgrp_dfl_root) {
-+		res = cset->dfl_cgrp;
- 	} else {
- 		struct cgrp_cset_link *link;
- 
+Yes, but in both cases we've evaluated tasks, not cgroups.
+
+> 
+> > > > Also, please note, that even without the kill-all flag the decision is made
+> > > > on per-cgroup level (except tasks in the root cgroup).
+> > > 
+> > > Yeah and I am not sure this is a reasonable behavior. Why should we
+> > > consider memcgs which are not kill-all as a single entity?
+> > 
+> > I think, it's reasonable to choose a cgroup/container to blow off based on
+> > the cgroup oom_priority/size (including hierarchical settings), and then
+> > kill one biggest or all tasks depending on cgroup settings.
+> 
+> But that doesn't mean you have to treat even !kill-all memcgs like a
+> single entity. In fact we should compare killable entities which is
+> either a task or the whole memcg if configured that way.
+
+I believe it's absolutely valid user's intention to prioritize some
+cgroups over other, even if only one task should be killed in case of OOM.
+
+Thanks!
+
+Roman
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
