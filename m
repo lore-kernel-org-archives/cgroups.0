@@ -1,63 +1,135 @@
-From: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: kmemleaks reports a lot of cases around memcg_create_kmem_cache
-Date: Mon, 7 Aug 2017 16:37:52 -0700
-Message-ID: <CANaxB-xaHyyn=c8mJ8R8=k-kFJvW1a04MAuAdmS+V4KsjU84AQ@mail.gmail.com>
-References: <CANaxB-x=xgLq116VReo4Og+jFsAB+ehx3xThnXoCx8pR3YXPSA@mail.gmail.com>
- <20170702185017.ew5cn4altyw7nomi@esperanza> <20170705144743.GA19330@htj.duckdns.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: kernel panic on null pointer on page->mem_cgroup
+Date: Tue, 8 Aug 2017 12:21:22 -0400
+Message-ID: <20170808162122.GA14689@cmpxchg.org>
+References: <20170805155241.GA94821@jaegeuk-macbookpro.roam.corp.google.com>
+ <20170808010150.4155-1-bradleybolen@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=2ZFK0ldIbvD4HDXZ0yRpaakPkyTBvaCKKephV/rx00U=;
-        b=I9jenWOTyS3nBqDA9tcLP8fXfyOchBOrUAg+mWlzuRNJpmSQaTmYloMUN8D97SaOT3
-         EAzYNmJqiYHr1DTuZvyZg/CxLfMZ5TV6PFLY2noVy0kRZI1GgGdqYbx2/fyNvQJnAjKh
-         uT2rvvo0oGPtDCct133bCVMRtIcuYqokXYj2Q1qw4WAiJxwN0YlzFl1ZASsB7pUdwawA
-         Ppu8UlQey3SpDXyL2ySJTbleFvNHWqE0SaAsK3LKudjq8h7vJQG61nJ/MtqPqKvuaJ09
-         m386f7RMM4f3DqpEU3+tw99Th5/shTBunD3VJDUYMrZVgy6IErWEU7qO2h8qoSHbSbN6
-         vyxA==
-In-Reply-To: <20170705144743.GA19330-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=l4+M+BBYqyh+/wFBemz2yZfGXIY3gGOJeHp3IDoyqm4=; b=ZYgQuXZPK4/PxhqQr2cwkkGf4a
+	zVL4tztOs2wQ1fsaZbuGhgjPBsuV3SnRb/dSeY2Ndv2zXyeZiHebUtZCb++KK0eYRYU3Fila1FhWl
+	x+ydUkGs7eLuejeOlXsc3YMcaWNixJTZnck8J8qZEHkVH+MJ+gtB3l50shiWzZeWlUFc=;
+Content-Disposition: inline
+In-Reply-To: <20170808010150.4155-1-bradleybolen@gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Bradley Bolen <bradleybolen@gmail.com>
+Cc: linux-mm@kvack.org, jaegeuk@kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello Vladimir and Tejun,
+Hi Jaegeuk and Bradley,
 
-This patch isn't in the Linus' tree. Could you do something to push it
-into the upstream tree.
+On Mon, Aug 07, 2017 at 09:01:50PM -0400, Bradley Bolen wrote:
+> I am getting a very similar error on v4.11 with an arm64 board.
+> 
+> I, too, also see page->mem_cgroup checked to make sure that it is not
+> NULL and then several instructions later it is NULL.  It does appear
+> that someone is changing that member without taking the lock.  In my
+> setup, I see
+> 
+> crash> bt
+> PID: 72     TASK: e1f48640  CPU: 0   COMMAND: "mmcqd/1"
+>  #0 [<c00ad35c>] (__crash_kexec) from [<c0101080>]
+>  #1 [<c0101080>] (panic) from [<c028cd6c>]
+>  #2 [<c028cd6c>] (svcerr_panic) from [<c028cdc4>]
+>  #3 [<c028cdc4>] (_SvcErr_) from [<c001474c>]
+>  #4 [<c001474c>] (die) from [<c00241f8>]
+>  #5 [<c00241f8>] (__do_kernel_fault) from [<c0560600>]
+>  #6 [<c0560600>] (do_page_fault) from [<c00092e8>]
+>  #7 [<c00092e8>] (do_DataAbort) from [<c055f9f0>]
+>     pc : [<c0112540>]    lr : [<c0112518>]    psr: a0000193
+>     sp : c1a19cc8  ip : 00000000  fp : c1a19d04
+>     r10: 0006ae29  r9 : 00000000  r8 : dfbf1800
+>     r7 : dfbf1800  r6 : 00000001  r5 : f3c1107c  r4 : e2fb6424
+>     r3 : 00000000  r2 : 00040228  r1 : 221e3000  r0 : a0000113
+>     Flags: NzCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM
+>  #8 [<c055f9f0>] (__dabt_svc) from [<c0112518>]
+>  #9 [<c0112540>] (test_clear_page_writeback) from [<c01046d4>]
+> #10 [<c01046d4>] (end_page_writeback) from [<c0149bcc>]
+> #11 [<c0149bcc>] (end_swap_bio_write) from [<c0261460>]
+> #12 [<c0261460>] (bio_endio) from [<c042c800>]
+> #13 [<c042c800>] (dec_pending) from [<c042e648>]
+> #14 [<c042e648>] (clone_endio) from [<c0261460>]
+> #15 [<c0261460>] (bio_endio) from [<bf60aa00>]
+> #16 [<bf60aa00>] (crypt_dec_pending [dm_crypt]) from [<bf60c1e8>]
+> #17 [<bf60c1e8>] (crypt_endio [dm_crypt]) from [<c0261460>]
+> #18 [<c0261460>] (bio_endio) from [<c0269e34>]
+> #19 [<c0269e34>] (blk_update_request) from [<c026a058>]
+> #20 [<c026a058>] (blk_update_bidi_request) from [<c026a444>]
+> #21 [<c026a444>] (blk_end_bidi_request) from [<c026a494>]
+> #22 [<c026a494>] (blk_end_request) from [<c0458dbc>]
+> #23 [<c0458dbc>] (mmc_blk_issue_rw_rq) from [<c0459e24>]
+> #24 [<c0459e24>] (mmc_blk_issue_rq) from [<c045a018>]
+> #25 [<c045a018>] (mmc_queue_thread) from [<c0048890>]
+> #26 [<c0048890>] (kthread) from [<c0010388>]
+> crash> sym c0112540
+> c0112540 (T) test_clear_page_writeback+512
+>  /kernel-source/include/linux/memcontrol.h: 518
+> 
+> crash> bt 35
+> PID: 35     TASK: e1d45dc0  CPU: 1   COMMAND: "kswapd0"
+>  #0 [<c0559ab8>] (__schedule) from [<c0559edc>]
+>  #1 [<c0559edc>] (schedule) from [<c055e54c>]
+>  #2 [<c055e54c>] (schedule_timeout) from [<c055a3a4>]
+>  #3 [<c055a3a4>] (io_schedule_timeout) from [<c0106cb0>]
+>  #4 [<c0106cb0>] (mempool_alloc) from [<c0261668>]
+>  #5 [<c0261668>] (bio_alloc_bioset) from [<c0149d68>]
+>  #6 [<c0149d68>] (get_swap_bio) from [<c014a280>]
+>  #7 [<c014a280>] (__swap_writepage) from [<c014a3bc>]
+>  #8 [<c014a3bc>] (swap_writepage) from [<c011e5c8>]
+>  #9 [<c011e5c8>] (shmem_writepage) from [<c011a9b8>]
+> #10 [<c011a9b8>] (shrink_page_list) from [<c011b528>]
+> #11 [<c011b528>] (shrink_inactive_list) from [<c011c160>]
+> #12 [<c011c160>] (shrink_node_memcg) from [<c011c400>]
+> #13 [<c011c400>] (shrink_node) from [<c011d7dc>]
+> #14 [<c011d7dc>] (kswapd) from [<c0048890>]
+> #15 [<c0048890>] (kthread) from [<c0010388>]
+> 
+> It appears that uncharge_list() in mm/memcontrol.c is not taking the
+> page lock when it sets mem_cgroup to NULL.  I am not familiar with the
+> mm code so I do not know if this is on purpose or not.  There is a
+> comment in uncharge_list that makes me believe that the crashing code
+> should not have been running:
+> /*
+>  * Nobody should be changing or seriously looking at
+>  * page->mem_cgroup at this point, we have fully
+>  * exclusive access to the page.
+>  */
+> However, I am new to looking at this area of the kernel so I am not
+> sure.
 
-Thanks,
-Andrei
+The lock is for pages that are actively being used, whereas the free
+path requires the page refcount to be 0; nobody else should be having
+access to the page at that time.
 
-On Wed, Jul 5, 2017 at 7:47 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> On Sun, Jul 02, 2017 at 09:50:17PM +0300, Vladimir Davydov wrote:
->> From: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Subject: [PATCH] slub: fix per memcg cache leak on css offline
->>
->> To avoid a possible deadlock, sysfs_slab_remove() schedules an
->> asynchronous work to delete sysfs entries corresponding to the kmem
->> cache. To ensure the cache isn't freed before the work function is
->> called, it takes a reference to the cache kobject. The reference is
->> supposed to be released by the work function. However, the work function
->> (sysfs_slab_remove_workfn()) does nothing in case the cache sysfs entry
->> has already been deleted, leaking the kobject and the corresponding
->> cache. This may happen on a per memcg cache destruction, because sysfs
->> entries of a per memcg cache are deleted on memcg offline if the cache
->> is empty (see __kmemcg_cache_deactivate()).
-> ...
->> Reported-by: Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Signed-off-by: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Fixes: 3b7b314053d02 ("slub: make sysfs file removal asynchronous")
->
-> Oops,
->
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->
-> Thanks.
->
-> --
-> tejun
+> I was able to create a reproducible scenario by using a udelay to
+> increase the time between the if (page->mem_cgroup) check and the later
+> dereference of it to increase the race window.  I then mounted an empty
+> ext4 partition and ran the following no more than twice before it
+> crashed.
+> dd if=/dev/zero of=/tmp/ext4disk/test bs=1M count=100
+
+Thanks, that's useful. I'm going to try to reproduce this also.
+
+There is a
+
+	VM_BUG_ON_PAGE(!PageHWPoison(page) && page_count(page), page);
+
+inside uncharge_list() that verifies that there shouldn't in fact be
+any pages ending writeback when they get into that function. Can you
+build your kernel with CONFIG_DEBUG_VM to enable that test?
+
+Thanks
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
