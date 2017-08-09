@@ -1,51 +1,97 @@
-From: wang Yu <yuwang668899-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: memcg Can't context between v1 and v2 because css->refcnt not released
-Date: Wed, 9 Aug 2017 15:06:34 +0800
-Message-ID: <CADK2BfzM9V=C3Kk6v714K3NVX58Q6pEaAMiHDGSyr6PakC2O=w@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=o3i7lxL0wX5yewEsdPrEB6qIZoIOm1CHsL+UBTok9mM=;
-        b=MrQmRAMfi6rvxc5xl4fQSOlBJURRvxMgqI1hT0ybqB5+zX8rQAyeQbvkS3Z8zBEc49
-         Fm5uN9CCpM919Y09sQWzv3Sn9T9Jyp7Ns5gLN1loKM3yOVY2ILGLXYI21caSa4K3NcHt
-         u1mX5smgtU4vsBOlaVIXQtg5zhQf0UeEvD6OD6vJnsYWGtQa6x8vhWd7VgKL0fd0ioke
-         JT+exp6Pj0rVhkNAQoH52NQOyDxRQH1izqlt+StFKbTCHznogFJxc/GrzKSbex+Yn9Em
-         Ep/qi1OSZlj6VRxKolF2bOHuX8Ft2XkpFRQLg0GiHPQP/SVd+oIcZKpkFkoJ1CbvPbI1
-         6WYA==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v3 0/3] cgroup: Introducing bypass mode
+Date: Wed,  9 Aug 2017 13:55:47 -0400
+Message-ID: <1502301350-19757-1-git-send-email-longman@redhat.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Waiman Long <longman@redhat.com>
 
-Hello Johannes ,Michal,and Tejun:
+ v2->v3:
+  - Remove invalid cgroup subdirectory creation patch.
+  - Add use cases for the bypass mode and removing statements about
+    control files ownership in cgroup-v2.txt.
+  - Restrict bypass mode to non-domain (threaded) controllers only.
 
-  i using memcg v1,  but some reason  i want to context to  memcg v2,
-but i can't, here is my step:
-#cat /proc/cgroups
-#subsys_name hierarchy num_cgroups enabled
- memory 5 1 1
-#cd /sys/fs/cgroup/memory
-#mkdir a
-#echo 0 > a/cgroup.procs
-#sleep 1
-#echo 0 > cgroup.procs
-#cat /proc/cgroups
-#subsys_name hierarchy num_cgroups enabled
- memory 5 2 1
-the num_cgroups not go to "1"
-so it will lead to can't context to memcg 2
-#cd ..
-#umount memory
-umount: /sys/fs/cgroup/memory: target is busy.
-        (In some cases useful info about processes that use
-         the device is found by lsof(8) or fuser(1))
+ v1->v2:
+  - Remove relax no-internal-process constraint patch as this feature
+    is in the thread mode v4 patch.
+  - Remove subtree root mode patch.
+  - Remove the skip dying css patch as I can no longer reproduce the
+    problem.
+  - Rework the bypass mode so that write to "cgroup.controllers"
+    to enable or disable controller interface files is only allowed
+    if the parent grants bypass mode to children by writing the
+    '#'-prefixed controller to "cgroup.subtree_control".
+  - Add a patch to disable subdirectory creation on an invalid domain.
 
-  and i have tracked  the root cause, i found that "b2052564e66d mm:
-memcontrol: continue cache reclaim from offlined groups"from Johannes
-Weiner, remove mem_cgroup_reparent_charges when mem_cgroup_css_offline, so
-the css->refcount  not go to "0", so the css_release not call when rmdir
-cgroup, and nr_cgroups not released.
-  so i want to ask does it reasonable can't context between v1 and v2
+ v1 patch - https://lkml.org/lkml/2017/6/14/551
+ v2 patch - https://lkml.org/lkml/2017/7/21/606
+
+This patchset introduces new capability to the cgroup v2 core to give
+more freedom and flexibility to non-domain controllers so that they
+can shape their own unique views of the virtual cgroup hierarchies
+that can best suit thier own use cases. It also enables a cgroup
+parent to selectively enable a non-domain controller in a subset of
+its child cgroups instead of in either all or none of them.
+
+The bypass mode cannot be used on domain controllers as it will
+complicate resource distribution model and rules.
+
+One use case is an application that want to use cpuset, for example,
+to bind some worker threads to individual cpus. At the same time, the
+application may also want to use cpu controller to limit the amount
+of cpu consumed by some other threads. Right now, the only way to do
+that with the current v2 control scheme is to create child cgroups
+with both cpu and cpuset controllers enabled and put the desired
+processes or threads into those child cgroups.
+
+The cost of enabling cpuset on a task that need cpu controller is
+negligible. However, the cost of enabling cpu controller on tasks
+that only need cpuset can be noticeable. The performance difference
+may become a concern for users who are thinking of moving from cgroup
+v1 to v2.
+
+Similarly, instead of cpuset, if we want to use perf_event, freezer or
+other non-domain controllers in a subset of tasks, we will also need
+to enable CPU controller along with the associated performance cost.
+
+With bypass mode, we will have the ability to enable just the
+non-domain controllers the tasks needed in their respective child
+cgroups. It is just like what we can currently do with cgroup v1.
+
+This patchset is layered on top of the "for-4.14" branch of Tejun's
+cgroup git tree.
+
+Patch 1 introduces a new bypass mode that allows a non-domain
+controller to be disabled in a cgroup, but re-enabled again in its
+children. This is enabled by writing the controller name prefixed with
+'#' to the "cgroup.subtree_control" file. Then all its children will
+have this controller in bypass mode.
+
+Patch 2 extends the bypass mode mechanism to allow those child
+cgroups that are put into the bypass mode for a particular non-domain
+controller by their parent to be re-enabled again by writing the
+controller name with the '+' prefix to the "cgroup.controllers" file.
+
+Patch 3 extends the debug controller to expose additional controller
+masks introduced by this patchset.
+
+Waiman Long (3):
+  cgroup: subtree_control bypass mode for non-domain controllers
+  cgroup: Allow reenabling of controller in bypass mode
+  cgroup: Make debug controller report new controller masks
+
+ Documentation/cgroup-v2.txt |  58 +++++++---
+ include/linux/cgroup-defs.h |  19 +++-
+ kernel/cgroup/cgroup.c      | 250 +++++++++++++++++++++++++++++++++++---------
+ kernel/cgroup/debug.c       |   2 +
+ 4 files changed, 257 insertions(+), 72 deletions(-)
+
+-- 
+1.8.3.1
+
