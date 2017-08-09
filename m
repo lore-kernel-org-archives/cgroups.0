@@ -1,85 +1,191 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [v4 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
-Date: Tue, 8 Aug 2017 16:24:32 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1708081615110.54505@chino.kir.corp.google.com>
-References: <20170726132718.14806-1-guro@fb.com> <20170726132718.14806-5-guro@fb.com>
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: kernel panic on null pointer on page->mem_cgroup
+Date: Tue, 8 Aug 2017 18:44:59 -0700
+Message-ID: <20170809014459.GB7693@jaegeuk-macbookpro.roam.corp.google.com>
+References: <20170805155241.GA94821@jaegeuk-macbookpro.roam.corp.google.com>
+ <20170808010150.4155-1-bradleybolen@gmail.com>
+ <20170808162122.GA14689@cmpxchg.org>
+ <20170808165601.GA7693@jaegeuk-macbookpro.roam.corp.google.com>
+ <20170808173704.GA22887@cmpxchg.org>
+ <CADvgSZSn1v-tTpa07ebqr19heQbkzbavdPM_nbRNR1WF-EBnFw@mail.gmail.com>
+ <20170808200849.GA1104@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=MvugsoIuS7SQaN6qv2ZajZEY8FHTg34ntA70CQdT2gA=;
-        b=vyT0H155HLPqjxK9YiYvjAdWxQMVaFKixIH/8UpFErAMBr5hQZv4yFY55MZRDPh8H1
-         C1hzYTQDQDoutPqcoKoEad6a54iQ1Rs3yBpEMYDHBWGWNapT8bvGOhnaAbkncYi/m5lT
-         qAH9BY0zmssjNvh3Xxx6bInM1MbBPMxxlFUaUSqhks7UDqok4/voTfg3gXqmgGyLOyUJ
-         7hCiczV26aRevWB/wCBh/XQ5ocnT+i1+JZYJWX2HRTQ3NXA22ima1+Zt/SF6zm81AbjY
-         TnzfexZfK5XZBJFY8NA/pcA5TGE+FYVAXqT05+aqELDaQaICUoB9Luxy99lZje2ZtUNh
-         PTBw==
-In-Reply-To: <20170726132718.14806-5-guro-b10kYP2dOMg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20170808200849.GA1104@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Brad Bolen <bradleybolen@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 26 Jul 2017, Roman Gushchin wrote:
+On 08/08, Johannes Weiner wrote:
+> On Tue, Aug 08, 2017 at 03:13:42PM -0400, Brad Bolen wrote:
+> > On Tue, Aug 8, 2017 at 1:37 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+> > > On Tue, Aug 08, 2017 at 09:56:01AM -0700, Jaegeuk Kim wrote:
+> > >> On 08/08, Johannes Weiner wrote:
+> > >> > Hi Jaegeuk and Bradley,
+> > >> >
+> > >> > On Mon, Aug 07, 2017 at 09:01:50PM -0400, Bradley Bolen wrote:
+> > >> > > I am getting a very similar error on v4.11 with an arm64 board.
+> > >> > >
+> > >> > > I, too, also see page->mem_cgroup checked to make sure that it is not
+> > >> > > NULL and then several instructions later it is NULL.  It does appear
+> > >> > > that someone is changing that member without taking the lock.  In my
+> > >> > > setup, I see
+> > >> > >
+> > >> > > crash> bt
+> > >> > > PID: 72     TASK: e1f48640  CPU: 0   COMMAND: "mmcqd/1"
+> > >> > >  #0 [<c00ad35c>] (__crash_kexec) from [<c0101080>]
+> > >> > >  #1 [<c0101080>] (panic) from [<c028cd6c>]
+> > >> > >  #2 [<c028cd6c>] (svcerr_panic) from [<c028cdc4>]
+> > >> > >  #3 [<c028cdc4>] (_SvcErr_) from [<c001474c>]
+> > >> > >  #4 [<c001474c>] (die) from [<c00241f8>]
+> > >> > >  #5 [<c00241f8>] (__do_kernel_fault) from [<c0560600>]
+> > >> > >  #6 [<c0560600>] (do_page_fault) from [<c00092e8>]
+> > >> > >  #7 [<c00092e8>] (do_DataAbort) from [<c055f9f0>]
+> > >> > >     pc : [<c0112540>]    lr : [<c0112518>]    psr: a0000193
+> > >> > >     sp : c1a19cc8  ip : 00000000  fp : c1a19d04
+> > >> > >     r10: 0006ae29  r9 : 00000000  r8 : dfbf1800
+> > >> > >     r7 : dfbf1800  r6 : 00000001  r5 : f3c1107c  r4 : e2fb6424
+> > >> > >     r3 : 00000000  r2 : 00040228  r1 : 221e3000  r0 : a0000113
+> > >> > >     Flags: NzCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM
+> > >> > >  #8 [<c055f9f0>] (__dabt_svc) from [<c0112518>]
+> > >> > >  #9 [<c0112540>] (test_clear_page_writeback) from [<c01046d4>]
+> > >> > > #10 [<c01046d4>] (end_page_writeback) from [<c0149bcc>]
+> > >> > > #11 [<c0149bcc>] (end_swap_bio_write) from [<c0261460>]
+> > >> > > #12 [<c0261460>] (bio_endio) from [<c042c800>]
+> > >> > > #13 [<c042c800>] (dec_pending) from [<c042e648>]
+> > >> > > #14 [<c042e648>] (clone_endio) from [<c0261460>]
+> > >> > > #15 [<c0261460>] (bio_endio) from [<bf60aa00>]
+> > >> > > #16 [<bf60aa00>] (crypt_dec_pending [dm_crypt]) from [<bf60c1e8>]
+> > >> > > #17 [<bf60c1e8>] (crypt_endio [dm_crypt]) from [<c0261460>]
+> > >> > > #18 [<c0261460>] (bio_endio) from [<c0269e34>]
+> > >> > > #19 [<c0269e34>] (blk_update_request) from [<c026a058>]
+> > >> > > #20 [<c026a058>] (blk_update_bidi_request) from [<c026a444>]
+> > >> > > #21 [<c026a444>] (blk_end_bidi_request) from [<c026a494>]
+> > >> > > #22 [<c026a494>] (blk_end_request) from [<c0458dbc>]
+> > >> > > #23 [<c0458dbc>] (mmc_blk_issue_rw_rq) from [<c0459e24>]
+> > >> > > #24 [<c0459e24>] (mmc_blk_issue_rq) from [<c045a018>]
+> > >> > > #25 [<c045a018>] (mmc_queue_thread) from [<c0048890>]
+> > >> > > #26 [<c0048890>] (kthread) from [<c0010388>]
+> > >> > > crash> sym c0112540
+> > >> > > c0112540 (T) test_clear_page_writeback+512
+> > >> > >  /kernel-source/include/linux/memcontrol.h: 518
+> > >> > >
+> > >> > > crash> bt 35
+> > >> > > PID: 35     TASK: e1d45dc0  CPU: 1   COMMAND: "kswapd0"
+> > >> > >  #0 [<c0559ab8>] (__schedule) from [<c0559edc>]
+> > >> > >  #1 [<c0559edc>] (schedule) from [<c055e54c>]
+> > >> > >  #2 [<c055e54c>] (schedule_timeout) from [<c055a3a4>]
+> > >> > >  #3 [<c055a3a4>] (io_schedule_timeout) from [<c0106cb0>]
+> > >> > >  #4 [<c0106cb0>] (mempool_alloc) from [<c0261668>]
+> > >> > >  #5 [<c0261668>] (bio_alloc_bioset) from [<c0149d68>]
+> > >> > >  #6 [<c0149d68>] (get_swap_bio) from [<c014a280>]
+> > >> > >  #7 [<c014a280>] (__swap_writepage) from [<c014a3bc>]
+> > >> > >  #8 [<c014a3bc>] (swap_writepage) from [<c011e5c8>]
+> > >> > >  #9 [<c011e5c8>] (shmem_writepage) from [<c011a9b8>]
+> > >> > > #10 [<c011a9b8>] (shrink_page_list) from [<c011b528>]
+> > >> > > #11 [<c011b528>] (shrink_inactive_list) from [<c011c160>]
+> > >> > > #12 [<c011c160>] (shrink_node_memcg) from [<c011c400>]
+> > >> > > #13 [<c011c400>] (shrink_node) from [<c011d7dc>]
+> > >> > > #14 [<c011d7dc>] (kswapd) from [<c0048890>]
+> > >> > > #15 [<c0048890>] (kthread) from [<c0010388>]
+> > >> > >
+> > >> > > It appears that uncharge_list() in mm/memcontrol.c is not taking the
+> > >> > > page lock when it sets mem_cgroup to NULL.  I am not familiar with the
+> > >> > > mm code so I do not know if this is on purpose or not.  There is a
+> > >> > > comment in uncharge_list that makes me believe that the crashing code
+> > >> > > should not have been running:
+> > >> > > /*
+> > >> > >  * Nobody should be changing or seriously looking at
+> > >> > >  * page->mem_cgroup at this point, we have fully
+> > >> > >  * exclusive access to the page.
+> > >> > >  */
+> > >> > > However, I am new to looking at this area of the kernel so I am not
+> > >> > > sure.
+> > >> >
+> > >> > The lock is for pages that are actively being used, whereas the free
+> > >> > path requires the page refcount to be 0; nobody else should be having
+> > >> > access to the page at that time.
+> > >>
+> > >> Given various trials for a while, using __mod_memcg_state() instead of
+> > >> mod_memcg_state() ssems somehow blowing the panic away. It might be caused
+> > >> by kernel preemption?
+> > >
+> > > That's puzzling. Is that reliably the case? Because on x86-64,
+> > > __this_cpu_add and this_cpu_add should result in the same code:
+> > >
+> > > #define raw_cpu_add_8(pcp, val)                 percpu_add_op((pcp), val)
+> > > #define this_cpu_add_8(pcp, val)                percpu_add_op((pcp), val)
+> > >
+> > > which boils down to single instructions - incq, decq, addq - and so
+> > > never needs explicit disabling of scheduler or interrupt preemption.
+> > >
+> > >> > > I was able to create a reproducible scenario by using a udelay to
+> > >> > > increase the time between the if (page->mem_cgroup) check and the later
+> > >> > > dereference of it to increase the race window.  I then mounted an empty
+> > >> > > ext4 partition and ran the following no more than twice before it
+> > >> > > crashed.
+> > >> > > dd if=/dev/zero of=/tmp/ext4disk/test bs=1M count=100
+> > >> >
+> > >> > Thanks, that's useful. I'm going to try to reproduce this also.
+> > >> >
+> > >> > There is a
+> > >> >
+> > >> >     VM_BUG_ON_PAGE(!PageHWPoison(page) && page_count(page), page);
+> > >> >
+> > >> > inside uncharge_list() that verifies that there shouldn't in fact be
+> > >> > any pages ending writeback when they get into that function. Can you
+> > >> > build your kernel with CONFIG_DEBUG_VM to enable that test?
+> > >>
+> > >> I'll test this as well. ;)
+> > >
+> > > Thanks. I'm trying various udelays in between the NULL-check and the
+> > > dereference, but I cannot seem to make it happen with the ext4-dd on
+> > > my local machine.
+> > I am using a fairly fat udelay of 100.
+> > 
+> > I turned on CONFIG_DEBUG_VM but it didn't bug for me, although the original
+> > problem still reproduced.
+> 
+> Ok that sounds like a page refcounting bug then.
+> 
+> > I can insert some tracing to try to get some more information, but unfortunately
+> > I am stuck with v4.11 at the moment and can't try v4.13-rc4 on this setup.
+> 
+> Does the below trigger with your reproducer? (Still doesn't for me).
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 3914e3dd6168..c052b085c5dd 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -599,6 +599,7 @@ static inline void __mod_lruvec_page_state(struct page *page,
+>  	struct mem_cgroup_per_node *pn;
+>  
+>  	__mod_node_page_state(page_pgdat(page), idx, val);
+> +	VM_BUG_ON_PAGE(!page_count(page), page);
+>  	if (mem_cgroup_disabled() || !page->mem_cgroup)
+>  		return;
+>  	__mod_memcg_state(page->mem_cgroup, idx, val);
+> @@ -612,6 +613,7 @@ static inline void mod_lruvec_page_state(struct page *page,
+>  	struct mem_cgroup_per_node *pn;
+>  
+>  	mod_node_page_state(page_pgdat(page), idx, val);
+> +	VM_BUG_ON_PAGE(!page_count(page), page);
 
-> +Cgroup-aware OOM Killer
-> +~~~~~~~~~~~~~~~~~~~~~~~
-> +
-> +Cgroup v2 memory controller implements a cgroup-aware OOM killer.
-> +It means that it treats memory cgroups as first class OOM entities.
-> +
-> +Under OOM conditions the memory controller tries to make the best
-> +choise of a victim, hierarchically looking for the largest memory
-> +consumer. By default, it will look for the biggest task in the
-> +biggest leaf cgroup.
-> +
-> +Be default, all cgroups have oom_priority 0, and OOM killer will
-> +chose the largest cgroup recursively on each level. For non-root
-> +cgroups it's possible to change the oom_priority, and it will cause
-> +the OOM killer to look athe the priority value first, and compare
-> +sizes only of cgroups with equal priority.
-> +
-> +But a user can change this behavior by enabling the per-cgroup
-> +oom_kill_all_tasks option. If set, it causes the OOM killer treat
-> +the whole cgroup as an indivisible memory consumer. In case if it's
-> +selected as on OOM victim, all belonging tasks will be killed.
-> +
-> +Tasks in the root cgroup are treated as independent memory consumers,
-> +and are compared with other memory consumers (e.g. leaf cgroups).
-> +The root cgroup doesn't support the oom_kill_all_tasks feature.
-> +
-> +This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
-> +the memory controller considers only cgroups belonging to the sub-tree
-> +of the OOM'ing cgroup.
-> +
->  IO
->  --
+It seems DEBUG_VM may hide the problem in my case, so I turned it off and
+replaced it with BUG_ON(!page_count(page)). Then, I exactly hit this.
 
-Thanks very much for following through with this.
+Thanks,
 
-As described in http://marc.info/?l=linux-kernel&m=149980660611610 this is 
-very similar to what we do for priority based oom killing.
+>  	if (mem_cgroup_disabled() || !page->mem_cgroup)
+>  		return;
+>  	mod_memcg_state(page->mem_cgroup, idx, val);
 
-I'm wondering your comments on extending it one step further, however: 
-include process priority as part of the selection rather than simply memcg 
-priority.
-
-memory.oom_priority will dictate which memcg the kill will originate from, 
-but processes have no ability to specify that they should actually be 
-killed as opposed to a leaf memcg.  I'm not sure how important this is for 
-your usecase, but we have found it useful to be able to specify process 
-priority as part of the decisionmaking.
-
-At each level of consideration, we simply kill a process with lower 
-/proc/pid/oom_priority if there are no memcgs with a lower 
-memory.oom_priority.  This allows us to define the exact process that will 
-be oom killed, absent oom_kill_all_tasks, and not require that the process 
-be attached to leaf memcg.  Most notably these are processes that are best 
-effort: stats collection, logging, etc.
-
-Do you think it would be helpful to introduce per-process oom priority as 
-well?
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
