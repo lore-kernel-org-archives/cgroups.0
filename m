@@ -1,355 +1,203 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/2] sched: Implement interface for cgroup unified hierarchy
-Date: Fri, 11 Aug 2017 09:47:27 -0700
-Message-ID: <20170811164727.3980027-3-tj@kernel.org>
-References: <20170811164727.3980027-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UmhE09MoACWurtrFV0PPSly+0b8YzXZAKt12SQh49es=;
-        b=uTRlRH3n0C0dlgX325x2I+P/lJDhRQUCyNGANUSdR8SgxZUldeno9p5LIAK+Y0R0Ll
-         ZV2Sx5MlbYLokXvqecVFcspJ+TewlarBqi5jF/mNUMICeusKMkYQZs9g4cePJOgUeQY4
-         DzRGMsayDrZAS+lAnWIH49rwolgAe6r8IyQBW2b3BjsZoCM4wcOlgsf63TPUbjD39ezf
-         AxkAUe3UwVSI77z4mbCKXzGy3ma1zhg2hQ7ahMGfTICjOm3r3yDl6hR9SJXkN8hvt3rr
-         aX+FhpzBBTGBp3Sl7/zR9Y+SisqyPvypiHXYD3w7UEKRc9V70+kfMfHe8l5odXxbODdT
-         jLfQ==
-In-Reply-To: <20170811164727.3980027-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:review-cgroup2-cpu-basic-stat 20/23]
+ kernel/sched/cputime.c:112:2: error: implicit declaration of function
+ 'cgroup_account_cputime_field'
+Date: Sat, 12 Aug 2017 00:56:33 +0800
+Message-ID: <201708120024.KsiEijrU%fengguang.wu@intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="EVF5PPMfhYS0aIcm"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, longman@redhat.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-There are a couple interface issues which can be addressed in cgroup2
-interface.
 
-* Stats from cpuacct being reported separately from the cpu stats.
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-* Use of different time units.  Writable control knobs use
-  microseconds, some stat fields use nanoseconds while other cpuacct
-  stat fields use centiseconds.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-cpu-basic-stat
+head:   8acdcade690d62f6b9751a5c8e55f938de779a2d
+commit: c0dee458e0d8d3c7dacacf91f4b801b8fc746ba9 [20/23] cpuacct: Introduce cgroup_account_cputime[_field]()
+config: i386-tinyconfig (attached as .config)
+compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+reproduce:
+        git checkout c0dee458e0d8d3c7dacacf91f4b801b8fc746ba9
+        # save the attached .config to linux build tree
+        make ARCH=i386 
 
-* Control knobs which can't be used in the root cgroup still show up
-  in the root.
+All errors (new ones prefixed by >>):
 
-* Control knob names and semantics aren't consistent with other
-  controllers.
+   kernel/sched/cputime.c: In function 'task_group_account_field':
+>> kernel/sched/cputime.c:112:2: error: implicit declaration of function 'cgroup_account_cputime_field' [-Werror=implicit-function-declaration]
+     cgroup_account_cputime_field(p, index, tmp);
+     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   cc1: some warnings being treated as errors
+--
+   kernel/sched/rt.c: In function 'update_curr_rt':
+>> kernel/sched/rt.c:982:2: error: implicit declaration of function 'cgroup_account_cputime' [-Werror=implicit-function-declaration]
+     cgroup_account_cputime(curr, delta_exec);
+     ^~~~~~~~~~~~~~~~~~~~~~
+   cc1: some warnings being treated as errors
+--
+   kernel/sched/deadline.c: In function 'update_curr_dl':
+>> kernel/sched/deadline.c:1148:2: error: implicit declaration of function 'cgroup_account_cputime' [-Werror=implicit-function-declaration]
+     cgroup_account_cputime(curr, delta_exec);
+     ^~~~~~~~~~~~~~~~~~~~~~
+   cc1: some warnings being treated as errors
 
-This patchset implements cpu controller's interface on cgroup2 which
-adheres to the controller file conventions described in
-Documentation/cgroups/cgroup-v2.txt.  Overall, the following changes
-are made.
+vim +/cgroup_account_cputime_field +112 kernel/sched/cputime.c
 
-* cpuacct is implictly enabled and disabled by cpu and its information
-  is reported through "cpu.stat" which now uses microseconds for all
-  time durations.  All time duration fields now have "_usec" appended
-  to them for clarity.
+   100	
+   101	static inline void task_group_account_field(struct task_struct *p, int index,
+   102						    u64 tmp)
+   103	{
+   104		/*
+   105		 * Since all updates are sure to touch the root cgroup, we
+   106		 * get ourselves ahead and touch it first. If the root cgroup
+   107		 * is the only cgroup, then nothing else should be necessary.
+   108		 *
+   109		 */
+   110		__this_cpu_add(kernel_cpustat.cpustat[index], tmp);
+   111	
+ > 112		cgroup_account_cputime_field(p, index, tmp);
+   113	}
+   114	
 
-  Note that cpuacct.usage_percpu is currently not included in
-  "cpu.stat".  If this information is actually called for, it will be
-  added later.
-
-* "cpu.shares" is replaced with "cpu.weight" and operates on the
-  standard scale defined by CGROUP_WEIGHT_MIN/DFL/MAX (1, 100, 10000).
-  The weight is scaled to scheduler weight so that 100 maps to 1024
-  and the ratio relationship is preserved - if weight is W and its
-  scaled value is S, W / 100 == S / 1024.  While the mapped range is a
-  bit smaller than the orignal scheduler weight range, the dead zones
-  on both sides are relatively small and covers wider range than the
-  nice value mappings.  This file doesn't make sense in the root
-  cgroup and isn't created on root.
-
-* "cpu.weight.nice" is added. When read, it reads back the nice value
-  which is closest to the current "cpu.weight".  When written, it sets
-  "cpu.weight" to the weight value which matches the nice value.  This
-  makes it easy to configure cgroups when they're competing against
-  threads in threaded subtrees.
-
-* "cpu.cfs_quota_us" and "cpu.cfs_period_us" are replaced by "cpu.max"
-  which contains both quota and period.
-
-v4: - Use cgroup2 basic usage stat as the information source instead
-      of cpuacct.
-
-v3: - Added "cpu.weight.nice" to allow using nice values when
-      configuring the weight.  The feature is requested by PeterZ.
-    - Merge the patch to enable threaded support on cpu and cpuacct.
-    - Dropped the bits about getting rid of cpuacct from patch
-      description as there is a pretty strong case for making cpuacct
-      an implicit controller so that basic cpu usage stats are always
-      available.
-    - Documentation updated accordingly.  "cpu.rt.max" section is
-      dropped for now.
-
-v2: - cpu_stats_show() was incorrectly using CONFIG_FAIR_GROUP_SCHED
-      for CFS bandwidth stats and also using raw division for u64.
-      Use CONFIG_CFS_BANDWITH and do_div() instead.  "cpu.rt.max" is
-      not included yet.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
 ---
- Documentation/cgroup-v2.txt |  36 ++++------
- kernel/sched/core.c         | 171 ++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 183 insertions(+), 24 deletions(-)
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 3f82169..0bbdc72 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -902,10 +902,6 @@ Controllers
- CPU
- ---
- 
--.. note::
--
--	The interface for the cpu controller hasn't been merged yet
--
- The "cpu" controllers regulates distribution of CPU cycles.  This
- controller implements weight and absolute bandwidth limit models for
- normal scheduling policy and absolute bandwidth allocation model for
-@@ -935,6 +931,18 @@ All time durations are in microseconds.
- 
- 	The weight in the range [1, 10000].
- 
-+  cpu.weight.nice
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	The nice value is in the range [-20, 19].
-+
-+	This interface file is an alternative interface for
-+	"cpu.weight" and allows reading and setting weight using the
-+	same values used by nice(2).  Because the range is smaller and
-+	granularity is coarser for the nice values, the read value is
-+	the closest approximation of the current weight.
-+
-   cpu.max
- 	A read-write two value file which exists on non-root cgroups.
- 	The default is "max 100000".
-@@ -947,26 +955,6 @@ All time durations are in microseconds.
- 	$PERIOD duration.  "max" for $MAX indicates no limit.  If only
- 	one number is written, $MAX is updated.
- 
--  cpu.rt.max
--	.. note::
--
--	   The semantics of this file is still under discussion and the
--	   interface hasn't been merged yet
--
--	A read-write two value file which exists on all cgroups.
--	The default is "0 100000".
--
--	The maximum realtime runtime allocation.  Over-committing
--	configurations are disallowed and process migrations are
--	rejected if not enough bandwidth is available.  It's in the
--	following format::
--
--	  $MAX $PERIOD
--
--	which indicates that the group may consume upto $MAX in each
--	$PERIOD duration.  If only one number is written, $MAX is
--	updated.
--
- 
- Memory
- ------
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 9220391..e37cc97 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -6657,6 +6657,175 @@ static struct cftype cpu_legacy_files[] = {
- 	{ }	/* Terminate */
- };
- 
-+static int cpu_stat_show(struct seq_file *sf, void *v)
-+{
-+	cgroup_stat_show_cputime(sf, "");
-+
-+#ifdef CONFIG_CFS_BANDWIDTH
-+	{
-+		struct task_group *tg = css_tg(seq_css(sf));
-+		struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
-+		u64 throttled_usec;
-+
-+		throttled_usec = cfs_b->throttled_time;
-+		do_div(throttled_usec, NSEC_PER_USEC);
-+
-+		seq_printf(sf, "nr_periods %d\n"
-+			   "nr_throttled %d\n"
-+			   "throttled_usec %llu\n",
-+			   cfs_b->nr_periods, cfs_b->nr_throttled,
-+			   throttled_usec);
-+	}
-+#endif
-+	return 0;
-+}
-+
-+#ifdef CONFIG_FAIR_GROUP_SCHED
-+static u64 cpu_weight_read_u64(struct cgroup_subsys_state *css,
-+			       struct cftype *cft)
-+{
-+	struct task_group *tg = css_tg(css);
-+	u64 weight = scale_load_down(tg->shares);
-+
-+	return DIV_ROUND_CLOSEST_ULL(weight * CGROUP_WEIGHT_DFL, 1024);
-+}
-+
-+static int cpu_weight_write_u64(struct cgroup_subsys_state *css,
-+				struct cftype *cft, u64 weight)
-+{
-+	/*
-+	 * cgroup weight knobs should use the common MIN, DFL and MAX
-+	 * values which are 1, 100 and 10000 respectively.  While it loses
-+	 * a bit of range on both ends, it maps pretty well onto the shares
-+	 * value used by scheduler and the round-trip conversions preserve
-+	 * the original value over the entire range.
-+	 */
-+	if (weight < CGROUP_WEIGHT_MIN || weight > CGROUP_WEIGHT_MAX)
-+		return -ERANGE;
-+
-+	weight = DIV_ROUND_CLOSEST_ULL(weight * 1024, CGROUP_WEIGHT_DFL);
-+
-+	return sched_group_set_shares(css_tg(css), scale_load(weight));
-+}
-+
-+static s64 cpu_weight_nice_read_s64(struct cgroup_subsys_state *css,
-+				    struct cftype *cft)
-+{
-+	unsigned long weight = scale_load_down(css_tg(css)->shares);
-+	int last_delta = INT_MAX;
-+	int prio, delta;
-+
-+	/* find the closest nice value to the current weight */
-+	for (prio = 0; prio < ARRAY_SIZE(sched_prio_to_weight); prio++) {
-+		delta = abs(sched_prio_to_weight[prio] - weight);
-+		if (delta >= last_delta)
-+			break;
-+		last_delta = delta;
-+	}
-+
-+	return PRIO_TO_NICE(prio - 1 + MAX_RT_PRIO);
-+}
-+
-+static int cpu_weight_nice_write_s64(struct cgroup_subsys_state *css,
-+				     struct cftype *cft, s64 nice)
-+{
-+	unsigned long weight;
-+
-+	if (nice < MIN_NICE || nice > MAX_NICE)
-+		return -ERANGE;
-+
-+	weight = sched_prio_to_weight[NICE_TO_PRIO(nice) - MAX_RT_PRIO];
-+	return sched_group_set_shares(css_tg(css), scale_load(weight));
-+}
-+#endif
-+
-+static void __maybe_unused cpu_period_quota_print(struct seq_file *sf,
-+						  long period, long quota)
-+{
-+	if (quota < 0)
-+		seq_puts(sf, "max");
-+	else
-+		seq_printf(sf, "%ld", quota);
-+
-+	seq_printf(sf, " %ld\n", period);
-+}
-+
-+/* caller should put the current value in *@periodp before calling */
-+static int __maybe_unused cpu_period_quota_parse(char *buf,
-+						 u64 *periodp, u64 *quotap)
-+{
-+	char tok[21];	/* U64_MAX */
-+
-+	if (!sscanf(buf, "%s %llu", tok, periodp))
-+		return -EINVAL;
-+
-+	*periodp *= NSEC_PER_USEC;
-+
-+	if (sscanf(tok, "%llu", quotap))
-+		*quotap *= NSEC_PER_USEC;
-+	else if (!strcmp(tok, "max"))
-+		*quotap = RUNTIME_INF;
-+	else
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+#ifdef CONFIG_CFS_BANDWIDTH
-+static int cpu_max_show(struct seq_file *sf, void *v)
-+{
-+	struct task_group *tg = css_tg(seq_css(sf));
-+
-+	cpu_period_quota_print(sf, tg_get_cfs_period(tg), tg_get_cfs_quota(tg));
-+	return 0;
-+}
-+
-+static ssize_t cpu_max_write(struct kernfs_open_file *of,
-+			     char *buf, size_t nbytes, loff_t off)
-+{
-+	struct task_group *tg = css_tg(of_css(of));
-+	u64 period = tg_get_cfs_period(tg);
-+	u64 quota;
-+	int ret;
-+
-+	ret = cpu_period_quota_parse(buf, &period, &quota);
-+	if (!ret)
-+		ret = tg_set_cfs_bandwidth(tg, period, quota);
-+	return ret ?: nbytes;
-+}
-+#endif
-+
-+static struct cftype cpu_files[] = {
-+	{
-+		.name = "stat",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cpu_stat_show,
-+	},
-+#ifdef CONFIG_FAIR_GROUP_SCHED
-+	{
-+		.name = "weight",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.read_u64 = cpu_weight_read_u64,
-+		.write_u64 = cpu_weight_write_u64,
-+	},
-+	{
-+		.name = "weight.nice",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.read_s64 = cpu_weight_nice_read_s64,
-+		.write_s64 = cpu_weight_nice_write_s64,
-+	},
-+#endif
-+#ifdef CONFIG_CFS_BANDWIDTH
-+	{
-+		.name = "max",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cpu_max_show,
-+		.write = cpu_max_write,
-+	},
-+#endif
-+	{ }	/* terminate */
-+};
-+
- struct cgroup_subsys cpu_cgrp_subsys = {
- 	.css_alloc	= cpu_cgroup_css_alloc,
- 	.css_online	= cpu_cgroup_css_online,
-@@ -6666,7 +6835,9 @@ struct cgroup_subsys cpu_cgrp_subsys = {
- 	.can_attach	= cpu_cgroup_can_attach,
- 	.attach		= cpu_cgroup_attach,
- 	.legacy_cftypes	= cpu_legacy_files,
-+	.dfl_cftypes	= cpu_files,
- 	.early_init	= true,
-+	.threaded	= true,
- };
- 
- #endif	/* CONFIG_CGROUP_SCHED */
--- 
-2.9.3
+--EVF5PPMfhYS0aIcm
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
+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
+
+--EVF5PPMfhYS0aIcm--
