@@ -1,55 +1,88 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET for-4.14] cgroup, sched: cgroup2 interface for CPU controller (on basic acct)
-Date: Fri, 11 Aug 2017 09:47:25 -0700
-Message-ID: <20170811164727.3980027-1-tj@kernel.org>
+Subject: [PATCH 1/2] sched: Misc preps for cgroup unified hierarchy interface
+Date: Fri, 11 Aug 2017 09:47:26 -0700
+Message-ID: <20170811164727.3980027-2-tj@kernel.org>
+References: <20170811164727.3980027-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=CXh5lw0VCbALSX3J2K5PgjfP/06srBXqisPF7DeQpaU=;
-        b=JfyAiYo01osfILeSdf4SwNeSgzhw+MFe9MUyRj7aGywa8s39qOFNxoGCzM8zFqghn4
-         T84CISeHCkgnXYXuPgUu66Iff1cXlAiVjbkZfqqsRFNlpCpgj4xY5E+e//IBNG4p1CFm
-         XMJBJA9J9Jd8fdtcmrWi6+OCipi5uytIyxokQkETuX2V04mYGBXhZa0dvMNO/2Ki4h1u
-         cVkXmfQ5dXutqV9u1i+fg03x5G3yJcNKenwEfbvEZdZj0ZlDpgbHFf6xVbra6LScGN53
-         ysgL+S5SC9beSDt8lbQ0cIjGg2/aRedbUJuur66idpfoXowoN+DR8tsqKPkGQeXc6mRx
-         khkg==
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=WJj6yLp2Em3Xdpmst6SU39gXqHDhdOCnRmAW5oizLKc=;
+        b=JiLc//rNryFMtKxPHguWIecM82R7uFZSwHUqzCZdk2UMUaU/IuB5bgKdsxZeBAbYaU
+         NLxya4LVQ9XelgB4QdCwiD+UXKEzELkEyWo5gui8rNz3fS+AHJJPvfRgzQc8RauHYwvZ
+         v/6E0s6u3HWg+RoLKuzj6AylbNTrQemiNyv7E4E7wY4xmjxdhj5eNc8fPBWXxeinHj7c
+         nDQASOAdhNVdfwwY+/C2LB9lIcxcGoPr/B6LxpjN1wZMaSUdJ/AiV/TtagVkdujaqlEl
+         DIyAdUEX6+n2V1YRkoifbypRH5oPKMfXOw4IoP6a1n6VLQAPWExp+cOwZCrclEFkRzgc
+         +yIg==
+In-Reply-To: <20170811164727.3980027-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, longman@redhat.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com, Tejun Heo <tj@kernel.org>
 
-Hello,
+Make the following changes in preparation for the cpu controller
+interface implementation for cgroup2.  This patch doesn't cause any
+functional differences.
 
-These are two patches to implement the cgroup2 CPU controller
-interface.  Changes from the last revision[L].
+* s/cpu_stats_show()/cpu_cfs_stat_show()/
 
-* Updated on top of the cgroup2 basic resource accounting patchset[B]
-  and now uses cgroup2's CPU accounting instead of cpuacct as stat
-  source.
+* s/cpu_files/cpu_legacy_files/
 
-* cpuacct is no longer necessary and not converted.
+v2: Dropped cpuacct changes as it won't be used by cpu controller
+    interface anymore.
 
-This patchset contains the following two patches.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+---
+ kernel/sched/core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
- 0001-sched-Misc-preps-for-cgroup-unified-hierarchy-interf.patch
- 0002-sched-Implement-interface-for-cgroup-unified-hierarc.patch
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 17c667b..9220391 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -6578,7 +6578,7 @@ static int __cfs_schedulable(struct task_group *tg, u64 period, u64 quota)
+ 	return ret;
+ }
+ 
+-static int cpu_stats_show(struct seq_file *sf, void *v)
++static int cpu_cfs_stat_show(struct seq_file *sf, void *v)
+ {
+ 	struct task_group *tg = css_tg(seq_css(sf));
+ 	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
+@@ -6618,7 +6618,7 @@ static u64 cpu_rt_period_read_uint(struct cgroup_subsys_state *css,
+ }
+ #endif /* CONFIG_RT_GROUP_SCHED */
+ 
+-static struct cftype cpu_files[] = {
++static struct cftype cpu_legacy_files[] = {
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 	{
+ 		.name = "shares",
+@@ -6639,7 +6639,7 @@ static struct cftype cpu_files[] = {
+ 	},
+ 	{
+ 		.name = "stat",
+-		.seq_show = cpu_stats_show,
++		.seq_show = cpu_cfs_stat_show,
+ 	},
+ #endif
+ #ifdef CONFIG_RT_GROUP_SCHED
+@@ -6665,7 +6665,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
+ 	.fork		= cpu_cgroup_fork,
+ 	.can_attach	= cpu_cgroup_can_attach,
+ 	.attach		= cpu_cgroup_attach,
+-	.legacy_cftypes	= cpu_files,
++	.legacy_cftypes	= cpu_legacy_files,
+ 	.early_init	= true,
+ };
+ 
+-- 
+2.9.3
 
-It's on top of the cgroup2 basic resource accounting patchset and
-available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup2-cpu-on-basic-acct
-
-diffstat follows.  Thanks.
-
- Documentation/cgroup-v2.txt |   36 ++------
- kernel/sched/core.c         |  179 +++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 187 insertions(+), 28 deletions(-)
-
---
-tejun
-
-[L] http://lkml.kernel.org/r/20170720184808.1433868-1-tj@kernel.org
-[B] http://lkml.kernel.org/r/20170811163754.3939102-1-tj@kernel.org
