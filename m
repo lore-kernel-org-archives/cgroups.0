@@ -1,73 +1,103 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [v4 2/4] mm, oom: cgroup-aware OOM killer
-Date: Mon, 14 Aug 2017 13:03:49 +0100
-Message-ID: <20170814120349.GA24393@castle.DHCP.thefacebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v4 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
+Date: Mon, 14 Aug 2017 13:28:32 +0100
+Message-ID: <20170814122832.GB24393@castle.DHCP.thefacebook.com>
 References: <20170726132718.14806-1-guro@fb.com>
- <20170726132718.14806-3-guro@fb.com>
- <20170801145435.GN15774@dhcp22.suse.cz>
- <20170801152548.GA29502@castle.dhcp.TheFacebook.com>
- <alpine.DEB.2.10.1708081559001.54505@chino.kir.corp.google.com>
+ <20170726132718.14806-5-guro@fb.com>
+ <alpine.DEB.2.10.1708081615110.54505@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=Jd8RaR7pCJua3FdphOExLlnJ6eaZL+PlUzfATjfb+1E=;
- b=LqbXHWIFo9Z8s0sz/Vo4FBNX0rG1drJWRRz/skZIk4SJCm7CSulMruJY9gksPf0UCbrU
- PulvRqcYnq1oom2rMTbvGRJCJbmAxz7ZG1NJQy8NZkvqbRNk3TQArJEEVXr9xcLZBdHA
- yy4ASn9pj0RmKW35cuSuHrJENxjxg0+wGRM= 
+ in-reply-to; s=facebook; bh=dB/KFAGDSwXyJKjjFhlHWlzyJfyHt6CAM4SqoeTkHA8=;
+ b=K/ZS83TsXsW5sbqwaAHhkb9NnNDSfUbNAMLY7bAoEWRx1MnFeclcnQWwkkyZZ/pXRyUJ
+ w9hdxB1P8nT/UQBJvEev1wFNuLlKq11ceOqwtB45qjCFZ8S+D3Lqw+Wr9lZPcOjISO+7
+ LzIdCymnFtY+6Msxrwzm2UgQORjVh3eC8KI= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Jd8RaR7pCJua3FdphOExLlnJ6eaZL+PlUzfATjfb+1E=;
- b=GZkw+eHLxcSRvQlG/MnC0ND6LAvpDu/xkbU2aq4yHWcY619LfP9u5AME8IbFXMa69xqgIq3UBq5QyzgFdx20tS1V+PcxwKsaDb+YXsMW0H+Fq+5pkL4Dv7/fSjmgTAGQaXRK+k9yXgNUSaMvq73v24apQP77Bm9KRiHc/bQHMVE=
+ bh=dB/KFAGDSwXyJKjjFhlHWlzyJfyHt6CAM4SqoeTkHA8=;
+ b=MBkCq8+g2tXMciLmihveZDjX1lLpbPfmBB1yK6VQOOcVXYrS32+kxVeboa6qQ1Fb/nL71HtluGZixEZCtjllHerY0K23PRv1GnlFnzoGzMCMUjNvzgw9asCj7gnRuFKWIfbk9c/mMqMexDgpaJxiKgWJ77q8dX/fQ2fyeYjA3jY=
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1708081559001.54505-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <alpine.DEB.2.10.1708081615110.54505@chino.kir.corp.google.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Aug 08, 2017 at 04:06:38PM -0700, David Rientjes wrote:
-> On Tue, 1 Aug 2017, Roman Gushchin wrote:
+On Tue, Aug 08, 2017 at 04:24:32PM -0700, David Rientjes wrote:
+> On Wed, 26 Jul 2017, Roman Gushchin wrote:
 > 
-> > > To the rest of the patch. I have to say I do not quite like how it is
-> > > implemented. I was hoping for something much simpler which would hook
-> > > into oom_evaluate_task. If a task belongs to a memcg with kill-all flag
-> > > then we would update the cumulative memcg badness (more specifically the
-> > > badness of the topmost parent with kill-all flag). Memcg will then
-> > > compete with existing self contained tasks (oom_badness will have to
-> > > tell whether points belong to a task or a memcg to allow the caller to
-> > > deal with it). But it shouldn't be much more complex than that.
-> > 
-> > I'm not sure, it will be any simpler. Basically I'm doing the same:
-> > the difference is that you want to iterate over tasks and for each
-> > task traverse the memcg tree, update per-cgroup oom score and find
-> > the corresponding memcg(s) with the kill-all flag. I'm doing the opposite:
-> > traverse the cgroup tree, and for each leaf cgroup iterate over processes.
-> > 
-> > Also, please note, that even without the kill-all flag the decision is made
-> > on per-cgroup level (except tasks in the root cgroup).
-> > 
+> > +Cgroup-aware OOM Killer
+> > +~~~~~~~~~~~~~~~~~~~~~~~
+> > +
+> > +Cgroup v2 memory controller implements a cgroup-aware OOM killer.
+> > +It means that it treats memory cgroups as first class OOM entities.
+> > +
+> > +Under OOM conditions the memory controller tries to make the best
+> > +choise of a victim, hierarchically looking for the largest memory
+> > +consumer. By default, it will look for the biggest task in the
+> > +biggest leaf cgroup.
+> > +
+> > +Be default, all cgroups have oom_priority 0, and OOM killer will
+> > +chose the largest cgroup recursively on each level. For non-root
+> > +cgroups it's possible to change the oom_priority, and it will cause
+> > +the OOM killer to look athe the priority value first, and compare
+> > +sizes only of cgroups with equal priority.
+> > +
+> > +But a user can change this behavior by enabling the per-cgroup
+> > +oom_kill_all_tasks option. If set, it causes the OOM killer treat
+> > +the whole cgroup as an indivisible memory consumer. In case if it's
+> > +selected as on OOM victim, all belonging tasks will be killed.
+> > +
+> > +Tasks in the root cgroup are treated as independent memory consumers,
+> > +and are compared with other memory consumers (e.g. leaf cgroups).
+> > +The root cgroup doesn't support the oom_kill_all_tasks feature.
+> > +
+> > +This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
+> > +the memory controller considers only cgroups belonging to the sub-tree
+> > +of the OOM'ing cgroup.
+> > +
+> >  IO
+> >  --
 > 
-> I think your implementation is preferred and is actually quite simple to 
-> follow, and I would encourage you to follow through with it.  It has a 
-> similar implementation to what we have done for years to kill a process 
-> from a leaf memcg.
+> Thanks very much for following through with this.
+> 
+> As described in http://marc.info/?l=linux-kernel&m=149980660611610 this is 
+> very similar to what we do for priority based oom killing.
+> 
+> I'm wondering your comments on extending it one step further, however: 
+> include process priority as part of the selection rather than simply memcg 
+> priority.
+> 
+> memory.oom_priority will dictate which memcg the kill will originate from, 
+> but processes have no ability to specify that they should actually be 
+> killed as opposed to a leaf memcg.  I'm not sure how important this is for 
+> your usecase, but we have found it useful to be able to specify process 
+> priority as part of the decisionmaking.
+> 
+> At each level of consideration, we simply kill a process with lower 
+> /proc/pid/oom_priority if there are no memcgs with a lower 
+> memory.oom_priority.  This allows us to define the exact process that will 
+> be oom killed, absent oom_kill_all_tasks, and not require that the process 
+> be attached to leaf memcg.  Most notably these are processes that are best 
+> effort: stats collection, logging, etc.
 
-Hi David!
-
-Thank you for the support.
+I'm focused on cgroup v2 interface, that means, that there are no processes
+belonging to non-leaf cgroups. So, cgroups are compared only with root-cgroup
+processes, and I'm not sure we really need a way to prioritize them.
 
 > 
-> I did notice that oom_kill_memcg_victim() calls directly into 
-> __oom_kill_process(), however, so we lack the traditional oom killer 
-> output that shows memcg usage and potential tasklist.  I think we should 
-> still be dumping this information to the kernel log so that we can see a 
-> breakdown of charged memory.
+> Do you think it would be helpful to introduce per-process oom priority as 
+> well?
 
-I think the existing output is too verbose for the case, when we kill
-a cgroup with many processes inside. But I absolutely agree, that we need
-some debug output, I'll add it in v5.
+I'm not against per-process oom_priority, and it might be a good idea
+to replace the existing oom_score_adj with it at some point. I might be wrong,
+but I think users mostly using the extereme oom_score_adj values;
+no one really needs the tiebreaking based on some percentages
+of the total memory. And oom_priority will be just a simpler and more clear
+way to express the same intention.
 
-Thanks!
+But it's not directly related to this patchset, and it's more arguable,
+so I think it can be done later.
