@@ -1,57 +1,128 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [v5 1/4] mm, oom: refactor the oom_kill_process() function
-Date: Mon, 14 Aug 2017 15:00:43 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1708141500260.129178@chino.kir.corp.google.com>
-References: <20170814183213.12319-1-guro@fb.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v5 2/4] mm, oom: cgroup-aware OOM killer
+Date: Mon, 14 Aug 2017 15:42:54 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1708141532300.63207@chino.kir.corp.google.com>
+References: <20170814183213.12319-1-guro@fb.com> <20170814183213.12319-3-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=XZQL66ItogYmagjrsO67YtUTo220QpAHSQvQJcsJeuo=;
-        b=cZQTld+aLnS738ILYqcqWg5U8Auu7W28i0JdgkqmbKLwDLq9QhgO0eXL4+C0JDNRs8
-         eFwjHqdr8+jtRCMRTq4ki4BH1Bxy4Rsc4VHJFr292gqQGJcvmkA1vNPqu2nXOsraP80L
-         397/jsrpFR8ExjGbQANYZePbCW0wrVaCWqTYB9Ty8im7p0t7HuQk9RCP4H3U8A1IgrVi
-         4bUOJAJJKavcrlWSBZ22yaL10m6yXfCJ3IOGOrwqx0DMGi58dOYpwV9Icf7YHAS8lnLA
-         HppHuJrJu8HPhy37SeUFE834Qg65FzqUF7j2uQqe6rOJaW0zURM9M4lMLsj+NgcF0YT6
-         34dw==
-In-Reply-To: <20170814183213.12319-1-guro-b10kYP2dOMg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=W6XrpRr9M3GOEm1Pa0If0gE9z7t0PPhhGIXS3gZnlKk=;
+        b=g/Vrc16OC7MKTw1kxxzyF4VYSbeqrkOKL5z8n+/f/KjazjTBKPzRUAd4kjY13csjcM
+         uuRqls3Ot8B3XHPJKk8GVQf6NZXT4pcS12oXrNCFXxIzGaJ8AsirZ8QZXYJM6gjHXnhD
+         fynY2pePJH+RsQFIyu6KTJMLzOh0dXOCEuC66QkbY+jdMKJUljXBy1jh0fV0zSXAux8a
+         2nHQR5IjuWuuaZuLaOVJY21dFH0z4ss8XI+zNwyIVS6ozm25Domdzi6EIqCBJHAfgOMV
+         MsMFun8as4UykOz1tlRagpVwOPSNAHgdCJuty0yyzrmFxEcABIquyT+35xGK1K8U8hCK
+         VTDQ==
+In-Reply-To: <20170814183213.12319-3-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On Mon, 14 Aug 2017, Roman Gushchin wrote:
 
-> The oom_kill_process() function consists of two logical parts:
-> the first one is responsible for considering task's children as
-> a potential victim and printing the debug information.
-> The second half is responsible for sending SIGKILL to all
-> tasks sharing the mm struct with the given victim.
-> 
-> This commit splits the oom_kill_process() function with
-> an intention to re-use the the second half: __oom_kill_process().
-> 
-> The cgroup-aware OOM killer will kill multiple tasks
-> belonging to the victim cgroup. We don't need to print
-> the debug information for the each task, as well as play
-> with task selection (considering task's children),
-> so we can't use the existing oom_kill_process().
-> 
-> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-> Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: kernel-team-b10kYP2dOMg@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> diff --git a/include/linux/oom.h b/include/linux/oom.h
+> index 8a266e2be5a6..b7ec3bd441be 100644
+> --- a/include/linux/oom.h
+> +++ b/include/linux/oom.h
+> @@ -39,6 +39,7 @@ struct oom_control {
+>  	unsigned long totalpages;
+>  	struct task_struct *chosen;
+>  	unsigned long chosen_points;
+> +	struct mem_cgroup *chosen_memcg;
+>  };
+>  
+>  extern struct mutex oom_lock;
+> @@ -79,6 +80,8 @@ extern void oom_killer_enable(void);
+>  
+>  extern struct task_struct *find_lock_task_mm(struct task_struct *p);
+>  
+> +extern int oom_evaluate_task(struct task_struct *task, void *arg);
+> +
+>  /* sysctls */
+>  extern int sysctl_oom_dump_tasks;
+>  extern int sysctl_oom_kill_allocating_task;
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index df6f63ee95d6..0b81dc55c6ac 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2639,6 +2639,181 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
+>  	return ret;
+>  }
+>  
+> +static long memcg_oom_badness(struct mem_cgroup *memcg,
+> +			      const nodemask_t *nodemask)
+> +{
+> +	long points = 0;
+> +	int nid;
+> +
+> +	for_each_node_state(nid, N_MEMORY) {
+> +		if (nodemask && !node_isset(nid, *nodemask))
+> +			continue;
+> +
+> +		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> +				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> +	}
+> +
+> +	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
+> +		(PAGE_SIZE / 1024);
+> +	points += memcg_page_state(memcg, NR_SLAB_UNRECLAIMABLE);
+> +	points += memcg_page_state(memcg, MEMCG_SOCK);
+> +	points += memcg_page_state(memcg, MEMCG_SWAP);
+> +
+> +	return points;
+> +}
 
-Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+I'm indifferent to the memcg evaluation criteria used to determine which 
+memcg should be selected over others with the same priority, others may 
+feel differently.
+
+> +
+> +static long oom_evaluate_memcg(struct mem_cgroup *memcg,
+> +			       const nodemask_t *nodemask)
+> +{
+> +	struct css_task_iter it;
+> +	struct task_struct *task;
+> +	int elegible = 0;
+> +
+> +	css_task_iter_start(&memcg->css, 0, &it);
+> +	while ((task = css_task_iter_next(&it))) {
+> +		/*
+> +		 * If there are no tasks, or all tasks have oom_score_adj set
+> +		 * to OOM_SCORE_ADJ_MIN and oom_kill_all_tasks is not set,
+> +		 * don't select this memory cgroup.
+> +		 */
+> +		if (!elegible &&
+> +		    (memcg->oom_kill_all_tasks ||
+> +		     task->signal->oom_score_adj != OOM_SCORE_ADJ_MIN))
+> +			elegible = 1;
+
+I'm curious about the decision made in this conditional and how 
+oom_kill_memcg_member() ignores task->signal->oom_score_adj.  It means 
+that memory.oom_kill_all_tasks overrides /proc/pid/oom_score_adj if it 
+should otherwise be disabled.
+
+It's undocumented in the changelog, but I'm questioning whether it's the 
+right decision.  Doesn't it make sense to kill all tasks that are not oom 
+disabled, and allow the user to still protect certain processes by their 
+/proc/pid/oom_score_adj setting?  Otherwise, there's no way to do that 
+protection without a sibling memcg and its own reservation of memory.  I'm 
+thinking about a process that governs jobs inside the memcg and if there 
+is an oom kill, it wants to do logging and any cleanup necessary before 
+exiting itself.  It seems like a powerful combination if coupled with oom 
+notification.
+
+Also, s/elegible/eligible/
+
+Otherwise, looks good!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
