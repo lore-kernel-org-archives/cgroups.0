@@ -1,210 +1,57 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [v5 1/4] mm, oom: refactor the oom_kill_process() function
-Date: Mon, 14 Aug 2017 19:32:09 +0100
-Message-ID: <20170814183213.12319-1-guro@fb.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [v5 1/4] mm, oom: refactor the oom_kill_process() function
+Date: Mon, 14 Aug 2017 15:00:43 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1708141500260.129178@chino.kir.corp.google.com>
+References: <20170814183213.12319-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=facebook;
- bh=88KKdK6jbiX+nwkMNSjuo1/Z1BvzXPg4Vhv9bwJxggM=;
- b=ilANyL3c/76E1lXYV/s8aM+unur/02H/D/BC5/jZPKrwq5NuwiMvrQDVNlGKHUrWaQQz
- FiEb47WbIy6wqOSPG4Yov6ftD7+DlcvRIiRJwHZRx5r04cj7NFXFpOEB12epLJvHSNrB
- 9subipimww0jpad2YwTk9CLjyhdLW80pLRo= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=88KKdK6jbiX+nwkMNSjuo1/Z1BvzXPg4Vhv9bwJxggM=;
- b=XO6FhDTjC6sJIlvQQPqb9zSsVehRlOxAoyT7ZtYwXPeAmKQBxZRkwxUl4+ar6Get1vqGHeVIvbJr+Mdu5FuNRo4vdf/eEMkr6HaTqgW/EBZO+V3N6IYld60tZDMVJpUsdxjnW+3dCl8xB57VHJZl/ATjKrfCXunZMXwVrjo8dwE=
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=XZQL66ItogYmagjrsO67YtUTo220QpAHSQvQJcsJeuo=;
+        b=cZQTld+aLnS738ILYqcqWg5U8Auu7W28i0JdgkqmbKLwDLq9QhgO0eXL4+C0JDNRs8
+         eFwjHqdr8+jtRCMRTq4ki4BH1Bxy4Rsc4VHJFr292gqQGJcvmkA1vNPqu2nXOsraP80L
+         397/jsrpFR8ExjGbQANYZePbCW0wrVaCWqTYB9Ty8im7p0t7HuQk9RCP4H3U8A1IgrVi
+         4bUOJAJJKavcrlWSBZ22yaL10m6yXfCJ3IOGOrwqx0DMGi58dOYpwV9Icf7YHAS8lnLA
+         HppHuJrJu8HPhy37SeUFE834Qg65FzqUF7j2uQqe6rOJaW0zURM9M4lMLsj+NgcF0YT6
+         34dw==
+In-Reply-To: <20170814183213.12319-1-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The oom_kill_process() function consists of two logical parts:
-the first one is responsible for considering task's children as
-a potential victim and printing the debug information.
-The second half is responsible for sending SIGKILL to all
-tasks sharing the mm struct with the given victim.
+On Mon, 14 Aug 2017, Roman Gushchin wrote:
 
-This commit splits the oom_kill_process() function with
-an intention to re-use the the second half: __oom_kill_process().
+> The oom_kill_process() function consists of two logical parts:
+> the first one is responsible for considering task's children as
+> a potential victim and printing the debug information.
+> The second half is responsible for sending SIGKILL to all
+> tasks sharing the mm struct with the given victim.
+> 
+> This commit splits the oom_kill_process() function with
+> an intention to re-use the the second half: __oom_kill_process().
+> 
+> The cgroup-aware OOM killer will kill multiple tasks
+> belonging to the victim cgroup. We don't need to print
+> the debug information for the each task, as well as play
+> with task selection (considering task's children),
+> so we can't use the existing oom_kill_process().
+> 
+> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+> Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: kernel-team-b10kYP2dOMg@public.gmane.org
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-The cgroup-aware OOM killer will kill multiple tasks
-belonging to the victim cgroup. We don't need to print
-the debug information for the each task, as well as play
-with task selection (considering task's children),
-so we can't use the existing oom_kill_process().
-
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
----
- mm/oom_kill.c | 123 +++++++++++++++++++++++++++++++---------------------------
- 1 file changed, 65 insertions(+), 58 deletions(-)
-
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 53b44425ef35..5c29a3dd591b 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -817,67 +817,12 @@ static bool task_will_free_mem(struct task_struct *task)
- 	return ret;
- }
- 
--static void oom_kill_process(struct oom_control *oc, const char *message)
-+static void __oom_kill_process(struct task_struct *victim)
- {
--	struct task_struct *p = oc->chosen;
--	unsigned int points = oc->chosen_points;
--	struct task_struct *victim = p;
--	struct task_struct *child;
--	struct task_struct *t;
-+	struct task_struct *p;
- 	struct mm_struct *mm;
--	unsigned int victim_points = 0;
--	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
--					      DEFAULT_RATELIMIT_BURST);
- 	bool can_oom_reap = true;
- 
--	/*
--	 * If the task is already exiting, don't alarm the sysadmin or kill
--	 * its children or threads, just set TIF_MEMDIE so it can die quickly
--	 */
--	task_lock(p);
--	if (task_will_free_mem(p)) {
--		mark_oom_victim(p);
--		wake_oom_reaper(p);
--		task_unlock(p);
--		put_task_struct(p);
--		return;
--	}
--	task_unlock(p);
--
--	if (__ratelimit(&oom_rs))
--		dump_header(oc, p);
--
--	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
--		message, task_pid_nr(p), p->comm, points);
--
--	/*
--	 * If any of p's children has a different mm and is eligible for kill,
--	 * the one with the highest oom_badness() score is sacrificed for its
--	 * parent.  This attempts to lose the minimal amount of work done while
--	 * still freeing memory.
--	 */
--	read_lock(&tasklist_lock);
--	for_each_thread(p, t) {
--		list_for_each_entry(child, &t->children, sibling) {
--			unsigned int child_points;
--
--			if (process_shares_mm(child, p->mm))
--				continue;
--			/*
--			 * oom_badness() returns 0 if the thread is unkillable
--			 */
--			child_points = oom_badness(child,
--				oc->memcg, oc->nodemask, oc->totalpages);
--			if (child_points > victim_points) {
--				put_task_struct(victim);
--				victim = child;
--				victim_points = child_points;
--				get_task_struct(victim);
--			}
--		}
--	}
--	read_unlock(&tasklist_lock);
--
- 	p = find_lock_task_mm(victim);
- 	if (!p) {
- 		put_task_struct(victim);
-@@ -947,10 +892,72 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
- 		wake_oom_reaper(victim);
- 
- 	mmdrop(mm);
--	put_task_struct(victim);
- }
- #undef K
- 
-+static void oom_kill_process(struct oom_control *oc, const char *message)
-+{
-+	struct task_struct *p = oc->chosen;
-+	unsigned int points = oc->chosen_points;
-+	struct task_struct *victim = p;
-+	struct task_struct *child;
-+	struct task_struct *t;
-+	unsigned int victim_points = 0;
-+	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
-+					      DEFAULT_RATELIMIT_BURST);
-+
-+	/*
-+	 * If the task is already exiting, don't alarm the sysadmin or kill
-+	 * its children or threads, just set TIF_MEMDIE so it can die quickly
-+	 */
-+	task_lock(p);
-+	if (task_will_free_mem(p)) {
-+		mark_oom_victim(p);
-+		wake_oom_reaper(p);
-+		task_unlock(p);
-+		put_task_struct(p);
-+		return;
-+	}
-+	task_unlock(p);
-+
-+	if (__ratelimit(&oom_rs))
-+		dump_header(oc, p);
-+
-+	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
-+		message, task_pid_nr(p), p->comm, points);
-+
-+	/*
-+	 * If any of p's children has a different mm and is eligible for kill,
-+	 * the one with the highest oom_badness() score is sacrificed for its
-+	 * parent.  This attempts to lose the minimal amount of work done while
-+	 * still freeing memory.
-+	 */
-+	read_lock(&tasklist_lock);
-+	for_each_thread(p, t) {
-+		list_for_each_entry(child, &t->children, sibling) {
-+			unsigned int child_points;
-+
-+			if (process_shares_mm(child, p->mm))
-+				continue;
-+			/*
-+			 * oom_badness() returns 0 if the thread is unkillable
-+			 */
-+			child_points = oom_badness(child,
-+				oc->memcg, oc->nodemask, oc->totalpages);
-+			if (child_points > victim_points) {
-+				put_task_struct(victim);
-+				victim = child;
-+				victim_points = child_points;
-+				get_task_struct(victim);
-+			}
-+		}
-+	}
-+	read_unlock(&tasklist_lock);
-+
-+	__oom_kill_process(victim);
-+	put_task_struct(victim);
-+}
-+
- /*
-  * Determines whether the kernel must panic because of the panic_on_oom sysctl.
-  */
--- 
-2.13.5
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
