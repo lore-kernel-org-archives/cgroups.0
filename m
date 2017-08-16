@@ -1,122 +1,130 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v5 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
-Date: Wed, 16 Aug 2017 15:43:44 +0100
-Message-ID: <20170816144344.GA29131@castle.DHCP.thefacebook.com>
+Subject: Re: [v5 2/4] mm, oom: cgroup-aware OOM killer
+Date: Wed, 16 Aug 2017 16:43:25 +0100
+Message-ID: <20170816154325.GB29131@castle.DHCP.thefacebook.com>
 References: <20170814183213.12319-1-guro@fb.com>
- <20170814183213.12319-5-guro@fb.com>
- <alpine.DEB.2.10.1708141544280.63207@chino.kir.corp.google.com>
- <20170815141350.GA4510@castle.DHCP.thefacebook.com>
- <alpine.DEB.2.10.1708151349280.104516@chino.kir.corp.google.com>
+ <20170814183213.12319-3-guro@fb.com>
+ <alpine.DEB.2.10.1708141532300.63207@chino.kir.corp.google.com>
+ <20170815121558.GA15892@castle.dhcp.TheFacebook.com>
+ <alpine.DEB.2.10.1708151435290.104516@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=gS2wlglPOo6pc++HGQ1MyRCQL5OhAgKt79tCu+E1XkU=;
- b=pLGcSZB7XdSfFKm94S2RDH5IQUCEvyJYxcwtuSusASUgbgncITBkqF7brsyYB0a1vmVr
- NjGTz9zm7vX+QKqE09F0VeChRSENi6HBV1AIfKc+rA/suI4pX7dgpZKC2q4aoi80Sh50
- pc0RYy8+iZZ7jN2cOh+yA08Z6C3U5fmiZAI= 
+ in-reply-to; s=facebook; bh=4Cot3nJCv0PcOTQjQVDynk1H/CX++Hy942Htq2RLRFc=;
+ b=l5LINP2gxaEyaiWuTqpO9eQIgvwxpBctPGPBda35qPyAHVDFBxu0uJTOkpeqCyqqMEtW
+ 46BV3IIiZGwKdtEPHXUzZZ83oX9RDnU8qoPhohLBCX5661jsEXZKTQSGuYiUrP5lunUy
+ e4y9RddvfUHAHW2Eih9ZgpXzGL1aLNAfvRQ= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=gS2wlglPOo6pc++HGQ1MyRCQL5OhAgKt79tCu+E1XkU=;
- b=Hyf4zBtaVq6z6x7llyHldcdjACUERqCuTnXffS1w4wLVty+0xSYjpsDFo1OevGraDyia7HC8OULOWgBJcZsTLyqdIxRRe1bfOiOJU6pTflFy9fNKXLQU84VyFAOojdfm9/MGQz8aZvmeJJlo7YH9/UYSM8EowwamB0lLCjJ5KWs=
+ bh=4Cot3nJCv0PcOTQjQVDynk1H/CX++Hy942Htq2RLRFc=;
+ b=bN4I/X2br7KUJRpGi+ShwDBmpnA7NybY9kvnC4AlsRM4MjF0iGoKGPoecMb1R2n2gXToXRHzzulBW1eN1VVcBgJHbWyC3LOx8Rq8ovl3FcmsXbVWQ3iSsW9K52cBENkGywMCbc8psfE+egE0eBnZvnhVYduU+Lf2yuFT33eZPus=
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1708151349280.104516@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <alpine.DEB.2.10.1708151435290.104516@chino.kir.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
 To: David Rientjes <rientjes@google.com>
 Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Aug 15, 2017 at 01:56:24PM -0700, David Rientjes wrote:
+On Tue, Aug 15, 2017 at 02:47:10PM -0700, David Rientjes wrote:
 > On Tue, 15 Aug 2017, Roman Gushchin wrote:
 > 
-> > > > diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-> > > > index dec5afdaa36d..22108f31e09d 100644
-> > > > --- a/Documentation/cgroup-v2.txt
-> > > > +++ b/Documentation/cgroup-v2.txt
-> > > > @@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
-> > > >         5-2-1. Memory Interface Files
-> > > >         5-2-2. Usage Guidelines
-> > > >         5-2-3. Memory Ownership
-> > > > +       5-2-4. Cgroup-aware OOM Killer
+> > > I'm curious about the decision made in this conditional and how 
+> > > oom_kill_memcg_member() ignores task->signal->oom_score_adj.  It means 
+> > > that memory.oom_kill_all_tasks overrides /proc/pid/oom_score_adj if it 
+> > > should otherwise be disabled.
 > > > 
-> > > Random curiousness, why cgroup-aware oom killer and not memcg-aware oom 
-> > > killer?
+> > > It's undocumented in the changelog, but I'm questioning whether it's the 
+> > > right decision.  Doesn't it make sense to kill all tasks that are not oom 
+> > > disabled, and allow the user to still protect certain processes by their 
+> > > /proc/pid/oom_score_adj setting?  Otherwise, there's no way to do that 
+> > > protection without a sibling memcg and its own reservation of memory.  I'm 
+> > > thinking about a process that governs jobs inside the memcg and if there 
+> > > is an oom kill, it wants to do logging and any cleanup necessary before 
+> > > exiting itself.  It seems like a powerful combination if coupled with oom 
+> > > notification.
 > > 
-> > I don't think we use the term "memcg" somewhere in v2 docs.
-> > Do you think that "Memory cgroup-aware OOM killer" is better?
-> > 
-> 
-> I think it would be better to not describe it as its own entity, but 
-> rather a part of how the memory cgroup works, so simply describing it in 
-> section 5-2, perhaps as its own subsection, as how the oom killer works 
-> when using the memory cgroup is sufficient.  I wouldn't separate it out as 
-> a distinct cgroup feature in the documentation.
-
-Ok I've got the idea, let me look, what I can do.
-I'll post an updated version soon.
-
-> 
-> > > > +	cgroups.  The default is "0".
-> > > > +
-> > > > +	Defines whether the OOM killer should treat the cgroup
-> > > > +	as a single entity during the victim selection.
-> > > 
-> > > Isn't this true independent of the memory.oom_kill_all_tasks setting?  
-> > > The cgroup aware oom killer will consider memcg's as logical units when 
-> > > deciding what to kill with or without memory.oom_kill_all_tasks, right?
-> > > 
-> > > I think you cover this fact in the cgroup aware oom killer section below 
-> > > so this might result in confusion if described alongside a setting of
-> > > memory.oom_kill_all_tasks.
-> > > 
-> 
-> I assume this is fixed so that it's documented that memory cgroups are 
-> considered logical units by the oom killer and that 
-> memory.oom_kill_all_tasks is separate?  The former defines the policy on 
-> how a memory cgroup is targeted and the latter defines the mechanism it 
-> uses to free memory.
-
-Yes, I've fixed this. Thanks!
-
-> > > > +Cgroup-aware OOM Killer
-> > > > +~~~~~~~~~~~~~~~~~~~~~~~
-> > > > +
-> > > > +Cgroup v2 memory controller implements a cgroup-aware OOM killer.
-> > > > +It means that it treats memory cgroups as first class OOM entities.
-> > > > +
-> > > > +Under OOM conditions the memory controller tries to make the best
-> > > > +choise of a victim, hierarchically looking for the largest memory
-> > > > +consumer. By default, it will look for the biggest task in the
-> > > > +biggest leaf cgroup.
-> > > > +
-> > > > +Be default, all cgroups have oom_priority 0, and OOM killer will
-> > > > +chose the largest cgroup recursively on each level. For non-root
-> > > > +cgroups it's possible to change the oom_priority, and it will cause
-> > > > +the OOM killer to look athe the priority value first, and compare
-> > > > +sizes only of cgroups with equal priority.
-> > > 
-> > > Maybe some description of "largest" would be helpful here?  I think you 
-> > > could briefly describe what is accounted for in the decisionmaking.
-> > 
-> > I'm afraid that it's too implementation-defined to be described.
-> > Do you have an idea, how to describe it without going too much into details?
+> > Good question!
+> > I think, that an ability to override any oom_score_adj value and get all tasks
+> > killed is more important, than an ability to kill all processes with some
+> > exceptions.
 > > 
 > 
-> The point is that "largest cgroup" is ambiguous here: largest in what 
-> sense?  The cgroup with the largest number of processes attached?  Using 
-> the largest amount of memory?
+> I'm disagreeing because getting all tasks killed is not necessarily 
+> something that only the kernel can do.  If all processes are oom disabled, 
+> that's a configuration issue done by sysadmin and the kernel should decide 
+> to kill the next largest memory cgroup or lower priority memory cgroup.  
+> It's not killing things like sshd that intentionally oom disable 
+> themselves.
 > 
-> I think the documentation should clearly define that the oom killer 
-> selects the memory cgroup that has the most memory managed at each level.
+> You could argue that having an oom disabled process attached to these 
+> memcgs in the first place is also a configuration issue, but the problem 
+> is that in cgroup v2 with a restriction on processes only being attached 
+> at the leaf cgroups that there is no competition for memory in this case.  
+> I must assign memory resources to that sshd, or "Activity Manager" 
+> described by the cgroup v1 documentation, just to prevent it from being 
+> killed.
+> 
+> I think the latter of what you describe, killing all processes with some 
+> exceptions, is actually quite powerful.  I can guarantee that processes 
+> that set themselves to oom disabled are really oom disabled and I don't 
+> need to work around that in the cgroup hierarchy only because of this 
+> caveat.  I can also oom disable my Activity Manger that wants to wait on 
+> oom notification and collect the oom kill logs, raise notifications, and 
+> perhaps restart the process that it manage.
+> 
+> > In your example someone still needs to look after the remaining process,
+> > and kill it after some timeout, if it will not quit by itself, right?
+> > 
+> 
+> No, it can restart the process that was oom killed; or it can be sshd and 
+> I can still ssh into my machine.
+> 
+> > The special treatment of the -1000 value (without oom_kill_all_tasks)
+> > is required only to not to break the existing setups.
+> > 
+> 
+> I think as a general principle that allowing an oom disabled process to be 
+> oom killed is incorrect and if you really do want these to be killed, then 
+> (1) either your oom_score_adj is already wrong or (2) you can wait on oom 
+> notification and exit.
 
-No problems, I'll add a clarification.
+It's natural to expect that inside a container there are their own sshd,
+"activity manager" or some other stuff, which can play with oom_score_adj.
+If it can override the upper cgroup-level settings, the whole delegation model
+is broken.
 
-Thank you!
+You can think about the oom_kill_all_tasks like the panic_on_oom,
+but on a cgroup level. It should _guarantee_, that in case of oom
+the whole cgroup will be destroyed completely, and will not remain
+in a non-consistent state.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The model you're describing is based on a trust given to these oom-unkillable
+processes on system level. But we can't really trust some unknown processes
+inside a cgroup that they will be able to do some useful work and finish
+in a reasonable time; especially in case of a global memory shortage.
+That means someone needs to look at cgroup after each OOM and check if there
+are remaining tasks. If so, the whole functionality is useless.
+
+If some complex post-oom handling is required, it should be performed
+from another cgroup (protected by the lower oom_priority value).
+
+So, for example:
+
+root
+  |
+  A
+ / \
+B   C
+
+B: oom_priority=10, oom_kill_all_tasks=1, contains workload
+C: oom_priority=0, oom_kill_all_tasks=0, contains control stuff
+
+If B is killed by OOM, an "activity manager" in C can be notified
+and perform some actions.
+
+Thanks!
+
+Roman
