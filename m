@@ -1,75 +1,122 @@
-From: Chris Wilson <chris@chris-wilson.co.uk>
-Subject: Re: [patch net-next 0/3] net/sched: Improve getting objects by indexes
-Date: Wed, 16 Aug 2017 10:19:53 +0100
-Message-ID: <150287519355.15499.3124883464555211520@mail.alporthouse.com>
-References: <1502849538-14284-1-git-send-email-chrism@mellanox.com>
- <144b87a3-bbe4-a194-ed83-e54840d7c7c2@amd.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v5 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
+Date: Wed, 16 Aug 2017 15:43:44 +0100
+Message-ID: <20170816144344.GA29131@castle.DHCP.thefacebook.com>
+References: <20170814183213.12319-1-guro@fb.com>
+ <20170814183213.12319-5-guro@fb.com>
+ <alpine.DEB.2.10.1708141544280.63207@chino.kir.corp.google.com>
+ <20170815141350.GA4510@castle.DHCP.thefacebook.com>
+ <alpine.DEB.2.10.1708151349280.104516@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <ath10k-bounces+gldad-ath10k=m.gmane.org@lists.infradead.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=lists.infradead.org; s=bombadil.20170209; h=Sender:
-	Content-Transfer-Encoding:Content-Type:Cc:List-Subscribe:List-Help:List-Post:
-	List-Archive:List-Unsubscribe:List-Id:Date:Subject:Message-ID:References:
-	In-Reply-To:From:To:MIME-Version:Reply-To:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	List-Owner; bh=/oliS/wCWrNy4p0EASKEeU+NjFSnQoOEjrJHoXhmptQ=; b=GNYhVJFoREEmdr
-	MshJZRVaYVaRFlUvdB7jzjHPnqqz7MGMcSw7fAPcu6xapXiqZS9J+9A+5CgAuRZZ7BQQYqtJ8b1t4
-	m+MDsaXGufWWovc8TnVzgQRrMquv9HNs0KFBROg5LxTWF7lWSI5J+u3GBxE7O6ePryk4NdezXQIzn
-	W0Zv9xhT+fE1WHUAHmCXOEDrVPIzcW4GPWu4zo0vcPFzL4fZpalUlLN3d12K0FnY2QkT0paTVRDCy
-	yj09GQJtljh8VESpIvUeNTcKaWpadiuAa00JrtWxMWnVRgCdm3maTBERn/IgfTc7hxPx3SFP2ahH+
-	NnhlDk3tMXNdFROyoyaQ==;
-In-Reply-To: <144b87a3-bbe4-a194-ed83-e54840d7c7c2@amd.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/ath10k>,
- <mailto:ath10k-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/ath10k/>
-List-Post: <mailto:ath10k@lists.infradead.org>
-List-Help: <mailto:ath10k-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/ath10k>,
- <mailto:ath10k-request@lists.infradead.org?subject=subscribe>
-Sender: "ath10k" <ath10k-bounces@lists.infradead.org>
-Errors-To: ath10k-bounces+gldad-ath10k=m.gmane.org@lists.infradead.org
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Chris Mi <chrism@mellanox.com>, netdev@vger.kernel.org
-Cc: lucho@ionkov.net, sergey.senozhatsky.work@gmail.com, snitzer@redhat.com, wsa@the-dreams.de, markb@mellanox.com, tom.leiming@gmail.com, stefanr@s5r6.in-berlin.de, zhi.a.wang@intel.com, nsekhar@ti.com, dri-devel@lists.freedesktop.org, bfields@fieldses.org, linux-sctp@vger.kernel.org, paulus@samba.org, jinpu.wang@profitbricks.com, pshelar@ovn.org, sumit.semwal@linaro.org, AlexBin.Xie@amd.com, david1.zhou@amd.com, linux-samsung-soc@vger.kernel.org, maximlevitsky@gmail.com, sudarsana.kalluru@qlogic.com, marek.vasut@gmail.com, linux-atm-general@lists.sourceforge.net, dtwlin@gmail.com, michel.daenzer@amd.com, dledford@redhat.com, tpmdd-devel@lists.sourceforge.net, stern@rowland.harvard.edu, longman@redhat.com, niranjana.vishwanathapura@intel.com, philipp.reisner@linbit.com, shli@kernel.org, linux@roeck-us.net, ohad@wizery.com, pmladek@suse.com, dick.kennedy@broadcom.com, linux-
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=gS2wlglPOo6pc++HGQ1MyRCQL5OhAgKt79tCu+E1XkU=;
+ b=pLGcSZB7XdSfFKm94S2RDH5IQUCEvyJYxcwtuSusASUgbgncITBkqF7brsyYB0a1vmVr
+ NjGTz9zm7vX+QKqE09F0VeChRSENi6HBV1AIfKc+rA/suI4pX7dgpZKC2q4aoi80Sh50
+ pc0RYy8+iZZ7jN2cOh+yA08Z6C3U5fmiZAI= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=gS2wlglPOo6pc++HGQ1MyRCQL5OhAgKt79tCu+E1XkU=;
+ b=Hyf4zBtaVq6z6x7llyHldcdjACUERqCuTnXffS1w4wLVty+0xSYjpsDFo1OevGraDyia7HC8OULOWgBJcZsTLyqdIxRRe1bfOiOJU6pTflFy9fNKXLQU84VyFAOojdfm9/MGQz8aZvmeJJlo7YH9/UYSM8EowwamB0lLCjJ5KWs=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1708151349280.104516@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-UXVvdGluZyBDaHJpc3RpYW4gS8O2bmlnICgyMDE3LTA4LTE2IDA4OjQ5OjA3KQo+IEFtIDE2LjA4
-LjIwMTcgdW0gMDQ6MTIgc2NocmllYiBDaHJpcyBNaToKPiA+IFVzaW5nIGN1cnJlbnQgVEMgY29k
-ZSwgaXQgaXMgdmVyeSBzbG93IHRvIGluc2VydCBhIGxvdCBvZiBydWxlcy4KPiA+Cj4gPiBJbiBv
-cmRlciB0byBpbXByb3ZlIHRoZSBydWxlcyB1cGRhdGUgcmF0ZSBpbiBUQywKPiA+IHdlIGludHJv
-ZHVjZWQgdGhlIGZvbGxvd2luZyB0d28gY2hhbmdlczoKPiA+ICAgICAgICAgIDEpIGNoYW5nZWQg
-Y2xzX2Zsb3dlciB0byB1c2UgSURSIHRvIG1hbmFnZSB0aGUgZmlsdGVycy4KPiA+ICAgICAgICAg
-IDIpIGNoYW5nZWQgYWxsIGFjdF94eHggbW9kdWxlcyB0byB1c2UgSURSIGluc3RlYWQgb2YKPiA+
-ICAgICAgICAgICAgIGEgc21hbGwgaGFzaCB0YWJsZQo+ID4KPiA+IEJ1dCBJRFIgaGFzIGEgbGlt
-aXRhdGlvbiB0aGF0IGl0IHVzZXMgaW50LiBUQyBoYW5kbGUgdXNlcyB1MzIuCj4gPiBUbyBtYWtl
-IHN1cmUgdGhlcmUgaXMgbm8gcmVncmVzc2lvbiwgd2UgYWxzbyBjaGFuZ2VkIElEUiB0byB1c2UK
-PiA+IHVuc2lnbmVkIGxvbmcuIEFsbCBjbGllbnRzIG9mIElEUiBhcmUgY2hhbmdlZCB0byB1c2Ug
-bmV3IElEUiBBUEkuCj4gCj4gV09XLCB3YWl0IGEgc2Vjb25kLiBUaGUgaWRyIGNoYW5nZSBpcyB0
-b3VjaGluZyBhIGxvdCBvZiBkcml2ZXJzIGFuZCB0byAKPiBiZSBob25lc3QgZG9lc24ndCBsb29r
-cyBjb3JyZWN0IGF0IGFsbC4KPiAKPiBKdXN0IGxvb2sgYXQgdGhlIGZpcnN0IGNodW5rIG9mIHlv
-dXIgbW9kaWZpY2F0aW9uOgo+ID4gQEAgLTk5OCw4ICs5OTksOSBAQCBpbnQgYnNnX3JlZ2lzdGVy
-X3F1ZXVlKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxLCBzdHJ1Y3QgZGV2aWNlICpwYXJlbnQsCj4g
-PiAgIAo+ID4gICAgICAgbXV0ZXhfbG9jaygmYnNnX211dGV4KTsKPiA+ICAgCj4gPiAtICAgICBy
-ZXQgPSBpZHJfYWxsb2MoJmJzZ19taW5vcl9pZHIsIGJjZCwgMCwgQlNHX01BWF9ERVZTLCBHRlBf
-S0VSTkVMKTsKPiA+IC0gICAgIGlmIChyZXQgPCAwKSB7Cj4gPiArICAgICByZXQgPSBpZHJfYWxs
-b2MoJmJzZ19taW5vcl9pZHIsIGJjZCwgJmlkcl9pbmRleCwgMCwgQlNHX01BWF9ERVZTLAo+ID4g
-KyAgICAgICAgICAgICAgICAgICAgIEdGUF9LRVJORUwpOwo+ID4gKyAgICAgaWYgKHJldCkgewo+
-ID4gICAgICAgICAgICAgICBpZiAocmV0ID09IC1FTk9TUEMpIHsKPiA+ICAgICAgICAgICAgICAg
-ICAgICAgICBwcmludGsoS0VSTl9FUlIgImJzZzogdG9vIG1hbnkgYnNnIGRldmljZXNcbiIpOwo+
-ID4gICAgICAgICAgICAgICAgICAgICAgIHJldCA9IC1FSU5WQUw7Cj4gVGhlIGNvbmRpdGlvbiAi
-aWYgKHJldCkiIHdpbGwgbm93IGFsd2F5cyBiZSB0cnVlIGFmdGVyIHRoZSBmaXJzdCAKPiBhbGxv
-Y2F0aW9uIGFuZCBzbyB3ZSBhbHdheXMgcnVuIGludG8gdGhlIGVycm9yIGhhbmRsaW5nIGFmdGVy
-IHRoYXQuCgpyZXQgaXMgbm93IHB1cmVseSB0aGUgZXJyb3IgY29kZSwgc28gaXQgZG9lc24ndCBs
-b29rIHRoYXQgc3VzcGljaW91cy4KCj4gSSd2ZSBuZXZlciByZWFkIHRoZSBic2cgY29kZSBiZWZv
-cmUsIGJ1dCB0aGF0J3MgY2VydGFpbmx5IG5vdCBjb3JyZWN0LiAKPiBBbmQgdGhhdCBpbmNvcnJl
-Y3QgcGF0dGVybiByZXBlYXRzIG92ZXIgYW5kIG92ZXIgYWdhaW4gaW4gdGhpcyBjb2RlLgo+IAo+
-IEFwYXJ0IGZyb20gdGhhdCB3aHkgdGhlIGhlY2sgZG8geW91IHdhbnQgdG8gYWxsb2NhdGUgbW9y
-ZSB0aGFuIDE8PDMxIAo+IGhhbmRsZXM/CgpBbmQgbW9yZSB0byB0aGUgcG9pbnQsIGFyYml0cmFy
-aWx5IGNoYW5naW5nIHRoZSBtYXhpbXVtIHRvIFVMT05HX01BWAp3aGVyZSB0aGUgQUJJIG9ubHkg
-c3VwcG9ydHMgVTMyX01BWCBpcyBkYW5nZXJvdXMuIFVubGVzcyB5b3UgZG8gdGhlCmFuYWx5c2lz
-IG90aGVyd2lzZSwgeW91IGhhdmUgdG8gcmVwbGFjZSBhbGwgdGhlIGVuZD0wIHdpdGggZW5kPUlO
-VF9NQVgKdG8gbWFpbnRhaW4gZXhpc3RpbmcgYmVoYXZpb3VyLgotQ2hyaXMKCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmF0aDEwayBtYWlsaW5nIGxpc3QK
-YXRoMTBrQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFp
-bG1hbi9saXN0aW5mby9hdGgxMGsK
+On Tue, Aug 15, 2017 at 01:56:24PM -0700, David Rientjes wrote:
+> On Tue, 15 Aug 2017, Roman Gushchin wrote:
+> 
+> > > > diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+> > > > index dec5afdaa36d..22108f31e09d 100644
+> > > > --- a/Documentation/cgroup-v2.txt
+> > > > +++ b/Documentation/cgroup-v2.txt
+> > > > @@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
+> > > >         5-2-1. Memory Interface Files
+> > > >         5-2-2. Usage Guidelines
+> > > >         5-2-3. Memory Ownership
+> > > > +       5-2-4. Cgroup-aware OOM Killer
+> > > 
+> > > Random curiousness, why cgroup-aware oom killer and not memcg-aware oom 
+> > > killer?
+> > 
+> > I don't think we use the term "memcg" somewhere in v2 docs.
+> > Do you think that "Memory cgroup-aware OOM killer" is better?
+> > 
+> 
+> I think it would be better to not describe it as its own entity, but 
+> rather a part of how the memory cgroup works, so simply describing it in 
+> section 5-2, perhaps as its own subsection, as how the oom killer works 
+> when using the memory cgroup is sufficient.  I wouldn't separate it out as 
+> a distinct cgroup feature in the documentation.
+
+Ok I've got the idea, let me look, what I can do.
+I'll post an updated version soon.
+
+> 
+> > > > +	cgroups.  The default is "0".
+> > > > +
+> > > > +	Defines whether the OOM killer should treat the cgroup
+> > > > +	as a single entity during the victim selection.
+> > > 
+> > > Isn't this true independent of the memory.oom_kill_all_tasks setting?  
+> > > The cgroup aware oom killer will consider memcg's as logical units when 
+> > > deciding what to kill with or without memory.oom_kill_all_tasks, right?
+> > > 
+> > > I think you cover this fact in the cgroup aware oom killer section below 
+> > > so this might result in confusion if described alongside a setting of
+> > > memory.oom_kill_all_tasks.
+> > > 
+> 
+> I assume this is fixed so that it's documented that memory cgroups are 
+> considered logical units by the oom killer and that 
+> memory.oom_kill_all_tasks is separate?  The former defines the policy on 
+> how a memory cgroup is targeted and the latter defines the mechanism it 
+> uses to free memory.
+
+Yes, I've fixed this. Thanks!
+
+> > > > +Cgroup-aware OOM Killer
+> > > > +~~~~~~~~~~~~~~~~~~~~~~~
+> > > > +
+> > > > +Cgroup v2 memory controller implements a cgroup-aware OOM killer.
+> > > > +It means that it treats memory cgroups as first class OOM entities.
+> > > > +
+> > > > +Under OOM conditions the memory controller tries to make the best
+> > > > +choise of a victim, hierarchically looking for the largest memory
+> > > > +consumer. By default, it will look for the biggest task in the
+> > > > +biggest leaf cgroup.
+> > > > +
+> > > > +Be default, all cgroups have oom_priority 0, and OOM killer will
+> > > > +chose the largest cgroup recursively on each level. For non-root
+> > > > +cgroups it's possible to change the oom_priority, and it will cause
+> > > > +the OOM killer to look athe the priority value first, and compare
+> > > > +sizes only of cgroups with equal priority.
+> > > 
+> > > Maybe some description of "largest" would be helpful here?  I think you 
+> > > could briefly describe what is accounted for in the decisionmaking.
+> > 
+> > I'm afraid that it's too implementation-defined to be described.
+> > Do you have an idea, how to describe it without going too much into details?
+> > 
+> 
+> The point is that "largest cgroup" is ambiguous here: largest in what 
+> sense?  The cgroup with the largest number of processes attached?  Using 
+> the largest amount of memory?
+> 
+> I think the documentation should clearly define that the oom killer 
+> selects the memory cgroup that has the most memory managed at each level.
+
+No problems, I'll add a clarification.
+
+Thank you!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
