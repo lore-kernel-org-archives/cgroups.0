@@ -1,83 +1,59 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [v5 2/4] mm, oom: cgroup-aware OOM killer
-Date: Mon, 21 Aug 2017 10:46:56 +0100
-Message-ID: <20170821094656.GA13899@castle.dhcp.TheFacebook.com>
-References: <20170814183213.12319-1-guro@fb.com>
- <20170814183213.12319-3-guro@fb.com>
- <alpine.DEB.2.10.1708141532300.63207@chino.kir.corp.google.com>
- <20170815121558.GA15892@castle.dhcp.TheFacebook.com>
- <alpine.DEB.2.10.1708151435290.104516@chino.kir.corp.google.com>
- <20170816154325.GB29131@castle.DHCP.thefacebook.com>
- <alpine.DEB.2.10.1708201741330.117182@chino.kir.corp.google.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: kernel panic on null pointer on page->mem_cgroup
+Date: Mon, 21 Aug 2017 09:02:18 -0400
+Message-ID: <20170821130218.GA1371@cmpxchg.org>
+References: <20170808010150.4155-1-bradleybolen@gmail.com>
+ <20170808162122.GA14689@cmpxchg.org>
+ <20170808165601.GA7693@jaegeuk-macbookpro.roam.corp.google.com>
+ <20170808173704.GA22887@cmpxchg.org>
+ <CADvgSZSn1v-tTpa07ebqr19heQbkzbavdPM_nbRNR1WF-EBnFw@mail.gmail.com>
+ <20170808200849.GA1104@cmpxchg.org>
+ <20170809014459.GB7693@jaegeuk-macbookpro.roam.corp.google.com>
+ <CADvgSZSNn7N3R7+jjeCgns2ZEPtYc6c3MWmkkQ3PA+0LHO_MfA@mail.gmail.com>
+ <20170809183825.GA26387@cmpxchg.org>
+ <20170810115605.GQ23863@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=mz6JPRcP5oV4XrqGeE2Z32bH17NNW6jJhp7fWbp4rV8=;
- b=Up6casz6pcA9G5T7zcrikffZu486NTWG9KPeKYTKgLXPpPUgH6ILrpg3v/62ccezBv0s
- 3zjVxQWvpkZm9WLm79dK2aKUjEeXndqZyP4QTlJsOKadhPWDsEkkSK/KbTkk7qUJaXRw
- ZsX3jYoA0vfQv+ZRfz6G85Xx28pS6gVU2ik= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=mz6JPRcP5oV4XrqGeE2Z32bH17NNW6jJhp7fWbp4rV8=;
- b=Y65Ykide4JYcu3pS2oFEAaxNVViGxQHtDO+lsuI2ZV23DvaYhiuuM0eru/qkAa+f5QpZlMB+ODwVVvfbS3coeTtxBwS785i8buLWJtmg+UIGMrPjC5EmlwW/0Zupp/wBOZ0x2imfWW5ibXGVHwX+E4SIxKo8rRzuDkmiCZTiZ7E=
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=o4OnLepSPD+Fgn/QoD3hwZbXrePDwNCQq1I8jeeGB6I=; b=cngxbj3c86pf8BCRbuZenyb7S+
+	Uzp/ZbtlXUW9f7gv/uLe0pFfIfl+L3P4VGv+AVuEm4tuO7tcI7hz0DztwZuUSw+sWiQyqDYsmhPK3
+	w7XVhIsjGOA7piDL3Z1ao+tELlA9FFogTjMdH0iGnXJlsINgc+1GUy4jGrp9RtVGDUIQ=;
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1708201741330.117182-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170810115605.GQ23863@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Brad Bolen <bradleybolen@gmail.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Aug 20, 2017 at 05:50:27PM -0700, David Rientjes wrote:
-> On Wed, 16 Aug 2017, Roman Gushchin wrote:
+On Thu, Aug 10, 2017 at 01:56:05PM +0200, Michal Hocko wrote:
+> On Wed 09-08-17 14:38:25, Johannes Weiner wrote:
+> > The issue is that writeback doesn't hold a page reference and the page
+> > might get freed after PG_writeback is cleared (and the mapping is
+> > unlocked) in test_clear_page_writeback(). The stat functions looking
+> > up the page's node or zone are safe, as those attributes are static
+> > across allocation and free cycles. But page->mem_cgroup is not, and it
+> > will get cleared if we race with truncation or migration.
 > 
-> > It's natural to expect that inside a container there are their own sshd,
-> > "activity manager" or some other stuff, which can play with oom_score_adj.
-> > If it can override the upper cgroup-level settings, the whole delegation model
-> > is broken.
-> > 
-> 
-> I don't think any delegation model related to core cgroups or memory 
-> cgroup is broken, I think it's based on how memory.oom_kill_all_tasks is 
-> defined.  It could very well behave as memory.oom_kill_all_eligible_tasks 
-> when enacted upon.
-> 
-> > You can think about the oom_kill_all_tasks like the panic_on_oom,
-> > but on a cgroup level. It should _guarantee_, that in case of oom
-> > the whole cgroup will be destroyed completely, and will not remain
-> > in a non-consistent state.
-> > 
-> 
-> Only CAP_SYS_ADMIN has this ability to set /proc/pid/oom_score_adj to
+> Is there anything that prevents us from holding a reference on a page
+> under writeback?
 
-CAP_SYS_RESOURCE
+Hm, I'm hesitant to add redundant life-time management to the page
+there just for memcg, which is not always configured in.
 
-> OOM_SCORE_ADJ_MIN, so it preserves the ability to change that setting, if 
-> needed, when it sets memory.oom_kill_all_tasks.  If a user gains 
-> permissions to change memory.oom_kill_all_tasks, I disagree it should 
-> override the CAP_SYS_ADMIN setting of /proc/pid/oom_score_adj.
-> 
-> I would prefer not to exclude oom disabled processes to their own sibling 
-> cgroups because they would require their own reservation with cgroup v2 
-> and it makes the single hierarchy model much more difficult to arrange 
-> alongside cpusets, for example.
-> 
-> > The model you're describing is based on a trust given to these oom-unkillable
-> > processes on system level. But we can't really trust some unknown processes
-> > inside a cgroup that they will be able to do some useful work and finish
-> > in a reasonable time; especially in case of a global memory shortage.
-> 
-> Yes, we prefer to panic instead of sshd, for example, being oom killed.
-> We trust that sshd, as well as our own activity manager and security 
-> daemons are trusted to do useful work and that we never want the kernel to 
-> do this.  I'm not sure why you are describing processes that CAP_SYS_ADMIN 
-> has set to be oom disabled as unknown processes.
-> 
-> I'd be interested in hearing the opinions of others related to a per-memcg 
-> knob being allowed to override the setting of the sysadmin.
+Pinning the memcg instead is slightly more complex, but IMO has the
+complexity in a preferrable place.
 
-Sure, me too.
+Would you agree?
 
-Thanks!
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
