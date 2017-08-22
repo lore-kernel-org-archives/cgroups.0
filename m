@@ -1,57 +1,393 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: kernel panic on null pointer on page->mem_cgroup
-Date: Mon, 21 Aug 2017 15:23:45 +0200
-Message-ID: <20170821132345.GK25956@dhcp22.suse.cz>
-References: <20170808162122.GA14689@cmpxchg.org>
- <20170808165601.GA7693@jaegeuk-macbookpro.roam.corp.google.com>
- <20170808173704.GA22887@cmpxchg.org>
- <CADvgSZSn1v-tTpa07ebqr19heQbkzbavdPM_nbRNR1WF-EBnFw@mail.gmail.com>
- <20170808200849.GA1104@cmpxchg.org>
- <20170809014459.GB7693@jaegeuk-macbookpro.roam.corp.google.com>
- <CADvgSZSNn7N3R7+jjeCgns2ZEPtYc6c3MWmkkQ3PA+0LHO_MfA@mail.gmail.com>
- <20170809183825.GA26387@cmpxchg.org>
- <20170810115605.GQ23863@dhcp22.suse.cz>
- <20170821130218.GA1371@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [v5 2/4] mm, oom: cgroup-aware OOM killer
+Date: Tue, 22 Aug 2017 13:03:44 -0400
+Message-ID: <20170822170344.GA13547@cmpxchg.org>
+References: <20170814183213.12319-1-guro@fb.com>
+ <20170814183213.12319-3-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=F3oyHCPuKOxVUzJchAV9UshYVpq3rPod66t2WhkFn9E=; b=pRDm9uShxoUPix3moRagv2ph7l
+	KZyjoFYayVx04w28cZPAiMFhllsZuKcogRX1HF7B5s61kLPnCiK/ZTzvqbecJknxMNqZ8gFEyRVNz
+	rHAw6eho7SUW6OK18xrw6Y/r2Uv1wnfiOnZvsRFq/Bqwv8emKnBWxTqaSZ1mXHW5seo0=;
 Content-Disposition: inline
-In-Reply-To: <20170821130218.GA1371-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170814183213.12319-3-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Brad Bolen <bradleybolen-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 21-08-17 09:02:18, Johannes Weiner wrote:
-> On Thu, Aug 10, 2017 at 01:56:05PM +0200, Michal Hocko wrote:
-> > On Wed 09-08-17 14:38:25, Johannes Weiner wrote:
-> > > The issue is that writeback doesn't hold a page reference and the page
-> > > might get freed after PG_writeback is cleared (and the mapping is
-> > > unlocked) in test_clear_page_writeback(). The stat functions looking
-> > > up the page's node or zone are safe, as those attributes are static
-> > > across allocation and free cycles. But page->mem_cgroup is not, and it
-> > > will get cleared if we race with truncation or migration.
-> > 
-> > Is there anything that prevents us from holding a reference on a page
-> > under writeback?
-> 
-> Hm, I'm hesitant to add redundant life-time management to the page
-> there just for memcg, which is not always configured in.
-> 
-> Pinning the memcg instead is slightly more complex, but IMO has the
-> complexity in a preferrable place.
+Hi Roman,
 
-If that is the single place that needs such a special handling and it is
-very likely to stay that way then the additional complexity is probably
-justified. I am just worried that this is really subtle and history
-tells us that such a code usually kicks us back later.
- 
-> Would you agree?
+great work! This looks mostly good to me now. Below are some nitpicks
+concerning naming and code layout, but nothing major.
 
-Well, I was not objecting to the patch. It seems correct I am just
-worried a robust fix would be preferable. And a clear object life time
-sounds like a more robust thing to do.
--- 
-Michal Hocko
-SUSE Labs
+On Mon, Aug 14, 2017 at 07:32:11PM +0100, Roman Gushchin wrote:
+> @@ -39,6 +39,7 @@ struct oom_control {
+>  	unsigned long totalpages;
+>  	struct task_struct *chosen;
+>  	unsigned long chosen_points;
+> +	struct mem_cgroup *chosen_memcg;
+>  };
+
+Please rename 'chosen' to 'chosen_task' to make the distinction to
+chosen_memcg clearer.
+
+The ordering is a little weird too, with chosen_points in between.
+
+	chosen_task
+	chosen_memcg
+	chosen_points
+
+?
+
+> @@ -2639,6 +2639,181 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
+>  	return ret;
+>  }
+>  
+> +static long memcg_oom_badness(struct mem_cgroup *memcg,
+> +			      const nodemask_t *nodemask)
+> +{
+> +	long points = 0;
+> +	int nid;
+> +
+> +	for_each_node_state(nid, N_MEMORY) {
+> +		if (nodemask && !node_isset(nid, *nodemask))
+> +			continue;
+> +
+> +		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> +				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> +	}
+> +
+> +	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
+> +		(PAGE_SIZE / 1024);
+> +	points += memcg_page_state(memcg, NR_SLAB_UNRECLAIMABLE);
+
+NR_SLAB_UNRECLAIMABLE is now accounted per-lruvec, which takes
+nodeness into account, and so would be more accurate here.
+
+You can get it with mem_cgroup_lruvec() and lruvec_page_state().
+
+> +	points += memcg_page_state(memcg, MEMCG_SOCK);
+> +	points += memcg_page_state(memcg, MEMCG_SWAP);
+> +
+> +	return points;
+> +}
+> +
+> +static long oom_evaluate_memcg(struct mem_cgroup *memcg,
+> +			       const nodemask_t *nodemask)
+> +{
+> +	struct css_task_iter it;
+> +	struct task_struct *task;
+> +	int elegible = 0;
+
+eligible
+
+> +
+> +	css_task_iter_start(&memcg->css, 0, &it);
+> +	while ((task = css_task_iter_next(&it))) {
+> +		/*
+> +		 * If there are no tasks, or all tasks have oom_score_adj set
+> +		 * to OOM_SCORE_ADJ_MIN and oom_kill_all_tasks is not set,
+> +		 * don't select this memory cgroup.
+> +		 */
+> +		if (!elegible &&
+> +		    (memcg->oom_kill_all_tasks ||
+> +		     task->signal->oom_score_adj != OOM_SCORE_ADJ_MIN))
+> +			elegible = 1;
+
+This is a little awkward to read. How about something like this:
+
+	/*
+	 * When killing individual tasks, we respect OOM score adjustments:
+	 * at least one task in the group needs to be killable for the group
+	 * to be oomable.
+	 *
+	 * Also check that previous OOM kills have finished, and abort if
+	 * there are any pending OOM victims.
+	 */
+	oomable = memcg->oom_kill_all_tasks;
+	while ((task = css_task_iter_next(&it))) {
+		if (!oomable && task->signal_oom_score_adj != OOM_SCORE_ADJ_MIN)
+			oomable = 1;
+
+> +		if (tsk_is_oom_victim(task) &&
+> +		    !test_bit(MMF_OOM_SKIP, &task->signal->oom_mm->flags)) {
+> +			elegible = -1;
+> +			break;
+> +		}
+> +	}
+> +	css_task_iter_end(&it);
+
+etc.
+
+> +
+> +	return elegible > 0 ? memcg_oom_badness(memcg, nodemask) : elegible;
+
+I find these much easier to read if broken up, even if it's more LOC:
+
+	if (eligible <= 0)
+		return eligible;
+
+	return memcg_oom_badness(memcg, nodemask);
+
+> +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+> +{
+> +	struct mem_cgroup *iter, *parent;
+> +
+> +	for_each_mem_cgroup_tree(iter, root) {
+> +		if (memcg_has_children(iter)) {
+> +			iter->oom_score = 0;
+> +			continue;
+> +		}
+> +
+> +		iter->oom_score = oom_evaluate_memcg(iter, oc->nodemask);
+> +		if (iter->oom_score == -1) {
+
+Please add comments to document the special returns. Maybe #defines
+would be clearer, too.
+
+> +			oc->chosen_memcg = (void *)-1UL;
+> +			mem_cgroup_iter_break(root, iter);
+> +			return;
+> +		}
+> +
+> +		if (!iter->oom_score)
+> +			continue;
+
+Same here.
+
+Maybe a switch would be suitable to handle the abort/no-score cases.
+
+> +		for (parent = parent_mem_cgroup(iter); parent && parent != root;
+> +		     parent = parent_mem_cgroup(parent))
+> +			parent->oom_score += iter->oom_score;
+> +	}
+> +
+> +	for (;;) {
+> +		struct cgroup_subsys_state *css;
+> +		struct mem_cgroup *memcg = NULL;
+> +		long score = LONG_MIN;
+> +
+> +		css_for_each_child(css, &root->css) {
+> +			struct mem_cgroup *iter = mem_cgroup_from_css(css);
+> +
+> +			if (iter->oom_score > score) {
+> +				memcg = iter;
+> +				score = iter->oom_score;
+> +			}
+> +		}
+> +
+> +		if (!memcg) {
+> +			if (oc->memcg && root == oc->memcg) {
+> +				oc->chosen_memcg = oc->memcg;
+> +				css_get(&oc->chosen_memcg->css);
+> +				oc->chosen_points = oc->memcg->oom_score;
+> +			}
+> +			break;
+> +		}
+> +
+> +		if (memcg->oom_kill_all_tasks || !memcg_has_children(memcg)) {
+> +			oc->chosen_memcg = memcg;
+> +			css_get(&oc->chosen_memcg->css);
+> +			oc->chosen_points = score;
+> +			break;
+> +		}
+> +
+> +		root = memcg;
+> +	}
+> +}
+> +
+> +static void select_victim_root_cgroup_task(struct oom_control *oc)
+> +{
+> +	struct css_task_iter it;
+> +	struct task_struct *task;
+> +	int ret = 0;
+> +
+> +	css_task_iter_start(&root_mem_cgroup->css, 0, &it);
+> +	while (!ret && (task = css_task_iter_next(&it)))
+> +		ret = oom_evaluate_task(task, oc);
+> +	css_task_iter_end(&it);
+> +}
+> +
+> +bool mem_cgroup_select_oom_victim(struct oom_control *oc)
+> +{
+> +	struct mem_cgroup *root = root_mem_cgroup;
+> +
+> +	oc->chosen = NULL;
+> +	oc->chosen_memcg = NULL;
+> +
+> +	if (mem_cgroup_disabled())
+> +		return false;
+> +
+> +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> +		return false;
+> +
+> +	if (oc->memcg)
+> +		root = oc->memcg;
+> +
+> +	rcu_read_lock();
+> +
+> +	select_victim_memcg(root, oc);
+> +	if (oc->chosen_memcg == (void *)-1UL) {
+> +		/* Existing OOM victims are found. */
+> +		rcu_read_unlock();
+> +		return true;
+> +	}
+
+It would be good to format this branch like the block below, with a
+newline and the comment before the branch block rather than inside.
+
+That would also set apart the call to select_victim_memcg(), which is
+the main workhorse of this function.
+
+> +	/*
+> +	 * For system-wide OOMs we should consider tasks in the root cgroup
+> +	 * with oom_score larger than oc->chosen_points.
+> +	 */
+> +	if (!oc->memcg) {
+> +		select_victim_root_cgroup_task(oc);
+> +
+> +		if (oc->chosen && oc->chosen_memcg) {
+> +			/*
+> +			 * If we've decided to kill a task in the root memcg,
+> +			 * release chosen_memcg.
+> +			 */
+> +			css_put(&oc->chosen_memcg->css);
+> +			oc->chosen_memcg = NULL;
+> +		}
+> +	}
+
+^^ like this one.
+
+> +
+> +	rcu_read_unlock();
+> +
+> +	return !!oc->chosen || !!oc->chosen_memcg;
+
+The !! are detrimental to readability and shouldn't be necessary.
+
+> @@ -5190,6 +5365,33 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+>  	return nbytes;
+>  }
+>  
+> +static int memory_oom_kill_all_tasks_show(struct seq_file *m, void *v)
+> +{
+> +	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+> +	bool oom_kill_all_tasks = memcg->oom_kill_all_tasks;
+> +
+> +	seq_printf(m, "%d\n", oom_kill_all_tasks);
+> +
+> +	return 0;
+> +}
+> +
+> +static ssize_t memory_oom_kill_all_tasks_write(struct kernfs_open_file *of,
+> +					       char *buf, size_t nbytes,
+> +					       loff_t off)
+> +{
+> +	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+> +	int oom_kill_all_tasks;
+> +	int err;
+> +
+> +	err = kstrtoint(strstrip(buf), 0, &oom_kill_all_tasks);
+> +	if (err)
+> +		return err;
+> +
+> +	memcg->oom_kill_all_tasks = !!oom_kill_all_tasks;
+> +
+> +	return nbytes;
+> +}
+> +
+>  static int memory_events_show(struct seq_file *m, void *v)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+> @@ -5310,6 +5512,12 @@ static struct cftype memory_files[] = {
+>  		.write = memory_max_write,
+>  	},
+>  	{
+> +		.name = "oom_kill_all_tasks",
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +		.seq_show = memory_oom_kill_all_tasks_show,
+> +		.write = memory_oom_kill_all_tasks_write,
+> +	},
+
+This name is quite a mouthful and reminiscent of the awkward v1
+interface names. It doesn't really go well with the v2 names.
+
+How about memory.oom_group?
+
+> +	{
+>  		.name = "events",
+>  		.flags = CFTYPE_NOT_ON_ROOT,
+>  		.file_offset = offsetof(struct mem_cgroup, events_file),
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 5c29a3dd591b..28e42a0d5eee 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -288,7 +288,7 @@ static enum oom_constraint constrained_alloc(struct oom_control *oc)
+>  	return CONSTRAINT_NONE;
+>  }
+>  
+> -static int oom_evaluate_task(struct task_struct *task, void *arg)
+> +int oom_evaluate_task(struct task_struct *task, void *arg)
+>  {
+>  	struct oom_control *oc = arg;
+>  	unsigned long points;
+> @@ -823,6 +823,9 @@ static void __oom_kill_process(struct task_struct *victim)
+>  	struct mm_struct *mm;
+>  	bool can_oom_reap = true;
+>  
+> +	if (is_global_init(victim) || (victim->flags & PF_KTHREAD))
+> +		return;
+> +
+>  	p = find_lock_task_mm(victim);
+>  	if (!p) {
+>  		put_task_struct(victim);
+> @@ -958,6 +961,60 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
+>  	put_task_struct(victim);
+>  }
+>  
+> +static int oom_kill_memcg_member(struct task_struct *task, void *unused)
+> +{
+> +	if (!tsk_is_oom_victim(task))
+> +		__oom_kill_process(task);
+> +	return 0;
+> +}
+> +
+> +static bool oom_kill_memcg_victim(struct oom_control *oc)
+> +{
+> +	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
+> +				      DEFAULT_RATELIMIT_BURST);
+> +
+> +	if (oc->chosen) {
+> +		if (oc->chosen != (void *)-1UL) {
+> +			if (__ratelimit(&oom_rs))
+> +				dump_header(oc, oc->chosen);
+> +
+> +			__oom_kill_process(oc->chosen);
+> +			put_task_struct(oc->chosen);
+> +			schedule_timeout_killable(1);
+> +		}
+> +		return true;
+> +
+> +	} else if (oc->chosen_memcg) {
+> +		if (oc->chosen_memcg == (void *)-1UL)
+> +			return true;
+
+Can you format the above chosen == (void *)-1UL the same way? That
+makes it easier to see that it's checking the same thing.
+
+Thanks
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
