@@ -1,19 +1,21 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [v6 1/4] mm, oom: refactor the oom_kill_process() function
-Date: Wed, 23 Aug 2017 17:51:57 +0100
-Message-ID: <20170823165201.24086-1-guro@fb.com>
+Subject: [v6 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
+Date: Wed, 23 Aug 2017 17:52:01 +0100
+Message-ID: <20170823165201.24086-5-guro@fb.com>
+References: <20170823165201.24086-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=facebook;
- bh=88KKdK6jbiX+nwkMNSjuo1/Z1BvzXPg4Vhv9bwJxggM=;
- b=YGEqGGHZ3LHm7CsZZ5eNDI3MmiwqveETdyh5dJLLNRFeE22KzItMU3wuKWe3+vwLzzNE
- 3Av7I8RMCDOq00/kccHUiE9s31EZt3eHQQCG4cfqtP7eoL4SZ1ayG8jzvJ2exkoQofsU
- Hwu/ZixoVRKukYn5GopLtvBVIIwdf+ckDeQ= 
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=5kKEH5YHBfdFNRdu2jEcs2X8uExcewckBFKkir99S6A=;
+ b=AvwoM4s7JM2DzHhvq45HHv/UAU1y6npx+1vbJBF71NXLzkHZV5EWJ0qvhFE1BirYz+N4
+ mtPuWi7JJroDvYcirnP3b57gUVbplLk77A/5gNfKqBzDh0p6UsJvSuPy5avcqqwr8aPe
+ wd5gdR/1zWCJCxgi5Oqenbi7Rp5b/sxRSAQ= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=88KKdK6jbiX+nwkMNSjuo1/Z1BvzXPg4Vhv9bwJxggM=;
- b=jRIXhsGyZcKmSanDX/7aMGZct/gY7kN3Bh9IiEVIyYyZcmPcUfGbsIfTPZ7QPJIKDrEPC+Cd83MDjJDp3+21Yvf/k23Vo14qgdyrea9QVIzgpavqXMfSKIBAvK8a/c8uKFoflcN/0aLT2ZLlqYYdO6dbyiYWTa3Aa+hmFV89WFI=
+ bh=5kKEH5YHBfdFNRdu2jEcs2X8uExcewckBFKkir99S6A=;
+ b=ZzBIh1pYbvQ9Y8vmna4PezZRM0JxtbealaX0l8ytd1wMZJPBWejkwbpYSBf33jm0nhqkYgok2+lIzx3Ug/YqHKh07SK3V53QUoPwth/C/n/z7FzZ+MiR9KwmwELL6jcjdRjnZ/3bTCwKWEvA60duzaQNuuqnghC++/X704eL6RM=
+In-Reply-To: <20170823165201.24086-1-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -21,20 +23,7 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
 Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The oom_kill_process() function consists of two logical parts:
-the first one is responsible for considering task's children as
-a potential victim and printing the debug information.
-The second half is responsible for sending SIGKILL to all
-tasks sharing the mm struct with the given victim.
-
-This commit splits the oom_kill_process() function with
-an intention to re-use the the second half: __oom_kill_process().
-
-The cgroup-aware OOM killer will kill multiple tasks
-belonging to the victim cgroup. We don't need to print
-the debug information for the each task, as well as play
-with task selection (considering task's children),
-so we can't use the existing oom_kill_process().
+Update cgroups v2 docs.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Michal Hocko <mhocko@kernel.org>
@@ -49,157 +38,96 @@ Cc: linux-doc@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- mm/oom_kill.c | 123 +++++++++++++++++++++++++++++++---------------------------
- 1 file changed, 65 insertions(+), 58 deletions(-)
+ Documentation/cgroup-v2.txt | 62 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
 
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 53b44425ef35..5c29a3dd591b 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -817,67 +817,12 @@ static bool task_will_free_mem(struct task_struct *task)
- 	return ret;
- }
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index dec5afdaa36d..79ac407bf5a0 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
+        5-2-1. Memory Interface Files
+        5-2-2. Usage Guidelines
+        5-2-3. Memory Ownership
++       5-2-4. OOM Killer
+      5-3. IO
+        5-3-1. IO Interface Files
+        5-3-2. Writeback
+@@ -1002,6 +1003,34 @@ PAGE_SIZE multiple when read back.
+ 	high limit is used and monitored properly, this limit's
+ 	utility is limited to providing the final safety net.
  
--static void oom_kill_process(struct oom_control *oc, const char *message)
-+static void __oom_kill_process(struct task_struct *victim)
- {
--	struct task_struct *p = oc->chosen;
--	unsigned int points = oc->chosen_points;
--	struct task_struct *victim = p;
--	struct task_struct *child;
--	struct task_struct *t;
-+	struct task_struct *p;
- 	struct mm_struct *mm;
--	unsigned int victim_points = 0;
--	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
--					      DEFAULT_RATELIMIT_BURST);
- 	bool can_oom_reap = true;
++  memory.oom_kill_all
++
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "0".
++
++	If set, OOM killer will kill all processes attached to the cgroup
++	if selected as an OOM victim.
++
++	Be default, the OOM killer respects the /proc/pid/oom_score_adj
++	value -1000, and will never kill the task, unless oom_kill_all
++	is set.
++
++  memory.oom_priority
++
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "0".
++
++	An integer number within the [-10000, 10000] range,
++	which defines the order in which the OOM killer selects victim
++	memory cgroups.
++
++	OOM killer prefers memory cgroups with larger priority if they
++	are populated with eligible tasks.
++
++	The oom_priority value is compared within sibling cgroups.
++
++	The root cgroup has the oom_priority 0, which cannot be changed.
++
+   memory.events
+ 	A read-only flat-keyed file which exists on non-root cgroups.
+ 	The following entries are defined.  Unless specified
+@@ -1206,6 +1235,39 @@ POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
+ belonging to the affected files to ensure correct memory ownership.
  
--	/*
--	 * If the task is already exiting, don't alarm the sysadmin or kill
--	 * its children or threads, just set TIF_MEMDIE so it can die quickly
--	 */
--	task_lock(p);
--	if (task_will_free_mem(p)) {
--		mark_oom_victim(p);
--		wake_oom_reaper(p);
--		task_unlock(p);
--		put_task_struct(p);
--		return;
--	}
--	task_unlock(p);
--
--	if (__ratelimit(&oom_rs))
--		dump_header(oc, p);
--
--	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
--		message, task_pid_nr(p), p->comm, points);
--
--	/*
--	 * If any of p's children has a different mm and is eligible for kill,
--	 * the one with the highest oom_badness() score is sacrificed for its
--	 * parent.  This attempts to lose the minimal amount of work done while
--	 * still freeing memory.
--	 */
--	read_lock(&tasklist_lock);
--	for_each_thread(p, t) {
--		list_for_each_entry(child, &t->children, sibling) {
--			unsigned int child_points;
--
--			if (process_shares_mm(child, p->mm))
--				continue;
--			/*
--			 * oom_badness() returns 0 if the thread is unkillable
--			 */
--			child_points = oom_badness(child,
--				oc->memcg, oc->nodemask, oc->totalpages);
--			if (child_points > victim_points) {
--				put_task_struct(victim);
--				victim = child;
--				victim_points = child_points;
--				get_task_struct(victim);
--			}
--		}
--	}
--	read_unlock(&tasklist_lock);
--
- 	p = find_lock_task_mm(victim);
- 	if (!p) {
- 		put_task_struct(victim);
-@@ -947,10 +892,72 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
- 		wake_oom_reaper(victim);
  
- 	mmdrop(mm);
--	put_task_struct(victim);
- }
- #undef K
++OOM Killer
++~~~~~~~~~~~~~~~~~~~~~~~
++
++Cgroup v2 memory controller implements a cgroup-aware OOM killer.
++It means that it treats cgroups as first class OOM entities.
++
++Under OOM conditions the memory controller tries to make the best
++choice of a victim, hierarchically looking for the largest memory
++consumer. By default, it will look for the biggest task in the
++biggest leaf memory cgroup.
++
++By default, all memory cgroups have oom_priority 0, and OOM killer
++will choice the cgroup with the largest memory consuption recursively
++on each level. For non-root cgroups it's possible to change
++the oom_priority, and it will cause the OOM killer to look
++at the priority value first, and compare sizes only of memory
++cgroups with equal priority.
++
++A user can change this behavior by enabling the per-cgroup
++oom_kill_all option. If set, OOM killer will kill all processes
++attached to the cgroup if selected as an OOM victim.
++
++Tasks in the root cgroup are treated as independent memory consumers,
++and are compared with other memory consumers (leaf memory cgroups).
++The root cgroup doesn't support the oom_kill_all feature.
++
++This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
++the memory controller considers only cgroups belonging to the sub-tree
++of the OOM'ing cgroup.
++
++If there are no cgroups with the enabled memory controller,
++the OOM killer is using the "traditional" process-based approach.
++
+ IO
+ --
  
-+static void oom_kill_process(struct oom_control *oc, const char *message)
-+{
-+	struct task_struct *p = oc->chosen;
-+	unsigned int points = oc->chosen_points;
-+	struct task_struct *victim = p;
-+	struct task_struct *child;
-+	struct task_struct *t;
-+	unsigned int victim_points = 0;
-+	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
-+					      DEFAULT_RATELIMIT_BURST);
-+
-+	/*
-+	 * If the task is already exiting, don't alarm the sysadmin or kill
-+	 * its children or threads, just set TIF_MEMDIE so it can die quickly
-+	 */
-+	task_lock(p);
-+	if (task_will_free_mem(p)) {
-+		mark_oom_victim(p);
-+		wake_oom_reaper(p);
-+		task_unlock(p);
-+		put_task_struct(p);
-+		return;
-+	}
-+	task_unlock(p);
-+
-+	if (__ratelimit(&oom_rs))
-+		dump_header(oc, p);
-+
-+	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
-+		message, task_pid_nr(p), p->comm, points);
-+
-+	/*
-+	 * If any of p's children has a different mm and is eligible for kill,
-+	 * the one with the highest oom_badness() score is sacrificed for its
-+	 * parent.  This attempts to lose the minimal amount of work done while
-+	 * still freeing memory.
-+	 */
-+	read_lock(&tasklist_lock);
-+	for_each_thread(p, t) {
-+		list_for_each_entry(child, &t->children, sibling) {
-+			unsigned int child_points;
-+
-+			if (process_shares_mm(child, p->mm))
-+				continue;
-+			/*
-+			 * oom_badness() returns 0 if the thread is unkillable
-+			 */
-+			child_points = oom_badness(child,
-+				oc->memcg, oc->nodemask, oc->totalpages);
-+			if (child_points > victim_points) {
-+				put_task_struct(victim);
-+				victim = child;
-+				victim_points = child_points;
-+				get_task_struct(victim);
-+			}
-+		}
-+	}
-+	read_unlock(&tasklist_lock);
-+
-+	__oom_kill_process(victim);
-+	put_task_struct(victim);
-+}
-+
- /*
-  * Determines whether the kernel must panic because of the panic_on_oom sysctl.
-  */
 -- 
 2.13.5
 
