@@ -1,135 +1,142 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [v6 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
-Date: Wed, 23 Aug 2017 17:52:01 +0100
-Message-ID: <20170823165201.24086-5-guro@fb.com>
-References: <20170823165201.24086-1-guro@fb.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [v5 2/4] mm, oom: cgroup-aware OOM killer
+Date: Wed, 23 Aug 2017 13:24:41 -0400
+Message-ID: <20170823172441.GA29085@cmpxchg.org>
+References: <20170814183213.12319-1-guro@fb.com>
+ <20170814183213.12319-3-guro@fb.com>
+ <20170822170344.GA13547@cmpxchg.org>
+ <20170823162031.GA13578@castle.dhcp.TheFacebook.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=5kKEH5YHBfdFNRdu2jEcs2X8uExcewckBFKkir99S6A=;
- b=AvwoM4s7JM2DzHhvq45HHv/UAU1y6npx+1vbJBF71NXLzkHZV5EWJ0qvhFE1BirYz+N4
- mtPuWi7JJroDvYcirnP3b57gUVbplLk77A/5gNfKqBzDh0p6UsJvSuPy5avcqqwr8aPe
- wd5gdR/1zWCJCxgi5Oqenbi7Rp5b/sxRSAQ= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=5kKEH5YHBfdFNRdu2jEcs2X8uExcewckBFKkir99S6A=;
- b=ZzBIh1pYbvQ9Y8vmna4PezZRM0JxtbealaX0l8ytd1wMZJPBWejkwbpYSBf33jm0nhqkYgok2+lIzx3Ug/YqHKh07SK3V53QUoPwth/C/n/z7FzZ+MiR9KwmwELL6jcjdRjnZ/3bTCwKWEvA60duzaQNuuqnghC++/X704eL6RM=
-In-Reply-To: <20170823165201.24086-1-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=SufW85IAxE7H881LNhFMveB3E26WUofZQffuaUSpGpQ=; b=OLK5+lfi1G5MHa8qtJE1BUMzUu
+	+LBJ804GHZX2lun30Hf0t4yIqzkTOq0X1QPKNhwFwIFFCb4cOo39tHOidv28VZYn3sFYNM6hON0AS
+	SQl0nvPZ/iVWy1xid9ZVOuC2FhGUQ1WQMuGWezH1yovVEaJ7d3E4U0JqjTLU5qM6UKW8=;
+Content-Disposition: inline
+In-Reply-To: <20170823162031.GA13578@castle.dhcp.TheFacebook.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Update cgroups v2 docs.
+Hi,
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
----
- Documentation/cgroup-v2.txt | 62 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
+On Wed, Aug 23, 2017 at 05:20:31PM +0100, Roman Gushchin wrote:
+> On Tue, Aug 22, 2017 at 01:03:44PM -0400, Johannes Weiner wrote:
+> > > +	css_task_iter_start(&memcg->css, 0, &it);
+> > > +	while ((task = css_task_iter_next(&it))) {
+> > > +		/*
+> > > +		 * If there are no tasks, or all tasks have oom_score_adj set
+> > > +		 * to OOM_SCORE_ADJ_MIN and oom_kill_all_tasks is not set,
+> > > +		 * don't select this memory cgroup.
+> > > +		 */
+> > > +		if (!elegible &&
+> > > +		    (memcg->oom_kill_all_tasks ||
+> > > +		     task->signal->oom_score_adj != OOM_SCORE_ADJ_MIN))
+> > > +			elegible = 1;
+> > 
+> > This is a little awkward to read. How about something like this:
+> > 
+> > 	/*
+> > 	 * When killing individual tasks, we respect OOM score adjustments:
+> > 	 * at least one task in the group needs to be killable for the group
+> > 	 * to be oomable.
+> > 	 *
+> > 	 * Also check that previous OOM kills have finished, and abort if
+> > 	 * there are any pending OOM victims.
+> > 	 */
+> > 	oomable = memcg->oom_kill_all_tasks;
+> > 	while ((task = css_task_iter_next(&it))) {
+> > 		if (!oomable && task->signal_oom_score_adj != OOM_SCORE_ADJ_MIN)
+> > 			oomable = 1;
+> > 
+> > > +		if (tsk_is_oom_victim(task) &&
+> > > +		    !test_bit(MMF_OOM_SKIP, &task->signal->oom_mm->flags)) {
+> > > +			elegible = -1;
+> > > +			break;
+> > > +		}
+> > > +	}
+> > > +	css_task_iter_end(&it);
+> 
+> We ignore oom_score_adj if oom_kill_all_tasks is set, it's
+> not reflected in your version. Anyway, I've moved the comments block
+> outside and rephrased it to make more clear.
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index dec5afdaa36d..79ac407bf5a0 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
-        5-2-1. Memory Interface Files
-        5-2-2. Usage Guidelines
-        5-2-3. Memory Ownership
-+       5-2-4. OOM Killer
-      5-3. IO
-        5-3-1. IO Interface Files
-        5-3-2. Writeback
-@@ -1002,6 +1003,34 @@ PAGE_SIZE multiple when read back.
- 	high limit is used and monitored properly, this limit's
- 	utility is limited to providing the final safety net.
- 
-+  memory.oom_kill_all
-+
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	If set, OOM killer will kill all processes attached to the cgroup
-+	if selected as an OOM victim.
-+
-+	Be default, the OOM killer respects the /proc/pid/oom_score_adj
-+	value -1000, and will never kill the task, unless oom_kill_all
-+	is set.
-+
-+  memory.oom_priority
-+
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	An integer number within the [-10000, 10000] range,
-+	which defines the order in which the OOM killer selects victim
-+	memory cgroups.
-+
-+	OOM killer prefers memory cgroups with larger priority if they
-+	are populated with eligible tasks.
-+
-+	The oom_priority value is compared within sibling cgroups.
-+
-+	The root cgroup has the oom_priority 0, which cannot be changed.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-@@ -1206,6 +1235,39 @@ POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
- belonging to the affected files to ensure correct memory ownership.
- 
- 
-+OOM Killer
-+~~~~~~~~~~~~~~~~~~~~~~~
-+
-+Cgroup v2 memory controller implements a cgroup-aware OOM killer.
-+It means that it treats cgroups as first class OOM entities.
-+
-+Under OOM conditions the memory controller tries to make the best
-+choice of a victim, hierarchically looking for the largest memory
-+consumer. By default, it will look for the biggest task in the
-+biggest leaf memory cgroup.
-+
-+By default, all memory cgroups have oom_priority 0, and OOM killer
-+will choice the cgroup with the largest memory consuption recursively
-+on each level. For non-root cgroups it's possible to change
-+the oom_priority, and it will cause the OOM killer to look
-+at the priority value first, and compare sizes only of memory
-+cgroups with equal priority.
-+
-+A user can change this behavior by enabling the per-cgroup
-+oom_kill_all option. If set, OOM killer will kill all processes
-+attached to the cgroup if selected as an OOM victim.
-+
-+Tasks in the root cgroup are treated as independent memory consumers,
-+and are compared with other memory consumers (leaf memory cgroups).
-+The root cgroup doesn't support the oom_kill_all feature.
-+
-+This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
-+the memory controller considers only cgroups belonging to the sub-tree
-+of the OOM'ing cgroup.
-+
-+If there are no cgroups with the enabled memory controller,
-+the OOM killer is using the "traditional" process-based approach.
-+
- IO
- --
- 
--- 
-2.13.5
+Yes it is...? We only respect the score if !oomable, which is set to
+oom_kill_all_tasks.
+
+> > > +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+> > > +{
+> > > +	struct mem_cgroup *iter, *parent;
+> > > +
+> > > +	for_each_mem_cgroup_tree(iter, root) {
+> > > +		if (memcg_has_children(iter)) {
+> > > +			iter->oom_score = 0;
+> > > +			continue;
+> > > +		}
+> > > +
+> > > +		iter->oom_score = oom_evaluate_memcg(iter, oc->nodemask);
+> > > +		if (iter->oom_score == -1) {
+> > 
+> > Please add comments to document the special returns. Maybe #defines
+> > would be clearer, too.
+> > 
+> > > +			oc->chosen_memcg = (void *)-1UL;
+> > > +			mem_cgroup_iter_break(root, iter);
+> > > +			return;
+> > > +		}
+> > > +
+> > > +		if (!iter->oom_score)
+> > > +			continue;
+> > 
+> > Same here.
+> > 
+> > Maybe a switch would be suitable to handle the abort/no-score cases. 
+> 
+> Not sure about switch/defines, but I've added several comment blocks
+> to describe possible return values, as well as their handling.
+> Hope, it will be enough.
+
+Sounds good.
+
+> > >  static int memory_events_show(struct seq_file *m, void *v)
+> > >  {
+> > >  	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+> > > @@ -5310,6 +5512,12 @@ static struct cftype memory_files[] = {
+> > >  		.write = memory_max_write,
+> > >  	},
+> > >  	{
+> > > +		.name = "oom_kill_all_tasks",
+> > > +		.flags = CFTYPE_NOT_ON_ROOT,
+> > > +		.seq_show = memory_oom_kill_all_tasks_show,
+> > > +		.write = memory_oom_kill_all_tasks_write,
+> > > +	},
+> > 
+> > This name is quite a mouthful and reminiscent of the awkward v1
+> > interface names. It doesn't really go well with the v2 names.
+> > 
+> > How about memory.oom_group?
+> 
+> I'd prefer to have something more obvious. I've renamed
+> memory.oom_kill_all_tasks to memory.oom_kill_all, which was earlier suggested
+> by Vladimir. Are you ok with it?
+
+No, we should be striving for short and sweet mnemonics that express a
+concept (oom applies to group, not member tasks) instead of underscore
+sentences that describe an implementation (upon oom, kill all tasks in
+the group).
+
+It's better to have newbies consult the documentation once than making
+everybody deal with long and cumbersome names for the rest of time.
+
+Like 'ls' being better than 'read_and_print_directory_contents'.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
