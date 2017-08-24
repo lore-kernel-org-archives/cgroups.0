@@ -1,86 +1,107 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
-Date: Wed, 23 Aug 2017 16:19:11 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1708231614310.68096@chino.kir.corp.google.com>
-References: <20170823165201.24086-1-guro@fb.com> <20170823165201.24086-3-guro@fb.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [v6 1/4] mm, oom: refactor the oom_kill_process() function
+Date: Thu, 24 Aug 2017 13:15:43 +0200
+Message-ID: <20170824111542.GE5943@dhcp22.suse.cz>
+References: <20170823165201.24086-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=tnkfytoQpdaDYGJ6f4S7P9281v+tZYF/0g9GlCUL4wQ=;
-        b=Tb8NYF6A9ptecR0toF4EWhQx+qJ0Qz5XS0xU7c8UeZDuVlON6qcBfof0Tc6rLkVNx0
-         9nx7woXVj/gUamufs4UAMat4ivuSr6M2Snj73yEFop3lGmqrKIIPN8Z5kmg+xLrD/ol3
-         i9PlMTs2e8Dgw3Njn8RmjvvxFH+eaiuFy4lkXBuc3Ju8+nDXgUx+uCNlyAezv1E79p+z
-         sLHuaqMSLR72VeHwRr1RNXQVzKc9dv5yjdnLm67kw7vnQAqL54zl6ijDjShY7fY3PU3h
-         qY+EfFcND9ZLBmHeksm0RGn+MPNeSPYLoenGlBxh3iYxMhSS92st+Wt9+oJuQHOoXBG/
-         3sGA==
-In-Reply-To: <20170823165201.24086-3-guro@fb.com>
+Content-Disposition: inline
+In-Reply-To: <20170823165201.24086-1-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 23 Aug 2017, Roman Gushchin wrote:
+This patch fails to apply on top of the mmotm tree. It seems the only
+reason is the missing
+http://lkml.kernel.org/r/20170810075019.28998-2-mhocko@kernel.org
 
-> Traditionally, the OOM killer is operating on a process level.
-> Under oom conditions, it finds a process with the highest oom score
-> and kills it.
+On Wed 23-08-17 17:51:57, Roman Gushchin wrote:
+> The oom_kill_process() function consists of two logical parts:
+> the first one is responsible for considering task's children as
+> a potential victim and printing the debug information.
+> The second half is responsible for sending SIGKILL to all
+> tasks sharing the mm struct with the given victim.
 > 
-> This behavior doesn't suit well the system with many running
-> containers:
-> 
-> 1) There is no fairness between containers. A small container with
-> few large processes will be chosen over a large one with huge
-> number of small processes.
-> 
-> 2) Containers often do not expect that some random process inside
-> will be killed. In many cases much safer behavior is to kill
-> all tasks in the container. Traditionally, this was implemented
-> in userspace, but doing it in the kernel has some advantages,
-> especially in a case of a system-wide OOM.
-> 
-> 3) Per-process oom_score_adj affects global OOM, so it's a breache
-> in the isolation.
-> 
-> To address these issues, cgroup-aware OOM killer is introduced.
-> 
-> Under OOM conditions, it tries to find the biggest memory consumer,
-> and free memory by killing corresponding task(s). The difference
-> the "traditional" OOM killer is that it can treat memory cgroups
-> as memory consumers as well as single processes.
-> 
-> By default, it will look for the biggest leaf cgroup, and kill
-> the largest task inside.
-> 
-> But a user can change this behavior by enabling the per-cgroup
-> oom_kill_all_tasks option. If set, it causes the OOM killer treat
-> the whole cgroup as an indivisible memory consumer. In case if it's
-> selected as on OOM victim, all belonging tasks will be killed.
-> 
+> This commit splits the oom_kill_process() function with
+> an intention to re-use the the second half: __oom_kill_process().
 
-I'm very happy with the rest of the patchset, but I feel that I must renew 
-my objection to memory.oom_kill_all_tasks being able to override the 
-setting of the admin of setting a process to be oom disabled.  From my 
-perspective, setting memory.oom_kill_all_tasks with an oom disabled 
-process attached that now becomes killable either (1) overrides the 
-CAP_SYS_RESOURCE oom disabled setting or (2) is lazy and doesn't modify 
-/proc/pid/oom_score_adj itself.
+Yes this makes some sense even without further changes.
 
-I'm not sure what is objectionable about allowing 
-memory.oom_kill_all_tasks to coexist with oom disabled processes.  Just 
-kill everything else so that the oom disabled process can report the oom 
-condition after notification, restart the task, etc.  If it's problematic, 
-then whomever is declaring everything must be killed shall also modify 
-/proc/pid/oom_score_adj of oom disabled processes.  If it doesn't have 
-permission to change that, then I think there's a much larger concern.
+> The cgroup-aware OOM killer will kill multiple tasks
+> belonging to the victim cgroup. We don't need to print
+> the debug information for the each task, as well as play
+> with task selection (considering task's children),
+> so we can't use the existing oom_kill_process().
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Cc: David Rientjes <rientjes@google.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: kernel-team@fb.com
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-mm@kvack.org
 
-> Tasks in the root cgroup are treated as independent memory consumers,
-> and are compared with other memory consumers (e.g. leaf cgroups).
-> The root cgroup doesn't support the oom_kill_all_tasks feature.
+I do agree with the patch there is just one thing to fix up.
+
+> ---
+>  mm/oom_kill.c | 123 +++++++++++++++++++++++++++++++---------------------------
+>  1 file changed, 65 insertions(+), 58 deletions(-)
+> 
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 53b44425ef35..5c29a3dd591b 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -817,67 +817,12 @@ static bool task_will_free_mem(struct task_struct *task)
+>  	return ret;
+>  }
+>  
+> -static void oom_kill_process(struct oom_control *oc, const char *message)
+> +static void __oom_kill_process(struct task_struct *victim)
+>  {
+[...]
+>  	p = find_lock_task_mm(victim);
+>  	if (!p) {
+>  		put_task_struct(victim);
+
+The context doesn't tell us but there is return right after this.
+
+	p = find_lock_task_mm(victim);
+	if (!p) {
+		put_task_struct(victim);
+		return;
+	} else if (victim != p) {
+		get_task_struct(p);
+		put_task_struct(victim);
+		victim = p;
+	}
+
+So we return with the reference dropped. Moreover we can change
+the victim, drop the reference on old one...
+
+> +static void oom_kill_process(struct oom_control *oc, const char *message)
+> +{
+[...]
+> +	__oom_kill_process(victim);
+> +	put_task_struct(victim);
+
+while we drop it here again and won't drop the changed one. If we race
+with the exiting task and there is no mm then we we double drop as well.
+So I think that __oom_kill_process should really drop the reference for
+all cases and oom_kill_process shouldn't care. Or if you absolutely
+need a guarantee that the victim won't go away after __oom_kill_process
+then you need to return the real victim and let the caller to deal with
+put_task_struct.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
