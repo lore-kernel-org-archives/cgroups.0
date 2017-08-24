@@ -1,137 +1,58 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
-Date: Thu, 24 Aug 2017 15:58:01 +0100
-Message-ID: <20170824145801.GA23457@castle.DHCP.thefacebook.com>
-References: <20170823165201.24086-1-guro@fb.com>
- <20170823165201.24086-3-guro@fb.com>
- <20170824114706.GG5943@dhcp22.suse.cz>
- <20170824122846.GA15916@castle.DHCP.thefacebook.com>
- <20170824125811.GK5943@dhcp22.suse.cz>
- <20170824135842.GA21167@castle.DHCP.thefacebook.com>
- <20170824141336.GP5943@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cpuset: Allow cpuset controller in default hierarchy
+Date: Thu, 24 Aug 2017 08:02:22 -0700
+Message-ID: <20170824150222.GQ491396@devbig577.frc2.facebook.com>
+References: <1503585611-13496-1-git-send-email-longman@redhat.com>
+ <20170824144322.GP491396@devbig577.frc2.facebook.com>
+ <863b01d0-e724-dab6-258e-d5980f985938@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=RHq3IoiC3syCi+gGEo7SiJ/3FM9p/gNphvxOPHZjkkM=;
- b=g+KLSyBcOOcAjqjUQXysOlMpVQjEMR61MIKttzx/PIyURCk0U6PC3DEG2ivd4GZtEFiU
- 3sOsPHfrNUHfR2mcq1/b0fu+4AjC2/Eo2cHibCCgCsOSDKPYWNvQYpEhqhPb6SPn4eyj
- h4jCNX+5fYloAnX/3BgmpdOtSwVmDn4ejkk= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=RHq3IoiC3syCi+gGEo7SiJ/3FM9p/gNphvxOPHZjkkM=;
- b=Kmm6Rwh0TirZZvvku2gu42HFyu52tCodmKfBqcrGn8fqRzvtGYoFGWYz1z/r2wuijJRzFNUC+8ElRXhK6FE6EVbIuNFy1P04rRuSbzF0NCO+pWyqfOmcQL/iAvxjQKIGMKMnG87oELqqQf6368rMBu4sD3wdCZTBmjkrcvB/u6Q=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=xSMRzXPlNvI+XBLYbZT9pZIt/lrURvvxQ/kI75gbZMA=;
+        b=XkRauj+PbsxegS8yJzsVBrPulLfSvfAlQqpCQdB+LU4sN13ozmOWYWscf9BLCFV51K
+         I0MnMqsz0ezbyzT6NHpt+E2idCvYwVZ396lZWTrnpbJ/hlrf/nSE9sor8S9DTIxkhMRV
+         0jwEV5R1R0Mlkc/Ra7wKKI2b5f3ECNNPvf826bdcpq0RWxpfIwukwVP30xUCmWKfuINK
+         G5uDQwHq+R/4NYo3CRYJWyAKdHW8viBc1IkCv4pqcfOrstPzEIe8hiYWR0Wh94yD4XIi
+         XalGQwj7yrX1qD7Ezq/WMW4DQOyat2x7i9m1UTZJit85FjMrvJe+DimYsieTE+iuUF3X
+         frpw==
 Content-Disposition: inline
-In-Reply-To: <20170824141336.GP5943@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <863b01d0-e724-dab6-258e-d5980f985938-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Aug 24, 2017 at 04:13:37PM +0200, Michal Hocko wrote:
-> On Thu 24-08-17 14:58:42, Roman Gushchin wrote:
-> > On Thu, Aug 24, 2017 at 02:58:11PM +0200, Michal Hocko wrote:
-> > > On Thu 24-08-17 13:28:46, Roman Gushchin wrote:
-> > > > Hi Michal!
-> > > > 
-> > > There is nothing like a "better victim". We are pretty much in a
-> > > catastrophic situation when we try to survive by killing a userspace.
-> > 
-> > Not necessary, it can be a cgroup OOM.
+Hello,
+
+On Thu, Aug 24, 2017 at 10:56:21AM -0400, Waiman Long wrote:
+> The main reason for sending out this patch is to figure out what exactly
+> is in your mind before enabling cpuset in v2.
 > 
-> memcg OOM is no different. The catastrophic is scoped to the specific
-> hierarchy but tasks in that hierarchy still fail to make a further
-> progress.
-> 
-> > > We try to kill the largest because that assumes that we return the
-> > > most memory from it. Now I do understand that you want to treat the
-> > > memcg as a single killable entity but I find it really questionable
-> > > to do a per-memcg metric and then do not treat it like that and kill
-> > > only a single task. Just imagine a single memcg with zillions of taks
-> > > each very small and you select it as the largest while a small taks
-> > > itself doesn't help to help to get us out of the OOM.
-> > 
-> > I don't think it's different from a non-containerized state: if you
-> > have a zillion of small tasks in the system, you'll meet the same issues.
-> 
-> Yes this is possible but usually you are comparing apples to apples so
-> you will kill the largest offender and then go on. To be honest I really
-> do hate how we try to kill a children rather than the selected victim
-> for the same reason.
+> From my point of view, the exclusive setting makes cpuset behave more
+> like a resource domain that a resource allocated to one cgroup won't be
+> available for another cgroup. So we can argue it both ways whether it
+> violates the basic hierarchy rules or not.
 
-I do hate it too.
+It's not even siblings interfering with other siblings.  The resource
+knobs belong to the parent, right?  So, the only thing it's doing is
+restricting the parent itself from creating certain configurations,
+which can be argued to be a feature but it's a really weird policy
+enforcement implemented in kernel.
 
-> 
-> > > > > I guess I have asked already and we haven't reached any consensus. I do
-> > > > > not like how you treat memcgs and tasks differently. Why cannot we have
-> > > > > a memcg score a sum of all its tasks?
-> > > > 
-> > > > It sounds like a more expensive way to get almost the same with less accuracy.
-> > > > Why it's better?
-> > > 
-> > > because then you are comparing apples to apples?
-> > 
-> > Well, I can say that I compare some number of pages against some other number
-> > of pages. And the relation between a page and memcg is more obvious, than a
-> > relation between a page and a process.
-> 
-> But you are comparing different accounting systems.
->  
-> > Both ways are not ideal, and sum of the processes is not ideal too.
-> > Especially, if you take oom_score_adj into account. Will you respect it?
-> 
-> Yes, and I do not see any reason why we shouldn't.
+> I will be in the Plumbers Conference next month and we can talk more
+> about this. My goal is to make cgroup v2 ready for prime time hopefully
+> by the end of the year.
 
-It makes things even more complicated.
-Right now task's oom_score can be in (~ -total_memory, ~ +2*total_memory) range,
-and it you're starting summing it, it can be multiplied by number of tasks...
-Weird.
-It also will be different in case of system and memcg-wide OOM.
+Sure, the only thing I think we need for cpuset is cutting down the
+interface to the minimal set which provides all the features to
+userspace.
 
-> 
-> > I've started actually with such approach, but then found it weird.
-> > 
-> > > Besides that you have
-> > > to check each task for over-killing anyway. So I do not see any
-> > > performance merits here.
-> > 
-> > It's an implementation detail, and we can hopefully get rid of it at some point.
-> 
-> Well, we might do some estimations and ignore oom scopes but I that
-> sounds really complicated and error prone. Unless we have anything like
-> that then I would start from tasks and build up the necessary to make a
-> decision at the higher level.
+Thanks.
 
-Seriously speaking, do you have an example, when summing per-process
-oom_score will work better?
-
-Especially, if we're talking about customizing oom_score calculation,
-it makes no sence to me. How you will sum process timestamps?
-
->  
-> > > > > How do you want to compare memcg score with tasks score?
-> > > > 
-> > > > I have to do it for tasks in root cgroups, but it shouldn't be a common case.
-> > > 
-> > > How come? I can easily imagine a setup where only some memcgs which
-> > > really do need a kill-all semantic while all others can live with single
-> > > task killed perfectly fine.
-> > 
-> > I mean taking a unified cgroup hierarchy into an account, there should not
-> > be lot of tasks in the root cgroup, if any.
-> 
-> Is that really the case? I would assume that memory controller would be
-> enabled only in those subtrees which really use the functionality and
-> the rest will be sitting in the root memcg. It might be the case if you
-> are running only containers but I am not really sure this is true in
-> general.
-
-Agree.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
