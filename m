@@ -1,12 +1,13 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v6 1/4] mm, oom: refactor the oom_kill_process() function
-Date: Thu, 24 Aug 2017 13:15:43 +0200
-Message-ID: <20170824111542.GE5943@dhcp22.suse.cz>
+Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
+Date: Thu, 24 Aug 2017 13:47:06 +0200
+Message-ID: <20170824114706.GG5943@dhcp22.suse.cz>
 References: <20170823165201.24086-1-guro@fb.com>
+ <20170823165201.24086-3-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20170823165201.24086-1-guro@fb.com>
+In-Reply-To: <20170823165201.24086-3-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -14,91 +15,110 @@ Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro@fb.com>
 Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch fails to apply on top of the mmotm tree. It seems the only
-reason is the missing
-http://lkml.kernel.org/r/20170810075019.28998-2-mhocko@kernel.org
+This doesn't apply on top of mmotm cleanly. You are missing
+http://lkml.kernel.org/r/20170807113839.16695-3-mhocko@kernel.org
 
-On Wed 23-08-17 17:51:57, Roman Gushchin wrote:
-> The oom_kill_process() function consists of two logical parts:
-> the first one is responsible for considering task's children as
-> a potential victim and printing the debug information.
-> The second half is responsible for sending SIGKILL to all
-> tasks sharing the mm struct with the given victim.
+On Wed 23-08-17 17:51:59, Roman Gushchin wrote:
+> Traditionally, the OOM killer is operating on a process level.
+> Under oom conditions, it finds a process with the highest oom score
+> and kills it.
 > 
-> This commit splits the oom_kill_process() function with
-> an intention to re-use the the second half: __oom_kill_process().
-
-Yes this makes some sense even without further changes.
-
-> The cgroup-aware OOM killer will kill multiple tasks
-> belonging to the victim cgroup. We don't need to print
-> the debug information for the each task, as well as play
-> with task selection (considering task's children),
-> so we can't use the existing oom_kill_process().
+> This behavior doesn't suit well the system with many running
+> containers:
 > 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Cc: David Rientjes <rientjes@google.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: kernel-team@fb.com
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-mm@kvack.org
-
-I do agree with the patch there is just one thing to fix up.
-
-> ---
->  mm/oom_kill.c | 123 +++++++++++++++++++++++++++++++---------------------------
->  1 file changed, 65 insertions(+), 58 deletions(-)
+> 1) There is no fairness between containers. A small container with
+> few large processes will be chosen over a large one with huge
+> number of small processes.
 > 
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index 53b44425ef35..5c29a3dd591b 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -817,67 +817,12 @@ static bool task_will_free_mem(struct task_struct *task)
->  	return ret;
->  }
->  
-> -static void oom_kill_process(struct oom_control *oc, const char *message)
-> +static void __oom_kill_process(struct task_struct *victim)
->  {
+> 2) Containers often do not expect that some random process inside
+> will be killed. In many cases much safer behavior is to kill
+> all tasks in the container. Traditionally, this was implemented
+> in userspace, but doing it in the kernel has some advantages,
+> especially in a case of a system-wide OOM.
+> 
+> 3) Per-process oom_score_adj affects global OOM, so it's a breache
+> in the isolation.
+
+Please explain more. I guess you mean that an untrusted memcg could hide
+itself from the global OOM killer by reducing the oom scores? Well you
+need CAP_SYS_RESOURCE do reduce the current oom_score{_adj} as David has
+already pointed out. I also agree that we absolutely must not kill an
+oom disabled task. I am pretty sure somebody is using OOM_SCORE_ADJ_MIN
+as a protection from an untrusted SIGKILL and inconsistent state as a
+result. Those applications simply shouldn't behave differently in the
+global and container contexts.
+
+If nothing else we have to skip OOM_SCORE_ADJ_MIN tasks during the kill.
+
+> To address these issues, cgroup-aware OOM killer is introduced.
+> 
+> Under OOM conditions, it tries to find the biggest memory consumer,
+> and free memory by killing corresponding task(s). The difference
+> the "traditional" OOM killer is that it can treat memory cgroups
+> as memory consumers as well as single processes.
+> 
+> By default, it will look for the biggest leaf cgroup, and kill
+> the largest task inside.
+
+Why? I believe that the semantic should be as simple as kill the largest
+oom killable entity. And the entity is either a process or a memcg which
+is marked that way. Why should we mix things and select a memcg to kill
+a process inside it? More on that below.
+
+> But a user can change this behavior by enabling the per-cgroup
+> oom_kill_all_tasks option. If set, it causes the OOM killer treat
+> the whole cgroup as an indivisible memory consumer. In case if it's
+> selected as on OOM victim, all belonging tasks will be killed.
+> 
+> Tasks in the root cgroup are treated as independent memory consumers,
+> and are compared with other memory consumers (e.g. leaf cgroups).
+> The root cgroup doesn't support the oom_kill_all_tasks feature.
+
+If anything you wouldn't have to treat the root memcg any special. It
+will be like any other memcg which doesn't have oom_kill_all_tasks...
+ 
 [...]
->  	p = find_lock_task_mm(victim);
->  	if (!p) {
->  		put_task_struct(victim);
 
-The context doesn't tell us but there is return right after this.
-
-	p = find_lock_task_mm(victim);
-	if (!p) {
-		put_task_struct(victim);
-		return;
-	} else if (victim != p) {
-		get_task_struct(p);
-		put_task_struct(victim);
-		victim = p;
-	}
-
-So we return with the reference dropped. Moreover we can change
-the victim, drop the reference on old one...
-
-> +static void oom_kill_process(struct oom_control *oc, const char *message)
+> +static long memcg_oom_badness(struct mem_cgroup *memcg,
+> +			      const nodemask_t *nodemask)
 > +{
-[...]
-> +	__oom_kill_process(victim);
-> +	put_task_struct(victim);
+> +	long points = 0;
+> +	int nid;
+> +	pg_data_t *pgdat;
+> +
+> +	for_each_node_state(nid, N_MEMORY) {
+> +		if (nodemask && !node_isset(nid, *nodemask))
+> +			continue;
+> +
+> +		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> +				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> +
+> +		pgdat = NODE_DATA(nid);
+> +		points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
+> +					    NR_SLAB_UNRECLAIMABLE);
+> +	}
+> +
+> +	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
+> +		(PAGE_SIZE / 1024);
+> +	points += memcg_page_state(memcg, MEMCG_SOCK);
+> +	points += memcg_page_state(memcg, MEMCG_SWAP);
+> +
+> +	return points;
 
-while we drop it here again and won't drop the changed one. If we race
-with the exiting task and there is no mm then we we double drop as well.
-So I think that __oom_kill_process should really drop the reference for
-all cases and oom_kill_process shouldn't care. Or if you absolutely
-need a guarantee that the victim won't go away after __oom_kill_process
-then you need to return the real victim and let the caller to deal with
-put_task_struct.
+I guess I have asked already and we haven't reached any consensus. I do
+not like how you treat memcgs and tasks differently. Why cannot we have
+a memcg score a sum of all its tasks? How do you want to compare memcg
+score with tasks score? This just smells like the outcome of a weird
+semantic that you try to select the largest group I have mentioned
+above.
+
+This is a rather fundamental concern and I believe we should find a
+consensus on it before going any further. I believe that users shouldn't
+see any difference in the OOM behavior when memcg v2 is used and there
+is no kill-all memcg. If there is such a memcg then we should treat only
+those specially. But you might have really strong usecases which haven't
+been presented or I've missed their importance.
+
 -- 
 Michal Hocko
 SUSE Labs
