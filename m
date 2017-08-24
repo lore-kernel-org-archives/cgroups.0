@@ -1,59 +1,176 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v6 3/4] mm, oom: introduce oom_priority for memory cgroups
-Date: Thu, 24 Aug 2017 14:10:54 +0200
-Message-ID: <20170824121054.GI5943@dhcp22.suse.cz>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
+Date: Thu, 24 Aug 2017 13:28:46 +0100
+Message-ID: <20170824122846.GA15916@castle.DHCP.thefacebook.com>
 References: <20170823165201.24086-1-guro@fb.com>
- <20170823165201.24086-4-guro@fb.com>
+ <20170823165201.24086-3-guro@fb.com>
+ <20170824114706.GG5943@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=FJ9rJ87zGfvdxwXEV1JuSium58Zoe8uWztbkT7GDoXY=;
+ b=rL6735Fe3w6icn2j8BrnCYxKWhSvbHJRJ0A93PGQNkqXQrqfc8xyzDPoulL8G0LiYJDJ
+ raygCxyTDHtVoVTCutBnM2VqGtPNl/bTrGsBpO6AcClJ41R7oW1DW/AJH/uz5uh2eCf2
+ nneJ6wdapLq/7JyBiSitqABoXO+2IWuNbKw= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=FJ9rJ87zGfvdxwXEV1JuSium58Zoe8uWztbkT7GDoXY=;
+ b=KYuLrrQZc+vLHG3Mbp7LyjxC/jAUlcHhA9ISRgq58yfUYcqYhc2ygv8mQ7En3azOKYcSFzb8LTZWBIcG3rgj6B9yJinM79begFRW7TR58SYSlVN1GM/yQSTQMj9xbQLa85yL/j+ixuG5XwnhLkrCN6JzmuYQftM8pXqtxDcERug=
 Content-Disposition: inline
-In-Reply-To: <20170823165201.24086-4-guro@fb.com>
+In-Reply-To: <20170824114706.GG5943@dhcp22.suse.cz>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
+To: Michal Hocko <mhocko@kernel.org>
 Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed 23-08-17 17:52:00, Roman Gushchin wrote:
-> Introduce a per-memory-cgroup oom_priority setting: an integer number
-> within the [-10000, 10000] range, which defines the order in which
-> the OOM killer selects victim memory cgroups.
+Hi Michal!
 
-Why do we need a range here?
+On Thu, Aug 24, 2017 at 01:47:06PM +0200, Michal Hocko wrote:
+> This doesn't apply on top of mmotm cleanly. You are missing
+> http://lkml.kernel.org/r/20170807113839.16695-3-mhocko@kernel.org
 
-> OOM killer prefers memory cgroups with larger priority if they are
-> populated with eligible tasks.
+I'll rebase. Thanks!
 
-So this is basically orthogonal to the score based selection and the
-real size is only the tiebreaker for same priorities? Could you describe
-the usecase? Becasuse to me this sounds like a separate oom killer
-strategy. I can imagine somebody might be interested (e.g. always kill
-the oldest memcgs...) but an explicit range wouldn't fly with such a
-usecase very well.
+> 
+> On Wed 23-08-17 17:51:59, Roman Gushchin wrote:
+> > Traditionally, the OOM killer is operating on a process level.
+> > Under oom conditions, it finds a process with the highest oom score
+> > and kills it.
+> > 
+> > This behavior doesn't suit well the system with many running
+> > containers:
+> > 
+> > 1) There is no fairness between containers. A small container with
+> > few large processes will be chosen over a large one with huge
+> > number of small processes.
+> > 
+> > 2) Containers often do not expect that some random process inside
+> > will be killed. In many cases much safer behavior is to kill
+> > all tasks in the container. Traditionally, this was implemented
+> > in userspace, but doing it in the kernel has some advantages,
+> > especially in a case of a system-wide OOM.
+> > 
+> > 3) Per-process oom_score_adj affects global OOM, so it's a breache
+> > in the isolation.
+> 
+> Please explain more. I guess you mean that an untrusted memcg could hide
+> itself from the global OOM killer by reducing the oom scores? Well you
+> need CAP_SYS_RESOURCE do reduce the current oom_score{_adj} as David has
+> already pointed out. I also agree that we absolutely must not kill an
+> oom disabled task. I am pretty sure somebody is using OOM_SCORE_ADJ_MIN
+> as a protection from an untrusted SIGKILL and inconsistent state as a
+> result. Those applications simply shouldn't behave differently in the
+> global and container contexts.
 
-That brings me back to my original suggestion. Wouldn't a "register an
-oom strategy" approach much better than blending things together and
-then have to wrap heads around different combinations of tunables?
+The main point of the kill_all option is to clean up the victim cgroup
+_completely_. If some tasks can survive, that means userspace should
+take care of them, look at the cgroup after oom, and kill the survivors
+manually.
 
-[...]
-> @@ -2760,7 +2761,12 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
->  			if (iter->oom_score == 0)
->  				continue;
+If you want to rely on OOM_SCORE_ADJ_MIN, don't set kill_all.
+I really don't get the usecase for this "kill all, except this and that".
+
+Also, it's really confusing to respect -1000 value, and completely ignore -999.
+
+I believe that any complex userspace OOM handling should use memory.high
+and handle memory shortage before an actual OOM.
+
+> 
+> If nothing else we have to skip OOM_SCORE_ADJ_MIN tasks during the kill.
+> 
+> > To address these issues, cgroup-aware OOM killer is introduced.
+> > 
+> > Under OOM conditions, it tries to find the biggest memory consumer,
+> > and free memory by killing corresponding task(s). The difference
+> > the "traditional" OOM killer is that it can treat memory cgroups
+> > as memory consumers as well as single processes.
+> > 
+> > By default, it will look for the biggest leaf cgroup, and kill
+> > the largest task inside.
+> 
+> Why? I believe that the semantic should be as simple as kill the largest
+> oom killable entity. And the entity is either a process or a memcg which
+> is marked that way.
+
+So, you still need to compare memcgroups and processes.
+
+In my case, it's more like an exception (only processes from root memcg,
+and only if there are no eligible cgroups with lower oom_priority).
+You suggest to rely on this comparison.
+
+> Why should we mix things and select a memcg to kill
+> a process inside it? More on that below.
+
+To have some sort of "fairness" in a containerized environemnt.
+Say, 1 cgroup with 1 big task, another cgroup with many smaller tasks.
+It's not necessary true, that first one is a better victim.
+
+> 
+> > But a user can change this behavior by enabling the per-cgroup
+> > oom_kill_all_tasks option. If set, it causes the OOM killer treat
+> > the whole cgroup as an indivisible memory consumer. In case if it's
+> > selected as on OOM victim, all belonging tasks will be killed.
+> > 
+> > Tasks in the root cgroup are treated as independent memory consumers,
+> > and are compared with other memory consumers (e.g. leaf cgroups).
+> > The root cgroup doesn't support the oom_kill_all_tasks feature.
+> 
+> If anything you wouldn't have to treat the root memcg any special. It
+> will be like any other memcg which doesn't have oom_kill_all_tasks...
 >  
-> -			if (iter->oom_score > score) {
-> +			if (iter->oom_priority > prio) {
-> +				memcg = iter;
-> +				prio = iter->oom_priority;
-> +				score = iter->oom_score;
-> +			} else if (iter->oom_priority == prio &&
-> +				   iter->oom_score > score) {
->  				memcg = iter;
->  				score = iter->oom_score;
->  			}
+> [...]
+> 
+> > +static long memcg_oom_badness(struct mem_cgroup *memcg,
+> > +			      const nodemask_t *nodemask)
+> > +{
+> > +	long points = 0;
+> > +	int nid;
+> > +	pg_data_t *pgdat;
+> > +
+> > +	for_each_node_state(nid, N_MEMORY) {
+> > +		if (nodemask && !node_isset(nid, *nodemask))
+> > +			continue;
+> > +
+> > +		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> > +				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> > +
+> > +		pgdat = NODE_DATA(nid);
+> > +		points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
+> > +					    NR_SLAB_UNRECLAIMABLE);
+> > +	}
+> > +
+> > +	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
+> > +		(PAGE_SIZE / 1024);
+> > +	points += memcg_page_state(memcg, MEMCG_SOCK);
+> > +	points += memcg_page_state(memcg, MEMCG_SWAP);
+> > +
+> > +	return points;
+> 
+> I guess I have asked already and we haven't reached any consensus. I do
+> not like how you treat memcgs and tasks differently. Why cannot we have
+> a memcg score a sum of all its tasks?
 
-Just a minor thing. Why do we even have to calculate oom_score when we
-use it only as a tiebreaker?
--- 
-Michal Hocko
-SUSE Labs
+It sounds like a more expensive way to get almost the same with less accuracy.
+Why it's better?
+
+> How do you want to compare memcg score with tasks score?
+
+I have to do it for tasks in root cgroups, but it shouldn't be a common case.
+
+> This just smells like the outcome of a weird
+> semantic that you try to select the largest group I have mentioned
+> above.
+> 
+> This is a rather fundamental concern and I believe we should find a
+> consensus on it before going any further. I believe that users shouldn't
+> see any difference in the OOM behavior when memcg v2 is used and there
+> is no kill-all memcg. If there is such a memcg then we should treat only
+> those specially. But you might have really strong usecases which haven't
+> been presented or I've missed their importance.
+
+I'll answer in the reply for your comments to the next commit.
+
+Thanks!
