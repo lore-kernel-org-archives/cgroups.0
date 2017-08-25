@@ -1,77 +1,89 @@
-From: Christian Brauner <christian.brauner@canonical.com>
-Subject: Re: [PATCH] cpuset: Allow cpuset controller in default hierarchy
-Date: Fri, 25 Aug 2017 00:58:58 +0200
-Message-ID: <20170824225857.ihxvcpgawb4fxda2@gmail.com>
-References: <1503585611-13496-1-git-send-email-longman@redhat.com>
- <20170824144322.GP491396@devbig577.frc2.facebook.com>
- <863b01d0-e724-dab6-258e-d5980f985938@redhat.com>
- <20170824150222.GQ491396@devbig577.frc2.facebook.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
+Date: Fri, 25 Aug 2017 10:14:03 +0200
+Message-ID: <20170825081402.GG25498@dhcp22.suse.cz>
+References: <20170823165201.24086-1-guro@fb.com>
+ <20170823165201.24086-3-guro@fb.com>
+ <20170824114706.GG5943@dhcp22.suse.cz>
+ <20170824122846.GA15916@castle.DHCP.thefacebook.com>
+ <20170824125811.GK5943@dhcp22.suse.cz>
+ <20170824135842.GA21167@castle.DHCP.thefacebook.com>
+ <20170824141336.GP5943@dhcp22.suse.cz>
+ <20170824145801.GA23457@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20170824150222.GQ491396@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170824145801.GA23457@castle.DHCP.thefacebook.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Tejun Heo <tj@kernel.org>
-Cc: Waiman Long <longman@redhat.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber@ubuntu.com>, Serge Hallyn <serge@hallyn.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 24, 2017 at 08:02:22AM -0700, Tejun Heo wrote:
-> Hello,
->=20
-> On Thu, Aug 24, 2017 at 10:56:21AM -0400, Waiman Long wrote:
-> > The main reason for sending out this patch is to figure out what exactly
-> > is in your mind before enabling cpuset in v2.
-> >=20
-> > From my point of view, the exclusive setting makes cpuset behave more
-> > like a resource domain that a resource allocated to one cgroup won't be
-> > available for another cgroup. So we can argue it both ways whether it
-> > violates the basic hierarchy rules or not.
->=20
-> It's not even siblings interfering with other siblings.  The resource
-> knobs belong to the parent, right?  So, the only thing it's doing is
-> restricting the parent itself from creating certain configurations,
-> which can be argued to be a feature but it's a really weird policy
-> enforcement implemented in kernel.
->=20
-> > I will be in the Plumbers Conference next month and we can talk more
-> > about this. My goal is to make cgroup v2 ready for prime time hopefully
-> > by the end of the year.
+On Thu 24-08-17 15:58:01, Roman Gushchin wrote:
+> On Thu, Aug 24, 2017 at 04:13:37PM +0200, Michal Hocko wrote:
+> > On Thu 24-08-17 14:58:42, Roman Gushchin wrote:
+[...]
+> > > Both ways are not ideal, and sum of the processes is not ideal too.
+> > > Especially, if you take oom_score_adj into account. Will you respect it?
+> > 
+> > Yes, and I do not see any reason why we shouldn't.
+> 
+> It makes things even more complicated.
+> Right now task's oom_score can be in (~ -total_memory, ~ +2*total_memory) range,
+> and it you're starting summing it, it can be multiplied by number of tasks...
+> Weird.
 
-Hi,
+oom_score_adj is just a normalized bias so if tasks inside oom will use
+it the whole memcg will get accumulated bias from all such tasks so it
+is not completely off. I agree that the more tasks use the bias the more
+biased the whole memcg will be. This might or might not be a problem.
+As you are trying to reimplement the existing oom killer implementation
+I do not think we cannot simply ignore API which people are used to.
 
-I've been following this thread and the cpuset controller being enabled on
-cgroup v2 is a really important step. As one of many container runtime
-maintainers this is obviously a big step for us with a lot of impact. It'd =
-be
-really nice if we could have a little little discussion just to see what the
-plan is like and what sort of features are going to expose to userspace. Th=
-is is
-all a very rapid development which is good. I'd just like to make sure to k=
-now
-what we're in for. Sort of like what we did last year at Plumber but less
-offical and without microphones and the overhead of having hundreds of peop=
-le in
-the room. :) Also it likely be way more relaxed given that a lot of the pro=
-blems
-dicussed back then seem to have been resolved.
+If this was a configurable oom policy then I could see how ignoring
+oom_score_adj is acceptable because it would be an explicit opt-in.
 
-CCing Serge and St=C3=A9phane. :)
+> It also will be different in case of system and memcg-wide OOM.
 
-Thanks!
-Christian
+Why, we do honor oom_score_adj for the memcg OOM now and in fact the
+kernel memcg OOM killer shouldn't be very much different from the global
+one except for the tasks scope.
 
->=20
-> Sure, the only thing I think we need for cpuset is cutting down the
-> interface to the minimal set which provides all the features to
-> userspace.
->=20
-> Thanks.
->=20
-> --=20
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > I've started actually with such approach, but then found it weird.
+> > > 
+> > > > Besides that you have
+> > > > to check each task for over-killing anyway. So I do not see any
+> > > > performance merits here.
+> > > 
+> > > It's an implementation detail, and we can hopefully get rid of it at some point.
+> > 
+> > Well, we might do some estimations and ignore oom scopes but I that
+> > sounds really complicated and error prone. Unless we have anything like
+> > that then I would start from tasks and build up the necessary to make a
+> > decision at the higher level.
+> 
+> Seriously speaking, do you have an example, when summing per-process
+> oom_score will work better?
+
+The primary reason I am pushing for this is to have the common iterator
+code path (which we have since Vladimir has unified memcg and global oom
+paths) and only parametrize the value calculation and victim selection.
+
+> Especially, if we're talking about customizing oom_score calculation,
+> it makes no sence to me. How you will sum process timestamps?
+
+Well, I meant you could sum oom_badness for your particular
+implementation. If we need some other policy then this wouldn't work and
+that's why I've said that I would like to preserve the current common
+code and only parametrize value calculation and victim selection...
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
