@@ -1,85 +1,106 @@
-From: Roman Gushchin <guro@fb.com>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
-Date: Fri, 25 Aug 2017 11:57:28 +0100
-Message-ID: <20170825105728.GA10438@castle.DHCP.thefacebook.com>
+Date: Fri, 25 Aug 2017 12:58:23 +0200
+Message-ID: <20170825105823.GA7769@dhcp22.suse.cz>
 References: <20170823165201.24086-1-guro@fb.com>
  <20170823165201.24086-3-guro@fb.com>
- <alpine.DEB.2.10.1708231614310.68096@chino.kir.corp.google.com>
+ <20170824114706.GG5943@dhcp22.suse.cz>
+ <20170824122846.GA15916@castle.DHCP.thefacebook.com>
+ <20170824125811.GK5943@dhcp22.suse.cz>
+ <20170824135842.GA21167@castle.DHCP.thefacebook.com>
+ <20170824141336.GP5943@dhcp22.suse.cz>
+ <20170824145801.GA23457@castle.DHCP.thefacebook.com>
+ <20170825081402.GG25498@dhcp22.suse.cz>
+ <20170825103951.GA3185@castle.dhcp.TheFacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=WCO31DAt1tOF2xKclc7XwHYkg31K/MR/qScsrCAgXSg=;
- b=CdfSQSLmoJJx4O22hQplmwXFEgUCDRQpsP3BUifAMyWfaQXTpS1t6wimV2ApHGtwHeDT
- sCN/nvVVXn62ubDW3T7licpFheMEYIGZRmK3aNLxeAsYxGdL/vEJjpFbgNzNTcVl1eK4
- 9xLmvCiLXV22EQkIIBf5tr9RNczigVMpELM= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=WCO31DAt1tOF2xKclc7XwHYkg31K/MR/qScsrCAgXSg=;
- b=Jl7Jhx2oTncIFJgH6LLWtrhhoY8Lmcybuh+ead/OMxDWOQp6JEAjVvnAWBoLamtIrbZaGxAF7woL5EUJ2TZS6W+56S9WTl4dqo/O3cBjR+XRz8+tKact8QRTRnLHSQj3tLzccydzEjOGHRriexRBi6jhsr7l3BKDrjIfS0KTR+E=
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1708231614310.68096@chino.kir.corp.google.com>
+In-Reply-To: <20170825103951.GA3185@castle.dhcp.TheFacebook.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi David!
-
-On Wed, Aug 23, 2017 at 04:19:11PM -0700, David Rientjes wrote:
-> On Wed, 23 Aug 2017, Roman Gushchin wrote:
+On Fri 25-08-17 11:39:51, Roman Gushchin wrote:
+> On Fri, Aug 25, 2017 at 10:14:03AM +0200, Michal Hocko wrote:
+> > On Thu 24-08-17 15:58:01, Roman Gushchin wrote:
+> > > On Thu, Aug 24, 2017 at 04:13:37PM +0200, Michal Hocko wrote:
+> > > > On Thu 24-08-17 14:58:42, Roman Gushchin wrote:
+> > [...]
+> > > > > Both ways are not ideal, and sum of the processes is not ideal too.
+> > > > > Especially, if you take oom_score_adj into account. Will you respect it?
+> > > > 
+> > > > Yes, and I do not see any reason why we shouldn't.
+> > > 
+> > > It makes things even more complicated.
+> > > Right now task's oom_score can be in (~ -total_memory, ~ +2*total_memory) range,
+> > > and it you're starting summing it, it can be multiplied by number of tasks...
+> > > Weird.
+> > 
+> > oom_score_adj is just a normalized bias so if tasks inside oom will use
+> > it the whole memcg will get accumulated bias from all such tasks so it
+> > is not completely off. I agree that the more tasks use the bias the more
+> > biased the whole memcg will be. This might or might not be a problem.
+> > As you are trying to reimplement the existing oom killer implementation
+> > I do not think we cannot simply ignore API which people are used to.
+> > 
+> > If this was a configurable oom policy then I could see how ignoring
+> > oom_score_adj is acceptable because it would be an explicit opt-in.
+> >
+> > > It also will be different in case of system and memcg-wide OOM.
+> > 
+> > Why, we do honor oom_score_adj for the memcg OOM now and in fact the
+> > kernel memcg OOM killer shouldn't be very much different from the global
+> > one except for the tasks scope.
 > 
-> > Traditionally, the OOM killer is operating on a process level.
-> > Under oom conditions, it finds a process with the highest oom score
-> > and kills it.
-> > 
-> > This behavior doesn't suit well the system with many running
-> > containers:
-> > 
-> > 1) There is no fairness between containers. A small container with
-> > few large processes will be chosen over a large one with huge
-> > number of small processes.
-> > 
-> > 2) Containers often do not expect that some random process inside
-> > will be killed. In many cases much safer behavior is to kill
-> > all tasks in the container. Traditionally, this was implemented
-> > in userspace, but doing it in the kernel has some advantages,
-> > especially in a case of a system-wide OOM.
-> > 
-> > 3) Per-process oom_score_adj affects global OOM, so it's a breache
-> > in the isolation.
-> > 
-> > To address these issues, cgroup-aware OOM killer is introduced.
-> > 
-> > Under OOM conditions, it tries to find the biggest memory consumer,
-> > and free memory by killing corresponding task(s). The difference
-> > the "traditional" OOM killer is that it can treat memory cgroups
-> > as memory consumers as well as single processes.
-> > 
-> > By default, it will look for the biggest leaf cgroup, and kill
-> > the largest task inside.
-> > 
-> > But a user can change this behavior by enabling the per-cgroup
-> > oom_kill_all_tasks option. If set, it causes the OOM killer treat
-> > the whole cgroup as an indivisible memory consumer. In case if it's
-> > selected as on OOM victim, all belonging tasks will be killed.
-> > 
+> Assume, you have two tasks (2Gb and 1Gb) in a cgroup with limit 3Gb.
+> The second task has oom_score_adj +100. Total memory is 64Gb, for example.
 > 
-> I'm very happy with the rest of the patchset, but I feel that I must renew 
-> my objection to memory.oom_kill_all_tasks being able to override the 
-> setting of the admin of setting a process to be oom disabled.  From my 
-> perspective, setting memory.oom_kill_all_tasks with an oom disabled 
-> process attached that now becomes killable either (1) overrides the 
-> CAP_SYS_RESOURCE oom disabled setting or (2) is lazy and doesn't modify 
-> /proc/pid/oom_score_adj itself.
+> I case of memcg-wide oom first task will be selected;
+> in case of system-wide OOM - the second.
+> 
+> Personally I don't like this, but it looks like we have to respect
+> oom_score_adj set to -1000, I'll alter my patch.
 
-Changed this in v7 (to be posted soon).
+I cannot say I would love how oom_score_adj works but it's been like
+that for a long time and people do rely on that. So we cannot simply
+change it under people feets.
+ 
+> > > > > I've started actually with such approach, but then found it weird.
+> > > > > 
+> > > > > > Besides that you have
+> > > > > > to check each task for over-killing anyway. So I do not see any
+> > > > > > performance merits here.
+> > > > > 
+> > > > > It's an implementation detail, and we can hopefully get rid of it at some point.
+> > > > 
+> > > > Well, we might do some estimations and ignore oom scopes but I that
+> > > > sounds really complicated and error prone. Unless we have anything like
+> > > > that then I would start from tasks and build up the necessary to make a
+> > > > decision at the higher level.
+> > > 
+> > > Seriously speaking, do you have an example, when summing per-process
+> > > oom_score will work better?
+> > 
+> > The primary reason I am pushing for this is to have the common iterator
+> > code path (which we have since Vladimir has unified memcg and global oom
+> > paths) and only parametrize the value calculation and victim selection.
+> 
+> I agree, but I'm not sure that we can (and have to) totally unify the way,
+> how oom_score is calculated for processes and cgroups.
+> 
+> But I'd like to see an unified oom_priority approach. This will allow
+> to define an OOM killing order in a clear way, and use size-based tiebreaking
+> for items of the same priority. Root-cgroup processes will be compared with
+> other memory consumers by oom_priority first and oom_score afterwards.
 
-Thanks!
-
-Roman
+This again changes the existing semantic so I really thing we should be
+careful and this all should be opt-in.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
