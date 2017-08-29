@@ -1,52 +1,111 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v6 3/4] mm, oom: introduce oom_priority for memory cgroups
-Date: Mon, 28 Aug 2017 13:54:20 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1708281353080.9719@chino.kir.corp.google.com>
-References: <20170823165201.24086-1-guro@fb.com> <20170823165201.24086-4-guro@fb.com> <20170824121054.GI5943@dhcp22.suse.cz> <20170824125113.GB15916@castle.DHCP.thefacebook.com> <20170824134859.GO5943@dhcp22.suse.cz>
- <20170824141108.GB21167@castle.DHCP.thefacebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH] mm: memcontrol: use per-cpu stocks for socket memory uncharging
+Date: Tue, 29 Aug 2017 11:01:50 +0100
+Message-ID: <20170829100150.4580-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=eRZeMWvgdlGguLDp7qYS2ekdcxpw5VvmwxwGxP2us0s=;
-        b=utbMIGj0WjmlWlA4YypZzzID/78fjadL0baCu6qfcpFCIvVkjBVrAzPRcu1UPDEQdf
-         eFnz6oGd7Jg2Mb/lh7eUytLl0q8+KorbXVjxE76aHJmbkxHY5u5wruNB/NZLJv3atdf3
-         HOR5+FN3Y+hge1Ryt2rJraVejBjdiNFAhFi9tC6lZ28Zq1mHCUa+Zp+sSo5SgTSoDzvj
-         aVXeudnv8GhukCyHaD89tBj50QCgcn8znQ5PNeySnZ8X5K5Fl9FqeTrkfellp9bu4iig
-         COoOoeg5m/hIsz0FA7an/5D5g48GjTg/34rQRPdZFYurjVB4990qD6GaMECbq3Ter+8h
-         myZA==
-In-Reply-To: <20170824141108.GB21167@castle.DHCP.thefacebook.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=0ubsSXHLgUaoLHC1YlQQ6Bsx5Gwrm68HXZEDviFa9+8=;
+ b=NIURck2EdG4aOSJGk1oHiQnMJ0CsDHcozrw4GBcsCIbfSuZzL7HPokfUxDRwYAVH3RaA
+ N6EMMKpiY1Ph4OE/m6p4EizJlZ/WCB+jLyFAZOSsXPl6GEuQG9C745MyDSSzF4fR1sLR
+ 1Ls3IUSuFUPKudfuhM3KyZe2wUyFoXwvt0A= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=0ubsSXHLgUaoLHC1YlQQ6Bsx5Gwrm68HXZEDviFa9+8=;
+ b=dFMI0FuRc6fwlkHILDVQJmvskMfwPwVCVx9WA1XcQ6DYH9hgNJqpOkNyf0VvzDKYuGT8Fxz8lYGp5nmOChZZfD+VkWuGWlADy/OuAVgggz9vF8h7QymI3/EXnfJltuX2iPsswA+OAPosMyIBiT77NcasDK8N9PlPtRhRW+qvW54=
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org
 
-On Thu, 24 Aug 2017, Roman Gushchin wrote:
+We've noticed a quite sensible performance overhead on some hosts
+with significant network traffic when socket memory accounting
+is enabled.
 
-> > > Do you have an example, which can't be effectively handled by an approach
-> > > I'm suggesting?
-> > 
-> > No, I do not have any which would be _explicitly_ requested but I do
-> > envision new requirements will emerge. The most probable one would be
-> > kill the youngest container because that would imply the least amount of
-> > work wasted.
-> 
-> I agree, this a nice feature. It can be implemented in userspace
-> by setting oom_priority.
-> 
+Perf top shows that socket memory uncharging path is hot:
+  2.13%  [kernel]                [k] page_counter_cancel
+  1.14%  [kernel]                [k] __sk_mem_reduce_allocated
+  1.14%  [kernel]                [k] _raw_spin_lock
+  0.87%  [kernel]                [k] _raw_spin_lock_irqsave
+  0.84%  [kernel]                [k] tcp_ack
+  0.84%  [kernel]                [k] ixgbe_poll
+  0.83%  < workload >
+  0.82%  [kernel]                [k] enqueue_entity
+  0.68%  [kernel]                [k] __fget
+  0.68%  [kernel]                [k] tcp_delack_timer_handler
+  0.67%  [kernel]                [k] __schedule
+  0.60%  < workload >
+  0.59%  [kernel]                [k] __inet6_lookup_established
+  0.55%  [kernel]                [k] __switch_to
+  0.55%  [kernel]                [k] menu_select
+  0.54%  libc-2.20.so            [.] __memcpy_avx_unaligned
 
-Yes, the "kill the newest memory cgroup as a tiebreak" is not strictly 
-required in the kernel and no cgroup should depend on this implementation 
-detail to avoid being killed if it shares the same memory.oom_priority as 
-another cgroup.  As you mention, it can be effectively implemented by 
-userspace itself.
+To address this issue, the existing per-cpu stock infrastructure
+can be used.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+refill_stock() can be called from mem_cgroup_uncharge_skmem()
+to move charge to a per-cpu stock instead of calling atomic
+page_counter_uncharge().
+
+To prevent the uncontrolled growth of per-cpu stocks,
+refill_stock() will explicitly drain the cached charge,
+if the cached value exceeds CHARGE_BATCH.
+
+This allows significantly optimize the load:
+  1.21%  [kernel]                [k] _raw_spin_lock
+  1.01%  [kernel]                [k] ixgbe_poll
+  0.92%  [kernel]                [k] _raw_spin_lock_irqsave
+  0.90%  [kernel]                [k] enqueue_entity
+  0.86%  [kernel]                [k] tcp_ack
+  0.85%  < workload >
+  0.74%  perf-11120.map          [.] 0x000000000061bf24
+  0.73%  [kernel]                [k] __schedule
+  0.67%  [kernel]                [k] __fget
+  0.63%  [kernel]                [k] __inet6_lookup_established
+  0.62%  [kernel]                [k] menu_select
+  0.59%  < workload >
+  0.59%  [kernel]                [k] __switch_to
+  0.57%  libc-2.20.so            [.] __memcpy_avx_unaligned
+
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: cgroups@vger.kernel.org
+Cc: kernel-team@fb.com
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+---
+ mm/memcontrol.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b9cf3cf4a3d0..a69d23082abf 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1792,6 +1792,9 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	}
+ 	stock->nr_pages += nr_pages;
+ 
++	if (stock->nr_pages > CHARGE_BATCH)
++		drain_stock(stock);
++
+ 	local_irq_restore(flags);
+ }
+ 
+@@ -5886,8 +5889,7 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 
+ 	this_cpu_sub(memcg->stat->count[MEMCG_SOCK], nr_pages);
+ 
+-	page_counter_uncharge(&memcg->memory, nr_pages);
+-	css_put_many(&memcg->css, nr_pages);
++	refill_stock(memcg, nr_pages);
+ }
+ 
+ static int __init cgroup_memory(char *s)
+-- 
+2.13.5
+
