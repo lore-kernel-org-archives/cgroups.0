@@ -1,65 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup fixes for v4.13-rc7
-Date: Tue, 29 Aug 2017 11:09:08 -0700
-Message-ID: <20170829180908.GU491396@devbig577.frc2.facebook.com>
+Subject: Re: [PATCH v2 3/3] cgroup: Implement cgroup2 basic CPU usage
+ accounting
+Date: Tue, 29 Aug 2017 11:10:04 -0700
+Message-ID: <20170829181004.GV491396@devbig577.frc2.facebook.com>
+References: <20170811163754.3939102-1-tj@kernel.org>
+ <20170811163754.3939102-4-tj@kernel.org>
+ <20170829174325.GS491396@devbig577.frc2.facebook.com>
+ <73f65285-867d-8ec0-d81a-000a2d16f611@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=9n7blQd8VpfmvvmzAigXToK7Hc8MS3DiYCyMYJus5/U=;
-        b=T5rtnzXDITHsv4n3uJDjL1ye2SMtZ1lV//Y+atcaImpSLBqJmGyAgEu8VPWmHTbV7h
-         euyYrWHZVRE9tLz4gXuC6+Kxg6RsMVZdCUSR+kFnQmyyalmWX6Y1PAoujpDLqyIdjbdF
-         GpZu8CbrClB0YW2LcMq+fjPgTm4kf8aY0JfkGpP4JrHH1BMkZViKXOcuNWpR8srcsHpO
-         QLPTbW2yqByL66vEluuFXvfTqz2WEw+gFea6XO1R7vcy72TcpzoeJTW5Q3gpY9HjJMXd
-         +B9NKKNS70Ff3rKV0fdb3vetzjUzjVU08wUOdRqwQkBtIIMnE+TyWSgEFLniYqrw6jcL
-         elMg==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=adoDBIt2h8uzASMOn7wXDWtNEd3V2DOhcYoksutXUEU=;
+        b=BBNpgBhz1l+RZfxjUS3ZRIKid1iD25vgt55lsDDH1hBsgY9i/eqICUbFWN0rgLI+pD
+         //8RiwU0iFGRStwlqCV4Vsu+lIkIGA/ID3qh6tW5Z38tcTPwok1G2yyjXtG64DJAzmfy
+         UGLn/BdTIbJHkbOlDkimjgtZtItq7mk/GnhNdAYhys0stXstsgzhW1MK3Ck0rzIWzF5x
+         NYb/k15V/DLOhivm8N7t0kXN+2eeB8fvQnaFhRzWipNO/i8bhGes4aa9x6koVPqSVMIk
+         ODEpeUPsaVctWDnC9qFCSeJn9IDcrNEa5Rs5Qpcn8UHkyh6XGQJaUzN+iR6AbF9JD43a
+         pOrg==
 Content-Disposition: inline
+In-Reply-To: <73f65285-867d-8ec0-d81a-000a2d16f611@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>
+To: Waiman Long <longman@redhat.com>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
 
-Hello,
+On Tue, Aug 29, 2017 at 02:06:24PM -0400, Waiman Long wrote:
+> > Cc: Waiman Long <waiman.long@hpe.com>
+> 
+> I just noticed that you have used my obsoleted email address in the cc
+> line. Would you mind changing it to the one that I am currently using?
 
-A late but obvious fix for cgroup.  I broke "cpuset.memory_pressure"
-file a long time ago (v4.4) by accidentally deleting its file index,
-which made it a duplicate of the "cpuset.memory_migrate" file.
-Spotted and fixed by Waiman.
+Ah, my apologies.  Will update.
 
 Thanks.
 
-The following changes since commit 3c74541777302eec43a0d1327c4d58b8659a776b:
-
-  cgroup: fix error return value from cgroup_subtree_control() (2017-07-23 08:15:17 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.13-fixes
-
-for you to fetch changes up to 1c08c22c874ac88799cab1f78c40f46110274915:
-
-  cpuset: Fix incorrect memory_pressure control file mapping (2017-08-24 09:42:28 -0700)
-
-----------------------------------------------------------------
-Waiman Long (1):
-      cpuset: Fix incorrect memory_pressure control file mapping
-
- kernel/cgroup/cpuset.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index ca8376e..8362bac 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1891,6 +1891,7 @@ static struct cftype files[] = {
- 	{
- 		.name = "memory_pressure",
- 		.read_u64 = cpuset_read_u64,
-+		.private = FILE_MEMORY_PRESSURE,
- 	},
- 
- 	{
+-- 
+tejun
