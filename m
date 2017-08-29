@@ -1,111 +1,121 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH] mm: memcontrol: use per-cpu stocks for socket memory uncharging
-Date: Tue, 29 Aug 2017 11:01:50 +0100
-Message-ID: <20170829100150.4580-1-guro@fb.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 3/3] cgroup: Implement cgroup2 basic CPU usage accounting
+Date: Tue, 29 Aug 2017 16:32:52 +0200
+Message-ID: <20170829143252.6zoes63bwfflukjy@hirez.programming.kicks-ass.net>
+References: <20170811163754.3939102-1-tj@kernel.org>
+ <20170811163754.3939102-4-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=facebook;
- bh=0ubsSXHLgUaoLHC1YlQQ6Bsx5Gwrm68HXZEDviFa9+8=;
- b=NIURck2EdG4aOSJGk1oHiQnMJ0CsDHcozrw4GBcsCIbfSuZzL7HPokfUxDRwYAVH3RaA
- N6EMMKpiY1Ph4OE/m6p4EizJlZ/WCB+jLyFAZOSsXPl6GEuQG9C745MyDSSzF4fR1sLR
- 1Ls3IUSuFUPKudfuhM3KyZe2wUyFoXwvt0A= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=0ubsSXHLgUaoLHC1YlQQ6Bsx5Gwrm68HXZEDviFa9+8=;
- b=dFMI0FuRc6fwlkHILDVQJmvskMfwPwVCVx9WA1XcQ6DYH9hgNJqpOkNyf0VvzDKYuGT8Fxz8lYGp5nmOChZZfD+VkWuGWlADy/OuAVgggz9vF8h7QymI3/EXnfJltuX2iPsswA+OAPosMyIBiT77NcasDK8N9PlPtRhRW+qvW54=
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=aHuroL3aHgfj/elwHefbFSv+2OvVsyPPWLNUZMrvbSI=; b=bs9Oqnwur4LO2H/S95RWFRRG5
+        WsCeOS2tu5FvRLe48XlaMK1YApsA3YmMgY+YAGLRAPkzIFOOure1GnUvRHwchA+aesPuw1U2HsqYF
+        E6bd/VZzKZ2PeBpCLwNjAkXTJjgGgjDooO87ZBFUIJ8IrMhgYW/UvCHwkZX11HfprzXpBnz+/9vK+
+        YTNsl1P2rxKw+46N772ngnhse2dpncbB0skJomcecD6618+eZfCREFYwFH40HKBOfPkMuV2FS5m6o
+        kL7n6uoQ3IUEBQPU9gY9QbmfKxJsuIvWdb278NxLv9oIoUhAGwTQPVZhwdT3y0KSgCPCh+gPcmQCB
+      
+Content-Disposition: inline
+In-Reply-To: <20170811163754.3939102-4-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
 
-We've noticed a quite sensible performance overhead on some hosts
-with significant network traffic when socket memory accounting
-is enabled.
 
-Perf top shows that socket memory uncharging path is hot:
-  2.13%  [kernel]                [k] page_counter_cancel
-  1.14%  [kernel]                [k] __sk_mem_reduce_allocated
-  1.14%  [kernel]                [k] _raw_spin_lock
-  0.87%  [kernel]                [k] _raw_spin_lock_irqsave
-  0.84%  [kernel]                [k] tcp_ack
-  0.84%  [kernel]                [k] ixgbe_poll
-  0.83%  < workload >
-  0.82%  [kernel]                [k] enqueue_entity
-  0.68%  [kernel]                [k] __fget
-  0.68%  [kernel]                [k] tcp_delack_timer_handler
-  0.67%  [kernel]                [k] __schedule
-  0.60%  < workload >
-  0.59%  [kernel]                [k] __inet6_lookup_established
-  0.55%  [kernel]                [k] __switch_to
-  0.55%  [kernel]                [k] menu_select
-  0.54%  libc-2.20.so            [.] __memcpy_avx_unaligned
+So I mostly like. On accounting it only adds to the immediate cgroup (if
+it has a parent, aka !root).
 
-To address this issue, the existing per-cpu stock infrastructure
-can be used.
+On update it does a DFS of all sub-groups and propagates the deltas up
+to the requested group.
 
-refill_stock() can be called from mem_cgroup_uncharge_skmem()
-to move charge to a per-cpu stock instead of calling atomic
-page_counter_uncharge().
+On Fri, Aug 11, 2017 at 09:37:54AM -0700, Tejun Heo wrote:
+> +/**
+> + * cgroup_cpu_stat_updated - keep track of updated cpu_stat
+> + * @cgrp: target cgroup
+> + * @cpu: cpu on which cpu_stat was updated
+> + *
+> + * @cgrp's cpu_stat on @cpu was updated.  Put it on the parent's matching
+> + * cpu_stat->updated_children list.
+> + */
+> +static void cgroup_cpu_stat_updated(struct cgroup *cgrp, int cpu)
+> +{
+> +	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_cpu_stat_lock, cpu);
+> +	struct cgroup *parent;
+> +	unsigned long flags;
+> +
+> +	/*
+> +	 * Speculative already-on-list test.  This may race leading to
+> +	 * temporary inaccuracies, which is fine.
+> +	 *
+> +	 * Because @parent's updated_children is terminated with @parent
+> +	 * instead of NULL, we can tell whether @cgrp is on the list by
+> +	 * testing the next pointer for NULL.
+> +	 */
+> +	if (cgroup_cpu_stat(cgrp, cpu)->updated_next)
+> +		return;
+> +
+> +	raw_spin_lock_irqsave(cpu_lock, flags);
+> +
+> +	/* put @cgrp and all ancestors on the corresponding updated lists */
+> +	for (parent = cgroup_parent(cgrp); parent;
+> +	     cgrp = parent, parent = cgroup_parent(cgrp)) {
+> +		struct cgroup_cpu_stat *cstat = cgroup_cpu_stat(cgrp, cpu);
+> +		struct cgroup_cpu_stat *pcstat = cgroup_cpu_stat(parent, cpu);
+> +
+> +		/*
+> +		 * Both additions and removals are bottom-up.  If a cgroup
+> +		 * is already in the tree, all ancestors are.
+> +		 */
+> +		if (cstat->updated_next)
+> +			break;
+> +
+> +		cstat->updated_next = pcstat->updated_children;
+> +		pcstat->updated_children = cgrp;
+> +	}
+> +
+> +	raw_spin_unlock_irqrestore(cpu_lock, flags);
+> +}
 
-To prevent the uncontrolled growth of per-cpu stocks,
-refill_stock() will explicitly drain the cached charge,
-if the cached value exceeds CHARGE_BATCH.
+> +static struct cgroup_cpu_stat *cgroup_cpu_stat_account_begin(struct cgroup *cgrp)
+> +{
+> +	struct cgroup_cpu_stat *cstat;
+> +
+> +	cstat = get_cpu_ptr(cgrp->cpu_stat);
+> +	u64_stats_update_begin(&cstat->sync);
+> +	return cstat;
+> +}
+> +
+> +static void cgroup_cpu_stat_account_end(struct cgroup *cgrp,
+> +					struct cgroup_cpu_stat *cstat)
+> +{
+> +	u64_stats_update_end(&cstat->sync);
+> +	cgroup_cpu_stat_updated(cgrp, smp_processor_id());
+> +	put_cpu_ptr(cstat);
+> +}
+> +
+> +void __cgroup_account_cputime(struct cgroup *cgrp, u64 delta_exec)
+> +{
+> +	struct cgroup_cpu_stat *cstat;
+> +
+> +	cstat = cgroup_cpu_stat_account_begin(cgrp);
+> +	cstat->cputime.sum_exec_runtime += delta_exec;
+> +	cgroup_cpu_stat_account_end(cgrp, cstat);
+> +}
 
-This allows significantly optimize the load:
-  1.21%  [kernel]                [k] _raw_spin_lock
-  1.01%  [kernel]                [k] ixgbe_poll
-  0.92%  [kernel]                [k] _raw_spin_lock_irqsave
-  0.90%  [kernel]                [k] enqueue_entity
-  0.86%  [kernel]                [k] tcp_ack
-  0.85%  < workload >
-  0.74%  perf-11120.map          [.] 0x000000000061bf24
-  0.73%  [kernel]                [k] __schedule
-  0.67%  [kernel]                [k] __fget
-  0.63%  [kernel]                [k] __inet6_lookup_established
-  0.62%  [kernel]                [k] menu_select
-  0.59%  < workload >
-  0.59%  [kernel]                [k] __switch_to
-  0.57%  libc-2.20.so            [.] __memcpy_avx_unaligned
+What I don't get is why you need cgroup_cpu_stat_updated(). That is, I
+see you use it to keep the keep the DFS 'stack' up-to-date, but what I
+don't see is why you'd need that.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: cgroups@vger.kernel.org
-Cc: kernel-team@fb.com
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
----
- mm/memcontrol.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Have a look at walk_tg_tree_from(), I think we can do something like
+that on struct cgroup_subsys_state, it has that children list and the
+parent pointer.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b9cf3cf4a3d0..a69d23082abf 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1792,6 +1792,9 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	}
- 	stock->nr_pages += nr_pages;
- 
-+	if (stock->nr_pages > CHARGE_BATCH)
-+		drain_stock(stock);
-+
- 	local_irq_restore(flags);
- }
- 
-@@ -5886,8 +5889,7 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- 
- 	this_cpu_sub(memcg->stat->count[MEMCG_SOCK], nr_pages);
- 
--	page_counter_uncharge(&memcg->memory, nr_pages);
--	css_put_many(&memcg->css, nr_pages);
-+	refill_stock(memcg, nr_pages);
- }
- 
- static int __init cgroup_memory(char *s)
--- 
-2.13.5
+And yes, walk_tg_tree_from() is tricky, it always takes a fair while to
+remember how it works.
 
