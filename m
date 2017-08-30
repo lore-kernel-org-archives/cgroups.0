@@ -1,8 +1,8 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 Subject: Re: [PATCH] mm: memcontrol: use per-cpu stocks for socket memory
  uncharging
-Date: Wed, 30 Aug 2017 11:55:24 +0100
-Message-ID: <20170830105524.GA2852@castle.dhcp.TheFacebook.com>
+Date: Wed, 30 Aug 2017 11:57:19 +0100
+Message-ID: <20170830105719.GB2852@castle.dhcp.TheFacebook.com>
 References: <20170829100150.4580-1-guro@fb.com>
  <20170829192621.GA5447@cmpxchg.org>
 Mime-Version: 1.0
@@ -10,21 +10,21 @@ Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=NBkUNY16uNSUXEyC00g5pjnAYKnpF+kOqCPXA4dTBU4=;
- b=jSDpf8l9/sEibonfkrsntiqWlFEcH4+W40rqj9NpmVZQ7nh3dsq618Q805OZlIgfXMvp
- Yhbfe4ajrH8i4V0unMu6J96UIkKFI1vfmxRKImlCQC8ZYoPriFndHc5xouTsjd2hCTnR
- /t5Saop4OzurUIWjlJmVoQXWJKxy8o3HQoI= 
+ in-reply-to; s=facebook; bh=CmlVoInciiMzK0r0dqOeBS0lkmAHM6WzBomWgaCShOU=;
+ b=hh2HAjj0aI0bg1QfjfnVe5CaMl2dDvz/aXF43jAoUX3a+UHg7rNl4pJgoFpQxTS0WCio
+ tqmGAhkOicei8jBdZ4OhelS8BRExH4tzN6XNnXNQm35sttNOBkEUJXguOUJodg0/tYf+
+ mj8Fs0i6UyNtI8iB/NdY6G+HAUyaxMBpVxU= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=NBkUNY16uNSUXEyC00g5pjnAYKnpF+kOqCPXA4dTBU4=;
- b=QGF8YxVBkJx7j1m5w8HnpwVBeZbQY6Iot3WvaXEFGAxXLSzpcGo/uyh1/u9RhH9J+3T1FYvTagMUpy1TsThM32DOALys+sBoOeCTRO3gQEoHf5GmcLzHpWY/tBuexmDVsF/w/RgMYxmyTUT8W0Nwtvf3G/PRLrBDysTkDQeXF38=
+ bh=CmlVoInciiMzK0r0dqOeBS0lkmAHM6WzBomWgaCShOU=;
+ b=bWCI+/DTvrr6itsNJapXjFvfu/snD06YfYAX6Y54PM7clKoZZeRi0pZWKyAvGWYmWf4YNGH49fxdv92OWBc+SBYgtFzhnG+3l/xO6J+z6DYRsLPNp1cS0zgmfn77DpWW4FFgIb47vRpks9FG1MaN5SDPwVdv+/TsTAWKVRvYc3E=
 Content-Disposition: inline
 In-Reply-To: <20170829192621.GA5447-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 On Tue, Aug 29, 2017 at 03:26:21PM -0400, Johannes Weiner wrote:
 > On Tue, Aug 29, 2017 at 11:01:50AM +0100, Roman Gushchin wrote:
@@ -89,13 +89,11 @@ On Tue, Aug 29, 2017 at 03:26:21PM -0400, Johannes Weiner wrote:
 > Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > 
 > Neat!
-> 
-> As far as other types of pages go: page cache and anon are already
-> batched pretty well, but I think kmem might benefit from this
-> too. Have you considered using the stock in memcg_kmem_uncharge()?
 
-Good idea!
-I'll try to find an appropriate testcase and check if it really
-brings any benefits. If so, I'll master a patch.
+Hi, Andrew!
 
-Thanks!
+Can you, please, pull this patch?
+
+Thank you!
+
+Roman
