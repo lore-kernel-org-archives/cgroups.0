@@ -1,112 +1,56 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol: use per-cpu stocks for socket memory
- uncharging
-Date: Wed, 30 Aug 2017 16:24:18 +0200
-Message-ID: <20170830142418.x2nnbljsczfjrdel@dhcp22.suse.cz>
-References: <20170829100150.4580-1-guro@fb.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
+Date: Wed, 30 Aug 2017 13:56:22 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1708301349130.79465@chino.kir.corp.google.com>
+References: <20170823165201.24086-1-guro@fb.com> <20170823165201.24086-3-guro@fb.com> <20170824114706.GG5943@dhcp22.suse.cz> <20170824122846.GA15916@castle.DHCP.thefacebook.com> <20170824125811.GK5943@dhcp22.suse.cz> <20170824135842.GA21167@castle.DHCP.thefacebook.com>
+ <20170824141336.GP5943@dhcp22.suse.cz> <20170824145801.GA23457@castle.DHCP.thefacebook.com> <20170825081402.GG25498@dhcp22.suse.cz> <20170830112240.GA4751@castle.dhcp.TheFacebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170829100150.4580-1-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=2nBlU/gqSCfzi8ScMWfy1X1LghUSTcSFc/vibJje3Sw=;
+        b=YBqt0WMhBUEA4su9vyZnJk4URGSig9DQB69YB+9F6mULpBezL81RPafmrXg7VcrOXu
+         Xo3FdCy451ZQeCeW3QmQNKtBFmdZcIQGCJQSoOCvv9TmZYpqfD7zKPwCZB8MDSNts50w
+         9ePr56vK6PnqnwDNKGJMiVsiyS1cayy8OUImAxytY7GrdgVaT3qEnq3rxLUGuaB7lMAj
+         MCPp/szjknCeo7PYL27zV4u0eUdMsuJTJjXyhwPuC88wtp9DwQ1UzpyXs/hEg1OOqMS3
+         LX9XYelom7NtcXA5ezgSc8VO1BE6KSlzlBZ/juhkPpMfyDFw2dGabPrsNgjcSoG+JEEM
+         pCsA==
+In-Reply-To: <20170830112240.GA4751@castle.dhcp.TheFacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 29-08-17 11:01:50, Roman Gushchin wrote:
-> We've noticed a quite sensible performance overhead on some hosts
-> with significant network traffic when socket memory accounting
-> is enabled.
-> 
-> Perf top shows that socket memory uncharging path is hot:
->   2.13%  [kernel]                [k] page_counter_cancel
->   1.14%  [kernel]                [k] __sk_mem_reduce_allocated
->   1.14%  [kernel]                [k] _raw_spin_lock
->   0.87%  [kernel]                [k] _raw_spin_lock_irqsave
->   0.84%  [kernel]                [k] tcp_ack
->   0.84%  [kernel]                [k] ixgbe_poll
->   0.83%  < workload >
->   0.82%  [kernel]                [k] enqueue_entity
->   0.68%  [kernel]                [k] __fget
->   0.68%  [kernel]                [k] tcp_delack_timer_handler
->   0.67%  [kernel]                [k] __schedule
->   0.60%  < workload >
->   0.59%  [kernel]                [k] __inet6_lookup_established
->   0.55%  [kernel]                [k] __switch_to
->   0.55%  [kernel]                [k] menu_select
->   0.54%  libc-2.20.so            [.] __memcpy_avx_unaligned
-> 
-> To address this issue, the existing per-cpu stock infrastructure
-> can be used.
-> 
-> refill_stock() can be called from mem_cgroup_uncharge_skmem()
-> to move charge to a per-cpu stock instead of calling atomic
-> page_counter_uncharge().
-> 
-> To prevent the uncontrolled growth of per-cpu stocks,
-> refill_stock() will explicitly drain the cached charge,
-> if the cached value exceeds CHARGE_BATCH.
-> 
-> This allows significantly optimize the load:
->   1.21%  [kernel]                [k] _raw_spin_lock
->   1.01%  [kernel]                [k] ixgbe_poll
->   0.92%  [kernel]                [k] _raw_spin_lock_irqsave
->   0.90%  [kernel]                [k] enqueue_entity
->   0.86%  [kernel]                [k] tcp_ack
->   0.85%  < workload >
->   0.74%  perf-11120.map          [.] 0x000000000061bf24
->   0.73%  [kernel]                [k] __schedule
->   0.67%  [kernel]                [k] __fget
->   0.63%  [kernel]                [k] __inet6_lookup_established
->   0.62%  [kernel]                [k] menu_select
->   0.59%  < workload >
->   0.59%  [kernel]                [k] __switch_to
->   0.57%  libc-2.20.so            [.] __memcpy_avx_unaligned
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: cgroups@vger.kernel.org
-> Cc: kernel-team@fb.com
-> Cc: linux-mm@kvack.org
-> Cc: linux-kernel@vger.kernel.org
+On Wed, 30 Aug 2017, Roman Gushchin wrote:
 
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-> ---
->  mm/memcontrol.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> I've spent some time to implement such a version.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b9cf3cf4a3d0..a69d23082abf 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1792,6 +1792,9 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
->  	}
->  	stock->nr_pages += nr_pages;
->  
-> +	if (stock->nr_pages > CHARGE_BATCH)
-> +		drain_stock(stock);
-> +
->  	local_irq_restore(flags);
->  }
->  
-> @@ -5886,8 +5889,7 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
->  
->  	this_cpu_sub(memcg->stat->count[MEMCG_SOCK], nr_pages);
->  
-> -	page_counter_uncharge(&memcg->memory, nr_pages);
-> -	css_put_many(&memcg->css, nr_pages);
-> +	refill_stock(memcg, nr_pages);
->  }
->  
->  static int __init cgroup_memory(char *s)
-> -- 
-> 2.13.5
+> It really became shorter and more existing code were reused,
+> howewer I've met a couple of serious issues:
+> 
+> 1) Simple summing of per-task oom_score doesn't make sense.
+>    First, we calculate oom_score per-task, while should sum per-process values,
+>    or, better, per-mm struct. We can take only threa-group leader's score
+>    into account, but it's also not 100% accurate.
+>    And, again, we have a question what to do with per-task oom_score_adj,
+>    if we don't task the task's oom_score into account.
+> 
+>    Using memcg stats still looks to me as a more accurate and consistent
+>    way of estimating memcg memory footprint.
+> 
 
--- 
-Michal Hocko
-SUSE Labs
+The patchset is introducing a new methodology for selecting oom victims so 
+you can define how cgroups are compared vs other cgroups with your own 
+"badness" calculation.  I think your implementation based heavily on anon 
+and unevictable lrus and unreclaimable slab is fine and you can describe 
+that detail in the documentation (along with the caveat that it is only 
+calculated for nodes in the allocation's mempolicy).  With 
+memory.oom_priority, the user has full ability to change that selection.  
+Process selection heuristics have changed over time themselves, it's not 
+something that must be backwards compatibile and trying to sum the usage 
+from each of the cgroup's mm_struct's and respect oom_score_adj is 
+unnecessarily complex.
