@@ -1,99 +1,118 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: use per-cpu stocks for socket memory
- uncharging
-Date: Wed, 30 Aug 2017 11:57:19 +0100
-Message-ID: <20170830105719.GB2852@castle.dhcp.TheFacebook.com>
-References: <20170829100150.4580-1-guro@fb.com>
- <20170829192621.GA5447@cmpxchg.org>
+Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
+Date: Wed, 30 Aug 2017 12:22:40 +0100
+Message-ID: <20170830112240.GA4751@castle.dhcp.TheFacebook.com>
+References: <20170823165201.24086-1-guro@fb.com>
+ <20170823165201.24086-3-guro@fb.com>
+ <20170824114706.GG5943@dhcp22.suse.cz>
+ <20170824122846.GA15916@castle.DHCP.thefacebook.com>
+ <20170824125811.GK5943@dhcp22.suse.cz>
+ <20170824135842.GA21167@castle.DHCP.thefacebook.com>
+ <20170824141336.GP5943@dhcp22.suse.cz>
+ <20170824145801.GA23457@castle.DHCP.thefacebook.com>
+ <20170825081402.GG25498@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=CmlVoInciiMzK0r0dqOeBS0lkmAHM6WzBomWgaCShOU=;
- b=hh2HAjj0aI0bg1QfjfnVe5CaMl2dDvz/aXF43jAoUX3a+UHg7rNl4pJgoFpQxTS0WCio
- tqmGAhkOicei8jBdZ4OhelS8BRExH4tzN6XNnXNQm35sttNOBkEUJXguOUJodg0/tYf+
- mj8Fs0i6UyNtI8iB/NdY6G+HAUyaxMBpVxU= 
+ in-reply-to; s=facebook; bh=1vFRQVaP3mHk9tHF1E9neb9toNj7zrdK9HpQHNyfoKw=;
+ b=VSHz/YbaE3DhmOw8mB1h7ton6glSpCNnO9P8f9MQJblyjgrw+X9B2EyF4kYBsP76AecQ
+ T4czfrIaoyRO/QPy3gWC87kTHIj+FpOy7ID6jqTYzE9qkT5us2OJs4rMH6G8Luscjold
+ VRVjT6xR6SwiHwJt4uKDmGYlJnKKHx0FA0U= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=CmlVoInciiMzK0r0dqOeBS0lkmAHM6WzBomWgaCShOU=;
- b=bWCI+/DTvrr6itsNJapXjFvfu/snD06YfYAX6Y54PM7clKoZZeRi0pZWKyAvGWYmWf4YNGH49fxdv92OWBc+SBYgtFzhnG+3l/xO6J+z6DYRsLPNp1cS0zgmfn77DpWW4FFgIb47vRpks9FG1MaN5SDPwVdv+/TsTAWKVRvYc3E=
+ bh=1vFRQVaP3mHk9tHF1E9neb9toNj7zrdK9HpQHNyfoKw=;
+ b=Bawb1ozCa6c3hjnkJZxlac6qSejxuUArAP2jJfC9EFUfCBKeJpwz8ogrqmECbgPEIW93jh2ZFNdVd84DnrgquGuhNMxKA3xgWZDYxtE7qQNfQlW5JCcKSsOUMdCVAXvUAu/D3vs8y7+qcKHVeptKDT5Wz8hiM6z9jmI+aE4vDD8=
 Content-Disposition: inline
-In-Reply-To: <20170829192621.GA5447-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20170825081402.GG25498-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Aug 29, 2017 at 03:26:21PM -0400, Johannes Weiner wrote:
-> On Tue, Aug 29, 2017 at 11:01:50AM +0100, Roman Gushchin wrote:
-> > We've noticed a quite sensible performance overhead on some hosts
-> > with significant network traffic when socket memory accounting
-> > is enabled.
+On Fri, Aug 25, 2017 at 10:14:03AM +0200, Michal Hocko wrote:
+> On Thu 24-08-17 15:58:01, Roman Gushchin wrote:
+> > On Thu, Aug 24, 2017 at 04:13:37PM +0200, Michal Hocko wrote:
+> > > On Thu 24-08-17 14:58:42, Roman Gushchin wrote:
+> [...]
+> > > > Both ways are not ideal, and sum of the processes is not ideal too.
+> > > > Especially, if you take oom_score_adj into account. Will you respect it?
+> > > 
+> > > Yes, and I do not see any reason why we shouldn't.
 > > 
-> > Perf top shows that socket memory uncharging path is hot:
-> >   2.13%  [kernel]                [k] page_counter_cancel
-> >   1.14%  [kernel]                [k] __sk_mem_reduce_allocated
-> >   1.14%  [kernel]                [k] _raw_spin_lock
-> >   0.87%  [kernel]                [k] _raw_spin_lock_irqsave
-> >   0.84%  [kernel]                [k] tcp_ack
-> >   0.84%  [kernel]                [k] ixgbe_poll
-> >   0.83%  < workload >
-> >   0.82%  [kernel]                [k] enqueue_entity
-> >   0.68%  [kernel]                [k] __fget
-> >   0.68%  [kernel]                [k] tcp_delack_timer_handler
-> >   0.67%  [kernel]                [k] __schedule
-> >   0.60%  < workload >
-> >   0.59%  [kernel]                [k] __inet6_lookup_established
-> >   0.55%  [kernel]                [k] __switch_to
-> >   0.55%  [kernel]                [k] menu_select
-> >   0.54%  libc-2.20.so            [.] __memcpy_avx_unaligned
-> > 
-> > To address this issue, the existing per-cpu stock infrastructure
-> > can be used.
-> > 
-> > refill_stock() can be called from mem_cgroup_uncharge_skmem()
-> > to move charge to a per-cpu stock instead of calling atomic
-> > page_counter_uncharge().
-> > 
-> > To prevent the uncontrolled growth of per-cpu stocks,
-> > refill_stock() will explicitly drain the cached charge,
-> > if the cached value exceeds CHARGE_BATCH.
-> > 
-> > This allows significantly optimize the load:
-> >   1.21%  [kernel]                [k] _raw_spin_lock
-> >   1.01%  [kernel]                [k] ixgbe_poll
-> >   0.92%  [kernel]                [k] _raw_spin_lock_irqsave
-> >   0.90%  [kernel]                [k] enqueue_entity
-> >   0.86%  [kernel]                [k] tcp_ack
-> >   0.85%  < workload >
-> >   0.74%  perf-11120.map          [.] 0x000000000061bf24
-> >   0.73%  [kernel]                [k] __schedule
-> >   0.67%  [kernel]                [k] __fget
-> >   0.63%  [kernel]                [k] __inet6_lookup_established
-> >   0.62%  [kernel]                [k] menu_select
-> >   0.59%  < workload >
-> >   0.59%  [kernel]                [k] __switch_to
-> >   0.57%  libc-2.20.so            [.] __memcpy_avx_unaligned
-> > 
-> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> > Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> > Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > Cc: kernel-team-b10kYP2dOMg@public.gmane.org
-> > Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> > Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > It makes things even more complicated.
+> > Right now task's oom_score can be in (~ -total_memory, ~ +2*total_memory) range,
+> > and it you're starting summing it, it can be multiplied by number of tasks...
+> > Weird.
 > 
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> oom_score_adj is just a normalized bias so if tasks inside oom will use
+> it the whole memcg will get accumulated bias from all such tasks so it
+> is not completely off. I agree that the more tasks use the bias the more
+> biased the whole memcg will be. This might or might not be a problem.
+> As you are trying to reimplement the existing oom killer implementation
+> I do not think we cannot simply ignore API which people are used to.
 > 
-> Neat!
+> If this was a configurable oom policy then I could see how ignoring
+> oom_score_adj is acceptable because it would be an explicit opt-in.
+> 
+> > It also will be different in case of system and memcg-wide OOM.
+> 
+> Why, we do honor oom_score_adj for the memcg OOM now and in fact the
+> kernel memcg OOM killer shouldn't be very much different from the global
+> one except for the tasks scope.
+> 
+> > > > I've started actually with such approach, but then found it weird.
+> > > > 
+> > > > > Besides that you have
+> > > > > to check each task for over-killing anyway. So I do not see any
+> > > > > performance merits here.
+> > > > 
+> > > > It's an implementation detail, and we can hopefully get rid of it at some point.
+> > > 
+> > > Well, we might do some estimations and ignore oom scopes but I that
+> > > sounds really complicated and error prone. Unless we have anything like
+> > > that then I would start from tasks and build up the necessary to make a
+> > > decision at the higher level.
+> > 
+> > Seriously speaking, do you have an example, when summing per-process
+> > oom_score will work better?
+> 
+> The primary reason I am pushing for this is to have the common iterator
+> code path (which we have since Vladimir has unified memcg and global oom
+> paths) and only parametrize the value calculation and victim selection.
+> 
+> > Especially, if we're talking about customizing oom_score calculation,
+> > it makes no sence to me. How you will sum process timestamps?
+> 
+> Well, I meant you could sum oom_badness for your particular
+> implementation. If we need some other policy then this wouldn't work and
+> that's why I've said that I would like to preserve the current common
+> code and only parametrize value calculation and victim selection...
 
-Hi, Andrew!
+I've spent some time to implement such a version.
 
-Can you, please, pull this patch?
+It really became shorter and more existing code were reused,
+howewer I've met a couple of serious issues:
 
-Thank you!
+1) Simple summing of per-task oom_score doesn't make sense.
+   First, we calculate oom_score per-task, while should sum per-process values,
+   or, better, per-mm struct. We can take only threa-group leader's score
+   into account, but it's also not 100% accurate.
+   And, again, we have a question what to do with per-task oom_score_adj,
+   if we don't task the task's oom_score into account.
+
+   Using memcg stats still looks to me as a more accurate and consistent
+   way of estimating memcg memory footprint.
+
+2) If we're treating tasks from not-kill-all cgroups as separate oom entities,
+   and compare them with memcgs with kill-all flag, we definitely need
+   per-task oom_priority to provide a clear way to compare entities.
+
+   Otherwise we need per-memcg size-based oom_score_adj, which is not
+   the best idea, as we agreed earlier.
+
+Thanks!
 
 Roman
