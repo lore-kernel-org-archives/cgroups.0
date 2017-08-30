@@ -1,254 +1,198 @@
-From: Christian Brauner <christian.brauner@mailbox.org>
-Subject: Re: [lxc-devel] [RFC PATCH] cgroup, cpuset: add cpuset.remap_cpus
-Date: Wed, 30 Aug 2017 15:27:55 +0200
-Message-ID: <20170830132755.tnqmuttodexc3oh6@mailbox.org>
-References: <1482419271-15410-1-git-send-email-w.bumiller@proxmox.com>
-Reply-To: christian.brauner@ubuntu.com
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mailbox.org; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:reply-to:message-id:subject:subject
-        :from:from:date:date:received; s=mail20150812; t=1504099677; bh=
-        IeHHwtxSj2ZbDAvWyp9PTijH8DbMgxU63NTU1AeZrz8=; b=ZpwfbEtsSRVCKr2h
-        5z6uekBUU/uYjoKY6QzJkzjN2hmljji35McNYMWy8oH0lgSsD2+Kv/y6HTsDTf7a
-        POXTAgJAKOApqy8JogCHqhSoABVt+88hUnToPv1p1ybeCD/0abHjKq6Uua7O1nwg
-        4e7BZo3z4UzgBEtMP+1PwXzOsIuLcDuEvWDIO/wDctRCAWSY+khqASgSQnf6j13c
-        i5Zx3QD6l37X5k6RtEpXzxgHu7z1EUBZSEgD5Jf8gVx9cjBh/tZdtGonzYAVsEX1
-        a2VQZD+qKDZqkGVVNq7gr3NhKetlPx3YWWt9SJuPW0H95uRk1cn1z5Iop8u9KUIu
-        GpRhHA==
-Content-Disposition: inline
-In-Reply-To: <1482419271-15410-1-git-send-email-w.bumiller@proxmox.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: [PATCH] Workqueue lockup: Circular dependency in threads
+Date: Wed, 30 Aug 2017 19:28:58 +0530
+Message-ID: <1504101538-20075-1-git-send-email-prsood@codeaurora.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504101560;
+        bh=Q3uVq8XliXIygJOdNAvN9H9LhnpbKIJ6wq3AGPU8EfU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=iVhyS9f2ZqfVitoa1dv4wjfrx1cc+mInmiao9S0btovxiG+nCZnRyvoHatFXNvRfO
+         vRpibaQgaK8EXtfuREUMXgym3r5Ho+wIcsGZsyKklK6GH+lX1cDOtdS12B7vmi0UnD
+         cA5iTWwrcFmVm+fKBF9JJ14+oMqQalky83XnCo5U=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504101555;
+        bh=Q3uVq8XliXIygJOdNAvN9H9LhnpbKIJ6wq3AGPU8EfU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=BclWVYikm15AMalLECbrahCA3bUi1w6z9Z1rsQV+4BthT2cy0hLNiZiv3Ua/CXDgU
+         iPqu6n2N3bLauCYM8Ios82YACC5wkNksS+3FQBHKPCntEAog1V9DxBB0wgPTL7qqQq
+         WW0hVTDy1ewJPd/T3UYVnbmHmADvizuHNDy7yWCg=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, w.bumiller@proxmox.com
-Cc: stgraber@ubuntu.com, serge@hallyn.com
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
 
 Hi,
 
-The following patch was sent a while back by Wolfgang Bumiller to remap cpusets
-for a whole subtree in a cgroup v1 cpuset hierarchy. The fact that currently
-this is not possible in a non-racy why is a pretty big limitation. This is
-especially true for nested containers. Where the nested containers often create
-additional subcgroups in the cpuset controller at will. The fact that you can't
-*easily* and in a non-racy way tighten the restriction on them after having
-created the parent container's cpuset cgroup seems really troubling.
+While using Linux version 4.4 on my setup, I have observed a deadlock.
 
-Here's a more concrete use case:
-Let's say you started out with handing over all cores to container "c1". You
-then create a nested container "c2" inside of "c1". This will - since the advent
-of cgroup namespaces - usually mean that "c2"'s cpuset cgroup is a subcgroup in
-"c1"'s cpuset cgroup. Usually, "c2"'s cpuset cgroup will also allocate all cores
-or at least a subset of them made available to it by "c1"'s cpuset cgroup. When
-the host now decides to restrict "c1"'s cpuset by removing some of the cores
-that it shares with "c2"'s cpuset subcgroup the host will fail to do this giving
-EBUSY. This leaves the container's open to consume the hosts cpu resources. The
-only option I see right now is to kill the containers and redo the whole cpuset
-layout for the whole subtree. This is usually not something you'd want to do
-when critical processes are running. The other option is to implement an
-algorithm for a container manager that does the remapping by walking the
-relevant cpuset subtree and first removing any cpus from the lowest node that
-uses these cpus and then adding all cpus it wants to add walking the tree top
-down. But that is - as I said - racy since the nested container's might create
-subcgroups thereby preventing he host from successfully performing the
-remapping. So an in-kernel approach seems to be a good idea. But maybe I'm just
-not seeing the obvious userspace solution to this which is entirely possible. I
-just thought I ping about this patch since I didn't see a discussion of this
-patch. Maybe it just got lost over Christmas. I take it that Wolfgang is still
-willing to pick up that patch but if he doesn't want to or can't I'm happy to
-step up. I just couldn't reach him today.
+1) CPU3 is getting hot plugged from a worker thread(kworker/0:0) on CPU0.
+2) Cpu hot plug flow needs to flush the work items on hot plugging CPU3,
+   with a high priority worker from the corresponding CPU(cpu3) worker pool.
+3) There is no high priority worker on CPU3, resulting in creation of worker
+   thread with high priority from create_worker.
+4) This creation is done by kthreadd, which got stuck while trying to acquire
+   cgroup_threadgroup_rwsem during kernel thread creation.
+5) Cgroup cgroup_threadgroup_rwsem is acquired by task init:729 and is waiting
+   on cpuset_mutex.
+6) cpuset_mutex is acquired by task init:1 and is waiting for cpuhotplug lock.
+7) cpuhotplug lock is acquired by kworker/0:0 while doing hotplug of CPU3
 
-Thanks!
-Christian
+Circular dependency:
+kworker/0:0 => kthreadd => init:729 => init:1 => kworker/0:0
 
-On Thu, Dec 22, 2016 at 04:07:51PM +0100, Wolfgang Bumiller wrote:
-> Changes a cpuset, recursively remapping all its descendants
-> to the new range.
-> 
-> Signed-off-by: Wolfgang Bumiller <w.bumiller@proxmox.com>
-> ---
-> Currently once a cpuset cgroup has a subdirectory it's impossible to
-> remove cpu without manually recursing through the cgroup file system.
-> The problem gets worse if you want to remap cpus of a larger subtree.
-> This is particularly useful with containers and problematic in that
-> the recursion might race against the creation of new subdirectories.
-> 
-> I'm not sure why this functionality isn't there yet and thought I'd
-> give it a try and send an RFC patch. I'm sure there's a reason though,
-> given how surprisingly small/simple the patch turned out to be and
-> I'm rarely the first to think of a feature like that ;-)
-> 
-> I hope this is something we could add one way or another, if possible
-> required changes to the patch are within the scope of my abilities.
-> 
->  include/linux/cpumask.h | 17 ++++++++++++++++
->  kernel/cpuset.c         | 54 +++++++++++++++++++++++++++++++++++++++----------
->  2 files changed, 60 insertions(+), 11 deletions(-)
-> 
-> diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
-> index 59915ea..f5487c8 100644
-> --- a/include/linux/cpumask.h
-> +++ b/include/linux/cpumask.h
-> @@ -514,6 +514,23 @@ static inline void cpumask_copy(struct cpumask *dstp,
->  }
->  
->  /**
-> + * cpumask_remap - *dstp = map(old, new)(*srcp)
-> + * @dstp: the result
-> + * @srcp: the input cpumask
-> + * @oldp: the old mask
-> + * @newp: the new mask
-> + */
-> +static inline void cpumask_remap(struct cpumask *dstp,
-> +				 const struct cpumask *srcp,
-> +				 const struct cpumask *oldp,
-> +				 const struct cpumask *newp)
-> +{
-> +	bitmap_remap(cpumask_bits(dstp), cpumask_bits(srcp),
-> +		     cpumask_bits(oldp), cpumask_bits(newp),
-> +		     nr_cpumask_bits);
-> +}
-> +
-> +/**
->   * cpumask_any - pick a "random" cpu from *srcp
->   * @srcp: the input cpumask
->   *
-> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-> index 02a8ea5..22d0cb2 100644
-> --- a/kernel/cpuset.c
-> +++ b/kernel/cpuset.c
-> @@ -450,7 +450,8 @@ static void free_trial_cpuset(struct cpuset *trial)
->   * Return 0 if valid, -errno if not.
->   */
->  
-> -static int validate_change(struct cpuset *cur, struct cpuset *trial)
-> +static int validate_change(struct cpuset *cur, struct cpuset *trial,
-> +			   bool remap)
->  {
->  	struct cgroup_subsys_state *css;
->  	struct cpuset *c, *par;
-> @@ -458,11 +459,13 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
->  
->  	rcu_read_lock();
->  
-> -	/* Each of our child cpusets must be a subset of us */
-> -	ret = -EBUSY;
-> -	cpuset_for_each_child(c, css, cur)
-> -		if (!is_cpuset_subset(c, trial))
-> -			goto out;
-> +	if (!remap) {
-> +		/* Each of our child cpusets must be a subset of us */
-> +		ret = -EBUSY;
-> +		cpuset_for_each_child(c, css, cur)
-> +			if (!is_cpuset_subset(c, trial))
-> +				goto out;
-> +	}
->  
->  	/* Remaining checks don't apply to root cpuset */
->  	ret = 0;
-> @@ -925,11 +928,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
->   * @cs: the cpuset to consider
->   * @trialcs: trial cpuset
->   * @buf: buffer of cpu numbers written to this cpuset
-> + * @remap: recursively remap all child nodes
->   */
->  static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
-> -			  const char *buf)
-> +			  const char *buf, bool remap)
->  {
->  	int retval;
-> +	struct cpuset *cp;
-> +	struct cgroup_subsys_state *pos_css;
-> +	struct cpumask tempmask;
->  
->  	/* top_cpuset.cpus_allowed tracks cpu_online_mask; it's read-only */
->  	if (cs == &top_cpuset)
-> @@ -957,11 +964,25 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
->  	if (cpumask_equal(cs->cpus_allowed, trialcs->cpus_allowed))
->  		return 0;
->  
-> -	retval = validate_change(cs, trialcs);
-> +	retval = validate_change(cs, trialcs, remap);
->  	if (retval < 0)
->  		return retval;
->  
->  	spin_lock_irq(&callback_lock);
-> +	if (remap) {
-> +		rcu_read_lock();
-> +		cpuset_for_each_descendant_pre(cp, pos_css, cs) {
-> +			/* skip empty subtrees */
-> +			if (cpumask_empty(cp->cpus_allowed)) {
-> +				pos_css = css_rightmost_descendant(pos_css);
-> +				continue;
-> +			}
-> +			cpumask_copy(&tempmask, cp->cpus_allowed);
-> +			cpumask_remap(cp->cpus_allowed, &tempmask,
-> +				      cs->cpus_allowed, trialcs->cpus_allowed);
-> +		}
-> +		rcu_read_unlock();
-> +	}
->  	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
->  	spin_unlock_irq(&callback_lock);
->  
-> @@ -1217,7 +1238,7 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
->  		retval = 0;		/* Too easy - nothing to do */
->  		goto done;
->  	}
-> -	retval = validate_change(cs, trialcs);
-> +	retval = validate_change(cs, trialcs, false);
->  	if (retval < 0)
->  		goto done;
->  
-> @@ -1304,7 +1325,7 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
->  	else
->  		clear_bit(bit, &trialcs->flags);
->  
-> -	err = validate_change(cs, trialcs);
-> +	err = validate_change(cs, trialcs, false);
->  	if (err < 0)
->  		goto out;
->  
-> @@ -1563,6 +1584,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
->  typedef enum {
->  	FILE_MEMORY_MIGRATE,
->  	FILE_CPULIST,
-> +	FILE_REMAP_CPULIST,
->  	FILE_MEMLIST,
->  	FILE_EFFECTIVE_CPULIST,
->  	FILE_EFFECTIVE_MEMLIST,
-> @@ -1695,7 +1717,10 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
->  
->  	switch (of_cft(of)->private) {
->  	case FILE_CPULIST:
-> -		retval = update_cpumask(cs, trialcs, buf);
-> +		retval = update_cpumask(cs, trialcs, buf, false);
-> +		break;
-> +	case FILE_REMAP_CPULIST:
-> +		retval = update_cpumask(cs, trialcs, buf, true);
->  		break;
->  	case FILE_MEMLIST:
->  		retval = update_nodemask(cs, trialcs, buf);
-> @@ -1811,6 +1836,13 @@ static struct cftype files[] = {
->  	},
->  
->  	{
-> +		.name = "remap_cpus",
-> +		.write = cpuset_write_resmask,
-> +		.max_write_len = (100U + 6 * NR_CPUS),
-> +		.private = FILE_REMAP_CPULIST,
-> +	},
-> +
-> +	{
->  		.name = "mems",
->  		.seq_show = cpuset_common_seq_show,
->  		.write = cpuset_write_resmask,
-> -- 
-> 2.1.4
-> 
-> 
-> _______________________________________________
-> lxc-devel mailing list
-> lxc-devel@lists.linuxcontainers.org
-> http://lists.linuxcontainers.org/listinfo/lxc-devel
+kworker/0:0
+-000|__switch_to()
+-001|context_switch(inline)
+-001|__schedule()
+-002|__preempt_count_sub(inline)
+-002|schedule()
+-003|schedule_timeout()
+-004|do_wait_for_common(inline)
+-004|__wait_for_common(inline)
+-004|wait_for_common()
+-005|wait_for_completion()
+-006|flush_work()
+-007|workqueue_cpu_down_callback()
+-008|notifier_call_chain()
+-009|__raw_notifier_call_chain()
+-010|notifier_to_errno(inline)
+-010|__cpu_notify()
+-011|cpu_down()
+-012|cpu_down()
+-013|cpu_subsys_offline()
+-014|device_offline()
+-015|do_core_control()
+-016|check_temp()
+-017|__read_once_size(inline)
+-017|static_key_count(inline)
+-017|static_key_false(inline)
+-017|trace_workqueue_execute_end(inline)
+-017|process_one_work()
+-018|worker_thread()
+-019|kthread()
+-020|ret_from_fork(asm)
+ ---|end of frame
+
+kthreadd
+-000|__switch_to()
+-001|context_switch(inline)
+-001|__schedule()
+-002|__preempt_count_sub(inline)
+-002|schedule()
+-003|rwsem_down_read_failed()
+-004|current_thread_info(inline)
+-004|preempt_count_ptr(inline)
+-004|__preempt_count_add(inline)
+-004|__percpu_down_read()
+-005|current_thread_info(inline)
+-005|preempt_count_ptr(inline)
+-005|__preempt_count_dec_and_test(inline)
+-005|percpu_down_read(inline)
+-005|cgroup_threadgroup_change_begin(inline)
+-005|threadgroup_change_begin(inline)
+-005|copy_process.isra.60()
+-006|do_fork()
+-007|kernel_thread()
+-008|create_kthread(inline)
+-008|kthreadd()
+-009|ret_from_fork(asm)
+ ---|end of frame
+
+init:729
+-000|__switch_to()
+-001|context_switch(inline)
+-001|__schedule()
+-002|__preempt_count_sub(inline)
+-002|schedule()
+-003|__preempt_count_add(inline)
+-003|schedule_preempt_disabled()
+-004|spin_lock(inline)
+-004|__mutex_lock_common(inline)
+-004|__mutex_lock_slowpath()
+-005|current_thread_info(inline)
+-005|mutex_set_owner(inline)
+-005|mutex_lock()
+-006|__read_once_size(inline)
+-006|static_key_count(inline)
+-006|cpuset_can_attach()
+-007|cgroup_taskset_migrate()
+-008|cgroup_migrate()
+-009|cgroup_attach_task()
+-010|__cgroup_procs_write.isra.32()
+-011|cgroup_tasks_write()
+-012|cgroup_file_write()
+-013|kernfs_fop_write()
+-014|__vfs_write()
+-015|vfs_write()
+-016|SYSC_write(inline)
+-016|sys_write()
+-017|el0_svc_naked(asm)
+ -->|exception
+-018|NUX:0x507970(asm)
+ ---|end of frame
+
+init:1
+-000|__switch_to()
+-001|context_switch(inline)
+-001|__schedule()
+-002|__preempt_count_sub(inline)
+-002|schedule()
+-003|__preempt_count_add(inline)
+-003|schedule_preempt_disabled()
+-004|spin_lock(inline)
+-004|__mutex_lock_common(inline)
+-004|__mutex_lock_slowpath()
+-005|current_thread_info(inline)
+-005|mutex_set_owner(inline)
+-005|mutex_lock()
+-006|atomic_add(inline)
+-006|get_online_cpus()
+-007|rebuild_sched_domains_locked()
+-008|update_cpumask(inline)
+-008|cpuset_write_resmask()
+-009|cgroup_file_write()
+-010|kernfs_fop_write()
+-011|__vfs_write()
+-012|vfs_write()
+-013|SYSC_write(inline)
+-013|sys_write()
+-014|el0_svc_naked(asm)
+ -->|exception
+-015|NUX:0x507970(asm)
+ ---|end of frame
+
+We can reorder the sequence of locks as in the below diff to avoid this
+deadlock. But I am looking for inputs/better solution to fix this deadlock.
+
+---
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+ /**
+  * update_tasks_cpumask - Update the cpumasks of tasks in the cpuset.
+  * @cs: the cpuset in which each task's cpus_allowed mask needs to be changed
+@@ -930,7 +946,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ 	rcu_read_unlock();
+ 
+ 	if (need_rebuild_sched_domains)
+-		rebuild_sched_domains_locked();
++		rebuild_sched_domains_unlocked()(without taking cpuhotplug.lock)
+ }
+ 
+ /**
+@@ -1719,6 +1735,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -1744,6 +1761,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ 	kernfs_unbreak_active_protection(of->kn);
+ 	css_put(&cs->css);
+ 	flush_workqueue(cpuset_migrate_mm_wq);
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc., 
+is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
