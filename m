@@ -1,56 +1,47 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
-Date: Wed, 30 Aug 2017 13:56:22 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1708301349130.79465@chino.kir.corp.google.com>
-References: <20170823165201.24086-1-guro@fb.com> <20170823165201.24086-3-guro@fb.com> <20170824114706.GG5943@dhcp22.suse.cz> <20170824122846.GA15916@castle.DHCP.thefacebook.com> <20170824125811.GK5943@dhcp22.suse.cz> <20170824135842.GA21167@castle.DHCP.thefacebook.com>
- <20170824141336.GP5943@dhcp22.suse.cz> <20170824145801.GA23457@castle.DHCP.thefacebook.com> <20170825081402.GG25498@dhcp22.suse.cz> <20170830112240.GA4751@castle.dhcp.TheFacebook.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [lxc-devel] [RFC PATCH] cgroup, cpuset: add cpuset.remap_cpus
+Date: Wed, 30 Aug 2017 17:41:31 -0700
+Message-ID: <20170831004131.GZ491396@devbig577.frc2.facebook.com>
+References: <1482419271-15410-1-git-send-email-w.bumiller@proxmox.com>
+ <20170830132755.tnqmuttodexc3oh6@mailbox.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=2nBlU/gqSCfzi8ScMWfy1X1LghUSTcSFc/vibJje3Sw=;
-        b=YBqt0WMhBUEA4su9vyZnJk4URGSig9DQB69YB+9F6mULpBezL81RPafmrXg7VcrOXu
-         Xo3FdCy451ZQeCeW3QmQNKtBFmdZcIQGCJQSoOCvv9TmZYpqfD7zKPwCZB8MDSNts50w
-         9ePr56vK6PnqnwDNKGJMiVsiyS1cayy8OUImAxytY7GrdgVaT3qEnq3rxLUGuaB7lMAj
-         MCPp/szjknCeo7PYL27zV4u0eUdMsuJTJjXyhwPuC88wtp9DwQ1UzpyXs/hEg1OOqMS3
-         LX9XYelom7NtcXA5ezgSc8VO1BE6KSlzlBZ/juhkPpMfyDFw2dGabPrsNgjcSoG+JEEM
-         pCsA==
-In-Reply-To: <20170830112240.GA4751@castle.dhcp.TheFacebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=qMFzUnWBOvthJDrlYxfqDAQgIKhgh37RBEclaBJVb+I=;
+        b=InXQSSNK+172b92cm6Spy1A31gly2E6fRMUaUyjE3Lsovluf7lhj/2wwGDoWTLQ7Kz
+         KHxj3a0ftW4S+lKIhxMElWGLd5HToQPqOspypXicsWj0g+EjzxWCxkOX4SuV0PICW7cu
+         WAnHVL8gPMBmbjf/LZ6HJp0MA42bxB611j+cobBoxAyqIBc9X7/VHfLFKftyBZ+7fnfo
+         tAM8CUeum70CYJheuDG8oloHkHHVzbYoOCKR6wHZXIHZA3JUqfIz9SLYlZ4Eo1LIq2lG
+         SZ4GKms0h86znB+VXX0nzk8zStFnjCMm7vpWsqlFcyInBhbUrxBa14qWmItvAHCKvHlg
+         di/w==
+Content-Disposition: inline
+In-Reply-To: <20170830132755.tnqmuttodexc3oh6-cl+VPiYnx/1AfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, w.bumiller-YTcQvvOqK21BDgjK7y7TUQ@public.gmane.org, stgraber-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
 
-On Wed, 30 Aug 2017, Roman Gushchin wrote:
+Hello,
 
-> I've spent some time to implement such a version.
-> 
-> It really became shorter and more existing code were reused,
-> howewer I've met a couple of serious issues:
-> 
-> 1) Simple summing of per-task oom_score doesn't make sense.
->    First, we calculate oom_score per-task, while should sum per-process values,
->    or, better, per-mm struct. We can take only threa-group leader's score
->    into account, but it's also not 100% accurate.
->    And, again, we have a question what to do with per-task oom_score_adj,
->    if we don't task the task's oom_score into account.
-> 
->    Using memcg stats still looks to me as a more accurate and consistent
->    way of estimating memcg memory footprint.
-> 
+On Wed, Aug 30, 2017 at 03:27:55PM +0200, Christian Brauner wrote:
+> The following patch was sent a while back by Wolfgang Bumiller to remap cpusets
+> for a whole subtree in a cgroup v1 cpuset hierarchy. The fact that currently
+> this is not possible in a non-racy why is a pretty big limitation. This is
+> especially true for nested containers. Where the nested containers often create
+> additional subcgroups in the cpuset controller at will. The fact that you can't
+> *easily* and in a non-racy way tighten the restriction on them after having
+> created the parent container's cpuset cgroup seems really troubling.
 
-The patchset is introducing a new methodology for selecting oom victims so 
-you can define how cgroups are compared vs other cgroups with your own 
-"badness" calculation.  I think your implementation based heavily on anon 
-and unevictable lrus and unreclaimable slab is fine and you can describe 
-that detail in the documentation (along with the caveat that it is only 
-calculated for nodes in the allocation's mempolicy).  With 
-memory.oom_priority, the user has full ability to change that selection.  
-Process selection heuristics have changed over time themselves, it's not 
-something that must be backwards compatibile and trying to sum the usage 
-from each of the cgroup's mm_struct's and respect oom_score_adj is 
-unnecessarily complex.
+There was a recent patch to enable v2 behavior on v1, which feels like
+the better approach at this point.  I'm not sure about adding a whole
+new interface for this.
+
+Thanks.
+
+-- 
+tejun
