@@ -1,57 +1,73 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [lxc-devel] [RFC PATCH] cgroup, cpuset: add cpuset.remap_cpus
-Date: Thu, 31 Aug 2017 06:50:22 -0700
-Message-ID: <20170831135022.GA1599492@devbig577.frc2.facebook.com>
-References: <1482419271-15410-1-git-send-email-w.bumiller@proxmox.com>
- <20170830132755.tnqmuttodexc3oh6@mailbox.org>
- <20170831004131.GZ491396@devbig577.frc2.facebook.com>
- <20170831094145.mrz6daucapq5kvn7@gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
+Date: Thu, 31 Aug 2017 13:01:54 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1708311246340.130518@chino.kir.corp.google.com>
+References: <20170823165201.24086-3-guro@fb.com> <20170824114706.GG5943@dhcp22.suse.cz> <20170824122846.GA15916@castle.DHCP.thefacebook.com> <20170824125811.GK5943@dhcp22.suse.cz> <20170824135842.GA21167@castle.DHCP.thefacebook.com> <20170824141336.GP5943@dhcp22.suse.cz>
+ <20170824145801.GA23457@castle.DHCP.thefacebook.com> <20170825081402.GG25498@dhcp22.suse.cz> <20170830112240.GA4751@castle.dhcp.TheFacebook.com> <alpine.DEB.2.10.1708301349130.79465@chino.kir.corp.google.com>
+ <20170831133423.GA30125@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Fg+6v26Dd3iabh4mEBsSiaij5yltC+ZhtNOPpUQd7YU=;
-        b=h7T2tsuV3hHwfjC0XZlQMClbGj2qMK5eXNLAk2aTSA7n4G0bMvWtfNMic3LFNLq9uK
-         DDp4YDCsqLIeqzSbi4nsu04ujZLaFYCideeAfZ7C7F/3tT6XMJwRoRps5ONI1wx+dL5B
-         kmZCuCC39cfPQFrnKwVt899qg4otqAmfTJ9kpJfFSC59MYvrFwYXntPol8kiHX0qTkta
-         LgMUNGrPF+NIB14wFtTzloSfwB7j3w5qUTQQzRCSPLN/OdRKIK/t0Ci7VfkzYQUESTvJ
-         kn1sSTWzvvKTPUCxs9/mZFsq8aPUaToYQn76OVA9SKNHZOMvk4Lc6poU7Rpk1BAHch6V
-         5m2Q==
-Content-Disposition: inline
-In-Reply-To: <20170831094145.mrz6daucapq5kvn7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=/xOzoPMtls0vdZIRRu1m3zdkNyqKsXaYeZShg3p9IQE=;
+        b=hqPz/95GZ44bcw4NbyBxWX1ADAnjUIh3V40dsz/LGfjLX6NYIic4Es9318IbLPFR4W
+         tKHfEPUwgTKrK/NvN4KuU6B6oOA8DTPSHWw7GjIKmFLzZq5GrXV1ka+cjPjy1Mga8/HC
+         RG7d7OW1UMPe0Cq7VVPaQwV8ZCxOduJzZ57dXUWrOowcSxIJ7QJ9fLRlUFk6+Dh2I3u8
+         8T0GAovbnk3Ih/OsV51iINFEflghXIhj2sNb2oxlIFfXAob+4iVQTApF/KAUbpD8MERr
+         u3RdXNZWWwYXgGVS2EPbm5VO+P3iaET0xlf+WAGtCi78VhepBFUg00eTlBfRnxTfRwu2
+         wL9A==
+In-Reply-To: <20170831133423.GA30125@castle.DHCP.thefacebook.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christian Brauner <christian.brauner-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, w.bumiller-YTcQvvOqK21BDgjK7y7TUQ@public.gmane.org, stgraber-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
+To: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 31, 2017 at 11:41:47AM +0200, Christian Brauner wrote:
-> On Wed, Aug 30, 2017 at 05:41:31PM -0700, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Wed, Aug 30, 2017 at 03:27:55PM +0200, Christian Brauner wrote:
-> > > The following patch was sent a while back by Wolfgang Bumiller to remap cpusets
-> > > for a whole subtree in a cgroup v1 cpuset hierarchy. The fact that currently
-> > > this is not possible in a non-racy why is a pretty big limitation. This is
-> > > especially true for nested containers. Where the nested containers often create
-> > > additional subcgroups in the cpuset controller at will. The fact that you can't
-> > > *easily* and in a non-racy way tighten the restriction on them after having
-> > > created the parent container's cpuset cgroup seems really troubling.
-> > 
-> > There was a recent patch to enable v2 behavior on v1, which feels like
-> > the better approach at this point.  I'm not sure about adding a whole
-> > new interface for this.
+On Thu, 31 Aug 2017, Roman Gushchin wrote:
+
+> So, it looks to me that we're close to an acceptable version,
+> and the only remaining question is the default behavior
+> (when oom_group is not set).
 > 
-> Cool. If it can be done easier and less invasive I'm all for it. Did the patch
-> already make it into your branch and - only if you happen to have the reference
-> flying around - could you point me to it.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/commit/?h=for-4.14&id=b8d1b8ee93df8ffbabbeadd65d39853cfad6d698
+Nit: without knowledge of the implementation, I still don't think I would 
+know what an "out of memory group" is.  Out of memory doesn't necessarily 
+imply a kill.  I suggest oom_kill_all or something that includes the verb.
 
-Thanks.
+> Michal suggests to ignore non-oom_group memcgs, and compare tasks with
+> memcgs with oom_group set. This makes the whole thing completely opt-in,
+> but then we probably need another knob (or value) to select between
+> "select memcg, kill biggest task" and "select memcg, kill all tasks".
 
--- 
-tejun
+It seems like that would either bias toward or bias against cgroups that 
+opt-in.  I suggest comparing memory cgroups at each level in the hierarchy 
+based on your new badness heuristic, regardless of any tunables it has 
+enabled.  Then kill either the largest process or all the processes 
+attached depending on oom_group or oom_kill_all.
+
+> Also, as the whole thing is based on comparison between processes and
+> memcgs, we probably need oom_priority for processes.
+
+I think with the constraints of cgroup v2 that a victim memcg must first 
+be chosen, and then a victim process attached to that memcg must be chosen 
+or all eligible processes attached to it be killed, depending on the 
+tunable.
+
+The simplest and most clear way to define this, in my opinion, is to 
+implement a heuristic that compares sibling memcgs based on usage, as you 
+have done.  This can be overridden by a memory.oom_priority that userspace 
+defines, and is enough support for them to change victim selection (no 
+mount option needed, just set memory.oom_priority).  Then kill the largest 
+process or all eligible processes attached.  We only use per-process 
+priority to override process selection compared to sibling memcgs, but 
+with cgroup v2 process constraints it doesn't seem like that is within the 
+scope of your patchset.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
