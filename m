@@ -1,207 +1,101 @@
-From: Prateek Sood <prsood@codeaurora.org>
-Subject: Re: [PATCH] Workqueue lockup: Circular dependency in threads
-Date: Thu, 31 Aug 2017 18:43:56 +0530
-Message-ID: <bc1016ee-792e-87f8-5158-777b7f9405b8@codeaurora.org>
-References: <1504101538-20075-1-git-send-email-prsood@codeaurora.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v6 2/4] mm, oom: cgroup-aware OOM killer
+Date: Thu, 31 Aug 2017 14:34:23 +0100
+Message-ID: <20170831133423.GA30125@castle.DHCP.thefacebook.com>
+References: <20170823165201.24086-3-guro@fb.com>
+ <20170824114706.GG5943@dhcp22.suse.cz>
+ <20170824122846.GA15916@castle.DHCP.thefacebook.com>
+ <20170824125811.GK5943@dhcp22.suse.cz>
+ <20170824135842.GA21167@castle.DHCP.thefacebook.com>
+ <20170824141336.GP5943@dhcp22.suse.cz>
+ <20170824145801.GA23457@castle.DHCP.thefacebook.com>
+ <20170825081402.GG25498@dhcp22.suse.cz>
+ <20170830112240.GA4751@castle.dhcp.TheFacebook.com>
+ <alpine.DEB.2.10.1708301349130.79465@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1504185241;
-        bh=PNyh0fQSXq6vveCYsJqLTF8NH0rDo/uYegRu5sDy+rs=;
-        h=Subject:To:References:From:Date:In-Reply-To:From;
-        b=G4zS+LZ8A8cLr+kzTlpjyI4qXvgGY2T71rlu0JvqAbKKhVG4X/qZLASWncmTirT01
-         6hhAzNslhnFfnE/4SaoMxFFpzfya0HrSp8ThLAUEZFBf4PkWg8Kok4yp21gbIZsRM2
-         RKGV9Kftj6KJiRWCZSwNSfuS1NXiMjdNuS8vOhMs=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1504185241;
-        bh=PNyh0fQSXq6vveCYsJqLTF8NH0rDo/uYegRu5sDy+rs=;
-        h=Subject:To:References:From:Date:In-Reply-To:From;
-        b=G4zS+LZ8A8cLr+kzTlpjyI4qXvgGY2T71rlu0JvqAbKKhVG4X/qZLASWncmTirT01
-         6hhAzNslhnFfnE/4SaoMxFFpzfya0HrSp8ThLAUEZFBf4PkWg8Kok4yp21gbIZsRM2
-         RKGV9Kftj6KJiRWCZSwNSfuS1NXiMjdNuS8vOhMs=
-In-Reply-To: <1504101538-20075-1-git-send-email-prsood@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, sramana@codeaurora.org, mingo@kernel.org, tj@kernel.org, longman@redhat.com, apkm@linux-foundation.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=NgVoWEzqIy9ckUcLG3GvQCsSKmmRDrkreArmImEoLFM=;
+ b=Bb2xtJ+zDdj8+2Xj275Q4s5QUFNMX8HYlHSWzIp/9hqQgDDJZPxzO7pHVvpNoUkkruyS
+ GW41k4lAmLwwPVgT/4fwwswV99sZdoVzjCdSWvtWmEJjVQRnoWhiNtYXM3G+esgInFkN
+ g3vNn8YGA2bxJk3qS274jU3W/fk/f/R0594= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=NgVoWEzqIy9ckUcLG3GvQCsSKmmRDrkreArmImEoLFM=;
+ b=LdN0WpgHMxzP+AFWhcR45p1foDgQ3f6JJv+x/NeylwmMgZSmt53QncNcXTojH7432qk8prvzoebinOa7H31vOp+YrO9+N9rkD2B9HYgWH3mi9Pgc0S9Q24cj5O9dqB6DvISjrm14dwOj1lpNCsHfWB0LspzqatqSodnMGMCDoj4=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1708301349130.79465@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 08/30/2017 07:28 PM, Prateek Sood wrote:
-> Hi,
+On Wed, Aug 30, 2017 at 01:56:22PM -0700, David Rientjes wrote:
+> On Wed, 30 Aug 2017, Roman Gushchin wrote:
 > 
-> While using Linux version 4.4 on my setup, I have observed a deadlock.
+> > I've spent some time to implement such a version.
+> > 
+> > It really became shorter and more existing code were reused,
+> > howewer I've met a couple of serious issues:
+> > 
+> > 1) Simple summing of per-task oom_score doesn't make sense.
+> >    First, we calculate oom_score per-task, while should sum per-process values,
+> >    or, better, per-mm struct. We can take only threa-group leader's score
+> >    into account, but it's also not 100% accurate.
+> >    And, again, we have a question what to do with per-task oom_score_adj,
+> >    if we don't task the task's oom_score into account.
+> > 
+> >    Using memcg stats still looks to me as a more accurate and consistent
+> >    way of estimating memcg memory footprint.
+> > 
 > 
-> 1) CPU3 is getting hot plugged from a worker thread(kworker/0:0) on CPU0.
-> 2) Cpu hot plug flow needs to flush the work items on hot plugging CPU3,
->    with a high priority worker from the corresponding CPU(cpu3) worker pool.
-> 3) There is no high priority worker on CPU3, resulting in creation of worker
->    thread with high priority from create_worker.
-> 4) This creation is done by kthreadd, which got stuck while trying to acquire
->    cgroup_threadgroup_rwsem during kernel thread creation.
-> 5) Cgroup cgroup_threadgroup_rwsem is acquired by task init:729 and is waiting
->    on cpuset_mutex.
-> 6) cpuset_mutex is acquired by task init:1 and is waiting for cpuhotplug lock.
-> 7) cpuhotplug lock is acquired by kworker/0:0 while doing hotplug of CPU3
-> 
-> Circular dependency:
-> kworker/0:0 => kthreadd => init:729 => init:1 => kworker/0:0
-> 
-> kworker/0:0
-> -000|__switch_to()
-> -001|context_switch(inline)
-> -001|__schedule()
-> -002|__preempt_count_sub(inline)
-> -002|schedule()
-> -003|schedule_timeout()
-> -004|do_wait_for_common(inline)
-> -004|__wait_for_common(inline)
-> -004|wait_for_common()
-> -005|wait_for_completion()
-> -006|flush_work()
-> -007|workqueue_cpu_down_callback()
-> -008|notifier_call_chain()
-> -009|__raw_notifier_call_chain()
-> -010|notifier_to_errno(inline)
-> -010|__cpu_notify()
-> -011|cpu_down()
-> -012|cpu_down()
-> -013|cpu_subsys_offline()
-> -014|device_offline()
-> -015|do_core_control()
-> -016|check_temp()
-> -017|__read_once_size(inline)
-> -017|static_key_count(inline)
-> -017|static_key_false(inline)
-> -017|trace_workqueue_execute_end(inline)
-> -017|process_one_work()
-> -018|worker_thread()
-> -019|kthread()
-> -020|ret_from_fork(asm)
->  ---|end of frame
-> 
-> kthreadd
-> -000|__switch_to()
-> -001|context_switch(inline)
-> -001|__schedule()
-> -002|__preempt_count_sub(inline)
-> -002|schedule()
-> -003|rwsem_down_read_failed()
-> -004|current_thread_info(inline)
-> -004|preempt_count_ptr(inline)
-> -004|__preempt_count_add(inline)
-> -004|__percpu_down_read()
-> -005|current_thread_info(inline)
-> -005|preempt_count_ptr(inline)
-> -005|__preempt_count_dec_and_test(inline)
-> -005|percpu_down_read(inline)
-> -005|cgroup_threadgroup_change_begin(inline)
-> -005|threadgroup_change_begin(inline)
-> -005|copy_process.isra.60()
-> -006|do_fork()
-> -007|kernel_thread()
-> -008|create_kthread(inline)
-> -008|kthreadd()
-> -009|ret_from_fork(asm)
->  ---|end of frame
-> 
-> init:729
-> -000|__switch_to()
-> -001|context_switch(inline)
-> -001|__schedule()
-> -002|__preempt_count_sub(inline)
-> -002|schedule()
-> -003|__preempt_count_add(inline)
-> -003|schedule_preempt_disabled()
-> -004|spin_lock(inline)
-> -004|__mutex_lock_common(inline)
-> -004|__mutex_lock_slowpath()
-> -005|current_thread_info(inline)
-> -005|mutex_set_owner(inline)
-> -005|mutex_lock()
-> -006|__read_once_size(inline)
-> -006|static_key_count(inline)
-> -006|cpuset_can_attach()
-> -007|cgroup_taskset_migrate()
-> -008|cgroup_migrate()
-> -009|cgroup_attach_task()
-> -010|__cgroup_procs_write.isra.32()
-> -011|cgroup_tasks_write()
-> -012|cgroup_file_write()
-> -013|kernfs_fop_write()
-> -014|__vfs_write()
-> -015|vfs_write()
-> -016|SYSC_write(inline)
-> -016|sys_write()
-> -017|el0_svc_naked(asm)
->  -->|exception
-> -018|NUX:0x507970(asm)
->  ---|end of frame
-> 
-> init:1
-> -000|__switch_to()
-> -001|context_switch(inline)
-> -001|__schedule()
-> -002|__preempt_count_sub(inline)
-> -002|schedule()
-> -003|__preempt_count_add(inline)
-> -003|schedule_preempt_disabled()
-> -004|spin_lock(inline)
-> -004|__mutex_lock_common(inline)
-> -004|__mutex_lock_slowpath()
-> -005|current_thread_info(inline)
-> -005|mutex_set_owner(inline)
-> -005|mutex_lock()
-> -006|atomic_add(inline)
-> -006|get_online_cpus()
-> -007|rebuild_sched_domains_locked()
-> -008|update_cpumask(inline)
-> -008|cpuset_write_resmask()
-> -009|cgroup_file_write()
-> -010|kernfs_fop_write()
-> -011|__vfs_write()
-> -012|vfs_write()
-> -013|SYSC_write(inline)
-> -013|sys_write()
-> -014|el0_svc_naked(asm)
->  -->|exception
-> -015|NUX:0x507970(asm)
->  ---|end of frame
-> 
-> We can reorder the sequence of locks as in the below diff to avoid this
-> deadlock. But I am looking for inputs/better solution to fix this deadlock.
-> 
-> ---
-> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
->  /**
->   * update_tasks_cpumask - Update the cpumasks of tasks in the cpuset.
->   * @cs: the cpuset in which each task's cpus_allowed mask needs to be changed
-> @@ -930,7 +946,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
->  	rcu_read_unlock();
->  
->  	if (need_rebuild_sched_domains)
-> -		rebuild_sched_domains_locked();
-> +		rebuild_sched_domains_unlocked()(without taking cpuhotplug.lock)
->  }
->  
->  /**
-> @@ -1719,6 +1735,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
-> +	get_online_cpus();
->  	mutex_lock(&cpuset_mutex);
->  	if (!is_cpuset_online(cs))
->  		goto out_unlock;
-> @@ -1744,6 +1761,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
->  	mutex_unlock(&cpuset_mutex);
-> +	put_online_cpus();
->  	kernfs_unbreak_active_protection(of->kn);
->  	css_put(&cs->css);
->  	flush_workqueue(cpuset_migrate_mm_wq);
-> 
+> The patchset is introducing a new methodology for selecting oom victims so 
+> you can define how cgroups are compared vs other cgroups with your own 
+> "badness" calculation.  I think your implementation based heavily on anon 
+> and unevictable lrus and unreclaimable slab is fine and you can describe 
+> that detail in the documentation (along with the caveat that it is only 
+> calculated for nodes in the allocation's mempolicy).  With 
+> memory.oom_priority, the user has full ability to change that selection.  
+> Process selection heuristics have changed over time themselves, it's not 
+> something that must be backwards compatibile and trying to sum the usage 
+> from each of the cgroup's mm_struct's and respect oom_score_adj is 
+> unnecessarily complex.
 
-++
+I agree.
 
-Adding more folks for suggestion
+So, it looks to me that we're close to an acceptable version,
+and the only remaining question is the default behavior
+(when oom_group is not set).
 
--- 
-Qualcomm India Private Limited, on behalf of Qualcomm Innovation
-Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
-Collaborative Project
+Michal suggests to ignore non-oom_group memcgs, and compare tasks with
+memcgs with oom_group set. This makes the whole thing completely opt-in,
+but then we probably need another knob (or value) to select between
+"select memcg, kill biggest task" and "select memcg, kill all tasks".
+Also, as the whole thing is based on comparison between processes and
+memcgs, we probably need oom_priority for processes.
+I'm not necessary against this options, but I do worry about the complexity
+of resulting interface.
+
+In my implementation we always select a victim memcg first (or a task
+in root memcg), and then kill the biggest task inside.
+It actually changes the victim selection policy. By doing this
+we achieve per-memcg fairness, which makes sense in a containerized
+environment.
+I believe it's acceptable, but I can also add a cgroup v2 mount option
+to completely revert to the per-process OOM killer for those users, who
+for some reasons depend on the existing victim selection policy.
+
+Any thoughts/objections?
+
+Thanks!
+
+Roman
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
