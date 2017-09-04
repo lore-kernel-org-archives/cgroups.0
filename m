@@ -1,162 +1,109 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [v7 3/5] mm, oom: introduce oom_priority for memory cgroups
-Date: Mon, 4 Sep 2017 15:21:06 +0100
-Message-ID: <20170904142108.7165-4-guro@fb.com>
-References: <20170904142108.7165-1-guro@fb.com>
+Subject: [v7 0/5] cgroup-aware OOM killer
+Date: Mon, 4 Sep 2017 15:21:03 +0100
+Message-ID: <20170904142108.7165-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=jF+aUshvq9C7Bcgt9Y15AS1jAHHRGmB7zalbXJ2aVFk=;
- b=iZezNeplDCjCd6fuRwC57MYlN/VwFD26JF5Kw1IbHrOs1/gScXK5Ry3yWD8WyE6XfZuv
- UHagR0gkyT6bSE73GHEGMD8kBanADwD1kZqz1pFv7uPvukcBGZlBUrnVds/xCj7l0Pim
- zXreBe5y/D2uM6Bnql5MJDNw5SFLZ33N7hY= 
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=pMri832dpXZnZB3k3WYX+0ZRu2UfjCxdr1UzIEpVze0=;
+ b=XW8rjDwvO9DRwEb1ezlnXd3LrNOJWz7kNvKUsDChsrra8iKmT1PKxHb5ri/k90ObgnfY
+ SDJjJ0zFbWJ06Aw/CAgg8T8KdJF5qjxhquzQ8P3FyHX9Fk0NWYldxOI90+IOmHDi3TKf
+ sozOkXiL0VagUe3UxtUQgM0fmEFpynoKlac= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=jF+aUshvq9C7Bcgt9Y15AS1jAHHRGmB7zalbXJ2aVFk=;
- b=CSB8rWQYyBlx1gywfiVFTnHIsbB185bi4NbJZlp6lYeGlEFpb/LFvTWXepaiJbuECjsqAn4usdzslsUgRWtYx360YXWZwcTLQYnf/tcYxsJHusXYZn2w/cXRtkpGIrhYC7NYN8EiIJyl5zOCncolV1Iky6/ouDDfRvSngA/c49o=
-In-Reply-To: <20170904142108.7165-1-guro@fb.com>
+ bh=pMri832dpXZnZB3k3WYX+0ZRu2UfjCxdr1UzIEpVze0=;
+ b=fgh9p5ViKHt+fT6enKg59kks6k85GzhknQdSATPpinl9RVWXgQMBoPdskv2Uuv1c4Uyn8/LV0RL7iy+2hVtu7H4T2Vaobqf+vRbJv3rpQPWt6/yIDKbZwS6Sp7eLKPvRGFW8NKFET2emueXoTAdX4fenAaCySTTikZfo6XWTzzA=
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Introduce a per-memory-cgroup oom_priority setting: an integer number,
-which defines the order in which the OOM killer selects victim memory
-cgroups.
+This patchset makes the OOM killer cgroup-aware.
 
-OOM killer prefers memory cgroups with larger priority if they are
-populated with eligible tasks.
+v7:
+  - __oom_kill_process() drops reference to the victim task
+  - oom_score_adj -1000 is always respected
+  - Renamed oom_kill_all to oom_group
+  - Dropped oom_prio range, converted from short to int
+  - Added a cgroup v2 mount option to disable cgroup-aware OOM killer
+  - Docs updated
+  - Rebased on top of mmotm
 
-The oom_priority value is compared within sibling cgroups.
+v6:
+  - Renamed oom_control.chosen to oom_control.chosen_task
+  - Renamed oom_kill_all_tasks to oom_kill_all
+  - Per-node NR_SLAB_UNRECLAIMABLE accounting
+  - Several minor fixes and cleanups
+  - Docs updated
 
-If two or more sibling cgroups have the same oom_priority,
-the decision is based on their memory footprint.
+v5:
+  - Rebased on top of Michal Hocko's patches, which have changed the
+    way how OOM victims becoming an access to the memory
+    reserves. Dropped corresponding part of this patchset
+  - Separated the oom_kill_process() splitting into a standalone commit
+  - Added debug output (suggested by David Rientjes)
+  - Some minor fixes
 
-The root cgroup has the oom_priority 0, which cannot be changed.
+v4:
+  - Reworked per-cgroup oom_score_adj into oom_priority
+    (based on ideas by David Rientjes)
+  - Tasks with oom_score_adj -1000 are never selected if
+    oom_kill_all_tasks is not set
+  - Memcg victim selection code is reworked, and
+    synchronization is based on finding tasks with OOM victim marker,
+    rather then on global counter
+  - Debug output is dropped
+  - Refactored TIF_MEMDIE usage
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
+v3:
+  - Merged commits 1-4 into 6
+  - Separated oom_score_adj logic and debug output into separate commits
+  - Fixed swap accounting
+
+v2:
+  - Reworked victim selection based on feedback
+    from Michal Hocko, Vladimir Davydov and Johannes Weiner
+  - "Kill all tasks" is now an opt-in option, by default
+    only one process will be killed
+  - Added per-cgroup oom_score_adj
+  - Refined oom score calculations, suggested by Vladimir Davydov
+  - Converted to a patchset
+
+v1:
+  https://lkml.org/lkml/2017/5/18/969
+
+
 Cc: Michal Hocko <mhocko@kernel.org>
 Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 Cc: David Rientjes <rientjes@google.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 Cc: kernel-team@fb.com
 Cc: cgroups@vger.kernel.org
 Cc: linux-doc@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-mm@kvack.org
----
- include/linux/memcontrol.h |  3 +++
- mm/memcontrol.c            | 49 ++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 50 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 5b5c2b89968e..73a0291948fd 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -206,6 +206,9 @@ struct mem_cgroup {
- 	/* cached OOM score */
- 	long oom_score;
- 
-+	/* OOM killer priority */
-+	int oom_priority;
-+
- 	/* handle for "memory.events" */
- 	struct cgroup_file events_file;
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 97813c56163b..d7dd293897ca 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2757,6 +2757,7 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- 	for (;;) {
- 		struct cgroup_subsys_state *css;
- 		struct mem_cgroup *memcg = NULL;
-+		int prio = INT_MIN;
- 		long score = LONG_MIN;
- 
- 		css_for_each_child(css, &root->css) {
-@@ -2768,7 +2769,12 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- 			if (iter->oom_score == 0)
- 				continue;
- 
--			if (iter->oom_score > score) {
-+			if (iter->oom_priority > prio) {
-+				memcg = iter;
-+				prio = iter->oom_priority;
-+				score = iter->oom_score;
-+			} else if (iter->oom_priority == prio &&
-+				   iter->oom_score > score) {
- 				memcg = iter;
- 				score = iter->oom_score;
- 			}
-@@ -2838,7 +2844,15 @@ bool mem_cgroup_select_oom_victim(struct oom_control *oc)
- 	 * For system-wide OOMs we should consider tasks in the root cgroup
- 	 * with oom_score larger than oc->chosen_points.
- 	 */
--	if (!oc->memcg) {
-+	if (!oc->memcg && !(oc->chosen_memcg &&
-+			    oc->chosen_memcg->oom_priority > 0)) {
-+		/*
-+		 * Root memcg has priority 0, so if chosen memcg has lower
-+		 * priority, any task in root cgroup is preferable.
-+		 */
-+		if (oc->chosen_memcg && oc->chosen_memcg->oom_priority < 0)
-+			oc->chosen_points = 0;
-+
- 		select_victim_root_cgroup_task(oc);
- 
- 		if (oc->chosen_task && oc->chosen_memcg) {
-@@ -5480,6 +5494,31 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
- 	return nbytes;
- }
- 
-+static int memory_oom_priority_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+
-+	seq_printf(m, "%d\n", memcg->oom_priority);
-+
-+	return 0;
-+}
-+
-+static ssize_t memory_oom_priority_write(struct kernfs_open_file *of,
-+				char *buf, size_t nbytes, loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	int oom_priority;
-+	int err;
-+
-+	err = kstrtoint(strstrip(buf), 0, &oom_priority);
-+	if (err)
-+		return err;
-+
-+	memcg->oom_priority = oom_priority;
-+
-+	return nbytes;
-+}
-+
- static int memory_events_show(struct seq_file *m, void *v)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-@@ -5606,6 +5645,12 @@ static struct cftype memory_files[] = {
- 		.write = memory_oom_group_write,
- 	},
- 	{
-+		.name = "oom_priority",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = memory_oom_priority_show,
-+		.write = memory_oom_priority_write,
-+	},
-+	{
- 		.name = "events",
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.file_offset = offsetof(struct mem_cgroup, events_file),
+Roman Gushchin (5):
+  mm, oom: refactor the oom_kill_process() function
+  mm, oom: cgroup-aware OOM killer
+  mm, oom: introduce oom_priority for memory cgroups
+  mm, oom, docs: describe the cgroup-aware OOM killer
+  mm, oom: cgroup v2 mount option to disable cgroup-aware OOM killer
+
+ Documentation/admin-guide/kernel-parameters.txt |   1 +
+ Documentation/cgroup-v2.txt                     |  56 +++++
+ include/linux/memcontrol.h                      |  36 +++
+ include/linux/oom.h                             |  12 +-
+ mm/memcontrol.c                                 | 293 ++++++++++++++++++++++++
+ mm/oom_kill.c                                   | 209 +++++++++++------
+ 6 files changed, 537 insertions(+), 70 deletions(-)
+
 -- 
 2.13.5
 
