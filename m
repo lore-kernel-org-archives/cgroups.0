@@ -1,101 +1,177 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup changes for v4.14-rc1
-Date: Tue, 5 Sep 2017 07:39:31 -0700
-Message-ID: <20170905143931.GI1774378@devbig577.frc2.facebook.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [v7 2/5] mm, oom: cgroup-aware OOM killer
+Date: Tue, 5 Sep 2017 16:57:00 +0200
+Message-ID: <20170905145700.fd7jjd37xf4tb55h@dhcp22.suse.cz>
+References: <20170904142108.7165-1-guro@fb.com>
+ <20170904142108.7165-3-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=pic5lCzWfqkaqx+01iCOVd8XCNs/qwgrO1Z8RiN7kzY=;
-        b=PH2FLLZipRY7Q15VU+NpvH20OQQ0KCbWXbqKfIxhKGHr/Cek+PYDxXdkkS1NDXI877
-         /PaMEpS3WXnkra9F0waF5scr8q0PUR4AlDTYMc9UPf3FJjaOzugPYGfMmtCPI5WTioFl
-         pGxG/PtdntnT0LyaMi/tKgAwQINsD+zYpJ9wuX317Du5zIOWt7FRIT/iLpkUH/cplqmp
-         SStCbLJJNxNAAkjJXxBWvu03PtijmCBVXyNHpzNevnEGgoD2CmsgmoWXMrblDYVGYpUH
-         RSi/ofaKUdIFJS77z5j7jjkm5D3h+oVryPh/24xBvdorHqDSzvpUOBfZMLLVuBksEEnJ
-         2kIg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170904142108.7165-3-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Linus.
+On Mon 04-09-17 15:21:05, Roman Gushchin wrote:
+[...]
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index a69d23082abf..97813c56163b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2649,6 +2649,213 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
+>  	return ret;
+>  }
+>  
+> +static long memcg_oom_badness(struct mem_cgroup *memcg,
+> +			      const nodemask_t *nodemask)
+> +{
+> +	long points = 0;
+> +	int nid;
+> +	pg_data_t *pgdat;
+> +
+> +	for_each_node_state(nid, N_MEMORY) {
+> +		if (nodemask && !node_isset(nid, *nodemask))
+> +			continue;
+> +
+> +		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> +				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
 
-Several notable changes this cycle.
+Why don't you consider file LRUs here? What if there is a lot of page
+cache which is not reclaimed because it is protected by memcg->low.
+Should we hide that from the OOM killer?
 
-* Thread mode was merged.  This will be used for cgroup2 support for
-  CPU and possibly other controllers.  Unfortunately, CPU controller
-  cgroup2 support didn't make this pull request but most contentions
-  have been resolved and the support is likely to be merged before the
-  next merge window.
+[...]
+> +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+> +{
+> +	struct mem_cgroup *iter, *parent;
+> +
+> +	for_each_mem_cgroup_tree(iter, root) {
+> +		if (memcg_has_children(iter)) {
+> +			iter->oom_score = 0;
+> +			continue;
+> +		}
 
-* cgroup.stat now shows the number of descendant cgroups.
+Do we really need this check? If it is a mere optimization then
+we should probably check for tasks in the memcg rather than
+descendant. More on that below.
 
-* cpuset now can enable the easier-to-configure v2 behavior on v1
-  hierarchy.
+> +
+> +		iter->oom_score = oom_evaluate_memcg(iter, oc->nodemask);
+> +
+> +		/*
+> +		 * Ignore empty and non-eligible memory cgroups.
+> +		 */
+> +		if (iter->oom_score == 0)
+> +			continue;
+> +
+> +		/*
+> +		 * If there are inflight OOM victims, we don't need to look
+> +		 * further for new victims.
+> +		 */
+> +		if (iter->oom_score == -1) {
+> +			oc->chosen_memcg = INFLIGHT_VICTIM;
+> +			mem_cgroup_iter_break(root, iter);
+> +			return;
+> +		}
+> +
+> +		for (parent = parent_mem_cgroup(iter); parent && parent != root;
+> +		     parent = parent_mem_cgroup(parent))
+> +			parent->oom_score += iter->oom_score;
 
-Thanks.
+Hmm. The changelog says "By default, it will look for the biggest leaf
+cgroup, and kill the largest task inside." But you are accumulating
+oom_score up the hierarchy and so parents will have higher score than
+the layer of their children and the larger the sub-hierarchy the more
+biased it will become. Say you have
+	root
+         /\
+        /  \
+       A    D
+      / \
+     B   C
 
-The following changes since commit 5771a8c08880cdca3bfb4a3fc6d309d6bba20877:
+B (5), C(15) thus A(20) and D(20). Unless I am missing something we are
+going to go down A path and then chose C even though D is the largest
+leaf group, right?
 
-  Linux v4.13-rc1 (2017-07-15 15:22:10 -0700)
+> +	}
+> +
+> +	for (;;) {
+> +		struct cgroup_subsys_state *css;
+> +		struct mem_cgroup *memcg = NULL;
+> +		long score = LONG_MIN;
+> +
+> +		css_for_each_child(css, &root->css) {
+> +			struct mem_cgroup *iter = mem_cgroup_from_css(css);
+> +
+> +			/*
+> +			 * Ignore empty and non-eligible memory cgroups.
+> +			 */
+> +			if (iter->oom_score == 0)
+> +				continue;
+> +
+> +			if (iter->oom_score > score) {
+> +				memcg = iter;
+> +				score = iter->oom_score;
+> +			}
+> +		}
+> +
+> +		if (!memcg) {
+> +			if (oc->memcg && root == oc->memcg) {
+> +				oc->chosen_memcg = oc->memcg;
+> +				css_get(&oc->chosen_memcg->css);
+> +				oc->chosen_points = oc->memcg->oom_score;
+> +			}
+> +			break;
+> +		}
+> +
+> +		if (memcg->oom_group || !memcg_has_children(memcg)) {
+> +			oc->chosen_memcg = memcg;
+> +			css_get(&oc->chosen_memcg->css);
+> +			oc->chosen_points = score;
+> +			break;
+> +		}
+> +
+> +		root = memcg;
+> +	}
+> +}
+> +
+[...]
+> +	/*
+> +	 * For system-wide OOMs we should consider tasks in the root cgroup
+> +	 * with oom_score larger than oc->chosen_points.
+> +	 */
+> +	if (!oc->memcg) {
+> +		select_victim_root_cgroup_task(oc);
 
-are available in the git repository at:
+I do not understand why do we have to handle root cgroup specially here.
+select_victim_memcg already iterates all memcgs in the oom hierarchy
+(including root) so if the root memcg is the largest one then we
+should simply consider it no? You are skipping root there because of
+memcg_has_children but I suspect this and the whole accumulate up the
+hierarchy approach just makes the whole thing more complex than necessary. With
+"tasks only in leafs" cgroup policy we should only see any pages on LRUs
+on the global root memcg and leaf cgroups. The same applies to memcg
+stats. So why cannot we simply do the tree walk, calculate
+badness/check the priority and select the largest memcg in one go?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.14
+> @@ -810,6 +810,9 @@ static void __oom_kill_process(struct task_struct *victim)
+>  	struct mm_struct *mm;
+>  	bool can_oom_reap = true;
+>  
+> +	if (is_global_init(victim) || (victim->flags & PF_KTHREAD))
+> +		return;
+> +
 
-for you to fetch changes up to b8d1b8ee93df8ffbabbeadd65d39853cfad6d698:
+This will leak a reference to the victim AFACS
 
-  cpuset: Allow v2 behavior in v1 cgroup (2017-08-18 08:24:22 -0700)
-
-----------------------------------------------------------------
-Dan Carpenter (1):
-      cgroup: remove unneeded checks
-
-Roman Gushchin (4):
-      cgroup: keep track of number of descent cgroups
-      cgroup: implement hierarchy limits
-      cgroup: add cgroup.stat interface with basic hierarchy stats
-      cgroup: re-use the parent pointer in cgroup_destroy_locked()
-
-Tejun Heo (13):
-      cgroup: update outdated cgroup.procs documentation
-      cgroup: remove now unused list_head @pending in cgroup_apply_cftypes()
-      cgroup: distinguish local and children populated states
-      cgroup: replace css_set walking populated test with testing cgrp->nr_populated_csets
-      cgroup: reorganize cgroup.procs / task write path
-      cgroup: add @flags to css_task_iter_start() and implement CSS_TASK_ITER_PROCS
-      cgroup: introduce cgroup->dom_cgrp and threaded css_set handling
-      cgroup: implement CSS_TASK_ITER_THREADED
-      cgroup: implement cgroup v2 thread support
-      cgroup: remove unnecessary empty check when enabling threaded mode
-      cgroup: add comment to cgroup_enable_threaded()
-      cgroup: short-circuit cset_cgroup_from_root() on the default hierarchy
-      cgroup: misc changes
-
-Waiman Long (3):
-      cgroup: update debug controller to print out thread mode information
-      cgroup: Add mount flag to enable cpuset to use v2 behavior in v1 cgroup
-      cpuset: Allow v2 behavior in v1 cgroup
-
- Documentation/cgroup-v2.txt     | 221 +++++++++-
- include/linux/cgroup-defs.h     |  68 ++-
- include/linux/cgroup.h          |  39 +-
- kernel/cgroup/cgroup-internal.h |  12 +-
- kernel/cgroup/cgroup-v1.c       |  75 +++-
- kernel/cgroup/cgroup.c          | 947 +++++++++++++++++++++++++++++++---------
- kernel/cgroup/cpuset.c          |  39 +-
- kernel/cgroup/debug.c           |  53 ++-
- kernel/cgroup/freezer.c         |   6 +-
- kernel/cgroup/pids.c            |   1 +
- kernel/events/core.c            |   1 +
- mm/memcontrol.c                 |   2 +-
- net/core/netclassid_cgroup.c    |   2 +-
- 13 files changed, 1194 insertions(+), 272 deletions(-)
+>  	p = find_lock_task_mm(victim);
+>  	if (!p) {
+>  		put_task_struct(victim);
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
