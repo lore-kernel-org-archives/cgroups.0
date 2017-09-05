@@ -1,136 +1,72 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v7 5/5] mm, oom: cgroup v2 mount option to disable cgroup-aware
- OOM killer
-Date: Mon, 4 Sep 2017 18:51:18 +0100
-Message-ID: <20170904175118.GA25219@castle.DHCP.thefacebook.com>
-References: <20170904142108.7165-1-guro@fb.com>
- <20170904142108.7165-6-guro@fb.com>
- <CALvZod4TtA8myYSqCL87dDXfyk1qkYx+v-MO6nt-cA+bKTcGUA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] Workqueue lockup: Circular dependency in threads
+Date: Tue, 5 Sep 2017 06:22:43 -0700
+Message-ID: <20170905132242.GA1774378@devbig577.frc2.facebook.com>
+References: <1504101538-20075-1-git-send-email-prsood@codeaurora.org>
+ <bc1016ee-792e-87f8-5158-777b7f9405b8@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=R21/qt6B6SRIlA19iL7fd7tD+1YgQRipaLVOoKdOfds=;
- b=ZMQB+gXjUZs43EfHtT11S4y7WjdV61EQIjJ7o6uVANAXE6aGZ+BYA0yvO/B2TnK0CL9D
- DdvIUyiKTQtfDFZLN40K6Dpa7IAPenZG2lD/pspbuq5tRtsXAVgYJjs8CaYZGbpn4YqR
- J6BwDX7LtfLO7TYvYj7acRPYz+pjpWMBU80= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=R21/qt6B6SRIlA19iL7fd7tD+1YgQRipaLVOoKdOfds=;
- b=N6iqOAofn30ya8qjTDKi1VTqx335BuBNlEDSqYFg9zpNRnzjLvBIBfNIYXRa7zasLbVzpjEQuuyOEWRHEwNR5wbZwxqJSIMnPeDZ1n5OaeJ32JxA41ZwSP9+ZQhliMjEajtf5/ZKFBvtHeeVham+mEJxKZWSbuWt6HWhzl1hcTA=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=QKZObg/ojEh3jXx6Xi5FQESJF6Sn56c6+f24loHYJw0=;
+        b=KhFHnF2DmPjMrLZPrHXoNNkSeCRtCIeQRNNG06NkKfAV6CeqFJNVQxNbaaGXenF+XF
+         iE1qBCsPeEnxU9usWpnC4YVadm1gaQN5E+C6yy/HQ4uVJ2Qmjv9xf3cMNfP5ZrKcHITw
+         2eULyTwRTXrgnmmvPH3BaQLkXqL4DZvaSAoYBzIs7ZdCflfv+mIIqODDkPARG1497Dpy
+         naRFxeWD7SA6MfC351k5MiN6WmWBZFNzS9Ap8Umh8yvGooFilye18P1Hi1NrpUSSG5DW
+         3codse1s9tYBXY0dM/uYmEkGcKDuqMzRKDrkkuZjFdJTTWEOhhNbmRdzdm3cPGbxi7wA
+         vwJQ==
 Content-Disposition: inline
-In-Reply-To: <CALvZod4TtA8myYSqCL87dDXfyk1qkYx+v-MO6nt-cA+bKTcGUA@mail.gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <bc1016ee-792e-87f8-5158-777b7f9405b8-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Linux MM <linux-mm@kvack.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, apkm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-On Mon, Sep 04, 2017 at 10:32:37AM -0700, Shakeel Butt wrote:
-> On Mon, Sep 4, 2017 at 7:21 AM, Roman Gushchin <guro@fb.com> wrote:
-> > Introducing of cgroup-aware OOM killer changes the victim selection
-> > algorithm used by default: instead of picking the largest process,
-> > it will pick the largest memcg and then the largest process inside.
-> >
-> > This affects only cgroup v2 users.
-> >
-> > To provide a way to use cgroups v2 if the old OOM victim selection
-> > algorithm is preferred for some reason, the nogroupoom mount option
-> > is added.
-> 
-> Is this mount option or boot parameter? From the code, it seems like a
-> boot parameter.
+Hello,
 
-Sure, you're right.
+On Thu, Aug 31, 2017 at 06:43:56PM +0530, Prateek Sood wrote:
+> > 6) cpuset_mutex is acquired by task init:1 and is waiting for cpuhotplug lock.
 
-Fixed version below.
+Yeah, this is the problematic one.
 
-Thank you!
+> > We can reorder the sequence of locks as in the below diff to avoid this
+> > deadlock. But I am looking for inputs/better solution to fix this deadlock.
+> > 
+> > ---
+> > diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+> >  /**
+> >   * update_tasks_cpumask - Update the cpumasks of tasks in the cpuset.
+> >   * @cs: the cpuset in which each task's cpus_allowed mask needs to be changed
+> > @@ -930,7 +946,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+> >  	rcu_read_unlock();
+> >  
+> >  	if (need_rebuild_sched_domains)
+> > -		rebuild_sched_domains_locked();
+> > +		rebuild_sched_domains_unlocked()(without taking cpuhotplug.lock)
+> >  }
+> >  
+> >  /**
+> > @@ -1719,6 +1735,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+> > +	get_online_cpus();
+> >  	mutex_lock(&cpuset_mutex);
+> >  	if (!is_cpuset_online(cs))
+> >  		goto out_unlock;
+> > @@ -1744,6 +1761,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+> >  	mutex_unlock(&cpuset_mutex);
+> > +	put_online_cpus();
+> >  	kernfs_unbreak_active_protection(of->kn);
+> >  	css_put(&cs->css);
+> >  	flush_workqueue(cpuset_migrate_mm_wq);
+> > 
 
---
+And the patch looks good to me.  Can you please format the patch with
+proper description and sob?
 
-From 0b4757ec8d339fa883e17d4e25a92f45bf5565e0 Mon Sep 17 00:00:00 2001
-From: Roman Gushchin <guro@fb.com>
-Date: Mon, 4 Sep 2017 12:08:52 +0100
-Subject: [v7 5/5] mm, oom: allow disabling cgroup-aware OOM killer
+Thanks.
 
-Introducing of cgroup-aware OOM killer changes the victim selection
-algorithm used by default: instead of picking the largest process,
-it will pick the largest memcg and then the largest process inside.
-
-This affects only cgroup v2 users.
-
-To provide a way to use cgroups v2 if the old OOM victim selection
-algorithm is preferred for some reason, the cgroup.memory=nogroupoom
-boot option is added.
-
-If set, the OOM selection is performed in a "traditional" per-process
-way. Both oom_priority and oom_group memcg knobs are ignored.
-
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
----
- Documentation/admin-guide/kernel-parameters.txt | 1 +
- mm/memcontrol.c                                 | 8 ++++++++
- 2 files changed, 9 insertions(+)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 28f1a0f84456..07891f1030aa 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -489,6 +489,7 @@
- 			Format: <string>
- 			nosocket -- Disable socket memory accounting.
- 			nokmem -- Disable kernel memory accounting.
-+			nogroupoom -- Disable cgroup-aware OOM killer.
- 
- 	checkreqprot	[SELINUX] Set initial checkreqprot flag value.
- 			Format: { "0" | "1" }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d7dd293897ca..6a8235dc41f6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -87,6 +87,9 @@ static bool cgroup_memory_nosocket;
- /* Kernel memory accounting disabled? */
- static bool cgroup_memory_nokmem;
- 
-+/* Cgroup-aware OOM  disabled? */
-+static bool cgroup_memory_nogroupoom;
-+
- /* Whether the swap controller is active */
- #ifdef CONFIG_MEMCG_SWAP
- int do_swap_account __read_mostly;
-@@ -2822,6 +2825,9 @@ bool mem_cgroup_select_oom_victim(struct oom_control *oc)
- 	if (mem_cgroup_disabled())
- 		return false;
- 
-+	if (cgroup_memory_nogroupoom)
-+		return false;
-+
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
- 		return false;
- 
-@@ -6188,6 +6194,8 @@ static int __init cgroup_memory(char *s)
- 			cgroup_memory_nosocket = true;
- 		if (!strcmp(token, "nokmem"))
- 			cgroup_memory_nokmem = true;
-+		if (!strcmp(token, "nogroupoom"))
-+			cgroup_memory_nogroupoom = true;
- 	}
- 	return 0;
- }
 -- 
-2.13.5
-
+tejun
