@@ -1,91 +1,104 @@
-From: Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [HMM-v25 10/19] mm/memcontrol: support MEMORY_DEVICE_PRIVATE v4
-Date: Tue, 5 Sep 2017 13:21:21 -0400
-Message-ID: <20170905172120.GB19397@redhat.com>
-References: <20170817000548.32038-1-jglisse@redhat.com>
- <20170817000548.32038-11-jglisse@redhat.com>
- <f239d1c2-7006-5ce4-7848-7d82e67533a9@linux.vnet.ibm.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [v7 5/5] mm, oom: cgroup v2 mount option to disable cgroup-aware
+ OOM killer
+Date: Tue, 5 Sep 2017 20:16:09 +0100
+Message-ID: <20170905191609.GA19687@castle.dhcp.TheFacebook.com>
+References: <20170904142108.7165-1-guro@fb.com>
+ <20170904142108.7165-6-guro@fb.com>
+ <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz>
+ <20170905143021.GA28599@castle.dhcp.TheFacebook.com>
+ <20170905151251.luh4wogjd3msfqgf@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=OVM08nfJCpqjEvuSqzyeqsVzrT45OugSlm+8FNUo/HY=;
+ b=pMU+jFdnIGeulW/QKK62uhEgT6CLAoZnvN/syW9q1EKhKWXNN8NQDIjtOOocL+qDkBVA
+ BKEnKX6GbPXKreHQ2797MU/p+8Yi0h2gjcTcIaxlY2mHGcTkRq1Uo0T9zKCzZiMRD+QU
+ AfoiqxPhaD5+VSdvWtzMGMw3YmiDpDtRrwY= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=OVM08nfJCpqjEvuSqzyeqsVzrT45OugSlm+8FNUo/HY=;
+ b=ZHVEmqO96/jguBdCGDlI+ysoU8bgvz+ffeXYKDGKwSbW57CYeTa6Bmi3v+htbQsbj8cHcjINwuzpaCnVDn3mN+MfBMz83w7dF13w2JrPXorC4vg3ImE9uk/RcqzMQb9p2nV4Jq7247vXtYzUnIKng7gBU3CFwamsv/X7wqdd378=
 Content-Disposition: inline
-In-Reply-To: <f239d1c2-7006-5ce4-7848-7d82e67533a9@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170905151251.luh4wogjd3msfqgf-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Laurent Dufour <ldufour@linux.vnet.ibm.com>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, John Hubbard <jhubbard@nvidia.com>, Dan Williams <dan.j.williams@intel.com>, David Nellans <dnellans@nvidia.com>, Balbir Singh <bsingharora@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 05, 2017 at 07:13:15PM +0200, Laurent Dufour wrote:
-> On 17/08/2017 02:05, J=E9r=F4me Glisse wrote:
-> > HMM pages (private or public device pages) are ZONE_DEVICE page and
-> > thus need special handling when it comes to lru or refcount. This
-> > patch make sure that memcontrol properly handle those when it face
-> > them. Those pages are use like regular pages in a process address
-> > space either as anonymous page or as file back page. So from memcg
-> > point of view we want to handle them like regular page for now at
-> > least.
-> >=20
-> > Changed since v3:
-> >   - remove public support and move those chunk to separate patch
-> > Changed since v2:
-> >   - s/host/public
-> > Changed since v1:
-> >   - s/public/host
-> >   - add comments explaining how device memory behave and why
-> >=20
-> > Signed-off-by: J=E9r=F4me Glisse <jglisse@redhat.com>
-> > Acked-by: Balbir Singh <bsingharora@gmail.com>
-> > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > Cc: Michal Hocko <mhocko@kernel.org>
-> > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> > Cc: cgroups@vger.kernel.org
-> > ---
-> >  kernel/memremap.c |  1 +
-> >  mm/memcontrol.c   | 52 +++++++++++++++++++++++++++++++++++++++++++++++=
-+----
-> >  2 files changed, 49 insertions(+), 4 deletions(-)
-> >=20
-> > diff --git a/kernel/memremap.c b/kernel/memremap.c
-> > index 398630c1fba3..f42d7483e886 100644
-> > --- a/kernel/memremap.c
-> > +++ b/kernel/memremap.c
-> > @@ -492,6 +492,7 @@ void put_zone_device_private_page(struct page *page)
-> >  		__ClearPageWaiters(page);
-> >=20
-> >  		page->mapping =3D NULL;
-> > +		mem_cgroup_uncharge(page);
-> >=20
-> >  		page->pgmap->page_free(page, page->pgmap->data);
-> >  	} else if (!count)
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 604fb3ca8028..977d1cf3493a 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -4407,12 +4407,13 @@ enum mc_target_type {
-> >  	MC_TARGET_NONE =3D 0,
-> >  	MC_TARGET_PAGE,
-> >  	MC_TARGET_SWAP,
-> > +	MC_TARGET_DEVICE,
-> >  };
-> >=20
-> >  static struct page *mc_handle_present_pte(struct vm_area_struct *vma,
-> >  						unsigned long addr, pte_t ptent)
-> >  {
-> > -	struct page *page =3D vm_normal_page(vma, addr, ptent);
-> > +	struct page *page =3D _vm_normal_page(vma, addr, ptent, true);
->=20
-> Hi J=E9r=F4me,
->=20
-> As _vm_normal_page() is defined later in the patch 18, so this patch shou=
-ld
->  break the bisectability.
+On Tue, Sep 05, 2017 at 05:12:51PM +0200, Michal Hocko wrote:
+> On Tue 05-09-17 15:30:21, Roman Gushchin wrote:
+> > On Tue, Sep 05, 2017 at 03:44:12PM +0200, Michal Hocko wrote:
+> [...]
+> > > Why is this an opt out rather than opt-in? IMHO the original oom logic
+> > > should be preserved by default and specific workloads should opt in for
+> > > the cgroup aware logic. Changing the global behavior depending on
+> > > whether cgroup v2 interface is in use is more than unexpected and IMHO
+> > > wrong approach to take. I think we should instead go with 
+> > > oom_strategy=[alloc_task,biggest_task,cgroup]
+> > > 
+> > > we currently have alloc_task (via sysctl_oom_kill_allocating_task) and
+> > > biggest_task which is the default. You are adding cgroup and the more I
+> > > think about the more I agree that it doesn't really make sense to try to
+> > > fit thew new semantic into the existing one (compare tasks to kill-all
+> > > memcgs). Just introduce a new strategy and define a new semantic from
+> > > scratch. Memcg priority and kill-all are a natural extension of this new
+> > > strategy. This will make the life easier and easier to understand by
+> > > users.
+> > > 
+> > > Does that make sense to you?
+> > 
+> > Absolutely.
+> > 
+> > The only thing: I'm not sure that we have to preserve the existing logic
+> > as default option. For most users (except few very specific usecases),
+> > it should be at least as good, as the existing one.
+> 
+> But this is really an unexpected change. Users even might not know that
+> they are using cgroup v2 and memcg is in use.
+> 
+> > Making it opt-in means that corresponding code will be executed only
+> > by few users, who cares.
+> 
+> Yeah, which is the way we should introduce new features no?
+> 
+> > Then we should probably hide corresponding
+> > cgroup interface (oom_group and oom_priority knobs) by default,
+> > and it feels as unnecessary complication and is overall against
+> > cgroup v2 interface design.
+> 
+> Why. If we care enough, we could simply return EINVAL when those knobs
+> are written while the corresponding strategy is not used.
 
-Correct, it seems i miss that when re-org patch order. The vm_normal_page()
-changes can be move to patch 18 as it would be more logical to change call
-site with the patch that adds the new special function.
+It doesn't look as a nice default interface.
 
-Dunno if patch can be edited now ?
+> 
+> > > I think we should instead go with
+> > > oom_strategy=[alloc_task,biggest_task,cgroup]
+> > 
+> > It would be a really nice interface; although I've no idea how to implement it:
+> > "alloc_task" is an existing sysctl, which we have to preserve;
+> 
+> I would argue that we should simply deprecate and later drop the sysctl.
+> I _strongly_ suspect anybody is using this. If yes it is not that hard
+> to change the kernel command like rather than select the sysctl.
 
-Cheers,
-J=E9r=F4me
+I agree. And if so, why do we need a new interface for an useless feature?
+
+> 
+> > while "cgroup" depends on cgroup v2.
+> 
+> Which is not a big deal either. Simply fall back to default if there are
+> no cgroup v2. The implementation would have essentially the same effect
+> because there won't be any kill-all cgroups and so we will select the
+> largest task.
+
+I'd agree with you, if there are use cases (excluding pure legacy),
+when the per-process algorithm is preferable over the cgroup-aware OOM.
+I really doubt, and hope, that with oom_priorities the suggested algorithm
+should cover almost all reasonable use cases.
+
+Thanks!
