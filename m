@@ -1,72 +1,205 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] Workqueue lockup: Circular dependency in threads
-Date: Tue, 5 Sep 2017 06:22:43 -0700
-Message-ID: <20170905132242.GA1774378@devbig577.frc2.facebook.com>
-References: <1504101538-20075-1-git-send-email-prsood@codeaurora.org>
- <bc1016ee-792e-87f8-5158-777b7f9405b8@codeaurora.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [v7 1/5] mm, oom: refactor the oom_kill_process() function
+Date: Tue, 5 Sep 2017 15:34:40 +0200
+Message-ID: <20170905133440.ekcwesdltttieoi7@dhcp22.suse.cz>
+References: <20170904142108.7165-1-guro@fb.com>
+ <20170904142108.7165-2-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=QKZObg/ojEh3jXx6Xi5FQESJF6Sn56c6+f24loHYJw0=;
-        b=KhFHnF2DmPjMrLZPrHXoNNkSeCRtCIeQRNNG06NkKfAV6CeqFJNVQxNbaaGXenF+XF
-         iE1qBCsPeEnxU9usWpnC4YVadm1gaQN5E+C6yy/HQ4uVJ2Qmjv9xf3cMNfP5ZrKcHITw
-         2eULyTwRTXrgnmmvPH3BaQLkXqL4DZvaSAoYBzIs7ZdCflfv+mIIqODDkPARG1497Dpy
-         naRFxeWD7SA6MfC351k5MiN6WmWBZFNzS9Ap8Umh8yvGooFilye18P1Hi1NrpUSSG5DW
-         3codse1s9tYBXY0dM/uYmEkGcKDuqMzRKDrkkuZjFdJTTWEOhhNbmRdzdm3cPGbxi7wA
-         vwJQ==
+Return-path: <linux-doc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <bc1016ee-792e-87f8-5158-777b7f9405b8-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170904142108.7165-2-guro@fb.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, apkm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Mon 04-09-17 15:21:04, Roman Gushchin wrote:
+> The oom_kill_process() function consists of two logical parts:
+> the first one is responsible for considering task's children as
+> a potential victim and printing the debug information.
+> The second half is responsible for sending SIGKILL to all
+> tasks sharing the mm struct with the given victim.
+> 
+> This commit splits the oom_kill_process() function with
+> an intention to re-use the the second half: __oom_kill_process().
+> 
+> The cgroup-aware OOM killer will kill multiple tasks
+> belonging to the victim cgroup. We don't need to print
+> the debug information for the each task, as well as play
+> with task selection (considering task's children),
+> so we can't use the existing oom_kill_process().
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Cc: David Rientjes <rientjes@google.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: kernel-team@fb.com
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-mm@kvack.org
 
-On Thu, Aug 31, 2017 at 06:43:56PM +0530, Prateek Sood wrote:
-> > 6) cpuset_mutex is acquired by task init:1 and is waiting for cpuhotplug lock.
+Looks good to me
+Acked-by: Michal Hocko <mhocko@suse.com>
 
-Yeah, this is the problematic one.
-
-> > We can reorder the sequence of locks as in the below diff to avoid this
-> > deadlock. But I am looking for inputs/better solution to fix this deadlock.
-> > 
-> > ---
-> > diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-> >  /**
-> >   * update_tasks_cpumask - Update the cpumasks of tasks in the cpuset.
-> >   * @cs: the cpuset in which each task's cpus_allowed mask needs to be changed
-> > @@ -930,7 +946,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
-> >  	rcu_read_unlock();
-> >  
-> >  	if (need_rebuild_sched_domains)
-> > -		rebuild_sched_domains_locked();
-> > +		rebuild_sched_domains_unlocked()(without taking cpuhotplug.lock)
-> >  }
-> >  
-> >  /**
-> > @@ -1719,6 +1735,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
-> > +	get_online_cpus();
-> >  	mutex_lock(&cpuset_mutex);
-> >  	if (!is_cpuset_online(cs))
-> >  		goto out_unlock;
-> > @@ -1744,6 +1761,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
-> >  	mutex_unlock(&cpuset_mutex);
-> > +	put_online_cpus();
-> >  	kernfs_unbreak_active_protection(of->kn);
-> >  	css_put(&cs->css);
-> >  	flush_workqueue(cpuset_migrate_mm_wq);
-> > 
-
-And the patch looks good to me.  Can you please format the patch with
-proper description and sob?
-
-Thanks.
+> ---
+>  mm/oom_kill.c | 123 +++++++++++++++++++++++++++++++---------------------------
+>  1 file changed, 65 insertions(+), 58 deletions(-)
+> 
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 99736e026712..f061b627092c 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -804,68 +804,12 @@ static bool task_will_free_mem(struct task_struct *task)
+>  	return ret;
+>  }
+>  
+> -static void oom_kill_process(struct oom_control *oc, const char *message)
+> +static void __oom_kill_process(struct task_struct *victim)
+>  {
+> -	struct task_struct *p = oc->chosen;
+> -	unsigned int points = oc->chosen_points;
+> -	struct task_struct *victim = p;
+> -	struct task_struct *child;
+> -	struct task_struct *t;
+> +	struct task_struct *p;
+>  	struct mm_struct *mm;
+> -	unsigned int victim_points = 0;
+> -	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
+> -					      DEFAULT_RATELIMIT_BURST);
+>  	bool can_oom_reap = true;
+>  
+> -	/*
+> -	 * If the task is already exiting, don't alarm the sysadmin or kill
+> -	 * its children or threads, just give it access to memory reserves
+> -	 * so it can die quickly
+> -	 */
+> -	task_lock(p);
+> -	if (task_will_free_mem(p)) {
+> -		mark_oom_victim(p);
+> -		wake_oom_reaper(p);
+> -		task_unlock(p);
+> -		put_task_struct(p);
+> -		return;
+> -	}
+> -	task_unlock(p);
+> -
+> -	if (__ratelimit(&oom_rs))
+> -		dump_header(oc, p);
+> -
+> -	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
+> -		message, task_pid_nr(p), p->comm, points);
+> -
+> -	/*
+> -	 * If any of p's children has a different mm and is eligible for kill,
+> -	 * the one with the highest oom_badness() score is sacrificed for its
+> -	 * parent.  This attempts to lose the minimal amount of work done while
+> -	 * still freeing memory.
+> -	 */
+> -	read_lock(&tasklist_lock);
+> -	for_each_thread(p, t) {
+> -		list_for_each_entry(child, &t->children, sibling) {
+> -			unsigned int child_points;
+> -
+> -			if (process_shares_mm(child, p->mm))
+> -				continue;
+> -			/*
+> -			 * oom_badness() returns 0 if the thread is unkillable
+> -			 */
+> -			child_points = oom_badness(child,
+> -				oc->memcg, oc->nodemask, oc->totalpages);
+> -			if (child_points > victim_points) {
+> -				put_task_struct(victim);
+> -				victim = child;
+> -				victim_points = child_points;
+> -				get_task_struct(victim);
+> -			}
+> -		}
+> -	}
+> -	read_unlock(&tasklist_lock);
+> -
+>  	p = find_lock_task_mm(victim);
+>  	if (!p) {
+>  		put_task_struct(victim);
+> @@ -939,6 +883,69 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
+>  }
+>  #undef K
+>  
+> +static void oom_kill_process(struct oom_control *oc, const char *message)
+> +{
+> +	struct task_struct *p = oc->chosen;
+> +	unsigned int points = oc->chosen_points;
+> +	struct task_struct *victim = p;
+> +	struct task_struct *child;
+> +	struct task_struct *t;
+> +	unsigned int victim_points = 0;
+> +	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
+> +					      DEFAULT_RATELIMIT_BURST);
+> +
+> +	/*
+> +	 * If the task is already exiting, don't alarm the sysadmin or kill
+> +	 * its children or threads, just give it access to memory reserves
+> +	 * so it can die quickly
+> +	 */
+> +	task_lock(p);
+> +	if (task_will_free_mem(p)) {
+> +		mark_oom_victim(p);
+> +		wake_oom_reaper(p);
+> +		task_unlock(p);
+> +		put_task_struct(p);
+> +		return;
+> +	}
+> +	task_unlock(p);
+> +
+> +	if (__ratelimit(&oom_rs))
+> +		dump_header(oc, p);
+> +
+> +	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
+> +		message, task_pid_nr(p), p->comm, points);
+> +
+> +	/*
+> +	 * If any of p's children has a different mm and is eligible for kill,
+> +	 * the one with the highest oom_badness() score is sacrificed for its
+> +	 * parent.  This attempts to lose the minimal amount of work done while
+> +	 * still freeing memory.
+> +	 */
+> +	read_lock(&tasklist_lock);
+> +	for_each_thread(p, t) {
+> +		list_for_each_entry(child, &t->children, sibling) {
+> +			unsigned int child_points;
+> +
+> +			if (process_shares_mm(child, p->mm))
+> +				continue;
+> +			/*
+> +			 * oom_badness() returns 0 if the thread is unkillable
+> +			 */
+> +			child_points = oom_badness(child,
+> +				oc->memcg, oc->nodemask, oc->totalpages);
+> +			if (child_points > victim_points) {
+> +				put_task_struct(victim);
+> +				victim = child;
+> +				victim_points = child_points;
+> +				get_task_struct(victim);
+> +			}
+> +		}
+> +	}
+> +	read_unlock(&tasklist_lock);
+> +
+> +	__oom_kill_process(victim);
+> +}
+> +
+>  /*
+>   * Determines whether the kernel must panic because of the panic_on_oom sysctl.
+>   */
+> -- 
+> 2.13.5
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
