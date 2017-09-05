@@ -1,85 +1,101 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v7 5/5] mm, oom: cgroup v2 mount option to disable cgroup-aware
- OOM killer
-Date: Tue, 5 Sep 2017 15:30:21 +0100
-Message-ID: <20170905143021.GA28599@castle.dhcp.TheFacebook.com>
-References: <20170904142108.7165-1-guro@fb.com>
- <20170904142108.7165-6-guro@fb.com>
- <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup changes for v4.14-rc1
+Date: Tue, 5 Sep 2017 07:39:31 -0700
+Message-ID: <20170905143931.GI1774378@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=okzz/GdoLjEsL6Wgjj3kQ3FEJWqR5bqIpjzXwVwlyVk=;
- b=CN0YzcdYLjga3M8jhtfm9oJs0yFwFb5c2mHUvhJ0ePoX9QbEzSwpvDj192ZQMnw38yp3
- xGu4IPa/ZuaT0jNP0jz2C5YDTRibSpPxd2en3Nu5Z/S54iHcZ7osUnlHNa645eD/mbD8
- kdtx+G8IAKg4S/pWuBbf7FxboMgRqso7tNQ= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=okzz/GdoLjEsL6Wgjj3kQ3FEJWqR5bqIpjzXwVwlyVk=;
- b=iG+qTRA2LCHxDuU9QmItnnKRGsK3lgDQJ8gaYDbNkdfyx9bCiIq0eLnXbblco5UZcgBVGwIR0Rc4MMktcnzNSVAVM32rg93akq4It0mkiSg48mbZusKxGw3Qbktas49n+acQabfcjpVbrvQUaenH+GJHnd3OTfEObFtRcYGVcoM=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=pic5lCzWfqkaqx+01iCOVd8XCNs/qwgrO1Z8RiN7kzY=;
+        b=PH2FLLZipRY7Q15VU+NpvH20OQQ0KCbWXbqKfIxhKGHr/Cek+PYDxXdkkS1NDXI877
+         /PaMEpS3WXnkra9F0waF5scr8q0PUR4AlDTYMc9UPf3FJjaOzugPYGfMmtCPI5WTioFl
+         pGxG/PtdntnT0LyaMi/tKgAwQINsD+zYpJ9wuX317Du5zIOWt7FRIT/iLpkUH/cplqmp
+         SStCbLJJNxNAAkjJXxBWvu03PtijmCBVXyNHpzNevnEGgoD2CmsgmoWXMrblDYVGYpUH
+         RSi/ofaKUdIFJS77z5j7jjkm5D3h+oVryPh/24xBvdorHqDSzvpUOBfZMLLVuBksEEnJ
+         2kIg==
 Content-Disposition: inline
-In-Reply-To: <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz>
-Sender: linux-doc-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, Sep 05, 2017 at 03:44:12PM +0200, Michal Hocko wrote:
-> I will go and check patch 2 more deeply but this is something that I
-> wanted to sort out first.
-> 
-> On Mon 04-09-17 15:21:08, Roman Gushchin wrote:
-> > Introducing of cgroup-aware OOM killer changes the victim selection
-> > algorithm used by default: instead of picking the largest process,
-> > it will pick the largest memcg and then the largest process inside.
-> > 
-> > This affects only cgroup v2 users.
-> > 
-> > To provide a way to use cgroups v2 if the old OOM victim selection
-> > algorithm is preferred for some reason, the nogroupoom mount option
-> > is added.
-> > 
-> > If set, the OOM selection is performed in a "traditional" per-process
-> > way. Both oom_priority and oom_group memcg knobs are ignored.
-> 
-> Why is this an opt out rather than opt-in? IMHO the original oom logic
-> should be preserved by default and specific workloads should opt in for
-> the cgroup aware logic. Changing the global behavior depending on
-> whether cgroup v2 interface is in use is more than unexpected and IMHO
-> wrong approach to take. I think we should instead go with 
-> oom_strategy=[alloc_task,biggest_task,cgroup]
-> 
-> we currently have alloc_task (via sysctl_oom_kill_allocating_task) and
-> biggest_task which is the default. You are adding cgroup and the more I
-> think about the more I agree that it doesn't really make sense to try to
-> fit thew new semantic into the existing one (compare tasks to kill-all
-> memcgs). Just introduce a new strategy and define a new semantic from
-> scratch. Memcg priority and kill-all are a natural extension of this new
-> strategy. This will make the life easier and easier to understand by
-> users.
-> 
-> Does that make sense to you?
+Hello, Linus.
 
-Absolutely.
+Several notable changes this cycle.
 
-The only thing: I'm not sure that we have to preserve the existing logic
-as default option. For most users (except few very specific usecases),
-it should be at least as good, as the existing one.
+* Thread mode was merged.  This will be used for cgroup2 support for
+  CPU and possibly other controllers.  Unfortunately, CPU controller
+  cgroup2 support didn't make this pull request but most contentions
+  have been resolved and the support is likely to be merged before the
+  next merge window.
 
-Making it opt-in means that corresponding code will be executed only
-by few users, who cares. Then we should probably hide corresponding
-cgroup interface (oom_group and oom_priority knobs) by default,
-and it feels as unnecessary complication and is overall against
-cgroup v2 interface design.
+* cgroup.stat now shows the number of descendant cgroups.
 
-> I think we should instead go with
-> oom_strategy=[alloc_task,biggest_task,cgroup]
+* cpuset now can enable the easier-to-configure v2 behavior on v1
+  hierarchy.
 
-It would be a really nice interface; although I've no idea how to implement it:
-"alloc_task" is an existing sysctl, which we have to preserve;
-while "cgroup" depends on cgroup v2.
+Thanks.
 
-Thanks!
+The following changes since commit 5771a8c08880cdca3bfb4a3fc6d309d6bba20877:
+
+  Linux v4.13-rc1 (2017-07-15 15:22:10 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.14
+
+for you to fetch changes up to b8d1b8ee93df8ffbabbeadd65d39853cfad6d698:
+
+  cpuset: Allow v2 behavior in v1 cgroup (2017-08-18 08:24:22 -0700)
+
+----------------------------------------------------------------
+Dan Carpenter (1):
+      cgroup: remove unneeded checks
+
+Roman Gushchin (4):
+      cgroup: keep track of number of descent cgroups
+      cgroup: implement hierarchy limits
+      cgroup: add cgroup.stat interface with basic hierarchy stats
+      cgroup: re-use the parent pointer in cgroup_destroy_locked()
+
+Tejun Heo (13):
+      cgroup: update outdated cgroup.procs documentation
+      cgroup: remove now unused list_head @pending in cgroup_apply_cftypes()
+      cgroup: distinguish local and children populated states
+      cgroup: replace css_set walking populated test with testing cgrp->nr_populated_csets
+      cgroup: reorganize cgroup.procs / task write path
+      cgroup: add @flags to css_task_iter_start() and implement CSS_TASK_ITER_PROCS
+      cgroup: introduce cgroup->dom_cgrp and threaded css_set handling
+      cgroup: implement CSS_TASK_ITER_THREADED
+      cgroup: implement cgroup v2 thread support
+      cgroup: remove unnecessary empty check when enabling threaded mode
+      cgroup: add comment to cgroup_enable_threaded()
+      cgroup: short-circuit cset_cgroup_from_root() on the default hierarchy
+      cgroup: misc changes
+
+Waiman Long (3):
+      cgroup: update debug controller to print out thread mode information
+      cgroup: Add mount flag to enable cpuset to use v2 behavior in v1 cgroup
+      cpuset: Allow v2 behavior in v1 cgroup
+
+ Documentation/cgroup-v2.txt     | 221 +++++++++-
+ include/linux/cgroup-defs.h     |  68 ++-
+ include/linux/cgroup.h          |  39 +-
+ kernel/cgroup/cgroup-internal.h |  12 +-
+ kernel/cgroup/cgroup-v1.c       |  75 +++-
+ kernel/cgroup/cgroup.c          | 947 +++++++++++++++++++++++++++++++---------
+ kernel/cgroup/cpuset.c          |  39 +-
+ kernel/cgroup/debug.c           |  53 ++-
+ kernel/cgroup/freezer.c         |   6 +-
+ kernel/cgroup/pids.c            |   1 +
+ kernel/events/core.c            |   1 +
+ mm/memcontrol.c                 |   2 +-
+ net/core/netclassid_cgroup.c    |   2 +-
+ 13 files changed, 1194 insertions(+), 272 deletions(-)
+
+-- 
+tejun
