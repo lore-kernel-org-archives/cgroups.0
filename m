@@ -1,56 +1,83 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [v7 5/5] mm, oom: cgroup v2 mount option to disable cgroup-aware
- OOM killer
-Date: Wed, 6 Sep 2017 10:42:42 +0200
-Message-ID: <20170906084242.l4rcx6n3hdzxvil6@dhcp22.suse.cz>
-References: <20170904142108.7165-1-guro@fb.com>
- <20170904142108.7165-6-guro@fb.com>
- <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz>
- <20170905143021.GA28599@castle.dhcp.TheFacebook.com>
- <20170905151251.luh4wogjd3msfqgf@dhcp22.suse.cz>
- <20170905191609.GA19687@castle.dhcp.TheFacebook.com>
+From: Prateek Sood <prsood@codeaurora.org>
+Subject: Re: [PATCH] Workqueue lockup: Circular dependency in threads
+Date: Wed, 6 Sep 2017 16:47:25 +0530
+Message-ID: <6de44880-c641-5e89-ff07-68ba206b692c@codeaurora.org>
+References: <1504101538-20075-1-git-send-email-prsood@codeaurora.org>
+ <bc1016ee-792e-87f8-5158-777b7f9405b8@codeaurora.org>
+ <20170905132242.GA1774378@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170905191609.GA19687-2xczL/1GIl5a1dPMsufgnw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504696651;
+        bh=XhzY4cUx5LGUo8QQ4Pct9a8bC9sRP5blxDaOIiyy/LQ=;
+        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+        b=HgSlXAe85k1qvZlovBbbHcN0O3Wtwo63At92Zbl0lrAtkaFD/vh6MNECZ6UPIUqi4
+         NJt2xf4SckOZCZVSs1ZX1T8yMzpTFuPeYRIL4TXq/LITvrrOI+q3dPpdZdJCYNE0Nn
+         eRFzJBXmlPq+Zs2F1GDLjKznWLjjRr40mBuTOHGA=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504696650;
+        bh=XhzY4cUx5LGUo8QQ4Pct9a8bC9sRP5blxDaOIiyy/LQ=;
+        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+        b=EWHQ9H7nz7D6O59h05BlKCid+wegj8Po4k+YaweDdeg2wsK9uXoBS4vZdbr9HxMXH
+         W9G6RLGYl3PQENg7Kmi9EVw5/PjC0jSSvYXOETWT9EeZV1tqqSDZFVqvfCsF8fpUZO
+         h8QoCSIbK/yilaU6tZkWYP83iAjgNWo6+I9M3q8s=
+In-Reply-To: <20170905132242.GA1774378@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, sramana@codeaurora.org, mingo@kernel.org, longman@redhat.com, apkm@linux-foundation.org
 
-On Tue 05-09-17 20:16:09, Roman Gushchin wrote:
-> On Tue, Sep 05, 2017 at 05:12:51PM +0200, Michal Hocko wrote:
-[...]
-> > > Then we should probably hide corresponding
-> > > cgroup interface (oom_group and oom_priority knobs) by default,
-> > > and it feels as unnecessary complication and is overall against
-> > > cgroup v2 interface design.
-> > 
-> > Why. If we care enough, we could simply return EINVAL when those knobs
-> > are written while the corresponding strategy is not used.
+On 09/05/2017 06:52 PM, Tejun Heo wrote:
+> Hello,
 > 
-> It doesn't look as a nice default interface.
-
-I do not have a strong opinion on this. A printk_once could explain why
-the knob is ignored and instruct the admin how to enable the feature
-completely.
- 
-> > > > I think we should instead go with
-> > > > oom_strategy=[alloc_task,biggest_task,cgroup]
-> > > 
-> > > It would be a really nice interface; although I've no idea how to implement it:
-> > > "alloc_task" is an existing sysctl, which we have to preserve;
-> > 
-> > I would argue that we should simply deprecate and later drop the sysctl.
-> > I _strongly_ suspect anybody is using this. If yes it is not that hard
-> > to change the kernel command like rather than select the sysctl.
+> On Thu, Aug 31, 2017 at 06:43:56PM +0530, Prateek Sood wrote:
+>>> 6) cpuset_mutex is acquired by task init:1 and is waiting for cpuhotplug lock.
 > 
-> I agree. And if so, why do we need a new interface for an useless feature?
+> Yeah, this is the problematic one.
+> 
+>>> We can reorder the sequence of locks as in the below diff to avoid this
+>>> deadlock. But I am looking for inputs/better solution to fix this deadlock.
+>>>
+>>> ---
+>>> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+>>>  /**
+>>>   * update_tasks_cpumask - Update the cpumasks of tasks in the cpuset.
+>>>   * @cs: the cpuset in which each task's cpus_allowed mask needs to be changed
+>>> @@ -930,7 +946,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+>>>  	rcu_read_unlock();
+>>>  
+>>>  	if (need_rebuild_sched_domains)
+>>> -		rebuild_sched_domains_locked();
+>>> +		rebuild_sched_domains_unlocked()(without taking cpuhotplug.lock)
+>>>  }
+>>>  
+>>>  /**
+>>> @@ -1719,6 +1735,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+>>> +	get_online_cpus();
+>>>  	mutex_lock(&cpuset_mutex);
+>>>  	if (!is_cpuset_online(cs))
+>>>  		goto out_unlock;
+>>> @@ -1744,6 +1761,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+>>>  	mutex_unlock(&cpuset_mutex);
+>>> +	put_online_cpus();
+>>>  	kernfs_unbreak_active_protection(of->kn);
+>>>  	css_put(&cs->css);
+>>>  	flush_workqueue(cpuset_migrate_mm_wq);
+>>>
+> 
+> And the patch looks good to me.  Can you please format the patch with
+> proper description and sob?
+> 
+> Thanks.
+> 
 
-Well, I won't be opposed just deprecating the sysfs and only add a
-"real" kill-allocate strategy if somebody explicitly asks for it.
+Thanks for review Tejun
+
+I will send updated patch.
+
 -- 
-Michal Hocko
-SUSE Labs
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation
+Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
+Collaborative Project
