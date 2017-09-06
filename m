@@ -1,137 +1,85 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v7 2/5] mm, oom: cgroup-aware OOM killer
-Date: Wed, 6 Sep 2017 14:41:42 +0100
-Message-ID: <20170906134142.GA15796@castle.DHCP.thefacebook.com>
-References: <20170904142108.7165-1-guro@fb.com>
- <20170904142108.7165-3-guro@fb.com>
- <20170905145700.fd7jjd37xf4tb55h@dhcp22.suse.cz>
- <20170905202357.GA10535@castle.DHCP.thefacebook.com>
- <20170906083158.gvqx6pekrsy2ya47@dhcp22.suse.cz>
- <20170906125750.GB12904@castle>
- <20170906132249.c2llo5zyrzgviqzc@dhcp22.suse.cz>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/9] Implement containers as kernel objects
+Date: Wed, 6 Sep 2017 09:03:42 -0500
+Message-ID: <20170906140341.GA8729@mail.hallyn.com>
+References: <149547014649.10599.12025037906646164347.stgit@warthog.procyon.org.uk>
+ <149547016213.10599.1969443294414531853.stgit@warthog.procyon.org.uk>
+ <20170814054711.GB29957@madcap2.tricolour.ca>
+ <CAHC9VhRgPRa7KeMt8G700aeFvqVYc0gMx__82K31TYY6oQQqTw@mail.gmail.com>
+ <20170818080300.GQ7187@madcap2.tricolour.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=6d8cX9KmbftWEHfk6l/o+elrDCMC83annfDsc9mH6XM=;
- b=brExl6GBoKXuiG6B4volvF2gUiBXOnXYQYINb/04kagJaCbg/3812cmTVk+JlejPHRNa
- cjKHNsBYgZXu4O9zsBJrVXYrS5Wtf0vkbH9hJ5a+WbYRczamwjfp7tsONYrNXVzACPjb
- WPHC1QdTUwPidXMCIp5sFFbUPxYY5cPm4P4= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=6d8cX9KmbftWEHfk6l/o+elrDCMC83annfDsc9mH6XM=;
- b=Hpf1Trs+ic6PUdib1BFJWSWJXVBi4xAsk068IG4pnAB1a3QePwzbfyXCbl2vGYUvqvvafYOHXfKEMuFin2Pt0FKkHR3CvxqyQ+dUhsKGKEsDy8ln7+4g6tmrqcAdBkuJxLRyoGfk5nx9NUz6vEZKTikZGkCHvytZzX5kTSFCTlk=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20170906132249.c2llo5zyrzgviqzc@dhcp22.suse.cz>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <20170818080300.GQ7187-bcJWsdo4jJjeVoXN4CMphl7TgLCtbB0G@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-On Wed, Sep 06, 2017 at 03:22:49PM +0200, Michal Hocko wrote:
-> On Wed 06-09-17 13:57:50, Roman Gushchin wrote:
-> > On Wed, Sep 06, 2017 at 10:31:58AM +0200, Michal Hocko wrote:
-> > > On Tue 05-09-17 21:23:57, Roman Gushchin wrote:
-> > > > On Tue, Sep 05, 2017 at 04:57:00PM +0200, Michal Hocko wrote:
-> > > [...]
-> > > > > Hmm. The changelog says "By default, it will look for the biggest leaf
-> > > > > cgroup, and kill the largest task inside." But you are accumulating
-> > > > > oom_score up the hierarchy and so parents will have higher score than
-> > > > > the layer of their children and the larger the sub-hierarchy the more
-> > > > > biased it will become. Say you have
-> > > > > 	root
-> > > > >          /\
-> > > > >         /  \
-> > > > >        A    D
-> > > > >       / \
-> > > > >      B   C
-> > > > > 
-> > > > > B (5), C(15) thus A(20) and D(20). Unless I am missing something we are
-> > > > > going to go down A path and then chose C even though D is the largest
-> > > > > leaf group, right?
-> > > > 
-> > > > You're right, changelog is not accurate, I'll fix it.
-> > > > The behavior is correct, IMO.
-> > > 
-> > > Please explain why. This is really a non-intuitive semantic. Why should
-> > > larger hierarchies be punished more than shallow ones? I would
-> > > completely agree if the whole hierarchy would be a killable entity (aka
-> > > A would be kill-all).
+Quoting Richard Guy Briggs (rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+...
+> > I believe we are going to need a container ID to container definition
+> > (namespace, etc.) mapping mechanism regardless of if the container ID
+> > is provided by userspace or a kernel generated serial number.  This
+> > mapping should be recorded in the audit log when the container ID is
+> > created/defined.
+> 
+> Agreed.
+> 
+> > > As was suggested in one of the previous threads, if there are any events not
+> > > associated with a task (incoming network packets) we log the namespace ID and
+> > > then only concern ourselves with its container serial number or container name
+> > > once it becomes associated with a task at which point that tracking will be
+> > > more important anyways.
 > > 
-> > I think it's a reasonable and clear policy: we're looking for a memcg
-> > with the smallest oom_priority and largest memory footprint recursively.
-> 
-> But this can get really complex for non-trivial setups. Anything with
-> deeper and larger hierarchies will get quite complex IMHO.
-> 
-> Btw. do you have any specific usecase for the priority based oom
-> killer? I remember David was asking for this because it _would_ be
-> useful but you didn't have it initially. And I agree with that I am
-> just not sure the semantic is thought through wery well. I am thinking
-> whether it would be easier to push this further without priority thing
-> for now and add it later with a clear example of the configuration and
-> how it should work and a more thought through semantic. Would that sound
-> acceptable? I believe the rest is quite useful to get merged on its own.
-
-Any way to set up which memcgs should be killed in first order,
-and which in the last will more or less suit me.
-Initially I did have somewhat similar to the per-cgroup oom_score_adj.
-But I really like David's idea here.
-It's just much more simple and also more powerful:
-clear semantics and long priority range will allow implementing
-policies in userspace.
-
-All priority-related stuff except docs is already separated.
-Of course, I can split docs too.
-
-Although, I don't think the whole thing is useful without any way
-to adjust the memcg selection, so we can't postpone if for too long.
-Anyway, if you think it's a way to go forward, let's do it.
-
-> 
-> > Then we reclaim some memory from it (by killing the biggest process
-> > or all processes, depending on memcg preferences).
+> > Agreed.  After all, a single namespace can be shared between multiple
+> > containers.  For those security officers who need to track individual
+> > events like this they will have the container ID mapping information
+> > in the logs as well so they should be able to trace the unassociated
+> > event to a set of containers.
 > > 
-> > In general, if there are two memcgs of equal importance (which is defined
-> > by setting the oom_priority), we're choosing the largest, because there
-> > are more chances that it contain a leaking process. The same is true
-> > right now for processes.
-> 
-> Yes except this is not the case as shown above. We can easily select a
-> smaller leaf memcg just because it is in a larger hierarchy and that
-> sounds very dubious to me. Even when all the priorities are the same.
-> 
-> > I agree, that for size-based comparison we could use a different policy:
-> > comparing leaf cgroups despite their level. But I don't see a clever
-> > way to apply oom_priorities in this case. Comparing oom_priority
-> > on each level is a simple and powerful policy, and it works well
-> > for delegation.
-> 
-> You are already shaping semantic around the implementation and that is a
-> clear sign of problem.
->  
-> > > [...]
-> > > > > I do not understand why do we have to handle root cgroup specially here.
-> > > > > select_victim_memcg already iterates all memcgs in the oom hierarchy
-> > > > > (including root) so if the root memcg is the largest one then we
-> > > > > should simply consider it no?
-> > > > 
-> > > > We don't have necessary stats for the root cgroup, so we can't calculate
-> > > > it's oom_score.
-> > > 
-> > > We used to charge pages to the root memcg as well so we might resurrect
-> > > that idea. In any case this is something that could be hidden in
-> > > memcg_oom_badness rather then special cased somewhere else.
+> > > I'm not convinced that a userspace or kernel generated UUID is that useful
+> > > since they are large, not human readable and may not be globally unique given
+> > > the "pets vs cattle" direction we are going with potentially identical
+> > > conditions in hosts or containers spawning containers, but I see no need to
+> > > restrict them.
 > > 
-> > In theory I agree, but I do not see a good way to calculate root memcg
-> > oom_score.
+> > From a kernel perspective I think an int should suffice; after all,
+> > you can't have more containers then you have processes.  If the
+> > container engine requires something more complex, it can use the int
+> > as input to its own mapping function.
 > 
-> Why cannot you emulate that by the largest task in the root? The same
-> way you actually do in select_victim_root_cgroup_task now?
+> PIDs roll over.  That already causes some ambiguity in reporting.  If a
+> system is constantly spawning and reaping containers, especially
+> single-process containers, I don't want to have to worry about that ID
+> rolling to keep track of it even though there should be audit records of
+> the spawn and death of each container.  There isn't significant cost
+> added here compared with some of the other overhead we're dealing with.
 
-Hm, this sounds good! Then I can apply the same policy for root memcg,
-treating it as level 1 leaf memcg.
+Strawman proposal:
 
-Thanks!
+1. Each clone/unshare/setns involving a namespace type generates an audit
+message along the lines of:
+
+PID 9512 (pid in init_pid_ns) in auditnsid 00000001 cloned CLONE_NEWNS|CLONE_NEWNET
+new auditnsid: 00000002
+associated namespaces: (list of all namespace filesystem inode numbers)
+
+2. Userspace (i.e. the container logging deamon here) can watch the audit log
+for all messages relating to auditnsid 00000002.  Presumably there will be
+messages along the lines of "PID 9513 in auditnsid 00000002 cloned...".  The
+container logging daemon can track those messages and add the new auditnsids
+to the list it watches.
+
+3. If a container is migrated (checkpointed and restored here or elsewhere),
+userspace can just follow the appropriate logs for the new containers.
+
+Userspace does not ever *request* a auditnsid.  They are ephemeral, just a
+tool to track the namespaces through the audit log.  They are however guaranteed
+to never be re-used until reboot.
+
+(Feels like someone must have proposed this before)
+
+-serge
