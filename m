@@ -1,35 +1,74 @@
-From: Christopher Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [v7 5/5] mm, oom: cgroup v2 mount option to disable cgroup-aware
  OOM killer
-Date: Thu, 7 Sep 2017 10:03:24 -0500 (CDT)
-Message-ID: <alpine.DEB.2.20.1709071001580.19736@nuc-kabylake>
-References: <20170904142108.7165-1-guro@fb.com> <20170904142108.7165-6-guro@fb.com> <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz> <20170905143021.GA28599@castle.dhcp.TheFacebook.com> <20170905151251.luh4wogjd3msfqgf@dhcp22.suse.cz>
- <20170905191609.GA19687@castle.dhcp.TheFacebook.com> <20170906084242.l4rcx6n3hdzxvil6@dhcp22.suse.cz> <20170906174043.GA12579@castle.DHCP.thefacebook.com> <alpine.DEB.2.10.1709061355001.70553@chino.kir.corp.google.com> <alpine.DEB.2.20.1709070939340.19539@nuc-kabylake>
- <20170907145239.GA19022@castle.DHCP.thefacebook.com>
+Date: Thu, 7 Sep 2017 12:14:57 -0400
+Message-ID: <20170907161457.GA1728@cmpxchg.org>
+References: <20170904142108.7165-1-guro@fb.com>
+ <20170904142108.7165-6-guro@fb.com>
+ <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz>
+ <20170905215344.GA27427@cmpxchg.org>
+ <20170906082859.qlqenftxuib64j35@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170907145239.GA19022-B3w7+ongkCiLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=eSgNZn4xPsPh3LcJB3M9CZdDYZGREr/Wc4WtkOKp+/A=; b=kfRJ4vXGJuos+kp1EcF+k4p9/8
+        XU/MQoOSh3i617gSI9VoC+Q9vqnEvGnpmniYvbhUb6iwy4RPYi7eEyU7HB3cUAwmTUR/XKmX+SLaZ
+        5uta6O5QuGA/EWJ4NdwdgyL2YHC6LoNfnZvKCriQyYWJTbG8l9fxMEBVw1WkIeZaLSoE=;
+Content-Disposition: inline
+In-Reply-To: <20170906082859.qlqenftxuib64j35@dhcp22.suse.cz>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, nzimmer-sJ/iWh9BUns@public.gmane.org, holt-sJ/iWh9BUns@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sivanich-sJ/iWh9BUns@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 7 Sep 2017, Roman Gushchin wrote:
+On Wed, Sep 06, 2017 at 10:28:59AM +0200, Michal Hocko wrote:
+> On Tue 05-09-17 17:53:44, Johannes Weiner wrote:
+> > The cgroup-awareness in the OOM killer is exactly the same thing. It
+> > should have been the default from the beginning, because the user
+> > configures a group of tasks to be an interdependent, terminal unit of
+> > memory consumption, and it's undesirable for the OOM killer to ignore
+> > this intention and compare members across these boundaries.
+> 
+> I would agree if that was true in general. I can completely see how the
+> cgroup awareness is useful in e.g. containerized environments (especially
+> with kill-all enabled) but memcgs are used in a large variety of
+> usecases and I cannot really say all of them really demand the new
+> semantic. Say I have a workload which doesn't want to see reclaim
+> interference from others on the same machine. Why should I kill a
+> process from that particular memcg just because it is the largest one
+> when there is a memory hog/leak outside of this memcg?
 
-> > Really? From what I know and worked on way back when: The reason was to be
-> > able to contain the affected application in a cpuset. Multiple apps may
-> > have been running in multiple cpusets on a large NUMA machine and the OOM
-> > condition in one cpuset should not affect the other. It also helped to
-> > isolate the application behavior causing the oom in numerous cases.
-> >
-> > Doesnt this requirement transfer to cgroups in the same way?
->
-> We have per-node memory stats and plan to use them during the OOM victim
-> selection. Hopefully it can help.
+Sure, it's always possible to come up with a config for which this
+isn't the optimal behavior. But this is about picking a default that
+makes sense to most users, and that type of cgroup usage just isn't
+the common case.
 
-One of the OOM causes could be that memory was restricted to a certain
-node set. Killing the allocating task is (was?) default behavior in that
-case so that the task that has the restrictions is killed. Not any task
-that may not have the restrictions and woiuld not experience OOM.
+> From my point of view the safest (in a sense of the least surprise)
+> way to go with opt-in for the new heuristic. I am pretty sure all who
+> would benefit from the new behavior will enable it while others will not
+> regress in unexpected way.
+
+This thinking simply needs to be balanced against the need to make an
+unsurprising and consistent final interface.
+
+The current behavior breaks isolation by letting tasks in different
+cgroups compete with each other during an OOM kill. While you can
+rightfully argue that it's possible for usecases to rely on this, you
+cannot tell me that this is the least-surprising thing we can offer
+users; certainly not new users, but also not many/most existing ones.
+
+> We can talk about the way _how_ to control these oom strategies, of
+> course. But I would be really reluctant to change the default which is
+> used for years and people got used to it.
+
+I really doubt there are many cgroup users that rely on that
+particular global OOM behavior.
+
+We have to agree to disagree, I guess.
