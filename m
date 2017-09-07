@@ -1,102 +1,37 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: remove circular dependency deadlock
-Date: Thu, 7 Sep 2017 19:51:07 +0200
-Message-ID: <20170907175107.GG17526@worktop.programming.kicks-ass.net>
-References: <1504792583-10424-1-git-send-email-prsood@codeaurora.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] mm: memcontrol: use per-cpu stocks for socket memory uncharging
+Date: Thu, 7 Sep 2017 11:44:12 -0700
+Message-ID: <CALvZod5zP=LL=LhD0WX-zX4mPbn7F_obQmpCrrin9YuBQHJLow@mail.gmail.com>
+References: <20170829100150.4580-1-guro@fb.com> <20170829192621.GA5447@cmpxchg.org>
+ <20170830105524.GA2852@castle.dhcp.TheFacebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=zPa8HsBFJFZiflXSsVYXbJV9mUiKDEqy0sNq9tS2kLc=; b=ZT+2YDFGUG7QS6Fs2qk0uRO+/
-        C831pQ4r2DvdxrNZfpClHdDYn/93OqMnaKBtkWUbT2N9bUASfP1SE9k2MumZqaekW3j0HpHaIdvSt
-        oI+YifgtpX8Hd13PmR9NbRRCmqnjxKtSbsGXEOetK0kLMp5CSnDEdseeMseDexBQDCAOfpjWaYmBB
-        aGQPoKnCW+qgg9LK0iO4X6SKCHUk5ZI79Y2aoxI0SSGTQNjp/71TbZrE4vwyg7NEIis6MShVnbCwH
-        rnnh6KbCvXzG3i2N0lGipwHP3Ev5NZaarkNqZhMADkjG6k4ImhDZqAeQqZ0EPTc6nzDel8wH2mGEu
-    
-Content-Disposition: inline
-In-Reply-To: <1504792583-10424-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=gWKUpQErXXZ8P246AifU2ADtDbCdM1Toe9akwEMxKY4=;
+        b=ND84p2Cn6rKx2nPZRaORAN/mSVg8n6eMjG3j9cHcEZzfokxVUpOdPtC6Zv0gOlVAhh
+         NxP5fvdrFgLwPfWr6Wwvz1brVq60rbeocjpRBeh+pSVpCz3kksJMmo0ilEtWgT82mDrw
+         HZNmtR7DnRHHFonaxZiIkqSOuLwxyWPJVzY3qJn8EPr0SCGxoat63wfnOUgOPyTXO0+v
+         W8xTuKBUKN2SCmTGAgZrZPiSjwgCmZXaGITRfpGMXksA9P0uBoQrnKcdCr5W7n/Et5i9
+         BIEAIZyXjCkDK+EelVJVluUPfN2BZMOxS6yp/ushQMCLv93oyOjiUCMvGgu0/3GKDWYM
+         Oz1g==
+In-Reply-To: <20170830105524.GA2852@castle.dhcp.TheFacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+To: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, kernel-team@fb.com, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, Sep 07, 2017 at 07:26:23PM +0530, Prateek Sood wrote:
-> Remove circular dependency deadlock in a scenario where hotplug of CPU is
-> being done while there is updation in cgroup and cpuset triggered from
-> userspace.
+>> As far as other types of pages go: page cache and anon are already
+>> batched pretty well, but I think kmem might benefit from this
+>> too. Have you considered using the stock in memcg_kmem_uncharge()?
+>
+> Good idea!
+> I'll try to find an appropriate testcase and check if it really
+> brings any benefits. If so, I'll master a patch.
+>
 
-You've forgotten to mention your solution to the deadlock, namely
-inverting cpuset_mutex and cpu_hotplug_lock.
-
-> Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-> ---
->  kernel/cgroup/cpuset.c | 32 +++++++++++++++++++-------------
->  1 file changed, 19 insertions(+), 13 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 2f4039b..60dc0ac 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -816,16 +816,15 @@ static int generate_sched_domains(cpumask_var_t **domains,
->   * 'cpus' is removed, then call this routine to rebuild the
->   * scheduler's dynamic sched domains.
->   *
-> - * Call with cpuset_mutex held.  Takes get_online_cpus().
->   */
-> -static void rebuild_sched_domains_locked(void)
-> +static void rebuild_sched_domains_cpuslocked(void)
->  {
->  	struct sched_domain_attr *attr;
->  	cpumask_var_t *doms;
->  	int ndoms;
->  
-> +	lockdep_assert_cpus_held();
->  	lockdep_assert_held(&cpuset_mutex);
-> -	get_online_cpus();
->  
->  	/*
->  	 * We have raced with CPU hotplug. Don't do anything to avoid
-> @@ -833,27 +832,27 @@ static void rebuild_sched_domains_locked(void)
->  	 * Anyways, hotplug work item will rebuild sched domains.
->  	 */
->  	if (!cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
-> -		goto out;
-> +		return;
->  
->  	/* Generate domain masks and attrs */
->  	ndoms = generate_sched_domains(&doms, &attr);
->  
->  	/* Have scheduler rebuild the domains */
->  	partition_sched_domains(ndoms, doms, attr);
-> -out:
-> -	put_online_cpus();
->  }
->  #else /* !CONFIG_SMP */
-> -static void rebuild_sched_domains_locked(void)
-> +static void rebuild_sched_domains_cpuslocked(void)
->  {
->  }
->  #endif /* CONFIG_SMP */
->  
->  void rebuild_sched_domains(void)
->  {
-> +	get_online_cpus();
->  	mutex_lock(&cpuset_mutex);
-> -	rebuild_sched_domains_locked();
-> +	rebuild_sched_domains_cpuslocked();
->  	mutex_unlock(&cpuset_mutex);
-> +	put_online_cpus();
->  }
-
-But if you invert these locks, the need for cpuset_hotplug_workfn() goes
-away, at least for the CPU part, and we can make in synchronous again.
-Yay!!
-
-Also, I think new code should use cpus_read_lock() instead of
-get_online_cpus().
+Hi Roman, did you get the chance to try this on memcg_kmem_uncharge()?
