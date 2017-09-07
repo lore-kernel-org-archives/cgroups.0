@@ -1,105 +1,257 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [v7 5/5] mm, oom: cgroup v2 mount option to disable cgroup-aware
- OOM killer
-Date: Wed, 6 Sep 2017 13:59:42 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709061355001.70553@chino.kir.corp.google.com>
-References: <20170904142108.7165-1-guro@fb.com> <20170904142108.7165-6-guro@fb.com> <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz> <20170905143021.GA28599@castle.dhcp.TheFacebook.com> <20170905151251.luh4wogjd3msfqgf@dhcp22.suse.cz>
- <20170905191609.GA19687@castle.dhcp.TheFacebook.com> <20170906084242.l4rcx6n3hdzxvil6@dhcp22.suse.cz> <20170906174043.GA12579@castle.DHCP.thefacebook.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=cCR4MaPURrTKLtfb0JDW5fvWRfCgM2qwd17iPnK3Da4=;
-        b=MaPtF9kPITV41g1OAekMvQ+uo2YwHOzhy0mUIM/nk7z5gqsa9b2sEAUvqCBe0iotGi
-         2wbL9kMeI8O2IdqrBsphZLFWZUlPxx1LUeH0WwEdOWLXFA6a8A8x2l63R/7amXI2Dap9
-         JJTKcUxQ2+2Gg1BD1gCaDUsKSUdJILVbqzJ0G6qWz66ukeFdnsAQf+5cD20c1hU1PoWH
-         4mIN0vlBDoOqC5vilAQi9rBOm/5+wFWhv34D3jvAj3ga33k0dvetBBkYooS1CTsxv6bK
-         LmC01i9Cjm4WXp0LRn3gC/GIV/UCfwjWPWE7g3mu3jesCTPssQp7uyevmPV9qnRjAwGv
-         CemQ==
-In-Reply-To: <20170906174043.GA12579-B3w7+ongkCiLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Prateek Sood <prsood@codeaurora.org>
+Subject: [PATCH] cgroup/cpuset: remove circular dependency deadlock
+Date: Thu,  7 Sep 2017 11:34:12 +0530
+Message-ID: <1504764252-29091-1-git-send-email-prsood@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504764269;
+        bh=cuxV8ac1ooF981REYEVIDmKgCSZPn2zeN5zjP9TXWAg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=oFmqo79TCjFeHJXfUC1Ft9sqtK8tbLCOI5zrDMm6bBQuWlRasd0lyBhlgGiEyWXoL
+         q+yzoE9wSylUWXbDz+vCxSmgdLY5t2A7PN3Meb8MevR5bAamsEFMGFcbnyXxQRE71g
+         Z6Jds/w5xk1I9nuGlLau83lfzJIDWg5++b3E9YSY=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504764267;
+        bh=cuxV8ac1ooF981REYEVIDmKgCSZPn2zeN5zjP9TXWAg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=iJWG+MdPjvKlMwEWfcG52/eh/Yfhx6avoVxtEQY5KseiWTkCCYI0yoUx4ln6yenrP
+         ff2F2WIuj667z/TZmNekFuusdgi78L4nMNO6xLjwJwbEqc1QFFko79s/8DP51Sofgk
+         fr66+vK6Y28LGjNavqsaxKx0bwD+EjZMz/i7wSjw=
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Christopher Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, nzimmer-sJ/iWh9BUns@public.gmane.org, holt-sJ/iWh9BUns@public.gmane.org
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj@kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, mingo@kernel.org, longman@redhat.com
+Cc: Prateek Sood <prsood@codeaurora.org>, linux-kernel@vger.kernel.org, sramana@codeaurora.org
 
-On Wed, 6 Sep 2017, Roman Gushchin wrote:
+Remove circular dependency deadlock in a scenario where hotplug of CPU is
+being done while there is updation in cgroup and cpuset triggered from
+userspace.
 
-> From f6e2339926a07500834d86548f3f116af7335d71 Mon Sep 17 00:00:00 2001
-> From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> Date: Wed, 6 Sep 2017 17:43:44 +0100
-> Subject: [PATCH] mm, oom: first step towards oom_kill_allocating_task
->  deprecation
-> 
-> The oom_kill_allocating_task sysctl which causes the OOM killer
-> to simple kill the allocating task is useless. Killing the random
-> task is not the best idea.
-> 
-> Nobody likes it, and hopefully nobody uses it.
-> We want to completely deprecate it at some point.
-> 
+Example scenario:
+kworker/0:0 => kthreadd => init:729 => init:1 => kworker/0:0
 
-SGI required it when it was introduced simply to avoid the very expensive 
-tasklist scan.  Adding Christoph Lameter to the cc since he was involved 
-back then.
+kworker/0:0 - percpu_down_write(&cpu_hotplug_lock)  [held]
+              flush(work)   [no high prio workqueue available on CPU]
+              wait_for_completion()
 
-I attempted to deprecate the old /proc/pid/oom_adj in this same manner; we 
-warned about it for over a year and then finally removed it, one person 
-complained of breakage, and it was reverted with a strict policy that 
-Linux doesn't break userspace.
+kthreadd    - percpu_down_read(cgroup_threadgroup_rwsem)  [waiting]
 
-Although it would be good to do, I'm not sure that this is possible unless 
-it can be shown nobody is using it.  Talking to SGI would be the first 
-step.
+init:729    - percpu_down_write(cgroup_threadgroup_rwsem)   [held]
+              lock(cpuset_mutex)   [waiting]
 
-I'm not sure what this has to do with the overall patchset though :)
+init:1      - lock(cpuset_mutex)   [held]
+              percpu_down_read(&cpu_hotplug_lock)   [waiting]
 
-> To make a first step towards deprecation, let's warn potential
-> users about deprecation plans.
-> 
-> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  kernel/sysctl.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-> index 655686d546cb..9158f1980584 100644
-> --- a/kernel/sysctl.c
-> +++ b/kernel/sysctl.c
-> @@ -220,6 +220,17 @@ static int sysrq_sysctl_handler(struct ctl_table *table, int write,
->  
->  #endif
->  
-> +static int proc_oom_kill_allocating_tasks(struct ctl_table *table, int write,
-> +				   void __user *buffer, size_t *lenp,
-> +				   loff_t *ppos)
-> +{
-> +	pr_warn_once("The oom_kill_allocating_task sysctl will be deprecated.\n"
-> +		     "If you're using it, please, report to "
-> +		     "linux-mm-Ja57EE8LTNBzeIdxy0IIJ+G/Ez6ZCGd0@public.gmane.org\n");
-> +
-> +	return proc_dointvec(table, write, buffer, lenp, ppos);
-> +}
-> +
->  static struct ctl_table kern_table[];
->  static struct ctl_table vm_table[];
->  static struct ctl_table fs_table[];
-> @@ -1235,7 +1246,7 @@ static struct ctl_table vm_table[] = {
->  		.data		= &sysctl_oom_kill_allocating_task,
->  		.maxlen		= sizeof(sysctl_oom_kill_allocating_task),
->  		.mode		= 0644,
-> -		.proc_handler	= proc_dointvec,
-> +		.proc_handler	= proc_oom_kill_allocating_tasks,
->  	},
->  	{
->  		.procname	= "oom_dump_tasks",
+Eliminate this dependecy by reordering locking of cpuset_mutex
+and cpu_hotplug_lock in following order
+1. Acquire cpu_hotplug_lock (read)
+2. Acquire cpuset_mutex
+
+Signed-off-by: Prateek Sood <prsood@codeaurora.org>
+---
+ kernel/cgroup/cpuset.c | 70 +++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 61 insertions(+), 9 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 2f4039b..687be57 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -843,10 +843,41 @@ static void rebuild_sched_domains_locked(void)
+ out:
+ 	put_online_cpus();
+ }
++
++/*
++ * Rebuild scheduler domains.
++ * Call with following lock held in the order
++ * 1. cpu_hotplug_lock (read)
++ * 2. cpuset_mutex
++ */
++static void rebuild_sched_domains_unlocked(void)
++{
++        struct sched_domain_attr *attr;
++        cpumask_var_t *doms;
++        int ndoms;
++
++        /*
++         * We have raced with CPU hotplug. Don't do anything to avoid
++         * passing doms with offlined cpu to partition_sched_domains().
++         * Anyways, hotplug work item will rebuild sched domains.
++         */
++        if (!cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
++                return;
++
++        /* Generate domain masks and attrs */
++        ndoms = generate_sched_domains(&doms, &attr);
++
++        /* Have scheduler rebuild the domains */
++        partition_sched_domains(ndoms, doms, attr);
++}
+ #else /* !CONFIG_SMP */
+ static void rebuild_sched_domains_locked(void)
+ {
+ }
++
++static void rebuild_sched_domains_unlocked(void)
++{
++}
+ #endif /* CONFIG_SMP */
+ 
+ void rebuild_sched_domains(void)
+@@ -885,7 +916,9 @@ static void update_tasks_cpumask(struct cpuset *cs)
+  *
+  * On legacy hierachy, effective_cpus will be the same with cpu_allowed.
+  *
+- * Called with cpuset_mutex held
++ * Called with following lock held in order
++ * 1. cpu_hotplug_lock (read)
++ * 2. cpuset_mutex
+  */
+ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ {
+@@ -940,7 +973,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ 	rcu_read_unlock();
+ 
+ 	if (need_rebuild_sched_domains)
+-		rebuild_sched_domains_locked();
++		rebuild_sched_domains_unlocked();
+ }
+ 
+ /**
+@@ -1262,6 +1295,11 @@ int current_cpuset_is_being_rebound(void)
+ 	return ret;
+ }
+ 
++/*
++ * Call with following lock held in order
++ * 1. cpu_hotplug_lock (read)
++ * 2. cpuset_mutex
++ */
+ static int update_relax_domain_level(struct cpuset *cs, s64 val)
+ {
+ #ifdef CONFIG_SMP
+@@ -1273,7 +1311,7 @@ static int update_relax_domain_level(struct cpuset *cs, s64 val)
+ 		cs->relax_domain_level = val;
+ 		if (!cpumask_empty(cs->cpus_allowed) &&
+ 		    is_sched_load_balance(cs))
+-			rebuild_sched_domains_locked();
++			rebuild_sched_domains_unlocked();
+ 	}
+ 
+ 	return 0;
+@@ -1304,9 +1342,10 @@ static void update_tasks_flags(struct cpuset *cs)
+  * cs:		the cpuset to update
+  * turning_on: 	whether the flag is being set or cleared
+  *
+- * Call with cpuset_mutex held.
++ * Call with following lock held in order
++ * 1. cpu_hotplug_lock (read)
++ * 2. cpuset_mutex
+  */
+-
+ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 		       int turning_on)
+ {
+@@ -1339,7 +1378,7 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
+-		rebuild_sched_domains_locked();
++		rebuild_sched_domains_unlocked();
+ 
+ 	if (spread_flag_changed)
+ 		update_tasks_flags(cs);
+@@ -1607,6 +1646,7 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	cpuset_filetype_t type = cft->private;
+ 	int retval = 0;
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	if (!is_cpuset_online(cs)) {
+ 		retval = -ENODEV;
+@@ -1644,6 +1684,7 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	}
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ 	return retval;
+ }
+ 
+@@ -1654,6 +1695,7 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	cpuset_filetype_t type = cft->private;
+ 	int retval = -ENODEV;
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -1668,6 +1710,7 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	}
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ 	return retval;
+ }
+ 
+@@ -1706,6 +1749,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+ 	kernfs_break_active_protection(of->kn);
+ 	flush_work(&cpuset_hotplug_work);
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -1731,6 +1775,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+ 	free_trial_cpuset(trialcs);
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ 	kernfs_unbreak_active_protection(of->kn);
+ 	css_put(&cs->css);
+ 	flush_workqueue(cpuset_migrate_mm_wq);
+@@ -2031,13 +2076,14 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ /*
+  * If the cpuset being removed has its flag 'sched_load_balance'
+  * enabled, then simulate turning sched_load_balance off, which
+- * will call rebuild_sched_domains_locked().
++ * will call rebuild_sched_domains_unlocked().
+  */
+ 
+ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ {
+ 	struct cpuset *cs = css_cs(css);
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 
+ 	if (is_sched_load_balance(cs))
+@@ -2047,6 +2093,7 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ 	clear_bit(CS_ONLINE, &cs->flags);
+ 
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ }
+ 
+ static void cpuset_css_free(struct cgroup_subsys_state *css)
+@@ -2341,8 +2388,13 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+ 	}
+ 
+ 	/* rebuild sched domains if cpus_allowed has changed */
+-	if (cpus_updated)
+-		rebuild_sched_domains();
++	if (cpus_updated) {
++		get_online_cpus();
++		mutex_lock(&cpuset_mutex);
++		rebuild_sched_domains_unlocked();
++		mutex_unlock(&cpuset_mutex);
++		put_online_cpus();
++	}
+ }
+ 
+ void cpuset_update_active_cpus(void)
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc., 
+is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
