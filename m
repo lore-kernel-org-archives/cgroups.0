@@ -1,114 +1,104 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+From: Boqun Feng <boqun.feng@gmail.com>
 Subject: Re: [PATCH] cgroup/cpuset: remove circular dependency deadlock
-Date: Thu, 7 Sep 2017 09:28:48 +0200
-Message-ID: <20170907072848.2sjjddwincaeplju@hirez.programming.kicks-ass.net>
+Date: Thu, 7 Sep 2017 16:56:32 +0800
+Message-ID: <20170907085534.GA30135@tardis>
 References: <1504764252-29091-1-git-send-email-prsood@codeaurora.org>
+ <20170907072848.2sjjddwincaeplju@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=hVnUiBvDQRcGY4Duc0oHqG6yLwPeFTudTzcF2v1s6ek=; b=sC6v1i5Wsv8XOHQvkvHXPg9UR
-        byoaS8Jl1pIqQvNGB0DSpGpB6Cpmey/Om6wc39us7/F6L0a0Y+E3I2OqWTmT5cv+SfNW5ty57rvYR
-        Wh+KVLZBI46eQWWcOQ+KU76HYwYXvlXRqBUPaI1THCbIAEPfjO6cp6SdnoxKmwGHNDr9GefFp2b63
-        l5/qBzCzG7dUY6m9A+uMFw/7jIxo3DJ/VFJdoBTmpi4oCUldRdksYaWZYZR7q2oMJdSbMj3U7R5tV
-        tLLcMmbqr0zcu4OvRt6SIePzQoHBOdluSaFlzF4LvSoA65qdKoyyqDcfGdYr7yogfl2I842VitsbR
-    
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="pvezYHf7grwyp3Bc"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=BO/iQnYGt1PiGpjFnSH2ZcpsXaeuGuHcp/qEoQtkBXw=;
+        b=i6zx1BpA860uekGPEPH4Kw4qyhjWuYUO1fZqRW4dwnN8/jJxJEkoOhN7BsfjIpY4pO
+         r5kFLtDnp38018k1kd/UNbG932S1nb7a5H2HU6ohcFnl8MskYLBrU0ZbSCbIOvA6ljJz
+         P0o2uNzjq1CWoQiMbqMtzficiyQ3OBa09yrngDWmElhS2hzCsC9qVY5R/Hf5fFuAnWt/
+         uL5s3dMB/b53kncxYQn7wo8eLBCdyDJCHTvfOKo0oUWER0bcKsyhQLiNl+YN1rtF9GWM
+         MJ2WqEO13qZ8fWIGBOIrGU06y4o8qxJhOi4L1n7TTf6zjbpgSbSS4T5t07L5IEwgW2zJ
+         I8tA==
 Content-Disposition: inline
-In-Reply-To: <1504764252-29091-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20170907072848.2sjjddwincaeplju@hirez.programming.kicks-ass.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-
-On Thu, Sep 07, 2017 at 11:34:12AM +0530, Prateek Sood wrote:
-> Remove circular dependency deadlock in a scenario where hotplug of CPU is
-> being done while there is updation in cgroup and cpuset triggered from
-> userspace.
-> 
-> Example scenario:
-> kworker/0:0 => kthreadd => init:729 => init:1 => kworker/0:0
-> 
-> kworker/0:0 - percpu_down_write(&cpu_hotplug_lock)  [held]
->               flush(work)   [no high prio workqueue available on CPU]
->               wait_for_completion()
-> 
-> kthreadd    - percpu_down_read(cgroup_threadgroup_rwsem)  [waiting]
-> 
-> init:729    - percpu_down_write(cgroup_threadgroup_rwsem)   [held]
->               lock(cpuset_mutex)   [waiting]
-> 
-> init:1      - lock(cpuset_mutex)   [held]
->               percpu_down_read(&cpu_hotplug_lock)   [waiting]
-
-That's both unreadable and useless :/ You want to tell what code paths
-that were, not which random tasks happened to run them.
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Prateek Sood <prsood@codeaurora.org>, tj@kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, mingo@kernel.org, longman@redhat.com, linux-kernel@vger.kernel.org, sramana@codeaurora.org, Thomas Gleixner <tglx@linutronix.de>
 
 
+--pvezYHf7grwyp3Bc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Eliminate this dependecy by reordering locking of cpuset_mutex
-> and cpu_hotplug_lock in following order
-> 1. Acquire cpu_hotplug_lock (read)
-> 2. Acquire cpuset_mutex
-> 
-> Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-> ---
->  kernel/cgroup/cpuset.c | 70 +++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 61 insertions(+), 9 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 2f4039b..687be57 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -843,10 +843,41 @@ static void rebuild_sched_domains_locked(void)
->  out:
->  	put_online_cpus();
->  }
-> +
-> +/*
-> + * Rebuild scheduler domains.
-> + * Call with following lock held in the order
-> + * 1. cpu_hotplug_lock (read)
-> + * 2. cpuset_mutex
+On Thu, Sep 07, 2017 at 09:28:48AM +0200, Peter Zijlstra wrote:
+> On Thu, Sep 07, 2017 at 11:34:12AM +0530, Prateek Sood wrote:
+> > Remove circular dependency deadlock in a scenario where hotplug of CPU =
+is
+> > being done while there is updation in cgroup and cpuset triggered from
+> > userspace.
+> >=20
+> > Example scenario:
+> > kworker/0:0 =3D> kthreadd =3D> init:729 =3D> init:1 =3D> kworker/0:0
+> >=20
+> > kworker/0:0 - percpu_down_write(&cpu_hotplug_lock)  [held]
+> >               flush(work)   [no high prio workqueue available on CPU]
+> >               wait_for_completion()
 
-Do not put that in comments, nobody ever reads comments.
+Hi Prateek,
 
-> + */
-> +static void rebuild_sched_domains_unlocked(void)
+so this is:
 
-The common postfix for a function called with the cpuhotplug lock held
-is: _cpuslocked()
+	_cpu_down():
+	  cpus_write_lock(); // percpu_down_write(&cpu_hotlug_lock)
+	  cpuhp_invoke_callbacks():
+	    workqueue_offine_cpu():
+	      wq_update_unbound_numa():
+	        alloc_unbound_pool():
+	          get_unbound_pool():
+		    create_worker():
+		      kthread_create_on_node():
+		        wake_up_process(kthreadd_task);
+		        wait_for_completion(); // create->done
 
-> +{
-> +        struct sched_domain_attr *attr;
-> +        cpumask_var_t *doms;
-> +        int ndoms;
+, right?
 
-	lockdep_assert_cpus_held();
-	lockdep_assert_held(&cpuset_mutex);
+Wonder running in a kworker is necessary to trigger this, I mean running
+a cpu_down() in a normal process context could also trigger this, no?
+Just ask out of curiosity.
 
-> +
-> +        /*
-> +         * We have raced with CPU hotplug. Don't do anything to avoid
-> +         * passing doms with offlined cpu to partition_sched_domains().
-> +         * Anyways, hotplug work item will rebuild sched domains.
-> +         */
-> +        if (!cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
-> +                return;
-> +
-> +        /* Generate domain masks and attrs */
-> +        ndoms = generate_sched_domains(&doms, &attr);
-> +
-> +        /* Have scheduler rebuild the domains */
-> +        partition_sched_domains(ndoms, doms, attr);
-> +}
+Regards,
+Boqun
 
-And you couldn't come up with a way to share _anything_ with the
-existing rebuild_sched_domains_locked() function?
+> >=20
+> > kthreadd    - percpu_down_read(cgroup_threadgroup_rwsem)  [waiting]
+> >=20
+> > init:729    - percpu_down_write(cgroup_threadgroup_rwsem)   [held]
+> >               lock(cpuset_mutex)   [waiting]
+> >=20
+> > init:1      - lock(cpuset_mutex)   [held]
+> >               percpu_down_read(&cpu_hotplug_lock)   [waiting]
+>=20
+> That's both unreadable and useless :/ You want to tell what code paths
+> that were, not which random tasks happened to run them.
+>=20
+>=20
+[...]
 
-*sigh*.. please try again.
+--pvezYHf7grwyp3Bc
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEEj5IosQTPz8XU1wRHSXnow7UH+rgFAlmxCb0ACgkQSXnow7UH
++rgh+Af+L0P//IFtlwFQLkh8VHI6or8ipwT+Cl7+vNjK+G5MpRJV9X68o5gYr+jj
+YATJz6ZWYRD+H7MmIoqmuwdpG7Q2iB9OmNFKvVsSaok+jYFF6Alwz2Jrjo1Ex+x1
+ZTZ9FdzXEL62l52Hcyq8kfPoIeRFbZNoRyyAGPT4xFJtYrmnJrl/GOyAk2rAhQyU
+90mCxiLd4EO9SF7+6WgFWmGIG8Yj97AYCRtWc17q3rp7YuRY4vqJIdUQFZUnEKI9
+rQwW/8GZUkC46xfgJSI3gwHdF2rTx02PNNoNwihqo65ZgrCyI0ks2z2QN1M93pwp
+fBuLaGZP9Yy99ypGti2VWSArBrs0cw==
+=QkrD
+-----END PGP SIGNATURE-----
+
+--pvezYHf7grwyp3Bc--
