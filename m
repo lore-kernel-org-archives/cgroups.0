@@ -1,55 +1,105 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v7 5/5] mm, oom: cgroup v2 mount option to disable cgroup-aware
- OOM killer
-Date: Thu, 7 Sep 2017 15:03:25 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709071502430.143767@chino.kir.corp.google.com>
-References: <20170904142108.7165-1-guro@fb.com> <20170904142108.7165-6-guro@fb.com> <20170905134412.qdvqcfhvbdzmarna@dhcp22.suse.cz> <20170905215344.GA27427@cmpxchg.org> <20170906082859.qlqenftxuib64j35@dhcp22.suse.cz>
- <alpine.DEB.2.20.1709071122360.20082@nuc-kabylake>
+From: Prateek Sood <prsood@codeaurora.org>
+Subject: Re: [PATCH] cgroup/cpuset: remove circular dependency deadlock
+Date: Fri, 8 Sep 2017 07:43:21 +0530
+Message-ID: <e5171d0d-5a4b-75b6-53b4-d1251cacc0ff@codeaurora.org>
+References: <1504792583-10424-1-git-send-email-prsood@codeaurora.org>
+ <20170907174505.GF17526@worktop.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=Ij6BNckOY2KybM6f3eFiLPfx/LS+su2UcGS71n7vtv4=;
-        b=lqo8ku5dCoBwTZO/lWw1pcx4pjggPsTbtnZNgExHR1Naa8YliA4NzPQmTV4rvvdVyL
-         J0pAIr6e0Py3CEfrEJ4od5ERyNet/X68HcH6jKuNe/tIK/Ha/eioNFXIx3mF2m20+4dW
-         mCnUqmjEbdzQjyVpegEOLl4+5nc2xhjnmRzyxTD+d3MpicFBfZh3spb5EAV+EyCP2QUX
-         Zq/rxA8BdmYeBOG6Td9iSUKwjuddCsEUN13wpa7y6LmaWf4wuEF7ZtgwMlyEo0EVdhAv
-         qTQOGrV2WNr49+Jhyg2J1csA0pPqWOWcqv3Vlcxm/9P2qRZN/1skPeQpLIiEIJoMCte0
-         /KIA==
-In-Reply-To: <alpine.DEB.2.20.1709071122360.20082@nuc-kabylake>
-Sender: linux-doc-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christopher Lameter <cl@linux.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504836807;
+        bh=RC7vQv4odMVnZYUTR7lX3RqmkQy1XdeaNn9Sy3J8n0Y=;
+        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+        b=G9OAohWXRCoRCFte43wRUupbA8V2vR37KvaqIX15EJ67yMmsOxYGY20xqWPjXWgrf
+         64vTD1Obwx0nMGxGAe8oob8TF37AchcC3li+ufM8ha3XUuQhsiTDIP+CrMosNHHQNp
+         o+nDNOPToen8XiojyfchiDz1LDgDPWZwfp3bJNLk=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1504836806;
+        bh=RC7vQv4odMVnZYUTR7lX3RqmkQy1XdeaNn9Sy3J8n0Y=;
+        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+        b=XrmB5ZbPljPEeArSBsNV83eBkGCKGqQeCJfM86DUHvRWQheTNx3OwHN7Xri+BDMbA
+         8Ro2OFlfzd9qMZuIZItJU+sH+b4NGRpX65fk6Sj6W5C7f3rVuyj/s324zNNNjnGOB5
+         MlB8XJRBJI4wSMBc6Z4GHQxF4af3hpirDA+DN7ZU=
+In-Reply-To: <20170907174505.GF17526@worktop.programming.kicks-ass.net>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: tj@kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, mingo@kernel.org, longman@redhat.com, boqun.feng@gmail.com, tglx@linutronix.de, linux-kernel@vger.kernel.org, sramana@codeaurora.org
 
-On Thu, 7 Sep 2017, Christopher Lameter wrote:
+On 09/07/2017 11:15 PM, Peter Zijlstra wrote:
+> On Thu, Sep 07, 2017 at 07:26:23PM +0530, Prateek Sood wrote:
+>> Remove circular dependency deadlock in a scenario where hotplug of CPU is
+>> being done while there is updation in cgroup and cpuset triggered from
+>> userspace.
+>>
+>> Process A => kthreadd => Process B => Process C => Process A
+> 
+>> Process A
+>> cpu_subsys_offline();
+>>   cpu_down();
+>>     _cpu_down();
+>>       percpu_down_write(&cpu_hotplug_lock); //held
+>>       cpuhp_invoke_callback();
+>>         workqueue_offline_cpu();
+>>           wq_update_unbound_numa();
+>>             kthread_create_on_node();
+>>               wake_up_process();  //wakeup kthreadd
+> 
+> TJ, I'm puzzled, why would we need to spawn new threads to update NUMA
+> affinity when taking a CPU out? That doesn't make sense to me, we can
+> either shrink the affinity of an existing thread or completely kill of a
+> thread if the mask becomes empty. But why spawn a new thread?
+> 
+>>           flush_work();
+>>           wait_for_completion();
+>>
 
-> > I am not sure this is how things evolved actually. This is way before
-> > my time so my git log interpretation might be imprecise. We do have
-> > oom_badness heuristic since out_of_memory has been introduced and
-> > oom_kill_allocating_task has been introduced much later because of large
-> > boxes with zillions of tasks (SGI I suspect) which took too long to
-> > select a victim so David has added this heuristic.
 > 
-> Nope. The logic was required for tasks that run out of memory when the
-> restriction on the allocation did not allow the use of all of memory.
-> cpuset restrictions and memory policy restrictions where the prime
-> considerations at the time.
-> 
-> It has *nothing* to do with zillions of tasks. Its amusing that the SGI
-> ghost is still haunting the discussion here. The company died a couple of
-> years ago finally (ok somehow HP has an "SGI" brand now I believe). But
-> there are multiple companies that have large NUMA configurations and they
-> all have configurations where they want to restrict allocations of a
-> process to subset of system memory. This is even more important now that
-> we get new forms of memory (NVDIMM, PCI-E device memory etc). You need to
-> figure out what to do with allocations that fail because the *allowed*
-> memory pools are empty.
+> Yes, inverting cpuset and hotplug would break that chain, but I'm still
+> wondering why workqueue needs to spawn threads on CPU down.
 > 
 
-We already had CONSTRAINT_CPUSET at the time, this was requested by Paul 
-and acked by him in https://marc.info/?l=linux-mm&m=118306851418425.
+Thanks for the comments Peter
+
+You rightly mentioned that a new thread will not be spawn
+while updating NUMA affinity when taking a CPU out.
+
+While a CPU is made offline, attempt is made to unbind per-cpu
+worker for CPU going down. This is done by queuing unbind work
+to system_highpri_wq. It results in an attempt to create one
+bounded worker thread as there is none. 
+
+wait_for_completion() in flush_work() waits for unbinding to
+finish for CPU going down.
+
+Process A
+cpu_subsys_offline();
+   cpu_down();
+     _cpu_down();
+       percpu_down_write(&cpu_hotplug_lock); //held
+       cpuhp_invoke_callback();
+         workqueue_offline_cpu();
+           queue_work_on(system_highpri_wq);
+             __queue_work();
+               insert_work();
+                 wake_up_worker(); //pool->nr_running = 0
+           flush_work();
+		   wait_for_completion();
+		   
+	   
+worker_thread();
+  need_more_worker(); // returns true
+  manage_workers();
+    maybe_create_worker();
+	  create_worker();
+	    kthread_create_on_node();
+		  wake_up_process(kthreadd_task);
+
+
+
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation
+Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
+Collaborative Project
