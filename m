@@ -1,37 +1,41 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [v8 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
-Date: Mon, 11 Sep 2017 14:17:42 +0100
-Message-ID: <20170911131742.16482-5-guro@fb.com>
+Subject: [v8 3/4] mm, oom: add cgroup v2 mount option for cgroup-aware OOM killer
+Date: Mon, 11 Sep 2017 14:17:41 +0100
+Message-ID: <20170911131742.16482-4-guro@fb.com>
 References: <20170911131742.16482-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=48twEvD6DnpJYAann+e6JeE9Df5b7x2J3iunuT+44sE=;
- b=HmOWcn73RpzpBrQAoqQXgqxB69BLC9zGqajlxBrDqxzlSS+dOsOhXyCDTzys7X0orzhh
- uc7/dT3e91yoKhZcwJs7fxKH3s0tfydKiN9Bl/xm1kD8d2uQ0nWeGvSz7t9zH0R/owMs
- 6nFPrqFxE/5vOv7NGd3Qn1GtsKN99v8U9Jc= 
+ content-type; s=facebook; bh=2VFbBKM9g9ab3LYOcU37w8q84W9U2qj8ZjCMM73wHio=;
+ b=RmreQKwy3srFM6VL85wrHov1X9Kzj7hRK/dkUGFn1afW7abzbHOg6uFj/I5FOk15KmwN
+ jiV+yUGiRorHemXgwU/n6mrAxDU2waQg3NUFdJ9nD/SFvSokjJCbwgLh71vju1rQvbaf
+ RrKOW12+pgc9BFt9hcoMcBG6PiRbuNGBScA= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=48twEvD6DnpJYAann+e6JeE9Df5b7x2J3iunuT+44sE=;
- b=WHd6j7jCWcfPMJC+h8GD6hUKaJ0Qz6QjN+f1j/f/soZwYlm8CJYcg/ifT34nOHUu6t4dAvlBU9aOxYHY5L0vwOMnbU64JW3y25rNRrRkig92l5N58lPVyrrRm1okE5kZbZbu9TppsiJC6sV26iSblm8WIHn43k5iO2FYga7vZ5c=
+ bh=2VFbBKM9g9ab3LYOcU37w8q84W9U2qj8ZjCMM73wHio=;
+ b=agBSNHWdfwmnHpgKDHZknealfwB8as/nhVEYWn+IuwAnBIAgu1it50u6y7npqPPkY4T0q4f2TfdxfHsAaaaew5G4PP6hxcoM7m/P/Pc1awB8bcSTSa8gyxKslhrJzg+pCGYBlkWhafV25uYKAdvmqLozcPPJ94bA6n+TDfm4Z8I=
 In-Reply-To: <20170911131742.16482-1-guro@fb.com>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Document the cgroup-aware OOM killer.
+Add a "groupoom" cgroup v2 mount option to enable the cgroup-aware
+OOM killer. If not set, the OOM selection is performed in
+a "traditional" per-process way.
+
+The behavior can be changed dynamically by remounting the cgroupfs.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Michal Hocko <mhocko@kernel.org>
 Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
 Cc: cgroups@vger.kernel.org
@@ -39,78 +43,76 @@ Cc: linux-doc@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- Documentation/cgroup-v2.txt | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ include/linux/cgroup-defs.h |  5 +++++
+ kernel/cgroup/cgroup.c      | 10 ++++++++++
+ mm/memcontrol.c             |  3 +++
+ 3 files changed, 18 insertions(+)
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index dc44785dc0fa..61a2e959e07a 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
-        5-2-1. Memory Interface Files
-        5-2-2. Usage Guidelines
-        5-2-3. Memory Ownership
-+       5-2-4. OOM Killer
-      5-3. IO
-        5-3-1. IO Interface Files
-        5-3-2. Writeback
-@@ -1034,6 +1035,18 @@ PAGE_SIZE multiple when read back.
- 	high limit is used and monitored properly, this limit's
- 	utility is limited to providing the final safety net.
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index ade4a78a54c2..db4ff3e233a9 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -79,6 +79,11 @@ enum {
+ 	 * Enable cpuset controller in v1 cgroup to use v2 behavior.
+ 	 */
+ 	CGRP_ROOT_CPUSET_V2_MODE = (1 << 4),
++
++	/*
++	 * Enable cgroup-aware OOM killer.
++	 */
++	CGRP_GROUP_OOM = (1 << 5),
+ };
  
-+  memory.oom_group
-+
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	If set, OOM killer will kill all processes attached to the cgroup
-+	if selected as an OOM victim.
-+
-+	OOM killer respects the /proc/pid/oom_score_adj value -1000,
-+	and will never kill the unkillable task, even if memory.oom_group
-+	is set.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-@@ -1237,6 +1250,32 @@ to be accessed repeatedly by other cgroups, it may make sense to use
- POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
- belonging to the affected files to ensure correct memory ownership.
+ /* cftype->flags */
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index d6551cd45238..5f8a97a233bb 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1699,6 +1699,9 @@ static int parse_cgroup_root_flags(char *data, unsigned int *root_flags)
+ 		if (!strcmp(token, "nsdelegate")) {
+ 			*root_flags |= CGRP_ROOT_NS_DELEGATE;
+ 			continue;
++		} else if (!strcmp(token, "groupoom")) {
++			*root_flags |= CGRP_GROUP_OOM;
++			continue;
+ 		}
  
-+OOM Killer
-+~~~~~~~~~~
+ 		pr_err("cgroup2: unknown option \"%s\"\n", token);
+@@ -1715,6 +1718,11 @@ static void apply_cgroup_root_flags(unsigned int root_flags)
+ 			cgrp_dfl_root.flags |= CGRP_ROOT_NS_DELEGATE;
+ 		else
+ 			cgrp_dfl_root.flags &= ~CGRP_ROOT_NS_DELEGATE;
 +
-+Cgroup v2 memory controller implements a cgroup-aware OOM killer.
-+It means that it treats cgroups as first class OOM entities.
-+
-+Under OOM conditions the memory controller tries to make the best
-+choice of a victim, hierarchically looking for a cgroup with the
-+largest memory footprint.
-+
-+By default, OOM killer will kill the biggest task in the selected
-+memory cgroup. A user can change this behavior by enabling
-+the per-cgroup oom_group option. If set, it causes the OOM killer
-+to kill all processes attached to the cgroup, except processes
-+with oom_score_adj set to -1000.
-+
-+This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
-+the memory controller considers only cgroups belonging to the sub-tree
-+of the OOM'ing cgroup.
-+
-+The root cgroup is treated as a leaf memory cgroup, so it's compared
-+with top-level memory cgroups.
-+
-+If there are no cgroups with the enabled memory controller,
-+the OOM killer is using the "traditional" process-based approach.
-+
++		if (root_flags & CGRP_GROUP_OOM)
++			cgrp_dfl_root.flags |= CGRP_GROUP_OOM;
++		else
++			cgrp_dfl_root.flags &= ~CGRP_GROUP_OOM;
+ 	}
+ }
  
- IO
- --
+@@ -1722,6 +1730,8 @@ static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root
+ {
+ 	if (cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE)
+ 		seq_puts(seq, ",nsdelegate");
++	if (cgrp_dfl_root.flags & CGRP_GROUP_OOM)
++		seq_puts(seq, ",groupoom");
+ 	return 0;
+ }
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index da2b12ea4667..d645f70cb3a7 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2871,6 +2871,9 @@ bool mem_cgroup_select_oom_victim(struct oom_control *oc)
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 		return false;
+ 
++	if (!(cgrp_dfl_root.flags & CGRP_GROUP_OOM))
++		return false;
++
+ 	if (oc->memcg)
+ 		root = oc->memcg;
+ 	else
 -- 
 2.13.5
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
