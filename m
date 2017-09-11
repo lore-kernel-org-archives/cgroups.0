@@ -1,76 +1,37 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [v8 2/4] mm, oom: cgroup-aware OOM killer
-Date: Mon, 11 Sep 2017 14:17:40 +0100
-Message-ID: <20170911131742.16482-3-guro@fb.com>
+Subject: [v8 4/4] mm, oom, docs: describe the cgroup-aware OOM killer
+Date: Mon, 11 Sep 2017 14:17:42 +0100
+Message-ID: <20170911131742.16482-5-guro@fb.com>
 References: <20170911131742.16482-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=bQ8P5Jipt4d+qu0cWEm5CU7PYdAcd/PMLQjC+pDTH/A=;
- b=eu4ChSWy7w6UqMmznZhjoalcLyYr1vvatqfE+s0RJup4YQ6b/YuY5BFigFiXbFooIgLF
- U4hDnfS++cen2/KLk3hNnN4qU4vklqq4yAuWOImJIRsYEq44AtbUX+FfFbjouI6V7qPd
- A4jqdi6VUywvnhsej7nPOACd7uFlKHDS/V8= 
+ content-type; s=facebook; bh=48twEvD6DnpJYAann+e6JeE9Df5b7x2J3iunuT+44sE=;
+ b=HmOWcn73RpzpBrQAoqQXgqxB69BLC9zGqajlxBrDqxzlSS+dOsOhXyCDTzys7X0orzhh
+ uc7/dT3e91yoKhZcwJs7fxKH3s0tfydKiN9Bl/xm1kD8d2uQ0nWeGvSz7t9zH0R/owMs
+ 6nFPrqFxE/5vOv7NGd3Qn1GtsKN99v8U9Jc= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=bQ8P5Jipt4d+qu0cWEm5CU7PYdAcd/PMLQjC+pDTH/A=;
- b=FUm1Wqw0b7TVv5t7t0kmG/4pib238IDqQa14gG+B6eSK6LNirytK+ZkCbWatLfFF3QM5+E2EcT0+VfhLj8P/5Gamu/ExmPCKibQBOi0GvcTXPBg2GLDwUUDn/H/7u+TgFputyyZldwpXlj05mPU5PEUpHN46cpV6OfJh5P89ZpM=
+ bh=48twEvD6DnpJYAann+e6JeE9Df5b7x2J3iunuT+44sE=;
+ b=WHd6j7jCWcfPMJC+h8GD6hUKaJ0Qz6QjN+f1j/f/soZwYlm8CJYcg/ifT34nOHUu6t4dAvlBU9aOxYHY5L0vwOMnbU64JW3y25rNRrRkig92l5N58lPVyrrRm1okE5kZbZbu9TppsiJC6sV26iSblm8WIHn43k5iO2FYga7vZ5c=
 In-Reply-To: <20170911131742.16482-1-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Traditionally, the OOM killer is operating on a process level.
-Under oom conditions, it finds a process with the highest oom score
-and kills it.
-
-This behavior doesn't suit well the system with many running
-containers:
-
-1) There is no fairness between containers. A small container with
-few large processes will be chosen over a large one with huge
-number of small processes.
-
-2) Containers often do not expect that some random process inside
-will be killed. In many cases much safer behavior is to kill
-all tasks in the container. Traditionally, this was implemented
-in userspace, but doing it in the kernel has some advantages,
-especially in a case of a system-wide OOM.
-
-To address these issues, the cgroup-aware OOM killer is introduced.
-
-Under OOM conditions, it looks for the biggest memory consumer,
-walking down by the memcg tree from root cgroup or OOMing cgroup,
-if OOM is caused by reaching memcg memory limit. On each level
-the memcg with biggest memory footprint is selected.
-By default, a leaf memcg is chosen, and the biggest task
-inside is killed.
-
-But a user can change this behavior by enabling the per-cgroup
-memory.oom_group option. If set, it causes the OOM killer to treat
-the whole cgroup as an indivisible memory consumer. This means
-that OOM victim selection will stop at such memcg, the whole
-memcg will be selected, and all belonging tasks will be killed.
-The only exception is tasks with oom_score_adj set to -1000
-are considered as unkillable.
-
-The root cgroup is treated as a leaf memcg, so it's score
-is compared with top-level memory cgroups. The oom_group option
-is not supported for the root cgroup. Due to memcg statistics
-implementation a special algorithm is used for estimating
-root cgroup oom_score: we define it as maximum oom_score
-of the belonging tasks.
+Document the cgroup-aware OOM killer.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Michal Hocko <mhocko@kernel.org>
 Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: David Rientjes <rientjes@google.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: David Rientjes <rientjes@google.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
 Cc: cgroups@vger.kernel.org
@@ -78,580 +39,73 @@ Cc: linux-doc@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- include/linux/memcontrol.h |  33 ++++++
- include/linux/oom.h        |  12 ++-
- mm/memcontrol.c            | 258 +++++++++++++++++++++++++++++++++++++++++++++
- mm/oom_kill.c              |  95 ++++++++++++++---
- 4 files changed, 383 insertions(+), 15 deletions(-)
+ Documentation/cgroup-v2.txt | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 69966c461d1c..5b5c2b89968e 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -35,6 +35,7 @@ struct mem_cgroup;
- struct page;
- struct mm_struct;
- struct kmem_cache;
-+struct oom_control;
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index dc44785dc0fa..61a2e959e07a 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
+        5-2-1. Memory Interface Files
+        5-2-2. Usage Guidelines
+        5-2-3. Memory Ownership
++       5-2-4. OOM Killer
+      5-3. IO
+        5-3-1. IO Interface Files
+        5-3-2. Writeback
+@@ -1034,6 +1035,18 @@ PAGE_SIZE multiple when read back.
+ 	high limit is used and monitored properly, this limit's
+ 	utility is limited to providing the final safety net.
  
- /* Cgroup-specific page state, on top of universal node page state */
- enum memcg_stat_item {
-@@ -199,6 +200,12 @@ struct mem_cgroup {
- 	/* OOM-Killer disable */
- 	int		oom_kill_disable;
++  memory.oom_group
++
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "0".
++
++	If set, OOM killer will kill all processes attached to the cgroup
++	if selected as an OOM victim.
++
++	OOM killer respects the /proc/pid/oom_score_adj value -1000,
++	and will never kill the unkillable task, even if memory.oom_group
++	is set.
++
+   memory.events
+ 	A read-only flat-keyed file which exists on non-root cgroups.
+ 	The following entries are defined.  Unless specified
+@@ -1237,6 +1250,32 @@ to be accessed repeatedly by other cgroups, it may make sense to use
+ POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
+ belonging to the affected files to ensure correct memory ownership.
  
-+	/* kill all tasks in the subtree in case of OOM */
-+	bool oom_group;
++OOM Killer
++~~~~~~~~~~
 +
-+	/* cached OOM score */
-+	long oom_score;
++Cgroup v2 memory controller implements a cgroup-aware OOM killer.
++It means that it treats cgroups as first class OOM entities.
 +
- 	/* handle for "memory.events" */
- 	struct cgroup_file events_file;
++Under OOM conditions the memory controller tries to make the best
++choice of a victim, hierarchically looking for a cgroup with the
++largest memory footprint.
++
++By default, OOM killer will kill the biggest task in the selected
++memory cgroup. A user can change this behavior by enabling
++the per-cgroup oom_group option. If set, it causes the OOM killer
++to kill all processes attached to the cgroup, except processes
++with oom_score_adj set to -1000.
++
++This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
++the memory controller considers only cgroups belonging to the sub-tree
++of the OOM'ing cgroup.
++
++The root cgroup is treated as a leaf memory cgroup, so it's compared
++with top-level memory cgroups.
++
++If there are no cgroups with the enabled memory controller,
++the OOM killer is using the "traditional" process-based approach.
++
  
-@@ -342,6 +349,11 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *css){
- 	return css ? container_of(css, struct mem_cgroup, css) : NULL;
- }
- 
-+static inline void mem_cgroup_put(struct mem_cgroup *memcg)
-+{
-+	css_put(&memcg->css);
-+}
-+
- #define mem_cgroup_from_counter(counter, member)	\
- 	container_of(counter, struct mem_cgroup, member)
- 
-@@ -480,6 +492,13 @@ static inline bool task_in_memcg_oom(struct task_struct *p)
- 
- bool mem_cgroup_oom_synchronize(bool wait);
- 
-+bool mem_cgroup_select_oom_victim(struct oom_control *oc);
-+
-+static inline bool mem_cgroup_oom_group(struct mem_cgroup *memcg)
-+{
-+	return memcg->oom_group;
-+}
-+
- #ifdef CONFIG_MEMCG_SWAP
- extern int do_swap_account;
- #endif
-@@ -744,6 +763,10 @@ static inline bool task_in_mem_cgroup(struct task_struct *task,
- 	return true;
- }
- 
-+static inline void mem_cgroup_put(struct mem_cgroup *memcg)
-+{
-+}
-+
- static inline struct mem_cgroup *
- mem_cgroup_iter(struct mem_cgroup *root,
- 		struct mem_cgroup *prev,
-@@ -936,6 +959,16 @@ static inline
- void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
- {
- }
-+
-+static inline bool mem_cgroup_select_oom_victim(struct oom_control *oc)
-+{
-+	return false;
-+}
-+
-+static inline bool mem_cgroup_oom_group(struct mem_cgroup *memcg)
-+{
-+	return false;
-+}
- #endif /* CONFIG_MEMCG */
- 
- /* idx can be of type enum memcg_stat_item or node_stat_item */
-diff --git a/include/linux/oom.h b/include/linux/oom.h
-index 76aac4ce39bc..ca78e2d5956e 100644
---- a/include/linux/oom.h
-+++ b/include/linux/oom.h
-@@ -9,6 +9,13 @@
- #include <linux/sched/coredump.h> /* MMF_* */
- #include <linux/mm.h> /* VM_FAULT* */
- 
-+
-+/*
-+ * Special value returned by victim selection functions to indicate
-+ * that are inflight OOM victims.
-+ */
-+#define INFLIGHT_VICTIM ((void *)-1UL)
-+
- struct zonelist;
- struct notifier_block;
- struct mem_cgroup;
-@@ -39,7 +46,8 @@ struct oom_control {
- 
- 	/* Used by oom implementation, do not set */
- 	unsigned long totalpages;
--	struct task_struct *chosen;
-+	struct task_struct *chosen_task;
-+	struct mem_cgroup *chosen_memcg;
- 	unsigned long chosen_points;
- };
- 
-@@ -101,6 +109,8 @@ extern void oom_killer_enable(void);
- 
- extern struct task_struct *find_lock_task_mm(struct task_struct *p);
- 
-+extern int oom_evaluate_task(struct task_struct *task, void *arg);
-+
- /* sysctls */
- extern int sysctl_oom_dump_tasks;
- extern int sysctl_oom_kill_allocating_task;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 15af3da5af02..da2b12ea4667 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2661,6 +2661,231 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
- 	return ret;
- }
- 
-+static long memcg_oom_badness(struct mem_cgroup *memcg,
-+			      const nodemask_t *nodemask,
-+			      unsigned long totalpages)
-+{
-+	long points = 0;
-+	int nid;
-+	pg_data_t *pgdat;
-+
-+	/*
-+	 * We don't have necessary stats for the root memcg,
-+	 * so we define it's oom_score as the maximum oom_score
-+	 * of the belonging tasks.
-+	 */
-+	if (memcg == root_mem_cgroup) {
-+		struct css_task_iter it;
-+		struct task_struct *task;
-+		long score, max_score = 0;
-+
-+		css_task_iter_start(&memcg->css, 0, &it);
-+		while ((task = css_task_iter_next(&it))) {
-+			score = oom_badness(task, memcg, nodemask,
-+					    totalpages);
-+			if (max_score > score)
-+				max_score = score;
-+		}
-+		css_task_iter_end(&it);
-+
-+		return max_score;
-+	}
-+
-+	for_each_node_state(nid, N_MEMORY) {
-+		if (nodemask && !node_isset(nid, *nodemask))
-+			continue;
-+
-+		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
-+				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
-+
-+		pgdat = NODE_DATA(nid);
-+		points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
-+					    NR_SLAB_UNRECLAIMABLE);
-+	}
-+
-+	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
-+		(PAGE_SIZE / 1024);
-+	points += memcg_page_state(memcg, MEMCG_SOCK);
-+	points += memcg_page_state(memcg, MEMCG_SWAP);
-+
-+	return points;
-+}
-+
-+/*
-+ * Checks if the given memcg is a valid OOM victim and returns a number,
-+ * which means the folowing:
-+ *   -1: there are inflight OOM victim tasks, belonging to the memcg
-+ *    0: memcg is not eligible, e.g. all belonging tasks are protected
-+ *       by oom_score_adj set to OOM_SCORE_ADJ_MIN
-+ *   >0: memcg is eligible, and the returned value is an estimation
-+ *       of the memory footprint
-+ */
-+static long oom_evaluate_memcg(struct mem_cgroup *memcg,
-+			       const nodemask_t *nodemask,
-+			       unsigned long totalpages)
-+{
-+	struct css_task_iter it;
-+	struct task_struct *task;
-+	int eligible = 0;
-+
-+	/*
-+	 * Memcg is OOM eligible if there are OOM killable tasks inside.
-+	 *
-+	 * We treat tasks with oom_score_adj set to OOM_SCORE_ADJ_MIN
-+	 * as unkillable.
-+	 *
-+	 * If there are inflight OOM victim tasks inside the memcg,
-+	 * we return -1.
-+	 */
-+	css_task_iter_start(&memcg->css, 0, &it);
-+	while ((task = css_task_iter_next(&it))) {
-+		if (!eligible &&
-+		    task->signal->oom_score_adj != OOM_SCORE_ADJ_MIN)
-+			eligible = 1;
-+
-+		if (tsk_is_oom_victim(task) &&
-+		    !test_bit(MMF_OOM_SKIP, &task->signal->oom_mm->flags)) {
-+			eligible = -1;
-+			break;
-+		}
-+	}
-+	css_task_iter_end(&it);
-+
-+	if (eligible <= 0)
-+		return eligible;
-+
-+	return memcg_oom_badness(memcg, nodemask, totalpages);
-+}
-+
-+static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
-+{
-+	struct mem_cgroup *iter, *parent;
-+
-+	/*
-+	 * If OOM is memcg-wide, and the memcg has the oom_group flag,
-+	 * simple select the memcg as a victim.
-+	 */
-+	if (oc->memcg && oc->memcg->oom_group) {
-+		oc->chosen_memcg = oc->memcg;
-+		css_get(&oc->chosen_memcg->css);
-+		oc->chosen_points = oc->memcg->oom_score;
-+		return;
-+	}
-+
-+	/*
-+	 * The oom_score is calculated for leaf memcgs and propagated upwards
-+	 * by the tree.
-+	 *
-+	 * for_each_mem_cgroup_tree() walks the tree in pre-order,
-+	 * so we simple reset oom_score for non-lead cgroups before
-+	 * starting accumulating an actual value from underlying sub-tree.
-+	 *
-+	 * Root memcg is treated as a leaf memcg.
-+	 */
-+	for_each_mem_cgroup_tree(iter, root) {
-+		if (memcg_has_children(iter) && iter != root_mem_cgroup) {
-+			iter->oom_score = 0;
-+			continue;
-+		}
-+
-+		iter->oom_score = oom_evaluate_memcg(iter, oc->nodemask,
-+						     oc->totalpages);
-+
-+		/*
-+		 * Ignore empty and non-eligible memory cgroups.
-+		 */
-+		if (iter->oom_score == 0)
-+			continue;
-+
-+		/*
-+		 * If there are inflight OOM victims, we don't need to look
-+		 * further for new victims.
-+		 */
-+		if (iter->oom_score == -1) {
-+			oc->chosen_memcg = INFLIGHT_VICTIM;
-+			mem_cgroup_iter_break(root, iter);
-+			return;
-+		}
-+
-+		for (parent = parent_mem_cgroup(iter); parent && parent != root;
-+		     parent = parent_mem_cgroup(parent))
-+			parent->oom_score += iter->oom_score;
-+	}
-+
-+	for (;;) {
-+		struct cgroup_subsys_state *css;
-+		struct mem_cgroup *memcg = NULL;
-+		long score = LONG_MIN;
-+
-+		/*
-+		 * Root memcg is compared with top-level memcgs.
-+		 */
-+		if (root == root_mem_cgroup && root->oom_score > 0) {
-+			score = root->oom_score;
-+			memcg = root_mem_cgroup;
-+		}
-+
-+		css_for_each_child(css, &root->css) {
-+			struct mem_cgroup *iter = mem_cgroup_from_css(css);
-+
-+			/*
-+			 * Ignore empty and non-eligible memory cgroups.
-+			 */
-+			if (iter->oom_score == 0)
-+				continue;
-+
-+			if (iter->oom_score > score) {
-+				memcg = iter;
-+				score = iter->oom_score;
-+			}
-+		}
-+
-+		if (!memcg) {
-+			if (oc->memcg && root == oc->memcg) {
-+				oc->chosen_memcg = oc->memcg;
-+				css_get(&oc->chosen_memcg->css);
-+				oc->chosen_points = oc->memcg->oom_score;
-+			}
-+			break;
-+		}
-+
-+		if (memcg->oom_group || !memcg_has_children(memcg) ||
-+		    memcg == root_mem_cgroup) {
-+			oc->chosen_memcg = memcg;
-+			css_get(&oc->chosen_memcg->css);
-+			oc->chosen_points = score;
-+			break;
-+		}
-+
-+		root = memcg;
-+	}
-+}
-+
-+bool mem_cgroup_select_oom_victim(struct oom_control *oc)
-+{
-+	struct mem_cgroup *root;
-+
-+	if (mem_cgroup_disabled())
-+		return false;
-+
-+	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-+		return false;
-+
-+	if (oc->memcg)
-+		root = oc->memcg;
-+	else
-+		root = root_mem_cgroup;
-+
-+	oc->chosen_task = NULL;
-+	oc->chosen_memcg = NULL;
-+
-+	rcu_read_lock();
-+	select_victim_memcg(root, oc);
-+	rcu_read_unlock();
-+
-+	return oc->chosen_task || oc->chosen_memcg;
-+}
-+
- /*
-  * Reclaims as many pages from the given memcg as possible.
-  *
-@@ -5258,6 +5483,33 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
- 	return nbytes;
- }
- 
-+static int memory_oom_group_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+	bool oom_group = memcg->oom_group;
-+
-+	seq_printf(m, "%d\n", oom_group);
-+
-+	return 0;
-+}
-+
-+static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
-+					       char *buf, size_t nbytes,
-+					       loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	int oom_group;
-+	int err;
-+
-+	err = kstrtoint(strstrip(buf), 0, &oom_group);
-+	if (err)
-+		return err;
-+
-+	memcg->oom_group = oom_group;
-+
-+	return nbytes;
-+}
-+
- static int memory_events_show(struct seq_file *m, void *v)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-@@ -5378,6 +5630,12 @@ static struct cftype memory_files[] = {
- 		.write = memory_max_write,
- 	},
- 	{
-+		.name = "oom_group",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = memory_oom_group_show,
-+		.write = memory_oom_group_write,
-+	},
-+	{
- 		.name = "events",
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.file_offset = offsetof(struct mem_cgroup, events_file),
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index f061b627092c..70359a535e62 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -288,7 +288,7 @@ static enum oom_constraint constrained_alloc(struct oom_control *oc)
- 	return CONSTRAINT_NONE;
- }
- 
--static int oom_evaluate_task(struct task_struct *task, void *arg)
-+int oom_evaluate_task(struct task_struct *task, void *arg)
- {
- 	struct oom_control *oc = arg;
- 	unsigned long points;
-@@ -322,26 +322,26 @@ static int oom_evaluate_task(struct task_struct *task, void *arg)
- 		goto next;
- 
- 	/* Prefer thread group leaders for display purposes */
--	if (points == oc->chosen_points && thread_group_leader(oc->chosen))
-+	if (points == oc->chosen_points && thread_group_leader(oc->chosen_task))
- 		goto next;
- select:
--	if (oc->chosen)
--		put_task_struct(oc->chosen);
-+	if (oc->chosen_task)
-+		put_task_struct(oc->chosen_task);
- 	get_task_struct(task);
--	oc->chosen = task;
-+	oc->chosen_task = task;
- 	oc->chosen_points = points;
- next:
- 	return 0;
- abort:
--	if (oc->chosen)
--		put_task_struct(oc->chosen);
--	oc->chosen = (void *)-1UL;
-+	if (oc->chosen_task)
-+		put_task_struct(oc->chosen_task);
-+	oc->chosen_task = INFLIGHT_VICTIM;
- 	return 1;
- }
- 
- /*
-  * Simple selection loop. We choose the process with the highest number of
-- * 'points'. In case scan was aborted, oc->chosen is set to -1.
-+ * 'points'. In case scan was aborted, oc->chosen_task is set to -1.
-  */
- static void select_bad_process(struct oom_control *oc)
- {
-@@ -810,6 +810,12 @@ static void __oom_kill_process(struct task_struct *victim)
- 	struct mm_struct *mm;
- 	bool can_oom_reap = true;
- 
-+	if (is_global_init(victim) || (victim->flags & PF_KTHREAD) ||
-+	    victim->signal->oom_score_adj == OOM_SCORE_ADJ_MIN) {
-+		put_task_struct(victim);
-+		return;
-+	}
-+
- 	p = find_lock_task_mm(victim);
- 	if (!p) {
- 		put_task_struct(victim);
-@@ -885,7 +891,7 @@ static void __oom_kill_process(struct task_struct *victim)
- 
- static void oom_kill_process(struct oom_control *oc, const char *message)
- {
--	struct task_struct *p = oc->chosen;
-+	struct task_struct *p = oc->chosen_task;
- 	unsigned int points = oc->chosen_points;
- 	struct task_struct *victim = p;
- 	struct task_struct *child;
-@@ -946,6 +952,64 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
- 	__oom_kill_process(victim);
- }
- 
-+static int oom_kill_memcg_member(struct task_struct *task, void *unused)
-+{
-+	if (!tsk_is_oom_victim(task)) {
-+		get_task_struct(task);
-+		__oom_kill_process(task);
-+	}
-+	return 0;
-+}
-+
-+static bool oom_kill_memcg_victim(struct oom_control *oc)
-+{
-+	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
-+				      DEFAULT_RATELIMIT_BURST);
-+
-+	if (oc->chosen_task) {
-+		if (oc->chosen_task == INFLIGHT_VICTIM)
-+			return true;
-+
-+		if (__ratelimit(&oom_rs))
-+			dump_header(oc, oc->chosen_task);
-+
-+		__oom_kill_process(oc->chosen_task);
-+
-+		schedule_timeout_killable(1);
-+		return true;
-+
-+	} else if (oc->chosen_memcg) {
-+		if (oc->chosen_memcg == INFLIGHT_VICTIM)
-+			return true;
-+
-+		/* Always begin with the biggest task */
-+		oc->chosen_points = 0;
-+		oc->chosen_task = NULL;
-+		mem_cgroup_scan_tasks(oc->chosen_memcg, oom_evaluate_task, oc);
-+
-+		if (oc->chosen_task && oc->chosen_task != INFLIGHT_VICTIM) {
-+			if (__ratelimit(&oom_rs))
-+				dump_header(oc, oc->chosen_task);
-+
-+			__oom_kill_process(oc->chosen_task);
-+
-+			if (mem_cgroup_oom_group(oc->chosen_memcg))
-+				mem_cgroup_scan_tasks(oc->chosen_memcg,
-+						      oom_kill_memcg_member,
-+						      NULL);
-+			schedule_timeout_killable(1);
-+		}
-+
-+		mem_cgroup_put(oc->chosen_memcg);
-+		oc->chosen_memcg = NULL;
-+		return oc->chosen_task;
-+
-+	} else {
-+		oc->chosen_points = 0;
-+		return false;
-+	}
-+}
-+
- /*
-  * Determines whether the kernel must panic because of the panic_on_oom sysctl.
-  */
-@@ -1042,18 +1106,21 @@ bool out_of_memory(struct oom_control *oc)
- 	    current->mm && !oom_unkillable_task(current, NULL, oc->nodemask) &&
- 	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
- 		get_task_struct(current);
--		oc->chosen = current;
-+		oc->chosen_task = current;
- 		oom_kill_process(oc, "Out of memory (oom_kill_allocating_task)");
- 		return true;
- 	}
- 
-+	if (mem_cgroup_select_oom_victim(oc) && oom_kill_memcg_victim(oc))
-+		return true;
-+
- 	select_bad_process(oc);
- 	/* Found nothing?!?! Either we hang forever, or we panic. */
--	if (!oc->chosen && !is_sysrq_oom(oc) && !is_memcg_oom(oc)) {
-+	if (!oc->chosen_task && !is_sysrq_oom(oc) && !is_memcg_oom(oc)) {
- 		dump_header(oc, NULL);
- 		panic("Out of memory and no killable processes...\n");
- 	}
--	if (oc->chosen && oc->chosen != (void *)-1UL) {
-+	if (oc->chosen_task && oc->chosen_task != INFLIGHT_VICTIM) {
- 		oom_kill_process(oc, !is_memcg_oom(oc) ? "Out of memory" :
- 				 "Memory cgroup out of memory");
- 		/*
-@@ -1062,7 +1129,7 @@ bool out_of_memory(struct oom_control *oc)
- 		 */
- 		schedule_timeout_killable(1);
- 	}
--	return !!oc->chosen;
-+	return !!oc->chosen_task;
- }
- 
- /*
+ IO
+ --
 -- 
 2.13.5
 
