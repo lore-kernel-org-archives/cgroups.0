@@ -1,60 +1,69 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v8 1/4] mm, oom: refactor the oom_kill_process() function
-Date: Mon, 11 Sep 2017 13:51:17 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709111349321.102819@chino.kir.corp.google.com>
-References: <20170911131742.16482-1-guro@fb.com> <20170911131742.16482-2-guro@fb.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v8 3/4] mm, oom: add cgroup v2 mount option for cgroup-aware
+ OOM killer
+Date: Tue, 12 Sep 2017 21:01:15 +0100
+Message-ID: <20170912200115.GA25218@castle>
+References: <20170911131742.16482-1-guro@fb.com>
+ <20170911131742.16482-4-guro@fb.com>
+ <alpine.DEB.2.10.1709111345320.102819@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=L/BTyf2lzPtw6uFd8HIkYzaUZLzNPbk8fWxVpx9QkYA=;
-        b=K3CLhTQl767l9Ae30bWECgPOCSY7RpCMiX+3zbz+JDHrJbYMkK8IwNMdjGsTD+XLoD
-         WIrLZ9qugyJuXtEzT5/1IZxj5lWAfuK22XyGUY1Tr4hv7FsKdV/dgc+Crel82NbLFFwl
-         +Qy6ftnpNoAJb4mLN3d72KdBnmumcHm7RUxCtQSTD2YSsWUirGVD1qM8iwgKrkuQCrFn
-         c5fiBaqZBqkvIgpkFHsY0PLAxBp+wIvqdMgwc8bd/T39JFkZoOIujzvbrDNQhQdwDAk7
-         GWgzTRF8BkZomtG0rsGS9A5wMjkqEb+VzbUhA/nFbvQ/yAaoJN4i1gCWNqRJdGAsEtu4
-         STAQ==
-In-Reply-To: <20170911131742.16482-2-guro@fb.com>
-Sender: linux-doc-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=4olCSAhuVPp/EQQ1Hubp5zkPt8X24UhryZShzUotFF8=;
+ b=kvDRlhIfHe24KNJT9RSfu/lBgYjMspfcVuTiRb8Y4MeJBTczTyG/fu/vEzyy0D9ciLXj
+ +yZx1dwjBYWuXHzQmADiKVGlESlSrSn8YbvlK+3D9wwmaNgdWjrMHs9XIS8iylkxNI+B
+ z9ypFJBgfOvBLOZ/x0yOdYXxePJwlpQUZdM= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=4olCSAhuVPp/EQQ1Hubp5zkPt8X24UhryZShzUotFF8=;
+ b=Gy5uRJr/jVryrbEpQJdul+u+HmqQjuuMG/SAZzKrNG0bGcFN+ns+eAqmfmtVj/RqoX5NTOimHHbkSYOYFmC3+B/jlrSIQlExQBBWE+OTqmZRTuvdpggKLmrjaMaU89CdARc8BePMPoekH4rdKWO1CYtE6r9yF8BiO625lEhdbCw=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1709111345320.102819@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
+To: David Rientjes <rientjes@google.com>
 Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 11 Sep 2017, Roman Gushchin wrote:
-
-> The oom_kill_process() function consists of two logical parts:
-> the first one is responsible for considering task's children as
-> a potential victim and printing the debug information.
-> The second half is responsible for sending SIGKILL to all
-> tasks sharing the mm struct with the given victim.
+On Mon, Sep 11, 2017 at 01:48:39PM -0700, David Rientjes wrote:
+> On Mon, 11 Sep 2017, Roman Gushchin wrote:
 > 
-> This commit splits the oom_kill_process() function with
-> an intention to re-use the the second half: __oom_kill_process().
+> > Add a "groupoom" cgroup v2 mount option to enable the cgroup-aware
+> > OOM killer. If not set, the OOM selection is performed in
+> > a "traditional" per-process way.
+> > 
+> > The behavior can be changed dynamically by remounting the cgroupfs.
 > 
-> The cgroup-aware OOM killer will kill multiple tasks
-> belonging to the victim cgroup. We don't need to print
-> the debug information for the each task, as well as play
-> with task selection (considering task's children),
-> so we can't use the existing oom_kill_process().
+> I can't imagine that Tejun would be happy with a new mount option, 
+> especially when it's not required.
 > 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Cc: David Rientjes <rientjes@google.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: kernel-team@fb.com
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-doc@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-mm@kvack.org
+> OOM behavior does not need to be defined at mount time and for the entire 
+> hierarchy.  It's possible to very easily implement a tunable as part of 
+> mem cgroup that is propagated to descendants and controls the oom scoring 
+> behavior for that hierarchy.  It does not need to be system wide and 
+> affect scoring of all processes based on which mem cgroup they are 
+> attached to at any given time.
 
-Acked-by: David Rientjes <rientjes@google.com>
+No, I don't think that mixing per-cgroup and per-process OOM selection
+algorithms is a good idea.
 
-https://marc.info/?l=linux-kernel&m=150274805412752
+So, there are 3 reasonable options:
+1) boot option
+2) sysctl
+3) cgroup mount option
+
+I believe, 3) is better, because it allows changing the behavior dynamically,
+and explicitly depends on v2 (what sysctl lacks).
+
+So, the only question is should it be opt-in or opt-out option.
+Personally, I would prefer opt-out, but Michal has a very strong opinion here.
+
+Thanks!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
