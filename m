@@ -1,63 +1,88 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Wed, 13 Sep 2017 13:46:08 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709131340020.146292@chino.kir.corp.google.com>
-References: <20170911131742.16482-1-guro@fb.com> <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz>
+Subject: Re: [v8 2/4] mm, oom: cgroup-aware OOM killer
+Date: Wed, 13 Sep 2017 13:46:51 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1709131346200.146292@chino.kir.corp.google.com>
+References: <20170911131742.16482-1-guro@fb.com> <20170911131742.16482-3-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=QaCYaXKgW8GRpiIz93kgj/cJtEm0C5Ps3NeCHsL2N/U=;
-        b=GSh+PSsH6ZTaqV9xZmyoLQU3tjKSBVoU7r+/A+EZO/yMW1P2Gu7weLFnTAbVhf4QG4
-         g62NgsPnA2me8jigs8TjCrSPWSd9tIXa/Chs/DP5kqroCdA2/Xak/IdiUoz6FAidVxw3
-         trwvoMmO5TzL55IRNJefL2dt23S9wVc6Ya2wS9MfSB0NN8R3WookDyoyd1GlyRcXxBb5
-         7kJCzxWMlcyQPpBbfj0ISXdLFHmUXZBDMTaGEqZfh4yo7EO5duyfS//Br+u9e0gRFn/r
-         o17CCQwsZ59BbkYsd9SjSHTpotfKe+iBGDoHHC8w4+v8+tLyT2CmiKS4Z65El4rntwPu
-         /Emw==
-In-Reply-To: <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz>
+        bh=krSGNniU52uR4qbpf1FzZsR4k44wAKvGJKAOMyFUHDs=;
+        b=oiCwFhblthcmD3ceFwvwuPklF0gLyMaMNEEsFi+JrnHTNhMczDCSuCx5G+EkVBO8yS
+         fw5dDIJDuM03pVvFOpoJYUiOaIrfbvfV5kbZYKDyR9y/IviKgeqf5TVyiaRChNwLdSV+
+         geX0bIjK3Yw3NRWp3/adGhsaQ0vltuUjYgI/Ie+B50bvEJyWFXVMwivmQ7YMAbeydAaj
+         1qbOn65PFYQ9bP/HYNAL/18cSB/T/Z+fMw6UU3c2Jlkx2PZHntS8Y2px94LvIgaHtfMR
+         LyvyTcFZ6FXHx/PE5UQ+tnS4FInOEqqcfgxC8L4ZksGo65lhpI9+INf3RZSNLqwDZkzm
+         SMQQ==
+In-Reply-To: <20170911131742.16482-3-guro@fb.com>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 13 Sep 2017, Michal Hocko wrote:
+On Mon, 11 Sep 2017, Roman Gushchin wrote:
 
-> > > This patchset makes the OOM killer cgroup-aware.
-> > > 
-> > > v8:
-> > >   - Do not kill tasks with OOM_SCORE_ADJ -1000
-> > >   - Make the whole thing opt-in with cgroup mount option control
-> > >   - Drop oom_priority for further discussions
-> > 
-> > Nack, we specifically require oom_priority for this to function correctly, 
-> > otherwise we cannot prefer to kill from low priority leaf memcgs as 
-> > required.
-> 
-> While I understand that your usecase might require priorities I do not
-> think this part missing is a reason to nack the cgroup based selection
-> and kill-all parts. This can be done on top. The only important part
-> right now is the current selection semantic - only leaf memcgs vs. size
-> of the hierarchy). I strongly believe that comparing only leaf memcgs
-> is more straightforward and it doesn't lead to unexpected results as
-> mentioned before (kill a small memcg which is a part of the larger
-> sub-hierarchy).
-> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 15af3da5af02..da2b12ea4667 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2661,6 +2661,231 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
+>  	return ret;
+>  }
+>  
+> +static long memcg_oom_badness(struct mem_cgroup *memcg,
+> +			      const nodemask_t *nodemask,
+> +			      unsigned long totalpages)
+> +{
+> +	long points = 0;
+> +	int nid;
+> +	pg_data_t *pgdat;
+> +
+> +	/*
+> +	 * We don't have necessary stats for the root memcg,
+> +	 * so we define it's oom_score as the maximum oom_score
+> +	 * of the belonging tasks.
+> +	 */
+> +	if (memcg == root_mem_cgroup) {
+> +		struct css_task_iter it;
+> +		struct task_struct *task;
+> +		long score, max_score = 0;
+> +
+> +		css_task_iter_start(&memcg->css, 0, &it);
+> +		while ((task = css_task_iter_next(&it))) {
+> +			score = oom_badness(task, memcg, nodemask,
+> +					    totalpages);
+> +			if (max_score > score)
 
-The problem is that we cannot enable the cgroup-aware oom killer and 
-oom_group behavior because, without oom priorities, we have no ability to 
-influence the cgroup that it chooses.  It is doing two things: providing 
-more fairness amongst cgroups by selecting based on cumulative usage 
-rather than single large process (good!), and effectively is removing all 
-userspace control of oom selection (bad).  We want the former, but it 
-needs to be coupled with support so that we can protect vital cgroups, 
-regardless of their usage.
+score > max_score
 
-It is certainly possible to add oom priorities on top before it is merged, 
-but I don't see why it isn't part of the patchset.  We need it before its 
-merged to avoid users playing with /proc/pid/oom_score_adj to prevent any 
-killing in the most preferable memcg when they could have simply changed 
-the oom priority.
+> +				max_score = score;
+> +		}
+> +		css_task_iter_end(&it);
+> +
+> +		return max_score;
+> +	}
+> +
+> +	for_each_node_state(nid, N_MEMORY) {
+> +		if (nodemask && !node_isset(nid, *nodemask))
+> +			continue;
+> +
+> +		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> +				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> +
+> +		pgdat = NODE_DATA(nid);
+> +		points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
+> +					    NR_SLAB_UNRECLAIMABLE);
+> +	}
+> +
+> +	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
+> +		(PAGE_SIZE / 1024);
+> +	points += memcg_page_state(memcg, MEMCG_SOCK);
+> +	points += memcg_page_state(memcg, MEMCG_SWAP);
+> +
+> +	return points;
+> +}
