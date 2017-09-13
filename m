@@ -1,67 +1,72 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v8 3/4] mm, oom: add cgroup v2 mount option for cgroup-aware
- OOM killer
-Date: Tue, 12 Sep 2017 13:23:00 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709121319040.62551@chino.kir.corp.google.com>
-References: <20170911131742.16482-1-guro@fb.com> <20170911131742.16482-4-guro@fb.com> <alpine.DEB.2.10.1709111345320.102819@chino.kir.corp.google.com> <20170912200115.GA25218@castle>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Wed, 13 Sep 2017 14:56:07 -0700
+Message-ID: <20170913215607.GA19259@castle>
+References: <20170911131742.16482-1-guro@fb.com>
+ <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com>
+ <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=tc7boOPME6lmWhry2dRJEgNgdB55AVbIXkUQC7Ot4uM=;
-        b=iTk5KPrqxUAHMQ1+TPRgTzOKY5FvAs6/6B/WUw916/nlLdPBRFuuIgkZ+8+80etfQC
-         X2U7rAtXjaxLSSECb4+FGMwi8YALOnIvlNHiw29H2fx7iabtR0LOLqRIYkT9bizuqV/i
-         5eFXSaFCOOOwALhzL1R8NKewjUltx6DLZEA2skmJQ3ZfcYYOVCJT/ZbOMhMrTrxjJ9Tz
-         0tU8gNQX+mC8923ZS4yNAPNHp8TtQLJgTjwK/DRvxjZrTdKE2EyN1sydo2t69/zFwfRn
-         Z367Syp+k4EHV44NgeamkHUJ7zo0n+9bmtAkhy65PaLyouaMEZ599YTwuYZHQNs0ttmP
-         McHQ==
-In-Reply-To: <20170912200115.GA25218@castle>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=l0tJla9PsmXJ23sPQOS+E2P5bAAo21wsTmaLqMyXisg=;
+ b=dAyMp6kp8T/qSqHnvug+v+GbnX+SUdSEGzXWZyA/SAW7uaYtbV8B6F/ASTpSTfNqoLC5
+ mgIMclg0O4ledL4EudYtQRbNGahRBAMPZOSKM3LZWJU7I7O1L+AzrpPNqHN5aHD4B13H
+ HcoFyfwzeKspk/ndHd7S2FnUHYFM+2BMJaQ= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=l0tJla9PsmXJ23sPQOS+E2P5bAAo21wsTmaLqMyXisg=;
+ b=b5035xWC+hwbddl8vPkHT1s5s0juQWVl23d70wJ6k2vvKvbViiMA10TNCIGXYcbKZr2URlp1xiWTLwO6wl/HWolSusgD+q0GL1GqiNPznsWkJGLYXbn4MTwLt/7LO9/Zi5QkllDGbTbm/argD76IGftlol53Q7Yu6Wpz1TAxvmU=
+Content-Disposition: inline
+In-Reply-To: <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 12 Sep 2017, Roman Gushchin wrote:
-
-> > I can't imagine that Tejun would be happy with a new mount option, 
-> > especially when it's not required.
+On Wed, Sep 13, 2017 at 02:29:14PM +0200, Michal Hocko wrote:
+> On Mon 11-09-17 13:44:39, David Rientjes wrote:
+> > On Mon, 11 Sep 2017, Roman Gushchin wrote:
 > > 
-> > OOM behavior does not need to be defined at mount time and for the entire 
-> > hierarchy.  It's possible to very easily implement a tunable as part of 
-> > mem cgroup that is propagated to descendants and controls the oom scoring 
-> > behavior for that hierarchy.  It does not need to be system wide and 
-> > affect scoring of all processes based on which mem cgroup they are 
-> > attached to at any given time.
+> > > This patchset makes the OOM killer cgroup-aware.
+> > > 
+> > > v8:
+> > >   - Do not kill tasks with OOM_SCORE_ADJ -1000
+> > >   - Make the whole thing opt-in with cgroup mount option control
+> > >   - Drop oom_priority for further discussions
+> > 
+> > Nack, we specifically require oom_priority for this to function correctly, 
+> > otherwise we cannot prefer to kill from low priority leaf memcgs as 
+> > required.
 > 
-> No, I don't think that mixing per-cgroup and per-process OOM selection
-> algorithms is a good idea.
-> 
-> So, there are 3 reasonable options:
-> 1) boot option
-> 2) sysctl
-> 3) cgroup mount option
-> 
-> I believe, 3) is better, because it allows changing the behavior dynamically,
-> and explicitly depends on v2 (what sysctl lacks).
-> 
-> So, the only question is should it be opt-in or opt-out option.
-> Personally, I would prefer opt-out, but Michal has a very strong opinion here.
-> 
+> While I understand that your usecase might require priorities I do not
+> think this part missing is a reason to nack the cgroup based selection
+> and kill-all parts. This can be done on top. The only important part
+> right now is the current selection semantic - only leaf memcgs vs. size
+> of the hierarchy).
 
-If it absolutely must be a mount option, then I would agree it should be 
-opt-in so that it's known what is being changed rather than changing how 
-selection was done in the past and requiring legacy users to now mount in 
-a new way.
+I agree.
 
-I'd be interested to hear Tejun's comments, however, about whether we want 
-to add controller specific mount options like this instead of a tunable at 
-the root level, for instance, that controls victim selection and would be 
-isolated to the memory cgroup controller as opposed to polluting mount 
-options.
+> I strongly believe that comparing only leaf memcgs
+> is more straightforward and it doesn't lead to unexpected results as
+> mentioned before (kill a small memcg which is a part of the larger
+> sub-hierarchy).
+
+One of two main goals of this patchset is to introduce cgroup-level
+fairness: bigger cgroups should be affected more than smaller,
+despite the size of tasks inside. I believe the same principle
+should be used for cgroups.
+
+Also, the opposite will make oom_semantics more weird: it will mean
+kill all tasks, but also treat memcg as a leaf cgroup.
+
+> 
+> I didn't get to read the new version of this series yet and hope to get
+> to it soon.
+
+Thanks!
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
