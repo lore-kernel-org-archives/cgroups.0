@@ -1,73 +1,67 @@
-From: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: Audit Kernel Container IDs
-Date: Thu, 14 Sep 2017 14:07:04 -0400
-Message-ID: <20170914180704.GU3405@madcap2.tricolour.ca>
-References: <20170913171328.GP3405@madcap2.tricolour.ca>
- <87d16tb2y5.fsf@xmission.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Thu, 14 Sep 2017 13:07:32 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1709141257400.91150@chino.kir.corp.google.com>
+References: <20170911131742.16482-1-guro@fb.com> <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz> <alpine.DEB.2.10.1709131340020.146292@chino.kir.corp.google.com>
+ <20170914133407.e7gstxssq6j5lo25@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <87d16tb2y5.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=YDt7ZEktO1M8BroccR7SehUM9goDsFJR/otOsTL2dw4=;
+        b=hhHZkUJYUBL8wvrkLOd7yD1l5AfAfMFm/x7CfsdhgwlV/z/3gbU4Dy0+ojNglpdwW3
+         19EzEGis1+ckCiliF6GQpKoMxk/gJX7WWPcM7EN5ezXkPQ5rJZxmQnYrxEjxKhQChslY
+         4ghxSoAFpOGHvyyLG9Bo5XjSoc81+/S4W7otTRV+aQxgj0Q/zrGSckObasV2F47C1HIK
+         pr3p69dqYvsqzDx3XAYVGZRkH6sb2SFprQDiI+kZPZWRj4OANweDegSjp4V40zziL6NA
+         HjXJpmwnR6YCVHDsld4wIx/as3IXNRjvLAqO5eE/+kjy8+KNNvkFuSmhG62k5tgZIAsy
+         yY2g==
+In-Reply-To: <20170914133407.e7gstxssq6j5lo25@dhcp22.suse.cz>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Audit <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2017-09-14 12:33, Eric W. Biederman wrote:
-> Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+On Thu, 14 Sep 2017, Michal Hocko wrote:
+
+> > It is certainly possible to add oom priorities on top before it is merged, 
+> > but I don't see why it isn't part of the patchset.
 > 
-> > The trigger is a pseudo filesystem (proc, since PID tree already exists)
-> > write of a u64 representing the container ID to a file representing a
-> > process that will become the first process in a new container.
-> > This might place restrictions on mount namespaces required to define a
-> > container, or at least careful checking of namespaces in the kernel to
-> > verify permissions of the orchestrator so it can't change its own
-> > container ID.
+> Because the semantic of the priority for non-leaf memcgs is not fully
+> clear and I would rather have the core of the functionality merged
+> before this is sorted out.
 > 
-> Why a u64?
 
-u32 will roll too quickly.  UUID is large enough that it adds
-significantly to audit record bandwidth.  I'd prefer u64, but can look
-at the difference of accommodating a UUID...
+We can't merge the core of the feature before this is sorted out because 
+then users start to depend on behavior and we must be backwards 
+compatible.  We need a full patchset that introduces the new selection 
+heuristic and a way for userspace to control it to either bias or prefer 
+one cgroup over another.  The kill-all mechanism is a more orthogonal 
+feature for the cgroup-aware oom killer than oom priorities.
 
-> Why a proc filesystem write and not a magic audit message?
+I have a usecase for both the cgroup-aware oom killer and its oom 
+priorities from previous versions of this patchset, I assume that Roman 
+does as well, and would like to see it merged bacause there are real-world 
+usecases for it rather than hypothetical usecases that would want to do 
+something different.
 
-A magic audit message requires CAP_AUDIT_WRITE, which we'd like to use
-sparingly.  Given that orchestrators will already require it to send
-the mandatory AUDIT_VIRT_*, this doesn't seem like an unreasonable burden.
+> > We need it before its 
+> > merged to avoid users playing with /proc/pid/oom_score_adj to prevent any 
+> > killing in the most preferable memcg when they could have simply changed 
+> > the oom priority.
+> 
+> I am sorry but I do not really understand your concern. Are you
+> suggesting that users would start oom disable all tasks in a memcg to
+> give it a higher priority? Even if that was the case why should such an
+> abuse be a blocker for generic memcg aware oom killer being merged?
 
-I was originally leaning towards an audit message trigger or a syscall.
-
-> I don't like the fact that the proc filesystem entry is likely going to
-> be readable and abusable by non-audit contexts?
-
-This proposal wasn't going to start with that link being readable, but
-its filesystem structure and link names would be, perhaps giving away
-too much already.
-
-I think we will need to find a way for the orchestrator or one of its
-authorized agents to read this information while blocking reads from
-unauthorized agents, otherwise this would be of very limited use.
-
-> Why the ability to change the containerid?  What is the use case you are
-> thinking of there?
-
-This was covered in the end of the conversation with Paul Moore (that
-maybe you got tired reading?)  I'd originally proposed having it write
-once, but Paul figured there was no good reason to restrict it and leave
-that decision up to the orchestrator.  The use case would be adding
-other processes to a container, but it could be argued all additional
-processes should be spawned by the first process in a container.
-
-> Eric
-
-- RGB
-
---
-Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sr. S/W Engineer, Kernel Security, Base Operating Systems
-Remote, Ottawa, Red Hat Canada
-IRC: rgb, SunRaycer
-Voice: +1.647.777.2635, Internal: (81) 32635
+If users do not have any way to control victim selection because of a 
+shortcoming in the kernel implementation, they will be required to oom 
+disable processes and let that be inherited by children they fork in the 
+memcg hierarchy to protect cgroups that they do not want to be oom killed, 
+regardless of their size.  They simply are left with no other alternative 
+if they want to use the cgroup-aware oom killer and/or the kill-all 
+mechanism.
