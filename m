@@ -1,63 +1,64 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Properly init nr_tasks in cgroup_taskset
-Date: Fri, 15 Sep 2017 11:28:35 -0700
-Message-ID: <d34d2f65-ef68-29d1-05e8-7f0ba0e0e6cf@redhat.com>
-References: <1505421913-29577-1-git-send-email-longman@redhat.com>
- <20170915154743.GF378890@devbig577.frc2.facebook.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Fri, 15 Sep 2017 12:55:55 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com>
+References: <20170911131742.16482-1-guro@fb.com> <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz> <20170913215607.GA19259@castle> <20170914134014.wqemev2kgychv7m5@dhcp22.suse.cz>
+ <20170914160548.GA30441@castle> <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz> <20170915152301.GA29379@castle>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170915154743.GF378890-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=1grN1eaQ2sL9AUQBk8BvmjvEG4dfsF2KhU+vbzkqc60=;
+        b=WwlVdAVV4ekl5+f9wZBSZ5psDIK4+3/76QKaCITW3nNzxb9Q2eEG22TrqOza8mUtZi
+         HVKkBzkmWuRDB4SQ/fNmtBMI4JGkYSTgvvXqrurA1dTGrJRHYAIqKPLuAHjyGpIS0k6K
+         JoD0BPDz/de2IFeM6gOxXxljHwb8FbCydk5zuDZHR77IDcbqTQwX46EdAhFx4PMOVbKR
+         eM/8iNP1EjI3etbJDJHJMT5QnccvRTWyEaIja4f/xMNXXCk0nbJtUojrARkLsVpDROBI
+         0DWqQLqTkWPtSh5mUKOArOsNom4x7R8NtcpBVvfO860Wk2/jsZFsxc1c5C/EKW6iqvM1
+         UZVQ==
+In-Reply-To: <20170915152301.GA29379@castle>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 09/15/2017 08:47 AM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Thu, Sep 14, 2017 at 01:45:13PM -0700, Waiman Long wrote:
->> Commit 610467270fb3 ("cgroup: don't call migration methods if there
->> are no tasks to migrate") introduces a new field nr_tasks to the
->> cgroup_taskset structure for keeping track of the number of tasks
->> contained in the structure.  The initial value of this field, however,
->> is not guaranteed to be 0 as all the cgroup_taskset structures are
->> allocated from stack.  Therefore, we need to explicitly initilized
->> it in the CGROUP_TASKSET_INIT() macro for the new code to behave
->> correctly.
->>
->> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> ---
->>  kernel/cgroup/cgroup-internal.h | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
->> index 5151ff2..6b4c04e 100644
->> --- a/kernel/cgroup/cgroup-internal.h
->> +++ b/kernel/cgroup/cgroup-internal.h
->> @@ -76,6 +76,7 @@ struct cgroup_mgctx {
->>  	.src_csets		= LIST_HEAD_INIT(tset.src_csets),		\
->>  	.dst_csets		= LIST_HEAD_INIT(tset.dst_csets),		\
->>  	.csets			= &tset.src_csets,	Y			\
->> +	.nr_tasks		= 0,						\
-> But it's an initialization macro, which means that the only way thhese
-> are used is as a part of whole struct initialization and the compiler
-> would always set the unspecified fields to zero.
->
-> Thanks.
->
-You are right. I checked the assembly code and it did initialize the
-other fields of the structure to 0. So my fix is bogus.
+On Fri, 15 Sep 2017, Roman Gushchin wrote:
 
-I sent this patch out because our QE people were still seeing the same
-panic in PPC machines even with your patch applied. So I mistakenly
-thought maybe the structure initialization wasn't complete. I will have
-to further into why this was still happening.
+> > But then you just enforce a structural restriction on your configuration
+> > because
+> > 	root
+> >         /  \
+> >        A    D
+> >       /\   
+> >      B  C
+> > 
+> > is a different thing than
+> > 	root
+> >         / | \
+> >        B  C  D
+> >
+> 
+> I actually don't have a strong argument against an approach to select
+> largest leaf or kill-all-set memcg. I think, in practice there will be
+> no much difference.
+> 
+> The only real concern I have is that then we have to do the same with
+> oom_priorities (select largest priority tree-wide), and this will limit
+> an ability to enforce the priority by parent cgroup.
+> 
 
-Sorry for bothering you.
+Yes, oom_priority cannot select the largest priority tree-wide for exactly 
+that reason.  We need the ability to control from which subtree the kill 
+occurs in ancestor cgroups.  If multiple jobs are allocated their own 
+cgroups and they can own memory.oom_priority for their own subcontainers, 
+this becomes quite powerful so they can define their own oom priorities.   
+Otherwise, they can easily override the oom priorities of other cgroups.
 
-Cheers,
-Longman
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
