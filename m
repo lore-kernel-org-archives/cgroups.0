@@ -1,7 +1,7 @@
-From: Roman Gushchin <guro@fb.com>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Fri, 15 Sep 2017 14:08:07 -0700
-Message-ID: <20170915210807.GA5238@castle>
+Date: Mon, 18 Sep 2017 08:14:05 +0200
+Message-ID: <20170918061405.pcrf5vauvul4c2nr@dhcp22.suse.cz>
 References: <20170911131742.16482-1-guro@fb.com>
  <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com>
  <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz>
@@ -10,76 +10,78 @@ References: <20170911131742.16482-1-guro@fb.com>
  <20170914160548.GA30441@castle>
  <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz>
  <20170915152301.GA29379@castle>
- <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=DfhnDceX/hhnnWl5cdD8xIprpirhUMhznXU4GF3qVc0=;
- b=DXAat6VVIqr5up6rzIyxtCyybIbUIgskxl0k+0LWknsmHgpLE3dXoumL/pFJK+vNfwgT
- +eEebIncJ4RY6sBB7xQ4IGCpBWz51TSfmGGgk+7C6veWv4in53hJYUJnX6SgNHUpsGLL
- /E6cgY2hinBPHwcTTO/Ra7J8+ksfN3OGzeo= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=DfhnDceX/hhnnWl5cdD8xIprpirhUMhznXU4GF3qVc0=;
- b=SG7nOvdtWDW6tATDrsFqBUvXYUTORAAHRHZvnm0mxIM8OWWDNfI8KVxW4wyhO5rmYCvHeFO0u5FE6Swnnl6ngMVtav48YOgYwO1AJ24ezUVI/vztxRXYtvvojpDV5K506BpXg6Dke0iZZq1B78y7MOY5pRi3+vvNp9a2sqVgMQ8=
+Return-path: <linux-doc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170915152301.GA29379@castle>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 15, 2017 at 12:55:55PM -0700, David Rientjes wrote:
-> On Fri, 15 Sep 2017, Roman Gushchin wrote:
-> 
-> > > But then you just enforce a structural restriction on your configuration
-> > > because
-> > > 	root
-> > >         /  \
-> > >        A    D
-> > >       /\   
-> > >      B  C
+On Fri 15-09-17 08:23:01, Roman Gushchin wrote:
+> On Fri, Sep 15, 2017 at 12:58:26PM +0200, Michal Hocko wrote:
+> > On Thu 14-09-17 09:05:48, Roman Gushchin wrote:
+> > > On Thu, Sep 14, 2017 at 03:40:14PM +0200, Michal Hocko wrote:
+> > > > On Wed 13-09-17 14:56:07, Roman Gushchin wrote:
+> > > > > On Wed, Sep 13, 2017 at 02:29:14PM +0200, Michal Hocko wrote:
+> > > > [...]
+> > > > > > I strongly believe that comparing only leaf memcgs
+> > > > > > is more straightforward and it doesn't lead to unexpected results as
+> > > > > > mentioned before (kill a small memcg which is a part of the larger
+> > > > > > sub-hierarchy).
+> > > > > 
+> > > > > One of two main goals of this patchset is to introduce cgroup-level
+> > > > > fairness: bigger cgroups should be affected more than smaller,
+> > > > > despite the size of tasks inside. I believe the same principle
+> > > > > should be used for cgroups.
+> > > > 
+> > > > Yes bigger cgroups should be preferred but I fail to see why bigger
+> > > > hierarchies should be considered as well if they are not kill-all. And
+> > > > whether non-leaf memcgs should allow kill-all is not entirely clear to
+> > > > me. What would be the usecase?
 > > > 
-> > > is a different thing than
-> > > 	root
-> > >         / | \
-> > >        B  C  D
-> > >
+> > > We definitely want to support kill-all for non-leaf cgroups.
+> > > A workload can consist of several cgroups and we want to clean up
+> > > the whole thing on OOM.
 > > 
-> > I actually don't have a strong argument against an approach to select
-> > largest leaf or kill-all-set memcg. I think, in practice there will be
-> > no much difference.
-> > 
-> > The only real concern I have is that then we have to do the same with
-> > oom_priorities (select largest priority tree-wide), and this will limit
-> > an ability to enforce the priority by parent cgroup.
-> > 
+> > Could you be more specific about such a workload? E.g. how can be such a
+> > hierarchy handled consistently when its sub-tree gets killed due to
+> > internal memory pressure?
 > 
-> Yes, oom_priority cannot select the largest priority tree-wide for exactly 
-> that reason.  We need the ability to control from which subtree the kill 
-> occurs in ancestor cgroups.  If multiple jobs are allocated their own 
-> cgroups and they can own memory.oom_priority for their own subcontainers, 
-> this becomes quite powerful so they can define their own oom priorities.   
-> Otherwise, they can easily override the oom priorities of other cgroups.
+> Or just system-wide OOM.
+> 
+> > Or do you expect that none of the subtree will
+> > have hard limit configured?
+> 
+> And this can also be a case: the whole workload may have hard limit
+> configured, while internal memcgs have only memory.low set for "soft"
+> prioritization.
+> 
+> > 
+> > But then you just enforce a structural restriction on your configuration
+> > because
+> > 	root
+> >         /  \
+> >        A    D
+> >       /\   
+> >      B  C
+> > 
+> > is a different thing than
+> > 	root
+> >         / | \
+> >        B  C  D
+> >
+> 
+> I actually don't have a strong argument against an approach to select
+> largest leaf or kill-all-set memcg. I think, in practice there will be
+> no much difference.
 
-I believe, it's a solvable problem: we can require CAP_SYS_RESOURCE to set
-the oom_priority below parent's value, or something like this.
+Well, I am worried that the difference will come unexpected when a
+deeper hierarchy is needed because of the structural needs.
 
-But it looks more complex, and I'm not sure there are real examples,
-when we have to compare memcgs, which are on different levels
-(or in different subtrees).
-
-In any case, oom_priorities and size-based comparison should share the
-same tree-walking policy. And I still would prefer comparing sizes and
-priorities independently on each level.
-
-Thanks!
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Michal Hocko
+SUSE Labs
