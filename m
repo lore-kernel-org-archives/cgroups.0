@@ -1,31 +1,31 @@
 From: David Rientjes <rientjes@google.com>
 Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Tue, 19 Sep 2017 13:51:25 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709191340180.7458@chino.kir.corp.google.com>
+Date: Tue, 19 Sep 2017 13:54:48 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1709191351330.7458@chino.kir.corp.google.com>
 References: <20170911131742.16482-1-guro@fb.com> <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz> <20170913215607.GA19259@castle> <20170914134014.wqemev2kgychv7m5@dhcp22.suse.cz>
- <20170914160548.GA30441@castle> <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz> <20170915152301.GA29379@castle> <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com> <20170918061603.z2ngh6bs5276mc3q@dhcp22.suse.cz>
+ <20170914160548.GA30441@castle> <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz> <20170915152301.GA29379@castle> <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com> <20170915210807.GA5238@castle>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=g7cvRYY3w+rE2Q3Q47ZqFgSeD4wgyHRN5ZXtCEUvIYs=;
-        b=rccaRee3rPo6vX1/OJDfDk6sbxpd8V+CKLnazAiE4c45pj1SKUT3SRJhRr9zoKf/Ir
-         LAv+feIu4qNsfPMXzmtOYrH5+UCf+GhJJOAecwykIUx+JEwAsKgZa3pk/WGtXsXxGiZC
-         47e6C7B31ogE+TvyjnbPimmujSiw6oRt0p/fg3NnSOFah4wdJwStF131pKMR24CzyYoC
-         ffR0d5qPvF87lcuorqHk8DdiH3RXF8b7DW2zs1jCehWHTrOv16etMEMy0ng2rewJoT5N
-         OMOIKA9V65ISTHokj0JCMkI8hWKtsAqQqQv/xFLmtAU+mt+rjyCD2+ONZHGrflUCyumk
-         JaGg==
-In-Reply-To: <20170918061603.z2ngh6bs5276mc3q@dhcp22.suse.cz>
+        bh=VECL8DXOqG+cP0VGG5JmA9+TO0qdG+KCNfUtDs6xAbs=;
+        b=RhkiCHEBud77IdXZ7oH2Khvqrlq4rEvDrgRF1P8V2acmxOlOCYV/XnXiAGGLunkjUJ
+         TJ3opgUGdBKthQ96gSJubABOfGeGEMlphgRkfamiz5HrN84YPARWvlKlaVgLXMOTs7es
+         /8XDLnt6d+O4b+IOips95gfGTIp4LpcJaMDmoq45/LJuqaR/2ihDmK2Muh0+nnOHReyU
+         ifldbiM88ofhBJQHrhnaGDdef4Idfr1LSsH7Dfqx4AtrTxDsTzpO6C3U7y6gK/AnVrlE
+         pqlBI4/J8QZryMgXeNzeVrPBSaR68ND14+wc9CyOsHApv20Rr+IVXjy9f6Hq5q/PDVV1
+         lIDA==
+In-Reply-To: <20170915210807.GA5238@castle>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 18 Sep 2017, Michal Hocko wrote:
+On Fri, 15 Sep 2017, Roman Gushchin wrote:
 
 > > > > But then you just enforce a structural restriction on your configuration
 > > > > because
@@ -57,45 +57,25 @@ On Mon, 18 Sep 2017, Michal Hocko wrote:
 > > this becomes quite powerful so they can define their own oom priorities.   
 > > Otherwise, they can easily override the oom priorities of other cgroups.
 > 
-> Could you be more speicific about your usecase? What would be a
-> problem If we allow to only increase priority in children (like other
-> hierarchical controls).
+> I believe, it's a solvable problem: we can require CAP_SYS_RESOURCE to set
+> the oom_priority below parent's value, or something like this.
+> 
+> But it looks more complex, and I'm not sure there are real examples,
+> when we have to compare memcgs, which are on different levels
+> (or in different subtrees).
 > 
 
-For memcg constrained oom conditions, there is only a theoretical issue if 
-the subtree is not under the control of a single user and various users 
-can alter their priorities without knowledge of the priorities of other 
-children in the same subtree that is oom, or those values change without 
-knowledge of a child.  I don't know of anybody that configures memory 
-cgroup hierarchies that way, though.
-
-The problem is more obvious in system oom conditions.  If we have two 
-top-level memory cgroups with the same "job" priority, they get the same 
-oom priority.  The user who configures subcontainers is now always 
-targeted for oom kill in an "increase priority in children" policy.
-
-The hierarchy becomes this:
-
-	root
-       /    \
-      A      D
-     / \   / | \
-    B   C E  F  G
-
-where A/memory.oom_priority == D/memory.oom_priority.
-
-D wants to kill in order of E -> F -> G, but can't configure that if
-B = A - 1 and C = B - 1.  It also shouldn't need to adjust its own oom 
-priorities based on a hierarchy outside its control and which can change 
-at any time at the discretion of the user (with namespaces you may not 
-even be able to access it).
-
-But also if A/memory.oom_priority = D/memory.oom_priority - 100, A is 
-preferred unless its subcontainers configure themselves in a way where 
-they have higher oom priority values than E, F, and G.  That may yield 
-very different results when additional jobs get scheduled on the system 
-(and H tree) where the user has full control over their own oom 
-priorities, even when the value must only increase.
+It's actually much more complex because in our environment we'd need an 
+"activity manager" with CAP_SYS_RESOURCE to control oom priorities of user 
+subcontainers when today it need only be concerned with top-level memory 
+cgroups.  Users can create their own hierarchies with their own oom 
+priorities at will, it doesn't alter the selection heuristic for another 
+other user running on the same system and gives them full control over the 
+selection in their own subtree.  We shouldn't need to have a system-wide 
+daemon with CAP_SYS_RESOURCE be required to manage subcontainers when 
+nothing else requires it.  I believe it's also much easier to document: 
+oom_priority is considered for all sibling cgroups at each level of the 
+hierarchy and the cgroup with the lowest priority value gets iterated.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
