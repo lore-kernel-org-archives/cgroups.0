@@ -1,87 +1,95 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Mon, 18 Sep 2017 08:02:54 -0700
-Message-ID: <20170918150254.GA24257@castle.DHCP.thefacebook.com>
-References: <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com>
- <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz>
- <20170913215607.GA19259@castle>
- <20170914134014.wqemev2kgychv7m5@dhcp22.suse.cz>
- <20170914160548.GA30441@castle>
- <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz>
- <20170915152301.GA29379@castle>
- <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com>
- <20170915210807.GA5238@castle>
- <20170918062045.kcfsboxvfmlg2wjo@dhcp22.suse.cz>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: RFC: Audit Kernel Container IDs
+Date: Mon, 18 Sep 2017 21:45:19 -0500
+Message-ID: <87wp4v76f4.fsf@xmission.com>
+References: <20170913171328.GP3405@madcap2.tricolour.ca>
+        <87d16tb2y5.fsf@xmission.com>
+        <20170914180704.GU3405@madcap2.tricolour.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=hXzptZLiYGkUonFA79cDvUld0RJSbj2WzD2gcTEVlfE=;
- b=WhsIUjAc+n7stHuUfve1ggF6v8IgpuSbihUfVAWVvK44P6cTZFCxsb5/030BEgaJH+oV
- jPikSdkvkTQLkrgL4r81vRCzqvwkOdt0ZdYw4vfXBSdAOhA24+Pgb9SNHdom/OTNhUVs
- CmmZmcYWGZYIJs88QDP9wSQWOxonzRAPQsE= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=hXzptZLiYGkUonFA79cDvUld0RJSbj2WzD2gcTEVlfE=;
- b=H4VElPfPfZd3Obfiv15fB/SpparH+iIL/prHaj48OW6EAN+fXXGf66AvkckpeLaV7rIUskCN7vkwShbduBQ02MUP7lp+qxpsIaah9gVxvHC5+x7AkXve6hJO87IEbTWvysN4v2QSiJH91hRPwbRJltxH4eM0sYS4LOFQE/DCwl0=
-Content-Disposition: inline
-In-Reply-To: <20170918062045.kcfsboxvfmlg2wjo@dhcp22.suse.cz>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170914180704.GU3405@madcap2.tricolour.ca> (Richard Guy
+        Briggs's message of "Thu, 14 Sep 2017 14:07:04 -0400")
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Richard Guy Briggs <rgb@redhat.com>
+Cc: cgroups@vger.kernel.org, Linux Containers <containers@lists.linux-foundation.org>, Linux API <linux-api@vger.kernel.org>, Linux Audit <linux-audit@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux Network Development <netdev@vger.kernel.org>, Aristeu Rozanski <arozansk@redhat.com>, David Howells <dhowells@redhat.com>, Eric Paris <eparis@parisplace.org>, jlayton@redhat.com, Andy Lutomirski <luto@kernel.org>, mszeredi@redhat.com, Paul Moore <pmoore@redhat.com>, "Serge E. Hallyn" <serge@hallyn.com>, Steve Grubb <sgrubb@redhat.com>, trondmy@primarydata.com, Al Viro <viro@zeniv.linux.org.uk>
 
-On Mon, Sep 18, 2017 at 08:20:45AM +0200, Michal Hocko wrote:
-> On Fri 15-09-17 14:08:07, Roman Gushchin wrote:
-> > On Fri, Sep 15, 2017 at 12:55:55PM -0700, David Rientjes wrote:
-> > > On Fri, 15 Sep 2017, Roman Gushchin wrote:
-> > > 
-> > > > > But then you just enforce a structural restriction on your configuration
-> > > > > because
-> > > > > 	root
-> > > > >         /  \
-> > > > >        A    D
-> > > > >       /\   
-> > > > >      B  C
-> > > > > 
-> > > > > is a different thing than
-> > > > > 	root
-> > > > >         / | \
-> > > > >        B  C  D
-> > > > >
-> > > > 
-> > > > I actually don't have a strong argument against an approach to select
-> > > > largest leaf or kill-all-set memcg. I think, in practice there will be
-> > > > no much difference.
-> > > > 
-> > > > The only real concern I have is that then we have to do the same with
-> > > > oom_priorities (select largest priority tree-wide), and this will limit
-> > > > an ability to enforce the priority by parent cgroup.
-> > > > 
-> > > 
-> > > Yes, oom_priority cannot select the largest priority tree-wide for exactly 
-> > > that reason.  We need the ability to control from which subtree the kill 
-> > > occurs in ancestor cgroups.  If multiple jobs are allocated their own 
-> > > cgroups and they can own memory.oom_priority for their own subcontainers, 
-> > > this becomes quite powerful so they can define their own oom priorities.   
-> > > Otherwise, they can easily override the oom priorities of other cgroups.
-> > 
-> > I believe, it's a solvable problem: we can require CAP_SYS_RESOURCE to set
-> > the oom_priority below parent's value, or something like this.
-> 
-> As said in other email. We can make priorities hierarchical (in the same
-> sense as hard limit or others) so that children cannot override their
-> parent.
+Richard Guy Briggs <rgb@redhat.com> writes:
 
-You mean they can set the knob to any value, but parent's value is enforced,
-if it's greater than child's value?
+> On 2017-09-14 12:33, Eric W. Biederman wrote:
+>> Richard Guy Briggs <rgb@redhat.com> writes:
+>> 
+>> > The trigger is a pseudo filesystem (proc, since PID tree already exists)
+>> > write of a u64 representing the container ID to a file representing a
+>> > process that will become the first process in a new container.
+>> > This might place restrictions on mount namespaces required to define a
+>> > container, or at least careful checking of namespaces in the kernel to
+>> > verify permissions of the orchestrator so it can't change its own
+>> > container ID.
+>> 
+>> Why a u64?
+>
+> u32 will roll too quickly.  UUID is large enough that it adds
+> significantly to audit record bandwidth.  I'd prefer u64, but can look
+> at the difference of accommodating a UUID...
 
-If so, this sounds logical to me. Then we have size-based comparison and
-priority-based comparison with similar rules, and all use cases are covered.
+I was imagining a string might be better.  As for the purposes of audit
+it is just a byte string you regurgitate.
 
-Ok, can we stick with this design?
-Then I'll return oom_priorities in place, and post a (hopefully) final version.
+>> Why a proc filesystem write and not a magic audit message?
+>
+> A magic audit message requires CAP_AUDIT_WRITE, which we'd like to use
+> sparingly.  Given that orchestrators will already require it to send
+> the mandatory AUDIT_VIRT_*, this doesn't seem like an unreasonable burden.
+>
+> I was originally leaning towards an audit message trigger or a syscall.
+>
+>> I don't like the fact that the proc filesystem entry is likely going to
+>> be readable and abusable by non-audit contexts?
+>
+> This proposal wasn't going to start with that link being readable, but
+> its filesystem structure and link names would be, perhaps giving away
+> too much already.
+>
+> I think we will need to find a way for the orchestrator or one of its
+> authorized agents to read this information while blocking reads from
+> unauthorized agents, otherwise this would be of very limited use.
 
-Thanks!
+Something that is set only for future audit messages seems reasonable.
+Once you start reading this from something other than audit messages I
+get neverous, that people will use this beyond audit for things it is
+not intended for.
+
+>> Why the ability to change the containerid?  What is the use case you are
+>> thinking of there?
+>
+> This was covered in the end of the conversation with Paul Moore (that
+> maybe you got tired reading?)
+
+I have not had time to review everything.  As I was busy preparing for my
+wedding and am now in the middle of my honeymoon.
+
+> I'd originally proposed having it write
+> once, but Paul figured there was no good reason to restrict it and leave
+> that decision up to the orchestrator.  The use case would be adding
+> other processes to a container, but it could be argued all additional
+> processes should be spawned by the first process in a container.
+
+I see two cases here:
+a) Nested containers
+b) Inject processes via something like nsenter into a container.
+
+In case a) you have to figure out what to do with nested containers
+and that does seem to be a legitimate case for a double write.  Arguably
+with the restriction that you must specify a more nested label.
+
+In case b) which you seem to be referring to it would be a process
+created by the container manager outside the container that has no
+container label.  At which point there is not a need for a double write.
+
+So my recommendation is to not support double writes until you support
+nested containers.
+
+Eric
