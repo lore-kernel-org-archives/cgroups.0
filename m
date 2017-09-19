@@ -1,130 +1,104 @@
-From: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: Audit Kernel Container IDs
-Date: Tue, 19 Sep 2017 00:15:05 -0400
-Message-ID: <20170919041505.GQ3405@madcap2.tricolour.ca>
-References: <20170913171328.GP3405@madcap2.tricolour.ca>
- <87d16tb2y5.fsf@xmission.com>
- <20170914180704.GU3405@madcap2.tricolour.ca>
- <87wp4v76f4.fsf@xmission.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Tue, 19 Sep 2017 13:51:25 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1709191340180.7458@chino.kir.corp.google.com>
+References: <20170911131742.16482-1-guro@fb.com> <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz> <20170913215607.GA19259@castle> <20170914134014.wqemev2kgychv7m5@dhcp22.suse.cz>
+ <20170914160548.GA30441@castle> <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz> <20170915152301.GA29379@castle> <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com> <20170918061603.z2ngh6bs5276mc3q@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <87wp4v76f4.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=g7cvRYY3w+rE2Q3Q47ZqFgSeD4wgyHRN5ZXtCEUvIYs=;
+        b=rccaRee3rPo6vX1/OJDfDk6sbxpd8V+CKLnazAiE4c45pj1SKUT3SRJhRr9zoKf/Ir
+         LAv+feIu4qNsfPMXzmtOYrH5+UCf+GhJJOAecwykIUx+JEwAsKgZa3pk/WGtXsXxGiZC
+         47e6C7B31ogE+TvyjnbPimmujSiw6oRt0p/fg3NnSOFah4wdJwStF131pKMR24CzyYoC
+         ffR0d5qPvF87lcuorqHk8DdiH3RXF8b7DW2zs1jCehWHTrOv16etMEMy0ng2rewJoT5N
+         OMOIKA9V65ISTHokj0JCMkI8hWKtsAqQqQv/xFLmtAU+mt+rjyCD2+ONZHGrflUCyumk
+         JaGg==
+In-Reply-To: <20170918061603.z2ngh6bs5276mc3q@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Audit <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2017-09-18 21:45, Eric W. Biederman wrote:
-> Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+On Mon, 18 Sep 2017, Michal Hocko wrote:
+
+> > > > But then you just enforce a structural restriction on your configuration
+> > > > because
+> > > > 	root
+> > > >         /  \
+> > > >        A    D
+> > > >       /\   
+> > > >      B  C
+> > > > 
+> > > > is a different thing than
+> > > > 	root
+> > > >         / | \
+> > > >        B  C  D
+> > > >
+> > > 
+> > > I actually don't have a strong argument against an approach to select
+> > > largest leaf or kill-all-set memcg. I think, in practice there will be
+> > > no much difference.
+> > > 
+> > > The only real concern I have is that then we have to do the same with
+> > > oom_priorities (select largest priority tree-wide), and this will limit
+> > > an ability to enforce the priority by parent cgroup.
+> > > 
+> > 
+> > Yes, oom_priority cannot select the largest priority tree-wide for exactly 
+> > that reason.  We need the ability to control from which subtree the kill 
+> > occurs in ancestor cgroups.  If multiple jobs are allocated their own 
+> > cgroups and they can own memory.oom_priority for their own subcontainers, 
+> > this becomes quite powerful so they can define their own oom priorities.   
+> > Otherwise, they can easily override the oom priorities of other cgroups.
 > 
-> > On 2017-09-14 12:33, Eric W. Biederman wrote:
-> >> Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> >> 
-> >> > The trigger is a pseudo filesystem (proc, since PID tree already exists)
-> >> > write of a u64 representing the container ID to a file representing a
-> >> > process that will become the first process in a new container.
-> >> > This might place restrictions on mount namespaces required to define a
-> >> > container, or at least careful checking of namespaces in the kernel to
-> >> > verify permissions of the orchestrator so it can't change its own
-> >> > container ID.
-> >> 
-> >> Why a u64?
-> >
-> > u32 will roll too quickly.  UUID is large enough that it adds
-> > significantly to audit record bandwidth.  I'd prefer u64, but can look
-> > at the difference of accommodating a UUID...
+> Could you be more speicific about your usecase? What would be a
+> problem If we allow to only increase priority in children (like other
+> hierarchical controls).
 > 
-> I was imagining a string might be better.  As for the purposes of audit
-> it is just a byte string you regurgitate.
 
-Yes, so looking at u128 vs dhowells' proposal, it would be 16 bytes vs
-24 bytes, which really isn't that much difference...
+For memcg constrained oom conditions, there is only a theoretical issue if 
+the subtree is not under the control of a single user and various users 
+can alter their priorities without knowledge of the priorities of other 
+children in the same subtree that is oom, or those values change without 
+knowledge of a child.  I don't know of anybody that configures memory 
+cgroup hierarchies that way, though.
 
-What length of string length were you envisioning?
+The problem is more obvious in system oom conditions.  If we have two 
+top-level memory cgroups with the same "job" priority, they get the same 
+oom priority.  The user who configures subcontainers is now always 
+targeted for oom kill in an "increase priority in children" policy.
 
-> >> Why a proc filesystem write and not a magic audit message?
-> >
-> > A magic audit message requires CAP_AUDIT_WRITE, which we'd like to use
-> > sparingly.  Given that orchestrators will already require it to send
-> > the mandatory AUDIT_VIRT_*, this doesn't seem like an unreasonable burden.
-> >
-> > I was originally leaning towards an audit message trigger or a syscall.
-> >
-> >> I don't like the fact that the proc filesystem entry is likely going to
-> >> be readable and abusable by non-audit contexts?
-> >
-> > This proposal wasn't going to start with that link being readable, but
-> > its filesystem structure and link names would be, perhaps giving away
-> > too much already.
-> >
-> > I think we will need to find a way for the orchestrator or one of its
-> > authorized agents to read this information while blocking reads from
-> > unauthorized agents, otherwise this would be of very limited use.
-> 
-> Something that is set only for future audit messages seems reasonable.
-> Once you start reading this from something other than audit messages I
-> get neverous, that people will use this beyond audit for things it is
-> not intended for.
+The hierarchy becomes this:
 
-Understandably.  At the same time, if we implement something that is
-more broadly useful and solves a number of other challenges others are
-facing, how can we make it available while limiting the potential for
-abuse?
+	root
+       /    \
+      A      D
+     / \   / | \
+    B   C E  F  G
 
-> >> Why the ability to change the containerid?  What is the use case you are
-> >> thinking of there?
-> >
-> > This was covered in the end of the conversation with Paul Moore (that
-> > maybe you got tired reading?)
-> 
-> I have not had time to review everything.  As I was busy preparing for my
-> wedding and am now in the middle of my honeymoon.
+where A/memory.oom_priority == D/memory.oom_priority.
 
-I'm very sorry, my bad!  You had given me a heads up about this and I
-appologise for causing a stir during your special time.
+D wants to kill in order of E -> F -> G, but can't configure that if
+B = A - 1 and C = B - 1.  It also shouldn't need to adjust its own oom 
+priorities based on a hierarchy outside its control and which can change 
+at any time at the discretion of the user (with namespaces you may not 
+even be able to access it).
 
-> > I'd originally proposed having it write
-> > once, but Paul figured there was no good reason to restrict it and leave
-> > that decision up to the orchestrator.  The use case would be adding
-> > other processes to a container, but it could be argued all additional
-> > processes should be spawned by the first process in a container.
-> 
-> I see two cases here:
-> a) Nested containers
-> b) Inject processes via something like nsenter into a container.
-> 
-> In case a) you have to figure out what to do with nested containers
-> and that does seem to be a legitimate case for a double write.  Arguably
-> with the restriction that you must specify a more nested label.
-
-Is this technically a double write if it is an inheritance?  That should
-be solvable with a flag.
-
-> In case b) which you seem to be referring to it would be a process
-> created by the container manager outside the container that has no
-> container label.  At which point there is not a need for a double write.
-
-Looking at the potential for nesting, if the orchestrator is already in
-a container, then it would already have a label, but if we refer to the
-flag solution above, then it is still the first write.
-
-> So my recommendation is to not support double writes until you support
-> nested containers.
-
-I think this is a reasonable restriction.
-
-Thanks for your time.  Sorry to disturb your holiday.
-
-> Eric
-
-- RGB
+But also if A/memory.oom_priority = D/memory.oom_priority - 100, A is 
+preferred unless its subcontainers configure themselves in a way where 
+they have higher oom priority values than E, F, and G.  That may yield 
+very different results when additional jobs get scheduled on the system 
+(and H tree) where the user has full control over their own oom 
+priorities, even when the value must only increase.
 
 --
-Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sr. S/W Engineer, Kernel Security, Base Operating Systems
-Remote, Ottawa, Red Hat Canada
-IRC: rgb, SunRaycer
-Voice: +1.647.777.2635, Internal: (81) 32635
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
