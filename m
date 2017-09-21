@@ -1,85 +1,82 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: Reinit cgroup_taskset structure before cgroup_migrate_execute() returns
-Date: Thu, 21 Sep 2017 09:54:13 -0400
-Message-ID: <1506002053-13380-1-git-send-email-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Thu, 21 Sep 2017 10:21:07 -0400
+Message-ID: <20170921142107.GA20109@cmpxchg.org>
+References: <20170911131742.16482-1-guro@fb.com>
+ <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=eKpuI3W/nhMAsYjDcNcC/h27pMC1wKBhBojQyj8U0y4=; b=gmuhHd5+NM4jvacf6M6q7vpnOf
+	Mg+WbtmtlHABOQMSlx9iHKyuKCIpXv2mXcD5g51bLdm8/7W5lRNGxXZ1hcLGNEbzIKGUh+kEQ4aHl
+	IlkZlok49O8y/B/4+MamGmVYQnr6SfCSmfsTEYg8qQG9sIrLz2LaFep0HefLLR4cvaEg=;
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The cgroup_taskset structure within the larger cgroup_mgctx structure
-is supposed to be used once and then discarded. That is not really the
-case in the hotplug code path:
+On Mon, Sep 11, 2017 at 01:44:39PM -0700, David Rientjes wrote:
+> On Mon, 11 Sep 2017, Roman Gushchin wrote:
+> 
+> > This patchset makes the OOM killer cgroup-aware.
+> > 
+> > v8:
+> >   - Do not kill tasks with OOM_SCORE_ADJ -1000
+> >   - Make the whole thing opt-in with cgroup mount option control
+> >   - Drop oom_priority for further discussions
+> 
+> Nack, we specifically require oom_priority for this to function correctly, 
+> otherwise we cannot prefer to kill from low priority leaf memcgs as 
+> required.  v8 appears to implement new functionality that we want, to 
+> compare two memcgs based on usage, but without the ability to influence 
+> that decision to protect important userspace, so now I'm in a position 
+> where (1) nothing has changed if I don't use the new mount option or (2) I 
+> get completely different oom kill selection with the new mount option but 
+> not the ability to influence it.  I was much happier with the direction 
+> that v7 was taking, but since v8 causes us to regress without the ability 
+> to change memcg priority, this has to be nacked.
 
-cpuset_hotplug_workfn()
- - cgroup_transfer_tasks()
-   - cgroup_migrate()
-     - cgroup_migrate_add_task()
-     - cgroup_migrate_execute()
+That's a ridiculous nak.
 
-In this case, the cgroup_migrate() function is called multiple time
-with the same cgroup_mgctx structure to transfer the tasks from
-one cgroup to another one-by-one. The second time cgroup_migrate()
-is called, the cgroup_taskset will be in an incorrect state and so
-may cause the system to panic. For example,
+The fact that this patch series doesn't solve your particular problem
+is not a technical argument to *reject* somebody else's work to solve
+a different problem. It's not a regression when behavior is completely
+unchanged unless you explicitly opt into a new functionality.
 
-  [  150.888410] Faulting instruction address: 0xc0000000001db648
-  [  150.888414] Oops: Kernel access of bad area, sig: 11 [#1]
-  [  150.888417] SMP NR_CPUS=2048
-  [  150.888417] NUMA
-  [  150.888419] pSeries
-    :
-  [  150.888545] NIP [c0000000001db648] cpuset_can_attach+0x58/0x1b0
-  [  150.888548] LR [c0000000001db638] cpuset_can_attach+0x48/0x1b0
-  [  150.888551] Call Trace:
-  [  150.888554] [c0000005f65cb940] [c0000000001db638] cpuset_can_attach+0x48/0x1b 0 (unreliable)
-  [  150.888559] [c0000005f65cb9a0] [c0000000001cff04] cgroup_migrate_execute+0xc4/0x4b0
-  [  150.888563] [c0000005f65cba20] [c0000000001d7d14] cgroup_transfer_tasks+0x1d4/0x370
-  [  150.888568] [c0000005f65cbb70] [c0000000001ddcb0] cpuset_hotplug_workfn+0x710/0x8f0
-  [  150.888572] [c0000005f65cbc80] [c00000000012032c] process_one_work+0x1ac/0x4d0
-  [  150.888576] [c0000005f65cbd20] [c0000000001206f8] worker_thread+0xa8/0x5b0
-  [  150.888580] [c0000005f65cbdc0] [c0000000001293f8] kthread+0x168/0x1b0
-  [  150.888584] [c0000005f65cbe30] [c00000000000b368] ret_from_kernel_thread+0x5c/0x74
+So let's stay reasonable here.
 
-To allow reuse of the cgroup_mgctx structure, some fields in that
-structure are now re-initialized at the end of cgroup_migrate_execute()
-function call so that the structure can be reused again in a later
-iteration without causing problem.
+The patch series has merit as it currently stands. It makes OOM
+killing in a cgrouped system fairer and less surprising. Whether you
+have the ability to influence this in a new way is an entirely
+separate discussion. It's one that involves ABI and user guarantees.
 
-This bug was introduced in the commit e595cd706982 ("group: track
-migration context in cgroup_mgctx") in 4.11. This commit moves the
-cgroup_taskset initialization out of cgroup_migrate(). The commit
-10467270fb3 ("cgroup: don't call migration methods if there are no
-tasks to migrate") helped, but did not completely resolve the problem.
+Right now Roman's patches make no guarantees on how the cgroup tree is
+descended. But once we define an interface for prioritization, it
+locks the victim algorithm into place to a certain extent.
 
-Fixes: e595cd706982bff0211e6fafe5a108421e747fbc ("group: track migration context in cgroup_mgctx")
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+It also involves a discussion about how much control userspace should
+have over OOM killing in the first place. It's a last-minute effort to
+save the kernel from deadlocking on memory. Whether that is the time
+and place to have userspace make clever resource management decisions
+is an entirely different thing than what Roman is doing.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index d6551cd..4485727 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2311,6 +2311,14 @@ static int cgroup_migrate_execute(struct cgroup_mgctx *mgctx)
- 		list_del_init(&cset->mg_node);
- 	}
- 	spin_unlock_irq(&css_set_lock);
-+
-+	/*
-+	 * Re-initialize the cgroup_taskset structure in case it is reused
-+	 * again in another cgroup_migrate_add_task()/cgroup_migrate_execute()
-+	 * iteration.
-+	 */
-+	tset->nr_tasks = 0;
-+	tset->csets    = &tset->src_csets;
- 	return ret;
- }
- 
--- 
-1.8.3.1
+But this patch series doesn't prevent any such future discussion and
+implementations, and it's not useless without it. So let's not
+conflate these two things, and hold the priority patch for now.
+
+Thanks.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
