@@ -1,56 +1,85 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Thu, 21 Sep 2017 01:30:45 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709210128020.10026@chino.kir.corp.google.com>
-References: <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz> <20170913215607.GA19259@castle> <20170914134014.wqemev2kgychv7m5@dhcp22.suse.cz> <20170914160548.GA30441@castle>
- <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz> <20170915152301.GA29379@castle> <alpine.DEB.2.10.1709151249290.76069@chino.kir.corp.google.com> <20170915210807.GA5238@castle> <20170918062045.kcfsboxvfmlg2wjo@dhcp22.suse.cz>
- <20170918150254.GA24257@castle.DHCP.thefacebook.com>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=JGk+MDIGujVkTrUDxB03ebx/nVZJwIKnG1LPx/Zc5kY=;
-        b=NGbdxqkjcR5bXIkG6EeMPUxXvmo/2qLxpiayRue5WT32KrZjie2N45SY6MpmXFI99a
-         id85dQnCpQPcNei9kS1TRJcJUnIxW/0SVyxN7qFhjuvOJYob4ADElkmHIcDalRD3K0f/
-         Ka2teQQycBjKs1xtKxnDiJkS95E52D2ReZOjU/pms7ljJXgB30B/HTdAofBfX7o0uWYk
-         tU/cw2FC75vRZoigmWBN6E35u1HZrTg9HLs4pkSPL8BW0FA3FELx7nIdyP7ZTfnOgBlq
-         8hDMwu4jgFJUHSwPUASoDDEQDeBuvwxTGQDh/NCSkZEYgsamMnY7VfkU0LHT2LyGpCNe
-         x1Yw==
-In-Reply-To: <20170918150254.GA24257@castle.DHCP.thefacebook.com>
-Sender: owner-linux-mm@kvack.org
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: Reinit cgroup_taskset structure before cgroup_migrate_execute() returns
+Date: Thu, 21 Sep 2017 09:54:13 -0400
+Message-ID: <1506002053-13380-1-git-send-email-longman@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, 18 Sep 2017, Roman Gushchin wrote:
+The cgroup_taskset structure within the larger cgroup_mgctx structure
+is supposed to be used once and then discarded. That is not really the
+case in the hotplug code path:
 
-> > As said in other email. We can make priorities hierarchical (in the same
-> > sense as hard limit or others) so that children cannot override their
-> > parent.
-> 
-> You mean they can set the knob to any value, but parent's value is enforced,
-> if it's greater than child's value?
-> 
-> If so, this sounds logical to me. Then we have size-based comparison and
-> priority-based comparison with similar rules, and all use cases are covered.
-> 
-> Ok, can we stick with this design?
-> Then I'll return oom_priorities in place, and post a (hopefully) final version.
-> 
+cpuset_hotplug_workfn()
+ - cgroup_transfer_tasks()
+   - cgroup_migrate()
+     - cgroup_migrate_add_task()
+     - cgroup_migrate_execute()
 
-I just want to make sure that we are going with your original 
-implementation here: that oom_priority is only effective for compare 
-sibling memory cgroups and nothing beyond that.  The value alone has no 
-relationship to any ancestor.  We can't set oom_priority based on the 
-priorities of any other memory cgroups other than our own siblings because 
-we have no control over how those change.
+In this case, the cgroup_migrate() function is called multiple time
+with the same cgroup_mgctx structure to transfer the tasks from
+one cgroup to another one-by-one. The second time cgroup_migrate()
+is called, the cgroup_taskset will be in an incorrect state and so
+may cause the system to panic. For example,
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+  [  150.888410] Faulting instruction address: 0xc0000000001db648
+  [  150.888414] Oops: Kernel access of bad area, sig: 11 [#1]
+  [  150.888417] SMP NR_CPUS=2048
+  [  150.888417] NUMA
+  [  150.888419] pSeries
+    :
+  [  150.888545] NIP [c0000000001db648] cpuset_can_attach+0x58/0x1b0
+  [  150.888548] LR [c0000000001db638] cpuset_can_attach+0x48/0x1b0
+  [  150.888551] Call Trace:
+  [  150.888554] [c0000005f65cb940] [c0000000001db638] cpuset_can_attach+0x48/0x1b 0 (unreliable)
+  [  150.888559] [c0000005f65cb9a0] [c0000000001cff04] cgroup_migrate_execute+0xc4/0x4b0
+  [  150.888563] [c0000005f65cba20] [c0000000001d7d14] cgroup_transfer_tasks+0x1d4/0x370
+  [  150.888568] [c0000005f65cbb70] [c0000000001ddcb0] cpuset_hotplug_workfn+0x710/0x8f0
+  [  150.888572] [c0000005f65cbc80] [c00000000012032c] process_one_work+0x1ac/0x4d0
+  [  150.888576] [c0000005f65cbd20] [c0000000001206f8] worker_thread+0xa8/0x5b0
+  [  150.888580] [c0000005f65cbdc0] [c0000000001293f8] kthread+0x168/0x1b0
+  [  150.888584] [c0000005f65cbe30] [c00000000000b368] ret_from_kernel_thread+0x5c/0x74
+
+To allow reuse of the cgroup_mgctx structure, some fields in that
+structure are now re-initialized at the end of cgroup_migrate_execute()
+function call so that the structure can be reused again in a later
+iteration without causing problem.
+
+This bug was introduced in the commit e595cd706982 ("group: track
+migration context in cgroup_mgctx") in 4.11. This commit moves the
+cgroup_taskset initialization out of cgroup_migrate(). The commit
+10467270fb3 ("cgroup: don't call migration methods if there are no
+tasks to migrate") helped, but did not completely resolve the problem.
+
+Fixes: e595cd706982bff0211e6fafe5a108421e747fbc ("group: track migration context in cgroup_mgctx")
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index d6551cd..4485727 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2311,6 +2311,14 @@ static int cgroup_migrate_execute(struct cgroup_mgctx *mgctx)
+ 		list_del_init(&cset->mg_node);
+ 	}
+ 	spin_unlock_irq(&css_set_lock);
++
++	/*
++	 * Re-initialize the cgroup_taskset structure in case it is reused
++	 * again in another cgroup_migrate_add_task()/cgroup_migrate_execute()
++	 * iteration.
++	 */
++	tset->nr_tasks = 0;
++	tset->csets    = &tset->src_csets;
+ 	return ret;
+ }
+ 
+-- 
+1.8.3.1
