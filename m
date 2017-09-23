@@ -1,70 +1,36 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Sat, 23 Sep 2017 01:16:30 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1709230111250.116512@chino.kir.corp.google.com>
-References: <20170911131742.16482-1-guro@fb.com> <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170921142107.GA20109@cmpxchg.org> <alpine.DEB.2.10.1709211357520.60945@chino.kir.corp.google.com> <20170922154426.GF828415@devbig577.frc2.facebook.com>
- <alpine.DEB.2.10.1709221316290.68140@chino.kir.corp.google.com> <20170922210519.GH828415@devbig577.frc2.facebook.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCHSET for-4.14] cgroup, sched: cgroup2 basic resource
+ accounting
+Date: Sat, 23 Sep 2017 15:37:31 +0200
+Message-ID: <20170923133731.uq5qekjypndpjv2l@hirez.programming.kicks-ass.net>
+References: <20170811163754.3939102-1-tj@kernel.org>
+ <20170922180530.GG828415@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=6zuN8WSbvbC0cfVZBt/JYOmN6NL7gqUyw9K/DZkORso=;
-        b=pgk6aUKKEa09E56jpUDCCRMGbMg8rgirExMruGrIEu8cNGamOqoMPzLB1H5qxT8CZU
-         oJATHYPb/ktE+UYaU1rqKvoWYdN2CIw8FIVUxpF4fERjDOjV9JvRvfwyVzv68gj3F90m
-         Bts7P8tTQlhOUL3aFxlub/Oka5j4RYxz1D+yORCpCdJRwzvi8MWHqFSZ3JVo3pSE2WKt
-         xWozLsYmHXw7XBYYhQo2W+7d0YEw1L4iZx9HYOyxBgwOYmuwJ+InEWtdtNlclo3bgGSv
-         yXK83s+tnKIIB8fHor2o+KdOBsWmwb4qs7O6FIfwu/zcOW7/cJxWVkqEFVH6ZOD8Jzcn
-         9SHg==
-In-Reply-To: <20170922210519.GH828415@devbig577.frc2.facebook.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=vSFGAZOVoN9mcBIi2NxukMgyZJWc0ea5x/mMcfR7n/s=; b=C3nKca6tVyOC1dTGiLfhuT71V
+        nWWA6BneZ6UjzJC00ey0S5ejx/kAdUzoIgwre4mNDWWg3WoThXtF086HqlN5xYBHY1ICxVBRUT6BW
+        zUVJoIfu+lyy1FvPyAIA+DzZqMxBs23iz1Q7LoHD4GPcT/LtDLubFSKWCDHPU57Ljm8PLRGcbCw7C
+        15N9LY/Dp7qnAcv4aUs7RaGNZPtILyz+4sgZrAUv/uDjJ0B0/UV1EJkAbf6SqfHcmZYZvMI0+erSD
+        MbYEOx6t0jYDC2tcimfNRT1S4kjIBAwYf1d9iZHAvrjTSXFsXn8vcnRGGNBSFqp8EfAaMB2v4J4qp
+    
+Content-Disposition: inline
+In-Reply-To: <20170922180530.GG828415-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
 
-On Fri, 22 Sep 2017, Tejun Heo wrote:
+On Fri, Sep 22, 2017 at 11:05:30AM -0700, Tejun Heo wrote:
+> Peter, ping?
 
-> > If you have this low priority maintenance job charging memory to the high 
-> > priority hierarchy, you're already misconfigured unless you adjust 
-> > /proc/pid/oom_score_adj because it will oom kill any larger process than 
-> > itself in today's kernels anyway.
-> > 
-> > A better configuration would be attach this hypothetical low priority 
-> > maintenance job to its own sibling cgroup with its own memory limit to 
-> > avoid exactly that problem: it going berserk and charging too much memory 
-> > to the high priority container that results in one of its processes 
-> > getting oom killed.
-> 
-> And how do you guarantee that across delegation boundaries?  The
-> points you raise on why the priority should be applied level-by-level
-> are exactly the same points why this doesn't really work.  OOM killing
-> priority isn't something which can be distributed across cgroup
-> hierarchy level-by-level.  The resulting decision tree doesn't make
-> any sense.
-> 
-
-It works very well in practice with real world usecases, and Roman has 
-developed the same design independently that we have used for the past 
-four years.  Saying it doesn't make any sense doesn't hold a lot of weight 
-when we both independently designed and implemented the same solution to 
-address our usecases.
-
-> I'm not against adding something which works but strict level-by-level
-> comparison isn't the solution.
-> 
-
-Each of the eight versions of Roman's cgroup aware oom killer has done 
-comparisons between siblings at each level.  Userspace influence on that 
-comparison would thus also need to be done at each level.  It's a very 
-powerful combination in practice.
-
-Thanks.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Humm,. So I think I was good, but I was under the impression you'd send
+a new version better explaining the need/design of that iteration stuff.
+Could be I lost the plot somehow.
