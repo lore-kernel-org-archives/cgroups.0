@@ -1,122 +1,61 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Mon, 25 Sep 2017 14:24:00 +0200
-Message-ID: <20170925122400.4e7jh5zmuzvbggpe@dhcp22.suse.cz>
-References: <20170911131742.16482-1-guro@fb.com>
- <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com>
- <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz>
- <20170913215607.GA19259@castle>
- <20170914134014.wqemev2kgychv7m5@dhcp22.suse.cz>
- <20170914160548.GA30441@castle>
- <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz>
- <20170915152301.GA29379@castle>
- <20170918061405.pcrf5vauvul4c2nr@dhcp22.suse.cz>
- <20170920215341.GA5382@castle>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET for-4.14] cgroup, sched: cgroup2 basic resource
+ accounting
+Date: Mon, 25 Sep 2017 08:07:45 -0700
+Message-ID: <20170925150745.GJ828415@devbig577.frc2.facebook.com>
+References: <20170811163754.3939102-1-tj@kernel.org>
+ <20170922180530.GG828415@devbig577.frc2.facebook.com>
+ <20170923133731.uq5qekjypndpjv2l@hirez.programming.kicks-ass.net>
+ <20170923134402.GI828415@devbig577.frc2.facebook.com>
+ <20170925072718.zajtw4fvubgqtp5r@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=F/DyjgrCyY4Ne4MPz3MU1UYWfEbJSPSsyJnYeH7kQPE=;
+        b=Nz8cVCDu6qwMUx9NPeQQNdZ+uLzr8N2Hk3H/llBsSOEQvcdh4GTAoKZyj6PUpD2epB
+         4duDRg/3J4GyKuIESXlljCYNt5U928KNUmL07rX+IUCsnKSNIUPV91JnQolsM9BlSFxV
+         rMzf+qwZBZIIrlJQ5y+4y+i5yLpApRDW6+J3mShanhUDgBx7zVeRUyqbCay05DWlObp7
+         XWGGaeoJCiZHh881bPNGEtCak9x7WXjr2zqo0LCSfavH6u8q2C16EOpN8x+orftUg95Y
+         MWDr9xfI0TCLEQcnFVdOrmpZdGNMQUGkfKUZt16hAQTnTtyn+NMCEOTj7nD44NNOY0Rh
+         Hx7w==
 Content-Disposition: inline
-In-Reply-To: <20170920215341.GA5382@castle>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20170925072718.zajtw4fvubgqtp5r-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
-Cc: David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, efault-Mmb7MZpHnFY@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
 
-I would really appreciate some feedback from Tejun, Johannes here.
+Hello,
 
-On Wed 20-09-17 14:53:41, Roman Gushchin wrote:
-> On Mon, Sep 18, 2017 at 08:14:05AM +0200, Michal Hocko wrote:
-> > On Fri 15-09-17 08:23:01, Roman Gushchin wrote:
-> > > On Fri, Sep 15, 2017 at 12:58:26PM +0200, Michal Hocko wrote:
-[...]
-> > > > But then you just enforce a structural restriction on your configuration
-> > > > because
-> > > > 	root
-> > > >         /  \
-> > > >        A    D
-> > > >       /\   
-> > > >      B  C
-> > > > 
-> > > > is a different thing than
-> > > > 	root
-> > > >         / | \
-> > > >        B  C  D
-> > > >
+On Mon, Sep 25, 2017 at 09:27:18AM +0200, Peter Zijlstra wrote:
+> On Sat, Sep 23, 2017 at 06:44:02AM -0700, Tejun Heo wrote:
+> > Hello, Peter.
+> > 
+> > On Sat, Sep 23, 2017 at 03:37:31PM +0200, Peter Zijlstra wrote:
+> > > On Fri, Sep 22, 2017 at 11:05:30AM -0700, Tejun Heo wrote:
+> > > > Peter, ping?
 > > > 
-> > > I actually don't have a strong argument against an approach to select
-> > > largest leaf or kill-all-set memcg. I think, in practice there will be
-> > > no much difference.
+> > > Humm,. So I think I was good, but I was under the impression you'd send
+> > > a new version better explaining the need/design of that iteration stuff.
+> > > Could be I lost the plot somehow.
+> > 
+> > The updated version was posted quite a while ago.
+> > 
+> >   http://lkml.kernel.org/r/20170829174325.GS491396-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org
 > 
-> I've tried to implement this approach, and it's really arguable.
-> Although your example looks reasonable, the opposite example is also valid:
-> you might want to compare whole hierarchies, and it's a quite typical usecase.
 > 
-> Assume, you have several containerized workloads on a machine (probably,
-> each will be contained in a memcg with memory.max set), with some hierarchy
-> of cgroups inside. Then in case of global memory shortage we want to reclaim
-> some memory from the biggest workload, and the selection should not depend
-> on group_oom settings. It would be really strange, if setting group_oom will
-> higher the chances to be killed.
-> 
-> In other words, let's imagine processes as leaf nodes in memcg tree. We decided
-> to select the biggest memcg and kill one or more processes inside (depending
-> on group_oom setting), but the memcg selection doesn't depend on it.
-> We do not compare processes from different cgroups, as well as cgroups with
-> processes. The same should apply to cgroups: why do we want to compare cgroups
-> from different sub-trees?
-> 
-> While size-based comparison can be implemented with this approach,
-> the priority-based is really weird (as David mentioned).
-> If priorities have no hierarchical meaning at all, we lack the very important
-> ability to enforce hierarchy oom_priority. Otherwise we have to invent some
-> complex rules of oom_priority propagation (e.g. is someone is raising
-> the oom_priority in parent, should it be applied to children immediately, etc).
+> Oh that's in the same thread, wasn't expecting that. Look ok I suppose.
+>
+> Acked-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-I would really forget about the priority at this stage. This needs
-really much more thinking and I consider the David's usecase very
-specialized to use it as a template for a general purpose oom
-prioritization. I might be wrong here of course...
+Applying to cgroup/for-4.15.
 
-> The oom_group knob meaning also becoms more complex. It affects both
-> the victim selection and OOM action. _ANY_ mechanism which allows to affect
-> OOM victim selection (either priorities, either bpf-based approach) should
-> not have global system-wide meaning, it breaks everything.
-> 
-> I do understand your point, but the same is true for other stuff, right?
-> E.g. cpu time distribution (and io, etc) depends on hierarchy configuration.
-> It's a limitation, but it's ok, as user should create a hierarchy which
-> reflects some logical relations between processes and groups of processes.
-> Otherwise we're going to the configuration hell.
+Thanks.
 
-And that is _exactly_ my concern. We surely do not want tell people that
-they have to consider their cgroup tree structure to control the global
-oom behavior. You simply do not have that constrain with leaf-only
-semantic and if kill-all intermediate nodes are used then there is an
-explicit opt-in for the hierarchy considerations.
-
-> In any case, OOM is a last resort mechanism. The goal is to reclaim some memory
-> and do not crash the system or do not leave it in totally broken state.
-> Any really complex mm in userspace should be applied _before_ OOM happens.
-> So, I don't think we have to support all possible configurations here,
-> if we're able to achieve the main goal (kill some processes and do not leave
-> broken systems/containers).
-
-True but we want to have the semantic reasonably understandable. And it
-is quite hard to explain that the oom killer hasn't selected the largest
-memcg just because it happened to be in a deeper hierarchy which has
-been configured to cover a different resource.
-
-I am sorry to repeat my self and I will not argue if there is a
-prevalent agreement that level-by-level comparison is considered
-desirable and documented behavior but, by all means, do not define this
-semantic based on a priority requirements and/or implementation details.
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
