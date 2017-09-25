@@ -1,81 +1,110 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH cgroup/for-4.15] sched/cputime: Add dummy cputime_adjust()
- implementation for CONFIG_VIRT_CPU_ACCOUNTING_NATIVE
-Date: Mon, 25 Sep 2017 14:34:21 -0700
-Message-ID: <20170925213421.GC560070@devbig577.frc2.facebook.com>
-References: <20170811163754.3939102-1-tj@kernel.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Mon, 25 Sep 2017 15:21:03 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1709251510430.15961@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1709111334210.102819@chino.kir.corp.google.com> <20170913122914.5gdksbmkolum7ita@dhcp22.suse.cz> <20170913215607.GA19259@castle> <20170914134014.wqemev2kgychv7m5@dhcp22.suse.cz> <20170914160548.GA30441@castle>
+ <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz> <20170915152301.GA29379@castle> <20170918061405.pcrf5vauvul4c2nr@dhcp22.suse.cz> <20170920215341.GA5382@castle> <20170925122400.4e7jh5zmuzvbggpe@dhcp22.suse.cz> <20170925170004.GA22704@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=B4ivb9fec7rziO1bViWiE12GvgDQUU1bF6+qUawa6J0=;
-        b=fEOCWSTA1n19CKdvj+AHYKrZB3mgKhHKgnmATPQmWmk0ylJ6X0rcUxw6eoyYQuvEjK
-         n80QFC2TroRJEx8Q5EzC66nNkdKotazLdv1YkEbLgyXWkeWfyM4R+xuQz9rSiNut1kLJ
-         2teC+wuROPrQkZH3n2uXnxsiEPKnO+3ClY473SWOilPHTTJl/C4eAKRSL9DZNQQHeXMI
-         6DPLje6CYr7qxMK8Qhyu7h5wTWfOJP9w9MbIfz1d1gNpsyp8FG339VOl9SMMJD1BbDfy
-         LpjSBE9uN5Vow4R5bk6bCM+dv2KCfnUmsjPhVzgwI4u5ammBlUf7yUl3QmK9E7RxDbMa
-         FEcg==
-Content-Disposition: inline
-In-Reply-To: <20170811163754.3939102-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=BhdRkvI8xU50gx419SKT1aG9+DKWgmlKpn4K1vJaz98=;
+        b=VCJ/dhK2KKHAh5+qgnE2I4QuyI/yG33DwnS+hgS5Lmn0ArsME8xnjKPN41jQvX6yRr
+         4Pwydxq85HKTRCDRzwuI5y/oKZFuqfi4/JuIor2HqO4MCMXItpIWsRX8OZdqk/5tc8Y4
+         pKw450jPka2lduuMEV1KRrI3YGylhh3vXwf5fUwxNkL6BBWEgpnM3wesgRFDxhWr62Ag
+         hOLfjMB3JBGuuTWmc/6b28wxUO5HUwLv3UdS9YuVzgC4v5ADDqT0QMKq24wCJmoOWsGJ
+         0snco4I6CT46IL42jYMd5fn0Uu2lVXM4ppKm3Mz51/jcFFfihrJm7zfpHMhpyzP8+ZC/
+         ob4g==
+In-Reply-To: <20170925170004.GA22704@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, longman@redhat.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Mon, 25 Sep 2017, Johannes Weiner wrote:
 
-Another follow-up fix.  I missed a dummy implementation leading to
-bulid failure on s390.  Because the bug and fix are trivial, I
-directly applied the patch to cgroup/for-4.15.  Please let me know if
-it should be routed differently.
+> > True but we want to have the semantic reasonably understandable. And it
+> > is quite hard to explain that the oom killer hasn't selected the largest
+> > memcg just because it happened to be in a deeper hierarchy which has
+> > been configured to cover a different resource.
+> 
+> Going back to Michal's example, say the user configured the following:
+> 
+>        root
+>       /    \
+>      A      D
+>     / \
+>    B   C
+> 
+> A global OOM event happens and we find this:
+> - A > D
+> - B, C, D are oomgroups
+> 
+> What the user is telling us is that B, C, and D are compound memory
+> consumers. They cannot be divided into their task parts from a memory
+> point of view.
+> 
+> However, the user doesn't say the same for A: the A subtree summarizes
+> and controls aggregate consumption of B and C, but without groupoom
+> set on A, the user says that A is in fact divisible into independent
+> memory consumers B and C.
+> 
+> If we don't have to kill all of A, but we'd have to kill all of D,
+> does it make sense to compare the two?
+> 
 
-Thanks.
------- 8< ------
-From 8157a7faf94135386bf04b1cf94e6efd3fb94702 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Mon, 25 Sep 2017 14:27:54 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+No, I agree that we shouldn't compare sibling memory cgroups based on 
+different criteria depending on whether group_oom is set or not.
 
-cfb766da54d9 ("sched/cputime: Expose cputime_adjust()") made
-cputime_adjust() public for cgroup basic cpu stat support; however,
-the commit forgot to add a dummy implementaiton for
-CONFIG_VIRT_CPU_ACCOUNTING_NATIVE leading to compiler errors on some
-s390 configurations.
+I think it would be better to compare siblings based on the same criteria 
+independent of group_oom if the user has mounted the hierarchy with the 
+new mode (I think we all agree that the mount option is needed).  It's 
+very easy to describe to the user and the selection is simple to 
+understand.  Then, once a cgroup has been chosen as the victim cgroup, 
+kill the process with the highest badness, allowing the user to influence 
+that with /proc/pid/oom_score_adj just as today, if group_oom is disabled; 
+otherwise, kill all eligible processes if enabled.
 
-Fix it by adding the missing dummy implementation.
+That, to me, is a very clear semantic and I believe it addresses Roman's 
+usecase.  My desire to have oom priorities amongst siblings is so that 
+userspace can influence which cgroup is chosen, just as it can influence 
+which process is chosen.
 
-Reported-by: “kbuild-all@01.org” <kbuild-all@01.org>
-Fixes: cfb766da54d9 ("sched/cputime: Expose cputime_adjust()")
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/sched/cputime.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+I see group_oom as a mechanism to be used when victim selection has 
+already been done instead of something that should be considered in the 
+policy of victim selection.
 
-diff --git a/kernel/sched/cputime.c b/kernel/sched/cputime.c
-index e01b699..5498f20 100644
---- a/kernel/sched/cputime.c
-+++ b/kernel/sched/cputime.c
-@@ -447,6 +447,13 @@ void vtime_account_irq_enter(struct task_struct *tsk)
- EXPORT_SYMBOL_GPL(vtime_account_irq_enter);
- #endif /* __ARCH_HAS_VTIME_ACCOUNT */
- 
-+void cputime_adjust(struct task_cputime *curr, struct prev_cputime *prev,
-+		    u64 *ut, u64 *st)
-+{
-+	*ut = curr->utime;
-+	*st = curr->stime;
-+}
-+
- void task_cputime_adjusted(struct task_struct *p, u64 *ut, u64 *st)
- {
- 	*ut = p->utime;
--- 
-2.9.5
+> Let's consider an extreme case of this conundrum:
+> 
+> 	root
+>       /     \
+>      A       B
+>     /|\      |
+>  A1-A1000    B1
+> 
+> Again we find:
+> - A > B
+> - A1 to A1000 and B1 are oomgroups
+> But:
+> - A1 to A1000 individually are tiny, B1 is huge
+> 
+> Going level by level, we'd pick A as the bigger hierarchy in the
+> system, and then kill off one of the tiny groups A1 to A1000.
+> 
+> Conversely, going for biggest consumer regardless of hierarchy, we'd
+> compare A1 to A1000 and B1, then pick B1 as the biggest single atomic
+> memory consumer in the system and kill all its tasks.
+> 
 
+If we compare sibling memcgs independent of group_oom, we don't 
+necessarily pick A unless it really is larger than B.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
