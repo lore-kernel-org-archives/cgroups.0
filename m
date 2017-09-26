@@ -1,9 +1,8 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Tue, 26 Sep 2017 15:30:40 +0200
-Message-ID: <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz>
-References: <20170915152301.GA29379@castle>
- <20170918061405.pcrf5vauvul4c2nr@dhcp22.suse.cz>
+Date: Tue, 26 Sep 2017 13:26:10 -0400
+Message-ID: <20170926172610.GA26694@cmpxchg.org>
+References: <20170918061405.pcrf5vauvul4c2nr@dhcp22.suse.cz>
  <20170920215341.GA5382@castle>
  <20170925122400.4e7jh5zmuzvbggpe@dhcp22.suse.cz>
  <20170925170004.GA22704@cmpxchg.org>
@@ -12,54 +11,77 @@ References: <20170915152301.GA29379@castle>
  <20170926105925.GA23139@castle.dhcp.TheFacebook.com>
  <20170926112134.r5eunanjy7ogjg5n@dhcp22.suse.cz>
  <20170926121300.GB23139@castle.dhcp.TheFacebook.com>
+ <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=79GVROxy1Fhrkij9oiLL4Uhm6IBS0TiNCeE1efWZIf0=; b=tvKTO2vkbgsWWaFqPULUUVaixt
+        UqrRyr16mXE3IPj5YD9VeFbUFg/F02R5HgHwFQzFM/cvyhfDUd30RSHabSZVORLIdUxNBO6GFFcWI
+        pNCFDdJT2Bwv/yP8NIL+jVWhM3xRNYT7vNzccOrZUZiTQw2LcT2X2QMeAZHIrWBMmGSE=;
 Content-Disposition: inline
-In-Reply-To: <20170926121300.GB23139@castle.dhcp.TheFacebook.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 26-09-17 13:13:00, Roman Gushchin wrote:
-> On Tue, Sep 26, 2017 at 01:21:34PM +0200, Michal Hocko wrote:
-> > On Tue 26-09-17 11:59:25, Roman Gushchin wrote:
-> > > On Mon, Sep 25, 2017 at 10:25:21PM +0200, Michal Hocko wrote:
-> > > > On Mon 25-09-17 19:15:33, Roman Gushchin wrote:
-> > > > [...]
-> > > > > I'm not against this model, as I've said before. It feels logical,
-> > > > > and will work fine in most cases.
+On Tue, Sep 26, 2017 at 03:30:40PM +0200, Michal Hocko wrote:
+> On Tue 26-09-17 13:13:00, Roman Gushchin wrote:
+> > On Tue, Sep 26, 2017 at 01:21:34PM +0200, Michal Hocko wrote:
+> > > On Tue 26-09-17 11:59:25, Roman Gushchin wrote:
+> > > > On Mon, Sep 25, 2017 at 10:25:21PM +0200, Michal Hocko wrote:
+> > > > > On Mon 25-09-17 19:15:33, Roman Gushchin wrote:
+> > > > > [...]
+> > > > > > I'm not against this model, as I've said before. It feels logical,
+> > > > > > and will work fine in most cases.
+> > > > > > 
+> > > > > > In this case we can drop any mount/boot options, because it preserves
+> > > > > > the existing behavior in the default configuration. A big advantage.
 > > > > > 
-> > > > > In this case we can drop any mount/boot options, because it preserves
-> > > > > the existing behavior in the default configuration. A big advantage.
+> > > > > I am not sure about this. We still need an opt-in, ragardless, because
+> > > > > selecting the largest process from the largest memcg != selecting the
+> > > > > largest task (just consider memcgs with many processes example).
 > > > > 
-> > > > I am not sure about this. We still need an opt-in, ragardless, because
-> > > > selecting the largest process from the largest memcg != selecting the
-> > > > largest task (just consider memcgs with many processes example).
+> > > > As I understand Johannes, he suggested to compare individual processes with
+> > > > group_oom mem cgroups. In other words, always select a killable entity with
+> > > > the biggest memory footprint.
+> > > > 
+> > > > This is slightly different from my v8 approach, where I treat leaf memcgs
+> > > > as indivisible memory consumers independent on group_oom setting, so
+> > > > by default I'm selecting the biggest task in the biggest memcg.
 > > > 
-> > > As I understand Johannes, he suggested to compare individual processes with
-> > > group_oom mem cgroups. In other words, always select a killable entity with
-> > > the biggest memory footprint.
-> > > 
-> > > This is slightly different from my v8 approach, where I treat leaf memcgs
-> > > as indivisible memory consumers independent on group_oom setting, so
-> > > by default I'm selecting the biggest task in the biggest memcg.
+> > > My reading is that he is actually proposing the same thing I've been
+> > > mentioning. Simply select the biggest killable entity (leaf memcg or
+> > > group_oom hierarchy) and either kill the largest task in that entity
+> > > (for !group_oom) or the whole memcg/hierarchy otherwise.
 > > 
-> > My reading is that he is actually proposing the same thing I've been
-> > mentioning. Simply select the biggest killable entity (leaf memcg or
-> > group_oom hierarchy) and either kill the largest task in that entity
-> > (for !group_oom) or the whole memcg/hierarchy otherwise.
+> > He wrote the following:
+> > "So I'm leaning toward the second model: compare all oomgroups and
+> > standalone tasks in the system with each other, independent of the
+> > failed hierarchical control structure. Then kill the biggest of them."
 > 
-> He wrote the following:
-> "So I'm leaning toward the second model: compare all oomgroups and
-> standalone tasks in the system with each other, independent of the
-> failed hierarchical control structure. Then kill the biggest of them."
+> I will let Johannes to comment but I believe this is just a
+> misunderstanding. If we compared only the biggest task from each memcg
+> then we are basically losing our fairness objective, aren't we?
 
-I will let Johannes to comment but I believe this is just a
-misunderstanding. If we compared only the biggest task from each memcg
-then we are basically losing our fairness objective, aren't we?
--- 
-Michal Hocko
-SUSE Labs
+Sorry about the confusion.
+
+Yeah I was making the case for what Michal proposed, to kill the
+biggest terminal consumer, which is either a task or an oomgroup.
+
+You'd basically iterate through all the tasks and cgroups in the
+system and pick the biggest task that isn't in an oom group or the
+biggest oom group and then kill that.
+
+Yeah, you'd have to compare the memory footprints of tasks with the
+memory footprints of cgroups. These aren't defined identically, and
+tasks don't get attributed every type of allocation that a cgroup
+would. But it should get us in the ballpark, and I cannot picture a
+scenario where this would lead to a completely undesirable outcome.
