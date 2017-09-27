@@ -1,90 +1,112 @@
-From: Tim Hockin <thockin@hockin.org>
+From: Roman Gushchin <guro@fb.com>
 Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Wed, 27 Sep 2017 08:35:50 -0700
-Message-ID: <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
-References: <20170925122400.4e7jh5zmuzvbggpe@dhcp22.suse.cz>
- <20170925170004.GA22704@cmpxchg.org> <20170925181533.GA15918@castle>
- <20170925202442.lmcmvqwy2jj2tr5h@dhcp22.suse.cz> <20170926105925.GA23139@castle.dhcp.TheFacebook.com>
- <20170926112134.r5eunanjy7ogjg5n@dhcp22.suse.cz> <20170926121300.GB23139@castle.dhcp.TheFacebook.com>
- <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz> <20170926172610.GA26694@cmpxchg.org>
- <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com> <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
+Date: Wed, 27 Sep 2017 17:23:00 +0100
+Message-ID: <20170927162300.GA5623@castle.DHCP.thefacebook.com>
+References: <20170925181533.GA15918@castle>
+ <20170925202442.lmcmvqwy2jj2tr5h@dhcp22.suse.cz>
+ <20170926105925.GA23139@castle.dhcp.TheFacebook.com>
+ <20170926112134.r5eunanjy7ogjg5n@dhcp22.suse.cz>
+ <20170926121300.GB23139@castle.dhcp.TheFacebook.com>
+ <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz>
+ <20170926172610.GA26694@cmpxchg.org>
+ <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com>
+ <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
+ <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=JKEgmaHHxePMDOLVxEKMCxhKpmqBFvZhFBo5b02TMNE=;
-        b=SzMzSeWZdVq3AqSqphYlC65KvZV51xSM/QMEFU0wrgcv7uwPoS++leBFoQMJjM+Gnx
-         6PfbddcEVXCgkdI+DQ5Qwne2xekxggebHkL5DMYfh3C0m+BscqI/VAPDvOJ8ahRmw65D
-         M6ZgqP8+rMj2kIg00d7TjlWTG0q87C+U6B2mjLayFyS7KPbm1S47RFV6w31Dr0pN1FRC
-         HQVPJoeQEUpMpp8trxDKe6PgQckaosm3EuCO3+XWhiaO7pX41tNueQzqdCwo1SacEf9h
-         GOWakk3fBw5uAY8I38xT2fEWGStDXdl/1y3tRqtY1azmu1sMVdhQSZwCaLjGcf4blhzU
-         fviA==
-In-Reply-To: <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=BV6Bb0mBvP+wLrY1A0/qMw6LliFu04rUrbsUXm4/bL0=;
+ b=GLNx8Lk5XtRDFTUolDxYhZXmbhJtM7pZCYN8+fQOcgU9EwnG/c9gaFa5mTfpnc2sJEyx
+ aPx9Xj80vDY6vpws9WVmLtNZLydpEKTaSOdAYiVSfaPLkFYsy0OrrswSDDfOKMvFYSye
+ wzB0R7KUB5nOVzL2oB6R1KPToc14eMxuzbs= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=BV6Bb0mBvP+wLrY1A0/qMw6LliFu04rUrbsUXm4/bL0=;
+ b=WPIP8SlyrJ9hgAvi3xEmG/w6/OQRR7kUyiAPrPL/qRv1ENnatsHHBAOBZRAyKPdH2964o9ngQtFiYArYotEp6eyeSWDYzjlrVXjPOiJSR1a1HSMAlLBamYxCE55f/cwV+TN/w0F7CPhW7jNP6ZYpY9/9IgcPdghc0lQw1ZxcO88=
+Content-Disposition: inline
+In-Reply-To: <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tim Hockin <thockin@hockin.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Wed, Sep 27, 2017 at 12:43 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> On Tue 26-09-17 20:37:37, Tim Hockin wrote:
-> [...]
->> I feel like David has offered examples here, and many of us at Google
->> have offered examples as long ago as 2013 (if I recall) of cases where
->> the proposed heuristic is EXACTLY WRONG.
+On Wed, Sep 27, 2017 at 08:35:50AM -0700, Tim Hockin wrote:
+> On Wed, Sep 27, 2017 at 12:43 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> > On Tue 26-09-17 20:37:37, Tim Hockin wrote:
+> > [...]
+> >> I feel like David has offered examples here, and many of us at Google
+> >> have offered examples as long ago as 2013 (if I recall) of cases where
+> >> the proposed heuristic is EXACTLY WRONG.
+> >
+> > I do not think we have discussed anything resembling the current
+> > approach. And I would really appreciate some more examples where
+> > decisions based on leaf nodes would be EXACTLY WRONG.
+> >
+> >> We need OOM behavior to kill in a deterministic order configured by
+> >> policy.
+> >
+> > And nobody is objecting to this usecase. I think we can build a priority
+> > policy on top of leaf-based decision as well. The main point we are
+> > trying to sort out here is a reasonable semantic that would work for
+> > most workloads. Sibling based selection will simply not work on those
+> > that have to use deeper hierarchies for organizational purposes. I
+> > haven't heard a counter argument for that example yet.
 >
-> I do not think we have discussed anything resembling the current
-> approach. And I would really appreciate some more examples where
-> decisions based on leaf nodes would be EXACTLY WRONG.
->
->> We need OOM behavior to kill in a deterministic order configured by
->> policy.
->
-> And nobody is objecting to this usecase. I think we can build a priority
-> policy on top of leaf-based decision as well. The main point we are
-> trying to sort out here is a reasonable semantic that would work for
-> most workloads. Sibling based selection will simply not work on those
-> that have to use deeper hierarchies for organizational purposes. I
-> haven't heard a counter argument for that example yet.
 
-We have a priority-based, multi-user cluster.  That cluster runs a
-variety of work, including critical things like search and gmail, as
-well as non-critical things like batch work.  We try to offer our
-users an SLA around how often they will be killed by factors outside
-themselves, but we also want to get higher utilization.  We know for a
-fact (data, lots of data) that most jobs have spare memory capacity,
-set aside for spikes or simply because accurate sizing is hard.  We
-can sell "guaranteed" resources to critical jobs, with a high SLA.  We
-can sell "best effort" resources to non-critical jobs with a low SLA.
-We achieve much better overall utilization this way.
+Hi, Tim!
 
-I need to represent the priority of these tasks in a way that gives me
-a very strong promise that, in case of system OOM, the non-critical
-jobs will be chosen before the critical jobs.  Regardless of size.
-Regardless of how many non-critical jobs have to die.  I'd rather kill
-*all* of the non-critical jobs than a single critical job.  Size of
-the process or cgroup is simply not a factor, and honestly given 2
-options of equal priority I'd say age matters more than size.
+> We have a priority-based, multi-user cluster.  That cluster runs a
+> variety of work, including critical things like search and gmail, as
+> well as non-critical things like batch work.  We try to offer our
+> users an SLA around how often they will be killed by factors outside
+> themselves, but we also want to get higher utilization.  We know for a
+> fact (data, lots of data) that most jobs have spare memory capacity,
+> set aside for spikes or simply because accurate sizing is hard.  We
+> can sell "guaranteed" resources to critical jobs, with a high SLA.  We
+> can sell "best effort" resources to non-critical jobs with a low SLA.
+> We achieve much better overall utilization this way.
 
-So concretely I have 2 first-level cgroups, one for "guaranteed" and
-one for "best effort" classes.  I always want to kill from "best
-effort", even if that means killing 100 small cgroups, before touching
-"guaranteed".
+This is well understood.
 
-I apologize if this is not as thorough as the rest of the thread - I
-am somewhat out of touch with the guts of it all these days.  I just
-feel compelled to indicate that, as a historical user (via Google
-systems) and current user (via Kubernetes), some of the assertions
-being made here do not ring true for our very real use cases.  I
-desperately want cgroup-aware OOM handing, but it has to be
-policy-based or it is just not useful to us.
+> 
+> I need to represent the priority of these tasks in a way that gives me
+> a very strong promise that, in case of system OOM, the non-critical
+> jobs will be chosen before the critical jobs.  Regardless of size.
+> Regardless of how many non-critical jobs have to die.  I'd rather kill
+> *all* of the non-critical jobs than a single critical job.  Size of
+> the process or cgroup is simply not a factor, and honestly given 2
+> options of equal priority I'd say age matters more than size.
+> 
+> So concretely I have 2 first-level cgroups, one for "guaranteed" and
+> one for "best effort" classes.  I always want to kill from "best
+> effort", even if that means killing 100 small cgroups, before touching
+> "guaranteed".
+> 
+> I apologize if this is not as thorough as the rest of the thread - I
+> am somewhat out of touch with the guts of it all these days.  I just
+> feel compelled to indicate that, as a historical user (via Google
+> systems) and current user (via Kubernetes), some of the assertions
+> being made here do not ring true for our very real use cases.  I
+> desperately want cgroup-aware OOM handing, but it has to be
+> policy-based or it is just not useful to us.
 
-Thanks.
+A policy-based approach was suggested by Michal at a very beginning of
+this discussion. Although nobody had any strong objections against it,
+we've agreed that this is out of scope of this patchset.
 
-Tim
+The idea of this patchset is to introduce an ability to select a memcg
+as an OOM victim with the following optional killing of all belonging tasks.
+I believe, it's absolutely mandatory for _any_ further development
+of the OOM killer, which wants to deal with memory cgroups as OOM entities.
+
+If you think that it makes impossible to support some use cases in the future,
+let's discuss it. Otherwise, I'd prefer to finish this part of the work,
+and proceed to the following improvements on top of it.
+
+Thank you!
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
