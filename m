@@ -1,118 +1,90 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [v9 5/5] mm, oom, docs: describe the cgroup-aware OOM killer
-Date: Wed, 27 Sep 2017 14:09:36 +0100
-Message-ID: <20170927130936.8601-6-guro@fb.com>
-References: <20170927130936.8601-1-guro@fb.com>
+From: Tim Hockin <thockin@hockin.org>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Wed, 27 Sep 2017 08:35:50 -0700
+Message-ID: <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
+References: <20170925122400.4e7jh5zmuzvbggpe@dhcp22.suse.cz>
+ <20170925170004.GA22704@cmpxchg.org> <20170925181533.GA15918@castle>
+ <20170925202442.lmcmvqwy2jj2tr5h@dhcp22.suse.cz> <20170926105925.GA23139@castle.dhcp.TheFacebook.com>
+ <20170926112134.r5eunanjy7ogjg5n@dhcp22.suse.cz> <20170926121300.GB23139@castle.dhcp.TheFacebook.com>
+ <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz> <20170926172610.GA26694@cmpxchg.org>
+ <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com> <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=moLu5X/gRPBHJYONL2r727XIU1n1Md/e/iK4D52usn0=;
- b=B1yAlxQilR7m9Dvy8g0lpWeJB/2Zs452cRx2oZ7W1TBuhhizAGAoMEABE5gtDmJG8C2Z
- A3+dK/XT+m/1RH0rbx/ZEvTN8BPPOafxaa1XmllXI1urcikkmZLeAHl7c8a/d/UC8pCz
- dHjmcaofIMG8/tWUOV43wQ6zmGUnEoceemY= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=moLu5X/gRPBHJYONL2r727XIU1n1Md/e/iK4D52usn0=;
- b=ZL1gQL7tHR+JkiiO7LtFmqy7EXppLHeKIyyJ6n1EbIkxM13BbAn8M/uK03m0z1yNiqregzJSfpYkUNqtwd4fA0UhiA4o1rxo3WtsGuSW1It1snZCue6SQj0Fj5pC67eq3T5QKaR+1flPoJRKQlVYI2Ben/tNrVir/V5g5iZQWoo=
-In-Reply-To: <20170927130936.8601-1-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:sender:in-reply-to:references:from:date:message-id
+         :subject:to:cc;
+        bh=JKEgmaHHxePMDOLVxEKMCxhKpmqBFvZhFBo5b02TMNE=;
+        b=SzMzSeWZdVq3AqSqphYlC65KvZV51xSM/QMEFU0wrgcv7uwPoS++leBFoQMJjM+Gnx
+         6PfbddcEVXCgkdI+DQ5Qwne2xekxggebHkL5DMYfh3C0m+BscqI/VAPDvOJ8ahRmw65D
+         M6ZgqP8+rMj2kIg00d7TjlWTG0q87C+U6B2mjLayFyS7KPbm1S47RFV6w31Dr0pN1FRC
+         HQVPJoeQEUpMpp8trxDKe6PgQckaosm3EuCO3+XWhiaO7pX41tNueQzqdCwo1SacEf9h
+         GOWakk3fBw5uAY8I38xT2fEWGStDXdl/1y3tRqtY1azmu1sMVdhQSZwCaLjGcf4blhzU
+         fviA==
+In-Reply-To: <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Document the cgroup-aware OOM killer.
+On Wed, Sep 27, 2017 at 12:43 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> On Tue 26-09-17 20:37:37, Tim Hockin wrote:
+> [...]
+>> I feel like David has offered examples here, and many of us at Google
+>> have offered examples as long ago as 2013 (if I recall) of cases where
+>> the proposed heuristic is EXACTLY WRONG.
+>
+> I do not think we have discussed anything resembling the current
+> approach. And I would really appreciate some more examples where
+> decisions based on leaf nodes would be EXACTLY WRONG.
+>
+>> We need OOM behavior to kill in a deterministic order configured by
+>> policy.
+>
+> And nobody is objecting to this usecase. I think we can build a priority
+> policy on top of leaf-based decision as well. The main point we are
+> trying to sort out here is a reasonable semantic that would work for
+> most workloads. Sibling based selection will simply not work on those
+> that have to use deeper hierarchies for organizational purposes. I
+> haven't heard a counter argument for that example yet.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
----
- Documentation/cgroup-v2.txt | 44 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+We have a priority-based, multi-user cluster.  That cluster runs a
+variety of work, including critical things like search and gmail, as
+well as non-critical things like batch work.  We try to offer our
+users an SLA around how often they will be killed by factors outside
+themselves, but we also want to get higher utilization.  We know for a
+fact (data, lots of data) that most jobs have spare memory capacity,
+set aside for spikes or simply because accurate sizing is hard.  We
+can sell "guaranteed" resources to critical jobs, with a high SLA.  We
+can sell "best effort" resources to non-critical jobs with a low SLA.
+We achieve much better overall utilization this way.
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 3f8216912df0..936dd60b8d6a 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
-        5-2-1. Memory Interface Files
-        5-2-2. Usage Guidelines
-        5-2-3. Memory Ownership
-+       5-2-4. OOM Killer
-      5-3. IO
-        5-3-1. IO Interface Files
-        5-3-2. Writeback
-@@ -1043,6 +1044,21 @@ PAGE_SIZE multiple when read back.
- 	high limit is used and monitored properly, this limit's
- 	utility is limited to providing the final safety net.
- 
-+  memory.oom_group
-+
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	If set, OOM killer will consider the memory cgroup and all
-+	descendant cgroups as indivisible memory consumers and compare
-+	them with other memory consumers by their memory footprint.
-+	If such memory cgroup is selected as an OOM victim, all
-+	processes belonging to it or it's descendants will be killed.
-+
-+	OOM killer respects the /proc/pid/oom_score_adj value -1000,
-+	and will never kill the unkillable task, even if memory.oom_group
-+	is set.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-@@ -1246,6 +1262,34 @@ to be accessed repeatedly by other cgroups, it may make sense to use
- POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
- belonging to the affected files to ensure correct memory ownership.
- 
-+OOM Killer
-+~~~~~~~~~~
-+
-+Cgroup v2 memory controller implements a cgroup-aware OOM killer.
-+It means that it treats cgroups as first class OOM entities.
-+
-+Under OOM conditions the memory controller tries to make the best
-+choice of a victim, looking for a memory cgroup with the largest
-+memory footprint, considering leaf cgroups and cgroups with the
-+memory.oom_group option set, which are considered to be an indivisible
-+memory consumers.
-+
-+By default, OOM killer will kill the biggest task in the selected
-+memory cgroup. A user can change this behavior by enabling
-+the per-cgroup memory.oom_group option. If set, it causes
-+the OOM killer to kill all processes attached to the cgroup,
-+except processes with oom_score_adj set to -1000.
-+
-+This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
-+the memory controller considers only cgroups belonging to the sub-tree
-+of the OOM'ing cgroup.
-+
-+The root cgroup is treated as a leaf memory cgroup, so it's compared
-+with other leaf memory cgroups and cgroups with oom_group option set.
-+
-+If there are no cgroups with the enabled memory controller,
-+the OOM killer is using the "traditional" process-based approach.
-+
- 
- IO
- --
--- 
-2.13.5
+I need to represent the priority of these tasks in a way that gives me
+a very strong promise that, in case of system OOM, the non-critical
+jobs will be chosen before the critical jobs.  Regardless of size.
+Regardless of how many non-critical jobs have to die.  I'd rather kill
+*all* of the non-critical jobs than a single critical job.  Size of
+the process or cgroup is simply not a factor, and honestly given 2
+options of equal priority I'd say age matters more than size.
+
+So concretely I have 2 first-level cgroups, one for "guaranteed" and
+one for "best effort" classes.  I always want to kill from "best
+effort", even if that means killing 100 small cgroups, before touching
+"guaranteed".
+
+I apologize if this is not as thorough as the rest of the thread - I
+am somewhat out of touch with the guts of it all these days.  I just
+feel compelled to indicate that, as a historical user (via Google
+systems) and current user (via Kubernetes), some of the assertions
+being made here do not ring true for our very real use cases.  I
+desperately want cgroup-aware OOM handing, but it has to be
+policy-based or it is just not useful to us.
+
+Thanks.
+
+Tim
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
