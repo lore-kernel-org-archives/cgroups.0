@@ -1,105 +1,111 @@
-From: Tim Hockin <thockin@hockin.org>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Tue, 26 Sep 2017 20:37:37 -0700
-Message-ID: <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com>
-References: <20170918061405.pcrf5vauvul4c2nr@dhcp22.suse.cz>
- <20170920215341.GA5382@castle> <20170925122400.4e7jh5zmuzvbggpe@dhcp22.suse.cz>
- <20170925170004.GA22704@cmpxchg.org> <20170925181533.GA15918@castle>
- <20170925202442.lmcmvqwy2jj2tr5h@dhcp22.suse.cz> <20170926105925.GA23139@castle.dhcp.TheFacebook.com>
- <20170926112134.r5eunanjy7ogjg5n@dhcp22.suse.cz> <20170926121300.GB23139@castle.dhcp.TheFacebook.com>
- <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz> <20170926172610.GA26694@cmpxchg.org>
+Date: Wed, 27 Sep 2017 09:37:44 +0200
+Message-ID: <20170927073744.5g7dq5c5spmtgz5g@dhcp22.suse.cz>
+References: <20170914160548.GA30441@castle>
+ <20170915105826.hq5afcu2ij7hevb4@dhcp22.suse.cz>
+ <20170915152301.GA29379@castle>
+ <20170918061405.pcrf5vauvul4c2nr@dhcp22.suse.cz>
+ <20170920215341.GA5382@castle>
+ <20170925122400.4e7jh5zmuzvbggpe@dhcp22.suse.cz>
+ <20170925170004.GA22704@cmpxchg.org>
+ <alpine.DEB.2.10.1709251510430.15961@chino.kir.corp.google.com>
+ <20170926084602.sloinq7gdoyxo23y@dhcp22.suse.cz>
+ <alpine.DEB.2.10.1709261340150.103010@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=U2vxmDhEinAPQdqMS6xUW7J07oZL/r4UoiUwcV3igSY=;
-        b=N/Tp+Oa13BC9NVLCqog8FE7cFOa6reVMcYuUuKRAJ1NeDfob5ToHES5sRbbw0Iay2E
-         3KNDmj+yLl2/UA3/vwITIvIY4X+fft9sUhitrX9LTNhfH+KPtWJ/uRSn7SFjK+n+6J/i
-         JEGjL7jSKAy8urOIaWpFigHJbXI2i2IfghbQb+7S2h0FYn2yIbfabooEc7zgiqQodN9v
-         +tQQcK/lqmi0gOPZWXwaHqXIRMxSZeM3e9pUkFQcQ9xTPRgETa/h+fAkHkaCptGPv49U
-         Kk1kWgQ6Cc/rHUdIusUSM13Zdwi+JmaLXLdxsIp/oJvpZDUdvFmz1UWOjKdiLzdGu1Nh
-         4E8g==
-In-Reply-To: <20170926172610.GA26694@cmpxchg.org>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1709261340150.103010@chino.kir.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I'm excited to see this being discussed again - it's been years since
-the last attempt.  I've tried to stay out of the conversation, but I
-feel obligated say something and then go back to lurking.
+On Tue 26-09-17 14:04:41, David Rientjes wrote:
+> On Tue, 26 Sep 2017, Michal Hocko wrote:
+> 
+> > > No, I agree that we shouldn't compare sibling memory cgroups based on 
+> > > different criteria depending on whether group_oom is set or not.
+> > > 
+> > > I think it would be better to compare siblings based on the same criteria 
+> > > independent of group_oom if the user has mounted the hierarchy with the 
+> > > new mode (I think we all agree that the mount option is needed).  It's 
+> > > very easy to describe to the user and the selection is simple to 
+> > > understand. 
+> > 
+> > I disagree. Just take the most simplistic example when cgroups reflect
+> > some other higher level organization - e.g. school with teachers,
+> > students and admins as the top level cgroups to control the proper cpu
+> > share load. Now you want to have a fair OOM selection between different
+> > entities. Do you consider selecting students all the time as an expected
+> > behavior just because their are the largest group? This just doesn't
+> > make any sense to me.
+> > 
+> 
+> Are you referring to this?
+> 
+> 	root
+>        /    \
+> students    admins
+> /      \    /    \
+> A      B    C    D
+> 
+> If the cumulative usage of all students exceeds the cumulative usage of 
+> all admins, yes, the choice is to kill from the /students tree.
 
-On Tue, Sep 26, 2017 at 10:26 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> On Tue, Sep 26, 2017 at 03:30:40PM +0200, Michal Hocko wrote:
->> On Tue 26-09-17 13:13:00, Roman Gushchin wrote:
->> > On Tue, Sep 26, 2017 at 01:21:34PM +0200, Michal Hocko wrote:
->> > > On Tue 26-09-17 11:59:25, Roman Gushchin wrote:
->> > > > On Mon, Sep 25, 2017 at 10:25:21PM +0200, Michal Hocko wrote:
->> > > > > On Mon 25-09-17 19:15:33, Roman Gushchin wrote:
->> > > > > [...]
->> > > > > > I'm not against this model, as I've said before. It feels logical,
->> > > > > > and will work fine in most cases.
->> > > > > >
->> > > > > > In this case we can drop any mount/boot options, because it preserves
->> > > > > > the existing behavior in the default configuration. A big advantage.
->> > > > >
->> > > > > I am not sure about this. We still need an opt-in, ragardless, because
->> > > > > selecting the largest process from the largest memcg != selecting the
->> > > > > largest task (just consider memcgs with many processes example).
->> > > >
->> > > > As I understand Johannes, he suggested to compare individual processes with
->> > > > group_oom mem cgroups. In other words, always select a killable entity with
->> > > > the biggest memory footprint.
->> > > >
->> > > > This is slightly different from my v8 approach, where I treat leaf memcgs
->> > > > as indivisible memory consumers independent on group_oom setting, so
->> > > > by default I'm selecting the biggest task in the biggest memcg.
->> > >
->> > > My reading is that he is actually proposing the same thing I've been
->> > > mentioning. Simply select the biggest killable entity (leaf memcg or
->> > > group_oom hierarchy) and either kill the largest task in that entity
->> > > (for !group_oom) or the whole memcg/hierarchy otherwise.
->> >
->> > He wrote the following:
->> > "So I'm leaning toward the second model: compare all oomgroups and
->> > standalone tasks in the system with each other, independent of the
->> > failed hierarchical control structure. Then kill the biggest of them."
->>
->> I will let Johannes to comment but I believe this is just a
->> misunderstanding. If we compared only the biggest task from each memcg
->> then we are basically losing our fairness objective, aren't we?
->
-> Sorry about the confusion.
->
-> Yeah I was making the case for what Michal proposed, to kill the
-> biggest terminal consumer, which is either a task or an oomgroup.
->
-> You'd basically iterate through all the tasks and cgroups in the
-> system and pick the biggest task that isn't in an oom group or the
-> biggest oom group and then kill that.
->
-> Yeah, you'd have to compare the memory footprints of tasks with the
-> memory footprints of cgroups. These aren't defined identically, and
-> tasks don't get attributed every type of allocation that a cgroup
-> would. But it should get us in the ballpark, and I cannot picture a
-> scenario where this would lead to a completely undesirable outcome.
+Which is wrong IMHO because the number of stutends is likely much more
+larger than admins (or teachers) yet it might be the admins one to run
+away. This example simply shows how comparing siblinks highly depends
+on the way you organize the hierarchy rather than the actual memory
+consumer runaways which is the primary goal of the OOM killer to handle.
 
-That last sentence:
+> This has been Roman's design from the very beginning.
 
-> I cannot picture a scenario where this would lead to a completely undesirable outcome.
+I suspect this was the case because deeper hierarchies for
+organizational purposes haven't been considered.
 
-I feel like David has offered examples here, and many of us at Google
-have offered examples as long ago as 2013 (if I recall) of cases where
-the proposed heuristic is EXACTLY WRONG.  We need OOM behavior to kill
-in a deterministic order configured by policy.  Sometimes, I would
-literally prefer to kill every other cgroup before killing "the big
-one".  The policy is *all* that matters for shared clusters of varying
-users and priorities.
+> If the preference is to kill 
+> the single largest process, which may be attached to either subtree, you 
+> would not have opted-in to the new heuristic.
 
-We did this in Borg, and it works REALLY well.  Has for years.  Now
-that the world is adopting Kubernetes we need it again, only it's much
-harder to carry a kernel patch in this case.
+I believe you are making a wrong assumption here. The container cleanup
+is sound reason to opt in and deeper hierarchies are simply required in
+the cgroup v2 world where you do not have separate hierarchies.
+ 
+> > > Then, once a cgroup has been chosen as the victim cgroup, 
+> > > kill the process with the highest badness, allowing the user to influence 
+> > > that with /proc/pid/oom_score_adj just as today, if group_oom is disabled; 
+> > > otherwise, kill all eligible processes if enabled.
+> > 
+> > And now, what should be the semantic of group_oom on an intermediate
+> > (non-leaf) memcg? Why should we compare it to other killable entities?
+> > Roman was mentioning a setup where a _single_ workload consists of a
+> > deeper hierarchy which has to be shut down at once. It absolutely makes
+> > sense to consider the cumulative memory of that hierarchy when we are
+> > going to kill it all.
+> > 
+> 
+> If group_oom is enabled on an intermediate memcg, I think the intuitive 
+> way to handle it would be that all descendants are also implicitly or 
+> explicitly group_oom.
+
+This is an interesting point. I would tend to agree here. If somebody
+requires all-in clean up up the hierarchy it feels strange that a
+subtree would disagree (e.g. during memcg oom on the subtree). I can
+hardly see a usecase that would really need a different group_oom policy
+depending on where in the hierarchy the oom happened to be honest.
+Roman?
+
+> It is compared to sibling cgroups based on 
+> cumulative usage at the time of oom and the largest is chosen and 
+> iterated.  The point is to separate out the selection heuristic (policy) 
+> from group_oom (mechanism) so that we don't bias or prefer subtrees based 
+> on group_oom, which makes this much more complex.
+
+I disagree. group_oom determines killable entity and making a decision
+based on a non-killable entities is weird as already pointed out.
+-- 
+Michal Hocko
+SUSE Labs
