@@ -1,89 +1,129 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Wed, 27 Sep 2017 11:19:13 +0100
-Message-ID: <20170927101913.GB4159@castle>
-References: <20170925170004.GA22704@cmpxchg.org>
- <20170925181533.GA15918@castle>
- <20170925202442.lmcmvqwy2jj2tr5h@dhcp22.suse.cz>
- <20170926105925.GA23139@castle.dhcp.TheFacebook.com>
- <20170926112134.r5eunanjy7ogjg5n@dhcp22.suse.cz>
- <20170926121300.GB23139@castle.dhcp.TheFacebook.com>
- <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz>
- <20170926172610.GA26694@cmpxchg.org>
- <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com>
- <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
+Subject: [v9 0/5] cgroup-aware OOM killer
+Date: Wed, 27 Sep 2017 14:09:31 +0100
+Message-ID: <20170927130936.8601-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=5tsB8L2lXjDHLclbvZCz52apU7qV1jje874XjF0qHlM=;
- b=m9JlxknL6o5LgV+5ro2UnYgjGTQjrXTCGRiabrzYIxIry+RThSFxh76dfw/hry8VzEte
- t0IOJrMMJdBNkol9BrFzrXOU08HCuHuFqgWElXI5odf5cVOVELbYGOnL+8DL/lXLFl3v
- DfvlrX6VHQHMuwAlSvuPmeJJi8RS5ROkilQ= 
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=Sl0K8/5wGPuqa8dF/5oxeKjTEIG6ajwSM52gWui4vo4=;
+ b=RNA36umkK0KvbgSLw+SfQUl9PmJ2KmqMpcyJJHh2xVC9v/a9iPiQ0QovtRJWIdcQgqna
+ oz4G2osorE7yTPiCz8CDBlx1l7Zt8fKp/uTsJoHEiQX/1YrItzzPTLN78A8g14zPIpY8
+ 63Fxq55tKgBO0XfS1rvP5UYqQhQVtIeZXgg= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=5tsB8L2lXjDHLclbvZCz52apU7qV1jje874XjF0qHlM=;
- b=DeMv6Gs4RzRzv71+hnjfzEs4mOg4dc8UgU9DunS2X7/E+Qu1AMcsSC6NU2N8h6sYSYB3shqjxYVilykpabfDAVC7AaaePhqwxGH1J3EYJihxYcxOfyokxpTNUkzYIn95UY4QIWTo0l1Ef61rHEbOHcftMGKKzFPtZajGMezI6+M=
-Content-Disposition: inline
-In-Reply-To: <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+ bh=Sl0K8/5wGPuqa8dF/5oxeKjTEIG6ajwSM52gWui4vo4=;
+ b=gHM/4yTXbTqEhBJUMJoVq+9pccWUAexr/ZNQ4/dNWbHHePaWBVtC8erL6qtKTUqd4BS1YBAHVWCZVodH1DpCfxfYYEZKVLLxJBTKeAAl3GPiMldWIyI0ofsRJEjw82oYVhf4HXpFQlxQc2lEbsK1JdDGC7QJRfyO5Gc1EgvSXqs=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Tim Hockin <thockin@hockin.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Sep 27, 2017 at 09:43:19AM +0200, Michal Hocko wrote:
-> On Tue 26-09-17 20:37:37, Tim Hockin wrote:
-> [...]
-> > I feel like David has offered examples here, and many of us at Google
-> > have offered examples as long ago as 2013 (if I recall) of cases where
-> > the proposed heuristic is EXACTLY WRONG.
-> 
-> I do not think we have discussed anything resembling the current
-> approach. And I would really appreciate some more examples where
-> decisions based on leaf nodes would be EXACTLY WRONG.
->
+This patchset makes the OOM killer cgroup-aware.
 
-I would agree here.
+v9:
+  - Change siblings-to-siblings comparison to the tree-wide search,
+    make related refactorings
+  - Make oom_group implicitly propagated down by the tree
+  - Fix an issue with task selection in root cgroup
 
-The discussing two-step approach (select biggest leaf or oom_group memcg,
-then select largest process inside) does really look as a way to go.
+v8:
+  - Do not kill tasks with OOM_SCORE_ADJ -1000
+  - Make the whole thing opt-in with cgroup mount option control
+  - Drop oom_priority for further discussions
+  - Kill the whole cgroup if oom_group is set and it's
+    memory.max is reached
+  - Update docs and commit messages
 
-It should work well in practice and it allows further development.
-It will catch workloads which are leaking child processes by default,
-which is an advantage in comparison to the existing algorithm.
+v7:
+  - __oom_kill_process() drops reference to the victim task
+  - oom_score_adj -1000 is always respected
+  - Renamed oom_kill_all to oom_group
+  - Dropped oom_prio range, converted from short to int
+  - Added a cgroup v2 mount option to disable cgroup-aware OOM killer
+  - Docs updated
+  - Rebased on top of mmotm
 
-Both strong hierarchical approach (as in v8) and pure flat (by Johannes)
-are more limiting. In first case, deep hierarchies are affected (as Michal
-mentioned) and we stick with tree traverse policy (Tejun's point).
+v6:
+  - Renamed oom_control.chosen to oom_control.chosen_task
+  - Renamed oom_kill_all_tasks to oom_kill_all
+  - Per-node NR_SLAB_UNRECLAIMABLE accounting
+  - Several minor fixes and cleanups
+  - Docs updated
 
-In second case, the further development is under a question: any new idea
-(say, oom_priorities, or, for example, if we will have a new useful memcg
-metric) should be applied to processes and memcgs simultaneously.
-Also, We drop any idea of memcg-level fairness and obtain some implementation
-issues (which I mentioned earlier). The idea of mixing tasks and memcgs
-leads to a much more hairy code, and the OOM code is already quite hairy.
-The idea of comparing killable entities is a leaking abstraction,
-as we can't predict how much memory killing a single process will release
-(say, for example, the process is the init in a pid namespace).
+v5:
+  - Rebased on top of Michal Hocko's patches, which have changed the
+    way how OOM victims becoming an access to the memory
+    reserves. Dropped corresponding part of this patchset
+  - Separated the oom_kill_process() splitting into a standalone commit
+  - Added debug output (suggested by David Rientjes)
+  - Some minor fixes
 
-> > We need OOM behavior to kill in a deterministic order configured by
-> > policy.
-> 
-> And nobody is objecting to this usecase. I think we can build a priority
-> policy on top of leaf-based decision as well. The main point we are
-> trying to sort out here is a reasonable semantic that would work for
-> most workloads. Sibling based selection will simply not work on those
-> that have to use deeper hierarchies for organizational purposes. I
-> haven't heard a counter argument for that example yet.
+v4:
+  - Reworked per-cgroup oom_score_adj into oom_priority
+    (based on ideas by David Rientjes)
+  - Tasks with oom_score_adj -1000 are never selected if
+    oom_kill_all_tasks is not set
+  - Memcg victim selection code is reworked, and
+    synchronization is based on finding tasks with OOM victim marker,
+    rather then on global counter
+  - Debug output is dropped
+  - Refactored TIF_MEMDIE usage
 
-Yes, implementing oom_priorities is a ~15 lines patch on top of
-the discussing approach. David can use this small off-stream patch
-for now, in any case it's a step forward in comparison to the existing state.
+v3:
+  - Merged commits 1-4 into 6
+  - Separated oom_score_adj logic and debug output into separate commits
+  - Fixed swap accounting
+
+v2:
+  - Reworked victim selection based on feedback
+    from Michal Hocko, Vladimir Davydov and Johannes Weiner
+  - "Kill all tasks" is now an opt-in option, by default
+    only one process will be killed
+  - Added per-cgroup oom_score_adj
+  - Refined oom score calculations, suggested by Vladimir Davydov
+  - Converted to a patchset
+
+v1:
+  https://lkml.org/lkml/2017/5/18/969
 
 
-Overall, do we have any open question left? Does anyone has any strong
-arguments against the discussing design?
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 
-Thanks!
+Roman Gushchin (5):
+  mm, oom: refactor the oom_kill_process() function
+  mm: implement mem_cgroup_scan_tasks() for the root memory cgroup
+  mm, oom: cgroup-aware OOM killer
+  mm, oom: add cgroup v2 mount option for cgroup-aware OOM killer
+  mm, oom, docs: describe the cgroup-aware OOM killer
+
+ Documentation/cgroup-v2.txt |  44 +++++++++
+ include/linux/cgroup-defs.h |   5 +
+ include/linux/memcontrol.h  |  38 +++++++
+ include/linux/oom.h         |  12 ++-
+ kernel/cgroup/cgroup.c      |  10 ++
+ mm/memcontrol.c             | 235 +++++++++++++++++++++++++++++++++++++++++++-
+ mm/oom_kill.c               | 194 +++++++++++++++++++++++-------------
+ 7 files changed, 465 insertions(+), 73 deletions(-)
+
+-- 
+2.13.5
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
