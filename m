@@ -1,45 +1,143 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET REPOST for-4.15] cgroup, sched: cgroup2 interface for
- CPU controller (on basic acct)
-Date: Fri, 29 Sep 2017 14:31:14 -0700
-Message-ID: <20170929213113.GA3301751@devbig577.frc2.facebook.com>
-References: <20170925160019.683562-1-tj@kernel.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [v8 0/4] cgroup-aware OOM killer
+Date: Sun, 1 Oct 2017 16:29:48 -0700
+Message-ID: <CALvZod7iaOEeGmDJA0cZvJWpuzc-hMRn3PG2cfzcMniJtAjKqA@mail.gmail.com>
+References: <20170925181533.GA15918@castle> <20170925202442.lmcmvqwy2jj2tr5h@dhcp22.suse.cz>
+ <20170926105925.GA23139@castle.dhcp.TheFacebook.com> <20170926112134.r5eunanjy7ogjg5n@dhcp22.suse.cz>
+ <20170926121300.GB23139@castle.dhcp.TheFacebook.com> <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz>
+ <20170926172610.GA26694@cmpxchg.org> <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com>
+ <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz> <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
+ <20170927162300.GA5623@castle.DHCP.thefacebook.com> <CAAAKZwtApj-FgRc2V77nEb3BUd97Rwhgf-b-k0zhf1u+Y4fqxA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=kAQCReZxPZr2v3BwgxdUDZHMAWQ03Jd4zOKTRLFn8ao=;
-        b=UD1u538u5+O2oNpFx9DVRXsC3r66hw2LDuq7cntQ0ruOZzfukgUSAcUuhIuWoL793m
-         hR8jojafcvqIHBXK7rvuEMcSrPXtlyeJBqO2hpxgl65dOsjLaVpZlSwLvMGbuCw+Ck+u
-         ulUouLgycszH0hPD1o490kItbYuHp2ITQBB6ZUPJiqgempOhztwLG73OBa/telK2qhM6
-         RYmouk4uBp1gTkz3yxyx1emyM9UuKKr+70ZFGymV+bN4o2F6KHW98HmgLElI0v8Jf9w2
-         jC21pjZlT2NRDigF5Zp/cEDTHLrc6QqKRYULJT9mgMTVFoHSG9Alkkp9DLRaFNpr7qc9
-         nx4Q==
-Content-Disposition: inline
-In-Reply-To: <20170925160019.683562-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=cZv+c0vIzb27+D+vOSj0/jnQGoA7EWpQwfpXl/x98Mk=;
+        b=TWd4boEnNSIW5e6Som84Btxr+zDmIwTxOoA0Rlyx+J8i9wmfLvCY/T78/YyBdCJDSB
+         AkQUN46Y/T4NRRrWsJRuGh9cq5ir6sA5jfu7hLTyxJm332Iy86nFOqSBqTvAY78TQvvY
+         VTcf6mxxOMHq2DFu9I5wl/Nv5p0KInpTa2nUYqKVuao/QUQuqIcrhvhVB2Nu65CCjkK4
+         dwMTHwtKLlK5PLus3RF6DkTL89bBHN0ElkAhfn5QIez5l5w6YR4rl3jwPEiLRw6kNW9f
+         imn3FW9227NfsfNz2Odc+aZP7792TokrwK+OGKnnEZ9D3nuZBsJP1xHD8dkzRN3qkdWU
+         FXOQ==
+In-Reply-To: <CAAAKZwtApj-FgRc2V77nEb3BUd97Rwhgf-b-k0zhf1u+Y4fqxA@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com
-Cc: longman@redhat.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, guro@fb.com
+To: Tim Hockin <thockin@hockin.org>
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, Linux MM <linux-mm@kvack.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Mon, Sep 25, 2017 at 09:00:17AM -0700, Tejun Heo wrote:
-> Hello,
-> 
-> (Rebased on cgroup/for-4.15, no real changes.  Once acked, I think
->  it'd be easiest to route these through the cgroup branch;
->  alternatively, we can pull cgroup/for-4.15 to a sched branch and
->  apply these there.)
-> 
-> These are two patches to implement the cgroup2 CPU controller
-> interface.  Changes from the last revision[L].
+>
+> Going back to Michal's example, say the user configured the following:
+>
+>        root
+>       /    \
+>      A      D
+>     / \
+>    B   C
+>
+> A global OOM event happens and we find this:
+> - A > D
+> - B, C, D are oomgroups
+>
+> What the user is telling us is that B, C, and D are compound memory
+> consumers. They cannot be divided into their task parts from a memory
+> point of view.
+>
+> However, the user doesn't say the same for A: the A subtree summarizes
+> and controls aggregate consumption of B and C, but without groupoom
+> set on A, the user says that A is in fact divisible into independent
+> memory consumers B and C.
+>
+> If we don't have to kill all of A, but we'd have to kill all of D,
+> does it make sense to compare the two?
+>
 
-Applied to cgroup/for-4.15.
+I think Tim has given very clear explanation why comparing A & D makes
+perfect sense. However I think the above example, a single user system
+where a user has designed and created the whole hierarchy and then
+attaches different jobs/applications to different nodes in this
+hierarchy, is also a valid scenario. One solution I can think of, to
+cater both scenarios, is to introduce a notion of 'bypass oom' or not
+include a memcg for oom comparision and instead include its children
+in the comparison.
 
-Thanks.
+So, in the same above example:
+        root
+       /       \
+      A(b)    D
+     /  \
+    B   C
 
--- 
-tejun
+A is marked as bypass and thus B and C are to be compared to D. So,
+for the single user scenario, all the internal nodes are marked
+'bypass oom comparison' and oom_priority of the leaves has to be set
+to the same value.
+
+Below is the pseudo code of select_victim_memcg() based on this idea
+and David's previous pseudo code. The calculation of size of a memcg
+is still not very well baked here yet. I am working on it and I plan
+to have a patch based on Roman's v9 "mm, oom: cgroup-aware OOM killer"
+patch.
+
+
+        struct mem_cgroup *memcg = root_mem_cgroup;
+        struct mem_cgroup *selected_memcg = root_mem_cgroup;
+        struct mem_cgroup *low_memcg;
+        unsigned long low_priority;
+        unsigned long prev_badness = memcg_oom_badness(memcg); // Roman's code
+        LIST_HEAD(queue);
+
+next_level:
+        low_memcg = NULL;
+        low_priority = ULONG_MAX;
+
+next:
+        for_each_child_of_memcg(it, memcg) {
+                unsigned long prio = it->oom_priority;
+                unsigned long badness = 0;
+
+                if (it->bypass_oom && !it->oom_group &&
+memcg_has_children(it)) {
+                        list_add(&it->oom_queue, &queue);
+                        continue;
+                }
+
+                if (prio > low_priority)
+                        continue;
+
+                if (prio == low_priority) {
+                        badness = mem_cgroup_usage(it); // for
+simplicity, need more thinking
+                        if (badness < prev_badness)
+                                continue;
+                }
+
+                low_memcg = it;
+                low_priority = prio;
+                prev_badness = badness ?: mem_cgroup_usage(it);  //
+for simplicity
+        }
+        if (!list_empty(&queue)) {
+                memcg = list_last_entry(&queue, struct mem_cgroup, oom_queue);
+                list_del(&memcg->oom_queue);
+                goto next;
+        }
+        if (low_memcg) {
+                selected_memcg = memcg = low_memcg;
+                prev_badness = 0;
+                if (!low_memcg->oom_group)
+                        goto next_level;
+        }
+        if (selected_memcg->oom_group)
+                oom_kill_memcg(selected_memcg);
+        else
+                oom_kill_process_from_memcg(selected_memcg);
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
