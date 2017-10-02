@@ -1,63 +1,41 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Shakeel Butt <shakeelb@google.com>
 Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Mon, 2 Oct 2017 21:28:14 +0200
-Message-ID: <20171002192814.sad75tqklp3nmr4m@dhcp22.suse.cz>
+Date: Mon, 2 Oct 2017 12:45:18 -0700
+Message-ID: <CALvZod4=+GVg+hrT4ubp9P4b+LUZ+q9mz4ztC=Fc_cmTZmvpcw@mail.gmail.com>
 References: <20170926133040.uupv3ibkt3jtbotf@dhcp22.suse.cz>
- <20170926172610.GA26694@cmpxchg.org>
- <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com>
- <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz>
- <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
- <20170927162300.GA5623@castle.DHCP.thefacebook.com>
- <CAAAKZwtApj-FgRc2V77nEb3BUd97Rwhgf-b-k0zhf1u+Y4fqxA@mail.gmail.com>
+ <20170926172610.GA26694@cmpxchg.org> <CAAAKZws88uF2dVrXwRV0V6AH5X68rWy7AfJxTxYjpuiyiNJFWA@mail.gmail.com>
+ <20170927074319.o3k26kja43rfqmvb@dhcp22.suse.cz> <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
+ <20170927162300.GA5623@castle.DHCP.thefacebook.com> <CAAAKZwtApj-FgRc2V77nEb3BUd97Rwhgf-b-k0zhf1u+Y4fqxA@mail.gmail.com>
  <CALvZod7iaOEeGmDJA0cZvJWpuzc-hMRn3PG2cfzcMniJtAjKqA@mail.gmail.com>
- <20171002122434.llbaarb6yw3o3mx3@dhcp22.suse.cz>
- <CALvZod65LYZZYy6uE=DQaQRPXYAhAci=NMG_w=ZANPGATgRwfg@mail.gmail.com>
+ <20171002122434.llbaarb6yw3o3mx3@dhcp22.suse.cz> <CALvZod65LYZZYy6uE=DQaQRPXYAhAci=NMG_w=ZANPGATgRwfg@mail.gmail.com>
+ <20171002192814.sad75tqklp3nmr4m@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CALvZod65LYZZYy6uE=DQaQRPXYAhAci=NMG_w=ZANPGATgRwfg@mail.gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=svpG0jYDhwoiuvs1oQWXY4S30o5tZT0OGvwLjR4O4iM=;
+        b=iGURmybtFLK2aMSIlEJagqKnv1dtYN2tx+VOZugmnyXhZNSm3eFSjeSPA8ZxVLAxqL
+         2h2h5lgrwqy/9a34GHwpXsa0rB2EOT1TarEaJDfAHEIYNcPvgITAFH2ukLUTq5nbJZ5J
+         /eIhp55ZBNxybYxyzgx/L+q2qHfYUP13Anq1aG+a1KrCOBBvQr72NjHelT5Wlm/tPeB8
+         wNGEGL46lN0pwu70+D8rtWQmWRTDLI6v/2AurrpN70UG7PvBtk04PwNyY0Xy0JgUkvC1
+         wwgyt2d4zhJfiOT0QDy3TvNRxRcJqueq5YOt3nBsxUsyAorQl4QgwIP0N0wZrShERwnW
+         OkGA==
+In-Reply-To: <20171002192814.sad75tqklp3nmr4m@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
+To: Michal Hocko <mhocko@kernel.org>
 Cc: Tim Hockin <thockin@hockin.org>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, Linux MM <linux-mm@kvack.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Mon 02-10-17 12:00:43, Shakeel Butt wrote:
-> > Yes and nobody is disputing that, really. I guess the main disconnect
-> > here is that different people want to have more detailed control over
-> > the victim selection while the patchset tries to handle the most
-> > simplistic scenario when a no userspace control over the selection is
-> > required. And I would claim that this will be a last majority of setups
-> > and we should address it first.
-> 
-> IMHO the disconnect/disagreement is which memcgs should be compared
-> with each other for oom victim selection. Let's forget about oom
-> priority and just take size into the account. Should the oom selection
-> algorithm, compare the leaves of the hierarchy or should it compare
-> siblings? For the single user system, comparing leaves makes sense
-> while in a multi user system, siblings should be compared for victim
-> selection.
+> I am sorry to cut the rest of your proposal because it simply goes over
+> the scope of the proposed solution while the usecase you are mentioning
+> is still possible. If we want to compare intermediate nodes (which seems
+> to be the case) then we can always provide a knob to opt-in - be it your
+> oom_gang or others.
 
-THis is simply not true. This is not about single vs. multi user
-systems. This is about how the memcg hierarchy is organized (please
-have a look at the example I've provided previously). I would dare to
-claim that comparing siblings is a weaker semantic just because it puts
-stronger constrains on how the hierarchy is organized. Especially when
-the cgrou v2 is single hierarchy based (so we cannot create intermediate
-cgroup nodes for other controllers because we would automatically get
-a cumulative memory consumption).
-
-I am sorry to cut the rest of your proposal because it simply goes over
-the scope of the proposed solution while the usecase you are mentioning
-is still possible. If we want to compare intermediate nodes (which seems
-to be the case) then we can always provide a knob to opt-in - be it your
-oom_gang or others.
-
-I am sorry but I would really appreciate to focus on making the step
-1  done before diverging into details about potential improvements and a
-better control over the selection. This whole thing is an opt-in so
-there is a no risk of a regression.
--- 
-Michal Hocko
-SUSE Labs
+In the Roman's proposed solution we can already force the comparison
+of intermediate nodes using 'oom_group', I am just requesting to
+separate the killall semantics from it.
