@@ -1,51 +1,89 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v8 0/4] cgroup-aware OOM killer
-Date: Mon, 2 Oct 2017 22:55:52 +0200
-Message-ID: <20171002205552.3ygveyd7yrcvkz7u@dhcp22.suse.cz>
-References: <CAAAKZws2CFExeg6A9AzrGjiHnFHU1h2xdk6J5Jw2kqxy=V+_YQ@mail.gmail.com>
- <20170927162300.GA5623@castle.DHCP.thefacebook.com>
- <CAAAKZwtApj-FgRc2V77nEb3BUd97Rwhgf-b-k0zhf1u+Y4fqxA@mail.gmail.com>
- <CALvZod7iaOEeGmDJA0cZvJWpuzc-hMRn3PG2cfzcMniJtAjKqA@mail.gmail.com>
- <20171002122434.llbaarb6yw3o3mx3@dhcp22.suse.cz>
- <CALvZod65LYZZYy6uE=DQaQRPXYAhAci=NMG_w=ZANPGATgRwfg@mail.gmail.com>
- <20171002192814.sad75tqklp3nmr4m@dhcp22.suse.cz>
- <CALvZod4=+GVg+hrT4ubp9P4b+LUZ+q9mz4ztC=Fc_cmTZmvpcw@mail.gmail.com>
- <20171002195601.3jeocmmzyf2jl3dw@dhcp22.suse.cz>
- <CALvZod5qiF_7k=D7uiF=GwQEgc7Vztn-DNYMxsnmKGrk3DaYBQ@mail.gmail.com>
+Subject: Re: [v9 2/5] mm: implement mem_cgroup_scan_tasks() for the root
+ memory cgroup
+Date: Tue, 3 Oct 2017 12:49:39 +0200
+Message-ID: <20171003104939.vm7pezgef7bqxe2v@dhcp22.suse.cz>
+References: <20170927130936.8601-1-guro@fb.com>
+ <20170927130936.8601-3-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CALvZod5qiF_7k=D7uiF=GwQEgc7Vztn-DNYMxsnmKGrk3DaYBQ@mail.gmail.com>
+In-Reply-To: <20170927130936.8601-3-guro@fb.com>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Tim Hockin <thockin@hockin.org>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, David Rientjes <rientjes@google.com>, Linux MM <linux-mm@kvack.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 02-10-17 13:24:25, Shakeel Butt wrote:
-> On Mon, Oct 2, 2017 at 12:56 PM, Michal Hocko <mhocko@kernel.org> wrote:
-> > On Mon 02-10-17 12:45:18, Shakeel Butt wrote:
-> >> > I am sorry to cut the rest of your proposal because it simply goes over
-> >> > the scope of the proposed solution while the usecase you are mentioning
-> >> > is still possible. If we want to compare intermediate nodes (which seems
-> >> > to be the case) then we can always provide a knob to opt-in - be it your
-> >> > oom_gang or others.
-> >>
-> >> In the Roman's proposed solution we can already force the comparison
-> >> of intermediate nodes using 'oom_group', I am just requesting to
-> >> separate the killall semantics from it.
-> >
-> > oom_group _is_ about killall semantic.  And comparing killable entities
-> > is just a natural thing to do. So I am not sure what you mean
-> >
+On Wed 27-09-17 14:09:33, Roman Gushchin wrote:
+> Implement mem_cgroup_scan_tasks() functionality for the root
+> memory cgroup to use this function for looking for a OOM victim
+> task in the root memory cgroup by the cgroup-ware OOM killer.
 > 
-> I am saying decouple the notion of comparable entities and killable entities.
+> The root memory cgroup should be treated as a leaf cgroup,
+> so only tasks which are directly belonging to the root cgroup
+> should be iterated over.
 
-There is no strong (bijection) relation there. Right now killable
-entities are comparable (which I hope we agree is the right thing to do)
-but nothing really prevents even non-killable entities to be compared in
-the future.
+I would only add that this patch doesn't introduce any functionally
+visible change because we never trigger oom killer with the root memcg
+as the root of the hierarchy. So this is just a preparatory work for
+later changes.
+
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Cc: David Rientjes <rientjes@google.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: kernel-team@fb.com
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-mm@kvack.org
+
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
+>  mm/memcontrol.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ae37b5624eb2..fa1a5120ce3f 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -917,7 +917,8 @@ static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
+>   * value, the function breaks the iteration loop and returns the value.
+>   * Otherwise, it will iterate over all tasks and return 0.
+>   *
+> - * This function must not be called for the root memory cgroup.
+> + * If memcg is the root memory cgroup, this function will iterate only
+> + * over tasks belonging directly to the root memory cgroup.
+>   */
+>  int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
+>  			  int (*fn)(struct task_struct *, void *), void *arg)
+> @@ -925,8 +926,6 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
+>  	struct mem_cgroup *iter;
+>  	int ret = 0;
+>  
+> -	BUG_ON(memcg == root_mem_cgroup);
+> -
+>  	for_each_mem_cgroup_tree(iter, memcg) {
+>  		struct css_task_iter it;
+>  		struct task_struct *task;
+> @@ -935,7 +934,7 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
+>  		while (!ret && (task = css_task_iter_next(&it)))
+>  			ret = fn(task, arg);
+>  		css_task_iter_end(&it);
+> -		if (ret) {
+> +		if (ret || memcg == root_mem_cgroup) {
+>  			mem_cgroup_iter_break(memcg, iter);
+>  			break;
+>  		}
+> -- 
+> 2.13.5
 
 -- 
 Michal Hocko
