@@ -1,97 +1,82 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [v9 3/5] mm, oom: cgroup-aware OOM killer
-Date: Tue, 3 Oct 2017 16:22:46 +0200
-Message-ID: <20171003142246.xactdt7xddqdhvtu@dhcp22.suse.cz>
+Date: Tue, 3 Oct 2017 07:35:59 -0700
+Message-ID: <20171003143559.GJ3301751@devbig577.frc2.facebook.com>
 References: <20170927130936.8601-1-guro@fb.com>
  <20170927130936.8601-4-guro@fb.com>
  <20171003114848.gstdawonla2gmfio@dhcp22.suse.cz>
  <20171003123721.GA27919@castle.dhcp.TheFacebook.com>
  <20171003133623.hoskmd3fsh4t2phf@dhcp22.suse.cz>
  <20171003140841.GA29624@castle.DHCP.thefacebook.com>
+ <20171003142246.xactdt7xddqdhvtu@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ylOrKRyrLWo3DgB5+vAQtZgDBTEv1vqGn/QYUX1mCkw=;
+        b=tHppWYd+i/Xabbe2BdgTgTIXZceIqdp1F25D6vGR7tVjmx190HqSSpWjNSlS5WX33Z
+         96ZY0ZeF3In28iXeFsFK62auweMN8JeXwpAjWUFf0vEpUYpXxQhhFx2VMwUDQniUR74q
+         FS6iSjNAmE/CQqMk+S4cmS3RUoLztYfk2afQncJjF07FfFAeh5DsfBRLPXvkWVN6q7ko
+         yFMv1qTXPBZBlpYjOKn2LKYVYDk6rNtJRSN1t8NGXjjzhizvZGQ3WD9VeVWr96X4DCcl
+         CcvPPiCuCcCBba8eP3vBkz5tF05Tx9kn1KhUz3rz8W3pWFTgnC9fdSU7uk35eiteapl5
+         m8Xw==
 Content-Disposition: inline
-In-Reply-To: <20171003140841.GA29624@castle.DHCP.thefacebook.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20171003142246.xactdt7xddqdhvtu-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 03-10-17 15:08:41, Roman Gushchin wrote:
-> On Tue, Oct 03, 2017 at 03:36:23PM +0200, Michal Hocko wrote:
-[...]
-> > I guess we want to inherit the value on the memcg creation but I agree
-> > that enforcing parent setting is weird. I will think about it some more
-> > but I agree that it is saner to only enforce per memcg value.
+Hello, Michal.
+
+On Tue, Oct 03, 2017 at 04:22:46PM +0200, Michal Hocko wrote:
+> On Tue 03-10-17 15:08:41, Roman Gushchin wrote:
+> > On Tue, Oct 03, 2017 at 03:36:23PM +0200, Michal Hocko wrote:
+> [...]
+> > > I guess we want to inherit the value on the memcg creation but I agree
+> > > that enforcing parent setting is weird. I will think about it some more
+> > > but I agree that it is saner to only enforce per memcg value.
+> > 
+> > I'm not against, but we should come up with a good explanation, why we're
+> > inheriting it; or not inherit.
 > 
-> I'm not against, but we should come up with a good explanation, why we're
-> inheriting it; or not inherit.
+> Inheriting sounds like a less surprising behavior. Once you opt in for
+> oom_group you can expect that descendants are going to assume the same
+> unless they explicitly state otherwise.
 
-Inheriting sounds like a less surprising behavior. Once you opt in for
-oom_group you can expect that descendants are going to assume the same
-unless they explicitly state otherwise.
+Here's a counter example.
 
-[...]
-> > > > > @@ -962,6 +968,48 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
-> > > > >  	__oom_kill_process(victim);
-> > > > >  }
-> > > > >  
-> > > > > +static int oom_kill_memcg_member(struct task_struct *task, void *unused)
-> > > > > +{
-> > > > > +	if (!tsk_is_oom_victim(task)) {
-> > > > 
-> > > > How can this happen?
-> > > 
-> > > We do start with killing the largest process, and then iterate over all tasks
-> > > in the cgroup. So, this check is required to avoid killing tasks which are
-> > > already in the termination process.
-> > 
-> > Do you mean we have tsk_is_oom_victim && MMF_OOM_SKIP == T?
-> 
-> No, just tsk_is_oom_victim. We're are killing the biggest task, and then _all_
-> tasks. This is a way to skip the biggest task, and do not kill it again.
+Let's say there's a container which hosts one main application, and
+the container shares its host with other containers.
 
-OK, I have missed that part. Why are we doing that actually? Why don't
-we simply do 
-	/* If oom_group flag is set, kill all belonging tasks */
-	if (mem_cgroup_oom_group(oc->chosen_memcg))
-		mem_cgroup_scan_tasks(oc->chosen_memcg, oom_kill_memcg_member,
-				      NULL);
+* Let's say the container is a regular containerized OS instance and
+  can't really guarantee system integrity if one its processes gets
+  randomly killed.
 
-we are going to kill all the tasks anyway.
+* However, the application that it's running inside an isolated cgroup
+  is more intelligent and composed of multiple interchangeable
+  processes and can treat killing of a random process as partial
+  capacity loss.
 
-[...]
-> > > > Hmm, does the full dump_header really apply for the new heuristic? E.g.
-> > > > does it make sense to dump_tasks()? Would it make sense to print stats
-> > > > of all eligible memcgs instead?
-> > > 
-> > > Hm, this is a tricky part: the dmesg output is at some point a part of ABI,
-> > 
-> > People are parsing oom reports but I disagree this is an ABI of any
-> > sort. The report is closely tight to the particular implementation and
-> > as such it has changed several times over the time.
-> > 
-> > > but is also closely connected with the implementation. So I would suggest
-> > > to postpone this until we'll get more usage examples and will better
-> > > understand what information we need.
-> > 
-> > I would drop tasks list at least because that is clearly misleading in
-> > this context because we are not selecting from all tasks. We are
-> > selecting between memcgs. The memcg information can be added in a
-> > separate patch of course.
-> 
-> Let's postpone it until we'll land the rest of the patchset.
+When the host is setting up the outer container, it doesn't
+necessarily know whether the containerized environment would be able
+to handle partial OOM kills or not.  It's akin to panic_on_oom setting
+at system level - it's the containerized instance itself which knows
+whether it can handle partial OOM kills or not.  This is why this knob
+should be delegatable.
 
-This is certainly not a show stopper but I would like to resolve it
-sooner rather than later.
+Now, the container itself has group OOM set and the isolated main
+application is starting up.  It obviously wants partial OOM kills
+rather than group killing.  This is the same principle.  The
+application which is being contained in the cgroup is the one which
+knows how it can handle OOM conditions, not the outer environment, so
+it obviously needs to be able to set the configuration it wants.
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
