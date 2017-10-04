@@ -1,89 +1,103 @@
-From: Shakeel Butt <shakeelb@google.com>
+From: Roman Gushchin <guro@fb.com>
 Subject: Re: [v10 3/6] mm, oom: cgroup-aware OOM killer
-Date: Wed, 4 Oct 2017 12:48:03 -0700
-Message-ID: <CALvZod6bwyoSWTv139y0wMidpZm5HcDu8RzVjF8U7GHxAzxSQw@mail.gmail.com>
-References: <20171004154638.710-1-guro@fb.com> <20171004154638.710-4-guro@fb.com>
+Date: Wed, 4 Oct 2017 20:51:10 +0100
+Message-ID: <20171004195110.GA18900@castle>
+References: <20171004154638.710-1-guro@fb.com>
+ <20171004154638.710-4-guro@fb.com>
+ <20171004192720.GC1501@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=Px/worLUEqc7v7NkCMpPzb0GQz4qkBwzYlEECgdBgBM=;
-        b=ZLOVwmjUl5L0c/N7O95LBp+KaoyQj8wY8X38JvRliaohzaH3b+GkpNgOZf+5fV5H9E
-         uILsh/YXuJQxLU4sF9p9e1FkdJ14xuwjIJgSPCaETFuYcjB/ZCXvILPpi/4zw/+yufqY
-         F52zKFM4TSD3cv4KkMEBYwHr0YxvoGxMGGtA2mSDRzYjNQa8x1SuEfgSjowM73zK6jc/
-         a6Hn+g7AZGHiL/LZomkXpL1sE3Taa4NbXXAYL3x/n1ty6WMPWKCYL/rzgO83YVK0YCmG
-         Gs/YJxEl/Dnm9gFv0YooW4/BqNkfByGXM0wOr4WwEjT2ItXs5Yx9pNYsz12aa9yUCGRC
-         gvpQ==
-In-Reply-To: <20171004154638.710-4-guro@fb.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=XfeQXVT86PBnW6yk/E6UyxRrTCsdEEz4HaS5CVmQRps=;
+ b=l6W3ETBM1Gx42rjErDXdVUcnpeCzqkDLjB7iZbN97CWa7kEMagrTCPTXNpYWbP2Stl9Z
+ sJ/P7R+ZCTo5+7i06YEjle48txKfwQ1Q6k85TEf2JgH4IASWwq9awIcSsOVU286I8z+h
+ V88ThMMekqznLg+JqcDUFGDQF6pxTmFKmD4= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=XfeQXVT86PBnW6yk/E6UyxRrTCsdEEz4HaS5CVmQRps=;
+ b=ROxPumzl1U0PsOcVsp4W4o7PQSG2px5hh7Q06XUn7ONzJWhtch8QUCJQG2K8D3Lenp2XQfQqmDWm0NTmGqTIEwyAZ/dFah1Y/WArOqPg+vUQuVSUuohDwbMnjvu+cCmiG9rqH6t08qiiF+Y1AqCEG+e0yWrtUmoflqlNvVGgEH4=
+Content-Disposition: inline
+In-Reply-To: <20171004192720.GC1501@cmpxchg.org>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Linux MM <linux-mm@kvack.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> +
-> +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
-> +{
-> +       struct mem_cgroup *iter;
-> +
-> +       oc->chosen_memcg = NULL;
-> +       oc->chosen_points = 0;
-> +
-> +       /*
-> +        * The oom_score is calculated for leaf memory cgroups (including
-> +        * the root memcg).
-> +        */
-> +       rcu_read_lock();
-> +       for_each_mem_cgroup_tree(iter, root) {
-> +               long score;
-> +
-> +               if (memcg_has_children(iter))
-> +                       continue;
+On Wed, Oct 04, 2017 at 03:27:20PM -0400, Johannes Weiner wrote:
+> On Wed, Oct 04, 2017 at 04:46:35PM +0100, Roman Gushchin wrote:
+> > Traditionally, the OOM killer is operating on a process level.
+> > Under oom conditions, it finds a process with the highest oom score
+> > and kills it.
+> > 
+> > This behavior doesn't suit well the system with many running
+> > containers:
+> > 
+> > 1) There is no fairness between containers. A small container with
+> > few large processes will be chosen over a large one with huge
+> > number of small processes.
+> > 
+> > 2) Containers often do not expect that some random process inside
+> > will be killed. In many cases much safer behavior is to kill
+> > all tasks in the container. Traditionally, this was implemented
+> > in userspace, but doing it in the kernel has some advantages,
+> > especially in a case of a system-wide OOM.
+> > 
+> > To address these issues, the cgroup-aware OOM killer is introduced.
+> > 
+> > Under OOM conditions, it looks for the biggest leaf memory cgroup
+> > and kills the biggest task belonging to it. The following patches
+> > will extend this functionality to consider non-leaf memory cgroups
+> > as well, and also provide an ability to kill all tasks belonging
+> > to the victim cgroup.
+> > 
+> > The root cgroup is treated as a leaf memory cgroup, so it's score
+> > is compared with leaf memory cgroups.
+> > Due to memcg statistics implementation a special algorithm
+> > is used for estimating it's oom_score: we define it as maximum
+> > oom_score of the belonging tasks.
+> > 
+> > Signed-off-by: Roman Gushchin <guro@fb.com>
+> > Cc: Michal Hocko <mhocko@kernel.org>
+> > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> > Cc: Johannes Weiner <hannes@cmpxchg.org>
+> > Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > Cc: David Rientjes <rientjes@google.com>
+> > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: kernel-team@fb.com
+> > Cc: cgroups@vger.kernel.org
+> > Cc: linux-doc@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Cc: linux-mm@kvack.org
+> 
+> This looks good to me.
+> 
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> I just have one question:
+> 
+> > @@ -828,6 +828,12 @@ static void __oom_kill_process(struct task_struct *victim)
+> >  	struct mm_struct *mm;
+> >  	bool can_oom_reap = true;
+> >  
+> > +	if (is_global_init(victim) || (victim->flags & PF_KTHREAD) ||
+> > +	    victim->signal->oom_score_adj == OOM_SCORE_ADJ_MIN) {
+> > +		put_task_struct(victim);
+> > +		return;
+> > +	}
+> > +
+> >  	p = find_lock_task_mm(victim);
+> >  	if (!p) {
+> >  		put_task_struct(victim);
+> 
+> Is this necessary? The callers of this function use oom_badness() to
+> find a victim, and that filters init, kthread, OOM_SCORE_ADJ_MIN.
 
-&& iter != root_mem_cgroup ?
+It is. __oom_kill_process() is used to kill all processes belonging
+to the selected memory cgroup, so we should perform these checks
+to avoid killing unkillable processes.
 
-> +
-> +               score = oom_evaluate_memcg(iter, oc->nodemask, oc->totalpages);
-> +
-> +               /*
-> +                * Ignore empty and non-eligible memory cgroups.
-> +                */
-> +               if (score == 0)
-> +                       continue;
-> +
-> +               /*
-> +                * If there are inflight OOM victims, we don't need
-> +                * to look further for new victims.
-> +                */
-> +               if (score == -1) {
-> +                       oc->chosen_memcg = INFLIGHT_VICTIM;
-> +                       mem_cgroup_iter_break(root, iter);
-> +                       break;
-> +               }
-> +
-
-Shouldn't there be a CSS_ONLINE check? Also instead of css_get at the
-end why not css_tryget_online() here and css_put for the previous
-selected one.
-
-> +               if (score > oc->chosen_points) {
-> +                       oc->chosen_points = score;
-> +                       oc->chosen_memcg = iter;
-> +               }
-> +       }
-> +
-> +       if (oc->chosen_memcg && oc->chosen_memcg != INFLIGHT_VICTIM)
-> +               css_get(&oc->chosen_memcg->css);
-> +
-> +       rcu_read_unlock();
-> +}
-> +
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks!
