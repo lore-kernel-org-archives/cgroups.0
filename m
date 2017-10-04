@@ -1,65 +1,81 @@
-From: Vladimir Davydov <vdavydov.dev@gmail.com>
-Subject: Re: crash during new kmem-limited memory cgroup creation if
- kmem_cache has been created when previous memory cgroup were inactive
-Date: Tue, 3 Oct 2017 19:09:44 +0300
-Message-ID: <20171003160944.ojiek7wtu3cmyow6@esperanza>
-References: <0537E873-CE22-4E6D-912A-6C8FDCF85493@intel.com>
- <20171002143244.lrp5nd2rf3lmjsql@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [v9 3/5] mm, oom: cgroup-aware OOM killer
+Date: Wed, 4 Oct 2017 11:29:38 +0200
+Message-ID: <20171004092938.nipd6mtywyy4im44@dhcp22.suse.cz>
+References: <20170927130936.8601-1-guro@fb.com>
+ <20170927130936.8601-4-guro@fb.com>
+ <20171003114848.gstdawonla2gmfio@dhcp22.suse.cz>
+ <20171003123721.GA27919@castle.dhcp.TheFacebook.com>
+ <20171003133623.hoskmd3fsh4t2phf@dhcp22.suse.cz>
+ <20171003140841.GA29624@castle.DHCP.thefacebook.com>
+ <20171003142246.xactdt7xddqdhvtu@dhcp22.suse.cz>
+ <20171003143559.GJ3301751@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=MIGe0JhWYZtgrX2k93zXfp2Lqv0V2U3uLXzoEiOL2oE=;
-        b=XDqS7OcacNWd4XSig7vMfytoQdL7eDzB/oDURtjEwak91gYeNgL1ohue8n+TipCodm
-         YCbWh14J5FOBKw2OSvK2bauBc79+LM3GNFatXe0aaiQtLDTH3EA63mskrPmFE81ZchtX
-         MQ+QlI1RE1SMNRD+XEpqaDdWZFQEB8CZ64i817f/xR5TKkEwmw0m2hOj6/Dqo7lSdC0T
-         BY4cMCQT9+q9VyKVkM1X56cQJyyyEoOvPDstvTDBxYfiA1FT+q08xPMvLIUGlh4aIzvT
-         zAkazN4yrXnaSyf58hXgmo82clOLmyipA+P48R/QEzmSLxdDVtkesvfxqWm4Q1xjMuya
-         TivA==
 Content-Disposition: inline
-In-Reply-To: <20171002143244.lrp5nd2rf3lmjsql@dhcp22.suse.cz>
+In-Reply-To: <20171003143559.GJ3301751@devbig577.frc2.facebook.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "Faccini, Bruno" <bruno.faccini@intel.com>
-Cc: Michal Hocko <mhocko@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello Bruno,
-
-On Mon, Oct 02, 2017 at 04:32:44PM +0200, Michal Hocko wrote:
-> [CC Vldimir and linux-mm]
+On Tue 03-10-17 07:35:59, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> On Tue 19-09-17 22:42:37, Faccini, Bruno wrote:
-> > The panic thread’s stack looks like :
-> > ============================
-> > [38212.118675] BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-> > [38212.120795] IP: [<ffffffff811dbb04>] __memcg_kmem_get_cache+0xe4/0x220
+> On Tue, Oct 03, 2017 at 04:22:46PM +0200, Michal Hocko wrote:
+> > On Tue 03-10-17 15:08:41, Roman Gushchin wrote:
+> > > On Tue, Oct 03, 2017 at 03:36:23PM +0200, Michal Hocko wrote:
+> > [...]
+> > > > I guess we want to inherit the value on the memcg creation but I agree
+> > > > that enforcing parent setting is weird. I will think about it some more
+> > > > but I agree that it is saner to only enforce per memcg value.
+> > > 
+> > > I'm not against, but we should come up with a good explanation, why we're
+> > > inheriting it; or not inherit.
+> > 
+> > Inheriting sounds like a less surprising behavior. Once you opt in for
+> > oom_group you can expect that descendants are going to assume the same
+> > unless they explicitly state otherwise.
+> 
+> Here's a counter example.
+> 
+> Let's say there's a container which hosts one main application, and
+> the container shares its host with other containers.
+> 
+> * Let's say the container is a regular containerized OS instance and
+>   can't really guarantee system integrity if one its processes gets
+>   randomly killed.
+> 
+> * However, the application that it's running inside an isolated cgroup
+>   is more intelligent and composed of multiple interchangeable
+>   processes and can treat killing of a random process as partial
+>   capacity loss.
+> 
+> When the host is setting up the outer container, it doesn't
+> necessarily know whether the containerized environment would be able
+> to handle partial OOM kills or not.  It's akin to panic_on_oom setting
+> at system level - it's the containerized instance itself which knows
+> whether it can handle partial OOM kills or not.  This is why this knob
+> should be delegatable.
+> 
+> Now, the container itself has group OOM set and the isolated main
+> application is starting up.  It obviously wants partial OOM kills
+> rather than group killing.  This is the same principle.  The
+> application which is being contained in the cgroup is the one which
+> knows how it can handle OOM conditions, not the outer environment, so
+> it obviously needs to be able to set the configuration it wants.
 
-Kernel memory accounting is totally unusable in 3.10, because it lacks
-dcache reclaim and there are a lot of implementation bugs. The one you
-caught is just one of many that have been fixed since 3.10. That's why
-it stayed disabled by default until 4.x.
+Yes this makes a lot of sense. On the other hand we used to copy other
+reclaim specific atributes like swappiness and oom_kill_disable.
 
-So IMHO the best you can do if you really want to use kernel memory
-accounting is upgrade to 4.x or backport all related patches.
+I guess we should be OK with "non-hierarchical" behavior when it is
+documented properly so that there are surpasses.
 
-> > and we can easily trigger it when running one of our regression test
-> > that is intended to test our software robustness against lack of
-> > Kernel memory, by setting very restrictive kmem limit for a memory
-> > cgroup where test’s tasks/contexts will be attached during their
-> > execution.
-
-Lack of kernel memory typically results in OOM and killing your
-software. The fact that it isn't like that in kmemcg-3.10 and you can
-easily get ENOMEM, for example, while scanning a directory is actually
-a bug, which was fixed in 4.x.
-
-AFAIU you want to test ENOMEM handling paths. Then IMHO you'd better use
-some kind of error injection either in userspace or in kernel, e.g. you
-might want to take a look at CONFIG_FAILSLAB.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
