@@ -1,103 +1,142 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [v10 3/6] mm, oom: cgroup-aware OOM killer
-Date: Wed, 4 Oct 2017 20:51:10 +0100
-Message-ID: <20171004195110.GA18900@castle>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [v10 5/6] mm, oom: add cgroup v2 mount option for cgroup-aware
+ OOM killer
+Date: Wed, 4 Oct 2017 16:04:53 -0400
+Message-ID: <20171004200453.GE1501@cmpxchg.org>
 References: <20171004154638.710-1-guro@fb.com>
- <20171004154638.710-4-guro@fb.com>
- <20171004192720.GC1501@cmpxchg.org>
+ <20171004154638.710-6-guro@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=XfeQXVT86PBnW6yk/E6UyxRrTCsdEEz4HaS5CVmQRps=;
- b=l6W3ETBM1Gx42rjErDXdVUcnpeCzqkDLjB7iZbN97CWa7kEMagrTCPTXNpYWbP2Stl9Z
- sJ/P7R+ZCTo5+7i06YEjle48txKfwQ1Q6k85TEf2JgH4IASWwq9awIcSsOVU286I8z+h
- V88ThMMekqznLg+JqcDUFGDQF6pxTmFKmD4= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=XfeQXVT86PBnW6yk/E6UyxRrTCsdEEz4HaS5CVmQRps=;
- b=ROxPumzl1U0PsOcVsp4W4o7PQSG2px5hh7Q06XUn7ONzJWhtch8QUCJQG2K8D3Lenp2XQfQqmDWm0NTmGqTIEwyAZ/dFah1Y/WArOqPg+vUQuVSUuohDwbMnjvu+cCmiG9rqH6t08qiiF+Y1AqCEG+e0yWrtUmoflqlNvVGgEH4=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=1+OkQSwRMW4tMSsWasFO6oH6g7d1kPW02CoCb+JU1Qs=; b=esDMtZN4GqnitGEWa362z4niEZ
+        GejSl0h4ecGgGqaaXg1Edmaw1BL2EoP5ddUYON6RIORshoGL+dMYHIewkVZmlUf5+2hlIuD0Lhe0f
+        ZoI38eFH/HsD2V+YGTK8EfrTQ7IIAwIwp9TL/LzEdoPmtJVCBJ0GabJVVEsC6g8Ml0Lw=;
 Content-Disposition: inline
-In-Reply-To: <20171004192720.GC1501@cmpxchg.org>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <20171004154638.710-6-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Oct 04, 2017 at 03:27:20PM -0400, Johannes Weiner wrote:
-> On Wed, Oct 04, 2017 at 04:46:35PM +0100, Roman Gushchin wrote:
-> > Traditionally, the OOM killer is operating on a process level.
-> > Under oom conditions, it finds a process with the highest oom score
-> > and kills it.
-> > 
-> > This behavior doesn't suit well the system with many running
-> > containers:
-> > 
-> > 1) There is no fairness between containers. A small container with
-> > few large processes will be chosen over a large one with huge
-> > number of small processes.
-> > 
-> > 2) Containers often do not expect that some random process inside
-> > will be killed. In many cases much safer behavior is to kill
-> > all tasks in the container. Traditionally, this was implemented
-> > in userspace, but doing it in the kernel has some advantages,
-> > especially in a case of a system-wide OOM.
-> > 
-> > To address these issues, the cgroup-aware OOM killer is introduced.
-> > 
-> > Under OOM conditions, it looks for the biggest leaf memory cgroup
-> > and kills the biggest task belonging to it. The following patches
-> > will extend this functionality to consider non-leaf memory cgroups
-> > as well, and also provide an ability to kill all tasks belonging
-> > to the victim cgroup.
-> > 
-> > The root cgroup is treated as a leaf memory cgroup, so it's score
-> > is compared with leaf memory cgroups.
-> > Due to memcg statistics implementation a special algorithm
-> > is used for estimating it's oom_score: we define it as maximum
-> > oom_score of the belonging tasks.
-> > 
-> > Signed-off-by: Roman Gushchin <guro@fb.com>
-> > Cc: Michal Hocko <mhocko@kernel.org>
-> > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > Cc: David Rientjes <rientjes@google.com>
-> > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > Cc: Tejun Heo <tj@kernel.org>
-> > Cc: kernel-team@fb.com
-> > Cc: cgroups@vger.kernel.org
-> > Cc: linux-doc@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > Cc: linux-mm@kvack.org
+On Wed, Oct 04, 2017 at 04:46:37PM +0100, Roman Gushchin wrote:
+> Add a "groupoom" cgroup v2 mount option to enable the cgroup-aware
+> OOM killer. If not set, the OOM selection is performed in
+> a "traditional" per-process way.
 > 
-> This looks good to me.
+> The behavior can be changed dynamically by remounting the cgroupfs.
+>
+> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+> Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: kernel-team-b10kYP2dOMg@public.gmane.org
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> ---
+>  include/linux/cgroup-defs.h |  5 +++++
+>  kernel/cgroup/cgroup.c      | 10 ++++++++++
+>  mm/memcontrol.c             |  3 +++
+>  3 files changed, 18 insertions(+)
 > 
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> 
-> I just have one question:
-> 
-> > @@ -828,6 +828,12 @@ static void __oom_kill_process(struct task_struct *victim)
-> >  	struct mm_struct *mm;
-> >  	bool can_oom_reap = true;
-> >  
-> > +	if (is_global_init(victim) || (victim->flags & PF_KTHREAD) ||
-> > +	    victim->signal->oom_score_adj == OOM_SCORE_ADJ_MIN) {
-> > +		put_task_struct(victim);
-> > +		return;
-> > +	}
-> > +
-> >  	p = find_lock_task_mm(victim);
-> >  	if (!p) {
-> >  		put_task_struct(victim);
-> 
-> Is this necessary? The callers of this function use oom_badness() to
-> find a victim, and that filters init, kthread, OOM_SCORE_ADJ_MIN.
+> diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+> index 3e55bbd31ad1..cae5343a8b21 100644
+> --- a/include/linux/cgroup-defs.h
+> +++ b/include/linux/cgroup-defs.h
+> @@ -80,6 +80,11 @@ enum {
+>  	 * Enable cpuset controller in v1 cgroup to use v2 behavior.
+>  	 */
+>  	CGRP_ROOT_CPUSET_V2_MODE = (1 << 4),
+> +
+> +	/*
+> +	 * Enable cgroup-aware OOM killer.
+> +	 */
+> +	CGRP_GROUP_OOM = (1 << 5),
+>  };
+>  
+>  /* cftype->flags */
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index c3421ee0d230..8d8aa46ff930 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -1709,6 +1709,9 @@ static int parse_cgroup_root_flags(char *data, unsigned int *root_flags)
+>  		if (!strcmp(token, "nsdelegate")) {
+>  			*root_flags |= CGRP_ROOT_NS_DELEGATE;
+>  			continue;
+> +		} else if (!strcmp(token, "groupoom")) {
+> +			*root_flags |= CGRP_GROUP_OOM;
+> +			continue;
+>  		}
+>  
+>  		pr_err("cgroup2: unknown option \"%s\"\n", token);
+> @@ -1725,6 +1728,11 @@ static void apply_cgroup_root_flags(unsigned int root_flags)
+>  			cgrp_dfl_root.flags |= CGRP_ROOT_NS_DELEGATE;
+>  		else
+>  			cgrp_dfl_root.flags &= ~CGRP_ROOT_NS_DELEGATE;
+> +
+> +		if (root_flags & CGRP_GROUP_OOM)
+> +			cgrp_dfl_root.flags |= CGRP_GROUP_OOM;
+> +		else
+> +			cgrp_dfl_root.flags &= ~CGRP_GROUP_OOM;
+>  	}
+>  }
+>  
+> @@ -1732,6 +1740,8 @@ static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root
+>  {
+>  	if (cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE)
+>  		seq_puts(seq, ",nsdelegate");
+> +	if (cgrp_dfl_root.flags & CGRP_GROUP_OOM)
+> +		seq_puts(seq, ",groupoom");
+>  	return 0;
+>  }
+>  
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 1fcd6cc353d5..2e82625bd354 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2865,6 +2865,9 @@ bool mem_cgroup_select_oom_victim(struct oom_control *oc)
+>  	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+>  		return false;
+>  
+> +	if (!(cgrp_dfl_root.flags & CGRP_GROUP_OOM))
+> +		return false;
 
-It is. __oom_kill_process() is used to kill all processes belonging
-to the selected memory cgroup, so we should perform these checks
-to avoid killing unkillable processes.
+That will silently ignore what the user writes to the memory.oom_group
+control files across the system's cgroup tree.
 
-Thanks!
+We'll have a knob that lets the workload declare itself an indivisible
+memory consumer, that it would like to get killed in one piece, and
+it's silently ignored because of a mount option they forgot to pass.
+
+That's not good from an interface perspective.
+
+On the other hand, the only benefit of this patch is to shield users
+from changes to the OOM killing heuristics. Yet, it's really hard to
+imagine that modifying the victim selection process slightly could be
+called a regression in any way. We have done that many times over,
+without a second thought on backwards compatibility:
+
+5e9d834a0e0c oom: sacrifice child with highest badness score for parent
+a63d83f427fb oom: badness heuristic rewrite
+778c14affaf9 mm, oom: base root bonus on current usage
+
+Let's not make the userspace interface crap because of some misguided
+idea that the OOM heuristic is a hard promise to userspace. It's never
+been, and nobody has complained about changes in the past.
+
+This case is doubly silly, as the behavior change only applies to
+cgroup2, which doesn't exactly have a large base of legacy users yet.
+
+Let's just drop this 5/6 patch.
