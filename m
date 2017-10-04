@@ -1,61 +1,37 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [v10 4/6] mm, oom: introduce memory.oom_group
-Date: Wed, 4 Oct 2017 16:46:36 +0100
-Message-ID: <20171004154638.710-5-guro@fb.com>
+Subject: [v10 6/6] mm, oom, docs: describe the cgroup-aware OOM killer
+Date: Wed, 4 Oct 2017 16:46:38 +0100
+Message-ID: <20171004154638.710-7-guro@fb.com>
 References: <20171004154638.710-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=ai2kO2tWxcLrJDLT3aUUrwNI+T1Tobd4jpZe7ZjDL1M=;
- b=iC2jzw0oiE9CG/WT6MQFopxREJqLAlovwhV604/rqN2uuh8fQuLuhm09xjZf3+iWxOFy
- zK6unpIU5DCA2nHLE/VkL5SSNCdRRTobf/sRj0ZuLmDt4WPAEs+2a9zLYE6uYzIzoWLf
- Qv80xptE9JkV85jOhII2J67PTJhd1HbJ2ug= 
+ content-type; s=facebook; bh=CmrXeXt3KZUA2oaEEW2kw+ZTtpKE65GsU9ihFRLVXno=;
+ b=VX4iGygO5N5D9QeGeVJFKw0rQ0peXoSS70225VWEKTN/JuA/eysOUHElgq+sUI3ftXcs
+ m/r8pfz+wxv1R/uVsO+aEeyxI4vM+sN35imnL87oWQ/e65TRfe/Mx+FYUWaOryYRk8OB
+ MOME/rZTsY+PwwO/AiAeLLmHslLfryVf8wQ= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=ai2kO2tWxcLrJDLT3aUUrwNI+T1Tobd4jpZe7ZjDL1M=;
- b=JPC0RW7DI2hiXUgUAPJto++flNo30BDFZR9dXwYfZ+Om5zb+EzbS509MGWrqaRQhsBIL5nirpN5RAH8nwaWlb+ifHRgZB8yAkbr+8l30+mj6NfcJyWsJ4oRIn7gZXK3FC7XMGPAmZ1g3SskgX19/hzaSjD09r8zKzUCd79pcUOs=
+ bh=CmrXeXt3KZUA2oaEEW2kw+ZTtpKE65GsU9ihFRLVXno=;
+ b=GFmMt9XC8bZ2wNuWyKauZHDXoDdmjMjeS1ryZcg7VysVP/ciPkHFRbYFoUVfD5Q+ViGlnlPLPUoGVJojHPaENszUMgUlvPIOEjcFaHlRrFkj1iY0RAZKuynHkVVmWPsYukEvyb9N0iPJz2uJ+TMt2Bm11nydVXHh0sB2D1EbVc4=
 In-Reply-To: <20171004154638.710-1-guro@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The cgroup-aware OOM killer treats leaf memory cgroups as memory
-consumption entities and performs the victim selection by comparing
-them based on their memory footprint. Then it kills the biggest task
-inside the selected memory cgroup.
-
-But there are workloads, which are not tolerant to a such behavior.
-Killing a random task may leave the workload in a broken state.
-
-To solve this problem, memory.oom_group knob is introduced.
-It will define, whether a memory group should be treated as an
-indivisible memory consumer, compared by total memory consumption
-with other memory consumers (leaf memory cgroups and other memory
-cgroups with memory.oom_group set), and whether all belonging tasks
-should be killed if the cgroup is selected.
-
-If set on memcg A, it means that in case of system-wide OOM or
-memcg-wide OOM scoped to A or any ancestor cgroup, all tasks,
-belonging to the sub-tree of A will be killed. If OOM event is
-scoped to a descendant cgroup (A/B, for example), only tasks in
-that cgroup can be affected. OOM killer will never touch any tasks
-outside of the scope of the OOM event.
-
-Also, tasks with oom_score_adj set to -1000 will not be killed.
-
-The default value is 0.
+Document the cgroup-aware OOM killer.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Michal Hocko <mhocko@kernel.org>
 Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: David Rientjes <rientjes@google.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: David Rientjes <rientjes@google.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
 Cc: cgroups@vger.kernel.org
@@ -63,225 +39,90 @@ Cc: linux-doc@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- include/linux/memcontrol.h | 17 +++++++++++
- mm/memcontrol.c            | 74 +++++++++++++++++++++++++++++++++++++++++++---
- mm/oom_kill.c              | 38 +++++++++++++++++-------
- 3 files changed, 115 insertions(+), 14 deletions(-)
+ Documentation/cgroup-v2.txt | 51 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 75b63b68846e..84ac10d7e67d 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -200,6 +200,13 @@ struct mem_cgroup {
- 	/* OOM-Killer disable */
- 	int		oom_kill_disable;
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 3f8216912df0..28429e62b0ea 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
+        5-2-1. Memory Interface Files
+        5-2-2. Usage Guidelines
+        5-2-3. Memory Ownership
++       5-2-4. OOM Killer
+      5-3. IO
+        5-3-1. IO Interface Files
+        5-3-2. Writeback
+@@ -1043,6 +1044,28 @@ PAGE_SIZE multiple when read back.
+ 	high limit is used and monitored properly, this limit's
+ 	utility is limited to providing the final safety net.
  
-+	/*
-+	 * Treat the sub-tree as an indivisible memory consumer,
-+	 * kill all belonging tasks if the memory cgroup selected
-+	 * as OOM victim.
-+	 */
-+	bool oom_group;
++  memory.oom_group
 +
- 	/* handle for "memory.events" */
- 	struct cgroup_file events_file;
- 
-@@ -488,6 +495,11 @@ bool mem_cgroup_oom_synchronize(bool wait);
- 
- bool mem_cgroup_select_oom_victim(struct oom_control *oc);
- 
-+static inline bool mem_cgroup_oom_group(struct mem_cgroup *memcg)
-+{
-+	return memcg->oom_group;
-+}
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "0".
 +
- #ifdef CONFIG_MEMCG_SWAP
- extern int do_swap_account;
- #endif
-@@ -953,6 +965,11 @@ static inline bool mem_cgroup_select_oom_victim(struct oom_control *oc)
- {
- 	return false;
- }
++	If set, OOM killer will consider the memory cgroup as an
++	indivisible memory consumers and compare it with other memory
++	consumers by it's memory footprint.
++	If such memory cgroup is selected as an OOM victim, all
++	processes belonging to it or it's descendants will be killed.
 +
-+static inline bool mem_cgroup_oom_group(struct mem_cgroup *memcg)
-+{
-+	return false;
-+}
- #endif /* CONFIG_MEMCG */
++	This applies to system-wide OOM conditions and reaching
++	the hard memory limit of the cgroup and their ancestor.
++	If OOM condition happens in a descendant cgroup with it's own
++	memory limit, the memory cgroup can't be considered
++	as an OOM victim, and OOM killer will not kill all belonging
++	tasks.
++
++	Also, OOM killer respects the /proc/pid/oom_score_adj value -1000,
++	and will never kill the unkillable task, even if memory.oom_group
++	is set.
++
+   memory.events
+ 	A read-only flat-keyed file which exists on non-root cgroups.
+ 	The following entries are defined.  Unless specified
+@@ -1246,6 +1269,34 @@ to be accessed repeatedly by other cgroups, it may make sense to use
+ POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
+ belonging to the affected files to ensure correct memory ownership.
  
- /* idx can be of type enum memcg_stat_item or node_stat_item */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 79f30c281185..1fcd6cc353d5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2776,19 +2776,50 @@ static long oom_evaluate_memcg(struct mem_cgroup *memcg,
++OOM Killer
++~~~~~~~~~~
++
++Cgroup v2 memory controller implements a cgroup-aware OOM killer.
++It means that it treats cgroups as first class OOM entities.
++
++Under OOM conditions the memory controller tries to make the best
++choice of a victim, looking for a memory cgroup with the largest
++memory footprint, considering leaf cgroups and cgroups with the
++memory.oom_group option set, which are considered to be an indivisible
++memory consumers.
++
++By default, OOM killer will kill the biggest task in the selected
++memory cgroup. A user can change this behavior by enabling
++the per-cgroup memory.oom_group option. If set, it causes
++the OOM killer to kill all processes attached to the cgroup,
++except processes with oom_score_adj set to -1000.
++
++This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
++the memory controller considers only cgroups belonging to the sub-tree
++of the OOM'ing cgroup.
++
++The root cgroup is treated as a leaf memory cgroup, so it's compared
++with other leaf memory cgroups and cgroups with oom_group option set.
++
++If there are no cgroups with the enabled memory controller,
++the OOM killer is using the "traditional" process-based approach.
++
  
- static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- {
--	struct mem_cgroup *iter;
-+	struct mem_cgroup *iter, *group = NULL;
-+	long group_score = 0;
- 
- 	oc->chosen_memcg = NULL;
- 	oc->chosen_points = 0;
- 
- 	/*
-+	 * If OOM is memcg-wide, and the memcg has the oom_group flag set,
-+	 * all tasks belonging to the memcg should be killed.
-+	 * So, we mark the memcg as a victim.
-+	 */
-+	if (oc->memcg && mem_cgroup_oom_group(oc->memcg)) {
-+		oc->chosen_memcg = oc->memcg;
-+		css_get(&oc->chosen_memcg->css);
-+		return;
-+	}
-+
-+	/*
- 	 * The oom_score is calculated for leaf memory cgroups (including
- 	 * the root memcg).
-+	 * Non-leaf oom_group cgroups accumulating score of descendant
-+	 * leaf memory cgroups.
- 	 */
- 	rcu_read_lock();
- 	for_each_mem_cgroup_tree(iter, root) {
- 		long score;
- 
-+		/*
-+		 * We don't consider non-leaf non-oom_group memory cgroups
-+		 * as OOM victims.
-+		 */
-+		if (memcg_has_children(iter) && !mem_cgroup_oom_group(iter))
-+			continue;
-+
-+		/*
-+		 * If group is not set or we've ran out of the group's sub-tree,
-+		 * we should set group and reset group_score.
-+		 */
-+		if (!group || group == root_mem_cgroup ||
-+		    !mem_cgroup_is_descendant(iter, group)) {
-+			group = iter;
-+			group_score = 0;
-+		}
-+
- 		if (memcg_has_children(iter))
- 			continue;
- 
-@@ -2810,9 +2841,11 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- 			break;
- 		}
- 
--		if (score > oc->chosen_points) {
--			oc->chosen_points = score;
--			oc->chosen_memcg = iter;
-+		group_score += score;
-+
-+		if (group_score > oc->chosen_points) {
-+			oc->chosen_points = group_score;
-+			oc->chosen_memcg = group;
- 		}
- 	}
- 
-@@ -5439,6 +5472,33 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
- 	return nbytes;
- }
- 
-+static int memory_oom_group_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+	bool oom_group = memcg->oom_group;
-+
-+	seq_printf(m, "%d\n", oom_group);
-+
-+	return 0;
-+}
-+
-+static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
-+				      char *buf, size_t nbytes,
-+				      loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	int oom_group;
-+	int err;
-+
-+	err = kstrtoint(strstrip(buf), 0, &oom_group);
-+	if (err)
-+		return err;
-+
-+	memcg->oom_group = oom_group;
-+
-+	return nbytes;
-+}
-+
- static int memory_events_show(struct seq_file *m, void *v)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-@@ -5559,6 +5619,12 @@ static struct cftype memory_files[] = {
- 		.write = memory_max_write,
- 	},
- 	{
-+		.name = "oom_group",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_oom_group_show,
-+		.write = memory_oom_group_write,
-+	},
-+	{
- 		.name = "events",
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.file_offset = offsetof(struct mem_cgroup, events_file),
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 63e38cf971e0..5bdb8cae3acc 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -970,21 +970,39 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
- 	__oom_kill_process(victim);
- }
- 
--static bool oom_kill_memcg_victim(struct oom_control *oc)
-+static int oom_kill_memcg_member(struct task_struct *task, void *unused)
- {
-+	get_task_struct(task);
-+	__oom_kill_process(task);
-+	return 0;
-+}
- 
-+static bool oom_kill_memcg_victim(struct oom_control *oc)
-+{
- 	if (oc->chosen_memcg == NULL || oc->chosen_memcg == INFLIGHT_VICTIM)
- 		return oc->chosen_memcg;
- 
--	/* Kill a task in the chosen memcg with the biggest memory footprint */
--	oc->chosen_points = 0;
--	oc->chosen_task = NULL;
--	mem_cgroup_scan_tasks(oc->chosen_memcg, oom_evaluate_task, oc);
--
--	if (oc->chosen_task == NULL || oc->chosen_task == INFLIGHT_VICTIM)
--		goto out;
--
--	__oom_kill_process(oc->chosen_task);
-+	/*
-+	 * If memory.oom_group is set, kill all tasks belonging to the sub-tree
-+	 * of the chosen memory cgroup, otherwise kill the task with the biggest
-+	 * memory footprint.
-+	 */
-+	if (mem_cgroup_oom_group(oc->chosen_memcg)) {
-+		mem_cgroup_scan_tasks(oc->chosen_memcg, oom_kill_memcg_member,
-+				      NULL);
-+		/* We have one or more terminating processes at this point. */
-+		oc->chosen_task = INFLIGHT_VICTIM;
-+	} else {
-+		oc->chosen_points = 0;
-+		oc->chosen_task = NULL;
-+		mem_cgroup_scan_tasks(oc->chosen_memcg, oom_evaluate_task, oc);
-+
-+		if (oc->chosen_task == NULL ||
-+		    oc->chosen_task == INFLIGHT_VICTIM)
-+			goto out;
-+
-+		__oom_kill_process(oc->chosen_task);
-+	}
- 
- out:
- 	mem_cgroup_put(oc->chosen_memcg);
+ IO
+ --
 -- 
 2.13.6
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
