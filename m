@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Roman Gushchin <guro@fb.com>
 Subject: Re: [v9 3/5] mm, oom: cgroup-aware OOM killer
-Date: Wed, 4 Oct 2017 11:29:38 +0200
-Message-ID: <20171004092938.nipd6mtywyy4im44@dhcp22.suse.cz>
+Date: Wed, 4 Oct 2017 16:04:52 +0100
+Message-ID: <20171004150452.GA23299@castle>
 References: <20170927130936.8601-1-guro@fb.com>
  <20170927130936.8601-4-guro@fb.com>
  <20171003114848.gstdawonla2gmfio@dhcp22.suse.cz>
@@ -9,76 +9,48 @@ References: <20170927130936.8601-1-guro@fb.com>
  <20171003133623.hoskmd3fsh4t2phf@dhcp22.suse.cz>
  <20171003140841.GA29624@castle.DHCP.thefacebook.com>
  <20171003142246.xactdt7xddqdhvtu@dhcp22.suse.cz>
- <20171003143559.GJ3301751@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20171003143559.GJ3301751@devbig577.frc2.facebook.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=e8Ba5IA8V7v9ISnuIymEVBSgUYYB1oQkLj76WII8AnY=;
+ b=jQFORA8+ZFJyktuGy1a0IMeY3kiwGsggXgxeDjVsg0UtP9PDK/gL0mjW6jxVu1oN08X2
+ y/FMFOjYIshp82nuI4nwmTn/UT6enUTeZf+oYqQ1N7tuubCk7PDyF895EjW2fNiVn9l0
+ MaPz/E5Mr5uWDkdkyy4S0tKJJ9GWFbNYLzU= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=e8Ba5IA8V7v9ISnuIymEVBSgUYYB1oQkLj76WII8AnY=;
+ b=WfNUsDHlwJCccurddLCTuqCojeEqp47QgYry+ETsbVVI1q2bpTWVrs2xnBUyMh3iw09F5f74H14P7p1RqKVn81pGk0U9WTzQ/VvC0ovQ9y4tLKzFM4HZj3F0lEIH0RJOIC/PlAC0EqHvAyuL7AFFjLd0/TMYvuSFTWX1hL/i0fo=
+Content-Disposition: inline
+In-Reply-To: <20171003142246.xactdt7xddqdhvtu@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 03-10-17 07:35:59, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> On Tue, Oct 03, 2017 at 04:22:46PM +0200, Michal Hocko wrote:
-> > On Tue 03-10-17 15:08:41, Roman Gushchin wrote:
-> > > On Tue, Oct 03, 2017 at 03:36:23PM +0200, Michal Hocko wrote:
-> > [...]
-> > > > I guess we want to inherit the value on the memcg creation but I agree
-> > > > that enforcing parent setting is weird. I will think about it some more
-> > > > but I agree that it is saner to only enforce per memcg value.
-> > > 
-> > > I'm not against, but we should come up with a good explanation, why we're
-> > > inheriting it; or not inherit.
+On Tue, Oct 03, 2017 at 04:22:46PM +0200, Michal Hocko wrote:
+> On Tue 03-10-17 15:08:41, Roman Gushchin wrote:
+> > On Tue, Oct 03, 2017 at 03:36:23PM +0200, Michal Hocko wrote:
+> [...]
+> > > I guess we want to inherit the value on the memcg creation but I agree
+> > > that enforcing parent setting is weird. I will think about it some more
+> > > but I agree that it is saner to only enforce per memcg value.
 > > 
-> > Inheriting sounds like a less surprising behavior. Once you opt in for
-> > oom_group you can expect that descendants are going to assume the same
-> > unless they explicitly state otherwise.
+> > I'm not against, but we should come up with a good explanation, why we're
+> > inheriting it; or not inherit.
 > 
-> Here's a counter example.
-> 
-> Let's say there's a container which hosts one main application, and
-> the container shares its host with other containers.
-> 
-> * Let's say the container is a regular containerized OS instance and
->   can't really guarantee system integrity if one its processes gets
->   randomly killed.
-> 
-> * However, the application that it's running inside an isolated cgroup
->   is more intelligent and composed of multiple interchangeable
->   processes and can treat killing of a random process as partial
->   capacity loss.
-> 
-> When the host is setting up the outer container, it doesn't
-> necessarily know whether the containerized environment would be able
-> to handle partial OOM kills or not.  It's akin to panic_on_oom setting
-> at system level - it's the containerized instance itself which knows
-> whether it can handle partial OOM kills or not.  This is why this knob
-> should be delegatable.
-> 
-> Now, the container itself has group OOM set and the isolated main
-> application is starting up.  It obviously wants partial OOM kills
-> rather than group killing.  This is the same principle.  The
-> application which is being contained in the cgroup is the one which
-> knows how it can handle OOM conditions, not the outer environment, so
-> it obviously needs to be able to set the configuration it wants.
+> Inheriting sounds like a less surprising behavior. Once you opt in for
+> oom_group you can expect that descendants are going to assume the same
+> unless they explicitly state otherwise.
 
-Yes this makes a lot of sense. On the other hand we used to copy other
-reclaim specific atributes like swappiness and oom_kill_disable.
+Not sure I understand why. Setting memory.oom_group on a child memcg
+has absolutely no meaning until memory.max is also set. In case of OOM
+scoped to the parent memcg or above, parent's value defines the behavior.
 
-I guess we should be OK with "non-hierarchical" behavior when it is
-documented properly so that there are surpasses.
+If a user decides to create a separate OOM domain (be setting the hard
+memory limit), he/she can also make a decision on how OOM event should
+be handled.
 
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks!
