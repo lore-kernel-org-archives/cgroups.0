@@ -1,298 +1,125 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v11 4/6] mm, oom: introduce memory.oom_group
-Date: Thu, 5 Oct 2017 16:31:04 +0200
-Message-ID: <20171005143104.wo5xstpe7mhkdlbr@dhcp22.suse.cz>
-References: <20171005130454.5590-1-guro@fb.com>
- <20171005130454.5590-5-guro@fb.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [v10 5/6] mm, oom: add cgroup v2 mount option for cgroup-aware
+ OOM killer
+Date: Thu, 5 Oct 2017 10:54:01 -0400
+Message-ID: <20171005144803.GA5733@cmpxchg.org>
+References: <20171004154638.710-1-guro@fb.com>
+ <20171004154638.710-6-guro@fb.com>
+ <20171004200453.GE1501@cmpxchg.org>
+ <20171005131419.4o6qynsl2qxomekb@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=ErrNtolOtBSbrQv7eeZi2/Ae9CQDnpjD3Vlv8Modz1k=; b=hapYzox/e1Kj3RhzUEiRrvWqDk
+	/Pa+DgoZnGJTPMg0dM4eVkac1tG/KL2HH1JJenZxKu7Obfu9ZWf3kR+qPbNBTFa6D/ovE1RCV0pp2
+	UeMseAaAFIVBDwscaX1AGjm/PQVeaklxDS0OcZJsoxeeWRpgwkzlsBSjz4xO4SccZF8o=;
 Content-Disposition: inline
-In-Reply-To: <20171005130454.5590-5-guro@fb.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <20171005131419.4o6qynsl2qxomekb@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Btw. here is how I would do the recursive oom badness. The diff is not
-the nicest one because there is some code moving but the resulting code
-is smaller and imho easier to grasp. Only compile tested though
----
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 085056e562b1..9cdba4682198 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -122,6 +122,11 @@ void cgroup_free(struct task_struct *p);
- int cgroup_init_early(void);
- int cgroup_init(void);
- 
-+static bool cgroup_has_tasks(struct cgroup *cgrp)
-+{
-+	return cgrp->nr_populated_csets;
-+}
-+
- /*
-  * Iteration helpers and macros.
-  */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 8dacf73ad57e..a2dd7e3ffe23 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -319,11 +319,6 @@ static void cgroup_idr_remove(struct idr *idr, int id)
- 	spin_unlock_bh(&cgroup_idr_lock);
- }
- 
--static bool cgroup_has_tasks(struct cgroup *cgrp)
--{
--	return cgrp->nr_populated_csets;
--}
--
- bool cgroup_is_threaded(struct cgroup *cgrp)
- {
- 	return cgrp->dom_cgrp != cgrp;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b3848bce4c86..012b2216266f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2671,59 +2671,63 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
- }
- 
- static long memcg_oom_badness(struct mem_cgroup *memcg,
--			      const nodemask_t *nodemask,
--			      unsigned long totalpages)
-+			      const nodemask_t *nodemask)
- {
-+	struct mem_cgroup *iter;
-+	struct css_task_iter it;
-+	struct task_struct *task;
- 	long points = 0;
-+	int eligible = 0;
- 	int nid;
- 	pg_data_t *pgdat;
- 
--	/*
--	 * We don't have necessary stats for the root memcg,
--	 * so we define it's oom_score as the maximum oom_score
--	 * of the belonging tasks.
--	 *
--	 * As tasks in the root memcg unlikely are parts of a
--	 * single workload, and we don't have to implement
--	 * group killing, this approximation is reasonable.
--	 *
--	 * But if we will have necessary stats for the root memcg,
--	 * we might switch to the approach which is used for all
--	 * other memcgs.
--	 */
--	if (memcg == root_mem_cgroup) {
--		struct css_task_iter it;
--		struct task_struct *task;
--		long score, max_score = 0;
--
-+	for_each_mem_cgroup_tree(iter, memcg) {
-+		/*
-+		 * Memcg is OOM eligible if there are OOM killable tasks inside.
-+		 *
-+		 * We treat tasks with oom_score_adj set to OOM_SCORE_ADJ_MIN
-+		 * as unkillable.
-+		 *
-+		 * If there are inflight OOM victim tasks inside the memcg,
-+		 * we return -1.
-+		 */
- 		css_task_iter_start(&memcg->css, 0, &it);
- 		while ((task = css_task_iter_next(&it))) {
--			score = oom_badness(task, memcg, nodemask,
--					    totalpages);
--			if (score > max_score)
--				max_score = score;
-+			if (!eligible &&
-+			    task->signal->oom_score_adj != OOM_SCORE_ADJ_MIN)
-+				eligible = 1;
-+
-+			if (tsk_is_oom_victim(task) &&
-+			    !test_bit(MMF_OOM_SKIP, &task->signal->oom_mm->flags)) {
-+				eligible = -1;
-+				break;
-+			}
- 		}
- 		css_task_iter_end(&it);
- 
--		return max_score;
--	}
-+		if (eligible <= 0) {
-+			mem_cgroup_iter_break(memcg, iter);
-+			points = -1;
-+			break;
-+		}
- 
--	for_each_node_state(nid, N_MEMORY) {
--		if (nodemask && !node_isset(nid, *nodemask))
--			continue;
-+		for_each_node_state(nid, N_MEMORY) {
-+			if (nodemask && !node_isset(nid, *nodemask))
-+				continue;
- 
--		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
--				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
-+			points += mem_cgroup_node_nr_lru_pages(memcg, nid,
-+					LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
- 
--		pgdat = NODE_DATA(nid);
--		points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
--					    NR_SLAB_UNRECLAIMABLE);
--	}
-+			pgdat = NODE_DATA(nid);
-+			points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
-+						    NR_SLAB_UNRECLAIMABLE);
-+		}
- 
--	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
--		(PAGE_SIZE / 1024);
--	points += memcg_page_state(memcg, MEMCG_SOCK);
--	points += memcg_page_state(memcg, MEMCG_SWAP);
-+		points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
-+			(PAGE_SIZE / 1024);
-+		points += memcg_page_state(memcg, MEMCG_SOCK);
-+		points += memcg_page_state(memcg, MEMCG_SWAP);
-+	}
- 
- 	return points;
- }
-@@ -2741,43 +2745,56 @@ static long oom_evaluate_memcg(struct mem_cgroup *memcg,
- 			       const nodemask_t *nodemask,
- 			       unsigned long totalpages)
- {
--	struct css_task_iter it;
--	struct task_struct *task;
--	int eligible = 0;
--
- 	/*
--	 * Memcg is OOM eligible if there are OOM killable tasks inside.
-+	 * We don't have necessary stats for the root memcg,
-+	 * so we define it's oom_score as the maximum oom_score
-+	 * of the belonging tasks.
- 	 *
--	 * We treat tasks with oom_score_adj set to OOM_SCORE_ADJ_MIN
--	 * as unkillable.
-+	 * As tasks in the root memcg unlikely are parts of a
-+	 * single workload, and we don't have to implement
-+	 * group killing, this approximation is reasonable.
- 	 *
--	 * If there are inflight OOM victim tasks inside the memcg,
--	 * we return -1.
-+	 * But if we will have necessary stats for the root memcg,
-+	 * we might switch to the approach which is used for all
-+	 * other memcgs.
- 	 */
--	css_task_iter_start(&memcg->css, 0, &it);
--	while ((task = css_task_iter_next(&it))) {
--		if (!eligible &&
--		    task->signal->oom_score_adj != OOM_SCORE_ADJ_MIN)
--			eligible = 1;
--
--		if (tsk_is_oom_victim(task) &&
--		    !test_bit(MMF_OOM_SKIP, &task->signal->oom_mm->flags)) {
--			eligible = -1;
--			break;
-+	if (memcg == root_mem_cgroup) {
-+		struct css_task_iter it;
-+		struct task_struct *task;
-+		long score, max_score = 0;
-+
-+		css_task_iter_start(&memcg->css, 0, &it);
-+		while ((task = css_task_iter_next(&it))) {
-+			if (tsk_is_oom_victim(task) &&
-+			    !test_bit(MMF_OOM_SKIP, &task->signal->oom_mm->flags)) {
-+				max_score = -1;
-+				break;
-+			}
-+			score = oom_badness(task, memcg, nodemask,
-+					    totalpages);
-+			if (score > max_score)
-+				max_score = score;
- 		}
--	}
--	css_task_iter_end(&it);
-+		css_task_iter_end(&it);
- 
--	if (eligible <= 0)
--		return eligible;
-+		return max_score;
-+	}
- 
--	return memcg_oom_badness(memcg, nodemask, totalpages);
-+	return memcg_oom_badness(memcg, nodemask);
- }
- 
-+static bool memcg_is_oom_eligible(struct mem_cgroup *memcg)
-+{
-+	if (mem_cgroup_oom_group(memcg))
-+		return true;
-+	if (cgroup_has_tasks(memcg->css.cgroup))
-+		return true;
-+
-+	return false;
-+}
- static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- {
--	struct mem_cgroup *iter, *group = NULL;
--	long group_score = 0;
-+	struct mem_cgroup *iter;
- 
- 	oc->chosen_memcg = NULL;
- 	oc->chosen_points = 0;
-@@ -2803,35 +2820,11 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- 	for_each_mem_cgroup_tree(iter, root) {
- 		long score;
- 
--		/*
--		 * We don't consider non-leaf non-oom_group memory cgroups
--		 * as OOM victims.
--		 */
--		if (memcg_has_children(iter) && iter != root_mem_cgroup &&
--		    !mem_cgroup_oom_group(iter))
--			continue;
--
--		/*
--		 * If group is not set or we've ran out of the group's sub-tree,
--		 * we should set group and reset group_score.
--		 */
--		if (!group || group == root_mem_cgroup ||
--		    !mem_cgroup_is_descendant(iter, group)) {
--			group = iter;
--			group_score = 0;
--		}
--
--		if (memcg_has_children(iter) && iter != root_mem_cgroup)
-+		if (!memcg_is_oom_eligible(iter))
- 			continue;
- 
- 		score = oom_evaluate_memcg(iter, oc->nodemask, oc->totalpages);
- 
--		/*
--		 * Ignore empty and non-eligible memory cgroups.
--		 */
--		if (score == 0)
--			continue;
--
- 		/*
- 		 * If there are inflight OOM victims, we don't need
- 		 * to look further for new victims.
-@@ -2842,11 +2835,9 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- 			break;
- 		}
- 
--		group_score += score;
--
--		if (group_score > oc->chosen_points) {
--			oc->chosen_points = group_score;
--			oc->chosen_memcg = group;
-+		if (score > oc->chosen_points) {
-+			oc->chosen_points = score;
-+			oc->chosen_memcg = iter;
- 		}
- 	}
- 
--- 
-Michal Hocko
-SUSE Labs
+On Thu, Oct 05, 2017 at 03:14:19PM +0200, Michal Hocko wrote:
+> On Wed 04-10-17 16:04:53, Johannes Weiner wrote:
+> [...]
+> > That will silently ignore what the user writes to the memory.oom_group
+> > control files across the system's cgroup tree.
+> > 
+> > We'll have a knob that lets the workload declare itself an indivisible
+> > memory consumer, that it would like to get killed in one piece, and
+> > it's silently ignored because of a mount option they forgot to pass.
+> > 
+> > That's not good from an interface perspective.
+> 
+> Yes and that is why I think a boot time knob would be the most simple
+> way. It will also open doors for more oom policies in future which I
+> believe come sooner or later.
+
+A boot time knob makes less sense to me than the mount option. It
+doesn't require a reboot to change this behavior, we shouldn't force
+the user to reboot when a runtime configuration is possible.
+
+But I don't see how dropping this patch as part of this series would
+prevent adding modular oom policies in the future?
+
+That said, selectable OOM policies sound like a total deadend to
+me. The kernel OOM happens way too late to be useful for any kind of
+resource policy already. Even now it won't prevent you from thrashing
+indefinitely, with only 5% of your workload's time spent productively.
+
+What kind of service quality do you have at this point?
+
+The *minority* of our OOM situations (in terms of "this isn't making
+real progress anymore due to a lack of memory") is even *seeing* OOM
+kills at this point. And it'll get worse as storage gets faster and
+memory bigger.
+
+How is that useful as a resource arbitration point?
+
+Then there is the question of reliability. I mean, we still don't have
+a global OOM killer that is actually free from deadlocks. We don't
+have reserves measured to the exact requirements of reclaim that would
+guarantee recovery, the OOM reaper requires a lock that we hope isn't
+taken, etc. I wouldn't want any of my fleet to rely on this for
+regular operation - I'm just glad that, when we do mess up and hit
+this event, we don't have to reboot.
+
+It makes much more sense to monitor memory pressure from userspace and
+smartly intervene when things turn unproductive, which is a long way
+from the point where the kernel is about to *deadlock* due to memory.
+
+Global OOM kills can still happen, but their goal should really be 1)
+to save the kernel, 2) respect the integrity of a memory consumer and
+3) be comprehensible to userspace. (These patches are about 2 and 3.)
+
+But abstracting such a rudimentary and fragile deadlock avoidance
+mechanism into higher-level resource management, or co-opting it as a
+policy enforcement tool, is crazy to me.
+
+And it seems reckless to present it as those things to our users by
+encoding any such elaborate policy interfaces.
+
+> > On the other hand, the only benefit of this patch is to shield users
+> > from changes to the OOM killing heuristics. Yet, it's really hard to
+> > imagine that modifying the victim selection process slightly could be
+> > called a regression in any way. We have done that many times over,
+> > without a second thought on backwards compatibility:
+> > 
+> > 5e9d834a0e0c oom: sacrifice child with highest badness score for parent
+> > a63d83f427fb oom: badness heuristic rewrite
+> > 778c14affaf9 mm, oom: base root bonus on current usage
+> 
+> yes we have changed that without a deeper considerations. Some of those
+> changes are arguable (e.g. child scarification). The oom badness
+> heuristic rewrite has triggered quite some complains AFAIR (I remember
+> Kosaki has made several attempts to revert it). I think that we are
+> trying to be more careful about user visible changes than we used to be.
+
+Whatever grumbling might have come up, it has not resulted in a revert
+or a way to switch back to the old behavior. So I don't think this can
+be considered an actual regression.
+
+We change heuristics in the MM all the time. If you track for example
+allocator behavior over different kernel versions, you can see how
+much our caching policy, our huge page policy etc. fluctuates. The
+impact of that is way bigger to regular workloads than how we go about
+choosing an OOM victim.
+
+We don't want to regress anybody, but let's also keep perspective here
+and especially consider the userspace interfaces we are willing to put
+in for at least the next few years, the promises we want to make, the
+further fragmentation of the config space, for such a negligible risk.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
