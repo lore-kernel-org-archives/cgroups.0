@@ -1,123 +1,70 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [v11 6/6] mm, oom, docs: describe the cgroup-aware OOM killer
-Date: Thu, 5 Oct 2017 14:04:54 +0100
-Message-ID: <20171005130454.5590-7-guro@fb.com>
-References: <20171005130454.5590-1-guro@fb.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [v10 5/6] mm, oom: add cgroup v2 mount option for cgroup-aware
+ OOM killer
+Date: Thu, 5 Oct 2017 15:14:19 +0200
+Message-ID: <20171005131419.4o6qynsl2qxomekb@dhcp22.suse.cz>
+References: <20171004154638.710-1-guro@fb.com>
+ <20171004154638.710-6-guro@fb.com>
+ <20171004200453.GE1501@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=CmrXeXt3KZUA2oaEEW2kw+ZTtpKE65GsU9ihFRLVXno=;
- b=Lg8o6HaLimbp7DCgCiaJ6twmwJPnlZEt0OEz3wSrmSvnU6JSR3bFi5TDVs07c1+WP/rc
- UcAoU4l2fYJwcOM2KjmMEgy3RHF2ObJS9F/7Ai/g5c6BdgCJeTbJ+mTUT3fU7f2VtI7D
- sWMwj76wODm98MDIY0o89LyoQToa9PgX3Ts= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=CmrXeXt3KZUA2oaEEW2kw+ZTtpKE65GsU9ihFRLVXno=;
- b=TWhb7vU5nSqeIRaz09a6C9efVYGTCzpITVbpiD1PcBpodKERD4nlmPvbboewOSJn9tHP2LooUSCrZIqgrhNTJv5NIFUyt4NOptzEO2gcPA5Y4B/tJ+QGMVIAYkiPX+8afm9z0z9xyMIwuj4F6+TWPxA4LIKRs3F8Sxm3fRrT2Eo=
-In-Reply-To: <20171005130454.5590-1-guro@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20171004200453.GE1501-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Document the cgroup-aware OOM killer.
+On Wed 04-10-17 16:04:53, Johannes Weiner wrote:
+[...]
+> That will silently ignore what the user writes to the memory.oom_group
+> control files across the system's cgroup tree.
+> 
+> We'll have a knob that lets the workload declare itself an indivisible
+> memory consumer, that it would like to get killed in one piece, and
+> it's silently ignored because of a mount option they forgot to pass.
+> 
+> That's not good from an interface perspective.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
----
- Documentation/cgroup-v2.txt | 51 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+Yes and that is why I think a boot time knob would be the most simple
+way. It will also open doors for more oom policies in future which I
+believe come sooner or later.
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 3f8216912df0..28429e62b0ea 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
-        5-2-1. Memory Interface Files
-        5-2-2. Usage Guidelines
-        5-2-3. Memory Ownership
-+       5-2-4. OOM Killer
-      5-3. IO
-        5-3-1. IO Interface Files
-        5-3-2. Writeback
-@@ -1043,6 +1044,28 @@ PAGE_SIZE multiple when read back.
- 	high limit is used and monitored properly, this limit's
- 	utility is limited to providing the final safety net.
- 
-+  memory.oom_group
-+
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	If set, OOM killer will consider the memory cgroup as an
-+	indivisible memory consumers and compare it with other memory
-+	consumers by it's memory footprint.
-+	If such memory cgroup is selected as an OOM victim, all
-+	processes belonging to it or it's descendants will be killed.
-+
-+	This applies to system-wide OOM conditions and reaching
-+	the hard memory limit of the cgroup and their ancestor.
-+	If OOM condition happens in a descendant cgroup with it's own
-+	memory limit, the memory cgroup can't be considered
-+	as an OOM victim, and OOM killer will not kill all belonging
-+	tasks.
-+
-+	Also, OOM killer respects the /proc/pid/oom_score_adj value -1000,
-+	and will never kill the unkillable task, even if memory.oom_group
-+	is set.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-@@ -1246,6 +1269,34 @@ to be accessed repeatedly by other cgroups, it may make sense to use
- POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
- belonging to the affected files to ensure correct memory ownership.
- 
-+OOM Killer
-+~~~~~~~~~~
-+
-+Cgroup v2 memory controller implements a cgroup-aware OOM killer.
-+It means that it treats cgroups as first class OOM entities.
-+
-+Under OOM conditions the memory controller tries to make the best
-+choice of a victim, looking for a memory cgroup with the largest
-+memory footprint, considering leaf cgroups and cgroups with the
-+memory.oom_group option set, which are considered to be an indivisible
-+memory consumers.
-+
-+By default, OOM killer will kill the biggest task in the selected
-+memory cgroup. A user can change this behavior by enabling
-+the per-cgroup memory.oom_group option. If set, it causes
-+the OOM killer to kill all processes attached to the cgroup,
-+except processes with oom_score_adj set to -1000.
-+
-+This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
-+the memory controller considers only cgroups belonging to the sub-tree
-+of the OOM'ing cgroup.
-+
-+The root cgroup is treated as a leaf memory cgroup, so it's compared
-+with other leaf memory cgroups and cgroups with oom_group option set.
-+
-+If there are no cgroups with the enabled memory controller,
-+the OOM killer is using the "traditional" process-based approach.
-+
- 
- IO
- --
+> On the other hand, the only benefit of this patch is to shield users
+> from changes to the OOM killing heuristics. Yet, it's really hard to
+> imagine that modifying the victim selection process slightly could be
+> called a regression in any way. We have done that many times over,
+> without a second thought on backwards compatibility:
+> 
+> 5e9d834a0e0c oom: sacrifice child with highest badness score for parent
+> a63d83f427fb oom: badness heuristic rewrite
+> 778c14affaf9 mm, oom: base root bonus on current usage
+
+yes we have changed that without a deeper considerations. Some of those
+changes are arguable (e.g. child scarification). The oom badness
+heuristic rewrite has triggered quite some complains AFAIR (I remember
+Kosaki has made several attempts to revert it). I think that we are
+trying to be more careful about user visible changes than we used to be.
+
+More importantly I do not think that the current (non-memcg aware) OOM
+policy is somehow obsolete and many people expect it to behave
+consistently. As I've said already, I have seen many complains that the
+OOM killer doesn't kill the right task. Most of them were just NUMA
+related issues where the oom report was not clear enough. I do not want
+to repeat that again now. Memcg awareness is certainly a useful
+heuristic but I do not see it universally applicable to all workloads.
+
+> Let's not make the userspace interface crap because of some misguided
+> idea that the OOM heuristic is a hard promise to userspace. It's never
+> been, and nobody has complained about changes in the past.
+> 
+> This case is doubly silly, as the behavior change only applies to
+> cgroup2, which doesn't exactly have a large base of legacy users yet.
+
+I agree on the interface part but I disagree with making it default just
+because v2 is not largerly adopted yet.
 -- 
-2.13.6
-
+Michal Hocko
+SUSE Labs
