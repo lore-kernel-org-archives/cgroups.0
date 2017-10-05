@@ -1,23 +1,25 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [v10 5/6] mm, oom: add cgroup v2 mount option for cgroup-aware
  OOM killer
-Date: Thu, 5 Oct 2017 10:54:01 -0400
-Message-ID: <20171005144803.GA5733@cmpxchg.org>
+Date: Thu, 5 Oct 2017 08:51:38 -0700
+Message-ID: <20171005155138.GU3301751@devbig577.frc2.facebook.com>
 References: <20171004154638.710-1-guro@fb.com>
  <20171004154638.710-6-guro@fb.com>
  <20171004200453.GE1501@cmpxchg.org>
  <20171005131419.4o6qynsl2qxomekb@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=ErrNtolOtBSbrQv7eeZi2/Ae9CQDnpjD3Vlv8Modz1k=; b=hapYzox/e1Kj3RhzUEiRrvWqDk
-	/Pa+DgoZnGJTPMg0dM4eVkac1tG/KL2HH1JJenZxKu7Obfu9ZWf3kR+qPbNBTFa6D/ovE1RCV0pp2
-	UeMseAaAFIVBDwscaX1AGjm/PQVeaklxDS0OcZJsoxeeWRpgwkzlsBSjz4xO4SccZF8o=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=RJ3Go8mHz7z9xTLdv0yz7K4u5ajafb5/sowj3zuk4aw=;
+        b=AbSDSc6RGrY+TarXvgv/DMb/HlakDUk5a/zAyPtUT/vpl61nnsdTujMybyzxUIlaw7
+         k0vPs6XnF1FKS7ULrOeh8IURx7pvXZ2kCTz6j4Ka9+kqZmdGU6Fcx9PhFjZUjEoBY8yo
+         1WnZxEijmr2zDP96AABDFoDxgOGOB/RXLIRQCJWWpGomhurj5pfHYj5e6ZfFmb8kuNHD
+         sMWYsFEhjWtLBugBOx1NvFa/VDKCkVMx/XZz1m7x0//RyGmypOS0IhXqOexzl4NgJYqZ
+         gnN71WHIoe8vlm4SQXrguZVzeFYIlpM64IbDOgd6S5LPRJXt6eVKNoOko6DoAp9w4vzp
+         gZCg==
 Content-Disposition: inline
 In-Reply-To: <20171005131419.4o6qynsl2qxomekb@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
@@ -25,98 +27,47 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Hello, Michal.
 
 On Thu, Oct 05, 2017 at 03:14:19PM +0200, Michal Hocko wrote:
-> On Wed 04-10-17 16:04:53, Johannes Weiner wrote:
-> [...]
-> > That will silently ignore what the user writes to the memory.oom_group
-> > control files across the system's cgroup tree.
-> > 
-> > We'll have a knob that lets the workload declare itself an indivisible
-> > memory consumer, that it would like to get killed in one piece, and
-> > it's silently ignored because of a mount option they forgot to pass.
-> > 
-> > That's not good from an interface perspective.
-> 
 > Yes and that is why I think a boot time knob would be the most simple
 > way. It will also open doors for more oom policies in future which I
 > believe come sooner or later.
 
-A boot time knob makes less sense to me than the mount option. It
-doesn't require a reboot to change this behavior, we shouldn't force
-the user to reboot when a runtime configuration is possible.
+While boot params are fine for development and debugging, as a
+user-interface, they aren't great.
 
-But I don't see how dropping this patch as part of this series would
-prevent adding modular oom policies in the future?
+* The user can't easily confirm whether the config they input is
+  correct and when they get it wrong what's wrong can be pretty
+  mysterious.
 
-That said, selectable OOM policies sound like a total deadend to
-me. The kernel OOM happens way too late to be useful for any kind of
-resource policy already. Even now it won't prevent you from thrashing
-indefinitely, with only 5% of your workload's time spent productively.
+* While kernel params can be made r/w through /proc, people usually
+  don't expect that and using that can become really confusing because
+  a lot of people use "dmesg|grep" to confirm the boot params and that
+  won't agree with the setting written later.
 
-What kind of service quality do you have at this point?
+* It can't be scoped.  What if we want to choose different policies
+  per delegated subtree?
 
-The *minority* of our OOM situations (in terms of "this isn't making
-real progress anymore due to a lack of memory") is even *seeing* OOM
-kills at this point. And it'll get worse as storage gets faster and
-memory bigger.
+* Boot params aren't the easiest (again, if you're a developer,
+  they're but most aren't developers) to play with and prone to cause
+  deployment issues.
 
-How is that useful as a resource arbitration point?
+* In this case, even worse because it ends up silently ignoring a
+  clearly explicit configuration in an interface file.
 
-Then there is the question of reliability. I mean, we still don't have
-a global OOM killer that is actually free from deadlocks. We don't
-have reserves measured to the exact requirements of reclaim that would
-guarantee recovery, the OOM reaper requires a lock that we hope isn't
-taken, etc. I wouldn't want any of my fleet to rely on this for
-regular operation - I'm just glad that, when we do mess up and hit
-this event, we don't have to reboot.
+If the behavior differences we get from group oom code isn't critical
+(and it doesn't seem to be), I'd greatly prefer just enabling it when
+cgroup2 is in use.  If it absolutely must be opt-in even on cgroup2,
+we can discuss other ways but I'd really like to see stronger
+rationales before going that route.
 
-It makes much more sense to monitor memory pressure from userspace and
-smartly intervene when things turn unproductive, which is a long way
-from the point where the kernel is about to *deadlock* due to memory.
+Thanks.
 
-Global OOM kills can still happen, but their goal should really be 1)
-to save the kernel, 2) respect the integrity of a memory consumer and
-3) be comprehensible to userspace. (These patches are about 2 and 3.)
-
-But abstracting such a rudimentary and fragile deadlock avoidance
-mechanism into higher-level resource management, or co-opting it as a
-policy enforcement tool, is crazy to me.
-
-And it seems reckless to present it as those things to our users by
-encoding any such elaborate policy interfaces.
-
-> > On the other hand, the only benefit of this patch is to shield users
-> > from changes to the OOM killing heuristics. Yet, it's really hard to
-> > imagine that modifying the victim selection process slightly could be
-> > called a regression in any way. We have done that many times over,
-> > without a second thought on backwards compatibility:
-> > 
-> > 5e9d834a0e0c oom: sacrifice child with highest badness score for parent
-> > a63d83f427fb oom: badness heuristic rewrite
-> > 778c14affaf9 mm, oom: base root bonus on current usage
-> 
-> yes we have changed that without a deeper considerations. Some of those
-> changes are arguable (e.g. child scarification). The oom badness
-> heuristic rewrite has triggered quite some complains AFAIR (I remember
-> Kosaki has made several attempts to revert it). I think that we are
-> trying to be more careful about user visible changes than we used to be.
-
-Whatever grumbling might have come up, it has not resulted in a revert
-or a way to switch back to the old behavior. So I don't think this can
-be considered an actual regression.
-
-We change heuristics in the MM all the time. If you track for example
-allocator behavior over different kernel versions, you can see how
-much our caching policy, our huge page policy etc. fluctuates. The
-impact of that is way bigger to regular workloads than how we go about
-choosing an OOM victim.
-
-We don't want to regress anybody, but let's also keep perspective here
-and especially consider the userspace interfaces we are willing to put
-in for at least the next few years, the promises we want to make, the
-further fragmentation of the config space, for such a negligible risk.
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
