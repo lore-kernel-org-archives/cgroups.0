@@ -1,62 +1,32 @@
 From: David Rientjes <rientjes@google.com>
 Subject: Re: [v10 3/6] mm, oom: cgroup-aware OOM killer
-Date: Thu, 5 Oct 2017 14:53:02 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1710051446310.87457@chino.kir.corp.google.com>
+Date: Thu, 5 Oct 2017 15:02:18 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1710051453590.87457@chino.kir.corp.google.com>
 References: <20171004154638.710-1-guro@fb.com> <20171004154638.710-4-guro@fb.com> <alpine.DEB.2.10.1710041322160.67374@chino.kir.corp.google.com> <20171004204153.GA2696@cmpxchg.org> <alpine.DEB.2.10.1710050123180.20389@chino.kir.corp.google.com>
- <20171005102716.GA4922@cmpxchg.org>
+ <20171005104429.GB12982@castle.dhcp.TheFacebook.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=sp5tDRJDFkQjSfxYOCWOzLW5Faoxj+OWvRf0Qm6otR4=;
-        b=iY7ybxjNVg5GZgtZkEV8HU88eT4pafoOlTnzCFEh7nS5Lu1Ci08Mai8qL4S249Us+8
-         pSBv0R9HsV48e/nSBbOa/83nYoT4ACf8x6wRaiqwSrAf8w0j2atIMY8FwOJDyv4mF4Ob
-         H8jvAtr6+PhkxRdfd9THPSitHSmsTcgeQHONukLqxfc7BJedHsAQXp3DgR81KsUs3JzW
-         gUFBZAlfLtHz15Eyv4VemUZ8SbhZfCGHfYM2Dc3e5efcLmZSkdA/NSDEd4ZIVrvIMc3B
-         9lJ3qHhG/7IXjUwNn3OcTkp6QAuJBmJvngIZg0SnJ7OjMKeM3YxIXZE0v4IR2EeXUy7a
-         f+wA==
-In-Reply-To: <20171005102716.GA4922@cmpxchg.org>
+        bh=5sQ9iLE0Zu2GFX4w7e8b7LDO/rAD6RMUWL1nAe0rz+g=;
+        b=GyIRJwHL27PvKEmy9KxxgZQKSQnOysnom/2jAmK3M9ef7LxcKuLmkgBs7gXJMgeYLF
+         qInD3ncUdCcD4A3g4a4TiPCcayXHy6jOJC1x+MSzsfw2F+mkzTN5yeB6V4CLqszI+a5E
+         jhsDzegw5CLv9Eyqc9oEfZYfONhU9EfI6hrhn5duTE+6ytIVrbVRxmyA9TdhQx540p/1
+         Pdy/40X8pAqliJ5dLq8Es61fTJbD92vMAZEQobNIXj5X60GUIP8h1VbpMo9lqci7+YDX
+         a4esFDES7I0NKA6d9wCGOilKqqjILO/vKKCHajdE5GosudrU5ztsNBB0ytaJcdNDAHHq
+         Q13Q==
+In-Reply-To: <20171005104429.GB12982@castle.dhcp.TheFacebook.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 5 Oct 2017, Johannes Weiner wrote:
+On Thu, 5 Oct 2017, Roman Gushchin wrote:
 
-> > It is, because it can quite clearly be a DoSand was prevented with 
-> > Roman's earlier design of iterating usage up the hierarchy and comparing 
-> > siblings based on that criteria.  I know exactly why he chose that 
-> > implementation detail early on, and it was to prevent cases such as this 
-> > and to not let userspace hide from the oom killer.
-> 
-> This doesn't address how it's different from a single process
-> following the same pattern right now.
-> 
-
-Are you referring to a single process being rewritten into N different 
-subprocesses that do the same work as the single process but is separated 
-in this manner to avoid having a large rss for any single process to avoid  
-being oom killed?
-
-This is solved by a cgroup-aware oom killer because these subprocesses 
-should not be able to escape their own chargable entity.  It's exactly the 
-usecase that Roman is addressing, correct?  My suggestion is to continue 
-to iterate the usage up the hierarchy so that users can't easily defeat 
-this by creating N subcontainers instead.
-
-> > Let's resolve that global oom is a real condition and getting into that 
-> > situation is not a userspace problem.  It's the result of overcommiting 
-> > the system, and is used in the enterprise to address business goals.  If 
-> > the above is true, and its up to memcg to prevent global oom in the first 
-> > place, then this entire patchset is absolutely pointless.  Limit userspace 
-> > to 95% of memory and when usage is approaching that limit, let userspace 
-> > attached to the root memcg iterate the hierarchy itself and kill from the 
-> > largest consumer.
-> > 
 > > This patchset exists because overcommit is real, exactly the same as 
 > > overcommit within memcg hierarchies is real.  99% of the time we don't run 
 > > into global oom because people aren't using their limits so it just works 
@@ -67,18 +37,63 @@ this by creating N subcontainers instead.
 > > processes over N cgroups.  It's going to oom kill an admin every single 
 > > time.
 > 
-> We overcommit too, but our workloads organize themselves based on
-> managing their resources, not based on evading the OOM killer. I'd
-> wager that's true for many if not most users.
+> Overcommit is real, but configuring the system in a way that system-wide OOM
+> happens often is a strange idea.
+
+I wouldn't consider 1% of the time to be often, but the incident rate 
+depends on many variables and who is sharing the same machine.  We can be 
+smart about it and limit the potential for it in many ways, but the end 
+result is that we still do overcommit and the system oom killer can be 
+used to free memory from a low priority process.
+
+> As we all know, the system can barely work
+> adequate under global memory shortage: network packets are dropped, latency
+> is bad, weird kernel issues are revealed periodically, etc.
+> I do not see, why you can't overcommit on deeper layers of cgroup hierarchy,
+> avoiding system-wide OOM to happen.
 > 
 
-No workloads are based on evading the oom killer, we are specifically 
-trying to avoid that with oom priorities.  They have the power over 
-increasing their own priority to be preferred to kill, but not decreasing 
-their oom priority that was set by an activity manager.  This is exactly 
-the same as how /proc/pid/oom_score_adj works.  With a cgroup-aware oom 
-killer, which we'd love, nothing can possibly evade the oom killer if 
-there are oom priorities.
+Whether it's a system oom or whether its part of the cgroup hierarchy 
+doesn't really matter, what matters is that overcommit occurs and we'd 
+like to kill based on cgroup usage for each cgroup and its subtree, much 
+like your earlier iterations, and also have the ability for userspace to 
+influence that.
+
+Without a cgroup-aware oom killer, I can prefer against killing an 
+important job that uses 80% of memory and I want it to continue using 80% 
+of memory.  We don't have that control over the cgroup-aware oom killer 
+although we want to consider cgroup and subtree usage when choosing 
+amongst cgroups with the same priority.  If you are not interested in 
+defining the oom priority, all can remain at the default and there is no 
+compatibility issue.
+
+> > I know exactly why earlier versions of this patchset iterated that usage 
+> > up the tree so you would pick from students, pick from this troublemaking 
+> > student, and then oom kill from his hierarchy.  Roman has made that point 
+> > himself.  My suggestion was to add userspace influence to it so that 
+> > enterprise users and users with business goals can actually define that we 
+> > really do want 80% of memory to be used by this process or this hierarchy, 
+> > it's in our best interest.
+> 
+> I'll repeat myself: I believe that there is a range of possible policies:
+> from a complete flat (what Johannes did suggested few weeks ago), to a very
+> hierarchical (as in v8). Each with their pros and cons.
+> (Michal did provide a clear example of bad behavior of the hierarchical approach).
+> 
+> I assume, that v10 is a good middle point, and it's good because it doesn't
+> prevent further development. Just for example, you can introduce a third state
+> of oom_group knob, which will mean "evaluate as a whole, but do not kill all".
+> And this is what will solve your particular case, right?
+> 
+
+I would need to add patches to add the "evaluate as a whole but do not 
+kill all" knob and a knob for "oom priority" so that userspace has the 
+same influence over a cgroup based comparison that it does with a process 
+based comparison to meet business goals.  I'm not sure I'd be happy to 
+pollute the mem cgroup v2 filesystem with such knobs when you can easily 
+just not set the priority if you don't want to, and increase the priority 
+if you have a leaf cgroup that should be preferred to be killed because of 
+excess usage.  It has worked quite well in practice.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
