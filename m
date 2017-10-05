@@ -1,70 +1,84 @@
-From: Shakeel Butt <shakeelb@google.com>
+From: David Rientjes <rientjes@google.com>
 Subject: Re: [v10 3/6] mm, oom: cgroup-aware OOM killer
-Date: Wed, 4 Oct 2017 14:24:26 -0700
-Message-ID: <CALvZod45ObeQwq-pKeqyLe2bNwfKAr0majCbNfqPOEJL+AeiNw@mail.gmail.com>
-References: <20171004154638.710-1-guro@fb.com> <20171004154638.710-4-guro@fb.com>
- <CALvZod6bwyoSWTv139y0wMidpZm5HcDu8RzVjF8U7GHxAzxSQw@mail.gmail.com> <20171004201524.GA4174@castle>
+Date: Thu, 5 Oct 2017 01:40:09 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1710050123180.20389@chino.kir.corp.google.com>
+References: <20171004154638.710-1-guro@fb.com> <20171004154638.710-4-guro@fb.com> <alpine.DEB.2.10.1710041322160.67374@chino.kir.corp.google.com> <20171004204153.GA2696@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=kM9TQ05IPPDjp7Kc+Rg3hSYC9KdV3icPhAwDSjA+p0c=;
-        b=Wok+/obMHgIt48F64O/mg6CFmOja/gkzglNdwzIgjshv/ofRG5P1uSzca5AseEMJ+F
-         PQciSSnz5qiBZcZmazLIWwHYJBFD482mPV/Latwr1alEUgVopX3p0+hHE/p0GfkoRWKE
-         DOcsJkD6fzY61+5f9Fe+rJuT5Rzz8cB7wkZjGaTfk96MD42gQNCVgz7VKPhbzShewZO/
-         aUwp42e/Vp4EbGJ0nHTdqW/bMyMAkvQESUr1M+6k5tHMQPykImioLikbF3hVNH2xq7WE
-         X4lBKmtOl49skpytKHk3/5cGzUJ7PX0amirtZsd9WeYe+vN8uUB8LlfkAV6Rzy1kEDy8
-         DBBw==
-In-Reply-To: <20171004201524.GA4174@castle>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=rjgAZPPl9o4uEpInEFZBxnCTQhkESiCg/menljsoqBA=;
+        b=HwKje2cC1j48Z8ejnLm+yA8yD4WkTVYr0fIZN+ONp9a1DD3OS3ZAQ2+5ks/efyk4P4
+         oRO/UwatBpWgMgRqMmE28JXR8jm4nZAFpqs2Ak/3cluF9hOB+ghHvVOAJQeBSCX2Id31
+         LQRcY1hyHQeiUiTQXIwsN5N9dMZ+yojapUbQ2zccPZjxSvKXZcQZrPRT0ifIbmC4RjKF
+         Eycne8Jx2nVSbB7lZA6zirUzeMwkEmYOYGOT5JkUlbxh5zhtFkSd7K4537TQXHkcl6T/
+         17kUt+3Uqb0oCSW8LLV7pHTrl7b+oXNcm6ZvUAGTp68wieRHeHzWLjLDRR2AcsfOQfaz
+         5uEA==
+In-Reply-To: <20171004204153.GA2696@cmpxchg.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Linux MM <linux-mm@kvack.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
->> > +               if (memcg_has_children(iter))
->> > +                       continue;
->>
->> && iter != root_mem_cgroup ?
->
-> Oh, sure. I had a stupid bug in my test script, which prevented me from
-> catching this. Thanks!
->
-> This should fix the problem.
-> --
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2e82625bd354..b3848bce4c86 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2807,7 +2807,8 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
->                  * We don't consider non-leaf non-oom_group memory cgroups
->                  * as OOM victims.
->                  */
-> -               if (memcg_has_children(iter) && !mem_cgroup_oom_group(iter))
-> +               if (memcg_has_children(iter) && iter != root_mem_cgroup &&
-> +                   !mem_cgroup_oom_group(iter))
->                         continue;
+On Wed, 4 Oct 2017, Johannes Weiner wrote:
 
-I think you are mixing the 3rd and 4th patch. The root_mem_cgroup
-check should be in 3rd while oom_group stuff should be in 4th.
+> > By only considering leaf memcgs, does this penalize users if their memcg 
+> > becomes oc->chosen_memcg purely because it has aggregated all of its 
+> > processes to be members of that memcg, which would otherwise be the 
+> > standard behavior?
+> > 
+> > What prevents me from spreading my memcg with N processes attached over N 
+> > child memcgs instead so that memcg_oom_badness() becomes very small for 
+> > each child memcg specifically to avoid being oom killed?
+> 
+> It's no different from forking out multiple mm to avoid being the
+> biggest process.
+> 
 
+It is, because it can quite clearly be a DoS, and was prevented with 
+Roman's earlier design of iterating usage up the hierarchy and comparing 
+siblings based on that criteria.  I know exactly why he chose that 
+implementation detail early on, and it was to prevent cases such as this 
+and to not let userspace hide from the oom killer.
 
->>
->> Shouldn't there be a CSS_ONLINE check? Also instead of css_get at the
->> end why not css_tryget_online() here and css_put for the previous
->> selected one.
->
-> Hm, why do we need to check this? I do not see, how we can choose
-> an OFFLINE memcg as a victim, tbh. Please, explain the problem.
->
+> It's up to the parent to enforce limits on that group and prevent you
+> from being able to cause global OOM in the first place, in particular
+> if you delegate to untrusted and potentially malicious users.
+> 
 
-Sorry about the confusion. There are two things. First, should we do a
-css_get on the newly selected memcg within the for loop when we still
-have a reference to it?
+Let's resolve that global oom is a real condition and getting into that 
+situation is not a userspace problem.  It's the result of overcommiting 
+the system, and is used in the enterprise to address business goals.  If 
+the above is true, and its up to memcg to prevent global oom in the first 
+place, then this entire patchset is absolutely pointless.  Limit userspace 
+to 95% of memory and when usage is approaching that limit, let userspace 
+attached to the root memcg iterate the hierarchy itself and kill from the 
+largest consumer.
 
-Second, for the OFFLINE memcg, you are right oom_evaluate_memcg() will
-return 0 for offlined memcgs. Maybe no need to call
-oom_evaluate_memcg() for offlined memcgs.
+This patchset exists because overcommit is real, exactly the same as 
+overcommit within memcg hierarchies is real.  99% of the time we don't run 
+into global oom because people aren't using their limits so it just works 
+out.  1% of the time we run into global oom and we need a decision to made 
+based for forward progress.  Using Michal's earlier example of admins and 
+students, a student can easily use all of his limit and also, with v10 of 
+this patchset, 99% of the time avoid being oom killed just by forking N 
+processes over N cgroups.  It's going to oom kill an admin every single 
+time.
+
+I know exactly why earlier versions of this patchset iterated that usage 
+up the tree so you would pick from students, pick from this troublemaking 
+student, and then oom kill from his hierarchy.  Roman has made that point 
+himself.  My suggestion was to add userspace influence to it so that 
+enterprise users and users with business goals can actually define that we 
+really do want 80% of memory to be used by this process or this hierarchy, 
+it's in our best interest.
+
+Earlier iterations of this patchset did this, and did it correctly.  
+Userspace influence over the decisionmaking makes it a very powerful 
+combination because you _can_ specify what your goals are or choose to 
+leave the priorities as default so you can compare based solely on usage.  
+It was a beautiful solution to the problem.
