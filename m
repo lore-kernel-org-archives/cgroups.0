@@ -1,63 +1,77 @@
 From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [v10 3/6] mm, oom: cgroup-aware OOM killer
-Date: Thu, 5 Oct 2017 13:14:02 +0200
-Message-ID: <20171005111402.53gplrzxhodslvvp@dhcp22.suse.cz>
+Date: Thu, 5 Oct 2017 13:40:47 +0200
+Message-ID: <20171005114047.wbie3b6nhtea4mwt@dhcp22.suse.cz>
 References: <20171004154638.710-1-guro@fb.com>
  <20171004154638.710-4-guro@fb.com>
- <20171004192720.GC1501@cmpxchg.org>
- <20171004195110.GA18900@castle>
- <alpine.DEB.2.10.1710041316120.67374@chino.kir.corp.google.com>
- <20171004203138.GA2632@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20171004203138.GA2632@cmpxchg.org>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <20171004154638.710-4-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Rientjes <rientjes@google.com>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed 04-10-17 16:31:38, Johannes Weiner wrote:
-> On Wed, Oct 04, 2017 at 01:17:14PM -0700, David Rientjes wrote:
-> > On Wed, 4 Oct 2017, Roman Gushchin wrote:
-> > 
-> > > > > @@ -828,6 +828,12 @@ static void __oom_kill_process(struct task_struct *victim)
-> > > > >  	struct mm_struct *mm;
-> > > > >  	bool can_oom_reap = true;
-> > > > >  
-> > > > > +	if (is_global_init(victim) || (victim->flags & PF_KTHREAD) ||
-> > > > > +	    victim->signal->oom_score_adj == OOM_SCORE_ADJ_MIN) {
-> > > > > +		put_task_struct(victim);
-> > > > > +		return;
-> > > > > +	}
-> > > > > +
-> > > > >  	p = find_lock_task_mm(victim);
-> > > > >  	if (!p) {
-> > > > >  		put_task_struct(victim);
-> > > > 
-> > > > Is this necessary? The callers of this function use oom_badness() to
-> > > > find a victim, and that filters init, kthread, OOM_SCORE_ADJ_MIN.
-> > > 
-> > > It is. __oom_kill_process() is used to kill all processes belonging
-> > > to the selected memory cgroup, so we should perform these checks
-> > > to avoid killing unkillable processes.
-> > > 
-> > 
-> > That's only true after the next patch in the series which uses the 
-> > oom_kill_memcg_member() callback to kill processes for oom_group, correct?  
-> > Would it be possible to move this check to that patch so it's more 
-> > obvious?
+On Wed 04-10-17 16:46:35, Roman Gushchin wrote:
+> Traditionally, the OOM killer is operating on a process level.
+> Under oom conditions, it finds a process with the highest oom score
+> and kills it.
 > 
-> Yup, I realized it when reviewing the next patch. Moving this hunk to
-> the next patch would probably make sense. Although, us reviewers have
-> been made aware of this now, so I don't feel strongly about it. Won't
-> make much of a difference once the patches are merged.
+> This behavior doesn't suit well the system with many running
+> containers:
+> 
+> 1) There is no fairness between containers. A small container with
+> few large processes will be chosen over a large one with huge
+> number of small processes.
+> 
+> 2) Containers often do not expect that some random process inside
+> will be killed. In many cases much safer behavior is to kill
+> all tasks in the container. Traditionally, this was implemented
+> in userspace, but doing it in the kernel has some advantages,
+> especially in a case of a system-wide OOM.
+> 
+> To address these issues, the cgroup-aware OOM killer is introduced.
+> 
+> Under OOM conditions, it looks for the biggest leaf memory cgroup
+> and kills the biggest task belonging to it. The following patches
+> will extend this functionality to consider non-leaf memory cgroups
+> as well, and also provide an ability to kill all tasks belonging
+> to the victim cgroup.
+> 
+> The root cgroup is treated as a leaf memory cgroup, so it's score
+> is compared with leaf memory cgroups.
+> Due to memcg statistics implementation a special algorithm
+> is used for estimating it's oom_score: we define it as maximum
+> oom_score of the belonging tasks.
 
-I think it would be better to move it because it will be less confusing
-that way. Especially for those who are going to read git history in
-order to understand why this is needed.
+Thanks for separating the group_oom part. This is getting in the
+mergeable state. I will ack it once the suggested fixes are folded in.
+There is some clean up potential on top (I find the oc->chosen_memcg
+quite ugly and will post a patch on top of yours) but that can be done
+later.
+ 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Cc: David Rientjes <rientjes@google.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: kernel-team@fb.com
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-mm@kvack.org
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
