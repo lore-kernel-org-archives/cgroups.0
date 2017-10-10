@@ -1,22 +1,32 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Roman Gushchin <guro@fb.com>
 Subject: Re: [v11 3/6] mm, oom: cgroup-aware OOM killer
-Date: Tue, 10 Oct 2017 10:18:32 +0200
-Message-ID: <20171010081832.tsidde5t6ziha4zh@dhcp22.suse.cz>
+Date: Tue, 10 Oct 2017 13:23:06 +0100
+Message-ID: <20171010122306.GA11653@castle.DHCP.thefacebook.com>
 References: <20171005130454.5590-1-guro@fb.com>
  <20171005130454.5590-4-guro@fb.com>
  <alpine.DEB.2.10.1710091414260.59643@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1710091414260.59643-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=8GqkqbU1jp52ORAW1KB9j3pO9PtI5+qLoF55JJQnego=;
+ b=NA8vdDcSAxmNzZfmm5kX2+HZSshk0tF+MawNI6RKrgr2h5FV9r2TSBbp4AR7Ohbp2uEG
+ 5+8K4HOdabsau08wv/oGGZu/7kjM+A4H8+XQ4G0CbVmeeI1o4tQn3Vteya2WZESKxr/c
+ n7CB6ZITUuYMid5pWGrVC8gNs8ZpCU5H68Y= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=8GqkqbU1jp52ORAW1KB9j3pO9PtI5+qLoF55JJQnego=;
+ b=h/zHQeEN5oRO1hRP/8g7Mi5YXkj9KGdmf7pT8nwBJPMH+55dBPtaYXyGSlkklpaLcj1HB14h18oTK2JwBXEWD5WFxHoRPaqkfQD1ZWvsz6dyqVxOWDxsmKxP3iMX6KATvh0R2ySRQ9yS2fLY2G9bM+CiV7/rWONvyNBa9kD2UKE=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1710091414260.59643@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 09-10-17 14:52:53, David Rientjes wrote:
+On Mon, Oct 09, 2017 at 02:52:53PM -0700, David Rientjes wrote:
 > On Thu, 5 Oct 2017, Roman Gushchin wrote:
 > 
 > > Traditionally, the OOM killer is operating on a process level.
@@ -39,6 +49,11 @@ On Mon 09-10-17 14:52:53, David Rientjes wrote:
 > 
 > I'd move the second point to the changelog for the next patch since this 
 > patch doesn't implement any support for memory.oom_group.
+
+There is a special remark later in the changelog explaining that
+this functionality will be added by following patches. I've thought
+it's useful to have all basic ideas in the one place.
+
 > 
 > > To address these issues, the cgroup-aware OOM killer is introduced.
 > > 
@@ -76,80 +91,14 @@ On Mon 09-10-17 14:52:53, David Rientjes wrote:
 > root mem cgroup itself or for a different accounting methodology for leaf 
 > memory cgroups.
 
-I believe this is documented in the patch. I agree with you but I also
-assume this will not be such a big problem in practice because usecases
-which are going to opt-in for the cgroup aware OOM killer will have the
-all workloads running in memcgs and the root will basically run only
-some essential system wide services needed for the overall system
-operation. Risk of the runaway of this should be reasonably small and
-killing any of those will put the system into an unstable state anyway.
+This is basically a workaround, because we don't have necessary stats for root
+memory cgroup. If we'll start gathering them at some point, we can change this
+and treat root memcg exactly as other leaf cgroups.
 
-That being said future improvements are possible but I guess that
-shouldn't be a roadblock for the feature to be merged.
+Or, if someone will come with an idea of a better approximation, it can be
+implemented as a separate enhancement on top of the initial implementation.
+This is more than welcome.
 
-> > +/*
-> > + * Checks if the given memcg is a valid OOM victim and returns a number,
-> > + * which means the folowing:
-> > + *   -1: there are inflight OOM victim tasks, belonging to the memcg
-> > + *    0: memcg is not eligible, e.g. all belonging tasks are protected
-> > + *       by oom_score_adj set to OOM_SCORE_ADJ_MIN
-> > + *   >0: memcg is eligible, and the returned value is an estimation
-> > + *       of the memory footprint
-> > + */
-> > +static long oom_evaluate_memcg(struct mem_cgroup *memcg,
-> > +			       const nodemask_t *nodemask,
-> > +			       unsigned long totalpages)
-> > +{
-> > +	struct css_task_iter it;
-> > +	struct task_struct *task;
-> > +	int eligible = 0;
-> > +
-> > +	/*
-> > +	 * Memcg is OOM eligible if there are OOM killable tasks inside.
-> > +	 *
-> > +	 * We treat tasks with oom_score_adj set to OOM_SCORE_ADJ_MIN
-> > +	 * as unkillable.
-> > +	 *
-> > +	 * If there are inflight OOM victim tasks inside the memcg,
-> > +	 * we return -1.
-> > +	 */
-> > +	css_task_iter_start(&memcg->css, 0, &it);
-> > +	while ((task = css_task_iter_next(&it))) {
-> > +		if (!eligible &&
-> > +		    task->signal->oom_score_adj != OOM_SCORE_ADJ_MIN)
-> > +			eligible = 1;
-> > +
-> > +		if (tsk_is_oom_victim(task) &&
-> > +		    !test_bit(MMF_OOM_SKIP, &task->signal->oom_mm->flags)) {
-> > +			eligible = -1;
-> > +			break;
-> > +		}
-> > +	}
-> > +	css_task_iter_end(&it);
-> > +
-> > +	if (eligible <= 0)
-> > +		return eligible;
-> > +
-> > +	return memcg_oom_badness(memcg, nodemask, totalpages);
-> > +}
-> > +
-> > +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
-> > +{
-> > +	struct mem_cgroup *iter;
-> > +
-> > +	oc->chosen_memcg = NULL;
-> > +	oc->chosen_points = 0;
-> > +
-> > +	/*
-> > +	 * The oom_score is calculated for leaf memory cgroups (including
-> > +	 * the root memcg).
-> > +	 */
-> > +	rcu_read_lock();
-> > +	for_each_mem_cgroup_tree(iter, root) {
-> > +		long score;
-> > +
-> > +		if (memcg_has_children(iter) && iter != root_mem_cgroup)
-> > +			continue;
 > 
 > I'll reiterate what I did on the last version of the patchset: considering 
 > only leaf memory cgroups easily allows users to defeat this heuristic and 
@@ -158,13 +107,7 @@ shouldn't be a roadblock for the feature to be merged.
 > cgroups for their N processes and attaches one process to each child, the 
 > _only_ thing this achieved is to defeat your heuristic and prefer other 
 > leaf cgroups simply because those other leaf cgroups did not do this.
-
-I do not think repeating the argument is both needed nor helpful. It has
-been already argued that the userspace is already able to do the same by
-splitting the memory consumptions between processes. I would argue even
-further that allowing an untrusted entity to create arbitrary sub groups
-is dangerous for other reasons.
-
+> 
 > Effectively:
 > 
 > for i in $(cat cgroup.procs); do mkdir $i; echo $i > $i/cgroup.procs; done
@@ -178,85 +121,30 @@ is dangerous for other reasons.
 > implementation of a process into several smaller individual processes does 
 > not allow this heuristic to be defeated.
 
-But it breaks other usecases as already pointed out and it is quite sad
-you keep ignoring those.
+To all previously said words I can only add that cgroup v2 allows to limit
+the amount of cgroups in the sub-tree:
+1a926e0bbab8 ("cgroup: implement hierarchy limits").
 
-> > +
-> > +		score = oom_evaluate_memcg(iter, oc->nodemask, oc->totalpages);
-> > +
-> > +		/*
-> > +		 * Ignore empty and non-eligible memory cgroups.
-> > +		 */
-> > +		if (score == 0)
-> > +			continue;
-> > +
-> > +		/*
-> > +		 * If there are inflight OOM victims, we don't need
-> > +		 * to look further for new victims.
-> > +		 */
-> > +		if (score == -1) {
-> > +			oc->chosen_memcg = INFLIGHT_VICTIM;
-> > +			mem_cgroup_iter_break(root, iter);
-> > +			break;
-> > +		}
-> > +
-> > +		if (score > oc->chosen_points) {
-> > +			oc->chosen_points = score;
-> > +			oc->chosen_memcg = iter;
-> > +		}
-> 
-> I'll reiterate what I did on previous versions of this patchset: this 
-> effectively removes all control the user has from influencing oom victim 
-> selection.  Victim selection is very important, the user must be able to 
-> influence that decision to prevent the loss of important work when the 
-> system is out of memory.
-
-And again it has been argued, and rightfully so, that this is not in
-scope of this series and a more advanced user space influence can be
-implemented on top.
-
-[...]
-
-> > @@ -1083,27 +1105,37 @@ bool out_of_memory(struct oom_control *oc)
-> >  	    current->mm && !oom_unkillable_task(current, NULL, oc->nodemask) &&
-> >  	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
-> >  		get_task_struct(current);
-> > -		oc->chosen = current;
-> > +		oc->chosen_task = current;
-> >  		oom_kill_process(oc, "Out of memory (oom_kill_allocating_task)");
-> >  		return true;
-> >  	}
-> >  
-> > +	if (mem_cgroup_select_oom_victim(oc) && oom_kill_memcg_victim(oc)) {
-> > +		delay = true;
-> > +		goto out;
-> > +	}
-> > +
-> >  	select_bad_process(oc);
-> 
 > This is racy because mem_cgroup_select_oom_victim() found an eligible 
 > oc->chosen_memcg that is not INFLIGHT_VICTIM with at least one eligible 
 > process but mem_cgroup_scan_task(oc->chosen_memcg) did not.  It means if a 
 > process cannot be killed because of oom_unkillable_task(), the only 
 > eligible processes moved or exited, or the /proc/pid/oom_score_adj of the 
 > eligible processes changed, we end up falling back to the complete 
-> tasklist scan.
-
-oom victim selection will always be racy wrt. tasks exiting. Falling
-back to the complete tasklist scan should be tolerable as this is really
-not even remotely close to a hot path.
-
-> It would be better for oom_evaluate_memcg() to consider 
+> tasklist scan.  It would be better for oom_evaluate_memcg() to consider 
 > oom_unkillable_task() and also retry in the case where 
 > oom_kill_memcg_victim() returns NULL.
 
-I am not really sure oom_unkillable_task will really help. Most of the
-conditions are simply not applicable to the memcgs' tasks. The only
-interesting one might be has_intersects_mems_allowed but even that one
-is quite questionable. memcg_oom_badness is already NUMA aware and
-has_intersects_mems_allowed is not much more reliable way to detect
-specific node consumers anyway.
+I agree with you here. The fallback to the existing mechanism is implemented
+to be safe for sure, especially in a case of a global OOM. When we'll get
+more confidence in cgroup-aware OOM killer reliability, we can change this
+behavior. Personally, I would prefer to get rid of looking at all tasks just
+to find a pre-existing OOM victim, but it might be quite tricky to implement.
 
--- 
-Michal Hocko
-SUSE Labs
+Thanks!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
