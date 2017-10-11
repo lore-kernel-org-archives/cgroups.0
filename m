@@ -1,201 +1,182 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [v11 3/6] mm, oom: cgroup-aware OOM killer
-Date: Tue, 10 Oct 2017 23:04:17 +0100
-Message-ID: <20171010220417.GA8667@castle>
-References: <20171005130454.5590-1-guro@fb.com>
- <20171005130454.5590-4-guro@fb.com>
- <alpine.DEB.2.10.1710091414260.59643@chino.kir.corp.google.com>
- <20171010122306.GA11653@castle.DHCP.thefacebook.com>
- <alpine.DEB.2.10.1710101345370.28262@chino.kir.corp.google.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: remove circular dependency deadlock
+Date: Wed, 11 Oct 2017 11:48:33 +0200
+Message-ID: <20171011094833.pdp4torvotvjdmkt@hirez.programming.kicks-ass.net>
+References: <1504792583-10424-1-git-send-email-prsood@codeaurora.org>
+ <20170907175107.GG17526@worktop.programming.kicks-ass.net>
+ <4668d1ec-dc43-8a9c-4f94-a421683d3c17@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=TmFn4Bgo/Mq+KH+tdzbkrSnOS9PsBtHv2dhY9UrYRyQ=;
- b=ZzDX6h09oI18wgEa/dTW9Uxb1jcaELieZ10C4n8rX7VzWAnLkcg7N5Zq4fuwMDLyxH5z
- reyMEj7YNAEsROQRsd9uS1+2tCjD6oRszoypCd4SVnjFk0YMYVlDyztmwdTfEyvNiUMp
- X4KVLnWmpqEssOZmiUi4nRMTYD5INOXXvaw= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=TmFn4Bgo/Mq+KH+tdzbkrSnOS9PsBtHv2dhY9UrYRyQ=;
- b=eOKa/IfmobUyqTPNK/OcfAgtL6szM6Hrd31Kq3m3+QMI4q654si1IzsC+4tG6ebMjcRWOZLIQh780BJVYKvFar501TYFtBEGIeEnkQpvj7J5MZwJ2NqO5p47qB2v5bX6HQRfeeNOMa+MW7LgGySXtL1425TO9IPoGgT0GdGx+xQ=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=MJzUqOWmVjJJ7ytO0CDW4msHch5r1E9vPJGBbZhDfiM=; b=pRbNa9T5h7pyYS6jimOGM+haJ
+        boKk2ISyAqEHpwcGHpLVIp2zFAgg3uhkkCI7OJdIDOT8b2iu1VoPzPmd4G+dOgsjtMGQK0kVIZvOC
+        WFV/YO7YDoO/sx60s21K5C2VYuOyJeAPHWOjiRDYbdOQTCvu/OQidcPcB9n4KYxlqwLq3o+DKlBSg
+        VBnv2pHHBq5m9T35/W/KzyRfFKOWuRuYIVvMnzL9mBrRJ8eTXvkx19vpM9lEvOiCtMoBWkxOpd1e7
+        ltn1+hYooUDVhSoMRYU17YwoMO6P6/glcjU2jrP6TlMye1DCkyFTXMjqKaIcGOeu8yP7yU9b8sija
+    
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1710101345370.28262-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <4668d1ec-dc43-8a9c-4f94-a421683d3c17-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
 
-On Tue, Oct 10, 2017 at 02:13:00PM -0700, David Rientjes wrote:
-> On Tue, 10 Oct 2017, Roman Gushchin wrote:
-> 
-> > > This seems to unfairly bias the root mem cgroup depending on process size.  
-> > > It isn't treated fairly as a leaf mem cgroup if they are being compared 
-> > > based on different criteria: the root mem cgroup as (mostly) the largest 
-> > > rss of a single process vs leaf mem cgroups as all anon, unevictable, and 
-> > > unreclaimable slab pages charged to it by all processes.
-> > > 
-> > > I imagine a configuration where the root mem cgroup has 100 processes 
-> > > attached each with rss of 80MB, compared to a leaf cgroup with 100 
-> > > processes of 1MB rss each.  How does this logic prevent repeatedly oom 
-> > > killing the processes of 1MB rss?
-> > > 
-> > > In this case, "the root cgroup is treated as a leaf memory cgroup" isn't 
-> > > quite fair, it can simply hide large processes from being selected.  Users 
-> > > who configure cgroups in a unified hierarchy for other resource 
-> > > constraints are penalized for this choice even though the mem cgroup with 
-> > > 100 processes of 1MB rss each may not be limited itself.
-> > > 
-> > > I think for this comparison to be fair, it requires accounting for the 
-> > > root mem cgroup itself or for a different accounting methodology for leaf 
-> > > memory cgroups.
-> > 
-> > This is basically a workaround, because we don't have necessary stats for root
-> > memory cgroup. If we'll start gathering them at some point, we can change this
-> > and treat root memcg exactly as other leaf cgroups.
-> > 
-> 
-> I understand why it currently cannot be an apples vs apples comparison 
-> without, as I suggest in the last paragraph, that the same accounting is 
-> done for the root mem cgroup, which is intuitive if it is to be considered 
-> on the same basis as leaf mem cgroups.
-> 
-> I understand for the design to work that leaf mem cgroups and the root mem 
-> cgroup must be compared if processes can be attached to the root mem 
-> cgroup.  My point is that it is currently completely unfair as I've 
-> stated: you can have 10000 processes attached to the root mem cgroup with 
-> rss of 80MB each and a leaf mem cgroup with 100 processes of 1MB rss each 
-> and the oom killer is going to target the leaf mem cgroup as a result of 
-> this apples vs oranges comparison.
-> 
-> In case it's not clear, the 10000 processes of 80MB rss each is the most 
-> likely contributor to a system-wide oom kill.  Unfortunately, the 
-> heuristic introduced by this patchset is broken wrt a fair comparison of 
-> the root mem cgroup usage.
-> 
-> > Or, if someone will come with an idea of a better approximation, it can be
-> > implemented as a separate enhancement on top of the initial implementation.
-> > This is more than welcome.
-> > 
-> 
-> We don't need a better approximation, we need a fair comparison.  The 
-> heuristic that this patchset is implementing is based on the usage of 
-> individual mem cgroups.  For the root mem cgroup to be considered 
-> eligible, we need to understand its usage.  That usage is _not_ what is 
-> implemented by this patchset, which is the largest rss of a single 
-> attached process.  This, in fact, is not an "approximation" at all.  In 
-> the example of 10000 processes attached with 80MB rss each, the usage of 
-> the root mem cgroup is _not_ 80MB.
+On Mon, Oct 09, 2017 at 06:57:46PM +0530, Prateek Sood wrote:
+> On 09/07/2017 11:21 PM, Peter Zijlstra wrote:
 
-It's hard to imagine a "healthy" setup with 10000 process in the root
-memory cgroup, and even if we kill 1 process we will still have 9999
-remaining process. I agree with you at some point, but it's not
-a real world example.
+> > But if you invert these locks, the need for cpuset_hotplug_workfn() goes
+> > away, at least for the CPU part, and we can make in synchronous again.
+> > Yay!!
 
+> The callback making a call to cpuset_hotplug_workfn()in hotplug path are
+>         [CPUHP_AP_ACTIVE] = {
+>                 .name                   = "sched:active",
+>                 .startup.single         = sched_cpu_activate,
+>                 .teardown.single        = sched_cpu_deactivate,
+>         },
 > 
-> I'll restate that oom killing a process is a last resort for the kernel, 
-> but it also must be able to make a smart decision.  Targeting dozens of 
-> 1MB processes instead of 80MB processes because of a shortcoming in this 
-> implementation is not the appropriate selection, it's the opposite of the 
-> correct selection.
+> if we make cpuset_hotplug_workfn() synchronous, deadlock might happen:
+> _cpu_down()
+>    cpus_write_lock()  //held
+>       cpuhp_kick_ap_work()
+>         cpuhp_kick_ap()
+>            __cpuhp_kick_ap()
+>               wake_up_process() //cpuhp_thread_fun
+>                 wait_for_ap_thread() //wait for complete from cpuhp_thread_fun()
 > 
-> > > I'll reiterate what I did on the last version of the patchset: considering 
-> > > only leaf memory cgroups easily allows users to defeat this heuristic and 
-> > > bias against all of their memory usage up to the largest process size 
-> > > amongst the set of processes attached.  If the user creates N child mem 
-> > > cgroups for their N processes and attaches one process to each child, the 
-> > > _only_ thing this achieved is to defeat your heuristic and prefer other 
-> > > leaf cgroups simply because those other leaf cgroups did not do this.
-> > > 
-> > > Effectively:
-> > > 
-> > > for i in $(cat cgroup.procs); do mkdir $i; echo $i > $i/cgroup.procs; done
-> > > 
-> > > will radically shift the heuristic from a score of all anonymous + 
-> > > unevictable memory for all processes to a score of the largest anonymous +
-> > > unevictable memory for a single process.  There is no downside or 
-> > > ramifaction for the end user in doing this.  When comparing cgroups based 
-> > > on usage, it only makes sense to compare the hierarchical usage of that 
-> > > cgroup so that attaching processes to descendants or splitting the 
-> > > implementation of a process into several smaller individual processes does 
-> > > not allow this heuristic to be defeated.
-> > 
-> > To all previously said words I can only add that cgroup v2 allows to limit
-> > the amount of cgroups in the sub-tree:
-> > 1a926e0bbab8 ("cgroup: implement hierarchy limits").
-> > 
-> 
-> So the solution to 
-> 
-> for i in $(cat cgroup.procs); do mkdir $i; echo $i > $i/cgroup.procs; done
-> 
-> evading all oom kills for your mem cgroup is to limit the number of 
-> cgroups that can be created by the user?  With a unified cgroup hierarchy, 
-> that doesn't work well if I wanted to actually constrain these individual 
-> processes to different resource limits like cpu usage.  In fact, the user 
-> may not know it is effectively evading the oom killer entirely because it 
-> has constrained the cpu of individual processes because its a side-effect 
-> of this heuristic.
-> 
-> 
-> You chose not to respond to my reiteration of userspace having absolutely 
-> no control over victim selection with the new heuristic without setting 
-> all processes to be oom disabled via /proc/pid/oom_score_adj.  If I have a 
-> very important job that is running on a system that is really supposed to 
-> use 80% of memory, I need to be able to specify that it should not be oom 
-> killed based on user goals.  Setting all processes to be oom disabled in 
-> the important mem cgroup to avoid being oom killed unless absolutely 
-> necessary in a system oom condition is not a robust solution: (1) the mem 
-> cgroup livelocks if it reaches its own mem cgroup limit and (2) the system 
-> panic()'s if these preferred mem cgroups are the only consumers left on 
-> the system.  With overcommit, both of these possibilities exist in the 
-> wild and the problem is only a result of the implementation detail of this 
-> patchset.
-> 
-> For these reasons: unfair comparison of root mem cgroup usage to bias 
-> against that mem cgroup from oom kill in system oom conditions, the 
-> ability of users to completely evade the oom killer by attaching all 
-> processes to child cgroups either purposefully or unpurposefully, and the 
-> inability of userspace to effectively control oom victim selection:
-> 
-> Nacked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> cpuhp_thread_fun()
+>    cpuhp_invoke_callback()
+>      sched_cpu_deactivate()
+>        cpuset_cpu_inactive()
+>           cpuset_update_active_cpus()
+>              cpuset_hotplug_work()
+>                 rebuild_sched_domains()
+>                    cpus_read_lock() //waiting as acquired in _cpu_down()
 
-So, if we'll sum the oom_score of tasks belonging to the root memory cgroup,
-will it fix the problem?
+Well, duh, don't use rebuild_sched_domains() 'obviously' :-) use
+rebuild_sched_domains_cpuslocked() instead and it works just fine.
 
-It might have some drawbacks as well (especially around oom_score_adj),
-but it's doable, if we'll ignore tasks which are not owners of their's mm struct.
+After applying your patch, the below boots and survives a hotplug.
 
-> 
-> > > This is racy because mem_cgroup_select_oom_victim() found an eligible 
-> > > oc->chosen_memcg that is not INFLIGHT_VICTIM with at least one eligible 
-> > > process but mem_cgroup_scan_task(oc->chosen_memcg) did not.  It means if a 
-> > > process cannot be killed because of oom_unkillable_task(), the only 
-> > > eligible processes moved or exited, or the /proc/pid/oom_score_adj of the 
-> > > eligible processes changed, we end up falling back to the complete 
-> > > tasklist scan.  It would be better for oom_evaluate_memcg() to consider 
-> > > oom_unkillable_task() and also retry in the case where 
-> > > oom_kill_memcg_victim() returns NULL.
-> > 
-> > I agree with you here. The fallback to the existing mechanism is implemented
-> > to be safe for sure, especially in a case of a global OOM. When we'll get
-> > more confidence in cgroup-aware OOM killer reliability, we can change this
-> > behavior. Personally, I would prefer to get rid of looking at all tasks just
-> > to find a pre-existing OOM victim, but it might be quite tricky to implement.
-> > 
-> 
-> I'm not sure what this has to do with confidence in this patchset's 
-> reliability?  The race obviously exists: mem_cgroup_select_oom_victim() 
-> found an eligible process in oc->chosen_memcg but it was either ineligible 
-> later because of oom_unkillable_task(), it moved, or it exited.  It's a 
-> race.  For users who opt-in to this new heuristic, they should not be 
-> concerned with a process exiting and thus killing a completely unexpected 
-> process from an unexpected memcg when it should be possible to retry and 
-> select the correct victim.
+---
+ include/linux/cpuset.h |    6 ------
+ kernel/cgroup/cpuset.c |   30 +++++++++---------------------
+ kernel/power/process.c |    2 --
+ kernel/sched/core.c    |    1 -
+ 4 files changed, 9 insertions(+), 30 deletions(-)
 
-Yes, I have to agree here.
-Looks like we can't fallback to the original policy.
-
-Thanks!
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -51,9 +51,7 @@ static inline void cpuset_dec(void)
+ 
+ extern int cpuset_init(void);
+ extern void cpuset_init_smp(void);
+-extern void cpuset_force_rebuild(void);
+ extern void cpuset_update_active_cpus(void);
+-extern void cpuset_wait_for_hotplug(void);
+ extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
+ extern void cpuset_cpus_allowed_fallback(struct task_struct *p);
+ extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
+@@ -166,15 +164,11 @@ static inline bool cpusets_enabled(void)
+ static inline int cpuset_init(void) { return 0; }
+ static inline void cpuset_init_smp(void) {}
+ 
+-static inline void cpuset_force_rebuild(void) { }
+-
+ static inline void cpuset_update_active_cpus(void)
+ {
+ 	partition_sched_domains(1, NULL, NULL);
+ }
+ 
+-static inline void cpuset_wait_for_hotplug(void) { }
+-
+ static inline void cpuset_cpus_allowed(struct task_struct *p,
+ 				       struct cpumask *mask)
+ {
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -833,7 +833,12 @@ static void rebuild_sched_domains_cpuslo
+ 	cpumask_var_t *doms;
+ 	int ndoms;
+ 
++	/*
++	 * When called during hotplug, this lock is held by the calling
++	 * thread, not cpuhp_thread_fun :/
++	 *
+ 	lockdep_assert_cpus_held();
++	 */
+ 	lockdep_assert_held(&cpuset_mutex);
+ 
+ 	/*
+@@ -2281,13 +2286,6 @@ static void cpuset_hotplug_update_tasks(
+ 	mutex_unlock(&cpuset_mutex);
+ }
+ 
+-static bool force_rebuild;
+-
+-void cpuset_force_rebuild(void)
+-{
+-	force_rebuild = true;
+-}
+-
+ /**
+  * cpuset_hotplug_workfn - handle CPU/memory hotunplug for a cpuset
+  *
+@@ -2362,25 +2360,15 @@ static void cpuset_hotplug_workfn(struct
+ 	}
+ 
+ 	/* rebuild sched domains if cpus_allowed has changed */
+-	if (cpus_updated || force_rebuild) {
+-		force_rebuild = false;
++	if (cpus_updated)
+ 		rebuild_sched_domains();
+-	}
+ }
+ 
+ void cpuset_update_active_cpus(void)
+ {
+-	/*
+-	 * We're inside cpu hotplug critical region which usually nests
+-	 * inside cgroup synchronization.  Bounce actual hotplug processing
+-	 * to a work item to avoid reverse locking order.
+-	 */
+-	schedule_work(&cpuset_hotplug_work);
+-}
+-
+-void cpuset_wait_for_hotplug(void)
+-{
+-	flush_work(&cpuset_hotplug_work);
++	mutex_lock(&cpuset_mutex);
++	rebuild_sched_domains_cpuslocked();
++	mutex_unlock(&cpuset_mutex);
+ }
+ 
+ /*
+--- a/kernel/power/process.c
++++ b/kernel/power/process.c
+@@ -203,8 +203,6 @@ void thaw_processes(void)
+ 	__usermodehelper_set_disable_depth(UMH_FREEZING);
+ 	thaw_workqueues();
+ 
+-	cpuset_wait_for_hotplug();
+-
+ 	read_lock(&tasklist_lock);
+ 	for_each_process_thread(g, p) {
+ 		/* No other threads should have PF_SUSPEND_TASK set */
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -5598,7 +5598,6 @@ static void cpuset_cpu_active(void)
+ 		 * restore the original sched domains by considering the
+ 		 * cpuset configurations.
+ 		 */
+-		cpuset_force_rebuild();
+ 	}
+ 	cpuset_update_active_cpus();
+ }
