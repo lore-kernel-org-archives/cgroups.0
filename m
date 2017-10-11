@@ -1,68 +1,31 @@
 From: David Rientjes <rientjes@google.com>
 Subject: Re: [v11 3/6] mm, oom: cgroup-aware OOM killer
-Date: Wed, 11 Oct 2017 13:21:47 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1710111247390.98307@chino.kir.corp.google.com>
+Date: Wed, 11 Oct 2017 13:27:44 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1710111323380.98307@chino.kir.corp.google.com>
 References: <20171005130454.5590-1-guro@fb.com> <20171005130454.5590-4-guro@fb.com> <alpine.DEB.2.10.1710091414260.59643@chino.kir.corp.google.com> <20171010122306.GA11653@castle.DHCP.thefacebook.com> <alpine.DEB.2.10.1710101345370.28262@chino.kir.corp.google.com>
- <20171010220417.GA8667@castle>
+ <20171011130815.qjw7jfnnqz3gpn4s@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=QlwgvJ5Lsca0yjWMNfOui5gAYDDSU4/giO8FB8+a3Yk=;
-        b=kGofJIfmJ7BHY7HTgCI+CFMUXslkzFqZ/OtvYdLiuwzGGJN/0QIAoo8vYye+a8nX9F
-         RfaYRD/h/3B6v7lGkoUd9NxCG2Uaf9Kbniq4iT/w7cZd3X0Lg3bvf8V7pzp/80db9z+A
-         eagcYFjyTXAIfrrXO97SUobL4hpO1/bjZgPTpPmJbBa3mghjEnpLphkLM8QypLqSlzEO
-         N7LucuiIWFDWI0l87V/laLlGRVr00DUjk4kCFjjgy1LJSsuyAc6amCVBawMP2E9sCSZd
-         SlJxK0r8n8KAWq34BQ6HcglpJ2M5eleCZSGfR2m47TkWAaQp7KWQWbLf6HeiR0mOgzdh
-         msDQ==
-In-Reply-To: <20171010220417.GA8667@castle>
+        bh=1lT8LIfgOBIiz0Ey6jeJ3kPAdOUPRrJ7DRlRoilJmzI=;
+        b=ug8JtvScN+AT/nT+tDRTdgeii05VHbNjzRVsPdT6irms7kvoOF23AZ48So8Ts1GhJe
+         RQvzZ9gQximOUuLXYFvfQnAldcZw1+1pr3rIf1LWnBLTaElCwO2G08altpU4KITVG08W
+         4jJSSbE+A0WCzgyrbP6Z6bPcdDqNnUWFCSt17EdMfShKWV4p1qboPjwb7uAetADVP9Wi
+         upyL/jvEqJvR4SNbrKL7IC3y88Y2nfjSF/2OlnWhPri/REV9xPFApdZAknjUGgLa/A//
+         +jqtaZCquuo421k9jDGPVXO2q87xKiyDk+M8wsYxZFkcCzl2bI7tWGQoprkia5AGg86i
+         Do7w==
+In-Reply-To: <20171011130815.qjw7jfnnqz3gpn4s@dhcp22.suse.cz>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 10 Oct 2017, Roman Gushchin wrote:
-
-> > We don't need a better approximation, we need a fair comparison.  The 
-> > heuristic that this patchset is implementing is based on the usage of 
-> > individual mem cgroups.  For the root mem cgroup to be considered 
-> > eligible, we need to understand its usage.  That usage is _not_ what is 
-> > implemented by this patchset, which is the largest rss of a single 
-> > attached process.  This, in fact, is not an "approximation" at all.  In 
-> > the example of 10000 processes attached with 80MB rss each, the usage of 
-> > the root mem cgroup is _not_ 80MB.
-> 
-> It's hard to imagine a "healthy" setup with 10000 process in the root
-> memory cgroup, and even if we kill 1 process we will still have 9999
-> remaining process. I agree with you at some point, but it's not
-> a real world example.
-> 
-
-It's an example that illustrates the problem with the unfair comparison 
-between the root mem cgroup and leaf mem cgroups.  It's unfair to compare 
-[largest rss of a single process attached to a cgroup] to
-[anon + unevictable + unreclaimable slab usage of a cgroup].  It's not an 
-approximation, as previously stated: the usage of the root mem cgroup is 
-not 100MB if there are 10 such processes attached to the root mem cgroup, 
-it's off by orders of magnitude.
-
-For the root mem cgroup to be treated equally as a leaf mem cgroup as this 
-patchset proposes, it must have a fair comparison.  That can be done by 
-accounting memory to the root mem cgroup in the same way it is to leaf mem 
-cgroups.
-
-But let's move the discussion forward to fix it.  To avoid necessarily 
-accounting memory to the root mem cgroup, have we considered if it is even 
-necessary to address the root mem cgroup?  For the users who opt-in to 
-this heuristic, would it be possible to discount the root mem cgroup from 
-the heuristic entirely so that oom kills originate from leaf mem cgroups?  
-Or, perhaps better, oom kill from non-memory.oom_group cgroups only if 
-the victim rss is greater than an eligible victim rss attached to the root 
-mem cgroup?
+On Wed, 11 Oct 2017, Michal Hocko wrote:
 
 > > For these reasons: unfair comparison of root mem cgroup usage to bias 
 > > against that mem cgroup from oom kill in system oom conditions, the 
@@ -72,56 +35,34 @@ mem cgroup?
 > > 
 > > Nacked-by: David Rientjes <rientjes@google.com>
 > 
-> So, if we'll sum the oom_score of tasks belonging to the root memory cgroup,
-> will it fix the problem?
+> I consider this NACK rather dubious. Evading the heuristic as you
+> describe requires root privileges in default configuration because
+> normal users are not allowed to create subtrees. If you
+> really want to delegate subtree to an untrusted entity then you do not
+> have to opt-in for this oom strategy. We can work on an additional means
+> which would allow to cover those as well (e.g. priority based one which
+> is requested for other usecases).
 > 
-> It might have some drawbacks as well (especially around oom_score_adj),
-> but it's doable, if we'll ignore tasks which are not owners of their's mm struct.
+
+You're missing the point that the user is trusted and it may be doing 
+something to circumvent oom kill unknowingly.  With a single unified 
+hierarchy, the user is forced to attach its processes to subcontainers if 
+it wants to constrain resources with other controllers.  Doing so ends up 
+completely avoiding oom kill because of this implementation detail.  It 
+has nothing to do with trust and the admin who is opting-in will not know 
+a user has cirumvented oom kill purely because it constrains its processes 
+with controllers other than the memory controller.
+
+> A similar argument applies to the root memcg evaluation. While the
+> proposed behavior is not optimal it would work for general usecase
+> described here where the root memcg doesn't really run any large number
+> of tasks. If somebody who explicitly opts-in for the new strategy and it
+> doesn't work well for that usecase we can enhance the behavior. That
+> alone is not a reason to nack the whole thing.
 > 
+> I find it really disturbing that you keep nacking this approach just
+> because it doesn't suite your specific usecase while it doesn't break
+> it. Moreover it has been stated several times already that future
+> improvements are possible and cover what you have described already.
 
-You would be required to discount oom_score_adj because the heuristic 
-doesn't account for oom_score_adj when comparing the anon + unevictable + 
-unreclaimable slab of leaf mem cgroups.  This wouldn't result in the 
-correct victim selection in real-world scenarios where processes attached 
-to the root mem cgroup are vital to the system and not part of any user 
-job, i.e. they are important system daemons and the "activity manager" 
-responsible for orchestrating the cgroup hierarchy.
-
-It's also still unfair because it now compares
-[sum of rss of processes attached to a cgroup] to
-[anon + unevictable + unreclaimable slab usage of a cgroup].  RSS isn't 
-going to be a solution, regardless if its one process or all processes, if 
-it's being compared to more types of memory in leaf cgroups.
-
-If we really don't want root mem cgroup accounting so this is a fair 
-comparison, I think the heuristic needs to special case the root mem 
-cgroup either by discounting root oom kills if there are eligible oom 
-kills from leaf cgroups (the user would be opting-in to this behavior) or 
-comparing the badness of a victim from a leaf cgroup to the badness of a 
-victim from the root cgroup when deciding which to kill and allow the user 
-to protect root mem cgroup processes with oom_score_adj.
-
-That aside, all of this has only addressed one of the three concerns with 
-the patchset.
-
-I believe the solution to avoid allowing users to circumvent oom kill is 
-to account usage up the hierarchy as you have done in the past.  Cgroup 
-hierarchies can be managed by the user so they can create their own 
-subcontainers, this is nothing new, and I would hope that you wouldn't 
-limit your feature to only a very specific set of usecases.  That may be 
-your solution for the root mem cgroup itself: if the hierarchical usage of 
-all top-level mem cgroups is known, it's possible to find the root mem 
-cgroup usage by subtraction, you are using stats that are global vmstats 
-in your heuristic.
-
-Accounting usage up the hierarchy avoids the first two concerns with the 
-patchset.  It allows you to implicitly understand the usage of the root 
-mem cgroup itself, and does not allow users to circumvent oom kill by 
-creating subcontainers, either purposefully or not.  The third concern, 
-userspace influence, can allow users to attack leaf mem cgroups deeper in 
-the tree if it is using more memory than expected, but the hierarchical 
-usage is lower at the top-level.  That is the only objection that I have 
-seen to using hierarchical usage: there may be a single cgroup deeper in 
-the tree that avoids oom kill because another hierarchy has a higher 
-usage.  This can trivially be addressed either by oom priorities or an 
-adjustment, just like oom_score_adj, on cgroup usage.
+This has nothing to do with my specific usecase.
