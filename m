@@ -1,91 +1,95 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [v11 3/6] mm, oom: cgroup-aware OOM killer
-Date: Thu, 12 Oct 2017 08:33:12 +0200
-Message-ID: <20171012063312.s37uwybbo3tfiii3@dhcp22.suse.cz>
-References: <20171005130454.5590-1-guro@fb.com>
- <20171005130454.5590-4-guro@fb.com>
- <alpine.DEB.2.10.1710091414260.59643@chino.kir.corp.google.com>
- <20171010122306.GA11653@castle.DHCP.thefacebook.com>
- <alpine.DEB.2.10.1710101345370.28262@chino.kir.corp.google.com>
- <20171011130815.qjw7jfnnqz3gpn4s@dhcp22.suse.cz>
- <alpine.DEB.2.10.1710111323380.98307@chino.kir.corp.google.com>
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: RFC(v2): Audit Kernel Container IDs
+Date: Thu, 12 Oct 2017 10:14:00 -0400
+Message-ID: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1710111323380.98307@chino.kir.corp.google.com>
-Sender: linux-doc-owner@vger.kernel.org
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: cgroups@vger.kernel.org, Linux Containers <containers@lists.linux-foundation.org>, Linux API <linux-api@vger.kernel.org>, Linux Audit <linux-audit@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux Network Development <netdev@vger.kernel.org>
+Cc: Simo Sorce <simo@redhat.com>, Carlos O'Donell <carlos@redhat.com>, Aristeu Rozanski <arozansk@redhat.com>, David Howells <dhowells@redhat.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Eric Paris <eparis@parisplace.org>, jlayton@redhat.com, Andy Lutomirski <luto@kernel.org>, mszeredi@redhat.com, Paul Moore <pmoore@redhat.com>, "Serge E. Hallyn" <serge@hallyn.com>, Steve Grubb <sgrubb@redhat.com>, trondmy@primarydata.com, Al Viro <viro@zeniv.linux.org.uk>
 
-On Wed 11-10-17 13:27:44, David Rientjes wrote:
-> On Wed, 11 Oct 2017, Michal Hocko wrote:
-> 
-> > > For these reasons: unfair comparison of root mem cgroup usage to bias 
-> > > against that mem cgroup from oom kill in system oom conditions, the 
-> > > ability of users to completely evade the oom killer by attaching all 
-> > > processes to child cgroups either purposefully or unpurposefully, and the 
-> > > inability of userspace to effectively control oom victim selection:
-> > > 
-> > > Nacked-by: David Rientjes <rientjes@google.com>
-> > 
-> > I consider this NACK rather dubious. Evading the heuristic as you
-> > describe requires root privileges in default configuration because
-> > normal users are not allowed to create subtrees. If you
-> > really want to delegate subtree to an untrusted entity then you do not
-> > have to opt-in for this oom strategy. We can work on an additional means
-> > which would allow to cover those as well (e.g. priority based one which
-> > is requested for other usecases).
-> > 
-> 
-> You're missing the point that the user is trusted and it may be doing 
-> something to circumvent oom kill unknowingly.
+Containers are a userspace concept.  The kernel knows nothing of them.
 
-I would really like to see a practical example of something like that. I
-am not saying this is completely impossible but as already pointed out
-this _can_ be addressed _on top_ of the current implementation. We will
-need some way to consider hierarchies anyway.
+The Linux audit system needs a way to be able to track the container
+provenance of events and actions.  Audit needs the kernel's help to do
+this.
 
-So I really fail to see why this would be a blocker. After all it
-is no different than skipping oom selection by splitting a process
-(knowingly or otherwise) into subprocesses which is possible even
-now. OOM killer selection has never been, will not be and cannot be
-perfect in principal. Quite contrary, the more clever the heuristics are
-trying to be the more corner cases they might generate as we could see
-in the past.
+Since the concept of a container is entirely a userspace concept, a
+registration from the userspace container orchestration system initiates
+this.  This will define a point in time and a set of resources
+associated with a particular container with an audit container ID.
 
-> With a single unified 
-> hierarchy, the user is forced to attach its processes to subcontainers if 
-> it wants to constrain resources with other controllers.  Doing so ends up 
-> completely avoiding oom kill because of this implementation detail.  It 
-> has nothing to do with trust and the admin who is opting-in will not know 
-> a user has cirumvented oom kill purely because it constrains its processes 
-> with controllers other than the memory controller.
-> 
-> > A similar argument applies to the root memcg evaluation. While the
-> > proposed behavior is not optimal it would work for general usecase
-> > described here where the root memcg doesn't really run any large number
-> > of tasks. If somebody who explicitly opts-in for the new strategy and it
-> > doesn't work well for that usecase we can enhance the behavior. That
-> > alone is not a reason to nack the whole thing.
-> > 
-> > I find it really disturbing that you keep nacking this approach just
-> > because it doesn't suite your specific usecase while it doesn't break
-> > it. Moreover it has been stated several times already that future
-> > improvements are possible and cover what you have described already.
-> 
-> This has nothing to do with my specific usecase.
+The registration is a pseudo filesystem (proc, since PID tree already
+exists) write of a u8[16] UUID representing the container ID to a file
+representing a process that will become the first process in a new
+container.  This write might place restrictions on mount namespaces
+required to define a container, or at least careful checking of
+namespaces in the kernel to verify permissions of the orchestrator so it
+can't change its own container ID.  A bind mount of nsfs may be
+necessary in the container orchestrator's mntNS.
+Note: Use a 128-bit scalar rather than a string to make compares faster
+and simpler.
 
-Well, I might be really wrong but it is hard to not notice how most of
-your complains push towards hierarchical level-by-level comparisons.
-Which has been considered and deemed unsuitable for the default cgroup
-aware oom selection because it imposes structural constrains on how
-the hierarchy is organized and thus disallow many usecases. So pushing
-for this just because it resembles your current inhouse implementation
-leaves me with a feeling that you care more about your usecase than a
-general usability.
--- 
-Michal Hocko
-SUSE Labs
+Require a new CAP_CONTAINER_ADMIN to be able to carry out the
+registration.  At that time, record the target container's user-supplied
+container identifier along with the target container's first process
+(which may become the target container's "init" process) process ID
+(referenced from the initial PID namespace), all namespace IDs (in the
+form of a nsfs device number and inode number tuple) in a new auxilliary
+record AUDIT_CONTAINER with a qualifying op=$action field.
+
+Issue a new auxilliary record AUDIT_CONTAINER_INFO for each valid
+container ID present on an auditable action or event.
+
+Forked and cloned processes inherit their parent's container ID,
+referenced in the process' task_struct.
+
+Mimic setns(2) and return an error if the process has already initiated
+threading or forked since this registration should happen before the
+process execution is started by the orchestrator and hence should not
+yet have any threads or children.  If this is deemed overly restrictive,
+switch all threads and children to the new containerID.
+
+Trust the orchestrator to judiciously use and restrict CAP_CONTAINER_ADMIN.
+
+Log the creation of every namespace, inheriting/adding its spawning
+process' containerID(s), if applicable.  Include the spawning and
+spawned namespace IDs (device and inode number tuples).
+[AUDIT_NS_CREATE, AUDIT_NS_DESTROY] [clone(2), unshare(2), setns(2)]
+Note: At this point it appears only network namespaces may need to track
+container IDs apart from processes since incoming packets may cause an
+auditable event before being associated with a process.
+
+Log the destruction of every namespace when it is no longer used by any
+process, include the namespace IDs (device and inode number tuples).
+[AUDIT_NS_DESTROY] [process exit, unshare(2), setns(2)]
+
+Issue a new auxilliary record AUDIT_NS_CHANGE listing (opt: op=$action)
+the parent and child namespace IDs for any changes to a process'
+namespaces. [setns(2)]
+Note: It may be possible to combine AUDIT_NS_* record formats and
+distinguish them with an op=$action field depending on the fields
+required for each message type.
+
+When a container ceases to exist because the last process in that
+container has exited and hence the last namespace has been destroyed and
+its refcount dropping to zero, log the fact.
+(This latter is likely needed for certification accountability.)  A
+container object may need a list of processes and/or namespaces.
+
+A namespace cannot directly migrate from one container to another but
+could be assigned to a newly spawned container.  A namespace can be
+moved from one container to another indirectly by having that namespace
+used in a second process in another container and then ending all the
+processes in the first container.
+
+(v2)
+- switch from u64 to u128 UUID
+- switch from "signal" and "trigger" to "register"
+- restrict registration to single process or force all threads and children into same container
+
+- RGB
