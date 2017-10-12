@@ -1,63 +1,215 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: RFC(v2): Audit Kernel Container IDs
-Date: Thu, 12 Oct 2017 12:59:57 -0500
-Message-ID: <8760bkxn4y.fsf@xmission.com>
-References: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [v11 3/6] mm, oom: cgroup-aware OOM killer
+Date: Thu, 12 Oct 2017 14:50:38 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1710121415420.76558@chino.kir.corp.google.com>
+References: <20171005130454.5590-1-guro@fb.com> <20171005130454.5590-4-guro@fb.com> <alpine.DEB.2.10.1710091414260.59643@chino.kir.corp.google.com> <20171010122306.GA11653@castle.DHCP.thefacebook.com> <alpine.DEB.2.10.1710101345370.28262@chino.kir.corp.google.com>
+ <20171010220417.GA8667@castle> <alpine.DEB.2.10.1710111247390.98307@chino.kir.corp.google.com> <20171011214927.GA28741@castle>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=mtolS1XqOx4Eh3UA3qzu9yf5rXd5skM0i10+WKNB218=;
+        b=NX3ktcu0c4HUh/3UY5NBiEdAR7ttAFTPAC5e+yuPOY+gbdqm6Gymolp/r1DTQ4RxF7
+         n53D5cN30ozGWqiWPzZBoblXY61IztCl8Vog6Xp8/1SfZikWEiqD02pCxSRXqIr9i5ZT
+         3lNLzX03f3BRRMu5RtvqWAAWAukL/u6e+58bhJnJZNHzNhOpbryOcr4MzDrdBPuVkQDv
+         Xk+Z6smLfOJ/Q0dpStcH6eqqCQMdA0esV4WOLIA2ZRnbu0jF+Ch7MkOjXHXA8Gmjsg+y
+         8XsrXfGrIoKhn5nfklj0hGrcDgX+HG+eY3wmqaR1gSdXzPJ5jTvgJuli1yJ3E4IJekyw
+         tTEQ==
+In-Reply-To: <20171011214927.GA28741@castle>
+Sender: linux-doc-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20171012141359.saqdtnodwmbz33b2-bcJWsdo4jJjeVoXN4CMphl7TgLCtbB0G@public.gmane.org> (Richard
-	Guy Briggs's message of "Thu, 12 Oct 2017 10:14:00 -0400")
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Carlos O'Donell <carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Audit <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+On Wed, 11 Oct 2017, Roman Gushchin wrote:
 
-> A namespace cannot directly migrate from one container to another but
-> could be assigned to a newly spawned container.  A namespace can be
-> moved from one container to another indirectly by having that namespace
-> used in a second process in another container and then ending all the
-> processes in the first container.
+> > But let's move the discussion forward to fix it.  To avoid necessarily 
+> > accounting memory to the root mem cgroup, have we considered if it is even 
+> > necessary to address the root mem cgroup?  For the users who opt-in to 
+> > this heuristic, would it be possible to discount the root mem cgroup from 
+> > the heuristic entirely so that oom kills originate from leaf mem cgroups?  
+> > Or, perhaps better, oom kill from non-memory.oom_group cgroups only if 
+> > the victim rss is greater than an eligible victim rss attached to the root 
+> > mem cgroup?
+> 
+> David, I'm not pretending for implementing the best possible accounting
+> for the root memory cgroup, and I'm sure there is a place for further
+> enhancement. But if it's not leading to some obviously stupid victim
+> selection (like ignoring leaking task, which consumes most of the memory),
+> I don't see why it should be treated as a blocker for the whole patchset.
+> I also doubt that any of us has these examples, and the best way to get
+> them is to get some real usage feedback.
+> 
+> Ignoring oom_score_adj, subtracting leaf usage sum from system usage etc,
+> these all are perfect ideas which can be implemented on top of this patchset.
+> 
 
-Ugh no.  The semantics here are way too mushy.  We need a clean crisp
-unambiguous definition or it will be impossible to get this correct and
-impossible to use for any security purpose.
+For the root mem cgroup to be compared to leaf mem cgroups, it needs a 
+fair comparison, not something that we leave to some future patches on top 
+of this patchset.  We can't compare some cgroups with other cgroups based 
+on different criteria depending on which cgroup is involved.  It's 
+actually a quite trivial problem to address, it was a small modiifcation 
+to your hierarchical usage patchset if that's the way that you elect to 
+fix it.
 
-I understand the challenge.  Some of the container managers share
-namespaces between containers.  Leading to things that are not really
-contained.
+I know that some of our customers use cgroups only for one or two jobs on 
+the system, and that isn't necessarily just for memory limitation.  The 
+fact remains, that without considering the root mem cgroup fairly, that 
+these customers are unfairly biased against because they have aggregated 
+their processes in a cgroup.  This a not a highly specialized usecase, I 
+am positive that many users use cgroups only for a subset of processes.  
+This heuristic penalizes that behavior to prefer them as oom victims.
 
-Please make this concept like an indellibale die.  Once you are stained
-with it you can not escape.  If you don't meet all of the criteria you
-aren't stained.
+The problem needs to be fixed instead of asking for the patchset to be 
+merged and hope that we'll address these issues later.  If you account for 
+hierarchical usage, you can easily subtract this from global vmstats to 
+get an implicit root usage.
 
-The justification that I heard, and that seems legitimate is that it is
-not timely and it is hard to make the connection between the distinct
-unshare, setns, and clone events and what is happening in the kernel.
+> > You would be required to discount oom_score_adj because the heuristic 
+> > doesn't account for oom_score_adj when comparing the anon + unevictable + 
+> > unreclaimable slab of leaf mem cgroups.  This wouldn't result in the 
+> > correct victim selection in real-world scenarios where processes attached 
+> > to the root mem cgroup are vital to the system and not part of any user 
+> > job, i.e. they are important system daemons and the "activity manager" 
+> > responsible for orchestrating the cgroup hierarchy.
+> > 
+> > It's also still unfair because it now compares
+> > [sum of rss of processes attached to a cgroup] to
+> > [anon + unevictable + unreclaimable slab usage of a cgroup].  RSS isn't 
+> > going to be a solution, regardless if its one process or all processes, if 
+> > it's being compared to more types of memory in leaf cgroups.
+> > 
+> > If we really don't want root mem cgroup accounting so this is a fair 
+> > comparison, I think the heuristic needs to special case the root mem 
+> > cgroup either by discounting root oom kills if there are eligible oom 
+> > kills from leaf cgroups (the user would be opting-in to this behavior) or 
+> > comparing the badness of a victim from a leaf cgroup to the badness of a 
+> > victim from the root cgroup when deciding which to kill and allow the user 
+> > to protect root mem cgroup processes with oom_score_adj.
+> > 
+> > That aside, all of this has only addressed one of the three concerns with 
+> > the patchset.
+> > 
+> > I believe the solution to avoid allowing users to circumvent oom kill is 
+> > to account usage up the hierarchy as you have done in the past.  Cgroup 
+> > hierarchies can be managed by the user so they can create their own 
+> > subcontainers, this is nothing new, and I would hope that you wouldn't 
+> > limit your feature to only a very specific set of usecases.  That may be 
+> > your solution for the root mem cgroup itself: if the hierarchical usage of 
+> > all top-level mem cgroups is known, it's possible to find the root mem 
+> > cgroup usage by subtraction, you are using stats that are global vmstats 
+> > in your heuristic.
+> > 
+> > Accounting usage up the hierarchy avoids the first two concerns with the 
+> > patchset.  It allows you to implicitly understand the usage of the root 
+> > mem cgroup itself, and does not allow users to circumvent oom kill by 
+> > creating subcontainers, either purposefully or not.  The third concern, 
+> > userspace influence, can allow users to attack leaf mem cgroups deeper in 
+> > the tree if it is using more memory than expected, but the hierarchical 
+> > usage is lower at the top-level.  That is the only objection that I have 
+> > seen to using hierarchical usage: there may be a single cgroup deeper in 
+> > the tree that avoids oom kill because another hierarchy has a higher 
+> > usage.  This can trivially be addressed either by oom priorities or an 
+> > adjustment, just like oom_score_adj, on cgroup usage.
+> 
+> As I've said, I barely understand how the exact implementation of root memory
+> cgroup accounting is considered a blocker for the whole feature.
+> The same is true for oom priorities: it's something that can and should
+> be implemented on top of the basic semantics, introduced by this patchset.
+> 
 
-With that justification definitely the network namespace needs to be
-stained if it is appropriate.
+No, we cannot merge incomplete features that have well identified issues 
+by simply saying that we'll address those issues later.  We need a 
+patchset that is complete.  Wrt root mem cgroup usage, this change is 
+actually quite trivial with hierarchical usage.  The memory cgroup is 
+based on accounting hierarchical usage, you actually have all the data you 
+need already available in the kernel.  Iterating all root processes for 
+where task == mm->owner and then accounting rss for those processes is not 
+the same as a leaf cgroup's anonymous + unevictable + unreclaimable slab.  
+It's not even a close approximation in some cases.
 
-I also don't see why this can't be a special dedicated audit message.
-I just looked at the code in the kernel and nlmsg_type is a u16.  There
-are only a handful of audit message types defined.  There is absolutely
-no reason to bring proc into this.
+OOM priorities are a different concern, but it also needs to be addressed 
+as a complete solution.  This patchset removes virtually all control the 
+user has in preferring a cgroup for oom kill or biasing against a cgroup 
+for oom kil.  The patchset is moving the selection criteria from 
+individual processes to cgroups.  Great!  Just allow userspace to have 
+influence over that selection just like /proc/pid/oom_adj has existed for 
+over a decade and is very widespread.  Users need the ability to protect 
+important cgroups on the system, just like they need the ability to 
+protect important processes on the system with the current heuristic.  If 
+a single cgroup accounts for 50% of memory, it will always be the chosen 
+victim memcg with your heuristic.  The only thing that is being asked here 
+is that userspace be able to say that cgroup is actually really important 
+and we should oom kill something else.  Not hard whatsoever.
 
-I have the same reservation as the others about defining a new cap for
-this.  It should be enough to make setting the container id a one time
-thing for a set of processes and namespaces.
+These two issues are actually very trivial to implement, and you actually 
+implemented 95% of it in earlier iterations of the patchset.  It was a 
+beautiful solution to all of these concerns and well written.  If you 
+would prefer that I use this patchset as a basis and then fix it with 
+respect to all three of these issues and then propose it, let me know.
 
-If this is going to be security it needs to be very simple and very well defined.
+> So, the only real question is the way how we find a victim memcg in the
+> subtree: by performing independent election on each level or by searching
+> tree-wide. We all had many discussion around, and as you remember, initially
+> I was supporting the first option.
+> But then Michal provided a very strong argument:
+> if you have 3 similar workloads in A, B and C, but for non-memory-related
+> reasons (e.g. cpu time sharing) you have to join A and B into a group D:
+>   /\
+>  D  C
+> / \
+> A B
+> it's strange to penalize A and B for it. It looks to me that you're
+> talking about the similar case, but you consider this hierarchy
+> useful. So, overall, it seems to be depending on exact configuration.
+> 
 
-Eric
+This is _exactly_ why you need oom priorities so that userspace can 
+influence the decisionmaking.  This makes my previous point, I'm not sure 
+where the disconnect is coming from?  You need to be able to bias D when 
+compared to C for the heuristic to work.  Userspace knows how it is 
+organizing its memory cgroups.  We would be making a mistake if we thought 
+we knew all possible ways that people are using cgroups and limit your 
+heuristic so that some people can opt-in and others are left with the 
+current per-process heuristic because their users have accidently 
+subverted oom kill selection because they split their processes amongst 
+subcontainers.
+
+> The selected approach is easy extendable into hierarchical direction:
+> as I've said before, we can introduce a new value of memory.oom_group,
+> which will enable cumulative accounting without mass killing.
+> 
+
+Again, we cannot merge incomplete patchsets in the hope that issues with 
+that patchset are addressed later, especially when there are three very 
+well defined concerns with the existing implementation.  Your earlier 
+iterations were actually a brilliant solution to the problem, I'm not sure 
+that you realize how powerful it could be in practice.
+
+> And, tbh, I don't see how oom_priorities will resolve an opposite
+> problem if we'd take the hierarchical approach.
+> 
+
+Think about it in a different way: we currently compare per-process usage 
+and userspace has /proc/pid/oom_score_adj to adjust that usage depending 
+on priorities of that process and still oom kill if there's a memory leak.  
+Your heuristic compares per-cgroup usage, it's the cgroup-aware oom killer 
+after all.  We don't need a strict memory.oom_priority that outranks all 
+other sibling cgroups regardless of usage.  We need a memory.oom_score_adj 
+to adjust the per-cgroup usage.  The decisionmaking in your earlier 
+example would be under the control of C/memory.oom_score_adj and 
+D/memory.oom_score_adj.  Problem solved.
+
+It also solves the problem of userspace being able to influence oom victim 
+selection so now they can protect important cgroups just like we can 
+protect important processes today.
+
+And since this would be hierarchical usage, you can trivially infer root 
+mem cgroup usage by subtraction of top-level mem cgroup usage.
+
+This is a powerful solution to the problem and gives userspace the control 
+they need so that it can work in all usecases, not a subset of usecases.
