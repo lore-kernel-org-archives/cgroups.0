@@ -1,132 +1,104 @@
 From: Casey Schaufler <casey@schaufler-ca.com>
 Subject: Re: RFC(v2): Audit Kernel Container IDs
-Date: Tue, 17 Oct 2017 09:10:43 -0700
-Message-ID: <23dbaf2e-e02d-d4a1-d409-5c860f254bbc@schaufler-ca.com>
+Date: Tue, 17 Oct 2017 09:43:18 -0700
+Message-ID: <eb96144d-4ab5-7f9f-de18-b296db35a00a@schaufler-ca.com>
 References: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca>
  <75b7d6a6-42ba-2dff-1836-1091c7c024e7@schaufler-ca.com>
  <20171017003340.whjdkqmkw4lydwy7@madcap2.tricolour.ca>
  <2319693.5l3M4ZINGd@x2> <1508243469.6230.24.camel@redhat.com>
  <a07968f6-fef1-f49d-01f1-6c660c0ada20@schaufler-ca.com>
  <1508254120.6230.34.camel@redhat.com>
+ <1508255091.3129.27.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1508256650; bh=lQCGgOrLyk3eyrjM0ujugQjq5nb8YRY8kgZxBOZX+0k=; h=Subject:To:Cc:References:From:Date:In-Reply-To:From:Subject; b=uHwmu3CYgxCROs3aN5/yH7P74wb18ABYlpFyGy1VsC7tTBb3BQGahJgvQQc/RMpLlWo2qxKb6cVhXMwwwvUD4V7/29+elBz9TnaqnwBRiqvwVKvoQH4xhJCJwVO9x0kEPSPnNBvUgc5z4GcSCyC1rBDLjYmflLhhabYT2h7KB7kGK825FoC7QZdqBersd20+3YG3+/g7jUz3E7YsdY+XwXxccK9q5xNIcgyBkUQay3jshhheYLb/RpUie1N3iIjCYwXYp4VSZCrFl4Z4A6nmg/UKQIAOLb20qSnGnkIuhw43nGHib30KAa5P9jcna1pr9ksaDcO4Ng2nHYDnB9KTMg==
-In-Reply-To: <1508254120.6230.34.camel@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1508258604; bh=+PdZVtN9hlsHYxZO6zVuSJ8hcbweqZBr8eudgMz6yGo=; h=Subject:To:Cc:References:From:Date:In-Reply-To:From:Subject; b=YafPxFw1Dpf/4Yw5MeE/E4sPL+zPcFQy+pN+oBxDH8ewIrAVBHIVY5OD9w/QomhFVppnIE0W/D3hGm7ShqMHzHRbthYVp+KRmqjsuFY7O5UuiBsIpuEqyCBQMc487OWQszC1PD7LXAOxwDDIGI0Pr9Vsi73kCy/44HDHQ81OeiLG5M4HZPZxYPsS72YtJhzJU5S/+7Y5Y1Cbq67Y8C85EWZ9ebzPAFwGYw2ORWegBCo35dGy+xJdP9E0bJq9k6tm2K6XU13qQF65MadbD0kqEywfEqTl3IwiyzHrF8C4Zw1vbuTvdfjLRrMcbMrHtnYxLGLcQ4wR7NujpBeairmauQ==
+In-Reply-To: <1508255091.3129.27.camel@HansenPartnership.com>
 Content-Language: en-US
-Sender: netdev-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Simo Sorce <simo@redhat.com>, Steve Grubb <sgrubb@redhat.com>, linux-audit@redhat.com
-Cc: Richard Guy Briggs <rgb@redhat.com>, mszeredi@redhat.com, "Eric W. Biederman" <ebiederm@xmission.com>, jlayton@redhat.com, Carlos O'Donell <carlos@redhat.com>, Linux API <linux-api@vger.kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Eric Paris <eparis@parisplace.org>, David Howells <dhowells@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Linux Network Development <netdev@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, cgroups@vger.kernel.org, "Serge E. Hallyn" <serge@hallyn.com>, trondmy@primarydata.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Simo Sorce <simo@redhat.com>, Steve Grubb <sgrubb@redhat.com>, linux-audit@redhat.com
+Cc: mszeredi@redhat.com, trondmy@primarydata.com, jlayton@redhat.com, Linux API <linux-api@vger.kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, David Howells <dhowells@redhat.com>, Carlos O'Donell <carlos@redhat.com>, cgroups@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, Andy Lutomirski <luto@kernel.org>, Linux Network Development <netdev@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Eric Paris <eparis@parisplace.org>, Al Viro <viro@zeniv.linux.org.uk>
 
-On 10/17/2017 8:28 AM, Simo Sorce wrote:
-> On Tue, 2017-10-17 at 07:59 -0700, Casey Schaufler wrote:
->> On 10/17/2017 5:31 AM, Simo Sorce wrote:
->>> On Mon, 2017-10-16 at 21:42 -0400, Steve Grubb wrote:
->>>> On Monday, October 16, 2017 8:33:40 PM EDT Richard Guy Briggs
->>>> wrote:
->>>>> There is such a thing, but the kernel doesn't know about it
->>>>> yet.  This same situation exists for loginuid and sessionid
->>>>> which
->>>>> are userspace concepts that the kernel tracks for the
->>>>> convenience
->>>>> of userspace.  As for its name, I'm not particularly picky, so
->>>>> if
->>>>> you don't like CAP_CONTAINER_* then I'm fine with
->>>>> CAP_AUDIT_CONTAINERID.  It really needs to be distinct from
->>>>> CAP_AUDIT_WRITE and CAP_AUDIT_CONTROL since we don't want to
->>>>> give
->>>>> the ability to set a containerID to any process that is able to
->>>>> do
->>>>> audit logging (such as vsftpd) and similarly we don't want to
->>>>> give
->>>>> the orchestrator the ability to control the setup of the audit
->>>>> daemon.
->>>> A long time ago, we were debating what should guard against rouge
->>>> processes from setting the loginuid. Casey argued that the
->>>> ability to
->>>> set the loginuid means they have the ability to control the audit
->>>> trail. That means that it should be guarded by CAP_AUDIT_CONTROL.
->>>> I
->>>> think the same logic applies today. 
->>> The difference is that with loginuid you needed to give processes
->>> able
->>> to audit also the ability to change it. You do not want to tie the
->>> ability to change container ids to the ability to audit. You want
->>> to be
->>> able to do audit stuff (within the container) without allowing it
->>> to
->>> change the container id.
->> Without a *kernel* policy on containerIDs you can't say what
->> security policy is being exempted.
-> The policy has been basically stated earlier.
+On 10/17/2017 8:44 AM, James Bottomley wrote:
+> On Tue, 2017-10-17 at 11:28 -0400, Simo Sorce wrote:
+>>> Without a *kernel* policy on containerIDs you can't say what
+>>> security policy is being exempted.
+>> The policy has been basically stated earlier.
+>>
+>> A way to track a set of processes from a specific point in time
+>> forward. The name used is "container id", but it could be anything.
+>> This marker is mostly used by user space to track process hierarchies
+>> without races, these processes can be very privileged, and must not
+>> be allowed to change the marker themselves when granted the current
+>> common capabilities.
+>>
+>> Is this a good enough description ? If not can you clarify your
+>> expectations ?
+> I think you mean you want to be able to apply a label to a process
+> which is inherited across forks.
 
-No. The expected user space behavior has been stated.
+That would be PTAGS. I agree that such a general mechanism
+could be very useful for a variety of purposes, not just
+containers. I do not agree that a single integer (e.g. a
+containerID) warrants more than trivial mechanism.
 
-> A way to track a set of processes from a specific point in time
-> forward. The name used is "container id", but it could be anything.
+> The label should only be susceptible
+> to modification by something possessing a capability (which one TBD).
 
-Then you want Jose Bollo's PTAGS. It's insane to add yet another
-arbitrary ID to the task for a special purpose. Add a general tagging
-mechanism instead. We could add a gazillion new id's, each with it's
-own capability if we head down this road.
+I think that the reason we're going to have crying and gnashing
+of teeth is that whatever capability is used. There will always be
+an issue of the capability granted being less specific than the
+application security model would like.
 
-> This marker is mostly used by user space to track process hierarchies
-> without races, these processes can be very privileged, and must not be
-> allowed to change the marker themselves when granted the current common
-> capabilities.
+And no, we're not going down the 330 capabilities road. It's been
+done in the UNIX world. Application security models hate that
+just as much as they hate the coarser granularity.
 
-Let's be clear. What happens in user space stays in user space.
-The kernel does not give a fig about user space policy. There has
-to be a kernel policy involved that a capability can exempt.
+> The idea is that processes spawned into a container would be labelled
+> by the container orchestration system.  It's unclear what should happen
+> to processes using nsenter after the fact, but policy for that should
+> be up to the orchestration system.
 
-> Is this a good enough description ? If not can you clarify your
-> expectations ?
+I'm fine with that. The user space policy can be anything y'all like.
 
-The kernel enforces kernel policy. Capabilities provide a mechanism
-to mark a process as exempt from some aspect of kernel policy. If
-you don't have a kernel policy, you don't get a capability. Clear?
+> The label will be used as a tag for audit information.
 
+Deep breath ...
+
+Which *is* a kernel security policy mechanism. Since the "label"
+is part of the audit information that the kernel is guaranteeing
+changing it would be covered by CAP_AUDIT_CONTROL. If the kernel
+does not use the "label" for any other purpose this is the only
+capability that makes sense for it.
+
+> I think you were missing label inheritance above.
 >
->>  Without that you can't say what capability is (or isn't)
->> appropriate.
-> See if the above is sufficient please.
->
->> You need a reason to have a capability check that makes sense in the
->> context of the kernel security policy.
-> I think the proposal had a reason, we may debate on whether that reason
-> is good enough.
->
->> Since we don't know what a container is in the kernel,
-> Please do not fixate on the word container.
->
->>  that's pretty hard. We don't create "fuzzy" capabilities
->> based on the trendy application behavior of the moment. If the
->> behavior is not related it audit, there's no reason for it, and
->> if it is, CAP_AUDIT_CONTROL works just fine. If this doesn't work
->> in your application security model I suggest that is where you
->> need to make changes.
-> The authors of the proposal came to the conclusion that kernel
-> assistance is needed. It would be nice to discuss the merits of it.
-> If you do not understand why the request has been made it would be more
-> useful to ask specific questions to understand what and why is the ask.
+> The security implications are that anything that can change the label
+> could also hide itself and its doings from the audit system and thus
+> would be used as a means to evade detection.  
 
-I understand pretty darn well.
+Yes. This is a consequence of the capability granularity. There is
+no way we can make the capability granularity sufficiently fine to
+prevent this. No one wants the 330 capabilities that Data General
+had in their secure UNIX system. 
 
-> Pushing back is fine, if you have understood the problem and have valid
-> arguments against a kernel level solution (and possibly suggestions for
-> a working user space solution), otherwise you are not adding value to
-> the discussion.
-
-The presumption is that the request is reasonable. Adding a capability
-in support of an undefined behavior is unreasonable. Based on the discussion,
-CAP_AUDIT_CONTROL is completely rational. I understand that it would be
-difficult to support your application privilege model. I would like to look
-into helping out with that, but have too many burning knives in the air
-just now.
-
+> I actually think this
+> means the label should be write once (once you've set it, you can't
+> change it) and orchestration systems should begin as unlabelled
+> processes allowing them to do arbitrary forks.
 >
-> Simo.
->
+> For nested containers, I actually think the label should be
+> hierarchical, so you can add a label for the new nested container but
+> it still also contains its parents label as well.
+
+You can't support this reasonably with a single containerID.
+You want PTAGS for this. I know that there is resistance to
+requiring anything beyond what's in the base kernel (and for
+good reasons) for containers. Especially something that is
+pending future work. But let's not jam something into the base
+kernel that isn't really going to address the issue.
+
+> James
 
