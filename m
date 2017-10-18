@@ -1,50 +1,63 @@
-From: Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC(v2): Audit Kernel Container IDs
-Date: Tue, 17 Oct 2017 20:23:01 -0400
-Message-ID: <16761682.puRDTGPHq7@x2>
-References: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca>
-	<1982291.vr6V9CPzqu@x2>
-	<1508263063.3129.35.camel@HansenPartnership.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: reorder flexible array members of struct
+ cgroup_root
+Date: Wed, 18 Oct 2017 06:30:10 -0700
+Message-ID: <20171018133010.GD1302522@devbig577.frc2.facebook.com>
+References: <20171017063322.11455-1-nick.desaulniers@gmail.com>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=acpK+7vUuFvrtVCFzGUpubNAkEhs2KMKqp3fuIPdAEQ=;
+        b=CIN1M4aNf6UrKcenG8bbxJpYdmfvyyx84A/vhmbfKfvC3qrVuSCS/0N+JMR+x383XU
+         Omd6Dktmt8VuKV1mJmRVkJP+550GBwGkpIogOt9tNppgqm45GR4G7+z5qImnNbP5t7n5
+         Hoxou4ItzcJKiAwrTf7iIsaF6NdiQneQupNbVSeXNWS/62oyDcmAsJXM4qPbVlvmGehI
+         2+9hQMrIGI5XFwrQamYzo5/uwQ3l+FGywQNfa1AGnDA1sBAoE815nxPrbIQIQCeQymMh
+         NRFjOWXAk4pkdpI1wI8UUEviJEHQ8ZjUbNu96UQAzdIiGaYShOQw86z7ss61TK5dwgIZ
+         vgVg==
+Content-Disposition: inline
+In-Reply-To: <20171017063322.11455-1-nick.desaulniers@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1508263063.3129.35.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Carlos O'Donell <carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Casey Schaufler <casey-iSGtlc1asvQWG2LlvL+J4A@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org
+To: Nick Desaulniers <nick.desaulniers@gmail.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday, October 17, 2017 1:57:43 PM EDT James Bottomley wrote:
-> > > > The idea is that processes spawned into a container would be
-> > > > labelled by the container orchestration system.  It's unclear
-> > > > what should happen to processes using nsenter after the fact, but
-> > > > policy for that should be up to the orchestration system.
-> > > 
-> > > I'm fine with that. The user space policy can be anything y'all
-> > > like.
-> > 
-> > I think there should be a login event.
+Hello,
+
+On Mon, Oct 16, 2017 at 11:33:21PM -0700, Nick Desaulniers wrote:
+> When compiling arch/x86/boot/compressed/eboot.c with HOSTCC=clang, the
+> following warning is observed:
 > 
-> I thought you wanted this for containers?  Container creation doesn't
-> have login events.  In an unprivileged orchestration system it may be
-> hard to synthetically manufacture them.
+> ./include/linux/cgroup-defs.h:391:16: warning: field 'cgrp' with
+> variable sized type 'struct cgroup' not at the end of a struct or class
+> is a GNU extension [-Wgnu-variable-sized-type-not-at-end]
+>         struct cgroup cgrp;
+>                       ^
+> Flexible array members are a C99 feature, but must be the last member of
+> a struct. Structs with flexible members composed in other structs must
+> also be the final members, unless using GNU C extensions.
+> 
+> struct cgroup_root's member cgrp is a struct cgroup, struct cgroup's
+> member ancestor_ids is a flexible member.
 
-I realize this. This work is very similar to problems we've solved 12 years 
-ago. We'll figure out what the right name is for it down the road. But the 
-concept is the same. If something enters a container, we need to know about 
-it. It needs to get tagged and be associated with the container. The way this 
-was solved for the loginuid problem was to add a session identifier so that 
-new logins of the same loginuid can coexist and we can trace actions back to a 
-specific login. I'd think we can apply lessons learned from a while back to 
-make container identification act similarly.
+This is silly tho.  We know the the root group embedded there won't
+have any ancestor_ids.  Also, in general, nothing prevents us from
+doing something like the following.
 
--Steve
+	struct outer_struct {
+		blah blah;
+		struct inner_struct_with_flexible_array_member inner;
+		unsigned long storage_for_flexible_array[NR_ENTRIES];
+		blah blah;
+	};
+
+I think we should just silence the bogus warning.
+
+Thanks.
+
+-- 
+tejun
