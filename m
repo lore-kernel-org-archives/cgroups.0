@@ -1,115 +1,53 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RESEND v12 3/6] mm, oom: cgroup-aware OOM killer
-Date: Thu, 19 Oct 2017 21:30:48 +0200
-Message-ID: <20171019193048.itwkfhycnebgbxsn@dhcp22.suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
+Date: Thu, 19 Oct 2017 15:45:34 -0400
+Message-ID: <20171019194534.GA5502@cmpxchg.org>
 References: <20171019185218.12663-1-guro@fb.com>
- <20171019185218.12663-4-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=g0apvw11DmikvksfY7r+4kstGsih1pCucBHsAkC2jp0=; b=T6cpujLsi/5loNbAjgVG7YFmnE
+        G8tN612WZ6lr9+mJh4zQGjJe/sYszn1BizqCSwtzfndZ4E3DEWd3YgGf7x0DhWsXsl7UMjUOWrz8V
+        W65zCzEsUj+I1oYgMib4F0q+wPaqSsoOIOS2dTA/8Sl1s6XYDobdNABwD9lswN+oibM0=;
 Content-Disposition: inline
-In-Reply-To: <20171019185218.12663-4-guro@fb.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20171019185218.12663-1-guro-b10kYP2dOMg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-On Thu 19-10-17 19:52:15, Roman Gushchin wrote:
-> Traditionally, the OOM killer is operating on a process level.
-> Under oom conditions, it finds a process with the highest oom score
-> and kills it.
-> 
-> This behavior doesn't suit well the system with many running
-> containers:
-> 
-> 1) There is no fairness between containers. A small container with
-> few large processes will be chosen over a large one with huge
-> number of small processes.
-> 
-> 2) Containers often do not expect that some random process inside
-> will be killed. In many cases much safer behavior is to kill
-> all tasks in the container. Traditionally, this was implemented
-> in userspace, but doing it in the kernel has some advantages,
-> especially in a case of a system-wide OOM.
-> 
-> To address these issues, the cgroup-aware OOM killer is introduced.
-> 
-> This patch introduces the core functionality: an ability to select
-> a memory cgroup as an OOM victim. Under OOM conditions the OOM killer
-> looks for the biggest leaf memory cgroup and kills the biggest
-> task belonging to it.
-> 
-> The following patches will extend this functionality to consider
-> non-leaf memory cgroups as OOM victims, and also provide an ability
-> to kill all tasks belonging to the victim cgroup.
-> 
-> The root cgroup is treated as a leaf memory cgroup, so it's score
-> is compared with other leaf memory cgroups.
-> Due to memcg statistics implementation a special approximation
-> is used for estimating oom_score of root memory cgroup: we sum
-> oom_score of the belonging processes (or, to be more precise,
-> tasks owning their mm structures).
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Acked-by: Michal Hocko <mhocko@suse.com>
+On Thu, Oct 19, 2017 at 07:52:12PM +0100, Roman Gushchin wrote:
+> This patchset makes the OOM killer cgroup-aware.
 
-Just to make it clear. My ack is conditional on the opt-in which is
-implemented later in the series. Strictly speaking system would
-behave differently during the bisection and that might lead to a
-confusion. I guess it would be better to simply disable this feature
-until we have means to enable it. But I do not really care strongly
-here.
+Hi Andrew,
 
-There is another thing that I am more concerned about. Usually you
-should drop ack when making further changes or at least call them out
-so that the reviewer is aware of them.  In this particular case I am
-worried about the fallback code we have discussed previously
+I believe this code is ready for merging upstream, and it seems Michal
+is in agreement. There are two main things to consider, however.
 
-[...]
-> @@ -1080,27 +1102,39 @@ bool out_of_memory(struct oom_control *oc)
->  	    current->mm && !oom_unkillable_task(current, NULL, oc->nodemask) &&
->  	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
->  		get_task_struct(current);
-> -		oc->chosen = current;
-> +		oc->chosen_task = current;
->  		oom_kill_process(oc, "Out of memory (oom_kill_allocating_task)");
->  		return true;
->  	}
->  
-> +	if (mem_cgroup_select_oom_victim(oc)) {
-> +		if (oom_kill_memcg_victim(oc))
-> +		    delay = true;
-> +
-> +		goto out;
-> +	}
-> +
-[...]
-> +out:
-> +	/*
-> +	 * Give the killed process a good chance to exit before trying
-> +	 * to allocate memory again.
-> +	 */
-> +	if (delay)
-> +		schedule_timeout_killable(1);
-> +
-> +	return !!oc->chosen_task;
->  }
+David would have really liked for this patchset to include knobs to
+influence how the algorithm picks cgroup victims. The rest of us
+agreed that this is beyond the scope of these patches, that the
+patches don't need it to be useful, and that there is nothing
+preventing anyone from adding configurability later on. David
+subsequently nacked the series as he considers it incomplete. Neither
+Michal nor I see technical merit in David's nack.
 
-this basically means that if you manage to select a memcg victim but
-then you won't be able to select any task in that memcg then you would
-return false from out_of_memory and that has other consequences. Namely
-__alloc_pages_may_oom will not set did_some_progress and so the
-allocation path will fail. While this scenario is not very likely we
-should behave better. Your previous implementation (which I've acked)
-did fall back to the standard oom killer path which is the safest
-option. Maybe we can do better but let's try robust and be clever later.
--- 
-Michal Hocko
-SUSE Labs
+Michal acked the implementation, but on the condition that the new
+behavior be opt-in, to not surprise existing users. I *think* we agree
+that respecting the cgroup topography during global OOM is what we
+should have been doing when cgroups were initially introduced; where
+we disagree is that I think users shouldn't have to opt in to
+improvements. We have done much more invasive changes to the victim
+selection without actual regressions in the past. Further, this change
+only applies to mounts of the new cgroup2. Tejun also wasn't convinced
+of the risk for regression, and too would prefer cgroup-awareness to
+be the default in cgroup2. I would ask for patch 5/6 to be dropped.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks
