@@ -1,125 +1,112 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [RESEND v12 6/6] mm, oom, docs: describe the cgroup-aware OOM killer
-Date: Thu, 19 Oct 2017 19:52:18 +0100
-Message-ID: <20171019185218.12663-7-guro@fb.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [RESEND v12 3/6] mm, oom: cgroup-aware OOM killer
+Date: Thu, 19 Oct 2017 21:30:48 +0200
+Message-ID: <20171019193048.itwkfhycnebgbxsn@dhcp22.suse.cz>
 References: <20171019185218.12663-1-guro@fb.com>
+ <20171019185218.12663-4-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=U3UFPOJm4I/W6qvlJuIXrVy2/+1YZJYAQm6OdTeN2dw=;
- b=TMxsJTDY/auFRGbDZzW1/UAA/TC1ubxFrZgQBeN7foRs4lAmSO2B5SfbA5UQK9W36pM7
- sn2KRrTkRY5iwSv3kOIDXck1uUO5eEaAMx4nzNehvz+3TFiCHddSYg6pIMhp30iC/oly
- ojVvEmoZpIFIGZcBq9eOIsol/B9AQEmsoZ4= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=U3UFPOJm4I/W6qvlJuIXrVy2/+1YZJYAQm6OdTeN2dw=;
- b=IjS0rUPqpPsrJjO0vsImXwqPpD3vy3gdvGRs4f+YUTI6kVg9F8en0YfAcWw9JSsCEv7j3KgKI78G5Q0tatyE29x6wB2N3M8TnS/GSQapU7vcLzYOG7LhMH/JBdR4uCgD/8pum5CjEnUfWb3KZRkhWpw8L+GEiJb8QGBFsoVqalY=
-In-Reply-To: <20171019185218.12663-1-guro@fb.com>
+Content-Disposition: inline
+In-Reply-To: <20171019185218.12663-4-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Document the cgroup-aware OOM killer.
+On Thu 19-10-17 19:52:15, Roman Gushchin wrote:
+> Traditionally, the OOM killer is operating on a process level.
+> Under oom conditions, it finds a process with the highest oom score
+> and kills it.
+> 
+> This behavior doesn't suit well the system with many running
+> containers:
+> 
+> 1) There is no fairness between containers. A small container with
+> few large processes will be chosen over a large one with huge
+> number of small processes.
+> 
+> 2) Containers often do not expect that some random process inside
+> will be killed. In many cases much safer behavior is to kill
+> all tasks in the container. Traditionally, this was implemented
+> in userspace, but doing it in the kernel has some advantages,
+> especially in a case of a system-wide OOM.
+> 
+> To address these issues, the cgroup-aware OOM killer is introduced.
+> 
+> This patch introduces the core functionality: an ability to select
+> a memory cgroup as an OOM victim. Under OOM conditions the OOM killer
+> looks for the biggest leaf memory cgroup and kills the biggest
+> task belonging to it.
+> 
+> The following patches will extend this functionality to consider
+> non-leaf memory cgroups as OOM victims, and also provide an ability
+> to kill all tasks belonging to the victim cgroup.
+> 
+> The root cgroup is treated as a leaf memory cgroup, so it's score
+> is compared with other leaf memory cgroups.
+> Due to memcg statistics implementation a special approximation
+> is used for estimating oom_score of root memory cgroup: we sum
+> oom_score of the belonging processes (or, to be more precise,
+> tasks owning their mm structures).
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Acked-by: Michal Hocko <mhocko@suse.com>
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.com>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
----
- Documentation/cgroup-v2.txt | 51 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+Just to make it clear. My ack is conditional on the opt-in which is
+implemented later in the series. Strictly speaking system would
+behave differently during the bisection and that might lead to a
+confusion. I guess it would be better to simply disable this feature
+until we have means to enable it. But I do not really care strongly
+here.
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 0bbdc720dd7c..69db5bf9c580 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -48,6 +48,7 @@ v1 is available under Documentation/cgroup-v1/.
-        5-2-1. Memory Interface Files
-        5-2-2. Usage Guidelines
-        5-2-3. Memory Ownership
-+       5-2-4. OOM Killer
-      5-3. IO
-        5-3-1. IO Interface Files
-        5-3-2. Writeback
-@@ -1031,6 +1032,28 @@ PAGE_SIZE multiple when read back.
- 	high limit is used and monitored properly, this limit's
- 	utility is limited to providing the final safety net.
- 
-+  memory.oom_group
-+
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	If set, OOM killer will consider the memory cgroup as an
-+	indivisible memory consumers and compare it with other memory
-+	consumers by it's memory footprint.
-+	If such memory cgroup is selected as an OOM victim, all
-+	processes belonging to it or it's descendants will be killed.
-+
-+	This applies to system-wide OOM conditions and reaching
-+	the hard memory limit of the cgroup and their ancestor.
-+	If OOM condition happens in a descendant cgroup with it's own
-+	memory limit, the memory cgroup can't be considered
-+	as an OOM victim, and OOM killer will not kill all belonging
-+	tasks.
-+
-+	Also, OOM killer respects the /proc/pid/oom_score_adj value -1000,
-+	and will never kill the unkillable task, even if memory.oom_group
-+	is set.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-@@ -1234,6 +1257,34 @@ to be accessed repeatedly by other cgroups, it may make sense to use
- POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
- belonging to the affected files to ensure correct memory ownership.
- 
-+OOM Killer
-+~~~~~~~~~~
-+
-+Cgroup v2 memory controller implements a cgroup-aware OOM killer.
-+It means that it treats cgroups as first class OOM entities.
-+
-+Under OOM conditions the memory controller tries to make the best
-+choice of a victim, looking for a memory cgroup with the largest
-+memory footprint, considering leaf cgroups and cgroups with the
-+memory.oom_group option set, which are considered to be an indivisible
-+memory consumers.
-+
-+By default, OOM killer will kill the biggest task in the selected
-+memory cgroup. A user can change this behavior by enabling
-+the per-cgroup memory.oom_group option. If set, it causes
-+the OOM killer to kill all processes attached to the cgroup,
-+except processes with oom_score_adj set to -1000.
-+
-+This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
-+the memory controller considers only cgroups belonging to the sub-tree
-+of the OOM'ing cgroup.
-+
-+The root cgroup is treated as a leaf memory cgroup, so it's compared
-+with other leaf memory cgroups and cgroups with oom_group option set.
-+
-+If there are no cgroups with the enabled memory controller,
-+the OOM killer is using the "traditional" process-based approach.
-+
- 
- IO
- --
+There is another thing that I am more concerned about. Usually you
+should drop ack when making further changes or at least call them out
+so that the reviewer is aware of them.  In this particular case I am
+worried about the fallback code we have discussed previously
+
+[...]
+> @@ -1080,27 +1102,39 @@ bool out_of_memory(struct oom_control *oc)
+>  	    current->mm && !oom_unkillable_task(current, NULL, oc->nodemask) &&
+>  	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
+>  		get_task_struct(current);
+> -		oc->chosen = current;
+> +		oc->chosen_task = current;
+>  		oom_kill_process(oc, "Out of memory (oom_kill_allocating_task)");
+>  		return true;
+>  	}
+>  
+> +	if (mem_cgroup_select_oom_victim(oc)) {
+> +		if (oom_kill_memcg_victim(oc))
+> +		    delay = true;
+> +
+> +		goto out;
+> +	}
+> +
+[...]
+> +out:
+> +	/*
+> +	 * Give the killed process a good chance to exit before trying
+> +	 * to allocate memory again.
+> +	 */
+> +	if (delay)
+> +		schedule_timeout_killable(1);
+> +
+> +	return !!oc->chosen_task;
+>  }
+
+this basically means that if you manage to select a memcg victim but
+then you won't be able to select any task in that memcg then you would
+return false from out_of_memory and that has other consequences. Namely
+__alloc_pages_may_oom will not set did_some_progress and so the
+allocation path will fail. While this scenario is not very likely we
+should behave better. Your previous implementation (which I've acked)
+did fall back to the standard oom killer path which is the safest
+option. Maybe we can do better but let's try robust and be clever later.
 -- 
-2.13.6
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
