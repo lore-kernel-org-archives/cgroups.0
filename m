@@ -1,106 +1,206 @@
-From: Paul Moore <paul@paul-moore.com>
-Subject: Re: RFC(v2): Audit Kernel Container IDs
-Date: Thu, 19 Oct 2017 13:47:59 -0400
-Message-ID: <CAHC9VhRHnDHFF-GZEz46kOZWQM6gCx3pWPZgOmd=a9R1W2CQFg@mail.gmail.com>
-References: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca>
- <75b7d6a6-42ba-2dff-1836-1091c7c024e7@schaufler-ca.com> <20171017003340.whjdkqmkw4lydwy7@madcap2.tricolour.ca>
- <2319693.5l3M4ZINGd@x2> <1508243469.6230.24.camel@redhat.com>
- <a07968f6-fef1-f49d-01f1-6c660c0ada20@schaufler-ca.com> <1508254120.6230.34.camel@redhat.com>
- <1508255091.3129.27.camel@HansenPartnership.com> <CAHC9VhRV9m6-APj3ofMQc22rL-WUoDzB8-urUxryszjCHHHLTg@mail.gmail.com>
- <49752b6f-8a77-d1e5-8acb-5a1eed0a992c@suse.de> <871sm0j7bm.fsf@xmission.com>
- <CAHC9VhTYF-MJm3ejWXE1H-eeXKaNBkeWKwdiKdj093xATYn7nQ@mail.gmail.com> <87y3o7gl5l.fsf@xmission.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [RESEND v12 1/6] mm, oom: refactor the oom_kill_process() function
+Date: Thu, 19 Oct 2017 19:52:13 +0100
+Message-ID: <20171019185218.12663-2-guro@fb.com>
+References: <20171019185218.12663-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=RzYF2M3RVsgGTtntxyo9j5wfkWMaM4S4BxbsZmqjX5I=;
-        b=vh9FDXhicpZBlKZ5H7bEDJOhlAfZ0zy5k21TrpT5XISMPBb/Cm5dJ5EoeM6TKAMCDU
-         l/PS7Xvl5DzaaYOY4HVpUFQWTuHCaKkrOjj65S0BqAmkQ0CXkKJMBDR8OYMBX0525/su
-         2S3ANUuMQXslGFqjAhkUR9tX3B7nZSV29XHrFLdy8jtEdHHuNM22+lnv4l7P2+yaP7AO
-         yMECFK0wGBRU+CHaiCzYkcQeSli97t2vfDGScuolnNGIg//+co1R6V+47E0MK82wYU4r
-         zqZXHaWIeURPmPL1hAN3Se/axrFOeNh2XeltjvKN7IKgYWCUXzSll9/fNs/KzidKTxwE
-         soXw==
-In-Reply-To: <87y3o7gl5l.fsf@xmission.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=0RRabeJY9bNDFfOVDnDFdJqxdOVZhozIfHhd+w4dN5U=;
+ b=AfflV+WhgfAwfQ8NWnD5D8/QEsTjm+LcZHQP2DM3+J2hQ5/OEwgO+wj2MVED5vEK1vmr
+ 9Ay6RxgZiPwEWxCI0d/wQ7p7C32/S1oq9luEl+WP1lOgXrec+D3v7nZwQvz+1+URHIi9
+ sCoRvkQek3iDl7QBHPcmWFx0Aku1bJzIFqk= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=0RRabeJY9bNDFfOVDnDFdJqxdOVZhozIfHhd+w4dN5U=;
+ b=fBV/L2t3FAuw3Pufnqsqs1iVfY8GXsvYVwwm+dfrrOwlTvPQfUvpYJ/RPlSprOvlyQIB6Qvp0sNMAxfSUclbOHRQDJ9aif0Z6qv86qqXjzE29Jp22vueq2Eonlfey3oniuVas+yahAZz5Sx/Qwwb9LEIMHF6N0nVQhBIM88K5wo=
+In-Reply-To: <20171019185218.12663-1-guro@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Aleksa Sarai <asarai@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, cgroups@vger.kernel.org, mszeredi@redhat.com, Andy Lutomirski <luto@kernel.org>, jlayton@redhat.com, Carlos O'Donell <carlos@redhat.com>, API <linux-api@vger.kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Viro <viro@zeniv.linux.org.uk>, David Howells <dhowells@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-audit@redhat.com, Simo Sorce <simo@redhat.com>, Development <netdev@vger.kernel.org>, Casey Schaufler <casey@schaufler-ca.com>, Eric Paris <eparis@parisplace.org>, Steve Grubb <sgrubb@redhat.com>, trondmy@primarydata.com
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Oct 19, 2017 at 12:25 PM, Eric W. Biederman
-<ebiederm@xmission.com> wrote:
-> Paul Moore <paul@paul-moore.com> writes:
->
->> On Wed, Oct 18, 2017 at 8:43 PM, Eric W. Biederman
->> <ebiederm@xmission.com> wrote:
->>> Aleksa Sarai <asarai@suse.de> writes:
->>>>>> The security implications are that anything that can change the label
->>>>>> could also hide itself and its doings from the audit system and thus
->>>>>> would be used as a means to evade detection.  I actually think this
->>>>>> means the label should be write once (once you've set it, you can't
->>>>>> change it) ...
->>>>>
->>>>> Richard and I have talked about a write once approach, but the
->>>>> thinking was that you may want to allow a nested container
->>>>> orchestrator (Why? I don't know, but people always want to do the
->>>>> craziest things.) and a write-once policy makes that impossible.  If
->>>>> we punt on the nested orchestrator, I believe we can seriously think
->>>>> about a write-once policy to simplify things.
->>>>
->>>> Nested containers are a very widely used use-case (see LXC system containers,
->>>> inside of which people run other container runtimes). So I would definitely
->>>> consider it something that "needs to be supported in some way". While the LXC
->>>> guys might be a *tad* crazy, the use-case isn't. :P
->>
->> No worries, we're all a little crazy in our own special ways ;)
->>
->> Kidding aside, thanks for explaining the use case.
->>
->>> Of course some of that gets to running auditd inside a container which
->>> we don't have yet either.
->>>
->>> So I think to start it is perfectly fine to figure out the non-nested
->>> case first and what makes sense there.  Then to sort out the nested
->>> container case.
->>>
->>> The solution might be that a process gets at most one id per ``audit
->>> namespace''.
->>
->> In an attempt to stay on-topic, let's try to stick with "audit
->> container ID" or "container ID" if you must.  I really want to avoid
->> the term "audit namespace" simply because the term "namespace" implies
->> some things which we aren't planning on doing.
->
-> This is 100% on topic.  I am saying that unless we are planing to have
-> auditd running in a container with it's own set of rules you probably
-> don't care about nested containers.  Last time I heard a discussion
-> about that the term in use was audit namespace.   So I was referring to
-> that support when I said audit namespace, even if the end result only
-> loosely fits the term namespace.
+The oom_kill_process() function consists of two logical parts:
+the first one is responsible for considering task's children as
+a potential victim and printing the debug information.
+The second half is responsible for sending SIGKILL to all
+tasks sharing the mm struct with the given victim.
 
-My "stay on-topic" comment is directed at, and limited to, your choice
-of terminology, not the discussion about container nesting.  I'm
-purposefully not using the term "audit namespace" to refer to anything
-that Richard has presented, and I'm kindly asking you to do the same,
-it simply doesn't fit.
+This commit splits the oom_kill_process() function with
+an intention to re-use the the second half: __oom_kill_process().
 
-> I could be wrong of course.  I don't fully understand what is driving
-> the desire to connect audit and containers.  But my naive guess is that
-> one from an audit perspective you don't care about nested containers
-> unless there is also a nested auditd who is looking at it from a nested
-> perspective.
+The cgroup-aware OOM killer will kill multiple tasks
+belonging to the victim cgroup. We don't need to print
+the debug information for the each task, as well as play
+with task selection (considering task's children),
+so we can't use the existing oom_kill_process().
 
-Two motivations that are clear to me: the first is the desire to be
-able to associate events in the audit log with a container (much like
-how the session ID helped us associate events with a login session),
-the second is the desire for users to run an audit daemon instance in
-their containers to capture audit events generated by their container.
-There is also a security certification motivation, see some of Steve's
-comments for more on that.
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Acked-by: Michal Hocko <mhocko@suse.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: David Rientjes <rientjes@google.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+---
+ mm/oom_kill.c | 123 +++++++++++++++++++++++++++++++---------------------------
+ 1 file changed, 65 insertions(+), 58 deletions(-)
 
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 26add8a0d1f7..0b9f36117989 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -842,68 +842,12 @@ static bool task_will_free_mem(struct task_struct *task)
+ 	return ret;
+ }
+ 
+-static void oom_kill_process(struct oom_control *oc, const char *message)
++static void __oom_kill_process(struct task_struct *victim)
+ {
+-	struct task_struct *p = oc->chosen;
+-	unsigned int points = oc->chosen_points;
+-	struct task_struct *victim = p;
+-	struct task_struct *child;
+-	struct task_struct *t;
++	struct task_struct *p;
+ 	struct mm_struct *mm;
+-	unsigned int victim_points = 0;
+-	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
+-					      DEFAULT_RATELIMIT_BURST);
+ 	bool can_oom_reap = true;
+ 
+-	/*
+-	 * If the task is already exiting, don't alarm the sysadmin or kill
+-	 * its children or threads, just give it access to memory reserves
+-	 * so it can die quickly
+-	 */
+-	task_lock(p);
+-	if (task_will_free_mem(p)) {
+-		mark_oom_victim(p);
+-		wake_oom_reaper(p);
+-		task_unlock(p);
+-		put_task_struct(p);
+-		return;
+-	}
+-	task_unlock(p);
+-
+-	if (__ratelimit(&oom_rs))
+-		dump_header(oc, p);
+-
+-	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
+-		message, task_pid_nr(p), p->comm, points);
+-
+-	/*
+-	 * If any of p's children has a different mm and is eligible for kill,
+-	 * the one with the highest oom_badness() score is sacrificed for its
+-	 * parent.  This attempts to lose the minimal amount of work done while
+-	 * still freeing memory.
+-	 */
+-	read_lock(&tasklist_lock);
+-	for_each_thread(p, t) {
+-		list_for_each_entry(child, &t->children, sibling) {
+-			unsigned int child_points;
+-
+-			if (process_shares_mm(child, p->mm))
+-				continue;
+-			/*
+-			 * oom_badness() returns 0 if the thread is unkillable
+-			 */
+-			child_points = oom_badness(child,
+-				oc->memcg, oc->nodemask, oc->totalpages);
+-			if (child_points > victim_points) {
+-				put_task_struct(victim);
+-				victim = child;
+-				victim_points = child_points;
+-				get_task_struct(victim);
+-			}
+-		}
+-	}
+-	read_unlock(&tasklist_lock);
+-
+ 	p = find_lock_task_mm(victim);
+ 	if (!p) {
+ 		put_task_struct(victim);
+@@ -977,6 +921,69 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
+ }
+ #undef K
+ 
++static void oom_kill_process(struct oom_control *oc, const char *message)
++{
++	struct task_struct *p = oc->chosen;
++	unsigned int points = oc->chosen_points;
++	struct task_struct *victim = p;
++	struct task_struct *child;
++	struct task_struct *t;
++	unsigned int victim_points = 0;
++	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
++					      DEFAULT_RATELIMIT_BURST);
++
++	/*
++	 * If the task is already exiting, don't alarm the sysadmin or kill
++	 * its children or threads, just give it access to memory reserves
++	 * so it can die quickly
++	 */
++	task_lock(p);
++	if (task_will_free_mem(p)) {
++		mark_oom_victim(p);
++		wake_oom_reaper(p);
++		task_unlock(p);
++		put_task_struct(p);
++		return;
++	}
++	task_unlock(p);
++
++	if (__ratelimit(&oom_rs))
++		dump_header(oc, p);
++
++	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
++		message, task_pid_nr(p), p->comm, points);
++
++	/*
++	 * If any of p's children has a different mm and is eligible for kill,
++	 * the one with the highest oom_badness() score is sacrificed for its
++	 * parent.  This attempts to lose the minimal amount of work done while
++	 * still freeing memory.
++	 */
++	read_lock(&tasklist_lock);
++	for_each_thread(p, t) {
++		list_for_each_entry(child, &t->children, sibling) {
++			unsigned int child_points;
++
++			if (process_shares_mm(child, p->mm))
++				continue;
++			/*
++			 * oom_badness() returns 0 if the thread is unkillable
++			 */
++			child_points = oom_badness(child,
++				oc->memcg, oc->nodemask, oc->totalpages);
++			if (child_points > victim_points) {
++				put_task_struct(victim);
++				victim = child;
++				victim_points = child_points;
++				get_task_struct(victim);
++			}
++		}
++	}
++	read_unlock(&tasklist_lock);
++
++	__oom_kill_process(victim);
++}
++
+ /*
+  * Determines whether the kernel must panic because of the panic_on_oom sysctl.
+  */
 -- 
-paul moore
-www.paul-moore.com
+2.13.6
+
