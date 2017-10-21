@@ -1,55 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: reorder flexible array members of struct
- cgroup_root
-Date: Sat, 21 Oct 2017 09:03:08 -0700
-Message-ID: <20171021160308.GN1302522@devbig577.frc2.facebook.com>
+From: Nick Desaulniers <nick.desaulniers@gmail.com>
+Subject: Re: [PATCH] cgroup: reorder flexible array members of struct cgroup_root
+Date: Sat, 21 Oct 2017 12:08:42 -0700
+Message-ID: <CAH7mPvihpc5mZYukBFFPToidDRUKtEx9FK4pZm0phuYCa4KGWA@mail.gmail.com>
 References: <20171017063322.11455-1-nick.desaulniers@gmail.com>
- <20171018133010.GD1302522@devbig577.frc2.facebook.com>
- <CAH7mPvjksNSDo4o=z51YkH4yX+gDnGXU-g59gTkOUS-pEva8sA@mail.gmail.com>
- <20171021153253.GG1302522@devbig577.frc2.facebook.com>
- <85d7f6eb-7869-551d-01b1-fa1712f4bd40@suse.de>
+ <20171018133010.GD1302522@devbig577.frc2.facebook.com> <CAH7mPvjksNSDo4o=z51YkH4yX+gDnGXU-g59gTkOUS-pEva8sA@mail.gmail.com>
+ <20171021153253.GG1302522@devbig577.frc2.facebook.com> <85d7f6eb-7869-551d-01b1-fa1712f4bd40@suse.de>
+ <20171021160308.GN1302522@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=uSltkP2MEwX4jNFGuTw2Gpksbs3LkCGyb/oXEljXeZQ=;
-        b=Na/r28gGnEYhDh0DI8aND8GF4hrJlzcydIk+VaxJuHqgsbmzhxfvJx1SUzJToQZjrt
-         sxRt7fpC6cEv0SY8ea8OBOkVoXItoIxwtNr9iz45dwqRgYZNPsgXRt4sMslmXg7ViTkG
-         jEL7nJvfLhusabE5SH477o9cU55v/v/ytjpME1WjKLYW09j/+au5ctL8rHyba2yDPtZT
-         PhZUkbXbFbzgloDd7rBv0Rx5EFis/j9clW0UuhPcRzU41Fh6G7hEdg9RxNny6i/0xYX0
-         bOAJdcCpYyN6LmSpQXQJqbEv1RhgFtPyQLXymo5KFcvmMdfQlz3UYOziwv9DYV2F0qAQ
-         gEfw==
-Content-Disposition: inline
-In-Reply-To: <85d7f6eb-7869-551d-01b1-fa1712f4bd40-l3A5Bk7waGM@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=xIsderPaUVemgQJEAvynDD+DurjaxE6/CHqMxmGkKRo=;
+        b=AUyAXV6au5fE6qJsoUAVA9bVAQN6IwHHMQJjIt9VTBe9nIEcHTk6gH9w6OqwX6n7tW
+         9DezH+D0+Qu7tYoi/DRcQrywM+wkbbIfI3OXxWSaH9pLP2SpGP0BaNUlYiQSCpCeskwz
+         Dy6bg+tqDFg+7iURRJinh0/eBrwOPglHJi25uaT5VtHL8n8S7u0gFFJDSvMnhdsVmTRm
+         pArOprkoPsRcliw72ywhGFYAUHO6uXSODbm2Y2fAbUFR8MpajPGRp1Yzz3Tr86uqmE06
+         FLpXkBF3bQHLA2Ic6gHaRHQyNpI9xUSI3wJ2mWOowFQpVn+ph/0h/rODH2sbT+hUkmbC
+         G9Pg==
+In-Reply-To: <20171021160308.GN1302522@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <asarai-l3A5Bk7waGM@public.gmane.org>
-Cc: Nick Desaulniers <nick.desaulniers-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Michael Davidson <md-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Hackmann <ghackmann-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, android-llvm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Aleksa Sarai <asarai@suse.de>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Matthias Kaehlcke <mka@chromium.org>, Michael Davidson <md@google.com>, Greg Hackmann <ghackmann@google.com>, Stephen Hines <srhines@google.com>
 
-On Sun, Oct 22, 2017 at 02:59:33AM +1100, Aleksa Sarai wrote:
-> >Here, not necessarily but I don't want to move it for a bogus reason.
-> >Why would we disallow embedding structs with flexible members in the
-> >middle when it can be done and is useful?  If we want to discuss
-> >whether we want to avoid such usages in the kernel (but why?), sure,
-> >let's have that discussion but we can't decide that on "clang warns on
-> >it by default".
-> 
-> There was a talk a few years ago by the clang folks[1] saying that
-> while trying to build a kernel with clang, they discovered that
-> several places in the kernel uses "VLAIS" (variable Length Arrays In
-> Structs") and argued that this is a violation of the C
-> specification, despite it being a GNU extension. They also submitted
-> several patches that removed this code (even working around a
-> user-space visible usage of VLAIS).
+On Sat, Oct 21, 2017 at 9:03 AM, Tejun Heo <tj@kernel.org> wrote:
+> The kernel is explicitly using GNU extended version of C and has
+> always from the beginning, so not-std-c isn't a valid argument.
 
-The kernel is explicitly using GNU extended version of C and has
-always from the beginning, so not-std-c isn't a valid argument.
+Ok, how about that it looks like gcc7.1 starts treating this as an error?
 
-Thanks.
+https://godbolt.org/g/ivzPHZ
 
--- 
-tejun
+gcc6.3 looks like it starts trying to warn about this.
+
+I don't have a local build of gcc7.1 to verify, but it seems like
+setting -std=gnu99 doesn't help.
+
+With Clang, it seems to be a warning that can be ignored via command
+line flags, but doesn't look like that's possible for newer versions
+of gcc, so this will have to be addressed at some point.
