@@ -1,91 +1,75 @@
-From: Neha Agarwal <nehaagarwal@google.com>
-Subject: Re: [RFC PATCH] mm, thp: make deferred_split_shrinker memcg-aware
-Date: Fri, 20 Oct 2017 10:47:57 -0700
-Message-ID: <CAEvLuNbo=zf1aC9k7sitZgYPD=P1Awwne4mmUSRtJc0EF1xcAA@mail.gmail.com>
-References: <20171019200323.42491-1-nehaagarwal@google.com>
- <20171020071250.ftqn2d356yekkp5k@dhcp22.suse.cz> <CAEvLuNbH0azyfSydbu3yNZ-_xY-G_5YrDDneCwcFbv+NgYd10w@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: reorder flexible array members of struct
+ cgroup_root
+Date: Sat, 21 Oct 2017 08:32:53 -0700
+Message-ID: <20171021153253.GG1302522@devbig577.frc2.facebook.com>
+References: <20171017063322.11455-1-nick.desaulniers@gmail.com>
+ <20171018133010.GD1302522@devbig577.frc2.facebook.com>
+ <CAH7mPvjksNSDo4o=z51YkH4yX+gDnGXU-g59gTkOUS-pEva8sA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=PV5vkRantFo7z7YVWmqCEOl1jfCaZximUjStkxKh2Kg=;
-        b=kdbmqj77E6nrSRBTREPB6NzhkDf3YaQRsi2MpC9GUttjWhFFWU/dPTd7S0l+EcPwHE
-         R5frXyZIbV6TPjjqdl9paBRcZj1CbuQ37MrgXLGYUaL9lvrUrNtvObjjQHHXnVf3DPSN
-         O8x2RcdVGZnypZp+Tx+XKQUQalwFYL72S/GXZi/3ZsoenFk3sc78Q9ce9GH7wk95gymz
-         JAdGE/egDbqYlvMX44VkGOco9cumE/tI0xeroY3bHuva0CkQeHD0klkXeklCzo0n+GQV
-         Jx70aeA/hdj9WkzhhHB+2aWvq3GwUq6mp718/0Wvhz6kG0Fa3VGkJh3sLv3jQ2PMKnd9
-         wvvg==
-In-Reply-To: <CAEvLuNbH0azyfSydbu3yNZ-_xY-G_5YrDDneCwcFbv+NgYd10w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=BfFfPt8KuhOdKW1s4OU/URnjGDCe2CzbaF/zjhwjWzo=;
+        b=ZjGSWhTEXfKBIMXdO1TQu2yGLN8seydnSqxVfgXdWgOpW3GQq6JlF3aNEsXtMLUKKC
+         0AuCg6FDzqeVrKM/5PnaxvTh1cOgvYXyogR9BQzTWH+Y4UMDHRjRtDxMFoBVE6UigCdq
+         iO3+AA6UJMcverOEbXdrZPDxCyEecyTS2AmQy+SblOqtFtrrnDmB8NXXwBDOBd/qsPSz
+         0lhp2Lfh5LTssF+AVPNZJ8OV93+76m6EhhYHTQooT8uYFu3GcC3Cw+BrXLvbBVXgServ
+         XTaBSHiFzGjjE9TAQDc6O2jtLiNFpM3y8ofspWlTUlJuIj+br2B7ZXrRD0vVfkXtmT2I
+         p++w==
+Content-Disposition: inline
+In-Reply-To: <CAH7mPvjksNSDo4o=z51YkH4yX+gDnGXU-g59gTkOUS-pEva8sA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Andrea Arcangeli <aarcange@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Dan Williams <dan.j.williams@intel.com>, David Rientjes <rientjes@google.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Mel Gorman <mgorman@techsingularity.net>, Vlastimil Babka <vbabka@suse.cz>, Kemi Wang <kemi.wang@intel.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Shaohua Li <shli@fb.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Nick Desaulniers <nick.desaulniers-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Michael Davidson <md-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Hackmann <ghackmann-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, android-llvm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Fri, Oct 20, 2017 at 9:47 AM, Neha Agarwal <nehaagarwal@google.com> wrote:
-> [Sorry for multiple emails, it wasn't in plain text before, thus resending.]
->
-> On Fri, Oct 20, 2017 at 12:12 AM, Michal Hocko <mhocko@kernel.org> wrote:
->> On Thu 19-10-17 13:03:23, Neha Agarwal wrote:
->>> deferred_split_shrinker is NUMA aware. Making it memcg-aware if
->>> CONFIG_MEMCG is enabled to prevent shrinking memory of memcg(s) that are
->>> not under memory pressure. This change isolates memory pressure across
->>> memcgs from deferred_split_shrinker perspective, by not prematurely
->>> splitting huge pages for the memcg that is not under memory pressure.
->>
->> Why do we need this? THP pages are usually not shared between memcgs. Or
->> do you have a real world example where this is not the case? Your patch
->> is adding quite a lot of (and to be really honest very ugly) code so
->> there better should be a _very_ good reason to justify it. I haven't
->> looked very closely to the code, at least all those ifdefs in the code
->> are too ugly to live.
->> --
->> Michal Hocko
->> SUSE Labs
->
-> Hi Michal,
->
-> Let me try to pitch the motivation first:
-> In the case of NUMA-aware shrinker, memory pressure may lead to
-> splitting and freeing subpages within a THP, irrespective of whether
-> the page belongs to the memcg that is under memory pressure. THP
-> sharing between memcgs is not a pre-condition for above to happen.
+Hello, Nick.
 
-I think I got confused here. The point I want to make is that when a
-memcg is under memory pressure, only memcg-aware shrinkers are called.
-However, a memcg with partially-mapped THPs (which can be split and
-thus free up subpages) should be be able to split such THPs, to avoid
-oom-kills under memory pressure. By making this shrinker memcg-aware,
-we will be able to free up subpages by splitting partially-mapped THPs
-under memory pressure.
+On Fri, Oct 20, 2017 at 12:15:55AM -0700, Nick Desaulniers wrote:
+> > This is silly tho.  We know the the root group embedded there won't
+> > have any ancestor_ids.
+> 
+> Sure, but struct cgroup_root is still declared as having a struct
+> cgroup not declared as the final member.
 
->
-> Let's consider two memcgs: memcg-A and memcg-B. Say memcg-A is under
-> memory pressure that is hitting its limit. If this memory pressure
-> invokes the shrinker (non-memcg-aware) and splits pages from memcg-B
-> queued for deferred splits, then that won't reduce memcg-A's usage. It
-> will reduce memcg-B's usage. Also, why should memcg-A's memory
-> pressure reduce memcg-B's usage.
->
-> By making this shrinker memcg-aware, we can invoke respective memcg
-> shrinkers to handle the memory pressure. Furthermore, with this
-> approach we can isolate the THPs of other memcg(s) (not under memory
-> pressure) from premature splits. Isolation aids in reducing
-> performance impact when we have several memcgs on the same machine.
->
-> Regarding ifdef ugliness: I get your point and agree with you on that.
-> I think I can do a better job at restricting the ugliness, will post
-> another version.
->
-> --
-> Thanks,
-> Neha Agarwal
+Why is that a problem tho?  We know that it doesn't have any flexible
+array member so there's no storage allocated to it.
 
+> > Also, in general, nothing prevents us from
+> > doing something like the following.
+> >
+> >         struct outer_struct {
+> >                 blah blah;
+> >                 struct inner_struct_with_flexible_array_member inner;
+> >                 unsigned long storage_for_flexible_array[NR_ENTRIES];
+> >                 blah blah;
+> >         };
+> 
+> At that point, then why have the struct with flexible array member in
+> the first place?
 
+Because there are different ways to use the struct?
+
+> >> or specific location of the member cgrp within struct cgroup_root AFAICT.
+> > I think we should just silence the bogus warning.
+> 
+> Is the order of the members actually important?  Otherwise it seems
+> that we're taking advantage of a GNU C extension for no real reason,
+> which is what I'm trying to avoid.  Please reconsider.
+
+Here, not necessarily but I don't want to move it for a bogus reason.
+Why would we disallow embedding structs with flexible members in the
+middle when it can be done and is useful?  If we want to discuss
+whether we want to avoid such usages in the kernel (but why?), sure,
+let's have that discussion but we can't decide that on "clang warns on
+it by default".
+
+Thanks.
 
 -- 
-Thanks,
-Neha Agarwal
+tejun
