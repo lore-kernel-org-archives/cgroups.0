@@ -1,89 +1,54 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
-Date: Sun, 22 Oct 2017 17:24:51 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com>
-References: <20171019185218.12663-1-guro@fb.com> <20171019194534.GA5502@cmpxchg.org>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [RFC PATCH] mm, thp: make deferred_split_shrinker memcg-aware
+Date: Mon, 23 Oct 2017 13:54:50 +0300
+Message-ID: <20171023105450.jv4qerpzlrodfws6@node.shutemov.name>
+References: <20171019200323.42491-1-nehaagarwal@google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=pOv3j5tzidFMNNMq8ym0wrPujPbYAywJfybYi2xkwKQ=;
-        b=fmb5vKvBmUqd009+2c/5WBq9oTCDPwtvf5naUhGPNiaDN3f9vklNcNLBahsXGcqTkA
-         rD9fadRZAfMqEU8LZTAc0KWH5h5jETQZU+Axl1CUxnj5cyN9PdBzLtU4GJuU2BcV+ol0
-         VwJaQrM++MmPYV4gG2apksF1xHM517XpUpdyDiTEzA85JqdQlndmN8HtGjhR5MymSrR9
-         YsmFqqdATvjFjLapkCIuJPDG5xko92d46cbXeWYXEZ6tpz9QF6McKTO//26TUREoFnhC
-         yUFzgTKu/ziC+FSm+R8RcrYmCsWqUXxjVpOhFqkaXz38iYv4DMEN59bO0EqHfCZj9i7I
-         pwUg==
-In-Reply-To: <20171019194534.GA5502@cmpxchg.org>
-Sender: linux-doc-owner@vger.kernel.org
+        d=shutemov-name.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=NG3xitf/ighuhJCc2dESfpDVzppbfBEklExRGQL3h34=;
+        b=LfnsXKmQBDVZ5Ei1o8smW0qEW/6vULOKMewjSEmPhoLyqZI6f4T8zY/EDc92anCzRw
+         mxOaypicOtqskFcXIbOsQTRXEkZCEQdh0ikUd15mHDg0ImSFqN0xAvAm7a1O5JZX8DGp
+         +1dLa3C4gu6iLCmy5ysWpAUTFLPwLjSz9GhLvlOZJsteolFpXUIl4bJ3XbTazNgV8Uax
+         gpmyU18nqeBuPRwjfBwMrRsu1e6w94q0FWRSI9Vdjbdl0+r3xuWFb0Wz5Slrd4UhuiTS
+         R9lJggm7DAzZD4/kzLvldKTA29a+Ptcp/0iJ/gBih0YowJ1CJjoexBQLORNZB9q8V5+h
+         mkgg==
+Content-Disposition: inline
+In-Reply-To: <20171019200323.42491-1-nehaagarwal@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Neha Agarwal <nehaagarwal@google.com>
+Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Andrea Arcangeli <aarcange@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Dan Williams <dan.j.williams@intel.com>, David Rientjes <rientjes@google.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Mel Gorman <mgorman@techsingularity.net>, Vlastimil Babka <vbabka@suse.cz>, Kemi Wang <kemi.wang@intel.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Shaohua Li <shli@fb.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Thu, 19 Oct 2017, Johannes Weiner wrote:
-
-> David would have really liked for this patchset to include knobs to
-> influence how the algorithm picks cgroup victims. The rest of us
-> agreed that this is beyond the scope of these patches, that the
-> patches don't need it to be useful, and that there is nothing
-> preventing anyone from adding configurability later on. David
-> subsequently nacked the series as he considers it incomplete. Neither
-> Michal nor I see technical merit in David's nack.
+On Thu, Oct 19, 2017 at 01:03:23PM -0700, Neha Agarwal wrote:
+> deferred_split_shrinker is NUMA aware. Making it memcg-aware if
+> CONFIG_MEMCG is enabled to prevent shrinking memory of memcg(s) that are
+> not under memory pressure. This change isolates memory pressure across
+> memcgs from deferred_split_shrinker perspective, by not prematurely
+> splitting huge pages for the memcg that is not under memory pressure.
 > 
-
-The nack is for three reasons:
-
- (1) unfair comparison of root mem cgroup usage to bias against that mem 
-     cgroup from oom kill in system oom conditions,
-
- (2) the ability of users to completely evade the oom killer by attaching
-     all processes to child cgroups either purposefully or unpurposefully,
-     and
-
- (3) the inability of userspace to effectively control oom victim  
-     selection.
-
-For (1), the difference in v12 is adding the rss of all processes attached 
-to the root mem cgroup as the evaluation.  This is not the same criteria 
-that child cgroups are evaluated on, and they are compared using that 
-bias.  It is very trivial to provide a fair comparison as was suggested in 
-v11.
-
-For (2), users who do
-
-	for i in $(cat cgroup.procs); do mkdir $i; echo $i > $i/cgroup.procs; done
-
-can completely evade the oom killer and this may be part of their standard 
-operating procedure for restricting resources with other cgroups other 
-than the mem cgroup.  Again, it's an unfair comparison to all other 
-cgroups on the system.
-
-For (3), users need the ability to protect important cgroups, such as 
-protecting a cgroup that is limited to 50% of system memory.  They need 
-the ability to kill processes from other cgroups to protect these 
-important processes.  This is nothing new: the oom killer has always 
-provided the ability to bias against important processes.
-
-There was follow-up email on all of these points where very trivial 
-changes were suggested to address all three of these issues, and which 
-Roman has implemented in one form or another in previous iterations with 
-the bonus that no accounting to the root mem cgroup needs to be done.
-
-> Michal acked the implementation, but on the condition that the new
-> behavior be opt-in, to not surprise existing users. I *think* we agree
-> that respecting the cgroup topography during global OOM is what we
-> should have been doing when cgroups were initially introduced; where
-> we disagree is that I think users shouldn't have to opt in to
-> improvements. We have done much more invasive changes to the victim
-> selection without actual regressions in the past. Further, this change
-> only applies to mounts of the new cgroup2. Tejun also wasn't convinced
-> of the risk for regression, and too would prefer cgroup-awareness to
-> be the default in cgroup2. I would ask for patch 5/6 to be dropped.
+> Note that a pte-mapped compound huge page charge is not moved to the dst
+> memcg on task migration. Look mem_cgroup_move_charge_pte_range() for
+> more information. Thus, mem_cgroup_move_account doesn't get called on
+> pte-mapped compound huge pages, hence we do not need to transfer the
+> page from source-memcg's split to destinations-memcg's split_queue.
 > 
+> Tested: Ran two copies of a microbenchmark with partially unmapped
+> thp(s) in two separate memory cgroups. When first memory cgroup is put
+> under memory pressure, it's own thp(s) split. Other memcg's thp(s)
+> remain intact.
+> 
+> Current implementation is not NUMA aware if MEMCG is compiled. If it is
+> important to have this shrinker both NUMA and MEMCG aware, I can work on
+> that.  Some feedback on this front will be useful.
 
-I agree with Michal that the new victim selection should be opt-in with 
-CGRP_GROUP_OOM.
+I thin, this should be done. That's strange compromise -- memcg vs NUMA.
+And I think solving will help a lot with ifdefs.
+
+-- 
+ Kirill A. Shutemov
