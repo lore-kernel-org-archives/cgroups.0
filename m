@@ -1,83 +1,87 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
-Date: Wed, 25 Oct 2017 13:12:12 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1710251308420.99765@chino.kir.corp.google.com>
-References: <20171019185218.12663-1-guro@fb.com> <20171019194534.GA5502@cmpxchg.org> <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com> <20171023114948.qzmo7emqbigfff7h@dhcp22.suse.cz>
+From: Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: Re: [PATCH] cgroup: reorder flexible array members of struct
+ cgroup_root
+Date: Wed, 25 Oct 2017 14:54:23 -0700
+Message-ID: <20171025215423.GD96615@google.com>
+References: <20171017063322.11455-1-nick.desaulniers@gmail.com>
+ <20171018133010.GD1302522@devbig577.frc2.facebook.com>
+ <CAH7mPvjksNSDo4o=z51YkH4yX+gDnGXU-g59gTkOUS-pEva8sA@mail.gmail.com>
+ <20171021153253.GG1302522@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=ig+xRXqFY8H2R/9TxlSre//pfaQfK+4rrONSbcD+DEo=;
-        b=Y1xrv74D9F0LkLkS1BLe/lQLfK71vtDxYgGmX8M2jRpKbg/+tmdwew0wy7Ldm2+X6v
-         K9D+2GtAonkma48jVth2X9j6Vr/LAVzhfLHJlQf8qs6TVOOAY//u0hFlaq7XmRZbJb9i
-         KRLSUmp5wHUorGlyW/edI9wC43BEzOPCboIR6Fc85aQmvlpHaWUpKExnuD7SnIRryKfu
-         iS7JWVE9yELNFzIy4F3Nn51f/tyKOYpWTImf2RS9kQe9eZ2LtweMxPrK1S9WijUDESmY
-         PlkcmUUOH1Yd1bFlJ/uAyTok7/NgV1JgSN2qEZph8qzqyHusy9HH9ydGw/7+2YtiYDqB
-         /xcw==
-In-Reply-To: <20171023114948.qzmo7emqbigfff7h@dhcp22.suse.cz>
-Sender: linux-doc-owner@vger.kernel.org
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Jne1fTBmvcL3v63yaPxnKxhH+/cwJSND4U/CUuDd+No=;
+        b=BtUWulUrW4jQOdkq1AYW4DRjOvqsPnDgX1dp48rYsUt/jY6n0xw3AqUT/bOOTPSdBP
+         AV7gWU51YqMo7+l5g4UBrsGMVFAJORhiaPT/26a5xLjEwmkqAHAoDMVxkosjkerKUNXT
+         LFVK4cEsI8jQAsQrKr/fkKCy0rbsqbVJZmkSE=
+Content-Disposition: inline
+In-Reply-To: <20171021153253.GG1302522-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Nick Desaulniers <nick.desaulniers-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Davidson <md-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Hackmann <ghackmann-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, android-llvm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Mon, 23 Oct 2017, Michal Hocko wrote:
+Hi Tejun,
 
-> On Sun 22-10-17 17:24:51, David Rientjes wrote:
-> > On Thu, 19 Oct 2017, Johannes Weiner wrote:
+El Sat, Oct 21, 2017 at 08:32:53AM -0700 Tejun Heo ha dit:
+
+> Hello, Nick.
+> 
+> On Fri, Oct 20, 2017 at 12:15:55AM -0700, Nick Desaulniers wrote:
+> > > This is silly tho.  We know the the root group embedded there won't
+> > > have any ancestor_ids.
 > > 
-> > > David would have really liked for this patchset to include knobs to
-> > > influence how the algorithm picks cgroup victims. The rest of us
-> > > agreed that this is beyond the scope of these patches, that the
-> > > patches don't need it to be useful, and that there is nothing
-> > > preventing anyone from adding configurability later on. David
-> > > subsequently nacked the series as he considers it incomplete. Neither
-> > > Michal nor I see technical merit in David's nack.
-> > > 
+> > Sure, but struct cgroup_root is still declared as having a struct
+> > cgroup not declared as the final member.
+> 
+> Why is that a problem tho?  We know that it doesn't have any flexible
+> array member so there's no storage allocated to it.
+> 
+> > > Also, in general, nothing prevents us from
+> > > doing something like the following.
+> > >
+> > >         struct outer_struct {
+> > >                 blah blah;
+> > >                 struct inner_struct_with_flexible_array_member inner;
+> > >                 unsigned long storage_for_flexible_array[NR_ENTRIES];
+> > >                 blah blah;
+> > >         };
 > > 
-> > The nack is for three reasons:
+> > At that point, then why have the struct with flexible array member in
+> > the first place?
+> 
+> Because there are different ways to use the struct?
+> 
+> > >> or specific location of the member cgrp within struct cgroup_root AFAICT.
+> > > I think we should just silence the bogus warning.
 > > 
-> >  (1) unfair comparison of root mem cgroup usage to bias against that mem 
-> >      cgroup from oom kill in system oom conditions,
+> > Is the order of the members actually important?  Otherwise it seems
+> > that we're taking advantage of a GNU C extension for no real reason,
+> > which is what I'm trying to avoid.  Please reconsider.
 > 
-> Most users who are going to use this feature right now will have
-> most of the userspace in their containers rather than in the root
-> memcg. The root memcg will always be special and as such there will
-> never be a universal best way to handle it. We should to satisfy most of
-> usecases. I would consider this something that is an open for a further
-> discussion but nothing that should stand in the way.
->  
-> >  (2) the ability of users to completely evade the oom killer by attaching
-> >      all processes to child cgroups either purposefully or unpurposefully,
-> >      and
-> 
-> This doesn't differ from the current state where a task can purposefully
-> or unpurposefully hide itself from the global memory killer by spawning
-> new processes.
->  
+> Here, not necessarily but I don't want to move it for a bogus reason.
+> Why would we disallow embedding structs with flexible members in the
+> middle when it can be done and is useful?  If we want to discuss
+> whether we want to avoid such usages in the kernel (but why?), sure,
+> let's have that discussion but we can't decide that on "clang warns on
+> it by default".
 
-It cannot hide from the global oom killer if this patchset is used because 
-it cannot hide its memory usage beneath cgroup levels.  This comment is in 
-support of accounting memory usage up the hierarchy.
+From your earlier comment I understand that there is no problem in
+this case because we know that cgroup_root->cgrp will always be
+empty.
 
-> >  (3) the inability of userspace to effectively control oom victim  
-> >      selection.
-> 
-> this is not requested by the current usecase and it has been pointed out
-> that this will be possible to implement on top of the foundation of this
-> patchset.
-> 
+However in other instances the warning could point out actual errors
+in the code, so I think it is good to have this warning generally
+enabled. If cgroup_root was defined in a .c file we could consider to
+disable the warning locally, but since the definition is in a header
+that is widely included (indirectly through linux/cgroup.h and
+net/sock.h) this doesn't seem to be an option.
 
-There's no reason to not present a complete patchset.  Userspace needs the 
-ability to bias or prefer processes (or cgroups, in this case).  That's 
-been the case with oom_adj in the past and oom_score_adj with the 
-rewritten heuristic.  It's trivial to implement and the only pending 
-suggestion to do this influence involves a slightly different scoring 
-mechanism than this patchset; it goes back to accounting memory up the 
-hierarchy as Roman initially implemented and then biasing between cgroups 
-based on an oom_score_adj.  So the proposed influence mechanism cannot be 
-implemented on top of this patchset as is, and that gives more reason why 
-we cannot merge incomplete patches that can't be extended in the future.
+Is there a good reason for the current position of cgrp within
+cgroup_root? If there are no drawbacks in moving it to the end of
+the struct I think Nick's patch is a reasonable solution.
