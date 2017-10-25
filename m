@@ -1,64 +1,83 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v3] cpuset: Enable cpuset controller in default hierarchy
-Date: Wed, 25 Oct 2017 11:50:34 -0400
-Message-ID: <db119820-84d4-7ccb-e65a-966d2d7aaf02@redhat.com>
-References: <1507324230-22996-1-git-send-email-longman@redhat.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
+Date: Wed, 25 Oct 2017 13:12:12 -0700 (PDT)
+Message-ID: <alpine.DEB.2.10.1710251308420.99765@chino.kir.corp.google.com>
+References: <20171019185218.12663-1-guro@fb.com> <20171019194534.GA5502@cmpxchg.org> <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com> <20171023114948.qzmo7emqbigfff7h@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <1507324230-22996-1-git-send-email-longman@redhat.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=ig+xRXqFY8H2R/9TxlSre//pfaQfK+4rrONSbcD+DEo=;
+        b=Y1xrv74D9F0LkLkS1BLe/lQLfK71vtDxYgGmX8M2jRpKbg/+tmdwew0wy7Ldm2+X6v
+         K9D+2GtAonkma48jVth2X9j6Vr/LAVzhfLHJlQf8qs6TVOOAY//u0hFlaq7XmRZbJb9i
+         KRLSUmp5wHUorGlyW/edI9wC43BEzOPCboIR6Fc85aQmvlpHaWUpKExnuD7SnIRryKfu
+         iS7JWVE9yELNFzIy4F3Nn51f/tyKOYpWTImf2RS9kQe9eZ2LtweMxPrK1S9WijUDESmY
+         PlkcmUUOH1Yd1bFlJ/uAyTok7/NgV1JgSN2qEZph8qzqyHusy9HH9ydGw/7+2YtiYDqB
+         /xcw==
+In-Reply-To: <20171023114948.qzmo7emqbigfff7h@dhcp22.suse.cz>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Mike Galbraith <efault@gmx.de>, Christian Brauner <christian.brauner@canonical.com>, =?UTF-8?Q?St=c3=a9phane_Graber?= <stgraber@ubuntu.com>, Serge Hallyn <serge@hallyn.com>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On 10/06/2017 05:10 PM, Waiman Long wrote:
-> Given the fact that thread mode had been merged into 4.14, it is now
-> time to enable cpuset to be used in the default hierarchy (cgroup v2)
-> as it is clearly threaded.
->
-> The cpuset controller had experienced feature creep since its
-> introduction more than a decade ago. Besides the core cpus and mems
-> control files to limit cpus and memory nodes, there are a bunch of
-> additional features that can be controlled from the userspace. Some of
-> the features are of doubtful usefulness and may not be actively used.
->
-> After examining the source code of some sample users like systemd,
-> libvirt and lxc for their use of those additional features, only
-> memory_migrate is used by libvirt.
->
-> This patch enables cpuset controller in the default hierarchy with a
-> minimal set of features. Currently, only memory_migrate is supported.
-> We can certainly add more features to the default hierarchy if there
-> is a real user need for them later on.
->
-> For features that are actually flags which are set internally, they are
-> being combined into a single "cpuset.flags" control file. That includes
-> the memory_migrate feature which is the only flag that is currently
-> supported. When the "cpuset.flags" file is read, it contains either
-> "+mem_migrate" (enabled) or "-mem_migrate" (disabled).
->
-> To enable it, use
->
->   # echo +mem_migrate > cpuset.flags
->
-> To disable it, use
->
->   # echo -mem_migrate > cpuset.flags
->
-> Note that the flag name is changed to "mem_migrate" for better naming
-> consistency.
->
-> v3:
->  - Further trim the additional features down to just memory_migrate.
->  - Update Documentation/cgroup-v2.txt.
->
-> Signed-off-by: Waiman Long <longman@redhat.com>
+On Mon, 23 Oct 2017, Michal Hocko wrote:
 
-Ping! Any comment on this patch?
+> On Sun 22-10-17 17:24:51, David Rientjes wrote:
+> > On Thu, 19 Oct 2017, Johannes Weiner wrote:
+> > 
+> > > David would have really liked for this patchset to include knobs to
+> > > influence how the algorithm picks cgroup victims. The rest of us
+> > > agreed that this is beyond the scope of these patches, that the
+> > > patches don't need it to be useful, and that there is nothing
+> > > preventing anyone from adding configurability later on. David
+> > > subsequently nacked the series as he considers it incomplete. Neither
+> > > Michal nor I see technical merit in David's nack.
+> > > 
+> > 
+> > The nack is for three reasons:
+> > 
+> >  (1) unfair comparison of root mem cgroup usage to bias against that mem 
+> >      cgroup from oom kill in system oom conditions,
+> 
+> Most users who are going to use this feature right now will have
+> most of the userspace in their containers rather than in the root
+> memcg. The root memcg will always be special and as such there will
+> never be a universal best way to handle it. We should to satisfy most of
+> usecases. I would consider this something that is an open for a further
+> discussion but nothing that should stand in the way.
+>  
+> >  (2) the ability of users to completely evade the oom killer by attaching
+> >      all processes to child cgroups either purposefully or unpurposefully,
+> >      and
+> 
+> This doesn't differ from the current state where a task can purposefully
+> or unpurposefully hide itself from the global memory killer by spawning
+> new processes.
+>  
 
-Cheers,
-Longman
+It cannot hide from the global oom killer if this patchset is used because 
+it cannot hide its memory usage beneath cgroup levels.  This comment is in 
+support of accounting memory usage up the hierarchy.
 
+> >  (3) the inability of userspace to effectively control oom victim  
+> >      selection.
+> 
+> this is not requested by the current usecase and it has been pointed out
+> that this will be possible to implement on top of the foundation of this
+> patchset.
+> 
+
+There's no reason to not present a complete patchset.  Userspace needs the 
+ability to bias or prefer processes (or cgroups, in this case).  That's 
+been the case with oom_adj in the past and oom_score_adj with the 
+rewritten heuristic.  It's trivial to implement and the only pending 
+suggestion to do this influence involves a slightly different scoring 
+mechanism than this patchset; it goes back to accounting memory up the 
+hierarchy as Roman initially implemented and then biasing between cgroups 
+based on an oom_score_adj.  So the proposed influence mechanism cannot be 
+implemented on top of this patchset as is, and that gives more reason why 
+we cannot merge incomplete patches that can't be extended in the future.
