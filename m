@@ -1,51 +1,64 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH] cgroup/cpuset: remove circular dependency deadlock
-Date: Wed, 25 Oct 2017 11:30:41 +0200
-Message-ID: <20171025093041.GO3165@worktop.lehotels.local>
-References: <1504792583-10424-1-git-send-email-prsood@codeaurora.org>
- <20170907175107.GG17526@worktop.programming.kicks-ass.net>
- <4668d1ec-dc43-8a9c-4f94-a421683d3c17@codeaurora.org>
- <20171011094833.pdp4torvotvjdmkt@hirez.programming.kicks-ass.net>
- <00043e79-3647-3979-07bb-27039921efb4@codeaurora.org>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v3] cpuset: Enable cpuset controller in default hierarchy
+Date: Wed, 25 Oct 2017 11:50:34 -0400
+Message-ID: <db119820-84d4-7ccb-e65a-966d2d7aaf02@redhat.com>
+References: <1507324230-22996-1-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=SrNaMVjtczdVKvWrJ/Ke5gPNt3W6mWQUMRAc3dUaCZA=; b=xIeOqHUQXj5K9jbHlQsFNlMsV
-        4TgfqCpEu4xY/5HsUWTCJ49iS8l+mDwHLkRDVCFP3nU5ouYvid0sb7IVNakPX4sKMswIV7j9N2P5G
-        ga1cm32S5g0yFYKtZEfZkKP174LsVr18JMNcKjyQWOtZ2544VEywMBcluzNhrTGm49fP5lHlZQXYf
-        u+s5jIcTng1WhdyKHYGhHemG8+1l/biTVy6CaiTg9wl4vbezGIOLKdRjdplGOjtKZM51pfR22xSsS
-        hejFUy+YBsVu0s5Ky7LxZdnWn51215QYrHhPQZpPJJfJMf6Wz3KQXhwOSqpGEYCrXIXDS9UfPl0zx
-      
-Content-Disposition: inline
-In-Reply-To: <00043e79-3647-3979-07bb-27039921efb4@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <1507324230-22996-1-git-send-email-longman@redhat.com>
+Content-Language: en-US
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood@codeaurora.org>
-Cc: tj@kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, mingo@kernel.org, longman@redhat.com, boqun.feng@gmail.com, tglx@linutronix.de, linux-kernel@vger.kernel.org, sramana@codeaurora.org
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Mike Galbraith <efault@gmx.de>, Christian Brauner <christian.brauner@canonical.com>, =?UTF-8?Q?St=c3=a9phane_Graber?= <stgraber@ubuntu.com>, Serge Hallyn <serge@hallyn.com>
 
-On Wed, Oct 25, 2017 at 02:09:54PM +0530, Prateek Sood wrote:
-> >  void cpuset_update_active_cpus(void)
-> >  {
-> > +	mutex_lock(&cpuset_mutex);
-> > +	rebuild_sched_domains_cpuslocked();
-> > +	mutex_unlock(&cpuset_mutex);
-> >  }
-> 
-> In the above patch rebuild_sched_domains_cpuslocked() has been
-> used directly. Earlier cpuset_hotplug_update_tasks() was also
-> called from cpuset_hotplug_workfn(). So migration of tasks
-> related to cgroup which has empty cpuset would not happen
-> during cpu hotplug.
-> 
-> 
-> Could you please help in understanding more on this.
-> 
+On 10/06/2017 05:10 PM, Waiman Long wrote:
+> Given the fact that thread mode had been merged into 4.14, it is now
+> time to enable cpuset to be used in the default hierarchy (cgroup v2)
+> as it is clearly threaded.
+>
+> The cpuset controller had experienced feature creep since its
+> introduction more than a decade ago. Besides the core cpus and mems
+> control files to limit cpus and memory nodes, there are a bunch of
+> additional features that can be controlled from the userspace. Some of
+> the features are of doubtful usefulness and may not be actively used.
+>
+> After examining the source code of some sample users like systemd,
+> libvirt and lxc for their use of those additional features, only
+> memory_migrate is used by libvirt.
+>
+> This patch enables cpuset controller in the default hierarchy with a
+> minimal set of features. Currently, only memory_migrate is supported.
+> We can certainly add more features to the default hierarchy if there
+> is a real user need for them later on.
+>
+> For features that are actually flags which are set internally, they are
+> being combined into a single "cpuset.flags" control file. That includes
+> the memory_migrate feature which is the only flag that is currently
+> supported. When the "cpuset.flags" file is read, it contains either
+> "+mem_migrate" (enabled) or "-mem_migrate" (disabled).
+>
+> To enable it, use
+>
+>   # echo +mem_migrate > cpuset.flags
+>
+> To disable it, use
+>
+>   # echo -mem_migrate > cpuset.flags
+>
+> Note that the flag name is changed to "mem_migrate" for better naming
+> consistency.
+>
+> v3:
+>  - Further trim the additional features down to just memory_migrate.
+>  - Update Documentation/cgroup-v2.txt.
+>
+> Signed-off-by: Waiman Long <longman@redhat.com>
 
-That was me being lazy...
+Ping! Any comment on this patch?
+
+Cheers,
+Longman
+
