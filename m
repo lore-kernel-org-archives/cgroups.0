@@ -1,86 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: reorder flexible array members of struct
- cgroup_root
-Date: Thu, 26 Oct 2017 07:32:22 -0700
-Message-ID: <20171026143222.GC59538@devbig577.frc2.facebook.com>
-References: <20171017063322.11455-1-nick.desaulniers@gmail.com>
- <20171018133010.GD1302522@devbig577.frc2.facebook.com>
- <CAH7mPvjksNSDo4o=z51YkH4yX+gDnGXU-g59gTkOUS-pEva8sA@mail.gmail.com>
- <20171021153253.GG1302522@devbig577.frc2.facebook.com>
- <20171025215423.GD96615@google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3] cpuset: Enable cpuset controller in default hierarchy
+Date: Thu, 26 Oct 2017 07:39:08 -0700
+Message-ID: <20171026143908.GD59538@devbig577.frc2.facebook.com>
+References: <1507324230-22996-1-git-send-email-longman@redhat.com>
+ <db119820-84d4-7ccb-e65a-966d2d7aaf02@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Ao7zjrFIb05LN2KpYmW4A8M+sXjp68pkB6o5fTh80L4=;
-        b=ND3pmhYchSbSIfgTM1yA4GFV5UHGm9aueG4VVFUOy0oZBomDFQH8Vh5kfRUt1TqvSa
-         UceLMZU0EYUA0C62xjPjb4JXRNIVqD5epfN7hSJYES/ms+udo6dRuvb0ex7Ptvs268Eb
-         Mn6aYzEGf2Tn/QWLuPPLerdIVh3xNMqGhA/o54Sc6Vb0lwtvkNkrKMDpcYzWmFb+x62/
-         5EYqcEYMgw7S8dZD9XOr9wRwUaMsUZmb4cPNcEMC2/W1Ul854vdPAfXJN8F1hVflYs3y
-         CBmg49112NV+zspg3mxAEkXyCORdjrl/7H30lyX9XoXtUgRV+AFARf7IVUFLTvR8PEig
-         NLiw==
+        bh=qKHHBnXTIV+8LioEnekIyQrYZ2xKbbNj2Lvc+LzwUkY=;
+        b=SJy84wBoeKCACdxjx+HhzIdL/tV1huhwnOzlAl/kEn+Z6KobV7qfctXBYislpenala
+         DQuUgs3YLRaqxp9ectWj8gY9GGapf0sNCqDiGCnlXkfqhIBzUub5aB14OGyuUakYLKph
+         lLTBAd/LCWIZ6XUcrYt5CPrKUxzYO6VewP5Dh1xkMUUlI8bn8DMogWfjiosGsAI2nNHU
+         nnMckNqHPZdtxk6ffgjNBQvD7MVwitozu7dN7SqgI9VudRneoDCW1GzfoT4iz0/vNOQh
+         lkXZ1KPk3jpRt7yYc42pwmwLCqsXWW0MEVFlpIc/2EwBn20XUM9k9VRnbt2dhouMOgUC
+         1Cxg==
 Content-Disposition: inline
-In-Reply-To: <20171025215423.GD96615-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <db119820-84d4-7ccb-e65a-966d2d7aaf02@redhat.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Matthias Kaehlcke <mka-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Nick Desaulniers <nick.desaulniers-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Davidson <md-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Hackmann <ghackmann-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, android-llvm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Mike Galbraith <efault@gmx.de>, Christian Brauner <christian.brauner@canonical.com>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber@ubuntu.com>, Serge Hallyn <serge@hallyn.com>
 
-Hello,
+Hello, Waiman.
 
-On Wed, Oct 25, 2017 at 02:54:23PM -0700, Matthias Kaehlcke wrote:
-> From your earlier comment I understand that there is no problem in
-> this case because we know that cgroup_root->cgrp will always be
-> empty.
-> 
-> However in other instances the warning could point out actual errors
-> in the code, so I think it is good to have this warning generally
-> enabled. If cgroup_root was defined in a .c file we could consider to
-> disable the warning locally, but since the definition is in a header
-> that is widely included (indirectly through linux/cgroup.h and
-> net/sock.h) this doesn't seem to be an option.
-> 
-> Is there a good reason for the current position of cgrp within
-> cgroup_root? If there are no drawbacks in moving it to the end of
-> the struct I think Nick's patch is a reasonable solution.
+On Wed, Oct 25, 2017 at 11:50:34AM -0400, Waiman Long wrote:
+> Ping! Any comment on this patch?
 
-This all sounds really bogus to me.  Let's say we have something like
-the following.
+Sorry about the lack of response.  Here are my two thoughts.
 
-  struct flex_struct {
-  	int array[];
-  };
+1. I'm not really sure about the memory part.  Mostly because of the
+   way it's configured and enforced is completely out of step with how
+   mm behaves in general.  I'd like to get more input from mm folks on
+   this.
 
-And the following two usages.
+2. I want to think more about how we expose the effective settings.
+   Not that anything is wrong with what cpuset does, but more that I
+   wanna ensure that it's something we can follow in other cases where
+   we have similar hierarchical property propagation.
 
-1.
+We're likely too late for the coming merge window.  Let's handle it
+during the next window.
 
-  struct flex_struct *fs =
-	kmalloc(sizeof(struct flex_struct) + N * sizeof(int));
-
-2.
-
-  struct enclosing_struct es {
-	struct flex_struct fs;
-	int fs_array_storage[N];
-  };
-
-  struct enclosing_struct *es =
-	kmalloc(sizeof(struct enclosing_struct));
-
-So, you're saying #1 is okay but #2 is not, which is just silly.  The
-compiler can't warn correctly about flex array members whether they're
-embedded or not.  Nothing prevents somebody accessing beyond N in #1
-either.
-
-This effort seems really pointless to me.  Let's please not waste any
-more bandwidth on this.
-
-Thanks.
+Thanks and my apologies for the delay.
 
 -- 
 tejun
