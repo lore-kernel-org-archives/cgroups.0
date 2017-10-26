@@ -1,112 +1,62 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH] cgroup/cpuset: remove circular dependency deadlock
-Date: Thu, 26 Oct 2017 10:05:12 -0400
-Message-ID: <dc80ad9d-5b3d-b991-76c8-35630bc139c5@redhat.com>
-References: <20171025093041.GO3165@worktop.lehotels.local>
- <1509018722-30359-1-git-send-email-prsood@codeaurora.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
+Date: Thu, 26 Oct 2017 10:24:45 -0400
+Message-ID: <20171026142445.GA21147@cmpxchg.org>
+References: <20171019185218.12663-1-guro@fb.com>
+ <20171019194534.GA5502@cmpxchg.org>
+ <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1509018722-30359-1-git-send-email-prsood@codeaurora.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Ns6rDCQwpuN3IRyFqXNvQrYqzHgapd3VjARVM4f/sqY=; b=CTvEQJLaG82BeGBmcg+pUNZz6V
+	W06kOSVX7HFkW32QYI51X6d/yHECOKyfPVELHmbOJozTqXZw0V5Mec6U1cUfQrUPyMia26fkX3xvO
+	uDHgopqKLuAAP5lyASVDZahe/K3P2/aQC6GYWS6sLUUq4c7bdQHCLmgmjBYNR/VYBDZQ=;
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Prateek Sood <prsood@codeaurora.org>, peterz@infradead.org, tj@kernel.org, lizefan@huawei.com, mingo@kernel.org, boqun.feng@gmail.com, tglx@linutronix.de
-Cc: cgroups@vger.kernel.org, sramana@codeaurora.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On 10/26/2017 07:52 AM, Prateek Sood wrote:
-> Remove circular dependency deadlock in a scenario where hotplug of CPU is
-> being done while there is updation in cgroup and cpuset triggered from
-> userspace.
->
-> Process A => kthreadd => Process B => Process C => Process A
->
-> Process A
-> cpu_subsys_offline();
->   cpu_down();
->     _cpu_down();
->       percpu_down_write(&cpu_hotplug_lock); //held
->       cpuhp_invoke_callback();
->         workqueue_offline_cpu();
->           wq_update_unbound_numa();
->             kthread_create_on_node();
->               wake_up_process();  //wakeup kthreadd
->           flush_work();
->           wait_for_completion();
->
-> kthreadd
-> kthreadd();
->   kernel_thread();
->     do_fork();
->       copy_process();
->         percpu_down_read(&cgroup_threadgroup_rwsem);
->           __rwsem_down_read_failed_common(); //waiting
->
-> Process B
-> kernfs_fop_write();
->   cgroup_file_write();
->     cgroup_procs_write();
->       percpu_down_write(&cgroup_threadgroup_rwsem); //held
->       cgroup_attach_task();
->         cgroup_migrate();
->           cgroup_migrate_execute();
->             cpuset_can_attach();
->               mutex_lock(&cpuset_mutex); //waiting
->
-> Process C
-> kernfs_fop_write();
->   cgroup_file_write();
->     cpuset_write_resmask();
->       mutex_lock(&cpuset_mutex); //held
->       update_cpumask();
->         update_cpumasks_hier();
->           rebuild_sched_domains_locked();
->             get_online_cpus();
->               percpu_down_read(&cpu_hotplug_lock); //waiting
->
-> Eliminating deadlock by reversing the locking order for cpuset_mutex and
-> cpu_hotplug_lock.
+On Sun, Oct 22, 2017 at 05:24:51PM -0700, David Rientjes wrote:
+> On Thu, 19 Oct 2017, Johannes Weiner wrote:
+> 
+> > David would have really liked for this patchset to include knobs to
+> > influence how the algorithm picks cgroup victims. The rest of us
+> > agreed that this is beyond the scope of these patches, that the
+> > patches don't need it to be useful, and that there is nothing
+> > preventing anyone from adding configurability later on. David
+> > subsequently nacked the series as he considers it incomplete. Neither
+> > Michal nor I see technical merit in David's nack.
+> > 
+> 
+> The nack is for three reasons:
+> 
+>  (1) unfair comparison of root mem cgroup usage to bias against that mem 
+>      cgroup from oom kill in system oom conditions,
+> 
+>  (2) the ability of users to completely evade the oom killer by attaching
+>      all processes to child cgroups either purposefully or unpurposefully,
+>      and
+> 
+>  (3) the inability of userspace to effectively control oom victim  
+>      selection.
 
-General comments:
+My apologies if my summary was too reductionist.
 
-Please add a version number of your patch. I have seen multiple versions
-of this patch and have lost track how many are there as there is no
-version number information.  In addition, there are changes beyond just
-swapping the lock order and they are not documented in this change log.
-I would like to see you discuss about those additional changes here as well.
+That being said, the arguments you repeat here have come up in
+previous threads and been responded to. This doesn't change my
+conclusion that your NAK is bogus.
 
->  void rebuild_sched_domains(void)
->  {
-> +	cpus_read_lock();
->  	mutex_lock(&cpuset_mutex);
-> -	rebuild_sched_domains_locked();
-> +	rebuild_sched_domains_cpuslocked();
->  	mutex_unlock(&cpuset_mutex);
-> +	cpus_read_unlock();
->  }
-
-I saw a lot of instances where cpus_read_lock() and mutex_lock() come
-together. Maybe some new lock/unlock helper functions may help.
-
-> @@ -2356,25 +2354,29 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
->  	}
->  
->  	/* rebuild sched domains if cpus_allowed has changed */
-> -	if (cpus_updated || force_rebuild) {
-> -		force_rebuild = false;
-> -		rebuild_sched_domains();
-> +	if (cpus_updated) {
-> +		if (use_cpu_hp_lock)
-> +			rebuild_sched_domains();
-> +		else {
-> +			/* When called during cpu hotplug cpu_hotplug_lock
-> +			 * is held by the calling thread, not
-> +			 * not cpuhp_thread_fun
-> +			 */
-
-??? The comment is not clear.
-
-Cheers,
-Longman
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
