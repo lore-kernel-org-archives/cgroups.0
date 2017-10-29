@@ -1,90 +1,138 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
-Date: Fri, 27 Oct 2017 16:05:40 -0400
-Message-ID: <20171027200540.GA25191@cmpxchg.org>
-References: <20171019185218.12663-1-guro@fb.com>
- <20171019194534.GA5502@cmpxchg.org>
- <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com>
- <20171026142445.GA21147@cmpxchg.org>
- <alpine.DEB.2.10.1710261359550.75887@chino.kir.corp.google.com>
+From: "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
+Subject: [PATCH] cfq-iosched: add "leaf_weight" setting for the root cgroup in
+ cgroups v2
+Date: Sun, 29 Oct 2017 17:36:53 +0100
+Message-ID: <a1828795-3f51-9455-9d0b-93f9dcfb6fd4@maciej.szmigiero.name>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=KvAFX5vZ252xgooXwpoSyWGYlfdXVTaGHWq8l3IbSoY=; b=W7wO1Ar5VZOKAlJooSyAmDKQJW
-	y6thKTkyieocoA4AkQ4ukhVKlPQCIFtrWvMNPWE3FAJMI/aBfcUbE/708q7G35C4ofcMMHMB/PT9o
-	AMZv8npcJJ2Ip3AgCDltwruXWT79B1dpffXOYTUbJMQCO+0EgxSborU8DoTrfeMZdMjA=;
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1710261359550.75887@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jens Axboe <axboe@kernel.dk>
+Cc: Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 
-On Thu, Oct 26, 2017 at 02:03:41PM -0700, David Rientjes wrote:
-> On Thu, 26 Oct 2017, Johannes Weiner wrote:
-> 
-> > > The nack is for three reasons:
-> > > 
-> > >  (1) unfair comparison of root mem cgroup usage to bias against that mem 
-> > >      cgroup from oom kill in system oom conditions,
-> > > 
-> > >  (2) the ability of users to completely evade the oom killer by attaching
-> > >      all processes to child cgroups either purposefully or unpurposefully,
-> > >      and
-> > > 
-> > >  (3) the inability of userspace to effectively control oom victim  
-> > >      selection.
-> > 
-> > My apologies if my summary was too reductionist.
-> > 
-> > That being said, the arguments you repeat here have come up in
-> > previous threads and been responded to. This doesn't change my
-> > conclusion that your NAK is bogus.
-> 
-> They actually haven't been responded to, Roman was working through v11 and 
-> made a change on how the root mem cgroup usage was calculated that was 
-> better than previous iterations but still not an apples to apples 
-> comparison with other cgroups.  The problem is that it the calculation for 
-> leaf cgroups includes additional memory classes, so it biases against 
-> processes that are moved to non-root mem cgroups.  Simply creating mem 
-> cgroups and attaching processes should not independently cause them to 
-> become more preferred: it should be a fair comparison between the root mem 
-> cgroup and the set of leaf mem cgroups as implemented.  That is very 
-> trivial to do with hierarchical oom cgroup scoring.
+CFQ scheduler has a property that processes (or tasks in cgroups v1) that
+aren't assigned to any particular cgroup - that is, which stay in the root
+cgroup - effectively form an implicit leaf child node attached to the root
+cgroup.
 
-There is absolutely no value in your repeating the same stuff over and
-over again without considering what other people are telling you.
+This behavior is documented in blkio-controller.txt for cgroups v1, however
+as far as I know it isn't documented anywhere for cgroups v2 besides a
+generic remark that "How resource consumption in the root cgroup is
+governed is up to each controller" in cgroup-v2.txt.
 
-Hierarchical oom scoring has other downsides, and most of us agree
-that they aren't preferable over the differences in scoring the root
-vs scoring other cgroups - in particular because the root cannot be
-controlled, doesn't even have local statistics, and so is unlikely to
-contain important work on a containerized system. Getting the ballpark
-right for the vast majority of usecases is more than good enough here.
+By default, this implicit leaf child node has a (CFQ) weight which is two
+times higher that the default weight of a child cgroup.
 
-> Since the ability of userspace to control oom victim selection is not 
-> addressed whatsoever by this patchset, and the suggested method cannot be 
-> implemented on top of this patchset as you have argued because it requires 
-> a change to the heuristic itself, the patchset needs to become complete 
-> before being mergeable.
+cgroups v1 provide a "leaf_weight" setting which allow changing this value.
+However, this setting is missing from cgroups v2 and so the only way to
+tweak how much IO time processes in the root cgroup get is to adapt
+weight settings of all child cgroups accordingly.
+Let's add a "leaf_weight" setting to the root cgroup in cgroups v2, too.
 
-It is complete. It just isn't a drop-in replacement for what you've
-been doing out-of-tree for years. Stop making your problem everybody
-else's problem.
+Note that new kernel threads appear in the root cgroup and there seems to
+be no way to change this since kthreadd cannot be moved to another cgroup
+(for a good reason).
 
-You can change the the heuristics later, as you have done before. Or
-you can add another configuration flag and we can phase out the old
-mode, like we do all the time.
+Signed-off-by: Maciej S. Szmigiero <mail@maciej.szmigiero.name>
+---
+ Documentation/cgroup-v2.txt | 11 +++++++++++
+ block/cfq-iosched.c         | 40 ++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 47 insertions(+), 4 deletions(-)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index dc44785dc0fa..3190c5108c31 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -1290,6 +1290,17 @@ IO Interface Files
+ 	  8:16 200
+ 	  8:0 50
+ 
++  io.leaf_weight
++	A read-write flat-keyed file which exists only on the root cgroup.
++	It operates the same way as io.weight but controls the weight of an
++	implicit leaf child node.
++	This implicit leaf child node hosts all the processes that are in
++	the root cgroup.
++	When distributing IO time this implicit child node is taken into
++	account as if it was a normal child cgroup of the root cgroup.
++
++	The default is "default 200".
++
+   io.max
+ 	A read-write nested-keyed file which exists on non-root
+ 	cgroups.
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 9f342ef1ad42..85b6970abb89 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -2136,6 +2136,17 @@ static struct cftype cfq_blkcg_legacy_files[] = {
+ 	{ }	/* terminate */
+ };
+ 
++static int cfq_print_leaf_weight_on_dfl(struct seq_file *sf, void *v)
++{
++	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
++	struct cfq_group_data *cgd = blkcg_to_cfqgd(blkcg);
++
++	seq_printf(sf, "default %u\n", cgd->leaf_weight);
++	blkcg_print_blkgs(sf, blkcg, cfqg_prfill_leaf_weight_device,
++			  &blkcg_policy_cfq, 0, false);
++	return 0;
++}
++
+ static int cfq_print_weight_on_dfl(struct seq_file *sf, void *v)
+ {
+ 	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
+@@ -2147,8 +2158,9 @@ static int cfq_print_weight_on_dfl(struct seq_file *sf, void *v)
+ 	return 0;
+ }
+ 
+-static ssize_t cfq_set_weight_on_dfl(struct kernfs_open_file *of,
+-				     char *buf, size_t nbytes, loff_t off)
++static ssize_t cfq_set_weight_on_dfl_common(struct kernfs_open_file *of,
++					    char *buf, size_t nbytes,
++					    loff_t off, bool is_leaf_weight)
+ {
+ 	char *endp;
+ 	int ret;
+@@ -2159,15 +2171,35 @@ static ssize_t cfq_set_weight_on_dfl(struct kernfs_open_file *of,
+ 	/* "WEIGHT" or "default WEIGHT" sets the default weight */
+ 	v = simple_strtoull(buf, &endp, 0);
+ 	if (*endp == '\0' || sscanf(buf, "default %llu", &v) == 1) {
+-		ret = __cfq_set_weight(of_css(of), v, true, false, false);
++		ret = __cfq_set_weight(of_css(of), v, true, false,
++				       is_leaf_weight);
+ 		return ret ?: nbytes;
+ 	}
+ 
+ 	/* "MAJ:MIN WEIGHT" */
+-	return __cfqg_set_weight_device(of, buf, nbytes, off, true, false);
++	return __cfqg_set_weight_device(of, buf, nbytes, off, true,
++					is_leaf_weight);
++}
++
++static ssize_t cfq_set_leaf_weight_on_dfl(struct kernfs_open_file *of,
++					  char *buf, size_t nbytes, loff_t off)
++{
++	return cfq_set_weight_on_dfl_common(of, buf, nbytes, off, true);
++}
++
++static ssize_t cfq_set_weight_on_dfl(struct kernfs_open_file *of,
++				     char *buf, size_t nbytes, loff_t off)
++{
++	return cfq_set_weight_on_dfl_common(of, buf, nbytes, off, false);
+ }
+ 
+ static struct cftype cfq_blkcg_files[] = {
++	{
++		.name = "leaf_weight",
++		.flags = CFTYPE_ONLY_ON_ROOT,
++		.seq_show = cfq_print_leaf_weight_on_dfl,
++		.write = cfq_set_leaf_weight_on_dfl,
++	},
+ 	{
+ 		.name = "weight",
+ 		.flags = CFTYPE_NOT_ON_ROOT,
