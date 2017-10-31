@@ -1,91 +1,82 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
-Date: Tue, 31 Oct 2017 15:34:22 +0100
-Message-ID: <20171031143422.dnm3wvkl4v6qngtv@dhcp22.suse.cz>
-References: <20171019185218.12663-1-guro@fb.com>
- <20171019194534.GA5502@cmpxchg.org>
- <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com>
- <20171026142445.GA21147@cmpxchg.org>
- <alpine.DEB.2.10.1710261359550.75887@chino.kir.corp.google.com>
- <20171027200540.GA25191@cmpxchg.org>
- <c0393a4f-3515-b75d-5a00-f95c8284c275@sonymobile.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [RESEND v12 3/6] mm, oom: cgroup-aware OOM killer
+Date: Tue, 31 Oct 2017 08:04:19 -0700
+Message-ID: <CALvZod7V1iNACeDJuuSDrMMGMo7YX+gZ87gq=S4rP=Eh9Wh5kQ@mail.gmail.com>
+References: <20171019185218.12663-1-guro@fb.com> <20171019185218.12663-4-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <c0393a4f-3515-b75d-5a00-f95c8284c275@sonymobile.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=rSdjpoJ51xCJGhQ+AeLnDJahDfocYgM5zz3QyU9AoBU=;
+        b=O597vT7pnVRzD6U6epjvqLuNphVJz7uOKIXEjiJadC4RfU/WK1x3lgW5IlokZmx2LO
+         /JtROnPMdD1TwItBBTjY5mQIY8wBn0nNVeKhEEk+WLa7bmBkyEvYWd75G1MxOjxG0rhK
+         wBzxE0K3iy6IzQuRaIc9jexjXzVXCrZdD+9v6YQXr5D1YDzdbBZQmdJq664KC9Ug+8XA
+         221hno5FJt0S6/Mmjk3McTaP26E6kjcMta32s+mZ+LQSFZGqWqII6c7JMYkt7lCUWEZg
+         c4tmjEkBNBa3fI7j4LKVis4nvX1UPDQXHlFqzBsDLBoPtTd3bpG/ZGZuBBNtdR8jOtR7
+         PMHw==
+In-Reply-To: <20171019185218.12663-4-guro@fb.com>
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: peter enderborg <peter.enderborg@sonymobile.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Roman Gushchin <guro@fb.com>
+Cc: Linux MM <linux-mm@kvack.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue 31-10-17 15:17:11, peter enderborg wrote:
-> On 10/27/2017 10:05 PM, Johannes Weiner wrote:
-> > On Thu, Oct 26, 2017 at 02:03:41PM -0700, David Rientjes wrote:
-> >> On Thu, 26 Oct 2017, Johannes Weiner wrote:
-> >>
-> >>>> The nack is for three reasons:
-> >>>>
-> >>>>  (1) unfair comparison of root mem cgroup usage to bias against that mem 
-> >>>>      cgroup from oom kill in system oom conditions,
-> >>>>
-> >>>>  (2) the ability of users to completely evade the oom killer by attaching
-> >>>>      all processes to child cgroups either purposefully or unpurposefully,
-> >>>>      and
-> >>>>
-> >>>>  (3) the inability of userspace to effectively control oom victim  
-> >>>>      selection.
-> >>> My apologies if my summary was too reductionist.
-> >>>
-> >>> That being said, the arguments you repeat here have come up in
-> >>> previous threads and been responded to. This doesn't change my
-> >>> conclusion that your NAK is bogus.
-> >> They actually haven't been responded to, Roman was working through v11 and 
-> >> made a change on how the root mem cgroup usage was calculated that was 
-> >> better than previous iterations but still not an apples to apples 
-> >> comparison with other cgroups.  The problem is that it the calculation for 
-> >> leaf cgroups includes additional memory classes, so it biases against 
-> >> processes that are moved to non-root mem cgroups.  Simply creating mem 
-> >> cgroups and attaching processes should not independently cause them to 
-> >> become more preferred: it should be a fair comparison between the root mem 
-> >> cgroup and the set of leaf mem cgroups as implemented.  That is very 
-> >> trivial to do with hierarchical oom cgroup scoring.
-> > There is absolutely no value in your repeating the same stuff over and
-> > over again without considering what other people are telling you.
-> >
-> > Hierarchical oom scoring has other downsides, and most of us agree
-> > that they aren't preferable over the differences in scoring the root
-> > vs scoring other cgroups - in particular because the root cannot be
-> > controlled, doesn't even have local statistics, and so is unlikely to
-> > contain important work on a containerized system. Getting the ballpark
-> > right for the vast majority of usecases is more than good enough here.
-> >
-> >> Since the ability of userspace to control oom victim selection is not 
-> >> addressed whatsoever by this patchset, and the suggested method cannot be 
-> >> implemented on top of this patchset as you have argued because it requires 
-> >> a change to the heuristic itself, the patchset needs to become complete 
-> >> before being mergeable.
-> > It is complete. It just isn't a drop-in replacement for what you've
-> > been doing out-of-tree for years. Stop making your problem everybody
-> > else's problem.
-> >
-> > You can change the the heuristics later, as you have done before. Or
-> > you can add another configuration flag and we can phase out the old
-> > mode, like we do all the time.
-> >
-> I think this problem is related to the removal of the lowmemorykiller,
-> where this is the life-line when the user-space for some reason fails.
-> 
-> So I guess quite a few will have this problem.
+> +
+> +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+> +{
+> +       struct mem_cgroup *iter;
+> +
+> +       oc->chosen_memcg = NULL;
+> +       oc->chosen_points = 0;
+> +
+> +       /*
+> +        * The oom_score is calculated for leaf memory cgroups (including
+> +        * the root memcg).
+> +        */
+> +       rcu_read_lock();
+> +       for_each_mem_cgroup_tree(iter, root) {
+> +               long score;
+> +
+> +               if (memcg_has_children(iter) && iter != root_mem_cgroup)
+> +                       continue;
+> +
 
-Could you be more specific please? We are _not_ removing possibility of
-the user space influenced oom victim selection. You can still use the
-_current_ oom selection heuristic. The patch adds a new selection method
-which is opt-in so only those who want to opt-in will not be allowed to
-have any influence on the victim selection. And as it has been pointed
-out this can be implemented later so it is not like "this won't be
-possible anymore in future"
--- 
-Michal Hocko
-SUSE Labs
+Cgroup v2 does not support charge migration between memcgs. So, there
+can be intermediate nodes which may contain the major charge of the
+processes in their leave descendents. Skipping such intermediate nodes
+will kind of protect such processes from oom-killer (lower on the list
+to be killed). Is it ok to not handle such scenario? If yes, shouldn't
+we document it?
+
+> +               score = oom_evaluate_memcg(iter, oc->nodemask, oc->totalpages);
+> +
+> +               /*
+> +                * Ignore empty and non-eligible memory cgroups.
+> +                */
+> +               if (score == 0)
+> +                       continue;
+> +
+> +               /*
+> +                * If there are inflight OOM victims, we don't need
+> +                * to look further for new victims.
+> +                */
+> +               if (score == -1) {
+> +                       oc->chosen_memcg = INFLIGHT_VICTIM;
+> +                       mem_cgroup_iter_break(root, iter);
+> +                       break;
+> +               }
+> +
+> +               if (score > oc->chosen_points) {
+> +                       oc->chosen_points = score;
+> +                       oc->chosen_memcg = iter;
+> +               }
+> +       }
+> +
+> +       if (oc->chosen_memcg && oc->chosen_memcg != INFLIGHT_VICTIM)
+> +               css_get(&oc->chosen_memcg->css);
+> +
+> +       rcu_read_unlock();
+> +}
