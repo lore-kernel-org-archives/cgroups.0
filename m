@@ -1,61 +1,86 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: peter enderborg <peter.enderborg@sonymobile.com>
 Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
-Date: Tue, 31 Oct 2017 08:54:08 +0100
-Message-ID: <20171031075408.67au22uk6dkpu7vv@dhcp22.suse.cz>
+Date: Tue, 31 Oct 2017 15:17:11 +0100
+Message-ID: <c0393a4f-3515-b75d-5a00-f95c8284c275@sonymobile.com>
 References: <20171019185218.12663-1-guro@fb.com>
  <20171019194534.GA5502@cmpxchg.org>
  <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com>
  <20171026142445.GA21147@cmpxchg.org>
  <alpine.DEB.2.10.1710261359550.75887@chino.kir.corp.google.com>
- <20171027093107.GA29492@castle.dhcp.TheFacebook.com>
- <alpine.DEB.2.10.1710301430170.105449@chino.kir.corp.google.com>
+ <20171027200540.GA25191@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1710301430170.105449-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20171027200540.GA25191@cmpxchg.org>
+Content-Language: en-GB
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>, David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On Mon 30-10-17 14:36:39, David Rientjes wrote:
-> On Fri, 27 Oct 2017, Roman Gushchin wrote:
-> 
-> > The thing is that the hierarchical approach (as in v8), which are you pushing,
-> > has it's own limitations, which we've discussed in details earlier. There are
-> > reasons why v12 is different, and we can't really simple go back. I mean if
-> > there are better ideas how to resolve concerns raised in discussions around v8,
-> > let me know, but ignoring them is not an option.
-> > 
-> 
-> I'm not ignoring them, I have stated that we need the ability to protect 
-> important cgroups on the system without oom disabling all attached 
-> processes.  If that is implemented as a memory.oom_score_adj with the same 
-> semantics as /proc/pid/oom_score_adj, i.e. a proportion of available 
-> memory (the limit), it can also address the issues pointed out with the 
-> hierarchical approach in v8.
+On 10/27/2017 10:05 PM, Johannes Weiner wrote:
+> On Thu, Oct 26, 2017 at 02:03:41PM -0700, David Rientjes wrote:
+>> On Thu, 26 Oct 2017, Johannes Weiner wrote:
+>>
+>>>> The nack is for three reasons:
+>>>>
+>>>>  (1) unfair comparison of root mem cgroup usage to bias against that mem 
+>>>>      cgroup from oom kill in system oom conditions,
+>>>>
+>>>>  (2) the ability of users to completely evade the oom killer by attaching
+>>>>      all processes to child cgroups either purposefully or unpurposefully,
+>>>>      and
+>>>>
+>>>>  (3) the inability of userspace to effectively control oom victim  
+>>>>      selection.
+>>> My apologies if my summary was too reductionist.
+>>>
+>>> That being said, the arguments you repeat here have come up in
+>>> previous threads and been responded to. This doesn't change my
+>>> conclusion that your NAK is bogus.
+>> They actually haven't been responded to, Roman was working through v11 and 
+>> made a change on how the root mem cgroup usage was calculated that was 
+>> better than previous iterations but still not an apples to apples 
+>> comparison with other cgroups.  The problem is that it the calculation for 
+>> leaf cgroups includes additional memory classes, so it biases against 
+>> processes that are moved to non-root mem cgroups.  Simply creating mem 
+>> cgroups and attaching processes should not independently cause them to 
+>> become more preferred: it should be a fair comparison between the root mem 
+>> cgroup and the set of leaf mem cgroups as implemented.  That is very 
+>> trivial to do with hierarchical oom cgroup scoring.
+> There is absolutely no value in your repeating the same stuff over and
+> over again without considering what other people are telling you.
+>
+> Hierarchical oom scoring has other downsides, and most of us agree
+> that they aren't preferable over the differences in scoring the root
+> vs scoring other cgroups - in particular because the root cannot be
+> controlled, doesn't even have local statistics, and so is unlikely to
+> contain important work on a containerized system. Getting the ballpark
+> right for the vast majority of usecases is more than good enough here.
+>
+>> Since the ability of userspace to control oom victim selection is not 
+>> addressed whatsoever by this patchset, and the suggested method cannot be 
+>> implemented on top of this patchset as you have argued because it requires 
+>> a change to the heuristic itself, the patchset needs to become complete 
+>> before being mergeable.
+> It is complete. It just isn't a drop-in replacement for what you've
+> been doing out-of-tree for years. Stop making your problem everybody
+> else's problem.
+>
+> You can change the the heuristics later, as you have done before. Or
+> you can add another configuration flag and we can phase out the old
+> mode, like we do all the time.
+>
+I think this problem is related to the removal of the lowmemorykiller,
+where this is the life-line when the user-space for some reason fails.
 
-No it cannot and it would be a terrible interface to have as well. You
-do not want to permanently tune oom_score_adj to compensate for
-structural restrictions on the hierarchy.
+So I guess quite a few will have this problem.
 
-> If this is not the case, could you elaborate 
-> on what your exact concern is and why we do not care that users can 
-> completely circumvent victim selection by creating child cgroups for other 
-> controllers?
-> 
-> Since the ability to protect important cgroups on the system may require a 
-> heuristic change, I think it should be solved now rather than constantly 
-> insisting that we can make this patchset complete later and in the 
-> meantime force the user to set all attached processes to be oom disabled.
 
-I believe, and Roman has pointed that out as well already, that further
-improvements can be implemented without changing user visible behavior
-as and add-on. If you disagree then you better come with a solid proof
-that all of us wrong and reasonable semantic cannot be achieved that
-way.
--- 
-Michal Hocko
-SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
