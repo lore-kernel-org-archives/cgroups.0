@@ -1,97 +1,60 @@
-From: peter enderborg <peter.enderborg@sonymobile.com>
-Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
-Date: Tue, 31 Oct 2017 16:07:42 +0100
-Message-ID: <311d5313-5a51-fded-714b-420ba3f6a879@sonymobile.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RESEND v12 3/6] mm, oom: cgroup-aware OOM killer
+Date: Tue, 31 Oct 2017 16:29:23 +0100
+Message-ID: <20171031152923.ndyxpdmx3npyqoqf@dhcp22.suse.cz>
 References: <20171019185218.12663-1-guro@fb.com>
- <20171019194534.GA5502@cmpxchg.org>
- <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com>
- <20171026142445.GA21147@cmpxchg.org>
- <alpine.DEB.2.10.1710261359550.75887@chino.kir.corp.google.com>
- <20171027200540.GA25191@cmpxchg.org>
- <c0393a4f-3515-b75d-5a00-f95c8284c275@sonymobile.com>
- <20171031143422.dnm3wvkl4v6qngtv@dhcp22.suse.cz>
+ <20171019185218.12663-4-guro@fb.com>
+ <CALvZod7V1iNACeDJuuSDrMMGMo7YX+gZ87gq=S4rP=Eh9Wh5kQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20171031143422.dnm3wvkl4v6qngtv@dhcp22.suse.cz>
-Content-Language: en-GB
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CALvZod7V1iNACeDJuuSDrMMGMo7YX+gZ87gq=S4rP=Eh9Wh5kQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 10/31/2017 03:34 PM, Michal Hocko wrote:
-> On Tue 31-10-17 15:17:11, peter enderborg wrote:
->> On 10/27/2017 10:05 PM, Johannes Weiner wrote:
->>> On Thu, Oct 26, 2017 at 02:03:41PM -0700, David Rientjes wrote:
->>>> On Thu, 26 Oct 2017, Johannes Weiner wrote:
->>>>
->>>>>> The nack is for three reasons:
->>>>>>
->>>>>>  (1) unfair comparison of root mem cgroup usage to bias against that mem 
->>>>>>      cgroup from oom kill in system oom conditions,
->>>>>>
->>>>>>  (2) the ability of users to completely evade the oom killer by attaching
->>>>>>      all processes to child cgroups either purposefully or unpurposefully,
->>>>>>      and
->>>>>>
->>>>>>  (3) the inability of userspace to effectively control oom victim  
->>>>>>      selection.
->>>>> My apologies if my summary was too reductionist.
->>>>>
->>>>> That being said, the arguments you repeat here have come up in
->>>>> previous threads and been responded to. This doesn't change my
->>>>> conclusion that your NAK is bogus.
->>>> They actually haven't been responded to, Roman was working through v11 and 
->>>> made a change on how the root mem cgroup usage was calculated that was 
->>>> better than previous iterations but still not an apples to apples 
->>>> comparison with other cgroups.  The problem is that it the calculation for 
->>>> leaf cgroups includes additional memory classes, so it biases against 
->>>> processes that are moved to non-root mem cgroups.  Simply creating mem 
->>>> cgroups and attaching processes should not independently cause them to 
->>>> become more preferred: it should be a fair comparison between the root mem 
->>>> cgroup and the set of leaf mem cgroups as implemented.  That is very 
->>>> trivial to do with hierarchical oom cgroup scoring.
->>> There is absolutely no value in your repeating the same stuff over and
->>> over again without considering what other people are telling you.
->>>
->>> Hierarchical oom scoring has other downsides, and most of us agree
->>> that they aren't preferable over the differences in scoring the root
->>> vs scoring other cgroups - in particular because the root cannot be
->>> controlled, doesn't even have local statistics, and so is unlikely to
->>> contain important work on a containerized system. Getting the ballpark
->>> right for the vast majority of usecases is more than good enough here.
->>>
->>>> Since the ability of userspace to control oom victim selection is not 
->>>> addressed whatsoever by this patchset, and the suggested method cannot be 
->>>> implemented on top of this patchset as you have argued because it requires 
->>>> a change to the heuristic itself, the patchset needs to become complete 
->>>> before being mergeable.
->>> It is complete. It just isn't a drop-in replacement for what you've
->>> been doing out-of-tree for years. Stop making your problem everybody
->>> else's problem.
->>>
->>> You can change the the heuristics later, as you have done before. Or
->>> you can add another configuration flag and we can phase out the old
->>> mode, like we do all the time.
->>>
->> I think this problem is related to the removal of the lowmemorykiller,
->> where this is the life-line when the user-space for some reason fails.
->>
->> So I guess quite a few will have this problem.
-> Could you be more specific please? We are _not_ removing possibility of
-> the user space influenced oom victim selection. You can still use the
-> _current_ oom selection heuristic. The patch adds a new selection method
-> which is opt-in so only those who want to opt-in will not be allowed to
-> have any influence on the victim selection. And as it has been pointed
-> out this can be implemented later so it is not like "this won't be
-> possible anymore in future"
+On Tue 31-10-17 08:04:19, Shakeel Butt wrote:
+> > +
+> > +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+> > +{
+> > +       struct mem_cgroup *iter;
+> > +
+> > +       oc->chosen_memcg = NULL;
+> > +       oc->chosen_points = 0;
+> > +
+> > +       /*
+> > +        * The oom_score is calculated for leaf memory cgroups (including
+> > +        * the root memcg).
+> > +        */
+> > +       rcu_read_lock();
+> > +       for_each_mem_cgroup_tree(iter, root) {
+> > +               long score;
+> > +
+> > +               if (memcg_has_children(iter) && iter != root_mem_cgroup)
+> > +                       continue;
+> > +
+> 
+> Cgroup v2 does not support charge migration between memcgs. So, there
+> can be intermediate nodes which may contain the major charge of the
+> processes in their leave descendents. Skipping such intermediate nodes
+> will kind of protect such processes from oom-killer (lower on the list
+> to be killed). Is it ok to not handle such scenario? If yes, shouldn't
+> we document it?
 
-I think the idea is to have a implementation that is lowmemorykiller selection heuristic.
+Yes, this is a real problem and the one which is not really solvable
+without the charge migration. You simply have no clue _who_ owns the
+memory so I assume that admins will need to setup the hierarchy which
+allows subgroups to migrate tasks to be oom_group.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Or we might want to allow opt-in for charge migration in v2. To be
+honest I wasn't completely happy about removing this functionality
+altogether in v2 but there was a strong pushback back then that relying
+on the charge migration doesn't have any sound usecase.
+
+Anyway, I agree that documentation should be explicit about that.
+-- 
+Michal Hocko
+SUSE Labs
