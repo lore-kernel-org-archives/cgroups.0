@@ -1,22 +1,31 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [RESEND v12 3/6] mm, oom: cgroup-aware OOM killer
-Date: Tue, 31 Oct 2017 16:29:23 +0100
-Message-ID: <20171031152923.ndyxpdmx3npyqoqf@dhcp22.suse.cz>
+Date: Tue, 31 Oct 2017 12:40:08 -0400
+Message-ID: <20171031164008.GA32246@cmpxchg.org>
 References: <20171019185218.12663-1-guro@fb.com>
  <20171019185218.12663-4-guro@fb.com>
  <CALvZod7V1iNACeDJuuSDrMMGMo7YX+gZ87gq=S4rP=Eh9Wh5kQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=zHj3VE2RWnQRS6ROBFT1ToHau0RPizVCwUKh/vc0ysA=; b=jjjBx26CHAYwvylUeqQPqCA8Fj
+        EeoLCITNYLC0NUawrkidZFfF667fo6WJ5gWYrcPXBRCtrSDK/2y56vMb7k5PaAnrR9wlwGpiRI6cQ
+        N37wmeD9zkgVELyyofkGiMqTXzPmECPMTYbAtWKCZLvzVl9xfH9j6kOXalyRkaz8jjfk=;
 Content-Disposition: inline
-In-Reply-To: <CALvZod7V1iNACeDJuuSDrMMGMo7YX+gZ87gq=S4rP=Eh9Wh5kQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CALvZod7V1iNACeDJuuSDrMMGMo7YX+gZ87gq=S4rP=Eh9Wh5kQ@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Roman Gushchin <guro@fb.com>, Linux MM <linux-mm@kvack.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue 31-10-17 08:04:19, Shakeel Butt wrote:
+On Tue, Oct 31, 2017 at 08:04:19AM -0700, Shakeel Butt wrote:
 > > +
 > > +static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
 > > +{
@@ -44,17 +53,19 @@ On Tue 31-10-17 08:04:19, Shakeel Butt wrote:
 > to be killed). Is it ok to not handle such scenario? If yes, shouldn't
 > we document it?
 
-Yes, this is a real problem and the one which is not really solvable
-without the charge migration. You simply have no clue _who_ owns the
-memory so I assume that admins will need to setup the hierarchy which
-allows subgroups to migrate tasks to be oom_group.
+Tasks cannot be in intermediate nodes, so the only way you can end up
+in a situation like this is to start tasks fully, let them fault in
+their full workingset, then create child groups and move them there.
 
-Or we might want to allow opt-in for charge migration in v2. To be
-honest I wasn't completely happy about removing this functionality
-altogether in v2 but there was a strong pushback back then that relying
-on the charge migration doesn't have any sound usecase.
+That has attribution problems much wider than the OOM killer: any
+local limits you would set on a leaf cgroup like this ALSO won't
+control the memory of its tasks - as it's all sitting in the parent.
 
-Anyway, I agree that documentation should be explicit about that.
--- 
-Michal Hocko
-SUSE Labs
+We created the "no internal competition" rule exactly to prevent this
+situation. To be consistent with that rule, we might want to disallow
+the creation of child groups once a cgroup has local memory charges.
+
+It's trivial to change the setup sequence to create the leaf cgroup
+first, then launch the workload from within.
+
+Either way, this is nothing specific about the OOM killer.
