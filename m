@@ -1,124 +1,265 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [RESEND v12 0/6] cgroup-aware OOM killer
-Date: Wed, 1 Nov 2017 13:42:37 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1711011329000.56485@chino.kir.corp.google.com>
-References: <20171019185218.12663-1-guro@fb.com> <20171019194534.GA5502@cmpxchg.org> <alpine.DEB.2.10.1710221715010.70210@chino.kir.corp.google.com> <20171026142445.GA21147@cmpxchg.org> <alpine.DEB.2.10.1710261359550.75887@chino.kir.corp.google.com>
- <20171027093107.GA29492@castle.dhcp.TheFacebook.com> <alpine.DEB.2.10.1710301430170.105449@chino.kir.corp.google.com> <20171031075408.67au22uk6dkpu7vv@dhcp22.suse.cz> <alpine.DEB.2.10.1710311513590.123444@chino.kir.corp.google.com>
- <20171101073758.femijh7clfbwmqeg@dhcp22.suse.cz>
-Mime-Version: 1.0
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 1/3] mm: memcontrol: eliminate raw access to stat and event counters
+Date: Fri,  3 Nov 2017 11:33:34 -0400
+Message-ID: <20171103153336.24044-1-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=9kTnGfujA8uhX2IQ7juKOCizFyfbS8+2qezGdZdSfxg=;
-        b=FVZh2xv5c4xZjIJ3BUm9z78xGifsFanzQGgkC3EzKJNero/Is4YLevWYJ8K94xQQjU
-         i5+vSbiNhdpYcG0Y47eUXbu7ujpNAQ1BeHHt2qEkdhQCURJN0WbO6Pol90N3HMJwIp6a
-         NqzDf6S5rIobxvZhRx46TGWlUwDgCGrD1EeT7eSRTiiZV4EPKxM6U0CjO91SQCAoZ6G1
-         GU6XOIapuFKoiH1fu0tEzJpR+ZFb/hViyLOymGhCIDBfnQbDVGYxQBWMaNS4pdYgqH8P
-         eBMGuS19qPn6u7lFDYQDn+Ckljs3LtcC6lC5Mmzdzjpqer1YfZotIWHoQxhcWQJ97usb
-         FeGw==
-In-Reply-To: <20171101073758.femijh7clfbwmqeg@dhcp22.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:
+	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=3nyt147bYUAuFxcEGtYhdJUBhCMN9/ntfZhFNdnb7jo=; b=ih/vfxWmDM5Ucsgd7PcH74COmH
+	YaknxfBXHKvNadfOQApTIwb6IejTremOHbOS8cvnQj7BOo2WmnFOOBKLtJ1WDZF76pgkCaLRpLcJI
+	R+agTSm1xFKPMgTgXyscMW6UnAqGNDnWOuDzd2nKHcQIsOtveUuDKIoJPNvhmeFTuTV8=;
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-On Wed, 1 Nov 2017, Michal Hocko wrote:
+Replace all raw 'this_cpu_' modifications of the stat and event
+per-cpu counters with API functions such as mod_memcg_state().
 
-> > memory.oom_score_adj would never need to be permanently tuned, just as 
-> > /proc/pid/oom_score_adj need never be permanently tuned.  My response was 
-> > an answer to Roman's concern that "v8 has it's own limitations," but I 
-> > haven't seen a concrete example where the oom killer is forced to kill 
-> > from the non-preferred cgroup while the user has power of biasing against 
-> > certain cgroups with memory.oom_score_adj.  Do you have such a concrete 
-> > example that we can work with?
-> 
-> Yes, the one with structural requirements due to other controllers or
-> due to general organizational purposes where hierarchical (sibling
-> oriented) comparison just doesn't work.
+This makes the code easier to read, but is also in preparation for the
+next patch, which changes the per-cpu implementation of those counters.
 
-You mean where an admin or user does
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/memcontrol.h | 31 +++++++++++++++---------
+ mm/memcontrol.c            | 59 ++++++++++++++++++++--------------------------
+ 2 files changed, 45 insertions(+), 45 deletions(-)
 
-	for i in $(cat cgroup.procs); do mkdir $i; echo $i > $i/cgroup.procs; done
-
-to place constraints on processes with other controllers but unknowingly 
-completely circumvented oom kill selection?  That's one of my concerns 
-that hasn't been addressed and I believe only can be done with 
-hierarchical accounting.
-
-> Take the students, teachers,
-> admins example. You definitely do not want to kill from students
-> subgroups by default just because this is the largest entity type.
-> Tuning memory.oom_score_adj doesn't work for that usecase as soon as
-> new subgroups come and go.
-> 
-
-With hierarchical accounting, that solves all three concerns that I have 
-enumerated, the top-level organizer knows the limits imposed.  It is 
-therefore *trivial* to prefer /students by biasing against it with 
-memory.oom_score_adj over other top-level mem cgroups and still kill 
-from /students if going over a certain threshold of memory.  With 
-hierarchical accounting and memory.oom_score_adj, it could even be used 
-for userspace to determine which student to kill from.  If /admins is 
-using more memory than expected, it gets biased against with the same 
-memory.oom_score_adj.  The point is that the top-level organizer that is 
-structing the mem cgroup tree knows the limits imposed and the preference 
-of /admins over /students, or vice versa.  It also doesn't allow /students 
-to circumvent victim selection by creating child mem cgroups.
-
-If this is missing your point, please draw the hierarchy you are 
-suggesting and show which mem cgroup is preferred by the admin and does 
-not allow the user to circumvent that priority.
-
-> > We simply cannot determine if improvements can be implemented in the 
-> > future without user-visible changes if those improvements are unknown or 
-> > undecided at this time.
-> 
-> Come on. There have been at least two examples on how this could be
-> achieved. One priority based which would use cumulative memory
-> consumption if set on intermediate nodes which would allow you to
-> compare siblings. And another one was to add a new knob which would make
-> an intermediate node an aggregate for accounting purposes.
-> 
-
-We don't need a memory.oom_group, memory.oom_hierarchical_accounting, 
-memory.oom_priority, and memory.oom_score_adj.  I believe 
-memory.oom_score_adj suffices.  I don't think it is in our best interest 
-or the users best interest to maintain many different combinations of how 
-an oom victim is selected.  I believe all the power needed is by providing 
-a memory.oom_score_adj since cgroup memory usage is being considered, just 
-as /proc/pid/oom_score_adj exists when process memory usage is being 
-considered.  It seems very intuitive.
-
-In the interest of not polluting the namespace, not allowing users to 
-circumvent the decisions of the oom killer, and to allow userspace to be 
-able to influence oom victim selection, we need this to be implemented now 
-rather than later since it may affect the heuristic under consideration 
-and we should have a complete patchset without being backed into a corner 
-based on decisions made earlier with the rationale that it can be figured 
-out later, let's merge this now.
-
-> And I am pretty sure we have already agreed that something like this is
-> useful for some usecases and nobody objected this would get merged in
-> future. All we are saying now is that this is not in scope of _this_
-> patchseries because the vast majority of usecases simply do not care
-> about influencing the oom selection. They only do care about having per
-> cgroup behavior and/or kill all semantic. I really do not understand
-> what is hard about that.
-> 
-
-I honestly do not believe what hurry we're in or what is so hard to 
-understand about implementing the ability of userspace to influence the 
-decisionmaking that works well together with the heuristic being 
-introduced.
-
-We can stop wasting time arguing about whether its appropriate to merge an 
-incomplete patchset or not and actually fix the three fundamental flaws 
-that have been outlined with this approach, or I can fork the patchset and 
-introduce it myself as proposed if that is preferred.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 69966c461d1c..2c80b69dd266 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -272,13 +272,6 @@ static inline bool mem_cgroup_disabled(void)
+ 	return !cgroup_subsys_enabled(memory_cgrp_subsys);
+ }
+ 
+-static inline void mem_cgroup_event(struct mem_cgroup *memcg,
+-				    enum memcg_event_item event)
+-{
+-	this_cpu_inc(memcg->stat->events[event]);
+-	cgroup_file_notify(&memcg->events_file);
+-}
+-
+ bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg);
+ 
+ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
+@@ -627,15 +620,23 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ 						gfp_t gfp_mask,
+ 						unsigned long *total_scanned);
+ 
++/* idx can be of type enum memcg_event_item or vm_event_item */
++static inline void __count_memcg_events(struct mem_cgroup *memcg,
++					int idx, unsigned long count)
++{
++	if (!mem_cgroup_disabled())
++		__this_cpu_add(memcg->stat->events[idx], count);
++}
++
++/* idx can be of type enum memcg_event_item or vm_event_item */
+ static inline void count_memcg_events(struct mem_cgroup *memcg,
+-				      enum vm_event_item idx,
+-				      unsigned long count)
++				      int idx, unsigned long count)
+ {
+ 	if (!mem_cgroup_disabled())
+ 		this_cpu_add(memcg->stat->events[idx], count);
+ }
+ 
+-/* idx can be of type enum memcg_stat_item or node_stat_item */
++/* idx can be of type enum memcg_event_item or vm_event_item */
+ static inline void count_memcg_page_event(struct page *page,
+ 					  int idx)
+ {
+@@ -654,12 +655,20 @@ static inline void count_memcg_event_mm(struct mm_struct *mm,
+ 	rcu_read_lock();
+ 	memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
+ 	if (likely(memcg)) {
+-		this_cpu_inc(memcg->stat->events[idx]);
++		count_memcg_events(memcg, idx, 1);
+ 		if (idx == OOM_KILL)
+ 			cgroup_file_notify(&memcg->events_file);
+ 	}
+ 	rcu_read_unlock();
+ }
++
++static inline void mem_cgroup_event(struct mem_cgroup *memcg,
++				    enum memcg_event_item event)
++{
++	count_memcg_events(memcg, event, 1);
++	cgroup_file_notify(&memcg->events_file);
++}
++
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+ void mem_cgroup_split_huge_fixup(struct page *head);
+ #endif
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 50e6906314f8..dabbc076e503 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -586,23 +586,23 @@ static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
+ 	 * counted as CACHE even if it's on ANON LRU.
+ 	 */
+ 	if (PageAnon(page))
+-		__this_cpu_add(memcg->stat->count[MEMCG_RSS], nr_pages);
++		__mod_memcg_state(memcg, MEMCG_RSS, nr_pages);
+ 	else {
+-		__this_cpu_add(memcg->stat->count[MEMCG_CACHE], nr_pages);
++		__mod_memcg_state(memcg, MEMCG_CACHE, nr_pages);
+ 		if (PageSwapBacked(page))
+-			__this_cpu_add(memcg->stat->count[NR_SHMEM], nr_pages);
++			__mod_memcg_state(memcg, NR_SHMEM, nr_pages);
+ 	}
+ 
+ 	if (compound) {
+ 		VM_BUG_ON_PAGE(!PageTransHuge(page), page);
+-		__this_cpu_add(memcg->stat->count[MEMCG_RSS_HUGE], nr_pages);
++		__mod_memcg_state(memcg, MEMCG_RSS_HUGE, nr_pages);
+ 	}
+ 
+ 	/* pagein of a big page is an event. So, ignore page size */
+ 	if (nr_pages > 0)
+-		__this_cpu_inc(memcg->stat->events[PGPGIN]);
++		__count_memcg_events(memcg, PGPGIN, 1);
+ 	else {
+-		__this_cpu_inc(memcg->stat->events[PGPGOUT]);
++		__count_memcg_events(memcg, PGPGOUT, 1);
+ 		nr_pages = -nr_pages; /* for event */
+ 	}
+ 
+@@ -2415,18 +2415,11 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+ 	for (i = 1; i < HPAGE_PMD_NR; i++)
+ 		head[i].mem_cgroup = head->mem_cgroup;
+ 
+-	__this_cpu_sub(head->mem_cgroup->stat->count[MEMCG_RSS_HUGE],
+-		       HPAGE_PMD_NR);
++	__mod_memcg_state(head->mem_cgroup, MEMCG_RSS_HUGE, -HPAGE_PMD_NR);
+ }
+ #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+ 
+ #ifdef CONFIG_MEMCG_SWAP
+-static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
+-				       int nr_entries)
+-{
+-	this_cpu_add(memcg->stat->count[MEMCG_SWAP], nr_entries);
+-}
+-
+ /**
+  * mem_cgroup_move_swap_account - move swap charge and swap_cgroup's record.
+  * @entry: swap entry to be moved
+@@ -2450,8 +2443,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
+ 	new_id = mem_cgroup_id(to);
+ 
+ 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
+-		mem_cgroup_swap_statistics(from, -1);
+-		mem_cgroup_swap_statistics(to, 1);
++		mod_memcg_state(from, MEMCG_SWAP, -1);
++		mod_memcg_state(to, MEMCG_SWAP, 1);
+ 		return 0;
+ 	}
+ 	return -EINVAL;
+@@ -4584,8 +4577,8 @@ static int mem_cgroup_move_account(struct page *page,
+ 	spin_lock_irqsave(&from->move_lock, flags);
+ 
+ 	if (!anon && page_mapped(page)) {
+-		__this_cpu_sub(from->stat->count[NR_FILE_MAPPED], nr_pages);
+-		__this_cpu_add(to->stat->count[NR_FILE_MAPPED], nr_pages);
++		__mod_memcg_state(from, NR_FILE_MAPPED, -nr_pages);
++		__mod_memcg_state(to, NR_FILE_MAPPED, nr_pages);
+ 	}
+ 
+ 	/*
+@@ -4597,16 +4590,14 @@ static int mem_cgroup_move_account(struct page *page,
+ 		struct address_space *mapping = page_mapping(page);
+ 
+ 		if (mapping_cap_account_dirty(mapping)) {
+-			__this_cpu_sub(from->stat->count[NR_FILE_DIRTY],
+-				       nr_pages);
+-			__this_cpu_add(to->stat->count[NR_FILE_DIRTY],
+-				       nr_pages);
++			__mod_memcg_state(from, NR_FILE_DIRTY, -nr_pages);
++			__mod_memcg_state(to, NR_FILE_DIRTY, nr_pages);
+ 		}
+ 	}
+ 
+ 	if (PageWriteback(page)) {
+-		__this_cpu_sub(from->stat->count[NR_WRITEBACK], nr_pages);
+-		__this_cpu_add(to->stat->count[NR_WRITEBACK], nr_pages);
++		__mod_memcg_state(from, NR_WRITEBACK, -nr_pages);
++		__mod_memcg_state(to, NR_WRITEBACK, nr_pages);
+ 	}
+ 
+ 	/*
+@@ -5642,11 +5633,11 @@ static void uncharge_batch(const struct uncharge_gather *ug)
+ 	}
+ 
+ 	local_irq_save(flags);
+-	__this_cpu_sub(ug->memcg->stat->count[MEMCG_RSS], ug->nr_anon);
+-	__this_cpu_sub(ug->memcg->stat->count[MEMCG_CACHE], ug->nr_file);
+-	__this_cpu_sub(ug->memcg->stat->count[MEMCG_RSS_HUGE], ug->nr_huge);
+-	__this_cpu_sub(ug->memcg->stat->count[NR_SHMEM], ug->nr_shmem);
+-	__this_cpu_add(ug->memcg->stat->events[PGPGOUT], ug->pgpgout);
++	__mod_memcg_state(ug->memcg, MEMCG_RSS, -ug->nr_anon);
++	__mod_memcg_state(ug->memcg, MEMCG_CACHE, -ug->nr_file);
++	__mod_memcg_state(ug->memcg, MEMCG_RSS_HUGE, -ug->nr_huge);
++	__mod_memcg_state(ug->memcg, NR_SHMEM, -ug->nr_shmem);
++	__count_memcg_events(ug->memcg, PGPGOUT, ug->pgpgout);
+ 	__this_cpu_add(ug->memcg->stat->nr_page_events, nr_pages);
+ 	memcg_check_events(ug->memcg, ug->dummy_page);
+ 	local_irq_restore(flags);
+@@ -5874,7 +5865,7 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	if (in_softirq())
+ 		gfp_mask = GFP_NOWAIT;
+ 
+-	this_cpu_add(memcg->stat->count[MEMCG_SOCK], nr_pages);
++	mod_memcg_state(memcg, MEMCG_SOCK, nr_pages);
+ 
+ 	if (try_charge(memcg, gfp_mask, nr_pages) == 0)
+ 		return true;
+@@ -5895,7 +5886,7 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 		return;
+ 	}
+ 
+-	this_cpu_sub(memcg->stat->count[MEMCG_SOCK], nr_pages);
++	mod_memcg_state(memcg, MEMCG_SOCK, -nr_pages);
+ 
+ 	refill_stock(memcg, nr_pages);
+ }
+@@ -6019,7 +6010,7 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg),
+ 				   nr_entries);
+ 	VM_BUG_ON_PAGE(oldid, page);
+-	mem_cgroup_swap_statistics(swap_memcg, nr_entries);
++	mod_memcg_state(swap_memcg, MEMCG_SWAP, nr_entries);
+ 
+ 	page->mem_cgroup = NULL;
+ 
+@@ -6085,7 +6076,7 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
+ 		mem_cgroup_id_get_many(memcg, nr_pages - 1);
+ 	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg), nr_pages);
+ 	VM_BUG_ON_PAGE(oldid, page);
+-	mem_cgroup_swap_statistics(memcg, nr_pages);
++	mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
+ 
+ 	return 0;
+ }
+@@ -6113,7 +6104,7 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+ 			else
+ 				page_counter_uncharge(&memcg->memsw, nr_pages);
+ 		}
+-		mem_cgroup_swap_statistics(memcg, -nr_pages);
++		mod_memcg_state(memcg, MEMCG_SWAP, -nr_pages);
+ 		mem_cgroup_id_put_many(memcg, nr_pages);
+ 	}
+ 	rcu_read_unlock();
+-- 
+2.15.0
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
