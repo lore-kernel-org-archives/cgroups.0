@@ -1,462 +1,429 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 3/3] mm: memcontrol: fix excessive complexity in memory.stat reporting
-Date: Fri,  3 Nov 2017 11:33:36 -0400
-Message-ID: <20171103153336.24044-3-hannes@cmpxchg.org>
-References: <20171103153336.24044-1-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:
-	Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=x87TQjQsuExB4QDEabFXVKBXzE7pS88aLCV7+5S5xRI=; b=tAxTGXoYj6taV0p5ZGMKI1gILc
-	aaVt4QuDXR5qRCk1sgJD/Br+uY6WOlo1/ORN9FepsObH3UKCmOjPXIvGlsYYtrUDdt13wGPrN1txR
-	3f4IS7+Y1rcqcSxy0QYVjyEByBy7QHAY99Qo4o+PXGmLsyWzYawH+rKyZKNqDKa2xLE0=;
-In-Reply-To: <20171103153336.24044-1-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup/cpuset: remove circular dependency deadlock
+Date: Mon, 6 Nov 2017 09:31:30 +0530
+Message-ID: <0b51254a-7a80-ab21-1d55-a6dbe0e9e1ec@codeaurora.org>
+References: <45cdac2f-4462-e5b5-d724-8cca58e3932a@codeaurora.org>
+ <1509347805-23491-1-git-send-email-prsood@codeaurora.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1509940897;
+        bh=aLtpRipXVR5zGpRYLlMScS4deuaixQDdkpe7yDL276M=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=BcRoeadQvu/q2k3soPe76wOyzEpf+xDqgiCq2r02ypNN325Hh8LU2GMYwm4OL3zVm
+         c8TTfoN8prA3Fkd2PxeTqEL2BLb+VO1ypMvFsaiIveYd/QJ4laQddryHApjh972lcU
+         xQArIGyoQ1ObF+HtHHKgBlZASm1YGCjrEpBQ9buU=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1509940895;
+        bh=aLtpRipXVR5zGpRYLlMScS4deuaixQDdkpe7yDL276M=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=ieXyTLxrsS5exkAcvaQLIqY1CEyiwglZFORwxJwejF+i9yk9LMJLOmaQ99xN4Mnb4
+         S0QcLoOU9kngCYB+JHF7rPsYYXp7yZyX5iUM+SA7Har79g89zre71B5k6mPUtnMZeX
+         PMDAyG8d7fOLtV6qRwPqXRXHKdd7kNKLcmOV/Tdo=
+In-Reply-To: <1509347805-23491-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-We've seen memory.stat reads in top-level cgroups take up to fourteen
-seconds during a userspace bug that created tens of thousands of ghost
-cgroups pinned by lingering page cache.
+On 10/30/2017 12:46 PM, Prateek Sood wrote:
+> Remove circular dependency deadlock in a scenario where hotplug of CPU is
+> being done while there is updation in cgroup and cpuset triggered from
+> userspace.
+> 
+> Process A => kthreadd => Process B => Process C => Process A
+> 
+> Process A
+> cpu_subsys_offline();
+>   cpu_down();
+>     _cpu_down();
+>       percpu_down_write(&cpu_hotplug_lock); //held
+>       cpuhp_invoke_callback();
+> 	     workqueue_offline_cpu();
+>             queue_work_on(); // unbind_work on system_highpri_wq
+>                __queue_work();
+>                  insert_work();
+>                     wake_up_worker();
+>             flush_work();
+>                wait_for_completion();
+> 
+> worker_thread();
+>    manage_workers();
+>       create_worker();
+> 	     kthread_create_on_node();
+> 		    wake_up_process(kthreadd_task);
+> 
+> kthreadd
+> kthreadd();
+>   kernel_thread();
+>     do_fork();
+>       copy_process();
+>         percpu_down_read(&cgroup_threadgroup_rwsem);
+>           __rwsem_down_read_failed_common(); //waiting
+> 
+> Process B
+> kernfs_fop_write();
+>   cgroup_file_write();
+>     cgroup_procs_write();
+>       percpu_down_write(&cgroup_threadgroup_rwsem); //held
+>       cgroup_attach_task();
+>         cgroup_migrate();
+>           cgroup_migrate_execute();
+>             cpuset_can_attach();
+>               mutex_lock(&cpuset_mutex); //waiting
+> 
+> Process C
+> kernfs_fop_write();
+>   cgroup_file_write();
+>     cpuset_write_resmask();
+>       mutex_lock(&cpuset_mutex); //held
+>       update_cpumask();
+>         update_cpumasks_hier();
+>           rebuild_sched_domains_locked();
+>             get_online_cpus();
+>               percpu_down_read(&cpu_hotplug_lock); //waiting
+> 
+> Eliminating deadlock by reversing the locking order for cpuset_mutex and
+> cpu_hotplug_lock. After inverting the locking sequence of cpu_hotplug_lock
+> and cpuset_mutex, cpuset_hotplug_workfn() related functionality can be
+> done synchronously from the context doing cpu hotplug. For memory hotplug
+> it still gets queued as a work item.
+> 
+> Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+> ---
+>  include/linux/cpuset.h |  6 ----
+>  kernel/cgroup/cpuset.c | 94 +++++++++++++++++++++++++++-----------------------
+>  kernel/power/process.c |  2 --
+>  kernel/sched/core.c    |  1 -
+>  4 files changed, 50 insertions(+), 53 deletions(-)
+> 
+> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+> index a1e6a33..e74655d 100644
+> --- a/include/linux/cpuset.h
+> +++ b/include/linux/cpuset.h
+> @@ -51,9 +51,7 @@ static inline void cpuset_dec(void)
+>  
+>  extern int cpuset_init(void);
+>  extern void cpuset_init_smp(void);
+> -extern void cpuset_force_rebuild(void);
+>  extern void cpuset_update_active_cpus(void);
+> -extern void cpuset_wait_for_hotplug(void);
+>  extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
+>  extern void cpuset_cpus_allowed_fallback(struct task_struct *p);
+>  extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
+> @@ -166,15 +164,11 @@ static inline void set_mems_allowed(nodemask_t nodemask)
+>  static inline int cpuset_init(void) { return 0; }
+>  static inline void cpuset_init_smp(void) {}
+>  
+> -static inline void cpuset_force_rebuild(void) { }
+> -
+>  static inline void cpuset_update_active_cpus(void)
+>  {
+>  	partition_sched_domains(1, NULL, NULL);
+>  }
+>  
+> -static inline void cpuset_wait_for_hotplug(void) { }
+> -
+>  static inline void cpuset_cpus_allowed(struct task_struct *p,
+>  				       struct cpumask *mask)
+>  {
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 4657e29..ec44aaa 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -817,6 +817,18 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>  	return ndoms;
+>  }
+>  
+> +static void cpuset_sched_change_begin(void)
+> +{
+> +	cpus_read_lock();
+> +	mutex_lock(&cpuset_mutex);
+> +}
+> +
+> +static void cpuset_sched_change_end(void)
+> +{
+> +	mutex_unlock(&cpuset_mutex);
+> +	cpus_read_unlock();
+> +}
+> +
+>  /*
+>   * Rebuild scheduler domains.
+>   *
+> @@ -826,16 +838,14 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>   * 'cpus' is removed, then call this routine to rebuild the
+>   * scheduler's dynamic sched domains.
+>   *
+> - * Call with cpuset_mutex held.  Takes get_online_cpus().
+>   */
+> -static void rebuild_sched_domains_locked(void)
+> +static void rebuild_sched_domains_cpuslocked(void)
+>  {
+>  	struct sched_domain_attr *attr;
+>  	cpumask_var_t *doms;
+>  	int ndoms;
+>  
+>  	lockdep_assert_held(&cpuset_mutex);
+> -	get_online_cpus();
+>  
+>  	/*
+>  	 * We have raced with CPU hotplug. Don't do anything to avoid
+> @@ -843,27 +853,25 @@ static void rebuild_sched_domains_locked(void)
+>  	 * Anyways, hotplug work item will rebuild sched domains.
+>  	 */
+>  	if (!cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
+> -		goto out;
+> +		return;
+>  
+>  	/* Generate domain masks and attrs */
+>  	ndoms = generate_sched_domains(&doms, &attr);
+>  
+>  	/* Have scheduler rebuild the domains */
+>  	partition_sched_domains(ndoms, doms, attr);
+> -out:
+> -	put_online_cpus();
+>  }
+>  #else /* !CONFIG_SMP */
+> -static void rebuild_sched_domains_locked(void)
+> +static void rebuild_sched_domains_cpuslocked(void)
+>  {
+>  }
+>  #endif /* CONFIG_SMP */
+>  
+>  void rebuild_sched_domains(void)
+>  {
+> -	mutex_lock(&cpuset_mutex);
+> -	rebuild_sched_domains_locked();
+> -	mutex_unlock(&cpuset_mutex);
+> +	cpuset_sched_change_begin();
+> +	rebuild_sched_domains_cpuslocked();
+> +	cpuset_sched_change_end();
+>  }
+>  
+>  /**
+> @@ -949,7 +957,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+>  	rcu_read_unlock();
+>  
+>  	if (need_rebuild_sched_domains)
+> -		rebuild_sched_domains_locked();
+> +		rebuild_sched_domains_cpuslocked();
+>  }
+>  
+>  /**
+> @@ -1281,7 +1289,7 @@ static int update_relax_domain_level(struct cpuset *cs, s64 val)
+>  		cs->relax_domain_level = val;
+>  		if (!cpumask_empty(cs->cpus_allowed) &&
+>  		    is_sched_load_balance(cs))
+> -			rebuild_sched_domains_locked();
+> +			rebuild_sched_domains_cpuslocked();
+>  	}
+>  
+>  	return 0;
+> @@ -1314,7 +1322,6 @@ static void update_tasks_flags(struct cpuset *cs)
+>   *
+>   * Call with cpuset_mutex held.
+>   */
+> -
+>  static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+>  		       int turning_on)
+>  {
+> @@ -1347,7 +1354,7 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+>  	spin_unlock_irq(&callback_lock);
+>  
+>  	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
+> -		rebuild_sched_domains_locked();
+> +		rebuild_sched_domains_cpuslocked();
+>  
+>  	if (spread_flag_changed)
+>  		update_tasks_flags(cs);
+> @@ -1615,7 +1622,7 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+>  	cpuset_filetype_t type = cft->private;
+>  	int retval = 0;
+>  
+> -	mutex_lock(&cpuset_mutex);
+> +	cpuset_sched_change_begin();
+>  	if (!is_cpuset_online(cs)) {
+>  		retval = -ENODEV;
+>  		goto out_unlock;
+> @@ -1651,7 +1658,7 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+>  		break;
+>  	}
+>  out_unlock:
+> -	mutex_unlock(&cpuset_mutex);
+> +	cpuset_sched_change_end();
+>  	return retval;
+>  }
+>  
+> @@ -1662,7 +1669,7 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+>  	cpuset_filetype_t type = cft->private;
+>  	int retval = -ENODEV;
+>  
+> -	mutex_lock(&cpuset_mutex);
+> +	cpuset_sched_change_begin();
+>  	if (!is_cpuset_online(cs))
+>  		goto out_unlock;
+>  
+> @@ -1675,7 +1682,7 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+>  		break;
+>  	}
+>  out_unlock:
+> -	mutex_unlock(&cpuset_mutex);
+> +	cpuset_sched_change_end();
+>  	return retval;
+>  }
+>  
+> @@ -1714,7 +1721,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+>  	kernfs_break_active_protection(of->kn);
+>  	flush_work(&cpuset_hotplug_work);
+>  
+> -	mutex_lock(&cpuset_mutex);
+> +	cpuset_sched_change_begin();
+>  	if (!is_cpuset_online(cs))
+>  		goto out_unlock;
+>  
+> @@ -1738,7 +1745,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+>  
+>  	free_trial_cpuset(trialcs);
+>  out_unlock:
+> -	mutex_unlock(&cpuset_mutex);
+> +	cpuset_sched_change_end();
+>  	kernfs_unbreak_active_protection(of->kn);
+>  	css_put(&cs->css);
+>  	flush_workqueue(cpuset_migrate_mm_wq);
+> @@ -2039,14 +2046,14 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+>  /*
+>   * If the cpuset being removed has its flag 'sched_load_balance'
+>   * enabled, then simulate turning sched_load_balance off, which
+> - * will call rebuild_sched_domains_locked().
+> + * will call rebuild_sched_domains_cpuslocked().
+>   */
+>  
+>  static void cpuset_css_offline(struct cgroup_subsys_state *css)
+>  {
+>  	struct cpuset *cs = css_cs(css);
+>  
+> -	mutex_lock(&cpuset_mutex);
+> +	cpuset_sched_change_begin();
+>  
+>  	if (is_sched_load_balance(cs))
+>  		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+> @@ -2054,7 +2061,7 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+>  	cpuset_dec();
+>  	clear_bit(CS_ONLINE, &cs->flags);
+>  
+> -	mutex_unlock(&cpuset_mutex);
+> +	cpuset_sched_change_end();
+>  }
+>  
+>  static void cpuset_css_free(struct cgroup_subsys_state *css)
+> @@ -2275,15 +2282,8 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs)
+>  	mutex_unlock(&cpuset_mutex);
+>  }
+>  
+> -static bool force_rebuild;
+> -
+> -void cpuset_force_rebuild(void)
+> -{
+> -	force_rebuild = true;
+> -}
+> -
+>  /**
+> - * cpuset_hotplug_workfn - handle CPU/memory hotunplug for a cpuset
+> + * cpuset_hotplug - handle CPU/memory hotunplug for a cpuset
+>   *
+>   * This function is called after either CPU or memory configuration has
+>   * changed and updates cpuset accordingly.  The top_cpuset is always
+> @@ -2298,7 +2298,7 @@ void cpuset_force_rebuild(void)
+>   * Note that CPU offlining during suspend is ignored.  We don't modify
+>   * cpusets across suspend/resume cycles at all.
+>   */
+> -static void cpuset_hotplug_workfn(struct work_struct *work)
+> +static void cpuset_hotplug(bool use_cpu_hp_lock)
+>  {
+>  	static cpumask_t new_cpus;
+>  	static nodemask_t new_mems;
+> @@ -2356,25 +2356,31 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+>  	}
+>  
+>  	/* rebuild sched domains if cpus_allowed has changed */
+> -	if (cpus_updated || force_rebuild) {
+> -		force_rebuild = false;
+> -		rebuild_sched_domains();
+> +	if (cpus_updated) {
+> +		if (use_cpu_hp_lock)
+> +			rebuild_sched_domains();
+> +		else {
+> +			/* Acquiring cpu_hotplug_lock is not required.
+> +			 * When cpuset_hotplug() is called in hotplug path,
+> +			 * cpu_hotplug_lock is held by the hotplug context
+> +			 * which is waiting for cpuhp_thread_fun to indicate
+> +			 * completion of callback.
+> +			 */
+> +			mutex_lock(&cpuset_mutex);
+> +			rebuild_sched_domains_cpuslocked();
+> +			mutex_unlock(&cpuset_mutex);
+> +		}
+>  	}
+>  }
+>  
+> -void cpuset_update_active_cpus(void)
+> +static void cpuset_hotplug_workfn(struct work_struct *work)
+>  {
+> -	/*
+> -	 * We're inside cpu hotplug critical region which usually nests
+> -	 * inside cgroup synchronization.  Bounce actual hotplug processing
+> -	 * to a work item to avoid reverse locking order.
+> -	 */
+> -	schedule_work(&cpuset_hotplug_work);
+> +	cpuset_hotplug(true);
+>  }
+>  
+> -void cpuset_wait_for_hotplug(void)
+> +void cpuset_update_active_cpus(void)
+>  {
+> -	flush_work(&cpuset_hotplug_work);
+> +	cpuset_hotplug(false);
+>  }
+>  
+>  /*
+> diff --git a/kernel/power/process.c b/kernel/power/process.c
+> index 50f25cb..28772b405 100644
+> --- a/kernel/power/process.c
+> +++ b/kernel/power/process.c
+> @@ -203,8 +203,6 @@ void thaw_processes(void)
+>  	__usermodehelper_set_disable_depth(UMH_FREEZING);
+>  	thaw_workqueues();
+>  
+> -	cpuset_wait_for_hotplug();
+> -
+>  	read_lock(&tasklist_lock);
+>  	for_each_process_thread(g, p) {
+>  		/* No other threads should have PF_SUSPEND_TASK set */
+> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> index d17c5da..25b8717 100644
+> --- a/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -5590,7 +5590,6 @@ static void cpuset_cpu_active(void)
+>  		 * restore the original sched domains by considering the
+>  		 * cpuset configurations.
+>  		 */
+> -		cpuset_force_rebuild();
+>  	}
+>  	cpuset_update_active_cpus();
+>  }
+> 
+Hi Folks,
 
-Even with a more reasonable number of cgroups, aggregating memory.stat
-is unnecessarily heavy. The complexity is this:
+Are there any more feedbacks/suggestions to improve this patch?
 
-	nr_cgroups * nr_stat_items * nr_possible_cpus
 
-where the stat items are ~70 at this point. With 128 cgroups and 128
-CPUs - decent, not enormous setups - reading the top-level memory.stat
-has to aggregate over a million per-cpu counters. This doesn't scale.
+Thanks
+PS
 
-Instead of spreading the source of truth across all CPUs, use the
-per-cpu counters merely to batch updates to shared atomic counters.
-
-This is the same as the per-cpu stocks we use for charging memory to
-the shared atomic page_counters, and also the way the global vmstat
-counters are implemented.
-
-Vmstat has elaborate spilling thresholds that depend on the number of
-CPUs, amount of memory, and memory pressure - carefully balancing the
-cost of counter updates with the amount of per-cpu error. That's
-because the vmstat counters are system-wide, but also used for
-decisions inside the kernel (e.g. NR_FREE_PAGES in the
-allocator). Neither is true for the memory controller.
-
-Use the same static batch size we already use for page_counter updates
-during charging. The per-cpu error in the stats will be 128k, which is
-an acceptable ratio of cores to memory accounting granularity.
-
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/memcontrol.h |  96 +++++++++++++++++++++++++++---------------
- mm/memcontrol.c            | 101 +++++++++++++++++++++++----------------------
- 2 files changed, 113 insertions(+), 84 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 1ffc54ac4cc9..882046863581 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -108,7 +108,10 @@ struct lruvec_stat {
-  */
- struct mem_cgroup_per_node {
- 	struct lruvec		lruvec;
--	struct lruvec_stat __percpu *lruvec_stat;
-+
-+	struct lruvec_stat __percpu *lruvec_stat_cpu;
-+	atomic_long_t		lruvec_stat[NR_VM_NODE_STAT_ITEMS];
-+
- 	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
- 
- 	struct mem_cgroup_reclaim_iter	iter[DEF_PRIORITY + 1];
-@@ -227,10 +230,10 @@ struct mem_cgroup {
- 	spinlock_t		move_lock;
- 	struct task_struct	*move_lock_task;
- 	unsigned long		move_lock_flags;
--	/*
--	 * percpu counter.
--	 */
--	struct mem_cgroup_stat_cpu __percpu *stat;
-+
-+	struct mem_cgroup_stat_cpu __percpu *stat_cpu;
-+	atomic_long_t		stat[MEMCG_NR_STAT];
-+	atomic_long_t		events[MEMCG_NR_EVENTS];
- 
- 	unsigned long		socket_pressure;
- 
-@@ -265,6 +268,12 @@ struct mem_cgroup {
- 	/* WARNING: nodeinfo must be the last member here */
- };
- 
-+/*
-+ * size of first charge trial. "32" comes from vmscan.c's magic value.
-+ * TODO: maybe necessary to use big numbers in big irons.
-+ */
-+#define MEMCG_CHARGE_BATCH 32U
-+
- extern struct mem_cgroup *root_mem_cgroup;
- 
- static inline bool mem_cgroup_disabled(void)
-@@ -485,32 +494,38 @@ void unlock_page_memcg(struct page *page);
- static inline unsigned long memcg_page_state(struct mem_cgroup *memcg,
- 					     int idx)
- {
--	long val = 0;
--	int cpu;
--
--	for_each_possible_cpu(cpu)
--		val += per_cpu(memcg->stat->count[idx], cpu);
--
--	if (val < 0)
--		val = 0;
--
--	return val;
-+	long x = atomic_long_read(&memcg->stat[idx]);
-+#ifdef CONFIG_SMP
-+	if (x < 0)
-+		x = 0;
-+#endif
-+	return x;
- }
- 
- /* idx can be of type enum memcg_stat_item or node_stat_item */
- static inline void __mod_memcg_state(struct mem_cgroup *memcg,
- 				     int idx, int val)
- {
--	if (!mem_cgroup_disabled())
--		__this_cpu_add(memcg->stat->count[idx], val);
-+	long x;
-+
-+	if (mem_cgroup_disabled())
-+		return;
-+
-+	x = val + __this_cpu_read(memcg->stat_cpu->count[idx]);
-+	if (unlikely(abs(x) > MEMCG_CHARGE_BATCH)) {
-+		atomic_long_add(x, &memcg->stat[idx]);
-+		x = 0;
-+	}
-+	__this_cpu_write(memcg->stat_cpu->count[idx], x);
- }
- 
- /* idx can be of type enum memcg_stat_item or node_stat_item */
- static inline void mod_memcg_state(struct mem_cgroup *memcg,
- 				   int idx, int val)
- {
--	if (!mem_cgroup_disabled())
--		this_cpu_add(memcg->stat->count[idx], val);
-+	preempt_disable();
-+	__mod_memcg_state(memcg, idx, val);
-+	preempt_enable();
- }
- 
- /**
-@@ -548,26 +563,25 @@ static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
- 					      enum node_stat_item idx)
- {
- 	struct mem_cgroup_per_node *pn;
--	long val = 0;
--	int cpu;
-+	long x;
- 
- 	if (mem_cgroup_disabled())
- 		return node_page_state(lruvec_pgdat(lruvec), idx);
- 
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	for_each_possible_cpu(cpu)
--		val += per_cpu(pn->lruvec_stat->count[idx], cpu);
--
--	if (val < 0)
--		val = 0;
--
--	return val;
-+	x = atomic_long_read(&pn->lruvec_stat[idx]);
-+#ifdef CONFIG_SMP
-+	if (x < 0)
-+		x = 0;
-+#endif
-+	return x;
- }
- 
- static inline void __mod_lruvec_state(struct lruvec *lruvec,
- 				      enum node_stat_item idx, int val)
- {
- 	struct mem_cgroup_per_node *pn;
-+	long x;
- 
- 	/* Update node */
- 	__mod_node_page_state(lruvec_pgdat(lruvec), idx, val);
-@@ -581,7 +595,12 @@ static inline void __mod_lruvec_state(struct lruvec *lruvec,
- 	__mod_memcg_state(pn->memcg, idx, val);
- 
- 	/* Update lruvec */
--	__this_cpu_add(pn->lruvec_stat->count[idx], val);
-+	x = val + __this_cpu_read(pn->lruvec_stat_cpu->count[idx]);
-+	if (unlikely(abs(x) > MEMCG_CHARGE_BATCH)) {
-+		atomic_long_add(x, &pn->lruvec_stat[idx]);
-+		x = 0;
-+	}
-+	__this_cpu_write(pn->lruvec_stat_cpu->count[idx], x);
- }
- 
- static inline void mod_lruvec_state(struct lruvec *lruvec,
-@@ -624,16 +643,25 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
- static inline void __count_memcg_events(struct mem_cgroup *memcg,
- 					int idx, unsigned long count)
- {
--	if (!mem_cgroup_disabled())
--		__this_cpu_add(memcg->stat->events[idx], count);
-+	unsigned long x;
-+
-+	if (mem_cgroup_disabled())
-+		return;
-+
-+	x = count + __this_cpu_read(memcg->stat_cpu->events[idx]);
-+	if (unlikely(x > MEMCG_CHARGE_BATCH)) {
-+		atomic_long_add(x, &memcg->events[idx]);
-+		x = 0;
-+	}
-+	__this_cpu_write(memcg->stat_cpu->events[idx], x);
- }
- 
--/* idx can be of type enum memcg_event_item or vm_event_item */
- static inline void count_memcg_events(struct mem_cgroup *memcg,
- 				      int idx, unsigned long count)
- {
--	if (!mem_cgroup_disabled())
--		this_cpu_add(memcg->stat->events[idx], count);
-+	preempt_disable();
-+	__count_memcg_events(memcg, idx, count);
-+	preempt_enable();
- }
- 
- /* idx can be of type enum memcg_event_item or vm_event_item */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index dabbc076e503..40d1ef65fbd2 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -542,39 +542,10 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
- 	return mz;
- }
- 
--/*
-- * Return page count for single (non recursive) @memcg.
-- *
-- * Implementation Note: reading percpu statistics for memcg.
-- *
-- * Both of vmstat[] and percpu_counter has threshold and do periodic
-- * synchronization to implement "quick" read. There are trade-off between
-- * reading cost and precision of value. Then, we may have a chance to implement
-- * a periodic synchronization of counter in memcg's counter.
-- *
-- * But this _read() function is used for user interface now. The user accounts
-- * memory usage by memory cgroup and he _always_ requires exact value because
-- * he accounts memory. Even if we provide quick-and-fuzzy read, we always
-- * have to visit all online cpus and make sum. So, for now, unnecessary
-- * synchronization is not implemented. (just implemented for cpu hotplug)
-- *
-- * If there are kernel internal actions which can make use of some not-exact
-- * value, and reading all cpu value can be performance bottleneck in some
-- * common workload, threshold and synchronization as vmstat[] should be
-- * implemented.
-- *
-- * The parameter idx can be of type enum memcg_event_item or vm_event_item.
-- */
--
- static unsigned long memcg_sum_events(struct mem_cgroup *memcg,
- 				      int event)
- {
--	unsigned long val = 0;
--	int cpu;
--
--	for_each_possible_cpu(cpu)
--		val += per_cpu(memcg->stat->events[event], cpu);
--	return val;
-+	return atomic_long_read(&memcg->events[event]);
- }
- 
- static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
-@@ -606,7 +577,7 @@ static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
- 		nr_pages = -nr_pages; /* for event */
- 	}
- 
--	__this_cpu_add(memcg->stat->nr_page_events, nr_pages);
-+	__this_cpu_add(memcg->stat_cpu->nr_page_events, nr_pages);
- }
- 
- unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
-@@ -642,8 +613,8 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
- {
- 	unsigned long val, next;
- 
--	val = __this_cpu_read(memcg->stat->nr_page_events);
--	next = __this_cpu_read(memcg->stat->targets[target]);
-+	val = __this_cpu_read(memcg->stat_cpu->nr_page_events);
-+	next = __this_cpu_read(memcg->stat_cpu->targets[target]);
- 	/* from time_after() in jiffies.h */
- 	if ((long)(next - val) < 0) {
- 		switch (target) {
-@@ -659,7 +630,7 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
- 		default:
- 			break;
- 		}
--		__this_cpu_write(memcg->stat->targets[target], next);
-+		__this_cpu_write(memcg->stat_cpu->targets[target], next);
- 		return true;
- 	}
- 	return false;
-@@ -1707,11 +1678,6 @@ void unlock_page_memcg(struct page *page)
- }
- EXPORT_SYMBOL(unlock_page_memcg);
- 
--/*
-- * size of first charge trial. "32" comes from vmscan.c's magic value.
-- * TODO: maybe necessary to use big numbers in big irons.
-- */
--#define CHARGE_BATCH	32U
- struct memcg_stock_pcp {
- 	struct mem_cgroup *cached; /* this never be root cgroup */
- 	unsigned int nr_pages;
-@@ -1739,7 +1705,7 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	unsigned long flags;
- 	bool ret = false;
- 
--	if (nr_pages > CHARGE_BATCH)
-+	if (nr_pages > MEMCG_CHARGE_BATCH)
- 		return ret;
- 
- 	local_irq_save(flags);
-@@ -1808,7 +1774,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	}
- 	stock->nr_pages += nr_pages;
- 
--	if (stock->nr_pages > CHARGE_BATCH)
-+	if (stock->nr_pages > MEMCG_CHARGE_BATCH)
- 		drain_stock(stock);
- 
- 	local_irq_restore(flags);
-@@ -1858,9 +1824,44 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
- static int memcg_hotplug_cpu_dead(unsigned int cpu)
- {
- 	struct memcg_stock_pcp *stock;
-+	struct mem_cgroup *memcg;
- 
- 	stock = &per_cpu(memcg_stock, cpu);
- 	drain_stock(stock);
-+
-+	for_each_mem_cgroup(memcg) {
-+		int i;
-+
-+		for (i = 0; i < MEMCG_NR_STAT; i++) {
-+			int nid;
-+			long x;
-+
-+			x = __this_cpu_xchg(memcg->stat_cpu->count[i], 0);
-+			if (x)
-+				atomic_long_add(x, &memcg->stat[i]);
-+
-+			if (i >= NR_VM_NODE_STAT_ITEMS)
-+				continue;
-+
-+			for_each_node(nid) {
-+				struct mem_cgroup_per_node *pn;
-+
-+				pn = mem_cgroup_nodeinfo(memcg, nid);
-+				x = __this_cpu_xchg(pn->lruvec_stat_cpu->count[i], 0);
-+				if (x)
-+					atomic_long_add(x, &pn->lruvec_stat[i]);
-+			}
-+		}
-+
-+		for (i = 0; i < MEMCG_NR_EVENTS; i++) {
-+			long x;
-+
-+			x = __this_cpu_xchg(memcg->stat_cpu->events[i], 0);
-+			if (x)
-+				atomic_long_add(x, &memcg->events[i]);
-+		}
-+	}
-+
- 	return 0;
- }
- 
-@@ -1881,7 +1882,7 @@ static void high_work_func(struct work_struct *work)
- 	struct mem_cgroup *memcg;
- 
- 	memcg = container_of(work, struct mem_cgroup, high_work);
--	reclaim_high(memcg, CHARGE_BATCH, GFP_KERNEL);
-+	reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
- }
- 
- /*
-@@ -1905,7 +1906,7 @@ void mem_cgroup_handle_over_high(void)
- static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 		      unsigned int nr_pages)
- {
--	unsigned int batch = max(CHARGE_BATCH, nr_pages);
-+	unsigned int batch = max(MEMCG_CHARGE_BATCH, nr_pages);
- 	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
- 	struct mem_cgroup *mem_over_limit;
- 	struct page_counter *counter;
-@@ -4161,8 +4162,8 @@ static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
- 	if (!pn)
- 		return 1;
- 
--	pn->lruvec_stat = alloc_percpu(struct lruvec_stat);
--	if (!pn->lruvec_stat) {
-+	pn->lruvec_stat_cpu = alloc_percpu(struct lruvec_stat);
-+	if (!pn->lruvec_stat_cpu) {
- 		kfree(pn);
- 		return 1;
- 	}
-@@ -4180,7 +4181,7 @@ static void free_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
- {
- 	struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
- 
--	free_percpu(pn->lruvec_stat);
-+	free_percpu(pn->lruvec_stat_cpu);
- 	kfree(pn);
- }
- 
-@@ -4190,7 +4191,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 
- 	for_each_node(node)
- 		free_mem_cgroup_per_node_info(memcg, node);
--	free_percpu(memcg->stat);
-+	free_percpu(memcg->stat_cpu);
- 	kfree(memcg);
- }
- 
-@@ -4219,8 +4220,8 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 	if (memcg->id.id < 0)
- 		goto fail;
- 
--	memcg->stat = alloc_percpu(struct mem_cgroup_stat_cpu);
--	if (!memcg->stat)
-+	memcg->stat_cpu = alloc_percpu(struct mem_cgroup_stat_cpu);
-+	if (!memcg->stat_cpu)
- 		goto fail;
- 
- 	for_each_node(node)
-@@ -5638,7 +5639,7 @@ static void uncharge_batch(const struct uncharge_gather *ug)
- 	__mod_memcg_state(ug->memcg, MEMCG_RSS_HUGE, -ug->nr_huge);
- 	__mod_memcg_state(ug->memcg, NR_SHMEM, -ug->nr_shmem);
- 	__count_memcg_events(ug->memcg, PGPGOUT, ug->pgpgout);
--	__this_cpu_add(ug->memcg->stat->nr_page_events, nr_pages);
-+	__this_cpu_add(ug->memcg->stat_cpu->nr_page_events, nr_pages);
- 	memcg_check_events(ug->memcg, ug->dummy_page);
- 	local_irq_restore(flags);
- 
 -- 
-2.15.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation
+Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
+Collaborative Project
