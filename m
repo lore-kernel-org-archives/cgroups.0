@@ -1,55 +1,48 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 2/2] cgroup: export list of cgroups v2 features using
- sysfs
-Date: Mon, 6 Nov 2017 12:02:31 -0800
-Message-ID: <20171106200231.GF3252168@devbig577.frc2.facebook.com>
-References: <20171106173854.GE3252168@devbig577.frc2.facebook.com>
- <20171106183029.21297-1-guro@fb.com>
- <20171106183029.21297-2-guro@fb.com>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
+Subject: Re: [PATCH 1/3] mm: memcontrol: eliminate raw access to stat and
+ event counters
+Date: Tue, 7 Nov 2017 12:15:40 +0300
+Message-ID: <20171107091540.mmv2htftez3ffle4@esperanza>
+References: <20171103153336.24044-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=JBE21bW4Q4686F1NAVEuMvuzfLiHq2CY5WUHzFVlzTc=;
-        b=cGJvZeVlOGsZ7E737ktRsx6+uFNJoVYOF67UJB7JAlo4zrgkYRkZZ8RkRTi2UKe9Fl
-         D0mJbYpMWSLdrjf64sB4MigkrGRWRRHi1GZ1IYihDD5miQoAJXaVJumJQjEJZ/B3I7pu
-         ObKIg9ytN+a7juUxwWxidRpRNR02sQAv4Sgt+SSfx4B6QrI/dafYvQwjZ52LHqYzupYK
-         DPV+BNco18s+t0pVfshDvRNU6zouo7PbmezeVYLYqL29H4khJMzGXGXDH4F4o5MhKJ7R
-         l7cVir8ER+suvpMqfqoYX+PsOUukMpVaQUZ3PIc0LBOU4TqkYErl923JWsqkKG5OeooY
-         EM0A==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=WwjLC3iMhJ9nc7erQfFj9ihyX6+mxFrLYnpKTNPs5Vk=;
+        b=T/fKkTBM9zs2qCW5Qaggvm8svcLiShSn6Jf8iQUvxLGj+bcZaEjDc1YMpGduLHhGM6
+         uxwfA5tyML3mqp9eyqAFqHfmhHbSabKg/YiA/d8Kdobopi/icfpKqYWTUbZtUUdYSBqc
+         WLL5gNI0ImazquL4sEgKnzlGS6uv3WctPmJW40iDA9BBzFu8bQNrhlzN9z55xm3AWDZh
+         wwAKe8ESPtjZO6t8Tq1jib14Jn6Pam7uqQkGtipaZiIMdLypWS6I/h9uclpynRecv2cs
+         7yENC3pih/44WGNrFJLS1yhC/fKNkPT7YY8MiBtS3zmuJDz14KziF73ol3byE6f/Vg4R
+         hTZg==
 Content-Disposition: inline
-In-Reply-To: <20171106183029.21297-2-guro-b10kYP2dOMg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20171103153336.24044-1-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-On Mon, Nov 06, 2017 at 01:30:29PM -0500, Roman Gushchin wrote:
-> The active development of cgroups v2 sometimes leads to a creation
-> of interfaces, which are not turned on by default (to provide
-> backward compatibility). It's handy to know from userspace, which
-> cgroup v2 features are supported without calculating it based
-> on the kernel version. So, let's export the list of such features
-> using /sys/kernel/cgroup/features pseudo-file.
+On Fri, Nov 03, 2017 at 11:33:34AM -0400, Johannes Weiner wrote:
+> Replace all raw 'this_cpu_' modifications of the stat and event
+> per-cpu counters with API functions such as mod_memcg_state().
 > 
-> The list is hardcoded and has to be extended when new functionality
-> is added. Each feature is printed on a new line.
+> This makes the code easier to read, but is also in preparation for the
+> next patch, which changes the per-cpu implementation of those counters.
 > 
-> Example:
->   $ cat /sys/kernel/cgroup/features
->   nsdelegate
-> 
-> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: kernel-team-b10kYP2dOMg@public.gmane.org
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  include/linux/memcontrol.h | 31 +++++++++++++++---------
+>  mm/memcontrol.c            | 59 ++++++++++++++++++++--------------------------
+>  2 files changed, 45 insertions(+), 45 deletions(-)
 
-Applied 1-2 to cgroup/for-4.15.
+Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
 
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
