@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/7] blkcg: associate a request with its blkcg_gq instead of request_list
-Date: Sun, 12 Nov 2017 14:26:09 -0800
-Message-ID: <20171112222613.3613362-4-tj@kernel.org>
+Subject: [PATCH 4/7] blkcg: refactor blkcg_gq lookup and creation in blkcg_bio_issue_check()
+Date: Sun, 12 Nov 2017 14:26:10 -0800
+Message-ID: <20171112222613.3613362-5-tj@kernel.org>
 References: <20171112222613.3613362-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Li9ges/6BZW2yXRJZABix+mKPEDNuzQuiyW8R/wCfZ8=;
-        b=lhsJpQ+b6YUJimWoqw4txdTgBSuViMhzqLMFlpdpd+LvNHDjPlbwe9Chk7OgRpRc9d
-         7Iood23nRIZN41jyaDz7NgNyFH+LT6qUTr5XWbzCAxb2GY7vYHjrtKoqKu1BnvMDdQl2
-         ZaYVrZ+EWn1bQYsHZqRVg8mzFuycKINzsv0Rmk0Bw5F84gg4C9j/2P98kG6pu2zkWPPb
-         eXkFFStOOULgE4Qa6/Om9zeS2pd2FNwFlh0neN62U6iKN/X/2/Y3JStW8+ZeV6+4GYAs
-         bDJMFcwY8fLFdVgSqHr5yFNjUseQB5c8l8iSP+NPH4cq66OvbvQ3bRdPALq4c0mcy5hO
-         n0gA==
+        bh=U6y/5vyjVJQD6G9vLdVVVkqh3NZF7QR6PIfcJkZKnwQ=;
+        b=TCpluT9cs1n2KJQR/rD9gli2hkuniJIvSqU3LOj+ENpQpmv89AniZDVw68i7o3jGhg
+         KjfxqL56CXwcZntb+h1vR4O4bQqmtABTsUzveW7sTvjhFOA8oz1R6wr51bynhgtdU9zu
+         sb/2xSj6dVNGQGEPxG2JEwNBpvu9ZqFvICTKDLXSGuoAJeJ5erY4pkdLSejzI2R0Cpo5
+         a4mb7kPn4U/DYlmXOqrHEAssdHeLIG6a2zy1C0wouoS+Cp+uPEcVuOlNZUHuo8N4pQZH
+         Uz1CcR41QZNQFSFDXT6iv/+233n9CimAyjJEIH+aYqPvb2u1qJimjbWMqp25gklXSFKc
+         6ufg==
 In-Reply-To: <20171112222613.3613362-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,84 +23,124 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: shli@kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, guro@fb.com, Tejun Heo <tj@kernel.org>
 
-On the legacy request_queue, each blkcg_gq has a dedicated
-request_list that requests for the cgroup are allocated from.  Each
-request points to the originating request_list and cgroup membership
-can be determined by examining which cgroup the associated
-request_list belongs to.
+blkcg_bio_issue_check() open codes blkcg_gq lookup and creation using
+blkg_lookup() and blkg_lookup_create().  Refactor the code so that
 
-This doesn't work for blk-mq which doesn't use request_list.  Let's
-associate each request with the blkcg_gq directly.  Except for minor
-wrapper changes, this doesn't affect the legacy request_queue and will
-allow blk-mq to track each request's cgroup association.
+* blkg_lookup_create() is renamed to blkcg_lookup_create_locked().
+
+* blkg_lookup_create() is now a new function which encapsulates the
+  RCU protected lookup and queue_locked protected creation.
+
+* blkg_lookup_create() is guaranteed to return a non-NULL blkcg_gq.
+  The NULL checks are removed from the users.
+
+This is pure refactoring and doesn't introduce any functional changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-mq.c             | 2 +-
- include/linux/blk-cgroup.h | 9 ++++++---
- include/linux/blkdev.h     | 2 +-
- 3 files changed, 8 insertions(+), 5 deletions(-)
+ block/blk-cgroup.c         |  6 +++---
+ block/blk-throttle.c       |  2 +-
+ include/linux/blk-cgroup.h | 32 +++++++++++++++++++++-----------
+ 3 files changed, 25 insertions(+), 15 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 98a1860..af958c4 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -306,7 +306,7 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
- 	rq->part = NULL;
- 	rq->start_time = jiffies;
- #ifdef CONFIG_BLK_CGROUP
--	rq->rl = NULL;
-+	rq->blkg = NULL;
- 	set_start_time_ns(rq);
- 	rq->io_start_time_ns = 0;
- #endif
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index c0d4736..b5721d32 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -463,7 +463,7 @@ static inline void blk_put_rl(struct request_list *rl)
-  */
- static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
- {
--	rq->rl = rl;
-+	rq->blkg = rl->blkg;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 60a4486..490b0a6 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -290,7 +290,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
  }
  
  /**
-@@ -474,7 +474,10 @@ static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
+- * blkg_lookup_create - lookup blkg, try to create one if not there
++ * blkg_lookup_create_locked - lookup blkg, try to create one if not there
+  * @blkcg: blkcg of interest
+  * @q: request_queue of interest
+  *
+@@ -303,8 +303,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+  * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
+  * dead and bypassing, returns ERR_PTR(-EBUSY).
   */
- static inline struct request_list *blk_rq_rl(struct request *rq)
+-struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+-				    struct request_queue *q)
++struct blkcg_gq *blkg_lookup_create_locked(struct blkcg *blkcg,
++					   struct request_queue *q)
  {
--	return rq->rl;
-+	if (!rq->blkg->parent)
-+		return &rq->q->root_rl;
-+	else
-+		return &rq->blkg->rl;
- }
+ 	struct blkcg_gq *blkg;
  
- struct request_list *__blk_queue_next_rl(struct request_list *rl,
-@@ -762,7 +765,7 @@ static inline void blkg_put(struct blkcg_gq *blkg) { }
- static inline struct request_list *blk_get_rl(struct request_queue *q,
- 					      struct bio *bio) { return &q->root_rl; }
- static inline void blk_put_rl(struct request_list *rl) { }
--static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl) { }
-+static inline void blk_rq_set_blkg(struct request *rq, struct blkcg_gq *blkg) { }
- static inline struct request_list *blk_rq_rl(struct request *rq) { return &rq->q->root_rl; }
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 8631763..1e6916b 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2123,7 +2123,7 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 		    struct bio *bio)
+ {
+ 	struct throtl_qnode *qn = NULL;
+-	struct throtl_grp *tg = blkg_to_tg(blkg ?: q->root_blkg);
++	struct throtl_grp *tg = blkg_to_tg(blkg);
+ 	struct throtl_service_queue *sq;
+ 	bool rw = bio_data_dir(bio);
+ 	bool throttled = false;
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index b5721d32..1de5158 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -172,8 +172,8 @@ extern struct cgroup_subsys_state * const blkcg_root_css;
  
- static inline bool blkcg_bio_issue_check(struct request_queue *q,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 8da6637..6ec1067 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -206,7 +206,7 @@ struct request {
- 	unsigned long start_time;
- 	struct blk_issue_stat issue_stat;
- #ifdef CONFIG_BLK_CGROUP
--	struct request_list *rl;		/* rl this rq is alloced from */
-+	struct blkcg_gq *blkg;			/* blkg of this rq */
- 	unsigned long long start_time_ns;
- 	unsigned long long io_start_time_ns;    /* when passed to hardware */
+ struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
+ 				      struct request_queue *q, bool update_hint);
+-struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+-				    struct request_queue *q);
++struct blkcg_gq *blkg_lookup_create_locked(struct blkcg *blkcg,
++					   struct request_queue *q);
+ int blkcg_init_queue(struct request_queue *q);
+ void blkcg_drain_queue(struct request_queue *q);
+ void blkcg_exit_queue(struct request_queue *q);
+@@ -680,6 +680,24 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
+ 				  struct bio *bio) { return false; }
  #endif
+ 
++static inline struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
++						  struct request_queue *q)
++{
++	struct blkcg_gq *blkg;
++
++	blkg = blkg_lookup(blkcg, q);
++	if (likely(blkg))
++		return blkg;
++
++	spin_lock_irq(q->queue_lock);
++	blkg = blkg_lookup_create_locked(blkcg, q);
++	spin_unlock_irq(q->queue_lock);
++	if (likely(!IS_ERR(blkg)))
++		return blkg;
++	else
++		return q->root_blkg;
++}
++
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio)
+ {
+@@ -693,19 +711,11 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 	/* associate blkcg if bio hasn't attached one */
+ 	bio_associate_blkcg(bio, &blkcg->css);
+ 
+-	blkg = blkg_lookup(blkcg, q);
+-	if (unlikely(!blkg)) {
+-		spin_lock_irq(q->queue_lock);
+-		blkg = blkg_lookup_create(blkcg, q);
+-		if (IS_ERR(blkg))
+-			blkg = NULL;
+-		spin_unlock_irq(q->queue_lock);
+-	}
++	blkg = blkg_lookup_create(blkcg, q);
+ 
+ 	throtl = blk_throtl_bio(q, blkg, bio);
+ 
+ 	if (!throtl) {
+-		blkg = blkg ?: q->root_blkg;
+ 		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
+ 				bio->bi_iter.bi_size);
+ 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
 -- 
 2.9.5
 
