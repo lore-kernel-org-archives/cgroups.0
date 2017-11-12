@@ -1,124 +1,162 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 7/7] blk-throtl: don't throttle the same IO multiple times
-Date: Sun, 12 Nov 2017 14:26:13 -0800
-Message-ID: <20171112222613.3613362-8-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 5/7] blkcg: associate blk-mq requests with the matching blkcg_gqs
+Date: Sun, 12 Nov 2017 14:26:11 -0800
+Message-ID: <20171112222613.3613362-6-tj@kernel.org>
 References: <20171112222613.3613362-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=eUHME64uL+H23vv4lcaMPPktH/1rWIYg554uTnYLOiA=;
-        b=r9YExRLDdQ3m1ULwiS0e8QfbFDl4SYBxOtltNvBhJaj+75rBTr2tmIqXs+nEFqJwTG
-         f1GTRrXU904aOLDbL7kV1YE+aCXZPKIQWLtL0x1TdsNjANKGWzebHN/bkEsxxR6iycqc
-         VD3phNmsmwd1CQLgtUX7rQzvFLVwfNhlxzHwT4+5+eUDDMkVDac+jAIjqghKS8Ma3axX
-         M5MdBBMlYq4zepsNeRfQw0GoR6QJI32/MNLicGfr7NhudfK3eNE9SjtYwbHg7xFsT5TM
-         gNMzaz6aw6IIiNhwSOObJNx2hHc5QJaz0BZCR86VBjIeazX6JBr/Ap3Kf9EF+Jq+yJPr
-         ytPw==
-In-Reply-To: <20171112222613.3613362-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=ephCEeyd+9iiVZ3j8A3vkDIK3R8WKrBOsM8jeivKqdU=;
+        b=G4V/43oLsuIWWT6n8Txt6uYHnyuu4FIbEVzGQPugQj13Ju1epFDjnSm54yOq0WfF2X
+         BDlUIK/aqb4xWqBMk7YR++DNNRzWPnkYe/+pGwUzb7FyRXphH9U7C6qLwUFCNQDGf1Wa
+         x9z9A7Zqy/ZHqPq4SNp99rMZrsFpgWLYQFRgjal6Lwd0SCqJ/TDHhp4SXG9+pOj8OXbZ
+         217F5nCn9xo+GjNCbl0ixDYIkwOs7FUyS+uW1L8BHt9hUwQ2jDoj4HhIEoUJFgZ9ZzO8
+         uggaO0oVG2KQyFQ+McOdyJNPuKNyVCIrZNyakmvpuufv5JiuF85tE82V/sorBKfbR0+i
+         FeBA==
+In-Reply-To: <20171112222613.3613362-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: shli@kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, guro@fb.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-BIO_THROTTLED is used to mark already throttled bios so that a bio
-doesn't get throttled multiple times.  The flag gets set when the bio
-starts getting dispatched from blk-throtl and cleared when it leaves
-blk-throtl.
+On legacy request_queues, request allocation through request_list
+associates each request with its blkcg_gq.  However, blk-mq doesn't
+use request_list and its requests aren't associated with the matching
+blkcg_gqs, preventing cgroup-aware tracking blk-mq IOs.
 
-Unfortunately, this doesn't work when the request_queue decides to
-split or requeue the bio and ends up throttling the same IO multiple
-times.  This condition gets easily triggered and often leads to
-multiple times lower bandwidth limit being enforced than configured.
+This patch adds blk_rq_[dis]associate_blkg() and use them in blk-mq
+request alloc/free paths so that every request is associated with its
+blkcg_gq while in-flight.  The added overhead is minimal and per-cpu
+in hot paths.  In the future, we also should be able to remove the
+more frequent per-bio blkcg_gq operations in blkcg_bio_issue_check()
+for blk-mq.
 
-Fix it by always setting BIO_THROTTLED for bios recursing to the same
-request_queue and clearing only when a bio leaves the current level.
+* ->blkcg is added to blk_mq_alloc_data to carry the target blkcg in
+  the allocation path.  I didn't #ifdef it for code simplicity.  The
+  only overhead when cgroup is disabled is the extra pointer in the
+  data structure, which shouldn't matter.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+* Moved set_start_time_ns() out of CONFIG_BLK_CGROUP together with
+  blk_rq_associate_blkg().  Both functions provide dummy
+  implementations when !CONFIG_BLK_CGROUP.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-core.c           | 10 +++++++---
- block/blk-throttle.c       |  8 --------
- include/linux/blk-cgroup.h | 20 ++++++++++++++++++++
- 3 files changed, 27 insertions(+), 11 deletions(-)
+ block/blk-mq.c             |  9 ++++++---
+ block/blk-mq.h             |  1 +
+ include/linux/blk-cgroup.h | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 49 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index ad23b96..f0e3157 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2216,11 +2216,15 @@ blk_qc_t generic_make_request(struct bio *bio)
- 			 */
- 			bio_list_init(&lower);
- 			bio_list_init(&same);
--			while ((bio = bio_list_pop(&bio_list_on_stack[0])) != NULL)
--				if (q == bio->bi_disk->queue)
-+			while ((bio = bio_list_pop(&bio_list_on_stack[0])) != NULL) {
-+				if (q == bio->bi_disk->queue) {
-+					blkcg_bio_repeat_q_level(bio);
- 					bio_list_add(&same, bio);
--				else
-+				} else {
-+					blkcg_bio_leave_q_level(bio);
- 					bio_list_add(&lower, bio);
-+				}
-+			}
- 			/* now assemble so we handle the lowest level first */
- 			bio_list_merge(&bio_list_on_stack[0], &lower);
- 			bio_list_merge(&bio_list_on_stack[0], &same);
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 1e6916b..76579b2 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2223,14 +2223,6 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
- out_unlock:
- 	spin_unlock_irq(q->queue_lock);
- out:
--	/*
--	 * As multiple blk-throtls may stack in the same issue path, we
--	 * don't want bios to leave with the flag set.  Clear the flag if
--	 * being issued.
--	 */
--	if (!throttled)
--		bio_clear_flag(bio, BIO_THROTTLED);
--
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
- 	if (throttled || !td->track_bio_latency)
- 		bio->bi_issue_stat.stat |= SKIP_LATENCY;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index af958c4..7cc64de 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -305,9 +305,10 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
+ 	rq->rq_disk = NULL;
+ 	rq->part = NULL;
+ 	rq->start_time = jiffies;
+-#ifdef CONFIG_BLK_CGROUP
+-	rq->blkg = NULL;
++
++	blk_rq_associate_blkg(rq, data->blkcg);
+ 	set_start_time_ns(rq);
++#ifdef CONFIG_BLK_CGROUP
+ 	rq->io_start_time_ns = 0;
+ #endif
+ 	rq->nr_phys_segments = 0;
+@@ -472,6 +473,8 @@ void blk_mq_free_request(struct request *rq)
+ 		}
+ 	}
+ 
++	blk_rq_disassociate_blkg(rq);
++
+ 	ctx->rq_completed[rq_is_sync(rq)]++;
+ 	if (rq->rq_flags & RQF_MQ_INFLIGHT)
+ 		atomic_dec(&hctx->nr_active);
+@@ -1599,7 +1602,7 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ {
+ 	const int is_sync = op_is_sync(bio->bi_opf);
+ 	const int is_flush_fua = op_is_flush(bio->bi_opf);
+-	struct blk_mq_alloc_data data = { .flags = 0 };
++	struct blk_mq_alloc_data data = { .flags = 0, .blkcg = bio_blkcg(bio) };
+ 	struct request *rq;
+ 	unsigned int request_count = 0;
+ 	struct blk_plug *plug;
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 4933af9..dfb1e1d 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -111,6 +111,7 @@ struct blk_mq_alloc_data {
+ 	struct request_queue *q;
+ 	unsigned int flags;
+ 	unsigned int shallow_depth;
++	struct blkcg *blkcg;
+ 
+ 	/* input & output parameter */
+ 	struct blk_mq_ctx *ctx;
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index f2f9691..bed0416 100644
+index 1de5158..96eed0f 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -675,9 +675,29 @@ static inline void blkg_rwstat_add_aux(struct blkg_rwstat *to,
- #ifdef CONFIG_BLK_DEV_THROTTLING
- extern bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
- 			   struct bio *bio);
-+
-+static inline void blkcg_bio_repeat_q_level(struct bio *bio)
-+{
-+	/*
-+	 * @bio is queued while processing a previous bio which was already
-+	 * throttled.  Don't throttle it again.
-+	 */
-+	bio_set_flag(bio, BIO_THROTTLED);
-+}
-+
-+static inline void blkcg_bio_leave_q_level(struct bio *bio)
-+{
-+	/*
-+	 * @bio may get throttled at multiple q levels, clear THROTTLED
-+	 * when leaving the current one.
-+	 */
-+	bio_clear_flag(bio, BIO_THROTTLED);
-+}
- #else
- static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
- 				  struct bio *bio) { return false; }
-+static inline void blkcg_bio_repeat_q_level(struct bio *bio) { }
-+static inline void biocg_bio_leave_q_level(struct bio *bio) { }
- #endif
+@@ -725,6 +725,45 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 	return !throtl;
+ }
  
- static inline struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
++/**
++ * blk_rq_associate_blkg - lookup and associate a request with its blkcg_gq
++ * @rq: request of interest
++ * @blkcg: target blkcg
++ *
++ * Associate @rq with the matching blkcg_cq of @blkcg.  This is used by
++ * blk-mq to associate requests directly with blkgs without going through
++ * request_list.
++ */
++static inline void blk_rq_associate_blkg(struct request *rq, struct blkcg *blkcg)
++{
++	struct request_queue *q = rq->q;
++	struct blkcg_gq *blkg;
++
++	if (!blkcg) {
++		rq->blkg = q->root_blkg;
++		return;
++	}
++
++	rcu_read_lock();
++	blkg = blkg_lookup_create(blkcg, q);
++	if (likely(blkg == q->root_blkg || percpu_ref_tryget(&blkg->refcnt)))
++		rq->blkg = blkg;
++	else
++		rq->blkg = q->root_blkg;
++	rcu_read_unlock();
++}
++
++/**
++ * blk_rq_disassociate_blkg - undo blk_rq_associate_blkg()
++ * @rq: request of interest
++ */
++static inline void blk_rq_disassociate_blkg(struct request *rq)
++{
++	if (rq->blkg && rq->blkg != rq->q->root_blkg)
++		blkg_put(rq->blkg);
++	rq->blkg = NULL;
++}
++
+ #else	/* CONFIG_BLK_CGROUP */
+ 
+ struct blkcg {
+@@ -781,6 +820,9 @@ static inline struct request_list *blk_rq_rl(struct request *rq) { return &rq->q
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio) { return true; }
+ 
++static inline void blk_rq_associate_blkg(struct request *rq, struct blkcg *blkcg) { }
++static inline void blk_rq_disassociate_blkg(struct request *rq) { }
++
+ #define blk_queue_for_each_rl(rl, q)	\
+ 	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
+ 
 -- 
 2.9.5
-
