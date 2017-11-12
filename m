@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/7] blkcg: relocate __blkg_release_rcu()
-Date: Sun, 12 Nov 2017 14:26:07 -0800
-Message-ID: <20171112222613.3613362-2-tj@kernel.org>
+Subject: [PATCH 2/7] blkcg: use percpu_ref for blkcg_gq->refcnt
+Date: Sun, 12 Nov 2017 14:26:08 -0800
+Message-ID: <20171112222613.3613362-3-tj@kernel.org>
 References: <20171112222613.3613362-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RdBB6b1Q+BPcJqiQqYUolyum316TU1Ak9ajmvcZEnes=;
-        b=RFm6DGzdTNBJ9ebpNUadN/BKbwM8JUEy63l02WD0dZT2Es+DeZQvpPakdVQ/pXWP+V
-         3FrE8iTywByhO1bsAgDu++vuyh1Dh+ds35SzThHEzTGQdmIc57MBr7VPUZVjlnjAmDPL
-         9Holmmd1jg6LKjuyNuS1dhpszzhkm9cVYPLEdH7T/xBsGuLwKcnShETa/Q2YTht/JT21
-         5yZlVNaKFJ6aeHnUBB9Jd+KbdnDaZ0fzlTXDoTvAtVhAiFnmR5AMMC8nAZkKMRp9TXN0
-         lMbb/tJwgChuxfr4tyliaslI59MAdivpHtJMkTgUNff2zOYWPPgWpsAXgLMRLjO+OmnB
-         GXxg==
+        bh=cNMQKbAid5zR2IKMAop1rOwJqioXk2V055pYuJvIfRw=;
+        b=oWZ9bMHl/yeZAOpGRLwHI/FdIb2W1NCnyG39E17BscGi8Ctdd/04YZEMQDpkzAwLxY
+         PL7V5dw9r+TMeqsqPzkoZ6qgoRcOiTc9MMrSQzqT1Demg4FOzQwCez1Jtli82UZRmdN6
+         377bUSMZwe0Ugys+KTPJuZAcrWVzu+Q/O5E9i2Y6pH1mMdKx/0rBXVlFEPiqFjaEIdEf
+         eVb2L+E6J8yc6D6056ShkhAWO8VKjhpaeDFZCOja2KRSUebksPLgXAuHoNUZAq4MFGcQ
+         E5JycAciOtgK/MObn3M1zn9EinogzWvOdRC7lM88zJbBtMgWr5P7SQPeC748Y5++s0AB
+         OhlQ==
 In-Reply-To: <20171112222613.3613362-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,78 +23,149 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: shli@kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, guro@fb.com, Tejun Heo <tj@kernel.org>
 
-Move __blkg_release_rcu() above blkg_alloc().  This is a pure code
-reorganization to prepare for the switch to percpu_ref.
+blkcg_gq->refcnt is an atomic_t.  This was due to the following two
+reasons.
+
+* When blkcg_gq was added, the percpu memory allocator didn't support
+  allocations from !GFP_KERNEL contexts.  Because blkcg_gq's are
+  created from IO issue paths, it couldn't use GFP_KERNEL allocations.
+
+* A blkcg_gq represents the connection between a cgroup and a
+  request_queue.  Because a in-flight bio already pins both, blkcg_gq
+  didn't usually need explicit pinning, making the use of atomic_t
+  acceptable albeit restrictive and fragile.
+
+Now that the percpu allocator supports !GFP_KERNEL allocations,
+there's no reason to keep using atomic_t refcnt.  This will allow
+clean separation between bio and request layers helping blkcg support
+in blk-mq.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c | 46 +++++++++++++++++++++++-----------------------
- 1 file changed, 23 insertions(+), 23 deletions(-)
+ block/blk-cgroup.c         | 21 ++++++++++++++++-----
+ include/linux/blk-cgroup.h | 13 ++++---------
+ 2 files changed, 20 insertions(+), 14 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index d3f56ba..6482be5 100644
+index 6482be5..60a4486 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -81,6 +81,29 @@ static void blkg_free(struct blkcg_gq *blkg)
+@@ -78,6 +78,7 @@ static void blkg_free(struct blkcg_gq *blkg)
+ 
+ 	blkg_rwstat_exit(&blkg->stat_ios);
+ 	blkg_rwstat_exit(&blkg->stat_bytes);
++	percpu_ref_exit(&blkg->refcnt);
  	kfree(blkg);
  }
  
-+/*
-+ * A group is RCU protected, but having an rcu lock does not mean that one
-+ * can access all the fields of blkg and assume these are valid.  For
-+ * example, don't try to follow throtl_data and request queue links.
-+ *
-+ * Having a reference to blkg under an rcu allows accesses to only values
-+ * local to groups like group stats and group rate limits.
-+ */
-+void __blkg_release_rcu(struct rcu_head *rcu_head)
+@@ -89,7 +90,7 @@ static void blkg_free(struct blkcg_gq *blkg)
+  * Having a reference to blkg under an rcu allows accesses to only values
+  * local to groups like group stats and group rate limits.
+  */
+-void __blkg_release_rcu(struct rcu_head *rcu_head)
++static void blkg_release_rcu(struct rcu_head *rcu_head)
+ {
+ 	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
+ 
+@@ -102,7 +103,13 @@ void __blkg_release_rcu(struct rcu_head *rcu_head)
+ 
+ 	blkg_free(blkg);
+ }
+-EXPORT_SYMBOL_GPL(__blkg_release_rcu);
++
++static void blkg_release(struct percpu_ref *refcnt)
 +{
-+	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
++	struct blkcg_gq *blkg = container_of(refcnt, struct blkcg_gq, refcnt);
 +
-+	/* release the blkcg and parent blkg refs this blkg has been holding */
-+	css_put(&blkg->blkcg->css);
-+	if (blkg->parent)
-+		blkg_put(blkg->parent);
-+
-+	wb_congested_put(blkg->wb_congested);
-+
-+	blkg_free(blkg);
++	call_rcu(&blkg->rcu_head, blkg_release_rcu);
 +}
-+EXPORT_SYMBOL_GPL(__blkg_release_rcu);
-+
+ 
  /**
   * blkg_alloc - allocate a blkg
-  * @blkcg: block cgroup the new blkg is associated with
-@@ -378,29 +401,6 @@ static void blkg_destroy_all(struct request_queue *q)
+@@ -123,6 +130,11 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 	if (!blkg)
+ 		return NULL;
+ 
++	if (percpu_ref_init(&blkg->refcnt, blkg_release, 0, gfp_mask)) {
++		kfree(blkg);
++		return NULL;
++	}
++
+ 	if (blkg_rwstat_init(&blkg->stat_bytes, gfp_mask) ||
+ 	    blkg_rwstat_init(&blkg->stat_ios, gfp_mask))
+ 		goto err_free;
+@@ -130,7 +142,6 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 	blkg->q = q;
+ 	INIT_LIST_HEAD(&blkg->q_node);
+ 	blkg->blkcg = blkcg;
+-	atomic_set(&blkg->refcnt, 1);
+ 
+ 	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
+ 	if (blkcg != &blkcg_root) {
+@@ -266,7 +277,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 		return blkg;
+ 
+ 	/* @blkg failed fully initialized, use the usual release path */
+-	blkg_put(blkg);
++	percpu_ref_kill(&blkg->refcnt);
+ 	return ERR_PTR(ret);
+ 
+ err_put_congested:
+@@ -373,7 +384,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 	 * Put the reference taken at the time of creation so that when all
+ 	 * queues are gone, group can be destroyed.
+ 	 */
+-	blkg_put(blkg);
++	percpu_ref_kill(&blkg->refcnt);
  }
  
- /*
-- * A group is RCU protected, but having an rcu lock does not mean that one
-- * can access all the fields of blkg and assume these are valid.  For
-- * example, don't try to follow throtl_data and request queue links.
-- *
-- * Having a reference to blkg under an rcu allows accesses to only values
-- * local to groups like group stats and group rate limits.
-- */
--void __blkg_release_rcu(struct rcu_head *rcu_head)
--{
--	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
--
--	/* release the blkcg and parent blkg refs this blkg has been holding */
--	css_put(&blkg->blkcg->css);
--	if (blkg->parent)
--		blkg_put(blkg->parent);
--
--	wb_congested_put(blkg->wb_congested);
--
--	blkg_free(blkg);
--}
--EXPORT_SYMBOL_GPL(__blkg_release_rcu);
--
--/*
-  * The next function used by blk_queue_for_each_rl().  It's a bit tricky
-  * because the root blkg uses @q->root_rl instead of its own rl.
+ /**
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 8bbc371..c0d4736 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -19,7 +19,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/radix-tree.h>
+ #include <linux/blkdev.h>
+-#include <linux/atomic.h>
++#include <linux/percpu-refcount.h>
+ 
+ /* percpu_counter batch for blkg_[rw]stats, per-cpu drift doesn't matter */
+ #define BLKG_STAT_CPU_BATCH	(INT_MAX / 2)
+@@ -123,7 +123,7 @@ struct blkcg_gq {
+ 	struct request_list		rl;
+ 
+ 	/* reference count */
+-	atomic_t			refcnt;
++	struct percpu_ref		refcnt;
+ 
+ 	/* is this blkg online? protected by both blkcg and q locks */
+ 	bool				online;
+@@ -355,21 +355,16 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
   */
+ static inline void blkg_get(struct blkcg_gq *blkg)
+ {
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	atomic_inc(&blkg->refcnt);
++	percpu_ref_get(&blkg->refcnt);
+ }
+ 
+-void __blkg_release_rcu(struct rcu_head *rcu);
+-
+ /**
+  * blkg_put - put a blkg reference
+  * @blkg: blkg to put
+  */
+ static inline void blkg_put(struct blkcg_gq *blkg)
+ {
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	if (atomic_dec_and_test(&blkg->refcnt))
+-		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
++	percpu_ref_put(&blkg->refcnt);
+ }
+ 
+ /**
 -- 
 2.9.5
 
