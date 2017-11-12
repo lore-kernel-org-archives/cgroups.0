@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 6/7] blkcg: account requests instead of bios for request based request_queues
-Date: Sun, 12 Nov 2017 14:26:12 -0800
-Message-ID: <20171112222613.3613362-7-tj@kernel.org>
+Subject: [PATCH 7/7] blk-throtl: don't throttle the same IO multiple times
+Date: Sun, 12 Nov 2017 14:26:13 -0800
+Message-ID: <20171112222613.3613362-8-tj@kernel.org>
 References: <20171112222613.3613362-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=KzEP2r7HKUFZsx/KBh9pVeUjTtngSwnI6y9v2XYkusw=;
-        b=vD5ro/KiPL9wdN2AtQTBKUUKzEXkM/kWA14guhpwLr7bEdMii12pAVgfmLOGsMpdWZ
-         38np32sNTHfBgKwuhwTa8wqJRXIcjEmmGE429mrtVlUjCz7pfIdwmf+vp7EMeuYfDl4z
-         ritgCPY8LzarWTnBzFWzNodWPeWRSwUm/N7iIGhs2CP5WzwC4aoxW2OtsQHLRbe0dRkl
-         wnAKIfHvG73sLfRL5QQSJJCSYmGCL1Y/8VOLXx9fZsTDpbNDn9OTQckXr4Ozcx9pnb9F
-         cooaIeL7nauwH4Zwk2SWDJsU54fsMswHP9XPTrMiYgrfNeHD7EX5rSnytt3987W7MA3D
-         eoHA==
+        bh=eUHME64uL+H23vv4lcaMPPktH/1rWIYg554uTnYLOiA=;
+        b=r9YExRLDdQ3m1ULwiS0e8QfbFDl4SYBxOtltNvBhJaj+75rBTr2tmIqXs+nEFqJwTG
+         f1GTRrXU904aOLDbL7kV1YE+aCXZPKIQWLtL0x1TdsNjANKGWzebHN/bkEsxxR6iycqc
+         VD3phNmsmwd1CQLgtUX7rQzvFLVwfNhlxzHwT4+5+eUDDMkVDac+jAIjqghKS8Ma3axX
+         M5MdBBMlYq4zepsNeRfQw0GoR6QJI32/MNLicGfr7NhudfK3eNE9SjtYwbHg7xFsT5TM
+         gNMzaz6aw6IIiNhwSOObJNx2hHc5QJaz0BZCR86VBjIeazX6JBr/Ap3Kf9EF+Jq+yJPr
+         ytPw==
 In-Reply-To: <20171112222613.3613362-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,90 +23,102 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: shli@kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, guro@fb.com, Tejun Heo <tj@kernel.org>
 
-blkcg accounting is currently bio based, which is silly for request
-based request_queues.  This is silly as the number of bios doesn't
-have much to do with the actual number of IOs issued to the underlying
-device (can be significantly higher or lower) and may change depending
-on the implementation details on how the bios are issued (e.g. from
-the recent split-bios-while-issuing change).
+BIO_THROTTLED is used to mark already throttled bios so that a bio
+doesn't get throttled multiple times.  The flag gets set when the bio
+starts getting dispatched from blk-throtl and cleared when it leaves
+blk-throtl.
 
-request based request_queues have QUEUE_FLAG_IO_STAT set by default
-which controls the gendisk accounting.  Do cgroup accounting for those
-request_queues together with gendisk accounting on request completion.
+Unfortunately, this doesn't work when the request_queue decides to
+split or requeue the bio and ends up throttling the same IO multiple
+times.  This condition gets easily triggered and often leads to
+multiple times lower bandwidth limit being enforced than configured.
 
-This makes cgroup accounting consistent with gendisk accounting and
-what's happening on the system.
+Fix it by always setting BIO_THROTTLED for bios recursing to the same
+request_queue and clearing only when a bio leaves the current level.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-core.c           |  3 +++
- include/linux/blk-cgroup.h | 18 +++++++++++++++++-
- 2 files changed, 20 insertions(+), 1 deletion(-)
+ block/blk-core.c           | 10 +++++++---
+ block/blk-throttle.c       |  8 --------
+ include/linux/blk-cgroup.h | 20 ++++++++++++++++++++
+ 3 files changed, 27 insertions(+), 11 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 048be4a..ad23b96 100644
+index ad23b96..f0e3157 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -2429,6 +2429,7 @@ void blk_account_io_completion(struct request *req, unsigned int bytes)
- 		cpu = part_stat_lock();
- 		part = req->part;
- 		part_stat_add(cpu, part, sectors[rw], bytes >> 9);
-+		blkcg_account_io_completion(req, bytes);
- 		part_stat_unlock();
- 	}
- }
-@@ -2454,6 +2455,8 @@ void blk_account_io_done(struct request *req)
- 		part_round_stats(req->q, cpu, part);
- 		part_dec_in_flight(req->q, part, rw);
- 
-+		blkcg_account_io_done(req);
-+
- 		hd_struct_put(part);
- 		part_stat_unlock();
- 	}
+@@ -2216,11 +2216,15 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 			 */
+ 			bio_list_init(&lower);
+ 			bio_list_init(&same);
+-			while ((bio = bio_list_pop(&bio_list_on_stack[0])) != NULL)
+-				if (q == bio->bi_disk->queue)
++			while ((bio = bio_list_pop(&bio_list_on_stack[0])) != NULL) {
++				if (q == bio->bi_disk->queue) {
++					blkcg_bio_repeat_q_level(bio);
+ 					bio_list_add(&same, bio);
+-				else
++				} else {
++					blkcg_bio_leave_q_level(bio);
+ 					bio_list_add(&lower, bio);
++				}
++			}
+ 			/* now assemble so we handle the lowest level first */
+ 			bio_list_merge(&bio_list_on_stack[0], &lower);
+ 			bio_list_merge(&bio_list_on_stack[0], &same);
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 1e6916b..76579b2 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2223,14 +2223,6 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ out_unlock:
+ 	spin_unlock_irq(q->queue_lock);
+ out:
+-	/*
+-	 * As multiple blk-throtls may stack in the same issue path, we
+-	 * don't want bios to leave with the flag set.  Clear the flag if
+-	 * being issued.
+-	 */
+-	if (!throttled)
+-		bio_clear_flag(bio, BIO_THROTTLED);
+-
+ #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+ 	if (throttled || !td->track_bio_latency)
+ 		bio->bi_issue_stat.stat |= SKIP_LATENCY;
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 96eed0f..f2f9691 100644
+index f2f9691..bed0416 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -715,7 +715,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 
- 	throtl = blk_throtl_bio(q, blkg, bio);
- 
--	if (!throtl) {
-+	/* if @q does io stat, blkcg stats are updated together with them */
-+	if (!blk_queue_io_stat(q) && !throtl) {
- 		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
- 				bio->bi_iter.bi_size);
- 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
-@@ -764,6 +765,17 @@ static inline void blk_rq_disassociate_blkg(struct request *rq)
- 	rq->blkg = NULL;
- }
- 
-+static inline void blkcg_account_io_completion(struct request *rq,
-+					       unsigned int bytes)
+@@ -675,9 +675,29 @@ static inline void blkg_rwstat_add_aux(struct blkg_rwstat *to,
+ #ifdef CONFIG_BLK_DEV_THROTTLING
+ extern bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 			   struct bio *bio);
++
++static inline void blkcg_bio_repeat_q_level(struct bio *bio)
 +{
-+	blkg_rwstat_add(&rq->blkg->stat_bytes, rq_data_dir(rq), bytes);
++	/*
++	 * @bio is queued while processing a previous bio which was already
++	 * throttled.  Don't throttle it again.
++	 */
++	bio_set_flag(bio, BIO_THROTTLED);
 +}
 +
-+static inline void blkcg_account_io_done(struct request *rq)
++static inline void blkcg_bio_leave_q_level(struct bio *bio)
 +{
-+	blkg_rwstat_add(&rq->blkg->stat_ios, rq_data_dir(rq), 1);
++	/*
++	 * @bio may get throttled at multiple q levels, clear THROTTLED
++	 * when leaving the current one.
++	 */
++	bio_clear_flag(bio, BIO_THROTTLED);
 +}
-+
- #else	/* CONFIG_BLK_CGROUP */
+ #else
+ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 				  struct bio *bio) { return false; }
++static inline void blkcg_bio_repeat_q_level(struct bio *bio) { }
++static inline void biocg_bio_leave_q_level(struct bio *bio) { }
+ #endif
  
- struct blkcg {
-@@ -823,6 +835,10 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- static inline void blk_rq_associate_blkg(struct request *rq, struct blkcg *blkcg) { }
- static inline void blk_rq_disassociate_blkg(struct request *rq) { }
- 
-+static inline void blkcg_account_io_completion(struct request *rq,
-+					       unsigned int bytes) { }
-+static inline void blkcg_account_io_done(struct request *rq) { }
-+
- #define blk_queue_for_each_rl(rl, q)	\
- 	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
- 
+ static inline struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
 -- 
 2.9.5
 
