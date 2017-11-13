@@ -1,7 +1,7 @@
 From: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 7/7] blk-throtl: don't throttle the same IO multiple times
-Date: Mon, 13 Nov 2017 11:54:13 -0800
-Message-ID: <20171113195413.b5lzqem2pt2bg4oe@kernel.org>
+Date: Mon, 13 Nov 2017 11:58:30 -0800
+Message-ID: <20171113195830.ij3god7gdrj4u4ax@kernel.org>
 References: <20171112222613.3613362-1-tj@kernel.org>
  <20171112222613.3613362-8-tj@kernel.org>
  <20171113040716.kaheegc4qub42n6z@kernel.org>
@@ -34,15 +34,9 @@ On Mon, Nov 13, 2017 at 07:57:45AM -0800, Tejun Heo wrote:
 > enough.  I think we should still copy BIO_THROTTLED on clones so that
 > we don't get suprises w/ other bio drivers.
 
-I'm not sure how you are going to make this correct. The mechanism is very
-fragile. So for example, 'q->make_request_fn(q, bio)' could just queue the bio
-somewhere and handle in other context (both dm and md do this). The bio will be
-called again with generic_make_request. In this case, the second time shouldn't
-throttle the bio. The bio could be called again with generic_make_request but
-with bdev changed. In this case, the second time should throttle the bio
-(against the new bdev). There are a lot of different usages of bio. I'd rather
-not depend on generic_make_request dispatches new bio immediately. That's why I
-add a bdev in my patch.
+Oh, I think there is a better solution. Not adding a new bdev is possible. We
+always set the BIO_THROTTLED flag after block-throttle and copy the flag in
+clone. In bio_set_dev, we clear the flag. This should work I think.
 
 Thanks,
 Shaohua
