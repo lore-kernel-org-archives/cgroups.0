@@ -1,54 +1,107 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 7/7] blk-throtl: don't throttle the same IO multiple times
-Date: Mon, 13 Nov 2017 11:58:54 -0800
-Message-ID: <20171113195854.GJ983427@devbig577.frc2.facebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH v2 3/7] blkcg: associate a request with its blkcg_gq instead
+ of request_list
+Date: Mon, 13 Nov 2017 12:15:23 -0800
+Message-ID: <20171113201523.GM983427@devbig577.frc2.facebook.com>
 References: <20171112222613.3613362-1-tj@kernel.org>
- <20171112222613.3613362-8-tj@kernel.org>
- <20171113040716.kaheegc4qub42n6z@kernel.org>
- <20171113111348.GF983427@devbig577.frc2.facebook.com>
- <20171113155745.GI983427@devbig577.frc2.facebook.com>
- <20171113195413.b5lzqem2pt2bg4oe@kernel.org>
+ <20171112222613.3613362-4-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Wou4yEYzjp1gjDdDbic2wwEmwiA1r3OV+cb55KG/TSU=;
-        b=Z5UlriljNZsLpR12vil1Qh5ZfZxgq6fWDEK6d0pA9Heby1QMwkwJuh9+DB/PGWhWj0
-         lEsEBE6Yu17ubXOq4eN9GeDJjF6Ww0jnFxhrhFafzY1Le35enxocD5moieF1GtogeXwZ
-         Ah2tfsMlZrddRSzrSPTjzwtiEpPRyOI1m5wJZap0htTxGBX6oFlx0gbja2Am7UO09eRJ
-         QK72RAsJO3pu+Qd5umZ9kkGM8UrM+cjQsklQHH6IazIBY1OzFUR1Xx6QriDmnA3PkIVm
-         H42+eJdhk47SB0grzVdC3PeswEMS9AeALutNBcMPmF0ZzM1XOR2w4b7zk1pnI7qjFDo4
-         XNcA==
+        bh=n98JD95i1wlSMBe4QPkU3CdTpDARzZmREeiDfvO9zFw=;
+        b=ivFf2PHEdw9rRpnEexaYqAii1k++WeY0859IBqZFD2gZJT/gBgvQrs+uGpv6gxks38
+         NOKKG4dbgKlhMFXMF2u4108OUcR2TgQc5SqUIAL6uDvQHSusugs1wh8DgnWNGEDUWl9W
+         Pd+KpNW/snnPP9tI7RrTQFuCkYIqrwX83EZF6fOPQm74jNRyy6izBGQOC/H9wbeZq1IH
+         eNAwooR8ix8YdJDx6Wk2fv5jgzO6EhjumYzgUnrWmL/q1py9cykGeVa/VOdGkDKvQXbL
+         xJ0zDFOdflaQCwSKuKAzSJWtw44vkqaFAy++epv/V7lQH2gJy98t0P4BZkHKHaj5e4Qi
+         Gpdg==
 Content-Disposition: inline
-In-Reply-To: <20171113195413.b5lzqem2pt2bg4oe-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20171112222613.3613362-4-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: axboe@kernel.dk
+Cc: shli@kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, guro@fb.com
 
-Hello,
+From c856a199ec70e4022e997609f1b17b9106408777 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Mon, 13 Nov 2017 12:11:57 -0800
 
-On Mon, Nov 13, 2017 at 11:54:13AM -0800, Shaohua Li wrote:
-> I'm not sure how you are going to make this correct. The mechanism is very
-> fragile. So for example, 'q->make_request_fn(q, bio)' could just queue the bio
-> somewhere and handle in other context (both dm and md do this). The bio will be
-> called again with generic_make_request. In this case, the second time shouldn't
-> throttle the bio. The bio could be called again with generic_make_request but
-> with bdev changed. In this case, the second time should throttle the bio
-> (against the new bdev). There are a lot of different usages of bio. I'd rather
-> not depend on generic_make_request dispatches new bio immediately. That's why I
-> add a bdev in my patch.
+On the legacy request_queue, each blkcg_gq has a dedicated
+request_list that requests for the cgroup are allocated from.  Each
+request points to the originating request_list and cgroup membership
+can be determined by examining which cgroup the associated
+request_list belongs to.
 
-I see.  Yeah, that makes sense.  The cloned bios may get queued to a
-different request_queue asynchronously and without remembering the
-last queue, you can't tell whether it's a new queue or not.  I'll drop
-this one and test with your patch.
+This doesn't work for blk-mq which doesn't use request_list.  Let's
+associate each request with the blkcg_gq directly.  Except for minor
+wrapper changes, this doesn't affect the legacy request_queue and will
+allow blk-mq to track each request's cgroup association.
 
-Thanks.
+v2: Build fix for !CONFIG_BLK_CGROUP.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ block/blk-mq.c             | 2 +-
+ include/linux/blk-cgroup.h | 7 +++++--
+ include/linux/blkdev.h     | 2 +-
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 98a1860..af958c4 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -306,7 +306,7 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
+ 	rq->part = NULL;
+ 	rq->start_time = jiffies;
+ #ifdef CONFIG_BLK_CGROUP
+-	rq->rl = NULL;
++	rq->blkg = NULL;
+ 	set_start_time_ns(rq);
+ 	rq->io_start_time_ns = 0;
+ #endif
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index c0d4736..47db75a 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -463,7 +463,7 @@ static inline void blk_put_rl(struct request_list *rl)
+  */
+ static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
+ {
+-	rq->rl = rl;
++	rq->blkg = rl->blkg;
+ }
+ 
+ /**
+@@ -474,7 +474,10 @@ static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
+  */
+ static inline struct request_list *blk_rq_rl(struct request *rq)
+ {
+-	return rq->rl;
++	if (!rq->blkg->parent)
++		return &rq->q->root_rl;
++	else
++		return &rq->blkg->rl;
+ }
+ 
+ struct request_list *__blk_queue_next_rl(struct request_list *rl,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8da6637..6ec1067 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -206,7 +206,7 @@ struct request {
+ 	unsigned long start_time;
+ 	struct blk_issue_stat issue_stat;
+ #ifdef CONFIG_BLK_CGROUP
+-	struct request_list *rl;		/* rl this rq is alloced from */
++	struct blkcg_gq *blkg;			/* blkg of this rq */
+ 	unsigned long long start_time_ns;
+ 	unsigned long long io_start_time_ns;    /* when passed to hardware */
+ #endif
 -- 
-tejun
+2.9.5
+
