@@ -1,95 +1,95 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] memcg: hugetlbfs basic usage accounting
-Date: Tue, 14 Nov 2017 13:06:07 -0800
-Message-ID: <20171114210607.GT983427@devbig577.frc2.facebook.com>
-References: <20171114172429.8916-1-guro@fb.com>
+From: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/7] blkcg: relocate __blkg_release_rcu()
+Date: Tue, 14 Nov 2017 15:12:26 -0800
+Message-ID: <20171114231226.bnqrb2xadiw7ba2q@kernel.org>
+References: <20171112222613.3613362-1-tj@kernel.org>
+ <20171112222613.3613362-2-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=jxSasMaNqq/n7hprzjeCHQIkMj+pAjvtTPLDgeKyPPs=;
-        b=AAzmoYh31u9MupOw6WNQtzBUDHA7bwCvYY9EBjTk30Ey3IauArmGN6weUXyyC7CIT6
-         bZaA5EMqay8eIfi8nEk0oJkv+2tOQ5NkxYnMJD4V3INYzBxlM4bJNO+SzITnbFzgufn3
-         9VlYtYDi7wSb53er2e/YAcGGDCV+KV1NPZFHhStb5JLvKG9IHC6qKZ4qFfIpt2JjPXM0
-         yRJjgW9vdDrTInRsDvWYmTL0qW/EsseDtcUk3bONwk1rb2lX72r89sgI67LeP/vSwxkt
-         zRc8433yauFYWxfeFvVvQOiZva+h7dhb0evmmOYad5wKk6V5LioOs3hUzsxvOV6ok9cC
-         rqvw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20171114172429.8916-1-guro@fb.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20171112222613.3613362-2-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Kravetz <mike.kravetz@oracle.com>, Dave Hansen <dave.hansen@intel.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
 
-On Tue, Nov 14, 2017 at 05:24:29PM +0000, Roman Gushchin wrote:
-> This patch implements basic accounting of memory consumption
-> by hugetlbfs pages for cgroup v2 memory controller.
+On Sun, Nov 12, 2017 at 02:26:07PM -0800, Tejun Heo wrote:
+> Move __blkg_release_rcu() above blkg_alloc().  This is a pure code
+> reorganization to prepare for the switch to percpu_ref.
 > 
-> Cgroup v2 memory controller lacks any visibility into the
-> hugetlbfs memory consumption. Cgroup v1 implemented a separate
-> hugetlbfs controller, which provided such stats, and also
-> provided some control abilities. Although porting of the
-> hugetlbfs controller to cgroup v2 is arguable a good idea and
-> is outside of scope of this patch, it's very useful to have
-> basic stats provided by memory.stat.
-> 
-> As hugetlbfs memory can easily represent a big portion of total
-> memory, it's important to understand who (which memcg/container)
-> is using it.
-> 
-> The number is represented in memory.stat as "hugetlb" in bytes and
-> is printed unconditionally. Accounting code doesn't depend on
-> cgroup v1 hugetlb controller.
-> 
-> Example:
->   $ cat /sys/fs/cgroup/user.slice/user-0.slice/session-1.scope/memory.stat
->   anon 1634304
->   file 1163264
->   kernel_stack 16384
->   slab 737280
->   sock 0
->   shmem 0
->   file_mapped 32768
->   file_dirty 4096
->   file_writeback 0
->   inactive_anon 0
->   active_anon 1634304
->   inactive_file 65536
->   active_file 1097728
->   unevictable 0
->   slab_reclaimable 282624
->   slab_unreclaimable 454656
->   hugetlb 1073741824
->   pgfault 4580
->   pgmajfault 13
->   ...
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Mike Kravetz <mike.kravetz@oracle.com>
-> Cc: Dave Hansen <dave.hansen@intel.com>
-> Cc: kernel-team@fb.com
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Acked-by: Tejun Heo <tj@kernel.org>
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Reviewed-by: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> ---
+>  block/blk-cgroup.c | 46 +++++++++++++++++++++++-----------------------
+>  1 file changed, 23 insertions(+), 23 deletions(-)
+> 
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index d3f56ba..6482be5 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -81,6 +81,29 @@ static void blkg_free(struct blkcg_gq *blkg)
+>  	kfree(blkg);
+>  }
+>  
+> +/*
+> + * A group is RCU protected, but having an rcu lock does not mean that one
+> + * can access all the fields of blkg and assume these are valid.  For
+> + * example, don't try to follow throtl_data and request queue links.
+> + *
+> + * Having a reference to blkg under an rcu allows accesses to only values
+> + * local to groups like group stats and group rate limits.
+> + */
+> +void __blkg_release_rcu(struct rcu_head *rcu_head)
+> +{
+> +	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
+> +
+> +	/* release the blkcg and parent blkg refs this blkg has been holding */
+> +	css_put(&blkg->blkcg->css);
+> +	if (blkg->parent)
+> +		blkg_put(blkg->parent);
+> +
+> +	wb_congested_put(blkg->wb_congested);
+> +
+> +	blkg_free(blkg);
+> +}
+> +EXPORT_SYMBOL_GPL(__blkg_release_rcu);
+> +
+>  /**
+>   * blkg_alloc - allocate a blkg
+>   * @blkcg: block cgroup the new blkg is associated with
+> @@ -378,29 +401,6 @@ static void blkg_destroy_all(struct request_queue *q)
+>  }
+>  
+>  /*
+> - * A group is RCU protected, but having an rcu lock does not mean that one
+> - * can access all the fields of blkg and assume these are valid.  For
+> - * example, don't try to follow throtl_data and request queue links.
+> - *
+> - * Having a reference to blkg under an rcu allows accesses to only values
+> - * local to groups like group stats and group rate limits.
+> - */
+> -void __blkg_release_rcu(struct rcu_head *rcu_head)
+> -{
+> -	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
+> -
+> -	/* release the blkcg and parent blkg refs this blkg has been holding */
+> -	css_put(&blkg->blkcg->css);
+> -	if (blkg->parent)
+> -		blkg_put(blkg->parent);
+> -
+> -	wb_congested_put(blkg->wb_congested);
+> -
+> -	blkg_free(blkg);
+> -}
+> -EXPORT_SYMBOL_GPL(__blkg_release_rcu);
+> -
+> -/*
+>   * The next function used by blk_queue_for_each_rl().  It's a bit tricky
+>   * because the root blkg uses @q->root_rl instead of its own rl.
+>   */
+> -- 
+> 2.9.5
+> 
