@@ -1,107 +1,215 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v2 3/7] blkcg: associate a request with its blkcg_gq instead
- of request_list
-Date: Mon, 13 Nov 2017 12:15:23 -0800
-Message-ID: <20171113201523.GM983427@devbig577.frc2.facebook.com>
-References: <20171112222613.3613362-1-tj@kernel.org>
- <20171112222613.3613362-4-tj@kernel.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH] memcg: hugetlbfs basic usage accounting
+Date: Tue, 14 Nov 2017 17:24:29 +0000
+Message-ID: <20171114172429.8916-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=n98JD95i1wlSMBe4QPkU3CdTpDARzZmREeiDfvO9zFw=;
-        b=ivFf2PHEdw9rRpnEexaYqAii1k++WeY0859IBqZFD2gZJT/gBgvQrs+uGpv6gxks38
-         NOKKG4dbgKlhMFXMF2u4108OUcR2TgQc5SqUIAL6uDvQHSusugs1wh8DgnWNGEDUWl9W
-         Pd+KpNW/snnPP9tI7RrTQFuCkYIqrwX83EZF6fOPQm74jNRyy6izBGQOC/H9wbeZq1IH
-         eNAwooR8ix8YdJDx6Wk2fv5jgzO6EhjumYzgUnrWmL/q1py9cykGeVa/VOdGkDKvQXbL
-         xJ0zDFOdflaQCwSKuKAzSJWtw44vkqaFAy++epv/V7lQH2gJy98t0P4BZkHKHaj5e4Qi
-         Gpdg==
-Content-Disposition: inline
-In-Reply-To: <20171112222613.3613362-4-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=I3GLreKo9y9fIboyX/32ScjNe1pfuH9NJN8d52uuoIQ=;
+ b=MZv3woHVkhIRXl+IB2ZS4SeIE4lQ64WnD8mcvCUMGT2rLZULbeGv5Ll9E5m8k4Bt6bTG
+ IAfZyXMeKY7UejdjFf+PyFjdhbRZjkhRsPClK3A0Tf6L/2W+DDdVylaMF/Lc2ISa6+K/
+ Je1g1ALHFu8GovbETlGJ7PfvMv/InRs+/nQ= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=I3GLreKo9y9fIboyX/32ScjNe1pfuH9NJN8d52uuoIQ=;
+ b=k2eyolzdCKy3vDaVDM0K1yoFCy0E9dCjbG4XAjEHXv1wmvTOYnp5KnIovoT4/kugzu0pV8x0Z+TmSSAtqxUoiYNOYy38CfFK+IX3gfYAeL5GuFLdMJwSIfQdAm4fXAQPtCWiPVX7D9d1FmKUdfyf9u2Oor9szk6RUPk/6NxbWno=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: shli@kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, guro@fb.com
+To: linux-mm@kvack.org
+Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mike Kravetz <mike.kravetz@oracle.com>, Dave Hansen <dave.hansen@intel.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From c856a199ec70e4022e997609f1b17b9106408777 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Mon, 13 Nov 2017 12:11:57 -0800
+This patch implements basic accounting of memory consumption
+by hugetlbfs pages for cgroup v2 memory controller.
 
-On the legacy request_queue, each blkcg_gq has a dedicated
-request_list that requests for the cgroup are allocated from.  Each
-request points to the originating request_list and cgroup membership
-can be determined by examining which cgroup the associated
-request_list belongs to.
+Cgroup v2 memory controller lacks any visibility into the
+hugetlbfs memory consumption. Cgroup v1 implemented a separate
+hugetlbfs controller, which provided such stats, and also
+provided some control abilities. Although porting of the
+hugetlbfs controller to cgroup v2 is arguable a good idea and
+is outside of scope of this patch, it's very useful to have
+basic stats provided by memory.stat.
 
-This doesn't work for blk-mq which doesn't use request_list.  Let's
-associate each request with the blkcg_gq directly.  Except for minor
-wrapper changes, this doesn't affect the legacy request_queue and will
-allow blk-mq to track each request's cgroup association.
+As hugetlbfs memory can easily represent a big portion of total
+memory, it's important to understand who (which memcg/container)
+is using it.
 
-v2: Build fix for !CONFIG_BLK_CGROUP.
+The number is represented in memory.stat as "hugetlb" in bytes and
+is printed unconditionally. Accounting code doesn't depend on
+cgroup v1 hugetlb controller.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Example:
+  $ cat /sys/fs/cgroup/user.slice/user-0.slice/session-1.scope/memory.stat
+  anon 1634304
+  file 1163264
+  kernel_stack 16384
+  slab 737280
+  sock 0
+  shmem 0
+  file_mapped 32768
+  file_dirty 4096
+  file_writeback 0
+  inactive_anon 0
+  active_anon 1634304
+  inactive_file 65536
+  active_file 1097728
+  unevictable 0
+  slab_reclaimable 282624
+  slab_unreclaimable 454656
+  hugetlb 1073741824
+  pgfault 4580
+  pgmajfault 13
+  ...
+
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Dave Hansen <dave.hansen@intel.com>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
 ---
- block/blk-mq.c             | 2 +-
- include/linux/blk-cgroup.h | 7 +++++--
- include/linux/blkdev.h     | 2 +-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ include/linux/memcontrol.h | 48 ++++++++++++++++++++++++++++++++++++++++++++++
+ mm/hugetlb.c               |  5 +++++
+ mm/memcontrol.c            |  3 +++
+ 3 files changed, 56 insertions(+)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 98a1860..af958c4 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -306,7 +306,7 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
- 	rq->part = NULL;
- 	rq->start_time = jiffies;
- #ifdef CONFIG_BLK_CGROUP
--	rq->rl = NULL;
-+	rq->blkg = NULL;
- 	set_start_time_ns(rq);
- 	rq->io_start_time_ns = 0;
- #endif
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index c0d4736..47db75a 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -463,7 +463,7 @@ static inline void blk_put_rl(struct request_list *rl)
-  */
- static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
- {
--	rq->rl = rl;
-+	rq->blkg = rl->blkg;
- }
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 69966c461d1c..e0dfb64d2918 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -45,6 +45,7 @@ enum memcg_stat_item {
+ 	MEMCG_SOCK,
+ 	/* XXX: why are these zone and not node counters? */
+ 	MEMCG_KERNEL_STACK_KB,
++	MEMCG_HUGETLB,
+ 	MEMCG_NR_STAT,
+ };
  
- /**
-@@ -474,7 +474,10 @@ static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
-  */
- static inline struct request_list *blk_rq_rl(struct request *rq)
- {
--	return rq->rl;
-+	if (!rq->blkg->parent)
-+		return &rq->q->root_rl;
-+	else
-+		return &rq->blkg->rl;
- }
- 
- struct request_list *__blk_queue_next_rl(struct request_list *rl,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 8da6637..6ec1067 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -206,7 +206,7 @@ struct request {
- 	unsigned long start_time;
- 	struct blk_issue_stat issue_stat;
- #ifdef CONFIG_BLK_CGROUP
--	struct request_list *rl;		/* rl this rq is alloced from */
-+	struct blkcg_gq *blkg;			/* blkg of this rq */
- 	unsigned long long start_time_ns;
- 	unsigned long long io_start_time_ns;    /* when passed to hardware */
+@@ -664,6 +665,39 @@ static inline void count_memcg_event_mm(struct mm_struct *mm,
+ void mem_cgroup_split_huge_fixup(struct page *head);
  #endif
+ 
++#ifdef CONFIG_HUGETLBFS
++static inline void mem_cgroup_add_hugetlb_page(struct page *page,
++					       unsigned int count)
++{
++	if (mem_cgroup_disabled())
++		return;
++
++	rcu_read_lock();
++	page->mem_cgroup = mem_cgroup_from_task(current);
++	css_get(&page->mem_cgroup->css);
++	rcu_read_unlock();
++
++	mod_memcg_page_state(page, MEMCG_HUGETLB, count);
++}
++
++static inline void mem_cgroup_remove_hugetlb_page(struct page *page,
++						  unsigned int count)
++{
++	if (mem_cgroup_disabled() || !page->mem_cgroup)
++		return;
++
++	mod_memcg_page_state(page, MEMCG_HUGETLB, -count);
++
++	css_put(&page->mem_cgroup->css);
++	page->mem_cgroup = NULL;
++}
++
++static inline void mem_cgroup_reset_hugetlb_page(struct page *page)
++{
++	page->mem_cgroup = NULL;
++}
++#endif
++
+ #else /* CONFIG_MEMCG */
+ 
+ #define MEM_CGROUP_ID_SHIFT	0
+@@ -936,6 +970,20 @@ static inline
+ void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
+ {
+ }
++
++static inline void mem_cgroup_add_hugetlb_page(struct page *page,
++					       unsigned int count)
++{
++}
++
++static inline void mem_cgroup_remove_hugetlb_page(struct page *page,
++						  unsigned int count)
++{
++}
++
++static inline void mem_cgroup_reset_hugetlb_page(struct page *page)
++{
++}
+ #endif /* CONFIG_MEMCG */
+ 
+ /* idx can be of type enum memcg_stat_item or node_stat_item */
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 4b3bbd2980bb..d1a2a9fa549a 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -1279,6 +1279,8 @@ void free_huge_page(struct page *page)
+ 	clear_page_huge_active(page);
+ 	hugetlb_cgroup_uncharge_page(hstate_index(h),
+ 				     pages_per_huge_page(h), page);
++	mem_cgroup_remove_hugetlb_page(page, pages_per_huge_page(h));
++
+ 	if (restore_reserve)
+ 		h->resv_huge_pages++;
+ 
+@@ -1301,6 +1303,7 @@ static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
+ 	set_compound_page_dtor(page, HUGETLB_PAGE_DTOR);
+ 	spin_lock(&hugetlb_lock);
+ 	set_hugetlb_cgroup(page, NULL);
++	mem_cgroup_reset_hugetlb_page(page);
+ 	h->nr_huge_pages++;
+ 	h->nr_huge_pages_node[nid]++;
+ 	spin_unlock(&hugetlb_lock);
+@@ -1584,6 +1587,7 @@ static struct page *__alloc_buddy_huge_page(struct hstate *h, gfp_t gfp_mask,
+ 		r_nid = page_to_nid(page);
+ 		set_compound_page_dtor(page, HUGETLB_PAGE_DTOR);
+ 		set_hugetlb_cgroup(page, NULL);
++		mem_cgroup_reset_hugetlb_page(page);
+ 		/*
+ 		 * We incremented the global counters already
+ 		 */
+@@ -2041,6 +2045,7 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
+ 		/* Fall through */
+ 	}
+ 	hugetlb_cgroup_commit_charge(idx, pages_per_huge_page(h), h_cg, page);
++	mem_cgroup_add_hugetlb_page(page, pages_per_huge_page(h));
+ 	spin_unlock(&hugetlb_lock);
+ 
+ 	set_page_private(page, (unsigned long)spool);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 50e6906314f8..f2323a9405a4 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5338,6 +5338,9 @@ static int memory_stat_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "slab_unreclaimable %llu\n",
+ 		   (u64)stat[NR_SLAB_UNRECLAIMABLE] * PAGE_SIZE);
+ 
++	seq_printf(m, "hugetlb %llu\n",
++		   (u64)stat[MEMCG_HUGETLB] * PAGE_SIZE);
++
+ 	/* Accumulated memory events */
+ 
+ 	seq_printf(m, "pgfault %lu\n", events[PGFAULT]);
 -- 
-2.9.5
+2.13.6
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
