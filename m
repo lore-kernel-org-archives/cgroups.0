@@ -1,57 +1,95 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v3] cpuset: Enable cpuset controller in default hierarchy
-Date: Tue, 14 Nov 2017 12:49:44 -0500
-Message-ID: <941d42e9-0696-a8f3-cda1-9be5b0303e6a@redhat.com>
-References: <1507324230-22996-1-git-send-email-longman@redhat.com>
- <db119820-84d4-7ccb-e65a-966d2d7aaf02@redhat.com>
- <20171026143908.GD59538@devbig577.frc2.facebook.com>
- <2814be69-8dc1-b2f8-406e-cc4dda289d94@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] memcg: hugetlbfs basic usage accounting
+Date: Tue, 14 Nov 2017 13:06:07 -0800
+Message-ID: <20171114210607.GT983427@devbig577.frc2.facebook.com>
+References: <20171114172429.8916-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <2814be69-8dc1-b2f8-406e-cc4dda289d94@redhat.com>
-Content-Language: en-US
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=jxSasMaNqq/n7hprzjeCHQIkMj+pAjvtTPLDgeKyPPs=;
+        b=AAzmoYh31u9MupOw6WNQtzBUDHA7bwCvYY9EBjTk30Ey3IauArmGN6weUXyyC7CIT6
+         bZaA5EMqay8eIfi8nEk0oJkv+2tOQ5NkxYnMJD4V3INYzBxlM4bJNO+SzITnbFzgufn3
+         9VlYtYDi7wSb53er2e/YAcGGDCV+KV1NPZFHhStb5JLvKG9IHC6qKZ4qFfIpt2JjPXM0
+         yRJjgW9vdDrTInRsDvWYmTL0qW/EsseDtcUk3bONwk1rb2lX72r89sgI67LeP/vSwxkt
+         zRc8433yauFYWxfeFvVvQOiZva+h7dhb0evmmOYad5wKk6V5LioOs3hUzsxvOV6ok9cC
+         rqvw==
+Content-Disposition: inline
+In-Reply-To: <20171114172429.8916-1-guro@fb.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Mike Galbraith <efault@gmx.de>, Christian Brauner <christian.brauner@canonical.com>, =?UTF-8?Q?St=c3=a9phane_Graber?= <stgraber@ubuntu.com>, Serge Hallyn <serge@hallyn.com>
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Kravetz <mike.kravetz@oracle.com>, Dave Hansen <dave.hansen@intel.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/26/2017 02:12 PM, Waiman Long wrote:
-> On 10/26/2017 10:39 AM, Tejun Heo wrote:
->> Hello, Waiman.
->>
->> On Wed, Oct 25, 2017 at 11:50:34AM -0400, Waiman Long wrote:
->>> Ping! Any comment on this patch?
->> Sorry about the lack of response.  Here are my two thoughts.
->>
->> 1. I'm not really sure about the memory part.  Mostly because of the
->>    way it's configured and enforced is completely out of step with how
->>    mm behaves in general.  I'd like to get more input from mm folks on
->>    this.
-> Yes, I also have doubt about which of the additional features are being
-> actively used. That is why the current patch exposes only the memory_migrate
-> flag in addition to the core *cpus and *mems control files. All the
-> other v1 features are not exposed waiting for further investigation and
-> feedback. One way to get more feedback is to have something that people
-> can play with. Maybe we could somehow tag it as experimental so that we
-> can change the interface later on, when necessary, if you have concern
-> about setting the APIs in stone.
->
->> 2. I want to think more about how we expose the effective settings.
->>    Not that anything is wrong with what cpuset does, but more that I
->>    wanna ensure that it's something we can follow in other cases where
->>    we have similar hierarchical property propagation.
-> Currently, the effective setting is exposed via the effective_cpus and
-> effective_mems control files. Unlike other controllers that control
-> resources, cpuset is unique in the sense that it is propagating
-> hierarchical constraints on CPUs and memory nodes down the tree. I
-> understand your desire to have a unified framework that can be applied
-> to most controllers, but I doubt cpuset is a good model in this regard.
+On Tue, Nov 14, 2017 at 05:24:29PM +0000, Roman Gushchin wrote:
+> This patch implements basic accounting of memory consumption
+> by hugetlbfs pages for cgroup v2 memory controller.
+> 
+> Cgroup v2 memory controller lacks any visibility into the
+> hugetlbfs memory consumption. Cgroup v1 implemented a separate
+> hugetlbfs controller, which provided such stats, and also
+> provided some control abilities. Although porting of the
+> hugetlbfs controller to cgroup v2 is arguable a good idea and
+> is outside of scope of this patch, it's very useful to have
+> basic stats provided by memory.stat.
+> 
+> As hugetlbfs memory can easily represent a big portion of total
+> memory, it's important to understand who (which memcg/container)
+> is using it.
+> 
+> The number is represented in memory.stat as "hugetlb" in bytes and
+> is printed unconditionally. Accounting code doesn't depend on
+> cgroup v1 hugetlb controller.
+> 
+> Example:
+>   $ cat /sys/fs/cgroup/user.slice/user-0.slice/session-1.scope/memory.stat
+>   anon 1634304
+>   file 1163264
+>   kernel_stack 16384
+>   slab 737280
+>   sock 0
+>   shmem 0
+>   file_mapped 32768
+>   file_dirty 4096
+>   file_writeback 0
+>   inactive_anon 0
+>   active_anon 1634304
+>   inactive_file 65536
+>   active_file 1097728
+>   unevictable 0
+>   slab_reclaimable 282624
+>   slab_unreclaimable 454656
+>   hugetlb 1073741824
+>   pgfault 4580
+>   pgmajfault 13
+>   ...
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Mike Kravetz <mike.kravetz@oracle.com>
+> Cc: Dave Hansen <dave.hansen@intel.com>
+> Cc: kernel-team@fb.com
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: linux-kernel@vger.kernel.org
 
-What do you think we can do for the 4.16 development cycle? I really
-like to see some kind of at least experimental support for cpuset v2.
-That may be the best way to gather feedback and decide what to do next.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Cheers,
-Longman
+Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
