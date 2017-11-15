@@ -1,48 +1,55 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH] memcg: hugetlbfs basic usage accounting
-Date: Wed, 15 Nov 2017 12:42:23 +0100
-Message-ID: <20171115114223.ykyfrnxvvzhiglfd@dhcp22.suse.cz>
+Date: Wed, 15 Nov 2017 07:15:08 -0500
+Message-ID: <20171115121508.GA2501@cmpxchg.org>
 References: <20171114172429.8916-1-guro@fb.com>
- <20171115083504.nwczf5xq6posy3bw@dhcp22.suse.cz>
- <20171115111803.GA28352@castle>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=lK8l8ZpLYLx41ye05YuPOxg7HQJuq6p/1ODCN4zbpEA=; b=Oc7+Xc54mrqKsfZNEGlcxbUlzY
+	aNqERTby5FSL/Q1KhoKlRQU827QOWByhY+w0s5QoAiF4JpRoo641QTdV18Ujnw3wpQQSO3KqaVdqd
+	uFQD4o+bF58tEg+1XEHI5+bv2tedgoAFwy7g6kfYL6e1Rcn06qGmDh4Cj+bFdCAVJtnI=;
 Content-Disposition: inline
-In-Reply-To: <20171115111803.GA28352@castle>
+In-Reply-To: <20171114172429.8916-1-guro@fb.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mike Kravetz <mike.kravetz@oracle.com>, Dave Hansen <dave.hansen@intel.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mike Kravetz <mike.kravetz@oracle.com>, Dave Hansen <dave.hansen@intel.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed 15-11-17 11:18:13, Roman Gushchin wrote:
-> On Wed, Nov 15, 2017 at 09:35:04AM +0100, Michal Hocko wrote:
-[...]
-> > So my primary question is, why don't you simply allow hugetlb controller
-> > rather than tweak stats for memcg? Is there any fundamental reason why
-> > hugetlb controller is not v2 compatible?
+On Tue, Nov 14, 2017 at 05:24:29PM +0000, Roman Gushchin wrote:
+> This patch implements basic accounting of memory consumption
+> by hugetlbfs pages for cgroup v2 memory controller.
 > 
-> I really don't know if the hugetlb controller has enough users to deserve
-> full support in v2 interface: adding knobs like memory.hugetlb.current,
-> memory.hugetlb.min, memory.hugetlb.high, memory.hugetlb.max, etc.
+> Cgroup v2 memory controller lacks any visibility into the
+> hugetlbfs memory consumption. Cgroup v1 implemented a separate
+> hugetlbfs controller, which provided such stats, and also
+> provided some control abilities. Although porting of the
+> hugetlbfs controller to cgroup v2 is arguable a good idea and
+> is outside of scope of this patch, it's very useful to have
+> basic stats provided by memory.stat.
 > 
-> I'd be rather conservative here and avoid adding a lot to the interface
-> without clear demand. Also, hugetlb pages are really special, and it's
-> at least not obvious how, say, memory.high should work for it.
+> As hugetlbfs memory can easily represent a big portion of total
+> memory, it's important to understand who (which memcg/container)
+> is using it.
 
-But you clearly want the hugetlb accoutning and that is what hugetlb
-controller is for. You might not be interested in the limit enforcement
-but that is not strictly required. So my question remains. Why don't we
-reuse an existing infrastructure and add a new which might confuse users
-in an extreme case?
+I'm not really buying this argument.
 
-Please note that I am not saying your patch is wrong, I just do not see
-why we should handle hugetlb pages 2 different ways to achieve a common
-infrastructure.
--- 
-Michal Hocko
-SUSE Labs
+Hugetlb setups tend to be static configurations that require intimate
+coordination between booting the kernel with a hugetlb reservation and
+precisely setting up the application(s).
+
+In the few cases where you need introspection, you can check the the
+HugetlbPages entry in /proc/<pid>/status. The minor convenience
+provided by adding an aggregate cgroup counter IMO doesn't outweigh
+the weirdness of listing a type of resource in memory.stat that isn't
+otherwise acknowledged or controllable as memory.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
