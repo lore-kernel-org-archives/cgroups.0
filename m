@@ -1,113 +1,56 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 6/7] blkcg: account requests instead of bios for request
- based request_queues
-Date: Wed, 15 Nov 2017 09:18:23 -0800
-Message-ID: <20171115171823.GW983427@devbig577.frc2.facebook.com>
-References: <20171112222613.3613362-1-tj@kernel.org>
- <20171112222613.3613362-7-tj@kernel.org>
- <20171114232355.vjxlzfbqbqj5ihq4@kernel.org>
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup/cpuset: remove circular dependency deadlock
+Date: Wed, 15 Nov 2017 22:48:21 +0530
+Message-ID: <857d3615-f1c6-c525-62cd-111ee5df6ac6@codeaurora.org>
+References: <45cdac2f-4462-e5b5-d724-8cca58e3932a@codeaurora.org>
+ <1509347805-23491-1-git-send-email-prsood@codeaurora.org>
+ <6f8b194f-05ec-05d4-3df6-e9eadc7f68bf@codeaurora.org>
+ <20171115103742.xt7muaq2dfrs2cyd@hirez.programming.kicks-ass.net>
+ <20171115170524.GU983427@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=0vdNomzi3HwvseJluUiFAusCwI7LkjVPXP9sQCwr0T4=;
-        b=A+KMqPDjPxjXZnBOnr/Si/LRxfGZ7wPklitx+4d0PwgqhIDemYy2VZxFAiIXpCPJFl
-         uyadxWOoTXqgAIMmvFUy0/33IbgFIUM/48JPtHoBUHzzYH5WjyaH3txF3beBuoKYHQwv
-         grseLvVx9guS5Jkwc0BcBXj8VIz+3tyA8QejXf0xF7W7B0kWfK8Go6/wIrZLW3J6Lepd
-         KB5p8cCfWXb8CwiuIsEx51ayzdN9DNkeEoaEZOiaLXRqDMlbmyUDdVyjlIqADufu9x8M
-         o7PX2S7QoJ2PeKXRVCE8FvGJ/4W47MBS8efqnXSvlsCf6HrgVdYwTOvEyzBoeWjiaPuf
-         uIew==
-Content-Disposition: inline
-In-Reply-To: <20171114232355.vjxlzfbqbqj5ihq4-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1510766315;
+        bh=aqNasY6cGwEUtgUFNtfqBf1O1H5W9zaNTSl2MoSQsyE=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=IkQEDTSjkGQKq1Nm/ml95homcvJTtv1ImMkT+7I8WovNtHAZweYiL+20JdVOolGj3
+         5i6Am8CdVMm9iffsGZS2ytqb4zvj5GTdM4MDKp+iN+Vc4RF+StmWG94qU/M3izzDWz
+         l3/1DBbH5O7YBc0ZUBvdM+s6aAaB9ZBbNRxMfcHw=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1510766314;
+        bh=aqNasY6cGwEUtgUFNtfqBf1O1H5W9zaNTSl2MoSQsyE=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=iqcQlPtRfkzqQ6B7ye7uppCY6kdj9tpYmX7OffYad4BLW+h/Lkv7tGMEeabTvHe4k
+         chlB42UnOLlbA6xvsbUf73WKaKm5gxU3qiGG3hVRz0Rvz0Wm2jTZL2FfbZ+Xa8SnVm
+         XszL1EW3sWo1RuFIWjowT5iFIynXHkOuhCEyqPMk=
+In-Reply-To: <20171115170524.GU983427-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-blkcg accounting is currently bio based, which is silly for request
-based request_queues.  This is silly as the number of bios doesn't
-have much to do with the actual number of IOs issued to the underlying
-device (can be significantly higher or lower) and may change depending
-on the implementation details on how the bios are issued (e.g. from
-the recent split-bios-while-issuing change).
+On 11/15/2017 10:35 PM, Tejun Heo wrote:
+> On Wed, Nov 15, 2017 at 11:37:42AM +0100, Peter Zijlstra wrote:
+>> On Wed, Nov 15, 2017 at 03:56:26PM +0530, Prateek Sood wrote:
+>>> Any improvement/suggestion for this patch?
+>>
+>> I would have done 2 patches, the first one solving the locking issue,
+>> the second removing the then redundant async rebuild stuff.
+>>
+>> Other than that this looks OK I suppose, but I was expecting this to go
+>> through the cgroup tree, TJ?
+> 
+> Will pick them up after -rc1.
+> 
+> Thanks.
+> 
 
-Do cgroup accounting for request based request_queues together with
-gendisk accounting on request completion.
+I have made two patches as suggested by Peter and sent for review. 
 
-This makes cgroup accounting consistent with gendisk accounting and
-what's happening on the system.
-
-v2: Use q->request_fn to skip bio based accounting instead of
-    QUEUE_FLAG_IOSTAT as suggested by Shaohua.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reviewed-by: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- block/blk-core.c           |    3 +++
- include/linux/blk-cgroup.h |   18 +++++++++++++++++-
- 2 files changed, 20 insertions(+), 1 deletion(-)
-
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2429,6 +2429,7 @@ void blk_account_io_completion(struct re
- 		cpu = part_stat_lock();
- 		part = req->part;
- 		part_stat_add(cpu, part, sectors[rw], bytes >> 9);
-+		blkcg_account_io_completion(req, bytes);
- 		part_stat_unlock();
- 	}
- }
-@@ -2454,6 +2455,8 @@ void blk_account_io_done(struct request
- 		part_round_stats(req->q, cpu, part);
- 		part_dec_in_flight(req->q, part, rw);
- 
-+		blkcg_account_io_done(req);
-+
- 		hd_struct_put(part);
- 		part_stat_unlock();
- 	}
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -715,7 +715,8 @@ static inline bool blkcg_bio_issue_check
- 
- 	throtl = blk_throtl_bio(q, blkg, bio);
- 
--	if (!throtl) {
-+	/* if @q does io stat, blkcg stats are updated together with them */
-+	if (!q->request_fn && !throtl) {
- 		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
- 				bio->bi_iter.bi_size);
- 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
-@@ -764,6 +765,17 @@ static inline void blk_rq_disassociate_b
- 	rq->blkg = NULL;
- }
- 
-+static inline void blkcg_account_io_completion(struct request *rq,
-+					       unsigned int bytes)
-+{
-+	blkg_rwstat_add(&rq->blkg->stat_bytes, rq_data_dir(rq), bytes);
-+}
-+
-+static inline void blkcg_account_io_done(struct request *rq)
-+{
-+	blkg_rwstat_add(&rq->blkg->stat_ios, rq_data_dir(rq), 1);
-+}
-+
- #else	/* CONFIG_BLK_CGROUP */
- 
- struct blkcg {
-@@ -823,6 +835,10 @@ static inline bool blkcg_bio_issue_check
- static inline void blk_rq_associate_blkg(struct request *rq, struct blkcg *blkcg) { }
- static inline void blk_rq_disassociate_blkg(struct request *rq) { }
- 
-+static inline void blkcg_account_io_completion(struct request *rq,
-+					       unsigned int bytes) { }
-+static inline void blkcg_account_io_done(struct request *rq) { }
-+
- #define blk_queue_for_each_rl(rl, q)	\
- 	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
- 
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation
+Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
+Collaborative Project
