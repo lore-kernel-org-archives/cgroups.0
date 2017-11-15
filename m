@@ -1,66 +1,48 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] memcg: hugetlbfs basic usage accounting
-Date: Wed, 15 Nov 2017 13:34:12 +0100
-Message-ID: <20171115123412.erspvvuqkeuioftt@dhcp22.suse.cz>
-References: <20171114172429.8916-1-guro@fb.com>
- <20171115083504.nwczf5xq6posy3bw@dhcp22.suse.cz>
- <20171115111803.GA28352@castle>
- <20171115114223.ykyfrnxvvzhiglfd@dhcp22.suse.cz>
- <20171115122306.GA16468@castle>
-Mime-Version: 1.0
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: [PATCH v3 0/2] Invert cpu_hotplug_lock and cpuset_mutex locking order.
+Date: Wed, 15 Nov 2017 19:50:13 +0530
+Message-ID: <1510755615-25906-1-git-send-email-prsood@codeaurora.org>
+References: <20171115103742.xt7muaq2dfrs2cyd@hirez.programming.kicks-ass.net>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20171115122306.GA16468@castle>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1510755648;
+        bh=YufYL5Nt3v/hT0ZMM5HJUxyjr6YnOVwuX1P39cChDgQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UNkiWb6YCo1mCmuzOZwu4sDec2UWu8zNEL1IeKR1qclhT6HK8M9ISEHf40HlwHCi8
+         ZWm81WS+eOuy8nKVRuBUxbgpilHE24iVH07qzCwA5ygTncK28huvfKydZj0OzxgZka
+         DyyyEtv7qbZCyZV7CssgIPbZndrBlycETSWmhZY8=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1510755647;
+        bh=YufYL5Nt3v/hT0ZMM5HJUxyjr6YnOVwuX1P39cChDgQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=mSiWKnWw0824W+1wf/DnzoJjR2sHrmvx6+kUXXu9tUGbYo0W8rz5WEztKFPHSFWzl
+         jp+02Wsumx29sSg43wHIrYo5Sod2ZDmvTidN1r4EZfBmqyO4M98TLj6dSA7ZbmUnej
+         UpGcTgM3yusK5SWXuBOaLjGaRA+A5K8WBi78YZKM=
+In-Reply-To: <20171115103742.xt7muaq2dfrs2cyd-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, clingutla-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
 
-On Wed 15-11-17 12:23:14, Roman Gushchin wrote:
-> On Wed, Nov 15, 2017 at 12:42:23PM +0100, Michal Hocko wrote:
-> > On Wed 15-11-17 11:18:13, Roman Gushchin wrote:
-> > > On Wed, Nov 15, 2017 at 09:35:04AM +0100, Michal Hocko wrote:
-> > [...]
-> > > > So my primary question is, why don't you simply allow hugetlb controller
-> > > > rather than tweak stats for memcg? Is there any fundamental reason why
-> > > > hugetlb controller is not v2 compatible?
-> > > 
-> > > I really don't know if the hugetlb controller has enough users to deserve
-> > > full support in v2 interface: adding knobs like memory.hugetlb.current,
-> > > memory.hugetlb.min, memory.hugetlb.high, memory.hugetlb.max, etc.
-> > > 
-> > > I'd be rather conservative here and avoid adding a lot to the interface
-> > > without clear demand. Also, hugetlb pages are really special, and it's
-> > > at least not obvious how, say, memory.high should work for it.
-> > 
-> > But you clearly want the hugetlb accoutning and that is what hugetlb
-> > controller is for. You might not be interested in the limit enforcement
-> > but that is not strictly required. So my question remains. Why don't we
-> > reuse an existing infrastructure and add a new which might confuse users
-> > in an extreme case?
-> 
-> Hm, but to use a small part of hugetlb controller infrastructure I would
-> have to add a whole set of cgroup v2 controls.
+This patch does following
+	1- Remove circular dependency deadlock by inverting order of
+cpu_hotplug_lock and cpuset_mutex.
+	2- Make cpuset_hotplug_workfn() synchronous for cpu hotplug path.
+For memory hotplug path it still gets queued as a work item.
 
-And? I mean how does that differ from somebody using memcg only for stat
-purposes?
+Prateek Sood (2):
+  cgroup/cpuset: remove circular dependency deadlock
+  cpuset: Make cpuset hotplug synchronous
 
-> And control knobs (like memory.hugetlb.current) are much more obligatory
-> than an entry in memory.stat, where we have some internal stats as well.
-> 
-> So, I don't really know why confusion should come from in this case?
+ include/linux/cpuset.h |  6 ----
+ kernel/cgroup/cpuset.c | 94 +++++++++++++++++++++++++++-----------------------
+ kernel/power/process.c |  2 --
+ kernel/sched/core.c    |  1 -
+ 4 files changed, 50 insertions(+), 53 deletions(-)
 
-Because you stat data that is not controlled by the controller. Just
-imagine if somebody wanted to sum counters to get the resulting
-accounted and enforced memory.
-
-You are simply trying to push a square through circle without a good
-reason. Unless there is a fundamental reason to not enable hugetlb
-controller to v2 I would rather go that way rather than to have another
-hugetlb weirdness. Enabling the controller should be a matter of
-exporting knobs. Trivial thing AFAICS.
 -- 
-Michal Hocko
-SUSE Labs
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc., 
+is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
