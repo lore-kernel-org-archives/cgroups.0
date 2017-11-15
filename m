@@ -1,38 +1,89 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup/cpuset: remove circular dependency deadlock
-Date: Wed, 15 Nov 2017 11:37:42 +0100
-Message-ID: <20171115103742.xt7muaq2dfrs2cyd@hirez.programming.kicks-ass.net>
-References: <45cdac2f-4462-e5b5-d724-8cca58e3932a@codeaurora.org>
- <1509347805-23491-1-git-send-email-prsood@codeaurora.org>
- <6f8b194f-05ec-05d4-3df6-e9eadc7f68bf@codeaurora.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH] memcg: hugetlbfs basic usage accounting
+Date: Wed, 15 Nov 2017 11:18:13 +0000
+Message-ID: <20171115111803.GA28352@castle>
+References: <20171114172429.8916-1-guro@fb.com>
+ <20171115083504.nwczf5xq6posy3bw@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=fPBtVvRISg48Llnu1MvKQJlujaQ+7n0VUFE1W/o/Aeg=; b=nXAAqiJMoNLulptm7UDRkSifs
-        vFQXQgZ6TxBf61tdNjKx1NWEvaab+KQLC3rw1N4BrV3ZFrqAS9V/S8d9Jmt3pB/qR9yQCcxOc221m
-        KaS0P18i07fjTLuRpHiwdQuqtTY3IycDB4eQDoRAhk74km85117ZKdg+l+dwzUX0oedSIpjev+Eik
-        Dv/HC1plr+N2VUaootsGo8qVYC0ZvDoinyAymmKKRoPwmYhmO2g00+FkI5iCG5JjqAjkT/5KQWE5l
-        1pOVo8QvwX/8AmF11g4xPSoslU0u2YDJgUEAmfkbBrfg3jBtcYmibPfK7GCHBUtnhE6SsTSOLk2Nm
-    
-Content-Disposition: inline
-In-Reply-To: <6f8b194f-05ec-05d4-3df6-e9eadc7f68bf-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=jp7YZF4l2jmEhjoWNZv4u4eZWs9dmLr9dT2N/rkBTQ8=;
+ b=n9htwdPQ8/6HWwR3v6N8b+GLEpxQFLASVRMWesUF25qoBodk1vkf8sVb48m1IEPESBCv
+ 2WTDECteNykDvCng7+1Vvy/hGl6H2DOqmpX58UdGAq3Z0XG4F4ZXCSsWYNDotIQuHK5y
+ VMWrjEru3ApCIWjOwLDdZyPoo8+7J0Qdfjc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=jp7YZF4l2jmEhjoWNZv4u4eZWs9dmLr9dT2N/rkBTQ8=;
+ b=BXGDMUWPelJnR2flOmrTXLcB1bVv8JTiUni4Rz/h+e6DxraGJJ4FQ01lUh8Bz231bI5KJflUN9ylCdoWIKxEDRXujTjqaNZ+AFE9Gd1/xLM7RcyYYONr0ZdxKySi/PzU+ElvnX1a7PSD5LTbyOLVunXYrNsFMrRJUeGmIQfNVhQ=
+Content-Disposition: inline
+In-Reply-To: <20171115083504.nwczf5xq6posy3bw@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mike Kravetz <mike.kravetz@oracle.com>, Dave Hansen <dave.hansen@intel.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Nov 15, 2017 at 03:56:26PM +0530, Prateek Sood wrote:
-> Any improvement/suggestion for this patch?
+On Wed, Nov 15, 2017 at 09:35:04AM +0100, Michal Hocko wrote:
+> On Tue 14-11-17 17:24:29, Roman Gushchin wrote:
+> > This patch implements basic accounting of memory consumption
+> > by hugetlbfs pages for cgroup v2 memory controller.
+> > 
+> > Cgroup v2 memory controller lacks any visibility into the
+> > hugetlbfs memory consumption. Cgroup v1 implemented a separate
+> > hugetlbfs controller, which provided such stats, and also
+> > provided some control abilities. Although porting of the
+> > hugetlbfs controller to cgroup v2 is arguable a good idea and
+> > is outside of scope of this patch, it's very useful to have
+> > basic stats provided by memory.stat.
 
-I would have done 2 patches, the first one solving the locking issue,
-the second removing the then redundant async rebuild stuff.
+Hi, Michal!
 
-Other than that this looks OK I suppose, but I was expecting this to go
-through the cgroup tree, TJ?
+> Separate hugetlb cgroup controller was really a deliberate decision.
+> We didn't want to mix hugetlb with the reclaimable memory. There is no
+> reasonable way to enforce memcg limits if hugetlb pages are involved.
+> 
+> AFAICS your patch shouldn't break the hugetlb controller because that
+> one (ab)uses page[2].private to store the hstate for the accounting.
+> You also do not really charge those hugetlb pages so the memcg
+> accounting will work unchaged.
+
+Yes, you are right.
+
+> 
+> So my primary question is, why don't you simply allow hugetlb controller
+> rather than tweak stats for memcg? Is there any fundamental reason why
+> hugetlb controller is not v2 compatible?
+
+I really don't know if the hugetlb controller has enough users to deserve
+full support in v2 interface: adding knobs like memory.hugetlb.current,
+memory.hugetlb.min, memory.hugetlb.high, memory.hugetlb.max, etc.
+
+I'd be rather conservative here and avoid adding a lot to the interface
+without clear demand. Also, hugetlb pages are really special, and it's
+at least not obvious how, say, memory.high should work for it.
+
+At the same time we don't really have any accounting of hugetlb page
+usage (except system-wide stats in sysfs). And providing such stats
+is really useful.
+In my particular case, I have some number of pre-allocated hugepages,
+and I have several containerized workloads, which are potentially
+using them to get performance bonuses. Having these stats allows to
+attribute the memory holding by hugetlb pages to one of the workloads.
+
+> It feels really strange to keeps stats of something the controller
+> doesn't really control. I can imagine confused users claiming that
+> numbers just do not add up...
+
+This is why I do not add this number to memory.current. At the same
+time numbers in memory.stat are not intended to be summed (we have
+event counters there, dirty pages counter, etc), so I don't see a problem.
+
+Thanks!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
