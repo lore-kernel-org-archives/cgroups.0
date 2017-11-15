@@ -1,117 +1,105 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v3 6/7] blkcg: account requests instead of bios for request
- based request_queues
-Date: Wed, 15 Nov 2017 09:22:41 -0800
-Message-ID: <20171115172241.GX983427@devbig577.frc2.facebook.com>
-References: <20171112222613.3613362-1-tj@kernel.org>
- <20171112222613.3613362-7-tj@kernel.org>
- <20171114232355.vjxlzfbqbqj5ihq4@kernel.org>
- <9a2ddc6a-d618-a896-290c-254ffeb5e9d6@kernel.dk>
+Subject: [GIT PULL] cgroup changes for v4.15-rc1
+Date: Wed, 15 Nov 2017 11:03:47 -0800
+Message-ID: <20171115190347.GB983427@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=mA9VjOIFHB5rr4UTTPJfwW0zasKI0qRUqZEhA3N8XLQ=;
-        b=kpcZEEsib2yDtDYDrhaBAdBWzSi47kqXVzLMc7hgEbuZGbR1XglN4Jb42RT1F5WX7J
-         qQSq/pKw8l4Hhzdj0wSgypHaEbgK+paG07iZ97zoXMYDxtipgIZCF4YDSnijYQOXOL0g
-         M9AHN4jk7i/Q2YzZ1z3poPrwyAurdl21ZHxZ3nFBA3fo0mI5+qgMSRKRhxq5+Vf8Cfym
-         dqA3K+nkHUofbPWeBJ8rI+5axgblN2vwFywQElljYBYju0lV5tA13y55ameOuie2MFUD
-         D4TIWoqKkWF3SKScYOCVMvuwMdMEBp2HD+Bx17vCtbCjG+FtrvUTLGrXEQvcnI67X/7c
-         UKWw==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=RJX6PmP9+6KQPnHLfZE172ZrRiljwWIUYnWy2I1z8M0=;
+        b=szuatRZi05J0Oz7UJkiOMiemuvZMmfSjQqxnDNMRYH3pmIfkblvJd+kSFG3Xk1wuoI
+         03PLvR1iJXzERaiNoO1ImSuUiKUVR6YkxTkTd5iElQfMlRW0MT8QcHn0PvZTfHIaHFlO
+         cJ8i2THbsXAJGfzYrWqAEB5ETgkL1H3qYSVF/X9Is3I6PJtf3st+9zBB1jKqZPsuQKBN
+         OE+LuhMTnSRuXUFDxEztxoqmjmy4efK3kkFwqyBftAOTgThel4fUejiYAfYyQV103b5x
+         Y3pwRRXiCP7FFSFqFY4vwryXuzQxLityohrjZtYAc7/uvbSPTzm02IVwI/rIb4IxT2be
+         lI5A==
 Content-Disposition: inline
-In-Reply-To: <9a2ddc6a-d618-a896-290c-254ffeb5e9d6-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-blkcg accounting is currently bio based, which is silly for request
-based request_queues.  This is silly as the number of bios doesn't
-have much to do with the actual number of IOs issued to the underlying
-device (can be significantly higher or lower) and may change depending
-on the implementation details on how the bios are issued (e.g. from
-the recent split-bios-while-issuing change).
+Hello, Linus.
 
-Do cgroup accounting for request based request_queues together with
-gendisk accounting on request completion.
+cgroup changes for v4.15-rc1.  cgroup2 cpu controller support is
+finally merged.
 
-This makes cgroup accounting consistent with gendisk accounting and
-what's happening on the system.
+* Basic cpu statistics support to allow monitoring by default without
+  the CPU controller enabled.
 
-v3: Use q->request_fn test doesn't work on blk-mq.  Use
-    queue_is_rq_based() instead as suggested by Jens.
+* cgroup2 cpu controller support.
 
-v2: Use q->request_fn to skip bio based accounting instead of
-    QUEUE_FLAG_IOSTAT as suggested by Shaohua.
+* /sys/kernel/cgroup files to help dealing with new / optional
+  features.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reviewed-by: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- block/blk-core.c           |    3 +++
- include/linux/blk-cgroup.h |   18 +++++++++++++++++-
- 2 files changed, 20 insertions(+), 1 deletion(-)
+The merge causes conflicts in two files - kernel/cgroup/Makefile and
+kernel/cgorup/cpuacct.h.  Both are trivial conflicts from the license
+identifier addition.  Makefile resolution is trivial and cpuacct.h no
+longer exists.
 
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2429,6 +2429,7 @@ void blk_account_io_completion(struct re
- 		cpu = part_stat_lock();
- 		part = req->part;
- 		part_stat_add(cpu, part, sectors[rw], bytes >> 9);
-+		blkcg_account_io_completion(req, bytes);
- 		part_stat_unlock();
- 	}
- }
-@@ -2454,6 +2455,8 @@ void blk_account_io_done(struct request
- 		part_round_stats(req->q, cpu, part);
- 		part_dec_in_flight(req->q, part, rw);
- 
-+		blkcg_account_io_done(req);
-+
- 		hd_struct_put(part);
- 		part_stat_unlock();
- 	}
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -715,7 +715,8 @@ static inline bool blkcg_bio_issue_check
- 
- 	throtl = blk_throtl_bio(q, blkg, bio);
- 
--	if (!throtl) {
-+	/* if @q does io stat, blkcg stats are updated together with them */
-+	if (!queue_is_rq_based(q) && !throtl) {
- 		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
- 				bio->bi_iter.bi_size);
- 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
-@@ -764,6 +765,17 @@ static inline void blk_rq_disassociate_b
- 	rq->blkg = NULL;
- }
- 
-+static inline void blkcg_account_io_completion(struct request *rq,
-+					       unsigned int bytes)
-+{
-+	blkg_rwstat_add(&rq->blkg->stat_bytes, rq_data_dir(rq), bytes);
-+}
-+
-+static inline void blkcg_account_io_done(struct request *rq)
-+{
-+	blkg_rwstat_add(&rq->blkg->stat_ios, rq_data_dir(rq), 1);
-+}
-+
- #else	/* CONFIG_BLK_CGROUP */
- 
- struct blkcg {
-@@ -823,6 +835,10 @@ static inline bool blkcg_bio_issue_check
- static inline void blk_rq_associate_blkg(struct request *rq, struct blkcg *blkcg) { }
- static inline void blk_rq_disassociate_blkg(struct request *rq) { }
- 
-+static inline void blkcg_account_io_completion(struct request *rq,
-+					       unsigned int bytes) { }
-+static inline void blkcg_account_io_done(struct request *rq) { }
-+
- #define blk_queue_for_each_rl(rl, q)	\
- 	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
- 
+Please expect another merge conflict with the bpf changes.  It's
+caused by two additions to the cgroup_create() error handling path.
+The resolution in the linux-next is correct.
+
+  https://marc.info/?l=linux-next&m=150757433124201&w=2
+
+Thanks.
+
+The following changes since commit e19b205be43d11bff638cad4487008c48d21c103:
+
+  Linux 4.14-rc2 (2017-09-24 16:38:56 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.15
+
+for you to fetch changes up to 5f2e673405b742be64e7c3604ed4ed3ac14f35ce:
+
+  cgroup: export list of cgroups v2 features using sysfs (2017-11-06 12:01:57 -0800)
+
+----------------------------------------------------------------
+Chao Yu (1):
+      MAINTAINERS: relocate cpuset.c
+
+Roman Gushchin (2):
+      cgroup: export list of delegatable control files using sysfs
+      cgroup: export list of cgroups v2 features using sysfs
+
+Tejun Heo (9):
+      sched/cputime: Expose cputime_adjust()
+      cpuacct: Introduce cgroup_account_cputime[_field]()
+      cgroup: Implement cgroup2 basic CPU usage accounting
+      cgroup: statically initialize init_css_set->dfl_cgrp
+      sched/cputime: Add dummy cputime_adjust() implementation for CONFIG_VIRT_CPU_ACCOUNTING_NATIVE
+      sched: Misc preps for cgroup unified hierarchy interface
+      sched: Implement interface for cgroup unified hierarchy
+      cgroup, sched: Move basic cpu stats from cgroup.stat to cpu.stat
+      cgroup: mark @cgrp __maybe_unused in cpu_stat_show()
+
+ Documentation/cgroup-v2.txt     |  42 ++---
+ MAINTAINERS                     |   2 +-
+ include/linux/cgroup-defs.h     |  59 +++++++
+ include/linux/cgroup.h          |  58 +++++++
+ include/linux/sched/cputime.h   |   3 +-
+ kernel/cgroup/Makefile          |   2 +-
+ kernel/cgroup/cgroup-internal.h |   9 ++
+ kernel/cgroup/cgroup.c          | 157 ++++++++++++++++++-
+ kernel/cgroup/stat.c            | 334 ++++++++++++++++++++++++++++++++++++++++
+ kernel/sched/core.c             | 174 ++++++++++++++++++++-
+ kernel/sched/cpuacct.h          |  17 --
+ kernel/sched/cputime.c          |  14 +-
+ kernel/sched/deadline.c         |   2 +-
+ kernel/sched/fair.c             |   2 +-
+ kernel/sched/rt.c               |   2 +-
+ kernel/sched/sched.h            |   2 +-
+ kernel/sched/stop_task.c        |   2 +-
+ 17 files changed, 821 insertions(+), 60 deletions(-)
+ create mode 100644 kernel/cgroup/stat.c
+ delete mode 100644 kernel/sched/cpuacct.h
+
+-- 
+tejun
