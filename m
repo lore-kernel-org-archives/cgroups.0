@@ -1,86 +1,48 @@
-From: Roman Gushchin <guro@fb.com>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH] memcg: hugetlbfs basic usage accounting
-Date: Wed, 15 Nov 2017 11:18:13 +0000
-Message-ID: <20171115111803.GA28352@castle>
+Date: Wed, 15 Nov 2017 12:42:23 +0100
+Message-ID: <20171115114223.ykyfrnxvvzhiglfd@dhcp22.suse.cz>
 References: <20171114172429.8916-1-guro@fb.com>
  <20171115083504.nwczf5xq6posy3bw@dhcp22.suse.cz>
+ <20171115111803.GA28352@castle>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=jp7YZF4l2jmEhjoWNZv4u4eZWs9dmLr9dT2N/rkBTQ8=;
- b=n9htwdPQ8/6HWwR3v6N8b+GLEpxQFLASVRMWesUF25qoBodk1vkf8sVb48m1IEPESBCv
- 2WTDECteNykDvCng7+1Vvy/hGl6H2DOqmpX58UdGAq3Z0XG4F4ZXCSsWYNDotIQuHK5y
- VMWrjEru3ApCIWjOwLDdZyPoo8+7J0Qdfjc= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=jp7YZF4l2jmEhjoWNZv4u4eZWs9dmLr9dT2N/rkBTQ8=;
- b=BXGDMUWPelJnR2flOmrTXLcB1bVv8JTiUni4Rz/h+e6DxraGJJ4FQ01lUh8Bz231bI5KJflUN9ylCdoWIKxEDRXujTjqaNZ+AFE9Gd1/xLM7RcyYYONr0ZdxKySi/PzU+ElvnX1a7PSD5LTbyOLVunXYrNsFMrRJUeGmIQfNVhQ=
 Content-Disposition: inline
-In-Reply-To: <20171115083504.nwczf5xq6posy3bw@dhcp22.suse.cz>
+In-Reply-To: <20171115111803.GA28352@castle>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
+To: Roman Gushchin <guro@fb.com>
 Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mike Kravetz <mike.kravetz@oracle.com>, Dave Hansen <dave.hansen@intel.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Nov 15, 2017 at 09:35:04AM +0100, Michal Hocko wrote:
-> On Tue 14-11-17 17:24:29, Roman Gushchin wrote:
-> > This patch implements basic accounting of memory consumption
-> > by hugetlbfs pages for cgroup v2 memory controller.
-> > 
-> > Cgroup v2 memory controller lacks any visibility into the
-> > hugetlbfs memory consumption. Cgroup v1 implemented a separate
-> > hugetlbfs controller, which provided such stats, and also
-> > provided some control abilities. Although porting of the
-> > hugetlbfs controller to cgroup v2 is arguable a good idea and
-> > is outside of scope of this patch, it's very useful to have
-> > basic stats provided by memory.stat.
-
-Hi, Michal!
-
-> Separate hugetlb cgroup controller was really a deliberate decision.
-> We didn't want to mix hugetlb with the reclaimable memory. There is no
-> reasonable way to enforce memcg limits if hugetlb pages are involved.
+On Wed 15-11-17 11:18:13, Roman Gushchin wrote:
+> On Wed, Nov 15, 2017 at 09:35:04AM +0100, Michal Hocko wrote:
+[...]
+> > So my primary question is, why don't you simply allow hugetlb controller
+> > rather than tweak stats for memcg? Is there any fundamental reason why
+> > hugetlb controller is not v2 compatible?
 > 
-> AFAICS your patch shouldn't break the hugetlb controller because that
-> one (ab)uses page[2].private to store the hstate for the accounting.
-> You also do not really charge those hugetlb pages so the memcg
-> accounting will work unchaged.
-
-Yes, you are right.
-
+> I really don't know if the hugetlb controller has enough users to deserve
+> full support in v2 interface: adding knobs like memory.hugetlb.current,
+> memory.hugetlb.min, memory.hugetlb.high, memory.hugetlb.max, etc.
 > 
-> So my primary question is, why don't you simply allow hugetlb controller
-> rather than tweak stats for memcg? Is there any fundamental reason why
-> hugetlb controller is not v2 compatible?
+> I'd be rather conservative here and avoid adding a lot to the interface
+> without clear demand. Also, hugetlb pages are really special, and it's
+> at least not obvious how, say, memory.high should work for it.
 
-I really don't know if the hugetlb controller has enough users to deserve
-full support in v2 interface: adding knobs like memory.hugetlb.current,
-memory.hugetlb.min, memory.hugetlb.high, memory.hugetlb.max, etc.
+But you clearly want the hugetlb accoutning and that is what hugetlb
+controller is for. You might not be interested in the limit enforcement
+but that is not strictly required. So my question remains. Why don't we
+reuse an existing infrastructure and add a new which might confuse users
+in an extreme case?
 
-I'd be rather conservative here and avoid adding a lot to the interface
-without clear demand. Also, hugetlb pages are really special, and it's
-at least not obvious how, say, memory.high should work for it.
-
-At the same time we don't really have any accounting of hugetlb page
-usage (except system-wide stats in sysfs). And providing such stats
-is really useful.
-In my particular case, I have some number of pre-allocated hugepages,
-and I have several containerized workloads, which are potentially
-using them to get performance bonuses. Having these stats allows to
-attribute the memory holding by hugetlb pages to one of the workloads.
-
-> It feels really strange to keeps stats of something the controller
-> doesn't really control. I can imagine confused users claiming that
-> numbers just do not add up...
-
-This is why I do not add this number to memory.current. At the same
-time numbers in memory.stat are not intended to be summed (we have
-event counters there, dirty pages counter, etc), so I don't see a problem.
-
-Thanks!
+Please note that I am not saying your patch is wrong, I just do not see
+why we should handle hugetlb pages 2 different ways to achieve a common
+infrastructure.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
