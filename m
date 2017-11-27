@@ -1,89 +1,82 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
 Subject: Re: [PATCH v3] cpuset: Enable cpuset controller in default hierarchy
-Date: Mon, 27 Nov 2017 13:04:11 -0800
-Message-ID: <20171127210411.GS983427@devbig577.frc2.facebook.com>
+Date: Mon, 27 Nov 2017 16:19:57 -0500
+Message-ID: <8a5ba419-2b02-5b6a-462f-34106cc575ab@redhat.com>
 References: <1507324230-22996-1-git-send-email-longman@redhat.com>
+ <20171127210411.GS983427@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=9dxEKdh2oiS4lcuU6vKXgy5CmK16fCWKUdPNjrqbYLY=;
-        b=rkXawI4s97jqYl0/YfFXsm9T0/P2qIjWQrkSWDPvBLtHti2T5ytBLLcWieftT7zxir
-         gr/Wb8VF39YlWd7YCHiyt6E2XKFLKfWGI6AsuAflNMXVay6APDPMBDmohOvhJ1YNQ5Iu
-         Zbm8BbcKIzfLFTtTXYqRh35dqQoxDYzkQHsqojM7gvdLHY9Y0wLGqfwyHXMSv8GiYyNo
-         ZN7n3dU+KsuhLfjJ3DVc/+4yAeRYa60ouHfXvBLFNuLb+brIBcLScogpJzrRCSZESf5G
-         2HQCpy0TofhpVLmIG/b3cotFq2VUDJr8E6gXJAtfuJa9AfdvlLRebjCFafKp+9kigdNw
-         UYmg==
-Content-Disposition: inline
-In-Reply-To: <1507324230-22996-1-git-send-email-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171127210411.GS983427@devbig577.frc2.facebook.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>, Christian Brauner <christian.brauner-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Mike Galbraith <efault@gmx.de>, Christian Brauner <christian.brauner@canonical.com>, =?UTF-8?Q?St=c3=a9phane_Graber?= <stgraber@ubuntu.com>, Serge Hallyn <serge@hallyn.com>
 
-Hello, Waiman.
+On 11/27/2017 04:04 PM, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> Sorry about the long delay.
+>
+> On Fri, Oct 06, 2017 at 05:10:30PM -0400, Waiman Long wrote:
+>> +Cpuset Interface Files
+>> +~~~~~~~~~~~~~~~~~~~~~~
+>> +
+>> +  cpuset.cpus
+>> +	A read-write multiple values file which exists on non-root
+>> +	cgroups.
+>> +
+>> +	It lists the CPUs allowed to be used by tasks within this
+>> +	cgroup.  The CPU numbers are comma-separated numbers or
+>> +	ranges.  For example:
+>> +
+>> +	  # cat cpuset.cpus
+>> +	  0-4,6,8-10
+>> +
+>> +	An empty value indicates that the cgroup is using the same
+>> +	setting as the nearest cgroup ancestor with a non-empty
+>> +	"cpuset.cpus" or all the available CPUs if none is found.
+>> +
+>> +	The value of "cpuset.cpus" stays constant until the next update
+>> +	and won't be affected by any CPU hotplug events.
+>> +
+>> +  cpuset.effective_cpus
+> Can we do cpuset.ecpus in the fashion of euid, egid..?
 
-Sorry about the long delay.
+Sure.
+>> +  cpuset.effective_mems
+> Ditto.
 
-On Fri, Oct 06, 2017 at 05:10:30PM -0400, Waiman Long wrote:
-> +Cpuset Interface Files
-> +~~~~~~~~~~~~~~~~~~~~~~
-> +
-> +  cpuset.cpus
-> +	A read-write multiple values file which exists on non-root
-> +	cgroups.
-> +
-> +	It lists the CPUs allowed to be used by tasks within this
-> +	cgroup.  The CPU numbers are comma-separated numbers or
-> +	ranges.  For example:
-> +
-> +	  # cat cpuset.cpus
-> +	  0-4,6,8-10
-> +
-> +	An empty value indicates that the cgroup is using the same
-> +	setting as the nearest cgroup ancestor with a non-empty
-> +	"cpuset.cpus" or all the available CPUs if none is found.
-> +
-> +	The value of "cpuset.cpus" stays constant until the next update
-> +	and won't be affected by any CPU hotplug events.
-> +
-> +  cpuset.effective_cpus
+Sure.
 
-Can we do cpuset.ecpus in the fashion of euid, egid..?
+>> +  cpuset.flags
+>> +	A read-write multiple values file which exists on non-root
+>> +	cgroups.
+>> +
+>> +	It lists the flags that are set (with a '+' prefix) and those
+>> +	that are not set (with a '-' prefix).	The currently supported
+>> +	flag is:
+>> +
+>> +	  mem_migrate
+>> +		When it is not set, an allocated memory page will
+>> +		stay in whatever node it was allocated independent
+>> +		of changes in "cpuset.mems".
+>> +
+>> +		When it is set, tasks with memory pages not in
+>> +		"cpuset.mems" will have those pages migrated over to
+>> +		memory nodes specified in "cpuset.mems".  Any changes
+>> +		to "cpuset.mems" will cause pages in nodes that are
+>> +		no longer valid to be migrated over to the newly
+>> +		valid nodes.
+> Let's start just with [e]cpus and [e]mems.  The flags interface looks
+> fine but the implementations of these features are really bad and
+> cgroup2 doesn't migrate resources for other controllers either anyway.
 
-> +  cpuset.effective_mems
+That is added because the mem_migrate feature is used in libvirt, I
+think. I am thinking of add a "[EXPERIMENTAL]" tag to the flags to
+indicate that it is subject to change.
 
-Ditto.
-
-> +  cpuset.flags
-> +	A read-write multiple values file which exists on non-root
-> +	cgroups.
-> +
-> +	It lists the flags that are set (with a '+' prefix) and those
-> +	that are not set (with a '-' prefix).	The currently supported
-> +	flag is:
-> +
-> +	  mem_migrate
-> +		When it is not set, an allocated memory page will
-> +		stay in whatever node it was allocated independent
-> +		of changes in "cpuset.mems".
-> +
-> +		When it is set, tasks with memory pages not in
-> +		"cpuset.mems" will have those pages migrated over to
-> +		memory nodes specified in "cpuset.mems".  Any changes
-> +		to "cpuset.mems" will cause pages in nodes that are
-> +		no longer valid to be migrated over to the newly
-> +		valid nodes.
-
-Let's start just with [e]cpus and [e]mems.  The flags interface looks
-fine but the implementations of these features are really bad and
-cgroup2 doesn't migrate resources for other controllers either anyway.
-
-Thanks.
-
--- 
-tejun
+Cheers,
+Longman
