@@ -1,50 +1,44 @@
-From: "Huang\, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH] mm, memcg: fix mem_cgroup_swapout() for THPs
-Date: Wed, 29 Nov 2017 08:38:08 +0800
-Message-ID: <87o9nlc427.fsf@yhuang-dev.intel.com>
+Date: Wed, 29 Nov 2017 10:17:13 +0000
+Message-ID: <20171129101713.GA28244@cmpxchg.org>
 References: <20171128161941.20931-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20171128161941.20931-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> (Shakeel Butt's
-        message of "Tue, 28 Nov 2017 08:19:41 -0800")
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=v3mEICMWWdxZdhxMQP8wumpnws5IR+m7a4JlgcSTCnQ=; b=2p0aMEAH8gTQw5XN5jr+lHKCeY
+	x/gv6cHa/d0phhfKzBd/Gwz7+E+/zHWjMD/pGMXIk81rEyvw/SuqgGW2iXTva76fx7M8/ouUx3k6J
+	M1W6UqHIsKBBw4UXPUs8wz3t+6PcBSbmzGRbcViIba2uyoZ5CYBJMQPFP4zrx38ocZOw=;
+Content-Disposition: inline
+In-Reply-To: <20171128161941.20931-1-shakeelb@google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Huang Ying <ying.huang@intel.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, stable@vger.kernel.org
 
-Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
-
+On Tue, Nov 28, 2017 at 08:19:41AM -0800, Shakeel Butt wrote:
 > The commit d6810d730022 ("memcg, THP, swap: make mem_cgroup_swapout()
 > support THP") changed mem_cgroup_swapout() to support transparent huge
 > page (THP). However the patch missed one location which should be
 > changed for correctly handling THPs. The resulting bug will cause the
 > memory cgroups whose THPs were swapped out to become zombies on
 > deletion.
-
-Good catch!  Thanks a lot for fixing!
-
-Best Regards,
-Huang, Ying
-
+> 
 > Fixes: d6810d730022 ("memcg, THP, swap: make mem_cgroup_swapout() support THP")
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 50e6906314f8..ac2ffd5e02b9 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6044,7 +6044,7 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->  	memcg_check_events(memcg, page);
->  
->  	if (!mem_cgroup_is_root(memcg))
-> -		css_put(&memcg->css);
-> +		css_put_many(&memcg->css, nr_entries);
->  }
->  
->  /**
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Cc: stable@vger.kernel.org
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
