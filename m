@@ -1,44 +1,206 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm, memcg: fix mem_cgroup_swapout() for THPs
-Date: Wed, 29 Nov 2017 10:17:13 +0000
-Message-ID: <20171129101713.GA28244@cmpxchg.org>
-References: <20171128161941.20931-1-shakeelb@google.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH v13 1/7] mm, oom: refactor the oom_kill_process() function
+Date: Thu, 30 Nov 2017 15:28:18 +0000
+Message-ID: <20171130152824.1591-2-guro@fb.com>
+References: <20171130152824.1591-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=v3mEICMWWdxZdhxMQP8wumpnws5IR+m7a4JlgcSTCnQ=; b=2p0aMEAH8gTQw5XN5jr+lHKCeY
-	x/gv6cHa/d0phhfKzBd/Gwz7+E+/zHWjMD/pGMXIk81rEyvw/SuqgGW2iXTva76fx7M8/ouUx3k6J
-	M1W6UqHIsKBBw4UXPUs8wz3t+6PcBSbmzGRbcViIba2uyoZ5CYBJMQPFP4zrx38ocZOw=;
-Content-Disposition: inline
-In-Reply-To: <20171128161941.20931-1-shakeelb@google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=kCBAWhq6e+SX7Xp59uqCSn3iUJ/c3xYFV8VW3DNf2/8=;
+ b=NO3IJi+z8Qb4HbuMkU25lzYA6kcDXlF84td1djPUTJ/c2njLWIv9dfTM0KFdLpK/bHk6
+ p2txbq1grjikKUrrLaqzilB5LKHmo2io0stdlKcD0+S76cZT0GZa77N1itnLuP+WgEC2
+ OvRbNciKpNZxyINoUrVfAajIIo30msiE58Y= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=kCBAWhq6e+SX7Xp59uqCSn3iUJ/c3xYFV8VW3DNf2/8=;
+ b=ACT9wzIDTnUUBYNGQIRzvtGJyWzc+evKoEI0BXkPv/HZ91UtM86StzTkmfZoXCVUhiajv0S2TwYGn86tzhjfVRJDHLnCbR2P7XT/gJKJCnTYl+lRoExFJgBTqR4i35ZUgt7T5gDBT0kld44GFa2FpOtKUFExwZOwuat0FOIq9K4=
+In-Reply-To: <20171130152824.1591-1-guro@fb.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Huang Ying <ying.huang@intel.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, stable@vger.kernel.org
+To: linux-mm@vger.kernel.org
+Cc: Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Nov 28, 2017 at 08:19:41AM -0800, Shakeel Butt wrote:
-> The commit d6810d730022 ("memcg, THP, swap: make mem_cgroup_swapout()
-> support THP") changed mem_cgroup_swapout() to support transparent huge
-> page (THP). However the patch missed one location which should be
-> changed for correctly handling THPs. The resulting bug will cause the
-> memory cgroups whose THPs were swapped out to become zombies on
-> deletion.
-> 
-> Fixes: d6810d730022 ("memcg, THP, swap: make mem_cgroup_swapout() support THP")
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> Cc: stable@vger.kernel.org
+The oom_kill_process() function consists of two logical parts:
+the first one is responsible for considering task's children as
+a potential victim and printing the debug information.
+The second half is responsible for sending SIGKILL to all
+tasks sharing the mm struct with the given victim.
 
+This commit splits the oom_kill_process() function with
+an intention to re-use the the second half: __oom_kill_process().
+
+The cgroup-aware OOM killer will kill multiple tasks
+belonging to the victim cgroup. We don't need to print
+the debug information for the each task, as well as play
+with task selection (considering task's children),
+so we can't use the existing oom_kill_process().
+
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Acked-by: Michal Hocko <mhocko@suse.com>
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: David Rientjes <rientjes@google.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+---
+ mm/oom_kill.c | 123 +++++++++++++++++++++++++++++++---------------------------
+ 1 file changed, 65 insertions(+), 58 deletions(-)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 3b0d0fed8480..f041534d77d3 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -814,68 +814,12 @@ static bool task_will_free_mem(struct task_struct *task)
+ 	return ret;
+ }
+ 
+-static void oom_kill_process(struct oom_control *oc, const char *message)
++static void __oom_kill_process(struct task_struct *victim)
+ {
+-	struct task_struct *p = oc->chosen;
+-	unsigned int points = oc->chosen_points;
+-	struct task_struct *victim = p;
+-	struct task_struct *child;
+-	struct task_struct *t;
++	struct task_struct *p;
+ 	struct mm_struct *mm;
+-	unsigned int victim_points = 0;
+-	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
+-					      DEFAULT_RATELIMIT_BURST);
+ 	bool can_oom_reap = true;
+ 
+-	/*
+-	 * If the task is already exiting, don't alarm the sysadmin or kill
+-	 * its children or threads, just give it access to memory reserves
+-	 * so it can die quickly
+-	 */
+-	task_lock(p);
+-	if (task_will_free_mem(p)) {
+-		mark_oom_victim(p);
+-		wake_oom_reaper(p);
+-		task_unlock(p);
+-		put_task_struct(p);
+-		return;
+-	}
+-	task_unlock(p);
+-
+-	if (__ratelimit(&oom_rs))
+-		dump_header(oc, p);
+-
+-	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
+-		message, task_pid_nr(p), p->comm, points);
+-
+-	/*
+-	 * If any of p's children has a different mm and is eligible for kill,
+-	 * the one with the highest oom_badness() score is sacrificed for its
+-	 * parent.  This attempts to lose the minimal amount of work done while
+-	 * still freeing memory.
+-	 */
+-	read_lock(&tasklist_lock);
+-	for_each_thread(p, t) {
+-		list_for_each_entry(child, &t->children, sibling) {
+-			unsigned int child_points;
+-
+-			if (process_shares_mm(child, p->mm))
+-				continue;
+-			/*
+-			 * oom_badness() returns 0 if the thread is unkillable
+-			 */
+-			child_points = oom_badness(child,
+-				oc->memcg, oc->nodemask, oc->totalpages);
+-			if (child_points > victim_points) {
+-				put_task_struct(victim);
+-				victim = child;
+-				victim_points = child_points;
+-				get_task_struct(victim);
+-			}
+-		}
+-	}
+-	read_unlock(&tasklist_lock);
+-
+ 	p = find_lock_task_mm(victim);
+ 	if (!p) {
+ 		put_task_struct(victim);
+@@ -949,6 +893,69 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
+ }
+ #undef K
+ 
++static void oom_kill_process(struct oom_control *oc, const char *message)
++{
++	struct task_struct *p = oc->chosen;
++	unsigned int points = oc->chosen_points;
++	struct task_struct *victim = p;
++	struct task_struct *child;
++	struct task_struct *t;
++	unsigned int victim_points = 0;
++	static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
++					      DEFAULT_RATELIMIT_BURST);
++
++	/*
++	 * If the task is already exiting, don't alarm the sysadmin or kill
++	 * its children or threads, just give it access to memory reserves
++	 * so it can die quickly
++	 */
++	task_lock(p);
++	if (task_will_free_mem(p)) {
++		mark_oom_victim(p);
++		wake_oom_reaper(p);
++		task_unlock(p);
++		put_task_struct(p);
++		return;
++	}
++	task_unlock(p);
++
++	if (__ratelimit(&oom_rs))
++		dump_header(oc, p);
++
++	pr_err("%s: Kill process %d (%s) score %u or sacrifice child\n",
++		message, task_pid_nr(p), p->comm, points);
++
++	/*
++	 * If any of p's children has a different mm and is eligible for kill,
++	 * the one with the highest oom_badness() score is sacrificed for its
++	 * parent.  This attempts to lose the minimal amount of work done while
++	 * still freeing memory.
++	 */
++	read_lock(&tasklist_lock);
++	for_each_thread(p, t) {
++		list_for_each_entry(child, &t->children, sibling) {
++			unsigned int child_points;
++
++			if (process_shares_mm(child, p->mm))
++				continue;
++			/*
++			 * oom_badness() returns 0 if the thread is unkillable
++			 */
++			child_points = oom_badness(child,
++				oc->memcg, oc->nodemask, oc->totalpages);
++			if (child_points > victim_points) {
++				put_task_struct(victim);
++				victim = child;
++				victim_points = child_points;
++				get_task_struct(victim);
++			}
++		}
++	}
++	read_unlock(&tasklist_lock);
++
++	__oom_kill_process(victim);
++}
++
+ /*
+  * Determines whether the kernel must panic because of the panic_on_oom sysctl.
+  */
+-- 
+2.14.3
+
