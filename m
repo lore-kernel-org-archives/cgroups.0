@@ -1,67 +1,60 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v13 5/7] mm, oom: add cgroup v2 mount option for
- cgroup-aware OOM killer
-Date: Fri, 1 Dec 2017 17:00:09 +0000
-Message-ID: <20171201170004.GA27436@castle.DHCP.thefacebook.com>
+Subject: Re: [PATCH v13 6/7] mm, oom, docs: describe the cgroup-aware OOM
+ killer
+Date: Fri, 1 Dec 2017 17:01:49 +0000
+Message-ID: <20171201170149.GB27436@castle.DHCP.thefacebook.com>
 References: <20171130152824.1591-1-guro@fb.com>
- <20171130152824.1591-6-guro@fb.com>
- <20171201084113.47lnuo3diwxts732@dhcp22.suse.cz>
- <20171201131530.GA7741@castle.DHCP.thefacebook.com>
- <20171201133145.w4b4cekruklcgtol@dhcp22.suse.cz>
+ <20171130152824.1591-7-guro@fb.com>
+ <20171201084154.l7i3fxtxd4fzrq7s@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=9LhydcVT0INA7/ffzBUdGSm7/nj4yA1oe+IkwvpYnuM=;
- b=A6LhrVOb5RX7z51E9BigihuU8L/GraKq35MGuJ8N0OkdqlwO8DqhhMr0A9FG64/z/wWK
- j1Y0TvbVFO9jRgxJDO7nMnunPkrndOIwtsXoGLry8rhB0VTsgaOLQLjSY90TQGYLPAE+
- StwilFvOHknHZ+mjtFI76rgHTGzPdfA0HFA= 
+ in-reply-to; s=facebook; bh=5ucLoejPufEGIvEvzAtT4ck4G6RLGDiOuJ74k7/eDU8=;
+ b=bGjR++dCRzZd88Xu9x2buHq5VYHAH18ZCIQeo9uYb7e++GjDLekxnS71SErpRVMrrZdB
+ ZLlf5QIEZfQl0eI3/rGfyjz7bmONCDu20xDQivb9oT6urUcrHaUHfX7HJG0nJAZSFQ7G
+ P0dHx7PayRvWWDV7hNZplutW5dHKrwGje1w= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=9LhydcVT0INA7/ffzBUdGSm7/nj4yA1oe+IkwvpYnuM=;
- b=RdDjm4sGPHgfmUT3Iw4BoHHrfAzWZ1BNtz2rj04wLu7gMK/rajEm6nSC9WSPlUr4rMwU57uaqqR1fnNwOyGPCcN5+CQV3ZuFBEl6mz/sMTMoo/JXZlfHTX4+lY+Nb8M3l05YLDAp4y910d8apN0Lls3sJQKOIdu75mJiiSN/d0Q=
+ bh=5ucLoejPufEGIvEvzAtT4ck4G6RLGDiOuJ74k7/eDU8=;
+ b=YV/n867gw03AB5+8SPom/D6FqnDrJh5cIlA7XNv9+8WN1KwKl358fSrK4SPqyN1AehKvVyZOb6JTcH8xWsQzkkGtV9FfwoY3MW4CP9dzlXA5JOAr1ZaHGwKLiQ8qKhLAnxc2+8pDAZs/uENlhnzIcpHk7UFqPHK0Ij0ml+QAZoE=
 Content-Disposition: inline
-In-Reply-To: <20171201133145.w4b4cekruklcgtol@dhcp22.suse.cz>
+In-Reply-To: <20171201084154.l7i3fxtxd4fzrq7s@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: linux-mm@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Dec 01, 2017 at 02:31:45PM +0100, Michal Hocko wrote:
-> On Fri 01-12-17 13:15:38, Roman Gushchin wrote:
-> [...]
-> > So, maybe we just need to return -EAGAIN (or may be -ENOTSUP) on any read/write
-> > attempt if option is not enabled?
+On Fri, Dec 01, 2017 at 09:41:54AM +0100, Michal Hocko wrote:
+> On Thu 30-11-17 15:28:23, Roman Gushchin wrote:
+> > @@ -1229,6 +1252,41 @@ to be accessed repeatedly by other cgroups, it may make sense to use
+> >  POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
+> >  belonging to the affected files to ensure correct memory ownership.
+> >  
+> > +OOM Killer
+> > +~~~~~~~~~~
+> > +
+> > +Cgroup v2 memory controller implements a cgroup-aware OOM killer.
+> > +It means that it treats cgroups as first class OOM entities.
 > 
-> Yes, that would work as well. ENOTSUP sounds better to me.
+> This should mention groupoom mount option to enable this functionality.
+> 
+> Other than that looks ok to me
+> Acked-by: Michal Hocko <mhocko@suse.com>
 > -- 
 > Michal Hocko
 > SUSE Labs
 
-From 78bf2c00abf450bcd993d02a7dc1783144005fbd Mon Sep 17 00:00:00 2001
+
+From 1d9c87128897ee7f27f9651d75b80f73985373e8 Mon Sep 17 00:00:00 2001
 From: Roman Gushchin <guro@fb.com>
-Date: Fri, 1 Dec 2017 14:30:14 +0000
-Subject: [PATCH] mm, oom: return error on access to memory.oom_group if
- groupoom is disabled
+Date: Fri, 1 Dec 2017 15:34:59 +0000
+Subject: [PATCH] mm, oom, docs: document groupoom mount option
 
-Cgroup-aware OOM killer depends on cgroup mount option and is turned
-off by default, despite the user interface (memory.oom_group file) is
-always present. As it might be confusing to a user, let's return
--ENOTSUPP on an attempt to access to memory.oom_group if groupoom is not
-enabled globally.
-
-Example:
-  $ cd /sys/fs/cgroup/user.slice/
-  $ cat memory.oom_group
-    cat: memory.oom_group: Unknown error 524
-  $ echo 1 > memory.oom_group
-    -bash: echo: write error: Unknown error 524
-  $ mount -o remount,groupoom /sys/fs/cgroup
-  $ echo 1 > memory.oom_group
-  $ cat memory.oom_group
-    1
+Add a note that cgroup-aware OOM logic is disabled by default
+and describe how to enable it.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
@@ -73,33 +66,36 @@ Cc: kernel-team@fb.com
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- mm/memcontrol.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ Documentation/cgroup-v2.txt | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c76d5fb55c5c..b709ee4f914b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5482,6 +5482,9 @@ static int memory_oom_group_show(struct seq_file *m, void *v)
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
- 	bool oom_group = memcg->oom_group;
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index c80a147f94b7..ff8e92db636d 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -1049,6 +1049,9 @@ PAGE_SIZE multiple when read back.
+ 	and will never kill the unkillable task, even if memory.oom_group
+ 	is set.
  
-+	if (!(cgrp_dfl_root.flags & CGRP_GROUP_OOM))
-+		return -ENOTSUPP;
++	If cgroup-aware OOM killer is not enabled, ENOTSUPP error
++	is returned on attempt to access the file.
 +
- 	seq_printf(m, "%d\n", oom_group);
+   memory.events
+ 	A read-only flat-keyed file which exists on non-root cgroups.
+ 	The following entries are defined.  Unless specified
+@@ -1258,6 +1261,12 @@ OOM Killer
+ Cgroup v2 memory controller implements a cgroup-aware OOM killer.
+ It means that it treats cgroups as first class OOM entities.
  
- 	return 0;
-@@ -5495,6 +5498,9 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
- 	int oom_group;
- 	int err;
- 
-+	if (!(cgrp_dfl_root.flags & CGRP_GROUP_OOM))
-+		return -ENOTSUPP;
++Cgroup-aware OOM logic is turned off by default and requires
++passing the "groupoom" option on mounting cgroupfs. It can also
++by remounting cgroupfs with the following command::
 +
- 	err = kstrtoint(strstrip(buf), 0, &oom_group);
- 	if (err)
- 		return err;
++  # mount -o remount,groupoom $MOUNT_POINT
++
+ Under OOM conditions the memory controller tries to make the best
+ choice of a victim, looking for a memory cgroup with the largest
+ memory footprint, considering leaf cgroups and cgroups with the
 -- 
 2.14.3
 
