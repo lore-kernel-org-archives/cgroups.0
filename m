@@ -1,42 +1,50 @@
-From: xuejiufei <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [bug report] writeback: sync returns with dirty pages exist
-Date: Mon, 4 Dec 2017 15:13:34 +0800
-Message-ID: <dc694ae2-f07f-61e1-7097-7c8411cee12d@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [bug report] writeback: sync returns with dirty pages exist
+Date: Mon, 4 Dec 2017 12:21:00 -0800
+Message-ID: <20171204202100.GE2421075@devbig577.frc2.facebook.com>
+References: <dc694ae2-f07f-61e1-7097-7c8411cee12d@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=to:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=vkeF5Lk+Zu6sBT+j+mXzcsguTFl/lR7QZm1kTSUJA2M=;
-        b=it7XFoipkk724tT9Ee0OL8aU4/KFQyInWddIdD3HZPmctbmzZpJKV4OwrE3ImJFWe8
-         bjOg/ZZRpgdw9YToJsN5dB5Me8sXFrQvsCL2NOoab5kICDFtrTVhDRctvXPBMAi1BHJg
-         IqIZPoMQeXp3JQWfkzQWbJ+fSPjrBlc3X3NmDr4egqeDANAJomj4SWEQALoeRI5gcOEy
-         m7+aHc+jBtvEb1n9IQLnAX+vm3SGyBI2UszcaBpfrflIILxYaNXHc0I8Yv2K8uciZnRb
-         tb/7tXx/SB6t0pGFEJyhygHnVYW6o+nb1qCTVhjuhxM1PwHosjwgq1Hx0okVC6MMa4Zf
-         66FA==
-Content-Language: en-US
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=hDQCOoSiJvaPMvpDdoOBJ0w7QUTl9D2cS2M8fZQIE7c=;
+        b=s7Q+OnvagTP6jUWbkXX/N1UqBG/Yt9gZs7N4cf4bp6QdvO4BL0ClngdO7CFl4c8NKc
+         wNOn2zyORNEtDM93vM66aFlXg0hQGasBjZ1TJKbq9iaCnpEA/JmWGrKztOSzCs3+SdBr
+         bT7PJyF3vO8MwEpr2YSDnWZsNraKYuE4Nb+5xlI+KClQ2HCZTFkGaFF+XUkKMjDDnl8h
+         hjLLmwA4GjBRGFcPOsnEshPk6+OEZIaOgFUPaFRRAxonsGYzIpSOWKYgYO2gf5yafmV/
+         IfIl83aNIDGteFiqJfTVfgIF2KGabZjk8B3RyP+hTecs1pQZKfldF3MQ7RZ5CzhljOeO
+         tc1Q==
+Content-Disposition: inline
+In-Reply-To: <dc694ae2-f07f-61e1-7097-7c8411cee12d-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: xuejiufei <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Tejun,
+Hello,
 
-I have found that system call sync may return even if dirty pages still
-exist. This is caused by the following case:
+On Mon, Dec 04, 2017 at 03:13:34PM +0800, xuejiufei wrote:
+> I have found that system call sync may return even if dirty pages still
+> exist. This is caused by the following case:
+> 
+> sync
+> -> sync_inodes_sb()
+>   -> bdi_split_work_to_wbs() queue works for each wb
+>   -> wb_wait_for_completions() wait for these works to complete.
+> 
+> >>>>>> race window. Writeback thread found it should switch to another
+> new wb while doing foreign cgroup detect. So a new wb is created, and
+> the inodes are move from old wb to the new one. The writeback work for
+> old wb is done, so the sync process is woken while the inodes with dirty
+> pages are still queued in new wb.
 
-sync
--> sync_inodes_sb()
-  -> bdi_split_work_to_wbs() queue works for each wb
-  -> wb_wait_for_completions() wait for these works to complete.
+Oops, yeah, that sounds plausible.  Will look into it.
 
->>>>>> race window. Writeback thread found it should switch to another
-new wb while doing foreign cgroup detect. So a new wb is created, and
-the inodes are move from old wb to the new one. The writeback work for
-old wb is done, so the sync process is woken while the inodes with dirty
-pages are still queued in new wb.
+Thanks.
 
-regards,
-Jiufei
+-- 
+tejun
