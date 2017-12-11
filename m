@@ -1,188 +1,73 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] writeback: synchronize sync(2) against cgroup writeback
- membership switches
-Date: Mon, 11 Dec 2017 11:50:52 -0800
-Message-ID: <20171211195052.GN2421075@devbig577.frc2.facebook.com>
-References: <dc694ae2-f07f-61e1-7097-7c8411cee12d@gmail.com>
- <20171205182007.GV2421075@devbig577.frc2.facebook.com>
- <8844b550-d91c-38d5-997a-a899d1e4aa42@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup fixes for v4.15-rc3
+Date: Mon, 11 Dec 2017 13:57:36 -0800
+Message-ID: <20171211215736.GR2421075@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=+E9pB5r4fhJfoo9y1rr503ooME3coUAJ4J5OwR9N6Sc=;
-        b=qc8vl8G78QSfQNE5sprWWMM42hCEr8KrKlHWxWcb8xbCLJeLohxwFdKG82qKyIfoBE
-         kIvX7AjtmWad8iNCb+YwL/we5qnsM/X92ZuLJNjvKqoneMQs1XXn11dlcB8uxg+YfSjl
-         0EGysOu5yklfrKze5BvEMzbZiwcbZv2YwEo2VsSBFiz5AF8DOVbJ3GYzXxVPmkgATZ2h
-         jCF6h0JYFhzKFy7u21qwIbb8JsKgvDYfsLqKKMyxI9E4tEIDi+nLlF4vlY1C+DLYY+BX
-         z6sADlbPQKMOyA4NqxoLnJVs2/voL88j69bod71iS0VZKVqESUcJlKBTrTpjorihUv6H
-         k6cA==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=bRvWv/9X5fMGULNuj8GZqbwT4xRhKbSnb2kb/qZGQNc=;
+        b=qIdfpUYpMQCW8/lxaSOtxpy8cBHuunIaZ+JhgFErQIRl+tTjK+3ExOUheOSiivbE1v
+         qgkQktWXoGxM6XqHCQwJPtaqIZku4ekcHx/tltXNMFj6as1iRd4NtU/ArfJlLzv7J6AI
+         oZ/YR0bLKD5E+BA8Ke4SQs4WhJchC6Nh27QW+Xecajm8xEe2QxLUx4sUNpjCLcb6BA++
+         1VsFbJztUAfybVTkywN6aI1Wha5oCeqfM2XdT6semHoF7S4fhcQV5Mr1Bcmp+snH0oAS
+         wjNjLjZMBBnN4IKXKQW0GyU9odo09wmYo9CJ2jvjQ4Wjc38FF6JlnMducN+5EKEt68Ob
+         y+Fw==
 Content-Disposition: inline
-In-Reply-To: <8844b550-d91c-38d5-997a-a899d1e4aa42-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuejiufei <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-sync_inodes_sb() can race against cgwb (cgroup writeback) membership
-switches and fail to writeback some inodes.  For example, if an inode
-switches to another wb while sync_inodes_sb() is in progress, the new
-wb might not be visible to bdi_split_work_to_wbs() at all or the inode
-might jump from a wb which hasn't issued writebacks yet to one which
-already has.
+Hello,
 
-This patch adds backing_dev_info->wb_switch_rwsem to synchronize cgwb
-switch path against sync_inodes_sb() so that sync_inodes_sb() is
-guaranteed to see all the target wbs and inodes can't jump wbs to
-escape syncing.
+* Prateek posted a couple patches to fix a deadlock involving cpuset
+  and workqueue.  It unfortunately caused a different deadlock and the
+  recent workqueue hotplug simplification removed the original
+  deadlock, so Prateek's two patches are reverted for now.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Jiufei Xue <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Link: http://lkml.kernel.org/r/dc694ae2-f07f-61e1-7097-7c8411cee12d-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
----
- fs/fs-writeback.c                |   50 +++++++++++++++++++++++++++++++++++++--
- include/linux/backing-dev-defs.h |    1 
- mm/backing-dev.c                 |    3 ++
- 3 files changed, 52 insertions(+), 2 deletions(-)
+* The new stat code was missing u64_stats initialization.  Fixed.
 
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -331,11 +331,22 @@ struct inode_switch_wbs_context {
- 	struct work_struct	work;
- };
- 
-+static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi)
-+{
-+	down_write(&bdi->wb_switch_rwsem);
-+}
-+
-+static void bdi_up_write_wb_switch_rwsem(struct backing_dev_info *bdi)
-+{
-+	up_write(&bdi->wb_switch_rwsem);
-+}
-+
- static void inode_switch_wbs_work_fn(struct work_struct *work)
- {
- 	struct inode_switch_wbs_context *isw =
- 		container_of(work, struct inode_switch_wbs_context, work);
- 	struct inode *inode = isw->inode;
-+	struct backing_dev_info *bdi = inode_to_bdi(inode);
- 	struct address_space *mapping = inode->i_mapping;
- 	struct bdi_writeback *old_wb = inode->i_wb;
- 	struct bdi_writeback *new_wb = isw->new_wb;
-@@ -344,6 +355,12 @@ static void inode_switch_wbs_work_fn(str
- 	void **slot;
- 
- 	/*
-+	 * If @inode switches cgwb membership while sync_inodes_sb() is
-+	 * being issued, sync_inodes_sb() might miss it.  Synchronize.
-+	 */
-+	down_read(&bdi->wb_switch_rwsem);
-+
-+	/*
- 	 * By the time control reaches here, RCU grace period has passed
- 	 * since I_WB_SWITCH assertion and all wb stat update transactions
- 	 * between unlocked_inode_to_wb_begin/end() are guaranteed to be
-@@ -435,6 +452,8 @@ skip_switch:
- 	spin_unlock(&new_wb->list_lock);
- 	spin_unlock(&old_wb->list_lock);
- 
-+	up_read(&bdi->wb_switch_rwsem);
-+
- 	if (switched) {
- 		wb_wakeup(new_wb);
- 		wb_put(old_wb);
-@@ -475,9 +494,18 @@ static void inode_switch_wbs(struct inod
- 	if (inode->i_state & I_WB_SWITCH)
- 		return;
- 
-+	/*
-+	 * Avoid starting new switches while sync_inodes_sb() is in
-+	 * progress.  Otherwise, if the down_write protected issue path
-+	 * blocks heavily, we might end up starting a large number of
-+	 * switches which will block on the rwsem.
-+	 */
-+	if (!down_read_trylock(&bdi->wb_switch_rwsem))
-+		return;
-+
- 	isw = kzalloc(sizeof(*isw), GFP_ATOMIC);
- 	if (!isw)
--		return;
-+		goto out_unlock;
- 
- 	/* find and pin the new wb */
- 	rcu_read_lock();
-@@ -511,12 +539,14 @@ static void inode_switch_wbs(struct inod
- 	 * Let's continue after I_WB_SWITCH is guaranteed to be visible.
- 	 */
- 	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
--	return;
-+	goto out_unlock;
- 
- out_free:
- 	if (isw->new_wb)
- 		wb_put(isw->new_wb);
- 	kfree(isw);
-+out_unlock:
-+	up_read(&bdi->wb_switch_rwsem);
- }
- 
- /**
-@@ -893,6 +923,9 @@ fs_initcall(cgroup_writeback_init);
- 
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
-+static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi) { }
-+static void bdi_up_write_wb_switch_rwsem(struct backing_dev_info *bdi) { }
-+
- static struct bdi_writeback *
- locked_inode_to_wb_and_lock_list(struct inode *inode)
- 	__releases(&inode->i_lock)
-@@ -2422,8 +2455,21 @@ void sync_inodes_sb(struct super_block *
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
-+	/*
-+	 * Protect against inode wb switch in inode_switch_wbs_work_fn().
-+	 * We want to synchronize syncs against switches.  Synchronizing
-+	 * among syncs isn't necessary but it shouldn't matter especially
-+	 * as we're only protecting the issuing.
-+	 *
-+	 * Once we grab the rwsem, bdi_split_work_to_wbs() is guaranteed to
-+	 * see all the target wbs.  If the wb membership hasn't changed,
-+	 * through the ordering visible to the caller; otherwise, through
-+	 * the transitive ordering via the rwsem.
-+	 */
-+	bdi_down_write_wb_switch_rwsem(bdi);
- 	bdi_split_work_to_wbs(bdi, &work, false);
- 	wb_wait_for_completion(bdi, &done);
-+	bdi_up_write_wb_switch_rwsem(bdi);
- 
- 	wait_sb_inodes(sb);
- }
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -189,6 +189,7 @@ struct backing_dev_info {
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct radix_tree_root cgwb_tree; /* radix tree of active cgroup wbs */
- 	struct rb_root cgwb_congested_tree; /* their congested states */
-+	struct rw_semaphore wb_switch_rwsem; /* no cgwb switch while syncing */
- #else
- 	struct bdi_writeback_congested *wb_congested;
- #endif
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -813,6 +813,9 @@ static int cgwb_bdi_init(struct backing_
- 		wb_congested_put(bdi->wb_congested);
- 		return err;
- 	}
-+
-+	init_rwsem(&bdi->wb_switch_rwsem);
-+
- 	return 0;
- }
- 
+* Doc and other misc changes.
+
+Thanks.
+
+The following changes since commit 4fbd8d194f06c8a3fd2af1ce560ddb31f7ec8323:
+
+  Linux 4.15-rc1 (2017-11-26 16:01:47 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.15-fixes
+
+for you to fetch changes up to c2f31b79d510ec1a27138bdcf2d0ece1080be85e:
+
+  cgroup: add warning about RT not being supported on cgroup2 (2017-12-05 11:47:17 -0800)
+
+----------------------------------------------------------------
+Lucas Stach (1):
+      cgroup: properly init u64_stats
+
+Prateek Sood (2):
+      cgroup/cpuset: remove circular dependency deadlock
+      cpuset: Make cpuset hotplug synchronous
+
+Tejun Heo (3):
+      Revert "cpuset: Make cpuset hotplug synchronous"
+      Revert "cgroup/cpuset: remove circular dependency deadlock"
+      cgroup: add warning about RT not being supported on cgroup2
+
+Wang Long (1):
+      debug cgroup: use task_css_set instead of rcu_dereference
+
+ Documentation/cgroup-v2.txt | 7 +++++++
+ kernel/cgroup/debug.c       | 4 ++--
+ kernel/cgroup/stat.c        | 8 ++++++--
+ 3 files changed, 15 insertions(+), 4 deletions(-)
+
+-- 
+tejun
