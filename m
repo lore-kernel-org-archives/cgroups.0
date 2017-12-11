@@ -1,38 +1,188 @@
-From: Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC(v2): Audit Kernel Container IDs
-Date: Mon, 11 Dec 2017 14:37:05 -0500
-Message-ID: <1574245.bUo6J1duCc@x2>
-References: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca> <f8ea78be-9bbf-2967-7b12-ac93bb85b0bc@schaufler-ca.com> <1513009857.6310.337.camel@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] writeback: synchronize sync(2) against cgroup writeback
+ membership switches
+Date: Mon, 11 Dec 2017 11:50:52 -0800
+Message-ID: <20171211195052.GN2421075@devbig577.frc2.facebook.com>
+References: <dc694ae2-f07f-61e1-7097-7c8411cee12d@gmail.com>
+ <20171205182007.GV2421075@devbig577.frc2.facebook.com>
+ <8844b550-d91c-38d5-997a-a899d1e4aa42@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1513009857.6310.337.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=+E9pB5r4fhJfoo9y1rr503ooME3coUAJ4J5OwR9N6Sc=;
+        b=qc8vl8G78QSfQNE5sprWWMM42hCEr8KrKlHWxWcb8xbCLJeLohxwFdKG82qKyIfoBE
+         kIvX7AjtmWad8iNCb+YwL/we5qnsM/X92ZuLJNjvKqoneMQs1XXn11dlcB8uxg+YfSjl
+         0EGysOu5yklfrKze5BvEMzbZiwcbZv2YwEo2VsSBFiz5AF8DOVbJ3GYzXxVPmkgATZ2h
+         jCF6h0JYFhzKFy7u21qwIbb8JsKgvDYfsLqKKMyxI9E4tEIDi+nLlF4vlY1C+DLYY+BX
+         z6sADlbPQKMOyA4NqxoLnJVs2/voL88j69bod71iS0VZKVqESUcJlKBTrTpjorihUv6H
+         k6cA==
+Content-Disposition: inline
+In-Reply-To: <8844b550-d91c-38d5-997a-a899d1e4aa42-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Casey Schaufler <casey-iSGtlc1asvQWG2LlvL+J4A@public.gmane.org>, =?ISO-8859-1?Q?Micka=EBl_Sala=FCn?= <mic-WFhQfpSGs3bR7s880joybQ@public.gmane.org>, Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuejiufei <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Monday, December 11, 2017 11:30:57 AM EST Eric Paris wrote:
-> > Because a container doesn't have to use namespaces to be a container
-> > you still need a mechanism for a process to declare that it is in
-> > fact
-> > in a container, and to identify the container.
-> 
-> I like the idea but I'm still tossing it around in my head (and
-> thinking about Casey's statement too). Lets say we have a 'docker-like'
-> container with pid=100  netns=X,userns=Y,mountns=Z. If I'm on the host
-> in all init namespaces and I run
->   nsenter -t 100 -n ip link set eth0 promisc on
-> How should this be logged?
+sync_inodes_sb() can race against cgwb (cgroup writeback) membership
+switches and fail to writeback some inodes.  For example, if an inode
+switches to another wb while sync_inodes_sb() is in progress, the new
+wb might not be visible to bdi_split_work_to_wbs() at all or the inode
+might jump from a wb which hasn't issued writebacks yet to one which
+already has.
 
-If it is a normal process, then everything would match the init name space and 
-you wouldn't have entered a container. If it were a container, any generated 
-event should have the container ID from registration attached to it.
+This patch adds backing_dev_info->wb_switch_rwsem to synchronize cgwb
+switch path against sync_inodes_sb() so that sync_inodes_sb() is
+guaranteed to see all the target wbs and inodes can't jump wbs to
+escape syncing.
 
-> Did this command run in it's own 'container' unrelated to the 'docker-like'
-> container?
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Jiufei Xue <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Link: http://lkml.kernel.org/r/dc694ae2-f07f-61e1-7097-7c8411cee12d-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+---
+ fs/fs-writeback.c                |   50 +++++++++++++++++++++++++++++++++++++--
+ include/linux/backing-dev-defs.h |    1 
+ mm/backing-dev.c                 |    3 ++
+ 3 files changed, 52 insertions(+), 2 deletions(-)
 
-That should be determined by what's in the task struct.
-
--Steve
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -331,11 +331,22 @@ struct inode_switch_wbs_context {
+ 	struct work_struct	work;
+ };
+ 
++static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi)
++{
++	down_write(&bdi->wb_switch_rwsem);
++}
++
++static void bdi_up_write_wb_switch_rwsem(struct backing_dev_info *bdi)
++{
++	up_write(&bdi->wb_switch_rwsem);
++}
++
+ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ {
+ 	struct inode_switch_wbs_context *isw =
+ 		container_of(work, struct inode_switch_wbs_context, work);
+ 	struct inode *inode = isw->inode;
++	struct backing_dev_info *bdi = inode_to_bdi(inode);
+ 	struct address_space *mapping = inode->i_mapping;
+ 	struct bdi_writeback *old_wb = inode->i_wb;
+ 	struct bdi_writeback *new_wb = isw->new_wb;
+@@ -344,6 +355,12 @@ static void inode_switch_wbs_work_fn(str
+ 	void **slot;
+ 
+ 	/*
++	 * If @inode switches cgwb membership while sync_inodes_sb() is
++	 * being issued, sync_inodes_sb() might miss it.  Synchronize.
++	 */
++	down_read(&bdi->wb_switch_rwsem);
++
++	/*
+ 	 * By the time control reaches here, RCU grace period has passed
+ 	 * since I_WB_SWITCH assertion and all wb stat update transactions
+ 	 * between unlocked_inode_to_wb_begin/end() are guaranteed to be
+@@ -435,6 +452,8 @@ skip_switch:
+ 	spin_unlock(&new_wb->list_lock);
+ 	spin_unlock(&old_wb->list_lock);
+ 
++	up_read(&bdi->wb_switch_rwsem);
++
+ 	if (switched) {
+ 		wb_wakeup(new_wb);
+ 		wb_put(old_wb);
+@@ -475,9 +494,18 @@ static void inode_switch_wbs(struct inod
+ 	if (inode->i_state & I_WB_SWITCH)
+ 		return;
+ 
++	/*
++	 * Avoid starting new switches while sync_inodes_sb() is in
++	 * progress.  Otherwise, if the down_write protected issue path
++	 * blocks heavily, we might end up starting a large number of
++	 * switches which will block on the rwsem.
++	 */
++	if (!down_read_trylock(&bdi->wb_switch_rwsem))
++		return;
++
+ 	isw = kzalloc(sizeof(*isw), GFP_ATOMIC);
+ 	if (!isw)
+-		return;
++		goto out_unlock;
+ 
+ 	/* find and pin the new wb */
+ 	rcu_read_lock();
+@@ -511,12 +539,14 @@ static void inode_switch_wbs(struct inod
+ 	 * Let's continue after I_WB_SWITCH is guaranteed to be visible.
+ 	 */
+ 	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
+-	return;
++	goto out_unlock;
+ 
+ out_free:
+ 	if (isw->new_wb)
+ 		wb_put(isw->new_wb);
+ 	kfree(isw);
++out_unlock:
++	up_read(&bdi->wb_switch_rwsem);
+ }
+ 
+ /**
+@@ -893,6 +923,9 @@ fs_initcall(cgroup_writeback_init);
+ 
+ #else	/* CONFIG_CGROUP_WRITEBACK */
+ 
++static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi) { }
++static void bdi_up_write_wb_switch_rwsem(struct backing_dev_info *bdi) { }
++
+ static struct bdi_writeback *
+ locked_inode_to_wb_and_lock_list(struct inode *inode)
+ 	__releases(&inode->i_lock)
+@@ -2422,8 +2455,21 @@ void sync_inodes_sb(struct super_block *
+ 		return;
+ 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+ 
++	/*
++	 * Protect against inode wb switch in inode_switch_wbs_work_fn().
++	 * We want to synchronize syncs against switches.  Synchronizing
++	 * among syncs isn't necessary but it shouldn't matter especially
++	 * as we're only protecting the issuing.
++	 *
++	 * Once we grab the rwsem, bdi_split_work_to_wbs() is guaranteed to
++	 * see all the target wbs.  If the wb membership hasn't changed,
++	 * through the ordering visible to the caller; otherwise, through
++	 * the transitive ordering via the rwsem.
++	 */
++	bdi_down_write_wb_switch_rwsem(bdi);
+ 	bdi_split_work_to_wbs(bdi, &work, false);
+ 	wb_wait_for_completion(bdi, &done);
++	bdi_up_write_wb_switch_rwsem(bdi);
+ 
+ 	wait_sb_inodes(sb);
+ }
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -189,6 +189,7 @@ struct backing_dev_info {
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct radix_tree_root cgwb_tree; /* radix tree of active cgroup wbs */
+ 	struct rb_root cgwb_congested_tree; /* their congested states */
++	struct rw_semaphore wb_switch_rwsem; /* no cgwb switch while syncing */
+ #else
+ 	struct bdi_writeback_congested *wb_congested;
+ #endif
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -813,6 +813,9 @@ static int cgwb_bdi_init(struct backing_
+ 		wb_congested_put(bdi->wb_congested);
+ 		return err;
+ 	}
++
++	init_rwsem(&bdi->wb_switch_rwsem);
++
+ 	return 0;
+ }
+ 
