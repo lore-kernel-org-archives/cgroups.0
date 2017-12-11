@@ -1,60 +1,50 @@
-From: Eric Paris <eparis@redhat.com>
-Subject: Re: RFC(v2): Audit Kernel Container IDs
-Date: Mon, 11 Dec 2017 11:30:57 -0500
-Message-ID: <1513009857.6310.337.camel@redhat.com>
-References: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca>
-         <75b7d6a6-42ba-2dff-1836-1091c7c024e7@schaufler-ca.com>
-         <7ebca85a-425c-2b95-9a5f-59d81707339e@digikod.net>
-         <f8ea78be-9bbf-2967-7b12-ac93bb85b0bc@schaufler-ca.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [bug report] writeback: sync returns with dirty pages exist
+Date: Mon, 11 Dec 2017 08:42:20 -0800
+Message-ID: <20171211164220.GL2421075@devbig577.frc2.facebook.com>
+References: <dc694ae2-f07f-61e1-7097-7c8411cee12d@gmail.com>
+ <20171205182007.GV2421075@devbig577.frc2.facebook.com>
+ <8844b550-d91c-38d5-997a-a899d1e4aa42@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f8ea78be-9bbf-2967-7b12-ac93bb85b0bc@schaufler-ca.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=mC6jxHZWpD4LLr7Hogp1efHv84uynssp4CnhK/hDDi8=;
+        b=lWktUpXYs5QRpZ9nwLQ4oSjWNqoaa4rjDvOVB3cHYajC50lv2+bbL5hegO5nYAWGDx
+         wlrGCCeUQ4mNZBWp0dCIXOqZ4drafol+azwip+MKmuIE1IWbG1IT9pyVEEsSg04pe2z1
+         HOOhWbZTHcKHXY8yhti4A0iBnGPO5rDviJm8qDP8faOCjp2YNUNNueZBvFjQP4M7o7s9
+         HcE7nx0aiixlPmhfsX4p7s1/bYIYh9mPiJYWBvs6vXoWciMvMoDNR/pPIUTBEs4V840p
+         UxbK8Dm3QOun3Sv5JpYorNWwYaAOTzaqeNDsQriaFO06RwnH/ujHylsopmDBPlQLVPYK
+         CZ3Q==
+Content-Disposition: inline
+In-Reply-To: <8844b550-d91c-38d5-997a-a899d1e4aa42-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Casey Schaufler <casey@schaufler-ca.com>, =?ISO-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>, Richard Guy Briggs <rgb@redhat.com>, cgroups@vger.kernel.org, Linux Containers <containers@lists.linux-foundation.org>, Linux API <linux-api@vger.kernel.org>, Linux Audit <linux-audit@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux Network Development <netdev@vger.kernel.org>
-Cc: mszeredi@redhat.com, "Eric W. Biederman" <ebiederm@xmission.com>, Simo Sorce <simo@redhat.com>, jlayton@redhat.com, Carlos O'Donell <carlos@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Eric Paris <eparis@parisplace.org>, trondmy@primarydata.com, Michael Kerrisk <mtk.manpages@gmail.com>
+Content-Type: text/plain; charset="windows-1252"
+To: xuejiufei <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, 2017-12-09 at 10:28 -0800, Casey Schaufler wrote:
-> On 12/9/2017 2:20 AM, Mickaï¿½l Salaï¿½n wrote:
+Hello,
 
-> >  What about automatically create
-> > and assign an ID to a process when it enters a namespace different
-> > than
-> > one of its parent process? This delegates the (permission)
-> > responsibility to the use of namespaces (e.g. /proc/sys/user/max_*
-> > limit).
-> 
-> That gets ugly when you have a container that uses user, filesystem,
-> network and whatever else namespaces. If all containers used the same
-> set of namespaces I think this would be a fine idea, but they don't.
-> 
-> > One interesting side effect of this approach would be to be able to
-> > identify which processes are in the same set of namespaces, even if
-> > not
-> > spawn from the container but entered after its creation (i.e. using
-> > setns), by creating container IDs as a (deterministic) checksum
-> > from the
-> > /proc/self/ns/* IDs.
-> > 
-> > Since the concern is to identify a container, I think the ability
-> > to
-> > audit the switch from one container ID to another is enough. I
-> > don't
-> > think we need nested IDs.
-> 
-> Because a container doesn't have to use namespaces to be a container
-> you still need a mechanism for a process to declare that it is in
-> fact
-> in a container, and to identify the container.
+On Wed, Dec 06, 2017 at 09:37:03AM +0800, xuejiufei wrote:
+> > So, wb_wait_for_completion() may end up returning earlier than
+> > expected but data integrity is waited by wait_sb_inodes() which isn't
+> > affected by inode cgroup wb migrations.  Have you actually seen this
+> > happening?
+> >=20
+> Yes=EF=BC=8C I have seen it actually happening. I think wait_sb_inodes() =
+only
+> wait for pages tagged with PAGECACHE_TAG_WRITEBACK, that means it wait the
+> pages written before. The pages are not written are still tagged with
+> PAGECACHE_TAG_DIRTY and wait_sb_inodes() will not wait for them.
 
-I like the idea but I'm still tossing it around in my head (and
-thinking about Casey's statement too). Lets say we have a 'docker-like' 
-container with pid=100  netns=X,userns=Y,mountns=Z. If I'm on the host
-in all init namespaces and I run
-  nsenter -t 100 -n ip link set eth0 promisc on
-How should this be logged? Did this command run in it's own 'container'
-unrelated to the 'docker-like' container?
+Ah, you're right.  Working on the fix.
 
--Eric
+Thanks.
+
+--=20
+tejun
