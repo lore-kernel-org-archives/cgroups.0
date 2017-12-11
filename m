@@ -1,64 +1,60 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
-Date: Mon, 11 Dec 2017 07:32:58 -0800
-Message-ID: <20171211153258.GI2421075@devbig577.frc2.facebook.com>
-References: <CANaxB-zT+sz=z1FFk5npnwMySdfKCBZDkM+P+=JXDkCXbh=rCw@mail.gmail.com>
- <1511868946-23959-1-git-send-email-prsood@codeaurora.org>
- <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
- <20171204202219.GF2421075@devbig577.frc2.facebook.com>
- <20171204225825.GP2421075@devbig577.frc2.facebook.com>
- <20171204230117.GF20227@worktop.programming.kicks-ass.net>
- <4e63b5e9-1696-910f-16ac-4d4d7eb98725@codeaurora.org>
- <40968aea-cd73-5ce4-d559-962d91e315c5@codeaurora.org>
+From: Eric Paris <eparis@redhat.com>
+Subject: Re: RFC(v2): Audit Kernel Container IDs
+Date: Mon, 11 Dec 2017 11:30:57 -0500
+Message-ID: <1513009857.6310.337.camel@redhat.com>
+References: <20171012141359.saqdtnodwmbz33b2@madcap2.tricolour.ca>
+         <75b7d6a6-42ba-2dff-1836-1091c7c024e7@schaufler-ca.com>
+         <7ebca85a-425c-2b95-9a5f-59d81707339e@digikod.net>
+         <f8ea78be-9bbf-2967-7b12-ac93bb85b0bc@schaufler-ca.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=WhlO/sEYEbRIi1Sec4410oomOqSi17srk7d455yZBV0=;
-        b=EMafBbIHVRQk+SVGwraotpOdYcThgq7Oq3LGLR7ji0qpPFMlU7y2Dzi70VBLChZyN7
-         +DELTAEaV1rcNONSvnPP3azDpVEAe+0hGmWq3XzWP/MS5GvVOv6zKo9LYD8lkk4C1nnO
-         0115cmsESPFV/K3Sn4jbFpV6lDJiGxefiEuBU0IdTHiqTivY566C5G8hjIL3gWW0yKUQ
-         EBOsmJBjZ/8P7t9h7mdg+3q2uIxJxyDsokzPQ0wWSXlkGFiBKgRNAnfJnwsWnJ10MI+X
-         rIP5IsJkUafDoa1X9LosQOBxENLhMYtN7GwKlHeVDsHWkvy/naFXnKXy5jwF1jQ+u1Wn
-         x+QA==
-Content-Disposition: inline
-In-Reply-To: <40968aea-cd73-5ce4-d559-962d91e315c5-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <f8ea78be-9bbf-2967-7b12-ac93bb85b0bc@schaufler-ca.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Casey Schaufler <casey@schaufler-ca.com>, =?ISO-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>, Richard Guy Briggs <rgb@redhat.com>, cgroups@vger.kernel.org, Linux Containers <containers@lists.linux-foundation.org>, Linux API <linux-api@vger.kernel.org>, Linux Audit <linux-audit@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux Network Development <netdev@vger.kernel.org>
+Cc: mszeredi@redhat.com, "Eric W. Biederman" <ebiederm@xmission.com>, Simo Sorce <simo@redhat.com>, jlayton@redhat.com, Carlos O'Donell <carlos@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Eric Paris <eparis@parisplace.org>, trondmy@primarydata.com, Michael Kerrisk <mtk.manpages@gmail.com>
 
-Hello, Prateek.
+On Sat, 2017-12-09 at 10:28 -0800, Casey Schaufler wrote:
+> On 12/9/2017 2:20 AM, Mickaï¿½l Salaï¿½n wrote:
 
-On Fri, Dec 08, 2017 at 05:15:55PM +0530, Prateek Sood wrote:
-> There is one deadlock issue during cgroup migration from cpu
-> hotplug path when a task T is being moved from source to
-> destination cgroup.
+> >  What about automatically create
+> > and assign an ID to a process when it enters a namespace different
+> > than
+> > one of its parent process? This delegates the (permission)
+> > responsibility to the use of namespaces (e.g. /proc/sys/user/max_*
+> > limit).
 > 
-> kworker/0:0
-> cpuset_hotplug_workfn()
->    cpuset_hotplug_update_tasks()
->       hotplug_update_tasks_legacy()
->         remove_tasks_in_empty_cpuset()
->           cgroup_transfer_tasks() // stuck in iterator loop
->             cgroup_migrate()
->               cgroup_migrate_add_task()
+> That gets ugly when you have a container that uses user, filesystem,
+> network and whatever else namespaces. If all containers used the same
+> set of namespaces I think this would be a fine idea, but they don't.
 > 
-> In cgroup_migrate_add_task() it checks for PF_EXITING flag of task T.
-> Task T will not migrate to destination cgroup. css_task_iter_start()
-> will keep pointing to task T in loop waiting for task T cg_list node
-> to be removed.
+> > One interesting side effect of this approach would be to be able to
+> > identify which processes are in the same set of namespaces, even if
+> > not
+> > spawn from the container but entered after its creation (i.e. using
+> > setns), by creating container IDs as a (deterministic) checksum
+> > from the
+> > /proc/self/ns/* IDs.
+> > 
+> > Since the concern is to identify a container, I think the ability
+> > to
+> > audit the switch from one container ID to another is enough. I
+> > don't
+> > think we need nested IDs.
+> 
+> Because a container doesn't have to use namespaces to be a container
+> you still need a mechanism for a process to declare that it is in
+> fact
+> in a container, and to identify the container.
 
-Heh, that's a bug in cgroup_transfer_tasks() which happened because I
-forgot to update when we changed how we handle exiting tasks.  The
-right thing to do here is making cgroup_transfer_tasks() repeat iff
-there were a valid migration target which didn't get transferred.
+I like the idea but I'm still tossing it around in my head (and
+thinking about Casey's statement too). Lets say we have a 'docker-like' 
+container with pid=100  netns=X,userns=Y,mountns=Z. If I'm on the host
+in all init namespaces and I run
+  nsenter -t 100 -n ip link set eth0 promisc on
+How should this be logged? Did this command run in it's own 'container'
+unrelated to the 'docker-like' container?
 
-Thanks.
-
--- 
-tejun
+-Eric
