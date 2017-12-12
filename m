@@ -1,39 +1,51 @@
-From: Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: limit max copied char length for cgroup file name
-Date: Tue, 12 Dec 2017 09:19:01 +0800
-Message-ID: <5d335794-f8e1-c763-a81e-49413733b696@cn.fujitsu.com>
-References: <20171209054758.13870-1-mashimiao.fnst@cn.fujitsu.com>
- <20171211150551.GC2421075@devbig577.frc2.facebook.com>
+From: Ma Shimiao <mashimiao.fnst@cn.fujitsu.com>
+Subject: [PATCH] cgroup: avoid cpoied names in cgroup longer than max
+Date: Tue, 12 Dec 2017 09:43:49 +0800
+Message-ID: <20171212014349.5036-1-mashimiao.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20171211150551.GC2421075-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Content-Language: en-MW
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: tj@kernel.org, lizefan@huawei.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ma Shimiao <mashimiao.fnst@cn.fujitsu.com>
 
-On 12/11/2017 11:05 PM, Tejun Heo wrote:
-> On Sat, Dec 09, 2017 at 01:47:58PM +0800, Ma Shimiao wrote:
->> the result of cgroup_file_name will be used by kernfs_remove_name,
->> and then by kernfs_remove_by_name_ns().
->> If reached the max length, may have problem printed by WARN() in
->> kernfs_remove_by_name_ns().
->>
->> Signed-off-by: Ma Shimiao <mashimiao.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> 
-> Can we use strscpy() instead?
+cgroup root name and file name have max length limit, we should
+avoid copying longer name than that to the name.
 
-OK, I will update the patch
-> 
-> Thanks.
-> 
+Signed-off-by: Ma Shimiao <mashimiao.fnst@cn.fujitsu.com>
+---
+ kernel/cgroup/cgroup.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 0b1ffe147f24..18d71fbd3923 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1397,7 +1397,7 @@ static char *cgroup_file_name(struct cgroup *cgrp, const struct cftype *cft,
+ 			 cgroup_on_dfl(cgrp) ? ss->name : ss->legacy_name,
+ 			 cft->name);
+ 	else
+-		strncpy(buf, cft->name, CGROUP_FILE_NAME_MAX);
++		strscpy(buf, cft->name, CGROUP_FILE_NAME_MAX);
+ 	return buf;
+ }
+ 
+@@ -1864,9 +1864,9 @@ void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts)
+ 
+ 	root->flags = opts->flags;
+ 	if (opts->release_agent)
+-		strcpy(root->release_agent_path, opts->release_agent);
++		strscpy(root->release_agent_path, opts->release_agent, PATH_MAX);
+ 	if (opts->name)
+-		strcpy(root->name, opts->name);
++		strscpy(root->name, opts->name, MAX_CGROUP_ROOT_NAMELEN);
+ 	if (opts->cpuset_clone_children)
+ 		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->cgrp.flags);
+ }
 -- 
-Ma Shimiao
-Development Dept.I
-Nanjing Fujitsu Nanda Software Tech. Co., Ltd.(FNST)
+2.13.6
+
+
 
