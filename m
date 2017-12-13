@@ -1,69 +1,90 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
-Date: Wed, 13 Dec 2017 08:06:17 -0800
-Message-ID: <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
-References: <CANaxB-zT+sz=z1FFk5npnwMySdfKCBZDkM+P+=JXDkCXbh=rCw@mail.gmail.com>
- <1511868946-23959-1-git-send-email-prsood@codeaurora.org>
- <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
- <20171204202219.GF2421075@devbig577.frc2.facebook.com>
- <20171204225825.GP2421075@devbig577.frc2.facebook.com>
- <20171204230117.GF20227@worktop.programming.kicks-ass.net>
- <20171211152059.GH2421075@devbig577.frc2.facebook.com>
- <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH] cgroup, docs: document cgroup v2 device controller
+Date: Wed, 13 Dec 2017 19:49:03 +0000
+Message-ID: <20171213194903.1265-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=x2MrNLOpirbHrA/wrNjREHDSVOPYAKGCopoUwF4gILQ=;
-        b=Bpsh/GoYa0YRc4y1XpsFEkOtacpXzoro+FLgyUSL996nCajlspKLzphI0pBk5rddi7
-         c96EH1UhtrS4yGk3bCOJfzPnXKXjvF92qt8bnI5j1aGzfR3BiPI62ns5N4sUoAVB8Qr2
-         Ydn5huFKsQuqI9uZ+iY6/047q9jt34BnZmb7v+8QCYdg5E8ow6TBdoeUZLt6S15wJtbv
-         SaMIieqmOkO796NQUifzDlouom4RuSoglAi8b7bRu3o0ouwQECcWP9zpq3d/TzdniPuo
-         EApfyN5YPb/7pRcgB/gVCnRJw1+aDEwSVqNiPElpwaqavEI1v/yGC/bXGprLb2y1v8zr
-         5wQg==
-Content-Disposition: inline
-In-Reply-To: <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=u6Lx7biRpsBaG/1hvhcLS1Syvq2zT0zV7jCPb5Wb8r8=;
+ b=n0o1x9S1O1I51Qh8385yfxWvlKu4Vi6ojf31DvXNUHVUTttKFLAPfT7Q+UHYg/DAr4vq
+ Cb6W0WyKYgzysjlaNxAbkJP6c8wQw21rSjiwQShqO9tmSyH4jbG7NQDfhWF0SsbEZUoC
+ R8SNWjgO0ompMy68IKDk+7gc48eVMYsrIZw= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=u6Lx7biRpsBaG/1hvhcLS1Syvq2zT0zV7jCPb5Wb8r8=;
+ b=Re840hKHANbQqXSUx2BPdQvLEvOErB0Q6cywo7NQJr87v1Y1vzDrwOGED7KqJyvQybaV7FZhaeIEgWqoec+EkKHPRUAqDacEIcHP2bwM3xtMNnHlibfPP/HkMX9Z3xguDtE4MmVyELyojh2FIw/swJG4PpWmh/Sr0a0DAlaYQhg=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood@codeaurora.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
+To: tj@kernel.org
+Cc: Roman Gushchin <guro@fb.com>, Alexei Starovoitov <ast@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Prateek.
+Add the corresponding section in cgroup v2 documentation.
 
-On Wed, Dec 13, 2017 at 01:20:46PM +0530, Prateek Sood wrote:
-> This change makes the usage of cpuset_hotplug_workfn() from cpu
-> hotplug path synchronous. For memory hotplug it still remains
-> asynchronous.
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Alexei Starovoitov <ast@kernel.org>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ Documentation/cgroup-v2.txt | 33 +++++++++++++++++++++++++++++----
+ 1 file changed, 29 insertions(+), 4 deletions(-)
 
-Ah, right.
-
-> Memory migration happening from cpuset_hotplug_workfn() is
-> already asynchronous by queuing cpuset_migrate_mm_workfn() in
-> cpuset_migrate_mm_wq.
->
-> cpuset_hotplug_workfn()
->    cpuset_hotplug_workfn(()
->       cpuset_migrate_mm()
->          queue_work(cpuset_migrate_mm_wq)
-> 
-> It seems that memory migration latency might not have
-> impact with this change.
-> 
-> Please let me know if you meant something else by cpuset
-> migration taking time when memory migration is turned on.
-
-No, I didn't.  I was just confused about which part became
-synchronous.  So, I don't have anything against making the cpu part
-synchronous, but let's not do that as the fix to the deadlocks cuz,
-while we can avoid them by changing cpuset, I don't think cpuset is
-the root cause for them.  If there are benefits to making cpuset cpu
-migration synchronous, let's do that for those benefits.
-
-Thanks.
-
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 2cddab7efb20..d6efabb487e3 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -53,10 +53,11 @@ v1 is available under Documentation/cgroup-v1/.
+        5-3-2. Writeback
+      5-4. PID
+        5-4-1. PID Interface Files
+-     5-5. RDMA
+-       5-5-1. RDMA Interface Files
+-     5-6. Misc
+-       5-6-1. perf_event
++     5-5. Device
++     5-6. RDMA
++       5-6-1. RDMA Interface Files
++     5-7. Misc
++       5-7-1. perf_event
+    6. Namespace
+      6-1. Basics
+      6-2. The Root and Views
+@@ -1429,6 +1430,30 @@ through fork() or clone(). These will return -EAGAIN if the creation
+ of a new process would cause a cgroup policy to be violated.
+ 
+ 
++Device controller
++-----------------
++
++Device controller manages access to device files. It includes both
++creation of new device files (using mknod), and access to the
++existing device files.
++
++Cgroup v2 device controller has no interface files and is implemented
++on top of cgroup BPF. To control access to device files, a user may
++create bpf programs of the BPF_CGROUP_DEVICE type and attach them
++to cgroups. On an attempt to access a device file, corresponding
++BPF programs will be executed, and depending on the return value
++the attempt will succeed or fail with -EPERM.
++
++A BPF_CGROUP_DEVICE program takes a pointer to the bpf_cgroup_dev_ctx
++structure, which describes the device access attempt: access type
++(mknod/read/write) and device (type, major and minor numbers).
++If the program returns 0, the attempt fails with -EPERM, otherwise
++it succeeds.
++
++An example of BPF_CGROUP_DEVICE program may be found in the kernel
++source tree in the tools/testing/selftests/bpf/dev_cgroup.c file.
++
++
+ RDMA
+ ----
+ 
 -- 
-tejun
+2.14.3
+
