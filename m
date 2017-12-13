@@ -1,55 +1,48 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] writeback: synchronize sync(2) against cgroup
- writeback membership switches
-Date: Wed, 13 Dec 2017 07:39:30 -0800
-Message-ID: <20171213153930.GO3919388@devbig577.frc2.facebook.com>
-References: <dc694ae2-f07f-61e1-7097-7c8411cee12d@gmail.com>
- <20171205182007.GV2421075@devbig577.frc2.facebook.com>
- <8844b550-d91c-38d5-997a-a899d1e4aa42@gmail.com>
- <20171211195052.GN2421075@devbig577.frc2.facebook.com>
- <20171212163830.GC3919388@devbig577.frc2.facebook.com>
- <20171213110004.GB23068@quack2.suse.cz>
+Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
+Date: Wed, 13 Dec 2017 07:40:41 -0800
+Message-ID: <20171213154041.GP3919388@devbig577.frc2.facebook.com>
+References: <CANaxB-zT+sz=z1FFk5npnwMySdfKCBZDkM+P+=JXDkCXbh=rCw@mail.gmail.com>
+ <1511868946-23959-1-git-send-email-prsood@codeaurora.org>
+ <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
+ <20171204202219.GF2421075@devbig577.frc2.facebook.com>
+ <20171204225825.GP2421075@devbig577.frc2.facebook.com>
+ <20171204230117.GF20227@worktop.programming.kicks-ass.net>
+ <4e63b5e9-1696-910f-16ac-4d4d7eb98725@codeaurora.org>
+ <40968aea-cd73-5ce4-d559-962d91e315c5@codeaurora.org>
+ <20171211153258.GI2421075@devbig577.frc2.facebook.com>
+ <c54d904e-13bc-8e2b-c9c1-8bf9cb8a33a3@codeaurora.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=y3U6H016CWdsphrrJpMDzto2PEwaA4x2UDEHw2DynLc=;
-        b=V5HKUYJa1RNTsT6D9TTWQMibZrSj8lrcdwHOMgCRmIkmxT+sn+T7RaarW7BlJ0rzB4
-         VR3ix39r9gVoFHh+MM9B8v/457Us+YkKX4+d0Qy361VYjI2d2g6hvrQ04PEUKVY6rya1
-         wnr2cpy3xqADchRFUHqgAnlksncy/ObHR/TuvoYeptjA5NiXsJIGlu+4kuWBqsB34yrO
-         6kYs86DVIZnX6KDWF1at9Tuy26hyeMiaRfMR3BcptmmepF9HW61Cbxh91731jx2DcXN8
-         yudaCUeroYmbN6Pjeryt3pzsL2QPoQ01tgYp5FZjD9R4/YepbeRUFw+3v/kImKseHuTJ
-         5R9w==
+        bh=pa7j0kNwndei7PLawlT6bmT+/hIaKFWOnohm2o0JPYc=;
+        b=S3gQk2FPPR0DY43RxmqF7OwizgYBQINPb4LyNNmzgsWWl2j8l16/DlI5Gecsnp13Ja
+         w4XrZDpeMaLrqon0J1+/f+m3ChPScsRhgs8mv8tQh8uG6XwHFQwlldsd7K9alQaUOkOJ
+         iGEiPEd2TGQZJGrvb0Fxla9ih7MVA+2/cw2gq64z4wgWZifMmy6ALSIuVQssQup1piUo
+         jymWlTY6JEFQs0r46+7ZAakBTDl/FdwfB/hpu+qHl1fJGsDVrJRrlNqV2jrGpNGZqQ/Q
+         uDniuaos1SxXQ3SdbANYyM6Q9svVVKmEqtCpv8F8TtPMyiqgXwraLEI3kiryXJjb+J9S
+         1pBg==
 Content-Disposition: inline
-In-Reply-To: <20171213110004.GB23068@quack2.suse.cz>
+In-Reply-To: <c54d904e-13bc-8e2b-c9c1-8bf9cb8a33a3@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, xuejiufei <xuejiufei@gmail.com>, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Prateek Sood <prsood@codeaurora.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
 
-Hello,
+Hello, Prateek.
 
-On Wed, Dec 13, 2017 at 12:00:04PM +0100, Jan Kara wrote:
-> OK, but this effectively prevents writeback from sync_inodes_sb() to ever
-> make inode switch wbs. Cannot that be abused in some way like making sure
-> writeback of our memcg is "invisible" by forcing it out using sync(2)? It
-> just looks a bit dangerous to me...
+On Wed, Dec 13, 2017 at 07:58:24PM +0530, Prateek Sood wrote:
+> Did you mean something like below. If not then could you
+> please share a patch for this problem in
+> cgroup_transfer_tasks().
 
-That's true.  There are a couple mitigating factors tho.
-
-* While it can delay switching during sync(2), it'll all still be
-  recorded and the switch will happen soon if needed.
-
-* sync(2) is hugely disruptive with or without this and can easily be
-  used to DOS the whole system.  People are working on restricting the
-  blast radius of sync(2) to mitigate this problem, which most likely
-  make this a non-problem too.
-
-If you can think of a better solution, I'm all ears.
+Oh we surely can add a new iterator but we can just count in
+cgroup_transfer_tasks() too, right?
 
 Thanks.
 
