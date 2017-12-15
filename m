@@ -1,66 +1,98 @@
-From: Tejun Heo <tj@kernel.org>
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
 Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
-Date: Fri, 15 Dec 2017 05:22:22 -0800
-Message-ID: <20171215132222.GF3919388@devbig577.frc2.facebook.com>
-References: <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
+Date: Sat, 16 Dec 2017 00:34:18 +0530
+Message-ID: <7c25aac5-ef23-26c6-5096-4f1ab1b53b70@codeaurora.org>
+References: <CANaxB-zT+sz=z1FFk5npnwMySdfKCBZDkM+P+=JXDkCXbh=rCw@mail.gmail.com>
+ <1511868946-23959-1-git-send-email-prsood@codeaurora.org>
+ <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
  <20171204202219.GF2421075@devbig577.frc2.facebook.com>
  <20171204225825.GP2421075@devbig577.frc2.facebook.com>
  <20171204230117.GF20227@worktop.programming.kicks-ass.net>
- <4e63b5e9-1696-910f-16ac-4d4d7eb98725@codeaurora.org>
- <40968aea-cd73-5ce4-d559-962d91e315c5@codeaurora.org>
- <20171211153258.GI2421075@devbig577.frc2.facebook.com>
- <c54d904e-13bc-8e2b-c9c1-8bf9cb8a33a3@codeaurora.org>
- <20171213154041.GP3919388@devbig577.frc2.facebook.com>
- <c282b638-95ef-b688-9249-f23a733c0a43@codeaurora.org>
+ <20171211152059.GH2421075@devbig577.frc2.facebook.com>
+ <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
+ <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MoG4qmEHUiYeVLyD6tom5crgrz0c9Qr/b5zB/SsZNUA=;
-        b=dRf1E30tuXgsFpiKvc5gCrs3MzrsChMCO4BJMUssHdBjGfUx98bji/8cMGNoFPa8yS
-         qHwII3x4oL6zvxyfFrMtHcb5evvzFY596LsBD6fE1IcAw5gZMXcsXP3BEWu/mMkd8eUY
-         Hm2aX/J9BA3wMxx3fycNnSL0YWSJ346NwN+fRzgL+xslwWuG88eCcno4uzPoxXwOZ0eu
-         GfgZ6QyKCNSNcIVk+nH5OrDQhkQAxIObIxNW5rgEfzK9DL7yOlvdSagwUKP5mmwlocVa
-         xoyegSwJu4dchXRCKULPkkcKUJLkQrZmzyEDhDfLFLFMF1dtAsje2wbuUBBQSnmVqVEb
-         N7gA==
-Content-Disposition: inline
-In-Reply-To: <c282b638-95ef-b688-9249-f23a733c0a43@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1513364662;
+        bh=kN/FwsEhWcKWajbJ/uKF1wgMu1fw+Nb9SWfWtemartk=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=lxcSb4QnRisnXrUcsxg86aVVXTmvqufPfN0HVV7nhLVt9VyWpR2y0Su2ux/DNY9Kn
+         poxg5PBnwDROr+NZ74A0TpXCQtE2+pEiw6Od9cCpZ/aG+tJxhP3dgTYHIm5CPfXY+m
+         9QHNe+MqqrRFXHgz6Jy/9wQ+qlJUJyKhq+zj4qFg=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1513364662;
+        bh=kN/FwsEhWcKWajbJ/uKF1wgMu1fw+Nb9SWfWtemartk=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=lxcSb4QnRisnXrUcsxg86aVVXTmvqufPfN0HVV7nhLVt9VyWpR2y0Su2ux/DNY9Kn
+         poxg5PBnwDROr+NZ74A0TpXCQtE2+pEiw6Od9cCpZ/aG+tJxhP3dgTYHIm5CPfXY+m
+         9QHNe+MqqrRFXHgz6Jy/9wQ+qlJUJyKhq+zj4qFg=
+In-Reply-To: <20171213160617.GQ3919388-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood@codeaurora.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
 
-Hello, Prateek.
-
-On Fri, Dec 15, 2017 at 02:24:55PM +0530, Prateek Sood wrote:
-> Following are two ways to improve cgroup_transfer_tasks(). In
-> both cases task in PF_EXITING state would be left in source
-> cgroup. It would be removed from cgroup_exit() in exit path.
+On 12/13/2017 09:36 PM, Tejun Heo wrote:
+> Hello, Prateek.
 > 
-> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> index 024085d..e2bdcdb 100644
-> --- a/kernel/cgroup/cgroup-v1.c
-> +++ b/kernel/cgroup/cgroup-v1.c
-> @@ -123,7 +123,10 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
->          */
->         do {
->                 css_task_iter_start(&from->self, 0, &it);
-> -               task = css_task_iter_next(&it);
-> +               do {
-> +                       task = css_task_iter_next(&it);
-> +               } while (task && (task & PF_EXITING))
-> +
+> On Wed, Dec 13, 2017 at 01:20:46PM +0530, Prateek Sood wrote:
+>> This change makes the usage of cpuset_hotplug_workfn() from cpu
+>> hotplug path synchronous. For memory hotplug it still remains
+>> asynchronous.
+> 
+> Ah, right.
+> 
+>> Memory migration happening from cpuset_hotplug_workfn() is
+>> already asynchronous by queuing cpuset_migrate_mm_workfn() in
+>> cpuset_migrate_mm_wq.
+>>
+>> cpuset_hotplug_workfn()
+>>    cpuset_hotplug_workfn(()
+>>       cpuset_migrate_mm()
+>>          queue_work(cpuset_migrate_mm_wq)
+>>
+>> It seems that memory migration latency might not have
+>> impact with this change.
+>>
+>> Please let me know if you meant something else by cpuset
+>> migration taking time when memory migration is turned on.
+> 
+> No, I didn't.  I was just confused about which part became
+> synchronous.  So, I don't have anything against making the cpu part
+> synchronous, but let's not do that as the fix to the deadlocks cuz,
+> while we can avoid them by changing cpuset, I don't think cpuset is
+> the root cause for them.  If there are benefits to making cpuset cpu
+> migration synchronous, let's do that for those benefits.
 
-Yeah, this looks good to me.  We can't just make a single pass as in
-the other one because we can race aginst fork.  And PF_EXITING being
-left behind is what was happening previously too anyway.  They can't
-be moved.
+Making CPU part synchronous can only be achieved if we retain the
+patch for inverting the locking order for cpuset_mutex and
+cpu_hotplug_lock.
 
-Thanks.
+> 
+> Thanks.
+> 
+
+Peter,
+
+Do you suggest taking both the patches:
+1) Inverting locking order of cpuset_mutex and cpu_hotplug_lock.
+2) Make cpuset hotplug work synchronous.
+
+or  
+
+ https://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git/commit/?h=for-4.15-fixes&id=e8b3f8db7aad99fcc5234fc5b89984ff6620de3d
+
+I would leave it for you and TJ to decide on this.
+
+Thanks
+
+
 
 -- 
-tejun
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation
+Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
+Collaborative Project
