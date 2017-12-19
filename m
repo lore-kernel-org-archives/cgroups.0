@@ -1,51 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: Fix deadlock in cpu hotplug path
-Date: Tue, 19 Dec 2017 05:39:58 -0800
-Message-ID: <20171219133958.GM3919388@devbig577.frc2.facebook.com>
-References: <b50d7b64-121f-9a4c-5269-aec9a73787ba@codeaurora.org>
- <1513668417-26785-1-git-send-email-prsood@codeaurora.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
+Date: Tue, 19 Dec 2017 07:12:19 -0800
+Message-ID: <CALvZod5jU9vPoJaf44TVT0_HQpEESiELJU5MD_DDRbcOkPNQbg@mail.gmail.com>
+References: <20171219000131.149170-1-shakeelb@google.com> <20171219124908.GS2787@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=unERHvaKdAwB0WtFjlFkfuQ9GRYaS3gEW+xWCmyRqo0=;
-        b=AosYbDyGXGRRU8p9CH0vtQVLiQw7D4yiLVC8Jg0wyKHIV8VamRAhNA5mINoXmUqo/3
-         NRk6PRCnxFsd/m1+bdneN6SrV6SvLeeySWQWjDWUhCcf+5LhsE6uUfSB5LHSjYguFymX
-         k/7dzGXdgiVvGSe9znnLOtbncvMV16KNUAGc6DuSYI9gvY+Mb5oHoeDRhmJyl7cU4vaV
-         3jMkaek3AWbRes53nTaYrmBMhdkmr0MLGoNCotubEiOpNm18fdK73JvwVkPqvBm+rYv3
-         aKMt4AreNA+Ok5A8sU41vuQIwDpHEfC80ejMv+sNv+r3vG81debRa1lzQbQyxlgmIUuJ
-         3P7Q==
-Content-Disposition: inline
-In-Reply-To: <1513668417-26785-1-git-send-email-prsood@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=tC/0+CVz4D+ONW5+QjUy4ac0Qtrx5GV26T+eDFFMZFk=;
+        b=Te+8m1Z2NtlphSARZquQwMWCirqEWFZO+yv3Q0oAmABPtEstjaVaM+VHCSubIPdnim
+         jlhEyfZ8JdUSPwrTSmcWGTPH7KXOKmWjOUxmjoEvw2an+xeDx47DYp0xAtDkio8mpQ/3
+         re1z1LX4KRfPirqMqlsC1KXfVZTd5kYvg1tYXTnVuhliV90wY/wV1GUP56nOtLgj6hBO
+         JKIMF1QrCNCSmhoWvPGVwJMuBTnH/YaT6IgsjY2tuZ0lrVlihtGxtn2DzciAdjX0yM/w
+         lzSAeZoP14zkNPF0wOHO3eiOYXKsiIHf+IizH4dKdJnQK3TVgMjy5Z22MPan+PGtsrwK
+         7e6w==
+In-Reply-To: <20171219124908.GS2787@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood@codeaurora.org>
-Cc: peterz@infradead.org, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org
 
-On Tue, Dec 19, 2017 at 12:56:57PM +0530, Prateek Sood wrote:
-> Deadlock during cgroup migration from cpu hotplug path when a task T is
-> being moved from source to destination cgroup.
-...
-> Task T inserted a work item in the worklist of cpu0 low priority
-> worker pool. It is waiting for expedited grace period work item
-> to execute. This work item will only be executed once kworker/0:0
-> complete execution of cpuset_hotplug_workfn().
-> 
-> kworker/0:0 ==> Task T ==>kworker/0:0
-> 
-> In case of PF_EXITING task being migrated from source to destination
-> cgroup, migrate next available task in source cgroup.
-> 
-> Change-Id: I8874fb04479c136cae4dabd5c168c7749df66664
-> Signed-off-by: Prateek Sood <prsood@codeaurora.org>
+On Tue, Dec 19, 2017 at 4:49 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> On Mon 18-12-17 16:01:31, Shakeel Butt wrote:
+>> The memory controller in cgroup v1 provides the memory+swap (memsw)
+>> interface to account to the combined usage of memory and swap of the
+>> jobs. The memsw interface allows the users to limit or view the
+>> consistent memory usage of their jobs irrespectibe of the presense of
+>> swap on the system (consistent OOM and memory reclaim behavior). The
+>> memory+swap accounting makes the job easier for centralized systems
+>> doing resource usage monitoring, prediction or anomaly detection.
+>>
+>> In cgroup v2, the 'memsw' interface was dropped and a new 'swap'
+>> interface has been introduced which allows to limit the actual usage of
+>> swap by the job. For the systems where swap is a limited resource,
+>> 'swap' interface can be used to fairly distribute the swap resource
+>> between different jobs. There is no easy way to limit the swap usage
+>> using the 'memsw' interface.
+>>
+>> However for the systems where the swap is cheap and can be increased
+>> dynamically (like remote swap and swap on zram), the 'memsw' interface
+>> is much more appropriate as it makes swap transparent to the jobs and
+>> gives consistent memory usage history to centralized monitoring systems.
+>>
+>> This patch adds memsw interface to cgroup v2 memory controller behind a
+>> mount option 'memsw'. The memsw interface is mutually exclusive with
+>> the existing swap interface. When 'memsw' is enabled, reading or writing
+>> to 'swap' interface files will return -ENOTSUPP and vice versa. Enabling
+>> or disabling memsw through remounting cgroup v2, will only be effective
+>> if there are no decendants of the root cgroup.
+>>
+>> When memsw accounting is enabled then "memory.high" is comapred with
+>> memory+swap usage. So, when the allocating job's memsw usage hits its
+>> high mark, the job will be throttled by triggering memory reclaim.
+>
+> From a quick look, this looks like a mess.
 
-Applied to cgroup/for-4.15-fixes.
+The main motivation behind this patch is to convince that memsw has
+genuine use-cases. How to provide memsw is still in RFC stage.
+Suggestions and comments are welcomed.
 
-Thanks a lot, Prateek.
+> We have agreed to go with
+> the current scheme for some good reasons.
 
--- 
-tejun
+Yes I agree, when the swap is a limited resource the current 'swap'
+interface should be used to fairly distribute it between different
+jobs.
+
+> There are cons/pros for both
+> approaches but I am not convinced we should convolute the user API for
+> the usecase you describe.
+>
+
+Yes, there are pros & cons, therefore we should give users the option
+to select the API that is better suited for their use-cases and
+environment. Both approaches are not interchangeable. We use memsw
+internally for use-cases I mentioned in commit message. This is one of
+the main blockers for us to even consider cgroup-v2 for memory
+controller.
+
+>> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
