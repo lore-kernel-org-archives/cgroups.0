@@ -1,63 +1,53 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
-Date: Tue, 19 Dec 2017 13:49:08 +0100
-Message-ID: <20171219124908.GS2787@dhcp22.suse.cz>
-References: <20171219000131.149170-1-shakeelb@google.com>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2] writeback: synchronize sync(2) against cgroup
+ writeback membership switches
+Date: Tue, 19 Dec 2017 14:04:54 +0100
+Message-ID: <20171219130454.GJ2277@quack2.suse.cz>
+References: <dc694ae2-f07f-61e1-7097-7c8411cee12d@gmail.com>
+ <20171205182007.GV2421075@devbig577.frc2.facebook.com>
+ <8844b550-d91c-38d5-997a-a899d1e4aa42@gmail.com>
+ <20171211195052.GN2421075@devbig577.frc2.facebook.com>
+ <20171212163830.GC3919388@devbig577.frc2.facebook.com>
+ <20171213110004.GB23068@quack2.suse.cz>
+ <20171213153930.GO3919388@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20171219000131.149170-1-shakeelb@google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20171213153930.GO3919388-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuejiufei <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 18-12-17 16:01:31, Shakeel Butt wrote:
-> The memory controller in cgroup v1 provides the memory+swap (memsw)
-> interface to account to the combined usage of memory and swap of the
-> jobs. The memsw interface allows the users to limit or view the
-> consistent memory usage of their jobs irrespectibe of the presense of
-> swap on the system (consistent OOM and memory reclaim behavior). The
-> memory+swap accounting makes the job easier for centralized systems
-> doing resource usage monitoring, prediction or anomaly detection.
+On Wed 13-12-17 07:39:30, Tejun Heo wrote:
+> Hello,
 > 
-> In cgroup v2, the 'memsw' interface was dropped and a new 'swap'
-> interface has been introduced which allows to limit the actual usage of
-> swap by the job. For the systems where swap is a limited resource,
-> 'swap' interface can be used to fairly distribute the swap resource
-> between different jobs. There is no easy way to limit the swap usage
-> using the 'memsw' interface.
+> On Wed, Dec 13, 2017 at 12:00:04PM +0100, Jan Kara wrote:
+> > OK, but this effectively prevents writeback from sync_inodes_sb() to ever
+> > make inode switch wbs. Cannot that be abused in some way like making sure
+> > writeback of our memcg is "invisible" by forcing it out using sync(2)? It
+> > just looks a bit dangerous to me...
 > 
-> However for the systems where the swap is cheap and can be increased
-> dynamically (like remote swap and swap on zram), the 'memsw' interface
-> is much more appropriate as it makes swap transparent to the jobs and
-> gives consistent memory usage history to centralized monitoring systems.
+> That's true.  There are a couple mitigating factors tho.
 > 
-> This patch adds memsw interface to cgroup v2 memory controller behind a
-> mount option 'memsw'. The memsw interface is mutually exclusive with
-> the existing swap interface. When 'memsw' is enabled, reading or writing
-> to 'swap' interface files will return -ENOTSUPP and vice versa. Enabling
-> or disabling memsw through remounting cgroup v2, will only be effective
-> if there are no decendants of the root cgroup.
+> * While it can delay switching during sync(2), it'll all still be
+>   recorded and the switch will happen soon if needed.
 > 
-> When memsw accounting is enabled then "memory.high" is comapred with
-> memory+swap usage. So, when the allocating job's memsw usage hits its
-> high mark, the job will be throttled by triggering memory reclaim.
+> * sync(2) is hugely disruptive with or without this and can easily be
+>   used to DOS the whole system.  People are working on restricting the
+>   blast radius of sync(2) to mitigate this problem, which most likely
+>   make this a non-problem too.
+> 
+> If you can think of a better solution, I'm all ears.
 
-From a quick look, this looks like a mess. We have agreed to go with
-the current scheme for some good reasons. There are cons/pros for both
-approaches but I am not convinced we should convolute the user API for
-the usecase you describe.
+After some thinking about this I don't have a better solution. So you can
+add:
 
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+Acked-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+
+								Honza
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
