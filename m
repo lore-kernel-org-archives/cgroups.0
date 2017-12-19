@@ -1,96 +1,63 @@
-From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: [PATCH] cgroup: Fix deadlock in cpu hotplug path
-Date: Tue, 19 Dec 2017 12:56:57 +0530
-Message-ID: <1513668417-26785-1-git-send-email-prsood@codeaurora.org>
-References: <b50d7b64-121f-9a4c-5269-aec9a73787ba@codeaurora.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1513668431;
-        bh=eSNzE7tJyPuLUED7+x6BK2Zws9oi/Sd/xXOT/BBjBYs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RSPczLAV9HKtcCXC0xbxX8+pCncsaT8bwX/2umURYudulifUF6stq670SF8Fe7fdH
-         Gy7YIaCNNdNbexwEDsIqOtiTwUJTF1NlymBdEyCs3G6UrS8ctShpjNEK60Q5isoC3P
-         qWVZ0G17KsuYEYypqg/0LkSmw/vYX/j6C/vvanSo=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1513668430;
-        bh=eSNzE7tJyPuLUED7+x6BK2Zws9oi/Sd/xXOT/BBjBYs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bhgqP9No9h14vMs+XQKUlZ5l1lxNgqAjsqjk33tXMpXgPwjL2c/8KpFq0zfYt8EXI
-         PqmxxtGWsQyBlRfk54PZDxJ9WCPXnXgRe4w9/K8PhyOhcdru46LSFo43KS8lXJTF8X
-         9hBlLvoUYJtGtQzE8/3B4mtlfutkf+M606oaF1F4=
-In-Reply-To: <b50d7b64-121f-9a4c-5269-aec9a73787ba-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
+Date: Tue, 19 Dec 2017 13:49:08 +0100
+Message-ID: <20171219124908.GS2787@dhcp22.suse.cz>
+References: <20171219000131.149170-1-shakeelb@google.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20171219000131.149170-1-shakeelb@google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-Deadlock during cgroup migration from cpu hotplug path when a task T is
-being moved from source to destination cgroup.
+On Mon 18-12-17 16:01:31, Shakeel Butt wrote:
+> The memory controller in cgroup v1 provides the memory+swap (memsw)
+> interface to account to the combined usage of memory and swap of the
+> jobs. The memsw interface allows the users to limit or view the
+> consistent memory usage of their jobs irrespectibe of the presense of
+> swap on the system (consistent OOM and memory reclaim behavior). The
+> memory+swap accounting makes the job easier for centralized systems
+> doing resource usage monitoring, prediction or anomaly detection.
+> 
+> In cgroup v2, the 'memsw' interface was dropped and a new 'swap'
+> interface has been introduced which allows to limit the actual usage of
+> swap by the job. For the systems where swap is a limited resource,
+> 'swap' interface can be used to fairly distribute the swap resource
+> between different jobs. There is no easy way to limit the swap usage
+> using the 'memsw' interface.
+> 
+> However for the systems where the swap is cheap and can be increased
+> dynamically (like remote swap and swap on zram), the 'memsw' interface
+> is much more appropriate as it makes swap transparent to the jobs and
+> gives consistent memory usage history to centralized monitoring systems.
+> 
+> This patch adds memsw interface to cgroup v2 memory controller behind a
+> mount option 'memsw'. The memsw interface is mutually exclusive with
+> the existing swap interface. When 'memsw' is enabled, reading or writing
+> to 'swap' interface files will return -ENOTSUPP and vice versa. Enabling
+> or disabling memsw through remounting cgroup v2, will only be effective
+> if there are no decendants of the root cgroup.
+> 
+> When memsw accounting is enabled then "memory.high" is comapred with
+> memory+swap usage. So, when the allocating job's memsw usage hits its
+> high mark, the job will be throttled by triggering memory reclaim.
 
-kworker/0:0
-cpuset_hotplug_workfn()
-   cpuset_hotplug_update_tasks()
-      hotplug_update_tasks_legacy()
-        remove_tasks_in_empty_cpuset()
-          cgroup_transfer_tasks() // stuck in iterator loop
-            cgroup_migrate()
-              cgroup_migrate_add_task()
+From a quick look, this looks like a mess. We have agreed to go with
+the current scheme for some good reasons. There are cons/pros for both
+approaches but I am not convinced we should convolute the user API for
+the usecase you describe.
 
-In cgroup_migrate_add_task() it checks for PF_EXITING flag of task T.
-Task T will not migrate to destination cgroup. css_task_iter_start()
-will keep pointing to task T in loop waiting for task T cg_list node
-to be removed.
-
-Task T
-do_exit()
-  exit_signals() // sets PF_EXITING
-  exit_task_namespaces()
-    switch_task_namespaces()
-      free_nsproxy()
-        put_mnt_ns()
-          drop_collected_mounts()
-            namespace_unlock()
-              synchronize_rcu()
-                _synchronize_rcu_expedited()
-                  schedule_work() // on cpu0 low priority worker pool
-                  wait_event() // waiting for work item to execute
-
-Task T inserted a work item in the worklist of cpu0 low priority
-worker pool. It is waiting for expedited grace period work item
-to execute. This work item will only be executed once kworker/0:0
-complete execution of cpuset_hotplug_workfn().
-
-kworker/0:0 ==> Task T ==>kworker/0:0
-
-In case of PF_EXITING task being migrated from source to destination
-cgroup, migrate next available task in source cgroup.
-
-Change-Id: I8874fb04479c136cae4dabd5c168c7749df66664
-Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
----
- kernel/cgroup/cgroup-v1.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 024085d..a2c05d2 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -123,7 +123,11 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
- 	 */
- 	do {
- 		css_task_iter_start(&from->self, 0, &it);
--		task = css_task_iter_next(&it);
-+
-+		do {
-+			task = css_task_iter_next(&it);
-+		} while (task && (task->flags & PF_EXITING));
-+
- 		if (task)
- 			get_task_struct(task);
- 		css_task_iter_end(&it);
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
 -- 
-Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc., 
-is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
