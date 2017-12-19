@@ -1,101 +1,96 @@
-From: George Amanakis <gamanakis-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: PROBLEM: NULL pointer dereference in kernel 4.14.6
-Date: Mon, 18 Dec 2017 15:17:54 -0500
-Message-ID: <1513628274.1378.1.camel@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-f4HSmTLRDTGv78JytkxV"
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: [PATCH] cgroup: Fix deadlock in cpu hotplug path
+Date: Tue, 19 Dec 2017 12:56:57 +0530
+Message-ID: <1513668417-26785-1-git-send-email-prsood@codeaurora.org>
+References: <b50d7b64-121f-9a4c-5269-aec9a73787ba@codeaurora.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:mime-version;
-        bh=VC//cLRgn1EL6wdkn+mUdAlkDb/dbjKXoE0aE34MJY0=;
-        b=jZpkPGvhphzE/EdNYSWzPsvJuybQyCowDJGOPnRHO57Q1CEGiN+hMoGfDo7yuBEm94
-         Oabq5LtV9eci1gJMECv/D32Op2ZIsEEnxE0zXiXmXPsz6kuA6kxQ6gwyH9hvYxOjl+JH
-         cufyz24Ms77Hkt3HPwCjDKxwqlKaRE3t+Yyu7Me/DIPKkJaJSS9bdWeuthB/f7yj/C8T
-         8VO8h/Q8mGzYBMBfjJhE8qdeMRpp9pzSOBNYpQy7uqfZLaQ19XvKSykIh4XL9vaDz0R8
-         byCTQO9NMYbI7qCuv/qDOsLr+J2xQ5gyE7A/EtkWmmrqjEcNyZVnICiZAtelG4hvI5Kp
-         5UsA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1513668431;
+        bh=eSNzE7tJyPuLUED7+x6BK2Zws9oi/Sd/xXOT/BBjBYs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=RSPczLAV9HKtcCXC0xbxX8+pCncsaT8bwX/2umURYudulifUF6stq670SF8Fe7fdH
+         Gy7YIaCNNdNbexwEDsIqOtiTwUJTF1NlymBdEyCs3G6UrS8ctShpjNEK60Q5isoC3P
+         qWVZ0G17KsuYEYypqg/0LkSmw/vYX/j6C/vvanSo=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1513668430;
+        bh=eSNzE7tJyPuLUED7+x6BK2Zws9oi/Sd/xXOT/BBjBYs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=bhgqP9No9h14vMs+XQKUlZ5l1lxNgqAjsqjk33tXMpXgPwjL2c/8KpFq0zfYt8EXI
+         PqmxxtGWsQyBlRfk54PZDxJ9WCPXnXgRe4w9/K8PhyOhcdru46LSFo43KS8lXJTF8X
+         9hBlLvoUYJtGtQzE8/3B4mtlfutkf+M606oaF1F4=
+In-Reply-To: <b50d7b64-121f-9a4c-5269-aec9a73787ba-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-
---=-f4HSmTLRDTGv78JytkxV
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
 
-I can replicate this on a Thinkpad X230i running archlinux with latest
-4.14.7 kernel, without the ZFS modules.
+Deadlock during cgroup migration from cpu hotplug path when a task T is
+being moved from source to destination cgroup.
 
-Steps to reproduce:
-1) create a virtual machine using libvirt (attached xml)
-2) virsh start vm
-3) head /sys/fs/cgroup/unified/machine.slice/machine-
-qemu\\x2d2\\x2dvm.scope/cgroup.procs
+kworker/0:0
+cpuset_hotplug_workfn()
+   cpuset_hotplug_update_tasks()
+      hotplug_update_tasks_legacy()
+        remove_tasks_in_empty_cpuset()
+          cgroup_transfer_tasks() // stuck in iterator loop
+            cgroup_migrate()
+              cgroup_migrate_add_task()
 
-This hangs the laptop requiring a hard reset.
+In cgroup_migrate_add_task() it checks for PF_EXITING flag of task T.
+Task T will not migrate to destination cgroup. css_task_iter_start()
+will keep pointing to task T in loop waiting for task T cg_list node
+to be removed.
 
-Regards,
-George
---=-f4HSmTLRDTGv78JytkxV
-Content-Type: application/xml; name="vm.xml"
-Content-Disposition: attachment; filename="vm.xml"
-Content-Transfer-Encoding: base64
+Task T
+do_exit()
+  exit_signals() // sets PF_EXITING
+  exit_task_namespaces()
+    switch_task_namespaces()
+      free_nsproxy()
+        put_mnt_ns()
+          drop_collected_mounts()
+            namespace_unlock()
+              synchronize_rcu()
+                _synchronize_rcu_expedited()
+                  schedule_work() // on cpu0 low priority worker pool
+                  wait_event() // waiting for work item to execute
 
-PGRvbWFpbiB0eXBlPSdrdm0nPgogIDxuYW1lPnZtPC9uYW1lPgogIDx1dWlkPmNlZGZiZGZiLWM4
-M2QtNGMzMi04MTE0LThmMmYwMzc2NjFkMjwvdXVpZD4KICA8bWVtb3J5IHVuaXQ9J0tpQic+MTA0
-ODU3NjwvbWVtb3J5PgogIDxjdXJyZW50TWVtb3J5IHVuaXQ9J0tpQic+MTA0ODU3NjwvY3VycmVu
-dE1lbW9yeT4KICA8bWVtb3J5QmFja2luZz4KICAgIDxodWdlcGFnZXMvPgogICAgPG5vc2hhcmVw
-YWdlcy8+CiAgICA8bG9ja2VkLz4KICA8L21lbW9yeUJhY2tpbmc+CiAgPHZjcHUgcGxhY2VtZW50
-PSdzdGF0aWMnPjE8L3ZjcHU+CiAgPGNwdXR1bmU+CiAgICA8dmNwdXBpbiB2Y3B1PScwJyBjcHVz
-ZXQ9JzInLz4KICAgIDxlbXVsYXRvcnBpbiBjcHVzZXQ9JzMnLz4KICA8L2NwdXR1bmU+CiAgPG9z
-PgogICAgPHR5cGUgYXJjaD0neDg2XzY0JyBtYWNoaW5lPSdwYy1xMzUtMi4xMCc+aHZtPC90eXBl
-PgogICAgPGxvYWRlciByZWFkb25seT0neWVzJyB0eXBlPSdwZmxhc2gnPi91c3Ivc2hhcmUvb3Zt
-Zi94NjQvb3ZtZl9jb2RlX3g2NC5iaW48L2xvYWRlcj4KICAgIDxudnJhbT4vZXRjL2xpYnZpcnQv
-cWVtdS9vdm1mX3ZhcnNfYXJjaF94NjQuYmluPC9udnJhbT4KICAgIDxib290IGRldj0naGQnLz4K
-ICA8L29zPgogIDxmZWF0dXJlcz4KICAgIDxhY3BpLz4KICAgIDxhcGljLz4KICA8L2ZlYXR1cmVz
-PgogIDxjcHUgbW9kZT0naG9zdC1wYXNzdGhyb3VnaCcgY2hlY2s9J25vbmUnPgogICAgPHRvcG9s
-b2d5IHNvY2tldHM9JzEnIGNvcmVzPScxJyB0aHJlYWRzPScxJy8+CiAgPC9jcHU+CiAgPGNsb2Nr
-IG9mZnNldD0ndXRjJy8+CiAgPG9uX3Bvd2Vyb2ZmPmRlc3Ryb3k8L29uX3Bvd2Vyb2ZmPgogIDxv
-bl9yZWJvb3Q+cmVzdGFydDwvb25fcmVib290PgogIDxvbl9jcmFzaD5yZXN0YXJ0PC9vbl9jcmFz
-aD4KICA8ZGV2aWNlcz4KICAgIDxlbXVsYXRvcj4vdXNyL2Jpbi9xZW11LXN5c3RlbS14ODZfNjQ8
-L2VtdWxhdG9yPgogICAgPGRpc2sgdHlwZT0nZmlsZScgZGV2aWNlPSdkaXNrJz4KICAgICAgPGRy
-aXZlciBuYW1lPSdxZW11JyB0eXBlPSdyYXcnLz4KICAgICAgPHNvdXJjZSBmaWxlPScvaG9tZS9z
-Y3l0aGUvdm0vdm0uaW1nJy8+CiAgICAgIDx0YXJnZXQgZGV2PSdzZGEnIGJ1cz0nc2NzaScvPgog
-ICAgICA8YWRkcmVzcyB0eXBlPSdkcml2ZScgY29udHJvbGxlcj0nMCcgYnVzPScwJyB0YXJnZXQ9
-JzAnIHVuaXQ9JzAnLz4KICAgIDwvZGlzaz4KICAgIDxjb250cm9sbGVyIHR5cGU9J3BjaScgaW5k
-ZXg9JzAnIG1vZGVsPSdwY2llLXJvb3QnLz4KICAgIDxjb250cm9sbGVyIHR5cGU9J3BjaScgaW5k
-ZXg9JzEnIG1vZGVsPSdwY2llLXJvb3QtcG9ydCc+CiAgICAgIDxtb2RlbCBuYW1lPSdwY2llLXJv
-b3QtcG9ydCcvPgogICAgICA8dGFyZ2V0IGNoYXNzaXM9JzEnIHBvcnQ9JzB4OCcvPgogICAgICA8
-YWRkcmVzcyB0eXBlPSdwY2knIGRvbWFpbj0nMHgwMDAwJyBidXM9JzB4MDAnIHNsb3Q9JzB4MDEn
-IGZ1bmN0aW9uPScweDAnIG11bHRpZnVuY3Rpb249J29uJy8+CiAgICA8L2NvbnRyb2xsZXI+CiAg
-ICA8Y29udHJvbGxlciB0eXBlPSdwY2knIGluZGV4PScyJyBtb2RlbD0ncGNpZS1yb290LXBvcnQn
-PgogICAgICA8bW9kZWwgbmFtZT0ncGNpZS1yb290LXBvcnQnLz4KICAgICAgPHRhcmdldCBjaGFz
-c2lzPScyJyBwb3J0PScweDknLz4KICAgICAgPGFkZHJlc3MgdHlwZT0ncGNpJyBkb21haW49JzB4
-MDAwMCcgYnVzPScweDAwJyBzbG90PScweDAxJyBmdW5jdGlvbj0nMHgxJy8+CiAgICA8L2NvbnRy
-b2xsZXI+CiAgICA8Y29udHJvbGxlciB0eXBlPSdwY2knIGluZGV4PSczJyBtb2RlbD0ncGNpZS1y
-b290LXBvcnQnPgogICAgICA8bW9kZWwgbmFtZT0ncGNpZS1yb290LXBvcnQnLz4KICAgICAgPHRh
-cmdldCBjaGFzc2lzPSczJyBwb3J0PScweGEnLz4KICAgICAgPGFkZHJlc3MgdHlwZT0ncGNpJyBk
-b21haW49JzB4MDAwMCcgYnVzPScweDAwJyBzbG90PScweDAxJyBmdW5jdGlvbj0nMHgyJy8+CiAg
-ICA8L2NvbnRyb2xsZXI+CiAgICA8Y29udHJvbGxlciB0eXBlPSdzY3NpJyBpbmRleD0nMCcgbW9k
-ZWw9J3ZpcnRpby1zY3NpJz4KICAgICAgPGFkZHJlc3MgdHlwZT0ncGNpJyBkb21haW49JzB4MDAw
-MCcgYnVzPScweDAyJyBzbG90PScweDAwJyBmdW5jdGlvbj0nMHgwJy8+CiAgICA8L2NvbnRyb2xs
-ZXI+CiAgICA8Y29udHJvbGxlciB0eXBlPSd1c2InIGluZGV4PScwJyBtb2RlbD0nbmVjLXhoY2kn
-PgogICAgICA8YWRkcmVzcyB0eXBlPSdwY2knIGRvbWFpbj0nMHgwMDAwJyBidXM9JzB4MDMnIHNs
-b3Q9JzB4MDAnIGZ1bmN0aW9uPScweDAnLz4KICAgIDwvY29udHJvbGxlcj4KICAgIDxjb250cm9s
-bGVyIHR5cGU9J3NhdGEnIGluZGV4PScwJz4KICAgICAgPGFkZHJlc3MgdHlwZT0ncGNpJyBkb21h
-aW49JzB4MDAwMCcgYnVzPScweDAwJyBzbG90PScweDFmJyBmdW5jdGlvbj0nMHgyJy8+CiAgICA8
-L2NvbnRyb2xsZXI+CiAgICA8aW50ZXJmYWNlIHR5cGU9J2JyaWRnZSc+CiAgICAgIDxtYWMgYWRk
-cmVzcz0nNTI6NTQ6MDA6M2Y6NDU6NDInLz4KICAgICAgPHNvdXJjZSBicmlkZ2U9J3ZpcmJyMCcv
-PgogICAgICA8bW9kZWwgdHlwZT0ndmlydGlvJy8+CiAgICAgIDxhZGRyZXNzIHR5cGU9J3BjaScg
-ZG9tYWluPScweDAwMDAnIGJ1cz0nMHgwMScgc2xvdD0nMHgwMCcgZnVuY3Rpb249JzB4MCcvPgog
-ICAgPC9pbnRlcmZhY2U+CiAgICA8c2VyaWFsIHR5cGU9J3B0eSc+CiAgICAgIDx0YXJnZXQgcG9y
-dD0nMCcvPgogICAgPC9zZXJpYWw+CiAgICA8Y29uc29sZSB0eXBlPSdwdHknPgogICAgICA8dGFy
-Z2V0IHR5cGU9J3NlcmlhbCcgcG9ydD0nMCcvPgogICAgPC9jb25zb2xlPgogICAgPGlucHV0IHR5
-cGU9J2tleWJvYXJkJyBidXM9J3BzMicvPgogICAgPGlucHV0IHR5cGU9J21vdXNlJyBidXM9J3Bz
-MicvPgogICAgPG1lbWJhbGxvb24gbW9kZWw9J25vbmUnLz4KICA8L2RldmljZXM+CjwvZG9tYWlu
-PgoK
+Task T inserted a work item in the worklist of cpu0 low priority
+worker pool. It is waiting for expedited grace period work item
+to execute. This work item will only be executed once kworker/0:0
+complete execution of cpuset_hotplug_workfn().
 
+kworker/0:0 ==> Task T ==>kworker/0:0
 
---=-f4HSmTLRDTGv78JytkxV--
+In case of PF_EXITING task being migrated from source to destination
+cgroup, migrate next available task in source cgroup.
+
+Change-Id: I8874fb04479c136cae4dabd5c168c7749df66664
+Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+---
+ kernel/cgroup/cgroup-v1.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 024085d..a2c05d2 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -123,7 +123,11 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 	 */
+ 	do {
+ 		css_task_iter_start(&from->self, 0, &it);
+-		task = css_task_iter_next(&it);
++
++		do {
++			task = css_task_iter_next(&it);
++		} while (task && (task->flags & PF_EXITING));
++
+ 		if (task)
+ 			get_task_struct(task);
+ 		css_task_iter_end(&it);
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc., 
+is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
