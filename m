@@ -1,72 +1,161 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1/2] mm/memcg: try harder to decrease
- [memory,memsw].limit_in_bytes
-Date: Wed, 20 Dec 2017 12:34:04 +0100
-Message-ID: <20171220113404.GN4831@dhcp22.suse.cz>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: [PATCH v2 1/2] mm/memcg: try harder to decrease [memory,memsw].limit_in_bytes
+Date: Wed, 20 Dec 2017 16:21:13 +0300
+Message-ID: <20171220132114.6883-1-aryabinin@virtuozzo.com>
 References: <20171220102429.31601-1-aryabinin@virtuozzo.com>
- <20171220103337.GL4831@dhcp22.suse.cz>
- <6e9ee949-c203-621d-890f-25a432bd4bb3@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <6e9ee949-c203-621d-890f-25a432bd4bb3@virtuozzo.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=TarpDy4wJjgcQWjBCPBrmhXpYOaqtipmEeurDp4CvuA=;
+ b=bXzsdTb9oPGw5HWELoP1ntOh/XALE+Z/WaKBnVgC1I5J9xoO++9GKswAyNXAIQHZ1RV7bVPOr4LpLvOqRwiyjOX8U5SecJfm0TlTFrHtprJw73Qz8DDZV1G6Jkuy8nMnS6hK8silq0AfSRlwDxnuYlllMKiSNY2F7yHmjDac8Vs=
+In-Reply-To: <20171220102429.31601-1-aryabinin@virtuozzo.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On Wed 20-12-17 14:32:19, Andrey Ryabinin wrote:
-> On 12/20/2017 01:33 PM, Michal Hocko wrote:
-> > On Wed 20-12-17 13:24:28, Andrey Ryabinin wrote:
-> >> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
-> >> pages on each iteration. This makes practically impossible to decrease
-> >> limit of memory cgroup. Tasks could easily allocate back 32 pages,
-> >> so we can't reduce memory usage, and once retry_count reaches zero we return
-> >> -EBUSY.
-> >>
-> >> It's easy to reproduce the problem by running the following commands:
-> >>
-> >>   mkdir /sys/fs/cgroup/memory/test
-> >>   echo $$ >> /sys/fs/cgroup/memory/test/tasks
-> >>   cat big_file > /dev/null &
-> >>   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
-> >>   -bash: echo: write error: Device or resource busy
-> >>
-> >> Instead of trying to free small amount of pages, it's much more
-> >> reasonable to free 'usage - limit' pages.
-> > 
-> > But that only makes the issue less probable. It doesn't fix it because 
-> > 		if (curusage >= oldusage)
-> > 			retry_count--;
-> > can still be true because allocator might be faster than the reclaimer.
-> > Wouldn't it be more reasonable to simply remove the retry count and keep
-> > trying until interrupted or we manage to update the limit.
-> 
-> But does it makes sense to continue reclaiming even if reclaimer can't
-> make any progress? I'd say no. "Allocator is faster than reclaimer"
-> may be not the only reason for failed reclaim. E.g. we could try to
-> set limit lower than amount of mlock()ed memory in cgroup, retrying
-> reclaim would be just a waste of machine's resources.  Or we simply
-> don't have any swap, and anon > new_limit. Should be burn the cpu in
-> that case?
+mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
+pages on each iteration. This makes practically impossible to decrease
+limit of memory cgroup. Tasks could easily allocate back 32 pages,
+so we can't reduce memory usage, and once retry_count reaches zero we return
+-EBUSY.
 
-We can check the number of reclaimed pages and go EBUSY if it is 0.
+Easy to reproduce the problem by running the following commands:
+
+  mkdir /sys/fs/cgroup/memory/test
+  echo $$ >> /sys/fs/cgroup/memory/test/tasks
+  cat big_file > /dev/null &
+  sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+  -bash: echo: write error: Device or resource busy
+
+Instead of relying on retry_count, keep trying to free required amount of pages
+until reclaimer makes any progress.
+
+Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+---
+ mm/memcontrol.c | 70 +++++++++++++--------------------------------------------
+ 1 file changed, 16 insertions(+), 54 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f40b5ad3f959..0d26db9a665d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1176,20 +1176,6 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+ }
  
-> > Another option would be to commit the new limit and allow temporal overcommit
-> > of the hard limit. New allocations and the limit update paths would
-> > reclaim to the hard limit.
-> > 
-> 
-> It sounds a bit fragile and tricky to me. I wouldn't go that way
-> without unless we have a very good reason for this.
-
-I haven't explored this, to be honest, so there may be dragons that way.
-I've just mentioned that option for completness.
+ /*
+- * This function returns the number of memcg under hierarchy tree. Returns
+- * 1(self count) if no children.
+- */
+-static int mem_cgroup_count_children(struct mem_cgroup *memcg)
+-{
+-	int num = 0;
+-	struct mem_cgroup *iter;
+-
+-	for_each_mem_cgroup_tree(iter, memcg)
+-		num++;
+-	return num;
+-}
+-
+-/*
+  * Return the memory (and swap, if configured) limit for a memcg.
+  */
+ unsigned long mem_cgroup_get_limit(struct mem_cgroup *memcg)
+@@ -2462,22 +2448,10 @@ static DEFINE_MUTEX(memcg_limit_mutex);
+ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 				   unsigned long limit)
+ {
+-	unsigned long curusage;
+-	unsigned long oldusage;
++	unsigned long usage;
+ 	bool enlarge = false;
+-	int retry_count;
+ 	int ret;
+ 
+-	/*
+-	 * For keeping hierarchical_reclaim simple, how long we should retry
+-	 * is depends on callers. We set our retry-count to be function
+-	 * of # of children which we should visit in this loop.
+-	 */
+-	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+-		      mem_cgroup_count_children(memcg);
+-
+-	oldusage = page_counter_read(&memcg->memory);
+-
+ 	do {
+ 		if (signal_pending(current)) {
+ 			ret = -EINTR;
+@@ -2498,15 +2472,13 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
+-
+-		curusage = page_counter_read(&memcg->memory);
+-		/* Usage is reduced ? */
+-		if (curusage >= oldusage)
+-			retry_count--;
+-		else
+-			oldusage = curusage;
+-	} while (retry_count);
++		usage = page_counter_read(&memcg->memory);
++		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
++					GFP_KERNEL, true)) {
++			ret = -EBUSY;
++			break;
++		}
++	} while (true);
+ 
+ 	if (!ret && enlarge)
+ 		memcg_oom_recover(memcg);
+@@ -2517,18 +2489,10 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 					 unsigned long limit)
+ {
+-	unsigned long curusage;
+-	unsigned long oldusage;
++	unsigned long usage;
+ 	bool enlarge = false;
+-	int retry_count;
+ 	int ret;
+ 
+-	/* see mem_cgroup_resize_res_limit */
+-	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+-		      mem_cgroup_count_children(memcg);
+-
+-	oldusage = page_counter_read(&memcg->memsw);
+-
+ 	do {
+ 		if (signal_pending(current)) {
+ 			ret = -EINTR;
+@@ -2549,15 +2513,13 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
+-
+-		curusage = page_counter_read(&memcg->memsw);
+-		/* Usage is reduced ? */
+-		if (curusage >= oldusage)
+-			retry_count--;
+-		else
+-			oldusage = curusage;
+-	} while (retry_count);
++		usage = page_counter_read(&memcg->memsw);
++		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
++					GFP_KERNEL, false)) {
++			ret = -EBUSY;
++			break;
++		}
++	} while (true);
+ 
+ 	if (!ret && enlarge)
+ 		memcg_oom_recover(memcg);
 -- 
-Michal Hocko
-SUSE Labs
+2.13.6
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
