@@ -1,72 +1,89 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
-Date: Tue, 19 Dec 2017 14:39:19 -0800
-Message-ID: <CALvZod5XRhXc3XrQw50Jw_OpRQB2iCCbgG-NMDCa8xRmGNdLrw@mail.gmail.com>
-References: <20171219000131.149170-1-shakeelb@google.com> <20171219124908.GS2787@dhcp22.suse.cz>
- <CALvZod5jU9vPoJaf44TVT0_HQpEESiELJU5MD_DDRbcOkPNQbg@mail.gmail.com>
- <20171219152444.GP3919388@devbig577.frc2.facebook.com> <CALvZod5sWWBX69QovOeLBSx9vij7=5cmoSocdTUvh2Uq8=noyQ@mail.gmail.com>
- <20171219173354.GQ3919388@devbig577.frc2.facebook.com> <CALvZod7pbp0fFUPRnC68qdzkCEUg2YTavq6C6OLxqooCU5VeyQ@mail.gmail.com>
- <20171219214107.GR3919388@devbig577.frc2.facebook.com>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: [PATCH 1/2] mm/memcg: try harder to decrease [memory,memsw].limit_in_bytes
+Date: Wed, 20 Dec 2017 13:24:28 +0300
+Message-ID: <20171220102429.31601-1-aryabinin@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=6MmbBtYQ/MytE0ZfVzZSG9losguzIuDTZMC5uWgz+K0=;
-        b=d0aN5TaNwQZpBTnfVLmmFrtuVa8/n1CfIcoCyOqmCzDYuzsyXToundZkWpFm3SFuMj
-         u3oj2pMgTMyWva4I7Fg/n8pUf4lyiIrG0rAWICE9oVv/RythrI/SgpC7/ad4AgHjqLlU
-         a/6QTc1RQJszi0m9RkG6cUNuJQY69IuZ816GF2nRoWhNmRFA0th96ZJWhSrLPyozLwT+
-         UMIBgQdaODDJwX7YbN4cFqdR9tKjRQg3FcSsbqNGg79j4372lvJjVzkwLZRPineewm8b
-         mcqzi5Sjw3Gzt4F6KfQGegcj0hy+FwiUflV1JfvNStTFYctSF2z4KADNbBVXTjZbt0nu
-         6ylg==
-In-Reply-To: <20171219214107.GR3919388@devbig577.frc2.facebook.com>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=yVxv6Ti+3Vn0bTN7NUY29HAQGeCGS2XQ3DPIE0XpZJI=;
+ b=MyyADJuzUn93ayQ2ExQHjZy352Lt9ojzPcmo0/mQcyG2adCzbUVXjLTvomneJeb8IB9VsOa9caslMxve3EUhYAS1IZbE9kX/LkxL0yAFDWcRwTGudqtUOdI4qEngMBWbOu6v3f50c5tx2IgcyKwrslvxTMjwK4BtXCUlT1n2D/4=
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Li Zefan <lizefan@huawei.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On Tue, Dec 19, 2017 at 1:41 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Tue, Dec 19, 2017 at 10:25:12AM -0800, Shakeel Butt wrote:
->> Making the runtime environment, an invariant is very critical to make
->> the management of a job easier whose instances run on different
->> clusters across the world. Some clusters might have different type of
->> swaps installed while some might not have one at all and the
->> availability of the swap can be dynamic (i.e. swap medium outage).
->>
->> So, if users want to run multiple instances of a job across multiple
->> clusters, they should be able to specify the limits of their jobs
->> irrespective of the knowledge of cluster. The best case would be they
->> just submits their jobs without any config and the system figures out
->> the right limit and enforce that. And to figure out the right limit
->> and enforcing it, the consistent memory usage history and consistent
->> memory limit enforcement is very critical.
->
-> I'm having a hard time extracting anything concrete from your
-> explanation on why memsw is required.  Can you please ELI5 with some
-> examples?
->
+mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
+pages on each iteration. This makes practically impossible to decrease
+limit of memory cgroup. Tasks could easily allocate back 32 pages,
+so we can't reduce memory usage, and once retry_count reaches zero we return
+-EBUSY.
 
-Suppose a user wants to run multiple instances of a specific job on
-different datacenters and s/he has budget of 100MiB for each instance.
-The instances are schduled on the requested datacenters and the
-scheduler has set the memory limit of those instances to 100MiB. Now,
-some datacenters have swap deployed, so, there, let's say, the swap
-limit of those instances are set according to swap medium
-availability. In this setting the user will see inconsistent memcg OOM
-behavior. Some of the instances see OOMs at 100MiB usage (suppose only
-anon memory) while some will see OOMs way above 100MiB due to swap.
-So, the user is required to know the internal knowledge of datacenters
-(like which has swap or not and swap type) and has to set the limits
-accordingly and thus increase the chance of config bugs.
+It's easy to reproduce the problem by running the following commands:
 
-Also different types and sizes of swap mediums in data center will
-further complicates the configuration. One datacenter might have SSD
-as a swap, another might be doing swap on zram and third might be
-doing swap on nvdimm. Each can have different size and can be assigned
-to jobs differently. So, it is possible that the instances of the same
-job might be assigned different swap limit on different datacenters.
+  mkdir /sys/fs/cgroup/memory/test
+  echo $$ >> /sys/fs/cgroup/memory/test/tasks
+  cat big_file > /dev/null &
+  sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+  -bash: echo: write error: Device or resource busy
+
+Instead of trying to free small amount of pages, it's much more
+reasonable to free 'usage - limit' pages.
+
+Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+---
+ mm/memcontrol.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f40b5ad3f959..09ee052cf684 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2476,7 +2476,7 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+ 		      mem_cgroup_count_children(memcg);
+ 
+-	oldusage = page_counter_read(&memcg->memory);
++	curusage = oldusage = page_counter_read(&memcg->memory);
+ 
+ 	do {
+ 		if (signal_pending(current)) {
+@@ -2498,7 +2498,8 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
++		try_to_free_mem_cgroup_pages(memcg, curusage - limit,
++					GFP_KERNEL, true);
+ 
+ 		curusage = page_counter_read(&memcg->memory);
+ 		/* Usage is reduced ? */
+@@ -2527,7 +2528,7 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+ 		      mem_cgroup_count_children(memcg);
+ 
+-	oldusage = page_counter_read(&memcg->memsw);
++	curusage = oldusage = page_counter_read(&memcg->memsw);
+ 
+ 	do {
+ 		if (signal_pending(current)) {
+@@ -2549,7 +2550,8 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
++		try_to_free_mem_cgroup_pages(memcg, curusage - limit,
++					GFP_KERNEL, false);
+ 
+ 		curusage = page_counter_read(&memcg->memsw);
+ 		/* Usage is reduced ? */
+-- 
+2.13.6
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
