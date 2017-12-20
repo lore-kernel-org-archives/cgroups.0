@@ -1,104 +1,56 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
-Date: Wed, 20 Dec 2017 12:27:22 -0800
-Message-ID: <CALvZod5ehycMTpSSaHwSchL_b9E6Ja6uwZB-cPT2KWg2kb=8sQ@mail.gmail.com>
-References: <20171219000131.149170-1-shakeelb@google.com> <20171219124908.GS2787@dhcp22.suse.cz>
- <CALvZod5jU9vPoJaf44TVT0_HQpEESiELJU5MD_DDRbcOkPNQbg@mail.gmail.com>
- <20171219152444.GP3919388@devbig577.frc2.facebook.com> <CALvZod5sWWBX69QovOeLBSx9vij7=5cmoSocdTUvh2Uq8=noyQ@mail.gmail.com>
- <20171219173354.GQ3919388@devbig577.frc2.facebook.com> <CALvZod7pbp0fFUPRnC68qdzkCEUg2YTavq6C6OLxqooCU5VeyQ@mail.gmail.com>
- <20171219214107.GR3919388@devbig577.frc2.facebook.com> <CALvZod5XRhXc3XrQw50Jw_OpRQB2iCCbgG-NMDCa8xRmGNdLrw@mail.gmail.com>
- <20171220193741.GD3413940@devbig577.frc2.facebook.com> <CALvZod7Z1Yh+ZhU8qxzSiN0Pph2R7O4Mki5E23FbJFAzhyCH8g@mail.gmail.com>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Cgroups v2 thread mode "domain invalid" state
+Date: Wed, 20 Dec 2017 21:32:04 +0100
+Message-ID: <CAKgNAkg2u=zt87tKk35vR+tQ7DnkJp9vbj+8n88=_MCcvmH9oQ@mail.gmail.com>
+Reply-To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=z9swsrhf+Cj54y3oul4iR/BL2OeYaUopNwC3SJgAiD8=;
-        b=midv/8V0SwWuA+5yi/O/avRTQTRo4Ot69FkThAP2B3dQ9nrm84GzPxVZzw824io1yG
-         hZe+uLtHdghvpJ4KJUYqdwvWvlbYlCTa1CId4qsYFTtzUa2xSUzPRRX1MUBHqOL1ZsRe
-         ikMfnqQMruWXS1/9qbKXrek86/kOe5U9r0Nr+6x9FPF7l6vvGYi78gWq6APu2ab4g7sj
-         fa3SWPjGgw5jTSiCLOlb+Twy66cuU2QnEJNRlHSl0XYtdcU/xzbySpqI43hGM+1nIkqK
-         aD3ZZjFeMmunrzalqMtzaaq29vjsNY27zmx7GIwOcMpunNqQR/XqIY5HlQmKKSplBXu/
-         tfPg==
-In-Reply-To: <CALvZod7Z1Yh+ZhU8qxzSiN0Pph2R7O4Mki5E23FbJFAzhyCH8g@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20161025;
+        h=mime-version:reply-to:from:date:message-id:subject:to:cc;
+        bh=/dyyCL26+qhVwCrfKbbwFVR9ltE1ZSv8f2Jf8Fr9wzQ=;
+        b=XDqjqP1lNoq/GR609P0UiS/W2RY3UEF+HOnoFsWsYpZlI2cYn6iOFo4vTgoi9JKXm6
+         caIgRTubfb2JJ/UcywexWn8H65byfvD+3GY5kGJjgpJcsIKLlfKZP9iksTFoVqEMNRYp
+         lreiHjktmVyyDR0XWgNGJZloQH3IN6/V6pehsS9G3+JWzr2mLbL5GPOj0/qKhvow+q96
+         ggNf1bXN1z+9pz+g8h7dzUDUocUyvCHjtXuwsUGPH1os1PZ1H2CSmcwn6BJesViChZf1
+         bukiTPSPLJcrQiQqBQsmhPGhbhRxhRM27r67sSSHRUDoP3h0gu/sZAbXFqhJd/VbSwhw
+         e00w==
+Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Li Zefan <lizefan@huawei.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Dec 20, 2017 at 12:15 PM, Shakeel Butt <shakeelb@google.com> wrote:
-> On Wed, Dec 20, 2017 at 11:37 AM, Tejun Heo <tj@kernel.org> wrote:
->> Hello, Shakeel.
->>
->> On Tue, Dec 19, 2017 at 02:39:19PM -0800, Shakeel Butt wrote:
->>> Suppose a user wants to run multiple instances of a specific job on
->>> different datacenters and s/he has budget of 100MiB for each instance.
->>> The instances are schduled on the requested datacenters and the
->>> scheduler has set the memory limit of those instances to 100MiB. Now,
->>> some datacenters have swap deployed, so, there, let's say, the swap
->>> limit of those instances are set according to swap medium
->>> availability. In this setting the user will see inconsistent memcg OOM
->>> behavior. Some of the instances see OOMs at 100MiB usage (suppose only
->>> anon memory) while some will see OOMs way above 100MiB due to swap.
->>> So, the user is required to know the internal knowledge of datacenters
->>> (like which has swap or not and swap type) and has to set the limits
->>> accordingly and thus increase the chance of config bugs.
->>
->> I don't understand how this invariant is useful across different
->> backing swap devices and availability.  e.g. Our OOM decisions are
->> currently not great in that the kernel can easily thrash for a very
->> long time without making actual progresses.  If you combine that with
->> widely varying types and availability of swaps,
->
-> The kernel never swaps out on hitting memsw limit. So, the varying
-> types and availability of swaps becomes invariant to the memcg OOM
-> behavior of the job.
->
->> whether something is
->> OOMing or not doesn't really tell you much.  The workload could be
->> running completely fine or have been thrashing without making any
->> meaningful forward progress for the past 15 mins.
->>
->> Given that whether or not swap exists, how much is avialable and how
->> fast the backing swap device is all highly influential parameters in
->> how the workload behaves, I don't see what having sum of memory + swap
->> as an invariant actually buys.  And, even that essentially meaningless
->> invariant doesn't really exist - the performance of the swap device
->> absolutely affects when the OOM killer would kick in.
->>
->
-> No, as I previously explained, the swap types and availability will be
-> transparent to the memcg OOM killer and memcg memory reclaim behavior.
->
->> So, I don't see how the sum of memory+swap makes it possible to ignore
->> the swap type and availability.  Can you please explain that further?
->>
->>> Also different types and sizes of swap mediums in data center will
->>> further complicates the configuration. One datacenter might have SSD
->>> as a swap, another might be doing swap on zram and third might be
->>> doing swap on nvdimm. Each can have different size and can be assigned
->>> to jobs differently. So, it is possible that the instances of the same
->>> job might be assigned different swap limit on different datacenters.
->>
->> Sure, but what does memswap achieve?
->>
->
-> 1. memswap provides consistent memcg OOM killer and memcg memory
-> reclaim behavior independent to swap.
-> 2. With memswap, the job owners do not have to think or worry about swaps.
+Hello Tejun,
 
-When I say OOM and memory reclaim behavior, I specifically mean memcg
-oom-kill and memcg memory reclaim behavior. These are different from
-global oom-killer and global memory reclaim behaviors. The global
-behaviors will be affected by the types and availability of swaps and
-the jobs can suffer differently based on swap types and availability
-on hitting global OOM scenario.
+At some point, I'd like to add some details about cgroups v2 "thread
+mode" to the cgroup(7) manual page. I think I understand most of the
+details by now, but there's one question I still can't work out an
+answer to: why does the "domain invalid" cgroup type exist?
 
+I did find the July 2017 mail thread
+"[PATCH 5/6] cgroup: implement cgroup v2 thread support"
+(https://marc.info/?t=150025735500001&r=1&w=2)
+where this cgroup type was discussed, but I must admit that I still
+don't get it. Instead of converting cgroups under a threaded subtree
+to "domain invalid" type, why can't they just be turned straight into
+"threaded" type?
+
+I guess another way of asking this question is: what possibilities
+does manually switching each "domain invalid" cgroup to "threaded"
+allow that wouldn't be allowed by immediately making all of the
+cgroups in a threaded subtree "threaded"?
+
+Cheers,
+
+Michael
+
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-man" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
