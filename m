@@ -1,182 +1,150 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2 1/2] mm/memcg: try harder to decrease
- [memory,memsw].limit_in_bytes
-Date: Wed, 20 Dec 2017 14:53:29 +0100
-Message-ID: <20171220135329.GS4831@dhcp22.suse.cz>
-References: <20171220102429.31601-1-aryabinin@virtuozzo.com>
- <20171220132114.6883-1-aryabinin@virtuozzo.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.15-fixes] cgroup: fix css_task_iter crash on
+ CSS_TASK_ITER_PROC
+Date: Wed, 20 Dec 2017 07:13:31 -0800
+Message-ID: <20171220151331.GA3413940@devbig577.frc2.facebook.com>
+References: <39625861-99c0-1c15-08a6-49b9d678c4c2@redhat.com>
+ <20171213152914.GN3919388@devbig577.frc2.facebook.com>
+ <121dc065-89ba-98ab-68ff-e86f1a636b06@redhat.com>
+ <20171213213756.GX3919388@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=1cXy66J8f2q0HicF4CwmV6pA8jYSWuOE3kZz1isTYts=;
+        b=ja4jLC7UPSsW4RsuNg67Gyq0Jui976YUb4LZKVflwyh1F1630t0pSeYNvuP4HlMOSV
+         zDhBj/GCHpdZHNrVVng94ED98vYd4rZJTkjF2HZdNfbI/OEpc0mzj2n0FJkyuDXWfD3U
+         EbcAq/sV/T9zUz09XnRDf84VGC0HbecopBUp93jEHPxzXy8D5fHdx3ZePl1xzRRoDd2g
+         sPez5/bRKkCnY8mHVrzK+TsWtYCQqc49RkrNnuXvj18jb1BVH/1aoC7A9193z8n7/FDK
+         SI/UzJ6VqB+titbQkxXQq5rKhWfUDNfeyUtFX8juettvfWAQQi2MqKa+a5lrKk+drEtU
+         OmZA==
 Content-Disposition: inline
-In-Reply-To: <20171220132114.6883-1-aryabinin@virtuozzo.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20171213213756.GX3919388-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, regressions-rCxcAJFjeRkk+I/owrrOrA@public.gmane.org, Bronek Kozicki <brok-CgwIDsGnGWjby3iVrkZq2A@public.gmane.org>, George Amanakis <gamanakis-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed 20-12-17 16:21:13, Andrey Ryabinin wrote:
-> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
-> pages on each iteration. This makes practically impossible to decrease
-> limit of memory cgroup. Tasks could easily allocate back 32 pages,
-> so we can't reduce memory usage, and once retry_count reaches zero we return
-> -EBUSY.
-> 
-> Easy to reproduce the problem by running the following commands:
-> 
->   mkdir /sys/fs/cgroup/memory/test
->   echo $$ >> /sys/fs/cgroup/memory/test/tasks
->   cat big_file > /dev/null &
->   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
->   -bash: echo: write error: Device or resource busy
-> 
-> Instead of relying on retry_count, keep trying to free required amount of pages
-> until reclaimer makes any progress.
+Hello,
 
-The wording of the changelog has some room for improvements. The last
-sentence should read something like "Instead of relying on retry_count,
-keep retrying the reclaim until the desired limit is reached or fail
-if the reclaim doesn't make any progress or a signal is pending."
+Applied the following to cgroup/for-4.15-fixes.  Will push out to
+linus later this week.  I could reproduce the problem reliably and am
+pretty sure this is the right fix but I'd greatly appreciate if you
+guys can confirm the fix too.
 
-I am bussy as hell today so I will look closer tomorrow or on Friday.
-But from a very quick glance the patch seems reasonable.
+Thank you very much.
+
+------ 8< ------
+From 74d0833c659a8a54735e5efdd44f4b225af68586 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Wed, 20 Dec 2017 07:09:19 -0800
+
+While teaching css_task_iter to handle skipping over tasks which
+aren't group leaders, bc2fb7ed089f ("cgroup: add @flags to
+css_task_iter_start() and implement CSS_TASK_ITER_PROCS") introduced a
+silly bug.
+
+CSS_TASK_ITER_PROCS is implemented by repeating
+css_task_iter_advance() while the advanced cursor is pointing to a
+non-leader thread.  However, the cursor variable, @l, wasn't updated
+when the iteration has to advance to the next css_set and the
+following repetition would operate on the terminal @l from the
+previous iteration which isn't pointing to a valid task leading to
+oopses like the following or infinite looping.
+
+  BUG: unable to handle kernel NULL pointer dereference at 0000000000000254
+  IP: __task_pid_nr_ns+0xc7/0xf0
+  PGD 0 P4D 0
+  Oops: 0000 [#1] SMP
+  ...
+  CPU: 2 PID: 1 Comm: systemd Not tainted 4.14.4-200.fc26.x86_64 #1
+  Hardware name: System manufacturer System Product Name/PRIME B350M-A, BIOS 3203 11/09/2017
+  task: ffff88c4baee8000 task.stack: ffff96d5c3158000
+  RIP: 0010:__task_pid_nr_ns+0xc7/0xf0
+  RSP: 0018:ffff96d5c315bd50 EFLAGS: 00010206
+  RAX: 0000000000000000 RBX: ffff88c4b68c6000 RCX: 0000000000000250
+  RDX: ffffffffa5e47960 RSI: 0000000000000000 RDI: ffff88c490f6ab00
+  RBP: ffff96d5c315bd50 R08: 0000000000001000 R09: 0000000000000005
+  R10: ffff88c4be006b80 R11: ffff88c42f1b8004 R12: ffff96d5c315bf18
+  R13: ffff88c42d7dd200 R14: ffff88c490f6a510 R15: ffff88c4b68c6000
+  FS:  00007f9446f8ea00(0000) GS:ffff88c4be680000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 0000000000000254 CR3: 00000007f956f000 CR4: 00000000003406e0
+  Call Trace:
+   cgroup_procs_show+0x19/0x30
+   cgroup_seqfile_show+0x4c/0xb0
+   kernfs_seq_show+0x21/0x30
+   seq_read+0x2ec/0x3f0
+   kernfs_fop_read+0x134/0x180
+   __vfs_read+0x37/0x160
+   ? security_file_permission+0x9b/0xc0
+   vfs_read+0x8e/0x130
+   SyS_read+0x55/0xc0
+   entry_SYSCALL_64_fastpath+0x1a/0xa5
+  RIP: 0033:0x7f94455f942d
+  RSP: 002b:00007ffe81ba2d00 EFLAGS: 00000293 ORIG_RAX: 0000000000000000
+  RAX: ffffffffffffffda RBX: 00005574e2233f00 RCX: 00007f94455f942d
+  RDX: 0000000000001000 RSI: 00005574e2321a90 RDI: 000000000000002b
+  RBP: 0000000000000000 R08: 00005574e2321a90 R09: 00005574e231de60
+  R10: 00007f94458c8b38 R11: 0000000000000293 R12: 00007f94458c8ae0
+  R13: 00007ffe81ba3800 R14: 0000000000000000 R15: 00005574e2116560
+  Code: 04 74 0e 89 f6 48 8d 04 76 48 8d 04 c5 f0 05 00 00 48 8b bf b8 05 00 00 48 01 c7 31 c0 48 8b 0f 48 85 c9 74 18 8b b2 30 08 00 00 <3b> 71 04 77 0d 48 c1 e6 05 48 01 f1 48 3b 51 38 74 09 5d c3 8b
+  RIP: __task_pid_nr_ns+0xc7/0xf0 RSP: ffff96d5c315bd50
+
+Fix it by moving the initialization of the cursor below the repeat
+label.  While at it, rename it to @next for readability.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Fixes: bc2fb7ed089f ("cgroup: add @flags to css_task_iter_start() and implement CSS_TASK_ITER_PROCS")
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v4.14+
+Reported-by: Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Reported-by: Bronek Kozicki <brok-CgwIDsGnGWjby3iVrkZq2A@public.gmane.org>
+Reported-by: George Amanakis <gamanakis-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index f4c2f8c..2cf06c2 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4125,26 +4125,24 @@ static void css_task_iter_advance_css_set(struct css_task_iter *it)
  
-> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
-> ---
->  mm/memcontrol.c | 70 +++++++++++++--------------------------------------------
->  1 file changed, 16 insertions(+), 54 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index f40b5ad3f959..0d26db9a665d 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1176,20 +1176,6 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
->  }
->  
->  /*
-> - * This function returns the number of memcg under hierarchy tree. Returns
-> - * 1(self count) if no children.
-> - */
-> -static int mem_cgroup_count_children(struct mem_cgroup *memcg)
-> -{
-> -	int num = 0;
-> -	struct mem_cgroup *iter;
-> -
-> -	for_each_mem_cgroup_tree(iter, memcg)
-> -		num++;
-> -	return num;
-> -}
-> -
-> -/*
->   * Return the memory (and swap, if configured) limit for a memcg.
->   */
->  unsigned long mem_cgroup_get_limit(struct mem_cgroup *memcg)
-> @@ -2462,22 +2448,10 @@ static DEFINE_MUTEX(memcg_limit_mutex);
->  static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
->  				   unsigned long limit)
->  {
-> -	unsigned long curusage;
-> -	unsigned long oldusage;
-> +	unsigned long usage;
->  	bool enlarge = false;
-> -	int retry_count;
->  	int ret;
->  
-> -	/*
-> -	 * For keeping hierarchical_reclaim simple, how long we should retry
-> -	 * is depends on callers. We set our retry-count to be function
-> -	 * of # of children which we should visit in this loop.
-> -	 */
-> -	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
-> -		      mem_cgroup_count_children(memcg);
-> -
-> -	oldusage = page_counter_read(&memcg->memory);
-> -
->  	do {
->  		if (signal_pending(current)) {
->  			ret = -EINTR;
-> @@ -2498,15 +2472,13 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
->  		if (!ret)
->  			break;
->  
-> -		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
-> -
-> -		curusage = page_counter_read(&memcg->memory);
-> -		/* Usage is reduced ? */
-> -		if (curusage >= oldusage)
-> -			retry_count--;
-> -		else
-> -			oldusage = curusage;
-> -	} while (retry_count);
-> +		usage = page_counter_read(&memcg->memory);
-> +		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
-> +					GFP_KERNEL, true)) {
-> +			ret = -EBUSY;
-> +			break;
-> +		}
-> +	} while (true);
->  
->  	if (!ret && enlarge)
->  		memcg_oom_recover(memcg);
-> @@ -2517,18 +2489,10 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
->  static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
->  					 unsigned long limit)
->  {
-> -	unsigned long curusage;
-> -	unsigned long oldusage;
-> +	unsigned long usage;
->  	bool enlarge = false;
-> -	int retry_count;
->  	int ret;
->  
-> -	/* see mem_cgroup_resize_res_limit */
-> -	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
-> -		      mem_cgroup_count_children(memcg);
-> -
-> -	oldusage = page_counter_read(&memcg->memsw);
-> -
->  	do {
->  		if (signal_pending(current)) {
->  			ret = -EINTR;
-> @@ -2549,15 +2513,13 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
->  		if (!ret)
->  			break;
->  
-> -		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
-> -
-> -		curusage = page_counter_read(&memcg->memsw);
-> -		/* Usage is reduced ? */
-> -		if (curusage >= oldusage)
-> -			retry_count--;
-> -		else
-> -			oldusage = curusage;
-> -	} while (retry_count);
-> +		usage = page_counter_read(&memcg->memsw);
-> +		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
-> +					GFP_KERNEL, false)) {
-> +			ret = -EBUSY;
-> +			break;
-> +		}
-> +	} while (true);
->  
->  	if (!ret && enlarge)
->  		memcg_oom_recover(memcg);
-> -- 
-> 2.13.6
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
-
+ static void css_task_iter_advance(struct css_task_iter *it)
+ {
+-	struct list_head *l = it->task_pos;
++	struct list_head *next;
+ 
+ 	lockdep_assert_held(&css_set_lock);
+-	WARN_ON_ONCE(!l);
+-
+ repeat:
+ 	/*
+ 	 * Advance iterator to find next entry.  cset->tasks is consumed
+ 	 * first and then ->mg_tasks.  After ->mg_tasks, we move onto the
+ 	 * next cset.
+ 	 */
+-	l = l->next;
++	next = it->task_pos->next;
+ 
+-	if (l == it->tasks_head)
+-		l = it->mg_tasks_head->next;
++	if (next == it->tasks_head)
++		next = it->mg_tasks_head->next;
+ 
+-	if (l == it->mg_tasks_head)
++	if (next == it->mg_tasks_head)
+ 		css_task_iter_advance_css_set(it);
+ 	else
+-		it->task_pos = l;
++		it->task_pos = next;
+ 
+ 	/* if PROCS, skip over tasks which aren't group leaders */
+ 	if ((it->flags & CSS_TASK_ITER_PROCS) && it->task_pos &&
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+2.9.5
