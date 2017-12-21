@@ -1,41 +1,115 @@
-From: Shakeel Butt <shakeelb@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
-Date: Thu, 21 Dec 2017 07:33:03 -0800
-Message-ID: <CALvZod59K7ZoM3jAGQih7HjVNJQBAgrTwZAxsSHqX1kHT6RYOA@mail.gmail.com>
-References: <20171219152444.GP3919388@devbig577.frc2.facebook.com>
- <CALvZod5sWWBX69QovOeLBSx9vij7=5cmoSocdTUvh2Uq8=noyQ@mail.gmail.com>
- <20171219173354.GQ3919388@devbig577.frc2.facebook.com> <CALvZod7pbp0fFUPRnC68qdzkCEUg2YTavq6C6OLxqooCU5VeyQ@mail.gmail.com>
- <20171219214107.GR3919388@devbig577.frc2.facebook.com> <CALvZod5XRhXc3XrQw50Jw_OpRQB2iCCbgG-NMDCa8xRmGNdLrw@mail.gmail.com>
- <20171220193741.GD3413940@devbig577.frc2.facebook.com> <CALvZod7Z1Yh+ZhU8qxzSiN0Pph2R7O4Mki5E23FbJFAzhyCH8g@mail.gmail.com>
- <20171220233658.GB1084507@devbig577.frc2.facebook.com> <CALvZod7eQWrD6LgbUrOvuhf5A1KKxBaK5t-U61gdFqvMeWXuzQ@mail.gmail.com>
- <20171221133726.GD1084507@devbig577.frc2.facebook.com> <CALvZod432hzxPZgAypjPsZ33Z==0MxmMdPM3bEBZMea-7GFAVw@mail.gmail.com>
+Date: Thu, 21 Dec 2017 09:29:30 -0800
+Message-ID: <20171221172930.GF1084507@devbig577.frc2.facebook.com>
+References: <20171219173354.GQ3919388@devbig577.frc2.facebook.com>
+ <CALvZod7pbp0fFUPRnC68qdzkCEUg2YTavq6C6OLxqooCU5VeyQ@mail.gmail.com>
+ <20171219214107.GR3919388@devbig577.frc2.facebook.com>
+ <CALvZod5XRhXc3XrQw50Jw_OpRQB2iCCbgG-NMDCa8xRmGNdLrw@mail.gmail.com>
+ <20171220193741.GD3413940@devbig577.frc2.facebook.com>
+ <CALvZod7Z1Yh+ZhU8qxzSiN0Pph2R7O4Mki5E23FbJFAzhyCH8g@mail.gmail.com>
+ <20171220233658.GB1084507@devbig577.frc2.facebook.com>
+ <CALvZod7eQWrD6LgbUrOvuhf5A1KKxBaK5t-U61gdFqvMeWXuzQ@mail.gmail.com>
+ <20171221133726.GD1084507@devbig577.frc2.facebook.com>
+ <CALvZod432hzxPZgAypjPsZ33Z==0MxmMdPM3bEBZMea-7GFAVw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=xdORNI/wgaavozT2iSeqRMaUhuXhoi3UOfwVIWVaSoA=;
-        b=cdtNqJX+pZVgKRlufQ+L6K596+1RMqd3FwzF2pCEC8bK6Pxl8okZ1yZTTwE+C3Wvdo
-         JLEv2ClPXLWcJ9iMmZTxuPiEki5ApI0ZMLS0q4Xk6qiIyyM9/hht5ZEGFiXI0q3DEMUb
-         uBdhddIWWWS3z2t23eaIfq+3/cKaRjGIYqwZVk35VrpK3PxJ/1oe0icl5YQA4CyFOAhe
-         +tOnRSJ6eTQuT+5mObCVCZA/y68xbS4+WihMKhOTCJMlwB8H8DeWceVq1tFYWY5ufEyX
-         4wvlQ48uj2T3c0R2miorqk/gVYlfS6yA+xj6gtRmswz51gjnpDrDFKe2k12pLkPFoIG7
-         TAQg==
-In-Reply-To: <CALvZod432hzxPZgAypjPsZ33Z==0MxmMdPM3bEBZMea-7GFAVw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=RJSv3EtlF0D1E4QYw3YBFC3YueLFQjs5MTFto+FXSGg=;
+        b=bmEz+Tr3YdhD02w50sWC6HRkd09lV8mEEKN35Ymxyt4prhQdyIyscT+Xlaq/Q8fZhg
+         Y1Ti5IMp0LKDfZUg3jVLk8IV0irvrMLjgqBT1dxmUI5IaG2nDGP+7UuEZOK/8xGDA/Yh
+         bQpynSeAQ9q0ussyLxQOTP2twe7GUlNVSULZyYhtSSaaR6y05djiHF3tFrVy9qHyx6KK
+         sEiUP0TY0T/0Fr1/xIe+rdMidxWHJlldbdFNn2pzGYl1FIxR3iebFcM1gJyoRKJsyR+9
+         HYbqP2/V17mI5b58yFQVipqRkpqjgpXKiyk2GSq2YDLRwViD5mw5CMIfdJuqqoLBlPT+
+         jKZw==
+Content-Disposition: inline
+In-Reply-To: <CALvZod432hzxPZgAypjPsZ33Z==0MxmMdPM3bEBZMea-7GFAVw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Li Zefan <lizefan@huawei.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> The swap (and its performance) is and should be transparent
+Hello, Shakeel.
+
+On Thu, Dec 21, 2017 at 07:22:20AM -0800, Shakeel Butt wrote:
+> I am claiming memory allocations under global pressure will be
+> affected by the performance of the underlying swap device. However
+> memory allocations under memcg memory pressure, with memsw, will not
+> be affected by the performance of the underlying swap device. A job
+> having 100 MiB limit running on a machine without global memory
+> pressure will never see swap on hitting 100 MiB memsw limit.
+
+But, without global memory pressure, the swap wouldn't be making any
+difference to begin with.  Also, when multiple cgroups are hitting
+memsw limits, they'd behave as if swappiness is zero increasing load
+on the filesystems, which then then of course will affect everyone
+under memory pressure whether memsw or not.
+
+> > On top of that, what's the point?
+> >
+> > 1. As I wrote earlier, given the current OOM killer implementation,
+> >    whether OOM kicks in or not is not even that relevant in
+> >    determining the health of the workload.  There are frequent failure
+> >    modes where OOM killer fails to kick in while the workload isn't
+> >    making any meaningful forward progress.
+> >
+> 
+> Deterministic oom-killer is not the point. The point is to
+> "consistently limit the anon memory" allocated by the job which only
+> memsw can provide. A job owner who has requested 100 MiB for a job
+> sees some instances of the job suffer at 100 MiB and other instances
+> suffer at 150 MiB, is an inconsistent behavior.
+
+So, the first part, I get.  memsw happens to be be able to limit the
+amount of anon memory.  I really don't think that was the intention
+but more of a byproduct that some people might find useful.
+
+The example you listed tho doesn't make much sense to me.  Given two
+systems with differing level of memory pressures, two instances can
+see wildly different performance regardless of memsw.
+
+> > 2. On hitting memsw limit, the OOM decision is dependent on the
+> >    performance of the file backing devices.  Why is that necessarily
+> >    better than being dependent on swap or both, which would increase
+> >    the reclaim efficiency anyway?  You can't avoid being affected by
+> >    the underlying hardware one way or the other.
+> 
+> This is a separate discussion but still the amount of file backed
+> pages is known and controlled by the job owner and they have the
+> option to use a storage service, providing a consistent performance
+> across different data centers, instead of the physical disks of the
+> system where the job is running and thus isolating the job's
+> performance from the speed of the local disk. This is not possible
+> with swap. The swap (and its performance) is and should be transparent
 > to the job owners.
 
-Please ignore this statement, I didn't mean to claim on the
-independence of job performance and underlying swap performance, sorry
-about that.
+And, for your use case, there is a noticeable difference between file
+backed and anonymous memories and that's why you want to limit
+anonymous memory independently from file backed memory.
 
-I meant to say that the amount of anon memory a job can allocate
-should be independent to the underlying swap.
+It looks like what you actually want is limiting the amount of
+anonymous memory independently from file-backed consumptions because,
+in your setup, while swap is always on local disk the file storages
+are over network and more configurable / flexible.
+
+Assuming I'm not misunderstanding you, here are my thoughts.
+
+* I'm not sure that distinguishing anon and file backed memories like
+  that is the direction we want to head.  In fact, the more uniform we
+  can behave across them, the more efficient we'd be as we wouldn't
+  have that artificial barrier.  It is true that we don't have the
+  same level of control for swap tho.
+
+* Even if we want an independent anon limit, memsw isn't the solution.
+  It's too conflated.  If you want to have anon limit, the right thing
+  to do would be pushing for an independent anon limit, not memsw.
+
+Thanks.
+
+-- 
+tejun
