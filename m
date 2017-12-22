@@ -1,115 +1,68 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
-Date: Thu, 21 Dec 2017 09:29:30 -0800
-Message-ID: <20171221172930.GF1084507@devbig577.frc2.facebook.com>
-References: <20171219173354.GQ3919388@devbig577.frc2.facebook.com>
- <CALvZod7pbp0fFUPRnC68qdzkCEUg2YTavq6C6OLxqooCU5VeyQ@mail.gmail.com>
- <20171219214107.GR3919388@devbig577.frc2.facebook.com>
- <CALvZod5XRhXc3XrQw50Jw_OpRQB2iCCbgG-NMDCa8xRmGNdLrw@mail.gmail.com>
- <20171220193741.GD3413940@devbig577.frc2.facebook.com>
- <CALvZod7Z1Yh+ZhU8qxzSiN0Pph2R7O4Mki5E23FbJFAzhyCH8g@mail.gmail.com>
- <20171220233658.GB1084507@devbig577.frc2.facebook.com>
- <CALvZod7eQWrD6LgbUrOvuhf5A1KKxBaK5t-U61gdFqvMeWXuzQ@mail.gmail.com>
- <20171221133726.GD1084507@devbig577.frc2.facebook.com>
- <CALvZod432hzxPZgAypjPsZ33Z==0MxmMdPM3bEBZMea-7GFAVw@mail.gmail.com>
+Subject: Re: Cgroups v2 thread mode "domain invalid" state
+Date: Thu, 21 Dec 2017 16:15:54 -0800
+Message-ID: <20171222001554.GH1084507@devbig577.frc2.facebook.com>
+References: <CAKgNAkg2u=zt87tKk35vR+tQ7DnkJp9vbj+8n88=_MCcvmH9oQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=RJSv3EtlF0D1E4QYw3YBFC3YueLFQjs5MTFto+FXSGg=;
-        b=bmEz+Tr3YdhD02w50sWC6HRkd09lV8mEEKN35Ymxyt4prhQdyIyscT+Xlaq/Q8fZhg
-         Y1Ti5IMp0LKDfZUg3jVLk8IV0irvrMLjgqBT1dxmUI5IaG2nDGP+7UuEZOK/8xGDA/Yh
-         bQpynSeAQ9q0ussyLxQOTP2twe7GUlNVSULZyYhtSSaaR6y05djiHF3tFrVy9qHyx6KK
-         sEiUP0TY0T/0Fr1/xIe+rdMidxWHJlldbdFNn2pzGYl1FIxR3iebFcM1gJyoRKJsyR+9
-         HYbqP2/V17mI5b58yFQVipqRkpqjgpXKiyk2GSq2YDLRwViD5mw5CMIfdJuqqoLBlPT+
-         jKZw==
+        bh=ExKJpbLanxyWXOfPHDzgMcUTj1x5S9/aH0MtB6yLZA0=;
+        b=W1E4EE26HcGaNdqYbqNprBa/m01vd4jH1xtTnTm9K5/Hq8fhcJ6M4dZabOsu9XXakB
+         JxUl5hO8aNV7sxH+zUjd9a8wSj4u5MjHrkreCeFvAkfP7Qu3ohwR3N3Kq22cSV8R/4YA
+         5/u+4mr6KbPzW7djVYtS1iWYDwsic5bGpJ2obtKHjWjEEq8fmirv8FDI3dsxTxriJytO
+         PjuDYnNi4FW8MuaDCqb00vuP402PMOOUrOi75aY6OujVgCgm5bOpy8CgTQfpTI1vfZSR
+         aHZIw0L8rzC8RRRgem7qR12YkcxUqztrokYy9Lmqjt8EfsjtqEPU6gjiZzWVqSdNnzFT
+         8vsg==
 Content-Disposition: inline
-In-Reply-To: <CALvZod432hzxPZgAypjPsZ33Z==0MxmMdPM3bEBZMea-7GFAVw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAKgNAkg2u=zt87tKk35vR+tQ7DnkJp9vbj+8n88=_MCcvmH9oQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Shakeel.
+Hello,
 
-On Thu, Dec 21, 2017 at 07:22:20AM -0800, Shakeel Butt wrote:
-> I am claiming memory allocations under global pressure will be
-> affected by the performance of the underlying swap device. However
-> memory allocations under memcg memory pressure, with memsw, will not
-> be affected by the performance of the underlying swap device. A job
-> having 100 MiB limit running on a machine without global memory
-> pressure will never see swap on hitting 100 MiB memsw limit.
-
-But, without global memory pressure, the swap wouldn't be making any
-difference to begin with.  Also, when multiple cgroups are hitting
-memsw limits, they'd behave as if swappiness is zero increasing load
-on the filesystems, which then then of course will affect everyone
-under memory pressure whether memsw or not.
-
-> > On top of that, what's the point?
-> >
-> > 1. As I wrote earlier, given the current OOM killer implementation,
-> >    whether OOM kicks in or not is not even that relevant in
-> >    determining the health of the workload.  There are frequent failure
-> >    modes where OOM killer fails to kick in while the workload isn't
-> >    making any meaningful forward progress.
-> >
+On Wed, Dec 20, 2017 at 09:32:04PM +0100, Michael Kerrisk (man-pages) wrote:
+> I did find the July 2017 mail thread
+> "[PATCH 5/6] cgroup: implement cgroup v2 thread support"
+> (https://marc.info/?t=150025735500001&r=1&w=2)
+> where this cgroup type was discussed, but I must admit that I still
+> don't get it. Instead of converting cgroups under a threaded subtree
+> to "domain invalid" type, why can't they just be turned straight into
+> "threaded" type?
 > 
-> Deterministic oom-killer is not the point. The point is to
-> "consistently limit the anon memory" allocated by the job which only
-> memsw can provide. A job owner who has requested 100 MiB for a job
-> sees some instances of the job suffer at 100 MiB and other instances
-> suffer at 150 MiB, is an inconsistent behavior.
+> I guess another way of asking this question is: what possibilities
+> does manually switching each "domain invalid" cgroup to "threaded"
+> allow that wouldn't be allowed by immediately making all of the
+> cgroups in a threaded subtree "threaded"?
 
-So, the first part, I get.  memsw happens to be be able to limit the
-amount of anon memory.  I really don't think that was the intention
-but more of a byproduct that some people might find useful.
+IIRC, there were two reasons.  (Writing from memory, so I might not be
+completely accurate.)
 
-The example you listed tho doesn't make much sense to me.  Given two
-systems with differing level of memory pressures, two instances can
-see wildly different performance regardless of memsw.
+* Consistency w/ the cgroups right under the root cgroup.  Because
+  they can be both domains and threadroots, we can't switch the
+  children over to thread mode automatically.  Doing that for cgroups
+  further down in the hierarchy would be really inconsistent.
 
-> > 2. On hitting memsw limit, the OOM decision is dependent on the
-> >    performance of the file backing devices.  Why is that necessarily
-> >    better than being dependent on swap or both, which would increase
-> >    the reclaim efficiency anyway?  You can't avoid being affected by
-> >    the underlying hardware one way or the other.
-> 
-> This is a separate discussion but still the amount of file backed
-> pages is known and controlled by the job owner and they have the
-> option to use a storage service, providing a consistent performance
-> across different data centers, instead of the physical disks of the
-> system where the job is running and thus isolating the job's
-> performance from the speed of the local disk. This is not possible
-> with swap. The swap (and its performance) is and should be transparent
-> to the job owners.
+* Possible extension to threadmode.  If we figure out how to do mixed
+  mode further down in the hierarchy (and if there are actual use
+  cases which require that), automatically switching would be really
+  confusing.
 
-And, for your use case, there is a noticeable difference between file
-backed and anonymous memories and that's why you want to limit
-anonymous memory independently from file backed memory.
-
-It looks like what you actually want is limiting the amount of
-anonymous memory independently from file-backed consumptions because,
-in your setup, while swap is always on local disk the file storages
-are over network and more configurable / flexible.
-
-Assuming I'm not misunderstanding you, here are my thoughts.
-
-* I'm not sure that distinguishing anon and file backed memories like
-  that is the direction we want to head.  In fact, the more uniform we
-  can behave across them, the more efficient we'd be as we wouldn't
-  have that artificial barrier.  It is true that we don't have the
-  same level of control for swap tho.
-
-* Even if we want an independent anon limit, memsw isn't the solution.
-  It's too conflated.  If you want to have anon limit, the right thing
-  to do would be pushing for an independent anon limit, not memsw.
+The invalid state while not the most convenient is straight forward
+(only the operations which are explicitly asked are performed) and
+keeps the door open for future changes.
 
 Thanks.
 
 -- 
 tejun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-man" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
