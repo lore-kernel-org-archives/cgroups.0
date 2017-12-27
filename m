@@ -1,134 +1,165 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [RFC] distinguish foreground and background IOs in block throttle
-Date: Wed, 27 Dec 2017 13:36:14 +0100
-Message-ID: <A491ADB3-5487-4161-A526-E0C3AF416437@linaro.org>
-References: <1fa623a6-e374-de5e-477e-e604cb760f82@gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Content-Type: multipart/mixed;
-        boundary="Apple-Mail=_AACAA3E2-F234-41B8-BEC9-D703D74EC9BC"
-Return-path: <linux-block-owner@vger.kernel.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [RFC PATCH] mm: memcontrol: memory+swap accounting for cgroup-v2
+Date: Wed, 27 Dec 2017 11:49:08 -0800
+Message-ID: <CALvZod4pkx8gE7HnFULrkywvH2Z-9zjMvjJY4n7d+NV8xYg18w@mail.gmail.com>
+References: <20171219173354.GQ3919388@devbig577.frc2.facebook.com>
+ <CALvZod7pbp0fFUPRnC68qdzkCEUg2YTavq6C6OLxqooCU5VeyQ@mail.gmail.com>
+ <20171219214107.GR3919388@devbig577.frc2.facebook.com> <CALvZod5XRhXc3XrQw50Jw_OpRQB2iCCbgG-NMDCa8xRmGNdLrw@mail.gmail.com>
+ <20171220193741.GD3413940@devbig577.frc2.facebook.com> <CALvZod7Z1Yh+ZhU8qxzSiN0Pph2R7O4Mki5E23FbJFAzhyCH8g@mail.gmail.com>
+ <20171220233658.GB1084507@devbig577.frc2.facebook.com> <CALvZod7eQWrD6LgbUrOvuhf5A1KKxBaK5t-U61gdFqvMeWXuzQ@mail.gmail.com>
+ <20171221133726.GD1084507@devbig577.frc2.facebook.com> <CALvZod432hzxPZgAypjPsZ33Z==0MxmMdPM3bEBZMea-7GFAVw@mail.gmail.com>
+ <20171221172930.GF1084507@devbig577.frc2.facebook.com>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
-         :references;
-        bh=Lnhjbup2faMH7pvIfRF4yJsiPnSYFfRli9JYc9qtQhI=;
-        b=Qb23TNpl3wp9dUk5mvqhsj/paTMD7UkuRuVZOsGmG7KZQHCEgac8I6Fl2mmmtGtCgJ
-         DgrtiXeuZmploYIq54ELXwyX8ueVCdb3fS60vRQiBUw/85HHFCbS+UMesfNWCDxS2y8K
-         ydWr4YYPDpRR1rNeIsV2/qDbvOQw046fEN6Zs=
-In-Reply-To: <1fa623a6-e374-de5e-477e-e604cb760f82@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=LoKjGO/DuLQVZ47fywHdzhHS9Uy3sHgbEb8k9YqreaM=;
+        b=WXK4XRfxPjq4vnkAl/QjfFVKQGtcbTUSZNFkWuDx2jDf0Kt0xPnn00XFqKpNWTR6Nh
+         YtfxSSIWJIoB65M02Snk2gzH/hTYcVr1mgcXCJo+pn6E6ssY8HT5SqNcpxJasllJenjf
+         WiL0iaEGHRvMMJ+0Fo9ortyn5vB2X4CXGKkl8aqhuwaPDTh/hX93NfDI4B+uGnX2lghB
+         F61+OTK9yBrWlkS/WGOIR8DzpiU06b58eOKbe/T/9IkxBttyeTrgNq/SKFKLrThHGUGJ
+         gJ0zJMkOZ6f+mHDBq/GSlzfKBTV6+vR0Os64LDXoEg2OqYE/c1Wv1rWYL2p2Lc/u1GIv
+         W7Kg==
+In-Reply-To: <20171221172930.GF1084507@devbig577.frc2.facebook.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: xuejiufei <xuejiufei@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@fb.com>, Shaohua Li <shli@kernel.org>, linux-block <linux-block@vger.kernel.org>, cgroups@vger.kernel.org, Mark Brown <broonie@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>
-
-
---Apple-Mail=_AACAA3E2-F234-41B8-BEC9-D703D74EC9BC
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
-
-
-
-> Il giorno 25 dic 2017, alle ore 03:44, xuejiufei <xuejiufei@gmail.com> =
-ha scritto:
->=20
-> Hi all,
->=20
-> Cgroup writeback is supported since v4.2. I found there exists a
-> problem in the following case.
->=20
-> A cgroup may send both buffer and direct/sync IOs. The foreground
-> thread will be stalled when periodic writeback IOs is flushed because
-> the service queue already has a plenty of writeback IOs, then
-> foreground IOs should be enqueued with its FIFO policy.
->=20
-> I wonder if we can distinguish foreground and background IOs in block
-> throttle to fix the above problem.
->=20
-> Any suggestion are always appreciated.
->=20
-
-Hi,
-to address similar issues, I have just sent a patch [1] for the BFQ
-I/O scheduler.  If you want to give it a try, it might solve, or at
-least mitigate, your problem (the patch does not involve groups,
-though, at least for the moment).
-
-There are still pending patches related to the low_latency mode of
-BFQ, so I suggest you to try with low_latency disabled, i.e., as root:
-echo bfq > /sys/block/<your-device>/queue/scheduler
-echo 0 > /sys/block/<your-device>/queue/iosched/low_latency=20
-
-For your possible convenience, I have attached the patch, gzipped, to
-this email too.
-
-Thanks,
-Paolo
-
-[1] https://www.spinics.net/lists/kernel/msg2684463.html
-
-
---Apple-Mail=_AACAA3E2-F234-41B8-BEC9-D703D74EC9BC
-Content-Disposition: attachment;
-	filename=0001-block-bfq-limit-tags-for-writes-and-async-I-O.patch.gz
-Content-Type: application/x-gzip;
-	x-unix-mode=0644;
-	name="0001-block-bfq-limit-tags-for-writes-and-async-I-O.patch.gz"
-Content-Transfer-Encoding: base64
-
-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
-Y8LBGbjeyPUc53+2m3pzbBUAAA==
---Apple-Mail=_AACAA3E2-F234-41B8-BEC9-D703D74EC9BC
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
+To: Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Li Zefan <lizefan@huawei.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org
 
+Hi Tejun,
 
+In my previous messages, I think the message "memsw improves the
+performance of the job" might have been conveyed. Please ignore that.
+The message I want to express is the "memsw provides users the ability
+to consistently limit their job's memory (specifically anon memory)
+irrespective of the presence of swap".
 
-> 
-> Thanks,
-> Jiufei
+On Thu, Dec 21, 2017 at 9:29 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Shakeel.
+>
+> On Thu, Dec 21, 2017 at 07:22:20AM -0800, Shakeel Butt wrote:
+>> I am claiming memory allocations under global pressure will be
+>> affected by the performance of the underlying swap device. However
+>> memory allocations under memcg memory pressure, with memsw, will not
+>> be affected by the performance of the underlying swap device. A job
+>> having 100 MiB limit running on a machine without global memory
+>> pressure will never see swap on hitting 100 MiB memsw limit.
+>
+> But, without global memory pressure, the swap wouldn't be making any
+> difference to begin with.
 
+It would in the current cgroup-v2's swap interface. When a job hits
+the memory.max (or memory.high), assuming the availability of swap and
+job's swap usage, the kernel will swapout the anon pages of the job.
 
---Apple-Mail=_AACAA3E2-F234-41B8-BEC9-D703D74EC9BC--
+> Also, when multiple cgroups are hitting
+> memsw limits, they'd behave as if swappiness is zero increasing load
+> on the filesystems, which then then of course will affect everyone
+> under memory pressure whether memsw or not.
+>
+>> > On top of that, what's the point?
+>> >
+>> > 1. As I wrote earlier, given the current OOM killer implementation,
+>> >    whether OOM kicks in or not is not even that relevant in
+>> >    determining the health of the workload.  There are frequent failure
+>> >    modes where OOM killer fails to kick in while the workload isn't
+>> >    making any meaningful forward progress.
+>> >
+>>
+>> Deterministic oom-killer is not the point. The point is to
+>> "consistently limit the anon memory" allocated by the job which only
+>> memsw can provide. A job owner who has requested 100 MiB for a job
+>> sees some instances of the job suffer at 100 MiB and other instances
+>> suffer at 150 MiB, is an inconsistent behavior.
+>
+> So, the first part, I get.  memsw happens to be be able to limit the
+> amount of anon memory.  I really don't think that was the intention
+> but more of a byproduct that some people might find useful.
+>
+> The example you listed tho doesn't make much sense to me.  Given two
+> systems with differing level of memory pressures, two instances can
+> see wildly different performance regardless of memsw.
+>
+
+The word 'suffer' might have given the impression that I am concerned
+about performance. Let me clarify, if the amount of memory a job can
+allocate differs based on the swap availability of the system where it
+ran, is an inconsistent behavior. The 'memsw' interface allows to
+overcome that inconsistency.
+
+>> > 2. On hitting memsw limit, the OOM decision is dependent on the
+>> >    performance of the file backing devices.  Why is that necessarily
+>> >    better than being dependent on swap or both, which would increase
+>> >    the reclaim efficiency anyway?  You can't avoid being affected by
+>> >    the underlying hardware one way or the other.
+>>
+>> This is a separate discussion but still the amount of file backed
+>> pages is known and controlled by the job owner and they have the
+>> option to use a storage service, providing a consistent performance
+>> across different data centers, instead of the physical disks of the
+>> system where the job is running and thus isolating the job's
+>> performance from the speed of the local disk. This is not possible
+>> with swap. The swap (and its performance) is and should be transparent
+>> to the job owners.
+>
+
+Please ignore this "separate discussion" as I do not want to lead the
+discussion towards the "performance" of file storages or swap mediums.
+
+> And, for your use case, there is a noticeable difference between file
+> backed and anonymous memories and that's why you want to limit
+> anonymous memory independently from file backed memory.
+>
+> It looks like what you actually want is limiting the amount of
+> anonymous memory independently from file-backed consumptions because,
+> in your setup, while swap is always on local disk the file storages
+> are over network and more configurable / flexible.
+>
+
+What I want is a job having 100 MiB memory limit should not be able to
+allocate anon memory more than 100 MiB irrespective of the
+availability of the swap. I can see that a separate anon limit can be
+used to achieve my goal but I am failing to see why memsw, which can
+also be used to achieve my goal and is already implemented, is not
+right direction or solution.
+
+> Assuming I'm not misunderstanding you, here are my thoughts.
+>
+> * I'm not sure that distinguishing anon and file backed memories like
+>   that is the direction we want to head.  In fact, the more uniform we
+>   can behave across them, the more efficient we'd be as we wouldn't
+>   have that artificial barrier.  It is true that we don't have the
+>   same level of control for swap tho.
+>
+
+I totally agree about the uniform behavior (& no artificial barriers)
+but I don't understand how 'memsw' will lead to opposite direction.
+'memsw' is an interface that can simultaneously limit anon, file and
+kmem of the job.
+
+> * Even if we want an independent anon limit, memsw isn't the solution.
+>   It's too conflated.
+
+I am confused. If we want a solution which has uniform behavior across
+file, anon & kmem and without any artificial barrier, how would that
+not be conflated?
+
+>   If you want to have anon limit, the right thing
+>   to do would be pushing for an independent anon limit, not memsw.
+>
+
+Though I agree that a separate anon limit will work for me. I am
+hesitant to push for that direction due to:
+
+1. The alternative solution, i.e. 'memsw', already exist.
+2. What will be the semantics of memory.high under new anon limit?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
