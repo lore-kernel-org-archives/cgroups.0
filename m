@@ -1,129 +1,118 @@
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH] blktrace: output io cgroup name for cgroup v1
-Date: Thu, 28 Dec 2017 15:04:00 +0800
-Message-ID: <20171228070400.26328-1-houtao1@huawei.com>
-Mime-Version: 1.0
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [RFC] distinguish foreground and background IOs in block throttle
+Date: Thu, 28 Dec 2017 09:48:43 +0100
+Message-ID: <D3E04C58-031C-4BDE-99B1-5F9EF680A533@linaro.org>
+References: <1fa623a6-e374-de5e-477e-e604cb760f82@gmail.com>
+ <A491ADB3-5487-4161-A526-E0C3AF416437@linaro.org>
+ <02a6f8ff-2f13-9590-93ac-002240f00815@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=No8o7f5J8Q8RbR6JiFQg6pLgnLMOkUQoXW8DW7A2o80=;
+        b=Fxacn4DFUMv8GH+q9SRAFNdU2rhU3CWJT9QurWSCrksgezlBAU6Qwq4Bpuf47d2peU
+         eoITv/zhUyBq4teooK6qr6JCN2nJo40zNp4wSyiJfurwnZR7znPPSJk8mqtOS9yAvKgN
+         yTrBSlEw5rAKZWOxN8S5wjihLsFyMQpFYnVio=
+In-Reply-To: <02a6f8ff-2f13-9590-93ac-002240f00815@gmail.com>
 Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-block@vger.kernel.org, cgroups@vger.kernel.org
-Cc: shli@kernel.org, tj@kernel.org, houtao1@huawei.com
+To: Joseph Qi <jiangqi903@gmail.com>
+Cc: xuejiufei <xuejiufei@gmail.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@fb.com>, Shaohua Li <shli@kernel.org>, linux-block <linux-block@vger.kernel.org>, cgroups@vger.kernel.org, Mark Brown <broonie@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>
 
-Now the output of io cgroup name in blktrace is controlled by
-blk_cgroup & blk_cgname options in trace_options files. When
-using cgroup v1 for io controller, there is no output of cgroup
-name in trace file, because cgroup_path_from_kernfs_id() uses
-cgrp_dfl_root.kf_root to find the cgroup file and cgrp_dfl_root
-is only valid for cgroup v2.
 
-So fix cgroup_path_from_kernfs_id() to support both cgroup v1 and v2.
 
-Fixes: 69fd5c3 ("blktrace: add an option to allow displaying cgroup path")
-Signed-off-by: Hou Tao <houtao1@huawei.com>
----
- include/linux/cgroup.h  |  6 +++---
- kernel/cgroup/cgroup.c  | 39 ++++++++++++++++++++++++++++++++++++---
- kernel/trace/blktrace.c |  4 ++--
- 3 files changed, 41 insertions(+), 8 deletions(-)
+> Il giorno 28 dic 2017, alle ore 02:51, Joseph Qi =
+<jiangqi903@gmail.com> ha scritto:
+>=20
+> Hi Paolo,
+>=20
+> On 17/12/27 20:36, Paolo Valente wrote:
+>>=20
+>>=20
+>>> Il giorno 25 dic 2017, alle ore 03:44, xuejiufei =
+<xuejiufei@gmail.com> ha scritto:
+>>>=20
+>>> Hi all,
+>>>=20
+>>> Cgroup writeback is supported since v4.2. I found there exists a
+>>> problem in the following case.
+>>>=20
+>>> A cgroup may send both buffer and direct/sync IOs. The foreground
+>>> thread will be stalled when periodic writeback IOs is flushed =
+because
+>>> the service queue already has a plenty of writeback IOs, then
+>>> foreground IOs should be enqueued with its FIFO policy.
+>>>=20
+>>> I wonder if we can distinguish foreground and background IOs in =
+block
+>>> throttle to fix the above problem.
+>>>=20
+>>> Any suggestion are always appreciated.
+>>>=20
+>>=20
+>> Hi,
+>> to address similar issues, I have just sent a patch [1] for the BFQ
+>> I/O scheduler.  If you want to give it a try, it might solve, or at
+>> least mitigate, your problem (the patch does not involve groups,
+>> though, at least for the moment).
+>>=20
+>> There are still pending patches related to the low_latency mode of
+>> BFQ, so I suggest you to try with low_latency disabled, i.e., as =
+root:
+>> echo bfq > /sys/block/<your-device>/queue/scheduler
+>> echo 0 > /sys/block/<your-device>/queue/iosched/low_latency=20
+>>=20
+>> For your possible convenience, I have attached the patch, gzipped, to
+>> this email too.
+>>> Thanks,
+>> Paolo
+>>=20
+>> [1] https://www.spinics.net/lists/kernel/msg2684463.html
+>>=20
+> I don't get why the issue Jiufei described has relations with =
+scheduler.
+>=20
+> IMO, the core reason is current we only have read/write queues in =
+block
+> throttle. That means all sync/async writes will go into the same =
+queue.
+> Once writeback IOs flush out and throttle happens, sync write will =
+also
+> have to be queued up. Since there are more async writes ahead of sync
+> writes in the queue, and the current policy is dispatching 6 reads and =
+2
+> writes during each round, sync writes will get significantly delay,
+> which we don't expect.
+>=20
+> So like read/write queue design, we may add another queue in block
+> throttle to distinguish sync/async writes, and then we can dispatch =
+more
+> sync writes than async writes.
+>=20
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 473e0c0..ed80490 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -651,7 +651,7 @@ static inline union kernfs_node_id *cgroup_get_kernfs_id(struct cgroup *cgrp)
- 	return &cgrp->kn->id;
- }
- 
--void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
-+void cgroup_path_from_kernfs_id(int ssid, const union kernfs_node_id *id,
- 					char *buf, size_t buflen);
- #else /* !CONFIG_CGROUPS */
- 
-@@ -686,8 +686,8 @@ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 	return true;
- }
- 
--static inline void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
--	char *buf, size_t buflen) {}
-+static inline void cgroup_path_from_kernfs_id(int ssid,
-+		const union kernfs_node_id *id, char *buf, size_t buflen) {}
- #endif /* !CONFIG_CGROUPS */
- 
- /*
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 0b1ffe1..49d63c6 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5354,16 +5354,49 @@ static int __init cgroup_wq_init(void)
- }
- core_initcall(cgroup_wq_init);
- 
--void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
-+void cgroup_path_from_kernfs_id(int ssid, const union kernfs_node_id *id,
- 					char *buf, size_t buflen)
- {
-+	struct kernfs_root *root;
- 	struct kernfs_node *kn;
-+	struct cgroup *root_cgrp = NULL;
- 
--	kn = kernfs_get_node_by_id(cgrp_dfl_root.kf_root, id);
--	if (!kn)
-+	if (ssid >= CGROUP_SUBSYS_COUNT)
- 		return;
-+
-+	if (likely(static_key_enabled(cgroup_subsys_on_dfl_key[ssid]))) {
-+		root = cgrp_dfl_root.kf_root;
-+	} else {
-+		struct cgroup_subsys *subsys = cgroup_subsys[ssid];
-+
-+		/*
-+		 * It seems we can not use rcu_read_lock() to protect
-+		 * the liveness check of subsys->root->cgrp. Although
-+		 * root->cgrp is freed by RCU, when we dereference the
-+		 * old root, the old root may been destroying by
-+		 * cgroup_destroy_root().
-+		 */
-+		mutex_lock(&cgroup_mutex);
-+		if (percpu_ref_tryget_live(&subsys->root->cgrp.self.refcnt)) {
-+			root_cgrp = &subsys->root->cgrp;
-+			root = subsys->root->kf_root;
-+		}
-+		mutex_unlock(&cgroup_mutex);
-+
-+		if (!root_cgrp)
-+			goto out;
-+	}
-+
-+	kn = kernfs_get_node_by_id(root, id);
-+	if (!kn)
-+		goto out;
-+
- 	kernfs_path(kn, buf, buflen);
- 	kernfs_put(kn);
-+
-+out:
-+	if (root_cgrp)
-+		cgroup_put(root_cgrp);
- }
- 
- /*
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 987d9a9a..79890e0 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -1279,8 +1279,8 @@ static void blk_log_action(struct trace_iterator *iter, const char *act,
- 		if (blk_tracer_flags.val & TRACE_BLK_OPT_CGNAME) {
- 			char blkcg_name_buf[NAME_MAX + 1] = "<...>";
- 
--			cgroup_path_from_kernfs_id(id, blkcg_name_buf,
--				sizeof(blkcg_name_buf));
-+			cgroup_path_from_kernfs_id(io_cgrp_id, id,
-+				blkcg_name_buf, sizeof(blkcg_name_buf));
- 			trace_seq_printf(&iter->seq, "%3d,%-3d %s %2s %3s ",
- 				 MAJOR(t->device), MINOR(t->device),
- 				 blkcg_name_buf, act, rwbs);
--- 
-2.9.5
+Hi Joseph,
+your description of the problem would be complete *if* sync write
+requests were issued as expected.  But the problem I have seen, and
+tried to solve with my patch, is that async requests easily eat all
+request tags (I'm referring to blk-mq of course).  So sync I/O has a
+hard time finding free tags for its requests, and is then throttled
+upstream.  Differentiating throttling downstream may not solve this
+problem, because async requests will accumulate upstream as before.
+The problem may even get worse, because downstream throttling may
+increase the duration of upstream congestion.
+
+My patch tries to solve this upstream problem.  BFQ then does the
+rest, downstream, for me.  Things may change in your scenario, though:
+you may not have this upstream problem at all, or you may have both
+the upstream and the downstream problems.
+
+Thanks,
+Paolo
+
+> Thanks,
+> Joseph
 
