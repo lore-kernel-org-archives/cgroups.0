@@ -1,43 +1,60 @@
-From: Matt Roper <matthew.d.roper@intel.com>
-Subject: [PATCH 2/2] cgroup: Update documentation reference
-Date: Fri, 29 Dec 2017 12:02:00 -0800
-Message-ID: <20171229200200.18873-2-matthew.d.roper@intel.com>
+From: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 1/2] Documentation/cgroup-v1: fix outdated programming
+ details
+Date: Fri, 29 Dec 2017 12:34:49 -0800
+Message-ID: <20171229203449.GS5820@mdroper-desk.amr.corp.intel.com>
 References: <20171229200200.18873-1-matthew.d.roper@intel.com>
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20171229200200.18873-1-matthew.d.roper@intel.com>
-Sender: linux-doc-owner@vger.kernel.org
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20171229200200.18873-1-matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: Matt Roper <matthew.d.roper@intel.com>, Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-The cgroup_subsys structure references a documentation file that has been
-renamed after the v1/v2 split.  Since the v2 documentation doesn't
-currently contain any information on kernel interfaces for controllers,
-point the user to the v1 docs.
+On Fri, Dec 29, 2017 at 12:01:59PM -0800, Matt Roper wrote:
+> The cgroup-v1 documentation is out of date in a few places:
+> 
+>  * cgroup controllers can no longer be compiled as modules since commit
+>    3ed80a6 ("cgroup: drop module support"); the functions and fields
+>    referenced here no longer exist.
+...
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-doc@vger.kernel.org
-Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
----
- include/linux/cgroup-defs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is actually exactly what I was digging into the cgroups
+documentation to figure out how to do.  I was hoping to be able to
+create a controller inside an existing device driver that could manage
+driver-specific policy and resources.  However based on the explanation
+given in https://www.spinics.net/lists/cgroups/msg10077.html , it sounds
+like this isn't really a direction that the cgroups framework wants to
+go.
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 8b7fd8e..9f242b8 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -561,7 +561,7 @@ struct cftype {
- 
- /*
-  * Control Group subsystem type.
-- * See Documentation/cgroups/cgroups.txt for details
-+ * See Documentation/cgroup-v1/cgroups.txt for details
-  */
- struct cgroup_subsys {
- 	struct cgroup_subsys_state *(*css_alloc)(struct cgroup_subsys_state *parent_css);
+My specific goal was to use the cgroups-v2 hierarchy to assign i915
+(GPU) workloads with an initial priority according to the cgroup
+classification of the submitting process.  In the future I could also
+see driver-specific cgroup controllers potentially being useful for
+managing specialized resources like graphics-specific stolen memory or
+video RAM on discrete gpu's.
+
+If a system is already using a cgroups-v2 hierarchy to manage other
+system resources via the standard controllers, I think it would be ideal
+if we could leverage that existing process organization to supply i915
+with desired driver-specific policy and resource assignments.  Since
+cgroup controllers don't seem to support this at the moment, is there an
+alternate mechanism I should be looking at instead?  Or is this a type
+of use case that we may want to evolve cgroups to support in a different
+manner?
+
+Thanks!
+
+
+Matt
+
 -- 
-2.9.5
-
+Matt Roper
+Graphics Software Engineer
+IoTG Platform Enabling & Development
+Intel Corporation
+(916) 356-2795
