@@ -1,42 +1,52 @@
-From: weiping zhang <zwp10758-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC] blk-throttle: export io_serviced_recursive, io_service_bytes_recursive
-Date: Sat, 30 Dec 2017 01:17:24 +0800
-Message-ID: <CAA70yB7wTVHKLdCGsgCzVi5thtwuU5buTA2acDyv_gABY8GDpw@mail.gmail.com>
-References: <20171211145621.GA2115@localhost.didichuxing.com> <20171211151705.GG2421075@devbig577.frc2.facebook.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=swvYys6vG/JOlIXwn0jtl5F4y7w4Z8JO0K5lmQWMlYk=;
-        b=RYGP9dVaqSVqRjM1AoYubkJEfsGp6ZaqH1Ptb40oTyJl5Fk/gRtuoHgKGMeGTUdHsq
-         QuSZJabcHF7a9eXqW1xbqBzr1EjMnFxBbImau6GCn6Ftvf3HPsd4RZ23bQ6zrjlLiQcG
-         sfzGbEP2slYYDe6oZo95S0oOR/0Kv5ncX8tZcLqx5Yubwn9orUdPlIHAGa/LXGJ3hxxs
-         KOTDW74HE5ayUjTSjgiNfr74o3UjrHVedcVQQFgCVdqXcD1SzsLjfJZRGPUfDg0hRZur
-         734PUp1XM1vEWYpdDk2LvnjD+PleNsvlI/LdL6+YdEvcvC4FA0N7gbt5dNKmqzbC3mRZ
-         +r6A==
-In-Reply-To: <20171211151705.GG2421075-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Matt Roper <matthew.d.roper@intel.com>
+Subject: [PATCH 1/2] Documentation/cgroup-v1: fix outdated programming details
+Date: Fri, 29 Dec 2017 12:01:59 -0800
+Message-ID: <20171229200200.18873-1-matthew.d.roper@intel.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups@vger.kernel.org
+Cc: Matt Roper <matthew.d.roper@intel.com>, Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
 
-2017-12-11 23:17 GMT+08:00 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
-> On Mon, Dec 11, 2017 at 10:56:25PM +0800, weiping zhang wrote:
->> export these two interface for cgroup-v1.
->>
->> Signed-off-by: weiping zhang <zhangweiping-j11cvHKnkmPwvR0lvYjcXw@public.gmane.org>
->
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->
-> Thanks.
->
+The cgroup-v1 documentation is out of date in a few places:
 
-Hi Jens,
+ * cgroup controllers can no longer be compiled as modules since commit
+   3ed80a6 ("cgroup: drop module support"); the functions and fields
+   referenced here no longer exist.
 
-these two interface are useful to collect blkcg info, would you pick it up ?
+ * Controllers need to create of a cgroup_subsys object named
+   "<name>_cgrp_subsys" instead of "<name>_subsys" since commit
+   073219e ("cgroup: clean up cgroup_subsys names and initialization")
 
-Thanks
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ Documentation/cgroup-v1/cgroups.txt | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/Documentation/cgroup-v1/cgroups.txt b/Documentation/cgroup-v1/cgroups.txt
+index 308e5ff..059f706 100644
+--- a/Documentation/cgroup-v1/cgroups.txt
++++ b/Documentation/cgroup-v1/cgroups.txt
+@@ -523,12 +523,7 @@ Accessing a task's cgroup pointer may be done in the following ways:
+ Each subsystem should:
+ 
+ - add an entry in linux/cgroup_subsys.h
+-- define a cgroup_subsys object called <name>_subsys
+-
+-If a subsystem can be compiled as a module, it should also have in its
+-module initcall a call to cgroup_load_subsys(), and in its exitcall a
+-call to cgroup_unload_subsys(). It should also set its_subsys.module =
+-THIS_MODULE in its .c file.
++- define a cgroup_subsys object called <name>_cgrp_subsys
+ 
+ Each subsystem may export the following methods. The only mandatory
+ methods are css_alloc/free. Any others that are null are presumed to
+-- 
+2.9.5
+
