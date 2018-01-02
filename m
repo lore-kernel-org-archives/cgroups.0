@@ -1,60 +1,44 @@
-From: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/2] Documentation/cgroup-v1: fix outdated programming
- details
-Date: Fri, 29 Dec 2017 12:34:49 -0800
-Message-ID: <20171229203449.GS5820@mdroper-desk.amr.corp.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] cgroup: Update documentation reference
+Date: Tue, 2 Jan 2018 07:00:42 -0800
+Message-ID: <20180102150042.GB3668920@devbig577.frc2.facebook.com>
 References: <20171229200200.18873-1-matthew.d.roper@intel.com>
+ <20171229200200.18873-2-matthew.d.roper@intel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=+q5tb/zCK479yFzte/W/Pl2ilWOgMCwJTF7ibVoFfXA=;
+        b=Yx/66tMw0PTi6kR5yt5s0fTt0RPmK2f25fK+VK4CnaCDDdoSLoy+Z2RLrJ2XZl716n
+         m21fSPglYie/2TWAM+aqKlH1gI8QUd8XBSmf8VOT/8c/a3T/d7kExVwCdfOqReCixsHp
+         3iiPpxjIvNB9F0qBCzMzB26WPPdYGW2UrxO9qHKPMWvGSo5U47KkBk6dSx5RwM+2rZf4
+         vH1sthLY0yJ3Y+jZdU1BzfdMwwkgoqxDXShZr2GcjRdP3AbaLSr6AiJwe0ZKu+3KPIfQ
+         lDH8pUnGE2I8dGPc2+GLsP6DbLf/U4iJbicR2pAgHEcaM1VrrOmCW4T9/IAdYZsPyTUU
+         XuUg==
 Content-Disposition: inline
-In-Reply-To: <20171229200200.18873-1-matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20171229200200.18873-2-matthew.d.roper@intel.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Matt Roper <matthew.d.roper@intel.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Fri, Dec 29, 2017 at 12:01:59PM -0800, Matt Roper wrote:
-> The cgroup-v1 documentation is out of date in a few places:
+On Fri, Dec 29, 2017 at 12:02:00PM -0800, Matt Roper wrote:
+> The cgroup_subsys structure references a documentation file that has been
+> renamed after the v1/v2 split.  Since the v2 documentation doesn't
+> currently contain any information on kernel interfaces for controllers,
+> point the user to the v1 docs.
 > 
->  * cgroup controllers can no longer be compiled as modules since commit
->    3ed80a6 ("cgroup: drop module support"); the functions and fields
->    referenced here no longer exist.
-...
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: linux-doc@vger.kernel.org
+> Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
 
-This is actually exactly what I was digging into the cgroups
-documentation to figure out how to do.  I was hoping to be able to
-create a controller inside an existing device driver that could manage
-driver-specific policy and resources.  However based on the explanation
-given in https://www.spinics.net/lists/cgroups/msg10077.html , it sounds
-like this isn't really a direction that the cgroups framework wants to
-go.
+Applied 1-2 to cgroup/for-4.16.
 
-My specific goal was to use the cgroups-v2 hierarchy to assign i915
-(GPU) workloads with an initial priority according to the cgroup
-classification of the submitting process.  In the future I could also
-see driver-specific cgroup controllers potentially being useful for
-managing specialized resources like graphics-specific stolen memory or
-video RAM on discrete gpu's.
-
-If a system is already using a cgroups-v2 hierarchy to manage other
-system resources via the standard controllers, I think it would be ideal
-if we could leverage that existing process organization to supply i915
-with desired driver-specific policy and resource assignments.  Since
-cgroup controllers don't seem to support this at the moment, is there an
-alternate mechanism I should be looking at instead?  Or is this a type
-of use case that we may want to evolve cgroups to support in a different
-manner?
-
-Thanks!
-
-
-Matt
+Thanks.
 
 -- 
-Matt Roper
-Graphics Software Engineer
-IoTG Platform Enabling & Development
-Intel Corporation
-(916) 356-2795
+tejun
