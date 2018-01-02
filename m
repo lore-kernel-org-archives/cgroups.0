@@ -1,67 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
-Date: Tue, 2 Jan 2018 08:16:56 -0800
-Message-ID: <20180102161656.GD3668920@devbig577.frc2.facebook.com>
-References: <CANaxB-zT+sz=z1FFk5npnwMySdfKCBZDkM+P+=JXDkCXbh=rCw@mail.gmail.com>
- <1511868946-23959-1-git-send-email-prsood@codeaurora.org>
- <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
- <20171204202219.GF2421075@devbig577.frc2.facebook.com>
- <20171204225825.GP2421075@devbig577.frc2.facebook.com>
- <20171204230117.GF20227@worktop.programming.kicks-ass.net>
- <20171211152059.GH2421075@devbig577.frc2.facebook.com>
- <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
- <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
- <9843d982-d201-8702-2e4e-0541a4d96b53@codeaurora.org>
-Mime-Version: 1.0
+From: Vladimir Rutsky <rutsky@google.com>
+Subject: [PATCH] cgroup-v2.txt: fix typos
+Date: Tue,  2 Jan 2018 17:27:41 +0100
+Message-ID: <1514910470-4260-1-git-send-email-rutsky@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6WNYtPL8WMwPi+DGhBRmor9zRMGz7zGE/qk/IuKbxRo=;
-        b=VHdU0g6a6ddFVKZ7s/1wrQiA2XgzUX4VHr5OfIzGyPT1owKFU7m8PtJJRMUyNc8dE9
-         ayQyJYewQKI/J90ar8UOF8SKsEnDflA+xOcQeUpw2wzPBx6x++MDRTCJ0+Z7O36qRTlr
-         0T7Heo2i4xcM8RSBXFZKLXz1AbeTcONzP+7MY8S5WJofZ+2PSUR9JaTsfYkgP/Njsa9y
-         6gnNvUTOAjOaqynb/n4xcvyk/yMLIwYxS7gmofR/hvk8+AE72D+BLjzosLPo98hhN5Ml
-         UQTWMiwzGfBTFWzQxY13xCWAP9EIZETl3Wj+9gWyw4y/elXlunlrOLL+YSZCIe8TOviG
-         sxRw==
-Content-Disposition: inline
-In-Reply-To: <9843d982-d201-8702-2e4e-0541a4d96b53@codeaurora.org>
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=YRf7VVpfhi0idTgbHc9hDM2uwk09SDjq6JgY78EUO5Y=;
+        b=o9s8dAILSnxrJ7bl7dJF9CqFHQGkkBvOBSaJ+0WTfUF2zXY+IetdjRPAxxEKtpvy6G
+         KpQxfiuL/AzASh4Su75JS4Uei54Moxk/6oXSAb4RoQPsmdHgh68rk8q/x0Squd8UXg4t
+         jkjJ9eZjKMY+wqS0QErJYKw5Td/DDzI/6xqcyzUDT12OAb49brAOJW8QcjG0fJk+vOMf
+         us4hdFsAIKMzG+c1Z8Z7zycABONAOQmu/60tmh71GmVE+hbxTqC6fW4XtkUqhZIocLil
+         9HTPV21LoJxGsseEQ4hln+fPsURrziSVAi3SV3e/hEAeOcEmz4knM2XWvk3Ix79nwjx5
+         RIbA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood@codeaurora.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Vladimir Rutsky <rutsky@google.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+Signed-off-by: Vladimir Rutsky <rutsky@google.com>
+---
+ Documentation/cgroup-v2.txt | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-On Fri, Dec 29, 2017 at 02:07:16AM +0530, Prateek Sood wrote:
-> task T is waiting for cpuset_mutex acquired
-> by kworker/2:1
-> 
-> sh ==> cpuhp/2 ==> kworker/2:1 ==> sh 
-> 
-> kworker/2:3 ==> kthreadd ==> Task T ==> kworker/2:1
-> 
-> It seems that my earlier patch set should fix this scenario:
-> 1) Inverting locking order of cpuset_mutex and cpu_hotplug_lock.
-> 2) Make cpuset hotplug work synchronous.
->
-> Could you please share your feedback.
-
-Hmm... this can also be resolved by adding WQ_MEM_RECLAIM to the
-synchronize rcu workqueue, right?  Given the wide-spread usages of
-synchronize_rcu and friends, maybe that's the right solution, or at
-least something we also need to do, for this particular deadlock?
-
-Again, I don't have anything against making the domain rebuliding part
-of cpuset operations synchronous and these tricky deadlock scenarios
-do indicate that doing so would probably be beneficial.  That said,
-tho, these scenarios seem more of manifestations of other problems
-exposed through kthreadd dependency than anything else.
-
-Thanks.
-
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 2cddab7..eb0b679 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -279,7 +279,7 @@ thread mode, the following conditions must be met.
+   exempt from this requirement.
+ 
+ Topology-wise, a cgroup can be in an invalid state.  Please consider
+-the following toplogy::
++the following topology::
+ 
+   A (threaded domain) - B (threaded) - C (domain, just created)
+ 
+@@ -1063,10 +1063,10 @@ PAGE_SIZE multiple when read back.
+ 		reached the limit and allocation was about to fail.
+ 
+ 		Depending on context result could be invocation of OOM
+-		killer and retrying allocation or failing alloction.
++		killer and retrying allocation or failing allocation.
+ 
+ 		Failed allocation in its turn could be returned into
+-		userspace as -ENOMEM or siletly ignored in cases like
++		userspace as -ENOMEM or silently ignored in cases like
+ 		disk readahead.  For now OOM in memory cgroup kills
+ 		tasks iff shortage has happened inside page fault.
+ 
+@@ -1191,7 +1191,7 @@ PAGE_SIZE multiple when read back.
+ 	cgroups.  The default is "max".
+ 
+ 	Swap usage hard limit.  If a cgroup's swap usage reaches this
+-	limit, anonymous meomry of the cgroup will not be swapped out.
++	limit, anonymous memory of the cgroup will not be swapped out.
+ 
+ 
+ Usage Guidelines
 -- 
-tejun
+2.7.4
+
