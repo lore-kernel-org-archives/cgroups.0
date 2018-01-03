@@ -1,69 +1,122 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] Documentation/cgroup-v1: fix outdated programming
- details
-Date: Tue, 2 Jan 2018 16:37:08 -0800
-Message-ID: <20180103003708.GH3668920@devbig577.frc2.facebook.com>
-References: <20171229200200.18873-1-matthew.d.roper@intel.com>
- <20171229203449.GS5820@mdroper-desk.amr.corp.intel.com>
- <20180102150502.GC3668920@devbig577.frc2.facebook.com>
- <20180103001202.GX5820@mdroper-desk.amr.corp.intel.com>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: cgroups(7): documenting cgroup.stat
+Date: Wed, 3 Jan 2018 01:38:18 +0100
+Message-ID: <7cfbf94e-71c8-b49e-7483-79c3fa363191@gmail.com>
+References: <196c0cca-b573-8c65-2b5f-66376f79a836@gmail.com>
+ <20180102215726.GA2606@castle>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=EEi7eazaFqrkDF0nJvy1cYESEshXmxn2ZJw3U+K/C3M=;
-        b=DAXQ2j08XFWMjkUnZgC29nEFkE6VjkiAPIfPhj5+UaE8dZ96prZNlhiY/KGgfZXJVS
-         R8rczNBsNiKMN48+XPD2xpPEMuzYwmTj4XnAXtNvUJc5/lr2JANr56WGsyaz/ZMC1+ev
-         c8Ie/I4LrMAFwbh7sofV9c+EPkwT8UD0hjNb/30qhdRrjZ/0T4LwoA2PN6L2llTn2/IZ
-         6FXjZQD6hMAnOPLAo+mc9g5Ivps0BJxsjbulGYKZ3qs/2h1MdbqI3Q2fCOpWfbiCfFD3
-         0nIrgtrWPd04OBmf3883usliXjlG+eWO+4InKocDFHu0tQrlbtvyPaxDYtyvQZNka15X
-         3vkg==
-Content-Disposition: inline
-In-Reply-To: <20180103001202.GX5820-b/RNqDZ/lqH1fpGqjiHozbKMmGWinSIL2HeeBUIffwg@public.gmane.org>
+        h=cc:subject:to:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=mNgAwjfwBgxCpFast1Z5R+PSlRw4J7MbSrVvqirmDCY=;
+        b=c+tPBNTkkx43aftcxqk8936MnVDLeKcqO+X67bpLberZlHTFEuhBa6VRFi6piqcXcS
+         eUowIFHTD9DDbH34fJwrpMDV+43MMow80NDo52d9yJ3JoNhfJdrUPew+n9eanFtL4UUq
+         28O2bqSGnFiwuuLQ7xNg6KrRqeCxbQAfp0dRh6iHv0B3JpM02PZY4BbJjz1ktM22LCEI
+         huWHjEPvWmETiGUfP+slpsbm/eVf3ACcJlnS1T3REGumWMzuueZyzt8oB8RyPostPot9
+         3Jmnr0QddynDrIfF7QomYbHV3j9ZghQq6ggI0XaAyxYvSy6iIlTiIdw0g9p8fiyuMeTC
+         aQWw==
+In-Reply-To: <20180102215726.GA2606@castle>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Matt.
+Hello Roman,
 
-On Tue, Jan 02, 2018 at 04:12:02PM -0800, Matt Roper wrote:
-> To make sure I'm understanding correctly --- you're suggesting that
-> instead of using a cgroup controller to add values (priority, vram,
-> etc.) as directly-accessible file nodes under a cgroup's kernfs
-> directory that I instead add new driver-specific ioctls (e.g.,
-> DRM_IOCTL_SET_CGROUP_PRIORITY) to programmatically update a driver
-> internal cgroup=>priority mapping table?  I think that roughly matches
-> what I see the bpf code doing with BPF_PROG_ATTACH in the bpf syscall.
+On 01/02/2018 10:57 PM, Roman Gushchin wrote:
+> Hello, Michael!
+> 
+> Thank you for working on this!
 
-Yes, something along that line.
+You're welcome. Thanks for reviewing the text!
 
-> I was originally hoping for some way that a driver could add entries to
-> the cgroup directory since that's easy to configure with something as
-> simple as a sysv-init script (and matches how other system policy values
-> will be updated).  But I guess we can write a simple userland tool to go
-> with our driver that can be called from such a script.
->
-> I guess the other alternative would be to try to mirror the cgroup
-> hierarchy in a driver-specific sysfs or debugfs tree where we'd add our
-> own value files, but that's probably more hassle than it's worth.
+> Please, find my comments below.
+> 
+> On Tue, Jan 02, 2018 at 07:22:33PM +0100, Michael Kerrisk (man-pages) wrote:
+>> Hello Roman,
+>>
+>> I wish to add documentation to cgroups(7) for the cgroup.stat file
+>> that you added in Linux 4.14. I wrote some text based on your text
+>> added to the cgroup-v2.txt file, but added some pieces, and also have
+>> a question (see below). The plain-text version for (easy review)
+>> is shown below. Could you please review this text? (Please note 
+>> the FIXME!)
+>>
+>> The branch containing the pending cgroups(7) changes can be found at :
+>> https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/log/?h=draft_cgroup_updates
+>>
+>> [[
+>>    Cgroups v2 cgroup.stat file
+>>        Each   cgroup   in   the  v2  hierarchy  contains  a  read-only
+>>        cgroup.stat file (first introduced in Linux 4.14) that consists
+>>        of  lines  containing key-value pairs.  The following keys cur‐
+>>        rently appear in this file:
+>>
+>>        nr_descendants
+>>               This is the  total  number  of  visible  (i.e.,  living)
+>>               descendant cgroups underneath this cgroup.
+>>
+>>               ┌─────────────────────────────────────────────────────┐
+>>               │FIXME                                                │
+>>               ├─────────────────────────────────────────────────────┤
+>>               │For  the  following text on nr_dying_descendants, it │
+>>               │would I think be  helpful  to  describe  a  condrete │
+>>               │example of when one might see nr_dying_descendants a │
+>>               │nonzero value for this  key.  Ideally,  the  example │
+>>               │would be one that the reader could easily reproduce. │
+>>               │Is there such an example?                            │
+>>               └─────────────────────────────────────────────────────┘
+> 
+> Hm, basically any cgroup which had some pagecache, associated during the
+> lifetime, will spend some time in the dying state. This means that for
+> most cgroups this number will be non-zero for some amount of time,
+> which depends on global memory pressure.
+> It's also very implementation-defined, and will be likely changed
+> in the following kernel versions.
+> 
+> So, I'm not sure, that such an example will be useful for a user.
+> Until this number is huge and constantly growing, it shouldn't be
+> interesting for an user at all.
 
-It really depends on whether it needs to be full-fledged resource
-controller or not.  The reason bpf is that way is because it can't be
-delegated and thus fits better when treated as a bpf mechanism which
-also matches cgroup membership rather than the other way around.  On
-the other hand, rdma is a full controller because it does fit the
-resource controller model.
+Fair enough. I added some vague text about resources needing to be freed
+before the cgroup is destroyed. See below.
 
-I have no idea what your requirements are, so I can't tell what'd fit
-your use case better.  It'd be great if you can ELI5 what you have on
-mind.
 
-Thanks.
+>>        nr_dying_descendants
+>>               This is the total number  of  dying  descendant  cgroups
+>>               underneath this cgroup.  A cgroup enters the dying state
+>>               after being deleted.  It remains in that  state  for  an
+>>               undefined  period  (which  will  depend  on system load)
+>>               before being destroyed.
+>>
+>>               A process can't be made a member of a dying cgroup,  and
+>>               a dying cgroup can't be brought back to life.
+> 
+> So, maybe it worth it to add a statement, that some amount of dying cgroups
+> is normal and it's not a signal of any problem?
+
+Okay, I added some text along those lines. The first paragraph now reads:
+
+       nr_dying_descendants
+              This is the total number  of  dying  descendant  cgroups
+              underneath this cgroup.  A cgroup enters the dying state
+              after being deleted.  It remains in that  state  for  an
+              undefined  period  (which  will  depend  on system load)
+              while  resources  are  freed  before   the   cgroup   is
+              destroyed.   Note  that  the presence of some cgroups in
+              the dying state is normal, and is not indicative of  any
+              problem.
+
+Thanks,
+
+Michael
 
 -- 
-tejun
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
