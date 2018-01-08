@@ -1,77 +1,46 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
-Date: Mon, 8 Jan 2018 04:28:23 -0800
-Message-ID: <20180108122823.GL3668920@devbig577.frc2.facebook.com>
-References: <20171204202219.GF2421075@devbig577.frc2.facebook.com>
- <20171204225825.GP2421075@devbig577.frc2.facebook.com>
- <20171204230117.GF20227@worktop.programming.kicks-ass.net>
- <20171211152059.GH2421075@devbig577.frc2.facebook.com>
- <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
- <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
- <9843d982-d201-8702-2e4e-0541a4d96b53@codeaurora.org>
- <20180102161656.GD3668920@devbig577.frc2.facebook.com>
- <20180102174408.GM7829@linux.vnet.ibm.com>
- <20180102180119.GA1355@linux.vnet.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: cgroups(7): extending man-pages documentation for cgroups v2
+Date: Mon, 8 Jan 2018 04:29:11 -0800
+Message-ID: <20180108122911.GM3668920@devbig577.frc2.facebook.com>
+References: <7e5b2a80-9439-4229-0ad0-eecca026a282@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=vPAmv7XATBHrbN7x6IXaYnCYCeaFVF3b1RhaSLFIUFI=;
-        b=NYsuBShw4WkM0QkR02WBvTcJIutUqDArQK35UXsTo0rD/OVBPfeSuVRpcKT4RyD4td
-         oJEWKQdceTANty73yjBB70KIO089HCccAfaEUMGUnmyjRxYaF+36MsDze+4kr0faTxS2
-         w95kjxIcPjA3yrdkoxNhSHnl6CYIuFvu798B6xj+xf7nJ1uZR6J6wYSM7S2xepl7CIjC
-         lBjTNBCcWep5UEHlxoFWxO2X6xhdi1VvOVo3WX/2gd05/HttZsOqqzc7LYde0ys+pmWk
-         OKzdOpfmrZmJaqUT4ue1dcnZS2p4y9zqYVrCMsfawzuGvPJ/kqXU+IbrfhtsFE3PlJ67
-         fwvg==
+        bh=eNdDmVNtqmVp4xzUcfGTmrXcx66Cqydk2IyVVi0DfZM=;
+        b=oqI9KckYUg2fC/tM83Qywaq4z9UPl8xQmMEmVRwek5PfxEHRjJB1A/W9MRTUsT/Oiv
+         PIMmH624MGAkmgLaUTIsYn3AB0UmTFFaGIK58MDClU7/fM8gVi/1syXl62KsfcHHXKqF
+         EYf5WWaPEajYmCCjw1Wl4xqPhPXQyUkbo7+MeFR+nSfuSGu7nGEfJOfxTzkoJpmgvAtu
+         06k/TMSVXFFK22+JqiRJsafhTvy2541+avoSLppUUcETMSYemdD5YjVSf5xuSCavR/+J
+         fq+6B7kWHbykqAU220sDGCA7VAy5MLNdALQUUlT2qTQBTIELGbmTrYzxVQWRgyCyNqGu
+         AHMA==
 Content-Disposition: inline
-In-Reply-To: <20180102180119.GA1355-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <7e5b2a80-9439-4229-0ad0-eecca026a282@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>, Roman Gushchin <guro@fb.com>, lkml <linux-kernel@vger.kernel.org>, linux-man <linux-man@vger.kernel.org>, cgroups@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
 
-Hello, Paul.
+Hello, Michael.
 
-Sorry about the delay.  Travel followed by cold. :(
-
-On Tue, Jan 02, 2018 at 10:01:19AM -0800, Paul E. McKenney wrote:
-> Actually, after taking a quick look, could you please supply me with
-> a way of mark a statically allocated workqueue as WQ_MEM_RECLAIM after
-> the fact?  Otherwise, I end up having to check for the workqueue having
-
-Hmmm... there is no statically allocated workqueue tho.  If you're
-referring to the system-wide workqueues (system*_wq), they're just
-created dynamically early during boot.
-
-> been allocated pretty much each time I use it, which is going to be an
-> open invitation for bugs.  Plus it looks like there are ways that RCU's
-> workqueue wakeups can be executed during very early boot, which can be
-> handled, but again in a rather messy fashion.
+On Tue, Jan 02, 2018 at 07:21:27PM +0100, Michael Kerrisk (man-pages) wrote:
+> There are some older features, as well as new features in 
+> cgroups v2 that have not so far been documented in the cgroups(7)
+> manual page. I have been working on patches to add documentation
+> for these features, and the man-pages branch containing these
+> patches can be found at:
+> https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/log/?h=draft_cgroup_updates
 > 
-> In contrast, given a way of mark a statically allocated workqueue
-> as WQ_MEM_RECLAIM after the fact, I simply continue initializing the
-> workqueue at early boot, and then add the WQ_MEM_RECLAIM marking some
-> arbitrarily chosen time after the scheduler has been initialized.
-> 
-> The required change to workqueues looks easy, just move the body of
-> the "if (flags & WQ_MEM_RECLAIM) {" statement in __alloc_workqueue_key()
-> to a separate function, right?
+> I will send the updates as a series of plain text messages,
+> and CC relevant people on the various patches. Would it be
+> possible for you to review these patches please.
 
-Ah, okay, yes, currently, workqueue init is kinda silly in that while
-it allows init of non-mem-reclaiming workqueues way before workqueue
-is actually online, it doesn't allow the same for mem-reclaiming ones.
-As you pointed out, it's just an oversight on my part as the init path
-split was done initially to accomodate early init of system
-workqueues.
-
-I'll update the code so that rescuers can be added later too; however,
-please note that while the work items may be queued, they won't be
-executed until workqueue_init() is run (the same as now) as there
-can't be worker threads anyway before that point.
+Yes, will do.  Sorry about the delay.  Was traveling and then caught a
+cold.
 
 Thanks.
 
