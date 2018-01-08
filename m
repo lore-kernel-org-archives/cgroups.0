@@ -1,9 +1,9 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH wq/for-4.16 1/2] workqueue: separate out init_rescuer()
-Date: Mon, 8 Jan 2018 05:47:20 -0800
-Message-ID: <20180108134720.GN3668920@devbig577.frc2.facebook.com>
-References: <20171204225825.GP2421075@devbig577.frc2.facebook.com>
- <20171204230117.GF20227@worktop.programming.kicks-ass.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH wq/for-4.16 2/2] workqueue: allow WQ_MEM_RECLAIM on early
+ init workqueues
+Date: Mon, 8 Jan 2018 05:47:52 -0800
+Message-ID: <20180108134752.GO3668920@devbig577.frc2.facebook.com>
+References: <20171204230117.GF20227@worktop.programming.kicks-ass.net>
  <20171211152059.GH2421075@devbig577.frc2.facebook.com>
  <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
  <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
@@ -12,128 +12,82 @@ References: <20171204225825.GP2421075@devbig577.frc2.facebook.com>
  <20180102174408.GM7829@linux.vnet.ibm.com>
  <20180102180119.GA1355@linux.vnet.ibm.com>
  <20180108122823.GL3668920@devbig577.frc2.facebook.com>
+ <20180108134720.GN3668920@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=iucRPZwT3ih5mU9ebas6KZhkEXhjL2GSaCt1D1MZTrI=;
-        b=QPqSqd4B0EVsC8URtMDH94lVtE+bjUcRq1EFRqdUXnvmNexyYQscU1uDn3Np1/JooL
-         ONyulrRApJK9Wg1IWYpmgmPBWCjKI8P2ZGCqOoGRfdxiGo27EkuoiMjDCVEbgrpfl6U9
-         JOvEKMfoSa45ZPwMSkGR+uB4sOf77+IkCSHCVuX+ljaFk4NlPgKi2wcpGOaVycwxXuxl
-         3bcCNrWm22uAUhQvmh2AHK72aIjMcAq2nhu26atoa7jw/aLpu0v3y3p9Zh6dg7URH/Jo
-         SZL3a64QqeSDwFtvChp1546rtIa/B31jtjodLCxvtzqAXKkB8A2Q/x1yY7khb40WZRCU
-         JRhQ==
+        bh=MFhgT3k76oj6O0R5Pp7kqyDrGqoUemYm2xyFOaZyW88=;
+        b=ttDyCGifk6HrnsdArA/mkM6CFKAXH5LUiN9kXUctFM+VFLGr2G5aktu4BN0jMR/d0i
+         2I6/pPs91vW1DLPUaa68+EFynkN/6iXhdAekJLlxNQJd6dLL7+RCMlWksabKa3/vXnJJ
+         +vlBZaOtKRCZwGF5eHlMt65ZmEOygU34X9Pw7pFE9IeITnHoArZD6uHJTTNwGt8e5MeU
+         wTX0ho+B07UZm1ZaJIGQLQiRSJgSnJX1WWrd4wwH01l3+wObG272bLDYcnCwjGRUjx0+
+         AlZm6TUBLc/lQr9xMgHIsgTIaJGRVVWTOpBIjpGr0A1BCIDnmaWMYbL02lygPkUPr2Xr
+         iLyg==
 Content-Disposition: inline
-In-Reply-To: <20180108122823.GL3668920-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20180108134720.GN3668920@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: Prateek Sood <prsood@codeaurora.org>, Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
 
-Hello, Paul.
+From 40c17f75dfa9ec163478efd3f7443fd6af9992c9 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Mon, 8 Jan 2018 05:38:37 -0800
 
-Applied the following two patches to allow early init of
-WQ_MEM_RECLAIM workqueues to the following git branch.
+Workqueues can be created early during boot before workqueue subsystem
+in fully online - work items are queued waiting for later full
+initialization.  However, early init wasn't supported for
+WQ_MEM_RECLAIM workqueues causing unnecessary annoyances for a subset
+of users.  Expand early init support to include WQ_MEM_RECLAIM
+workqueues.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git for-4.16
-
-The branch won't be rebased and currently only contains these two
-patches.  Please feel free to pull and put further RCU changes on top.
-
-Thanks.
-
------- 8< ------
-From 983c751532738b83c4c5b51192ebc6fbfe9330f7 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Mon, 8 Jan 2018 05:38:32 -0800
-
-Separate out init_rescuer() from __alloc_workqueue_key() to prepare
-for early init support for WQ_MEM_RECLAIM.  This patch doesn't
-introduce any functional changes.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Paul McKenney <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Paul McKenney <paulmck@linux.vnet.ibm.com>
 ---
- kernel/workqueue.c | 56 ++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 33 insertions(+), 23 deletions(-)
+ kernel/workqueue.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 43d18cb..5baac7c 100644
+index 5baac7c..c86cc1e 100644
 --- a/kernel/workqueue.c
 +++ b/kernel/workqueue.c
-@@ -3939,6 +3939,37 @@ static int wq_clamp_max_active(int max_active, unsigned int flags,
- 	return clamp_val(max_active, 1, lim);
- }
- 
-+/*
-+ * Workqueues which may be used during memory reclaim should have a rescuer
-+ * to guarantee forward progress.
-+ */
-+static int init_rescuer(struct workqueue_struct *wq)
-+{
-+	struct worker *rescuer;
-+	int ret;
-+
-+	if (!(wq->flags & WQ_MEM_RECLAIM))
-+		return 0;
-+
-+	rescuer = alloc_worker(NUMA_NO_NODE);
-+	if (!rescuer)
-+		return -ENOMEM;
-+
-+	rescuer->rescue_wq = wq;
-+	rescuer->task = kthread_create(rescuer_thread, rescuer, "%s", wq->name);
-+	ret = PTR_ERR_OR_ZERO(rescuer->task);
-+	if (ret) {
-+		kfree(rescuer);
-+		return ret;
-+	}
-+
-+	wq->rescuer = rescuer;
-+	kthread_bind_mask(rescuer->task, cpu_possible_mask);
-+	wake_up_process(rescuer->task);
-+
-+	return 0;
-+}
-+
- struct workqueue_struct *__alloc_workqueue_key(const char *fmt,
- 					       unsigned int flags,
- 					       int max_active,
-@@ -4001,29 +4032,8 @@ struct workqueue_struct *__alloc_workqueue_key(const char *fmt,
+@@ -4032,7 +4032,7 @@ struct workqueue_struct *__alloc_workqueue_key(const char *fmt,
  	if (alloc_and_link_pwqs(wq) < 0)
  		goto err_free_wq;
  
--	/*
--	 * Workqueues which may be used during memory reclaim should
--	 * have a rescuer to guarantee forward progress.
--	 */
--	if (flags & WQ_MEM_RECLAIM) {
--		struct worker *rescuer;
--
--		rescuer = alloc_worker(NUMA_NO_NODE);
--		if (!rescuer)
--			goto err_destroy;
--
--		rescuer->rescue_wq = wq;
--		rescuer->task = kthread_create(rescuer_thread, rescuer, "%s",
--					       wq->name);
--		if (IS_ERR(rescuer->task)) {
--			kfree(rescuer);
--			goto err_destroy;
--		}
--
--		wq->rescuer = rescuer;
--		kthread_bind_mask(rescuer->task, cpu_possible_mask);
--		wake_up_process(rescuer->task);
--	}
-+	if (init_rescuer(wq) < 0)
-+		goto err_destroy;
+-	if (init_rescuer(wq) < 0)
++	if (wq_online && init_rescuer(wq) < 0)
+ 		goto err_destroy;
  
  	if ((wq->flags & WQ_SYSFS) && workqueue_sysfs_register(wq))
- 		goto err_destroy;
+@@ -5639,6 +5639,8 @@ int __init workqueue_init(void)
+ 	 * archs such as power and arm64.  As per-cpu pools created
+ 	 * previously could be missing node hint and unbound pools NUMA
+ 	 * affinity, fix them up.
++	 *
++	 * Also, while iterating workqueues, create rescuers if requested.
+ 	 */
+ 	wq_numa_init();
+ 
+@@ -5650,8 +5652,12 @@ int __init workqueue_init(void)
+ 		}
+ 	}
+ 
+-	list_for_each_entry(wq, &workqueues, list)
++	list_for_each_entry(wq, &workqueues, list) {
+ 		wq_update_unbound_numa(wq, smp_processor_id(), true);
++		WARN(init_rescuer(wq),
++		     "workqueue: failed to create early rescuer for %s",
++		     wq->name);
++	}
+ 
+ 	mutex_unlock(&wq_pool_mutex);
+ 
 -- 
 2.9.5
+
