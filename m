@@ -1,48 +1,105 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: cgroups(7): extending man-pages documentation for cgroups v2
-Date: Mon, 8 Jan 2018 04:29:11 -0800
-Message-ID: <20180108122911.GM3668920@devbig577.frc2.facebook.com>
-References: <7e5b2a80-9439-4229-0ad0-eecca026a282@gmail.com>
+From: yuyufen <yuyufen@huawei.com>
+Subject: is a bug in blk-throttle?
+Date: Mon, 8 Jan 2018 20:46:32 +0800
+Message-ID: <2c99866a-3075-7a51-02c0-f683eec503c7@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=eNdDmVNtqmVp4xzUcfGTmrXcx66Cqydk2IyVVi0DfZM=;
-        b=oqI9KckYUg2fC/tM83Qywaq4z9UPl8xQmMEmVRwek5PfxEHRjJB1A/W9MRTUsT/Oiv
-         PIMmH624MGAkmgLaUTIsYn3AB0UmTFFaGIK58MDClU7/fM8gVi/1syXl62KsfcHHXKqF
-         EYf5WWaPEajYmCCjw1Wl4xqPhPXQyUkbo7+MeFR+nSfuSGu7nGEfJOfxTzkoJpmgvAtu
-         06k/TMSVXFFK22+JqiRJsafhTvy2541+avoSLppUUcETMSYemdD5YjVSf5xuSCavR/+J
-         fq+6B7kWHbykqAU220sDGCA7VAy5MLNdALQUUlT2qTQBTIELGbmTrYzxVQWRgyCyNqGu
-         AHMA==
-Content-Disposition: inline
-In-Reply-To: <7e5b2a80-9439-4229-0ad0-eecca026a282@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>, Roman Gushchin <guro@fb.com>, lkml <linux-kernel@vger.kernel.org>, linux-man <linux-man@vger.kernel.org>, cgroups@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: tj@kernel.org, axboe@fb.com, shli@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-Hello, Michael.
+Hi, all
 
-On Tue, Jan 02, 2018 at 07:21:27PM +0100, Michael Kerrisk (man-pages) wrote:
-> There are some older features, as well as new features in 
-> cgroups v2 that have not so far been documented in the cgroups(7)
-> manual page. I have been working on patches to add documentation
-> for these features, and the man-pages branch containing these
-> patches can be found at:
-> https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/log/?h=draft_cgroup_updates
-> 
-> I will send the updates as a series of plain text messages,
-> and CC relevant people on the various patches. Would it be
-> possible for you to review these patches please.
+I test blk throttle in linux.4.15-rc6, and find that,
+system can't throttle IOs accurately, when io.max is set a small value.
 
-Yes, will do.  Sorry about the delay.  Was traveling and then caught a
-cold.
+I make a directory 'mytest' in cgroup2 and set /dev/vdc io.max to 1M/s.
+Device /dev/vdc(253:32) is mounted on /ext4 with type ext4.
+
+$ echo "253:32 wbps=1048576" > /sys/fs/cgroup/unified/mytest/io.max
+$ echo $$ > /sys/fs/cgroup/unified/mytest/cgroup.procs
+
+
+Test result as follow:
+
+$ dd if=/dev/zero of=/ext4/f1 bs=1M count=10 oflag=direct
+$ iostat 1 -d -h -y -p vdc
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                   3.00         0.0k         1.0M       0.0k 1.0M
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                   5.00         0.0k         1.0M       0.0k 1.0M
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                   3.00         0.0k         1.0M       0.0k 1.0M
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                   3.00         0.0k         1.0M       0.0k 1.0M
+
+when bs = io.max, it seems OK!
+
+
+$ dd if=/dev/zero of=/ext4/f1 bs=512k count=10 oflag=direct
+$ iostat 1 -d -h -y -p vdc
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                       3.00         0.0k         1.0M 0.0k       1.0M
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                       2.00         0.0k         1.0M 0.0k       1.0M
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                       2.00         0.0k         1.0M 0.0k       1.0M
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+vdc
+                       2.00         0.0k         1.0M 0.0k       1.0M
+When bs < io.max, it also seems OK!
+
+
+$ dd if=/dev/zero of=/ext4/f1 bs=2M count=10 oflag=direct
+$ iostat 1 -d -h -y -p vdc
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read MB_wrtn
+vdc
+                       4.00         0.0k         2.0M 0.0k       2.0M
+
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read MB_wrtn
+vdc
+                       0.00         0.0k         0.0k 0.0k       0.0k
+
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read MB_wrtn
+vdc
+                       6.00         0.0k         2.0M 0.0k       2.0M
+
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read MB_wrtn
+vdc
+                       0.00         0.0k         0.0k 0.0k       0.0k
+However,
+when bs > io.max, the max MB_wrtn/s is 2M, which is over the limit (i.e. 
+io.max=1M).
+We also test with bs = 10M, the result also show as above.
+
+
+Reason:
+In my system, a bio's BIO_MAX_PAGES=512 pages (i.e. 2M).
+Since dd is sequence write, each submitted bio is 2M, when bs > 2M.
+blk-throttle will dispatch an integral number of bios from struct 
+throtl_service_queue,
+resulting in MB_wrtn/s = 2M.
+
+Is this a bug and worth to fix?
+
 
 Thanks.
+Yufen Yu
 
--- 
-tejun
