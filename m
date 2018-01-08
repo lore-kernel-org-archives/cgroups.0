@@ -1,61 +1,67 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] cgroup fixes for v4.15-rc7
-Date: Mon, 8 Jan 2018 11:41:01 -0800
-Message-ID: <CA+55aFyQu8wTOJ8HdUjRA2NnLLdXRPvPyEyaws=5VULVJrDSxg@mail.gmail.com>
-References: <20180108145223.GS3668920@devbig577.frc2.facebook.com>
- <CA+55aFzLYgX5WVAFASH65LkTtvSbn_g6eibxe1Psoc1Uc2hFkw@mail.gmail.com>
- <CA+55aFxSbAJe9gnL7jXHUO8KzY8TbrvSt7+jWsTZTJt7EMMzuw@mail.gmail.com> <20180108192801.GZ3668920@devbig577.frc2.facebook.com>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: cgroups(7): documenting /sys/kernel/cgroup files
+Date: Mon, 8 Jan 2018 22:11:43 +0100
+Message-ID: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=l+kVfxJdABp9bcmUOvhC4Kbf6DCVBrmHDoIR1bwoYFc=;
-        b=osBb6yVa4pHGl6g6FNpvwi506xImIr5ah+ZSTCafb1xBJxBXd2vqZKN0NaLo1T0NBm
-         Cc/Ieo1ut4CQuo7P8Yv+4LtmcrTB8bdhr/KMbnNOELOHrJOwFBW2rZ7UOfodp922V5p+
-         2oK1fkAm4KWtMr1sHNTuOvNPdpsW2v+sqQHAjbB01XWWYzDaNrySqIuPB2a0exCTFsiW
-         lLy3iNEFCFfMOmN5D3Kq+Lxug3H2VCuqr133T3xMwZoxMZjh3Yb16DxORfKJWWnhSWoi
-         WGoccfYqpivd0dbrYfVpldQFAKB+FpTMsk5SNEMFNAc5uO1HfUXSh0x8OqbU7Se5UXmP
-         IQHg==
-In-Reply-To: <20180108192801.GZ3668920@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=cc:to:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=N7e6R8mMlK8VJhav8xpE94xD1HlUO4rJntDekdbO0KM=;
+        b=XHIv/QTvCQ50fgUVx24pW/IyPe69ri3unWwOt4Ww/tPPdadfNIlX8gDlog0ou6PwyF
+         cQUx9dHg5jcInrBgd80Y3r7on5gQJkOutFYsBHiee/gvM3T/PGDoa002pZbNT5yC7ocN
+         SjmIwk+ZEgX1lDElcFcQknq29CjDYp5pLD2HFbPM8IlogApVxEXyJNP4aGbRh9Yq3WvR
+         H4qjHaWvVAz0ZjeFKWhtj/gUFzOwriSU1EH+vgh6zHTxfVpkyksBy9d9vKXKx7oYujUb
+         xTO1IYElgGqWpflG847rGwKdqUkjGL9WBwon48QQzeVyMAM7E0vsa022lUR/v3H1RoZv
+         4r+g==
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups <cgroups@vger.kernel.org>
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Jan 8, 2018 at 11:28 AM, Tejun Heo <tj@kernel.org> wrote:
->
-> Dang, I was reading the different str*cpy() functions and suggested
-> strscpy() and then forgot about it and blindly applied strlcpy()
-> blindly after the build warning report.  It'd be great to weed out the
-> useless ones.  These are places where truncation is fine.  Would the
-> right thing to do be adding (void) in front, which is kinda ugly?
+Hello Roman,
 
-Yeah, I don't know. The actual code looks fine, and I pulled it, but I
-really hate strlcpy().
+I wrote cgroups(7) text below to document the files added by you in
+Linux 4.15. Could you let me know if the following text is okay please:
 
-Having us have extra warnings for strscpy() that turns people off from
-using the right function is all kinds of sad.
+   /sys/kernel/cgroup files
+       /sys/kernel/cgroup/delegate (since Linux 4.15)
+              This file exports a list of the cgroups v2 files  (one  per
+              line) that are delegatable (i.e., whose ownership should be
+              changed to the user ID of the delegatee).  In  the  future,
+              the  set  of delegatable files may change or grow, and this
+              file provides a way for the  kernel  to  inform  user-space
+              applications of which files must be delegated.  As at Linux
+              4.15, one sees the following when inspecting this file:
 
-I do think KASAN was unhappy about strscpy() too, because of the
-word-at-a-time optimization (even if that one is very careful to not
-cross pages etc).
+                  $ cat /sys/kernel/cgroup/delegate
+                  cgroup.procs
+                  cgroup.subtree_control
 
-Ho humm. I don't know what the right fix is. But I do suspect we
-could/should just remove the __must_check from strscpy(), because one
-of the points of that function really is that it always does the right
-thing regardless of what you pass into it.
+       /sys/kernel/cgroup/features (since Linux 4.15)
+              Over time, the set of cgroups v2 features that are provided
+              by  the kernel may change or grow, or some features may not
+              be enabled by default.  This file provides a way for  user-
+              space  applications  to  discover what features the running
+              kernel supports or has enabled.  Features  are  listed  one
+              per line:
 
-But some people absolutely love those idiotic warnings, even when they
-demonstrably result in people writing worse code due to them.
+                  $ cat /sys/kernel/cgroup/features nsdelegate
 
-Because "not checking error returns is a bug". Bah, humbug.
+              The entries that can appear in this file are:
 
-If just removing the __must_check makes cgroup happy, I would suggest
-you send me a patch with that removal and the strlcpy turned back into
-strscpy. Because I definitely _will_ apply such a patch.
+              nsdelegate (since Linux 4.15)
+                     The kernel supports the nsdelegate mount option.
 
-                Linus
+Cheers,
+
+Michael
+
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
