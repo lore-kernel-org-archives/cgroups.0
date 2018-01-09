@@ -1,141 +1,69 @@
-From: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: RFC(V3): Audit Kernel Container IDs
-Date: Tue, 9 Jan 2018 07:16:20 -0500
-Message-ID: <20180109121620.wi7dq2423ugsraqv@madcap2.tricolour.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
+Date: Tue, 9 Jan 2018 05:44:48 -0800
+Message-ID: <20180109134448.GE3668920@devbig577.frc2.facebook.com>
+References: <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
+ <9843d982-d201-8702-2e4e-0541a4d96b53@codeaurora.org>
+ <20180102161656.GD3668920@devbig577.frc2.facebook.com>
+ <20180102174408.GM7829@linux.vnet.ibm.com>
+ <20180102180119.GA1355@linux.vnet.ibm.com>
+ <20180108122823.GL3668920@devbig577.frc2.facebook.com>
+ <20180108225238.GN9671@linux.vnet.ibm.com>
+ <20180109003127.GA30224@linux.vnet.ibm.com>
+ <20180109034211.GC3668920@devbig577.frc2.facebook.com>
+ <20180109042016.GR9671@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=eiJ/re04C3wDb2n6hXA3iAbqd3NkGxQm+mirVd5+yog=;
+        b=dCKlt3PDYAmjw6M+f2YZ4Usowt3cs1ItMwosAgCZGvqwh9Yq3q5sH2ehUwLsu1sN5G
+         r/iLl5kSP3GjObqTbjQw+gxs3ZjlO+LpCC9JPaX8d3W8BfdU8SLgmPfmki+dL3yGUQ6q
+         Bq2w1cNxRdx35sReY3aoXxktRV/BgYNAQEBdc4jOuPQSn2ht2s4h2Uf+MmRNoIBcL+Uy
+         6lWAXCNxRilKmCzrwkA+ta9t5VA4i/ADc4SNUjgVG0X9CSMMF1FQPWk27zCLWOVfvFFY
+         QyBGTqS+UmBNAbRLeA9/Kc5v2tdKJhU1SQoEHQpMdGI13pdT5fj9Gu2UWEDMYdfHy4k9
+         LL0g==
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20180109042016.GR9671@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Audit <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Carlos O'Donell <carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Madz Car <madzcar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: Prateek Sood <prsood@codeaurora.org>, Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
 
-Containers are a userspace concept.  The kernel knows nothing of them.
+Hello, Paul.
 
-The Linux audit system needs a way to be able to track the container
-provenance of events and actions.  Audit needs the kernel's help to do
-this.
+On Mon, Jan 08, 2018 at 08:20:16PM -0800, Paul E. McKenney wrote:
+> OK, so I can put WQ_MEM_RECLAIM on the early boot creation of RCU's
+> workqueue_struct as shown below, right?
 
-Since the concept of a container is entirely a userspace concept, a
-registration from the userspace container orchestration system initiates
-this.  This will define a point in time and a set of resources
-associated with a particular container with an audit container
-identifier.
+Yes, this looks good to me.  Just one question.
 
-The registration is a u64 representing the audit container identifier
-written to a special file in a pseudo filesystem (proc, since PID tree
-already exists) representing a process that will become a parent process
-in that container.  This write might place restrictions on mount
-namespaces required to define a container, or at least careful checking
-of namespaces in the kernel to verify permissions of the orchestrator so
-it can't change its own container ID.  A bind mount of nsfs may be
-necessary in the container orchestrator's mount namespace.  This write
-can only happen once per process.
+> +struct workqueue_struct *rcu_gp_workqueue;
+> +
+>  void __init rcu_init(void)
+>  {
+>  	int cpu;
+> @@ -4298,6 +4300,10 @@ void __init rcu_init(void)
+>  		rcu_cpu_starting(cpu);
+>  		rcutree_online_cpu(cpu);
+>  	}
+> +
+> +	/* Create workqueue for expedited GPs and for Tree SRCU. */
+> +	rcu_gp_workqueue = alloc_workqueue("rcu_gp", WQ_MEM_RECLAIM, 0);
+> +	WARN_ON(!rcu_gp_workqueue);
 
-Note: The justification for using a u64 is that it minimizes the
-information printed in every audit record, reducing bandwidth and limits
-comparisons to a single u64 which will be faster and less error-prone.
+The code was previously using both system_power_efficient_wq and
+system_workqueue (for the expedited path).  I guess the options were
+either using two workqueues or dropping POWER_EFFICIENT.  I have no
+idea how big an impact this will make or whether it'd even be
+noticeable but maybe it'd be worthwhile to mention that in the
+description?
 
-Require CAP_AUDIT_CONTROL to be able to carry out the registration.  At
-that time, record the target container's user-supplied audit container
-identifier along with a target container's parent process (which may
-become the target container's "init" process) process ID (referenced
-from the initial PID namespace) in a new record AUDIT_CONTAINER with a
-qualifying op=$action field.
+Thanks.
 
-Issue a new auxilliary record AUDIT_CONTAINER_INFO for each valid
-container ID present on an auditable action or event.
-
-Forked and cloned processes inherit their parent's audit container
-identifier, referenced in the process' task_struct.  Since the audit
-container identifier is inherited rather than written, it can still be
-written once.  This will prevent tampering while allowing nesting.
-(This can be implemented with an internal settable flag upon
-registration that does not get copied across a fork/clone.)
-
-Mimic setns(2) and return an error if the process has already initiated
-threading or forked since this registration should happen before the
-process execution is started by the orchestrator and hence should not
-yet have any threads or children.  If this is deemed overly restrictive,
-switch all of the target's threads and children to the new containerID.
-
-Trust the orchestrator to judiciously use and restrict CAP_AUDIT_CONTROL.
-
-When a container ceases to exist because the last process in that
-container has exited log the fact to balance the registration action.  
-(This is likely needed for certification accountability.)
-
-At this point it appears unnecessary to add a container session
-identifier since this is all tracked from loginuid and sessionid to
-communicate with the container orchestrator to spawn an additional
-session into an existing container which would be logged.  It can be
-added at a later date without breaking API should it be deemed
-necessary.
-
-The following namespace logging actions are not needed for certification
-purposes at this point, but are helpful for tracking namespace activity.
-These are auxilliary records that are associated with namespace
-manipulation syscalls unshare(2), clone(2) and setns(2), so the records
-will only show up if explicit syscall rules have been added to document
-this activity.
-
-Log the creation of every namespace, inheriting/adding its spawning
-process' audit container identifier(s), if applicable.  Include the
-spawning and spawned namespace IDs (device and inode number tuples).
-[AUDIT_NS_CREATE, AUDIT_NS_DESTROY] [clone(2), unshare(2), setns(2)]
-Note: At this point it appears only network namespaces may need to track
-container IDs apart from processes since incoming packets may cause an
-auditable event before being associated with a process.  Since a
-namespace can be shared by processes in different containers, the
-namespace will need to track all containers to which it has been
-assigned.
-
-Upon registration, the target process' namespace IDs (in the form of a
-nsfs device number and inode number tuple) will be recorded in an
-AUDIT_NS_INFO auxilliary record.
-
-Log the destruction of every namespace that is no longer used by any
-process, including the namespace IDs (device and inode number tuples).
-[AUDIT_NS_DESTROY] [process exit, unshare(2), setns(2)]
-
-Issue a new auxilliary record AUDIT_NS_CHANGE listing (opt: op=$action)
-the parent and child namespace IDs for any changes to a process'
-namespaces. [setns(2)]
-Note: It may be possible to combine AUDIT_NS_* record formats and
-distinguish them with an op=$action field depending on the fields
-required for each message type.
-
-The audit container identifier will need to be reaped from all
-implicated namespaces upon the destruction of a container.
-
-This namespace information adds supporting information for tracking
-events not attributable to specific processes.
-
-Changelog:
-
-(Upstream V3)
-- switch back to u64 (from pmoore, can be expanded to u128 in future if
-  need arises without breaking API.  u32 was originally proposed, up to
-  c36 discussed)
-- write-once, but children inherit audit container identifier and can
-  then still be written once
-- switch to CAP_AUDIT_CONTROL
-- group namespace actions together, auxilliary records to namespace
-  operations.
-
-(Upstream V2)
-- switch from u64 to u128 UUID
-- switch from "signal" and "trigger" to "register"
-- restrict registration to single process or force all threads and
-  children into same container
-
-- RGB
-
---
-Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sr. S/W Engineer, Kernel Security, Base Operating Systems
-Remote, Ottawa, Red Hat Canada
-IRC: rgb, SunRaycer
-Voice: +1.647.777.2635, Internal: (81) 32635
+-- 
+tejun
