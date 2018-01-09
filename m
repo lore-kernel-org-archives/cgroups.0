@@ -1,152 +1,98 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
-Date: Mon, 8 Jan 2018 20:20:16 -0800
-Message-ID: <20180109042016.GR9671@linux.vnet.ibm.com>
-References: <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
- <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
- <9843d982-d201-8702-2e4e-0541a4d96b53@codeaurora.org>
- <20180102161656.GD3668920@devbig577.frc2.facebook.com>
- <20180102174408.GM7829@linux.vnet.ibm.com>
- <20180102180119.GA1355@linux.vnet.ibm.com>
- <20180108122823.GL3668920@devbig577.frc2.facebook.com>
- <20180108225238.GN9671@linux.vnet.ibm.com>
- <20180109003127.GA30224@linux.vnet.ibm.com>
- <20180109034211.GC3668920@devbig577.frc2.facebook.com>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: xuejiufei <xuejiufei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH] blk-throttle: dispatch more sync writes in block
+ throttle layer
+Date: Tue, 9 Jan 2018 12:45:13 +0800
+Message-ID: <5ff01c31-5277-909f-4c35-9b9be513d8e1@gmail.com>
+References: <f6f59e3c-456a-8275-8af0-32e4f2e5cdd6@gmail.com>
+ <20180108120742.GJ3668920@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180109034211.GC3668920@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=m8MmJK1ysxCioGxnZHn5k4G01ezWx3GlSoD4tpfXxyw=;
+        b=MIfs+YiKI+O1tJuVQkQcrt5K7UNusKynSmllez593Jx/6taQ2z7ZoxpwMO4DK2r2rd
+         1qyugdJcs6E9cIu2wn95GxOem0pKUBOkYF55AlqZ9krsQd7F+22sPFpS/PQcsyZCUFVR
+         714+7ygw2Qz2+vE/t0EurE1IgAlEDxeaTxapdqsw3p793Luyi59zCkjc8cySBzuNvusn
+         fvSTlFe+cAzyRY2gPhbJ5F8/1w7M/jvNsqDipf9M2OBtL7+L7sADBE611Zo9cN0sFrNP
+         9rnY25OLVZ2b/OPOqxfwyTBM1Mp7tGsfwpWHftr/kKXZyDvb/x8OkvQ+N/BF3YXkBj37
+         inzA==
+In-Reply-To: <20180108120742.GJ3668920-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Prateek Sood <prsood@codeaurora.org>, Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jinli.zjl-gPhfCIXyaqCqndwCJWfcng@public.gmane.org, qijiang.qj-gPhfCIXyaqCqndwCJWfcng@public.gmane.org
 
-On Mon, Jan 08, 2018 at 07:42:11PM -0800, Tejun Heo wrote:
-> Hello, Paul.
+Hi Tejun,
+
+Thanks for your reply.
+
+On 2018/1/8 下午8:07, Tejun Heo wrote:
+> Hello,
 > 
-> On Mon, Jan 08, 2018 at 04:31:27PM -0800, Paul E. McKenney wrote:
-> > +static int __init rcu_init_wq_rescuer(void)
-> > +{
-> > +	WARN_ON(init_rescuer(rcu_gp_workqueue));
-> > +	return 0;
-> > +}
-> > +core_initcall(rcu_init_wq_rescuer);
+> On Fri, Jan 05, 2018 at 01:16:26PM +0800, xuejiufei wrote:
+>> From: Jiufei Xue <jiufei.xjf-gPhfCIXyaqCqndwCJWfcng@public.gmane.org>
+>>
+>> Cgroup writeback is supported since v4.2. But there exists a problem
+>> in the following case.
+>>
+>> A cgroup may send both buffer and direct/sync IOs. The foreground
+>> thread will be stalled when periodic writeback IOs is flushed because
+>> the service queue in block throttle layer already has a plenty of
+>> writeback IOs, then foreground IOs should be enqueued with its FIFO
+>> policy. The current policy is dispatching 6 reads and 2 writes during
+>> each round, sync writes will be significantly delayed.
+>>
+>> This patch adds another queue in block throttle. Now there are 3 queues
+>> in a service queue: read, sync write, async write, and we can dispatch
+>> more sync writes than aync writes.
 > 
-> So, what I don't get is why RCU needs to call this explicitly.
-> core_initcall() is after workqueue_init() anyway.  Why am I missing?
+> We usually handle sync writes together with reads instead of
+> introducing a separate queue for sync writes.
+> 
 
-Me being stupid, I guess.
+Do you mean we should put reads and sync writes into the same
+queue? There are 2 reasons that I introduce another queue for
+async writes and others.
 
-OK, so I can put WQ_MEM_RECLAIM on the early boot creation of RCU's
-workqueue_struct as shown below, right?
+1. A bio is charged according to the direction, if we put the reads
+and sync writes together, we need to search the queue to pick a
+certain number of read and write IOs when the limit is not reached.
 
-							Thanx, Paul
+2. I found that the multi-queue scheduler kyber also has three queues:
+one for read, one for sync write and one for others. This patch
+introduces another queue for async writes and others just like kyber.
 
-------------------------------------------------------------------------
+BTW, I found another case when I test cgroup writeback.
+Create a file with 5G written extents and last 1G unwritten extents,
+then write to the file sequentially using buffer IO. The write thread
+is stalled when writes to the unwritten extent because it sends a
+zeroout request which is queued at the tail of service queue and
+will dispatched after all the writeback IOs.
 
-commit 9884a945a65837cda6de2ff621d47c59a6ca3e28
-Author: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Date:   Mon Jan 8 14:35:52 2018 -0800
+[<ffffffff812d73dc>] blkdev_issue_zeroout+0x24c/0x260
+[<ffffffffa02e59fc>] ext4_ext_zeroout.isra.37+0x4c/0x60 [ext4]
+[<ffffffffa02ea68b>] ext4_ext_handle_unwritten_extents+0x53b/0xd20 [ext4]
+[<ffffffffa02eb71f>] ext4_ext_map_blocks+0x87f/0xed0 [ext4]
+[<ffffffffa02b92b9>] ext4_map_blocks+0x179/0x590 [ext4]
+[<ffffffffa02b978c>] _ext4_get_block+0xbc/0x1b0 [ext4]
+[<ffffffffa02b9896>] ext4_get_block+0x16/0x20 [ext4]
+[<ffffffff8121a5d7>] __block_write_begin+0x1a7/0x490
+[<ffffffffa02bd7da>] ext4_write_begin+0x18a/0x420 [ext4]
+[<ffffffff8116a89d>] generic_file_buffered_write+0x11d/0x290
+[<ffffffff8116bf75>] __generic_file_aio_write+0x1d5/0x3e0
+[<ffffffff8116c1dd>] generic_file_aio_write+0x5d/0xc0
+[<ffffffffa02b29d5>] ext4_file_write+0xb5/0x460 [ext4]
+[<ffffffff81231688>] do_io_submit+0x3b8/0x870
+[<ffffffff81231b50>] SyS_io_submit+0x10/0x20
+[<ffffffff8164b249>] system_call_fastpath+0x16/0x1b
+[<ffffffffffffffff>] 0xffffffffffffffff
 
-    rcu: Create RCU-specific workqueues with rescuers
-    
-    RCU's expedited grace periods can participate in out-of-memory deadlocks
-    due to all available system_wq kthreads being blocked and there not being
-    memory available to create more.  This commit prevents such deadlocks
-    by allocating an RCU-specific workqueue_struct at early boot time, and
-    providing it with a rescuer to ensure forward progress.  This uses the
-    shiny new init_rescuer() function provided by Tejun (but indirectly).
-    
-    This commit also causes SRCU to use this new RCU-specific
-    workqueue_struct.  Note that SRCU's use of workqueues never blocks them
-    waiting for readers, so this should be safe from a forward-progress
-    viewpoint.
-    
-    Reported-by: Prateek Sood <prsood@codeaurora.org>
-    Reported-by: Tejun Heo <tj@kernel.org>
-    Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-
-diff --git a/kernel/rcu/rcu.h b/kernel/rcu/rcu.h
-index 59c471de342a..acabc4781b08 100644
---- a/kernel/rcu/rcu.h
-+++ b/kernel/rcu/rcu.h
-@@ -493,6 +493,7 @@ void show_rcu_gp_kthreads(void);
- void rcu_force_quiescent_state(void);
- void rcu_bh_force_quiescent_state(void);
- void rcu_sched_force_quiescent_state(void);
-+extern struct workqueue_struct *rcu_gp_workqueue;
- #endif /* #else #ifdef CONFIG_TINY_RCU */
- 
- #ifdef CONFIG_RCU_NOCB_CPU
-diff --git a/kernel/rcu/srcutree.c b/kernel/rcu/srcutree.c
-index 6d5880089ff6..89f0f6b3ce9a 100644
---- a/kernel/rcu/srcutree.c
-+++ b/kernel/rcu/srcutree.c
-@@ -465,7 +465,7 @@ static bool srcu_queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
-  */
- static void srcu_schedule_cbs_sdp(struct srcu_data *sdp, unsigned long delay)
- {
--	srcu_queue_delayed_work_on(sdp->cpu, system_power_efficient_wq,
-+	srcu_queue_delayed_work_on(sdp->cpu, rcu_gp_workqueue,
- 				   &sdp->work, delay);
- }
- 
-@@ -664,7 +664,7 @@ static void srcu_funnel_gp_start(struct srcu_struct *sp, struct srcu_data *sdp,
- 	    rcu_seq_state(sp->srcu_gp_seq) == SRCU_STATE_IDLE) {
- 		WARN_ON_ONCE(ULONG_CMP_GE(sp->srcu_gp_seq, sp->srcu_gp_seq_needed));
- 		srcu_gp_start(sp);
--		queue_delayed_work(system_power_efficient_wq, &sp->work,
-+		queue_delayed_work(rcu_gp_workqueue, &sp->work,
- 				   srcu_get_delay(sp));
- 	}
- 	raw_spin_unlock_irqrestore_rcu_node(sp, flags);
-@@ -1198,7 +1198,7 @@ static void srcu_reschedule(struct srcu_struct *sp, unsigned long delay)
- 	raw_spin_unlock_irq_rcu_node(sp);
- 
- 	if (pushgp)
--		queue_delayed_work(system_power_efficient_wq, &sp->work, delay);
-+		queue_delayed_work(rcu_gp_workqueue, &sp->work, delay);
- }
- 
- /*
-diff --git a/kernel/rcu/tree.c b/kernel/rcu/tree.c
-index f9c0ca2ccf0c..d658538e6f7d 100644
---- a/kernel/rcu/tree.c
-+++ b/kernel/rcu/tree.c
-@@ -4272,6 +4272,8 @@ static void __init rcu_dump_rcu_node_tree(struct rcu_state *rsp)
- 	pr_cont("\n");
- }
- 
-+struct workqueue_struct *rcu_gp_workqueue;
-+
- void __init rcu_init(void)
- {
- 	int cpu;
-@@ -4298,6 +4300,10 @@ void __init rcu_init(void)
- 		rcu_cpu_starting(cpu);
- 		rcutree_online_cpu(cpu);
- 	}
-+
-+	/* Create workqueue for expedited GPs and for Tree SRCU. */
-+	rcu_gp_workqueue = alloc_workqueue("rcu_gp", WQ_MEM_RECLAIM, 0);
-+	WARN_ON(!rcu_gp_workqueue);
- }
- 
- #include "tree_exp.h"
-diff --git a/kernel/rcu/tree_exp.h b/kernel/rcu/tree_exp.h
-index 46d61b597731..3ba3ef4d4796 100644
---- a/kernel/rcu/tree_exp.h
-+++ b/kernel/rcu/tree_exp.h
-@@ -606,7 +606,7 @@ static void _synchronize_rcu_expedited(struct rcu_state *rsp,
- 		rew.rew_rsp = rsp;
- 		rew.rew_s = s;
- 		INIT_WORK_ONSTACK(&rew.rew_work, wait_rcu_exp_gp);
--		schedule_work(&rew.rew_work);
-+		queue_work(rcu_gp_workqueue, &rew.rew_work);
- 	}
- 
- 	/* Wait for expedited grace period to complete. */
-
+Thanks.
+Jiufei Xue
+> Thanks.
+> 
