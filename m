@@ -1,54 +1,39 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v3 1/2] mm/memcg: try harder to decrease [memory,memsw].limit_in_bytes
-Date: Tue, 9 Jan 2018 09:22:53 -0800
-Message-ID: <CALvZod4WCsrcx+Zrj9pNSoJFyhB7_5OZxBxT_kiy0unprKMdcA@mail.gmail.com>
-References: <20171220135329.GS4831@dhcp22.suse.cz> <20180109165815.8329-1-aryabinin@virtuozzo.com>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: Re: [PATCH v3 2/2] mm/memcg: Consolidate
+ mem_cgroup_resize_[memsw]_limit() functions.
+Date: Tue, 9 Jan 2018 20:26:33 +0300
+Message-ID: <6ba40354-10d8-7955-7932-9dcd05ed5977@virtuozzo.com>
+References: <20171220135329.GS4831@dhcp22.suse.cz>
+ <20180109165815.8329-1-aryabinin@virtuozzo.com>
+ <20180109165815.8329-2-aryabinin@virtuozzo.com>
+ <CALvZod64eZGKne7jZip_O4_q4yjaRsVWpTRa0pQgRT3guqQkGA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=f3+vKTfCZ5BU2ia71DuqgJ2Tw8n+e7Jb7VHuriGpktc=;
-        b=Buw8cKItLsqLJCBEalxSiZwsTkOvOW+P4Z0vgLBDuhEiHWbNK3Gned31Vk5ywejtWL
-         45Oy5e2/IIQ/oiDnx7UPYNaxx2L45KBf8u9OVb2VQzyxvuiyVX7f1+oZfbhyDFMKRxzf
-         x1uvXNNiX84YtJ+0Wh2w4a/vxHDe99m/DmqtcViHfQDKhRJKWf5E1G4EixeJ1Ypgh4/K
-         h+IxNc7lm8GCvH8qXt1NoFYsXy3GSyjNAdDgWTzoQ6d4ImMx7c5IYxzhMxFC+p4ZE6H0
-         oYs+peP5GXT3XI/Yufo0GLY4wZU3hJiZFXtfwq+d3pAZy/3hIGQ2DwHXV7v1C4GBMaJo
-         38OA==
-In-Reply-To: <20180109165815.8329-1-aryabinin@virtuozzo.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=aGZJRSAL8eQ6SWPzRwtRfJhcGFA7GxGs/DRGP3MN/tA=;
+ b=gi/n6S7mAqkxtvKBJluRLp1MsxYgyWsKPXogcNLkBzbgu0pV5J2gAw+T7RMtuCqm6gklnMjYPgEzJ2nAVQED2rouOmifz32qXkuZpyhAsh1tpNl69yKFl6sE0WRhrwDdufSgxaH1Oid2nFAL5YRmuaB01HtVDSkaX+Br6qTsvTo=
+In-Reply-To: <CALvZod64eZGKne7jZip_O4_q4yjaRsVWpTRa0pQgRT3guqQkGA@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>
 
-On Tue, Jan 9, 2018 at 8:58 AM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
-> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
-> pages on each iteration. This makes practically impossible to decrease
-> limit of memory cgroup. Tasks could easily allocate back 32 pages,
-> so we can't reduce memory usage, and once retry_count reaches zero we return
-> -EBUSY.
->
-> Easy to reproduce the problem by running the following commands:
->
->   mkdir /sys/fs/cgroup/memory/test
->   echo $$ >> /sys/fs/cgroup/memory/test/tasks
->   cat big_file > /dev/null &
->   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
->   -bash: echo: write error: Device or resource busy
->
-> Instead of relying on retry_count, keep retrying the reclaim until
-> the desired limit is reached or fail if the reclaim doesn't make
-> any progress or a signal is pending.
->
-> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+On 01/09/2018 08:10 PM, Shakeel Butt wrote:
+> On Tue, Jan 9, 2018 at 8:58 AM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+>> mem_cgroup_resize_limit() and mem_cgroup_resize_memsw_limit() are almost
+>> identical functions. Instead of having two of them, we could pass an
+>> additional argument to mem_cgroup_resize_limit() and by using it,
+>> consolidate all the code in a single function.
+>>
+>> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+> 
+> I think this is already proposed and Acked.
+> 
+> https://patchwork.kernel.org/patch/10150719/
+> 
 
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Indeed. I'll rebase 1/2 patch on top, if it will be applied first.
