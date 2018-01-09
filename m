@@ -1,30 +1,30 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
 Subject: Re: cgroups(7): documenting cgroups v2 thread mode
-Date: Tue, 9 Jan 2018 23:52:57 +0100
-Message-ID: <79c80f45-1290-c096-c384-6379b56d9239@gmail.com>
+Date: Tue, 9 Jan 2018 23:54:03 +0100
+Message-ID: <5c9ea5dd-12dc-99d6-7905-40fdbc34e6ae@gmail.com>
 References: <b2d54ae2-62db-7402-ed99-7a0e72f90ff4@gmail.com>
  <20180109211000.GT3668920@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=cc:subject:to:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=yR94/5tKkpZd5fzNSZFAyfMubiCOFFWnc1rtDkL9Mo8=;
-        b=tT+FsjfG84Qqcgpci1Rd2fc1xU7ceGVtWyeP8ZpPGaAoD/9E8LLYqon4CVKNDjvbWx
-         mcAODxLNg7ZM1BVVw1QBLs3SAoIWva8da1MbkEgsUYnoCzVZL1KfbA7VkZARMoi/S+1r
-         NT1lcsFkfrJ94QTphOIUgLV1Lt53vPwU+V9PQyb3FvAxTNLT2IJJBvOPZnVkZGjacq9s
-         9E8oBt2BAVsqhlueQ5yhoM0hONCh8pXLvufqcPnS5fIE6px5ifyJptLJJYB9G2UTvy0+
-         UvWqAUYId2PAkg2Mm63B6JDUK1Q0kwovtdXLUDFUXQqswAvF7XefvFa6jEagqJibrkn7
-         Rpkw==
-In-Reply-To: <20180109211000.GT3668920-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+        bh=U+CK43W6wcaN+ydjF+cSbwwJAW9ySYAjvQ6chbQ3K20=;
+        b=Di/iZA4k7GQt3aPLmivwMtLlsmgDt90QyEbLNcWHrHRrQQzKOUnoncLmyhB1trS3s9
+         3ukfk7zEYx2m2aWbsWFpCuoZJjlqU69HaCUexaM+0u/RraU5gNDS1UtmKa9XOodV9sbC
+         WWmkL3SuSHh/KDNF/NFNK6VVhPpkUXvHHNqaqcOHoNI/PLnjMj9zBYCjAVfPONH7SQdo
+         C2KTjZSzEK+K/qN4CYurHNrEqs3C2sm21llpzqCJpSVGdbcsBpr1jpEWAQYMY/01Q69g
+         orC9caV+l8aVqBe21O2hWvun7/VIRR+IMfquYTF4+rfGYH9zvt5rZMMSP/UdkrwwJcEL
+         qPlw==
+In-Reply-To: <20180109211000.GT3668920@devbig577.frc2.facebook.com>
 Content-Language: en-US
-Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Lauro Venancio <lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: mtk.manpages@gmail.com, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-man <linux-man@vger.kernel.org>, "Serge E. Hallyn" <serge@hallyn.com>, Mike Galbraith <efault@gmx.de>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Paul Turner <pjt@google.com>, kernel-team@fb.com, Andy Lutomirski <luto@amacapital.net>, Johannes Weiner <hannes@cmpxchg.org>, Lauro Venancio <lvenanci@redhat.com>, Waiman Long <longman@redhat.com>
 
 On 01/09/2018 10:10 PM, Tejun Heo wrote:
 > Hello,
@@ -66,12 +66,15 @@ On 01/09/2018 10:10 PM, Tejun Heo wrote:
 > threaded domains instead of threaded roots.  It's mostly about future
 > extensibility (especially as Waiman was proposing related changes
 > there) and not doing things automatically / recursively if possible.
-
-Okay.
-
+> 
 > Looks good to me.
 
-Thanks for the review.
+One more thing. I added the following sentence to the text:
+
+       The  cgroup.threads file is writable only for the cgroups inside a
+       threaded subtree.
+
+Can you confirm that that is correct, please.
 
 Cheers,
 
@@ -83,7 +86,3 @@ Michael
 Michael Kerrisk
 Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
 Linux/UNIX System Programming Training: http://man7.org/training/
---
-To unsubscribe from this list: send the line "unsubscribe linux-man" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
