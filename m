@@ -1,65 +1,141 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: cgroups(7): documenting /sys/kernel/cgroup files
-Date: Tue, 9 Jan 2018 11:28:18 +0000
-Message-ID: <20180109112811.GA31373@castle.DHCP.thefacebook.com>
-References: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505@gmail.com>
+From: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: RFC(V3): Audit Kernel Container IDs
+Date: Tue, 9 Jan 2018 07:16:20 -0500
+Message-ID: <20180109121620.wi7dq2423ugsraqv@madcap2.tricolour.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=toSP/dNK4sWZJuOErp0VGlkRos1nk0BjDcM5kYio0+E=;
- b=fBmLEXOMUeJDY2x2cODJk5m7AyTwG41S/PZBF89zgPd24OER7ZrMSVRsFvYgpJZm9cMa
- YohCibRNhFyiONmSgEiMima7dzh+PJ3T3MhZifBOGjKrpqpo3I7XyNE/gnSACfEkCkKv
- n4nBd+zvFxDopksTEdPn9Xr+NTp7f79vHqg= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=toSP/dNK4sWZJuOErp0VGlkRos1nk0BjDcM5kYio0+E=;
- b=cF972Mw02UEdWeRL8Pv5pke0r+J3G/Zk5lyja2bir8O3fEa3EFSycW+qVIIrZyrq8P8wL/4iuTqm/6KkN7hAz1WHbVclg6YytZafpBs+REkmeKCKl5+6eYGdmAi8HOciI1wQc2GDRj5SKi6LwyepcVqGyxi5sB7A0rWysHzYg7I=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, linux-man <linux-man@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Audit <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Carlos O'Donell <carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Madz Car <madzcar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Hello, Michael!
+Containers are a userspace concept.  The kernel knows nothing of them.
 
-Overall looks good to me, one small nit below.
+The Linux audit system needs a way to be able to track the container
+provenance of events and actions.  Audit needs the kernel's help to do
+this.
 
-On Mon, Jan 08, 2018 at 10:11:43PM +0100, Michael Kerrisk (man-pages) wrote:
-> Hello Roman,
-> 
-> I wrote cgroups(7) text below to document the files added by you in
-> Linux 4.15. Could you let me know if the following text is okay please:
-> 
->    /sys/kernel/cgroup files
->        /sys/kernel/cgroup/delegate (since Linux 4.15)
->               This file exports a list of the cgroups v2 files  (one  per
->               line) that are delegatable (i.e., whose ownership should be
->               changed to the user ID of the delegatee).  In  the  future,
->               the  set  of delegatable files may change or grow, and this
->               file provides a way for the  kernel  to  inform  user-space
->               applications of which files must be delegated.  As at Linux
->               4.15, one sees the following when inspecting this file:
-> 
->                   $ cat /sys/kernel/cgroup/delegate
->                   cgroup.procs
->                   cgroup.subtree_control
-> 
->        /sys/kernel/cgroup/features (since Linux 4.15)
->               Over time, the set of cgroups v2 features that are provided
->               by  the kernel may change or grow, or some features may not
->               be enabled by default.  This file provides a way for  user-
->               space  applications  to  discover what features the running
->               kernel supports or has enabled.  Features  are  listed  one
-                                ^^
-I would replace "or" with "and" here.
+Since the concept of a container is entirely a userspace concept, a
+registration from the userspace container orchestration system initiates
+this.  This will define a point in time and a set of resources
+associated with a particular container with an audit container
+identifier.
 
-Please, feel free to add
-Reviewed-by: Roman Gushchin <guro@fb.com>
+The registration is a u64 representing the audit container identifier
+written to a special file in a pseudo filesystem (proc, since PID tree
+already exists) representing a process that will become a parent process
+in that container.  This write might place restrictions on mount
+namespaces required to define a container, or at least careful checking
+of namespaces in the kernel to verify permissions of the orchestrator so
+it can't change its own container ID.  A bind mount of nsfs may be
+necessary in the container orchestrator's mount namespace.  This write
+can only happen once per process.
 
-Thank you!
+Note: The justification for using a u64 is that it minimizes the
+information printed in every audit record, reducing bandwidth and limits
+comparisons to a single u64 which will be faster and less error-prone.
 
-Roman
+Require CAP_AUDIT_CONTROL to be able to carry out the registration.  At
+that time, record the target container's user-supplied audit container
+identifier along with a target container's parent process (which may
+become the target container's "init" process) process ID (referenced
+from the initial PID namespace) in a new record AUDIT_CONTAINER with a
+qualifying op=$action field.
+
+Issue a new auxilliary record AUDIT_CONTAINER_INFO for each valid
+container ID present on an auditable action or event.
+
+Forked and cloned processes inherit their parent's audit container
+identifier, referenced in the process' task_struct.  Since the audit
+container identifier is inherited rather than written, it can still be
+written once.  This will prevent tampering while allowing nesting.
+(This can be implemented with an internal settable flag upon
+registration that does not get copied across a fork/clone.)
+
+Mimic setns(2) and return an error if the process has already initiated
+threading or forked since this registration should happen before the
+process execution is started by the orchestrator and hence should not
+yet have any threads or children.  If this is deemed overly restrictive,
+switch all of the target's threads and children to the new containerID.
+
+Trust the orchestrator to judiciously use and restrict CAP_AUDIT_CONTROL.
+
+When a container ceases to exist because the last process in that
+container has exited log the fact to balance the registration action.  
+(This is likely needed for certification accountability.)
+
+At this point it appears unnecessary to add a container session
+identifier since this is all tracked from loginuid and sessionid to
+communicate with the container orchestrator to spawn an additional
+session into an existing container which would be logged.  It can be
+added at a later date without breaking API should it be deemed
+necessary.
+
+The following namespace logging actions are not needed for certification
+purposes at this point, but are helpful for tracking namespace activity.
+These are auxilliary records that are associated with namespace
+manipulation syscalls unshare(2), clone(2) and setns(2), so the records
+will only show up if explicit syscall rules have been added to document
+this activity.
+
+Log the creation of every namespace, inheriting/adding its spawning
+process' audit container identifier(s), if applicable.  Include the
+spawning and spawned namespace IDs (device and inode number tuples).
+[AUDIT_NS_CREATE, AUDIT_NS_DESTROY] [clone(2), unshare(2), setns(2)]
+Note: At this point it appears only network namespaces may need to track
+container IDs apart from processes since incoming packets may cause an
+auditable event before being associated with a process.  Since a
+namespace can be shared by processes in different containers, the
+namespace will need to track all containers to which it has been
+assigned.
+
+Upon registration, the target process' namespace IDs (in the form of a
+nsfs device number and inode number tuple) will be recorded in an
+AUDIT_NS_INFO auxilliary record.
+
+Log the destruction of every namespace that is no longer used by any
+process, including the namespace IDs (device and inode number tuples).
+[AUDIT_NS_DESTROY] [process exit, unshare(2), setns(2)]
+
+Issue a new auxilliary record AUDIT_NS_CHANGE listing (opt: op=$action)
+the parent and child namespace IDs for any changes to a process'
+namespaces. [setns(2)]
+Note: It may be possible to combine AUDIT_NS_* record formats and
+distinguish them with an op=$action field depending on the fields
+required for each message type.
+
+The audit container identifier will need to be reaped from all
+implicated namespaces upon the destruction of a container.
+
+This namespace information adds supporting information for tracking
+events not attributable to specific processes.
+
+Changelog:
+
+(Upstream V3)
+- switch back to u64 (from pmoore, can be expanded to u128 in future if
+  need arises without breaking API.  u32 was originally proposed, up to
+  c36 discussed)
+- write-once, but children inherit audit container identifier and can
+  then still be written once
+- switch to CAP_AUDIT_CONTROL
+- group namespace actions together, auxilliary records to namespace
+  operations.
+
+(Upstream V2)
+- switch from u64 to u128 UUID
+- switch from "signal" and "trigger" to "register"
+- restrict registration to single process or force all threads and
+  children into same container
+
+- RGB
+
+--
+Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
