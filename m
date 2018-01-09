@@ -1,88 +1,45 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Subject: Re: cgroups(7): documenting cgroups v2 thread mode
-Date: Tue, 9 Jan 2018 23:54:03 +0100
-Message-ID: <5c9ea5dd-12dc-99d6-7905-40fdbc34e6ae@gmail.com>
-References: <b2d54ae2-62db-7402-ed99-7a0e72f90ff4@gmail.com>
- <20180109211000.GT3668920@devbig577.frc2.facebook.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v3 2/2] mm/memcg: Consolidate
+ mem_cgroup_resize_[memsw]_limit() functions.
+Date: Tue, 9 Jan 2018 15:26:22 -0800
+Message-ID: <20180109152622.31ca558acb0cc25a1b14f38c@linux-foundation.org>
+References: <20171220135329.GS4831@dhcp22.suse.cz>
+	<20180109165815.8329-1-aryabinin@virtuozzo.com>
+	<20180109165815.8329-2-aryabinin@virtuozzo.com>
+	<CALvZod64eZGKne7jZip_O4_q4yjaRsVWpTRa0pQgRT3guqQkGA@mail.gmail.com>
+	<6ba40354-10d8-7955-7932-9dcd05ed5977@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=cc:subject:to:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=U+CK43W6wcaN+ydjF+cSbwwJAW9ySYAjvQ6chbQ3K20=;
-        b=Di/iZA4k7GQt3aPLmivwMtLlsmgDt90QyEbLNcWHrHRrQQzKOUnoncLmyhB1trS3s9
-         3ukfk7zEYx2m2aWbsWFpCuoZJjlqU69HaCUexaM+0u/RraU5gNDS1UtmKa9XOodV9sbC
-         WWmkL3SuSHh/KDNF/NFNK6VVhPpkUXvHHNqaqcOHoNI/PLnjMj9zBYCjAVfPONH7SQdo
-         C2KTjZSzEK+K/qN4CYurHNrEqs3C2sm21llpzqCJpSVGdbcsBpr1jpEWAQYMY/01Q69g
-         orC9caV+l8aVqBe21O2hWvun7/VIRR+IMfquYTF4+rfGYH9zvt5rZMMSP/UdkrwwJcEL
-         qPlw==
-In-Reply-To: <20180109211000.GT3668920@devbig577.frc2.facebook.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <6ba40354-10d8-7955-7932-9dcd05ed5977@virtuozzo.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>
-Cc: mtk.manpages@gmail.com, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-man <linux-man@vger.kernel.org>, "Serge E. Hallyn" <serge@hallyn.com>, Mike Galbraith <efault@gmx.de>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Paul Turner <pjt@google.com>, kernel-team@fb.com, Andy Lutomirski <luto@amacapital.net>, Johannes Weiner <hannes@cmpxchg.org>, Lauro Venancio <lvenanci@redhat.com>, Waiman Long <longman@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>
 
-On 01/09/2018 10:10 PM, Tejun Heo wrote:
-> Hello,
+On Tue, 9 Jan 2018 20:26:33 +0300 Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+
+> On 01/09/2018 08:10 PM, Shakeel Butt wrote:
+> > On Tue, Jan 9, 2018 at 8:58 AM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+> >> mem_cgroup_resize_limit() and mem_cgroup_resize_memsw_limit() are almost
+> >> identical functions. Instead of having two of them, we could pass an
+> >> additional argument to mem_cgroup_resize_limit() and by using it,
+> >> consolidate all the code in a single function.
+> >>
+> >> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+> > 
+> > I think this is already proposed and Acked.
+> > 
+> > https://patchwork.kernel.org/patch/10150719/
+> > 
 > 
-> On Tue, Jan 02, 2018 at 07:24:01PM +0100, Michael Kerrisk (man-pages) wrote:
->>        2. We write the string "threaded" to each of the domain invalid
->>           cgroups  under  y,  in  order  to  convert  them to the type
->>           threaded.  As a consequence of this step, all threads  under
->>           the  threaded  root  now  have  the  type  threaded  and the
->>           threaded subtree is now fully usable.   The  requirement  to
->>           write  "threaded"  to each of these cgroups is somewhat cum‐
->>           bersome, but allows for possible future  extensions  to  the
->>           thread-mode model.
->>
->>           ┌─────────────────────────────────────────────────────┐
->>           │FIXME                                                │
->>           ├─────────────────────────────────────────────────────┤
->>           │Re  the preceding paragraphs... Are there other rea‐ │
->>           │sosn  for  the  (cumbersome)  requirement  to  write │
->>           │'threaded'  to  each of the cgroup.type files in the │
->>           │threaded subtrees? Tejun Heo mentioned  the  follow‐ │
->>           │ing:                                                 │
->>           │                                                     │
->>           │    Consistency w/ the cgroups right under the root  │
->>           │    cgroup.  Because they can be both domains and    │
->>           │    threadroots, we can't switch the children over   │
->>           │    to thread mode automatically.  Doing that for    │
->>           │    cgroups further down in the hierarchy would be   │
->>           │    really inconsistent.                             │
->>           │                                                     │
->>           │But,  it's  not  clear  to  me  how  "Doing that for │
->>           │cgroups further  down  in  the  hierarchy  would  be │
->>           │really inconsistent", since in the current implemen‐ │
->>           │tation, those same thread groups  are  converted  to │
->>           │"domain invalid" type.  What am I missing?           │
->>           └─────────────────────────────────────────────────────┘
-> 
-> Yeah, I was confused with an earlier varient where we were marking
-> threaded domains instead of threaded roots.  It's mostly about future
-> extensibility (especially as Waiman was proposing related changes
-> there) and not doing things automatically / recursively if possible.
-> 
-> Looks good to me.
+> Indeed. I'll rebase 1/2 patch on top, if it will be applied first.
 
-One more thing. I added the following sentence to the text:
+Yes please.
 
-       The  cgroup.threads file is writable only for the cgroups inside a
-       threaded subtree.
-
-Can you confirm that that is correct, please.
-
-Cheers,
-
-Michael
-
-
-
--- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
