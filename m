@@ -1,174 +1,169 @@
-From: Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC(V3): Audit Kernel Container IDs
-Date: Tue, 09 Jan 2018 11:18:56 -0500
-Message-ID: <1515514736.3239.10.camel@redhat.com>
-References: <20180109121620.wi7dq2423ugsraqv@madcap2.tricolour.ca>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: [PATCH v3 1/2] mm/memcg: try harder to decrease [memory,memsw].limit_in_bytes
+Date: Tue,  9 Jan 2018 19:58:14 +0300
+Message-ID: <20180109165815.8329-1-aryabinin@virtuozzo.com>
+References: <20171220135329.GS4831@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=W8Qxe/xRwQnRJiHBBz/8X2j5Ks0UtQHdasLF4Os4OQ0=;
+ b=HqsLwG9Xuu+3/Y86VN5XdpT7Ndt8HYk15Ti43LdQA53CgdLmInw6rRxGYUOeFVAjGgcAYn/l6BLdpXs+DMNur6Ge69OBYjZwIWvrCMX7gjb/SjBpdeLC2jyXdoWbQ0Lm08xsjz7SPsiYfj8sPIToHTl+am/Zquo+Ms7CKBE1Aug=
+In-Reply-To: <20171220135329.GS4831@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180109121620.wi7dq2423ugsraqv-bcJWsdo4jJjeVoXN4CMphl7TgLCtbB0G@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Audit <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Carlos O'Donell <carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Moore <pmoore-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Madz Car <madzcar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, "Eric W.
-	Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On Tue, 2018-01-09 at 07:16 -0500, Richard Guy Briggs wrote:
-> Containers are a userspace concept.  The kernel knows nothing of them.
-> 
-> The Linux audit system needs a way to be able to track the container
-> provenance of events and actions.  Audit needs the kernel's help to do
-> this.
-> 
-> Since the concept of a container is entirely a userspace concept, a
-> registration from the userspace container orchestration system initiates
-> this.  This will define a point in time and a set of resources
-> associated with a particular container with an audit container
-> identifier.
-> 
-> The registration is a u64 representing the audit container identifier
-> written to a special file in a pseudo filesystem (proc, since PID tree
-> already exists) representing a process that will become a parent process
-> in that container.  This write might place restrictions on mount
-> namespaces required to define a container, or at least careful checking
-> of namespaces in the kernel to verify permissions of the orchestrator so
-> it can't change its own container ID.  A bind mount of nsfs may be
-> necessary in the container orchestrator's mount namespace.  This write
-> can only happen once per process.
-> 
-> Note: The justification for using a u64 is that it minimizes the
-> information printed in every audit record, reducing bandwidth and limits
-> comparisons to a single u64 which will be faster and less error-prone.
-> 
-> Require CAP_AUDIT_CONTROL to be able to carry out the registration.  At
-> that time, record the target container's user-supplied audit container
-> identifier along with a target container's parent process (which may
-> become the target container's "init" process) process ID (referenced
-> from the initial PID namespace) in a new record AUDIT_CONTAINER with a
-> qualifying op=$action field.
-> 
-> Issue a new auxilliary record AUDIT_CONTAINER_INFO for each valid
-> container ID present on an auditable action or event.
-> 
-> Forked and cloned processes inherit their parent's audit container
-> identifier, referenced in the process' task_struct.  Since the audit
-> container identifier is inherited rather than written, it can still be
-> written once.  This will prevent tampering while allowing nesting.
-> (This can be implemented with an internal settable flag upon
-> registration that does not get copied across a fork/clone.)
-> 
-> Mimic setns(2) and return an error if the process has already initiated
-> threading or forked since this registration should happen before the
-> process execution is started by the orchestrator and hence should not
-> yet have any threads or children.  If this is deemed overly restrictive,
-> switch all of the target's threads and children to the new containerID.
-> 
-> Trust the orchestrator to judiciously use and restrict CAP_AUDIT_CONTROL.
-> 
-> When a container ceases to exist because the last process in that
-> container has exited log the fact to balance the registration action.  
-> (This is likely needed for certification accountability.)
-> 
-> At this point it appears unnecessary to add a container session
-> identifier since this is all tracked from loginuid and sessionid to
-> communicate with the container orchestrator to spawn an additional
-> session into an existing container which would be logged.  It can be
-> added at a later date without breaking API should it be deemed
-> necessary.
-> 
-> The following namespace logging actions are not needed for certification
-> purposes at this point, but are helpful for tracking namespace activity.
-> These are auxilliary records that are associated with namespace
-> manipulation syscalls unshare(2), clone(2) and setns(2), so the records
-> will only show up if explicit syscall rules have been added to document
-> this activity.
-> 
-> Log the creation of every namespace, inheriting/adding its spawning
-> process' audit container identifier(s), if applicable.  Include the
-> spawning and spawned namespace IDs (device and inode number tuples).
-> [AUDIT_NS_CREATE, AUDIT_NS_DESTROY] [clone(2), unshare(2), setns(2)]
-> Note: At this point it appears only network namespaces may need to track
-> container IDs apart from processes since incoming packets may cause an
-> auditable event before being associated with a process.  Since a
-> namespace can be shared by processes in different containers, the
-> namespace will need to track all containers to which it has been
-> assigned.
-> 
-> Upon registration, the target process' namespace IDs (in the form of a
-> nsfs device number and inode number tuple) will be recorded in an
-> AUDIT_NS_INFO auxilliary record.
-> 
-> Log the destruction of every namespace that is no longer used by any
-> process, including the namespace IDs (device and inode number tuples).
-> [AUDIT_NS_DESTROY] [process exit, unshare(2), setns(2)]
-> 
-> Issue a new auxilliary record AUDIT_NS_CHANGE listing (opt: op=$action)
-> the parent and child namespace IDs for any changes to a process'
-> namespaces. [setns(2)]
-> Note: It may be possible to combine AUDIT_NS_* record formats and
-> distinguish them with an op=$action field depending on the fields
-> required for each message type.
-> 
-> The audit container identifier will need to be reaped from all
-> implicated namespaces upon the destruction of a container.
-> 
-> This namespace information adds supporting information for tracking
-> events not attributable to specific processes.
-> 
-> Changelog:
-> 
-> (Upstream V3)
-> - switch back to u64 (from pmoore, can be expanded to u128 in future if
->   need arises without breaking API.  u32 was originally proposed, up to
->   c36 discussed)
-> - write-once, but children inherit audit container identifier and can
->   then still be written once
-> - switch to CAP_AUDIT_CONTROL
-> - group namespace actions together, auxilliary records to namespace
->   operations.
-> 
-> (Upstream V2)
-> - switch from u64 to u128 UUID
-> - switch from "signal" and "trigger" to "register"
-> - restrict registration to single process or force all threads and
->   children into same container
+mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
+pages on each iteration. This makes practically impossible to decrease
+limit of memory cgroup. Tasks could easily allocate back 32 pages,
+so we can't reduce memory usage, and once retry_count reaches zero we return
+-EBUSY.
 
-I am trying to understand the back and forth on the ID size.
+Easy to reproduce the problem by running the following commands:
 
-From an orchestrator POV anything that requires tracking a node
-specific ID is not ideal.
+  mkdir /sys/fs/cgroup/memory/test
+  echo $$ >> /sys/fs/cgroup/memory/test/tasks
+  cat big_file > /dev/null &
+  sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+  -bash: echo: write error: Device or resource busy
 
-Orchestrators tend to span many nodes, and containers tend to have IDs
-that are either UUID or have a Hash (like SHA256) as identifier.
+Instead of relying on retry_count, keep retrying the reclaim until
+the desired limit is reached or fail if the reclaim doesn't make
+any progress or a signal is pending.
 
-The problem here is two-fold:
+Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+---
 
-a) Your auditing requires some mapping to be useful outside of the
-system.
-If you aggreggate audit logs outside of the system or you want to
-correlate the system audit logs with other components dealing with
-containers, now you need a place where you provide a mapping from your
-audit u64 to the ID a container has in the rest of the system.
+Changes since v2:
+ - Changelog wording per mhocko@
 
-b) Now you need a mapping of some sort. The simplest way a container
-orchestrator can go about this is to just use the UUID or Hash
-representing their view of the container, truncate it to a u64 and use
-that for Audit. This means there are some chances there will be a
-collision and a duplicate u64 ID will be used by the orchestrator as
-the container ID. What happen in that case ?
+ mm/memcontrol.c | 70 +++++++++++++--------------------------------------------
+ 1 file changed, 16 insertions(+), 54 deletions(-)
 
-Simo.
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f40b5ad3f959..0d26db9a665d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1176,20 +1176,6 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+ }
+ 
+ /*
+- * This function returns the number of memcg under hierarchy tree. Returns
+- * 1(self count) if no children.
+- */
+-static int mem_cgroup_count_children(struct mem_cgroup *memcg)
+-{
+-	int num = 0;
+-	struct mem_cgroup *iter;
+-
+-	for_each_mem_cgroup_tree(iter, memcg)
+-		num++;
+-	return num;
+-}
+-
+-/*
+  * Return the memory (and swap, if configured) limit for a memcg.
+  */
+ unsigned long mem_cgroup_get_limit(struct mem_cgroup *memcg)
+@@ -2462,22 +2448,10 @@ static DEFINE_MUTEX(memcg_limit_mutex);
+ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 				   unsigned long limit)
+ {
+-	unsigned long curusage;
+-	unsigned long oldusage;
++	unsigned long usage;
+ 	bool enlarge = false;
+-	int retry_count;
+ 	int ret;
+ 
+-	/*
+-	 * For keeping hierarchical_reclaim simple, how long we should retry
+-	 * is depends on callers. We set our retry-count to be function
+-	 * of # of children which we should visit in this loop.
+-	 */
+-	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+-		      mem_cgroup_count_children(memcg);
+-
+-	oldusage = page_counter_read(&memcg->memory);
+-
+ 	do {
+ 		if (signal_pending(current)) {
+ 			ret = -EINTR;
+@@ -2498,15 +2472,13 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
+-
+-		curusage = page_counter_read(&memcg->memory);
+-		/* Usage is reduced ? */
+-		if (curusage >= oldusage)
+-			retry_count--;
+-		else
+-			oldusage = curusage;
+-	} while (retry_count);
++		usage = page_counter_read(&memcg->memory);
++		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
++					GFP_KERNEL, true)) {
++			ret = -EBUSY;
++			break;
++		}
++	} while (true);
+ 
+ 	if (!ret && enlarge)
+ 		memcg_oom_recover(memcg);
+@@ -2517,18 +2489,10 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 					 unsigned long limit)
+ {
+-	unsigned long curusage;
+-	unsigned long oldusage;
++	unsigned long usage;
+ 	bool enlarge = false;
+-	int retry_count;
+ 	int ret;
+ 
+-	/* see mem_cgroup_resize_res_limit */
+-	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
+-		      mem_cgroup_count_children(memcg);
+-
+-	oldusage = page_counter_read(&memcg->memsw);
+-
+ 	do {
+ 		if (signal_pending(current)) {
+ 			ret = -EINTR;
+@@ -2549,15 +2513,13 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
+-
+-		curusage = page_counter_read(&memcg->memsw);
+-		/* Usage is reduced ? */
+-		if (curusage >= oldusage)
+-			retry_count--;
+-		else
+-			oldusage = curusage;
+-	} while (retry_count);
++		usage = page_counter_read(&memcg->memsw);
++		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
++					GFP_KERNEL, false)) {
++			ret = -EBUSY;
++			break;
++		}
++	} while (true);
+ 
+ 	if (!ret && enlarge)
+ 		memcg_oom_recover(memcg);
 -- 
-Simo Sorce
-Sr. Principal Software Engineer
-Red Hat, Inc
+2.13.6
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
