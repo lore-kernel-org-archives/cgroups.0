@@ -1,69 +1,58 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: cgroups(7): documenting /sys/kernel/cgroup files
-Date: Wed, 10 Jan 2018 18:31:20 +0100
-Message-ID: <CAKgNAkhDY09gauX-1Ut4SoL9DEoxj9wJ8SjS6h-Ntc90xeWi1A@mail.gmail.com>
+Date: Wed, 10 Jan 2018 09:33:40 -0800
+Message-ID: <20180110173340.GG3668920@devbig577.frc2.facebook.com>
 References: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505@gmail.com>
  <CAKgNAkhk-527Rh6tGYJO-U3UXgwBC1+t5nB+5JEq62nTO2p15A@mail.gmail.com>
- <20180110124407.GA26913@castle.DHCP.thefacebook.com> <20180110140239.GX3668920@devbig577.frc2.facebook.com>
-Reply-To: mtk.manpages@gmail.com
+ <20180110124407.GA26913@castle.DHCP.thefacebook.com>
+ <20180110140239.GX3668920@devbig577.frc2.facebook.com>
+ <CAKgNAkhDY09gauX-1Ut4SoL9DEoxj9wJ8SjS6h-Ntc90xeWi1A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:reply-to:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=COc06EYBdpPM9JtGQYn7Gz9HeW2LW5iTUlsYJ6PtUWw=;
-        b=SfZVCeuJc2FmuifSRy0he46ZSG3CRGH3bX5cV6++vqTUIPeDiMLsYXoqm6Ct5OiiZT
-         M49O7tSHjIQrg1hFdHqfCDCN5kFsTvil5rjYi4n6wYFNwOT7MQTNm964WRFVFsGUoBwx
-         UckXx66KSbdCe+sQNQU/ONNoc1QVHYzxbWq9d3YTT1N5jfXRDwDS8Uu61DvzGTbw2tGQ
-         gueC+BOPq+PrXpWOgZkWgBzT4ZPvUg6MTmzK1KeZVIHPG4OxDphEJ0b/rHiPNCA+ZkSN
-         zxjSkdKQUWTQSw24HQsFIdnd4Gv0svoalpjns17Xr3izXPc4YJa60OcXqJ8jCtHP35OF
-         /ukw==
-In-Reply-To: <20180110140239.GX3668920@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=zqlEtFx2jmj4qFzEu1tpEePKgokpXowGL+qhmkhNznM=;
+        b=Bqf2VddssPJFJkIVxxTS9MF3hpDBWwFgKpLrRnyTDuj5D7AaPSoX9FLl84Gc/ehP4t
+         rr5XLTOZpL6e8RZWV3BrsPIUPH2E62FdBmu3QDit/f7ZyqC7BlogSfyGyogez855MfJr
+         9BKJdp0Nn0DtrXqgKCSsnkADmGkd70p8r4T+jzqhA0PKohaXYWfB85HcxqvVuVsNFY06
+         rLAEKfOsWJZJerqQSGFqhUUe49JfzhNE3HzMAh/hWjZpd2iWLR8KRQKlo1AopvK0flbt
+         vqgsCGBM+ybffUVfgjvftON/R25T9NZcqM/gaytfMBavBXbAf2KWIETpngA4l0MK50kr
+         6oJw==
+Content-Disposition: inline
+In-Reply-To: <CAKgNAkhDY09gauX-1Ut4SoL9DEoxj9wJ8SjS6h-Ntc90xeWi1A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-man <linux-man@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
+To: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello Tejun,
+Hello, Michael.
 
-On 10 January 2018 at 15:02, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Wed, Jan 10, 2018 at 04:44:14AM -0800, Roman Gushchin wrote:
->> cgroup.threads is not listed because it's not delegatable (doesn't have
->> CFTYPE_NS_DELEGATABLE flag set). I don't know if it was intended or just
->> an accident (I believe the latter).
->
-> So, thread mode isn't delegatble.  Marking a cgroup as threaded turns
-> that subtree threaded and join the parent's domain, so we can't allow
-> delegation roots to be turned threaded - just like we can't mark the
-> root cgroup threaded, and I'm not really not sure what it means to
-> delegate a portion of threaded subtree.
+On Wed, Jan 10, 2018 at 06:31:20PM +0100, Michael Kerrisk (man-pages) wrote:
+> So, I am confused. According to Documentation/cgroup-v2.txt,
+> cgoup.threads is delegated:
+> 
+> [[
+> Model of Delegation
+> ~~~~~~~~~~~~~~~~~~~
+> 
+> A cgroup can be delegated in two ways.  First, to a less privileged
+> user by granting write access of the directory and its "cgroup.procs",
+> "cgroup.threads" and "cgroup.subtree_control" files to the user.
+> Second, if the "nsdelegate" mount option is set, automatically to a
+> cgroup namespace on namespace creation.
+> ]]
+> 
+> So, is that a mistake in that text file?
 
-So, I am confused. According to Documentation/cgroup-v2.txt,
-cgoup.threads is delegated:
+Yes, it is.  I probably copy&pasted from an earlier version where we
+were marking threaded domains instead of threaded roots.  Will fix it
+right away.
 
-[[
-Model of Delegation
-~~~~~~~~~~~~~~~~~~~
-
-A cgroup can be delegated in two ways.  First, to a less privileged
-user by granting write access of the directory and its "cgroup.procs",
-"cgroup.threads" and "cgroup.subtree_control" files to the user.
-Second, if the "nsdelegate" mount option is set, automatically to a
-cgroup namespace on namespace creation.
-]]
-
-So, is that a mistake in that text file?
-
-Cheers,
-
-Michael
+Thanks.
 
 -- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+tejun
