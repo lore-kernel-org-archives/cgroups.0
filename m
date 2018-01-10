@@ -1,127 +1,96 @@
-From: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v4] mm/memcg: try harder to decrease [memory,memsw].limit_in_bytes
-Date: Wed, 10 Jan 2018 15:43:17 +0300
-Message-ID: <20180110124317.28887-1-aryabinin@virtuozzo.com>
-References: <20180109152622.31ca558acb0cc25a1b14f38c@linux-foundation.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: cgroups(7): documenting /sys/kernel/cgroup files
+Date: Wed, 10 Jan 2018 04:44:14 -0800
+Message-ID: <20180110124407.GA26913@castle.DHCP.thefacebook.com>
+References: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505@gmail.com>
+ <CAKgNAkhk-527Rh6tGYJO-U3UXgwBC1+t5nB+5JEq62nTO2p15A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=JVG15y2f5eYzo669Gw4EVewf8NIhtZdIKxVJrLOu6Bk=;
- b=JrO6eWcraMIPgNJm0JsrwP/n+NjmTGh+9jyPFSairBF7/A5GaLNN1FhK6KskXl2UyFZISf+deCl7c/kWZ18WyZC+WdqZ1J3kwjvUhZWsiQevkkfy9zMfX3oiEeC8nbipbVTMh9sb3jFOpCE5V1+0VhXExt58RhsNfLhZPkDMzuQ=
-In-Reply-To: <20180109152622.31ca558acb0cc25a1b14f38c-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=9krMLsYuZrs+LgfHv/QmBfy1nFaAnMYofh9m+YT+Jj0=;
+ b=J2TEPhDoGby4BZ6kZAJ7+FmJe8LRpCejKWBeHx3wIjmQzZbhhSWYBHgHGIR8Gf2uyje9
+ KH+XZ1rjQp1hxokrnryZJwQ7t9SH/wASZnIUS4IgwiWUzJdp8I32zYv7uCVn6HlvtSRb
+ XA/Ts7CUZQIknwq4W+OCnqJ/LNjmxKZr8IU= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=9krMLsYuZrs+LgfHv/QmBfy1nFaAnMYofh9m+YT+Jj0=;
+ b=W698VLdZYcVA2h+ij3OM3ZQP4HY8pStHhQzMAS+Mt5RYYuFKgW/EgMXIngLodkqxI2gWX/7R28Gq06hWcnpkt73OBmMP8XB0uw7uHl/wJZ4U5oLdQgCE90j2UP26oF8zn85rbKbf1N0Cf/ciMa45zDbpVIX6Cxt84JkUSryz7mk=
+Content-Disposition: inline
+In-Reply-To: <CAKgNAkhk-527Rh6tGYJO-U3UXgwBC1+t5nB+5JEq62nTO2p15A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, linux-man <linux-man@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>
 
-mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
-pages on each iteration. This makes practically impossible to decrease
-limit of memory cgroup. Tasks could easily allocate back 32 pages,
-so we can't reduce memory usage, and once retry_count reaches zero we return
--EBUSY.
+Hello Michael,
 
-Easy to reproduce the problem by running the following commands:
+On Wed, Jan 10, 2018 at 05:23:32AM +0100, Michael Kerrisk (man-pages) wrote:
+> Hello Roman,
+> 
+> On 8 January 2018 at 22:11, Michael Kerrisk (man-pages)
+> <mtk.manpages@gmail.com> wrote:
+> > Hello Roman,
+> >
+> > I wrote cgroups(7) text below to document the files added by you in
+> > Linux 4.15. Could you let me know if the following text is okay please:
+> >
+> >    /sys/kernel/cgroup files
+> >        /sys/kernel/cgroup/delegate (since Linux 4.15)
+> >               This file exports a list of the cgroups v2 files  (one  per
+> >               line) that are delegatable (i.e., whose ownership should be
+> >               changed to the user ID of the delegatee).  In  the  future,
+> >               the  set  of delegatable files may change or grow, and this
+> >               file provides a way for the  kernel  to  inform  user-space
+> >               applications of which files must be delegated.  As at Linux
+> >               4.15, one sees the following when inspecting this file:
+> >
+> >                   $ cat /sys/kernel/cgroup/delegate
+> >                   cgroup.procs
+> >                   cgroup.subtree_control
+> 
+> I have a question about /sys/kernel/cgroup/delegate: why does this
+> file not list cgroup.threads, since that is also a file that
+> (potentially) should be delegated?
 
-  mkdir /sys/fs/cgroup/memory/test
-  echo $$ >> /sys/fs/cgroup/memory/test/tasks
-  cat big_file > /dev/null &
-  sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
-  -bash: echo: write error: Device or resource busy
+cc Tejun
 
-Instead of relying on retry_count, keep retrying the reclaim until
-the desired limit is reached or fail if the reclaim doesn't make
-any progress or a signal is pending.
+cgroup.threads is not listed because it's not delegatable (doesn't have
+CFTYPE_NS_DELEGATABLE flag set). I don't know if it was intended or just
+an accident (I believe the latter).
 
-Signed-off-by: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Thanks!
+
+PS In the latter case the following patch should fix it:
+
+From fdf19edb6e9594e48e89d4510767b9eb6ca2d9dd Mon Sep 17 00:00:00 2001
+From: Roman Gushchin <guro@fb.com>
+Date: Wed, 10 Jan 2018 04:35:12 -0800
+Subject: [PATCH] cgroup: make cgroup.threads delegatable
+
+Make cgroup.threads file delegatable.
+The behavior of cgroup.threads should follow the behavior of cgroup.procs.
+
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Discovered-by: Michael Kerrisk <mtk.manpages@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>
 ---
+ kernel/cgroup/cgroup.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Changes since v3:
- - Rebase
-
-Changes since v2:
- - Changelog wording per mhocko@
-
-
- mm/memcontrol.c | 44 ++++++++------------------------------------
- 1 file changed, 8 insertions(+), 36 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 13aeccf32c2e..c3d1eaef752d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1176,20 +1176,6 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
- }
- 
- /*
-- * This function returns the number of memcg under hierarchy tree. Returns
-- * 1(self count) if no children.
-- */
--static int mem_cgroup_count_children(struct mem_cgroup *memcg)
--{
--	int num = 0;
--	struct mem_cgroup *iter;
--
--	for_each_mem_cgroup_tree(iter, memcg)
--		num++;
--	return num;
--}
--
--/*
-  * Return the memory (and swap, if configured) limit for a memcg.
-  */
- unsigned long mem_cgroup_get_limit(struct mem_cgroup *memcg)
-@@ -2462,24 +2448,12 @@ static DEFINE_MUTEX(memcg_limit_mutex);
- static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
- 				   unsigned long limit, bool memsw)
- {
--	unsigned long curusage;
--	unsigned long oldusage;
-+	unsigned long usage;
- 	bool enlarge = false;
--	int retry_count;
- 	int ret;
- 	bool limits_invariant;
- 	struct page_counter *counter = memsw ? &memcg->memsw : &memcg->memory;
- 
--	/*
--	 * For keeping hierarchical_reclaim simple, how long we should retry
--	 * is depends on callers. We set our retry-count to be function
--	 * of # of children which we should visit in this loop.
--	 */
--	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
--		      mem_cgroup_count_children(memcg);
--
--	oldusage = page_counter_read(counter);
--
- 	do {
- 		if (signal_pending(current)) {
- 			ret = -EINTR;
-@@ -2506,15 +2480,13 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
- 		if (!ret)
- 			break;
- 
--		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, !memsw);
--
--		curusage = page_counter_read(counter);
--		/* Usage is reduced ? */
--		if (curusage >= oldusage)
--			retry_count--;
--		else
--			oldusage = curusage;
--	} while (retry_count);
-+		usage = page_counter_read(counter);
-+		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
-+						GFP_KERNEL, !memsw)) {
-+			ret = -EBUSY;
-+			break;
-+		}
-+	} while (true);
- 
- 	if (!ret && enlarge)
- 		memcg_oom_recover(memcg);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 0b1ffe147f24..b74d9ee1425c 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4449,6 +4449,7 @@ static struct cftype cgroup_base_files[] = {
+ 	},
+ 	{
+ 		.name = "cgroup.threads",
++		.flags = CFTYPE_NS_DELEGATABLE,
+ 		.release = cgroup_procs_release,
+ 		.seq_start = cgroup_threads_start,
+ 		.seq_next = cgroup_procs_next,
 -- 
-2.13.6
+2.14.3
