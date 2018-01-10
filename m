@@ -1,66 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroups(7): documenting cgroups v2 thread mode
-Date: Wed, 10 Jan 2018 14:29:13 -0800
-Message-ID: <20180110222913.GH3460072@devbig577.frc2.facebook.com>
-References: <b2d54ae2-62db-7402-ed99-7a0e72f90ff4@gmail.com>
- <20180109211000.GT3668920@devbig577.frc2.facebook.com>
- <5c9ea5dd-12dc-99d6-7905-40fdbc34e6ae@gmail.com>
- <20180110144708.GC3668920@devbig577.frc2.facebook.com>
- <704d0cd5-0bab-f876-a09c-9d60e9d2ef93@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v4] mm/memcg: try harder to decrease
+ [memory,memsw].limit_in_bytes
+Date: Wed, 10 Jan 2018 14:31:21 -0800
+Message-ID: <20180110143121.cf2a1c5497b31642c9b38b2a@linux-foundation.org>
+References: <20180109152622.31ca558acb0cc25a1b14f38c@linux-foundation.org>
+        <20180110124317.28887-1-aryabinin@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=6HZC3GQ3nJkXb/xiBer3u58CGs5s3CDUAni1w8Pdr+s=;
-        b=uCnaM8L0X7U3HtS9OcbktFBFGCBtqt4ECn77KzD7khQnWhS4MDrgM7TdwCOMH/wV3M
-         OtLGQTQ/8urxKQtVr9ewnUeoxa9gvYJDr6TYu1InnucDJR0NoZWY+mUgA3mZMdSL11eR
-         nwUGkqWimjaRW2av395M+mwCB9sEfeAVMSg4L5ixo6wVIjQQRv2+7E+w4Lo2yAFDi0K/
-         Ub2a5uIuXSfJL9iZjOpZykVIQ4rKZc8Mn7q5p7kzwDqpDEJ6+u4OZiRkx2Fu1gAxyGBH
-         mGlRROtP9MMob9fvocH/99i3iOb/BNaVPWs0R9RB/6hyvC4XTbVTzZJK+ou7+wPHCKRD
-         uOpw==
-Content-Disposition: inline
-In-Reply-To: <704d0cd5-0bab-f876-a09c-9d60e9d2ef93-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180110124317.28887-1-aryabinin@virtuozzo.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <efault-Mmb7MZpHnFY@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Lauro Venancio <lvenanci-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-Hello,
+On Wed, 10 Jan 2018 15:43:17 +0300 Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
 
-On Wed, Jan 10, 2018 at 11:18:48PM +0100, Michael Kerrisk (man-pages) wrote:
-> Ahh yes. Now I understand. I made the description of the containment
-> rules for cgroup.threads more explicit in the text:
+> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
+> pages on each iteration. This makes practically impossible to decrease
+> limit of memory cgroup. Tasks could easily allocate back 32 pages,
+> so we can't reduce memory usage, and once retry_count reaches zero we return
+> -EBUSY.
 > 
->        As with writing to cgroup.procs, some containment rules apply when
->        writing to the cgroup.threads file:
+> Easy to reproduce the problem by running the following commands:
 > 
->        *  The  writer  must  have  write permission on the cgroup.threads
->           file in the destination cgroup.
+>   mkdir /sys/fs/cgroup/memory/test
+>   echo $$ >> /sys/fs/cgroup/memory/test/tasks
+>   cat big_file > /dev/null &
+>   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+>   -bash: echo: write error: Device or resource busy
 > 
->        *  The writer must have write permission on the cgroup.procs  file
->           in  the  common ancestor of the source and destination cgroups.
->           (In some cases, the common ancestor may be the source or desti‐
->           nation cgroup itself.)
+> Instead of relying on retry_count, keep retrying the reclaim until
+> the desired limit is reached or fail if the reclaim doesn't make
+> any progress or a signal is pending.
 > 
->        *  The source and destination cgroups must be in the same threaded
->           subtree.  (Outside a threaded subtree, an  attempt  to  move  a
->           thread by writing its thread ID to the cgroup.threads in a dif‐
->           ferent domain cgroup fails with the error EOPNOTSUPP.)
-> 
-> Okay? (I realize that the last bullet point is a rather different way of
-> formulating your idea that "the only extra restriction is that the domain
-> cgroup must be the same for the source and destination". But I think the
-> reformulation is easier to understand, no?)
 
-It looks great to me.  Me explaining that way is mostly from internal
-/ conceptual POV.  Yours is definitely more approachable.
+Is there any situation under which that mem_cgroup_resize_limit() can
+get stuck semi-indefinitely in a livelockish state?  It isn't very
+obvious that we're protected from this, so perhaps it would help to
+have a comment which describes how loop termination is assured?
 
-Thanks.
-
--- 
-tejun
