@@ -1,56 +1,57 @@
-From: xuejiufei <xuejiufei@gmail.com>
-Subject: Re: [RFC PATCH] blk-throttle: dispatch more sync writes in block
- throttle layer
-Date: Wed, 10 Jan 2018 09:44:43 +0800
-Message-ID: <37158a6a-ff0d-10e7-c39b-9d588b5f50d2@gmail.com>
-References: <f6f59e3c-456a-8275-8af0-32e4f2e5cdd6@gmail.com>
- <20180108120742.GJ3668920@devbig577.frc2.facebook.com>
- <5ff01c31-5277-909f-4c35-9b9be513d8e1@gmail.com>
- <20180109145659.GG3668920@devbig577.frc2.facebook.com>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: cgroups(7): documenting /sys/kernel/cgroup files
+Date: Wed, 10 Jan 2018 05:23:32 +0100
+Message-ID: <CAKgNAkhk-527Rh6tGYJO-U3UXgwBC1+t5nB+5JEq62nTO2p15A@mail.gmail.com>
+References: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505@gmail.com>
+Reply-To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=lYymnx7swErdUoSm09GtchnzsEyrFwmUkGfnWPoVWDc=;
-        b=bxNYZ/ZfZhLUPrQpLIA0XAH/UE8Qw53nJsGcxxQbkDCBNWHUb/rCeDOnL9xp7kmfnk
-         Vd9P38VmZ7WvFY+i7YvOJXh2FI2wujVn9cO1y8+EHF11BnY4DGVy0YlRLjQlSe8TrcUm
-         PNco3wSi/FNtlMH9ScKs4DjSdCwl4tEUuGOkj1ssp5My1VdpQFJZnSVRxa8CtexWsYLL
-         CwZa8G9PFDXELvZfySRG6JZXV288H7HnA4XQGuNnMVnfpKdQKGP38PlM3gJ4Gjo6K0e7
-         WiwUa7dIqXiQHjsOO4jkj24SoFDch3ErYMb8K/YdVMpg71rQhdH6S8tj26EfYeGy9KZk
-         /BFQ==
-In-Reply-To: <20180109145659.GG3668920@devbig577.frc2.facebook.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
+        h=mime-version:reply-to:in-reply-to:references:from:date:message-id
+         :subject:to:cc;
+        bh=1flYUag69IveTuaRohQAz2qw7qrCONfO+ficr4qxRBA=;
+        b=JTjhXOWE6yobWEhwIsHDNkVVP8+GoZWw3z+vfeT5fCOY5A73VOHqESDqRYFP+3qwfp
+         2zXNLL9r9SVJpzQf43E8w8YZv/jr0gfKJMdfw2Em7xJ9B/FC4yTk75REoS+6kB8Qel/X
+         XHokRLUlv+vQhVcffpKyTwP4ZhM6g9ORDxparE6rKpUR38PfRqEViU7lgokay4CVQFo6
+         uS+lLSMEhSEy4+Vbv3KsnTK239EZiykBNSm94i2UnmyQLFhr6w9x+tQ2fk8NTTu/i5m9
+         c85PK6MF34iFWiBP4otfJcBz9djBsEBDpnL8E+ptoX4rrYPQNNMefpKKFE6Zy6n+33Sz
+         AKRA==
+In-Reply-To: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@fb.com>, Shaohua Li <shli@kernel.org>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, jinli.zjl@alibaba-inc.com, qijiang.qj@alibaba-inc.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi Tejun,
+Hello Roman,
 
-On 2018/1/9 下午10:56, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Jan 09, 2018 at 12:45:13PM +0800, xuejiufei wrote:
->> 1. A bio is charged according to the direction, if we put the reads
->> and sync writes together, we need to search the queue to pick a
->> certain number of read and write IOs when the limit is not reached.
-> 
-> Ah, you're right.
-> 
->> 2. I found that the multi-queue scheduler kyber also has three queues:
->> one for read, one for sync write and one for others. This patch
->> introduces another queue for async writes and others just like kyber.
-> 
-> Yeah, it'd make sense to make that a separate queue then.
-> 
-Could you please review this patch and give some advice?
+On 8 January 2018 at 22:11, Michael Kerrisk (man-pages)
+<mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> Hello Roman,
+>
+> I wrote cgroups(7) text below to document the files added by you in
+> Linux 4.15. Could you let me know if the following text is okay please:
+>
+>    /sys/kernel/cgroup files
+>        /sys/kernel/cgroup/delegate (since Linux 4.15)
+>               This file exports a list of the cgroups v2 files  (one  per
+>               line) that are delegatable (i.e., whose ownership should be
+>               changed to the user ID of the delegatee).  In  the  future,
+>               the  set  of delegatable files may change or grow, and this
+>               file provides a way for the  kernel  to  inform  user-space
+>               applications of which files must be delegated.  As at Linux
+>               4.15, one sees the following when inspecting this file:
+>
+>                   $ cat /sys/kernel/cgroup/delegate
+>                   cgroup.procs
+>                   cgroup.subtree_control
 
-Thanks.
-Jiufei Xue
+I have a question about /sys/kernel/cgroup/delegate: why does this
+file not list cgroup.threads, since that is also a file that
+(potentially) should be delegated?
 
-> Thanks.
-> 
+Cheers,
+
+Michael
