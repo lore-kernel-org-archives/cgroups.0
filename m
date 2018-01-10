@@ -1,67 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: cgroups(7): documenting cgroups v2 delegation
-Date: Wed, 10 Jan 2018 11:39:07 -0800
-Message-ID: <20180110193907.GC3460072@devbig577.frc2.facebook.com>
-References: <1ce0a885-94fb-7480-7180-7b873c95b1bb@gmail.com>
- <20180108141450.GP3668920@devbig577.frc2.facebook.com>
- <6c9fdaee-739f-164d-d04e-fb3a7319db90@gmail.com>
- <20180109210722.GS3668920@devbig577.frc2.facebook.com>
- <672cd179-31be-e03a-f9ff-ce59b76e23e2@gmail.com>
- <20180110142640.GB3668920@devbig577.frc2.facebook.com>
- <655118da-6d58-8f02-7367-77c10a3c16ea@gmail.com>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
+Date: Wed, 10 Jan 2018 12:08:21 -0800
+Message-ID: <20180110200821.GA22541@linux.vnet.ibm.com>
+References: <20180102180119.GA1355@linux.vnet.ibm.com>
+ <20180108122823.GL3668920@devbig577.frc2.facebook.com>
+ <20180108225238.GN9671@linux.vnet.ibm.com>
+ <20180109003127.GA30224@linux.vnet.ibm.com>
+ <20180109034211.GC3668920@devbig577.frc2.facebook.com>
+ <20180109042016.GR9671@linux.vnet.ibm.com>
+ <20180109134448.GE3668920@devbig577.frc2.facebook.com>
+ <20180109152112.GT9671@linux.vnet.ibm.com>
+ <20180109153752.GI3668920@devbig577.frc2.facebook.com>
+ <20180109160022.GW9671@linux.vnet.ibm.com>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=/PWS82rECmwqKmmfUWiGTzmLXCTb1Cv2IPSGbgrLQWE=;
-        b=VZVxou9rumdRUyXtY7MrD6dfboqIGPMOSifeBgDo79ZIZo77M4/MPXP9g4dAa8n8bM
-         YiMiMsFY9tMARacMT7jDaYKvf6p7UALW1Czhv8Md7CcF+WryobpEiFx2TAvfNRa8eHqP
-         wEmUYkrNk5IMp0B1lr/byfonuMxtB3HphRj4EoWkVgVoW7K5qp1L7hAE1JAg36X/YDwq
-         ToaTxvZnc/W0wiZPfeM4q8dfljyLRbCuVEqK+zgNE1fQG5sC6pr7lzyH4kXBJRvJfufE
-         RYB3CRVIqdMO0btJp009s0NX3aCf7/3fiH/8v2YZ0z+KGffdYLZ/nlL6d6eQQi8k9n7D
-         Mj3w==
 Content-Disposition: inline
-In-Reply-To: <655118da-6d58-8f02-7367-77c10a3c16ea@gmail.com>
+In-Reply-To: <20180109160022.GW9671@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>, linux-man <linux-man@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Prateek Sood <prsood@codeaurora.org>, Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org
 
-Hello,
-
-On Wed, Jan 10, 2018 at 08:20:53PM +0100, Michael Kerrisk (man-pages) wrote:
-> On 01/10/2018 03:26 PM, Tejun Heo wrote:
-> > Hello, Michael.
+On Tue, Jan 09, 2018 at 08:00:22AM -0800, Paul E. McKenney wrote:
+> On Tue, Jan 09, 2018 at 07:37:52AM -0800, Tejun Heo wrote:
+> > Hello, Paul.
 > > 
-> > On Tue, Jan 09, 2018 at 11:48:11PM +0100, Michael Kerrisk (man-pages) wrote:
-> >>> That said, not necessarily an objection.  I'm just not sure about it.
-> >>
-> >> Okay. For the moment, I'll leave that text as is.
-> >>
-> >> I realized that there was also one more file that needs to be included
-> >> in the list of files that must be delegated:
-> >>
-> >>        /dlgt_grp/cgroup.threads
-> >>               Changing the ownership of  this  file  is  necessary  if  a
-> >>               threaded subtree is being delegated (see the description of
-> >>               "thread mode", below).
-> >>
-> >> Can you please confirm that it's only necessary to delegate this file
-> >> if we are delegating a threaded subtree?
+> > On Tue, Jan 09, 2018 at 07:21:12AM -0800, Paul E. McKenney wrote:
+> > > > The code was previously using both system_power_efficient_wq and
+> > > > system_workqueue (for the expedited path).  I guess the options were
+> > > > either using two workqueues or dropping POWER_EFFICIENT.  I have no
+> > > > idea how big an impact this will make or whether it'd even be
+> > > > noticeable but maybe it'd be worthwhile to mention that in the
+> > > > description?
+> > > 
+> > > Good point!  How about if I change the last paragraph of the commit
+> > > log to read as follows?
+> > > 
+> > > 							Thanx, Paul
+> > > 
+> > > ------------------------------------------------------------------------
+> > > 
+> > > This commit also causes SRCU to use this new RCU-specific
+> > > workqueue_struct.  Note that SRCU's use of workqueues never blocks them
+> > > waiting for readers, so this should be safe from a forward-progress
+> > > viewpoint.  Note that this moves SRCU from system_power_efficient_wq
+> > > to a normal workqueue.  In the unlikely event that this results in 
+> > > measurable degradation, a separate power-efficient workqueue will be
+> > > creates for SRCU.
 > > 
-> > Replied on the other thread.  The file isn't delegatable as far as I
-> > can tell.
+> > Sounds good.  Please feel free to add
+> > 
+> >  Acked-by: Tejun Heo <tj@kernel.org>
 > 
-> So, following on from the discussion in the other thread, my
-> question above still stands.
+> Done, thank you!
 
-Oh, I frankly haven't thought about delegating a threaded subtree.
+And one additional question...  How are we pushing this upstream?  By
+default, I would push things starting this late into the merge window
+following the next one (v4.17), but would be more than willing to make
+an exception given that this fixes a valid real-world complaint.
 
-Thanks.
+For that matter, if you would rather push my commit along with your pair
+of commits, that works for me!  Either way, please just let me know.
 
--- 
-tejun
+							Thanx, Paul
+
