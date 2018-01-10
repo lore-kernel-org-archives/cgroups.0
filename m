@@ -1,57 +1,64 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: cgroups(7): documenting /sys/kernel/cgroup files
-Date: Wed, 10 Jan 2018 05:23:32 +0100
-Message-ID: <CAKgNAkhk-527Rh6tGYJO-U3UXgwBC1+t5nB+5JEq62nTO2p15A@mail.gmail.com>
-References: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505@gmail.com>
-Reply-To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: Re: RFC(V3): Audit Kernel Container IDs
+Date: Wed, 10 Jan 2018 01:54:45 -0500
+Message-ID: <20180110065445.d2i4uuwnf44gvbl5@madcap2.tricolour.ca>
+References: <20180109121620.wi7dq2423ugsraqv@madcap2.tricolour.ca>
+ <87k1wqcykw.fsf@xmission.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:reply-to:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=1flYUag69IveTuaRohQAz2qw7qrCONfO+ficr4qxRBA=;
-        b=JTjhXOWE6yobWEhwIsHDNkVVP8+GoZWw3z+vfeT5fCOY5A73VOHqESDqRYFP+3qwfp
-         2zXNLL9r9SVJpzQf43E8w8YZv/jr0gfKJMdfw2Em7xJ9B/FC4yTk75REoS+6kB8Qel/X
-         XHokRLUlv+vQhVcffpKyTwP4ZhM6g9ORDxparE6rKpUR38PfRqEViU7lgokay4CVQFo6
-         uS+lLSMEhSEy4+Vbv3KsnTK239EZiykBNSm94i2UnmyQLFhr6w9x+tQ2fk8NTTu/i5m9
-         c85PK6MF34iFWiBP4otfJcBz9djBsEBDpnL8E+ptoX4rrYPQNNMefpKKFE6Zy6n+33Sz
-         AKRA==
-In-Reply-To: <ff431fd8-f1c1-ed8d-2d69-64ea83a8a505-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87k1wqcykw.fsf@xmission.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Michael Kerrisk <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: cgroups@vger.kernel.org, Linux Containers <containers@lists.linux-foundation.org>, Linux API <linux-api@vger.kernel.org>, Linux Audit <linux-audit@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux Network Development <netdev@vger.kernel.org>, Simo Sorce <simo@redhat.com>, Carlos O'Donell <carlos@redhat.com>, Aristeu Rozanski <arozansk@redhat.com>, David Howells <dhowells@redhat.com>, Eric Paris <eparis@parisplace.org>, Daniel Walsh <dwalsh@redhat.com>, jlayton@redhat.com, Andy Lutomirski <luto@kernel.org>, mszeredi@redhat.com, Paul Moore <pmoore@redhat.com>, "Serge E. Hallyn" <serge@hallyn.com>, Steve Grubb <sgrubb@redhat.com>, trondmy@primarydata.com, Al Viro <viro@zeniv.linux.org.uk>, Ma
 
-Hello Roman,
+On 2018-01-09 19:05, Eric W. Biederman wrote:
+> Please let's have a description of the problem you are trying to solve.
 
-On 8 January 2018 at 22:11, Michael Kerrisk (man-pages)
-<mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> Hello Roman,
->
-> I wrote cgroups(7) text below to document the files added by you in
-> Linux 4.15. Could you let me know if the following text is okay please:
->
->    /sys/kernel/cgroup files
->        /sys/kernel/cgroup/delegate (since Linux 4.15)
->               This file exports a list of the cgroups v2 files  (one  per
->               line) that are delegatable (i.e., whose ownership should be
->               changed to the user ID of the delegatee).  In  the  future,
->               the  set  of delegatable files may change or grow, and this
->               file provides a way for the  kernel  to  inform  user-space
->               applications of which files must be delegated.  As at Linux
->               4.15, one sees the following when inspecting this file:
->
->                   $ cat /sys/kernel/cgroup/delegate
->                   cgroup.procs
->                   cgroup.subtree_control
+I thought the first sentence of the second paragraph summed it up rather
+well.
 
-I have a question about /sys/kernel/cgroup/delegate: why does this
-file not list cgroup.threads, since that is also a file that
-(potentially) should be delegated?
+Here are the elaborated motivations:
 
-Cheers,
+- Filter unwanted, irrelevant or unimportant messages before they fill
+  queue so important messages don't get lost.  This is a certification
+  requirement.
 
-Michael
+- Make security claims about containers, require tracking of actions
+  within those containers to ensure compliance with established security
+  policies.
+
+- Route messages from events to local audit daemon instance or host
+  audit daemon instance
+
+- Tried nsIDs, but insufficient for efficient filtering, routing,
+  tracking
+
+> A proposed solution without talking about the problem space is useless.
+> Any proposed solution could potentially work.
+> 
+> I know to these exist.  There is motivation for your work.
+> What is the motivation?
+> What problem are you trying to solve?
+> 
+> In particular what information are you trying to get into logs that you
+> can not get into the logs today?
+> 
+> I am going to try to give this the attention it deserves but right now I
+> am having to deal with half thought out patches for information leaks
+> from speculative code paths, so I won't be able to give this much
+> attention for a little bit.
+> 
+> Eric
+
+- RGB
+
+--
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
