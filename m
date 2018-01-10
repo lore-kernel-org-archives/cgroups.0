@@ -1,80 +1,52 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Subject: Re: cgroups(7): documenting cgroups v2 delegation
-Date: Wed, 10 Jan 2018 23:01:11 +0100
-Message-ID: <fdfc4c27-f87c-fab8-894c-f9f21374bab2@gmail.com>
-References: <1ce0a885-94fb-7480-7180-7b873c95b1bb@gmail.com>
- <20180108141450.GP3668920@devbig577.frc2.facebook.com>
- <6c9fdaee-739f-164d-d04e-fb3a7319db90@gmail.com>
- <20180109210722.GS3668920@devbig577.frc2.facebook.com>
- <672cd179-31be-e03a-f9ff-ce59b76e23e2@gmail.com>
- <20180110142640.GB3668920@devbig577.frc2.facebook.com>
- <655118da-6d58-8f02-7367-77c10a3c16ea@gmail.com>
- <20180110193907.GC3460072@devbig577.frc2.facebook.com>
+From: "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
+Date: Wed, 10 Jan 2018 14:10:40 -0800
+Message-ID: <20180110221040.GO9671@linux.vnet.ibm.com>
+References: <20180108225238.GN9671@linux.vnet.ibm.com>
+ <20180109003127.GA30224@linux.vnet.ibm.com>
+ <20180109034211.GC3668920@devbig577.frc2.facebook.com>
+ <20180109042016.GR9671@linux.vnet.ibm.com>
+ <20180109134448.GE3668920@devbig577.frc2.facebook.com>
+ <20180109152112.GT9671@linux.vnet.ibm.com>
+ <20180109153752.GI3668920@devbig577.frc2.facebook.com>
+ <20180109160022.GW9671@linux.vnet.ibm.com>
+ <20180110200821.GA22541@linux.vnet.ibm.com>
+ <20180110214101.GE3460072@devbig577.frc2.facebook.com>
+Reply-To: paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=cc:subject:to:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=hDicol3mfbESr2Juw4aRlY8F8U1IChI1cjXTUI69RpU=;
-        b=sOkIUcSLz+j7O+Ju06JH7cXrAPpH1pdtRIuWTFih8+PEoUFWU31uMIylncS9p3JfwR
-         hFXO9qqRyZjBMYDx0E9OEquQlsdHNXXcWFX2pUdIMAAU3cAobaElXfRRiHvtbNIJQpTa
-         vjXP1KU830UxkeWjvVPPwt9/V1W3FofFlzugz3nlwyXN/Ss8guGhzqm6NOGSaJu2pMMv
-         zY4T08BiipuExB7xl+SdyJYpYTIZowzgVCiaUkiWXQCcq/OgFN11Q+u1oPKhsl6TMy2g
-         hkiwAIpUGPSLWj3LmKlkZ4DFNiX2GWcXW/cRV+1wtSSvZSQAQenf98JfXfdVrIAgYf7R
-         yR3A==
-In-Reply-To: <20180110193907.GC3460072@devbig577.frc2.facebook.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20180110214101.GE3460072-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: mtk.manpages@gmail.com, "Serge E. Hallyn" <serge@hallyn.com>, linux-man <linux-man@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
 
-Hello Tejun,
-
-On 01/10/2018 08:39 PM, Tejun Heo wrote:
-> Hello,
+On Wed, Jan 10, 2018 at 01:41:01PM -0800, Tejun Heo wrote:
+> Hello, Paul.
 > 
-> On Wed, Jan 10, 2018 at 08:20:53PM +0100, Michael Kerrisk (man-pages) wrote:
->> On 01/10/2018 03:26 PM, Tejun Heo wrote:
->>> Hello, Michael.
->>>
->>> On Tue, Jan 09, 2018 at 11:48:11PM +0100, Michael Kerrisk (man-pages) wrote:
->>>>> That said, not necessarily an objection.  I'm just not sure about it.
->>>>
->>>> Okay. For the moment, I'll leave that text as is.
->>>>
->>>> I realized that there was also one more file that needs to be included
->>>> in the list of files that must be delegated:
->>>>
->>>>        /dlgt_grp/cgroup.threads
->>>>               Changing the ownership of  this  file  is  necessary  if  a
->>>>               threaded subtree is being delegated (see the description of
->>>>               "thread mode", below).
->>>>
->>>> Can you please confirm that it's only necessary to delegate this file
->>>> if we are delegating a threaded subtree?
->>>
->>> Replied on the other thread.  The file isn't delegatable as far as I
->>> can tell.
->>
->> So, following on from the discussion in the other thread, my
->> question above still stands.
+> On Wed, Jan 10, 2018 at 12:08:21PM -0800, Paul E. McKenney wrote:
+> > And one additional question...  How are we pushing this upstream?  By
+> > default, I would push things starting this late into the merge window
+> > following the next one (v4.17), but would be more than willing to make
+> > an exception given that this fixes a valid real-world complaint.
 > 
-> Oh, I frankly haven't thought about delegating a threaded subtree.
+> I put the workqueue part in the fixes branch.  If there's gonna be
+> another rc, I'm gonna push it to Linus.  If not, I'll push when the
+> next window opens.  I think either way should be fine.
+> 
+> > For that matter, if you would rather push my commit along with your pair
+> > of commits, that works for me!  Either way, please just let me know.
+> 
+> Oh, let's push these through their respective trees.  Please take the
+> RCU one through the usual RCU tree.
 
-I'm still confused. cgroup-v2.txt documents the possibility. You
-wrote that text. We just had a conversation in another thread about the
-fact that cgroup.threads is delegatable. You must have thought at 
-least a little about this?
+Works for me!
 
-Cheers,
+> Thank you very much.
 
-Michael
+And to you!
 
--- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+							Thanx, Paul
