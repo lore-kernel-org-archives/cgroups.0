@@ -1,99 +1,67 @@
-From: "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
-Subject: [PATCH v2] cgroup, docs: document the root cgroup behavior of cpu and
- io controllers
-Date: Wed, 10 Jan 2018 23:33:19 +0100
-Message-ID: <90ac05c0-8e84-0c0b-195a-4c1712e40f09@maciej.szmigiero.name>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: cgroups(7): documenting cgroups v2 delegation
+Date: Wed, 10 Jan 2018 23:34:46 +0100
+Message-ID: <ff31f13b-f28b-2765-73dd-c2d67524ff9f@gmail.com>
+References: <20180108141450.GP3668920@devbig577.frc2.facebook.com>
+ <6c9fdaee-739f-164d-d04e-fb3a7319db90@gmail.com>
+ <20180109210722.GS3668920@devbig577.frc2.facebook.com>
+ <672cd179-31be-e03a-f9ff-ce59b76e23e2@gmail.com>
+ <20180110142640.GB3668920@devbig577.frc2.facebook.com>
+ <655118da-6d58-8f02-7367-77c10a3c16ea@gmail.com>
+ <20180110193907.GC3460072@devbig577.frc2.facebook.com>
+ <fdfc4c27-f87c-fab8-894c-f9f21374bab2@gmail.com>
+ <20180110221418.GF3460072@devbig577.frc2.facebook.com>
+ <5207cfc8-5525-b932-baee-6b0160886178@gmail.com>
+ <20180110222726.GG3460072@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=cc:subject:to:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=r0Xr/uaOOjxpzxyY4+v/dsMOtHWjQowVUYYix20O/OU=;
+        b=ChalvRs4F3kZmqjn5/CLuiZ7Fl0fBxBCweSw8TwJjkYvXofpu+KDBoB1m4IfsumEwx
+         lEyAuwl+KJwbcFeNq81CeMsi/AS/2nl2lvdfs/yF4Q3mA6eV0yPJoHTKNmqCHKZ5+lbq
+         WToVuFYLE6uXoMi4YOyBN1Ac+cgFYc2Nods9tcGW5Ihj72VyotLWD0aboWahR+njQF7H
+         scXEauShCihlLE7xYqpaU4umLve9IMLMIGQ1SY2vfVM08wU9jK/pnYnObHNBu5Q5lAi+
+         mS1VJBNydy596iWVRKYufLJrQF7o8l324DF8GhdRFJarLK50iNwseLgm9/gOhOZHuta7
+         g+Ig==
+In-Reply-To: <20180110222726.GG3460072-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 Content-Language: en-US
-Sender: linux-doc-owner@vger.kernel.org
+Sender: linux-man-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Currently, cgroups v2 documentation contains only a generic remark that
-"How resource consumption in the root cgroup is governed is up to each
-controller", which isn't really telling users much, who need to dig in the
-code and / or commit messages to learn the exact behavior.
+On 01/10/2018 11:27 PM, Tejun Heo wrote:
+> Hello,
+> 
+> On Wed, Jan 10, 2018 at 11:24:05PM +0100, Michael Kerrisk (man-pages) wrote:
+>>> Oh, I'm probably mixing up two things.
+>>>
+>>> 1. When delegating, cgroup.threads should be delegated.  Doing that
+>>>    selectively doesn't achieve anything meaningful.
+>>
+>> Understood. But surely delegating cgroup.threads is effectively
+>> meaningless when delegating a "domain" cgroup tree? (Obviously it's
+>> not harmful to delegate the the cgroup.threads file in this case;
+>> it's just not useful to do so.)
+> 
+> Yeap, unless we can somehow support non-root mixed domains.
 
-In cgroups v1 at least the blkio controller had its operation with respect
-to competition between child threads and child cgroups documented in
-blkio-controller.txt, with references to cfq-iosched.txt.
-Also, cgroups v2 documentation describes v1 behavior of both cpu and
-blkio controllers in an "Issues with v1" section.
+Thanks for the clarification/confirmation, Tejun.
 
-Let's document this behavior also for cgroups v2 to make life easier for
-users.
+Cheers,
 
-Signed-off-by: Maciej S. Szmigiero <mail@maciej.szmigiero.name>
----
-Changes from v1:
-Move the root cgroup behavior description to a separate section,
-clearly marking it as non-normative information which is subject to
-change.
+Michael
 
- Documentation/cgroup-v2.txt | 35 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index c783bbb9d0fb..f942952686b2 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -58,6 +58,9 @@ v1 is available under Documentation/cgroup-v1/.
-        5-6-1. RDMA Interface Files
-      5-7. Misc
-        5-7-1. perf_event
-+     5-N. Non-normative information
-+       5-N-1. CPU controller root cgroup process behaviour
-+       5-N-2. IO controller root cgroup process behaviour
-    6. Namespace
-      6-1. Basics
-      6-2. The Root and Views
-@@ -421,7 +424,9 @@ The root cgroup is exempt from this restriction.  Root contains
- processes and anonymous resource consumption which can't be associated
- with any other cgroups and requires special treatment from most
- controllers.  How resource consumption in the root cgroup is governed
--is up to each controller.
-+is up to each controller (for more information on this topic please
-+refer to the Non-normative information section in the Controllers
-+chapter).
- 
- Note that the restriction doesn't get in the way if there is no
- enabled controller in the cgroup's "cgroup.subtree_control".  This is
-@@ -1506,6 +1511,34 @@ always be filtered by cgroup v2 path.  The controller can still be
- moved to a legacy hierarchy after v2 hierarchy is populated.
- 
- 
-+Non-normative information
-+-------------------------
-+
-+This section contains information that isn't considered to be a part of
-+the stable kernel API and so is subject to change.
-+
-+
-+CPU controller root cgroup process behaviour
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+When distributing CPU cycles in the root cgroup each thread in this
-+cgroup is treated as if it was hosted in a separate child cgroup of the
-+root cgroup. This child cgroup weight is dependent on its thread nice
-+level.
-+For details of this mapping see sched_prio_to_weight array in
-+kernel/sched/core.c file (values from this array should be scaled
-+appropriately so the neutral - nice 0 - value is 100 instead of 1024).
-+
-+
-+IO controller root cgroup process behaviour
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+Root cgroup processes are hosted in an implicit leaf child node.
-+When distributing IO resources this implicit child node is taken into
-+account as if it was a normal child cgroup of the root cgroup with a
-+weight value of 200.
-+
-+
- Namespace
- =========
- 
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-man" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
