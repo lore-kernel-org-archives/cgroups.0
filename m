@@ -1,62 +1,93 @@
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+From: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Subject: Re: [PATCH v4] mm/memcg: try harder to decrease
  [memory,memsw].limit_in_bytes
-Date: Thu, 11 Jan 2018 14:59:23 +0300
-Message-ID: <47856d2b-1534-6198-c2e2-6d2356973bef@virtuozzo.com>
+Date: Thu, 11 Jan 2018 15:21:33 +0300
+Message-ID: <4a8f667d-c2ae-e3df-00fd-edc01afe19e1@virtuozzo.com>
 References: <20180109152622.31ca558acb0cc25a1b14f38c@linux-foundation.org>
  <20180110124317.28887-1-aryabinin@virtuozzo.com>
- <20180110143121.cf2a1c5497b31642c9b38b2a@linux-foundation.org>
+ <20180111104239.GZ1732@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
  s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=KEJen7WoW3wkPhLKMmUEpfmkZWH+f3zzlVDT0csIczU=;
- b=IjBlhLvqw+/mOKfmnUS5IRZ/JcxvzmDTL8q13VVnPvZLrQOAkD5aow0eHDtxEe1j768jFGFmnleBKoEdZ+pabQuXawiD9t+peTPWql5dRR9LXFnHYR4wBhybONa1ZCSG3PHg5ZfiK5Fk7JS3l9vQ4dr3gAcoHx1v0TDHFOKtpho=
-In-Reply-To: <20180110143121.cf2a1c5497b31642c9b38b2a@linux-foundation.org>
+ bh=qXaJNZQ9QGxLf23jgZktHa868i18i2icXPDKoxuqFYs=;
+ b=gehcdN9is8BO9R2oKjf+LwbqpzoJB2kvkwvlpy+M1vD+GFAuIyoActe8UCusp43Z6WrME+B1aLDUguBoCN68dWX6LcZdzhXk/ClkAZDw7WXcKl28gGmVLa+3/KN8vD/s5RGW1W5R/YJHSUsdk7sylNbt6ADHTjfjkc1N+evQRyc=
+In-Reply-To: <20180111104239.GZ1732-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Content-Language: en-US
-Sender: owner-linux-mm@kvack.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 01/11/2018 01:31 AM, Andrew Morton wrote:
-> On Wed, 10 Jan 2018 15:43:17 +0300 Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+
+
+On 01/11/2018 01:42 PM, Michal Hocko wrote:
+> On Wed 10-01-18 15:43:17, Andrey Ryabinin wrote:
+> [...]
+>> @@ -2506,15 +2480,13 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+>>  		if (!ret)
+>>  			break;
+>>  
+>> -		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, !memsw);
+>> -
+>> -		curusage = page_counter_read(counter);
+>> -		/* Usage is reduced ? */
+>> -		if (curusage >= oldusage)
+>> -			retry_count--;
+>> -		else
+>> -			oldusage = curusage;
+>> -	} while (retry_count);
+>> +		usage = page_counter_read(counter);
+>> +		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
+>> +						GFP_KERNEL, !memsw)) {
 > 
->> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
->> pages on each iteration. This makes practically impossible to decrease
->> limit of memory cgroup. Tasks could easily allocate back 32 pages,
->> so we can't reduce memory usage, and once retry_count reaches zero we return
->> -EBUSY.
->>
->> Easy to reproduce the problem by running the following commands:
->>
->>   mkdir /sys/fs/cgroup/memory/test
->>   echo $$ >> /sys/fs/cgroup/memory/test/tasks
->>   cat big_file > /dev/null &
->>   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
->>   -bash: echo: write error: Device or resource busy
->>
->> Instead of relying on retry_count, keep retrying the reclaim until
->> the desired limit is reached or fail if the reclaim doesn't make
->> any progress or a signal is pending.
->>
-> 
-> Is there any situation under which that mem_cgroup_resize_limit() can
-> get stuck semi-indefinitely in a livelockish state?  It isn't very
-> obvious that we're protected from this, so perhaps it would help to
-> have a comment which describes how loop termination is assured?
+> If the usage drops below limit in the meantime then you get underflow
+> and reclaim the whole memcg. I do not think this is a good idea. This
+> can also lead to over reclaim. Why don't you simply stick with the
+> original SWAP_CLUSTER_MAX (aka 1 for try_to_free_mem_cgroup_pages)?
 > 
 
-We are not protected from this. If tasks in cgroup *indefinitely* generate reclaimable memory at high rate
-and user asks to set unreachable limit, like 'echo 4096 > memory.limit_in_bytes', than
-try_to_free_mem_cgroup_pages() will return non-zero indefinitely.
+Because, if new limit is gigabytes bellow the current usage, retrying to set
+new limit after reclaiming only 32 pages seems unreasonable.
 
-Is that a big deal? At least loop can be interrupted by a signal, and we don't hold any locks here.
+So, I made this:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+From: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: mm-memcg-try-harder-to-decrease-limit_in_bytes-fix
+
+Protect from overreclaim if usage become lower than limit.
+
+Signed-off-by: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+---
+ mm/memcontrol.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 4671ae8a8b1a..6120bb619547 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2455,7 +2455,7 @@ static DEFINE_MUTEX(memcg_limit_mutex);
+ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 				   unsigned long limit, bool memsw)
+ {
+-	unsigned long usage;
++	unsigned long nr_pages;
+ 	bool enlarge = false;
+ 	int ret;
+ 	bool limits_invariant;
+@@ -2487,8 +2487,8 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		usage = page_counter_read(counter);
+-		if (!try_to_free_mem_cgroup_pages(memcg, usage - limit,
++		nr_pages = max_t(long, 1, page_counter_read(counter) - limit);
++		if (!try_to_free_mem_cgroup_pages(memcg, nr_pages,
+ 						GFP_KERNEL, !memsw)) {
+ 			ret = -EBUSY;
+ 			break;
+-- 
+2.13.6
