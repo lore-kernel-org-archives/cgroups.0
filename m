@@ -1,92 +1,97 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
-Date: Mon, 15 Jan 2018 12:54:33 +0100
-Message-ID: <20180115115433.GA22473@dhcp22.suse.cz>
-References: <20171130152824.1591-1-guro@fb.com>
- <20171130123930.cf3217c816fd270fa35a40cb@linux-foundation.org>
- <alpine.DEB.2.10.1801091556490.173445@chino.kir.corp.google.com>
- <20180110131143.GB26913@castle.DHCP.thefacebook.com>
- <20180110113345.54dd571967fd6e70bfba68c3@linux-foundation.org>
- <20180111090809.GW1732@dhcp22.suse.cz>
- <20180111131845.GA13726@castle.DHCP.thefacebook.com>
- <alpine.DEB.2.10.1801121331110.120129@chino.kir.corp.google.com>
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
+Date: Mon, 15 Jan 2018 17:32:18 +0530
+Message-ID: <3c9b2a2d-ede4-1242-418a-353ec9f78db3@codeaurora.org>
+References: <CANaxB-zT+sz=z1FFk5npnwMySdfKCBZDkM+P+=JXDkCXbh=rCw@mail.gmail.com>
+ <1511868946-23959-1-git-send-email-prsood@codeaurora.org>
+ <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
+ <20171204202219.GF2421075@devbig577.frc2.facebook.com>
+ <20171204225825.GP2421075@devbig577.frc2.facebook.com>
+ <20171204230117.GF20227@worktop.programming.kicks-ass.net>
+ <20171211152059.GH2421075@devbig577.frc2.facebook.com>
+ <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
+ <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
+ <9843d982-d201-8702-2e4e-0541a4d96b53@codeaurora.org>
+ <20180102161656.GD3668920@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1801121331110.120129@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1516017750;
+        bh=hXGYw+S8KV/ije3jPwkkB2mbYJvz86ixoWjjx70XCXQ=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=VJY0xDgBRwcat0JwvPsJH+usEPK6L+P3GX1j02zlq4vCBg/OCCGRUE9e3y3c4Gehn
+         mICFZk69cxC0m0LvYaM5ZTukzY8b9DXD6rex8L0ddabd4nvo5Kq+MvcBGDFlW3tegd
+         k6mpSpLqX0X/6T3DnOZ3E+q/+Lt2ALzqjs81haL8=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1516017749;
+        bh=hXGYw+S8KV/ije3jPwkkB2mbYJvz86ixoWjjx70XCXQ=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=Ii3BgR1YHIswTbHG2MPdfM2ippXTDcyUwjj4HjDHpzDWo132u8kd+bvXL8mB6TzZ7
+         EooZODuyTLqDwZ81QEMaa9cblX1NSt8BbFlHqh5Mo3f3jxKee7nsyKfqjdVHl2KEdX
+         1ZC3SJsF3Qs/iuDUPViDZWUkvF9gBjS6+1Nk1fy4=
+In-Reply-To: <20180102161656.GD3668920-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sramana-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, "Paul E. McKenney" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-On Fri 12-01-18 14:03:03, David Rientjes wrote:
-> On Thu, 11 Jan 2018, Roman Gushchin wrote:
+On 01/02/2018 09:46 PM, Tejun Heo wrote:
+> Hello,
 > 
-> > Summarizing all this, following the hierarchy is good when it reflects
-> > the "importance" of cgroup's memory for a user, and bad otherwise.
-> > In generic case with unified hierarchy it's not true, so following
-> > the hierarchy unconditionally is bad.
-> > 
-> > Current version of the patchset allows common evaluation of cgroups
-> > by setting memory.groupoom to true. The only limitation is that it
-> > also changes the OOM action: all belonging processes will be killed.
-> > If we really want to preserve an option to evaluate cgroups
-> > together without forcing "kill all processes" action, we can
-> > convert memory.groupoom from being boolean to the multi-value knob.
-> > For instance, "disabled" and "killall". This will allow to add
-> > a third state ("evaluate", for example) later without breaking the API.
-> > 
+> On Fri, Dec 29, 2017 at 02:07:16AM +0530, Prateek Sood wrote:
+>> task T is waiting for cpuset_mutex acquired
+>> by kworker/2:1
+>>
+>> sh ==> cpuhp/2 ==> kworker/2:1 ==> sh 
+>>
+>> kworker/2:3 ==> kthreadd ==> Task T ==> kworker/2:1
+>>
+>> It seems that my earlier patch set should fix this scenario:
+>> 1) Inverting locking order of cpuset_mutex and cpu_hotplug_lock.
+>> 2) Make cpuset hotplug work synchronous.
+>>
+>> Could you please share your feedback.
 > 
-> No, this isn't how kernel features get introduced.  We don't design a new 
-> kernel feature with its own API for a highly specialized usecase and then 
-> claim we'll fix the problems later.  Users will work around the 
-> constraints of the new feature, if possible, and then we can end up 
-> breaking them later.  Or, we can pollute the mem cgroup v2 filesystem with 
-> even more tunables to cover up for mistakes in earlier designs.
+> Hmm... this can also be resolved by adding WQ_MEM_RECLAIM to the
+> synchronize rcu workqueue, right?  Given the wide-spread usages of
+> synchronize_rcu and friends, maybe that's the right solution, or at
+> least something we also need to do, for this particular deadlock?
+> 
+> Again, I don't have anything against making the domain rebuliding part
+> of cpuset operations synchronous and these tricky deadlock scenarios
+> do indicate that doing so would probably be beneficial.  That said,
+> tho, these scenarios seem more of manifestations of other problems
+> exposed through kthreadd dependency than anything else.
+> 
+> Thanks.
+> 
 
-This is a blatant misinterpretation of the proposed changes. I haven't
-heard _any_ single argument against the proposed user interface except
-for complaints for missing tunables. This is not how the kernel
-development works and should work. The usecase was clearly described and
-far from limited to a single workload or company.
- 
-> The key point to all three of my objections: extensibility.
+Hi TJ,
 
-And it has been argued that further _features_ can be added on top. I am
-absolutely fed up discussing those things again and again without any
-progress. You simply keep _ignoring_ counter arguments and that is a
-major PITA to be honest with you. You are basically blocking a useful
-feature because it doesn't solve your particular workload. This is
-simply not acceptable in the kernel development.
+Thanks for suggesting WQ_MEM_RECLAIM solution.
 
-> Both you and Michal have acknowledged blantently obvious shortcomings in 
-> the design.
+My understanding of WQ_MEM_RECLAIM was that it needs to be used for
+cases where memory pressure could cause deadlocks.
 
-What you call blatant shortcomings we do not see affecting any
-_existing_ workloads. If they turn out to be real issues then we can fix
-them without deprecating any user APIs added by this patchset.
+In this case it does not seem to be a memory pressure issue.
+Overloading WQ_MEM_RECLAIM usage for solution to another problem
+is the correct approach?
 
-Look, I am not the one who is a heavy container user. The primary reason
-I am supporting this is because a) it has a _real_ user and I can see
-more to emerge and b) because it _makes_ sense in its current form and
-it doesn't bring heavy maintenance burden in the OOM code base which I
-do care about.
+This scenario can be resolved by using WQ_MEM_RECLAIM and a separate
+workqueue for rcu. But there seems to be a possibility in future if
+any cpu hotplug callbacks use other predefined workqueues which do not
+have WQ_MEM_RECLAIM option.
 
-I am deliberately skipping the rest of your email because it is _yet_
-_again_ a form of obstructing the current patchset which is what you
-have been doing for quite some time. I will leave the final decision
-for merging to Andrew. If you want to build a more fine grained control
-on top, you are free to do so. I will be reviewing those like any other
-upstream oom changes.
+Please let me know your feedback on this.
+
+
+Thanks
+
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation
+Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
+Collaborative Project
