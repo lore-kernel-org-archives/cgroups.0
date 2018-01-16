@@ -1,71 +1,128 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup/cpuset: fix circular locking dependency
-Date: Tue, 16 Jan 2018 08:27:30 -0800
-Message-ID: <20180116162730.GQ3460072@devbig577.frc2.facebook.com>
-References: <623f214b-8b9a-f967-7a3d-ca9c06151267@codeaurora.org>
- <20171204202219.GF2421075@devbig577.frc2.facebook.com>
- <20171204225825.GP2421075@devbig577.frc2.facebook.com>
- <20171204230117.GF20227@worktop.programming.kicks-ass.net>
- <20171211152059.GH2421075@devbig577.frc2.facebook.com>
- <cca9aea2-9bff-decf-d669-8f90b928ea18@codeaurora.org>
- <20171213160617.GQ3919388@devbig577.frc2.facebook.com>
- <9843d982-d201-8702-2e4e-0541a4d96b53@codeaurora.org>
- <20180102161656.GD3668920@devbig577.frc2.facebook.com>
- <3c9b2a2d-ede4-1242-418a-353ec9f78db3@codeaurora.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
+Date: Tue, 16 Jan 2018 13:21:50 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1801161306250.242486@chino.kir.corp.google.com>
+References: <20171130152824.1591-1-guro@fb.com> <20171130123930.cf3217c816fd270fa35a40cb@linux-foundation.org> <alpine.DEB.2.10.1801091556490.173445@chino.kir.corp.google.com> <20180110131143.GB26913@castle.DHCP.thefacebook.com>
+ <20180110113345.54dd571967fd6e70bfba68c3@linux-foundation.org> <20180113171432.GA23484@cmpxchg.org> <alpine.DEB.2.10.1801141536380.131380@chino.kir.corp.google.com> <20180115162500.GA26120@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=k9CQ4BQYCVjd1vbkfKs8OWfM2QHiZLnzOUVM7n+kZ34=;
-        b=c+/GcqGJITfyC6RPLsu1FzyJMji84m9OKs2GJE/hm9lh3e2noTFjNRBtvUfsUvKTkN
-         aw1xbGgXQKsjRnRAxTtO7ezlK+Q0TfpMdMVvUEyjHjGeFRg6FvF6wuDhAUkbo1YdipeJ
-         EQ2z97qB1A6tiJ4rE23MjOdCb7bqDcV95qUjdBnJFVyNnrti7kjUFCS7ZnJAgZoh9OEE
-         pu7RWiXF/ED2M440E+LRl55KNTtPsdql2JRYc7fz8jZjGzEt7ZAYgipUz2g1ZnXciUza
-         fobtV6RgzsC2oEy++TkBsxLGPKJNzLIwPISvwMsJJF2n6vgesA76UcbcQR0x51no0v7G
-         nM8A==
-Content-Disposition: inline
-In-Reply-To: <3c9b2a2d-ede4-1242-418a-353ec9f78db3@codeaurora.org>
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=tSHDzQjaVaZ8UgNdp/Xu0ZimOMjc7qiKxLvQhvlQYYc=;
+        b=HEWdHqGsgtio9BtiYSO0FbLM9MQ6TRb7WUESwP5s/4KfnIPmaq3pPOCsL1/VJ2ai/G
+         cCy30AI6MSuw3xAWCOwbKSjTAuraiCfYKQ90xeCrJeINqM/O2eigYzI3KeWwvFQOq6In
+         7Es39Xm/PBeDy7WayM+2v9/19oAqgEFS1i+zHWB+bKZmBaeUW/tH98owwcESpyq5h5KK
+         L+aANLUF5YBoOJXZDvTpbdmvSpt0MzpTn2OeBIWiW9OWPZmgyu6oDs4KH6G/ktxUQQUD
+         Pou4D3KofvkdbO4YxtkM1VugcXBntAb0yCWb5rSBhpyibva8jnXCvwKuFU7bYWFI/cLN
+         Kyyg==
+In-Reply-To: <20180115162500.GA26120@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Prateek Sood <prsood@codeaurora.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, avagin@gmail.com, mingo@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, sramana@codeaurora.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, linux-mm@vger.kernel.org, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Hello, Prateek.
+On Mon, 15 Jan 2018, Johannes Weiner wrote:
 
-On Mon, Jan 15, 2018 at 05:32:18PM +0530, Prateek Sood wrote:
-> My understanding of WQ_MEM_RECLAIM was that it needs to be used for
-> cases where memory pressure could cause deadlocks.
+> > It's quite trivial to allow the root mem cgroup to be compared exactly the 
+> > same as another cgroup.  Please see 
+> > https://marc.info/?l=linux-kernel&m=151579459920305.
+> 
+> This only says "that will be fixed" and doesn't address why I care.
+> 
 
-Yes, that is the primary role; however, there are a couple places
-where we need it to isolate a low level subsystem's forward progress
-from the dependencies of the dynanic worker pool management.
+Because the design of the cgroup aware oom killer requires the entire 
+system to be fully containerized to be useful and select the 
+correct/anticipated victim.  If anything is left behind in the root mem 
+cgroup, or on systems that use mem cgroups in ways that you do not, it 
+returns wildly unpredictable and downright wrong results; it factors 
+oom_score_adj into the selection criteria only for processes attached to 
+the root mem cgroup and ignores it otherwise.  If we treated root and leaf 
+cgroups as comparable, this problem wouldn't arise.
 
-> In this case it does not seem to be a memory pressure issue.
-> Overloading WQ_MEM_RECLAIM usage for solution to another problem
-> is the correct approach?
+> > > This assumes you even need one. Right now, the OOM killer picks the
+> > > biggest MM, so you can evade selection by forking your MM. This patch
+> > > allows picking the biggest cgroup, so you can evade by forking groups.
+> > 
+> > It's quite trivial to prevent any cgroup from evading the oom killer by 
+> > either forking their mm or attaching all their processes to subcontainers.  
+> > Please see https://marc.info/?l=linux-kernel&m=151579459920305.
+> 
+> This doesn't address anything I wrote.
+> 
 
-In general, we don't face this issue but for things like RCU, I do
-believe this is the right approach.  The name of the flag is a bit of
-misnomer for those cases as it only describes one of the dependencies
-of worker pool management.  I don't think it's an actual problem given
-that vast majority of the usages are protecting against memory
-dependency.
+It prevents both problems if you are attached to a mem cgroup subtree.  
+You can't fork the mm and you can't fork groups to evade the selection 
+logic.  If the root mem cgroup and leaf cgroups were truly comparable, it 
+also prevents both problems regardless of which cgroup the processes 
+attached to.
 
-> This scenario can be resolved by using WQ_MEM_RECLAIM and a separate
-> workqueue for rcu. But there seems to be a possibility in future if
-> any cpu hotplug callbacks use other predefined workqueues which do not
-> have WQ_MEM_RECLAIM option.
+> > > It's not a new vector, and clearly nobody cares. This has never been
+> > > brought up against the current design that I know of.
+> > 
+> > As cgroup v2 becomes more popular, people will organize their cgroup 
+> > hierarchies for all controllers they need to use.  We do this today, for 
+> > example, by attaching some individual consumers to child mem cgroups 
+> > purely for the rich statistics and vmscan stats that mem cgroup provides 
+> > without any limitation on those cgroups.
+> 
+> There is no connecting tissue between what I wrote and what you wrote.
+> 
 
-We want to isolate from this sort of dependencies anyway, especially
-how widely and deeply we depend on RCU these days.  Maybe we will
-develop a justified case in the future but at least up until now every
-case around this issue seems to be something to be fixed on their own.
+You're completely ignoring other usecases other than your own highly 
+specialized usecase.  You may attach every user process on the system to 
+leaf cgroups and you may not have any users who have control over a 
+subtree.  Other people do.  And this patchset, as implemented, returns 
+very inaccurate results or allows users to intentionally or 
+unintentionally evade the oom killer just because they want to use 
+subcontainers.
+
+Creating and attaching a subset of processes to either top-level 
+containers or subcontainers for either limitation by mem cgroup or for 
+statistics is a valid usecase, and one that is used in practice.  Your 
+suggestion of avoiding that problem to work around the shortcomings of 
+this patchset by limiting how many subcontainers can be created by the 
+user is utterly ridiculous.
+
+> We have a patch set that was developed, iterated and improved over 10+
+> revisions, based on evaluating and weighing trade-offs. It's reached a
+> state where the memcg maintainers are happy with it and don't have any
+> concern about future extendabilty to cover more specialized setups.
+> 
+
+It's also obviously untested in those 10+ revisions since it uses 
+oom_badness() for the root mem cgroup and not leaf mem cgroups which is 
+why it breaks any system where user processes are attached to the root mem 
+cgroup.  See my example where a 1GB worker attached to the root mem cgroup 
+is preferred over a cgroup with 6GB workers.  It may have been tested with 
+your own highly specialized usecase, but not with anything else, and the 
+author obviously admits its shortcomings.
+
+> You've had nine months to contribute and shape this patch series
+> productively, and instead resorted to a cavalcade of polemics,
+> evasion, and repetition of truisms and refuted points. A ten paragraph
+> proposal of vague ideas at this point is simply not a valid argument.
+> 
+
+The patch series has gone through massive changes over the past nine 
+months and I've brought up three very specific concerns with its current 
+form that makes it non-extensible.  I know the patchset has very 
+significant changes or rewrites in its history, but I'm only concerned 
+with its present form because it's not something that can easily be 
+extended later.  We don't need useless files polutting the cgroup v2 
+filesystem for things that don't matter with other oom policies and we 
+don't need the mount option, actually.
+
+> You can send patches to replace or improve on Roman's code and make
+> the case for them.
+> 
+
+I volunteered in the email thread where I proposed an alternative to 
+replace it, I'm actively seeking any feedback on that proposal to address 
+anybody else's concerns early on.  Your participation in that would be 
+very useful.
 
 Thanks.
-
--- 
-tejun
