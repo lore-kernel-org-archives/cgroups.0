@@ -1,105 +1,96 @@
-From: David Rientjes <rientjes@google.com>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
-Date: Tue, 16 Jan 2018 13:36:21 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1801161323550.242486@chino.kir.corp.google.com>
-References: <20171130152824.1591-1-guro@fb.com> <20171130123930.cf3217c816fd270fa35a40cb@linux-foundation.org> <alpine.DEB.2.10.1801091556490.173445@chino.kir.corp.google.com> <20180110131143.GB26913@castle.DHCP.thefacebook.com>
- <20180110113345.54dd571967fd6e70bfba68c3@linux-foundation.org> <20180111090809.GW1732@dhcp22.suse.cz> <20180111131845.GA13726@castle.DHCP.thefacebook.com> <alpine.DEB.2.10.1801121331110.120129@chino.kir.corp.google.com>
+Date: Tue, 16 Jan 2018 23:09:07 +0100
+Message-ID: <20180116220907.GD17351@dhcp22.suse.cz>
+References: <20171130152824.1591-1-guro@fb.com>
+ <20171130123930.cf3217c816fd270fa35a40cb@linux-foundation.org>
+ <alpine.DEB.2.10.1801091556490.173445@chino.kir.corp.google.com>
+ <20180110131143.GB26913@castle.DHCP.thefacebook.com>
+ <20180110113345.54dd571967fd6e70bfba68c3@linux-foundation.org>
+ <20180111090809.GW1732@dhcp22.suse.cz>
+ <20180111131845.GA13726@castle.DHCP.thefacebook.com>
+ <alpine.DEB.2.10.1801121331110.120129@chino.kir.corp.google.com>
  <20180115115433.GA22473@dhcp22.suse.cz>
+ <alpine.DEB.2.10.1801161323550.242486@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=UTaIohNVULcdppfilwVXIOP/j9qvW1IygUIdzwmUXI8=;
-        b=jjxwXkn/DjeVlJmvK0wy3uTmxZLlBgqTHxa8ib2Cz1rgNjGAadbE3o9JhwJWlpSzNv
-         ierqBdpEg5mGzv4p+BYS3dQrk6YBRKrRaGtWLPFn5satoEzq5Tj9aM6320fGVeY5gukN
-         sfZI1JbpYo/aADWzXaq6zXm8zHYvGFfl0Uwn6J/EvDpbfD7FfVsYlFt4wgNku0t+RTdo
-         s/QujuVhF5gIkBayD7GErviSwOk9YYZzKZtdfd1DI/jk48wTiD0IjwOgOdpuYFMRKId/
-         UxtgYRT/DzQ4cWr7CMkngJD2Ni3aPlKGis/aMxpjuIcdCKE5VuDL99dTp6JOuP3l7wPa
-         WUfw==
-In-Reply-To: <20180115115433.GA22473@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1801161323550.242486@chino.kir.corp.google.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
+To: David Rientjes <rientjes@google.com>
 Cc: Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, 15 Jan 2018, Michal Hocko wrote:
-
-> > No, this isn't how kernel features get introduced.  We don't design a new 
-> > kernel feature with its own API for a highly specialized usecase and then 
-> > claim we'll fix the problems later.  Users will work around the 
-> > constraints of the new feature, if possible, and then we can end up 
-> > breaking them later.  Or, we can pollute the mem cgroup v2 filesystem with 
-> > even more tunables to cover up for mistakes in earlier designs.
+On Tue 16-01-18 13:36:21, David Rientjes wrote:
+> On Mon, 15 Jan 2018, Michal Hocko wrote:
 > 
-> This is a blatant misinterpretation of the proposed changes. I haven't
-> heard _any_ single argument against the proposed user interface except
-> for complaints for missing tunables. This is not how the kernel
-> development works and should work. The usecase was clearly described and
-> far from limited to a single workload or company.
->  
-
-The complaint about the user interface is that it is not extensible, as my 
-next line states.  This doesn't need to be opted into with a mount option 
-locking the entire system into a single oom policy.  That, itself, is the 
-result of a poor design.  What is needed is a way for users to define an 
-oom policy that is generally useful, not something that is locked in for 
-the whole system.  We don't need several different cgroup mount options 
-only for mem cgroup oom policies.  We also don't need random 
-memory.groupoom files being added to the mem cgroup v2 filesystem only for 
-one or two particular policies and being no-ops otherwise.  It can easily 
-be specified as part of the policy itself.  My suggestion adds two new 
-files to the mem cgroup v2 filesystem and no mount option, and allows any 
-policy to be added later that only uses these two files.  I see you've 
-ignored all of that in this email, so perhaps reading it would be 
-worthwhile so that you can provide constructive feedback.
-
-> > The key point to all three of my objections: extensibility.
+> > > No, this isn't how kernel features get introduced.  We don't design a new 
+> > > kernel feature with its own API for a highly specialized usecase and then 
+> > > claim we'll fix the problems later.  Users will work around the 
+> > > constraints of the new feature, if possible, and then we can end up 
+> > > breaking them later.  Or, we can pollute the mem cgroup v2 filesystem with 
+> > > even more tunables to cover up for mistakes in earlier designs.
+> > 
+> > This is a blatant misinterpretation of the proposed changes. I haven't
+> > heard _any_ single argument against the proposed user interface except
+> > for complaints for missing tunables. This is not how the kernel
+> > development works and should work. The usecase was clearly described and
+> > far from limited to a single workload or company.
+> >  
 > 
-> And it has been argued that further _features_ can be added on top. I am
-> absolutely fed up discussing those things again and again without any
-> progress. You simply keep _ignoring_ counter arguments and that is a
-> major PITA to be honest with you. You are basically blocking a useful
-> feature because it doesn't solve your particular workload. This is
-> simply not acceptable in the kernel development.
-> 
+> The complaint about the user interface is that it is not extensible, as my 
+> next line states.
 
-As the thread says, this has nothing to do with my own particular 
-workload, it has to do with three obvious shortcomings in the design that 
-the user has no control over.  We can't add features on top if the 
-heuristic itself changes as a result of the proposal, it needs to be 
-introduced in an extensible way so that additional changes can be made 
-later, if necessary, while still working around the very obvious problems 
-with this current implementation.  My suggestion is that we introduce a 
-way to define the oom policy once so that we don't have to change it later 
-and are left with needless mount options or mem cgroup v2 files that 
-become no-ops with the suggested design.  I hope that you will read the 
-proposal for that extensible interface and comment on it about any 
-concerns that you have, because that feedback would generally be useful.
+I disagree and will not repeat argument why.
 
-> > Both you and Michal have acknowledged blantently obvious shortcomings in 
-> > the design.
-> 
-> What you call blatant shortcomings we do not see affecting any
-> _existing_ workloads. If they turn out to be real issues then we can fix
-> them without deprecating any user APIs added by this patchset.
-> 
+> This doesn't need to be opted into with a mount option 
+> locking the entire system into a single oom policy.  That, itself, is the 
+> result of a poor design.  What is needed is a way for users to define an 
+> oom policy that is generally useful, not something that is locked in for 
+> the whole system. 
 
-There are existing workloads that use mem cgroup subcontainers purely for 
-tracking charging and vmscan stats, which results in this logic being 
-evaded.  It's a real issue, and a perfectly acceptable usecase for mem 
-cgroup.  It's a result of the entire oom policy either being opted into or 
-opted out of for the entire system and impossible for the user to 
-configure or avoid.  That can be done better by enabling the oom policy 
-only for a subtree, as I've suggested, but you've ignored.  It would also 
-render both the mount option and the additional file in the mem cgroup v2 
-filesystem added by this patchset to be no-ops.
+We have been discussing general oom policies for years now and there was
+_no_ _single_ useful/acceptable approach suggested. Nor is your sketch
+I am afraid because we could argue how that one doesn't address other
+usecases out there which need a more specific control. All that without
+having _no code_ merged. The current one is a policy that addresses a
+reasonably large class of usecases out there based on containers without
+forcing everybody else to use the same policy.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> We don't need several different cgroup mount options 
+> only for mem cgroup oom policies.
+
+cgroup mount option sounds like a reasonable approach already used for
+the unified hierarchy in early stages.
+
+> We also don't need random 
+> memory.groupoom files being added to the mem cgroup v2 filesystem only for 
+> one or two particular policies and being no-ops otherwise.
+
+This groupoom is a fundamental API allowing to kill the whole cgroup
+which is a reasonable thing to do and also sane user API regardless of
+implementation details. Any oom selection policy can be built on top.
+
+> It can easily 
+> be specified as part of the policy itself.
+
+No it cannot, because it would conflate oom selection _and_ oom action
+together. And that would be wrong _semantically_, I believe. And I am quite
+sure we can discuss what kind of policies we need to death and won't
+move on. Exactly like, ehm, until now.
+
+So let me repeat. There are users for the functionality. Users have to
+explicitly opt-in so existing users are not in a risk of regressions.
+Further more fine grained oom selection policies can be implemented on top
+without breaking new users.
+In short: There is no single reason to block this to be merged.
+
+If your usecase is not covered yet then feel free to extend the existing
+code/APIs to do so. I will happily review and discuss them like I've
+been doing here even though I am myself not a user of this new
+functionality.
+-- 
+Michal Hocko
+SUSE Labs
