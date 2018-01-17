@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 79/99] blk-cgroup: Convert to XArray
-Date: Wed, 17 Jan 2018 12:21:43 -0800
-Message-ID: <20180117202203.19756-80-willy@infradead.org>
+Subject: [PATCH v6 76/99] irqdomain: Convert to XArray
+Date: Wed, 17 Jan 2018 12:21:40 -0800
+Message-ID: <20180117202203.19756-77-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
 	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
 	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=wpiM8CZm1dy0IKRaPRruGuexHowKpTyFYTPs2f4JnBo=; b=SuKKTqmN/xrlggfp2p9UDn9T1
-	CqDinXTd9uRuO35DxAIVXnjsm03Jz64WsymaehGPOoqSvP/jSwBs4qOfaliJlEOARMMhoZUm3SBad
-	KnTT0p86gwC4ZIV0t2NEHHcQZ+/MxwBT6/88FOE5kTmEaWCbdFJDkDqoJN+n/KyEFJxJN5XhkDYXd
-	dGzhWlcXwjM6wOdZq9mjxlGqra3hZgMbjZw4HYoibSsYUP4sFzkO4S9Z6H4jOoFt5Di6brPEv7JlP
-	FGGo726f7Y9+QCWGEieWjx/esn1uumprjYjDD1Qhg6oX2HhF2D/85cg1TmrqMHmQex+fcWwvWYrSz
-	P58Az0baQ==;
+	 bh=+yVoQeyjkhK4Cj87Ud7F2T7oIlaLDDzy0OUL0S1s4N4=; b=vCqekAQK+gqqH9T84/7dhsp4q
+	Ru9Ncml7qWL6Gymmr8XfKuAiZ7GhH6SksaoMQSfztDPaXhtCE9+7AbEM7nTHa07V6cnpdwmfNo4qA
+	n0xmHejPX+Kygy3mnCx3J6NCyrNQH9MugiZT88SEgJ7w5oshVqlhf0++yuYlZnfjepDXDuxnMs4nF
+	VkuttE7S5m2XEAjDmHfsyh5PphNL79SQ8Me2tvMYM2rUS6WQmvPQcrt2YmM/psUKgeAt484jlOFQO
+	ZGXKvNzOhnwLZ4xaqymQMENm4eLr3nUCLn8RqJhmhfnILTG46tyHDdTCmqa726crymVi9DDfcj6o/
+	Yv2lQCYIQ==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -27,264 +27,231 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This call to radix_tree_preload is awkward.  At the point of allocation,
-we're under not only a local lock, but also under the queue lock.  So we
-can't back out, drop the lock and retry the allocation.  Replace this
-preload call with a call to xa_reserve() which will ensure the memory is
-allocated.
+In a non-critical path, irqdomain wants to know how many entries are
+stored in the xarray, so add xa_count().  This is a pretty straightforward
+conversion; mostly just removing now-redundant locking.  The only thing
+of note is just how much simpler irq_domain_fix_revmap() becomes.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- block/bfq-cgroup.c         |  4 ++--
- block/blk-cgroup.c         | 52 ++++++++++++++++++++++------------------------
- block/cfq-iosched.c        |  4 ++--
- include/linux/blk-cgroup.h |  5 ++---
- 4 files changed, 31 insertions(+), 34 deletions(-)
+ include/linux/irqdomain.h | 10 ++++------
+ include/linux/xarray.h    |  1 +
+ kernel/irq/irqdomain.c    | 39 ++++++++++-----------------------------
+ lib/xarray.c              | 25 +++++++++++++++++++++++++
+ 4 files changed, 40 insertions(+), 35 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index da1525ec4c87..0648aaa6498b 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -860,7 +860,7 @@ static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
- 		return ret;
- 
- 	ret = 0;
--	spin_lock_irq(&blkcg->lock);
-+	xa_lock_irq(&blkcg->blkg_array);
- 	bfqgd->weight = (unsigned short)val;
- 	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
- 		struct bfq_group *bfqg = blkg_to_bfqg(blkg);
-@@ -894,7 +894,7 @@ static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
- 			bfqg->entity.prio_changed = 1;
- 		}
- 	}
--	spin_unlock_irq(&blkcg->lock);
-+	xa_unlock_irq(&blkcg->blkg_array);
- 
- 	return ret;
- }
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 4117524ca45b..37962d52f1a8 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -146,12 +146,12 @@ struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
- 	struct blkcg_gq *blkg;
- 
- 	/*
--	 * Hint didn't match.  Look up from the radix tree.  Note that the
-+	 * Hint didn't match.  Fetch from the xarray.  Note that the
- 	 * hint can only be updated under queue_lock as otherwise @blkg
--	 * could have already been removed from blkg_tree.  The caller is
-+	 * could have already been removed from blkg_array.  The caller is
- 	 * responsible for grabbing queue_lock if @update_hint.
- 	 */
--	blkg = radix_tree_lookup(&blkcg->blkg_tree, q->id);
-+	blkg = xa_load(&blkcg->blkg_array, q->id);
- 	if (blkg && blkg->q == q) {
- 		if (update_hint) {
- 			lockdep_assert_held(q->queue_lock);
-@@ -223,8 +223,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	}
- 
- 	/* insert */
--	spin_lock(&blkcg->lock);
--	ret = radix_tree_insert(&blkcg->blkg_tree, q->id, blkg);
-+	xa_lock(&blkcg->blkg_array);
-+	ret = xa_err(__xa_store(&blkcg->blkg_array, q->id, blkg, GFP_NOWAIT));
- 	if (likely(!ret)) {
- 		hlist_add_head_rcu(&blkg->blkcg_node, &blkcg->blkg_list);
- 		list_add(&blkg->q_node, &q->blkg_list);
-@@ -237,7 +237,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 		}
- 	}
- 	blkg->online = true;
--	spin_unlock(&blkcg->lock);
-+	xa_unlock(&blkcg->blkg_array);
- 
- 	if (!ret)
- 		return blkg;
-@@ -314,7 +314,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	int i;
- 
- 	lockdep_assert_held(blkg->q->queue_lock);
--	lockdep_assert_held(&blkcg->lock);
-+	lockdep_assert_held(&blkcg->blkg_array.xa_lock);
- 
- 	/* Something wrong if we are trying to remove same group twice */
- 	WARN_ON_ONCE(list_empty(&blkg->q_node));
-@@ -334,7 +334,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 
- 	blkg->online = false;
- 
--	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
-+	xa_erase(&blkcg->blkg_array, blkg->q->id);
- 	list_del_init(&blkg->q_node);
- 	hlist_del_init_rcu(&blkg->blkcg_node);
- 
-@@ -368,9 +368,9 @@ static void blkg_destroy_all(struct request_queue *q)
- 	list_for_each_entry_safe(blkg, n, &q->blkg_list, q_node) {
- 		struct blkcg *blkcg = blkg->blkcg;
- 
--		spin_lock(&blkcg->lock);
-+		xa_lock(&blkcg->blkg_array);
- 		blkg_destroy(blkg);
--		spin_unlock(&blkcg->lock);
-+		xa_unlock(&blkcg->blkg_array);
- 	}
- 
- 	q->root_blkg = NULL;
-@@ -443,7 +443,7 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
- 	int i;
- 
- 	mutex_lock(&blkcg_pol_mutex);
--	spin_lock_irq(&blkcg->lock);
-+	xa_lock_irq(&blkcg->blkg_array);
- 
- 	/*
- 	 * Note that stat reset is racy - it doesn't synchronize against
-@@ -462,7 +462,7 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
- 		}
- 	}
- 
--	spin_unlock_irq(&blkcg->lock);
-+	xa_unlock_irq(&blkcg->blkg_array);
- 	mutex_unlock(&blkcg_pol_mutex);
- 	return 0;
- }
-@@ -1012,7 +1012,7 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
- {
- 	struct blkcg *blkcg = css_to_blkcg(css);
- 
--	spin_lock_irq(&blkcg->lock);
-+	xa_lock_irq(&blkcg->blkg_array);
- 
- 	while (!hlist_empty(&blkcg->blkg_list)) {
- 		struct blkcg_gq *blkg = hlist_entry(blkcg->blkg_list.first,
-@@ -1023,13 +1023,13 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
- 			blkg_destroy(blkg);
- 			spin_unlock(q->queue_lock);
- 		} else {
--			spin_unlock_irq(&blkcg->lock);
-+			xa_unlock_irq(&blkcg->blkg_array);
- 			cpu_relax();
--			spin_lock_irq(&blkcg->lock);
-+			xa_lock_irq(&blkcg->blkg_array);
- 		}
- 	}
- 
--	spin_unlock_irq(&blkcg->lock);
-+	xa_unlock_irq(&blkcg->blkg_array);
- 
- 	wb_blkcg_offline(blkcg);
- }
-@@ -1096,8 +1096,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 			pol->cpd_init_fn(cpd);
- 	}
- 
--	spin_lock_init(&blkcg->lock);
--	INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_NOWAIT | __GFP_NOWARN);
-+	xa_init_flags(&blkcg->blkg_array, XA_FLAGS_LOCK_IRQ);
- 	INIT_HLIST_HEAD(&blkcg->blkg_list);
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	INIT_LIST_HEAD(&blkcg->cgwb_list);
-@@ -1132,14 +1131,14 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- int blkcg_init_queue(struct request_queue *q)
- {
- 	struct blkcg_gq *new_blkg, *blkg;
--	bool preloaded;
- 	int ret;
- 
- 	new_blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
- 	if (!new_blkg)
- 		return -ENOMEM;
- 
--	preloaded = !radix_tree_preload(GFP_KERNEL);
-+	if (xa_reserve(&blkcg_root.blkg_array, q->id, GFP_KERNEL))
-+		return -ENOMEM;
- 
- 	/*
- 	 * Make sure the root blkg exists and count the existing blkgs.  As
-@@ -1152,11 +1151,10 @@ int blkcg_init_queue(struct request_queue *q)
- 	spin_unlock_irq(q->queue_lock);
- 	rcu_read_unlock();
- 
--	if (preloaded)
--		radix_tree_preload_end();
--
--	if (IS_ERR(blkg))
-+	if (IS_ERR(blkg)) {
-+		xa_erase(&blkcg_root.blkg_array, q->id);
- 		return PTR_ERR(blkg);
-+	}
- 
- 	q->root_blkg = blkg;
- 	q->root_rl.blkg = blkg;
-@@ -1374,8 +1372,8 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 	__clear_bit(pol->plid, q->blkcg_pols);
- 
- 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
--		/* grab blkcg lock too while removing @pd from @blkg */
--		spin_lock(&blkg->blkcg->lock);
-+		/* grab xa_lock too while removing @pd from @blkg */
-+		xa_lock(&blkg->blkcg->blkg_array);
- 
- 		if (blkg->pd[pol->plid]) {
- 			if (pol->pd_offline_fn)
-@@ -1384,7 +1382,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 			blkg->pd[pol->plid] = NULL;
- 		}
- 
--		spin_unlock(&blkg->blkcg->lock);
-+		xa_unlock(&blkg->blkcg->blkg_array);
- 	}
- 
- 	spin_unlock_irq(q->queue_lock);
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 9f342ef1ad42..a51bef7af8df 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -1827,7 +1827,7 @@ static int __cfq_set_weight(struct cgroup_subsys_state *css, u64 val,
- 	if (val < min || val > max)
- 		return -ERANGE;
- 
--	spin_lock_irq(&blkcg->lock);
-+	xa_lock_irq(&blkcg->blkg_array);
- 	cfqgd = blkcg_to_cfqgd(blkcg);
- 	if (!cfqgd) {
- 		ret = -EINVAL;
-@@ -1859,7 +1859,7 @@ static int __cfq_set_weight(struct cgroup_subsys_state *css, u64 val,
- 	}
- 
- out:
--	spin_unlock_irq(&blkcg->lock);
-+	xa_unlock_irq(&blkcg->blkg_array);
- 	return ret;
- }
- 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index e9825ff57b15..6278c49d3997 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -17,7 +17,7 @@
- #include <linux/cgroup.h>
- #include <linux/percpu_counter.h>
- #include <linux/seq_file.h>
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 48c7e86bb556..6c69d9141709 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -33,8 +33,7 @@
+ #include <linux/types.h>
+ #include <linux/irqhandler.h>
+ #include <linux/of.h>
+-#include <linux/mutex.h>
 -#include <linux/radix-tree.h>
 +#include <linux/xarray.h>
- #include <linux/blkdev.h>
- #include <linux/atomic.h>
- #include <linux/kthread.h>
-@@ -44,9 +44,8 @@ struct blkcg_gq;
  
- struct blkcg {
- 	struct cgroup_subsys_state	css;
--	spinlock_t			lock;
+ struct device_node;
+ struct irq_domain;
+@@ -151,7 +150,7 @@ struct irq_domain_chip_generic;
+  * @revmap_direct_max_irq: The largest hwirq that can be set for controllers that
+  *                         support direct mapping
+  * @revmap_size: Size of the linear map table @linear_revmap[]
+- * @revmap_tree: Radix map tree for hwirqs that don't fit in the linear map
++ * @revmap_array: hwirqs that don't fit in the linear map
+  * @linear_revmap: Linear table of hwirq->virq reverse mappings
+  */
+ struct irq_domain {
+@@ -177,8 +176,7 @@ struct irq_domain {
+ 	irq_hw_number_t hwirq_max;
+ 	unsigned int revmap_direct_max_irq;
+ 	unsigned int revmap_size;
+-	struct radix_tree_root revmap_tree;
+-	struct mutex revmap_tree_mutex;
++	struct xarray revmap_array;
+ 	unsigned int linear_revmap[];
+ };
  
--	struct radix_tree_root		blkg_tree;
-+	struct xarray			blkg_array;
- 	struct blkcg_gq	__rcu		*blkg_hint;
- 	struct hlist_head		blkg_list;
+@@ -378,7 +376,7 @@ extern void irq_dispose_mapping(unsigned int virq);
+  * This is a fast path alternative to irq_find_mapping() that can be
+  * called directly by irq controller code to save a handful of
+  * instructions. It is always safe to call, but won't find irqs mapped
+- * using the radix tree.
++ * using the xarray.
+  */
+ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
+ 					     irq_hw_number_t hwirq)
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index c3f7405c5517..892288fe9595 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -269,6 +269,7 @@ void *xa_find_after(struct xarray *xa, unsigned long *index,
+ 		unsigned long max, xa_tag_t) __attribute__((nonnull(2)));
+ unsigned int xa_extract(struct xarray *, void **dst, unsigned long start,
+ 		unsigned long max, unsigned int n, xa_tag_t);
++unsigned long xa_count(struct xarray *);
+ void xa_destroy(struct xarray *);
  
+ /**
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 62068ad46930..d6da3a8eadd2 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -114,7 +114,7 @@ EXPORT_SYMBOL_GPL(irq_domain_free_fwnode);
+ /**
+  * __irq_domain_add() - Allocate a new irq_domain data structure
+  * @fwnode: firmware node for the interrupt controller
+- * @size: Size of linear map; 0 for radix mapping only
++ * @size: Size of linear map; 0 for xarray mapping only
+  * @hwirq_max: Maximum number of interrupts supported by controller
+  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
+  *              direct mapping
+@@ -209,8 +209,7 @@ struct irq_domain *__irq_domain_add(struct fwnode_handle *fwnode, int size,
+ 	of_node_get(of_node);
+ 
+ 	/* Fill structure */
+-	INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
+-	mutex_init(&domain->revmap_tree_mutex);
++	xa_init(&domain->revmap_array);
+ 	domain->ops = ops;
+ 	domain->host_data = host_data;
+ 	domain->hwirq_max = hwirq_max;
+@@ -241,7 +240,7 @@ void irq_domain_remove(struct irq_domain *domain)
+ 	mutex_lock(&irq_domain_mutex);
+ 	debugfs_remove_domain_dir(domain);
+ 
+-	WARN_ON(!radix_tree_empty(&domain->revmap_tree));
++	WARN_ON(!xa_empty(&domain->revmap_array));
+ 
+ 	list_del(&domain->link);
+ 
+@@ -462,9 +461,7 @@ static void irq_domain_clear_mapping(struct irq_domain *domain,
+ 	if (hwirq < domain->revmap_size) {
+ 		domain->linear_revmap[hwirq] = 0;
+ 	} else {
+-		mutex_lock(&domain->revmap_tree_mutex);
+-		radix_tree_delete(&domain->revmap_tree, hwirq);
+-		mutex_unlock(&domain->revmap_tree_mutex);
++		xa_erase(&domain->revmap_array, hwirq);
+ 	}
+ }
+ 
+@@ -475,9 +472,7 @@ static void irq_domain_set_mapping(struct irq_domain *domain,
+ 	if (hwirq < domain->revmap_size) {
+ 		domain->linear_revmap[hwirq] = irq_data->irq;
+ 	} else {
+-		mutex_lock(&domain->revmap_tree_mutex);
+-		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
+-		mutex_unlock(&domain->revmap_tree_mutex);
++		xa_store(&domain->revmap_array, hwirq, irq_data, GFP_KERNEL);
+ 	}
+ }
+ 
+@@ -585,7 +580,7 @@ EXPORT_SYMBOL_GPL(irq_domain_associate_many);
+  * This routine is used for irq controllers which can choose the hardware
+  * interrupt numbers they generate. In such a case it's simplest to use
+  * the linux irq as the hardware interrupt number. It still uses the linear
+- * or radix tree to store the mapping, but the irq controller can optimize
++ * or xarray to store the mapping, but the irq controller can optimize
+  * the revmap path by using the hwirq directly.
+  */
+ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
+@@ -890,9 +885,7 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
+ 	if (hwirq < domain->revmap_size)
+ 		return domain->linear_revmap[hwirq];
+ 
+-	rcu_read_lock();
+-	data = radix_tree_lookup(&domain->revmap_tree, hwirq);
+-	rcu_read_unlock();
++	data = xa_load(&domain->revmap_array, hwirq);
+ 	return data ? data->irq : 0;
+ }
+ EXPORT_SYMBOL_GPL(irq_find_mapping);
+@@ -943,8 +936,6 @@ static int virq_debug_show(struct seq_file *m, void *private)
+ 	unsigned long flags;
+ 	struct irq_desc *desc;
+ 	struct irq_domain *domain;
+-	struct radix_tree_iter iter;
+-	void __rcu **slot;
+ 	int i;
+ 
+ 	seq_printf(m, " %-16s  %-6s  %-10s  %-10s  %s\n",
+@@ -953,7 +944,6 @@ static int virq_debug_show(struct seq_file *m, void *private)
+ 	list_for_each_entry(domain, &irq_domain_list, link) {
+ 		struct device_node *of_node;
+ 		const char *name;
+-
+ 		int count = 0;
+ 
+ 		of_node = irq_domain_get_of_node(domain);
+@@ -965,8 +955,7 @@ static int virq_debug_show(struct seq_file *m, void *private)
+ 		else
+ 			name = "";
+ 
+-		radix_tree_for_each_slot(slot, &domain->revmap_tree, &iter, 0)
+-			count++;
++		count = xa_count(&domain->revmap_array);
+ 		seq_printf(m, "%c%-16s  %6u  %10u  %10u  %s\n",
+ 			   domain == irq_default_domain ? '*' : ' ', domain->name,
+ 			   domain->revmap_size + count, domain->revmap_size,
+@@ -1452,17 +1441,9 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
+ /* The irq_data was moved, fix the revmap to refer to the new location */
+ static void irq_domain_fix_revmap(struct irq_data *d)
+ {
+-	void __rcu **slot;
+-
+ 	if (d->hwirq < d->domain->revmap_size)
+-		return; /* Not using radix tree. */
+-
+-	/* Fix up the revmap. */
+-	mutex_lock(&d->domain->revmap_tree_mutex);
+-	slot = radix_tree_lookup_slot(&d->domain->revmap_tree, d->hwirq);
+-	if (slot)
+-		radix_tree_replace_slot(&d->domain->revmap_tree, slot, d);
+-	mutex_unlock(&d->domain->revmap_tree_mutex);
++		return;
++	xa_store(&d->domain->revmap_array, d->hwirq, d, GFP_KERNEL);
+ }
+ 
+ /**
+diff --git a/lib/xarray.c b/lib/xarray.c
+index b4dec8e2d202..62642e5508ee 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -1625,6 +1625,31 @@ unsigned int xa_extract(struct xarray *xa, void **dst, unsigned long start,
+ }
+ EXPORT_SYMBOL(xa_extract);
+ 
++/**
++ * xa_count() - Count the number of present entries in the XArray
++ * @xa: XArray.
++ *
++ * This function walks the XArray counting how many entries are present.
++ * If every entry in the XArray is full, this function will return 0.  If
++ * this is a theoretical possibility, check xa_empty() first.
++ *
++ * This is a naive implementation; faster implementations are possible.
++ * If speed is important, consider maintaining a count variable in your
++ * own data structure.
++ */
++unsigned long xa_count(struct xarray *xa)
++{
++	XA_STATE(xas, xa, 0);
++	void *p;
++	unsigned long count = 0;
++
++	xas_for_each(&xas, p, ULONG_MAX)
++		count++;
++
++	return count;
++}
++EXPORT_SYMBOL(xa_count);
++
+ /**
+  * xa_destroy() - Free all internal data structures.
+  * @xa: XArray.
 -- 
 2.15.1
 
