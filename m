@@ -1,78 +1,91 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [patch -mm 0/4] mm, memcg: introduce oom policies
-Date: Wed, 17 Jan 2018 11:46:03 +0000
-Message-ID: <20180117114554.GA10523@castle.DHCP.thefacebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch -mm 3/4] mm, memcg: replace memory.oom_group with policy
+ tunable
+Date: Wed, 17 Jan 2018 07:41:55 -0800
+Message-ID: <20180117154155.GU3460072@devbig577.frc2.facebook.com>
 References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1801161814130.28198@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=YzQdAmhVMM1VBob7HzX8y1etKxrP/WU3Hm/TgCsYE9w=;
- b=ONYY00zNu4KbI+mwBEv8dWj+P+w56cRgJphFgCWxNwjXmDWJPoiWWtG+D0TPvmcimUi+
- evLtvWNv7oREv7DdP+QTUm/37m3IzejiHhmsykY36dFbbE3RLSEckhAY1IfPxV0DNE/n
- T5g71LI5cQ5R9PzU4Sv7BpbbtIA2a6eBo5Y= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=YzQdAmhVMM1VBob7HzX8y1etKxrP/WU3Hm/TgCsYE9w=;
- b=f2VVI14qr3LJtsIcrT+Hg1ii8f/IBFFedYp0yIh311S+r+K64PgE1uqy6DbZwOvCnQGJ2rEeP8W/bR7a0yCVc0RPqhNezklUOUuI/KBF+L6VKHnKUNRce/Wh9ga3ssk8P+qkc/aEAZadG5yOKNq1UWCZDktmlhUVUJzKx8ssbP4=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=EPqYbciQrTG0JihwLZlFLm1Z1NQ+//IP+c3PY1vqSO0=;
+        b=ZFJM0WSDeIVHnV7tbiWvgdAwX/mUNkYDZ6iF0qLnV8tC5KSJHG8KIklOC+ZPmLZBJN
+         CDhbY/Is//AFf92AYeH4Y/WATVZ4DTgvOe8RRWUQ+3BA/vDH8CQFryCwBHeWvcFD3C79
+         /at7svThF8qQolNyEym7Ly/FF4Yd3PXZh2YzpAPclm4lGbZDKz/OnAojhMgteay4T+5h
+         VIW/s6ONZF9Urkxtnsyr0SAxFbb8RQDiBmYu/KfXgi+wC2IHYHBwCiDCcImXUUNzLk6q
+         6Sus6PsmS1Q1oezDXVNX8khI8WtAQWMgh9maIapaibG8pTHzGkYt5x3jd0QNvEvlXoED
+         +wkQ==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
+In-Reply-To: <alpine.DEB.2.10.1801161814130.28198@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Jan 16, 2018 at 06:14:58PM -0800, David Rientjes wrote:
-> There are three significant concerns about the cgroup aware oom killer as
-> it is implemented in -mm:
-> 
->  (1) allows users to evade the oom killer by creating subcontainers or
->      using other controllers since scoring is done per cgroup and not
->      hierarchically,
-> 
->  (2) does not allow the user to influence the decisionmaking, such that
->      important subtrees cannot be preferred or biased, and
-> 
->  (3) unfairly compares the root mem cgroup using completely different
->      criteria than leaf mem cgroups and allows wildly inaccurate results
->      if oom_score_adj is used.
-> 
-> This patchset aims to fix (1) completely and, by doing so, introduces a
-> completely extensible user interface that can be expanded in the future.
-> 
-> It eliminates the mount option for the cgroup aware oom killer entirely
-> since it is now enabled through the root mem cgroup's oom policy.
-> 
-> It eliminates a pointless tunable, memory.oom_group, that unnecessarily
-> pollutes the mem cgroup v2 filesystem and is invalid when cgroup v2 is
-> mounted with the "groupoom" option.
+Hello, David.
 
-You're introducing a new oom_policy knob, which has two separate sets
-of possible values for the root and non-root cgroups. I don't think
-it aligns with the existing cgroup v2 design.
+On Tue, Jan 16, 2018 at 06:15:08PM -0800, David Rientjes wrote:
+> The behavior of killing an entire indivisible memory consumer, enabled
+> by memory.oom_group, is an oom policy itself.  It specifies that all
 
-For the root cgroup it works exactly as mount option, and both "none"
-and "cgroup" values have no meaning outside of the root cgroup. We can
-discuss if a knob on root cgroup is better than a mount option, or not
-(I don't think so), but it has nothing to do with oom policy as you
-define it for non-root cgroups.
+I thought we discussed this before but maybe I'm misremembering.
+There are two parts to the OOM policy.  One is victim selection, the
+other is the action to take thereafter.
 
-For non-root cgroups you're introducing "all" and "tree", and the _only_
-difference is that in the "all" mode all processes will be killed, rather
-than the biggest in the "tree". I find these names confusing, in reality
-it's more "evaluate together and kill all" and "evaluate together and
-kill one".
+The two are different and conflating the two don't work too well.  For
+example, please consider what should be given to the delegatee when
+delegating a subtree, which often is a good excercise when designing
+these APIs.
 
-So, it's not really the fully hierarchical approach, which I thought,
-you were arguing for. You can easily do the same with adding the third
-value to the memory.groupoom knob, as I've suggested earlier (say, "disable,
-"kill" and "evaluate"), and will be much less confusing.
+When a given workload is selected for OOM kill (IOW, selected to free
+some memory), whether the workload can handle individual process kills
+or not is the property of the workload itself.  Some applications can
+safely handle some of its processes picked off and killed.  Most
+others can't and want to be handled as a single unit, which makes it a
+property of the workload.
 
-Thanks!
+That makes sense in the hierarchy too because whether one process or
+the whole workload is killed doesn't infringe upon the parent's
+authority over resources which in turn implies that there's nothing to
+worry about how the parent's groupoom setting should constrain the
+descendants.
 
-Roman
+OOM victim selection policy is a different beast.  As you've mentioned
+multiple times, especially if you're worrying about people abusing OOM
+policies by creating sub-cgroups and so on, the policy, first of all,
+shouldn't be delegatable and secondly should have meaningful
+hierarchical restrictions so that a policy that an ancestor chose
+can't be nullified by a descendant.
+
+I'm not necessarily against adding hierarchical victim selection
+policy tunables; however, I am skeptical whether static tunables on
+cgroup hierarchy (including selectable policies) can be made clean and
+versatile enough, especially because the resource hierarchy doesn't
+necessarily, or rather in most cases, match the OOM victim selection
+decision tree, but I'd be happy to be proven wrong.
+
+Without explicit configurations, the only thing the OOM killer needs
+to guarantee is that the system can make forward progress.  We've
+always been tweaking victim selection with or without cgroup and
+absolutely shouldn't be locked into a specific heuristics.  The
+heuristics is an implementaiton detail subject to improvements.
+
+To me, your patchset actually seems to demonstrate that these are
+separate issues.  The goal of groupoom is just to kill logical units
+as cgroup hierarchy can inform the kernel of how workloads are
+composed in the userspace.  If you want to improve victim selection,
+sure, please go ahead, but your argument that groupoom can't be merged
+because of victim selection policy doesn't make sense to me.
+
+Thanks.
+
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
