@@ -1,23 +1,23 @@
 From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: [PATCH v6 94/99] f2fs: Convert extent_tree_root to XArray
-Date: Wed, 17 Jan 2018 12:21:58 -0800
-Message-ID: <20180117202203.19756-95-willy@infradead.org>
+Subject: [PATCH v6 93/99] f2fs: Convert ino_root to XArray
+Date: Wed, 17 Jan 2018 12:21:57 -0800
+Message-ID: <20180117202203.19756-94-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
         Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=/a6OGWRc2ZLVnDjmJc12Mjc/f/sFqqYukAEJhi/KYjo=; b=efn8fvAUACKFKPKaEaureEs4R
-        wnlOJ/seiL1eUALkkSpEbvCrSkDO3G7C0z8h7XDthvsIstRxdcXg2ZHyP5+WHLuZKZVq98hG1hJd0
-        d5oDYelnr18UzmZqVC7P4kSEL1z1yqcWpQ2cynw/r5QKATpl2WY5YanwelP2acILAOKmGPaSEp8sa
-        9cLUM8S9sL0OMhwEmK0O0uUNkGgosWyIGQNqkHF7f7LqMTo9D2nppJcO46gPAANzhIbvTrWprcBmS
-        VvDii+dZiqJY0i9c8vnh0lP1EFtWIuWeridDjCMxYiBmwj1qOVw9+B334XD5TqOe/ljTu9P+viKEn
+         bh=7NlhZLzEe862nsjjn+PzkATmLIpT8jJP4lXQ6PTbYLg=; b=tNpBishKcVY2TJvh04kJ6iLEe
+        wuI80h9QimCuAUMH5JwxTqo74bjKHkzu4SDLyqQeRR1TW3HWbqfdD97P8/RF8QlSI84VvyvWq3RHZ
+        IY5opuVMnXjquNJ/EOmcyXF0G18dTmJVtzyDQoGzf06Oe04rQpBpu8tCgMQiIz06Ls6nEzMN5HvEc
+        mu/kE616fg93M3ST1sO9u8ThokoAaYjRFqWxO9wL7E9Uzc98vTkC1VmGCGjsF3zkq7WFAlTP2AhHv
+        9ta2u2rjPWI3fiH1c5vcJRJOo/JtUdQMQIaB9ZfvWKgJvyHeUhEQmIerd/7YHT3w8NM74djGpICDG
     
 In-Reply-To: <20180117202203.19756-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -27,158 +27,218 @@ Cc: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mm-
 
 From: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 
-Rename it to extent_array and use the xa_lock in place of the
-extent_tree_lock mutex.
+I did a fairly major rewrite of __add_ino_entry(); please check carefully.
+Also, we can remove ino_list unless it's important to write out orphan
+inodes in the order they were orphaned.  It may also make more sense to
+combine the array of inode_management structures into a single XArray
+with tags, but that would be a job for someone who understands this
+filesystem better than I do.
 
 Signed-off-by: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 ---
- fs/f2fs/extent_cache.c | 59 +++++++++++++++++++++++++-------------------------
- fs/f2fs/f2fs.h         |  3 +--
- 2 files changed, 30 insertions(+), 32 deletions(-)
+ fs/f2fs/checkpoint.c | 85 +++++++++++++++++++++++-----------------------------
+ fs/f2fs/f2fs.h       |  3 +-
+ 2 files changed, 38 insertions(+), 50 deletions(-)
 
-diff --git a/fs/f2fs/extent_cache.c b/fs/f2fs/extent_cache.c
-index ff2352a0ed15..da5f3bd1808d 100644
---- a/fs/f2fs/extent_cache.c
-+++ b/fs/f2fs/extent_cache.c
-@@ -250,25 +250,25 @@ static struct extent_tree *__grab_extent_tree(struct inode *inode)
- 	struct extent_tree *et;
- 	nid_t ino = inode->i_ino;
+diff --git a/fs/f2fs/checkpoint.c b/fs/f2fs/checkpoint.c
+index 4aa69bc1c70a..04d69679da13 100644
+--- a/fs/f2fs/checkpoint.c
++++ b/fs/f2fs/checkpoint.c
+@@ -403,33 +403,30 @@ static void __add_ino_entry(struct f2fs_sb_info *sbi, nid_t ino,
+ 	struct inode_management *im = &sbi->im[type];
+ 	struct ino_entry *e, *tmp;
  
--	mutex_lock(&sbi->extent_tree_lock);
--	et = radix_tree_lookup(&sbi->extent_tree_root, ino);
--	if (!et) {
--		et = f2fs_kmem_cache_alloc(extent_tree_slab, GFP_NOFS);
--		f2fs_radix_tree_insert(&sbi->extent_tree_root, ino, et);
--		memset(et, 0, sizeof(struct extent_tree));
--		et->ino = ino;
--		et->root = RB_ROOT;
--		et->cached_en = NULL;
--		rwlock_init(&et->lock);
--		INIT_LIST_HEAD(&et->list);
--		atomic_set(&et->node_cnt, 0);
--		atomic_inc(&sbi->total_ext_tree);
--	} else {
-+	et = xa_load(&sbi->extent_array, ino);
-+	if (et) {
- 		atomic_dec(&sbi->total_zombie_tree);
- 		list_del_init(&et->list);
-+		goto out;
- 	}
--	mutex_unlock(&sbi->extent_tree_lock);
- 
-+	et = f2fs_kmem_cache_alloc(extent_tree_slab, GFP_NOFS | __GFP_ZERO);
-+	et->ino = ino;
-+	et->root = RB_ROOT;
-+	et->cached_en = NULL;
-+	rwlock_init(&et->lock);
-+	INIT_LIST_HEAD(&et->list);
-+	atomic_set(&et->node_cnt, 0);
+-	tmp = f2fs_kmem_cache_alloc(ino_entry_slab, GFP_NOFS);
+-
+-	radix_tree_preload(GFP_NOFS | __GFP_NOFAIL);
+-
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
+-	if (!e) {
+-		e = tmp;
+-		if (unlikely(radix_tree_insert(&im->ino_root, ino, e)))
+-			f2fs_bug_on(sbi, 1);
+-
+-		memset(e, 0, sizeof(struct ino_entry));
+-		e->ino = ino;
+-
+-		list_add_tail(&e->list, &im->ino_list);
+-		if (type != ORPHAN_INO)
+-			im->ino_num++;
++	xa_lock(&im->ino_root);
++	e = xa_load(&im->ino_root, ino);
++	if (e)
++		goto found;
++	xa_unlock(&im->ino_root);
 +
-+	xa_store(&sbi->extent_array, ino, et, GFP_NOFS);
-+	atomic_inc(&sbi->total_ext_tree);
-+
-+out:
- 	/* never died until evict_inode */
- 	F2FS_I(inode)->extent_tree = et;
- 
-@@ -622,7 +622,7 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
- 	if (!atomic_read(&sbi->total_zombie_tree))
- 		goto free_node;
- 
--	if (!mutex_trylock(&sbi->extent_tree_lock))
-+	if (!xa_trylock(&sbi->extent_array))
- 		goto out;
- 
- 	/* 1. remove unreferenced extent tree */
-@@ -634,7 +634,7 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
- 		}
- 		f2fs_bug_on(sbi, atomic_read(&et->node_cnt));
- 		list_del_init(&et->list);
--		radix_tree_delete(&sbi->extent_tree_root, et->ino);
-+		xa_erase(&sbi->extent_array, et->ino);
- 		kmem_cache_free(extent_tree_slab, et);
- 		atomic_dec(&sbi->total_ext_tree);
- 		atomic_dec(&sbi->total_zombie_tree);
-@@ -642,13 +642,13 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
- 
- 		if (node_cnt + tree_cnt >= nr_shrink)
- 			goto unlock_out;
--		cond_resched();
-+		cond_resched_lock(&sbi->extent_array.xa_lock);
++	tmp = f2fs_kmem_cache_alloc(ino_entry_slab, GFP_NOFS | __GFP_ZERO);
++	xa_lock(&im->ino_root);
++	e = __xa_cmpxchg(&im->ino_root, ino, NULL, tmp,
++						GFP_NOFS | __GFP_NOFAIL);
++	if (e) {
++		kmem_cache_free(ino_entry_slab, tmp);
++		goto found;
  	}
--	mutex_unlock(&sbi->extent_tree_lock);
-+	xa_unlock(&sbi->extent_array);
++	e = tmp;
  
- free_node:
- 	/* 2. remove LRU extent entries */
--	if (!mutex_trylock(&sbi->extent_tree_lock))
-+	if (!xa_trylock(&sbi->extent_array))
- 		goto out;
++	e->ino = ino;
++	list_add_tail(&e->list, &im->ino_list);
++	if (type != ORPHAN_INO)
++		im->ino_num++;
++found:
+ 	if (type == FLUSH_INO)
+ 		f2fs_set_bit(devidx, (char *)&e->dirty_device);
+-
+-	spin_unlock(&im->ino_lock);
+-	radix_tree_preload_end();
+-
+-	if (e != tmp)
+-		kmem_cache_free(ino_entry_slab, tmp);
++	xa_unlock(&im->ino_root);
+ }
  
- 	remained = nr_shrink - (node_cnt + tree_cnt);
-@@ -678,7 +678,7 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
- 	spin_unlock(&sbi->extent_lock);
+ static void __remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+@@ -437,17 +434,14 @@ static void __remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+ 	struct inode_management *im = &sbi->im[type];
+ 	struct ino_entry *e;
  
- unlock_out:
--	mutex_unlock(&sbi->extent_tree_lock);
-+	xa_unlock(&sbi->extent_array);
- out:
- 	trace_f2fs_shrink_extent_tree(sbi, node_cnt, tree_cnt);
- 
-@@ -725,23 +725,23 @@ void f2fs_destroy_extent_tree(struct inode *inode)
- 
- 	if (inode->i_nlink && !is_bad_inode(inode) &&
- 					atomic_read(&et->node_cnt)) {
--		mutex_lock(&sbi->extent_tree_lock);
-+		xa_lock(&sbi->extent_array);
- 		list_add_tail(&et->list, &sbi->zombie_list);
- 		atomic_inc(&sbi->total_zombie_tree);
--		mutex_unlock(&sbi->extent_tree_lock);
-+		xa_unlock(&sbi->extent_array);
- 		return;
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
++	xa_lock(&im->ino_root);
++	e = __xa_erase(&im->ino_root, ino);
+ 	if (e) {
+ 		list_del(&e->list);
+-		radix_tree_delete(&im->ino_root, ino);
+ 		im->ino_num--;
+-		spin_unlock(&im->ino_lock);
+ 		kmem_cache_free(ino_entry_slab, e);
+-		return;
  	}
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ }
  
- 	/* free all extent info belong to this extent tree */
- 	node_cnt = f2fs_destroy_extent_node(inode);
- 
--	/* delete extent tree entry in radix tree */
--	mutex_lock(&sbi->extent_tree_lock);
-+	/* delete extent from array */
-+	xa_lock(&sbi->extent_array);
- 	f2fs_bug_on(sbi, atomic_read(&et->node_cnt));
--	radix_tree_delete(&sbi->extent_tree_root, inode->i_ino);
--	kmem_cache_free(extent_tree_slab, et);
-+	__xa_erase(&sbi->extent_array, inode->i_ino);
- 	atomic_dec(&sbi->total_ext_tree);
--	mutex_unlock(&sbi->extent_tree_lock);
-+	xa_unlock(&sbi->extent_array);
-+	kmem_cache_free(extent_tree_slab, et);
- 
- 	F2FS_I(inode)->extent_tree = NULL;
- 
-@@ -787,8 +787,7 @@ void f2fs_update_extent_cache_range(struct dnode_of_data *dn,
- 
- void init_extent_cache_info(struct f2fs_sb_info *sbi)
+ void add_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+@@ -466,12 +460,8 @@ void remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+ bool exist_written_data(struct f2fs_sb_info *sbi, nid_t ino, int mode)
  {
--	INIT_RADIX_TREE(&sbi->extent_tree_root, GFP_NOIO);
--	mutex_init(&sbi->extent_tree_lock);
-+	xa_init(&sbi->extent_array);
- 	INIT_LIST_HEAD(&sbi->extent_list);
- 	spin_lock_init(&sbi->extent_lock);
- 	atomic_set(&sbi->total_ext_tree, 0);
+ 	struct inode_management *im = &sbi->im[mode];
+-	struct ino_entry *e;
+ 
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
+-	spin_unlock(&im->ino_lock);
+-	return e ? true : false;
++	return xa_load(&im->ino_root, ino) ? true : false;
+ }
+ 
+ void release_ino_entry(struct f2fs_sb_info *sbi, bool all)
+@@ -482,14 +472,14 @@ void release_ino_entry(struct f2fs_sb_info *sbi, bool all)
+ 	for (i = all ? ORPHAN_INO : APPEND_INO; i < MAX_INO_ENTRY; i++) {
+ 		struct inode_management *im = &sbi->im[i];
+ 
+-		spin_lock(&im->ino_lock);
++		xa_lock(&im->ino_root);
+ 		list_for_each_entry_safe(e, tmp, &im->ino_list, list) {
+ 			list_del(&e->list);
+-			radix_tree_delete(&im->ino_root, e->ino);
++			__xa_erase(&im->ino_root, e->ino);
+ 			kmem_cache_free(ino_entry_slab, e);
+ 			im->ino_num--;
+ 		}
+-		spin_unlock(&im->ino_lock);
++		xa_unlock(&im->ino_root);
+ 	}
+ }
+ 
+@@ -506,11 +496,11 @@ bool is_dirty_device(struct f2fs_sb_info *sbi, nid_t ino,
+ 	struct ino_entry *e;
+ 	bool is_dirty = false;
+ 
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
++	xa_lock(&im->ino_root);
++	e = xa_load(&im->ino_root, ino);
+ 	if (e && f2fs_test_bit(devidx, (char *)&e->dirty_device))
+ 		is_dirty = true;
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ 	return is_dirty;
+ }
+ 
+@@ -519,11 +509,11 @@ int acquire_orphan_inode(struct f2fs_sb_info *sbi)
+ 	struct inode_management *im = &sbi->im[ORPHAN_INO];
+ 	int err = 0;
+ 
+-	spin_lock(&im->ino_lock);
++	xa_lock(&im->ino_root);
+ 
+ #ifdef CONFIG_F2FS_FAULT_INJECTION
+ 	if (time_to_inject(sbi, FAULT_ORPHAN)) {
+-		spin_unlock(&im->ino_lock);
++		xa_unlock(&im->ino_root);
+ 		f2fs_show_injection_info(FAULT_ORPHAN);
+ 		return -ENOSPC;
+ 	}
+@@ -532,7 +522,7 @@ int acquire_orphan_inode(struct f2fs_sb_info *sbi)
+ 		err = -ENOSPC;
+ 	else
+ 		im->ino_num++;
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ 
+ 	return err;
+ }
+@@ -541,10 +531,10 @@ void release_orphan_inode(struct f2fs_sb_info *sbi)
+ {
+ 	struct inode_management *im = &sbi->im[ORPHAN_INO];
+ 
+-	spin_lock(&im->ino_lock);
++	xa_lock(&im->ino_root);
+ 	f2fs_bug_on(sbi, im->ino_num == 0);
+ 	im->ino_num--;
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ }
+ 
+ void add_orphan_inode(struct inode *inode)
+@@ -677,7 +667,7 @@ static void write_orphan_inodes(struct f2fs_sb_info *sbi, block_t start_blk)
+ 	orphan_blocks = GET_ORPHAN_BLOCKS(im->ino_num);
+ 
+ 	/*
+-	 * we don't need to do spin_lock(&im->ino_lock) here, since all the
++	 * we don't need to lock the ino_root here, since all the
+ 	 * orphan inode operations are covered under f2fs_lock_op().
+ 	 * And, spin_lock should be avoided due to page operations below.
+ 	 */
+@@ -1433,8 +1423,7 @@ void init_ino_entry_info(struct f2fs_sb_info *sbi)
+ 	for (i = 0; i < MAX_INO_ENTRY; i++) {
+ 		struct inode_management *im = &sbi->im[i];
+ 
+-		INIT_RADIX_TREE(&im->ino_root, GFP_ATOMIC);
+-		spin_lock_init(&im->ino_lock);
++		xa_init(&im->ino_root);
+ 		INIT_LIST_HEAD(&im->ino_list);
+ 		im->ino_num = 0;
+ 	}
 diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-index b3ee784b49bc..4eacef9c7274 100644
+index 6abf26c31d01..b3ee784b49bc 100644
 --- a/fs/f2fs/f2fs.h
 +++ b/fs/f2fs/f2fs.h
-@@ -1064,8 +1064,7 @@ struct f2fs_sb_info {
- 	spinlock_t inode_lock[NR_INODE_TYPE];	/* for dirty inode list lock */
+@@ -994,8 +994,7 @@ enum inode_type {
  
- 	/* for extent tree cache */
--	struct radix_tree_root extent_tree_root;/* cache extent cache entries */
--	struct mutex extent_tree_lock;	/* locking extent radix tree */
-+	struct xarray extent_array;		/* cache extent cache entries */
- 	struct list_head extent_list;		/* lru list for shrinker */
- 	spinlock_t extent_lock;			/* locking extent lru list */
- 	atomic_t total_ext_tree;		/* extent tree count */
+ /* for inner inode cache management */
+ struct inode_management {
+-	struct radix_tree_root ino_root;	/* ino entry array */
+-	spinlock_t ino_lock;			/* for ino entry lock */
++	struct xarray ino_root;			/* ino entry array */
+ 	struct list_head ino_list;		/* inode list head */
+ 	unsigned long ino_num;			/* number of entries */
+ };
 -- 
 2.15.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
