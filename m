@@ -1,262 +1,124 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 76/99] irqdomain: Convert to XArray
-Date: Wed, 17 Jan 2018 12:21:40 -0800
-Message-ID: <20180117202203.19756-77-willy@infradead.org>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: [PATCH v6 91/99] btrfs: Convert name_cache to XArray
+Date: Wed, 17 Jan 2018 12:21:55 -0800
+Message-ID: <20180117202203.19756-92-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-nilfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
-	Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=+yVoQeyjkhK4Cj87Ud7F2T7oIlaLDDzy0OUL0S1s4N4=; b=vCqekAQK+gqqH9T84/7dhsp4q
-	Ru9Ncml7qWL6Gymmr8XfKuAiZ7GhH6SksaoMQSfztDPaXhtCE9+7AbEM7nTHa07V6cnpdwmfNo4qA
-	n0xmHejPX+Kygy3mnCx3J6NCyrNQH9MugiZT88SEgJ7w5oshVqlhf0++yuYlZnfjepDXDuxnMs4nF
-	VkuttE7S5m2XEAjDmHfsyh5PphNL79SQ8Me2tvMYM2rUS6WQmvPQcrt2YmM/psUKgeAt484jlOFQO
-	ZGXKvNzOhnwLZ4xaqymQMENm4eLr3nUCLn8RqJhmhfnILTG46tyHDdTCmqa726crymVi9DDfcj6o/
-	Yv2lQCYIQ==;
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-Sender: owner-linux-mm@kvack.org
+        d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
+        Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=IPMtOo9O6zePGjdzwMm0QriyABbJsEyfkDbEY7J63AE=; b=U2iKR1zx1AWPgk9mfBSBnzI60
+        r4EyiRwmoL5DVss7Y1C7f4N4t+fdWXizui/c3eQoSIziPE9ptTRQBUN8Jc0sgfgwjPsN3+aMx7zoz
+        VwGou8JjMjhnSb+tABYq1IcUUey1KHbdkSfwu2+qtsY2ZJu25aGEfnbmo/JmfCS46tHyIvrkZUIrC
+        tdbJjEuihYBGUp6krlpRCvTX2aQH/zFHu0xZlqwT4Noy+xJF1ikjwwzon623v+iZNmFRbh6p5EEO9
+        QGEiAlSJofqSz+13Na6CveQWj3dzXBYO19Q0qWBSwwe8bsMIbEZ++5Gff9tXbKRh7MNfuzfZo00e1
+    
+In-Reply-To: <20180117202203.19756-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: linux-nilfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-nilfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stefano Stabellini <sstabellini-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+From: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 
-In a non-critical path, irqdomain wants to know how many entries are
-stored in the xarray, so add xa_count().  This is a pretty straightforward
-conversion; mostly just removing now-redundant locking.  The only thing
-of note is just how much simpler irq_domain_fix_revmap() becomes.
+This is a very straightforward conversion.  The handling of collisions
+in the namecache could be better handled with an hlist, but that's a
+patch for another day.
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 ---
- include/linux/irqdomain.h | 10 ++++------
- include/linux/xarray.h    |  1 +
- kernel/irq/irqdomain.c    | 39 ++++++++++-----------------------------
- lib/xarray.c              | 25 +++++++++++++++++++++++++
- 4 files changed, 40 insertions(+), 35 deletions(-)
+ fs/btrfs/send.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 48c7e86bb556..6c69d9141709 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -33,8 +33,7 @@
- #include <linux/types.h>
- #include <linux/irqhandler.h>
- #include <linux/of.h>
--#include <linux/mutex.h>
+diff --git a/fs/btrfs/send.c b/fs/btrfs/send.c
+index 20d3300bd268..3891a8e958fa 100644
+--- a/fs/btrfs/send.c
++++ b/fs/btrfs/send.c
+@@ -23,7 +23,7 @@
+ #include <linux/mount.h>
+ #include <linux/xattr.h>
+ #include <linux/posix_acl_xattr.h>
 -#include <linux/radix-tree.h>
 +#include <linux/xarray.h>
+ #include <linux/vmalloc.h>
+ #include <linux/string.h>
+ #include <linux/compat.h>
+@@ -118,7 +118,7 @@ struct send_ctx {
+ 	struct list_head new_refs;
+ 	struct list_head deleted_refs;
  
- struct device_node;
- struct irq_domain;
-@@ -151,7 +150,7 @@ struct irq_domain_chip_generic;
-  * @revmap_direct_max_irq: The largest hwirq that can be set for controllers that
-  *                         support direct mapping
-  * @revmap_size: Size of the linear map table @linear_revmap[]
-- * @revmap_tree: Radix map tree for hwirqs that don't fit in the linear map
-+ * @revmap_array: hwirqs that don't fit in the linear map
-  * @linear_revmap: Linear table of hwirq->virq reverse mappings
-  */
- struct irq_domain {
-@@ -177,8 +176,7 @@ struct irq_domain {
- 	irq_hw_number_t hwirq_max;
- 	unsigned int revmap_direct_max_irq;
- 	unsigned int revmap_size;
--	struct radix_tree_root revmap_tree;
--	struct mutex revmap_tree_mutex;
-+	struct xarray revmap_array;
- 	unsigned int linear_revmap[];
- };
+-	struct radix_tree_root name_cache;
++	struct xarray name_cache;
+ 	struct list_head name_cache_list;
+ 	int name_cache_size;
  
-@@ -378,7 +376,7 @@ extern void irq_dispose_mapping(unsigned int virq);
-  * This is a fast path alternative to irq_find_mapping() that can be
-  * called directly by irq controller code to save a handful of
-  * instructions. It is always safe to call, but won't find irqs mapped
-- * using the radix tree.
-+ * using the xarray.
-  */
- static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
- 					     irq_hw_number_t hwirq)
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index c3f7405c5517..892288fe9595 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -269,6 +269,7 @@ void *xa_find_after(struct xarray *xa, unsigned long *index,
- 		unsigned long max, xa_tag_t) __attribute__((nonnull(2)));
- unsigned int xa_extract(struct xarray *, void **dst, unsigned long start,
- 		unsigned long max, unsigned int n, xa_tag_t);
-+unsigned long xa_count(struct xarray *);
- void xa_destroy(struct xarray *);
+@@ -2021,8 +2021,7 @@ static int name_cache_insert(struct send_ctx *sctx,
+ 	int ret = 0;
+ 	struct list_head *nce_head;
  
- /**
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 62068ad46930..d6da3a8eadd2 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -114,7 +114,7 @@ EXPORT_SYMBOL_GPL(irq_domain_free_fwnode);
- /**
-  * __irq_domain_add() - Allocate a new irq_domain data structure
-  * @fwnode: firmware node for the interrupt controller
-- * @size: Size of linear map; 0 for radix mapping only
-+ * @size: Size of linear map; 0 for xarray mapping only
-  * @hwirq_max: Maximum number of interrupts supported by controller
-  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
-  *              direct mapping
-@@ -209,8 +209,7 @@ struct irq_domain *__irq_domain_add(struct fwnode_handle *fwnode, int size,
- 	of_node_get(of_node);
+-	nce_head = radix_tree_lookup(&sctx->name_cache,
+-			(unsigned long)nce->ino);
++	nce_head = xa_load(&sctx->name_cache, (unsigned long)nce->ino);
+ 	if (!nce_head) {
+ 		nce_head = kmalloc(sizeof(*nce_head), GFP_KERNEL);
+ 		if (!nce_head) {
+@@ -2031,7 +2030,8 @@ static int name_cache_insert(struct send_ctx *sctx,
+ 		}
+ 		INIT_LIST_HEAD(nce_head);
  
- 	/* Fill structure */
--	INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
--	mutex_init(&domain->revmap_tree_mutex);
-+	xa_init(&domain->revmap_array);
- 	domain->ops = ops;
- 	domain->host_data = host_data;
- 	domain->hwirq_max = hwirq_max;
-@@ -241,7 +240,7 @@ void irq_domain_remove(struct irq_domain *domain)
- 	mutex_lock(&irq_domain_mutex);
- 	debugfs_remove_domain_dir(domain);
- 
--	WARN_ON(!radix_tree_empty(&domain->revmap_tree));
-+	WARN_ON(!xa_empty(&domain->revmap_array));
- 
- 	list_del(&domain->link);
- 
-@@ -462,9 +461,7 @@ static void irq_domain_clear_mapping(struct irq_domain *domain,
- 	if (hwirq < domain->revmap_size) {
- 		domain->linear_revmap[hwirq] = 0;
- 	} else {
--		mutex_lock(&domain->revmap_tree_mutex);
--		radix_tree_delete(&domain->revmap_tree, hwirq);
--		mutex_unlock(&domain->revmap_tree_mutex);
-+		xa_erase(&domain->revmap_array, hwirq);
- 	}
- }
- 
-@@ -475,9 +472,7 @@ static void irq_domain_set_mapping(struct irq_domain *domain,
- 	if (hwirq < domain->revmap_size) {
- 		domain->linear_revmap[hwirq] = irq_data->irq;
- 	} else {
--		mutex_lock(&domain->revmap_tree_mutex);
--		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
--		mutex_unlock(&domain->revmap_tree_mutex);
-+		xa_store(&domain->revmap_array, hwirq, irq_data, GFP_KERNEL);
- 	}
- }
- 
-@@ -585,7 +580,7 @@ EXPORT_SYMBOL_GPL(irq_domain_associate_many);
-  * This routine is used for irq controllers which can choose the hardware
-  * interrupt numbers they generate. In such a case it's simplest to use
-  * the linux irq as the hardware interrupt number. It still uses the linear
-- * or radix tree to store the mapping, but the irq controller can optimize
-+ * or xarray to store the mapping, but the irq controller can optimize
-  * the revmap path by using the hwirq directly.
-  */
- unsigned int irq_create_direct_mapping(struct irq_domain *domain)
-@@ -890,9 +885,7 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
- 	if (hwirq < domain->revmap_size)
- 		return domain->linear_revmap[hwirq];
- 
--	rcu_read_lock();
--	data = radix_tree_lookup(&domain->revmap_tree, hwirq);
--	rcu_read_unlock();
-+	data = xa_load(&domain->revmap_array, hwirq);
- 	return data ? data->irq : 0;
- }
- EXPORT_SYMBOL_GPL(irq_find_mapping);
-@@ -943,8 +936,6 @@ static int virq_debug_show(struct seq_file *m, void *private)
- 	unsigned long flags;
- 	struct irq_desc *desc;
- 	struct irq_domain *domain;
--	struct radix_tree_iter iter;
--	void __rcu **slot;
- 	int i;
- 
- 	seq_printf(m, " %-16s  %-6s  %-10s  %-10s  %s\n",
-@@ -953,7 +944,6 @@ static int virq_debug_show(struct seq_file *m, void *private)
- 	list_for_each_entry(domain, &irq_domain_list, link) {
- 		struct device_node *of_node;
- 		const char *name;
--
- 		int count = 0;
- 
- 		of_node = irq_domain_get_of_node(domain);
-@@ -965,8 +955,7 @@ static int virq_debug_show(struct seq_file *m, void *private)
- 		else
- 			name = "";
- 
--		radix_tree_for_each_slot(slot, &domain->revmap_tree, &iter, 0)
--			count++;
-+		count = xa_count(&domain->revmap_array);
- 		seq_printf(m, "%c%-16s  %6u  %10u  %10u  %s\n",
- 			   domain == irq_default_domain ? '*' : ' ', domain->name,
- 			   domain->revmap_size + count, domain->revmap_size,
-@@ -1452,17 +1441,9 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
- /* The irq_data was moved, fix the revmap to refer to the new location */
- static void irq_domain_fix_revmap(struct irq_data *d)
+-		ret = radix_tree_insert(&sctx->name_cache, nce->ino, nce_head);
++		ret = xa_insert(&sctx->name_cache, nce->ino, nce_head,
++								GFP_KERNEL);
+ 		if (ret < 0) {
+ 			kfree(nce_head);
+ 			kfree(nce);
+@@ -2050,8 +2050,7 @@ static void name_cache_delete(struct send_ctx *sctx,
  {
--	void __rcu **slot;
--
- 	if (d->hwirq < d->domain->revmap_size)
--		return; /* Not using radix tree. */
--
--	/* Fix up the revmap. */
--	mutex_lock(&d->domain->revmap_tree_mutex);
--	slot = radix_tree_lookup_slot(&d->domain->revmap_tree, d->hwirq);
--	if (slot)
--		radix_tree_replace_slot(&d->domain->revmap_tree, slot, d);
--	mutex_unlock(&d->domain->revmap_tree_mutex);
-+		return;
-+	xa_store(&d->domain->revmap_array, d->hwirq, d, GFP_KERNEL);
- }
+ 	struct list_head *nce_head;
  
- /**
-diff --git a/lib/xarray.c b/lib/xarray.c
-index b4dec8e2d202..62642e5508ee 100644
---- a/lib/xarray.c
-+++ b/lib/xarray.c
-@@ -1625,6 +1625,31 @@ unsigned int xa_extract(struct xarray *xa, void **dst, unsigned long start,
+-	nce_head = radix_tree_lookup(&sctx->name_cache,
+-			(unsigned long)nce->ino);
++	nce_head = xa_load(&sctx->name_cache, (unsigned long)nce->ino);
+ 	if (!nce_head) {
+ 		btrfs_err(sctx->send_root->fs_info,
+ 	      "name_cache_delete lookup failed ino %llu cache size %d, leaking memory",
+@@ -2066,7 +2065,7 @@ static void name_cache_delete(struct send_ctx *sctx,
+ 	 * We may not get to the final release of nce_head if the lookup fails
+ 	 */
+ 	if (nce_head && list_empty(nce_head)) {
+-		radix_tree_delete(&sctx->name_cache, (unsigned long)nce->ino);
++		xa_erase(&sctx->name_cache, (unsigned long)nce->ino);
+ 		kfree(nce_head);
+ 	}
  }
- EXPORT_SYMBOL(xa_extract);
+@@ -2077,7 +2076,7 @@ static struct name_cache_entry *name_cache_search(struct send_ctx *sctx,
+ 	struct list_head *nce_head;
+ 	struct name_cache_entry *cur;
  
-+/**
-+ * xa_count() - Count the number of present entries in the XArray
-+ * @xa: XArray.
-+ *
-+ * This function walks the XArray counting how many entries are present.
-+ * If every entry in the XArray is full, this function will return 0.  If
-+ * this is a theoretical possibility, check xa_empty() first.
-+ *
-+ * This is a naive implementation; faster implementations are possible.
-+ * If speed is important, consider maintaining a count variable in your
-+ * own data structure.
-+ */
-+unsigned long xa_count(struct xarray *xa)
-+{
-+	XA_STATE(xas, xa, 0);
-+	void *p;
-+	unsigned long count = 0;
-+
-+	xas_for_each(&xas, p, ULONG_MAX)
-+		count++;
-+
-+	return count;
-+}
-+EXPORT_SYMBOL(xa_count);
-+
- /**
-  * xa_destroy() - Free all internal data structures.
-  * @xa: XArray.
+-	nce_head = radix_tree_lookup(&sctx->name_cache, (unsigned long)ino);
++	nce_head = xa_load(&sctx->name_cache, (unsigned long)ino);
+ 	if (!nce_head)
+ 		return NULL;
+ 
+@@ -6526,7 +6525,7 @@ long btrfs_ioctl_send(struct file *mnt_file, struct btrfs_ioctl_send_args *arg)
+ 
+ 	INIT_LIST_HEAD(&sctx->new_refs);
+ 	INIT_LIST_HEAD(&sctx->deleted_refs);
+-	INIT_RADIX_TREE(&sctx->name_cache, GFP_KERNEL);
++	xa_init(&sctx->name_cache);
+ 	INIT_LIST_HEAD(&sctx->name_cache_list);
+ 
+ 	sctx->flags = arg->flags;
 -- 
 2.15.1
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-nilfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
