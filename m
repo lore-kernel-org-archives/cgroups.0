@@ -1,156 +1,170 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 81/99] i915: Convert handles_vma to XArray
-Date: Wed, 17 Jan 2018 12:21:45 -0800
-Message-ID: <20180117202203.19756-82-willy@infradead.org>
+Subject: [PATCH v6 80/99] blk-ioc: Convert to XArray
+Date: Wed, 17 Jan 2018 12:21:44 -0800
+Message-ID: <20180117202203.19756-81-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
-        Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=gxhRWbcJt7AX7Y95yQIm4Q1siXSpYAdP/qAVmMfyD+E=; b=e/oqTkra9Q31JRGihytyLluqF
-        LFMamJMJCdFH7wNswd6oVa07+fPT4qXYcEaDFyvOyiTwIkITKvOTBuJNLYt7XzvnwAhXvcRwFzcyk
-        5aEO8uzmyDpuXxxrCfpeCOphMucjsALVXlJ8E+q1rjvJVJsaUXZ+XkMg25v5x8ZRoVyyzDKstFMsf
-        oIZ1GY9HwPSrAjBqOiOea/cGJmrsyvCjf8c1Z19fQqM7x8rbBppvJkxP64di1ePahrqlDYNF3LiM6
-        uq48xKk9cg2xWxu6gLeH5VzYW+0cRlPu4O61xOi5NbpKkL/SoKZQMNXWdkZ7iEv5pIdl6Q08gyYLB
-    
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ d=sourceforge.net; s=x; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:
+ To:From:Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
+ Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+ Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+ List-Subscribe:List-Post:List-Owner:List-Archive;
+ bh=LeHoKsS2mqnMzdAdH0WdGATRSD8SnSLILL861J9jbi0=; b=cXIIlJtQLbI/sKN8V0XvruKv/h
+ ncpI+eGT/V6YtnhO5qYN2XC4gylh+Q432tT4QaYs9Yl6PrGL7o00CM2+HS1XNNGISKQeRCkVFmllx
+ PrdAD6TNf/hh1bv/e8COGZfohSEpLhPz+Ywy7ZAbvVW/CNhpwrY0O70/AQlBV+yZ/Y+4=;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
+ ;
+ h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
+ :MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+ Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+ :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+ List-Post:List-Owner:List-Archive;
+ bh=LeHoKsS2mqnMzdAdH0WdGATRSD8SnSLILL861J9jbi0=; b=OgCyqgXp7bWbMBM0yQ1RGtOd7v
+ 22T5PvP0Lu4HYXCh6DZrprryxF+rMMegIYrjIBk2j3K/B3l3ptXoGFtcl+ICcxv5QHueWeHaqU1IW
+ +gaRnwq7MnOXoydjPKgnH8QBkTjGw6jbUF27rNkhdOTegEh61eFyLP0KrOBjkTVC4vLg=;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
+ Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
+ Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+ Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+ List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+ bh=LeHoKsS2mqnMzdAdH0WdGATRSD8SnSLILL861J9jbi0=; b=myKklxZiYih8FoupgRJMN+TVX
+ G3bOydgVs68Y7q4A44g3t93nhAycTntCu8JwxL0K73P10a8FxBeYvEnvVxUljlOsbk9CmAGefPbAi
+ h52Ool8V4J1FKnuSkBnr9hpmARkKtI9mFoEOt0VxF39cArPg4NNIT8A22lfHkVadCpJsx9WZlJidO
+ 5xnSN46JcGfVY1k1GQmbxCrjb0gicAPllWn4hqBSmYNnaEEj+OSuTvobsfcjZI/mDH9yYaWq6mZf2
+ AdXSuemrY8Z7bEtfE0vcfmsKbSyq1yo7adO5HRpgmC2Wtx1B7MgQQ6kysgJhKthU7dGRB06gsabvn
+ s4ViKYbmQ==;
+In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
+List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>, 
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
 To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-sh@vger.kernel.org, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, linux-remoteproc@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, Stefano Stabellini <sstabellini@kernel.org>, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, linux-btrfs@vger.kernel.org
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Straightforward conversion.
+Skip converting the lock to use xa_lock; I think this code can live with
+the double-locking.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/gpu/drm/i915/i915_gem.c               |  2 +-
- drivers/gpu/drm/i915/i915_gem_context.c       | 12 +++++-------
- drivers/gpu/drm/i915/i915_gem_context.h       |  4 ++--
- drivers/gpu/drm/i915/i915_gem_execbuffer.c    |  6 +++---
- drivers/gpu/drm/i915/selftests/mock_context.c |  2 +-
- 5 files changed, 12 insertions(+), 14 deletions(-)
+ block/blk-ioc.c           | 13 +++++++------
+ include/linux/iocontext.h |  6 +++---
+ 2 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
-index 25ce7bcf9988..69e944f4dfce 100644
---- a/drivers/gpu/drm/i915/i915_gem.c
-+++ b/drivers/gpu/drm/i915/i915_gem.c
-@@ -3351,7 +3351,7 @@ void i915_gem_close_object(struct drm_gem_object *gem, struct drm_file *file)
- 		if (ctx->file_priv != fpriv)
- 			continue;
+diff --git a/block/blk-ioc.c b/block/blk-ioc.c
+index f23311e4b201..baf83c8ac503 100644
+--- a/block/blk-ioc.c
++++ b/block/blk-ioc.c
+@@ -68,7 +68,7 @@ static void ioc_destroy_icq(struct io_cq *icq)
  
--		vma = radix_tree_delete(&ctx->handles_vma, lut->handle);
-+		vma = xa_erase(&ctx->handles_vma, lut->handle);
- 		GEM_BUG_ON(vma->obj != obj);
+ 	lockdep_assert_held(&ioc->lock);
  
- 		/* We allow the process to have multiple handles to the same
-diff --git a/drivers/gpu/drm/i915/i915_gem_context.c b/drivers/gpu/drm/i915/i915_gem_context.c
-index f782cf2069c1..1aff35ba6e18 100644
---- a/drivers/gpu/drm/i915/i915_gem_context.c
-+++ b/drivers/gpu/drm/i915/i915_gem_context.c
-@@ -95,9 +95,9 @@
+-	radix_tree_delete(&ioc->icq_tree, icq->q->id);
++	xa_erase(&ioc->icq_array, icq->q->id);
+ 	hlist_del_init(&icq->ioc_node);
+ 	list_del_init(&icq->q_node);
  
- static void lut_close(struct i915_gem_context *ctx)
- {
-+	XA_STATE(xas, &ctx->handles_vma, 0);
- 	struct i915_lut_handle *lut, *ln;
--	struct radix_tree_iter iter;
--	void __rcu **slot;
-+	struct i915_vma *vma;
+@@ -278,7 +278,7 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_flags, int node)
+ 	atomic_set(&ioc->nr_tasks, 1);
+ 	atomic_set(&ioc->active_ref, 1);
+ 	spin_lock_init(&ioc->lock);
+-	INIT_RADIX_TREE(&ioc->icq_tree, GFP_ATOMIC | __GFP_HIGH);
++	xa_init_flags(&ioc->icq_array, XA_FLAGS_LOCK_IRQ);
+ 	INIT_HLIST_HEAD(&ioc->icq_list);
+ 	INIT_WORK(&ioc->release_work, ioc_release_fn);
  
- 	list_for_each_entry_safe(lut, ln, &ctx->handles_list, ctx_link) {
- 		list_del(&lut->obj_link);
-@@ -105,10 +105,8 @@ static void lut_close(struct i915_gem_context *ctx)
+@@ -363,7 +363,7 @@ struct io_cq *ioc_lookup_icq(struct io_context *ioc, struct request_queue *q)
+ 	if (icq && icq->q == q)
+ 		goto out;
+ 
+-	icq = radix_tree_lookup(&ioc->icq_tree, q->id);
++	icq = xa_load(&ioc->icq_array, q->id);
+ 	if (icq && icq->q == q)
+ 		rcu_assign_pointer(ioc->icq_hint, icq);	/* allowed to race */
+ 	else
+@@ -398,7 +398,7 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
+ 	if (!icq)
+ 		return NULL;
+ 
+-	if (radix_tree_maybe_preload(gfp_mask) < 0) {
++	if (xa_reserve(&ioc->icq_array, q->id, gfp_mask)) {
+ 		kmem_cache_free(et->icq_cache, icq);
+ 		return NULL;
  	}
+@@ -412,7 +412,8 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
+ 	spin_lock_irq(q->queue_lock);
+ 	spin_lock(&ioc->lock);
  
- 	rcu_read_lock();
--	radix_tree_for_each_slot(slot, &ctx->handles_vma, &iter, 0) {
--		struct i915_vma *vma = rcu_dereference_raw(*slot);
--
--		radix_tree_iter_delete(&ctx->handles_vma, &iter, slot);
-+	xas_for_each(&xas, vma, ULONG_MAX) {
-+		xas_store(&xas, NULL);
- 		__i915_gem_object_release_unless_active(vma->obj);
- 	}
- 	rcu_read_unlock();
-@@ -276,7 +274,7 @@ __create_hw_context(struct drm_i915_private *dev_priv,
- 	ctx->i915 = dev_priv;
- 	ctx->priority = I915_PRIORITY_NORMAL;
+-	if (likely(!radix_tree_insert(&ioc->icq_tree, q->id, icq))) {
++	if (likely(!xa_store(&ioc->icq_array, q->id, icq,
++						GFP_ATOMIC | __GFP_HIGH))) {
+ 		hlist_add_head(&icq->ioc_node, &ioc->icq_list);
+ 		list_add(&icq->q_node, &q->icq_list);
+ 		if (et->uses_mq && et->ops.mq.init_icq)
+@@ -421,6 +422,7 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
+ 			et->ops.sq.elevator_init_icq_fn(icq);
+ 	} else {
+ 		kmem_cache_free(et->icq_cache, icq);
++		xa_erase(&ioc->icq_array, q->id);
+ 		icq = ioc_lookup_icq(ioc, q);
+ 		if (!icq)
+ 			printk(KERN_ERR "cfq: icq link failed!\n");
+@@ -428,7 +430,6 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
  
--	INIT_RADIX_TREE(&ctx->handles_vma, GFP_KERNEL);
-+	xa_init(&ctx->handles_vma);
- 	INIT_LIST_HEAD(&ctx->handles_list);
+ 	spin_unlock(&ioc->lock);
+ 	spin_unlock_irq(q->queue_lock);
+-	radix_tree_preload_end();
+ 	return icq;
+ }
  
- 	/* Default context will never have a file_priv */
-diff --git a/drivers/gpu/drm/i915/i915_gem_context.h b/drivers/gpu/drm/i915/i915_gem_context.h
-index 44688e22a5c2..8e3e0d002f77 100644
---- a/drivers/gpu/drm/i915/i915_gem_context.h
-+++ b/drivers/gpu/drm/i915/i915_gem_context.h
-@@ -181,11 +181,11 @@ struct i915_gem_context {
- 	/** remap_slice: Bitmask of cache lines that need remapping */
- 	u8 remap_slice;
+diff --git a/include/linux/iocontext.h b/include/linux/iocontext.h
+index dba15ca8e60b..e16224f70084 100644
+--- a/include/linux/iocontext.h
++++ b/include/linux/iocontext.h
+@@ -2,9 +2,9 @@
+ #ifndef IOCONTEXT_H
+ #define IOCONTEXT_H
  
--	/** handles_vma: rbtree to look up our context specific obj/vma for
-+	/** handles_vma: lookup our context specific obj/vma for
- 	 * the user handle. (user handles are per fd, but the binding is
- 	 * per vm, which may be one per context or shared with the global GTT)
- 	 */
--	struct radix_tree_root handles_vma;
-+	struct xarray handles_vma;
+-#include <linux/radix-tree.h>
+ #include <linux/rcupdate.h>
+ #include <linux/workqueue.h>
++#include <linux/xarray.h>
  
- 	/** handles_list: reverse list of all the rbtree entries in use for
- 	 * this context, which allows us to free all the allocations on
-diff --git a/drivers/gpu/drm/i915/i915_gem_execbuffer.c b/drivers/gpu/drm/i915/i915_gem_execbuffer.c
-index 435ed95df144..828f4b5473ea 100644
---- a/drivers/gpu/drm/i915/i915_gem_execbuffer.c
-+++ b/drivers/gpu/drm/i915/i915_gem_execbuffer.c
-@@ -683,7 +683,7 @@ static int eb_select_context(struct i915_execbuffer *eb)
+ enum {
+ 	ICQ_EXITED		= 1 << 2,
+@@ -56,7 +56,7 @@ enum {
+  * - ioc->icq_list and icq->ioc_node are protected by ioc lock.
+  *   q->icq_list and icq->q_node by q lock.
+  *
+- * - ioc->icq_tree and ioc->icq_hint are protected by ioc lock, while icq
++ * - ioc->icq_array and ioc->icq_hint are protected by ioc lock, while icq
+  *   itself is protected by q lock.  However, both the indexes and icq
+  *   itself are also RCU managed and lookup can be performed holding only
+  *   the q lock.
+@@ -111,7 +111,7 @@ struct io_context {
+ 	int nr_batch_requests;     /* Number of requests left in the batch */
+ 	unsigned long last_waited; /* Time last woken after wait for request */
  
- static int eb_lookup_vmas(struct i915_execbuffer *eb)
- {
--	struct radix_tree_root *handles_vma = &eb->ctx->handles_vma;
-+	struct xarray *handles_vma = &eb->ctx->handles_vma;
- 	struct drm_i915_gem_object *obj;
- 	unsigned int i;
- 	int err;
-@@ -702,7 +702,7 @@ static int eb_lookup_vmas(struct i915_execbuffer *eb)
- 		struct i915_lut_handle *lut;
- 		struct i915_vma *vma;
+-	struct radix_tree_root	icq_tree;
++	struct xarray		icq_array;
+ 	struct io_cq __rcu	*icq_hint;
+ 	struct hlist_head	icq_list;
  
--		vma = radix_tree_lookup(handles_vma, handle);
-+		vma = xa_load(handles_vma, handle);
- 		if (likely(vma))
- 			goto add_vma;
- 
-@@ -724,7 +724,7 @@ static int eb_lookup_vmas(struct i915_execbuffer *eb)
- 			goto err_obj;
- 		}
- 
--		err = radix_tree_insert(handles_vma, handle, vma);
-+		err = xa_err(xa_store(handles_vma, handle, vma, GFP_KERNEL));
- 		if (unlikely(err)) {
- 			kfree(lut);
- 			goto err_obj;
-diff --git a/drivers/gpu/drm/i915/selftests/mock_context.c b/drivers/gpu/drm/i915/selftests/mock_context.c
-index bbf80d42e793..b664a7159242 100644
---- a/drivers/gpu/drm/i915/selftests/mock_context.c
-+++ b/drivers/gpu/drm/i915/selftests/mock_context.c
-@@ -40,7 +40,7 @@ mock_context(struct drm_i915_private *i915,
- 	INIT_LIST_HEAD(&ctx->link);
- 	ctx->i915 = i915;
- 
--	INIT_RADIX_TREE(&ctx->handles_vma, GFP_KERNEL);
-+	xa_init(&ctx->handles_vma);
- 	INIT_LIST_HEAD(&ctx->handles_list);
- 
- 	ret = ida_simple_get(&i915->contexts.hw_ida,
 -- 
 2.15.1
 
+
+------------------------------------------------------------------------------
+Check out the vibrant tech community on one of the world's most
+engaging tech sites, Slashdot.org! http://sdm.link/slashdot
