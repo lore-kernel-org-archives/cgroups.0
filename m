@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 56/99] lustre: Convert to XArray
-Date: Wed, 17 Jan 2018 12:21:20 -0800
-Message-ID: <20180117202203.19756-57-willy@infradead.org>
+Subject: [PATCH v6 15/99] xarray: Add xas_next and xas_prev
+Date: Wed, 17 Jan 2018 12:20:39 -0800
+Message-ID: <20180117202203.19756-16-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=iUwoT2jTeIJDsbftyjZLSRZC7V1QinGj9JYk3Mn7QX8=; b=bIbkpvGjAuFZH6ThdYkJoUIjtT
- 0P/OTcYBhXLI5vIyPlEGvYWJ61t/Cblyx7YZcBYYb4qJYuO9UOAOPi1vT/sFjeXJSFfjvLwSiWvLV
- DLfCiqISZBkqepBEMTaCu+Wfb9vk92mHns1sXvxunrLFRPIC9M00OK+V6p3pRGY8/Wdw=;
+ bh=FFGwEKqwz7HxeX4959DY8ppIBtDPoxQwgFmxph9iOhQ=; b=MYOBZ3Di++/r60c7wReeS26+lC
+ Zi0xdaPj0U9AXHgJmsR6pwpKEOSGn8TsbFu4iwkiIDc2mTUr9ZzocvcD1owLmWe3NsM78LrLHVzlz
+ l83h2rozrYB+dCJo/GXMBtElDxSsKrMhMfe4KDaTPi8h7WBU4n/juDiW5l1EpnmKRYyI=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=iUwoT2jTeIJDsbftyjZLSRZC7V1QinGj9JYk3Mn7QX8=; b=OzeKX/ZRzUf08NRgtpc/HjP0UF
- ck6nL2NSM+8EaR1yUe6QDqroQCsqn1Awoo+XZ07w9lgWOHacZFkuEiw7bmbreYuez29f/Ia34UjVN
- EkZ8DIVLC3YNiNdcfGzVFyekdrzyH7pRDk5HpVOjJ+ZpwjzCky84m5LnqQ8yKMkI+M9g=;
+ bh=FFGwEKqwz7HxeX4959DY8ppIBtDPoxQwgFmxph9iOhQ=; b=N6nKw60opqnLAsyhJ2BcjHvgcY
+ 1jfm23jPPW98BMQsHuPiSBPV8c0pTRrjo8sgtwDQgc3faDo7jGQobjffYxzjwR4KK18kkkL/dmV/p
+ A4L5m9dR4WEWPsnNk3J572LCn2sFry9am/mCdzAYj+9xxeKm/7Q+OsEJO//piHW+/Hk0=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=iUwoT2jTeIJDsbftyjZLSRZC7V1QinGj9JYk3Mn7QX8=; b=ENbgxJ/jg4N43jTx44ed+TvuI
- EW5NjE29BwdXnecGQhizta8ft7CZOB/s9K65D6skhJ2mDGfgt35kCotpewkfY+Oa3nVtf0XsQQ/Ns
- QkOo87z5GhhOiKdvddFWO3zsVNSZ4iiKwlNvX8ArtEilj/sT2/qY8GyJb+mXm74S4D+z5YPGv/8Ot
- aplj4sOEAJH9ftsCeEpWOTTBXgIMm0lTMMGsOqnoWhvvp99D951yWSjq2tVveMo4ToVWtEcwYjeun
- S7o9D2ZnUDfhzJqgByfA+fKCa4bfvz0VKmAPlIDAkF2rWoCHKR+Sn74La2sqfDGtj0/pj61zqM40G
- pIMhdQacA==;
+ bh=FFGwEKqwz7HxeX4959DY8ppIBtDPoxQwgFmxph9iOhQ=; b=ogA3CxYMCQUzb0509Tw3pAzi1
+ 8UJLdb3sVARnZQHdXbCg4jIXkdoDUFZ1iS33Rg1L4MxvTN6rmm3Y3XkNrqd2eCZlpWSjoKZnqxcZ8
+ t841XtcXz6AmPDZyFa8uZY3MQIqaSv4LWCtOKixdLWENtgUWnU9vn2Z3xDVsIAjpzu4hYuusoKxSC
+ F9EDt/8EjNxpBuB7sv+WE15BRq95TG40KNy0ig262FaCgMJhDXq9ApBI/Ns3hPzW/o/Zdc7TSuY1T
+ sFz9vRMAskVKsRPYEOHN7Zk0P0cdgUvxHB10Ii8s+MXbcUJY0FVDX7Q5bwEIl6iX5brw3Ci0KN49u
+ sU/fC/wQQ==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,85 +53,485 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
+These two functions move the xas index by one position, and adjust the
+rest of the iterator state to match it.  This is more efficient than
+calling xas_set() as it keeps the iterator at the leaves of the tree
+instead of walking the iterator from the root each time.
+
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/staging/lustre/lustre/llite/glimpse.c   | 12 +++++-------
- drivers/staging/lustre/lustre/mdc/mdc_request.c | 16 ++++++++--------
- 2 files changed, 13 insertions(+), 15 deletions(-)
+ include/linux/xarray.h                 |  67 +++++++++
+ lib/xarray.c                           |  74 ++++++++++
+ tools/testing/radix-tree/xarray-test.c | 259 +++++++++++++++++++++++++++++++++
+ 3 files changed, 400 insertions(+)
 
-diff --git a/drivers/staging/lustre/lustre/llite/glimpse.c b/drivers/staging/lustre/lustre/llite/glimpse.c
-index 5f2843da911c..25232fdf5797 100644
---- a/drivers/staging/lustre/lustre/llite/glimpse.c
-+++ b/drivers/staging/lustre/lustre/llite/glimpse.c
-@@ -57,7 +57,7 @@ static const struct cl_lock_descr whole_file = {
- };
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index d106b2fe4cec..01ce313fc00e 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -660,6 +660,12 @@ static inline bool xas_not_node(struct xa_node *node)
+ 	return ((unsigned long)node & 3) || !node;
+ }
  
- /*
-- * Check whether file has possible unwriten pages.
-+ * Check whether file has possible unwritten pages.
-  *
-  * \retval 1    file is mmap-ed or has dirty pages
-  *	 0    otherwise
-@@ -66,16 +66,14 @@ blkcnt_t dirty_cnt(struct inode *inode)
++/* True if the node represents RESTART or an error */
++static inline bool xas_frozen(struct xa_node *node)
++{
++	return (unsigned long)node & 2;
++}
++
+ /* True if the node represents head-of-tree, RESTART or BOUNDS */
+ static inline bool xas_top(struct xa_node *node)
  {
- 	blkcnt_t cnt = 0;
- 	struct vvp_object *vob = cl_inode2vvp(inode);
--	void	      *results[1];
+@@ -901,6 +907,67 @@ enum {
+ 	for (entry = xas_find_tag(xas, max, tag); entry; \
+ 	     entry = xas_next_tag(xas, max, tag))
  
--	if (inode->i_mapping)
--		cnt += radix_tree_gang_lookup_tag(&inode->i_mapping->pages,
--						  results, 0, 1,
--						  PAGECACHE_TAG_DIRTY);
-+	if (inode->i_mapping && xa_tagged(&inode->i_mapping->pages,
-+				PAGECACHE_TAG_DIRTY))
-+		cnt = 1;
- 	if (cnt == 0 && atomic_read(&vob->vob_mmap_cnt) > 0)
- 		cnt = 1;
++void *__xas_next(struct xa_state *);
++void *__xas_prev(struct xa_state *);
++
++/**
++ * xas_prev() - Move iterator to previous index.
++ * @xas: XArray operation state.
++ *
++ * If the @xas was in an error state, it will remain in an error state
++ * and this function will return %NULL.  If the @xas has never been walked,
++ * it will have the effect of calling xas_load().  Otherwise one will be
++ * subtracted from the index and the state will be walked to the correct
++ * location in the array for the next operation.
++ *
++ * If the iterator was referencing index 0, this function wraps
++ * around to %ULONG_MAX.
++ *
++ * Return: The entry at the new index.  This may be %NULL or an internal
++ * entry, although it should never be a node entry.
++ */
++static inline void *xas_prev(struct xa_state *xas)
++{
++	struct xa_node *node = xas->xa_node;
++
++	if (unlikely(xas_not_node(node) || node->shift ||
++				xas->xa_offset == 0))
++		return __xas_prev(xas);
++
++	xas->xa_index--;
++	xas->xa_offset--;
++	return xa_entry(xas->xa, node, xas->xa_offset);
++}
++
++/**
++ * xas_next() - Move state to next index.
++ * @xas: XArray operation state.
++ *
++ * If the @xas was in an error state, it will remain in an error state
++ * and this function will return %NULL.  If the @xas has never been walked,
++ * it will have the effect of calling xas_load().  Otherwise one will be
++ * added to the index and the state will be walked to the correct
++ * location in the array for the next operation.
++ *
++ * If the iterator was referencing index %ULONG_MAX, this function wraps
++ * around to 0.
++ *
++ * Return: The entry at the new index.  This may be %NULL or an internal
++ * entry, although it should never be a node entry.
++ */
++static inline void *xas_next(struct xa_state *xas)
++{
++	struct xa_node *node = xas->xa_node;
++
++	if (unlikely(xas_not_node(node) || node->shift ||
++				xas->xa_offset == XA_CHUNK_MASK))
++		return __xas_next(xas);
++
++	xas->xa_index++;
++	xas->xa_offset++;
++	return xa_entry(xas->xa, node, xas->xa_offset);
++}
++
+ /* Internal functions, mostly shared between radix-tree.c, xarray.c and idr.c */
+ void xas_destroy(struct xa_state *);
  
--	return (cnt > 0) ? 1 : 0;
-+	return cnt;
+diff --git a/lib/xarray.c b/lib/xarray.c
+index af81d4bf9ae1..e8ece1fff9fd 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -838,6 +838,80 @@ void xas_pause(struct xa_state *xas)
+ }
+ EXPORT_SYMBOL_GPL(xas_pause);
+ 
++/*
++ * __xas_prev() - Find the previous entry in the XArray.
++ * @xas: XArray operation state.
++ *
++ * Helper function for xas_prev() which handles all the complex cases
++ * out of line.
++ */
++void *__xas_prev(struct xa_state *xas)
++{
++	void *entry;
++
++	if (!xas_frozen(xas->xa_node))
++		xas->xa_index--;
++	if (xas_not_node(xas->xa_node))
++		return xas_load(xas);
++
++	if (xas->xa_offset != get_offset(xas->xa_index, xas->xa_node))
++		xas->xa_offset--;
++
++	while (xas->xa_offset == 255) {
++		xas->xa_offset = xas->xa_node->offset - 1;
++		xas->xa_node = xa_parent(xas->xa, xas->xa_node);
++		if (!xas->xa_node)
++			return set_bounds(xas);
++	}
++
++	for (;;) {
++		entry = xa_entry(xas->xa, xas->xa_node, xas->xa_offset);
++		if (!xa_is_node(entry))
++			return entry;
++
++		xas->xa_node = xa_to_node(entry);
++		xas_set_offset(xas);
++	}
++}
++EXPORT_SYMBOL_GPL(__xas_prev);
++
++/*
++ * __xas_next() - Find the next entry in the XArray.
++ * @xas: XArray operation state.
++ *
++ * Helper function for xas_next() which handles all the complex cases
++ * out of line.
++ */
++void *__xas_next(struct xa_state *xas)
++{
++	void *entry;
++
++	if (!xas_frozen(xas->xa_node))
++		xas->xa_index++;
++	if (xas_not_node(xas->xa_node))
++		return xas_load(xas);
++
++	if (xas->xa_offset != get_offset(xas->xa_index, xas->xa_node))
++		xas->xa_offset++;
++
++	while (xas->xa_offset == XA_CHUNK_SIZE) {
++		xas->xa_offset = xas->xa_node->offset + 1;
++		xas->xa_node = xa_parent(xas->xa, xas->xa_node);
++		if (!xas->xa_node)
++			return set_bounds(xas);
++	}
++
++	for (;;) {
++		entry = xa_entry(xas->xa, xas->xa_node, xas->xa_offset);
++		if (!xa_is_node(entry))
++			return entry;
++
++		xas->xa_node = xa_to_node(entry);
++		xas_set_offset(xas);
++	}
++}
++EXPORT_SYMBOL_GPL(__xas_next);
++
+ /**
+  * xas_find() - Find the next present entry in the XArray.
+  * @xas: XArray operation state.
+diff --git a/tools/testing/radix-tree/xarray-test.c b/tools/testing/radix-tree/xarray-test.c
+index 26b25be81656..2ad460c1febf 100644
+--- a/tools/testing/radix-tree/xarray-test.c
++++ b/tools/testing/radix-tree/xarray-test.c
+@@ -49,6 +49,147 @@ void check_xa_tag(struct xarray *xa)
+ 	assert(xa_get_tag(xa, 0, XA_TAG_0) == false);
  }
  
- int cl_glimpse_lock(const struct lu_env *env, struct cl_io *io,
-diff --git a/drivers/staging/lustre/lustre/mdc/mdc_request.c b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-index 2ec79a6b17da..ea23247e9e02 100644
---- a/drivers/staging/lustre/lustre/mdc/mdc_request.c
-+++ b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-@@ -934,17 +934,18 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
- 	 * hash _smaller_ than one we are looking for.
- 	 */
- 	unsigned long offset = hash_x_index(*hash, hash64);
-+	XA_STATE(xas, &mapping->pages, offset);
- 	struct page *page;
--	int found;
- 
--	xa_lock_irq(&mapping->pages);
--	found = radix_tree_gang_lookup(&mapping->pages,
--				       (void **)&page, offset, 1);
--	if (found > 0 && !xa_is_value(page)) {
-+	xas_lock_irq(&xas);
-+	page = xas_find(&xas, ULONG_MAX);
-+	if (xa_is_value(page))
-+		page = NULL;
-+	if (page) {
- 		struct lu_dirpage *dp;
- 
- 		get_page(page);
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		/*
- 		 * In contrast to find_lock_page() we are sure that directory
- 		 * page cannot be truncated (while DLM lock is held) and,
-@@ -992,8 +993,7 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
- 			page = ERR_PTR(-EIO);
- 		}
- 	} else {
--		xa_unlock_irq(&mapping->pages);
--		page = NULL;
-+		xas_unlock_irq(&xas);
++/* Check that putting the xas into an error state works correctly */
++void check_xas_error(struct xarray *xa)
++{
++	XA_STATE(xas, xa, 0);
++
++	assert(xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL) == 0);
++	assert(xa_load(xa, 1) == xa_mk_value(1));
++
++	assert(xas_error(&xas) == 0);
++
++	xas_set_err(&xas, -ENOTTY);
++	assert(xas_error(&xas) == -ENOTTY);
++
++	xas_set_err(&xas, -ENOSPC);
++	assert(xas_error(&xas) == -ENOSPC);
++
++	xas_set_err(&xas, -ENOMEM);
++	assert(xas_error(&xas) == -ENOMEM);
++
++	assert(xas_load(&xas) == NULL);
++	assert(xas_store(&xas, &xas) == NULL);
++	assert(xas_load(&xas) == NULL);
++
++	assert(xas.xa_index == 0);
++	assert(xas_next(&xas) == NULL);
++	assert(xas.xa_index == 0);
++
++	assert(xas_prev(&xas) == NULL);
++	assert(xas.xa_index == 0);
++
++	xas_retry(&xas, XA_RETRY_ENTRY);
++	assert(xas_error(&xas) == 0);
++
++	assert(xas_find(&xas, ULONG_MAX) == xa_mk_value(1));
++	assert(xas.xa_index == 1);
++	assert(xas_error(&xas) == 0);
++
++	assert(xas_find(&xas, ULONG_MAX) == NULL);
++	assert(xas.xa_index > 1);
++	assert(xas_error(&xas) == 0);
++	assert(xas.xa_node == XAS_BOUNDS);
++}
++
++void check_xas_pause(struct xarray *xa)
++{
++	XA_STATE(xas, xa, 0);
++	void *entry;
++	unsigned int seen;
++
++	xa_store(xa, 0, xa_mk_value(0), GFP_KERNEL);
++	xa_set_tag(xa, 0, XA_TAG_0);
++
++	seen = 0;
++	rcu_read_lock();
++	xas_for_each_tag(&xas, entry, ULONG_MAX, XA_TAG_0) {
++		if (!seen++) {
++			xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
++			xa_set_tag(xa, 1, XA_TAG_0);
++		}
++	}
++	rcu_read_unlock();
++	/* We don't see an entry that was added after we started */
++	assert(seen == 1);
++
++	seen = 0;
++	xas_set(&xas, 0);
++	rcu_read_lock();
++	xas_for_each_tag(&xas, entry, ULONG_MAX, XA_TAG_0) {
++		if (!seen++)
++			xa_erase(xa, 1);
++	}
++	rcu_read_unlock();
++	assert(seen == 1);
++
++	seen = 0;
++	xas_set(&xas, 0);
++	rcu_read_lock();
++	xas_for_each(&xas, entry, ULONG_MAX) {
++		if (!seen++)
++			xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
++	}
++	rcu_read_unlock();
++	assert(seen == 1);
++
++	seen = 0;
++	xas_set(&xas, 0);
++	rcu_read_lock();
++	xas_for_each(&xas, entry, ULONG_MAX) {
++		if (!seen++)
++			xa_erase(xa, 1);
++	}
++	rcu_read_unlock();
++	assert(seen == 1);
++
++	seen = 0;
++	xas_set(&xas, 0);
++	rcu_read_lock();
++	for (entry = xas_load(&xas); entry; entry = xas_next(&xas)) {
++		if (!seen++)
++			xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
++	}
++	rcu_read_unlock();
++	assert(seen == 2);
++
++	seen = 0;
++	xas_set(&xas, 0);
++	rcu_read_lock();
++	for (entry = xas_load(&xas); entry; entry = xas_next(&xas)) {
++		if (!seen++)
++			xa_erase(xa, 1);
++	}
++	rcu_read_unlock();
++	assert(seen == 1);
++
++	xa_store(xa, 1, xa_mk_value(1), GFP_KERNEL);
++	seen = 0;
++	xas_set(&xas, 0);
++	xas_for_each(&xas, entry, ULONG_MAX) {
++		if (!seen++)
++			xas_pause(&xas);
++	}
++	assert(seen == 2);
++
++	seen = 0;
++	xas_set(&xas, 0);
++	for (entry = xas_load(&xas); entry; entry = xas_next(&xas)) {
++		if (!seen++)
++			xas_pause(&xas);
++	}
++	assert(seen == 2);
++
++	seen = 0;
++	xas_set(&xas, 0);
++	xa_set_tag(xa, 1, XA_TAG_0);
++	xas_for_each_tag(&xas, entry, ULONG_MAX, XA_TAG_0) {
++		if (!seen++)
++			xas_pause(&xas);
++	}
++	assert(seen == 2);
++}
++
+ void check_xas_retry(struct xarray *xa)
+ {
+ 	XA_STATE(xas, xa, 0);
+@@ -257,9 +398,108 @@ void check_xas_delete(struct xarray *xa)
  	}
- 	return page;
  }
+ 
++void check_move_small(struct xarray *xa, unsigned long idx)
++{
++	XA_STATE(xas, xa, 0);
++	unsigned long i;
++
++	xa_store(xa, 0, xa_mk_value(0), GFP_KERNEL);
++	xa_store(xa, idx, xa_mk_value(idx), GFP_KERNEL);
++
++	for (i = 0; i < idx * 4; i++) {
++		void *entry = xas_next(&xas);
++		if (i <= idx)
++			assert(xas.xa_node != XAS_RESTART);
++		assert(xas.xa_index == i);
++		if (i == 0 || i == idx)
++			assert(entry == xa_mk_value(i));
++		else
++			assert(entry == NULL);
++	}
++	xas_next(&xas);
++	assert(xas.xa_index == i);
++
++	do {
++		void *entry = xas_prev(&xas);
++		i--;
++		if (i <= idx)
++			assert(xas.xa_node != XAS_RESTART);
++		assert(xas.xa_index == i);
++		if (i == 0 || i == idx)
++			assert(entry == xa_mk_value(i));
++		else
++			assert(entry == NULL);
++	} while (i > 0);
++
++	xas_set(&xas, ULONG_MAX);
++	assert(xas_next(&xas) == NULL);
++	assert(xas.xa_index == ULONG_MAX);
++	assert(xas_next(&xas) == xa_mk_value(0));
++	assert(xas.xa_index == 0);
++	assert(xas_prev(&xas) == NULL);
++	assert(xas.xa_index == ULONG_MAX);
++}
++
++void check_move(struct xarray *xa)
++{
++	XA_STATE(xas, xa, (1 << 16) - 1);
++	unsigned long i;
++
++	for (i = 0; i < (1 << 16); i++) {
++		xa_store(xa, i, xa_mk_value(i), GFP_KERNEL);
++	}
++
++	do {
++		void *entry = xas_prev(&xas);
++		i--;
++		assert(entry == xa_mk_value(i));
++		assert(i == xas.xa_index);
++	} while (i != 0);
++
++	assert(xas_prev(&xas) == NULL);
++	assert(xas.xa_index == ULONG_MAX);
++
++	do {
++		void *entry = xas_next(&xas);
++		assert(entry == xa_mk_value(i));
++		assert(i == xas.xa_index);
++		i++;
++	} while (i < (1 << 16));
++
++	for (i = (1 << 8); i < (1 << 15); i++) {
++		xa_erase(xa, i);
++	}
++
++	i = xas.xa_index;
++
++	do {
++		void *entry = xas_prev(&xas);
++		i--;
++		if ((i < (1 << 8)) || (i >= (1 << 15)))
++			assert(entry == xa_mk_value(i));
++		else
++			assert(entry == NULL);
++		assert(i == xas.xa_index);
++	} while (i != 0);
++
++	assert(xas_prev(&xas) == NULL);
++	assert(xas.xa_index == ULONG_MAX);
++
++	do {
++		void *entry = xas_next(&xas);
++		if ((i < (1 << 8)) || (i >= (1 << 15)))
++			assert(entry == xa_mk_value(i));
++		else
++			assert(entry == NULL);
++		assert(i == xas.xa_index);
++		i++;
++	} while (i < (1 << 16));
++}
++
+ void xarray_checks(void)
+ {
+ 	DEFINE_XARRAY(array);
++	unsigned long i;
+ 
+ 	check_xa_err(&array);
+ 	item_kill_tree(&array);
+@@ -267,9 +507,15 @@ void xarray_checks(void)
+ 	check_xa_tag(&array);
+ 	item_kill_tree(&array);
+ 
++	check_xas_error(&array);
++	item_kill_tree(&array);
++
+ 	check_xas_retry(&array);
+ 	item_kill_tree(&array);
+ 
++	check_xas_pause(&array);
++	item_kill_tree(&array);
++
+ 	check_xa_load(&array);
+ 	item_kill_tree(&array);
+ 
+@@ -283,6 +529,19 @@ void xarray_checks(void)
+ 	check_find(&array);
+ 	check_xas_delete(&array);
+ 	item_kill_tree(&array);
++
++	for (i = 0; i < 16; i++) {
++		check_move_small(&array, 1UL << i);
++		item_kill_tree(&array);
++	}
++
++	for (i = 2; i < 16; i++) {
++		check_move_small(&array, (1UL << i) - 1);
++		item_kill_tree(&array);
++	}
++
++	check_move(&array);
++	item_kill_tree(&array);
+ }
+ 
+ int __weak main(void)
 -- 
 2.15.1
 
