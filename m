@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 17/99] xarray: Add MAINTAINERS entry
-Date: Wed, 17 Jan 2018 12:20:41 -0800
-Message-ID: <20180117202203.19756-18-willy@infradead.org>
+Subject: [PATCH v6 32/99] mm: Convert truncate to XArray
+Date: Wed, 17 Jan 2018 12:20:56 -0800
+Message-ID: <20180117202203.19756-33-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=82H3zweFnHH27bR2aNmm9vzn7f0RsZrKjI/BrKOxcNE=; b=T8QuYZIgJIkkZTBVF8+wZCLst/
- o9vEdzQfnwC8yo5ESaPjUfM38+aBxAES/5ZpCkTXlxhrOOvUgjMP0s7LI121ZHTbhMgrDUhEwW+c/
- GjoF9X3UBgoTHrUfEw8YXU0SdYhTL9FhW/tUJbg1m2tu50/y6wSuxJWnxqtProztnNRM=;
+ bh=z2wUjX53zsGmPoUiEiA7zW7Pqnae/hfF/ikw47JMqAo=; b=D+ZLr8vBjQEG3R8Wzczs4DPPYo
+ q+QA7qBAIwAWOe9/Q1LCsC/Ve4IB656GUvzliAr2T/1O9954OqDU8FUQ/eqmvz5N0tYwuZRkUgHng
+ f8unuxSVPtBFT+DmeBnf3+IfQwSG0Cku8of8aqzB4VJ7iybSjhbX9SQfV5LK91ouQTqw=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=82H3zweFnHH27bR2aNmm9vzn7f0RsZrKjI/BrKOxcNE=; b=Wen919EBzji2b6ciXD+Eyoig91
- XaJ+/lUetJmozzuP83jWk/l6XvfP+AknDUW3ed0q/k9hARwpGnFpUbMaGAmd28RyifkDDCtCm7DNz
- In0HPjGgKhXKaeOe6XlFMBmtVE0Wk+3Hk1pt4U34tHGGZm/acwL4PnlUY9WZZeH7L/fo=;
+ bh=z2wUjX53zsGmPoUiEiA7zW7Pqnae/hfF/ikw47JMqAo=; b=XNy5y1QFIVfRz782gjzXf1ksVx
+ 7kSOI/qBG+0B61WnnKhLAaaSrjUMAGp5FznDdZnKZlW/kDavrWQSM+uZU0wi3Z9v5Sxo7up6G8XoY
+ hrbD812rO/49zPdlX7potu6yqQMNDJSgp0uLmSQJiTlYWrKXyN8yDmeSsT638wevu0V4=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=82H3zweFnHH27bR2aNmm9vzn7f0RsZrKjI/BrKOxcNE=; b=N0ZZuAUypwP3e6CJFT10O5l/j
- rsNX/eWlcGKJhrR/EZCL157FAe9mVnEnBIf/DO7gQKI4FoOdCqQ00SY//fkNhgqrAYJYlSYCSTgDQ
- 2vujMagMYceDgOim9l6YsSeUKZaDAhK+m5qAWDFbc7oqwTsOwY+nstV42wWQtLfB/dVR7I9o3Op1T
- TRFqxZHwkcYd986aQmteU+uCpZTz4Fmljg07sPri+QtHIc1c6062Ap4yqeVSL8CZcv1zRF70aA1NZ
- XZGHAlBomsjQbou4f5YKDEUMjxcCLsVeZ5i58bCluMa0XK7fq5K8hqo+9nBLmAZkdc/ORw/GDcgxH
- bQ1k463ZQ==;
+ bh=z2wUjX53zsGmPoUiEiA7zW7Pqnae/hfF/ikw47JMqAo=; b=UVVbNfS46+4TSAeJMR4tkZdgE
+ krd6cgrrD1lXZpmRTUAdmhCMqYiX5NGj7cNteCRp1Ui78W8Lfkq1/OnIgXX9nxY6wUphK66CWkscl
+ bh0oTMgVheB0L38kjfA0rOMyf4aeWgGe8hlk6Xpn0tWx7Fx3D8Dbsi60BhuYgbRHe8lryJAemmu7z
+ R1vs+bqmqrTDE1lL1RAXHGcXIm/pPaEEcCpDYn2QOE4cSMRAU1alZ8GN8WlMmoGXkV5SomzOL9Os4
+ ooqetvxaMiuGrfQFMks+D9AKJw5orOz5JvuGsPx715I2CxYVi9+oHzZ0hEcX527A7ARQhjIT/PoH/
+ aIM7o6ZhQ==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,36 +53,51 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Add myself as XArray and IDR maintainer.
+This is essentially xa_cmpxchg() with the locking handled above us,
+and it doesn't have to handle replacing a NULL entry.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- MAINTAINERS | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ mm/truncate.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 18994806e441..55ae4c0b38d5 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14893,6 +14893,18 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86/vdso
- S:	Maintained
- F:	arch/x86/entry/vdso/
+diff --git a/mm/truncate.c b/mm/truncate.c
+index 69bb743dd7e5..70323c347298 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -33,15 +33,12 @@
+ static inline void __clear_shadow_entry(struct address_space *mapping,
+ 				pgoff_t index, void *entry)
+ {
+-	struct radix_tree_node *node;
+-	void **slot;
++	XA_STATE(xas, &mapping->pages, index);
  
-+XARRAY
-+M:	Matthew Wilcox <mawilcox@microsoft.com>
-+M:	Matthew Wilcox <willy@infradead.org>
-+L:	linux-fsdevel@vger.kernel.org
-+S:	Supported
-+F:	Documentation/core-api/xarray.rst
-+F:	lib/idr.c
-+F:	lib/xarray.c
-+F:	include/linux/idr.h
-+F:	include/linux/xarray.h
-+F:	tools/testing/radix-tree
-+
- XC2028/3028 TUNER DRIVER
- M:	Mauro Carvalho Chehab <mchehab@s-opensource.com>
- M:	Mauro Carvalho Chehab <mchehab@kernel.org>
+-	if (!__radix_tree_lookup(&mapping->pages, index, &node, &slot))
++	xas_set_update(&xas, workingset_update_node);
++	if (xas_load(&xas) != entry)
+ 		return;
+-	if (*slot != entry)
+-		return;
+-	__radix_tree_replace(&mapping->pages, node, slot, NULL,
+-			     workingset_update_node);
++	xas_store(&xas, NULL);
+ 	mapping->nrexceptional--;
+ }
+ 
+@@ -746,10 +743,10 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
+ 		index++;
+ 	}
+ 	/*
+-	 * For DAX we invalidate page tables after invalidating radix tree.  We
++	 * For DAX we invalidate page tables after invalidating page cache.  We
+ 	 * could invalidate page tables while invalidating each entry however
+ 	 * that would be expensive. And doing range unmapping before doesn't
+-	 * work as we have no cheap way to find whether radix tree entry didn't
++	 * work as we have no cheap way to find whether page cache entry didn't
+ 	 * get remapped later.
+ 	 */
+ 	if (dax_mapping(mapping)) {
 -- 
 2.15.1
 
