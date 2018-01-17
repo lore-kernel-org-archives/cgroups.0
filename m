@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 30/99] mm: Convert page-writeback to XArray
-Date: Wed, 17 Jan 2018 12:20:54 -0800
-Message-ID: <20180117202203.19756-31-willy@infradead.org>
+Subject: [PATCH v6 21/99] xarray: Add xa_reserve and xa_release
+Date: Wed, 17 Jan 2018 12:20:45 -0800
+Message-ID: <20180117202203.19756-22-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=qPrgouP58kWLR8jrX70FWhTUzHZLolfaOU1e75K8fVc=; b=c/Czf0Vmv7BsH3/vrQaP1xCYoq
- D/PY3EJTORn+NtyRRsH5Kwa5iwqD+m8TlmN5dl/OdRb0clwe/M5eJPlokvXSyC+SYj+edGtQymSHQ
- nOcmTKucqmXNoFJEABWIY+KKEOgjfihUZQf/ItiXzP7GSPTexn1t1eHPbmPFIY4+xCJg=;
+ bh=kxMDFVvJxazhbqx48cDE1jvnCN9jWvyDKrSQLHcLun4=; b=eTuKb6j1uZSP1B0lLBnAbd9z7K
+ Vd9C31897as8uN6movKVgRmghN2lwQuMOFYzlyOXTDqJjNax3XEvgFSHH9aCpSGrl4ZdL1LC2t9Vu
+ voqgpFJPVveXMVL6NK1DGXOTbYpUTG0IVMT3EZU5T8ieK1CyX+lHgPi6hyML8f5C+UxI=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=qPrgouP58kWLR8jrX70FWhTUzHZLolfaOU1e75K8fVc=; b=gQtPyfSQn1jDWqB6DJGn1ixyyF
- 3/v4Ng81WJsfxjasKjl1Sz7nAty5Lkmcnp4yRJpT7ctwrhcIAqKRfeItTuLKmYarLm2IHpnKTMzxa
- ER8L4AMPiz02tzlODz3MexgO3dRmb8Z7fMrNW1jdw1addo+jx+ZNGzteK75WFHFd5SIw=;
+ bh=kxMDFVvJxazhbqx48cDE1jvnCN9jWvyDKrSQLHcLun4=; b=LLg8dzJ+FAcI98BO8HrOOTC2C4
+ Rz+/yEqHWNsFZXW5YCpwXnLhkdEGiei9DgGIbOLXvnmx5yAVyXNUz+AcxmwgwNmqk90n+9vNYaYou
+ N7b4XUzhecRtJFfQ4fU1FV11QgrJqQM2thtwN2qYJJIEvFVU2KsTujGz7hM74fX5Y0Vs=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=qPrgouP58kWLR8jrX70FWhTUzHZLolfaOU1e75K8fVc=; b=nSV/2DHVq3OXQA9IxFs/9qqfT
- a1Q4yHwFLP3xo1qgK9d7Zx4v8AY9stmAIYCgL4qMtc+o/DRqxR/zqOn9vctFAyJNoOF5Yha2ONBRK
- x0Zr4D/5k4VzAbXhmcSZA4adsrJ38YUHcSciFZFiS6dlxu8vTpM8YHA46zwgUgS/WQt1i5mGqgPcx
- CX1pCm/CqOqCXTwd6Nab8ZXScSMpneZ7jxcQFEq76LmrFDSJkPBXbxU0QHJveu4+eLpJsQPUsoB/h
- ATI0qCV2RnLlIn0XD5LbLB9rN9cXYNSF1RBZsdeUvi2HSvhwlkPQbvNjeIZb3+YagsJvBfgznQXdA
- hBEUWEomQ==;
+ bh=kxMDFVvJxazhbqx48cDE1jvnCN9jWvyDKrSQLHcLun4=; b=Nted86jAFb7CV8xrVgaT3ribU
+ xjmbwrMwn2i3RaszinUbHmBVZnXNLv4mxYIpxjMqABJlfnzrVbdthmc83/34N+lo7GQABzTF4+2D8
+ NF0zlCgBARCOWBB8inrmxqc4Uqi/HcMciCyh9Yl0mf1Z2iRfQJLsimcIVfQFC3r6aMtSFUXR1tXVz
+ zOMiqSWFWf4BTvIQL/mSIkCjxLII0qsZd8K12ICvPrSrf0Ed5zgX56aFEYQw6EZjtunQGMx4P1Lw+
+ PtLU8bH9MXtJyQjYNaI9GbWukripbuO/K0kINJimRKsieQQoH3pDuCG8qe0zUWkZ2LdOH5cUQHRrf
+ EqoSPRAOQ==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,187 +53,168 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Includes moving mapping_tagged() to fs.h as a static inline, and
-changing it to return bool.
+This function simply creates a slot in the XArray for users which need
+to acquire multiple locks before storing their entry in the tree and
+so cannot use a plain xa_store().
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/fs.h  | 17 +++++++++------
- mm/page-writeback.c | 62 +++++++++++++++++++----------------------------------
- 2 files changed, 32 insertions(+), 47 deletions(-)
+ include/linux/xarray.h                 | 14 ++++++++++
+ lib/xarray.c                           | 51 ++++++++++++++++++++++++++++++++++
+ tools/testing/radix-tree/xarray-test.c | 25 +++++++++++++++++
+ 3 files changed, 90 insertions(+)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e4345c13e237..c58bc3c619bf 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -470,15 +470,18 @@ struct block_device {
- 	struct mutex		bd_fsfreeze_mutex;
- } __randomize_layout;
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index 6f59f1f60205..c3f7405c5517 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -259,6 +259,7 @@ void *xa_load(struct xarray *, unsigned long index);
+ void *xa_store(struct xarray *, unsigned long index, void *entry, gfp_t);
+ void *xa_cmpxchg(struct xarray *, unsigned long index,
+ 			void *old, void *entry, gfp_t);
++int xa_reserve(struct xarray *, unsigned long index, gfp_t);
+ bool xa_get_tag(struct xarray *, unsigned long index, xa_tag_t);
+ void xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
+ void xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
+@@ -373,6 +374,19 @@ static inline int xa_insert(struct xarray *xa, unsigned long index,
+ 	return -EEXIST;
+ }
  
-+/* XArray tags, for tagging dirty and writeback pages in the pagecache. */
-+#define PAGECACHE_TAG_DIRTY	XA_TAG_0
-+#define PAGECACHE_TAG_WRITEBACK	XA_TAG_1
-+#define PAGECACHE_TAG_TOWRITE	XA_TAG_2
-+
- /*
-- * Radix-tree tags, for tagging dirty and writeback pages within the pagecache
-- * radix trees
-+ * Returns true if any of the pages in the mapping are marked with the tag.
-  */
--#define PAGECACHE_TAG_DIRTY	0
--#define PAGECACHE_TAG_WRITEBACK	1
--#define PAGECACHE_TAG_TOWRITE	2
--
--int mapping_tagged(struct address_space *mapping, int tag);
-+static inline bool mapping_tagged(struct address_space *mapping, xa_tag_t tag)
++/**
++ * xa_release() - Release a reserved entry.
++ * @xa: XArray.
++ * @index: Index of entry.
++ *
++ * After calling xa_reserve(), you can call this function to release the
++ * reservation.  It is harmless to call this function if the entry was used.
++ */
++static inline void xa_release(struct xarray *xa, unsigned long index)
 +{
-+	return xa_tagged(&mapping->pages, tag);
++	xa_cmpxchg(xa, index, NULL, NULL, 0);
 +}
- 
- static inline void i_mmap_lock_write(struct address_space *mapping)
- {
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 588ce729d199..0407436a8305 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2098,33 +2098,25 @@ void __init page_writeback_init(void)
-  * dirty pages in the file (thus it is important for this function to be quick
-  * so that it can tag pages faster than a dirtying process can create them).
-  */
--/*
-- * We tag pages in batches of WRITEBACK_TAG_BATCH to reduce xa_lock latency.
-- */
- void tag_pages_for_writeback(struct address_space *mapping,
- 			     pgoff_t start, pgoff_t end)
- {
--#define WRITEBACK_TAG_BATCH 4096
--	unsigned long tagged = 0;
--	struct radix_tree_iter iter;
--	void **slot;
-+	XA_STATE(xas, &mapping->pages, start);
-+	unsigned int tagged = 0;
-+	void *page;
- 
--	xa_lock_irq(&mapping->pages);
--	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, start,
--							PAGECACHE_TAG_DIRTY) {
--		if (iter.index > end)
--			break;
--		radix_tree_iter_tag_set(&mapping->pages, &iter,
--							PAGECACHE_TAG_TOWRITE);
--		tagged++;
--		if ((tagged % WRITEBACK_TAG_BATCH) != 0)
-+	xas_lock_irq(&xas);
-+	xas_for_each_tag(&xas, page, end, PAGECACHE_TAG_DIRTY) {
-+		xas_set_tag(&xas, PAGECACHE_TAG_TOWRITE);
-+		if (++tagged % XA_CHECK_SCHED)
- 			continue;
--		slot = radix_tree_iter_resume(slot, &iter);
--		xa_unlock_irq(&mapping->pages);
 +
-+		xas_pause(&xas);
-+		xas_unlock_irq(&xas);
- 		cond_resched();
--		xa_lock_irq(&mapping->pages);
-+		xas_lock_irq(&xas);
- 	}
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
+ #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
+ #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
+ #define xa_unlock(xa)		spin_unlock(&(xa)->xa_lock)
+diff --git a/lib/xarray.c b/lib/xarray.c
+index ace309cc9253..b4dec8e2d202 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -1275,6 +1275,8 @@ void *xa_cmpxchg(struct xarray *xa, unsigned long index,
+ 	do {
+ 		xas_lock(&xas);
+ 		curr = xas_load(&xas);
++		if (curr == XA_ZERO_ENTRY)
++			curr = NULL;
+ 		if (curr == old)
+ 			xas_store(&xas, entry);
+ 		xas_unlock(&xas);
+@@ -1310,6 +1312,8 @@ void *__xa_cmpxchg(struct xarray *xa, unsigned long index,
+ 
+ 	do {
+ 		curr = xas_load(&xas);
++		if (curr == XA_ZERO_ENTRY)
++			curr = NULL;
+ 		if (curr == old)
+ 			xas_store(&xas, entry);
+ 	} while (__xas_nomem(&xas, gfp));
+@@ -1318,6 +1322,53 @@ void *__xa_cmpxchg(struct xarray *xa, unsigned long index,
  }
- EXPORT_SYMBOL(tag_pages_for_writeback);
+ EXPORT_SYMBOL(__xa_cmpxchg);
  
-@@ -2164,7 +2156,7 @@ int write_cache_pages(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int cycled;
- 	int range_whole = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 	if (wbc->range_cyclic) {
-@@ -2445,7 +2437,7 @@ void account_page_cleaned(struct page *page, struct address_space *mapping,
- 
- /*
-  * For address_spaces which do not use buffers.  Just tag the page as dirty in
-- * its radix tree.
-+ * the xarray.
-  *
-  * This is also used when a single buffer is being dirtied: we want to set the
-  * page dirty in that case, but not all the buffers.  This is a "bottom-up"
-@@ -2471,7 +2463,7 @@ int __set_page_dirty_nobuffers(struct page *page)
- 		BUG_ON(page_mapping(page) != mapping);
- 		WARN_ON_ONCE(!PagePrivate(page) && !PageUptodate(page));
- 		account_page_dirtied(page, mapping);
--		radix_tree_tag_set(&mapping->pages, page_index(page),
-+		__xa_set_tag(&mapping->pages, page_index(page),
- 				   PAGECACHE_TAG_DIRTY);
- 		xa_unlock_irqrestore(&mapping->pages, flags);
- 		unlock_page_memcg(page);
-@@ -2634,13 +2626,13 @@ EXPORT_SYMBOL(__cancel_dirty_page);
-  * Returns true if the page was previously dirty.
-  *
-  * This is for preparing to put the page under writeout.  We leave the page
-- * tagged as dirty in the radix tree so that a concurrent write-for-sync
-+ * tagged as dirty in the xarray so that a concurrent write-for-sync
-  * can discover it via a PAGECACHE_TAG_DIRTY walk.  The ->writepage
-  * implementation will run either set_page_writeback() or set_page_dirty(),
-- * at which stage we bring the page's dirty flag and radix-tree dirty tag
-+ * at which stage we bring the page's dirty flag and xarray dirty tag
-  * back into sync.
-  *
-- * This incoherency between the page's dirty flag and radix-tree tag is
-+ * This incoherency between the page's dirty flag and xarray tag is
-  * unfortunate, but it only exists while the page is locked.
-  */
- int clear_page_dirty_for_io(struct page *page)
-@@ -2721,7 +2713,7 @@ int test_clear_page_writeback(struct page *page)
- 		xa_lock_irqsave(&mapping->pages, flags);
- 		ret = TestClearPageWriteback(page);
- 		if (ret) {
--			radix_tree_tag_clear(&mapping->pages, page_index(page),
-+			__xa_clear_tag(&mapping->pages, page_index(page),
- 						PAGECACHE_TAG_WRITEBACK);
- 			if (bdi_cap_account_writeback(bdi)) {
- 				struct bdi_writeback *wb = inode_to_wb(inode);
-@@ -2773,7 +2765,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 			on_wblist = mapping_tagged(mapping,
- 						   PAGECACHE_TAG_WRITEBACK);
- 
--			radix_tree_tag_set(&mapping->pages, page_index(page),
-+			__xa_set_tag(&mapping->pages, page_index(page),
- 						PAGECACHE_TAG_WRITEBACK);
- 			if (bdi_cap_account_writeback(bdi))
- 				inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
-@@ -2787,10 +2779,10 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 				sb_mark_inode_writeback(mapping->host);
- 		}
- 		if (!PageDirty(page))
--			radix_tree_tag_clear(&mapping->pages, page_index(page),
-+			__xa_clear_tag(&mapping->pages, page_index(page),
- 						PAGECACHE_TAG_DIRTY);
- 		if (!keep_write)
--			radix_tree_tag_clear(&mapping->pages, page_index(page),
-+			__xa_clear_tag(&mapping->pages, page_index(page),
- 						PAGECACHE_TAG_TOWRITE);
- 		xa_unlock_irqrestore(&mapping->pages, flags);
- 	} else {
-@@ -2806,16 +2798,6 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- }
- EXPORT_SYMBOL(__test_set_page_writeback);
- 
--/*
-- * Return true if any of the pages in the mapping are marked with the
-- * passed tag.
-- */
--int mapping_tagged(struct address_space *mapping, int tag)
--{
--	return radix_tree_tagged(&mapping->pages, tag);
--}
--EXPORT_SYMBOL(mapping_tagged);
--
++/**
++ * xa_reserve() - Reserve this index in the XArray.
++ * @xa: XArray.
++ * @index: Index into array.
++ * @gfp: Memory allocation flags.
++ *
++ * Ensures there is somewhere to store an entry at @index in the array.
++ * If there is already something stored at @index, this function does
++ * nothing.  If there was nothing there, the entry is marked as reserved.
++ * Loads from @index will continue to see a %NULL pointer until a
++ * subsequent store to @index.
++ *
++ * If you do not use the entry that you have reserved, call xa_release()
++ * or xa_erase() to free any unnecessary memory.
++ *
++ * Return: 0 if the reservation succeeded or -ENOMEM if it failed.
++ */
++int xa_reserve(struct xarray *xa, unsigned long index, gfp_t gfp)
++{
++	XA_STATE(xas, xa, index);
++	unsigned int lock_type = xa_lock_type(xa);
++	void *curr;
++
++	do {
++		if (lock_type == XA_LOCK_IRQ)
++			xas_lock_irq(&xas);
++		else if (lock_type == XA_LOCK_BH)
++			xas_lock_bh(&xas);
++		else
++			xas_lock(&xas);
++
++		curr = xas_create(&xas);
++		if (!curr)
++			xas_store(&xas, XA_ZERO_ENTRY);
++
++                if (lock_type == XA_LOCK_IRQ)
++                        xas_unlock_irq(&xas);
++                else if (lock_type == XA_LOCK_BH)
++                        xas_unlock_bh(&xas);
++                else
++                        xas_unlock(&xas);
++	} while (xas_nomem(&xas, gfp));
++
++	return xas_error(&xas);
++}
++EXPORT_SYMBOL(xa_reserve);
++
  /**
-  * wait_for_stable_page() - wait for writeback to finish, if necessary.
-  * @page:	The page to wait on.
+  * __xa_set_tag() - Set this tag on this entry while locked.
+  * @xa: XArray.
+diff --git a/tools/testing/radix-tree/xarray-test.c b/tools/testing/radix-tree/xarray-test.c
+index 4d3541ac31e9..fe38b53df2ab 100644
+--- a/tools/testing/radix-tree/xarray-test.c
++++ b/tools/testing/radix-tree/xarray-test.c
+@@ -502,6 +502,29 @@ void check_move(struct xarray *xa)
+ 	} while (i < (1 << 16));
+ }
+ 
++void check_reserve(struct xarray *xa)
++{
++	assert(xa_empty(xa));
++	xa_reserve(xa, 12345678, GFP_KERNEL);
++	assert(!xa_empty(xa));
++	assert(!xa_load(xa, 12345678));
++	xa_release(xa, 12345678);
++	assert(xa_empty(xa));
++
++	xa_reserve(xa, 12345678, GFP_KERNEL);
++	assert(!xa_store(xa, 12345678, xa_mk_value(12345678), GFP_NOWAIT));
++	xa_release(xa, 12345678);
++	assert(xa_erase(xa, 12345678) == xa_mk_value(12345678));
++	assert(xa_empty(xa));
++
++	xa_reserve(xa, 12345678, GFP_KERNEL);
++	assert(!xa_cmpxchg(xa, 12345678, NULL, xa_mk_value(12345678),
++								GFP_NOWAIT));
++	xa_release(xa, 12345678);
++	assert(xa_erase(xa, 12345678) == xa_mk_value(12345678));
++	assert(xa_empty(xa));
++}
++
+ void xarray_checks(void)
+ {
+ 	DEFINE_XARRAY(array);
+@@ -548,6 +571,8 @@ void xarray_checks(void)
+ 
+ 	check_move(&array);
+ 	item_kill_tree(&array);
++
++	check_reserve(&array);
+ }
+ 
+ int __weak main(void)
 -- 
 2.15.1
 
