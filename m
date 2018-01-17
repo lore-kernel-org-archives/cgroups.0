@@ -1,7 +1,8 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 53/99] fs: Convert writeback to XArray
-Date: Wed, 17 Jan 2018 12:21:17 -0800
-Message-ID: <20180117202203.19756-54-willy@infradead.org>
+Subject: [PATCH v6 34/99] mm: Convert delete_from_swap_cache to
+ XArray
+Date: Wed, 17 Jan 2018 12:20:58 -0800
+Message-ID: <20180117202203.19756-35-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +14,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ocf6wl8zYKtw5m0lmpIHnD421UfKbAxeuZFBoq38Wv8=; b=YLz5VGMCIwsE3EDv6C06rNJqa/
- Od+d2xE/if5/dl8GeB532H/ZtmdAVWD5Pgd8BRVNYreT2MOIoOb8FR5AA7SVMidvwlWAvtgzvw+SL
- /ExVI4sccj/4IFDf348o969aqqSPKGifnTQv+A2D2yHnzusGeu2Hj3kCh3yqcghvgilw=;
+ bh=s2gscbsLMSTP0puGyUAjopwfDRZDa5emN431qieUBlk=; b=TJKbNgG0Xna11qteOMdC1rOtwU
+ aph9zuhgbZZBX2pjhuUAZkP5ipW9TJ0PK/S5hUsxG07QQ06vcn+NbAFlkKHhE8stLBvzp4S6gHpne
+ 4g7LGk7MJ6LMPMz/hPkLZY8VoRWv/g2dYxPKvQpsCXudEIjugBVtbSJHIY4QoW5TLfjY=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +24,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=ocf6wl8zYKtw5m0lmpIHnD421UfKbAxeuZFBoq38Wv8=; b=QnIdN6d/cf+XIS4oRYn3AvqiV1
- oEp1V3isO03WP/GuR9j99f5bvdTOAw7oTL4zGqlRht5gN32cVcByoAi3Qr14SCU2aSq0zEBm2dbHS
- O59OEWhv2yC66cHKopVQED+1dbBAIo8I92uup7j97B7/9x+mt5849uey5V6yF3u2KoPk=;
+ bh=s2gscbsLMSTP0puGyUAjopwfDRZDa5emN431qieUBlk=; b=fxvM0gOkKbdKxRcsJe2hfF3G90
+ f0IURqGMQcckeVLxWtzcpvmOmiUXywnk0HhZR38a9pgnZtFDNChtBpK+SQfusTAcoYS/a1ZIQ7jpY
+ sMgkM3PfkJao/bYCpM3yyhylQdbM5wMxN6dTvGO9/dxeQJ0uoEx2f6lJ8HCoEDNpEoJ8=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ocf6wl8zYKtw5m0lmpIHnD421UfKbAxeuZFBoq38Wv8=; b=LwTEtxxGdRpIZ+SI2d0Z87dhl
- DQzWfNfD5GBQMtfK5W+6LF0dwdZTpmtepNT8c1YtCSF/L2gvYsi2tslhzx/fjHGAac+Yp3KlDDncN
- LbuAwXSKq9tm5MGXk54V8K9F7k1filVEO2IywhjM9cu2ORgwc0KUnDxkOzbP/EoHEJxir3UZQpVAi
- q/3sCuM+0SVxzB0bGsRqa0fjkUzlKbGIS2EKvjOyo92+BWEaALtDcMT+09BGgJ81pb0Nuoa3ZRYNt
- PFKbCzWdgpnJPq0qAxKpLgvzawSG/QeIXpXZfCbyFWOkBnmVA+4/U2mSwLui04yd+USW09jVxIyz1
- NGxs1Whpg==;
+ bh=s2gscbsLMSTP0puGyUAjopwfDRZDa5emN431qieUBlk=; b=uoClgqsREBcGCJNridzYl5QA+
+ KdSv2yKWS6y020uaQJhrCg4ezEI6dQ2KLv+HZn91NqngpoceS0RaOJefj6RK5jDV85wZIvbErVgOw
+ 7I6cdoyGMIZmVnPBm6YXyBt7oUFpxeN62iIOpQjYtq22CVvSNpPvVULP/JT2dwzEfCB2D0fikhlp9
+ mrOsiOZFkpqL/ZPDlZofFQvtCZXqP0nvMd9wrnGSOlHFsvYdRDIagigviW8UgvrZuceqdbe2rs5Cz
+ bwlt/+6EWiUBKU7BLs6ROi2tjdTbL2/qS6njNIXO96hKaiGFMDGfiQSVH4cBsIh40xYAHRSR3ED8E
+ +nOzc0+yA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,62 +54,105 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-A couple of short loops.
+Both callers of __delete_from_swap_cache have the swp_entry_t already,
+so pass that in to make constructing the XA_STATE easier.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/fs-writeback.c | 25 +++++++++----------------
- 1 file changed, 9 insertions(+), 16 deletions(-)
+ include/linux/swap.h |  5 +++--
+ mm/swap_state.c      | 24 ++++++++++--------------
+ mm/vmscan.c          |  2 +-
+ 3 files changed, 14 insertions(+), 17 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index e2c1ca667d9a..897a89489fe9 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -339,9 +339,9 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
- 	struct address_space *mapping = inode->i_mapping;
- 	struct bdi_writeback *old_wb = inode->i_wb;
- 	struct bdi_writeback *new_wb = isw->new_wb;
--	struct radix_tree_iter iter;
-+	XA_STATE(xas, &mapping->pages, 0);
-+	struct page *page;
- 	bool switched = false;
--	void **slot;
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index e519554730fa..8eb99229dbc0 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -408,7 +408,7 @@ extern void show_swap_cache_info(void);
+ extern int add_to_swap(struct page *page);
+ extern int add_to_swap_cache(struct page *, swp_entry_t, gfp_t);
+ extern int __add_to_swap_cache(struct page *page, swp_entry_t entry);
+-extern void __delete_from_swap_cache(struct page *);
++extern void __delete_from_swap_cache(struct page *, swp_entry_t entry);
+ extern void delete_from_swap_cache(struct page *);
+ extern void free_page_and_swap_cache(struct page *);
+ extern void free_pages_and_swap_cache(struct page **, int);
+@@ -583,7 +583,8 @@ static inline int add_to_swap_cache(struct page *page, swp_entry_t entry,
+ 	return -1;
+ }
  
- 	/*
- 	 * By the time control reaches here, RCU grace period has passed
-@@ -375,25 +375,18 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
- 	 * to possibly dirty pages while PAGECACHE_TAG_WRITEBACK points to
- 	 * pages actually under writeback.
- 	 */
--	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
--				   PAGECACHE_TAG_DIRTY) {
--		struct page *page = radix_tree_deref_slot_protected(slot,
--						&mapping->pages.xa_lock);
--		if (likely(page) && PageDirty(page)) {
-+	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_DIRTY) {
-+		if (PageDirty(page)) {
- 			dec_wb_stat(old_wb, WB_RECLAIMABLE);
- 			inc_wb_stat(new_wb, WB_RECLAIMABLE);
- 		}
+-static inline void __delete_from_swap_cache(struct page *page)
++static inline void __delete_from_swap_cache(struct page *page,
++							swp_entry_t entry)
+ {
+ }
+ 
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index a57b5ad4c503..219e3b4f09e6 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -154,23 +154,22 @@ int add_to_swap_cache(struct page *page, swp_entry_t entry, gfp_t gfp)
+  * This must be called only on pages that have
+  * been verified to be in the swap cache.
+  */
+-void __delete_from_swap_cache(struct page *page)
++void __delete_from_swap_cache(struct page *page, swp_entry_t entry)
+ {
+-	struct address_space *address_space;
++	struct address_space *address_space = swap_address_space(entry);
+ 	int i, nr = hpage_nr_pages(page);
+-	swp_entry_t entry;
+-	pgoff_t idx;
++	pgoff_t idx = swp_offset(entry);
++	XA_STATE(xas, &address_space->pages, idx);
+ 
+ 	VM_BUG_ON_PAGE(!PageLocked(page), page);
+ 	VM_BUG_ON_PAGE(!PageSwapCache(page), page);
+ 	VM_BUG_ON_PAGE(PageWriteback(page), page);
+ 
+-	entry.val = page_private(page);
+-	address_space = swap_address_space(entry);
+-	idx = swp_offset(entry);
+ 	for (i = 0; i < nr; i++) {
+-		radix_tree_delete(&address_space->pages, idx + i);
++		void *entry = xas_store(&xas, NULL);
++		VM_BUG_ON_PAGE(entry != page + i, entry);
+ 		set_page_private(page + i, 0);
++		xas_next(&xas);
  	}
+ 	ClearPageSwapCache(page);
+ 	address_space->nrpages -= nr;
+@@ -246,14 +245,11 @@ int add_to_swap(struct page *page)
+  */
+ void delete_from_swap_cache(struct page *page)
+ {
+-	swp_entry_t entry;
+-	struct address_space *address_space;
+-
+-	entry.val = page_private(page);
++	swp_entry_t entry = { .val = page_private(page) };
++	struct address_space *address_space = swap_address_space(entry);
  
--	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
--				   PAGECACHE_TAG_WRITEBACK) {
--		struct page *page = radix_tree_deref_slot_protected(slot,
--						&mapping->pages.xa_lock);
--		if (likely(page)) {
--			WARN_ON_ONCE(!PageWriteback(page));
--			dec_wb_stat(old_wb, WB_WRITEBACK);
--			inc_wb_stat(new_wb, WB_WRITEBACK);
--		}
-+	xas_set(&xas, 0);
-+	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_WRITEBACK) {
-+		WARN_ON_ONCE(!PageWriteback(page));
-+		dec_wb_stat(old_wb, WB_WRITEBACK);
-+		inc_wb_stat(new_wb, WB_WRITEBACK);
- 	}
+-	address_space = swap_address_space(entry);
+ 	xa_lock_irq(&address_space->pages);
+-	__delete_from_swap_cache(page);
++	__delete_from_swap_cache(page, entry);
+ 	xa_unlock_irq(&address_space->pages);
  
- 	wb_get(new_wb);
+ 	put_swap_page(page, entry);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 2fa675a2db31..51d437a18db8 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -718,7 +718,7 @@ static int __remove_mapping(struct address_space *mapping, struct page *page,
+ 	if (PageSwapCache(page)) {
+ 		swp_entry_t swap = { .val = page_private(page) };
+ 		mem_cgroup_swapout(page, swap);
+-		__delete_from_swap_cache(page);
++		__delete_from_swap_cache(page, swap);
+ 		xa_unlock_irqrestore(&mapping->pages, flags);
+ 		put_swap_page(page, swap);
+ 	} else {
 -- 
 2.15.1
 
