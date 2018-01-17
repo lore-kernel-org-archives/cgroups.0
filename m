@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 40/99] pagevec: Use xa_tag_t
-Date: Wed, 17 Jan 2018 12:21:04 -0800
-Message-ID: <20180117202203.19756-41-willy@infradead.org>
+Subject: [PATCH v6 56/99] lustre: Convert to XArray
+Date: Wed, 17 Jan 2018 12:21:20 -0800
+Message-ID: <20180117202203.19756-57-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=SifHHZwFFRTIZT/PgpOJ4/1onRi5abDvnrmtMcTrVRw=; b=djOpDIASf+NCR95J/MDcj41Dbl
- F3vko1CJmoiTDCUcWFBFsZsb7sG2EtTJ6mgicIZfweA3EMP7TwYmdi0C+dICTvLa+jUkwietnZndI
- bhCgJ2sO1r/dH1aR8wf217uFyXryXt6fbGEfLYdeFIyIlbdzRJ/ajVjYBJ/R5YzlUTx4=;
+ bh=iUwoT2jTeIJDsbftyjZLSRZC7V1QinGj9JYk3Mn7QX8=; b=bIbkpvGjAuFZH6ThdYkJoUIjtT
+ 0P/OTcYBhXLI5vIyPlEGvYWJ61t/Cblyx7YZcBYYb4qJYuO9UOAOPi1vT/sFjeXJSFfjvLwSiWvLV
+ DLfCiqISZBkqepBEMTaCu+Wfb9vk92mHns1sXvxunrLFRPIC9M00OK+V6p3pRGY8/Wdw=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=SifHHZwFFRTIZT/PgpOJ4/1onRi5abDvnrmtMcTrVRw=; b=PLewNu3vapQ4JXYC3EmdYxLzGg
- 5aSo/rp+d14sVR/FzyIvzMxvfqgj+KlYYCyEMwoV1JKdfii2lPPsiJVrr16CJX0PeaDslph6mNQ/Y
- 6COtfSQiYKZQDhBK3GB5Kz2q6lbHisvuKDIJZ3up6z9eioxHBhJ70fVGVIrxgNxYn5Fg=;
+ bh=iUwoT2jTeIJDsbftyjZLSRZC7V1QinGj9JYk3Mn7QX8=; b=OzeKX/ZRzUf08NRgtpc/HjP0UF
+ ck6nL2NSM+8EaR1yUe6QDqroQCsqn1Awoo+XZ07w9lgWOHacZFkuEiw7bmbreYuez29f/Ia34UjVN
+ EkZ8DIVLC3YNiNdcfGzVFyekdrzyH7pRDk5HpVOjJ+ZpwjzCky84m5LnqQ8yKMkI+M9g=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=SifHHZwFFRTIZT/PgpOJ4/1onRi5abDvnrmtMcTrVRw=; b=JaixgejtEUBKW/CAocUafE+Cx
- Rt9nUE59hxctfnm6ryiGsCjiCB5VwaK4c+saXEyvC3yqdLsxk6bBPFjNqUzNT5yzUR9qNe9C0LPIW
- /BEib/zmEgOqDfwnieMzguYKLV+doMXZTMfJrfBTP1ke7OjjxjYBwUMq/Po6SBeDuGD1pbVy0sa+G
- Fnxjn9ht8JXh90gCpkXSRWrgM8H9WOwOfGR/UjjA2uCnJiugZg2PVZHZWP7HI9e1/PG/j166dCxt5
- E6GM/a9ggqJqY/Ugdj4j3JXxyKU39sQD9NCUr1j/uzu6N4KJqRmYLituAAEpTl/ah2Ng5dArK10dZ
- 9oHhirMuA==;
+ bh=iUwoT2jTeIJDsbftyjZLSRZC7V1QinGj9JYk3Mn7QX8=; b=ENbgxJ/jg4N43jTx44ed+TvuI
+ EW5NjE29BwdXnecGQhizta8ft7CZOB/s9K65D6skhJ2mDGfgt35kCotpewkfY+Oa3nVtf0XsQQ/Ns
+ QkOo87z5GhhOiKdvddFWO3zsVNSZ4iiKwlNvX8ArtEilj/sT2/qY8GyJb+mXm74S4D+z5YPGv/8Ot
+ aplj4sOEAJH9ftsCeEpWOTTBXgIMm0lTMMGsOqnoWhvvp99D951yWSjq2tVveMo4ToVWtEcwYjeun
+ S7o9D2ZnUDfhzJqgByfA+fKCa4bfvz0VKmAPlIDAkF2rWoCHKR+Sn74La2sqfDGtj0/pj61zqM40G
+ pIMhdQacA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,130 +53,85 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Removes sparse warnings.
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/btrfs/extent_io.c    | 4 ++--
- fs/ext4/inode.c         | 2 +-
- fs/f2fs/data.c          | 2 +-
- fs/gfs2/aops.c          | 2 +-
- include/linux/pagevec.h | 8 +++++---
- mm/swap.c               | 4 ++--
- 6 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/staging/lustre/lustre/llite/glimpse.c   | 12 +++++-------
+ drivers/staging/lustre/lustre/mdc/mdc_request.c | 16 ++++++++--------
+ 2 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 22948f4febe7..4301cbf4e31f 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -3795,7 +3795,7 @@ int btree_write_cache_pages(struct address_space *mapping,
- 	pgoff_t index;
- 	pgoff_t end;		/* Inclusive */
- 	int scanned = 0;
--	int tag;
-+	xa_tag_t tag;
+diff --git a/drivers/staging/lustre/lustre/llite/glimpse.c b/drivers/staging/lustre/lustre/llite/glimpse.c
+index 5f2843da911c..25232fdf5797 100644
+--- a/drivers/staging/lustre/lustre/llite/glimpse.c
++++ b/drivers/staging/lustre/lustre/llite/glimpse.c
+@@ -57,7 +57,7 @@ static const struct cl_lock_descr whole_file = {
+ };
  
- 	pagevec_init(&pvec);
- 	if (wbc->range_cyclic) {
-@@ -3922,7 +3922,7 @@ static int extent_write_cache_pages(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int range_whole = 0;
- 	int scanned = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	/*
- 	 * We have to hold onto the inode so that ordered extents can do their
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 534a9130f625..4b7c10853928 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -2614,7 +2614,7 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
- 	long left = mpd->wbc->nr_to_write;
- 	pgoff_t index = mpd->first_page;
- 	pgoff_t end = mpd->last_page;
--	int tag;
-+	xa_tag_t tag;
- 	int i, err = 0;
- 	int blkbits = mpd->inode->i_blkbits;
- 	ext4_lblk_t lblk;
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index 8f51ac47b77f..c8f6d9806896 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -1640,7 +1640,7 @@ static int f2fs_write_cache_pages(struct address_space *mapping,
- 	pgoff_t last_idx = ULONG_MAX;
- 	int cycled;
- 	int range_whole = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 
-diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-index 1daf15a1f00c..c78ecd008191 100644
---- a/fs/gfs2/aops.c
-+++ b/fs/gfs2/aops.c
-@@ -369,7 +369,7 @@ static int gfs2_write_cache_jdata(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int cycled;
- 	int range_whole = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 	if (wbc->range_cyclic) {
-diff --git a/include/linux/pagevec.h b/include/linux/pagevec.h
-index 5fb6580f7f23..5168901bf06d 100644
---- a/include/linux/pagevec.h
-+++ b/include/linux/pagevec.h
-@@ -9,6 +9,8 @@
- #ifndef _LINUX_PAGEVEC_H
- #define _LINUX_PAGEVEC_H
- 
-+#include <linux/xarray.h>
-+
- /* 14 pointers + two long's align the pagevec structure to a power of two */
- #define PAGEVEC_SIZE	14
- 
-@@ -40,12 +42,12 @@ static inline unsigned pagevec_lookup(struct pagevec *pvec,
- 
- unsigned pagevec_lookup_range_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag);
-+		xa_tag_t tag);
- unsigned pagevec_lookup_range_nr_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag, unsigned max_pages);
-+		xa_tag_t tag, unsigned max_pages);
- static inline unsigned pagevec_lookup_tag(struct pagevec *pvec,
--		struct address_space *mapping, pgoff_t *index, int tag)
-+		struct address_space *mapping, pgoff_t *index, xa_tag_t tag)
+ /*
+- * Check whether file has possible unwriten pages.
++ * Check whether file has possible unwritten pages.
+  *
+  * \retval 1    file is mmap-ed or has dirty pages
+  *	 0    otherwise
+@@ -66,16 +66,14 @@ blkcnt_t dirty_cnt(struct inode *inode)
  {
- 	return pagevec_lookup_range_tag(pvec, mapping, index, (pgoff_t)-1, tag);
+ 	blkcnt_t cnt = 0;
+ 	struct vvp_object *vob = cl_inode2vvp(inode);
+-	void	      *results[1];
+ 
+-	if (inode->i_mapping)
+-		cnt += radix_tree_gang_lookup_tag(&inode->i_mapping->pages,
+-						  results, 0, 1,
+-						  PAGECACHE_TAG_DIRTY);
++	if (inode->i_mapping && xa_tagged(&inode->i_mapping->pages,
++				PAGECACHE_TAG_DIRTY))
++		cnt = 1;
+ 	if (cnt == 0 && atomic_read(&vob->vob_mmap_cnt) > 0)
+ 		cnt = 1;
+ 
+-	return (cnt > 0) ? 1 : 0;
++	return cnt;
  }
-diff --git a/mm/swap.c b/mm/swap.c
-index 8d7773cb2c3f..31d79479dacf 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -991,7 +991,7 @@ EXPORT_SYMBOL(pagevec_lookup_range);
  
- unsigned pagevec_lookup_range_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag)
-+		xa_tag_t tag)
- {
- 	pvec->nr = find_get_pages_range_tag(mapping, index, end, tag,
- 					PAGEVEC_SIZE, pvec->pages);
-@@ -1001,7 +1001,7 @@ EXPORT_SYMBOL(pagevec_lookup_range_tag);
+ int cl_glimpse_lock(const struct lu_env *env, struct cl_io *io,
+diff --git a/drivers/staging/lustre/lustre/mdc/mdc_request.c b/drivers/staging/lustre/lustre/mdc/mdc_request.c
+index 2ec79a6b17da..ea23247e9e02 100644
+--- a/drivers/staging/lustre/lustre/mdc/mdc_request.c
++++ b/drivers/staging/lustre/lustre/mdc/mdc_request.c
+@@ -934,17 +934,18 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
+ 	 * hash _smaller_ than one we are looking for.
+ 	 */
+ 	unsigned long offset = hash_x_index(*hash, hash64);
++	XA_STATE(xas, &mapping->pages, offset);
+ 	struct page *page;
+-	int found;
  
- unsigned pagevec_lookup_range_nr_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag, unsigned max_pages)
-+		xa_tag_t tag, unsigned max_pages)
- {
- 	pvec->nr = find_get_pages_range_tag(mapping, index, end, tag,
- 		min_t(unsigned int, max_pages, PAGEVEC_SIZE), pvec->pages);
+-	xa_lock_irq(&mapping->pages);
+-	found = radix_tree_gang_lookup(&mapping->pages,
+-				       (void **)&page, offset, 1);
+-	if (found > 0 && !xa_is_value(page)) {
++	xas_lock_irq(&xas);
++	page = xas_find(&xas, ULONG_MAX);
++	if (xa_is_value(page))
++		page = NULL;
++	if (page) {
+ 		struct lu_dirpage *dp;
+ 
+ 		get_page(page);
+-		xa_unlock_irq(&mapping->pages);
++		xas_unlock_irq(&xas);
+ 		/*
+ 		 * In contrast to find_lock_page() we are sure that directory
+ 		 * page cannot be truncated (while DLM lock is held) and,
+@@ -992,8 +993,7 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
+ 			page = ERR_PTR(-EIO);
+ 		}
+ 	} else {
+-		xa_unlock_irq(&mapping->pages);
+-		page = NULL;
++		xas_unlock_irq(&xas);
+ 	}
+ 	return page;
+ }
 -- 
 2.15.1
 
