@@ -1,8 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 57/99] dax: Convert dax_unlock_mapping_entry
- to XArray
-Date: Wed, 17 Jan 2018 12:21:21 -0800
-Message-ID: <20180117202203.19756-58-willy@infradead.org>
+Subject: [PATCH v6 73/99] xfs: Convert mru cache to XArray
+Date: Wed, 17 Jan 2018 12:21:37 -0800
+Message-ID: <20180117202203.19756-74-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=Z+ajj2wD4YsebV2T4CDiyg/K740zitLZXJd3yaYAxYY=; b=nI27ZyO5zMPv/7PG2HgNdt/DAj
- ewIn5q/FbcVWp7fgqooFyd4k2mbnLqz7kU2e1KI6sNc/pRShdFXDeZ3xtXO2vD0j/44creXtnkmDj
- d5DOyHOAGjUHvP24Zy+8YBrr6K19SsVfTbZwZwVn15NwNBPrp37kqKyLQeK1JjpyEn54=;
+ bh=pQoPAZH+LdTNlYHSvc0jw9KpY7VbWvr8hV9iL3hlNZg=; b=D9ww94FtCGHCx+x5AYm9QiOJw5
+ q2RDqvTsDjvv4kwVqOjX5jFlAzB5F3zGVrmI+6tc0khuWMT10n3iCmVW0QcUTGfQBsn8+Ao9I6G1X
+ SBHwTpA0pVeU7wKnmtCfC+bSoFQHctiKx1hotXq7UIq8MtbNxdMOa5q06prDtq1ytGew=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -24,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=Z+ajj2wD4YsebV2T4CDiyg/K740zitLZXJd3yaYAxYY=; b=jXFK1zxHmCImHUGqUdSS/pSZJH
- 7FeoTj9oOlgT5HnDxaygjXDwlx97c976wiNK5lh2dRDZcVX/LSHJupPc/EY1ury4ts0NbtRmD/cZr
- CF9nXprDI/z+mteWRq/nSQVek9Ko+vBIvRFpZ33/iKibLB15kr1Jv388CfPwyzoHxmZc=;
+ bh=pQoPAZH+LdTNlYHSvc0jw9KpY7VbWvr8hV9iL3hlNZg=; b=Zr+GWZjb4VOwJoDLiR7hu+5zi5
+ 5wxDfFtBbMKBMA5As72ry74IrTLjc/S1ZjoDaYsfjDlOupobyCWE5UtP5yA2e+EpjWmM4I7q9LfaQ
+ ivw9Ohz6r4GcYTpOd+PghsuHfXkgVhQSOf2VU70DOS8AXPHf09X6lVHQ5U8FQtT5vKbE=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=Z+ajj2wD4YsebV2T4CDiyg/K740zitLZXJd3yaYAxYY=; b=UMVqCZ4n3BWUCchehQooIWPkX
- ZCiiy2jJhqKy20/XNvSQscnRanbBFcaIukqaaKiFosQ9OQ6fMLDRoZ4vqSQ9rwe8qOXdnfT8RUX7J
- 6vRocjbGPfi2TPOxYT59fkk/V461FEeBtMJt4jejA3FGwgDVGe4NSNDJQeHeiWu22BVJKTXi5D7Gd
- aUGDbRvfBUU2riSNU62oM85fM4tj3iIDRN/f6I8nW9UQfxKSh6eL497AkcKZqMIZcIKQu9c6+4uhf
- GXulDCD184rM846aa+IMjb3t1hwA7cj8qPgvx1ZpKoZ/Y0X/EW80nSejmUWSDl7AkWgGU27en3xyq
- HkMlGTFCg==;
+ bh=pQoPAZH+LdTNlYHSvc0jw9KpY7VbWvr8hV9iL3hlNZg=; b=NerMtxTUNVCrlE4L++lfh6E8f
+ 3ZNEDT87Qv6K4M+cmOoBawdRb5DxbwK/p3dgPd2fPuEO//vL+wycDpXdBoqD+Pm8iBNITevHQ6pu5
+ 9jYCIfNMeZoBqqOL3FJys5HYWXHzK7O4LMGSV8miCDdBFxn/yBsOD2PYXzi0YKn/5suzrIHyxRwVI
+ KZGOnB/vQm1ij/JCb+0UTcdEZm0YIF8eSuwfYITDpm22Twr8AljJJKiafZb6c7Yul7L0USMwYGpqn
+ aT4mXKZJh8sTnGP0pJmDnLXKS+/pLoLazHoUWyT5MBoWmCn5eAoPA2f9sCSNs0qbguzRQZgINyTV5
+ dRl1nbMng==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -54,104 +53,213 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Replace slot_locked() with dax_locked() and inline unlock_slot() into
-its only caller.
+This eliminates a call to radix_tree_preload().
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 48 ++++++++++++++++--------------------------------
- 1 file changed, 16 insertions(+), 32 deletions(-)
+ fs/xfs/xfs_mru_cache.c | 72 +++++++++++++++++++++++---------------------------
+ 1 file changed, 33 insertions(+), 39 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 5097a606da1a..f3463d93a6ce 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -73,6 +73,11 @@ fs_initcall(init_dax_wait_table);
- #define DAX_ZERO_PAGE	(1UL << 2)
- #define DAX_EMPTY	(1UL << 3)
- 
-+static bool dax_locked(void *entry)
-+{
-+	return xa_to_value(entry) & DAX_ENTRY_LOCK;
-+}
-+
- static unsigned long dax_radix_sector(void *entry)
- {
- 	return xa_to_value(entry) >> DAX_SHIFT;
-@@ -180,16 +185,6 @@ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
- 		__wake_up(wq, TASK_NORMAL, wake_all ? 0 : 1, &key);
- }
- 
--/*
-- * Check whether the given slot is locked.  Must be called with xa_lock held.
-- */
--static inline int slot_locked(struct address_space *mapping, void **slot)
--{
--	unsigned long entry = xa_to_value(
--		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
--	return entry & DAX_ENTRY_LOCK;
--}
--
- /*
-  * Mark the given slot as locked.  Must be called with xa_lock held.
+diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+index f8a674d7f092..2179bede5396 100644
+--- a/fs/xfs/xfs_mru_cache.c
++++ b/fs/xfs/xfs_mru_cache.c
+@@ -101,10 +101,9 @@
+  * an infinite loop in the code.
   */
-@@ -202,18 +197,6 @@ static inline void *lock_slot(struct address_space *mapping, void **slot)
- 	return entry;
- }
- 
--/*
-- * Mark the given slot as unlocked.  Must be called with xa_lock held.
-- */
--static inline void *unlock_slot(struct address_space *mapping, void **slot)
--{
--	unsigned long v = xa_to_value(
--		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
--	void *entry = xa_mk_value(v & ~DAX_ENTRY_LOCK);
--	radix_tree_replace_slot(&mapping->pages, slot, entry);
--	return entry;
--}
--
- /*
-  * Lookup entry in radix tree, wait for it to become unlocked if it is
-  * a DAX entry and return it. The caller must call
-@@ -237,8 +220,7 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 		entry = __radix_tree_lookup(&mapping->pages, index, NULL,
- 					  &slot);
- 		if (!entry ||
--		    WARN_ON_ONCE(!xa_is_value(entry)) ||
--		    !slot_locked(mapping, slot)) {
-+		    WARN_ON_ONCE(!xa_is_value(entry)) || !dax_locked(entry)) {
- 			if (slotp)
- 				*slotp = slot;
- 			return entry;
-@@ -257,17 +239,19 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- static void dax_unlock_mapping_entry(struct address_space *mapping,
- 				     pgoff_t index)
+ struct xfs_mru_cache {
+-	struct radix_tree_root	store;     /* Core storage data structure.  */
++	struct xarray		store;     /* Core storage data structure.  */
+ 	struct list_head	*lists;    /* Array of lists, one per grp.  */
+ 	struct list_head	reap_list; /* Elements overdue for reaping. */
+-	spinlock_t		lock;      /* Lock to protect this struct.  */
+ 	unsigned int		grp_count; /* Number of discrete groups.    */
+ 	unsigned int		grp_time;  /* Time period spanned by grps.  */
+ 	unsigned int		lru_grp;   /* Group containing time zero.   */
+@@ -232,22 +231,21 @@ _xfs_mru_cache_list_insert(
+  * data store, removing it from the reap list, calling the client's free
+  * function and deleting the element from the element zone.
+  *
+- * We get called holding the mru->lock, which we drop and then reacquire.
+- * Sparse need special help with this to tell it we know what we are doing.
++ * We get called holding the mru->store lock, which we drop and then reacquire.
++ * Sparse needs special help with this to tell it we know what we are doing.
+  */
+ STATIC void
+ _xfs_mru_cache_clear_reap_list(
+ 	struct xfs_mru_cache	*mru)
+-		__releases(mru->lock) __acquires(mru->lock)
++		__releases(mru->store) __acquires(mru->store)
  {
--	void *entry, **slot;
-+	XA_STATE(xas, &mapping->pages, index);
-+	void *entry;
+ 	struct xfs_mru_cache_elem *elem, *next;
+ 	struct list_head	tmp;
  
--	xa_lock_irq(&mapping->pages);
--	entry = __radix_tree_lookup(&mapping->pages, index, NULL, &slot);
--	if (WARN_ON_ONCE(!entry || !xa_is_value(entry) ||
--			 !slot_locked(mapping, slot))) {
--		xa_unlock_irq(&mapping->pages);
-+	xas_lock_irq(&xas);
-+	entry = xas_load(&xas);
-+	if (WARN_ON_ONCE(!entry || !xa_is_value(entry) || !dax_locked(entry))) {
-+		xas_unlock_irq(&xas);
- 		return;
+ 	INIT_LIST_HEAD(&tmp);
+ 	list_for_each_entry_safe(elem, next, &mru->reap_list, list_node) {
+-
+ 		/* Remove the element from the data store. */
+-		radix_tree_delete(&mru->store, elem->key);
++		__xa_erase(&mru->store, elem->key);
+ 
+ 		/*
+ 		 * remove to temp list so it can be freed without
+@@ -255,14 +253,14 @@ _xfs_mru_cache_clear_reap_list(
+ 		 */
+ 		list_move(&elem->list_node, &tmp);
  	}
--	unlock_slot(mapping, slot);
--	xa_unlock_irq(&mapping->pages);
-+	entry = xa_mk_value(xa_to_value(entry) & ~DAX_ENTRY_LOCK);
-+	xas_store(&xas, entry);
-+	/* Safe to not call xas_pause here -- we don't touch the array after */
-+	xas_unlock_irq(&xas);
- 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+-	spin_unlock(&mru->lock);
++	xa_unlock(&mru->store);
+ 
+ 	list_for_each_entry_safe(elem, next, &tmp, list_node) {
+ 		list_del_init(&elem->list_node);
+ 		mru->free_func(elem);
+ 	}
+ 
+-	spin_lock(&mru->lock);
++	xa_lock(&mru->store);
  }
  
+ /*
+@@ -284,7 +282,7 @@ _xfs_mru_cache_reap(
+ 	if (!mru || !mru->lists)
+ 		return;
+ 
+-	spin_lock(&mru->lock);
++	xa_lock(&mru->store);
+ 	next = _xfs_mru_cache_migrate(mru, jiffies);
+ 	_xfs_mru_cache_clear_reap_list(mru);
+ 
+@@ -298,7 +296,7 @@ _xfs_mru_cache_reap(
+ 		queue_delayed_work(xfs_mru_reap_wq, &mru->work, next);
+ 	}
+ 
+-	spin_unlock(&mru->lock);
++	xa_unlock(&mru->store);
+ }
+ 
+ int
+@@ -358,13 +356,8 @@ xfs_mru_cache_create(
+ 	for (grp = 0; grp < mru->grp_count; grp++)
+ 		INIT_LIST_HEAD(mru->lists + grp);
+ 
+-	/*
+-	 * We use GFP_KERNEL radix tree preload and do inserts under a
+-	 * spinlock so GFP_ATOMIC is appropriate for the radix tree itself.
+-	 */
+-	INIT_RADIX_TREE(&mru->store, GFP_ATOMIC);
++	xa_init(&mru->store);
+ 	INIT_LIST_HEAD(&mru->reap_list);
+-	spin_lock_init(&mru->lock);
+ 	INIT_DELAYED_WORK(&mru->work, _xfs_mru_cache_reap);
+ 
+ 	mru->grp_time  = grp_time;
+@@ -394,17 +387,17 @@ xfs_mru_cache_flush(
+ 	if (!mru || !mru->lists)
+ 		return;
+ 
+-	spin_lock(&mru->lock);
++	xa_lock(&mru->store);
+ 	if (mru->queued) {
+-		spin_unlock(&mru->lock);
++		xa_unlock(&mru->store);
+ 		cancel_delayed_work_sync(&mru->work);
+-		spin_lock(&mru->lock);
++		xa_lock(&mru->store);
+ 	}
+ 
+ 	_xfs_mru_cache_migrate(mru, jiffies + mru->grp_count * mru->grp_time);
+ 	_xfs_mru_cache_clear_reap_list(mru);
+ 
+-	spin_unlock(&mru->lock);
++	xa_unlock(&mru->store);
+ }
+ 
+ void
+@@ -431,24 +424,24 @@ xfs_mru_cache_insert(
+ 	unsigned long		key,
+ 	struct xfs_mru_cache_elem *elem)
+ {
++	XA_STATE(xas, &mru->store, key);
+ 	int			error;
+ 
+ 	ASSERT(mru && mru->lists);
+ 	if (!mru || !mru->lists)
+ 		return -EINVAL;
+ 
+-	if (radix_tree_preload(GFP_NOFS))
+-		return -ENOMEM;
+-
+ 	INIT_LIST_HEAD(&elem->list_node);
+ 	elem->key = key;
+ 
+-	spin_lock(&mru->lock);
+-	error = radix_tree_insert(&mru->store, key, elem);
+-	radix_tree_preload_end();
+-	if (!error)
+-		_xfs_mru_cache_list_insert(mru, elem);
+-	spin_unlock(&mru->lock);
++	do {
++		xas_lock(&xas);
++		xas_store(&xas, elem);
++		error = xas_error(&xas);
++		if (!error)
++			_xfs_mru_cache_list_insert(mru, elem);
++		xas_unlock(&xas);
++	} while (xas_nomem(&xas, GFP_NOFS));
+ 
+ 	return error;
+ }
+@@ -470,11 +463,11 @@ xfs_mru_cache_remove(
+ 	if (!mru || !mru->lists)
+ 		return NULL;
+ 
+-	spin_lock(&mru->lock);
+-	elem = radix_tree_delete(&mru->store, key);
++	xa_lock(&mru->store);
++	elem = __xa_erase(&mru->store, key);
+ 	if (elem)
+ 		list_del(&elem->list_node);
+-	spin_unlock(&mru->lock);
++	xa_unlock(&mru->store);
+ 
+ 	return elem;
+ }
+@@ -520,20 +513,21 @@ xfs_mru_cache_lookup(
+ 	struct xfs_mru_cache	*mru,
+ 	unsigned long		key)
+ {
++	XA_STATE(xas, &mru->store, key);
+ 	struct xfs_mru_cache_elem *elem;
+ 
+ 	ASSERT(mru && mru->lists);
+ 	if (!mru || !mru->lists)
+ 		return NULL;
+ 
+-	spin_lock(&mru->lock);
+-	elem = radix_tree_lookup(&mru->store, key);
++	xas_lock(&xas);
++	elem = xas_load(&xas);
+ 	if (elem) {
+ 		list_del(&elem->list_node);
+ 		_xfs_mru_cache_list_insert(mru, elem);
+-		__release(mru_lock); /* help sparse not be stupid */
++		__release(&xas); /* help sparse not be stupid */
+ 	} else
+-		spin_unlock(&mru->lock);
++		xas_unlock(&xas);
+ 
+ 	return elem;
+ }
+@@ -546,7 +540,7 @@ xfs_mru_cache_lookup(
+ void
+ xfs_mru_cache_done(
+ 	struct xfs_mru_cache	*mru)
+-		__releases(mru->lock)
++		__releases(mru->store)
+ {
+-	spin_unlock(&mru->lock);
++	xa_unlock(&mru->store);
+ }
 -- 
 2.15.1
 
