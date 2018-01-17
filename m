@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 60/99] dax: Convert __dax_invalidate_mapping_entry to XArray
-Date: Wed, 17 Jan 2018 12:21:24 -0800
-Message-ID: <20180117202203.19756-61-willy@infradead.org>
+Subject: [PATCH v6 66/99] page cache: Finish XArray conversion
+Date: Wed, 17 Jan 2018 12:21:30 -0800
+Message-ID: <20180117202203.19756-67-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
 	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
 	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=zxW46HrF9aiqLexk9BaysKMYO4nPFGmq9Qp8WgDDloU=; b=DwWvcH3aHbF+5aj8xQ8UTKPvg
-	EITTVxX97FIRo8btutXbyII38UlCnDw8LFIey3JApow09542umZCBbWqcgX3lKVpQ7SwTqYCJ868D
-	Qgu9Ux97V1nXFWAdjHxvb8uYdfeulwOf/rkyJxfT4cyt9B/8UG6PIiwoJvS1TrNm0P4KgXp+nYnp0
-	oExsENSY53vlo753WWwYlwU+AoIC1OBvW3VU4S6yJo3pHJB6E77EyoqVR7zduKV6/s1zp1+A4JxV5
-	RsjaQH+1/5R638wQeXC2gQTbns8pHxpReHwY/D0vEE+rpr5o2npAH3dKT6+YRtm8pObIOpqCQkZTA
-	O/HCYjmmQ==;
+	 bh=ZUixE8UIx+Uw33Ptxtp6ch2sD7OyVIqIqzQrNWtBjXg=; b=aZQCFV6wuMHvlK+PoTv+bYM7R
+	u2h977vzY0bh5PK3j4eUygqAGyEARVw7gPv43GXsQ8xH0sDhcIrou5k9RrXpRMWCNxrEhQpph2qis
+	B8FROZEUXzpD2B9WJXjwC8AX4ENVL2xF+XAvSq2NOSL6fRpzDKFuEaKDQ2Je1CNFo5EqJ05BqIqLO
+	sUvgkeVTWYgNibpzvlQG62Rvnkp32oIiL4jt0Us0Puup33YL/9IF3sUQx1nT196kWMku7jAMgftMW
+	lvuYkuJlgvSLpKaIHXUtxxkEMhqJ8jjd9BIsztDUyRJGBiASvTe7jee/llwLgV7dYkhMnRbfxgfd8
+	1oBp3qNUA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -27,47 +27,55 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Simple now that we already have an xa_state!
+With no more radix tree API users left, we can drop the GFP flags
+and use xa_init() instead of INIT_RADIX_TREE().
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ fs/inode.c         | 2 +-
+ include/linux/fs.h | 2 +-
+ mm/swap_state.c    | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index d3fe61b95216..9a30224da4d6 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -413,24 +413,24 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	XA_STATE(xas, &mapping->pages, index);
- 	int ret = 0;
- 	void *entry;
--	struct radix_tree_root *pages = &mapping->pages;
- 
- 	xa_lock_irq(&mapping->pages);
- 	entry = get_unlocked_mapping_entry(&xas);
- 	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
- 		goto out;
- 	if (!trunc &&
--	    (radix_tree_tag_get(pages, index, PAGECACHE_TAG_DIRTY) ||
--	     radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE)))
-+	    (xas_get_tag(&xas, PAGECACHE_TAG_DIRTY) ||
-+	     xas_get_tag(&xas, PAGECACHE_TAG_TOWRITE)))
- 		goto out;
--	radix_tree_delete(pages, index);
-+	xas_store(&xas, NULL);
- 	mapping->nrexceptional--;
- 	ret = 1;
- out:
- 	put_unlocked_mapping_entry(&xas, entry);
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
- 	return ret;
- }
-+
- /*
-  * Delete DAX entry at @index from @mapping.  Wait for it
-  * to be unlocked before deleting it.
+diff --git a/fs/inode.c b/fs/inode.c
+index c7b00573c10d..f5680b805336 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -348,7 +348,7 @@ EXPORT_SYMBOL(inc_nlink);
+ void address_space_init_once(struct address_space *mapping)
+ {
+ 	memset(mapping, 0, sizeof(*mapping));
+-	INIT_RADIX_TREE(&mapping->pages, GFP_ATOMIC | __GFP_ACCOUNT);
++	xa_init_flags(&mapping->pages, XA_FLAGS_LOCK_IRQ);
+ 	init_rwsem(&mapping->i_mmap_rwsem);
+ 	INIT_LIST_HEAD(&mapping->private_list);
+ 	spin_lock_init(&mapping->private_lock);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index c58bc3c619bf..b459bf4ddb62 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -410,7 +410,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
+  */
+ struct address_space {
+ 	struct inode		*host;
+-	struct radix_tree_root	pages;
++	struct xarray		pages;
+ 	gfp_t			gfp_mask;
+ 	atomic_t		i_mmap_writable;
+ 	struct rb_root_cached	i_mmap;
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 219e3b4f09e6..25f027d0bb00 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -573,7 +573,7 @@ int init_swap_address_space(unsigned int type, unsigned long nr_pages)
+ 		return -ENOMEM;
+ 	for (i = 0; i < nr; i++) {
+ 		space = spaces + i;
+-		INIT_RADIX_TREE(&space->pages, GFP_ATOMIC|__GFP_NOWARN);
++		xa_init_flags(&space->pages, XA_FLAGS_LOCK_IRQ);
+ 		atomic_set(&space->i_mmap_writable, 0);
+ 		space->a_ops = &swap_aops;
+ 		/* swap cache doesn't use writeback related tags */
 -- 
 2.15.1
 
