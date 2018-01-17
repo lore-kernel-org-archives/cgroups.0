@@ -1,7 +1,8 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 65/99] dax: Fix sparse warning
-Date: Wed, 17 Jan 2018 12:21:29 -0800
-Message-ID: <20180117202203.19756-66-willy@infradead.org>
+Subject: [PATCH v6 39/99] mm: Convert khugepaged_scan_shmem to
+ XArray
+Date: Wed, 17 Jan 2018 12:21:03 -0800
+Message-ID: <20180117202203.19756-40-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +14,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=gkqfWwRqwd2HZPlcOVcJrDMpt7HmnmzlXTDVEbTO50Q=; b=BH2BDfTT3MUKmJei7XHHLukyoH
- P7RJAdytGjdxVyJlpsVX2n+jZ+rYmLNxXU0nhxB6OiNDzM8Ag/r/XPBTQ4sSEQWTpEpNrS35jiSl7
- gCPfvS11gS8smAnRgFHbm5glNJaZWUkRNOUamcPObjv55J3BaQ9XXspMEpVh9dQQb9yc=;
+ bh=PaT37owr/YpSqtBMVCXpJsWlREI0zmsi77XgyaU2bpM=; b=M5sVFqxj7rZVbTlpL94dI9g6SH
+ 2x/CXZgF8plFO+l0ZTwIPEfRFdhbW58as7T9rjMsR0o3ZxdfkgOoQ27SVfAEg0BPBkwGzDEYv12Ib
+ r6qCAIR4mC15azOPG36tgc2RgKiRHFfIAlXPBAV6G2Rka5r9+pR7z/OUHz17bajBDm/A=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +24,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=gkqfWwRqwd2HZPlcOVcJrDMpt7HmnmzlXTDVEbTO50Q=; b=IVX7g+WYZCrNt91wB4RnNZ+Yr4
- y1CzLJcH79Xuv480IYyqhK2nl5EKPhTgIW774m9mUqYRgifp0cjWtolLGx5e6aY7nHdQPcOb2Yw+o
- ybRu40Seq1CmUBUjSGWELU/qD/bHHzmrCNNUNAHHvOqjRnKSlNacsaS+PrdUAxUcguGs=;
+ bh=PaT37owr/YpSqtBMVCXpJsWlREI0zmsi77XgyaU2bpM=; b=m9aWbGRIWlInJRHZUYP5WuhxPD
+ ZEG7ht9KH+K8UBeSdUdDxh12VcvyHfcWEleaydLh0kLk5GKXE+rNdEyYn8rfFQZPYIqFoivD1KIMP
+ y22riD2KtuQhZIwMLB/ISJQKXcUflRqspS0L2dbDNZct5GKMq4Minn37ybrrAxZCPp1Q=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=gkqfWwRqwd2HZPlcOVcJrDMpt7HmnmzlXTDVEbTO50Q=; b=KC+0bzRe8oBsTLyK1u0RnFhKp
- MY72rBNYkEzAfNIAnGSaZKxZX/c3W4/Vm3YftRrSRdJAO1aUf0bTxLJ2XEJd4mP3EAhSgXyRKIBXc
- +DHVy0TW2cmL1HeC5SSx+R24ae9d30e8v4B7MyX7l/HAtREfRQmNY0PRtDV0bewt5XPw6v/3+1Cs/
- HJyDgvvc8j9p+bRm4iRHoIXWEjaZ3mnkZ7DlkQFTwD2+vta1Gs6H3Tv1UWLBbsOQCxyKB7nuu8kRL
- ilLs0QzOchZA7s8Bax16XIJhMdlhLlvvO4rvE8Pts7IZm3ubB4+ch+AaRyWNVnjVjXAjDWrPWP+8j
- b6Gb+30Gw==;
+ bh=PaT37owr/YpSqtBMVCXpJsWlREI0zmsi77XgyaU2bpM=; b=gs19MIY+hmfSvoMuPUJW+9WxI
+ /rxRr3b8RXA1AwPVXVF0/YWSx7Z7Ma+2dlCKn4q+CIOgKBa5aIzbuKf3NN8WiCeijdEHzD0fcslgg
+ pexAcpF9/RJvhSUEBm/jr8O+FPgLTuHqeLL4ouzH6zf8D4UipTEOAa1/um9GOfwa/v3u6xSzj8CF4
+ 5s1qX1WKK3RR96HKIuZjWOPvGBkIx2GrUdQWiOa3/tEG86ENcRr1kNUU4PYFP0VU2XbF143Zakoca
+ qszcwBbqFI8nA8ULI60XjBuz61CVGt4F7fitDwDZX+htJIznwa8FV7OmE5XrKqvGSKGSoopIcSlg7
+ PoDUVM5yA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,83 +54,57 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-sparse doesn't know that follow_pte_pmd() conditionally acquires the ptl,
-because it's in a separate compilation unit.  Move follow_pte_pmd() to
-mm.h where sparse can see it.
+Slightly shorter and easier to read code.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/mm.h | 15 ++++++++++++++-
- mm/memory.c        | 16 +---------------
- 2 files changed, 15 insertions(+), 16 deletions(-)
+ mm/khugepaged.c | 17 +++++------------
+ 1 file changed, 5 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index fe1ee4313add..9c384c486edf 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1314,7 +1314,7 @@ int copy_page_range(struct mm_struct *dst, struct mm_struct *src,
- 			struct vm_area_struct *vma);
- void unmap_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen, int even_cows);
--int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
- 			     unsigned long *start, unsigned long *end,
- 			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp);
- int follow_pfn(struct vm_area_struct *vma, unsigned long address,
-@@ -1324,6 +1324,19 @@ int follow_phys(struct vm_area_struct *vma, unsigned long address,
- int generic_access_phys(struct vm_area_struct *vma, unsigned long addr,
- 			void *buf, int len, int write);
- 
-+static inline int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+			     unsigned long *start, unsigned long *end,
-+			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
-+{
-+	int res;
-+
-+	/* (void) is needed to make gcc happy */
-+	(void) __cond_lock(*ptlp,
-+			   !(res = __follow_pte_pmd(mm, address, start, end,
-+						    ptepp, pmdpp, ptlp)));
-+	return res;
-+}
-+
- static inline void unmap_shared_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen)
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 9f49d0cd61c2..15f1b2d81a69 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1534,8 +1534,7 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 		pgoff_t start, struct page **hpage)
  {
-diff --git a/mm/memory.c b/mm/memory.c
-index ca5674cbaff2..66184601ac03 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4201,7 +4201,7 @@ int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
- }
- #endif /* __PAGETABLE_PMD_FOLDED */
- 
--static int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
- 			    unsigned long *start, unsigned long *end,
- 			    pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
- {
-@@ -4278,20 +4278,6 @@ static inline int follow_pte(struct mm_struct *mm, unsigned long address,
- 	return res;
- }
- 
--int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
--			     unsigned long *start, unsigned long *end,
--			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
--{
--	int res;
+ 	struct page *page = NULL;
+-	struct radix_tree_iter iter;
+-	void **slot;
++	XA_STATE(xas, &mapping->pages, start);
+ 	int present, swap;
+ 	int node = NUMA_NO_NODE;
+ 	int result = SCAN_SUCCEED;
+@@ -1544,17 +1543,11 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 	swap = 0;
+ 	memset(khugepaged_node_load, 0, sizeof(khugepaged_node_load));
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+-		if (iter.index >= start + HPAGE_PMD_NR)
+-			break;
 -
--	/* (void) is needed to make gcc happy */
--	(void) __cond_lock(*ptlp,
--			   !(res = __follow_pte_pmd(mm, address, start, end,
--						    ptepp, pmdpp, ptlp)));
--	return res;
--}
--EXPORT_SYMBOL(follow_pte_pmd);
--
- /**
-  * follow_pfn - look up PFN at a user virtual address
-  * @vma: memory mapping
+-		page = radix_tree_deref_slot(slot);
+-		if (radix_tree_deref_retry(page)) {
+-			slot = radix_tree_iter_retry(&iter);
++	xas_for_each(&xas, page, start + HPAGE_PMD_NR - 1) {
++		if (xas_retry(&xas, page))
+ 			continue;
+-		}
+ 
+-		if (radix_tree_exception(page)) {
++		if (xa_is_value(page)) {
+ 			if (++swap > khugepaged_max_ptes_swap) {
+ 				result = SCAN_EXCEED_SWAP_PTE;
+ 				break;
+@@ -1593,7 +1586,7 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 		present++;
+ 
+ 		if (need_resched()) {
+-			slot = radix_tree_iter_resume(slot, &iter);
++			xas_pause(&xas);
+ 			cond_resched_rcu();
+ 		}
+ 	}
 -- 
 2.15.1
 
