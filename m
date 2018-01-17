@@ -1,7 +1,8 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 67/99] mm: Convert cgroup writeback to XArray
-Date: Wed, 17 Jan 2018 12:21:31 -0800
-Message-ID: <20180117202203.19756-68-willy@infradead.org>
+Subject: [PATCH v6 46/99] shmem: Convert shmem_add_to_page_cache
+ to XArray
+Date: Wed, 17 Jan 2018 12:21:10 -0800
+Message-ID: <20180117202203.19756-47-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +14,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=rTshG3SBn8CWiawm3Q3Mh1fF4HgInl4fH0Vr6jnt6Uk=; b=JmZQvj40bGuuuJI7orupf3GFbl
- yJbqATQI4Ro+UDQZXpbfZt+6c5jEghelyofU1EK4rAKhzxe1BKcpz9e0jfRMnIsvER1p92R/raQ/C
- 5KQ/EJy225W3bCkWILNCBkWWswamA3+m9OvIXlb5sYLx1qbwefCmRxzfJF7Vi+X3zv0U=;
+ bh=CI6+ICcbAPgkjpBfhyq9h1AbkNo2ZS67PXe5OqCkJMY=; b=gs9EXy9cHs8FgNve4mmnqW7Q/w
+ wXbSlyGN4fGHmHxqqXfNj7rtyuv4keSUt4K0CSNc24AOez07mRK+VAwz+sGh9fIquhrwaWutcOJ/i
+ rD9FHbmbWGCeBQm5of8X1KUHFkCIGFnPg3y9KE5QpMEMGx8AmgiFG/gbZTXdlUPSMbGE=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +24,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=rTshG3SBn8CWiawm3Q3Mh1fF4HgInl4fH0Vr6jnt6Uk=; b=EytEOd7vZn+YS4IuxAyz9Bn9H1
- ibBATCCY5U7o6FYoPGodJenKAbZNfuudiHWwMlbxGsbYsbYF/d/ZSi/0gBJZ2TfwyqM+dN8f8S1Rn
- 2i+OrRSiVdvzGR8diWsID0qTJqqLECCPBw6csgFReSUhvMfttX6Xm5PcloSIW3DhxTd4=;
+ bh=CI6+ICcbAPgkjpBfhyq9h1AbkNo2ZS67PXe5OqCkJMY=; b=Bl9669BY7SIFmrPU4IZu6Seb15
+ WcV4o2XQkitvzmrtthHVht2hjANoC9Fh0hOiCQHPyHmg1+HdJeHXd3oh/OUhYSGFTcVLRzDYAkkKd
+ YiO1ZW45W0TXQh1AbQC6M25xd4man1QneESpVIyeJA1odZz/RUWNfKxhOwbeuXT1NtAY=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=rTshG3SBn8CWiawm3Q3Mh1fF4HgInl4fH0Vr6jnt6Uk=; b=ZJH5TeDIyWaN0VgN+Y/gTecoM
- e75Rz3apmCk2dYpeSBVxjwttPvfkQU7HG0rQ/LOfguMqxFwP+1vuKzTcNhFXlqMCKFsBLB+qopUcr
- c+8QpztKprkDhi47UGhCav1zN23SAjtnjV8UrLF8g42AIPxzys5ut75MX5DRw9HGv5rbk3Ssc0nfJ
- hx1vPAFQEjY438bOtwWpz/b19Zb49dEK5tPMGjkmMYw8TH1gRQxhaVejSjeuKWcLD0SMR0v09mOvw
- Rbt30nKvMeIzxMr7cHmCISScw/tkqg0ibI5JIictnc0ZvNfzUU9EAK6/EU5uuEjOkwqmQ9g37CCkg
- 7XiZ+qh1g==;
+ bh=CI6+ICcbAPgkjpBfhyq9h1AbkNo2ZS67PXe5OqCkJMY=; b=mIUjrCwXlMr9wLcuz0iUayZju
+ +gyupOkDgdS9Jdvz0w5QN+toNF504XyF0v3ZG39cY+Zl3fJ6eI69RnaeXOLO7bOfdQDag6A8U82Ob
+ ++0NMYcWZdxblROLZ6OalPG9/dllEjyP6F09jEY6x17gZDCs21bPeMxXBXIs99xGsuypFxowBxekP
+ O2ohRyCuWVmFCn3i6VgLBJEAEVIMQVLhDRhg5rgRe9rWjgt08OJ4ID3xZnfTbHFRj8NO2cs6ZT81c
+ 9YSDNhoA8ZqRAV2SrvrMUq6/TN8ECG7qBY9omBaIB6fW9Ve+znsq2+hUI2OPLZnv5RsgRESyNNy5v
+ BtpMmA3IA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,123 +54,161 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is a fairly naive conversion, leaving in place the GFP_ATOMIC
-allocation.  By switching the locking around, we could use GFP_KERNEL
-and probably simplify the error handling.
+This removes the last caller of radix_tree_maybe_preload_order().
+Simpler code, unless we run out of memory for new xa_nodes partway through
+inserting entries into the xarray.  Hopefully we can support multi-index
+entries in the page cache soon and all the awful code goes away.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/backing-dev-defs.h |  2 +-
- include/linux/backing-dev.h      |  2 +-
- mm/backing-dev.c                 | 22 ++++++++++------------
- 3 files changed, 12 insertions(+), 14 deletions(-)
+ mm/shmem.c | 87 ++++++++++++++++++++++++++++----------------------------------
+ 1 file changed, 39 insertions(+), 48 deletions(-)
 
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index bfe86b54f6c1..074a54aad33c 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -187,7 +187,7 @@ struct backing_dev_info {
- 	struct bdi_writeback wb;  /* the root writeback info for this bdi */
- 	struct list_head wb_list; /* list of all wbs */
- #ifdef CONFIG_CGROUP_WRITEBACK
--	struct radix_tree_root cgwb_tree; /* radix tree of active cgroup wbs */
-+	struct xarray cgwb_xa;		/* radix tree of active cgroup wbs */
- 	struct rb_root cgwb_congested_tree; /* their congested states */
- #else
- 	struct bdi_writeback_congested *wb_congested;
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 3df0d20e23f3..27e7b31bd802 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -271,7 +271,7 @@ static inline struct bdi_writeback *wb_find_current(struct backing_dev_info *bdi
- 	if (!memcg_css->parent)
- 		return &bdi->wb;
+diff --git a/mm/shmem.c b/mm/shmem.c
+index e4a2eb1336be..0f49edae05e4 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -558,9 +558,10 @@ static unsigned long shmem_unused_huge_shrink(struct shmem_sb_info *sbinfo,
+  */
+ static int shmem_add_to_page_cache(struct page *page,
+ 				   struct address_space *mapping,
+-				   pgoff_t index, void *expected)
++				   pgoff_t index, void *expected, gfp_t gfp)
+ {
+-	int error, nr = hpage_nr_pages(page);
++	XA_STATE(xas, &mapping->pages, index);
++	unsigned long i, nr = 1UL << compound_order(page);
  
--	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-+	wb = xa_load(&bdi->cgwb_xa, memcg_css->id);
+ 	VM_BUG_ON_PAGE(PageTail(page), page);
+ 	VM_BUG_ON_PAGE(index != round_down(index, nr), page);
+@@ -569,49 +570,47 @@ static int shmem_add_to_page_cache(struct page *page,
+ 	VM_BUG_ON(expected && PageTransHuge(page));
  
- 	/*
- 	 * %current's blkcg equals the effective blkcg of its memcg.  No
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index b5f940ce0143..aa0f85df0928 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -417,8 +417,8 @@ static void wb_exit(struct bdi_writeback *wb)
- #include <linux/memcontrol.h>
+ 	page_ref_add(page, nr);
+-	page->mapping = mapping;
+ 	page->index = index;
++	page->mapping = mapping;
+ 
+-	xa_lock_irq(&mapping->pages);
+-	if (PageTransHuge(page)) {
+-		void __rcu **results;
+-		pgoff_t idx;
+-		int i;
+-
+-		error = 0;
+-		if (radix_tree_gang_lookup_slot(&mapping->pages,
+-					&results, &idx, index, 1) &&
+-				idx < index + HPAGE_PMD_NR) {
+-			error = -EEXIST;
++	do {
++		xas_lock_irq(&xas);
++		xas_create_range(&xas, index + nr - 1);
++		if (xas_error(&xas))
++			goto unlock;
++		for (i = 0; i < nr; i++) {
++			void *entry = xas_load(&xas);
++			if (entry != expected)
++				xas_set_err(&xas, -ENOENT);
++			if (xas_error(&xas))
++				goto undo;
++			xas_store(&xas, page + i);
++			xas_next(&xas);
+ 		}
+-
+-		if (!error) {
+-			for (i = 0; i < HPAGE_PMD_NR; i++) {
+-				error = radix_tree_insert(&mapping->pages,
+-						index + i, page + i);
+-				VM_BUG_ON(error);
+-			}
++		if (PageTransHuge(page)) {
+ 			count_vm_event(THP_FILE_ALLOC);
++			__inc_node_page_state(page, NR_SHMEM_THPS);
+ 		}
+-	} else if (!expected) {
+-		error = radix_tree_insert(&mapping->pages, index, page);
+-	} else {
+-		error = shmem_xa_replace(mapping, index, expected, page);
+-	}
+-
+-	if (!error) {
+ 		mapping->nrpages += nr;
+-		if (PageTransHuge(page))
+-			__inc_node_page_state(page, NR_SHMEM_THPS);
+ 		__mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, nr);
+ 		__mod_node_page_state(page_pgdat(page), NR_SHMEM, nr);
+-		xa_unlock_irq(&mapping->pages);
+-	} else {
++		goto unlock;
++undo:
++		while (i-- > 0) {
++			xas_store(&xas, NULL);
++			xas_prev(&xas);
++		}
++unlock:
++		xas_unlock_irq(&xas);
++	} while (xas_nomem(&xas, gfp));
++
++	if (xas_error(&xas)) {
+ 		page->mapping = NULL;
+-		xa_unlock_irq(&mapping->pages);
+ 		page_ref_sub(page, nr);
++		return xas_error(&xas);
+ 	}
+-	return error;
++
++	return 0;
+ }
  
  /*
-- * cgwb_lock protects bdi->cgwb_tree, bdi->cgwb_congested_tree,
-- * blkcg->cgwb_list, and memcg->cgwb_list.  bdi->cgwb_tree is also RCU
-+ * cgwb_lock protects bdi->cgwb_xa, bdi->cgwb_congested_tree,
-+ * blkcg->cgwb_list, and memcg->cgwb_list.  bdi->cgwb_xa is also RCU
-  * protected.
-  */
- static DEFINE_SPINLOCK(cgwb_lock);
-@@ -539,7 +539,7 @@ static void cgwb_kill(struct bdi_writeback *wb)
- {
- 	lockdep_assert_held(&cgwb_lock);
+@@ -1159,7 +1158,7 @@ static int shmem_unuse_inode(struct shmem_inode_info *info,
+ 	 */
+ 	if (!error)
+ 		error = shmem_add_to_page_cache(*pagep, mapping, index,
+-						radswap);
++						radswap, gfp);
+ 	if (error != -ENOMEM) {
+ 		/*
+ 		 * Truncation and eviction use free_swap_and_cache(), which
+@@ -1677,7 +1676,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 				false);
+ 		if (!error) {
+ 			error = shmem_add_to_page_cache(page, mapping, index,
+-						swp_to_radix_entry(swap));
++						swp_to_radix_entry(swap), gfp);
+ 			/*
+ 			 * We already confirmed swap under page lock, and make
+ 			 * no memory allocation here, so usually no possibility
+@@ -1783,13 +1782,8 @@ alloc_nohuge:		page = shmem_alloc_and_acct_page(gfp, inode,
+ 				PageTransHuge(page));
+ 		if (error)
+ 			goto unacct;
+-		error = radix_tree_maybe_preload_order(gfp & GFP_RECLAIM_MASK,
+-				compound_order(page));
+-		if (!error) {
+-			error = shmem_add_to_page_cache(page, mapping, hindex,
+-							NULL);
+-			radix_tree_preload_end();
+-		}
++		error = shmem_add_to_page_cache(page, mapping, hindex,
++						NULL, gfp & GFP_RECLAIM_MASK);
+ 		if (error) {
+ 			mem_cgroup_cancel_charge(page, memcg,
+ 					PageTransHuge(page));
+@@ -2256,11 +2250,8 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
+ 	if (ret)
+ 		goto out_release;
  
--	WARN_ON(!radix_tree_delete(&wb->bdi->cgwb_tree, wb->memcg_css->id));
-+	WARN_ON(xa_erase(&wb->bdi->cgwb_xa, wb->memcg_css->id) != wb);
- 	list_del(&wb->memcg_node);
- 	list_del(&wb->blkcg_node);
- 	percpu_ref_kill(&wb->refcnt);
-@@ -571,7 +571,7 @@ static int cgwb_create(struct backing_dev_info *bdi,
+-	ret = radix_tree_maybe_preload(gfp & GFP_RECLAIM_MASK);
+-	if (!ret) {
+-		ret = shmem_add_to_page_cache(page, mapping, pgoff, NULL);
+-		radix_tree_preload_end();
+-	}
++	ret = shmem_add_to_page_cache(page, mapping, pgoff, NULL,
++						gfp & GFP_RECLAIM_MASK);
+ 	if (ret)
+ 		goto out_release_uncharge;
  
- 	/* look up again under lock and discard on blkcg mismatch */
- 	spin_lock_irqsave(&cgwb_lock, flags);
--	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-+	wb = xa_load(&bdi->cgwb_xa, memcg_css->id);
- 	if (wb && wb->blkcg_css != blkcg_css) {
- 		cgwb_kill(wb);
- 		wb = NULL;
-@@ -614,8 +614,7 @@ static int cgwb_create(struct backing_dev_info *bdi,
- 	spin_lock_irqsave(&cgwb_lock, flags);
- 	if (test_bit(WB_registered, &bdi->wb.state) &&
- 	    blkcg_cgwb_list->next && memcg_cgwb_list->next) {
--		/* we might have raced another instance of this function */
--		ret = radix_tree_insert(&bdi->cgwb_tree, memcg_css->id, wb);
-+		ret = xa_insert(&bdi->cgwb_xa, memcg_css->id, wb, GFP_ATOMIC);
- 		if (!ret) {
- 			list_add_tail_rcu(&wb->bdi_node, &bdi->wb_list);
- 			list_add(&wb->memcg_node, memcg_cgwb_list);
-@@ -682,7 +681,7 @@ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
- 
- 	do {
- 		rcu_read_lock();
--		wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-+		wb = xa_load(&bdi->cgwb_xa, memcg_css->id);
- 		if (wb) {
- 			struct cgroup_subsys_state *blkcg_css;
- 
-@@ -704,7 +703,7 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
- {
- 	int ret;
- 
--	INIT_RADIX_TREE(&bdi->cgwb_tree, GFP_ATOMIC);
-+	xa_init(&bdi->cgwb_xa);
- 	bdi->cgwb_congested_tree = RB_ROOT;
- 
- 	ret = wb_init(&bdi->wb, bdi, 1, GFP_KERNEL);
-@@ -717,15 +716,14 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
- 
- static void cgwb_bdi_unregister(struct backing_dev_info *bdi)
- {
--	struct radix_tree_iter iter;
--	void **slot;
-+	XA_STATE(xas, &bdi->cgwb_xa, 0);
- 	struct bdi_writeback *wb;
- 
- 	WARN_ON(test_bit(WB_registered, &bdi->wb.state));
- 
- 	spin_lock_irq(&cgwb_lock);
--	radix_tree_for_each_slot(slot, &bdi->cgwb_tree, &iter, 0)
--		cgwb_kill(*slot);
-+	xas_for_each(&xas, wb, ULONG_MAX)
-+		cgwb_kill(wb);
- 
- 	while (!list_empty(&bdi->wb_list)) {
- 		wb = list_first_entry(&bdi->wb_list, struct bdi_writeback,
 -- 
 2.15.1
 
