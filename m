@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 89/99] btrfs: Convert buffer_radix to XArray
-Date: Wed, 17 Jan 2018 12:21:53 -0800
-Message-ID: <20180117202203.19756-90-willy@infradead.org>
+Subject: [PATCH v6 86/99] btrfs: Convert reada_zones to XArray
+Date: Wed, 17 Jan 2018 12:21:50 -0800
+Message-ID: <20180117202203.19756-87-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
 	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
 	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=x7xCLRrzdWQ26zK6Bns61bu2j3jrqnYQR3BElqF6qQ0=; b=e5je4z4RGka8R09U5GtirD9nc
-	Wh8qVBlpVDf/T5Qv8u2cY/hneIOIreJaZ1xlQOO+/nMb6TB+DkWuTB3lpRbfjEOZ5qCVv9OEWXFx4
-	AA/+czqmtRZnqD+e+Pfill9pNWeXFLy8gUbqc8RYfat/WnTMjcS3hbaTfJQ5yCzTghGC+Y4SF1B5x
-	mjs+g2/4rLK8K8VpuhXEJtHdPa4l16+o/CvUMTmpwsJ1klQ2jdfxS96RlWLFqJ3cCfV0E45r26QnN
-	qSa9Y/BMvU1O/wOrxhEjxCrZCCOEg6NEa3bxLR9cj23D795pl9/Sb0wDGFP6XBnK/v5gBUueSmgMX
-	RadtLp1OA==;
+	 bh=JhuHPFLlYbwqxeR/orJj9pxXezSFdCJ1s1TJfn+xsf8=; b=aPk3c72INSJ7NjNWxHWqgRVeh
+	3Wlxcq7wjeB8Cldpa56v3z/vNkKvjJR8zaDUT9z+1J6uW71wQl8ZGh5hXvRcwuZZHqbefEQUnSOYp
+	SA2I86vTq1HL655MOlg+FK0YNet9lCvZglrwMR69NyuImyJr/qLTT4oRAdchyj7z+IkKqEKvpcCyX
+	qa8Omda5AZr6DISxjtxgI9HVfSsaJ+4NMdGE0CCsi+qQHF0vK+q/ezsEvkWmegOYE+BRUcvZOsgNz
+	5ef8tJnvi4ewT6cPN/GL8pKR7RlZLCRxdOR9/Z1GDRoESUO9MML/D+B4D+DvKd7sYSgiWmWtCx/68
+	xK2fzJ0uA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -27,263 +27,184 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Eliminate the buffer_lock as the internal xa_lock provides all the
-necessary protection.  We can remove the radix_tree_preload calls, but
-I can't find a good way to use the 'exists' result from xa_cmpxchg().
-We could resort to the advanced API to improve this, but it's a really
-unlikely case (nothing in the xarray when we first look; something there
-when we try to add the newly-allocated extent buffer), so I think it's
-not worth optimising for.
+The use of the reada_lock means we have to use the xa_reserve() API.
+If we can avoid using reada_lock to protect this xarray, we can drop
+the use of that function.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/btrfs/ctree.h             |  5 ++-
- fs/btrfs/disk-io.c           |  3 +-
- fs/btrfs/extent_io.c         | 82 ++++++++++++++++++--------------------------
- fs/btrfs/tests/btrfs-tests.c | 26 +++-----------
- 4 files changed, 40 insertions(+), 76 deletions(-)
+ fs/btrfs/reada.c   | 54 +++++++++++++++++++-----------------------------------
+ fs/btrfs/volumes.c |  2 +-
+ fs/btrfs/volumes.h |  2 +-
+ 3 files changed, 21 insertions(+), 37 deletions(-)
 
-diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
-index 272d099bed7e..87984ce3a4c2 100644
---- a/fs/btrfs/ctree.h
-+++ b/fs/btrfs/ctree.h
-@@ -1058,9 +1058,8 @@ struct btrfs_fs_info {
- 	/* readahead works cnt */
- 	atomic_t reada_works_cnt;
- 
--	/* Extent buffer radix tree */
--	spinlock_t buffer_lock;
--	struct radix_tree_root buffer_radix;
-+	/* Extent buffer array */
-+	struct xarray buffer_array;
- 
- 	/* next backup root to be overwritten */
- 	int backup_root_index;
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index 1eae29045d43..650d1350b64d 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -2429,7 +2429,7 @@ int open_ctree(struct super_block *sb,
- 	}
- 
- 	xa_init(&fs_info->fs_roots);
--	INIT_RADIX_TREE(&fs_info->buffer_radix, GFP_ATOMIC);
-+	xa_init(&fs_info->buffer_array);
- 	INIT_LIST_HEAD(&fs_info->trans_list);
- 	INIT_LIST_HEAD(&fs_info->dead_roots);
- 	INIT_LIST_HEAD(&fs_info->delayed_iputs);
-@@ -2442,7 +2442,6 @@ int open_ctree(struct super_block *sb,
- 	spin_lock_init(&fs_info->tree_mod_seq_lock);
- 	spin_lock_init(&fs_info->super_lock);
- 	spin_lock_init(&fs_info->qgroup_op_lock);
--	spin_lock_init(&fs_info->buffer_lock);
- 	spin_lock_init(&fs_info->unused_bgs_lock);
- 	rwlock_init(&fs_info->tree_mod_log_lock);
- 	mutex_init(&fs_info->unused_bg_unpin_mutex);
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index fd5e9d887328..2b43fa11c9e2 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -4884,8 +4884,7 @@ struct extent_buffer *find_extent_buffer(struct btrfs_fs_info *fs_info,
- 	struct extent_buffer *eb;
- 
- 	rcu_read_lock();
--	eb = radix_tree_lookup(&fs_info->buffer_radix,
--			       start >> PAGE_SHIFT);
-+	eb = xa_load(&fs_info->buffer_array, start >> PAGE_SHIFT);
- 	if (eb && atomic_inc_not_zero(&eb->refs)) {
- 		rcu_read_unlock();
- 		/*
-@@ -4919,31 +4918,24 @@ struct extent_buffer *find_extent_buffer(struct btrfs_fs_info *fs_info,
- struct extent_buffer *alloc_test_extent_buffer(struct btrfs_fs_info *fs_info,
- 					u64 start)
+diff --git a/fs/btrfs/reada.c b/fs/btrfs/reada.c
+index ab852b8e3e37..ef8e84ff2012 100644
+--- a/fs/btrfs/reada.c
++++ b/fs/btrfs/reada.c
+@@ -239,17 +239,16 @@ static struct reada_zone *reada_find_zone(struct btrfs_device *dev, u64 logical,
  {
--	struct extent_buffer *eb, *exists = NULL;
--	int ret;
-+	struct extent_buffer *exists, *eb = NULL;
+ 	struct btrfs_fs_info *fs_info = dev->fs_info;
+ 	int ret;
+-	struct reada_zone *zone;
++	struct reada_zone *curr, *zone;
+ 	struct btrfs_block_group_cache *cache = NULL;
+ 	u64 start;
+ 	u64 end;
++	unsigned long index = logical >> PAGE_SHIFT;
+ 	int i;
  
--	eb = find_extent_buffer(fs_info, start);
--	if (eb)
--		return eb;
--	eb = alloc_dummy_extent_buffer(fs_info, start);
--	if (!eb)
--		return NULL;
--	eb->fs_info = fs_info;
- again:
--	ret = radix_tree_preload(GFP_NOFS);
--	if (ret)
-+	exists = find_extent_buffer(fs_info, start);
-+	if (exists)
- 		goto free_eb;
--	spin_lock(&fs_info->buffer_lock);
--	ret = radix_tree_insert(&fs_info->buffer_radix,
--				start >> PAGE_SHIFT, eb);
--	spin_unlock(&fs_info->buffer_lock);
--	radix_tree_preload_end();
--	if (ret == -EEXIST) {
--		exists = find_extent_buffer(fs_info, start);
--		if (exists)
-+	if (!eb)
-+		eb = alloc_dummy_extent_buffer(fs_info, start);
-+	if (!eb)
-+		return NULL;
-+	exists = xa_cmpxchg(&fs_info->buffer_array, start >> PAGE_SHIFT,
-+				NULL, eb, GFP_NOFS);
-+	if (unlikely(exists)) {
-+		if (xa_is_err(exists)) {
-+			exists = NULL;
- 			goto free_eb;
--		else
--			goto again;
-+		}
-+		goto again;
- 	}
- 	check_buffer_tree_ref(eb);
- 	set_bit(EXTENT_BUFFER_IN_TREE, &eb->bflags);
-@@ -4957,7 +4949,8 @@ struct extent_buffer *alloc_test_extent_buffer(struct btrfs_fs_info *fs_info,
- 	atomic_inc(&eb->refs);
- 	return eb;
- free_eb:
--	btrfs_release_extent_buffer(eb);
-+	if (eb)
-+		btrfs_release_extent_buffer(eb);
- 	return exists;
- }
- #endif
-@@ -4969,22 +4962,24 @@ struct extent_buffer *alloc_extent_buffer(struct btrfs_fs_info *fs_info,
- 	unsigned long num_pages = num_extent_pages(start, len);
- 	unsigned long i;
- 	unsigned long index = start >> PAGE_SHIFT;
--	struct extent_buffer *eb;
-+	struct extent_buffer *eb = NULL;
- 	struct extent_buffer *exists = NULL;
- 	struct page *p;
- 	struct address_space *mapping = fs_info->btree_inode->i_mapping;
- 	int uptodate = 1;
--	int ret;
- 
- 	if (!IS_ALIGNED(start, fs_info->sectorsize)) {
- 		btrfs_err(fs_info, "bad tree block start %llu", start);
- 		return ERR_PTR(-EINVAL);
- 	}
- 
--	eb = find_extent_buffer(fs_info, start);
--	if (eb)
--		return eb;
-+again:
-+	exists = find_extent_buffer(fs_info, start);
-+	if (exists)
-+		goto free_eb;
- 
-+	if (eb)
-+		goto add;
- 	eb = __alloc_extent_buffer(fs_info, start, len);
- 	if (!eb)
- 		return ERR_PTR(-ENOMEM);
-@@ -5037,24 +5032,15 @@ struct extent_buffer *alloc_extent_buffer(struct btrfs_fs_info *fs_info,
- 	}
- 	if (uptodate)
- 		set_bit(EXTENT_BUFFER_UPTODATE, &eb->bflags);
--again:
--	ret = radix_tree_preload(GFP_NOFS);
--	if (ret) {
--		exists = ERR_PTR(ret);
--		goto free_eb;
--	}
--
--	spin_lock(&fs_info->buffer_lock);
--	ret = radix_tree_insert(&fs_info->buffer_radix,
--				start >> PAGE_SHIFT, eb);
--	spin_unlock(&fs_info->buffer_lock);
--	radix_tree_preload_end();
--	if (ret == -EEXIST) {
--		exists = find_extent_buffer(fs_info, start);
--		if (exists)
-+add:
-+	exists = xa_cmpxchg(&fs_info->buffer_array, start >> PAGE_SHIFT,
-+				NULL, eb, GFP_NOFS);
-+	if (unlikely(exists)) {
-+		if (xa_is_err(exists)) {
-+			exists = NULL;
- 			goto free_eb;
--		else
--			goto again;
-+		}
-+		goto again;
- 	}
- 	/* add one reference for the tree */
- 	check_buffer_tree_ref(eb);
-@@ -5107,10 +5093,8 @@ static int release_extent_buffer(struct extent_buffer *eb)
- 
- 			spin_unlock(&eb->refs_lock);
- 
--			spin_lock(&fs_info->buffer_lock);
--			radix_tree_delete(&fs_info->buffer_radix,
-+			xa_erase(&fs_info->buffer_array,
- 					  eb->start >> PAGE_SHIFT);
--			spin_unlock(&fs_info->buffer_lock);
- 		} else {
- 			spin_unlock(&eb->refs_lock);
- 		}
-diff --git a/fs/btrfs/tests/btrfs-tests.c b/fs/btrfs/tests/btrfs-tests.c
-index 570bce31a301..f80fd54903e9 100644
---- a/fs/btrfs/tests/btrfs-tests.c
-+++ b/fs/btrfs/tests/btrfs-tests.c
-@@ -110,7 +110,6 @@ struct btrfs_fs_info *btrfs_alloc_dummy_fs_info(u32 nodesize, u32 sectorsize)
+-	zone = NULL;
+ 	spin_lock(&fs_info->reada_lock);
+-	ret = radix_tree_gang_lookup(&dev->reada_zones, (void **)&zone,
+-				     logical >> PAGE_SHIFT, 1);
+-	if (ret == 1 && logical >= zone->start && logical <= zone->end) {
++	zone = xa_find(&dev->reada_zones, &index, ULONG_MAX, XA_PRESENT);
++	if (zone && logical >= zone->start && logical <= zone->end) {
+ 		kref_get(&zone->refcnt);
+ 		spin_unlock(&fs_info->reada_lock);
+ 		return zone;
+@@ -269,7 +268,8 @@ static struct reada_zone *reada_find_zone(struct btrfs_device *dev, u64 logical,
+ 	if (!zone)
  		return NULL;
- 	}
  
--	spin_lock_init(&fs_info->buffer_lock);
- 	spin_lock_init(&fs_info->qgroup_lock);
- 	spin_lock_init(&fs_info->qgroup_op_lock);
- 	spin_lock_init(&fs_info->super_lock);
-@@ -125,7 +124,7 @@ struct btrfs_fs_info *btrfs_alloc_dummy_fs_info(u32 nodesize, u32 sectorsize)
- 	INIT_LIST_HEAD(&fs_info->dirty_qgroups);
- 	INIT_LIST_HEAD(&fs_info->dead_roots);
- 	INIT_LIST_HEAD(&fs_info->tree_mod_seq_list);
--	INIT_RADIX_TREE(&fs_info->buffer_radix, GFP_ATOMIC);
-+	xa_init(&fs_info->buffer_array);
- 	xa_init(&fs_info->fs_roots);
- 	extent_io_tree_init(&fs_info->freed_extents[0], NULL);
- 	extent_io_tree_init(&fs_info->freed_extents[1], NULL);
-@@ -139,8 +138,8 @@ struct btrfs_fs_info *btrfs_alloc_dummy_fs_info(u32 nodesize, u32 sectorsize)
+-	ret = radix_tree_preload(GFP_KERNEL);
++	ret = xa_reserve(&dev->reada_zones,
++			 (unsigned long)(end >> PAGE_SHIFT), GFP_KERNEL);
+ 	if (ret) {
+ 		kfree(zone);
+ 		return NULL;
+@@ -290,21 +290,18 @@ static struct reada_zone *reada_find_zone(struct btrfs_device *dev, u64 logical,
+ 	zone->ndevs = bbio->num_stripes;
  
- void btrfs_free_dummy_fs_info(struct btrfs_fs_info *fs_info)
- {
--	struct radix_tree_iter iter;
--	void **slot;
-+	struct extent_buffer *eb;
-+	unsigned long index = 0;
- 
- 	if (!fs_info)
- 		return;
-@@ -151,25 +150,8 @@ void btrfs_free_dummy_fs_info(struct btrfs_fs_info *fs_info)
- 
- 	test_mnt->mnt_sb->s_fs_info = NULL;
- 
--	spin_lock(&fs_info->buffer_lock);
--	radix_tree_for_each_slot(slot, &fs_info->buffer_radix, &iter, 0) {
--		struct extent_buffer *eb;
+ 	spin_lock(&fs_info->reada_lock);
+-	ret = radix_tree_insert(&dev->reada_zones,
++	curr = xa_cmpxchg(&dev->reada_zones,
+ 				(unsigned long)(zone->end >> PAGE_SHIFT),
+-				zone);
 -
--		eb = radix_tree_deref_slot_protected(slot, &fs_info->buffer_lock);
--		if (!eb)
--			continue;
--		/* Shouldn't happen but that kind of thinking creates CVE's */
--		if (radix_tree_exception(eb)) {
--			if (radix_tree_deref_retry(eb))
--				slot = radix_tree_iter_retry(&iter);
--			continue;
--		}
--		slot = radix_tree_iter_resume(slot, &iter);
--		spin_unlock(&fs_info->buffer_lock);
-+	xa_for_each(&fs_info->buffer_array, eb, index, ULONG_MAX, XA_PRESENT)
- 		free_extent_buffer_stale(eb);
--		spin_lock(&fs_info->buffer_lock);
--	}
--	spin_unlock(&fs_info->buffer_lock);
+-	if (ret == -EEXIST) {
++				NULL, zone, GFP_NOWAIT | __GFP_NOWARN);
++	if (curr) {
+ 		kfree(zone);
+-		ret = radix_tree_gang_lookup(&dev->reada_zones, (void **)&zone,
+-					     logical >> PAGE_SHIFT, 1);
+-		if (ret == 1 && logical >= zone->start && logical <= zone->end)
++		zone = curr;
++		if (logical >= zone->start && logical <= zone->end)
+ 			kref_get(&zone->refcnt);
+ 		else
+ 			zone = NULL;
+ 	}
+ 	spin_unlock(&fs_info->reada_lock);
+-	radix_tree_preload_end();
  
- 	btrfs_free_qgroup_config(fs_info);
- 	btrfs_free_fs_roots(fs_info);
+ 	return zone;
+ }
+@@ -537,9 +534,7 @@ static void reada_zone_release(struct kref *kref)
+ {
+ 	struct reada_zone *zone = container_of(kref, struct reada_zone, refcnt);
+ 
+-	radix_tree_delete(&zone->device->reada_zones,
+-			  zone->end >> PAGE_SHIFT);
+-
++	xa_erase(&zone->device->reada_zones, zone->end >> PAGE_SHIFT);
+ 	kfree(zone);
+ }
+ 
+@@ -592,7 +587,7 @@ static void reada_peer_zones_set_lock(struct reada_zone *zone, int lock)
+ 
+ 	for (i = 0; i < zone->ndevs; ++i) {
+ 		struct reada_zone *peer;
+-		peer = radix_tree_lookup(&zone->devs[i]->reada_zones, index);
++		peer = xa_load(&zone->devs[i]->reada_zones, index);
+ 		if (peer && peer->device != zone->device)
+ 			peer->locked = lock;
+ 	}
+@@ -603,12 +598,11 @@ static void reada_peer_zones_set_lock(struct reada_zone *zone, int lock)
+  */
+ static int reada_pick_zone(struct btrfs_device *dev)
+ {
+-	struct reada_zone *top_zone = NULL;
++	struct reada_zone *zone, *top_zone = NULL;
+ 	struct reada_zone *top_locked_zone = NULL;
+ 	u64 top_elems = 0;
+ 	u64 top_locked_elems = 0;
+ 	unsigned long index = 0;
+-	int ret;
+ 
+ 	if (dev->reada_curr_zone) {
+ 		reada_peer_zones_set_lock(dev->reada_curr_zone, 0);
+@@ -616,14 +610,7 @@ static int reada_pick_zone(struct btrfs_device *dev)
+ 		dev->reada_curr_zone = NULL;
+ 	}
+ 	/* pick the zone with the most elements */
+-	while (1) {
+-		struct reada_zone *zone;
+-
+-		ret = radix_tree_gang_lookup(&dev->reada_zones,
+-					     (void **)&zone, index, 1);
+-		if (ret == 0)
+-			break;
+-		index = (zone->end >> PAGE_SHIFT) + 1;
++	xa_for_each(&dev->reada_zones, zone, index, ULONG_MAX, XA_PRESENT) {
+ 		if (zone->locked) {
+ 			if (zone->elems > top_locked_elems) {
+ 				top_locked_elems = zone->elems;
+@@ -819,15 +806,13 @@ static void dump_devs(struct btrfs_fs_info *fs_info, int all)
+ 
+ 	spin_lock(&fs_info->reada_lock);
+ 	list_for_each_entry(device, &fs_devices->devices, dev_list) {
++		struct reada_zone *zone;
++
+ 		btrfs_debug(fs_info, "dev %lld has %d in flight", device->devid,
+ 			atomic_read(&device->reada_in_flight));
+ 		index = 0;
+-		while (1) {
+-			struct reada_zone *zone;
+-			ret = radix_tree_gang_lookup(&device->reada_zones,
+-						     (void **)&zone, index, 1);
+-			if (ret == 0)
+-				break;
++		xa_for_each(&dev->reada_zones, zone, index, ULONG_MAX,
++								XA_PRESENT) {
+ 			pr_debug("  zone %llu-%llu elems %llu locked %d devs",
+ 				    zone->start, zone->end, zone->elems,
+ 				    zone->locked);
+@@ -839,7 +824,6 @@ static void dump_devs(struct btrfs_fs_info *fs_info, int all)
+ 				pr_cont(" curr off %llu",
+ 					device->reada_next - zone->start);
+ 			pr_cont("\n");
+-			index = (zone->end >> PAGE_SHIFT) + 1;
+ 		}
+ 		cnt = 0;
+ 		index = 0;
+diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
+index cba286183ff9..8e683799b436 100644
+--- a/fs/btrfs/volumes.c
++++ b/fs/btrfs/volumes.c
+@@ -247,7 +247,7 @@ static struct btrfs_device *__alloc_device(void)
+ 	atomic_set(&dev->reada_in_flight, 0);
+ 	atomic_set(&dev->dev_stats_ccnt, 0);
+ 	btrfs_device_data_ordered_init(dev);
+-	INIT_RADIX_TREE(&dev->reada_zones, GFP_NOFS & ~__GFP_DIRECT_RECLAIM);
++	xa_init(&dev->reada_zones);
+ 	INIT_RADIX_TREE(&dev->reada_extents, GFP_NOFS & ~__GFP_DIRECT_RECLAIM);
+ 
+ 	return dev;
+diff --git a/fs/btrfs/volumes.h b/fs/btrfs/volumes.h
+index 335fd1590458..aeabe03d3e44 100644
+--- a/fs/btrfs/volumes.h
++++ b/fs/btrfs/volumes.h
+@@ -139,7 +139,7 @@ struct btrfs_device {
+ 	atomic_t reada_in_flight;
+ 	u64 reada_next;
+ 	struct reada_zone *reada_curr_zone;
+-	struct radix_tree_root reada_zones;
++	struct xarray reada_zones;
+ 	struct radix_tree_root reada_extents;
+ 
+ 	/* disk I/O failure stats. For detailed description refer to
 -- 
 2.15.1
 
