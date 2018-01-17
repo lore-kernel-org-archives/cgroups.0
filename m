@@ -1,8 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 45/99] shmem: Convert shmem_wait_for_pins to
- XArray
-Date: Wed, 17 Jan 2018 12:21:09 -0800
-Message-ID: <20180117202203.19756-46-willy@infradead.org>
+Subject: [PATCH v6 83/99] hwspinlock: Convert to XArray
+Date: Wed, 17 Jan 2018 12:21:47 -0800
+Message-ID: <20180117202203.19756-84-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=tm395P+07Nr+JL+jzuW6+85raWyo2+0xXriULUgqQxI=; b=ZnCJCqQYnQBHpSRPnTvN56PaYV
- 6Y1yXDrwPGMD40Rioigf2y25MClaSCiFZp839uDt8y90ndYhfBHlmEVf1XkudTcsLdKhTgg8tCKfX
- pEU2XKO3rizcqzI/uschiuZMUmR8pfA85oMfvpdKdKr/RObI6Mgnvq3JspyTvdJ9e4i0=;
+ bh=9fFOAysuk6CpybOi5z6t/NaeM/YYdaODArkHgkzRsis=; b=BN0jlJgkSiUSiBDQVL3dkT0S8L
+ 3vYZcg5vKSt5PBiCoHK084enzPpXOCx0lgao2n+P1c6sSU30+E4ylaQmqFNC2HJyH4VCPGFhbxAhH
+ 8+aeDodJwvYyKRwsvJIkiAE2AaQ4zx9TtDgjQDmlM8Hy7YvVdg3f28PPNOiwLeizvY98=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -24,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=tm395P+07Nr+JL+jzuW6+85raWyo2+0xXriULUgqQxI=; b=CywIurhFkHceaizexGQkuU1Dqk
- OCaC6KlF50hvlVWHKrZCfqEit3DcmUakSrsyeZCm1Oudcwg8jFiarPvdLCIOtGhFpv7WVxGDK2KP2
- eDsn62b+z0QBON6M04rMG0cJNtk2lYqbmL35SlHF4g++NznvWJAm/BOgToi1BDxrWnW4=;
+ bh=9fFOAysuk6CpybOi5z6t/NaeM/YYdaODArkHgkzRsis=; b=QRxzqz7fxmnQK6vIPeRPdy7sS3
+ 1pHIzsYDP5Gx58oJZ0kw/pi7kpdR55AR+vFzwEZ79bH4XZP1aeYvc/ds1TeaEUgh1pAaIGg04h4ru
+ 4vpAiSuzJTtz2dSPajRU/8j/nZUfMYibZXatJAfQA0ZZT256m+NJ7oGE+LTmmOnS3qNk=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=tm395P+07Nr+JL+jzuW6+85raWyo2+0xXriULUgqQxI=; b=iImZJE8Jl3whzqxpoFqTXA9gQ
- fDnZ3Vyj5JPWwtf0e3yUrPSFsGt67h+xSPv9F7Y8H4oBZqoC56OA0Cvz9ep+araGxk8ry+1DZo2QU
- p3sKCwVSorZm1fLGjRmrofBefwL8HqxkIz6rvx7MRkZEByG+Yii+wy72qLXBypmZKwtkayNYh2lOv
- Aa2mbZXJ8oCSFpRTXaAhr/QSkWPnmvwyAij5WU3iQbJ59RisMmaChF8Hbi1bVn56YNx1c11g7UP3H
- tik4IckU7RKhlANn8HO++SHidG5gtGdmA/p872gw9daBbN4sJjKF3itSIJQYKznzG3aJJ6pwsBsYm
- wN+SBrpiA==;
+ bh=9fFOAysuk6CpybOi5z6t/NaeM/YYdaODArkHgkzRsis=; b=WSoOtgatCLpCUeTvpzk9c4VOA
+ MfUpxOiKWxAMaXdY0H0Hvjt9d8KFFhYZFAsK/luEqbeS+Rv6oTpdhJYe0eQlhxsVR3BllstHCpD3/
+ NZf8v6M61nmC3HvbURCGFbA9228kayELGRDoSoEmFahrgT1h878/KD/g2IvMmDBwZAPzsESd8EOby
+ ZqThVt8V6enO1EUNWNMpekdFYSxlUCPLmBnDP0T2sL8QofElaBF8U9R0eGb5yi9NFpNCVkXCbA2sc
+ hzIY+MkqWg2rqwFQfhLzYpLXsgwyuZxffa/e0Eko55dWaaAQNDdj6yzAfA9BAqJUZVAM3kPYXmama
+ bKm94WSBA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -54,106 +53,341 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-As with shmem_tag_pins(), hold the lock around the entire loop instead
-of acquiring & dropping it for each entry we're going to untag.
+I had to mess with the locking a bit as I converted the code from a
+mutex to the xa_lock.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/shmem.c | 59 ++++++++++++++++++++++++-----------------------------------
- 1 file changed, 24 insertions(+), 35 deletions(-)
+ drivers/hwspinlock/hwspinlock_core.c | 151 ++++++++++++-----------------------
+ 1 file changed, 52 insertions(+), 99 deletions(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 2f41c7ceea18..e4a2eb1336be 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -2636,9 +2636,7 @@ static void shmem_tag_pins(struct address_space *mapping)
+diff --git a/drivers/hwspinlock/hwspinlock_core.c b/drivers/hwspinlock/hwspinlock_core.c
+index 4074441444fe..acb6e315925f 100644
+--- a/drivers/hwspinlock/hwspinlock_core.c
++++ b/drivers/hwspinlock/hwspinlock_core.c
+@@ -23,43 +23,32 @@
+ #include <linux/types.h>
+ #include <linux/err.h>
+ #include <linux/jiffies.h>
+-#include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/hwspinlock.h>
+ #include <linux/pm_runtime.h>
+-#include <linux/mutex.h>
+ #include <linux/of.h>
+ 
+ #include "hwspinlock_internal.h"
+ 
+-/* radix tree tags */
+-#define HWSPINLOCK_UNUSED	(0) /* tags an hwspinlock as unused */
++#define HWSPINLOCK_UNUSED	XA_TAG_0
+ 
+ /*
+- * A radix tree is used to maintain the available hwspinlock instances.
+- * The tree associates hwspinlock pointers with their integer key id,
++ * An xarray is used to maintain the available hwspinlock instances.
++ * The array associates hwspinlock pointers with their integer key id,
+  * and provides easy-to-use API which makes the hwspinlock core code simple
+  * and easy to read.
+  *
+- * Radix trees are quick on lookups, and reasonably efficient in terms of
++ * The XArray is quick on lookups, and reasonably efficient in terms of
+  * storage, especially with high density usages such as this framework
+  * requires (a continuous range of integer keys, beginning with zero, is
+  * used as the ID's of the hwspinlock instances).
+  *
+- * The radix tree API supports tagging items in the tree, which this
+- * framework uses to mark unused hwspinlock instances (see the
+- * HWSPINLOCK_UNUSED tag above). As a result, the process of querying the
+- * tree, looking for an unused hwspinlock instance, is now reduced to a
+- * single radix tree API call.
++ * The xarray API supports tagging items, which this framework uses to mark
++ * unused hwspinlock instances (see the HWSPINLOCK_UNUSED tag above). As a
++ * result, the process of querying the array, looking for an unused
++ * hwspinlock instance, is reduced to a single call.
   */
- static int shmem_wait_for_pins(struct address_space *mapping)
+-static RADIX_TREE(hwspinlock_tree, GFP_KERNEL);
+-
+-/*
+- * Synchronization of access to the tree is achieved using this mutex,
+- * as the radix-tree API requires that users provide all synchronisation.
+- * A mutex is needed because we're using non-atomic radix tree allocations.
+- */
+-static DEFINE_MUTEX(hwspinlock_tree_lock);
+-
++static DEFINE_XARRAY(hwspinlock_xa);
+ 
+ /**
+  * __hwspin_trylock() - attempt to lock a specific hwspinlock
+@@ -294,10 +283,9 @@ of_hwspin_lock_simple_xlate(const struct of_phandle_args *hwlock_spec)
+  */
+ int of_hwspin_lock_get_id(struct device_node *np, int index)
  {
++	XA_STATE(xas, &hwspinlock_xa, 0);
+ 	struct of_phandle_args args;
+ 	struct hwspinlock *hwlock;
 -	struct radix_tree_iter iter;
 -	void **slot;
--	pgoff_t start;
-+	XA_STATE(xas, &mapping->pages, 0);
- 	struct page *page;
- 	int error, scan;
+ 	int id;
+ 	int ret;
  
-@@ -2646,7 +2644,9 @@ static int shmem_wait_for_pins(struct address_space *mapping)
+@@ -309,22 +297,15 @@ int of_hwspin_lock_get_id(struct device_node *np, int index)
+ 	/* Find the hwspinlock device: we need its base_id */
+ 	ret = -EPROBE_DEFER;
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &hwspinlock_tree, &iter, 0) {
+-		hwlock = radix_tree_deref_slot(slot);
+-		if (unlikely(!hwlock))
+-			continue;
+-		if (radix_tree_deref_retry(hwlock)) {
+-			slot = radix_tree_iter_retry(&iter);
++	xas_for_each(&xas, hwlock, ULONG_MAX) {
++		if (xas_retry(&xas, hwlock))
+ 			continue;
+-		}
  
- 	error = 0;
- 	for (scan = 0; scan <= LAST_SCAN; scan++) {
--		if (!radix_tree_tagged(&mapping->pages, SHMEM_TAG_PINNED))
-+		unsigned int tagged = 0;
-+
-+		if (!xas_tagged(&xas, SHMEM_TAG_PINNED))
+-		if (hwlock->bank->dev->of_node == args.np) {
+-			ret = 0;
++		if (hwlock->bank->dev->of_node == args.np)
  			break;
+-		}
+ 	}
+ 	rcu_read_unlock();
+-	if (ret < 0)
++	if (!hwlock)
+ 		goto out;
  
- 		if (!scan)
-@@ -2654,45 +2654,34 @@ static int shmem_wait_for_pins(struct address_space *mapping)
- 		else if (schedule_timeout_killable((HZ << scan) / 200))
- 			scan = LAST_SCAN;
+ 	id = of_hwspin_lock_simple_xlate(&args);
+@@ -332,6 +313,7 @@ int of_hwspin_lock_get_id(struct device_node *np, int index)
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
++	ret = 0;
+ 	id += hwlock->bank->base_id;
  
--		start = 0;
--		rcu_read_lock();
--		radix_tree_for_each_tagged(slot, &mapping->pages, &iter,
--					   start, SHMEM_TAG_PINNED) {
--
--			page = radix_tree_deref_slot(slot);
--			if (radix_tree_exception(page)) {
--				if (radix_tree_deref_retry(page)) {
--					slot = radix_tree_iter_retry(&iter);
--					continue;
--				}
--
--				page = NULL;
--			}
--
--			if (page &&
--			    page_count(page) - page_mapcount(page) != 1) {
--				if (scan < LAST_SCAN)
--					goto continue_resched;
--
-+		xas_set(&xas, 0);
-+		xas_lock_irq(&xas);
-+		xas_for_each_tag(&xas, page, ULONG_MAX, SHMEM_TAG_PINNED) {
-+			bool clear = true;
-+			if (xa_is_value(page))
-+				continue;
-+			if (page_count(page) - page_mapcount(page) != 1) {
- 				/*
- 				 * On the last scan, we clean up all those tags
- 				 * we inserted; but make a note that we still
- 				 * found pages pinned.
- 				 */
--				error = -EBUSY;
-+				if (scan == LAST_SCAN)
-+					error = -EBUSY;
-+				else
-+					clear = false;
- 			}
-+			if (clear)
-+				xas_clear_tag(&xas, SHMEM_TAG_PINNED);
-+			if (++tagged % XA_CHECK_SCHED)
-+				continue;
+ out:
+@@ -342,26 +324,19 @@ EXPORT_SYMBOL_GPL(of_hwspin_lock_get_id);
  
--			xa_lock_irq(&mapping->pages);
--			radix_tree_tag_clear(&mapping->pages,
--					     iter.index, SHMEM_TAG_PINNED);
--			xa_unlock_irq(&mapping->pages);
--continue_resched:
--			if (need_resched()) {
--				slot = radix_tree_iter_resume(slot, &iter);
--				cond_resched_rcu();
--			}
-+			xas_pause(&xas);
-+			xas_unlock_irq(&xas);
-+			cond_resched();
-+			xas_lock_irq(&xas);
- 		}
--		rcu_read_unlock();
-+		xas_unlock_irq(&xas);
+ static int hwspin_lock_register_single(struct hwspinlock *hwlock, int id)
+ {
+-	struct hwspinlock *tmp;
+-	int ret;
++	void *curr;
+ 
+-	mutex_lock(&hwspinlock_tree_lock);
+-
+-	ret = radix_tree_insert(&hwspinlock_tree, id, hwlock);
+-	if (ret) {
+-		if (ret == -EEXIST)
++	curr = xa_cmpxchg(&hwspinlock_xa, id, NULL, hwlock, GFP_KERNEL);
++	if (curr) {
++		if (!xa_is_err(curr))
+ 			pr_err("hwspinlock id %d already exists!\n", id);
+ 		goto out;
  	}
  
- 	return error;
+ 	/* mark this hwspinlock as available */
+-	tmp = radix_tree_tag_set(&hwspinlock_tree, id, HWSPINLOCK_UNUSED);
+-
+-	/* self-sanity check which should never fail */
+-	WARN_ON(tmp != hwlock);
++	xa_set_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
+ 
+ out:
+-	mutex_unlock(&hwspinlock_tree_lock);
+ 	return 0;
+ }
+ 
+@@ -370,23 +345,16 @@ static struct hwspinlock *hwspin_lock_unregister_single(unsigned int id)
+ 	struct hwspinlock *hwlock = NULL;
+ 	int ret;
+ 
+-	mutex_lock(&hwspinlock_tree_lock);
+-
+ 	/* make sure the hwspinlock is not in use (tag is set) */
+-	ret = radix_tree_tag_get(&hwspinlock_tree, id, HWSPINLOCK_UNUSED);
++	ret = xa_get_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
+ 	if (ret == 0) {
+ 		pr_err("hwspinlock %d still in use (or not present)\n", id);
+ 		goto out;
+ 	}
+ 
+-	hwlock = radix_tree_delete(&hwspinlock_tree, id);
+-	if (!hwlock) {
+-		pr_err("failed to delete hwspinlock %d\n", id);
+-		goto out;
+-	}
++	hwlock = xa_erase(&hwspinlock_xa, id);
+ 
+ out:
+-	mutex_unlock(&hwspinlock_tree_lock);
+ 	return hwlock;
+ }
+ 
+@@ -477,8 +445,7 @@ EXPORT_SYMBOL_GPL(hwspin_lock_unregister);
+  * __hwspin_lock_request() - tag an hwspinlock as used and power it up
+  *
+  * This is an internal function that prepares an hwspinlock instance
+- * before it is given to the user. The function assumes that
+- * hwspinlock_tree_lock is taken.
++ * before it is given to the user.
+  *
+  * Returns 0 or positive to indicate success, and a negative value to
+  * indicate an error (with the appropriate error code)
+@@ -486,7 +453,6 @@ EXPORT_SYMBOL_GPL(hwspin_lock_unregister);
+ static int __hwspin_lock_request(struct hwspinlock *hwlock)
+ {
+ 	struct device *dev = hwlock->bank->dev;
+-	struct hwspinlock *tmp;
+ 	int ret;
+ 
+ 	/* prevent underlying implementation from being removed */
+@@ -501,16 +467,7 @@ static int __hwspin_lock_request(struct hwspinlock *hwlock)
+ 		dev_err(dev, "%s: can't power on device\n", __func__);
+ 		pm_runtime_put_noidle(dev);
+ 		module_put(dev->driver->owner);
+-		return ret;
+ 	}
+-
+-	/* mark hwspinlock as used, should not fail */
+-	tmp = radix_tree_tag_clear(&hwspinlock_tree, hwlock_to_id(hwlock),
+-							HWSPINLOCK_UNUSED);
+-
+-	/* self-sanity check that should never fail */
+-	WARN_ON(tmp != hwlock);
+-
+ 	return ret;
+ }
+ 
+@@ -548,29 +505,28 @@ struct hwspinlock *hwspin_lock_request(void)
+ {
+ 	struct hwspinlock *hwlock;
+ 	int ret;
++	unsigned long index = 0;
+ 
+-	mutex_lock(&hwspinlock_tree_lock);
++	xa_lock(&hwspinlock_xa);
+ 
+ 	/* look for an unused lock */
+-	ret = radix_tree_gang_lookup_tag(&hwspinlock_tree, (void **)&hwlock,
+-						0, 1, HWSPINLOCK_UNUSED);
+-	if (ret == 0) {
++	hwlock = xa_find(&hwspinlock_xa, &index, ULONG_MAX, HWSPINLOCK_UNUSED);
++	if (!hwlock) {
+ 		pr_warn("a free hwspinlock is not available\n");
+-		hwlock = NULL;
+-		goto out;
++		xa_unlock(&hwspinlock_xa);
++		return NULL;
+ 	}
+ 
+-	/* sanity check that should never fail */
+-	WARN_ON(ret > 1);
+-
+ 	/* mark as used and power up */
++	__xa_clear_tag(&hwspinlock_xa, index, HWSPINLOCK_UNUSED);
++	xa_unlock(&hwspinlock_xa);
++
+ 	ret = __hwspin_lock_request(hwlock);
+-	if (ret < 0)
+-		hwlock = NULL;
++	if (ret == 0)
++		return hwlock;
+ 
+-out:
+-	mutex_unlock(&hwspinlock_tree_lock);
+-	return hwlock;
++	xa_set_tag(&hwspinlock_xa, index, HWSPINLOCK_UNUSED);
++	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(hwspin_lock_request);
+ 
+@@ -592,10 +548,10 @@ struct hwspinlock *hwspin_lock_request_specific(unsigned int id)
+ 	struct hwspinlock *hwlock;
+ 	int ret;
+ 
+-	mutex_lock(&hwspinlock_tree_lock);
++	xa_lock(&hwspinlock_xa);
+ 
+ 	/* make sure this hwspinlock exists */
+-	hwlock = radix_tree_lookup(&hwspinlock_tree, id);
++	hwlock = xa_load(&hwspinlock_xa, id);
+ 	if (!hwlock) {
+ 		pr_warn("hwspinlock %u does not exist\n", id);
+ 		goto out;
+@@ -605,21 +561,25 @@ struct hwspinlock *hwspin_lock_request_specific(unsigned int id)
+ 	WARN_ON(hwlock_to_id(hwlock) != id);
+ 
+ 	/* make sure this hwspinlock is unused */
+-	ret = radix_tree_tag_get(&hwspinlock_tree, id, HWSPINLOCK_UNUSED);
++	ret = xa_get_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
+ 	if (ret == 0) {
+ 		pr_warn("hwspinlock %u is already in use\n", id);
+-		hwlock = NULL;
+ 		goto out;
+ 	}
+ 
+ 	/* mark as used and power up */
++	__xa_clear_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
++	xa_unlock(&hwspinlock_xa);
++
+ 	ret = __hwspin_lock_request(hwlock);
+-	if (ret < 0)
+-		hwlock = NULL;
++	if (ret == 0)
++		return hwlock;
+ 
++	xa_set_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
++	return NULL;
+ out:
+-	mutex_unlock(&hwspinlock_tree_lock);
+-	return hwlock;
++	xa_unlock(&hwspinlock_xa);
++	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(hwspin_lock_request_specific);
+ 
+@@ -638,7 +598,6 @@ EXPORT_SYMBOL_GPL(hwspin_lock_request_specific);
+ int hwspin_lock_free(struct hwspinlock *hwlock)
+ {
+ 	struct device *dev;
+-	struct hwspinlock *tmp;
+ 	int ret;
+ 
+ 	if (!hwlock) {
+@@ -647,12 +606,11 @@ int hwspin_lock_free(struct hwspinlock *hwlock)
+ 	}
+ 
+ 	dev = hwlock->bank->dev;
+-	mutex_lock(&hwspinlock_tree_lock);
+ 
+ 	/* make sure the hwspinlock is used */
+-	ret = radix_tree_tag_get(&hwspinlock_tree, hwlock_to_id(hwlock),
++	ret = xa_get_tag(&hwspinlock_xa, hwlock_to_id(hwlock),
+ 							HWSPINLOCK_UNUSED);
+-	if (ret == 1) {
++	if (ret) {
+ 		dev_err(dev, "%s: hwlock is already free\n", __func__);
+ 		dump_stack();
+ 		ret = -EINVAL;
+@@ -665,16 +623,11 @@ int hwspin_lock_free(struct hwspinlock *hwlock)
+ 		goto out;
+ 
+ 	/* mark this hwspinlock as available */
+-	tmp = radix_tree_tag_set(&hwspinlock_tree, hwlock_to_id(hwlock),
+-							HWSPINLOCK_UNUSED);
+-
+-	/* sanity check (this shouldn't happen) */
+-	WARN_ON(tmp != hwlock);
++	xa_set_tag(&hwspinlock_xa, hwlock_to_id(hwlock), HWSPINLOCK_UNUSED);
+ 
+ 	module_put(dev->driver->owner);
+ 
+ out:
+-	mutex_unlock(&hwspinlock_tree_lock);
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(hwspin_lock_free);
 -- 
 2.15.1
 
