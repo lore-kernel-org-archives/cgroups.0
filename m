@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 32/99] mm: Convert truncate to XArray
-Date: Wed, 17 Jan 2018 12:20:56 -0800
-Message-ID: <20180117202203.19756-33-willy@infradead.org>
+Subject: [PATCH v6 37/99] mm: Convert huge_memory to XArray
+Date: Wed, 17 Jan 2018 12:21:01 -0800
+Message-ID: <20180117202203.19756-38-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=z2wUjX53zsGmPoUiEiA7zW7Pqnae/hfF/ikw47JMqAo=; b=D+ZLr8vBjQEG3R8Wzczs4DPPYo
- q+QA7qBAIwAWOe9/Q1LCsC/Ve4IB656GUvzliAr2T/1O9954OqDU8FUQ/eqmvz5N0tYwuZRkUgHng
- f8unuxSVPtBFT+DmeBnf3+IfQwSG0Cku8of8aqzB4VJ7iybSjhbX9SQfV5LK91ouQTqw=;
+ bh=rAYa1YOy3vh7kOTS6KP7uHSLmuSyisoLLvfiQIO0r+A=; b=Lf/hUmHrB4tu2qAmmLy7h/yQOc
+ pLHOV3VXOAvsvXmZCzEEEscIQH7W8IJKGrBMKgoIhQvb1PvUSV5YTxb3N1nSkDpeg3+6JNlhBC4aq
+ Fc2LdFWDVFrnLmNxTAt1IZ/DYU9hlD8rIrCaNo2uzf5RrTMIPqXLBnKsN8KNXBOW4IyA=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=z2wUjX53zsGmPoUiEiA7zW7Pqnae/hfF/ikw47JMqAo=; b=XNy5y1QFIVfRz782gjzXf1ksVx
- 7kSOI/qBG+0B61WnnKhLAaaSrjUMAGp5FznDdZnKZlW/kDavrWQSM+uZU0wi3Z9v5Sxo7up6G8XoY
- hrbD812rO/49zPdlX7potu6yqQMNDJSgp0uLmSQJiTlYWrKXyN8yDmeSsT638wevu0V4=;
+ bh=rAYa1YOy3vh7kOTS6KP7uHSLmuSyisoLLvfiQIO0r+A=; b=PPNRwlWBr0Mf6OyAKSY2mRNX1t
+ X2dkj4GlsTwhMQNjkfvoJy+wLhkSygtdYFW3kHJ5qwi1gZj2eAdZTXFl6pb6ynMWlvWvfgEyTXPu7
+ yVB2gYDq3ChBVpTBmH7HqmJhxr1MmH4LhSero60f/HiDU+F3yDHt2Qna5AGMXqsa/a+Q=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=z2wUjX53zsGmPoUiEiA7zW7Pqnae/hfF/ikw47JMqAo=; b=UVVbNfS46+4TSAeJMR4tkZdgE
- krd6cgrrD1lXZpmRTUAdmhCMqYiX5NGj7cNteCRp1Ui78W8Lfkq1/OnIgXX9nxY6wUphK66CWkscl
- bh0oTMgVheB0L38kjfA0rOMyf4aeWgGe8hlk6Xpn0tWx7Fx3D8Dbsi60BhuYgbRHe8lryJAemmu7z
- R1vs+bqmqrTDE1lL1RAXHGcXIm/pPaEEcCpDYn2QOE4cSMRAU1alZ8GN8WlMmoGXkV5SomzOL9Os4
- ooqetvxaMiuGrfQFMks+D9AKJw5orOz5JvuGsPx715I2CxYVi9+oHzZ0hEcX527A7ARQhjIT/PoH/
- aIM7o6ZhQ==;
+ bh=rAYa1YOy3vh7kOTS6KP7uHSLmuSyisoLLvfiQIO0r+A=; b=WiF0JYXgFZMjryAe/3z5+0uYv
+ RA5fGTFVd/NwesfIx1Jxvnkqwe055rmNTTuoeMpcTk5avcDc2ST7bULC+FPQ6MzRExHuzs3jNGTgZ
+ WByecIHkc2LpqfYZxYnWJnjbnMxiGh75Llr8ttDSzbyAN8SLrzDWaBTgZP6HfEriNe5hOaRb31mlD
+ xTd3WnnxofFX/Ji7sitReDZuEUrXuyhi4ViMFrL1spQg8XhiXHayeyUn0XS8tczjngdKwAUjWblwe
+ jfPxZLURc8Yarf8BDfjFfn4Tbh2iggPNNULilg8Y6Ou+IO0t6skNpIU5Ty3AsEe0Sy3tW5GDmsoVP
+ oF6WgMBdw==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,51 +53,73 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is essentially xa_cmpxchg() with the locking handled above us,
-and it doesn't have to handle replacing a NULL entry.
+Quite a straightforward conversion.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/truncate.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ mm/huge_memory.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 69bb743dd7e5..70323c347298 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -33,15 +33,12 @@
- static inline void __clear_shadow_entry(struct address_space *mapping,
- 				pgoff_t index, void *entry)
- {
--	struct radix_tree_node *node;
--	void **slot;
-+	XA_STATE(xas, &mapping->pages, index);
- 
--	if (!__radix_tree_lookup(&mapping->pages, index, &node, &slot))
-+	xas_set_update(&xas, workingset_update_node);
-+	if (xas_load(&xas) != entry)
- 		return;
--	if (*slot != entry)
--		return;
--	__radix_tree_replace(&mapping->pages, node, slot, NULL,
--			     workingset_update_node);
-+	xas_store(&xas, NULL);
- 	mapping->nrexceptional--;
- }
- 
-@@ -746,10 +743,10 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
- 		index++;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index f71dd3e7d8cd..5c275295bbd3 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2379,7 +2379,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
+ 	if (PageAnon(head) && !PageSwapCache(head)) {
+ 		page_ref_inc(page_tail);
+ 	} else {
+-		/* Additional pin to radix tree */
++		/* Additional pin to page cache */
+ 		page_ref_add(page_tail, 2);
  	}
- 	/*
--	 * For DAX we invalidate page tables after invalidating radix tree.  We
-+	 * For DAX we invalidate page tables after invalidating page cache.  We
- 	 * could invalidate page tables while invalidating each entry however
- 	 * that would be expensive. And doing range unmapping before doesn't
--	 * work as we have no cheap way to find whether radix tree entry didn't
-+	 * work as we have no cheap way to find whether page cache entry didn't
- 	 * get remapped later.
- 	 */
- 	if (dax_mapping(mapping)) {
+ 
+@@ -2450,13 +2450,13 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	ClearPageCompound(head);
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
+-		/* Additional pin to radix tree of swap cache */
++		/* Additional pin to swap cache */
+ 		if (PageSwapCache(head))
+ 			page_ref_add(head, 2);
+ 		else
+ 			page_ref_inc(head);
+ 	} else {
+-		/* Additional pin to radix tree */
++		/* Additional pin to page cache */
+ 		page_ref_add(head, 2);
+ 		xa_unlock(&head->mapping->pages);
+ 	}
+@@ -2568,7 +2568,7 @@ bool can_split_huge_page(struct page *page, int *pextra_pins)
+ {
+ 	int extra_pins;
+ 
+-	/* Additional pins from radix tree */
++	/* Additional pins from page cache */
+ 	if (PageAnon(page))
+ 		extra_pins = PageSwapCache(page) ? HPAGE_PMD_NR : 0;
+ 	else
+@@ -2664,17 +2664,14 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	spin_lock_irqsave(zone_lru_lock(page_zone(head)), flags);
+ 
+ 	if (mapping) {
+-		void **pslot;
++		XA_STATE(xas, &mapping->pages, page_index(head));
+ 
+-		xa_lock(&mapping->pages);
+-		pslot = radix_tree_lookup_slot(&mapping->pages,
+-				page_index(head));
+ 		/*
+-		 * Check if the head page is present in radix tree.
++		 * Check if the head page is present in page cache.
+ 		 * We assume all tail are present too, if head is there.
+ 		 */
+-		if (radix_tree_deref_slot_protected(pslot,
+-					&mapping->pages.xa_lock) != head)
++		xa_lock(&mapping->pages);
++		if (xas_load(&xas) != head)
+ 			goto fail;
+ 	}
+ 
 -- 
 2.15.1
 
