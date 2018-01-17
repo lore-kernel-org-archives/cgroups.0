@@ -1,244 +1,295 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: [PATCH v6 93/99] f2fs: Convert ino_root to XArray
-Date: Wed, 17 Jan 2018 12:21:57 -0800
-Message-ID: <20180117202203.19756-94-willy@infradead.org>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v6 79/99] blk-cgroup: Convert to XArray
+Date: Wed, 17 Jan 2018 12:21:43 -0800
+Message-ID: <20180117202203.19756-80-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
-        Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=7NlhZLzEe862nsjjn+PzkATmLIpT8jJP4lXQ6PTbYLg=; b=tNpBishKcVY2TJvh04kJ6iLEe
-        wuI80h9QimCuAUMH5JwxTqo74bjKHkzu4SDLyqQeRR1TW3HWbqfdD97P8/RF8QlSI84VvyvWq3RHZ
-        IY5opuVMnXjquNJ/EOmcyXF0G18dTmJVtzyDQoGzf06Oe04rQpBpu8tCgMQiIz06Ls6nEzMN5HvEc
-        mu/kE616fg93M3ST1sO9u8ThokoAaYjRFqWxO9wL7E9Uzc98vTkC1VmGCGjsF3zkq7WFAlTP2AhHv
-        9ta2u2rjPWI3fiH1c5vcJRJOo/JtUdQMQIaB9ZfvWKgJvyHeUhEQmIerd/7YHT3w8NM74djGpICDG
-    
-In-Reply-To: <20180117202203.19756-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+	d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
+	Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	 bh=wpiM8CZm1dy0IKRaPRruGuexHowKpTyFYTPs2f4JnBo=; b=SuKKTqmN/xrlggfp2p9UDn9T1
+	CqDinXTd9uRuO35DxAIVXnjsm03Jz64WsymaehGPOoqSvP/jSwBs4qOfaliJlEOARMMhoZUm3SBad
+	KnTT0p86gwC4ZIV0t2NEHHcQZ+/MxwBT6/88FOE5kTmEaWCbdFJDkDqoJN+n/KyEFJxJN5XhkDYXd
+	dGzhWlcXwjM6wOdZq9mjxlGqra3hZgMbjZw4HYoibSsYUP4sFzkO4S9Z6H4jOoFt5Di6brPEv7JlP
+	FGGo726f7Y9+QCWGEieWjx/esn1uumprjYjDD1Qhg6oX2HhF2D/85cg1TmrqMHmQex+fcWwvWYrSz
+	P58Az0baQ==;
+In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-nilfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stefano Stabellini <sstabellini-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-From: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-I did a fairly major rewrite of __add_ino_entry(); please check carefully.
-Also, we can remove ino_list unless it's important to write out orphan
-inodes in the order they were orphaned.  It may also make more sense to
-combine the array of inode_management structures into a single XArray
-with tags, but that would be a job for someone who understands this
-filesystem better than I do.
+This call to radix_tree_preload is awkward.  At the point of allocation,
+we're under not only a local lock, but also under the queue lock.  So we
+can't back out, drop the lock and retry the allocation.  Replace this
+preload call with a call to xa_reserve() which will ensure the memory is
+allocated.
 
-Signed-off-by: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/f2fs/checkpoint.c | 85 +++++++++++++++++++++++-----------------------------
- fs/f2fs/f2fs.h       |  3 +-
- 2 files changed, 38 insertions(+), 50 deletions(-)
+ block/bfq-cgroup.c         |  4 ++--
+ block/blk-cgroup.c         | 52 ++++++++++++++++++++++------------------------
+ block/cfq-iosched.c        |  4 ++--
+ include/linux/blk-cgroup.h |  5 ++---
+ 4 files changed, 31 insertions(+), 34 deletions(-)
 
-diff --git a/fs/f2fs/checkpoint.c b/fs/f2fs/checkpoint.c
-index 4aa69bc1c70a..04d69679da13 100644
---- a/fs/f2fs/checkpoint.c
-+++ b/fs/f2fs/checkpoint.c
-@@ -403,33 +403,30 @@ static void __add_ino_entry(struct f2fs_sb_info *sbi, nid_t ino,
- 	struct inode_management *im = &sbi->im[type];
- 	struct ino_entry *e, *tmp;
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index da1525ec4c87..0648aaa6498b 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -860,7 +860,7 @@ static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
+ 		return ret;
  
--	tmp = f2fs_kmem_cache_alloc(ino_entry_slab, GFP_NOFS);
--
--	radix_tree_preload(GFP_NOFS | __GFP_NOFAIL);
--
--	spin_lock(&im->ino_lock);
--	e = radix_tree_lookup(&im->ino_root, ino);
--	if (!e) {
--		e = tmp;
--		if (unlikely(radix_tree_insert(&im->ino_root, ino, e)))
--			f2fs_bug_on(sbi, 1);
--
--		memset(e, 0, sizeof(struct ino_entry));
--		e->ino = ino;
--
--		list_add_tail(&e->list, &im->ino_list);
--		if (type != ORPHAN_INO)
--			im->ino_num++;
-+	xa_lock(&im->ino_root);
-+	e = xa_load(&im->ino_root, ino);
-+	if (e)
-+		goto found;
-+	xa_unlock(&im->ino_root);
-+
-+	tmp = f2fs_kmem_cache_alloc(ino_entry_slab, GFP_NOFS | __GFP_ZERO);
-+	xa_lock(&im->ino_root);
-+	e = __xa_cmpxchg(&im->ino_root, ino, NULL, tmp,
-+						GFP_NOFS | __GFP_NOFAIL);
-+	if (e) {
-+		kmem_cache_free(ino_entry_slab, tmp);
-+		goto found;
- 	}
-+	e = tmp;
- 
-+	e->ino = ino;
-+	list_add_tail(&e->list, &im->ino_list);
-+	if (type != ORPHAN_INO)
-+		im->ino_num++;
-+found:
- 	if (type == FLUSH_INO)
- 		f2fs_set_bit(devidx, (char *)&e->dirty_device);
--
--	spin_unlock(&im->ino_lock);
--	radix_tree_preload_end();
--
--	if (e != tmp)
--		kmem_cache_free(ino_entry_slab, tmp);
-+	xa_unlock(&im->ino_root);
- }
- 
- static void __remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
-@@ -437,17 +434,14 @@ static void __remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
- 	struct inode_management *im = &sbi->im[type];
- 	struct ino_entry *e;
- 
--	spin_lock(&im->ino_lock);
--	e = radix_tree_lookup(&im->ino_root, ino);
-+	xa_lock(&im->ino_root);
-+	e = __xa_erase(&im->ino_root, ino);
- 	if (e) {
- 		list_del(&e->list);
--		radix_tree_delete(&im->ino_root, ino);
- 		im->ino_num--;
--		spin_unlock(&im->ino_lock);
- 		kmem_cache_free(ino_entry_slab, e);
--		return;
- 	}
--	spin_unlock(&im->ino_lock);
-+	xa_unlock(&im->ino_root);
- }
- 
- void add_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
-@@ -466,12 +460,8 @@ void remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
- bool exist_written_data(struct f2fs_sb_info *sbi, nid_t ino, int mode)
- {
- 	struct inode_management *im = &sbi->im[mode];
--	struct ino_entry *e;
- 
--	spin_lock(&im->ino_lock);
--	e = radix_tree_lookup(&im->ino_root, ino);
--	spin_unlock(&im->ino_lock);
--	return e ? true : false;
-+	return xa_load(&im->ino_root, ino) ? true : false;
- }
- 
- void release_ino_entry(struct f2fs_sb_info *sbi, bool all)
-@@ -482,14 +472,14 @@ void release_ino_entry(struct f2fs_sb_info *sbi, bool all)
- 	for (i = all ? ORPHAN_INO : APPEND_INO; i < MAX_INO_ENTRY; i++) {
- 		struct inode_management *im = &sbi->im[i];
- 
--		spin_lock(&im->ino_lock);
-+		xa_lock(&im->ino_root);
- 		list_for_each_entry_safe(e, tmp, &im->ino_list, list) {
- 			list_del(&e->list);
--			radix_tree_delete(&im->ino_root, e->ino);
-+			__xa_erase(&im->ino_root, e->ino);
- 			kmem_cache_free(ino_entry_slab, e);
- 			im->ino_num--;
+ 	ret = 0;
+-	spin_lock_irq(&blkcg->lock);
++	xa_lock_irq(&blkcg->blkg_array);
+ 	bfqgd->weight = (unsigned short)val;
+ 	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
+ 		struct bfq_group *bfqg = blkg_to_bfqg(blkg);
+@@ -894,7 +894,7 @@ static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
+ 			bfqg->entity.prio_changed = 1;
  		}
--		spin_unlock(&im->ino_lock);
-+		xa_unlock(&im->ino_root);
  	}
+-	spin_unlock_irq(&blkcg->lock);
++	xa_unlock_irq(&blkcg->blkg_array);
+ 
+ 	return ret;
  }
- 
-@@ -506,11 +496,11 @@ bool is_dirty_device(struct f2fs_sb_info *sbi, nid_t ino,
- 	struct ino_entry *e;
- 	bool is_dirty = false;
- 
--	spin_lock(&im->ino_lock);
--	e = radix_tree_lookup(&im->ino_root, ino);
-+	xa_lock(&im->ino_root);
-+	e = xa_load(&im->ino_root, ino);
- 	if (e && f2fs_test_bit(devidx, (char *)&e->dirty_device))
- 		is_dirty = true;
--	spin_unlock(&im->ino_lock);
-+	xa_unlock(&im->ino_root);
- 	return is_dirty;
- }
- 
-@@ -519,11 +509,11 @@ int acquire_orphan_inode(struct f2fs_sb_info *sbi)
- 	struct inode_management *im = &sbi->im[ORPHAN_INO];
- 	int err = 0;
- 
--	spin_lock(&im->ino_lock);
-+	xa_lock(&im->ino_root);
- 
- #ifdef CONFIG_F2FS_FAULT_INJECTION
- 	if (time_to_inject(sbi, FAULT_ORPHAN)) {
--		spin_unlock(&im->ino_lock);
-+		xa_unlock(&im->ino_root);
- 		f2fs_show_injection_info(FAULT_ORPHAN);
- 		return -ENOSPC;
- 	}
-@@ -532,7 +522,7 @@ int acquire_orphan_inode(struct f2fs_sb_info *sbi)
- 		err = -ENOSPC;
- 	else
- 		im->ino_num++;
--	spin_unlock(&im->ino_lock);
-+	xa_unlock(&im->ino_root);
- 
- 	return err;
- }
-@@ -541,10 +531,10 @@ void release_orphan_inode(struct f2fs_sb_info *sbi)
- {
- 	struct inode_management *im = &sbi->im[ORPHAN_INO];
- 
--	spin_lock(&im->ino_lock);
-+	xa_lock(&im->ino_root);
- 	f2fs_bug_on(sbi, im->ino_num == 0);
- 	im->ino_num--;
--	spin_unlock(&im->ino_lock);
-+	xa_unlock(&im->ino_root);
- }
- 
- void add_orphan_inode(struct inode *inode)
-@@ -677,7 +667,7 @@ static void write_orphan_inodes(struct f2fs_sb_info *sbi, block_t start_blk)
- 	orphan_blocks = GET_ORPHAN_BLOCKS(im->ino_num);
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 4117524ca45b..37962d52f1a8 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -146,12 +146,12 @@ struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
+ 	struct blkcg_gq *blkg;
  
  	/*
--	 * we don't need to do spin_lock(&im->ino_lock) here, since all the
-+	 * we don't need to lock the ino_root here, since all the
- 	 * orphan inode operations are covered under f2fs_lock_op().
- 	 * And, spin_lock should be avoided due to page operations below.
+-	 * Hint didn't match.  Look up from the radix tree.  Note that the
++	 * Hint didn't match.  Fetch from the xarray.  Note that the
+ 	 * hint can only be updated under queue_lock as otherwise @blkg
+-	 * could have already been removed from blkg_tree.  The caller is
++	 * could have already been removed from blkg_array.  The caller is
+ 	 * responsible for grabbing queue_lock if @update_hint.
  	 */
-@@ -1433,8 +1423,7 @@ void init_ino_entry_info(struct f2fs_sb_info *sbi)
- 	for (i = 0; i < MAX_INO_ENTRY; i++) {
- 		struct inode_management *im = &sbi->im[i];
- 
--		INIT_RADIX_TREE(&im->ino_root, GFP_ATOMIC);
--		spin_lock_init(&im->ino_lock);
-+		xa_init(&im->ino_root);
- 		INIT_LIST_HEAD(&im->ino_list);
- 		im->ino_num = 0;
+-	blkg = radix_tree_lookup(&blkcg->blkg_tree, q->id);
++	blkg = xa_load(&blkcg->blkg_array, q->id);
+ 	if (blkg && blkg->q == q) {
+ 		if (update_hint) {
+ 			lockdep_assert_held(q->queue_lock);
+@@ -223,8 +223,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
  	}
-diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-index 6abf26c31d01..b3ee784b49bc 100644
---- a/fs/f2fs/f2fs.h
-+++ b/fs/f2fs/f2fs.h
-@@ -994,8 +994,7 @@ enum inode_type {
  
- /* for inner inode cache management */
- struct inode_management {
--	struct radix_tree_root ino_root;	/* ino entry array */
--	spinlock_t ino_lock;			/* for ino entry lock */
-+	struct xarray ino_root;			/* ino entry array */
- 	struct list_head ino_list;		/* inode list head */
- 	unsigned long ino_num;			/* number of entries */
- };
+ 	/* insert */
+-	spin_lock(&blkcg->lock);
+-	ret = radix_tree_insert(&blkcg->blkg_tree, q->id, blkg);
++	xa_lock(&blkcg->blkg_array);
++	ret = xa_err(__xa_store(&blkcg->blkg_array, q->id, blkg, GFP_NOWAIT));
+ 	if (likely(!ret)) {
+ 		hlist_add_head_rcu(&blkg->blkcg_node, &blkcg->blkg_list);
+ 		list_add(&blkg->q_node, &q->blkg_list);
+@@ -237,7 +237,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 		}
+ 	}
+ 	blkg->online = true;
+-	spin_unlock(&blkcg->lock);
++	xa_unlock(&blkcg->blkg_array);
+ 
+ 	if (!ret)
+ 		return blkg;
+@@ -314,7 +314,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 	int i;
+ 
+ 	lockdep_assert_held(blkg->q->queue_lock);
+-	lockdep_assert_held(&blkcg->lock);
++	lockdep_assert_held(&blkcg->blkg_array.xa_lock);
+ 
+ 	/* Something wrong if we are trying to remove same group twice */
+ 	WARN_ON_ONCE(list_empty(&blkg->q_node));
+@@ -334,7 +334,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 
+ 	blkg->online = false;
+ 
+-	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
++	xa_erase(&blkcg->blkg_array, blkg->q->id);
+ 	list_del_init(&blkg->q_node);
+ 	hlist_del_init_rcu(&blkg->blkcg_node);
+ 
+@@ -368,9 +368,9 @@ static void blkg_destroy_all(struct request_queue *q)
+ 	list_for_each_entry_safe(blkg, n, &q->blkg_list, q_node) {
+ 		struct blkcg *blkcg = blkg->blkcg;
+ 
+-		spin_lock(&blkcg->lock);
++		xa_lock(&blkcg->blkg_array);
+ 		blkg_destroy(blkg);
+-		spin_unlock(&blkcg->lock);
++		xa_unlock(&blkcg->blkg_array);
+ 	}
+ 
+ 	q->root_blkg = NULL;
+@@ -443,7 +443,7 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ 	int i;
+ 
+ 	mutex_lock(&blkcg_pol_mutex);
+-	spin_lock_irq(&blkcg->lock);
++	xa_lock_irq(&blkcg->blkg_array);
+ 
+ 	/*
+ 	 * Note that stat reset is racy - it doesn't synchronize against
+@@ -462,7 +462,7 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ 		}
+ 	}
+ 
+-	spin_unlock_irq(&blkcg->lock);
++	xa_unlock_irq(&blkcg->blkg_array);
+ 	mutex_unlock(&blkcg_pol_mutex);
+ 	return 0;
+ }
+@@ -1012,7 +1012,7 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+ {
+ 	struct blkcg *blkcg = css_to_blkcg(css);
+ 
+-	spin_lock_irq(&blkcg->lock);
++	xa_lock_irq(&blkcg->blkg_array);
+ 
+ 	while (!hlist_empty(&blkcg->blkg_list)) {
+ 		struct blkcg_gq *blkg = hlist_entry(blkcg->blkg_list.first,
+@@ -1023,13 +1023,13 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+ 			blkg_destroy(blkg);
+ 			spin_unlock(q->queue_lock);
+ 		} else {
+-			spin_unlock_irq(&blkcg->lock);
++			xa_unlock_irq(&blkcg->blkg_array);
+ 			cpu_relax();
+-			spin_lock_irq(&blkcg->lock);
++			xa_lock_irq(&blkcg->blkg_array);
+ 		}
+ 	}
+ 
+-	spin_unlock_irq(&blkcg->lock);
++	xa_unlock_irq(&blkcg->blkg_array);
+ 
+ 	wb_blkcg_offline(blkcg);
+ }
+@@ -1096,8 +1096,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 			pol->cpd_init_fn(cpd);
+ 	}
+ 
+-	spin_lock_init(&blkcg->lock);
+-	INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_NOWAIT | __GFP_NOWARN);
++	xa_init_flags(&blkcg->blkg_array, XA_FLAGS_LOCK_IRQ);
+ 	INIT_HLIST_HEAD(&blkcg->blkg_list);
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&blkcg->cgwb_list);
+@@ -1132,14 +1131,14 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ int blkcg_init_queue(struct request_queue *q)
+ {
+ 	struct blkcg_gq *new_blkg, *blkg;
+-	bool preloaded;
+ 	int ret;
+ 
+ 	new_blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
+ 	if (!new_blkg)
+ 		return -ENOMEM;
+ 
+-	preloaded = !radix_tree_preload(GFP_KERNEL);
++	if (xa_reserve(&blkcg_root.blkg_array, q->id, GFP_KERNEL))
++		return -ENOMEM;
+ 
+ 	/*
+ 	 * Make sure the root blkg exists and count the existing blkgs.  As
+@@ -1152,11 +1151,10 @@ int blkcg_init_queue(struct request_queue *q)
+ 	spin_unlock_irq(q->queue_lock);
+ 	rcu_read_unlock();
+ 
+-	if (preloaded)
+-		radix_tree_preload_end();
+-
+-	if (IS_ERR(blkg))
++	if (IS_ERR(blkg)) {
++		xa_erase(&blkcg_root.blkg_array, q->id);
+ 		return PTR_ERR(blkg);
++	}
+ 
+ 	q->root_blkg = blkg;
+ 	q->root_rl.blkg = blkg;
+@@ -1374,8 +1372,8 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 	__clear_bit(pol->plid, q->blkcg_pols);
+ 
+ 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+-		/* grab blkcg lock too while removing @pd from @blkg */
+-		spin_lock(&blkg->blkcg->lock);
++		/* grab xa_lock too while removing @pd from @blkg */
++		xa_lock(&blkg->blkcg->blkg_array);
+ 
+ 		if (blkg->pd[pol->plid]) {
+ 			if (pol->pd_offline_fn)
+@@ -1384,7 +1382,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 			blkg->pd[pol->plid] = NULL;
+ 		}
+ 
+-		spin_unlock(&blkg->blkcg->lock);
++		xa_unlock(&blkg->blkcg->blkg_array);
+ 	}
+ 
+ 	spin_unlock_irq(q->queue_lock);
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 9f342ef1ad42..a51bef7af8df 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1827,7 +1827,7 @@ static int __cfq_set_weight(struct cgroup_subsys_state *css, u64 val,
+ 	if (val < min || val > max)
+ 		return -ERANGE;
+ 
+-	spin_lock_irq(&blkcg->lock);
++	xa_lock_irq(&blkcg->blkg_array);
+ 	cfqgd = blkcg_to_cfqgd(blkcg);
+ 	if (!cfqgd) {
+ 		ret = -EINVAL;
+@@ -1859,7 +1859,7 @@ static int __cfq_set_weight(struct cgroup_subsys_state *css, u64 val,
+ 	}
+ 
+ out:
+-	spin_unlock_irq(&blkcg->lock);
++	xa_unlock_irq(&blkcg->blkg_array);
+ 	return ret;
+ }
+ 
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index e9825ff57b15..6278c49d3997 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -17,7 +17,7 @@
+ #include <linux/cgroup.h>
+ #include <linux/percpu_counter.h>
+ #include <linux/seq_file.h>
+-#include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/blkdev.h>
+ #include <linux/atomic.h>
+ #include <linux/kthread.h>
+@@ -44,9 +44,8 @@ struct blkcg_gq;
+ 
+ struct blkcg {
+ 	struct cgroup_subsys_state	css;
+-	spinlock_t			lock;
+ 
+-	struct radix_tree_root		blkg_tree;
++	struct xarray			blkg_array;
+ 	struct blkcg_gq	__rcu		*blkg_hint;
+ 	struct hlist_head		blkg_list;
+ 
 -- 
 2.15.1
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
