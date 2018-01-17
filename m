@@ -1,8 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 09/99] xarray: Add xa_get_tag,
- xa_set_tag and xa_clear_tag
-Date: Wed, 17 Jan 2018 12:20:33 -0800
-Message-ID: <20180117202203.19756-10-willy@infradead.org>
+Subject: [PATCH v6 53/99] fs: Convert writeback to XArray
+Date: Wed, 17 Jan 2018 12:21:17 -0800
+Message-ID: <20180117202203.19756-54-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=JS2zhNKz9YfF921qLz9NegLIVJEfSmzHLkMPLwkP3C8=; b=AvUJfXGzAIobDHEZ4s7HffStG8
- 0FIVFebutaXCzXcZ4SjxerE6TrUpCEuZ64YqWvIpsdYHX+hQIkznjZbgoQZKbzC58I7Xlax2/ggyK
- IevbSwUBCmOsiSB8MA4JCLrZ117a0e+yHnkhDBFvOYMIzr2Vo9ui7vBC0gFXKXMfAAzk=;
+ bh=ocf6wl8zYKtw5m0lmpIHnD421UfKbAxeuZFBoq38Wv8=; b=YLz5VGMCIwsE3EDv6C06rNJqa/
+ Od+d2xE/if5/dl8GeB532H/ZtmdAVWD5Pgd8BRVNYreT2MOIoOb8FR5AA7SVMidvwlWAvtgzvw+SL
+ /ExVI4sccj/4IFDf348o969aqqSPKGifnTQv+A2D2yHnzusGeu2Hj3kCh3yqcghvgilw=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -24,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=JS2zhNKz9YfF921qLz9NegLIVJEfSmzHLkMPLwkP3C8=; b=lCWFqWtot0dHfLk+I6OUA3GJq8
- ZSnsNmLzi/ZSxa32YmEHKPrA6V4cUU6+zxs55k7naumPNYhyHhTL0JixVG8bjVByoO0S9sb+J+jHD
- 8u6W6rpWXExSvLgszO0i3b5xrewzBRoqOLyvADzIl1PeyTHVE4GRFXRJ80RwkvHP3HS8=;
+ bh=ocf6wl8zYKtw5m0lmpIHnD421UfKbAxeuZFBoq38Wv8=; b=QnIdN6d/cf+XIS4oRYn3AvqiV1
+ oEp1V3isO03WP/GuR9j99f5bvdTOAw7oTL4zGqlRht5gN32cVcByoAi3Qr14SCU2aSq0zEBm2dbHS
+ O59OEWhv2yC66cHKopVQED+1dbBAIo8I92uup7j97B7/9x+mt5849uey5V6yF3u2KoPk=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=JS2zhNKz9YfF921qLz9NegLIVJEfSmzHLkMPLwkP3C8=; b=bUra3nrRdtKPLiJ1RNYrYgCmh
- 73tY4UrhVlGH7ytz3uGjbVGg2/EueNpC5cABUhb073iYQx6vOjsYqlnY94ptaUGtysAFof8k0cv82
- udaiqsAZgMn+sp9jkzUNpCwpl/m2COzn9O5JXngivQyO5iakySyYbxV0t02VOIrNqM3d/al9cc0rr
- F+2UV8I2E87a/pUv+gZtht0XZleFK0Tna7yBNWq200Pcw+8pJ4GkxKhVkiTVWwsLN6EVjuDPztC4A
- qcJk9WoiL4FdQPvlcIzJ5qy+RyCvqeh/N3LZvFWu+l2WAndXfi/88JtTGYJ+qRlS3/xcSF7SUdzfo
- m8KCrFkmw==;
+ bh=ocf6wl8zYKtw5m0lmpIHnD421UfKbAxeuZFBoq38Wv8=; b=LwTEtxxGdRpIZ+SI2d0Z87dhl
+ DQzWfNfD5GBQMtfK5W+6LF0dwdZTpmtepNT8c1YtCSF/L2gvYsi2tslhzx/fjHGAac+Yp3KlDDncN
+ LbuAwXSKq9tm5MGXk54V8K9F7k1filVEO2IywhjM9cu2ORgwc0KUnDxkOzbP/EoHEJxir3UZQpVAi
+ q/3sCuM+0SVxzB0bGsRqa0fjkUzlKbGIS2EKvjOyo92+BWEaALtDcMT+09BGgJ81pb0Nuoa3ZRYNt
+ PFKbCzWdgpnJPq0qAxKpLgvzawSG/QeIXpXZfCbyFWOkBnmVA+4/U2mSwLui04yd+USW09jVxIyz1
+ NGxs1Whpg==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -54,382 +53,62 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-XArray tags are slightly more strongly typed than the radix tree tags,
-but occupy the same bits.  This commit also adds the xas_ family of tag
-operations, for cases where the caller is already holding the lock, and
-xa_tagged() to ask whether any array member has a particular tag set.
+A couple of short loops.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h         |  40 +++++++
- lib/xarray.c                   | 229 +++++++++++++++++++++++++++++++++++++++++
- tools/include/linux/spinlock.h |   6 ++
- 3 files changed, 275 insertions(+)
+ fs/fs-writeback.c | 25 +++++++++----------------
+ 1 file changed, 9 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index 54c694e5c33f..ddeb49b8bfc1 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -11,6 +11,7 @@
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index e2c1ca667d9a..897a89489fe9 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -339,9 +339,9 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 	struct address_space *mapping = inode->i_mapping;
+ 	struct bdi_writeback *old_wb = inode->i_wb;
+ 	struct bdi_writeback *new_wb = isw->new_wb;
+-	struct radix_tree_iter iter;
++	XA_STATE(xas, &mapping->pages, 0);
++	struct page *page;
+ 	bool switched = false;
+-	void **slot;
  
- #include <linux/bug.h>
- #include <linux/compiler.h>
-+#include <linux/gfp.h>
- #include <linux/kconfig.h>
- #include <linux/kernel.h>
- #include <linux/rcupdate.h>
-@@ -141,6 +142,20 @@ static inline int xa_err(void *entry)
- 	return 0;
- }
+ 	/*
+ 	 * By the time control reaches here, RCU grace period has passed
+@@ -375,25 +375,18 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 	 * to possibly dirty pages while PAGECACHE_TAG_WRITEBACK points to
+ 	 * pages actually under writeback.
+ 	 */
+-	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
+-				   PAGECACHE_TAG_DIRTY) {
+-		struct page *page = radix_tree_deref_slot_protected(slot,
+-						&mapping->pages.xa_lock);
+-		if (likely(page) && PageDirty(page)) {
++	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_DIRTY) {
++		if (PageDirty(page)) {
+ 			dec_wb_stat(old_wb, WB_RECLAIMABLE);
+ 			inc_wb_stat(new_wb, WB_RECLAIMABLE);
+ 		}
+ 	}
  
-+typedef unsigned __bitwise xa_tag_t;
-+#define XA_TAG_0		((__force xa_tag_t)0U)
-+#define XA_TAG_1		((__force xa_tag_t)1U)
-+#define XA_TAG_2		((__force xa_tag_t)2U)
-+#define XA_PRESENT		((__force xa_tag_t)8U)
-+#define XA_TAG_MAX		XA_TAG_2
-+
-+/*
-+ * Values for xa_flags.  The radix tree stores its GFP flags in the xa_flags,
-+ * and we remain compatible with that.
-+ */
-+#define XA_FLAGS_TAG(tag)	((__force gfp_t)((1U << __GFP_BITS_SHIFT) << \
-+						(__force unsigned)(tag)))
-+
- /**
-  * struct xarray - The anchor of the XArray.
-  * @xa_lock: Lock that protects the contents of the XArray.
-@@ -187,6 +202,9 @@ struct xarray {
+-	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
+-				   PAGECACHE_TAG_WRITEBACK) {
+-		struct page *page = radix_tree_deref_slot_protected(slot,
+-						&mapping->pages.xa_lock);
+-		if (likely(page)) {
+-			WARN_ON_ONCE(!PageWriteback(page));
+-			dec_wb_stat(old_wb, WB_WRITEBACK);
+-			inc_wb_stat(new_wb, WB_WRITEBACK);
+-		}
++	xas_set(&xas, 0);
++	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_WRITEBACK) {
++		WARN_ON_ONCE(!PageWriteback(page));
++		dec_wb_stat(old_wb, WB_WRITEBACK);
++		inc_wb_stat(new_wb, WB_WRITEBACK);
+ 	}
  
- void xa_init_flags(struct xarray *, gfp_t flags);
- void *xa_load(struct xarray *, unsigned long index);
-+bool xa_get_tag(struct xarray *, unsigned long index, xa_tag_t);
-+void xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
-+void xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
- 
- /**
-  * xa_init() - Initialise an empty XArray.
-@@ -199,6 +217,18 @@ static inline void xa_init(struct xarray *xa)
- 	xa_init_flags(xa, 0);
- }
- 
-+/**
-+ * xa_tagged() - Inquire whether any entry in this array has a tag set
-+ * @xa: Array
-+ * @tag: Tag value
-+ *
-+ * Return: %true if any entry has this tag set.
-+ */
-+static inline bool xa_tagged(const struct xarray *xa, xa_tag_t tag)
-+{
-+	return xa->xa_flags & XA_FLAGS_TAG(tag);
-+}
-+
- #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
- #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
- #define xa_unlock(xa)		spin_unlock(&(xa)->xa_lock)
-@@ -211,6 +241,12 @@ static inline void xa_init(struct xarray *xa)
- #define xa_unlock_irqrestore(xa, flags) \
- 				spin_unlock_irqrestore(&(xa)->xa_lock, flags)
- 
-+/*
-+ * Versions of the normal API which require the caller to hold the xa_lock.
-+ */
-+void __xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
-+void __xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
-+
- /* Everything below here is the Advanced API.  Proceed with caution. */
- 
- /*
-@@ -504,6 +540,10 @@ static inline bool xas_retry(struct xa_state *xas, const void *entry)
- 
- void *xas_load(struct xa_state *);
- 
-+bool xas_get_tag(const struct xa_state *, xa_tag_t);
-+void xas_set_tag(const struct xa_state *, xa_tag_t);
-+void xas_clear_tag(const struct xa_state *, xa_tag_t);
-+
- /**
-  * xas_reload() - Refetch an entry from the xarray.
-  * @xas: XArray operation state.
-diff --git a/lib/xarray.c b/lib/xarray.c
-index 83b9c25de415..59b57e6f80de 100644
---- a/lib/xarray.c
-+++ b/lib/xarray.c
-@@ -5,6 +5,7 @@
-  * Author: Matthew Wilcox <mawilcox@microsoft.com>
-  */
- 
-+#include <linux/bitmap.h>
- #include <linux/export.h>
- #include <linux/xarray.h>
- 
-@@ -24,6 +25,55 @@
-  * @entry refers to something stored in a slot in the xarray
-  */
- 
-+static inline struct xa_node *xa_parent(struct xarray *xa,
-+					const struct xa_node *node)
-+{
-+	return rcu_dereference_check(node->parent,
-+						lockdep_is_held(&xa->xa_lock));
-+}
-+
-+static inline struct xa_node *xa_parent_locked(struct xarray *xa,
-+					const struct xa_node *node)
-+{
-+	return rcu_dereference_protected(node->parent,
-+						lockdep_is_held(&xa->xa_lock));
-+}
-+
-+static inline void xa_tag_set(struct xarray *xa, xa_tag_t tag)
-+{
-+	if (!(xa->xa_flags & XA_FLAGS_TAG(tag)))
-+		xa->xa_flags |= XA_FLAGS_TAG(tag);
-+}
-+
-+static inline void xa_tag_clear(struct xarray *xa, xa_tag_t tag)
-+{
-+	if (xa->xa_flags & XA_FLAGS_TAG(tag))
-+		xa->xa_flags &= ~(XA_FLAGS_TAG(tag));
-+}
-+
-+static inline bool node_get_tag(const struct xa_node *node, unsigned int offset,
-+				xa_tag_t tag)
-+{
-+	return test_bit(offset, node->tags[(__force unsigned)tag]);
-+}
-+
-+static inline void node_set_tag(struct xa_node *node, unsigned int offset,
-+				xa_tag_t tag)
-+{
-+	__set_bit(offset, node->tags[(__force unsigned)tag]);
-+}
-+
-+static inline void node_clear_tag(struct xa_node *node, unsigned int offset,
-+				xa_tag_t tag)
-+{
-+	__clear_bit(offset, node->tags[(__force unsigned)tag]);
-+}
-+
-+static inline bool node_any_tag(struct xa_node *node, xa_tag_t tag)
-+{
-+	return !bitmap_empty(node->tags[(__force unsigned)tag], XA_CHUNK_SIZE);
-+}
-+
- /* extracts the offset within this node from the index */
- static unsigned int get_offset(unsigned long index, struct xa_node *node)
- {
-@@ -118,6 +168,85 @@ void *xas_load(struct xa_state *xas)
- }
- EXPORT_SYMBOL_GPL(xas_load);
- 
-+/**
-+ * xas_get_tag() - Returns the state of this tag.
-+ * @xas: XArray operation state.
-+ * @tag: Tag number.
-+ *
-+ * Return: true if the tag is set, false if the tag is clear or @xas
-+ * is in an error state.
-+ */
-+bool xas_get_tag(const struct xa_state *xas, xa_tag_t tag)
-+{
-+	if (xas_invalid(xas))
-+		return false;
-+	if (!xas->xa_node)
-+		return xa_tagged(xas->xa, tag);
-+	return node_get_tag(xas->xa_node, xas->xa_offset, tag);
-+}
-+EXPORT_SYMBOL_GPL(xas_get_tag);
-+
-+/**
-+ * xas_set_tag() - Sets the tag on this entry and its parents.
-+ * @xas: XArray operation state.
-+ * @tag: Tag number.
-+ *
-+ * Sets the specified tag on this entry, and walks up the tree setting it
-+ * on all the ancestor entries.  Does nothing if @xas has not been walked to
-+ * an entry, or is in an error state.
-+ */
-+void xas_set_tag(const struct xa_state *xas, xa_tag_t tag)
-+{
-+	struct xa_node *node = xas->xa_node;
-+	unsigned int offset = xas->xa_offset;
-+
-+	if (xas_invalid(xas))
-+		return;
-+
-+	while (node) {
-+		if (node_get_tag(node, offset, tag))
-+			return;
-+		node_set_tag(node, offset, tag);
-+		offset = node->offset;
-+		node = xa_parent_locked(xas->xa, node);
-+	}
-+
-+	if (!xa_tagged(xas->xa, tag))
-+		xa_tag_set(xas->xa, tag);
-+}
-+EXPORT_SYMBOL_GPL(xas_set_tag);
-+
-+/**
-+ * xas_clear_tag() - Clears the tag on this entry and its parents.
-+ * @xas: XArray operation state.
-+ * @tag: Tag number.
-+ *
-+ * Clears the specified tag on this entry, and walks back to the head
-+ * attempting to clear it on all the ancestor entries.  Does nothing if
-+ * @xas has not been walked to an entry, or is in an error state.
-+ */
-+void xas_clear_tag(const struct xa_state *xas, xa_tag_t tag)
-+{
-+	struct xa_node *node = xas->xa_node;
-+	unsigned int offset = xas->xa_offset;
-+
-+	if (xas_invalid(xas))
-+		return;
-+
-+	while (node) {
-+		node_clear_tag(node, offset, tag);
-+		if (node_any_tag(node, tag))
-+			return;
-+
-+		offset = node->offset;
-+		node = xa_parent_locked(xas->xa, node);
-+	}
-+
-+	if (xa_tagged(xas->xa, tag))
-+		xa_tag_clear(xas->xa, tag);
-+}
-+EXPORT_SYMBOL_GPL(xas_clear_tag);
-+
- /**
-  * xa_init_flags() - Initialise an empty XArray with flags.
-  * @xa: XArray.
-@@ -157,6 +286,106 @@ void *xa_load(struct xarray *xa, unsigned long index)
- }
- EXPORT_SYMBOL(xa_load);
- 
-+/**
-+ * __xa_set_tag() - Set this tag on this entry while locked.
-+ * @xa: XArray.
-+ * @index: Index of entry.
-+ * @tag: Tag number.
-+ *
-+ * Attempting to set a tag on a NULL entry does not succeed.
-+ * This function expects the xa_lock to be held on entry.
-+ */
-+void __xa_set_tag(struct xarray *xa, unsigned long index, xa_tag_t tag)
-+{
-+	XA_STATE(xas, xa, index);
-+	void *entry = xas_load(&xas);
-+
-+	if (entry)
-+		xas_set_tag(&xas, tag);
-+}
-+EXPORT_SYMBOL_GPL(__xa_set_tag);
-+
-+/**
-+ * __xa_clear_tag() - Clear this tag on this entry while locked.
-+ * @xa: XArray.
-+ * @index: Index of entry.
-+ * @tag: Tag number.
-+ *
-+ * This function expects the xa_lock to be held on entry.
-+ */
-+void __xa_clear_tag(struct xarray *xa, unsigned long index, xa_tag_t tag)
-+{
-+	XA_STATE(xas, xa, index);
-+	void *entry = xas_load(&xas);
-+
-+	if (entry)
-+		xas_clear_tag(&xas, tag);
-+}
-+EXPORT_SYMBOL_GPL(__xa_clear_tag);
-+
-+/**
-+ * xa_get_tag() - Inquire whether this tag is set on this entry.
-+ * @xa: XArray.
-+ * @index: Index of entry.
-+ * @tag: Tag number.
-+ *
-+ * This function uses the RCU read lock, so the result may be out of date
-+ * by the time it returns.  If you need the result to be stable, use a lock.
-+ *
-+ * Return: True if the entry at @index has this tag set, false if it doesn't.
-+ */
-+bool xa_get_tag(struct xarray *xa, unsigned long index, xa_tag_t tag)
-+{
-+	XA_STATE(xas, xa, index);
-+	void *entry;
-+
-+	rcu_read_lock();
-+	entry = xas_start(&xas);
-+	while (xas_get_tag(&xas, tag)) {
-+		if (!xa_is_node(entry))
-+			goto found;
-+		entry = xas_descend(&xas, xa_to_node(entry));
-+	}
-+	rcu_read_unlock();
-+	return false;
-+ found:
-+	rcu_read_unlock();
-+	return true;
-+}
-+EXPORT_SYMBOL(xa_get_tag);
-+
-+/**
-+ * xa_set_tag() - Set this tag on this entry.
-+ * @xa: XArray.
-+ * @index: Index of entry.
-+ * @tag: Tag number.
-+ *
-+ * Attempting to set a tag on a NULL entry does not succeed.
-+ */
-+void xa_set_tag(struct xarray *xa, unsigned long index, xa_tag_t tag)
-+{
-+	xa_lock(xa);
-+	__xa_set_tag(xa, index, tag);
-+	xa_unlock(xa);
-+}
-+EXPORT_SYMBOL(xa_set_tag);
-+
-+/**
-+ * xa_clear_tag() - Clear this tag on this entry.
-+ * @xa: XArray.
-+ * @index: Index of entry.
-+ * @tag: Tag number.
-+ *
-+ * Clearing a tag always succeeds.
-+ */
-+void xa_clear_tag(struct xarray *xa, unsigned long index, xa_tag_t tag)
-+{
-+	xa_lock(xa);
-+	__xa_clear_tag(xa, index, tag);
-+	xa_unlock(xa);
-+}
-+EXPORT_SYMBOL(xa_clear_tag);
-+
- #ifdef XA_DEBUG
- void xa_dump_node(const struct xa_node *node)
- {
-diff --git a/tools/include/linux/spinlock.h b/tools/include/linux/spinlock.h
-index 34fed5c38da2..85a009001109 100644
---- a/tools/include/linux/spinlock.h
-+++ b/tools/include/linux/spinlock.h
-@@ -10,6 +10,12 @@
- #define __SPIN_LOCK_UNLOCKED(x)	(pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER
- #define spin_lock_init(x)	pthread_mutex_init(x, NULL);
- 
-+#define spin_lock(x)			pthread_mutex_lock(x)
-+#define spin_unlock(x)			pthread_mutex_unlock(x)
-+#define spin_lock_bh(x)			pthread_mutex_lock(x)
-+#define spin_unlock_bh(x)		pthread_mutex_unlock(x)
-+#define spin_lock_irq(x)		pthread_mutex_lock(x)
-+#define spin_unlock_irq(x)		pthread_mutex_unlock(x)
- #define spin_lock_irqsave(x, f)		(void)f, pthread_mutex_lock(x)
- #define spin_unlock_irqrestore(x, f)	(void)f, pthread_mutex_unlock(x)
- 
+ 	wb_get(new_wb);
 -- 
 2.15.1
 
