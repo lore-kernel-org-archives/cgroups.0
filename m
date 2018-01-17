@@ -1,96 +1,56 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
-Date: Tue, 16 Jan 2018 23:09:07 +0100
-Message-ID: <20180116220907.GD17351@dhcp22.suse.cz>
-References: <20171130152824.1591-1-guro@fb.com>
- <20171130123930.cf3217c816fd270fa35a40cb@linux-foundation.org>
- <alpine.DEB.2.10.1801091556490.173445@chino.kir.corp.google.com>
- <20180110131143.GB26913@castle.DHCP.thefacebook.com>
- <20180110113345.54dd571967fd6e70bfba68c3@linux-foundation.org>
- <20180111090809.GW1732@dhcp22.suse.cz>
- <20180111131845.GA13726@castle.DHCP.thefacebook.com>
- <alpine.DEB.2.10.1801121331110.120129@chino.kir.corp.google.com>
- <20180115115433.GA22473@dhcp22.suse.cz>
- <alpine.DEB.2.10.1801161323550.242486@chino.kir.corp.google.com>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch -mm 0/4] mm, memcg: introduce oom policies
+Date: Tue, 16 Jan 2018 18:14:58 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1801161323550.242486@chino.kir.corp.google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:user-agent:mime-version;
+        bh=4fOcafIajXxlfB2mT1omota3Um0fpEK+MR2Beucjzfg=;
+        b=rvHDJfE0GNHrVhyI7zSGkm/m4hPwqjkDv2wiRpjBR8q6LjbYj2XMFNc9rd+e2cQdme
+         HTzqDaWtL1cBsoXPvWyIbCRFxtdOlI9S3AGjY1Up+hLzxK3tAMYYcdFVsloY+asUKJnS
+         SlHor5syYzV3DJyID1XzWrHMTEq4IfdRqPgrN1VFw3OYgUdTav6BKtTZEUHLbjryyKWX
+         3QMw7c+tk+N3mVQVNzmzNaj+d4CJJI9IXWK2t3uk2dxRz7My3DGiF/dj8CNA0h3xNLM3
+         LGMgB4iK/DgL18w+fCIJAenMSlpcCV/pj8c3m0g9/O810sSZnoXWCkCHLVum6PchZonD
+         grIQ==
 Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Tue 16-01-18 13:36:21, David Rientjes wrote:
-> On Mon, 15 Jan 2018, Michal Hocko wrote:
-> 
-> > > No, this isn't how kernel features get introduced.  We don't design a new 
-> > > kernel feature with its own API for a highly specialized usecase and then 
-> > > claim we'll fix the problems later.  Users will work around the 
-> > > constraints of the new feature, if possible, and then we can end up 
-> > > breaking them later.  Or, we can pollute the mem cgroup v2 filesystem with 
-> > > even more tunables to cover up for mistakes in earlier designs.
-> > 
-> > This is a blatant misinterpretation of the proposed changes. I haven't
-> > heard _any_ single argument against the proposed user interface except
-> > for complaints for missing tunables. This is not how the kernel
-> > development works and should work. The usecase was clearly described and
-> > far from limited to a single workload or company.
-> >  
-> 
-> The complaint about the user interface is that it is not extensible, as my 
-> next line states.
+There are three significant concerns about the cgroup aware oom killer as
+it is implemented in -mm:
 
-I disagree and will not repeat argument why.
+ (1) allows users to evade the oom killer by creating subcontainers or
+     using other controllers since scoring is done per cgroup and not
+     hierarchically,
 
-> This doesn't need to be opted into with a mount option 
-> locking the entire system into a single oom policy.  That, itself, is the 
-> result of a poor design.  What is needed is a way for users to define an 
-> oom policy that is generally useful, not something that is locked in for 
-> the whole system. 
+ (2) does not allow the user to influence the decisionmaking, such that
+     important subtrees cannot be preferred or biased, and
 
-We have been discussing general oom policies for years now and there was
-_no_ _single_ useful/acceptable approach suggested. Nor is your sketch
-I am afraid because we could argue how that one doesn't address other
-usecases out there which need a more specific control. All that without
-having _no code_ merged. The current one is a policy that addresses a
-reasonably large class of usecases out there based on containers without
-forcing everybody else to use the same policy.
+ (3) unfairly compares the root mem cgroup using completely different
+     criteria than leaf mem cgroups and allows wildly inaccurate results
+     if oom_score_adj is used.
 
-> We don't need several different cgroup mount options 
-> only for mem cgroup oom policies.
+This patchset aims to fix (1) completely and, by doing so, introduces a
+completely extensible user interface that can be expanded in the future.
 
-cgroup mount option sounds like a reasonable approach already used for
-the unified hierarchy in early stages.
+It eliminates the mount option for the cgroup aware oom killer entirely
+since it is now enabled through the root mem cgroup's oom policy.
 
-> We also don't need random 
-> memory.groupoom files being added to the mem cgroup v2 filesystem only for 
-> one or two particular policies and being no-ops otherwise.
+It eliminates a pointless tunable, memory.oom_group, that unnecessarily
+pollutes the mem cgroup v2 filesystem and is invalid when cgroup v2 is
+mounted with the "groupoom" option.
+---
+ Applied on top of -mm.
 
-This groupoom is a fundamental API allowing to kill the whole cgroup
-which is a reasonable thing to do and also sane user API regardless of
-implementation details. Any oom selection policy can be built on top.
-
-> It can easily 
-> be specified as part of the policy itself.
-
-No it cannot, because it would conflate oom selection _and_ oom action
-together. And that would be wrong _semantically_, I believe. And I am quite
-sure we can discuss what kind of policies we need to death and won't
-move on. Exactly like, ehm, until now.
-
-So let me repeat. There are users for the functionality. Users have to
-explicitly opt-in so existing users are not in a risk of regressions.
-Further more fine grained oom selection policies can be implemented on top
-without breaking new users.
-In short: There is no single reason to block this to be merged.
-
-If your usecase is not covered yet then feel free to extend the existing
-code/APIs to do so. I will happily review and discuss them like I've
-been doing here even though I am myself not a user of this new
-functionality.
--- 
-Michal Hocko
-SUSE Labs
+ Documentation/cgroup-v2.txt |  87 ++++++++++++++++-----------------
+ include/linux/cgroup-defs.h |   5 --
+ include/linux/memcontrol.h  |  37 ++++++++++----
+ kernel/cgroup/cgroup.c      |  13 +----
+ mm/memcontrol.c             | 116 +++++++++++++++++++++++++-------------------
+ mm/oom_kill.c               |   4 +-
+ 6 files changed, 139 insertions(+), 123 deletions(-)
