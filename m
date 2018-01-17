@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 84/99] btrfs: Convert fs_roots_radix to XArray
-Date: Wed, 17 Jan 2018 12:21:48 -0800
-Message-ID: <20180117202203.19756-85-willy@infradead.org>
+Subject: [PATCH v6 75/99] md: Convert raid5-cache to XArray
+Date: Wed, 17 Jan 2018 12:21:39 -0800
+Message-ID: <20180117202203.19756-76-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
 	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
 	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=RTjcS3ZpjxXxVAGHrEq4TcMN/yAr4qtZnI/s7mGbsuI=; b=EVabICniYURM0cT9im5CY8g+K
-	gF4oNaT9UsaspjOcRncLLRPI+bGNj1oLTcgFjSPIwy0zGaFCXz9Q1xqKeUjjot6f9pbKlR3LtWeEB
-	XuH07mRf7RazoHpEz9nNM4A1whtWd1He06EGsvnq7uNYY6o3JVrapS6rPb6hTCBIeyK6bb1eAUKwO
-	SBTaaVeQlofqHSkjYltCRFvKzIP0sH2EEk4Vifko7+W562Y67rLXcCfX1G9Vm4+yVGQuGFrsuqPGq
-	Uk04N1u5m2az0oxHfJA0M1gQJdUZHiG0FuTtLv9Me2c3R4DCRtnqz0at5dZkRpOZPjfj4vHjr1MfR
-	gYKtRat+g==;
+	 bh=ucYQQuyaU+seUhVdZCjb+7+0+lr/dpjcuW6qV2Sduvk=; b=uWwilT+WmwZpZMXDm3Aq3s0wZ
+	v2rlh61Fg4xegu/ZoVfROseHGw76wi5KmuG73AozmeW/nU06xSVXXH0bqvZcpSk9yOcxYP9C72J1w
+	FRE2r9asb+QuZglJBYYB+ElsPbWOy8y/8cYTZAVnzhSTdbHGrIxl1Sgryqtqf5iEhMTsE14RXapWf
+	lbn2RwKuar/ocXCgvKpBXzlIgBVWWDU98+SutuUMEodWqthNBRkpXvBAedjeJ38OvPz0X4EBgIfS+
+	fEftq+CH812BtneLipLLy3wc69CeMpdee3WvGBco0jhjLQKNEo5vJIQ2JEXhvLIJ0HVJ05VPky8jD
+	07n5sTWNA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -27,313 +27,228 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Most of the gang lookups being done can be expressed just as efficiently
-and somewhat more naturally as xa_for_each() loops.  I opted not to
-change the one in btrfs_cleanup_fs_roots() as it's using SRCU which is
-subtle and quick to anger.
+This is the first user of the radix tree I've converted which was
+storing numbers rather than pointers.  I'm fairly pleased with how
+well it came out.  There's less boiler-plate involved than there was
+with the radix tree, so that's a win.  It does use the advanced API,
+and I think that's a signal that there needs to be a separate API for
+using the XArray for only integers.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/btrfs/ctree.h             |  3 +-
- fs/btrfs/disk-io.c           | 65 +++++++++++----------------------
- fs/btrfs/tests/btrfs-tests.c |  3 +-
- fs/btrfs/transaction.c       | 87 ++++++++++++++++++--------------------------
- 4 files changed, 59 insertions(+), 99 deletions(-)
+ drivers/md/raid5-cache.c | 119 ++++++++++++++++-------------------------------
+ 1 file changed, 40 insertions(+), 79 deletions(-)
 
-diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
-index 13c260b525a1..173d72dfaab6 100644
---- a/fs/btrfs/ctree.h
-+++ b/fs/btrfs/ctree.h
-@@ -741,8 +741,7 @@ struct btrfs_fs_info {
- 	/* the log root tree is a directory of all the other log roots */
- 	struct btrfs_root *log_root_tree;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 39f31f07ffe9..2c8ad0ed9b48 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -158,9 +158,8 @@ struct r5l_log {
+ 	/* to disable write back during in degraded mode */
+ 	struct work_struct disable_writeback_work;
  
--	spinlock_t fs_roots_radix_lock;
--	struct radix_tree_root fs_roots_radix;
-+	struct xarray fs_roots;
+-	/* to for chunk_aligned_read in writeback mode, details below */
+-	spinlock_t tree_lock;
+-	struct radix_tree_root big_stripe_tree;
++	/* for chunk_aligned_read in writeback mode, details below */
++	struct xarray big_stripe;
+ };
  
- 	/* block group cache stuff */
- 	spinlock_t block_group_cache_lock;
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index a8ecccfc36de..62995a55d112 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -1519,13 +1519,7 @@ int btrfs_init_fs_root(struct btrfs_root *root)
- struct btrfs_root *btrfs_lookup_fs_root(struct btrfs_fs_info *fs_info,
- 					u64 root_id)
- {
--	struct btrfs_root *root;
+ /*
+@@ -170,9 +169,8 @@ struct r5l_log {
+  * chunk contains 64 4kB-page, so this chunk contain 64 stripes). For
+  * chunk_aligned_read, these stripes are grouped into one "big_stripe".
+  * For each big_stripe, we count how many stripes of this big_stripe
+- * are in the write back cache. These data are tracked in a radix tree
+- * (big_stripe_tree). We use radix_tree item pointer as the counter.
+- * r5c_tree_index() is used to calculate keys for the radix tree.
++ * are in the write back cache. This counter is tracked in an xarray
++ * (big_stripe). r5c_index() is used to calculate the index.
+  *
+  * chunk_aligned_read() calls r5c_big_stripe_cached() to look up
+  * big_stripe of each chunk in the tree. If this big_stripe is in the
+@@ -180,9 +178,9 @@ struct r5l_log {
+  * rcu_read_lock().
+  *
+  * It is necessary to remember whether a stripe is counted in
+- * big_stripe_tree. Instead of adding new flag, we reuses existing flags:
++ * big_stripe. Instead of adding new flag, we reuses existing flags:
+  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of these
+- * two flags are set, the stripe is counted in big_stripe_tree. This
++ * two flags are set, the stripe is counted in big_stripe. This
+  * requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
+  * r5c_try_caching_write(); and moving clear_bit of
+  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE to
+@@ -190,23 +188,13 @@ struct r5l_log {
+  */
+ 
+ /*
+- * radix tree requests lowest 2 bits of data pointer to be 2b'00.
+- * So it is necessary to left shift the counter by 2 bits before using it
+- * as data pointer of the tree.
+- */
+-#define R5C_RADIX_COUNT_SHIFT 2
 -
--	spin_lock(&fs_info->fs_roots_radix_lock);
--	root = radix_tree_lookup(&fs_info->fs_roots_radix,
--				 (unsigned long)root_id);
--	spin_unlock(&fs_info->fs_roots_radix_lock);
--	return root;
-+	return xa_load(&fs_info->fs_roots, (unsigned long)root_id);
+-/*
+- * calculate key for big_stripe_tree
++ * calculate key for big_stripe
+  *
+  * sect: align_bi->bi_iter.bi_sector or sh->sector
+  */
+-static inline sector_t r5c_tree_index(struct r5conf *conf,
+-				      sector_t sect)
++static inline sector_t r5c_index(struct r5conf *conf, sector_t sect)
+ {
+-	sector_t offset;
+-
+-	offset = sector_div(sect, conf->chunk_sectors);
++	sector_div(sect, conf->chunk_sectors);
+ 	return sect;
  }
  
- int btrfs_insert_fs_root(struct btrfs_fs_info *fs_info,
-@@ -1533,18 +1527,13 @@ int btrfs_insert_fs_root(struct btrfs_fs_info *fs_info,
- {
- 	int ret;
- 
--	ret = radix_tree_preload(GFP_NOFS);
--	if (ret)
--		return ret;
--
--	spin_lock(&fs_info->fs_roots_radix_lock);
--	ret = radix_tree_insert(&fs_info->fs_roots_radix,
-+	xa_lock(&fs_info->fs_roots);
-+	ret = __xa_insert(&fs_info->fs_roots,
- 				(unsigned long)root->root_key.objectid,
--				root);
-+				root, GFP_NOFS);
- 	if (ret == 0)
- 		set_bit(BTRFS_ROOT_IN_RADIX, &root->state);
--	spin_unlock(&fs_info->fs_roots_radix_lock);
--	radix_tree_preload_end();
-+	xa_unlock(&fs_info->fs_roots);
- 
- 	return ret;
- }
-@@ -2079,33 +2068,25 @@ static void free_root_pointers(struct btrfs_fs_info *info, int chunk_root)
- 
- void btrfs_free_fs_roots(struct btrfs_fs_info *fs_info)
- {
+@@ -2646,10 +2634,6 @@ int r5c_try_caching_write(struct r5conf *conf,
+ 	int i;
+ 	struct r5dev *dev;
+ 	int to_cache = 0;
+-	void **pslot;
+-	sector_t tree_index;
 -	int ret;
--	struct btrfs_root *gang[8];
--	int i;
-+	struct btrfs_root *root;
-+	unsigned long i = 0;
+-	uintptr_t refcount;
  
- 	while (!list_empty(&fs_info->dead_roots)) {
--		gang[0] = list_entry(fs_info->dead_roots.next,
-+		root = list_entry(fs_info->dead_roots.next,
- 				     struct btrfs_root, root_list);
--		list_del(&gang[0]->root_list);
-+		list_del(&root->root_list);
+ 	BUG_ON(!r5c_is_writeback(log));
  
--		if (test_bit(BTRFS_ROOT_IN_RADIX, &gang[0]->state)) {
--			btrfs_drop_and_free_fs_root(fs_info, gang[0]);
-+		if (test_bit(BTRFS_ROOT_IN_RADIX, &root->state)) {
-+			btrfs_drop_and_free_fs_root(fs_info, root);
- 		} else {
--			free_extent_buffer(gang[0]->node);
--			free_extent_buffer(gang[0]->commit_root);
--			btrfs_put_fs_root(gang[0]);
-+			free_extent_buffer(root->node);
-+			free_extent_buffer(root->commit_root);
-+			btrfs_put_fs_root(root);
+@@ -2697,39 +2681,29 @@ int r5c_try_caching_write(struct r5conf *conf,
  		}
  	}
  
--	while (1) {
--		ret = radix_tree_gang_lookup(&fs_info->fs_roots_radix,
--					     (void **)gang, 0,
--					     ARRAY_SIZE(gang));
--		if (!ret)
--			break;
--		for (i = 0; i < ret; i++)
--			btrfs_drop_and_free_fs_root(fs_info, gang[i]);
--	}
-+	xa_for_each(&fs_info->fs_roots, root, i, ULONG_MAX, XA_PRESENT)
-+		btrfs_drop_and_free_fs_root(fs_info, root);
- 
- 	if (test_bit(BTRFS_FS_STATE_ERROR, &fs_info->fs_state)) {
- 		btrfs_free_log_root_tree(NULL, fs_info);
-@@ -2447,7 +2428,7 @@ int open_ctree(struct super_block *sb,
- 		goto fail_delalloc_bytes;
- 	}
- 
--	INIT_RADIX_TREE(&fs_info->fs_roots_radix, GFP_ATOMIC);
-+	xa_init(&fs_info->fs_roots);
- 	INIT_RADIX_TREE(&fs_info->buffer_radix, GFP_ATOMIC);
- 	INIT_LIST_HEAD(&fs_info->trans_list);
- 	INIT_LIST_HEAD(&fs_info->dead_roots);
-@@ -2456,7 +2437,6 @@ int open_ctree(struct super_block *sb,
- 	INIT_LIST_HEAD(&fs_info->caching_block_groups);
- 	spin_lock_init(&fs_info->delalloc_root_lock);
- 	spin_lock_init(&fs_info->trans_lock);
--	spin_lock_init(&fs_info->fs_roots_radix_lock);
- 	spin_lock_init(&fs_info->delayed_iput_lock);
- 	spin_lock_init(&fs_info->defrag_inodes_lock);
- 	spin_lock_init(&fs_info->tree_mod_seq_lock);
-@@ -3573,10 +3553,7 @@ int write_all_supers(struct btrfs_fs_info *fs_info, int max_mirrors)
- void btrfs_drop_and_free_fs_root(struct btrfs_fs_info *fs_info,
- 				  struct btrfs_root *root)
- {
--	spin_lock(&fs_info->fs_roots_radix_lock);
--	radix_tree_delete(&fs_info->fs_roots_radix,
--			  (unsigned long)root->root_key.objectid);
--	spin_unlock(&fs_info->fs_roots_radix_lock);
-+	xa_erase(&fs_info->fs_roots, (unsigned long)root->root_key.objectid);
- 
- 	if (btrfs_root_refs(&root->root_item) == 0)
- 		synchronize_srcu(&fs_info->subvol_srcu);
-@@ -3632,9 +3609,9 @@ int btrfs_cleanup_fs_roots(struct btrfs_fs_info *fs_info)
- 
- 	while (1) {
- 		index = srcu_read_lock(&fs_info->subvol_srcu);
--		ret = radix_tree_gang_lookup(&fs_info->fs_roots_radix,
--					     (void **)gang, root_objectid,
--					     ARRAY_SIZE(gang));
-+		ret = xa_extract(&fs_info->fs_roots, (void **)gang,
-+				root_objectid, ULONG_MAX, ARRAY_SIZE(gang),
-+				XA_PRESENT);
- 		if (!ret) {
- 			srcu_read_unlock(&fs_info->subvol_srcu, index);
- 			break;
-diff --git a/fs/btrfs/tests/btrfs-tests.c b/fs/btrfs/tests/btrfs-tests.c
-index d3f25376a0f8..570bce31a301 100644
---- a/fs/btrfs/tests/btrfs-tests.c
-+++ b/fs/btrfs/tests/btrfs-tests.c
-@@ -114,7 +114,6 @@ struct btrfs_fs_info *btrfs_alloc_dummy_fs_info(u32 nodesize, u32 sectorsize)
- 	spin_lock_init(&fs_info->qgroup_lock);
- 	spin_lock_init(&fs_info->qgroup_op_lock);
- 	spin_lock_init(&fs_info->super_lock);
--	spin_lock_init(&fs_info->fs_roots_radix_lock);
- 	spin_lock_init(&fs_info->tree_mod_seq_lock);
- 	mutex_init(&fs_info->qgroup_ioctl_lock);
- 	mutex_init(&fs_info->qgroup_rescan_lock);
-@@ -127,7 +126,7 @@ struct btrfs_fs_info *btrfs_alloc_dummy_fs_info(u32 nodesize, u32 sectorsize)
- 	INIT_LIST_HEAD(&fs_info->dead_roots);
- 	INIT_LIST_HEAD(&fs_info->tree_mod_seq_list);
- 	INIT_RADIX_TREE(&fs_info->buffer_radix, GFP_ATOMIC);
--	INIT_RADIX_TREE(&fs_info->fs_roots_radix, GFP_ATOMIC);
-+	xa_init(&fs_info->fs_roots);
- 	extent_io_tree_init(&fs_info->freed_extents[0], NULL);
- 	extent_io_tree_init(&fs_info->freed_extents[1], NULL);
- 	fs_info->pinned_extents = &fs_info->freed_extents[0];
-diff --git a/fs/btrfs/transaction.c b/fs/btrfs/transaction.c
-index 5a8c2649af2f..2d6606df0fa3 100644
---- a/fs/btrfs/transaction.c
-+++ b/fs/btrfs/transaction.c
-@@ -33,7 +33,7 @@
- #include "dev-replace.h"
- #include "qgroup.h"
- 
--#define BTRFS_ROOT_TRANS_TAG 0
-+#define BTRFS_ROOT_TRANS_TAG XA_TAG_0
- 
- static const unsigned int btrfs_blocked_trans_types[TRANS_STATE_MAX] = {
- 	[TRANS_STATE_RUNNING]		= 0U,
-@@ -333,15 +333,15 @@ static int record_root_in_trans(struct btrfs_trans_handle *trans,
- 		 */
- 		smp_wmb();
- 
--		spin_lock(&fs_info->fs_roots_radix_lock);
-+		xa_lock(&fs_info->fs_roots);
- 		if (root->last_trans == trans->transid && !force) {
--			spin_unlock(&fs_info->fs_roots_radix_lock);
-+			xa_unlock(&fs_info->fs_roots);
- 			return 0;
- 		}
--		radix_tree_tag_set(&fs_info->fs_roots_radix,
-+		__xa_set_tag(&fs_info->fs_roots,
- 				   (unsigned long)root->root_key.objectid,
- 				   BTRFS_ROOT_TRANS_TAG);
--		spin_unlock(&fs_info->fs_roots_radix_lock);
-+		xa_unlock(&fs_info->fs_roots);
- 		root->last_trans = trans->transid;
- 
- 		/* this is pretty tricky.  We don't want to
-@@ -383,11 +383,8 @@ void btrfs_add_dropped_root(struct btrfs_trans_handle *trans,
- 	spin_unlock(&cur_trans->dropped_roots_lock);
- 
- 	/* Make sure we don't try to update the root at commit time */
--	spin_lock(&fs_info->fs_roots_radix_lock);
--	radix_tree_tag_clear(&fs_info->fs_roots_radix,
--			     (unsigned long)root->root_key.objectid,
-+	xa_clear_tag(&fs_info->fs_roots, (unsigned long)root->root_key.objectid,
- 			     BTRFS_ROOT_TRANS_TAG);
--	spin_unlock(&fs_info->fs_roots_radix_lock);
- }
- 
- int btrfs_record_root_in_trans(struct btrfs_trans_handle *trans,
-@@ -1255,53 +1252,41 @@ void btrfs_add_dead_root(struct btrfs_root *root)
- static noinline int commit_fs_roots(struct btrfs_trans_handle *trans,
- 				    struct btrfs_fs_info *fs_info)
- {
--	struct btrfs_root *gang[8];
--	int i;
--	int ret;
-+	struct btrfs_root *root;
-+	unsigned long index = 0;
- 	int err = 0;
- 
--	spin_lock(&fs_info->fs_roots_radix_lock);
--	while (1) {
--		ret = radix_tree_gang_lookup_tag(&fs_info->fs_roots_radix,
--						 (void **)gang, 0,
--						 ARRAY_SIZE(gang),
--						 BTRFS_ROOT_TRANS_TAG);
--		if (ret == 0)
--			break;
--		for (i = 0; i < ret; i++) {
--			struct btrfs_root *root = gang[i];
--			radix_tree_tag_clear(&fs_info->fs_roots_radix,
--					(unsigned long)root->root_key.objectid,
--					BTRFS_ROOT_TRANS_TAG);
--			spin_unlock(&fs_info->fs_roots_radix_lock);
--
--			btrfs_free_log(trans, root);
--			btrfs_update_reloc_root(trans, root);
--			btrfs_orphan_commit_root(trans, root);
--
--			btrfs_save_ino_cache(root, trans);
--
--			/* see comments in should_cow_block() */
--			clear_bit(BTRFS_ROOT_FORCE_COW, &root->state);
--			smp_mb__after_atomic();
--
--			if (root->commit_root != root->node) {
--				list_add_tail(&root->dirty_list,
--					&trans->transaction->switch_commits);
--				btrfs_set_root_node(&root->root_item,
--						    root->node);
+-	/* if the stripe is not counted in big_stripe_tree, add it now */
++	/* if the stripe is not counted in big_stripe, add it now */
+ 	if (!test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) &&
+ 	    !test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
+-		tree_index = r5c_tree_index(conf, sh->sector);
+-		spin_lock(&log->tree_lock);
+-		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
+-					       tree_index);
+-		if (pslot) {
+-			refcount = (uintptr_t)radix_tree_deref_slot_protected(
+-				pslot, &log->tree_lock) >>
+-				R5C_RADIX_COUNT_SHIFT;
+-			radix_tree_replace_slot(
+-				&log->big_stripe_tree, pslot,
+-				(void *)((refcount + 1) << R5C_RADIX_COUNT_SHIFT));
+-		} else {
+-			/*
+-			 * this radix_tree_insert can fail safely, so no
+-			 * need to call radix_tree_preload()
+-			 */
+-			ret = radix_tree_insert(
+-				&log->big_stripe_tree, tree_index,
+-				(void *)(1 << R5C_RADIX_COUNT_SHIFT));
+-			if (ret) {
+-				spin_unlock(&log->tree_lock);
+-				r5c_make_stripe_write_out(sh);
+-				return -EAGAIN;
 -			}
-+	xa_lock(&fs_info->fs_roots);
-+	xa_for_each(&fs_info->fs_roots, root, index, ULONG_MAX,
-+						BTRFS_ROOT_TRANS_TAG) {
-+		__xa_clear_tag(&fs_info->fs_roots, index, BTRFS_ROOT_TRANS_TAG);
-+		xa_unlock(&fs_info->fs_roots);
- 
--			err = btrfs_update_root(trans, fs_info->tree_root,
--						&root->root_key,
--						&root->root_item);
--			spin_lock(&fs_info->fs_roots_radix_lock);
--			if (err)
--				break;
--			btrfs_qgroup_free_meta_all(root);
-+		btrfs_free_log(trans, root);
-+		btrfs_update_reloc_root(trans, root);
-+		btrfs_orphan_commit_root(trans, root);
++		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
++		void *entry;
 +
-+		btrfs_save_ino_cache(root, trans);
-+
-+		/* see comments in should_cow_block() */
-+		clear_bit(BTRFS_ROOT_FORCE_COW, &root->state);
-+		smp_mb__after_atomic();
-+
-+		if (root->commit_root != root->node) {
-+			list_add_tail(&root->dirty_list,
-+				&trans->transaction->switch_commits);
-+			btrfs_set_root_node(&root->root_item, root->node);
++		/* Caller would rather handle failures than supply GFP flags */
++		xas_lock(&xas);
++		entry = xas_create(&xas);
++		if (entry)
++			entry = xa_mk_value(xa_to_value(entry) + 1);
++		else
++			entry = xa_mk_value(1);
++		xas_store(&xas, entry);
++		xas_unlock(&xas);
++		if (xas_error(&xas)) {
++			r5c_make_stripe_write_out(sh);
++			return -EAGAIN;
  		}
+-		spin_unlock(&log->tree_lock);
+ 
+ 		/*
+ 		 * set STRIPE_R5C_PARTIAL_STRIPE, this shows the stripe is
+-		 * counted in the radix tree
++		 * counted in big_stripe
+ 		 */
+ 		set_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state);
+ 		atomic_inc(&conf->r5c_cached_partial_stripes);
+@@ -2812,9 +2786,6 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+ 	struct r5l_log *log = conf->log;
+ 	int i;
+ 	int do_wakeup = 0;
+-	sector_t tree_index;
+-	void **pslot;
+-	uintptr_t refcount;
+ 
+ 	if (!log || !test_bit(R5_InJournal, &sh->dev[sh->pd_idx].flags))
+ 		return;
+@@ -2852,24 +2823,21 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+ 	atomic_dec(&log->stripe_in_journal_count);
+ 	r5c_update_log_state(log);
+ 
+-	/* stop counting this stripe in big_stripe_tree */
++	/* stop counting this stripe in big_stripe */
+ 	if (test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) ||
+ 	    test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
+-		tree_index = r5c_tree_index(conf, sh->sector);
+-		spin_lock(&log->tree_lock);
+-		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
+-					       tree_index);
+-		BUG_ON(pslot == NULL);
+-		refcount = (uintptr_t)radix_tree_deref_slot_protected(
+-			pslot, &log->tree_lock) >>
+-			R5C_RADIX_COUNT_SHIFT;
+-		if (refcount == 1)
+-			radix_tree_delete(&log->big_stripe_tree, tree_index);
++		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
++		void *entry;
 +
-+		err = btrfs_update_root(trans, fs_info->tree_root,
-+					&root->root_key, &root->root_item);
-+		xa_lock(&fs_info->fs_roots);
-+		if (err)
-+			break;
-+		btrfs_qgroup_free_meta_all(root);
-+		index = 0;
++		xas_lock(&xas);
++		entry = xas_load(&xas);
++		BUG_ON(!entry);
++		if (entry == xa_mk_value(1))
++			entry = NULL;
+ 		else
+-			radix_tree_replace_slot(
+-				&log->big_stripe_tree, pslot,
+-				(void *)((refcount - 1) << R5C_RADIX_COUNT_SHIFT));
+-		spin_unlock(&log->tree_lock);
++			entry = xa_mk_value(xa_to_value(entry) - 1);
++		xas_store(&xas, entry);
++		xas_unlock(&xas);
  	}
--	spin_unlock(&fs_info->fs_roots_radix_lock);
-+	xa_unlock(&fs_info->fs_roots);
- 	return err;
+ 
+ 	if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
+@@ -2949,16 +2917,10 @@ int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh)
+ bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect)
+ {
+ 	struct r5l_log *log = conf->log;
+-	sector_t tree_index;
+-	void *slot;
+ 
+ 	if (!log)
+ 		return false;
+-
+-	WARN_ON_ONCE(!rcu_read_lock_held());
+-	tree_index = r5c_tree_index(conf, sect);
+-	slot = radix_tree_lookup(&log->big_stripe_tree, tree_index);
+-	return slot != NULL;
++	return xa_load(&log->big_stripe, r5c_index(conf, sect)) != NULL;
  }
  
+ static int r5l_load_log(struct r5l_log *log)
+@@ -3112,8 +3074,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	if (!log->meta_pool)
+ 		goto out_mempool;
+ 
+-	spin_lock_init(&log->tree_lock);
+-	INIT_RADIX_TREE(&log->big_stripe_tree, GFP_NOWAIT | __GFP_NOWARN);
++	xa_init(&log->big_stripe);
+ 
+ 	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
+ 						 log->rdev->mddev, "reclaim");
 -- 
 2.15.1
 
