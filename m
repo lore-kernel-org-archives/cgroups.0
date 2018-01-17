@@ -1,209 +1,184 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 74/99] usb: Convert xhci-mem to XArray
-Date: Wed, 17 Jan 2018 12:21:38 -0800
-Message-ID: <20180117202203.19756-75-willy@infradead.org>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: [PATCH v6 94/99] f2fs: Convert extent_tree_root to XArray
+Date: Wed, 17 Jan 2018 12:21:58 -0800
+Message-ID: <20180117202203.19756-95-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
-	Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=P9zHkQQVc9KvQ6y8Fgg/uz8QILnSJoaa9SJ/B852ZM8=; b=dMMBZnrq7i8+NOmZ/o1wzkyuV
-	cjdYcFTRcw4QJxP1HuieOb+P+/cv9vtSzAmbhkLQBj7cxLziNgZuURujKxdrCle2tcUI66M6KTE4m
-	XQ9TTKYNPZonTeZoDTd0Q0xCD94NZ5AWY2WvFolxnOfvI7CGfM0yCAAsL2WSP2LtP+sslef/JC8W+
-	/4aR2vVxhAVGNa19EfuZrUHlbTk+IiO+gxdYquHIfH/DnSkNMNDJ7K89ZmmDFC3sPCePEqReOYB5d
-	QXK8qQor0OCAGKkcAnDDrSX5FSPwrVovaFPkHglTP0fSV3z8veIkjNoUSn2kmGRACjQvq+8loVSoc
-	8+5CuC6qw==;
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-Sender: owner-linux-mm@kvack.org
+        d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
+        Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=/a6OGWRc2ZLVnDjmJc12Mjc/f/sFqqYukAEJhi/KYjo=; b=efn8fvAUACKFKPKaEaureEs4R
+        wnlOJ/seiL1eUALkkSpEbvCrSkDO3G7C0z8h7XDthvsIstRxdcXg2ZHyP5+WHLuZKZVq98hG1hJd0
+        d5oDYelnr18UzmZqVC7P4kSEL1z1yqcWpQ2cynw/r5QKATpl2WY5YanwelP2acILAOKmGPaSEp8sa
+        9cLUM8S9sL0OMhwEmK0O0uUNkGgosWyIGQNqkHF7f7LqMTo9D2nppJcO46gPAANzhIbvTrWprcBmS
+        VvDii+dZiqJY0i9c8vnh0lP1EFtWIuWeridDjCMxYiBmwj1qOVw9+B334XD5TqOe/ljTu9P+viKEn
+    
+In-Reply-To: <20180117202203.19756-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-nilfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stefano Stabellini <sstabellini-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+From: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 
-The XArray API is a slightly better fit for xhci_insert_segment_mapping()
-than the radix tree API was.
+Rename it to extent_array and use the xa_lock in place of the
+extent_tree_lock mutex.
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+Signed-off-by: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 ---
- drivers/usb/host/xhci-mem.c | 68 +++++++++++++++++++--------------------------
- drivers/usb/host/xhci.h     |  6 ++--
- 2 files changed, 32 insertions(+), 42 deletions(-)
+ fs/f2fs/extent_cache.c | 59 +++++++++++++++++++++++++-------------------------
+ fs/f2fs/f2fs.h         |  3 +--
+ 2 files changed, 30 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/usb/host/xhci-mem.c b/drivers/usb/host/xhci-mem.c
-index 3a29b32a3bd0..a2e15a9abc30 100644
---- a/drivers/usb/host/xhci-mem.c
-+++ b/drivers/usb/host/xhci-mem.c
-@@ -149,70 +149,60 @@ static void xhci_link_rings(struct xhci_hcd *xhci, struct xhci_ring *ring,
- }
+diff --git a/fs/f2fs/extent_cache.c b/fs/f2fs/extent_cache.c
+index ff2352a0ed15..da5f3bd1808d 100644
+--- a/fs/f2fs/extent_cache.c
++++ b/fs/f2fs/extent_cache.c
+@@ -250,25 +250,25 @@ static struct extent_tree *__grab_extent_tree(struct inode *inode)
+ 	struct extent_tree *et;
+ 	nid_t ino = inode->i_ino;
  
- /*
-- * We need a radix tree for mapping physical addresses of TRBs to which stream
-- * ID they belong to.  We need to do this because the host controller won't tell
-+ * We need to map physical addresses of TRBs to the stream ID they belong to.
-+ * We need to do this because the host controller won't tell
-  * us which stream ring the TRB came from.  We could store the stream ID in an
-  * event data TRB, but that doesn't help us for the cancellation case, since the
-  * endpoint may stop before it reaches that event data TRB.
-  *
-- * The radix tree maps the upper portion of the TRB DMA address to a ring
-+ * The xarray maps the upper portion of the TRB DMA address to a ring
-  * segment that has the same upper portion of DMA addresses.  For example, say I
-  * have segments of size 1KB, that are always 1KB aligned.  A segment may
-  * start at 0x10c91000 and end at 0x10c913f0.  If I use the upper 10 bits, the
-- * key to the stream ID is 0x43244.  I can use the DMA address of the TRB to
-- * pass the radix tree a key to get the right stream ID:
-+ * index of the stream ID is 0x43244.  I can use the DMA address of the TRB as
-+ * the xarray index to get the right stream ID:
-  *
-  *	0x10c90fff >> 10 = 0x43243
-  *	0x10c912c0 >> 10 = 0x43244
-  *	0x10c91400 >> 10 = 0x43245
-  *
-  * Obviously, only those TRBs with DMA addresses that are within the segment
-- * will make the radix tree return the stream ID for that ring.
-+ * will make the xarray return the stream ID for that ring.
-  *
-- * Caveats for the radix tree:
-+ * Caveats for the xarray:
-  *
-- * The radix tree uses an unsigned long as a key pair.  On 32-bit systems, an
-+ * The xarray uses an unsigned long for the index.  On 32-bit systems, an
-  * unsigned long will be 32-bits; on a 64-bit system an unsigned long will be
-  * 64-bits.  Since we only request 32-bit DMA addresses, we can use that as the
-- * key on 32-bit or 64-bit systems (it would also be fine if we asked for 64-bit
-- * PCI DMA addresses on a 64-bit system).  There might be a problem on 32-bit
-- * extended systems (where the DMA address can be bigger than 32-bits),
-+ * index on 32-bit or 64-bit systems (it would also be fine if we asked for
-+ * 64-bit PCI DMA addresses on a 64-bit system).  There might be a problem on
-+ * 32-bit extended systems (where the DMA address can be bigger than 32-bits),
-  * if we allow the PCI dma mask to be bigger than 32-bits.  So don't do that.
-  */
--static int xhci_insert_segment_mapping(struct radix_tree_root *trb_address_map,
+-	mutex_lock(&sbi->extent_tree_lock);
+-	et = radix_tree_lookup(&sbi->extent_tree_root, ino);
+-	if (!et) {
+-		et = f2fs_kmem_cache_alloc(extent_tree_slab, GFP_NOFS);
+-		f2fs_radix_tree_insert(&sbi->extent_tree_root, ino, et);
+-		memset(et, 0, sizeof(struct extent_tree));
+-		et->ino = ino;
+-		et->root = RB_ROOT;
+-		et->cached_en = NULL;
+-		rwlock_init(&et->lock);
+-		INIT_LIST_HEAD(&et->list);
+-		atomic_set(&et->node_cnt, 0);
+-		atomic_inc(&sbi->total_ext_tree);
+-	} else {
++	et = xa_load(&sbi->extent_array, ino);
++	if (et) {
+ 		atomic_dec(&sbi->total_zombie_tree);
+ 		list_del_init(&et->list);
++		goto out;
+ 	}
+-	mutex_unlock(&sbi->extent_tree_lock);
+ 
++	et = f2fs_kmem_cache_alloc(extent_tree_slab, GFP_NOFS | __GFP_ZERO);
++	et->ino = ino;
++	et->root = RB_ROOT;
++	et->cached_en = NULL;
++	rwlock_init(&et->lock);
++	INIT_LIST_HEAD(&et->list);
++	atomic_set(&et->node_cnt, 0);
 +
-+static unsigned long trb_index(dma_addr_t dma)
-+{
-+	return (unsigned long)(dma >> TRB_SEGMENT_SHIFT);
-+}
++	xa_store(&sbi->extent_array, ino, et, GFP_NOFS);
++	atomic_inc(&sbi->total_ext_tree);
 +
-+static int xhci_insert_segment_mapping(struct xarray *trb_address_map,
- 		struct xhci_ring *ring,
- 		struct xhci_segment *seg,
--		gfp_t mem_flags)
-+		gfp_t gfp)
++out:
+ 	/* never died until evict_inode */
+ 	F2FS_I(inode)->extent_tree = et;
+ 
+@@ -622,7 +622,7 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
+ 	if (!atomic_read(&sbi->total_zombie_tree))
+ 		goto free_node;
+ 
+-	if (!mutex_trylock(&sbi->extent_tree_lock))
++	if (!xa_trylock(&sbi->extent_array))
+ 		goto out;
+ 
+ 	/* 1. remove unreferenced extent tree */
+@@ -634,7 +634,7 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
+ 		}
+ 		f2fs_bug_on(sbi, atomic_read(&et->node_cnt));
+ 		list_del_init(&et->list);
+-		radix_tree_delete(&sbi->extent_tree_root, et->ino);
++		xa_erase(&sbi->extent_array, et->ino);
+ 		kmem_cache_free(extent_tree_slab, et);
+ 		atomic_dec(&sbi->total_ext_tree);
+ 		atomic_dec(&sbi->total_zombie_tree);
+@@ -642,13 +642,13 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
+ 
+ 		if (node_cnt + tree_cnt >= nr_shrink)
+ 			goto unlock_out;
+-		cond_resched();
++		cond_resched_lock(&sbi->extent_array.xa_lock);
+ 	}
+-	mutex_unlock(&sbi->extent_tree_lock);
++	xa_unlock(&sbi->extent_array);
+ 
+ free_node:
+ 	/* 2. remove LRU extent entries */
+-	if (!mutex_trylock(&sbi->extent_tree_lock))
++	if (!xa_trylock(&sbi->extent_array))
+ 		goto out;
+ 
+ 	remained = nr_shrink - (node_cnt + tree_cnt);
+@@ -678,7 +678,7 @@ unsigned int f2fs_shrink_extent_tree(struct f2fs_sb_info *sbi, int nr_shrink)
+ 	spin_unlock(&sbi->extent_lock);
+ 
+ unlock_out:
+-	mutex_unlock(&sbi->extent_tree_lock);
++	xa_unlock(&sbi->extent_array);
+ out:
+ 	trace_f2fs_shrink_extent_tree(sbi, node_cnt, tree_cnt);
+ 
+@@ -725,23 +725,23 @@ void f2fs_destroy_extent_tree(struct inode *inode)
+ 
+ 	if (inode->i_nlink && !is_bad_inode(inode) &&
+ 					atomic_read(&et->node_cnt)) {
+-		mutex_lock(&sbi->extent_tree_lock);
++		xa_lock(&sbi->extent_array);
+ 		list_add_tail(&et->list, &sbi->zombie_list);
+ 		atomic_inc(&sbi->total_zombie_tree);
+-		mutex_unlock(&sbi->extent_tree_lock);
++		xa_unlock(&sbi->extent_array);
+ 		return;
+ 	}
+ 
+ 	/* free all extent info belong to this extent tree */
+ 	node_cnt = f2fs_destroy_extent_node(inode);
+ 
+-	/* delete extent tree entry in radix tree */
+-	mutex_lock(&sbi->extent_tree_lock);
++	/* delete extent from array */
++	xa_lock(&sbi->extent_array);
+ 	f2fs_bug_on(sbi, atomic_read(&et->node_cnt));
+-	radix_tree_delete(&sbi->extent_tree_root, inode->i_ino);
+-	kmem_cache_free(extent_tree_slab, et);
++	__xa_erase(&sbi->extent_array, inode->i_ino);
+ 	atomic_dec(&sbi->total_ext_tree);
+-	mutex_unlock(&sbi->extent_tree_lock);
++	xa_unlock(&sbi->extent_array);
++	kmem_cache_free(extent_tree_slab, et);
+ 
+ 	F2FS_I(inode)->extent_tree = NULL;
+ 
+@@ -787,8 +787,7 @@ void f2fs_update_extent_cache_range(struct dnode_of_data *dn,
+ 
+ void init_extent_cache_info(struct f2fs_sb_info *sbi)
  {
--	unsigned long key;
--	int ret;
--
--	key = (unsigned long)(seg->dma >> TRB_SEGMENT_SHIFT);
- 	/* Skip any segments that were already added. */
--	if (radix_tree_lookup(trb_address_map, key))
--		return 0;
--
--	ret = radix_tree_maybe_preload(mem_flags);
--	if (ret)
--		return ret;
--	ret = radix_tree_insert(trb_address_map,
--			key, ring);
--	radix_tree_preload_end();
--	return ret;
-+	return xa_err(xa_cmpxchg(trb_address_map, trb_index(seg->dma), NULL,
-+								ring, gfp));
- }
+-	INIT_RADIX_TREE(&sbi->extent_tree_root, GFP_NOIO);
+-	mutex_init(&sbi->extent_tree_lock);
++	xa_init(&sbi->extent_array);
+ 	INIT_LIST_HEAD(&sbi->extent_list);
+ 	spin_lock_init(&sbi->extent_lock);
+ 	atomic_set(&sbi->total_ext_tree, 0);
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index b3ee784b49bc..4eacef9c7274 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -1064,8 +1064,7 @@ struct f2fs_sb_info {
+ 	spinlock_t inode_lock[NR_INODE_TYPE];	/* for dirty inode list lock */
  
--static void xhci_remove_segment_mapping(struct radix_tree_root *trb_address_map,
-+static void xhci_remove_segment_mapping(struct xarray *trb_address_map,
- 		struct xhci_segment *seg)
- {
--	unsigned long key;
--
--	key = (unsigned long)(seg->dma >> TRB_SEGMENT_SHIFT);
--	if (radix_tree_lookup(trb_address_map, key))
--		radix_tree_delete(trb_address_map, key);
-+	xa_erase(trb_address_map, trb_index(seg->dma));
- }
- 
- static int xhci_update_stream_segment_mapping(
--		struct radix_tree_root *trb_address_map,
-+		struct xarray *trb_address_map,
- 		struct xhci_ring *ring,
- 		struct xhci_segment *first_seg,
- 		struct xhci_segment *last_seg,
-@@ -574,8 +564,8 @@ struct xhci_ring *xhci_dma_to_transfer_ring(
- 		u64 address)
- {
- 	if (ep->ep_state & EP_HAS_STREAMS)
--		return radix_tree_lookup(&ep->stream_info->trb_address_map,
--				address >> TRB_SEGMENT_SHIFT);
-+		return xa_load(&ep->stream_info->trb_address_map,
-+				trb_index(address));
- 	return ep->ring;
- }
- 
-@@ -654,10 +644,10 @@ struct xhci_stream_info *xhci_alloc_stream_info(struct xhci_hcd *xhci,
- 	if (!stream_info->free_streams_command)
- 		goto cleanup_ctx;
- 
--	INIT_RADIX_TREE(&stream_info->trb_address_map, GFP_ATOMIC);
-+	xa_init(&stream_info->trb_address_map);
- 
- 	/* Allocate rings for all the streams that the driver will use,
--	 * and add their segment DMA addresses to the radix tree.
-+	 * and add their segment DMA addresses to the map.
- 	 * Stream 0 is reserved.
- 	 */
- 
-@@ -2376,7 +2366,7 @@ int xhci_mem_init(struct xhci_hcd *xhci, gfp_t flags)
- 	 * Initialize the ring segment pool.  The ring must be a contiguous
- 	 * structure comprised of TRBs.  The TRBs must be 16 byte aligned,
- 	 * however, the command ring segment needs 64-byte aligned segments
--	 * and our use of dma addresses in the trb_address_map radix tree needs
-+	 * and our use of dma addresses in the trb_address_map xarray needs
- 	 * TRB_SEGMENT_SIZE alignment, so we pick the greater alignment need.
- 	 */
- 	xhci->segment_pool = dma_pool_create("xHCI ring segments", dev,
-diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
-index 054ce74524af..e8208a3eee3c 100644
---- a/drivers/usb/host/xhci.h
-+++ b/drivers/usb/host/xhci.h
-@@ -15,7 +15,7 @@
- #include <linux/usb.h>
- #include <linux/timer.h>
- #include <linux/kernel.h>
--#include <linux/radix-tree.h>
-+#include <linux/xarray.h>
- #include <linux/usb/hcd.h>
- #include <linux/io-64-nonatomic-lo-hi.h>
- 
-@@ -837,7 +837,7 @@ struct xhci_stream_info {
- 	unsigned int			num_stream_ctxs;
- 	dma_addr_t			ctx_array_dma;
- 	/* For mapping physical TRB addresses to segments in stream rings */
--	struct radix_tree_root		trb_address_map;
-+	struct xarray			trb_address_map;
- 	struct xhci_command		*free_streams_command;
- };
- 
-@@ -1584,7 +1584,7 @@ struct xhci_ring {
- 	unsigned int		bounce_buf_len;
- 	enum xhci_ring_type	type;
- 	bool			last_td_was_short;
--	struct radix_tree_root	*trb_address_map;
-+	struct xarray		*trb_address_map;
- };
- 
- struct xhci_erst_entry {
+ 	/* for extent tree cache */
+-	struct radix_tree_root extent_tree_root;/* cache extent cache entries */
+-	struct mutex extent_tree_lock;	/* locking extent radix tree */
++	struct xarray extent_array;		/* cache extent cache entries */
+ 	struct list_head extent_list;		/* lru list for shrinker */
+ 	spinlock_t extent_lock;			/* locking extent lru list */
+ 	atomic_t total_ext_tree;		/* extent tree count */
 -- 
 2.15.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
