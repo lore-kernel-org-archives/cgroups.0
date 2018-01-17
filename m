@@ -1,8 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 62/99] dax: Convert dax_insert_pfn_mkwrite to
- XArray
-Date: Wed, 17 Jan 2018 12:21:26 -0800
-Message-ID: <20180117202203.19756-63-willy@infradead.org>
+Subject: [PATCH v6 16/99] xarray: Add xas_create_range
+Date: Wed, 17 Jan 2018 12:20:40 -0800
+Message-ID: <20180117202203.19756-17-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ui0jdz9E027vx6kh4BN1DpRsE9/lobM/lWsy/ECHg1w=; b=kjLTAPoKQ+T+4nz58L6pqSRvN1
- gKY0wvIEFMK/25CnvfBZvtXBylebMZZFrHlg5l6GyNCUXXuod4NdFVPWE3WblG2H1iBQjxyq/Ri/9
- 258uS9iUIH9IvH8WZ8+kYeEbFtY15bv7FLGRCaaJv+zacqBsq8zo42Tv5GFJPnGijSJo=;
+ bh=QBvHViXVnkVEPmgjEoQYNX4IHNnWrbJw+OscY9Dm/qw=; b=WkaJEtsqhwVvsPWJiWdfzsUyz5
+ CAD2Dd8gaYdRYpLRGJSLpL2sSoRAf6EwkT9ELYJ/CRcp6TD4Tg2epKljzwsJOIqxEPUcdOzqiVjzA
+ fwkDwmocIFNLxxNttDlG7tgMFxkQMDd+WRDjT4c8kAH7tdLsjiHv9efSbq4Wi2L3UPYA=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -24,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=ui0jdz9E027vx6kh4BN1DpRsE9/lobM/lWsy/ECHg1w=; b=ZYe72NtWPmUYOa56Xdw6Sm4GGZ
- Yj09QXQ8Clp0AWe0CR5XF7ZZ0feAQNKAkIChsYCHexWxPlw36HZoupwYRVT1ny8YPEcmxpBrKh54b
- TZyrTjLee0OMO2lI4Olmfi7N/6M7CBwyUf/tQzkYJMkHEKwEVcFYAMmBYxEfohkE02qA=;
+ bh=QBvHViXVnkVEPmgjEoQYNX4IHNnWrbJw+OscY9Dm/qw=; b=CLaLYeE3svw+nwb6GGKnnGb6BR
+ WU/1SJUE6UWHLJR8XrJCX+SEGAEyuXei8JX/pyxHUCcn3WEc9qjFjbPyc93oR9PzrVOa8f8K2faaE
+ kLZ2E1O4vlC/g+GPz/tYFyXKf/GR/IPFjMB+uzuw4gEqNI90Yp4Q6YoPnMlNyJ7pob6s=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ui0jdz9E027vx6kh4BN1DpRsE9/lobM/lWsy/ECHg1w=; b=pUgZyHzEvv3RkL+Uz5fUTSOH/
- GCtMTSLtHkkf6Xk0hgsTDzt2yMxZGaLpQFIHw14I9rO/jNxWIahYBUT1xPW0lpBbVusYPWjTMVGDr
- HfQshAqjS5eaAjs6VMhgcPrite+VtRwtTHBJzWM4OkQQ+/hUbr8M08T4muzTdmbLhMDnlLCC0nVBU
- fhMPyCIii/AcRi0cyhg6F9Pnl4G9Ql/bMQvN4+jQjNwOSjLKBy2v6KrLVHSWkNSunR6xdcvJXk1fQ
- 7RszCtCcu1TTfeMUvyBkG/9KcDOkguTQLJwU2Jb86qRzIjpQB/ql5hnsDGEgo1+vx6MZv+1hzIWBv
- qc9S4jdAA==;
+ bh=QBvHViXVnkVEPmgjEoQYNX4IHNnWrbJw+OscY9Dm/qw=; b=s432/WlHtq2r6+H7DZcEBuVKP
+ Pj69E6eIV/HJGEWKz8dWArjxbQ/5bsibhCQnoRgVglHGCR4scNIiNGY32EVYbpu9YGy21rzUxSHUZ
+ dJ0qkhHmePvrF9gQwJRN8MbbhiutzlWNkGj0Uhf8MOuEM6IE4RWU7LAlscRcyS85QP6O6T9rRF7Dh
+ c09E8719hUQqD2gurpeJ6DLvQmxZ12Rh+dT2ar1JOpkYlEyd96PDBD7Pxy9MUOlYTV03+HEG2C0LJ
+ 8AFyId6yy8w6Izdx4Hmc7YP/lqXwkGCudlz270er3erkhH1RkxbCH+BG6wDvEbKeMRXbsWZCAj6mb
+ pHQKn52cw==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -54,41 +53,61 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
+This hopefully temporary function is useful for users who have not yet
+been converted to multi-index entries.
+
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/linux/xarray.h |  2 ++
+ lib/xarray.c           | 22 ++++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index b66b8c896ed8..e6b25ef112f2 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1497,21 +1497,21 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
- 	void *entry;
- 	int vmf_ret, error;
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index 01ce313fc00e..acb6d02ff194 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -705,6 +705,8 @@ void xas_init_tags(const struct xa_state *);
+ bool xas_nomem(struct xa_state *, gfp_t);
+ void xas_pause(struct xa_state *);
  
--	xa_lock_irq(&mapping->pages);
-+	xas_lock_irq(&xas);
- 	entry = get_unlocked_mapping_entry(&xas);
- 	/* Did we race with someone splitting entry or so? */
- 	if (!entry ||
- 	    (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
- 	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
- 		put_unlocked_mapping_entry(&xas, entry);
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
- 						      VM_FAULT_NOPAGE);
- 		return VM_FAULT_NOPAGE;
- 	}
--	radix_tree_tag_set(&mapping->pages, index, PAGECACHE_TAG_DIRTY);
-+	xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
- 	entry = lock_slot(&xas);
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
- 	switch (pe_size) {
- 	case PE_SIZE_PTE:
- 		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
++void xas_create_range(struct xa_state *, unsigned long max);
++
+ /**
+  * xas_reload() - Refetch an entry from the xarray.
+  * @xas: XArray operation state.
+diff --git a/lib/xarray.c b/lib/xarray.c
+index e8ece1fff9fd..c044373d6893 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -612,6 +612,28 @@ void *xas_create(struct xa_state *xas)
+ }
+ EXPORT_SYMBOL_GPL(xas_create);
+ 
++/**
++ * xas_create_range() - Ensure that stores to this range will succeed
++ * @xas: XArray operation state.
++ * @max: The highest index to create a slot for.
++ *
++ * Creates all of the slots in the range between the current position of
++ * @xas and @max.  This is for the benefit of users who have not yet been
++ * converted to multi-index entries.
++ *
++ * The implementation is naive.
++ */
++void xas_create_range(struct xa_state *xas, unsigned long max)
++{
++	XA_STATE(tmp, xas->xa, xas->xa_index);
++
++	do {
++		xas_create(&tmp);
++		xas_set(&tmp, tmp.xa_index + XA_CHUNK_SIZE);
++	} while (tmp.xa_index < max);
++}
++EXPORT_SYMBOL_GPL(xas_create_range);
++
+ static void store_siblings(struct xa_state *xas, void *entry, void *curr,
+ 				int *countp, int *valuesp)
+ {
 -- 
 2.15.1
 
