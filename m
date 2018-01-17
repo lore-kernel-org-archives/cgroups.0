@@ -1,7 +1,7 @@
 From: David Rientjes <rientjes@google.com>
-Subject: [patch -mm 1/4] mm, memcg: introduce per-memcg oom policy tunable
-Date: Tue, 16 Jan 2018 18:15:03 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1801161813480.28198@chino.kir.corp.google.com>
+Subject: [patch -mm 4/4] mm, memcg: add hierarchical usage oom policy
+Date: Tue, 16 Jan 2018 18:15:11 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1801161814260.28198@chino.kir.corp.google.com>
 References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -9,13 +9,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=/r9QU7TNFgK7N2BbTQ7+GVg0h/Tg4EiQ2sP5UPaR1fQ=;
-        b=A3s7kuRhNogTWLJ0ssxJQ6fNp8COXTODSNi1AW1JDoYQrtAjGCXi0Ri8t6IRSrCuQT
-         GeBhBvl13C+MW1Uzs5WppwFm/LrhUYB/c3iZFi9FJXUXOlUkhivRMrqEio+W/VN1f93f
-         mU96KQ+X6QCUoME/eCROB8HbeROuoIgswfHDBkFxx+uFJl06C9HunnO/tIfgZyRjIWVo
-         rtlYl56czUhVKeLQDN/pr13hgG4gW9CKyS1l5uLWB+k5xA25UqvqGlyzdlSXw1o8dyIP
-         sbkhHmoo4fytPYO5OqxXl3uXhtlxoUbHVeoFbFVElGhdguF7qlj5LjNMW2a5MXkemHXu
-         dRwg==
+        bh=R5kLfgCNe3tcfrgPC6troR21pOASpUf42Q62FxubbHo=;
+        b=j7efgG91yUr335sOYUaqZOtFAUSERKaG6YhlJZ7rAUiskwC/BIgPhBFfWc/V8FnYJf
+         jZE2C8rwLbgvJtUTB/2l3QP99PvKA8xTYA+3MmmOhzLyQCLZTNTil2bUVUG+PC2PCIFm
+         A095BU75iiAi4XJ8PT9s8v0K6VSOM16qDaiUlqmTH186+6HHBKg4NsqRldsNZ1zU6Stx
+         PFaTP6PYQgorPiPoir1Kla9YXKTX80nqUClN5bCQsBgX+MN3KO93fFC+5NtMxD66ee+6
+         YELDB4sLucilAny9wfaStxfw3XplK+OuFnCtZTmJ2QB3UMXaY02SDOi7glDgAlqUrGgm
+         w9kg==
 In-Reply-To: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,138 +24,148 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
 Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-The cgroup aware oom killer is needlessly declared for the entire system
-by a mount option.  It's unnecessary to force the system into a single
-oom policy: either cgroup aware, or the traditional process aware.
+One of the three significant concerns brought up about the cgroup aware
+oom killer is that its decisionmaking is completely evaded by creating
+subcontainers and attaching processes such that the ancestor's usage does
+not exceed another cgroup on the system.
 
-This patch introduces a memory.oom_policy tunable for all mem cgroups.
-It is currently a no-op: it can only be set to "none", which is its
-default policy.  It will be expanded in the next patch to define cgroup
-aware oom killer behavior.
+In this regard, users who do not distribute their processes over a set of
+subcontainers for mem cgroup control, statistics, or other controllers
+are unfairly penalized.
 
-This is an extensible interface that can be used to define cgroup aware
-assessment of mem cgroup subtrees or the traditional process aware
-assessment.
-
-Another benefit of such an approach is that an admin can lock in a
-certain policy for the system or for a mem cgroup subtree and can
-delegate the policy decision to the user to determine if the kill should
-originate from a subcontainer, as indivisible memory consumers
-themselves, or selection should be done per process.
+This adds an oom policy, "tree", that accounts for hierarchical usage
+when comparing cgroups and the cgroup aware oom killer is enabled by an
+ancestor.  This allows administrators, for example, to require users in
+their own top-level mem cgroup subtree to be accounted for with
+hierarchical usage.  In other words, they can longer evade the oom killer
+by using other controllers or subcontainers.
 
 Signed-off-by: David Rientjes <rientjes@google.com>
 ---
- Documentation/cgroup-v2.txt |  9 +++++++++
- include/linux/memcontrol.h  | 11 +++++++++++
- mm/memcontrol.c             | 35 +++++++++++++++++++++++++++++++++++
- 3 files changed, 55 insertions(+)
+ Documentation/cgroup-v2.txt | 12 ++++++++++--
+ include/linux/memcontrol.h  |  9 +++++++--
+ mm/memcontrol.c             | 23 +++++++++++++++--------
+ 3 files changed, 32 insertions(+), 12 deletions(-)
 
 diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
 --- a/Documentation/cgroup-v2.txt
 +++ b/Documentation/cgroup-v2.txt
-@@ -1060,6 +1060,15 @@ PAGE_SIZE multiple when read back.
- 	If cgroup-aware OOM killer is not enabled, ENOTSUPP error
- 	is returned on attempt to access the file.
+@@ -1048,6 +1048,11 @@ PAGE_SIZE multiple when read back.
+ 	memory consumers; that is, they will compare mem cgroup usage rather
+ 	than process memory footprint.  See the "OOM Killer" section.
  
-+  memory.oom_policy
++	If "tree", the OOM killer will compare mem cgroups and its subtree
++	as indivisible memory consumers when selecting a hierarchy.  This
++	policy cannot be set on the root mem cgroup.  See the "OOM Killer"
++	section.
 +
-+	A read-write single string file which exists on all cgroups.  The
-+	default value is "none".
+ 	If "all", the OOM killer will compare mem cgroups and its subtree
+ 	as indivisible memory consumers and kill all processes attached to
+ 	the mem cgroup and its subtree.  This policy cannot be set on the
+@@ -1275,6 +1280,9 @@ There are currently three available oom policies:
+  - "cgroup": choose the cgroup with the largest memory footprint from the
+    subtree as an OOM victim and kill at least one process.
+ 
++ - "tree": choose the cgroup with the largest memory footprint considering
++   itself and its subtree and kill at least one process.
 +
-+	If "none", the OOM killer will use the default policy to choose a
-+	victim; that is, it will choose the single process with the largest
-+	memory footprint.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
+  - "all": choose the cgroup with the largest memory footprint considering
+    itself and its subtree and kill all processes attached (cannot be set on
+    the root mem cgroup).
+@@ -1292,8 +1300,8 @@ Please, note that memory charges are not migrating if tasks
+ are moved between different memory cgroups. Moving tasks with
+ significant memory footprint may affect OOM victim selection logic.
+ If it's a case, please, consider creating a common ancestor for
+-the source and destination memory cgroups and setting a policy of "all"
+-on ancestor layer.
++the source and destination memory cgroups and setting a policy of "tree"
++or "all" on ancestor layer.
+ 
+ 
+ IO
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -58,6 +58,14 @@ enum memcg_event_item {
- 	MEMCG_NR_EVENTS,
- };
- 
-+enum memcg_oom_policy {
-+	/*
-+	 * No special oom policy, process selection is determined by
-+	 * oom_badness()
-+	 */
-+	MEMCG_OOM_POLICY_NONE,
-+};
-+
- struct mem_cgroup_reclaim_cookie {
- 	pg_data_t *pgdat;
- 	int priority;
-@@ -203,6 +211,9 @@ struct mem_cgroup {
- 	/* OOM-Killer disable */
- 	int		oom_kill_disable;
- 
-+	/* OOM policy for this subtree */
-+	enum memcg_oom_policy oom_policy;
-+
+@@ -70,8 +70,13 @@ enum memcg_oom_policy {
+ 	 */
+ 	MEMCG_OOM_POLICY_CGROUP,
  	/*
- 	 * Treat the sub-tree as an indivisible memory consumer,
- 	 * kill all belonging tasks if the memory cgroup selected
+-	 * Same as MEMCG_OOM_POLICY_CGROUP, but all eligible processes attached
+-	 * to the cgroup and subtree should be oom killed
++	 * Tree cgroup usage for all descendant memcg groups, treating each mem
++	 * cgroup and its subtree as an indivisible consumer
++	 */
++	MEMCG_OOM_POLICY_TREE,
++	/*
++	 * Same as MEMCG_OOM_POLICY_TREE, but all eligible processes are also
++	 * oom killed
+ 	 */
+ 	MEMCG_OOM_POLICY_ALL,
+ };
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -4417,6 +4417,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- 	if (parent) {
- 		memcg->swappiness = mem_cgroup_swappiness(parent);
- 		memcg->oom_kill_disable = parent->oom_kill_disable;
-+		memcg->oom_policy = parent->oom_policy;
- 	}
- 	if (parent && parent->use_hierarchy) {
- 		memcg->use_hierarchy = true;
-@@ -5534,6 +5535,34 @@ static int memory_stat_show(struct seq_file *m, void *v)
- 	return 0;
- }
+@@ -2715,11 +2715,11 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+ 	oc->chosen_points = 0;
  
-+static int memory_oom_policy_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+	enum memcg_oom_policy policy = READ_ONCE(memcg->oom_policy);
-+
-+	switch (policy) {
-+	case MEMCG_OOM_POLICY_NONE:
-+	default:
-+		seq_puts(m, "none\n");
-+	};
-+	return 0;
-+}
-+
-+static ssize_t memory_oom_policy_write(struct kernfs_open_file *of,
-+				       char *buf, size_t nbytes, loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	ssize_t ret = nbytes;
-+
-+	buf = strstrip(buf);
-+	if (!memcmp("none", buf, min(sizeof("none")-1, nbytes)))
-+		memcg->oom_policy = MEMCG_OOM_POLICY_NONE;
-+	else
-+		ret = -EINVAL;
-+
-+	return ret;
-+}
-+
- static struct cftype memory_files[] = {
- 	{
- 		.name = "current",
-@@ -5575,6 +5604,12 @@ static struct cftype memory_files[] = {
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = memory_stat_show,
- 	},
-+	{
-+		.name = "oom_policy",
-+		.flags = CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_oom_policy_show,
-+		.write = memory_oom_policy_write,
-+	},
- 	{ }	/* terminate */
- };
+ 	/*
+-	 * If OOM is memcg-wide, and the oom policy is "all", all processes
+-	 * attached to the memcg and subtree should be killed.
+-	 * So, we mark the memcg as a victim.
++	 * If OOM is memcg-wide, and the oom policy is "tree" or "all", this
++	 * is the selected memcg.
+ 	 */
+-	if (oc->memcg && mem_cgroup_oom_policy_all(oc->memcg)) {
++	if (oc->memcg && (oc->memcg->oom_policy == MEMCG_OOM_POLICY_TREE ||
++			  oc->memcg->oom_policy == MEMCG_OOM_POLICY_ALL)) {
+ 		oc->chosen_memcg = oc->memcg;
+ 		css_get(&oc->chosen_memcg->css);
+ 		return;
+@@ -2728,8 +2728,8 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+ 	/*
+ 	 * The oom_score is calculated for leaf memory cgroups (including
+ 	 * the root memcg).
+-	 * Cgroups with oom policy of "all" accumulate the score of descendant
+-	 * leaf memory cgroups.
++	 * Cgroups with oom policy of "tree" or "all" accumulate the score of
++	 * descendant leaf memory cgroups.
+ 	 */
+ 	rcu_read_lock();
+ 	for_each_mem_cgroup_tree(iter, root) {
+@@ -2737,10 +2737,11 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
  
+ 		/*
+ 		 * We don't consider non-leaf memory cgroups without the oom
+-		 * policy of "all" as oom victims.
++		 * policy of "tree" or "all" as oom victims.
+ 		 */
+ 		if (memcg_has_children(iter) && iter != root_mem_cgroup &&
+-		    !mem_cgroup_oom_policy_all(iter))
++		    iter->oom_policy != MEMCG_OOM_POLICY_TREE &&
++		    iter->oom_policy != MEMCG_OOM_POLICY_ALL)
+ 			continue;
+ 
+ 		/*
+@@ -5511,6 +5512,9 @@ static int memory_oom_policy_show(struct seq_file *m, void *v)
+ 	case MEMCG_OOM_POLICY_CGROUP:
+ 		seq_puts(m, "cgroup\n");
+ 		break;
++	case MEMCG_OOM_POLICY_TREE:
++		seq_puts(m, "tree\n");
++		break;
+ 	case MEMCG_OOM_POLICY_ALL:
+ 		seq_puts(m, "all\n");
+ 		break;
+@@ -5532,6 +5536,9 @@ static ssize_t memory_oom_policy_write(struct kernfs_open_file *of,
+ 		memcg->oom_policy = MEMCG_OOM_POLICY_NONE;
+ 	else if (!memcmp("cgroup", buf, min(sizeof("cgroup")-1, nbytes)))
+ 		memcg->oom_policy = MEMCG_OOM_POLICY_CGROUP;
++	else if (memcg != root_mem_cgroup &&
++			!memcmp("tree", buf, min(sizeof("tree")-1, nbytes)))
++		memcg->oom_policy = MEMCG_OOM_POLICY_TREE;
+ 	else if (memcg != root_mem_cgroup &&
+ 			!memcmp("all", buf, min(sizeof("all")-1, nbytes)))
+ 		memcg->oom_policy = MEMCG_OOM_POLICY_ALL;
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
