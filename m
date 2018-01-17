@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 61/99] dax: Convert dax_writeback_one to XArray
-Date: Wed, 17 Jan 2018 12:21:25 -0800
-Message-ID: <20180117202203.19756-62-willy@infradead.org>
+Subject: [PATCH v6 92/99] f2fs: Convert pids radix tree to XArray
+Date: Wed, 17 Jan 2018 12:21:56 -0800
+Message-ID: <20180117202203.19756-93-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ATGFKhqyH2T5U1HUZMqsryAWBagEjgPv8+V/QavNJZs=; b=len3nI1klTnRL55XL8ly3BFYzE
- KsuZHCbKK9sffb75cLlNpcSx+z1OWidGIRuU1/X7wIAfemO2ObuSEnBBcgkjO6GwGgUV6t4ej0CUs
- IgvOGNDTYjp74Ub+/9UiA4kDi18r3GlCDvcjoiOb08uJEmLL0lV/OyeiykulyNzQCICA=;
+ bh=nDbSNQtY3I32d6R0AQMGtIlXjATZUM/TBTgCd5AKpiA=; b=jTtqPwaNfV1cWMgQ1Q6WgdaYrp
+ +lH1z4aIyH7PrtFBBRjs07ViZJJ6kxTPlPqRv47Pbumn5uXfNqNa+8geMm5WMhkEeteuWpJwt/X4P
+ huX9dH0EX37I19rx9ZsmEmcXnCTKOhbhrU2zSp6gaVaE42tN7hVA4gYC5GPTkv8NY5zU=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=ATGFKhqyH2T5U1HUZMqsryAWBagEjgPv8+V/QavNJZs=; b=b3tomVHLyTRRyKwkWSVtpPaxV8
- k2uCQFH1trGoYwKV7HJhUsUHvFxXYo4+1hvHutjC38YHA8Ir0snMCQqtGjTQxTQ0EyQ5ruKiOl2PD
- u0tWaWdnFNxa5gjfvOoJwqX4GlM0bllWTMdX9dLsv7rLyjFas9DncWiZWcYBbRVnmGHw=;
+ bh=nDbSNQtY3I32d6R0AQMGtIlXjATZUM/TBTgCd5AKpiA=; b=SzKbkaPtpnwkgJqh6yWWNEUfWT
+ OeqpsaaLNOgZgAZknTGHwyXtSOU4oNQX51Jct3sLKKXLTVLf0l7RjHhRjB0bmr5bY7Fmd0zKorf+q
+ V8nE5NC3O7xbmrgCHDitOVXlmqHCjXd7Zoji86uvOIAeUN8sJB8I9J0jXLkwlSePqf2s=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ATGFKhqyH2T5U1HUZMqsryAWBagEjgPv8+V/QavNJZs=; b=uVzUKcEixPLeXPEn9sddjJFQ2
- idpcAGr+08afe1jCf+/QXiRryHy8v0xWjs3avWDMO994NSWNC+rWmKsJhR/NCJp1q3nI+/mb9ZdbJ
- bysZoMEXC0wWdYxEgCJZrdOfDn1mQFikQAZHk7hSr4wbWdfoMeoQI9THHjd8Vk5gkIDht0Vdgf5A8
- gQQraXx8Z723i1kK26rgKRdbcsEuCLsy2FarBPlFEfaULt75ClnKoHn21R3Dz76Adcjz+VAY8G7qu
- 6vYQaxi8wW1rAnVeYJ5NnXm0bTMDUY/TiRSWYbgjd2/QY+/ItqY4jdl7CMM/bb/fKJFMotV8JX57I
- kEVDj4p5g==;
+ bh=nDbSNQtY3I32d6R0AQMGtIlXjATZUM/TBTgCd5AKpiA=; b=MN4v26tzHiZB6R+Hk3zmusuUY
+ +pu9Srd/sL/BJ9P7ObG+bnphV3pKEOIN5kdRFQlqAMn6h8C4nraM0Y9PCd84Co2v/5IERdFERb+S3
+ a7dgBBcUZleKdvb3DgUQIePAyqtpKqAiz2S1jgRnnWJJbJXlNc1z/9p3paUVBPJQs4bDnTFTOjBpD
+ hN4nQ+zEPxMchcDMWHSobhw92MeC9ynbdhCLVaAE3PRRMQ5N02pdpG5be+cCnAq4sKrZcOKCh3hUZ
+ Gxde4v9fSJE3ufVQErRwh1nKfNHo5TkBV0OqpqArJ7/eQLnPaJMGAkxeyarYWWZ37kQUD0YSBIiZk
+ zRa7DnlrA==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,76 +53,135 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Likewise easy
+The XArray API works out rather well for this user.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ fs/f2fs/super.c |  2 --
+ fs/f2fs/trace.c | 60 ++++-----------------------------------------------------
+ fs/f2fs/trace.h |  2 --
+ 3 files changed, 4 insertions(+), 60 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 9a30224da4d6..b66b8c896ed8 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -632,8 +632,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 		struct dax_device *dax_dev, struct address_space *mapping,
- 		pgoff_t index, void *entry)
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index 708155d9c2e4..d608edffe69e 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -2831,8 +2831,6 @@ static int __init init_f2fs_fs(void)
  {
--	struct radix_tree_root *pages = &mapping->pages;
--	XA_STATE(xas, pages, index);
-+	XA_STATE(xas, &mapping->pages, index);
- 	void *entry2, *kaddr;
- 	long ret = 0, id;
- 	sector_t sector;
-@@ -648,7 +647,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	if (WARN_ON(!xa_is_value(entry)))
- 		return -EIO;
+ 	int err;
  
--	xa_lock_irq(&mapping->pages);
-+	xas_lock_irq(&xas);
- 	entry2 = get_unlocked_mapping_entry(&xas);
- 	/* Entry got punched out / reallocated? */
- 	if (!entry2 || WARN_ON_ONCE(!xa_is_value(entry2)))
-@@ -667,7 +666,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	}
+-	f2fs_build_trace_ios();
+-
+ 	err = init_inodecache();
+ 	if (err)
+ 		goto fail;
+diff --git a/fs/f2fs/trace.c b/fs/f2fs/trace.c
+index bccbbf2616d2..f316a42c547f 100644
+--- a/fs/f2fs/trace.c
++++ b/fs/f2fs/trace.c
+@@ -16,8 +16,7 @@
+ #include "f2fs.h"
+ #include "trace.h"
  
- 	/* Another fsync thread may have already written back this entry */
--	if (!radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE))
-+	if (!xas_get_tag(&xas, PAGECACHE_TAG_TOWRITE))
- 		goto put_unlocked;
- 	/* Lock the entry to serialize with page faults */
- 	entry = lock_slot(&xas);
-@@ -678,8 +677,8 @@ static int dax_writeback_one(struct block_device *bdev,
- 	 * at the entry only under xa_lock and once they do that they will
- 	 * see the entry locked and wait for it to unlock.
- 	 */
--	radix_tree_tag_clear(pages, index, PAGECACHE_TAG_TOWRITE);
--	xa_unlock_irq(&mapping->pages);
-+	xas_clear_tag(&xas, PAGECACHE_TAG_TOWRITE);
-+	xas_unlock_irq(&xas);
+-static RADIX_TREE(pids, GFP_ATOMIC);
+-static spinlock_t pids_lock;
++static DEFINE_XARRAY(pids);
+ static struct last_io_info last_io;
  
- 	/*
- 	 * Even if dax_writeback_mapping_range() was given a wbc->range_start
-@@ -717,9 +716,7 @@ static int dax_writeback_one(struct block_device *bdev,
- 	 * the pfn mappings are writeprotected and fault waits for mapping
- 	 * entry lock.
- 	 */
--	xa_lock_irq(&mapping->pages);
--	radix_tree_tag_clear(pages, index, PAGECACHE_TAG_DIRTY);
--	xa_unlock_irq(&mapping->pages);
-+	xa_clear_tag(&mapping->pages, index, PAGECACHE_TAG_DIRTY);
- 	trace_dax_writeback_one(mapping->host, index, size >> PAGE_SHIFT);
-  dax_unlock:
- 	dax_read_unlock(id);
-@@ -728,7 +725,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ static inline void __print_last_io(void)
+@@ -57,28 +56,13 @@ void f2fs_trace_pid(struct page *page)
+ {
+ 	struct inode *inode = page->mapping->host;
+ 	pid_t pid = task_pid_nr(current);
+-	void *p;
  
-  put_unlocked:
- 	put_unlocked_mapping_entry(&xas, entry2);
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
- 	return ret;
+ 	set_page_private(page, (unsigned long)pid);
+ 
+-	if (radix_tree_preload(GFP_NOFS))
+-		return;
+-
+-	spin_lock(&pids_lock);
+-	p = radix_tree_lookup(&pids, pid);
+-	if (p == current)
+-		goto out;
+-	if (p)
+-		radix_tree_delete(&pids, pid);
+-
+-	f2fs_radix_tree_insert(&pids, pid, current);
+-
+-	trace_printk("%3x:%3x %4x %-16s\n",
++	if (xa_store(&pids, pid, current, GFP_NOFS) != current)
++		trace_printk("%3x:%3x %4x %-16s\n",
+ 			MAJOR(inode->i_sb->s_dev), MINOR(inode->i_sb->s_dev),
+ 			pid, current->comm);
+-out:
+-	spin_unlock(&pids_lock);
+-	radix_tree_preload_end();
  }
  
+ void f2fs_trace_ios(struct f2fs_io_info *fio, int flush)
+@@ -120,43 +104,7 @@ void f2fs_trace_ios(struct f2fs_io_info *fio, int flush)
+ 	return;
+ }
+ 
+-void f2fs_build_trace_ios(void)
+-{
+-	spin_lock_init(&pids_lock);
+-}
+-
+-#define PIDVEC_SIZE	128
+-static unsigned int gang_lookup_pids(pid_t *results, unsigned long first_index,
+-							unsigned int max_items)
+-{
+-	struct radix_tree_iter iter;
+-	void **slot;
+-	unsigned int ret = 0;
+-
+-	if (unlikely(!max_items))
+-		return 0;
+-
+-	radix_tree_for_each_slot(slot, &pids, &iter, first_index) {
+-		results[ret] = iter.index;
+-		if (++ret == max_items)
+-			break;
+-	}
+-	return ret;
+-}
+-
+ void f2fs_destroy_trace_ios(void)
+ {
+-	pid_t pid[PIDVEC_SIZE];
+-	pid_t next_pid = 0;
+-	unsigned int found;
+-
+-	spin_lock(&pids_lock);
+-	while ((found = gang_lookup_pids(pid, next_pid, PIDVEC_SIZE))) {
+-		unsigned idx;
+-
+-		next_pid = pid[found - 1] + 1;
+-		for (idx = 0; idx < found; idx++)
+-			radix_tree_delete(&pids, pid[idx]);
+-	}
+-	spin_unlock(&pids_lock);
++	xa_destroy(&pids);
+ }
+diff --git a/fs/f2fs/trace.h b/fs/f2fs/trace.h
+index 67db24ac1e85..157e4564e48b 100644
+--- a/fs/f2fs/trace.h
++++ b/fs/f2fs/trace.h
+@@ -34,12 +34,10 @@ struct last_io_info {
+ 
+ extern void f2fs_trace_pid(struct page *);
+ extern void f2fs_trace_ios(struct f2fs_io_info *, int);
+-extern void f2fs_build_trace_ios(void);
+ extern void f2fs_destroy_trace_ios(void);
+ #else
+ #define f2fs_trace_pid(p)
+ #define f2fs_trace_ios(i, n)
+-#define f2fs_build_trace_ios()
+ #define f2fs_destroy_trace_ios()
+ 
+ #endif
 -- 
 2.15.1
 
