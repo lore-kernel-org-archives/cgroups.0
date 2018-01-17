@@ -1,23 +1,23 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 95/99] f2fs: Convert gclist.iroot to XArray
-Date: Wed, 17 Jan 2018 12:21:59 -0800
-Message-ID: <20180117202203.19756-96-willy@infradead.org>
+Subject: [PATCH v6 60/99] dax: Convert __dax_invalidate_mapping_entry to XArray
+Date: Wed, 17 Jan 2018 12:21:24 -0800
+Message-ID: <20180117202203.19756-61-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
-        Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=47QaJrwnfsmKeZuf8T8agrYaRD6vhVrtV1ISCmk9vzc=; b=he43x9tj/d3ph3vYT4O5hbH37
-        RxIhchklIfbFPo4Czmtyw6cvKKsyz77MUSBdGYRhdaTi3H4bM5qaRjLOSqfl7KeXnhNmQYAR36BzV
-        58qprfxRyvyOhYFvln1StLAND0WsjluqASgdu1qIRC/jDbG6gSzBX/b/aBggA041DumYtiogC9IVR
-        3zE/XQ5xGHenblRWrxFcwLMg0aqqVL+BTshgfIVHuyFZ61QLhGB8wGtN4vYzSotCnEdl0AAEiF4RU
-        yKrgWi05sRK11Swp6gtCFKSVoYmfHg4zXK0O/QN/CwrxzdGRpvR3xB6RbJ4aO2cZ2n24rIWRJzYv8
-    
+	d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
+	Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	 bh=zxW46HrF9aiqLexk9BaysKMYO4nPFGmq9Qp8WgDDloU=; b=DwWvcH3aHbF+5aj8xQ8UTKPvg
+	EITTVxX97FIRo8btutXbyII38UlCnDw8LFIey3JApow09542umZCBbWqcgX3lKVpQ7SwTqYCJ868D
+	Qgu9Ux97V1nXFWAdjHxvb8uYdfeulwOf/rkyJxfT4cyt9B/8UG6PIiwoJvS1TrNm0P4KgXp+nYnp0
+	oExsENSY53vlo753WWwYlwU+AoIC1OBvW3VU4S6yJo3pHJB6E77EyoqVR7zduKV6/s1zp1+A4JxV5
+	RsjaQH+1/5R638wQeXC2gQTbns8pHxpReHwY/D0vEE+rpr5o2npAH3dKT6+YRtm8pObIOpqCQkZTA
+	O/HCYjmmQ==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -27,73 +27,52 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Straightforward conversion.
+Simple now that we already have an xa_state!
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/f2fs/gc.c | 14 +++++++-------
- fs/f2fs/gc.h |  2 +-
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ fs/dax.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
-index aac1e02f75df..2b33068dc36b 100644
---- a/fs/f2fs/gc.c
-+++ b/fs/f2fs/gc.c
-@@ -417,7 +417,7 @@ static struct inode *find_gc_inode(struct gc_inode_list *gc_list, nid_t ino)
- {
- 	struct inode_entry *ie;
- 
--	ie = radix_tree_lookup(&gc_list->iroot, ino);
-+	ie = xa_load(&gc_list->iroot, ino);
- 	if (ie)
- 		return ie->inode;
- 	return NULL;
-@@ -434,7 +434,7 @@ static void add_gc_inode(struct gc_inode_list *gc_list, struct inode *inode)
- 	new_ie = f2fs_kmem_cache_alloc(inode_entry_slab, GFP_NOFS);
- 	new_ie->inode = inode;
- 
--	f2fs_radix_tree_insert(&gc_list->iroot, inode->i_ino, new_ie);
-+	xa_store(&gc_list->iroot, inode->i_ino, new_ie, GFP_NOFS);
- 	list_add_tail(&new_ie->list, &gc_list->ilist);
- }
- 
-@@ -442,7 +442,7 @@ static void put_gc_inode(struct gc_inode_list *gc_list)
- {
- 	struct inode_entry *ie, *next_ie;
- 	list_for_each_entry_safe(ie, next_ie, &gc_list->ilist, list) {
--		radix_tree_delete(&gc_list->iroot, ie->inode->i_ino);
-+		xa_erase(&gc_list->iroot, ie->inode->i_ino);
- 		iput(ie->inode);
- 		list_del(&ie->list);
- 		kmem_cache_free(inode_entry_slab, ie);
-@@ -989,10 +989,10 @@ int f2fs_gc(struct f2fs_sb_info *sbi, bool sync,
+diff --git a/fs/dax.c b/fs/dax.c
+index d3fe61b95216..9a30224da4d6 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -413,24 +413,24 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 	XA_STATE(xas, &mapping->pages, index);
  	int ret = 0;
- 	struct cp_control cpc;
- 	unsigned int init_segno = segno;
--	struct gc_inode_list gc_list = {
--		.ilist = LIST_HEAD_INIT(gc_list.ilist),
--		.iroot = RADIX_TREE_INIT(gc_list.iroot, GFP_NOFS),
--	};
-+	struct gc_inode_list gc_list;
+ 	void *entry;
+-	struct radix_tree_root *pages = &mapping->pages;
+ 
+ 	xa_lock_irq(&mapping->pages);
+ 	entry = get_unlocked_mapping_entry(&xas);
+ 	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
+ 		goto out;
+ 	if (!trunc &&
+-	    (radix_tree_tag_get(pages, index, PAGECACHE_TAG_DIRTY) ||
+-	     radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE)))
++	    (xas_get_tag(&xas, PAGECACHE_TAG_DIRTY) ||
++	     xas_get_tag(&xas, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
+-	radix_tree_delete(pages, index);
++	xas_store(&xas, NULL);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+ out:
+ 	put_unlocked_mapping_entry(&xas, entry);
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
+ 	return ret;
+ }
 +
-+	xa_init(&gc_list.iroot);
-+	INIT_LIST_HEAD(&gc_list.ilist);
- 
- 	trace_f2fs_gc_begin(sbi->sb, sync, background,
- 				get_pages(sbi, F2FS_DIRTY_NODES),
-diff --git a/fs/f2fs/gc.h b/fs/f2fs/gc.h
-index 9325191fab2d..769259b0a4f6 100644
---- a/fs/f2fs/gc.h
-+++ b/fs/f2fs/gc.h
-@@ -41,7 +41,7 @@ struct f2fs_gc_kthread {
- 
- struct gc_inode_list {
- 	struct list_head ilist;
--	struct radix_tree_root iroot;
-+	struct xarray iroot;
- };
- 
  /*
+  * Delete DAX entry at @index from @mapping.  Wait for it
+  * to be unlocked before deleting it.
 -- 
 2.15.1
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
