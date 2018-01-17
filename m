@@ -1,165 +1,243 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 55/99] f2fs: Convert to XArray
-Date: Wed, 17 Jan 2018 12:21:19 -0800
-Message-ID: <20180117202203.19756-56-willy@infradead.org>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: [PATCH v6 96/99] dma-debug: Convert to XArray
+Date: Wed, 17 Jan 2018 12:22:00 -0800
+Message-ID: <20180117202203.19756-97-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
+        Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=NcPrSNl0PJX8QPkrt8w3KQSJyJwFYqJs0WM0icyZM4s=; b=rY3Wl+r0k7Afw9kHtRZYNbmTA
+        +UMjVIiMFrLJIhj6DjBHGHeiKjU6yMZKSLT0VTJ7xFATPVjiOOL1hHZkGGu2AS+njwV2qhc+jsWTU
+        o0bU5xeWqqEYAZKqMemX94Bglp8E3kiOZHvlmoE5UsgpsQ38WfxeDn1h+VXJ6zDOIGVLFlqx+PTIR
+        Lpmrzwu6bGE7gSkX13hRXUJ8owpcUSQLvFvPpNewKFdL7Qem3zwjGoIDpJyAcGj8CXCRcTLRjrDPe
+        1zzXn1SLxXyrBw5Ap2wzAhKyYa51m1xm+dHV4yAzW7756tQLyPyqBXtKpUpJtFaCrsPym17n5eKKv
+    
+In-Reply-To: <20180117202203.19756-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- d=sourceforge.net; s=x; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:
- To:From:Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
- Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
- Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
- List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=T9UHgjsvMOlJWcNj5ey/5z9/Dj+z9dBtLpmY7uJEkvk=; b=kQglpHPVe5d4I9uXGhQcXOiXIZ
- Wx5y2IjHZbPgl0xltIRkN9YzbweAsVQggtqpv6sdJOFW98EnGe69sfkW5MBUTjI+y6B9b2FfFlRpE
- zVlepKLj5D47Unr/ZRvAa+/Vwbo9EHH7+hEkxTiY6I7TX75G0VlAcBOKPGVZPYxyTDKI=;
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
- ;
- h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
- :MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
- Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
- :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
- List-Post:List-Owner:List-Archive;
- bh=T9UHgjsvMOlJWcNj5ey/5z9/Dj+z9dBtLpmY7uJEkvk=; b=KnMRjLFzpaMDM6b6BANMlqBbuZ
- SD0i2OhledkzpYPfNGbQGb27GNLX7qEDIeDBdczr3F6WJ0tRE0ydCumk9s1nMgG7so/dx7yPuwLWJ
- gfUi34iPEquy+ZWOo3o3aE7MnzAQ31tqjA9ZA6+UWgNmoyFyKMos9Gt/IGfa8wQoeGk0=;
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
- Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
- Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
- Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
- List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=T9UHgjsvMOlJWcNj5ey/5z9/Dj+z9dBtLpmY7uJEkvk=; b=p9ZBUcHjxoOT4vHTEr+GphW3B
- aOEVCj4Nst6P/TLqrXyd3RdffYICpcpkMbZ8H3PaJfw/d448SPTIV3Ix4YPH0VFWLJr2pSglAF8z2
- QuADvmuM+rKT5xYepR3DpR29VyUTQemz/QURk0YB84FLkrYOrg419lIuGzR1k6BO44G2RjlSL6Zlb
- 2KA22ELttKB25lGWMA9DCABNyDXd/lD3PlDwy//yeTY+qC1oQBMT53zCdnmGNx/YmKeCT/wSoKDIT
- 307KzKBr6jJq1PfxNk8hPhjk+rXy8Syxyol12K1sQu2+5ITkdw3veMyrldFHGFI4dITOsWiJ7h3h8
- NgGap2P0Q==;
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
- <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
-List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>, 
- <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
-To: linux-kernel@vger.kernel.org
-Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-sh@vger.kernel.org, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, linux-remoteproc@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, Stefano Stabellini <sstabellini@kernel.org>, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, linux-btrfs@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-nilfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stefano Stabellini <sstabellini-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+From: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 
-This is a straightforward conversion.
+This is an unusual way to use the xarray tags.  If any other users
+come up, we can add an xas_get_tags() / xas_set_tags() API, but until
+then I don't want to encourage this kind of abuse.
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+Signed-off-by: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 ---
- fs/f2fs/data.c   |  3 +--
- fs/f2fs/dir.c    |  5 +----
- fs/f2fs/inline.c |  6 +-----
- fs/f2fs/node.c   | 10 ++--------
- 4 files changed, 5 insertions(+), 19 deletions(-)
+ lib/dma-debug.c | 105 +++++++++++++++++++++++++-------------------------------
+ 1 file changed, 46 insertions(+), 59 deletions(-)
 
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index c8f6d9806896..1f3f192f152f 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -2175,8 +2175,7 @@ void f2fs_set_page_dirty_nobuffers(struct page *page)
- 	xa_lock_irqsave(&mapping->pages, flags);
- 	WARN_ON_ONCE(!PageUptodate(page));
- 	account_page_dirtied(page, mapping);
--	radix_tree_tag_set(&mapping->pages,
--			page_index(page), PAGECACHE_TAG_DIRTY);
-+	__xa_set_tag(&mapping->pages, page_index(page), PAGECACHE_TAG_DIRTY);
- 	xa_unlock_irqrestore(&mapping->pages, flags);
- 	unlock_page_memcg(page);
+diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+index fb4af570ce04..965b3837d060 100644
+--- a/lib/dma-debug.c
++++ b/lib/dma-debug.c
+@@ -22,7 +22,6 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/sched/task.h>
+ #include <linux/stacktrace.h>
+-#include <linux/radix-tree.h>
+ #include <linux/dma-debug.h>
+ #include <linux/spinlock.h>
+ #include <linux/vmalloc.h>
+@@ -30,6 +29,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/export.h>
+ #include <linux/device.h>
++#include <linux/xarray.h>
+ #include <linux/types.h>
+ #include <linux/sched.h>
+ #include <linux/ctype.h>
+@@ -465,9 +465,8 @@ EXPORT_SYMBOL(debug_dma_dump_mappings);
+  * At any time debug_dma_assert_idle() can be called to trigger a
+  * warning if any cachelines in the given page are in the active set.
+  */
+-static RADIX_TREE(dma_active_cacheline, GFP_NOWAIT);
+-static DEFINE_SPINLOCK(radix_lock);
+-#define ACTIVE_CACHELINE_MAX_OVERLAP ((1 << RADIX_TREE_MAX_TAGS) - 1)
++static DEFINE_XARRAY_FLAGS(dma_active_cacheline, XA_FLAGS_LOCK_IRQ);
++#define ACTIVE_CACHELINE_MAX_OVERLAP ((1 << XA_MAX_TAGS) - 1)
+ #define CACHELINE_PER_PAGE_SHIFT (PAGE_SHIFT - L1_CACHE_SHIFT)
+ #define CACHELINES_PER_PAGE (1 << CACHELINE_PER_PAGE_SHIFT)
  
-diff --git a/fs/f2fs/dir.c b/fs/f2fs/dir.c
-index b5515ea6bb2f..296070016ec9 100644
---- a/fs/f2fs/dir.c
-+++ b/fs/f2fs/dir.c
-@@ -708,7 +708,6 @@ void f2fs_delete_entry(struct f2fs_dir_entry *dentry, struct page *page,
- 	unsigned int bit_pos;
- 	int slots = GET_DENTRY_SLOTS(le16_to_cpu(dentry->name_len));
- 	struct address_space *mapping = page_mapping(page);
--	unsigned long flags;
- 	int i;
+@@ -477,37 +476,40 @@ static phys_addr_t to_cacheline_number(struct dma_debug_entry *entry)
+ 		(entry->offset >> L1_CACHE_SHIFT);
+ }
  
- 	f2fs_update_time(F2FS_I_SB(dir), REQ_TIME);
-@@ -739,10 +738,8 @@ void f2fs_delete_entry(struct f2fs_dir_entry *dentry, struct page *page,
- 
- 	if (bit_pos == NR_DENTRY_IN_BLOCK &&
- 			!truncate_hole(dir, page->index, page->index + 1)) {
--		xa_lock_irqsave(&mapping->pages, flags);
--		radix_tree_tag_clear(&mapping->pages, page_index(page),
-+		xa_clear_tag(&mapping->pages, page_index(page),
- 				     PAGECACHE_TAG_DIRTY);
--		xa_unlock_irqrestore(&mapping->pages, flags);
- 
- 		clear_page_dirty_for_io(page);
- 		ClearPagePrivate(page);
-diff --git a/fs/f2fs/inline.c b/fs/f2fs/inline.c
-index 7858b8e15f33..d3c3f84beca9 100644
---- a/fs/f2fs/inline.c
-+++ b/fs/f2fs/inline.c
-@@ -204,7 +204,6 @@ int f2fs_write_inline_data(struct inode *inode, struct page *page)
- 	void *src_addr, *dst_addr;
- 	struct dnode_of_data dn;
- 	struct address_space *mapping = page_mapping(page);
--	unsigned long flags;
- 	int err;
- 
- 	set_new_dnode(&dn, inode, NULL, NULL, 0);
-@@ -226,10 +225,7 @@ int f2fs_write_inline_data(struct inode *inode, struct page *page)
- 	kunmap_atomic(src_addr);
- 	set_page_dirty(dn.inode_page);
- 
--	xa_lock_irqsave(&mapping->pages, flags);
--	radix_tree_tag_clear(&mapping->pages, page_index(page),
--			     PAGECACHE_TAG_DIRTY);
--	xa_unlock_irqrestore(&mapping->pages, flags);
-+	xa_clear_tag(&mapping->pages, page_index(page), PAGECACHE_TAG_DIRTY);
- 
- 	set_inode_flag(inode, FI_APPEND_WRITE);
- 	set_inode_flag(inode, FI_DATA_EXIST);
-diff --git a/fs/f2fs/node.c b/fs/f2fs/node.c
-index 6b64a3009d55..0a6d5c2f996e 100644
---- a/fs/f2fs/node.c
-+++ b/fs/f2fs/node.c
-@@ -88,14 +88,10 @@ bool available_free_memory(struct f2fs_sb_info *sbi, int type)
- static void clear_node_page_dirty(struct page *page)
+-static int active_cacheline_read_overlap(phys_addr_t cln)
++static unsigned int active_cacheline_read_overlap(struct xa_state *xas)
  {
- 	struct address_space *mapping = page->mapping;
--	unsigned int long flags;
+-	int overlap = 0, i;
++	unsigned int tags = 0;
++	xa_tag_t tag;
  
- 	if (PageDirty(page)) {
--		xa_lock_irqsave(&mapping->pages, flags);
--		radix_tree_tag_clear(&mapping->pages,
--				page_index(page),
-+		xa_clear_tag(&mapping->pages, page_index(page),
- 				PAGECACHE_TAG_DIRTY);
--		xa_unlock_irqrestore(&mapping->pages, flags);
+-	for (i = RADIX_TREE_MAX_TAGS - 1; i >= 0; i--)
+-		if (radix_tree_tag_get(&dma_active_cacheline, cln, i))
+-			overlap |= 1 << i;
+-	return overlap;
++	for (tag = 0; tag < XA_MAX_TAGS; tag++)
++		if (xas_get_tag(xas, tag))
++			tags |= 1U << tag;
++
++	return tags;
+ }
  
- 		clear_page_dirty_for_io(page);
- 		dec_page_count(F2FS_M_SB(mapping), F2FS_DIRTY_NODES);
-@@ -1142,9 +1138,7 @@ void ra_node_page(struct f2fs_sb_info *sbi, nid_t nid)
+-static int active_cacheline_set_overlap(phys_addr_t cln, int overlap)
++static int active_cacheline_set_overlap(struct xa_state *xas, int overlap)
+ {
+-	int i;
++	xa_tag_t tag;
+ 
+ 	if (overlap > ACTIVE_CACHELINE_MAX_OVERLAP || overlap < 0)
+ 		return overlap;
+ 
+-	for (i = RADIX_TREE_MAX_TAGS - 1; i >= 0; i--)
+-		if (overlap & 1 << i)
+-			radix_tree_tag_set(&dma_active_cacheline, cln, i);
++	for (tag = 0; tag < XA_MAX_TAGS; tag++) {
++		if (overlap & (1U << tag))
++			xas_set_tag(xas, tag);
+ 		else
+-			radix_tree_tag_clear(&dma_active_cacheline, cln, i);
++			xas_clear_tag(xas, tag);
++	}
+ 
+ 	return overlap;
+ }
+ 
+-static void active_cacheline_inc_overlap(phys_addr_t cln)
++static void active_cacheline_inc_overlap(struct xa_state *xas)
+ {
+-	int overlap = active_cacheline_read_overlap(cln);
++	int overlap = active_cacheline_read_overlap(xas);
+ 
+-	overlap = active_cacheline_set_overlap(cln, ++overlap);
++	overlap = active_cacheline_set_overlap(xas, ++overlap);
+ 
+ 	/* If we overflowed the overlap counter then we're potentially
+ 	 * leaking dma-mappings.  Otherwise, if maps and unmaps are
+@@ -517,21 +519,22 @@ static void active_cacheline_inc_overlap(phys_addr_t cln)
+ 	 */
+ 	WARN_ONCE(overlap > ACTIVE_CACHELINE_MAX_OVERLAP,
+ 		  "DMA-API: exceeded %d overlapping mappings of cacheline %pa\n",
+-		  ACTIVE_CACHELINE_MAX_OVERLAP, &cln);
++		  ACTIVE_CACHELINE_MAX_OVERLAP, &xas->xa_index);
+ }
+ 
+-static int active_cacheline_dec_overlap(phys_addr_t cln)
++static int active_cacheline_dec_overlap(struct xa_state *xas)
+ {
+-	int overlap = active_cacheline_read_overlap(cln);
++	int overlap = active_cacheline_read_overlap(xas);
+ 
+-	return active_cacheline_set_overlap(cln, --overlap);
++	return active_cacheline_set_overlap(xas, --overlap);
+ }
+ 
+ static int active_cacheline_insert(struct dma_debug_entry *entry)
+ {
+ 	phys_addr_t cln = to_cacheline_number(entry);
++	XA_STATE(xas, &dma_active_cacheline, cln);
+ 	unsigned long flags;
+-	int rc;
++	struct dma_debug_entry *exists;
+ 
+ 	/* If the device is not writing memory then we don't have any
+ 	 * concerns about the cpu consuming stale data.  This mitigates
+@@ -540,32 +543,32 @@ static int active_cacheline_insert(struct dma_debug_entry *entry)
+ 	if (entry->direction == DMA_TO_DEVICE)
+ 		return 0;
+ 
+-	spin_lock_irqsave(&radix_lock, flags);
+-	rc = radix_tree_insert(&dma_active_cacheline, cln, entry);
+-	if (rc == -EEXIST)
+-		active_cacheline_inc_overlap(cln);
+-	spin_unlock_irqrestore(&radix_lock, flags);
++	xas_lock_irqsave(&xas, flags);
++	exists = xas_create(&xas);
++	if (exists)
++		active_cacheline_inc_overlap(&xas);
++	else
++		xas_store(&xas, entry);
++	xas_unlock_irqrestore(&xas, flags);
+ 
+-	return rc;
++	return xas_error(&xas);
+ }
+ 
+ static void active_cacheline_remove(struct dma_debug_entry *entry)
+ {
+ 	phys_addr_t cln = to_cacheline_number(entry);
++	XA_STATE(xas, &dma_active_cacheline, cln);
+ 	unsigned long flags;
+ 
+ 	/* ...mirror the insert case */
+ 	if (entry->direction == DMA_TO_DEVICE)
  		return;
- 	f2fs_bug_on(sbi, check_nid_range(sbi, nid));
  
--	rcu_read_lock();
--	apage = radix_tree_lookup(&NODE_MAPPING(sbi)->pages, nid);
--	rcu_read_unlock();
-+	apage = xa_load(&NODE_MAPPING(sbi)->pages, nid);
- 	if (apage)
+-	spin_lock_irqsave(&radix_lock, flags);
+-	/* since we are counting overlaps the final put of the
+-	 * cacheline will occur when the overlap count is 0.
+-	 * active_cacheline_dec_overlap() returns -1 in that case
+-	 */
+-	if (active_cacheline_dec_overlap(cln) < 0)
+-		radix_tree_delete(&dma_active_cacheline, cln);
+-	spin_unlock_irqrestore(&radix_lock, flags);
++	xas_lock_irqsave(&xas, flags);
++	xas_load(&xas);
++	if (active_cacheline_dec_overlap(&xas) < 0)
++		xas_store(&xas, NULL);
++	xas_unlock_irqrestore(&xas, flags);
+ }
+ 
+ /**
+@@ -578,12 +581,8 @@ static void active_cacheline_remove(struct dma_debug_entry *entry)
+  */
+ void debug_dma_assert_idle(struct page *page)
+ {
+-	static struct dma_debug_entry *ents[CACHELINES_PER_PAGE];
+-	struct dma_debug_entry *entry = NULL;
+-	void **results = (void **) &ents;
+-	unsigned int nents, i;
+-	unsigned long flags;
+-	phys_addr_t cln;
++	struct dma_debug_entry *entry;
++	unsigned long cln;
+ 
+ 	if (dma_debug_disabled())
+ 		return;
+@@ -591,21 +590,9 @@ void debug_dma_assert_idle(struct page *page)
+ 	if (!page)
+ 		return;
+ 
+-	cln = (phys_addr_t) page_to_pfn(page) << CACHELINE_PER_PAGE_SHIFT;
+-	spin_lock_irqsave(&radix_lock, flags);
+-	nents = radix_tree_gang_lookup(&dma_active_cacheline, results, cln,
+-				       CACHELINES_PER_PAGE);
+-	for (i = 0; i < nents; i++) {
+-		phys_addr_t ent_cln = to_cacheline_number(ents[i]);
+-
+-		if (ent_cln == cln) {
+-			entry = ents[i];
+-			break;
+-		} else if (ent_cln >= cln + CACHELINES_PER_PAGE)
+-			break;
+-	}
+-	spin_unlock_irqrestore(&radix_lock, flags);
+-
++	cln = page_to_pfn(page) << CACHELINE_PER_PAGE_SHIFT;
++	entry = xa_find(&dma_active_cacheline, &cln,
++			cln + CACHELINES_PER_PAGE - 1, XA_PRESENT);
+ 	if (!entry)
  		return;
  
 -- 
 2.15.1
-
-
-------------------------------------------------------------------------------
-Check out the vibrant tech community on one of the world's most
-engaging tech sites, Slashdot.org! http://sdm.link/slashdot
