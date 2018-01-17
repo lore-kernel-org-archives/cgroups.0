@@ -1,248 +1,99 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: [PATCH v6 99/99] null_blk: Convert to XArray
-Date: Wed, 17 Jan 2018 12:22:03 -0800
-Message-ID: <20180117202203.19756-100-willy@infradead.org>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v6 95/99] f2fs: Convert gclist.iroot to XArray
+Date: Wed, 17 Jan 2018 12:21:59 -0800
+Message-ID: <20180117202203.19756-96-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
-Return-path: <linux-nilfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
         Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Zvk/SOyIH4arlNZ5RDVqJpJmFpwNakZ4ci7E3A/cN+k=; b=AuWpbh4cRgwsueN+0GnuJZEvr
-        otE/mfAltu8YkcQuhxQIr7d+tcVzgIb7NBVYvBvWacuimtrdJwAUujORTj/BrulI+X+NoauID9e9e
-        1EuKPm9mpnOPpaMy7iee80mwvm7v/E+8HR6o9p2xmxTTncpZtefqcsbUhpqcWtjMqDjJpqXMOwsui
-        0Mkd4DQBY+pJCT3FpsmkTAsbTZ5vCel55sQy9DfMcS1Op5ZuF0dUy+lCf9//UXLj8Wx0BiJuz4L9Y
-        m+Rcf+AWD/wjGnDNe9biKHK6+zj0K4iV14jnFYDtwAc6DpdpW9EAnCime56mdzsJBNcxaTkxPGnc3
+         bh=47QaJrwnfsmKeZuf8T8agrYaRD6vhVrtV1ISCmk9vzc=; b=he43x9tj/d3ph3vYT4O5hbH37
+        RxIhchklIfbFPo4Czmtyw6cvKKsyz77MUSBdGYRhdaTi3H4bM5qaRjLOSqfl7KeXnhNmQYAR36BzV
+        58qprfxRyvyOhYFvln1StLAND0WsjluqASgdu1qIRC/jDbG6gSzBX/b/aBggA041DumYtiogC9IVR
+        3zE/XQ5xGHenblRWrxFcwLMg0aqqVL+BTshgfIVHuyFZ61QLhGB8wGtN4vYzSotCnEdl0AAEiF4RU
+        yKrgWi05sRK11Swp6gtCFKSVoYmfHg4zXK0O/QN/CwrxzdGRpvR3xB6RbJ4aO2cZ2n24rIWRJzYv8
     
-In-Reply-To: <20180117202203.19756-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-nilfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-nilfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stefano Stabellini <sstabellini-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-From: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-We can probably avoid the call to xa_reserve() by changing the locking,
-but I didn't feel confident enough to do that.
+Straightforward conversion.
 
-Signed-off-by: Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/block/null_blk.c | 87 +++++++++++++++++++++---------------------------
- 1 file changed, 38 insertions(+), 49 deletions(-)
+ fs/f2fs/gc.c | 14 +++++++-------
+ fs/f2fs/gc.h |  2 +-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index ad0477ae820f..d90d173b8885 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -15,6 +15,7 @@
- #include <linux/lightnvm.h>
- #include <linux/configfs.h>
- #include <linux/badblocks.h>
-+#include <linux/xarray.h>
+diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
+index aac1e02f75df..2b33068dc36b 100644
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -417,7 +417,7 @@ static struct inode *find_gc_inode(struct gc_inode_list *gc_list, nid_t ino)
+ {
+ 	struct inode_entry *ie;
  
- #define SECTOR_SHIFT		9
- #define PAGE_SECTORS_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
-@@ -90,8 +91,8 @@ struct nullb_page {
- struct nullb_device {
- 	struct nullb *nullb;
- 	struct config_item item;
--	struct radix_tree_root data; /* data stored in the disk */
--	struct radix_tree_root cache; /* disk cache data */
-+	struct xarray data; /* data stored in the disk */
-+	struct xarray cache; /* disk cache data */
- 	unsigned long flags; /* device flags */
- 	unsigned int curr_cache;
- 	struct badblocks badblocks;
-@@ -558,8 +559,8 @@ static struct nullb_device *null_alloc_dev(void)
- 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
- 	if (!dev)
- 		return NULL;
--	INIT_RADIX_TREE(&dev->data, GFP_ATOMIC);
--	INIT_RADIX_TREE(&dev->cache, GFP_ATOMIC);
-+	xa_init_flags(&dev->data, XA_FLAGS_LOCK_IRQ);
-+	xa_init_flags(&dev->cache, XA_FLAGS_LOCK_IRQ);
- 	if (badblocks_init(&dev->badblocks, 0)) {
- 		kfree(dev);
- 		return NULL;
-@@ -752,18 +753,18 @@ static void null_free_sector(struct nullb *nullb, sector_t sector,
- 	unsigned int sector_bit;
- 	u64 idx;
- 	struct nullb_page *t_page, *ret;
--	struct radix_tree_root *root;
-+	struct xarray *xa;
+-	ie = radix_tree_lookup(&gc_list->iroot, ino);
++	ie = xa_load(&gc_list->iroot, ino);
+ 	if (ie)
+ 		return ie->inode;
+ 	return NULL;
+@@ -434,7 +434,7 @@ static void add_gc_inode(struct gc_inode_list *gc_list, struct inode *inode)
+ 	new_ie = f2fs_kmem_cache_alloc(inode_entry_slab, GFP_NOFS);
+ 	new_ie->inode = inode;
  
--	root = is_cache ? &nullb->dev->cache : &nullb->dev->data;
-+	xa = is_cache ? &nullb->dev->cache : &nullb->dev->data;
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	sector_bit = (sector & SECTOR_MASK);
- 
--	t_page = radix_tree_lookup(root, idx);
-+	t_page = xa_load(xa, idx);
- 	if (t_page) {
- 		__clear_bit(sector_bit, &t_page->bitmap);
- 
- 		if (!t_page->bitmap) {
--			ret = radix_tree_delete_item(root, idx, t_page);
-+			ret = xa_cmpxchg(xa, idx, t_page, NULL, 0);
- 			WARN_ON(ret != t_page);
- 			null_free_page(ret);
- 			if (is_cache)
-@@ -772,47 +773,34 @@ static void null_free_sector(struct nullb *nullb, sector_t sector,
- 	}
+-	f2fs_radix_tree_insert(&gc_list->iroot, inode->i_ino, new_ie);
++	xa_store(&gc_list->iroot, inode->i_ino, new_ie, GFP_NOFS);
+ 	list_add_tail(&new_ie->list, &gc_list->ilist);
  }
  
--static struct nullb_page *null_radix_tree_insert(struct nullb *nullb, u64 idx,
-+static struct nullb_page *null_xa_insert(struct nullb *nullb, u64 idx,
- 	struct nullb_page *t_page, bool is_cache)
+@@ -442,7 +442,7 @@ static void put_gc_inode(struct gc_inode_list *gc_list)
  {
--	struct radix_tree_root *root;
-+	struct xarray *xa = is_cache ? &nullb->dev->cache : &nullb->dev->data;
-+	struct nullb_page *exist;
+ 	struct inode_entry *ie, *next_ie;
+ 	list_for_each_entry_safe(ie, next_ie, &gc_list->ilist, list) {
+-		radix_tree_delete(&gc_list->iroot, ie->inode->i_ino);
++		xa_erase(&gc_list->iroot, ie->inode->i_ino);
+ 		iput(ie->inode);
+ 		list_del(&ie->list);
+ 		kmem_cache_free(inode_entry_slab, ie);
+@@ -989,10 +989,10 @@ int f2fs_gc(struct f2fs_sb_info *sbi, bool sync,
+ 	int ret = 0;
+ 	struct cp_control cpc;
+ 	unsigned int init_segno = segno;
+-	struct gc_inode_list gc_list = {
+-		.ilist = LIST_HEAD_INIT(gc_list.ilist),
+-		.iroot = RADIX_TREE_INIT(gc_list.iroot, GFP_NOFS),
+-	};
++	struct gc_inode_list gc_list;
++
++	xa_init(&gc_list.iroot);
++	INIT_LIST_HEAD(&gc_list.ilist);
  
--	root = is_cache ? &nullb->dev->cache : &nullb->dev->data;
--
--	if (radix_tree_insert(root, idx, t_page)) {
-+	exist = xa_cmpxchg(xa, idx, NULL, t_page, GFP_ATOMIC);
-+	if (exist) {
- 		null_free_page(t_page);
--		t_page = radix_tree_lookup(root, idx);
--		WARN_ON(!t_page || t_page->page->index != idx);
-+		t_page = exist;
- 	} else if (is_cache)
- 		nullb->dev->curr_cache += PAGE_SIZE;
+ 	trace_f2fs_gc_begin(sbi->sb, sync, background,
+ 				get_pages(sbi, F2FS_DIRTY_NODES),
+diff --git a/fs/f2fs/gc.h b/fs/f2fs/gc.h
+index 9325191fab2d..769259b0a4f6 100644
+--- a/fs/f2fs/gc.h
++++ b/fs/f2fs/gc.h
+@@ -41,7 +41,7 @@ struct f2fs_gc_kthread {
  
-+	WARN_ON(t_page->page->index != idx);
- 	return t_page;
- }
+ struct gc_inode_list {
+ 	struct list_head ilist;
+-	struct radix_tree_root iroot;
++	struct xarray iroot;
+ };
  
- static void null_free_device_storage(struct nullb_device *dev, bool is_cache)
- {
--	unsigned long pos = 0;
--	int nr_pages;
--	struct nullb_page *ret, *t_pages[FREE_BATCH];
--	struct radix_tree_root *root;
--
--	root = is_cache ? &dev->cache : &dev->data;
--
--	do {
--		int i;
--
--		nr_pages = radix_tree_gang_lookup(root,
--				(void **)t_pages, pos, FREE_BATCH);
--
--		for (i = 0; i < nr_pages; i++) {
--			pos = t_pages[i]->page->index;
--			ret = radix_tree_delete_item(root, pos, t_pages[i]);
--			WARN_ON(ret != t_pages[i]);
--			null_free_page(ret);
--		}
-+	struct nullb_page *t_page;
-+	XA_STATE(xas, is_cache ? &dev->cache : &dev->data, 0);
- 
--		pos++;
--	} while (nr_pages == FREE_BATCH);
-+	xas_lock(&xas);
-+	xas_for_each(&xas, t_page, ULONG_MAX) {
-+		xas_store(&xas, NULL);
-+		null_free_page(t_page);
-+	}
-+	xas_unlock(&xas);
- 
- 	if (is_cache)
- 		dev->curr_cache = 0;
-@@ -824,13 +812,13 @@ static struct nullb_page *__null_lookup_page(struct nullb *nullb,
- 	unsigned int sector_bit;
- 	u64 idx;
- 	struct nullb_page *t_page;
--	struct radix_tree_root *root;
-+	struct xarray *xa;
- 
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	sector_bit = (sector & SECTOR_MASK);
- 
--	root = is_cache ? &nullb->dev->cache : &nullb->dev->data;
--	t_page = radix_tree_lookup(root, idx);
-+	xa = is_cache ? &nullb->dev->cache : &nullb->dev->data;
-+	t_page = xa_load(xa, idx);
- 	WARN_ON(t_page && t_page->page->index != idx);
- 
- 	if (t_page && (for_write || test_bit(sector_bit, &t_page->bitmap)))
-@@ -854,6 +842,7 @@ static struct nullb_page *null_lookup_page(struct nullb *nullb,
- static struct nullb_page *null_insert_page(struct nullb *nullb,
- 	sector_t sector, bool ignore_cache)
- {
-+	struct xarray *xa;
- 	u64 idx;
- 	struct nullb_page *t_page;
- 
-@@ -867,14 +856,14 @@ static struct nullb_page *null_insert_page(struct nullb *nullb,
- 	if (!t_page)
- 		goto out_lock;
- 
--	if (radix_tree_preload(GFP_NOIO))
-+	idx = sector >> PAGE_SECTORS_SHIFT;
-+	xa = ignore_cache ? &nullb->dev->data : &nullb->dev->cache;
-+	if (xa_reserve(xa, idx, GFP_NOIO))
- 		goto out_freepage;
- 
- 	spin_lock_irq(&nullb->lock);
--	idx = sector >> PAGE_SECTORS_SHIFT;
- 	t_page->page->index = idx;
--	t_page = null_radix_tree_insert(nullb, idx, t_page, !ignore_cache);
--	radix_tree_preload_end();
-+	t_page = null_xa_insert(nullb, idx, t_page, !ignore_cache);
- 
- 	return t_page;
- out_freepage:
-@@ -900,8 +889,7 @@ static int null_flush_cache_page(struct nullb *nullb, struct nullb_page *c_page)
- 	if (test_bit(NULLB_PAGE_FREE, &c_page->bitmap)) {
- 		null_free_page(c_page);
- 		if (t_page && t_page->bitmap == 0) {
--			ret = radix_tree_delete_item(&nullb->dev->data,
--				idx, t_page);
-+			xa_cmpxchg(&nullb->dev->data, idx, t_page, NULL, 0);
- 			null_free_page(t_page);
- 		}
- 		return 0;
-@@ -926,7 +914,7 @@ static int null_flush_cache_page(struct nullb *nullb, struct nullb_page *c_page)
- 	kunmap_atomic(dst);
- 	kunmap_atomic(src);
- 
--	ret = radix_tree_delete_item(&nullb->dev->cache, idx, c_page);
-+	ret = xa_cmpxchg(&nullb->dev->cache, idx, c_page, NULL, 0);
- 	null_free_page(ret);
- 	nullb->dev->curr_cache -= PAGE_SIZE;
- 
-@@ -944,8 +932,9 @@ static int null_make_cache_space(struct nullb *nullb, unsigned long n)
- 	     nullb->dev->curr_cache + n || nullb->dev->curr_cache == 0)
- 		return 0;
- 
--	nr_pages = radix_tree_gang_lookup(&nullb->dev->cache,
--			(void **)c_pages, nullb->cache_flush_pos, FREE_BATCH);
-+	nr_pages = xa_extract(&nullb->dev->cache, (void **)c_pages,
-+				nullb->cache_flush_pos, ULONG_MAX,
-+				FREE_BATCH, XA_PRESENT);
- 	/*
- 	 * nullb_flush_cache_page could unlock before using the c_pages. To
- 	 * avoid race, we don't allow page free
-@@ -1086,7 +1075,7 @@ static int null_handle_flush(struct nullb *nullb)
- 			break;
- 	}
- 
--	WARN_ON(!radix_tree_empty(&nullb->dev->cache));
-+	WARN_ON(!xa_empty(&nullb->dev->cache));
- 	spin_unlock_irq(&nullb->lock);
- 	return err;
- }
+ /*
 -- 
 2.15.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-nilfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
