@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 33/99] mm: Convert add_to_swap_cache to XArray
-Date: Wed, 17 Jan 2018 12:20:57 -0800
-Message-ID: <20180117202203.19756-34-willy@infradead.org>
+Subject: [PATCH v6 78/99] sh: intc: Convert to XArray
+Date: Wed, 17 Jan 2018 12:21:42 -0800
+Message-ID: <20180117202203.19756-79-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,9 +13,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
  Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
  List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ez4U47aEXmVbSez/I9CwQQt0Ph1owD6gR7dRJ/T3D4k=; b=MaH+AM1bT2chhcVWemR1fzXKYX
- mKsx+EIo+dTe2PG1ePawUVMm49H/O1aQT7+6M5MX5ZQL9Bmksfo+jaO0IRlBRaWXIsIqhsK94d1uq
- p4LWocATc6f48b5JbVqt61dEhT3ly/0PdF7hAqqgEhuYrhr52u2zPDK3CQoDlCwT72E4=;
+ bh=dMmQH2kHjjOa16pkYOdU1wgqtUGiT/uWNr9dt65hu+s=; b=hsV5P1O5ZYQJlIu4Q8zFdZFfj7
+ AUARsbJAKdzCeXPkp0UJ3tpRoFrmrVBYHn3N0M5vNBC/8ont4oqSglZFB95/RGdQBlkFgm4Ak7V1N
+ Td70p3IWiYUM3/rwR7D8M38zRqKGcP0/bA8Y7a9mmnb4xHuUmSmXEM6524AY0ztQeDEI=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  ;
  h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To
@@ -23,21 +23,21 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
  Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
  :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
  List-Post:List-Owner:List-Archive;
- bh=ez4U47aEXmVbSez/I9CwQQt0Ph1owD6gR7dRJ/T3D4k=; b=YkLgRMryBovOBSXxd6kkMUFzD9
- c/c/qAyYaRPglS4IRX00GKgjyf/ltcdrb1v4mvwMB87i+d0J5nqb+Gv0itzUNyIxOQ57DOyPPs6vF
- SEAzHZu+YcUSDbAQq3jOCmffqvnHiB2IAUv2kuKVR4XVDt5QxBD9Zeocrcq7KgeR2u3s=;
+ bh=dMmQH2kHjjOa16pkYOdU1wgqtUGiT/uWNr9dt65hu+s=; b=WmHUZrbNCFiKvHrDzPduXuf4ta
+ HZWojrIo1V6enGju1SonG8tpld6g4QvqroQWXE6VSw+pA0pCddRYzxKUFzNQfSpGIBe4M9QZA1mBG
+ bWAvuSyPrIgGOWO5B7NQchXj+E8bbg886fsDcjmapSv2EnOzDlJhl4b2oQBzQJPyJ7eY=;
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=bombadil.20170209; h=References:In-Reply-To:Message-Id:
  Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:Content-Type:
  Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
  Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
  List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=ez4U47aEXmVbSez/I9CwQQt0Ph1owD6gR7dRJ/T3D4k=; b=uWXs46oc6VUjLSYDeOuUI/N9v
- VCWBmPgJawEmFg6JT3TzJPNeTESh1cB5mns352TzwEqUn3ptkqezOwYytmyLRCGm5puo7cZz2KtO5
- uY97NwcRqdN0f+mGSKaJFa6Uu7V1Ec4baLtIl200RECBTqI/vNDD2bs4qvSU321qk+Tq8RYsxCnuA
- dMmKHubXY5DA/kUvBErZGwiGtjCCRdo0f9MWx9eiik8CqMDpYU/xJ6R5Epg6SVzGVEYPKiUZ7a5cX
- YxvwrH3lOFxIqOkdpZkj2oSAGdEQuauPKdqG/e5APbaR+FmqzxMR6eeKi6/x+Nv6mo2aEktAElChc
- guttcPL6w==;
+ bh=dMmQH2kHjjOa16pkYOdU1wgqtUGiT/uWNr9dt65hu+s=; b=Z5HwbJq+WvZ17baDIq63sXVlp
+ JVwvHXByxRp4BFajgsSY2DUEvl80qyvZvhEcU3ZmC2gRpCdmiUKDD/+ux6zHxZ9rqc7p1rxJo5nz8
+ XP+PIn2FFUC8y1gxVF+6B2/MWY0wv6MWZLTH/vZK89LybM/5sZSN4YauDexE1DwhoJoi5gXlTCY1F
+ jkSOL5vf/vc5S4Mvkz0kSEfE/TlhtHWa1x0n+3uJYohkJnWNOsT/FJ2OOBw49wMJIvBTYvv5e23zQ
+ w+ejeudjqCGq7mWLWkV745jkOevwKzzZCIUMysgMKx+TTPoseudlmEaiVvPWnoJjLEUIP2eF42NVW
+ 3pUb2wDjw==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
@@ -53,176 +53,232 @@ Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Combine __add_to_swap_cache and add_to_swap_cache into one function
-since there is no more need to preload.
+The radix tree was being protected by a raw spinlock.  I believe that
+was not necessary, and the new internal regular spinlock will be
+adequate for this array.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/swap_state.c | 93 ++++++++++++++++++---------------------------------------
- 1 file changed, 29 insertions(+), 64 deletions(-)
+ drivers/sh/intc/core.c      |  9 ++----
+ drivers/sh/intc/internals.h |  5 ++--
+ drivers/sh/intc/virq.c      | 72 +++++++++++++--------------------------------
+ 3 files changed, 25 insertions(+), 61 deletions(-)
 
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 3f95e8fc4cb2..a57b5ad4c503 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -107,14 +107,15 @@ void show_swap_cache_info(void)
- }
+diff --git a/drivers/sh/intc/core.c b/drivers/sh/intc/core.c
+index 8e72bcbd3d6d..356a423d9dcb 100644
+--- a/drivers/sh/intc/core.c
++++ b/drivers/sh/intc/core.c
+@@ -30,7 +30,6 @@
+ #include <linux/syscore_ops.h>
+ #include <linux/list.h>
+ #include <linux/spinlock.h>
+-#include <linux/radix-tree.h>
+ #include <linux/export.h>
+ #include <linux/sort.h>
+ #include "internals.h"
+@@ -78,11 +77,8 @@ static void __init intc_register_irq(struct intc_desc *desc,
+ 	struct intc_handle_int *hp;
+ 	struct irq_data *irq_data;
+ 	unsigned int data[2], primary;
+-	unsigned long flags;
  
- /*
-- * __add_to_swap_cache resembles add_to_page_cache_locked on swapper_space,
-+ * add_to_swap_cache resembles add_to_page_cache_locked on swapper_space,
-  * but sets SwapCache flag and private instead of mapping and index.
-  */
--int __add_to_swap_cache(struct page *page, swp_entry_t entry)
-+int add_to_swap_cache(struct page *page, swp_entry_t entry, gfp_t gfp)
- {
--	int error, i, nr = hpage_nr_pages(page);
--	struct address_space *address_space;
-+	struct address_space *address_space = swap_address_space(entry);
- 	pgoff_t idx = swp_offset(entry);
-+	XA_STATE(xas, &address_space->pages, idx);
-+	unsigned long i, nr = 1UL << compound_order(page);
- 
- 	VM_BUG_ON_PAGE(!PageLocked(page), page);
- 	VM_BUG_ON_PAGE(PageSwapCache(page), page);
-@@ -123,50 +124,30 @@ int __add_to_swap_cache(struct page *page, swp_entry_t entry)
- 	page_ref_add(page, nr);
- 	SetPageSwapCache(page);
- 
--	address_space = swap_address_space(entry);
--	xa_lock_irq(&address_space->pages);
--	for (i = 0; i < nr; i++) {
--		set_page_private(page + i, entry.val + i);
--		error = radix_tree_insert(&address_space->pages,
--					  idx + i, page + i);
--		if (unlikely(error))
--			break;
--	}
--	if (likely(!error)) {
-+	do {
-+		xas_lock_irq(&xas);
-+		xas_create_range(&xas, idx + nr - 1);
-+		if (xas_error(&xas))
-+			goto unlock;
-+		for (i = 0; i < nr; i++) {
-+			VM_BUG_ON_PAGE(xas.xa_index != idx + i, page);
-+			set_page_private(page + i, entry.val + i);
-+			xas_store(&xas, page + i);
-+			xas_next(&xas);
-+		}
- 		address_space->nrpages += nr;
- 		__mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, nr);
- 		ADD_CACHE_INFO(add_total, nr);
--	} else {
--		/*
--		 * Only the context which have set SWAP_HAS_CACHE flag
--		 * would call add_to_swap_cache().
--		 * So add_to_swap_cache() doesn't returns -EEXIST.
--		 */
--		VM_BUG_ON(error == -EEXIST);
--		set_page_private(page + i, 0UL);
--		while (i--) {
--			radix_tree_delete(&address_space->pages, idx + i);
--			set_page_private(page + i, 0UL);
--		}
--		ClearPageSwapCache(page);
--		page_ref_sub(page, nr);
--	}
--	xa_unlock_irq(&address_space->pages);
-+unlock:
-+		xas_unlock_irq(&xas);
-+	} while (xas_nomem(&xas, gfp));
- 
--	return error;
--}
--
--
--int add_to_swap_cache(struct page *page, swp_entry_t entry, gfp_t gfp_mask)
--{
--	int error;
-+	if (!xas_error(&xas))
-+		return 0;
- 
--	error = radix_tree_maybe_preload_order(gfp_mask, compound_order(page));
--	if (!error) {
--		error = __add_to_swap_cache(page, entry);
--		radix_tree_preload_end();
--	}
--	return error;
-+	ClearPageSwapCache(page);
-+	page_ref_sub(page, nr);
-+	return xas_error(&xas);
- }
- 
- /*
-@@ -220,7 +201,7 @@ int add_to_swap(struct page *page)
- 		goto fail;
+-	raw_spin_lock_irqsave(&intc_big_lock, flags);
+-	radix_tree_insert(&d->tree, enum_id, intc_irq_xlate_get(irq));
+-	raw_spin_unlock_irqrestore(&intc_big_lock, flags);
++	xa_store(&d->array, enum_id, intc_irq_xlate_get(irq), GFP_ATOMIC);
  
  	/*
--	 * Radix-tree node allocations from PF_MEMALLOC contexts could
-+	 * XArray node allocations from PF_MEMALLOC contexts could
- 	 * completely exhaust the page allocator. __GFP_NOMEMALLOC
- 	 * stops emergency reserves from being allocated.
- 	 *
-@@ -232,7 +213,6 @@ int add_to_swap(struct page *page)
- 	 */
- 	err = add_to_swap_cache(page, entry,
- 			__GFP_HIGH|__GFP_NOMEMALLOC|__GFP_NOWARN);
--	/* -ENOMEM radix-tree allocation failure */
- 	if (err)
- 		/*
- 		 * add_to_swap_cache() doesn't return -EEXIST, so we can safely
-@@ -400,19 +380,11 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
- 				break;		/* Out of memory */
- 		}
+ 	 * Prefer single interrupt source bitmap over other combinations:
+@@ -196,8 +192,7 @@ int __init register_intc_controller(struct intc_desc *desc)
+ 	INIT_LIST_HEAD(&d->list);
+ 	list_add_tail(&d->list, &intc_list);
  
--		/*
--		 * call radix_tree_preload() while we can wait.
--		 */
--		err = radix_tree_maybe_preload(gfp_mask & GFP_KERNEL);
--		if (err)
--			break;
+-	raw_spin_lock_init(&d->lock);
+-	INIT_RADIX_TREE(&d->tree, GFP_ATOMIC);
++	xa_init(&d->array);
+ 
+ 	d->index = nr_intc_controllers;
+ 
+diff --git a/drivers/sh/intc/internals.h b/drivers/sh/intc/internals.h
+index fa73c173b56a..9b6fd07e99a6 100644
+--- a/drivers/sh/intc/internals.h
++++ b/drivers/sh/intc/internals.h
+@@ -5,7 +5,7 @@
+ #include <linux/list.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+-#include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/device.h>
+ 
+ #define _INTC_MK(fn, mode, addr_e, addr_d, width, shift) \
+@@ -54,8 +54,7 @@ struct intc_subgroup_entry {
+ struct intc_desc_int {
+ 	struct list_head list;
+ 	struct device dev;
+-	struct radix_tree_root tree;
+-	raw_spinlock_t lock;
++	struct xarray array;
+ 	unsigned int index;
+ 	unsigned long *reg;
+ #ifdef CONFIG_SMP
+diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+index a638c3048207..801c9c8b7556 100644
+--- a/drivers/sh/intc/virq.c
++++ b/drivers/sh/intc/virq.c
+@@ -12,7 +12,6 @@
+ #include <linux/slab.h>
+ #include <linux/irq.h>
+ #include <linux/list.h>
+-#include <linux/radix-tree.h>
+ #include <linux/spinlock.h>
+ #include <linux/export.h>
+ #include "internals.h"
+@@ -27,10 +26,7 @@ struct intc_virq_list {
+ #define for_each_virq(entry, head) \
+ 	for (entry = head; entry; entry = entry->next)
+ 
+-/*
+- * Tags for the radix tree
+- */
+-#define INTC_TAG_VIRQ_NEEDS_ALLOC	0
++#define INTC_TAG_VIRQ_NEEDS_ALLOC	XA_TAG_0
+ 
+ void intc_irq_xlate_set(unsigned int irq, intc_enum id, struct intc_desc_int *d)
+ {
+@@ -54,23 +50,18 @@ int intc_irq_lookup(const char *chipname, intc_enum enum_id)
+ 	int irq = -1;
+ 
+ 	list_for_each_entry(d, &intc_list, list) {
+-		int tagged;
 -
- 		/*
- 		 * Swap entry may have been freed since our caller observed it.
- 		 */
- 		err = swapcache_prepare(entry);
- 		if (err == -EEXIST) {
--			radix_tree_preload_end();
- 			/*
- 			 * We might race against get_swap_page() and stumble
- 			 * across a SWAP_HAS_CACHE swap_map entry whose page
-@@ -420,26 +392,19 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
- 			 */
- 			cond_resched();
+ 		if (strcmp(d->chip.name, chipname) != 0)
  			continue;
--		}
--		if (err) {		/* swp entry is obsolete ? */
--			radix_tree_preload_end();
-+		} else if (err)		/* swp entry is obsolete ? */
- 			break;
--		}
  
--		/* May fail (-ENOMEM) if radix-tree node allocation failed. */
-+		/* May fail (-ENOMEM) if XArray node allocation failed. */
- 		__SetPageLocked(new_page);
- 		__SetPageSwapBacked(new_page);
--		err = __add_to_swap_cache(new_page, entry);
-+		err = add_to_swap_cache(new_page, entry, gfp_mask & GFP_KERNEL);
- 		if (likely(!err)) {
--			radix_tree_preload_end();
--			/*
--			 * Initiate read into locked page and return.
--			 */
-+			/* Initiate read into locked page */
- 			lru_cache_add_anon(new_page);
- 			*new_page_allocated = true;
- 			return new_page;
- 		}
--		radix_tree_preload_end();
- 		__ClearPageLocked(new_page);
  		/*
- 		 * add_to_swap_cache() doesn't return -EEXIST, so we can safely
+ 		 * Catch early lookups for subgroup VIRQs that have not
+-		 * yet been allocated an IRQ. This already includes a
+-		 * fast-path out if the tree is untagged, so there is no
+-		 * need to explicitly test the root tree.
++		 * yet been allocated an IRQ.
+ 		 */
+-		tagged = radix_tree_tag_get(&d->tree, enum_id,
+-					    INTC_TAG_VIRQ_NEEDS_ALLOC);
+-		if (unlikely(tagged))
++		if (unlikely(xa_get_tag(&d->array, enum_id,
++						INTC_TAG_VIRQ_NEEDS_ALLOC)))
+ 			break;
+ 
+-		ptr = radix_tree_lookup(&d->tree, enum_id);
++		ptr = xa_load(&d->array, enum_id);
+ 		if (ptr) {
+ 			irq = ptr - intc_irq_xlate;
+ 			break;
+@@ -148,22 +139,16 @@ static void __init intc_subgroup_init_one(struct intc_desc *desc,
+ {
+ 	struct intc_map_entry *mapped;
+ 	unsigned int pirq;
+-	unsigned long flags;
+ 	int i;
+ 
+-	mapped = radix_tree_lookup(&d->tree, subgroup->parent_id);
+-	if (!mapped) {
+-		WARN_ON(1);
++	mapped = xa_load(&d->array, subgroup->parent_id);
++	if (WARN_ON(!mapped))
+ 		return;
+-	}
+ 
+ 	pirq = mapped - intc_irq_xlate;
+ 
+-	raw_spin_lock_irqsave(&d->lock, flags);
+-
+ 	for (i = 0; i < ARRAY_SIZE(subgroup->enum_ids); i++) {
+ 		struct intc_subgroup_entry *entry;
+-		int err;
+ 
+ 		if (!subgroup->enum_ids[i])
+ 			continue;
+@@ -176,15 +161,14 @@ static void __init intc_subgroup_init_one(struct intc_desc *desc,
+ 		entry->enum_id = subgroup->enum_ids[i];
+ 		entry->handle = intc_subgroup_data(subgroup, d, i);
+ 
+-		err = radix_tree_insert(&d->tree, entry->enum_id, entry);
+-		if (unlikely(err < 0))
++		if (xa_err(xa_store(&d->array, entry->enum_id, entry,
++						GFP_NOWAIT))) {
++			kfree(entry);
+ 			break;
+-
+-		radix_tree_tag_set(&d->tree, entry->enum_id,
++		}
++		xa_set_tag(&d->array, entry->enum_id,
+ 				   INTC_TAG_VIRQ_NEEDS_ALLOC);
+ 	}
+-
+-	raw_spin_unlock_irqrestore(&d->lock, flags);
+ }
+ 
+ void __init intc_subgroup_init(struct intc_desc *desc, struct intc_desc_int *d)
+@@ -201,28 +185,16 @@ void __init intc_subgroup_init(struct intc_desc *desc, struct intc_desc_int *d)
+ static void __init intc_subgroup_map(struct intc_desc_int *d)
+ {
+ 	struct intc_subgroup_entry *entries[32];
+-	unsigned long flags;
+ 	unsigned int nr_found;
+ 	int i;
+ 
+-	raw_spin_lock_irqsave(&d->lock, flags);
+-
+-restart:
+-	nr_found = radix_tree_gang_lookup_tag_slot(&d->tree,
+-			(void ***)entries, 0, ARRAY_SIZE(entries),
+-			INTC_TAG_VIRQ_NEEDS_ALLOC);
++	nr_found = xa_extract(&d->array, (void **)entries, 0, ULONG_MAX,
++			ARRAY_SIZE(entries), INTC_TAG_VIRQ_NEEDS_ALLOC);
+ 
+ 	for (i = 0; i < nr_found; i++) {
+-		struct intc_subgroup_entry *entry;
+-		int irq;
++		struct intc_subgroup_entry *entry = entries[i];
++		int irq = irq_alloc_desc(numa_node_id());
+ 
+-		entry = radix_tree_deref_slot((void **)entries[i]);
+-		if (unlikely(!entry))
+-			continue;
+-		if (radix_tree_deref_retry(entry))
+-			goto restart;
+-
+-		irq = irq_alloc_desc(numa_node_id());
+ 		if (unlikely(irq < 0)) {
+ 			pr_err("no more free IRQs, bailing..\n");
+ 			break;
+@@ -250,13 +222,11 @@ static void __init intc_subgroup_map(struct intc_desc_int *d)
+ 		add_virq_to_pirq(entry->pirq, irq);
+ 		irq_set_chained_handler(entry->pirq, intc_virq_handler);
+ 
+-		radix_tree_tag_clear(&d->tree, entry->enum_id,
+-				     INTC_TAG_VIRQ_NEEDS_ALLOC);
+-		radix_tree_replace_slot(&d->tree, (void **)entries[i],
+-					&intc_irq_xlate[irq]);
++		xa_store(&d->array, entry->enum_id, &intc_irq_xlate[irq],
++				GFP_NOWAIT);
++		xa_clear_tag(&d->array, entry->enum_id,
++				INTC_TAG_VIRQ_NEEDS_ALLOC);
+ 	}
+-
+-	raw_spin_unlock_irqrestore(&d->lock, flags);
+ }
+ 
+ void __init intc_finalize(void)
+@@ -264,6 +234,6 @@ void __init intc_finalize(void)
+ 	struct intc_desc_int *d;
+ 
+ 	list_for_each_entry(d, &intc_list, list)
+-		if (radix_tree_tagged(&d->tree, INTC_TAG_VIRQ_NEEDS_ALLOC))
++		if (xa_tagged(&d->array, INTC_TAG_VIRQ_NEEDS_ALLOC))
+ 			intc_subgroup_map(d);
+ }
 -- 
 2.15.1
 
