@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 66/99] page cache: Finish XArray conversion
-Date: Wed, 17 Jan 2018 12:21:30 -0800
-Message-ID: <20180117202203.19756-67-willy@infradead.org>
+Subject: [PATCH v6 64/99] dax: Convert grab_mapping_entry to XArray
+Date: Wed, 17 Jan 2018 12:21:28 -0800
+Message-ID: <20180117202203.19756-65-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
 	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
 	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	 bh=ZUixE8UIx+Uw33Ptxtp6ch2sD7OyVIqIqzQrNWtBjXg=; b=aZQCFV6wuMHvlK+PoTv+bYM7R
-	u2h977vzY0bh5PK3j4eUygqAGyEARVw7gPv43GXsQ8xH0sDhcIrou5k9RrXpRMWCNxrEhQpph2qis
-	B8FROZEUXzpD2B9WJXjwC8AX4ENVL2xF+XAvSq2NOSL6fRpzDKFuEaKDQ2Je1CNFo5EqJ05BqIqLO
-	sUvgkeVTWYgNibpzvlQG62Rvnkp32oIiL4jt0Us0Puup33YL/9IF3sUQx1nT196kWMku7jAMgftMW
-	lvuYkuJlgvSLpKaIHXUtxxkEMhqJ8jjd9BIsztDUyRJGBiASvTe7jee/llwLgV7dYkhMnRbfxgfd8
-	1oBp3qNUA==;
+	 bh=UB9rtjq79F+pSnhpZzMuKVYqDm8IxbUCeV3KsiaqQkM=; b=So+CNmzeBhDh/WL00l7dnMU9w
+	ep/AKipifiGBDjQ1yQHFVzbjaCGyHl5v/Qjee9dRGIqANpV0pADciM+bICo45F8v2RKJvqsvyIz70
+	pyQPcsHblKXUUeMpdDYMlLGuvtcMXttLNKveewFcOiJQeyvkOeYfFGiau3daaJllpYPsW7Q2oPRvF
+	nqHN+szlzigGSZHJ+JXLIRmkIajsPLof/ZjFKddfsTGRTV8CSp6cQeHLVMLlOPsl1HrCn3I6x8w3d
+	2oEheuhDGyQFnld5oDZ9Aolu6ORnwtlhUpsGtR7piSeSu0hr8fc4/I99nVGGrwoOvxQJLEZE+CEEv
+	Egh5V1Trg==;
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -27,55 +27,163 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-With no more radix tree API users left, we can drop the GFP flags
-and use xa_init() instead of INIT_RADIX_TREE().
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/inode.c         | 2 +-
- include/linux/fs.h | 2 +-
- mm/swap_state.c    | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ fs/dax.c | 98 +++++++++++++++++-----------------------------------------------
+ 1 file changed, 26 insertions(+), 72 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index c7b00573c10d..f5680b805336 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -348,7 +348,7 @@ EXPORT_SYMBOL(inc_nlink);
- void address_space_init_once(struct address_space *mapping)
+diff --git a/fs/dax.c b/fs/dax.c
+index 494e8fb7a98f..3eb0cf176d69 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -44,6 +44,7 @@
+ 
+ /* The 'colour' (ie low bits) within a PMD of a page offset.  */
+ #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
++#define PMD_ORDER	(PMD_SHIFT - PAGE_SHIFT)
+ 
+ static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
+ 
+@@ -89,10 +90,10 @@ static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
+ 			DAX_ENTRY_LOCK);
+ }
+ 
+-static unsigned int dax_radix_order(void *entry)
++static unsigned int dax_entry_order(void *entry)
  {
- 	memset(mapping, 0, sizeof(*mapping));
--	INIT_RADIX_TREE(&mapping->pages, GFP_ATOMIC | __GFP_ACCOUNT);
-+	xa_init_flags(&mapping->pages, XA_FLAGS_LOCK_IRQ);
- 	init_rwsem(&mapping->i_mmap_rwsem);
- 	INIT_LIST_HEAD(&mapping->private_list);
- 	spin_lock_init(&mapping->private_lock);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c58bc3c619bf..b459bf4ddb62 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -410,7 +410,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
-  */
- struct address_space {
- 	struct inode		*host;
--	struct radix_tree_root	pages;
-+	struct xarray		pages;
- 	gfp_t			gfp_mask;
- 	atomic_t		i_mmap_writable;
- 	struct rb_root_cached	i_mmap;
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 219e3b4f09e6..25f027d0bb00 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -573,7 +573,7 @@ int init_swap_address_space(unsigned int type, unsigned long nr_pages)
- 		return -ENOMEM;
- 	for (i = 0; i < nr; i++) {
- 		space = spaces + i;
--		INIT_RADIX_TREE(&space->pages, GFP_ATOMIC|__GFP_NOWARN);
-+		xa_init_flags(&space->pages, XA_FLAGS_LOCK_IRQ);
- 		atomic_set(&space->i_mmap_writable, 0);
- 		space->a_ops = &swap_aops;
- 		/* swap cache doesn't use writeback related tags */
+ 	if (xa_to_value(entry) & DAX_PMD)
+-		return PMD_SHIFT - PAGE_SHIFT;
++		return PMD_ORDER;
+ 	return 0;
+ }
+ 
+@@ -299,10 +300,11 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ {
+ 	XA_STATE(xas, &mapping->pages, index);
+ 	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
+-	void *entry, **slot;
++	void *entry;
+ 
++	xas_set_order(&xas, index, size_flag ? PMD_ORDER : 0);
+ restart:
+-	xa_lock_irq(&mapping->pages);
++	xas_lock_irq(&xas);
+ 	entry = get_unlocked_mapping_entry(&xas);
+ 
+ 	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
+@@ -326,84 +328,36 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		}
+ 	}
+ 
+-	/* No entry for given index? Make sure radix tree is big enough. */
+-	if (!entry || pmd_downgrade) {
+-		int err;
+-
+-		if (pmd_downgrade) {
+-			/*
+-			 * Make sure 'entry' remains valid while we drop
+-			 * xa_lock.
+-			 */
+-			entry = lock_slot(&xas);
+-		}
+-
+-		xa_unlock_irq(&mapping->pages);
++	if (pmd_downgrade) {
++		entry = lock_slot(&xas);
+ 		/*
+ 		 * Besides huge zero pages the only other thing that gets
+ 		 * downgraded are empty entries which don't need to be
+ 		 * unmapped.
+ 		 */
+-		if (pmd_downgrade && dax_is_zero_entry(entry))
++		if (dax_is_zero_entry(entry)) {
++			xas_pause(&xas);
++			xas_unlock_irq(&xas);
+ 			unmap_mapping_range(mapping,
+ 				(index << PAGE_SHIFT) & PMD_MASK, PMD_SIZE, 0);
+-
+-		err = radix_tree_preload(
+-				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
+-		if (err) {
+-			if (pmd_downgrade)
+-				put_locked_mapping_entry(mapping, index);
+-			return ERR_PTR(err);
++			xas_lock_irq(&xas);
+ 		}
+-		xa_lock_irq(&mapping->pages);
+-
+-		if (!entry) {
+-			/*
+-			 * We needed to drop the pages lock while calling
+-			 * radix_tree_preload() and we didn't have an entry to
+-			 * lock.  See if another thread inserted an entry at
+-			 * our index during this time.
+-			 */
+-			entry = __radix_tree_lookup(&mapping->pages, index,
+-					NULL, &slot);
+-			if (entry) {
+-				radix_tree_preload_end();
+-				xa_unlock_irq(&mapping->pages);
+-				goto restart;
+-			}
+-		}
+-
+-		if (pmd_downgrade) {
+-			radix_tree_delete(&mapping->pages, index);
+-			mapping->nrexceptional--;
+-			dax_wake_entry(&xas, entry, true);
+-		}
+-
++		xas_store(&xas, NULL);
++		mapping->nrexceptional--;
++		dax_wake_entry(&xas, entry, true);
++	}
++	if (!entry || pmd_downgrade) {
+ 		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
+-
+-		err = __radix_tree_insert(&mapping->pages, index,
+-				dax_radix_order(entry), entry);
+-		radix_tree_preload_end();
+-		if (err) {
+-			xa_unlock_irq(&mapping->pages);
+-			/*
+-			 * Our insertion of a DAX entry failed, most likely
+-			 * because we were inserting a PMD entry and it
+-			 * collided with a PTE sized entry at a different
+-			 * index in the PMD range.  We haven't inserted
+-			 * anything into the radix tree and have no waiters to
+-			 * wake.
+-			 */
+-			return ERR_PTR(err);
+-		}
+-		/* Good, we have inserted empty locked entry into the tree. */
+-		mapping->nrexceptional++;
+-		xa_unlock_irq(&mapping->pages);
+-		return entry;
++		xas_store(&xas, entry);
++		if (!xas_error(&xas))
++			mapping->nrexceptional++;
++	} else {
++		entry = lock_slot(&xas);
+ 	}
+-	entry = lock_slot(&xas);
+  out_unlock:
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
++	if (xas_nomem(&xas, GFP_NOIO))
++		goto restart;
+ 	return entry;
+ }
+ 
+@@ -682,7 +636,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	 * worry about partial PMD writebacks.
+ 	 */
+ 	sector = dax_radix_sector(entry);
+-	size = PAGE_SIZE << dax_radix_order(entry);
++	size = PAGE_SIZE << dax_entry_order(entry);
+ 
+ 	id = dax_read_lock();
+ 	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
 -- 
 2.15.1
 
