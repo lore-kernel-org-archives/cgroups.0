@@ -1,40 +1,35 @@
-From: =?UTF-8?q?Christopher=20D=C3=ADaz=20Riveros?= <chrisadr-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH-next] MEMCG: memcontrol: make local symbol static
-Date: Thu, 18 Jan 2018 14:33:27 -0500
-Message-ID: <20180118193327.14200-1-chrisadr@gentoo.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [RFC] blk-throttle: export io_serviced_recursive,
+ io_service_bytes_recursive
+Date: Thu, 18 Jan 2018 12:56:13 -0700
+Message-ID: <7456ac3f-e7e4-e91d-ef09-83e7c46cb2bd@kernel.dk>
+References: <20171211145621.GA2115@localhost.didichuxing.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=YfN3GopeOkjq0Il0c4F3swr+Odke2M87Jt4Fb0NHz+A=;
+        b=xJHg+i2LbnFDd+BrLE6YpO4HbTx3bKbkTybRaqzdECg3bVw/ZX506OxzarLwO1UURd
+         NBGT0fZBxlIIq/j4NDvbOPjwwoVADGrCIVHCDGv+dp2mIKz+y2GRduBG7vzPbQOCjYXs
+         9bWcBPVlCRNSF5zsIHkD29hGbrcTCa6Q2G8q78DLVKCI/LwIaA1JbeKdkEd3W0DB+H6h
+         L+c+OMf74x9N/HSsomXH5MOFweNJfcXzgTBL7dLNnV9mdOgGSa2HLqToOimAPGhDAjN5
+         9cVazOjHIYQdaMK8w+63eHanCb8pYb7KRmdHGapzrBg1+JKj8rU2sFq2GCL17fscZZLE
+         44lw==
+In-Reply-To: <20171211145621.GA2115@localhost.didichuxing.com>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: =?UTF-8?q?Christopher=20D=C3=ADaz=20Riveros?= <chrisadr-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: tj@kernel.org, shli@kernel.org, lizefan@huawei.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-Fixes the following sparse warning:
+On 12/11/17 7:56 AM, weiping zhang wrote:
+> export these two interface for cgroup-v1.
 
-mm/memcontrol.c:1097:14: warning:
-  symbol 'memcg1_stats' was not declared. Should it be static?
+Applied, thanks.
 
-Signed-off-by: Christopher D=C3=ADaz Riveros <chrisadr-aBrp7R+bbdUdnm+yROfE=
-0A@public.gmane.org>
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-- 
+Jens Axboe
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c3d1eaef752d..c992491dfb03 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1094,7 +1094,7 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgro=
-up *memcg)
- 	return false;
- }
-=20
--unsigned int memcg1_stats[] =3D {
-+static const unsigned int memcg1_stats[] =3D {
- 	MEMCG_CACHE,
- 	MEMCG_RSS,
- 	MEMCG_RSS_HUGE,
---=20
-2.15.1
