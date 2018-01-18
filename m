@@ -1,67 +1,45 @@
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH v6 00/99] XArray version 6
-Date: Thu, 18 Jan 2018 17:07:50 +0100
-Message-ID: <20180118160749.GP13726@twin.jikos.cz>
-References: <20180117202203.19756-1-willy@infradead.org>
-Reply-To: dsterba@suse.cz
+From: weiping zhang <zwp10758-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC] blk-throttle: export io_serviced_recursive, io_service_bytes_recursive
+Date: Thu, 18 Jan 2018 23:41:06 +0800
+Message-ID: <CAA70yB6WJcNQqfF7SiT19qJ_sBY-DDDn5kzNmW24SSBgyTLEsw@mail.gmail.com>
+References: <20171211145621.GA2115@localhost.didichuxing.com> <20171211151705.GG2421075@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=JHS0L2BGNpvM/S6ROUojlSnN0tsMtHofEn2SuhmcGHg=;
+        b=KqTMEze133mPw4lKbUkmckl7AEXA9DwYYSub9LcFEhz97FYNz3jEufEfLbSoAViLk9
+         a1p57nxFkiICQKxiCkT9xLW7eL0O0UJTBie0Mq038eQW+ajlnp1sk1CwmQ2CZIYtBmxz
+         LUS4Pd5flN2IBmzbHfGwhM85qaozFkfbEetmh3X/S/zAZTy+l23Nr+KVfkDGYwNWnr/T
+         EHjgF35tThEydOJ4zvsBTy+1yo7wkMDsXLYMq6tvkswf4D5jtFIuGAHMWJPy6GdNk3aV
+         PS1+Om/jB+tT3EA9QNDVWUaj2PC26PX+drUeuGP/6/kvW21m7k30PXADh0+Igp38EBCR
+         8XOw==
+In-Reply-To: <20171211151705.GG2421075-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-sh@vger.kernel.org, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, linux-remoteproc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, Stefano Stabellini <sstabellini@kernel.org>, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, linux-btrfs@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-T24gV2VkLCBKYW4gMTcsIDIwMTggYXQgMTI6MjA6MjRQTSAtMDgwMCwgTWF0dGhldyBXaWxjb3gg
-d3JvdGU6Cj4gRnJvbTogTWF0dGhldyBXaWxjb3ggPG1hd2lsY294QG1pY3Jvc29mdC5jb20+Cj4g
-Cj4gVGhpcyB2ZXJzaW9uIG9mIHRoZSBYQXJyYXkgaGFzIG5vIGtub3duIGJ1Z3MuCgpJJ3ZlIGJv
-b3RlZCB0aGlzIHBhdGNoc2V0IG9uIDIgYm94ZXMsIGJvdGggaGFkIHJhbmRvbSBwcm9ibGVtcyBk
-dXJpbmcKYm9vdC4gT24gb25lIEkgd2FzIG5vdCBhYmxlIHRvIGRpYWdub3NlIHdoYXQgd2VudCB3
-cm9uZy4gT24gdGhlIG90aGVyCm9uZSB0aGUgc3lzdGVtIGJvb3RlZCB1cCB0byB1c2Vyc3BhY2Ug
-YW5kIGZhaWxlZCB0byBzZXQgdXAgbmV0d29ya2luZy4KU2VyaWFsIGNvbnNvbGUgd29ya2VkIGFu
-ZCB0aGUgbmV0d29yayBzZXJ2aWNlIGNvbXBsYWluZWQgYWJvdXQgd3JvbmcKZm9ybWF0IG9mIC91
-c3Ivc2hhcmUvd2lja2VkL3NjaGVtYS90ZWFtLnhtbCAuIFRoYXQncyBzdXBwb3NlZCB0byBiZSBh
-CnRleHQgZmlsZSwgdGhvdWdoIGhleGR1bXAgc2hvd2VkIG1lIGxvdHMgb2YgemVyb3MuIFRyaW1t
-ZWQgb3V0cHV0OgoKMDAwMDAwMDAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAgfC4uLi4uLi4uLi4uLi4uLi58CioKKHNpbWlsYXIgb3V0cHV0IGhlcmUp
-CioKMDAwMDBhMTAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAxMSAwMyAwMCAwMCAwMCAwMCAw
-MCAwMCAgfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAwYTIwICAyMCA4YiA3ZiAwMSAwMCAwMCAwMCAw
-MCAgYTAgODQgN2QgMDEgMDAgMDAgMDAgMDAgIHwgLi4uLi4uLi4ufS4uLi4ufAowMDAwMGEzMCAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIDEwIDg5IDdmIDAxIDAwIDAwIDAwIDAwICB8Li4uLi4u
-Li4uLi4uLi4uLnwKMDAwMDBhNDAgIGEwIDg0IDdkIDAxIDAwIDAwIDAwIDAwICAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAgfC4ufS4uLi4uLi4uLi4uLi58CjAwMDAwYTUwICA4MCA4YSA3ZiAwMSAw
-MCAwMCAwMCAwMCAgZTAgY2YgN2QgMDEgMDAgMDAgMDAgMDAgIHwuLi4uLi4uLi4ufS4uLi4ufAow
-MDAwMGE2MCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIDYwIDhhIDdmIDAxIDAwIDAwIDAwIDAw
-ICB8Li4uLi4uLi5gLi4uLi4uLnwKMDAwMDBhNzAgIGEwIDg0IDdkIDAxIDAwIDAwIDAwIDAwICAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgfC4ufS4uLi4uLi4uLi4uLi58CjAwMDAwYTgwICAzMCA4
-OSA3ZiAwMSAwMCAwMCAwMCAwMCAgYTAgODQgN2QgMDEgMDAgMDAgMDAgMDAgIHwwLi4uLi4uLi4u
-fS4uLi4ufAowMDAwMGE5MCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIDYwIGYyIDdmIDAxIDAw
-IDAwIDAwIDAwICB8Li4uLi4uLi5gLi4uLi4uLnwKMDAwMDBhYTAgIDQwIGZkIDdlIDAxIDAwIDAw
-IDAwIDAwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgfEAufi4uLi4uLi4uLi4uLi58CjAwMDAw
-YWIwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIHwu
-Li4uLi4uLi4uLi4uLi4ufAoqCjAwMDAxMDAwICAzZSAwYSAyMCAyMCAzYyAyZiA2ZCA2NSAgNzQg
-NjggNmYgNjQgM2UgMGEgM2MgMmYgIHw+LiAgPC9tZXRob2Q+LjwvfAowMDAwMTAxMCAgNzMgNjUg
-NzIgNzYgNjkgNjMgNjUgM2UgIDBhICAgICAgICAgICAgICAgICAgICAgICB8c2VydmljZT4ufAoK
-VGhlcmUncyBzb21ldGhpbmcgYXQgdGhlIGVuZCBvZiB0aGUgZmlsZSB0aGF0IGRvZXMgbG9vayBs
-aWtlIGEgeG1sIGZyYWdtZW50LgpUaGUgZmlsZSBzaXplIGlzIDQxMjEuIFRoaXMgbG9va3MgdG8g
-bWUgbGlrZSBleGFjdGx5IHRoZSBmaXJzdCBwYWdlIG9mIHRoZSBmaWxlCndhcyBub3QgcmVhZCBj
-b3JyZWN0bHkuCgpUaGUgeG1sIGZpbGUgaXMgc3VwcG9zZWQgdG8gYmUgcmVhZC1vbmx5IGR1cmlu
-ZyBzdGFydHVwLCBzbyB0aGVyZSB3YXMgbm8gd3JpdGUKaW4gZmxpZ2h0LiAncnBtIC1WdicgcmVw
-b3J0ZWQgb25seSB0aGlzIGZpbGUgY29ycnVwdGVkLiBCb290aW5nIHRvIG90aGVyCmtlcm5lbHMg
-d2FzIGZpbmUsIG5ldHdvcmsgdXAsIGFuZCB0aGUgZmlsZSB3YXMgb2sgYWdhaW4uIFNvIHRoZQpj
-b3JydXB0aW9uIGhhcHBlbmVkIG9ubHkgaW4gbWVtb3J5LCB3aGljaCBsZWFkcyBtZSB0byBjb25j
-bHVzaW9uIHRoYXQKdGhlcmUgaXMgYW4gdW5rbm93biBidWcgaW4geW91ciBwYXRjaHNldC4KX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4IG1h
-aWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMu
-ZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
+2017-12-11 23:17 GMT+08:00 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
+> On Mon, Dec 11, 2017 at 10:56:25PM +0800, weiping zhang wrote:
+>> export these two interface for cgroup-v1.
+>>
+>> Signed-off-by: weiping zhang <zhangweiping-j11cvHKnkmPwvR0lvYjcXw@public.gmane.org>
+>
+> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>
+
+Hi Jens,
+
+Have you got time to check this patch ?
+
+Thanks
+
+> Thanks.
+>
+> --
+> tejun
