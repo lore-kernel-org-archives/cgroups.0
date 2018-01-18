@@ -1,47 +1,67 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH-next] MEMCG: memcontrol: make local symbol static
-Date: Thu, 18 Jan 2018 07:14:06 -0800
-Message-ID: <1516288446.14023.0.camel@perches.com>
-References: <20180118150805.18521-1-chrisadr@gentoo.org>
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH v6 00/99] XArray version 6
+Date: Thu, 18 Jan 2018 17:07:50 +0100
+Message-ID: <20180118160749.GP13726@twin.jikos.cz>
+References: <20180117202203.19756-1-willy@infradead.org>
+Reply-To: dsterba@suse.cz
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20180118150805.18521-1-chrisadr@gentoo.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Christopher =?ISO-8859-1?Q?D=EDaz?= Riveros <chrisadr@gentoo.org>, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-s390@vger.kernel.org, David Howells <dhowells@redhat.com>, linux-nilfs@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-sh@vger.kernel.org, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, linux-remoteproc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, Stefano Stabellini <sstabellini@kernel.org>, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, linux-btrfs@vger.kernel.org
 
-On Thu, 2018-01-18 at 10:08 -0500, Christopher D=EDaz Riveros wrote:
-> Fixes the following sparse warning:
->=20
-> mm/memcontrol.c:1097:14: warning:
->   symbol 'memcg1_stats' was not declared. Should it be static?
->=20
-> Signed-off-by: Christopher D=EDaz Riveros <chrisadr@gentoo.org>
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-[]
-> @@ -1094,7 +1094,7 @@ static bool mem_cgroup_wait_acct_move(struct mem_cg=
-roup *memcg)
->  	return false;
->  }
-> =20
-> -unsigned int memcg1_stats[] =3D {
-> +static unsigned int memcg1_stats[] =3D {
-
-This should almost certainly be static const
-
->  	MEMCG_CACHE,
->  	MEMCG_RSS,
->  	MEMCG_RSS_HUGE,
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+T24gV2VkLCBKYW4gMTcsIDIwMTggYXQgMTI6MjA6MjRQTSAtMDgwMCwgTWF0dGhldyBXaWxjb3gg
+d3JvdGU6Cj4gRnJvbTogTWF0dGhldyBXaWxjb3ggPG1hd2lsY294QG1pY3Jvc29mdC5jb20+Cj4g
+Cj4gVGhpcyB2ZXJzaW9uIG9mIHRoZSBYQXJyYXkgaGFzIG5vIGtub3duIGJ1Z3MuCgpJJ3ZlIGJv
+b3RlZCB0aGlzIHBhdGNoc2V0IG9uIDIgYm94ZXMsIGJvdGggaGFkIHJhbmRvbSBwcm9ibGVtcyBk
+dXJpbmcKYm9vdC4gT24gb25lIEkgd2FzIG5vdCBhYmxlIHRvIGRpYWdub3NlIHdoYXQgd2VudCB3
+cm9uZy4gT24gdGhlIG90aGVyCm9uZSB0aGUgc3lzdGVtIGJvb3RlZCB1cCB0byB1c2Vyc3BhY2Ug
+YW5kIGZhaWxlZCB0byBzZXQgdXAgbmV0d29ya2luZy4KU2VyaWFsIGNvbnNvbGUgd29ya2VkIGFu
+ZCB0aGUgbmV0d29yayBzZXJ2aWNlIGNvbXBsYWluZWQgYWJvdXQgd3JvbmcKZm9ybWF0IG9mIC91
+c3Ivc2hhcmUvd2lja2VkL3NjaGVtYS90ZWFtLnhtbCAuIFRoYXQncyBzdXBwb3NlZCB0byBiZSBh
+CnRleHQgZmlsZSwgdGhvdWdoIGhleGR1bXAgc2hvd2VkIG1lIGxvdHMgb2YgemVyb3MuIFRyaW1t
+ZWQgb3V0cHV0OgoKMDAwMDAwMDAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAgfC4uLi4uLi4uLi4uLi4uLi58CioKKHNpbWlsYXIgb3V0cHV0IGhlcmUp
+CioKMDAwMDBhMTAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAxMSAwMyAwMCAwMCAwMCAwMCAw
+MCAwMCAgfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAwYTIwICAyMCA4YiA3ZiAwMSAwMCAwMCAwMCAw
+MCAgYTAgODQgN2QgMDEgMDAgMDAgMDAgMDAgIHwgLi4uLi4uLi4ufS4uLi4ufAowMDAwMGEzMCAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIDEwIDg5IDdmIDAxIDAwIDAwIDAwIDAwICB8Li4uLi4u
+Li4uLi4uLi4uLnwKMDAwMDBhNDAgIGEwIDg0IDdkIDAxIDAwIDAwIDAwIDAwICAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAgfC4ufS4uLi4uLi4uLi4uLi58CjAwMDAwYTUwICA4MCA4YSA3ZiAwMSAw
+MCAwMCAwMCAwMCAgZTAgY2YgN2QgMDEgMDAgMDAgMDAgMDAgIHwuLi4uLi4uLi4ufS4uLi4ufAow
+MDAwMGE2MCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIDYwIDhhIDdmIDAxIDAwIDAwIDAwIDAw
+ICB8Li4uLi4uLi5gLi4uLi4uLnwKMDAwMDBhNzAgIGEwIDg0IDdkIDAxIDAwIDAwIDAwIDAwICAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgfC4ufS4uLi4uLi4uLi4uLi58CjAwMDAwYTgwICAzMCA4
+OSA3ZiAwMSAwMCAwMCAwMCAwMCAgYTAgODQgN2QgMDEgMDAgMDAgMDAgMDAgIHwwLi4uLi4uLi4u
+fS4uLi4ufAowMDAwMGE5MCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIDYwIGYyIDdmIDAxIDAw
+IDAwIDAwIDAwICB8Li4uLi4uLi5gLi4uLi4uLnwKMDAwMDBhYTAgIDQwIGZkIDdlIDAxIDAwIDAw
+IDAwIDAwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgfEAufi4uLi4uLi4uLi4uLi58CjAwMDAw
+YWIwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIHwu
+Li4uLi4uLi4uLi4uLi4ufAoqCjAwMDAxMDAwICAzZSAwYSAyMCAyMCAzYyAyZiA2ZCA2NSAgNzQg
+NjggNmYgNjQgM2UgMGEgM2MgMmYgIHw+LiAgPC9tZXRob2Q+LjwvfAowMDAwMTAxMCAgNzMgNjUg
+NzIgNzYgNjkgNjMgNjUgM2UgIDBhICAgICAgICAgICAgICAgICAgICAgICB8c2VydmljZT4ufAoK
+VGhlcmUncyBzb21ldGhpbmcgYXQgdGhlIGVuZCBvZiB0aGUgZmlsZSB0aGF0IGRvZXMgbG9vayBs
+aWtlIGEgeG1sIGZyYWdtZW50LgpUaGUgZmlsZSBzaXplIGlzIDQxMjEuIFRoaXMgbG9va3MgdG8g
+bWUgbGlrZSBleGFjdGx5IHRoZSBmaXJzdCBwYWdlIG9mIHRoZSBmaWxlCndhcyBub3QgcmVhZCBj
+b3JyZWN0bHkuCgpUaGUgeG1sIGZpbGUgaXMgc3VwcG9zZWQgdG8gYmUgcmVhZC1vbmx5IGR1cmlu
+ZyBzdGFydHVwLCBzbyB0aGVyZSB3YXMgbm8gd3JpdGUKaW4gZmxpZ2h0LiAncnBtIC1WdicgcmVw
+b3J0ZWQgb25seSB0aGlzIGZpbGUgY29ycnVwdGVkLiBCb290aW5nIHRvIG90aGVyCmtlcm5lbHMg
+d2FzIGZpbmUsIG5ldHdvcmsgdXAsIGFuZCB0aGUgZmlsZSB3YXMgb2sgYWdhaW4uIFNvIHRoZQpj
+b3JydXB0aW9uIGhhcHBlbmVkIG9ubHkgaW4gbWVtb3J5LCB3aGljaCBsZWFkcyBtZSB0byBjb25j
+bHVzaW9uIHRoYXQKdGhlcmUgaXMgYW4gdW5rbm93biBidWcgaW4geW91ciBwYXRjaHNldC4KX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4IG1h
+aWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMu
+ZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
