@@ -1,134 +1,103 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 1/2] mm/memcontrol.c: try harder to decrease
- [memory,memsw].limit_in_bytes
-Date: Fri, 19 Jan 2018 14:32:27 +0100
-Message-ID: <20180119133227.GC6584@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v5 2/2] mm/memcontrol.c: Reduce reclaim retries in
+ mem_cgroup_resize_limit()
+Date: Fri, 19 Jan 2018 14:35:10 +0100
+Message-ID: <20180119133510.GD6584@dhcp22.suse.cz>
 References: <20171220102429.31601-1-aryabinin@virtuozzo.com>
  <20180119132544.19569-1-aryabinin@virtuozzo.com>
+ <20180119132544.19569-2-aryabinin@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20180119132544.19569-1-aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20180119132544.19569-2-aryabinin@virtuozzo.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
 
-On Fri 19-01-18 16:25:43, Andrey Ryabinin wrote:
-> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
-> pages on each iteration.  This makes it practically impossible to decrease
-> limit of memory cgroup.  Tasks could easily allocate back 32 pages, so we
-> can't reduce memory usage, and once retry_count reaches zero we return
-> -EBUSY.
+On Fri 19-01-18 16:25:44, Andrey Ryabinin wrote:
+> Currently mem_cgroup_resize_limit() retries to set limit after reclaiming
+> 32 pages. It makes more sense to reclaim needed amount of pages right away.
 > 
-> Easy to reproduce the problem by running the following commands:
+> This works noticeably faster, especially if 'usage - limit' big.
+> E.g. bringing down limit from 4G to 50M:
 > 
->   mkdir /sys/fs/cgroup/memory/test
->   echo $$ >> /sys/fs/cgroup/memory/test/tasks
->   cat big_file > /dev/null &
->   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
->   -bash: echo: write error: Device or resource busy
+> Before:
+>  # perf stat echo 50M > memory.limit_in_bytes
 > 
-> Instead of relying on retry_count, keep retrying the reclaim until the
-> desired limit is reached or fail if the reclaim doesn't make any progress
-> or a signal is pending.
+>      Performance counter stats for 'echo 50M':
+> 
+>             386.582382      task-clock (msec)         #    0.835 CPUs utilized
+>                  2,502      context-switches          #    0.006 M/sec
+> 
+>            0.463244382 seconds time elapsed
+> 
+> After:
+>  # perf stat echo 50M > memory.limit_in_bytes
+> 
+>      Performance counter stats for 'echo 50M':
+> 
+>             169.403906      task-clock (msec)         #    0.849 CPUs utilized
+>                     14      context-switches          #    0.083 K/sec
+> 
+>            0.199536900 seconds time elapsed
 
-Thanks for splitting the original patch. I am OK with this part.
+But I am not going ack this one. As already stated this has a risk
+of over-reclaim if there a lot of charges are freed along with this
+shrinking. This is more of a theoretical concern so I am _not_ going to
+nack. If we ever see such a problem then reverting this patch should be
+pretty straghtforward.
 
-> Signed-off-by: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
+> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+> Cc: Shakeel Butt <shakeelb@google.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 > ---
->  mm/memcontrol.c | 42 ++++++------------------------------------
->  1 file changed, 6 insertions(+), 36 deletions(-)
+>  mm/memcontrol.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 13aeccf32c2e..9d987f3e79dc 100644
+> index 9d987f3e79dc..09bac2df2f12 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -1176,20 +1176,6 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
->  }
->  
->  /*
-> - * This function returns the number of memcg under hierarchy tree. Returns
-> - * 1(self count) if no children.
-> - */
-> -static int mem_cgroup_count_children(struct mem_cgroup *memcg)
-> -{
-> -	int num = 0;
-> -	struct mem_cgroup *iter;
-> -
-> -	for_each_mem_cgroup_tree(iter, memcg)
-> -		num++;
-> -	return num;
-> -}
-> -
-> -/*
->   * Return the memory (and swap, if configured) limit for a memcg.
->   */
->  unsigned long mem_cgroup_get_limit(struct mem_cgroup *memcg)
-> @@ -2462,24 +2448,11 @@ static DEFINE_MUTEX(memcg_limit_mutex);
+> @@ -2448,6 +2448,7 @@ static DEFINE_MUTEX(memcg_limit_mutex);
 >  static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
 >  				   unsigned long limit, bool memsw)
 >  {
-> -	unsigned long curusage;
-> -	unsigned long oldusage;
+> +	unsigned long nr_pages;
 >  	bool enlarge = false;
-> -	int retry_count;
 >  	int ret;
 >  	bool limits_invariant;
->  	struct page_counter *counter = memsw ? &memcg->memsw : &memcg->memory;
->  
-> -	/*
-> -	 * For keeping hierarchical_reclaim simple, how long we should retry
-> -	 * is depends on callers. We set our retry-count to be function
-> -	 * of # of children which we should visit in this loop.
-> -	 */
-> -	retry_count = MEM_CGROUP_RECLAIM_RETRIES *
-> -		      mem_cgroup_count_children(memcg);
-> -
-> -	oldusage = page_counter_read(counter);
-> -
->  	do {
->  		if (signal_pending(current)) {
->  			ret = -EINTR;
-> @@ -2506,15 +2479,12 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+> @@ -2479,8 +2480,9 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
 >  		if (!ret)
 >  			break;
 >  
-> -		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, !memsw);
-> -
-> -		curusage = page_counter_read(counter);
-> -		/* Usage is reduced ? */
-> -		if (curusage >= oldusage)
-> -			retry_count--;
-> -		else
-> -			oldusage = curusage;
-> -	} while (retry_count);
-> +		if (!try_to_free_mem_cgroup_pages(memcg, 1,
-> +					GFP_KERNEL, !memsw)) {
-> +			ret = -EBUSY;
-> +			break;
-> +		}
-> +	} while (true);
->  
->  	if (!ret && enlarge)
->  		memcg_oom_recover(memcg);
+> -		if (!try_to_free_mem_cgroup_pages(memcg, 1,
+> -					GFP_KERNEL, !memsw)) {
+> +		nr_pages = max_t(long, 1, page_counter_read(counter) - limit);
+> +		if (!try_to_free_mem_cgroup_pages(memcg, nr_pages,
+> +						GFP_KERNEL, !memsw)) {
+>  			ret = -EBUSY;
+>  			break;
+>  		}
 > -- 
 > 2.13.6
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
