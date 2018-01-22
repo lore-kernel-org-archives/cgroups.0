@@ -1,44 +1,74 @@
-From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [BUG] cgroup lockup while upgrading udev on debian
-Date: Mon, 22 Jan 2018 17:46:36 +0100
-Message-ID: <20180122164636.GA24468@kroah.com>
-References: <20180121213108.4218693b@gandalf.local.home>
- <20180122163051.GE1096857@devbig577.frc2.facebook.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v4.15-rc9] sched, cgroup: Don't reject lower cpu.max on
+ ancestors
+Date: Mon, 22 Jan 2018 11:26:18 -0800
+Message-ID: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=qb5iT4jk+y1VmQ1Nw1bi0Iz/JWEhGHjcDcMsDzKiiTA=;
+        b=m1xeBZ56PX1WUvV5sLIxcgQenO34zJDRsn0cx9OyL5k9ZYXiz50vQ7nPCp1i5nAAqw
+         CueOFSEsXudTNsiYWPke5lIRvdf2y/z7PjwuMnFSt2dRzo2mvnqrBRQWBZPBWsoxpTRF
+         Ko4gF6RvrNbDNVSgF/+o4Uv+pAxSPyGwo3KJwyNRnlPqyOk/vBrIOtEk7+s4rphUps1H
+         QG6oI6AvY5k2Y92Ukl3YAOu1zRWWGlmpEBh1jxAs2cYhl0A4gUKwxzZxN2zJkzOF5vgc
+         oJbicJcyNxuR0TnzFHEBKWpn7N4dF16K51Ki8mso+R9+Q9HzhpIbXcVbdgOa7KiMOYvf
+         cQDA==
 Content-Disposition: inline
-In-Reply-To: <20180122163051.GE1096857-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Mon, Jan 22, 2018 at 08:30:51AM -0800, Tejun Heo wrote:
-> Hello, Steven.
-> 
-> On Sun, Jan 21, 2018 at 09:31:08PM -0500, Steven Rostedt wrote:
-> > While upgrading my system, it locked up while upgrading udev. It locked
-> > up on vanilla v4.14.12, and it also locked up on debian's 4.14 kernel
-> > as well. When I booted debian's 4.9 kernel, it upgraded fine.
-> > 
-> > Note, this is my main server and not a development box. It is not
-> > something I'm going to run bisects or other tests on. I don't even have
-> > it logging to serial console (hence the photo). It's serials are hooked
-> > to my test boxes. That is, it receives logs, it's not set up to send
-> > them.
-> > 
-> > Attached in the photo of the crash that happened when I did:
-> > 
-> >  # dpkg --configure udev
-> 
-> It looks like the same bug which was fixed by 74d0833c659a ("cgroup:
-> fix css_task_iter crash on CSS_TASK_ITER_PROC").  The bug got
-> introduced durinv v4.14 cycle and triggers when cgroup1 and cgroup2
-> are used at the same time, which the recent versions of systemd does
-> when in cgroup1 mode.
+While adding cgroup2 interface for the cpu controller, 0d5936344f30
+("sched: Implement interface for cgroup unified hierarchy") forgot to
+update input validation and left it to reject cpu.max config if any
+descendant has set a higher value.
 
-That fix ended up in 4.14.14, so 4.14.12 is a bit too old Steven :)
+cgroup2 officially supports delegation and a descendant must not be
+able to restrict what its ancestors can configure.  For absolute
+limits such as cpu.max and memory.max, this means that the config at
+each level should only act as the upper limit at that level and
+shouldn't interfere with what other cgroups can configure.
 
-greg k-h
+This patch updates config validation on cgroup2 so that the cpu
+controller follows the same convention.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Fixes: 0d5936344f30 ("sched: Implement interface for cgroup unified hierarchy")
+---
+ kernel/sched/core.c |   15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index a7bf32a..e06e484 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -6610,13 +6610,18 @@ static int tg_cfs_schedulable_down(struct task_group *tg, void *data)
+ 		parent_quota = parent_b->hierarchical_quota;
+ 
+ 		/*
+-		 * Ensure max(child_quota) <= parent_quota, inherit when no
++		 * Ensure max(child_quota) <= parent_quota.  On cgroup2,
++		 * always take the min.  On cgroup1, only inherit when no
+ 		 * limit is set:
+ 		 */
+-		if (quota == RUNTIME_INF)
+-			quota = parent_quota;
+-		else if (parent_quota != RUNTIME_INF && quota > parent_quota)
+-			return -EINVAL;
++		if (cgroup_subsys_on_dfl(cpu_cgrp_subsys)) {
++			quota = min(quota, parent_quota);
++		} else {
++			if (quota == RUNTIME_INF)
++				quota = parent_quota;
++			else if (parent_quota != RUNTIME_INF && quota > parent_quota)
++				return -EINVAL;
++		}
+ 	}
+ 	cfs_b->hierarchical_quota = quota;
+ 
