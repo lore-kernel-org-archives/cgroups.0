@@ -1,78 +1,67 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [patch -mm 3/4] mm, memcg: replace memory.oom_group with policy
- tunable
-Date: Sat, 20 Jan 2018 04:32:51 -0800
-Message-ID: <20180120123251.GB1096857@devbig577.frc2.facebook.com>
-References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
- <alpine.DEB.2.10.1801161814130.28198@chino.kir.corp.google.com>
- <20180117154155.GU3460072@devbig577.frc2.facebook.com>
- <alpine.DEB.2.10.1801171348190.86895@chino.kir.corp.google.com>
- <alpine.DEB.2.10.1801191251080.177541@chino.kir.corp.google.com>
+From: Matt Roper <matthew.d.roper@intel.com>
+Subject: Re: [PATCH RFC 8/9] drm/i915: Allow default context
+ priority to be set via cgroup parameter
+Date: Mon, 22 Jan 2018 07:57:14 -0800
+Message-ID: <20180122155714.GF31510@mdroper-desk.amr.corp.intel.com>
+References: <20180120015141.10118-1-matthew.d.roper@intel.com>
+ <20180120015141.10118-9-matthew.d.roper@intel.com>
+ <151644097064.13504.16277692057900569412@mail.alporthouse.com>
+ <151644481966.13504.7137241044794274937@mail.alporthouse.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=QKAO+sySSh47OvkXRYpc1pYjzk3Ze42qmkL6LiGc4j8=;
-        b=T/K2glxAfwcqkL1EMXP7P+F38kHk2/nCaR37GiLeH5KvJTakaRQ3RfqYCOdLCcpSb7
-         JShNoppAEaL9InunpKnVzvTVDBvNai7NKjOG3qpgASSJLJSxRlfGjArauWkYCwyk3/qp
-         Uq7EKtOWVRH0vl9n/TTXzkpkBJFMFpiHHS1Vhs+kqdaaPlPviUdfdkWKFQZf9I3DWx/E
-         UFyRKy0denMygLe2OdnsCt0xFQtwXVj6oA7q9GnDRvNL5+sQWzG918UBa2VDjn480wh6
-         nd7JSa3nVGA1WTfCLRsdfUIuyoqecin9Hhd7pp2/9YVzryTAGS+V7Pv8GGUat9SPlRU9
-         gGeA==
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1801191251080.177541-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
+In-Reply-To: <151644481966.13504.7137241044794274937@mail.alporthouse.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Chris Wilson <chris@chris-wilson.co.uk>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
 
-Hello, David.
-
-On Fri, Jan 19, 2018 at 12:53:41PM -0800, David Rientjes wrote:
-> Hearing no response, I'll implement this as a separate tunable in a v2 
-> series assuming there are no better ideas proposed before next week.  One 
-> of the nice things about a separate tunable is that an admin can control 
-> the overall policy and they can delegate the mechanism (killall vs one 
-> process) to a user subtree.  I agree with your earlier point that killall 
-> vs one process is a property of the workload and is better defined 
-> separately.
-
-If I understood your arguments correctly, the reasons that you thought
-your selectdion policy changes must go together with Roman's victim
-action were two-fold.
-
-1. You didn't want a separate knob for group oom behavior and wanted
-   it to be combined with selection policy.  I'm glad that you now
-   recognize that this would be the wrong design choice.
-
-2. The current selection policy may be exploited by delegatee and
-   strictly hierarchical seleciton should be available.  We can debate
-   the pros and cons of different heuristics; however, to me, the
-   followings are clear.
-
-   * Strictly hierarchical approach can't replace the current policy.
-     It doesn't work well for a lot of use cases.
-
-   * OOM victim selection policy has always been subject to changes
-     and improvements.
-
-I don't see any blocker here.  The issue you're raising can and should
-be handled separately.
-
-In terms of interface, what makes an interface bad is when the
-purposes aren't crystalized enough and different interface pieces fail
-to clearnly encapsulate what's actually necessary.
-
-Here, whether a workload can survive being killed piece-wise or not is
-an inherent property of the workload and a pretty binary one at that.
-I'm not necessarily against changing it to take string inputs but
-don't see rationales for doing so yet.
-
-Thanks.
-
--- 
-tejun
+T24gU2F0LCBKYW4gMjAsIDIwMTggYXQgMTA6NDA6MTlBTSArMDAwMCwgQ2hyaXMgV2lsc29uIHdy
+b3RlOgo+IFF1b3RpbmcgQ2hyaXMgV2lsc29uICgyMDE4LTAxLTIwIDA5OjM2OjEwKQo+ID4gUXVv
+dGluZyBNYXR0IFJvcGVyICgyMDE4LTAxLTIwIDAxOjUxOjQwKQo+ID4gPiBHUFUgY29udGV4dHMg
+YXJlIHVzdWFsbHkgY3JlYXRlZCB3aXRoICJub3JtYWwiIHByaW9yaXR5IGFzIGEgc3RhcnRpbmcg
+cG9pbnQgYW5kCj4gPiA+IHRoZW4gbWF5IGJlIGFkanVzdGVkIGZyb20gdGhlaXIgZWl0aGVyIHZp
+YSBleHBsaWNpdCBtZXRob2RzIChjb250ZXh0X3NldF9wYXJhbSkKPiA+ID4gb3IgaW1wbGljaXQg
+bWV0aG9kcyAoYm9vc3RzL3BlbmFsaXphdGlvbiBkdWUgdG8gcnVudGltZSBiZWhhdmlvcikuICBM
+ZXQncyBhbGxvdwo+ID4gPiBhIHN5c3RlbSBpbnRlZ3JhdG9yIHRvIG92ZXJyaWRlIHRoaXMgc3Rh
+cnRpbmcgR1BVIHByaW9yaXR5IGZvciBhIGdyb3VwIG9mCj4gPiA+IHByb2Nlc3NlcyBieSBzZXR0
+aW5nIGEgcGFyYW1ldGVyIG9uIHRoZSBjZ3JvdXAgdGhhdCB0aGVzZSBwcm9jZXNzZXMgYmVsb25n
+IHRvLgo+ID4gCj4gPiBZb3UgYXJlIHN0aWxsIGFsbG93aW5nIGEgcHJvY2VzcyB0byB1bmRvIHRo
+ZSBjZ3JvdXAgYnkgY2hhbmdpbmcgaXRzCj4gPiBvd24gcHJpb3JpdHkuIFdoYXQgeW91IHdhbnQg
+SSB0aGluayBpcyBhIHByaW9yaXR5LW9mZnNldCBvciBzb21lc3VjaC4KPiAKPiBBbG9uZyB0aGlz
+IHZlaW4sIGl0J3Mgd29ydGh3aGlsZSBwb2ludGluZyBvdXQgdGhhdCB0aGUgY3VycmVudCBzY2hl
+ZHVsZXIKPiBpcyBub3QgZXZlbiBjbG9zZSB0byBiZWluZyB0aGUgY2dyb3VwLWVuYWJsZWQgQ0ZT
+IGltcGxlbWVudGF0aW9uIGl0Cj4gbmVlZHMgdG8gYmUgdG8gY2FsbCBpdHNlbGYgYSBzY2hlZHVs
+ZXIuIChJdCdzIG1vcmUgb3IgbGVzcyBhIG5vLW9wCj4gc2NoZWR1bGVyLikgSXQgbWF5IGJlIHBy
+ZW1hdHVyZSB0byBzdGFydCBleHBvc2luZyBob29rcyBpbnRvIGl0Lgo+IC1DaHJpcwoKSSB0aGlu
+ayB0aGF0IHByb2JhYmx5IGRlcGVuZHMgYSBiaXQgb24gd2hhdCB5b3UgbmVlZCBmcm9tIGEgInNj
+aGVkdWxlci4iClRoZSBjdXJyZW50IGk5MTUgc2NoZWR1bGVyIGlzbid0IGZhaXIgKGkuZS4sIGl0
+IGFsbG93cyBoaWdoZXIgcHJpb3JpdHkKcHJvY2Vzc2VzIHRvIHBvdGVudGlhbGx5IHN0YXJ2ZSBv
+dXQgbG93ZXIgcHJpb3JpdHkgcHJvY2Vzc2VzKSwgYnV0IHRoYXQKd2luZHMgdXAgYmVpbmcgZXhh
+Y3RseSB3aGF0IHdlIHdhbnQgaW4gYSBsb3Qgb2YgZW1iZWRkZWQgdXNlIGNhc2VzIHdoZXJlCnRo
+ZSBoaWdoZXIgcHJpb3JpdHkgYXBwcyB0cnVseSBuZWVkIGFic29sdXRlIHByZWNlZGVuY2Ugb3Zl
+ciBsb3dlcgpwcmlvcml0eS4gIEdyYW50ZWQsIGluIHRob3NlIGtpbmQgb2Ygc2V0dGluZ3MgdGhl
+IGhpZ2hlciBwcmlvcml0eSBhcHBzCnRlbmQgdG8gYmUgY3VyYXRlZCwgc28gdGhlcmUncyBhbHJl
+YWR5IGEgcmVhc29uYWJsZSBleHBlY3RhdGlvbiB0aGF0CnRoZXkncmUgd2VsbC1iZWhhdmVkIGFu
+ZCB3b24ndCBvdmVyY29tbWl0IHRoZSBzeXN0ZW0uCgpUaGUgc3VnZ2VzdGlvbiBvZiBzd2l0Y2hp
+bmcgdGhlIGNncm91cCB0byBnaXZlIGEgcHJpb3JpdHkgb2Zmc2V0IHZzIGEKcHJpb3JpdHkgc3Rh
+cnRpbmcgcG9pbnQgaXMgYSBnb29kIHN1Z2dlc3Rpb24gdGhvdWdoOyB0aGFua3MhCgoKTWF0dAoK
+Cj4gLS0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5z
+dWJzY3JpYmUgY2dyb3VwcyIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
+QHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtl
+cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAoKLS0gCk1hdHQgUm9wZXIKR3JhcGhpY3MgU29m
+dHdhcmUgRW5naW5lZXIKSW9URyBQbGF0Zm9ybSBFbmFibGluZyAmIERldmVsb3BtZW50CkludGVs
+IENvcnBvcmF0aW9uCig5MTYpIDM1Ni0yNzk1Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3Rz
+LmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xp
+c3RpbmZvL2ludGVsLWdmeAo=
