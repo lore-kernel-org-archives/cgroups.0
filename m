@@ -1,74 +1,115 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v4.15-rc9] sched, cgroup: Don't reject lower cpu.max on
- ancestors
-Date: Mon, 22 Jan 2018 11:26:18 -0800
-Message-ID: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch -mm 3/4] mm, memcg: replace memory.oom_group with policy
+ tunable
+Date: Mon, 22 Jan 2018 14:34:39 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1801221420120.16871@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com> <alpine.DEB.2.10.1801161814130.28198@chino.kir.corp.google.com> <20180117154155.GU3460072@devbig577.frc2.facebook.com> <alpine.DEB.2.10.1801171348190.86895@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1801191251080.177541@chino.kir.corp.google.com> <20180120123251.GB1096857@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=qb5iT4jk+y1VmQ1Nw1bi0Iz/JWEhGHjcDcMsDzKiiTA=;
-        b=m1xeBZ56PX1WUvV5sLIxcgQenO34zJDRsn0cx9OyL5k9ZYXiz50vQ7nPCp1i5nAAqw
-         CueOFSEsXudTNsiYWPke5lIRvdf2y/z7PjwuMnFSt2dRzo2mvnqrBRQWBZPBWsoxpTRF
-         Ko4gF6RvrNbDNVSgF/+o4Uv+pAxSPyGwo3KJwyNRnlPqyOk/vBrIOtEk7+s4rphUps1H
-         QG6oI6AvY5k2Y92Ukl3YAOu1zRWWGlmpEBh1jxAs2cYhl0A4gUKwxzZxN2zJkzOF5vgc
-         oJbicJcyNxuR0TnzFHEBKWpn7N4dF16K51Ki8mso+R9+Q9HzhpIbXcVbdgOa7KiMOYvf
-         cQDA==
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=ePaoWrzx13WaURwsqjTHnBzOF9SkrNZoh0T5mjIOtAg=;
+        b=MYvZ18KJiinoXZ/Cj554Xzxnc4eHpvTlJRgkdeQv58M3M2EN1ipUENaZrGZKm9CeZZ
+         GgCzSMdqfG5m2ByqECcYVcLM58PCNPCMVMudXs/v3pZId8JpptAFMGXozQnDdZfk3viT
+         6eTdB8fYm0oI2VgKKJTA1sKD/lZ8ERmKdj1aqG5g9a87d2tFFI+qwaRgBWhZUIyfrRmI
+         RRSg1wIi9RUo+4DaWT7nSpKWa3CSryyn4QSUYkUfmliRUrWSDwnUGs0GnsYa7YnVf8h+
+         LwKspFSCOiEDbRT014rCvq6zhnfmsEiySZ54YiLlo2bGmz7ozguoDEDBWYl0c5NH2QoD
+         V2WA==
+In-Reply-To: <20180120123251.GB1096857@devbig577.frc2.facebook.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-While adding cgroup2 interface for the cpu controller, 0d5936344f30
-("sched: Implement interface for cgroup unified hierarchy") forgot to
-update input validation and left it to reject cpu.max config if any
-descendant has set a higher value.
+On Sat, 20 Jan 2018, Tejun Heo wrote:
 
-cgroup2 officially supports delegation and a descendant must not be
-able to restrict what its ancestors can configure.  For absolute
-limits such as cpu.max and memory.max, this means that the config at
-each level should only act as the upper limit at that level and
-shouldn't interfere with what other cgroups can configure.
+> > Hearing no response, I'll implement this as a separate tunable in a v2 
+> > series assuming there are no better ideas proposed before next week.  One 
+> > of the nice things about a separate tunable is that an admin can control 
+> > the overall policy and they can delegate the mechanism (killall vs one 
+> > process) to a user subtree.  I agree with your earlier point that killall 
+> > vs one process is a property of the workload and is better defined 
+> > separately.
+> 
+> If I understood your arguments correctly, the reasons that you thought
+> your selectdion policy changes must go together with Roman's victim
+> action were two-fold.
+> 
+> 1. You didn't want a separate knob for group oom behavior and wanted
+>    it to be combined with selection policy.  I'm glad that you now
+>    recognize that this would be the wrong design choice.
+> 
 
-This patch updates config validation on cgroup2 so that the cpu
-controller follows the same convention.
+The memory.oom_action (or mechanism) file that I've proposed is different 
+than memory.oom_group: we want to provide a non-binary tunable to specify 
+what action that oom killer should effect.  That could be to kill all 
+processes in the subtree, similar to memory.oom_group, the local cgroup, 
+or a different mechanism.  I could propose the patchset backwards, if 
+necessary, because memory.oom_group is currently built upon a broken 
+selection heuristic.  In other words, I could propose a memory.oom_action 
+that can specify two different mechanisms that would be useful outside of 
+any different selection function.  However, since the mechanism is built 
+on top of the cgroup aware oom killer's policy, we can't merge it 
+currently without the broken logic.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Fixes: 0d5936344f30 ("sched: Implement interface for cgroup unified hierarchy")
----
- kernel/sched/core.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+> 2. The current selection policy may be exploited by delegatee and
+>    strictly hierarchical seleciton should be available.  We can debate
+>    the pros and cons of different heuristics; however, to me, the
+>    followings are clear.
+> 
+>    * Strictly hierarchical approach can't replace the current policy.
+>      It doesn't work well for a lot of use cases.
+> 
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index a7bf32a..e06e484 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -6610,13 +6610,18 @@ static int tg_cfs_schedulable_down(struct task_group *tg, void *data)
- 		parent_quota = parent_b->hierarchical_quota;
- 
- 		/*
--		 * Ensure max(child_quota) <= parent_quota, inherit when no
-+		 * Ensure max(child_quota) <= parent_quota.  On cgroup2,
-+		 * always take the min.  On cgroup1, only inherit when no
- 		 * limit is set:
- 		 */
--		if (quota == RUNTIME_INF)
--			quota = parent_quota;
--		else if (parent_quota != RUNTIME_INF && quota > parent_quota)
--			return -EINVAL;
-+		if (cgroup_subsys_on_dfl(cpu_cgrp_subsys)) {
-+			quota = min(quota, parent_quota);
-+		} else {
-+			if (quota == RUNTIME_INF)
-+				quota = parent_quota;
-+			else if (parent_quota != RUNTIME_INF && quota > parent_quota)
-+				return -EINVAL;
-+		}
- 	}
- 	cfs_b->hierarchical_quota = quota;
- 
+-ECONFUSED.  I haven't proposed any strict hierarchical approach here, 
+it's configurable by the user.
+
+>    * OOM victim selection policy has always been subject to changes
+>      and improvements.
+> 
+
+That's fine, but the selection policy introduced by any cgroup aware oom 
+killer is being specified now and is pretty clear cut: compare the usage 
+of cgroups equally based on certain criteria and choose the largest.  I 
+don't see how that could be changed or improved once the end user starts 
+using it, the heuristic has become a policy.  A single cgroup aware policy 
+doesn't work, if you don't have localized, per-cgroup control you have 
+Michal's /admins and /students example; if you don't have hierarchical, 
+subtree control you have my example of users intentionally/unintentionally 
+evading the selection logic based on using cgroups.  The policy needs to 
+be defined for subtrees.  There hasn't been any objection to that, so 
+introducing functionality that adds a completely unnecessary and broken 
+mount option and forces users to configure cgroups in a certain manner 
+that no longer exists with subtree control doesn't seem helpful.
+
+> I don't see any blocker here.  The issue you're raising can and should
+> be handled separately.
+> 
+
+It can't, because the current patchset locks the system into a single 
+selection criteria that is unnecessary and the mount option would become a 
+no-op after the policy per subtree becomes configurable by the user as 
+part of the hierarchy itself.
+
+> Here, whether a workload can survive being killed piece-wise or not is
+> an inherent property of the workload and a pretty binary one at that.
+> I'm not necessarily against changing it to take string inputs but
+> don't see rationales for doing so yet.
+> 
+
+We don't need the unnecessary level in the cgroup hierarchy that enables 
+memory.oom_group, as proposed, and serves no other purpose.  It's 
+perfectly valid for subtrees to run user executors whereas a "killall" 
+mechanism is valid for some workloads and not others.  We do not need 
+ancestor cgroups locking that decision into place.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
