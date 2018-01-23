@@ -1,71 +1,45 @@
 From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [patch -mm 3/4] mm, memcg: replace memory.oom_group with policy
  tunable
-Date: Tue, 23 Jan 2018 16:13:00 +0100
-Message-ID: <20180123151300.GP1526@dhcp22.suse.cz>
+Date: Tue, 23 Jan 2018 16:53:01 +0100
+Message-ID: <20180123155301.GS1526@dhcp22.suse.cz>
 References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
  <alpine.DEB.2.10.1801161814130.28198@chino.kir.corp.google.com>
  <20180117154155.GU3460072@devbig577.frc2.facebook.com>
- <20180117160004.GH2900@dhcp22.suse.cz>
- <alpine.DEB.2.10.1801171415200.86895@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1801171348190.86895@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1801191251080.177541@chino.kir.corp.google.com>
+ <20180120123251.GB1096857@devbig577.frc2.facebook.com>
+ <alpine.DEB.2.10.1801221420120.16871@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1801171415200.86895@chino.kir.corp.google.com>
-Sender: linux-doc-owner@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.10.1801221420120.16871@chino.kir.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: David Rientjes <rientjes@google.com>
 Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed 17-01-18 14:18:33, David Rientjes wrote:
-> On Wed, 17 Jan 2018, Michal Hocko wrote:
-> 
-> > Absolutely agreed! And moreover, there are not all that many ways what
-> > to do as an action. You just kill a logical entity - be it a process or
-> > a logical group of processes. But you have way too many policies how
-> > to select that entity. Do you want to chose the youngest process/group
-> > because all the older ones have been computing real stuff and you would
-> > lose days of your cpu time? Or should those who pay more should be
-> > protected (aka give them static priorities), or you name it...
+On Mon 22-01-18 14:34:39, David Rientjes wrote:
+> On Sat, 20 Jan 2018, Tejun Heo wrote:
+[...]
+> > I don't see any blocker here.  The issue you're raising can and should
+> > be handled separately.
 > > 
 > 
-> That's an argument for making the interface extensible, yes.
+> It can't, because the current patchset locks the system into a single 
+> selection criteria that is unnecessary and the mount option would become a 
+> no-op after the policy per subtree becomes configurable by the user as 
+> part of the hierarchy itself.
 
-And there is no interface to control the selection yet so we can develop
-one on top.
- 
-> > I am sorry, I still didn't grasp the full semantic of the proposed
-> > soluton but the mere fact it is starting by conflating selection and the
-> > action is a no go and a wrong API. This is why I've said that what you
-> > (David) outlined yesterday is probably going to suffer from a much
-> > longer discussion and most likely to be not acceptable. Your patchset
-> > proves me correct...
-> 
-> I'm very happy to change the API if there are better suggestions.  That 
-> may end up just being an memory.oom_policy file, as this implements, and 
-> separating out a new memory.oom_action that isn't a boolean value to 
-> either do a full group kill or only a single process.  Or it could be what 
-> I suggested in my mail to Tejun, such as "hierarchy killall" written to
-> memory.oom_policy, which would specify a single policy and then an 
-> optional mechanism.  With my proposed patchset, there would then be three 
-> policies: "none", "cgroup", and "tree" and one possible optional 
-> mechanism: "killall".
+This is simply not true! OOM victim selection has changed in the
+past and will be always a subject to changes in future. Current
+implementation doesn't provide any externally controlable selection
+policy and therefore the default can be assumed. Whatever that default
+means now or in future. The only contract added here is the kill full
+memcg if selected and that can be implemented on _any_ selection policy.
 
-You haven't convinced me at all. This all sounds more like "what if"
-than a really thought through interface. I've tried to point out that
-having a real policy driven victim selection is a _hard_ thing to do
-_right_.
-
-On the other hand oom_group makes semantic sense. It controls the
-killable entity and there are usecases which want to consider the full
-memcg as a single killable entity. No matter what selection policy we
-chose on top. It is just a natural API.
-
-Now you keep arguing about the victim selection and different strategies
-to implement it. We will not move forward as long as you keep conflating
-the two things, I am afraid.
 -- 
 Michal Hocko
 SUSE Labs
