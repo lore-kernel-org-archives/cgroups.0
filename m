@@ -1,42 +1,90 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [patch -mm 3/4] mm, memcg: replace memory.oom_group with policy
- tunable
-Date: Thu, 25 Jan 2018 09:11:34 +0100
-Message-ID: <20180125081134.GL28465@dhcp22.suse.cz>
-References: <20180117154155.GU3460072@devbig577.frc2.facebook.com>
- <alpine.DEB.2.10.1801171348190.86895@chino.kir.corp.google.com>
- <alpine.DEB.2.10.1801191251080.177541@chino.kir.corp.google.com>
- <20180120123251.GB1096857@devbig577.frc2.facebook.com>
- <alpine.DEB.2.10.1801221420120.16871@chino.kir.corp.google.com>
- <20180123155301.GS1526@dhcp22.suse.cz>
- <alpine.DEB.2.10.1801231416330.254281@chino.kir.corp.google.com>
- <20180124082041.GD1526@dhcp22.suse.cz>
- <alpine.DEB.2.10.1801241340310.24330@chino.kir.corp.google.com>
- <20180124140805.b4eb437c6fe9dadb67a32e8a@linux-foundation.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20180124140805.b4eb437c6fe9dadb67a32e8a-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH bpf-next] cgroup: support attaching eBPF programs to net_prio cgroup
+Date: Thu, 25 Jan 2018 23:38:48 +0800
+Message-ID: <1516894728-2061-1-git-send-email-laoar.shao@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=JGZ+WG6OMBHaKqjD0DO39lgaHCuMQCioRcL/O2zzjjI=;
+        b=BtNxr/g5fpCRL9mMequoI7tVg3wE36ci6fj7pFksZ8JQ6XrF1lfrooQNY9WHlgrowE
+         MRaSSni25gO7Zx/vTg6ITZ2XZifxXBFVjekARzzuGClfEfKhSV8CYP8IU9LipsxH0pNU
+         yuhijgP65PUHCLxhKyPVqlMR2ikLY2sqQihoq/eyn1eYp7b6+Tuugyie8oH+t5mNXyjc
+         LWRDbf3VQjtvzoLcvTYbApxcle9MXwhEoE4cJ6JyN+5tcpnLHs1M2x+JRkmIY+LyCwSG
+         F50lUeQeHssm09oqZ9nHFZMn/XIscWY0YG8xJd/yMo+ibKurC9aTRcow+IIIlEJBVLFH
+         GzGw==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: tj@kernel.org, guro@fb.com, davem@davemloft.net, longman@redhat.com, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Yafang Shao <laoar.shao@gmail.com>
 
-On Wed 24-01-18 14:08:05, Andrew Morton wrote:
-[...]
-> Can we please try to narrow the scope of this issue by concentrating on
-> the userspace interfaces?  David believes that the mount option and
-> memory.oom_group will disappear again in the near future, others
-> disagree.
+If net_prio is used, we could also use eBPF programs to attach it,
+because the net_prio cgroup could be got with prioidx in struct
+sock_cgroup_data.
+Hence it should not only be limited to cgroup2.
 
-Mount option is the cgroups maintainers call. And they seemed to be OK
-with it.
-I've tried to explain that oom_group is something that is semantically
-sane and something we want to support because there are workloads which
-simply do not work properly when only a subset is torn down. As such it
-is not an API hazard AFAICS.
--- 
-Michal Hocko
-SUSE Labs
+Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+---
+ include/linux/cgroup.h | 18 ++++++++++++++++--
+ kernel/cgroup/cgroup.c |  6 +-----
+ 2 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 473e0c0..1d67def 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -772,8 +772,22 @@ static inline struct cgroup *sock_cgroup_ptr(struct sock_cgroup_data *skcd)
+ 	 */
+ 	v = READ_ONCE(skcd->val);
+
+-	if (v & 1)
+-		return &cgrp_dfl_root.cgrp;
++	/* either net_prio or net_cls or both being used. */
++	if (v & 1) {
++		if (skcd->prioidx != 1) {
++			struct cgroup_subsys_state *css;
++			struct cgroup *cg;
++
++			rcu_read_lock();
++			css = css_from_id(skcd->prioidx, &net_prio_cgrp_subsys);
++			cg = css->cgroup;
++			rcu_read_unlock();
++
++			return cg;
++		}
++
++		return task_cgroup(current, net_prio_cgrp_id);
++	}
+
+ 	return (struct cgroup *)(unsigned long)v ?: &cgrp_dfl_root.cgrp;
+ #else
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 7e4c445..59610f5 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5735,7 +5735,7 @@ struct cgroup *cgroup_get_from_path(const char *path)
+
+ /**
+  * cgroup_get_from_fd - get a cgroup pointer from a fd
+- * @fd: fd obtained by open(cgroup2_dir)
++ * @fd: fd obtained by open(cgroup2_dir or net_prio_dir)
+  *
+  * Find the cgroup from a fd which should be obtained
+  * by opening a cgroup directory.  Returns a pointer to the
+@@ -5758,10 +5758,6 @@ struct cgroup *cgroup_get_from_fd(int fd)
+ 		return ERR_CAST(css);
+
+ 	cgrp = css->cgroup;
+-	if (!cgroup_on_dfl(cgrp)) {
+-		cgroup_put(cgrp);
+-		return ERR_PTR(-EBADF);
+-	}
+
+ 	return cgrp;
+ }
+--
+1.8.3.1
+
