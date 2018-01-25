@@ -1,51 +1,55 @@
-From: Yafang Shao <laoar.shao@gmail.com>
-Subject: Re: [PATCH bpf-next] cgroup: support attaching eBPF programs to
- net_prio cgroup
-Date: Thu, 25 Jan 2018 23:56:18 +0800
-Message-ID: <CALOAHbCpDjivn53-OM2RpOnmm2qFujw23ANnmvCGJvcpnP4DMA@mail.gmail.com>
-References: <1516894728-2061-1-git-send-email-laoar.shao@gmail.com> <20180125155029.GG17457@devbig577.frc2.facebook.com>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: Re: [PATCH v5 1/2] mm/memcontrol.c: try harder to decrease
+ [memory,memsw].limit_in_bytes
+Date: Thu, 25 Jan 2018 22:44:16 +0300
+Message-ID: <5741fb29-a343-1f20-8957-bcd3647f2111@virtuozzo.com>
+References: <20171220102429.31601-1-aryabinin@virtuozzo.com>
+ <20180119132544.19569-1-aryabinin@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=zGA4sUjZGLosQGMvhqxRNPVCahe251zNn7N4Mk/2gKs=;
-        b=gERac+2N9umTrkQ43VVwgYZPwSqZBJO9WR7TiijhA7Q2vFoXalivuG5WTmCbNqph+S
-         6RMBJgBcsOmLiYUNDJfmPKneCFhAzMs2b6rQQpTrX+wkC8x2sPXJgMk5VR/dvkC8qlFu
-         IzEm874r05IXuHr45OpdvEWBoziJTjaI8RvAuL6Sna9WfPPmXsfQQ2xpiQ4OlGrdglme
-         aVgo+0oD/A2qmFQlX2FzAtmgkMFuVMiJugP/NOw5k83XQ6IAwWoy3evygmlW48ldHBNQ
-         g3DU33NdNpHwBv2RSxINlEDZioTp/nHLmaAw6ml1K9liGxTOXvjDojXXHvP0iTexq42K
-         dQsA==
-In-Reply-To: <20180125155029.GG17457@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=Wfyn6ayR5z6v+WjVASayq0/BtoufL5DNKu42XnilGHc=;
+ b=EOrsvX7dp+WAnLyplT55HuLTKuayoNlfXgraXV46i90vxiU9D9FeeE3csm+k8zMpQwSnHuDd3CyzNjB3GQ5sG1IB9pSleZCwHaIsmIG3HeSILsdAkM9de7QlkEvf3KosxY5HHIUAvGKt1GkExqERWvG2UQGg2Rf5rNzLyYcDgi0=
+In-Reply-To: <20180119132544.19569-1-aryabinin@virtuozzo.com>
+Content-Language: en-US
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, David Miller <davem@davemloft.net>, longman@redhat.com, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
 
-On Thu, Jan 25, 2018 at 11:50 PM, Tejun Heo <tj@kernel.org> wrote:
-> On Thu, Jan 25, 2018 at 11:38:48PM +0800, Yafang Shao wrote:
->> If net_prio is used, we could also use eBPF programs to attach it,
->> because the net_prio cgroup could be got with prioidx in struct
->> sock_cgroup_data.
->> Hence it should not only be limited to cgroup2.
->
-> I really don't wanna do this.  This comes with all sorts of reverse
-> lookup and naming issues.  In addition, cgroup1 and 2 aren't mutually
-> exclusive.  If the use case is on cgroup1 and wants to use cgroup bpf
-> programs, just replicate the cgroup2 hierarchy for bpf.  Hierarchy
-> replication across different controllers is how most use cgroup1 after
-> all.  With recent versions of systemd which defaults to using cgroup2
-> for process management, you get the replication for free too.
->
+On 01/19/2018 04:25 PM, Andrey Ryabinin wrote:
+> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
+> pages on each iteration.  This makes it practically impossible to decrease
+> limit of memory cgroup.  Tasks could easily allocate back 32 pages, so we
+> can't reduce memory usage, and once retry_count reaches zero we return
+> -EBUSY.
+> 
+> Easy to reproduce the problem by running the following commands:
+> 
+>   mkdir /sys/fs/cgroup/memory/test
+>   echo $$ >> /sys/fs/cgroup/memory/test/tasks
+>   cat big_file > /dev/null &
+>   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+>   -bash: echo: write error: Device or resource busy
+> 
+> Instead of relying on retry_count, keep retrying the reclaim until the
+> desired limit is reached or fail if the reclaim doesn't make any progress
+> or a signal is pending.
+> 
+> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+> Cc: Shakeel Butt <shakeelb@google.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 
-Hi Tejun,
 
-I don't understand what do you mean Hierarchy replication.
-Could you pls. show me some examples  ?
+Andrew, are you ok to pick up the patch?
 
-
-Thanks
-Yafang
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
