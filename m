@@ -1,55 +1,80 @@
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Subject: Re: [PATCH v5 1/2] mm/memcontrol.c: try harder to decrease
- [memory,memsw].limit_in_bytes
-Date: Thu, 25 Jan 2018 22:44:16 +0300
-Message-ID: <5741fb29-a343-1f20-8957-bcd3647f2111@virtuozzo.com>
-References: <20171220102429.31601-1-aryabinin@virtuozzo.com>
- <20180119132544.19569-1-aryabinin@virtuozzo.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch -mm 3/4] mm, memcg: replace memory.oom_group with policy
+ tunable
+Date: Thu, 25 Jan 2018 15:27:29 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1801251517460.152440@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1801161814130.28198@chino.kir.corp.google.com> <20180117154155.GU3460072@devbig577.frc2.facebook.com> <alpine.DEB.2.10.1801171348190.86895@chino.kir.corp.google.com> <alpine.DEB.2.10.1801191251080.177541@chino.kir.corp.google.com>
+ <20180120123251.GB1096857@devbig577.frc2.facebook.com> <alpine.DEB.2.10.1801221420120.16871@chino.kir.corp.google.com> <20180123155301.GS1526@dhcp22.suse.cz> <alpine.DEB.2.10.1801231416330.254281@chino.kir.corp.google.com> <20180124082041.GD1526@dhcp22.suse.cz>
+ <alpine.DEB.2.10.1801241340310.24330@chino.kir.corp.google.com> <20180125080542.GK28465@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Wfyn6ayR5z6v+WjVASayq0/BtoufL5DNKu42XnilGHc=;
- b=EOrsvX7dp+WAnLyplT55HuLTKuayoNlfXgraXV46i90vxiU9D9FeeE3csm+k8zMpQwSnHuDd3CyzNjB3GQ5sG1IB9pSleZCwHaIsmIG3HeSILsdAkM9de7QlkEvf3KosxY5HHIUAvGKt1GkExqERWvG2UQGg2Rf5rNzLyYcDgi0=
-In-Reply-To: <20180119132544.19569-1-aryabinin@virtuozzo.com>
-Content-Language: en-US
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=qC94N/Dd8khDgmRcbyMy1D6gFBDuejY8Dbibj//nWvI=;
+        b=vNtft3CKQ8UugmTHRPAjbe1WDN0Aur1AVMMO0+JEnLwwHgCQeuG4SWYelbejmlj2Xn
+         89VUh3VHMMR9BfXcH2wMa3ldSra0NJa/pKjKvG7k+BA8OaTwZMaCJ7mrE/hUMoO6nJYl
+         PoJ9DEA25q+rNovMTE4ariokMbqtk2rnF8ZY4fmdYTRh9flTc58i5N8DyCVeQ/NQviEY
+         wFa7+MOeWmwQT5GdhGq5ThxUma39GqJ/cncYPydz31u272Cxzm9v8bQxE/2CQIXZj5f0
+         p/kmOoWwARGAYOEbRAJ2m7sMIF7hbuta7OljuC07mGDDPlMrp7+uzO5TgTGuG9h5dsRb
+         AJVQ==
+In-Reply-To: <20180125080542.GK28465@dhcp22.suse.cz>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On 01/19/2018 04:25 PM, Andrey Ryabinin wrote:
-> mem_cgroup_resize_[memsw]_limit() tries to free only 32 (SWAP_CLUSTER_MAX)
-> pages on each iteration.  This makes it practically impossible to decrease
-> limit of memory cgroup.  Tasks could easily allocate back 32 pages, so we
-> can't reduce memory usage, and once retry_count reaches zero we return
-> -EBUSY.
-> 
-> Easy to reproduce the problem by running the following commands:
-> 
->   mkdir /sys/fs/cgroup/memory/test
->   echo $$ >> /sys/fs/cgroup/memory/test/tasks
->   cat big_file > /dev/null &
->   sleep 1 && echo $((100*1024*1024)) > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
->   -bash: echo: write error: Device or resource busy
-> 
-> Instead of relying on retry_count, keep retrying the reclaim until the
-> desired limit is reached or fail if the reclaim doesn't make any progress
-> or a signal is pending.
-> 
-> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
-> Cc: Shakeel Butt <shakeelb@google.com>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+On Thu, 25 Jan 2018, Michal Hocko wrote:
 
+> > As a result, this would remove patch 3/4 from the series.  Do you have any 
+> > other feedback regarding the remainder of this patch series before I 
+> > rebase it?
+> 
+> Yes, and I have provided it already. What you are proposing is
+> incomplete at best and needs much better consideration and much more
+> time to settle.
+> 
 
-Andrew, are you ok to pick up the patch?
+Could you elaborate on why specifying the oom policy for the entire 
+hierarchy as part of the root mem cgroup and also for individual subtrees 
+is incomplete?  It allows admins to specify and delegate policy decisions 
+to subtrees owners as appropriate.  It addresses your concern in the 
+/admins and /students example.  It addresses my concern about evading the 
+selection criteria simply by creating child cgroups.  It appears to be a 
+win-win.  What is incomplete or are you concerned about?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> > I will address the unfair root mem cgroup vs leaf mem cgroup comparison in 
+> > a separate patchset to fix an issue where any user of oom_score_adj on a 
+> > system that is not fully containerized gets very unusual, unexpected, and 
+> > undocumented results.
+> 
+> I will not oppose but as it has been mentioned several times, this is by
+> no means a blocker issue. It can be added on top.
+> 
+
+The current implementation is only useful for fully containerized systems 
+where no processes are attached to the root mem cgroup.  Anything in the 
+root mem cgroup is judged by different criteria and if they use 
+/proc/pid/oom_score_adj the entire heuristic breaks down.  That's because 
+per-process usage and oom_score_adj are only relevant for the root mem 
+cgroup and irrelevant when attached to a leaf.  Because of that, users are 
+affected by the design decision and will organize their hierarchies as 
+approrpiate to avoid it.  Users who only want to use cgroups for a subset 
+of processes but still treat those processes as indivisible logical units 
+when attached to cgroups find that it is simply not possible.
+
+I'm focused solely on fixing the three main issues that this 
+implementation causes.  One of them, userspace influence to protect 
+important cgroups, can be added on top.  The other two, evading the 
+selection criteria and unfair comparison of root vs leaf, are shortcomings 
+in the design that I believe should be addressed before it's merged to 
+avoid changing the API later.  I'm in no rush to ask for the cgroup aware 
+oom killer to be merged if it's incomplete and must be changed for 
+usecases that are not highly specialized (fully containerized and no use 
+of oom_score_adj for any process).  I am actively engaged in fixing it, 
+however, so that it becomes a candidate for merge.  Your feedback is 
+useful with regard to those fixes, but daily emails on how we must merge 
+the current implementation now are not providing value, at least to me.
