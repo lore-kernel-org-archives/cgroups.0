@@ -1,23 +1,22 @@
 From: David Rientjes <rientjes@google.com>
-Subject: [patch -mm v2 2/3] mm, memcg: replace cgroup aware oom killer mount
- option with tunable
-Date: Thu, 25 Jan 2018 15:53:48 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1801251553030.161808@chino.kir.corp.google.com>
-References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com> <alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com>
+Subject: [patch -mm v2 0/3] mm, memcg: introduce oom policies
+Date: Thu, 25 Jan 2018 15:53:41 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=qt2gAMzN9R/15csvM3IUTPHHpODhcWGxuA2KGgg2/QE=;
-        b=iYV2N7g8Er26UaZWUZ+ZjnvRr/75cPhPfjcvPQ1N+ya992W8UTO8QraSELaBSgSIC0
-         zl5J+u5G0L0QRoBG8wU7JsFBDSEGQQJe5RQq0HfC9YDsuJAGLuRo0EZUZd634WHuenDF
-         zdS6curVN8dqWbbbh7kjUhbM/96SeuggZ+EPnr9skCA9CJ6WFeez0+hokm1pWuYvl9T3
-         4A3fmzZA5Mv1aoZ0tcOD19gj5/NHB2F4a3FO0BSxXUmrCOoz0j7c3YSWFnhH9/ZoBkua
-         OmNCKg8vP3g6vMtP49mupDJyZ7gfYzL4lNitmpSYkcSjNe/TPeLNR+rCz3RZg9uiSVYT
-         uStQ==
-In-Reply-To: <alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com>
+        bh=RHCKjEhZUD5Qoo6dVEEnTkJo2qSlXIOrsHlwaKh1SiY=;
+        b=XGvZAjRqKhK7uL5PBz75esHz2wNQoZz2+XyYJykSnSz4VX7gkmeDonA5gd5QX8Mdj4
+         oWBPh4bRUH7lbzxJTesfJuy5kcSFbFF7ciAI6M2MQkmSbXiHDmOZzwrft7ftV6YjtO1U
+         Z5UNiie1F+y/5SL4D7fN5nu6+mK8/zi2VraNQBI9/5mpCSNBhhxIs+F0d7ftcqnwphpb
+         mWdud/rqex5wY5TxCUilwXgMNPLlk7UdfYVvowK2vePyDo/3/SQpzwkiS0UF0EKhgGcQ
+         7fNEbcz0WkXxEd9G1kwviNiDIMtMGZm3Z4kYID4KqnYfY14OdHp6i7rBscr/qNBrBd6B
+         Ittg==
+In-Reply-To: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
@@ -25,228 +24,36 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
 Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Now that each mem cgroup on the system has a memory.oom_policy tunable to
-specify oom kill selection behavior, remove the needless "groupoom" mount
-option that requires (1) the entire system to be forced, perhaps
-unnecessarily, perhaps unexpectedly, into a single oom policy that
-differs from the traditional per process selection, and (2) a remount to
-change.
+There are three significant concerns about the cgroup aware oom killer as
+it is implemented in -mm:
 
-Instead of enabling the cgroup aware oom killer with the "groupoom" mount
-option, set the mem cgroup subtree's memory.oom_policy to "cgroup".
+ (1) allows users to evade the oom killer by creating subcontainers or
+     using other controllers since scoring is done per cgroup and not
+     hierarchically,
 
-Signed-off-by: David Rientjes <rientjes@google.com>
+ (2) does not allow the user to influence the decisionmaking, such that
+     important subtrees cannot be preferred or biased, and
+
+ (3) unfairly compares the root mem cgroup using completely different
+     criteria than leaf mem cgroups and allows wildly inaccurate results
+     if oom_score_adj is used.
+
+This patchset aims to fix (1) completely and, by doing so, introduces a
+completely extensible user interface that can be expanded in the future.
+
+It eliminates the mount option for the cgroup aware oom killer entirely
+since it is now enabled through the root mem cgroup's oom policy.
+
+It preserves memory.oom_group behavior.
 ---
- Documentation/cgroup-v2.txt | 43 +++++++++++++++++++++----------------------
- include/linux/cgroup-defs.h |  5 -----
- include/linux/memcontrol.h  |  5 +++++
- kernel/cgroup/cgroup.c      | 13 +------------
- mm/memcontrol.c             | 17 ++++++++---------
- 5 files changed, 35 insertions(+), 48 deletions(-)
+ Applied on top of -mm.
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -1074,6 +1074,10 @@ PAGE_SIZE multiple when read back.
- 	victim; that is, it will choose the single process with the largest
- 	memory footprint.
- 
-+	If "cgroup", the OOM killer will compare mem cgroups as indivisible
-+	memory consumers; that is, they will compare mem cgroup usage rather
-+	than process memory footprint.  See the "OOM Killer" section.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-@@ -1280,37 +1284,32 @@ belonging to the affected files to ensure correct memory ownership.
- OOM Killer
- ~~~~~~~~~~
- 
--Cgroup v2 memory controller implements a cgroup-aware OOM killer.
--It means that it treats cgroups as first class OOM entities.
-+Cgroup v2 memory controller implements an optional cgroup-aware out of
-+memory killer, which treats cgroups as indivisible OOM entities.
- 
--Cgroup-aware OOM logic is turned off by default and requires
--passing the "groupoom" option on mounting cgroupfs. It can also
--by remounting cgroupfs with the following command::
-+This policy is controlled by memory.oom_policy.  When a memory cgroup is
-+out of memory, its memory.oom_policy will dictate how the OOM killer will
-+select a process, or cgroup, to kill.  Likewise, when the system is OOM,
-+the policy is dictated by the root mem cgroup.
- 
--  # mount -o remount,groupoom $MOUNT_POINT
-+There are currently two available oom policies:
- 
--Under OOM conditions the memory controller tries to make the best
--choice of a victim, looking for a memory cgroup with the largest
--memory footprint, considering leaf cgroups and cgroups with the
--memory.oom_group option set, which are considered to be an indivisible
--memory consumers.
-+ - "none": default, choose the largest single memory hogging process to
-+   oom kill, as traditionally the OOM killer has always done.
- 
--By default, OOM killer will kill the biggest task in the selected
--memory cgroup. A user can change this behavior by enabling
--the per-cgroup memory.oom_group option. If set, it causes
--the OOM killer to kill all processes attached to the cgroup,
--except processes with oom_score_adj set to -1000.
-+ - "cgroup": choose the cgroup with the largest memory footprint from the
-+   subtree as an OOM victim and kill at least one process, depending on
-+   memory.oom_group, from it.
- 
--This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
--the memory controller considers only cgroups belonging to the sub-tree
--of the OOM'ing cgroup.
-+When selecting a cgroup as a victim, the OOM killer will kill the process
-+with the largest memory footprint.  A user can control this behavior by
-+enabling the per-cgroup memory.oom_group option.  If set, it causes the
-+OOM killer to kill all processes attached to the cgroup, except processes
-+with /proc/pid/oom_score_adj set to -1000 (oom disabled).
- 
- The root cgroup is treated as a leaf memory cgroup, so it's compared
- with other leaf memory cgroups and cgroups with oom_group option set.
- 
--If there are no cgroups with the enabled memory controller,
--the OOM killer is using the "traditional" process-based approach.
--
- Please, note that memory charges are not migrating if tasks
- are moved between different memory cgroups. Moving tasks with
- significant memory footprint may affect OOM victim selection logic.
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -81,11 +81,6 @@ enum {
- 	 * Enable cpuset controller in v1 cgroup to use v2 behavior.
- 	 */
- 	CGRP_ROOT_CPUSET_V2_MODE = (1 << 4),
--
--	/*
--	 * Enable cgroup-aware OOM killer.
--	 */
--	CGRP_GROUP_OOM = (1 << 5),
- };
- 
- /* cftype->flags */
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -64,6 +64,11 @@ enum memcg_oom_policy {
- 	 * oom_badness()
- 	 */
- 	MEMCG_OOM_POLICY_NONE,
-+	/*
-+	 * Local cgroup usage is used to select a target cgroup, treating each
-+	 * mem cgroup as an indivisible consumer
-+	 */
-+	MEMCG_OOM_POLICY_CGROUP,
- };
- 
- struct mem_cgroup_reclaim_cookie {
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1732,9 +1732,6 @@ static int parse_cgroup_root_flags(char *data, unsigned int *root_flags)
- 		if (!strcmp(token, "nsdelegate")) {
- 			*root_flags |= CGRP_ROOT_NS_DELEGATE;
- 			continue;
--		} else if (!strcmp(token, "groupoom")) {
--			*root_flags |= CGRP_GROUP_OOM;
--			continue;
- 		}
- 
- 		pr_err("cgroup2: unknown option \"%s\"\n", token);
-@@ -1751,11 +1748,6 @@ static void apply_cgroup_root_flags(unsigned int root_flags)
- 			cgrp_dfl_root.flags |= CGRP_ROOT_NS_DELEGATE;
- 		else
- 			cgrp_dfl_root.flags &= ~CGRP_ROOT_NS_DELEGATE;
--
--		if (root_flags & CGRP_GROUP_OOM)
--			cgrp_dfl_root.flags |= CGRP_GROUP_OOM;
--		else
--			cgrp_dfl_root.flags &= ~CGRP_GROUP_OOM;
- 	}
- }
- 
-@@ -1763,8 +1755,6 @@ static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root
- {
- 	if (cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE)
- 		seq_puts(seq, ",nsdelegate");
--	if (cgrp_dfl_root.flags & CGRP_GROUP_OOM)
--		seq_puts(seq, ",groupoom");
- 	return 0;
- }
- 
-@@ -5922,8 +5912,7 @@ static struct kobj_attribute cgroup_delegate_attr = __ATTR_RO(delegate);
- static ssize_t features_show(struct kobject *kobj, struct kobj_attribute *attr,
- 			     char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "nsdelegate\n"
--					"groupoom\n");
-+	return snprintf(buf, PAGE_SIZE, "nsdelegate\n");
- }
- static struct kobj_attribute cgroup_features_attr = __ATTR_RO(features);
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2798,14 +2798,14 @@ bool mem_cgroup_select_oom_victim(struct oom_control *oc)
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
- 		return false;
- 
--	if (!(cgrp_dfl_root.flags & CGRP_GROUP_OOM))
--		return false;
--
- 	if (oc->memcg)
- 		root = oc->memcg;
- 	else
- 		root = root_mem_cgroup;
- 
-+	if (root->oom_policy != MEMCG_OOM_POLICY_CGROUP)
-+		return false;
-+
- 	select_victim_memcg(root, oc);
- 
- 	return oc->chosen_memcg;
-@@ -5412,9 +5412,6 @@ static int memory_oom_group_show(struct seq_file *m, void *v)
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
- 	bool oom_group = memcg->oom_group;
- 
--	if (!(cgrp_dfl_root.flags & CGRP_GROUP_OOM))
--		return -ENOTSUPP;
--
- 	seq_printf(m, "%d\n", oom_group);
- 
- 	return 0;
-@@ -5428,9 +5425,6 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
- 	int oom_group;
- 	int err;
- 
--	if (!(cgrp_dfl_root.flags & CGRP_GROUP_OOM))
--		return -ENOTSUPP;
--
- 	err = kstrtoint(strstrip(buf), 0, &oom_group);
- 	if (err)
- 		return err;
-@@ -5541,6 +5535,9 @@ static int memory_oom_policy_show(struct seq_file *m, void *v)
- 	enum memcg_oom_policy policy = READ_ONCE(memcg->oom_policy);
- 
- 	switch (policy) {
-+	case MEMCG_OOM_POLICY_CGROUP:
-+		seq_puts(m, "cgroup\n");
-+		break;
- 	case MEMCG_OOM_POLICY_NONE:
- 	default:
- 		seq_puts(m, "none\n");
-@@ -5557,6 +5554,8 @@ static ssize_t memory_oom_policy_write(struct kernfs_open_file *of,
- 	buf = strstrip(buf);
- 	if (!memcmp("none", buf, min(sizeof("none")-1, nbytes)))
- 		memcg->oom_policy = MEMCG_OOM_POLICY_NONE;
-+	else if (!memcmp("cgroup", buf, min(sizeof("cgroup")-1, nbytes)))
-+		memcg->oom_policy = MEMCG_OOM_POLICY_CGROUP;
- 	else
- 		ret = -EINVAL;
- 
+ Documentation/cgroup-v2.txt | 64 ++++++++++++++++++++++++++++-----------------
+ include/linux/cgroup-defs.h |  5 ----
+ include/linux/memcontrol.h  | 21 +++++++++++++++
+ kernel/cgroup/cgroup.c      | 13 +--------
+ mm/memcontrol.c             | 64 ++++++++++++++++++++++++++++++++++++---------
+ 5 files changed, 114 insertions(+), 53 deletions(-)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
