@@ -1,104 +1,96 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch -mm v2 2/3] mm, memcg: replace cgroup aware oom killer
- mount option with tunable
-Date: Fri, 26 Jan 2018 16:17:35 -0800
-Message-ID: <20180126161735.b999356fbe96c0acd33aaa66@linux-foundation.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [patch -mm v2 1/3] mm, memcg: introduce per-memcg oom policy
+ tunable
+Date: Fri, 26 Jan 2018 18:15:48 +0100
+Message-ID: <20180126171548.GB16763@dhcp22.suse.cz>
 References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
-	<alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com>
-	<alpine.DEB.2.10.1801251553030.161808@chino.kir.corp.google.com>
-	<20180125160016.30e019e546125bb13b5b6b4f@linux-foundation.org>
-	<alpine.DEB.2.10.1801261415090.15318@chino.kir.corp.google.com>
-	<20180126143950.719912507bd993d92188877f@linux-foundation.org>
-	<alpine.DEB.2.10.1801261441340.20954@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1801251552490.161808@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.10.1801261441340.20954@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1801251552490.161808@chino.kir.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: David Rientjes <rientjes@google.com>
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, 26 Jan 2018 14:52:59 -0800 (PST) David Rientjes <rientjes@google.com> wrote:
-
-> On Fri, 26 Jan 2018, Andrew Morton wrote:
+On Thu 25-01-18 15:53:45, David Rientjes wrote:
+> The cgroup aware oom killer is needlessly declared for the entire system
+> by a mount option.  It's unnecessary to force the system into a single
+> oom policy: either cgroup aware, or the traditional process aware.
 > 
-> > > -ECONFUSED.  We want to have a mount option that has the sole purpose of 
-> > > doing echo cgroup > /mnt/cgroup/memory.oom_policy?
-> > 
-> > Approximately.  Let me put it another way: can we modify your patchset
-> > so that the mount option remains, and continues to have a sufficiently
-> > same effect?  For backward compatibility.
-> > 
+> This patch introduces a memory.oom_policy tunable for all mem cgroups.
+> It is currently a no-op: it can only be set to "none", which is its
+> default policy.  It will be expanded in the next patch to define cgroup
+> aware oom killer behavior.
 > 
-> The mount option would exist solely to set the oom policy of the root mem 
-> cgroup, it would lose its effect of mandating that policy for any subtree 
-> since it would become configurable by the user if delegated.
-
-Why can't we propagate the mount option into the subtrees?
-
-If the user then alters that behaviour with new added-by-David tunables
-then fine, that's still backward compatible.
-
-> Let me put it another way: if the cgroup aware oom killer is merged for 
-> 4.16 without this patchset, userspace can reasonably infer the oom policy 
-> from checking how cgroups were mounted.  If my followup patchset were 
-> merged for 4.17, that's invalid and it becomes dependent on kernel 
-> version: it could have the "groupoom" mount option but configured through 
-> the root mem cgroup's memory.oom_policy to not be cgroup aware at all.
-
-That concern seems unreasonable to me.  Is an application *really*
-going to peek at the mount options to figure out what its present oom
-policy is?  Well, maybe.  But that's a pretty dopey thing to do and I
-wouldn't lose much sleep over breaking any such application in the very
-unlikely case that such a thing was developed in that two-month window.
-
-If that's really a concern then let's add (to Roman's patchset) a
-proper interface for an application to query its own oom policy.
-
-> That inconsistency, to me, is unfair to burden userspace with.
+> This is an extensible interface that can be used to define cgroup aware
+> assessment of mem cgroup subtrees or the traditional process aware
+> assessment.
 > 
-> > > This, and fixes to fairly compare the root mem cgroup with leaf mem 
-> > > cgroups, are essential before the feature is merged otherwise it yields 
-> > > wildly unpredictable (and unexpected, since its interaction with 
-> > > oom_score_adj isn't documented) results as I already demonstrated where 
-> > > cgroups with 1GB of usage are killed instead of 6GB workers outside of 
-> > > that subtree.
-> > 
-> > OK, so Roman's new feature is incomplete: it satisfies some use cases
-> > but not others.  And we kinda have a plan to address the other use
-> > cases in the future.
-> > 
-> 
-> Those use cases are also undocumented such that the user doesn't know the 
-> behavior they are opting into.  Nowhere in the patchset does it mention 
-> anything about oom_score_adj other than being oom disabled.  It doesn't 
-> mention that a per-process tunable now depends strictly on whether it is 
-> attached to root or not.  It specifies a fair comparison between the root 
-> mem cgroup and leaf mem cgroups, which is obviously incorrect by the 
-> implementation itself.  So I'm not sure the user would know which use 
-> cases it is valid for, which is why I've been trying to make it generally 
-> purposeful and documented.
 
-Documentation patches are nice.  We can cc:stable them too, so no huge
-hurry.
+So what is the actual semantic and scope of this policy. Does it apply
+only down the hierarchy. Also how do you compare cgroups with different
+policies? Let's say you have
+          root
+         / |  \
+        A  B   C
+       / \    / \
+      D   E  F   G
 
-> > There's nothing wrong with that!  As long as we don't break existing
-> > setups while evolving the feature.  How do we do that?
-> > 
-> 
-> We'd break the setups that actually configure their cgroups and processes 
-> to abide by the current implementation since we'd need to discount 
-> oom_score_adj from the the root mem cgroup usage to fix it.
+Assume A: cgroup, B: oom_group=1, C: tree, G: oom_group=1
 
-Am having trouble understanding that.  Expand, please?
+Now we have the global OOM killer to choose a victim. From a quick
+glance over those patches, it seems that we will be comparing only
+tasks because root->oom_policy != MEMCG_OOM_POLICY_CGROUP. A, B and C
+policies are ignored. Moreover If I select any of B's tasks then I will
+happily kill it breaking the expectation that the whole memcg will go
+away. Weird, don't you think? Or did I misunderstand?
 
-Can we address this (and other such) issues in the (interim)
-documentation?
+So let's assume that root: cgroup. Then we are finally comparing
+cgroups. D, E, B, C. Of those D, E and F do not have any
+policy. Do they inherit their policy from the parent? If they don't then
+we should be comparing their tasks separately, no? The code disagrees
+because once we are in the cgroup mode, we do not care about separate
+tasks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Let's say we choose C because it has the largest cumulative consumption.
+It is not oom_group so it will select a task from F, G. Again you are
+breaking oom_group policy of G if you kill a single task. So you would
+have to be recursive here. That sounds fixable though. Just be
+recursive.
+
+Then you say
+
+> Another benefit of such an approach is that an admin can lock in a
+> certain policy for the system or for a mem cgroup subtree and can
+> delegate the policy decision to the user to determine if the kill should
+> originate from a subcontainer, as indivisible memory consumers
+> themselves, or selection should be done per process.
+
+And the code indeed doesn't check oom_policy on each level of the
+hierarchy, unless I am missing something. So the subgroup is simply
+locked in to the oom_policy parent has chosen. That is not the case for
+the tree policy.
+
+So look how we are comparing cumulative groups without policy with
+groups with policy with subtrees. Either I have grossly misunderstood
+something or this is massively inconsistent and it doesn't make much
+sense to me. Root memcg without cgroup policy will simply turn off the
+whole thing for the global OOM case. So you really need to enable it
+there but then it is not really clear how to configure lower levels.
+
+From the above it seems that you are more interested in memcg OOMs and
+want to give different hierarchies different policies but you quickly
+hit the similar inconsistencies there as well.
+
+I am not sure how extensible this is actually. How do we place
+priorities on top?
+
+> Signed-off-by: David Rientjes <rientjes@google.com>
+-- 
+Michal Hocko
+SUSE Labs
