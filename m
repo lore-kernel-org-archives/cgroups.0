@@ -1,71 +1,127 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch -mm v2 2/3] mm, memcg: replace cgroup aware oom killer
- mount option with tunable
-Date: Fri, 26 Jan 2018 14:20:24 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1801261415090.15318@chino.kir.corp.google.com>
-References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com> <alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com> <alpine.DEB.2.10.1801251553030.161808@chino.kir.corp.google.com>
- <20180125160016.30e019e546125bb13b5b6b4f@linux-foundation.org>
+Subject: Re: [patch -mm 3/4] mm, memcg: replace memory.oom_group with policy
+ tunable
+Date: Fri, 26 Jan 2018 14:33:36 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1801261420330.15318@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1801171348190.86895@chino.kir.corp.google.com> <alpine.DEB.2.10.1801191251080.177541@chino.kir.corp.google.com> <20180120123251.GB1096857@devbig577.frc2.facebook.com> <alpine.DEB.2.10.1801221420120.16871@chino.kir.corp.google.com>
+ <20180123155301.GS1526@dhcp22.suse.cz> <alpine.DEB.2.10.1801231416330.254281@chino.kir.corp.google.com> <20180124082041.GD1526@dhcp22.suse.cz> <alpine.DEB.2.10.1801241340310.24330@chino.kir.corp.google.com> <20180125080542.GK28465@dhcp22.suse.cz>
+ <alpine.DEB.2.10.1801251517460.152440@chino.kir.corp.google.com> <20180126100726.GA5027@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=THloCuCWF6Cbi88W4QzKu+8PLTls7eSLfGfee97GoAA=;
-        b=Faia0L6JAc+Y0RfWdC7t2mzrDGqh20dV44XmWyHx62ZSa9+lSzEhjxev/6Wxn6TYBd
-         IH1JPZ/Pfq9ENd3isYXCKwfdz/odIkSuRn6ZG6D5P2Z8aW+clR+Bbm7VJ7lc5Gbwb8YI
-         FEkDVtLCKATnWtTxhxp5dfL68zLWWfD6CHDzLaOT10RoYsqKeeRXlJ30QX5z9w8hZAH5
-         Y/lghw7k3Mtukeed2JFiS27tPQIvsXwrg+TgvFk0Q2b8NCZC1SjTM+YQw1+zeKcGZMno
-         wICfgT/CSwRHYWqlHSipwnZ1sZZCTheryMBlnNYPl+TPqL2FDviIVk/xoBUQSqB0YgLR
-         l4Cg==
-In-Reply-To: <20180125160016.30e019e546125bb13b5b6b4f@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
+        bh=lJoFJzzQ7c8uHQ7C52HN+niCbvRUrTG9G19KwogIVCA=;
+        b=GG+WpmYcIUuyyLu1odAJVi98CVdZMp4bgKf8XIczQlZ2X3PaEO3zPoLTxWyssMVOnZ
+         aKALPqVGsx1/UiCaQ6FhItFdggOuj3jHdJqdI0oXftSzjRxVwe/Z89ofdCEvqaOO2r8U
+         +PXTzICHn2Ua/OKRoOqFFjphKBVPRRqrxnxxv1p8gKsxguyeZSKvaiqx8Ye7AKMmY75T
+         QurLjvtaLc5enNTk28VCYX26rdEhGcgJzGXvaC8mDcA1AAq0GXEXwUFz1RU/kgcyeOcz
+         7HP6WEh0qJwOv6dxHRwLqCvIOHzoeYTM+6FlaCMj+gfMJbCETUpkUHZQ9cBrsQPxuD0n
+         k2BQ==
+In-Reply-To: <20180126100726.GA5027@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, 25 Jan 2018, Andrew Morton wrote:
+On Fri, 26 Jan 2018, Michal Hocko wrote:
 
-> > Now that each mem cgroup on the system has a memory.oom_policy tunable to
-> > specify oom kill selection behavior, remove the needless "groupoom" mount
-> > option that requires (1) the entire system to be forced, perhaps
-> > unnecessarily, perhaps unexpectedly, into a single oom policy that
-> > differs from the traditional per process selection, and (2) a remount to
-> > change.
-> > 
-> > Instead of enabling the cgroup aware oom killer with the "groupoom" mount
-> > option, set the mem cgroup subtree's memory.oom_policy to "cgroup".
+> > Could you elaborate on why specifying the oom policy for the entire 
+> > hierarchy as part of the root mem cgroup and also for individual subtrees 
+> > is incomplete?  It allows admins to specify and delegate policy decisions 
+> > to subtrees owners as appropriate.  It addresses your concern in the 
+> > /admins and /students example.  It addresses my concern about evading the 
+> > selection criteria simply by creating child cgroups.  It appears to be a 
+> > win-win.  What is incomplete or are you concerned about?
 > 
-> Can we retain the groupoom mount option and use its setting to set the
-> initial value of every memory.oom_policy?  That way the mount option
-> remains somewhat useful and we're back-compatible?
+> I will get back to this later. I am really busy these days. This is not
+> a trivial thing at all.
 > 
 
--ECONFUSED.  We want to have a mount option that has the sole purpose of 
-doing echo cgroup > /mnt/cgroup/memory.oom_policy?
+Please follow-up in the v2 patchset when you have time.
 
-Please note that this patchset is not only to remove a mount option, it is 
-to allow oom policies to be configured per subtree such that users whom 
-you delegate those subtrees to cannot evade the oom policy that is set at 
-a higher level.  The goal is to prevent the user from needing to organize 
-their hierarchy is a specific way to work around this constraint and use 
-things like limiting the number of child cgroups that user is allowed to 
-create only to work around the oom policy.  With a cgroup v2 single 
-hierarchy it severely limits the amount of control the user has over their 
-processes because they are locked into a very specific hierarchy 
-configuration solely to not allow the user to evade oom kill.
+> Most usecases I've ever seen usually use oom_score_adj only to disable
+> the oom killer for a particular service. In those case the current
+> heuristic works reasonably well.
+> 
 
-This, and fixes to fairly compare the root mem cgroup with leaf mem 
-cgroups, are essential before the feature is merged otherwise it yields 
-wildly unpredictable (and unexpected, since its interaction with 
-oom_score_adj isn't documented) results as I already demonstrated where 
-cgroups with 1GB of usage are killed instead of 6GB workers outside of 
-that subtree.
+I'm not familiar with the workloads you have worked with that use 
+oom_score_adj.  We use it to prefer a subset of processes first and a 
+subset of processes last.  I don't expect this to be a highly specialized 
+usecase, it's the purpose of the tunable.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The fact remains that oom_score_adj tuning is only effective with the 
+current implementation when attached to the root mem cgroup in an 
+undocumented way, the preference or bias immediately changes as soon as it 
+is attached to a cgroup, even if it's the only non root mem cgroup on the 
+system.
+
+> > That's because per-process usage and oom_score_adj are only relevant  
+> > for the root mem cgroup and irrelevant when attached to a leaf.       
+> 
+> This is the simplest implementation. You could go and ignore
+> oom_score_adj on root tasks. Would it be much better? Should you ignore
+> oom disabled tasks? Should you consider kernel memory footprint of those
+> tasks? Maybe we will realize that we simply have to account root memcg
+> like any other memcg.  We used to do that but it has been reverted due
+> to performance footprint. There are more questions to answer I believe
+> but the most important one is whether actually any _real_ user cares.
+> 
+
+The goal is to compare the root mem cgroup and leaf mem cgroups equally.  
+That is specifically listed as a goal for the cgroup aware oom killer and 
+it's very obvious it's not implemented correctly particularly because of 
+this bias but also because sum of oom_badness() != anon + unevictable + 
+unreclaimable slab, even discounting oom_score_adj.  The amount of slab is 
+only considered for leaf mem cgroups as well.
+
+What I've proposed in the past was to use the global state of anon, 
+unevictable, and unreclaimable slab to fairly account the root mem cgroup 
+without bias from oom_score_adj for comparing cgroup usage.  oom_score_adj 
+is valid when choosing the process from the root mem cgroup to kill, not 
+when comparing against other cgroups since leaf cgroups discount it.
+
+> I can see your arguments and they are true. You can construct setups
+> where the current memcg oom heuristic works sub-optimally. The same has
+> been the case for the OOM killer in general. The OOM killer has always
+> been just a heuristic and there always be somebody complaining. This
+> doesn't mean we should just remove it because it works reasonably well
+> for most users.
+> 
+
+It's not most users, it's only for configurations that are fully 
+containerized where there are no user processes attached to the root mem 
+cgroup and nobody uses oom_score_adj like it is defined to be used, and 
+it's undocumented so they don't even know that fact without looking at the 
+kernel implementation.
+
+> > Because of that, users are 
+> > affected by the design decision and will organize their hierarchies as 
+> > approrpiate to avoid it.  Users who only want to use cgroups for a subset 
+> > of processes but still treat those processes as indivisible logical units 
+> > when attached to cgroups find that it is simply not possible.
+> 
+> Nobody enforces the memcg oom selection as presented here for those
+> users. They have to explicitly _opt-in_. If the new heuristic doesn't
+> work for them we will hear about that most likely. I am really skeptical
+> that oom_score_adj can be reused for memcg aware oom selection.
+> 
+
+oom_score_adj is value for choosing a process attached to a mem cgroup to 
+kill, absent memory.oom_group being set.  It is not valid to for comparing 
+cgroups, obviously.  That's why it shouldn't be used for the root mem 
+cgroup either, which the current implementation does, when it is 
+documented falsely to be a fair comparison.
+
+> I do not think anything you have proposed so far is even close to
+> mergeable state. I think you are simply oversimplifying this. We have
+> spent many months discussing different aspects of the memcg aware OOM
+> killer. The result is a compromise that should work reasonably well
+> for the targeted usecases and it doesn't bring unsustainable APIs that
+> will get carved into stone.
+
+If you don't have time to review the patchset to show that it's not 
+mergeable, I'm not sure that I have anything to work with.
