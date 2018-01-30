@@ -1,198 +1,97 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [patch -mm v2 1/3] mm, memcg: introduce per-memcg oom policy
- tunable
-Date: Tue, 30 Jan 2018 09:50:13 +0100
-Message-ID: <20180130085013.GP21609@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [patch -mm v2 2/3] mm, memcg: replace cgroup aware oom killer
+ mount option with tunable
+Date: Tue, 30 Jan 2018 09:54:45 +0100
+Message-ID: <20180130085445.GQ21609@dhcp22.suse.cz>
 References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com>
  <alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com>
- <alpine.DEB.2.10.1801251552490.161808@chino.kir.corp.google.com>
- <20180126171548.GB16763@dhcp22.suse.cz>
- <alpine.DEB.2.10.1801291418150.29670@chino.kir.corp.google.com>
+ <alpine.DEB.2.10.1801251553030.161808@chino.kir.corp.google.com>
+ <20180125160016.30e019e546125bb13b5b6b4f@linux-foundation.org>
+ <alpine.DEB.2.10.1801261415090.15318@chino.kir.corp.google.com>
+ <20180126143950.719912507bd993d92188877f@linux-foundation.org>
+ <alpine.DEB.2.10.1801261441340.20954@chino.kir.corp.google.com>
+ <20180126161735.b999356fbe96c0acd33aaa66@linux-foundation.org>
+ <20180129104657.GC21609@dhcp22.suse.cz>
+ <20180129191139.GA1121507@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1801291418150.29670-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20180129191139.GA1121507@devbig577.frc2.facebook.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Mon 29-01-18 14:38:02, David Rientjes wrote:
-> On Fri, 26 Jan 2018, Michal Hocko wrote:
+On Mon 29-01-18 11:11:39, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> > > The cgroup aware oom killer is needlessly declared for the entire system
-> > > by a mount option.  It's unnecessary to force the system into a single
-> > > oom policy: either cgroup aware, or the traditional process aware.
-> > > 
-> > > This patch introduces a memory.oom_policy tunable for all mem cgroups.
-> > > It is currently a no-op: it can only be set to "none", which is its
-> > > default policy.  It will be expanded in the next patch to define cgroup
-> > > aware oom killer behavior.
-> > > 
-> > > This is an extensible interface that can be used to define cgroup aware
-> > > assessment of mem cgroup subtrees or the traditional process aware
-> > > assessment.
-> > > 
-> > 
-> > So what is the actual semantic and scope of this policy. Does it apply
-> > only down the hierarchy. Also how do you compare cgroups with different
-> > policies? Let's say you have
-> >           root
-> >          / |  \
-> >         A  B   C
-> >        / \    / \
-> >       D   E  F   G
-> > 
-> > Assume A: cgroup, B: oom_group=1, C: tree, G: oom_group=1
-> > 
+> On Mon, Jan 29, 2018 at 11:46:57AM +0100, Michal Hocko wrote:
+> > @@ -1292,7 +1292,11 @@ the memory controller considers only cgroups belonging to the sub-tree
+> >  of the OOM'ing cgroup.
+> >  
+> >  The root cgroup is treated as a leaf memory cgroup, so it's compared
+> > -with other leaf memory cgroups and cgroups with oom_group option set.
+> > +with other leaf memory cgroups and cgroups with oom_group option
+> > +set. Due to internal implementation restrictions the size of the root
+> > +cgroup is a cumulative sum of oom_badness of all its tasks (in other
+> > +words oom_score_adj of each task is obeyed). This might change in the
+> > +future.
 > 
-> At each level of the hierarchy, memory.oom_policy compares immediate 
-> children, it's the only way that an admin can lock in a specific oom 
-> policy like "tree" and then delegate the subtree to the user.  If you've 
-> configured it as above, comparing A and C should be the same based on the 
-> cumulative usage of their child mem cgroups.
+> Thanks, we can definitely use more documentation.  However, it's a bit
+> difficult to follow.  Maybe expand it to a separate paragraph on the
+> current behavior with a clear warning that the default OOM heuristics
+> is subject to changes?
 
-So cgroup == tree if we are memcg aware OOM killing, right? Why do we
-need both then? Just to make memcg aware OOM killing possible?
+Does this sound any better?
 
-> The policy for B hasn't been specified, but since it does not have any 
-> children "cgroup" and "tree" should be the same.
+From ea4fa9c36d3ec2cf13d1949169924a1a54b9fcd6 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.com>
+Date: Tue, 30 Jan 2018 09:54:15 +0100
+Subject: [PATCH] oom, memcg: clarify root memcg oom accounting
 
-So now you have a killable cgroup selected by process criterion? That
-just doesn't make any sense. So I guess it would at least require to
-enforce (cgroup || tree) to allow oom_group.
+David Rientjes has pointed out that the current way how the root memcg
+is accounted for the cgroup aware OOM killer is undocumented. Unlike
+regular cgroups there is no accounting going on in the root memcg
+(mostly for performance reasons). Therefore we are suming up oom_badness
+of its tasks. This might result in an over accounting because of the
+oom_score_adj setting. Document this for now.
 
-But even then it doesn't make much sense to me because having a memcg
-killable or not is an attribute of the _memcg_ rather than the OOM
-context, no? In other words how much sense does it make to have B OOM
-intity or not depending on whether this is a global OOM or B OOM. Either
-the workload running inside B can cope with partial tear down or it
-cannot. Or do you have an example when something like that would be
-useful?
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ Documentation/cgroup-v2.txt | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 2eaed1e2243d..67bdf19f8e5b 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -1291,8 +1291,14 @@ This affects both system- and cgroup-wide OOMs. For a cgroup-wide OOM
+ the memory controller considers only cgroups belonging to the sub-tree
+ of the OOM'ing cgroup.
  
-> > Now we have the global OOM killer to choose a victim. From a quick
-> > glance over those patches, it seems that we will be comparing only
-> > tasks because root->oom_policy != MEMCG_OOM_POLICY_CGROUP. A, B and C
-> > policies are ignored.
-> 
-> Right, a policy of "none" reverts its subtree back to per-process 
-> comparison if you are either not using the cgroup aware oom killer or your 
-> subtree is not using the cgroup aware oom killer.
-
-So how are you going to compare none cgroups with those that consider
-full memcg or hierarchy (cgroup, tree)? Are you going to consider
-oom_score_adj?
-
-> > Moreover If I select any of B's tasks then I will
-> > happily kill it breaking the expectation that the whole memcg will go
-> > away. Weird, don't you think? Or did I misunderstand?
-> > 
-> 
-> It's just as weird as the behavior of memory.oom_group today without using 
-> the mount option :)
-
-Which is why oom_group returns -ENOTSUPP, so you simply cannot even set
-any memcg as oom killable. And you do not have this weirdness.
-
-> In that case, mem_cgroup_select_oom_victim() always 
-> returns false and the value of memory.oom_group is ignored.  I agree that 
-> it's weird in -mm and there's nothing preventing us from separating 
-> memory.oom_group from the cgroup aware oom killer and allowing it to be 
-> set regardless of a selection change.
-
-it is not weird. I suspect you misunderstood the code and its intention.
-
-> If memory.oom_group is set, and the 
-> kill originates from that mem cgroup, kill all processes attached to it 
-> and its subtree.
-> 
-> This is a criticism of the current implementation in -mm, however, my 
-> extension only respects its weirdness.
-> 
-> > So let's assume that root: cgroup. Then we are finally comparing
-> > cgroups. D, E, B, C. Of those D, E and F do not have any
-> > policy. Do they inherit their policy from the parent? If they don't then
-> > we should be comparing their tasks separately, no? The code disagrees
-> > because once we are in the cgroup mode, we do not care about separate
-> > tasks.
-> > 
-> 
-> No, perhaps I wasn't clear in the documentation: the policy at each level 
-> of the hierarchy is specified by memory.oom_policy and compares its 
-> immediate children with that policy.  So the per-cgroup usage of A, B, and 
-> C and compared regardless of A, B, and C's own oom policies.
-
-You are still operating in terms of levels. And that is rather confusing
-because we are operating on a _tree_ and that walk has to be independent
-on the way we walk that tree - i.e. whether we do DFS or BFS ordering.
-
-> > Let's say we choose C because it has the largest cumulative consumption.
-> > It is not oom_group so it will select a task from F, G. Again you are
-> > breaking oom_group policy of G if you kill a single task. So you would
-> > have to be recursive here. That sounds fixable though. Just be
-> > recursive.
-> > 
-> 
-> I fully agree, but that's (another) implementation detail of what is in 
-> -mm that isn't specified.  I think where you're going is the complete 
-> separation of mem cgroup selection from memory.oom_group.  I agree, and we 
-> can fix that.  memory.oom_group also shouldn't depend on any mount option, 
-> it can be set or unset depending on the properties of the workload.
-
-Huh? oom_group is completely orthogonal to the selection strategy. Full
-stop. I do not know how many times I have to repeat that. oom_group
-defines who to kill from the target. It is completely irrelevant how we
-have selected the target.
-
-> > Then you say
-> > 
-> > > Another benefit of such an approach is that an admin can lock in a
-> > > certain policy for the system or for a mem cgroup subtree and can
-> > > delegate the policy decision to the user to determine if the kill should
-> > > originate from a subcontainer, as indivisible memory consumers
-> > > themselves, or selection should be done per process.
-> > 
-> > And the code indeed doesn't check oom_policy on each level of the
-> > hierarchy, unless I am missing something. So the subgroup is simply
-> > locked in to the oom_policy parent has chosen. That is not the case for
-> > the tree policy.
-> > 
-> > So look how we are comparing cumulative groups without policy with
-> > groups with policy with subtrees. Either I have grossly misunderstood
-> > something or this is massively inconsistent and it doesn't make much
-> > sense to me. Root memcg without cgroup policy will simply turn off the
-> > whole thing for the global OOM case. So you really need to enable it
-> > there but then it is not really clear how to configure lower levels.
-> > 
-> > From the above it seems that you are more interested in memcg OOMs and
-> > want to give different hierarchies different policies but you quickly
-> > hit the similar inconsistencies there as well.
-> > 
-> > I am not sure how extensible this is actually. How do we place
-> > priorities on top?
-> > 
-> 
-> If you're referring to strict priorities where one cgroup can be preferred 
-> or biased against regardless of usage, that would be an extension with yet 
-> another tunable.
-
-How does that fit into cgroup, tree, none policy model?
-
-> Userspace influence over the selection is not addressed 
-> by this patchset, nor is the unfair comparison of the root mem cgroup with 
-> leaf mem cgroups.  My suggestion previously was a memory.oom_value 
-> tunable, which is configured depending on its parent's memory.oom_policy.  
-> If "cgroup" or "tree" it behaves as oom_score_adj-type behavior, i.e. it's 
-> an adjustment on the usage.  This way, a subtree's usage can have a 
-> certain amount of memory discounted, for example, because it is supposed 
-> to use more than 50% of memory.  If a new "priority" memory.oom_policy 
-> were implemented, which would be trivial, comparison between child cgroups 
-> would be as simple as comparing memory.oom_value integers.
-
-What if we need to implement "kill the youngest" policy? This wouldn't
-really work out, right?
+-The root cgroup is treated as a leaf memory cgroup, so it's compared
+-with other leaf memory cgroups and cgroups with oom_group option set.
++Leaf cgroups are compared based on their cumulative memory usage. The
++root cgroup is treated as a leaf memory cgroup as well, so it's
++compared with other leaf memory cgroups. Due to internal implementation
++restrictions the size of the root cgroup is a cumulative sum of
++oom_badness of all its tasks (in other words oom_score_adj of each task
++is obeyed). Relying on oom_score_adj (appart from OOM_SCORE_ADJ_MIN)
++can lead to overestimating of the root cgroup consumption and it is
++therefore discouraged. This might change in the future, though.
+ 
+ If there are no cgroups with the enabled memory controller,
+ the OOM killer is using the "traditional" process-based approach.
+-- 
+2.15.1
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
