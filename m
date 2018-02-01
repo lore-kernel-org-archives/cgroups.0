@@ -1,180 +1,63 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch -mm v2 1/3] mm, memcg: introduce per-memcg oom policy
- tunable
-Date: Thu, 1 Feb 2018 02:11:08 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1802010159570.175600@chino.kir.corp.google.com>
-References: <alpine.DEB.2.10.1801161812550.28198@chino.kir.corp.google.com> <alpine.DEB.2.10.1801251552320.161808@chino.kir.corp.google.com> <alpine.DEB.2.10.1801251552490.161808@chino.kir.corp.google.com> <20180126171548.GB16763@dhcp22.suse.cz>
- <alpine.DEB.2.10.1801291418150.29670@chino.kir.corp.google.com> <20180130085013.GP21609@dhcp22.suse.cz> <alpine.DEB.2.10.1801301413080.148885@chino.kir.corp.google.com> <20180131094717.GR21609@dhcp22.suse.cz>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v4.15-rc9] sched, cgroup: Don't reject lower cpu.max on
+ ancestors
+Date: Thu, 1 Feb 2018 17:49:42 +0100
+Message-ID: <20180201164942.GC2249@hirez.programming.kicks-ass.net>
+References: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
+ <20180130102156.GS2249@hirez.programming.kicks-ass.net>
+ <20180130145639.GD1121507@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=sk3492Rzhacey5nB0RKDSAuT9LXOMbnKv/DrNhyMEZk=;
-        b=VjSfFCtZigBcqeUiWhb7IbH29gB6gmkIUw/BhQ9IXILCSQgWD+W2SSEWWI9SwPohJ/
-         QoJ0nEsXtjp+D+2dEaKbjh5OrWUUQxqTX3W9teIf6k4HRHRDfRlD6NuNb5yDP+thbjmW
-         v1Y7mgze9kH5KJ8V3s92AxIuJWd1g7dRKTRDRjyh5AD8sHbtXvJL6tXPaoZnvAbODT4K
-         a/cmk1aYXYv52Jvd52LjFfmRBx2Inb9KKv+NSqUBp27j+NQ5whrkZYBO/L3sFjfNrJBb
-         YQV0Z1vA1qrEgekr22yg551144jf8lX60QgTZrd/f4Q9chZ7Bb+ZcB5iyvO5YbF0A5+S
-         H0IQ==
-In-Reply-To: <20180131094717.GR21609@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=K3r6wu+b75ZcYD+PRbHqphV61siPK9Oe3M6tvvLYhHs=; b=RagDktTqUDbHwLx5//z16pqaA
+        UqfBnA8PbY505T6+mRheFrw/ZZ0bc44qarUQX04dxtTHdr4uXxd3E/uONvtNuPBK8G2HFxYA5Z6Qx
+        +kMOhRCaQPr/NvcRGddyOcKwVQmP0BWk3sVrV/DEFoECJNlpIOt2NCTy92n5yGvabfAHtDyigwelX
+        RqzVjmbplDn/rd6e5Tm1S8M5B8BxOGm9dx5bwhMQAAh6vWd3dIr6/N71o868dc0q4cyTDzSz0Q/S5
+        9NUmkHMegNoqNJPxx5NZH5BdvwKasqpWNMBx6z0zQM3XklkeBedZb85CChuXffZRTUFfgLxAfSxVQ
+      
+Content-Disposition: inline
+In-Reply-To: <20180130145639.GD1121507-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Wed, 31 Jan 2018, Michal Hocko wrote:
-
-> > > > >           root
-> > > > >          / |  \
-> > > > >         A  B   C
-> > > > >        / \    / \
-> > > > >       D   E  F   G
-> > > > > 
-> > > > > Assume A: cgroup, B: oom_group=1, C: tree, G: oom_group=1
-> > > > > 
-> > > > 
-> > > > At each level of the hierarchy, memory.oom_policy compares immediate 
-> > > > children, it's the only way that an admin can lock in a specific oom 
-> > > > policy like "tree" and then delegate the subtree to the user.  If you've 
-> > > > configured it as above, comparing A and C should be the same based on the 
-> > > > cumulative usage of their child mem cgroups.
-> > > 
-> It seems I am still not clear with my question. What kind of difference
-> does policy=cgroup vs. none on A? Also what kind of different does it
-> make when a leaf node has cgroup policy?
+On Tue, Jan 30, 2018 at 06:56:39AM -0800, Tejun Heo wrote:
+> Hello,
 > 
-
-If A has an oom policy of "cgroup" it will be comparing the local usage of 
-D vs E, "tree" would be the same since neither descendants have child 
-cgroups.  If A has an oom policy of "none" it would compare processes 
-attached to D and E and respect /proc/pid/oom_score_adj.  It allows for 
-opting in and opting out of cgroup aware selection not only for the whole 
-system but also per subtree.
-
-> > Hmm, I'm not sure why we would limit memory.oom_group to any policy.  Even 
-> > if we are selecting a process, even without selecting cgroups as victims, 
-> > killing a process may still render an entire cgroup useless and it makes 
-> > sense to kill all processes in that cgroup.  If an unlucky process is 
-> > selected with today's heursitic of oom_badness() or with a "none" policy 
-> > with my patchset, I don't see why we can't enable the user to kill all 
-> > other processes in the cgroup.  It may not make sense for some trees, but 
-> > but I think it could be useful for others.
+> On Tue, Jan 30, 2018 at 11:21:56AM +0100, Peter Zijlstra wrote:
+> > afaiu the existing code does exactly the opposite, it forces the
+> > descendants to configure less than the parent allows.
+> > 
+> > You're taking out an error condition and silently allowing descentant
+> > misconfiguration. How does that make sense?
 > 
-> My intuition screams here. I will think about this some more but I would
-> be really curious about any sensible usecase when you want sacrifice the
-> whole gang just because of one process compared to other processes or
-> cgroups is too large. Do you see how you are mixing entities here?
+> Well, they're upper limits, not strict allocations.  The current
+> behavior implemented by cpu isn't either a strict allocation or upper
+> limits.  It disallows a child from having a value higher than the
+> parent (allocation-ish) but the sum of the children is allowed to
+> exceed the parent's (limit-ish).
+
+True; but its still weird to have the parent 'promise' something and
+then retract that 'promise' later.
+
+> The combination is rather arbitrary and makes it impossible to
+> delegate safely (a delegatee can block the delegator from reducing the
+> amount resource allocated to the delegatee) while not really
+> protecting against overcommit from descendants either.
 > 
+> We had this sort of input validations in different controllers all in
+> their own ways.  In most cases, these aren't well thought out and we
+> can't support things like delegation without aligning controller
+> behaviors.
 
-It's a property of the workload that has nothing to do with selection.  
-Regardless of how a victim is selected, we need a victim.  That victim may 
-be able to tolerate the loss of the process, and not even need to be the 
-largest memory hogging process based on /proc/pid/oom_score_adj (periodic 
-cleanups, logging, stat collection are what I'm most familiar with).  It 
-may also be vital to the workload and it's better off to kill the entire 
-job, it's highly dependent on what the job is.  There's a general usecase 
-for memory.oom_group behavior without any selection changes, we've had a 
-killall tunable for years and is used by many customers for the same 
-reason.  There's no reason for it to be coupled, it can exist independent 
-of any cgroup aware selection.
+I suppose.. 
 
-> I do not understand. Get back to our example. Are you saying that G
-> with none will enforce the none policy to C and root? If yes then this
-> doesn't make any sense because you are not really able to delegate the
-> oom policy down the tree at all. It would effectively make tree policy
-> pointless.
-> 
-
-The oom policy of G is pointless, it has no children cgroups.  It can be 
-"none", "cgroup", or "tree", it's not the root of a subtree.  (The oom 
-policy of the root mem cgroup is also irrelevant if there are no other 
-cgroups, same thing.)  If G is oom, it kills the largest process or 
-everything if memory.oom_group is set, which in your example it is.
-
-> I am skipping the rest of the following text because it is picking
-> on details and the whole design is not clear to me. So could you start
-> over documenting semantic and requirements. Ideally by describing:
-> - how does the policy on the root of the OOM hierarchy controls the
->   selection policy
-
-If "none", there's no difference than Linus's tree right now.  If 
-"cgroup", it enables cgroup aware selection: it compares all cgroups on 
-the system wrt local usage unless that cgroup has "tree" set in which case 
-its usage is hierarchical.
-
-> - how does the per-memcg policy act during the tree walk - for both
->   intermediate nodes and leafs
-
-The oom policy is determined by the mem cgroup under oom, that is the root 
-of the subtree under oom and its policy dictates how to select a victim 
-mem cgroup.
-
-> - how does the oom killer act based on the selected memcg
-
-That's the point about memory.oom_group: once it has selected a cgroup (if 
-cgroup aware behavior is enabled for the oom subtree [could be root]), a 
-memory hogging process attached to that subtree is killed or everything is 
-killed if memory.oom_group is enabled.
-
-> - how do you compare tasks with memcgs
-> 
-
-You don't, I think the misunderstanding is what happens if the root of a 
-subtree is "cgroup", for example, and a descendant has "none" enabled.  
-The root is under oom, it is comparing cgroups :)  "None" is only 
-effective if that subtree root is oom where process usage is considered.
-
-The point is that all the functionality available in -mm is still 
-available, just dictate "cgroup" everywhere and make it a decision that 
-can change per subtree, if necessary, without any mount option that would 
-become obsoleted.  Then, make memory.oom_group possible without any 
-specific selection policy since its useful on its own.
-
-Let me give you a concrete example based on your earlier /admins, 
-/teachers, /students example.  We oversubscribe the /students subtree in 
-the case where /admins and /teachers aren't using the memory.  We say 100 
-students can use 1GB each, but the limit of /students is actually 200GB.  
-100 students using 1GB each won't cause a system oom, we control that by 
-the limit of /admins and /teachers.  But we allow using memory that isn't 
-in use by /admins and /teachers if it's there, opening up overconsumers to 
-the possibility of oom kill.  (This is a real world example with batch job 
-scheduling, it's anything but hypothetical.)
-
-/students/michal logs in, and he has complete control over his subtree.  
-He's going to start several jobs, all in their own cgroups, with usage 
-well over 1GB, but if he's oom killed he wants the right thing oom killed.  
-
-Obviously this completely breaks down if the -mm functionality is used if 
-you have 10 jobs using 512MB each, because another student using more than 
-1GB who isn't using cgroups is going to be oom killed instead, although 
-you are using 5GB.  We've discussed that ad nauseam, and is why I 
-introduced "tree".
-
-But now look at the API.  /students/michal is using child cgroups but 
-which selection policy is in effect?  Will it kill the most memory hogging 
-process in his subtree or the most memory hogging process from the most 
-memory hogging cgroup?  It's an important distinction because it's 
-directly based on how he constructs his hierarchy: if locked into one 
-selection logic, the least important job *must* be in the highest 
-consuming cgroup; otherwise, his /proc/pid/oom_score_adj is respected.  He 
-*must* query the mount option.
-
-But now let's say that memory.oom_policy is merged to give this control to 
-him to do per process, per cgroup, or per subtree oom killing based on how 
-he defines it.  The mount option doesn't mean anything anymore, in fact, 
-it can mean the complete opposite of what actually happens.  That's the 
-direct objection to the mount option.  Since I have systems with thousands 
-of cgroups in hundreds of cgroups and over 100 workgroups that define, 
-sometimes very creatively, how to select oom victims, I'm an advocate for 
-an extensible interface that is useful for general purpose, doesn't remove 
-any functionality, and doesn't have contradicting specifications.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
