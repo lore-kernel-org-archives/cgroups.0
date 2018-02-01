@@ -1,205 +1,187 @@
-From: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH RFC v2 6/7] drm/i915: Introduce 'priority offset' for GPU contexts
-Date: Thu,  1 Feb 2018 11:53:14 -0800
-Message-ID: <20180201195315.4956-7-matthew.d.roper@intel.com>
+From: Matt Roper <matthew.d.roper@intel.com>
+Subject: [PATCH RFC v2 5/7] drm/i915: cgroup integration
+Date: Thu,  1 Feb 2018 11:53:13 -0800
+Message-ID: <20180201195315.4956-6-matthew.d.roper@intel.com>
 References: <20180201195315.4956-1-matthew.d.roper@intel.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20180201195315.4956-1-matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20180201195315.4956-1-matthew.d.roper@intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
 
-There are cases where a system integrator may wish to raise/lower the
-priority of GPU workloads being submitted by specific OS process(es),
-independently of how the software self-classifies its own priority.
-Exposing "priority offset" as an i915-specific cgroup parameter will
-enable such system-level configuration.
-
-Normally GPU contexts start with a priority value of 0
-(I915_CONTEXT_DEFAULT_PRIORITY) and then may be adjusted up/down from
-there via other mechanisms.  We'd like to provide a system-level input
-to the priority decision that will be taken into consideration, even
-when userspace later attempts to set an absolute priority value via
-I915_CONTEXT_PARAM_PRIORITY.  The priority offset introduced here
-provides a base value that will always be added to (or subtracted from)
-the software's self-assigned priority value.
-
-This patch makes priority offset a cgroup-specific value; contexts will
-be created with a priority offset based on the cgroup membership of the
-process creating the context at the time the context is created.  Note
-that priority offset is assigned at context creation time; migrating a
-process to a different cgroup or changing the offset associated with a
-cgroup will only affect new context creation and will not alter the
-behavior of existing contexts previously created by the process.
-
-Signed-off-by: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
----
- drivers/gpu/drm/i915/i915_cgroup.c      | 46 +++++++++++++++++++++++++++++++++
- drivers/gpu/drm/i915/i915_drv.h         |  7 +++++
- drivers/gpu/drm/i915/i915_gem_context.c |  6 +++--
- drivers/gpu/drm/i915/i915_gem_context.h |  9 +++++++
- include/uapi/drm/i915_drm.h             |  1 +
- 5 files changed, 67 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/gpu/drm/i915/i915_cgroup.c b/drivers/gpu/drm/i915/i915_cgroup.c
-index 778af895fc00..73f3cfe31d66 100644
---- a/drivers/gpu/drm/i915/i915_cgroup.c
-+++ b/drivers/gpu/drm/i915/i915_cgroup.c
-@@ -11,6 +11,8 @@
- 
- struct i915_cgroup_data {
- 	struct cgroup_driver_data base;
-+
-+	int priority_offset;
- };
- 
- static inline struct i915_cgroup_data *
-@@ -72,6 +74,8 @@ i915_cgroup_setparam_ioctl(struct drm_device *dev, void *data,
- 	struct cgroup *cgrp;
- 	struct file *f;
- 	struct inode *inode = NULL;
-+	struct cgroup_driver_data *cgrpdata;
-+	struct i915_cgroup_data *i915data;
- 	int ret;
- 
- 	if (!dev_priv->i915_cgroups) {
-@@ -125,6 +129,17 @@ i915_cgroup_setparam_ioctl(struct drm_device *dev, void *data,
- 		return ret;
- 
- 	switch (req->param) {
-+	case I915_CGROUP_PARAM_PRIORITY_OFFSET:
-+		cgrpdata = cgroup_driver_get_data(dev_priv->i915_cgroups, cgrp,
-+						  NULL);
-+		if (IS_ERR(cgrpdata))
-+			return PTR_ERR(cgrpdata);
-+
-+		DRM_DEBUG_DRIVER("Setting cgroup priority offset to %lld\n",
-+				 req->value);
-+		i915data = cgrp_to_i915(cgrpdata);
-+		i915data->priority_offset = req->value;
-+		break;
- 	default:
- 		DRM_DEBUG_DRIVER("Invalid cgroup parameter %lld\n", req->param);
- 		return -EINVAL;
-@@ -132,3 +147,34 @@ i915_cgroup_setparam_ioctl(struct drm_device *dev, void *data,
- 
- 	return 0;
- }
-+
-+/**
-+ * i915_cgroup_get_prio_offset() - get prio offset for current proc's cgroup
-+ * @dev_priv: drm device
-+ * @file_priv: file handle for calling process
-+ *
-+ * RETURNS:
-+ * Priority offset associated with the calling process' cgroup in the default
-+ * (v2) hierarchy, otherwise 0 if no explicit priority has been assigned.
-+ */
-+int
-+i915_cgroup_get_prio_offset(struct drm_i915_private *dev_priv,
-+			    struct drm_i915_file_private *file_priv)
-+{
-+       struct cgroup *cgrp;
-+       struct cgroup_driver_data *cgrpdata;
-+
-+       /* Ignore internally-created contexts not associated with a process */
-+       if (!file_priv)
-+               return 0;
-+
-+       cgrp = drm_file_get_cgroup(file_priv->file);
-+       if (WARN_ON(!cgrp))
-+               return 0;
-+
-+       cgrpdata = cgroup_driver_get_data(dev_priv->i915_cgroups, cgrp, NULL);
-+       if (IS_ERR(cgrpdata))
-+	       return 0;
-+
-+       return cgrp_to_i915(cgrpdata)->priority_offset;
-+}
-diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 60e3ff6a48bb..313191e5278a 100644
---- a/drivers/gpu/drm/i915/i915_drv.h
-+++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -2920,6 +2920,8 @@ int i915_cgroup_init(struct drm_i915_private *dev_priv);
- int i915_cgroup_setparam_ioctl(struct drm_device *dev, void *data,
- 			       struct drm_file *file);
- void i915_cgroup_shutdown(struct drm_i915_private *dev_priv);
-+int i915_cgroup_get_prio_offset(struct drm_i915_private *dev_priv,
-+				struct drm_i915_file_private *file_priv);
- #else
- static inline int
- i915_cgroup_init(struct drm_i915_private *dev_priv)
-@@ -2933,6 +2935,11 @@ i915_cgroup_setparam_ioctl(struct drm_device *dev, void *data,
- {
- 	return -EINVAL;
- }
-+static inline int
-+i915_cgroup_get_prio_offset(struct drm_i915_private *dev_priv,
-+			    struct drm_i915_file_private *file_priv) {
-+	return 0;
-+}
- #endif
- 
- /* i915_drv.c */
-diff --git a/drivers/gpu/drm/i915/i915_gem_context.c b/drivers/gpu/drm/i915/i915_gem_context.c
-index 648e7536ff51..700d7bc7cfc8 100644
---- a/drivers/gpu/drm/i915/i915_gem_context.c
-+++ b/drivers/gpu/drm/i915/i915_gem_context.c
-@@ -274,7 +274,9 @@ __create_hw_context(struct drm_i915_private *dev_priv,
- 	kref_init(&ctx->ref);
- 	list_add_tail(&ctx->link, &dev_priv->contexts.list);
- 	ctx->i915 = dev_priv;
--	ctx->priority = I915_PRIORITY_NORMAL;
-+	ctx->priority_offset =
-+		i915_cgroup_get_prio_offset(dev_priv, file_priv);
-+	ctx->priority = I915_PRIORITY_NORMAL + ctx->priority_offset;
- 
- 	INIT_RADIX_TREE(&ctx->handles_vma, GFP_KERNEL);
- 	INIT_LIST_HEAD(&ctx->handles_list);
-@@ -816,7 +818,7 @@ int i915_gem_context_setparam_ioctl(struct drm_device *dev, void *data,
- 				 !capable(CAP_SYS_NICE))
- 				ret = -EPERM;
- 			else
--				ctx->priority = priority;
-+				ctx->priority = priority + ctx->priority_offset;
- 		}
- 		break;
- 
-diff --git a/drivers/gpu/drm/i915/i915_gem_context.h b/drivers/gpu/drm/i915/i915_gem_context.h
-index 4bfb72f8e1cb..4f1c95fca5c2 100644
---- a/drivers/gpu/drm/i915/i915_gem_context.h
-+++ b/drivers/gpu/drm/i915/i915_gem_context.h
-@@ -147,6 +147,15 @@ struct i915_gem_context {
- 	 */
- 	int priority;
- 
-+	/**
-+	 * @priority_offset: priority offset
-+	 *
-+	 * A value, configured via cgroup, that sets the starting priority
-+	 * of the context.  Any priority set explicitly via context parameter
-+	 * will be added to the priority offset.
-+	 */
-+	int priority_offset;
-+
- 	/** ggtt_offset_bias: placement restriction for context objects */
- 	u32 ggtt_offset_bias;
- 
-diff --git a/include/uapi/drm/i915_drm.h b/include/uapi/drm/i915_drm.h
-index fe333ae1f0c6..1c1988e9fba5 100644
---- a/include/uapi/drm/i915_drm.h
-+++ b/include/uapi/drm/i915_drm.h
-@@ -1622,6 +1622,7 @@ struct drm_i915_cgroup_param {
- 	__s32 cgroup_fd;
- 	__u32 flags;
- 	__u64 param;
-+#define I915_CGROUP_PARAM_PRIORITY_OFFSET	0x1
- 	__s64 value;
- };
- 
--- 
-2.14.3
+UmVnaXN0ZXIgaTkxNSBhcyBhIGNvbnN1bWVyIG9mIHRoZSBjZ3JvdXBfZHJpdmVyIGZyYW1ld29y
+ayBhbmQgYWRkIGFuIGlvY3RsIHRvCmFsbG93IHVzZXJzcGFjZSB0byBzZXQgaTkxNS1zcGVjaWZp
+YyBwYXJhbWV0ZXJzIGFzc29jaWF0ZWQgd2l0aCBjZ3JvdXBzLgoKU2lnbmVkLW9mZi1ieTogTWF0
+dCBSb3BlciA8bWF0dGhldy5kLnJvcGVyQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL2dwdS9kcm0v
+aTkxNS9LY29uZmlnICAgICAgIHwgICAxICsKIGRyaXZlcnMvZ3B1L2RybS9pOTE1L01ha2VmaWxl
+ICAgICAgfCAgIDEgKwogZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9jZ3JvdXAuYyB8IDEzNCAr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiBkcml2ZXJzL2dwdS9kcm0vaTkx
+NS9pOTE1X2Rydi5jICAgIHwgICA3ICsrCiBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2Rydi5o
+ICAgIHwgIDI0ICsrKysrKysKIGluY2x1ZGUvdWFwaS9kcm0vaTkxNV9kcm0uaCAgICAgICAgfCAg
+MTIgKysrKwogNiBmaWxlcyBjaGFuZ2VkLCAxNzkgaW5zZXJ0aW9ucygrKQogY3JlYXRlIG1vZGUg
+MTAwNjQ0IGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfY2dyb3VwLmMKCmRpZmYgLS1naXQgYS9k
+cml2ZXJzL2dwdS9kcm0vaTkxNS9LY29uZmlnIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvS2NvbmZp
+ZwppbmRleCBkZmQ5NTg4OWY0YjcuLjFjNmI1M2VlNzZjZCAxMDA2NDQKLS0tIGEvZHJpdmVycy9n
+cHUvZHJtL2k5MTUvS2NvbmZpZworKysgYi9kcml2ZXJzL2dwdS9kcm0vaTkxNS9LY29uZmlnCkBA
+IC0yMyw2ICsyMyw3IEBAIGNvbmZpZyBEUk1fSTkxNQogCXNlbGVjdCBTWU5DX0ZJTEUKIAlzZWxl
+Y3QgSU9TRl9NQkkKIAlzZWxlY3QgQ1JDMzIKKwlzZWxlY3QgQ0dST1VQX0RSSVZFUiBpZiBDR1JP
+VVBTCiAJaGVscAogCSAgQ2hvb3NlIHRoaXMgb3B0aW9uIGlmIHlvdSBoYXZlIGEgc3lzdGVtIHRo
+YXQgaGFzICJJbnRlbCBHcmFwaGljcwogCSAgTWVkaWEgQWNjZWxlcmF0b3IiIG9yICJIRCBHcmFw
+aGljcyIgaW50ZWdyYXRlZCBncmFwaGljcywKZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9p
+OTE1L01ha2VmaWxlIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvTWFrZWZpbGUKaW5kZXggM2JkZGQ4
+YTA2ODA2Li41ZjRhMjFmMWE5ZGYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvZ3B1L2RybS9pOTE1L01h
+a2VmaWxlCisrKyBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L01ha2VmaWxlCkBAIC00Nyw2ICs0Nyw3
+IEBAIGk5MTUteSA6PSBpOTE1X2Rydi5vIFwKIGk5MTUtJChDT05GSUdfQ09NUEFUKSAgICs9IGk5
+MTVfaW9jMzIubwogaTkxNS0kKENPTkZJR19ERUJVR19GUykgKz0gaTkxNV9kZWJ1Z2ZzLm8gaW50
+ZWxfcGlwZV9jcmMubwogaTkxNS0kKENPTkZJR19QRVJGX0VWRU5UUykgKz0gaTkxNV9wbXUubwor
+aTkxNS0kKENPTkZJR19DR1JPVVBTKSArPSBpOTE1X2Nncm91cC5vCiAKICMgR0VNIGNvZGUKIGk5
+MTUteSArPSBpOTE1X2NtZF9wYXJzZXIubyBcCmRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0v
+aTkxNS9pOTE1X2Nncm91cC5jIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9jZ3JvdXAuYwpu
+ZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwMDAwMDAuLjc3OGFmODk1ZmMwMAotLS0g
+L2Rldi9udWxsCisrKyBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfY2dyb3VwLmMKQEAgLTAs
+MCArMSwxMzQgQEAKKy8qIFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBNSVQgKi8KKy8qCisgKiBp
+OTE1X2Nncm91cC5jIC0gTGludXggY2dyb3VwcyBpbnRlZ3JhdGlvbiBmb3IgaTkxNQorICoKKyAq
+IENvcHlyaWdodCAoQykgMjAxOCBJbnRlbCBDb3Jwb3JhdGlvbgorICovCisKKyNpbmNsdWRlIDxs
+aW51eC9jZ3JvdXAuaD4KKworI2luY2x1ZGUgImk5MTVfZHJ2LmgiCisKK3N0cnVjdCBpOTE1X2Nn
+cm91cF9kYXRhIHsKKwlzdHJ1Y3QgY2dyb3VwX2RyaXZlcl9kYXRhIGJhc2U7Cit9OworCitzdGF0
+aWMgaW5saW5lIHN0cnVjdCBpOTE1X2Nncm91cF9kYXRhICoKK2NncnBfdG9faTkxNShzdHJ1Y3Qg
+Y2dyb3VwX2RyaXZlcl9kYXRhICpkYXRhKQoreworCXJldHVybiBjb250YWluZXJfb2YoZGF0YSwg
+c3RydWN0IGk5MTVfY2dyb3VwX2RhdGEsIGJhc2UpOworfQorCitzdGF0aWMgc3RydWN0IGNncm91
+cF9kcml2ZXJfZGF0YSAqCitpOTE1X2Nncm91cF9hbGxvYyhzdHJ1Y3QgY2dyb3VwX2RyaXZlciAq
+ZHJ2KQoreworCXN0cnVjdCBpOTE1X2Nncm91cF9kYXRhICpkYXRhOworCisJZGF0YSA9IGt6YWxs
+b2Moc2l6ZW9mICpkYXRhLCBHRlBfS0VSTkVMKTsKKwlyZXR1cm4gJmRhdGEtPmJhc2U7Cit9CisK
+K3N0YXRpYyB2b2lkCitpOTE1X2Nncm91cF9mcmVlKHN0cnVjdCBjZ3JvdXBfZHJpdmVyX2RhdGEg
+KmRhdGEpCit7CisJa2ZyZWUoZGF0YSk7Cit9CisKK3N0YXRpYyBzdHJ1Y3QgY2dyb3VwX2RyaXZl
+cl9mdW5jcyBpOTE1X2Nncm91cF9mdW5jcyA9IHsKKwkuYWxsb2NfZGF0YSA9IGk5MTVfY2dyb3Vw
+X2FsbG9jLAorCS5mcmVlX2RhdGEgPSBpOTE1X2Nncm91cF9mcmVlLAorfTsKKworaW50CitpOTE1
+X2Nncm91cF9pbml0KHN0cnVjdCBkcm1faTkxNV9wcml2YXRlICpkZXZfcHJpdikKK3sKKwlkZXZf
+cHJpdi0+aTkxNV9jZ3JvdXBzID0gY2dyb3VwX2RyaXZlcl9pbml0KCZpOTE1X2Nncm91cF9mdW5j
+cyk7CisJaWYgKElTX0VSUihkZXZfcHJpdi0+aTkxNV9jZ3JvdXBzKSkKKwkJcmV0dXJuIFBUUl9F
+UlIoZGV2X3ByaXYtPmk5MTVfY2dyb3Vwcyk7CisKKwlyZXR1cm4gMDsKK30KKwordm9pZAoraTkx
+NV9jZ3JvdXBfc2h1dGRvd24oc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgKmRldl9wcml2KQorewor
+CWNncm91cF9kcml2ZXJfcmVsZWFzZShkZXZfcHJpdi0+aTkxNV9jZ3JvdXBzKTsKK30KKworLyoq
+CisgKiBpOTE1X2Nncm91cF9zZXRwYXJhbV9pb2N0bCAtIGlvY3RsIHRvIGFsdGVyIGk5MTUgc2V0
+dGluZ3MgZm9yIGEgY2dyb3VwCisgKiBAZGV2OiBEUk0gZGV2aWNlCisgKiBAZGF0YTogZGF0YSBw
+b2ludGVyIGZvciB0aGUgaW9jdGwKKyAqIEBmaWxlX3ByaXY6IERSTSBmaWxlIGhhbmRsZSBmb3Ig
+dGhlIGlvY3RsIGNhbGwKKyAqCisgKiBBbGxvd3MgaTkxNS1zcGVjaWZpYyBwYXJhbWV0ZXJzIHRv
+IGJlIHNldCBmb3IgYSBMaW51eCBjZ3JvdXAuCisgKi8KK2ludAoraTkxNV9jZ3JvdXBfc2V0cGFy
+YW1faW9jdGwoc3RydWN0IGRybV9kZXZpY2UgKmRldiwgdm9pZCAqZGF0YSwKKyAgICAgICAgICAg
+ICAgICAgICAgICAgICBzdHJ1Y3QgZHJtX2ZpbGUgKmZpbGUpCit7CisJc3RydWN0IGRybV9pOTE1
+X3ByaXZhdGUgKmRldl9wcml2ID0gdG9faTkxNShkZXYpOworCXN0cnVjdCBkcm1faTkxNV9jZ3Jv
+dXBfcGFyYW0gKnJlcSA9IGRhdGE7CisJc3RydWN0IGNncm91cCAqY2dycDsKKwlzdHJ1Y3QgZmls
+ZSAqZjsKKwlzdHJ1Y3QgaW5vZGUgKmlub2RlID0gTlVMTDsKKwlpbnQgcmV0OworCisJaWYgKCFk
+ZXZfcHJpdi0+aTkxNV9jZ3JvdXBzKSB7CisJCURSTV9ERUJVR19EUklWRVIoIk5vIHN1cHBvcnQg
+Zm9yIGRyaXZlci1zcGVjaWZpYyBjZ3JvdXAgZGF0YVxuIik7CisJCXJldHVybiAtRUlOVkFMOwor
+CX0KKworCS8qIFdlIGRvbid0IGFjdHVhbGx5IHN1cHBvcnQgYW55IGZsYWdzIHlldC4gKi8KKwlp
+ZiAocmVxLT5mbGFncykgeworCQlEUk1fREVCVUdfRFJJVkVSKCJJbnZhbGlkIGZsYWdzXG4iKTsK
+KwkJcmV0dXJuIC1FSU5WQUw7CisJfQorCisJLyoKKwkgKiBNYWtlIHN1cmUgdGhlIGZpbGUgZGVz
+Y3JpcHRvciByZWFsbHkgaXMgYSBjZ3JvdXAgZmQgYW5kIGlzIG9uIHRoZQorCSAqIHYyIGhpZXJh
+cmNoeS4KKwkgKi8KKwljZ3JwID0gY2dyb3VwX2dldF9mcm9tX2ZkKHJlcS0+Y2dyb3VwX2ZkKTsK
+KwlpZiAoSVNfRVJSKGNncnApKSB7CisJCURSTV9ERUJVR19EUklWRVIoIkludmFsaWQgY2dyb3Vw
+IGZpbGUgZGVzY3JpcHRvclxuIik7CisJCXJldHVybiBQVFJfRVJSKGNncnApOworCX0KKworCS8q
+CisJICogQWNjZXNzIGNvbnRyb2w6ICBUaGUgc3RyYXRlZ3kgZm9yIHVzaW5nIGNncm91cHMgaW4g
+YSBnaXZlbgorCSAqIGVudmlyb25tZW50IGlzIGdlbmVyYWxseSBkZXRlcm1pbmVkIGJ5IHRoZSBz
+eXN0ZW0gaW50ZWdyYXRvcgorCSAqIGFuZC9vciBPUyB2ZW5kb3IsIHNvIHRoZSBzcGVjaWZpYyBw
+b2xpY3kgYWJvdXQgd2hvIGNhbi9jYW4ndAorCSAqIG1hbmlwdWxhdGUgdGhlbSB0ZW5kcyB0byBi
+ZSBkb21haW4tc3BlY2lmaWMgKGFuZCBtYXkgdmFyeQorCSAqIGRlcGVuZGluZyBvbiB0aGUgbG9j
+YXRpb24gaW4gdGhlIGNncm91cCBoaWVyYXJjaHkpLiAgUmF0aGVyIHRoYW4KKwkgKiB0cnlpbmcg
+dG8gdGllIHBlcm1pc3Npb24gb24gdGhpcyBpb2N0bCB0byBhIERSTS1zcGVjaWZpYyBjb25jZXB0
+cworCSAqIGxpa2UgRFJNIG1hc3Rlciwgd2UnbGwgYWxsb3cgY2dyb3VwIHBhcmFtZXRlcnMgdG8g
+YmUgc2V0IGJ5IGFueQorCSAqIHByb2Nlc3MgdGhhdCBoYXMgYmVlbiBncmFudGVkIHdyaXRlIGFj
+Y2VzcyBvbiB0aGUgY2dyb3VwJ3MKKwkgKiB2aXJ0dWFsIGZpbGUgc3lzdGVtIChpLmUuLCB0aGUg
+c2FtZSBwZXJtaXNzaW9ucyB0aGF0IHdvdWxkCisJICogZ2VuZXJhbGx5IGJlIG5lZWRlZCB0byB1
+cGRhdGUgdGhlIHZpcnR1YWwgZmlsZXMgcHJvdmlkZWQgYnkKKwkgKiBjZ3JvdXAgY29udHJvbGxl
+cnMpLgorCSAqLworCWYgPSBmZ2V0X3JhdyhyZXEtPmNncm91cF9mZCk7CisJaWYgKFdBUk5fT04o
+IWYpKQorCQlyZXR1cm4gLUVCQURGOworCisJaW5vZGUgPSBrZXJuZnNfZ2V0X2lub2RlKGYtPmZf
+cGF0aC5kZW50cnktPmRfc2IsIGNncnAtPmtuKTsKKwlpZiAoaW5vZGUpCisJCXJldCA9IGlub2Rl
+X3Blcm1pc3Npb24oaW5vZGUsIE1BWV9XUklURSk7CisJZWxzZQorCQlyZXQgPSAtRU5PTUVNOwor
+CisJaXB1dChpbm9kZSk7CisJZnB1dChmKTsKKworCWlmIChyZXQpCisJCXJldHVybiByZXQ7CisK
+Kwlzd2l0Y2ggKHJlcS0+cGFyYW0pIHsKKwlkZWZhdWx0OgorCQlEUk1fREVCVUdfRFJJVkVSKCJJ
+bnZhbGlkIGNncm91cCBwYXJhbWV0ZXIgJWxsZFxuIiwgcmVxLT5wYXJhbSk7CisJCXJldHVybiAt
+RUlOVkFMOworCX0KKworCXJldHVybiAwOworfQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJt
+L2k5MTUvaTkxNV9kcnYuYyBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfZHJ2LmMKaW5kZXgg
+MWVjMTJhZGQzNGIyLi41ZDVlNjUyNTk4ZmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvZ3B1L2RybS9p
+OTE1L2k5MTVfZHJ2LmMKKysrIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9kcnYuYwpAQCAt
+MTM5OCw2ICsxMzk4LDEwIEBAIGludCBpOTE1X2RyaXZlcl9sb2FkKHN0cnVjdCBwY2lfZGV2ICpw
+ZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqZW50KQogCiAJaW50ZWxfcnVudGltZV9w
+bV9wdXQoZGV2X3ByaXYpOwogCisJcmV0ID0gaTkxNV9jZ3JvdXBfaW5pdChkZXZfcHJpdik7CisJ
+aWYgKHJldCA8IDApCisJICAgIGdvdG8gb3V0X2NsZWFudXBfaHc7CisKIAlpOTE1X3dlbGNvbWVf
+bWVzc2FnZXMoZGV2X3ByaXYpOwogCiAJcmV0dXJuIDA7CkBAIC0xNDI0LDYgKzE0MjgsOCBAQCB2
+b2lkIGk5MTVfZHJpdmVyX3VubG9hZChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2KQogCXN0cnVjdCBk
+cm1faTkxNV9wcml2YXRlICpkZXZfcHJpdiA9IHRvX2k5MTUoZGV2KTsKIAlzdHJ1Y3QgcGNpX2Rl
+diAqcGRldiA9IGRldl9wcml2LT5kcm0ucGRldjsKIAorCWk5MTVfY2dyb3VwX3NodXRkb3duKGRl
+dl9wcml2KTsKKwogCWk5MTVfZHJpdmVyX3VucmVnaXN0ZXIoZGV2X3ByaXYpOwogCiAJaWYgKGk5
+MTVfZ2VtX3N1c3BlbmQoZGV2X3ByaXYpKQpAQCAtMjgzNSw2ICsyODQxLDcgQEAgc3RhdGljIGNv
+bnN0IHN0cnVjdCBkcm1faW9jdGxfZGVzYyBpOTE1X2lvY3Rsc1tdID0gewogCURSTV9JT0NUTF9E
+RUZfRFJWKEk5MTVfUEVSRl9PUEVOLCBpOTE1X3BlcmZfb3Blbl9pb2N0bCwgRFJNX1JFTkRFUl9B
+TExPVyksCiAJRFJNX0lPQ1RMX0RFRl9EUlYoSTkxNV9QRVJGX0FERF9DT05GSUcsIGk5MTVfcGVy
+Zl9hZGRfY29uZmlnX2lvY3RsLCBEUk1fVU5MT0NLRUR8RFJNX1JFTkRFUl9BTExPVyksCiAJRFJN
+X0lPQ1RMX0RFRl9EUlYoSTkxNV9QRVJGX1JFTU9WRV9DT05GSUcsIGk5MTVfcGVyZl9yZW1vdmVf
+Y29uZmlnX2lvY3RsLCBEUk1fVU5MT0NLRUR8RFJNX1JFTkRFUl9BTExPVyksCisJRFJNX0lPQ1RM
+X0RFRl9EUlYoSTkxNV9DR1JPVVBfU0VUUEFSQU0sIGk5MTVfY2dyb3VwX3NldHBhcmFtX2lvY3Rs
+LCBEUk1fVU5MT0NLRUR8RFJNX1JFTkRFUl9BTExPVyksCiB9OwogCiBzdGF0aWMgc3RydWN0IGRy
+bV9kcml2ZXIgZHJpdmVyID0gewpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkx
+NV9kcnYuaCBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfZHJ2LmgKaW5kZXggYzY3NjI2OWVk
+ODQzLi42MGUzZmY2YTQ4YmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVf
+ZHJ2LmgKKysrIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9kcnYuaApAQCAtMjM1Nyw2ICsy
+MzU3LDkgQEAgc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgewogCiAJc3RydWN0IGk5MTVfcG11IHBt
+dTsKIAorCS8qIExpbnV4IGNncm91cCBpbnRlZ3JhdGlvbiAqLworCXN0cnVjdCBjZ3JvdXBfZHJp
+dmVyICppOTE1X2Nncm91cHM7CisKIAkvKgogCSAqIE5PVEU6IFRoaXMgaXMgdGhlIGRyaTEvdW1z
+IGR1bmdlb24sIGRvbid0IGFkZCBzdHVmZiBoZXJlLiBZb3VyIHBhdGNoCiAJICogd2lsbCBiZSBy
+ZWplY3RlZC4gSW5zdGVhZCBsb29rIGZvciBhIGJldHRlciBwbGFjZS4KQEAgLTI5MTEsNiArMjkx
+NCwyNyBAQCBpbnRlbF9nZ3R0X3VwZGF0ZV9uZWVkc192dGRfd2Eoc3RydWN0IGRybV9pOTE1X3By
+aXZhdGUgKmRldl9wcml2KQogaW50IGludGVsX3Nhbml0aXplX2VuYWJsZV9wcGd0dChzdHJ1Y3Qg
+ZHJtX2k5MTVfcHJpdmF0ZSAqZGV2X3ByaXYsCiAJCQkJaW50IGVuYWJsZV9wcGd0dCk7CiAKKy8q
+IGk5MTVfY2dyb3VwLmMgKi8KKyNpZmRlZiBDT05GSUdfQ0dST1VQUworaW50IGk5MTVfY2dyb3Vw
+X2luaXQoc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgKmRldl9wcml2KTsKK2ludCBpOTE1X2Nncm91
+cF9zZXRwYXJhbV9pb2N0bChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCB2b2lkICpkYXRhLAorCQkJ
+ICAgICAgIHN0cnVjdCBkcm1fZmlsZSAqZmlsZSk7Cit2b2lkIGk5MTVfY2dyb3VwX3NodXRkb3du
+KHN0cnVjdCBkcm1faTkxNV9wcml2YXRlICpkZXZfcHJpdik7CisjZWxzZQorc3RhdGljIGlubGlu
+ZSBpbnQKK2k5MTVfY2dyb3VwX2luaXQoc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgKmRldl9wcml2
+KQoreworCXJldHVybiAwOworfQorc3RhdGljIGlubGluZSB2b2lkIGk5MTVfY2dyb3VwX3NodXRk
+b3duKHN0cnVjdCBkcm1faTkxNV9wcml2YXRlICpkZXZfcHJpdikge30KK3N0YXRpYyBpbmxpbmUg
+aW50CitpOTE1X2Nncm91cF9zZXRwYXJhbV9pb2N0bChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCB2
+b2lkICpkYXRhLAorCQkJICAgc3RydWN0IGRybV9maWxlICpmaWxlKQoreworCXJldHVybiAtRUlO
+VkFMOworfQorI2VuZGlmCisKIC8qIGk5MTVfZHJ2LmMgKi8KIHZvaWQgX19wcmludGYoMywgNCkK
+IF9faTkxNV9wcmludGsoc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgKmRldl9wcml2LCBjb25zdCBj
+aGFyICpsZXZlbCwKZGlmZiAtLWdpdCBhL2luY2x1ZGUvdWFwaS9kcm0vaTkxNV9kcm0uaCBiL2lu
+Y2x1ZGUvdWFwaS9kcm0vaTkxNV9kcm0uaAppbmRleCA1MzZlZTRmZWJkNzQuLmZlMzMzYWUxZjBj
+NiAxMDA2NDQKLS0tIGEvaW5jbHVkZS91YXBpL2RybS9pOTE1X2RybS5oCisrKyBiL2luY2x1ZGUv
+dWFwaS9kcm0vaTkxNV9kcm0uaApAQCAtMzE4LDYgKzMxOCw3IEBAIHR5cGVkZWYgc3RydWN0IF9k
+cm1faTkxNV9zYXJlYSB7CiAjZGVmaW5lIERSTV9JOTE1X1BFUkZfT1BFTgkJMHgzNgogI2RlZmlu
+ZSBEUk1fSTkxNV9QRVJGX0FERF9DT05GSUcJMHgzNwogI2RlZmluZSBEUk1fSTkxNV9QRVJGX1JF
+TU9WRV9DT05GSUcJMHgzOAorI2RlZmluZSBEUk1fSTkxNV9DR1JPVVBfU0VUUEFSQU0JMHgzOQog
+CiAjZGVmaW5lIERSTV9JT0NUTF9JOTE1X0lOSVQJCURSTV9JT1coIERSTV9DT01NQU5EX0JBU0Ug
+KyBEUk1fSTkxNV9JTklULCBkcm1faTkxNV9pbml0X3QpCiAjZGVmaW5lIERSTV9JT0NUTF9JOTE1
+X0ZMVVNICQlEUk1fSU8gKCBEUk1fQ09NTUFORF9CQVNFICsgRFJNX0k5MTVfRkxVU0gpCkBAIC0z
+NzUsNiArMzc2LDcgQEAgdHlwZWRlZiBzdHJ1Y3QgX2RybV9pOTE1X3NhcmVhIHsKICNkZWZpbmUg
+RFJNX0lPQ1RMX0k5MTVfUEVSRl9PUEVOCURSTV9JT1coRFJNX0NPTU1BTkRfQkFTRSArIERSTV9J
+OTE1X1BFUkZfT1BFTiwgc3RydWN0IGRybV9pOTE1X3BlcmZfb3Blbl9wYXJhbSkKICNkZWZpbmUg
+RFJNX0lPQ1RMX0k5MTVfUEVSRl9BRERfQ09ORklHCURSTV9JT1coRFJNX0NPTU1BTkRfQkFTRSAr
+IERSTV9JOTE1X1BFUkZfQUREX0NPTkZJRywgc3RydWN0IGRybV9pOTE1X3BlcmZfb2FfY29uZmln
+KQogI2RlZmluZSBEUk1fSU9DVExfSTkxNV9QRVJGX1JFTU9WRV9DT05GSUcJRFJNX0lPVyhEUk1f
+Q09NTUFORF9CQVNFICsgRFJNX0k5MTVfUEVSRl9SRU1PVkVfQ09ORklHLCBfX3U2NCkKKyNkZWZp
+bmUgRFJNX0lPQ1RMX0k5MTVfQ0dST1VQX1NFVFBBUkFNCQlEUk1fSU9XKERSTV9DT01NQU5EX0JB
+U0UgKyBEUk1fSTkxNV9DR1JPVVBfU0VUUEFSQU0sIHN0cnVjdCBkcm1faTkxNV9jZ3JvdXBfcGFy
+YW0pCiAKIC8qIEFsbG93IGRyaXZlcnMgdG8gc3VibWl0IGJhdGNoYnVmZmVycyBkaXJlY3RseSB0
+byBoYXJkd2FyZSwgcmVseWluZwogICogb24gdGhlIHNlY3VyaXR5IG1lY2hhbmlzbXMgcHJvdmlk
+ZWQgYnkgaGFyZHdhcmUuCkBAIC0xNjEzLDYgKzE2MTUsMTYgQEAgc3RydWN0IGRybV9pOTE1X3Bl
+cmZfb2FfY29uZmlnIHsKIAlfX3U2NCBmbGV4X3JlZ3NfcHRyOwogfTsKIAorLyoqCisgKiBTdHJ1
+Y3R1cmUgdG8gc2V0IGk5MTUgcGFyYW1ldGVyIG9uIGEgY2dyb3VwLgorICovCitzdHJ1Y3QgZHJt
+X2k5MTVfY2dyb3VwX3BhcmFtIHsKKwlfX3MzMiBjZ3JvdXBfZmQ7CisJX191MzIgZmxhZ3M7CisJ
+X191NjQgcGFyYW07CisJX19zNjQgdmFsdWU7Cit9OworCiAjaWYgZGVmaW5lZChfX2NwbHVzcGx1
+cykKIH0KICNlbmRpZgotLSAKMi4xNC4zCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5m
+cmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9kcmktZGV2ZWwK
