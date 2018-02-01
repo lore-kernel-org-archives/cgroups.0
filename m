@@ -1,63 +1,106 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v4.15-rc9] sched, cgroup: Don't reject lower cpu.max on
- ancestors
-Date: Thu, 1 Feb 2018 17:49:42 +0100
-Message-ID: <20180201164942.GC2249@hirez.programming.kicks-ass.net>
-References: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
- <20180130102156.GS2249@hirez.programming.kicks-ass.net>
- <20180130145639.GD1121507@devbig577.frc2.facebook.com>
+From: Matt Roper <matthew.d.roper@intel.com>
+Subject: [PATCH RFC v2 0/7] DRM management via cgroups
+Date: Thu,  1 Feb 2018 11:53:08 -0800
+Message-ID: <20180201195315.4956-1-matthew.d.roper@intel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=K3r6wu+b75ZcYD+PRbHqphV61siPK9Oe3M6tvvLYhHs=; b=RagDktTqUDbHwLx5//z16pqaA
-        UqfBnA8PbY505T6+mRheFrw/ZZ0bc44qarUQX04dxtTHdr4uXxd3E/uONvtNuPBK8G2HFxYA5Z6Qx
-        +kMOhRCaQPr/NvcRGddyOcKwVQmP0BWk3sVrV/DEFoECJNlpIOt2NCTy92n5yGvabfAHtDyigwelX
-        RqzVjmbplDn/rd6e5Tm1S8M5B8BxOGm9dx5bwhMQAAh6vWd3dIr6/N71o868dc0q4cyTDzSz0Q/S5
-        9NUmkHMegNoqNJPxx5NZH5BdvwKasqpWNMBx6z0zQM3XklkeBedZb85CChuXffZRTUFfgLxAfSxVQ
-      
-Content-Disposition: inline
-In-Reply-To: <20180130145639.GD1121507-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
 
-On Tue, Jan 30, 2018 at 06:56:39AM -0800, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Jan 30, 2018 at 11:21:56AM +0100, Peter Zijlstra wrote:
-> > afaiu the existing code does exactly the opposite, it forces the
-> > descendants to configure less than the parent allows.
-> > 
-> > You're taking out an error condition and silently allowing descentant
-> > misconfiguration. How does that make sense?
-> 
-> Well, they're upper limits, not strict allocations.  The current
-> behavior implemented by cpu isn't either a strict allocation or upper
-> limits.  It disallows a child from having a value higher than the
-> parent (allocation-ish) but the sum of the children is allowed to
-> exceed the parent's (limit-ish).
-
-True; but its still weird to have the parent 'promise' something and
-then retract that 'promise' later.
-
-> The combination is rather arbitrary and makes it impossible to
-> delegate safely (a delegatee can block the delegator from reducing the
-> amount resource allocated to the delegatee) while not really
-> protecting against overcommit from descendants either.
-> 
-> We had this sort of input validations in different controllers all in
-> their own ways.  In most cases, these aren't well thought out and we
-> can't support things like delegation without aligning controller
-> behaviors.
-
-I suppose.. 
-
-Acked-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+VGhpcyBpcyBhIHNlY29uZCBpdGVyYXRpb24gb2YgdGhlIHBhdGNoZXMgb3JpZ2luYWxseSBwb3N0
+ZWQgaGVyZToKICAgICAgICBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9p
+bnRlbC1nZngvMjAxOC1KYW51YXJ5LzE1MzE1Ni5odG1sCgpQbGVhc2Ugc2VlIHRoZSBvcmlnaW5h
+bCBjb3ZlciBsZXR0ZXIgdG8gdW5kZXJzdGFuZCB0aGUgZ2VuZXJhbCBnb2FsIGFuZApqdXN0aWZp
+Y2F0aW9uIGZvciB0aGlzIHdvcmsuCgpUaGlzIHNlcmllcyBtYWtlcyB0aGUgZm9sbG93aW5nIGlt
+cG9ydGFudCBjaGFuZ2VzIHRvIHRoZSBkZXNpZ24gZnJvbQp0aGUgZmlyc3QgdmVyc2lvbjoKCiAq
+IFRoZSAiY2dyb3VwIGhlbHBlciBsaWJyYXJ5IiBoYXMgYmVlbiByZW1vdmVkIGZyb20gdGhlIERS
+TSBjb3JlOyB0aGUKICAgZWFybHkgcGF0Y2hlcyBvZiB0aGlzIHNlcmllcyBpbnRyb2R1Y2UgYW4g
+ZW5oYW5jZW1lbnQgdG8gdGhlIGNncm91cAogICBzdWJzeXN0ZW0gaXRzZWxmIHdoaWNoIHdpbGwg
+Z3JhbnQgZHJpdmVycyB0aGUgYWJpbGl0eSB0byBzYXZlL3Jlc3RvcmUKICAgdGhlaXIgb3duIGRy
+aXZlci1zcGVjaWZpYyBkYXRhIHN0cnVjdHVyZXMgYXNzb2NpYXRlZCB3aXRoIGluZGl2aWR1YWwK
+ICAgY2dyb3Vwcy4gIERyaXZlcnMgbWF5IHN1YmNsYXNzIHRoZSBjZ3JvdXBfZHJpdmVyX2RhdGEg
+c3RydWN0dXJlIHRvCiAgIHN0b3JlIGFueSBraW5kIG9mIHBlci1jZ3JvdXAgZGF0YSB0aGV5IHdh
+bnQsIG5vdCBqdXN0IGludGVnZXIKICAga2V5L3ZhbHVlIHBhaXJzIGFzIHRoZSBoZWxwZXIgbGli
+cmFyeSBmcm9tIHZlcnNpb24gMSBvZiB0aGlzIHNlcmllcwogICBkaWQuICBNb3ZpbmcgdGhpcyBm
+dW5jdGlvbmFsaXR5IGRpcmVjdGx5IGludG8gY2dyb3VwcyB3aWxsIGFsc28gYWxsb3cKICAgb3Ro
+ZXIgcGFydHMgb2YgdGhlIGtlcm5lbCB0byBwb3RlbnRpYWxseSBiZW5lZml0IGZyb20gdGhpcwog
+ICBmdW5jdGlvbmFsaXR5LCBub3QganVzdCBEUk0gZHJpdmVycy4KCiAqIFRoZSBnZW5lcmFsIGdy
+YXBoaWNzLXNwZWNpZmljIGlvY3RsIHRvIHNldCBjZ3JvdXAgcGFyYW1ldGVycyBoYXMKICAgbW92
+ZWQgZnJvbSB0aGUgRFJNIGNvcmUgdG8gaTkxNS4gIFRoaXMgd2FzIHByZXR0eSBtdWNoIGFuIGFy
+Yml0cmFyeQogICBjaG9pY2UgSSBtYWRlIHdoaWxlIHJlLXdyaXRpbmcgdGhlIG5ldyB2ZXJzaW9u
+IG9mIHRoZSBzZXJpZXM7IEkgZG9uJ3QKICAgaGF2ZSBhIHN0cm9uZyBvcGluaW9uIG92ZXIgd2hl
+dGhlciB0aGUgaW9jdGwgZ29lcyBpbiB0aGUgRFJNIGNvcmUgb3IKICAgc3RheXMgaTkxNS1zcGVj
+aWZpYy4gIEknZCBhcHByZWNpYXRlIGZlZWRiYWNrIGZyb20gb3RoZXIgZHJpdmVyIHRlYW1zCiAg
+IGFzIHRvIHdoZXRoZXIgdGhleSBhbnRpY2lwYXRlIGNncm91cCBpbnRlZ3JhdGlvbiBiZWluZyB1
+c2VmdWwgZm9yCiAgIHRoZWlyIGRyaXZlcnMgYW5kIHVzZSBjYXNlcyAoZS5nLiwgZm9yIGNvbnRy
+b2xsaW5nIHRoaW5ncyBsaWtlIEdQVQogICBtZW1vcnkgdXNhZ2UsIHByaW9yaXR5IHNldHRpbmdz
+LCBldGMuKS4gIEknbGwgbW92ZSB0aGUgaW9jdGwgYmFjayB0bwogICB0aGUgRFJNIGNvcmUgaW4g
+dGhlIG5leHQgaXRlcmF0aW9uIGlmIHRoZXJlJ3MgaW50ZXJlc3QgZnJvbSBvdGhlcgogICBkcml2
+ZXIgdGVhbXMuCgogKiBUaGUgaTkxNS1zcGVjaWZpYyB1c2FnZSBvZiB0aGlzIGZ1bmN0aW9uYWxp
+dHkgaXMgdG8gYWRqdXN0IEdQVQogICBwcmlvcml0eSBmb3IgZ3JvdXBzIG9mIHByb2Nlc3Nlcy4g
+IEJhc2VkIG9uIENocmlzJyBmZWVkYmFjaywgSSd2ZQogICBtYWRlIHRoaXMgY29udHJvbCBhICJw
+cmlvcml0eSBvZmZzZXQiIHJhdGhlciB0aGFuIGp1c3QgYSBzdGFydGluZwogICBwcmlvcml0eSwg
+c28gdGhhdCB0aGUgY2hhbmdlIGFwcGxpZWQgYnkgY2dyb3VwIHdpbGwgYmUgYWRkZWQgdG8gdGhl
+CiAgIGV4cGxpY2l0bHktc2V0IGNvbnRleHQgcHJpb3JpdHkgcmF0aGVyIHRoYW4gYmVpbmcgb3Zl
+cndyaXR0ZW4gYnkgaXQuCiAgIEF0IHRoZSBtb21lbnQgaTkxNSBzdGlsbCBqdXN0IGFzc2lnbnMg
+dGhlIHByaW9yaXR5IG9mZnNldCBvbmUgdGltZSBhdAogICBjb250ZXh0IGNyZWF0aW9uIGFuZCBk
+b2Vzbid0IGFsdGVyIGl0IGlmIHRoZSBwcm9jZXNzIG1pZ3JhdGVzIGJldHdlZW4KICAgY2dyb3Vw
+cyBhdCBydW50aW1lIG9yIGlmIHRoZSBjZ3JvdXAgaGFzIGEgbmV3IHZhbHVlIGFzc2lnbmVkIHRv
+IGl0OwogICBzdWNoIGNoYW5nZXMgb25seSBhZmZlY3QgdGhlIHByaW9yaXR5IG9mZnNldCBvZiBu
+ZXcgY29udGV4dHMgY3JlYXRlZAogICBieSBhIHByb2Nlc3MuICBJJ20gb3BlbiB0byBmZWVkYmFj
+ayBvbiB3aGV0aGVyIHdlIHNob3VsZCBhbHNvIG1ha2UKICAgY2dyb3VwIGNoYW5nZXMgYWZmZWN0
+IGV4aXN0aW5nIEdQVSBjb250ZXh0KHMpIGZyb20gYSBwcm9jZXNzLgoKQXMgbm90ZWQgb24gdjEg
+b2YgbXkgcGF0Y2ggc2VyaWVzLCBjZ3JvdXAgY29udHJvbCBvZiBncmFwaGljcyBkcml2ZXIKY29u
+Y2VwdHMgaXMgZXhwZWN0ZWQgdG8gYmUgZG9uZSBtb3N0bHkgZHVyaW5nIHN5c3RlbSBzdGFydHVw
+IChlLmcuLCBhCnN5c3YtaW5pdCBzY3JpcHQgb3IgYSBzeXN0ZW1kIHJlY2lwZSB3cml0dGVuIGJ5
+IGEgc3lzdGVtIGludGVncmF0b3IgYW5kCmN1c3RvbSB0byB0aGVpciBvd24gc2V0dXApLCBzbyB3
+ZSBkb24ndCByZWFsbHkgbmVlZCBhIHRlcnJpYmx5CmNvbXBsaWNhdGVkIHVzZXJzcGFjZSwganVz
+dCBhIHNpbXBsZSB0b29sIHRoYXQgY2FuIGJlIGNhbGxlZCBieQphcHByb3ByaWF0ZSBzY3JpcHRz
+L3JlY2lwZXMgdG8gc2V0IHRoZSBkZXNpcmVkIHBvbGljeS4gIEkndmUgcmUtd3JpdHRlbgp0aGUg
+dG9vbCBmcm9tIHYxIG9mIHRoZSBwYXRjaCBzZXJpZXMgYXMgYW4gaS1nLXQgdG9vbCB0aGlzIHRp
+bWUgYW5kIHdpbGwKc2VuZCBpdCBhcyBmb2xsb3d1cCBlbWFpbCBzaG9ydGx5LgoKU3RpbGwgb24g
+bXkgVE9ETyBsaXN0IChvbmNlIEkgZ2F0aGVyIHNvbWUgbW9yZSBnZW5lcmFsIGZlZWRiYWNrIGFu
+ZCBtb3ZlCm91dCBvZiB0aGUgZWFybHkgUkZDIHN0YWdlKToKICogRG9jdW1lbnQgdGhpcyBtb3Jl
+IGZ1bGx5IGluIGJvdGggdGhlIGNncm91cHMgZG9jdW1lbnRhdGlvbiBhbmQgdGhlCiAgIGk5MTUg
+a2VybmVsZG9jLgogKiBXcml0ZSBzb21lIGktZy10IHRlc3RzIHRvIGV4ZXJjaXNlIHRoZSBpb2N0
+bCBhbmQgYWxsIHRoZSBjb3JuZXIKICAgY2FzZXMuCgoKTWF0dCBSb3BlciAoNyk6CiAgY2dyb3Vw
+OiBBbGxvdyBkcml2ZXJzIHRvIHN0b3JlIGRhdGEgYXNzb2NpYXRlZCB3aXRoIGEgY2dyb3VwCiAg
+a2VybmZzOiBFeHBvcnQga2VybmZzX2dldF9pbm9kZQogIGNncm91cDogQWRkIGludGVyZmFjZSB0
+byBhbGxvdyBkcml2ZXJzIHRvIGxvb2t1cCBwcm9jZXNzIGNncm91cAogICAgbWVtYmVyc2hpcAog
+IGRybTogQWRkIGhlbHBlciB0byBvYnRhaW4gY2dyb3VwIG9mIGRybV9maWxlJ3Mgb3duaW5nIHBy
+b2Nlc3MKICBkcm0vaTkxNTogY2dyb3VwIGludGVncmF0aW9uCiAgZHJtL2k5MTU6IEludHJvZHVj
+ZSAncHJpb3JpdHkgb2Zmc2V0JyBmb3IgR1BVIGNvbnRleHRzCiAgZHJtL2k5MTU6IEFkZCBjb250
+ZXh0IHByaW9yaXR5ICYgcHJpb3JpdHkgb2Zmc2V0IHRvIGRlYnVnZnMKCiBkcml2ZXJzL2dwdS9k
+cm0vaTkxNS9LY29uZmlnICAgICAgICAgICAgfCAgIDEgKwogZHJpdmVycy9ncHUvZHJtL2k5MTUv
+TWFrZWZpbGUgICAgICAgICAgIHwgICAxICsKIGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfY2dy
+b3VwLmMgICAgICB8IDE4MCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogZHJpdmVy
+cy9ncHUvZHJtL2k5MTUvaTkxNV9kZWJ1Z2ZzLmMgICAgIHwgICAzICsKIGRyaXZlcnMvZ3B1L2Ry
+bS9pOTE1L2k5MTVfZHJ2LmMgICAgICAgICB8ICAgNyArKwogZHJpdmVycy9ncHUvZHJtL2k5MTUv
+aTkxNV9kcnYuaCAgICAgICAgIHwgIDMxICsrKysrKwogZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkx
+NV9nZW1fY29udGV4dC5jIHwgICA2ICstCiBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2dlbV9j
+b250ZXh0LmggfCAgIDkgKysKIGZzL2tlcm5mcy9pbm9kZS5jICAgICAgICAgICAgICAgICAgICAg
+ICB8ICAgMSArCiBpbmNsdWRlL2RybS9kcm1fZmlsZS5oICAgICAgICAgICAgICAgICAgfCAgMjAg
+KysrKwogaW5jbHVkZS9saW51eC9jZ3JvdXAtZGVmcy5oICAgICAgICAgICAgIHwgIDM3ICsrKysr
+KysKIGluY2x1ZGUvbGludXgvY2dyb3VwLmggICAgICAgICAgICAgICAgICB8ICAzMyArKysrKysK
+IGluY2x1ZGUvdWFwaS9kcm0vaTkxNV9kcm0uaCAgICAgICAgICAgICB8ICAxMyArKysKIGluaXQv
+S2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgNCArCiBrZXJuZWwvY2dyb3Vw
+L01ha2VmaWxlICAgICAgICAgICAgICAgICAgfCAgIDEgKwoga2VybmVsL2Nncm91cC9jZ3JvdXAu
+YyAgICAgICAgICAgICAgICAgIHwgICAxICsKIGtlcm5lbC9jZ3JvdXAvY2dyb3VwX2RyaXZlci5j
+ICAgICAgICAgICB8IDE2MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrCiAxNyBmaWxlcyBj
+aGFuZ2VkLCA1MDggaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKIGNyZWF0ZSBtb2RlIDEw
+MDY0NCBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2Nncm91cC5jCiBjcmVhdGUgbW9kZSAxMDA2
+NDQga2VybmVsL2Nncm91cC9jZ3JvdXBfZHJpdmVyLmMKCi0tIAoyLjE0LjMKCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxp
+c3QKSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNr
+dG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVsLWdmeAo=
