@@ -1,39 +1,74 @@
-From: Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>
-Subject: Re: [PATCH RFC v2 7/7] drm/i915: Add context priority & priority offset to
- debugfs
-Date: Thu, 01 Feb 2018 20:24:00 +0000
-Message-ID: <151751664033.28099.8069028482469265908@mail.alporthouse.com>
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Subject: Re: [Intel-gfx] [PATCH RFC v2 3/7] cgroup: Add interface to allow
+ drivers to lookup process cgroup membership
+Date: Thu, 01 Feb 2018 20:49:32 +0000
+Message-ID: <151751817231.28099.3778306702580372716@mail.alporthouse.com>
 References: <20180201195315.4956-1-matthew.d.roper@intel.com>
- <20180201195315.4956-8-matthew.d.roper@intel.com>
+ <20180201195315.4956-4-matthew.d.roper@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20180201195315.4956-8-matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20180201195315.4956-4-matthew.d.roper@intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matt Roper <matthew.d.roper@intel.com>, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
 
-Quoting Matt Roper (2018-02-01 19:53:15)
-> Update i915_context_status to include priority information.
-> 
-> Signed-off-by: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> ---
->  drivers/gpu/drm/i915/i915_debugfs.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/gpu/drm/i915/i915_debugfs.c b/drivers/gpu/drm/i915/i915_debugfs.c
-> index 3849ded354e3..e9d8e20155b1 100644
-> --- a/drivers/gpu/drm/i915/i915_debugfs.c
-> +++ b/drivers/gpu/drm/i915/i915_debugfs.c
-> @@ -1915,6 +1915,9 @@ static int i915_context_status(struct seq_file *m, void *unused)
->                 seq_putc(m, ctx->remap_slice ? 'R' : 'r');
->                 seq_putc(m, '\n');
->  
-> +               seq_printf(m, "Priority %d (prio offset = %d)\n",
-> +                          ctx->priority, ctx->priority_offset);
-
-s/prio offset/cgroup offset/ ?
-"prio" itself I think is redundant given that we are providing further
-details of "Priority"
--Chris
+UXVvdGluZyBNYXR0IFJvcGVyICgyMDE4LTAyLTAxIDE5OjUzOjExKQo+IERyaXZlcnMgd2lsbCBu
+ZWVkIHRvIHNhdmUvcmVzdG9yZSB0aGUgYXBwcm9wcmlhdGUgY2dyb3VwIGRhdGEgZm9yIHRoZSBw
+cm9jZXNzCj4gc3VibWl0dGluZyBhIGRyaXZlciByZXF1ZXN0LiAgQWRkIGFuIGludGVyZmFjZSBm
+b3IgZHJpdmVycyB0byBkZXRlcm1pbmUgdGhlCj4gY2dyb3VwIGZvciB0aGUgdXNlcnNwYWNlIHBy
+b2Nlc3Mgc3VibWl0dGluZyBhIGRyaXZlciByZXF1ZXN0Lgo+IAo+IENjOiBUZWp1biBIZW8gPHRq
+QGtlcm5lbC5vcmc+Cj4gQ2M6IGNncm91cHNAdmdlci5rZXJuZWwub3JnCj4gU2lnbmVkLW9mZi1i
+eTogTWF0dCBSb3BlciA8bWF0dGhldy5kLnJvcGVyQGludGVsLmNvbT4KPiAtLS0KPiAgaW5jbHVk
+ZS9saW51eC9jZ3JvdXAuaCAgICAgICAgfCAgNiArKysrKysKPiAga2VybmVsL2Nncm91cC9jZ3Jv
+dXBfZHJpdmVyLmMgfCAyNCArKysrKysrKysrKysrKysrKysrKysrKysKPiAgMiBmaWxlcyBjaGFu
+Z2VkLCAzMCBpbnNlcnRpb25zKCspCj4gCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvY2dy
+b3VwLmggYi9pbmNsdWRlL2xpbnV4L2Nncm91cC5oCj4gaW5kZXggMGJhMTM3NDEyMmM3Li4wNWVi
+ZmI5N2JjZGUgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVkZS9saW51eC9jZ3JvdXAuaAo+ICsrKyBiL2lu
+Y2x1ZGUvbGludXgvY2dyb3VwLmgKPiBAQCAtODQyLDYgKzg0Miw3IEBAIHZvaWQgY2dyb3VwX2Ry
+aXZlcl9yZWxlYXNlKHN0cnVjdCBjZ3JvdXBfZHJpdmVyICpkcnYpOwo+ICBzdHJ1Y3QgY2dyb3Vw
+X2RyaXZlcl9kYXRhICogY2dyb3VwX2RyaXZlcl9nZXRfZGF0YShzdHJ1Y3QgY2dyb3VwX2RyaXZl
+ciAqZHJ2LAo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIHN0cnVjdCBjZ3JvdXAgKmNncnAsCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgYm9vbCAqaXNfbmV3KTsKPiArc3RydWN0IGNncm91cCAqY2dy
+b3VwX2Zvcl9kcml2ZXJfcHJvY2VzcyhzdHJ1Y3QgcGlkICpwaWQpOwo+ICAKPiAgI2Vsc2UgLyog
+IUNPTkZJR19DR1JPVVBfRFJJVkVSICovCj4gIAo+IEBAIC04NTcsNiArODU4LDExIEBAIGNncm91
+cF9kcml2ZXJfZ2V0X2RhdGEoc3RydWN0IGNncm91cF9kcml2ZXIgKmRydiwKPiAgewo+ICAgICAg
+ICAgcmV0dXJuIEVSUl9QVFIoLUVJTlZBTCk7Cj4gIH0KPiArc3RhdGljIGlubGluZSBzdHJ1Y3Qg
+Y2dyb3VwICoKPiArY2dyb3VwX2Zvcl9kcml2ZXJfcHJvY2VzcyhzdHJ1Y3QgcGlkICpwaWQpCj4g
+K3sKPiArICAgICAgIHJldHVybiBOVUxMOwo+ICt9Cj4gIAo+ICAjZW5kaWYgLyogIUNPTkZJR19D
+R1JPVVBfRFJJVkVSICovCj4gIAo+IGRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL2Nncm91cF9k
+cml2ZXIuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwX2RyaXZlci5jCj4gaW5kZXggMGQ4OTMzOTVk
+YzdiLi40Zjg3MGNiYjkyMTIgMTAwNjQ0Cj4gLS0tIGEva2VybmVsL2Nncm91cC9jZ3JvdXBfZHJp
+dmVyLmMKPiArKysgYi9rZXJuZWwvY2dyb3VwL2Nncm91cF9kcml2ZXIuYwo+IEBAIC0xMjgsMyAr
+MTI4LDI3IEBAIGNncm91cF9kcml2ZXJfZ2V0X2RhdGEoc3RydWN0IGNncm91cF9kcml2ZXIgKmRy
+diwKPiAgICAgICAgIHJldHVybiBkYXRhOwo+ICB9Cj4gIEVYUE9SVF9TWU1CT0woY2dyb3VwX2Ry
+aXZlcl9nZXRfZGF0YSk7Cj4gKwo+ICsvKioKPiArICogY2dyb3VwX2Zvcl9kcml2ZXJfcHJvY2Vz
+cyAtIHJldHVybiB0aGUgY2dyb3VwIGZvciBhIHByb2Nlc3MKPiArICogQHBpZDogcHJvY2VzcyB0
+byBsb29rdXAgY2dyb3VwIGZvcgo+ICsgKgo+ICsgKiBSZXR1cm5zIHRoZSBjZ3JvdXAgZnJvbSB0
+aGUgdjIgaGllcmFyY2h5IHRoYXQgYSBwcm9jZXNzIGJlbG9uZ3MgdG8uCj4gKyAqIFRoaXMgZnVu
+Y3Rpb24gaXMgaW50ZW5kZWQgdG8gYmUgY2FsbGVkIGZyb20gZHJpdmVycyBhbmQgd2lsbCBvYnRh
+aW4KPiArICogdGhlIG5lY2Vzc2FyeSBjZ3JvdXAgbG9ja3MuCj4gKyAqCj4gKyAqIFJFVFVSTlM6
+Cj4gKyAqIFByb2Nlc3MnIGNncm91cCBpbiB0aGUgZGVmYXVsdCAodjIpIGhpZXJhcmNoeQo+ICsg
+Ki8KPiArc3RydWN0IGNncm91cCAqCj4gK2Nncm91cF9mb3JfZHJpdmVyX3Byb2Nlc3Moc3RydWN0
+IHBpZCAqcGlkKQo+ICt7Cj4gKyAgICAgICBzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRhc2sgPSBwaWRf
+dGFzayhwaWQsIFBJRFRZUEVfUElEKTsKPiArCj4gKyAgICAgICBtdXRleF9sb2NrKCZjZ3JvdXBf
+bXV0ZXgpOwo+ICsgICAgICAgc3Bpbl9sb2NrX2lycSgmY3NzX3NldF9sb2NrKTsKPiArICAgICAg
+IHRhc2tfY2dyb3VwX2Zyb21fcm9vdCh0YXNrLCAmY2dycF9kZmxfcm9vdCk7Cj4gKyAgICAgICBz
+cGluX3VubG9ja19pcnEoJmNzc19zZXRfbG9jayk7Cj4gKyAgICAgICBtdXRleF91bmxvY2soJmNn
+cm91cF9tdXRleCk7CgpHdXQgZmVlbGluZyBzYXlzIHVzZSB0YXNrID0gZ2V0X3BpZF90YXNrKCk7
+IGlmICghdGFzaykgcmV0dXJuIE5VTEwgYW5kCnB1dF90YXNrX3N0cnVjdCh0YXNrKTsgZm9yIHNh
+ZmV0eS4KClNob3VsZG4ndCB0aGVyZSBiZSBhIHJldHVybiBoZXJlPwo+ICt9Ci1DaHJpcwpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFp
+bGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5m
+cmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
