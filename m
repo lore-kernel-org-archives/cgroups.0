@@ -1,67 +1,38 @@
-From: Matt Roper <matthew.d.roper@intel.com>
-Subject: [PATCH RFC v2 4/7] drm: Add helper to obtain cgroup of drm_file's
- owning process
-Date: Thu,  1 Feb 2018 11:53:12 -0800
-Message-ID: <20180201195315.4956-5-matthew.d.roper@intel.com>
+From: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH RFC v2 7/7] drm/i915: Add context priority & priority offset to debugfs
+Date: Thu,  1 Feb 2018 11:53:15 -0800
+Message-ID: <20180201195315.4956-8-matthew.d.roper@intel.com>
 References: <20180201195315.4956-1-matthew.d.roper@intel.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20180201195315.4956-1-matthew.d.roper@intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20180201195315.4956-1-matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-U2lnbmVkLW9mZi1ieTogTWF0dCBSb3BlciA8bWF0dGhldy5kLnJvcGVyQGludGVsLmNvbT4KLS0t
-CiBpbmNsdWRlL2RybS9kcm1fZmlsZS5oICAgICAgICB8IDIwICsrKysrKysrKysrKysrKysrKysr
-CiBrZXJuZWwvY2dyb3VwL2Nncm91cF9kcml2ZXIuYyB8IDEyICsrKysrKysrKystLQogMiBmaWxl
-cyBjaGFuZ2VkLCAzMCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
-L2luY2x1ZGUvZHJtL2RybV9maWxlLmggYi9pbmNsdWRlL2RybS9kcm1fZmlsZS5oCmluZGV4IDBl
-MGM4Njg0NTFhNS4uNzJhYzQwNTMwYWQzIDEwMDY0NAotLS0gYS9pbmNsdWRlL2RybS9kcm1fZmls
-ZS5oCisrKyBiL2luY2x1ZGUvZHJtL2RybV9maWxlLmgKQEAgLTMyLDYgKzMyLDcgQEAKIAogI2lu
-Y2x1ZGUgPGxpbnV4L3R5cGVzLmg+CiAjaW5jbHVkZSA8bGludXgvY29tcGxldGlvbi5oPgorI2lu
-Y2x1ZGUgPGxpbnV4L2Nncm91cC5oPgogCiAjaW5jbHVkZSA8dWFwaS9kcm0vZHJtLmg+CiAKQEAg
-LTM3OCw0ICszNzksMjMgQEAgdm9pZCBkcm1fZXZlbnRfY2FuY2VsX2ZyZWUoc3RydWN0IGRybV9k
-ZXZpY2UgKmRldiwKIHZvaWQgZHJtX3NlbmRfZXZlbnRfbG9ja2VkKHN0cnVjdCBkcm1fZGV2aWNl
-ICpkZXYsIHN0cnVjdCBkcm1fcGVuZGluZ19ldmVudCAqZSk7CiB2b2lkIGRybV9zZW5kX2V2ZW50
-KHN0cnVjdCBkcm1fZGV2aWNlICpkZXYsIHN0cnVjdCBkcm1fcGVuZGluZ19ldmVudCAqZSk7CiAK
-KyNpZmRlZiBDT05GSUdfQ0dST1VQUworLyoqCisgKiBkcm1fZmlsZV9nZXRfY2dyb3VwIC0gb2J0
-YWluIGNncm91cCBmb3IgZHJtX2ZpbGUncyBvd25pbmcgcHJvY2VzcworICogQGZpbGVfcHJpdjog
-RFJNIGZpbGUKKyAqCisgKiBPYnRhaW5zIHRoZSBjZ3JvdXAgZnJvbSBhIHNwZWNpZmljIGhpZXJh
-cmNoeSB0aGF0IHRoZSBkcm1fZmlsZSdzIG93bmluZworICogcHJvY2VzcyBiZWxvbmdzIHRvLiAg
-VGhlIGNncm91cCBtYXkgYmUgdXNlZCB0byBzZXQgZHJpdmVyLXNwZWNpZmljCisgKiBwb2xpY3kg
-KHByaW9yaXR5LCB2cmFtIHVzYWdlLCBldGMuKS4KKyAqLworc3RhdGljIGlubGluZSBzdHJ1Y3Qg
-Y2dyb3VwICoKK2RybV9maWxlX2dldF9jZ3JvdXAoc3RydWN0IGRybV9maWxlICpmaWxlX3ByaXYp
-Cit7CisJcmV0dXJuIGNncm91cF9mb3JfZHJpdmVyX3Byb2Nlc3MoZmlsZV9wcml2LT5waWQpOwor
-fQorI2Vsc2UKK3N0YXRpYyBpbmxpbmUgc3RydWN0IGNncm91cCAqCitkcm1fZmlsZV9nZXRfY2dy
-b3VwKHN0cnVjdCBkcm1fZmlsZSAqZmlsZV9wcml2KSB7IHJldHVybiBOVUxMOyB9CisjZW5kaWYK
-KwogI2VuZGlmIC8qIF9EUk1fRklMRV9IXyAqLwpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9j
-Z3JvdXBfZHJpdmVyLmMgYi9rZXJuZWwvY2dyb3VwL2Nncm91cF9kcml2ZXIuYwppbmRleCA0Zjg3
-MGNiYjkyMTIuLmRiMGUyNjhiOTU0NiAxMDA2NDQKLS0tIGEva2VybmVsL2Nncm91cC9jZ3JvdXBf
-ZHJpdmVyLmMKKysrIGIva2VybmVsL2Nncm91cC9jZ3JvdXBfZHJpdmVyLmMKQEAgLTQsNiArNCw3
-IEBACiAKICNpbmNsdWRlIDxsaW51eC9oYXNodGFibGUuaD4KICNpbmNsdWRlIDxsaW51eC9tbS5o
-PgorI2luY2x1ZGUgPGxpbnV4L3NjaGVkL3Rhc2suaD4KIAogLyoKICAqIEdlbmVyYWwgZGF0YSBz
-dHJ1Y3R1cmUgcmV0dXJuZWQgYnkgY2dyb3VwX2RyaXZlcl9pbml0KCkgYW5kIHVzZWQgYXMgYQpA
-QCAtMTQzLDEyICsxNDQsMTkgQEAgRVhQT1JUX1NZTUJPTChjZ3JvdXBfZHJpdmVyX2dldF9kYXRh
-KTsKIHN0cnVjdCBjZ3JvdXAgKgogY2dyb3VwX2Zvcl9kcml2ZXJfcHJvY2VzcyhzdHJ1Y3QgcGlk
-ICpwaWQpCiB7Ci0Jc3RydWN0IHRhc2tfc3RydWN0ICp0YXNrID0gcGlkX3Rhc2socGlkLCBQSURU
-WVBFX1BJRCk7CisJc3RydWN0IHRhc2tfc3RydWN0ICp0YXNrOworCXN0cnVjdCBjZ3JvdXAgKmNn
-cnA7CisKKwlyZWFkX2xvY2soJnRhc2tsaXN0X2xvY2spOworCXRhc2sgPSBwaWRfdGFzayhwaWQs
-IFBJRFRZUEVfUElEKTsKKwlyZWFkX3VubG9jaygmdGFza2xpc3RfbG9jayk7CiAKIAltdXRleF9s
-b2NrKCZjZ3JvdXBfbXV0ZXgpOwogCXNwaW5fbG9ja19pcnEoJmNzc19zZXRfbG9jayk7Ci0JdGFz
-a19jZ3JvdXBfZnJvbV9yb290KHRhc2ssICZjZ3JwX2RmbF9yb290KTsKKwljZ3JwID0gdGFza19j
-Z3JvdXBfZnJvbV9yb290KHRhc2ssICZjZ3JwX2RmbF9yb290KTsKIAlzcGluX3VubG9ja19pcnEo
-JmNzc19zZXRfbG9jayk7CiAJbXV0ZXhfdW5sb2NrKCZjZ3JvdXBfbXV0ZXgpOworCisJcmV0dXJu
-IGNncnA7CiB9CiBFWFBPUlRfU1lNQk9MKGNncm91cF9mb3JfZHJpdmVyX3Byb2Nlc3MpOwotLSAK
-Mi4xNC4zCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpk
-cmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0
-cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+Update i915_context_status to include priority information.
+
+Signed-off-by: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ drivers/gpu/drm/i915/i915_debugfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_debugfs.c b/drivers/gpu/drm/i915/i915_debugfs.c
+index 3849ded354e3..e9d8e20155b1 100644
+--- a/drivers/gpu/drm/i915/i915_debugfs.c
++++ b/drivers/gpu/drm/i915/i915_debugfs.c
+@@ -1915,6 +1915,9 @@ static int i915_context_status(struct seq_file *m, void *unused)
+ 		seq_putc(m, ctx->remap_slice ? 'R' : 'r');
+ 		seq_putc(m, '\n');
+ 
++		seq_printf(m, "Priority %d (prio offset = %d)\n",
++			   ctx->priority, ctx->priority_offset);
++
+ 		for_each_engine(engine, dev_priv, id) {
+ 			struct intel_context *ce = &ctx->engine[engine->id];
+ 
+-- 
+2.14.3
