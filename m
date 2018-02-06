@@ -1,159 +1,270 @@
-From: Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC(V3): Audit Kernel Container IDs
-Date: Mon, 05 Feb 2018 08:47:36 -0500
-Message-ID: <1517838456.13097.163.camel@redhat.com>
-References: <20180109121620.wi7dq2423ugsraqv@madcap2.tricolour.ca>
-         <1515514736.3239.10.camel@redhat.com>
-         <20180110070011.l4rcdcwb27witfem@madcap2.tricolour.ca>
-         <CAHC9VhQ=hX55e7ftkVQCogTZTcdSm3rm-+YNOgWomabbXV_sKg@mail.gmail.com>
-         <1517609946.13097.161.camel@redhat.com>
-         <CAHC9VhTg0ocArSek03A-XrbjgR4iGeysxXWaA8HknKBD_5ZRkA@mail.gmail.com>
+From: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH] blk-throttle: fix race between blkcg_bio_issue_check and
+ cgroup_rmdir
+Date: Tue, 6 Feb 2018 15:36:16 +0800
+Message-ID: <78df88f6-eef5-2e7b-65ab-3b6abb84262a@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAHC9VhTg0ocArSek03A-XrbjgR4iGeysxXWaA8HknKBD_5ZRkA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
-Cc: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, Carlos O'Donell <carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Audit <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Linux Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuejiufei <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Caspar Zhang <caspar-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-On Fri, 2018-02-02 at 18:24 -0500, Paul Moore wrote:
-> On Fri, Feb 2, 2018 at 5:19 PM, Simo Sorce <simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> > On Fri, 2018-02-02 at 16:24 -0500, Paul Moore wrote:
-> > > On Wed, Jan 10, 2018 at 2:00 AM, Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> > > > On 2018-01-09 11:18, Simo Sorce wrote:
-> > > > > On Tue, 2018-01-09 at 07:16 -0500, Richard Guy Briggs wrote:
-> 
-> ...
-> 
-> > > > Paul, can you justify this somewhat larger inconvenience for some
-> > > > relatively minor convenience on our part?
-> > > 
-> > > Done in direct response to Simo.
-> > 
-> > Sorry but your response sounds more like waving away then addressing
-> > them, the excuse being: we can't please everyone, so we are going to
-> > please no one.
-> 
-> I obviously disagree with the take on my comments but you're free to
-> your opinion.
+We've triggered a WARNING in blk_throtl_bio when throttling writeback
+io, which complains blkg->refcnt is already 0 when calling blkg_get, and
+then kernel crashes with invalid page request.
+After investigating this issue, we've found there is a race between
+blkcg_bio_issue_check and cgroup_rmdir. The race is described below.
 
-The I misunderstood your comments, I am not interested in putting words
-in your mouth.
+writeback kworker
+  blkcg_bio_issue_check
+    rcu_read_lock
+    blkg_lookup
+    <<< *race window*
+    blk_throtl_bio
+      spin_lock_irq(q->queue_lock)
+      spin_unlock_irq(q->queue_lock)
+    rcu_read_unlock
 
-> I believe saying we are pleasing no one isn't really fair now is it?
+cgroup_rmdir
+  cgroup_destroy_locked
+    kill_css
+      css_killed_ref_fn
+        css_killed_work_fn
+          offline_css
+            blkcg_css_offline
+              spin_trylock(q->queue_lock)
+              blkg_destroy
+              spin_unlock(q->queue_lock)
 
-Well, of course you are going to please the audit subsystem, I
-understand that. I think there is a problem of expectations. Some
-people, me included, hoped to have a way to identify a container with
-the help of the kernel.
+Since rcu can only prevent blkg from releasing when it is being used,
+the blkg->refcnt can be decreased to 0 during blkg_destroy and schedule
+blkg release.
+Then trying to blkg_get in blk_throtl_bio will complains the WARNING.
+And then the corresponding blkg_put will schedule blkg release again,
+which result in double free.
+This race is introduced by commit ae1188963611 ("blkcg: consolidate blkg
+creation in blkcg_bio_issue_check()"). Before this commit, it will lookup
+first and then try to lookup/create again with queue_lock. So revive
+this logic to fix the race.
 
-> Is there any type of audit container ID now?  How would you go about
-> associating audit events with containers now?
+Fixes: ae1188963611 ("blkcg: consolidate blkg creation in blkcg_bio_issue_check()")
+Reported-by: Jiufei Xue <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Signed-off-by: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+CC: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ block/blk-cgroup.c         |  2 +-
+ block/blk-throttle.c       | 29 +++++++++++++++++++++++++----
+ block/cfq-iosched.c        | 33 +++++++++++++++++++++++----------
+ include/linux/blk-cgroup.h | 27 +++++----------------------
+ 4 files changed, 54 insertions(+), 37 deletions(-)
 
-We do not have a good way, there are some dirty tricks like inferring
-the container identity via cgroup names, but that is ... eww.
-This is why, given audit has the same need of user space, there was
-some hope we could agree on an identifier that could be used by both.
-It would make correlating audit logs and other cluster-wide events
-simpler. That is all.
-
->  (spoiler alert: it ain't
-> pretty, and there are gaps I don't believe you can cover)  This
-> proposal provides a mechanism to do this in a way that isn't tied to
-> any one particular concept of a container and is manageable inside the
-> kernel.
-
-I like the proposal for the most part, we are just discussing on the
-nature of the identifier, which is a minor detail in the end.
-
-> If you have a need to track audit events for containers, I find it
-> extremely hard to believe that you are not at least partially pleased
-> by the solutions presented here.  It may not be everything on your
-> wishlist, but when did you ever get *everything* on your wishlist?
-
-It is true, and I am sorry if I came out demanding or abrasive. It was
-not my intention. Of course a u64 that has to be mapped is still better
-than nothing. It does cause a lot more work in user space, but it is
-not impossible to deal with.
-
-> > > But to be clear Richard, we've talked about this a few times, it's not
-> > > a "minor convenience" on our part, it's a pretty big convenience once
-> > > we starting having to route audit events and make decisions based on
-> > > the audit container ID information.  Audit performance is less than
-> > > awesome now, I'm working hard to not make it worse.
-> > 
-> > Sounds like a security vs performance trade off to me.
-> 
-> Welcome to software development.  It's generally a pretty terrible
-> hobby and/or occupation, but we make up for it with long hours and
-> endless frustration.
-
-Tell me more about that, not! ;-)
-
-> > > > u64 vs u128 is easy for us to
-> > > > accomodate in terms of scalar comparisons.  It doubles the information
-> > > > in every container id field we print in audit records.
-> > > 
-> > > ... and slows down audit container ID checks.
-> > 
-> > Are you saying a cmp on a u128 is slower than a comparison on a u64 and
-> > this is something that will be noticeable ?
-> 
-> Do you have a 128 bit system?
-
-no, but all 64bit systems have an instruction that allow you to do
-atomic 128 compare and swap (IIRC ?).
-
->   I don't.  I've got a bunch of 64 bit
-> systems, and a couple of 32 bit systems too.  People that use audit
-> have a tendency to really hammer on it, to the point that we get
-> performance complaints on a not infrequent basis.  I don't know the
-> exact number of times we are going to need to check the audit
-> container ID, but it's reasonable to think that we'll expose it as a
-> filter-able field which adds a few checks, we'll use it for record
-> routing so that's a few more, and if we're running multiple audit
-> daemons we will probably want to include LSM checks which could result
-> in a few more audit container ID checks.  If it was one comparison I
-> wouldn't be too worried about it, but the point I'm trying to make is
-> that we don't know what the implementation is going to look like yet
-> and I suspect this ID is going to be leveraged in several places in
-> the audit subsystem and I would much rather start small to save
-> headaches later.
-> 
-> We can always expand the ID to a larger integer at a later date, but
-> we can't make it smaller.
-
-Well looking through the history of in kernel identifiers I know it is
-hard also to increase size, because userspace will end up depending on
-a specific size ... and this is the only reason I am really debating
-this. If it were really easy to change I wouldn't bother to do it now.
-
-> > > > A c36 is a bigger step.
-> > > 
-> > > Yeah, we're not doing that, no way.
-> > 
-> > Ok, I can see your point though I do not agree with it.
-> > 
-> > I can see why you do not want to have arbitrary length strings, but a
-> > u128 sounded like a reasonable compromise to me as it has enough room
-> > to be able to have unique cluster-wide IDs which a u64 definitely makes
-> > a lot harder to provide w/o tight coordination.
-> 
-> I originally wanted it to be a 32-bit integer, but Richard managed to
-> talk me into 64-bits, that was my compromise :)
-> 
-> As I said earlier, if you are doing container auditing you're going to
-> need coordination with the orchestrator, regardless of the audit
-> container ID size.
-
-Ok, I guess that's as good as I can get it for now, thank you for your
-patient explanations.
-
-Simo.
-
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 4117524..b1d22e5 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -162,7 +162,6 @@ struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
+ 
+ 	return NULL;
+ }
+-EXPORT_SYMBOL_GPL(blkg_lookup_slowpath);
+ 
+ /*
+  * If @new_blkg is %NULL, this function tries to allocate a new one as
+@@ -306,6 +305,7 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ 			return blkg;
+ 	}
+ }
++EXPORT_SYMBOL_GPL(blkg_lookup_create);
+ 
+ static void blkg_destroy(struct blkcg_gq *blkg)
+ {
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index c5a1316..ec830be 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2143,26 +2143,41 @@ static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
+ #endif
+ }
+ 
+-bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
++bool blk_throtl_bio(struct request_queue *q, struct blkcg *blkcg,
+ 		    struct bio *bio)
+ {
++	struct throtl_data *td = q->td;
+ 	struct throtl_qnode *qn = NULL;
+-	struct throtl_grp *tg = blkg_to_tg(blkg ?: q->root_blkg);
++	struct throtl_grp *tg;
++	struct blkcg_gq *blkg;
+ 	struct throtl_service_queue *sq;
+ 	bool rw = bio_data_dir(bio);
+ 	bool throttled = false;
+-	struct throtl_data *td = tg->td;
+ 
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
+ 
++	/*
++	 * If a group has no rules, just update the dispatch stats in lockless
++	 * manner and return.
++	 */
++	blkg = blkg_lookup(blkcg, q);
++	tg = blkg_to_tg(blkg);
++	if (tg && !tg->has_rules[rw])
++		goto out;
++
+ 	/* see throtl_charge_bio() */
+-	if (bio_flagged(bio, BIO_THROTTLED) || !tg->has_rules[rw])
++	if (bio_flagged(bio, BIO_THROTTLED))
+ 		goto out;
+ 
+ 	spin_lock_irq(q->queue_lock);
+ 
+ 	throtl_update_latency_buckets(td);
+ 
++	blkg = blkg_lookup_create(blkcg, q);
++	if (IS_ERR(blkg))
++		blkg = q->root_blkg;
++	tg = blkg_to_tg(blkg);
++
+ 	if (unlikely(blk_queue_bypass(q)))
+ 		goto out_unlock;
+ 
+@@ -2253,6 +2268,12 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 	if (throttled || !td->track_bio_latency)
+ 		bio->bi_issue_stat.stat |= SKIP_LATENCY;
+ #endif
++	if (!throttled) {
++		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
++				bio->bi_iter.bi_size);
++		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
++	}
++
+ 	return throttled;
+ }
+ 
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 9f342ef..60f53b5 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1674,15 +1674,28 @@ static void cfq_pd_reset_stats(struct blkg_policy_data *pd)
+ 	cfqg_stats_reset(&cfqg->stats);
+ }
+ 
+-static struct cfq_group *cfq_lookup_cfqg(struct cfq_data *cfqd,
+-					 struct blkcg *blkcg)
++/*
++ * Search for the cfq group current task belongs to. request_queue lock must
++ * be held.
++ */
++static struct cfq_group *cfq_lookup_create_cfqg(struct cfq_data *cfqd,
++						struct blkcg *blkcg)
+ {
+-	struct blkcg_gq *blkg;
++	struct request_queue *q = cfqd->queue;
++	struct cfq_group *cfqg = NULL;
+ 
+-	blkg = blkg_lookup(blkcg, cfqd->queue);
+-	if (likely(blkg))
+-		return blkg_to_cfqg(blkg);
+-	return NULL;
++	/* avoid lookup for the common case where there's no blkcg */
++	if (blkcg == &blkcg_root) {
++		cfqg = cfqd->root_group;
++	} else {
++		struct blkcg_gq *blkg;
++
++		blkg = blkg_lookup_create(blkcg, q);
++		if (!IS_ERR(blkg))
++			cfqg = blkg_to_cfqg(blkg);
++	}
++
++	return cfqg;
+ }
+ 
+ static void cfq_link_cfqq_cfqg(struct cfq_queue *cfqq, struct cfq_group *cfqg)
+@@ -2178,8 +2191,8 @@ static ssize_t cfq_set_weight_on_dfl(struct kernfs_open_file *of,
+ };
+ 
+ #else /* GROUP_IOSCHED */
+-static struct cfq_group *cfq_lookup_cfqg(struct cfq_data *cfqd,
+-					 struct blkcg *blkcg)
++static struct cfq_group *cfq_lookup_create_cfqg(struct cfq_data *cfqd,
++						struct blkcg *blkcg)
+ {
+ 	return cfqd->root_group;
+ }
+@@ -3814,7 +3827,7 @@ static inline void check_blkcg_changed(struct cfq_io_cq *cic, struct bio *bio)
+ 	struct cfq_group *cfqg;
+ 
+ 	rcu_read_lock();
+-	cfqg = cfq_lookup_cfqg(cfqd, bio_blkcg(bio));
++	cfqg = cfq_lookup_create_cfqg(cfqd, bio_blkcg(bio));
+ 	if (!cfqg) {
+ 		cfqq = &cfqd->oom_cfqq;
+ 		goto out;
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 69bea82..e667841 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -428,8 +428,8 @@ static inline struct request_list *blk_get_rl(struct request_queue *q,
+ 	 * or if either the blkcg or queue is going away.  Fall back to
+ 	 * root_rl in such cases.
+ 	 */
+-	blkg = blkg_lookup(blkcg, q);
+-	if (unlikely(!blkg))
++	blkg = blkg_lookup_create(blkcg, q);
++	if (unlikely(IS_ERR(blkg)))
+ 		goto root_rl;
+ 
+ 	blkg_get(blkg);
+@@ -672,10 +672,10 @@ static inline void blkg_rwstat_add_aux(struct blkg_rwstat *to,
+ }
+ 
+ #ifdef CONFIG_BLK_DEV_THROTTLING
+-extern bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
++extern bool blk_throtl_bio(struct request_queue *q, struct blkcg *blkcg,
+ 			   struct bio *bio);
+ #else
+-static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
++static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg *blkcg,
+ 				  struct bio *bio) { return false; }
+ #endif
+ 
+@@ -683,7 +683,6 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio)
+ {
+ 	struct blkcg *blkcg;
+-	struct blkcg_gq *blkg;
+ 	bool throtl = false;
+ 
+ 	rcu_read_lock();
+@@ -692,23 +691,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 	/* associate blkcg if bio hasn't attached one */
+ 	bio_associate_blkcg(bio, &blkcg->css);
+ 
+-	blkg = blkg_lookup(blkcg, q);
+-	if (unlikely(!blkg)) {
+-		spin_lock_irq(q->queue_lock);
+-		blkg = blkg_lookup_create(blkcg, q);
+-		if (IS_ERR(blkg))
+-			blkg = NULL;
+-		spin_unlock_irq(q->queue_lock);
+-	}
+-
+-	throtl = blk_throtl_bio(q, blkg, bio);
+-
+-	if (!throtl) {
+-		blkg = blkg ?: q->root_blkg;
+-		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
+-				bio->bi_iter.bi_size);
+-		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
+-	}
++	throtl = blk_throtl_bio(q, blkcg, bio);
+ 
+ 	rcu_read_unlock();
+ 	return !throtl;
 -- 
-Simo Sorce
-Sr. Principal Software Engineer
-Red Hat, Inc
+1.9.4
