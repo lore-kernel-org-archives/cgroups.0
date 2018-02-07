@@ -1,72 +1,90 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: memcontrol: fix NR_WRITEBACK leak in memcg and
- system stats
-Date: Wed, 7 Feb 2018 11:55:47 -0500
-Message-ID: <20180207165547.GB29418@cmpxchg.org>
-References: <20180203082353.17284-1-hannes@cmpxchg.org>
- <CALvZod5-35Y+_eot6-6J5HyssnmAW-wfYhuQdxxA9Zj8Ng2e+g@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2] blk-throttle: fix race between blkcg_bio_issue_check
+ and cgroup_rmdir
+Date: Wed, 7 Feb 2018 13:38:11 -0800
+Message-ID: <20180207213811.GF695913@devbig577.frc2.facebook.com>
+References: <6f136c90-faa9-4bc0-b02f-3a112b4d8360@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-	; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-	Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=Bj4+YG1h0XbAXmRQg4EvAJuHGH96NtJRGKXXiXTFbJ0=; b=L75cdHM8fqeUOjdlBAF+sVExv2
-	KknWEafW1rRrQC7A08l7FxMWs8WEG3BfKMP255p6oIN/sQekkRnsSPdRgYyiAoDxHt0OA4VV53ZdM
-	x2us/lLty3GUKeczWBu1mKa17oBJaPax6AhDqutBrwAzSBm9Zh2fQ8ePbmkmzLUREh7E=;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=gV5ERurDM3UcRzGfTDyeupn+Ng+EeNgRDbBTdKvxOcU=;
+        b=AWiG+10iCAwkDig4oOeiwusQfDlJRTgMenDoyJwvOy1eyeFOa4hx2DK+X0pLFdlVG0
+         I81AjOcyxoeUoa2F1iQ7MJw2EQirKD7EliGu953+iBzubp/QqhbmR9FhZHqXKc1yKQOh
+         uLUBu0DL1APFBi4HukbxWXY+eavBiaWDWoLQIQVsU4dSw/y6RpFipHmn9WFc7MVSgJp2
+         ht8C0VzUOGLzZ5mu5sBveOQSn+sKkU0ESzc/sJYO5mbq0j9DCO3kaahy0TUpg4oQIUSk
+         9oaahe9fYtDqm3mtf4w+hkVwSjfSFrGKIBH7TtSTF1P159zNAfmQBriq/6a4y3VSVWFj
+         XRFg==
 Content-Disposition: inline
-In-Reply-To: <CALvZod5-35Y+_eot6-6J5HyssnmAW-wfYhuQdxxA9Zj8Ng2e+g@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <6f136c90-faa9-4bc0-b02f-3a112b4d8360-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team@fb.com
+To: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, xuejiufei <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Caspar Zhang <caspar-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Shakeel,
+Hello, Joseph.
 
-On Wed, Feb 07, 2018 at 07:44:08AM -0800, Shakeel Butt wrote:
-> On Sat, Feb 3, 2018 at 12:23 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > After the ("a983b5ebee57 mm: memcontrol: fix excessive complexity in
-> > memory.stat reporting"), we observed slowly upward creeping
-> > NR_WRITEBACK counts over the course of several days, both the
-> > per-memcg stats as well as the system counter in e.g. /proc/meminfo.
-> >
-> > The conversion from full per-cpu stat counts to per-cpu cached atomic
-> > stat counts introduced an irq-unsafe RMW operation into the updates.
-> >
-> > Most stat updates come from process context, but one notable exception
-> > is the NR_WRITEBACK counter. While writebacks are issued from process
-> > context, they are retired from (soft)irq context.
-> >
-> > When writeback completions interrupt the RMW counter updates of new
-> > writebacks being issued, the decs from the completions are lost.
-> >
-> > Since the global updates are routed through the joint lruvec API, both
-> > the memcg counters as well as the system counters are affected.
-> >
-> > This patch makes the joint stat and event API irq safe.
-> >
-> > Fixes: a983b5ebee57 ("mm: memcontrol: fix excessive complexity in memory.stat reporting")
-> > Debugged-by: Tejun Heo <tj@kernel.org>
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+On Wed, Feb 07, 2018 at 04:40:02PM +0800, Joseph Qi wrote:
+> writeback kworker
+>   blkcg_bio_issue_check
+>     rcu_read_lock
+>     blkg_lookup
+>     <<< *race window*
+>     blk_throtl_bio
+>       spin_lock_irq(q->queue_lock)
+>       spin_unlock_irq(q->queue_lock)
+>     rcu_read_unlock
 > 
-> Should this be considered for stable?
+> cgroup_rmdir
+>   cgroup_destroy_locked
+>     kill_css
+>       css_killed_ref_fn
+>         css_killed_work_fn
+>           offline_css
+>             blkcg_css_offline
+>               spin_trylock(q->queue_lock)
+>               blkg_destroy
+>               spin_unlock(q->queue_lock)
 
-The stable tree is only for fixes to already released kernels, but
-there is no release containing the faulty patch:
+Ah, right.  Thanks for spotting the bug.
 
-$ git describe --tags a983b5ebee57
-v4.15-3322-ga983b5ebee57
+> Since rcu can only prevent blkg from releasing when it is being used,
+> the blkg->refcnt can be decreased to 0 during blkg_destroy and schedule
+> blkg release.
+> Then trying to blkg_get in blk_throtl_bio will complains the WARNING.
+> And then the corresponding blkg_put will schedule blkg release again,
+> which result in double free.
+> This race is introduced by commit ae1188963611 ("blkcg: consolidate blkg
+> creation in blkcg_bio_issue_check()"). Before this commit, it will lookup
+> first and then try to lookup/create again with queue_lock. So revive
+> this logic to fix the race.
 
-nor was the faulty patch itself marked for stable.
+The change seems a bit drastic to me.  Can't we do something like the
+following instead?
 
-So as long as this fix makes it into 4.16 we should be good.
+blk_throtl_bio()
+{
+	... non throttled cases ...
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+	/* out-of-limit, queue to @tg */
+
+	/*
+	 * We can look up and retry but the race window is tiny here.
+	 * Just letting it through should be good enough.
+	 */
+	if (!css_tryget(blkcg->css))
+		goto out;
+
+	... actual queueing ...
+	css_put(blkcg->css);
+	...
+}
+
+Thanks.
+
+-- 
+tejun
