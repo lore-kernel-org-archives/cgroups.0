@@ -1,58 +1,105 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [IGT PATCH RFC] tools: Introduce intel_cgroup tool
-Date: Wed, 7 Feb 2018 13:54:58 -0800
-Message-ID: <20180207215458.GI695913@devbig577.frc2.facebook.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC v2 1/7] cgroup: Allow drivers to store data
+ associated with a cgroup
+Date: Wed, 7 Feb 2018 14:11:57 -0800
+Message-ID: <20180207221157.GJ695913@devbig577.frc2.facebook.com>
 References: <20180201195315.4956-1-matthew.d.roper@intel.com>
- <20180201195615.5124-1-matthew.d.roper@intel.com>
- <151751685381.28099.5351495854502256843@mail.alporthouse.com>
- <20180201231437.GJ31510@mdroper-desk.amr.corp.intel.com>
+ <20180201195315.4956-2-matthew.d.roper@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
- h=sender:date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to:user-agent;
- bh=rmrUeIOaGEaP660cEO5FS/heTDwHk+3vHlxmZRASKV4=;
- b=cKp0caPkaq9IYR52/kgqzTfBKcZn+ZcRPshHzyvLkkT1tT6g3P22B5BupHIZPpQXxI
- GDNeHCF01KK4JxXvJgflBWe+ICR+8E1bWWnFNsAkymvCOXGaN9S9vNiLTl+uyk+/9MuZ
- VLrQIT37ALbYkfBPiaGQJZEb+9hU8z+U62vqyOWLmvAt6Dz4iOku+32xpqZoFPzkWq5Z
- E6vnc6mdam1vOBBkeZYqyz8Y5iUi0YS2z3145pVdsLVTK/YUk/OwoSTiUlDjw/iJLYJe
- HdP+IjwytMMtrKx+6KuR5AKBYhzltX/023hK33c2nJHvAop54ARYNw8yONj3INHmQ8am
- V/Gg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=DCCLm80TqOl2YcwDEv5qjWmjrrpzs1YPDKJu1QColGc=;
+        b=T19Zh5pX5WA6ozxxJHiPUqnNCmNxhRbQTkAXx6lnYEQwTeCXewW2C6wq8JkKkCn+To
+         kGIpZ6lPOavyjehE2WssAsusWebr2VRJ37XBwUpC8q3S9OSprhadMcPo5si+qHa4tGDB
+         z4vmVJUPKx6pmNkYud+jVLgLGrLrAs1S/vAzl92wnbggFOUYnQUPv8tQeCaz3GoCcm16
+         BMtQ+OWlDW/eubOPGkYwlaAc/xb+E0AkrtmjnCizd0+ayYJYvq1kFoBMY8BZ5hx3Sonf
+         54XJXxPX5Rp6mh3RmVYgPZkfmaGGE3/VF65kHHL8AawhaMzjbl0PKJYAZf8qRJ+2Zk//
+         4qDQ==
 Content-Disposition: inline
-In-Reply-To: <20180201231437.GJ31510@mdroper-desk.amr.corp.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <20180201195315.4956-2-matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matt Roper <matthew.d.roper@intel.com>
-Cc: cgroups@vger.kernel.org, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+Content-Transfer-Encoding: 7bit
+To: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-SGVsbG8sCgpGb3Jnb3QgdG8gcmVzcG9uZCB0byBvbmUgcG9pbnQuCgpPbiBUaHUsIEZlYiAwMSwg
-MjAxOCBhdCAwMzoxNDozOFBNIC0wODAwLCBNYXR0IFJvcGVyIHdyb3RlOgo+ICAqIFRoZSBkcml2
-ZXJzIHRoYXQgd2FudCB0byBtYWtlIHVzZSBvZiB0aGlzIGZ1bmN0aW9uYWxpdHkgbWF5IGJlIGJ1
-aWx0Cj4gICAgYXMgbW9kdWxlcyByYXRoZXIgdGhhbiBjb21waWxlZCBkaXJlY3RseSBpbnRvIHRo
-ZSBrZXJuZWwuICBUaGlzIGlzCj4gICAgaW1wb3J0YW50IGJlY2F1c2UgdGhlIGNncm91cHMgc3Vi
-c3lzdGVtIHJlbW92ZWQgdGhlIGFiaWxpdHkgdG8gaGF2ZQo+ICAgIGNncm91cCBjb250cm9sbGVy
-cyBpbiBtb2R1bGVzIGEgZmV3IHllYXJzIGFnby4gIFdoaWxlIGl0IG1pZ2h0IGJlCj4gICAgcG9z
-c2libGUgdG8gcmVzdXJyZWN0IG1vZHVsZS1iYXNlZCBjZ3JvdXAgY29udHJvbGxlciBzdXBwb3J0
-LCBteQo+ICAgIGltcHJlc3Npb24gaXMgdGhhdCB0aGUgY2dyb3VwcyBjb21tdW5pdHkgd291bGQg
-cHJlZmVyIGEgc2VwYXJhdGUKPiAgICBub24tY29udHJvbGxlciBtZWNoYW5pc20gZm9yIGRvaW5n
-IHdoYXQgd2Ugd2FudCB0byBkby4gIEUuZy4sIHNlZQo+ICAgIGh0dHBzOi8vd3d3LnNwaW5pY3Mu
-bmV0L2xpc3RzL2Nncm91cHMvbXNnMTg2NzQuaHRtbCBmb3Igc29tZSBicmllZgo+ICAgIGRpc2N1
-c3Npb24gb24gdGhpcyB0b3BpYy4KClNvLCB0aGlzIGlzbid0IGEgY29uY2Vybi4gIElmIHdlIG5l
-ZWQgdG8gaGF2ZSBtb2R1bGFyIGNvbnRyb2xsZXJzLCB3ZQpjYW4gcmVzdXJyZWN0IG1vZHVsZSBz
-dXBwb3J0LCBob3BlZnVsbHkgaW4gYSBzaW1wbGVyIHdheSwgb3IgY291bGQgZG8Kc29tZXRoaW5n
-IHNpbWlsYXIgdG8gd2hhdCByZG1hIGNvbnRyb2xsZXIgZGlkLiAgV2Ugc2hvdWxkbid0IG1ha2UK
-dXNlcmxhbmQgaW50ZXJmYWNlIGRlY2lzaW9ucyBiYXNlZCBvbiB0aGlzIHNvcnQgb2YgaW1wbGVt
-ZW50YXRpb24KZGV0YWlscy4KClRoYW5rcy4KCi0tIAp0ZWp1bgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVs
-LWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngK
+Hello,
+
+On Thu, Feb 01, 2018 at 11:53:09AM -0800, Matt Roper wrote:
+>  * Drivers may be built as modules (and unloaded/reloaded) which is not
+>    something cgroup controllers support today.
+
+As discussed in the other subthread, this shouldn't be a concern.
+
+>  * Drivers may wish to provide their own interface to allow userspace to
+>    adjust driver-specific settings (e.g., via a driver ioctl rather than
+>    via the kernfs filesystem).
+>  * A single driver may be managing multiple devices and wish to maintain
+>    different driver-specific cgroup data for each.
+
+If you look at io and rdma controllers, they already do this.
+
+> Note that technically these interfaces aren't restricted to drivers
+> (other non-driver parts of the kernel could make use of them as well).
+> I expect drivers to be the primary consumers of this interface and
+> couldn't think of a more appropriate generic name (the term "subsystem"
+> would probably be more accurate, but that's already used by cgroup
+> controllers).
+
+Let's please not do "driver", it's really confusing.  Just coming up
+with a made-up word would be fine as long as the connection can be
+made and the word is easily identifiable.  e.g. cgroup cdata / pdata for
+cgroup custom / priv data.
+
+> +/*
+> + * Driver-specific cgroup data.  Drivers should subclass this structure with
+> + * their own fields for data that should be stored alongside individual
+> + * cgroups.
+> + */
+> +struct cgroup_driver_data {
+> +	/* Driver this data structure is associated with */
+> +	struct cgroup_driver *drv;
+> +
+> +	/* Node in cgroup's data hashtable */
+> +	struct hlist_node cgroupnode;
+> +
+> +	/* Node in driver's data list; used to cleanup on driver unload */
+> +	struct list_head drivernode;
+> +};
+...
+> +struct cgroup_driver {
+> +	/* Functions this driver uses to manage its data */
+> +	struct cgroup_driver_funcs *funcs;
+> +
+> +	/*
+> +	 * List of driver-specific data structures that need to be cleaned up
+> +	 * if driver is unloaded.
+> +	 */
+> +	struct list_head datalist;
+> +};
+
+It generally looks great but can we do something like the following in
+terms of interface?
+
+  struct cgroup_cdata {
+	  const void *key;
+	  void (*free)(struct cgroup_cdata *cdata);
+	  /* whatever other necessary fields */
+	  char data[];
+  };
+
+  int cgroup_cdata_install(struct cgroup *cgrp, struct cgroup_cdata *cdata);
+  struct cgroup_cdata *cgroup_cdata_lookup(struct cgroup *cgrp, const void *key);
+  int cgroup_cdata_free(struct cgroup *cgrp, const void *key);
+  /* free is also automatically called when the cgroup is released */
+
+And please use a separate lock or mutex for managing them.
+
+Thanks.
+
+-- 
+tejun
