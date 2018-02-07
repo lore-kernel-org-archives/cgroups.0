@@ -1,90 +1,73 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] blk-throttle: fix race between blkcg_bio_issue_check
- and cgroup_rmdir
-Date: Wed, 7 Feb 2018 13:38:11 -0800
-Message-ID: <20180207213811.GF695913@devbig577.frc2.facebook.com>
-References: <6f136c90-faa9-4bc0-b02f-3a112b4d8360@linux.alibaba.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [IGT PATCH RFC] tools: Introduce intel_cgroup tool
+Date: Wed, 7 Feb 2018 13:50:03 -0800
+Message-ID: <20180207215003.GH695913@devbig577.frc2.facebook.com>
+References: <20180201195315.4956-1-matthew.d.roper@intel.com>
+ <20180201195615.5124-1-matthew.d.roper@intel.com>
+ <151751685381.28099.5351495854502256843@mail.alporthouse.com>
+ <20180201231437.GJ31510@mdroper-desk.amr.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=gV5ERurDM3UcRzGfTDyeupn+Ng+EeNgRDbBTdKvxOcU=;
-        b=AWiG+10iCAwkDig4oOeiwusQfDlJRTgMenDoyJwvOy1eyeFOa4hx2DK+X0pLFdlVG0
-         I81AjOcyxoeUoa2F1iQ7MJw2EQirKD7EliGu953+iBzubp/QqhbmR9FhZHqXKc1yKQOh
-         uLUBu0DL1APFBi4HukbxWXY+eavBiaWDWoLQIQVsU4dSw/y6RpFipHmn9WFc7MVSgJp2
-         ht8C0VzUOGLzZ5mu5sBveOQSn+sKkU0ESzc/sJYO5mbq0j9DCO3kaahy0TUpg4oQIUSk
-         9oaahe9fYtDqm3mtf4w+hkVwSjfSFrGKIBH7TtSTF1P159zNAfmQBriq/6a4y3VSVWFj
-         XRFg==
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
+ h=sender:date:from:to:cc:subject:message-id:references:mime-version
+ :content-disposition:in-reply-to:user-agent;
+ bh=6CYNKCKem92WZl2IasF5JY7qwlRnhqMNeB9OS/M3HvQ=;
+ b=Bjf7MVgH6tOHbRIBZD08IXI7CQAjS+nGzQwp4j4Qo13guR4j+t/s6CbWvFRvDYhCt5
+ YaFqkbZaqqlX7bIomsPHzerzLvPvNLbU9gKcGf7keuslan2XAx0zKihWZ4u2+nqh7MQJ
+ y6wYn/jLZe6S7/8kPAaaVgrV0CGceAIkIJb4oP+0EH6CSAsuNDrm8Xo0GSuYdXA7eRm1
+ ZFgLSNygYcb+tM+GJl+Kt3WZTNQrRy03RSSCmrgNtZk7LXB/To3BVtiyK/NGWrM40LuC
+ aUZEJq0n3AUvMvGv0COVoluHbWrmjNC0qRm0ws87P26lyKxOKDfSDC2heFITAMA+s/gM
+ JJtQ==
 Content-Disposition: inline
-In-Reply-To: <6f136c90-faa9-4bc0-b02f-3a112b4d8360-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
+In-Reply-To: <20180201231437.GJ31510@mdroper-desk.amr.corp.intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, xuejiufei <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Caspar Zhang <caspar-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matt Roper <matthew.d.roper@intel.com>
+Cc: cgroups@vger.kernel.org, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
 
-Hello, Joseph.
-
-On Wed, Feb 07, 2018 at 04:40:02PM +0800, Joseph Qi wrote:
-> writeback kworker
->   blkcg_bio_issue_check
->     rcu_read_lock
->     blkg_lookup
->     <<< *race window*
->     blk_throtl_bio
->       spin_lock_irq(q->queue_lock)
->       spin_unlock_irq(q->queue_lock)
->     rcu_read_unlock
-> 
-> cgroup_rmdir
->   cgroup_destroy_locked
->     kill_css
->       css_killed_ref_fn
->         css_killed_work_fn
->           offline_css
->             blkcg_css_offline
->               spin_trylock(q->queue_lock)
->               blkg_destroy
->               spin_unlock(q->queue_lock)
-
-Ah, right.  Thanks for spotting the bug.
-
-> Since rcu can only prevent blkg from releasing when it is being used,
-> the blkg->refcnt can be decreased to 0 during blkg_destroy and schedule
-> blkg release.
-> Then trying to blkg_get in blk_throtl_bio will complains the WARNING.
-> And then the corresponding blkg_put will schedule blkg release again,
-> which result in double free.
-> This race is introduced by commit ae1188963611 ("blkcg: consolidate blkg
-> creation in blkcg_bio_issue_check()"). Before this commit, it will lookup
-> first and then try to lookup/create again with queue_lock. So revive
-> this logic to fix the race.
-
-The change seems a bit drastic to me.  Can't we do something like the
-following instead?
-
-blk_throtl_bio()
-{
-	... non throttled cases ...
-
-	/* out-of-limit, queue to @tg */
-
-	/*
-	 * We can look up and retry but the race window is tiny here.
-	 * Just letting it through should be good enough.
-	 */
-	if (!css_tryget(blkcg->css))
-		goto out;
-
-	... actual queueing ...
-	css_put(blkcg->css);
-	...
-}
-
-Thanks.
-
--- 
-tejun
+SGVsbG8sIE1hdHQsIENocmlzLgoKT24gVGh1LCBGZWIgMDEsIDIwMTggYXQgMDM6MTQ6MzhQTSAt
+MDgwMCwgTWF0dCBSb3BlciB3cm90ZToKPiA+IEhtbS4gQ291bGQgd2Ugbm90IGF2b2lkIGRybV9p
+b2N0bCArIHdlbGwga25vd24gcGFyYW0gbmFtZXMgYW5kIHVzZSBhCj4gPiBtb3JlIGdlbmVyaWMg
+dG9vbCB0byBzZXQgY2dyb3VwIGF0dHJpYnV0ZXM/IEp1c3QgZmVlbHMgd3JvbmcgdGhhdCBhCj4g
+PiBzdWNoIGEgZ2VuZXJpYyBpbnRlcmZhY2UgYm9pbHMgZG93biB0byBhIGRyaXZlciBzcGVjaWZp
+YyBpb2N0bC4KClNvLCBldmVyeXRoaW5nIHdoaWNoIHNob3dzIHVwIGluIHRoZSBjZ3JvdXAgaGll
+cmFyY2h5IHNob3VsZCBzYXRpc2Z5CnRoZSBmb2xsb3dpbmcgdHdvIGNvbmRpdGlvbnMuCgoqIFRo
+ZSBjb250cm9sIG1lY2hhbmlzbSBzaG91bGQgYWRoZXJlIHRvIG9uZSBvZiB0aGUgcmVzb3VyY2UK
+ICBkaXN0cmlidXRpb24gbW9kZWxzIGRlZmluZWQgaW4gRG9jdW1lbnRhdGlvbi9jZ3JvdXAtdjIu
+dHh0LiAgVGhpcyBpcwogIHRvIGVuc3VyZSBjb25zaXN0ZW5jeSBhY3Jvc3MgZGlmZmVyZW50IHJl
+c291cmNlcyB3aGljaCBpbiB0dXJuCiAgYWxsb3dzIHRoaW5ncyBsaWtlIGRlbGVnYXRpb24uCgoq
+IFRoaXMgb25lIGlzIGEgYml0IHZhZ3VlIGFuZCBJIHByb2JhYmx5IHNob3VsZCBmaW5kIGEgYmV0
+dGVyIHdheSB0bwogIGRlc2NyaWJlIGl0IGJ1dCBlYWNoIGNvbnRyb2xsZXIgc2hvdWxkIGVuY2Fw
+c3VsYXRlIGEgZ2VuZXJpYyBjb3JlCiAgcmVzb3VyY2UuICBIZXJlLCBJIGRvbid0IHRoaW5rIGl0
+IG1ha2VzIHNlbnNlIHRvIGhhdmUgaW50ZWwgZ2Z4CiAgY29udHJvbGxlciB3aGVuIHRoZXJlIGFy
+ZSBhIGxvdCBvZiBjb21tbW9uYWxpdGllcyBpbiB0aGUgZ3JhcGhpY3MKICBoYXJkd2FyZSBhY3Jv
+c3MgZGlmZmVyZW50IHZlbmRvcnMuICBJdCBzaG91bGQgYmUgYmV0dGVyIGFic3RyYWN0ZWQuCgpJ
+dCdzIHRydWUgdGhhdCBpdCdzIGRpZmZpY3VsdCB0byBmaWd1cmUgb3V0IHRoZSByaWdodCBnZW5l
+cmljIGRlc2lnbgp3aXRob3V0IGFjdHVhbGx5IHRyeWluZywgYW5kIEkgdGhpbmsgdGhhdCdzIHdo
+eSBpdCdkIGJlIGJldHRlciB0bwpzdGFydCBzY29wZWQgaW4gdGhlIHNjb3BlIG9mIHRoZSBzcGVj
+aWZpYyBkcml2ZXIuICBUaGUgc21hbGxlciBzY29wZQp3b3VsZCBhbGxvdyBmb3IgbGVzcyBzdHJp
+Y3QgZXhwZWN0YXRpb25zLCBtb3JlIGxhdGl0dWRlLCBhbmQgZWFzaWVyCmV4cGVyaW1lbnRhdGlv
+bnMuCgo+IEkgdGhpbmsgdGhlIG5pY2VzdCBpbnRlcmZhY2UgZm9yIHNldHRpbmcgY2dyb3VwIGF0
+dHJpYnV0ZXMgd291bGQgYmUgdG8KPiBmaW5kIGEgd2F5IHRvIGFkZCBvdXIgb3duIGtlcm5mcyBl
+bnRyaWVzIHRvIHRoZSBjZ3JvdXAgZmlsZXN5c3RlbSwgdGhlCj4gc2FtZSB3YXkgcmVhbCBjZ3Jv
+dXAgY29udHJvbGxlcnMgZG8uICBUaGVuIHdlIGNvdWxkIGRvIHNvbWV0aGluZyBsaWtlCj4gImVj
+aG8gMTIzID4gL2Nncm91cDIvYXBwcy9oaWdocHJpby9pOTE1LmNhcmQwLnByaW9yaXR5IiBhbmQg
+bm90IG5lZWQgdG8KPiBjYWxsIGFueSBpb2N0bCdzIGF0IGFsbC4gIFdpdGhvdXQgY3JlYXRpbmcg
+YW4gYWN0dWFsIGNncm91cCBjb250cm9sbGVyLAo+IEkgdGhpbmsgdGhpcyBtaWdodCBiZSBjaGFs
+bGVuZ2luZywgYnV0IEknbSBpbnZlc3RpZ2F0aW5nIGl0IG9uIHRoZSBzaWRlCj4gcmlnaHQgbm93
+IHRvIHNlZSBpZiBpdCdzIGEgdmlhYmxlIG9wdGlvbi4KClNvLCBJIHN0cm9uZ2x5IGJlbGlldmUg
+dGhhdCBpdCBpc24ndCB0aGUgcmlnaHQgYXBwcm9hY2ggdG8gYWRkIGk5MTUKcHJlZml4ZWQgaW50
+ZXJmYWNlIGZpbGVzIHRvIGNncm91cCBpbnRlcmZhY2UuCgpUaGFua3MuCgotLSAKdGVqdW4KX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4IG1h
+aWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMu
+ZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
