@@ -1,17 +1,17 @@
-From: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH] blk-throttle: fix race between blkcg_bio_issue_check and
+From: Joseph Qi <joseph.qi@linux.alibaba.com>
+Subject: [PATCH v2] blk-throttle: fix race between blkcg_bio_issue_check and
  cgroup_rmdir
-Date: Tue, 6 Feb 2018 15:36:16 +0800
-Message-ID: <78df88f6-eef5-2e7b-65ab-3b6abb84262a@linux.alibaba.com>
+Date: Wed, 7 Feb 2018 16:40:02 +0800
+Message-ID: <6f136c90-faa9-4bc0-b02f-3a112b4d8360@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuejiufei <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Caspar Zhang <caspar-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+Cc: xuejiufei <jiufei.xue@linux.alibaba.com>, Caspar Zhang <caspar@linux.alibaba.com>, linux-block <linux-block@vger.kernel.org>, cgroups@vger.kernel.org
 
 We've triggered a WARNING in blk_throtl_bio when throttling writeback
 io, which complains blkg->refcnt is already 0 when calling blkg_get, and
@@ -51,16 +51,18 @@ creation in blkcg_bio_issue_check()"). Before this commit, it will lookup
 first and then try to lookup/create again with queue_lock. So revive
 this logic to fix the race.
 
+v2: fix a potential NULL pointer dereference when stats
+
 Fixes: ae1188963611 ("blkcg: consolidate blkg creation in blkcg_bio_issue_check()")
-Reported-by: Jiufei Xue <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Signed-off-by: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-CC: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Reported-by: Jiufei Xue <jiufei.xue@linux.alibaba.com>
+Signed-off-by: Joseph Qi <joseph.qi@linux.alibaba.com>
+Cc: stable@vger.kernel.org
 ---
  block/blk-cgroup.c         |  2 +-
- block/blk-throttle.c       | 29 +++++++++++++++++++++++++----
+ block/blk-throttle.c       | 30 ++++++++++++++++++++++++++----
  block/cfq-iosched.c        | 33 +++++++++++++++++++++++----------
  include/linux/blk-cgroup.h | 27 +++++----------------------
- 4 files changed, 54 insertions(+), 37 deletions(-)
+ 4 files changed, 55 insertions(+), 37 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
 index 4117524..b1d22e5 100644
@@ -83,7 +85,7 @@ index 4117524..b1d22e5 100644
  static void blkg_destroy(struct blkcg_gq *blkg)
  {
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index c5a1316..ec830be 100644
+index c5a1316..decdd76 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
 @@ -2143,26 +2143,41 @@ static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
@@ -132,11 +134,12 @@ index c5a1316..ec830be 100644
  	if (unlikely(blk_queue_bypass(q)))
  		goto out_unlock;
  
-@@ -2253,6 +2268,12 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+@@ -2253,6 +2268,13 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
  	if (throttled || !td->track_bio_latency)
  		bio->bi_issue_stat.stat |= SKIP_LATENCY;
  #endif
 +	if (!throttled) {
++		blkg = blkg ?: q->root_blkg;
 +		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
 +				bio->bi_iter.bi_size);
 +		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
