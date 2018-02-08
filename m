@@ -1,51 +1,89 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC v2 3/7] cgroup: Add interface to allow
- drivers to lookup process cgroup membership
-Date: Wed, 7 Feb 2018 14:42:52 -0800
-Message-ID: <20180207224252.GK695913@devbig577.frc2.facebook.com>
-References: <20180201195315.4956-1-matthew.d.roper@intel.com>
- <20180201195315.4956-4-matthew.d.roper@intel.com>
+From: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v2] blk-throttle: fix race between blkcg_bio_issue_check
+ and cgroup_rmdir
+Date: Thu, 8 Feb 2018 10:29:43 +0800
+Message-ID: <b590caed-1423-4776-966d-cd9e346a8ea1@linux.alibaba.com>
+References: <6f136c90-faa9-4bc0-b02f-3a112b4d8360@linux.alibaba.com>
+ <20180207213811.GF695913@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
- h=sender:date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to:user-agent;
- bh=c7ktxRxp+D39Bi3gII790+ft+lKeTA/OjogqMjWUzLM=;
- b=N1dr9OEMX5MOoyI7ZXRzWgKpBQRILFoLVLFC/bn60BlMoNjBpktgiBYV49tsfQMg5/
- GC2tCv/MEofzR3X59JnVf5j2G+0LWvHwsGmq6hy0qxotSBvn8KDeDs2Be33lt9mZEnTO
- 8QDxId7WFwDycLvuFBr4OzfRG6U5/guLNnoIBDUzZ3Lfoh7YIoOTEpctkDdRi6yIhc4W
- 9P45u1rFb4sFkvKLNnZkqqKfQAbE4B7uwiZCoatXgw3BbeIzUPta/uitYm1jDxHzVQIg
- n5frpvcNflQN5PRlMadi/+XWYXmIB1h9h7E5zzc7MtrE1xpKkwptDqUi+Yy93gurImyb
- YpIQ==
-Content-Disposition: inline
-In-Reply-To: <20180201195315.4956-4-matthew.d.roper@intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20180207213811.GF695913-4dN5La/x3IkLX0oZNxdnEQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matt Roper <matthew.d.roper@intel.com>
-Cc: cgroups@vger.kernel.org, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, xuejiufei <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Caspar Zhang <caspar-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-SGVsbG8sCgpPbiBUaHUsIEZlYiAwMSwgMjAxOCBhdCAxMTo1MzoxMUFNIC0wODAwLCBNYXR0IFJv
-cGVyIHdyb3RlOgo+ICsvKioKPiArICogY2dyb3VwX2Zvcl9kcml2ZXJfcHJvY2VzcyAtIHJldHVy
-biB0aGUgY2dyb3VwIGZvciBhIHByb2Nlc3MKPiArICogQHBpZDogcHJvY2VzcyB0byBsb29rdXAg
-Y2dyb3VwIGZvcgo+ICsgKgo+ICsgKiBSZXR1cm5zIHRoZSBjZ3JvdXAgZnJvbSB0aGUgdjIgaGll
-cmFyY2h5IHRoYXQgYSBwcm9jZXNzIGJlbG9uZ3MgdG8uCj4gKyAqIFRoaXMgZnVuY3Rpb24gaXMg
-aW50ZW5kZWQgdG8gYmUgY2FsbGVkIGZyb20gZHJpdmVycyBhbmQgd2lsbCBvYnRhaW4KPiArICog
-dGhlIG5lY2Vzc2FyeSBjZ3JvdXAgbG9ja3MuCj4gKyAqCj4gKyAqIFJFVFVSTlM6Cj4gKyAqIFBy
-b2Nlc3MnIGNncm91cCBpbiB0aGUgZGVmYXVsdCAodjIpIGhpZXJhcmNoeQo+ICsgKi8KPiArc3Ry
-dWN0IGNncm91cCAqCj4gK2Nncm91cF9mb3JfZHJpdmVyX3Byb2Nlc3Moc3RydWN0IHBpZCAqcGlk
-KQoKSSB0aGluayB5b3UgcHJvYmFibHkgd2FudCB0byB1c2UgdGFza19kZmxfY2dyb3VwKCkuICBX
-ZSBjYW4gYWRkCnRhc2tfZ2V0X2RmbF9jZ3JvdXAoKSBpbiBhIHNpbWlsYXIgZmFzaGlvbiB0byB0
-YXNrX2dldF9jc3MoKSBpZgpuZWNlc3NhcnkuCgpUaGFua3MuCgotLSAKdGVqdW4KX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4IG1haWxpbmcg
-bGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRl
-c2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
+Hi Tejun,
+Thanks very much for reviewing this patch.
+
+On 18/2/8 05:38, Tejun Heo wrote:
+> Hello, Joseph.
+> 
+> On Wed, Feb 07, 2018 at 04:40:02PM +0800, Joseph Qi wrote:
+>> writeback kworker
+>>   blkcg_bio_issue_check
+>>     rcu_read_lock
+>>     blkg_lookup
+>>     <<< *race window*
+>>     blk_throtl_bio
+>>       spin_lock_irq(q->queue_lock)
+>>       spin_unlock_irq(q->queue_lock)
+>>     rcu_read_unlock
+>>
+>> cgroup_rmdir
+>>   cgroup_destroy_locked
+>>     kill_css
+>>       css_killed_ref_fn
+>>         css_killed_work_fn
+>>           offline_css
+>>             blkcg_css_offline
+>>               spin_trylock(q->queue_lock)
+>>               blkg_destroy
+>>               spin_unlock(q->queue_lock)
+> 
+> Ah, right.  Thanks for spotting the bug.
+> 
+>> Since rcu can only prevent blkg from releasing when it is being used,
+>> the blkg->refcnt can be decreased to 0 during blkg_destroy and schedule
+>> blkg release.
+>> Then trying to blkg_get in blk_throtl_bio will complains the WARNING.
+>> And then the corresponding blkg_put will schedule blkg release again,
+>> which result in double free.
+>> This race is introduced by commit ae1188963611 ("blkcg: consolidate blkg
+>> creation in blkcg_bio_issue_check()"). Before this commit, it will lookup
+>> first and then try to lookup/create again with queue_lock. So revive
+>> this logic to fix the race.
+> 
+> The change seems a bit drastic to me.  Can't we do something like the
+> following instead?
+> 
+> blk_throtl_bio()
+> {
+> 	... non throttled cases ...
+> 
+> 	/* out-of-limit, queue to @tg */
+> 
+> 	/*
+> 	 * We can look up and retry but the race window is tiny here.
+> 	 * Just letting it through should be good enough.
+> 	 */
+> 	if (!css_tryget(blkcg->css))
+> 		goto out;
+> 
+> 	... actual queueing ...
+> 	css_put(blkcg->css);
+> 	...
+> }
+So you mean checking css->refcnt to prevent the further use of
+blkg_get? I think it makes sense.
+IMO, we should use css_tryget_online instead, and rightly after taking
+queue_lock. Because there may be more use of blkg_get in blk_throtl_bio
+in the futher. Actually it already has two now. One is in
+blk_throtl_assoc_bio, and the other is in throtl_qnode_add_bio.
+What do you think of this?
+
+Thanks,
+Joseph
