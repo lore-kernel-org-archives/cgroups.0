@@ -1,42 +1,61 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RESEND] blk-throttle: dispatch more sync writes in block
- throttle layer
-Date: Thu, 8 Feb 2018 07:41:05 -0800
-Message-ID: <20180208154105.GO695913@devbig577.frc2.facebook.com>
-References: <557effc5-65f0-5190-477e-6d20b7121b59@linux.alibaba.com>
- <2c190660-1c35-3813-de7d-0cbfec9af7b1@linux.alibaba.com>
+From: Joseph Qi <joseph.qi@linux.alibaba.com>
+Subject: Re: [PATCH v2] blk-throttle: fix race between blkcg_bio_issue_check
+ and cgroup_rmdir
+Date: Fri, 9 Feb 2018 10:15:19 +0800
+Message-ID: <aac95b90-786d-95bf-b93d-87ecca79f846@linux.alibaba.com>
+References: <6f136c90-faa9-4bc0-b02f-3a112b4d8360@linux.alibaba.com>
+ <20180207213811.GF695913@devbig577.frc2.facebook.com>
+ <b590caed-1423-4776-966d-cd9e346a8ea1@linux.alibaba.com>
+ <20180208152307.GL695913@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=hsw72OdFSdljxrkI/QgSIgxDqwzWZOOgoGPHllvX1fo=;
-        b=f1fe/EA4n7C7pxKIHG8Xn4+EHy3DEM0wQAvIBXJuGXoWBpoT496LH69Cs+gAW6a0ll
-         ElE3UEZWKqPbU5gI7WbhkPECZ5qBqjudRg2OS7WoV5RRslnWmYTmcFYaiff8jOTaB9Mj
-         VDA1d0i7Ni1PFe3sdeDLZBuYJtPKeThbAc+AztkTOuuAGk9IvmN9yBG7gilG0cyN2Vqg
-         LU1arS8NgY1iZtjJvUu8nD7CgV+NiwAxKrURv58fT7plN/68hPTY4gcmM45R573aq1+w
-         OH0F8bClNYDRU66sXpdSHGYYmnDa8Mj0NdAv+A1Dtu+gMX1g9a6H3HWXUGlMRdEagoAE
-         3s+g==
-Content-Disposition: inline
-In-Reply-To: <2c190660-1c35-3813-de7d-0cbfec9af7b1-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20180208152307.GL695913@devbig577.frc2.facebook.com>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: xuejiufei <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, caspar-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, xuejiufei <jiufei.xue@linux.alibaba.com>, Caspar Zhang <caspar@linux.alibaba.com>, linux-block <linux-block@vger.kernel.org>, cgroups@vger.kernel.org
 
-Hello,
+Hi Tejun,
 
-On Thu, Feb 08, 2018 at 11:39:19AM +0800, xuejiufei wrote:
-> Hi Tejun,
+On 18/2/8 23:23, Tejun Heo wrote:
+> Hello, Joseph.
 > 
-> Could you please kindly review this patch or give some advice?
+> On Thu, Feb 08, 2018 at 10:29:43AM +0800, Joseph Qi wrote:
+>> So you mean checking css->refcnt to prevent the further use of
+>> blkg_get? I think it makes sense.
+> 
+> Yes.
+> 
+>> IMO, we should use css_tryget_online instead, and rightly after taking
+> 
+> Not really.  An offline css still can have a vast amount of IO to
+> drain and write out.
+> 
+IIUC, we have to identify it is in blkcg_css_offline now which will
+blkg_put. Since percpu_ref_kill_and_confirm in kill_css will set flag
+__PERCPU_REF_DEAD, so we can use this to avoid the race. IOW, if
+__PERCPU_REF_DEAD is set now, we know blkcg css is in offline and
+continue access blkg may risk double free. Thus we choose to skip these
+ios.
+I don't get how css_tryget works since it doesn't care the flag
+__PERCPU_REF_DEAD. Also css_tryget can't prevent blkcg_css from
+offlining since the race happens blkcg_css_offline is in progress.
+Am I missing something here?
 
-I don't have anything against it but let's wait for Shaohua.
+Thanks,
+Joseph
 
-Thanks.
-
--- 
-tejun
+>> queue_lock. Because there may be more use of blkg_get in blk_throtl_bio
+>> in the futher. Actually it already has two now. One is in
+>> blk_throtl_assoc_bio, and the other is in throtl_qnode_add_bio.
+>> What do you think of this?
+> 
+> As long as we avoid making the bypass paths expensive, whatever makes
+> the code easier to read and maintain would be better.  css ref ops are
+> extremely cheap anyway.
+> 
+> Thanks.
+> 
