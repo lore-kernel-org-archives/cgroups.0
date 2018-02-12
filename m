@@ -1,54 +1,50 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] blk-throttle: fix race between blkcg_bio_issue_check
- and cgroup_rmdir
-Date: Mon, 12 Feb 2018 09:11:43 -0800
-Message-ID: <20180212171143.GY695913@devbig577.frc2.facebook.com>
-References: <6f136c90-faa9-4bc0-b02f-3a112b4d8360@linux.alibaba.com>
- <20180207213811.GF695913@devbig577.frc2.facebook.com>
- <b590caed-1423-4776-966d-cd9e346a8ea1@linux.alibaba.com>
- <20180208152307.GL695913@devbig577.frc2.facebook.com>
- <aac95b90-786d-95bf-b93d-87ecca79f846@linux.alibaba.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4.15-rc9] sched, cgroup: Don't reject lower cpu.max on
+ ancestors
+Date: Mon, 12 Feb 2018 09:24:58 -0800
+Message-ID: <20180212172458.GF695913@devbig577.frc2.facebook.com>
+References: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=UMGQgKqt2hwyp3UZtA68X9YZoUDF22nyNyDW0UGg9XY=;
-        b=NyWL47L+XziC6gIyok9yYe1VCPN1t2WvYwOQ1+/Q2Dz+stP6Fkoxe3Ho9XEpaGC+TF
-         bzXKRLVJ1Z8FPPfFXgy7NUqjNTVUyVdjxNFB2Ty3PlVDrtwXMzM/nmL+yibcuXEz9amz
-         1s4ctG3LesVHgNKU+rbmqWnsW+AztBiJtF1Dc1BmBQxchZuVD0nV5h+iuGV8fPyKpW35
-         JCnjlfQGDIZ59M5OwdLw1ZxkO336S8l503QxpK8r3Unzdm6U6SkSfWmeYCYequIGgZMV
-         uM18Zb+B923PHIXkuHAqwL9EIrhk5mMW0w3J08FXOI7Qgtfb8hcXjDOdQvoqgu5EiWiq
-         yfmA==
+        bh=v+/7YXMt/NQxb2RPdHE2vctIhSMcO7cDlI0c060R0rw=;
+        b=i2LNCFwLGMwndfeu65sDZvSfpUWq94GKG6Wij26PlAj1KYJTZQ6vcf8CconWs3MJHt
+         UeHang6WMUyAnJmWBs4kL7HxbYqUn4Y1pQzrvGJ2ivu0bwaLj/fuLPQRtW0AgqnrO8ny
+         YGEHd5sarJuUjKb041t1Mj5qaKP5mLs8DylJ8MBUQcJ3Ttx/cF9gMbC4j7vYn2DpY1TY
+         t3cWOk6ixy8yVB1lv8aPpG7EyTduckHXNyRyji11ptMz61Sou95Cc3jJ0xXr4sEiOMB0
+         9k15eyAWZvBTuH78m4m2xjWNkLQWd7b73EAn5yDPV/rpzfgG6XgubOp/qAZEgB6cVugp
+         9+cA==
 Content-Disposition: inline
-In-Reply-To: <aac95b90-786d-95bf-b93d-87ecca79f846-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, xuejiufei <jiufei.xue-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Caspar Zhang <caspar-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-Hello, Joseph.
+On Mon, Jan 22, 2018 at 11:26:18AM -0800, Tejun Heo wrote:
+> While adding cgroup2 interface for the cpu controller, 0d5936344f30
+> ("sched: Implement interface for cgroup unified hierarchy") forgot to
+> update input validation and left it to reject cpu.max config if any
+> descendant has set a higher value.
+> 
+> cgroup2 officially supports delegation and a descendant must not be
+> able to restrict what its ancestors can configure.  For absolute
+> limits such as cpu.max and memory.max, this means that the config at
+> each level should only act as the upper limit at that level and
+> shouldn't interfere with what other cgroups can configure.
+> 
+> This patch updates config validation on cgroup2 so that the cpu
+> controller follows the same convention.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Fixes: 0d5936344f30 ("sched: Implement interface for cgroup unified hierarchy")
 
-On Fri, Feb 09, 2018 at 10:15:19AM +0800, Joseph Qi wrote:
-> IIUC, we have to identify it is in blkcg_css_offline now which will
-> blkg_put. Since percpu_ref_kill_and_confirm in kill_css will set flag
-> __PERCPU_REF_DEAD, so we can use this to avoid the race. IOW, if
-> __PERCPU_REF_DEAD is set now, we know blkcg css is in offline and
-> continue access blkg may risk double free. Thus we choose to skip these
-> ios.
-> I don't get how css_tryget works since it doesn't care the flag
-> __PERCPU_REF_DEAD. Also css_tryget can't prevent blkcg_css from
-> offlining since the race happens blkcg_css_offline is in progress.
-> Am I missing something here?
-
-Once marked dead, the ref is in atomic mode and css_tryget() would hit
-the atomic counter.  Here, we don't care about the offlining and
-draining.  A draining memcg can still have a lot of memory to be
-written back attached to it and we don't want punt all of them to the
-root cgroup.
+Applied to cgroup/for-4.16-fixes.
 
 Thanks.
 
