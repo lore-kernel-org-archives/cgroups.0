@@ -1,16 +1,16 @@
 From: Mathieu Poirier <mathieu.poirier@linaro.org>
-Subject: [PATCH V3 06/10] sched/deadline: Keep new DL task within root domain's boundary
-Date: Tue, 13 Feb 2018 13:32:43 -0700
-Message-ID: <1518553967-20656-7-git-send-email-mathieu.poirier@linaro.org>
+Subject: [PATCH V3 08/10] cgroup: Constrain the addition of CPUs to a new CPUset
+Date: Tue, 13 Feb 2018 13:32:45 -0700
+Message-ID: <1518553967-20656-9-git-send-email-mathieu.poirier@linaro.org>
 References: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UiNYSXlI7VQ3ceWY8eltwO5YQlhRrMN/ywnq3UC6geM=;
-        b=fEsj0b4bFOXf5b4A57cwUpm7uAXJ7n2KbBPx6KJIQNI3bss1EX3uLirSofvpXAC5Vi
-         zenUEf4RfO87M1dImm43IQuGEYQRfe4yl1FMe/Im49A6/YoF5i2wMQFX8krpx0qPBhQ5
-         JCO21PlGdCu7BtQxtIxyS49YMytJWi3+Ot7KE=
+        bh=oUUAzyuPxc2AWJT2EOSXQAEFlSz5Oal6yF3Vntlh3d8=;
+        b=fhvNaP3VFNS+rKp8IezXtyq1ExfwA0JvnoeHnWOcdBYWAd9+76CSseGsgm/PHlqzvn
+         tNSinUrTQ8VDhzOO7GUN2aCMgi2/Q+otsAcU9nj3To93RM6I+47a/zTHyQKdlX88xfYw
+         qatqfzmWizXlTGteL+xWX+9YeyDoaP800lQf0=
 In-Reply-To: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -20,129 +20,81 @@ Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org
 Cc: lizefan@huawei.com, mingo@redhat.com, rostedt@goodmis.org, claudio@evidence.eu.com, bristot@redhat.com, tommaso.cucinotta@santannapisa.it, juri.lelli@redhat.com, luca.abeni@santannapisa.it, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-When considering to move a task to the DL policy we need to make sure
-the CPUs it is allowed to run on matches the CPUs of the root domain of
-the runqueue it is currently assigned to.  Otherwise the task will be
-allowed to roam on CPUs outside of this root domain, something that will
-skew system deadline statistics and potentially lead to over selling DL
-bandwidth.
+Care must be taken when CPUs are added to a new CPUset.  If an ancestor
+of that set has its sched_load_balance flag switch off then the CPUs in
+the new CPUset will be added to a new root domain.  If the ancestor also
+had DL tasks those will end up covering more than one root domain,
+breaking at the same time the DL integrity model.
 
-For example we have a system where the cpuset.sched_load_balance flag of
-the root cpuset has been set to 0 and the 4 core system split in 2 cpuset:
-set1 has CPU 0 and 1 while set2 has CPU 2 and 3.  This results in 3 cpuset,
-i.e, the default set that has all 4 CPUs along with set1 and set2 as just
-depicted.  We also have task A that hasn't been assigned to any CPUset and
-as such, is part of the default (root) CPUset.
-
-At the time we want to move task A to a DL policy it has been assigned to
-CPU1.  Since CPU1 is part of set1 the root domain will have 2 CPUs in it
-and the bandwidth constraint checked against the current DL bandwidth
-allotment of those 2 CPUs.
-
-If task A is promoted to a DL policy it's 'cpus_allowed' mask is still
-equal to the CPUs in the default CPUset, making it possible for the
-scheduler to move it to CPU2 and CPU3, which could also be running DL tasks
-of their own.
-
-This patch makes sure that a task's cpus_allowed mask matches the CPUs
-of the root domain associated to the runqueue it has been assigned to.
+This patch prevents adding CPUs to a new CPUset if one of its ancestor
+had its sched_load_balance flag off and had DL tasks assigned to it.
 
 Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
 ---
- include/linux/cpuset.h |  6 ++++++
- kernel/cgroup/cpuset.c | 23 +++++++++++++++++++++++
- kernel/sched/core.c    | 20 ++++++++++++++++++++
- 3 files changed, 49 insertions(+)
+ kernel/cgroup/cpuset.c | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index 4bbb3f5a3020..f6a9051de907 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -57,6 +57,7 @@ extern void cpuset_update_active_cpus(void);
- extern void cpuset_wait_for_hotplug(void);
- extern void cpuset_lock(void);
- extern void cpuset_unlock(void);
-+extern bool cpuset_cpus_match_task(struct task_struct *tsk);
- extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
- extern void cpuset_cpus_allowed_fallback(struct task_struct *p);
- extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
-@@ -182,6 +183,11 @@ static inline void cpuset_lock(void) { }
- 
- static inline void cpuset_unlock(void) { }
- 
-+static inline bool cpuset_cpus_match_task(struct task_struct *tsk)
-+{
-+	return true;
-+}
-+
- static inline void cpuset_cpus_allowed(struct task_struct *p,
- 				       struct cpumask *mask)
- {
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index d8108030b754..45a5035ae601 100644
+index 4f5e8bac5337..4c1b71608c23 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2487,6 +2487,29 @@ void cpuset_unlock(void)
- }
- 
- /**
-+ * cpuset_cpus_match_task - return whether a task's cpus_allowed mask matches
-+ * that of the cpuset it is assigned to.
-+ * @tsk: pointer to the task_struct from which tsk->cpus_allowd is obtained.
-+ *
-+ * Description: Returns 'true' if the cpus_allowed mask of a task is the same
-+ * as the cpus_allowed of the cpuset the task belongs to.  This is useful in
-+ * situation where both cpuset and DL tasks are used.
-+ */
-+bool cpuset_cpus_match_task(struct task_struct *tsk)
+@@ -481,6 +481,43 @@ static bool cpuset_has_dl_tasks(struct cpuset *cs)
+  * Assumes RCU read lock and cpuset_mutex are held.
+  */
+ static int
++validate_change_cpus(struct cpuset *cur, struct cpuset *trial)
 +{
-+	bool ret;
-+	unsigned long flags;
++	int ret = 0;
 +
-+	spin_lock_irqsave(&callback_lock, flags);
-+	rcu_read_lock();
-+	ret = cpumask_equal((task_cs(tsk))->cpus_allowed, &tsk->cpus_allowed);
-+	rcu_read_unlock();
-+	spin_unlock_irqrestore(&callback_lock, flags);
++	/*
++	 * CPUs are being added to a CPUset.  If any parent of @trial has its
++	 * sched_load_balance flag switched off this operation will create a
++	 * new root domain spanning trial->cpus_allowed. At the same time
++	 * if any parent of @trial has a DL task, that task will end up
++	 * spanning more than one root domain and break the deadline integrity
++	 * model.
++	 */
++	if (cpumask_weight(cur->cpus_allowed) <
++	    cpumask_weight(trial->cpus_allowed)) {
++		struct cpuset *parent;
 +
++		parent = parent_cs(trial);
++		/* Go up until we reach the top_cpuset */
++		while (parent) {
++			if (cpuset_has_dl_tasks(parent) &&
++			    !is_sched_load_balance(parent)) {
++				ret = -EBUSY;
++				goto out;
++			}
++
++			parent = parent_cs(parent);
++		}
++	}
++
++out:
 +	return ret;
 +}
 +
-+/**
-  * cpuset_cpus_allowed - return cpus_allowed mask from a tasks cpuset.
-  * @tsk: pointer to task_struct from which to obtain cpuset->cpus_allowed.
-  * @pmask: pointer to struct cpumask variable to receive cpus_allowed set.
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 0d8badcf1f0f..b930857f4d14 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -4237,6 +4237,26 @@ static int __sched_setscheduler(struct task_struct *p,
- 			cpumask_t *span = rq->rd->span;
++/*
++ * Assumes RCU read lock and cpuset_mutex are held.
++ */
++static int
+ validate_change_load_balance(struct cpuset *cur, struct cpuset *trial)
+ {
+ 	bool populated = false, dl_tasks = false;
+@@ -553,8 +590,11 @@ validate_dl_change(struct cpuset *cur, struct cpuset *trial)
+ 	/* Check if the sched_load_balance flag has been changed */
+ 	ret = validate_change_load_balance(cur, trial);
+ 	if (ret)
+-		return ret;
++		goto out;
  
- 			/*
-+			 * If setscheduling to SCHED_DEADLINE we need to make
-+			 * sure the task is constrained to run within the root
-+			 * domain it is associated with, something that isn't
-+			 * guaranteed when using cpusets.
-+			 *
-+			 * Speaking of cpusets, we also need to assert that a
-+			 * task's cpus_allowed mask equals its cpuset's
-+			 * cpus_allowed mask. Otherwise a DL task could be
-+			 * assigned to a cpuset that has more CPUs than the root
-+			 * domain it is associated with, a situation that yields
-+			 * no benefits and greatly complicate the management of
-+			 * DL task when cpusets are present.
-+			 */
-+			if (!cpumask_equal(&p->cpus_allowed, span) ||
-+			    !cpuset_cpus_match_task(p)) {
-+				retval = -EPERM;
-+				goto unlock;
-+			}
++	ret = validate_change_cpus(cur, trial);
 +
-+			/*
- 			 * Don't allow tasks with an affinity mask smaller than
- 			 * the entire root_domain to become SCHED_DEADLINE. We
- 			 * will also fail if there's no bandwidth available.
++out:
+ 	return ret;
+ }
+ 
 -- 
 2.7.4
 
