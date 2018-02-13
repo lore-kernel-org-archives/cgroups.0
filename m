@@ -1,52 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4.15-rc9] sched, cgroup: Don't reject lower cpu.max on
- ancestors
-Date: Mon, 12 Feb 2018 09:24:58 -0800
-Message-ID: <20180212172458.GF695913@devbig577.frc2.facebook.com>
-References: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=v+/7YXMt/NQxb2RPdHE2vctIhSMcO7cDlI0c060R0rw=;
-        b=i2LNCFwLGMwndfeu65sDZvSfpUWq94GKG6Wij26PlAj1KYJTZQ6vcf8CconWs3MJHt
-         UeHang6WMUyAnJmWBs4kL7HxbYqUn4Y1pQzrvGJ2ivu0bwaLj/fuLPQRtW0AgqnrO8ny
-         YGEHd5sarJuUjKb041t1Mj5qaKP5mLs8DylJ8MBUQcJ3Ttx/cF9gMbC4j7vYn2DpY1TY
-         t3cWOk6ixy8yVB1lv8aPpG7EyTduckHXNyRyji11ptMz61Sou95Cc3jJ0xXr4sEiOMB0
-         9k15eyAWZvBTuH78m4m2xjWNkLQWd7b73EAn5yDPV/rpzfgG6XgubOp/qAZEgB6cVugp
-         9+cA==
-Content-Disposition: inline
-In-Reply-To: <20180122192618.GA1771050@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Chengguang Xu <cgxu519@icloud.com>
+Subject: [PATCH] blk-throttle: avoid multiple counting for same bio
+Date: Tue, 13 Feb 2018 14:45:50 +0800
+Message-ID: <1518504350-139546-1-git-send-email-cgxu519@icloud.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;     s=04042017;
+ t=1518504394;  bh=KQ7d14eJI8OAk5hG9cMFK0HZop2gkwx0c5XXraVKsck=;
+        h=From:To:Subject:Date:Message-id;
+        b=JrIBGKzamXwm/yjHE9GoCv3gBg/a/2YyLxEGLQbKS/PqoljifUf+Hxu30fvmVA2nl
+ F3vBXobHxO8uNRUe3eqt2uKvZke8aBjEUnQUlZFh1QKvZnYKlPT/DErx/s6dIrbHWn
+ j0GOO/x+hooOkMgHlgzLscQ1BrreKjr0HIGy9Q4Sq9IuFUbnPU4pfK2iq7XPb+lExy
+ uWwGy+9+470RH8sXhKxIC70iJwS23SHMjckqfpQ39DiPye/qUT9hV7h18xSp+7SdXV
+ z8VVDyE4uQMNcmsJIlIplKidgiN3h+kRpmZ65RjSPemTrVhIVIPJ53eXYdwuEFYbXF
+ to0pOtZiTbsIA==
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: tj@kernel.org, axboe@fb.com
+Cc: shli@fb.com, vgoyal@redhat.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Chengguang Xu <cgxu519@icloud.com>
 
-On Mon, Jan 22, 2018 at 11:26:18AM -0800, Tejun Heo wrote:
-> While adding cgroup2 interface for the cpu controller, 0d5936344f30
-> ("sched: Implement interface for cgroup unified hierarchy") forgot to
-> update input validation and left it to reject cpu.max config if any
-> descendant has set a higher value.
-> 
-> cgroup2 officially supports delegation and a descendant must not be
-> able to restrict what its ancestors can configure.  For absolute
-> limits such as cpu.max and memory.max, this means that the config at
-> each level should only act as the upper limit at that level and
-> shouldn't interfere with what other cgroups can configure.
-> 
-> This patch updates config validation on cgroup2 so that the cpu
-> controller follows the same convention.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Fixes: 0d5936344f30 ("sched: Implement interface for cgroup unified hierarchy")
+In current throttling/upper limit policy of blkio cgroup
+blkio.throttle.io_service_bytes does not exactly represent
+the number of bytes issued to the disk by the group, sometimes
+this number could be counted multiple times of real bytes.
+This fix introduces BIO_COUNTED flag to avoid multiple counting
+for same bio.
 
-Applied to cgroup/for-4.16-fixes.
+Signed-off-by: Chengguang Xu <cgxu519@icloud.com>
+---
+ include/linux/blk-cgroup.h | 4 ++++
+ include/linux/blk_types.h  | 1 +
+ 2 files changed, 5 insertions(+)
 
-Thanks.
-
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 69bea82..6c77711 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -686,6 +686,9 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 	struct blkcg_gq *blkg;
+ 	bool throtl = false;
+ 
++	if (bio_flagged(bio, BIO_COUNTED))
++		return !throtl;
++
+ 	rcu_read_lock();
+ 	blkcg = bio_blkcg(bio);
+ 
+@@ -708,6 +711,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
+ 				bio->bi_iter.bi_size);
+ 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
++		bio_set_flag(bio, BIO_COUNTED);
+ 	}
+ 
+ 	rcu_read_unlock();
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index bf18b95..23b83e7 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -181,6 +181,7 @@ struct bio {
+ 				 * throttling rules. Don't do it again. */
+ #define BIO_TRACE_COMPLETION 10	/* bio_endio() should trace the final completion
+ 				 * of this bio. */
++#define BIO_COUNTED	11	/* This bio has already been counted. */
+ /* See BVEC_POOL_OFFSET below before adding new flags */
+ 
+ /*
 -- 
-tejun
+1.8.3.1
+
