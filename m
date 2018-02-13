@@ -1,167 +1,253 @@
-From: Mathieu Poirier <mathieu.poirier@linaro.org>
-Subject: [PATCH V3 07/10] cgroup: Constrain 'sched_load_balance' flag when DL tasks are present
-Date: Tue, 13 Feb 2018 13:32:44 -0700
-Message-ID: <1518553967-20656-8-git-send-email-mathieu.poirier@linaro.org>
+From: Mathieu Poirier <mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH V3 05/10] cpuset: Rebuild root domain deadline accounting information
+Date: Tue, 13 Feb 2018 13:32:42 -0700
+Message-ID: <1518553967-20656-6-git-send-email-mathieu.poirier@linaro.org>
 References: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=uq46gIPTMMHr/Kat4X5lgfFhxL9zwh8U+r4MofJlGJE=;
-        b=BDHATBqFc0sPhc0T3pEQV4hcu+EyeElcrfCkPm8ZLX5bC+E8dC1qDaBXcPf3DIHcud
-         Ncl6sQ6ipH+y05ptMPKTT0WUgMnsruggG5mWYb8VsWfFUkh9RHYV+qVuWzIZuL8Hx6EU
-         f8iIOUx+ybCZkiFKDeOr2fIeQTGvsxYgvECeI=
-In-Reply-To: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=RpRuSxilgCH4LvoCdF6+8SofEdCVGn9nDBpdua5XPeg=;
+        b=ZyuffiXfo5iEz4uAcBgVh9AbjJH/5OUzhigoxN2CbbuxFHdrROm2U7MPr4IvGUJOk/
+         cTyZ7LxGXqGzrfnj4ITSxP8pzQb4/w4Ldb/Y9PLCnBEbcfNmliQ9PhH6wfw5+X4MXgKI
+         lVY+kt6t1HwJFSh02q7haJn8rjheinsPeh9rk=
+In-Reply-To: <1518553967-20656-1-git-send-email-mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: peterz@infradead.org
-Cc: lizefan@huawei.com, mingo@redhat.com, rostedt@goodmis.org, claudio@evidence.eu.com, bristot@redhat.com, tommaso.cucinotta@santannapisa.it, juri.lelli@redhat.com, luca.abeni@santannapisa.it, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch prevents the 'sched_load_balance' flag from being set to 0
-when DL tasks are present in a CPUset.  Otherwise we end up with the
-DL tasks using CPUs belonging to different root domains, something that
-breaks the mathematical model behind DL bandwidth management.
+When the topology of root domains is modified by CPUset or CPUhotplug
+operations information about the current deadline bandwidth held in the
+root domain is lost.
 
-For example on a 4 core system CPUset "set1" has been created and CPUs
-0 and 1 assigned to it.  A DL task has also been spun off.  By default
-the DL task can use all the CPUs in the default CPUset.
+This patch address the issue by recalculating the lost deadline
+bandwidth information by circling through the deadline tasks held in
+CPUsets and adding their current load to the root domain they are
+associated with.
 
-If we set the base CPUset's cpuset.sched_load_balance to 0, CPU 0 and 1
-are added to a newly created root domain while CPU 2 and 3 endup in the
-default root domain.  But the DL task is still part of the base CPUset and
-as such can use CPUs 0 to 3, spanning at the same time more than one root
-domain.
-
-Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+Signed-off-by: Mathieu Poirier <mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup/cpuset.c | 104 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 104 insertions(+)
+ include/linux/sched.h          |  5 ++++
+ include/linux/sched/deadline.h |  8 ++++++
+ kernel/cgroup/cpuset.c         | 63 +++++++++++++++++++++++++++++++++++++++++-
+ kernel/sched/deadline.c        | 31 +++++++++++++++++++++
+ kernel/sched/sched.h           |  3 --
+ kernel/sched/topology.c        | 14 +++++++++-
+ 6 files changed, 119 insertions(+), 5 deletions(-)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 45a5035ae601..4f5e8bac5337 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -458,6 +458,106 @@ static void free_trial_cpuset(struct cpuset *trial)
- 	kfree(trial);
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index b161ef8a902e..b9bd7da8dc85 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -239,6 +239,11 @@ struct vtime {
+ 	u64			gtime;
+ };
+ 
++#ifdef CONFIG_SMP
++extern struct root_domain def_root_domain;
++extern struct mutex sched_domains_mutex;
++#endif
++
+ struct sched_info {
+ #ifdef CONFIG_SCHED_INFO
+ 	/* Cumulative counters: */
+diff --git a/include/linux/sched/deadline.h b/include/linux/sched/deadline.h
+index a5bc8728ead7..050961659b1d 100644
+--- a/include/linux/sched/deadline.h
++++ b/include/linux/sched/deadline.h
+@@ -29,4 +29,12 @@ static inline bool dl_time_before(u64 a, u64 b)
+ 	return (s64)(a - b) < 0;
  }
  
-+static bool cpuset_has_dl_tasks(struct cpuset *cs)
++#ifdef CONFIG_SMP
++
++struct root_domain;
++extern void dl_add_task_root_domain(struct task_struct *p);
++extern void dl_clear_root_domain(struct root_domain *rd);
++
++#endif /* CONFIG_SMP */
++
+ #endif /* _LINUX_SCHED_DEADLINE_H */
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 41f8391640e6..d8108030b754 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -44,6 +44,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/rcupdate.h>
+ #include <linux/sched.h>
++#include <linux/sched/deadline.h>
+ #include <linux/sched/mm.h>
+ #include <linux/sched/task.h>
+ #include <linux/seq_file.h>
+@@ -812,6 +813,66 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	return ndoms;
+ }
+ 
++static void update_tasks_root_domain(struct cpuset *cs)
 +{
-+	bool dl_tasks = false;
 +	struct css_task_iter it;
 +	struct task_struct *task;
 +
-+	/* Go through each task in @cs looking for a DL task */
 +	css_task_iter_start(&cs->css, 0, &it);
 +
-+	while (!dl_tasks && (task = css_task_iter_next(&it))) {
-+		if (dl_task(task))
-+			dl_tasks = true;
-+	}
++	while ((task = css_task_iter_next(&it)))
++		dl_add_task_root_domain(task);
 +
 +	css_task_iter_end(&it);
-+
-+	return dl_tasks;
 +}
 +
 +/*
-+ * Assumes RCU read lock and cpuset_mutex are held.
++ * Called with cpuset_mutex held (rebuild_sched_domains())
++ * Called with hotplug lock held (rebuild_sched_domains_locked())
++ * Called with sched_domains_mutex held (partition_and_rebuild_domains())
 + */
-+static int
-+validate_change_load_balance(struct cpuset *cur, struct cpuset *trial)
++static void rebuild_root_domains(void)
 +{
-+	bool populated = false, dl_tasks = false;
-+	int ret = -EBUSY;
++	struct cpuset *cs = NULL;
 +	struct cgroup_subsys_state *pos_css;
-+	struct cpuset *cs;
 +
-+	 /* Bail out if nothing has changed. */
-+	if (is_sched_load_balance(cur) ==
-+	    is_sched_load_balance(trial)) {
-+		ret = 0;
-+		goto out;
-+	}
++	rcu_read_lock();
 +
 +	/*
-+	 * First deal with the generic case that applies when
-+	 * cpuset.sched_load_balance gets flipped on a cpuset,
-+	 * regardless of the value.
++	 * Clear default root domain DL accounting, it will be computed again
++	 * if a task belongs to it.
 +	 */
-+	cpuset_for_each_descendant_pre(cs, pos_css, cur) {
-+		if (cpuset_has_dl_tasks(cs))
-+			dl_tasks = true;
++	dl_clear_root_domain(&def_root_domain);
 +
-+		/* Skip the top cpuset since it obviously exists */
-+		if (cs == cur)
-+			continue;
++	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
 +
-+		/* Children without CPUs are not important */
-+		if (cpumask_empty(cs->cpus_allowed)) {
++		if (cpumask_empty(cs->effective_cpus)) {
 +			pos_css = css_rightmost_descendant(pos_css);
 +			continue;
 +		}
 +
-+		/* CPUs have been assigned to this cpuset. */
-+		populated = true;
++		css_get(&cs->css);
 +
-+		/*
-+		 * Go no further if both conditions are true so that we
-+		 * don't end up in a situation where a DL task is
-+		 * spanning more than one root domain or only assigned
-+		 * to a subset of the CPUs in a root domain.
-+		 */
-+		if (populated && dl_tasks)
-+			goto out;
++		rcu_read_unlock();
++
++		update_tasks_root_domain(cs);
++
++		rcu_read_lock();
++		css_put(&cs->css);
 +	}
-+
-+	/*
-+	 * Things get very complicated when dealing with children cpuset,
-+	 * resulting in hard to maintain code and low confidence that
-+	 * all cases are handled properly.  As such prevent the
-+	 * cpuset.sched_load_balance from being modified on children cpuset
-+	 * where DL tasks have been assigned (or any of its children).
-+	 */
-+	if (dl_tasks && parent_cs(cur))
-+		goto out;
-+
-+	ret = 0;
-+out:
-+	return ret;
++	rcu_read_unlock();
 +}
 +
-+/*
-+ * Assumes RCU read lock and cpuset_mutex are held.
-+ */
-+static int
-+validate_dl_change(struct cpuset *cur, struct cpuset *trial)
++static void
++partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
++				    struct sched_domain_attr *dattr_new)
 +{
-+	int ret = 0;
-+
-+	/* Check if the sched_load_balance flag has been changed */
-+	ret = validate_change_load_balance(cur, trial);
-+	if (ret)
-+		return ret;
-+
-+	return ret;
++	mutex_lock(&sched_domains_mutex);
++	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
++	rebuild_root_domains();
++	mutex_unlock(&sched_domains_mutex);
 +}
 +
  /*
-  * validate_change() - Used to validate that any proposed cpuset change
-  *		       follows the structural rules for cpusets.
-@@ -492,6 +592,10 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
- 		if (!is_cpuset_subset(c, trial))
- 			goto out;
+  * Rebuild scheduler domains.
+  *
+@@ -844,7 +905,7 @@ static void rebuild_sched_domains_locked(void)
+ 	ndoms = generate_sched_domains(&doms, &attr);
  
-+	/* Make sure changes are compatible with deadline scheduling class */
-+	if (validate_dl_change(cur, trial))
-+		goto out;
+ 	/* Have scheduler rebuild the domains */
+-	partition_sched_domains(ndoms, doms, attr);
++	partition_and_rebuild_sched_domains(ndoms, doms, attr);
+ out:
+ 	put_online_cpus();
+ }
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 9bb0e0c412ec..8eb508cf1990 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -2269,6 +2269,37 @@ void __init init_sched_dl_class(void)
+ 					GFP_KERNEL, cpu_to_node(i));
+ }
+ 
++void dl_add_task_root_domain(struct task_struct *p)
++{
++	unsigned long flags;
++	struct rq_flags rf;
++	struct rq *rq;
++	struct dl_bw *dl_b;
 +
- 	/* Remaining checks don't apply to root cpuset */
- 	ret = 0;
- 	if (cur == &top_cpuset)
++	rq = task_rq_lock(p, &rf);
++	if (!dl_task(p))
++		goto unlock;
++
++	dl_b = &rq->rd->dl_bw;
++	raw_spin_lock_irqsave(&dl_b->lock, flags);
++
++	dl_b->total_bw += p->dl.dl_bw;
++
++	raw_spin_unlock_irqrestore(&dl_b->lock, flags);
++
++unlock:
++	task_rq_unlock(rq, p, &rf);
++}
++
++void dl_clear_root_domain(struct root_domain *rd)
++{
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&rd->dl_bw.lock, flags);
++	rd->dl_bw.total_bw = 0;
++	raw_spin_unlock_irqrestore(&rd->dl_bw.lock, flags);
++}
++
+ #endif /* CONFIG_SMP */
+ 
+ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index fb5fc458547f..8aba192d4d17 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -685,9 +685,6 @@ struct root_domain {
+ 	unsigned long max_cpu_capacity;
+ };
+ 
+-extern struct root_domain def_root_domain;
+-extern struct mutex sched_domains_mutex;
+-
+ extern void init_defrootdomain(void);
+ extern int sched_init_domains(const struct cpumask *cpu_map);
+ extern void rq_attach_root(struct rq *rq, struct root_domain *rd);
+diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
+index eee721da40fb..3210ded386ba 100644
+--- a/kernel/sched/topology.c
++++ b/kernel/sched/topology.c
+@@ -3,6 +3,7 @@
+  * Scheduler topology setup/handling methods
+  */
+ #include <linux/sched.h>
++#include <linux/sched/deadline.h>
+ #include <linux/mutex.h>
+ #include <linux/sched/isolation.h>
+ #include <linux/proc_fs.h>
+@@ -1889,8 +1890,19 @@ void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
+ 	for (i = 0; i < ndoms_cur; i++) {
+ 		for (j = 0; j < n && !new_topology; j++) {
+ 			if (cpumask_equal(doms_cur[i], doms_new[j])
+-			    && dattrs_equal(dattr_cur, i, dattr_new, j))
++			    && dattrs_equal(dattr_cur, i, dattr_new, j)) {
++				struct root_domain *rd;
++
++				/*
++				 * This domain won't be destroyed and as such
++				 * its dl_bw->total_bw needs to be cleared.  It
++				 * will be recomputed in function
++				 * update_tasks_root_domain().
++				 */
++				rd = cpu_rq(cpumask_any(doms_cur[i]))->rd;
++				dl_clear_root_domain(rd);
+ 				goto match1;
++			}
+ 		}
+ 		/* No match - a current sched domain not in new doms_new[] */
+ 		detach_destroy_domains(doms_cur[i]);
 -- 
 2.7.4
-
