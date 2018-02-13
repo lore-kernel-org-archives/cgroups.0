@@ -1,16 +1,16 @@
 From: Mathieu Poirier <mathieu.poirier@linaro.org>
-Subject: [PATCH V3 10/10] sched/deadline: Prevent CPU hotplug operation if DL task on CPU
-Date: Tue, 13 Feb 2018 13:32:47 -0700
-Message-ID: <1518553967-20656-11-git-send-email-mathieu.poirier@linaro.org>
+Subject: [PATCH V3 07/10] cgroup: Constrain 'sched_load_balance' flag when DL tasks are present
+Date: Tue, 13 Feb 2018 13:32:44 -0700
+Message-ID: <1518553967-20656-8-git-send-email-mathieu.poirier@linaro.org>
 References: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UbhPA4pshwFydxif8sqRTcHzvw2HfoMH+EbQHDwykcA=;
-        b=DVCvk9ZgdcQD0+NZcisAYqDjgZApKtpzarE0SHhAEP+eCsvDNE7jRWw+vziFuo//fK
-         Gqe9w9iZ9w/L7PwaNXVeK+be+4JCB81gW+QTZKEdFOiK0tvEGXbOFsjtuSClYkzJwE78
-         Elgeik8iROxXblraNm/mLY5KbNAQxq+8WSBu8=
+        bh=uq46gIPTMMHr/Kat4X5lgfFhxL9zwh8U+r4MofJlGJE=;
+        b=BDHATBqFc0sPhc0T3pEQV4hcu+EyeElcrfCkPm8ZLX5bC+E8dC1qDaBXcPf3DIHcud
+         Ncl6sQ6ipH+y05ptMPKTT0WUgMnsruggG5mWYb8VsWfFUkh9RHYV+qVuWzIZuL8Hx6EU
+         f8iIOUx+ybCZkiFKDeOr2fIeQTGvsxYgvECeI=
 In-Reply-To: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -20,173 +20,148 @@ Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org
 Cc: lizefan@huawei.com, mingo@redhat.com, rostedt@goodmis.org, claudio@evidence.eu.com, bristot@redhat.com, tommaso.cucinotta@santannapisa.it, juri.lelli@redhat.com, luca.abeni@santannapisa.it, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-When a DL task is assigned a CPU the "utilisation" (this_bw) and the
-"active utilisation" (running_bw) fields of rq->dl are incremented
-accordingly.  If the CPU is hotplugged out the DL task is transferred
-to another CPU but the task's contribution to this_bw and running_bw
-isn't substracted from the outgoing CPU's rq nor added to the newly
-appointed CPU.
+This patch prevents the 'sched_load_balance' flag from being set to 0
+when DL tasks are present in a CPUset.  Otherwise we end up with the
+DL tasks using CPUs belonging to different root domains, something that
+breaks the mathematical model behind DL bandwidth management.
 
-In this example (where a kernel has been instrumented to output the
-relevant information) we have a 4 CPU system with one 6:10 DL task that
-has been assigned to CPU 2:
+For example on a 4 core system CPUset "set1" has been created and CPUs
+0 and 1 assigned to it.  A DL task has also been spun off.  By default
+the DL task can use all the CPUs in the default CPUset.
 
-	root@dragon:/home/linaro/# cat /proc/rq_debug
-
-	dl_rq[0]:
-	  .online			: yes
-	  .dl_nr_running		: 0
-	  .running_bw			: 0
-	  .this_bw			: 0
-	  .rd->span			: 0-3
-	  .dl_nr_migratory		: 0
-	  .rd->dl_bw->bw		: 3984588
-	  .rd->dl_bw->total_bw		: 629145
-
-	dl_rq[1]:
-	  .online			: yes
-	  .dl_nr_running		: 0
-	  .running_bw			: 0
-	  .this_bw			: 0
-	  .rd->span:			: 0-3
-	  .dl_nr_migratory		: 0
-	  .rd->dl_bw->bw		: 3984588	<-- RD capacity for 4 CPUs
-	  .rd->dl_bw->total_bw		: 629145
-
-	dl_rq[2]:
-	  .online			: yes
-	  .dl_nr_running		: 1		<-- One task running
-	  .running_bw			: 629145	<-- Normal behavior
-	  .this_bw			: 629145	<-- Normal behavior
-	  .rd->span			: 0-3
-	  .dl_nr_migratory		: 1
-	  .rd->dl_bw->bw		: 3984588
-	  .rd->dl_bw->total_bw		: 629145
-
-	dl_rq[3]:
-	  .online			: yes
-	  .dl_nr_running		: 0
-	  .running_bw			: 0
-	  .this_bw			: 0
-	  .rd->span			: 0-3
-	  .dl_nr_migratory		: 0
-	  .rd->dl_bw->bw		: 3984588
-	  .rd->dl_bw->total_bw		: 629145
-
-At this point we hotplug out CPU2 and list the status again:
-
-root@dragon:/home/linaro/# echo  0 > /sys/devices/system/cpu/cpu2/online
-root@dragon:/home/linaro/# cat /proc/rq_debug
-
-	dl_rq[0]:
-	  .online			: yes
-	  .dl_nr_running		: 1		<-- DL task was moved here
-	  .running_bw			: 0		<-- Contribution not added
-	  .this_bw			: 0		<-- Contribution not added
-	  .rd->span			: 0-1,3
-	  .dl_nr_migratory		: 1
-	  .rd->dl_bw->bw		: 2988441	<-- RD capacity updated
-	  .rd->dl_bw->total_bw		: 629145
-
-	dl_rq[1]:
-	  .online			: yes
-	  .dl_nr_running		: 0
-	  .running_bw			: 0
-	  .this_bw			: 0
-	  .rd->span			: 0-1,3
-	  .dl_nr_migratory		: 0
-	  .rd->dl_bw->bw		: 2988441
-	  .rd->dl_bw->total_bw		: 629145
-
-	dl_rq[2]:
-	  .online			: no		<-- runqueue no longer online
-	  .dl_nr_running		: 0		<-- DL task was moved
-	  .running_bw			: 629145	<-- Contribution not substracted
-	  .this_bw			: 629145	<-- Contribution not substracted
-	  .rd->span			: 2
-	  .dl_nr_migratory		: 0
-	  .rd->dl_bw->bw		: 996147
-	  .rd->dl_bw->total_bw		: 0
-
-	dl_rq[3]:
-	  .online			: yes
-	  .dl_nr_running		: 0
-	  .running_bw			: 0
-	  .this_bw			: 0
-	  .rd->span			: 0-1,3
-	  .dl_nr_migratory		: 0
-	  .rd->dl_bw->bw		: 2988441
-	  .rd->dl_bw->total_bw: 629145
-
-Upon rebooting the system a splat is also produced:
-
-[  578.184789] ------------[ cut here ]------------
-[  578.184813] dl_rq->running_bw > old
-[  578.184838] WARNING: CPU: 0 PID: 4076 at /home/mpoirier/work/linaro/deadline/kernel/kernel/sched/deadline.c:98 dequeue_task_dl+0x128/0x168
-[  578.191693] Modules linked in:
-[  578.191705] CPU: 0 PID: 4076 Comm: burn Not tainted 4.15.0-00009-gf597fc1e5764-dirty #259
-[  578.191708] Hardware name: Qualcomm Technologies, Inc. APQ 8016 SBC (DT)
-[  578.191713] pstate: 60000085 (nZCv daIf -PAN -UAO)
-[  578.191718] pc : dequeue_task_dl+0x128/0x168
-[  578.191722] lr : dequeue_task_dl+0x128/0x168
-[  578.191724] sp : ffff8000383ebbf0
-[  578.191727] x29: ffff8000383ebbf0 x28: ffff800038288000
-[  578.191733] x27: 0000000000000009 x26: ffff800038890000
-[  578.191739] x25: ffff800038994e60 x24: ffff800038994e00
-[  578.191744] x23: 0000000000000000 x22: 0000000000000000
-[  578.191749] x21: 000000000000000e x20: ffff800038288000
-[  578.191755] x19: ffff80003d950aa8 x18: 0000000000000010
-[  578.191761] x17: 0000000000000001 x16: 0000000000002710
-[  578.191766] x15: 0000000000000006 x14: ffff0000892ed37f
-[  578.191772] x13: ffff0000092ed38d x12: 0000000000000000
-[  578.191778] x11: ffff8000383eb840 x10: 0000000005f5e0ff
-[  578.191784] x9 : 0000000000000034 x8 : 625f676e696e6e75
-[  578.191794] x7 : 723e2d71725f6c64 x6 : 000000000000016c
-[  578.191800] x5 : 0000000000000000 x4 : 0000000000000000
-[  578.191806] x3 : ffffffffffffffff x2 : 000080003480f000
-[  578.191812] x1 : ffff800038288000 x0 : 0000000000000017
-[  578.191818] Call trace:
-[  578.191824]  dequeue_task_dl+0x128/0x168
-[  578.191830]  sched_move_task+0xa8/0x150
-[  578.191837]  sched_autogroup_exit_task+0x20/0x30
-[  578.191843]  do_exit+0x2c4/0x9f8
-[  578.191847]  do_group_exit+0x3c/0xa0
-[  578.191853]  get_signal+0x2a4/0x568
-[  578.191860]  do_signal+0x70/0x210
-[  578.191866]  do_notify_resume+0xe0/0x138
-[  578.191870]  work_pending+0x8/0x10
-[  578.191874] ---[ end trace 345388d10dc698fe ]---
-
-As a stop-gap measure before the real solution is available this patch
-prevents users from carrying out a CPU hotplug operation if a DL task is
-running (or suspended) on said CPU.
+If we set the base CPUset's cpuset.sched_load_balance to 0, CPU 0 and 1
+are added to a newly created root domain while CPU 2 and 3 endup in the
+default root domain.  But the DL task is still part of the base CPUset and
+as such can use CPUs 0 to 3, spanning at the same time more than one root
+domain.
 
 Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
 ---
- kernel/sched/deadline.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ kernel/cgroup/cpuset.c | 104 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 8eb508cf1990..c46aaa7c3569 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -2741,11 +2741,16 @@ bool dl_cpu_busy(unsigned int cpu)
- 	int cpus;
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 45a5035ae601..4f5e8bac5337 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -458,6 +458,106 @@ static void free_trial_cpuset(struct cpuset *trial)
+ 	kfree(trial);
+ }
  
- 	rcu_read_lock_sched();
-+	overflow = !!(cpu_rq(cpu)->dl.this_bw);
-+	if (overflow)
++static bool cpuset_has_dl_tasks(struct cpuset *cs)
++{
++	bool dl_tasks = false;
++	struct css_task_iter it;
++	struct task_struct *task;
++
++	/* Go through each task in @cs looking for a DL task */
++	css_task_iter_start(&cs->css, 0, &it);
++
++	while (!dl_tasks && (task = css_task_iter_next(&it))) {
++		if (dl_task(task))
++			dl_tasks = true;
++	}
++
++	css_task_iter_end(&it);
++
++	return dl_tasks;
++}
++
++/*
++ * Assumes RCU read lock and cpuset_mutex are held.
++ */
++static int
++validate_change_load_balance(struct cpuset *cur, struct cpuset *trial)
++{
++	bool populated = false, dl_tasks = false;
++	int ret = -EBUSY;
++	struct cgroup_subsys_state *pos_css;
++	struct cpuset *cs;
++
++	 /* Bail out if nothing has changed. */
++	if (is_sched_load_balance(cur) ==
++	    is_sched_load_balance(trial)) {
++		ret = 0;
++		goto out;
++	}
++
++	/*
++	 * First deal with the generic case that applies when
++	 * cpuset.sched_load_balance gets flipped on a cpuset,
++	 * regardless of the value.
++	 */
++	cpuset_for_each_descendant_pre(cs, pos_css, cur) {
++		if (cpuset_has_dl_tasks(cs))
++			dl_tasks = true;
++
++		/* Skip the top cpuset since it obviously exists */
++		if (cs == cur)
++			continue;
++
++		/* Children without CPUs are not important */
++		if (cpumask_empty(cs->cpus_allowed)) {
++			pos_css = css_rightmost_descendant(pos_css);
++			continue;
++		}
++
++		/* CPUs have been assigned to this cpuset. */
++		populated = true;
++
++		/*
++		 * Go no further if both conditions are true so that we
++		 * don't end up in a situation where a DL task is
++		 * spanning more than one root domain or only assigned
++		 * to a subset of the CPUs in a root domain.
++		 */
++		if (populated && dl_tasks)
++			goto out;
++	}
++
++	/*
++	 * Things get very complicated when dealing with children cpuset,
++	 * resulting in hard to maintain code and low confidence that
++	 * all cases are handled properly.  As such prevent the
++	 * cpuset.sched_load_balance from being modified on children cpuset
++	 * where DL tasks have been assigned (or any of its children).
++	 */
++	if (dl_tasks && parent_cs(cur))
 +		goto out;
 +
- 	dl_b = dl_bw_of(cpu);
- 	raw_spin_lock_irqsave(&dl_b->lock, flags);
- 	cpus = dl_bw_cpus(cpu);
- 	overflow = __dl_overflow(dl_b, cpus, 0, 0);
- 	raw_spin_unlock_irqrestore(&dl_b->lock, flags);
++	ret = 0;
 +out:
- 	rcu_read_unlock_sched();
- 	return overflow;
- }
++	return ret;
++}
++
++/*
++ * Assumes RCU read lock and cpuset_mutex are held.
++ */
++static int
++validate_dl_change(struct cpuset *cur, struct cpuset *trial)
++{
++	int ret = 0;
++
++	/* Check if the sched_load_balance flag has been changed */
++	ret = validate_change_load_balance(cur, trial);
++	if (ret)
++		return ret;
++
++	return ret;
++}
++
+ /*
+  * validate_change() - Used to validate that any proposed cpuset change
+  *		       follows the structural rules for cpusets.
+@@ -492,6 +592,10 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ 		if (!is_cpuset_subset(c, trial))
+ 			goto out;
+ 
++	/* Make sure changes are compatible with deadline scheduling class */
++	if (validate_dl_change(cur, trial))
++		goto out;
++
+ 	/* Remaining checks don't apply to root cpuset */
+ 	ret = 0;
+ 	if (cur == &top_cpuset)
 -- 
 2.7.4
 
