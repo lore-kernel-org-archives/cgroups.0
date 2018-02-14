@@ -1,126 +1,58 @@
-From: Mathieu Poirier <mathieu.poirier@linaro.org>
-Subject: [PATCH V3 04/10] sched/core: Prevent race condition between cpuset and __sched_setscheduler()
-Date: Tue, 13 Feb 2018 13:32:41 -0700
-Message-ID: <1518553967-20656-5-git-send-email-mathieu.poirier@linaro.org>
-References: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC PATCH 0/3] Directed kmem charging
+Date: Tue, 13 Feb 2018 18:56:50 -0800
+Message-ID: <20180214025653.132942-1-shakeelb@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Rrh4DAOTBW2ljGohKEk/qZ/6oqcBMfBa1z5aftfWH5k=;
-        b=KeDDm7ThA8dMcMlwVymErZqolbPxpadLCV0q56Uh098JOTh9Tzv+GCd8Xnqct8bd8r
-         10/e+HGlSwMcb/FmkhUis0NGuViB+I8jcQtjEzwquy7BzVKdYrEz1WO/+mDLLt6SDSML
-         NbJgYPR06XBvz6mq6sOAY2dBUyqjQekR9NrZY=
-In-Reply-To: <1518553967-20656-1-git-send-email-mathieu.poirier@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=8HmRdc6cOzghCnzRYYmWN038q5DR30QMADFjqPbSVgk=;
+        b=Wntc0Ep2RveHNIO9HqtD2gcwReNaje6kTSXLDNhgFl84jqU3RnOgAkLufN37koVG1V
+         feZT+j34XjG7AAbIyXkNF8OgPSHSLrTcRAfOV/SbHYgbBlXL3Wxo2rTEvojJ9exZqW6u
+         gVJMhJJK//HYIdOuejjs9WtTLzT17fcMQ61Ezk+rxrWjbsFsjR59nQnzTRK72qNHSSxN
+         o/7IKHGcM1pSbox5yVBiOaNT+SyfxRaVemJtKUXJRV6phzWvDCkTCaDTRBIXXMH/GG+5
+         9UoRUupmpbVd0eQ4K1IxVnKoQ2MuOH1CRYVzslhHyPr3BZAzoc7GSy6PpjzsF2WmGqUl
+         dbiA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: peterz@infradead.org
-Cc: lizefan@huawei.com, mingo@redhat.com, rostedt@goodmis.org, claudio@evidence.eu.com, bristot@redhat.com, tommaso.cucinotta@santannapisa.it, juri.lelli@redhat.com, luca.abeni@santannapisa.it, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-No synchronisation mechanism exist between the cpuset subsystem and calls
-to function __sched_setscheduler().  As such it is possible that new root
-domains are created on the cpuset side while a deadline acceptance test
-is carried out in __sched_setscheduler(), leading to a potential oversell
-of CPU bandwidth.
+This patchset introduces memcg variant memory allocation functions. The
+caller can explicitly pass the memcg to charge for kmem allocations.
+Currently the kernel, for __GFP_ACCOUNT memory allocation requests,
+extract the memcg of the current task to charge for the kmem allocation.
+This patch series introduces kmem allocation functions where the caller
+can pass the pointer to the remote memcg. The remote memcg will be
+charged for the allocation instead of the memcg of the caller.
 
-By making available the cpuset_mutex to the core scheduler it is possible
-to prevent situations such as the one described above from happening.
 
-Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
----
- include/linux/cpuset.h |  6 ++++++
- kernel/cgroup/cpuset.c | 16 ++++++++++++++++
- kernel/sched/core.c    |  9 +++++++++
- 3 files changed, 31 insertions(+)
+Shakeel Butt (3):
+  mm: memcg: plumbing memcg for kmem cache allocations
+  mm: memcg: plumbing memcg for kmalloc allocations
+  fs: fsnotify: account fsnotify metadata to kmemcg
 
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index 934633a05d20..4bbb3f5a3020 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -55,6 +55,8 @@ extern void cpuset_init_smp(void);
- extern void cpuset_force_rebuild(void);
- extern void cpuset_update_active_cpus(void);
- extern void cpuset_wait_for_hotplug(void);
-+extern void cpuset_lock(void);
-+extern void cpuset_unlock(void);
- extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
- extern void cpuset_cpus_allowed_fallback(struct task_struct *p);
- extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
-@@ -176,6 +178,10 @@ static inline void cpuset_update_active_cpus(void)
- 
- static inline void cpuset_wait_for_hotplug(void) { }
- 
-+static inline void cpuset_lock(void) { }
-+
-+static inline void cpuset_unlock(void) { }
-+
- static inline void cpuset_cpus_allowed(struct task_struct *p,
- 				       struct cpumask *mask)
- {
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index d18c72e83de4..41f8391640e6 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2410,6 +2410,22 @@ void __init cpuset_init_smp(void)
- }
- 
- /**
-+ * cpuset_lock - Grab the cpuset_mutex from another subsysytem
-+ */
-+void cpuset_lock(void)
-+{
-+	mutex_lock(&cpuset_mutex);
-+}
-+
-+/**
-+ * cpuset_unlock - Release the cpuset_mutex from another subsysytem
-+ */
-+void cpuset_unlock(void)
-+{
-+	mutex_unlock(&cpuset_mutex);
-+}
-+
-+/**
-  * cpuset_cpus_allowed - return cpus_allowed mask from a tasks cpuset.
-  * @tsk: pointer to task_struct from which to obtain cpuset->cpus_allowed.
-  * @pmask: pointer to struct cpumask variable to receive cpus_allowed set.
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index f727c3d0064c..0d8badcf1f0f 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -4176,6 +4176,13 @@ static int __sched_setscheduler(struct task_struct *p,
- 	}
- 
- 	/*
-+	 * Make sure we don't race with the cpuset subsystem where root
-+	 * domains can be rebuilt or modified while operations like DL
-+	 * admission checks are carried out.
-+	 */
-+	cpuset_lock();
-+
-+	/*
- 	 * Make sure no PI-waiters arrive (or leave) while we are
- 	 * changing the priority of the task:
- 	 *
-@@ -4247,6 +4254,7 @@ static int __sched_setscheduler(struct task_struct *p,
- 	if (unlikely(oldpolicy != -1 && oldpolicy != p->policy)) {
- 		policy = oldpolicy = -1;
- 		task_rq_unlock(rq, p, &rf);
-+		cpuset_unlock();
- 		goto recheck;
- 	}
- 
-@@ -4316,6 +4324,7 @@ static int __sched_setscheduler(struct task_struct *p,
- 
- unlock:
- 	task_rq_unlock(rq, p, &rf);
-+	cpuset_unlock();
- 	return retval;
- }
- 
+ fs/notify/dnotify/dnotify.c          |   5 +-
+ fs/notify/fanotify/fanotify.c        |  12 ++-
+ fs/notify/fanotify/fanotify.h        |   3 +-
+ fs/notify/fanotify/fanotify_user.c   |   8 +-
+ fs/notify/group.c                    |   4 +
+ fs/notify/inotify/inotify_fsnotify.c |   2 +-
+ fs/notify/inotify/inotify_user.c     |   5 +-
+ fs/notify/mark.c                     |   9 +-
+ include/linux/fsnotify_backend.h     |  12 ++-
+ include/linux/memcontrol.h           |  12 ++-
+ include/linux/slab.h                 |  86 +++++++++++++++-
+ mm/memcontrol.c                      |  29 ++++--
+ mm/page_alloc.c                      |   2 +-
+ mm/slab.c                            | 107 ++++++++++++++++----
+ mm/slab.h                            |   6 +-
+ mm/slab_common.c                     |  41 +++++++-
+ mm/slub.c                            | 140 ++++++++++++++++++++++-----
+ 17 files changed, 404 insertions(+), 79 deletions(-)
+
 -- 
-2.7.4
-
+2.16.1.291.g4437f3f132-goog
