@@ -1,61 +1,65 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH] mm: memcg: expose mem_cgroup_put API
-Date: Wed,  7 Mar 2018 18:48:50 -0800
-Message-ID: <20180308024850.39737-1-shakeelb@google.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=dLauWtxjF5Rad+8FslU9jZFF2sc/hz5VoS3D7/2wSsM=;
-        b=iVTR+VEwS0YYkvEGOnnjJqHu0gtdsDt32saKA3j8poJ1Vv7zr+vTnaxBM7x9stuXNl
-         8LjYx1Rf4nYfoLhaycvCqED7XIDXhcqbV5t/4eTWlTNrPPuRNhBs0g1KC+l0k6xzYUDW
-         Wnro6S97FjJAXsycbP9eqehgVn4/6plrJxH98sva30o7aRVfYPBRV7G9cmKXCtfYLGw9
-         aEOfzI/r8NOVvy27/C9ADM1oq7Qm8jGFbSlj+gywLnhDlt5oR2zxPwniO+DHhls5G235
-         9sm/GPA7GO4KOFHJ5P19IVwj5XtQrX8GoreOub5SU3+o9To7iGc3KTD4tfp9pUqGgitt
-         4DaA==
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Subject: Re: [PATCH v3 5/6] drm/i915: Introduce 'priority offset' for GPU
+ contexts (v2)
+Date: Thu, 08 Mar 2018 11:32:04 +0000
+Message-ID: <152050872479.8783.5832623625876356787@mail.alporthouse.com>
+References: <20180306234700.6562-1-matthew.d.roper@intel.com>
+ <20180306234700.6562-6-matthew.d.roper@intel.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20180306234700.6562-6-matthew.d.roper@intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+To: Matt Roper <matthew.d.roper@intel.com>, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
 
-This patch exports mem_cgroup_put API to put the refcnt of the memory
-cgroup.
-
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
----
- include/linux/memcontrol.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index c46016bb25eb..0da79e116a07 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -344,6 +344,11 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *css){
- 	return css ? container_of(css, struct mem_cgroup, css) : NULL;
- }
- 
-+static inline void mem_cgroup_put(struct mem_cgroup *memcg)
-+{
-+	css_put(&memcg->css);
-+}
-+
- #define mem_cgroup_from_counter(counter, member)	\
- 	container_of(counter, struct mem_cgroup, member)
- 
-@@ -789,6 +794,10 @@ static inline bool task_in_mem_cgroup(struct task_struct *task,
- 	return true;
- }
- 
-+static inline void mem_cgroup_put(struct mem_cgroup *memcg)
-+{
-+}
-+
- static inline struct mem_cgroup *
- mem_cgroup_iter(struct mem_cgroup *root,
- 		struct mem_cgroup *prev,
--- 
-2.16.2.395.g2e18187dfd-goog
-
+UXVvdGluZyBNYXR0IFJvcGVyICgyMDE4LTAzLTA2IDIzOjQ2OjU5KQo+IFRoZXJlIGFyZSBjYXNl
+cyB3aGVyZSBhIHN5c3RlbSBpbnRlZ3JhdG9yIG1heSB3aXNoIHRvIHJhaXNlL2xvd2VyIHRoZQo+
+IHByaW9yaXR5IG9mIEdQVSB3b3JrbG9hZHMgYmVpbmcgc3VibWl0dGVkIGJ5IHNwZWNpZmljIE9T
+IHByb2Nlc3MoZXMpLAo+IGluZGVwZW5kZW50bHkgb2YgaG93IHRoZSBzb2Z0d2FyZSBzZWxmLWNs
+YXNzaWZpZXMgaXRzIG93biBwcmlvcml0eS4KPiBFeHBvc2luZyAicHJpb3JpdHkgb2Zmc2V0IiBh
+cyBhbiBpOTE1LXNwZWNpZmljIGNncm91cCBwYXJhbWV0ZXIgd2lsbAo+IGVuYWJsZSBzdWNoIHN5
+c3RlbS1sZXZlbCBjb25maWd1cmF0aW9uLgo+IAo+IE5vcm1hbGx5IEdQVSBjb250ZXh0cyBzdGFy
+dCB3aXRoIGEgcHJpb3JpdHkgdmFsdWUgb2YgMAo+IChJOTE1X0NPTlRFWFRfREVGQVVMVF9QUklP
+UklUWSkgYW5kIHRoZW4gbWF5IGJlIGFkanVzdGVkIHVwL2Rvd24gZnJvbQo+IHRoZXJlIHZpYSBv
+dGhlciBtZWNoYW5pc21zLiAgV2UnZCBsaWtlIHRvIHByb3ZpZGUgYSBzeXN0ZW0tbGV2ZWwgaW5w
+dXQKPiB0byB0aGUgcHJpb3JpdHkgZGVjaXNpb24gdGhhdCB3aWxsIGJlIHRha2VuIGludG8gY29u
+c2lkZXJhdGlvbiwgZXZlbgo+IHdoZW4gdXNlcnNwYWNlIGxhdGVyIGF0dGVtcHRzIHRvIHNldCBh
+biBhYnNvbHV0ZSBwcmlvcml0eSB2YWx1ZSB2aWEKPiBJOTE1X0NPTlRFWFRfUEFSQU1fUFJJT1JJ
+VFkuICBUaGUgcHJpb3JpdHkgb2Zmc2V0IGludHJvZHVjZWQgaGVyZQo+IHByb3ZpZGVzIGEgYmFz
+ZSB2YWx1ZSB0aGF0IHdpbGwgYWx3YXlzIGJlIGFkZGVkIHRvIChvciBzdWJ0cmFjdGVkIGZyb20p
+Cj4gdGhlIHNvZnR3YXJlJ3Mgc2VsZi1hc3NpZ25lZCBwcmlvcml0eSB2YWx1ZS4KPiAKPiBUaGlz
+IHBhdGNoIG1ha2VzIHByaW9yaXR5IG9mZnNldCBhIGNncm91cC1zcGVjaWZpYyB2YWx1ZTsgY29u
+dGV4dHMgd2lsbAo+IGJlIGNyZWF0ZWQgd2l0aCBhIHByaW9yaXR5IG9mZnNldCBiYXNlZCBvbiB0
+aGUgY2dyb3VwIG1lbWJlcnNoaXAgb2YgdGhlCj4gcHJvY2VzcyBjcmVhdGluZyB0aGUgY29udGV4
+dCBhdCB0aGUgdGltZSB0aGUgY29udGV4dCBpcyBjcmVhdGVkLiAgTm90ZQo+IHRoYXQgcHJpb3Jp
+dHkgb2Zmc2V0IGlzIGFzc2lnbmVkIGF0IGNvbnRleHQgY3JlYXRpb24gdGltZTsgbWlncmF0aW5n
+IGEKPiBwcm9jZXNzIHRvIGEgZGlmZmVyZW50IGNncm91cCBvciBjaGFuZ2luZyB0aGUgb2Zmc2V0
+IGFzc29jaWF0ZWQgd2l0aCBhCj4gY2dyb3VwIHdpbGwgb25seSBhZmZlY3QgbmV3IGNvbnRleHQg
+Y3JlYXRpb24gYW5kIHdpbGwgbm90IGFsdGVyIHRoZQo+IGJlaGF2aW9yIG9mIGV4aXN0aW5nIGNv
+bnRleHRzIHByZXZpb3VzbHkgY3JlYXRlZCBieSB0aGUgcHJvY2Vzcy4KPiAKPiB2MjoKPiAgLSBS
+ZWJhc2Ugb250byBuZXcgY2dyb3VwX3ByaXYgQVBJCj4gIC0gVXNlIGN1cnJlbnQgaW5zdGVhZCBv
+ZiBkcm1fZmlsZS0+cGlkIHRvIGRldGVybWluZSB3aGljaCBwcm9jZXNzIHRvCj4gICAgbG9va3Vw
+IHByaW9yaXR5IGZvci4gKENocmlzKQo+ICAtIERvbid0IGZvcmdldCB0byBzdWJ0cmFjdCBwcmlv
+cml0eSBvZmZzZXQgaW4gY29udGV4dF9nZXRwYXJhbSBpb2N0bCB0bwo+ICAgIG1ha2UgaXQgbWF0
+Y2ggc2V0cGFyYW0gYmVoYXZpb3IuIChDaHJpcykKPiAKPiBTaWduZWQtb2ZmLWJ5OiBNYXR0IFJv
+cGVyIDxtYXR0aGV3LmQucm9wZXJAaW50ZWwuY29tPgoKRm9yIGN0eC0+cHJpb3JpdHkvY3R4LT5w
+cmlvcml0eV9vZmZzZXQKUmV2aWV3ZWQtYnk6IENocmlzIFdpbHNvbiA8Y2hyaXNAY2hyaXMtd2ls
+c29uLmNvLnVrPgoKQXQgdGhlIGVuZCBvZiB0aGUgZGF5LCBldmVyeXRoaW5nIHRoYXQgaXMgbW9k
+aWZpYWJsZSBieSBjb250ZXh0IGlzIGdvaW5nCnRvIHdhbnQgY2dyb3VwIGNvbnN0cmFpbnQsIGJ1
+dCBsaWtlIHByaW9yaXR5X29mZnNldCBlYWNoIHdpbGwgcmVxdWlyZQpzb21lIHRob3VnaHQgYXMg
+dG8gaG93IHRvIGV4cHJlc3MgdGhlIGNvbnN0cmFpbnQuCgpJbnRlcmVzdGluZyBjb251bmRydW0s
+IGFuZCBzdGlsbCB3ZSB3YW50IGEgY29uc2lzdGVudCBpbnRlcmZhY2UgZm9yIGFsbAp0aGUgZ3B1
+cyBvbiBhIHN5c3RlbS4KLUNocmlzCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVk
+ZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZv
+L2RyaS1kZXZlbAo=
