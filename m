@@ -1,81 +1,27 @@
-From: Matt Roper <matthew.d.roper@intel.com>
-Subject: Re: [PATCH v3 5/6] drm/i915: Introduce 'priority offset' for GPU
- contexts (v2)
-Date: Thu, 8 Mar 2018 11:31:59 -0800
-Message-ID: <20180308193159.GE15174@mdroper-desk.amr.corp.intel.com>
-References: <20180306234700.6562-1-matthew.d.roper@intel.com>
- <20180306234700.6562-6-matthew.d.roper@intel.com>
- <152050872479.8783.5832623625876356787@mail.alporthouse.com>
- <152051469371.18139.11580558640049325828@mail.alporthouse.com>
- <20180308182206.GB15174@mdroper-desk.amr.corp.intel.com>
- <152053493188.18139.15823742732295620160@mail.alporthouse.com>
- <152053533403.18139.16370975727202246818@mail.alporthouse.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] mm: memcg: expose mem_cgroup_put API
+Date: Thu, 8 Mar 2018 15:40:58 -0800
+Message-ID: <20180308154058.9158c9c1ff1e4e67990bcce7@linux-foundation.org>
+References: <20180308024850.39737-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <152053533403.18139.16370975727202246818@mail.alporthouse.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180308024850.39737-1-shakeelb@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Chris Wilson <chris@chris-wilson.co.uk>
-Cc: cgroups@vger.kernel.org, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-T24gVGh1LCBNYXIgMDgsIDIwMTggYXQgMDY6NTU6MzRQTSArMDAwMCwgQ2hyaXMgV2lsc29uIHdy
-b3RlOgo+IFF1b3RpbmcgQ2hyaXMgV2lsc29uICgyMDE4LTAzLTA4IDE4OjQ4OjUxKQo+ID4gUXVv
-dGluZyBNYXR0IFJvcGVyICgyMDE4LTAzLTA4IDE4OjIyOjA2KQo+ID4gPiAgKiBPcHRpb24gMjog
-IEFsbG93IHByaW9yaXR5IG9mZnNldCB0byBiZSBzZXQgaW4gYSBtdWNoIGxhcmdlciByYW5nZQo+
-ID4gPiAgICAoZS5nLiwgW1NIUlRfTUlOKzEwMjMsU0hSVF9NQVgtMTAyM10pLiAgVGhpcyBhbGxv
-d3MgY2dyb3VwcyB0byBoYXZlCj4gPiA+ICAgIGVmZmVjdGl2ZSBwcmlvcml0eSByYW5nZXMgdGhh
-dCBkb24ndCBvdmVybGFwLiAgY2dyb3VwIHJhbmdlcyBjYW4gYWxzbwo+ID4gPiAgICBiZSBpbnRl
-bnRpb25hbGx5IHNldCBhYm92ZSBJOTE1X1BSSU9SSVRZX0RJU1BMQVkgdG8gYWxsb3cgdXMgdG8K
-PiA+ID4gICAgZGVmaW5lIGNsYXNzZXMgb2YgYXBwbGljYXRpb25zIHdob3NlIHdvcmsgaXMgbW9y
-ZSBpbXBvcnRhbnQgdGhhbgo+ID4gPiAgICBtYWludGFpbmluZyBhIHN0YWJsZSBmcmFtZXJhdGUg
-b24gdGhlIGRpc3BsYXkuICBXZSdkIGFsc28gcHJvYmFibHkKPiA+ID4gICAgbmVlZCB0byBzaGlm
-dCB0aGUga2VybmVsIGlkbGUgY29udGV4dCBkb3duIHRvIHNvbWV0aGluZyBsaWtlIElOVF9NSU4K
-PiA+ID4gICAgaW5zdGVhZCBvZiB1c2luZyAtMTAyNC4KPiA+IAo+ID4gSU5UX01JTisxIGp1c3Qg
-dG8gYmUgYXdrd2FyZC4gKElOVF9NSU4gaXMgSTkxNV9QUklPUklUWV9JTlZBTElELikKPiA+IAo+
-ID4gU29tZXRoaW5nIHRvIGJlYXIgaW4gbWluZCBpcyB0aGF0IEkgd2FudCB0byByZXNlcnZlIHRo
-ZSBsb3cgOCBiaXRzIG9mCj4gPiBjdHgtPnByaW9yaXR5IGZvciBpbnRlcm5hbCB1c2UgKGhldXJp
-c3RpYyBhZGp1c3RtZW50cyBieSB0aGUgc2NoZWR1bGVyKS4KPiA+IENhbiBzaHJpbmsgdGhhdCB0
-byBzYXkgMyBiaXRzIGluIHRoZSBjdXJyZW50IHNjaGVtZS4KPiA+IAo+ID4gM2JpdHMgZm9yIGlu
-dGVybmFsIGFkanVzdG1lbnQKPiA+IDIwYml0cyBmb3IgdXNlciBwcmlvcml0eS4KPiA+IDhiaXRz
-IGZvciBjZ3JvdXAgb2Zmc2V0Lgo+ID4gc2lnbmJpdC4KPiA+IAo+ID4gTm90aGluZyBwcm9oaWJp
-dHMgdXMgZnJvbSBtb3ZpbmcgdG8gNjRiIGlmIHJlcXVpcmVkLiBCdXQgMzJiIHNob3VsZCBiZQo+
-ID4gZW5vdWdoIHJhbmdlIGZvciBwbGVudHkgb2YgY2xpZW50cyBhbmQgY2dyb3VwcywgaW1vLiBS
-ZWR1Y2luZyBjZ3JvdXAKPiA+IG9mZnNldCB0byA2IGJpdHMgd291bGQgYmUgbmljZSA6KQo+IAo+
-IEZvcmdvdCB0byBjb21tZW50IG9uIHRoZSBwb2xpY3kgZGVjaXNpb24gb2YgSTkxNV9QUklPUklU
-WV9ESVNQTEFZLgo+IEl0J3MgbmF1Z2h0eSB0aGF0IGl0J3MgYSBtYWdpYyBjb25zdGFudCB0aGF0
-IGlzbid0IGV4cG9zZWQgdG8gdGhlCj4gc3lzYWRtaW4sIHNvIEkgd291bGQgc3RpbGwgc2V0IGl0
-IHRvIHRoZSBtYXhpbXVtIHByaW9yaXR5IHBvc3NpYmxlIHVuZGVyCj4gdGhlIGV4dGVuZGVkIHNj
-aGVtZSAoaS5lLiBJTlRfTUFYKSwgYnV0IGFsbG93IGZvciBpdCB0byBiZSBhZGp1c3RlZC4KPiBJ
-OTE1X1NFVFBBUkFNICpzaGl2ZXJzKiBNYXliZSB0aGF0J3MgYSB0b3BpYyBmb3IgY2dyb3VwIGFz
-IHdlbGwgaWYgd2UgY2FuCj4gYXNzb2NpYXRlIHRoZSBwYWdlZmxpcCB3aXRoIGEgcHJvY2VzcyBh
-bmQgZmluZCBpdHMgaW50ZXJhY3Rpdml0eSBzZXR0aW5ncy4KPiAKPiBDYW4gSSBleHBvc2UganVz
-dCBhYm91dCBhbnkgcmFuZG9tIHBvbGljeSBkZWNpc2lvbiB0aHJvdWdoIGNncm91cD8KPiAtQ2hy
-aXMKCklmIHRoZSBwb2xpY3kgYXBwbGllcyB0byBhIGNncm91cCBvZiBwcm9jZXNzZXMsIHRoZW4g
-d2UgY2FuIGRlYWwgd2l0aApwcmV0dHkgbXVjaCBhbnkga2luZCBvZiBwb2xpY3kgYXMgbG9uZyBh
-cyB3ZSBzdGljayB0byB0aGUgZHJpdmVyIGlvY3RsCmFwcHJvYWNoIGluIHRoaXMgc2VyaWVzLiAg
-RS5nLiwgd2UgY291bGQgYWRkIGEgY2dyb3VwIHNldHRpbmcgImVsaWdpYmxlCmZvciBkaXNwbGF5
-IGJvb3N0IiBzbyB0aGF0IG9ubHkgc3BlY2lmaWMgcHJvY2Vzc2VzIGFyZSBlbGlnaWJsZSBmb3Ig
-YQpkaXNwbGF5IGJvb3N0LgoKSWYgd2Ugd2FudCB0byBjb250cm9sIGEgc2luZ2xlIG92ZXJhbGwg
-c3lzdGVtIHZhbHVlIChlLmcuLCAic2V0IHRoZQpkaXNwbGF5IGJvb3N0IGZpeGVkIHZhbHVlIikg
-d2UgY291bGQgdGVjaG5pY2FsbHkgZG8gdGhhdCBieSBoYXZpbmcgc3VjaApwYXJhbWV0ZXJzIHNl
-dCBvbiB0aGUgdjIgaGllcmFyY2h5J3Mgcm9vdCBjZ3JvdXAsIGJ1dCB0aGF0IHNlZW1zIGEgYml0
-CmNvdW50ZXJpbnR1aXRpdmUgYW5kIEknbSBub3Qgc3VyZSBpZiB0aGVyZSdzIGEgYmVuZWZpdCB0
-byBkb2luZyBzby4KVXNpbmcgYSBtb3JlIGdlbmVyYWwgaW50ZXJmYWNlIGxpa2UgSTkxNV9TRVRQ
-QVJBTSBvciBzeXNmcyBvciBzb21ldGhpbmcKc2VlbXMgbW9yZSBhcHByb3ByaWF0ZSBpbiB0aGF0
-IGNhc2UuCgoKTWF0dAoKLS0gCk1hdHQgUm9wZXIKR3JhcGhpY3MgU29mdHdhcmUgRW5naW5lZXIK
-SW9URyBQbGF0Zm9ybSBFbmFibGluZyAmIERldmVsb3BtZW50CkludGVsIENvcnBvcmF0aW9uCig5
-MTYpIDM1Ni0yNzk1Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9y
-ZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZl
-bAo=
+On Wed,  7 Mar 2018 18:48:50 -0800 Shakeel Butt <shakeelb@google.com> wrote:
+
+> This patch exports mem_cgroup_put API to put the refcnt of the memory
+> cgroup.
+
+Not the best of changelogs :(
+
+Why is this patch being added?
+
+It's a prerequisite for <I-forget-which-patch> isn't it?
+
+
