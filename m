@@ -1,55 +1,161 @@
-From: Mike Galbraith <efault@gmx.de>
-Subject: Re: [PATCH v4] cpuset: Enable cpuset controller in default hierarchy
-Date: Mon, 12 Mar 2018 16:21:25 +0100
-Message-ID: <1520868085.9178.1.camel@gmx.de>
-References: <1520609707-16582-1-git-send-email-longman@redhat.com>
-         <1520613285.12489.36.camel@gmx.de>
-         <1c3fe7b0-2600-c46d-1527-d3aaf024bb91@redhat.com>
-         <1520619426.27998.18.camel@gmx.de>
-         <55809fe4-98ba-5566-86ed-457acfef0e1c@redhat.com>
-         <1520624424.27998.76.camel@gmx.de>
-         <53de9683-01b7-bac4-8b70-dc1f93ede600@redhat.com>
-         <20180309221736.GB5926@hirez.programming.kicks-ass.net>
-         <f0fca497-e4e7-3dbd-1e5c-a7f502c05dcb@redhat.com>
-         <20180310131647.GB4043@hirez.programming.kicks-ass.net>
-         <12ef7f60-5b14-8e09-2478-1453a3071f21@redhat.com>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch -mm v3 1/3] mm, memcg: introduce per-memcg oom policy
+ tunable
+Date: Mon, 12 Mar 2018 17:57:53 -0700 (PDT)
+Message-ID: <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com>
+References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <12ef7f60-5b14-8e09-2478-1453a3071f21@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=10Yo9t8r+SqscV3pxVKGKfH22DhxPF9wnkpiFYMsoww=;
+        b=nNs4OEGLryPIxYssxsTP8Bq63AyOVfaBZjT1BNp5oRhU7UgdYDTCu0zGZPAWDVWofy
+         mnlOMOsGz37RKXlq0TFU0JS7ILnVuzn8CKL9FdrEI0yd411naP/+34VgvS5WW/bPxcXt
+         m2lINSL3XCwPBnnnHtmYR+/cQjwk1D2yb/gW+0zoAaZBIZU8EcH8rJ3iN6sV8w1xIB0/
+         JpX5400Tqyr1ZQxmDoAG29nmw6/UF0zrJTFDZDWsCosMje8L7buKZ+Q2SHPOZEasqpSk
+         dlX4SmoY2KbA5El3ZO0/xo0JbZpocNhVjS1Bcyy56npeZj007uVuZlpoA49xmRT+vhj3
+         W7PQ==
+In-Reply-To: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Waiman Long <longman@redhat.com>, Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, 2018-03-12 at 10:20 -0400, Waiman Long wrote:
-> On 03/10/2018 08:16 AM, Peter Zijlstra wrote:
-> 
-> > The equivalent of isolcpus=xxx is a cgroup setup like:
-> >
-> >         root
-> > 	/  \
-> >   system    other
-> >
-> > Where other has the @xxx cpus and system the remainder and
-> > root.sched_load_balance = 0.
-> 
-> I saw in the kernel-parameters.txt file that the isolcpus option was
-> deprecated - use cpusets instead. However, there doesn't seem to have
-> document on the right way to do it.
+The cgroup aware oom killer is needlessly enforced for the entire system
+by a mount option.  It's unnecessary to force the system into a single
+oom policy: either cgroup aware, or the traditional process aware.
 
-I use cset shield (cpuset package) in a script to create a set and
-migrate everything that's permitted into the system set.
+This patch introduces a memory.oom_policy tunable for all mem cgroups.
+It is currently a no-op: it can only be set to "none", which is its
+default policy.  It will be expanded in the next patch to define cgroup
+aware oom killer behavior for its subtree.
 
-setup:
-cset shield --userset=rtcpus --cpu=4-63 --kthread=on
-<poke this/that>
+This is an extensible interface that can be used to define cgroup aware
+assessment of mem cgroup subtrees or the traditional process aware
+assessment.
 
-teardown:
-cset shield --userset=rtcpus --reset
-<un-poke this/that>
+Another benefit of such an approach is that an admin can lock in a
+certain policy for the system or for a mem cgroup subtree and can
+delegate the policy decision to the user to determine if the kill should
+originate from a subcontainer, as indivisible memory consumers
+themselves, or selection should be done per process.
 
-Non-sexy, but works for simple stuff.
+Signed-off-by: David Rientjes <rientjes@google.com>
+---
+ Documentation/cgroup-v2.txt | 11 +++++++++++
+ include/linux/memcontrol.h  | 11 +++++++++++
+ mm/memcontrol.c             | 35 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 57 insertions(+)
 
-	-Mike
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -1065,6 +1065,17 @@ PAGE_SIZE multiple when read back.
+ 	If cgroup-aware OOM killer is not enabled, ENOTSUPP error
+ 	is returned on attempt to access the file.
+ 
++  memory.oom_policy
++
++	A read-write single string file which exists on all cgroups.  The
++	default value is "none".
++
++	If "none", the OOM killer will use the default policy to choose a
++	victim; that is, it will choose the single process with the largest
++	memory footprint adjusted by /proc/pid/oom_score_adj (see
++	Documentation/filesystems/proc.txt).  This is the same policy as if
++	memory cgroups were not even mounted.
++
+   memory.events
+ 	A read-only flat-keyed file which exists on non-root cgroups.
+ 	The following entries are defined.  Unless specified
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -58,6 +58,14 @@ enum memcg_event_item {
+ 	MEMCG_NR_EVENTS,
+ };
+ 
++enum memcg_oom_policy {
++	/*
++	 * No special oom policy, process selection is determined by
++	 * oom_badness()
++	 */
++	MEMCG_OOM_POLICY_NONE,
++};
++
+ struct mem_cgroup_reclaim_cookie {
+ 	pg_data_t *pgdat;
+ 	int priority;
+@@ -203,6 +211,9 @@ struct mem_cgroup {
+ 	/* OOM-Killer disable */
+ 	int		oom_kill_disable;
+ 
++	/* OOM policy for this subtree */
++	enum memcg_oom_policy oom_policy;
++
+ 	/*
+ 	 * Treat the sub-tree as an indivisible memory consumer,
+ 	 * kill all belonging tasks if the memory cgroup selected
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4415,6 +4415,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	if (parent) {
+ 		memcg->swappiness = mem_cgroup_swappiness(parent);
+ 		memcg->oom_kill_disable = parent->oom_kill_disable;
++		memcg->oom_policy = parent->oom_policy;
+ 	}
+ 	if (parent && parent->use_hierarchy) {
+ 		memcg->use_hierarchy = true;
+@@ -5532,6 +5533,34 @@ static int memory_stat_show(struct seq_file *m, void *v)
+ 	return 0;
+ }
+ 
++static int memory_oom_policy_show(struct seq_file *m, void *v)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
++	enum memcg_oom_policy policy = READ_ONCE(memcg->oom_policy);
++
++	switch (policy) {
++	case MEMCG_OOM_POLICY_NONE:
++	default:
++		seq_puts(m, "none\n");
++	};
++	return 0;
++}
++
++static ssize_t memory_oom_policy_write(struct kernfs_open_file *of,
++				       char *buf, size_t nbytes, loff_t off)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	ssize_t ret = nbytes;
++
++	buf = strstrip(buf);
++	if (!memcmp("none", buf, min(sizeof("none")-1, nbytes)))
++		memcg->oom_policy = MEMCG_OOM_POLICY_NONE;
++	else
++		ret = -EINVAL;
++
++	return ret;
++}
++
+ static struct cftype memory_files[] = {
+ 	{
+ 		.name = "current",
+@@ -5573,6 +5602,12 @@ static struct cftype memory_files[] = {
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = memory_stat_show,
+ 	},
++	{
++		.name = "oom_policy",
++		.flags = CFTYPE_NS_DELEGATABLE,
++		.seq_show = memory_oom_policy_show,
++		.write = memory_oom_policy_write,
++	},
+ 	{ }	/* terminate */
+ };
+ 
