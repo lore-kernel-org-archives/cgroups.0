@@ -1,45 +1,89 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [patch -mm v3 1/3] mm, memcg: introduce per-memcg oom policy
- tunable
-Date: Wed, 14 Mar 2018 12:38:52 +0000
-Message-ID: <20180314123851.GB20850@castle.DHCP.thefacebook.com>
-References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
- <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com>
+From: Alexei Starovoitov <ast@fb.com>
+Subject: Re: [PATCH v3 1/6] cgroup: Allow registration and
+ lookup of cgroup private data
+Date: Tue, 13 Mar 2018 14:27:58 -0700
+Message-ID: <4bc02913-7250-ed88-fac0-6b19957ca07b@fb.com>
+References: <20180306234700.6562-1-matthew.d.roper@intel.com>
+ <20180306234700.6562-2-matthew.d.roper@intel.com>
+ <20180313205035.GN2943022@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=Dy6puvisM2mT62ReAIi2nSU52U2txJ2w1dbH9f40fEg=;
- b=DBbk0wmOCYBD2OR3DKdhyjHL2jFD8r2fqT0/pell33AmXWjS9gKsng4xUDrrVYKz6F1N
- ctiJ4MvyLFPZPpZcTZpxx3A2U/Fhg6y8Z03IJ3LPFqnLE9kaJILERBRXTcXSPF+XjEmR
- zhOPa+C2A7TJdO0XRRKLUX0Qwz15hmCcrVo= 
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com;
+ h=subject : to : references
+ : cc : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=facebook;
+ bh=/5uKtJDlp1CGn8bFw9aE58pjCxoLh/SZSDFmiGvqgyk=;
+ b=J81uQM+aQWmLRQAiY75f2rl5DlfUNuPYNLS0ntLW4ovTKTqFbkpzjI1iew7/fUIvNqRT
+ w5l3a7OX+cdCNJjIqT0n/Q0CxBBWBM0VD/h0skCzPq4VEHMEQxuWga6Hi1Ojs7X8M/q7
+ 63fvgUFspLnoBXmMfRs4FU9pG3RuB1zGsR0= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Dy6puvisM2mT62ReAIi2nSU52U2txJ2w1dbH9f40fEg=;
- b=jqUvSzIgRFSokSeO98iVpDiB5LC6YoNXGZnEcFJtczyG1/0+nFKQhP9At3U9r3GeprKiuf0n/p5Mg4HWciShp6m4RANSTlv5wZ07Ye6M9QDrgwQYJV2ilDnadqIylpeaH1KDvu26kPFNSPL9ha/IScqPBESsrVFLhP7MIcOUoSA=
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version; 
+ bh=/5uKtJDlp1CGn8bFw9aE58pjCxoLh/SZSDFmiGvqgyk=;
+ b=AxD0oTkIbIv2kHDZl+Uw8UCIPo6MCtMlLsO1NBU4OTavF65taHnef1ucDlNUK6de2ygBbiNhoFuOqZGDl6EGNFhLoxnTkttXpZjbD3UrHSyK7glHGmKdO9GFP2vPEzSlKJGQcMXiGCPLRVXHb90Fm3cmSzwCSXAZB4iZQ0AEwsk=
+In-Reply-To: <20180313205035.GN2943022@devbig577.frc2.facebook.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Matt Roper <matthew.d.roper@intel.com>
+Cc: Daniel Borkmann <daniel@iogearbox.net>, intel-gfx@lists.freedesktop.org, Alexei Starovoitov <alexei.starovoitov@gmail.com>, cgroups@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-On Mon, Mar 12, 2018 at 05:57:53PM -0700, David Rientjes wrote:
-> The cgroup aware oom killer is needlessly enforced for the entire system
-> by a mount option.  It's unnecessary to force the system into a single
-> oom policy: either cgroup aware, or the traditional process aware.
-
-Can you, please, provide a real-life example, when using per-process
-and cgroup-aware OOM killer depending on OOM scope is beneficial?
-
-It might be quite confusing, depending on configuration.
-From inside a container you can have different types of OOMs,
-depending on parent's cgroup configuration, which is not even
-accessible for reading from inside.
-
-Also, it's probably good to have an interface to show which policies
-are available.
-
-Thanks!
+T24gMy8xMy8xOCAxOjUwIFBNLCBUZWp1biBIZW8gd3JvdGU6Cj4gSGVsbG8sIE1hdHQuCj4KPiBj
+YydpbmcgUm9tYW4gYW5kIEFsZXhlaS4KPgo+IE9uIFR1ZSwgTWFyIDA2LCAyMDE4IGF0IDAzOjQ2
+OjU1UE0gLTA4MDAsIE1hdHQgUm9wZXIgd3JvdGU6Cj4+IFRoZXJlIGFyZSBjYXNlcyB3aGVyZSBv
+dGhlciBwYXJ0cyBvZiB0aGUga2VybmVsIG1heSB3aXNoIHRvIHN0b3JlIGRhdGEKPj4gYXNzb2Np
+YXRlZCB3aXRoIGluZGl2aWR1YWwgY2dyb3VwcyB3aXRob3V0IGJ1aWxkaW5nIGEgZnVsbCBjZ3Jv
+dXAKPj4gY29udHJvbGxlci4gIExldCdzIGFkZCBpbnRlcmZhY2VzIHRvIGFsbG93IHRoZW0gdG8g
+cmVnaXN0ZXIgYW5kIGxvb2t1cAo+PiB0aGlzIHByaXZhdGUgZGF0YSBmb3IgaW5kaXZpZHVhbCBj
+Z3JvdXBzLgo+Pgo+PiBBIGtlcm5lbCBzeXN0ZW0gKGUuZy4sIGEgZHJpdmVyKSB0aGF0IHdpc2hl
+cyB0byByZWdpc3RlciBwcml2YXRlIGRhdGEKPj4gZm9yIGEgY2dyb3VwIHdpbGwgZG8gc28gYnkg
+c3ViY2xhc3NpbmcgdGhlICdzdHJ1Y3QgY2dyb3VwX3ByaXYnCj4+IHN0cnVjdHVyZSB0byBkZXNj
+cmliZSB0aGUgbmVjZXNzYXJ5IGRhdGEgdG8gc3RvcmUuICBCZWZvcmUgcmVnaXN0ZXJpbmcgYQo+
+PiBwcml2YXRlIGRhdGEgc3RydWN0dXJlIHRvIGEgY2dyb3VwLCB0aGUgY2FsbGVyIHNob3VsZCBm
+aWxsIGluIHRoZSAna2V5Jwo+PiBhbmQgJ2ZyZWUnIGZpZWxkcyBvZiB0aGUgYmFzZSBjZ3JvdXBf
+cHJpdiBzdHJ1Y3R1cmUuCj4+Cj4+ICAqICdrZXknIHNob3VsZCBiZSBhIHVuaXF1ZSB2b2lkKiB0
+aGF0IHdpbGwgYWN0IGFzIGEga2V5IGZvciBmdXR1cmUKPj4gICAgcHJpdmRhdGEgbG9va3Vwcy9y
+ZW1vdmFscy4gIE5vdGUgdGhhdCB0aGlzIGFsbG93cyBkcml2ZXJzIHRvIHN0b3JlCj4+ICAgIHBl
+ci1kZXZpY2UgcHJpdmF0ZSBkYXRhIGZvciBhIGNncm91cCBieSB1c2luZyBhIGRldmljZSBwb2lu
+dGVyIGFzIGEga2V5Lgo+Pgo+PiAgKiAnZnJlZScgc2hvdWxkIGJlIGEgZnVuY3Rpb24gcG9pbnRl
+ciB0byBhIGZ1bmN0aW9uIHRoYXQgbWF5IGJlIHVzZWQKPj4gICAgdG8gZGVzdHJveSB0aGUgcHJp
+dmF0ZSBkYXRhLiAgVGhpcyBmdW5jdGlvbiB3aWxsIGJlIGNhbGxlZAo+PiAgICBhdXRvbWF0aWNh
+bGx5IGlmIHRoZSB1bmRlcmx5aW5nIGNncm91cCBpcyBkZXN0cm95ZWQuCj4KPiBUaGlzIGZlYXR1
+cmUgdHVybmVkIG91dCB0byBoYXZlIG1vcmUgdXNlcnMgdGhhbiBJIG9yaWdpbmFsbHkKPiBhbnRp
+Y2lwYXRlZCBhbmQgYnBmIGFsc28gd2FudHMgc29tZXRoaW5nIGxpa2UgdGhpcyB0byB0cmFjayBu
+ZXR3b3JrCj4gc3RhdGVzLiAgVGhlIHJlcXVpcmVtZW50cyBhcmUgcHJldHR5IHNpbWlsYXIgYnV0
+IG5vdCBxdWl0ZSB0aGUgc2FtZS4KPiBUaGUgZXh0cmEgcmVxdWlyZW1lbnRzIGFyZS4uLgo+Cj4g
+KiBMb29rdXAgbXVzdCBiZSByZWFsbHkgY2hlYXAuICBQcm9iYWJseSB1c2luZyBwb2ludGVyIGhh
+c2ggb3Igd2Fsa2luZwo+ICAgbGlzdCBpc24ndCBncmVhdCwgc28gbWF5YmUgaWRyIGJhc2VkIGxv
+b2t1cCArIFJDVSBwcm90ZWN0ZWQgaW5kZXgKPiAgIHRhYmxlIHBlciBjZ3JvdXA/Cj4KPiAqIEl0
+IHNob3VsZCBzdXBwb3J0IGJvdGggcmVndWxhciBtZW1vcnkgYW5kIHBlcmNwdSBwb2ludGVycy4g
+IEdpdmVuCj4gICB0aGF0IHdoYXQgY2dyb3VwIGRvZXMgaXMgcHJldHR5IG11Y2ggY2dyb3VwOmtl
+eSAtPiBwb2ludGVyIGxvb2t1cCwKPiAgIGl0J3MgbW9zdGx5IGFib3V0IGdldHRpbmcgdGhlIGlu
+dGVyZmFjZSByaWdodCBzbyB0aGF0IGl0J3Mgbm90IHRvbwo+ICAgZXJyb3ItcHJvbmUuCgpmcm9t
+IGJwZiBzaWRlIHRoZXJlIHNob3VsZCBiZSBfemVyb18gbG9va3Vwcy4KSWYgYnBmIGRvIGEgbG9v
+a3VwIGl0IGNhbiBlcXVhbGx5IHVzZSBpdHMgb3duIG1hcCB0byBkbyB0aGF0LgoKIEZyb20gYnBm
+IHByb2dyYW0gcG9pbnQgb2YgdmlldyBpdCB3aWxsIGxvb2sgbGlrZToKc3RydWN0IG15X2RhdGEg
+ewogICB1NjQgYTsKICAgdTMyIGI7Cn0gKnB0cjsKcHRyID0gYnBmX2dldF9jZ3JvdXBfYnVmKHNr
+Yiwgc2l6ZW9mKHN0cnVjdCBteV9kYXRhKSk7CgpicGZfZ2V0X2Nncm91cF9idWYoKSBpcyBsb29r
+dXAtZnJlZS4gV29yc3QgY2FzZSBpdCB3aWxsIGRvIHBvaW50ZXIKZGVyZWZlcmVuY2VzCnNrYi0+
+c2stPnNrX2NncnBfZGF0YS0+dmFsIHRvIGdldCB0byBjZ3JvdXAgYW5kIGZyb20gY2dyb3VwIHRv
+IGdldCAKcG9pbnRlciB0byB0aGUgYnVmZmVyLgpJbiBnb29kIGNhc2UgaXQgbWF5IGJlIG9wdGlt
+aXplZCAoaW5saW5lZCkgYnkgdGhlIHZlcmlmaWVyIGludG8gYWJzb2x1dGUgCmFkZHJlc3Mgb2Yg
+dGhhdCBjZ3JvdXAgc2NyYXRjaCBidWZmZXIgYXQgYXR0YWNoIHRpbWUuCgpzaXplb2Yoc3RydWN0
+IG15X2RhdGEpIHdpbGwgYmUgc2VlbiBieSB2ZXJpZmllciBhbmQgaXQgd2lsbCBwcm9wYWdhdGUg
+aXQgCmludG8gcHJvZy0+YXV4LgpMYXRlciBhdCBwcm9nIGF0dGFjaCB0aW1lIHRoZSBrZXJuZWwg
+d2lsbCByZXF1ZXN0IGFsbG9jYXRpb24gdmlhIApjZ3JvdXBfbWFsbG9jKGNncnApClRoaXMgc2Ny
+YXRjaCBtZW1vcnkgd2lsbCBiZSBhdmFpbGFibGUgcGVyLWNncm91cCBhbmQgY2FuIGJlIGZ1cnRo
+ZXIgCmRpdmlkZWQgYnkgdGhlIGJwZiBwcm9ncmFtLgpUaGUgYm91bmQgY2hlY2tzIHdpbGwgYmUg
+ZG9uZSBzdGF0aWNhbGx5IGJ5IHRoZSB2ZXJpZmllciBzaW1pbGFyIHRvIG1hcCAKdmFsdWVzLgoK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4
+IG1haWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
+dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
