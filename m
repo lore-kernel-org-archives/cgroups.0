@@ -1,23 +1,19 @@
 From: David Rientjes <rientjes@google.com>
-Subject: [patch -mm v3 1/3] mm, memcg: introduce per-memcg oom policy
- tunable
-Date: Mon, 12 Mar 2018 17:57:53 -0700 (PDT)
-Message-ID: <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com>
-References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
+Subject: [patch -mm v3 0/3] mm, memcg: introduce oom policies
+Date: Mon, 12 Mar 2018 17:57:51 -0700 (PDT)
+Message-ID: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=10Yo9t8r+SqscV3pxVKGKfH22DhxPF9wnkpiFYMsoww=;
-        b=nNs4OEGLryPIxYssxsTP8Bq63AyOVfaBZjT1BNp5oRhU7UgdYDTCu0zGZPAWDVWofy
-         mnlOMOsGz37RKXlq0TFU0JS7ILnVuzn8CKL9FdrEI0yd411naP/+34VgvS5WW/bPxcXt
-         m2lINSL3XCwPBnnnHtmYR+/cQjwk1D2yb/gW+0zoAaZBIZU8EcH8rJ3iN6sV8w1xIB0/
-         JpX5400Tqyr1ZQxmDoAG29nmw6/UF0zrJTFDZDWsCosMje8L7buKZ+Q2SHPOZEasqpSk
-         dlX4SmoY2KbA5El3ZO0/xo0JbZpocNhVjS1Bcyy56npeZj007uVuZlpoA49xmRT+vhj3
-         W7PQ==
-In-Reply-To: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
+        h=date:from:to:cc:subject:message-id:user-agent:mime-version;
+        bh=xw8WJdddWeO8YbPgxrQM4cYlVvL2X56t9I7GdnKa0BA=;
+        b=b5kZVtpjnxIWYMk46akW6T2YbSXIiF8wyHULgKZS0ZqLfCv+vV9HGO5mElWzEptFL4
+         dUiNF0JcpNMBnHVf5I3ewnhZB+IO4llWY6RxpMaY4VWUjkbgUjeEveu+NdeR10UESkKE
+         N9f7gt3X6ad5gQuB/MkroZfkxxDc4zX8shb/Obwrto9MTXrviLNiflwB0FGcDEwfcT6e
+         n4G86UA9TMOrblxXugsLSNyjAAO9TqgIY/33A33UC/DFNDElmUZWty2cfqMZuvfHrnde
+         OSXCHaW9tYZ4XgXbC9LdvSpX9pijbpU6qIUrwrqe4YqNX//3MRNFiTNdLX4g4bC4LaWF
+         wesA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -25,137 +21,36 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
 Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-The cgroup aware oom killer is needlessly enforced for the entire system
-by a mount option.  It's unnecessary to force the system into a single
-oom policy: either cgroup aware, or the traditional process aware.
+There are three significant concerns about the cgroup aware oom killer as
+it is implemented in -mm:
 
-This patch introduces a memory.oom_policy tunable for all mem cgroups.
-It is currently a no-op: it can only be set to "none", which is its
-default policy.  It will be expanded in the next patch to define cgroup
-aware oom killer behavior for its subtree.
+ (1) allows users to evade the oom killer by creating subcontainers or
+     using other controllers since scoring is done per cgroup and not
+     hierarchically,
 
-This is an extensible interface that can be used to define cgroup aware
-assessment of mem cgroup subtrees or the traditional process aware
-assessment.
+ (2) unfairly compares the root mem cgroup using completely different
+     criteria than leaf mem cgroups and allows wildly inaccurate results
+     if oom_score_adj is used, and
 
-Another benefit of such an approach is that an admin can lock in a
-certain policy for the system or for a mem cgroup subtree and can
-delegate the policy decision to the user to determine if the kill should
-originate from a subcontainer, as indivisible memory consumers
-themselves, or selection should be done per process.
+ (3) does not allow the user to influence the decisionmaking, such that
+     important subtrees cannot be preferred or biased.
 
-Signed-off-by: David Rientjes <rientjes@google.com>
+This patchset aims to fix (1) completely and, by doing so, introduces a
+completely extensible user interface that can be expanded in the future.
+
+It preserves all functionality that currently exists in -mm and extends
+it to be generally useful outside of very specialized usecases.
+
+It eliminates the mount option for the cgroup aware oom killer entirely
+since it is now enabled through the root mem cgroup's oom policy.
 ---
- Documentation/cgroup-v2.txt | 11 +++++++++++
- include/linux/memcontrol.h  | 11 +++++++++++
- mm/memcontrol.c             | 35 +++++++++++++++++++++++++++++++++++
- 3 files changed, 57 insertions(+)
+ v3:
+  - updated documentation
+  - rebased to next-20180309
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -1065,6 +1065,17 @@ PAGE_SIZE multiple when read back.
- 	If cgroup-aware OOM killer is not enabled, ENOTSUPP error
- 	is returned on attempt to access the file.
- 
-+  memory.oom_policy
-+
-+	A read-write single string file which exists on all cgroups.  The
-+	default value is "none".
-+
-+	If "none", the OOM killer will use the default policy to choose a
-+	victim; that is, it will choose the single process with the largest
-+	memory footprint adjusted by /proc/pid/oom_score_adj (see
-+	Documentation/filesystems/proc.txt).  This is the same policy as if
-+	memory cgroups were not even mounted.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -58,6 +58,14 @@ enum memcg_event_item {
- 	MEMCG_NR_EVENTS,
- };
- 
-+enum memcg_oom_policy {
-+	/*
-+	 * No special oom policy, process selection is determined by
-+	 * oom_badness()
-+	 */
-+	MEMCG_OOM_POLICY_NONE,
-+};
-+
- struct mem_cgroup_reclaim_cookie {
- 	pg_data_t *pgdat;
- 	int priority;
-@@ -203,6 +211,9 @@ struct mem_cgroup {
- 	/* OOM-Killer disable */
- 	int		oom_kill_disable;
- 
-+	/* OOM policy for this subtree */
-+	enum memcg_oom_policy oom_policy;
-+
- 	/*
- 	 * Treat the sub-tree as an indivisible memory consumer,
- 	 * kill all belonging tasks if the memory cgroup selected
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4415,6 +4415,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- 	if (parent) {
- 		memcg->swappiness = mem_cgroup_swappiness(parent);
- 		memcg->oom_kill_disable = parent->oom_kill_disable;
-+		memcg->oom_policy = parent->oom_policy;
- 	}
- 	if (parent && parent->use_hierarchy) {
- 		memcg->use_hierarchy = true;
-@@ -5532,6 +5533,34 @@ static int memory_stat_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
-+static int memory_oom_policy_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+	enum memcg_oom_policy policy = READ_ONCE(memcg->oom_policy);
-+
-+	switch (policy) {
-+	case MEMCG_OOM_POLICY_NONE:
-+	default:
-+		seq_puts(m, "none\n");
-+	};
-+	return 0;
-+}
-+
-+static ssize_t memory_oom_policy_write(struct kernfs_open_file *of,
-+				       char *buf, size_t nbytes, loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	ssize_t ret = nbytes;
-+
-+	buf = strstrip(buf);
-+	if (!memcmp("none", buf, min(sizeof("none")-1, nbytes)))
-+		memcg->oom_policy = MEMCG_OOM_POLICY_NONE;
-+	else
-+		ret = -EINVAL;
-+
-+	return ret;
-+}
-+
- static struct cftype memory_files[] = {
- 	{
- 		.name = "current",
-@@ -5573,6 +5602,12 @@ static struct cftype memory_files[] = {
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = memory_stat_show,
- 	},
-+	{
-+		.name = "oom_policy",
-+		.flags = CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_oom_policy_show,
-+		.write = memory_oom_policy_write,
-+	},
- 	{ }	/* terminate */
- };
- 
+ Documentation/cgroup-v2.txt | 90 ++++++++++++++++++++++++-------------
+ include/linux/cgroup-defs.h |  5 ---
+ include/linux/memcontrol.h  | 21 +++++++++
+ kernel/cgroup/cgroup.c      | 13 +-----
+ mm/memcontrol.c             | 64 +++++++++++++++++++++-----
+ 5 files changed, 132 insertions(+), 61 deletions(-)
