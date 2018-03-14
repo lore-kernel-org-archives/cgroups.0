@@ -1,77 +1,70 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v3 1/6] cgroup: Allow registration and
- lookup of cgroup private data
-Date: Tue, 13 Mar 2018 22:52:21 +0000
-Message-ID: <20180313225214.GA14441@castle>
-References: <20180306234700.6562-1-matthew.d.roper@intel.com>
- <20180306234700.6562-2-matthew.d.roper@intel.com>
- <20180313205035.GN2943022@devbig577.frc2.facebook.com>
- <4bc02913-7250-ed88-fac0-6b19957ca07b@fb.com>
- <20180313213658.GA12498@castle>
- <36e459e1-dd65-8153-7ac4-1629550cce92@fb.com>
- <20180313221314.GR2943022@devbig577.frc2.facebook.com>
- <d0314e4c-b1cb-8270-b39f-14a66eeedfd3@fb.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4] cpuset: Enable cpuset controller in default hierarchy
+Date: Wed, 14 Mar 2018 12:57:11 -0700
+Message-ID: <20180314195711.GD2943022@devbig577.frc2.facebook.com>
+References: <1520609707-16582-1-git-send-email-longman@redhat.com>
+ <1520613285.12489.36.camel@gmx.de>
+ <1c3fe7b0-2600-c46d-1527-d3aaf024bb91@redhat.com>
+ <1520619426.27998.18.camel@gmx.de>
+ <55809fe4-98ba-5566-86ed-457acfef0e1c@redhat.com>
+ <1520624424.27998.76.camel@gmx.de>
+ <53de9683-01b7-bac4-8b70-dc1f93ede600@redhat.com>
+ <20180309221736.GB5926@hirez.programming.kicks-ass.net>
+ <f0fca497-e4e7-3dbd-1e5c-a7f502c05dcb@redhat.com>
+ <1520653648.12749.20.camel@gmx.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com;
- h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=RRyR3uTeUJOHK1vvPAX1Piu3bJvqvCUMvxSGy52k/p8=;
- b=D2gdyff7dLHrc2EqwDYepWt9WcMEv8WMLDEhTWogy5RjcM+uwMgAY9AERLsWFe6TV+3F
- A50HNnyJwfS5XA06LaopaeS5m2ZqiTGppjxFafC4OGS7t4pnu0qbV4V9NtWiRwWqgJtS
- SLY7XOmmjOW/S2MkLwghHAiXXtziFoa6PRs= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version; 
- bh=RRyR3uTeUJOHK1vvPAX1Piu3bJvqvCUMvxSGy52k/p8=;
- b=KVjJ79PAV4qhLsVU8GG6iu+iAptH1Vj80OG8F06i3yyHBGB8qFC+Sm8ccGBM7CYpWYbFwEqMvtyDP4DPadd9fACXv2NHGNcKZ/CoOSxSC3zTvbAWHDUpUOrxWrzp9xahIK/sJlBX/fx487+tvzkfSpqyJcHpicKMdqdDFahAvFE=
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=mNzR5KMENUVyWqgjSK1EivG7Spr6h4RxAlgh2Yc24WM=;
+        b=XTvqYQXK1C1k9E21UsRSJOZN/kIIyps4bpjY0Qon060BgZjLa97m9DhwCdsw6xpKaL
+         v6kTgRV0HG1aGOUvExuxD89UmM8piax+7xnkbxX1mkxRAyQmAWsDhoixas0TAz3oPjsD
+         APqP4YEDdUXG+lyOULY18qKn+/cN3AZWIt9mKem3HgQxHcNdV03fPVVl32sL1uJZejkE
+         1bKwJU4wWxOaG2pO1vM1/S9a2nUUdsHjKnofq+lpBvPg7KtRVIC8aPvmV9tqrwSX3EAm
+         fImguSpAIVjBIWVvKdg0s4JdxAQ6eVcZBDycC9PwMRb5fpKrqAh0QUWQnEssc5RaDEze
+         UYwg==
 Content-Disposition: inline
-In-Reply-To: <d0314e4c-b1cb-8270-b39f-14a66eeedfd3@fb.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Alexei Starovoitov <ast@fb.com>
-Cc: Daniel Borkmann <daniel@iogearbox.net>, intel-gfx@lists.freedesktop.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, kernel-team@fb.com, Alexei Starovoitov <alexei.starovoitov@gmail.com>
+In-Reply-To: <1520653648.12749.20.camel@gmx.de>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Mike Galbraith <efault@gmx.de>
+Cc: Waiman Long <longman@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-T24gVHVlLCBNYXIgMTMsIDIwMTggYXQgMDM6NDI6MjBQTSAtMDcwMCwgQWxleGVpIFN0YXJvdm9p
-dG92IHdyb3RlOgo+IE9uIDMvMTMvMTggMzoxMyBQTSwgVGVqdW4gSGVvIHdyb3RlOgo+ID4gSGVs
-bG8sCj4gPiAKPiA+IE9uIFR1ZSwgTWFyIDEzLCAyMDE4IGF0IDAyOjQ3OjQ1UE0gLTA3MDAsIEFs
-ZXhlaSBTdGFyb3ZvaXRvdiB3cm90ZToKPiA+ID4gaXQgaGFzIHRvIGJlIHplcm8gbG9va3Vwcy4g
-SWYgaWRyIGxvb2t1cCBpcyBpbnZvbHZlZCwgaXQncyBjbGVhbmVyCj4gPiA+IHRvIGFkZCBpZHIg
-YXMgbmV3IGJwZiBtYXAgdHlwZSBhbmQgdXNlIGNncm91cCBpbm8gYXMgYW4gaWQuCj4gPiAKPiA+
-IE9oLCBpZHIgKG9yIHJhdGhlciBpZGEpIGlzIGp1c3QgdG8gYWxsb2NhdGUgdGhlIGtleSwgb25j
-ZSB0aGUga2V5IGlzCj4gPiB0aGVyZSBpdCBwcmV0dHkgbXVjaCBzaG91bGQgYm9pbCBkb3duIHRv
-IHN0aCBsaWtlCj4gPiAKPiA+IAlyY3VfcmVhZF9sb2NrKCk7Cj4gPiAJdGFibGUgPSByY3VfZGVy
-ZWYoY2dycC0+dGFibGUpOwo+ID4gCWlmIChrZXkgPCB0YWJsZS0+bGVuKQo+ID4gCQlyZXQgPSB0
-YWJsZVtrZXldOwo+ID4gCWVsc2UKPiA+IAkJcmV0ID0gTlVMTDsKPiA+IAlyY3VfcmVhZF91bmxv
-Y2soKTsKPiA+IAo+ID4gRGVwZW5kaW5nIG9uIHRoZSByZXF1aXJlbWVudHMsIHdlIGNhbiBnZXQg
-cmlkIG9mIHRoZSB0YWJsZS0+bGVuIGNoZWNrCj4gPiBieSBtYWtpbmcga2V5IGFsbG9jIHBhdGgg
-bW9yZSBleHBlbnNpdmUgKGllLiBnaXZlIG91dCBrZXkgb25seSBhZnRlcgo+ID4gdGFibGUgZXh0
-ZW5zaW9uIGlzIGZ1bGx5IGRvbmUgYW5kIHByb3BhZ2F0ZWQpLgo+IAo+IGp1c3QgbGlrZSB0d28g
-YnBmIHByb2dzIGNhbiBiZSBhdHRhY2hlZCB0byB0aGUgc2FtZSBjZ3JvdXAKPiB0aGUgc2FtZSBi
-cGYgcHJvZyBjYW4gYmUgYXR0YWNoZWQgdG8gbXVsdGlwbGUgY2dyb3Vwcy4KPiBJZiB3ZSB1c2Ug
-aWRhIHRvIGFsbG9jYXRlIGFuIGlkIGFuZCBzdG9yZSBpdCBicGYtPmF1eC0+Y2dyb3VwX3RhYmxl
-X2tleQo+IHRvIGxhdGVyIGRvOiBjZ3JwLT50YWJsZVticGYtPmF1eC0+Y2dyb3VwX3RhYmxlX2tl
-eV0KPiB0aGlzIGlkPT1rZXkgd291bGQgbmVlZCB0byB2YWxpZCBhY3Jvc3MgbXVsdGlwbGUgY2dy
-b3VwcyB3aGljaAo+IGNvbXBsaWNhdGVzIHRoaW5ncyBhIGxvdC4KPiAKPiBJdCBmZWVscyB0aGF0
-IHdlIG5lZWQgc29tZXRoaW5nIHNpbWlsYXIgdG8gY29tcHV0ZV9lZmZlY3RpdmVfcHJvZ3MoKQo+
-IGJ1dCBmb3IgdGhpcyBzY3JhdGNoIGJ1ZmZlcnMuCj4gVGhlbiBhdCB0aGUgdGltZSBvZiBCUEZf
-UFJPR19SVU5fQVJSQVkgc3VwcGx5IGNvcnJlc3BvbmRpbmcKPiBzY3JhdGNoIGJ1ZmZlciBmb3Ig
-ZXZlcnkgcHJvZ3JhbS4KPiBOZXh0IHRvIGNncnAtPmJwZi5lZmZlY3RpdmVbdHlwZV0gaGF2ZSBz
-aW1pbGFyIGFycmF5IG9mIHBvaW50ZXJzCj4gdG8gc2NyYXRjaCBidWZmZXJzLgoKU29ycnksIGlm
-IEkgd2Fzbid0IGNsZWFyLCB0aGlzIGlzIGV4YWN0bHkgd2hhdCBJIG1lYW4gaW4gbXkgcHJldiBs
-ZXR0ZXI6Cm1ha2UgYSBwb2ludGVyIHRvIGEgc2NyYXRjaCBidWZmZXIgdW5pcXVlIHBlciAoY2dy
-b3VwLCBhdHRhY2hlZCBwcm9ncmFtKQpwYWlyLgoKVGhlbiB3ZSdsbCBoYXZlIHplcm8gbG9va3Vw
-cyBvbiBhIGhvdCBwYXRoLCBidXQga2VlcCB0aGUgZmxleGliaWxpdHkuLgoKU291bmRzIHZlcnkg
-Z29vZCB0byBtZS4KClRoYW5rcyEKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KSW50ZWwtZ2Z4IG1haWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRl
-c2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8v
-aW50ZWwtZ2Z4Cg==
+Hello,
+
+On Sat, Mar 10, 2018 at 04:47:28AM +0100, Mike Galbraith wrote:
+> Some form of cpu_exclusive (preferably exactly that, but something else
+> could replace it) is needed to define sets that must not overlap any
+> other set at creation time or any time thereafter. =A0A set with property
+> 'exclusive' is the enabler for fundamentally exclusive (but dynamic!)
+> set properties such as 'isolated' (etc etc).
+
+I'm not sure cpu_exclusive makes sense.  A controller knob can either
+belong to the parent or the cgroup itself and cpu_exclusive doesn't
+make sense in either case.
+
+1. cpu_exclusive is owned by the parent as other usual resource
+   control knobs.  IOW, it's not delegatable.
+
+   This is weird because it's asking the kernel to protect against its
+   own misconfiguration and there's nothing preventing cpu_exclusive
+   itself being cleared by the same entitya.
+
+2. cpu_exclusive is owned by the cgroup itself like memory.oom_group.
+   IOW, it's delegatable.
+
+   This allows a cgroup to affect what its siblings can or cannot do,
+   which is broken.  Semantically, it doesn't make much sense either.
+
+I don't think it's a good idea to add a kernel mechanism to prevent
+misconfiguration from a single entity.
+
+Thanks.
+
+--=20
+tejun
