@@ -1,173 +1,45 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: Re: [patch -mm] mm, memcg: evaluate root and leaf memcgs fairly on
- oom
-Date: Wed, 14 Mar 2018 12:17:06 +0000
-Message-ID: <20180314121700.GA20850@castle.DHCP.thefacebook.com>
+Subject: Re: [patch -mm v3 1/3] mm, memcg: introduce per-memcg oom policy
+ tunable
+Date: Wed, 14 Mar 2018 12:38:52 +0000
+Message-ID: <20180314123851.GB20850@castle.DHCP.thefacebook.com>
 References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
- <alpine.DEB.2.20.1803131720470.247949@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=cqm10UjNy92+AIqRmNjQFPgnwE4wC4fZRXTq3jEt4N4=;
- b=n/O1lxXpg0EE0uHRn/Bc1rYPIy8FBGqg06uX68q28BS5vIB0gZdYhZmr1lhhTYUDvzmP
- 9KMZGS7guMftyJUfacqNIa5tQuOM26CDQan6E03HQlfG+bm4BMl0mjAESRY5N5LZhIwG
- xwlVYMo4Ataff21+Dy/nFlhohC73f2NkZKY= 
+ in-reply-to; s=facebook; bh=Dy6puvisM2mT62ReAIi2nSU52U2txJ2w1dbH9f40fEg=;
+ b=DBbk0wmOCYBD2OR3DKdhyjHL2jFD8r2fqT0/pell33AmXWjS9gKsng4xUDrrVYKz6F1N
+ ctiJ4MvyLFPZPpZcTZpxx3A2U/Fhg6y8Z03IJ3LPFqnLE9kaJILERBRXTcXSPF+XjEmR
+ zhOPa+C2A7TJdO0XRRKLUX0Qwz15hmCcrVo= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=cqm10UjNy92+AIqRmNjQFPgnwE4wC4fZRXTq3jEt4N4=;
- b=caV+0yEkjNFJCkBI6M2Nl+ukviIXfolWyoGhB5Bacg7wxa2AKaoKFsvqS0j1jY/44iyrVjNcnTKlgh/OvKCfWEh+8iVkaqiSix4aV3ReMRI9M5GayFDJt5hh9GUK4vG2hctu6Wqn5ofkvJiBisalEhYoqneaAgmXDql/JKnBYN8=
+ bh=Dy6puvisM2mT62ReAIi2nSU52U2txJ2w1dbH9f40fEg=;
+ b=jqUvSzIgRFSokSeO98iVpDiB5LC6YoNXGZnEcFJtczyG1/0+nFKQhP9At3U9r3GeprKiuf0n/p5Mg4HWciShp6m4RANSTlv5wZ07Ye6M9QDrgwQYJV2ilDnadqIylpeaH1KDvu26kPFNSPL9ha/IScqPBESsrVFLhP7MIcOUoSA=
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1803131720470.247949@chino.kir.corp.google.com>
+In-Reply-To: <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
 To: David Rientjes <rientjes@google.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Hello, David!
+On Mon, Mar 12, 2018 at 05:57:53PM -0700, David Rientjes wrote:
+> The cgroup aware oom killer is needlessly enforced for the entire system
+> by a mount option.  It's unnecessary to force the system into a single
+> oom policy: either cgroup aware, or the traditional process aware.
 
-Overall I like this idea.
-Some questions below.
+Can you, please, provide a real-life example, when using per-process
+and cgroup-aware OOM killer depending on OOM scope is beneficial?
 
-On Tue, Mar 13, 2018 at 05:21:09PM -0700, David Rientjes wrote:
-> There are several downsides to the current implementation that compares
-> the root mem cgroup with leaf mem cgroups for the cgroup-aware oom killer.
-> 
-> For example, /proc/pid/oom_score_adj is accounted for processes attached
-> to the root mem cgroup but not leaves.  This leads to wild inconsistencies
-> that unfairly bias for or against the root mem cgroup.
-> 
-> Assume a 728KB bash shell is attached to the root mem cgroup without any
-> other processes having a non-default /proc/pid/oom_score_adj.  At the time
-> of system oom, the root mem cgroup evaluated to 43,474 pages after boot.
-> If the bash shell adjusts its /proc/self/oom_score_adj to 1000, however,
-> the root mem cgroup evaluates to 24,765,482 pages lol.  It would take a
-> cgroup 95GB of memory to outweigh the root mem cgroup's evaluation.
-> 
-> The reverse is even more confusing: if the bash shell adjusts its
-> /proc/self/oom_score_adj to -999, the root mem cgroup evaluates to 42,268
-> pages, a basically meaningless transformation.
-> 
-> /proc/pid/oom_score_adj is discounted, however, for processes attached to
-> leaf mem cgroups.  If a sole process using 250MB of memory is attached to
-> a mem cgroup, it evaluates to 250MB >> PAGE_SHIFT.  If its
-> /proc/pid/oom_score_adj is changed to -999, or even 1000, the evaluation
-> remains the same for the mem cgroup.
-> 
-> The heuristic that is used for the root mem cgroup also differs from leaf
-> mem cgroups.
-> 
-> For the root mem cgroup, the evaluation is the sum of all process's
-> /proc/pid/oom_score.  Besides factoring in oom_score_adj, it is based on
-> the sum of rss + swap + page tables for all processes attached to it.
-> For leaf mem cgroups, it is based on the amount of anonymous or
-> unevictable memory + unreclaimable slab + kernel stack + sock + swap.
-> 
-> There's also an exemption for root mem cgroup processes that do not
-> intersect the allocating process's mems_allowed.  Because the current
-> heuristic is based on oom_badness(), the evaluation of the root mem
-> cgroup disregards all processes attached to it that have disjoint
-> mems_allowed making oom selection specifically dependant on the
-> allocating process for system oom conditions!
-> 
-> This patch introduces completely fair comparison between the root mem
-> cgroup and leaf mem cgroups.  It compares them with the same heuristic
-> and does not prefer one over the other.  It disregards oom_score_adj
-> as the cgroup-aware oom killer should, if enabled by memory.oom_policy.
-> The goal is to target the most memory consuming cgroup on the system,
-> not consider per-process adjustment.
-> 
-> The fact that the evaluation of all mem cgroups depends on the mempolicy
-> of the allocating process, which is completely undocumented for the
-> cgroup-aware oom killer, will be addressed in a subsequent patch.
-> 
-> Signed-off-by: David Rientjes <rientjes@google.com>
-> ---
->  Based on top of oom policy patch series at
->  https://marc.info/?t=152090280800001
-> 
->  Documentation/cgroup-v2.txt |   7 +-
->  mm/memcontrol.c             | 147 ++++++++++++++++++------------------
->  2 files changed, 74 insertions(+), 80 deletions(-)
-> 
-> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-> --- a/Documentation/cgroup-v2.txt
-> +++ b/Documentation/cgroup-v2.txt
-> @@ -1328,12 +1328,7 @@ OOM killer to kill all processes attached to the cgroup, except processes
->  with /proc/pid/oom_score_adj set to -1000 (oom disabled).
->  
->  The root cgroup is treated as a leaf memory cgroup as well, so it is
-> -compared with other leaf memory cgroups. Due to internal implementation
-> -restrictions the size of the root cgroup is the cumulative sum of
-> -oom_badness of all its tasks (in other words oom_score_adj of each task
-> -is obeyed). Relying on oom_score_adj (apart from OOM_SCORE_ADJ_MIN) can
-> -lead to over- or underestimation of the root cgroup consumption and it is
-> -therefore discouraged. This might change in the future, however.
-> +compared with other leaf memory cgroups.
->  
->  Please, note that memory charges are not migrating if tasks
->  are moved between different memory cgroups. Moving tasks with
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -94,6 +94,8 @@ int do_swap_account __read_mostly;
->  #define do_swap_account		0
->  #endif
->  
-> +static atomic_long_t total_sock_pages;
-> +
->  /* Whether legacy memory+swap accounting is active */
->  static bool do_memsw_account(void)
->  {
-> @@ -2607,9 +2609,9 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
->  }
->  
->  static long memcg_oom_badness(struct mem_cgroup *memcg,
-> -			      const nodemask_t *nodemask,
-> -			      unsigned long totalpages)
-> +			      const nodemask_t *nodemask)
->  {
-> +	const bool is_root_memcg = memcg == root_mem_cgroup;
->  	long points = 0;
->  	int nid;
->  	pg_data_t *pgdat;
-> @@ -2618,92 +2620,65 @@ static long memcg_oom_badness(struct mem_cgroup *memcg,
->  		if (nodemask && !node_isset(nid, *nodemask))
->  			continue;
->  
-> -		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
-> -				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
-> -
->  		pgdat = NODE_DATA(nid);
-> -		points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
-> -					    NR_SLAB_UNRECLAIMABLE);
-> +		if (is_root_memcg) {
-> +			points += node_page_state(pgdat, NR_ACTIVE_ANON) +
-> +				  node_page_state(pgdat, NR_INACTIVE_ANON);
-> +			points += node_page_state(pgdat, NR_SLAB_UNRECLAIMABLE);
-> +		} else {
-> +			points += mem_cgroup_node_nr_lru_pages(memcg, nid,
-> +							       LRU_ALL_ANON);
-> +			points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
-> +						    NR_SLAB_UNRECLAIMABLE);
-> +		}
->  	}
->  
-> -	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
-> -		(PAGE_SIZE / 1024);
-> -	points += memcg_page_state(memcg, MEMCG_SOCK);
-> -	points += memcg_page_state(memcg, MEMCG_SWAP);
-> -
-> +	if (is_root_memcg) {
-> +		points += global_zone_page_state(NR_KERNEL_STACK_KB) /
-> +				(PAGE_SIZE / 1024);
-> +		points += atomic_long_read(&total_sock_pages);
-                                            ^^^^^^^^^^^^^^^^
-BTW, where do we change this counter?
+It might be quite confusing, depending on configuration.
+From inside a container you can have different types of OOMs,
+depending on parent's cgroup configuration, which is not even
+accessible for reading from inside.
 
-I also doubt that global atomic variable can work here,
-we probably need something better scaling.
+Also, it's probably good to have an interface to show which policies
+are available.
 
 Thanks!
