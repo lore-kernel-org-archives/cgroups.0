@@ -1,139 +1,54 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 1/6] mm/vmscan: Wake up flushers for legacy cgroups too
-Date: Thu, 15 Mar 2018 11:57:44 -0700
-Message-ID: <CALvZod5LVv61Wdsq_h+4i392O1uQprGri+99WfA=Qxr=ZBoZLw@mail.gmail.com>
-References: <20180315164553.17856-1-aryabinin@virtuozzo.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch -mm] mm, memcg: evaluate root and leaf memcgs fairly on
+ oom
+Date: Thu, 15 Mar 2018 13:01:35 -0700 (PDT)
+Message-ID: <alpine.DEB.2.20.1803151259450.44030@chino.kir.corp.google.com>
+References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com> <alpine.DEB.2.20.1803131720470.247949@chino.kir.corp.google.com> <20180314121700.GA20850@castle.DHCP.thefacebook.com> <alpine.DEB.2.20.1803141337110.163553@chino.kir.corp.google.com>
+ <20180315164646.GA1853@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=OVanvcC/dLgyh6uP3KXtKdocGMaip3rlCnvK2NPvV18=;
-        b=JjdRc6ZH3MXMezdRfnvjAXgJNS9z+0ArHZmSfabRb1f68xkAlQJhVZhfIkhx3A7sT8
-         2SpY/8gtt1z55d5gZ467OTe6U7gSN6FtUmv4hpn2oKHpILKf5+kdWLt0PD8FhVVXWn6K
-         LNvlfdk5ZT81Ku9fmLsMw4aG2BzGp0XXe5CZwFa0AxFW4yhXmPu36ptlYSGsJBOCAtzR
-         vcJHm00p3vYVGiV/KTOI3MtiH+sY1OSh5xcwNLlVIxyFpyI5Uowl94QLg13MUSS470c+
-         ortHj2WB0LnjK7tV/+Qb11OKdqcZ76rE3++6zJlOHADDBSh3fpOSm9vmGtDV2Cs9Sc2L
-         V9sg==
-In-Reply-To: <20180315164553.17856-1-aryabinin@virtuozzo.com>
-Sender: stable-owner@vger.kernel.org
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=g9aHvVfh2Hn2VmMQr0Z9PWKkY6CtZe63QVmCowY4kIY=;
+        b=r3KOP7qKlJglALfrUbypQlAMeHck9PLY9dsaWxiWMnsVdNBlAhkdONxpJiJSngwJfV
+         bVTHy3vAjz6orpte1igQuq4rc7qqOa3cPpA2GsJKpCE7Sp/6T83oRNow9sgSd9KQt82u
+         VCmGjdoYzBcA42dyQznYn5FswoBwfwn6X0TvKJSaEeQGTtw0yVJThP1XZKx2F5OhxW7J
+         qxInysNOHdC+kKiX446MOlrntljOO4rJl470JX38S2j9tFeb7T9Rwus9/b2CoyY304YC
+         qBBI9kCcqwxES8o0yOM7TRfZ2rhk0AxtJj/FxjWqkQ9mDS+6JeiVp39yjvzZvQkz56P6
+         6+dw==
+In-Reply-To: <20180315164646.GA1853@castle.DHCP.thefacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, stable@vger.kernel.org, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Mar 15, 2018 at 9:45 AM, Andrey Ryabinin
-<aryabinin@virtuozzo.com> wrote:
-> Commit 726d061fbd36 ("mm: vmscan: kick flushers when we encounter
-> dirty pages on the LRU") added flusher invocation to
-> shrink_inactive_list() when many dirty pages on the LRU are encountered.
->
-> However, shrink_inactive_list() doesn't wake up flushers for legacy
-> cgroup reclaim, so the next commit bbef938429f5 ("mm: vmscan: remove
-> old flusher wakeup from direct reclaim path") removed the only source
-> of flusher's wake up in legacy mem cgroup reclaim path.
->
-> This leads to premature OOM if there is too many dirty pages in cgroup:
->     # mkdir /sys/fs/cgroup/memory/test
->     # echo $$ > /sys/fs/cgroup/memory/test/tasks
->     # echo 50M > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
->     # dd if=/dev/zero of=tmp_file bs=1M count=100
->     Killed
->
->     dd invoked oom-killer: gfp_mask=0x14000c0(GFP_KERNEL), nodemask=(null), order=0, oom_score_adj=0
->
->     Call Trace:
->      dump_stack+0x46/0x65
->      dump_header+0x6b/0x2ac
->      oom_kill_process+0x21c/0x4a0
->      out_of_memory+0x2a5/0x4b0
->      mem_cgroup_out_of_memory+0x3b/0x60
->      mem_cgroup_oom_synchronize+0x2ed/0x330
->      pagefault_out_of_memory+0x24/0x54
->      __do_page_fault+0x521/0x540
->      page_fault+0x45/0x50
->
->     Task in /test killed as a result of limit of /test
->     memory: usage 51200kB, limit 51200kB, failcnt 73
->     memory+swap: usage 51200kB, limit 9007199254740988kB, failcnt 0
->     kmem: usage 296kB, limit 9007199254740988kB, failcnt 0
->     Memory cgroup stats for /test: cache:49632KB rss:1056KB rss_huge:0KB shmem:0KB
->             mapped_file:0KB dirty:49500KB writeback:0KB swap:0KB inactive_anon:0KB
->             active_anon:1168KB inactive_file:24760KB active_file:24960KB unevictable:0KB
->     Memory cgroup out of memory: Kill process 3861 (bash) score 88 or sacrifice child
->     Killed process 3876 (dd) total-vm:8484kB, anon-rss:1052kB, file-rss:1720kB, shmem-rss:0kB
->     oom_reaper: reaped process 3876 (dd), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
->
-> Wake up flushers in legacy cgroup reclaim too.
->
-> Fixes: bbef938429f5 ("mm: vmscan: remove old flusher wakeup from direct reclaim path")
-> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+On Thu, 15 Mar 2018, Roman Gushchin wrote:
 
-Indeed I am seeing oom-kills without the patch.
+> > Seems like it was dropped from the patch somehow.  It is intended to do 
+> > atomic_long_add(nr_pages) in mem_cgroup_charge_skmem() and 
+> > atomic_long_add(-nr_pages) mem_cgroup_uncharge_skmem().
+> > 
+> > > I also doubt that global atomic variable can work here,
+> > > we probably need something better scaling.
+> > > 
+> > 
+> > Why do you think an atomic_long_add() is too expensive when we're already 
+> > disabling irqs and dong try_charge()?
+> 
+> Hard to say without having full code :)
+> try_charge() is batched, if you'll batch it too, it will probably work.
+> 
 
-Tested-by: Shakeel Butt <shakeelb@google.com>
+The full code is what's specified above: it does the 
+atomic_long_add(nr_pages) in mem_cgroup_charge_skmem() and 
+atomic_long_add(-nr_pages) mem_cgroup_uncharge_skmem().
 
-> Cc: <stable@vger.kernel.org>
-> ---
->  mm/vmscan.c | 31 ++++++++++++++++---------------
->  1 file changed, 16 insertions(+), 15 deletions(-)
->
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 8fcd9f8d7390..4390a8d5be41 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1771,6 +1771,20 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
->         if (stat.nr_writeback && stat.nr_writeback == nr_taken)
->                 set_bit(PGDAT_WRITEBACK, &pgdat->flags);
->
-> +       /*
-> +        * If dirty pages are scanned that are not queued for IO, it
-> +        * implies that flushers are not doing their job. This can
-> +        * happen when memory pressure pushes dirty pages to the end of
-> +        * the LRU before the dirty limits are breached and the dirty
-> +        * data has expired. It can also happen when the proportion of
-> +        * dirty pages grows not through writes but through memory
-> +        * pressure reclaiming all the clean cache. And in some cases,
-> +        * the flushers simply cannot keep up with the allocation
-> +        * rate. Nudge the flusher threads in case they are asleep.
-> +        */
-> +       if (stat.nr_unqueued_dirty == nr_taken)
-> +               wakeup_flusher_threads(WB_REASON_VMSCAN);
-> +
->         /*
->          * Legacy memcg will stall in page writeback so avoid forcibly
->          * stalling here.
-> @@ -1783,22 +1797,9 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
->                 if (stat.nr_dirty && stat.nr_dirty == stat.nr_congested)
->                         set_bit(PGDAT_CONGESTED, &pgdat->flags);
->
-> -               /*
-> -                * If dirty pages are scanned that are not queued for IO, it
-> -                * implies that flushers are not doing their job. This can
-> -                * happen when memory pressure pushes dirty pages to the end of
-> -                * the LRU before the dirty limits are breached and the dirty
-> -                * data has expired. It can also happen when the proportion of
-> -                * dirty pages grows not through writes but through memory
-> -                * pressure reclaiming all the clean cache. And in some cases,
-> -                * the flushers simply cannot keep up with the allocation
-> -                * rate. Nudge the flusher threads in case they are asleep, but
-> -                * also allow kswapd to start writing pages during reclaim.
-> -                */
-> -               if (stat.nr_unqueued_dirty == nr_taken) {
-> -                       wakeup_flusher_threads(WB_REASON_VMSCAN);
-> +               /* Allow kswapd to start writing pages during reclaim. */
-> +               if (stat.nr_unqueued_dirty == nr_taken)
->                         set_bit(PGDAT_DIRTY, &pgdat->flags);
-> -               }
->
->                 /*
->                  * If kswapd scans pages marked marked for immediate
-> --
-> 2.16.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The patch is comparing the root mem cgroup and leaf mem cgroups fairly.  
+For this, it requires that we have stats that can be directly compared or 
+at least very close approximations.  We don't want to get in a situation 
+where root and leaf mem cgroups are being compared based on different 
+stats.
