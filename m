@@ -1,130 +1,139 @@
 From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v3 1/2] mm: memcg: remote memcg charging for kmem allocations
-Date: Thu, 15 Mar 2018 11:25:14 -0700
-Message-ID: <CALvZod7uAqXGmdLfUkqjiaZkvAL7ptya5G2aT6+eV8TpjNoFGQ@mail.gmail.com>
-References: <20180221223757.127213-1-shakeelb@google.com> <20180221223757.127213-2-shakeelb@google.com>
- <20180313134902.GW12772@dhcp22.suse.cz> <CALvZod5XFKLfQiHN1g3KWJ-DEJPt8gX6QJD=x22x_eyDN88RYg@mail.gmail.com>
- <20180315174941.GN23100@dhcp22.suse.cz>
+Subject: Re: [PATCH 1/6] mm/vmscan: Wake up flushers for legacy cgroups too
+Date: Thu, 15 Mar 2018 11:57:44 -0700
+Message-ID: <CALvZod5LVv61Wdsq_h+4i392O1uQprGri+99WfA=Qxr=ZBoZLw@mail.gmail.com>
+References: <20180315164553.17856-1-aryabinin@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc;
-        bh=nKjKS1gdrCk9c7xWlX54yNJo0Dptg5hwmvoUGFm4r1I=;
-        b=rHrxlArigBP4t06mMxMYGXPDRu7xOjaAm/GylvR8DB7EX4UBNyKvBCSuv7+6UJts9V
-         4RKQKHA2chrVmIh948tDofrUHSv2VuquEveNpI+eSnhuQbnq+G7h4xRiSGKCNJKznzHh
-         I6tB/f4ETARu2DfdbAAFlP8uyD+Qpt+NeHeEZPNfNdV10E5fYkgy8gPl3L6JI6wmAWOp
-         rexQKVG0wgmkqldLjblGyoruTpH0JRqMiCMac6aNZXxQn2/7fCgGHAaQIE5VQoUmMLDm
-         00RX1mddHD1nzTH+5kkI+yYO+jOhdcN5I4jTiTI0Cyb3CUsPGMXmsiGcPrvn3KGgyOR0
-         ZWgQ==
-In-Reply-To: <20180315174941.GN23100@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=OVanvcC/dLgyh6uP3KXtKdocGMaip3rlCnvK2NPvV18=;
+        b=JjdRc6ZH3MXMezdRfnvjAXgJNS9z+0ArHZmSfabRb1f68xkAlQJhVZhfIkhx3A7sT8
+         2SpY/8gtt1z55d5gZ467OTe6U7gSN6FtUmv4hpn2oKHpILKf5+kdWLt0PD8FhVVXWn6K
+         LNvlfdk5ZT81Ku9fmLsMw4aG2BzGp0XXe5CZwFa0AxFW4yhXmPu36ptlYSGsJBOCAtzR
+         vcJHm00p3vYVGiV/KTOI3MtiH+sY1OSh5xcwNLlVIxyFpyI5Uowl94QLg13MUSS470c+
+         ortHj2WB0LnjK7tV/+Qb11OKdqcZ76rE3++6zJlOHADDBSh3fpOSm9vmGtDV2Cs9Sc2L
+         V9sg==
+In-Reply-To: <20180315164553.17856-1-aryabinin@virtuozzo.com>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, stable@vger.kernel.org, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Thu, Mar 15, 2018 at 10:49 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> On Tue 13-03-18 10:55:18, Shakeel Butt wrote:
->> On Tue, Mar 13, 2018 at 6:49 AM, Michal Hocko <mhocko@kernel.org> wrote:
->> > On Wed 21-02-18 14:37:56, Shakeel Butt wrote:
->> > [...]
->> >> +#ifdef CONFIG_MEMCG
->> >> +static inline struct mem_cgroup *memalloc_memcg_save(struct mem_cgroup *memcg)
->> >> +{
->> >> +     struct mem_cgroup *old_memcg = current->target_memcg;
->> >> +     current->target_memcg = memcg;
->> >> +     return old_memcg;
->> >> +}
->> >
->> > So you are relying that the caller will handle the reference counting
->> > properly? I do not think this is a good idea.
->>
->> For the fsnotify use-case, this assumption makes sense as fsnotify has
->> an abstraction of fsnotify_group which is created by the
->> person/process interested in the events and thus can be used to hold
->> the reference to the person/process's memcg.
+On Thu, Mar 15, 2018 at 9:45 AM, Andrey Ryabinin
+<aryabinin@virtuozzo.com> wrote:
+> Commit 726d061fbd36 ("mm: vmscan: kick flushers when we encounter
+> dirty pages on the LRU") added flusher invocation to
+> shrink_inactive_list() when many dirty pages on the LRU are encountered.
 >
-> OK, but there is not any direct connection between fsnotify_group and
-> task_struct lifetimes, is it? This makes the API suspectible to
-> use-after-free bugs.
+> However, shrink_inactive_list() doesn't wake up flushers for legacy
+> cgroup reclaim, so the next commit bbef938429f5 ("mm: vmscan: remove
+> old flusher wakeup from direct reclaim path") removed the only source
+> of flusher's wake up in legacy mem cgroup reclaim path.
 >
-
-For fsnotify, whoever is calling [fanotify|inotify]_handle_event()
-will have a stable reference to fsnotify_group and fsnotify_group has
-reference to memcg. These allocations happen within
-[fanotify|inotify]_handle_event(), so, for fsnotify I don't think
-there will be use-after-free bugs.
-
-Basically whoever is calling memcg variant of kmem_cache_alloc or
-kmalloc should either have stable direct or indirect reference to the
-memcg.
-
->> Another use-case I have
->> in mind is the filesystem mount. Basically attaching a mount with a
->> memcg and thus all user pages and kmem allocations (inodes, dentries)
->> for that mount will be charged to the attached memcg.
+> This leads to premature OOM if there is too many dirty pages in cgroup:
+>     # mkdir /sys/fs/cgroup/memory/test
+>     # echo $$ > /sys/fs/cgroup/memory/test/tasks
+>     # echo 50M > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+>     # dd if=/dev/zero of=tmp_file bs=1M count=100
+>     Killed
 >
-> So you charge page cache to the origin task but metadata to a different
-> memcg?
+>     dd invoked oom-killer: gfp_mask=0x14000c0(GFP_KERNEL), nodemask=(null), order=0, oom_score_adj=0
 >
-
-No, both page cache and metadata to a different memcg.
-
->> In this use-case
->> the super_block is the perfect structure to hold the reference to the
->> memcg.
->>
->> If in future we find a use-case where this assumption does not make
->> sense we can evolve the API and since this is kernel internal API, it
->> should not be hard to evolve.
->>
->> > Also do we need some kind
->> > of debugging facility to detect unbalanced save/restore scopes?
->> >
->>
->> I am not sure, I didn't find other similar patterns (like PF_MEMALLOC)
->> having debugging facility.
+>     Call Trace:
+>      dump_stack+0x46/0x65
+>      dump_header+0x6b/0x2ac
+>      oom_kill_process+0x21c/0x4a0
+>      out_of_memory+0x2a5/0x4b0
+>      mem_cgroup_out_of_memory+0x3b/0x60
+>      mem_cgroup_oom_synchronize+0x2ed/0x330
+>      pagefault_out_of_memory+0x24/0x54
+>      __do_page_fault+0x521/0x540
+>      page_fault+0x45/0x50
 >
-> Maybe we need something more generic here.
+>     Task in /test killed as a result of limit of /test
+>     memory: usage 51200kB, limit 51200kB, failcnt 73
+>     memory+swap: usage 51200kB, limit 9007199254740988kB, failcnt 0
+>     kmem: usage 296kB, limit 9007199254740988kB, failcnt 0
+>     Memory cgroup stats for /test: cache:49632KB rss:1056KB rss_huge:0KB shmem:0KB
+>             mapped_file:0KB dirty:49500KB writeback:0KB swap:0KB inactive_anon:0KB
+>             active_anon:1168KB inactive_file:24760KB active_file:24960KB unevictable:0KB
+>     Memory cgroup out of memory: Kill process 3861 (bash) score 88 or sacrifice child
+>     Killed process 3876 (dd) total-vm:8484kB, anon-rss:1052kB, file-rss:1720kB, shmem-rss:0kB
+>     oom_reaper: reaped process 3876 (dd), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
 >
-
-Please do let me know if you have something in mind.
-
->> Maybe we can add such debugging facility
->> when we find more users other than kmalloc & kmem_cache_alloc. Vmalloc
->> may be one but I could not think of a use-case for vmalloc for remote
->> charging, so, no need to add more code at this time.
->>
->> > [...]
->> >> @@ -2260,7 +2269,10 @@ struct kmem_cache *memcg_kmem_get_cache(struct kmem_cache *cachep)
->> >>       if (current->memcg_kmem_skip_account)
->> >>               return cachep;
->> >>
->> >> -     memcg = get_mem_cgroup_from_mm(current->mm);
->> >> +     if (current->target_memcg)
->> >> +             memcg = get_mem_cgroup(current->target_memcg);
->> >> +     if (!memcg)
->> >> +             memcg = get_mem_cgroup_from_mm(current->mm);
->> >>       kmemcg_id = READ_ONCE(memcg->kmemcg_id);
->> >>       if (kmemcg_id < 0)
->> >>               goto out;
->> >
->> > You are also adding one branch for _each_ charge path even though the
->> > usecase is rather limited.
->> >
->>
->> I understand the concern but the charging path, IMO, is much complex
->> than just one or couple of additional branches. I can run a simple
->> microbenchmark to see if there is anything noticeable here.
+> Wake up flushers in legacy cgroup reclaim too.
 >
-> Charging path is still a _hot path_. Especially when the kmem accounting
-> is enabled by default. You cannot simply downplay the overhead. We have
-> _one_ user but all users should pay the price. This is simply hard to
-> justify. Maybe we can thing of something that would put the burden on
-> the charging context?
->
+> Fixes: bbef938429f5 ("mm: vmscan: remove old flusher wakeup from direct reclaim path")
+> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-I will see if I can find out a way for that.
+Indeed I am seeing oom-kills without the patch.
+
+Tested-by: Shakeel Butt <shakeelb@google.com>
+
+> Cc: <stable@vger.kernel.org>
+> ---
+>  mm/vmscan.c | 31 ++++++++++++++++---------------
+>  1 file changed, 16 insertions(+), 15 deletions(-)
+>
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 8fcd9f8d7390..4390a8d5be41 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -1771,6 +1771,20 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+>         if (stat.nr_writeback && stat.nr_writeback == nr_taken)
+>                 set_bit(PGDAT_WRITEBACK, &pgdat->flags);
+>
+> +       /*
+> +        * If dirty pages are scanned that are not queued for IO, it
+> +        * implies that flushers are not doing their job. This can
+> +        * happen when memory pressure pushes dirty pages to the end of
+> +        * the LRU before the dirty limits are breached and the dirty
+> +        * data has expired. It can also happen when the proportion of
+> +        * dirty pages grows not through writes but through memory
+> +        * pressure reclaiming all the clean cache. And in some cases,
+> +        * the flushers simply cannot keep up with the allocation
+> +        * rate. Nudge the flusher threads in case they are asleep.
+> +        */
+> +       if (stat.nr_unqueued_dirty == nr_taken)
+> +               wakeup_flusher_threads(WB_REASON_VMSCAN);
+> +
+>         /*
+>          * Legacy memcg will stall in page writeback so avoid forcibly
+>          * stalling here.
+> @@ -1783,22 +1797,9 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+>                 if (stat.nr_dirty && stat.nr_dirty == stat.nr_congested)
+>                         set_bit(PGDAT_CONGESTED, &pgdat->flags);
+>
+> -               /*
+> -                * If dirty pages are scanned that are not queued for IO, it
+> -                * implies that flushers are not doing their job. This can
+> -                * happen when memory pressure pushes dirty pages to the end of
+> -                * the LRU before the dirty limits are breached and the dirty
+> -                * data has expired. It can also happen when the proportion of
+> -                * dirty pages grows not through writes but through memory
+> -                * pressure reclaiming all the clean cache. And in some cases,
+> -                * the flushers simply cannot keep up with the allocation
+> -                * rate. Nudge the flusher threads in case they are asleep, but
+> -                * also allow kswapd to start writing pages during reclaim.
+> -                */
+> -               if (stat.nr_unqueued_dirty == nr_taken) {
+> -                       wakeup_flusher_threads(WB_REASON_VMSCAN);
+> +               /* Allow kswapd to start writing pages during reclaim. */
+> +               if (stat.nr_unqueued_dirty == nr_taken)
+>                         set_bit(PGDAT_DIRTY, &pgdat->flags);
+> -               }
+>
+>                 /*
+>                  * If kswapd scans pages marked marked for immediate
+> --
+> 2.16.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
