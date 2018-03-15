@@ -1,136 +1,157 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch -mm v3 1/3] mm, memcg: introduce per-memcg oom policy
- tunable
-Date: Thu, 15 Mar 2018 13:16:53 -0700 (PDT)
-Message-ID: <alpine.DEB.2.20.1803151301480.44030@chino.kir.corp.google.com>
-References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com> <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com> <20180314123851.GB20850@castle.DHCP.thefacebook.com> <alpine.DEB.2.20.1803141341180.163553@chino.kir.corp.google.com>
- <20180315171039.GB1853@castle.DHCP.thefacebook.com>
+From: Stefan Berger <stefanb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [RFC PATCH V1 01/12] audit: add container id
+Date: Thu, 15 Mar 2018 16:27:01 -0400
+Message-ID: <216d1ab1-531b-9185-2e31-34f162f08aad@linux.vnet.ibm.com>
+References: <cover.1519930146.git.rgb@redhat.com>
+	<2e5d93ee46feca915a101c2fc3062da674a98223.1519930146.git.rgb@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=ZEQ7zb8oPJO1VnWyjccXN2Sd3s83Gtw3Gt2i7hwSBk4=;
-        b=e2kPVs8TN5RyO4KNLm+ceyjd2MQkw7I/st4JqI9pIObmCYrWq4Mw9SF2nuLkEtzNHB
-         bt6EnEQo8TggoSsG3mO0akB8hWZG1MyKLxRUpqziQpi26wPZBt4lU7TMwRIsc2J9bswC
-         torkTZIF3sOdN7Fal1qZEfWbRSsNNvfSYbI2vuE9e1DanFf8vwUZUxWDWsqkb73tLkVq
-         xeBQr2MrYF/1668rgLWHGwHa/NoQ/7tlYxeRgiEhOp+2CZUxl1qQErwjruHL/BG/Ro5U
-         Ba3XU0OT9Sj1i4QbOp3jCYrl3rxJfW8i2WvhblDzh1Dv2qrqVqtB2CjUI1Mana72z4E2
-         ovhg==
-In-Reply-To: <20180315171039.GB1853@castle.DHCP.thefacebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <2e5d93ee46feca915a101c2fc3062da674a98223.1519930146.git.rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-Audit Mailing List <linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, madzcar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org
 
-On Thu, 15 Mar 2018, Roman Gushchin wrote:
+On 03/01/2018 02:41 PM, Richard Guy Briggs wrote:
+> Implement the proc fs write to set the audit container ID of a process,
+> emitting an AUDIT_CONTAINER record to document the event.
+>
+> This is a write from the container orchestrator task to a proc entry of
+> the form /proc/PID/containerid where PID is the process ID of the newly
+> created task that is to become the first task in a container, or an
+> additional task added to a container.
+>
+> The write expects up to a u64 value (unset: 18446744073709551615).
+>
+> This will produce a record such as this:
+> type=UNKNOWN[1333] msg=audit(1519903238.968:261): op=set pid=596 uid=0 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 auid=0 tty=pts0 ses=1 opid=596 old-contid=18446744073709551615 contid=123455 res=0
+>
+> The "op" field indicates an initial set.  The "pid" to "ses" fields are
+> the orchestrator while the "opid" field is the object's PID, the process
+> being "contained".  Old and new container ID values are given in the
+> "contid" fields, while res indicates its success.
+>
+> It is not permitted to self-set, unset or re-set the container ID.  A
+> child inherits its parent's container ID, but then can be set only once
+> after.
+>
+> See: https://github.com/linux-audit/audit-kernel/issues/32
+>
+>
+>   /* audit_rule_data supports filter rules with both integer and string
+>    * fields.  It corresponds with AUDIT_ADD_RULE, AUDIT_DEL_RULE and
+> diff --git a/kernel/auditsc.c b/kernel/auditsc.c
+> index 4e0a4ac..0ee1e59 100644
+> --- a/kernel/auditsc.c
+> +++ b/kernel/auditsc.c
+> @@ -2073,6 +2073,92 @@ int audit_set_loginuid(kuid_t loginuid)
+>   	return rc;
+>   }
+>
+> +static int audit_set_containerid_perm(struct task_struct *task, u64 containerid)
+> +{
+> +	struct task_struct *parent;
+> +	u64 pcontainerid, ccontainerid;
+> +	pid_t ppid;
+> +
+> +	/* Don't allow to set our own containerid */
+> +	if (current == task)
+> +		return -EPERM;
+> +	/* Don't allow the containerid to be unset */
+> +	if (!cid_valid(containerid))
+> +		return -EINVAL;
+> +	/* if we don't have caps, reject */
+> +	if (!capable(CAP_AUDIT_CONTROL))
+> +		return -EPERM;
+> +	/* if containerid is unset, allow */
+> +	if (!audit_containerid_set(task))
+> +		return 0;
 
-> >  - Does not lock the entire system into a single methodology.  Users
-> >    working in a subtree can default to what they are used to: per-process
-> >    oom selection even though their subtree might be targeted by a system
-> >    policy level decision at the root.  This allow them flexibility to
-> >    organize their subtree intuitively for use with other controllers in a
-> >    single hierarchy.
-> > 
-> >    The real-world example is a user who currently organizes their subtree
-> >    for this purpose and has defined oom_score_adj appropriately and now
-> >    regresses if the admin mounts with the needless "groupoom" option.
-> 
-> I find this extremely confusing.
-> 
-> The problem is that OOM policy defines independently how the OOM
-> of the corresponding scope is handled, not like how it prefers
-> to handle OOMs from above.
-> 
-> As I've said, if you're inside a container, you can have OOMs
-> of different types, depending on settings, which you don't even know about.
-> Sometimes oom_score_adj works, sometimes not.
-> Sometimes all processes are killed, sometimes not.
-> IMO, this adds nothing but mess.
-> 
+I am wondering whether there should be a check for the target process 
+that will receive the containerid to not have CAP_SYS_ADMIN that would 
+otherwise allow it to arbitrarily unshare()/clone() and leave the set of 
+namespaces that may make up the container whose containerid we assign here?
 
-There are many additional problems with the cgroup aware oom killer in 
--mm, yes, the fact that memory.oom_group is factored into the selection 
-logic is another problem.  Users who prefer to account their subtree for 
-comparison (the only way to avoid allowing users to evade the oom killer 
-completely) should use the memory.oom_policy of "tree" introduced later.  
-memory.oom_group needs to be completely separated from the policy of 
-selecting a victim, it shall only be a mechanism that defines if a single 
-process is oom killed or all processes attached to the victim mem cgroup 
-as a property of the workload.
+> +	/* it is already set, and not inherited from the parent, reject */
+> +	ccontainerid = audit_get_containerid(task);
+> +	rcu_read_lock();
+> +	parent = rcu_dereference(task->real_parent);
+> +	rcu_read_unlock();
+> +	task_lock(parent);
+> +	pcontainerid = audit_get_containerid(parent);
+> +	ppid = task_tgid_nr(parent);
+ppid not needed...
 
-> The mount option (which I'm not a big fan of too) was added only
-> to provide a 100% backward compatibility, what was forced by Michal.
-> But I doubt that mixing per-process and per-cgroup approach
-> makes any sense.
-> 
-
-It makes absolute sense and has real users who can immediately use this if 
-it's merged.  There is nothing wrong with a user preferring to kill the 
-largest process from their subtree on mem cgroup oom.  It's what they've 
-always experienced, with cgroup v1 and v2.  It's the difference between 
-users in a subtree being able to use /proc/pid/oom_score_adj or not.  
-Without it, their oom_score_adj values become entirely irrelevant.  We 
-have users who tune their oom_score_adj and are running in a subtree they 
-control.
-
-If an overcomitted ancestor is oom, which is up to the admin to define in 
-the organization of the hierarchy and imposing limits, the user does not 
-control which process or group of processes is oom killed.  That's a 
-decision for the ancestor which controls all descendant cgroups, including 
-limits and oom policies.
-
-> > 
-> >  - Allows changing the oom policy at runtime without remounting the entire
-> >    cgroup fs.  Depending on how cgroups are going to be used, per-process 
-> >    vs cgroup-aware may be mandated separately.  This is a trait only of
-> >    the mem cgroup controller, the root level oom policy is no different
-> >    from the subtree and depends directly on how the subtree is organized.
-> >    If other controllers are already being used, requiring a remount to
-> >    change the system-wide oom policy is an unnecessary burden.
-> > 
-> >    The real-world example is systems software that either supports user
-> >    subtrees or strictly subtrees that it maintains itself.  While other
-> >    controllers are used, the mem cgroup oom policy can be changed at
-> >    runtime rather than requiring a remount and reorganizing other
-> >    controllers exactly as before.
-> 
-> Btw, what the problem with remounting? You don't have to re-create cgroups,
-> or something like this; the operation is as trivial as adding a flag.
-> 
-
-Remounting is for the entire mem cgroup hierarchy.  The point of this 
-entire patchset is that different subtrees will have different policies, 
-it cannot be locked into a single selection logic.
-
-This completely avoids users being able to evade the cgroup-aware oom 
-killer by creating subcontainers.
-
-Obviously I've been focused on users controlling subtrees in a lot of my 
-examples.  Those users may already prefer oom killing the largest process 
-on the system (or their subtree).  They can still do that with this patch 
-and opt out of cgroup awareness for their subtree.
-
-It also provides all the functionality that the current implementation in 
--mm provides.
-
-> > 
-> >  - Can be extended to cgroup v1 if necessary.  There is no need for a
-> >    new cgroup v1 mount option and mem cgroup oom selection is not
-> >    dependant on any functionality provided by cgroup v2.  The policies
-> >    introduced here work exactly the same if used with cgroup v1.
-> > 
-> >    The real-world example is a cgroup configuration that hasn't had
-> >    the ability to move to cgroup v2 yet and still would like to use
-> >    cgroup-aware oom selection with a very trivial change to add the
-> >    memory.oom_policy file to the cgroup v1 filesystem.
-> 
-> I assume that v1 interface is frozen.
-> 
-
-It requires adding the memory.oom_policy file to the cgroup v1 fs, that's 
-it.  No other support is needed.  If that's allowed upstream, great; if 
-not, it's a very simple patch to carry for a distribution.
+> +	task_unlock(parent);
+> +	if (ccontainerid != pcontainerid)
+> +		return -EPERM;
+> +	return 0;
+> +}
+> +
+> +static void audit_log_set_containerid(struct task_struct *task, u64 oldcontainerid,
+> +				      u64 containerid, int rc)
+> +{
+> +	struct audit_buffer *ab;
+> +	uid_t uid;
+> +	struct tty_struct *tty;
+> +
+> +	if (!audit_enabled)
+> +		return;
+> +
+> +	ab = audit_log_start(NULL, GFP_KERNEL, AUDIT_CONTAINER);
+> +	if (!ab)
+> +		return;
+> +
+> +	uid = from_kuid(&init_user_ns, task_uid(current));
+> +	tty = audit_get_tty(current);
+> +
+> +	audit_log_format(ab, "op=set pid=%d uid=%u", task_tgid_nr(current), uid);
+> +	audit_log_task_context(ab);
+> +	audit_log_format(ab, " auid=%u tty=%s ses=%u opid=%d old-contid=%llu contid=%llu res=%d",
+> +			 from_kuid(&init_user_ns, audit_get_loginuid(current)),
+> +			 tty ? tty_name(tty) : "(none)", audit_get_sessionid(current),
+> +			 task_tgid_nr(task), oldcontainerid, containerid, !rc);
+> +
+> +	audit_put_tty(tty);
+> +	audit_log_end(ab);
+> +}
+> +
+> +/**
+> + * audit_set_containerid - set current task's audit_context containerid
+> + * @containerid: containerid value
+> + *
+> + * Returns 0 on success, -EPERM on permission failure.
+> + *
+> + * Called (set) from fs/proc/base.c::proc_containerid_write().
+> + */
+> +int audit_set_containerid(struct task_struct *task, u64 containerid)
+> +{
+> +	u64 oldcontainerid;
+> +	int rc;
+> +
+> +	oldcontainerid = audit_get_containerid(task);
+> +
+> +	rc = audit_set_containerid_perm(task, containerid);
+> +	if (!rc) {
+> +		task_lock(task);
+> +		task->containerid = containerid;
+> +		task_unlock(task);
+> +	}
+> +
+> +	audit_log_set_containerid(task, oldcontainerid, containerid, rc);
+> +	return rc;
+> +}
+> +
+>   /**
+>    * __audit_mq_open - record audit data for a POSIX MQ open
+>    * @oflag: open flag
