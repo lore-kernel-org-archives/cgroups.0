@@ -1,79 +1,81 @@
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Subject: [PATCH 2/6] mm/vmscan: Update stale comments
-Date: Thu, 15 Mar 2018 19:45:49 +0300
-Message-ID: <20180315164553.17856-2-aryabinin@virtuozzo.com>
-References: <20180315164553.17856-1-aryabinin@virtuozzo.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [patch -mm] mm, memcg: evaluate root and leaf memcgs fairly on
+ oom
+Date: Thu, 15 Mar 2018 16:46:53 +0000
+Message-ID: <20180315164646.GA1853@castle.DHCP.thefacebook.com>
+References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803131720470.247949@chino.kir.corp.google.com>
+ <20180314121700.GA20850@castle.DHCP.thefacebook.com>
+ <alpine.DEB.2.20.1803141337110.163553@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=3+4DRAmVo4qqs/oSZ0tIQNzD/H1SHCUYvVjpp1IMPb4=;
- b=bOGxdbGttORVuAQxtm3o63aF5W8ENsowx3HmRumqkMJdVMPO0I/I5BGU6uL1eiTjX54y6mO5cXLWrCKdLc0jevP+5q1+b3WHgwl85BoYAOgCCkclyw3+0WDR9azGo3bbCLheqT5lC4AiuXwz+nYjj8Te1Ii37m+kB4uQSTYe59c=
-In-Reply-To: <20180315164553.17856-1-aryabinin@virtuozzo.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=wvP9lfp78CUgumF8vTx98Fl/jpODnmPt02mkKGtQolA=;
+ b=NZX+NqMuaCMxeVWNW4J2rSWZiQlBmc1WcCs9fMlUrnS2zhhdAv+OoDmis44S06icKSdY
+ cKtezXUCsijNd6a0S2zC2zQSlhlxUSbnf7U8oQ3XTLZnCP0mVhAcgRKizi5HYHfPqk2q
+ jy2z7QvOowx5ih87PFznjRtNFa1ivplQlWc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=wvP9lfp78CUgumF8vTx98Fl/jpODnmPt02mkKGtQolA=;
+ b=SMbP9viwW4/YYu147aaEg3670eLQDLhJ2VcAzt7/5nLAIZbZ7wmaMAO6ZW4sG3kZMRNF3xAIJzIRS+uXe74cTWefyJJe91O7JWuwG9aWXfdXdrFB0CFyRs9un7pqXX3IAjNGvziUhoq5tj79Pbkdmfg0hlJGa8CBVkKwaMvEV4w=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.20.1803141337110.163553@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Update some comments that become stale since transiton from per-zone
-to per-node reclaim.
+On Wed, Mar 14, 2018 at 01:41:03PM -0700, David Rientjes wrote:
+> On Wed, 14 Mar 2018, Roman Gushchin wrote:
+> 
+> > > @@ -2618,92 +2620,65 @@ static long memcg_oom_badness(struct mem_cgroup *memcg,
+> > >  		if (nodemask && !node_isset(nid, *nodemask))
+> > >  			continue;
+> > >  
+> > > -		points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> > > -				LRU_ALL_ANON | BIT(LRU_UNEVICTABLE));
+> > > -
+> > >  		pgdat = NODE_DATA(nid);
+> > > -		points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
+> > > -					    NR_SLAB_UNRECLAIMABLE);
+> > > +		if (is_root_memcg) {
+> > > +			points += node_page_state(pgdat, NR_ACTIVE_ANON) +
+> > > +				  node_page_state(pgdat, NR_INACTIVE_ANON);
+> > > +			points += node_page_state(pgdat, NR_SLAB_UNRECLAIMABLE);
+> > > +		} else {
+> > > +			points += mem_cgroup_node_nr_lru_pages(memcg, nid,
+> > > +							       LRU_ALL_ANON);
+> > > +			points += lruvec_page_state(mem_cgroup_lruvec(pgdat, memcg),
+> > > +						    NR_SLAB_UNRECLAIMABLE);
+> > > +		}
+> > >  	}
+> > >  
+> > > -	points += memcg_page_state(memcg, MEMCG_KERNEL_STACK_KB) /
+> > > -		(PAGE_SIZE / 1024);
+> > > -	points += memcg_page_state(memcg, MEMCG_SOCK);
+> > > -	points += memcg_page_state(memcg, MEMCG_SWAP);
+> > > -
+> > > +	if (is_root_memcg) {
+> > > +		points += global_zone_page_state(NR_KERNEL_STACK_KB) /
+> > > +				(PAGE_SIZE / 1024);
+> > > +		points += atomic_long_read(&total_sock_pages);
+> >                                             ^^^^^^^^^^^^^^^^
+> > BTW, where do we change this counter?
+> > 
+> 
+> Seems like it was dropped from the patch somehow.  It is intended to do 
+> atomic_long_add(nr_pages) in mem_cgroup_charge_skmem() and 
+> atomic_long_add(-nr_pages) mem_cgroup_uncharge_skmem().
+> 
+> > I also doubt that global atomic variable can work here,
+> > we probably need something better scaling.
+> > 
+> 
+> Why do you think an atomic_long_add() is too expensive when we're already 
+> disabling irqs and dong try_charge()?
 
-Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
----
- mm/vmscan.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 4390a8d5be41..6d74b12099bd 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -926,7 +926,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 			(PageSwapCache(page) && (sc->gfp_mask & __GFP_IO));
- 
- 		/*
--		 * The number of dirty pages determines if a zone is marked
-+		 * The number of dirty pages determines if a node is marked
- 		 * reclaim_congested which affects wait_iff_congested. kswapd
- 		 * will stall and start writing pages if the tail of the LRU
- 		 * is all dirty unqueued pages.
-@@ -1764,7 +1764,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	 * as there is no guarantee the dirtying process is throttled in the
- 	 * same way balance_dirty_pages() manages.
- 	 *
--	 * Once a zone is flagged ZONE_WRITEBACK, kswapd will count the number
-+	 * Once a node is flagged PGDAT_WRITEBACK, kswapd will count the number
- 	 * of pages under pages flagged for immediate reclaim and stall if any
- 	 * are encountered in the nr_immediate check below.
- 	 */
-@@ -1791,7 +1791,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	 */
- 	if (sane_reclaim(sc)) {
- 		/*
--		 * Tag a zone as congested if all the dirty pages scanned were
-+		 * Tag a node as congested if all the dirty pages scanned were
- 		 * backed by a congested BDI and wait_iff_congested will stall.
- 		 */
- 		if (stat.nr_dirty && stat.nr_dirty == stat.nr_congested)
-@@ -1812,7 +1812,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	}
- 
- 	/*
--	 * Stall direct reclaim for IO completions if underlying BDIs or zone
-+	 * Stall direct reclaim for IO completions if underlying BDIs and node
- 	 * is congested. Allow kswapd to continue until it starts encountering
- 	 * unqueued dirty pages or cycling through the LRU too quickly.
- 	 */
-@@ -3808,7 +3808,7 @@ static int __node_reclaim(struct pglist_data *pgdat, gfp_t gfp_mask, unsigned in
- 
- 	if (node_pagecache_reclaimable(pgdat) > pgdat->min_unmapped_pages) {
- 		/*
--		 * Free memory by calling shrink zone with increasing
-+		 * Free memory by calling shrink node with increasing
- 		 * priorities until we have enough memory freed.
- 		 */
- 		do {
--- 
-2.16.1
-
+Hard to say without having full code :)
+try_charge() is batched, if you'll batch it too, it will probably work.
