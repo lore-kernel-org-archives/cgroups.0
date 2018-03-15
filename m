@@ -1,94 +1,104 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [patch -mm v3 1/3] mm, memcg: introduce per-memcg oom policy
- tunable
-Date: Thu, 15 Mar 2018 17:10:41 +0000
-Message-ID: <20180315171039.GB1853@castle.DHCP.thefacebook.com>
-References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
- <alpine.DEB.2.20.1803121757080.192200@chino.kir.corp.google.com>
- <20180314123851.GB20850@castle.DHCP.thefacebook.com>
- <alpine.DEB.2.20.1803141341180.163553@chino.kir.corp.google.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v3 1/2] mm: memcg: remote memcg charging for kmem
+ allocations
+Date: Thu, 15 Mar 2018 18:49:41 +0100
+Message-ID: <20180315174941.GN23100@dhcp22.suse.cz>
+References: <20180221223757.127213-1-shakeelb@google.com>
+ <20180221223757.127213-2-shakeelb@google.com>
+ <20180313134902.GW12772@dhcp22.suse.cz>
+ <CALvZod5XFKLfQiHN1g3KWJ-DEJPt8gX6QJD=x22x_eyDN88RYg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=TuYyzSs4QI7LDJ4b+yc7ZikBkG8ry3Wq6XbQHnZ/eW0=;
- b=fQlg87fSxbd41xZnALIpYiOxF7h0uccj34WgTC/DmyZQGwsmSRMUgM3n+InZIK0Mo+N4
- 4tJpy+7NR6xzbvXAijzIk886gpzI5HGIxxeQ7VpPxhW7TFAQrgPpJjiHBq7U9ZspWkzz
- Fz70Y3+a3F15cx+3svayuUfmiPO2I9UgU8M= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=TuYyzSs4QI7LDJ4b+yc7ZikBkG8ry3Wq6XbQHnZ/eW0=;
- b=a+yL8Teswijd89ZfMXUAuco8exdyTBqBjCmGAAmYeCPwyRqSj1XSVtPu8d0b9e6O3XrH+1J9Kr6LlARUDNoNQ09F8k932HUaK/orkYAeKlFc9VO3HKqFZAda3vJ+kZW9zrbHa8eZs99Mu3KVk/JgEyd5AekPbl5f7SqORjvSrkQ=
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1803141341180.163553@chino.kir.corp.google.com>
+In-Reply-To: <CALvZod5XFKLfQiHN1g3KWJ-DEJPt8gX6QJD=x22x_eyDN88RYg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hello, David!
-
-On Wed, Mar 14, 2018 at 01:58:59PM -0700, David Rientjes wrote:
-> On Wed, 14 Mar 2018, Roman Gushchin wrote:
->  - Does not lock the entire system into a single methodology.  Users
->    working in a subtree can default to what they are used to: per-process
->    oom selection even though their subtree might be targeted by a system
->    policy level decision at the root.  This allow them flexibility to
->    organize their subtree intuitively for use with other controllers in a
->    single hierarchy.
+On Tue 13-03-18 10:55:18, Shakeel Butt wrote:
+> On Tue, Mar 13, 2018 at 6:49 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> > On Wed 21-02-18 14:37:56, Shakeel Butt wrote:
+> > [...]
+> >> +#ifdef CONFIG_MEMCG
+> >> +static inline struct mem_cgroup *memalloc_memcg_save(struct mem_cgroup *memcg)
+> >> +{
+> >> +     struct mem_cgroup *old_memcg = current->target_memcg;
+> >> +     current->target_memcg = memcg;
+> >> +     return old_memcg;
+> >> +}
+> >
+> > So you are relying that the caller will handle the reference counting
+> > properly? I do not think this is a good idea.
 > 
->    The real-world example is a user who currently organizes their subtree
->    for this purpose and has defined oom_score_adj appropriately and now
->    regresses if the admin mounts with the needless "groupoom" option.
+> For the fsnotify use-case, this assumption makes sense as fsnotify has
+> an abstraction of fsnotify_group which is created by the
+> person/process interested in the events and thus can be used to hold
+> the reference to the person/process's memcg.
 
-I find this extremely confusing.
+OK, but there is not any direct connection between fsnotify_group and
+task_struct lifetimes, is it? This makes the API suspectible to
+use-after-free bugs.
 
-The problem is that OOM policy defines independently how the OOM
-of the corresponding scope is handled, not like how it prefers
-to handle OOMs from above.
+> Another use-case I have
+> in mind is the filesystem mount. Basically attaching a mount with a
+> memcg and thus all user pages and kmem allocations (inodes, dentries)
+> for that mount will be charged to the attached memcg.
 
-As I've said, if you're inside a container, you can have OOMs
-of different types, depending on settings, which you don't even know about.
-Sometimes oom_score_adj works, sometimes not.
-Sometimes all processes are killed, sometimes not.
-IMO, this adds nothing but mess.
+So you charge page cache to the origin task but metadata to a different
+memcg?
 
-The mount option (which I'm not a big fan of too) was added only
-to provide a 100% backward compatibility, what was forced by Michal.
-But I doubt that mixing per-process and per-cgroup approach
-makes any sense.
-
+> In this use-case
+> the super_block is the perfect structure to hold the reference to the
+> memcg.
 > 
->  - Allows changing the oom policy at runtime without remounting the entire
->    cgroup fs.  Depending on how cgroups are going to be used, per-process 
->    vs cgroup-aware may be mandated separately.  This is a trait only of
->    the mem cgroup controller, the root level oom policy is no different
->    from the subtree and depends directly on how the subtree is organized.
->    If other controllers are already being used, requiring a remount to
->    change the system-wide oom policy is an unnecessary burden.
+> If in future we find a use-case where this assumption does not make
+> sense we can evolve the API and since this is kernel internal API, it
+> should not be hard to evolve.
 > 
->    The real-world example is systems software that either supports user
->    subtrees or strictly subtrees that it maintains itself.  While other
->    controllers are used, the mem cgroup oom policy can be changed at
->    runtime rather than requiring a remount and reorganizing other
->    controllers exactly as before.
-
-Btw, what the problem with remounting? You don't have to re-create cgroups,
-or something like this; the operation is as trivial as adding a flag.
-
+> > Also do we need some kind
+> > of debugging facility to detect unbalanced save/restore scopes?
+> >
 > 
->  - Can be extended to cgroup v1 if necessary.  There is no need for a
->    new cgroup v1 mount option and mem cgroup oom selection is not
->    dependant on any functionality provided by cgroup v2.  The policies
->    introduced here work exactly the same if used with cgroup v1.
+> I am not sure, I didn't find other similar patterns (like PF_MEMALLOC)
+> having debugging facility.
+
+Maybe we need something more generic here.
+
+> Maybe we can add such debugging facility
+> when we find more users other than kmalloc & kmem_cache_alloc. Vmalloc
+> may be one but I could not think of a use-case for vmalloc for remote
+> charging, so, no need to add more code at this time.
 > 
->    The real-world example is a cgroup configuration that hasn't had
->    the ability to move to cgroup v2 yet and still would like to use
->    cgroup-aware oom selection with a very trivial change to add the
->    memory.oom_policy file to the cgroup v1 filesystem.
+> > [...]
+> >> @@ -2260,7 +2269,10 @@ struct kmem_cache *memcg_kmem_get_cache(struct kmem_cache *cachep)
+> >>       if (current->memcg_kmem_skip_account)
+> >>               return cachep;
+> >>
+> >> -     memcg = get_mem_cgroup_from_mm(current->mm);
+> >> +     if (current->target_memcg)
+> >> +             memcg = get_mem_cgroup(current->target_memcg);
+> >> +     if (!memcg)
+> >> +             memcg = get_mem_cgroup_from_mm(current->mm);
+> >>       kmemcg_id = READ_ONCE(memcg->kmemcg_id);
+> >>       if (kmemcg_id < 0)
+> >>               goto out;
+> >
+> > You are also adding one branch for _each_ charge path even though the
+> > usecase is rather limited.
+> >
+> 
+> I understand the concern but the charging path, IMO, is much complex
+> than just one or couple of additional branches. I can run a simple
+> microbenchmark to see if there is anything noticeable here.
 
-I assume that v1 interface is frozen.
-
-Thanks!
+Charging path is still a _hot path_. Especially when the kmem accounting
+is enabled by default. You cannot simply downplay the overhead. We have
+_one_ user but all users should pay the price. This is simply hard to
+justify. Maybe we can thing of something that would put the burden on
+the charging context?
+-- 
+Michal Hocko
+SUSE Labs
