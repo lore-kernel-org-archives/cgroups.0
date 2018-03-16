@@ -1,233 +1,181 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v5 1/2] cpuset: Enable cpuset controller in default hierarchy
-Date: Thu, 15 Mar 2018 17:20:41 -0400
-Message-ID: <1521148842-15486-2-git-send-email-longman@redhat.com>
-References: <1521148842-15486-1-git-send-email-longman@redhat.com>
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: Re: [RFC PATCH V1 01/12] audit: add container id
+Date: Thu, 15 Mar 2018 23:58:37 -0400
+Message-ID: <20180316035837.ddnqvbyrbp3fdk7e@madcap2.tricolour.ca>
+References: <cover.1519930146.git.rgb@redhat.com>
+ <2e5d93ee46feca915a101c2fc3062da674a98223.1519930146.git.rgb@redhat.com>
+ <216d1ab1-531b-9185-2e31-34f162f08aad@linux.vnet.ibm.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1521148842-15486-1-git-send-email-longman@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <216d1ab1-531b-9185-2e31-34f162f08aad@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Waiman Long <longman@redhat.com>
+To: Stefan Berger <stefanb@linux.vnet.ibm.com>
+Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, Linux-Audit Mailing List <linux-audit@redhat.com>, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, mszeredi@redhat.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, viro@zeniv.linux.org.uk, dhowells@redhat.com, simo@redhat.com, trondmy@primarydata.com, eparis@parisplace.org, serge@hallyn.com, ebiederm@xmission.com, madzcar@gmail.com
 
-Given the fact that thread mode had been merged into 4.14, it is now
-time to enable cpuset to be used in the default hierarchy (cgroup v2)
-as it is clearly threaded.
+On 2018-03-15 16:27, Stefan Berger wrote:
+> On 03/01/2018 02:41 PM, Richard Guy Briggs wrote:
+> > Implement the proc fs write to set the audit container ID of a process,
+> > emitting an AUDIT_CONTAINER record to document the event.
+> > 
+> > This is a write from the container orchestrator task to a proc entry of
+> > the form /proc/PID/containerid where PID is the process ID of the newly
+> > created task that is to become the first task in a container, or an
+> > additional task added to a container.
+> > 
+> > The write expects up to a u64 value (unset: 18446744073709551615).
+> > 
+> > This will produce a record such as this:
+> > type=UNKNOWN[1333] msg=audit(1519903238.968:261): op=set pid=596 uid=0 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 auid=0 tty=pts0 ses=1 opid=596 old-contid=18446744073709551615 contid=123455 res=0
+> > 
+> > The "op" field indicates an initial set.  The "pid" to "ses" fields are
+> > the orchestrator while the "opid" field is the object's PID, the process
+> > being "contained".  Old and new container ID values are given in the
+> > "contid" fields, while res indicates its success.
+> > 
+> > It is not permitted to self-set, unset or re-set the container ID.  A
+> > child inherits its parent's container ID, but then can be set only once
+> > after.
+> > 
+> > See: https://github.com/linux-audit/audit-kernel/issues/32
+> > 
+> > 
+> >   /* audit_rule_data supports filter rules with both integer and string
+> >    * fields.  It corresponds with AUDIT_ADD_RULE, AUDIT_DEL_RULE and
+> > diff --git a/kernel/auditsc.c b/kernel/auditsc.c
+> > index 4e0a4ac..0ee1e59 100644
+> > --- a/kernel/auditsc.c
+> > +++ b/kernel/auditsc.c
+> > @@ -2073,6 +2073,92 @@ int audit_set_loginuid(kuid_t loginuid)
+> >   	return rc;
+> >   }
+> > 
+> > +static int audit_set_containerid_perm(struct task_struct *task, u64 containerid)
+> > +{
+> > +	struct task_struct *parent;
+> > +	u64 pcontainerid, ccontainerid;
+> > +	pid_t ppid;
+> > +
+> > +	/* Don't allow to set our own containerid */
+> > +	if (current == task)
+> > +		return -EPERM;
+> > +	/* Don't allow the containerid to be unset */
+> > +	if (!cid_valid(containerid))
+> > +		return -EINVAL;
+> > +	/* if we don't have caps, reject */
+> > +	if (!capable(CAP_AUDIT_CONTROL))
+> > +		return -EPERM;
+> > +	/* if containerid is unset, allow */
+> > +	if (!audit_containerid_set(task))
+> > +		return 0;
+> 
+> I am wondering whether there should be a check for the target process that
+> will receive the containerid to not have CAP_SYS_ADMIN that would otherwise
+> allow it to arbitrarily unshare()/clone() and leave the set of namespaces
+> that may make up the container whose containerid we assign here?
 
-The cpuset controller had experienced feature creep since its
-introduction more than a decade ago. Besides the core cpus and mems
-control files to limit cpus and memory nodes, there are a bunch of
-additional features that can be controlled from the userspace. Some of
-the features are of doubtful usefulness and may not be actively used.
+This is a reasonable question.  This has been debated and I understood
+the conclusion was that without a clear definition of a "container", the
+task still remains in that container that just now has more
+sub-namespaces (in the case of hierarchical namespaces), we don't want
+to restrict it in such a way and that allows it to create nested
+containers.  I see setns being more problematic if it could switch to
+another existing namespace that was set up by the orchestrator for a
+different container.  The coming v2 patchset acknowledges this situation
+with the network namespace being potentially shared by multiple
+containers.
 
-This patch enables cpuset controller in the default hierarchy with
-a minimal set of features, namely just the cpus and mems and their
-effective_* counterparts.  We can certainly add more features to the
-default hierarchy in the future if there is a real user need for them
-later on.
+This is the motivation for the code below that allows to set the
+containerid even if it is already inherited from its parent.
 
-Alternatively, with the unified hiearachy, it may make more sense
-to move some of those additional cpuset features, if desired, to
-memory controller or may be to the cpu controller instead of staying
-with cpuset.
+> > +	/* it is already set, and not inherited from the parent, reject */
+> > +	ccontainerid = audit_get_containerid(task);
+> > +	rcu_read_lock();
+> > +	parent = rcu_dereference(task->real_parent);
+> > +	rcu_read_unlock();
+> > +	task_lock(parent);
+> > +	pcontainerid = audit_get_containerid(parent);
+> > +	ppid = task_tgid_nr(parent);
+>
+> ppid not needed...
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- Documentation/cgroup-v2.txt | 96 ++++++++++++++++++++++++++++++++++++++++-----
- kernel/cgroup/cpuset.c      | 44 +++++++++++++++++++--
- 2 files changed, 127 insertions(+), 13 deletions(-)
+Thanks for catching this.  It was the vestige of a failed devel
+experiment that didn't flush that useless appendage.  :-)
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 74cdeae..b91fd5d 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -48,16 +48,18 @@ v1 is available under Documentation/cgroup-v1/.
-        5-2-1. Memory Interface Files
-        5-2-2. Usage Guidelines
-        5-2-3. Memory Ownership
--     5-3. IO
--       5-3-1. IO Interface Files
--       5-3-2. Writeback
--     5-4. PID
--       5-4-1. PID Interface Files
--     5-5. Device
--     5-6. RDMA
--       5-6-1. RDMA Interface Files
--     5-7. Misc
--       5-7-1. perf_event
-+     5-3. Cpuset
-+       5.3-1. Cpuset Interface Files
-+     5-4. IO
-+       5-4-1. IO Interface Files
-+       5-4-2. Writeback
-+     5-5. PID
-+       5-5-1. PID Interface Files
-+     5-6. Device
-+     5-7. RDMA
-+       5-7-1. RDMA Interface Files
-+     5-8. Misc
-+       5-8-1. perf_event
-      5-N. Non-normative information
-        5-N-1. CPU controller root cgroup process behaviour
-        5-N-2. IO controller root cgroup process behaviour
-@@ -1243,6 +1245,80 @@ POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
- belonging to the affected files to ensure correct memory ownership.
- 
- 
-+Cpuset
-+------
-+
-+The "cpuset" controller provides a mechanism for constraining
-+the CPU and memory node placement of tasks to only the resources
-+specified in the cpuset interface files in a task's current cgroup.
-+This is especially valuable on large NUMA systems where placing jobs
-+on properly sized subsets of the systems with careful processor and
-+memory placement to reduce cross-node memory access and contention
-+can improve overall system performance.
-+
-+The "cpuset" controller is hierarchical.  That means the controller
-+cannot use CPUs or memory nodes not allowed in its parent.
-+
-+
-+Cpuset Interface Files
-+~~~~~~~~~~~~~~~~~~~~~~
-+
-+  cpuset.cpus
-+	A read-write multiple values file which exists on non-root
-+	cgroups.
-+
-+	It lists the CPUs allowed to be used by tasks within this
-+	cgroup.  The CPU numbers are comma-separated numbers or
-+	ranges.  For example:
-+
-+	  # cat cpuset.cpus
-+	  0-4,6,8-10
-+
-+	An empty value indicates that the cgroup is using the same
-+	setting as the nearest cgroup ancestor with a non-empty
-+	"cpuset.cpus" or all the available CPUs if none is found.
-+
-+	The value of "cpuset.cpus" stays constant until the next update
-+	and won't be affected by any CPU hotplug events.
-+
-+  cpuset.effective_cpus
-+	A read-only multiple values file which exists on non-root
-+	cgroups.
-+
-+	It lists the onlined CPUs that are actually allowed to be
-+	used by tasks within the current cgroup. It is a subset of
-+	"cpuset.cpus".  Its value will be affected by CPU hotplug
-+	events.
-+
-+  cpuset.mems
-+	A read-write multiple values file which exists on non-root
-+	cgroups.
-+
-+	It lists the memory nodes allowed to be used by tasks within
-+	this cgroup.  The memory node numbers are comma-separated
-+	numbers or ranges.  For example:
-+
-+	  # cat cpuset.mems
-+	  0-1,3
-+
-+	An empty value indicates that the cgroup is using the same
-+	setting as the nearest cgroup ancestor with a non-empty
-+	"cpuset.mems" or all the available memory nodes if none
-+	is found.
-+
-+	The value of "cpuset.mems" stays constant until the next update
-+	and won't be affected by any memory nodes hotplug events.
-+
-+  cpuset.effective_mems
-+	A read-only multiple values file which exists on non-root
-+	cgroups.
-+
-+	It lists the onlined memory nodes that are actually allowed
-+	to be used by tasks within the current cgroup.  It is a subset
-+	of "cpuset.mems".  Its value will be affected by memory nodes
-+	hotplug events.
-+
-+
- IO
- --
- 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index b42037e..7837d1f 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1823,12 +1823,11 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
- 	return 0;
- }
- 
--
- /*
-  * for the common functions, 'private' gives the type of file
-  */
- 
--static struct cftype files[] = {
-+static struct cftype legacy_files[] = {
- 	{
- 		.name = "cpus",
- 		.seq_show = cpuset_common_seq_show,
-@@ -1931,6 +1930,43 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
- };
- 
- /*
-+ * This is currently a minimal set for the default hierarchy. It can be
-+ * expanded later on by migrating more features and control files from v1.
-+ */
-+static struct cftype dfl_files[] = {
-+	{
-+		.name = "cpus",
-+		.seq_show = cpuset_common_seq_show,
-+		.write = cpuset_write_resmask,
-+		.max_write_len = (100U + 6 * NR_CPUS),
-+		.private = FILE_CPULIST,
-+	},
-+
-+	{
-+		.name = "mems",
-+		.seq_show = cpuset_common_seq_show,
-+		.write = cpuset_write_resmask,
-+		.max_write_len = (100U + 6 * MAX_NUMNODES),
-+		.private = FILE_MEMLIST,
-+	},
-+
-+	{
-+		.name = "effective_cpus",
-+		.seq_show = cpuset_common_seq_show,
-+		.private = FILE_EFFECTIVE_CPULIST,
-+	},
-+
-+	{
-+		.name = "effective_mems",
-+		.seq_show = cpuset_common_seq_show,
-+		.private = FILE_EFFECTIVE_MEMLIST,
-+	},
-+
-+	{ }	/* terminate */
-+};
-+
-+
-+/*
-  *	cpuset_css_alloc - allocate a cpuset css
-  *	cgrp:	control group that the new cpuset will be part of
-  */
-@@ -2104,8 +2140,10 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
- 	.post_attach	= cpuset_post_attach,
- 	.bind		= cpuset_bind,
- 	.fork		= cpuset_fork,
--	.legacy_cftypes	= files,
-+	.legacy_cftypes	= legacy_files,
-+	.dfl_cftypes	= dfl_files,
- 	.early_init	= true,
-+	.threaded	= true,
- };
- 
- /**
--- 
-1.8.3.1
+> > +	task_unlock(parent);
+> > +	if (ccontainerid != pcontainerid)
+> > +		return -EPERM;
+> > +	return 0;
+> > +}
+> > +
+> > +static void audit_log_set_containerid(struct task_struct *task, u64 oldcontainerid,
+> > +				      u64 containerid, int rc)
+> > +{
+> > +	struct audit_buffer *ab;
+> > +	uid_t uid;
+> > +	struct tty_struct *tty;
+> > +
+> > +	if (!audit_enabled)
+> > +		return;
+> > +
+> > +	ab = audit_log_start(NULL, GFP_KERNEL, AUDIT_CONTAINER);
+> > +	if (!ab)
+> > +		return;
+> > +
+> > +	uid = from_kuid(&init_user_ns, task_uid(current));
+> > +	tty = audit_get_tty(current);
+> > +
+> > +	audit_log_format(ab, "op=set pid=%d uid=%u", task_tgid_nr(current), uid);
+> > +	audit_log_task_context(ab);
+> > +	audit_log_format(ab, " auid=%u tty=%s ses=%u opid=%d old-contid=%llu contid=%llu res=%d",
+> > +			 from_kuid(&init_user_ns, audit_get_loginuid(current)),
+> > +			 tty ? tty_name(tty) : "(none)", audit_get_sessionid(current),
+> > +			 task_tgid_nr(task), oldcontainerid, containerid, !rc);
+> > +
+> > +	audit_put_tty(tty);
+> > +	audit_log_end(ab);
+> > +}
+> > +
+> > +/**
+> > + * audit_set_containerid - set current task's audit_context containerid
+> > + * @containerid: containerid value
+> > + *
+> > + * Returns 0 on success, -EPERM on permission failure.
+> > + *
+> > + * Called (set) from fs/proc/base.c::proc_containerid_write().
+> > + */
+> > +int audit_set_containerid(struct task_struct *task, u64 containerid)
+> > +{
+> > +	u64 oldcontainerid;
+> > +	int rc;
+> > +
+> > +	oldcontainerid = audit_get_containerid(task);
+> > +
+> > +	rc = audit_set_containerid_perm(task, containerid);
+> > +	if (!rc) {
+> > +		task_lock(task);
+> > +		task->containerid = containerid;
+> > +		task_unlock(task);
+> > +	}
+> > +
+> > +	audit_log_set_containerid(task, oldcontainerid, containerid, rc);
+> > +	return rc;
+> > +}
+> > +
+> >   /**
+> >    * __audit_mq_open - record audit data for a POSIX MQ open
+> >    * @oflag: open flag
+> 
+> 
 
+- RGB
+
+--
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
