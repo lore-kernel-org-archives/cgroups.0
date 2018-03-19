@@ -1,77 +1,75 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: =?utf-8?B?562U5aSNOiBbUEFUQ0g=?= =?utf-8?Q?=5D?=
- mm/memcontrol.c: speed up to force empty a memory cgroup
-Date: Mon, 19 Mar 2018 11:37:56 +0100
-Message-ID: <20180319103756.GV23100@dhcp22.suse.cz>
+From: "Li,Rongqing" <lirongqing@baidu.com>
+Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSF0gbW0vbWVtY29udHJvbC5jOiBzcGVl?=
+ =?utf-8?Q?d_up_to_force_empty_a_memory_cgroup?=
+Date: Mon, 19 Mar 2018 10:51:42 +0000
+Message-ID: <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
 References: <1521448170-19482-1-git-send-email-lirongqing@baidu.com>
  <20180319085355.GQ23100@dhcp22.suse.cz>
  <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com>
+ <20180319103756.GV23100@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com>
+In-Reply-To: <20180319103756.GV23100@dhcp22.suse.cz>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "Li,Rongqing" <lirongqing@baidu.com>
+To: Michal Hocko <mhocko@kernel.org>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On Mon 19-03-18 10:00:41, Li,Rongqing wrote:
-> 
-> 
-> > -----邮件原件-----
-> > 发件人: Michal Hocko [mailto:mhocko@kernel.org]
-> > 发送时间: 2018年3月19日 16:54
-> > 收件人: Li,Rongqing <lirongqing@baidu.com>
-> > 抄送: linux-kernel@vger.kernel.org; linux-mm@kvack.org;
-> > cgroups@vger.kernel.org; hannes@cmpxchg.org; Andrey Ryabinin
-> > <aryabinin@virtuozzo.com>
-> > 主题: Re: [PATCH] mm/memcontrol.c: speed up to force empty a memory
-> > cgroup
-> > 
-> > On Mon 19-03-18 16:29:30, Li RongQing wrote:
-> > > mem_cgroup_force_empty() tries to free only 32 (SWAP_CLUSTER_MAX)
-> > > pages on each iteration, if a memory cgroup has lots of page cache, it
-> > > will take many iterations to empty all page cache, so increase the
-> > > reclaimed number per iteration to speed it up. same as in
-> > > mem_cgroup_resize_limit()
-> > >
-> > > a simple test show:
-> > >
-> > >   $dd if=aaa  of=bbb  bs=1k count=3886080
-> > >   $rm -f bbb
-> > >   $time echo 100000000 >/cgroup/memory/test/memory.limit_in_bytes
-> > >
-> > > Before: 0m0.252s ===> after: 0m0.178s
-> > 
-> > Andrey was proposing something similar [1]. My main objection was that his
-> > approach might lead to over-reclaim. Your approach is more conservative
-> > because it just increases the batch size. The size is still rather arbitrary. Same
-> > as SWAP_CLUSTER_MAX but that one is a commonly used unit of reclaim in
-> > the MM code.
-> > 
-> > I would be really curious about more detailed explanation why having a
-> > larger batch yields to a better performance because we are doingg
-> > SWAP_CLUSTER_MAX batches at the lower reclaim level anyway.
-> > 
-> 
-> Although SWAP_CLUSTER_MAX is used at the lower level, but the call stack of 
-> try_to_free_mem_cgroup_pages is too long, increase the nr_to_reclaim can reduce
-> times of calling function[do_try_to_free_pages, shrink_zones, hrink_node ]
-> 
-> mem_cgroup_resize_limit
-> --->try_to_free_mem_cgroup_pages:  .nr_to_reclaim = max(1024,  SWAP_CLUSTER_MAX),
->    ---> do_try_to_free_pages 
->      ---> shrink_zones
->       --->shrink_node
->        ---> shrink_node_memcg
->          ---> shrink_list          <-------loop will happen in this place [times=1024/32]
->            ---> shrink_page_list
-
-Can you actually measure this to be the culprit. Because we should
-rethink our call path if it is too complicated/deep to perform well.
-Adding arbitrary batch sizes doesn't sound like a good way to go to me.
--- 
-Michal Hocko
-SUSE Labs
+DQoNCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IE1pY2hhbCBIb2NrbyBb
+bWFpbHRvOm1ob2Nrb0BrZXJuZWwub3JnXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQz5pyIMTnm
+l6UgMTg6MzgNCj4g5pS25Lu25Lq6OiBMaSxSb25ncWluZyA8bGlyb25ncWluZ0BiYWlkdS5jb20+
+DQo+IOaKhOmAgTogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtbW1Aa3ZhY2su
+b3JnOw0KPiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZzsgaGFubmVzQGNtcHhjaGcub3JnOyBBbmRy
+ZXkgUnlhYmluaW4NCj4gPGFyeWFiaW5pbkB2aXJ0dW96em8uY29tPg0KPiDkuLvpopg6IFJlOiDn
+rZTlpI06IFtQQVRDSF0gbW0vbWVtY29udHJvbC5jOiBzcGVlZCB1cCB0byBmb3JjZSBlbXB0eSBh
+DQo+IG1lbW9yeSBjZ3JvdXANCj4gDQo+IE9uIE1vbiAxOS0wMy0xOCAxMDowMDo0MSwgTGksUm9u
+Z3Fpbmcgd3JvdGU6DQo+ID4NCj4gPg0KPiA+ID4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiA+
+ID4g5Y+R5Lu25Lq6OiBNaWNoYWwgSG9ja28gW21haWx0bzptaG9ja29Aa2VybmVsLm9yZ10NCj4g
+PiA+IOWPkemAgeaXtumXtDogMjAxOOW5tDPmnIgxOeaXpSAxNjo1NA0KPiA+ID4g5pS25Lu25Lq6
+OiBMaSxSb25ncWluZyA8bGlyb25ncWluZ0BiYWlkdS5jb20+DQo+ID4gPiDmioTpgIE6IGxpbnV4
+LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LW1tQGt2YWNrLm9yZzsNCj4gPiA+IGNncm91
+cHNAdmdlci5rZXJuZWwub3JnOyBoYW5uZXNAY21weGNoZy5vcmc7IEFuZHJleSBSeWFiaW5pbg0K
+PiA+ID4gPGFyeWFiaW5pbkB2aXJ0dW96em8uY29tPg0KPiA+ID4g5Li76aKYOiBSZTogW1BBVENI
+XSBtbS9tZW1jb250cm9sLmM6IHNwZWVkIHVwIHRvIGZvcmNlIGVtcHR5IGENCj4gbWVtb3J5DQo+
+ID4gPiBjZ3JvdXANCj4gPiA+DQo+ID4gPiBPbiBNb24gMTktMDMtMTggMTY6Mjk6MzAsIExpIFJv
+bmdRaW5nIHdyb3RlOg0KPiA+ID4gPiBtZW1fY2dyb3VwX2ZvcmNlX2VtcHR5KCkgdHJpZXMgdG8g
+ZnJlZSBvbmx5IDMyDQo+IChTV0FQX0NMVVNURVJfTUFYKQ0KPiA+ID4gPiBwYWdlcyBvbiBlYWNo
+IGl0ZXJhdGlvbiwgaWYgYSBtZW1vcnkgY2dyb3VwIGhhcyBsb3RzIG9mIHBhZ2UNCj4gPiA+ID4g
+Y2FjaGUsIGl0IHdpbGwgdGFrZSBtYW55IGl0ZXJhdGlvbnMgdG8gZW1wdHkgYWxsIHBhZ2UgY2Fj
+aGUsIHNvDQo+ID4gPiA+IGluY3JlYXNlIHRoZSByZWNsYWltZWQgbnVtYmVyIHBlciBpdGVyYXRp
+b24gdG8gc3BlZWQgaXQgdXAuIHNhbWUNCj4gPiA+ID4gYXMgaW4NCj4gPiA+ID4gbWVtX2Nncm91
+cF9yZXNpemVfbGltaXQoKQ0KPiA+ID4gPg0KPiA+ID4gPiBhIHNpbXBsZSB0ZXN0IHNob3c6DQo+
+ID4gPiA+DQo+ID4gPiA+ICAgJGRkIGlmPWFhYSAgb2Y9YmJiICBicz0xayBjb3VudD0zODg2MDgw
+DQo+ID4gPiA+ICAgJHJtIC1mIGJiYg0KPiA+ID4gPiAgICR0aW1lIGVjaG8NCj4gMTAwMDAwMDAw
+ID4vY2dyb3VwL21lbW9yeS90ZXN0L21lbW9yeS5saW1pdF9pbl9ieXRlcw0KPiA+ID4gPg0KPiA+
+ID4gPiBCZWZvcmU6IDBtMC4yNTJzID09PT4gYWZ0ZXI6IDBtMC4xNzhzDQo+ID4gPg0KPiA+ID4g
+QW5kcmV5IHdhcyBwcm9wb3Npbmcgc29tZXRoaW5nIHNpbWlsYXIgWzFdLiBNeSBtYWluIG9iamVj
+dGlvbiB3YXMNCj4gPiA+IHRoYXQgaGlzIGFwcHJvYWNoIG1pZ2h0IGxlYWQgdG8gb3Zlci1yZWNs
+YWltLiBZb3VyIGFwcHJvYWNoIGlzIG1vcmUNCj4gPiA+IGNvbnNlcnZhdGl2ZSBiZWNhdXNlIGl0
+IGp1c3QgaW5jcmVhc2VzIHRoZSBiYXRjaCBzaXplLiBUaGUgc2l6ZSBpcw0KPiA+ID4gc3RpbGwg
+cmF0aGVyIGFyYml0cmFyeS4gU2FtZSBhcyBTV0FQX0NMVVNURVJfTUFYIGJ1dCB0aGF0IG9uZSBp
+cyBhDQo+ID4gPiBjb21tb25seSB1c2VkIHVuaXQgb2YgcmVjbGFpbSBpbiB0aGUgTU0gY29kZS4N
+Cj4gPiA+DQo+ID4gPiBJIHdvdWxkIGJlIHJlYWxseSBjdXJpb3VzIGFib3V0IG1vcmUgZGV0YWls
+ZWQgZXhwbGFuYXRpb24gd2h5IGhhdmluZw0KPiA+ID4gYSBsYXJnZXIgYmF0Y2ggeWllbGRzIHRv
+IGEgYmV0dGVyIHBlcmZvcm1hbmNlIGJlY2F1c2Ugd2UgYXJlIGRvaW5nZw0KPiA+ID4gU1dBUF9D
+TFVTVEVSX01BWCBiYXRjaGVzIGF0IHRoZSBsb3dlciByZWNsYWltIGxldmVsIGFueXdheS4NCj4g
+PiA+DQo+ID4NCj4gPiBBbHRob3VnaCBTV0FQX0NMVVNURVJfTUFYIGlzIHVzZWQgYXQgdGhlIGxv
+d2VyIGxldmVsLCBidXQgdGhlIGNhbGwNCj4gPiBzdGFjayBvZiB0cnlfdG9fZnJlZV9tZW1fY2dy
+b3VwX3BhZ2VzIGlzIHRvbyBsb25nLCBpbmNyZWFzZSB0aGUNCj4gPiBucl90b19yZWNsYWltIGNh
+biByZWR1Y2UgdGltZXMgb2YgY2FsbGluZw0KPiA+IGZ1bmN0aW9uW2RvX3RyeV90b19mcmVlX3Bh
+Z2VzLCBzaHJpbmtfem9uZXMsIGhyaW5rX25vZGUgXQ0KPiA+DQo+ID4gbWVtX2Nncm91cF9yZXNp
+emVfbGltaXQNCj4gPiAtLS0+dHJ5X3RvX2ZyZWVfbWVtX2Nncm91cF9wYWdlczogIC5ucl90b19y
+ZWNsYWltID0gbWF4KDEwMjQsDQo+ID4gLS0tPlNXQVBfQ0xVU1RFUl9NQVgpLA0KPiA+ICAgIC0t
+LT4gZG9fdHJ5X3RvX2ZyZWVfcGFnZXMNCj4gPiAgICAgIC0tLT4gc2hyaW5rX3pvbmVzDQo+ID4g
+ICAgICAgLS0tPnNocmlua19ub2RlDQo+ID4gICAgICAgIC0tLT4gc2hyaW5rX25vZGVfbWVtY2cN
+Cj4gPiAgICAgICAgICAtLS0+IHNocmlua19saXN0ICAgICAgICAgIDwtLS0tLS0tbG9vcCB3aWxs
+IGhhcHBlbiBpbiB0aGlzIHBsYWNlDQo+IFt0aW1lcz0xMDI0LzMyXQ0KPiA+ICAgICAgICAgICAg
+LS0tPiBzaHJpbmtfcGFnZV9saXN0DQo+IA0KPiBDYW4geW91IGFjdHVhbGx5IG1lYXN1cmUgdGhp
+cyB0byBiZSB0aGUgY3VscHJpdC4gQmVjYXVzZSB3ZSBzaG91bGQgcmV0aGluaw0KPiBvdXIgY2Fs
+bCBwYXRoIGlmIGl0IGlzIHRvbyBjb21wbGljYXRlZC9kZWVwIHRvIHBlcmZvcm0gd2VsbC4NCj4g
+QWRkaW5nIGFyYml0cmFyeSBiYXRjaCBzaXplcyBkb2Vzbid0IHNvdW5kIGxpa2UgYSBnb29kIHdh
+eSB0byBnbyB0byBtZS4NCg0KT2ssIEkgd2lsbCB0cnkNCg0KLVJvbmdRaW5nDQo+IC0tDQo+IE1p
+Y2hhbCBIb2Nrbw0KPiBTVVNFIExhYnMNCg==
