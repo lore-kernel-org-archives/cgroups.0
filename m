@@ -1,48 +1,81 @@
-From: Mike Galbraith <efault@gmx.de>
-Subject: Re: [PATCH v4] cpuset: Enable cpuset controller in default hierarchy
-Date: Mon, 19 Mar 2018 21:49:10 +0100
-Message-ID: <1521492550.16869.1.camel@gmx.de>
-References: <1c3fe7b0-2600-c46d-1527-d3aaf024bb91@redhat.com>
-         <1520619426.27998.18.camel@gmx.de>
-         <55809fe4-98ba-5566-86ed-457acfef0e1c@redhat.com>
-         <1520624424.27998.76.camel@gmx.de>
-         <53de9683-01b7-bac4-8b70-dc1f93ede600@redhat.com>
-         <20180309221736.GB5926@hirez.programming.kicks-ass.net>
-         <f0fca497-e4e7-3dbd-1e5c-a7f502c05dcb@redhat.com>
-         <1520653648.12749.20.camel@gmx.de>
-         <20180314195711.GD2943022@devbig577.frc2.facebook.com>
-         <1521082141.7100.1.camel@gmx.de>
-         <20180319153413.GO2943022@devbig577.frc2.facebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 1/2] cpuset: Enable cpuset controller in default
+ hierarchy
+Date: Mon, 19 Mar 2018 08:59:37 -0700
+Message-ID: <20180319155937.GQ2943022@devbig577.frc2.facebook.com>
+References: <1521148842-15486-1-git-send-email-longman@redhat.com>
+ <1521148842-15486-2-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180319153413.GO2943022@devbig577.frc2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=AriMpbPmhFykEuV9cKv6WH/lAYzTqQXMm/EzcTM+nb0=;
+        b=bLQsGZWN+/V6Z5tEBi9Hm9KrE6r/H14bP2eOIOGL6FvBIX5wpnDA62ntZhOQAqJanZ
+         EPnWTeZYVwZNWaDNGUr6kYffX870XYKTnlQK4q/orgOv+zuJiDrBX+osiWiHyGhcqywU
+         QSt8XPKJNfe8DyKRS5gugovF/s45T09QnzhxBt1fkOQWGCwz8tbmvC+c8JBlAc6oXhaM
+         zCItuMqLsK6IeXlDSJdYolrJm9dBrvv8LPRFwhvhZxpyiF9uUhrnWDGa2LKUqqfOB0zC
+         GZDJ+EYFVhkvlT1YzyxgYhDnmlCAQKuuCyOuKvhmyPkC/09wQnT/oHM07oWUDZw23fzN
+         HiMg==
+Content-Disposition: inline
+In-Reply-To: <1521148842-15486-2-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Waiman Long <longman@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-On Mon, 2018-03-19 at 08:34 -0700, Tejun Heo wrote:
-> Hello, Mike.
-> 
-> On Thu, Mar 15, 2018 at 03:49:01AM +0100, Mike Galbraith wrote:
-> > Under the hood v2 details are entirely up to you.  My input ends at
-> > please don't leave dynamic partitioning standing at the dock when v2
-> > sails.
-> 
-> So, this isn't about implementation details but about what the
-> interface achieves - ie, what's the actual function?  The only thing I
-> can see is blocking the entity which is configuring the hierarchy from
-> making certain configs.  While that might be useful in some specific
-> use cases, it seems to miss the bar for becoming its own kernel
-> feature.  After all, nothing prevents the same entity from clearing
-> the exlusive bit and making the said changes.
+Hello, Waiman.
 
-Yes, privileged contexts can maliciously or stupidly step all over one
-other no matter what you do (finite resource), but oxymoron creation
-(CPUs simultaneously balanced and isolated) should be handled.  If one
-context can allocate a set overlapping a set another context intends to
-or already has detached from scheduler domains, both are screwed.
+This looks great.  A couple nitpicks below.
 
-	-Mike
+> +     5-3. Cpuset
+> +       5.3-1. Cpuset Interface Files
+
+Can we put cpuset below pid?  It feels weird to break up cpu, memory
+and io as they represent the three major resources and are in a
+similar fashion.
+
+> +  cpuset.effective_cpus
+> +	A read-only multiple values file which exists on non-root
+> +	cgroups.
+> +
+> +	It lists the onlined CPUs that are actually allowed to be
+> +	used by tasks within the current cgroup. It is a subset of
+> +	"cpuset.cpus".  Its value will be affected by CPU hotplug
+> +	events.
+
+Can we do cpuset.cpus.availble which lists the cpus available to the
+cgroup instead of the eventual computed mask for the cgroup?  That'd
+be more useful as it doesn't lose the information by and'ing what's
+available with the cgroup's mask and it's trivial to determine the
+effective from the two masks.
+
+> +  cpuset.effective_mems
+> +	A read-only multiple values file which exists on non-root
+> +	cgroups.
+> +
+> +	It lists the onlined memory nodes that are actually allowed
+> +	to be used by tasks within the current cgroup.  It is a subset
+> +	of "cpuset.mems".  Its value will be affected by memory nodes
+> +	hotplug events.
+
+Ditto.
+
+> +static struct cftype dfl_files[] = {
+> +	{
+> +		.name = "cpus",
+> +		.seq_show = cpuset_common_seq_show,
+> +		.write = cpuset_write_resmask,
+> +		.max_write_len = (100U + 6 * NR_CPUS),
+> +		.private = FILE_CPULIST,
+> +	},
+
+Is it missing CFTYPE_NOT_ON_ROOT?  Other files too.
+
+Thanks.
+
+-- 
+tejun
