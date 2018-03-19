@@ -1,73 +1,75 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch -mm] mm: memcg: remote memcg charging for kmem allocations
- fix
-Date: Sun, 18 Mar 2018 13:24:51 -0700 (PDT)
-Message-ID: <alpine.DEB.2.20.1803181318530.241887@chino.kir.corp.google.com>
-References: <20180305182951.34462-1-shakeelb@google.com> <20180305182951.34462-2-shakeelb@google.com>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [Intel-gfx] [PATCH v4 1/8] cgroup: Allow registration and lookup
+ of cgroup private data (v2)
+Date: Mon, 19 Mar 2018 13:41:27 +0800
+Message-ID: <201803191310.Mog2Ur6C%fengguang.wu@intel.com>
+References: <20180317000905.7091-2-matthew.d.roper@intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=2W/02XBuWIo95g142aAkDkpAeBEC6wtcHwEmwOp8Cc8=;
-        b=Ar5vIRqKr3XXOWr7061vrSh8B44m78Wctiq7Xz+CZm8mj+J33fyZxNEtnC06a+yfnO
-         fDPI+zteruVsAiu9FsnX4FdlmM5uI0qOBoHPzXVbp8VIZMlaKkpMhP3F+gawAuqK+biM
-         NqI84ZOWgURL3reE7YRobt6iSAlVnfGauvUwbxcynyK9eDWkKVcFxVnEoB3ipMf6VBAn
-         8kHB+K+pVvCxTvim6bK7OndeNH5nEGzUCUW2VxJIOYXTxz0y30lBFItJ5dt6UZf2RPSo
-         APF4ddn7JPZa0xRPdrfckQ4uqoEV9u9tIH9RGe4MyrBXtbFmnSrSbIC4467GiXPch0bn
-         zYWA==
-In-Reply-To: <20180305182951.34462-2-shakeelb@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <20180317000905.7091-2-matthew.d.roper@intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matt Roper <matthew.d.roper@intel.com>
+Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, kbuild-all@01.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-fix build warning for CONFIG_SLOB:
-
-mm/memcontrol.c:706:27: warning: 'get_mem_cgroup' defined but not used [-Wunused-function]
-static struct mem_cgroup *get_mem_cgroup(struct mem_cgroup *memcg)
-
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- mm/memcontrol.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -701,15 +701,6 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
- 	return memcg;
- }
- 
--static struct mem_cgroup *get_mem_cgroup(struct mem_cgroup *memcg)
--{
--	rcu_read_lock();
--	if (!css_tryget_online(&memcg->css))
--		memcg = NULL;
--	rcu_read_unlock();
--	return memcg;
--}
--
- /**
-  * mem_cgroup_iter - iterate over memory cgroup hierarchy
-  * @root: hierarchy root
-@@ -2128,6 +2119,15 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
- }
- 
- #ifndef CONFIG_SLOB
-+static struct mem_cgroup *get_mem_cgroup(struct mem_cgroup *memcg)
-+{
-+	rcu_read_lock();
-+	if (!css_tryget_online(&memcg->css))
-+		memcg = NULL;
-+	rcu_read_unlock();
-+	return memcg;
-+}
-+
- static int memcg_alloc_cache_id(void)
- {
- 	int id, size;
+SGkgTWF0dCwKClRoYW5rIHlvdSBmb3IgdGhlIHBhdGNoISBQZXJoYXBzIHNvbWV0aGluZyB0byBp
+bXByb3ZlOgoKW2F1dG8gYnVpbGQgdGVzdCBXQVJOSU5HIG9uIG5leHQtMjAxODAzMDldClthbHNv
+IGJ1aWxkIHRlc3QgV0FSTklORyBvbiB2NC4xNi1yYzZdCltjYW5ub3QgYXBwbHkgdG8gdjQuMTYt
+cmM0IHY0LjE2LXJjMyB2NC4xNi1yYzJdCltpZiB5b3VyIHBhdGNoIGlzIGFwcGxpZWQgdG8gdGhl
+IHdyb25nIGdpdCB0cmVlLCBwbGVhc2UgZHJvcCB1cyBhIG5vdGUgdG8gaGVscCBpbXByb3ZlIHRo
+ZSBzeXN0ZW1dCgp1cmw6ICAgIGh0dHBzOi8vZ2l0aHViLmNvbS8wZGF5LWNpL2xpbnV4L2NvbW1p
+dHMvTWF0dC1Sb3Blci9jZ3JvdXAtcHJpdmF0ZS1kYXRhLWFuZC1EUk0taTkxNS1pbnRlZ3JhdGlv
+bi8yMDE4MDMxOS0wNzE3NTIKcmVwcm9kdWNlOgogICAgICAgICMgYXB0LWdldCBpbnN0YWxsIHNw
+YXJzZQogICAgICAgIG1ha2UgQVJDSD14ODZfNjQgYWxsbW9kY29uZmlnCiAgICAgICAgbWFrZSBD
+PTEgQ0Y9LURfX0NIRUNLX0VORElBTl9fCgoKc3BhcnNlIHdhcm5pbmdzOiAobmV3IG9uZXMgcHJl
+Zml4ZWQgYnkgPj4pCgo+PiBrZXJuZWwvY2dyb3VwL2Nncm91cC5jOjk0OjE6IHNwYXJzZTogc3lt
+Ym9sICdjZ3JvdXBfaWRyX2xvY2snIHdhcyBub3QgZGVjbGFyZWQuIFNob3VsZCBpdCBiZSBzdGF0
+aWM/Cj4+IGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6NDY1NToxNzogc3BhcnNlOiBpbmNvcnJlY3Qg
+dHlwZSBpbiBhc3NpZ25tZW50IChkaWZmZXJlbnQgYWRkcmVzcyBzcGFjZXMpIEBAICAgIGV4cGVj
+dGVkIHZvaWQgKipzbG90IEBAICAgIGdvdCB2b2lkIFtub2RlcmVmXSA8YXZvaWQgKipzbG90IEBA
+CiAgIGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6NDY1NToxNzogICAgZXhwZWN0ZWQgdm9pZCAqKnNs
+b3QKICAga2VybmVsL2Nncm91cC9jZ3JvdXAuYzo0NjU1OjE3OiAgICBnb3Qgdm9pZCBbbm9kZXJl
+Zl0gPGFzbjo0PioqCj4+IGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6NDY1NToxNzogc3BhcnNlOiBp
+bmNvcnJlY3QgdHlwZSBpbiBhc3NpZ25tZW50IChkaWZmZXJlbnQgYWRkcmVzcyBzcGFjZXMpIEBA
+ICAgIGV4cGVjdGVkIHZvaWQgKipzbG90IEBAICAgIGdvdCB2b2lkIFtub2RlcmVmXSA8YXZvaWQg
+KipzbG90IEBACiAgIGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6NDY1NToxNzogICAgZXhwZWN0ZWQg
+dm9pZCAqKnNsb3QKICAga2VybmVsL2Nncm91cC9jZ3JvdXAuYzo0NjU1OjE3OiAgICBnb3Qgdm9p
+ZCBbbm9kZXJlZl0gPGFzbjo0PioqCj4+IGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6NDY1NToxNzog
+c3BhcnNlOiBpbmNvcnJlY3QgdHlwZSBpbiBhcmd1bWVudCAxIChkaWZmZXJlbnQgYWRkcmVzcyBz
+cGFjZXMpIEBAICAgIGV4cGVjdGVkIHZvaWQgW25vZGVyZWZdIDxhc246ND4qKnNsb3QgQEAgICAg
+Z290IHNuOjQ+KipzbG90IEBACiAgIGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6NDY1NToxNzogICAg
+ZXhwZWN0ZWQgdm9pZCBbbm9kZXJlZl0gPGFzbjo0Pioqc2xvdAogICBrZXJuZWwvY2dyb3VwL2Nn
+cm91cC5jOjQ2NTU6MTc6ICAgIGdvdCB2b2lkICoqc2xvdAo+PiBrZXJuZWwvY2dyb3VwL2Nncm91
+cC5jOjQ2NTU6MTc6IHNwYXJzZTogaW5jb3JyZWN0IHR5cGUgaW4gYXNzaWdubWVudCAoZGlmZmVy
+ZW50IGFkZHJlc3Mgc3BhY2VzKSBAQCAgICBleHBlY3RlZCB2b2lkICoqc2xvdCBAQCAgICBnb3Qg
+dm9pZCBbbm9kZXJlZl0gPGF2b2lkICoqc2xvdCBAQAogICBrZXJuZWwvY2dyb3VwL2Nncm91cC5j
+OjQ2NTU6MTc6ICAgIGV4cGVjdGVkIHZvaWQgKipzbG90CiAgIGtlcm5lbC9jZ3JvdXAvY2dyb3Vw
+LmM6NDY1NToxNzogICAgZ290IHZvaWQgW25vZGVyZWZdIDxhc246ND4qKgogICBrZXJuZWwvY2dy
+b3VwL2Nncm91cC5jOjI2NDg6MjA6IHNwYXJzZTogY29udGV4dCBpbWJhbGFuY2UgaW4gJ2Nncm91
+cF9wcm9jc193cml0ZV9zdGFydCcgLSB3cm9uZyBjb3VudCBhdCBleGl0CiAgIGtlcm5lbC9jZ3Jv
+dXAvY2dyb3VwLmM6MjcwNDo5OiBzcGFyc2U6IGNvbnRleHQgaW1iYWxhbmNlIGluICdjZ3JvdXBf
+cHJvY3Nfd3JpdGVfZmluaXNoJyAtIHdyb25nIGNvdW50IGF0IGV4aXQKICAga2VybmVsL2Nncm91
+cC9jZ3JvdXAuYzoyODE1Ojk6IHNwYXJzZTogY29udGV4dCBpbWJhbGFuY2UgaW4gJ2Nncm91cF9s
+b2NrX2FuZF9kcmFpbl9vZmZsaW5lJyAtIHdyb25nIGNvdW50IGF0IGV4aXQKICAga2VybmVsL2Nn
+cm91cC9jZ3JvdXAuYzo0Mzc1OjE2OiBzcGFyc2U6IGNvbnRleHQgaW1iYWxhbmNlIGluICdjZ3Jv
+dXBfcHJvY3Nfd3JpdGUnIC0gd3JvbmcgY291bnQgYXQgZXhpdAogICBrZXJuZWwvY2dyb3VwL2Nn
+cm91cC5jOjQ0MTY6MTY6IHNwYXJzZTogY29udGV4dCBpbWJhbGFuY2UgaW4gJ2Nncm91cF90aHJl
+YWRzX3dyaXRlJyAtIHdyb25nIGNvdW50IGF0IGV4aXQKClBsZWFzZSByZXZpZXcgYW5kIHBvc3Np
+Ymx5IGZvbGQgdGhlIGZvbGxvd3VwIHBhdGNoLgoKLS0tCjAtREFZIGtlcm5lbCB0ZXN0IGluZnJh
+c3RydWN0dXJlICAgICAgICAgICAgICAgIE9wZW4gU291cmNlIFRlY2hub2xvZ3kgQ2VudGVyCmh0
+dHBzOi8vbGlzdHMuMDEub3JnL3BpcGVybWFpbC9rYnVpbGQtYWxsICAgICAgICAgICAgICAgICAg
+IEludGVsIENvcnBvcmF0aW9uCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNr
+dG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Ry
+aS1kZXZlbAo=
