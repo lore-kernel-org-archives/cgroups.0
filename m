@@ -1,47 +1,62 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v5 2/2] cpuset: Add cpuset.flags control knob to v2
-Date: Mon, 19 Mar 2018 12:33:14 -0400
-Message-ID: <8e553b7e-cab6-1b5d-9110-cc5770ae16c4@redhat.com>
-References: <1521148842-15486-1-git-send-email-longman@redhat.com>
- <1521148842-15486-3-git-send-email-longman@redhat.com>
- <20180319162654.GR2943022@devbig577.frc2.facebook.com>
+From: David Rientjes <rientjes@google.com>
+Subject: =?UTF-8?Q?Re=3A_=E7=AD=94=E5=A4=8D=3A_=E7=AD=94=E5=A4=8D=3A_=5BPATCH=5D_mm=2Fmemcontrol=2Ec=3A_speed_up_to_force_empty_a_memory_cgroup?=
+Date: Mon, 19 Mar 2018 10:51:57 -0700 (PDT)
+Message-ID: <alpine.DEB.2.20.1803191044310.177918@chino.kir.corp.google.com>
+References: <1521448170-19482-1-git-send-email-lirongqing@baidu.com> <20180319085355.GQ23100@dhcp22.suse.cz> <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com> <20180319103756.GV23100@dhcp22.suse.cz>
+ <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180319162654.GR2943022@devbig577.frc2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=00hVlNXFMIiuvNZxzSHHf9n4hfJDmKRqabqtUXhAKcQ=;
+        b=CQY7u07coNzYrPcm0ylwcJhn/fxIlSuFeMMpaxiyVUBkw9D8+xFbgLqamTjfpvL8hD
+         qnbd9wmMOOA4vyZRBQDUHdSbBsZQze7n/BFIpxnXwDlhvwa2UjrtmyErsmNB3XUmv4b/
+         vHUpSzaksf1C/pwg4f5X+Szt2RXPlq/Ga4yg9HmE6oogBdJXEQiHKIsAW6ywOZql/+7Z
+         AN6jzrpGe/nD7VLzcnRBdDw0ZeFJYYlikjMLZmJdNjwetJeAd2zU+QPRWdkZsoi03xgt
+         kIgxC+8sOlpRPYIBNpC77joGPhXM/Q7J1fNC7EIOHgVxyvEMjF3qAEixgn6gKGAWkBGV
+         iuwg==
+In-Reply-To: <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: "Li,Rongqing" <lirongqing@baidu.com>
+Cc: Michal Hocko <mhocko@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On 03/19/2018 12:26 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Thu, Mar 15, 2018 at 05:20:42PM -0400, Waiman Long wrote:
->> +	The currently supported flag is:
->> +
->> +	  sched_load_balance
->> +		When it is not set, there will be no load balancing
->> +		among CPUs on this cpuset.  Tasks will stay in the
->> +		CPUs they are running on and will not be moved to
->> +		other CPUs.
->> +
->> +		When it is set, tasks within this cpuset will be
->> +		load-balanced by the kernel scheduler.  Tasks will be
->> +		moved from CPUs with high load to other CPUs within
->> +		the same cpuset with less load periodically.
-> Hmm... looks like this is something which can be decided by the cgroup
-> itself and should be made delegatable.  Given that different flags
-> might need different delegation settings and the precedence of
-> memory.oom_group, I think it'd be better to make the flags separate
-> bool files - ie. cpuset.sched_load_balance which contains 0/1 and
-> marked delegatable.
->
-> Thanks.
->
-Sure. Will do that.
+On Mon, 19 Mar 2018, Li,Rongqing wrote:
 
--Longman
+> > > Although SWAP_CLUSTER_MAX is used at the lower level, but the call
+> > > stack of try_to_free_mem_cgroup_pages is too long, increase the
+> > > nr_to_reclaim can reduce times of calling
+> > > function[do_try_to_free_pages, shrink_zones, hrink_node ]
+> > >
+> > > mem_cgroup_resize_limit
+> > > --->try_to_free_mem_cgroup_pages:  .nr_to_reclaim = max(1024,
+> > > --->SWAP_CLUSTER_MAX),
+> > >    ---> do_try_to_free_pages
+> > >      ---> shrink_zones
+> > >       --->shrink_node
+> > >        ---> shrink_node_memcg
+> > >          ---> shrink_list          <-------loop will happen in this place
+> > [times=1024/32]
+> > >            ---> shrink_page_list
+> > 
+> > Can you actually measure this to be the culprit. Because we should rethink
+> > our call path if it is too complicated/deep to perform well.
+> > Adding arbitrary batch sizes doesn't sound like a good way to go to me.
+> 
+> Ok, I will try
+> 
 
+Looping in mem_cgroup_resize_limit(), which takes memcg_limit_mutex on 
+every iteration which contends with lowering limits in other cgroups (on 
+our systems, thousands), calling try_to_free_mem_cgroup_pages() with less 
+than SWAP_CLUSTER_MAX is lame.  It would probably be best to limit the 
+nr_pages to the amount that needs to be reclaimed, though, rather than 
+over reclaiming.
+
+If you wanted to be invasive, you could change page_counter_limit() to 
+return the count - limit, fix up the callers that look for -EBUSY, and 
+then use max(val, SWAP_CLUSTER_MAX) as your nr_pages.
