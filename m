@@ -1,40 +1,56 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: [RFC PATCH] cgroup: cgroup_idr_lock can be static
-Date: Mon, 19 Mar 2018 13:41:27 +0800
-Message-ID: <20180319054127.GA6844@intel17>
-References: <20180317000905.7091-2-matthew.d.roper@intel.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <20180317000905.7091-2-matthew.d.roper@intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+From: Li RongQing <lirongqing@baidu.com>
+Subject: [PATCH] mm/memcontrol.c: speed up to force empty a memory cgroup
+Date: Mon, 19 Mar 2018 16:29:30 +0800
+Message-ID: <1521448170-19482-1-git-send-email-lirongqing@baidu.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Matt Roper <matthew.d.roper@intel.com>
-Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, kbuild-all@01.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@kernel.org
 
-CkZpeGVzOiBkNmRlNGU3ZTllNjAgKCJjZ3JvdXA6IEFsbG93IHJlZ2lzdHJhdGlvbiBhbmQgbG9v
-a3VwIG9mIGNncm91cCBwcml2YXRlIGRhdGEgKHYyKSIpClNpZ25lZC1vZmYtYnk6IEZlbmdndWFu
-ZyBXdSA8ZmVuZ2d1YW5nLnd1QGludGVsLmNvbT4KLS0tCiBjZ3JvdXAuYyB8ICAgIDIgKy0KIDEg
-ZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBh
-L2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgYi9rZXJuZWwvY2dyb3VwL2Nncm91cC5jCmluZGV4IGM3
-Nzg4MzAuLjlhZjYwODYgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKKysrIGIv
-a2VybmVsL2Nncm91cC9jZ3JvdXAuYwpAQCAtOTEsNyArOTEsNyBAQCBzdGF0aWMgREVGSU5FX0lE
-UihjZ3JvdXBfcHJpdl9pZHIpOwogICogUHJvdGVjdHMgY2dyb3VwX2lkciwgY3NzX2lkciwgYW5k
-IGNncm91cF9wcml2X2lkciBzbyB0aGF0IElEcyBjYW4gYmUKICAqIHJlbGVhc2VkIHdpdGhvdXQg
-Z3JhYmJpbmcgY2dyb3VwX211dGV4LgogICovCi1ERUZJTkVfU1BJTkxPQ0soY2dyb3VwX2lkcl9s
-b2NrKTsKK3N0YXRpYyBERUZJTkVfU1BJTkxPQ0soY2dyb3VwX2lkcl9sb2NrKTsKIAogLyoKICAq
-IFByb3RlY3RzIGNncm91cF9maWxlLT5rbiBmb3IgIXNlbGYgY3NzZXMuICBJdCBzeW5jaHJvbml6
-ZXMgbm90aWZpY2F0aW9ucwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3Rv
-cC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRl
-bC1nZngK
+mem_cgroup_force_empty() tries to free only 32 (SWAP_CLUSTER_MAX) pages
+on each iteration, if a memory cgroup has lots of page cache, it will
+take many iterations to empty all page cache, so increase the reclaimed
+number per iteration to speed it up. same as in mem_cgroup_resize_limit()
+
+a simple test show:
+
+  $dd if=aaa  of=bbb  bs=1k count=3886080
+  $rm -f bbb
+  $time echo 100000000 >/cgroup/memory/test/memory.limit_in_bytes
+
+Before: 0m0.252s ===> after: 0m0.178s
+
+Signed-off-by: Li RongQing <lirongqing@baidu.com>
+---
+ mm/memcontrol.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 670e99b68aa6..8910d9e8e908 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2480,7 +2480,7 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		if (!try_to_free_mem_cgroup_pages(memcg, 1,
++		if (!try_to_free_mem_cgroup_pages(memcg, 1024,
+ 					GFP_KERNEL, !memsw)) {
+ 			ret = -EBUSY;
+ 			break;
+@@ -2610,7 +2610,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+ 		if (signal_pending(current))
+ 			return -EINTR;
+ 
+-		progress = try_to_free_mem_cgroup_pages(memcg, 1,
++		progress = try_to_free_mem_cgroup_pages(memcg, 1024,
+ 							GFP_KERNEL, true);
+ 		if (!progress) {
+ 			nr_retries--;
+-- 
+2.11.0
+
