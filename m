@@ -1,75 +1,55 @@
-From: "Li,Rongqing" <lirongqing@baidu.com>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSF0gbW0vbWVtY29udHJvbC5jOiBzcGVl?=
- =?utf-8?Q?d_up_to_force_empty_a_memory_cgroup?=
-Date: Mon, 19 Mar 2018 10:51:42 +0000
-Message-ID: <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
-References: <1521448170-19482-1-git-send-email-lirongqing@baidu.com>
- <20180319085355.GQ23100@dhcp22.suse.cz>
- <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com>
- <20180319103756.GV23100@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4] cpuset: Enable cpuset controller in default hierarchy
+Date: Mon, 19 Mar 2018 08:34:13 -0700
+Message-ID: <20180319153413.GO2943022@devbig577.frc2.facebook.com>
+References: <1c3fe7b0-2600-c46d-1527-d3aaf024bb91@redhat.com>
+ <1520619426.27998.18.camel@gmx.de>
+ <55809fe4-98ba-5566-86ed-457acfef0e1c@redhat.com>
+ <1520624424.27998.76.camel@gmx.de>
+ <53de9683-01b7-bac4-8b70-dc1f93ede600@redhat.com>
+ <20180309221736.GB5926@hirez.programming.kicks-ass.net>
+ <f0fca497-e4e7-3dbd-1e5c-a7f502c05dcb@redhat.com>
+ <1520653648.12749.20.camel@gmx.de>
+ <20180314195711.GD2943022@devbig577.frc2.facebook.com>
+ <1521082141.7100.1.camel@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180319103756.GV23100@dhcp22.suse.cz>
-Content-Language: zh-CN
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ZGksuuewyAPyROG/hxaBdDCdlHVZ5iQFtb03QQJTaOk=;
+        b=piPQY8AkOG/ayno9JPqwnHQFGxAiFBrSsB+Npe+OZqL3M4FbOF+vBqgH/pt3TAeTlS
+         lMFlPGoZYT34Ur92Wyq3jFesOxVTo/gmZY99gwTVhNQVyxX12SgmkOKn6O4BOew5fP+O
+         Zv5x9k4k3AXDAzuaMEqS0Kb+ns8fvfqHLVrAeQUip71oek5QOnEG88I2eqbhxro6OHhf
+         gIyde0Wwl1fTmU4Sqp19VOUZ5vlMbxTcSF9r855xtuoiNTiLxiZilUmaB2j1F+xufdQ5
+         bfbIUsO3ow9XCaeXY4xda5sn+qAAa1HMBMoMCHcOAx5LMn/dNclE7/pF54fEwpV11ljJ
+         5+Og==
+Content-Disposition: inline
+In-Reply-To: <1521082141.7100.1.camel@gmx.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Michal Hocko <mhocko@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Mike Galbraith <efault@gmx.de>
+Cc: Waiman Long <longman@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-DQoNCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IE1pY2hhbCBIb2NrbyBb
-bWFpbHRvOm1ob2Nrb0BrZXJuZWwub3JnXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQz5pyIMTnm
-l6UgMTg6MzgNCj4g5pS25Lu25Lq6OiBMaSxSb25ncWluZyA8bGlyb25ncWluZ0BiYWlkdS5jb20+
-DQo+IOaKhOmAgTogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtbW1Aa3ZhY2su
-b3JnOw0KPiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZzsgaGFubmVzQGNtcHhjaGcub3JnOyBBbmRy
-ZXkgUnlhYmluaW4NCj4gPGFyeWFiaW5pbkB2aXJ0dW96em8uY29tPg0KPiDkuLvpopg6IFJlOiDn
-rZTlpI06IFtQQVRDSF0gbW0vbWVtY29udHJvbC5jOiBzcGVlZCB1cCB0byBmb3JjZSBlbXB0eSBh
-DQo+IG1lbW9yeSBjZ3JvdXANCj4gDQo+IE9uIE1vbiAxOS0wMy0xOCAxMDowMDo0MSwgTGksUm9u
-Z3Fpbmcgd3JvdGU6DQo+ID4NCj4gPg0KPiA+ID4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiA+
-ID4g5Y+R5Lu25Lq6OiBNaWNoYWwgSG9ja28gW21haWx0bzptaG9ja29Aa2VybmVsLm9yZ10NCj4g
-PiA+IOWPkemAgeaXtumXtDogMjAxOOW5tDPmnIgxOeaXpSAxNjo1NA0KPiA+ID4g5pS25Lu25Lq6
-OiBMaSxSb25ncWluZyA8bGlyb25ncWluZ0BiYWlkdS5jb20+DQo+ID4gPiDmioTpgIE6IGxpbnV4
-LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LW1tQGt2YWNrLm9yZzsNCj4gPiA+IGNncm91
-cHNAdmdlci5rZXJuZWwub3JnOyBoYW5uZXNAY21weGNoZy5vcmc7IEFuZHJleSBSeWFiaW5pbg0K
-PiA+ID4gPGFyeWFiaW5pbkB2aXJ0dW96em8uY29tPg0KPiA+ID4g5Li76aKYOiBSZTogW1BBVENI
-XSBtbS9tZW1jb250cm9sLmM6IHNwZWVkIHVwIHRvIGZvcmNlIGVtcHR5IGENCj4gbWVtb3J5DQo+
-ID4gPiBjZ3JvdXANCj4gPiA+DQo+ID4gPiBPbiBNb24gMTktMDMtMTggMTY6Mjk6MzAsIExpIFJv
-bmdRaW5nIHdyb3RlOg0KPiA+ID4gPiBtZW1fY2dyb3VwX2ZvcmNlX2VtcHR5KCkgdHJpZXMgdG8g
-ZnJlZSBvbmx5IDMyDQo+IChTV0FQX0NMVVNURVJfTUFYKQ0KPiA+ID4gPiBwYWdlcyBvbiBlYWNo
-IGl0ZXJhdGlvbiwgaWYgYSBtZW1vcnkgY2dyb3VwIGhhcyBsb3RzIG9mIHBhZ2UNCj4gPiA+ID4g
-Y2FjaGUsIGl0IHdpbGwgdGFrZSBtYW55IGl0ZXJhdGlvbnMgdG8gZW1wdHkgYWxsIHBhZ2UgY2Fj
-aGUsIHNvDQo+ID4gPiA+IGluY3JlYXNlIHRoZSByZWNsYWltZWQgbnVtYmVyIHBlciBpdGVyYXRp
-b24gdG8gc3BlZWQgaXQgdXAuIHNhbWUNCj4gPiA+ID4gYXMgaW4NCj4gPiA+ID4gbWVtX2Nncm91
-cF9yZXNpemVfbGltaXQoKQ0KPiA+ID4gPg0KPiA+ID4gPiBhIHNpbXBsZSB0ZXN0IHNob3c6DQo+
-ID4gPiA+DQo+ID4gPiA+ICAgJGRkIGlmPWFhYSAgb2Y9YmJiICBicz0xayBjb3VudD0zODg2MDgw
-DQo+ID4gPiA+ICAgJHJtIC1mIGJiYg0KPiA+ID4gPiAgICR0aW1lIGVjaG8NCj4gMTAwMDAwMDAw
-ID4vY2dyb3VwL21lbW9yeS90ZXN0L21lbW9yeS5saW1pdF9pbl9ieXRlcw0KPiA+ID4gPg0KPiA+
-ID4gPiBCZWZvcmU6IDBtMC4yNTJzID09PT4gYWZ0ZXI6IDBtMC4xNzhzDQo+ID4gPg0KPiA+ID4g
-QW5kcmV5IHdhcyBwcm9wb3Npbmcgc29tZXRoaW5nIHNpbWlsYXIgWzFdLiBNeSBtYWluIG9iamVj
-dGlvbiB3YXMNCj4gPiA+IHRoYXQgaGlzIGFwcHJvYWNoIG1pZ2h0IGxlYWQgdG8gb3Zlci1yZWNs
-YWltLiBZb3VyIGFwcHJvYWNoIGlzIG1vcmUNCj4gPiA+IGNvbnNlcnZhdGl2ZSBiZWNhdXNlIGl0
-IGp1c3QgaW5jcmVhc2VzIHRoZSBiYXRjaCBzaXplLiBUaGUgc2l6ZSBpcw0KPiA+ID4gc3RpbGwg
-cmF0aGVyIGFyYml0cmFyeS4gU2FtZSBhcyBTV0FQX0NMVVNURVJfTUFYIGJ1dCB0aGF0IG9uZSBp
-cyBhDQo+ID4gPiBjb21tb25seSB1c2VkIHVuaXQgb2YgcmVjbGFpbSBpbiB0aGUgTU0gY29kZS4N
-Cj4gPiA+DQo+ID4gPiBJIHdvdWxkIGJlIHJlYWxseSBjdXJpb3VzIGFib3V0IG1vcmUgZGV0YWls
-ZWQgZXhwbGFuYXRpb24gd2h5IGhhdmluZw0KPiA+ID4gYSBsYXJnZXIgYmF0Y2ggeWllbGRzIHRv
-IGEgYmV0dGVyIHBlcmZvcm1hbmNlIGJlY2F1c2Ugd2UgYXJlIGRvaW5nZw0KPiA+ID4gU1dBUF9D
-TFVTVEVSX01BWCBiYXRjaGVzIGF0IHRoZSBsb3dlciByZWNsYWltIGxldmVsIGFueXdheS4NCj4g
-PiA+DQo+ID4NCj4gPiBBbHRob3VnaCBTV0FQX0NMVVNURVJfTUFYIGlzIHVzZWQgYXQgdGhlIGxv
-d2VyIGxldmVsLCBidXQgdGhlIGNhbGwNCj4gPiBzdGFjayBvZiB0cnlfdG9fZnJlZV9tZW1fY2dy
-b3VwX3BhZ2VzIGlzIHRvbyBsb25nLCBpbmNyZWFzZSB0aGUNCj4gPiBucl90b19yZWNsYWltIGNh
-biByZWR1Y2UgdGltZXMgb2YgY2FsbGluZw0KPiA+IGZ1bmN0aW9uW2RvX3RyeV90b19mcmVlX3Bh
-Z2VzLCBzaHJpbmtfem9uZXMsIGhyaW5rX25vZGUgXQ0KPiA+DQo+ID4gbWVtX2Nncm91cF9yZXNp
-emVfbGltaXQNCj4gPiAtLS0+dHJ5X3RvX2ZyZWVfbWVtX2Nncm91cF9wYWdlczogIC5ucl90b19y
-ZWNsYWltID0gbWF4KDEwMjQsDQo+ID4gLS0tPlNXQVBfQ0xVU1RFUl9NQVgpLA0KPiA+ICAgIC0t
-LT4gZG9fdHJ5X3RvX2ZyZWVfcGFnZXMNCj4gPiAgICAgIC0tLT4gc2hyaW5rX3pvbmVzDQo+ID4g
-ICAgICAgLS0tPnNocmlua19ub2RlDQo+ID4gICAgICAgIC0tLT4gc2hyaW5rX25vZGVfbWVtY2cN
-Cj4gPiAgICAgICAgICAtLS0+IHNocmlua19saXN0ICAgICAgICAgIDwtLS0tLS0tbG9vcCB3aWxs
-IGhhcHBlbiBpbiB0aGlzIHBsYWNlDQo+IFt0aW1lcz0xMDI0LzMyXQ0KPiA+ICAgICAgICAgICAg
-LS0tPiBzaHJpbmtfcGFnZV9saXN0DQo+IA0KPiBDYW4geW91IGFjdHVhbGx5IG1lYXN1cmUgdGhp
-cyB0byBiZSB0aGUgY3VscHJpdC4gQmVjYXVzZSB3ZSBzaG91bGQgcmV0aGluaw0KPiBvdXIgY2Fs
-bCBwYXRoIGlmIGl0IGlzIHRvbyBjb21wbGljYXRlZC9kZWVwIHRvIHBlcmZvcm0gd2VsbC4NCj4g
-QWRkaW5nIGFyYml0cmFyeSBiYXRjaCBzaXplcyBkb2Vzbid0IHNvdW5kIGxpa2UgYSBnb29kIHdh
-eSB0byBnbyB0byBtZS4NCg0KT2ssIEkgd2lsbCB0cnkNCg0KLVJvbmdRaW5nDQo+IC0tDQo+IE1p
-Y2hhbCBIb2Nrbw0KPiBTVVNFIExhYnMNCg==
+Hello, Mike.
+
+On Thu, Mar 15, 2018 at 03:49:01AM +0100, Mike Galbraith wrote:
+> Under the hood v2 details are entirely up to you.  My input ends at
+> please don't leave dynamic partitioning standing at the dock when v2
+> sails.
+
+So, this isn't about implementation details but about what the
+interface achieves - ie, what's the actual function?  The only thing I
+can see is blocking the entity which is configuring the hierarchy from
+making certain configs.  While that might be useful in some specific
+use cases, it seems to miss the bar for becoming its own kernel
+feature.  After all, nothing prevents the same entity from clearing
+the exlusive bit and making the said changes.
+
+Thanks.
+
+-- 
+tejun
