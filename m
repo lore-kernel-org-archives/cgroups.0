@@ -1,75 +1,79 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRD?= =?utf-8?Q?H=5D?=
- mm/memcontrol.c: speed up to force empty a memory cgroup
-Date: Tue, 20 Mar 2018 09:39:50 +0100
-Message-ID: <20180320083950.GD23100@dhcp22.suse.cz>
-References: <1521448170-19482-1-git-send-email-lirongqing@baidu.com>
- <20180319085355.GQ23100@dhcp22.suse.cz>
- <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com>
- <20180319103756.GV23100@dhcp22.suse.cz>
- <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
- <alpine.DEB.2.20.1803191044310.177918@chino.kir.corp.google.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v5 1/2] cpuset: Enable cpuset controller in default
+ hierarchy
+Date: Tue, 20 Mar 2018 09:51:20 -0400
+Message-ID: <1881c1da-56ec-d76b-b736-fd0919737ec6@redhat.com>
+References: <1521148842-15486-1-git-send-email-longman@redhat.com>
+ <1521148842-15486-2-git-send-email-longman@redhat.com>
+ <20180319155937.GQ2943022@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1803191044310.177918@chino.kir.corp.google.com>
+In-Reply-To: <20180319155937.GQ2943022@devbig577.frc2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: "Li,Rongqing" <lirongqing@baidu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-On Mon 19-03-18 10:51:57, David Rientjes wrote:
-> On Mon, 19 Mar 2018, Li,Rongqing wrote:
-> 
-> > > > Although SWAP_CLUSTER_MAX is used at the lower level, but the call
-> > > > stack of try_to_free_mem_cgroup_pages is too long, increase the
-> > > > nr_to_reclaim can reduce times of calling
-> > > > function[do_try_to_free_pages, shrink_zones, hrink_node ]
-> > > >
-> > > > mem_cgroup_resize_limit
-> > > > --->try_to_free_mem_cgroup_pages:  .nr_to_reclaim = max(1024,
-> > > > --->SWAP_CLUSTER_MAX),
-> > > >    ---> do_try_to_free_pages
-> > > >      ---> shrink_zones
-> > > >       --->shrink_node
-> > > >        ---> shrink_node_memcg
-> > > >          ---> shrink_list          <-------loop will happen in this place
-> > > [times=1024/32]
-> > > >            ---> shrink_page_list
-> > > 
-> > > Can you actually measure this to be the culprit. Because we should rethink
-> > > our call path if it is too complicated/deep to perform well.
-> > > Adding arbitrary batch sizes doesn't sound like a good way to go to me.
-> > 
-> > Ok, I will try
-> > 
-> 
-> Looping in mem_cgroup_resize_limit(), which takes memcg_limit_mutex on 
-> every iteration which contends with lowering limits in other cgroups (on 
-> our systems, thousands), calling try_to_free_mem_cgroup_pages() with less 
-> than SWAP_CLUSTER_MAX is lame.
+On 03/19/2018 11:59 AM, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> This looks great.  A couple nitpicks below.
+>
+>> +     5-3. Cpuset
+>> +       5.3-1. Cpuset Interface Files
+> Can we put cpuset below pid?  It feels weird to break up cpu, memory
+> and io as they represent the three major resources and are in a
+> similar fashion.
+Sure. I will move it down below pid.
 
-Well, if the global lock is a bottleneck in your deployments then we
-can come up with something more clever. E.g. per hierarchy locking
-or even drop the lock for the reclaim altogether. If we reclaim in
-SWAP_CLUSTER_MAX then the potential over-reclaim risk quite low when
-multiple users are shrinking the same (sub)hierarchy.
+>> +  cpuset.effective_cpus
+>> +	A read-only multiple values file which exists on non-root
+>> +	cgroups.
+>> +
+>> +	It lists the onlined CPUs that are actually allowed to be
+>> +	used by tasks within the current cgroup. It is a subset of
+>> +	"cpuset.cpus".  Its value will be affected by CPU hotplug
+>> +	events.
+> Can we do cpuset.cpus.availble which lists the cpus available to the
+> cgroup instead of the eventual computed mask for the cgroup?  That'd
+> be more useful as it doesn't lose the information by and'ing what's
+> available with the cgroup's mask and it's trivial to determine the
+> effective from the two masks.
 
-> It would probably be best to limit the 
-> nr_pages to the amount that needs to be reclaimed, though, rather than 
-> over reclaiming.
+I don't get what you want here. cpus is the cpuset's cpus_allowed mask.
+effective_cpus is the effective_cpus mask. When you say cpus available
+to the cgroup, do you mean the cpu_online_mask or the list of cpus from
+the parent? Or do you just want to change the name to cpus.available
+instead of effective_cpus?
 
-How do you achieve that? The charging path is not synchornized with the
-shrinking one at all.
+>> +  cpuset.effective_mems
+>> +	A read-only multiple values file which exists on non-root
+>> +	cgroups.
+>> +
+>> +	It lists the onlined memory nodes that are actually allowed
+>> +	to be used by tasks within the current cgroup.  It is a subset
+>> +	of "cpuset.mems".  Its value will be affected by memory nodes
+>> +	hotplug events.
+> Ditto.
+>
+>> +static struct cftype dfl_files[] = {
+>> +	{
+>> +		.name = "cpus",
+>> +		.seq_show = cpuset_common_seq_show,
+>> +		.write = cpuset_write_resmask,
+>> +		.max_write_len = (100U + 6 * NR_CPUS),
+>> +		.private = FILE_CPULIST,
+>> +	},
+> Is it missing CFTYPE_NOT_ON_ROOT?  Other files too.
 
-> If you wanted to be invasive, you could change page_counter_limit() to 
-> return the count - limit, fix up the callers that look for -EBUSY, and 
-> then use max(val, SWAP_CLUSTER_MAX) as your nr_pages.
+Right, I will set CFTYPE_NOT_ON_ROOT to "cpus" and "mems" as we are not
+supposed to change them in the root. The effective_cpus and
+effective_mems will be there in the root to show what are available.
 
-I am not sure I understand
+Cheers,
+Longman
 
--- 
-Michal Hocko
-SUSE Labs
+
