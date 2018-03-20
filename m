@@ -1,90 +1,61 @@
-From: David Rientjes <rientjes@google.com>
-Subject: =?UTF-8?Q?Re=3A_=E7=AD=94=E5=A4=8D=3A_=E7=AD=94=E5=A4=8D=3A_=5BPATCH=5D_mm=2Fmemcontrol=2Ec=3A_speed_up_to_force_empty_a_memory_cgroup?=
-Date: Tue, 20 Mar 2018 13:29:57 -0700 (PDT)
-Message-ID: <alpine.DEB.2.20.1803201327060.167205@chino.kir.corp.google.com>
-References: <1521448170-19482-1-git-send-email-lirongqing@baidu.com> <20180319085355.GQ23100@dhcp22.suse.cz> <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com> <20180319103756.GV23100@dhcp22.suse.cz>
- <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com> <alpine.DEB.2.20.1803191044310.177918@chino.kir.corp.google.com> <20180320083950.GD23100@dhcp22.suse.cz>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v5 2/2] cpuset: Add cpuset.flags control knob to v2
+Date: Tue, 20 Mar 2018 16:43:44 -0400
+Message-ID: <066acb95-3140-904d-f599-84c1f94ad27c@redhat.com>
+References: <1521148842-15486-1-git-send-email-longman@redhat.com>
+ <1521148842-15486-3-git-send-email-longman@redhat.com>
+ <20180319162654.GR2943022@devbig577.frc2.facebook.com>
+ <8e553b7e-cab6-1b5d-9110-cc5770ae16c4@redhat.com>
+ <cbe9b852-80b6-8341-b51c-4d754d00ce53@redhat.com>
+ <20180320202247.GQ519464@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=33LzgS+OPlkDfGcWsDLn61givyON0hNZrXrsALJWxL8=;
-        b=sqRWBKFoore0U2zV4k0z/VflGgMZYEutNJu62QejWk29VmgPaytA1jqBvHecKJEmL7
-         DtabhzzDtPD703hOwppqX9DdQRmxTx9ElMiEAuB9Ym4KYT1hD9KvLHXnegixV72rhcY2
-         upUIqfnesf0c7J9oprMVQRnCzHXyDO1fdhcnHTGEryHc0sBBOIiSsmZWZYaTWFP+1/S+
-         8Air8v7jJX36cWtoRkv/8HkLL4igLsQnCgRDGrYJchHSl9i2o5unJnfWW7lQva2VgLRX
-         mkrqYIunFr6tH49kBhqDAr5Pi/vPMEf8ND9rwEmYVpf7pW8wh0PcBlHsYrwZzBWRl+M4
-         yUQQ==
-In-Reply-To: <20180320083950.GD23100@dhcp22.suse.cz>
+In-Reply-To: <20180320202247.GQ519464@devbig577.frc2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: "Li,Rongqing" <lirongqing@baidu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-On Tue, 20 Mar 2018, Michal Hocko wrote:
+On 03/20/2018 04:22 PM, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> On Tue, Mar 20, 2018 at 04:12:25PM -0400, Waiman Long wrote:
+>> After some thought, I am planning to impose the following additional
+>> constraints on how sched_load_balance works in v2.
+>>
+>> 1) sched_load_balance will be made hierarchical, the child will inherit
+>> the flag from its parent.
+>> 2) cpu_exclusive will be implicitly associated with sched_load_balance.
+>> IOW, sched_load_balance => !cpu_exclusive, and !sched_load_balance =>
+>> cpu_exclusive.
+>> 3) sched_load_balance cannot be 1 on a child if it is 0 on the parent.
+>>
+>> With these changes, sched_load_balance will have to be set by the parent
+>> and so will not be delegatable. Please let me know your thought on that.
+> So, for configurations, we usually don't let them interact across
+> hierarchy because that can lead to configurations surprise-changing
+> and delegated children locking the parent into the current config.
+>
+> This case could be different and as long as we always guarantee that
+> an ancestor isn't limited by its descendants in what it can configure,
+> it should be okay (e.g. an ancestor should always be able to turn on
+> sched_load_balance regardless of how the descendants are configured).
 
-> > > > > Although SWAP_CLUSTER_MAX is used at the lower level, but the call
-> > > > > stack of try_to_free_mem_cgroup_pages is too long, increase the
-> > > > > nr_to_reclaim can reduce times of calling
-> > > > > function[do_try_to_free_pages, shrink_zones, hrink_node ]
-> > > > >
-> > > > > mem_cgroup_resize_limit
-> > > > > --->try_to_free_mem_cgroup_pages:  .nr_to_reclaim = max(1024,
-> > > > > --->SWAP_CLUSTER_MAX),
-> > > > >    ---> do_try_to_free_pages
-> > > > >      ---> shrink_zones
-> > > > >       --->shrink_node
-> > > > >        ---> shrink_node_memcg
-> > > > >          ---> shrink_list          <-------loop will happen in this place
-> > > > [times=1024/32]
-> > > > >            ---> shrink_page_list
-> > > > 
-> > > > Can you actually measure this to be the culprit. Because we should rethink
-> > > > our call path if it is too complicated/deep to perform well.
-> > > > Adding arbitrary batch sizes doesn't sound like a good way to go to me.
-> > > 
-> > > Ok, I will try
-> > > 
-> > 
-> > Looping in mem_cgroup_resize_limit(), which takes memcg_limit_mutex on 
-> > every iteration which contends with lowering limits in other cgroups (on 
-> > our systems, thousands), calling try_to_free_mem_cgroup_pages() with less 
-> > than SWAP_CLUSTER_MAX is lame.
-> 
-> Well, if the global lock is a bottleneck in your deployments then we
-> can come up with something more clever. E.g. per hierarchy locking
-> or even drop the lock for the reclaim altogether. If we reclaim in
-> SWAP_CLUSTER_MAX then the potential over-reclaim risk quite low when
-> multiple users are shrinking the same (sub)hierarchy.
-> 
+Yes, I will do some testing to make sure that a descendant won't be able
+to affect how the ancestors can behave.
 
-I don't believe this to be a bottleneck if nr_pages is increased in 
-mem_cgroup_resize_limit().
+> Hmmm... can you explain why sched_load_balance needs to behave this
+> way?
 
-> > It would probably be best to limit the 
-> > nr_pages to the amount that needs to be reclaimed, though, rather than 
-> > over reclaiming.
-> 
-> How do you achieve that? The charging path is not synchornized with the
-> shrinking one at all.
-> 
+It boils down to the fact that it doesn't make sense to have a CPU in an
+isolated cpuset to participate in load balancing in another cpuset as
+Mike has said before. It is especially true in a parent-child
+relationship where a delegatee can escape CPU isolation by re-enabling
+sched_load_balance in a child cpuset.
 
-The point is to get a better guess at how many pages, up to 
-SWAP_CLUSTER_MAX, that need to be reclaimed instead of 1.
+Cheers,
+Longman
 
-> > If you wanted to be invasive, you could change page_counter_limit() to 
-> > return the count - limit, fix up the callers that look for -EBUSY, and 
-> > then use max(val, SWAP_CLUSTER_MAX) as your nr_pages.
-> 
-> I am not sure I understand
-> 
-
-Have page_counter_limit() return the number of pages over limit, i.e. 
-count - limit, since it compares the two anyway.  Fix up existing callers 
-and then clamp that value to SWAP_CLUSTER_MAX in 
-mem_cgroup_resize_limit().  It's a more accurate guess than either 1 or 
-1024.
