@@ -1,68 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 1/2] cpuset: Enable cpuset controller in default
- hierarchy
-Date: Tue, 20 Mar 2018 13:10:29 -0700
-Message-ID: <20180320201029.GO519464@devbig577.frc2.facebook.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v5 2/2] cpuset: Add cpuset.flags control knob to v2
+Date: Tue, 20 Mar 2018 16:12:25 -0400
+Message-ID: <cbe9b852-80b6-8341-b51c-4d754d00ce53@redhat.com>
 References: <1521148842-15486-1-git-send-email-longman@redhat.com>
- <1521148842-15486-2-git-send-email-longman@redhat.com>
- <20180319155937.GQ2943022@devbig577.frc2.facebook.com>
- <1881c1da-56ec-d76b-b736-fd0919737ec6@redhat.com>
+ <1521148842-15486-3-git-send-email-longman@redhat.com>
+ <20180319162654.GR2943022@devbig577.frc2.facebook.com>
+ <8e553b7e-cab6-1b5d-9110-cc5770ae16c4@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=lAiQqpCcQDlXQITgI8JJALMA48DylJdpE65IrtFSPRE=;
-        b=K3gaUsQtRdZaUajGpvLBM5j33738ehWUwPGd2E8Lp67tBrcaKQvW/SkMvRqcCffEHT
-         LdgsAmz6aIlLoqSn+03YkZttjCgVebIT05v6UQncqYcb0DniCuIBRZZzmNYM+RushySo
-         M5TLKUqdaHtBHFasHL/8Ksuvg6loIjsCgw6J3RDoC6717Yr3HUgY7m5jt1PzUJRwwIE/
-         odVpgyhfXYO6PjqFSvIESIv5Z6Hv1IGZgbSCGs+jPoeqt62XquCfR/P8H0b0XnNzTb5L
-         CRJIJkH9z3WxQBVqD6+LX4gNsKEHAeGWsS2/Bi9fOkRBNZl3+DfuwYJ+v2AOPn+JXmZ9
-         E1/A==
-Content-Disposition: inline
-In-Reply-To: <1881c1da-56ec-d76b-b736-fd0919737ec6@redhat.com>
+In-Reply-To: <8e553b7e-cab6-1b5d-9110-cc5770ae16c4@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-Hello, Waiman.
+On 03/19/2018 12:33 PM, Waiman Long wrote:
+> On 03/19/2018 12:26 PM, Tejun Heo wrote:
+>> Hello, Waiman.
+>>
+>> On Thu, Mar 15, 2018 at 05:20:42PM -0400, Waiman Long wrote:
+>>> +	The currently supported flag is:
+>>> +
+>>> +	  sched_load_balance
+>>> +		When it is not set, there will be no load balancing
+>>> +		among CPUs on this cpuset.  Tasks will stay in the
+>>> +		CPUs they are running on and will not be moved to
+>>> +		other CPUs.
+>>> +
+>>> +		When it is set, tasks within this cpuset will be
+>>> +		load-balanced by the kernel scheduler.  Tasks will be
+>>> +		moved from CPUs with high load to other CPUs within
+>>> +		the same cpuset with less load periodically.
+>> Hmm... looks like this is something which can be decided by the cgroup
+>> itself and should be made delegatable.  Given that different flags
+>> might need different delegation settings and the precedence of
+>> memory.oom_group, I think it'd be better to make the flags separate
+>> bool files - ie. cpuset.sched_load_balance which contains 0/1 and
+>> marked delegatable.
+>>
+>> Thanks.
+>>
+> Sure. Will do that.
 
-On Tue, Mar 20, 2018 at 09:51:20AM -0400, Waiman Long wrote:
-> >> +	It lists the onlined CPUs that are actually allowed to be
-> >> +	used by tasks within the current cgroup. It is a subset of
-> >> +	"cpuset.cpus".  Its value will be affected by CPU hotplug
-> >> +	events.
-> > Can we do cpuset.cpus.availble which lists the cpus available to the
-> > cgroup instead of the eventual computed mask for the cgroup?  That'd
-> > be more useful as it doesn't lose the information by and'ing what's
-> > available with the cgroup's mask and it's trivial to determine the
-> > effective from the two masks.
-> 
-> I don't get what you want here. cpus is the cpuset's cpus_allowed mask.
-> effective_cpus is the effective_cpus mask. When you say cpus available
-> to the cgroup, do you mean the cpu_online_mask or the list of cpus from
-> the parent? Or do you just want to change the name to cpus.available
-> instead of effective_cpus?
+After some thought, I am planning to impose the following additional
+constraints on how sched_load_balance works in v2.
 
-The available cpus from the parent, where the effective is AND between
-cpuset.available and cpuset.cpus of the cgroup, so that the user can
-see what's available for the cgroup unfiltered by cpuset.cpus.
+1) sched_load_balance will be made hierarchical, the child will inherit
+the flag from its parent.
+2) cpu_exclusive will be implicitly associated with sched_load_balance.
+IOW, sched_load_balance => !cpu_exclusive, and !sched_load_balance =>
+cpu_exclusive.
+3) sched_load_balance cannot be 1 on a child if it is 0 on the parent.
 
-> Right, I will set CFTYPE_NOT_ON_ROOT to "cpus" and "mems" as we are not
-> supposed to change them in the root. The effective_cpus and
-> effective_mems will be there in the root to show what are available.
+With these changes, sched_load_balance will have to be set by the parent
+and so will not be delegatable. Please let me know your thought on that.
 
-So, we can do that in the future but let's not do that for now.  It's
-the same problem we have for basically everything else and we've
-stayed away from replicating the information in the root cgroup.  This
-might change in the future but if we do that let's do that
-consistently.
+Cheers,
+Longman
 
-Thanks.
 
--- 
-tejun
+
