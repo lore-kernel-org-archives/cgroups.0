@@ -1,333 +1,48 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [RFC] mm: allow to decrease swap.max below actual swap usage
-Date: Tue, 20 Mar 2018 22:35:43 +0000
-Message-ID: <20180320223543.6188-1-guro@fb.com>
+From: David Rientjes <rientjes@google.com>
+Subject: =?UTF-8?Q?Re=3A_=E7=AD=94=E5=A4=8D=3A_=E7=AD=94=E5=A4=8D=3A_=5BPATCH=5D_mm=2Fmemcontrol=2Ec=3A_speed_up_to_force_empty_a_memory_cgroup?=
+Date: Tue, 20 Mar 2018 15:45:27 -0700 (PDT)
+Message-ID: <alpine.DEB.2.20.1803201540290.45142@chino.kir.corp.google.com>
+References: <1521448170-19482-1-git-send-email-lirongqing@baidu.com> <20180319085355.GQ23100@dhcp22.suse.cz> <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com> <20180319103756.GV23100@dhcp22.suse.cz>
+ <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com> <alpine.DEB.2.20.1803191044310.177918@chino.kir.corp.google.com> <20180320083950.GD23100@dhcp22.suse.cz> <alpine.DEB.2.20.1803201327060.167205@chino.kir.corp.google.com>
+ <56508bd0-e8d7-55fd-5109-c8dacf26b13e@virtuozzo.com> <alpine.DEB.2.20.1803201514340.14003@chino.kir.corp.google.com> <e265c518-968b-8669-ad22-671c781ad96e@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=facebook;
- bh=GoHlab++9X4UgU9uWm0jqDOOb+NiAyfY/Tyt1ZzaXs4=;
- b=rFrKDCVM3rMCsZ11GgyrJcsDCwWCUqijTW8+JnwjCY4kWvf1sXHo+sVgcuUZkI+XZNdu
- E7AmvcIGk2D1Hr29iT210pwQTSPplGoRjMOJzA9vA0iNJFM+3szULlGGFe758QOtI3h2
- Q1G+84n9wjd6VuTUmp4TW2EaHuh7+mJOfWc= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=GoHlab++9X4UgU9uWm0jqDOOb+NiAyfY/Tyt1ZzaXs4=;
- b=VejBlmWrPPm564ZhY/7l3aq/vvsp1EWNFmOsZ2HIh/J1x/+FaqbugtP/EZE2Z26Ii70pHT+3I3yy+WLB3qRks1jCTyBGUzyZ4OKLf0bdBOF7tnwMywtVYrg1xtgYCVbqyLou3qufb4xf82CWhyynaXQnrd9q5H6TD02Eh9jRnZM=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=NPikiFOK6hIbw8sv4Z0hFwFFiEM+tdmFNMryWQvorQ4=;
+        b=FpU6InHvW2aIe+EtX5hwDHfbheX7JKOx8zxLZ/8HgqC6xWYiOol+CgXcKpttGghqfr
+         +bP4/kSt9poe1G7V8VdvSIk/tEjn/bmNBcVDQ5wxgxoPLFi4a3tPehaJ8R/TEIGLW/sq
+         FvNtaQibnekhMHENcQkZbP2GDzfa7Tau2StSEXncUn2yOqmRJy/r6brkGfSx4dbL48Gk
+         YoFjAMZSJLdEiPKHvIRO4EZD7C7zYYxszsnTmFp3ghX2iDm/6fdMYHdtq1ElHw0sWCrY
+         j1wCivRH6MLHxrXvr8zskte32yDzP+ELpo6sqF9+F2NTZbSaobFx9ZMoR++onjMrRTpP
+         xbjg==
+In-Reply-To: <e265c518-968b-8669-ad22-671c781ad96e@virtuozzo.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, Rik van Riel <riel@surriel.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Michal Hocko <mhocko@kernel.org>, "Li,Rongqing" <lirongqing@baidu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>
 
-Currently an attempt to set swap.max into a value lower
-than the actual swap usage fails. And a user can't do much
-with it, except turning off swap globally (using swapoff).
+On Wed, 21 Mar 2018, Andrey Ryabinin wrote:
 
-This patch aims to fix this issue by allowing setting swap.max
-into any value (which corresponds to cgroup v2 API design),
-and schedule a background job to fit swap size into the new limit.
+> > Is SWAP_CLUSTER_MAX the best answer if I'm lowering the limit by 1GB?
+> > 
+> 
+> Absolutely not. I completely on your side here. 
+> I've tried to fix this recently - http://lkml.kernel.org/r/20180119132544.19569-2-aryabinin@virtuozzo.com
+> I guess that Andrew decided to not take my patch, because Michal wasn't
+> happy about it (see mail archives if you want more details).
+> 
 
-The following script can be used to test the memory.swap behavior:
-  #!/bin/bash
+I unfortunately didn't see this patch in January, it seems very similar to 
+what I was suggesting in this thread.  You do a page_counter_read() 
+directly in mem_cgroup_resize_limit() where my suggestion was to have 
+page_counter_limit() return the difference, but there's nothing 
+significantly different about what you proposed and what I suggested.
 
-  mkdir -p /sys/fs/cgroup/test_swap
-  echo 100M > /sys/fs/cgroup/test_swap/memory.max
-  echo max > /sys/fs/cgroup/test_swap/memory.swap.max
-
-  mkdir -p /sys/fs/cgroup/test_swap_2
-  echo 100M > /sys/fs/cgroup/test_swap_2/memory.max
-  echo max > /sys/fs/cgroup/test_swap_2/memory.swap.max
-
-  echo $$ > /sys/fs/cgroup/test_swap/cgroup.procs
-  allocate 200M &
-
-  echo $$ > /sys/fs/cgroup/test_swap_2/cgroup.procs
-  allocate 200M &
-
-  sleep 2
-
-  cat /sys/fs/cgroup/test_swap/memory.swap.current
-  cat /sys/fs/cgroup/test_swap_2/memory.swap.current
-
-  echo max > /sys/fs/cgroup/test_swap/memory.max
-  echo 50M > /sys/fs/cgroup/test_swap/memory.swap.max
-
-  sleep 10
-
-  cat /sys/fs/cgroup/test_swap/memory.swap.current
-  cat /sys/fs/cgroup/test_swap_2/memory.swap.current
-
-  pkill allocate
-
-Original test results:
-  106024960
-  106348544
-  ./swap.sh: line 23: echo: write error: Device or resource busy
-  106024960
-  106348544
-
-With this patch applied:
-  106045440
-  106352640
-  52428800
-  106201088
-
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Shaohua Li <shli@fb.com>
-Cc: Rik van Riel <riel@surriel.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org
----
- include/linux/memcontrol.h |  1 +
- include/linux/swap.h       |  9 +++++++
- include/linux/swapfile.h   |  3 ++-
- mm/frontswap.c             |  2 +-
- mm/memcontrol.c            | 27 +++++++++++++++----
- mm/swapfile.c              | 64 ++++++++++++++++++++++++++++++++++++++++++----
- 6 files changed, 94 insertions(+), 12 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 4525b4404a9e..0c1508503422 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -184,6 +184,7 @@ struct mem_cgroup {
- 
- 	/* Range enforcement for interrupt charges */
- 	struct work_struct high_work;
-+	struct work_struct swap_work;
- 
- 	unsigned long soft_limit;
- 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 1985940af479..878f111d0603 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -650,6 +650,8 @@ extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry);
- extern void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages);
- extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
- extern bool mem_cgroup_swap_full(struct page *page);
-+extern int mem_cgroup_shrink_swap(struct mem_cgroup *memcg,
-+				  unsigned long nr_pages);
- #else
- static inline void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- {
-@@ -675,6 +677,13 @@ static inline bool mem_cgroup_swap_full(struct page *page)
- {
- 	return vm_swap_full();
- }
-+
-+static inline int mem_cgroup_shrink_swap(struct mem_cgroup *memcg,
-+					 unsigned long nr_pages)
-+{
-+	return 0;
-+}
-+
- #endif
- 
- #endif /* __KERNEL__*/
-diff --git a/include/linux/swapfile.h b/include/linux/swapfile.h
-index 06bd7b096167..16844259e802 100644
---- a/include/linux/swapfile.h
-+++ b/include/linux/swapfile.h
-@@ -9,6 +9,7 @@
- extern spinlock_t swap_lock;
- extern struct plist_head swap_active_head;
- extern struct swap_info_struct *swap_info[];
--extern int try_to_unuse(unsigned int, bool, unsigned long);
-+extern int try_to_unuse(unsigned int type, bool fronstswap,
-+			unsigned long pages_to_unuse, struct mem_cgroup *memcg);
- 
- #endif /* _LINUX_SWAPFILE_H */
-diff --git a/mm/frontswap.c b/mm/frontswap.c
-index fec8b5044040..f7cb2e802fce 100644
---- a/mm/frontswap.c
-+++ b/mm/frontswap.c
-@@ -458,7 +458,7 @@ void frontswap_shrink(unsigned long target_pages)
- 	ret = __frontswap_shrink(target_pages, &pages_to_unuse, &type);
- 	spin_unlock(&swap_lock);
- 	if (ret == 0)
--		try_to_unuse(type, true, pages_to_unuse);
-+		try_to_unuse(type, true, pages_to_unuse, NULL);
- 	return;
- }
- EXPORT_SYMBOL(frontswap_shrink);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d1a917b5b7b7..2150f15a7345 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -60,6 +60,7 @@
- #include <linux/vmpressure.h>
- #include <linux/mm_inline.h>
- #include <linux/swap_cgroup.h>
-+#include <linux/swapfile.h>
- #include <linux/cpu.h>
- #include <linux/oom.h>
- #include <linux/lockdep.h>
-@@ -1879,6 +1880,23 @@ static void high_work_func(struct work_struct *work)
- 	reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
- }
- 
-+static void swap_work_func(struct work_struct *work)
-+{
-+	struct mem_cgroup *memcg;
-+
-+	memcg = container_of(work, struct mem_cgroup, swap_work);
-+
-+	for (;;) {
-+		unsigned long usage = page_counter_read(&memcg->swap);
-+
-+		if (usage <= memcg->swap.limit)
-+			break;
-+
-+		if (mem_cgroup_shrink_swap(memcg, usage - memcg->swap.limit))
-+			break;
-+	}
-+}
-+
- /*
-  * Scheduled by try_charge() to be executed from the userland return path
-  * and reclaims memory over the high limit.
-@@ -4391,6 +4409,7 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 		goto fail;
- 
- 	INIT_WORK(&memcg->high_work, high_work_func);
-+	INIT_WORK(&memcg->swap_work, swap_work_func);
- 	memcg->last_scanned_node = MAX_NUMNODES;
- 	INIT_LIST_HEAD(&memcg->oom_notify);
- 	mutex_init(&memcg->thresholds_lock);
-@@ -4526,6 +4545,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- 
- 	vmpressure_cleanup(&memcg->vmpressure);
- 	cancel_work_sync(&memcg->high_work);
-+	cancel_work_sync(&memcg->swap_work);
- 	mem_cgroup_remove_from_trees(memcg);
- 	memcg_free_kmem(memcg);
- 	mem_cgroup_free(memcg);
-@@ -6394,11 +6414,8 @@ static ssize_t swap_max_write(struct kernfs_open_file *of,
- 	if (err)
- 		return err;
- 
--	mutex_lock(&memcg_limit_mutex);
--	err = page_counter_limit(&memcg->swap, max);
--	mutex_unlock(&memcg_limit_mutex);
--	if (err)
--		return err;
-+	xchg(&memcg->swap.limit, max);
-+	schedule_work(&memcg->swap_work);
- 
- 	return nbytes;
- }
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 44101a14e3f5..e7551ca9bed5 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -2093,11 +2093,11 @@ static unsigned int find_next_to_unuse(struct swap_info_struct *si,
-  * and then search for the process using it.  All the necessary
-  * page table adjustments can then be made atomically.
-  *
-- * if the boolean frontswap is true, only unuse pages_to_unuse pages;
-- * pages_to_unuse==0 means all pages; ignored if frontswap is false
-+ * Only unuse pages_to_unuse pages; pages_to_unuse==0 means all pages.
-  */
- int try_to_unuse(unsigned int type, bool frontswap,
--		 unsigned long pages_to_unuse)
-+		 unsigned long pages_to_unuse,
-+		 struct mem_cgroup *memcg)
- {
- 	struct swap_info_struct *si = swap_info[type];
- 	struct mm_struct *start_mm;
-@@ -2192,6 +2192,17 @@ int try_to_unuse(unsigned int type, bool frontswap,
- 		lock_page(page);
- 		wait_on_page_writeback(page);
- 
-+		if (memcg && do_swap_account) {
-+			swp_entry_t ent = { .val = page_private(page), };
-+			unsigned short id = lookup_swap_cgroup_id(ent);
-+
-+			if (memcg != mem_cgroup_from_id(id)) {
-+				unlock_page(page);
-+				put_page(page);
-+				continue;
-+			}
-+		}
-+
- 		/*
- 		 * Remove all references to entry.
- 		 */
-@@ -2310,7 +2321,7 @@ int try_to_unuse(unsigned int type, bool frontswap,
- 		 * interactive performance.
- 		 */
- 		cond_resched();
--		if (frontswap && pages_to_unuse > 0) {
-+		if (pages_to_unuse > 0) {
- 			if (!--pages_to_unuse)
- 				break;
- 		}
-@@ -2618,6 +2629,49 @@ bool has_usable_swap(void)
- 	return ret;
- }
- 
-+int mem_cgroup_shrink_swap(struct mem_cgroup *memcg, unsigned long nr_pages)
-+{
-+	struct swap_info_struct *p = NULL;
-+	unsigned long to_shrink;
-+	int err;
-+
-+	spin_lock(&swap_lock);
-+	plist_for_each_entry(p, &swap_active_head, list) {
-+		if (!(p->flags & SWP_WRITEOK))
-+			continue;
-+
-+		to_shrink = min(512UL, nr_pages);
-+
-+		del_from_avail_list(p);
-+		spin_lock(&p->lock);
-+		plist_del(&p->list, &swap_active_head);
-+		p->flags &= ~SWP_WRITEOK;
-+		spin_unlock(&p->lock);
-+		spin_unlock(&swap_lock);
-+
-+		disable_swap_slots_cache_lock();
-+
-+		set_current_oom_origin();
-+		err = try_to_unuse(p->type, false, to_shrink, memcg);
-+		clear_current_oom_origin();
-+
-+		reinsert_swap_info(p);
-+		reenable_swap_slots_cache_unlock();
-+
-+		if (err)
-+			return err;
-+
-+		nr_pages -= to_shrink;
-+		if (!nr_pages)
-+			return err;
-+
-+		spin_lock(&swap_lock);
-+	}
-+	spin_unlock(&swap_lock);
-+
-+	return 0;
-+}
-+
- SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
- {
- 	struct swap_info_struct *p = NULL;
-@@ -2693,7 +2747,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
- 	disable_swap_slots_cache_lock();
- 
- 	set_current_oom_origin();
--	err = try_to_unuse(p->type, false, 0); /* force unuse all pages */
-+	err = try_to_unuse(p->type, false, 0, NULL); /* force unuse all pages */
- 	clear_current_oom_origin();
- 
- 	if (err) {
--- 
-2.14.3
-
+Perhaps the patch would be better off as a compromise between what you, I, 
+and Li RongQing have proposed/suggested: have page_counter_limit() return 
+the difference, and clamp it to some value proportional to the new limit.
