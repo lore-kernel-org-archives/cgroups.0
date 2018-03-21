@@ -1,81 +1,134 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRD?= =?utf-8?Q?H=5D?=
- mm/memcontrol.c: speed up to force empty a memory cgroup
-Date: Wed, 21 Mar 2018 10:59:13 +0100
-Message-ID: <20180321095913.GE23100@dhcp22.suse.cz>
-References: <20180319085355.GQ23100@dhcp22.suse.cz>
- <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com>
- <20180319103756.GV23100@dhcp22.suse.cz>
- <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
- <alpine.DEB.2.20.1803191044310.177918@chino.kir.corp.google.com>
- <20180320083950.GD23100@dhcp22.suse.cz>
- <alpine.DEB.2.20.1803201327060.167205@chino.kir.corp.google.com>
- <56508bd0-e8d7-55fd-5109-c8dacf26b13e@virtuozzo.com>
- <alpine.DEB.2.20.1803201514340.14003@chino.kir.corp.google.com>
- <e265c518-968b-8669-ad22-671c781ad96e@virtuozzo.com>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: Re: [PATCH 5/6] mm/vmscan: Don't change pgdat state on base of a
+ single LRU list state.
+Date: Wed, 21 Mar 2018 13:40:32 +0300
+Message-ID: <232175b6-4cb0-1123-66cb-b9acafdcd660@virtuozzo.com>
+References: <20180315164553.17856-1-aryabinin@virtuozzo.com>
+ <20180315164553.17856-5-aryabinin@virtuozzo.com>
+ <20180320152550.GZ23100@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e265c518-968b-8669-ad22-671c781ad96e@virtuozzo.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=BM6Hs0YVBSVZKBj58/zFZK1qI79T0Dsxun/4PnxipL4=;
+ b=X4vUkjbuycMHCAW1dSEB+ybD39QlrcVtuCVT6eWP3m8VCMIbTiGtl4HrHS6nf04zQ4iMOKdhwdlZ7/NecYwOY9CGLV6Ll4y+yLYn/7gsl2p5DZO4Xc8aQgsEuwpy932fhCgbviuw3fRpsv5zczG8zhKTkYNP4ftjmPT6wNnPJOo=
+In-Reply-To: <20180320152550.GZ23100@dhcp22.suse.cz>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: David Rientjes <rientjes@google.com>, "Li,Rongqing" <lirongqing@baidu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Wed 21-03-18 01:35:05, Andrey Ryabinin wrote:
-> On 03/21/2018 01:15 AM, David Rientjes wrote:
-> > On Wed, 21 Mar 2018, Andrey Ryabinin wrote:
-> > 
-> >>>>> It would probably be best to limit the 
-> >>>>> nr_pages to the amount that needs to be reclaimed, though, rather than 
-> >>>>> over reclaiming.
-> >>>>
-> >>>> How do you achieve that? The charging path is not synchornized with the
-> >>>> shrinking one at all.
-> >>>>
-> >>>
-> >>> The point is to get a better guess at how many pages, up to 
-> >>> SWAP_CLUSTER_MAX, that need to be reclaimed instead of 1.
-> >>>
-> >>>>> If you wanted to be invasive, you could change page_counter_limit() to 
-> >>>>> return the count - limit, fix up the callers that look for -EBUSY, and 
-> >>>>> then use max(val, SWAP_CLUSTER_MAX) as your nr_pages.
-> >>>>
-> >>>> I am not sure I understand
-> >>>>
-> >>>
-> >>> Have page_counter_limit() return the number of pages over limit, i.e. 
-> >>> count - limit, since it compares the two anyway.  Fix up existing callers 
-> >>> and then clamp that value to SWAP_CLUSTER_MAX in 
-> >>> mem_cgroup_resize_limit().  It's a more accurate guess than either 1 or 
-> >>> 1024.
-> >>>
-> >>
-> >> JFYI, it's never 1, it's always SWAP_CLUSTER_MAX.
-> >> See try_to_free_mem_cgroup_pages():
-> >> ....	
-> >> 	struct scan_control sc = {
-> >> 		.nr_to_reclaim = max(nr_pages, SWAP_CLUSTER_MAX),
-> >>
-> > 
-> > Is SWAP_CLUSTER_MAX the best answer if I'm lowering the limit by 1GB?
-> > 
+On 03/20/2018 06:25 PM, Michal Hocko wrote:
+> On Thu 15-03-18 19:45:52, Andrey Ryabinin wrote:
+>> We have separate LRU list for each memory cgroup. Memory reclaim iterates
+>> over cgroups and calls shrink_inactive_list() every inactive LRU list.
+>> Based on the state of a single LRU shrink_inactive_list() may flag
+>> the whole node as dirty,congested or under writeback. This is obviously
+>> wrong and hurtful. It's especially hurtful when we have possibly
+>> small congested cgroup in system. Than *all* direct reclaims waste time
+>> by sleeping in wait_iff_congested().
 > 
-> Absolutely not. I completely on your side here. 
-> I've tried to fix this recently - http://lkml.kernel.org/r/20180119132544.19569-2-aryabinin@virtuozzo.com
-> I guess that Andrew decided to not take my patch, because Michal wasn't
-> happy about it (see mail archives if you want more details).
+> I assume you have seen this in real workloads. Could you be more
+> specific about how you noticed the problem?
+> 
 
-I was unhappy about the explanation and justification of the patch. It
-is still not clear to me why try_to_free_mem_cgroup_pages with a single
-target should be slower than multiple calls of this function with
-smaller batches when the real reclaim is still SWAP_CLUSTER_MAX batched.
+Does it matter? One of our userspace processes have some sort of watchdog.
+When it doesn't receive some event in time it complains that process stuck.
+In this case in-kernel allocation stuck in wait_iff_congested.
 
-There is also a theoretical risk of over reclaim. Especially with large
-targets.
 
--- 
-Michal Hocko
-SUSE Labs
+>> Sum reclaim stats across all visited LRUs on node and flag node as dirty,
+>> congested or under writeback based on that sum. This only fixes the
+>> problem for global reclaim case. Per-cgroup reclaim will be addressed
+>> separately by the next patch.
+>>
+>> This change will also affect systems with no memory cgroups. Reclaimer
+>> now makes decision based on reclaim stats of the both anon and file LRU
+>> lists. E.g. if the file list is in congested state and get_scan_count()
+>> decided to reclaim some anon pages, reclaimer will start shrinking
+>> anon without delay in wait_iff_congested() like it was before. It seems
+>> to be a reasonable thing to do. Why waste time sleeping, before reclaiming
+>> anon given that we going to try to reclaim it anyway?
+> 
+> Well, if we have few anon pages in the mix then we stop throttling the
+> reclaim, I am afraid. I am worried this might get us kswapd hogging CPU
+> problems back.
+> 
+
+Yeah, it's not ideal choice. If only few anon pages taken than *not* throttling is bad,
+and if few file pages taken and many anon than *not* throttling is probably good.
+
+Anyway, such requires more thought,research,justification, etc.
+I'll change the patch to take into account file only pages, as it was before the patch.
+
+
+> [...]
+
+>> @@ -2579,6 +2542,58 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>>  		if (sc->nr_reclaimed - nr_reclaimed)
+>>  			reclaimable = true;
+>>  
+>> +		/*
+>> +		 * If reclaim is isolating dirty pages under writeback, it implies
+>> +		 * that the long-lived page allocation rate is exceeding the page
+>> +		 * laundering rate. Either the global limits are not being effective
+>> +		 * at throttling processes due to the page distribution throughout
+>> +		 * zones or there is heavy usage of a slow backing device. The
+>> +		 * only option is to throttle from reclaim context which is not ideal
+>> +		 * as there is no guarantee the dirtying process is throttled in the
+>> +		 * same way balance_dirty_pages() manages.
+>> +		 *
+>> +		 * Once a node is flagged PGDAT_WRITEBACK, kswapd will count the number
+>> +		 * of pages under pages flagged for immediate reclaim and stall if any
+>> +		 * are encountered in the nr_immediate check below.
+>> +		 */
+>> +		if (stat.nr_writeback && stat.nr_writeback == stat.nr_taken)
+>> +			set_bit(PGDAT_WRITEBACK, &pgdat->flags);
+>> +
+>> +		/*
+>> +		 * Legacy memcg will stall in page writeback so avoid forcibly
+>> +		 * stalling here.
+>> +		 */
+>> +		if (sane_reclaim(sc)) {
+>> +			/*
+>> +			 * Tag a node as congested if all the dirty pages scanned were
+>> +			 * backed by a congested BDI and wait_iff_congested will stall.
+>> +			 */
+>> +			if (stat.nr_dirty && stat.nr_dirty == stat.nr_congested)
+>> +				set_bit(PGDAT_CONGESTED, &pgdat->flags);
+>> +
+>> +			/* Allow kswapd to start writing pages during reclaim. */
+>> +			if (stat.nr_unqueued_dirty == stat.nr_taken)
+>> +				set_bit(PGDAT_DIRTY, &pgdat->flags);
+>> +
+>> +			/*
+>> +			 * If kswapd scans pages marked marked for immediate
+>> +			 * reclaim and under writeback (nr_immediate), it implies
+>> +			 * that pages are cycling through the LRU faster than
+>> +			 * they are written so also forcibly stall.
+>> +			 */
+>> +			if (stat.nr_immediate)
+>> +				congestion_wait(BLK_RW_ASYNC, HZ/10);
+>> +		}
+>> +
+>> +		/*
+>> +		 * Stall direct reclaim for IO completions if underlying BDIs and node
+>> +		 * is congested. Allow kswapd to continue until it starts encountering
+>> +		 * unqueued dirty pages or cycling through the LRU too quickly.
+>> +		 */
+>> +		if (!sc->hibernation_mode && !current_is_kswapd() &&
+>> +		    current_may_throttle())
+>> +			wait_iff_congested(pgdat, BLK_RW_ASYNC, HZ/10);
+>> +
+>>  	} while (should_continue_reclaim(pgdat, sc->nr_reclaimed - nr_reclaimed,
+>>  					 sc->nr_scanned - nr_scanned, sc));
+> 
+> Why didn't you put the whole thing after the loop?
+> 
+
+Why this should be put after the loop? Here we already scanned all LRUs on node and
+can decide in what state the node is. If should_countinue_reclaim() decides to continue,
+the reclaim will be continued in accordance to the state of the node.
