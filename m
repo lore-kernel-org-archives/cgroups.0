@@ -1,221 +1,56 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [RFC] mm: memory.low heirarchical behavior
-Date: Wed, 21 Mar 2018 19:08:06 +0000
-Message-ID: <20180321190801.GA22452@castle.DHCP.thefacebook.com>
-References: <20180320223353.5673-1-guro@fb.com>
- <20180321182308.GA28232@cmpxchg.org>
+From: Matt Roper <matthew.d.roper@intel.com>
+Subject: [PATCH v4.5 0/8] cgroup private data and DRM/i915 integration
+Date: Wed, 21 Mar 2018 16:23:36 -0700
+Message-ID: <20180321232344.20727-1-matthew.d.roper@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=TXpvLZ+2vL4Ity7g2dvzHMlwWHhg8Lb/6ApLO6fayTY=;
- b=cCPQT6SXPTCQSuDBekDQxj1/sfvn4uww3zR++HLv/yJWsBZYyQiSkHtSsnlotWgCG88N
- Kt2XamW/LvRXEAhvnbG3EZEdw9GFsdtsrpFsoh/15guejAHCfMufQyvmtwMmL5iHKw0i
- gd35lRBO46XGKcJwQKjYOGz+mKnFmC0n7UI= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=TXpvLZ+2vL4Ity7g2dvzHMlwWHhg8Lb/6ApLO6fayTY=;
- b=b4eI+MabCnCulCKGnoz3LSQG7OUc1dWuhoWk+bqtSmISq7yc/E8VtKqmQZxRt2wOP20x7+1dHC1/biMFTPZTaZFuZ3jkW4k6qAJQ/Ol2xCuNwvQDNfW7fIDAcEVkVH+p9ZoicTOMhmy+om3hKS3H8z8NZPSGkOA9cZwqeIsEdYo=
-Content-Disposition: inline
-In-Reply-To: <20180321182308.GA28232@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
 
-Hi Johannes!
-
-Thank you for review!
-
-I've answered most important questions below.
-What about all other stylistic/naming/cosmetic issues, I've no
-objections, I'll address them in v2.
-
-> Hi Roman,
-> 
-> On Tue, Mar 20, 2018 at 10:33:53PM +0000, Roman Gushchin wrote:
-> > This patch aims to address an issue in current memory.low semantics,
-> > which makes it hard to use it in a hierarchy, where some leaf memory
-> > cgroups are more valuable than others.
-> > 
-> > For example, there are memcgs A, A/B, A/C, A/D and A/E:
-> > 
-> >   A      A/memory.low = 2G, A/memory.current = 6G
-> >  //\\
-> > BC  DE   B/memory.low = 3G  B/memory.usage = 2G
-> >          C/memory.low = 1G  C/memory.usage = 2G
-> >          D/memory.low = 0   D/memory.usage = 2G
-> > 	 E/memory.low = 10G E/memory.usage = 0
-> > 
-> > If we apply memory pressure, B, C and D are reclaimed at
-> > the same pace while A's usage exceeds 2G.
-> > This is obviously wrong, as B's usage is fully below B's memory.low,
-> > and C has 1G of protection as well.
-> > Also, A is pushed to the size, which is less than A's 2G memory.low,
-> > which is also wrong.
-> > 
-> > A simple bash script (provided below) can be used to reproduce
-> > the problem. Current results are:
-> >   A:    1430097920
-> >   A/B:  711929856
-> >   A/C:  717426688
-> >   A/D:  741376
-> >   A/E:  0
-> 
-> Yes, this is a problem. And the behavior with your patch looks much
-> preferable over the status quo.
-> 
-> > To address the issue a concept of effective memory.low is introduced.
-> > Effective memory.low is always equal or less than original memory.low.
-> > In a case, when there is no memory.low overcommittment (and also for
-> > top-level cgroups), these two values are equal.
-> > Otherwise it's a part of parent's effective memory.low, calculated as
-> > a cgroup's memory.low usage divided by sum of sibling's memory.low
-> > usages (under memory.low usage I mean the size of actually protected
-> > memory: memory.current if memory.current < memory.low, 0 otherwise).
-> 
-> This hurts my brain.
-> 
-> Why is memory.current == memory.low (which should fully protect
-> memory.current) a low usage of 0?
-> 
-> Why is memory.current > memory.low not a low usage of memory.low?
-> 
-> I.e. shouldn't this be low_usage = min(memory.current, memory.low)?
-
-This is really the non-trivial part.
-
-Let's look at an example:
-memcg A   (memory.current = 4G, memory.low = 2G)
-memcg A/B (memory.current = 2G, memory.low = 2G)
-memcg A/C (memory.current = 2G, memory.low = 1G)
-
-If we'll calculate effective memory.low using your definition
-before any reclaim, we end up with the following:
-A/B  2G * 2G / (2G + 1G) = 4/3G
-A/C  2G * 1G / (2G + 1G) = 2/3G
-
-Looks good, but both cgroups are below their effective limits.
-When memory pressure is applied, both are reclaimed at the same pace.
-While both B and C are getting smaller and smaller, their weights
-and effective low limits are getting closer and closer, but
-still below their usages. This ends up when both cgroups will
-have size of 1G, which is obviously wrong.
-
-Fundamentally the problem is that memory.low doesn't define
-the reclaim speed, just yes or no. So, if there are children cgroups,
-some of which are below their memory.low, and some above (as in the example),
-it's crucially important to reclaim unprotected memory first.
-
-This is exactly what my code does: as soon as memory.current is larger
-than memory.low, we don't treat cgroup's memory as protected at all,
-so it doesn't affect effective limits of sibling cgroups.
-
-> 
-> > It's necessary to track the actual usage, because otherwise an empty
-> > cgroup with memory.low set (A/E in my example) will affect actual
-> > memory distribution, which makes no sense.
-> 
-> Yep, that makes sense.
-> 
-> > Effective memory.low is always capped by memory.low, set by user.
-> > That means it's not possible to become a larger guarantee than
-> > memory.low set by a user, even if corresponding part of parent's
-> > guarantee is larger. This matches existing semantics.
-> 
-> That's a complicated sentence for an intuitive concept: yes, we
-> wouldn't expect a group's protected usage to exceed its own memory.low
-> setting just because the parent's is higher. I'd drop this part.
-> 
-> > Calculating effective memory.low can be done in the reclaim path,
-> > as we conveniently traversing the cgroup tree from top to bottom and
-> > check memory.low on each level. So, it's a perfect place to calculate
-> > effective memory low and save it to use it for children cgroups.
-> > 
-> > This also eliminates a need to traverse the cgroup tree from bottom
-> > to top each time to check if parent's guarantee is not exceeded.
-> > 
-> > Setting/resetting effective memory.low is intentionally racy, but
-> > it's fine and shouldn't lead to any significant differences in
-> > actual memory distribution.
-> > 
-> > With this patch applied results are matching the expectations:
-> >   A:    2146160640
-> >   A/B:  1427795968
-> >   A/C:  717705216
-> >   A/D:  659456
-> >   A/E:  0
-> 
-> Very cool results.
-> 
-> Below some comments on the implementation.
-> 
-> > +static void memcg_update_low(struct mem_cgroup *memcg)
-> > +{
-> > +	unsigned long usage, low_usage, prev_low_usage;
-> > +	struct mem_cgroup *parent;
-> > +	long delta;
-> > +
-> > +	do {
-> > +		parent = parent_mem_cgroup(memcg);
-> > +		if (!parent || mem_cgroup_is_root(parent))
-> > +			break;
-> > +
-> > +		if (!memcg->low && !atomic_long_read(&memcg->low_usage))
-> > +			break;
-> > +
-> > +		usage = page_counter_read(&memcg->memory);
-> > +		if (usage < memcg->low)
-> > +			low_usage = usage;
-> > +		else
-> > +			low_usage = 0;
-> > +
-> > +		prev_low_usage = atomic_long_xchg(&memcg->low_usage, low_usage);
-> > +		delta = low_usage - prev_low_usage;
-> > +		if (delta == 0)
-> > +			break;
-> > +
-> > +		atomic_long_add(delta, &parent->s_low_usage);
-> > +
-> > +	} while ((memcg = parent));
-> > +}
-> 
-> This code could use some comments ;)
-> 
-> Something that explains that we're tracking the combined usage of the
-> children and what we're using that information for.
-> 
-> The conceptual descriptions you have in the changelog should be in the
-> code somewher, to give a high level overview of how we're enforcing
-> the low settings hierarchically.
-> 
-> > @@ -1726,6 +1756,7 @@ static void drain_stock(struct memcg_stock_pcp *stock)
-> >  		page_counter_uncharge(&old->memory, stock->nr_pages);
-> >  		if (do_memsw_account())
-> >  			page_counter_uncharge(&old->memsw, stock->nr_pages);
-> > +		memcg_update_low(old);
-> >  		css_put_many(&old->css, stock->nr_pages);
-> >  		stock->nr_pages = 0;
-> 
-> The function is called every time the page counter changes and walks
-> up the hierarchy exactly the same. That is a good sign that the low
-> usage tracking should really be part of the page counter code itself.
-
-I thought about it, but the problem is that page counters are used for
-accounting swap, kmem, tcpmem (for v1), where low limit calculations are
-not applicable. I've no idea, how to add them nicely and without excessive
-overhead.
-Also, good news are that it's possible to avoid any tracking until
-a user actually overcommits memory.low guarantees. I plan to implement
-this optimization in a separate patch.
-
-> 
-> I think you also have to call it when memory.low changes, as that may
-> increase or decrease low usage just as much as when usage changes.
-
-Yes, you're right. There will be likely not much difference in practice,
-but you're totally correct. Will fix this.
-
-Thank you!
+VGhpcyB2ZXJzaW9uIG9mIHRoZSBwYXRjaCBzZXJpZXMganVzdCBjb250YWlucyBzb21lIG1pbm9y
+IHVwZGF0ZXMgdG8KYWRkcmVzcyBjaGVja3BhdGNoIGFuZCBzcGFyc2Ugd2FybmluZ3MuICBUaGVy
+ZSBhcmUgbm8gc2VyaW91cyBkZXNpZ24gb3IKaW1wbGVtZW50YXRpb24gY2hhbmdlcyBzaW5jZSB2
+NC4KCllvdSBjYW4gZmluZCB0aGUgcHJldmlvdXMgdmVyc2lvbnMgb2YgdGhpcyBzZXJpZXMgKGFu
+ZCBtb3JlIGRldGFpbGVkCmNvdmVyIGxldHRlcnMpIGhlcmU6CiAodjEpIGh0dHBzOi8vbGlzdHMu
+ZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4LUphbnVhcnkvMTUzMTU2Lmh0
+bWwKICh2MikgaHR0cHM6Ly93d3cubWFpbC1hcmNoaXZlLmNvbS9kcmktZGV2ZWxAbGlzdHMuZnJl
+ZWRlc2t0b3Aub3JnL21zZzIwODE3MC5odG1sCiAodjMpIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
+b3Aub3JnL2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4LU1hcmNoLzE1NzkyOC5odG1sCiAodjQpIGh0
+dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4LU1hcmNo
+LzE1OTIyMi5odG1sCgpNYXR0IFJvcGVyICg4KToKICBjZ3JvdXA6IEFsbG93IHJlZ2lzdHJhdGlv
+biBhbmQgbG9va3VwIG9mIGNncm91cCBwcml2YXRlIGRhdGEgKHYzKQogIGNncm91cDogSW50cm9k
+dWNlIHRhc2tfZ2V0X2RmbF9jZ3JvdXAoKSAodjIpCiAgY2dyb3VwOiBJbnRyb2R1Y2UgY2dyb3Vw
+X3ByaXZfZ2V0X2N1cnJlbnQKICBkcm0vaTkxNTogQWRqdXN0IGludGVybmFsIHByaW9yaXR5IGRl
+ZmluaXRpb25zICh2MikKICBkcm0vaTkxNTogY2dyb3VwIGludGVncmF0aW9uICh2NCkKICBkcm0v
+aTkxNTogSW50cm9kdWNlICdwcmlvcml0eSBvZmZzZXQnIGZvciBHUFUgY29udGV4dHMgKHY0KQog
+IGRybS9pOTE1OiBJbnRyb2R1Y2UgcGVyLWNncm91cCBkaXNwbGF5IGJvb3N0IHNldHRpbmcKICBk
+cm0vaTkxNTogQWRkIGNvbnRleHQgcHJpb3JpdHkgJiBwcmlvcml0eSBvZmZzZXQgdG8gZGVidWdm
+cyAodjIpCgogZHJpdmVycy9ncHUvZHJtL2k5MTUvTWFrZWZpbGUgICAgICAgICAgIHwgICAxICsK
+IGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfY2dyb3VwLmMgICAgICB8IDIwNyArKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKwogZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9kZWJ1Z2Zz
+LmMgICAgIHwgICAzICsKIGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfZHJ2LmMgICAgICAgICB8
+ICAgOCArKwogZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9kcnYuaCAgICAgICAgIHwgIDQ2ICsr
+KysrKy0KIGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfZ2VtX2NvbnRleHQuYyB8ICAxMiArLQog
+ZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9nZW1fY29udGV4dC5oIHwgICA5ICsrCiBkcml2ZXJz
+L2dwdS9kcm0vaTkxNS9pOTE1X3JlcXVlc3QuaCAgICAgfCAgMTggKystCiBkcml2ZXJzL2dwdS9k
+cm0vaTkxNS9pbnRlbF9kaXNwbGF5LmMgICAgfCAgIDUgKy0KIGluY2x1ZGUvbGludXgvY2dyb3Vw
+LWRlZnMuaCAgICAgICAgICAgICB8ICAgOCArKwogaW5jbHVkZS9saW51eC9jZ3JvdXAuaCAgICAg
+ICAgICAgICAgICAgIHwgIDM3ICsrKysrKwogaW5jbHVkZS91YXBpL2RybS9pOTE1X2RybS5oICAg
+ICAgICAgICAgIHwgIDE0ICsrKwoga2VybmVsL2Nncm91cC9jZ3JvdXAuYyAgICAgICAgICAgICAg
+ICAgIHwgMjA2ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0KIDEzIGZpbGVzIGNoYW5n
+ZWQsIDU2MSBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKIGNyZWF0ZSBtb2RlIDEwMDY0
+NCBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2Nncm91cC5jCgotLSAKMi4xNC4zCgpfX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGlu
+ZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVl
+ZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
