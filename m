@@ -1,41 +1,104 @@
-From: Matt Roper <matthew.d.roper@intel.com>
-Subject: [PATCH v4.5 8/8] drm/i915: Add context priority &
- priority offset to debugfs (v2)
-Date: Wed, 21 Mar 2018 16:23:44 -0700
-Message-ID: <20180321232344.20727-9-matthew.d.roper@intel.com>
-References: <20180321232344.20727-1-matthew.d.roper@intel.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v6 2/2] cpuset: Add cpuset.sched_load_balance to v2
+Date: Thu, 22 Mar 2018 09:41:20 +0100
+Message-ID: <20180322084120.GE7231@localhost.localdomain>
+References: <1521649309-26690-1-git-send-email-longman@redhat.com>
+ <1521649309-26690-3-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20180321232344.20727-1-matthew.d.roper@intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1521649309-26690-3-git-send-email-longman@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-VXBkYXRlIGk5MTVfY29udGV4dF9zdGF0dXMgdG8gaW5jbHVkZSBwcmlvcml0eSBpbmZvcm1hdGlv
-bi4KCnYyOgogLSBDbGFyaWZ5IHRoYXQgdGhlIG9mZnNldCBpcyBiYXNlZCBvbiBjZ3JvdXAgKENo
-cmlzKQoKU2lnbmVkLW9mZi1ieTogTWF0dCBSb3BlciA8bWF0dGhldy5kLnJvcGVyQGludGVsLmNv
-bT4KLS0tCiBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2RlYnVnZnMuYyB8IDMgKysrCiAxIGZp
-bGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJt
-L2k5MTUvaTkxNV9kZWJ1Z2ZzLmMgYi9kcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2RlYnVnZnMu
-YwppbmRleCA3ODE2Y2Q1MzEwMGEuLmFjMmRhZDM4ZGVlMSAxMDA2NDQKLS0tIGEvZHJpdmVycy9n
-cHUvZHJtL2k5MTUvaTkxNV9kZWJ1Z2ZzLmMKKysrIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkx
-NV9kZWJ1Z2ZzLmMKQEAgLTE5NTksNiArMTk1OSw5IEBAIHN0YXRpYyBpbnQgaTkxNV9jb250ZXh0
-X3N0YXR1cyhzdHJ1Y3Qgc2VxX2ZpbGUgKm0sIHZvaWQgKnVudXNlZCkKIAkJc2VxX3B1dGMobSwg
-Y3R4LT5yZW1hcF9zbGljZSA/ICdSJyA6ICdyJyk7CiAJCXNlcV9wdXRjKG0sICdcbicpOwogCisJ
-CXNlcV9wcmludGYobSwgIlByaW9yaXR5ICVkIChjZ3JvdXAgb2Zmc2V0ID0gJWQpXG4iLAorCQkJ
-ICAgY3R4LT5wcmlvcml0eSwgY3R4LT5wcmlvcml0eV9vZmZzZXQpOworCiAJCWZvcl9lYWNoX2Vu
-Z2luZShlbmdpbmUsIGRldl9wcml2LCBpZCkgewogCQkJc3RydWN0IGludGVsX2NvbnRleHQgKmNl
-ID0gJmN0eC0+ZW5naW5lW2VuZ2luZS0+aWRdOwogCi0tIAoyLjE0LjMKCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QK
-SW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9w
-Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVsLWdmeAo=
+Hi Waiman,
+
+On 21/03/18 12:21, Waiman Long wrote:
+> The sched_load_balance flag is needed to enable CPU isolation similar
+> to what can be done with the "isolcpus" kernel boot parameter.
+> 
+> The sched_load_balance flag implies an implicit !cpu_exclusive as
+> it doesn't make sense to have an isolated CPU being load-balanced in
+> another cpuset.
+> 
+> For v2, this flag is hierarchical and is inherited by child cpusets. It
+> is not allowed to have this flag turn off in a parent cpuset, but on
+> in a child cpuset.
+> 
+> This flag is set by the parent and is not delegatable.
+> 
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  Documentation/cgroup-v2.txt | 22 ++++++++++++++++++
+>  kernel/cgroup/cpuset.c      | 56 +++++++++++++++++++++++++++++++++++++++------
+>  2 files changed, 71 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+> index ed8ec66..c970bd7 100644
+> --- a/Documentation/cgroup-v2.txt
+> +++ b/Documentation/cgroup-v2.txt
+> @@ -1514,6 +1514,28 @@ Cpuset Interface Files
+>  	it is a subset of "cpuset.mems".  Its value will be affected
+>  	by memory nodes hotplug events.
+>  
+> +  cpuset.sched_load_balance
+> +	A read-write single value file which exists on non-root cgroups.
+> +	The default is "1" (on), and the other possible value is "0"
+> +	(off).
+> +
+> +	When it is on, tasks within this cpuset will be load-balanced
+> +	by the kernel scheduler.  Tasks will be moved from CPUs with
+> +	high load to other CPUs within the same cpuset with less load
+> +	periodically.
+> +
+> +	When it is off, there will be no load balancing among CPUs on
+> +	this cgroup.  Tasks will stay in the CPUs they are running on
+> +	and will not be moved to other CPUs.
+> +
+> +	This flag is hierarchical and is inherited by child cpusets. It
+> +	can be turned off only when the CPUs in this cpuset aren't
+> +	listed in the cpuset.cpus of other sibling cgroups, and all
+> +	the child cpusets, if present, have this flag turned off.
+> +
+> +	Once it is off, it cannot be turned back on as long as the
+> +	parent cgroup still has this flag in the off state.
+> +
+
+I'm afraid that this will not work for SCHED_DEADLINE (at least for how
+it is implemented today). As you can see in Documentation [1] the only
+way a user has to perform partitioned/clustered scheduling is to create
+subset of exclusive cpusets and then assign deadline tasks to them. The
+other thing to take into account here is that a root_domain is created
+for each exclusive set and we use such root_domain to keep information
+about admitted bandwidth and speed up load balancing decisions (there is
+a max heap tracking deadlines of active tasks on each root_domain).
+
+Now, AFAIR distinct root_domain(s) are created when parent group has
+sched_load_balance disabled and cpus_exclusive set (in cgroup v1 that
+is). So, what we normally do is create, say, cpus_exclusive groups for
+the different clusters and then disable sched_load_balance at root level
+(so that each cluster gets its own root_domain). Also,
+sched_load_balance is enabled in children groups (as load balancing
+inside clusters is what we actually needed :).
+
+IIUC your proposal this will not be permitted with cgroup v2 because
+sched_load_balance won't be present at root level and children groups
+won't be able to set sched_load_balance back to 1 if that was set to 0
+in some parent. Is that true?
+
+Look, the way things work today is most probably not perfect (just to
+say one thing, we need to disable load balancing for all classes at root
+level just because DEADLINE wants to set restricted affinities to his
+tasks :/) and we could probably think on how to change how this all
+work. So, let's first see if IIUC what you are proposing (and its
+implications). :)
+
+Best,
+
+- Juri
+
+[1] https://elixir.bootlin.com/linux/v4.16-rc6/source/Documentation/scheduler/sched-deadline.txt#L640
