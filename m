@@ -1,114 +1,115 @@
-From: Chris Wilson <chris@chris-wilson.co.uk>
-Subject: Re: [PATCH v4.5 1/8] cgroup: Allow registration and
- lookup of cgroup private data (v3)
-Date: Thu, 22 Mar 2018 18:04:44 +0000
-Message-ID: <152174188439.23562.9500776701220466090@mail.alporthouse.com>
-References: <20180321232344.20727-1-matthew.d.roper@intel.com>
- <20180321232344.20727-2-matthew.d.roper@intel.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v6 2/2] cpuset: Add cpuset.sched_load_balance to v2
+Date: Thu, 22 Mar 2018 17:50:48 -0400
+Message-ID: <e754e128-0a93-800e-e71b-2c8dc316ba8a@redhat.com>
+References: <1521649309-26690-1-git-send-email-longman@redhat.com>
+ <1521649309-26690-3-git-send-email-longman@redhat.com>
+ <20180322084120.GE7231@localhost.localdomain>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20180321232344.20727-2-matthew.d.roper@intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180322084120.GE7231@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matt Roper <matthew.d.roper@intel.com>, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Alexei Starovoitov <ast@fb.com>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-UXVvdGluZyBNYXR0IFJvcGVyICgyMDE4LTAzLTIxIDIzOjIzOjM3KQo+IFRoZXJlIGFyZSBjYXNl
-cyB3aGVyZSBvdGhlciBwYXJ0cyBvZiB0aGUga2VybmVsIG1heSB3aXNoIHRvIHN0b3JlIGRhdGEK
-PiBhc3NvY2lhdGVkIHdpdGggaW5kaXZpZHVhbCBjZ3JvdXBzIHdpdGhvdXQgYnVpbGRpbmcgYSBm
-dWxsIGNncm91cAo+IGNvbnRyb2xsZXIuICBMZXQncyBhZGQgaW50ZXJmYWNlcyB0byBhbGxvdyB0
-aGVtIHRvIHJlZ2lzdGVyIGFuZCBsb29rdXAKPiB0aGlzIHByaXZhdGUgZGF0YSBmb3IgaW5kaXZp
-ZHVhbCBjZ3JvdXBzLgo+IAo+IEEga2VybmVsIHN5c3RlbSAoZS5nLiwgYSBkcml2ZXIpIHRoYXQg
-d2lzaGVzIHRvIHJlZ2lzdGVyIHByaXZhdGUgZGF0YQo+IGZvciBhIGNncm91cCBzaG91bGQgc3Rh
-cnQgYnkgb2J0YWluaW5nIGEgdW5pcXVlIHByaXZhdGUgZGF0YSBrZXkgYnkKPiBjYWxsaW5nIGNn
-cm91cF9wcml2X2dldGtleSgpLiAgSXQgbWF5IHRoZW4gYXNzb2NpYXRlIHByaXZhdGUgZGF0YQo+
-IHdpdGggYSBjZ3JvdXAgYnkgY2FsbGluZyBjZ3JvdXBfcHJpdl9pbnN0YWxsKGNncnAsIGtleSwg
-cmVmKSB3aGVyZSAncmVmJwo+IGlzIGEgcG9pbnRlciB0byBhIGtyZWYgZmllbGQgaW5zaWRlIHRo
-ZSBwcml2YXRlIGRhdGEgc3RydWN0dXJlLiAgVGhlCj4gcHJpdmF0ZSBkYXRhIG1heSBsYXRlciBi
-ZSBsb29rZWQgdXAgYnkgY2FsbGluZyBjZ3JvdXBfcHJpdl9nZXQoY2dycCwKPiBrZXkpIHRvIG9i
-dGFpbiBhIG5ldyByZWZlcmVuY2UgdG8gdGhlIHByaXZhdGUgZGF0YS4gIFByaXZhdGUgZGF0YSBt
-YXkgYmUKPiB1bnJlZ2lzdGVyZWQgdmlhIGNncm91cF9wcml2X3JlbGVhc2UoY2dycCwga2V5KS4K
-PiAKPiBJZiBhIGNncm91cCBpcyByZW1vdmVkLCB0aGUgcmVmZXJlbmNlIGNvdW50IGZvciBhbGwg
-cHJpdmF0ZSBkYXRhIG9iamVjdHMKPiB3aWxsIGJlIGRlY3JlbWVudGVkLgo+IAo+IHYyOiAgU2ln
-bmlmaWNhbnQgb3ZlcmhhdWwgc3VnZ2VzdGVkIGJ5IFRlanVuLCBBbGV4ZWksIGFuZCBSb21hbgo+
-ICAtIFJld29yayBpbnRlcmZhY2UgdG8gbWFrZSBjb25zdW1lcnMgb2J0YWluIGFuIGlkYS1iYXNl
-ZCBrZXkgcmF0aGVyCj4gICAgdGhhbiBzdXBwbHlpbmcgdGhlaXIgb3duIGFyYml0cmFyeSB2b2lk
-Kgo+ICAtIEludGVybmFsIGltcGxlbWVudGF0aW9uIG5vdyB1c2VzIHBlci1jZ3JvdXAgcmFkaXh0
-cmVlcyB3aGljaCBzaG91bGQKPiAgICBhbGxvdyBtdWNoIGZhc3RlciBsb29rdXAgdGhhbiB0aGUg
-cHJldmlvdXMgaGFzaHRhYmxlIGFwcHJvYWNoCj4gIC0gUHJpdmF0ZSBkYXRhIGlzIHJlZ2lzdGVy
-ZWQgdmlhIGtyZWYsIGFsbG93aW5nIGEgc2luZ2xlIHByaXZhdGUgZGF0YQo+ICAgIHN0cnVjdHVy
-ZSB0byBwb3RlbnRpYWxseSBiZSBhc3NpZ25lZCB0byBtdWx0aXBsZSBjZ3JvdXBzLgo+IAo+IHYz
-Ogo+ICAtIFNwYXJlIHdhcm5pbmcgZml4ZXMgKGtidWlsZCB0ZXN0IHJvYm90KQo+IAo+IENjOiBU
-ZWp1biBIZW8gPHRqQGtlcm5lbC5vcmc+Cj4gQ2M6IEFsZXhlaSBTdGFyb3ZvaXRvdiA8YXN0QGZi
-LmNvbT4KPiBDYzogUm9tYW4gR3VzaGNoaW4gPGd1cm9AZmIuY29tPgo+IENjOiBjZ3JvdXBzQHZn
-ZXIua2VybmVsLm9yZwo+IFNpZ25lZC1vZmYtYnk6IE1hdHQgUm9wZXIgPG1hdHRoZXcuZC5yb3Bl
-ckBpbnRlbC5jb20+Cj4gCj4gZml4dXAhIGNncm91cDogQWxsb3cgcmVnaXN0cmF0aW9uIGFuZCBs
-b29rdXAgb2YgY2dyb3VwIHByaXZhdGUgZGF0YSAodjIpCj4gLS0tCj4gIGluY2x1ZGUvbGludXgv
-Y2dyb3VwLWRlZnMuaCB8ICAxMCArKysKPiAgaW5jbHVkZS9saW51eC9jZ3JvdXAuaCAgICAgIHwg
-ICA3ICsrCj4gIGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgICAgICB8IDE4MyArKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLQo+ICAzIGZpbGVzIGNoYW5nZWQsIDE5OCBp
-bnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xp
-bnV4L2Nncm91cC1kZWZzLmggYi9pbmNsdWRlL2xpbnV4L2Nncm91cC1kZWZzLmgKPiBpbmRleCA5
-ZjI0MmI4NzZmZGUuLjkwODZkOTYzY2MwYSAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL2xpbnV4L2Nn
-cm91cC1kZWZzLmgKPiArKysgYi9pbmNsdWRlL2xpbnV4L2Nncm91cC1kZWZzLmgKPiBAQCAtNDI3
-LDYgKzQyNywxNiBAQCBzdHJ1Y3QgY2dyb3VwIHsKPiAgICAgICAgIC8qIHVzZWQgdG8gc3RvcmUg
-ZUJQRiBwcm9ncmFtcyAqLwo+ICAgICAgICAgc3RydWN0IGNncm91cF9icGYgYnBmOwo+ICAKPiAr
-ICAgICAgIC8qCj4gKyAgICAgICAgKiBjZ3JvdXAgcHJpdmF0ZSBkYXRhIHJlZ2lzdGVyZWQgYnkg
-b3RoZXIgbm9uLWNvbnRyb2xsZXIgcGFydHMgb2YgdGhlCj4gKyAgICAgICAgKiBrZXJuZWwuICBJ
-bnNlcnRpb25zIGFyZSBwcm90ZWN0ZWQgYnkgcHJpdmRhdGFfbG9jaywgbG9va3VwcyBieQo+ICsg
-ICAgICAgICogcmN1X3JlYWRfbG9jaygpLgo+ICsgICAgICAgICovCj4gKyAgICAgICBzdHJ1Y3Qg
-cmFkaXhfdHJlZV9yb290IHByaXZkYXRhOwo+ICsKPiArICAgICAgIC8qIFByb3RlY3QgYWdhaW5z
-dCBjb25jdXJyZW50IGluc2VydGlvbnMvZGVsZXRpb25zIHRvIHByaXZkYXRhICovCj4gKyAgICAg
-ICBzcGlubG9ja190IHByaXZkYXRhX2xvY2s7Cj4gKwo+ICAgICAgICAgLyogaWRzIG9mIHRoZSBh
-bmNlc3RvcnMgYXQgZWFjaCBsZXZlbCBpbmNsdWRpbmcgc2VsZiAqLwo+ICAgICAgICAgaW50IGFu
-Y2VzdG9yX2lkc1tdOwo+ICB9Owo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2Nncm91cC5o
-IGIvaW5jbHVkZS9saW51eC9jZ3JvdXAuaAo+IGluZGV4IDQ3M2UwYzBhYmI4Ni4uNjNkMjJkZmEw
-MGJkIDEwMDY0NAo+IC0tLSBhL2luY2x1ZGUvbGludXgvY2dyb3VwLmgKPiArKysgYi9pbmNsdWRl
-L2xpbnV4L2Nncm91cC5oCj4gQEAgLTgzMyw0ICs4MzMsMTEgQEAgc3RhdGljIGlubGluZSB2b2lk
-IHB1dF9jZ3JvdXBfbnMoc3RydWN0IGNncm91cF9uYW1lc3BhY2UgKm5zKQo+ICAgICAgICAgICAg
-ICAgICBmcmVlX2Nncm91cF9ucyhucyk7Cj4gIH0KPiAgCj4gKy8qIGNncm91cCBwcml2YXRlIGRh
-dGEgaGFuZGxpbmcgKi8KPiAraW50IGNncm91cF9wcml2X2dldGtleSh2b2lkICgqZnJlZSkoc3Ry
-dWN0IGtyZWYgKikpOwo+ICt2b2lkIGNncm91cF9wcml2X2Rlc3Ryb3lrZXkoaW50IGtleSk7Cj4g
-K2ludCBjZ3JvdXBfcHJpdl9pbnN0YWxsKHN0cnVjdCBjZ3JvdXAgKmNncnAsIGludCBrZXksIHN0
-cnVjdCBrcmVmICpyZWYpOwo+ICtzdHJ1Y3Qga3JlZiAqY2dyb3VwX3ByaXZfZ2V0KHN0cnVjdCBj
-Z3JvdXAgKmNncnAsIGludCBrZXkpOwo+ICt2b2lkIGNncm91cF9wcml2X3JlbGVhc2Uoc3RydWN0
-IGNncm91cCAqY2dycCwgaW50IGtleSk7Cj4gKwo+ICAjZW5kaWYgLyogX0xJTlVYX0NHUk9VUF9I
-ICovCj4gZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgYi9rZXJuZWwvY2dyb3Vw
-L2Nncm91cC5jCj4gaW5kZXggOGNkYTNiYzNhZTIyLi4zMjY4YTIxZTgxNTggMTAwNjQ0Cj4gLS0t
-IGEva2VybmVsL2Nncm91cC9jZ3JvdXAuYwo+ICsrKyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMK
-PiBAQCAtODEsOCArODEsMTUgQEAgRVhQT1JUX1NZTUJPTF9HUEwoY3NzX3NldF9sb2NrKTsKPiAg
-I2VuZGlmCj4gIAo+ICAvKgo+IC0gKiBQcm90ZWN0cyBjZ3JvdXBfaWRyIGFuZCBjc3NfaWRyIHNv
-IHRoYXQgSURzIGNhbiBiZSByZWxlYXNlZCB3aXRob3V0Cj4gLSAqIGdyYWJiaW5nIGNncm91cF9t
-dXRleC4KPiArICogSUQgYWxsb2NhdG9yIGZvciBjZ3JvdXAgcHJpdmF0ZSBkYXRhIGtleXM7IHRo
-ZSBJRCdzIGFsbG9jYXRlZCBoZXJlIHdpbGwKPiArICogYmUgdXNlZCB0byBpbmRleCBhbGwgcGVy
-LWNncm91cCByYWRpeCB0cmVlcy4gIFRoZSByYWRpeCB0cmVlIGJ1aWx0IGludG8KPiArICogdGhl
-IElEUiBpdHNlbGYgd2lsbCBzdG9yZSBhIGtleS1zcGVjaWZpYyBmdW5jdGlvbiB0byBiZSBwYXNz
-ZWQgdG8ga3JlZl9wdXQuCj4gKyAqLwo+ICtzdGF0aWMgREVGSU5FX0lEUihjZ3JvdXBfcHJpdl9p
-ZHIpOwoKRnVuIHR3byByYWRpeHRyZWVzLCBvbmUgdG8gaG9sZCB0aGUgKCpmcmVlKSgpIGFuZCB0
-aGUgb3RoZXIgdGhlIHZvaWQqLgoKV291bGQgbm90IGp1c3QgYQpzdHJ1Y3QgY2dyb3VwX3ByaXZk
-YXRhIHsKCXN0cnVjdCByY3VfaGVhZCByY3U7Cgl2b2lkICgqZnJlZSkoc3RydWN0IGtyZWYgKik7
-Cn0Kc3VmZmljZSBmb3Igc3ViY2xhc3Npbmc/IChBbHNvIHRoaXMgaXMgYSBwcmltZSBjYW5kaWRh
-dGUgZm9yIHN3aXRjaGluZwp0byBYQXJyYXkuKQoKPiArc3RydWN0IGtyZWYgKgo+ICtjZ3JvdXBf
-cHJpdl9nZXQoc3RydWN0IGNncm91cCAqY2dycCwgaW50IGtleSkKPiArewo+ICsgICAgICAgc3Ry
-dWN0IGtyZWYgKnJlZjsKPiArCj4gKyAgICAgICBXQVJOX09OKGNncnAtPnJvb3QgIT0gJmNncnBf
-ZGZsX3Jvb3QpOwo+ICsgICAgICAgV0FSTl9PTihrZXkgPT0gMCk7Cj4gKwo+ICsgICAgICAgcmN1
-X3JlYWRfbG9jaygpOwo+ICsKPiArICAgICAgIHJlZiA9IHJhZGl4X3RyZWVfbG9va3VwKCZjZ3Jw
-LT5wcml2ZGF0YSwga2V5KTsKPiArICAgICAgIGlmIChyZWYpCj4gKyAgICAgICAgICAgICAgIGty
-ZWZfZ2V0KHJlZik7CgpUaGlzIGlzIG5vdCBzYWZlLCB5b3UgbmVlZAoKaWYgKHJlZiAmJiAha3Jl
-Zl9nZXRfdW5sZXNzX3plcm8ocmVmKSkKCXJlZiA9IE5VTEw7CgpvdGhlcndpc2UgdGhlIGNncm91
-cF9wcml2X3JlbGVhc2UoKSBtYXkgZHJvcCB0aGUgbGFzdCByZWZlcmVuY2UgcHJpb3IgdG8KeW91
-IG9idGFpbmluZyB5b3Vycy4gQWxzbyByZXF1aXJlcyB0aGUgcHJpdmRhdGEgdG8gYmUgUkNVIHBy
-b3RlY3RlZC4KLUNocmlzCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9w
-Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVs
-LWdmeAo=
+On 03/22/2018 04:41 AM, Juri Lelli wrote:
+> Hi Waiman,
+>
+> On 21/03/18 12:21, Waiman Long wrote:
+>> The sched_load_balance flag is needed to enable CPU isolation similar
+>> to what can be done with the "isolcpus" kernel boot parameter.
+>>
+>> The sched_load_balance flag implies an implicit !cpu_exclusive as
+>> it doesn't make sense to have an isolated CPU being load-balanced in
+>> another cpuset.
+>>
+>> For v2, this flag is hierarchical and is inherited by child cpusets. It
+>> is not allowed to have this flag turn off in a parent cpuset, but on
+>> in a child cpuset.
+>>
+>> This flag is set by the parent and is not delegatable.
+>>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>  Documentation/cgroup-v2.txt | 22 ++++++++++++++++++
+>>  kernel/cgroup/cpuset.c      | 56 +++++++++++++++++++++++++++++++++++++++------
+>>  2 files changed, 71 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+>> index ed8ec66..c970bd7 100644
+>> --- a/Documentation/cgroup-v2.txt
+>> +++ b/Documentation/cgroup-v2.txt
+>> @@ -1514,6 +1514,28 @@ Cpuset Interface Files
+>>  	it is a subset of "cpuset.mems".  Its value will be affected
+>>  	by memory nodes hotplug events.
+>>  
+>> +  cpuset.sched_load_balance
+>> +	A read-write single value file which exists on non-root cgroups.
+>> +	The default is "1" (on), and the other possible value is "0"
+>> +	(off).
+>> +
+>> +	When it is on, tasks within this cpuset will be load-balanced
+>> +	by the kernel scheduler.  Tasks will be moved from CPUs with
+>> +	high load to other CPUs within the same cpuset with less load
+>> +	periodically.
+>> +
+>> +	When it is off, there will be no load balancing among CPUs on
+>> +	this cgroup.  Tasks will stay in the CPUs they are running on
+>> +	and will not be moved to other CPUs.
+>> +
+>> +	This flag is hierarchical and is inherited by child cpusets. It
+>> +	can be turned off only when the CPUs in this cpuset aren't
+>> +	listed in the cpuset.cpus of other sibling cgroups, and all
+>> +	the child cpusets, if present, have this flag turned off.
+>> +
+>> +	Once it is off, it cannot be turned back on as long as the
+>> +	parent cgroup still has this flag in the off state.
+>> +
+> I'm afraid that this will not work for SCHED_DEADLINE (at least for how
+> it is implemented today). As you can see in Documentation [1] the only
+> way a user has to perform partitioned/clustered scheduling is to create
+> subset of exclusive cpusets and then assign deadline tasks to them. The
+> other thing to take into account here is that a root_domain is created
+> for each exclusive set and we use such root_domain to keep information
+> about admitted bandwidth and speed up load balancing decisions (there is
+> a max heap tracking deadlines of active tasks on each root_domain).
+> Now, AFAIR distinct root_domain(s) are created when parent group has
+> sched_load_balance disabled and cpus_exclusive set (in cgroup v1 that
+> is). So, what we normally do is create, say, cpus_exclusive groups for
+> the different clusters and then disable sched_load_balance at root level
+> (so that each cluster gets its own root_domain). Also,
+> sched_load_balance is enabled in children groups (as load balancing
+> inside clusters is what we actually needed :).
+
+That looks like an undocumented side effect to me. I would rather see an
+explicit control file that enable root_domain and break it free from
+cpu_exclusive && !sched_load_balance, e.g. sched_root_domain(?).
+
+> IIUC your proposal this will not be permitted with cgroup v2 because
+> sched_load_balance won't be present at root level and children groups
+> won't be able to set sched_load_balance back to 1 if that was set to 0
+> in some parent. Is that true?
+
+Yes, that is the current plan.
+
+> Look, the way things work today is most probably not perfect (just to
+> say one thing, we need to disable load balancing for all classes at root
+> level just because DEADLINE wants to set restricted affinities to his
+> tasks :/) and we could probably think on how to change how this all
+> work. So, let's first see if IIUC what you are proposing (and its
+> implications). :)
+>
+Cgroup v2 is supposed to allow us to have a fresh start to rethink what
+is a more sane way of partitioning resources without worrying about
+backward compatibility. So I think it is time to design a new way for
+deadline tasks to work with cpuset v2.
+
+Cheers,
+Longman
+
+
+
