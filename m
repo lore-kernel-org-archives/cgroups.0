@@ -1,164 +1,99 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch v2 -mm 1/6] mm, memcg: introduce per-memcg oom policy
- tunable
-Date: Thu, 22 Mar 2018 14:53:48 -0700 (PDT)
-Message-ID: <alpine.DEB.2.20.1803221452050.17056@chino.kir.corp.google.com>
-References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com> <alpine.DEB.2.20.1803151351140.55261@chino.kir.corp.google.com> <alpine.DEB.2.20.1803161405410.209509@chino.kir.corp.google.com>
- <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
+From: "Li,Rongqing" <lirongqing@baidu.com>
+Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSF0gbW0vbWVtY29udHJvbC5jOiBzcGVl?=
+ =?utf-8?Q?d_up_to_force_empty_a_memory_cgroup?=
+Date: Fri, 23 Mar 2018 02:58:36 +0000
+Message-ID: <2AD939572F25A448A3AE3CAEA61328C2374832C1@BC-MAIL-M28.internal.baidu.com>
+References: <1521448170-19482-1-git-send-email-lirongqing@baidu.com>
+ <20180319085355.GQ23100@dhcp22.suse.cz>
+ <2AD939572F25A448A3AE3CAEA61328C23745764B@BC-MAIL-M28.internal.baidu.com>
+ <20180319103756.GV23100@dhcp22.suse.cz>
+ <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=+n88kiWd7AcQNtj7MHbfphivQkZ4paw+Ubi+GhSjD3s=;
-        b=pHyEnx1rhlzKM2zLlM2x3pgjadfDYHkEWNGZvn+1vIY5eHs/C+4w8hcil7rzXmRb2N
-         seIShH1zSaZz6inbsI/ChIOfspsIXcCtw3JYlOsbbzixduNd2YLxDy+1VI3NDjAXBAhq
-         KBJH8LaCEA3O79PivdQZwQzApMEOOM1l/TzoAainShIEk9HVGDqZMfO1DEYvPvlAQJQR
-         WKu9X/qoEZYXCQuMvfNbm6sQxfpkdGDJVuJCjztg+UVK5qh/FMNf3sWi8+7kk9/JwvoF
-         yaAojHViocAeDtBZ+8hS0U8E2MdmwSy6vXOI9hjw8gFulI9wECVK2H50Qh50Y20vu/01
-         Awgw==
-In-Reply-To: <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
+In-Reply-To: <2AD939572F25A448A3AE3CAEA61328C2374589DC@BC-MAIL-M28.internal.baidu.com>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: "Li,Rongqing" <lirongqing@baidu.com>, Michal Hocko <mhocko@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-The cgroup aware oom killer is needlessly enforced for the entire system
-by a mount option.  It's unnecessary to force the system into a single
-oom policy: either cgroup aware, or the traditional process aware.
-
-This patch introduces a memory.oom_policy tunable for all mem cgroups.
-It is currently a no-op: it can only be set to "none", which is its
-default policy.  It will be expanded in the next patch to define cgroup
-aware oom killer behavior for its subtree.
-
-This is an extensible interface that can be used to define cgroup aware
-assessment of mem cgroup subtrees or the traditional process aware
-assessment.
-
-Reading memory.oom_policy will specify the list of available policies.
-
-Another benefit of such an approach is that an admin can lock in a
-certain policy for the system or for a mem cgroup subtree and can
-delegate the policy decision to the user to determine if the kill should
-originate from a subcontainer, as indivisible memory consumers
-themselves, or selection should be done per process.
-
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- Documentation/cgroup-v2.txt | 11 +++++++++++
- include/linux/memcontrol.h  | 11 +++++++++++
- mm/memcontrol.c             | 35 +++++++++++++++++++++++++++++++++++
- 3 files changed, 57 insertions(+)
-
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -1065,6 +1065,17 @@ PAGE_SIZE multiple when read back.
- 	If cgroup-aware OOM killer is not enabled, ENOTSUPP error
- 	is returned on attempt to access the file.
- 
-+  memory.oom_policy
-+
-+	A read-write single string file which exists on all cgroups.  The
-+	default value is "none".
-+
-+	If "none", the OOM killer will use the default policy to choose a
-+	victim; that is, it will choose the single process with the largest
-+	memory footprint adjusted by /proc/pid/oom_score_adj (see
-+	Documentation/filesystems/proc.txt).  This is the same policy as if
-+	memory cgroups were not even mounted.
-+
-   memory.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -58,6 +58,14 @@ enum memcg_event_item {
- 	MEMCG_NR_EVENTS,
- };
- 
-+enum memcg_oom_policy {
-+	/*
-+	 * No special oom policy, process selection is determined by
-+	 * oom_badness()
-+	 */
-+	MEMCG_OOM_POLICY_NONE,
-+};
-+
- struct mem_cgroup_reclaim_cookie {
- 	pg_data_t *pgdat;
- 	int priority;
-@@ -203,6 +211,9 @@ struct mem_cgroup {
- 	/* OOM-Killer disable */
- 	int		oom_kill_disable;
- 
-+	/* OOM policy for this subtree */
-+	enum memcg_oom_policy oom_policy;
-+
- 	/*
- 	 * Treat the sub-tree as an indivisible memory consumer,
- 	 * kill all belonging tasks if the memory cgroup selected
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4430,6 +4430,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- 	if (parent) {
- 		memcg->swappiness = mem_cgroup_swappiness(parent);
- 		memcg->oom_kill_disable = parent->oom_kill_disable;
-+		memcg->oom_policy = parent->oom_policy;
- 	}
- 	if (parent && parent->use_hierarchy) {
- 		memcg->use_hierarchy = true;
-@@ -5547,6 +5548,34 @@ static int memory_stat_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
-+static int memory_oom_policy_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+	enum memcg_oom_policy policy = READ_ONCE(memcg->oom_policy);
-+
-+	switch (policy) {
-+	case MEMCG_OOM_POLICY_NONE:
-+	default:
-+		seq_puts(m, "[none]\n");
-+	};
-+	return 0;
-+}
-+
-+static ssize_t memory_oom_policy_write(struct kernfs_open_file *of,
-+				       char *buf, size_t nbytes, loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	ssize_t ret = nbytes;
-+
-+	buf = strstrip(buf);
-+	if (!memcmp("none", buf, min(sizeof("none")-1, nbytes)))
-+		memcg->oom_policy = MEMCG_OOM_POLICY_NONE;
-+	else
-+		ret = -EINVAL;
-+
-+	return ret;
-+}
-+
- static struct cftype memory_files[] = {
- 	{
- 		.name = "current",
-@@ -5588,6 +5617,12 @@ static struct cftype memory_files[] = {
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = memory_stat_show,
- 	},
-+	{
-+		.name = "oom_policy",
-+		.flags = CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_oom_policy_show,
-+		.write = memory_oom_policy_write,
-+	},
- 	{ }	/* terminate */
- };
- 
+DQoNCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IGxpbnV4LWtlcm5lbC1v
+d25lckB2Z2VyLmtlcm5lbC5vcmcNCj4gW21haWx0bzpsaW51eC1rZXJuZWwtb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSDku6PooaggTGksUm9uZ3FpbmcNCj4g5Y+R6YCB5pe26Ze0OiAyMDE45bm0M+ac
+iDE55pelIDE4OjUyDQo+IOaUtuS7tuS6ujogTWljaGFsIEhvY2tvIDxtaG9ja29Aa2VybmVsLm9y
+Zz4NCj4g5oqE6YCBOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1tbUBrdmFj
+ay5vcmc7DQo+IGNncm91cHNAdmdlci5rZXJuZWwub3JnOyBoYW5uZXNAY21weGNoZy5vcmc7IEFu
+ZHJleSBSeWFiaW5pbg0KPiA8YXJ5YWJpbmluQHZpcnR1b3p6by5jb20+DQo+IOS4u+mimDog562U
+5aSNOiDnrZTlpI06IFtQQVRDSF0gbW0vbWVtY29udHJvbC5jOiBzcGVlZCB1cCB0byBmb3JjZSBl
+bXB0eSBhDQo+IG1lbW9yeSBjZ3JvdXANCj4gDQo+IA0KPiANCj4gPiAtLS0tLemCruS7tuWOn+S7
+ti0tLS0tDQo+ID4g5Y+R5Lu25Lq6OiBNaWNoYWwgSG9ja28gW21haWx0bzptaG9ja29Aa2VybmVs
+Lm9yZ10NCj4gPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQz5pyIMTnml6UgMTg6MzgNCj4gPiDmlLbk
+u7bkuro6IExpLFJvbmdxaW5nIDxsaXJvbmdxaW5nQGJhaWR1LmNvbT4NCj4gPiDmioTpgIE6IGxp
+bnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LW1tQGt2YWNrLm9yZzsNCj4gPiBjZ3Jv
+dXBzQHZnZXIua2VybmVsLm9yZzsgaGFubmVzQGNtcHhjaGcub3JnOyBBbmRyZXkgUnlhYmluaW4N
+Cj4gPiA8YXJ5YWJpbmluQHZpcnR1b3p6by5jb20+DQo+ID4g5Li76aKYOiBSZTog562U5aSNOiBb
+UEFUQ0hdIG1tL21lbWNvbnRyb2wuYzogc3BlZWQgdXAgdG8gZm9yY2UgZW1wdHkgYQ0KPiBtZW1v
+cnkNCj4gPiBjZ3JvdXANCj4gPg0KPiA+IE9uIE1vbiAxOS0wMy0xOCAxMDowMDo0MSwgTGksUm9u
+Z3Fpbmcgd3JvdGU6DQo+ID4gPg0KPiA+ID4NCj4gPiA+ID4gLS0tLS3pgq7ku7bljp/ku7YtLS0t
+LQ0KPiA+ID4gPiDlj5Hku7bkuro6IE1pY2hhbCBIb2NrbyBbbWFpbHRvOm1ob2Nrb0BrZXJuZWwu
+b3JnXQ0KPiA+ID4gPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQz5pyIMTnml6UgMTY6NTQNCj4gPiA+
+ID4g5pS25Lu25Lq6OiBMaSxSb25ncWluZyA8bGlyb25ncWluZ0BiYWlkdS5jb20+DQo+ID4gPiA+
+IOaKhOmAgTogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtbW1Aa3ZhY2sub3Jn
+Ow0KPiA+ID4gPiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZzsgaGFubmVzQGNtcHhjaGcub3JnOyBB
+bmRyZXkgUnlhYmluaW4NCj4gPiA+ID4gPGFyeWFiaW5pbkB2aXJ0dW96em8uY29tPg0KPiA+ID4g
+PiDkuLvpopg6IFJlOiBbUEFUQ0hdIG1tL21lbWNvbnRyb2wuYzogc3BlZWQgdXAgdG8gZm9yY2Ug
+ZW1wdHkgYQ0KPiA+IG1lbW9yeQ0KPiA+ID4gPiBjZ3JvdXANCj4gPiA+ID4NCj4gPiA+ID4gT24g
+TW9uIDE5LTAzLTE4IDE2OjI5OjMwLCBMaSBSb25nUWluZyB3cm90ZToNCj4gPiA+ID4gPiBtZW1f
+Y2dyb3VwX2ZvcmNlX2VtcHR5KCkgdHJpZXMgdG8gZnJlZSBvbmx5IDMyDQo+ID4gKFNXQVBfQ0xV
+U1RFUl9NQVgpDQo+ID4gPiA+ID4gcGFnZXMgb24gZWFjaCBpdGVyYXRpb24sIGlmIGEgbWVtb3J5
+IGNncm91cCBoYXMgbG90cyBvZiBwYWdlDQo+ID4gPiA+ID4gY2FjaGUsIGl0IHdpbGwgdGFrZSBt
+YW55IGl0ZXJhdGlvbnMgdG8gZW1wdHkgYWxsIHBhZ2UgY2FjaGUsIHNvDQo+ID4gPiA+ID4gaW5j
+cmVhc2UgdGhlIHJlY2xhaW1lZCBudW1iZXIgcGVyIGl0ZXJhdGlvbiB0byBzcGVlZCBpdCB1cC4g
+c2FtZQ0KPiA+ID4gPiA+IGFzIGluDQo+ID4gPiA+ID4gbWVtX2Nncm91cF9yZXNpemVfbGltaXQo
+KQ0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gYSBzaW1wbGUgdGVzdCBzaG93Og0KPiA+ID4gPiA+DQo+
+ID4gPiA+ID4gICAkZGQgaWY9YWFhICBvZj1iYmIgIGJzPTFrIGNvdW50PTM4ODYwODANCj4gPiA+
+ID4gPiAgICRybSAtZiBiYmINCj4gPiA+ID4gPiAgICR0aW1lIGVjaG8NCj4gPiAxMDAwMDAwMDAg
+Pi9jZ3JvdXAvbWVtb3J5L3Rlc3QvbWVtb3J5LmxpbWl0X2luX2J5dGVzDQo+ID4gPiA+ID4NCj4g
+PiA+ID4gPiBCZWZvcmU6IDBtMC4yNTJzID09PT4gYWZ0ZXI6IDBtMC4xNzhzDQo+ID4gPiA+DQo+
+ID4gPiA+IEFuZHJleSB3YXMgcHJvcG9zaW5nIHNvbWV0aGluZyBzaW1pbGFyIFsxXS4gTXkgbWFp
+biBvYmplY3Rpb24gd2FzDQo+ID4gPiA+IHRoYXQgaGlzIGFwcHJvYWNoIG1pZ2h0IGxlYWQgdG8g
+b3Zlci1yZWNsYWltLiBZb3VyIGFwcHJvYWNoIGlzDQo+ID4gPiA+IG1vcmUgY29uc2VydmF0aXZl
+IGJlY2F1c2UgaXQganVzdCBpbmNyZWFzZXMgdGhlIGJhdGNoIHNpemUuIFRoZQ0KPiA+ID4gPiBz
+aXplIGlzIHN0aWxsIHJhdGhlciBhcmJpdHJhcnkuIFNhbWUgYXMgU1dBUF9DTFVTVEVSX01BWCBi
+dXQgdGhhdA0KPiA+ID4gPiBvbmUgaXMgYSBjb21tb25seSB1c2VkIHVuaXQgb2YgcmVjbGFpbSBp
+biB0aGUgTU0gY29kZS4NCj4gPiA+ID4NCj4gPiA+ID4gSSB3b3VsZCBiZSByZWFsbHkgY3VyaW91
+cyBhYm91dCBtb3JlIGRldGFpbGVkIGV4cGxhbmF0aW9uIHdoeQ0KPiA+ID4gPiBoYXZpbmcgYSBs
+YXJnZXIgYmF0Y2ggeWllbGRzIHRvIGEgYmV0dGVyIHBlcmZvcm1hbmNlIGJlY2F1c2Ugd2UNCj4g
+PiA+ID4gYXJlIGRvaW5nZyBTV0FQX0NMVVNURVJfTUFYIGJhdGNoZXMgYXQgdGhlIGxvd2VyIHJl
+Y2xhaW0gbGV2ZWwNCj4gYW55d2F5Lg0KPiA+ID4gPg0KPiA+ID4NCj4gPiA+IEFsdGhvdWdoIFNX
+QVBfQ0xVU1RFUl9NQVggaXMgdXNlZCBhdCB0aGUgbG93ZXIgbGV2ZWwsIGJ1dCB0aGUgY2FsbA0K
+PiA+ID4gc3RhY2sgb2YgdHJ5X3RvX2ZyZWVfbWVtX2Nncm91cF9wYWdlcyBpcyB0b28gbG9uZywg
+aW5jcmVhc2UgdGhlDQo+ID4gPiBucl90b19yZWNsYWltIGNhbiByZWR1Y2UgdGltZXMgb2YgY2Fs
+bGluZw0KPiA+ID4gZnVuY3Rpb25bZG9fdHJ5X3RvX2ZyZWVfcGFnZXMsIHNocmlua196b25lcywg
+aHJpbmtfbm9kZSBdDQo+ID4gPg0KPiA+ID4gbWVtX2Nncm91cF9yZXNpemVfbGltaXQNCj4gPiA+
+IC0tLT50cnlfdG9fZnJlZV9tZW1fY2dyb3VwX3BhZ2VzOiAgLm5yX3RvX3JlY2xhaW0gPSBtYXgo
+MTAyNCwNCj4gPiA+IC0tLT5TV0FQX0NMVVNURVJfTUFYKSwNCj4gPiA+ICAgIC0tLT4gZG9fdHJ5
+X3RvX2ZyZWVfcGFnZXMNCj4gPiA+ICAgICAgLS0tPiBzaHJpbmtfem9uZXMNCj4gPiA+ICAgICAg
+IC0tLT5zaHJpbmtfbm9kZQ0KPiA+ID4gICAgICAgIC0tLT4gc2hyaW5rX25vZGVfbWVtY2cNCj4g
+PiA+ICAgICAgICAgIC0tLT4gc2hyaW5rX2xpc3QgICAgICAgICAgPC0tLS0tLS1sb29wIHdpbGwg
+aGFwcGVuIGluIHRoaXMgcGxhY2UNCj4gPiBbdGltZXM9MTAyNC8zMl0NCj4gPiA+ICAgICAgICAg
+ICAgLS0tPiBzaHJpbmtfcGFnZV9saXN0DQo+ID4NCj4gPiBDYW4geW91IGFjdHVhbGx5IG1lYXN1
+cmUgdGhpcyB0byBiZSB0aGUgY3VscHJpdC4gQmVjYXVzZSB3ZSBzaG91bGQNCj4gPiByZXRoaW5r
+IG91ciBjYWxsIHBhdGggaWYgaXQgaXMgdG9vIGNvbXBsaWNhdGVkL2RlZXAgdG8gcGVyZm9ybSB3
+ZWxsLg0KPiA+IEFkZGluZyBhcmJpdHJhcnkgYmF0Y2ggc2l6ZXMgZG9lc24ndCBzb3VuZCBsaWtl
+IGEgZ29vZCB3YXkgdG8gZ28gdG8gbWUuDQo+IA0KPiBPaywgSSB3aWxsIHRyeQ0KPiANCmh0dHA6
+Ly9wYXN0ZWQuY28vNGVkYmNmZmYNCg0KVGhpcyBpcyByZXN1bHQgZnJvbSBmdHJhY2UgZ3JhcGgs
+IGl0IG1heWJlIHByb3ZlIHRoYXQgdGhlIGRlZXAgY2FsbCBwYXRoIGxlYWRzIHRvIGxvdyBwZXJm
+b3JtYW5jZS4NCg0KQW5kIHdoZW4gaW5jcmVhc2UgcmVjbGFpbWluZyBwYWdlIGluIHRyeV90b19m
+cmVlX21lbV9jZ3JvdXBfcGFnZXMsIGl0IGNhbiByZWR1Y2UgY2FsbGluZyBvZiBzaHJpbmtfc2xh
+Yiwgd2hpY2ggc2F2ZSB0aW1lcywgaW4gbXkgY2FzZXMsIHBhZ2UgY2FjaGVzIG9jY3VweSBtb3N0
+IG1lbW9yeSwgc2xhYiBpcyBsaXR0bGUsIGJ1dCBzaHJpbmtfc2xhYiB3aWxsIGJlIGNhbGxlZCBl
+dmVyeXRpbWUNCg0KTXV0ZXhfbG9jayAxIHVzDQoNCnRyeV90b19mcmVlX21lbV9jZ3JvdXBfcGFn
+ZXMNCiAgZG9fdHJ5X3RvX2ZyZWVfcGFnZXMgISAxODUuMDIwIHVzDQogICAgc2hyaW5rX25vZGUg
+ICEgMTE2LjUyOSB1cw0KICAgICAgc2hyaW5rX25vZGVfbWVtY2cgICAzOS4yMDMNCiAgICAgICAg
+ICBzaHJpbmtfaW5hY3RpdmVfbGlzdCAgMzMuOTYwDQogICAgICBzaHJpbmtfc2xhYiAgIDcyLjk1
+NQ0KDQogICAgc2hyaW5rX25vZGUgIDYxLjUwMiB1cw0KICAgICAgc2hyaW5rX25vZGVfbWVtY2cg
+ICAzLjk1NQ0KICAgICAgc2hyaW5rX3NsYWIgICA1NC4yOTYgdXMNCg0KLVJvbmdRaW5nDQoNCj4g
+LVJvbmdRaW5nDQo+ID4gLS0NCj4gPiBNaWNoYWwgSG9ja28NCj4gPiBTVVNFIExhYnMNCg==
