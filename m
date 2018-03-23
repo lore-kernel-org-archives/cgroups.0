@@ -1,80 +1,74 @@
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Subject: [PATCH v2 1/4] mm/vmscan: Update stale comments
-Date: Fri, 23 Mar 2018 18:20:26 +0300
-Message-ID: <20180323152029.11084-2-aryabinin@virtuozzo.com>
-References: <20180323152029.11084-1-aryabinin@virtuozzo.com>
+From: Matt Roper <matthew.d.roper@intel.com>
+Subject: Re: [PATCH v4 0/8] cgroup private data and DRM/i915
+ integration
+Date: Fri, 23 Mar 2018 08:46:16 -0700
+Message-ID: <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
+References: <20180317000905.7091-1-matthew.d.roper@intel.com>
+ <152180733854.5713.2309886695226223646@jlahtine-desk.ger.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=rOmwoEJeRoQNROk2qpmhE7A/bvpvtLz4/Om5Kv7AgE0=;
- b=Ri1mH40YuqFhffik2vi3udv43XDZdJ/6Hxn2ETN7Zb95EdyOXh1F4ltJ14p3fWwD+wPEjHs6zMc6PIvNfojqNamZfc49iNsT4IMotB6dtP4VZOGJkwPcCIk6cdwjjyT1zF1BKmVM2hcKCGaVvivfltyGdF1d+xT/xqA6/FuQoec=
-In-Reply-To: <20180323152029.11084-1-aryabinin@virtuozzo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <152180733854.5713.2309886695226223646@jlahtine-desk.ger.corp.intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Steven Rostedt <rostedt@goodmis.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Update some comments that become stale since transiton from per-zone
-to per-node reclaim.
-
-Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Acked-by: Michal Hocko <mhocko@suse.com>
----
- mm/vmscan.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 4390a8d5be41..6d74b12099bd 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -926,7 +926,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 			(PageSwapCache(page) && (sc->gfp_mask & __GFP_IO));
- 
- 		/*
--		 * The number of dirty pages determines if a zone is marked
-+		 * The number of dirty pages determines if a node is marked
- 		 * reclaim_congested which affects wait_iff_congested. kswapd
- 		 * will stall and start writing pages if the tail of the LRU
- 		 * is all dirty unqueued pages.
-@@ -1764,7 +1764,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	 * as there is no guarantee the dirtying process is throttled in the
- 	 * same way balance_dirty_pages() manages.
- 	 *
--	 * Once a zone is flagged ZONE_WRITEBACK, kswapd will count the number
-+	 * Once a node is flagged PGDAT_WRITEBACK, kswapd will count the number
- 	 * of pages under pages flagged for immediate reclaim and stall if any
- 	 * are encountered in the nr_immediate check below.
- 	 */
-@@ -1791,7 +1791,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	 */
- 	if (sane_reclaim(sc)) {
- 		/*
--		 * Tag a zone as congested if all the dirty pages scanned were
-+		 * Tag a node as congested if all the dirty pages scanned were
- 		 * backed by a congested BDI and wait_iff_congested will stall.
- 		 */
- 		if (stat.nr_dirty && stat.nr_dirty == stat.nr_congested)
-@@ -1812,7 +1812,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	}
- 
- 	/*
--	 * Stall direct reclaim for IO completions if underlying BDIs or zone
-+	 * Stall direct reclaim for IO completions if underlying BDIs and node
- 	 * is congested. Allow kswapd to continue until it starts encountering
- 	 * unqueued dirty pages or cycling through the LRU too quickly.
- 	 */
-@@ -3808,7 +3808,7 @@ static int __node_reclaim(struct pglist_data *pgdat, gfp_t gfp_mask, unsigned in
- 
- 	if (node_pagecache_reclaimable(pgdat) > pgdat->min_unmapped_pages) {
- 		/*
--		 * Free memory by calling shrink zone with increasing
-+		 * Free memory by calling shrink node with increasing
- 		 * priorities until we have enough memory freed.
- 		 */
- 		do {
--- 
-2.16.1
-
+T24gRnJpLCBNYXIgMjMsIDIwMTggYXQgMDI6MTU6MzhQTSArMDIwMCwgSm9vbmFzIExhaHRpbmVu
+IHdyb3RlOgo+IFF1b3RpbmcgTWF0dCBSb3BlciAoMjAxOC0wMy0xNyAwMjowODo1NykKPiA+IFRo
+aXMgaXMgdGhlIGZvdXJ0aCBpdGVyYXRpb24gb2YgdGhlIHdvcmsgcHJldmlvdXNseSBwb3N0ZWQg
+aGVyZToKPiA+ICAgKHYxKSBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9p
+bnRlbC1nZngvMjAxOC1KYW51YXJ5LzE1MzE1Ni5odG1sCj4gPiAgICh2MikgaHR0cHM6Ly93d3cu
+bWFpbC1hcmNoaXZlLmNvbS9kcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21zZzIwODE3
+MC5odG1sCj4gPiAgICh2MykgaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2ZXMv
+aW50ZWwtZ2Z4LzIwMTgtTWFyY2gvMTU3OTI4Lmh0bWwKPiA+IAo+ID4gVGhlIGhpZ2ggbGV2ZWwg
+Z29hbCBvZiB0aGlzIHdvcmsgaXMgdG8gYWxsb3cgbm9uLWNncm91cC1jb250cm9sbGVyIHBhcnRz
+Cj4gPiBvZiB0aGUga2VybmVsIChlLmcuLCBkZXZpY2UgZHJpdmVycykgdG8gcmVnaXN0ZXIgdGhl
+aXIgb3duIHByaXZhdGUKPiA+IHBvbGljeSBkYXRhIGZvciBzcGVjaWZpYyBjZ3JvdXBzLiAgVGhh
+dCBtZWNoYW5pc20gaXMgdGhlbiBtYWRlIHVzZSBvZiBpbgo+ID4gdGhlIGk5MTUgZ3JhcGhpY3Mg
+ZHJpdmVyIHRvIGFsbG93IEdQVSBwcmlvcml0eSB0byBiZSBhc3NpZ25lZCBhY2NvcmRpbmcKPiA+
+IHRvIHRoZSBjZ3JvdXAgbWVtYmVyc2hpcCBvZiB0aGUgb3duaW5nIHByb2Nlc3MuICBQbGVhc2Ug
+c2VlIHRoZSB2MSBjb3Zlcgo+ID4gbGV0dGVyIGxpbmtlZCBhYm92ZSBmb3IgYSBtb3JlIGluLWRl
+cHRoIGV4cGxhbmF0aW9uIGFuZCBqdXN0aWZpY2F0aW9uLgo+IAo+IEhpIE1hdHQsCj4gCj4gRm9y
+IGNyb3NzLXN1YnN5c3RlbSBjaGFuZ2VzIHN1Y2ggYXMgdGhpcywgaXQgbWFrZXMgc2Vuc2UgdG8g
+Q2MgYWxsCj4gcmVsZXZhbnQgbWFpbnRhaW5lcnMsIGVzcGVjaWFsbHkgaWYgdGhlcmUgaGF2ZSBi
+ZWVuIHByZXZpb3VzIGNvbW1lbnRzIHRvCj4gZWFybGllciByZXZpc2lvbnMuCj4gCj4gUGxlYXNl
+LCBkbyBpbmNsdWRlIGFuZCBrZWVwIGEgcmVmZXJlbmNlIHRvIHRoZSB1c2Vyc3BhY2UgcG9ydGlv
+biBvZiB0aGUKPiBjaGFuZ2VzIHdoZW4geW91IHN1Z2dlc3QgbmV3IHVBUEkgdG8gYmUgYWRkZWQu
+IEF0IGxlYXN0IEkgaGF2ZSBzb21lIHRyb3VibGUKPiB0cnlpbmcgdG8gdHJhY2sgZG93biB0aGUg
+cmVsZXZhbnQgaW50ZXJmYWNlIGNvbnN1bWVyIGhlcmUuCj4gCj4gSSdtIHVuc3VyZSBob3cgbXVj
+aCBzZW5zZSBpdCBtYWtlcyB0byBjb21tZW5jZSB3aXRoIGRldGFpbGVkIGk5MTUgcmV2aWV3Cj4g
+aWYgd2Ugd2lsbCBiZSBibG9ja2VkIGJ5IGxhY2sgb2YgdXNlcnNwYWNlIGFmdGVyIHRoYXQ/IEkn
+bSBhc3N1bWluZwo+IHlvdSd2ZSByZWFkIHRocm91Z2ggWzFdIGFscmVhZHkuCgpIaSBKb29uYXMs
+CgpJJ3ZlIHNlbnQgdGhlIHVzZXJzcGFjZSBjb2RlIG91dCBhIGZldyB0aW1lcywgYnV0IGl0IGxv
+b2tzIGxpa2UgSSBmb3Jnb3QKdG8gaW5jbHVkZSBhIGNvcHkgd2l0aCB2NC92NC41LiAgSGVyZSdz
+IHRoZSB2ZXJzaW9uIEkgcHJvdmlkZWQgd2l0aCB2MzoKICBodHRwczovL2xpc3RzLmZyZWVkZXNr
+dG9wLm9yZy9hcmNoaXZlcy9pbnRlbC1nZngvMjAxOC1NYXJjaC8xNTc5MzUuaHRtbAoKVXN1YWxs
+eSB3ZSBkb24ndCBjb25zaWRlciB0aGluZ3MgbGlrZSBpLWctdCB0byBiZSBzdWZmaWNpZW50IHVz
+ZXJzcGFjZQpjb25zdW1lcnMgYmVjYXVzZSB3ZSBuZWVkIGEgcmVhbC13b3JsZCBjb25zdW1lciBy
+YXRoZXIgdGhhbiBhICJ0b3kiCnVzZXJzcGFjZS4gIEhvd2V2ZXIgaW4gdGhpcyBjYXNlLCB0aGUg
+aS1nLXQgdG9vbCwgYWx0aG91Z2ggdmVyeSBzaW1wbGUsCmlzIHJlYWxseSB0aGUgb25seSB1c2Vy
+c3BhY2UgY29uc3VtZXIgSSBleHBlY3QgdGhlcmUgdG8gZXZlciBiZS4KVWx0aW1hdGVseSB0aGUg
+dHJ1ZSBjb25zdW1lciBvZiB0aGlzIGNncm91cHMgd29yayBhcmUgYmFzaCBzY3JpcHRzLCBzeXN2
+CmluaXQgc2NyaXB0cywgc3lzdGVtZCByZWNpcGVzLCBldGMuICB0aGF0IGp1c3QgbmVlZCBhIHZl
+cnkgc2ltcGxlIHRvb2wKdG8gYXNzaWduIHRoZSBzcGVjaWZpYyB2YWx1ZXMgdGhhdCBtYWtlIHNl
+bnNlIG9uIGEgZ2l2ZW4gc3lzdGVtLgpUaGVyZSdzIG5vIGV4cGVjdGF0aW9uIHRoYXQgZ3JhcGhp
+Y3MgY2xpZW50cyBvciBkaXNwbGF5IHNlcnZlcnMgd291bGQKZXZlciBuZWVkIHRvIG1ha2UgdXNl
+IG9mIHRoZXNlIGludGVyZmFjZXMuCgoKCk1hdHQKCj4gCj4gUmVnYXJkcywgSm9vbmFzCj4gCj4g
+WzFdIGh0dHBzOi8vMDEub3JnL2xpbnV4Z3JhcGhpY3MvZ2Z4LWRvY3MvZHJtL2dwdS9kcm0tdWFw
+aS5odG1sI29wZW4tc291cmNlLXVzZXJzcGFjZS1yZXF1aXJlbWVudHMKCi0tIApNYXR0IFJvcGVy
+CkdyYXBoaWNzIFNvZnR3YXJlIEVuZ2luZWVyCklvVEcgUGxhdGZvcm0gRW5hYmxpbmcgJiBEZXZl
+bG9wbWVudApJbnRlbCBDb3Jwb3JhdGlvbgooOTE2KSAzNTYtMjc5NQpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0Cklu
+dGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5v
+cmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngK
