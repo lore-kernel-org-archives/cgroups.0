@@ -1,57 +1,68 @@
-From: yuankuiz@codeaurora.org
-Subject: Re: [PATCH]cgroup: __cpuset_node_allowed return bool
-Date: Sat, 24 Mar 2018 13:05:50 +0800
-Message-ID: <0fee75e4a1b12f5fca30e04306a95788@codeaurora.org>
-References: <d2f9fe6096235032f445ab88e562560f@codeaurora.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET] mm, memcontrol: Make cgroup_rstat available to controllers
+Date: Sat, 24 Mar 2018 09:08:58 -0700
+Message-ID: <20180324160901.512135-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1521867950;
-        bh=JNT26J/WRwrXMWO/PF2FDpOPKqbjgeb39zBVRAy4AEs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=YnTiNzi7oex7kBQOa05Tw/35GWaHulGm3s+VRCY8Ln4yHU7lFAEtplYmsZxTUikrd
-         sxu5s5zMgrkMmAMvj1lehlX4UWuzq7uf8PsZnxl73bYGwxE3VNRYSx2dudBTKWPZdJ
-         lmqsbzTV+TPBpmWFRJ1EJ4KEKnH23/LViwG48qak=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1521867950;
-        bh=JNT26J/WRwrXMWO/PF2FDpOPKqbjgeb39zBVRAy4AEs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=YnTiNzi7oex7kBQOa05Tw/35GWaHulGm3s+VRCY8Ln4yHU7lFAEtplYmsZxTUikrd
-         sxu5s5zMgrkMmAMvj1lehlX4UWuzq7uf8PsZnxl73bYGwxE3VNRYSx2dudBTKWPZdJ
-         lmqsbzTV+TPBpmWFRJ1EJ4KEKnH23/LViwG48qak=
-In-Reply-To: <d2f9fe6096235032f445ab88e562560f@codeaurora.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=/5W4tEGuJl5F9fX/iG/2IRtqWFchG4MaGrcZdTv8sqc=;
+        b=BviaKImOmm2q26OJdXhINMQKyiibSB1uhy2ICPFgHW8fmFzE0xlq6Huk4h7vdiwLsk
+         0QayE38roXocikOdtNaNM191EvUFQ7b30yyEelEVBJFDCxoJDQ2nhfCc9vpJG9o/ne5g
+         OoHenddekoWGYVPcsr9Kt/clnYZozG5BmH7aWXKKjL++5ks0L605OLS4cv/pCI7iJA8x
+         Opjbm4aVk1wAg781bJx5BnRcPgQt8j20m3LUXKQdda0F4ufrR1o5YUsNWxsSO7rj79FC
+         YmVP8yBA+cqBvM51tq5nIswyXyAOojT5ZAovuaMZ5JgoAXNWkUfm+waPPtrm+ZyoDirr
+         +0Xw==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, pkondeti@codeaurora.org, cgroups-owner@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
+Cc: guro@fb.com, riel@surriel.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org
 
- From 304cec1cc42255fbd9e231a810f4eea20ab74b90 Mon Sep 17 00:00:00 2001
- From: John Zhao <yuankuiz@codeaurora.org>
-Date: Sat, 24 Mar 2018 13:01:32 +0800
-Subject: [PATCH] cgroup: __cpuset_node_allowed return bool
+Hello,
 
-as a bool, __cpuset_node_allowed(...) return should be bool.
+Since a983b5ebee57 ("mm: memcontrol: fix excessive complexity in
+memory.stat reporting"), memcg uses percpu batch-overflowing for all
+stat accounting.  While the propagation delay is okay for statistics,
+it doesn't work for events.  If a notification for an event is sent
+out, the relevant counter must reflect the event when read afterwards.
+With the percpu batching, it's easy to miss, for example, an oom or
+oom_kill event because it's still buffered in one of the percpu
+counters.
 
-Signed-off-by: John Zhao <yuankuiz@codeaurora.org>
----
-  kernel/cgroup/cpuset.c | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
+cgroup already has a mechanism to efficiently handle hierarchical
+statistics in a scalable manner, cgroup_rstat, and it now can be used
+by controllers.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index b42037e..42338b7 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2552,7 +2552,7 @@ static struct cpuset 
-*nearest_hardwall_ancestor(struct cpuset *cs)
-  bool __cpuset_node_allowed(int node, gfp_t gfp_mask)
-  {
-  	struct cpuset *cs;		/* current cpuset ancestors */
--	int allowed;			/* is allocation in zone z allowed? */
-+	bool allowed;			/* is allocation in zone z allowed? */
-  	unsigned long flags;
+This patchset addresses the forementioned problem by converting event
+accounting to cgroup_rstat.  While the stat part isn't broken, it's
+also converted for consistency and a few other benefits.  Also, while
+trying to convert lruvec_stat, I found out that it has no users.
+Remove it too (not sure whether it's needed for some non-obvious
+reasons tho).
 
-  	if (in_interrupt())
--- 
-2.7.4
+ 0001-mm-memcontrol-Use-cgroup_rstat-for-event-accounting.patch
+ 0002-mm-memcontrol-Use-cgroup_rstat-for-stat-accounting.patch
+ 0003-mm-memcontrol-Remove-lruvec_stat.patch
+
+This patchset is on top of the "cgroup/for-4.17: Make cgroup_rstat
+available to controllers" patchset[1] and also available in the
+following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup_rstat
+
+diffstat follows.
+
+ include/linux/memcontrol.h |  131 ++++++++++++------------
+ mm/memcontrol.c            |  238 ++++++++++++++++++++-------------------------
+ mm/vmscan.c                |    4 
+ 3 files changed, 180 insertions(+), 193 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[1] http://lkml.kernel.org/r/20180323231313.1254142-1-tj@kernel.org
