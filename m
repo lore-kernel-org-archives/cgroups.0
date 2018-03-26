@@ -1,200 +1,86 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v2 5/8] cgroup: Factor out and expose cgroup_rstat_*()
- interface functions
-Date: Sat, 24 Mar 2018 13:44:35 -0700
-Message-ID: <20180324204435.GG2149215@devbig577.frc2.facebook.com>
-References: <20180323231313.1254142-1-tj@kernel.org>
- <20180323231313.1254142-6-tj@kernel.org>
+From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+Subject: Re: [PATCH v4 0/8] cgroup private data and DRM/i915 integration
+Date: Mon, 26 Mar 2018 10:30:23 +0300
+Message-ID: <152204942372.6045.18152790780379161422@jlahtine-desk.ger.corp.intel.com>
+References: <20180317000905.7091-1-matthew.d.roper@intel.com>
+ <152180733854.5713.2309886695226223646@jlahtine-desk.ger.corp.intel.com>
+ <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=9QL+fDpA7/FLZ9oStkTp8p4oGO7i8CJwrbyPWLLJtMw=;
-        b=DdBMksi8R06Hh8wMqRFP0sbTGOEWIrwzFympq18yokc+6KTfdnd+lIFpscZmyEmE1U
-         x8TO76ZDKOrbv0HExY2Ql9kazLQr4c4wHklxB31d9JoI1FvEdgWqZZ/CjG8NS3KRu0Ae
-         EkX4QXu9eCm0WGo2E03H9jARih2XGWH+W+P4hjRjnvGuUaqaERNqnqpiwCvBjYXzb/wW
-         +Dhwd+3bMw5nZEA3FWjJgIy9Sex+OKU2Iejei3imEruQ8UKENDeRcvHa7Vt6hdi886o/
-         XSYQO0jQN5UGdjCSR99XAgcE8CYrxjJ2Mnt7D3KTq6MVHb/hkRThrXEibSlYD5l5aMLi
-         CcUQ==
-Content-Disposition: inline
-In-Reply-To: <20180323231313.1254142-6-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, guro@fb.com, kernel-team@fb.com
+To: Matt Roper <matthew.d.roper@intel.com>
+Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-From 6139f87ac4a5650fed5c8be5611becbce96d7f1c Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Sat, 24 Mar 2018 13:39:36 -0700
-
-cgroup_rstat is being generalized so that controllers can use it too.
-This patch factors out and exposes the following interface functions.
-
-* cgroup_rstat_updated(): Renamed from cgroup_rstat_cpu_updated() for
-  consistency.
-
-* cgroup_rstat_flush_hold/release(): Factored out from base stat
-  implementation.
-
-* cgroup_rstat_flush(): Verbatim expose.
-
-While at it, drop assert on cgroup_rstat_mutex in
-cgroup_base_stat_flush() as it crosses layers and make a minor comment
-update.
-
-v2: Added EXPORT_SYMBOL_GPL(cgroup_rstat_updated) to fix a build bug.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- include/linux/cgroup.h          | 11 +++++++++--
- kernel/cgroup/cgroup-internal.h |  1 -
- kernel/cgroup/rstat.c           | 42 +++++++++++++++++++++++++++++------------
- 3 files changed, 39 insertions(+), 15 deletions(-)
-
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 473e0c0..5c6018f 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -690,11 +690,18 @@ static inline void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
- 	char *buf, size_t buflen) {}
- #endif /* !CONFIG_CGROUPS */
- 
-+#ifdef CONFIG_CGROUPS
- /*
-- * Basic resource stats.
-+ * cgroup scalable recursive statistics.
-  */
--#ifdef CONFIG_CGROUPS
-+void cgroup_rstat_updated(struct cgroup *cgrp, int cpu);
-+void cgroup_rstat_flush(struct cgroup *cgrp);
-+void cgroup_rstat_flush_hold(struct cgroup *cgrp);
-+void cgroup_rstat_flush_release(void);
- 
-+/*
-+ * Basic resource stats.
-+ */
- #ifdef CONFIG_CGROUP_CPUACCT
- void cpuacct_charge(struct task_struct *tsk, u64 cputime);
- void cpuacct_account_field(struct task_struct *tsk, int index, u64 val);
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index 2bf6fb4..b68e1a7 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -203,7 +203,6 @@ int cgroup_task_count(const struct cgroup *cgrp);
- /*
-  * rstat.c
-  */
--void cgroup_rstat_flush(struct cgroup *cgrp);
- int cgroup_rstat_init(struct cgroup *cgrp);
- void cgroup_rstat_exit(struct cgroup *cgrp);
- void cgroup_rstat_boot(void);
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 87d7252..d49bf92 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -13,7 +13,7 @@ static struct cgroup_rstat_cpu *cgroup_rstat_cpu(struct cgroup *cgrp, int cpu)
- }
- 
- /**
-- * cgroup_rstat_cpu_updated - keep track of updated rstat_cpu
-+ * cgroup_rstat_updated - keep track of updated rstat_cpu
-  * @cgrp: target cgroup
-  * @cpu: cpu on which rstat_cpu was updated
-  *
-@@ -21,7 +21,7 @@ static struct cgroup_rstat_cpu *cgroup_rstat_cpu(struct cgroup *cgrp, int cpu)
-  * rstat_cpu->updated_children list.  See the comment on top of
-  * cgroup_rstat_cpu definition for details.
-  */
--static void cgroup_rstat_cpu_updated(struct cgroup *cgrp, int cpu)
-+void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
- {
- 	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
- 	struct cgroup *parent;
-@@ -59,6 +59,7 @@ static void cgroup_rstat_cpu_updated(struct cgroup *cgrp, int cpu)
- 
- 	raw_spin_unlock_irqrestore(cpu_lock, flags);
- }
-+EXPORT_SYMBOL_GPL(cgroup_rstat_updated);
- 
- /**
-  * cgroup_rstat_cpu_pop_updated - iterate and dismantle rstat_cpu updated tree
-@@ -167,6 +168,29 @@ void cgroup_rstat_flush(struct cgroup *cgrp)
- 	mutex_unlock(&cgroup_rstat_mutex);
- }
- 
-+/**
-+ * cgroup_rstat_flush_begin - flush stats in @cgrp's subtree and hold
-+ * @cgrp: target cgroup
-+ *
-+ * Flush stats in @cgrp's subtree and prevent further flushes.  Must be
-+ * paired with cgroup_rstat_flush_release().
-+ */
-+void cgroup_rstat_flush_hold(struct cgroup *cgrp)
-+	__acquires(&cgroup_rstat_mutex)
-+{
-+	mutex_lock(&cgroup_rstat_mutex);
-+	cgroup_rstat_flush_locked(cgrp);
-+}
-+
-+/**
-+ * cgroup_rstat_flush_release - release cgroup_rstat_flush_hold()
-+ */
-+void cgroup_rstat_flush_release(void)
-+	__releases(&cgroup_rstat_mutex)
-+{
-+	mutex_unlock(&cgroup_rstat_mutex);
-+}
-+
- int cgroup_rstat_init(struct cgroup *cgrp)
- {
- 	int cpu;
-@@ -239,15 +263,13 @@ static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
- 	struct cgroup_base_stat delta;
- 	unsigned seq;
- 
--	lockdep_assert_held(&cgroup_rstat_mutex);
--
- 	/* fetch the current per-cpu values */
- 	do {
- 		seq = __u64_stats_fetch_begin(&rstatc->bsync);
- 		cputime = rstatc->bstat.cputime;
- 	} while (__u64_stats_fetch_retry(&rstatc->bsync, seq));
- 
--	/* accumulate the deltas to propgate */
-+	/* calculate the delta to propgate */
- 	delta.cputime.utime = cputime.utime - last_cputime->utime;
- 	delta.cputime.stime = cputime.stime - last_cputime->stime;
- 	delta.cputime.sum_exec_runtime = cputime.sum_exec_runtime -
-@@ -278,7 +300,7 @@ static void cgroup_base_stat_cputime_account_end(struct cgroup *cgrp,
- 						 struct cgroup_rstat_cpu *rstatc)
- {
- 	u64_stats_update_end(&rstatc->bsync);
--	cgroup_rstat_cpu_updated(cgrp, smp_processor_id());
-+	cgroup_rstat_updated(cgrp, smp_processor_id());
- 	put_cpu_ptr(rstatc);
- }
- 
-@@ -323,14 +345,10 @@ void cgroup_base_stat_cputime_show(struct seq_file *seq)
- 	if (!cgroup_parent(cgrp))
- 		return;
- 
--	mutex_lock(&cgroup_rstat_mutex);
--
--	cgroup_rstat_flush_locked(cgrp);
--
-+	cgroup_rstat_flush_hold(cgrp);
- 	usage = cgrp->bstat.cputime.sum_exec_runtime;
- 	cputime_adjust(&cgrp->bstat.cputime, &cgrp->prev_cputime, &utime, &stime);
--
--	mutex_unlock(&cgroup_rstat_mutex);
-+	cgroup_rstat_flush_release();
- 
- 	do_div(usage, NSEC_PER_USEC);
- 	do_div(utime, NSEC_PER_USEC);
--- 
-2.9.5
-
+UXVvdGluZyBNYXR0IFJvcGVyICgyMDE4LTAzLTIzIDE3OjQ2OjE2KQo+IE9uIEZyaSwgTWFyIDIz
+LCAyMDE4IGF0IDAyOjE1OjM4UE0gKzAyMDAsIEpvb25hcyBMYWh0aW5lbiB3cm90ZToKPiA+IFF1
+b3RpbmcgTWF0dCBSb3BlciAoMjAxOC0wMy0xNyAwMjowODo1NykKPiA+ID4gVGhpcyBpcyB0aGUg
+Zm91cnRoIGl0ZXJhdGlvbiBvZiB0aGUgd29yayBwcmV2aW91c2x5IHBvc3RlZCBoZXJlOgo+ID4g
+PiAgICh2MSkgaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2ZXMvaW50ZWwtZ2Z4
+LzIwMTgtSmFudWFyeS8xNTMxNTYuaHRtbAo+ID4gPiAgICh2MikgaHR0cHM6Ly93d3cubWFpbC1h
+cmNoaXZlLmNvbS9kcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21zZzIwODE3MC5odG1s
+Cj4gPiA+ICAgKHYzKSBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9pbnRl
+bC1nZngvMjAxOC1NYXJjaC8xNTc5MjguaHRtbAo+ID4gPiAKPiA+ID4gVGhlIGhpZ2ggbGV2ZWwg
+Z29hbCBvZiB0aGlzIHdvcmsgaXMgdG8gYWxsb3cgbm9uLWNncm91cC1jb250cm9sbGVyIHBhcnRz
+Cj4gPiA+IG9mIHRoZSBrZXJuZWwgKGUuZy4sIGRldmljZSBkcml2ZXJzKSB0byByZWdpc3RlciB0
+aGVpciBvd24gcHJpdmF0ZQo+ID4gPiBwb2xpY3kgZGF0YSBmb3Igc3BlY2lmaWMgY2dyb3Vwcy4g
+IFRoYXQgbWVjaGFuaXNtIGlzIHRoZW4gbWFkZSB1c2Ugb2YgaW4KPiA+ID4gdGhlIGk5MTUgZ3Jh
+cGhpY3MgZHJpdmVyIHRvIGFsbG93IEdQVSBwcmlvcml0eSB0byBiZSBhc3NpZ25lZCBhY2NvcmRp
+bmcKPiA+ID4gdG8gdGhlIGNncm91cCBtZW1iZXJzaGlwIG9mIHRoZSBvd25pbmcgcHJvY2Vzcy4g
+IFBsZWFzZSBzZWUgdGhlIHYxIGNvdmVyCj4gPiA+IGxldHRlciBsaW5rZWQgYWJvdmUgZm9yIGEg
+bW9yZSBpbi1kZXB0aCBleHBsYW5hdGlvbiBhbmQganVzdGlmaWNhdGlvbi4KPiA+IAo+ID4gSGkg
+TWF0dCwKPiA+IAo+ID4gRm9yIGNyb3NzLXN1YnN5c3RlbSBjaGFuZ2VzIHN1Y2ggYXMgdGhpcywg
+aXQgbWFrZXMgc2Vuc2UgdG8gQ2MgYWxsCj4gPiByZWxldmFudCBtYWludGFpbmVycywgZXNwZWNp
+YWxseSBpZiB0aGVyZSBoYXZlIGJlZW4gcHJldmlvdXMgY29tbWVudHMgdG8KPiA+IGVhcmxpZXIg
+cmV2aXNpb25zLgo+ID4gCj4gPiBQbGVhc2UsIGRvIGluY2x1ZGUgYW5kIGtlZXAgYSByZWZlcmVu
+Y2UgdG8gdGhlIHVzZXJzcGFjZSBwb3J0aW9uIG9mIHRoZQo+ID4gY2hhbmdlcyB3aGVuIHlvdSBz
+dWdnZXN0IG5ldyB1QVBJIHRvIGJlIGFkZGVkLiBBdCBsZWFzdCBJIGhhdmUgc29tZSB0cm91Ymxl
+Cj4gPiB0cnlpbmcgdG8gdHJhY2sgZG93biB0aGUgcmVsZXZhbnQgaW50ZXJmYWNlIGNvbnN1bWVy
+IGhlcmUuCj4gPiAKPiA+IEknbSB1bnN1cmUgaG93IG11Y2ggc2Vuc2UgaXQgbWFrZXMgdG8gY29t
+bWVuY2Ugd2l0aCBkZXRhaWxlZCBpOTE1IHJldmlldwo+ID4gaWYgd2Ugd2lsbCBiZSBibG9ja2Vk
+IGJ5IGxhY2sgb2YgdXNlcnNwYWNlIGFmdGVyIHRoYXQ/IEknbSBhc3N1bWluZwo+ID4geW91J3Zl
+IHJlYWQgdGhyb3VnaCBbMV0gYWxyZWFkeS4KPiAKPiBIaSBKb29uYXMsCj4gCj4gSSd2ZSBzZW50
+IHRoZSB1c2Vyc3BhY2UgY29kZSBvdXQgYSBmZXcgdGltZXMsIGJ1dCBpdCBsb29rcyBsaWtlIEkg
+Zm9yZ290Cj4gdG8gaW5jbHVkZSBhIGNvcHkgd2l0aCB2NC92NC41LiAgSGVyZSdzIHRoZSB2ZXJz
+aW9uIEkgcHJvdmlkZWQgd2l0aCB2MzoKPiAgIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
+L2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4LU1hcmNoLzE1NzkzNS5odG1sCgpUaGFua3MuIEtlZXBp
+bmcgdGhhdCBpbiB0aGUgcmVsZXZhbnQgY29tbWl0IG1lc3NhZ2Ugb2YgdGhlIHBhdGNoIHRoYXQK
+aW50cm9kdWNlcyB0aGUgbmV3IHVBUEkgd2lsbCBtYWtlIGl0IGhhcmRlciB0byBmb3JnZXQgYW5k
+IGVhc2llc3QgZm9yCmdpdCBibGFtZSwgdG9vLgoKPiAKPiBVc3VhbGx5IHdlIGRvbid0IGNvbnNp
+ZGVyIHRoaW5ncyBsaWtlIGktZy10IHRvIGJlIHN1ZmZpY2llbnQgdXNlcnNwYWNlCj4gY29uc3Vt
+ZXJzIGJlY2F1c2Ugd2UgbmVlZCBhIHJlYWwtd29ybGQgY29uc3VtZXIgcmF0aGVyIHRoYW4gYSAi
+dG95Igo+IHVzZXJzcGFjZS4gIEhvd2V2ZXIgaW4gdGhpcyBjYXNlLCB0aGUgaS1nLXQgdG9vbCwg
+YWx0aG91Z2ggdmVyeSBzaW1wbGUsCj4gaXMgcmVhbGx5IHRoZSBvbmx5IHVzZXJzcGFjZSBjb25z
+dW1lciBJIGV4cGVjdCB0aGVyZSB0byBldmVyIGJlLgo+IFVsdGltYXRlbHkgdGhlIHRydWUgY29u
+c3VtZXIgb2YgdGhpcyBjZ3JvdXBzIHdvcmsgYXJlIGJhc2ggc2NyaXB0cywgc3lzdgo+IGluaXQg
+c2NyaXB0cywgc3lzdGVtZCByZWNpcGVzLCBldGMuICB0aGF0IGp1c3QgbmVlZCBhIHZlcnkgc2lt
+cGxlIHRvb2wKPiB0byBhc3NpZ24gdGhlIHNwZWNpZmljIHZhbHVlcyB0aGF0IG1ha2Ugc2Vuc2Ug
+b24gYSBnaXZlbiBzeXN0ZW0uCj4gVGhlcmUncyBubyBleHBlY3RhdGlvbiB0aGF0IGdyYXBoaWNz
+IGNsaWVudHMgb3IgZGlzcGxheSBzZXJ2ZXJzIHdvdWxkCj4gZXZlciBuZWVkIHRvIG1ha2UgdXNl
+IG9mIHRoZXNlIGludGVyZmFjZXMuCgpJIHdhcyB1bmRlciB0aGUgaW1wcmVzc2lvbiB0aGF0IGEg
+Yml0IG1vcmUgZ2VuZXJpYyBHUFUgY2dyb3VwcyBzdXBwb3J0CndhcyByZWNlaXZpbmcgYSBsb3Qg
+b2Ygc3VwcG9ydCBpbiB0aGUgZWFybHkgZGlzY3Vzc2lvbj8gQSBkZWRpY2F0ZWQKaW50ZWxfY2dy
+b3VwIHNvdW5kcyB1bmRlcndoZWxtaW5nLCB3aGVuIGNvbXBhcmluZyB0byBpZGVhIG9mICJncHVf
+bmljZSIsCmZvciB1c2VyIGFkb3B0aW9uIDopCgpBbHNvLCBJIG1pZ2h0IG5vdCBiZSB1cC10by1k
+YXRlIGFib3V0IGFsbCB0aGluZ3MgY2dyb3VwcywgYnV0IHRoZSB3YXkKaW50ZWxfY2dyb3VwIHdv
+cmtzLCBmZWVscyBiaXQgZm9yY2VkLiBXZSBjcmVhdGUgYSB1c2Vyc3BhY2UgY29udGV4dCBqdXN0
+CnRvIGNvbW11bmljYXRlIHdpdGggdGhlIGRyaXZlciBhbmQgdGhlIElPQ1RMIHdpbGwgc3RpbGwg
+aGF2ZSBnbG9iYWwKZWZmZWN0cy4gSSBjYW4ndCBidXQgdGhpbmsgdGhhdCBpOTE1IHJlYWRpbmcg
+ZnJvbSB0aGUgY2dyb3VwcyBzdWJzeXN0ZW0KZm9yIHRoZSBjdXJyZW50IHByb2Nlc3Mgd291bGQg
+ZmVlbCBtb3JlIGludHVpdGl2ZSB0byBtZS4KCkRvZXMgdGhlIGltcGxlbWVudGF0aW9uIG1pbWlj
+IHNvbWUgZXhpc3RpbmcgY2dyb3VwcyB0b29sIG9yIGRlLWZhY3RvIHdheQpvZiBkb2luZyB0aGlu
+Z3MgaW4gY2dyb3VwcyB3b3JsZD8KClJlZ2FyZHMsIEpvb25hcwpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1k
+ZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
+bWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
