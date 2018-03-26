@@ -1,86 +1,90 @@
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-Subject: Re: [PATCH v4 0/8] cgroup private data and DRM/i915 integration
-Date: Mon, 26 Mar 2018 10:30:23 +0300
-Message-ID: <152204942372.6045.18152790780379161422@jlahtine-desk.ger.corp.intel.com>
-References: <20180317000905.7091-1-matthew.d.roper@intel.com>
- <152180733854.5713.2309886695226223646@jlahtine-desk.ger.corp.intel.com>
- <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v6 2/2] cpuset: Add cpuset.sched_load_balance to v2
+Date: Mon, 26 Mar 2018 14:47:11 +0200
+Message-ID: <20180326124711.GE5942@localhost.localdomain>
+References: <1521649309-26690-1-git-send-email-longman@redhat.com>
+ <1521649309-26690-3-git-send-email-longman@redhat.com>
+ <20180322084120.GE7231@localhost.localdomain>
+ <e754e128-0a93-800e-e71b-2c8dc316ba8a@redhat.com>
+ <20180323075952.GA4763@localhost.localdomain>
+ <a8860a42-31b5-4620-7b23-b7515ee11d7d@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <a8860a42-31b5-4620-7b23-b7515ee11d7d@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matt Roper <matthew.d.roper@intel.com>
-Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, efault@gmx.de, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-UXVvdGluZyBNYXR0IFJvcGVyICgyMDE4LTAzLTIzIDE3OjQ2OjE2KQo+IE9uIEZyaSwgTWFyIDIz
-LCAyMDE4IGF0IDAyOjE1OjM4UE0gKzAyMDAsIEpvb25hcyBMYWh0aW5lbiB3cm90ZToKPiA+IFF1
-b3RpbmcgTWF0dCBSb3BlciAoMjAxOC0wMy0xNyAwMjowODo1NykKPiA+ID4gVGhpcyBpcyB0aGUg
-Zm91cnRoIGl0ZXJhdGlvbiBvZiB0aGUgd29yayBwcmV2aW91c2x5IHBvc3RlZCBoZXJlOgo+ID4g
-PiAgICh2MSkgaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2ZXMvaW50ZWwtZ2Z4
-LzIwMTgtSmFudWFyeS8xNTMxNTYuaHRtbAo+ID4gPiAgICh2MikgaHR0cHM6Ly93d3cubWFpbC1h
-cmNoaXZlLmNvbS9kcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21zZzIwODE3MC5odG1s
-Cj4gPiA+ICAgKHYzKSBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9pbnRl
-bC1nZngvMjAxOC1NYXJjaC8xNTc5MjguaHRtbAo+ID4gPiAKPiA+ID4gVGhlIGhpZ2ggbGV2ZWwg
-Z29hbCBvZiB0aGlzIHdvcmsgaXMgdG8gYWxsb3cgbm9uLWNncm91cC1jb250cm9sbGVyIHBhcnRz
-Cj4gPiA+IG9mIHRoZSBrZXJuZWwgKGUuZy4sIGRldmljZSBkcml2ZXJzKSB0byByZWdpc3RlciB0
-aGVpciBvd24gcHJpdmF0ZQo+ID4gPiBwb2xpY3kgZGF0YSBmb3Igc3BlY2lmaWMgY2dyb3Vwcy4g
-IFRoYXQgbWVjaGFuaXNtIGlzIHRoZW4gbWFkZSB1c2Ugb2YgaW4KPiA+ID4gdGhlIGk5MTUgZ3Jh
-cGhpY3MgZHJpdmVyIHRvIGFsbG93IEdQVSBwcmlvcml0eSB0byBiZSBhc3NpZ25lZCBhY2NvcmRp
-bmcKPiA+ID4gdG8gdGhlIGNncm91cCBtZW1iZXJzaGlwIG9mIHRoZSBvd25pbmcgcHJvY2Vzcy4g
-IFBsZWFzZSBzZWUgdGhlIHYxIGNvdmVyCj4gPiA+IGxldHRlciBsaW5rZWQgYWJvdmUgZm9yIGEg
-bW9yZSBpbi1kZXB0aCBleHBsYW5hdGlvbiBhbmQganVzdGlmaWNhdGlvbi4KPiA+IAo+ID4gSGkg
-TWF0dCwKPiA+IAo+ID4gRm9yIGNyb3NzLXN1YnN5c3RlbSBjaGFuZ2VzIHN1Y2ggYXMgdGhpcywg
-aXQgbWFrZXMgc2Vuc2UgdG8gQ2MgYWxsCj4gPiByZWxldmFudCBtYWludGFpbmVycywgZXNwZWNp
-YWxseSBpZiB0aGVyZSBoYXZlIGJlZW4gcHJldmlvdXMgY29tbWVudHMgdG8KPiA+IGVhcmxpZXIg
-cmV2aXNpb25zLgo+ID4gCj4gPiBQbGVhc2UsIGRvIGluY2x1ZGUgYW5kIGtlZXAgYSByZWZlcmVu
-Y2UgdG8gdGhlIHVzZXJzcGFjZSBwb3J0aW9uIG9mIHRoZQo+ID4gY2hhbmdlcyB3aGVuIHlvdSBz
-dWdnZXN0IG5ldyB1QVBJIHRvIGJlIGFkZGVkLiBBdCBsZWFzdCBJIGhhdmUgc29tZSB0cm91Ymxl
-Cj4gPiB0cnlpbmcgdG8gdHJhY2sgZG93biB0aGUgcmVsZXZhbnQgaW50ZXJmYWNlIGNvbnN1bWVy
-IGhlcmUuCj4gPiAKPiA+IEknbSB1bnN1cmUgaG93IG11Y2ggc2Vuc2UgaXQgbWFrZXMgdG8gY29t
-bWVuY2Ugd2l0aCBkZXRhaWxlZCBpOTE1IHJldmlldwo+ID4gaWYgd2Ugd2lsbCBiZSBibG9ja2Vk
-IGJ5IGxhY2sgb2YgdXNlcnNwYWNlIGFmdGVyIHRoYXQ/IEknbSBhc3N1bWluZwo+ID4geW91J3Zl
-IHJlYWQgdGhyb3VnaCBbMV0gYWxyZWFkeS4KPiAKPiBIaSBKb29uYXMsCj4gCj4gSSd2ZSBzZW50
-IHRoZSB1c2Vyc3BhY2UgY29kZSBvdXQgYSBmZXcgdGltZXMsIGJ1dCBpdCBsb29rcyBsaWtlIEkg
-Zm9yZ290Cj4gdG8gaW5jbHVkZSBhIGNvcHkgd2l0aCB2NC92NC41LiAgSGVyZSdzIHRoZSB2ZXJz
-aW9uIEkgcHJvdmlkZWQgd2l0aCB2MzoKPiAgIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
-L2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4LU1hcmNoLzE1NzkzNS5odG1sCgpUaGFua3MuIEtlZXBp
-bmcgdGhhdCBpbiB0aGUgcmVsZXZhbnQgY29tbWl0IG1lc3NhZ2Ugb2YgdGhlIHBhdGNoIHRoYXQK
-aW50cm9kdWNlcyB0aGUgbmV3IHVBUEkgd2lsbCBtYWtlIGl0IGhhcmRlciB0byBmb3JnZXQgYW5k
-IGVhc2llc3QgZm9yCmdpdCBibGFtZSwgdG9vLgoKPiAKPiBVc3VhbGx5IHdlIGRvbid0IGNvbnNp
-ZGVyIHRoaW5ncyBsaWtlIGktZy10IHRvIGJlIHN1ZmZpY2llbnQgdXNlcnNwYWNlCj4gY29uc3Vt
-ZXJzIGJlY2F1c2Ugd2UgbmVlZCBhIHJlYWwtd29ybGQgY29uc3VtZXIgcmF0aGVyIHRoYW4gYSAi
-dG95Igo+IHVzZXJzcGFjZS4gIEhvd2V2ZXIgaW4gdGhpcyBjYXNlLCB0aGUgaS1nLXQgdG9vbCwg
-YWx0aG91Z2ggdmVyeSBzaW1wbGUsCj4gaXMgcmVhbGx5IHRoZSBvbmx5IHVzZXJzcGFjZSBjb25z
-dW1lciBJIGV4cGVjdCB0aGVyZSB0byBldmVyIGJlLgo+IFVsdGltYXRlbHkgdGhlIHRydWUgY29u
-c3VtZXIgb2YgdGhpcyBjZ3JvdXBzIHdvcmsgYXJlIGJhc2ggc2NyaXB0cywgc3lzdgo+IGluaXQg
-c2NyaXB0cywgc3lzdGVtZCByZWNpcGVzLCBldGMuICB0aGF0IGp1c3QgbmVlZCBhIHZlcnkgc2lt
-cGxlIHRvb2wKPiB0byBhc3NpZ24gdGhlIHNwZWNpZmljIHZhbHVlcyB0aGF0IG1ha2Ugc2Vuc2Ug
-b24gYSBnaXZlbiBzeXN0ZW0uCj4gVGhlcmUncyBubyBleHBlY3RhdGlvbiB0aGF0IGdyYXBoaWNz
-IGNsaWVudHMgb3IgZGlzcGxheSBzZXJ2ZXJzIHdvdWxkCj4gZXZlciBuZWVkIHRvIG1ha2UgdXNl
-IG9mIHRoZXNlIGludGVyZmFjZXMuCgpJIHdhcyB1bmRlciB0aGUgaW1wcmVzc2lvbiB0aGF0IGEg
-Yml0IG1vcmUgZ2VuZXJpYyBHUFUgY2dyb3VwcyBzdXBwb3J0CndhcyByZWNlaXZpbmcgYSBsb3Qg
-b2Ygc3VwcG9ydCBpbiB0aGUgZWFybHkgZGlzY3Vzc2lvbj8gQSBkZWRpY2F0ZWQKaW50ZWxfY2dy
-b3VwIHNvdW5kcyB1bmRlcndoZWxtaW5nLCB3aGVuIGNvbXBhcmluZyB0byBpZGVhIG9mICJncHVf
-bmljZSIsCmZvciB1c2VyIGFkb3B0aW9uIDopCgpBbHNvLCBJIG1pZ2h0IG5vdCBiZSB1cC10by1k
-YXRlIGFib3V0IGFsbCB0aGluZ3MgY2dyb3VwcywgYnV0IHRoZSB3YXkKaW50ZWxfY2dyb3VwIHdv
-cmtzLCBmZWVscyBiaXQgZm9yY2VkLiBXZSBjcmVhdGUgYSB1c2Vyc3BhY2UgY29udGV4dCBqdXN0
-CnRvIGNvbW11bmljYXRlIHdpdGggdGhlIGRyaXZlciBhbmQgdGhlIElPQ1RMIHdpbGwgc3RpbGwg
-aGF2ZSBnbG9iYWwKZWZmZWN0cy4gSSBjYW4ndCBidXQgdGhpbmsgdGhhdCBpOTE1IHJlYWRpbmcg
-ZnJvbSB0aGUgY2dyb3VwcyBzdWJzeXN0ZW0KZm9yIHRoZSBjdXJyZW50IHByb2Nlc3Mgd291bGQg
-ZmVlbCBtb3JlIGludHVpdGl2ZSB0byBtZS4KCkRvZXMgdGhlIGltcGxlbWVudGF0aW9uIG1pbWlj
-IHNvbWUgZXhpc3RpbmcgY2dyb3VwcyB0b29sIG9yIGRlLWZhY3RvIHdheQpvZiBkb2luZyB0aGlu
-Z3MgaW4gY2dyb3VwcyB3b3JsZD8KClJlZ2FyZHMsIEpvb25hcwpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1k
-ZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+On 23/03/18 14:44, Waiman Long wrote:
+> On 03/23/2018 03:59 AM, Juri Lelli wrote:
+
+[...]
+
+> > OK, thanks for confirming. Can you tell again however why do you think
+> > we need to remove sched_load_balance from root level? Won't we end up
+> > having tasks put on isolated sets?
+> 
+> The root cgroup is special that it owns all the resources in the system.
+> We generally don't want restriction be put on the root cgroup. A child
+> cgroup has to be created to have constraints put on it. In fact, most of
+> the controller files don't show up in the v2 cgroup root at all.
+> 
+> An isolated cgroup has to be put under root, e.g.
+> 
+>       Root
+>      /    \
+> isolated  balanced
+> 
+> >
+> > Also, I guess children groups with more than one CPU will need to be
+> > able to load balance across their CPUs, no matter what their parent
+> > group does?
+> 
+> The purpose of an isolated cpuset is to have a dedicated set of CPUs to
+> be used by a certain application that makes its own scheduling decision
+> by placing tasks explicitly on specific CPUs. It just doesn't make sense
+> to have a CPU in an isolated cpuset to participated in load balancing in
+> another cpuset. If one want load balancing in a child cpuset, the parent
+> cpuset should have load balancing turned on as well.
+
+Isolated with CPUs overlapping some other cpuset makes little sense, I
+agree. What I have in mind however is an isolated set of CPUs that don't
+overlap with any other cpuset (as your balanced set above). In this case
+I think it makes sense to let the sys admin decide if "automatic" load
+balancing has to be performed (by the scheduler) or no load balacing at
+all has to take place?
+
+Further extending your example:
+
+             Root [0-3]
+	     /        \
+        group1 [0-1] group2[2-3]
+
+Why should we prevent load balancing to be disabled at root level (so
+that for example tasks still residing in root group are not freely
+migrated around, potentially disturbing both sub-groups)?
+
+Then one can decide that group1 is a "userspace managed" group (no load
+balancing takes place) and group2 is balanced by the scheduler.
+
+And this is not DEADLINE specific, IMHO.
+
+> As I look into the code, it seems like root domain is probably somewhat
+> associated with cpu_exclusive only. Whether sched_load_balance is set
+> doesn't really matter.  I will need to look further on the conditions
+> where a new root domain is created.
+
+I checked again myself (sched domains code is always a maze :) and I
+believe that sched_load_balance flag indeed controls domains (sched and
+root) creation and configuration . Changing the flag triggers potential
+rebuild and separed sched/root domains are generated if subgroups have
+non overlapping cpumasks.  cpu_exclusive only enforces this latter
+condition.
+
+Best,
+
+- Juri
