@@ -1,7 +1,7 @@
-From: syzbot <syzbot+6887cbb011c8054e8a3d@syzkaller.appspotmail.com>
-Subject: INFO: rcu detected stall in bitmap_parselist
-Date: Sun, 01 Apr 2018 10:13:01 -0700
-Message-ID: <000000000000edc3690568cc95eb@google.com>
+From: syzbot <syzbot+1c6aab3af348855fd824@syzkaller.appspotmail.com>
+Subject: INFO: rcu detected stall in __bitmap_parselist
+Date: Sun, 01 Apr 2018 10:13:24 -0700
+Message-ID: <0000000000004752520568cc978d@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -13,31 +13,32 @@ To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, s
 Hello,
 
 syzbot hit the following crash on upstream commit
-3eb2ce825ea1ad89d20f7a3b5780df850e4be274 (Sun Mar 25 22:44:30 2018 +0000)
-Linux 4.16-rc7
+10b84daddbec72c6b440216a69de9a9605127f7a (Sat Mar 31 17:59:00 2018 +0000)
+Merge branch 'perf-urgent-for-linus' of  
+git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
 syzbot dashboard link:  
-https://syzkaller.appspot.com/bug?extid=6887cbb011c8054e8a3d
+https://syzkaller.appspot.com/bug?extid=1c6aab3af348855fd824
 
-So far this crash happened 3 times on upstream.
+So far this crash happened 8 times on upstream.
 Unfortunately, I don't have any reproducer for this crash yet.
 Raw console output:  
-https://syzkaller.appspot.com/x/log.txt?id=5674881425342464
+https://syzkaller.appspot.com/x/log.txt?id=4789350973833216
 Kernel config:  
-https://syzkaller.appspot.com/x/.config?id=-8440362230543204781
+https://syzkaller.appspot.com/x/.config?id=-2760467897697295172
 compiler: gcc (GCC) 7.1.1 20170620
 
 IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+6887cbb011c8054e8a3d@syzkaller.appspotmail.com
+Reported-by: syzbot+1c6aab3af348855fd824@syzkaller.appspotmail.com
 It will help syzbot understand when the bug is fixed. See footer for  
 details.
 If you forward the report, please keep this part and the footer.
 
 INFO: rcu_sched self-detected stall on CPU
-	1-....: (124999 ticks this GP) idle=0da/1/4611686018427387906  
-softirq=49340/49340 fqs=31180
-	 (t=125000 jiffies g=24134 c=24133 q=654)
+	1-....: (124999 ticks this GP) idle=99a/1/4611686018427387906  
+softirq=145926/145926 fqs=31223
+	 (t=125000 jiffies g=76485 c=76484 q=1326)
 NMI backtrace for cpu 1
-CPU: 1 PID: 14671 Comm: syz-executor3 Not tainted 4.16.0-rc7+ #368
+CPU: 1 PID: 600 Comm: syz-executor3 Not tainted 4.16.0-rc7+ #374
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
 Google 01/01/2011
 Call Trace:
@@ -64,13 +65,15 @@ Call Trace:
   smp_apic_timer_interrupt+0x14a/0x700 arch/x86/kernel/apic/apic.c:1050
   apic_timer_interrupt+0xf/0x20 arch/x86/entry/entry_64.S:857
   </IRQ>
-RIP: 0010:__bitmap_parselist+0x2f0/0x4b0 lib/bitmap.c:612
-RSP: 0018:ffff88019ef0f6d8 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff12
-RAX: 0000000000010000 RBX: 0000000000000001 RCX: ffffffff82af9d1d
-RDX: 0000000000010000 RSI: ffffc900042fb000 RDI: ffff8801b5a023e0
-RBP: ffff88019ef0f750 R08: ffffed0036b4047d R09: ffff8801b5a023e0
-R10: 0000000000000001 R11: ffffed0036b4047c R12: 0000000000000008
-R13: 0000000000000000 R14: 0000000000000000 R15: dffffc0000000000
+RIP: 0010:__bitmap_set+0x49/0x110 lib/bitmap.c:261
+RSP: 0018:ffff88018b6a7690 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff12
+RAX: 00000000ffffffc0 RBX: ffffffffffffffff RCX: 0000000000000000
+RDX: 0000000000040000 RSI: 0000000000000000 RDI: ffff8801ac9306a0
+RBP: ffff88018b6a76c8 R08: ffffed00359260d5 R09: ffff8801ac9306a0
+R10: 0000000000000001 R11: ffffed00359260d4 R12: ffffffffffffffff
+R13: 0000000000000000 R14: ffff8801ac9306a0 R15: 0000000000000000
+  bitmap_set include/linux/bitmap.h:365 [inline]
+  __bitmap_parselist+0x310/0x4b0 lib/bitmap.c:616
   bitmap_parselist+0x3a/0x50 lib/bitmap.c:628
   cpulist_parse include/linux/cpumask.h:639 [inline]
   update_cpumask kernel/cgroup/cpuset.c:974 [inline]
@@ -83,13 +86,13 @@ R13: 0000000000000000 R14: 0000000000000000 R15: dffffc0000000000
   SyS_write+0xef/0x220 fs/read_write.c:581
   do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
   entry_SYSCALL_64_after_hwframe+0x42/0xb7
-RIP: 0033:0x454879
-RSP: 002b:00007f01ef5b4c68 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 00007f01ef5b56d4 RCX: 0000000000454879
-RDX: 0000000000000002 RSI: 0000000020000040 RDI: 0000000000000014
+RIP: 0033:0x454e79
+RSP: 002b:00007ff0e19eec68 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007ff0e19ef6d4 RCX: 0000000000454e79
+RDX: 0000000000000003 RSI: 00000000200000c0 RDI: 0000000000000014
 RBP: 000000000072bea0 R08: 0000000000000000 R09: 0000000000000000
 R10: 0000000000000000 R11: 0000000000000246 R12: 00000000ffffffff
-R13: 00000000000006a1 R14: 00000000006fbfb8 R15: 0000000000000000
+R13: 00000000000006b0 R14: 00000000006fc120 R15: 0000000000000000
 
 
 ---
