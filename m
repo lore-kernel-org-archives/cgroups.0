@@ -1,95 +1,95 @@
-From: syzbot <syzbot+8a5de3cce7cdc70e9ebe@syzkaller.appspotmail.com>
-Subject: general protection fault in __mem_cgroup_free
-Date: Sat, 31 Mar 2018 13:47:05 -0700
-Message-ID: <001a11447acaab591f0568bb75e2@google.com>
+From: syzbot <syzbot+6887cbb011c8054e8a3d@syzkaller.appspotmail.com>
+Subject: INFO: rcu detected stall in bitmap_parselist
+Date: Sun, 01 Apr 2018 10:13:01 -0700
+Message-ID: <000000000000edc3690568cc95eb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, syzkaller-bugs@googlegroups.com
 
 Hello,
 
 syzbot hit the following crash on upstream commit
-9dd2326890d89a5179967c947dab2bab34d7ddee (Fri Mar 30 17:29:47 2018 +0000)
-Merge tag 'ceph-for-4.16-rc8' of git://github.com/ceph/ceph-client
+3eb2ce825ea1ad89d20f7a3b5780df850e4be274 (Sun Mar 25 22:44:30 2018 +0000)
+Linux 4.16-rc7
 syzbot dashboard link:  
-https://syzkaller.appspot.com/bug?extid=8a5de3cce7cdc70e9ebe
+https://syzkaller.appspot.com/bug?extid=6887cbb011c8054e8a3d
 
-So far this crash happened 14 times on upstream.
-C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5578311367393280
-syzkaller reproducer:  
-https://syzkaller.appspot.com/x/repro.syz?id=5708657048158208
+So far this crash happened 3 times on upstream.
+Unfortunately, I don't have any reproducer for this crash yet.
 Raw console output:  
-https://syzkaller.appspot.com/x/log.txt?id=6693821748346880
+https://syzkaller.appspot.com/x/log.txt?id=5674881425342464
 Kernel config:  
-https://syzkaller.appspot.com/x/.config?id=-2760467897697295172
+https://syzkaller.appspot.com/x/.config?id=-8440362230543204781
 compiler: gcc (GCC) 7.1.1 20170620
 
 IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+8a5de3cce7cdc70e9ebe@syzkaller.appspotmail.com
+Reported-by: syzbot+6887cbb011c8054e8a3d@syzkaller.appspotmail.com
 It will help syzbot understand when the bug is fixed. See footer for  
 details.
 If you forward the report, please keep this part and the footer.
 
-RBP: 00000000006dcc20 R08: 0000000000000002 R09: 0000000000003335
-R10: 0000000000000000 R11: 0000000000000246 R12: 0030656c69662f2e
-R13: 00007f1747954d80 R14: ffffffffffffffff R15: 0000000000000006
-kasan: CONFIG_KASAN_INLINE enabled
-kasan: GPF could be caused by NULL-ptr deref or user memory access
-general protection fault: 0000 [#1] SMP KASAN
-Dumping ftrace buffer:
-    (ftrace buffer empty)
-Modules linked in:
-CPU: 0 PID: 4422 Comm: syzkaller101598 Not tainted 4.16.0-rc7+ #372
+INFO: rcu_sched self-detected stall on CPU
+	1-....: (124999 ticks this GP) idle=0da/1/4611686018427387906  
+softirq=49340/49340 fqs=31180
+	 (t=125000 jiffies g=24134 c=24133 q=654)
+NMI backtrace for cpu 1
+CPU: 1 PID: 14671 Comm: syz-executor3 Not tainted 4.16.0-rc7+ #368
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
 Google 01/01/2011
-RIP: 0010:free_mem_cgroup_per_node_info mm/memcontrol.c:4111 [inline]
-RIP: 0010:__mem_cgroup_free+0x71/0x110 mm/memcontrol.c:4120
-RSP: 0018:ffff8801accf75a8 EFLAGS: 00010206
-RAX: 0000000000000011 RBX: 0000000000000000 RCX: ffffffff8310cdfd
-RDX: 0000000000000000 RSI: 0000000000000040 RDI: 0000000000000088
-RBP: ffff8801accf75c8 R08: 0000000000000000 R09: ffff8801accf73a0
-R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
-R13: ffff8801ad210d40 R14: dffffc0000000000 R15: ffff8801ad210d40
-FS:  00007f1747955700(0000) GS:ffff8801db000000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000460000 CR3: 00000001cb367004 CR4: 00000000001606f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 Call Trace:
-  mem_cgroup_free mm/memcontrol.c:4128 [inline]
-  mem_cgroup_css_alloc+0x403/0x19c0 mm/memcontrol.c:4239
-  css_create kernel/cgroup/cgroup.c:4729 [inline]
-  cgroup_apply_control_enable+0x44d/0xbc0 kernel/cgroup/cgroup.c:2916
-  cgroup_mkdir+0x56f/0xfc0 kernel/cgroup/cgroup.c:4938
-  kernfs_iop_mkdir+0x153/0x1e0 fs/kernfs/dir.c:1099
-  vfs_mkdir+0x390/0x600 fs/namei.c:3800
-  SYSC_mkdirat fs/namei.c:3823 [inline]
-  SyS_mkdirat+0x22b/0x2b0 fs/namei.c:3807
+  <IRQ>
+  __dump_stack lib/dump_stack.c:17 [inline]
+  dump_stack+0x194/0x24d lib/dump_stack.c:53
+  nmi_cpu_backtrace+0x1d2/0x210 lib/nmi_backtrace.c:103
+  nmi_trigger_cpumask_backtrace+0x123/0x180 lib/nmi_backtrace.c:62
+  arch_trigger_cpumask_backtrace+0x14/0x20 arch/x86/kernel/apic/hw_nmi.c:38
+  trigger_single_cpu_backtrace include/linux/nmi.h:156 [inline]
+  rcu_dump_cpu_stacks+0x186/0x1de kernel/rcu/tree.c:1375
+  print_cpu_stall kernel/rcu/tree.c:1524 [inline]
+  check_cpu_stall.isra.61+0xbb8/0x15b0 kernel/rcu/tree.c:1592
+  __rcu_pending kernel/rcu/tree.c:3361 [inline]
+  rcu_pending kernel/rcu/tree.c:3423 [inline]
+  rcu_check_callbacks+0x238/0xd20 kernel/rcu/tree.c:2763
+  update_process_times+0x30/0x60 kernel/time/timer.c:1636
+  tick_sched_handle+0x85/0x160 kernel/time/tick-sched.c:162
+  tick_sched_timer+0x42/0x120 kernel/time/tick-sched.c:1194
+  __run_hrtimer kernel/time/hrtimer.c:1349 [inline]
+  __hrtimer_run_queues+0x39c/0xec0 kernel/time/hrtimer.c:1411
+  hrtimer_interrupt+0x2a5/0x6f0 kernel/time/hrtimer.c:1469
+  local_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1025 [inline]
+  smp_apic_timer_interrupt+0x14a/0x700 arch/x86/kernel/apic/apic.c:1050
+  apic_timer_interrupt+0xf/0x20 arch/x86/entry/entry_64.S:857
+  </IRQ>
+RIP: 0010:__bitmap_parselist+0x2f0/0x4b0 lib/bitmap.c:612
+RSP: 0018:ffff88019ef0f6d8 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff12
+RAX: 0000000000010000 RBX: 0000000000000001 RCX: ffffffff82af9d1d
+RDX: 0000000000010000 RSI: ffffc900042fb000 RDI: ffff8801b5a023e0
+RBP: ffff88019ef0f750 R08: ffffed0036b4047d R09: ffff8801b5a023e0
+R10: 0000000000000001 R11: ffffed0036b4047c R12: 0000000000000008
+R13: 0000000000000000 R14: 0000000000000000 R15: dffffc0000000000
+  bitmap_parselist+0x3a/0x50 lib/bitmap.c:628
+  cpulist_parse include/linux/cpumask.h:639 [inline]
+  update_cpumask kernel/cgroup/cpuset.c:974 [inline]
+  cpuset_write_resmask+0x1694/0x2850 kernel/cgroup/cpuset.c:1724
+  cgroup_file_write+0x2ae/0x710 kernel/cgroup/cgroup.c:3429
+  kernfs_fop_write+0x2bc/0x440 fs/kernfs/file.c:316
+  __vfs_write+0xef/0x970 fs/read_write.c:480
+  vfs_write+0x189/0x510 fs/read_write.c:544
+  SYSC_write fs/read_write.c:589 [inline]
+  SyS_write+0xef/0x220 fs/read_write.c:581
   do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
   entry_SYSCALL_64_after_hwframe+0x42/0xb7
-RIP: 0033:0x44a0c9
-RSP: 002b:00007f1747954d78 EFLAGS: 00000246 ORIG_RAX: 0000000000000102
-RAX: ffffffffffffffda RBX: 00000000006dcc24 RCX: 000000000044a0c9
-RDX: 0000000000000020 RSI: 0000000020000280 RDI: 0000000000000005
-RBP: 00000000006dcc20 R08: 0000000000000002 R09: 0000000000003335
-R10: 0000000000000000 R11: 0000000000000246 R12: 0030656c69662f2e
-R13: 00007f1747954d80 R14: ffffffffffffffff R15: 0000000000000006
-Code: 00 00 48 89 f8 48 c1 e8 03 42 80 3c 30 00 0f 85 99 00 00 00 4f 8b a4  
-e5 f0 09 00 00 49 8d bc 24 88 00 00 00 48 89 f8 48 c1 e8 03 <42> 80 3c 30  
-00 0f 85 88 00 00 00 49 8b bc 24 88 00 00 00 e8 77
-RIP: free_mem_cgroup_per_node_info mm/memcontrol.c:4111 [inline] RSP:  
-ffff8801accf75a8
-RIP: __mem_cgroup_free+0x71/0x110 mm/memcontrol.c:4120 RSP: ffff8801accf75a8
----[ end trace 57ac07c30502ef78 ]---
-Kernel panic - not syncing: Fatal exception
-Dumping ftrace buffer:
-    (ftrace buffer empty)
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
+RIP: 0033:0x454879
+RSP: 002b:00007f01ef5b4c68 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f01ef5b56d4 RCX: 0000000000454879
+RDX: 0000000000000002 RSI: 0000000020000040 RDI: 0000000000000014
+RBP: 000000000072bea0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00000000ffffffff
+R13: 00000000000006a1 R14: 00000000006fbfb8 R15: 0000000000000000
 
 
 ---
@@ -102,9 +102,6 @@ If you forgot to add the Reported-by tag, once the fix for this bug is
 merged
 into any tree, please reply to this email with:
 #syz fix: exact-commit-title
-If you want to test a patch for this bug, please reply with:
-#syz test: git://repo/address.git branch
-and provide the patch inline or as an attachment.
 To mark this as a duplicate of another syzbot report, please reply with:
 #syz dup: exact-subject-of-another-report
 If it's a one-off invalid bug report, please reply with:
