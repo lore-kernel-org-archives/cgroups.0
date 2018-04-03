@@ -1,13 +1,14 @@
 From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: general protection fault in __mem_cgroup_free
-Date: Tue, 3 Apr 2018 11:43:29 +0200
-Message-ID: <20180403094329.GJ5501@dhcp22.suse.cz>
+Date: Tue, 3 Apr 2018 12:50:48 +0200
+Message-ID: <20180403105048.GK5501@dhcp22.suse.cz>
 References: <001a113fe4c0a623b10568bb75ea@google.com>
  <20180403093733.GI5501@dhcp22.suse.cz>
+ <20180403094329.GJ5501@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180403093733.GI5501@dhcp22.suse.cz>
+In-Reply-To: <20180403094329.GJ5501@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -15,67 +16,31 @@ Content-Transfer-Encoding: 7bit
 To: syzbot <syzbot+8a5de3cce7cdc70e9ebe@syzkaller.appspotmail.com>
 Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On Tue 03-04-18 11:37:33, Michal Hocko wrote:
-> [CC Andrey]
-> 
-> On Sat 31-03-18 13:47:05, syzbot wrote:
-> > Hello,
-> > 
-> > syzbot hit the following crash on upstream commit
-> > 9dd2326890d89a5179967c947dab2bab34d7ddee (Fri Mar 30 17:29:47 2018 +0000)
-> > Merge tag 'ceph-for-4.16-rc8' of git://github.com/ceph/ceph-client
-> > syzbot dashboard link:
-> > https://syzkaller.appspot.com/bug?extid=8a5de3cce7cdc70e9ebe
-> > 
-> > So far this crash happened 14 times on upstream.
-> > C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5578311367393280
-> > syzkaller reproducer:
-> > https://syzkaller.appspot.com/x/repro.syz?id=5708657048158208
-> > Raw console output:
-> > https://syzkaller.appspot.com/x/log.txt?id=6693821748346880
-> > Kernel config:
-> > https://syzkaller.appspot.com/x/.config?id=-2760467897697295172
-> > compiler: gcc (GCC) 7.1.1 20170620
-> > 
-> > IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> > Reported-by: syzbot+8a5de3cce7cdc70e9ebe@syzkaller.appspotmail.com
-> > It will help syzbot understand when the bug is fixed. See footer for
-> > details.
-> > If you forward the report, please keep this part and the footer.
-> > 
-> > RBP: 00000000006dcc20 R08: 0000000000000002 R09: 0000000000003335
-> > R10: 0000000000000000 R11: 0000000000000246 R12: 0030656c69662f2e
-> > R13: 00007f1747954d80 R14: ffffffffffffffff R15: 0000000000000006
-> > kasan: CONFIG_KASAN_INLINE enabled
-> > kasan: GPF could be caused by NULL-ptr deref or user memory access
-> > general protection fault: 0000 [#1] SMP KASAN
-> > Dumping ftrace buffer:
-> >    (ftrace buffer empty)
-> > Modules linked in:
-> > CPU: 0 PID: 4422 Comm: syzkaller101598 Not tainted 4.16.0-rc7+ #372
-> > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
-> > Google 01/01/2011
-> > RIP: 0010:free_mem_cgroup_per_node_info mm/memcontrol.c:4111 [inline]
-> > RIP: 0010:__mem_cgroup_free+0x71/0x110 mm/memcontrol.c:4120
-> 
-> Is this a real bug or a KASAN false positive? The RIP points at
->         free_percpu(pn->lruvec_stat_cpu);
-> 
-> Which can be NULL if we are failing to allocate per-node data in
-> mem_cgroup_alloc. You stack unwinder seems to point to
-> mem_cgroup_css_alloc->mem_cgroup_free though and that one cannot see
-> NULL memcg->nodeinfo[node] AFAICS.
-> 
-> Even if this is really mem_cgroup_alloc path then calling free_percpu
-> with NULL pointer should be OK. Or am I missing something?
+Here we go
 
-Scratch that. The bug is real. We can have memcg->nodeinfo[node] =
-NULL from mem_cgroup_alloc. It uses the same failure path as the pcp
-allocation failure.
+From 38f0f08a3f9f19c106ae53350e43dc97e2e3a4d8 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.com>
+Date: Tue, 3 Apr 2018 12:40:41 +0200
+Subject: [PATCH] memcg: fix per_node_info cleanup
 
-This should fix it. I will send the full patch with proper changelog
-shortly
+syzbot has triggered a NULL ptr dereference when allocation fault
+injection enforces a failure and alloc_mem_cgroup_per_node_info
+initializes memcg->nodeinfo only half way through. __mem_cgroup_free
+still tries to free all per-node data and dereferences pn->lruvec_stat_cpu
+unconditioanlly even if the specific per-node data hasn't been
+initialized.
+
+The bug is quite unlikely to hit because small allocations do not fail
+and we would need quite some numa nodes to make struct mem_cgroup_per_node
+large enough to cross the costly order.
+
+Reported-by: syzbot+8a5de3cce7cdc70e9ebe@syzkaller.appspotmail.com
+Fixes: 00f3ca2c2d66 ("mm: memcontrol: per-lruvec stats infrastructure")
+Signed-off-by: Michal Hocko <mhocko@suse.com>
 ---
+ mm/memcontrol.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
 index e3d5a0a7917f..0a9c4d5194f3 100644
 --- a/mm/memcontrol.c
@@ -90,6 +55,9 @@ index e3d5a0a7917f..0a9c4d5194f3 100644
  	free_percpu(pn->lruvec_stat_cpu);
  	kfree(pn);
  }
+-- 
+2.16.3
+
 -- 
 Michal Hocko
 SUSE Labs
