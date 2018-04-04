@@ -1,135 +1,72 @@
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: Re: INFO: rcu detected stall in bitmap_parselist
-Date: Thu, 5 Apr 2018 00:58:46 +0900
-Message-ID: <201804050058.EIB64593.LtSFQHFJOMOVFO@I-love.SAKURA.ne.jp>
-References: <000000000000edc3690568cc95eb@google.com>
-        <f1a0af0d-44c5-e938-b48f-0bace885f0a2@I-love.SAKURA.ne.jp>
-        <20180404154136.p7aeye7657q466sq@yury-thinkpad>
+From: Yury Norov <ynorov@caviumnetworks.com>
+Subject: [PATCH] lib: fix stall in __bitmap_parselist()
+Date: Wed,  4 Apr 2018 19:26:47 +0300
+Message-ID: <20180404162647.15763-1-ynorov@caviumnetworks.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180404154136.p7aeye7657q466sq@yury-thinkpad>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=CAVIUMNETWORKS.onmicrosoft.com; s=selector1-cavium-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=x5CcCeLjSdB1YBATN0aRMSuZZIzeXc3qvXxP3rYvv/M=;
+ b=E/wVjiLUnck0DGi+CQIdeBXvcw1jRDo3QqJFlUC9lRbjQ07UqGcY1h5GY3yaoAVbF3pZxM3cB45miiAAc2ozKehpqS66Uh3pdaQrpnBNdW088Jn8WixretHJFXPjz8E/cjhEiOOSVwKcqFjTkIjjXehs6bkD8K1g1k+pt2QmLmo=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: ynorov@caviumnetworks.com
-Cc: syzbot+6887cbb011c8054e8a3d@syzkaller.appspotmail.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, syzkaller-bugs@googlegroups.com, noamca@mellanox.com, linux@rasmusvillemoes.dk, mawilcox@microsoft.com, mchehab@kernel.org, akpm@linux-foundation.org
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: Yury Norov <ynorov@caviumnetworks.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, syzkaller-bugs@googlegroups.com, Noam Camus <noamca@mellanox.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, Matthew Wilcox <mawilcox@microsoft.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Yury Norov wrote:
-> Hi Tetsuo,
-> 
-> Thanks for the patch.
-> 
-> On Wed, Apr 04, 2018 at 09:21:43PM +0900, Tetsuo Handa wrote:
-> > Yury, are you OK with this patch?
-> > 
-> > 
-> > >From 7f21827cdfe9780b4949b22bcd19efa721b463d2 Mon Sep 17 00:00:00 2001
-> > From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > Date: Wed, 4 Apr 2018 21:12:10 +0900
-> > Subject: [PATCH] lib/bitmap: Rewrite __bitmap_parselist().
-> > 
-> > syzbot is catching stalls at __bitmap_parselist() [1]. The trigger is
-> > 
-> >   unsigned long v = 0;
-> >   bitmap_parselist("7:,", &v, BITS_PER_LONG);
-> 
-> Could you add this case to the test_bitmap_parselist()?
-> 
-> > which results in hitting infinite loop at
-> > 
-> >   while (a <= b) {
-> >     off = min(b - a + 1, used_size);
-> >     bitmap_set(maskp, a, off);
-> >     a += group_size;
-> >   }
-> > 
-> > due to used_size == group_size == 0.
-> > 
-> > Current code is difficult to read due to too many flag variables.
-> > Let's rewrite it.
-> 
-> I also don't like current implementation of bitmap_parselist(), but
-> discussion on new code  may take some time. Can you submit minimal
-> fix in separated patch to let people discuss your new implementation
-> without rush?
+syzbot is catching stalls at __bitmap_parselist() [1]. The trigger is
 
-OK. Then you can write the patch. You know current code better than I.
+  unsigned long v = 0;
+  bitmap_parselist("7:,", &v, BITS_PER_LONG);
 
-> > @@ -485,6 +485,58 @@ int bitmap_print_to_pagebuf(bool list, char *buf, const unsigned long *maskp,
-> >  }
-> >  EXPORT_SYMBOL(bitmap_print_to_pagebuf);
-> >  
-> > +static bool get_uint(const char **buf, unsigned int *res)
-> > +{
-> > +	const char *p = *buf;
-> > +
-> > +	if (!isdigit(*p))
-> > +		return false;
-> > +	*res = simple_strtoul(p, (char **) buf, 10);
-> 
-> In comment to simple_strtoul(): "This function is obsolete. Please
-> use kstrtoul instead."
+which results in hitting infinite loop at
 
-I intentionally choose simple_strtoul() because next delimiter (e.g. '-')
-starts at returned address. kstrtoul() fails if next letter starts.
+    while (a <= b) {
+	    off = min(b - a + 1, used_size);
+	    bitmap_set(maskp, a, off);
+	    a += group_size;
+    }
 
-> 
-> > +	return p < *buf;
+due to used_size == group_size == 0.
 
-I think I should limit to "0 <= *res <= INT_MAX" range in order to avoid
-overflow at start += group_size.
+Reported-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Reported-by: syzbot <syzbot+6887cbb011c8054e8a3d@syzkaller.appspotmail.com>
+Signed-off-by: Yury Norov <ynorov@caviumnetworks.com>
+---
+ lib/bitmap.c      | 2 +-
+ lib/test_bitmap.c | 4 ++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-> > +}
-> > +
-> > +static int __bitmap_parse_one_chunk(const char *buf, unsigned long *maskp,
-> > +				    const unsigned int nmaskbits)
-> > +{
-> > +	unsigned int start;
-> > +	unsigned int end;
-> > +	unsigned int group_size;
-> > +	unsigned int used_size;
-> > +
-> > +	while (*buf && isspace(*buf))
-> > +		buf++;
-> > +	if (!get_uint(&buf, &start))
-> > +		return -EINVAL;
-> > +	if (*buf == '-') {
-> > +		buf++;
-> > +		if (!get_uint(&buf, &end) || start > end)
-> > +			return -EINVAL;
-> > +		if (*buf == ':') {
-> > +			buf++;
-> > +			if (!get_uint(&buf, &used_size) || *buf++ != '/' ||
-> > +			    !get_uint(&buf, &group_size) ||
-> > +			    used_size > group_size)
-> > +				return -EINVAL;
-> 
-> So this is still not safe against "1-10:0/0", or I miss something?
-> (This is another testcase we should add to test_bitmap.c)
+diff --git a/lib/bitmap.c b/lib/bitmap.c
+index 9e498c77ed0e..a42eff7e8c48 100644
+--- a/lib/bitmap.c
++++ b/lib/bitmap.c
+@@ -607,7 +607,7 @@ static int __bitmap_parselist(const char *buf, unsigned int buflen,
+ 		/* if no digit is after '-', it's wrong*/
+ 		if (at_start && in_range)
+ 			return -EINVAL;
+-		if (!(a <= b) || !(used_size <= group_size))
++		if (!(a <= b) || group_size == 0 || !(used_size <= group_size))
+ 			return -EINVAL;
+ 		if (b >= nmaskbits)
+ 			return -ERANGE;
+diff --git a/lib/test_bitmap.c b/lib/test_bitmap.c
+index 756f20ad03db..de16f7869fb1 100644
+--- a/lib/test_bitmap.c
++++ b/lib/test_bitmap.c
+@@ -255,6 +255,10 @@ static const struct test_bitmap_parselist parselist_tests[] __initconst = {
+ 	{-EINVAL, "-1",	NULL, 8, 0},
+ 	{-EINVAL, "-0",	NULL, 8, 0},
+ 	{-EINVAL, "10-1", NULL, 8, 0},
++	{-EINVAL, "0-31:", NULL, 8, 0},
++	{-EINVAL, "0-31:0", NULL, 8, 0},
++	{-EINVAL, "0-31:0/0", NULL, 8, 0},
++	{-EINVAL, "0-31:1/0", NULL, 8, 0},
+ 	{-EINVAL, "0-31:10/1", NULL, 8, 0},
+ };
+ 
+-- 
+2.14.1
 
-Indeed. We need to make more testcases.
-
-> > +	while (buflen && !err) {
-> > +		char *cp;
-> > +		char tmpbuf[256];
-> > +		unsigned int size = min(buflen,
-> > +					(unsigned int) sizeof(tmpbuf) - 1);
-> > +
-> > +		if (!is_user)
-> > +			memcpy(tmpbuf, buf, size);
-> > +		else if (copy_from_user(tmpbuf, (const char __user __force *)
-> > +					buf, size))
-> > +			return -EFAULT;
-> 
-> This is not safe against this:
-> "[250 whitespaces] 567-890:123/456"
-
-Do we need to accept such insane entry?
-
-> 
-> And it will be Schlemiel the painter's-styled algorithm for input like:
-> "1,2,3,4, ... ,98,99,100". 
-> 
-> I think we need something like __bitmap_parse_get_chunk() to copy
-> coma-separated substrings.
