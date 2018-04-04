@@ -1,152 +1,59 @@
-From: Yury Norov <ynorov@caviumnetworks.com>
-Subject: Re: INFO: rcu detected stall in bitmap_parselist
-Date: Wed, 4 Apr 2018 19:53:04 +0300
-Message-ID: <20180404165304.fkclobbpqd4itwta@yury-thinkpad>
-References: <000000000000edc3690568cc95eb@google.com>
- <f1a0af0d-44c5-e938-b48f-0bace885f0a2@I-love.SAKURA.ne.jp>
- <20180404154136.p7aeye7657q466sq@yury-thinkpad>
- <201804050058.EIB64593.LtSFQHFJOMOVFO@I-love.SAKURA.ne.jp>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3] mm: memcontrol: Use cgroup_rstat for event accounting
+Date: Wed, 4 Apr 2018 09:58:29 -0700
+Message-ID: <20180404165829.GA3126663@devbig577.frc2.facebook.com>
+References: <20180324160901.512135-1-tj@kernel.org>
+ <20180324160901.512135-2-tj@kernel.org>
+ <20180404140855.GA28966@cmpxchg.org>
+ <20180404141850.GC28966@cmpxchg.org>
+ <20180404143447.GJ6312@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=CAVIUMNETWORKS.onmicrosoft.com; s=selector1-cavium-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=ORIfSUZ//kjAlpBDOjAbG64rtWivS9CCBqqRroHu5jM=;
- b=ODhpaDVp+ZOpCIem6Xy4urXn8iysjF4hNy7DRAzz6YlUsG/BEKhmzeUemYASiMQsZhXCC4VXWB3E8BUwNCbYSPshEFzIVWkrWLECr/QqMLwMvzfDaupQ0+TUMCG3wMScIDqaqIhTuRvmkz/8b9NfP0JW0IWzyNfxYtq/LNoehqQ=
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=epoN4Th0eB74UGZq+OeEAZ7LRzqpdsK53mDZcFiDtps=;
+        b=R6HmM2HxnsaaCPmZNVyFJQ8L2UHi0MhIKs0lKtTBokxNtf9JF5fqZ9+sS3k9Xk73D1
+         PjqV2KkGU+amu3FbO2lGDxIbpLwNJzJ7+AKSt87q6jgJZlINBiY6LG9MdiVgm8IdVIFb
+         X30G0iTWie52eiGchia2h8aYnSPEoZ06tB31MLYbGLKidZV7CejsyJ0zFJ7wC1oo4OId
+         iqB+TyUb4cIhbYVL36KNl89z5X6XFPxl40lUkFbi7wrIHoQ9vewgfkNZY1MF2pcJ84l7
+         VFUFUAs8yXRIZ7j0lPokdqZrLH2+9aGAdSGdJjCf25AUs8VPbZiMJYZDLvdV0XzZ7NM/
+         p3Eg==
 Content-Disposition: inline
-In-Reply-To: <201804050058.EIB64593.LtSFQHFJOMOVFO@I-love.SAKURA.ne.jp>
+In-Reply-To: <20180404143447.GJ6312@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: syzbot+6887cbb011c8054e8a3d@syzkaller.appspotmail.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, syzkaller-bugs@googlegroups.com, noamca@mellanox.com, linux@rasmusvillemoes.dk, mawilcox@microsoft.com, mchehab@kernel.org, akpm@linux-foundation.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, vdavydov.dev@gmail.com, guro@fb.com, riel@surriel.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Apr 05, 2018 at 12:58:46AM +0900, Tetsuo Handa wrote:
-> Yury Norov wrote:
-> > Hi Tetsuo,
-> > 
-> > Thanks for the patch.
-> > 
-> > On Wed, Apr 04, 2018 at 09:21:43PM +0900, Tetsuo Handa wrote:
-> > > Yury, are you OK with this patch?
-> > > 
-> > > 
-> > > >From 7f21827cdfe9780b4949b22bcd19efa721b463d2 Mon Sep 17 00:00:00 2001
-> > > From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > > Date: Wed, 4 Apr 2018 21:12:10 +0900
-> > > Subject: [PATCH] lib/bitmap: Rewrite __bitmap_parselist().
-> > > 
-> > > syzbot is catching stalls at __bitmap_parselist() [1]. The trigger is
-> > > 
-> > >   unsigned long v = 0;
-> > >   bitmap_parselist("7:,", &v, BITS_PER_LONG);
-> > 
-> > Could you add this case to the test_bitmap_parselist()?
-> > 
-> > > which results in hitting infinite loop at
-> > > 
-> > >   while (a <= b) {
-> > >     off = min(b - a + 1, used_size);
-> > >     bitmap_set(maskp, a, off);
-> > >     a += group_size;
-> > >   }
-> > > 
-> > > due to used_size == group_size == 0.
-> > > 
-> > > Current code is difficult to read due to too many flag variables.
-> > > Let's rewrite it.
-> > 
-> > I also don't like current implementation of bitmap_parselist(), but
-> > discussion on new code  may take some time. Can you submit minimal
-> > fix in separated patch to let people discuss your new implementation
-> > without rush?
-> 
-> OK. Then you can write the patch. You know current code better than I.
+Hello,
 
-Done.
- 
-> > > @@ -485,6 +485,58 @@ int bitmap_print_to_pagebuf(bool list, char *buf, const unsigned long *maskp,
-> > >  }
-> > >  EXPORT_SYMBOL(bitmap_print_to_pagebuf);
-> > >  
-> > > +static bool get_uint(const char **buf, unsigned int *res)
-> > > +{
-> > > +	const char *p = *buf;
-> > > +
-> > > +	if (!isdigit(*p))
-> > > +		return false;
-> > > +	*res = simple_strtoul(p, (char **) buf, 10);
+On Wed, Apr 04, 2018 at 04:34:47PM +0200, Michal Hocko wrote:
+> > > The lazy updates are neat, but I'm a little concerned at the memory
+> > > footprint. On a 64-cpu machine for example, this adds close to 9000
+> > > words to struct mem_cgroup. And we really only need the accuracy for
+> > > the 4 cgroup items in memory.events, not all VM events and stats.
+> > > 
+> > > Why not restrict the patch to those? It would also get rid of the
+> > > weird sharing between VM and cgroup enums.
 > > 
-> > In comment to simple_strtoul(): "This function is obsolete. Please
-> > use kstrtoul instead."
+> > In fact, I wonder if we need per-cpuness for MEMCG_LOW, MEMCG_HIGH
+> > etc. in the first place. They describe super high-level reclaim and
+> > OOM events, so they're not nearly as hot as other VM events and
+> > stats. We could probably just have a per-memcg array of atomics.
 > 
-> I intentionally choose simple_strtoul() because next delimiter (e.g. '-')
-> starts at returned address. kstrtoul() fails if next letter starts.
+> Agreed!
 
-OK, but then it should be explained in comment, I think.
- 
-> > > +	return p < *buf;
-> 
-> I think I should limit to "0 <= *res <= INT_MAX" range in order to avoid
-> overflow at start += group_size.
-> 
-> > > +}
-> > > +
-> > > +static int __bitmap_parse_one_chunk(const char *buf, unsigned long *maskp,
-> > > +				    const unsigned int nmaskbits)
-> > > +{
-> > > +	unsigned int start;
-> > > +	unsigned int end;
-> > > +	unsigned int group_size;
-> > > +	unsigned int used_size;
-> > > +
-> > > +	while (*buf && isspace(*buf))
-> > > +		buf++;
-> > > +	if (!get_uint(&buf, &start))
-> > > +		return -EINVAL;
-> > > +	if (*buf == '-') {
-> > > +		buf++;
-> > > +		if (!get_uint(&buf, &end) || start > end)
-> > > +			return -EINVAL;
-> > > +		if (*buf == ':') {
-> > > +			buf++;
-> > > +			if (!get_uint(&buf, &used_size) || *buf++ != '/' ||
-> > > +			    !get_uint(&buf, &group_size) ||
-> > > +			    used_size > group_size)
-> > > +				return -EINVAL;
-> > 
-> > So this is still not safe against "1-10:0/0", or I miss something?
-> > (This is another testcase we should add to test_bitmap.c)
-> 
-> Indeed. We need to make more testcases.
-> 
-> > > +	while (buflen && !err) {
-> > > +		char *cp;
-> > > +		char tmpbuf[256];
-> > > +		unsigned int size = min(buflen,
-> > > +					(unsigned int) sizeof(tmpbuf) - 1);
-> > > +
-> > > +		if (!is_user)
-> > > +			memcpy(tmpbuf, buf, size);
-> > > +		else if (copy_from_user(tmpbuf, (const char __user __force *)
-> > > +					buf, size))
-> > > +			return -EFAULT;
-> > 
-> > This is not safe against this:
-> > "[250 whitespaces] 567-890:123/456"
-> 
-> Do we need to accept such insane entry?
- 
-This is how current implementation works - no limit on number of whitespaces
-before and after the cunk. It's userspace interface, and we should be careful
-adding new limitations. God forbid us break userspace. :-)
+Ah, yeah, if we aren't worried about the update frequency of
+MEMCG_HIGH, which likely is the highest freq, we can just switch to
+atomic_t.  I'm gonna apply the cgroup stat refactoring patches to
+cgroup, so if we ever wanna switch the counter to rstat, we can easily
+do that later.
 
-It looks insane, but this kind of things is quite possible if input string
-is the result of heavy scripting.
- 
-> > And it will be Schlemiel the painter's-styled algorithm for input like:
-> > "1,2,3,4, ... ,98,99,100". 
-> > 
-> > I think we need something like __bitmap_parse_get_chunk() to copy
-> > coma-separated substrings.
+Thasnks.
+
+-- 
+tejun
