@@ -1,187 +1,401 @@
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-Subject: Re: DRM cgroups integration (Was: Re: [PATCH v4 0/8] cgroup private
- data and DRM/i915 integration)
-Date: Thu, 05 Apr 2018 17:15:13 +0300
-Message-ID: <152293771366.8317.15801541807884941472@jlahtine-desk.ger.corp.intel.com>
-References: <20180317000905.7091-1-matthew.d.roper@intel.com>
- <152180733854.5713.2309886695226223646@jlahtine-desk.ger.corp.intel.com>
- <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
- <152204942372.6045.18152790780379161422@jlahtine-desk.ger.corp.intel.com>
- <20180330004313.GD20702@mdroper-desk.amr.corp.intel.com>
- <152293601096.7685.7445126271312339212@jlahtine-desk.ger.corp.intel.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [RFC] mm: allow to decrease swap.max below actual swap usage
+Date: Thu, 5 Apr 2018 15:47:50 +0100
+Message-ID: <20180405144744.GA15097@castle.DHCP.thefacebook.com>
+References: <20180320223543.6188-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <152293601096.7685.7445126271312339212@jlahtine-desk.ger.corp.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Airlie <airlied@redhat.com>, Matt Roper <matthew.d.roper@intel.com>
-Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Alex Deucher <alexander.deucher@amd.com>, Jerome Glisse <jglisse@redhat.com>, Felix Kuehling <Felix.Kuehling@amd.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=CLXvLDvPMTgMcIPgyd5lsKgzsCV6iCiOEAMaOCFxxGs=;
+ b=DhS9l41wDcQISLPdN88OnZWIEJmh8XB3C2WjiQUr3OTV30sKOCYaiVD+Ax0hK3ndFqkx
+ 7QTkdXu9rQ8RY1X4C4RTnwFJsZJC6PJ8TcnmwYZRmEVkV/H1sBlSC62QL7NrVk8KFVlZ
+ wC+IJFSQSZqEbHE4gk95CmNXw7v7xOcIeuw= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=CLXvLDvPMTgMcIPgyd5lsKgzsCV6iCiOEAMaOCFxxGs=;
+ b=imBtJL28c4x6RKDf67YuHTHMlkB58NYkXlP/ppepyzTukhuK1JLVdRiCeyfl+j9bfC5anA+3spVQXO8I6KuSKk7U4/cdEpkuykAR6ThUqeIvmjOiVmyKJelnvkxExjzeGpqNar9QYpONDx81mUXsnvaj8HIVSJUusC+09J+1IMg=
+Content-Disposition: inline
+In-Reply-To: <20180320223543.6188-1-guro@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: linux-mm@kvack.org
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, Rik van Riel <riel@surriel.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-KyBTb21lIG1vcmUgQ2MncyBiYXNlZCBvbiBJUkMgZGlzY3Vzc2lvbgoKUXVvdGluZyBKb29uYXMg
-TGFodGluZW4gKDIwMTgtMDQtMDUgMTY6NDY6NTEpCj4gKyBEYXZlIGZvciBjb21tZW50aW5nIGZy
-b20gRFJNIHN1YnN5c3RlbSBwZXJzcGVjdGl2ZS4gSSBzdHJvbmdseSBiZWxpZXZlCj4gdGhlcmUg
-d291bGQgYmUgYmVuZWZpdCBmcm9tIGFncmVlaW5nIG9uIHNvbWUgZm91bmRhdGlvbiBvZiBEUk0g
-c3Vic3lzdGVtCj4gbGV2ZWwgcHJvZ3JhbSBHUFUgbmljZW5lc3MgWy0yMCwxOV0gYW5kIG1lbW9y
-eSBsaW1pdCBbMCxOXSBwYWdlcy4KPiAKPiBRdW90aW5nIE1hdHQgUm9wZXIgKDIwMTgtMDMtMzAg
-MDM6NDM6MTMpCj4gPiBPbiBNb24sIE1hciAyNiwgMjAxOCBhdCAxMDozMDoyM0FNICswMzAwLCBK
-b29uYXMgTGFodGluZW4gd3JvdGU6Cj4gPiA+IFF1b3RpbmcgTWF0dCBSb3BlciAoMjAxOC0wMy0y
-MyAxNzo0NjoxNikKPiA+ID4gPiBPbiBGcmksIE1hciAyMywgMjAxOCBhdCAwMjoxNTozOFBNICsw
-MjAwLCBKb29uYXMgTGFodGluZW4gd3JvdGU6Cj4gPiA+ID4gPiBRdW90aW5nIE1hdHQgUm9wZXIg
-KDIwMTgtMDMtMTcgMDI6MDg6NTcpCj4gPiA+ID4gPiA+IFRoaXMgaXMgdGhlIGZvdXJ0aCBpdGVy
-YXRpb24gb2YgdGhlIHdvcmsgcHJldmlvdXNseSBwb3N0ZWQgaGVyZToKPiA+ID4gPiA+ID4gICAo
-djEpIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4
-LUphbnVhcnkvMTUzMTU2Lmh0bWwKPiA+ID4gPiA+ID4gICAodjIpIGh0dHBzOi8vd3d3Lm1haWwt
-YXJjaGl2ZS5jb20vZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZy9tc2cyMDgxNzAuaHRt
-bAo+ID4gPiA+ID4gPiAgICh2MykgaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2
-ZXMvaW50ZWwtZ2Z4LzIwMTgtTWFyY2gvMTU3OTI4Lmh0bWwKPiA+ID4gPiA+ID4gCj4gPiA+ID4g
-PiA+IFRoZSBoaWdoIGxldmVsIGdvYWwgb2YgdGhpcyB3b3JrIGlzIHRvIGFsbG93IG5vbi1jZ3Jv
-dXAtY29udHJvbGxlciBwYXJ0cwo+ID4gPiA+ID4gPiBvZiB0aGUga2VybmVsIChlLmcuLCBkZXZp
-Y2UgZHJpdmVycykgdG8gcmVnaXN0ZXIgdGhlaXIgb3duIHByaXZhdGUKPiA+ID4gPiA+ID4gcG9s
-aWN5IGRhdGEgZm9yIHNwZWNpZmljIGNncm91cHMuICBUaGF0IG1lY2hhbmlzbSBpcyB0aGVuIG1h
-ZGUgdXNlIG9mIGluCj4gPiA+ID4gPiA+IHRoZSBpOTE1IGdyYXBoaWNzIGRyaXZlciB0byBhbGxv
-dyBHUFUgcHJpb3JpdHkgdG8gYmUgYXNzaWduZWQgYWNjb3JkaW5nCj4gPiA+ID4gPiA+IHRvIHRo
-ZSBjZ3JvdXAgbWVtYmVyc2hpcCBvZiB0aGUgb3duaW5nIHByb2Nlc3MuICBQbGVhc2Ugc2VlIHRo
-ZSB2MSBjb3Zlcgo+ID4gPiA+ID4gPiBsZXR0ZXIgbGlua2VkIGFib3ZlIGZvciBhIG1vcmUgaW4t
-ZGVwdGggZXhwbGFuYXRpb24gYW5kIGp1c3RpZmljYXRpb24uCj4gPiA+ID4gPiAKPiA+ID4gPiA+
-IEhpIE1hdHQsCj4gPiA+ID4gPiAKPiA+ID4gPiA+IEZvciBjcm9zcy1zdWJzeXN0ZW0gY2hhbmdl
-cyBzdWNoIGFzIHRoaXMsIGl0IG1ha2VzIHNlbnNlIHRvIENjIGFsbAo+ID4gPiA+ID4gcmVsZXZh
-bnQgbWFpbnRhaW5lcnMsIGVzcGVjaWFsbHkgaWYgdGhlcmUgaGF2ZSBiZWVuIHByZXZpb3VzIGNv
-bW1lbnRzIHRvCj4gPiA+ID4gPiBlYXJsaWVyIHJldmlzaW9ucy4KPiA+ID4gPiA+IAo+ID4gPiA+
-ID4gUGxlYXNlLCBkbyBpbmNsdWRlIGFuZCBrZWVwIGEgcmVmZXJlbmNlIHRvIHRoZSB1c2Vyc3Bh
-Y2UgcG9ydGlvbiBvZiB0aGUKPiA+ID4gPiA+IGNoYW5nZXMgd2hlbiB5b3Ugc3VnZ2VzdCBuZXcg
-dUFQSSB0byBiZSBhZGRlZC4gQXQgbGVhc3QgSSBoYXZlIHNvbWUgdHJvdWJsZQo+ID4gPiA+ID4g
-dHJ5aW5nIHRvIHRyYWNrIGRvd24gdGhlIHJlbGV2YW50IGludGVyZmFjZSBjb25zdW1lciBoZXJl
-Lgo+ID4gPiA+ID4gCj4gPiA+ID4gPiBJJ20gdW5zdXJlIGhvdyBtdWNoIHNlbnNlIGl0IG1ha2Vz
-IHRvIGNvbW1lbmNlIHdpdGggZGV0YWlsZWQgaTkxNSByZXZpZXcKPiA+ID4gPiA+IGlmIHdlIHdp
-bGwgYmUgYmxvY2tlZCBieSBsYWNrIG9mIHVzZXJzcGFjZSBhZnRlciB0aGF0PyBJJ20gYXNzdW1p
-bmcKPiA+ID4gPiA+IHlvdSd2ZSByZWFkIHRocm91Z2ggWzFdIGFscmVhZHkuCj4gPiA+ID4gCj4g
-PiA+ID4gSGkgSm9vbmFzLAo+ID4gPiA+IAo+ID4gPiA+IEkndmUgc2VudCB0aGUgdXNlcnNwYWNl
-IGNvZGUgb3V0IGEgZmV3IHRpbWVzLCBidXQgaXQgbG9va3MgbGlrZSBJIGZvcmdvdAo+ID4gPiA+
-IHRvIGluY2x1ZGUgYSBjb3B5IHdpdGggdjQvdjQuNS4gIEhlcmUncyB0aGUgdmVyc2lvbiBJIHBy
-b3ZpZGVkIHdpdGggdjM6Cj4gPiA+ID4gICBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9h
-cmNoaXZlcy9pbnRlbC1nZngvMjAxOC1NYXJjaC8xNTc5MzUuaHRtbAo+ID4gPiAKPiA+ID4gVGhh
-bmtzLiBLZWVwaW5nIHRoYXQgaW4gdGhlIHJlbGV2YW50IGNvbW1pdCBtZXNzYWdlIG9mIHRoZSBw
-YXRjaCB0aGF0Cj4gPiA+IGludHJvZHVjZXMgdGhlIG5ldyB1QVBJIHdpbGwgbWFrZSBpdCBoYXJk
-ZXIgdG8gZm9yZ2V0IGFuZCBlYXNpZXN0IGZvcgo+ID4gPiBnaXQgYmxhbWUsIHRvby4KPiA+ID4g
-Cj4gPiA+ID4gCj4gPiA+ID4gVXN1YWxseSB3ZSBkb24ndCBjb25zaWRlciB0aGluZ3MgbGlrZSBp
-LWctdCB0byBiZSBzdWZmaWNpZW50IHVzZXJzcGFjZQo+ID4gPiA+IGNvbnN1bWVycyBiZWNhdXNl
-IHdlIG5lZWQgYSByZWFsLXdvcmxkIGNvbnN1bWVyIHJhdGhlciB0aGFuIGEgInRveSIKPiA+ID4g
-PiB1c2Vyc3BhY2UuICBIb3dldmVyIGluIHRoaXMgY2FzZSwgdGhlIGktZy10IHRvb2wsIGFsdGhv
-dWdoIHZlcnkgc2ltcGxlLAo+ID4gPiA+IGlzIHJlYWxseSB0aGUgb25seSB1c2Vyc3BhY2UgY29u
-c3VtZXIgSSBleHBlY3QgdGhlcmUgdG8gZXZlciBiZS4KPiA+ID4gPiBVbHRpbWF0ZWx5IHRoZSB0
-cnVlIGNvbnN1bWVyIG9mIHRoaXMgY2dyb3VwcyB3b3JrIGFyZSBiYXNoIHNjcmlwdHMsIHN5c3YK
-PiA+ID4gPiBpbml0IHNjcmlwdHMsIHN5c3RlbWQgcmVjaXBlcywgZXRjLiAgdGhhdCBqdXN0IG5l
-ZWQgYSB2ZXJ5IHNpbXBsZSB0b29sCj4gPiA+ID4gdG8gYXNzaWduIHRoZSBzcGVjaWZpYyB2YWx1
-ZXMgdGhhdCBtYWtlIHNlbnNlIG9uIGEgZ2l2ZW4gc3lzdGVtLgo+ID4gPiA+IFRoZXJlJ3Mgbm8g
-ZXhwZWN0YXRpb24gdGhhdCBncmFwaGljcyBjbGllbnRzIG9yIGRpc3BsYXkgc2VydmVycyB3b3Vs
-ZAo+ID4gPiA+IGV2ZXIgbmVlZCB0byBtYWtlIHVzZSBvZiB0aGVzZSBpbnRlcmZhY2VzLgo+ID4g
-PiAKPiA+ID4gSSB3YXMgdW5kZXIgdGhlIGltcHJlc3Npb24gdGhhdCBhIGJpdCBtb3JlIGdlbmVy
-aWMgR1BVIGNncm91cHMgc3VwcG9ydAo+ID4gPiB3YXMgcmVjZWl2aW5nIGEgbG90IG9mIHN1cHBv
-cnQgaW4gdGhlIGVhcmx5IGRpc2N1c3Npb24/IEEgZGVkaWNhdGVkCj4gPiA+IGludGVsX2Nncm91
-cCBzb3VuZHMgdW5kZXJ3aGVsbWluZywgd2hlbiBjb21wYXJpbmcgdG8gaWRlYSBvZiAiZ3B1X25p
-Y2UiLAo+ID4gPiBmb3IgdXNlciBhZG9wdGlvbiA6KQo+ID4gCj4gPiBJJ20gb3BlbiB0byBtb3Zp
-bmcgdGhlIGNncm91cF9wcml2IHJlZ2lzdHJhdGlvbi9sb29rdXAgdG8gdGhlIERSTSBjb3JlCj4g
-PiBpZiBvdGhlciBkcml2ZXJzIGFyZSBpbnRlcmVzdGVkIGluIHVzaW5nIHRoaXMgbWVjaGFuaXNt
-IGFuZCBpZiB3ZSBjYW4KPiA+IGNvbWUgdG8gYW4gYWdyZWVtZW50IG9uIGEgc3RhbmRhcmQgcHJp
-b3JpdHkgb2Zmc2V0IHJhbmdlIHRvIHN1cHBvcnQsIGhvdwo+ID4gZGlzcGxheSBib29zdCBzaG91
-bGQgd29yayBmb3IgYWxsIGRyaXZlcnMsIGV0Yy4gIFRoZXJlIG1pZ2h0IGJlIHNvbWUKPiA+IGNo
-YWxsZW5nZXMgbWFwcGluZyBhIERSTS1kZWZpbmVkIHByaW9yaXR5IHJhbmdlIGRvd24gdG8gYSBk
-aWZmZXJlbnQKPiA+IHJhbmdlIHRoYXQgbWFrZXMgc2Vuc2UgZm9yIGluZGl2aWR1YWwgZHJpdmVy
-IHNjaGVkdWxlcnMsIGVzcGVjaWFsbHkKPiA+IHNpbmNlIHNvbWUgZHJpdmVycyBhbHJlYWR5IGV4
-cG9zZSBhIGRpZmZlcmVudCBwcmlvcml0eSBzY2hlbWUgdG8KPiA+IHVzZXJzcGFjZSB2aWEgb3Ro
-ZXIgaW50ZXJmYWNlcyBsaWtlIGk5MTUgZG9lcyB3aXRoIEdFTSBjb250ZXh0IHByaW9yaXR5Lgo+
-ID4gCj4gPiBTbyBmYXIgSSBoYXZlbid0IHJlYWxseSBoZWFyZCBhbnkgaW50ZXJlc3Qgb3V0c2lk
-ZSB0aGUgSW50ZWwgY2FtcCwgYnV0Cj4gPiBob3BlZnVsbHkgb3RoZXIgZHJpdmVyIHRlYW1zIGNh
-biBzcGVhayB1cCBpZiB0aGV5J3JlIGZvci9hZ2FpbnN0IHRoaXMuCj4gPiBJIGRvbid0IHdhbnQg
-dG8gdHJ5IHRvIGFydGlmaWNpYWxseSBzdGFuZGFyZGl6ZSB0aGlzIGlmIG90aGVyIGRyaXZlcnMK
-PiA+IHdhbnQgdG8gZ28gYSBkaWZmZXJlbnQgZGlyZWN0aW9uIHdpdGggcHJpb3JpdHkvc2NoZWR1
-bGluZyB0aGF0J3MgdG9vCj4gPiBkaWZmZXJlbnQgZnJvbSB0aGUgY3VycmVudCBJbnRlbC1kcml2
-ZW4gZGVzaWduLgo+IAo+IEkgZG9uJ3QgdGhpbmsgdGhlcmUgYXJlIHRoYXQgbWFueSBkaXJlY3Rp
-b25zIHRvIGdvIGFib3V0IEdQVSBjb250ZXh0Cj4gcHJpb3JpdHksIGNvbnNpZGVyaW5nIHdlIGhh
-dmUgdGhlIEVHTF9JTUdfY29udGV4dF9wcmlvcml0eSBleHRlbnNpb24sIHNvCj4gaXQnbGwgb25s
-eSBiZSBhYm91dCBncmFudWxhcml0eSBvZiB0aGUgc2NhbGUuCj4gCj4gSSB3b3VsZCBzdWdnZXN0
-IHRvIGdvIHdpdGggdGhlIG5pY2UgbGlrZSBzY2FsZSBmb3IgZWFzeSB1c2VyIGFkb3B0aW9uLAo+
-IHRoZW4ganVzdCBhcHBseSB0aGF0IGFzIHRoZSBOIG1vc3Qgc2lnbmlmaWNhbnQgYml0cy4KPiAK
-PiBUaGUgY29udGV4dHMgY291bGQgdGhlbiBvZiBjb3Vyc2UgZnVydGhlciBhZGp1c3QgdGhlaXIg
-cHJpb3JpdHkgZnJvbSB3aGF0Cj4gaXMgc2V0IGJ5IHRoZSAiZ3B1X25pY2UiIGFwcGxpY2F0aW9u
-IHdpdGggdGhlIHJlbWFpbmluZyBiaXRzLgo+IAo+IEknbSBzdHJvbmdseSBmZWVsaW5nIHRoaXMg
-c2hvdWxkIGJlIGEgRFJNIGxldmVsICJncHVfbmljZSIuIEFuZCB0aGUKPiBiaW5kaW5nIHRvIGNn
-cm91cHMgc2hvdWxkIGNvbWUgdGhyb3VnaCBEUk0gY29yZS4gSWYgaXQgZG9lc24ndCwgbGltaXRp
-bmcKPiB0aGUgYW1vdW50IG9mIG1lbW9yeSB1c2VkIGJlY29tZXMgYXdrd2FyZCBhcyB0aGUgYWxs
-b2NhdGlvbiBpcwo+IGNlbnRyYWxpemVkIHRvIERSTSBjb3JlLgo+IAo+ID4gPiBBbHNvLCBJIG1p
-Z2h0IG5vdCBiZSB1cC10by1kYXRlIGFib3V0IGFsbCB0aGluZ3MgY2dyb3VwcywgYnV0IHRoZSB3
-YXkKPiA+ID4gaW50ZWxfY2dyb3VwIHdvcmtzLCBmZWVscyBiaXQgZm9yY2VkLiBXZSBjcmVhdGUg
-YSB1c2Vyc3BhY2UgY29udGV4dCBqdXN0Cj4gPiA+IHRvIGNvbW11bmljYXRlIHdpdGggdGhlIGRy
-aXZlciBhbmQgdGhlIElPQ1RMIHdpbGwgc3RpbGwgaGF2ZSBnbG9iYWwKPiA+ID4gZWZmZWN0cy4g
-SSBjYW4ndCBidXQgdGhpbmsgdGhhdCBpOTE1IHJlYWRpbmcgZnJvbSB0aGUgY2dyb3VwcyBzdWJz
-eXN0ZW0KPiA+ID4gZm9yIHRoZSBjdXJyZW50IHByb2Nlc3Mgd291bGQgZmVlbCBtb3JlIGludHVp
-dGl2ZSB0byBtZS4KPiA+IAo+ID4gSSB0aGluayB5b3UncmUgcmVmZXJyaW5nIHRvIHRoZSBlYXJs
-aWVyIGRpc2N1c3Npb24gYWJvdXQgZXhwb3NpbmcKPiA+IHByaW9yaXR5IGRpcmVjdGx5IHZpYSB0
-aGUgY2dyb3VwcyBmaWxlc3lzdGVtPyAgVGhhdCB3b3VsZCBjZXJ0YWlubHkgYmUKPiA+IHNpbXBs
-ZXIgZnJvbSBhIHVzZXJzcGFjZSBwZXJzcGVjdGl2ZSwgYnV0IGl0J3Mgbm90IHRoZSBkaXJlY3Rp
-b24gdGhhdAo+ID4gdGhlIGNncm91cHMgbWFpbnRhaW5lciB3YW50cyB0byBzZWUgdGhpbmdzIGdv
-LiAgQWRkaW5nIGZpbGVzIGRpcmVjdGx5IHRvCj4gPiB0aGUgY2dyb3VwcyBmaWxlc3lzdGVtIGlz
-IHN1cHBvc2VkIHRvIGJlIHNvbWV0aGluZyB0aGF0J3MgcmVzZXJ2ZWQgZm9yCj4gPiBvZmZpY2lh
-bCBjZ3JvdXBzIGNvbnRyb2xsZXJzLiAgVGhlIEdQVSBwcmlvcml0eSBjb25jZXB0IHdlJ3JlIHRy
-eWluZyB0bwo+ID4gYWRkIGhlcmUgZG9lc24ndCBhbGlnbiB3aXRoIHRoZSByZXF1aXJlbWVudHMg
-Zm9yIGNyZWF0aW5nIGEgY29udHJvbGxlciwKPiA+IHNvIHRoZSBwcmVmZXJyZWQgYXBwcm9hY2gg
-aXMgdG8gY3JlYXRlIGEgY3VzdG9tIGludGVyZmFjZSAoc3lzY2FsbCBvcgo+ID4gaW9jdGwpIHRo
-YXQgc2ltcGx5IHRha2VzIGEgY2dyb3VwIGFzIGEgcGFyYW1ldGVyLiAgVGhlcmUncyBwcmVjZW5k
-ZW50Cj4gPiB3aXRoIHNpbWlsYXIgaW50ZXJmYWNlcyBpbiBhcmVhcyBsaWtlIEJQRiAod2hlcmUg
-dGhlIGJwZigpIHN5c3RlbSBjYWxsCj4gPiBjYW4gYWNjZXB0IGEgY2dyb3VwIGFzIGEgcGFyYW1l
-dGVyIGFuZCB0aGVuIHBlcmZvcm0gaXRzIG93biBwcml2YXRlCj4gPiBwb2xpY3kgY2hhbmdlcyBh
-cyBpdCBzZWVzIGZpdCkuCj4gPiAKPiA+IFVzaW5nIGEgdHJ1ZSBjZ3JvdXBzIGNvbnRyb2xsZXIg
-YW5kIGV4cG9zaW5nIHNldHRpbmdzIHZpYSB0aGUgZmlsZXN5c3RlbQo+ID4gaXMgbGlrZWx5IHN0
-aWxsIHRoZSB3YXkgd2UnbGwgd2FudCB0byBnbyBmb3Igc29tZSBvdGhlciB0eXBlcyBvZgo+ID4g
-Y2dyb3Vwcy1iYXNlZCBwb2xpY3kgaW4gdGhlIGZ1dHVyZSAoZS5nLiwgbGltaXRpbmcgR1BVIG1l
-bW9yeSB1c2FnZSk7IGl0Cj4gPiBqdXN0IGlzbid0IHRoZSBhcHByb3ByaWF0ZSBkaXJlY3Rpb24g
-Zm9yIHByaW9yaXR5Lgo+IAo+IE1pZ2h0IGJlIGp1c3QgbWUgYnV0IGZlZWxzIGJpdCBjcmF6eSB0
-byBiZSBzZXR0aW5nIEdQVSBtZW1vcnkgdXNhZ2UKPiB0aHJvdWdoIGFub3RoZXIgaW50ZXJmYWNl
-IGFuZCB0aGVuIGRvaW5nIGk5MTUgc3BlY2lmaWMgSU9DVExzIHRvIGNvbnRyb2wKPiB0aGUgcHJp
-b3JpdHkgb2YgdGhhdCBzYW1lIGNncm91cC4KPiAKPiBJIGRvbid0IGZlZWwgY29tZm9ydGFibGUg
-YWRkaW5nIGN1c3RvbSBjZ3JvdXBzIGRlcGVuZGVudCBJT0NUTHMgdG8gaTkxNQo+IHdoZXJlIGNn
-cm91cHMgaXMgb25seSB3b3JraW5nIGFzIHRoZSB2YXJpYWJsZSBjYXJyaWVyIGluIGJhY2tncm91
-bmQuIFdlCj4gc2hvdWxkIHJlYWxseSBqdXN0IGJlIGNvbnN1bWluZyBhIHZhcmlhYmxlIGZyb20g
-Y2dyb3VwcyBhbmQgaXQgc2hvdWxkIGJlCj4gc2V0IG91dHNpZGUgb2Ygb2YgdGhlIGk5MTUgSU9D
-VEwgaW50ZXJmYWNlLgo+IAo+IEknbSBzdGlsbCBzZWVpbmcgdGhhdCB3ZSBzaG91bGQgaGF2ZSBh
-IERSTSBjZ3JvdXBzIGNvbnRyb2xsZXIgYW5kIGEgRFJNCj4gc3Vic3lzdGVtIHdpZGUgYXBwbGlj
-YXRpb24gdG8gY29udHJvbCB0aGUgcHJpb3JpdHkgYW5kIG1lbW9yeSB1c2FnZQo+IHRvIGJlIGZl
-ZCB0byB0aGUgZHJpdmVycy4KPiAKPiBJZiB3ZSBlbmQgdXAganVzdCBzdXBwb3J0aW5nIGk5MTUg
-YXBwcywgd2UgY291bGQgYXMgd2VsbCB1c2UgTERfUFJFTE9BRAo+IHdyYXBwZXIgYW5kIGFsdGVy
-IHRoZSBjb250ZXh0IHByaW9yaXR5IGF0IGNyZWF0aW9uIHRpbWUgZm9yIGV4YWN0bHkgdGhlCj4g
-c2FtZSBlZmZlY3QgYW5kIG5vIGV4dHJhIGludGVyZmFjZXMgdG8gbWFpbnRhaW4uCj4gCj4gPiA+
-IERvZXMgdGhlIGltcGxlbWVudGF0aW9uIG1pbWljIHNvbWUgZXhpc3RpbmcgY2dyb3VwcyB0b29s
-IG9yIGRlLWZhY3RvIHdheQo+ID4gPiBvZiBkb2luZyB0aGluZ3MgaW4gY2dyb3VwcyB3b3JsZD8K
-PiA+IAo+ID4gVGhlIGlvY3RsIGFwcHJvYWNoIEkgdG9vayBpcyBzaW1pbGFyIHRvIHN5c2NhbGwg
-YXBwcm9hY2ggdGhhdCB0aGUgQlBGCj4gPiBndXlzIHVzZSB0byBhdHRhY2ggQlBGIHByb2dyYW1z
-IHRvIGEgY2dyb3VwLiAgSSdtIG5vdCB2ZXJ5IGZhbWlsaWFyIHdpdGgKPiA+IEJQRiBvciBob3cg
-aXQgZ2V0cyB1c2VkIGZyb20gdXNlcnNwYWNlLCBzbyBJJ20gbm90IHN1cmUgd2hldGhlciB0aGUK
-PiA+IGludGVyZmFjZSBpcyBpbnRlbmRlZCBmb3Igb25lIHNwZWNpZmljIHRvb2wgKGxpa2Ugb3Vy
-cyBpcyksIG9yIHdoZXRoZXIKPiA+IHRoZXJlJ3MgbW9yZSB2YXJpZXR5IGZvciB1c2Vyc3BhY2Ug
-Y29uc3VtZXJzLgo+IAo+IElzIHRoZSBwcm9wb3NhbCB0byBzZXQgdGhlIG1lbW9yeSB1c2FnZSBm
-cm9tIHNpbWlsYXIgaW50ZXJmYWNlLCBvciBpcwo+IHRoYXQgc3RpbGwgbm90IGltcGxlbWVudGVk
-Pwo+IAo+IEknbSBzZWVpbmcgYSB2ZXJ5IGNsb3NlIHJlbGF0aW9uIGJldHdlZW4gdGltZS1zbGlj
-aW5nIEdQVSB0aW1lIGFuZAo+IGFsbG93ZWQgR1BVIGJ1ZmZlciBhbGxvY2F0aW9ucywgc28gaGF2
-aW5nIHR3byBjb21wbGV0ZWx5IGRpZmZlcmVudAo+IGludGVyZmFjZXMgZG9lcyBqdXN0IGZlZWwg
-dmVyeSBoYWNraXNoIHdheSBvZiBpbXBsZW1lbnRpbmcgdGhpcy4KPiAKPiBSZWdhcmRzLCBKb29u
-YXMKPiAKPiA+IAo+ID4gCj4gPiBNYXR0Cj4gPiAKPiA+ID4gCj4gPiA+IFJlZ2FyZHMsIEpvb25h
-cwo+ID4gPiAtLQo+ID4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
-bGluZSAidW5zdWJzY3JpYmUgY2dyb3VwcyIgaW4KPiA+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdl
-IHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiA+ID4gTW9yZSBtYWpvcmRvbW8gaW5mbyBh
-dCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4gPiAKPiA+IC0t
-IAo+ID4gTWF0dCBSb3Blcgo+ID4gR3JhcGhpY3MgU29mdHdhcmUgRW5naW5lZXIKPiA+IElvVEcg
-UGxhdGZvcm0gRW5hYmxpbmcgJiBEZXZlbG9wbWVudAo+ID4gSW50ZWwgQ29ycG9yYXRpb24KPiA+
-ICg5MTYpIDM1Ni0yNzk1Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9w
-Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1k
-ZXZlbAo=
+On Tue, Mar 20, 2018 at 10:35:43PM +0000, Roman Gushchin wrote:
+> Currently an attempt to set swap.max into a value lower
+> than the actual swap usage fails. And a user can't do much
+> with it, except turning off swap globally (using swapoff).
+> 
+> This patch aims to fix this issue by allowing setting swap.max
+> into any value (which corresponds to cgroup v2 API design),
+> and schedule a background job to fit swap size into the new limit.
+> 
+> The following script can be used to test the memory.swap behavior:
+>   #!/bin/bash
+> 
+>   mkdir -p /sys/fs/cgroup/test_swap
+>   echo 100M > /sys/fs/cgroup/test_swap/memory.max
+>   echo max > /sys/fs/cgroup/test_swap/memory.swap.max
+> 
+>   mkdir -p /sys/fs/cgroup/test_swap_2
+>   echo 100M > /sys/fs/cgroup/test_swap_2/memory.max
+>   echo max > /sys/fs/cgroup/test_swap_2/memory.swap.max
+> 
+>   echo $$ > /sys/fs/cgroup/test_swap/cgroup.procs
+>   allocate 200M &
+> 
+>   echo $$ > /sys/fs/cgroup/test_swap_2/cgroup.procs
+>   allocate 200M &
+> 
+>   sleep 2
+> 
+>   cat /sys/fs/cgroup/test_swap/memory.swap.current
+>   cat /sys/fs/cgroup/test_swap_2/memory.swap.current
+> 
+>   echo max > /sys/fs/cgroup/test_swap/memory.max
+>   echo 50M > /sys/fs/cgroup/test_swap/memory.swap.max
+> 
+>   sleep 10
+> 
+>   cat /sys/fs/cgroup/test_swap/memory.swap.current
+>   cat /sys/fs/cgroup/test_swap_2/memory.swap.current
+> 
+>   pkill allocate
+> 
+> Original test results:
+>   106024960
+>   106348544
+>   ./swap.sh: line 23: echo: write error: Device or resource busy
+>   106024960
+>   106348544
+> 
+> With this patch applied:
+>   106045440
+>   106352640
+>   52428800
+>   106201088
+
+Any comments, thoughts, feedback?
+
+Rebased version below.
+
+---
+
+From a0811f1d094b3103e50c005586471afbe15e9113 Mon Sep 17 00:00:00 2001
+From: Roman Gushchin <guro@fb.com>
+Date: Thu, 5 Apr 2018 15:46:50 +0100
+Subject: [PATCH v2] mm: allow to decrease swap.max below actual swap usage
+
+Currently an attempt to set swap.max into a value lower
+than the actual swap usage fails. And a user can't do much
+with it, except turning off swap globally (using swapoff).
+
+This patch aims to fix this issue by allowing setting swap.max
+into any value (which corresponds to cgroup v2 API design),
+and schedule a background job to fit swap size into the new limit.
+
+The following script can be used to test the memory.swap behavior:
+  #!/bin/bash
+
+  mkdir -p /sys/fs/cgroup/test_swap
+  echo 100M > /sys/fs/cgroup/test_swap/memory.max
+  echo max > /sys/fs/cgroup/test_swap/memory.swap.max
+
+  mkdir -p /sys/fs/cgroup/test_swap_2
+  echo 100M > /sys/fs/cgroup/test_swap_2/memory.max
+  echo max > /sys/fs/cgroup/test_swap_2/memory.swap.max
+
+  echo $$ > /sys/fs/cgroup/test_swap/cgroup.procs
+  allocate 200M &
+
+  echo $$ > /sys/fs/cgroup/test_swap_2/cgroup.procs
+  allocate 200M &
+
+  sleep 2
+
+  cat /sys/fs/cgroup/test_swap/memory.swap.current
+  cat /sys/fs/cgroup/test_swap_2/memory.swap.current
+
+  echo max > /sys/fs/cgroup/test_swap/memory.max
+  echo 50M > /sys/fs/cgroup/test_swap/memory.swap.max
+
+  sleep 10
+
+  cat /sys/fs/cgroup/test_swap/memory.swap.current
+  cat /sys/fs/cgroup/test_swap_2/memory.swap.current
+
+  pkill allocate
+
+Original test results:
+  106024960
+  106348544
+  ./swap.sh: line 23: echo: write error: Device or resource busy
+  106024960
+  106348544
+
+With this patch applied:
+  106045440
+  106352640
+  52428800
+  106201088
+
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Shaohua Li <shli@fb.com>
+Cc: Rik van Riel <riel@surriel.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org
+---
+ include/linux/memcontrol.h |  1 +
+ include/linux/swap.h       |  9 +++++++
+ include/linux/swapfile.h   |  3 ++-
+ mm/frontswap.c             |  2 +-
+ mm/memcontrol.c            | 27 +++++++++++++++----
+ mm/swapfile.c              | 64 ++++++++++++++++++++++++++++++++++++++++++----
+ 6 files changed, 94 insertions(+), 12 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 44422e1d3def..788e374274d3 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -184,6 +184,7 @@ struct mem_cgroup {
+ 
+ 	/* Range enforcement for interrupt charges */
+ 	struct work_struct high_work;
++	struct work_struct swap_work;
+ 
+ 	unsigned long soft_limit;
+ 
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 1985940af479..878f111d0603 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -650,6 +650,8 @@ extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry);
+ extern void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages);
+ extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+ extern bool mem_cgroup_swap_full(struct page *page);
++extern int mem_cgroup_shrink_swap(struct mem_cgroup *memcg,
++				  unsigned long nr_pages);
+ #else
+ static inline void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ {
+@@ -675,6 +677,13 @@ static inline bool mem_cgroup_swap_full(struct page *page)
+ {
+ 	return vm_swap_full();
+ }
++
++static inline int mem_cgroup_shrink_swap(struct mem_cgroup *memcg,
++					 unsigned long nr_pages)
++{
++	return 0;
++}
++
+ #endif
+ 
+ #endif /* __KERNEL__*/
+diff --git a/include/linux/swapfile.h b/include/linux/swapfile.h
+index 06bd7b096167..16844259e802 100644
+--- a/include/linux/swapfile.h
++++ b/include/linux/swapfile.h
+@@ -9,6 +9,7 @@
+ extern spinlock_t swap_lock;
+ extern struct plist_head swap_active_head;
+ extern struct swap_info_struct *swap_info[];
+-extern int try_to_unuse(unsigned int, bool, unsigned long);
++extern int try_to_unuse(unsigned int type, bool fronstswap,
++			unsigned long pages_to_unuse, struct mem_cgroup *memcg);
+ 
+ #endif /* _LINUX_SWAPFILE_H */
+diff --git a/mm/frontswap.c b/mm/frontswap.c
+index fec8b5044040..f7cb2e802fce 100644
+--- a/mm/frontswap.c
++++ b/mm/frontswap.c
+@@ -458,7 +458,7 @@ void frontswap_shrink(unsigned long target_pages)
+ 	ret = __frontswap_shrink(target_pages, &pages_to_unuse, &type);
+ 	spin_unlock(&swap_lock);
+ 	if (ret == 0)
+-		try_to_unuse(type, true, pages_to_unuse);
++		try_to_unuse(type, true, pages_to_unuse, NULL);
+ 	return;
+ }
+ EXPORT_SYMBOL(frontswap_shrink);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 18dda3f113bd..c1496453d3ef 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -60,6 +60,7 @@
+ #include <linux/vmpressure.h>
+ #include <linux/mm_inline.h>
+ #include <linux/swap_cgroup.h>
++#include <linux/swapfile.h>
+ #include <linux/cpu.h>
+ #include <linux/oom.h>
+ #include <linux/lockdep.h>
+@@ -1870,6 +1871,23 @@ static void high_work_func(struct work_struct *work)
+ 	reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
+ }
+ 
++static void swap_work_func(struct work_struct *work)
++{
++	struct mem_cgroup *memcg;
++
++	memcg = container_of(work, struct mem_cgroup, swap_work);
++
++	for (;;) {
++		unsigned long usage = page_counter_read(&memcg->swap);
++
++		if (usage <= memcg->swap.limit)
++			break;
++
++		if (mem_cgroup_shrink_swap(memcg, usage - memcg->swap.limit))
++			break;
++	}
++}
++
+ /*
+  * Scheduled by try_charge() to be executed from the userland return path
+  * and reclaims memory over the high limit.
+@@ -4391,6 +4409,7 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ 		goto fail;
+ 
+ 	INIT_WORK(&memcg->high_work, high_work_func);
++	INIT_WORK(&memcg->swap_work, swap_work_func);
+ 	memcg->last_scanned_node = MAX_NUMNODES;
+ 	INIT_LIST_HEAD(&memcg->oom_notify);
+ 	mutex_init(&memcg->thresholds_lock);
+@@ -4526,6 +4545,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ 
+ 	vmpressure_cleanup(&memcg->vmpressure);
+ 	cancel_work_sync(&memcg->high_work);
++	cancel_work_sync(&memcg->swap_work);
+ 	mem_cgroup_remove_from_trees(memcg);
+ 	memcg_free_kmem(memcg);
+ 	mem_cgroup_free(memcg);
+@@ -6408,11 +6428,8 @@ static ssize_t swap_max_write(struct kernfs_open_file *of,
+ 	if (err)
+ 		return err;
+ 
+-	mutex_lock(&memcg_limit_mutex);
+-	err = page_counter_limit(&memcg->swap, max);
+-	mutex_unlock(&memcg_limit_mutex);
+-	if (err)
+-		return err;
++	xchg(&memcg->swap.limit, max);
++	schedule_work(&memcg->swap_work);
+ 
+ 	return nbytes;
+ }
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 0b3674b1409a..1e7f9502e3cf 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -2093,11 +2093,11 @@ static unsigned int find_next_to_unuse(struct swap_info_struct *si,
+  * and then search for the process using it.  All the necessary
+  * page table adjustments can then be made atomically.
+  *
+- * if the boolean frontswap is true, only unuse pages_to_unuse pages;
+- * pages_to_unuse==0 means all pages; ignored if frontswap is false
++ * Only unuse pages_to_unuse pages; pages_to_unuse==0 means all pages.
+  */
+ int try_to_unuse(unsigned int type, bool frontswap,
+-		 unsigned long pages_to_unuse)
++		 unsigned long pages_to_unuse,
++		 struct mem_cgroup *memcg)
+ {
+ 	struct swap_info_struct *si = swap_info[type];
+ 	struct mm_struct *start_mm;
+@@ -2192,6 +2192,17 @@ int try_to_unuse(unsigned int type, bool frontswap,
+ 		lock_page(page);
+ 		wait_on_page_writeback(page);
+ 
++		if (memcg && do_swap_account) {
++			swp_entry_t ent = { .val = page_private(page), };
++			unsigned short id = lookup_swap_cgroup_id(ent);
++
++			if (memcg != mem_cgroup_from_id(id)) {
++				unlock_page(page);
++				put_page(page);
++				continue;
++			}
++		}
++
+ 		/*
+ 		 * Remove all references to entry.
+ 		 */
+@@ -2310,7 +2321,7 @@ int try_to_unuse(unsigned int type, bool frontswap,
+ 		 * interactive performance.
+ 		 */
+ 		cond_resched();
+-		if (frontswap && pages_to_unuse > 0) {
++		if (pages_to_unuse > 0) {
+ 			if (!--pages_to_unuse)
+ 				break;
+ 		}
+@@ -2618,6 +2629,49 @@ bool has_usable_swap(void)
+ 	return ret;
+ }
+ 
++int mem_cgroup_shrink_swap(struct mem_cgroup *memcg, unsigned long nr_pages)
++{
++	struct swap_info_struct *p = NULL;
++	unsigned long to_shrink;
++	int err;
++
++	spin_lock(&swap_lock);
++	plist_for_each_entry(p, &swap_active_head, list) {
++		if (!(p->flags & SWP_WRITEOK))
++			continue;
++
++		to_shrink = min(512UL, nr_pages);
++
++		del_from_avail_list(p);
++		spin_lock(&p->lock);
++		plist_del(&p->list, &swap_active_head);
++		p->flags &= ~SWP_WRITEOK;
++		spin_unlock(&p->lock);
++		spin_unlock(&swap_lock);
++
++		disable_swap_slots_cache_lock();
++
++		set_current_oom_origin();
++		err = try_to_unuse(p->type, false, to_shrink, memcg);
++		clear_current_oom_origin();
++
++		reinsert_swap_info(p);
++		reenable_swap_slots_cache_unlock();
++
++		if (err)
++			return err;
++
++		nr_pages -= to_shrink;
++		if (!nr_pages)
++			return err;
++
++		spin_lock(&swap_lock);
++	}
++	spin_unlock(&swap_lock);
++
++	return 0;
++}
++
+ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
+ {
+ 	struct swap_info_struct *p = NULL;
+@@ -2693,7 +2747,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
+ 	disable_swap_slots_cache_lock();
+ 
+ 	set_current_oom_origin();
+-	err = try_to_unuse(p->type, false, 0); /* force unuse all pages */
++	err = try_to_unuse(p->type, false, 0, NULL); /* force unuse all pages */
+ 	clear_current_oom_origin();
+ 
+ 	if (err) {
+-- 
+2.14.3
+
