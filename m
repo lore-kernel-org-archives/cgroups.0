@@ -1,233 +1,178 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [RFC] mm: memory.low heirarchical behavior
-Date: Wed, 4 Apr 2018 13:07:00 -0400
-Message-ID: <20180404170700.GA2161@cmpxchg.org>
-References: <20180320223353.5673-1-guro@fb.com>
- <20180321182308.GA28232@cmpxchg.org>
- <20180321190801.GA22452@castle.DHCP.thefacebook.com>
+From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+Subject: DRM cgroups integration (Was: Re: [PATCH v4 0/8] cgroup
+ private data and DRM/i915 integration)
+Date: Thu, 05 Apr 2018 16:46:51 +0300
+Message-ID: <152293601096.7685.7445126271312339212@jlahtine-desk.ger.corp.intel.com>
+References: <20180317000905.7091-1-matthew.d.roper@intel.com>
+ <152180733854.5713.2309886695226223646@jlahtine-desk.ger.corp.intel.com>
+ <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
+ <152204942372.6045.18152790780379161422@jlahtine-desk.ger.corp.intel.com>
+ <20180330004313.GD20702@mdroper-desk.amr.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=p8oVNB6xEY3dvUAVndyt/GNx01guB81Dhwv8bZ0hzS0=; b=oijUn9MnJaHblWpi77ol8qxxbG
-        mmn5J7KW6LLlDlBpj8+Ujz/ZJtcRbSDUkKCO3TY1y71H9X+bU0QLlHD0swzi50vutuj4jJHkFjW9G
-        zNZHWca29duLwMS31FsaBeM1/Cb09ozb6pjVq1rv2M3NvS+PHeuy6110+hX40mOBciBM=;
-Content-Disposition: inline
-In-Reply-To: <20180321190801.GA22452@castle.DHCP.thefacebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <20180330004313.GD20702@mdroper-desk.amr.corp.intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matt Roper <matthew.d.roper@intel.com>, Dave Airlie <airlied@redhat.com>
+Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On Wed, Mar 21, 2018 at 07:08:06PM +0000, Roman Gushchin wrote:
-> > On Tue, Mar 20, 2018 at 10:33:53PM +0000, Roman Gushchin wrote:
-> > > This patch aims to address an issue in current memory.low semantics,
-> > > which makes it hard to use it in a hierarchy, where some leaf memory
-> > > cgroups are more valuable than others.
-> > > 
-> > > For example, there are memcgs A, A/B, A/C, A/D and A/E:
-> > > 
-> > >   A      A/memory.low = 2G, A/memory.current = 6G
-> > >  //\\
-> > > BC  DE   B/memory.low = 3G  B/memory.usage = 2G
-> > >          C/memory.low = 1G  C/memory.usage = 2G
-> > >          D/memory.low = 0   D/memory.usage = 2G
-> > > 	 E/memory.low = 10G E/memory.usage = 0
-> > > 
-> > > If we apply memory pressure, B, C and D are reclaimed at
-> > > the same pace while A's usage exceeds 2G.
-> > > This is obviously wrong, as B's usage is fully below B's memory.low,
-> > > and C has 1G of protection as well.
-> > > Also, A is pushed to the size, which is less than A's 2G memory.low,
-> > > which is also wrong.
-> > > 
-> > > A simple bash script (provided below) can be used to reproduce
-> > > the problem. Current results are:
-> > >   A:    1430097920
-> > >   A/B:  711929856
-> > >   A/C:  717426688
-> > >   A/D:  741376
-> > >   A/E:  0
-> > 
-> > Yes, this is a problem. And the behavior with your patch looks much
-> > preferable over the status quo.
-> > 
-> > > To address the issue a concept of effective memory.low is introduced.
-> > > Effective memory.low is always equal or less than original memory.low.
-> > > In a case, when there is no memory.low overcommittment (and also for
-> > > top-level cgroups), these two values are equal.
-> > > Otherwise it's a part of parent's effective memory.low, calculated as
-> > > a cgroup's memory.low usage divided by sum of sibling's memory.low
-> > > usages (under memory.low usage I mean the size of actually protected
-> > > memory: memory.current if memory.current < memory.low, 0 otherwise).
-> > 
-> > This hurts my brain.
-> > 
-> > Why is memory.current == memory.low (which should fully protect
-> > memory.current) a low usage of 0?
-> > 
-> > Why is memory.current > memory.low not a low usage of memory.low?
-> > 
-> > I.e. shouldn't this be low_usage = min(memory.current, memory.low)?
-> 
-> This is really the non-trivial part.
-> 
-> Let's look at an example:
-> memcg A   (memory.current = 4G, memory.low = 2G)
-> memcg A/B (memory.current = 2G, memory.low = 2G)
-> memcg A/C (memory.current = 2G, memory.low = 1G)
-> 
-> If we'll calculate effective memory.low using your definition
-> before any reclaim, we end up with the following:
-> A/B  2G * 2G / (2G + 1G) = 4/3G
-> A/C  2G * 1G / (2G + 1G) = 2/3G
-> 
-> Looks good, but both cgroups are below their effective limits.
-> When memory pressure is applied, both are reclaimed at the same pace.
-> While both B and C are getting smaller and smaller, their weights
-> and effective low limits are getting closer and closer, but
-> still below their usages. This ends up when both cgroups will
-> have size of 1G, which is obviously wrong.
-> 
-> Fundamentally the problem is that memory.low doesn't define
-> the reclaim speed, just yes or no. So, if there are children cgroups,
-> some of which are below their memory.low, and some above (as in the example),
-> it's crucially important to reclaim unprotected memory first.
-> 
-> This is exactly what my code does: as soon as memory.current is larger
-> than memory.low, we don't treat cgroup's memory as protected at all,
-> so it doesn't affect effective limits of sibling cgroups.
-
-Okay, that explanation makes sense to me. Once you're in excess, your
-memory is generally unprotected wrt your siblings until you're reigned
-in again.
-
-It should still be usage <= low rather than usage < low, right? Since
-you're protected up to and including what that number says.
-
-> > > @@ -1726,6 +1756,7 @@ static void drain_stock(struct memcg_stock_pcp *stock)
-> > >  		page_counter_uncharge(&old->memory, stock->nr_pages);
-> > >  		if (do_memsw_account())
-> > >  			page_counter_uncharge(&old->memsw, stock->nr_pages);
-> > > +		memcg_update_low(old);
-> > >  		css_put_many(&old->css, stock->nr_pages);
-> > >  		stock->nr_pages = 0;
-> > 
-> > The function is called every time the page counter changes and walks
-> > up the hierarchy exactly the same. That is a good sign that the low
-> > usage tracking should really be part of the page counter code itself.
-> 
-> I thought about it, but the problem is that page counters are used for
-> accounting swap, kmem, tcpmem (for v1), where low limit calculations are
-> not applicable. I've no idea, how to add them nicely and without excessive
-> overhead.
-> Also, good news are that it's possible to avoid any tracking until
-> a user actually overcommits memory.low guarantees. I plan to implement
-> this optimization in a separate patch.
-
-Hm, I'm not too worried about swap (not a sensitive path) or the other
-users (per-cpu batched). It just adds a branch. How about the below?
-
-diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
-index c15ab80ad32d..95bdbca86751 100644
---- a/include/linux/page_counter.h
-+++ b/include/linux/page_counter.h
-@@ -9,8 +9,13 @@
- struct page_counter {
- 	atomic_long_t count;
- 	unsigned long limit;
-+	unsigned long protected;
- 	struct page_counter *parent;
- 
-+	/* Hierarchical, proportional protection */
-+	atomic_long_t protected_count;
-+	atomic_long_t children_protected_count;
-+
- 	/* legacy */
- 	unsigned long watermark;
- 	unsigned long failcnt;
-@@ -42,6 +47,7 @@ bool page_counter_try_charge(struct page_counter *counter,
- 			     struct page_counter **fail);
- void page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages);
- int page_counter_limit(struct page_counter *counter, unsigned long limit);
-+void page_counter_protect(struct page_counter *counter, unsigned long protected);
- int page_counter_memparse(const char *buf, const char *max,
- 			  unsigned long *nr_pages);
- 
-diff --git a/mm/page_counter.c b/mm/page_counter.c
-index 2a8df3ad60a4..e6f7665d13e3 100644
---- a/mm/page_counter.c
-+++ b/mm/page_counter.c
-@@ -13,6 +13,29 @@
- #include <linux/bug.h>
- #include <asm/page.h>
- 
-+static void propagate_protected(struct page_counter *c, unsigned long count)
-+{
-+	unsigned long protected_count;
-+	unsigned long delta;
-+	unsigned long old;
-+
-+	if (!c->parent)
-+		return;
-+
-+	if (!c->protected && !atomic_long_read(&c->protected_count))
-+		return;
-+
-+	if (count <= c->protected)
-+		protected_count = count;
-+	else
-+		protected_count = 0;
-+
-+	old = atomic_long_xchg(&c->protected_count, protected_count);
-+	delta = protected_count - old;
-+	if (delta)
-+		atomic_long_add(delta, &c->parent->children_protected_count);
-+}
-+
- /**
-  * page_counter_cancel - take pages out of the local counter
-  * @counter: counter
-@@ -23,6 +46,7 @@ void page_counter_cancel(struct page_counter *counter, unsigned long nr_pages)
- 	long new;
- 
- 	new = atomic_long_sub_return(nr_pages, &counter->count);
-+	propagate_protected(counter, new);
- 	/* More uncharges than charges? */
- 	WARN_ON_ONCE(new < 0);
- }
-@@ -42,6 +66,7 @@ void page_counter_charge(struct page_counter *counter, unsigned long nr_pages)
- 		long new;
- 
- 		new = atomic_long_add_return(nr_pages, &c->count);
-+		propagate_protected(c, new);
- 		/*
- 		 * This is indeed racy, but we can live with some
- 		 * inaccuracy in the watermark.
-@@ -93,6 +118,7 @@ bool page_counter_try_charge(struct page_counter *counter,
- 			*fail = c;
- 			goto failed;
- 		}
-+		propagate_protected(c, new);
- 		/*
- 		 * Just like with failcnt, we can live with some
- 		 * inaccuracy in the watermark.
-@@ -164,6 +190,12 @@ int page_counter_limit(struct page_counter *counter, unsigned long limit)
- 	}
- }
- 
-+void page_counter_protect(struct page_counter *counter, unsigned long protected)
-+{
-+	c->protected = protected;
-+	propagate_protected(counter, atomic_long_read(&counter->count));
-+}
-+
- /**
-  * page_counter_memparse - memparse() for page counter limits
-  * @buf: string to parse
+KyBEYXZlIGZvciBjb21tZW50aW5nIGZyb20gRFJNIHN1YnN5c3RlbSBwZXJzcGVjdGl2ZS4gSSBz
+dHJvbmdseSBiZWxpZXZlCnRoZXJlIHdvdWxkIGJlIGJlbmVmaXQgZnJvbSBhZ3JlZWluZyBvbiBz
+b21lIGZvdW5kYXRpb24gb2YgRFJNIHN1YnN5c3RlbQpsZXZlbCBwcm9ncmFtIEdQVSBuaWNlbmVz
+cyBbLTIwLDE5XSBhbmQgbWVtb3J5IGxpbWl0IFswLE5dIHBhZ2VzLgoKUXVvdGluZyBNYXR0IFJv
+cGVyICgyMDE4LTAzLTMwIDAzOjQzOjEzKQo+IE9uIE1vbiwgTWFyIDI2LCAyMDE4IGF0IDEwOjMw
+OjIzQU0gKzAzMDAsIEpvb25hcyBMYWh0aW5lbiB3cm90ZToKPiA+IFF1b3RpbmcgTWF0dCBSb3Bl
+ciAoMjAxOC0wMy0yMyAxNzo0NjoxNikKPiA+ID4gT24gRnJpLCBNYXIgMjMsIDIwMTggYXQgMDI6
+MTU6MzhQTSArMDIwMCwgSm9vbmFzIExhaHRpbmVuIHdyb3RlOgo+ID4gPiA+IFF1b3RpbmcgTWF0
+dCBSb3BlciAoMjAxOC0wMy0xNyAwMjowODo1NykKPiA+ID4gPiA+IFRoaXMgaXMgdGhlIGZvdXJ0
+aCBpdGVyYXRpb24gb2YgdGhlIHdvcmsgcHJldmlvdXNseSBwb3N0ZWQgaGVyZToKPiA+ID4gPiA+
+ICAgKHYxKSBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9pbnRlbC1nZngv
+MjAxOC1KYW51YXJ5LzE1MzE1Ni5odG1sCj4gPiA+ID4gPiAgICh2MikgaHR0cHM6Ly93d3cubWFp
+bC1hcmNoaXZlLmNvbS9kcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21zZzIwODE3MC5o
+dG1sCj4gPiA+ID4gPiAgICh2MykgaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2
+ZXMvaW50ZWwtZ2Z4LzIwMTgtTWFyY2gvMTU3OTI4Lmh0bWwKPiA+ID4gPiA+IAo+ID4gPiA+ID4g
+VGhlIGhpZ2ggbGV2ZWwgZ29hbCBvZiB0aGlzIHdvcmsgaXMgdG8gYWxsb3cgbm9uLWNncm91cC1j
+b250cm9sbGVyIHBhcnRzCj4gPiA+ID4gPiBvZiB0aGUga2VybmVsIChlLmcuLCBkZXZpY2UgZHJp
+dmVycykgdG8gcmVnaXN0ZXIgdGhlaXIgb3duIHByaXZhdGUKPiA+ID4gPiA+IHBvbGljeSBkYXRh
+IGZvciBzcGVjaWZpYyBjZ3JvdXBzLiAgVGhhdCBtZWNoYW5pc20gaXMgdGhlbiBtYWRlIHVzZSBv
+ZiBpbgo+ID4gPiA+ID4gdGhlIGk5MTUgZ3JhcGhpY3MgZHJpdmVyIHRvIGFsbG93IEdQVSBwcmlv
+cml0eSB0byBiZSBhc3NpZ25lZCBhY2NvcmRpbmcKPiA+ID4gPiA+IHRvIHRoZSBjZ3JvdXAgbWVt
+YmVyc2hpcCBvZiB0aGUgb3duaW5nIHByb2Nlc3MuICBQbGVhc2Ugc2VlIHRoZSB2MSBjb3Zlcgo+
+ID4gPiA+ID4gbGV0dGVyIGxpbmtlZCBhYm92ZSBmb3IgYSBtb3JlIGluLWRlcHRoIGV4cGxhbmF0
+aW9uIGFuZCBqdXN0aWZpY2F0aW9uLgo+ID4gPiA+IAo+ID4gPiA+IEhpIE1hdHQsCj4gPiA+ID4g
+Cj4gPiA+ID4gRm9yIGNyb3NzLXN1YnN5c3RlbSBjaGFuZ2VzIHN1Y2ggYXMgdGhpcywgaXQgbWFr
+ZXMgc2Vuc2UgdG8gQ2MgYWxsCj4gPiA+ID4gcmVsZXZhbnQgbWFpbnRhaW5lcnMsIGVzcGVjaWFs
+bHkgaWYgdGhlcmUgaGF2ZSBiZWVuIHByZXZpb3VzIGNvbW1lbnRzIHRvCj4gPiA+ID4gZWFybGll
+ciByZXZpc2lvbnMuCj4gPiA+ID4gCj4gPiA+ID4gUGxlYXNlLCBkbyBpbmNsdWRlIGFuZCBrZWVw
+IGEgcmVmZXJlbmNlIHRvIHRoZSB1c2Vyc3BhY2UgcG9ydGlvbiBvZiB0aGUKPiA+ID4gPiBjaGFu
+Z2VzIHdoZW4geW91IHN1Z2dlc3QgbmV3IHVBUEkgdG8gYmUgYWRkZWQuIEF0IGxlYXN0IEkgaGF2
+ZSBzb21lIHRyb3VibGUKPiA+ID4gPiB0cnlpbmcgdG8gdHJhY2sgZG93biB0aGUgcmVsZXZhbnQg
+aW50ZXJmYWNlIGNvbnN1bWVyIGhlcmUuCj4gPiA+ID4gCj4gPiA+ID4gSSdtIHVuc3VyZSBob3cg
+bXVjaCBzZW5zZSBpdCBtYWtlcyB0byBjb21tZW5jZSB3aXRoIGRldGFpbGVkIGk5MTUgcmV2aWV3
+Cj4gPiA+ID4gaWYgd2Ugd2lsbCBiZSBibG9ja2VkIGJ5IGxhY2sgb2YgdXNlcnNwYWNlIGFmdGVy
+IHRoYXQ/IEknbSBhc3N1bWluZwo+ID4gPiA+IHlvdSd2ZSByZWFkIHRocm91Z2ggWzFdIGFscmVh
+ZHkuCj4gPiA+IAo+ID4gPiBIaSBKb29uYXMsCj4gPiA+IAo+ID4gPiBJJ3ZlIHNlbnQgdGhlIHVz
+ZXJzcGFjZSBjb2RlIG91dCBhIGZldyB0aW1lcywgYnV0IGl0IGxvb2tzIGxpa2UgSSBmb3Jnb3QK
+PiA+ID4gdG8gaW5jbHVkZSBhIGNvcHkgd2l0aCB2NC92NC41LiAgSGVyZSdzIHRoZSB2ZXJzaW9u
+IEkgcHJvdmlkZWQgd2l0aCB2MzoKPiA+ID4gICBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9y
+Zy9hcmNoaXZlcy9pbnRlbC1nZngvMjAxOC1NYXJjaC8xNTc5MzUuaHRtbAo+ID4gCj4gPiBUaGFu
+a3MuIEtlZXBpbmcgdGhhdCBpbiB0aGUgcmVsZXZhbnQgY29tbWl0IG1lc3NhZ2Ugb2YgdGhlIHBh
+dGNoIHRoYXQKPiA+IGludHJvZHVjZXMgdGhlIG5ldyB1QVBJIHdpbGwgbWFrZSBpdCBoYXJkZXIg
+dG8gZm9yZ2V0IGFuZCBlYXNpZXN0IGZvcgo+ID4gZ2l0IGJsYW1lLCB0b28uCj4gPiAKPiA+ID4g
+Cj4gPiA+IFVzdWFsbHkgd2UgZG9uJ3QgY29uc2lkZXIgdGhpbmdzIGxpa2UgaS1nLXQgdG8gYmUg
+c3VmZmljaWVudCB1c2Vyc3BhY2UKPiA+ID4gY29uc3VtZXJzIGJlY2F1c2Ugd2UgbmVlZCBhIHJl
+YWwtd29ybGQgY29uc3VtZXIgcmF0aGVyIHRoYW4gYSAidG95Igo+ID4gPiB1c2Vyc3BhY2UuICBI
+b3dldmVyIGluIHRoaXMgY2FzZSwgdGhlIGktZy10IHRvb2wsIGFsdGhvdWdoIHZlcnkgc2ltcGxl
+LAo+ID4gPiBpcyByZWFsbHkgdGhlIG9ubHkgdXNlcnNwYWNlIGNvbnN1bWVyIEkgZXhwZWN0IHRo
+ZXJlIHRvIGV2ZXIgYmUuCj4gPiA+IFVsdGltYXRlbHkgdGhlIHRydWUgY29uc3VtZXIgb2YgdGhp
+cyBjZ3JvdXBzIHdvcmsgYXJlIGJhc2ggc2NyaXB0cywgc3lzdgo+ID4gPiBpbml0IHNjcmlwdHMs
+IHN5c3RlbWQgcmVjaXBlcywgZXRjLiAgdGhhdCBqdXN0IG5lZWQgYSB2ZXJ5IHNpbXBsZSB0b29s
+Cj4gPiA+IHRvIGFzc2lnbiB0aGUgc3BlY2lmaWMgdmFsdWVzIHRoYXQgbWFrZSBzZW5zZSBvbiBh
+IGdpdmVuIHN5c3RlbS4KPiA+ID4gVGhlcmUncyBubyBleHBlY3RhdGlvbiB0aGF0IGdyYXBoaWNz
+IGNsaWVudHMgb3IgZGlzcGxheSBzZXJ2ZXJzIHdvdWxkCj4gPiA+IGV2ZXIgbmVlZCB0byBtYWtl
+IHVzZSBvZiB0aGVzZSBpbnRlcmZhY2VzLgo+ID4gCj4gPiBJIHdhcyB1bmRlciB0aGUgaW1wcmVz
+c2lvbiB0aGF0IGEgYml0IG1vcmUgZ2VuZXJpYyBHUFUgY2dyb3VwcyBzdXBwb3J0Cj4gPiB3YXMg
+cmVjZWl2aW5nIGEgbG90IG9mIHN1cHBvcnQgaW4gdGhlIGVhcmx5IGRpc2N1c3Npb24/IEEgZGVk
+aWNhdGVkCj4gPiBpbnRlbF9jZ3JvdXAgc291bmRzIHVuZGVyd2hlbG1pbmcsIHdoZW4gY29tcGFy
+aW5nIHRvIGlkZWEgb2YgImdwdV9uaWNlIiwKPiA+IGZvciB1c2VyIGFkb3B0aW9uIDopCj4gCj4g
+SSdtIG9wZW4gdG8gbW92aW5nIHRoZSBjZ3JvdXBfcHJpdiByZWdpc3RyYXRpb24vbG9va3VwIHRv
+IHRoZSBEUk0gY29yZQo+IGlmIG90aGVyIGRyaXZlcnMgYXJlIGludGVyZXN0ZWQgaW4gdXNpbmcg
+dGhpcyBtZWNoYW5pc20gYW5kIGlmIHdlIGNhbgo+IGNvbWUgdG8gYW4gYWdyZWVtZW50IG9uIGEg
+c3RhbmRhcmQgcHJpb3JpdHkgb2Zmc2V0IHJhbmdlIHRvIHN1cHBvcnQsIGhvdwo+IGRpc3BsYXkg
+Ym9vc3Qgc2hvdWxkIHdvcmsgZm9yIGFsbCBkcml2ZXJzLCBldGMuICBUaGVyZSBtaWdodCBiZSBz
+b21lCj4gY2hhbGxlbmdlcyBtYXBwaW5nIGEgRFJNLWRlZmluZWQgcHJpb3JpdHkgcmFuZ2UgZG93
+biB0byBhIGRpZmZlcmVudAo+IHJhbmdlIHRoYXQgbWFrZXMgc2Vuc2UgZm9yIGluZGl2aWR1YWwg
+ZHJpdmVyIHNjaGVkdWxlcnMsIGVzcGVjaWFsbHkKPiBzaW5jZSBzb21lIGRyaXZlcnMgYWxyZWFk
+eSBleHBvc2UgYSBkaWZmZXJlbnQgcHJpb3JpdHkgc2NoZW1lIHRvCj4gdXNlcnNwYWNlIHZpYSBv
+dGhlciBpbnRlcmZhY2VzIGxpa2UgaTkxNSBkb2VzIHdpdGggR0VNIGNvbnRleHQgcHJpb3JpdHku
+Cj4gCj4gU28gZmFyIEkgaGF2ZW4ndCByZWFsbHkgaGVhcmQgYW55IGludGVyZXN0IG91dHNpZGUg
+dGhlIEludGVsIGNhbXAsIGJ1dAo+IGhvcGVmdWxseSBvdGhlciBkcml2ZXIgdGVhbXMgY2FuIHNw
+ZWFrIHVwIGlmIHRoZXkncmUgZm9yL2FnYWluc3QgdGhpcy4KPiBJIGRvbid0IHdhbnQgdG8gdHJ5
+IHRvIGFydGlmaWNpYWxseSBzdGFuZGFyZGl6ZSB0aGlzIGlmIG90aGVyIGRyaXZlcnMKPiB3YW50
+IHRvIGdvIGEgZGlmZmVyZW50IGRpcmVjdGlvbiB3aXRoIHByaW9yaXR5L3NjaGVkdWxpbmcgdGhh
+dCdzIHRvbwo+IGRpZmZlcmVudCBmcm9tIHRoZSBjdXJyZW50IEludGVsLWRyaXZlbiBkZXNpZ24u
+CgpJIGRvbid0IHRoaW5rIHRoZXJlIGFyZSB0aGF0IG1hbnkgZGlyZWN0aW9ucyB0byBnbyBhYm91
+dCBHUFUgY29udGV4dApwcmlvcml0eSwgY29uc2lkZXJpbmcgd2UgaGF2ZSB0aGUgRUdMX0lNR19j
+b250ZXh0X3ByaW9yaXR5IGV4dGVuc2lvbiwgc28KaXQnbGwgb25seSBiZSBhYm91dCBncmFudWxh
+cml0eSBvZiB0aGUgc2NhbGUuCgpJIHdvdWxkIHN1Z2dlc3QgdG8gZ28gd2l0aCB0aGUgbmljZSBs
+aWtlIHNjYWxlIGZvciBlYXN5IHVzZXIgYWRvcHRpb24sCnRoZW4ganVzdCBhcHBseSB0aGF0IGFz
+IHRoZSBOIG1vc3Qgc2lnbmlmaWNhbnQgYml0cy4KClRoZSBjb250ZXh0cyBjb3VsZCB0aGVuIG9m
+IGNvdXJzZSBmdXJ0aGVyIGFkanVzdCB0aGVpciBwcmlvcml0eSBmcm9tIHdoYXQKaXMgc2V0IGJ5
+IHRoZSAiZ3B1X25pY2UiIGFwcGxpY2F0aW9uIHdpdGggdGhlIHJlbWFpbmluZyBiaXRzLgoKSSdt
+IHN0cm9uZ2x5IGZlZWxpbmcgdGhpcyBzaG91bGQgYmUgYSBEUk0gbGV2ZWwgImdwdV9uaWNlIi4g
+QW5kIHRoZQpiaW5kaW5nIHRvIGNncm91cHMgc2hvdWxkIGNvbWUgdGhyb3VnaCBEUk0gY29yZS4g
+SWYgaXQgZG9lc24ndCwgbGltaXRpbmcKdGhlIGFtb3VudCBvZiBtZW1vcnkgdXNlZCBiZWNvbWVz
+IGF3a3dhcmQgYXMgdGhlIGFsbG9jYXRpb24gaXMKY2VudHJhbGl6ZWQgdG8gRFJNIGNvcmUuCgo+
+ID4gQWxzbywgSSBtaWdodCBub3QgYmUgdXAtdG8tZGF0ZSBhYm91dCBhbGwgdGhpbmdzIGNncm91
+cHMsIGJ1dCB0aGUgd2F5Cj4gPiBpbnRlbF9jZ3JvdXAgd29ya3MsIGZlZWxzIGJpdCBmb3JjZWQu
+IFdlIGNyZWF0ZSBhIHVzZXJzcGFjZSBjb250ZXh0IGp1c3QKPiA+IHRvIGNvbW11bmljYXRlIHdp
+dGggdGhlIGRyaXZlciBhbmQgdGhlIElPQ1RMIHdpbGwgc3RpbGwgaGF2ZSBnbG9iYWwKPiA+IGVm
+ZmVjdHMuIEkgY2FuJ3QgYnV0IHRoaW5rIHRoYXQgaTkxNSByZWFkaW5nIGZyb20gdGhlIGNncm91
+cHMgc3Vic3lzdGVtCj4gPiBmb3IgdGhlIGN1cnJlbnQgcHJvY2VzcyB3b3VsZCBmZWVsIG1vcmUg
+aW50dWl0aXZlIHRvIG1lLgo+IAo+IEkgdGhpbmsgeW91J3JlIHJlZmVycmluZyB0byB0aGUgZWFy
+bGllciBkaXNjdXNzaW9uIGFib3V0IGV4cG9zaW5nCj4gcHJpb3JpdHkgZGlyZWN0bHkgdmlhIHRo
+ZSBjZ3JvdXBzIGZpbGVzeXN0ZW0/ICBUaGF0IHdvdWxkIGNlcnRhaW5seSBiZQo+IHNpbXBsZXIg
+ZnJvbSBhIHVzZXJzcGFjZSBwZXJzcGVjdGl2ZSwgYnV0IGl0J3Mgbm90IHRoZSBkaXJlY3Rpb24g
+dGhhdAo+IHRoZSBjZ3JvdXBzIG1haW50YWluZXIgd2FudHMgdG8gc2VlIHRoaW5ncyBnby4gIEFk
+ZGluZyBmaWxlcyBkaXJlY3RseSB0bwo+IHRoZSBjZ3JvdXBzIGZpbGVzeXN0ZW0gaXMgc3VwcG9z
+ZWQgdG8gYmUgc29tZXRoaW5nIHRoYXQncyByZXNlcnZlZCBmb3IKPiBvZmZpY2lhbCBjZ3JvdXBz
+IGNvbnRyb2xsZXJzLiAgVGhlIEdQVSBwcmlvcml0eSBjb25jZXB0IHdlJ3JlIHRyeWluZyB0bwo+
+IGFkZCBoZXJlIGRvZXNuJ3QgYWxpZ24gd2l0aCB0aGUgcmVxdWlyZW1lbnRzIGZvciBjcmVhdGlu
+ZyBhIGNvbnRyb2xsZXIsCj4gc28gdGhlIHByZWZlcnJlZCBhcHByb2FjaCBpcyB0byBjcmVhdGUg
+YSBjdXN0b20gaW50ZXJmYWNlIChzeXNjYWxsIG9yCj4gaW9jdGwpIHRoYXQgc2ltcGx5IHRha2Vz
+IGEgY2dyb3VwIGFzIGEgcGFyYW1ldGVyLiAgVGhlcmUncyBwcmVjZW5kZW50Cj4gd2l0aCBzaW1p
+bGFyIGludGVyZmFjZXMgaW4gYXJlYXMgbGlrZSBCUEYgKHdoZXJlIHRoZSBicGYoKSBzeXN0ZW0g
+Y2FsbAo+IGNhbiBhY2NlcHQgYSBjZ3JvdXAgYXMgYSBwYXJhbWV0ZXIgYW5kIHRoZW4gcGVyZm9y
+bSBpdHMgb3duIHByaXZhdGUKPiBwb2xpY3kgY2hhbmdlcyBhcyBpdCBzZWVzIGZpdCkuCj4gCj4g
+VXNpbmcgYSB0cnVlIGNncm91cHMgY29udHJvbGxlciBhbmQgZXhwb3Npbmcgc2V0dGluZ3Mgdmlh
+IHRoZSBmaWxlc3lzdGVtCj4gaXMgbGlrZWx5IHN0aWxsIHRoZSB3YXkgd2UnbGwgd2FudCB0byBn
+byBmb3Igc29tZSBvdGhlciB0eXBlcyBvZgo+IGNncm91cHMtYmFzZWQgcG9saWN5IGluIHRoZSBm
+dXR1cmUgKGUuZy4sIGxpbWl0aW5nIEdQVSBtZW1vcnkgdXNhZ2UpOyBpdAo+IGp1c3QgaXNuJ3Qg
+dGhlIGFwcHJvcHJpYXRlIGRpcmVjdGlvbiBmb3IgcHJpb3JpdHkuCgpNaWdodCBiZSBqdXN0IG1l
+IGJ1dCBmZWVscyBiaXQgY3JhenkgdG8gYmUgc2V0dGluZyBHUFUgbWVtb3J5IHVzYWdlCnRocm91
+Z2ggYW5vdGhlciBpbnRlcmZhY2UgYW5kIHRoZW4gZG9pbmcgaTkxNSBzcGVjaWZpYyBJT0NUTHMg
+dG8gY29udHJvbAp0aGUgcHJpb3JpdHkgb2YgdGhhdCBzYW1lIGNncm91cC4KCkkgZG9uJ3QgZmVl
+bCBjb21mb3J0YWJsZSBhZGRpbmcgY3VzdG9tIGNncm91cHMgZGVwZW5kZW50IElPQ1RMcyB0byBp
+OTE1CndoZXJlIGNncm91cHMgaXMgb25seSB3b3JraW5nIGFzIHRoZSB2YXJpYWJsZSBjYXJyaWVy
+IGluIGJhY2tncm91bmQuIFdlCnNob3VsZCByZWFsbHkganVzdCBiZSBjb25zdW1pbmcgYSB2YXJp
+YWJsZSBmcm9tIGNncm91cHMgYW5kIGl0IHNob3VsZCBiZQpzZXQgb3V0c2lkZSBvZiBvZiB0aGUg
+aTkxNSBJT0NUTCBpbnRlcmZhY2UuCgpJJ20gc3RpbGwgc2VlaW5nIHRoYXQgd2Ugc2hvdWxkIGhh
+dmUgYSBEUk0gY2dyb3VwcyBjb250cm9sbGVyIGFuZCBhIERSTQpzdWJzeXN0ZW0gd2lkZSBhcHBs
+aWNhdGlvbiB0byBjb250cm9sIHRoZSBwcmlvcml0eSBhbmQgbWVtb3J5IHVzYWdlCnRvIGJlIGZl
+ZCB0byB0aGUgZHJpdmVycy4KCklmIHdlIGVuZCB1cCBqdXN0IHN1cHBvcnRpbmcgaTkxNSBhcHBz
+LCB3ZSBjb3VsZCBhcyB3ZWxsIHVzZSBMRF9QUkVMT0FECndyYXBwZXIgYW5kIGFsdGVyIHRoZSBj
+b250ZXh0IHByaW9yaXR5IGF0IGNyZWF0aW9uIHRpbWUgZm9yIGV4YWN0bHkgdGhlCnNhbWUgZWZm
+ZWN0IGFuZCBubyBleHRyYSBpbnRlcmZhY2VzIHRvIG1haW50YWluLgoKPiA+IERvZXMgdGhlIGlt
+cGxlbWVudGF0aW9uIG1pbWljIHNvbWUgZXhpc3RpbmcgY2dyb3VwcyB0b29sIG9yIGRlLWZhY3Rv
+IHdheQo+ID4gb2YgZG9pbmcgdGhpbmdzIGluIGNncm91cHMgd29ybGQ/Cj4gCj4gVGhlIGlvY3Rs
+IGFwcHJvYWNoIEkgdG9vayBpcyBzaW1pbGFyIHRvIHN5c2NhbGwgYXBwcm9hY2ggdGhhdCB0aGUg
+QlBGCj4gZ3V5cyB1c2UgdG8gYXR0YWNoIEJQRiBwcm9ncmFtcyB0byBhIGNncm91cC4gIEknbSBu
+b3QgdmVyeSBmYW1pbGlhciB3aXRoCj4gQlBGIG9yIGhvdyBpdCBnZXRzIHVzZWQgZnJvbSB1c2Vy
+c3BhY2UsIHNvIEknbSBub3Qgc3VyZSB3aGV0aGVyIHRoZQo+IGludGVyZmFjZSBpcyBpbnRlbmRl
+ZCBmb3Igb25lIHNwZWNpZmljIHRvb2wgKGxpa2Ugb3VycyBpcyksIG9yIHdoZXRoZXIKPiB0aGVy
+ZSdzIG1vcmUgdmFyaWV0eSBmb3IgdXNlcnNwYWNlIGNvbnN1bWVycy4KCklzIHRoZSBwcm9wb3Nh
+bCB0byBzZXQgdGhlIG1lbW9yeSB1c2FnZSBmcm9tIHNpbWlsYXIgaW50ZXJmYWNlLCBvciBpcwp0
+aGF0IHN0aWxsIG5vdCBpbXBsZW1lbnRlZD8KCkknbSBzZWVpbmcgYSB2ZXJ5IGNsb3NlIHJlbGF0
+aW9uIGJldHdlZW4gdGltZS1zbGljaW5nIEdQVSB0aW1lIGFuZAphbGxvd2VkIEdQVSBidWZmZXIg
+YWxsb2NhdGlvbnMsIHNvIGhhdmluZyB0d28gY29tcGxldGVseSBkaWZmZXJlbnQKaW50ZXJmYWNl
+cyBkb2VzIGp1c3QgZmVlbCB2ZXJ5IGhhY2tpc2ggd2F5IG9mIGltcGxlbWVudGluZyB0aGlzLgoK
+UmVnYXJkcywgSm9vbmFzCgo+IAo+IAo+IE1hdHQKPiAKPiA+IAo+ID4gUmVnYXJkcywgSm9vbmFz
+Cj4gPiAtLQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
+InVuc3Vic2NyaWJlIGNncm91cHMiIGluCj4gPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFq
+b3Jkb21vQHZnZXIua2VybmVsLm9yZwo+ID4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4gCj4gLS0gCj4gTWF0dCBSb3Bl
+cgo+IEdyYXBoaWNzIFNvZnR3YXJlIEVuZ2luZWVyCj4gSW9URyBQbGF0Zm9ybSBFbmFibGluZyAm
+IERldmVsb3BtZW50Cj4gSW50ZWwgQ29ycG9yYXRpb24KPiAoOTE2KSAzNTYtMjc5NQpfX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGlu
+ZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVl
+ZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngK
