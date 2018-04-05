@@ -1,297 +1,312 @@
-From: Felix Kuehling <felix.kuehling@amd.com>
-Subject: Re: DRM cgroups integration (Was: Re: [PATCH v4 0/8]
- cgroup private data and DRM/i915 integration)
-Date: Thu, 5 Apr 2018 13:32:16 -0400
-Message-ID: <bcc1bcf1-1593-7c71-055e-b6268dfb469b@amd.com>
-References: <20180317000905.7091-1-matthew.d.roper@intel.com>
- <152180733854.5713.2309886695226223646@jlahtine-desk.ger.corp.intel.com>
- <20180323154615.GD24674@mdroper-desk.amr.corp.intel.com>
- <152204942372.6045.18152790780379161422@jlahtine-desk.ger.corp.intel.com>
- <20180330004313.GD20702@mdroper-desk.amr.corp.intel.com>
- <152293601096.7685.7445126271312339212@jlahtine-desk.ger.corp.intel.com>
- <152293771366.8317.15801541807884941472@jlahtine-desk.ger.corp.intel.com>
- <20180405144944.GA31612@mdroper-desk.amr.corp.intel.com>
- <20180405150623.GB31612@mdroper-desk.amr.corp.intel.com>
- <20180405154815.GC31612@mdroper-desk.amr.corp.intel.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH] mm: memcg: make sure memory.events is uptodate when waking
+ pollers
+Date: Thu, 5 Apr 2018 13:55:16 -0400
+Message-ID: <20180405175507.GA24817@cmpxchg.org>
+References: <20180324160901.512135-1-tj@kernel.org>
+ <20180324160901.512135-2-tj@kernel.org>
+ <20180404140855.GA28966@cmpxchg.org>
+ <20180404141850.GC28966@cmpxchg.org>
+ <20180404143447.GJ6312@dhcp22.suse.cz>
+ <20180404165829.GA3126663@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=amdcloud.onmicrosoft.com; s=selector1-amd-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=e8W97ZIUFRfz2i3YFi1GIXaO4QMHekA6AnMesFJbwRg=;
- b=y3Tr3aNRpHESxvDDpyVDQdfk6IeljyRKzDL8hsiXl3vUydzCourazSwyu3TeXMFPsCMMCRX/P95luW2SU7/3fFDkb2KupJLC5N9h2U8UiMEJTjbioUF4BZeSRJXDLYr5A5V6BOrmkN6hRlMQ7NFXiPrLj+fQERiXO7SFh4ixYuM=
-In-Reply-To: <20180405154815.GC31612@mdroper-desk.amr.corp.intel.com>
-Content-Language: en-CA
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Matt Roper <matthew.d.roper@intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, "Ho, Kenny" <Kenny.Ho@amd.com>
-Cc: Alexei Starovoitov <ast@fb.com>, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Alex Deucher <alexander.deucher@amd.com>, Jerome Glisse <jglisse@redhat.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Dave Airlie <airlied@redhat.com>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Roman Gushchin <guro@fb.com>, Lucas Stach <l.stach@pengutronix.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=SBvcwuUXXP0nnTNMzGSVHzpT/TERq69YQ2Gtb2SnwuM=; b=euWM+39R5XACjTtLN/a2TFC7Qx
+        0a8KjICixTuejOTRecTlfBZXWHNLqQ69aF8R94ivxpAKfsP8HVFGdvd/LoPCfcyUsYinx5GsQMcwy
+        TEW/bIPgSTthJO0EWsGJOcQJg/4luVoscw28r/QLtcPlUUZNR6S/6+S+YCclxvm2WVc8=;
+Content-Disposition: inline
+In-Reply-To: <20180404165829.GA3126663@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@kernel.org>, vdavydov.dev@gmail.com, guro@fb.com, riel@surriel.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-QWRkaW5nIEtlbm55LCB3aG8gcmVjZW50bHkgc3RhcnRlZCBsb29raW5nIGludG8gY2dyb3VwIHN1
-cHBvcnQgZnJvbSB0aGUKQU1EIEdQVSBjb21wdXRpbmcgc2lkZS4KClJlZ2FyZHMsCsKgIEZlbGl4
-CgoKT24gMjAxOC0wNC0wNSAxMTo0OCBBTSwgTWF0dCBSb3BlciB3cm90ZToKPiBKdXN0IHJlYWxp
-emVkIEpvb25hcyBoYWQgc29tZSBvdGhlciBjb21tZW50cyBkb3duIGF0IHRoZSBib3R0b20gdGhh
-dCBJCj4gbWlzc2VkIG9yaWdpbmFsbHkuLi4KPgo+IE9uIFRodSwgQXByIDA1LCAyMDE4IGF0IDA4
-OjA2OjIzQU0gLTA3MDAsIE1hdHQgUm9wZXIgd3JvdGU6Cj4+IE9uIFRodSwgQXByIDA1LCAyMDE4
-IGF0IDA3OjQ5OjQ0QU0gLTA3MDAsIE1hdHQgUm9wZXIgd3JvdGU6Cj4+PiBPbiBUaHUsIEFwciAw
-NSwgMjAxOCBhdCAwNToxNToxM1BNICswMzAwLCBKb29uYXMgTGFodGluZW4gd3JvdGU6Cj4+Pj4g
-KyBTb21lIG1vcmUgQ2MncyBiYXNlZCBvbiBJUkMgZGlzY3Vzc2lvbgo+Pj4+Cj4+Pj4gUXVvdGlu
-ZyBKb29uYXMgTGFodGluZW4gKDIwMTgtMDQtMDUgMTY6NDY6NTEpCj4+Pj4+ICsgRGF2ZSBmb3Ig
-Y29tbWVudGluZyBmcm9tIERSTSBzdWJzeXN0ZW0gcGVyc3BlY3RpdmUuIEkgc3Ryb25nbHkgYmVs
-aWV2ZQo+Pj4+PiB0aGVyZSB3b3VsZCBiZSBiZW5lZml0IGZyb20gYWdyZWVpbmcgb24gc29tZSBm
-b3VuZGF0aW9uIG9mIERSTSBzdWJzeXN0ZW0KPj4+Pj4gbGV2ZWwgcHJvZ3JhbSBHUFUgbmljZW5l
-c3MgWy0yMCwxOV0gYW5kIG1lbW9yeSBsaW1pdCBbMCxOXSBwYWdlcy4KPj4+ICtDaHJpcyBXaWxz
-b24KPj4gK21vcmUgQ2MncyBiYXNlZCBvbiBJUkMgZGlzY3Vzc2lvbi4KPj4KPj4KPj4gTWF0dAo+
-Pgo+Pj4gSWYgd2UgaWdub3JlIGJhY2t3YXJkIGNvbXBhdGliaWxpdHkgYW5kIEFCSSBpc3N1ZXMg
-Zm9yIG5vdyBhbmQgYXNzdW1lCj4+PiBhbGwgZHJpdmVycyBjYW4gbW92ZSB0byBbLTIwLCAxOV0g
-Zm9yIGFwcGxpY2F0aW9uLWFjY2Vzc2libGUgcHJpb3JpdHkKPj4+IHJhbmdlcyAoaS5lLiwgc2Vs
-ZiBvcHQtaW4gdmlhIGV4aXN0aW5nIGNvbnRleHQgcGFyYW1ldGVyIGlvY3RscyBhbmQKPj4+IHN1
-Y2gpLCBJIHRoaW5rIHdlIHN0aWxsIG5lZWQgYSBtdWNoIGxhcmdlciByYW5nZSBmb3IgdGhlIHBy
-aW9yaXR5IG9mZnNldAo+Pj4gYXNzaWduZWQgdmlhIGNncm91cC4gIE9uZSBvZiB0aGUgZ29hbHMg
-d2l0aCB0aGUgY2dyb3VwIHdvcmsgaXMgdG8gZ2l2ZQo+Pj4gdGhlIHN5c3RlbSBpbnRlZ3JhdG9y
-IHRoZSBhYmlsaXR5IHRvIGRlZmluZSBjbGFzc2VzIG9mIGFwcGxpY2F0aW9ucyB3aXRoCj4+PiBu
-b24tb3ZlcmxhcHBpbmcgcmFuZ2VzIChpLmUuLCBpbiBzb21lIHN5c3RlbXMgYW4gYXBwIGluIHRo
-ZSAidmVyeQo+Pj4gaW1wb3J0YW50IiBjZ3JvdXAgdGhhdCBzZWxmLWxvd2VycyBpdHNlbGYgYXMg
-ZmFyIGFzIHBvc3NpYmxlIHNob3VsZAo+Pj4gc3RpbGwgYmUgcHJpb3JpdGl6ZWQgaGlnaGVyIHRo
-YW4gYW4gYXBwIGluIHRoZSAiYmVzdCBlZmZvcnQiIGNncm91cCB0aGF0Cj4+PiBzZWxmLWJvb3N0
-cyBpdHNlbGYgYXMgZmFyIGFzIHBvc3NpYmxlKS4gIENocmlzIFdpbHNvbiBhbmQgSSBkaXNjdXNz
-ZWQKPj4+IHRoYXQgYSBiaXQgb24gdGhpcyB0aHJlYWQgaWYgeW91IHdhbnQgdG8gc2VlIHRoZSBj
-b250ZXh0Ogo+Pj4KPj4+IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2lu
-dGVsLWdmeC8yMDE4LU1hcmNoLzE1ODIwNC5odG1sCj4+Pgo+Pj4gVGhhdCBkaXNjdXNzaW9uIHdh
-cyBiYXNlZCBvbiBpOTE1J3MgY3VycmVudCBhcHBsaWNhdGlvbi1hY2Nlc3NpYmxlIHJhbmdlCj4+
-PiBvZiBbLTEwMjMsMTAyM10uICBJZiB3ZSBzaGlmdCB0byBhIG11Y2ggc21hbGxlciBbLTIwLDE5
-XSByYW5nZSBmb3IKPj4+IGFwcGxpY2F0aW9ucyB0byB1c2UgZGlyZWN0bHksIHRoZW4gd2UgbWln
-aHQgd2FudCB0byBhbGxvdyBjZ3JvdXAgb2Zmc2V0Cj4+PiB0byBiZSBzb21ldGhpbmcgbGlrZSBb
-LTEwMDAsMTAwMF0gdG8gZW5zdXJlIHRoZSBzeXN0ZW0gaW50ZWdyYXRvciBoYXMKPj4+IGVub3Vn
-aCBmbGV4aWJpbGl0eT8KPj4+Cj4+PiBBbHNvIG5vdGUgdGhhdCAiZGlzcGxheSBib29zdCIgKGku
-ZS4sIGEgcHJpb3JpdHkgYm9vc3QgZm9yIGNvbnRleHRzIHRoYXQKPj4+IGFyZSBibG9ja2luZyBh
-IGZsaXApIG1heSB2YXJ5IGRlcGVuZGluZyBvbiBzeXN0ZW0gc2V0dXAsIHNvIHNldHRpbmcKPj4+
-IGJlaW5nIGFibGUgdG8gZGVmaW5lIHRoZSBkaXNwbGF5IGJvb3N0J3MgZWZmZWN0aXZlIHByaW9y
-aXR5IHZpYSBjZ3JvdXAKPj4+IGlzIGltcG9ydGFudCBhcyB3ZWxsLgo+Pj4KPj4+Cj4+PiBNYXR0
-Cj4+Pgo+Pj4KPj4+Cj4+Pj4+IFF1b3RpbmcgTWF0dCBSb3BlciAoMjAxOC0wMy0zMCAwMzo0Mzox
-MykKPj4+Pj4+IE9uIE1vbiwgTWFyIDI2LCAyMDE4IGF0IDEwOjMwOjIzQU0gKzAzMDAsIEpvb25h
-cyBMYWh0aW5lbiB3cm90ZToKPj4+Pj4+PiBRdW90aW5nIE1hdHQgUm9wZXIgKDIwMTgtMDMtMjMg
-MTc6NDY6MTYpCj4+Pj4+Pj4+IE9uIEZyaSwgTWFyIDIzLCAyMDE4IGF0IDAyOjE1OjM4UE0gKzAy
-MDAsIEpvb25hcyBMYWh0aW5lbiB3cm90ZToKPj4+Pj4+Pj4+IFF1b3RpbmcgTWF0dCBSb3BlciAo
-MjAxOC0wMy0xNyAwMjowODo1NykKPj4+Pj4+Pj4+PiBUaGlzIGlzIHRoZSBmb3VydGggaXRlcmF0
-aW9uIG9mIHRoZSB3b3JrIHByZXZpb3VzbHkgcG9zdGVkIGhlcmU6Cj4+Pj4+Pj4+Pj4gICAodjEp
-IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4LUph
-bnVhcnkvMTUzMTU2Lmh0bWwKPj4+Pj4+Pj4+PiAgICh2MikgaHR0cHM6Ly93d3cubWFpbC1hcmNo
-aXZlLmNvbS9kcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21zZzIwODE3MC5odG1sCj4+
-Pj4+Pj4+Pj4gICAodjMpIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2lu
-dGVsLWdmeC8yMDE4LU1hcmNoLzE1NzkyOC5odG1sCj4+Pj4+Pj4+Pj4KPj4+Pj4+Pj4+PiBUaGUg
-aGlnaCBsZXZlbCBnb2FsIG9mIHRoaXMgd29yayBpcyB0byBhbGxvdyBub24tY2dyb3VwLWNvbnRy
-b2xsZXIgcGFydHMKPj4+Pj4+Pj4+PiBvZiB0aGUga2VybmVsIChlLmcuLCBkZXZpY2UgZHJpdmVy
-cykgdG8gcmVnaXN0ZXIgdGhlaXIgb3duIHByaXZhdGUKPj4+Pj4+Pj4+PiBwb2xpY3kgZGF0YSBm
-b3Igc3BlY2lmaWMgY2dyb3Vwcy4gIFRoYXQgbWVjaGFuaXNtIGlzIHRoZW4gbWFkZSB1c2Ugb2Yg
-aW4KPj4+Pj4+Pj4+PiB0aGUgaTkxNSBncmFwaGljcyBkcml2ZXIgdG8gYWxsb3cgR1BVIHByaW9y
-aXR5IHRvIGJlIGFzc2lnbmVkIGFjY29yZGluZwo+Pj4+Pj4+Pj4+IHRvIHRoZSBjZ3JvdXAgbWVt
-YmVyc2hpcCBvZiB0aGUgb3duaW5nIHByb2Nlc3MuICBQbGVhc2Ugc2VlIHRoZSB2MSBjb3Zlcgo+
-Pj4+Pj4+Pj4+IGxldHRlciBsaW5rZWQgYWJvdmUgZm9yIGEgbW9yZSBpbi1kZXB0aCBleHBsYW5h
-dGlvbiBhbmQganVzdGlmaWNhdGlvbi4KPj4+Pj4+Pj4+IEhpIE1hdHQsCj4+Pj4+Pj4+Pgo+Pj4+
-Pj4+Pj4gRm9yIGNyb3NzLXN1YnN5c3RlbSBjaGFuZ2VzIHN1Y2ggYXMgdGhpcywgaXQgbWFrZXMg
-c2Vuc2UgdG8gQ2MgYWxsCj4+Pj4+Pj4+PiByZWxldmFudCBtYWludGFpbmVycywgZXNwZWNpYWxs
-eSBpZiB0aGVyZSBoYXZlIGJlZW4gcHJldmlvdXMgY29tbWVudHMgdG8KPj4+Pj4+Pj4+IGVhcmxp
-ZXIgcmV2aXNpb25zLgo+Pj4+Pj4+Pj4KPj4+Pj4+Pj4+IFBsZWFzZSwgZG8gaW5jbHVkZSBhbmQg
-a2VlcCBhIHJlZmVyZW5jZSB0byB0aGUgdXNlcnNwYWNlIHBvcnRpb24gb2YgdGhlCj4+Pj4+Pj4+
-PiBjaGFuZ2VzIHdoZW4geW91IHN1Z2dlc3QgbmV3IHVBUEkgdG8gYmUgYWRkZWQuIEF0IGxlYXN0
-IEkgaGF2ZSBzb21lIHRyb3VibGUKPj4+Pj4+Pj4+IHRyeWluZyB0byB0cmFjayBkb3duIHRoZSBy
-ZWxldmFudCBpbnRlcmZhY2UgY29uc3VtZXIgaGVyZS4KPj4+Pj4+Pj4+Cj4+Pj4+Pj4+PiBJJ20g
-dW5zdXJlIGhvdyBtdWNoIHNlbnNlIGl0IG1ha2VzIHRvIGNvbW1lbmNlIHdpdGggZGV0YWlsZWQg
-aTkxNSByZXZpZXcKPj4+Pj4+Pj4+IGlmIHdlIHdpbGwgYmUgYmxvY2tlZCBieSBsYWNrIG9mIHVz
-ZXJzcGFjZSBhZnRlciB0aGF0PyBJJ20gYXNzdW1pbmcKPj4+Pj4+Pj4+IHlvdSd2ZSByZWFkIHRo
-cm91Z2ggWzFdIGFscmVhZHkuCj4+Pj4+Pj4+IEhpIEpvb25hcywKPj4+Pj4+Pj4KPj4+Pj4+Pj4g
-SSd2ZSBzZW50IHRoZSB1c2Vyc3BhY2UgY29kZSBvdXQgYSBmZXcgdGltZXMsIGJ1dCBpdCBsb29r
-cyBsaWtlIEkgZm9yZ290Cj4+Pj4+Pj4+IHRvIGluY2x1ZGUgYSBjb3B5IHdpdGggdjQvdjQuNS4g
-IEhlcmUncyB0aGUgdmVyc2lvbiBJIHByb3ZpZGVkIHdpdGggdjM6Cj4+Pj4+Pj4+ICAgaHR0cHM6
-Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2ZXMvaW50ZWwtZ2Z4LzIwMTgtTWFyY2gvMTU3
-OTM1Lmh0bWwKPj4+Pj4+PiBUaGFua3MuIEtlZXBpbmcgdGhhdCBpbiB0aGUgcmVsZXZhbnQgY29t
-bWl0IG1lc3NhZ2Ugb2YgdGhlIHBhdGNoIHRoYXQKPj4+Pj4+PiBpbnRyb2R1Y2VzIHRoZSBuZXcg
-dUFQSSB3aWxsIG1ha2UgaXQgaGFyZGVyIHRvIGZvcmdldCBhbmQgZWFzaWVzdCBmb3IKPj4+Pj4+
-PiBnaXQgYmxhbWUsIHRvby4KPj4+Pj4+Pgo+Pj4+Pj4+PiBVc3VhbGx5IHdlIGRvbid0IGNvbnNp
-ZGVyIHRoaW5ncyBsaWtlIGktZy10IHRvIGJlIHN1ZmZpY2llbnQgdXNlcnNwYWNlCj4+Pj4+Pj4+
-IGNvbnN1bWVycyBiZWNhdXNlIHdlIG5lZWQgYSByZWFsLXdvcmxkIGNvbnN1bWVyIHJhdGhlciB0
-aGFuIGEgInRveSIKPj4+Pj4+Pj4gdXNlcnNwYWNlLiAgSG93ZXZlciBpbiB0aGlzIGNhc2UsIHRo
-ZSBpLWctdCB0b29sLCBhbHRob3VnaCB2ZXJ5IHNpbXBsZSwKPj4+Pj4+Pj4gaXMgcmVhbGx5IHRo
-ZSBvbmx5IHVzZXJzcGFjZSBjb25zdW1lciBJIGV4cGVjdCB0aGVyZSB0byBldmVyIGJlLgo+Pj4+
-Pj4+PiBVbHRpbWF0ZWx5IHRoZSB0cnVlIGNvbnN1bWVyIG9mIHRoaXMgY2dyb3VwcyB3b3JrIGFy
-ZSBiYXNoIHNjcmlwdHMsIHN5c3YKPj4+Pj4+Pj4gaW5pdCBzY3JpcHRzLCBzeXN0ZW1kIHJlY2lw
-ZXMsIGV0Yy4gIHRoYXQganVzdCBuZWVkIGEgdmVyeSBzaW1wbGUgdG9vbAo+Pj4+Pj4+PiB0byBh
-c3NpZ24gdGhlIHNwZWNpZmljIHZhbHVlcyB0aGF0IG1ha2Ugc2Vuc2Ugb24gYSBnaXZlbiBzeXN0
-ZW0uCj4+Pj4+Pj4+IFRoZXJlJ3Mgbm8gZXhwZWN0YXRpb24gdGhhdCBncmFwaGljcyBjbGllbnRz
-IG9yIGRpc3BsYXkgc2VydmVycyB3b3VsZAo+Pj4+Pj4+PiBldmVyIG5lZWQgdG8gbWFrZSB1c2Ug
-b2YgdGhlc2UgaW50ZXJmYWNlcy4KPj4+Pj4+PiBJIHdhcyB1bmRlciB0aGUgaW1wcmVzc2lvbiB0
-aGF0IGEgYml0IG1vcmUgZ2VuZXJpYyBHUFUgY2dyb3VwcyBzdXBwb3J0Cj4+Pj4+Pj4gd2FzIHJl
-Y2VpdmluZyBhIGxvdCBvZiBzdXBwb3J0IGluIHRoZSBlYXJseSBkaXNjdXNzaW9uPyBBIGRlZGlj
-YXRlZAo+Pj4+Pj4+IGludGVsX2Nncm91cCBzb3VuZHMgdW5kZXJ3aGVsbWluZywgd2hlbiBjb21w
-YXJpbmcgdG8gaWRlYSBvZiAiZ3B1X25pY2UiLAo+Pj4+Pj4+IGZvciB1c2VyIGFkb3B0aW9uIDop
-Cj4+Pj4+PiBJJ20gb3BlbiB0byBtb3ZpbmcgdGhlIGNncm91cF9wcml2IHJlZ2lzdHJhdGlvbi9s
-b29rdXAgdG8gdGhlIERSTSBjb3JlCj4+Pj4+PiBpZiBvdGhlciBkcml2ZXJzIGFyZSBpbnRlcmVz
-dGVkIGluIHVzaW5nIHRoaXMgbWVjaGFuaXNtIGFuZCBpZiB3ZSBjYW4KPj4+Pj4+IGNvbWUgdG8g
-YW4gYWdyZWVtZW50IG9uIGEgc3RhbmRhcmQgcHJpb3JpdHkgb2Zmc2V0IHJhbmdlIHRvIHN1cHBv
-cnQsIGhvdwo+Pj4+Pj4gZGlzcGxheSBib29zdCBzaG91bGQgd29yayBmb3IgYWxsIGRyaXZlcnMs
-IGV0Yy4gIFRoZXJlIG1pZ2h0IGJlIHNvbWUKPj4+Pj4+IGNoYWxsZW5nZXMgbWFwcGluZyBhIERS
-TS1kZWZpbmVkIHByaW9yaXR5IHJhbmdlIGRvd24gdG8gYSBkaWZmZXJlbnQKPj4+Pj4+IHJhbmdl
-IHRoYXQgbWFrZXMgc2Vuc2UgZm9yIGluZGl2aWR1YWwgZHJpdmVyIHNjaGVkdWxlcnMsIGVzcGVj
-aWFsbHkKPj4+Pj4+IHNpbmNlIHNvbWUgZHJpdmVycyBhbHJlYWR5IGV4cG9zZSBhIGRpZmZlcmVu
-dCBwcmlvcml0eSBzY2hlbWUgdG8KPj4+Pj4+IHVzZXJzcGFjZSB2aWEgb3RoZXIgaW50ZXJmYWNl
-cyBsaWtlIGk5MTUgZG9lcyB3aXRoIEdFTSBjb250ZXh0IHByaW9yaXR5Lgo+Pj4+Pj4KPj4+Pj4+
-IFNvIGZhciBJIGhhdmVuJ3QgcmVhbGx5IGhlYXJkIGFueSBpbnRlcmVzdCBvdXRzaWRlIHRoZSBJ
-bnRlbCBjYW1wLCBidXQKPj4+Pj4+IGhvcGVmdWxseSBvdGhlciBkcml2ZXIgdGVhbXMgY2FuIHNw
-ZWFrIHVwIGlmIHRoZXkncmUgZm9yL2FnYWluc3QgdGhpcy4KPj4+Pj4+IEkgZG9uJ3Qgd2FudCB0
-byB0cnkgdG8gYXJ0aWZpY2lhbGx5IHN0YW5kYXJkaXplIHRoaXMgaWYgb3RoZXIgZHJpdmVycwo+
-Pj4+Pj4gd2FudCB0byBnbyBhIGRpZmZlcmVudCBkaXJlY3Rpb24gd2l0aCBwcmlvcml0eS9zY2hl
-ZHVsaW5nIHRoYXQncyB0b28KPj4+Pj4+IGRpZmZlcmVudCBmcm9tIHRoZSBjdXJyZW50IEludGVs
-LWRyaXZlbiBkZXNpZ24uCj4+Pj4+IEkgZG9uJ3QgdGhpbmsgdGhlcmUgYXJlIHRoYXQgbWFueSBk
-aXJlY3Rpb25zIHRvIGdvIGFib3V0IEdQVSBjb250ZXh0Cj4+Pj4+IHByaW9yaXR5LCBjb25zaWRl
-cmluZyB3ZSBoYXZlIHRoZSBFR0xfSU1HX2NvbnRleHRfcHJpb3JpdHkgZXh0ZW5zaW9uLCBzbwo+
-Pj4+PiBpdCdsbCBvbmx5IGJlIGFib3V0IGdyYW51bGFyaXR5IG9mIHRoZSBzY2FsZS4KPj4+Pj4K
-Pj4+Pj4gSSB3b3VsZCBzdWdnZXN0IHRvIGdvIHdpdGggdGhlIG5pY2UgbGlrZSBzY2FsZSBmb3Ig
-ZWFzeSB1c2VyIGFkb3B0aW9uLAo+Pj4+PiB0aGVuIGp1c3QgYXBwbHkgdGhhdCBhcyB0aGUgTiBt
-b3N0IHNpZ25pZmljYW50IGJpdHMuCj4+Pj4+Cj4+Pj4+IFRoZSBjb250ZXh0cyBjb3VsZCB0aGVu
-IG9mIGNvdXJzZSBmdXJ0aGVyIGFkanVzdCB0aGVpciBwcmlvcml0eSBmcm9tIHdoYXQKPj4+Pj4g
-aXMgc2V0IGJ5IHRoZSAiZ3B1X25pY2UiIGFwcGxpY2F0aW9uIHdpdGggdGhlIHJlbWFpbmluZyBi
-aXRzLgo+Pj4+Pgo+Pj4+PiBJJ20gc3Ryb25nbHkgZmVlbGluZyB0aGlzIHNob3VsZCBiZSBhIERS
-TSBsZXZlbCAiZ3B1X25pY2UiLiBBbmQgdGhlCj4+Pj4+IGJpbmRpbmcgdG8gY2dyb3VwcyBzaG91
-bGQgY29tZSB0aHJvdWdoIERSTSBjb3JlLiBJZiBpdCBkb2Vzbid0LCBsaW1pdGluZwo+Pj4+PiB0
-aGUgYW1vdW50IG9mIG1lbW9yeSB1c2VkIGJlY29tZXMgYXdrd2FyZCBhcyB0aGUgYWxsb2NhdGlv
-biBpcwo+Pj4+PiBjZW50cmFsaXplZCB0byBEUk0gY29yZS4KPiBNeSBlYXJsaWVzdCBpdGVyYXRp
-b25zIG9mIHRoaXMgd29yayBkaWQgYWRkIHRoZSBpbnRlcmZhY2VzIHRvIHNldAo+IGNncm91cC1i
-YXNlZCBHUFUgcHJpb3JpdHkgYXQgdGhlIERSTSBjb3JlLiAgSSBkaWRuJ3QgcmVhbGx5IGdldCB0
-aGUKPiBzZW5zZSBhdCB0aGUgdGltZSB0aGF0IGFueW9uZSBvdXRzaWRlIG9mIEludGVsIHdhcyBp
-bnRlcmVzdGVkIGluIHRoZQo+IGNncm91cHMgd29yaywgc28gSSBtb3ZlZCB0aGUgaW50ZXJmYWNl
-cyBiYWNrIGludG8gaTkxNSBmb3Igc3ViZXF1ZW50Cj4gdXBkYXRlcywgYnV0IEknbSBoYXBweSB0
-byBtb3ZlIGl0IGJhY2suICBOb3RlIHRoYXQgZXZlbiBpbiB0aGF0IGNhc2UKPiB0aGlzIHdpbGwg
-c3RpbGwgZW5kIHVwIGFzIGEgRFJNIGNvcmUgaW9jdGwgcmF0aGVyIHRoYW4gYSB0cnVlIGNncm91
-cHMKPiBjb250cm9sbGVyOyBzZWUgYmVsb3cuCj4KPj4+Pj4+PiBBbHNvLCBJIG1pZ2h0IG5vdCBi
-ZSB1cC10by1kYXRlIGFib3V0IGFsbCB0aGluZ3MgY2dyb3VwcywgYnV0IHRoZSB3YXkKPj4+Pj4+
-PiBpbnRlbF9jZ3JvdXAgd29ya3MsIGZlZWxzIGJpdCBmb3JjZWQuIFdlIGNyZWF0ZSBhIHVzZXJz
-cGFjZSBjb250ZXh0IGp1c3QKPj4+Pj4+PiB0byBjb21tdW5pY2F0ZSB3aXRoIHRoZSBkcml2ZXIg
-YW5kIHRoZSBJT0NUTCB3aWxsIHN0aWxsIGhhdmUgZ2xvYmFsCj4+Pj4+Pj4gZWZmZWN0cy4gSSBj
-YW4ndCBidXQgdGhpbmsgdGhhdCBpOTE1IHJlYWRpbmcgZnJvbSB0aGUgY2dyb3VwcyBzdWJzeXN0
-ZW0KPj4+Pj4+PiBmb3IgdGhlIGN1cnJlbnQgcHJvY2VzcyB3b3VsZCBmZWVsIG1vcmUgaW50dWl0
-aXZlIHRvIG1lLgo+Pj4+Pj4gSSB0aGluayB5b3UncmUgcmVmZXJyaW5nIHRvIHRoZSBlYXJsaWVy
-IGRpc2N1c3Npb24gYWJvdXQgZXhwb3NpbmcKPj4+Pj4+IHByaW9yaXR5IGRpcmVjdGx5IHZpYSB0
-aGUgY2dyb3VwcyBmaWxlc3lzdGVtPyAgVGhhdCB3b3VsZCBjZXJ0YWlubHkgYmUKPj4+Pj4+IHNp
-bXBsZXIgZnJvbSBhIHVzZXJzcGFjZSBwZXJzcGVjdGl2ZSwgYnV0IGl0J3Mgbm90IHRoZSBkaXJl
-Y3Rpb24gdGhhdAo+Pj4+Pj4gdGhlIGNncm91cHMgbWFpbnRhaW5lciB3YW50cyB0byBzZWUgdGhp
-bmdzIGdvLiAgQWRkaW5nIGZpbGVzIGRpcmVjdGx5IHRvCj4+Pj4+PiB0aGUgY2dyb3VwcyBmaWxl
-c3lzdGVtIGlzIHN1cHBvc2VkIHRvIGJlIHNvbWV0aGluZyB0aGF0J3MgcmVzZXJ2ZWQgZm9yCj4+
-Pj4+PiBvZmZpY2lhbCBjZ3JvdXBzIGNvbnRyb2xsZXJzLiAgVGhlIEdQVSBwcmlvcml0eSBjb25j
-ZXB0IHdlJ3JlIHRyeWluZyB0bwo+Pj4+Pj4gYWRkIGhlcmUgZG9lc24ndCBhbGlnbiB3aXRoIHRo
-ZSByZXF1aXJlbWVudHMgZm9yIGNyZWF0aW5nIGEgY29udHJvbGxlciwKPj4+Pj4+IHNvIHRoZSBw
-cmVmZXJyZWQgYXBwcm9hY2ggaXMgdG8gY3JlYXRlIGEgY3VzdG9tIGludGVyZmFjZSAoc3lzY2Fs
-bCBvcgo+Pj4+Pj4gaW9jdGwpIHRoYXQgc2ltcGx5IHRha2VzIGEgY2dyb3VwIGFzIGEgcGFyYW1l
-dGVyLiAgVGhlcmUncyBwcmVjZW5kZW50Cj4+Pj4+PiB3aXRoIHNpbWlsYXIgaW50ZXJmYWNlcyBp
-biBhcmVhcyBsaWtlIEJQRiAod2hlcmUgdGhlIGJwZigpIHN5c3RlbSBjYWxsCj4+Pj4+PiBjYW4g
-YWNjZXB0IGEgY2dyb3VwIGFzIGEgcGFyYW1ldGVyIGFuZCB0aGVuIHBlcmZvcm0gaXRzIG93biBw
-cml2YXRlCj4+Pj4+PiBwb2xpY3kgY2hhbmdlcyBhcyBpdCBzZWVzIGZpdCkuCj4+Pj4+Pgo+Pj4+
-Pj4gVXNpbmcgYSB0cnVlIGNncm91cHMgY29udHJvbGxlciBhbmQgZXhwb3Npbmcgc2V0dGluZ3Mg
-dmlhIHRoZSBmaWxlc3lzdGVtCj4+Pj4+PiBpcyBsaWtlbHkgc3RpbGwgdGhlIHdheSB3ZSdsbCB3
-YW50IHRvIGdvIGZvciBzb21lIG90aGVyIHR5cGVzIG9mCj4+Pj4+PiBjZ3JvdXBzLWJhc2VkIHBv
-bGljeSBpbiB0aGUgZnV0dXJlIChlLmcuLCBsaW1pdGluZyBHUFUgbWVtb3J5IHVzYWdlKTsgaXQK
-Pj4+Pj4+IGp1c3QgaXNuJ3QgdGhlIGFwcHJvcHJpYXRlIGRpcmVjdGlvbiBmb3IgcHJpb3JpdHku
-Cj4+Pj4+IE1pZ2h0IGJlIGp1c3QgbWUgYnV0IGZlZWxzIGJpdCBjcmF6eSB0byBiZSBzZXR0aW5n
-IEdQVSBtZW1vcnkgdXNhZ2UKPj4+Pj4gdGhyb3VnaCBhbm90aGVyIGludGVyZmFjZSBhbmQgdGhl
-biBkb2luZyBpOTE1IHNwZWNpZmljIElPQ1RMcyB0byBjb250cm9sCj4+Pj4+IHRoZSBwcmlvcml0
-eSBvZiB0aGF0IHNhbWUgY2dyb3VwLgo+Pj4+Pgo+Pj4+PiBJIGRvbid0IGZlZWwgY29tZm9ydGFi
-bGUgYWRkaW5nIGN1c3RvbSBjZ3JvdXBzIGRlcGVuZGVudCBJT0NUTHMgdG8gaTkxNQo+Pj4+PiB3
-aGVyZSBjZ3JvdXBzIGlzIG9ubHkgd29ya2luZyBhcyB0aGUgdmFyaWFibGUgY2FycmllciBpbiBi
-YWNrZ3JvdW5kLiBXZQo+Pj4+PiBzaG91bGQgcmVhbGx5IGp1c3QgYmUgY29uc3VtaW5nIGEgdmFy
-aWFibGUgZnJvbSBjZ3JvdXBzIGFuZCBpdCBzaG91bGQgYmUKPj4+Pj4gc2V0IG91dHNpZGUgb2Yg
-b2YgdGhlIGk5MTUgSU9DVEwgaW50ZXJmYWNlLgo+Pj4+Pgo+Pj4+PiBJJ20gc3RpbGwgc2VlaW5n
-IHRoYXQgd2Ugc2hvdWxkIGhhdmUgYSBEUk0gY2dyb3VwcyBjb250cm9sbGVyIGFuZCBhIERSTQo+
-Pj4+PiBzdWJzeXN0ZW0gd2lkZSBhcHBsaWNhdGlvbiB0byBjb250cm9sIHRoZSBwcmlvcml0eSBh
-bmQgbWVtb3J5IHVzYWdlCj4+Pj4+IHRvIGJlIGZlZCB0byB0aGUgZHJpdmVycy4KPiBBIGNncm91
-cHMgY29udHJvbGxlciBjb3VsZCBiZSB1c2VkIGZvciBHUFUgbWVtb3J5IG1hbmFnZW1lbnQsIGJ1
-dCBub3QKPiBmb3IgcHJpb3JpdHkgYWRqdXN0bWVudCB0aGUgd2F5IHdlJ3JlIGRvaW5nIGl0IHJp
-Z2h0IG5vdy4gIEFsdGhvdWdoCj4gdGhlcmUncyBzb21lIHByZWV4aXN0aW5nIGxlZ2FjeSBzdHVm
-ZiB0aGF0IGRvZXNuJ3QgcXVpdGUgZm9sbG93IHRoZQo+IHJ1bGVzLCB0aGUgY2dyb3VwcyBzdWJz
-eXN0ZW0gd2lsbCBvbmx5IGFjY2VwdCBuZXcgY2dyb3VwIGNvbnRyb2xsZXJzIGlmCj4gdGhleSB0
-YWtlIHRoZSBlbnRpcmUgc3RydWN0dXJlIG9mIHRoZSBjZ3JvdXBzIGhpZXJhcmNoeSBpbnRvIGFj
-Y291bnQKPiAocmF0aGVyIHRoYW4ganVzdCBsb29raW5nIGF0IHZhbHVlcyBhdCBhIGxlYWYgbm9k
-ZSkgYW5kIGFyZSBiYXNlZCBvbiBvbmUKPiBvZiB0aGUgZm91ciByZXNvdXJjZSBkaXN0cmlidXRp
-b24gbW9kZWxzIGRlc2NyaWJlZCBpbiB0aGUKPiBEb2N1bWVudGF0aW9uL2Nncm91cC12Mi50eHQg
-KHdlaWdodHMsIGxpbWl0cywgcHJvdGVjdGlvbnMsIGFsbG9jYXRpb25zKS4KPiBHUFUgcHJpb3Jp
-dHkgaXMgc29tZXdoYXQgY2xvc2UgdG8gYSAid2VpZ2h0IiBidXQgbm90IHF1aXRlIC0tLSBhIHRy
-dWUKPiB3ZWlnaHQgd291bGRuJ3QgYWxsb3cgdW5mYWlyIHNjaGVkdWxpbmcgb3IgaW50ZW50aW9u
-YWwgc3RhcnZhdGlvbiB3aGljaAo+IGFyZSB2ZXJ5IGltcG9ydGFudCB0byB0aGUgdXNlIGNhc2Vz
-IEknbSBmb2N1c2luZyBvbi4KPgo+IFRoZSBjZ3JvdXBzIG1haW50YWluZXIgaGFzIHN1Z2dlc3Rl
-ZCB0aGF0IGEgc2VwYXJhdGUgaW50ZXJmYWNlIChzeXNjYWxsLAo+IGlvY3RsLCBldGMuKSBiZSB1
-c2VkIGZvciBpdGVtcyBsaWtlIHRoaXMgdGhhdCBkb24ndCBtZWV0IHRoZSBjcml0ZXJpYQo+IGZv
-ciBhIGZ1bGwgY2dyb3VwcyBjb250cm9sbGVyLCBhbmQgdGhlcmUgYXJlIG90aGVyIGV4YW1wbGVz
-IG9mIHRoaXMga2luZAo+IG9mIGRlc2lnbiBlbHNld2hlcmUgaW4gdGhlIGtlcm5lbCB0b28uCj4K
-Pj4+Pj4gSWYgd2UgZW5kIHVwIGp1c3Qgc3VwcG9ydGluZyBpOTE1IGFwcHMsIHdlIGNvdWxkIGFz
-IHdlbGwgdXNlIExEX1BSRUxPQUQKPj4+Pj4gd3JhcHBlciBhbmQgYWx0ZXIgdGhlIGNvbnRleHQg
-cHJpb3JpdHkgYXQgY3JlYXRpb24gdGltZSBmb3IgZXhhY3RseSB0aGUKPj4+Pj4gc2FtZSBlZmZl
-Y3QgYW5kIG5vIGV4dHJhIGludGVyZmFjZXMgdG8gbWFpbnRhaW4uCj4gSSB0aGluayB0aGlzIGlz
-IG1pc3NpbmcgdGhlIHBvaW50IG9mIHVzaW5nIGNncm91cHMuICBjZ3JvdXBzIGFsbG93Cj4gcG9s
-aWN5IHRvIGJlIHNldCBpbmRlcGVuZGVudGx5IGJ5IGEgcHJpdmlsZWdlZCBzeXN0ZW0gaW50ZWdy
-YXRvciBvcgo+IHN5c3RlbSBhZG1pbmlzdHJhdG9yLCBpbiBhIHdheSB0aGF0IGFwcGxpY2F0aW9u
-cyB0aGVtc2VsdmVzIGRvbid0IGhhdmUKPiBhY2Nlc3MgdG8uICBMRF9QUkVMT0FEIHdvdWxkIG9u
-bHkgaGF2ZSBhY2Nlc3MgdG8gdGhlIGludGVyZmFjZXMKPiBhdmFpbGFibGUgdG8gdGhlIGFwcCBp
-dHNlbGYgYW5kIHRoZSBhcHAgY291bGQgc2ltcGx5IHVuZG8gd2hhdGV2ZXIKPiBzZXR0aW5nIHRo
-ZSBMRF9QUkVMT0FEIHRyaWVkIHRvIHVzZS4KPgo+IFRoZSBnb2FsIHdpdGggY2dyb3VwcyBpc24n
-dCB0byBwcm92aWRlIGEgImdwdSBuaWNlIiB3aGVyZSB5b3UKPiBzZWxmLWNsYXNzaWZ5IHlvdXJz
-ZWxmLCBidXQgcmF0aGVyIHRoZSBhYmlsaXR5IGZvciB0aGUgcGVyc29uIGRlZmluaW5nCj4gaG93
-IHRoZSBvdmVyYWxsIHN5c3RlbSB3b3JrcyB0byBjbGFzc2lmeSBhbmQgY29udHJvbCB0aGUgdmFy
-aW91cyB0eXBlcwo+IG9mIGFwcGxpY2F0aW9ucyBydW5uaW5nIGluIGEgdHJhbnNwYXJlbnQgYW5k
-IGdsb2JhbCB3YXkuCj4KPj4+Pj4+PiBEb2VzIHRoZSBpbXBsZW1lbnRhdGlvbiBtaW1pYyBzb21l
-IGV4aXN0aW5nIGNncm91cHMgdG9vbCBvciBkZS1mYWN0byB3YXkKPj4+Pj4+PiBvZiBkb2luZyB0
-aGluZ3MgaW4gY2dyb3VwcyB3b3JsZD8KPj4+Pj4+IFRoZSBpb2N0bCBhcHByb2FjaCBJIHRvb2sg
-aXMgc2ltaWxhciB0byBzeXNjYWxsIGFwcHJvYWNoIHRoYXQgdGhlIEJQRgo+Pj4+Pj4gZ3V5cyB1
-c2UgdG8gYXR0YWNoIEJQRiBwcm9ncmFtcyB0byBhIGNncm91cC4gIEknbSBub3QgdmVyeSBmYW1p
-bGlhciB3aXRoCj4+Pj4+PiBCUEYgb3IgaG93IGl0IGdldHMgdXNlZCBmcm9tIHVzZXJzcGFjZSwg
-c28gSSdtIG5vdCBzdXJlIHdoZXRoZXIgdGhlCj4+Pj4+PiBpbnRlcmZhY2UgaXMgaW50ZW5kZWQg
-Zm9yIG9uZSBzcGVjaWZpYyB0b29sIChsaWtlIG91cnMgaXMpLCBvciB3aGV0aGVyCj4+Pj4+PiB0
-aGVyZSdzIG1vcmUgdmFyaWV0eSBmb3IgdXNlcnNwYWNlIGNvbnN1bWVycy4KPj4+Pj4gSXMgdGhl
-IHByb3Bvc2FsIHRvIHNldCB0aGUgbWVtb3J5IHVzYWdlIGZyb20gc2ltaWxhciBpbnRlcmZhY2Us
-IG9yIGlzCj4+Pj4+IHRoYXQgc3RpbGwgbm90IGltcGxlbWVudGVkPwo+IEdQVSBtZW1vcnkgbWFu
-YWdlbWVudCBpcyBhIHZlcnkgZGlmZmVyZW50IHJlc291cmNlIG1vZGVsLCBzbyBJJ2QgZXhwZWN0
-Cj4gbWVtb3J5IHRvIGJlIG1hbmFnZWQgYnkgYSByZWFsIGNncm91cHMgY29udHJvbGxlci4gSS5l
-LiwgdGhlIGludGVyZmFjZQo+IHdvdWxkIGJlIGRpZmZlcmVudC4gIEkgaGF2ZW4ndCBwZXJzb25h
-bGx5IGRvbmUgYW55IHdvcmsgb24gY2dyb3Vwcy1iYXNlZAo+IG1lbW9yeSBtYW5hZ2VtZW50OyBJ
-IGFncmVlIHRoYXQgd291bGQgYmUgbmljZSB0byBoYXZlLCBidXQgbm9uZSBvZiB0aGUKPiB1c2Ug
-Y2FzZXMgbXkgdGVhbSBpcyBmb2N1c2VkIG9uIGhhdmUgdGhhdCBhcyBhIHJlcXVpcmVtZW50Lgo+
-Cj4+Pj4+IEknbSBzZWVpbmcgYSB2ZXJ5IGNsb3NlIHJlbGF0aW9uIGJldHdlZW4gdGltZS1zbGlj
-aW5nIEdQVSB0aW1lIGFuZAo+Pj4+PiBhbGxvd2VkIEdQVSBidWZmZXIgYWxsb2NhdGlvbnMsIHNv
-IGhhdmluZyB0d28gY29tcGxldGVseSBkaWZmZXJlbnQKPj4+Pj4gaW50ZXJmYWNlcyBkb2VzIGp1
-c3QgZmVlbCB2ZXJ5IGhhY2tpc2ggd2F5IG9mIGltcGxlbWVudGluZyB0aGlzLgo+IElmIHdlIHdl
-cmUgdGltZSBzbGljaW5nIEdQVSB0aW1lIGFuZCBnaXZpbmcgb3V0IGZyYWN0aW9uYWwgc2hhcmVz
-IG9mCj4gdGltZSB0byBlYWNoIGNsaWVudCwgdGhhdCB3b3VsZCBiZSBhIHZlcnkgZGlmZmVyZW50
-IHNpdHVhdGlvbiB0aGFuIHdlCj4gaGF2ZSB0b2RheTsgaW4gdGhhdCBjYXNlIEkgYWdyZWUgdGhh
-dCBhIGNncm91cHMgY29udHJvbGxlciB3b3VsZCBiZSB0aGUKPiB3YXkgdG8gZ28uICBXaGlsZSB0
-aGVyZSBwcm9iYWJseSBhcmUgYSBsb3Qgb2YgY2FzZXMgd2hlcmUgdGltZSBzbGljaW5nCj4gYW5k
-IGZhaXIgc2NoZWR1bGluZyB3b3VsZCBiZSBiZW5lZmljaWFsIChlc3BlY2lhbGx5IHN0dWZmIGxp
-a2UgZGVza3RvcAo+IG9yIG1vYmlsZSBzZXR0aW5ncyksIEknbSBtb3N0bHkgZm9jdXNlZCBvbiBl
-bWJlZGRlZCB1c2UgY2FzZXMgdGhhdAo+IGRlcGVuZCBvbiB0b2RheSdzIHVuZmFpciwgc3RyaWN0
-IHByaW9yaXR5IHNjaGVkdWxpbmcuCj4KPgo+IE1hdHQKPgo+Pj4+PiBSZWdhcmRzLCBKb29uYXMK
-Pj4+Pj4KPj4+Pj4+Cj4+Pj4+PiBNYXR0Cj4+Pj4+Pgo+Pj4+Pj4+IFJlZ2FyZHMsIEpvb25hcwo+
-Pj4+Pj4+IC0tCj4+Pj4+Pj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhl
-IGxpbmUgInVuc3Vic2NyaWJlIGNncm91cHMiIGluCj4+Pj4+Pj4gdGhlIGJvZHkgb2YgYSBtZXNz
-YWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPj4+Pj4+PiBNb3JlIG1ham9yZG9tbyBp
-bmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPj4+Pj4+
-IC0tIAo+Pj4+Pj4gTWF0dCBSb3Blcgo+Pj4+Pj4gR3JhcGhpY3MgU29mdHdhcmUgRW5naW5lZXIK
-Pj4+Pj4+IElvVEcgUGxhdGZvcm0gRW5hYmxpbmcgJiBEZXZlbG9wbWVudAo+Pj4+Pj4gSW50ZWwg
-Q29ycG9yYXRpb24KPj4+Pj4+ICg5MTYpIDM1Ni0yNzk1Cj4+Pj4gLS0KPj4+PiBUbyB1bnN1YnNj
-cmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgY2dyb3VwcyIg
-aW4KPj4+PiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9y
-Zwo+Pj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFq
-b3Jkb21vLWluZm8uaHRtbAo+Pj4gLS0gCj4+PiBNYXR0IFJvcGVyCj4+PiBHcmFwaGljcyBTb2Z0
-d2FyZSBFbmdpbmVlcgo+Pj4gSW9URyBQbGF0Zm9ybSBFbmFibGluZyAmIERldmVsb3BtZW50Cj4+
-PiBJbnRlbCBDb3Jwb3JhdGlvbgo+Pj4gKDkxNikgMzU2LTI3OTUKPj4gLS0gCj4+IE1hdHQgUm9w
-ZXIKPj4gR3JhcGhpY3MgU29mdHdhcmUgRW5naW5lZXIKPj4gSW9URyBQbGF0Zm9ybSBFbmFibGlu
-ZyAmIERldmVsb3BtZW50Cj4+IEludGVsIENvcnBvcmF0aW9uCj4+ICg5MTYpIDM1Ni0yNzk1Cgpf
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZngg
-bWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0
-cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngK
+On Wed, Apr 04, 2018 at 09:58:29AM -0700, Tejun Heo wrote:
+> On Wed, Apr 04, 2018 at 04:34:47PM +0200, Michal Hocko wrote:
+> > > > The lazy updates are neat, but I'm a little concerned at the memory
+> > > > footprint. On a 64-cpu machine for example, this adds close to 9000
+> > > > words to struct mem_cgroup. And we really only need the accuracy for
+> > > > the 4 cgroup items in memory.events, not all VM events and stats.
+> > > > 
+> > > > Why not restrict the patch to those? It would also get rid of the
+> > > > weird sharing between VM and cgroup enums.
+> > > 
+> > > In fact, I wonder if we need per-cpuness for MEMCG_LOW, MEMCG_HIGH
+> > > etc. in the first place. They describe super high-level reclaim and
+> > > OOM events, so they're not nearly as hot as other VM events and
+> > > stats. We could probably just have a per-memcg array of atomics.
+> > 
+> > Agreed!
+> 
+> Ah, yeah, if we aren't worried about the update frequency of
+> MEMCG_HIGH, which likely is the highest freq, we can just switch to
+> atomic_t.  I'm gonna apply the cgroup stat refactoring patches to
+> cgroup, so if we ever wanna switch the counter to rstat, we can easily
+> do that later.
+
+Yeah, that's still great to have as generalized infrastructure.
+
+For memory.events, how about this instead?
+
+---
+
+From 4369ce161a9085aa408f2eca54f9de72909ee1b1 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Thu, 5 Apr 2018 11:53:55 -0400
+Subject: [PATCH] mm: memcg: make sure memory.events is uptodate when waking
+ pollers
+
+a983b5ebee57 ("mm: memcontrol: fix excessive complexity in memory.stat
+reporting") added per-cpu drift to all memory cgroup stats and events
+shown in memory.stat and memory.events.
+
+For memory.stat this is acceptable. But memory.events issues file
+notifications, and somebody polling the file for changes will be
+confused when the counters in it are unchanged after a wakeup.
+
+Luckily, the events in memory.events - MEMCG_LOW, MEMCG_HIGH,
+MEMCG_MAX, MEMCG_OOM - are sufficiently rare and high-level that we
+don't need per-cpu buffering for them: MEMCG_HIGH and MEMCG_MAX would
+be the most frequent, but they're counting invocations of reclaim,
+which is a complex operation that touches many shared cachelines.
+
+This splits memory.events from the generic VM events and tracks them
+in their own, unbuffered atomic counters. That's also cleaner, as it
+eliminates the ugly enum nesting of VM and cgroup events.
+
+Fixes: a983b5ebee57 ("mm: memcontrol: fix excessive complexity in memory.stat reporting")
+Reported-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/memcontrol.h | 35 ++++++++++++++++++-----------------
+ mm/memcontrol.c            | 31 ++++++++++++++++++-------------
+ mm/vmscan.c                |  2 +-
+ 3 files changed, 37 insertions(+), 31 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index c46016bb25eb..6503a9ca27c1 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -48,13 +48,12 @@ enum memcg_stat_item {
+ 	MEMCG_NR_STAT,
+ };
+ 
+-/* Cgroup-specific events, on top of universal VM events */
+-enum memcg_event_item {
+-	MEMCG_LOW = NR_VM_EVENT_ITEMS,
++enum memcg_memory_event {
++	MEMCG_LOW,
+ 	MEMCG_HIGH,
+ 	MEMCG_MAX,
+ 	MEMCG_OOM,
+-	MEMCG_NR_EVENTS,
++	MEMCG_NR_MEMORY_EVENTS,
+ };
+ 
+ struct mem_cgroup_reclaim_cookie {
+@@ -88,7 +87,7 @@ enum mem_cgroup_events_target {
+ 
+ struct mem_cgroup_stat_cpu {
+ 	long count[MEMCG_NR_STAT];
+-	unsigned long events[MEMCG_NR_EVENTS];
++	unsigned long events[NR_VM_EVENT_ITEMS];
+ 	unsigned long nr_page_events;
+ 	unsigned long targets[MEM_CGROUP_NTARGETS];
+ };
+@@ -202,7 +201,8 @@ struct mem_cgroup {
+ 	/* OOM-Killer disable */
+ 	int		oom_kill_disable;
+ 
+-	/* handle for "memory.events" */
++	/* memory.events */
++	atomic_long_t memory_events[MEMCG_NR_MEMORY_EVENTS];
+ 	struct cgroup_file events_file;
+ 
+ 	/* protect arrays of thresholds */
+@@ -231,9 +231,10 @@ struct mem_cgroup {
+ 	struct task_struct	*move_lock_task;
+ 	unsigned long		move_lock_flags;
+ 
++	/* memory.stat */
+ 	struct mem_cgroup_stat_cpu __percpu *stat_cpu;
+ 	atomic_long_t		stat[MEMCG_NR_STAT];
+-	atomic_long_t		events[MEMCG_NR_EVENTS];
++	atomic_long_t		events[NR_VM_EVENT_ITEMS];
+ 
+ 	unsigned long		socket_pressure;
+ 
+@@ -645,9 +646,9 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ 						gfp_t gfp_mask,
+ 						unsigned long *total_scanned);
+ 
+-/* idx can be of type enum memcg_event_item or vm_event_item */
+ static inline void __count_memcg_events(struct mem_cgroup *memcg,
+-					int idx, unsigned long count)
++					enum vm_event_item idx,
++					unsigned long count)
+ {
+ 	unsigned long x;
+ 
+@@ -663,7 +664,8 @@ static inline void __count_memcg_events(struct mem_cgroup *memcg,
+ }
+ 
+ static inline void count_memcg_events(struct mem_cgroup *memcg,
+-				      int idx, unsigned long count)
++				      enum vm_event_item idx,
++				      unsigned long count)
+ {
+ 	unsigned long flags;
+ 
+@@ -672,9 +674,8 @@ static inline void count_memcg_events(struct mem_cgroup *memcg,
+ 	local_irq_restore(flags);
+ }
+ 
+-/* idx can be of type enum memcg_event_item or vm_event_item */
+ static inline void count_memcg_page_event(struct page *page,
+-					  int idx)
++					  enum vm_event_item idx)
+ {
+ 	if (page->mem_cgroup)
+ 		count_memcg_events(page->mem_cgroup, idx, 1);
+@@ -698,10 +699,10 @@ static inline void count_memcg_event_mm(struct mm_struct *mm,
+ 	rcu_read_unlock();
+ }
+ 
+-static inline void mem_cgroup_event(struct mem_cgroup *memcg,
+-				    enum memcg_event_item event)
++static inline void memcg_memory_event(struct mem_cgroup *memcg,
++				      enum memcg_memory_event event)
+ {
+-	count_memcg_events(memcg, event, 1);
++	atomic_long_inc(&memcg->memory_events[event]);
+ 	cgroup_file_notify(&memcg->events_file);
+ }
+ 
+@@ -721,8 +722,8 @@ static inline bool mem_cgroup_disabled(void)
+ 	return true;
+ }
+ 
+-static inline void mem_cgroup_event(struct mem_cgroup *memcg,
+-				    enum memcg_event_item event)
++static inline void memcg_memory_event(struct mem_cgroup *memcg,
++				      enum memcg_memory_event event)
+ {
+ }
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9ec024b862ac..e29c80b4a9ee 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1839,7 +1839,7 @@ static int memcg_hotplug_cpu_dead(unsigned int cpu)
+ 			}
+ 		}
+ 
+-		for (i = 0; i < MEMCG_NR_EVENTS; i++) {
++		for (i = 0; i < NR_VM_EVENT_ITEMS; i++) {
+ 			long x;
+ 
+ 			x = this_cpu_xchg(memcg->stat_cpu->events[i], 0);
+@@ -1858,7 +1858,7 @@ static void reclaim_high(struct mem_cgroup *memcg,
+ 	do {
+ 		if (page_counter_read(&memcg->memory) <= memcg->high)
+ 			continue;
+-		mem_cgroup_event(memcg, MEMCG_HIGH);
++		memcg_memory_event(memcg, MEMCG_HIGH);
+ 		try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask, true);
+ 	} while ((memcg = parent_mem_cgroup(memcg)));
+ }
+@@ -1949,7 +1949,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (!gfpflags_allow_blocking(gfp_mask))
+ 		goto nomem;
+ 
+-	mem_cgroup_event(mem_over_limit, MEMCG_MAX);
++	memcg_memory_event(mem_over_limit, MEMCG_MAX);
+ 
+ 	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+ 						    gfp_mask, may_swap);
+@@ -1992,7 +1992,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (fatal_signal_pending(current))
+ 		goto force;
+ 
+-	mem_cgroup_event(mem_over_limit, MEMCG_OOM);
++	memcg_memory_event(mem_over_limit, MEMCG_OOM);
+ 
+ 	mem_cgroup_oom(mem_over_limit, gfp_mask,
+ 		       get_order(nr_pages * PAGE_SIZE));
+@@ -2688,10 +2688,10 @@ static void tree_events(struct mem_cgroup *memcg, unsigned long *events)
+ 	struct mem_cgroup *iter;
+ 	int i;
+ 
+-	memset(events, 0, sizeof(*events) * MEMCG_NR_EVENTS);
++	memset(events, 0, sizeof(*events) * NR_VM_EVENT_ITEMS);
+ 
+ 	for_each_mem_cgroup_tree(iter, memcg) {
+-		for (i = 0; i < MEMCG_NR_EVENTS; i++)
++		for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
+ 			events[i] += memcg_sum_events(iter, i);
+ 	}
+ }
+@@ -5178,7 +5178,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+ 			continue;
+ 		}
+ 
+-		mem_cgroup_event(memcg, MEMCG_OOM);
++		memcg_memory_event(memcg, MEMCG_OOM);
+ 		if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
+ 			break;
+ 	}
+@@ -5191,11 +5191,16 @@ static int memory_events_show(struct seq_file *m, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+ 
+-	seq_printf(m, "low %lu\n", memcg_sum_events(memcg, MEMCG_LOW));
+-	seq_printf(m, "high %lu\n", memcg_sum_events(memcg, MEMCG_HIGH));
+-	seq_printf(m, "max %lu\n", memcg_sum_events(memcg, MEMCG_MAX));
+-	seq_printf(m, "oom %lu\n", memcg_sum_events(memcg, MEMCG_OOM));
+-	seq_printf(m, "oom_kill %lu\n", memcg_sum_events(memcg, OOM_KILL));
++	seq_printf(m, "low %lu\n",
++		   atomic_long_read(&memcg->memory_events[MEMCG_LOW]));
++	seq_printf(m, "high %lu\n",
++		   atomic_long_read(&memcg->memory_events[MEMCG_HIGH]));
++	seq_printf(m, "max %lu\n",
++		   atomic_long_read(&memcg->memory_events[MEMCG_MAX]));
++	seq_printf(m, "oom %lu\n",
++		   atomic_long_read(&memcg->memory_events[MEMCG_OOM]));
++	seq_printf(m, "oom_kill %lu\n",
++		   atomic_long_read(&memcg->memory_events[OOM_KILL]));
+ 
+ 	return 0;
+ }
+@@ -5204,7 +5209,7 @@ static int memory_stat_show(struct seq_file *m, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+ 	unsigned long stat[MEMCG_NR_STAT];
+-	unsigned long events[MEMCG_NR_EVENTS];
++	unsigned long events[NR_VM_EVENT_ITEMS];
+ 	int i;
+ 
+ 	/*
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index cd5dc3faaa57..7cdace56222f 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2544,7 +2544,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 					sc->memcg_low_skipped = 1;
+ 					continue;
+ 				}
+-				mem_cgroup_event(memcg, MEMCG_LOW);
++				memcg_memory_event(memcg, MEMCG_LOW);
+ 			}
+ 
+ 			reclaimed = sc->nr_reclaimed;
+-- 
+2.16.3
+
