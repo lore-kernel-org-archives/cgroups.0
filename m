@@ -1,134 +1,71 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 2/4] mm: memory.low hierarchical behavior
-Date: Thu, 5 Apr 2018 15:36:40 -0400
-Message-ID: <20180405193640.GB27918@cmpxchg.org>
-References: <20180405185921.4942-1-guro@fb.com>
- <20180405185921.4942-2-guro@fb.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] mm: memcg: make sure memory.events is uptodate when
+ waking pollers
+Date: Thu, 5 Apr 2018 12:45:12 -0700
+Message-ID: <20180405194512.GD3126663@devbig577.frc2.facebook.com>
+References: <20180324160901.512135-1-tj@kernel.org>
+ <20180324160901.512135-2-tj@kernel.org>
+ <20180404140855.GA28966@cmpxchg.org>
+ <20180404141850.GC28966@cmpxchg.org>
+ <20180404143447.GJ6312@dhcp22.suse.cz>
+ <20180404165829.GA3126663@devbig577.frc2.facebook.com>
+ <20180405175507.GA24817@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=zrLjWGpD1wh+7LZkztm+FPxvKL7wX2O8HnzauZ4/srY=; b=hsfMcjmiZVBxASFNr6Lw6YMiVX
-        8inEqtBQ3OeyLWIwYpp2Vnx7sfPXwpgVcHCk9aVkCF890gj/rVT3pLOQISxhx4D9q01e37Tx+9gb4
-        PfHkUrGzn51MQp22xfz1PLSmqDnt3h8g78cVlNC2+3D07qS5ooLcMoL/tzReenGnsLVs=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Lu84HhAZLrxfZ7APj9U2wL/V2z1LAEgNQc4VQ9m3ue8=;
+        b=ItMgZJIerwheaw+bM0d63QykEV57Dybf7syBVk0rcJWIAiFY5VcTToyOSo0rzJm8ZJ
+         0IHGy/n3lzQR+vcv2GHeqSNmbV6O4sj/pdLlS8oYgFmXdUVvp1peOxeXrLFuZ7G3y41g
+         4WSvs9AI9OabljiPK0d6U/TiFzy9e3kIC7SqEICGPeI8K2MKaEywAiikr1e77NLn7Kyx
+         Wda7G/rhWht2BUmi8Kk274WeUIvzctYDuyrqr6zh1P6JfLcTBVk1A+KekZK3df774n07
+         leg8FlAwdiRa749UOp6ibs5eshZnP0J+lO9F5JNx/8Ie0Uc030+UHAgzGgFUF736L/KS
+         G2tA==
 Content-Disposition: inline
-In-Reply-To: <20180405185921.4942-2-guro@fb.com>
+In-Reply-To: <20180405175507.GA24817@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>, vdavydov.dev@gmail.com, guro@fb.com, riel@surriel.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Apr 05, 2018 at 07:59:19PM +0100, Roman Gushchin wrote:
-> This patch aims to address an issue in current memory.low semantics,
-> which makes it hard to use it in a hierarchy, where some leaf memory
-> cgroups are more valuable than others.
+On Thu, Apr 05, 2018 at 01:55:16PM -0400, Johannes Weiner wrote:
+> From 4369ce161a9085aa408f2eca54f9de72909ee1b1 Mon Sep 17 00:00:00 2001
+> From: Johannes Weiner <hannes@cmpxchg.org>
+> Date: Thu, 5 Apr 2018 11:53:55 -0400
+> Subject: [PATCH] mm: memcg: make sure memory.events is uptodate when waking
+>  pollers
 > 
-> For example, there are memcgs A, A/B, A/C, A/D and A/E:
+> a983b5ebee57 ("mm: memcontrol: fix excessive complexity in memory.stat
+> reporting") added per-cpu drift to all memory cgroup stats and events
+> shown in memory.stat and memory.events.
 > 
->   A      A/memory.low = 2G, A/memory.current = 6G
->  //\\
-> BC  DE   B/memory.low = 3G  B/memory.current = 2G
->          C/memory.low = 1G  C/memory.current = 2G
->          D/memory.low = 0   D/memory.current = 2G
-> 	 E/memory.low = 10G E/memory.current = 0
+> For memory.stat this is acceptable. But memory.events issues file
+> notifications, and somebody polling the file for changes will be
+> confused when the counters in it are unchanged after a wakeup.
 > 
-> If we apply memory pressure, B, C and D are reclaimed at
-> the same pace while A's usage exceeds 2G.
-> This is obviously wrong, as B's usage is fully below B's memory.low,
-> and C has 1G of protection as well.
-> Also, A is pushed to the size, which is less than A's 2G memory.low,
-> which is also wrong.
+> Luckily, the events in memory.events - MEMCG_LOW, MEMCG_HIGH,
+> MEMCG_MAX, MEMCG_OOM - are sufficiently rare and high-level that we
+> don't need per-cpu buffering for them: MEMCG_HIGH and MEMCG_MAX would
+> be the most frequent, but they're counting invocations of reclaim,
+> which is a complex operation that touches many shared cachelines.
 > 
-> A simple bash script (provided below) can be used to reproduce
-> the problem. Current results are:
->   A:    1430097920
->   A/B:  711929856
->   A/C:  717426688
->   A/D:  741376
->   A/E:  0
+> This splits memory.events from the generic VM events and tracks them
+> in their own, unbuffered atomic counters. That's also cleaner, as it
+> eliminates the ugly enum nesting of VM and cgroup events.
 > 
-> To address the issue a concept of effective memory.low is introduced.
-> Effective memory.low is always equal or less than original memory.low.
-> In a case, when there is no memory.low overcommittment (and also for
-> top-level cgroups), these two values are equal.
-> Otherwise it's a part of parent's effective memory.low, calculated as
-> a cgroup's memory.low usage divided by sum of sibling's memory.low
-> usages (under memory.low usage I mean the size of actually protected
-> memory: memory.current if memory.current < memory.low, 0 otherwise).
-> It's necessary to track the actual usage, because otherwise an empty
-> cgroup with memory.low set (A/E in my example) will affect actual
-> memory distribution, which makes no sense. To avoid traversing
-> the cgroup tree twice, page_counters code is reused.
-> 
-> Calculating effective memory.low can be done in the reclaim path,
-> as we conveniently traversing the cgroup tree from top to bottom and
-> check memory.low on each level. So, it's a perfect place to calculate
-> effective memory low and save it to use it for children cgroups.
-> 
-> This also eliminates a need to traverse the cgroup tree from bottom
-> to top each time to check if parent's guarantee is not exceeded.
-> 
-> Setting/resetting effective memory.low is intentionally racy, but
-> it's fine and shouldn't lead to any significant differences in
-> actual memory distribution.
-> 
-> With this patch applied results are matching the expectations:
->   A:    2147930112
->   A/B:  1428721664
->   A/C:  718393344
->   A/D:  815104
->   A/E:  0
-> 
-> Test script:
->   #!/bin/bash
-> 
->   CGPATH="/sys/fs/cgroup"
-> 
->   truncate /file1 --size 2G
->   truncate /file2 --size 2G
->   truncate /file3 --size 2G
->   truncate /file4 --size 50G
-> 
->   mkdir "${CGPATH}/A"
->   echo "+memory" > "${CGPATH}/A/cgroup.subtree_control"
->   mkdir "${CGPATH}/A/B" "${CGPATH}/A/C" "${CGPATH}/A/D" "${CGPATH}/A/E"
-> 
->   echo 2G > "${CGPATH}/A/memory.low"
->   echo 3G > "${CGPATH}/A/B/memory.low"
->   echo 1G > "${CGPATH}/A/C/memory.low"
->   echo 0 > "${CGPATH}/A/D/memory.low"
->   echo 10G > "${CGPATH}/A/E/memory.low"
-> 
->   echo $$ > "${CGPATH}/A/B/cgroup.procs" && vmtouch -qt /file1
->   echo $$ > "${CGPATH}/A/C/cgroup.procs" && vmtouch -qt /file2
->   echo $$ > "${CGPATH}/A/D/cgroup.procs" && vmtouch -qt /file3
->   echo $$ > "${CGPATH}/cgroup.procs" && vmtouch -qt /file4
-> 
->   echo "A:   " `cat "${CGPATH}/A/memory.current"`
->   echo "A/B: " `cat "${CGPATH}/A/B/memory.current"`
->   echo "A/C: " `cat "${CGPATH}/A/C/memory.current"`
->   echo "A/D: " `cat "${CGPATH}/A/D/memory.current"`
->   echo "A/E: " `cat "${CGPATH}/A/E/memory.current"`
-> 
->   rmdir "${CGPATH}/A/B" "${CGPATH}/A/C" "${CGPATH}/A/D" "${CGPATH}/A/E"
->   rmdir "${CGPATH}/A"
->   rm /file1 /file2 /file3 /file4
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: kernel-team@fb.com
-> Cc: linux-mm@kvack.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
+> Fixes: a983b5ebee57 ("mm: memcontrol: fix excessive complexity in memory.stat reporting")
+> Reported-by: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Yeah, that works.  FWIW,
+
+Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
+
+-- 
+tejun
