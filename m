@@ -1,42 +1,43 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 4/4] mm/docs: describe memory.low refinements
-Date: Thu, 5 Apr 2018 15:46:15 -0400
-Message-ID: <20180405194615.GD27918@cmpxchg.org>
-References: <20180405185921.4942-1-guro@fb.com>
- <20180405185921.4942-4-guro@fb.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 3/4] mm/vmscan: Don't change pgdat state on base of a
+ single LRU list state.
+Date: Thu, 5 Apr 2018 15:17:51 -0700
+Message-ID: <20180405151751.c07ee14496f9d5b691b49c64@linux-foundation.org>
+References: <20180323152029.11084-1-aryabinin@virtuozzo.com>
+        <20180323152029.11084-4-aryabinin@virtuozzo.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=ZBVDmx24pWehOly/7pumcXjHi/MGPfvW6fhZhtriMhI=; b=ga91hfp9YLQs57VJa4ylVg28F+
-        7VcWJGDQKeD+3ovLFzgDDNnLKJGKB8DBlKvndwZP6EA516lpjxk6KWaxR0usW4xg3GuBO05MN/+Hx
-        +5k1Pf3U5vxwqly27tQAlrZm6laDvjnhwoN4h7sfHPO4EmLf0tE1cjA7xP031dhPhE5g=;
-Content-Disposition: inline
-In-Reply-To: <20180405185921.4942-4-guro@fb.com>
+In-Reply-To: <20180323152029.11084-4-aryabinin@virtuozzo.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Steven Rostedt <rostedt@goodmis.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu, Apr 05, 2018 at 07:59:21PM +0100, Roman Gushchin wrote:
-> Refine cgroup v2 docs after latest memory.low changes.
+On Fri, 23 Mar 2018 18:20:28 +0300 Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+
+> We have separate LRU list for each memory cgroup. Memory reclaim iterates
+> over cgroups and calls shrink_inactive_list() every inactive LRU list.
+> Based on the state of a single LRU shrink_inactive_list() may flag
+> the whole node as dirty,congested or under writeback. This is obviously
+> wrong and hurtful. It's especially hurtful when we have possibly
+> small congested cgroup in system. Than *all* direct reclaims waste time
+> by sleeping in wait_iff_congested(). And the more memcgs in the system
+> we have the longer memory allocation stall is, because
+> wait_iff_congested() called on each lru-list scan.
 > 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: kernel-team@fb.com
-> Cc: linux-mm@kvack.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-doc@vger.kernel.org
+> Sum reclaim stats across all visited LRUs on node and flag node as dirty,
+> congested or under writeback based on that sum. Also call
+> congestion_wait(), wait_iff_congested() once per pgdat scan, instead of
+> once per lru-list scan.
+> 
+> This only fixes the problem for global reclaim case. Per-cgroup reclaim
+> may alter global pgdat flags too, which is wrong. But that is separate
+> issue and will be addressed in the next patch.
+> 
+> This change will not have any effect on a systems with all workload
+> concentrated in a single cgroup.
+> 
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Could we please get this reviewed?
