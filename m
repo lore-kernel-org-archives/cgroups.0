@@ -1,73 +1,227 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v2 4/4] mm/vmscan: Don't mess with pgdat->flags in memcg
- reclaim.
-Date: Thu, 5 Apr 2018 15:18:28 -0700
-Message-ID: <20180405151828.98b5bfb143a7a8b7dec4b153@linux-foundation.org>
-References: <20180323152029.11084-1-aryabinin@virtuozzo.com>
-        <20180323152029.11084-5-aryabinin@virtuozzo.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v2 3/4] mm/vmscan: Don't change pgdat state on base of a
+ single LRU list state.
+Date: Thu, 5 Apr 2018 18:04:50 -0700
+Message-ID: <CALvZod6bRRdq4gWbSxWXaT8OSEsp+O5YwrjfLdzMx3gQVZei-Q@mail.gmail.com>
+References: <20180323152029.11084-1-aryabinin@virtuozzo.com> <20180323152029.11084-4-aryabinin@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180323152029.11084-5-aryabinin@virtuozzo.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=XBphiUDgWrl2LJGr7eSfT8mLb9HJ7nSQh6pfxILxZz4=;
+        b=dikqpOTNt8KRtJeSbn22YOS/HWuvM8hDTB06j4U/6F+tQoMU4CbJw37sIXjri/gPbe
+         z3d/kuS1bnrWVTEIdYlbAVjz32JPkHaziaU1FkxJ8c1ZDXUYYEKs1WYPdyO6nMgD2Vx6
+         ADerI67pEnpvkNVNqV11v+dgTJzu7ExkjcPiH2MLMlRm0IMciHqBHFWDTGq1N86TupKz
+         YAJbpotL5ZOiTV6ju+IXquJ6m93tVAY7/pRpzbAOhJkRyEWr+NSRGVUQuEebyh7G7oKR
+         ZkD5TdKdWBE49S2ibQEMuIV+oBxjnNf99RfsfOEknKoZni/minOdH1K6o92Mf/ug0twZ
+         xnUA==
+In-Reply-To: <20180323152029.11084-4-aryabinin@virtuozzo.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Steven Rostedt <rostedt@goodmis.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Fri, 23 Mar 2018 18:20:29 +0300 Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+On Fri, Mar 23, 2018 at 8:20 AM, Andrey Ryabinin
+<aryabinin@virtuozzo.com> wrote:
+> We have separate LRU list for each memory cgroup. Memory reclaim iterates
+> over cgroups and calls shrink_inactive_list() every inactive LRU list.
+> Based on the state of a single LRU shrink_inactive_list() may flag
+> the whole node as dirty,congested or under writeback. This is obviously
+> wrong and hurtful. It's especially hurtful when we have possibly
+> small congested cgroup in system. Than *all* direct reclaims waste time
+> by sleeping in wait_iff_congested(). And the more memcgs in the system
+> we have the longer memory allocation stall is, because
+> wait_iff_congested() called on each lru-list scan.
+>
+> Sum reclaim stats across all visited LRUs on node and flag node as dirty,
+> congested or under writeback based on that sum. Also call
+> congestion_wait(), wait_iff_congested() once per pgdat scan, instead of
+> once per lru-list scan.
+>
+> This only fixes the problem for global reclaim case. Per-cgroup reclaim
+> may alter global pgdat flags too, which is wrong. But that is separate
+> issue and will be addressed in the next patch.
+>
+> This change will not have any effect on a systems with all workload
+> concentrated in a single cgroup.
+>
+> Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-> memcg reclaim may alter pgdat->flags based on the state of LRU lists
-> in cgroup and its children. PGDAT_WRITEBACK may force kswapd to sleep
-> congested_wait(), PGDAT_DIRTY may force kswapd to writeback filesystem
-> pages. But the worst here is PGDAT_CONGESTED, since it may force all
-> direct reclaims to stall in wait_iff_congested(). Note that only kswapd
-> have powers to clear any of these bits. This might just never happen if
-> cgroup limits configured that way. So all direct reclaims will stall
-> as long as we have some congested bdi in the system.
-> 
-> Leave all pgdat->flags manipulations to kswapd. kswapd scans the whole
-> pgdat, only kswapd can clear pgdat->flags once node is balance, thus
-> it's reasonable to leave all decisions about node state to kswapd.
-> 
-> Moving pgdat->flags manipulation to kswapd, means that cgroup2 recalim
-> now loses its congestion throttling mechanism. Add per-cgroup congestion
-> state and throttle cgroup2 reclaimers if memcg is in congestion state.
-> 
-> Currently there is no need in per-cgroup PGDAT_WRITEBACK and PGDAT_DIRTY
-> bits since they alter only kswapd behavior.
-> 
-> The problem could be easily demonstrated by creating heavy congestion
-> in one cgroup:
-> 
->     echo "+memory" > /sys/fs/cgroup/cgroup.subtree_control
->     mkdir -p /sys/fs/cgroup/congester
->     echo 512M > /sys/fs/cgroup/congester/memory.max
->     echo $$ > /sys/fs/cgroup/congester/cgroup.procs
->     /* generate a lot of diry data on slow HDD */
->     while true; do dd if=/dev/zero of=/mnt/sdb/zeroes bs=1M count=1024; done &
->     ....
->     while true; do dd if=/dev/zero of=/mnt/sdb/zeroes bs=1M count=1024; done &
-> 
-> and some job in another cgroup:
-> 
->     mkdir /sys/fs/cgroup/victim
->     echo 128M > /sys/fs/cgroup/victim/memory.max
-> 
->     # time cat /dev/sda > /dev/null
->     real    10m15.054s
->     user    0m0.487s
->     sys     1m8.505s
-> 
-> According to the tracepoint in wait_iff_congested(), the 'cat' spent 50%
-> of the time sleeping there.
-> 
-> With the patch, cat don't waste time anymore:
-> 
->     # time cat /dev/sda > /dev/null
->     real    5m32.911s
->     user    0m0.411s
->     sys     0m56.664s
-> 
+Seems reasonable.
 
-Reviewers, please?
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
+
+> ---
+>  mm/vmscan.c | 124 +++++++++++++++++++++++++++++++++++-------------------------
+>  1 file changed, 73 insertions(+), 51 deletions(-)
+>
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 403f59edd53e..2134b3ac8fa0 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -116,6 +116,15 @@ struct scan_control {
+>
+>         /* Number of pages freed so far during a call to shrink_zones() */
+>         unsigned long nr_reclaimed;
+> +
+> +       struct {
+> +               unsigned int dirty;
+> +               unsigned int unqueued_dirty;
+> +               unsigned int congested;
+> +               unsigned int writeback;
+> +               unsigned int immediate;
+> +               unsigned int file_taken;
+> +       } nr;
+>  };
+>
+>  #ifdef ARCH_HAS_PREFETCH
+> @@ -1754,23 +1763,6 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+>         mem_cgroup_uncharge_list(&page_list);
+>         free_unref_page_list(&page_list);
+>
+> -       /*
+> -        * If reclaim is isolating dirty pages under writeback, it implies
+> -        * that the long-lived page allocation rate is exceeding the page
+> -        * laundering rate. Either the global limits are not being effective
+> -        * at throttling processes due to the page distribution throughout
+> -        * zones or there is heavy usage of a slow backing device. The
+> -        * only option is to throttle from reclaim context which is not ideal
+> -        * as there is no guarantee the dirtying process is throttled in the
+> -        * same way balance_dirty_pages() manages.
+> -        *
+> -        * Once a node is flagged PGDAT_WRITEBACK, kswapd will count the number
+> -        * of pages under pages flagged for immediate reclaim and stall if any
+> -        * are encountered in the nr_immediate check below.
+> -        */
+> -       if (stat.nr_writeback && stat.nr_writeback == nr_taken)
+> -               set_bit(PGDAT_WRITEBACK, &pgdat->flags);
+> -
+>         /*
+>          * If dirty pages are scanned that are not queued for IO, it
+>          * implies that flushers are not doing their job. This can
+> @@ -1785,40 +1777,13 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+>         if (stat.nr_unqueued_dirty == nr_taken)
+>                 wakeup_flusher_threads(WB_REASON_VMSCAN);
+>
+> -       /*
+> -        * Legacy memcg will stall in page writeback so avoid forcibly
+> -        * stalling here.
+> -        */
+> -       if (sane_reclaim(sc)) {
+> -               /*
+> -                * Tag a node as congested if all the dirty pages scanned were
+> -                * backed by a congested BDI and wait_iff_congested will stall.
+> -                */
+> -               if (stat.nr_dirty && stat.nr_dirty == stat.nr_congested)
+> -                       set_bit(PGDAT_CONGESTED, &pgdat->flags);
+> -
+> -               /* Allow kswapd to start writing pages during reclaim. */
+> -               if (stat.nr_unqueued_dirty == nr_taken)
+> -                       set_bit(PGDAT_DIRTY, &pgdat->flags);
+> -
+> -               /*
+> -                * If kswapd scans pages marked marked for immediate
+> -                * reclaim and under writeback (nr_immediate), it implies
+> -                * that pages are cycling through the LRU faster than
+> -                * they are written so also forcibly stall.
+> -                */
+> -               if (stat.nr_immediate)
+> -                       congestion_wait(BLK_RW_ASYNC, HZ/10);
+> -       }
+> -
+> -       /*
+> -        * Stall direct reclaim for IO completions if underlying BDIs and node
+> -        * is congested. Allow kswapd to continue until it starts encountering
+> -        * unqueued dirty pages or cycling through the LRU too quickly.
+> -        */
+> -       if (!sc->hibernation_mode && !current_is_kswapd() &&
+> -           current_may_throttle())
+> -               wait_iff_congested(pgdat, BLK_RW_ASYNC, HZ/10);
+> +       sc->nr.dirty += stat.nr_dirty;
+> +       sc->nr.congested += stat.nr_congested;
+> +       sc->nr.unqueued_dirty += stat.nr_unqueued_dirty;
+> +       sc->nr.writeback += stat.nr_writeback;
+> +       sc->nr.immediate += stat.nr_immediate;
+> +       if (file)
+> +               sc->nr.file_taken += nr_taken;
+>
+>         trace_mm_vmscan_lru_shrink_inactive(pgdat->node_id,
+>                         nr_scanned, nr_reclaimed,
+> @@ -2522,6 +2487,8 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>                 unsigned long node_lru_pages = 0;
+>                 struct mem_cgroup *memcg;
+>
+> +               memset(&sc->nr, 0, sizeof(sc->nr));
+> +
+>                 nr_reclaimed = sc->nr_reclaimed;
+>                 nr_scanned = sc->nr_scanned;
+>
+> @@ -2587,6 +2554,61 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>                 if (sc->nr_reclaimed - nr_reclaimed)
+>                         reclaimable = true;
+>
+> +               /*
+> +                * If reclaim is isolating dirty pages under writeback, it
+> +                * implies that the long-lived page allocation rate is exceeding
+> +                * the page laundering rate. Either the global limits are not
+> +                * being effective at throttling processes due to the page
+> +                * distribution throughout zones or there is heavy usage of a
+> +                * slow backing device. The only option is to throttle from
+> +                * reclaim context which is not ideal as there is no guarantee
+> +                * the dirtying process is throttled in the same way
+> +                * balance_dirty_pages() manages.
+> +                *
+> +                * Once a node is flagged PGDAT_WRITEBACK, kswapd will count the
+> +                * number of pages under pages flagged for immediate reclaim and
+> +                * stall if any are encountered in the nr_immediate check below.
+> +                */
+> +               if (sc->nr.writeback && sc->nr.writeback == sc->nr.file_taken)
+> +                       set_bit(PGDAT_WRITEBACK, &pgdat->flags);
+> +
+> +               /*
+> +                * Legacy memcg will stall in page writeback so avoid forcibly
+> +                * stalling here.
+> +                */
+> +               if (sane_reclaim(sc)) {
+> +                       /*
+> +                        * Tag a node as congested if all the dirty pages
+> +                        * scanned were backed by a congested BDI and
+> +                        * wait_iff_congested will stall.
+> +                        */
+> +                       if (sc->nr.dirty && sc->nr.dirty == sc->nr.congested)
+> +                               set_bit(PGDAT_CONGESTED, &pgdat->flags);
+> +
+> +                       /* Allow kswapd to start writing pages during reclaim.*/
+> +                       if (sc->nr.unqueued_dirty == sc->nr.file_taken)
+> +                               set_bit(PGDAT_DIRTY, &pgdat->flags);
+> +
+> +                       /*
+> +                        * If kswapd scans pages marked marked for immediate
+> +                        * reclaim and under writeback (nr_immediate), it
+> +                        * implies that pages are cycling through the LRU
+> +                        * faster than they are written so also forcibly stall.
+> +                        */
+> +                       if (sc->nr.immediate)
+> +                               congestion_wait(BLK_RW_ASYNC, HZ/10);
+> +               }
+> +
+> +               /*
+> +                * Stall direct reclaim for IO completions if underlying BDIs
+> +                * and node is congested. Allow kswapd to continue until it
+> +                * starts encountering unqueued dirty pages or cycling through
+> +                * the LRU too quickly.
+> +                */
+> +               if (!sc->hibernation_mode && !current_is_kswapd() &&
+> +                   current_may_throttle())
+> +                       wait_iff_congested(pgdat, BLK_RW_ASYNC, HZ/10);
+> +
+>         } while (should_continue_reclaim(pgdat, sc->nr_reclaimed - nr_reclaimed,
+>                                          sc->nr_scanned - nr_scanned, sc));
+>
+> --
+> 2.16.1
+>
