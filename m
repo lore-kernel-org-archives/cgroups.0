@@ -1,79 +1,123 @@
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Subject: Re: [PATCH v2 3/4] mm/vmscan: Don't change pgdat state on base of a
- single LRU list state.
-Date: Fri, 6 Apr 2018 20:25:10 +0300
-Message-ID: <312906df-80c4-aaaf-3d0f-caaeeceb9f39@virtuozzo.com>
-References: <20180323152029.11084-1-aryabinin@virtuozzo.com>
- <20180323152029.11084-4-aryabinin@virtuozzo.com>
- <20180406162835.GD20806@cmpxchg.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] Re: [PATCH v3 1/2] mm: memcg: remote memcg charging for kmem allocations
+Date: Fri,  6 Apr 2018 10:36:01 -0700
+Message-ID: <20180406173601.126152-1-shakeelb@google.com>
+References: <20180315174941.GN23100@dhcp22.suse.cz>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=5R3zq4IZ6J0W6STusX0nl8ua2fLRXkNcuFoH4SLlnSE=;
- b=SzBpXbkaN5+71ckFijNN7pNY6hzP5ocjghpmkoPAEaln7L6L8piYU5yBQbW637EhlTZUbSAZ3cwo9qDauEbC4GLsTn/JvGBH162ozkRBt62VHuDn0v1NZzfqCtfNwrFXuZkd+MIHU8Yp8O8J5Dw9PKfzHBOLvztNEJuvmSCsD7I=
-In-Reply-To: <20180406162835.GD20806@cmpxchg.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=PIOzhEIokkz3BZCajLwypq9ZBDh9/3KJt62G1ivH7Uc=;
+        b=rsrEnstOk4myLBjSWkdronH97sxlaH+5IIuDoVGsKaJ1cAsIMvTTfF71cpyqik1i4r
+         4bqz6wgqaBPSCregoRTx4u15saTQBNdpLMGp+VTjUFPRkggjORdW+DpGb8A0QOcPNEfu
+         59AyAS4/BTNmcGC2o8hj13De8hEFeJm9cnUfwO9FXz+55Wp+fxMFlyDGc7YKCPFtIApg
+         E5RgWxbExBhqNtwEYpg1RP+BtTWymFu60gmisFxvURatDMSqf8i2iNs6aaaNLJQSH+4Q
+         lySwDDtFbaeL4sshcQ1AbuETrms71ScsEfDknt0eA7l8mUBJJxMOEgzYe5KO1FGAcMQY
+         kArw==
+In-Reply-To: <20180315174941.GN23100@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Steven Rostedt <rostedt@goodmis.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shakeel Butt <shakeelb@google.com>
 
+On Thu, Mar 15, 2018 at 10:49 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> Charging path is still a _hot path_. Especially when the kmem accounting
+> is enabled by default. You cannot simply downplay the overhead. We have
+> _one_ user but all users should pay the price. This is simply hard to
+> justify. Maybe we can thing of something that would put the  burden on
+> the charging context?
 
+What do you think of the following?
 
-On 04/06/2018 07:28 PM, Johannes Weiner wrote:
-> 
-> This isn't quite equivalent to what we have right now.
-> 
-> Yes, nr_dirty, nr_unqueued_dirty and nr_congested apply to file pages
-> only. That part is about waking the flushers and avoiding writing
-> files in 4k chunks from reclaim context. So those numbers do need to
-> be compared against scanned *file* pages.
-> 
-> But nr_writeback and nr_immediate is about throttling reclaim when we
-> hit too many pages under writeout, and that applies to both file and
-> anonymous/swap pages. We do want to throttle on swapout, too.
-> 
-> So nr_writeback needs to check against all nr_taken, not just file.
-> 
-
-Agreed, the fix bellow. It causes conflict in the next 4/4 patch,
-so I'll just send v3 with all fixes folded.
-
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
 ---
- mm/vmscan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ mm/memcontrol.c | 37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 4d848b8df01f..c45497475e84 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -124,6 +124,7 @@ struct scan_control {
- 		unsigned int writeback;
- 		unsigned int immediate;
- 		unsigned int file_taken;
-+		unsigned int taken;
- 	} nr;
- };
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 5d3ea8799a2c..205043283716 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -701,6 +701,20 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
+ 	return memcg;
+ }
  
-@@ -1771,6 +1772,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	sc->nr.unqueued_dirty += stat.nr_unqueued_dirty;
- 	sc->nr.writeback += stat.nr_writeback;
- 	sc->nr.immediate += stat.nr_immediate;
-+	sc->nr.taken += nr_taken;
- 	if (file)
- 		sc->nr.file_taken += nr_taken;
++static __always_inline struct mem_cgroup *get_mem_cgroup(
++				struct mem_cgroup *memcg, struct mm_struct *mm)
++{
++	if (unlikely(memcg)) {
++		rcu_read_lock();
++		if (css_tryget_online(&memcg->css)) {
++			rcu_read_unlock();
++			return memcg;
++		}
++		rcu_read_unlock();
++	}
++	return get_mem_cgroup_from_mm(mm);
++}
++
+ /**
+  * mem_cgroup_iter - iterate over memory cgroup hierarchy
+  * @root: hierarchy root
+@@ -2119,15 +2133,6 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
+ }
  
-@@ -2553,7 +2555,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
- 		 * number of pages under pages flagged for immediate reclaim and
- 		 * stall if any are encountered in the nr_immediate check below.
- 		 */
--		if (sc->nr.writeback && sc->nr.writeback == sc->nr.file_taken)
-+		if (sc->nr.writeback && sc->nr.writeback == sc->nr.taken)
- 			set_bit(PGDAT_WRITEBACK, &pgdat->flags);
+ #ifndef CONFIG_SLOB
+-static struct mem_cgroup *get_mem_cgroup(struct mem_cgroup *memcg)
+-{
+-	rcu_read_lock();
+-	if (!css_tryget_online(&memcg->css))
+-		memcg = NULL;
+-	rcu_read_unlock();
+-	return memcg;
+-}
+-
+ static int memcg_alloc_cache_id(void)
+ {
+ 	int id, size;
+@@ -2257,7 +2262,7 @@ static inline bool memcg_kmem_bypass(void)
+  */
+ struct kmem_cache *memcg_kmem_get_cache(struct kmem_cache *cachep)
+ {
+-	struct mem_cgroup *memcg = NULL;
++	struct mem_cgroup *memcg;
+ 	struct kmem_cache *memcg_cachep;
+ 	int kmemcg_id;
  
- 		/*
+@@ -2269,10 +2274,7 @@ struct kmem_cache *memcg_kmem_get_cache(struct kmem_cache *cachep)
+ 	if (current->memcg_kmem_skip_account)
+ 		return cachep;
+ 
+-	if (current->target_memcg)
+-		memcg = get_mem_cgroup(current->target_memcg);
+-	if (!memcg)
+-		memcg = get_mem_cgroup_from_mm(current->mm);
++	memcg = get_mem_cgroup(current->target_memcg, current->mm);
+ 	kmemcg_id = READ_ONCE(memcg->kmemcg_id);
+ 	if (kmemcg_id < 0)
+ 		goto out;
+@@ -2350,16 +2352,13 @@ int memcg_kmem_charge_memcg(struct page *page, gfp_t gfp, int order,
+  */
+ int memcg_kmem_charge(struct page *page, gfp_t gfp, int order)
+ {
+-	struct mem_cgroup *memcg = NULL;
++	struct mem_cgroup *memcg;
+ 	int ret = 0;
+ 
+ 	if (memcg_kmem_bypass())
+ 		return 0;
+ 
+-	if (current->target_memcg)
+-		memcg = get_mem_cgroup(current->target_memcg);
+-	if (!memcg)
+-		memcg = get_mem_cgroup_from_mm(current->mm);
++	memcg = get_mem_cgroup(current->target_memcg, current->mm);
+ 	if (!mem_cgroup_is_root(memcg)) {
+ 		ret = memcg_kmem_charge_memcg(page, gfp, order, memcg);
+ 		if (!ret)
 -- 
-2.16.1
+2.17.0.484.g0c8726318c-goog
+
