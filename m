@@ -1,162 +1,60 @@
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Subject: [PATCH] mm-vmscan-dont-mess-with-pgdat-flags-in-memcg-reclaim-v2-fix
-Date: Fri,  6 Apr 2018 16:52:15 +0300
-Message-ID: <20180406135215.10057-1-aryabinin@virtuozzo.com>
-References: <CALvZod7P7cE38fDrWd=0caA2J6ZOmSzEuLGQH9VSaagCbo5O+A@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v2 4/4] mm/vmscan: Don't mess with pgdat->flags in memcg reclaim.
+Date: Fri, 6 Apr 2018 07:15:40 -0700
+Message-ID: <CALvZod4YCvz4bvjcrQxi_=HeZ49pZcA2xvres6_jMKwvOdhqcg@mail.gmail.com>
+References: <20180323152029.11084-1-aryabinin@virtuozzo.com>
+ <20180323152029.11084-5-aryabinin@virtuozzo.com> <CALvZod7P7cE38fDrWd=0caA2J6ZOmSzEuLGQH9VSaagCbo5O+A@mail.gmail.com>
+ <72db1bfb-aa79-3764-54fd-2c7ddbd07bea@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=rmQMy4N7ys/3V1O7foP6IqoIiXJ1vw4Vx5gxtdyGZf0=;
- b=AdLx0aVGVOsGkUdoxaqVdIE4+4DiWx9hgcSKmnWi2pfacAnM+OsqAy7zKQL0FkBTsLnt/+lMt5ZTx5Ymm/yXls2eZH7HZpUw+cgJB5P377jJos2CQClHQEqMma6wrK0BT55VrdLkXxT4xCv8tyKB1OTWHWMw/pSz7nUvLQGibKU=
-In-Reply-To: <CALvZod7P7cE38fDrWd=0caA2J6ZOmSzEuLGQH9VSaagCbo5O+A@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=DZGX8UMMSb/gHPkaueqjmLtJwdiL8M7YEM0DWtQ4ksI=;
+        b=qYtXsbDjKyZe1TYAPV5lBok/6VyRqXl/xqimQsyJ7h3cADZselA9hon5Zm49BuAgvm
+         72TjbfIlanUGZOm2M5y+l2o7H9p7BPKqfF6k8lQJX0ujYbAUhK4hTPDPIOYvWRYbiPNM
+         Hu7xP/IkErmMvKL0b4o+ST6CdUcvOR465pSue6bf6uHiZfjTKh8qEAvkxzMU3Gdg2SKc
+         L9OxcHuidR04qynO8l+C/8UQQRTZtb4LHwZFdhWTS9Z7nNfbw4ocGsEsB6fl8dFSCavq
+         6hgq1ujWx4VtQsjOexXdagK1zH6MU7janapAt4ebULaGMzrl7kYgVobRawG9GbCi7Jqp
+         EcNw==
+In-Reply-To: <72db1bfb-aa79-3764-54fd-2c7ddbd07bea@virtuozzo.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>
-Cc: Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Linux MM <linux-mm@kvack.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Andrey Ryabinin <aryabinin@virtuozzo.com>
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On 04/06/2018 05:13 AM, Shakeel Butt wrote:
-> Question: Should this 'flags' be per-node? Is it ok for a congested
-> memcg to call wait_iff_congested for all nodes?
-
-Indeed, congestion state should be pre-node. If memcg on node A is
-congested, there is no point is stalling memcg reclaim from node B.
-
-Make congestion state per-cgroup-per-node and record it in
-'struct mem_cgroup_per_node'.
-
-Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
----
- include/linux/memcontrol.h |  5 +++--
- mm/vmscan.c                | 39 +++++++++++++++++++++++++--------------
- 2 files changed, 28 insertions(+), 16 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 8b394bbf1c86..af9eed2e3e04 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -120,6 +120,9 @@ struct mem_cgroup_per_node {
- 	unsigned long		usage_in_excess;/* Set to the value by which */
- 						/* the soft limit is exceeded*/
- 	bool			on_tree;
-+	bool			congested;	/* memcg has many dirty pages */
-+						/* backed by a congested BDI */
-+
- 	struct mem_cgroup	*memcg;		/* Back pointer, we cannot */
- 						/* use container_of	   */
- };
-@@ -189,8 +192,6 @@ struct mem_cgroup {
- 	/* vmpressure notifications */
- 	struct vmpressure vmpressure;
- 
--	unsigned long flags;
--
- 	/*
- 	 * Should the accounting and control be hierarchical, per subtree?
- 	 */
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 99688299eba8..78214c899710 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -200,16 +200,27 @@ static bool sane_reclaim(struct scan_control *sc)
- 	return false;
- }
- 
--static void set_memcg_bit(enum pgdat_flags flag,
--			struct mem_cgroup *memcg)
-+static void set_memcg_congestion(pg_data_t *pgdat,
-+				struct mem_cgroup *memcg,
-+				bool congested)
- {
--	set_bit(flag, &memcg->flags);
-+	struct mem_cgroup_per_node *mz;
-+
-+	if (!memcg)
-+		return;
-+
-+	mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
-+	WRITE_ONCE(mz->congested, congested);
- }
- 
--static int test_memcg_bit(enum pgdat_flags flag,
-+static bool memcg_congested(pg_data_t *pgdat,
- 			struct mem_cgroup *memcg)
- {
--	return test_bit(flag, &memcg->flags);
-+	struct mem_cgroup_per_node *mz;
-+
-+	mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
-+	return READ_ONCE(mz->congested);
-+
- }
- #else
- static bool global_reclaim(struct scan_control *sc)
-@@ -222,15 +233,16 @@ static bool sane_reclaim(struct scan_control *sc)
- 	return true;
- }
- 
--static inline void set_memcg_bit(enum pgdat_flags flag,
--				struct mem_cgroup *memcg)
-+static inline void set_memcg_congestion(struct pglist_data *pgdat,
-+				struct mem_cgroup *memcg, bool congested)
- {
- }
- 
--static inline int test_memcg_bit(enum pgdat_flags flag,
--				struct mem_cgroup *memcg)
-+static inline bool memcg_congested(struct pglist_data *pgdat,
-+			struct mem_cgroup *memcg)
- {
--	return 0;
-+	return false;
-+
- }
- #endif
- 
-@@ -2482,7 +2494,7 @@ static inline bool should_continue_reclaim(struct pglist_data *pgdat,
- static bool pgdat_memcg_congested(pg_data_t *pgdat, struct mem_cgroup *memcg)
- {
- 	return test_bit(PGDAT_CONGESTED, &pgdat->flags) ||
--		(memcg && test_memcg_bit(PGDAT_CONGESTED, memcg));
-+		(memcg && memcg_congested(pgdat, memcg));
- }
- 
- static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
-@@ -2617,7 +2629,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
- 		 */
- 		if (!global_reclaim(sc) && sane_reclaim(sc) &&
- 		    sc->nr.dirty && sc->nr.dirty == sc->nr.congested)
--			set_memcg_bit(PGDAT_CONGESTED, root);
-+			set_memcg_congestion(pgdat, root, true);
- 
- 		/*
- 		 * Stall direct reclaim for IO completions if underlying BDIs
-@@ -2844,6 +2856,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
- 			continue;
- 		last_pgdat = zone->zone_pgdat;
- 		snapshot_refaults(sc->target_mem_cgroup, zone->zone_pgdat);
-+		set_memcg_congestion(last_pgdat, sc->target_mem_cgroup, false);
- 	}
- 
- 	delayacct_freepages_end();
-@@ -3067,7 +3080,6 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
- 	 * the priority and make it zero.
- 	 */
- 	shrink_node_memcg(pgdat, memcg, &sc, &lru_pages);
--	clear_bit(PGDAT_CONGESTED, &memcg->flags);
- 
- 	trace_mm_vmscan_memcg_softlimit_reclaim_end(sc.nr_reclaimed);
- 
-@@ -3113,7 +3125,6 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 	noreclaim_flag = memalloc_noreclaim_save();
- 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
- 	memalloc_noreclaim_restore(noreclaim_flag);
--	clear_bit(PGDAT_CONGESTED, &memcg->flags);
- 
- 	trace_mm_vmscan_memcg_reclaim_end(nr_reclaimed);
- 
--- 
-2.16.1
-
+On Fri, Apr 6, 2018 at 4:44 AM, Andrey Ryabinin <aryabinin@virtuozzo.com> wrote:
+> On 04/06/2018 05:13 AM, Shakeel Butt wrote:
+>> On Fri, Mar 23, 2018 at 8:20 AM, Andrey Ryabinin
+>> <aryabinin@virtuozzo.com> wrote:
+>>> memcg reclaim may alter pgdat->flags based on the state of LRU lists
+>>> in cgroup and its children. PGDAT_WRITEBACK may force kswapd to sleep
+>>> congested_wait(), PGDAT_DIRTY may force kswapd to writeback filesystem
+>>> pages. But the worst here is PGDAT_CONGESTED, since it may force all
+>>> direct reclaims to stall in wait_iff_congested(). Note that only kswapd
+>>> have powers to clear any of these bits. This might just never happen if
+>>> cgroup limits configured that way. So all direct reclaims will stall
+>>> as long as we have some congested bdi in the system.
+>>>
+>>> Leave all pgdat->flags manipulations to kswapd. kswapd scans the whole
+>>> pgdat, only kswapd can clear pgdat->flags once node is balance, thus
+>>> it's reasonable to leave all decisions about node state to kswapd.
+>>
+>> What about global reclaimers? Is the assumption that when global
+>> reclaimers hit such condition, kswapd will be running and correctly
+>> set PGDAT_CONGESTED?
+>>
+>
+> The reason I moved this under if(current_is_kswapd()) is because only kswapd
+> can clear these flags. I'm less worried about the case when PGDAT_CONGESTED falsely
+> not set, and more worried about the case when it falsely set. If direct reclaimer sets
+> PGDAT_CONGESTED, do we have guarantee that, after congestion problem is sorted, kswapd
+> ill be woken up and clear the flag? It seems like there is no such guarantee.
+> E.g. direct reclaimers may eventually balance pgdat and kswapd simply won't wake up
+> (see wakeup_kswapd()).
+>
+>
+Thanks for the explanation, I think it should be in the commit message.
