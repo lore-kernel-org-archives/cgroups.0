@@ -1,143 +1,162 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v3 3/4] mm: treat memory.low value inclusive
-Date: Fri, 6 Apr 2018 13:21:38 +0100
-Message-ID: <20180406122132.GA7185@castle>
-References: <20180405185921.4942-1-guro@fb.com>
- <20180405185921.4942-3-guro@fb.com>
- <20180405194526.GC27918@cmpxchg.org>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: [PATCH] mm-vmscan-dont-mess-with-pgdat-flags-in-memcg-reclaim-v2-fix
+Date: Fri,  6 Apr 2018 16:52:15 +0300
+Message-ID: <20180406135215.10057-1-aryabinin@virtuozzo.com>
+References: <CALvZod7P7cE38fDrWd=0caA2J6ZOmSzEuLGQH9VSaagCbo5O+A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=pPtDANZSiHG9yF4YVpKebRQ2IKfNPZmH1lePnuLIOFM=;
- b=k17xki9I+MTEYp/m+m7OXvFeAfQEiieRRsleo99AMpEYLnaKzVMXIcJeHFfOfxViyzky
- zsVqidMUrgAi0j7A4epsyvGpUogDXOa2H6L8nQNYTR+zLGCExCm+3Sn7AB4t+TD6Y6tQ
- WB8rl3E3j47hhmp83w2COvwVs3WGOmvCi04= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=pPtDANZSiHG9yF4YVpKebRQ2IKfNPZmH1lePnuLIOFM=;
- b=ecgm9sWem44V2LoWzj65dA+KBreiubR00GB3COmKjYnlWZozYoHElaRPeoJBiGbCGKhrSedXbj9jaYKEZx2PBHIFzAXUOZ5KenlNwZopnUaBQlIVTGoBJ7rnAVvIqtqy33vG4vkrTibHSTRrXBrYnaxVyhcKTPkd/oEAbGhX360=
-Content-Disposition: inline
-In-Reply-To: <20180405194526.GC27918@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=rmQMy4N7ys/3V1O7foP6IqoIiXJ1vw4Vx5gxtdyGZf0=;
+ b=AdLx0aVGVOsGkUdoxaqVdIE4+4DiWx9hgcSKmnWi2pfacAnM+OsqAy7zKQL0FkBTsLnt/+lMt5ZTx5Ymm/yXls2eZH7HZpUw+cgJB5P377jJos2CQClHQEqMma6wrK0BT55VrdLkXxT4xCv8tyKB1OTWHWMw/pSz7nUvLQGibKU=
+In-Reply-To: <CALvZod7P7cE38fDrWd=0caA2J6ZOmSzEuLGQH9VSaagCbo5O+A@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>
+Cc: Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Linux MM <linux-mm@kvack.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On Thu, Apr 05, 2018 at 03:45:26PM -0400, Johannes Weiner wrote:
-> On Thu, Apr 05, 2018 at 07:59:20PM +0100, Roman Gushchin wrote:
-> > If memcg's usage is equal to the memory.low value, avoid reclaiming
-> > from this cgroup while there is a surplus of reclaimable memory.
-> > 
-> > This sounds more logical and also matches memory.high and memory.max
-> > behavior: both are inclusive.
-> 
-> I was trying to figure out why we did it this way in the first place
-> and found this patch:
-> 
-> commit 4e54dede38b45052a941bcf709f7d29f2e18174d
-> Author: Michal Hocko <mhocko@suse.cz>
-> Date:   Fri Feb 27 15:51:46 2015 -0800
-> 
->     memcg: fix low limit calculation
->     
->     A memcg is considered low limited even when the current usage is equal to
->     the low limit.  This leads to interesting side effects e.g.
->     groups/hierarchies with no memory accounted are considered protected and
->     so the reclaim will emit MEMCG_LOW event when encountering them.
->     
->     Another and much bigger issue was reported by Joonsoo Kim.  He has hit a
->     NULL ptr dereference with the legacy cgroup API which even doesn't have
->     low limit exposed.  The limit is 0 by default but the initial check fails
->     for memcg with 0 consumption and parent_mem_cgroup() would return NULL if
->     use_hierarchy is 0 and so page_counter_read would try to dereference NULL.
->     
->     I suppose that the current implementation is just an overlook because the
->     documentation in Documentation/cgroups/unified-hierarchy.txt says:
->     
->       "The memory.low boundary on the other hand is a top-down allocated
->       reserve.  A cgroup enjoys reclaim protection when it and all its
->       ancestors are below their low boundaries"
->     
->     Fix the usage and the low limit comparision in mem_cgroup_low accordingly.
->     
-> > @@ -5709,7 +5709,7 @@ bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg)
-> >  	elow = min(elow, parent_elow * low_usage / siblings_low_usage);
-> >  exit:
-> >  	memcg->memory.elow = elow;
-> > -	return usage < elow;
-> > +	return usage <= elow;
-> 
-> So I think this needs to be usage && usage <= elow to not emit
-> MEMCG_LOW events in case usage == elow == 0.
+On 04/06/2018 05:13 AM, Shakeel Butt wrote:
+> Question: Should this 'flags' be per-node? Is it ok for a congested
+> memcg to call wait_iff_congested for all nodes?
 
-Perfect catch! Thanks, Johannes!
+Indeed, congestion state should be pre-node. If memcg on node A is
+congested, there is no point is stalling memcg reclaim from node B.
 
-Updated version below.
+Make congestion state per-cgroup-per-node and record it in
+'struct mem_cgroup_per_node'.
 
---
-
-From 466c35c36cae392cfee5e54a2884792972e789ee Mon Sep 17 00:00:00 2001
-From: Roman Gushchin <guro@fb.com>
-Date: Thu, 5 Apr 2018 19:31:35 +0100
-Subject: [PATCH v4 3/4] mm: treat memory.low value inclusive
-
-If memcg's usage is equal to the memory.low value, avoid reclaiming
-from this cgroup while there is a surplus of reclaimable memory.
-
-This sounds more logical and also matches memory.high and memory.max
-behavior: both are inclusive.
-
-Empty cgroups are not considered protected, so MEMCG_LOW events
-are not emitted for empty cgroups, if there is no more reclaimable
-memory in the system.
-
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
 ---
- mm/memcontrol.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ include/linux/memcontrol.h |  5 +++--
+ mm/vmscan.c                | 39 +++++++++++++++++++++++++--------------
+ 2 files changed, 28 insertions(+), 16 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 78cf21f2a943..3d039fa1a8f5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5608,14 +5608,14 @@ struct cgroup_subsys memory_cgrp_subsys = {
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 8b394bbf1c86..af9eed2e3e04 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -120,6 +120,9 @@ struct mem_cgroup_per_node {
+ 	unsigned long		usage_in_excess;/* Set to the value by which */
+ 						/* the soft limit is exceeded*/
+ 	bool			on_tree;
++	bool			congested;	/* memcg has many dirty pages */
++						/* backed by a congested BDI */
++
+ 	struct mem_cgroup	*memcg;		/* Back pointer, we cannot */
+ 						/* use container_of	   */
  };
+@@ -189,8 +192,6 @@ struct mem_cgroup {
+ 	/* vmpressure notifications */
+ 	struct vmpressure vmpressure;
  
- /**
-- * mem_cgroup_low - check if memory consumption is below the normal range
-+ * mem_cgroup_low - check if memory consumption is in the normal range
-  * @root: the top ancestor of the sub-tree being checked
-  * @memcg: the memory cgroup to check
-  *
-  * WARNING: This function is not stateless! It can only be used as part
-  *          of a top-down tree iteration, not for isolated queries.
-  *
-- * Returns %true if memory consumption of @memcg is below the normal range.
-+ * Returns %true if memory consumption of @memcg is in the normal range.
-  *
-  * @root is exclusive; it is never low when looked at directly
-  *
-@@ -5709,7 +5709,7 @@ bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg)
- 	elow = min(elow, parent_elow * low_usage / siblings_low_usage);
- exit:
- 	memcg->memory.elow = elow;
--	return usage < elow;
-+	return usage && usage <= elow;
+-	unsigned long flags;
+-
+ 	/*
+ 	 * Should the accounting and control be hierarchical, per subtree?
+ 	 */
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 99688299eba8..78214c899710 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -200,16 +200,27 @@ static bool sane_reclaim(struct scan_control *sc)
+ 	return false;
  }
  
- /**
+-static void set_memcg_bit(enum pgdat_flags flag,
+-			struct mem_cgroup *memcg)
++static void set_memcg_congestion(pg_data_t *pgdat,
++				struct mem_cgroup *memcg,
++				bool congested)
+ {
+-	set_bit(flag, &memcg->flags);
++	struct mem_cgroup_per_node *mz;
++
++	if (!memcg)
++		return;
++
++	mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
++	WRITE_ONCE(mz->congested, congested);
+ }
+ 
+-static int test_memcg_bit(enum pgdat_flags flag,
++static bool memcg_congested(pg_data_t *pgdat,
+ 			struct mem_cgroup *memcg)
+ {
+-	return test_bit(flag, &memcg->flags);
++	struct mem_cgroup_per_node *mz;
++
++	mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
++	return READ_ONCE(mz->congested);
++
+ }
+ #else
+ static bool global_reclaim(struct scan_control *sc)
+@@ -222,15 +233,16 @@ static bool sane_reclaim(struct scan_control *sc)
+ 	return true;
+ }
+ 
+-static inline void set_memcg_bit(enum pgdat_flags flag,
+-				struct mem_cgroup *memcg)
++static inline void set_memcg_congestion(struct pglist_data *pgdat,
++				struct mem_cgroup *memcg, bool congested)
+ {
+ }
+ 
+-static inline int test_memcg_bit(enum pgdat_flags flag,
+-				struct mem_cgroup *memcg)
++static inline bool memcg_congested(struct pglist_data *pgdat,
++			struct mem_cgroup *memcg)
+ {
+-	return 0;
++	return false;
++
+ }
+ #endif
+ 
+@@ -2482,7 +2494,7 @@ static inline bool should_continue_reclaim(struct pglist_data *pgdat,
+ static bool pgdat_memcg_congested(pg_data_t *pgdat, struct mem_cgroup *memcg)
+ {
+ 	return test_bit(PGDAT_CONGESTED, &pgdat->flags) ||
+-		(memcg && test_memcg_bit(PGDAT_CONGESTED, memcg));
++		(memcg && memcg_congested(pgdat, memcg));
+ }
+ 
+ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+@@ -2617,7 +2629,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 		 */
+ 		if (!global_reclaim(sc) && sane_reclaim(sc) &&
+ 		    sc->nr.dirty && sc->nr.dirty == sc->nr.congested)
+-			set_memcg_bit(PGDAT_CONGESTED, root);
++			set_memcg_congestion(pgdat, root, true);
+ 
+ 		/*
+ 		 * Stall direct reclaim for IO completions if underlying BDIs
+@@ -2844,6 +2856,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 			continue;
+ 		last_pgdat = zone->zone_pgdat;
+ 		snapshot_refaults(sc->target_mem_cgroup, zone->zone_pgdat);
++		set_memcg_congestion(last_pgdat, sc->target_mem_cgroup, false);
+ 	}
+ 
+ 	delayacct_freepages_end();
+@@ -3067,7 +3080,6 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+ 	 * the priority and make it zero.
+ 	 */
+ 	shrink_node_memcg(pgdat, memcg, &sc, &lru_pages);
+-	clear_bit(PGDAT_CONGESTED, &memcg->flags);
+ 
+ 	trace_mm_vmscan_memcg_softlimit_reclaim_end(sc.nr_reclaimed);
+ 
+@@ -3113,7 +3125,6 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 	noreclaim_flag = memalloc_noreclaim_save();
+ 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
+ 	memalloc_noreclaim_restore(noreclaim_flag);
+-	clear_bit(PGDAT_CONGESTED, &memcg->flags);
+ 
+ 	trace_mm_vmscan_memcg_reclaim_end(nr_reclaimed);
+ 
 -- 
-2.14.3
+2.16.1
 
