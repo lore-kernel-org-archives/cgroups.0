@@ -1,38 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] mm, memcontrol: Implement memory.swap.events
-Date: Thu, 12 Apr 2018 08:38:08 -0700
-Message-ID: <20180412153808.GC793541@devbig577.frc2.facebook.com>
-References: <20180324165127.701194-1-tj@kernel.org>
- <20180412141345.GH23400@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] memcg: Remove memcg_cgroup::id from IDR on
+ mem_cgroup_css_alloc() failure
+Date: Fri, 13 Apr 2018 10:55:53 +0200
+Message-ID: <20180413085553.GF17484@dhcp22.suse.cz>
+References: <152354470916.22460.14397070748001974638.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=JQquykhz0sfSzUB55xkTnmJRzn5dpl6FCsWPm9CGAG0=;
-        b=vOqT2ODLCecSx/Ack7KqVSRNgUAl9TgakoGeQCVJul+Y0/rJQAGucvR6LaN9LkajwB
-         FPA2CkzBLX4/tahUYWAurh1akVJBn7xjqESbnMzd9IRJy/z/DmiWVCD1ZEIdkoYS5flF
-         YC5gYmD7jFW24xtqFCJ5rRfFTSxWoKQLjdPGNtK52lz1tVbyRHT1BehmQNVe4s9OouX8
-         dt/sQNd7Cqhnl6L/nCq1SOchRBE+vNLtdcZCgm2PtOz7P2mvjqP6RCLoy1gFet/yYSnz
-         OBwZcW0BstOk+4MAioFXqTohwiMqZt+DPM08lABtp/DhYwHLHZUVfya8So8/et2kk+HL
-         aCSA==
 Content-Disposition: inline
-In-Reply-To: <20180412141345.GH23400@dhcp22.suse.cz>
+In-Reply-To: <152354470916.22460.14397070748001974638.stgit@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, guro@fb.com, riel@surriel.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Kirill Tkhai <ktkhai@virtuozzo.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Apr 12, 2018 at 04:13:45PM +0200, Michal Hocko wrote:
-> Hi Tejun,
-> sorry for the late response. Are you plannig to repost?
+On Thu 12-04-18 17:52:04, Kirill Tkhai wrote:
+[...]
+> @@ -4471,6 +4477,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+>  
+>  	return &memcg->css;
+>  fail:
+> +	mem_cgroup_id_remove(memcg);
+>  	mem_cgroup_free(memcg);
+>  	return ERR_PTR(-ENOMEM);
+>  }
 
-Yeah, will do later.
+The only path which jumps to fail: here (in the current mmotm tree) is 
+	error = memcg_online_kmem(memcg);
+	if (error)
+		goto fail;
 
-Thanks.
+AFAICS and the only failure path in memcg_online_kmem
+	memcg_id = memcg_alloc_cache_id();
+	if (memcg_id < 0)
+		return memcg_id;
 
+I am not entirely clear on memcg_alloc_cache_id but it seems we do clean
+up properly. Or am I missing something?
 -- 
-tejun
+Michal Hocko
+SUSE Labs
