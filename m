@@ -1,76 +1,59 @@
-From: Rik van Riel <riel@surriel.com>
-Subject: Re: [PATCH] mm: allow to decrease swap.max below actual swap usage
-Date: Mon, 16 Apr 2018 11:07:22 -0400
-Message-ID: <1523891242.27555.9.camel@surriel.com>
-References: <20180412132705.30316-1-guro@fb.com>
-         <20180416013902.GD1911913@devbig577.frc2.facebook.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-tBA0idIUGrNb7kCfECyR"
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v5 0/2] Directed kmem charging
+Date: Mon, 16 Apr 2018 13:51:48 -0700
+Message-ID: <20180416205150.113915-1-shakeelb@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180416013902.GD1911913@devbig577.frc2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=PIeIsYPNo1yiSNK8T1oRdDldSchnG3GNjKdDOormGLg=;
+        b=YevGx64WfISV5JUqUVUOJtuXPsw7QbYBoX/AIPrHdGzA1UP4pScLGA+yMIxe0/g/4W
+         fW9+69wBCKqfcwc+kPDEtVBs7kGpoXtp7ClZ5/71rlM1mE+bCRFA1uAqO9xt4K2NotsF
+         pnFXenTlzubj6lIvZVfSmUC+HeOqZacAHCTusD5VGlPlzEa4Iqjv6/MGZrZLJeQgvPQd
+         ht45Io60fJW1cDCa4L4uN7FZwG2kmgTO5mIbpmJ7z8DvKYXz8NfmL5jKjs3MkYheMJvk
+         AorRPbjXLpjITrsgmkWErXovt53D81TlTZBzqUCv7s+bybBhR+M3W9TjjGqjgSPwj//2
+         8LUQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
-
-
---=-tBA0idIUGrNb7kCfECyR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 2018-04-15 at 18:39 -0700, Tejun Heo wrote:
-> Hello, Roman.
->=20
-> The reclaim behavior is a bit worrisome.
->=20
-> * It disables an entire swap area while reclaim is in progress.  Most
->   systems only have one swap area, so this would disable allocating
->   new swap area for everyone.
-
-That could easily cause OOM kills on systems.
-
-I prefer Tejun's simple approach, of having
-the system slowly reduce swap use below the
-new maximum limit.
-
-> * The reclaim seems very inefficient.  IIUC, it has to read every
-> swap
->   page to see whether the page belongs to the target memcg and for
->   each matching page, which involves walking page mm's and page
->   tables.
-
-One of my Outreachy interns, Kelley Nielsen,
-worked on making swap reclaim more efficient
-by scanning the virtual address space of
-processes.
-
-Unfortunately, we ran into some unforseen
-issues with that approach that we never managed
-to sort out :(
-
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-
-Acked-by: Rik van Riel <riel@surriel.com>
-
---=20
-All Rights Reversed.
---=-tBA0idIUGrNb7kCfECyR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shakeel Butt <shakeelb@google.com>
 
------BEGIN PGP SIGNATURE-----
+This patchset introduces memcg variant memory allocation functions. The
+caller can explicitly pass the memcg to charge for kmem allocations.
+Currently the kernel, for __GFP_ACCOUNT memory allocation requests,
+extract the memcg of the current task to charge for the kmem allocation.
+This patch series introduces kmem allocation functions where the caller
+can pass the pointer to the remote memcg. The remote memcg will be
+charged for the allocation instead of the memcg of the caller. However
+the caller must have a reference to the remote memcg.
 
-iQEzBAABCAAdFiEEKR73pCCtJ5Xj3yADznnekoTE3oMFAlrUvCoACgkQznnekoTE
-3oP/Bwf+Nc+IRCKzX3QEdvTpUJOaiAFrdGROFUtrGHvZSc9qSvdN+z6TMsCUi6r6
-FnXQf1Uf0TRve+ASaJq7O69vpGQTpdhWPQimB1U+aE/JsNmOqAbxwOfsj7fMrkbA
-NjsP69KQ8/lAoDEP5ZdZda8VAPm5+psbqj+wagvTTP5IiVAUN/56iafSgHZ+3zmU
-NPsEfjXSDUrn7TwoNhTAdM55E5fCgZoUTuajhO6nsROlEqH5k/P+L/o2FPmdUYd2
-CzCuKoWprBjrf8MAmX8W0a90DtWiu7q5MKeAwVfEh29OO+kf1w5hVXhBKHf0BVUX
-Z4K0PBihXKOZMhzCTq8+IU83zeFeFw==
-=YMrS
------END PGP SIGNATURE-----
+Fixed the build for SLOB in v2, added the target_memcg in task_struct in
+v3, added node variant for kmem allocation functions and rebased fsnotify
+patch over Jan's patches in v4 and in v5 fixed CONFIG_MEMCG=n build and
+removed the extra branch in the common case of memory allocation.
 
---=-tBA0idIUGrNb7kCfECyR--
+Shakeel Butt (2):
+  mm: memcg: remote memcg charging for kmem allocations
+  fs: fsnotify: account fsnotify metadata to kmemcg
+
+ fs/notify/dnotify/dnotify.c          |  5 ++-
+ fs/notify/fanotify/fanotify.c        |  6 ++-
+ fs/notify/fanotify/fanotify_user.c   |  5 ++-
+ fs/notify/group.c                    |  4 ++
+ fs/notify/inotify/inotify_fsnotify.c |  2 +-
+ fs/notify/inotify/inotify_user.c     |  5 ++-
+ include/linux/fsnotify_backend.h     | 12 ++++--
+ include/linux/memcontrol.h           |  7 ++++
+ include/linux/sched.h                |  3 ++
+ include/linux/sched/mm.h             | 24 +++++++++++
+ include/linux/slab.h                 | 59 ++++++++++++++++++++++++++++
+ kernel/fork.c                        |  3 ++
+ mm/memcontrol.c                      | 20 ++++++++--
+ 13 files changed, 141 insertions(+), 14 deletions(-)
+
+-- 
+2.17.0.484.g0c8726318c-goog
 
