@@ -1,120 +1,76 @@
-From: Tejun Heo <tj@kernel.org>
+From: Rik van Riel <riel@surriel.com>
 Subject: Re: [PATCH] mm: allow to decrease swap.max below actual swap usage
-Date: Sun, 15 Apr 2018 18:39:02 -0700
-Message-ID: <20180416013902.GD1911913@devbig577.frc2.facebook.com>
+Date: Mon, 16 Apr 2018 11:07:22 -0400
+Message-ID: <1523891242.27555.9.camel@surriel.com>
 References: <20180412132705.30316-1-guro@fb.com>
+         <20180416013902.GD1911913@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-tBA0idIUGrNb7kCfECyR"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=8Mc5GFqXGm91iPIJWqp2cuv5GEJilE+0eGFjEQWdIwM=;
-        b=trE67j8LfoJYlGuMeZTbKgbDVwqRFwzsGXxwsz1CEEKnQ5joHmZbjryMuJ+i8Xky5t
-         TKD3S344kWZKp/RA7PLCDPFuhkDT3cBYrxdO/+n5d4IZWkkP0oP06DZtSvnJBpAQMqJc
-         wCedpV25eiRrhXE5bvB3NHUrdniO/sUC/+5H/hjAI7Y9yLMw2ql5CnEfMKDbz7ZvPbp9
-         1Al7YlWvCFy4iL9uyz0ekK8yZh51qSqvtwsmWkk3/qHkJqe1ScX2khDQnb2AqR+NaQnz
-         szKaAZNgJQQMACUy2bynpAh8x7PEoHpAaIwhlMRZOHrbXwWXh9ISNFdyebmgr4JlUQwW
-         Wpvw==
-Content-Disposition: inline
-In-Reply-To: <20180412132705.30316-1-guro@fb.com>
+In-Reply-To: <20180416013902.GD1911913@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
+
+
+--=-tBA0idIUGrNb7kCfECyR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2018-04-15 at 18:39 -0700, Tejun Heo wrote:
+> Hello, Roman.
+>=20
+> The reclaim behavior is a bit worrisome.
+>=20
+> * It disables an entire swap area while reclaim is in progress.  Most
+>   systems only have one swap area, so this would disable allocating
+>   new swap area for everyone.
+
+That could easily cause OOM kills on systems.
+
+I prefer Tejun's simple approach, of having
+the system slowly reduce swap use below the
+new maximum limit.
+
+> * The reclaim seems very inefficient.  IIUC, it has to read every
+> swap
+>   page to see whether the page belongs to the target memcg and for
+>   each matching page, which involves walking page mm's and page
+>   tables.
+
+One of my Outreachy interns, Kelley Nielsen,
+worked on making swap reclaim more efficient
+by scanning the virtual address space of
+processes.
+
+Unfortunately, we ran into some unforseen
+issues with that approach that we never managed
+to sort out :(
+
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+
+Acked-by: Rik van Riel <riel@surriel.com>
+
+--=20
+All Rights Reversed.
+--=-tBA0idIUGrNb7kCfECyR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, Rik van Riel <riel@surriel.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-Hello, Roman.
+-----BEGIN PGP SIGNATURE-----
 
-The reclaim behavior is a bit worrisome.
+iQEzBAABCAAdFiEEKR73pCCtJ5Xj3yADznnekoTE3oMFAlrUvCoACgkQznnekoTE
+3oP/Bwf+Nc+IRCKzX3QEdvTpUJOaiAFrdGROFUtrGHvZSc9qSvdN+z6TMsCUi6r6
+FnXQf1Uf0TRve+ASaJq7O69vpGQTpdhWPQimB1U+aE/JsNmOqAbxwOfsj7fMrkbA
+NjsP69KQ8/lAoDEP5ZdZda8VAPm5+psbqj+wagvTTP5IiVAUN/56iafSgHZ+3zmU
+NPsEfjXSDUrn7TwoNhTAdM55E5fCgZoUTuajhO6nsROlEqH5k/P+L/o2FPmdUYd2
+CzCuKoWprBjrf8MAmX8W0a90DtWiu7q5MKeAwVfEh29OO+kf1w5hVXhBKHf0BVUX
+Z4K0PBihXKOZMhzCTq8+IU83zeFeFw==
+=YMrS
+-----END PGP SIGNATURE-----
 
-* It disables an entire swap area while reclaim is in progress.  Most
-  systems only have one swap area, so this would disable allocating
-  new swap area for everyone.
+--=-tBA0idIUGrNb7kCfECyR--
 
-* The reclaim seems very inefficient.  IIUC, it has to read every swap
-  page to see whether the page belongs to the target memcg and for
-  each matching page, which involves walking page mm's and page
-  tables.
-
-An easy optimization would be walking swap_cgroup_ctrl so that it only
-reads swap entries which belong to the target cgroup and avoid
-disabling swap for others, but looking at the code, I wonder whether
-we need active reclaim at all.
-
-Swap already tries to aggressively reclaim swap entries when swap
-usage > 50% of the limit, so simply reducing the limit already
-triggers aggressive reclaim, and given that it's swap, just waiting it
-out could be the better behavior anyway, so how about something like
-the following?
-
------- 8< ------
-From: Tejun Heo <tj@kernel.org>
-Subject: mm: memcg: allow lowering memory.swap.max below the current usage
-
-Currently an attempt to set swap.max into a value lower than the
-actual swap usage fails, which causes configuration problems as
-there's no way of lowering the configuration below the current usage
-short of turning off swap entirely.  This makes swap.max difficult to
-use and allows delegatees to lock the delegator out of reducing swap
-allocation.
-
-This patch updates swap_max_write() so that the limit can be lowered
-below the current usage.  It doesn't implement active reclaiming of
-swap entries for the following reasons.
-
-* mem_cgroup_swap_full() already tells the swap machinary to
-  aggressively reclaim swap entries if the usage is above 50% of
-  limit, so simply lowering the limit automatically triggers gradual
-  reclaim.
-
-* Forcing back swapped out pages is likely to heavily impact the
-  workload and mess up the working set.  Given that swap usually is a
-  lot less valuable and less scarce, letting the existing usage
-  dissipate over time through the above gradual reclaim and as they're
-  falted back in is likely the better behavior.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Shaohua Li <shli@fb.com>
-Cc: Rik van Riel <riel@surriel.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org
----
- Documentation/cgroup-v2.txt |    5 +++++
- mm/memcontrol.c             |    6 +-----
- 2 files changed, 6 insertions(+), 5 deletions(-)
-
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -1199,6 +1199,11 @@ PAGE_SIZE multiple when read back.
- 	Swap usage hard limit.  If a cgroup's swap usage reaches this
- 	limit, anonymous memory of the cgroup will not be swapped out.
- 
-+	When reduced under the current usage, the existing swap
-+	entries are reclaimed gradually and the swap usage may stay
-+	higher than the limit for an extended period of time.  This
-+	reduces the impact on the workload and memory management.
-+
- 
- Usage Guidelines
- ~~~~~~~~~~~~~~~~
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6144,11 +6144,7 @@ static ssize_t swap_max_write(struct ker
- 	if (err)
- 		return err;
- 
--	mutex_lock(&memcg_limit_mutex);
--	err = page_counter_limit(&memcg->swap, max);
--	mutex_unlock(&memcg_limit_mutex);
--	if (err)
--		return err;
-+	xchg(&memcg->swap.limit, max);
- 
- 	return nbytes;
- }
