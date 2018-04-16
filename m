@@ -1,65 +1,120 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] memcg: Remove memcg_cgroup::id from IDR on
- mem_cgroup_css_alloc() failure
-Date: Fri, 13 Apr 2018 14:51:01 +0200
-Message-ID: <20180413125101.GO17484@dhcp22.suse.cz>
-References: <ed75d18c-f516-2feb-53a8-6d2836e1da59@virtuozzo.com>
- <20180413110200.GG17484@dhcp22.suse.cz>
- <06931a83-91d2-3dcf-31cf-0b98d82e957f@virtuozzo.com>
- <20180413112036.GH17484@dhcp22.suse.cz>
- <6dbc33bb-f3d5-1a46-b454-13c6f5865fcd@virtuozzo.com>
- <20180413113855.GI17484@dhcp22.suse.cz>
- <8a81c801-35c8-767d-54b0-df9f1ca0abc0@virtuozzo.com>
- <20180413115454.GL17484@dhcp22.suse.cz>
- <abfd4903-c455-fac2-7ed6-73707cda64d1@virtuozzo.com>
- <20180413121433.GM17484@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] mm: allow to decrease swap.max below actual swap usage
+Date: Sun, 15 Apr 2018 18:39:02 -0700
+Message-ID: <20180416013902.GD1911913@devbig577.frc2.facebook.com>
+References: <20180412132705.30316-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=8Mc5GFqXGm91iPIJWqp2cuv5GEJilE+0eGFjEQWdIwM=;
+        b=trE67j8LfoJYlGuMeZTbKgbDVwqRFwzsGXxwsz1CEEKnQ5joHmZbjryMuJ+i8Xky5t
+         TKD3S344kWZKp/RA7PLCDPFuhkDT3cBYrxdO/+n5d4IZWkkP0oP06DZtSvnJBpAQMqJc
+         wCedpV25eiRrhXE5bvB3NHUrdniO/sUC/+5H/hjAI7Y9yLMw2ql5CnEfMKDbz7ZvPbp9
+         1Al7YlWvCFy4iL9uyz0ekK8yZh51qSqvtwsmWkk3/qHkJqe1ScX2khDQnb2AqR+NaQnz
+         szKaAZNgJQQMACUy2bynpAh8x7PEoHpAaIwhlMRZOHrbXwWXh9ISNFdyebmgr4JlUQwW
+         Wpvw==
 Content-Disposition: inline
-In-Reply-To: <20180413121433.GM17484@dhcp22.suse.cz>
+In-Reply-To: <20180412132705.30316-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kirill Tkhai <ktkhai@virtuozzo.com>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, Rik van Riel <riel@surriel.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-On Fri 13-04-18 14:14:33, Michal Hocko wrote:
-[...]
-> Well, this is probably a matter of taste. I will not argue. I will not
-> object if Johannes is OK with your patch. But the whole thing confused
-> hell out of me so I would rather un-clutter it...
+Hello, Roman.
 
-In other words, this
+The reclaim behavior is a bit worrisome.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8c2ed1c2b72c..ca7e981a8a1a 100644
+* It disables an entire swap area while reclaim is in progress.  Most
+  systems only have one swap area, so this would disable allocating
+  new swap area for everyone.
+
+* The reclaim seems very inefficient.  IIUC, it has to read every swap
+  page to see whether the page belongs to the target memcg and for
+  each matching page, which involves walking page mm's and page
+  tables.
+
+An easy optimization would be walking swap_cgroup_ctrl so that it only
+reads swap entries which belong to the target cgroup and avoid
+disabling swap for others, but looking at the code, I wonder whether
+we need active reclaim at all.
+
+Swap already tries to aggressively reclaim swap entries when swap
+usage > 50% of the limit, so simply reducing the limit already
+triggers aggressive reclaim, and given that it's swap, just waiting it
+out could be the better behavior anyway, so how about something like
+the following?
+
+------ 8< ------
+From: Tejun Heo <tj@kernel.org>
+Subject: mm: memcg: allow lowering memory.swap.max below the current usage
+
+Currently an attempt to set swap.max into a value lower than the
+actual swap usage fails, which causes configuration problems as
+there's no way of lowering the configuration below the current usage
+short of turning off swap entirely.  This makes swap.max difficult to
+use and allows delegatees to lock the delegator out of reducing swap
+allocation.
+
+This patch updates swap_max_write() so that the limit can be lowered
+below the current usage.  It doesn't implement active reclaiming of
+swap entries for the following reasons.
+
+* mem_cgroup_swap_full() already tells the swap machinary to
+  aggressively reclaim swap entries if the usage is above 50% of
+  limit, so simply lowering the limit automatically triggers gradual
+  reclaim.
+
+* Forcing back swapped out pages is likely to heavily impact the
+  workload and mess up the working set.  Given that swap usually is a
+  lot less valuable and less scarce, letting the existing usage
+  dissipate over time through the above gradual reclaim and as they're
+  falted back in is likely the better behavior.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Shaohua Li <shli@fb.com>
+Cc: Rik van Riel <riel@surriel.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org
+---
+ Documentation/cgroup-v2.txt |    5 +++++
+ mm/memcontrol.c             |    6 +-----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -1199,6 +1199,11 @@ PAGE_SIZE multiple when read back.
+ 	Swap usage hard limit.  If a cgroup's swap usage reaches this
+ 	limit, anonymous memory of the cgroup will not be swapped out.
+ 
++	When reduced under the current usage, the existing swap
++	entries are reclaimed gradually and the swap usage may stay
++	higher than the limit for an extended period of time.  This
++	reduces the impact on the workload and memory management.
++
+ 
+ Usage Guidelines
+ ~~~~~~~~~~~~~~~~
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -4351,6 +4351,14 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- {
- 	int node;
+@@ -6144,11 +6144,7 @@ static ssize_t swap_max_write(struct ker
+ 	if (err)
+ 		return err;
  
-+	/*
-+	 * We are trying to remove the idr key when the last memcg
-+	 * reference drops which can be sooner than when the last
-+	 * css reference is dropped to recycle ids faster.
-+	 */
-+	if (memcg->id.id > 0)
-+		idr_remove(&mem_cgroup_idr, memcg->id.id);
-+
- 	for_each_node(node)
- 		free_mem_cgroup_per_node_info(memcg, node);
- 	free_percpu(memcg->stat_cpu);
-@@ -4411,8 +4419,6 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 	idr_replace(&mem_cgroup_idr, memcg, memcg->id.id);
- 	return memcg;
- fail:
--	if (memcg->id.id > 0)
--		idr_remove(&mem_cgroup_idr, memcg->id.id);
- 	__mem_cgroup_free(memcg);
- 	return NULL;
+-	mutex_lock(&memcg_limit_mutex);
+-	err = page_counter_limit(&memcg->swap, max);
+-	mutex_unlock(&memcg_limit_mutex);
+-	if (err)
+-		return err;
++	xchg(&memcg->swap.limit, max);
+ 
+ 	return nbytes;
  }
--- 
-Michal Hocko
-SUSE Labs
