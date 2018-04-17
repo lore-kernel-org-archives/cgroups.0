@@ -1,157 +1,117 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/2] mm, memcontrol: Implement memory.swap.events
-Date: Mon, 16 Apr 2018 16:11:51 -0700
-Message-ID: <20180416231151.GI1911913@devbig577.frc2.facebook.com>
-References: <20180416230901.GG1911913@devbig577.frc2.facebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH] mm: allow to decrease swap.max below actual swap usage
+Date: Tue, 17 Apr 2018 12:06:49 +0100
+Message-ID: <20180417110643.GA28901@castle.DHCP.thefacebook.com>
+References: <20180412132705.30316-1-guro@fb.com>
+ <20180416013902.GD1911913@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=ZdZz0tL5Ex+6gwWLwtBLAHcfEEo3LLVAKI8LpZJ1Ksk=;
-        b=AqLK+AQhr6PRmAHYw5Z2Zxxm57jyePzprC/OnQ1ilcohhDh09uEquDqNLeKV5llUVm
-         WD3ZW+7DHJIz6oWkxenVggF0VVjXtpX1oGdLuW6xomj1MKXQU8Y5kuZ4yzrmWWBsFwmh
-         a2wlBvYlDUWYNlR8dFXnfl4ccLU3o0IzREb0G84I+XjsFXyQWnNnFDMhbmDNh1cDK6z6
-         G/hZqVirbiJccnR14g+sjxKXjP/06SvxmPnOC0q9CRSpSlUoKgxbEcyb3/JdUdWjbaoM
-         EM/U2OF8VioOjQlJGZZhCkb93w8TMCSnlF93N28YlbpcUasm9nueBbG3Mm77i1JDnjnE
-         CV0w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=5eLrvNhJ9t7czFfLAwlFDcFvN/981EKk4cJJSrNHtZI=;
+ b=ClPmcpPnzqZtz2LVGcMUNRCCwN6wX2h7rK1hbLzejebIC2wmHnkFAs+DG3fklNKo/28H
+ xoTiWGRH2NS+p+2q9sZ3qkEf89ABN7drvip8PjZ+gT5279gocceYtG3SKLOsbY87hg/N
+ 3AZ3JINoxr2Xhmf4R7A7ifMBf+TcVROrF4E= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=5eLrvNhJ9t7czFfLAwlFDcFvN/981EKk4cJJSrNHtZI=;
+ b=Y6IW7npRNNNEOpxKtVwMMuMsyx4OSuV6YXhYnhiKLT1u6AtfzviuMy2UMYI6XYlz8JmCt7LfZUoGCf3hxRo4Ve+O9Pk3JHvOe0C0DogjFVr/gzM5+4awD4Oun+XQnFFWiABtUMp3c3IiTCMNYVItfhRaQ1FNH45RpQHbUB1/1t0=
 Content-Disposition: inline
-In-Reply-To: <20180416230901.GG1911913@devbig577.frc2.facebook.com>
+In-Reply-To: <20180416013902.GD1911913@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
-Cc: guro@fb.com, riel@surriel.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, Rik van Riel <riel@surriel.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
 
-Add swap max and fail events so that userland can monitor and respond
-to running out of swap.
+Hi, Tejun!
 
-v2: Rebased on top of e27be240df53 ("mm: memcg: make sure
-    memory.events is uptodate when waking pollers")
+On Sun, Apr 15, 2018 at 06:39:02PM -0700, Tejun Heo wrote:
+> Hello, Roman.
+> 
+> The reclaim behavior is a bit worrisome.
+> 
+> * It disables an entire swap area while reclaim is in progress.  Most
+>   systems only have one swap area, so this would disable allocating
+>   new swap area for everyone.
+> 
+> * The reclaim seems very inefficient.  IIUC, it has to read every swap
+>   page to see whether the page belongs to the target memcg and for
+>   each matching page, which involves walking page mm's and page
+>   tables.
+> 
+> An easy optimization would be walking swap_cgroup_ctrl so that it only
+> reads swap entries which belong to the target cgroup and avoid
+> disabling swap for others, but looking at the code, I wonder whether
+> we need active reclaim at all.
+> 
+> Swap already tries to aggressively reclaim swap entries when swap
+> usage > 50% of the limit, so simply reducing the limit already
+> triggers aggressive reclaim, and given that it's swap, just waiting it
+> out could be the better behavior anyway, so how about something like
+> the following?
+> 
+> ------ 8< ------
+> From: Tejun Heo <tj@kernel.org>
+> Subject: mm: memcg: allow lowering memory.swap.max below the current usage
+> 
+> Currently an attempt to set swap.max into a value lower than the
+> actual swap usage fails, which causes configuration problems as
+> there's no way of lowering the configuration below the current usage
+> short of turning off swap entirely.  This makes swap.max difficult to
+> use and allows delegatees to lock the delegator out of reducing swap
+> allocation.
+> 
+> This patch updates swap_max_write() so that the limit can be lowered
+> below the current usage.  It doesn't implement active reclaiming of
+> swap entries for the following reasons.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Roman Gushchin <guro@fb.com>
-Cc: Rik van Riel <riel@surriel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-api@vger.kernel.org
----
-Hello,
+This is definitely better than existing state of things, and it's also safe.
 
-I'm not too sure about the fail event.  Right now, it's a bit
-confusing which stats / events are recursive and which aren't and also
-which ones reflect events which originate from a given cgroup and
-which targets the cgroup.  No idea what the right long term solution
-is and it could just be that growing them organically is actually the
-only right thing to do.
+I assume, that active swap reclaim can be useful in some cases,
+but we can return to this question later.
 
-Thanks.
+Acked-by: Roman Gushchin <guro@fb.com>
 
- Documentation/cgroup-v2.txt |   16 ++++++++++++++++
- include/linux/memcontrol.h  |    5 +++++
- mm/memcontrol.c             |   24 +++++++++++++++++++++++-
- 3 files changed, 44 insertions(+), 1 deletion(-)
+> 
+> * mem_cgroup_swap_full() already tells the swap machinary to
+>   aggressively reclaim swap entries if the usage is above 50% of
+>   limit, so simply lowering the limit automatically triggers gradual
+>   reclaim.
+> 
+> * Forcing back swapped out pages is likely to heavily impact the
+>   workload and mess up the working set.  Given that swap usually is a
+>   lot less valuable and less scarce, letting the existing usage
+>   dissipate over time through the above gradual reclaim and as they're
+>   falted back in is likely the better behavior.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Roman Gushchin <guro@fb.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Shaohua Li <shli@fb.com>
+> Cc: Rik van Riel <riel@surriel.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: cgroups@vger.kernel.org
+> ---
+>  Documentation/cgroup-v2.txt |    5 +++++
+>  mm/memcontrol.c             |    6 +-----
+>  2 files changed, 6 insertions(+), 5 deletions(-)
+> 
+> --- a/Documentation/cgroup-v2.txt
+> +++ b/Documentation/cgroup-v2.txt
+> @@ -1199,6 +1199,11 @@ PAGE_SIZE multiple when read back.
+>  	Swap usage hard limit.  If a cgroup's swap usage reaches this
+>  	limit, anonymous memory of the cgroup will not be swapped out.
+>  
+> +	When reduced under the current usage, the existing swap
+> +	entries are reclaimed gradually and the swap usage may stay
+> +	higher than the limit for an extended period of time.  This
+> +	reduces the impact on the workload and memory management.
 
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -1199,6 +1199,22 @@ PAGE_SIZE multiple when read back.
- 	Swap usage hard limit.  If a cgroup's swap usage reaches this
- 	limit, anonymous memory of the cgroup will not be swapped out.
- 
-+  memory.swap.events
-+	A read-only flat-keyed file which exists on non-root cgroups.
-+	The following entries are defined.  Unless specified
-+	otherwise, a value change in this file generates a file
-+	modified event.
-+
-+	  max
-+		The number of times the cgroup's swap usage was about
-+		to go over the max boundary and swap allocation
-+		failed.
-+
-+	  fail
-+		The number of times swap allocation failed either
-+		because of running out of swap system-wide or max
-+		limit.
-+
- 
- Usage Guidelines
- ~~~~~~~~~~~~~~~~
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -53,6 +53,8 @@ enum memcg_memory_event {
- 	MEMCG_HIGH,
- 	MEMCG_MAX,
- 	MEMCG_OOM,
-+	MEMCG_SWAP_MAX,
-+	MEMCG_SWAP_FAIL,
- 	MEMCG_NR_MEMORY_EVENTS,
- };
- 
-@@ -208,6 +210,9 @@ struct mem_cgroup {
- 	atomic_long_t memory_events[MEMCG_NR_MEMORY_EVENTS];
- 	struct cgroup_file events_file;
- 
-+	/* handle for "memory.swap.events" */
-+	struct cgroup_file swap_events_file;
-+
- 	/* protect arrays of thresholds */
- 	struct mutex thresholds_lock;
- 
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6012,13 +6012,17 @@ int mem_cgroup_try_charge_swap(struct pa
- 	if (!memcg)
- 		return 0;
- 
--	if (!entry.val)
-+	if (!entry.val) {
-+		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
- 		return 0;
-+	}
- 
- 	memcg = mem_cgroup_id_get_online(memcg);
- 
- 	if (!mem_cgroup_is_root(memcg) &&
- 	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
-+		memcg_memory_event(memcg, MEMCG_SWAP_MAX);
-+		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
- 		mem_cgroup_id_put(memcg);
- 		return -ENOMEM;
- 	}
-@@ -6156,6 +6160,18 @@ static ssize_t swap_max_write(struct ker
- 	return nbytes;
- }
- 
-+static int swap_events_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-+
-+	seq_printf(m, "max %lu\n",
-+		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_MAX]));
-+	seq_printf(m, "fail %lu\n",
-+		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_FAIL]));
-+
-+	return 0;
-+}
-+
- static struct cftype swap_files[] = {
- 	{
- 		.name = "swap.current",
-@@ -6168,6 +6184,12 @@ static struct cftype swap_files[] = {
- 		.seq_show = swap_max_show,
- 		.write = swap_max_write,
- 	},
-+	{
-+		.name = "swap.events",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.file_offset = offsetof(struct mem_cgroup, swap_events_file),
-+		.seq_show = swap_events_show,
-+	},
- 	{ }	/* terminate */
- };
- 
+I would probably drop the last sentence: it looks like an excuse
+for the defined semantics; but it's totally fine.
+
+Thanks!
