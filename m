@@ -1,46 +1,141 @@
-From: Casey Schaufler <casey@schaufler-ca.com>
-Subject: Re: [RFC PATCH ghak32 V2 01/13] audit: add container id
-Date: Wed, 18 Apr 2018 17:41:29 -0700
-Message-ID: <32d3e7a6-36f0-571a-bb91-67f746c7eafa@schaufler-ca.com>
-References: <cover.1521179281.git.rgb@redhat.com>
- <e284617ad667ad8f17958dd8babb87fe1b4d7205.1521179281.git.rgb@redhat.com>
- <CAHC9VhTyvxxj2e2Gn+iyW6iLLeYB7hp8a+JvfeMmJ2nUPqtEaw@mail.gmail.com>
+From: Paul Moore <paul@paul-moore.com>
+Subject: Re: [RFC PATCH ghak32 V2 07/13] audit: add container aux record to watch/tree/mark
+Date: Wed, 18 Apr 2018 20:42:43 -0400
+Message-ID: <CAHC9VhTzp-r2TFytt1zTEpeGK=O5dEnLPFw-CdsM1ttpY0a30g@mail.gmail.com>
+References: <cover.1521179281.git.rgb@redhat.com> <737f914a88d048b9985984c0ce1f946c30ca374c.1521179281.git.rgb@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1524098500; bh=IkTC3qdnwxIFqch5yLRe8frKfvV4jXfufWZ3gU6h44k=; h=Subject:To:Cc:References:From:Date:In-Reply-To:From:Subject; b=gG3XT5QRvEqRJErFfFpHu4fN7bWdLWDk67onweW58AJoYS+9+BvZDtaiDfxXwPFqZxKbhG7U8ZvSHBUB5ycHJnDdmqXr6xDOKko/G8TUTaHP5ka0KxUuFwJ+npLFLye2E2kglqdd7sH4i2YsNwB4IR7HJpTd52SBO1ivHnS0lBDoNZ1yM5CQ5oXGhVsbBEQb4o3a961rlSsd9WCkjfnUiMlTnQKSzHTw96OlsmStG3HZqrJkxsVmQAItlQlfuI7dUPXF20zKWKRpsm57IipwZBuNy5fzpjgSRUJwmU0PSbc1WnmdVtoCrmaLWhoHnXNat9CYMmfSgv2PhF5bVjdHOA==
-In-Reply-To: <CAHC9VhTyvxxj2e2Gn+iyW6iLLeYB7hp8a+JvfeMmJ2nUPqtEaw@mail.gmail.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=v2130Rwkt5V/lqLvIGBzplFEuVHe4QQNvD4kog4USUo=;
+        b=Jfo2FwDHHVbjSCMGDuKqFlRfboSy48An9d+JnA8T89t6rT5D6XK4e2PBc/T7tDUEZl
+         4eth/1VomBRCxIhF6IZEQvyKgwDkZDi/qj9uM9U73w1h/yKZmVMnRx13Z6KBNR5QvyeK
+         R891iA91Tv/OZRkmaWspL0Pw1lSI5/lM1B3S8Pnli0YijpqGTuTQhrY4cUeL027Ujudg
+         QXJq0+3l1AX3JlvhvCd7jrSIs5JjS8FcEYr5GTR5AW7YjeZbEhGjP1dDZz4IcANnEO0X
+         sUMYuylR5sKzxcokBWaJjfMs4SmG9BSDRq6L7m8UVwGITgz5yjOLtcq4/mQq5MkXIxeq
+         +Lfg==
+In-Reply-To: <737f914a88d048b9985984c0ce1f946c30ca374c.1521179281.git.rgb@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Paul Moore <paul@paul-moore.com>, Richard Guy Briggs <rgb@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Richard Guy Briggs <rgb@redhat.com>
 Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, Linux-Audit Mailing List <linux-audit@redhat.com>, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
 
-On 4/18/2018 4:47 PM, Paul Moore wrote:
-> On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
->> Implement the proc fs write to set the audit container ID of a process,
->> emitting an AUDIT_CONTAINER record to document the event.
->> ...
->>
->> diff --git a/include/linux/sched.h b/include/linux/sched.h
->> index d258826..1b82191 100644
->> --- a/include/linux/sched.h
->> +++ b/include/linux/sched.h
->> @@ -796,6 +796,7 @@ struct task_struct {
->>  #ifdef CONFIG_AUDITSYSCALL
->>         kuid_t                          loginuid;
->>         unsigned int                    sessionid;
->> +       u64                             containerid;
-> This one line addition to the task_struct scares me the most of
-> anything in this patchset.  Why?  It's a field named "containerid" in
-> a perhaps one of the most widely used core kernel structures; the
-> possibilities for abuse are endless, and it's foolish to think we
-> would ever be able to adequately police this.
+On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
+> Add container ID auxiliary record to mark, watch and tree rule
+> configuration standalone records.
+>
+> Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
+> ---
+>  kernel/audit_fsnotify.c |  5 ++++-
+>  kernel/audit_tree.c     |  5 ++++-
+>  kernel/audit_watch.c    | 33 +++++++++++++++++++--------------
+>  3 files changed, 27 insertions(+), 16 deletions(-)
+>
+> diff --git a/kernel/audit_fsnotify.c b/kernel/audit_fsnotify.c
+> index 52f368b..18c110d 100644
+> --- a/kernel/audit_fsnotify.c
+> +++ b/kernel/audit_fsnotify.c
+> @@ -124,10 +124,11 @@ static void audit_mark_log_rule_change(struct audit_fsnotify_mark *audit_mark, c
+>  {
+>         struct audit_buffer *ab;
+>         struct audit_krule *rule = audit_mark->rule;
+> +       struct audit_context *context = audit_alloc_local();
+>
+>         if (!audit_enabled)
+>                 return;
 
-If we can get the LSM infrastructure managed task blobs from 
-module stacking in ahead of this we could create a trivial security
-module to manage this. It's not as if there aren't all sorts of
-interactions between security modules and the audit system already.
+Move the audit_alloc_local() after the audit_enabled check.
 
+> -       ab = audit_log_start(NULL, GFP_NOFS, AUDIT_CONFIG_CHANGE);
+> +       ab = audit_log_start(context, GFP_NOFS, AUDIT_CONFIG_CHANGE);
+>         if (unlikely(!ab))
+>                 return;
+>         audit_log_format(ab, "auid=%u ses=%u op=%s",
+> @@ -138,6 +139,8 @@ static void audit_mark_log_rule_change(struct audit_fsnotify_mark *audit_mark, c
+>         audit_log_key(ab, rule->filterkey);
+>         audit_log_format(ab, " list=%d res=1", rule->listnr);
+>         audit_log_end(ab);
+> +       audit_log_container_info(context, "config", audit_get_containerid(current));
+> +       audit_free_context(context);
+>  }
+>
+>  void audit_remove_mark(struct audit_fsnotify_mark *audit_mark)
+> diff --git a/kernel/audit_tree.c b/kernel/audit_tree.c
+> index 67e6956..7c085be 100644
+> --- a/kernel/audit_tree.c
+> +++ b/kernel/audit_tree.c
+> @@ -496,8 +496,9 @@ static int tag_chunk(struct inode *inode, struct audit_tree *tree)
+>  static void audit_tree_log_remove_rule(struct audit_krule *rule)
+>  {
+>         struct audit_buffer *ab;
+> +       struct audit_context *context = audit_alloc_local();
 
+Sort of independent of the audit container ID work, but shouldn't we
+have an audit_enabled check here?
+
+> -       ab = audit_log_start(NULL, GFP_KERNEL, AUDIT_CONFIG_CHANGE);
+> +       ab = audit_log_start(context, GFP_KERNEL, AUDIT_CONFIG_CHANGE);
+>         if (unlikely(!ab))
+>                 return;
+>         audit_log_format(ab, "op=remove_rule");
+> @@ -506,6 +507,8 @@ static void audit_tree_log_remove_rule(struct audit_krule *rule)
+>         audit_log_key(ab, rule->filterkey);
+>         audit_log_format(ab, " list=%d res=1", rule->listnr);
+>         audit_log_end(ab);
+> +       audit_log_container_info(context, "config", audit_get_containerid(current));
+> +       audit_free_context(context);
+>  }
+>
+>  static void kill_rules(struct audit_tree *tree)
+> diff --git a/kernel/audit_watch.c b/kernel/audit_watch.c
+> index 9eb8b35..60d75a2 100644
+> --- a/kernel/audit_watch.c
+> +++ b/kernel/audit_watch.c
+> @@ -238,20 +238,25 @@ static struct audit_watch *audit_dupe_watch(struct audit_watch *old)
+>
+>  static void audit_watch_log_rule_change(struct audit_krule *r, struct audit_watch *w, char *op)
+>  {
+> -       if (audit_enabled) {
+> -               struct audit_buffer *ab;
+> -               ab = audit_log_start(NULL, GFP_NOFS, AUDIT_CONFIG_CHANGE);
+> -               if (unlikely(!ab))
+> -                       return;
+> -               audit_log_format(ab, "auid=%u ses=%u op=%s",
+> -                                from_kuid(&init_user_ns, audit_get_loginuid(current)),
+> -                                audit_get_sessionid(current), op);
+> -               audit_log_format(ab, " path=");
+> -               audit_log_untrustedstring(ab, w->path);
+> -               audit_log_key(ab, r->filterkey);
+> -               audit_log_format(ab, " list=%d res=1", r->listnr);
+> -               audit_log_end(ab);
+> -       }
+> +       struct audit_buffer *ab;
+> +       struct audit_context *context = audit_alloc_local();
+> +
+> +       if (!audit_enabled)
+> +               return;
+
+Same as above, do the allocation after the audit_enabled check.
+
+> +       ab = audit_log_start(context, GFP_NOFS, AUDIT_CONFIG_CHANGE);
+> +       if (unlikely(!ab))
+> +               return;
+> +       audit_log_format(ab, "auid=%u ses=%u op=%s",
+> +                        from_kuid(&init_user_ns, audit_get_loginuid(current)),
+> +                        audit_get_sessionid(current), op);
+> +       audit_log_format(ab, " path=");
+> +       audit_log_untrustedstring(ab, w->path);
+> +       audit_log_key(ab, r->filterkey);
+> +       audit_log_format(ab, " list=%d res=1", r->listnr);
+> +       audit_log_end(ab);
+> +       audit_log_container_info(context, "config", audit_get_containerid(current));
+> +       audit_free_context(context);
+>  }
+
+-- 
+paul moore
+www.paul-moore.com
