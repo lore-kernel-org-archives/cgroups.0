@@ -1,69 +1,237 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: Some questions about cgroup aware OOM killer.
-Date: Thu, 19 Apr 2018 11:43:42 +0100
-Message-ID: <20180419104336.GA20675@castle.DHCP.thefacebook.com>
-References: <1524122224-26670-1-git-send-email-ufo19890607@gmail.com>
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: Re: [RFC PATCH ghak32 V2 04/13] audit: add containerid filtering
+Date: Thu, 19 Apr 2018 08:17:38 -0400
+Message-ID: <20180419121738.ekiy27bpyel6o3zu@madcap2.tricolour.ca>
+References: <cover.1521179281.git.rgb@redhat.com>
+ <b933f93762435990e9b1e6d5aebf15f186ac8951.1521179281.git.rgb@redhat.com>
+ <CAHC9VhRVGTCVJxG3Etcs-aOpr71A7xGsn5VPhskUG35rmQ7WUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=facebook;
- bh=rut6R1O0dnJEpPKj8+6EDvs4bYkM77jWnzli+Vtn+Ko=;
- b=Pn24MNF1qFElhjjc2fAEznjgR6LIqiTUPak7dsR8rjc7JRJIlkk9WVm56sOCoJP6WCTr
- mEHy28pm06Gf5mgXrcMr4ArYLhkRJ74zagacIGUdbHOTWUijFcR2VvSy0/mrQR2rg8+O
- UlbxgbkMN0rMx3J2Ufe7uXtmeTE8ygD5jQk= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=rut6R1O0dnJEpPKj8+6EDvs4bYkM77jWnzli+Vtn+Ko=;
- b=A0pWOmg44Ju+5eS2JlbAxaHT27gV/4/PVljHF73Jdekh8lqAB/BKwT3sxEgsYvhS1+UCxSKsN3RAGgKfAVBEeYsh2kWSaZNucz2C3YPswDSf9DSab/lTRQZ+jsVvCoDdtl2XU6DoW3e1BQjBWDUOTkt3VZKOkGmsCCye34Ral4M=
 Content-Disposition: inline
-In-Reply-To: <1524122224-26670-1-git-send-email-ufo19890607@gmail.com>
+In-Reply-To: <CAHC9VhRVGTCVJxG3Etcs-aOpr71A7xGsn5VPhskUG35rmQ7WUw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: ufo19890607 <ufo19890607@gmail.com>
-Cc: mhocko@suse.com, vdavydov.dev@gmail.com, penguin-kernel@i-love.sakura.ne.jp, rientjes@google.com, akpm@linux-foundation.org, tj@kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, yuzhoujian <yuzhoujian@didichuxing.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Paul Moore <paul@paul-moore.com>
+Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, Linux-Audit Mailing List <linux-audit@redhat.com>, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
 
-Hi!
-
-Please, pull the whole patchset from the next tree:
-git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-
-$ git log next/master --oneline --author=guro@fb.com
-1fecc970ac9e cgroup: list groupoom in cgroup features
-dff73d397f7f mm-oom-docs-describe-the-cgroup-aware-oom-killer-fix
-7cf83086511a mm, oom, docs: describe the cgroup-aware OOM killer
-e2194b2869f1 mm, oom: add cgroup v2 mount option for cgroup-aware OOM killer
-338fbcc52518 mm, oom: return error on access to memory.oom_group if groupoom is disabled
-96fb32250ded mm, oom: introduce memory.oom_group
-ed5f99985bf8 mm, oom: cgroup-aware OOM killer
-e33eba2c3273 mm: implement mem_cgroup_scan_tasks() for the root memory cgroup
-9bd3a4c529d4 mm, oom: refactor oom_kill_process()
-
-Thanks!
-
-On Thu, Apr 19, 2018 at 08:17:04AM +0100, ufo19890607 wrote:
-> From: yuzhoujian <yuzhoujian@didichuxing.com>
+On 2018-04-18 20:24, Paul Moore wrote:
+> On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
+> > Implement container ID filtering using the AUDIT_CONTAINERID field name
+> > to send an 8-character string representing a u64 since the value field
+> > is only u32.
+> >
+> > Sending it as two u32 was considered, but gathering and comparing two
+> > fields was more complex.
 > 
-> Hi Roman
-> I've read your patchset about cgroup aware OOM killer, and try
-> to merge your patchset to the upstream kernel(v4.17-rc1). But
-> I found some functions which in your patch([PATCH v13 3/7] 
-> mm, oom: cgroup-aware OOM killer) does not exist in the upstream
-> kernel. Which version of the kernel do you patch on? And, do you
-> have the latest patchset?
+> My only worry here is that you aren't really sending a string in the
+> ASCII sense, you are sending an 8 byte buffer (that better be NUL
+> terminated) that happens to be an unsigned 64-bit integer.  To be
+> clear, I'm okay with that (it's protected by AUDIT_CONTAINERID), and
+> the code is okay with that, I just want us to pause for a minute and
+> make sure that is an okay thing to do long term.
+
+I already went through that process and warned of it 7 weeks ago.  As
+already noted, That was preferable to two seperate u32 fields that
+depend on each other making comparisons more complicated.  Using two
+seperate fields to configure the rule could be gated for validity, then
+the result stored in a special rule field, but I wasn't keen about that
+approach.
+
+> > The feature indicator is AUDIT_FEATURE_BITMAP_CONTAINERID_FILTER.
+> >
+> > This requires support from userspace to be useful.
+> > See: https://github.com/linux-audit/audit-userspace/issues/40
+> > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
+> > ---
+> >  include/linux/audit.h      |  1 +
+> >  include/uapi/linux/audit.h |  5 ++++-
+> >  kernel/audit.h             |  1 +
+> >  kernel/auditfilter.c       | 47 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  kernel/auditsc.c           |  3 +++
+> >  5 files changed, 56 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/include/linux/audit.h b/include/linux/audit.h
+> > index 3acbe9d..f10ca1b 100644
+> > --- a/include/linux/audit.h
+> > +++ b/include/linux/audit.h
+> > @@ -76,6 +76,7 @@ struct audit_field {
+> >         u32                             type;
+> >         union {
+> >                 u32                     val;
+> > +               u64                     val64;
+> >                 kuid_t                  uid;
+> >                 kgid_t                  gid;
+> >                 struct {
+> > diff --git a/include/uapi/linux/audit.h b/include/uapi/linux/audit.h
+> > index e83ccbd..8443a8f 100644
+> > --- a/include/uapi/linux/audit.h
+> > +++ b/include/uapi/linux/audit.h
+> > @@ -262,6 +262,7 @@
+> >  #define AUDIT_LOGINUID_SET     24
+> >  #define AUDIT_SESSIONID        25      /* Session ID */
+> >  #define AUDIT_FSTYPE   26      /* FileSystem Type */
+> > +#define AUDIT_CONTAINERID      27      /* Container ID */
+> >
+> >                                 /* These are ONLY useful when checking
+> >                                  * at syscall exit time (AUDIT_AT_EXIT). */
+> > @@ -342,6 +343,7 @@ enum {
+> >  #define AUDIT_FEATURE_BITMAP_SESSIONID_FILTER  0x00000010
+> >  #define AUDIT_FEATURE_BITMAP_LOST_RESET                0x00000020
+> >  #define AUDIT_FEATURE_BITMAP_FILTER_FS         0x00000040
+> > +#define AUDIT_FEATURE_BITMAP_CONTAINERID_FILTER        0x00000080
+> >
+> >  #define AUDIT_FEATURE_BITMAP_ALL (AUDIT_FEATURE_BITMAP_BACKLOG_LIMIT | \
+> >                                   AUDIT_FEATURE_BITMAP_BACKLOG_WAIT_TIME | \
+> > @@ -349,7 +351,8 @@ enum {
+> >                                   AUDIT_FEATURE_BITMAP_EXCLUDE_EXTEND | \
+> >                                   AUDIT_FEATURE_BITMAP_SESSIONID_FILTER | \
+> >                                   AUDIT_FEATURE_BITMAP_LOST_RESET | \
+> > -                                 AUDIT_FEATURE_BITMAP_FILTER_FS)
+> > +                                 AUDIT_FEATURE_BITMAP_FILTER_FS | \
+> > +                                 AUDIT_FEATURE_BITMAP_CONTAINERID_FILTER)
+> >
+> >  /* deprecated: AUDIT_VERSION_* */
+> >  #define AUDIT_VERSION_LATEST           AUDIT_FEATURE_BITMAP_ALL
+> > diff --git a/kernel/audit.h b/kernel/audit.h
+> > index 214e149..aaa651a 100644
+> > --- a/kernel/audit.h
+> > +++ b/kernel/audit.h
+> > @@ -234,6 +234,7 @@ static inline int audit_hash_ino(u32 ino)
+> >
+> >  extern int audit_match_class(int class, unsigned syscall);
+> >  extern int audit_comparator(const u32 left, const u32 op, const u32 right);
+> > +extern int audit_comparator64(const u64 left, const u32 op, const u64 right);
+> >  extern int audit_uid_comparator(kuid_t left, u32 op, kuid_t right);
+> >  extern int audit_gid_comparator(kgid_t left, u32 op, kgid_t right);
+> >  extern int parent_len(const char *path);
+> > diff --git a/kernel/auditfilter.c b/kernel/auditfilter.c
+> > index d7a807e..c4c8746 100644
+> > --- a/kernel/auditfilter.c
+> > +++ b/kernel/auditfilter.c
+> > @@ -410,6 +410,7 @@ static int audit_field_valid(struct audit_entry *entry, struct audit_field *f)
+> >         /* FALL THROUGH */
+> >         case AUDIT_ARCH:
+> >         case AUDIT_FSTYPE:
+> > +       case AUDIT_CONTAINERID:
+> >                 if (f->op != Audit_not_equal && f->op != Audit_equal)
+> >                         return -EINVAL;
+> >                 break;
+> > @@ -584,6 +585,14 @@ static struct audit_entry *audit_data_to_entry(struct audit_rule_data *data,
+> >                         }
+> >                         entry->rule.exe = audit_mark;
+> >                         break;
+> > +               case AUDIT_CONTAINERID:
+> > +                       if (f->val != sizeof(u64))
+> > +                               goto exit_free;
+> > +                       str = audit_unpack_string(&bufp, &remain, f->val);
+> > +                       if (IS_ERR(str))
+> > +                               goto exit_free;
+> > +                       f->val64 = ((u64 *)str)[0];
+> > +                       break;
+> >                 }
+> >         }
+> >
+> > @@ -666,6 +675,11 @@ static struct audit_rule_data *audit_krule_to_data(struct audit_krule *krule)
+> >                         data->buflen += data->values[i] =
+> >                                 audit_pack_string(&bufp, audit_mark_path(krule->exe));
+> >                         break;
+> > +               case AUDIT_CONTAINERID:
+> > +                       data->buflen += data->values[i] = sizeof(u64);
+> > +                       for (i = 0; i < sizeof(u64); i++)
+> > +                               ((char *)bufp)[i] = ((char *)&f->val64)[i];
+> > +                       break;
+> >                 case AUDIT_LOGINUID_SET:
+> >                         if (krule->pflags & AUDIT_LOGINUID_LEGACY && !f->val) {
+> >                                 data->fields[i] = AUDIT_LOGINUID;
+> > @@ -752,6 +766,10 @@ static int audit_compare_rule(struct audit_krule *a, struct audit_krule *b)
+> >                         if (!gid_eq(a->fields[i].gid, b->fields[i].gid))
+> >                                 return 1;
+> >                         break;
+> > +               case AUDIT_CONTAINERID:
+> > +                       if (a->fields[i].val64 != b->fields[i].val64)
+> > +                               return 1;
+> > +                       break;
+> >                 default:
+> >                         if (a->fields[i].val != b->fields[i].val)
+> >                                 return 1;
+> > @@ -1210,6 +1228,31 @@ int audit_comparator(u32 left, u32 op, u32 right)
+> >         }
+> >  }
+> >
+> > +int audit_comparator64(u64 left, u32 op, u64 right)
+> > +{
+> > +       switch (op) {
+> > +       case Audit_equal:
+> > +               return (left == right);
+> > +       case Audit_not_equal:
+> > +               return (left != right);
+> > +       case Audit_lt:
+> > +               return (left < right);
+> > +       case Audit_le:
+> > +               return (left <= right);
+> > +       case Audit_gt:
+> > +               return (left > right);
+> > +       case Audit_ge:
+> > +               return (left >= right);
+> > +       case Audit_bitmask:
+> > +               return (left & right);
+> > +       case Audit_bittest:
+> > +               return ((left & right) == right);
+> > +       default:
+> > +               BUG();
+> > +               return 0;
+> > +       }
+> > +}
+> > +
+> >  int audit_uid_comparator(kuid_t left, u32 op, kuid_t right)
+> >  {
+> >         switch (op) {
+> > @@ -1348,6 +1391,10 @@ int audit_filter(int msgtype, unsigned int listtype)
+> >                                 result = audit_comparator(audit_loginuid_set(current),
+> >                                                           f->op, f->val);
+> >                                 break;
+> > +                       case AUDIT_CONTAINERID:
+> > +                               result = audit_comparator64(audit_get_containerid(current),
+> > +                                                             f->op, f->val64);
+> > +                               break;
+> >                         case AUDIT_MSGTYPE:
+> >                                 result = audit_comparator(msgtype, f->op, f->val);
+> >                                 break;
+> > diff --git a/kernel/auditsc.c b/kernel/auditsc.c
+> > index 65be110..2bba324 100644
+> > --- a/kernel/auditsc.c
+> > +++ b/kernel/auditsc.c
+> > @@ -614,6 +614,9 @@ static int audit_filter_rules(struct task_struct *tsk,
+> >                 case AUDIT_LOGINUID_SET:
+> >                         result = audit_comparator(audit_loginuid_set(tsk), f->op, f->val);
+> >                         break;
+> > +               case AUDIT_CONTAINERID:
+> > +                       result = audit_comparator64(audit_get_containerid(tsk), f->op, f->val64);
+> > +                       break;
+> >                 case AUDIT_SUBJ_USER:
+> >                 case AUDIT_SUBJ_ROLE:
+> >                 case AUDIT_SUBJ_TYPE:
+> > --
+> > 1.8.3.1
+> >
+> > --
+> > Linux-audit mailing list
+> > Linux-audit@redhat.com
+> > https://www.redhat.com/mailman/listinfo/linux-audit
 > 
-> The faults in PATCH v13 3/7:
-> 1. mm/oom_kill.o: In function `out_of_memory':
->    /linux/mm/oom_kill.c:1125: undefined reference to `alloc_pages_before_oomkill'
-> 2. mm/oom_kill.c: In function ‘out_of_memory’:
->    mm/oom_kill.c:1125:5: error: ‘struct oom_control’ has no member named ‘page’
->    oc->page = alloc_pages_before_oomkill(oc);
->      ^
 > 
-> Best wishes
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> paul moore
+> www.paul-moore.com
+
+- RGB
+
+--
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
