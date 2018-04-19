@@ -1,118 +1,43 @@
-From: Paul Moore <paul@paul-moore.com>
-Subject: Re: [RFC PATCH ghak32 V2 12/13] audit: NETFILTER_PKT: record each
- container ID associated with a netNS
-Date: Wed, 18 Apr 2018 22:10:10 -0400
-Message-ID: <CAHC9VhR3BNRr24BPxud0X_eyFmSxUOh9bwjWNU4Z=rnDR0fENA@mail.gmail.com>
-References: <cover.1521179281.git.rgb@redhat.com> <66adde01c1dda792aff99a457eea576a0b08ca98.1521179281.git.rgb@redhat.com>
+From: ufo19890607 <ufo19890607@gmail.com>
+Subject: Some questions about cgroup aware OOM killer.
+Date: Thu, 19 Apr 2018 08:17:04 +0100
+Message-ID: <1524122224-26670-1-git-send-email-ufo19890607@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=Gj8/thAg0wox2etqQGXomOatW3ZQsvbCa2rMkoTjKwI=;
-        b=AS8WT8fw5ltkiYKMufH65CyECTKxbYfvKubWiLJyEKFNsZm29uwZoNBlDKY0HRVJC6
-         RNV8F97nXKS6S9+jMmqkHIIaDSrdk+8CHucqxGWUwLme/hv+OdzlktubhNmrQFJYSXmq
-         ywcYHxwm1y8OwCgvJPbrMA24UNNSdWSdUAYectHI2xoMndRhvv3gqrur2ObxhQMeolsg
-         4jAzb6IYH072/JO1lDxNWa682ZUG9k0j0/W3GhULzXoIg6ktmZfhPk0XdvdY0axLbuqT
-         DFqRONO0YF0eg2yxuX/k3AX+tGkVdDrW6+QrVkfwJ0WzROPzx+FuCAwoAN4j/OvnXit/
-         2mPg==
-In-Reply-To: <66adde01c1dda792aff99a457eea576a0b08ca98.1521179281.git.rgb@redhat.com>
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=gC5HfWu9MN4rgGEJvSrBc0tHAVh75vqqzP9R2ktQxOU=;
+        b=jlZoW3JreFMlYIdNYeRFJ+CFj79iuit5JUhtYKna1DQSA6xzG/a/oifiOzZsvd0wSD
+         Edx4mJtY7Kd34GABA0zLnx6yKDf7X+/xOlRi819Mmgh3/w/y0+S6+E0wPABxym04ZB6K
+         rdnIRbwRJ/KjfXabCTpj7CZKjK/DSlmZyOExKj7BlM89PKLfCQul7ssKMQYSBCLcQNXD
+         0GieE8tPSlqcpDIQ2oBV75rUYQXC5cVHiPnecS4oSEWsPPG3eQ0I5VYpmNQGCcdPOTDj
+         n4nu+JlL/2GXVAJg1iCbKriMinVwaL6KcAh30y/lM2ObZvdj/V0N/4PtFZ30Zyl4ybFk
+         3NzA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Richard Guy Briggs <rgb@redhat.com>
-Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, Linux-Audit Mailing List <linux-audit@redhat.com>, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
+Content-Type: text/plain; charset="utf-8"
+To: guro@fb.com, mhocko@suse.com, vdavydov.dev@gmail.com, penguin-kernel@i-love.sakura.ne.jp, rientjes@google.com, akpm@linux-foundation.org, tj@kernel.org
+Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, yuzhoujian <yuzhoujian@didichuxing.com>
 
-On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
-> Add container ID auxiliary record(s) to NETFILTER_PKT event standalone
-> records.  Iterate through all potential container IDs associated with a
-> network namespace.
->
-> Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
-> ---
->  kernel/audit.c           |  1 +
->  kernel/auditsc.c         |  2 ++
->  net/netfilter/xt_AUDIT.c | 15 ++++++++++++++-
->  3 files changed, 17 insertions(+), 1 deletion(-)
->
-> diff --git a/kernel/audit.c b/kernel/audit.c
-> index 08662b4..3c77e47 100644
-> --- a/kernel/audit.c
-> +++ b/kernel/audit.c
-> @@ -2102,6 +2102,7 @@ int audit_log_container_info(struct audit_context *context,
->         audit_log_end(ab);
->         return 0;
->  }
-> +EXPORT_SYMBOL(audit_log_container_info);
->
->  void audit_log_key(struct audit_buffer *ab, char *key)
->  {
-> diff --git a/kernel/auditsc.c b/kernel/auditsc.c
-> index 208da962..af68d01 100644
-> --- a/kernel/auditsc.c
-> +++ b/kernel/auditsc.c
-> @@ -975,6 +975,7 @@ struct audit_context *audit_alloc_local(void)
->         context->in_syscall = 1;
->         return context;
->  }
-> +EXPORT_SYMBOL(audit_alloc_local);
->
->  inline void audit_free_context(struct audit_context *context)
->  {
-> @@ -989,6 +990,7 @@ inline void audit_free_context(struct audit_context *context)
->         audit_proctitle_free(context);
->         kfree(context);
->  }
-> +EXPORT_SYMBOL(audit_free_context);
->
->  static int audit_log_pid_context(struct audit_context *context, pid_t pid,
->                                  kuid_t auid, kuid_t uid, unsigned int sessionid,
-> diff --git a/net/netfilter/xt_AUDIT.c b/net/netfilter/xt_AUDIT.c
-> index c502419..edaa456 100644
-> --- a/net/netfilter/xt_AUDIT.c
-> +++ b/net/netfilter/xt_AUDIT.c
-> @@ -71,10 +71,14 @@ static bool audit_ip6(struct audit_buffer *ab, struct sk_buff *skb)
->  {
->         struct audit_buffer *ab;
->         int fam = -1;
-> +       struct audit_context *context = audit_alloc_local();
-> +       struct audit_containerid *cont;
-> +       int i = 0;
-> +       struct net *net;
->
->         if (audit_enabled == 0)
->                 goto errout;
+From: yuzhoujian <yuzhoujian@didichuxing.com>
 
-Do I need to say it?  I probably should ... the allocation should
-happen after the audit_enabled check.
+Hi Roman
+I've read your patchset about cgroup aware OOM killer, and try
+to merge your patchset to the upstream kernel(v4.17-rc1). But
+I found some functions which in your patch([PATCH v13 3/7] 
+mm, oom: cgroup-aware OOM killer) does not exist in the upstream
+kernel. Which version of the kernel do you patch on? And, do you
+have the latest patchset?
 
-> -       ab = audit_log_start(NULL, GFP_ATOMIC, AUDIT_NETFILTER_PKT);
-> +       ab = audit_log_start(context, GFP_ATOMIC, AUDIT_NETFILTER_PKT);
->         if (ab == NULL)
->                 goto errout;
->
-> @@ -104,7 +108,16 @@ static bool audit_ip6(struct audit_buffer *ab, struct sk_buff *skb)
->
->         audit_log_end(ab);
->
-> +       net = sock_net(NETLINK_CB(skb).sk);
-> +       list_for_each_entry(cont, &net->audit_containerid, list) {
-> +               char buf[14];
-> +
-> +               sprintf(buf, "net%u", i++);
-> +               audit_log_container_info(context, buf, cont->id);
-> +       }
+The faults in PATCH v13 3/7:
+1. mm/oom_kill.o: In function `out_of_memory':
+   /linux/mm/oom_kill.c:1125: undefined reference to `alloc_pages_before_oomkill'
+2. mm/oom_kill.c: In function ‘out_of_memory’:
+   mm/oom_kill.c:1125:5: error: ‘struct oom_control’ has no member named ‘page’
+   oc->page = alloc_pages_before_oomkill(oc);
+     ^
 
-It seems like this could (should?) be hidden inside an audit function,
-e.g. audit_log_net_containers() or something like that.
-
->  errout:
-> +       audit_free_context(context);
->         return XT_CONTINUE;
->  }
-
--- 
-paul moore
-www.paul-moore.com
+Best wishes
