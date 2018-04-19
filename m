@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v7 4/5] cpuset: Restrict load balancing off cpus to subset of cpus.isolated
-Date: Thu, 19 Apr 2018 09:47:03 -0400
-Message-ID: <1524145624-23655-5-git-send-email-longman@redhat.com>
+Subject: [PATCH v7 1/5] cpuset: Enable cpuset controller in default hierarchy
+Date: Thu, 19 Apr 2018 09:47:00 -0400
+Message-ID: <1524145624-23655-2-git-send-email-longman@redhat.com>
 References: <1524145624-23655-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1524145624-23655-1-git-send-email-longman@redhat.com>
@@ -13,98 +13,219 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Waiman Long <longman@redhat.com>
 
-With the addition of "cpuset.cpus.isolated", it makes sense to add the
-restriction that load balancing can only be turned off if the CPUs in
-the isolated cpuset are subset of "cpuset.cpus.isolated".
+Given the fact that thread mode had been merged into 4.14, it is now
+time to enable cpuset to be used in the default hierarchy (cgroup v2)
+as it is clearly threaded.
+
+The cpuset controller had experienced feature creep since its
+introduction more than a decade ago. Besides the core cpus and mems
+control files to limit cpus and memory nodes, there are a bunch of
+additional features that can be controlled from the userspace. Some of
+the features are of doubtful usefulness and may not be actively used.
+
+This patch enables cpuset controller in the default hierarchy with
+a minimal set of features, namely just the cpus and mems and their
+effective_* counterparts.  We can certainly add more features to the
+default hierarchy in the future if there is a real user need for them
+later on.
+
+Alternatively, with the unified hiearachy, it may make more sense
+to move some of those additional cpuset features, if desired, to
+memory controller or may be to the cpu controller instead of staying
+with cpuset.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- Documentation/cgroup-v2.txt |  7 ++++---
- kernel/cgroup/cpuset.c      | 29 ++++++++++++++++++++++++++---
- 2 files changed, 30 insertions(+), 6 deletions(-)
+ Documentation/cgroup-v2.txt | 90 ++++++++++++++++++++++++++++++++++++++++++---
+ kernel/cgroup/cpuset.c      | 48 ++++++++++++++++++++++--
+ 2 files changed, 130 insertions(+), 8 deletions(-)
 
 diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 8d89dc2..c4227ee 100644
+index 74cdeae..ed8ec66 100644
 --- a/Documentation/cgroup-v2.txt
 +++ b/Documentation/cgroup-v2.txt
-@@ -1554,9 +1554,10 @@ Cpuset Interface Files
- 	and will not be moved to other CPUs.
+@@ -53,11 +53,13 @@ v1 is available under Documentation/cgroup-v1/.
+        5-3-2. Writeback
+      5-4. PID
+        5-4-1. PID Interface Files
+-     5-5. Device
+-     5-6. RDMA
+-       5-6-1. RDMA Interface Files
+-     5-7. Misc
+-       5-7-1. perf_event
++     5-5. Cpuset
++       5.5-1. Cpuset Interface Files
++     5-6. Device
++     5-7. RDMA
++       5-7-1. RDMA Interface Files
++     5-8. Misc
++       5-8-1. perf_event
+      5-N. Non-normative information
+        5-N-1. CPU controller root cgroup process behaviour
+        5-N-2. IO controller root cgroup process behaviour
+@@ -1435,6 +1437,84 @@ through fork() or clone(). These will return -EAGAIN if the creation
+ of a new process would cause a cgroup policy to be violated.
  
- 	This flag is hierarchical and is inherited by child cpusets. It
--	can be turned off only when the CPUs in this cpuset aren't
--	listed in the cpuset.cpus of other sibling cgroups, and all
--	the child cpusets, if present, have this flag turned off.
-+	can be explicitly turned off only when it is a direct child of
-+	the root cgroup and the CPUs in this cpuset are subset of the
-+	root's "cpuset.cpus.isolated".	Moreover, the CPUs cannot be
-+	listed in the "cpuset.cpus" of other sibling cgroups.
  
- 	Once it is off, it cannot be turned back on as long as the
- 	parent cgroup still has this flag in the off state.
++Cpuset
++------
++
++The "cpuset" controller provides a mechanism for constraining
++the CPU and memory node placement of tasks to only the resources
++specified in the cpuset interface files in a task's current cgroup.
++This is especially valuable on large NUMA systems where placing jobs
++on properly sized subsets of the systems with careful processor and
++memory placement to reduce cross-node memory access and contention
++can improve overall system performance.
++
++The "cpuset" controller is hierarchical.  That means the controller
++cannot use CPUs or memory nodes not allowed in its parent.
++
++
++Cpuset Interface Files
++~~~~~~~~~~~~~~~~~~~~~~
++
++  cpuset.cpus
++	A read-write multiple values file which exists on non-root
++	cgroups.
++
++	It lists the CPUs allowed to be used by tasks within this
++	cgroup.  The CPU numbers are comma-separated numbers or
++	ranges.  For example:
++
++	  # cat cpuset.cpus
++	  0-4,6,8-10
++
++	An empty value indicates that the cgroup is using the same
++	setting as the nearest cgroup ancestor with a non-empty
++	"cpuset.cpus" or all the available CPUs if none is found.
++
++	The value of "cpuset.cpus" stays constant until the next update
++	and won't be affected by any CPU hotplug events.
++
++  cpuset.cpus.effective
++	A read-only multiple values file which exists on non-root
++	cgroups.
++
++	It lists the onlined CPUs that are actually allowed to be
++	used by tasks within the current cgroup.  If "cpuset.cpus"
++	is empty, it shows all the CPUs from the parent cgroup that
++	will be available to be used by this cgroup.  Otherwise, it is
++	a subset of "cpuset.cpus".  Its value will be affected by CPU
++	hotplug events.
++
++  cpuset.mems
++	A read-write multiple values file which exists on non-root
++	cgroups.
++
++	It lists the memory nodes allowed to be used by tasks within
++	this cgroup.  The memory node numbers are comma-separated
++	numbers or ranges.  For example:
++
++	  # cat cpuset.mems
++	  0-1,3
++
++	An empty value indicates that the cgroup is using the same
++	setting as the nearest cgroup ancestor with a non-empty
++	"cpuset.mems" or all the available memory nodes if none
++	is found.
++
++	The value of "cpuset.mems" stays constant until the next update
++	and won't be affected by any memory nodes hotplug events.
++
++  cpuset.mems.effective
++	A read-only multiple values file which exists on non-root
++	cgroups.
++
++	It lists the onlined memory nodes that are actually allowed to
++	be used by tasks within the current cgroup.  If "cpuset.mems"
++	is empty, it shows all the memory nodes from the parent cgroup
++	that will be available to be used by this cgroup.  Otherwise,
++	it is a subset of "cpuset.mems".  Its value will be affected
++	by memory nodes hotplug events.
++
++
+ Device controller
+ -----------------
+ 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index c746b18..d05c4c8 100644
+index b42037e..419b758 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -511,6 +511,16 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+@@ -1823,12 +1823,11 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 	return 0;
+ }
  
- 	par = parent_cs(cur);
- 
-+	/*
-+	 * On default hierarchy with sched_load_balance flag off, the cpu
-+	 * list must be a subset of the parent's isolated CPU list, if
-+	 * defined (root).
-+	 */
-+	if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys) &&
-+	    !is_sched_load_balance(trial) && par->isolation_count &&
-+	    !cpumask_subset(trial->cpus_allowed, par->isolated_cpus))
-+		goto out;
-+
- 	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
- 	ret = -EACCES;
- 	if (!is_in_v2_mode() && !is_cpuset_subset(trial, par))
-@@ -1431,10 +1441,16 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 	else
- 		clear_bit(bit, &trialcs->flags);
- 
-+	balance_flag_changed = (is_sched_load_balance(cs) !=
-+				is_sched_load_balance(trialcs));
-+
- 	/*
- 	 * On default hierarchy, turning off sched_load_balance flag implies
- 	 * an implicit cpu_exclusive. Turning on sched_load_balance will
- 	 * clear the cpu_exclusive flag.
-+	 *
-+	 * sched_load_balance can only be turned off if all the CPUs are
-+	 * in the parent's isolated CPU list.
- 	 */
- 	if ((bit == CS_SCHED_LOAD_BALANCE) &&
- 	    cgroup_subsys_on_dfl(cpuset_cgrp_subsys)) {
-@@ -1442,15 +1458,22 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 			clear_bit(CS_CPU_EXCLUSIVE, &trialcs->flags);
- 		else
- 			set_bit(CS_CPU_EXCLUSIVE, &trialcs->flags);
-+
-+		if (balance_flag_changed && !turning_on) {
-+			struct cpuset *parent = parent_cs(cs);
-+
-+			err = -EBUSY;
-+			if (!parent->isolation_count ||
-+			    !cpumask_subset(trialcs->cpus_allowed,
-+					    parent->cpus_allowed))
-+				goto out;
-+		}
- 	}
- 
- 	err = validate_change(cs, trialcs);
- 	if (err < 0)
- 		goto out;
- 
--	balance_flag_changed = (is_sched_load_balance(cs) !=
--				is_sched_load_balance(trialcs));
 -
- 	spread_flag_changed = ((is_spread_slab(cs) != is_spread_slab(trialcs))
- 			|| (is_spread_page(cs) != is_spread_page(trialcs)));
+ /*
+  * for the common functions, 'private' gives the type of file
+  */
  
+-static struct cftype files[] = {
++static struct cftype legacy_files[] = {
+ 	{
+ 		.name = "cpus",
+ 		.seq_show = cpuset_common_seq_show,
+@@ -1931,6 +1930,47 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ };
+ 
+ /*
++ * This is currently a minimal set for the default hierarchy. It can be
++ * expanded later on by migrating more features and control files from v1.
++ */
++static struct cftype dfl_files[] = {
++	{
++		.name = "cpus",
++		.seq_show = cpuset_common_seq_show,
++		.write = cpuset_write_resmask,
++		.max_write_len = (100U + 6 * NR_CPUS),
++		.private = FILE_CPULIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "mems",
++		.seq_show = cpuset_common_seq_show,
++		.write = cpuset_write_resmask,
++		.max_write_len = (100U + 6 * MAX_NUMNODES),
++		.private = FILE_MEMLIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "cpus.effective",
++		.seq_show = cpuset_common_seq_show,
++		.private = FILE_EFFECTIVE_CPULIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "mems.effective",
++		.seq_show = cpuset_common_seq_show,
++		.private = FILE_EFFECTIVE_MEMLIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{ }	/* terminate */
++};
++
++
++/*
+  *	cpuset_css_alloc - allocate a cpuset css
+  *	cgrp:	control group that the new cpuset will be part of
+  */
+@@ -2104,8 +2144,10 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+ 	.post_attach	= cpuset_post_attach,
+ 	.bind		= cpuset_bind,
+ 	.fork		= cpuset_fork,
+-	.legacy_cftypes	= files,
++	.legacy_cftypes	= legacy_files,
++	.dfl_cftypes	= dfl_files,
+ 	.early_init	= true,
++	.threaded	= true,
+ };
+ 
+ /**
 -- 
 1.8.3.1
 
