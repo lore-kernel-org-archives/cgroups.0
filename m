@@ -1,159 +1,111 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 1/2] mm: introduce memory.min
-Date: Fri, 20 Apr 2018 16:44:29 -0400
-Message-ID: <20180420204429.GA24563@cmpxchg.org>
-References: <20180420163632.3978-1-guro@fb.com>
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: Re: [RFC PATCH ghak32 V2 11/13] audit: add support for containerid
+ to network namespaces
+Date: Fri, 20 Apr 2018 16:42:25 -0400
+Message-ID: <20180420204225.iik2lgtj6gx2ep4w@madcap2.tricolour.ca>
+References: <cover.1521179281.git.rgb@redhat.com>
+ <11b43a498e768a14764594c808a96b34d52be0af.1521179281.git.rgb@redhat.com>
+ <CAHC9VhRkstDMjd5T3w+iOUDjzDAs1AOm0xd3p6v_xn6fNGYQhA@mail.gmail.com>
+ <20180420200226.7tyxzuovdbgclw3m@madcap2.tricolour.ca>
+ <CAHC9VhTOYUAyCJidm99som6FVmjouQUGsEHarQ4h_NhwJxQQfw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=gqeCfhZ+I/DmjHt7xg7+NveAtkYIXyAoOku859mXGtM=; b=fITt8iJTv4uyonruVTXfYalGyI
-        Q2uo8llYV2fHXZEfSbzNqOC4JySlANEmcgTGcUWjUIqfChneLOImiT0pWyJbClLOeY5rxWgYzUe38
-        RYMgK4dzMifpJBLnyLIMLoQFoAHasJY2qMmzGPfIqWaRhPkM6OJ2hGM2RFzZQEy19N2g=;
 Content-Disposition: inline
-In-Reply-To: <20180420163632.3978-1-guro@fb.com>
+In-Reply-To: <CAHC9VhTOYUAyCJidm99som6FVmjouQUGsEHarQ4h_NhwJxQQfw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>
+To: Paul Moore <paul@paul-moore.com>
+Cc: simo@redhat.com, jlayton@redhat.com, carlos@redhat.com, linux-api@vger.kernel.org, containers@lists.linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, Eric Paris <eparis@parisplace.org>, dhowells@redhat.com, Linux-Audit Mailing List <linux-audit@redhat.com>, ebiederm@xmission.com, luto@kernel.org, netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, serge@hallyn.com, viro@zeniv.linux.org.uk
 
-Hi Roman,
-
-this looks cool, and the implementation makes sense to me, so the
-feedback I have is just smaller stuff.
-
-On Fri, Apr 20, 2018 at 05:36:31PM +0100, Roman Gushchin wrote:
-> Memory controller implements the memory.low best-effort memory
-> protection mechanism, which works perfectly in many cases and
-> allows protecting working sets of important workloads from
-> sudden reclaim.
+On 2018-04-20 16:22, Paul Moore wrote:
+> On Fri, Apr 20, 2018 at 4:02 PM, Richard Guy Briggs <rgb@redhat.com> wrote:
+> > On 2018-04-18 21:46, Paul Moore wrote:
+> >> On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
+> >> > Audit events could happen in a network namespace outside of a task
+> >> > context due to packets received from the net that trigger an auditing
+> >> > rule prior to being associated with a running task.  The network
+> >> > namespace could in use by multiple containers by association to the
+> >> > tasks in that network namespace.  We still want a way to attribute
+> >> > these events to any potential containers.  Keep a list per network
+> >> > namespace to track these container identifiiers.
+> >> >
+> >> > Add/increment the container identifier on:
+> >> > - initial setting of the container id via /proc
+> >> > - clone/fork call that inherits a container identifier
+> >> > - unshare call that inherits a container identifier
+> >> > - setns call that inherits a container identifier
+> >> > Delete/decrement the container identifier on:
+> >> > - an inherited container id dropped when child set
+> >> > - process exit
+> >> > - unshare call that drops a net namespace
+> >> > - setns call that drops a net namespace
+> >> >
+> >> > See: https://github.com/linux-audit/audit-kernel/issues/32
+> >> > See: https://github.com/linux-audit/audit-testsuite/issues/64
+> >> > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
+> >> > ---
+> >> >  include/linux/audit.h       |  7 +++++++
+> >> >  include/net/net_namespace.h | 12 ++++++++++++
+> >> >  kernel/auditsc.c            |  9 ++++++---
+> >> >  kernel/nsproxy.c            |  6 ++++++
+> >> >  net/core/net_namespace.c    | 45 +++++++++++++++++++++++++++++++++++++++++++++
+> >> >  5 files changed, 76 insertions(+), 3 deletions(-)
 > 
-> But it's semantics has a significant limitation: it works
+> ...
+> 
+> >> > diff --git a/kernel/nsproxy.c b/kernel/nsproxy.c
+> >> > index f6c5d33..d9f1090 100644
+> >> > --- a/kernel/nsproxy.c
+> >> > +++ b/kernel/nsproxy.c
+> >> > @@ -140,6 +140,7 @@ int copy_namespaces(unsigned long flags, struct task_struct *tsk)
+> >> >         struct nsproxy *old_ns = tsk->nsproxy;
+> >> >         struct user_namespace *user_ns = task_cred_xxx(tsk, user_ns);
+> >> >         struct nsproxy *new_ns;
+> >> > +       u64 containerid = audit_get_containerid(tsk);
+> >> >
+> >> >         if (likely(!(flags & (CLONE_NEWNS | CLONE_NEWUTS | CLONE_NEWIPC |
+> >> >                               CLONE_NEWPID | CLONE_NEWNET |
+> >> > @@ -167,6 +168,7 @@ int copy_namespaces(unsigned long flags, struct task_struct *tsk)
+> >> >                 return  PTR_ERR(new_ns);
+> >> >
+> >> >         tsk->nsproxy = new_ns;
+> >> > +       net_add_audit_containerid(new_ns->net_ns, containerid);
+> >> >         return 0;
+> >> >  }
+> >>
+> >> Hopefully we can handle this in audit_net_init(), we just need to
+> >> figure out where we can get the correct task_struct for the audit
+> >> container ID (some backpointer in the net struct?).
+> >
+> > I don't follow.  This needs to happen on every task startup.
+> > audit_net_init() is only called when a new network namespace starts up.
+> 
+> Yep, sorry, my mistake.  I must have confused myself when I was
+> looking at the code.
+> 
+> I'm thinking out loud here, bear with me ...
+> 
+> Assuming we move the netns/audit-container-ID tracking to audit_net,
+> and considering we already have an audit hook in copy_process() (it
+> calls audit_alloc()), would this be better handled by the
+> copy_process() hook?  This ignores naming, audit_alloc() reuse, etc.;
+> those can be easily fixed.  I'm just thinking of ways to limit our
+> impact on the core kernel and leverage our existing interaction
+> points.
 
-its
+The new namespace hasn't been cloned yet and this is the only function
+where we have access to both namespaces, so I don't see how that could
+work...
 
-> only until there is a supply of reclaimable memory.
+> paul moore
 
-s/until/as long as/
+- RGB
 
-Maybe "as long as there is an unprotected supply of reclaimable memory
-from other groups"?
-
-> This makes it pretty useless against any sort of slow memory
-> leaks or memory usage increases. This is especially true
-> for swapless systems. If swap is enabled, memory soft protection
-> effectively postpones problems, allowing a leaking application
-> to fill all swap area, which makes no sense.
-> The only effective way to guarantee the memory protection
-> in this case is to invoke the OOM killer.
-
-This makes it sound like it has no purpose at all. But like with
-memory.high, the point is to avoid the kernel OOM killer, which knows
-jack about how the system is structured, and instead allow userspace
-management software to monitor MEMCG_LOW and make informed decisions.
-
-memory.min again is the fail-safe for memory.low, not the primary way
-of implementing guarantees.
-
-> @@ -297,7 +297,14 @@ static inline bool mem_cgroup_disabled(void)
->  	return !cgroup_subsys_enabled(memory_cgrp_subsys);
->  }
->  
-> -bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg);
-> +enum mem_cgroup_protection {
-> +	MEM_CGROUP_UNPROTECTED,
-> +	MEM_CGROUP_PROTECTED_LOW,
-> +	MEM_CGROUP_PROTECTED_MIN,
-> +};
-
-These look a bit unwieldy. How about
-
-MEMCG_PROT_NONE,
-MEMCG_PROT_LOW,
-MEMCG_PROT_HIGH,
-
-> +enum mem_cgroup_protection
-> +mem_cgroup_protected(struct mem_cgroup *root, struct mem_cgroup *memcg);
-
-Please don't wrap at the return type, wrap the parameter list instead.
-
->  int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
->  			  gfp_t gfp_mask, struct mem_cgroup **memcgp,
-> @@ -756,6 +763,12 @@ static inline void memcg_memory_event(struct mem_cgroup *memcg,
->  {
->  }
->  
-> +static inline bool mem_cgroup_min(struct mem_cgroup *root,
-> +				  struct mem_cgroup *memcg)
-> +{
-> +	return false;
-> +}
-> +
->  static inline bool mem_cgroup_low(struct mem_cgroup *root,
->  				  struct mem_cgroup *memcg)
->  {
-
-The real implementation has these merged into the single
-mem_cgroup_protected(). Probably a left-over from earlier versions?
-
-It's always a good idea to build test the !CONFIG_MEMCG case too.
-
-> @@ -5685,44 +5723,71 @@ struct cgroup_subsys memory_cgrp_subsys = {
->   * for next usage. This part is intentionally racy, but it's ok,
->   * as memory.low is a best-effort mechanism.
->   */
-> -bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg)
-> +enum mem_cgroup_protection
-> +mem_cgroup_protected(struct mem_cgroup *root, struct mem_cgroup *memcg)
-
-Please fix the wrapping here too.
-
-> @@ -2525,12 +2525,29 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
->  			unsigned long reclaimed;
->  			unsigned long scanned;
->  
-> -			if (mem_cgroup_low(root, memcg)) {
-> +			switch (mem_cgroup_protected(root, memcg)) {
-> +			case MEM_CGROUP_PROTECTED_MIN:
-> +				/*
-> +				 * Hard protection.
-> +				 * If there is no reclaimable memory, OOM.
-> +				 */
-> +				continue;
-> +
-> +			case MEM_CGROUP_PROTECTED_LOW:
-
-Please drop that newline after continue.
-
-> +				/*
-> +				 * Soft protection.
-> +				 * Respect the protection only until there is
-> +				 * a supply of reclaimable memory.
-
-Same feedback here as in the changelog:
-
-s/until/as long as/
-
-Maybe "as long as there is an unprotected supply of reclaimable memory
-from other groups"?
-
-> +				 */
->  				if (!sc->memcg_low_reclaim) {
->  					sc->memcg_low_skipped = 1;
->  					continue;
->  				}
->  				memcg_memory_event(memcg, MEMCG_LOW);
-> +				break;
-> +
-> +			case MEM_CGROUP_UNPROTECTED:
-
-Please drop that newline after break, too.
-
-Thanks!
-Johannes
+--
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
