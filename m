@@ -1,97 +1,100 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v7 0/5] cpuset: Enable cpuset controller in default hierarchy
-Date: Thu, 19 Apr 2018 09:46:59 -0400
-Message-ID: <1524145624-23655-1-git-send-email-longman@redhat.com>
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: Re: [RFC PATCH ghak32 V2 10/13] audit: add containerid support for
+ seccomp and anom_abend records
+Date: Thu, 19 Apr 2018 20:42:18 -0400
+Message-ID: <20180420004218.tgndd474wgueyjzk@madcap2.tricolour.ca>
+References: <cover.1521179281.git.rgb@redhat.com>
+ <11174597083f89352f1d6491ec94e27f882625d9.1521179281.git.rgb@redhat.com>
+ <CAHC9VhS6MKoLkzpfcmYBSNnvrtbL2FOF5PX9uOfivSVEWykkQg@mail.gmail.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAHC9VhS6MKoLkzpfcmYBSNnvrtbL2FOF5PX9uOfivSVEWykkQg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Waiman Long <longman@redhat.com>
+To: Paul Moore <paul@paul-moore.com>
+Cc: simo@redhat.com, jlayton@redhat.com, carlos@redhat.com, linux-api@vger.kernel.org, containers@lists.linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, Eric Paris <eparis@parisplace.org>, dhowells@redhat.com, Linux-Audit Mailing List <linux-audit@redhat.com>, ebiederm@xmission.com, luto@kernel.org, netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, serge@hallyn.com, viro@zeniv.linux.org.uk
 
-v7:
- - Add a root-only cpuset.cpus.isolated control file for CPU isolation.
- - Enforce that load_balancing can only be turned off on cpusets with
-   CPUs from the isolated list.
- - Update sched domain generation to allow cpusets with CPUs only
-   from the isolated CPU list to be in separate root domains.
+On 2018-04-18 21:31, Paul Moore wrote:
+> On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
+> > Add container ID auxiliary records to secure computing and abnormal end
+> > standalone records.
+> >
+> > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
+> > ---
+> >  kernel/auditsc.c | 10 ++++++++--
+> >  1 file changed, 8 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/kernel/auditsc.c b/kernel/auditsc.c
+> > index 7103d23..2f02ed9 100644
+> > --- a/kernel/auditsc.c
+> > +++ b/kernel/auditsc.c
+> > @@ -2571,6 +2571,7 @@ static void audit_log_task(struct audit_buffer *ab)
+> >  void audit_core_dumps(long signr)
+> >  {
+> >         struct audit_buffer *ab;
+> > +       struct audit_context *context = audit_alloc_local();
+> 
+> Looking quickly at do_coredump() I *believe* we can use current here.
+> 
+> >         if (!audit_enabled)
+> >                 return;
+> > @@ -2578,19 +2579,22 @@ void audit_core_dumps(long signr)
+> >         if (signr == SIGQUIT)   /* don't care for those */
+> >                 return;
+> >
+> > -       ab = audit_log_start(NULL, GFP_KERNEL, AUDIT_ANOM_ABEND);
+> > +       ab = audit_log_start(context, GFP_KERNEL, AUDIT_ANOM_ABEND);
+> >         if (unlikely(!ab))
+> >                 return;
+> >         audit_log_task(ab);
+> >         audit_log_format(ab, " sig=%ld res=1", signr);
+> >         audit_log_end(ab);
+> > +       audit_log_container_info(context, "abend", audit_get_containerid(current));
+> > +       audit_free_context(context);
+> >  }
+> >
+> >  void __audit_seccomp(unsigned long syscall, long signr, int code)
+> >  {
+> >         struct audit_buffer *ab;
+> > +       struct audit_context *context = audit_alloc_local();
+> 
+> We can definitely use current here.
 
-v6:
- - Hide cpuset control knobs in root cgroup.
- - Rename effective_cpus and effective_mems to cpus.effective and
-   mems.effective respectively.
- - Remove cpuset.flags and add cpuset.sched_load_balance instead
-   as the behavior of sched_load_balance has changed and so is
-   not a simple flag.
- - Update cgroup-v2.txt accordingly.
+Ok, so both syscall aux records.  That elimintes this patch from the
+set, can go in independently.
 
-v5:
- - Add patch 2 to provide the cpuset.flags control knob for the
-   sched_load_balance flag which should be the only feature that is
-   essential as a replacement of the "isolcpus" kernel boot parameter.
+> > -       ab = audit_log_start(NULL, GFP_KERNEL, AUDIT_SECCOMP);
+> > +       ab = audit_log_start(context, GFP_KERNEL, AUDIT_SECCOMP);
+> >         if (unlikely(!ab))
+> >                 return;
+> >         audit_log_task(ab);
+> > @@ -2598,6 +2602,8 @@ void __audit_seccomp(unsigned long syscall, long signr, int code)
+> >                          signr, syscall_get_arch(), syscall,
+> >                          in_compat_syscall(), KSTK_EIP(current), code);
+> >         audit_log_end(ab);
+> > +       audit_log_container_info(context, "seccomp", audit_get_containerid(current));
+> > +       audit_free_context(context);
+> >  }
+> >
+> >  struct list_head *audit_killed_trees(void)
+> 
+> -- 
+> paul moore
+> www.paul-moore.com
+> 
+> --
+> Linux-audit mailing list
+> Linux-audit@redhat.com
+> https://www.redhat.com/mailman/listinfo/linux-audit
 
-v4:
- - Further minimize the feature set by removing the flags control knob.
+- RGB
 
-v3:
- - Further trim the additional features down to just memory_migrate.
- - Update Documentation/cgroup-v2.txt.
-
-v6 patch: https://lkml.org/lkml/2018/3/21/530
-
-The purpose of this patchset is to provide a basic set of cpuset
-features for cgroup v2. This basic set includes the non-root "cpus",
-"mems", "cpus.effective" and "mems.effective", "sched_load_balance"
-control file as well as a root-only "cpus.isolated".
-
-The root-only "cpus.isolated" file is added to support use cases similar
-to the "isolcpus" kernel parameter. CPUs from the isolated list can be
-put into child cpusets where "sched_load_balance" can be disabled to
-allow finer control of task-cpu mappings of those isolated CPUs.
-
-On the other hand, enabling the "sched_load_balance" on a cpuset with
-only CPUs from the isolated list will allow those CPUs to use a separate
-root domain from that of the root cpuset.
-
-This patchset does not exclude the possibility of adding more features
-in the future after careful consideration.
-
-Patch 1 enables cpuset in cgroup v2 with cpus, mems and their
-effective counterparts.
-
-Patch 2 adds sched_load_balance whose behavior changes in v2 to become
-hierarchical and includes an implicit !cpu_exclusive.
-
-Patch 3 adds a new root-only "cpuset.cpus.isolated" control file for
-CPU isolation purpose.
-
-Patch 4 adds the limitation that "sched_load_balance" can only be turned
-off in a cpuset if all the CPUs in the cpuset are already in the root's
-"cpuset.cpus.isolated".
-
-Patch 5 modifies the sched domain generation code to generate separate root
-sched domains if all the CPUs in a cpuset comes from "cpuset.cpus.isolated".
-
-In other words, all the CPUs that need to be isolated or in separate
-root domains have to be put into the "cpuset.cpus.isolated" first. Then
-child cpusets can be created to partition those isolated CPUs into
-either separate root domains with "sched_load_balance" on or really
-isolated CPUs with "sched_load_balance" off. Load balancing cannot
-be turned off at root.
-
-Waiman Long (5):
-  cpuset: Enable cpuset controller in default hierarchy
-  cpuset: Add cpuset.sched_load_balance to v2
-  cpuset: Add a root-only cpus.isolated v2 control file
-  cpuset: Restrict load balancing off cpus to subset of cpus.isolated
-  cpuset: Make generate_sched_domains() recognize isolated_cpus
-
- Documentation/cgroup-v2.txt | 138 ++++++++++++++++++++-
- kernel/cgroup/cpuset.c      | 287 +++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 404 insertions(+), 21 deletions(-)
-
--- 
-1.8.3.1
-
+--
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
