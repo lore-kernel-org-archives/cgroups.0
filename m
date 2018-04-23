@@ -1,174 +1,81 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH 1/2] mm: introduce memory.min
-Date: Mon, 23 Apr 2018 13:44:43 +0100
-Message-ID: <20180423124442.GB29016@castle.DHCP.thefacebook.com>
-References: <20180420163632.3978-1-guro@fb.com>
- <20180420204429.GA24563@cmpxchg.org>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v7 0/5] cpuset: Enable cpuset controller in default
+ hierarchy
+Date: Mon, 23 Apr 2018 15:07:15 +0200
+Message-ID: <20180423130715.GA32341@localhost.localdomain>
+References: <1524145624-23655-1-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=7kY58nSdq+7ASkvMYNeoJChudxQRFxBWFeK597t6JE0=;
- b=hl6CQK2PZwfXYLstrQtL72FVoOpLUADEYCYKGXGqyFJ9K3eEkP0ISmHers8YZ9H3seXM
- cnH86/M41ueSC7nxPsHEKbgSHAO16VNoJAootpCVEsO5P3vah7baNoWTBWY9qCE0uigl
- RuajKFXmce/4icJAko7JEZclnDAzrcakPOY= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=7kY58nSdq+7ASkvMYNeoJChudxQRFxBWFeK597t6JE0=;
- b=RA1k6lamLo4G0XVFMCHs/J03qtlJCEL+61bkGOr/uX/n0Pfy2x3Xi4SNslOzO+EHppxBGHX37XRnjDBUuFcYG72K5CH4fLGbZtCSFgzr/2QFVVj+pAqs1FZES3ssyLMftNpTzQ22rKUaMm/MaXUiA1R/Cs+0IyRvOTifwfWIyr4=
 Content-Disposition: inline
-In-Reply-To: <20180420204429.GA24563@cmpxchg.org>
+In-Reply-To: <1524145624-23655-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-Hi Johannes!
+Hi Waiman,
 
-Thanks for the review. I've just sent v2, which closely
-follows your advice, really nothing contradictory.
+On 19/04/18 09:46, Waiman Long wrote:
+> v7:
+>  - Add a root-only cpuset.cpus.isolated control file for CPU isolation.
+>  - Enforce that load_balancing can only be turned off on cpusets with
+>    CPUs from the isolated list.
+>  - Update sched domain generation to allow cpusets with CPUs only
+>    from the isolated CPU list to be in separate root domains.
 
-Plus fixed some comments on top of mem_cgroup_protected
-and fixed !CONFIG_MEMCG build.
+Just got this while
 
-Thank you!
+# echo 2-3 > /sys/fs/cgroup/cpuset.cpus.isolated
 
-Roman
+[ 6679.177826] =============================
+[ 6679.178385] WARNING: suspicious RCU usage
+[ 6679.178910] 4.16.0-rc6+ #151 Not tainted
+[ 6679.179459] -----------------------------
+[ 6679.180082] /home/juri/work/kernel/linux/kernel/cgroup/cgroup.c:3826 cgroup_mutex or RCU read lock required!
+[ 6679.181402]
+[ 6679.181402] other info that might help us debug this:
+[ 6679.181402]
+[ 6679.182407]
+[ 6679.182407] rcu_scheduler_active = 2, debug_locks = 1
+[ 6679.183278] 3 locks held by bash/2205:
+[ 6679.183785]  #0:  (sb_writers#10){.+.+}, at: [<000000004e577fb9>] vfs_write+0x18a/0x1b0
+[ 6679.184871]  #1:  (&of->mutex){+.+.}, at: [<000000005944c83f>] kernfs_fop_write+0xe2/0x1a0
+[ 6679.185987]  #2:  (cpuset_mutex){+.+.}, at: [<00000000879bfba0>] cpuset_write_resmask+0x72/0x1560
+[ 6679.187112]
+[ 6679.187112] stack backtrace:
+[ 6679.187612] CPU: 3 PID: 2205 Comm: bash Not tainted 4.16.0-rc6+ #151
+[ 6679.188318] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-2.fc27 04/01/2014
+[ 6679.189291] Call Trace:
+[ 6679.189581]  dump_stack+0x85/0xc5
+[ 6679.189963]  css_next_child+0x90/0xd0
+[ 6679.190385]  cpuset_write_resmask+0x46f/0x1560
+[ 6679.190885]  ? lock_acquire+0x9f/0x210
+[ 6679.191315]  cgroup_file_write+0x94/0x230
+[ 6679.191768]  kernfs_fop_write+0x113/0x1a0
+[ 6679.192223]  __vfs_write+0x36/0x180
+[ 6679.192617]  ? rcu_read_lock_sched_held+0x6b/0x80
+[ 6679.193139]  ? rcu_sync_lockdep_assert+0x2e/0x60
+[ 6679.193654]  ? __sb_start_write+0x154/0x1f0
+[ 6679.194118]  ? __sb_start_write+0x16a/0x1f0
+[ 6679.194607]  vfs_write+0xc1/0x1b0
+[ 6679.194984]  SyS_write+0x55/0xc0
+[ 6679.195365]  ? trace_hardirqs_off_thunk+0x1a/0x1c
+[ 6679.195839]  do_syscall_64+0x79/0x220
+[ 6679.196212]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+[ 6679.196729] RIP: 0033:0x7f03183ff780
+[ 6679.197138] RSP: 002b:00007ffeae336ca8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[ 6679.197866] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f03183ff780
+[ 6679.198550] RDX: 0000000000000004 RSI: 0000000000eaf408 RDI: 0000000000000001
+[ 6679.199235] RBP: 0000000000eaf408 R08: 000000000000000a R09: 00007f0318cff700
+[ 6679.199928] R10: 0000000000000000 R11: 0000000000000246 R12: 00007f03186b57a0
+[ 6679.200615] R13: 0000000000000004 R14: 0000000000000001 R15: 0000000000000000
+[ 6679.201369] rebuild_sched_domains dom 0: 0-1
+[ 6679.202196] span: 0-1 (max cpu_capacity = 1024)
 
-On Fri, Apr 20, 2018 at 04:44:29PM -0400, Johannes Weiner wrote:
-> Hi Roman,
-> 
-> this looks cool, and the implementation makes sense to me, so the
-> feedback I have is just smaller stuff.
-> 
-> On Fri, Apr 20, 2018 at 05:36:31PM +0100, Roman Gushchin wrote:
-> > Memory controller implements the memory.low best-effort memory
-> > protection mechanism, which works perfectly in many cases and
-> > allows protecting working sets of important workloads from
-> > sudden reclaim.
-> > 
-> > But it's semantics has a significant limitation: it works
-> 
-> its
-> 
-> > only until there is a supply of reclaimable memory.
-> 
-> s/until/as long as/
-> 
-> Maybe "as long as there is an unprotected supply of reclaimable memory
-> from other groups"?
-> 
-> > This makes it pretty useless against any sort of slow memory
-> > leaks or memory usage increases. This is especially true
-> > for swapless systems. If swap is enabled, memory soft protection
-> > effectively postpones problems, allowing a leaking application
-> > to fill all swap area, which makes no sense.
-> > The only effective way to guarantee the memory protection
-> > in this case is to invoke the OOM killer.
-> 
-> This makes it sound like it has no purpose at all. But like with
-> memory.high, the point is to avoid the kernel OOM killer, which knows
-> jack about how the system is structured, and instead allow userspace
-> management software to monitor MEMCG_LOW and make informed decisions.
-> 
-> memory.min again is the fail-safe for memory.low, not the primary way
-> of implementing guarantees.
-> 
-> > @@ -297,7 +297,14 @@ static inline bool mem_cgroup_disabled(void)
-> >  	return !cgroup_subsys_enabled(memory_cgrp_subsys);
-> >  }
-> >  
-> > -bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg);
-> > +enum mem_cgroup_protection {
-> > +	MEM_CGROUP_UNPROTECTED,
-> > +	MEM_CGROUP_PROTECTED_LOW,
-> > +	MEM_CGROUP_PROTECTED_MIN,
-> > +};
-> 
-> These look a bit unwieldy. How about
-> 
-> MEMCG_PROT_NONE,
-> MEMCG_PROT_LOW,
-> MEMCG_PROT_HIGH,
-> 
-> > +enum mem_cgroup_protection
-> > +mem_cgroup_protected(struct mem_cgroup *root, struct mem_cgroup *memcg);
-> 
-> Please don't wrap at the return type, wrap the parameter list instead.
-> 
-> >  int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
-> >  			  gfp_t gfp_mask, struct mem_cgroup **memcgp,
-> > @@ -756,6 +763,12 @@ static inline void memcg_memory_event(struct mem_cgroup *memcg,
-> >  {
-> >  }
-> >  
-> > +static inline bool mem_cgroup_min(struct mem_cgroup *root,
-> > +				  struct mem_cgroup *memcg)
-> > +{
-> > +	return false;
-> > +}
-> > +
-> >  static inline bool mem_cgroup_low(struct mem_cgroup *root,
-> >  				  struct mem_cgroup *memcg)
-> >  {
-> 
-> The real implementation has these merged into the single
-> mem_cgroup_protected(). Probably a left-over from earlier versions?
-> 
-> It's always a good idea to build test the !CONFIG_MEMCG case too.
-> 
-> > @@ -5685,44 +5723,71 @@ struct cgroup_subsys memory_cgrp_subsys = {
-> >   * for next usage. This part is intentionally racy, but it's ok,
-> >   * as memory.low is a best-effort mechanism.
-> >   */
-> > -bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg)
-> > +enum mem_cgroup_protection
-> > +mem_cgroup_protected(struct mem_cgroup *root, struct mem_cgroup *memcg)
-> 
-> Please fix the wrapping here too.
-> 
-> > @@ -2525,12 +2525,29 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
-> >  			unsigned long reclaimed;
-> >  			unsigned long scanned;
-> >  
-> > -			if (mem_cgroup_low(root, memcg)) {
-> > +			switch (mem_cgroup_protected(root, memcg)) {
-> > +			case MEM_CGROUP_PROTECTED_MIN:
-> > +				/*
-> > +				 * Hard protection.
-> > +				 * If there is no reclaimable memory, OOM.
-> > +				 */
-> > +				continue;
-> > +
-> > +			case MEM_CGROUP_PROTECTED_LOW:
-> 
-> Please drop that newline after continue.
-> 
-> > +				/*
-> > +				 * Soft protection.
-> > +				 * Respect the protection only until there is
-> > +				 * a supply of reclaimable memory.
-> 
-> Same feedback here as in the changelog:
-> 
-> s/until/as long as/
-> 
-> Maybe "as long as there is an unprotected supply of reclaimable memory
-> from other groups"?
-> 
-> > +				 */
-> >  				if (!sc->memcg_low_reclaim) {
-> >  					sc->memcg_low_skipped = 1;
-> >  					continue;
-> >  				}
-> >  				memcg_memory_event(memcg, MEMCG_LOW);
-> > +				break;
-> > +
-> > +			case MEM_CGROUP_UNPROTECTED:
-> 
-> Please drop that newline after break, too.
-> 
-> Thanks!
-> Johannes
+Guess we should grab either lock from the writing path.
+
+Best,
+
+- Juri
