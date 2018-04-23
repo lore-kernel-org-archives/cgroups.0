@@ -1,46 +1,37 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH v7 3/5] cpuset: Add a root-only cpus.isolated v2 control
- file
-Date: Mon, 23 Apr 2018 17:56:49 +0200
-Message-ID: <20180423155649.GD32341@localhost.localdomain>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v7 0/5] cpuset: Enable cpuset controller in default
+ hierarchy
+Date: Mon, 23 Apr 2018 12:32:12 -0400
+Message-ID: <f1f02718-c7e7-f6b3-be7b-3d7c2f2ffa50@redhat.com>
 References: <1524145624-23655-1-git-send-email-longman@redhat.com>
- <1524145624-23655-4-git-send-email-longman@redhat.com>
+ <1524212601.11030.2.camel@gmx.de>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1524145624-23655-4-git-send-email-longman@redhat.com>
+In-Reply-To: <1524212601.11030.2.camel@gmx.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
+To: Mike Galbraith <efault@gmx.de>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
 
-On 19/04/18 09:47, Waiman Long wrote:
+On 04/20/2018 04:23 AM, Mike Galbraith wrote:
+> On Thu, 2018-04-19 at 09:46 -0400, Waiman Long wrote:
+>> v7:
+>>  - Add a root-only cpuset.cpus.isolated control file for CPU isolation.
+>>  - Enforce that load_balancing can only be turned off on cpusets with
+>>    CPUs from the isolated list.
+>>  - Update sched domain generation to allow cpusets with CPUs only
+>>    from the isolated CPU list to be in separate root domains.
+> I haven't done much, but was able to do a q/d manual build, populate
+> and teardown of system/critical sets on my desktop box, and it looked
+> ok.  Thanks for getting this aboard the v2 boat.
+>
+> 	-Mike
 
-[...]
+Thank for the testing.
 
-> +  cpuset.cpus.isolated
-> +	A read-write multiple values file which exists on root cgroup
-> +	only.
-> +
-> +	It lists the CPUs that have been withdrawn from the root cgroup
-> +	for load balancing.  These CPUs can still be allocated to child
-> +	cpusets with load balancing enabled, if necessary.
-> +
-> +	If a child cpuset contains only an exclusive set of CPUs that are
-> +	a subset of the isolated CPUs and with load balancing enabled,
-> +	these CPUs will be load balanced on a separate root domain from
-> +	the one in the root cgroup.
-> +
-> +	Just putting the CPUs into "cpuset.cpus.isolated" will be
-> +	enough to disable load balancing on those CPUs as long as they
-> +	do not appear in a child cpuset with load balancing enabled.
+Cheers,
+Longman
 
-Tasks that were on those CPUs when they got isolated will stay there
-(unless forcibly moved somewhere else). They will also "automatically"
-belong to default root domain (or potentially to a new root domain
-created for a group using those CPUs). Both things are maybe unavoidable
-(as discussed in previous versions some tasks cannot be migrated at
-all), but such "side effects" should probably be documented. What do you
-think?
