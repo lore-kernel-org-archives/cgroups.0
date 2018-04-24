@@ -1,316 +1,124 @@
-From: Paul Moore <paul@paul-moore.com>
-Subject: Re: [RFC PATCH ghak32 V2 01/13] audit: add container id
-Date: Mon, 23 Apr 2018 19:15:08 -0400
-Message-ID: <CAHC9VhQkJBU-f-AuEnGF1BA2QW6nCJ_yr_EqBR02-1y9+XQZ5A@mail.gmail.com>
-References: <cover.1521179281.git.rgb@redhat.com> <e284617ad667ad8f17958dd8babb87fe1b4d7205.1521179281.git.rgb@redhat.com>
- <CAHC9VhTyvxxj2e2Gn+iyW6iLLeYB7hp8a+JvfeMmJ2nUPqtEaw@mail.gmail.com> <20180421143443.faaput5g2rn6ul7p@madcap2.tricolour.ca>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [RFC PATCH 0/2] memory.low,min reclaim
+Date: Tue, 24 Apr 2018 00:56:09 +0000
+Message-ID: <CAHH2K0bDXrs+J3jWB1X7wphRMoLgjVUTAAFNLGFarDeAfRhA7Q@mail.gmail.com>
+References: <20180320223353.5673-1-guro@fb.com> <20180422202612.127760-1-gthelen@google.com>
+ <20180423103804.GA12648@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=LJbbBUr6pT4Eh+/T5UesoYvqOZVE8aSb5y9nnCEZDrk=;
-        b=Noi4KujTZj/CNpbCxGx16qTjGhmfjRkDacr+q/DyKK/uzfHZfI962T0oaO0pmvJOgj
-         H/V7X95rgNmdQDnUXk4gsB2vteNUJpVN+K+zn0E0F2VlP2hugP6tfrbbiO7Ex26HEmtp
-         hF1mC6H+gacFoNkbp3LQwzi0HZuTL+FRaUmA+hkvAG1gCCdadDt13wRXSw0d13MVxrfG
-         2bGKfK6FFA+5sosBk8qMqgc4tDUpMgxvj/LjyTeDdA74HK9yqSR/2JJr0HKBOmqMdInr
-         DW0Idn9Ik4QCKrAzxxz2/d3uwIRTOdxPLTkoNZ/KEa6iyx5PpUtqwseBonYlfcilZOny
-         awug==
-In-Reply-To: <20180421143443.faaput5g2rn6ul7p@madcap2.tricolour.ca>
+        bh=Htav33/3MhYyt7PmW3NVIQVVAH/L2lZIlm2flK+dnMo=;
+        b=WN8Sa3ZNQ8OEwzOI7ZjKQPm55SGBrH7zRVhbQuKCm/x1pDHJsQGRTxzA9v5AKkvbNN
+         4PEhesVJuG9n8cCWI+Z1d4/QI+QbQpw2ppKTxrpB4A4N4NdIu+K2uSPJz1JpRFPBPY4y
+         q5Ti6ZI6IM8JQKD+HpKwTdmlznSAgs1Hi/HxzCodvg3xNTc5R5MsQd8F5JkbP7TQ8ciP
+         5YDyo56raycfZMUPz0G2I06cePbkayUNs0ZlrzDQ/slEkQsRrqGyHq/oQH1G0m0xA7RI
+         NowYMeMmy98rVVNvN2KUGVY7Th2gzTiyiOqTMhH+80ik5DcPOcQlndGq77lnjvrtuoaP
+         QHFg==
+In-Reply-To: <20180423103804.GA12648@castle.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Richard Guy Briggs <rgb@redhat.com>
-Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, Linux-Audit Mailing List <linux-audit@redhat.com>, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
+To: guro@fb.com
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Cgroups <cgroups@vger.kernel.org>, kernel-team@fb.com, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Sat, Apr 21, 2018 at 10:34 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
-> On 2018-04-18 19:47, Paul Moore wrote:
->> On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
->> > Implement the proc fs write to set the audit container ID of a process,
->> > emitting an AUDIT_CONTAINER record to document the event.
->> >
->> > This is a write from the container orchestrator task to a proc entry of
->> > the form /proc/PID/containerid where PID is the process ID of the newly
->> > created task that is to become the first task in a container, or an
->> > additional task added to a container.
->> >
->> > The write expects up to a u64 value (unset: 18446744073709551615).
->> >
->> > This will produce a record such as this:
->> > type=CONTAINER msg=audit(1519903238.968:261): op=set pid=596 uid=0 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 auid=0 tty=pts0 ses=1 opid=596 old-contid=18446744073709551615 contid=123455 res=0
->> >
->> > The "op" field indicates an initial set.  The "pid" to "ses" fields are
->> > the orchestrator while the "opid" field is the object's PID, the process
->> > being "contained".  Old and new container ID values are given in the
->> > "contid" fields, while res indicates its success.
->> >
->> > It is not permitted to self-set, unset or re-set the container ID.  A
->> > child inherits its parent's container ID, but then can be set only once
->> > after.
->> >
->> > See: https://github.com/linux-audit/audit-kernel/issues/32
->> >
->> > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
->> > ---
->> >  fs/proc/base.c             | 37 ++++++++++++++++++++
->> >  include/linux/audit.h      | 16 +++++++++
->> >  include/linux/init_task.h  |  4 ++-
->> >  include/linux/sched.h      |  1 +
->> >  include/uapi/linux/audit.h |  2 ++
->> >  kernel/auditsc.c           | 84 ++++++++++++++++++++++++++++++++++++++++++++++
->> >  6 files changed, 143 insertions(+), 1 deletion(-)
+On Mon, Apr 23, 2018 at 3:38 AM Roman Gushchin <guro@fb.com> wrote:
 
-...
+> Hi, Greg!
 
->> > diff --git a/include/linux/sched.h b/include/linux/sched.h
->> > index d258826..1b82191 100644
->> > --- a/include/linux/sched.h
->> > +++ b/include/linux/sched.h
->> > @@ -796,6 +796,7 @@ struct task_struct {
->> >  #ifdef CONFIG_AUDITSYSCALL
->> >         kuid_t                          loginuid;
->> >         unsigned int                    sessionid;
->> > +       u64                             containerid;
->>
->> This one line addition to the task_struct scares me the most of
->> anything in this patchset.  Why?  It's a field named "containerid" in
->> a perhaps one of the most widely used core kernel structures; the
->> possibilities for abuse are endless, and it's foolish to think we
->> would ever be able to adequately police this.
->
-> Fair enough.
->
->> Unfortunately, we can't add the field to audit_context as things
->> currently stand because we don't always allocate an audit_context,
->> it's dependent on the system's configuration, and we need to track the
->> audit container ID for a given process, regardless of the audit
->> configuration.  Pretty much the same reason why loginuid and sessionid
->> are located directly in task_struct now.  As I stressed during the
->> design phase, I really want to keep this as an *audit* container ID
->> and not a general purpose kernel wide container ID.  If the kernel
->> ever grows a general purpose container ID token, I'll be the first in
->> line to convert the audit code, but I don't want audit to be that
->> general purpose mechanism ... audit is hated enough as-is ;)
->
-> When would we need an audit container ID when audit is not enabled
-> enough to have an audit_context?
+> On Sun, Apr 22, 2018 at 01:26:10PM -0700, Greg Thelen wrote:
+> > Roman's previously posted memory.low,min patches add per memcg effective
+> > low limit to detect overcommitment of parental limits.  But if we flip
+> > low,min reclaim to bail if usage<{low,min} at any level, then we don't
+need
+> > an effective low limit, which makes the code simpler.  When parent
+limits
+> > are overcommited memory.min will oom kill, which is more drastic but
+makes
+> > the memory.low a simpler concept.  If memcg a/b wants oom kill before
+> > reclaim, then give it to them.  It seems a bit strange for
+a/b/memory.low's
+> > behaviour to depend on a/c/memory.low (i.e. a/b.low is strong unless
+> > a/b.low+a/c.low exceed a.low).
 
-I'm thinking of the audit_alloc() case where audit_filter_task()
-returns AUDIT_DISABLED.
+> It's actually not strange: a/b and a/c are sharing a common resource:
+> a/memory.low.
 
-I believe this is the same reason why loginuid and sessionid live
-directly in the task_struct and not in the audit_context; they need to
-persist for the lifetime of the task.
+> Exactly as a/b/memory.max and a/c/memory.max are sharing a/memory.max.
+> If there are sibling cgroups which are consuming memory, a cgroup can't
+> exceed parent's memory.max, even if its memory.max is grater.
 
-> If it is only used for audit, and audit is the only consumer, and audit
-> can only use it when it is enabled, then we can just return success to
-> any write to the proc filehandle, or not even present it.  Nothing will
-> be able to know that value wasn't used.
->
-> When are loginuid and sessionid used now when audit is not enabled (or
-> should I say, explicitly disabled)?
+> >
+> > I think there might be a simpler way (ableit it doesn't yet include
+> > Documentation):
+> > - memcg: fix memory.low
+> > - memcg: add memory.min
+> >  3 files changed, 75 insertions(+), 6 deletions(-)
+> >
+> > The idea of this alternate approach is for memory.low,min to avoid
+reclaim
+> > if any portion of under-consideration memcg ancestry is under respective
+> > limit.
 
-See above.  I think that should answer these questions.
+> This approach has a significant downside: it breaks hierarchical
+constraints
+> for memory.low/min. There are two important outcomes:
 
->> > diff --git a/include/uapi/linux/audit.h b/include/uapi/linux/audit.h
->> > index 4e61a9e..921a71f 100644
->> > --- a/include/uapi/linux/audit.h
->> > +++ b/include/uapi/linux/audit.h
->> > @@ -71,6 +71,7 @@
->> >  #define AUDIT_TTY_SET          1017    /* Set TTY auditing status */
->> >  #define AUDIT_SET_FEATURE      1018    /* Turn an audit feature on or off */
->> >  #define AUDIT_GET_FEATURE      1019    /* Get which features are enabled */
->> > +#define AUDIT_CONTAINER                1020    /* Define the container id and information */
->> >
->> >  #define AUDIT_FIRST_USER_MSG   1100    /* Userspace messages mostly uninteresting to kernel */
->> >  #define AUDIT_USER_AVC         1107    /* We filter this differently */
->> > @@ -465,6 +466,7 @@ struct audit_tty_status {
->> >  };
->> >
->> >  #define AUDIT_UID_UNSET (unsigned int)-1
->> > +#define AUDIT_CID_UNSET ((u64)-1)
->>
->> I think we need to decide if we want to distinguish between the "host"
->> (e.g. init ns) and "unset".  Looking at this patch (I've only quickly
->> skimmed the others so far) it would appear that you don't think we
->> need to worry about this distinction; that's fine, but let's make it
->> explicit with a comment in the code that AUDIT_CID_UNSET means "unset"
->> as well as "host".
->
-> I don't see any reason to distinguish between "host" and "unset".  Since
-> a container doesn't have a concrete definition based in namespaces, the
-> initial namespace set is meaningless here.
+> 1) Any leaf's memory.low/min value is respected, even if parent's value
+>           is lower or even 0. It's not possible anymore to limit the amount
+of
+>           protected memory for a sub-tree.
+>           This is especially bad in case of delegation.
 
-Okay, that sounds reasonable.
+As someone who has been using something like memory.min for a while, I have
+cases where it needs to be a strong protection.  Such jobs prefer oom kill
+to reclaim.  These jobs know they need X MB of memory.  But I guess it's on
+me to avoid configuring machines which overcommit memory.min at such cgroup
+levels all the way to the root.
 
-> Is there value in having a container orchestrator process have a
-> reserved container ID that has a policy distinct from any other
-> container?
+> 2) If a cgroup has an ancestor with the usage under its memory.low/min,
+>           it becomes protection, even if its memory.low/min is 0. So it
+becomes
+>           impossible to have unprotected cgroups in protected sub-tree.
 
-I'm open to arguments for this idea, but I don't see a point to it right now.
+Fair point.
 
-> If so, then I could see the value in making the distinction.
-> For example, I've heard of interest in systemd acting as a container
-> orchestrator, so if it took on that role as PID 1, then every process in
-> the system would inherit that ID and none would be unset.
->
-> I can't picture how having seperate "host" and "unset" values helps us.
+One use case is where a non trivial job which has several memory accounting
+subcontainers.  Is there a way to only set memory.low at the top and have
+the offer protection to the job?
+The case I'm thinking of is:
+% cd /cgroup
+% echo +memory > cgroup.subtree_control
+% mkdir top
+% echo +memory > top/cgroup.subtree_control
+% mkdir top/part1 top/part2
+% echo 1GB > top/memory.min
+% (echo $BASHPID > top/part1/cgroup.procs && part1)
+% (echo $BASHPID > top/part2/cgroup.procs && part2)
 
-I don't have a strong feeling either way, I just wanted to ask the question.
+Empirically it's been measured that the entire workload (/top) needs 1GB to
+perform well.  But we don't care how the memory is distributed between
+part1,part2.  Is the strategy for that to set /top, /top/part1.min, and
+/top/part2.min to 1GB?
 
->> >  /* audit_rule_data supports filter rules with both integer and string
->> >   * fields.  It corresponds with AUDIT_ADD_RULE, AUDIT_DEL_RULE and
->> > diff --git a/kernel/auditsc.c b/kernel/auditsc.c
->> > index 4e0a4ac..29c8482 100644
->> > --- a/kernel/auditsc.c
->> > +++ b/kernel/auditsc.c
->> > @@ -2073,6 +2073,90 @@ int audit_set_loginuid(kuid_t loginuid)
->> >         return rc;
->> >  }
->> >
->> > +static int audit_set_containerid_perm(struct task_struct *task, u64 containerid)
->> > +{
->> > +       struct task_struct *parent;
->> > +       u64 pcontainerid, ccontainerid;
->> > +
->> > +       /* Don't allow to set our own containerid */
->> > +       if (current == task)
->> > +               return -EPERM;
->>
->> Why not?  Is there some obvious security concern that I missing?
->
-> We then lose the distinction in the AUDIT_CONTAINER record between the
-> initiating PID and the target PID.  This was outlined in the proposal.
+What do you think about exposing emin and elow to user space?  I think that
+would reduce admin/user confusion in situations where memory.min is
+internally discounted.
 
-I just went back and reread the v3 proposal and I still don't see a
-good explanation of this.  Why is this bad?  What's the security
-concern?
+(tangent) Delegation in v2 isn't something I've been able to fully
+internalize yet.
+The "no interior processes" rule challenges my notion of subdelegation.
+My current model is where a system controller creates a container C with
+C.min and then starts client manager process M in C.  Then M can choose
+to further divide C's resources (e.g. C/S).  This doesn't seem possible
+because v2 doesn't allow for interior processes.  So the system manager
+would need to create C, set C.low, create C/sub_manager, create
+C/sub_resources, set C/sub_manager.low, set C/sub_resources.low, then start
+M in C/sub_manager.  Then sub_manager can create and manage
+C/sub_resources/S.
 
-> Having said that, I'm still not sure we have protected sufficiently from
-> a child turning around and setting it's parent's as yet unset or
-> inherited audit container ID.
-
-Yes, I believe we only want to let a task set the audit container for
-it's children (or itself/threads if we decide to allow that, see
-above).  There *has* to be a function to check to see if a task if a
-child of a given task ... right? ... although this is likely to be a
-pointer traversal and locking nightmare ... hmmm.
-
->> I ask because I suppose it might be possible for some container
->> runtime to do a fork, setup some of the environment and them exec the
->> container (before you answer the obvious "namespaces!" please remember
->> we're not trying to define containers).
->
-> I don't think namespaces have any bearing on this concern since none are
-> required.
->
->> > +       /* Don't allow the containerid to be unset */
->> > +       if (!cid_valid(containerid))
->> > +               return -EINVAL;
->> > +       /* if we don't have caps, reject */
->> > +       if (!capable(CAP_AUDIT_CONTROL))
->> > +               return -EPERM;
->> > +       /* if containerid is unset, allow */
->> > +       if (!audit_containerid_set(task))
->> > +               return 0;
->> > +       /* it is already set, and not inherited from the parent, reject */
->> > +       ccontainerid = audit_get_containerid(task);
->> > +       rcu_read_lock();
->> > +       parent = rcu_dereference(task->real_parent);
->> > +       rcu_read_unlock();
->> > +       task_lock(parent);
->> > +       pcontainerid = audit_get_containerid(parent);
->> > +       task_unlock(parent);
->> > +       if (ccontainerid != pcontainerid)
->> > +               return -EPERM;
->> > +       return 0;
->> > +}
->> > +
->> > +static void audit_log_set_containerid(struct task_struct *task, u64 oldcontainerid,
->> > +                                     u64 containerid, int rc)
->> > +{
->> > +       struct audit_buffer *ab;
->> > +       uid_t uid;
->> > +       struct tty_struct *tty;
->> > +
->> > +       if (!audit_enabled)
->> > +               return;
->> > +
->> > +       ab = audit_log_start(NULL, GFP_KERNEL, AUDIT_CONTAINER);
->> > +       if (!ab)
->> > +               return;
->> > +
->> > +       uid = from_kuid(&init_user_ns, task_uid(current));
->> > +       tty = audit_get_tty(current);
->> > +
->> > +       audit_log_format(ab, "op=set pid=%d uid=%u", task_tgid_nr(current), uid);
->> > +       audit_log_task_context(ab);
->> > +       audit_log_format(ab, " auid=%u tty=%s ses=%u opid=%d old-contid=%llu contid=%llu res=%d",
->> > +                        from_kuid(&init_user_ns, audit_get_loginuid(current)),
->> > +                        tty ? tty_name(tty) : "(none)", audit_get_sessionid(current),
->> > +                        task_tgid_nr(task), oldcontainerid, containerid, !rc);
->> > +
->> > +       audit_put_tty(tty);
->> > +       audit_log_end(ab);
->> > +}
->> > +
->> > +/**
->> > + * audit_set_containerid - set current task's audit_context containerid
->> > + * @containerid: containerid value
->> > + *
->> > + * Returns 0 on success, -EPERM on permission failure.
->> > + *
->> > + * Called (set) from fs/proc/base.c::proc_containerid_write().
->> > + */
->> > +int audit_set_containerid(struct task_struct *task, u64 containerid)
->> > +{
->> > +       u64 oldcontainerid;
->> > +       int rc;
->> > +
->> > +       oldcontainerid = audit_get_containerid(task);
->> > +
->> > +       rc = audit_set_containerid_perm(task, containerid);
->> > +       if (!rc) {
->> > +               task_lock(task);
->> > +               task->containerid = containerid;
->> > +               task_unlock(task);
->> > +       }
->> > +
->> > +       audit_log_set_containerid(task, oldcontainerid, containerid, rc);
->> > +       return rc;
->>
->> Why are audit_set_containerid_perm() and audit_log_containerid()
->> separate functions?
->
-> (I assume you mean audit_log_set_containerid()?)
-
-Yep.  My fingers got tired typing in that function name and decided a
-shortcut was necessary.
-
-> It seemed clearer that all the permission checking was in one function
-> and its return code could be used to report the outcome when logging the
-> (attempted) action.  This is the same structure as audit_set_loginuid()
-> and it made sense.
-
-When possible I really like it when the permission checks are in the
-same function as the code which does the work; it's less likely to get
-abused that way (you have to willfully bypass the access checks).  The
-exceptions might be if you wanted to reuse the access control code, or
-insert a modular access mechanism (e.g. LSMs).
-
-I'm less concerned about audit_log_set_containerid(), but the usual
-idea of avoiding single-use function within the same scope applies
-here.
-
-> This would be the time to connect it to a syscall if that seems like a
-> good idea and remove pid, uid, auid, tty, ses fields.
-
-Ah yes, I missed that.  You know my stance on connecting records by
-now (hint: yes, connect them) so I think that would be a good thing to
-do for the next round.
-
--- 
-paul moore
-www.paul-moore.com
+PS: Thanks for the memory.low and memory.min work.  Regardless of how we
+proceed it's better than the upstream memory.soft_limit_in_bytes!
