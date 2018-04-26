@@ -1,50 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH cgroup/for-4.17 2/2] Subject: cgroup: Limit event
- generation frequency
-Date: Thu, 26 Apr 2018 14:35:14 -0700
-Message-ID: <20180426213514.GV1911913@devbig577.frc2.facebook.com>
-References: <20180323194722.GE2149215@devbig577.frc2.facebook.com>
- <20180323194753.GF2149215@devbig577.frc2.facebook.com>
+Subject: Re: [PATCHSET] cgroup/for-4.17: Make cgroup_rstat available to
+ controllers
+Date: Thu, 26 Apr 2018 14:35:33 -0700
+Message-ID: <20180426213533.GW1911913@devbig577.frc2.facebook.com>
+References: <20180323231313.1254142-1-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=g8dlQPSge40aMnv1pBkb8vhGJ6VgWEqkvQOVl6HmBW4=;
-        b=NNFUeU8KxiQ2dOrtl38DUSuR/YHLXImGKfc5+2m+VeNoEImYUJTgBKNf1ZYD0oZ8mW
-         2yX/HgjxbBs0/wGLGj6wn04y0xIMTXSezGY4wRrntC1DoukNW3I9DqprIEiRmJKXl2qv
-         gpoeOnZLAA6L90IxnuAgmm5Eql7RPK3Q1rcLTJ1SgUPW83O4MOaACcl5RTKlxvk5R1S1
-         nMLT0dCx+dVUMflMkw6o6Wyb38cXW/cL4YjR/YypDQEd7dgvwk48fLCPlQtguJxRfNjD
-         +JYAui5a30eBQJQ6QtLxZvKNX9AHbsuLkSNVufYl83GELdxxu6vtQPgB835tkUxWvadB
-         0xTA==
+        bh=nNNxkHwrOTuLcVh0bR6D1LlBdNl/pfD6BNbilPT4aKk=;
+        b=AbE1cVlhmLd3mRJwG+VtuGfhAcBCHchwVLf1Hm68qrx3HYUlvfSHqCXLoZS99xk34F
+         oepZEbbtn2vOvtyiwQbS6ulyF9uOivS1uWUvd9zh686LVK63xQgU9NHBPF3bSwSrrRdu
+         KFJa+2JvSeIUZEXNn7hdmSKbyVvSNKmtvPVRe1YYy5unbVFPGv94ZYj8ouAPKljpffWl
+         6qZd+GXdHNe2AiGMQlCxpexRmGHWuEvv8vMt+ahr+27Mff1aveu8wuuI2sh9MMfmcBbF
+         uRO1CJRSJmfFBsBfSZdJ/zo/X/hXRElOdJVMz/Po2j3H7waEuFEZeuf8RQ8qiOeHCHAo
+         Y5nA==
 Content-Disposition: inline
-In-Reply-To: <20180323194753.GF2149215@devbig577.frc2.facebook.com>
+In-Reply-To: <20180323231313.1254142-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org
+To: lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, guro@fb.com, kernel-team@fb.com
 
-On Fri, Mar 23, 2018 at 12:47:53PM -0700, Tejun Heo wrote:
-> ".events" files generate file modified event to notify userland of
-> possible new events.  Some of the events can be quite bursty
-> (e.g. memory high event) and generating notification each time is
-> costly and pointless.
+On Fri, Mar 23, 2018 at 04:13:05PM -0700, Tejun Heo wrote:
+> Hello,
 > 
-> This patch implements a event rate limit mechanism.  If a new
-> notification is requested before 10ms has passed since the previous
-> notification, the new notification is delayed till then.
+> cgroup has scalable recursive stat mechanism implemented in
+> kernel/stat.c.  It's currently only used to track cpu consumptions and
+> difficult to use outside of cgroup core.  This patchset generalizes
+> the mechanism and exposes it as cgroup_rstat so that controllers can
+> use it.
 > 
-> As this only delays from the second notification on in a given close
-> cluster of notifications, userland reactions to notifications
-> shouldn't be delayed at all in most cases while avoiding notification
-> storms.
+> This patchset contains the following eight patches.  A follow-up
+> patchset will add usages.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+>  0001-cgroup-Rename-kernel-cgroup-stat.c-to-kernel-cgroup-.patch
+>  0002-cgroup-Rename-stat-to-rstat.patch
+>  0003-cgroup-Distinguish-base-resource-stat-implementation.patch
+>  0004-cgroup-Reorganize-kernel-cgroup-rstat.c.patch
+>  0005-cgroup-Factor-out-and-expose-cgroup_rstat_-interface.patch
+>  0006-cgroup-Replace-cgroup_rstat_mutex-with-a-spinlock.patch
+>  0007-cgroup-Add-cgroup_subsys-css_rstat_flush.patch
+>  0008-cgroup-Add-memory-barriers-to-plug-cgroup_rstat_upda.patch
 
-Applied 1-2 to cgroup/for-4.18.
+Applied 1-8 to cgroup/for-4.18.
 
 Thanks.
 
