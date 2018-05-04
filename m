@@ -1,82 +1,108 @@
-From: TSUKADA Koutaro <tsukada@ascade.co.jp>
+From: Mike Kravetz <mike.kravetz@oracle.com>
 Subject: Re: [PATCH] memcg, hugetlb: pages allocated for hugetlb's overcommit
  will be charged to memcg
-Date: Fri, 4 May 2018 09:09:47 +0900
-Message-ID: <a696eccd-24f3-9368-5baa-afbd3628468a@ascade.co.jp>
+Date: Thu, 3 May 2018 21:26:39 -0700
+Message-ID: <fae2dde5-00b0-f12c-66ff-8b69351805a9@oracle.com>
 References: <ecb737e9-ccec-2d7e-45d9-91884a669b58@ascade.co.jp>
  <dc21a4ac-b57f-59a8-f97a-90a59d5a59cd@oracle.com>
  <c9019050-7c89-86c3-93fc-9beb64e43ed3@ascade.co.jp>
  <249d53f4-225d-8a11-d557-b915fa4fa9cb@oracle.com>
+ <a696eccd-24f3-9368-5baa-afbd3628468a@ascade.co.jp>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <249d53f4-225d-8a11-d557-b915fa4fa9cb@oracle.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2017-10-26;
+ bh=jqh7EeboJAKw/axyYvHrdUnmaf1fZ1ZcOVkbkXt8QUM=;
+ b=Pz4btDF2kideSKz/88mkEoRWcpiy8JoGPQ45t1Pcn8Z/S+GMasTsiKQOxEkbEa+s21jz
+ OqPmLpaKq89Fpzt2GE7sa+HrKGxqHtOQP2dSI/yzIHauLzbdH2zgKZyIg6YzmMuJ23zv
+ n/p3kE0jPbxpNrj/Mge51p8PtX6LFS8/9qk428WjBe2XQY62pm6UM7g3ZMPxXMqCLB4A
+ r11mZ06+L3EFsECOFz7D8p1ieoQsj3dkXi806XxwG+owz3SodlfJmI7nRmj+zgg3pvwy
+ TfIcDXJDlfrlDyQ3dc+4QlyunOBfKg/Lj1eSpBN1Dn9z2b+u3siUKfL+Jsa0iQxnlQv7 uw== 
+In-Reply-To: <a696eccd-24f3-9368-5baa-afbd3628468a@ascade.co.jp>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mike Kravetz <mike.kravetz@oracle.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, =?UTF-8?Q?Marc-Andr=c3=a9_Lureau?= <marcandre.lureau@redhat.com>, Punit Agrawal <punit.agrawal@arm.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, Andrea Arcangeli <aarcange@redhat.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, tsukada@ascade.co.jp
+To: TSUKADA Koutaro <tsukada@ascade.co.jp>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, =?UTF-8?Q?Marc-Andr=c3=a9_Lureau?= <marcandre.lureau@redhat.com>, Punit Agrawal <punit.agrawal@arm.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, Andrea Arcangeli <aarcange@redhat.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On 2018/05/03 11:33, Mike Kravetz wrote:
-> On 05/01/2018 11:54 PM, TSUKADA Koutaro wrote:
->> On 2018/05/02 13:41, Mike Kravetz wrote:
->>> What is the reason for not charging pages at allocation/reserve time?  I am
->>> not an expert in memcg accounting, but I would think the pages should be
->>> charged at allocation time.  Otherwise, a task could allocate a large number
->>> of (reserved) pages that are not charged to a memcg.  memcg charges in other
->>> code paths seem to happen at huge page allocation time.
->>
->> If we charge to memcg at page allocation time, the new page is not yet
->> registered in rmap, so it will be accounted as 'cache' inside the memcg. Then,
->> after being registered in rmap, memcg will account as 'RSS' if the task moves
->> cgroup, so I am worried about the possibility of inconsistency in statistics
->> (memory.stat).
->>
->> As you said, in this patch, there may be a problem that a memory leak occurs
->> due to unused pages after being reserved.
->>
->>>> This patch targets RHELSA(kernel-alt-4.11.0-45.6.1.el7a.src.rpm).
+On 05/03/2018 05:09 PM, TSUKADA Koutaro wrote:
+> On 2018/05/03 11:33, Mike Kravetz wrote:
+>> On 05/01/2018 11:54 PM, TSUKADA Koutaro wrote:
+>>> On 2018/05/02 13:41, Mike Kravetz wrote:
+>>>> What is the reason for not charging pages at allocation/reserve time?  I am
+>>>> not an expert in memcg accounting, but I would think the pages should be
+>>>> charged at allocation time.  Otherwise, a task could allocate a large number
+>>>> of (reserved) pages that are not charged to a memcg.  memcg charges in other
+>>>> code paths seem to happen at huge page allocation time.
 >>>
->>> It would be very helpful to rebase this patch on a recent mainline kernel.
->>> The code to allocate surplus huge pages has been significantly changed in
->>> recent kernels.
+>>> If we charge to memcg at page allocation time, the new page is not yet
+>>> registered in rmap, so it will be accounted as 'cache' inside the memcg. Then,
+>>> after being registered in rmap, memcg will account as 'RSS' if the task moves
+>>> cgroup, so I am worried about the possibility of inconsistency in statistics
+>>> (memory.stat).
 >>>
->>> I have no doubt that this is a real issue and we are not correctly charging
->>> surplus to a memcg.  But your patch will be hard to evaluate when based on
->>> an older distro kernel.
->> I apologize for the patch of the old kernel. The patch was rewritten
->> for 4.17-rc2(6d08b06).
+>>> As you said, in this patch, there may be a problem that a memory leak occurs
+>>> due to unused pages after being reserved.
+>>>
+>>>>> This patch targets RHELSA(kernel-alt-4.11.0-45.6.1.el7a.src.rpm).
+>>>>
+>>>> It would be very helpful to rebase this patch on a recent mainline kernel.
+>>>> The code to allocate surplus huge pages has been significantly changed in
+>>>> recent kernels.
+>>>>
+>>>> I have no doubt that this is a real issue and we are not correctly charging
+>>>> surplus to a memcg.  But your patch will be hard to evaluate when based on
+>>>> an older distro kernel.
+>>> I apologize for the patch of the old kernel. The patch was rewritten
+>>> for 4.17-rc2(6d08b06).
+>>
+>> Thank you very much for rebasing the patch.
+>>
+>> I did not look closely at your patch until now.  My first thought was that
+>> you  were changing/expanding the existing accounting.  However, it appears
+>> that you want to account for hugetlb surplus pages in the memory cgroup.
+>> Is there any reason why the hugetlb cgroup resource controller does not meet
+>> your needs?  It a quick look at the code, it does appear to handle surplus
+>> pages correctly.
 > 
-> Thank you very much for rebasing the patch.
+> Yes, basically it is exactly what you are talking about, but my usage is
+> somewhat special. I would like users who submit jobs on the HPC cluster to use
+> the hugetlb page. When submitting a job, the user specifies a memory resource
+> (for example, sbatch --mem in slurm).
 > 
-> I did not look closely at your patch until now.  My first thought was that
-> you  were changing/expanding the existing accounting.  However, it appears
-> that you want to account for hugetlb surplus pages in the memory cgroup.
-> Is there any reason why the hugetlb cgroup resource controller does not meet
-> your needs?  It a quick look at the code, it does appear to handle surplus
-> pages correctly.
+> If the user specifies 10GB, we assume that the system administrator has set the
+> limit of 10GB for memory cgroup and hugetlb cgroup respectively, and does not
+> create a hugetlb pool and sets it so that can overcommit. Then, users can use
+> 10GB normal pages and more 10GB hugetlb page by overcommitting, which means
+> user can use 20GB totaly. However, the administrator should restrict the normal
+> page and hugetlb page to 10GB in total.
+> 
+> Since it is difficult to estimate the ratio used by user of normal pages and
+> hugetlb pages, setting limits of 2 GB to memory cgroup and 8 GB to hugetlb
+> cgroup is not very good idea.
+> 
+> In such a case, with my patch, I thought that the administrator can manage the
+> resources just by setting 10GB for the limit of memory cgoup(No limit is set
+> for hugetlb cgroup).
 
-Yes, basically it is exactly what you are talking about, but my usage is
-somewhat special. I would like users who submit jobs on the HPC cluster to use
-the hugetlb page. When submitting a job, the user specifies a memory resource
-(for example, sbatch --mem in slurm).
+Thank you for the explanation of your use case.  I now understand what
+you were trying to accomplish with your patch.
 
-If the user specifies 10GB, we assume that the system administrator has set the
-limit of 10GB for memory cgroup and hugetlb cgroup respectively, and does not
-create a hugetlb pool and sets it so that can overcommit. Then, users can use
-10GB normal pages and more 10GB hugetlb page by overcommitting, which means
-user can use 20GB totaly. However, the administrator should restrict the normal
-page and hugetlb page to 10GB in total.
+Your use case reminds me of the session at LSFMM titled "swap accounting".
+https://lwn.net/Articles/753162/
 
-Since it is difficult to estimate the ratio used by user of normal pages and
-hugetlb pages, setting limits of 2 GB to memory cgroup and 8 GB to hugetlb
-cgroup is not very good idea.
+I hope someone with more cgroup expertise (Johannes? Aneesh?) can provide
+comments.  My experience in that area is limited.
 
-In such a case, with my patch, I thought that the administrator can manage the
-resources just by setting 10GB for the limit of memory cgoup(No limit is set
-for hugetlb cgroup).
-
+One question that comes to mind is "Why would the user/application writer
+use hugetlbfs overcommit instead of THP?".  For hugetlbfs overcommit, they
+need to be prepared for huge page allocations to fail.  So, in some cases
+they may not be able to use any hugetlbfs pages.  This is not much different
+than THP.  However, in the THP case huge page allocation failures and fall
+back to base pages is transparent to the user.  With THP, the normal memory
+cgroup controller should work well.
 -- 
-
-
+Mike Kravetz
