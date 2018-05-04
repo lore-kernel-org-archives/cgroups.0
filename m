@@ -1,33 +1,60 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] Add a file named cgroup.procs_stat in cgroup
-Date: Fri, 4 May 2018 10:31:47 -0700
-Message-ID: <20180504173147.GA4649@kroah.com>
-References: <1525444100-4858-1-git-send-email-qiangzh.hust@gmail.com>
-Mime-Version: 1.0
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] mm: memcontrol: drain stocks on resize limit
+Date: Fri,  4 May 2018 13:55:48 -0700
+Message-ID: <20180504205548.110696-1-shakeelb@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1525455119;
-        bh=vy0CuwD8sipzvV54xrvvSpjrL6xzSvgQOi6iqAyhhvQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vM5Bx/ZkI7umRiPZ9QEI6wzgCL4dP6QblaUp0Dodpa0rOrNFO9s9WILgPH8KdN/Fd
-         IsYShblena8B67r+GbXDiZrHC+XWgype7TlUXmXPDQWt3ZqFZ3CBqjxl8x47zcEAzP
-         BYjnmmPrTw0Ap+aD4uzqe+27RSfO9yNYEpeY9dY0=
-Content-Disposition: inline
-In-Reply-To: <1525444100-4858-1-git-send-email-qiangzh.hust@gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=DnUXLEaCkkCVH3E829dGRxAOA8xyVQ0lOvRMY9hJGEI=;
+        b=TURGtkQmk7rkrMeduUJd+hla+ZISuA1kz8znMwFvV0ZOR/uKnCBHtW+ZPl3g/Xn308
+         R2I2KARF7NS44t0mwlpDcbZhSu3RdQpBAp7G4TlqmKGbxlQjXv+hnjB5HrWjJNgrCEi3
+         xbIatTsSkoWNx935dwxn7kXYCsnBU2bUSxe5xoARvUYfXCVOuBSoEtB/obshbeAdQGaZ
+         xc/0FUaWnLzogT1W+lSNtgQPOTZhnXtS2W91kdnnibLyS8H8HJThtYau9AKdJQQyjsi8
+         I03/90qQ3mE8LCnTRPJILi9FMnIPJolIQf19DHOEhXdk0nClgPVELATOq8UVezrVTZK2
+         OvXg==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: zhangq95 <qiangzh.hust@gmail.com>
-Cc: linux-kernel@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, peterz@infradead.org, cgroups@vger.kernel.org, riel@redhat.com, gs051095@gmail.com, akpm@linux-foundation.org, oleg@redhat.com, tglx@linutronix.de, keescook@chromium.org, longman@redhat.com, prsood@codeaurora.org, guro@fb.com, davem@davemloft.net, mhocko@suse.com, kirill.shutemov@linux.intel.com, marcos.souza.org@gmail.com, hoeun.ryu@gmail.com, rostedt@goodmis.org, bigeasy@linutronix.de, alexander.levin@verizon.com, paulmck@linux.vnet.ibm.com, fweisbec@gmail.com
+To: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shakeel Butt <shakeelb@google.com>
 
-On Fri, May 04, 2018 at 10:28:20PM +0800, zhangq95 wrote:
-> When I run "cat /proc/stat" in a container, container will access
-> host's file directly which is a security risk.
+Resizing the memcg limit for cgroup-v2 drains the stocks before
+triggering the memcg reclaim. Do the same for cgroup-v1 to make the
+behavior consistent.
 
-Why is this a "security risk"?  What can be learned there that is
-somehow "bad"?
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+---
+ mm/memcontrol.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-thanks,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 25b148c2d222..e2d33a37f971 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2463,6 +2463,7 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+ 				 unsigned long max, bool memsw)
+ {
+ 	bool enlarge = false;
++	bool drained = false;
+ 	int ret;
+ 	bool limits_invariant;
+ 	struct page_counter *counter = memsw ? &memcg->memsw : &memcg->memory;
+@@ -2493,6 +2494,12 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
++		if (!drained) {
++			drain_all_stock(memcg);
++			drained = true;
++			continue;
++		}
++
+ 		if (!try_to_free_mem_cgroup_pages(memcg, 1,
+ 					GFP_KERNEL, !memsw)) {
+ 			ret = -EBUSY;
+-- 
+2.17.0.441.gb46fe60e1d-goog
 
-greg k-h
