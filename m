@@ -1,252 +1,225 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH] Add a file named cgroup.procs_stat in cgroup
-Date: Sat, 5 May 2018 15:34:09 +0800
-Message-ID: <201805051540.FuMfhg8K%fengguang.wu@intel.com>
-References: <1525444100-4858-1-git-send-email-qiangzh.hust@gmail.com>
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: Re: [RFC PATCH ghak32 V2 01/13] audit: add container id
+Date: Sun, 6 May 2018 12:51:30 -0400
+Message-ID: <20180506165130.w23hrxonnpebof5n@madcap2.tricolour.ca>
+References: <cover.1521179281.git.rgb@redhat.com>
+ <e284617ad667ad8f17958dd8babb87fe1b4d7205.1521179281.git.rgb@redhat.com>
+ <CAHC9VhTyvxxj2e2Gn+iyW6iLLeYB7hp8a+JvfeMmJ2nUPqtEaw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1525444100-4858-1-git-send-email-qiangzh.hust@gmail.com>
+In-Reply-To: <CAHC9VhTyvxxj2e2Gn+iyW6iLLeYB7hp8a+JvfeMmJ2nUPqtEaw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: zhangq95 <qiangzh.hust@gmail.com>
-Cc: kbuild-all@01.org, linux-kernel@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, mingo@redhat.com, peterz@infradead.org, cgroups@vger.kernel.org, riel@redhat.com, gs051095@gmail.com, akpm@linux-foundation.org, oleg@redhat.com, tglx@linutronix.de, keescook@chromium.org, gregkh@linuxfoundation.org, longman@redhat.com, prsood@codeaurora.org, guro@fb.com, davem@davemloft.net, mhocko@suse.com, kirill.shutemov@linux.intel.com, marcos.souza.org@gmail.com, hoeun.ryu@gmail.com, rostedt@goodmis.org, bigeasy@linutronix.de, alexander.levin@verizon.com, paulmck@linux.vnet.ibm.com, fweisbec@gmail.com, zhangq95 <qiangzh.hust@gmail.com>
+To: Paul Moore <paul@paul-moore.com>
+Cc: simo@redhat.com, jlayton@redhat.com, carlos@redhat.com, linux-api@vger.kernel.org, containers@lists.linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, Eric Paris <eparis@parisplace.org>, dhowells@redhat.com, Linux-Audit Mailing List <linux-audit@redhat.com>, ebiederm@xmission.com, luto@kernel.org, netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, serge@hallyn.com, viro@zeniv.linux.org.uk
 
-Hi zhangq95,
+On 2018-04-18 19:47, Paul Moore wrote:
+> On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
+> > Implement the proc fs write to set the audit container ID of a process,
+> > emitting an AUDIT_CONTAINER record to document the event.
+> >
+> > This is a write from the container orchestrator task to a proc entry of
+> > the form /proc/PID/containerid where PID is the process ID of the newly
+> > created task that is to become the first task in a container, or an
+> > additional task added to a container.
+> >
+> > The write expects up to a u64 value (unset: 18446744073709551615).
+> >
+> > This will produce a record such as this:
+> > type=CONTAINER msg=audit(1519903238.968:261): op=set pid=596 uid=0 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 auid=0 tty=pts0 ses=1 opid=596 old-contid=18446744073709551615 contid=123455 res=0
+> >
+> > The "op" field indicates an initial set.  The "pid" to "ses" fields are
+> > the orchestrator while the "opid" field is the object's PID, the process
+> > being "contained".  Old and new container ID values are given in the
+> > "contid" fields, while res indicates its success.
+> >
+> > It is not permitted to self-set, unset or re-set the container ID.  A
+> > child inherits its parent's container ID, but then can be set only once
+> > after.
+> >
+> > See: https://github.com/linux-audit/audit-kernel/issues/32
+> >
+> > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
+> > ---
+> >  fs/proc/base.c             | 37 ++++++++++++++++++++
+> >  include/linux/audit.h      | 16 +++++++++
+> >  include/linux/init_task.h  |  4 ++-
+> >  include/linux/sched.h      |  1 +
+> >  include/uapi/linux/audit.h |  2 ++
+> >  kernel/auditsc.c           | 84 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  6 files changed, 143 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/fs/proc/base.c b/fs/proc/base.c
+> > index 60316b5..6ce4fbe 100644
+> > --- a/fs/proc/base.c
+> > +++ b/fs/proc/base.c
+> > @@ -1299,6 +1299,41 @@ static ssize_t proc_sessionid_read(struct file * file, char __user * buf,
+> >         .read           = proc_sessionid_read,
+> >         .llseek         = generic_file_llseek,
+> >  };
+> > +
+> > +static ssize_t proc_containerid_write(struct file *file, const char __user *buf,
+> > +                                  size_t count, loff_t *ppos)
+> > +{
+> > +       struct inode *inode = file_inode(file);
+> > +       u64 containerid;
+> > +       int rv;
+> > +       struct task_struct *task = get_proc_task(inode);
+> > +
+> > +       if (!task)
+> > +               return -ESRCH;
+> > +       if (*ppos != 0) {
+> > +               /* No partial writes. */
+> > +               put_task_struct(task);
+> > +               return -EINVAL;
+> > +       }
+> > +
+> > +       rv = kstrtou64_from_user(buf, count, 10, &containerid);
+> > +       if (rv < 0) {
+> > +               put_task_struct(task);
+> > +               return rv;
+> > +       }
+> > +
+> > +       rv = audit_set_containerid(task, containerid);
+> > +       put_task_struct(task);
+> > +       if (rv < 0)
+> > +               return rv;
+> > +       return count;
+> > +}
+> > +
+> > +static const struct file_operations proc_containerid_operations = {
+> > +       .write          = proc_containerid_write,
+> > +       .llseek         = generic_file_llseek,
+> > +};
+> > +
+> >  #endif
+> >
+> >  #ifdef CONFIG_FAULT_INJECTION
+> > @@ -2961,6 +2996,7 @@ static int proc_pid_patch_state(struct seq_file *m, struct pid_namespace *ns,
+> >  #ifdef CONFIG_AUDITSYSCALL
+> >         REG("loginuid",   S_IWUSR|S_IRUGO, proc_loginuid_operations),
+> >         REG("sessionid",  S_IRUGO, proc_sessionid_operations),
+> > +       REG("containerid", S_IWUSR, proc_containerid_operations),
+> >  #endif
+> >  #ifdef CONFIG_FAULT_INJECTION
+> >         REG("make-it-fail", S_IRUGO|S_IWUSR, proc_fault_inject_operations),
+> > @@ -3355,6 +3391,7 @@ static int proc_tid_comm_permission(struct inode *inode, int mask)
+> >  #ifdef CONFIG_AUDITSYSCALL
+> >         REG("loginuid",  S_IWUSR|S_IRUGO, proc_loginuid_operations),
+> >         REG("sessionid",  S_IRUGO, proc_sessionid_operations),
+> > +       REG("containerid", S_IWUSR, proc_containerid_operations),
+> >  #endif
+> >  #ifdef CONFIG_FAULT_INJECTION
+> >         REG("make-it-fail", S_IRUGO|S_IWUSR, proc_fault_inject_operations),
 
-Thank you for the patch! Perhaps something to improve:
+...
 
-[auto build test WARNING on linus/master]
-[also build test WARNING on v4.17-rc3]
-[cannot apply to cgroup/for-next next-20180504]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> > diff --git a/include/linux/sched.h b/include/linux/sched.h
+> > index d258826..1b82191 100644
+> > --- a/include/linux/sched.h
+> > +++ b/include/linux/sched.h
+> > @@ -796,6 +796,7 @@ struct task_struct {
+> >  #ifdef CONFIG_AUDITSYSCALL
+> >         kuid_t                          loginuid;
+> >         unsigned int                    sessionid;
+> > +       u64                             containerid;
+> 
+> This one line addition to the task_struct scares me the most of
+> anything in this patchset.  Why?  It's a field named "containerid" in
+> a perhaps one of the most widely used core kernel structures; the
+> possibilities for abuse are endless, and it's foolish to think we
+> would ever be able to adequately police this.
+> 
+> Unfortunately, we can't add the field to audit_context as things
+> currently stand because we don't always allocate an audit_context,
+> it's dependent on the system's configuration, and we need to track the
+> audit container ID for a given process, regardless of the audit
+> configuration.  Pretty much the same reason why loginuid and sessionid
+> are located directly in task_struct now.  As I stressed during the
+> design phase, I really want to keep this as an *audit* container ID
+> and not a general purpose kernel wide container ID.  If the kernel
+> ever grows a general purpose container ID token, I'll be the first in
+> line to convert the audit code, but I don't want audit to be that
+> general purpose mechanism ... audit is hated enough as-is ;)
+> 
+> I think the right solution to this is to create another new struct,
+> audit_task_info (or similar, the name really isn't that important),
+> which would be stored as a pointer in task_struct and would replace
+> the audit_context pointer, loginuid, sessionid, and the newly proposed
+> containerid.  The new audit_task_info would always be allocated in the
+> audit_alloc() function (please use kmem_cache), and the audit_context
+> pointer included inside would continue to be allocated based on the
+> existing conditions.  By keeping audit_task_info as a pointer inside
+> task_struct we could hide the structure definition inside
+> kernel/audit*.c and make it much more difficult for other subsystems
+> to abuse it.[1]
+> 
+>   struct audit_task_info {
+>     kuid_t loginuid;
+>     unsigned int sessionid;
+>     u64 containerid;
+>     struct audit_context *ctx;
+>   }
+> 
+> Actually, we might even want to consider storing audit_context in
+> audit_task_info (no pointer), or making it a zero length array
+> (ctx[0]) and going with a variable sized allocation of audit_task_info
+> ... but all that could be done as a follow up optimization once we get
+> the basic idea sorted.
 
-url:    https://github.com/0day-ci/linux/commits/zhangq95/Add-a-file-named-cgroup-procs_stat-in-cgroup/20180505-115518
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+I tried statically allocating struct audit_task_info (with a pointer to
+struct audit_context) in addition to dynamically allocating struct
+audit_task_info due to a bug I'd introduced while dynamically allocating
+audit_task_info, so I now have proof-of-concepts for working static and
+almost working dynamic allocated struct audit_task_info.
 
+Statically allocating it required a new header file, so I'm not that
+crazy about it, but it proved it works.
 
-sparse warnings: (new ones prefixed by >>)
+Dynamically allocating it isn't quite as clean as was hoped since
+init/init_task.c still needs initializaiton values for loginuid and
+sessionid which could be supplied by a statically allocated struct
+audit_task_info and still needs to know the internals of that struct to
+do so.  Dynamic allocation is also more disruptive initially, but in the
+long run will be more stable to the rest of the kernel.
 
->> kernel//cgroup/cgroup-v1.c:634:39: sparse: incorrect type in return expression (different base types) @@    expected int @@    got voiint @@
-   kernel//cgroup/cgroup-v1.c:634:39:    expected int
-   kernel//cgroup/cgroup-v1.c:634:39:    got void *
-   kernel//cgroup/cgroup-v1.c:655:33: sparse: undefined identifier 'CPUACCT_PROCS_SWITCHES'
-   kernel//cgroup/cgroup-v1.c:657:33: sparse: undefined identifier 'CPUACCT_PROCS_FORKS'
-   kernel//cgroup/cgroup-v1.c:659:33: sparse: undefined identifier 'CPUACCT_PROCS_RUNNING'
-   kernel//cgroup/cgroup-v1.c:661:33: sparse: undefined identifier 'CPUACCT_PROCS_IOWAIT'
-   kernel//cgroup/cgroup-v1.c:521:16: sparse: context imbalance in '__cgroup1_procs_write' - wrong count at exit
->> kernel//cgroup/cgroup-v1.c:654:55: sparse: call with no type!
-   kernel//cgroup/cgroup-v1.c:656:52: sparse: call with no type!
-   kernel//cgroup/cgroup-v1.c:658:58: sparse: call with no type!
-   kernel//cgroup/cgroup-v1.c:660:53: sparse: call with no type!
-   kernel//cgroup/cgroup-v1.c: In function 'cgroup_procs_stat_show':
-   kernel//cgroup/cgroup-v1.c:634:11: warning: return makes integer from pointer without a cast [-Wint-conversion]
-       return ERR_PTR(ret);
-              ^~~~~~~~~~~~
-   kernel//cgroup/cgroup-v1.c:655:5: error: 'CPUACCT_PROCS_SWITCHES' undeclared (first use in this function)
-        CPUACCT_PROCS_SWITCHES, 0);
-        ^~~~~~~~~~~~~~~~~~~~~~
-   kernel//cgroup/cgroup-v1.c:655:5: note: each undeclared identifier is reported only once for each function it appears in
-   kernel//cgroup/cgroup-v1.c:657:5: error: 'CPUACCT_PROCS_FORKS' undeclared (first use in this function); did you mean 'CPUACCT_PROCS_SWITCHES'?
-        CPUACCT_PROCS_FORKS, 0);
-        ^~~~~~~~~~~~~~~~~~~
-        CPUACCT_PROCS_SWITCHES
-   kernel//cgroup/cgroup-v1.c:659:5: error: 'CPUACCT_PROCS_RUNNING' undeclared (first use in this function); did you mean 'CPUACCT_PROCS_FORKS'?
-        CPUACCT_PROCS_RUNNING, 0);
-        ^~~~~~~~~~~~~~~~~~~~~
-        CPUACCT_PROCS_FORKS
-   kernel//cgroup/cgroup-v1.c:661:5: error: 'CPUACCT_PROCS_IOWAIT' undeclared (first use in this function); did you mean 'CPUACCT_PROCS_FORKS'?
-        CPUACCT_PROCS_IOWAIT, 0);
-        ^~~~~~~~~~~~~~~~~~~~
-        CPUACCT_PROCS_FORKS
+I'm not crazy about the idea of dynamically (or even statically)
+allocating struct audit_task_info which includes allocated space for
+struct audit_context since the latter is far larger than the former.
+
+> [1] If for some reason allocating audit_task_info becomes too much
+> overhead to bear (somewhat doubtful since we would only do it at task
+> creation), we could do some ugly tricks to directly include an
+> audit_task_struct chunk in task_struct but I'd like to avoid that if
+> possible (and I think we can).
+
+On allocation, I don't see too much of a problem.  When calling
+audit_free() if there is no audit context it is pretty lightweight, but
+gets heavier if we eliminate the inline audit_free() and rename
+__audit_free() back to audit_free().  Having struct audit_task_info
+directly in struct task_struct would be faster and also allow defaults
+to be set in init/init_task.c (which has recently been populated from
+include/linux/init_task.h).  I'm not sure this is enough of a reason to
+avoid a pointer from task_struct.
+
+(As an aside, converting allocation of audit_context could also benefit
+from kmem_cache... and maybe even struct audit_names)
+
+> >  #endif
+> >         struct seccomp                  seccomp;
+> 
+> ...
+
+> paul moore
+
+- RGB
+
 --
-   kernel//sched/core.c:279:17: sparse: expression using sizeof(void)
-   kernel//sched/core.c:509:9: sparse: incompatible types in comparison expression (different address spaces)
-   kernel//sched/core.c:1614:17: sparse: incompatible types in comparison expression (different address spaces)
-   kernel//sched/core.c:1802:27: sparse: incompatible types in comparison expression (different address spaces)
-   kernel//sched/core.c:3417:33: sparse: undefined identifier 'CPUACCT_PROCS_SWITCHES'
-   kernel//sched/core.c:3477:33: sparse: undefined identifier 'CPUACCT_PROCS_SWITCHES'
-   kernel//sched/core.c:3766:24: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3766:24: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3999:21: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3999:21: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3999:21: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3999:21: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3999:21: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3999:21: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3999:21: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4002:16: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4002:16: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4002:16: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4002:16: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4002:16: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4002:16: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4002:16: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3766:24: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3766:24: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3766:24: sparse: expression using sizeof(void)
-   kernel//sched/core.c:3766:24: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4536:28: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4536:28: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4536:28: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4536:28: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4536:28: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4536:28: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4536:28: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4939:39: sparse: expression using sizeof(void)
-   kernel//sched/core.c:4939:39: sparse: expression using sizeof(void)
-   kernel//sched/core.c:6560:11: sparse: symbol 'max_cfs_quota_period' was not declared. Should it be static?
-   kernel//sched/core.c:6561:11: sparse: symbol 'min_cfs_quota_period' was not declared. Should it be static?
-   kernel//sched/core.c:6641:5: sparse: symbol 'tg_set_cfs_quota' was not declared. Should it be static?
-   kernel//sched/core.c:6654:6: sparse: symbol 'tg_get_cfs_quota' was not declared. Should it be static?
-   kernel//sched/core.c:6667:5: sparse: symbol 'tg_set_cfs_period' was not declared. Should it be static?
-   kernel//sched/core.c:6677:6: sparse: symbol 'tg_get_cfs_period' was not declared. Should it be static?
-   kernel//sched/core.c:6760:33: sparse: expression using sizeof(void)
-   kernel//sched/core.c:6760:33: sparse: expression using sizeof(void)
->> kernel//sched/core.c:3416:50: sparse: call with no type!
-   kernel//sched/core.c:3476:50: sparse: call with no type!
-   kernel//sched/core.c: In function '__schedule':
-   kernel//sched/core.c:3417:5: error: 'CPUACCT_PROCS_SWITCHES' undeclared (first use in this function)
-        CPUACCT_PROCS_SWITCHES, 1, 0);
-        ^~~~~~~~~~~~~~~~~~~~~~
-   kernel//sched/core.c:3417:5: note: each undeclared identifier is reported only once for each function it appears in
---
-   kernel//sched/rt.c:851:43: sparse: expression using sizeof(void)
-   kernel//sched/rt.c:851:43: sparse: expression using sizeof(void)
-   kernel//sched/sched.h:2148:16: sparse: incompatible types in comparison expression (different address spaces)
-   kernel//sched/sched.h:2148:16: sparse: incompatible types in comparison expression (different address spaces)
-   kernel//sched/rt.c:733:40: sparse: expression using sizeof(void)
-   kernel//sched/rt.c:733:40: sparse: expression using sizeof(void)
-   kernel//sched/rt.c:962:9: sparse: expression using sizeof(void)
-   kernel//sched/rt.c:962:9: sparse: expression using sizeof(void)
-   kernel//sched/rt.c:1330:50: sparse: undefined identifier 'CPUACCT_PROCS_RUNNING'
-   kernel//sched/rt.c:1342:50: sparse: undefined identifier 'CPUACCT_PROCS_RUNNING'
-   kernel//sched/rt.c:1664:9: sparse: incompatible types in comparison expression (different address spaces)
-   kernel//sched/rt.c:2291:24: sparse: expression using sizeof(void)
-   kernel//sched/rt.c:2291:24: sparse: expression using sizeof(void)
->> kernel//sched/rt.c:1330:34: sparse: call with no type!
-   kernel//sched/rt.c:1342:34: sparse: call with no type!
-   kernel//sched/rt.c:1757:9: sparse: context imbalance in 'find_lock_lowest_rq' - different lock contexts for basic block
-   kernel//sched/rt.c:1852:9: sparse: context imbalance in 'push_rt_task' - unexpected unlock
-   kernel//sched/rt.c: In function 'enqueue_task_rt':
-   kernel//sched/rt.c:1330:43: error: 'CPUACCT_PROCS_RUNNING' undeclared (first use in this function)
-     update_cpuacct_procs_stat(p, cpu_of(rq), CPUACCT_PROCS_RUNNING, 1, 0);
-                                              ^~~~~~~~~~~~~~~~~~~~~
-   kernel//sched/rt.c:1330:43: note: each undeclared identifier is reported only once for each function it appears in
-   kernel//sched/rt.c: In function 'dequeue_task_rt':
-   kernel//sched/rt.c:1342:43: error: 'CPUACCT_PROCS_RUNNING' undeclared (first use in this function)
-     update_cpuacct_procs_stat(p, cpu_of(rq), CPUACCT_PROCS_RUNNING, -1, 0);
-                                              ^~~~~~~~~~~~~~~~~~~~~
-
-vim +634 kernel//cgroup/cgroup-v1.c
-
-   609	
-   610	static int cgroup_procs_stat_show(struct seq_file *s, void *v)
-   611	{
-   612		struct kernfs_open_file *of = s->private;
-   613		struct cgroup *cgrp = seq_css(s)->cgroup;
-   614		struct cgroup_pidlist *l;
-   615		enum cgroup_filetype type = seq_cft(s)->private;
-   616		struct task_struct *tsk;
-   617		int ret, i = 0, j = 0, tmp = 0;
-   618		unsigned long forks = 0, iowait = 0, nr_runnable = 0;
-   619		pid_t *start;
-   620		struct timespec64 boottime;
-   621		unsigned long long start_time, switches = 0;
-   622		unsigned long per_softirq_nums[NR_SOFTIRQS] = {0};
-   623		unsigned long sum_softirq = 0;
-   624		struct cpumask cpus_allowed;
-   625	
-   626		mutex_lock(&cgrp->pidlist_mutex);
-   627		if (of->priv)
-   628			of->priv = cgroup_pidlist_find(cgrp, type);
-   629	
-   630		if (!of->priv) {
-   631			ret = pidlist_array_load(cgrp, type,
-   632						 (struct cgroup_pidlist **)&of->priv);
-   633			if (ret)
- > 634				return ERR_PTR(ret);
-   635		}
-   636		l = of->priv;
-   637	
-   638		start = l->list;
-   639	
-   640		tsk = find_task_by_pid_ns(*start, &init_pid_ns);
-   641		getboottime64(&boottime);
-   642	
-   643		if (in_noninit_pid_ns(tsk) &&
-   644			task_in_nonroot_cpuacct(tsk)) {
-   645			if (task_css(tsk, cpuset_cgrp_id)) {
-   646				memset(&cpus_allowed, 0, sizeof(cpus_allowed));
-   647				get_tsk_cpu_allowed(tsk, &cpus_allowed);
-   648			}
-   649	
-   650			start_time = tsk->real_start_time / NSEC_PER_SEC;
-   651			start_time += (unsigned long long)boottime.tv_sec;
-   652	
-   653			for_each_cpu_and(i, cpu_possible_mask, &cpus_allowed) {
- > 654				switches += task_ca_procs_stat(tsk, i,
-   655					CPUACCT_PROCS_SWITCHES, 0);
-   656				forks += task_ca_procs_stat(tsk, i,
-   657					CPUACCT_PROCS_FORKS, 0);
-   658				nr_runnable += task_ca_procs_stat(tsk, i,
-   659					CPUACCT_PROCS_RUNNING, 0);
-   660				iowait += task_ca_procs_stat(tsk, i,
-   661					CPUACCT_PROCS_IOWAIT, 0);
-   662	
-   663				for (j = 0; j < NR_SOFTIRQS; j++) {
-   664					tmp = task_ca_procs_stat(tsk, i, j, 1);
-   665					per_softirq_nums[j] += tmp;
-   666					sum_softirq += tmp;
-   667				}
-   668			}
-   669	
-   670		} else {
-   671			cpumask_copy(&cpus_allowed, cpu_possible_mask);
-   672			nr_runnable = nr_running();
-   673			forks = total_forks;
-   674			iowait = nr_iowait();
-   675			switches = nr_context_switches();
-   676			start_time = (unsigned long long)boottime.tv_sec;
-   677	
-   678			for (j = 0; j < NR_SOFTIRQS; j++) {
-   679				unsigned long softirq_stat = kstat_softirqs_cpu(j, i);
-   680	
-   681				per_softirq_nums[j] += softirq_stat;
-   682				sum_softirq += softirq_stat;
-   683			}
-   684		}
-   685	
-   686		seq_printf(s, "softirq %lu ", sum_softirq);
-   687		for (j = 0; j < NR_SOFTIRQS; j++)
-   688			seq_printf(s, "%lu ", per_softirq_nums[j]);
-   689	
-   690		seq_puts(s, "\n");
-   691		seq_printf(s,
-   692			"ctxt %llu\n"
-   693			"btime %llu\n"
-   694			"processes %lu\n"
-   695			"procs_running %lu\n"
-   696			"procs_blocked %lu\n",
-   697			switches,
-   698			start_time,
-   699			forks,
-   700			nr_runnable,
-   701			iowait);
-   702	
-   703		mod_delayed_work(cgroup_pidlist_destroy_wq, &l->destroy_dwork,
-   704			CGROUP_PIDLIST_DESTROY_DELAY);
-   705		mutex_unlock(&cgrp->pidlist_mutex);
-   706	
-   707		return 0;
-   708	}
-   709	
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
