@@ -1,225 +1,114 @@
-From: Richard Guy Briggs <rgb@redhat.com>
-Subject: Re: [RFC PATCH ghak32 V2 01/13] audit: add container id
-Date: Sun, 6 May 2018 12:51:30 -0400
-Message-ID: <20180506165130.w23hrxonnpebof5n@madcap2.tricolour.ca>
-References: <cover.1521179281.git.rgb@redhat.com>
- <e284617ad667ad8f17958dd8babb87fe1b4d7205.1521179281.git.rgb@redhat.com>
- <CAHC9VhTyvxxj2e2Gn+iyW6iLLeYB7hp8a+JvfeMmJ2nUPqtEaw@mail.gmail.com>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: Use-after-scope Write in mem_cgroup_uncharge' bug.(Plain text)
+Date: Mon, 7 May 2018 08:01:45 +0200
+Message-ID: <CACT4Y+Ze3tKeLL=c5UbSMmzBEDdz7EURh6769-L4fRFGM7X5tA@mail.gmail.com>
+References: <CAD1Xb+-kbRLxe1XNSkhY-VXZWV8fSy-gZeeGhtKH2hO42VJKzA@mail.gmail.com>
+ <CACT4Y+Y-=9wmOOm3Q5BpNOL+2H123YAaRvBCbv-zCBv3Y4Ysew@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAHC9VhTyvxxj2e2Gn+iyW6iLLeYB7hp8a+JvfeMmJ2nUPqtEaw@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=g4+0ruzx/n5nXMSn9aINgxVPePdhma625+88NCqS6oc=;
+        b=BTecf0tbDu/Cwwb1jx3C37hmlkCyUErom6Z6QVXoQ+ZLwCb+KlRfB+5s8aEMtiuorf
+         zm9McI9Pcz8ui1HSpZ3+C3cTp3wTmo7UQnsR0QuCkDzMuQpTIsJP0gIifW9atacoFYlD
+         FZekE8LGUHhuH2tF4UEp8eAe3nBDtQk1IrxhOEye5oc5KFZnfCv2de8UzlUgcJtkjD05
+         pbnLif5FzF9QkJZjfplvgIFvMiUt8wBNkEP07C5yH0frYVbN6rRtZtRvL8MvOj4ygRo5
+         IlW5C2Ft89OH8UDOBmBUYps0oCRHyOES6XfxG7XXvCQoroiviONdKXORB5NOxooGc3Da
+         m4AQ==
+In-Reply-To: <CACT4Y+Y-=9wmOOm3Q5BpNOL+2H123YAaRvBCbv-zCBv3Y4Ysew@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Paul Moore <paul@paul-moore.com>
-Cc: simo@redhat.com, jlayton@redhat.com, carlos@redhat.com, linux-api@vger.kernel.org, containers@lists.linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, Eric Paris <eparis@parisplace.org>, dhowells@redhat.com, Linux-Audit Mailing List <linux-audit@redhat.com>, ebiederm@xmission.com, luto@kernel.org, netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, serge@hallyn.com, viro@zeniv.linux.org.uk
+To: Dongsong Yu <yudongsong1992@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, syzkaller <syzkaller@googlegroups.com>, Mark Rutland <mark.rutland@arm.com>
 
-On 2018-04-18 19:47, Paul Moore wrote:
-> On Fri, Mar 16, 2018 at 5:00 AM, Richard Guy Briggs <rgb@redhat.com> wrote:
-> > Implement the proc fs write to set the audit container ID of a process,
-> > emitting an AUDIT_CONTAINER record to document the event.
-> >
-> > This is a write from the container orchestrator task to a proc entry of
-> > the form /proc/PID/containerid where PID is the process ID of the newly
-> > created task that is to become the first task in a container, or an
-> > additional task added to a container.
-> >
-> > The write expects up to a u64 value (unset: 18446744073709551615).
-> >
-> > This will produce a record such as this:
-> > type=CONTAINER msg=audit(1519903238.968:261): op=set pid=596 uid=0 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 auid=0 tty=pts0 ses=1 opid=596 old-contid=18446744073709551615 contid=123455 res=0
-> >
-> > The "op" field indicates an initial set.  The "pid" to "ses" fields are
-> > the orchestrator while the "opid" field is the object's PID, the process
-> > being "contained".  Old and new container ID values are given in the
-> > "contid" fields, while res indicates its success.
-> >
-> > It is not permitted to self-set, unset or re-set the container ID.  A
-> > child inherits its parent's container ID, but then can be set only once
-> > after.
-> >
-> > See: https://github.com/linux-audit/audit-kernel/issues/32
-> >
-> > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
-> > ---
-> >  fs/proc/base.c             | 37 ++++++++++++++++++++
-> >  include/linux/audit.h      | 16 +++++++++
-> >  include/linux/init_task.h  |  4 ++-
-> >  include/linux/sched.h      |  1 +
-> >  include/uapi/linux/audit.h |  2 ++
-> >  kernel/auditsc.c           | 84 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  6 files changed, 143 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/fs/proc/base.c b/fs/proc/base.c
-> > index 60316b5..6ce4fbe 100644
-> > --- a/fs/proc/base.c
-> > +++ b/fs/proc/base.c
-> > @@ -1299,6 +1299,41 @@ static ssize_t proc_sessionid_read(struct file * file, char __user * buf,
-> >         .read           = proc_sessionid_read,
-> >         .llseek         = generic_file_llseek,
-> >  };
-> > +
-> > +static ssize_t proc_containerid_write(struct file *file, const char __user *buf,
-> > +                                  size_t count, loff_t *ppos)
-> > +{
-> > +       struct inode *inode = file_inode(file);
-> > +       u64 containerid;
-> > +       int rv;
-> > +       struct task_struct *task = get_proc_task(inode);
-> > +
-> > +       if (!task)
-> > +               return -ESRCH;
-> > +       if (*ppos != 0) {
-> > +               /* No partial writes. */
-> > +               put_task_struct(task);
-> > +               return -EINVAL;
-> > +       }
-> > +
-> > +       rv = kstrtou64_from_user(buf, count, 10, &containerid);
-> > +       if (rv < 0) {
-> > +               put_task_struct(task);
-> > +               return rv;
-> > +       }
-> > +
-> > +       rv = audit_set_containerid(task, containerid);
-> > +       put_task_struct(task);
-> > +       if (rv < 0)
-> > +               return rv;
-> > +       return count;
-> > +}
-> > +
-> > +static const struct file_operations proc_containerid_operations = {
-> > +       .write          = proc_containerid_write,
-> > +       .llseek         = generic_file_llseek,
-> > +};
-> > +
-> >  #endif
-> >
-> >  #ifdef CONFIG_FAULT_INJECTION
-> > @@ -2961,6 +2996,7 @@ static int proc_pid_patch_state(struct seq_file *m, struct pid_namespace *ns,
-> >  #ifdef CONFIG_AUDITSYSCALL
-> >         REG("loginuid",   S_IWUSR|S_IRUGO, proc_loginuid_operations),
-> >         REG("sessionid",  S_IRUGO, proc_sessionid_operations),
-> > +       REG("containerid", S_IWUSR, proc_containerid_operations),
-> >  #endif
-> >  #ifdef CONFIG_FAULT_INJECTION
-> >         REG("make-it-fail", S_IRUGO|S_IWUSR, proc_fault_inject_operations),
-> > @@ -3355,6 +3391,7 @@ static int proc_tid_comm_permission(struct inode *inode, int mask)
-> >  #ifdef CONFIG_AUDITSYSCALL
-> >         REG("loginuid",  S_IWUSR|S_IRUGO, proc_loginuid_operations),
-> >         REG("sessionid",  S_IRUGO, proc_sessionid_operations),
-> > +       REG("containerid", S_IWUSR, proc_containerid_operations),
-> >  #endif
-> >  #ifdef CONFIG_FAULT_INJECTION
-> >         REG("make-it-fail", S_IRUGO|S_IWUSR, proc_fault_inject_operations),
+On Wed, May 2, 2018 at 1:18 PM, Dmitry Vyukov <dvyukov@google.com> wrote:
+> On Wed, May 2, 2018 at 1:11 PM, Dongsong Yu <yudongsong1992@gmail.com> wrote:
+>> Hi,
+>> I've got the following bug report while fuzzing linux kenrel (4.16.0) on
+>> arm64 with syzkaller.
+>> The kernel config file and poc generated by C reproducer are attached.
+>>
+>> Syzkaller hit 'KASAN: use-after-scope Write in mem_cgroup_uncharge' bug.
+>
+> Hi Dongsong,
+>
+> If I am looking at the right source:
+> https://elixir.bootlin.com/linux/v4.16/source/mm/memcontrol.c#L5667
+> this report does not make sense.
+> What version of compiler do you use?
+> Please post disasm of mem_cgroup_uncharge with source/line annotations.
 
-...
 
-> > diff --git a/include/linux/sched.h b/include/linux/sched.h
-> > index d258826..1b82191 100644
-> > --- a/include/linux/sched.h
-> > +++ b/include/linux/sched.h
-> > @@ -796,6 +796,7 @@ struct task_struct {
-> >  #ifdef CONFIG_AUDITSYSCALL
-> >         kuid_t                          loginuid;
-> >         unsigned int                    sessionid;
-> > +       u64                             containerid;
-> 
-> This one line addition to the task_struct scares me the most of
-> anything in this patchset.  Why?  It's a field named "containerid" in
-> a perhaps one of the most widely used core kernel structures; the
-> possibilities for abuse are endless, and it's foolish to think we
-> would ever be able to adequately police this.
-> 
-> Unfortunately, we can't add the field to audit_context as things
-> currently stand because we don't always allocate an audit_context,
-> it's dependent on the system's configuration, and we need to track the
-> audit container ID for a given process, regardless of the audit
-> configuration.  Pretty much the same reason why loginuid and sessionid
-> are located directly in task_struct now.  As I stressed during the
-> design phase, I really want to keep this as an *audit* container ID
-> and not a general purpose kernel wide container ID.  If the kernel
-> ever grows a general purpose container ID token, I'll be the first in
-> line to convert the audit code, but I don't want audit to be that
-> general purpose mechanism ... audit is hated enough as-is ;)
-> 
-> I think the right solution to this is to create another new struct,
-> audit_task_info (or similar, the name really isn't that important),
-> which would be stored as a pointer in task_struct and would replace
-> the audit_context pointer, loginuid, sessionid, and the newly proposed
-> containerid.  The new audit_task_info would always be allocated in the
-> audit_alloc() function (please use kmem_cache), and the audit_context
-> pointer included inside would continue to be allocated based on the
-> existing conditions.  By keeping audit_task_info as a pointer inside
-> task_struct we could hide the structure definition inside
-> kernel/audit*.c and make it much more difficult for other subsystems
-> to abuse it.[1]
-> 
->   struct audit_task_info {
->     kuid_t loginuid;
->     unsigned int sessionid;
->     u64 containerid;
->     struct audit_context *ctx;
->   }
-> 
-> Actually, we might even want to consider storing audit_context in
-> audit_task_info (no pointer), or making it a zero length array
-> (ctx[0]) and going with a variable sized allocation of audit_task_info
-> ... but all that could be done as a follow up optimization once we get
-> the basic idea sorted.
+I don't see how the bug can happen. Nor I see who stores 0xf8f8f8f8
+into KASAN shadow, though I am not very proficient in arm64 asm. I
+don't remember any similar false positives on x86.
++Mark, have you seen any KASAN false positives related to
+use-after-scope on arm64?
 
-I tried statically allocating struct audit_task_info (with a pointer to
-struct audit_context) in addition to dynamically allocating struct
-audit_task_info due to a bug I'd introduced while dynamically allocating
-audit_task_info, so I now have proof-of-concepts for working static and
-almost working dynamic allocated struct audit_task_info.
 
-Statically allocating it required a new header file, so I'm not that
-crazy about it, but it proved it works.
 
-Dynamically allocating it isn't quite as clean as was hoped since
-init/init_task.c still needs initializaiton values for loginuid and
-sessionid which could be supplied by a statically allocated struct
-audit_task_info and still needs to know the internals of that struct to
-do so.  Dynamic allocation is also more disruptive initially, but in the
-long run will be more stable to the rest of the kernel.
-
-I'm not crazy about the idea of dynamically (or even statically)
-allocating struct audit_task_info which includes allocated space for
-struct audit_context since the latter is far larger than the former.
-
-> [1] If for some reason allocating audit_task_info becomes too much
-> overhead to bear (somewhat doubtful since we would only do it at task
-> creation), we could do some ugly tricks to directly include an
-> audit_task_struct chunk in task_struct but I'd like to avoid that if
-> possible (and I think we can).
-
-On allocation, I don't see too much of a problem.  When calling
-audit_free() if there is no audit context it is pretty lightweight, but
-gets heavier if we eliminate the inline audit_free() and rename
-__audit_free() back to audit_free().  Having struct audit_task_info
-directly in struct task_struct would be faster and also allow defaults
-to be set in init/init_task.c (which has recently been populated from
-include/linux/init_task.h).  I'm not sure this is enough of a reason to
-avoid a pointer from task_struct.
-
-(As an aside, converting allocation of audit_context could also benefit
-from kmem_cache... and maybe even struct audit_names)
-
-> >  #endif
-> >         struct seccomp                  seccomp;
-> 
-> ...
-
-> paul moore
-
-- RGB
-
---
-Richard Guy Briggs <rgb@redhat.com>
-Sr. S/W Engineer, Kernel Security, Base Operating Systems
-Remote, Ottawa, Red Hat Canada
-IRC: rgb, SunRaycer
-Voice: +1.647.777.2635, Internal: (81) 32635
+>> ==================================================================
+>> BUG: KASAN: use-after-scope in uncharge_gather_clear mm/memcontrol.c:5546
+>> [inline]
+>> BUG: KASAN: use-after-scope in mem_cgroup_uncharge+0xcc/0xf0
+>> mm/memcontrol.c:5667
+>> Write of size 64 at addr ffff8000738c6cf0 by task syzkaller348646/1477
+>>
+>> CPU: 0 PID: 1477 Comm: syzkaller348646 Not tainted 4.16.0 #2
+>> Hardware name: linux,dummy-virt (DT)
+>> Call trace:
+>>   dump_backtrace+0x0/0x350 arch/arm64/kernel/time.c:64
+>>   show_stack+0x20/0x30 arch/arm64/kernel/traps.c:151
+>>   __dump_stack lib/dump_stack.c:17 [inline]
+>>   dump_stack+0x11c/0x198 lib/dump_stack.c:53
+>>   print_address_description+0x60/0x270 mm/kasan/report.c:256
+>>   kasan_report_error mm/kasan/report.c:354 [inline]
+>>   kasan_report+0x248/0x348 mm/kasan/report.c:412
+>>   check_memory_region_inline mm/kasan/kasan.c:253 [inline]
+>>   check_memory_region+0x148/0x198 mm/kasan/kasan.c:267
+>>   memset+0x2c/0x50 mm/kasan/kasan.c:285
+>>   uncharge_gather_clear mm/memcontrol.c:5546 [inline]
+>>   mem_cgroup_uncharge+0xcc/0xf0 mm/memcontrol.c:5667
+>>   __page_cache_release+0x11c/0x640 mm/swap.c:73
+>>   __put_compound_page+0x30/0x70 mm/swap.c:93
+>>   release_pages+0x6b4/0x990 mm/swap.c:760
+>>   free_pages_and_swap_cache+0x1e8/0x250 mm/swap_state.c:322
+>>   tlb_flush_mmu_free+0x6c/0xb8 mm/memory.c:259
+>>   tlb_flush_mmu+0x3c/0x48 mm/memory.c:268
+>>   arch_tlb_finish_mmu+0x70/0xc0 mm/memory.c:283
+>>   tlb_finish_mmu+0xd0/0x128 mm/memory.c:433
+>>   unmap_region+0x248/0x2b8 mm/mmap.c:2514
+>>   do_munmap+0x3b8/0x670 mm/mmap.c:2726
+>>   mmap_region+0x3b8/0xa78 mm/mmap.c:1646
+>>   do_mmap+0x448/0x6a0 mm/mmap.c:1483
+>>   do_mmap_pgoff include/linux/mm.h:2223 [inline]
+>>   vm_mmap_pgoff+0x17c/0x1b8 mm/util.c:355
+>>   SYSC_mmap_pgoff mm/mmap.c:1533 [inline]
+>>   SyS_mmap_pgoff+0x184/0x3e8 mm/mmap.c:1491
+>>   sys_mmap+0x58/0x80 arch/arm64/kernel/sys.c:37
+>>   el0_svc_naked+0x30/0x34
+>>
+>> The buggy address belongs to the page:
+>> page:ffff7e0001ce3180 count:0 mapcount:0 mapping:0000000000000000 index:0x0
+>> flags: 0x4fffc00000000000()
+>> raw: 4fffc00000000000 0000000000000000 0000000000000000 00000000ffffffff
+>> raw: 0000000000000000 ffff7e0001ce31a0 0000000000000000 0000000000000000
+>> page dumped because: kasan: bad access detected
+>>
+>> Memory state around the buggy address:
+>>   ffff8000738c6b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>>   ffff8000738c6c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>>> ffff8000738c6c80: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f1 f1 f1 f1 f8 f8
+>>                                                               ^
+>>   ffff8000738c6d00: f8 f8 f8 f8 f8 f8 f3 f3 f3 f3 f8 f8 f8 f8 f8 f8
+>>   ffff8000738c6d80: f8 f8 f8 f8 f8 f8 00 00 00 00 00 00 00 00 00 00
+>> ==================================================================
+>>
+>> --
+>> You received this message because you are subscribed to the Google Groups "syzkaller" group.
+>> To unsubscribe from this group and stop receiving emails from it, send an email to syzkaller+unsubscribe@googlegroups.com.
+>> For more options, visit https://groups.google.com/d/optout.
