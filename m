@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 3/7] delayacct: track delays from thrashing cache pages
-Date: Mon,  7 May 2018 17:01:31 -0400
-Message-ID: <20180507210135.1823-4-hannes@cmpxchg.org>
+Subject: [PATCH 1/7] mm: workingset: don't drop refault information prematurely
+Date: Mon,  7 May 2018 17:01:29 -0400
+Message-ID: <20180507210135.1823-2-hannes@cmpxchg.org>
 References: <20180507210135.1823-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
@@ -10,9 +10,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=1iClfn4HlKN+hDTHHl595345vpFkPY3xJZGmTVC9G8E=; b=pOCOWEF984Q7MoQVXe88i1yF0t
-        rqioncROWo0lVScdiUVVcoOT28O8FjTXxB8H4sL6mklrEnhsgRBs9S40vnDPAlRZ1aZrQjRQzfqaH
-        j3hxdg8RK/1tsVipKRtAcwFs5vz+aHmGjqOxoBtVNOL/QbuNt5x50p7zaTguzU1BsPuE=;
+        bh=PUltZEzDEG5OoCb+tqodLp9Z8/Tnpk6sVV12mVb/eA4=; b=OmaVwI8pE1UO2/VIRQ9jhgQqzZ
+        cQYOQPeroWsyFgzG+sismg1l/i71Nqas83UlWjadkAauuymtfcD/w3ifYgbHJTDuF+7Oek7w4qof9
+        gS2t9OH+bAFy5pcBH7AjWq1hwNBcVECpGZ5P8EdIFfOuc/go7bKQq9ZfFdAnro536aaQ=;
 In-Reply-To: <20180507210135.1823-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,218 +22,56 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-Delay accounting already measures the time a task spends in direct
-reclaim and waiting for swapin, but in low memory situations tasks
-spend can spend a significant amount of their time waiting on
-thrashing page cache. This isn't tracked right now.
+From: Johannes Weiner <jweiner@fb.com>
 
-To know the full impact of memory contention on an individual task,
-measure the delay when waiting for a recently evicted active cache
-page to read back into memory.
+If we just keep enough refault information to match the CURRENT page
+cache during reclaim time, we could lose a lot of events when there is
+only a temporary spike in non-cache memory consumption that pushes out
+all the cache. Once cache comes back, we won't see those refaults.
+They might not be actionable for LRU aging, but we want to know about
+them for measuring memory pressure.
 
-Also update tools/accounting/getdelays.c:
-
-     [hannes@computer accounting]$ sudo ./getdelays -d -p 1
-     print delayacct stats ON
-     PID     1
-
-     CPU             count     real total  virtual total    delay total  delay average
-                     50318      745000000      847346785      400533713          0.008ms
-     IO              count    delay total  delay average
-                       435      122601218              0ms
-     SWAP            count    delay total  delay average
-                         0              0              0ms
-     RECLAIM         count    delay total  delay average
-                         0              0              0ms
-     THRASHING       count    delay total  delay average
-                        19       12621439              0ms
-
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Johannes Weiner <jweiner@fb.com>
 ---
- include/linux/delayacct.h      | 23 +++++++++++++++++++++++
- include/uapi/linux/taskstats.h |  6 +++++-
- kernel/delayacct.c             | 15 +++++++++++++++
- mm/filemap.c                   | 11 +++++++++++
- tools/accounting/getdelays.c   |  8 +++++++-
- 5 files changed, 61 insertions(+), 2 deletions(-)
+ mm/workingset.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/delayacct.h b/include/linux/delayacct.h
-index 5e335b6203f4..d3e75b3ba487 100644
---- a/include/linux/delayacct.h
-+++ b/include/linux/delayacct.h
-@@ -57,7 +57,12 @@ struct task_delay_info {
- 
- 	u64 freepages_start;
- 	u64 freepages_delay;	/* wait for memory reclaim */
-+
-+	u64 thrashing_start;
-+	u64 thrashing_delay;	/* wait for thrashing page */
-+
- 	u32 freepages_count;	/* total count of memory reclaim */
-+	u32 thrashing_count;	/* total count of thrash waits */
- };
- #endif
- 
-@@ -76,6 +81,8 @@ extern int __delayacct_add_tsk(struct taskstats *, struct task_struct *);
- extern __u64 __delayacct_blkio_ticks(struct task_struct *);
- extern void __delayacct_freepages_start(void);
- extern void __delayacct_freepages_end(void);
-+extern void __delayacct_thrashing_start(void);
-+extern void __delayacct_thrashing_end(void);
- 
- static inline int delayacct_is_task_waiting_on_io(struct task_struct *p)
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 40ee02c83978..53759a3cf99a 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -364,7 +364,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
  {
-@@ -156,6 +163,18 @@ static inline void delayacct_freepages_end(void)
- 		__delayacct_freepages_end();
- }
+ 	unsigned long max_nodes;
+ 	unsigned long nodes;
+-	unsigned long cache;
++	unsigned long pages;
  
-+static inline void delayacct_thrashing_start(void)
-+{
-+	if (current->delays)
-+		__delayacct_thrashing_start();
-+}
+ 	/* list_lru lock nests inside the IRQ-safe i_pages lock */
+ 	local_irq_disable();
+@@ -393,14 +393,14 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ 	 *
+ 	 * PAGE_SIZE / radix_tree_nodes / node_entries * 8 / PAGE_SIZE
+ 	 */
+-	if (sc->memcg) {
+-		cache = mem_cgroup_node_nr_lru_pages(sc->memcg, sc->nid,
+-						     LRU_ALL_FILE);
+-	} else {
+-		cache = node_page_state(NODE_DATA(sc->nid), NR_ACTIVE_FILE) +
+-			node_page_state(NODE_DATA(sc->nid), NR_INACTIVE_FILE);
+-	}
+-	max_nodes = cache >> (RADIX_TREE_MAP_SHIFT - 3);
++#ifdef CONFIG_MEMCG
++	if (sc->memcg)
++		pages = page_counter_read(&sc->memcg->memory);
++	else
++#endif
++		pages = node_present_pages(sc->nid);
 +
-+static inline void delayacct_thrashing_end(void)
-+{
-+	if (current->delays)
-+		__delayacct_thrashing_end();
-+}
-+
- #else
- static inline void delayacct_set_flag(int flag)
- {}
-@@ -182,6 +201,10 @@ static inline void delayacct_freepages_start(void)
- {}
- static inline void delayacct_freepages_end(void)
- {}
-+static inline void delayacct_thrashing_start(void)
-+{}
-+static inline void delayacct_thrashing_end(void)
-+{}
++	max_nodes = pages >> (RADIX_TREE_MAP_SHIFT - 3);
  
- #endif /* CONFIG_TASK_DELAY_ACCT */
- 
-diff --git a/include/uapi/linux/taskstats.h b/include/uapi/linux/taskstats.h
-index b7aa7bb2349f..5e8ca16a9079 100644
---- a/include/uapi/linux/taskstats.h
-+++ b/include/uapi/linux/taskstats.h
-@@ -34,7 +34,7 @@
-  */
- 
- 
--#define TASKSTATS_VERSION	8
-+#define TASKSTATS_VERSION	9
- #define TS_COMM_LEN		32	/* should be >= TASK_COMM_LEN
- 					 * in linux/sched.h */
- 
-@@ -164,6 +164,10 @@ struct taskstats {
- 	/* Delay waiting for memory reclaim */
- 	__u64	freepages_count;
- 	__u64	freepages_delay_total;
-+
-+	/* Delay waiting for thrashing page */
-+	__u64	thrashing_count;
-+	__u64	thrashing_delay_total;
- };
- 
- 
-diff --git a/kernel/delayacct.c b/kernel/delayacct.c
-index e2764d767f18..02ba745c448d 100644
---- a/kernel/delayacct.c
-+++ b/kernel/delayacct.c
-@@ -134,9 +134,12 @@ int __delayacct_add_tsk(struct taskstats *d, struct task_struct *tsk)
- 	d->swapin_delay_total = (tmp < d->swapin_delay_total) ? 0 : tmp;
- 	tmp = d->freepages_delay_total + tsk->delays->freepages_delay;
- 	d->freepages_delay_total = (tmp < d->freepages_delay_total) ? 0 : tmp;
-+	tmp = d->thrashing_delay_total + tsk->delays->thrashing_delay;
-+	d->thrashing_delay_total = (tmp < d->thrashing_delay_total) ? 0 : tmp;
- 	d->blkio_count += tsk->delays->blkio_count;
- 	d->swapin_count += tsk->delays->swapin_count;
- 	d->freepages_count += tsk->delays->freepages_count;
-+	d->thrashing_count += tsk->delays->thrashing_count;
- 	spin_unlock_irqrestore(&tsk->delays->lock, flags);
- 
- 	return 0;
-@@ -168,3 +171,15 @@ void __delayacct_freepages_end(void)
- 		&current->delays->freepages_count);
- }
- 
-+void __delayacct_thrashing_start(void)
-+{
-+	current->delays->thrashing_start = ktime_get_ns();
-+}
-+
-+void __delayacct_thrashing_end(void)
-+{
-+	delayacct_end(&current->delays->lock,
-+		      &current->delays->thrashing_start,
-+		      &current->delays->thrashing_delay,
-+		      &current->delays->thrashing_count);
-+}
-diff --git a/mm/filemap.c b/mm/filemap.c
-index bd36b7226cf4..e49961e13dd9 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -36,6 +36,7 @@
- #include <linux/cleancache.h>
- #include <linux/shmem_fs.h>
- #include <linux/rmap.h>
-+#include <linux/delayacct.h>
- #include "internal.h"
- 
- #define CREATE_TRACE_POINTS
-@@ -1073,8 +1074,15 @@ static inline int wait_on_page_bit_common(wait_queue_head_t *q,
- {
- 	struct wait_page_queue wait_page;
- 	wait_queue_entry_t *wait = &wait_page.wait;
-+	bool thrashing = false;
- 	int ret = 0;
- 
-+	if (bit_nr == PG_locked && !PageSwapBacked(page) &&
-+	    !PageUptodate(page) && PageWorkingset(page)) {
-+		delayacct_thrashing_start();
-+		thrashing = true;
-+	}
-+
- 	init_wait(wait);
- 	wait->flags = lock ? WQ_FLAG_EXCLUSIVE : 0;
- 	wait->func = wake_page_function;
-@@ -1113,6 +1121,9 @@ static inline int wait_on_page_bit_common(wait_queue_head_t *q,
- 
- 	finish_wait(q, wait);
- 
-+	if (thrashing)
-+		delayacct_thrashing_end();
-+
- 	/*
- 	 * A signal could leave PageWaiters set. Clearing it here if
- 	 * !waitqueue_active would be possible (by open-coding finish_wait),
-diff --git a/tools/accounting/getdelays.c b/tools/accounting/getdelays.c
-index 9f420d98b5fb..8cb504d30384 100644
---- a/tools/accounting/getdelays.c
-+++ b/tools/accounting/getdelays.c
-@@ -203,6 +203,8 @@ static void print_delayacct(struct taskstats *t)
- 	       "SWAP  %15s%15s%15s\n"
- 	       "      %15llu%15llu%15llums\n"
- 	       "RECLAIM  %12s%15s%15s\n"
-+	       "      %15llu%15llu%15llums\n"
-+	       "THRASHING%12s%15s%15s\n"
- 	       "      %15llu%15llu%15llums\n",
- 	       "count", "real total", "virtual total",
- 	       "delay total", "delay average",
-@@ -222,7 +224,11 @@ static void print_delayacct(struct taskstats *t)
- 	       "count", "delay total", "delay average",
- 	       (unsigned long long)t->freepages_count,
- 	       (unsigned long long)t->freepages_delay_total,
--	       average_ms(t->freepages_delay_total, t->freepages_count));
-+	       average_ms(t->freepages_delay_total, t->freepages_count),
-+	       "count", "delay total", "delay average",
-+	       (unsigned long long)t->thrashing_count,
-+	       (unsigned long long)t->thrashing_delay_total,
-+	       average_ms(t->thrashing_delay_total, t->thrashing_count));
- }
- 
- static void task_context_switch_counts(struct taskstats *t)
+ 	if (nodes <= max_nodes)
+ 		return 0;
 -- 
 2.17.0
 
