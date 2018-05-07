@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 5/7] sched: loadavg: make calc_load_n() public
-Date: Mon,  7 May 2018 17:01:33 -0400
-Message-ID: <20180507210135.1823-6-hannes@cmpxchg.org>
+Subject: [PATCH 3/7] delayacct: track delays from thrashing cache pages
+Date: Mon,  7 May 2018 17:01:31 -0400
+Message-ID: <20180507210135.1823-4-hannes@cmpxchg.org>
 References: <20180507210135.1823-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
@@ -10,9 +10,9 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=Q9tf/aX05pddBBcSMfINSla3wt3pXRBjeLsf3chgvp0=; b=RmO+/FrVyVnL4yCOTItqEvd/iQ
-        TGGGSTEsRQ1CxTOcEQiZ3iirslPVfEJ7qRa4kuQrHpSJNkYyvmfB+aPVMuLJ1up072cko4HSeeRKb
-        4BFouTtFYiN1UEWLsvwNwkfgi6de3ORl416bznDbdKbHd0diyBd4GuS59OU94E4trpyY=;
+        bh=1iClfn4HlKN+hDTHHl595345vpFkPY3xJZGmTVC9G8E=; b=pOCOWEF984Q7MoQVXe88i1yF0t
+        rqioncROWo0lVScdiUVVcoOT28O8FjTXxB8H4sL6mklrEnhsgRBs9S40vnDPAlRZ1aZrQjRQzfqaH
+        j3hxdg8RK/1tsVipKRtAcwFs5vz+aHmGjqOxoBtVNOL/QbuNt5x50p7zaTguzU1BsPuE=;
 In-Reply-To: <20180507210135.1823-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,174 +22,218 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-It's going to be used in the following patch. Keep the churn separate.
+Delay accounting already measures the time a task spends in direct
+reclaim and waiting for swapin, but in low memory situations tasks
+spend can spend a significant amount of their time waiting on
+thrashing page cache. This isn't tracked right now.
+
+To know the full impact of memory contention on an individual task,
+measure the delay when waiting for a recently evicted active cache
+page to read back into memory.
+
+Also update tools/accounting/getdelays.c:
+
+     [hannes@computer accounting]$ sudo ./getdelays -d -p 1
+     print delayacct stats ON
+     PID     1
+
+     CPU             count     real total  virtual total    delay total  delay average
+                     50318      745000000      847346785      400533713          0.008ms
+     IO              count    delay total  delay average
+                       435      122601218              0ms
+     SWAP            count    delay total  delay average
+                         0              0              0ms
+     RECLAIM         count    delay total  delay average
+                         0              0              0ms
+     THRASHING       count    delay total  delay average
+                        19       12621439              0ms
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/sched/loadavg.h | 69 +++++++++++++++++++++++++++++++++++
- kernel/sched/loadavg.c        | 69 -----------------------------------
- 2 files changed, 69 insertions(+), 69 deletions(-)
+ include/linux/delayacct.h      | 23 +++++++++++++++++++++++
+ include/uapi/linux/taskstats.h |  6 +++++-
+ kernel/delayacct.c             | 15 +++++++++++++++
+ mm/filemap.c                   | 11 +++++++++++
+ tools/accounting/getdelays.c   |  8 +++++++-
+ 5 files changed, 61 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/sched/loadavg.h b/include/linux/sched/loadavg.h
-index cc9cc62bb1f8..0e4c24978751 100644
---- a/include/linux/sched/loadavg.h
-+++ b/include/linux/sched/loadavg.h
-@@ -37,6 +37,75 @@ calc_load(unsigned long load, unsigned long exp, unsigned long active)
- 	return newload / FIXED_1;
+diff --git a/include/linux/delayacct.h b/include/linux/delayacct.h
+index 5e335b6203f4..d3e75b3ba487 100644
+--- a/include/linux/delayacct.h
++++ b/include/linux/delayacct.h
+@@ -57,7 +57,12 @@ struct task_delay_info {
+ 
+ 	u64 freepages_start;
+ 	u64 freepages_delay;	/* wait for memory reclaim */
++
++	u64 thrashing_start;
++	u64 thrashing_delay;	/* wait for thrashing page */
++
+ 	u32 freepages_count;	/* total count of memory reclaim */
++	u32 thrashing_count;	/* total count of thrash waits */
+ };
+ #endif
+ 
+@@ -76,6 +81,8 @@ extern int __delayacct_add_tsk(struct taskstats *, struct task_struct *);
+ extern __u64 __delayacct_blkio_ticks(struct task_struct *);
+ extern void __delayacct_freepages_start(void);
+ extern void __delayacct_freepages_end(void);
++extern void __delayacct_thrashing_start(void);
++extern void __delayacct_thrashing_end(void);
+ 
+ static inline int delayacct_is_task_waiting_on_io(struct task_struct *p)
+ {
+@@ -156,6 +163,18 @@ static inline void delayacct_freepages_end(void)
+ 		__delayacct_freepages_end();
  }
  
-+/**
-+ * fixed_power_int - compute: x^n, in O(log n) time
-+ *
-+ * @x:         base of the power
-+ * @frac_bits: fractional bits of @x
-+ * @n:         power to raise @x to.
-+ *
-+ * By exploiting the relation between the definition of the natural power
-+ * function: x^n := x*x*...*x (x multiplied by itself for n times), and
-+ * the binary encoding of numbers used by computers: n := \Sum n_i * 2^i,
-+ * (where: n_i \elem {0, 1}, the binary vector representing n),
-+ * we find: x^n := x^(\Sum n_i * 2^i) := \Prod x^(n_i * 2^i), which is
-+ * of course trivially computable in O(log_2 n), the length of our binary
-+ * vector.
-+ */
-+static inline unsigned long
-+fixed_power_int(unsigned long x, unsigned int frac_bits, unsigned int n)
++static inline void delayacct_thrashing_start(void)
 +{
-+	unsigned long result = 1UL << frac_bits;
++	if (current->delays)
++		__delayacct_thrashing_start();
++}
 +
-+	if (n) {
-+		for (;;) {
-+			if (n & 1) {
-+				result *= x;
-+				result += 1UL << (frac_bits - 1);
-+				result >>= frac_bits;
-+			}
-+			n >>= 1;
-+			if (!n)
-+				break;
-+			x *= x;
-+			x += 1UL << (frac_bits - 1);
-+			x >>= frac_bits;
-+		}
++static inline void delayacct_thrashing_end(void)
++{
++	if (current->delays)
++		__delayacct_thrashing_end();
++}
++
+ #else
+ static inline void delayacct_set_flag(int flag)
+ {}
+@@ -182,6 +201,10 @@ static inline void delayacct_freepages_start(void)
+ {}
+ static inline void delayacct_freepages_end(void)
+ {}
++static inline void delayacct_thrashing_start(void)
++{}
++static inline void delayacct_thrashing_end(void)
++{}
+ 
+ #endif /* CONFIG_TASK_DELAY_ACCT */
+ 
+diff --git a/include/uapi/linux/taskstats.h b/include/uapi/linux/taskstats.h
+index b7aa7bb2349f..5e8ca16a9079 100644
+--- a/include/uapi/linux/taskstats.h
++++ b/include/uapi/linux/taskstats.h
+@@ -34,7 +34,7 @@
+  */
+ 
+ 
+-#define TASKSTATS_VERSION	8
++#define TASKSTATS_VERSION	9
+ #define TS_COMM_LEN		32	/* should be >= TASK_COMM_LEN
+ 					 * in linux/sched.h */
+ 
+@@ -164,6 +164,10 @@ struct taskstats {
+ 	/* Delay waiting for memory reclaim */
+ 	__u64	freepages_count;
+ 	__u64	freepages_delay_total;
++
++	/* Delay waiting for thrashing page */
++	__u64	thrashing_count;
++	__u64	thrashing_delay_total;
+ };
+ 
+ 
+diff --git a/kernel/delayacct.c b/kernel/delayacct.c
+index e2764d767f18..02ba745c448d 100644
+--- a/kernel/delayacct.c
++++ b/kernel/delayacct.c
+@@ -134,9 +134,12 @@ int __delayacct_add_tsk(struct taskstats *d, struct task_struct *tsk)
+ 	d->swapin_delay_total = (tmp < d->swapin_delay_total) ? 0 : tmp;
+ 	tmp = d->freepages_delay_total + tsk->delays->freepages_delay;
+ 	d->freepages_delay_total = (tmp < d->freepages_delay_total) ? 0 : tmp;
++	tmp = d->thrashing_delay_total + tsk->delays->thrashing_delay;
++	d->thrashing_delay_total = (tmp < d->thrashing_delay_total) ? 0 : tmp;
+ 	d->blkio_count += tsk->delays->blkio_count;
+ 	d->swapin_count += tsk->delays->swapin_count;
+ 	d->freepages_count += tsk->delays->freepages_count;
++	d->thrashing_count += tsk->delays->thrashing_count;
+ 	spin_unlock_irqrestore(&tsk->delays->lock, flags);
+ 
+ 	return 0;
+@@ -168,3 +171,15 @@ void __delayacct_freepages_end(void)
+ 		&current->delays->freepages_count);
+ }
+ 
++void __delayacct_thrashing_start(void)
++{
++	current->delays->thrashing_start = ktime_get_ns();
++}
++
++void __delayacct_thrashing_end(void)
++{
++	delayacct_end(&current->delays->lock,
++		      &current->delays->thrashing_start,
++		      &current->delays->thrashing_delay,
++		      &current->delays->thrashing_count);
++}
+diff --git a/mm/filemap.c b/mm/filemap.c
+index bd36b7226cf4..e49961e13dd9 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -36,6 +36,7 @@
+ #include <linux/cleancache.h>
+ #include <linux/shmem_fs.h>
+ #include <linux/rmap.h>
++#include <linux/delayacct.h>
+ #include "internal.h"
+ 
+ #define CREATE_TRACE_POINTS
+@@ -1073,8 +1074,15 @@ static inline int wait_on_page_bit_common(wait_queue_head_t *q,
+ {
+ 	struct wait_page_queue wait_page;
+ 	wait_queue_entry_t *wait = &wait_page.wait;
++	bool thrashing = false;
+ 	int ret = 0;
+ 
++	if (bit_nr == PG_locked && !PageSwapBacked(page) &&
++	    !PageUptodate(page) && PageWorkingset(page)) {
++		delayacct_thrashing_start();
++		thrashing = true;
 +	}
 +
-+	return result;
-+}
-+
-+/*
-+ * a1 = a0 * e + a * (1 - e)
-+ *
-+ * a2 = a1 * e + a * (1 - e)
-+ *    = (a0 * e + a * (1 - e)) * e + a * (1 - e)
-+ *    = a0 * e^2 + a * (1 - e) * (1 + e)
-+ *
-+ * a3 = a2 * e + a * (1 - e)
-+ *    = (a0 * e^2 + a * (1 - e) * (1 + e)) * e + a * (1 - e)
-+ *    = a0 * e^3 + a * (1 - e) * (1 + e + e^2)
-+ *
-+ *  ...
-+ *
-+ * an = a0 * e^n + a * (1 - e) * (1 + e + ... + e^n-1) [1]
-+ *    = a0 * e^n + a * (1 - e) * (1 - e^n)/(1 - e)
-+ *    = a0 * e^n + a * (1 - e^n)
-+ *
-+ * [1] application of the geometric series:
-+ *
-+ *              n         1 - x^(n+1)
-+ *     S_n := \Sum x^i = -------------
-+ *             i=0          1 - x
-+ */
-+static inline unsigned long
-+calc_load_n(unsigned long load, unsigned long exp,
-+	    unsigned long active, unsigned int n)
-+{
-+	return calc_load(load, fixed_power_int(exp, FSHIFT, n), active);
-+}
-+
- #define LOAD_INT(x) ((x) >> FSHIFT)
- #define LOAD_FRAC(x) LOAD_INT(((x) & (FIXED_1-1)) * 100)
+ 	init_wait(wait);
+ 	wait->flags = lock ? WQ_FLAG_EXCLUSIVE : 0;
+ 	wait->func = wake_page_function;
+@@ -1113,6 +1121,9 @@ static inline int wait_on_page_bit_common(wait_queue_head_t *q,
  
-diff --git a/kernel/sched/loadavg.c b/kernel/sched/loadavg.c
-index 54fbdfb2d86c..0736e349a54e 100644
---- a/kernel/sched/loadavg.c
-+++ b/kernel/sched/loadavg.c
-@@ -210,75 +210,6 @@ static long calc_load_nohz_fold(void)
- 	return delta;
+ 	finish_wait(q, wait);
+ 
++	if (thrashing)
++		delayacct_thrashing_end();
++
+ 	/*
+ 	 * A signal could leave PageWaiters set. Clearing it here if
+ 	 * !waitqueue_active would be possible (by open-coding finish_wait),
+diff --git a/tools/accounting/getdelays.c b/tools/accounting/getdelays.c
+index 9f420d98b5fb..8cb504d30384 100644
+--- a/tools/accounting/getdelays.c
++++ b/tools/accounting/getdelays.c
+@@ -203,6 +203,8 @@ static void print_delayacct(struct taskstats *t)
+ 	       "SWAP  %15s%15s%15s\n"
+ 	       "      %15llu%15llu%15llums\n"
+ 	       "RECLAIM  %12s%15s%15s\n"
++	       "      %15llu%15llu%15llums\n"
++	       "THRASHING%12s%15s%15s\n"
+ 	       "      %15llu%15llu%15llums\n",
+ 	       "count", "real total", "virtual total",
+ 	       "delay total", "delay average",
+@@ -222,7 +224,11 @@ static void print_delayacct(struct taskstats *t)
+ 	       "count", "delay total", "delay average",
+ 	       (unsigned long long)t->freepages_count,
+ 	       (unsigned long long)t->freepages_delay_total,
+-	       average_ms(t->freepages_delay_total, t->freepages_count));
++	       average_ms(t->freepages_delay_total, t->freepages_count),
++	       "count", "delay total", "delay average",
++	       (unsigned long long)t->thrashing_count,
++	       (unsigned long long)t->thrashing_delay_total,
++	       average_ms(t->thrashing_delay_total, t->thrashing_count));
  }
  
--/**
-- * fixed_power_int - compute: x^n, in O(log n) time
-- *
-- * @x:         base of the power
-- * @frac_bits: fractional bits of @x
-- * @n:         power to raise @x to.
-- *
-- * By exploiting the relation between the definition of the natural power
-- * function: x^n := x*x*...*x (x multiplied by itself for n times), and
-- * the binary encoding of numbers used by computers: n := \Sum n_i * 2^i,
-- * (where: n_i \elem {0, 1}, the binary vector representing n),
-- * we find: x^n := x^(\Sum n_i * 2^i) := \Prod x^(n_i * 2^i), which is
-- * of course trivially computable in O(log_2 n), the length of our binary
-- * vector.
-- */
--static unsigned long
--fixed_power_int(unsigned long x, unsigned int frac_bits, unsigned int n)
--{
--	unsigned long result = 1UL << frac_bits;
--
--	if (n) {
--		for (;;) {
--			if (n & 1) {
--				result *= x;
--				result += 1UL << (frac_bits - 1);
--				result >>= frac_bits;
--			}
--			n >>= 1;
--			if (!n)
--				break;
--			x *= x;
--			x += 1UL << (frac_bits - 1);
--			x >>= frac_bits;
--		}
--	}
--
--	return result;
--}
--
--/*
-- * a1 = a0 * e + a * (1 - e)
-- *
-- * a2 = a1 * e + a * (1 - e)
-- *    = (a0 * e + a * (1 - e)) * e + a * (1 - e)
-- *    = a0 * e^2 + a * (1 - e) * (1 + e)
-- *
-- * a3 = a2 * e + a * (1 - e)
-- *    = (a0 * e^2 + a * (1 - e) * (1 + e)) * e + a * (1 - e)
-- *    = a0 * e^3 + a * (1 - e) * (1 + e + e^2)
-- *
-- *  ...
-- *
-- * an = a0 * e^n + a * (1 - e) * (1 + e + ... + e^n-1) [1]
-- *    = a0 * e^n + a * (1 - e) * (1 - e^n)/(1 - e)
-- *    = a0 * e^n + a * (1 - e^n)
-- *
-- * [1] application of the geometric series:
-- *
-- *              n         1 - x^(n+1)
-- *     S_n := \Sum x^i = -------------
-- *             i=0          1 - x
-- */
--static unsigned long
--calc_load_n(unsigned long load, unsigned long exp,
--	    unsigned long active, unsigned int n)
--{
--	return calc_load(load, fixed_power_int(exp, FSHIFT, n), active);
--}
--
- /*
-  * NO_HZ can leave us missing all per-CPU ticks calling
-  * calc_load_fold_active(), but since a NO_HZ CPU folds its delta into
+ static void task_context_switch_counts(struct taskstats *t)
 -- 
 2.17.0
 
