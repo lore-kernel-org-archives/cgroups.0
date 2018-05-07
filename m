@@ -1,33 +1,53 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: memcontrol: drain stocks on resize limit
-Date: Mon, 7 May 2018 10:48:35 -0400
-Message-ID: <20180507144835.GA5163@cmpxchg.org>
-References: <20180504205548.110696-1-shakeelb@google.com>
-Mime-Version: 1.0
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] mm: memcontrol: drain memcg stock on force_empty
+Date: Mon,  7 May 2018 13:16:51 -0700
+Message-ID: <20180507201651.165879-1-shakeelb@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=L6HTJmiDynKQpG0v0Bzt4OzZY1X6/KqVLxvajjEo9dk=; b=aIPQ/iVsu42d7/RHDX90+U68kj
-        fckLdqaAapvuuh8J91iMSxfSTCCkTqITPUMs5AIDkQLhkUJtqbS4ss4jXJwWMIpCadCBU0Qh7/fvw
-        IB5NyKSadWRdK3XH6qKWhsPlyffU4+nyg4YrbQ+kti9dB0IWM+FL79Dy9lQnYFOAfZDs=;
-Content-Disposition: inline
-In-Reply-To: <20180504205548.110696-1-shakeelb@google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=ZkbjXuXmGO55DL15j170PYMzmg+KwhYXthb2CazHkFg=;
+        b=otxEheU289OjZU+O+u9CFaSsGRmyIymcfyEHrtTA/GtmIhJs7cTOsUZ9uXNUOKhaG7
+         KHEVvwBfVIEPo0MeNDLxpi7Qlxw5mZ4I66vrMsXrLmizFCMT97A5i6VZBtU236Y08Pt6
+         TntEQkpzksgtV2ZlL6dBP/0wzQeULYbYVF53VD/I15z4fAXU74MYhmHDTI+KTMJVEOrV
+         Ln+95/VSGRkjuGaYCIU6TwfikXP0csDV6Cb82Xnz88uThZC9HGVoNDfDMOD/zwpefq/c
+         +ftZp6K9GGs7OO+hQUi10DDoEyWoyGmaXpc3UJYvwv4Jy2BEaa0oVGirgBHuOOcZ3Sk9
+         rGvg==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Junaid Shahid <junaids@google.com>, Junaid Shahid <juanids@google.com>, Shakeel Butt <shakeelb@google.com>
 
-On Fri, May 04, 2018 at 01:55:48PM -0700, Shakeel Butt wrote:
-> Resizing the memcg limit for cgroup-v2 drains the stocks before
-> triggering the memcg reclaim. Do the same for cgroup-v1 to make the
-> behavior consistent.
-> 
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+From: Junaid Shahid <junaids@google.com>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+The per-cpu memcg stock can retain a charge of upto 32 pages. On a
+machine with large number of cpus, this can amount to a decent amount
+of memory. Additionally force_empty interface might be triggering
+unneeded memcg reclaims.
+
+Signed-off-by: Junaid Shahid <juanids@google.com>
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+---
+ mm/memcontrol.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e2d33a37f971..2c3c69524b49 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2841,6 +2841,9 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+ 
+ 	/* we call try-to-free pages for make this cgroup empty */
+ 	lru_add_drain_all();
++
++	drain_all_stock(memcg);
++
+ 	/* try to free all pages in this cgroup */
+ 	while (nr_retries && page_counter_read(&memcg->memory)) {
+ 		int progress;
+-- 
+2.17.0.441.gb46fe60e1d-goog
+
