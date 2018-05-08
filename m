@@ -1,71 +1,58 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v7 3/5] cpuset: Add a root-only cpus.isolated v2 control
- file
-Date: Mon, 7 May 2018 20:30:02 -0400
-Message-ID: <04f33505-1256-461e-917c-175869d6dd24@redhat.com>
-References: <1524145624-23655-1-git-send-email-longman@redhat.com>
- <1524145624-23655-4-git-send-email-longman@redhat.com>
- <20180502140835.GK12180@hirez.programming.kicks-ass.net>
+From: TSUKADA Koutaro <tsukada@ascade.co.jp>
+Subject: Re: [PATCH] memcg, hugetlb: pages allocated for hugetlb's overcommit
+ will be charged to memcg
+Date: Tue, 8 May 2018 09:35:41 +0900
+Message-ID: <7c4dced0-fb54-4336-8bcb-e863187a0d49@ascade.co.jp>
+References: <ecb737e9-ccec-2d7e-45d9-91884a669b58@ascade.co.jp>
+ <dc21a4ac-b57f-59a8-f97a-90a59d5a59cd@oracle.com>
+ <c9019050-7c89-86c3-93fc-9beb64e43ed3@ascade.co.jp>
+ <249d53f4-225d-8a11-d557-b915fa4fa9cb@oracle.com>
+ <a696eccd-24f3-9368-5baa-afbd3628468a@ascade.co.jp>
+ <fae2dde5-00b0-f12c-66ff-8b69351805a9@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180502140835.GK12180@hirez.programming.kicks-ass.net>
+In-Reply-To: <fae2dde5-00b0-f12c-66ff-8b69351805a9@oracle.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
+To: Mike Kravetz <mike.kravetz@oracle.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, =?UTF-8?Q?Marc-Andr=c3=a9_Lureau?= <marcandre.lureau@redhat.com>, Punit Agrawal <punit.agrawal@arm.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, Andrea Arcangeli <aarcange@redhat.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, tsukada@ascade.co.jp
 
-On 05/02/2018 10:08 AM, Peter Zijlstra wrote:
-> On Thu, Apr 19, 2018 at 09:47:02AM -0400, Waiman Long wrote:
->> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
->> index c970bd7..8d89dc2 100644
->> --- a/Documentation/cgroup-v2.txt
->> +++ b/Documentation/cgroup-v2.txt
->> @@ -1484,6 +1484,31 @@ Cpuset Interface Files
->>  	a subset of "cpuset.cpus".  Its value will be affected by CPU
->>  	hotplug events.
->>  
->> +  cpuset.cpus.isolated
->> +	A read-write multiple values file which exists on root cgroup
->> +	only.
->> +
->> +	It lists the CPUs that have been withdrawn from the root cgroup
->> +	for load balancing.  These CPUs can still be allocated to child
->> +	cpusets with load balancing enabled, if necessary.
->> +
->> +	If a child cpuset contains only an exclusive set of CPUs that are
->> +	a subset of the isolated CPUs and with load balancing enabled,
->> +	these CPUs will be load balanced on a separate root domain from
->> +	the one in the root cgroup.
->> +
->> +	Just putting the CPUs into "cpuset.cpus.isolated" will be
->> +	enough to disable load balancing on those CPUs as long as they
->> +	do not appear in a child cpuset with load balancing enabled.
->> +	Fine-grained control of cpu isolation can also be done by
->> +	putting these isolated CPUs into child cpusets with load
->> +	balancing disabled.
->> +
->> +	The "cpuset.cpus.isolated" should be set up before child
->> +	cpusets are created.  Once child cpusets are present, changes
->> +	to "cpuset.cpus.isolated" will not be allowed if the CPUs that
->> +	change their states are in any of the child cpusets.
->> +
-> So I see why you did this, but it is _really_ ugly and breaks the
-> container invariant.
->
-> Ideally we'd make the root group less special, not more special.
+On 2018/05/04 13:26, Mike Kravetz wrote:
+> Thank you for the explanation of your use case.  I now understand what
+> you were trying to accomplish with your patch.
+> 
+> Your use case reminds me of the session at LSFMM titled "swap accounting".
+> https://lwn.net/Articles/753162/
+> 
+> I hope someone with more cgroup expertise (Johannes? Aneesh?) can provide
+> comments.  My experience in that area is limited.
 
-Yes, I am planning to make the root cgroup less special by putting a new
-isolation flag into all the non-root cgroup.
+I am waiting for comments from expertise. The point is whether the surplus
+hugetlb page that allocated from buddy pool directly should be charged to
+memory cgroup or not.
 
-The container invariant thing, however, is a bit hard to do. Do we
-really need a container root to behave exactly like the real root? I
-guess we can make that happen if we really want to, but it will
-certainly make the code more complex. So it is a trade-off about what is
-worth to do and what is not.
+> One question that comes to mind is "Why would the user/application writer
+> use hugetlbfs overcommit instead of THP?".  For hugetlbfs overcommit, they
+> need to be prepared for huge page allocations to fail.  So, in some cases
+> they may not be able to use any hugetlbfs pages.  This is not much different
+> than THP.  However, in the THP case huge page allocation failures and fall
+> back to base pages is transparent to the user.  With THP, the normal memory
+> cgroup controller should work well.
 
-Cheers,
-Longman
+Certainly THP is much easier to use than hugetlb in 4KB page size kernel.
+On the other hand, some distributions(SUSE, RHEL) have a page size of 64KB,
+and the THP size in that case is 512MB(not 2MB). I am afraid that 512MB of
+huge page is somewhat difficult to use.
+
+In hugetlbfs, page size variation increases by using contiguous bits
+supported by aarch64 architecture, and 2MB, 512MB, 16GB, 4TB can be used
+in 64KB environment(Actually, only 2MB is usable...). I also believe THP
+is the best in the 4KB environment, but I am considering how to use the
+huge page in the 64KB environment.
+-- 
+Tsukada Koutaro
+
 
