@@ -1,11 +1,8 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
- IO
-Date: Tue, 8 May 2018 10:06:48 -0400
-Message-ID: <20180508140648.GB2900@cmpxchg.org>
-References: <20180507210135.1823-1-hannes@cmpxchg.org>
- <20180507210135.1823-7-hannes@cmpxchg.org>
- <024fba07-eece-3878-0924-ea9fd601542d@infradead.org>
+Subject: Re: [PATCH v2] mm: fix oom_kill event handling
+Date: Tue, 8 May 2018 13:16:10 -0400
+Message-ID: <20180508171610.GA24175@cmpxchg.org>
+References: <20180508124637.29984-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
@@ -14,29 +11,39 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=yV9mx4MM9CtIkOlDtJkY37nJ1rCbjTHtcSVrNOCcgDI=; b=U6x1hkMZxnJLIho9M2MCnsN3HZ
-        3WUWZjtucFaPS6iaV+jGPbGmowAee7OLQqcrevbhxFusQMnxtowpbQdOJx6pf2Eb43o70X6Hbfnj4
-        RtGy/cDVCSEzA/fNjJQcpHcDAMgm3LtIetIYW+eroT0c57D/vZ72PoyR3aef3i1ueeAQ=;
+        bh=0gHY3fHSXBCZyPC2XXFyN1WpgiS312/pyHsr4QVe4DI=; b=obZmPf+Vdtqcn8aEyvNkJTXXCN
+        4eEpJgOzLU2fs750JYdICQbsWXl6r8UYvake74T3l2BCz81uaz8QJDbFC3RDXZaYXg7ZPgjAzZVVg
+        qFNqJPBw7Q5bnkh576oYYvScTLFDTRfnrLrWKD5RBRgJqe3cqKdO6BIyiBM1QjURgTWg=;
 Content-Disposition: inline
-In-Reply-To: <024fba07-eece-3878-0924-ea9fd601542d@infradead.org>
+In-Reply-To: <20180508124637.29984-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Roman Gushchin <guro@fb.com>
+Cc: kernel-team@fb.com, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, May 07, 2018 at 05:42:36PM -0700, Randy Dunlap wrote:
-> On 05/07/2018 02:01 PM, Johannes Weiner wrote:
-> > + * The ratio is tracked in decaying time averages over 10s, 1m, 5m
-> > + * windows. Cumluative stall times are tracked and exported as well to
+On Tue, May 08, 2018 at 01:46:37PM +0100, Roman Gushchin wrote:
+> Commit e27be240df53 ("mm: memcg: make sure memory.events is
+> uptodate when waking pollers") converted most of memcg event
+> counters to per-memcg atomics, which made them less confusing
+> for a user. The "oom_kill" counter remained untouched, so now
+> it behaves differently than other counters (including "oom").
+> This adds nothing but confusion.
 > 
->                Cumulative
+> Let's fix this by adding the MEMCG_OOM_KILL event, and follow
+> the MEMCG_OOM approach. This also removes a hack from
+> count_memcg_event_mm(), introduced earlier specially for the
+> OOM_KILL counter.
 > 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-mm@kvack.org
 
-> > +/**
-> > + * psi_memstall_leave - mark the end of an memory stall section
-> 
->                                     end of a memory
-
-Thanks Randy, I'll get those fixed.
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
