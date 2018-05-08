@@ -1,25 +1,25 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH] mm: fix oom_kill event handling
-Date: Tue, 8 May 2018 13:04:02 +0100
-Message-ID: <20180508120402.3159-1-guro@fb.com>
+Subject: [PATCH v2] mm: fix oom_kill event handling
+Date: Tue, 8 May 2018 13:46:37 +0100
+Message-ID: <20180508124637.29984-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : mime-version : content-type; s=facebook;
- bh=98sfEoQVd0oMEoBswQEHyZVp+ybt2+rYSOW9jYLo+XQ=;
- b=mWrxrOU02gMlxEyVrJK5Ipjmb8vxni761L2t7do7P7nrBR/NczUZ6lFQD0m/+ANNleI0
- lXXTQomgvh4WnoPAin7wY+9n2kIjddu6OfvalvL1H6rauNjP/XzJ6NK7r1eGdf7H5tPp
- uMQ5j6q0/KpR+iploGhLWqlUQDEaAhWsH1c= 
+ bh=iwCe74MfKX97ymg1Qlw+6L0ZaKcgAe16L/1wdywj86U=;
+ b=IrOUpdqhuMb54KfBJsaTzHouvAPTlvMHBqg7f0BPnfFU0xChqA+a+PqbpOH3YMYq4RmK
+ +3kwdnjsALC0Zb3Ld68OsMPuUZCeY4uS7HVfWTX9cL2hCCqiDqWP830FR5k7LkZxbS0W
+ 7JD0QGMBMzBx9mzHbQ8FTRkz1Q5hlNyt3kk= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=98sfEoQVd0oMEoBswQEHyZVp+ybt2+rYSOW9jYLo+XQ=;
- b=BiVn4reKB5XFuIQ/TzkYTfYI2BCYqbWeKCmiTN9RyyvkO7TAlaEpu5rcsf4rxegwvuPtVzQbYNjxyP3LsTyKURirPc+0GIU/9uUNUGymMwfYBh1+vmgCz3oqsXaCCV0RPAiJ5s3Wsi9868frT54Xlkt8aDIrqkDGj40GzVZtCyg=
+ bh=iwCe74MfKX97ymg1Qlw+6L0ZaKcgAe16L/1wdywj86U=;
+ b=DwSqnL6OOJQCQGTW8UMHTGIkw6rKUZ4FwtE6D2AFLF/FgLAdfOeKYCT4GNmOD2qI0Ktxmxi1yp9z35xLhbt6jspkrNQXi1actsstvC6ss2cN3VDOPAcjHJLO3D2PO/ps/Wwr3nAB2uNKSiJax8SBOEk7Io0MOMw/f0N1WFgGD0I=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: kernel-team@fb.com, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: kernel-team@fb.com
+Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
 Commit e27be240df53 ("mm: memcg: make sure memory.events is
 uptodate when waking pollers") converted most of memcg event
@@ -49,7 +49,7 @@ Cc: linux-mm@kvack.org
  3 files changed, 27 insertions(+), 7 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 6cbea2f25a87..caa8b70a85f6 100644
+index 6cbea2f25a87..794475db7368 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
 @@ -54,6 +54,7 @@ enum memcg_memory_event {
@@ -86,7 +86,7 @@ index 6cbea2f25a87..caa8b70a85f6 100644
 +		return;
 +
 +	rcu_read_lock();
-+	memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
++	memcg = rcu_dereference(mm->memcg);
 +	if (likely(memcg))
 +		memcg_memory_event(memcg, event);
 +	rcu_read_unlock();
