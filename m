@@ -1,38 +1,150 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH] mm: fix oom_kill event handling
-Date: Tue, 8 May 2018 13:49:16 +0100
-Message-ID: <20180508124743.GA26112@castle.DHCP.thefacebook.com>
-References: <20180508120402.3159-1-guro@fb.com>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: Re: [PATCH v2] mm: fix oom_kill event handling
+Date: Tue, 8 May 2018 16:26:26 +0300
+Message-ID: <c5ca700a-46f7-9ba9-2c2e-fd4fd1cb16ea@yandex-team.ru>
+References: <20180508124637.29984-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=Hw7B30KOr+T55L/mwVNOiI9jHMTT3DDyk894CmHkuQI=;
- b=SyLegr9BFj5MsId1u2PA7NdEHYhPL0NyBTJyjPC8QYbNEWUKL2zsJVCmL7k66q0xcBLq
- 7wcuiOH1Xs+tWhP8vWoW9k/5TsV4n55CxEASt1xcJBQNI8AyhwmkhGsS6qNubK/30082
- qGHLik4wu1HyLYO5Dj+gxirIqewsq8A5q+I= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Hw7B30KOr+T55L/mwVNOiI9jHMTT3DDyk894CmHkuQI=;
- b=PIN5m0BIH2CRB0uYOuTnAU62x6j1XRrws41EHOti/mRcoBR4d2kS0jTNIs3guB4WQqutdLMSIdC2KbQG7chDfOCNbwpDjEJEiSoJWH7xnVjIRqCQH1aRSd8APcUw0BKvmZh0ONX+Wm1ZeRQVkYcew4mrznX3FbMFsvD/jCfAvtY=
-Content-Disposition: inline
-In-Reply-To: <20180508120402.3159-1-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1525785986; bh=ULiHoT5GR9XlhZXYmuBYPExN/HkA8PKniPOoucFm/3M=;
+        h=Subject:To:Cc:References:From:Message-ID:Date:In-Reply-To;
+        b=PgQBoNGop0/uoYjtcjfdrCdKclnd9iMirC589G19VXzr1+Bu5dhwSxHP6fV46Tp4f
+         cobqSbKuZ/bFQxKwJMR8h3Ejc7oxqGidojXuHele1iG27EXXSqq8RdYQsheyBZdB75
+         23MxNw+l74S3ps8GBhifk3DBr6PD8lNvJffKQMjQ=
+In-Reply-To: <20180508124637.29984-1-guro@fb.com>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Roman Gushchin <guro@fb.com>, kernel-team@fb.com
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, May 08, 2018 at 01:04:02PM +0100, Roman Gushchin wrote:
+On 08.05.2018 15:46, Roman Gushchin wrote:
 > Commit e27be240df53 ("mm: memcg: make sure memory.events is
 > uptodate when waking pollers") converted most of memcg event
 > counters to per-memcg atomics, which made them less confusing
 > for a user. The "oom_kill" counter remained untouched, so now
 > it behaves differently than other counters (including "oom").
 > This adds nothing but confusion.
+> 
+> Let's fix this by adding the MEMCG_OOM_KILL event, and follow
+> the MEMCG_OOM approach. This also removes a hack from
+> count_memcg_event_mm(), introduced earlier specially for the
+> OOM_KILL counter.
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-mm@kvack.org
 
-Please, ignore this one. Version 2 is properly rebased on top
-of the mm tree.
+Acked-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 
-Thanks!
+> ---
+>   include/linux/memcontrol.h | 26 ++++++++++++++++++++++----
+>   mm/memcontrol.c            |  6 ++++--
+>   mm/oom_kill.c              |  2 +-
+>   3 files changed, 27 insertions(+), 7 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 6cbea2f25a87..794475db7368 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -54,6 +54,7 @@ enum memcg_memory_event {
+>   	MEMCG_HIGH,
+>   	MEMCG_MAX,
+>   	MEMCG_OOM,
+> +	MEMCG_OOM_KILL,
+>   	MEMCG_SWAP_MAX,
+>   	MEMCG_SWAP_FAIL,
+>   	MEMCG_NR_MEMORY_EVENTS,
+> @@ -721,11 +722,8 @@ static inline void count_memcg_event_mm(struct mm_struct *mm,
+>   
+>   	rcu_read_lock();
+>   	memcg = rcu_dereference(mm->memcg);
+> -	if (likely(memcg)) {
+> +	if (likely(memcg))
+>   		count_memcg_events(memcg, idx, 1);
+> -		if (idx == OOM_KILL)
+> -			cgroup_file_notify(&memcg->events_file);
+> -	}
+>   	rcu_read_unlock();
+>   }
+>   
+> @@ -736,6 +734,21 @@ static inline void memcg_memory_event(struct mem_cgroup *memcg,
+>   	cgroup_file_notify(&memcg->events_file);
+>   }
+>   
+> +static inline void memcg_memory_event_mm(struct mm_struct *mm,
+> +					 enum memcg_memory_event event)
+> +{
+> +	struct mem_cgroup *memcg;
+> +
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+> +	rcu_read_lock();
+> +	memcg = rcu_dereference(mm->memcg);
+> +	if (likely(memcg))
+> +		memcg_memory_event(memcg, event);
+> +	rcu_read_unlock();
+> +}
+> +
+>   #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>   void mem_cgroup_split_huge_fixup(struct page *head);
+>   #endif
+> @@ -757,6 +770,11 @@ static inline void memcg_memory_event(struct mem_cgroup *memcg,
+>   {
+>   }
+>   
+> +static inline void memcg_memory_event_mm(struct mm_struct *mm,
+> +					 enum memcg_memory_event event)
+> +{
+> +}
+> +
+>   static inline bool mem_cgroup_low(struct mem_cgroup *root,
+>   				  struct mem_cgroup *memcg)
+>   {
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 10973671e562..38717630305d 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3772,7 +3772,8 @@ static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
+>   
+>   	seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
+>   	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
+> -	seq_printf(sf, "oom_kill %lu\n", memcg_sum_events(memcg, OOM_KILL));
+> +	seq_printf(sf, "oom_kill %lu\n",
+> +		   atomic_long_read(&memcg->memory_events[MEMCG_OOM_KILL]));
+>   	return 0;
+>   }
+>   
+> @@ -5529,7 +5530,8 @@ static int memory_events_show(struct seq_file *m, void *v)
+>   		   atomic_long_read(&memcg->memory_events[MEMCG_MAX]));
+>   	seq_printf(m, "oom %lu\n",
+>   		   atomic_long_read(&memcg->memory_events[MEMCG_OOM]));
+> -	seq_printf(m, "oom_kill %lu\n", memcg_sum_events(memcg, OOM_KILL));
+> +	seq_printf(m, "oom_kill %lu\n",
+> +		   atomic_long_read(&memcg->memory_events[MEMCG_OOM_KILL]));
+>   
+>   	return 0;
+>   }
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 8f7d8dd99e5d..6b74142a1259 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -868,7 +868,7 @@ static void __oom_kill_process(struct task_struct *victim)
+>   
+>   	/* Raise event before sending signal: task reaper must see this */
+>   	count_vm_event(OOM_KILL);
+> -	count_memcg_event_mm(mm, OOM_KILL);
+> +	memcg_memory_event_mm(mm, MEMCG_OOM_KILL);
+>   
+>   	/*
+>   	 * We should send SIGKILL before granting access to memory reserves
+> 
