@@ -1,124 +1,113 @@
-From: Peter Zijlstra <peterz@infradead.org>
+From: Vinayak Menon <vinmenon@codeaurora.org>
 Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
  IO
-Date: Wed, 9 May 2018 12:55:05 +0200
-Message-ID: <20180509105505.GQ12217@hirez.programming.kicks-ass.net>
+Date: Wed, 9 May 2018 16:33:24 +0530
+Message-ID: <87060553-2e09-2e2a-13a2-a91345d6df30@codeaurora.org>
 References: <20180507210135.1823-1-hannes@cmpxchg.org>
  <20180507210135.1823-7-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=xEvcsgNJX26D71IbUXyuispBBMEfRfB+37tUjDV7HIc=; b=E0hsG8714gH08sFRHI8NoCKkX
-        63dxxdppYXJuI+a8Bl/0YXirWdCc3sR0gLTV8iH5AuL04cOX19sIbIGcc2M4OVFESSsTNhX1sMfEv
-        eXbgtHn3EHtUmb8e/D9gn+6wajervjQA8iFfudXs7vTPc8x+QavypDyhPaa2ygBxsTgoR8Jn0k7T3
-        rjdGsBK1/L4BIcnHGwUzDf6i1f9RQ81VNshidjjV5TsdQa2Qq/Ezguw+Fy7PAgXAPU90PF5xDseKl
-        g46CMQ8jprLaAzFvZK+3NHwVLd0icrhtalf8r2qZpZw/aUoi1CyDvxNBfTnp9Mts+xhmB2DvZJWqB
-      
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1525863814;
+        bh=+1PXQ9g0qF5G3qCnv2axV1PQvCB16OJwuNa5CXfvpN8=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=Z3xyJLsJzseo6ovnAdC9b75i3OjZB4G+ShOPqndixpxXVLTiqbDlxoR4SHu760Hzn
+         WB/4x+uo2eMIUpSRtQn5O9sWMltBpm2frBPMZUxKL2C3wMAAr6Eo4OoCqWj+oNsCZa
+         KDsVxKVcSCp5ZTDt0ZXP8JmHGzySIcp3Tlo1TVm4=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1525863813;
+        bh=+1PXQ9g0qF5G3qCnv2axV1PQvCB16OJwuNa5CXfvpN8=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=POeCGKfkO2ESR5cOQQJVtZmkgkviyY7/jNWKv7K5ZiSGQYRbFcFnGbEGQEj3ibRxc
+         Yta+4ujahviZ+d4UThV34pItc/i1AhdRWG0+cqExN75LlYILh7ZWS41xE+cB/P7r4f
+         evAv04qKnMhSkZwTD6/CkPN5azvI4nuOAdTZKbQE=
 In-Reply-To: <20180507210135.1823-7-hannes@cmpxchg.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On Mon, May 07, 2018 at 05:01:34PM -0400, Johannes Weiner wrote:
 
-> @@ -28,10 +28,14 @@ static inline int sched_info_on(void)
->  	return 1;
->  #elif defined(CONFIG_TASK_DELAY_ACCT)
->  	extern int delayacct_on;
-> -	return delayacct_on;
-> -#else
-> -	return 0;
-> +	if (delayacct_on)
-> +		return 1;
-> +#elif defined(CONFIG_PSI)
-> +	extern int psi_disabled;
-> +	if (!psi_disabled)
-> +		return 1;
->  #endif
-> +	return 0;
->  }
-
-> diff --git a/kernel/sched/stats.h b/kernel/sched/stats.h
-> index 8aea199a39b4..cb4a68bcf37a 100644
-> --- a/kernel/sched/stats.h
-> +++ b/kernel/sched/stats.h
-> @@ -55,12 +55,90 @@ static inline void rq_sched_info_depart  (struct rq *rq, unsigned long long delt
->  # define   schedstat_val_or_zero(var)	0
->  #endif /* CONFIG_SCHEDSTATS */
->  
-> +#ifdef CONFIG_PSI
-> +/*
-> + * PSI tracks state that persists across sleeps, such as iowaits and
-> + * memory stalls. As a result, it has to distinguish between sleeps,
-> + * where a task's runnable state changes, and requeues, where a task
-> + * and its state are being moved between CPUs and runqueues.
-> + */
-> +static inline void psi_enqueue(struct task_struct *p, u64 now)
+On 5/8/2018 2:31 AM, Johannes Weiner wrote:
+> +static void psi_group_update(struct psi_group *group, int cpu, u64 now,
+> +			     unsigned int clear, unsigned int set)
 > +{
-> +	int clear = 0, set = TSK_RUNNING;
+> +	enum psi_state state = PSI_NONE;
+> +	struct psi_group_cpu *groupc;
+> +	unsigned int *tasks;
+> +	unsigned int to, bo;
 > +
-> +	if (p->state == TASK_RUNNING || p->sched_psi_wake_requeue) {
-> +		if (p->flags & PF_MEMSTALL)
-> +			set |= TSK_MEMSTALL;
-> +		p->sched_psi_wake_requeue = 0;
-> +	} else {
-> +		if (p->in_iowait)
-> +			clear |= TSK_IOWAIT;
+> +	groupc = per_cpu_ptr(group->cpus, cpu);
+> +	tasks = groupc->tasks;
+> +
+> +	/* Update task counts according to the set/clear bitmasks */
+> +	for (to = 0; (bo = ffs(clear)); to += bo, clear >>= bo) {
+> +		int idx = to + (bo - 1);
+> +
+> +		if (tasks[idx] == 0 && !psi_bug) {
+> +			printk_deferred(KERN_ERR "psi: task underflow! cpu=%d idx=%d tasks=[%u %u %u %u]\n",
+> +					cpu, idx, tasks[0], tasks[1],
+> +					tasks[2], tasks[3]);
+> +			psi_bug = 1;
+> +		}
+> +		tasks[idx]--;
 > +	}
+> +	for (to = 0; (bo = ffs(set)); to += bo, set >>= bo)
+> +		tasks[to + (bo - 1)]++;
 > +
-> +	psi_task_change(p, now, clear, set);
-> +}
-> +static inline void psi_dequeue(struct task_struct *p, u64 now)
-> +{
-> +	int clear = TSK_RUNNING, set = 0;
+> +	/* Time in which tasks wait for the CPU */
+> +	state = PSI_NONE;
+> +	if (tasks[NR_RUNNING] > 1)
+> +		state = PSI_SOME;
+> +	time_state(&groupc->res[PSI_CPU], state, now);
 > +
-> +	if (p->state == TASK_RUNNING) {
-> +		if (p->flags & PF_MEMSTALL)
-> +			clear |= TSK_MEMSTALL;
-> +	} else {
-> +		if (p->in_iowait)
-> +			set |= TSK_IOWAIT;
+> +	/* Time in which tasks wait for memory */
+> +	state = PSI_NONE;
+> +	if (tasks[NR_MEMSTALL]) {
+> +		if (!tasks[NR_RUNNING] ||
+> +		    (cpu_curr(cpu)->flags & PF_MEMSTALL))
+> +			state = PSI_FULL;
+> +		else
+> +			state = PSI_SOME;
 > +	}
+> +	time_state(&groupc->res[PSI_MEM], state, now);
 > +
-> +	psi_task_change(p, now, clear, set);
-> +}
-> +static inline void psi_ttwu_dequeue(struct task_struct *p)
-> +{
-> +	/*
-> +	 * Is the task being migrated during a wakeup? Make sure to
-> +	 * deregister its sleep-persistent psi states from the old
-> +	 * queue, and let psi_enqueue() know it has to requeue.
-> +	 */
-> +	if (unlikely(p->in_iowait || (p->flags & PF_MEMSTALL))) {
-> +		struct rq_flags rf;
-> +		struct rq *rq;
-> +		int clear = 0;
-> +
-> +		if (p->in_iowait)
-> +			clear |= TSK_IOWAIT;
-> +		if (p->flags & PF_MEMSTALL)
-> +			clear |= TSK_MEMSTALL;
-> +
-> +		rq = __task_rq_lock(p, &rf);
-> +		update_rq_clock(rq);
-> +		psi_task_change(p, rq_clock(rq), clear, 0);
-> +		p->sched_psi_wake_requeue = 1;
-> +		__task_rq_unlock(rq, &rf);
+> +	/* Time in which tasks wait for IO */
+> +	state = PSI_NONE;
+> +	if (tasks[NR_IOWAIT]) {
+> +		if (!tasks[NR_RUNNING])
+> +			state = PSI_FULL;
+> +		else
+> +			state = PSI_SOME;
 > +	}
-> +}
+> +	time_state(&groupc->res[PSI_IO], state, now);
+> +
+> +	/* Time in which tasks are non-idle, to weigh the CPU in summaries */
+> +	if (groupc->nonidle)
+> +		groupc->nonidle_time += now - groupc->nonidle_start;
+> +	groupc->nonidle = tasks[NR_RUNNING] ||
+> +		tasks[NR_IOWAIT] || tasks[NR_MEMSTALL];
+> +	if (groupc->nonidle)
+> +		groupc->nonidle_start = now;
+> +
+> +	/* Kick the stats aggregation worker if it's gone to sleep */
+> +	if (!delayed_work_pending(&group->clock_work))
 
-That all seems to be missing psi_disabled tests.. Yes I know it's
-burried down in psi_task_change() somewhere, but that's really (too)
-late.
+This causes a crash when the work is scheduled before system_wq is up. In my case when the first
+schedule was called from kthreadd. And I had to do this to make it work.
+if (keventd_up() && !delayed_work_pending(&group->clock_work))
 
-(also, you seem to be conserving whitespace; typically we have an empty
-lines between functions)
+> +		schedule_delayed_work(&group->clock_work, MY_LOAD_FREQ);
+> +}
+> +
+> +void psi_task_change(struct task_struct *task, u64 now, int clear, int set)
+> +{
+> +	struct cgroup *cgroup, *parent;
+
+unused variables
+
+Thanks,
+Vinayak
