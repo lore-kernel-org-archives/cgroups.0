@@ -1,24 +1,24 @@
 From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
  IO
-Date: Wed, 9 May 2018 12:46:18 +0200
-Message-ID: <20180509104618.GP12217@hirez.programming.kicks-ass.net>
+Date: Wed, 9 May 2018 12:55:05 +0200
+Message-ID: <20180509105505.GQ12217@hirez.programming.kicks-ass.net>
 References: <20180507210135.1823-1-hannes@cmpxchg.org>
  <20180507210135.1823-7-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=39AIeCwOrrPsevhGOBzac/9B4xjSpWy/QewYbhpk7f4=; b=YsGlWXGLg6AbMo5jvoFPLQyJP
-        hBJSaxHA2MAJR4aKyBjFYFDUJfrgHsHOFIG8L11D4g71D9uRafxjBLvZEpVHpoBEIccGfYp++lANF
-        7FACeOi0ho76zFXHPazysc1ws1PR17bgZDXXF5czKOB+QVap9q/Om1Cc6cGPSc/fIHoLEkbQg31Yi
-        VXaiY9XVnycGK0di4844w19R41xAfYsWa6N/VKyvU3RjslNojG23U5zFLFCUkUD7TQyRQx8U7YLCv
-        HIHs4ZNj/+EdlSOdKwCKJphe7JNoWUV6IcZlnj5XVJUOnm2oC5Vgrlk1CWUH7prdyA8ti4yG9+jLw
-    
+         bh=xEvcsgNJX26D71IbUXyuispBBMEfRfB+37tUjDV7HIc=; b=E0hsG8714gH08sFRHI8NoCKkX
+        63dxxdppYXJuI+a8Bl/0YXirWdCc3sR0gLTV8iH5AuL04cOX19sIbIGcc2M4OVFESSsTNhX1sMfEv
+        eXbgtHn3EHtUmb8e/D9gn+6wajervjQA8iFfudXs7vTPc8x+QavypDyhPaa2ygBxsTgoR8Jn0k7T3
+        rjdGsBK1/L4BIcnHGwUzDf6i1f9RQ81VNshidjjV5TsdQa2Qq/Ezguw+Fy7PAgXAPU90PF5xDseKl
+        g46CMQ8jprLaAzFvZK+3NHwVLd0icrhtalf8r2qZpZw/aUoi1CyDvxNBfTnp9Mts+xhmB2DvZJWqB
+      
 Content-Disposition: inline
 In-Reply-To: <20180507210135.1823-7-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -30,15 +30,67 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.or
 
 On Mon, May 07, 2018 at 05:01:34PM -0400, Johannes Weiner wrote:
 
-> @@ -2038,6 +2038,7 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
->  	cpu = select_task_rq(p, p->wake_cpu, SD_BALANCE_WAKE, wake_flags);
->  	if (task_cpu(p) != cpu) {
->  		wake_flags |= WF_MIGRATED;
-> +		psi_ttwu_dequeue(p);
->  		set_task_cpu(p, cpu);
->  	}
->  
+> @@ -28,10 +28,14 @@ static inline int sched_info_on(void)
+>  	return 1;
+>  #elif defined(CONFIG_TASK_DELAY_ACCT)
+>  	extern int delayacct_on;
+> -	return delayacct_on;
+> -#else
+> -	return 0;
+> +	if (delayacct_on)
+> +		return 1;
+> +#elif defined(CONFIG_PSI)
+> +	extern int psi_disabled;
+> +	if (!psi_disabled)
+> +		return 1;
+>  #endif
+> +	return 0;
+>  }
 
+> diff --git a/kernel/sched/stats.h b/kernel/sched/stats.h
+> index 8aea199a39b4..cb4a68bcf37a 100644
+> --- a/kernel/sched/stats.h
+> +++ b/kernel/sched/stats.h
+> @@ -55,12 +55,90 @@ static inline void rq_sched_info_depart  (struct rq *rq, unsigned long long delt
+>  # define   schedstat_val_or_zero(var)	0
+>  #endif /* CONFIG_SCHEDSTATS */
+>  
+> +#ifdef CONFIG_PSI
+> +/*
+> + * PSI tracks state that persists across sleeps, such as iowaits and
+> + * memory stalls. As a result, it has to distinguish between sleeps,
+> + * where a task's runnable state changes, and requeues, where a task
+> + * and its state are being moved between CPUs and runqueues.
+> + */
+> +static inline void psi_enqueue(struct task_struct *p, u64 now)
+> +{
+> +	int clear = 0, set = TSK_RUNNING;
+> +
+> +	if (p->state == TASK_RUNNING || p->sched_psi_wake_requeue) {
+> +		if (p->flags & PF_MEMSTALL)
+> +			set |= TSK_MEMSTALL;
+> +		p->sched_psi_wake_requeue = 0;
+> +	} else {
+> +		if (p->in_iowait)
+> +			clear |= TSK_IOWAIT;
+> +	}
+> +
+> +	psi_task_change(p, now, clear, set);
+> +}
+> +static inline void psi_dequeue(struct task_struct *p, u64 now)
+> +{
+> +	int clear = TSK_RUNNING, set = 0;
+> +
+> +	if (p->state == TASK_RUNNING) {
+> +		if (p->flags & PF_MEMSTALL)
+> +			clear |= TSK_MEMSTALL;
+> +	} else {
+> +		if (p->in_iowait)
+> +			set |= TSK_IOWAIT;
+> +	}
+> +
+> +	psi_task_change(p, now, clear, set);
+> +}
 > +static inline void psi_ttwu_dequeue(struct task_struct *p)
 > +{
 > +	/*
@@ -64,11 +116,9 @@ On Mon, May 07, 2018 at 05:01:34PM -0400, Johannes Weiner wrote:
 > +	}
 > +}
 
-Yeah, no... not happening.
+That all seems to be missing psi_disabled tests.. Yes I know it's
+burried down in psi_task_change() somewhere, but that's really (too)
+late.
 
-We spend a lot of time to never touch the old rq->lock on wakeups. Mason
-was the one pushing for that, so he should very well know this.
-
-The one cross-cpu atomic (iowait) is already a problem (the whole iowait
-accounting being useless makes it even worse), adding significant remote
-prodding is just really bad.
+(also, you seem to be conserving whitespace; typically we have an empty
+lines between functions)
