@@ -1,53 +1,56 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol: drain memcg stock on force_empty
-Date: Wed, 9 May 2018 10:18:07 +0200
-Message-ID: <20180509081807.GG32366@dhcp22.suse.cz>
-References: <20180507201651.165879-1-shakeelb@google.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 5/7] sched: loadavg: make calc_load_n() public
+Date: Wed, 9 May 2018 11:49:06 +0200
+Message-ID: <20180509094906.GI12217@hirez.programming.kicks-ass.net>
+References: <20180507210135.1823-1-hannes@cmpxchg.org>
+ <20180507210135.1823-6-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=zWG9IPm9IFMWB62eZxyspALqVLb6gPilyxYotQ540Rk=; b=J+bPqcmeG51gAAZ07qiXmUDid
+        0aU0zhialh1RGsRYTvkv/QxONGGdeugJl07wAZ7ZxXsFytvdy1hh0jK3LWDnTJ4KZri1XySHoerji
+        Mkg6F78cs3c412k3Cbmi/HBLN6RmuJNJCvqeR5ZnN/NcOpR/M/jnIrvCPCmTpqVKCqhXXYogTK2OT
+        vUoEeI2C1ygqLDCDFcwbOVePisEtSuKI7vEiypFVQnZ+erF4n+9HFAaxftVmJGVkC4ZxWw8DMmUzx
+        ML5XKIEo4wPRTwy/XHMR9fjMQdFlzS5KQ0CIC8VajiDvWvm8OEh732/BWU6jtuQu7hu78MG1rNhvG
+    
 Content-Disposition: inline
-In-Reply-To: <20180507201651.165879-1-shakeelb@google.com>
+In-Reply-To: <20180507210135.1823-6-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Junaid Shahid <junaids@google.com>, Junaid Shahid <juanids@google.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On Mon 07-05-18 13:16:51, Shakeel Butt wrote:
-> From: Junaid Shahid <junaids@google.com>
-> 
-> The per-cpu memcg stock can retain a charge of upto 32 pages. On a
-> machine with large number of cpus, this can amount to a decent amount
-> of memory. Additionally force_empty interface might be triggering
-> unneeded memcg reclaims.
-> 
-> Signed-off-by: Junaid Shahid <juanids@google.com>
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
-
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-> ---
->  mm/memcontrol.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e2d33a37f971..2c3c69524b49 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2841,6 +2841,9 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
->  
->  	/* we call try-to-free pages for make this cgroup empty */
->  	lru_add_drain_all();
+On Mon, May 07, 2018 at 05:01:33PM -0400, Johannes Weiner wrote:
+> +static inline unsigned long
+> +fixed_power_int(unsigned long x, unsigned int frac_bits, unsigned int n)
+> +{
+> +	unsigned long result = 1UL << frac_bits;
 > +
-> +	drain_all_stock(memcg);
+> +	if (n) {
+> +		for (;;) {
+> +			if (n & 1) {
+> +				result *= x;
+> +				result += 1UL << (frac_bits - 1);
+> +				result >>= frac_bits;
+> +			}
+> +			n >>= 1;
+> +			if (!n)
+> +				break;
+> +			x *= x;
+> +			x += 1UL << (frac_bits - 1);
+> +			x >>= frac_bits;
+> +		}
+> +	}
 > +
->  	/* try to free all pages in this cgroup */
->  	while (nr_retries && page_counter_read(&memcg->memory)) {
->  		int progress;
-> -- 
-> 2.17.0.441.gb46fe60e1d-goog
+> +	return result;
+> +}
 
--- 
-Michal Hocko
-SUSE Labs
+No real objection; but that does look a wee bit fat for an inline I
+suppose.
