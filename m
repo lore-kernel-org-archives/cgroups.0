@@ -1,9 +1,10 @@
 From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 5/7] sched: loadavg: make calc_load_n() public
-Date: Wed, 9 May 2018 11:49:06 +0200
-Message-ID: <20180509094906.GI12217@hirez.programming.kicks-ass.net>
+Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
+ IO
+Date: Wed, 9 May 2018 11:59:38 +0200
+Message-ID: <20180509095938.GJ12217@hirez.programming.kicks-ass.net>
 References: <20180507210135.1823-1-hannes@cmpxchg.org>
- <20180507210135.1823-6-hannes@cmpxchg.org>
+ <20180507210135.1823-7-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
@@ -12,14 +13,14 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=zWG9IPm9IFMWB62eZxyspALqVLb6gPilyxYotQ540Rk=; b=J+bPqcmeG51gAAZ07qiXmUDid
-        0aU0zhialh1RGsRYTvkv/QxONGGdeugJl07wAZ7ZxXsFytvdy1hh0jK3LWDnTJ4KZri1XySHoerji
-        Mkg6F78cs3c412k3Cbmi/HBLN6RmuJNJCvqeR5ZnN/NcOpR/M/jnIrvCPCmTpqVKCqhXXYogTK2OT
-        vUoEeI2C1ygqLDCDFcwbOVePisEtSuKI7vEiypFVQnZ+erF4n+9HFAaxftVmJGVkC4ZxWw8DMmUzx
-        ML5XKIEo4wPRTwy/XHMR9fjMQdFlzS5KQ0CIC8VajiDvWvm8OEh732/BWU6jtuQu7hu78MG1rNhvG
+         bh=NVbh/LOsISNmbHBJlSondA21W2OEIYOM5hTTqlZZNTQ=; b=WMJ7Kh9j0lkGfYTUgxcERW5BX
+        AtgFLC+nWK2eOgh7/T8QhRIbuM4sRIT1BvGEQzUvJ6qg1UQufNrWwe+jFMImtAfckOTkUveN5PRle
+        988LOj/otbzwFrfgFg9iP5uPNY4TU+nxngrXGF7bPaisz23QTlKbBPMRHT77dOEL3HvP8PXu9LxF/
+        w+8IXN96/8zm8BH/jpkoHPLcGGUANGNLQAR1hbriyeAoMpNOF38E6HGH51daXPMVC/HpRewKefVu9
+        794PD3JP9zBJBKf5U2XElunO2+ebY2+vn5bJWsdOASkmGRVzaEQ6SIuqKjffoP7n9rM6wff4SBKHo
     
 Content-Disposition: inline
-In-Reply-To: <20180507210135.1823-6-hannes@cmpxchg.org>
+In-Reply-To: <20180507210135.1823-7-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,30 +28,95 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On Mon, May 07, 2018 at 05:01:33PM -0400, Johannes Weiner wrote:
-> +static inline unsigned long
-> +fixed_power_int(unsigned long x, unsigned int frac_bits, unsigned int n)
-> +{
-> +	unsigned long result = 1UL << frac_bits;
+On Mon, May 07, 2018 at 05:01:34PM -0400, Johannes Weiner wrote:
+> diff --git a/include/linux/psi_types.h b/include/linux/psi_types.h
+> new file mode 100644
+> index 000000000000..b22b0ffc729d
+> --- /dev/null
+> +++ b/include/linux/psi_types.h
+> @@ -0,0 +1,84 @@
+> +#ifndef _LINUX_PSI_TYPES_H
+> +#define _LINUX_PSI_TYPES_H
 > +
-> +	if (n) {
-> +		for (;;) {
-> +			if (n & 1) {
-> +				result *= x;
-> +				result += 1UL << (frac_bits - 1);
-> +				result >>= frac_bits;
-> +			}
-> +			n >>= 1;
-> +			if (!n)
-> +				break;
-> +			x *= x;
-> +			x += 1UL << (frac_bits - 1);
-> +			x >>= frac_bits;
-> +		}
-> +	}
+> +#include <linux/types.h>
 > +
-> +	return result;
-> +}
+> +#ifdef CONFIG_PSI
+> +
+> +/* Tracked task states */
+> +enum psi_task_count {
+> +	NR_RUNNING,
+> +	NR_IOWAIT,
+> +	NR_MEMSTALL,
+> +	NR_PSI_TASK_COUNTS,
+> +};
+> +
+> +/* Task state bitmasks */
+> +#define TSK_RUNNING	(1 << NR_RUNNING)
+> +#define TSK_IOWAIT	(1 << NR_IOWAIT)
+> +#define TSK_MEMSTALL	(1 << NR_MEMSTALL)
+> +
+> +/* Resources that workloads could be stalled on */
+> +enum psi_res {
+> +	PSI_CPU,
+> +	PSI_MEM,
+> +	PSI_IO,
+> +	NR_PSI_RESOURCES,
+> +};
+> +
+> +/* Pressure states for a group of tasks */
+> +enum psi_state {
+> +	PSI_NONE,		/* No stalled tasks */
+> +	PSI_SOME,		/* Stalled tasks & working tasks */
+> +	PSI_FULL,		/* Stalled tasks & no working tasks */
+> +	NR_PSI_STATES,
+> +};
+> +
+> +struct psi_resource {
+> +	/* Current pressure state for this resource */
+> +	enum psi_state state;
+> +
+> +	/* Start of current state (cpu_clock) */
+> +	u64 state_start;
+> +
+> +	/* Time sampling buckets for pressure states (ns) */
+> +	u64 times[NR_PSI_STATES - 1];
 
-No real objection; but that does look a wee bit fat for an inline I
-suppose.
+Fails to explain why no FULL.
+
+> +};
+> +
+> +struct psi_group_cpu {
+> +	/* States of the tasks belonging to this group */
+> +	unsigned int tasks[NR_PSI_TASK_COUNTS];
+> +
+
+AFAICT there's a hole here, that would fit the @nonidle member. Which
+also avoids the later hole generated by it.
+
+> +	/* Per-resource pressure tracking in this group */
+> +	struct psi_resource res[NR_PSI_RESOURCES];
+> +
+> +	/* There are runnable or D-state tasks */
+> +	bool nonidle;
+
+Mandatory complaint about using _Bool in composites goes here.
+
+> +	/* Start of current non-idle state (cpu_clock) */
+> +	u64 nonidle_start;
+> +
+> +	/* Time sampling bucket for non-idle state (ns) */
+> +	u64 nonidle_time;
+> +};
+> +
+> +struct psi_group {
+> +	struct psi_group_cpu *cpus;
+> +
+> +	struct delayed_work clock_work;
+> +	unsigned long period_expires;
+> +
+> +	u64 some[NR_PSI_RESOURCES];
+> +	u64 full[NR_PSI_RESOURCES];
+> +
+> +	unsigned long avg_some[NR_PSI_RESOURCES][3];
+> +	unsigned long avg_full[NR_PSI_RESOURCES][3];
+> +};
