@@ -1,12 +1,10 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
- IO
-Date: Thu, 10 May 2018 09:41:32 -0400
-Message-ID: <20180510134132.GA19348@cmpxchg.org>
+Subject: Re: [PATCH 5/7] sched: loadavg: make calc_load_n() public
+Date: Thu, 10 May 2018 09:46:36 -0400
+Message-ID: <20180510134636.GB19348@cmpxchg.org>
 References: <20180507210135.1823-1-hannes@cmpxchg.org>
- <20180507210135.1823-7-hannes@cmpxchg.org>
- <20180509104618.GP12217@hirez.programming.kicks-ass.net>
- <20180509113849.GJ12235@hirez.programming.kicks-ass.net>
+ <20180507210135.1823-6-hannes@cmpxchg.org>
+ <20180509094906.GI12217@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
@@ -15,11 +13,11 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=IDVS5v+xfLmBiJePuAJrbHm5wD3oLcjPjpXJ5gv/7Kk=; b=2Z9ztjhl8w99+8ih4eqYSSKEIT
-        N1aVWluSWTTZbJAoM+m5s11NBC3yS9FJaBSrHkcJAdDjS1wnTghqBqPFwSrXTbJ3VhIIlG1PSR/wP
-        EYo1F6kEq0smyFpFwZdQZfAT2zkdUVZurpiQjN+l6zZXvifuxVGykpKIuA+QBTP2NYWQ=;
+        bh=Qmx7JjeoeaJC3OplY4bbMOvvnadtQKcRgCsArlMNFho=; b=JriDjeZd9eV4ZClfXZvC28l8PO
+        F/8t+M6zIp+w9nYM0FDY6NNldhMrdi0BcA1zS3WDgwrmLY28TcuLy3Kvq6kCSnPmUK5I1c5eQSV1/
+        zDmpizbkMWJc07lvRAoHmRNuhUEMA62UXm5wUt2LVlF8u4mifMmPCT6rVLJHGtDLa2/A=;
 Content-Disposition: inline
-In-Reply-To: <20180509113849.GJ12235@hirez.programming.kicks-ass.net>
+In-Reply-To: <20180509094906.GI12217@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,123 +25,34 @@ Content-Transfer-Encoding: 7bit
 To: Peter Zijlstra <peterz@infradead.org>
 Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On Wed, May 09, 2018 at 01:38:49PM +0200, Peter Zijlstra wrote:
-> On Wed, May 09, 2018 at 12:46:18PM +0200, Peter Zijlstra wrote:
-> > On Mon, May 07, 2018 at 05:01:34PM -0400, Johannes Weiner wrote:
-> > 
-> > > @@ -2038,6 +2038,7 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
-> > >  	cpu = select_task_rq(p, p->wake_cpu, SD_BALANCE_WAKE, wake_flags);
-> > >  	if (task_cpu(p) != cpu) {
-> > >  		wake_flags |= WF_MIGRATED;
-> > > +		psi_ttwu_dequeue(p);
-> > >  		set_task_cpu(p, cpu);
-> > >  	}
-> > >  
-> > 
-> > > +static inline void psi_ttwu_dequeue(struct task_struct *p)
-> > > +{
-> > > +	/*
-> > > +	 * Is the task being migrated during a wakeup? Make sure to
-> > > +	 * deregister its sleep-persistent psi states from the old
-> > > +	 * queue, and let psi_enqueue() know it has to requeue.
-> > > +	 */
-> > > +	if (unlikely(p->in_iowait || (p->flags & PF_MEMSTALL))) {
-> > > +		struct rq_flags rf;
-> > > +		struct rq *rq;
-> > > +		int clear = 0;
-> > > +
-> > > +		if (p->in_iowait)
-> > > +			clear |= TSK_IOWAIT;
-> > > +		if (p->flags & PF_MEMSTALL)
-> > > +			clear |= TSK_MEMSTALL;
-> > > +
-> > > +		rq = __task_rq_lock(p, &rf);
-> > > +		update_rq_clock(rq);
-> > > +		psi_task_change(p, rq_clock(rq), clear, 0);
-> > > +		p->sched_psi_wake_requeue = 1;
-> > > +		__task_rq_unlock(rq, &rf);
-> > > +	}
-> > > +}
-> > 
-> > Yeah, no... not happening.
-> > 
-> > We spend a lot of time to never touch the old rq->lock on wakeups. Mason
-> > was the one pushing for that, so he should very well know this.
-> > 
-> > The one cross-cpu atomic (iowait) is already a problem (the whole iowait
-> > accounting being useless makes it even worse), adding significant remote
-> > prodding is just really bad.
+On Wed, May 09, 2018 at 11:49:06AM +0200, Peter Zijlstra wrote:
+> On Mon, May 07, 2018 at 05:01:33PM -0400, Johannes Weiner wrote:
+> > +static inline unsigned long
+> > +fixed_power_int(unsigned long x, unsigned int frac_bits, unsigned int n)
+> > +{
+> > +	unsigned long result = 1UL << frac_bits;
+> > +
+> > +	if (n) {
+> > +		for (;;) {
+> > +			if (n & 1) {
+> > +				result *= x;
+> > +				result += 1UL << (frac_bits - 1);
+> > +				result >>= frac_bits;
+> > +			}
+> > +			n >>= 1;
+> > +			if (!n)
+> > +				break;
+> > +			x *= x;
+> > +			x += 1UL << (frac_bits - 1);
+> > +			x >>= frac_bits;
+> > +		}
+> > +	}
+> > +
+> > +	return result;
+> > +}
 > 
-> Also, since all you need is the global number, I don't think you
-> actually need any of this. See what we do for nr_uninterruptible.
-> 
-> In general I think you want to (re)read loadavg.c some more, and maybe
-> reuse a bit more of that.
+> No real objection; but that does look a wee bit fat for an inline I
+> suppose.
 
-So there is a reason I'm tracking productivity states per-cpu and not
-globally. Consider the following example periods on two CPUs:
-
-    CPU 0
-Task 1: | EXECUTING  | memstalled |
-Task 2: | runqueued  | EXECUTING  |
-
-    CPU 1
-Task 3: | memstalled | EXECUTING  |
-
-If we tracked only the global number of stalled tasks, similarly to
-nr_uninterruptible, the number would be elevated throughout the whole
-sampling period, giving a pressure value of 100% for "some stalled".
-And, since there is always something executing, a "full stall" of 0%.
-
-Now consider what happens when the Task 3 sequence is the other way
-around:
-
-    CPU 0
-Task 1: | EXECUTING  | memstalled |
-Task 2: | runqueued  | EXECUTING  |
-
-    CPU 1
-Task 3: | EXECUTING  | memstalled |
-
-Here the number of stalled tasks is elevated only during half of the
-sampling period, this time giving a pressure reading of 50% for "some"
-(and again 0% for "full").
-
-That's a different measurement, but in terms of workload progress, the
-sequences are functionally equivalent. In both scenarios the same
-amount of productive CPU cycles is spent advancing tasks 1, 2 and 3,
-and the same amount of potentially productive CPU time is lost due to
-the contention of memory. We really ought to read the same pressure.
-
-So what I'm doing is calculating the productivity loss on each CPU in
-a sampling period as if they were independent time slices. It doesn't
-matter how you slice and dice the sequences within each one - if used
-CPU time and lost CPU time have the same proportion, we have the same
-pressure.
-
-In both scenarios above, this method will give a pressure reading of
-some=50% and full=25% of "normalized walltime", which is the time loss
-the work would experience on a single CPU executing it serially.
-
-To illustrate:
-
-    CPU X
-        1            2            3            4
-Task 1: | EXECUTING  | memstalled | sleeping   | sleeping   |
-Task 2: | runqueued  | EXECUTING  | sleeping   | sleeping   |
-Task 3: | sleeping   | sleeping   | EXECUTING  | memstalled |
-
-You can clearly see the 50% of walltime in which *somebody* isn't
-advancing (2 and 4), and the 25% of walltime in which *no* tasks are
-(3). Same amount of work, same memory stalls, same pressure numbers.
-
-Globalized state tracking would produce those numbers on the single
-CPU (obviously), but once concurrency gets into the mix, it's
-questionable what its results mean. It certainly isn't able to
-reliably detect equivalent slowdowns of individual tasks ("some" is
-all over the place), and in this example wasn't able to capture the
-impact of contention on overall work completion ("full" is 0%).
-
-* CPU 0: some = 50%, full =  0%
-  CPU 1: some = 50%, full = 50%
-    avg: some = 50%, full = 25%
+Fair enough, I'll put these back where I found them and make
+calc_load_n() extern instead.
