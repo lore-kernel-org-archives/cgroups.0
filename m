@@ -1,53 +1,149 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2] mm: fix oom_kill event handling
-Date: Thu, 10 May 2018 15:07:59 +0200
-Message-ID: <20180510130759.GG5325@dhcp22.suse.cz>
-References: <20180508124637.29984-1-guro@fb.com>
- <20180510114147.GB5325@dhcp22.suse.cz>
- <20180510121251.GA6762@castle.DHCP.thefacebook.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
+ IO
+Date: Thu, 10 May 2018 09:41:32 -0400
+Message-ID: <20180510134132.GA19348@cmpxchg.org>
+References: <20180507210135.1823-1-hannes@cmpxchg.org>
+ <20180507210135.1823-7-hannes@cmpxchg.org>
+ <20180509104618.GP12217@hirez.programming.kicks-ass.net>
+ <20180509113849.GJ12235@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=IDVS5v+xfLmBiJePuAJrbHm5wD3oLcjPjpXJ5gv/7Kk=; b=2Z9ztjhl8w99+8ih4eqYSSKEIT
+        N1aVWluSWTTZbJAoM+m5s11NBC3yS9FJaBSrHkcJAdDjS1wnTghqBqPFwSrXTbJ3VhIIlG1PSR/wP
+        EYo1F6kEq0smyFpFwZdQZfAT2zkdUVZurpiQjN+l6zZXvifuxVGykpKIuA+QBTP2NYWQ=;
 Content-Disposition: inline
-In-Reply-To: <20180510121251.GA6762@castle.DHCP.thefacebook.com>
+In-Reply-To: <20180509113849.GJ12235@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On Thu 10-05-18 13:12:56, Roman Gushchin wrote:
-> On Thu, May 10, 2018 at 01:41:47PM +0200, Michal Hocko wrote:
-> > On Tue 08-05-18 13:46:37, Roman Gushchin wrote:
-> > > Commit e27be240df53 ("mm: memcg: make sure memory.events is
-> > > uptodate when waking pollers") converted most of memcg event
-> > > counters to per-memcg atomics, which made them less confusing
-> > > for a user. The "oom_kill" counter remained untouched, so now
-> > > it behaves differently than other counters (including "oom").
-> > > This adds nothing but confusion.
-> > > 
-> > > Let's fix this by adding the MEMCG_OOM_KILL event, and follow
-> > > the MEMCG_OOM approach. This also removes a hack from
-> > > count_memcg_event_mm(), introduced earlier specially for the
-> > > OOM_KILL counter.
+On Wed, May 09, 2018 at 01:38:49PM +0200, Peter Zijlstra wrote:
+> On Wed, May 09, 2018 at 12:46:18PM +0200, Peter Zijlstra wrote:
+> > On Mon, May 07, 2018 at 05:01:34PM -0400, Johannes Weiner wrote:
 > > 
-> > I agree that the current OOM_KILL is confusing. But do we really need
-> > another memcg_memory_event_mm helper used for only one counter rather
-> > than reuse memcg_memory_event. __oom_kill_process doesn't have the memcg
-> > but nothing should really prevent us from adding the context
-> > (oom_control) there, no?
+> > > @@ -2038,6 +2038,7 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
+> > >  	cpu = select_task_rq(p, p->wake_cpu, SD_BALANCE_WAKE, wake_flags);
+> > >  	if (task_cpu(p) != cpu) {
+> > >  		wake_flags |= WF_MIGRATED;
+> > > +		psi_ttwu_dequeue(p);
+> > >  		set_task_cpu(p, cpu);
+> > >  	}
+> > >  
+> > 
+> > > +static inline void psi_ttwu_dequeue(struct task_struct *p)
+> > > +{
+> > > +	/*
+> > > +	 * Is the task being migrated during a wakeup? Make sure to
+> > > +	 * deregister its sleep-persistent psi states from the old
+> > > +	 * queue, and let psi_enqueue() know it has to requeue.
+> > > +	 */
+> > > +	if (unlikely(p->in_iowait || (p->flags & PF_MEMSTALL))) {
+> > > +		struct rq_flags rf;
+> > > +		struct rq *rq;
+> > > +		int clear = 0;
+> > > +
+> > > +		if (p->in_iowait)
+> > > +			clear |= TSK_IOWAIT;
+> > > +		if (p->flags & PF_MEMSTALL)
+> > > +			clear |= TSK_MEMSTALL;
+> > > +
+> > > +		rq = __task_rq_lock(p, &rf);
+> > > +		update_rq_clock(rq);
+> > > +		psi_task_change(p, rq_clock(rq), clear, 0);
+> > > +		p->sched_psi_wake_requeue = 1;
+> > > +		__task_rq_unlock(rq, &rf);
+> > > +	}
+> > > +}
+> > 
+> > Yeah, no... not happening.
+> > 
+> > We spend a lot of time to never touch the old rq->lock on wakeups. Mason
+> > was the one pushing for that, so he should very well know this.
+> > 
+> > The one cross-cpu atomic (iowait) is already a problem (the whole iowait
+> > accounting being useless makes it even worse), adding significant remote
+> > prodding is just really bad.
 > 
-> Not sure, that I follow. oom_control has memcg pointer,
-> but it's a pointer to a cgroup, where OOM happened.
-> In particular, it's NULL for a system-wide OOM.
+> Also, since all you need is the global number, I don't think you
+> actually need any of this. See what we do for nr_uninterruptible.
 > 
-> And we do send the OOM_KILL event to the cgroup,
-> which actually contains the process.
+> In general I think you want to (re)read loadavg.c some more, and maybe
+> reuse a bit more of that.
 
-You are right! For some reason I thought we do count events on the
-hierarchy which is under OOM. I was wrong.
+So there is a reason I'm tracking productivity states per-cpu and not
+globally. Consider the following example periods on two CPUs:
 
-Acked-by: Michal Hocko <mhocko@suse.com>
--- 
-Michal Hocko
-SUSE Labs
+    CPU 0
+Task 1: | EXECUTING  | memstalled |
+Task 2: | runqueued  | EXECUTING  |
+
+    CPU 1
+Task 3: | memstalled | EXECUTING  |
+
+If we tracked only the global number of stalled tasks, similarly to
+nr_uninterruptible, the number would be elevated throughout the whole
+sampling period, giving a pressure value of 100% for "some stalled".
+And, since there is always something executing, a "full stall" of 0%.
+
+Now consider what happens when the Task 3 sequence is the other way
+around:
+
+    CPU 0
+Task 1: | EXECUTING  | memstalled |
+Task 2: | runqueued  | EXECUTING  |
+
+    CPU 1
+Task 3: | EXECUTING  | memstalled |
+
+Here the number of stalled tasks is elevated only during half of the
+sampling period, this time giving a pressure reading of 50% for "some"
+(and again 0% for "full").
+
+That's a different measurement, but in terms of workload progress, the
+sequences are functionally equivalent. In both scenarios the same
+amount of productive CPU cycles is spent advancing tasks 1, 2 and 3,
+and the same amount of potentially productive CPU time is lost due to
+the contention of memory. We really ought to read the same pressure.
+
+So what I'm doing is calculating the productivity loss on each CPU in
+a sampling period as if they were independent time slices. It doesn't
+matter how you slice and dice the sequences within each one - if used
+CPU time and lost CPU time have the same proportion, we have the same
+pressure.
+
+In both scenarios above, this method will give a pressure reading of
+some=50% and full=25% of "normalized walltime", which is the time loss
+the work would experience on a single CPU executing it serially.
+
+To illustrate:
+
+    CPU X
+        1            2            3            4
+Task 1: | EXECUTING  | memstalled | sleeping   | sleeping   |
+Task 2: | runqueued  | EXECUTING  | sleeping   | sleeping   |
+Task 3: | sleeping   | sleeping   | EXECUTING  | memstalled |
+
+You can clearly see the 50% of walltime in which *somebody* isn't
+advancing (2 and 4), and the 25% of walltime in which *no* tasks are
+(3). Same amount of work, same memory stalls, same pressure numbers.
+
+Globalized state tracking would produce those numbers on the single
+CPU (obviously), but once concurrency gets into the mix, it's
+questionable what its results mean. It certainly isn't able to
+reliably detect equivalent slowdowns of individual tasks ("some" is
+all over the place), and in this example wasn't able to capture the
+impact of contention on overall work completion ("full" is 0%).
+
+* CPU 0: some = 50%, full =  0%
+  CPU 1: some = 50%, full = 50%
+    avg: some = 50%, full = 25%
