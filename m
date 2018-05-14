@@ -1,60 +1,72 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH 0/7] psi: pressure stall information for CPU, memory, and
  IO
-Date: Mon, 14 May 2018 10:35:37 -0700
-Message-ID: <cb81b9f2-a280-d8a9-c720-247fb9f5fa90@wdc.com>
+Date: Mon, 14 May 2018 14:55:20 -0400
+Message-ID: <20180514185520.GA7398@cmpxchg.org>
 References: <20180507210135.1823-1-hannes@cmpxchg.org>
  <010001635f4e8be9-94e7be7a-e75c-438c-bffb-5b56301c4c55-000000@email.amazonses.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1526320501; x=1557856501;
-  h=subject:to:cc:references:from:message-id:date:
-   mime-version:in-reply-to:content-transfer-encoding;
-  bh=RQk/Yr7237q/wKpBQjpdNBB0owXSQrmrFsHBxiyt6bM=;
-  b=CTdDC2mCjcRIXSR4MiX7CivvMJ6DN54hngtsm45d+478zCm5LItDH8t0
-   x29uZuWJc2K8SPlA6lWO8zMXoWg+104e6Zj9biDBl5JQ0Q/7vTKfdgIrL
-   +3oWuh54IgQU/G2QLN2i76jKNCPaDhVERzYkUgFYUilLQTQf2I01BefkX
-   LcX1U84JJc8NXzyByPTI/mjGcN2csl2CeCknuN1LkLCHbTqRwn0IDx4FL
-   5pA8G0ZjJtb3akZITXywJlwRP5gv25kOi6nIKxLHzLsrYS/COW4pyMyva
-   IGs4NPaV1FWBv+tzs8j9B/2cdXXHO8vTRSlx1XJRxuGG/bEK5RmC0eLnF
-   w==;
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector1-wdc-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Wj52V8tLf62lkqrj2JSl73n3/Dx4KTZaAcHoKa3IFWY=;
- b=YU41tcRF+/J5vwSPcv7gq4RhZDYha2U6HgTUwlZ2MsAtzbzopWe6qf6KDfcElC6+5FC4CNzIkfl5qykP4+B//6m6HB29caemswIdCNPIZHyxjMGeqCbYiY6CAheyIisoxLufiXUnW2BpahoxPONBGnwH2Gx9WmW+M0ussSNHlW8=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=eVYpmjqcSZBn4kAVO0jNYh3Jhm47wWqyq0luxDgSTjU=; b=zBJZOJtcA7Tqlr13PMNOADnYVw
+        I9jymj6mOnTFq6oqZjvSUij7TaK7krj8bkMyezzwx7yhFovx5j5mtEHFhP7JTQUNvQQkxJwHWA0/R
+        ArdJqr/xsRVT7hyQddGiCjAKEfHPx9P7w7kvvNkOiwVFWDJnlnOz0c4qWy58nHS0oOBA=;
+Content-Disposition: inline
 In-Reply-To: <010001635f4e8be9-94e7be7a-e75c-438c-bffb-5b56301c4c55-000000@email.amazonses.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christopher Lameter <cl@linux.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christopher Lameter <cl@linux.com>
 Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On 05/14/18 08:39, Christopher Lameter wrote:
+On Mon, May 14, 2018 at 03:39:33PM +0000, Christopher Lameter wrote:
 > On Mon, 7 May 2018, Johannes Weiner wrote:
->> What to make of this number? If CPU utilization is at 100% and CPU
->> pressure is 0, it means the system is perfectly utilized, with one
->> runnable thread per CPU and nobody waiting. At two or more runnable
->> tasks per CPU, the system is 100% overcommitted and the pressure
->> average will indicate as much. From a utilization perspective this is
->> a great state of course: no CPU cycles are being wasted, even when 50%
->> of the threads were to go idle (and most workloads do vary). From the
->> perspective of the individual job it's not great, however, and they
->> might do better with more resources. Depending on what your priority
->> is, an elevated "some" number may or may not require action.
+> 
+> > What to make of this number? If CPU utilization is at 100% and CPU
+> > pressure is 0, it means the system is perfectly utilized, with one
+> > runnable thread per CPU and nobody waiting. At two or more runnable
+> > tasks per CPU, the system is 100% overcommitted and the pressure
+> > average will indicate as much. From a utilization perspective this is
+> > a great state of course: no CPU cycles are being wasted, even when 50%
+> > of the threads were to go idle (and most workloads do vary). From the
+> > perspective of the individual job it's not great, however, and they
+> > might do better with more resources. Depending on what your priority
+> > is, an elevated "some" number may or may not require action.
 > 
 > This looks awfully similar to loadavg. Problem is that loadavg gets
 > screwed up by tasks blocked waiting for I/O. Isnt there some way to fix
 > loadavg instead?
 
-The following article explains why it probably made sense in 1993 to 
-include TASK_UNINTERRUPTIBLE in loadavg and also why this no longer 
-makes sense today:
+Counting iowaiting tasks is one thing, but there are a few more things
+that make it hard to use for telling the impact of CPU competition:
 
-http://www.brendangregg.com/blog/2017-08-08/linux-load-averages.html
+- It's not normalized to available CPU count. The loadavg in isolation
+  doesn't mean anything, and you have to know the number of CPUs and
+  any CPU bindings / restrictions in effect, which presents at least
+  some difficulty when monitoring a big heterogeneous fleet.
 
-Bart.
+- The way it's sampled makes it impossible to use for latencies. You
+  could be mostly idle but periodically have herds of tasks competing
+  for the CPU for short, low-latency operations. Even if we changed
+  this in the implementation, you're still stuck with the interface
+  that has...
+
+- ...a short-term load window of 1m. This is generally fairly coarse
+  for something that can be loaded and unloaded as abruptly as the CPU
+
+I'm trying to fix these with a portable way of aggregating multi-cpu
+states, as well as tracking the true time spent in a state instead of
+sampling it. Plus a smaller short-term window of 10s, but that's
+almost irrelevant because I'm exporting the absolute state time clock
+so you can calculate your own averages over any time window you want.
+
+Since I'm using the same model and infrastructure for memory and IO
+load as well, IMO it makes more sense to present them in a coherent
+interface instead of trying to retrofit and change the loadavg file,
+which might not even be possible.
