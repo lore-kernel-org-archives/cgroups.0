@@ -1,37 +1,44 @@
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: [PATCH 0/7] psi: pressure stall information for CPU, memory,
- and IO
-Date: Mon, 14 May 2018 20:15:50 +0000
-Message-ID: <01000163604b7e9e-c2729157-aed2-4f5b-bebe-1bf16261ab88-000000@email.amazonses.com>
-References: <20180507210135.1823-1-hannes@cmpxchg.org> <010001635f4e8be9-94e7be7a-e75c-438c-bffb-5b56301c4c55-000000@email.amazonses.com> <20180514185520.GA7398@cmpxchg.org>
+From: Stephen Boyd <sboyd@kernel.org>
+Subject: Re: [PATCH v2 09/11] docs: Fix some broken references
+Date: Tue, 15 May 2018 13:26:04 -0700
+Message-ID: <152641596420.237094.12177504626636253047@swboyd.mtv.corp.google.com>
+References: <cover.1525870886.git.mchehab+samsung@kernel.org>
+ <e959f23d6f6905ee606fadfda13e2bb37deed017.1525870886.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=ug7nbtf4gccmlpwj322ax3p6ow6yfsug; d=amazonses.com; t=1526328950;
-        h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type:Feedback-ID;
-        bh=Q8qPqzBa5m7L/sRi/d6xL7H4RD0c77gF8yCVTDEi6rk=;
-        b=HxsLc3w88slSx0f4GXVHXAgrxm6md9d1u9vuvLsucwQX3+2ngehU0q74ZtQX+y5e
-        uiLWKg49n0EAZtwjAIPTEI61EFXDBA1teINOz9K/gorb9BekJwGtj1tFDjHpBsPO+lo
-        dx6PuiKr2uJOzbnyT4Mec+SCao2GSuXlcEOxu7ok=
-In-Reply-To: <20180514185520.GA7398@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+ s=default; t=1526415966;
+ bh=OgTBqKUjSy5Sg9bfyLvXJFz18Vug4sZXn2Z4gEhQ38w=;
+ h=To:From:In-Reply-To:Cc:References:Subject:Date:From;
+ b=SNloT9KP1t5E6+oFQnmFwe2tAUOxNKnN3Nc8ldrwb7xRZFHXlEY2kzZQtRbuxIWy8
+ s9kIh6NCs1FkBLnJwRHtHyvVsvtXxGwUlCkZsKBjH/8KkCdIsPi/a4x0Lxdd+G5sTt
+ yIeLoKifZZFDXUb/glFpDsjBhGh4rkLdCLoMq5XE=
+In-Reply-To: <e959f23d6f6905ee606fadfda13e2bb37deed017.1525870886.git.mchehab+samsung@kernel.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org, Jaroslav Kysela <perex@perex.cz>, Eric Paris <eparis@parisplace.org>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, linux-clk@vger.kernel.org, James Morris <jmorris@namei.org>, Alan Stern <stern@rowland.harvard.edu>, xen-devel@lists.xenproject.org, Boqun Feng <boqun.feng@gmail.com>, Nicholas Piggin <npiggin@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, Antoine Jacquet <royale@zerezo.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, linux-crypto@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, alsa-devel@alsa-project.org, David Airlie <airlied@linux.ie>, Max Filippov <jcmvbkbc@gmail.com>, Harry Wei <harryxiyou@gmail.com>, selinux@tycho.nsa.gov, Paul Moore <>
 
-On Mon, 14 May 2018, Johannes Weiner wrote:
-
-> Since I'm using the same model and infrastructure for memory and IO
-> load as well, IMO it makes more sense to present them in a coherent
-> interface instead of trying to retrofit and change the loadavg file,
-> which might not even be possible.
-
-Well I keep looking at the loadavg output from numerous tools and then in
-my mind I divide by the number of processors, guess if any of the threads
-would be doing I/O and if I cannot figure that out groan and run "vmstat"
-for awhile to figure that out.
-
-Lets have some numbers there that make more sense please.
-
+UXVvdGluZyBNYXVybyBDYXJ2YWxobyBDaGVoYWIgKDIwMTgtMDUtMDkgMDY6MTg6NTIpCj4gQXMg
+d2UgbW92ZSBzdHVmZiBhcm91bmQsIHNvbWUgZG9jIHJlZmVyZW5jZXMgYXJlIGJyb2tlbi4gRml4
+IHNvbWUgb2YKPiB0aGVtIHZpYSB0aGlzIHNjcmlwdDoKPiAgICAgICAgIC4vc2NyaXB0cy9kb2N1
+bWVudGF0aW9uLWZpbGUtcmVmLWNoZWNrIC0tZml4LXJzdAo+IAo+IE1hbnVhbGx5IGNoZWNrZWQg
+aWYgdGhlIHByb2R1Y2VkIHJlc3VsdCBpcyB2YWxpZCwgcmVtb3ZpbmcgYSBmZXcKPiBmYWxzZS1w
+b3NpdGl2ZXMuCj4gCj4gU2lnbmVkLW9mZi1ieTogTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIDxtY2hl
+aGFiK3NhbXN1bmdAa2VybmVsLm9yZz4KPiAtLS0KCj4gIGRyaXZlcnMvY2xrL2Nsay5jICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0KPiAgZHJpdmVycy9jbGsvaW5nZW5pYy9j
+Z3UuaCAgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KCkFja2VkLWJ5OiBTdGVwaGVuIEJveWQg
+PHNib3lkQGtlcm5lbC5vcmc+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNr
+dG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Ry
+aS1kZXZlbAo=
