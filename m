@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v8 3/6] cpuset: Add cpuset.sched.load_balance flag to v2
-Date: Thu, 17 May 2018 16:55:42 -0400
-Message-ID: <1526590545-3350-4-git-send-email-longman@redhat.com>
+Subject: [PATCH v8 2/6] cpuset: Add new v2 cpuset.sched.domain flag
+Date: Thu, 17 May 2018 16:55:41 -0400
+Message-ID: <1526590545-3350-3-git-send-email-longman@redhat.com>
 References: <1526590545-3350-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1526590545-3350-1-git-send-email-longman@redhat.com>
@@ -13,165 +13,425 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Waiman Long <longman@redhat.com>
 
-The sched.load_balance flag is needed to enable CPU isolation similar to
-what can be done with the "isolcpus" kernel boot parameter. Its value
-can only be changed in a scheduling domain with no child cpusets. On
-a non-scheduling domain cpuset, the value of sched.load_balance is
-inherited from its parent.
+A new cpuset.sched.domain boolean flag is added to cpuset v2. This new
+flag indicates that the CPUs in the current cpuset should be treated
+as a separate scheduling domain. This new flag is owned by the parent
+and will cause the CPUs in the cpuset to be removed from the effective
+CPUs of its parent.
 
-This flag is set by the parent and is not delegatable.
+This is implemented internally by adding a new isolated_cpus mask that
+holds the CPUs belonging to child scheduling domain cpusets so that:
+
+	isolated_cpus | effective_cpus = cpus_allowed
+	isolated_cpus & effective_cpus = 0
+
+This new flag can only be turned on in a cpuset if its parent is either
+root or a scheduling domain itself with non-empty cpu list. The state
+of this flag cannot be changed if the cpuset has children.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- Documentation/cgroup-v2.txt | 24 ++++++++++++++++++++
- kernel/cgroup/cpuset.c      | 53 +++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 73 insertions(+), 4 deletions(-)
+ Documentation/cgroup-v2.txt |  22 ++++
+ kernel/cgroup/cpuset.c      | 237 +++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 256 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 54d9e22..071b634d 100644
+index cf7bac6..54d9e22 100644
 --- a/Documentation/cgroup-v2.txt
 +++ b/Documentation/cgroup-v2.txt
-@@ -1536,6 +1536,30 @@ Cpuset Interface Files
- 	CPUs of the parent cgroup. Once it is set, this flag cannot be
- 	cleared if there are any child cgroups with cpuset enabled.
+@@ -1514,6 +1514,28 @@ Cpuset Interface Files
+ 	it is a subset of "cpuset.mems".  Its value will be affected
+ 	by memory nodes hotplug events.
  
-+	A parent cgroup cannot distribute all its CPUs to child
-+	scheduling domain cgroups unless its load balancing flag is
-+	turned off.
-+
-+  cpuset.sched.load_balance
++  cpuset.sched.domain
 +	A read-write single value file which exists on non-root
 +	cpuset-enabled cgroups.  It is a binary value flag that accepts
 +	either "0" (off) or a non-zero value (on).  This flag is set
 +	by the parent and is not delegatable.
 +
-+	When it is on, tasks within this cpuset will be load-balanced
-+	by the kernel scheduler.  Tasks will be moved from CPUs with
-+	high load to other CPUs within the same cpuset with less load
-+	periodically.
++	If set, it indicates that the CPUs in the current cgroup will
++	be the root of a scheduling domain.  The root cgroup is always
++	a scheduling domain.  There are constraints on where this flag
++	can be set.  It can only be set in a cgroup if all the following
++	conditions are true.
 +
-+	When it is off, there will be no load balancing among CPUs on
-+	this cgroup.  Tasks will stay in the CPUs they are running on
-+	and will not be moved to other CPUs.
++	1) The parent cgroup is also a scheduling domain with a non-empty
++	   cpu list.
++	2) The list of CPUs are exclusive, i.e. they are not shared by
++	   any of its siblings.
++	3) There is no child cgroups with cpuset enabled.
 +
-+	The initial value of this flag is "1".	This flag is then
-+	inherited by child cgroups with cpuset enabled.  Its state
-+	can only be changed on a scheduling domain cgroup with no
-+	cpuset-enabled children.
++	Setting this flag will take the CPUs away from the effective
++	CPUs of the parent cgroup. Once it is set, this flag cannot be
++	cleared if there are any child cgroups with cpuset enabled.
 +
  
  Device controller
  -----------------
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index e1a1af0..368e1b7 100644
+index 419b758..e1a1af0 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -510,7 +510,7 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+@@ -109,6 +109,9 @@ struct cpuset {
+ 	cpumask_var_t effective_cpus;
+ 	nodemask_t effective_mems;
  
- 	par = parent_cs(cur);
- 
--	/* On legacy hiearchy, we must be a subset of our parent cpuset. */
-+	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
- 	ret = -EACCES;
- 	if (!is_in_v2_mode() && !is_cpuset_subset(trial, par))
- 		goto out;
-@@ -1061,6 +1061,14 @@ static int update_isolated_cpumask(struct cpuset *cpuset,
- 		goto out;
- 
++	/* Isolated CPUs for scheduling domain children */
++	cpumask_var_t isolated_cpus;
++
  	/*
-+	 * A parent can't distribute all its CPUs to child scheduling
-+	 * domain cpusets unless load balancing is off.
-+	 */
-+	if (adding & !deleting && is_sched_load_balance(parent) &&
-+	    cpumask_equal(addmask, parent->effective_cpus))
-+		goto out;
+ 	 * This is old Memory Nodes tasks took on.
+ 	 *
+@@ -134,6 +137,9 @@ struct cpuset {
+ 
+ 	/* for custom sched domain */
+ 	int relax_domain_level;
++
++	/* for isolated_cpus */
++	int isolation_count;
+ };
+ 
+ static inline struct cpuset *css_cs(struct cgroup_subsys_state *css)
+@@ -175,6 +181,7 @@ static inline bool task_has_mempolicy(struct task_struct *task)
+ 	CS_SCHED_LOAD_BALANCE,
+ 	CS_SPREAD_PAGE,
+ 	CS_SPREAD_SLAB,
++	CS_SCHED_DOMAIN,
+ } cpuset_flagbits_t;
+ 
+ /* convenient tests for these bits */
+@@ -203,6 +210,11 @@ static inline int is_sched_load_balance(const struct cpuset *cs)
+ 	return test_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
+ }
+ 
++static inline int is_sched_domain(const struct cpuset *cs)
++{
++	return test_bit(CS_SCHED_DOMAIN, &cs->flags);
++}
++
+ static inline int is_memory_migrate(const struct cpuset *cs)
+ {
+ 	return test_bit(CS_MEMORY_MIGRATE, &cs->flags);
+@@ -220,7 +232,7 @@ static inline int is_spread_slab(const struct cpuset *cs)
+ 
+ static struct cpuset top_cpuset = {
+ 	.flags = ((1 << CS_ONLINE) | (1 << CS_CPU_EXCLUSIVE) |
+-		  (1 << CS_MEM_EXCLUSIVE)),
++		  (1 << CS_MEM_EXCLUSIVE) | (1 << CS_SCHED_DOMAIN)),
+ };
+ 
+ /**
+@@ -902,7 +914,19 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ 	cpuset_for_each_descendant_pre(cp, pos_css, cs) {
+ 		struct cpuset *parent = parent_cs(cp);
+ 
+-		cpumask_and(new_cpus, cp->cpus_allowed, parent->effective_cpus);
++		/*
++		 * If parent has isolated CPUs, include them in the list
++		 * of allowable CPUs.
++		 */
++		if (parent->isolation_count) {
++			cpumask_or(new_cpus, parent->effective_cpus,
++				   parent->isolated_cpus);
++			cpumask_and(new_cpus, new_cpus, cpu_online_mask);
++			cpumask_and(new_cpus, new_cpus, cp->cpus_allowed);
++		} else {
++			cpumask_and(new_cpus, cp->cpus_allowed,
++				    parent->effective_cpus);
++		}
+ 
+ 		/*
+ 		 * If it becomes empty, inherit the effective mask of the
+@@ -948,6 +972,154 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ }
+ 
+ /**
++ * update_isolated_cpumask - update the isolated_cpus mask of parent cpuset
++ * @cpuset:  The cpuset that requests CPU isolation
++ * @oldmask: The old isolated cpumask to be removed from the parent
++ * @newmask: The new isolated cpumask to be added to the parent
++ * Return: 0 if successful, an error code otherwise
++ *
++ * Changes to the isolated CPUs are not allowed if any of CPUs changing
++ * state are in any of the child cpusets of the parent except the requesting
++ * child.
++ *
++ * If the sched_domain flag changes, either the oldmask (0=>1) or the
++ * newmask (1=>0) will be NULL.
++ *
++ * Called with cpuset_mutex held.
++ */
++static int update_isolated_cpumask(struct cpuset *cpuset,
++	struct cpumask *oldmask, struct cpumask *newmask)
++{
++	int retval;
++	int adding, deleting;
++	cpumask_var_t addmask, delmask;
++	struct cpuset *parent = parent_cs(cpuset);
++	struct cpuset *sibling;
++	struct cgroup_subsys_state *pos_css;
++	int old_count = parent->isolation_count;
++	bool dying = cpuset->css.flags & CSS_DYING;
 +
 +	/*
- 	 * Check if any CPUs in addmask or delmask are in a sibling cpuset.
- 	 * An empty sibling cpus_allowed means it is the same as parent's
- 	 * effective_cpus. This checking is skipped if the cpuset is dying.
-@@ -1531,6 +1539,16 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 
- 	domain_flag_changed = (is_sched_domain(cs) != is_sched_domain(trialcs));
- 
-+	/*
-+	 * On default hierachy, a load balance flag change is only allowed
-+	 * in a scheduling domain with no child cpuset.
++	 * Parent must be a scheduling domain with non-empty cpus_allowed.
 +	 */
-+	if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys) && balance_flag_changed &&
-+	   (!is_sched_domain(cs) || css_has_online_children(&cs->css))) {
-+		err = -EINVAL;
-+		goto out;
++	if (!is_sched_domain(parent) || cpumask_empty(parent->cpus_allowed))
++		return -EINVAL;
++
++	/*
++	 * The oldmask, if present, must be a subset of parent's isolated
++	 * CPUs.
++	 */
++	if (oldmask && !cpumask_empty(oldmask) && (!parent->isolation_count ||
++			!cpumask_subset(oldmask, parent->isolated_cpus))) {
++		WARN_ON_ONCE(1);
++		return -EINVAL;
 +	}
 +
- 	if (domain_flag_changed) {
- 		err = turning_on
- 		    ? update_isolated_cpumask(cs, NULL, cs->cpus_allowed)
-@@ -2187,6 +2205,14 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
++	/*
++	 * A sched_domain state change is not allowed if there are
++	 * online children and the cpuset is not dying.
++	 */
++	if (!dying && (!oldmask || !newmask) &&
++	    css_has_online_children(&cpuset->css))
++		return -EBUSY;
++
++	if (!zalloc_cpumask_var(&addmask, GFP_KERNEL))
++		return -ENOMEM;
++	if (!zalloc_cpumask_var(&delmask, GFP_KERNEL)) {
++		free_cpumask_var(addmask);
++		return -ENOMEM;
++	}
++
++	if (!old_count) {
++		if (!zalloc_cpumask_var(&parent->isolated_cpus, GFP_KERNEL)) {
++			retval = -ENOMEM;
++			goto out;
++		}
++		old_count = 1;
++	}
++
++	retval = -EBUSY;
++	adding = deleting = false;
++	if (newmask)
++		cpumask_copy(addmask, newmask);
++	if (oldmask)
++		deleting = cpumask_andnot(delmask, oldmask, addmask);
++	if (newmask)
++		adding = cpumask_andnot(addmask, newmask, delmask);
++
++	if (!adding && !deleting)
++		goto out_ok;
++
++	/*
++	 * The cpus to be added must be in the parent's effective_cpus mask
++	 * but not in the isolated_cpus mask.
++	 */
++	if (!cpumask_subset(addmask, parent->effective_cpus))
++		goto out;
++	if (parent->isolation_count &&
++	    cpumask_intersects(parent->isolated_cpus, addmask))
++		goto out;
++
++	/*
++	 * Check if any CPUs in addmask or delmask are in a sibling cpuset.
++	 * An empty sibling cpus_allowed means it is the same as parent's
++	 * effective_cpus. This checking is skipped if the cpuset is dying.
++	 */
++	if (dying)
++		goto updated_isolated_cpus;
++
++	cpuset_for_each_child(sibling, pos_css, parent) {
++		if ((sibling == cpuset) || !(sibling->css.flags & CSS_ONLINE))
++			continue;
++		if (cpumask_empty(sibling->cpus_allowed))
++			goto out;
++		if (adding &&
++		    cpumask_intersects(sibling->cpus_allowed, addmask))
++			goto out;
++		if (deleting &&
++		    cpumask_intersects(sibling->cpus_allowed, delmask))
++			goto out;
++	}
++
++	/*
++	 * Change the isolated CPU list.
++	 * Newly added isolated CPUs will be removed from effective_cpus
++	 * and newly deleted ones will be added back if they are online.
++	 */
++updated_isolated_cpus:
++	spin_lock_irq(&callback_lock);
++	if (adding)
++		cpumask_or(parent->isolated_cpus,
++			   parent->isolated_cpus, addmask);
++
++	if (deleting)
++		cpumask_andnot(parent->isolated_cpus,
++			       parent->isolated_cpus, delmask);
++
++	/*
++	 * New effective_cpus = (cpus_allowed & ~isolated_cpus) &
++	 *			 cpu_online_mask
++	 */
++	cpumask_andnot(parent->effective_cpus, parent->cpus_allowed,
++		       parent->isolated_cpus);
++	cpumask_and(parent->effective_cpus, parent->effective_cpus,
++		    cpu_online_mask);
++
++	parent->isolation_count = cpumask_weight(parent->isolated_cpus);
++	spin_unlock_irq(&callback_lock);
++
++out_ok:
++	retval = 0;
++out:
++	free_cpumask_var(addmask);
++	free_cpumask_var(delmask);
++	if (old_count && !parent->isolation_count)
++		free_cpumask_var(parent->isolated_cpus);
++
++	return retval;
++}
++
++/**
+  * update_cpumask - update the cpus_allowed mask of a cpuset and all tasks in it
+  * @cs: the cpuset to consider
+  * @trialcs: trial cpuset
+@@ -988,6 +1160,13 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (retval < 0)
+ 		return retval;
+ 
++	if (is_sched_domain(cs)) {
++		retval = update_isolated_cpumask(cs, cs->cpus_allowed,
++						 trialcs->cpus_allowed);
++		if (retval < 0)
++			return retval;
++	}
++
+ 	spin_lock_irq(&callback_lock);
+ 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
+ 	spin_unlock_irq(&callback_lock);
+@@ -1316,6 +1495,7 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 	struct cpuset *trialcs;
+ 	int balance_flag_changed;
+ 	int spread_flag_changed;
++	int domain_flag_changed;
+ 	int err;
+ 
+ 	trialcs = alloc_trial_cpuset(cs);
+@@ -1327,6 +1507,18 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 	else
+ 		clear_bit(bit, &trialcs->flags);
+ 
++	/*
++	 *  Turning on sched.domain flag (default hierarchy only) implies
++	 *  an implicit cpu_exclusive. Turning off sched.domain will clear
++	 *  the cpu_exclusive flag.
++	 */
++	if (bit == CS_SCHED_DOMAIN) {
++		if (turning_on)
++			set_bit(CS_CPU_EXCLUSIVE, &trialcs->flags);
++		else
++			clear_bit(CS_CPU_EXCLUSIVE, &trialcs->flags);
++	}
++
+ 	err = validate_change(cs, trialcs);
+ 	if (err < 0)
+ 		goto out;
+@@ -1337,11 +1529,26 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 	spread_flag_changed = ((is_spread_slab(cs) != is_spread_slab(trialcs))
+ 			|| (is_spread_page(cs) != is_spread_page(trialcs)));
+ 
++	domain_flag_changed = (is_sched_domain(cs) != is_sched_domain(trialcs));
++
++	if (domain_flag_changed) {
++		err = turning_on
++		    ? update_isolated_cpumask(cs, NULL, cs->cpus_allowed)
++		    : update_isolated_cpumask(cs, cs->cpus_allowed, NULL);
++		if (err < 0)
++			goto out;
++		/*
++		 * At this point, the state has been changed.
++		 * So we can't back out with error anymore.
++		 */
++	}
++
+ 	spin_lock_irq(&callback_lock);
+ 	cs->flags = trialcs->flags;
+ 	spin_unlock_irq(&callback_lock);
+ 
+-	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
++	if (!cpumask_empty(trialcs->cpus_allowed) &&
++	   (balance_flag_changed || domain_flag_changed))
+ 		rebuild_sched_domains_locked();
+ 
+ 	if (spread_flag_changed)
+@@ -1596,6 +1803,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+ 	FILE_MEM_EXCLUSIVE,
+ 	FILE_MEM_HARDWALL,
+ 	FILE_SCHED_LOAD_BALANCE,
++	FILE_SCHED_DOMAIN,
+ 	FILE_SCHED_RELAX_DOMAIN_LEVEL,
+ 	FILE_MEMORY_PRESSURE_ENABLED,
+ 	FILE_MEMORY_PRESSURE,
+@@ -1629,6 +1837,9 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	case FILE_SCHED_LOAD_BALANCE:
+ 		retval = update_flag(CS_SCHED_LOAD_BALANCE, cs, val);
+ 		break;
++	case FILE_SCHED_DOMAIN:
++		retval = update_flag(CS_SCHED_DOMAIN, cs, val);
++		break;
+ 	case FILE_MEMORY_MIGRATE:
+ 		retval = update_flag(CS_MEMORY_MIGRATE, cs, val);
+ 		break;
+@@ -1790,6 +2001,8 @@ static u64 cpuset_read_u64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 		return is_mem_hardwall(cs);
+ 	case FILE_SCHED_LOAD_BALANCE:
+ 		return is_sched_load_balance(cs);
++	case FILE_SCHED_DOMAIN:
++		return is_sched_domain(cs);
+ 	case FILE_MEMORY_MIGRATE:
+ 		return is_memory_migrate(cs);
+ 	case FILE_MEMORY_PRESSURE_ENABLED:
+@@ -1966,6 +2179,14 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
  		.flags = CFTYPE_NOT_ON_ROOT,
  	},
  
 +	{
-+		.name = "sched.load_balance",
++		.name = "sched.domain",
 +		.read_u64 = cpuset_read_u64,
 +		.write_u64 = cpuset_write_u64,
-+		.private = FILE_SCHED_LOAD_BALANCE,
++		.private = FILE_SCHED_DOMAIN,
 +		.flags = CFTYPE_NOT_ON_ROOT,
 +	},
 +
  	{ }	/* terminate */
  };
  
-@@ -2200,19 +2226,38 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
- cpuset_css_alloc(struct cgroup_subsys_state *parent_css)
- {
- 	struct cpuset *cs;
-+	struct cgroup_subsys_state *errptr = ERR_PTR(-ENOMEM);
+@@ -2075,6 +2296,9 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+  * If the cpuset being removed has its flag 'sched_load_balance'
+  * enabled, then simulate turning sched_load_balance off, which
+  * will call rebuild_sched_domains_locked().
++ *
++ * If the cpuset has the 'sched_domain' flag enabled, simulate
++ * turning sched_domain off.
+  */
  
- 	if (!parent_css)
- 		return &top_cpuset.css;
+ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+@@ -2083,6 +2307,13 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
  
- 	cs = kzalloc(sizeof(*cs), GFP_KERNEL);
- 	if (!cs)
--		return ERR_PTR(-ENOMEM);
-+		return errptr;
- 	if (!alloc_cpumask_var(&cs->cpus_allowed, GFP_KERNEL))
- 		goto free_cs;
- 	if (!alloc_cpumask_var(&cs->effective_cpus, GFP_KERNEL))
- 		goto free_cpus;
+ 	mutex_lock(&cpuset_mutex);
  
--	set_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
 +	/*
-+	 * On default hierarchy, inherit parent's CS_SCHED_LOAD_BALANCE flag.
-+	 * Creating new cpuset is also not allowed if the effective_cpus of
-+	 * its parent is empty.
++	 * Calling update_flag() may fail, so we have to call
++	 * update_isolated_cpumask directly to be sure.
 +	 */
-+	if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys)) {
-+		struct cpuset *parent = css_cs(parent_css);
++	if (is_sched_domain(cs))
++		update_isolated_cpumask(cs, cs->cpus_allowed, NULL);
 +
-+		if (test_bit(CS_SCHED_LOAD_BALANCE, &parent->flags))
-+			set_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
-+
-+		if (cpumask_empty(parent->effective_cpus)) {
-+			errptr = ERR_PTR(-EINVAL);
-+			goto free_cpus;
-+		}
-+	} else {
-+		set_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
-+	}
-+
- 	cpumask_clear(cs->cpus_allowed);
- 	nodes_clear(cs->mems_allowed);
- 	cpumask_clear(cs->effective_cpus);
-@@ -2226,7 +2271,7 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
- 	free_cpumask_var(cs->cpus_allowed);
- free_cs:
- 	kfree(cs);
--	return ERR_PTR(-ENOMEM);
-+	return errptr;
- }
+ 	if (is_sched_load_balance(cs))
+ 		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
  
- static int cpuset_css_online(struct cgroup_subsys_state *css)
 -- 
 1.8.3.1
 
