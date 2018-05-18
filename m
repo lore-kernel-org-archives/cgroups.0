@@ -1,8 +1,8 @@
 From: TSUKADA Koutaro <tsukada@ascade.co.jp>
-Subject: [PATCH v2 6/7] Documentation, hugetlb: describe about
- charge_surplus_hugepages,
-Date: Fri, 18 May 2018 13:39:21 +0900
-Message-ID: <07466cce-ca82-9024-a04a-c17291e64f84@ascade.co.jp>
+Subject: [PATCH v2 7/7] memcg: supports movement of surplus hugepages
+ statistics
+Date: Fri, 18 May 2018 13:41:15 +0900
+Message-ID: <caab17ea-840e-c9c3-4da1-e99050c4256d@ascade.co.jp>
 References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -15,38 +15,137 @@ Content-Type: text/plain; charset="us-ascii"
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, Mike Kravetz <mike.kravetz@oracle.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Punit Agrawal <punit.agrawal@arm.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, tsukada@ascade.co.jp
 
-Add a description about charge_surplus_hugepages.
+When the task that charged surplus hugepages moves memory cgroup, it
+updates the statistical information correctly.
 
 Signed-off-by: TSUKADA Koutaro <tsukada@ascade.co.jp>
 ---
- hugetlbpage.txt |    6 ++++++
- 1 file changed, 6 insertions(+)
+ memcontrol.c |   99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 99 insertions(+)
 
-diff --git a/Documentation/vm/hugetlbpage.txt b/Documentation/vm/hugetlbpage.txt
-index faf077d..af8d112 100644
---- a/Documentation/vm/hugetlbpage.txt
-+++ b/Documentation/vm/hugetlbpage.txt
-@@ -129,6 +129,11 @@ number of "surplus" huge pages from the kernel's normal page pool, when the
- persistent huge page pool is exhausted. As these surplus huge pages become
- unused, they are freed back to the kernel's normal page pool.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a8f1ff8..63f0922 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4698,12 +4698,110 @@ static int mem_cgroup_count_precharge_pte_range(pmd_t *pmd,
+ 	return 0;
+ }
 
-+/proc/sys/vm/charge_surplus_hugepages indicates to charge "surplus" huge pages
-+obteined from the normal page pool to memory cgroup. If true, the amount to be
-+overcommitted is limited within memory usage allowed by the memory cgroup to
-+which the task belongs. The default value is false.
++#ifdef CONFIG_HUGETLB_PAGE
++static enum mc_target_type get_mctgt_type_hugetlb(struct vm_area_struct *vma,
++			unsigned long addr, pte_t *pte, union mc_target *target)
++{
++	struct page *page = NULL;
++	pte_t entry;
++	enum mc_target_type ret = MC_TARGET_NONE;
 +
- When increasing the huge page pool size via nr_hugepages, any existing surplus
- pages will first be promoted to persistent huge pages.  Then, additional
- huge pages will be allocated, if necessary and if possible, to fulfill
-@@ -169,6 +174,7 @@ Inside each of these directories, the same set of files will exist:
- 	free_hugepages
- 	resv_hugepages
- 	surplus_hugepages
-+	charge_surplus_hugepages
++	if (!(mc.flags & MOVE_ANON))
++		return ret;
++
++	entry = huge_ptep_get(pte);
++	if (!pte_present(entry))
++		return ret;
++
++	page = pte_page(entry);
++	VM_BUG_ON_PAGE(!page || !PageHead(page), page);
++	if (likely(!PageSurplusCharge(page)))
++		return ret;
++	if (page->mem_cgroup == mc.from) {
++		ret = MC_TARGET_PAGE;
++		if (target) {
++			get_page(page);
++			target->page = page;
++		}
++	}
++
++	return ret;
++}
++
++static int hugetlb_count_precharge_pte_range(pte_t *pte, unsigned long hmask,
++					unsigned long addr, unsigned long end,
++					struct mm_walk *walk)
++{
++	struct vm_area_struct *vma = walk->vma;
++	struct mm_struct *mm = walk->mm;
++	spinlock_t *ptl;
++	union mc_target target;
++
++	ptl = huge_pte_lock(hstate_vma(vma), mm, pte);
++	if (get_mctgt_type_hugetlb(vma, addr, pte, &target) == MC_TARGET_PAGE) {
++		mc.precharge += (1 << compound_order(target.page));
++		put_page(target.page);
++	}
++	spin_unlock(ptl);
++
++	return 0;
++}
++
++static int hugetlb_move_charge_pte_range(pte_t *pte, unsigned long hmask,
++					unsigned long addr, unsigned long end,
++					struct mm_walk *walk)
++{
++	struct vm_area_struct *vma = walk->vma;
++	struct mm_struct *mm = walk->mm;
++	spinlock_t *ptl;
++	enum mc_target_type target_type;
++	union mc_target target;
++	struct page *page;
++	unsigned long nr_pages;
++
++	ptl = huge_pte_lock(hstate_vma(vma), mm, pte);
++	target_type = get_mctgt_type_hugetlb(vma, addr, pte, &target);
++	if (target_type == MC_TARGET_PAGE) {
++		page = target.page;
++		nr_pages = (1 << compound_order(page));
++		if (mc.precharge < nr_pages) {
++			put_page(page);
++			goto unlock;
++		}
++		if (!mem_cgroup_move_account(page, true, mc.from, mc.to)) {
++			mc.precharge -= nr_pages;
++			mc.moved_charge += nr_pages;
++		}
++		put_page(page);
++	}
++unlock:
++	spin_unlock(ptl);
++
++	return 0;
++}
++#else
++static int hugetlb_count_precharge_pte_range(pte_t *pte, unsigned long hmask,
++					unsigned long addr, unsigned long end,
++					struct mm_walk *walk)
++{
++	return 0;
++}
++
++static int hugetlb_move_charge_pte_range(pte_t *pte, unsigned long hmask,
++					unsigned long addr, unsigned long end,
++					struct mm_walk *walk)
++{
++	return 0;
++}
++#endif
++
+ static unsigned long mem_cgroup_count_precharge(struct mm_struct *mm)
+ {
+ 	unsigned long precharge;
 
- which function as described above for the default huge page-sized case.
+ 	struct mm_walk mem_cgroup_count_precharge_walk = {
+ 		.pmd_entry = mem_cgroup_count_precharge_pte_range,
++		.hugetlb_entry = hugetlb_count_precharge_pte_range,
+ 		.mm = mm,
+ 	};
+ 	down_read(&mm->mmap_sem);
+@@ -4981,6 +5079,7 @@ static void mem_cgroup_move_charge(void)
+ {
+ 	struct mm_walk mem_cgroup_move_charge_walk = {
+ 		.pmd_entry = mem_cgroup_move_charge_pte_range,
++		.hugetlb_entry = hugetlb_move_charge_pte_range,
+ 		.mm = mc.mm,
+ 	};
 
 -- 
 Tsukada
-
 
