@@ -1,72 +1,93 @@
-From: Steve Grubb <sgrubb@redhat.com>
-Subject: Re: [RFC PATCH ghak32 V2 01/13] audit: add container id
-Date: Fri, 18 May 2018 11:38:25 -0400
-Message-ID: <20180518113825.4ceeadf6@ivy-bridge>
-References: <cover.1521179281.git.rgb@redhat.com>
-        <e284617ad667ad8f17958dd8babb87fe1b4d7205.1521179281.git.rgb@redhat.com>
-        <20180517170053.7d4afa87@ivy-bridge>
-        <20180517215600.dyswlkvqdtgjwr5y@madcap2.tricolour.ca>
-        <20180518095636.56ff322d@ivy-bridge>
-        <20180518152106.do5b3mu6e6eyvo7q@madcap2.tricolour.ca>
+From: Punit Agrawal <punit.agrawal@arm.com>
+Subject: Re: [PATCH v2 3/7] memcg: use compound_order rather than hpage_nr_pages
+Date: Fri, 18 May 2018 18:46:49 +0100
+Message-ID: <87wow0zwja.fsf@e105922-lin.cambridge.arm.com>
+References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
+        <262267fe-d98c-0b25-9013-3dafb52e8679@ascade.co.jp>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180518152106.do5b3mu6e6eyvo7q@madcap2.tricolour.ca>
+In-Reply-To: <262267fe-d98c-0b25-9013-3dafb52e8679@ascade.co.jp> (TSUKADA
+        Koutaro's message of "Fri, 18 May 2018 13:34:26 +0900")
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Richard Guy Briggs <rgb@redhat.com>
-Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, Linux-Audit Mailing List <linux-audit@redhat.com>, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, eparis@parisplace.org, serge@hallyn.com
+Content-Transfer-Encoding: 7bit
+To: TSUKADA Koutaro <tsukada@ascade.co.jp>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, Mike Kravetz <mike.kravetz@oracle.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgro
 
-On Fri, 18 May 2018 11:21:06 -0400
-Richard Guy Briggs <rgb@redhat.com> wrote:
+Tsukada-san,
 
-> On 2018-05-18 09:56, Steve Grubb wrote:
-> > On Thu, 17 May 2018 17:56:00 -0400
-> > Richard Guy Briggs <rgb@redhat.com> wrote:
-> >   
-> > > > During syscall events, the path info is returned in a a record
-> > > > simply called AUDIT_PATH, cwd info is returned in AUDIT_CWD. So,
-> > > > rather than calling the record that gets attached to everything
-> > > > AUDIT_CONTAINER_INFO, how about simply AUDIT_CONTAINER.    
-> > > 
-> > > Considering the container initiation record is different than the
-> > > record to document the container involved in an otherwise normal
-> > > syscall, we need two names.  I don't have a strong opinion what
-> > > they are.
-> > > 
-> > > I'd prefer AUDIT_CONTAIN and AUDIT_CONTAINER_INFO so that the two
-> > > are different enough to be visually distinct while leaving
-> > > AUDIT_CONTAINERID for the field type in patch 4 ("audit: add
-> > > containerid filtering")  
-> 
-> (Sorry, I had intended AUDIT_CONTAINER for the first in that paragraph
-> above.)
-> 
-> > How about AUDIT_CONTAINER for the auxiliary record? The one that
-> > starts the container, I don't have a strong opinion on. Could be
-> > AUDIT_CONTAINER_INIT, AUDIT_CONTAINER_START, AUDIT_CONTAINERID,
-> > AUDIT_CONTAINER_ID, or something else. The API call that sets the ID
-> > for filtering could be AUDIT_CID or AUDIT_CONTID if that helps
-> > decide what the initial event might be. Normally, it should match
-> > the field being filtered.  
-> 
-> Ok, I had shortened the record field name to "contid=" to be unique
-> enough while not using too much netlink bandwidth.  I could have used
-> "cid=" but that could be unobvious or ambiguous.  I didn't want to use
-> the full "containerid=" due to that.  I suppose I could change the
-> field name macro to AUDIT_CONTID.
-> 
-> For the one that starts the container, I'd prefer to leave the name a
-> bit more general than "_INIT", "_START", so maybe I'll swap them
-> around and use AUDIT_CONTAINER_INFO for the startup record, and use
-> AUDIT_CONTAINER for the syscall auxiliary record.
-> 
-> Does that work?
+I am not familiar with memcg so can't comment about whether the patchset
+is the right way to solve the problem outlined in the cover letter but
+had a couple of comments about this patch.
 
-I'll go along with that. Thanks. But making that swap frees up
-AUDIT_CONTAINER_ID which could be the first event. But
-AUDIT_CONTAINER_INFO is also fine with me.
+TSUKADA Koutaro <tsukada@ascade.co.jp> writes:
 
-Best Regards,
--Steve
+> The current memcg implementation assumes that the compound page is THP.
+> In order to be able to charge surplus hugepage, we use compound_order.
+>
+> Signed-off-by: TSUKADA Koutaro <tsukada@ascade.co.jp>
+
+Please move this before Patch 1/7. This is to prevent wrong accounting
+of pages to memcg for size != PMD_SIZE.
+
+> ---
+>  memcontrol.c |   10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2bd3df3..a8f1ff8 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4483,7 +4483,7 @@ static int mem_cgroup_move_account(struct page *page,
+>  				   struct mem_cgroup *to)
+>  {
+>  	unsigned long flags;
+> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
+
+Instead of replacing calls to hpage_nr_pages(), is it possible to modify
+it to do the calculation?
+
+Thanks,
+Punit
+
+>  	int ret;
+>  	bool anon;
+>
+> @@ -5417,7 +5417,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
+>  			  bool compound)
+>  {
+>  	struct mem_cgroup *memcg = NULL;
+> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
+>  	int ret = 0;
+>
+>  	if (mem_cgroup_disabled())
+> @@ -5478,7 +5478,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
+>  void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+>  			      bool lrucare, bool compound)
+>  {
+> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
+>
+>  	VM_BUG_ON_PAGE(!page->mapping, page);
+>  	VM_BUG_ON_PAGE(PageLRU(page) && !lrucare, page);
+> @@ -5522,7 +5522,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+>  void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg,
+>  		bool compound)
+>  {
+> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
+>
+>  	if (mem_cgroup_disabled())
+>  		return;
+> @@ -5729,7 +5729,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
+>
+>  	/* Force-charge the new page. The old one will be freed soon */
+>  	compound = PageTransHuge(newpage);
+> -	nr_pages = compound ? hpage_nr_pages(newpage) : 1;
+> +	nr_pages = compound ? (1 << compound_order(newpage)) : 1;
+>
+>  	page_counter_charge(&memcg->memory, nr_pages);
+>  	if (do_memsw_account())
