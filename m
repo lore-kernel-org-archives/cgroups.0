@@ -1,7 +1,8 @@
 From: TSUKADA Koutaro <tsukada@ascade.co.jp>
-Subject: [PATCH v2 3/7] memcg: use compound_order rather than hpage_nr_pages
-Date: Fri, 18 May 2018 13:34:26 +0900
-Message-ID: <262267fe-d98c-0b25-9013-3dafb52e8679@ascade.co.jp>
+Subject: [PATCH v2 4/7] mm, sysctl: make charging surplus hugepages
+ controllable
+Date: Fri, 18 May 2018 13:36:11 +0900
+Message-ID: <d87cac0d-e395-a528-4c25-226399a09121@ascade.co.jp>
 References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -14,64 +15,80 @@ Content-Type: text/plain; charset="us-ascii"
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, Mike Kravetz <mike.kravetz@oracle.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Punit Agrawal <punit.agrawal@arm.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, tsukada@ascade.co.jp
 
-The current memcg implementation assumes that the compound page is THP.
-In order to be able to charge surplus hugepage, we use compound_order.
+Make the default hugetlb surplus hugepage controlable by
+/proc/sys/vm/charge_surplus_hugepages.
 
 Signed-off-by: TSUKADA Koutaro <tsukada@ascade.co.jp>
 ---
- memcontrol.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ include/linux/hugetlb.h |    2 ++
+ kernel/sysctl.c         |    7 +++++++
+ mm/hugetlb.c            |   21 +++++++++++++++++++++
+ 3 files changed, 30 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2bd3df3..a8f1ff8 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4483,7 +4483,7 @@ static int mem_cgroup_move_account(struct page *page,
- 				   struct mem_cgroup *to)
- {
- 	unsigned long flags;
--	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
-+	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
- 	int ret;
- 	bool anon;
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index 33fe5be..9314b07 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -80,6 +80,8 @@ struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
+ void reset_vma_resv_huge_pages(struct vm_area_struct *vma);
+ int hugetlb_sysctl_handler(struct ctl_table *, int, void __user *, size_t *, loff_t *);
+ int hugetlb_overcommit_handler(struct ctl_table *, int, void __user *, size_t *, loff_t *);
++int hugetlb_charge_surplus_handler(struct ctl_table *, int, void __user *,
++					size_t *, loff_t *);
+ int hugetlb_treat_movable_handler(struct ctl_table *, int, void __user *, size_t *, loff_t *);
 
-@@ -5417,7 +5417,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
- 			  bool compound)
- {
- 	struct mem_cgroup *memcg = NULL;
--	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
-+	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
- 	int ret = 0;
+ #ifdef CONFIG_NUMA
+diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+index 6a78cf7..d562d64 100644
+--- a/kernel/sysctl.c
++++ b/kernel/sysctl.c
+@@ -1394,6 +1394,13 @@ static int sysrq_sysctl_handler(struct ctl_table *table, int write,
+ 		.mode		= 0644,
+ 		.proc_handler	= hugetlb_overcommit_handler,
+ 	},
++	{
++		.procname	= "charge_surplus_hugepages",
++		.data		= NULL,
++		.maxlen		= sizeof(int),
++		.mode		= 0644,
++		.proc_handler	= hugetlb_charge_surplus_handler,
++	},
+ #endif
+ 	{
+ 		.procname	= "lowmem_reserve_ratio",
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 2e7b543..9a9549c 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -3069,6 +3069,27 @@ int hugetlb_overcommit_handler(struct ctl_table *table, int write,
+ 	return ret;
+ }
 
- 	if (mem_cgroup_disabled())
-@@ -5478,7 +5478,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
- void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
- 			      bool lrucare, bool compound)
- {
--	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
-+	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
++int hugetlb_charge_surplus_handler(struct ctl_table *table, int write,
++			void __user *buffer, size_t *length, loff_t *ppos)
++{
++	struct hstate *h = &default_hstate;
++	int tmp, ret;
++
++	if (!hugepages_supported())
++		return -EOPNOTSUPP;
++
++	tmp = h->charge_surplus_huge_pages ? 1 : 0;
++	table->data = &tmp;
++	table->maxlen = sizeof(int);
++	ret = proc_dointvec_minmax(table, write, buffer, length, ppos);
++	if (ret)
++		goto out;
++
++	if (write)
++		h->charge_surplus_huge_pages = tmp ? true : false;
++out:
++	return ret;
++}
+ #endif /* CONFIG_SYSCTL */
 
- 	VM_BUG_ON_PAGE(!page->mapping, page);
- 	VM_BUG_ON_PAGE(PageLRU(page) && !lrucare, page);
-@@ -5522,7 +5522,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
- void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg,
- 		bool compound)
- {
--	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
-+	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
+ void hugetlb_report_meminfo(struct seq_file *m)
 
- 	if (mem_cgroup_disabled())
- 		return;
-@@ -5729,7 +5729,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
-
- 	/* Force-charge the new page. The old one will be freed soon */
- 	compound = PageTransHuge(newpage);
--	nr_pages = compound ? hpage_nr_pages(newpage) : 1;
-+	nr_pages = compound ? (1 << compound_order(newpage)) : 1;
-
- 	page_counter_charge(&memcg->memory, nr_pages);
- 	if (do_memsw_account())
-
--- 
+--
 Tsukada
 
