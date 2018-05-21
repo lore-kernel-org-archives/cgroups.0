@@ -1,291 +1,173 @@
-From: Patrick Bellasi <patrick.bellasi@arm.com>
-Subject: Re: [PATCH v8 1/6] cpuset: Enable cpuset controller in default
- hierarchy
-Date: Mon, 21 May 2018 12:55:28 +0100
-Message-ID: <20180521115528.GR30654@e110439-lin>
-References: <1526590545-3350-1-git-send-email-longman@redhat.com>
- <1526590545-3350-2-git-send-email-longman@redhat.com>
+From: Alban Crequy <alban@kinvolk.io>
+Subject: Re: [PATCH] [RFC] bpf: tracing: new helper bpf_get_current_cgroup_ino
+Date: Mon, 21 May 2018 15:52:17 +0200
+Message-ID: <CADZs7q5dDJS8Y+z=9B9-Z6ZXCGgeVtqEF6uPdTJrD10kUO-RWQ@mail.gmail.com>
+References: <20180513173318.21680-1-alban@kinvolk.io> <CAH3MdRUe7K8zJHuGAfnY6_VEkBLAWY1F_WaJgcLs4qDdQv1bTA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1526590545-3350-2-git-send-email-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kinvolk.io; s=google;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=AtTNjVbF4gH5HysoRyPdOcu2RoZONtJXRgljGQ7f7rM=;
+        b=kvG+gX3nMvOwfsOyHPbNmFnoVrX1cFgFJW0x7l324t0Sx3bGpmFRtdbI/EZE0wXB87
+         WqmMT+eoU3xm5EKT64yVjg2XDmi4gSXjGyaLfMGjRs8l2ZpJHYMbxUqXJFoGWr0b4Lzr
+         DZgG+NOYE6mEtFmx7LTlnqLkYmLL7ktg08CYg=
+In-Reply-To: <CAH3MdRUe7K8zJHuGAfnY6_VEkBLAWY1F_WaJgcLs4qDdQv1bTA@mail.gmail.com>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
+To: Y Song <ys114321@gmail.com>
+Cc: Alban Crequy <alban.crequy@gmail.com>, netdev <netdev@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, cgroups@vger.kernel.org
 
-Hi Waiman!
+On Mon, May 14, 2018 at 9:38 PM, Y Song <ys114321@gmail.com> wrote:
+>
+> On Sun, May 13, 2018 at 10:33 AM, Alban Crequy <alban.crequy@gmail.com> wrote:
+> > From: Alban Crequy <alban@kinvolk.io>
+> >
+> > bpf_get_current_cgroup_ino() allows BPF trace programs to get the inode
+> > of the cgroup where the current process resides.
+> >
+> > My use case is to get statistics about syscalls done by a specific
+> > Kubernetes container. I have a tracepoint on raw_syscalls/sys_enter and
+> > a BPF map containing the cgroup inode that I want to trace. I use
+> > bpf_get_current_cgroup_ino() and I quickly return from the tracepoint if
+> > the inode is not in the BPF hash map.
+>
+> Alternatively, the kernel already has bpf_current_task_under_cgroup helper
+> which uses a cgroup array to store cgroup fd's. If the current task is
+> in the hierarchy of a particular cgroup, the helper will return true.
+>
+> One difference between your helper and bpf_current_task_under_cgroup() is
+> that your helper tests against a particular cgroup, not including its
+> children, but
+> bpf_current_task_under_cgroup() will return true even the task is in a
+> nested cgroup.
+>
+> Maybe this will work for you?
 
-I've started looking at the possibility to move Android to use cgroups
-v2 and the availability of the cpuset controller makes this even more
-promising.
+I like the behaviour that it checks for children cgroups. But with the
+cgroup array, I can test only one cgroup at a time. I would like to be
+able to enable my tracer for a few Kubernetes containers or all by
+adding the inodes of a few cgroups in a hash map. So I could keep
+separate stats for each. With bpf_current_task_under_cgroup(), I would
+need to iterate over the list of cgroups, which is difficult with BPF.
 
-I'll try to give a run to this series on Android, meanwhile I have
-some (hopefully not too much dummy) questions below.
+Also, Kubernetes is cgroup-v1 only and bpf_current_task_under_cgroup()
+is cgroup-v2 only. In Kubernetes, the processes remain in the root of
+the v2 hierarchy. I'd like to be able to select the cgroup hierarchy
+in my helper so it'd work for both v1 and v2.
 
-On 17-May 16:55, Waiman Long wrote:
-> Given the fact that thread mode had been merged into 4.14, it is now
-> time to enable cpuset to be used in the default hierarchy (cgroup v2)
-> as it is clearly threaded.
-> 
-> The cpuset controller had experienced feature creep since its
-> introduction more than a decade ago. Besides the core cpus and mems
-> control files to limit cpus and memory nodes, there are a bunch of
-> additional features that can be controlled from the userspace. Some of
-> the features are of doubtful usefulness and may not be actively used.
-> 
-> This patch enables cpuset controller in the default hierarchy with
-> a minimal set of features, namely just the cpus and mems and their
-> effective_* counterparts.  We can certainly add more features to the
-> default hierarchy in the future if there is a real user need for them
-> later on.
-> 
-> Alternatively, with the unified hiearachy, it may make more sense
-> to move some of those additional cpuset features, if desired, to
-> memory controller or may be to the cpu controller instead of staying
-> with cpuset.
-> 
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->  Documentation/cgroup-v2.txt | 90 ++++++++++++++++++++++++++++++++++++++++++---
->  kernel/cgroup/cpuset.c      | 48 ++++++++++++++++++++++--
->  2 files changed, 130 insertions(+), 8 deletions(-)
-> 
-> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-> index 74cdeae..cf7bac6 100644
-> --- a/Documentation/cgroup-v2.txt
-> +++ b/Documentation/cgroup-v2.txt
-> @@ -53,11 +53,13 @@ v1 is available under Documentation/cgroup-v1/.
->         5-3-2. Writeback
->       5-4. PID
->         5-4-1. PID Interface Files
-> -     5-5. Device
-> -     5-6. RDMA
-> -       5-6-1. RDMA Interface Files
-> -     5-7. Misc
-> -       5-7-1. perf_event
-> +     5-5. Cpuset
-> +       5.5-1. Cpuset Interface Files
-> +     5-6. Device
-> +     5-7. RDMA
-> +       5-7-1. RDMA Interface Files
-> +     5-8. Misc
-> +       5-8-1. perf_event
->       5-N. Non-normative information
->         5-N-1. CPU controller root cgroup process behaviour
->         5-N-2. IO controller root cgroup process behaviour
-> @@ -1435,6 +1437,84 @@ through fork() or clone(). These will return -EAGAIN if the creation
->  of a new process would cause a cgroup policy to be violated.
->  
->  
-> +Cpuset
-> +------
-> +
-> +The "cpuset" controller provides a mechanism for constraining
-> +the CPU and memory node placement of tasks to only the resources
-> +specified in the cpuset interface files in a task's current cgroup.
-> +This is especially valuable on large NUMA systems where placing jobs
-> +on properly sized subsets of the systems with careful processor and
-> +memory placement to reduce cross-node memory access and contention
-> +can improve overall system performance.
+> > Without this BPF helper, I would need to keep track of all pids in the
+> > container. The Netlink proc connector can be used to follow process
+> > creation and destruction but it is racy.
+> >
+> > This patch only looks at the memory cgroup, which was enough for me
+> > since each Kubernetes container is placed in a different mem cgroup.
+> > For a generic implementation, I'm not sure how to proceed: it seems I
+> > would need to use 'for_each_root(root)' (see example in
+> > proc_cgroup_show() from kernel/cgroup/cgroup.c) but I don't know if
+> > taking the cgroup mutex is possible in the BPF helper function. It might
+> > be ok in the tracepoint raw_syscalls/sys_enter but could the mutex
+> > already be taken in some other tracepoints?
+>
+> mutex is not allowed in a helper since it can block.
 
-Another quite important use-case for cpuset is Android, where they are
-actively used to do both power-saving as well as performance tunings.
-For example, depending on the status of an application, its threads
-can be allowed to run on all available CPUS (e.g. foreground apps) or
-be restricted only on few energy efficient CPUs (e.g. backgroud apps).
+Ok. I don't know how to implement my helper properly then. Maybe I
+could just use the 1st cgroup-v1 hierarchy (the name=systemd one) so I
+don't have to iterate over the hierarchies. But would that be
+acceptable?
 
-Since here we are at "rewriting" cpusets for v2, I think it's important
-to keep this mobile world scenario into consideration.
+Cheers,
+Alban
 
-For example, in this context, we are looking at the possibility to
-update/tune cpuset.cpus with a relatively high rate, i.e. tens of
-times per second. Not sure that's the same update rate usually
-required for the large NUMA systems you cite above.  However, in this
-case it's quite important to have really small overheads for these
-operations.
-
-> +
-> +The "cpuset" controller is hierarchical.  That means the controller
-> +cannot use CPUs or memory nodes not allowed in its parent.
-> +
-> +
-> +Cpuset Interface Files
-> +~~~~~~~~~~~~~~~~~~~~~~
-> +
-> +  cpuset.cpus
-> +	A read-write multiple values file which exists on non-root
-> +	cpuset-enabled cgroups.
-> +
-> +	It lists the CPUs allowed to be used by tasks within this
-> +	cgroup.  The CPU numbers are comma-separated numbers or
-> +	ranges.  For example:
-> +
-> +	  # cat cpuset.cpus
-> +	  0-4,6,8-10
-> +
-> +	An empty value indicates that the cgroup is using the same
-> +	setting as the nearest cgroup ancestor with a non-empty
-> +	"cpuset.cpus" or all the available CPUs if none is found.
-
-Does that means that we can move tasks into a newly created group for
-which we have not yet configured this value?
-AFAIK, that's a different behavior wrt v1... and I like it better.
-
-> +
-> +	The value of "cpuset.cpus" stays constant until the next update
-> +	and won't be affected by any CPU hotplug events.
-
-This also sounds interesting, does it means that we use the
-cpuset.cpus mask to restrict online CPUs, whatever they are?
-
-I'll have a better look at the code, but my understanding of v1 is
-that we spent a lot of effort to keep task cpu-affinity masks aligned
-with the cpuset in which they live, and we do something similar at each
-HP event, which ultimately generates a lot of overheads in systems
-where: you have many HP events and/or cpuset.cpus change quite
-frequently.
-
-I hope to find some better behavior in this series.
-
-> +
-> +  cpuset.cpus.effective
-> +	A read-only multiple values file which exists on non-root
-> +	cpuset-enabled cgroups.
-> +
-> +	It lists the onlined CPUs that are actually allowed to be
-> +	used by tasks within the current cgroup.  If "cpuset.cpus"
-> +	is empty, it shows all the CPUs from the parent cgroup that
-> +	will be available to be used by this cgroup.  Otherwise, it is
-> +	a subset of "cpuset.cpus".  Its value will be affected by CPU
-> +	hotplug events.
-
-This looks similar to v1, isn't it?
-
-> +
-> +  cpuset.mems
-> +	A read-write multiple values file which exists on non-root
-> +	cpuset-enabled cgroups.
-> +
-> +	It lists the memory nodes allowed to be used by tasks within
-> +	this cgroup.  The memory node numbers are comma-separated
-> +	numbers or ranges.  For example:
-> +
-> +	  # cat cpuset.mems
-> +	  0-1,3
-> +
-> +	An empty value indicates that the cgroup is using the same
-> +	setting as the nearest cgroup ancestor with a non-empty
-> +	"cpuset.mems" or all the available memory nodes if none
-> +	is found.
-> +
-> +	The value of "cpuset.mems" stays constant until the next update
-> +	and won't be affected by any memory nodes hotplug events.
-> +
-> +  cpuset.mems.effective
-> +	A read-only multiple values file which exists on non-root
-> +	cpuset-enabled cgroups.
-> +
-> +	It lists the onlined memory nodes that are actually allowed to
-> +	be used by tasks within the current cgroup.  If "cpuset.mems"
-> +	is empty, it shows all the memory nodes from the parent cgroup
-> +	that will be available to be used by this cgroup.  Otherwise,
-> +	it is a subset of "cpuset.mems".  Its value will be affected
-> +	by memory nodes hotplug events.
-> +
-> +
->  Device controller
->  -----------------
->  
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index b42037e..419b758 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1823,12 +1823,11 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
->  	return 0;
->  }
->  
-> -
->  /*
->   * for the common functions, 'private' gives the type of file
->   */
->  
-> -static struct cftype files[] = {
-> +static struct cftype legacy_files[] = {
->  	{
->  		.name = "cpus",
->  		.seq_show = cpuset_common_seq_show,
-> @@ -1931,6 +1930,47 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
->  };
->  
->  /*
-> + * This is currently a minimal set for the default hierarchy. It can be
-> + * expanded later on by migrating more features and control files from v1.
-> + */
-> +static struct cftype dfl_files[] = {
-> +	{
-> +		.name = "cpus",
-> +		.seq_show = cpuset_common_seq_show,
-> +		.write = cpuset_write_resmask,
-> +		.max_write_len = (100U + 6 * NR_CPUS),
-> +		.private = FILE_CPULIST,
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +	},
-> +
-> +	{
-> +		.name = "mems",
-> +		.seq_show = cpuset_common_seq_show,
-> +		.write = cpuset_write_resmask,
-> +		.max_write_len = (100U + 6 * MAX_NUMNODES),
-> +		.private = FILE_MEMLIST,
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +	},
-> +
-> +	{
-> +		.name = "cpus.effective",
-> +		.seq_show = cpuset_common_seq_show,
-> +		.private = FILE_EFFECTIVE_CPULIST,
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +	},
-> +
-> +	{
-> +		.name = "mems.effective",
-> +		.seq_show = cpuset_common_seq_show,
-> +		.private = FILE_EFFECTIVE_MEMLIST,
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +	},
-> +
-> +	{ }	/* terminate */
-> +};
-> +
-> +
-> +/*
->   *	cpuset_css_alloc - allocate a cpuset css
->   *	cgrp:	control group that the new cpuset will be part of
->   */
-> @@ -2104,8 +2144,10 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
->  	.post_attach	= cpuset_post_attach,
->  	.bind		= cpuset_bind,
->  	.fork		= cpuset_fork,
-> -	.legacy_cftypes	= files,
-> +	.legacy_cftypes	= legacy_files,
-> +	.dfl_cftypes	= dfl_files,
->  	.early_init	= true,
-> +	.threaded	= true,
-
-Which means that by default we can attach tasks instead of only
-processes, right?
-
->  };
->  
->  /**
-> -- 
-> 1.8.3.1
-> 
-
--- 
-#include <best/regards.h>
-
-Patrick Bellasi
+> > Signed-off-by: Alban Crequy <alban@kinvolk.io>
+> > ---
+> >  include/uapi/linux/bpf.h | 11 ++++++++++-
+> >  kernel/trace/bpf_trace.c | 25 +++++++++++++++++++++++++
+> >  2 files changed, 35 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
+> > index c5ec89732a8d..38ac3959cdf3 100644
+> > --- a/include/uapi/linux/bpf.h
+> > +++ b/include/uapi/linux/bpf.h
+> > @@ -755,6 +755,14 @@ union bpf_attr {
+> >   *     @addr: pointer to struct sockaddr to bind socket to
+> >   *     @addr_len: length of sockaddr structure
+> >   *     Return: 0 on success or negative error code
+> > + *
+> > + * u64 bpf_get_current_cgroup_ino(hierarchy, flags)
+> > + *     Get the cgroup{1,2} inode of current task under the specified hierarchy.
+> > + *     @hierarchy: cgroup hierarchy
+>
+> Not sure what is the value to specify hierarchy here.
+> A cgroup directory fd?
+>
+> > + *     @flags: reserved for future use
+> > + *     Return:
+> > + *       == 0 error
+>
+> looks like < 0 means error.
+>
+> > + *        > 0 inode of the cgroup
+>                >= 0 means good?
+> >   */
+> >  #define __BPF_FUNC_MAPPER(FN)          \
+> >         FN(unspec),                     \
+> > @@ -821,7 +829,8 @@ union bpf_attr {
+> >         FN(msg_apply_bytes),            \
+> >         FN(msg_cork_bytes),             \
+> >         FN(msg_pull_data),              \
+> > -       FN(bind),
+> > +       FN(bind),                       \
+> > +       FN(get_current_cgroup_ino),
+> >
+> >  /* integer value in 'imm' field of BPF_CALL instruction selects which helper
+> >   * function eBPF program intends to call
+> > diff --git a/kernel/trace/bpf_trace.c b/kernel/trace/bpf_trace.c
+> > index 56ba0f2a01db..9bf92a786639 100644
+> > --- a/kernel/trace/bpf_trace.c
+> > +++ b/kernel/trace/bpf_trace.c
+> > @@ -524,6 +524,29 @@ static const struct bpf_func_proto bpf_probe_read_str_proto = {
+> >         .arg3_type      = ARG_ANYTHING,
+> >  };
+> >
+> > +BPF_CALL_2(bpf_get_current_cgroup_ino, u32, hierarchy, u64, flags)
+> > +{
+> > +       // TODO: pick the correct hierarchy instead of the mem controller
+> > +       struct cgroup *cgrp = task_cgroup(current, memory_cgrp_id);
+> > +
+> > +       if (unlikely(!cgrp))
+> > +               return -EINVAL;
+> > +       if (unlikely(hierarchy))
+> > +               return -EINVAL;
+> > +       if (unlikely(flags))
+> > +               return -EINVAL;
+> > +
+> > +       return cgrp->kn->id.ino;
+> > +}
+> > +
+> > +static const struct bpf_func_proto bpf_get_current_cgroup_ino_proto = {
+> > +       .func           = bpf_get_current_cgroup_ino,
+> > +       .gpl_only       = false,
+> > +       .ret_type       = RET_INTEGER,
+> > +       .arg1_type      = ARG_DONTCARE,
+> > +       .arg2_type      = ARG_DONTCARE,
+> > +};
+> > +
+> >  static const struct bpf_func_proto *
+> >  tracing_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
+> >  {
+> > @@ -564,6 +587,8 @@ tracing_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
+> >                 return &bpf_get_prandom_u32_proto;
+> >         case BPF_FUNC_probe_read_str:
+> >                 return &bpf_probe_read_str_proto;
+> > +       case BPF_FUNC_get_current_cgroup_ino:
+> > +               return &bpf_get_current_cgroup_ino_proto;
+> >         default:
+> >                 return NULL;
+> >         }
+> > --
+> > 2.14.3
+> >
