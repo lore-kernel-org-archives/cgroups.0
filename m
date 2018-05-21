@@ -1,130 +1,291 @@
-From: TSUKADA Koutaro <tsukada@ascade.co.jp>
-Subject: Re: [PATCH v2 3/7] memcg: use compound_order rather than
- hpage_nr_pages
-Date: Mon, 21 May 2018 12:48:22 +0900
-Message-ID: <2053ac36-74df-b05e-d1ce-36f69dde2a47@ascade.co.jp>
-References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
- <262267fe-d98c-0b25-9013-3dafb52e8679@ascade.co.jp>
- <87wow0zwja.fsf@e105922-lin.cambridge.arm.com>
- <87sh6ozwc4.fsf@e105922-lin.cambridge.arm.com>
+From: Patrick Bellasi <patrick.bellasi@arm.com>
+Subject: Re: [PATCH v8 1/6] cpuset: Enable cpuset controller in default
+ hierarchy
+Date: Mon, 21 May 2018 12:55:28 +0100
+Message-ID: <20180521115528.GR30654@e110439-lin>
+References: <1526590545-3350-1-git-send-email-longman@redhat.com>
+ <1526590545-3350-2-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87sh6ozwc4.fsf@e105922-lin.cambridge.arm.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1526590545-3350-2-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
-To: Punit Agrawal <punit.agrawal@arm.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, Mike Kravetz <mike.kravetz@oracle.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgro
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
 
-On 2018/05/19 2:51, Punit Agrawal wrote:
-> Punit Agrawal <punit.agrawal@arm.com> writes:
+Hi Waiman!
+
+I've started looking at the possibility to move Android to use cgroups
+v2 and the availability of the cpuset controller makes this even more
+promising.
+
+I'll try to give a run to this series on Android, meanwhile I have
+some (hopefully not too much dummy) questions below.
+
+On 17-May 16:55, Waiman Long wrote:
+> Given the fact that thread mode had been merged into 4.14, it is now
+> time to enable cpuset to be used in the default hierarchy (cgroup v2)
+> as it is clearly threaded.
 > 
->> Tsukada-san,
->>
->> I am not familiar with memcg so can't comment about whether the patchset
->> is the right way to solve the problem outlined in the cover letter but
->> had a couple of comments about this patch.
->>
->> TSUKADA Koutaro <tsukada@ascade.co.jp> writes:
->>
->>> The current memcg implementation assumes that the compound page is THP.
->>> In order to be able to charge surplus hugepage, we use compound_order.
->>>
->>> Signed-off-by: TSUKADA Koutaro <tsukada@ascade.co.jp>
->>
->> Please move this before Patch 1/7. This is to prevent wrong accounting
->> of pages to memcg for size != PMD_SIZE.
+> The cpuset controller had experienced feature creep since its
+> introduction more than a decade ago. Besides the core cpus and mems
+> control files to limit cpus and memory nodes, there are a bunch of
+> additional features that can be controlled from the userspace. Some of
+> the features are of doubtful usefulness and may not be actively used.
 > 
-> I just noticed that the default state is off so the change isn't enabled
-> until the sysfs node is exposed in the next patch. Please ignore this
-> comment.
+> This patch enables cpuset controller in the default hierarchy with
+> a minimal set of features, namely just the cpus and mems and their
+> effective_* counterparts.  We can certainly add more features to the
+> default hierarchy in the future if there is a real user need for them
+> later on.
 > 
-> One below still applies.
+> Alternatively, with the unified hiearachy, it may make more sense
+> to move some of those additional cpuset features, if desired, to
+> memory controller or may be to the cpu controller instead of staying
+> with cpuset.
 > 
->>
->>> ---
->>>   memcontrol.c |   10 +++++-----
->>>   1 file changed, 5 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index 2bd3df3..a8f1ff8 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -4483,7 +4483,7 @@ static int mem_cgroup_move_account(struct page *page,
->>>   				   struct mem_cgroup *to)
->>>   {
->>>   	unsigned long flags;
->>> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
->>> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
->>
->> Instead of replacing calls to hpage_nr_pages(), is it possible to modify
->> it to do the calculation?
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  Documentation/cgroup-v2.txt | 90 ++++++++++++++++++++++++++++++++++++++++++---
+>  kernel/cgroup/cpuset.c      | 48 ++++++++++++++++++++++--
+>  2 files changed, 130 insertions(+), 8 deletions(-)
+> 
+> diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+> index 74cdeae..cf7bac6 100644
+> --- a/Documentation/cgroup-v2.txt
+> +++ b/Documentation/cgroup-v2.txt
+> @@ -53,11 +53,13 @@ v1 is available under Documentation/cgroup-v1/.
+>         5-3-2. Writeback
+>       5-4. PID
+>         5-4-1. PID Interface Files
+> -     5-5. Device
+> -     5-6. RDMA
+> -       5-6-1. RDMA Interface Files
+> -     5-7. Misc
+> -       5-7-1. perf_event
+> +     5-5. Cpuset
+> +       5.5-1. Cpuset Interface Files
+> +     5-6. Device
+> +     5-7. RDMA
+> +       5-7-1. RDMA Interface Files
+> +     5-8. Misc
+> +       5-8-1. perf_event
+>       5-N. Non-normative information
+>         5-N-1. CPU controller root cgroup process behaviour
+>         5-N-2. IO controller root cgroup process behaviour
+> @@ -1435,6 +1437,84 @@ through fork() or clone(). These will return -EAGAIN if the creation
+>  of a new process would cause a cgroup policy to be violated.
+>  
+>  
+> +Cpuset
+> +------
+> +
+> +The "cpuset" controller provides a mechanism for constraining
+> +the CPU and memory node placement of tasks to only the resources
+> +specified in the cpuset interface files in a task's current cgroup.
+> +This is especially valuable on large NUMA systems where placing jobs
+> +on properly sized subsets of the systems with careful processor and
+> +memory placement to reduce cross-node memory access and contention
+> +can improve overall system performance.
 
-Thank you for review my code and please just call me Tsukada.
+Another quite important use-case for cpuset is Android, where they are
+actively used to do both power-saving as well as performance tunings.
+For example, depending on the status of an application, its threads
+can be allowed to run on all available CPUS (e.g. foreground apps) or
+be restricted only on few energy efficient CPUs (e.g. backgroud apps).
 
-I think it is possible to modify the inside of itself rather than
-replacing the call to hpage_nr_pages().
+Since here we are at "rewriting" cpusets for v2, I think it's important
+to keep this mobile world scenario into consideration.
 
-Inferring from the processing that hpage_nr_pages() desires, I thought
-that the definition of hpage_nr_pages() could be moved outside the
-CONFIG_TRANSPARENT_HUGEPAGE. It seems that THP and HugeTLBfs can be
-handled correctly because compound_order() is judged by seeing whether it
-is PageHead or not.
+For example, in this context, we are looking at the possibility to
+update/tune cpuset.cpus with a relatively high rate, i.e. tens of
+times per second. Not sure that's the same update rate usually
+required for the large NUMA systems you cite above.  However, in this
+case it's quite important to have really small overheads for these
+operations.
 
-Also, I would like to use compound_order() inside hpage_nr_pages(), but
-since huge_mm.h is included before mm.h where compound_order() is defined,
-move hpage_nr_pages to mm.h.
+> +
+> +The "cpuset" controller is hierarchical.  That means the controller
+> +cannot use CPUs or memory nodes not allowed in its parent.
+> +
+> +
+> +Cpuset Interface Files
+> +~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +  cpuset.cpus
+> +	A read-write multiple values file which exists on non-root
+> +	cpuset-enabled cgroups.
+> +
+> +	It lists the CPUs allowed to be used by tasks within this
+> +	cgroup.  The CPU numbers are comma-separated numbers or
+> +	ranges.  For example:
+> +
+> +	  # cat cpuset.cpus
+> +	  0-4,6,8-10
+> +
+> +	An empty value indicates that the cgroup is using the same
+> +	setting as the nearest cgroup ancestor with a non-empty
+> +	"cpuset.cpus" or all the available CPUs if none is found.
 
-Instead of patch 3/7, are the following patches implementing what you
-intended?
+Does that means that we can move tasks into a newly created group for
+which we have not yet configured this value?
+AFAIK, that's a different behavior wrt v1... and I like it better.
 
-diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-index a8a1262..1186ab7 100644
---- a/include/linux/huge_mm.h
-+++ b/include/linux/huge_mm.h
-@@ -204,12 +204,6 @@ static inline spinlock_t *pud_trans_huge_lock(pud_t *pud,
-  	else
-  		return NULL;
-  }
--static inline int hpage_nr_pages(struct page *page)
--{
--	if (unlikely(PageTransHuge(page)))
--		return HPAGE_PMD_NR;
--	return 1;
--}
+> +
+> +	The value of "cpuset.cpus" stays constant until the next update
+> +	and won't be affected by any CPU hotplug events.
 
-  struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
-  		pmd_t *pmd, int flags);
-@@ -254,8 +248,6 @@ static inline bool thp_migration_supported(void)
-  #define HPAGE_PUD_MASK ({ BUILD_BUG(); 0; })
-  #define HPAGE_PUD_SIZE ({ BUILD_BUG(); 0; })
+This also sounds interesting, does it means that we use the
+cpuset.cpus mask to restrict online CPUs, whatever they are?
 
--#define hpage_nr_pages(x) 1
--
-  static inline bool transparent_hugepage_enabled(struct vm_area_struct *vma)
-  {
-  	return false;
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 1ac1f06..082f2ee 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -673,6 +673,12 @@ static inline unsigned int compound_order(struct page *page)
-  	return page[1].compound_order;
-  }
+I'll have a better look at the code, but my understanding of v1 is
+that we spent a lot of effort to keep task cpu-affinity masks aligned
+with the cpuset in which they live, and we do something similar at each
+HP event, which ultimately generates a lot of overheads in systems
+where: you have many HP events and/or cpuset.cpus change quite
+frequently.
 
-+static inline int hpage_nr_pages(struct page *page)
-+{
-+	VM_BUG_ON_PAGE(PageTail(page), page);
-+	return (1 << compound_order(page));
-+}
-+
-  static inline void set_compound_order(struct page *page, unsigned int order)
-  {
-  	page[1].compound_order = order;
+I hope to find some better behavior in this series.
+
+> +
+> +  cpuset.cpus.effective
+> +	A read-only multiple values file which exists on non-root
+> +	cpuset-enabled cgroups.
+> +
+> +	It lists the onlined CPUs that are actually allowed to be
+> +	used by tasks within the current cgroup.  If "cpuset.cpus"
+> +	is empty, it shows all the CPUs from the parent cgroup that
+> +	will be available to be used by this cgroup.  Otherwise, it is
+> +	a subset of "cpuset.cpus".  Its value will be affected by CPU
+> +	hotplug events.
+
+This looks similar to v1, isn't it?
+
+> +
+> +  cpuset.mems
+> +	A read-write multiple values file which exists on non-root
+> +	cpuset-enabled cgroups.
+> +
+> +	It lists the memory nodes allowed to be used by tasks within
+> +	this cgroup.  The memory node numbers are comma-separated
+> +	numbers or ranges.  For example:
+> +
+> +	  # cat cpuset.mems
+> +	  0-1,3
+> +
+> +	An empty value indicates that the cgroup is using the same
+> +	setting as the nearest cgroup ancestor with a non-empty
+> +	"cpuset.mems" or all the available memory nodes if none
+> +	is found.
+> +
+> +	The value of "cpuset.mems" stays constant until the next update
+> +	and won't be affected by any memory nodes hotplug events.
+> +
+> +  cpuset.mems.effective
+> +	A read-only multiple values file which exists on non-root
+> +	cpuset-enabled cgroups.
+> +
+> +	It lists the onlined memory nodes that are actually allowed to
+> +	be used by tasks within the current cgroup.  If "cpuset.mems"
+> +	is empty, it shows all the memory nodes from the parent cgroup
+> +	that will be available to be used by this cgroup.  Otherwise,
+> +	it is a subset of "cpuset.mems".  Its value will be affected
+> +	by memory nodes hotplug events.
+> +
+> +
+>  Device controller
+>  -----------------
+>  
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index b42037e..419b758 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1823,12 +1823,11 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+>  	return 0;
+>  }
+>  
+> -
+>  /*
+>   * for the common functions, 'private' gives the type of file
+>   */
+>  
+> -static struct cftype files[] = {
+> +static struct cftype legacy_files[] = {
+>  	{
+>  		.name = "cpus",
+>  		.seq_show = cpuset_common_seq_show,
+> @@ -1931,6 +1930,47 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+>  };
+>  
+>  /*
+> + * This is currently a minimal set for the default hierarchy. It can be
+> + * expanded later on by migrating more features and control files from v1.
+> + */
+> +static struct cftype dfl_files[] = {
+> +	{
+> +		.name = "cpus",
+> +		.seq_show = cpuset_common_seq_show,
+> +		.write = cpuset_write_resmask,
+> +		.max_write_len = (100U + 6 * NR_CPUS),
+> +		.private = FILE_CPULIST,
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +	},
+> +
+> +	{
+> +		.name = "mems",
+> +		.seq_show = cpuset_common_seq_show,
+> +		.write = cpuset_write_resmask,
+> +		.max_write_len = (100U + 6 * MAX_NUMNODES),
+> +		.private = FILE_MEMLIST,
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +	},
+> +
+> +	{
+> +		.name = "cpus.effective",
+> +		.seq_show = cpuset_common_seq_show,
+> +		.private = FILE_EFFECTIVE_CPULIST,
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +	},
+> +
+> +	{
+> +		.name = "mems.effective",
+> +		.seq_show = cpuset_common_seq_show,
+> +		.private = FILE_EFFECTIVE_MEMLIST,
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +	},
+> +
+> +	{ }	/* terminate */
+> +};
+> +
+> +
+> +/*
+>   *	cpuset_css_alloc - allocate a cpuset css
+>   *	cgrp:	control group that the new cpuset will be part of
+>   */
+> @@ -2104,8 +2144,10 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+>  	.post_attach	= cpuset_post_attach,
+>  	.bind		= cpuset_bind,
+>  	.fork		= cpuset_fork,
+> -	.legacy_cftypes	= files,
+> +	.legacy_cftypes	= legacy_files,
+> +	.dfl_cftypes	= dfl_files,
+>  	.early_init	= true,
+> +	.threaded	= true,
+
+Which means that by default we can attach tasks instead of only
+processes, right?
+
+>  };
+>  
+>  /**
+> -- 
+> 1.8.3.1
+> 
 
 -- 
-Thanks,
-Tsukada
+#include <best/regards.h>
 
+Patrick Bellasi
