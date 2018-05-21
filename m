@@ -1,103 +1,130 @@
-From: Punit Agrawal <punit.agrawal@arm.com>
-Subject: Re: [PATCH v2 3/7] memcg: use compound_order rather than hpage_nr_pages
-Date: Fri, 18 May 2018 18:51:07 +0100
-Message-ID: <87sh6ozwc4.fsf@e105922-lin.cambridge.arm.com>
+From: TSUKADA Koutaro <tsukada@ascade.co.jp>
+Subject: Re: [PATCH v2 3/7] memcg: use compound_order rather than
+ hpage_nr_pages
+Date: Mon, 21 May 2018 12:48:22 +0900
+Message-ID: <2053ac36-74df-b05e-d1ce-36f69dde2a47@ascade.co.jp>
 References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
-        <262267fe-d98c-0b25-9013-3dafb52e8679@ascade.co.jp>
-        <87wow0zwja.fsf@e105922-lin.cambridge.arm.com>
+ <262267fe-d98c-0b25-9013-3dafb52e8679@ascade.co.jp>
+ <87wow0zwja.fsf@e105922-lin.cambridge.arm.com>
+ <87sh6ozwc4.fsf@e105922-lin.cambridge.arm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87wow0zwja.fsf@e105922-lin.cambridge.arm.com> (Punit Agrawal's
-        message of "Fri, 18 May 2018 18:46:49 +0100")
+In-Reply-To: <87sh6ozwc4.fsf@e105922-lin.cambridge.arm.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: TSUKADA Koutaro <tsukada@ascade.co.jp>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+To: Punit Agrawal <punit.agrawal@arm.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, Mike Kravetz <mike.kravetz@oracle.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgro
 
-Punit Agrawal <punit.agrawal@arm.com> writes:
+On 2018/05/19 2:51, Punit Agrawal wrote:
+> Punit Agrawal <punit.agrawal@arm.com> writes:
+> 
+>> Tsukada-san,
+>>
+>> I am not familiar with memcg so can't comment about whether the patchset
+>> is the right way to solve the problem outlined in the cover letter but
+>> had a couple of comments about this patch.
+>>
+>> TSUKADA Koutaro <tsukada@ascade.co.jp> writes:
+>>
+>>> The current memcg implementation assumes that the compound page is THP.
+>>> In order to be able to charge surplus hugepage, we use compound_order.
+>>>
+>>> Signed-off-by: TSUKADA Koutaro <tsukada@ascade.co.jp>
+>>
+>> Please move this before Patch 1/7. This is to prevent wrong accounting
+>> of pages to memcg for size != PMD_SIZE.
+> 
+> I just noticed that the default state is off so the change isn't enabled
+> until the sysfs node is exposed in the next patch. Please ignore this
+> comment.
+> 
+> One below still applies.
+> 
+>>
+>>> ---
+>>>   memcontrol.c |   10 +++++-----
+>>>   1 file changed, 5 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>> index 2bd3df3..a8f1ff8 100644
+>>> --- a/mm/memcontrol.c
+>>> +++ b/mm/memcontrol.c
+>>> @@ -4483,7 +4483,7 @@ static int mem_cgroup_move_account(struct page *page,
+>>>   				   struct mem_cgroup *to)
+>>>   {
+>>>   	unsigned long flags;
+>>> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+>>> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
+>>
+>> Instead of replacing calls to hpage_nr_pages(), is it possible to modify
+>> it to do the calculation?
 
-> Tsukada-san,
->
-> I am not familiar with memcg so can't comment about whether the patchset
-> is the right way to solve the problem outlined in the cover letter but
-> had a couple of comments about this patch.
->
-> TSUKADA Koutaro <tsukada@ascade.co.jp> writes:
->
->> The current memcg implementation assumes that the compound page is THP.
->> In order to be able to charge surplus hugepage, we use compound_order.
->>
->> Signed-off-by: TSUKADA Koutaro <tsukada@ascade.co.jp>
->
-> Please move this before Patch 1/7. This is to prevent wrong accounting
-> of pages to memcg for size != PMD_SIZE.
+Thank you for review my code and please just call me Tsukada.
 
-I just noticed that the default state is off so the change isn't enabled
-until the sysfs node is exposed in the next patch. Please ignore this
-comment.
+I think it is possible to modify the inside of itself rather than
+replacing the call to hpage_nr_pages().
 
-One below still applies.
+Inferring from the processing that hpage_nr_pages() desires, I thought
+that the definition of hpage_nr_pages() could be moved outside the
+CONFIG_TRANSPARENT_HUGEPAGE. It seems that THP and HugeTLBfs can be
+handled correctly because compound_order() is judged by seeing whether it
+is PageHead or not.
 
->
->> ---
->>  memcontrol.c |   10 +++++-----
->>  1 file changed, 5 insertions(+), 5 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 2bd3df3..a8f1ff8 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -4483,7 +4483,7 @@ static int mem_cgroup_move_account(struct page *page,
->>  				   struct mem_cgroup *to)
->>  {
->>  	unsigned long flags;
->> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
->> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
->
-> Instead of replacing calls to hpage_nr_pages(), is it possible to modify
-> it to do the calculation?
->
-> Thanks,
-> Punit
->
->>  	int ret;
->>  	bool anon;
->>
->> @@ -5417,7 +5417,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
->>  			  bool compound)
->>  {
->>  	struct mem_cgroup *memcg = NULL;
->> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
->> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
->>  	int ret = 0;
->>
->>  	if (mem_cgroup_disabled())
->> @@ -5478,7 +5478,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
->>  void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
->>  			      bool lrucare, bool compound)
->>  {
->> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
->> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
->>
->>  	VM_BUG_ON_PAGE(!page->mapping, page);
->>  	VM_BUG_ON_PAGE(PageLRU(page) && !lrucare, page);
->> @@ -5522,7 +5522,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
->>  void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg,
->>  		bool compound)
->>  {
->> -	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
->> +	unsigned int nr_pages = compound ? (1 << compound_order(page)) : 1;
->>
->>  	if (mem_cgroup_disabled())
->>  		return;
->> @@ -5729,7 +5729,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
->>
->>  	/* Force-charge the new page. The old one will be freed soon */
->>  	compound = PageTransHuge(newpage);
->> -	nr_pages = compound ? hpage_nr_pages(newpage) : 1;
->> +	nr_pages = compound ? (1 << compound_order(newpage)) : 1;
->>
->>  	page_counter_charge(&memcg->memory, nr_pages);
->>  	if (do_memsw_account())
+Also, I would like to use compound_order() inside hpage_nr_pages(), but
+since huge_mm.h is included before mm.h where compound_order() is defined,
+move hpage_nr_pages to mm.h.
+
+Instead of patch 3/7, are the following patches implementing what you
+intended?
+
+diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
+index a8a1262..1186ab7 100644
+--- a/include/linux/huge_mm.h
++++ b/include/linux/huge_mm.h
+@@ -204,12 +204,6 @@ static inline spinlock_t *pud_trans_huge_lock(pud_t *pud,
+  	else
+  		return NULL;
+  }
+-static inline int hpage_nr_pages(struct page *page)
+-{
+-	if (unlikely(PageTransHuge(page)))
+-		return HPAGE_PMD_NR;
+-	return 1;
+-}
+
+  struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
+  		pmd_t *pmd, int flags);
+@@ -254,8 +248,6 @@ static inline bool thp_migration_supported(void)
+  #define HPAGE_PUD_MASK ({ BUILD_BUG(); 0; })
+  #define HPAGE_PUD_SIZE ({ BUILD_BUG(); 0; })
+
+-#define hpage_nr_pages(x) 1
+-
+  static inline bool transparent_hugepage_enabled(struct vm_area_struct *vma)
+  {
+  	return false;
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 1ac1f06..082f2ee 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -673,6 +673,12 @@ static inline unsigned int compound_order(struct page *page)
+  	return page[1].compound_order;
+  }
+
++static inline int hpage_nr_pages(struct page *page)
++{
++	VM_BUG_ON_PAGE(PageTail(page), page);
++	return (1 << compound_order(page));
++}
++
+  static inline void set_compound_order(struct page *page, unsigned int order)
+  {
+  	page[1].compound_order = order;
+
+-- 
+Thanks,
+Tsukada
+
