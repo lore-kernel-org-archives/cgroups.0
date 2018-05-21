@@ -1,147 +1,89 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] mm: fix race between kmem_cache destroy, create and
- deactivate
-Date: Mon, 21 May 2018 11:42:27 -0700
-Message-ID: <20180521114227.233983ac7038a9f4bf5b7066@linux-foundation.org>
-References: <20180521174116.171846-1-shakeelb@google.com>
+From: Steve Grubb <sgrubb@redhat.com>
+Subject: Re: [RFC PATCH ghak32 V2 13/13] debug audit: read container ID of a process
+Date: Mon, 21 May 2018 15:16:01 -0400
+Message-ID: <3001737.MkQ41rgtZF@x2>
+References: <cover.1521179281.git.rgb@redhat.com> <1081821010c124fe4e35984ec3dac1654453bb7c.1521179281.git.rgb@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180521174116.171846-1-shakeelb@google.com>
+In-Reply-To: <1081821010c124fe4e35984ec3dac1654453bb7c.1521179281.git.rgb@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Linux MM <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-audit@redhat.com
+Cc: Richard Guy Briggs <rgb@redhat.com>, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, eparis@parisplace.org, serge@hallyn.com
 
-On Mon, 21 May 2018 10:41:16 -0700 Shakeel Butt <shakeelb@google.com> wrote:
+On Friday, March 16, 2018 5:00:40 AM EDT Richard Guy Briggs wrote:
+> Add support for reading the container ID from the proc filesystem.
 
-> The memcg kmem cache creation and deactivation (SLUB only) is
-> asynchronous. If a root kmem cache is destroyed whose memcg cache is in
-> the process of creation or deactivation, the kernel may crash.
+I think this could be useful in general. Please consider this to be part of 
+the full patch set and not something merely used to debug the patches.
+
+-Steve
+
+> This is a read from the proc entry of the form /proc/PID/containerid
+> where PID is the process ID of the task whose container ID is sought.
 > 
-> Example of one such crash:
-> 	general protection fault: 0000 [#1] SMP PTI
-> 	CPU: 1 PID: 1721 Comm: kworker/14:1 Not tainted 4.17.0-smp
-> 	...
-> 	Workqueue: memcg_kmem_cache kmemcg_deactivate_workfn
-> 	RIP: 0010:has_cpu_slab
-> 	...
-> 	Call Trace:
-> 	? on_each_cpu_cond
-> 	__kmem_cache_shrink
-> 	kmemcg_cache_deact_after_rcu
-> 	kmemcg_deactivate_workfn
-> 	process_one_work
-> 	worker_thread
-> 	kthread
-> 	ret_from_fork+0x35/0x40
+> The read expects up to a u64 value (unset: 18446744073709551615).
 > 
-> This issue is due to the lack of reference counting for the root
-> kmem_caches. There exist a refcount in kmem_cache but it is actually a
-> count of aliases i.e. number of kmem_caches merged together.
+> Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
+> ---
+>  fs/proc/base.c | 20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
 > 
-> This patch make alias count explicit and adds reference counting to the
-> root kmem_caches. The reference of a root kmem cache is elevated on
-> merge and while its memcg kmem_cache is in the process of creation or
-> deactivation.
-> 
-
-The patch seems depressingly complex.
-
-And a bit underdocumented...
-
-> --- a/include/linux/slab.h
-> +++ b/include/linux/slab.h
-> @@ -674,6 +674,8 @@ struct memcg_cache_params {
+> diff --git a/fs/proc/base.c b/fs/proc/base.c
+> index 6ce4fbe..f66d1e2 100644
+> --- a/fs/proc/base.c
+> +++ b/fs/proc/base.c
+> @@ -1300,6 +1300,21 @@ static ssize_t proc_sessionid_read(struct file *
+> file, char __user * buf, .llseek		= generic_file_llseek,
 >  };
->  
->  int memcg_update_all_caches(int num_memcgs);
-> +bool kmem_cache_tryget(struct kmem_cache *s);
-> +void kmem_cache_put(struct kmem_cache *s);
->  
->  /**
->   * kmalloc_array - allocate memory for an array.
-> diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-> index d9228e4d0320..4bb22c89a740 100644
-> --- a/include/linux/slab_def.h
-> +++ b/include/linux/slab_def.h
-> @@ -41,7 +41,8 @@ struct kmem_cache {
->  /* 4) cache creation/removal */
->  	const char *name;
->  	struct list_head list;
-> -	int refcount;
-> +	refcount_t refcount;
-> +	int alias_count;
-
-The semantic meaning of these two?  What locking protects alias_count?
-
->  	int object_size;
->  	int align;
->  
-> diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-> index 3773e26c08c1..532d4b6f83ed 100644
-> --- a/include/linux/slub_def.h
-> +++ b/include/linux/slub_def.h
-> @@ -97,7 +97,8 @@ struct kmem_cache {
->  	struct kmem_cache_order_objects max;
->  	struct kmem_cache_order_objects min;
->  	gfp_t allocflags;	/* gfp flags to use on each alloc */
-> -	int refcount;		/* Refcount for slab cache destroy */
-> +	refcount_t refcount;	/* Refcount for slab cache destroy */
-> +	int alias_count;	/* Number of root kmem caches merged */
-
-"merged" what with what in what manner?
-
->  	void (*ctor)(void *);
->  	unsigned int inuse;		/* Offset to metadata */
->  	unsigned int align;		/* Alignment */
->
-> ...
->
-> --- a/mm/slab.h
-> +++ b/mm/slab.h
-> @@ -25,7 +25,8 @@ struct kmem_cache {
->  	unsigned int useroffset;/* Usercopy region offset */
->  	unsigned int usersize;	/* Usercopy region size */
->  	const char *name;	/* Slab name for sysfs */
-> -	int refcount;		/* Use counter */
-> +	refcount_t refcount;	/* Use counter */
-> +	int alias_count;
-
-Semantic meaning/usage of alias_count?  Locking for it?
-
->  	void (*ctor)(void *);	/* Called on object slot creation */
->  	struct list_head list;	/* List of all slab caches on the system */
->  };
->
-> ...
->
-> +bool kmem_cache_tryget(struct kmem_cache *s)
+> 
+> +static ssize_t proc_containerid_read(struct file *file, char __user *buf,
+> +				  size_t count, loff_t *ppos)
 > +{
-> +	if (is_root_cache(s))
-> +		return refcount_inc_not_zero(&s->refcount);
-> +	return false;
+> +	struct inode *inode = file_inode(file);
+> +	struct task_struct *task = get_proc_task(inode);
+> +	ssize_t length;
+> +	char tmpbuf[TMPBUFLEN*2];
+> +
+> +	if (!task)
+> +		return -ESRCH;
+> +	length = scnprintf(tmpbuf, TMPBUFLEN*2, "%llu",
+> audit_get_containerid(task)); +	put_task_struct(task);
+> +	return simple_read_from_buffer(buf, count, ppos, tmpbuf, length);
 > +}
 > +
-> +void kmem_cache_put(struct kmem_cache *s)
-> +{
-> +	if (is_root_cache(s) &&
-> +	    refcount_dec_and_test(&s->refcount))
-> +		__kmem_cache_destroy(s, true);
-> +}
-> +
-> +void kmem_cache_put_locked(struct kmem_cache *s)
-> +{
-> +	if (is_root_cache(s) &&
-> +	    refcount_dec_and_test(&s->refcount))
-> +		__kmem_cache_destroy(s, false);
-> +}
+>  static ssize_t proc_containerid_write(struct file *file, const char __user
+> *buf, size_t count, loff_t *ppos)
+>  {
+> @@ -1330,6 +1345,7 @@ static ssize_t proc_containerid_write(struct file
+> *file, const char __user *buf, }
+> 
+>  static const struct file_operations proc_containerid_operations = {
+> +	.read		= proc_containerid_read,
+>  	.write		= proc_containerid_write,
+>  	.llseek		= generic_file_llseek,
+>  };
+> @@ -2996,7 +3012,7 @@ static int proc_pid_patch_state(struct seq_file *m,
+> struct pid_namespace *ns, #ifdef CONFIG_AUDITSYSCALL
+>  	REG("loginuid",   S_IWUSR|S_IRUGO, proc_loginuid_operations),
+>  	REG("sessionid",  S_IRUGO, proc_sessionid_operations),
+> -	REG("containerid", S_IWUSR, proc_containerid_operations),
+> +	REG("containerid", S_IWUSR|S_IRUSR, proc_containerid_operations),
+>  #endif
+>  #ifdef CONFIG_FAULT_INJECTION
+>  	REG("make-it-fail", S_IRUGO|S_IWUSR, proc_fault_inject_operations),
+> @@ -3391,7 +3407,7 @@ static int proc_tid_comm_permission(struct inode
+> *inode, int mask) #ifdef CONFIG_AUDITSYSCALL
+>  	REG("loginuid",  S_IWUSR|S_IRUGO, proc_loginuid_operations),
+>  	REG("sessionid",  S_IRUGO, proc_sessionid_operations),
+> -	REG("containerid", S_IWUSR, proc_containerid_operations),
+> +	REG("containerid", S_IWUSR|S_IRUSR, proc_containerid_operations),
+>  #endif
+>  #ifdef CONFIG_FAULT_INJECTION
+>  	REG("make-it-fail", S_IRUGO|S_IWUSR, proc_fault_inject_operations),
 
-Some covering documentation for the above would be useful.  Why do they
-exist, why do they only operate on the root cache? etc.
 
->
-> ...
->
+
 
