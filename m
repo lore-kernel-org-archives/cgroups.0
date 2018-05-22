@@ -1,57 +1,65 @@
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: [PATCH] mm: fix race between kmem_cache destroy, create and
- deactivate
-Date: Tue, 22 May 2018 16:43:02 +0000
-Message-ID: <0100016388bb8ade-de95df0e-6154-4ddc-98bb-ee33811cca85-000000@email.amazonses.com>
-References: <20180521174116.171846-1-shakeelb@google.com> <20180521114227.233983ac7038a9f4bf5b7066@linux-foundation.org>
+From: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH ghak32 V2 13/13] debug audit: read container ID of a
+	process
+Date: Tue, 22 May 2018 13:35:41 -0400
+Message-ID: <20180522173541.slcdszumi7q6c4id@madcap2.tricolour.ca>
+References: <cover.1521179281.git.rgb@redhat.com>
+	<1081821010c124fe4e35984ec3dac1654453bb7c.1521179281.git.rgb@redhat.com>
+	<3001737.MkQ41rgtZF@x2> <87muwshl4z.fsf@xmission.com>
+	<CAHC9VhQruN88t-R9Qo3e4hwCZ58RAyrmEmH1nY4RR6NZaiBzGQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=ug7nbtf4gccmlpwj322ax3p6ow6yfsug; d=amazonses.com; t=1527007382;
-        h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type:Feedback-ID;
-        bh=ifK5nphAsIvboDdGhQRXC44uOJcpD6cBQHzAowxFlf4=;
-        b=KmhSvcoe/8KozPIjq1LtNQnQUsyAm08sDtM1VVRVyZN+1mjF9JZI4fAjqeKDxiKw
-        Gfz0DpjpU12KDH3vZotMbWcSaFR2fzR31XF0yvMdHQc5x+ELbdidm6pc8UcjxRvmFUn
-        HUrYugKfhcaqvLw6q+hZF9LhWhKtmkErZC6baDTU=
-In-Reply-To: <20180521114227.233983ac7038a9f4bf5b7066@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Linux MM <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAHC9VhQruN88t-R9Qo3e4hwCZ58RAyrmEmH1nY4RR6NZaiBzGQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org
 
-On Mon, 21 May 2018, Andrew Morton wrote:
-
-> The patch seems depressingly complex.
->
-> And a bit underdocumented...
-
-Maybe separate out the bits that rename refcount to alias_count?
-
-> > +	refcount_t refcount;
-> > +	int alias_count;
->
-> The semantic meaning of these two?  What locking protects alias_count?
-
-slab_mutex
-
->
-> >  	int object_size;
-> >  	int align;
+On 2018-05-21 16:06, Paul Moore wrote:
+> On Mon, May 21, 2018 at 3:19 PM, Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
+> > Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+> >> On Friday, March 16, 2018 5:00:40 AM EDT Richard Guy Briggs wrote:
+> >>> Add support for reading the container ID from the proc filesystem.
+> >>
+> >> I think this could be useful in general. Please consider this to be part of
+> >> the full patch set and not something merely used to debug the patches.
 > >
-> > diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-> > index 3773e26c08c1..532d4b6f83ed 100644
-> > --- a/include/linux/slub_def.h
-> > +++ b/include/linux/slub_def.h
-> > @@ -97,7 +97,8 @@ struct kmem_cache {
-> >  	struct kmem_cache_order_objects max;
-> >  	struct kmem_cache_order_objects min;
-> >  	gfp_t allocflags;	/* gfp flags to use on each alloc */
-> > -	int refcount;		/* Refcount for slab cache destroy */
-> > +	refcount_t refcount;	/* Refcount for slab cache destroy */
-> > +	int alias_count;	/* Number of root kmem caches merged */
->
-> "merged" what with what in what manner?
+> > Only with an audit specific name.
+> >
+> > As it is:
+> >
+> > Nacked-by: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+> >
+> > The truth is the containerid name really stinks and is quite confusing
+> > and does not imply that the label applies only to audit.  And little
+> > things like this make me extremely uncofortable with it.
+> 
+> It also makes the audit container ID (notice how I *always* call it
+> the *audit* container ID? that is not an accident) available for
+> userspace applications to abuse.  Perhaps in the future we can look at
+> ways to make this more available to applications, but this patch is
+> not the answer.
 
-That is a basic SLUB feature.
+Do you have a productive suggestion?
+
+> paul moore
+
+- RGB
+
+--
+Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
