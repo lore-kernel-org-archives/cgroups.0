@@ -1,64 +1,96 @@
-From: Y Song <ys114321@gmail.com>
-Subject: Re: [PATCH] [RFC] bpf: tracing: new helper bpf_get_current_cgroup_ino
-Date: Mon, 21 May 2018 17:24:49 -0700
-Message-ID: <CAH3MdRWgruVq+3r+2pHTah-c2zTO03vPkepjWDZ0_KrYcroy9A@mail.gmail.com>
-References: <20180513173318.21680-1-alban@kinvolk.io> <20180521162609.lpdrnozowmzdn57m@ast-mbp.dhcp.thefacebook.com>
+From: TSUKADA Koutaro <tsukada@ascade.co.jp>
+Subject: Re: [PATCH v2 0/7] mm: pages for hugetlb's overcommit may be able to
+ charge to memcg
+Date: Tue, 22 May 2018 21:56:42 +0900
+Message-ID: <9456064b-3ae1-0234-a1fc-918708156b6a@ascade.co.jp>
+References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
+ <871se5ysbg.fsf@e105922-lin.cambridge.arm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=EtFhwwEJ8zT2/HaFLJ3JWPH20nX2Hqgi3pE8FXrYWF8=;
-        b=SLRANYFGScceu1RQE/OzO8lLSaUlx6AQIRznq4acjMmtur2LIVEMNDE77Yy5nFtQT4
-         sc7oAMThH4xMOhxl6Ls7tLvo6jWhQMl1NPbR65ekSsM9Ipkm9UQiZHrjDQX+NNYL4t+d
-         JE/hGS7MFIBr7/Bt/Vl+5NVgX3SYizPP5ZajBBQRnG79Dm7iFxouuBjo0aIRrazO7JSc
-         sA1+Rz9Xz3zyC+XvFjr3vvmMNFgrA32dKQPndyJcTleaUtYlKWpRIuEeVmYX0+8+pkXT
-         x0Vqa2oBXfZyHYiMqHTvqlnhsS+KZJi7sFJTAm8I+aytzQWOxukt/3Galfyuzu6C2hMr
-         QGSg==
-In-Reply-To: <20180521162609.lpdrnozowmzdn57m@ast-mbp.dhcp.thefacebook.com>
+In-Reply-To: <871se5ysbg.fsf@e105922-lin.cambridge.arm.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Cc: Alban Crequy <alban.crequy@gmail.com>, netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, Alban Crequy <alban@kinvolk.io>, tj@kernel.org
+To: Punit Agrawal <punit.agrawal@arm.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, Mike Kravetz <mike.kravetz@oracle.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgro
 
-On Mon, May 21, 2018 at 9:26 AM, Alexei Starovoitov
-<alexei.starovoitov@gmail.com> wrote:
-> On Sun, May 13, 2018 at 07:33:18PM +0200, Alban Crequy wrote:
+Hi Punit,
+
+On 2018/05/21 23:52, Punit Agrawal wrote:
+> Hi Tsukada,
+> 
+> I was staring at memcg code to better understand your changes and had
+> the below thought.
+> 
+> TSUKADA Koutaro <tsukada@ascade.co.jp> writes:
+> 
+> [...]
+> 
+>> In this patch-set, introduce the charge_surplus_huge_pages(boolean) to
+>> struct hstate. If it is true, it charges to the memory cgroup to which the
+>> task that obtained surplus hugepages belongs. If it is false, do nothing as
+>> before, and the default value is false. The charge_surplus_huge_pages can
+>> be controlled procfs or sysfs interfaces.
+> 
+> Instead of tying the surplus huge page charging control per-hstate,
+> could the control be made per-memcg?
+> 
+> This can be done by introducing a per-memory controller file in sysfs
+> (memory.charge_surplus_hugepages?) that indicates whether surplus
+> hugepages are to be charged to the controller and forms part of the
+> total limit. IIUC, the limit already accounts for page and swap cache
+> pages.
+> 
+> This would allow the control to be enabled per-cgroup and also keep the
+> userspace control interface in one place.
+> 
+> As said earlier, I'm not familiar with memcg so the above might not be a
+> feasible but think it'll lead to a more coherent user
+> interface. Hopefully, more knowledgeable folks on the thread can chime
+> in.
+> 
+
+Thank you for good advise.
+As you mentioned, it is better to be able to control by per-memcg. After
+organizing my thoughts, I will develop the next version patch-set that can
+solve issues and challenge again.
+
+Thanks,
+Tsukada
+
+> Thanks,
+> Punit
+> 
+>> Since THP is very effective in environments with kernel page size of 4KB,
+>> such as x86, there is no reason to positively use HugeTLBfs, so I think
+>> that there is no situation to enable charge_surplus_huge_pages. However, in
+>> some distributions such as arm64, the page size of the kernel is 64KB, and
+>> the size of THP is too huge as 512MB, making it difficult to use. HugeTLBfs
+>> may support multiple huge page sizes, and in such a special environment
+>> there is a desire to use HugeTLBfs.
 >>
->> +BPF_CALL_2(bpf_get_current_cgroup_ino, u32, hierarchy, u64, flags)
->> +{
->> +     // TODO: pick the correct hierarchy instead of the mem controller
->> +     struct cgroup *cgrp = task_cgroup(current, memory_cgrp_id);
->> +
->> +     if (unlikely(!cgrp))
->> +             return -EINVAL;
->> +     if (unlikely(hierarchy))
->> +             return -EINVAL;
->> +     if (unlikely(flags))
->> +             return -EINVAL;
->> +
->> +     return cgrp->kn->id.ino;
->
-> ino only is not enough to identify cgroup. It needs generation number too.
-> I don't quite see how hierarchy and flags can be used in the future.
-> Also why limit it to memcg?
->
-> How about something like this instead:
->
-> BPF_CALL_2(bpf_get_current_cgroup_id)
-> {
->         struct cgroup *cgrp = task_dfl_cgroup(current);
->
->         return cgrp->kn->id.id;
-> }
-> The user space can use fhandle api to get the same 64-bit id.
+>> The patch set is for 4.17.0-rc3+. I don't know whether patch-set are
+>> acceptable or not, so I just done a simple test.
+>>
+>> Thanks,
+>> Tsukada
+>>
+>> TSUKADA Koutaro (7):
+>>   hugetlb: introduce charge_surplus_huge_pages to struct hstate
+>>   hugetlb: supports migrate charging for surplus hugepages
+>>   memcg: use compound_order rather than hpage_nr_pages
+>>   mm, sysctl: make charging surplus hugepages controllable
+>>   hugetlb: add charge_surplus_hugepages attribute
+>>   Documentation, hugetlb: describe about charge_surplus_hugepages
+>>   memcg: supports movement of surplus hugepages statistics
+>>
+>>  Documentation/vm/hugetlbpage.txt |    6 +
+>>  include/linux/hugetlb.h          |    4 +
+>>  kernel/sysctl.c                  |    7 +
+>>  mm/hugetlb.c                     |  148 +++++++++++++++++++++++++++++++++++++++
+>>  mm/memcontrol.c                  |  109 +++++++++++++++++++++++++++-
+>>  5 files changed, 269 insertions(+), 5 deletions(-)
 
-I think this should work. This will also be useful to bcc as user
-space can encode desired id
-in the bpf program and compared that id to the current cgroup id, so we can have
-cgroup level tracing (esp. stat collection) support. To cope with
-cgroup hierarchy, user can use
-cgroup-array based approach or explicitly compare against multiple cgroup id's.
+
