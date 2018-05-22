@@ -1,65 +1,106 @@
-From: Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH ghak32 V2 13/13] debug audit: read container ID of a
-	process
-Date: Tue, 22 May 2018 13:35:41 -0400
-Message-ID: <20180522173541.slcdszumi7q6c4id@madcap2.tricolour.ca>
-References: <cover.1521179281.git.rgb@redhat.com>
-	<1081821010c124fe4e35984ec3dac1654453bb7c.1521179281.git.rgb@redhat.com>
-	<3001737.MkQ41rgtZF@x2> <87muwshl4z.fsf@xmission.com>
-	<CAHC9VhQruN88t-R9Qo3e4hwCZ58RAyrmEmH1nY4RR6NZaiBzGQ@mail.gmail.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v2 0/7] mm: pages for hugetlb's overcommit may be able to
+ charge to memcg
+Date: Tue, 22 May 2018 20:54:07 +0200
+Message-ID: <20180522185407.GC20441@dhcp22.suse.cz>
+References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
+ <240f1b14-ed7d-4983-6c52-be4899d4caa5@oracle.com>
+ <8711fed5-fc35-a11a-3a17-740a9dca1f2a@ascade.co.jp>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8711fed5-fc35-a11a-3a17-740a9dca1f2a@ascade.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAHC9VhQruN88t-R9Qo3e4hwCZ58RAyrmEmH1nY4RR6NZaiBzGQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Eric Paris <eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org>, Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org
+To: TSUKADA Koutaro <tsukada@ascade.co.jp>
+Cc: Mike Kravetz <mike.kravetz@oracle.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Punit Agrawal <punit.agrawal@arm.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On 2018-05-21 16:06, Paul Moore wrote:
-> On Mon, May 21, 2018 at 3:19 PM, Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
-> > Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> >> On Friday, March 16, 2018 5:00:40 AM EDT Richard Guy Briggs wrote:
-> >>> Add support for reading the container ID from the proc filesystem.
+On Tue 22-05-18 22:04:23, TSUKADA Koutaro wrote:
+> On 2018/05/22 3:07, Mike Kravetz wrote:
+> > On 05/17/2018 09:27 PM, TSUKADA Koutaro wrote:
+> >> Thanks to Mike Kravetz for comment on the previous version patch.
 > >>
-> >> I think this could be useful in general. Please consider this to be part of
-> >> the full patch set and not something merely used to debug the patches.
-> >
-> > Only with an audit specific name.
-> >
-> > As it is:
-> >
-> > Nacked-by: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-> >
-> > The truth is the containerid name really stinks and is quite confusing
-> > and does not imply that the label applies only to audit.  And little
-> > things like this make me extremely uncofortable with it.
+> >> The purpose of this patch-set is to make it possible to control whether or
+> >> not to charge surplus hugetlb pages obtained by overcommitting to memory
+> >> cgroup. In the future, I am trying to accomplish limiting the memory usage
+> >> of applications that use both normal pages and hugetlb pages by the memory
+> >> cgroup(not use the hugetlb cgroup).
+> >>
+> >> Applications that use shared libraries like libhugetlbfs.so use both normal
+> >> pages and hugetlb pages, but we do not know how much to use each. Please
+> >> suppose you want to manage the memory usage of such applications by cgroup
+> >> How do you set the memory cgroup and hugetlb cgroup limit when you want to
+> >> limit memory usage to 10GB?
+> >>
+> >> If you set a limit of 10GB for each, the user can use a total of 20GB of
+> >> memory and can not limit it well. Since it is difficult to estimate the
+> >> ratio used by user of normal pages and hugetlb pages, setting limits of 2GB
+> >> to memory cgroup and 8GB to hugetlb cgroup is not very good idea. In such a
+> >> case, I thought that by using my patch-set, we could manage resources just
+> >> by setting 10GB as the limit of memory cgoup(there is no limit to hugetlb
+> >> cgroup).
+> >>
+> >> In this patch-set, introduce the charge_surplus_huge_pages(boolean) to
+> >> struct hstate. If it is true, it charges to the memory cgroup to which the
+> >> task that obtained surplus hugepages belongs. If it is false, do nothing as
+> >> before, and the default value is false. The charge_surplus_huge_pages can
+> >> be controlled procfs or sysfs interfaces.
+> >>
+> >> Since THP is very effective in environments with kernel page size of 4KB,
+> >> such as x86, there is no reason to positively use HugeTLBfs, so I think
+> >> that there is no situation to enable charge_surplus_huge_pages. However, in
+> >> some distributions such as arm64, the page size of the kernel is 64KB, and
+> >> the size of THP is too huge as 512MB, making it difficult to use. HugeTLBfs
+> >> may support multiple huge page sizes, and in such a special environment
+> >> there is a desire to use HugeTLBfs.
+> > 
+> > One of the basic questions/concerns I have is accounting for surplus huge
+> > pages in the default memory resource controller.  The existing huegtlb
+> > resource controller already takes hugetlbfs huge pages into account,
+> > including surplus pages.  This series would allow surplus pages to be
+> > accounted for in the default  memory controller, or the hugetlb controller
+> > or both.
+> > 
+> > I understand that current mechanisms do not meet the needs of the above
+> > use case.  The question is whether this is an appropriate way to approach
+> > the issue.
+
+I do share your view Mike!
+
+> > My cgroup experience and knowledge is extremely limited, but
+> > it does not appear that any other resource can be controlled by multiple
+> > controllers.  Therefore, I am concerned that this may be going against
+> > basic cgroup design philosophy.
 > 
-> It also makes the audit container ID (notice how I *always* call it
-> the *audit* container ID? that is not an accident) available for
-> userspace applications to abuse.  Perhaps in the future we can look at
-> ways to make this more available to applications, but this patch is
-> not the answer.
+> Thank you for your feedback.
+> That makes sense, surplus hugepages are charged to both memcg and hugetlb
+> cgroup, which may be contrary to cgroup design philosophy.
+> 
+> Based on the above advice, I have considered the following improvements,
+> what do you think about?
+> 
+> The 'charge_surplus_hugepages' of v2 patch-set was an option to switch
+> "whether to charge memcg in addition to hugetlb cgroup", but it will be
+> abolished. Instead, change to "switch only to memcg instead of hugetlb
+> cgroup" option. This is called 'surplus_charge_to_memcg'.
 
-Do you have a productive suggestion?
+This all looks so hackish and ad-hoc that I would be tempted to give it
+an outright nack, but let's here more about why do we need this fiddling
+at all. I've asked in other email so I guess I will get an answer there
+but let me just emphasize again that I absolutely detest a possibility
+to put hugetlb pages into the memcg mix. They just do not belong there.
+Try to look at previous discussions why it has been decided to have a
+separate hugetlb pages at all.
 
-> paul moore
-
-- RGB
-
---
-Richard Guy Briggs <rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sr. S/W Engineer, Kernel Security, Base Operating Systems
-Remote, Ottawa, Red Hat Canada
-IRC: rgb, SunRaycer
-Voice: +1.647.777.2635, Internal: (81) 32635
+I am also quite confused why you keep distinguishing surplus hugetlb
+pages from regular preallocated ones. Being a surplus page is an
+implementation detail that we use for an internal accounting rather than
+something to exhibit to the userspace even more than we do currently.
+Just look at what [sw]hould when you need to adjust accounting - e.g.
+due to the pool resize. Are you going to uncharge those surplus pages
+ffrom memcg to reflect their persistence?
+-- 
+Michal Hocko
+SUSE Labs
