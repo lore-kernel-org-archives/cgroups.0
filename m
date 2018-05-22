@@ -1,68 +1,57 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH] cgroup, docs: add a note about returning EBUSY in some cases
-Date: Tue, 22 May 2018 15:36:48 +0100
-Message-ID: <20180522143648.29508-1-guro@fb.com>
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [PATCH] mm: fix race between kmem_cache destroy, create and
+ deactivate
+Date: Tue, 22 May 2018 16:43:02 +0000
+Message-ID: <0100016388bb8ade-de95df0e-6154-4ddc-98bb-ee33811cca85-000000@email.amazonses.com>
+References: <20180521174116.171846-1-shakeelb@google.com> <20180521114227.233983ac7038a9f4bf5b7066@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=facebook;
- bh=pyGyst6CwqeV5Q/PD0dBswtRw65+/xB3wFZAo8T8W68=;
- b=Thpcd6pVWuyT5i5NFYbWW+77Wywh2cK00X5Hvj+0ziS3gy+DkwHZR4MhshntQYwI2Tqk
- wBLIvG91MFIaEfWQFMFB3hzAWefl6+a8qc0yH11cr/UNAQjzBxQi9Y4189jHMJWHkKOg
- W0sQEY36Gw3sIEX9nzaPELiWrsyNOStZtS0= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pyGyst6CwqeV5Q/PD0dBswtRw65+/xB3wFZAo8T8W68=;
- b=DM5iM5qdlOnoBQvHK1BfsfyiLWBfg0Ae8iW1i1wOLFS17JHHjgl6ETADF5j67osxy1LLPfyT23rRPiwX4D8e3vr5eGhpsYyXM1xFo57DuvYhBg2cZeAVQP7hF86wP4h5Goz1FueubY8DyxqKqaWRDxeXrF/vgEhsPTVNML8Nq+8=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=ug7nbtf4gccmlpwj322ax3p6ow6yfsug; d=amazonses.com; t=1527007382;
+        h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type:Feedback-ID;
+        bh=ifK5nphAsIvboDdGhQRXC44uOJcpD6cBQHzAowxFlf4=;
+        b=KmhSvcoe/8KozPIjq1LtNQnQUsyAm08sDtM1VVRVyZN+1mjF9JZI4fAjqeKDxiKw
+        Gfz0DpjpU12KDH3vZotMbWcSaFR2fzR31XF0yvMdHQc5x+ELbdidm6pc8UcjxRvmFUn
+        HUrYugKfhcaqvLw6q+hZF9LhWhKtmkErZC6baDTU=
+In-Reply-To: <20180521114227.233983ac7038a9f4bf5b7066@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Linux MM <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Explicitly document EBUSY returned by writing into cgroup.procs
-if controllers are enabled; and writing into cgroup.subtree_control
-if there are attached processes.
+On Mon, 21 May 2018, Andrew Morton wrote:
 
-The return code might be slightly surprising, and because there is
-nothing obviously better, let's document it at least.
+> The patch seems depressingly complex.
+>
+> And a bit underdocumented...
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
-Cc: cgroups@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- Documentation/cgroup-v2.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+Maybe separate out the bits that rename refcount to alias_count?
 
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 74cdeaed9f7a..57302f88a4ad 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -799,6 +799,9 @@ All cgroup core files are prefixed with "cgroup."
- 	When delegating a sub-hierarchy, write access to this file
- 	should be granted along with the containing directory.
- 
-+	If the target cgroup has enabled controllers, writing to this
-+	file will fail with EBUSY.
-+
- 	In a threaded cgroup, reading this file fails with EOPNOTSUPP
- 	as all the processes belong to the thread root.  Writing is
- 	supported and moves every thread of the process to the cgroup.
-@@ -850,6 +853,9 @@ All cgroup core files are prefixed with "cgroup."
- 	the last one is effective.  When multiple enable and disable
- 	operations are specified, either all succeed or all fail.
- 
-+	If the cgroup has attached tasks, writing to this file will
-+	fail with EBUSY.
-+
-   cgroup.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
--- 
-2.14.3
+> > +	refcount_t refcount;
+> > +	int alias_count;
+>
+> The semantic meaning of these two?  What locking protects alias_count?
 
+slab_mutex
+
+>
+> >  	int object_size;
+> >  	int align;
+> >
+> > diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+> > index 3773e26c08c1..532d4b6f83ed 100644
+> > --- a/include/linux/slub_def.h
+> > +++ b/include/linux/slub_def.h
+> > @@ -97,7 +97,8 @@ struct kmem_cache {
+> >  	struct kmem_cache_order_objects max;
+> >  	struct kmem_cache_order_objects min;
+> >  	gfp_t allocflags;	/* gfp flags to use on each alloc */
+> > -	int refcount;		/* Refcount for slab cache destroy */
+> > +	refcount_t refcount;	/* Refcount for slab cache destroy */
+> > +	int alias_count;	/* Number of root kmem caches merged */
+>
+> "merged" what with what in what manner?
+
+That is a basic SLUB feature.
