@@ -1,190 +1,68 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH v8 6/6] cpuset: Allow reporting of sched domain
- generation info
-Date: Tue, 22 May 2018 15:53:49 +0200
-Message-ID: <20180522135349.GB31040@localhost.localdomain>
-References: <1526590545-3350-1-git-send-email-longman@redhat.com>
- <1526590545-3350-7-git-send-email-longman@redhat.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH] cgroup, docs: add a note about returning EBUSY in some cases
+Date: Tue, 22 May 2018 15:36:48 +0100
+Message-ID: <20180522143648.29508-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1526590545-3350-7-git-send-email-longman@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=pyGyst6CwqeV5Q/PD0dBswtRw65+/xB3wFZAo8T8W68=;
+ b=Thpcd6pVWuyT5i5NFYbWW+77Wywh2cK00X5Hvj+0ziS3gy+DkwHZR4MhshntQYwI2Tqk
+ wBLIvG91MFIaEfWQFMFB3hzAWefl6+a8qc0yH11cr/UNAQjzBxQi9Y4189jHMJWHkKOg
+ W0sQEY36Gw3sIEX9nzaPELiWrsyNOStZtS0= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pyGyst6CwqeV5Q/PD0dBswtRw65+/xB3wFZAo8T8W68=;
+ b=DM5iM5qdlOnoBQvHK1BfsfyiLWBfg0Ae8iW1i1wOLFS17JHHjgl6ETADF5j67osxy1LLPfyT23rRPiwX4D8e3vr5eGhpsYyXM1xFo57DuvYhBg2cZeAVQP7hF86wP4h5Goz1FueubY8DyxqKqaWRDxeXrF/vgEhsPTVNML8Nq+8=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Explicitly document EBUSY returned by writing into cgroup.procs
+if controllers are enabled; and writing into cgroup.subtree_control
+if there are attached processes.
 
-On 17/05/18 16:55, Waiman Long wrote:
-> This patch enables us to report sched domain generation information.
-> 
-> If DYNAMIC_DEBUG is enabled, issuing the following command
-> 
->   echo "file cpuset.c +p" > /sys/kernel/debug/dynamic_debug/control
-> 
-> and setting loglevel to 8 will allow the kernel to show what scheduling
-> domain changes are being made.
-> 
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->  kernel/cgroup/cpuset.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index fb8aa82b..8f586e8 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -820,6 +820,12 @@ static int generate_sched_domains(cpumask_var_t **domains,
->  	}
->  	BUG_ON(nslot != ndoms);
->  
-> +#ifdef CONFIG_DEBUG_KERNEL
-> +	for (i = 0; i < ndoms; i++)
-> +		pr_debug("generate_sched_domains dom %d: %*pbl\n", i,
-> +			 cpumask_pr_args(doms[i]));
-> +#endif
-> +
+The return code might be slightly surprising, and because there is
+nothing obviously better, let's document it at least.
 
-While I'm always in favor of adding debug output, in this case I'm not
-sure it's adding much to what we already print when booting with
-sched_debug kernel command-line param, e.g.
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
+Cc: cgroups@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ Documentation/cgroup-v2.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
---->8---
- Kernel command line: BOOT_IMAGE=/vmlinuz-4.17.0-rc5+ ... sched_debug
+diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
+index 74cdeaed9f7a..57302f88a4ad 100644
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -799,6 +799,9 @@ All cgroup core files are prefixed with "cgroup."
+ 	When delegating a sub-hierarchy, write access to this file
+ 	should be granted along with the containing directory.
+ 
++	If the target cgroup has enabled controllers, writing to this
++	file will fail with EBUSY.
++
+ 	In a threaded cgroup, reading this file fails with EOPNOTSUPP
+ 	as all the processes belong to the thread root.  Writing is
+ 	supported and moves every thread of the process to the cgroup.
+@@ -850,6 +853,9 @@ All cgroup core files are prefixed with "cgroup."
+ 	the last one is effective.  When multiple enable and disable
+ 	operations are specified, either all succeed or all fail.
+ 
++	If the cgroup has attached tasks, writing to this file will
++	fail with EBUSY.
++
+   cgroup.events
+ 	A read-only flat-keyed file which exists on non-root cgroups.
+ 	The following entries are defined.  Unless specified
+-- 
+2.14.3
 
-[...]
-
- smp: Bringing up secondary CPUs ...
- x86: Booting SMP configuration:
- .... node  #0, CPUs:        #1  #2  #3  #4  #5
- .... node  #1, CPUs:    #6  #7  #8  #9 #10 #11
- smp: Brought up 2 nodes, 12 CPUs
- smpboot: Max logical packages: 2
- smpboot: Total of 12 processors activated (45636.50 BogoMIPS)
- CPU0 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }
-   domain-1: span=0-11 level=NUMA
-    groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
- CPU1 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }
-   domain-1: span=0-11 level=NUMA
-    groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
- CPU2 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }
-   domain-1: span=0-11 level=NUMA
-    groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
- CPU3 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }
-   domain-1: span=0-11 level=NUMA
-    groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
- CPU4 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }
-   domain-1: span=0-11 level=NUMA
-    groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
- CPU5 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }
-   domain-1: span=0-11 level=NUMA
-    groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
- CPU6 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }
-   domain-1: span=0-11 level=NUMA
-    groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
- CPU7 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }
-   domain-1: span=0-11 level=NUMA
-    groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
- CPU8 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }
-   domain-1: span=0-11 level=NUMA
-    groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
- CPU9 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }
-   domain-1: span=0-11 level=NUMA
-    groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
- CPU10 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }
-   domain-1: span=0-11 level=NUMA
-    groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
- CPU11 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }
-   domain-1: span=0-11 level=NUMA
-    groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
- span: 0-11 (max cpu_capacity = 1024)
-
-[...]
-
- generate_sched_domains dom 0: 6-11 <-- this and the one below is what
- generate_sched_domains dom 1: 0-5      you are adding
- CPU0 attaching NULL sched-domain.
- CPU1 attaching NULL sched-domain.
- CPU2 attaching NULL sched-domain.
- CPU3 attaching NULL sched-domain.
- CPU4 attaching NULL sched-domain.
- CPU5 attaching NULL sched-domain.
- CPU6 attaching NULL sched-domain.
- CPU7 attaching NULL sched-domain.
- CPU8 attaching NULL sched-domain.
- CPU9 attaching NULL sched-domain.
- CPU10 attaching NULL sched-domain.
- CPU11 attaching NULL sched-domain.
- CPU6 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }
- CPU7 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }
- CPU8 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }
- CPU9 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }
- CPU10 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }
- CPU11 attaching sched-domain(s):
-  domain-0: span=6-11 level=MC
-   groups: 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }
- span: 6-11 (max cpu_capacity = 1024)
- CPU0 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }
- CPU1 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }
- CPU2 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }
- CPU3 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }
- CPU4 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }
- CPU5 attaching sched-domain(s):
-  domain-0: span=0-5 level=MC
-   groups: 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }
- span: 0-5 (max cpu_capacity = 1024)
- --->8---
-
- Do you think there is still a benefit in printing out what
- generate_sched_domains does?
-
- Best,
-
- - Juri
