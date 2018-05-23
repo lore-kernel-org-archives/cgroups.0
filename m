@@ -1,123 +1,99 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Subject: [PATCH] cgroup: css_set_lock should nest inside
- tasklist_lock
-Date: Wed, 23 May 2018 11:14:33 -0700
-Message-ID: <20180523181433.GP1718769@devbig577.frc2.facebook.com>
-References: <20180521054022.GE19015@yexl-desktop>
- <20180521073808.GA21726@localhost>
- <20180521153331.GM1718769@devbig577.frc2.facebook.com>
- <20180522002001.GA13023@localhost>
+Subject: [PATCH REPOST] mm: memcg: allow lowering memory.swap.max below the
+ current usage
+Date: Wed, 23 May 2018 11:50:41 -0700
+Message-ID: <20180523185041.GR1718769@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=+kya0Y9jy2MjALCv/BFFQ0sg8UyhNa/jrRbczobSgaA=;
-        b=O1CPDkSgL0BHTOUIzddzsUr2k0XHPu38HSLaoFj5d7PaVr1GC6g3ssI8bvmcbt9krW
-         bJlRzEwpKEw8ucWKK50If96+zqkTFYVCEFaIJNOGfnoM68wgMHN/tQlN6pgXtd25LZhW
-         BJxcztfHQp22bSxL7dkv8dPIHtEOLJUIr8pTaSnMN2aKcQ4KpIaG3JM31lM4/830Hsw5
-         nOzBYGQuk38K4Drx0tiYIhGNel7idbhc9Gp6eSHY/Ap3IdbCs4rvAQ8v/sMp7QCFbgnX
-         kAlzJkNsMvG/Wpnqq/sR0D8NaEwy52xnvhhKYUEGNIPHyimyBGVvCfx6eTyOvP12VzM2
-         e5VQ==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=9U6A1Ro6rTIyzu6lM/AUu8I0xnd8/cO0kB0s+DrXUKg=;
+        b=h3FNCqq5NFelKs3/BUgkNQFJMZG/jrs8XdggvVjBeL5RE9iyEaqEjOY/PIq1umM+bZ
+         Z0FK9UqQeUIaT/DJUcJAq3Iyd8VrviFod8yfhMVn9TadGXVjKtL87EZmyzcdNurBihg6
+         bRNr/sNGcRCrvnZFzcTcZo92eKX5J8jxLPQ3hTRjOYlOKBp7mZXbqbs4PWOAhAlUHjxs
+         6EDP2nCWpAAZbNb3qW32awm6JaXAIKpAt27QCEuc/YhvLLM3Nc27lEyJUB5PB8E2shqH
+         HMKR6qnvZlKXkelZwhP7INnhHW1rlShw1LrN7hpif0SafzPPbml+SqB//+MuybfgEyp6
+         HYyA==
 Content-Disposition: inline
-In-Reply-To: <20180522002001.GA13023@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Boqun Feng <boqun.feng@gmail.com>
-Cc: kernel test robot <xiaolong.ye@intel.com>, lkp@01.org, Peter Zijlstra <peterz@infradead.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, kernel-team@fb.com, Michal Hocko <mhocko@kernel.org>, Shaohua Li <shli@fb.com>, Rik van Riel <riel@surriel.com>, cgroups@vger.kernel.org
 
-Applied the following patch to cgroup/for-4.18.
+Currently an attempt to set swap.max into a value lower than the
+actual swap usage fails, which causes configuration problems as
+there's no way of lowering the configuration below the current usage
+short of turning off swap entirely.  This makes swap.max difficult to
+use and allows delegatees to lock the delegator out of reducing swap
+allocation.
+
+This patch updates swap_max_write() so that the limit can be lowered
+below the current usage.  It doesn't implement active reclaiming of
+swap entries for the following reasons.
+
+* mem_cgroup_swap_full() already tells the swap machinary to
+  aggressively reclaim swap entries if the usage is above 50% of
+  limit, so simply lowering the limit automatically triggers gradual
+  reclaim.
+
+* Forcing back swapped out pages is likely to heavily impact the
+  workload and mess up the working set.  Given that swap usually is a
+  lot less valuable and less scarce, letting the existing usage
+  dissipate over time through the above gradual reclaim and as they're
+  falted back in is likely the better behavior.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Acked-by: Roman Gushchin <guro@fb.com>
+Acked-by: Rik van Riel <riel@surriel.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Shaohua Li <shli@fb.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org
+---
+Hello, Andrew.
+
+This was buried in the thread discussing Roman's original patch.  The
+consensus seems to be that this simple approach is what we wanna do at
+least for now.  Can you please pick it up?
 
 Thanks.
 
------- 8< ------
-From d8742e22902186e30c346b1ba881cb52942ae3e4 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Wed, 23 May 2018 11:04:54 -0700
+ Documentation/cgroup-v2.txt |    5 +++++
+ mm/memcontrol.c             |    6 +-----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-cgroup_enable_task_cg_lists() incorrectly nests non-irq-safe
-tasklist_lock inside irq-safe css_set_lock triggering the following
-lockdep warning.
-
-  WARNING: possible irq lock inversion dependency detected
-  4.17.0-rc1-00027-gb37d049 #6 Not tainted
-  --------------------------------------------------------
-  systemd/1 just changed the state of lock:
-  00000000fe57773b (css_set_lock){..-.}, at: cgroup_free+0xf2/0x12a
-  but this lock took another, SOFTIRQ-unsafe lock in the past:
-   (tasklist_lock){.+.+}
-
-  and interrupts could create inverse lock ordering between them.
-
-  other info that might help us debug this:
-   Possible interrupt unsafe locking scenario:
-
-	 CPU0                    CPU1
-	 ----                    ----
-    lock(tasklist_lock);
-				 local_irq_disable();
-				 lock(css_set_lock);
-				 lock(tasklist_lock);
-    <Interrupt>
-      lock(css_set_lock);
-
-   *** DEADLOCK ***
-
-The condition is highly unlikely to actually happen especially given
-that the path is executed only once per boot.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Boqun Feng <boqun.feng@gmail.com>
----
- kernel/cgroup/cgroup.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 04b7e7f..63989cb 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1798,13 +1798,6 @@ static void cgroup_enable_task_cg_lists(void)
- {
- 	struct task_struct *p, *g;
+--- a/Documentation/cgroup-v2.txt
++++ b/Documentation/cgroup-v2.txt
+@@ -1199,6 +1199,11 @@ PAGE_SIZE multiple when read back.
+ 	Swap usage hard limit.  If a cgroup's swap usage reaches this
+ 	limit, anonymous memory of the cgroup will not be swapped out.
  
--	spin_lock_irq(&css_set_lock);
--
--	if (use_task_css_set_links)
--		goto out_unlock;
--
--	use_task_css_set_links = true;
--
- 	/*
- 	 * We need tasklist_lock because RCU is not safe against
- 	 * while_each_thread(). Besides, a forking task that has passed
-@@ -1813,6 +1806,13 @@ static void cgroup_enable_task_cg_lists(void)
- 	 * tasklist if we walk through it with RCU.
- 	 */
- 	read_lock(&tasklist_lock);
-+	spin_lock_irq(&css_set_lock);
++	When reduced under the current usage, the existing swap
++	entries are reclaimed gradually and the swap usage may stay
++	higher than the limit for an extended period of time.  This
++	reduces the impact on the workload and memory management.
 +
-+	if (use_task_css_set_links)
-+		goto out_unlock;
-+
-+	use_task_css_set_links = true;
-+
- 	do_each_thread(g, p) {
- 		WARN_ON_ONCE(!list_empty(&p->cg_list) ||
- 			     task_css_set(p) != &init_css_set);
-@@ -1840,9 +1840,9 @@ static void cgroup_enable_task_cg_lists(void)
- 		}
- 		spin_unlock(&p->sighand->siglock);
- 	} while_each_thread(g, p);
--	read_unlock(&tasklist_lock);
- out_unlock:
- 	spin_unlock_irq(&css_set_lock);
-+	read_unlock(&tasklist_lock);
+ 
+ Usage Guidelines
+ ~~~~~~~~~~~~~~~~
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6144,11 +6144,7 @@ static ssize_t swap_max_write(struct ker
+ 	if (err)
+ 		return err;
+ 
+-	mutex_lock(&memcg_limit_mutex);
+-	err = page_counter_limit(&memcg->swap, max);
+-	mutex_unlock(&memcg_limit_mutex);
+-	if (err)
+-		return err;
++	xchg(&memcg->swap.limit, max);
+ 
+ 	return nbytes;
  }
- 
- static void init_cgroup_housekeeping(struct cgroup *cgrp)
--- 
-2.9.5
-
