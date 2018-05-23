@@ -1,62 +1,67 @@
-From: Vinayak Menon <vinmenon@codeaurora.org>
-Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
- IO
-Date: Wed, 23 May 2018 18:49:25 +0530
-Message-ID: <47beeaa6-74aa-35d0-2808-e5c54be854a6@codeaurora.org>
-References: <20180507210135.1823-1-hannes@cmpxchg.org>
- <20180507210135.1823-7-hannes@cmpxchg.org>
- <87060553-2e09-2e2a-13a2-a91345d6df30@codeaurora.org>
- <20180523131747.GA4086@cmpxchg.org>
+From: Patrick Bellasi <patrick.bellasi@arm.com>
+Subject: Re: [PATCH v8 4/6] cpuset: Make generate_sched_domains() recognize
+ isolated_cpus
+Date: Wed, 23 May 2018 18:34:53 +0100
+Message-ID: <20180523173453.GY30654@e110439-lin>
+References: <1526590545-3350-1-git-send-email-longman@redhat.com>
+ <1526590545-3350-5-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1527081574;
-        bh=Y7gzwCVHHPtVifw+NFE5nMBx/GjYEo7NB+YkMBG8UZM=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=PA690RarXKFW6FuJQTXdc1Ot3GhbgGITq+c0L7Ihf4AKfY+ai07rEsaCFkyW2ruyF
-         2vT0F11NF3Knge4JeOqtE9/BdqolG4AttoUaa2+eIolzj+CTOS+Ms8Ys9YDmThKoVX
-         lKQDgWg0VhumfVrBqf79jcFoUWGM04KxgiULjt6U=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1527081573;
-        bh=Y7gzwCVHHPtVifw+NFE5nMBx/GjYEo7NB+YkMBG8UZM=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=pAy3+03ngotlVe4t5SkqJr1AgeBuflaAZkh+/jAhoiqZQUsC0R5IYnNEFR1CLXrm5
-         pdKQl+XSNjMM+zA81N8SEz+z2vPn6chhDKdEJ+HNecI/w4JwDu2oMuuCo6dsHcIMhg
-         8pcOLjp2x3XOIKfjZ+LetA3UjG6U/rJaoYOJauhE=
-In-Reply-To: <20180523131747.GA4086@cmpxchg.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1526590545-3350-5-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
 
+Hi Waiman,
 
-On 5/23/2018 6:47 PM, Johannes Weiner wrote:
-> On Wed, May 09, 2018 at 04:33:24PM +0530, Vinayak Menon wrote:
->> On 5/8/2018 2:31 AM, Johannes Weiner wrote:
->>> +	/* Kick the stats aggregation worker if it's gone to sleep */
->>> +	if (!delayed_work_pending(&group->clock_work))
->> This causes a crash when the work is scheduled before system_wq is up. In my case when the first
->> schedule was called from kthreadd. And I had to do this to make it work.
->> if (keventd_up() && !delayed_work_pending(&group->clock_work))
->>
->>> +		schedule_delayed_work(&group->clock_work, MY_LOAD_FREQ);
-> I was trying to figure out how this is possible, and it didn't make
-> sense because we do initialize the system_wq way before kthreadd.
->
-> Did you by any chance backport this to a pre-4.10 kernel which does
-> not have 3347fa092821 ("workqueue: make workqueue available early
-> during boot") yet?
+On 17-May 16:55, Waiman Long wrote:
 
-Sorry I did not mention that. I was trying on 4.9 kernel. It's clear now. Thanks.
+[...]
 
->>> +void psi_task_change(struct task_struct *task, u64 now, int clear, int set)
->>> +{
->>> +	struct cgroup *cgroup, *parent;
->> unused variables
-> They're used in the next patch, I'll fix that up.
->
-> Thanks
+> @@ -672,13 +672,14 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>  	int ndoms = 0;		/* number of sched domains in result */
+>  	int nslot;		/* next empty doms[] struct cpumask slot */
+>  	struct cgroup_subsys_state *pos_css;
+> +	bool root_load_balance = is_sched_load_balance(&top_cpuset);
+>  
+>  	doms = NULL;
+>  	dattr = NULL;
+>  	csa = NULL;
+>  
+>  	/* Special case for the 99% of systems with one, full, sched domain */
+> -	if (is_sched_load_balance(&top_cpuset)) {
+> +	if (root_load_balance && !top_cpuset.isolation_count) {
 
+Perhaps I'm missing something but, it seems to me that, when the two
+conditions above are true, then we are going to destroy and rebuild
+the exact same scheduling domains.
+
+IOW, on 99% of systems where:
+
+   is_sched_load_balance(&top_cpuset)
+   top_cpuset.isolation_count = 0
+
+since boot time and forever, then every time we update a value for
+cpuset.cpus we keep rebuilding the same SDs.
+
+It's not strictly related to this patch, the same already happens in
+mainline based just on the first condition, but since you are extending
+that optimization, perhaps you can tell me where I'm possibly wrong or
+which cases I'm not considering.
+
+I'm interested mainly because on Android systems those conditions
+are always true and we see SDs rebuilds every time we write
+something in cpuset.cpus, which ultimately accounts for almost all the
+6-7[ms] time required for the write to return, depending on the CPU
+frequency.
+
+Cheers Patrick
+
+-- 
+#include <best/regards.h>
+
+Patrick Bellasi
