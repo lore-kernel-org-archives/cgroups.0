@@ -1,39 +1,55 @@
-From: Daniel Borkmann <daniel@iogearbox.net>
-Subject: Re: [PATCH] [RFC] bpf: tracing: new helper bpf_get_current_cgroup_ino
-Date: Wed, 23 May 2018 10:57:06 +0200
-Message-ID: <ef833a5c-8307-fee7-26ec-057f623a9049@iogearbox.net>
-References: <20180513173318.21680-1-alban@kinvolk.io>
- <20180521162609.lpdrnozowmzdn57m@ast-mbp.dhcp.thefacebook.com>
- <CAH3MdRWgruVq+3r+2pHTah-c2zTO03vPkepjWDZ0_KrYcroy9A@mail.gmail.com>
- <CAH3MdRVdfw52atavT3KL8MpPw7zDM_hR6aUcqDP1PogLn_sH+w@mail.gmail.com>
- <20180523033550.z3tqo4lhd3zrmtdu@ast-mbp>
- <CAH3MdRVwmKd84ePvNX+NuAj3TfA_28BObEmzBqGXv=P5_A=8fQ@mail.gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 6/7] psi: pressure stall information for CPU, memory, and
+ IO
+Date: Wed, 23 May 2018 09:17:47 -0400
+Message-ID: <20180523131747.GA4086@cmpxchg.org>
+References: <20180507210135.1823-1-hannes@cmpxchg.org>
+ <20180507210135.1823-7-hannes@cmpxchg.org>
+ <87060553-2e09-2e2a-13a2-a91345d6df30@codeaurora.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAH3MdRVwmKd84ePvNX+NuAj3TfA_28BObEmzBqGXv=P5_A=8fQ@mail.gmail.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=bXtgLOdeHshlQpEJ7jqwOj/3dz2Qx0kbmqkNFXF9mCM=; b=GFMdoa1rH5o9/YzxQ8gP2VzjiT
+        nKDK1+Ntr9KeM2afQ56UUum/sKvQdMM1rM/sPvoDgwDuXf2RcK/HrNFlZph1ZX51JWWRVxPL9c50z
+        9CHOJRYYkAVmmqnuIuTQAy5FBX6JA1NZhvx+/Ta+rlsE56YwPLGfJutexzRaaW/kLmEA=;
+Content-Disposition: inline
+In-Reply-To: <87060553-2e09-2e2a-13a2-a91345d6df30@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Y Song <ys114321@gmail.com>, Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Cc: Alban Crequy <alban.crequy@gmail.com>, netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, Alban Crequy <alban@kinvolk.io>, tj@kernel.org
+Content-Transfer-Encoding: 7bit
+To: Vinayak Menon <vinmenon@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On 05/23/2018 06:31 AM, Y Song wrote:
-> On Tue, May 22, 2018 at 8:35 PM, Alexei Starovoitov
-> <alexei.starovoitov@gmail.com> wrote:
->> On Tue, May 22, 2018 at 08:33:24PM -0700, Y Song wrote:
->>> +       struct cgroup *cgrp = task_dfl_cgroup(current);
->>> +       if (!cgrp)
->>> +               return -EINVAL;
->>
->> why this check is needed?
+On Wed, May 09, 2018 at 04:33:24PM +0530, Vinayak Menon wrote:
+> On 5/8/2018 2:31 AM, Johannes Weiner wrote:
+> > +	/* Kick the stats aggregation worker if it's gone to sleep */
+> > +	if (!delayed_work_pending(&group->clock_work))
 > 
-> No reason :-) Originally I am concerned whether it is possible cgrp
-> could be NULL.
-> By looking at the code, it SEEMS to me that it could not be NULL, but I am not
-> 100% sure (as I am not a cgroup expert). Since you are asking,
-> probably means it cannot be NULL, so will remove it in formal upstream patch.
+> This causes a crash when the work is scheduled before system_wq is up. In my case when the first
+> schedule was called from kthreadd. And I had to do this to make it work.
+> if (keventd_up() && !delayed_work_pending(&group->clock_work))
+>
+> > +		schedule_delayed_work(&group->clock_work, MY_LOAD_FREQ);
 
-Aside from this the cgrp->kn->id.id is also u64, so overlapping this with
-error codes we'll get into a similar issue as with bpf_perf_event_read().
+I was trying to figure out how this is possible, and it didn't make
+sense because we do initialize the system_wq way before kthreadd.
+
+Did you by any chance backport this to a pre-4.10 kernel which does
+not have 3347fa092821 ("workqueue: make workqueue available early
+during boot") yet?
+
+> > +void psi_task_change(struct task_struct *task, u64 now, int clear, int set)
+> > +{
+> > +	struct cgroup *cgroup, *parent;
+> 
+> unused variables
+
+They're used in the next patch, I'll fix that up.
+
+Thanks
