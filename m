@@ -1,234 +1,83 @@
-From: Y Song <ys114321@gmail.com>
-Subject: Re: [PATCH] [RFC] bpf: tracing: new helper bpf_get_current_cgroup_ino
-Date: Fri, 25 May 2018 09:28:22 -0700
-Message-ID: <CAH3MdRWcLa7hkohdU74TPj2HinWzA=QTHAHd+T7WM4GDMOQ-Kg@mail.gmail.com>
-References: <20180513173318.21680-1-alban@kinvolk.io> <20180521162609.lpdrnozowmzdn57m@ast-mbp.dhcp.thefacebook.com>
- <CAH3MdRWgruVq+3r+2pHTah-c2zTO03vPkepjWDZ0_KrYcroy9A@mail.gmail.com>
- <CAH3MdRVdfw52atavT3KL8MpPw7zDM_hR6aUcqDP1PogLn_sH+w@mail.gmail.com> <CADZs7q4xd1CwGULvYe2-Y2aYpwhiiw3upF=mAK0ve_-jrk1yFg@mail.gmail.com>
-Mime-Version: 1.0
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] memcg: force charge kmem counter too
+Date: Fri, 25 May 2018 11:55:01 -0700
+Message-ID: <20180525185501.82098-1-shakeelb@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=OWbit73o3g8CB32wuanhinjcIKJ4xEOW/2MFm7PZJok=;
-        b=cjqdCv1fqfy2QhBi06Z9Rs8dMk/AiFF6yE8d4fLqXJzSdlBig3Fn1VJvvPRLQOBgNs
-         8heOyTR8zHeoyDpKPCT9aCKca2QsTLKrfwGqcqSTP/iVTRfYng8Lwjgjvd25PTHk2Vu7
-         ISbHtNPOmP0X8+ts//dLtUbxuSf/ugC0vNm/U+e+5K5VBFK6Pa3mF3WtS+7l+0DmYqNY
-         v1pd0k+PIvcYY29eIO9ayirozZqSk7mSWgAdWpXvnvnUc1joACqDMHutW/dgx8kt+HDk
-         JxAEBFbJFLr8RQqPf2uFpBM0zrqzvJPnSW3+bWLEJMf6D53H6GqUJhiWiCM9k7znGVW/
-         S36A==
-In-Reply-To: <CADZs7q4xd1CwGULvYe2-Y2aYpwhiiw3upF=mAK0ve_-jrk1yFg@mail.gmail.com>
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=Ii8pbkgyKnKKb8mIj9iKO/rsfe91Ujvj6+NbEtYEzkc=;
+        b=HCsJYvaQYD1hNu8rrAKKmrOJMbL/UuHslAmnPzVugF9PKVXAj5/PNFbL2PbVwnPvWm
+         OKqxlKUIr5otcIJmnQtfB6MRKpdhBqibXwGxedAOa07mXFQef36OsJKK///BmoxB6Awn
+         k61fyU9t0sycX6q9fxfyczmBkeEDN0A8+CQ3BVQGVXpziSoCw1NNFZJSlEQlR2SIQpUn
+         Q8TDuNtpj47jxbHOxUFDYlJBfP3DR9v7hFaXV3waGrwkQTYV1A5yFYfGzDe7Pm7ef+GC
+         8BSNFPnz5qpbkoIBu4g9s9T5/IKjHsfaPTIyAc84o0xbOije8RZs+qD08vebYm0qqwZf
+         CPuA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alban Crequy <alban@kinvolk.io>
-Cc: Alexei Starovoitov <alexei.starovoitov@gmail.com>, netdev <netdev@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Iago_L=C3=B3pez_Galeiras?= <iago@kinvolk.io>
+To: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Linux MM <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Shakeel Butt <shakeelb@google.com>
 
-On Fri, May 25, 2018 at 8:21 AM, Alban Crequy <alban@kinvolk.io> wrote:
-> On Wed, May 23, 2018 at 4:34 AM Y Song <ys114321@gmail.com> wrote:
->
->> I did a quick prototyping and the above interface seems working fine.
->
-> Thanks! I gave your kernel patch & userspace program a try and it works for
-> me on cgroup-v2.
->
-> Also, I found out how to get my containers to use both cgroup-v1 and
-> cgroup-v2 (by enabling systemd's hybrid cgroup mode and docker's
-> '--exec-opt native.cgroupdriver=systemd' option). So I should be able to
-> use the BPF helper function without having to add support for all the
-> cgroup-v1 hierarchies.
+Based on several conditions the kernel can decide to force charge an
+allocation for a memcg i.e. overcharge memcg->memory and memcg->memsw
+counters. Do the same for memcg->kmem counter too. In cgroup-v1, this
+bug can cause a __GFP_NOFAIL kmem allocation fail if an explicit limit
+on kmem counter is set and reached.
 
-Great. Will submit a formal patch soon.
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+---
+ mm/memcontrol.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
->
->> The kernel change:
->> ===============
->
->> [yhs@localhost bpf-next]$ git diff
->> diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
->> index 97446bbe2ca5..669b7383fddb 100644
->> --- a/include/uapi/linux/bpf.h
->> +++ b/include/uapi/linux/bpf.h
->> @@ -1976,7 +1976,8 @@ union bpf_attr {
->>          FN(fib_lookup),                 \
->>          FN(sock_hash_update),           \
->>          FN(msg_redirect_hash),          \
->> -       FN(sk_redirect_hash),
->> +       FN(sk_redirect_hash),           \
->> +       FN(get_current_cgroup_id),
->
->>   /* integer value in 'imm' field of BPF_CALL instruction selects which
-> helper
->>    * function eBPF program intends to call
->> diff --git a/kernel/trace/bpf_trace.c b/kernel/trace/bpf_trace.c
->> index ce2cbbff27e4..e11e3298f911 100644
->> --- a/kernel/trace/bpf_trace.c
->> +++ b/kernel/trace/bpf_trace.c
->> @@ -493,6 +493,21 @@ static const struct bpf_func_proto
->> bpf_current_task_under_cgroup_proto = {
->>          .arg2_type      = ARG_ANYTHING,
->>   };
->
->> +BPF_CALL_0(bpf_get_current_cgroup_id)
->> +{
->> +       struct cgroup *cgrp = task_dfl_cgroup(current);
->> +       if (!cgrp)
->> +               return -EINVAL;
->> +
->> +       return cgrp->kn->id.id;
->> +}
->> +
->> +static const struct bpf_func_proto bpf_get_current_cgroup_id_proto = {
->> +       .func           = bpf_get_current_cgroup_id,
->> +       .gpl_only       = false,
->> +       .ret_type       = RET_INTEGER,
->> +};
->> +
->>   BPF_CALL_3(bpf_probe_read_str, void *, dst, u32, size,
->>             const void *, unsafe_ptr)
->>   {
->> @@ -563,6 +578,8 @@ tracing_func_proto(enum bpf_func_id func_id, const
->> struct bpf_prog *prog)
->>                  return &bpf_get_prandom_u32_proto;
->>          case BPF_FUNC_probe_read_str:
->>                  return &bpf_probe_read_str_proto;
->> +       case BPF_FUNC_get_current_cgroup_id:
->> +               return &bpf_get_current_cgroup_id_proto;
->>          default:
->>                  return NULL;
->>          }
->
->> The following program can be used to print out a cgroup id given a cgroup
-> path.
->> [yhs@localhost cg]$ cat get_cgroup_id.c
->> #define _GNU_SOURCE
->> #include <stdio.h>
->> #include <stdlib.h>
->> #include <sys/types.h>
->> #include <sys/stat.h>
->> #include <fcntl.h>
->
->> int main(int argc, char **argv)
->> {
->>      int dirfd, err, flags, mount_id, fhsize;
->>      struct file_handle *fhp;
->>      char *pathname;
->
->>      if (argc != 2) {
->>          printf("usage: %s <cgroup_path>\n", argv[0]);
->>          return 1;
->>      }
->
->>      pathname = argv[1];
->>      dirfd = AT_FDCWD;
->>      flags = 0;
->
->>      fhsize = sizeof(*fhp);
->>      fhp = malloc(fhsize);
->>      if (!fhp)
->>          return 1;
->
->>      err = name_to_handle_at(dirfd, pathname, fhp, &mount_id, flags);
->>      if (err >= 0) {
->>          printf("error\n");
->>          return 1;
->>      }
->
->>      fhsize = sizeof(struct file_handle) + fhp->handle_bytes;
->>      fhp = realloc(fhp, fhsize);
->>      if (!fhp)
->>          return 1;
->
->>      err = name_to_handle_at(dirfd, pathname, fhp, &mount_id, flags);
->>      if (err < 0)
->>          perror("name_to_handle_at");
->>      else {
->>          int i;
->
->>          printf("dir = %s, mount_id = %d\n", pathname, mount_id);
->>          printf("handle_bytes = %d, handle_type = %d\n", fhp->handle_bytes,
->>              fhp->handle_type);
->>          if (fhp->handle_bytes != 8)
->>              return 1;
->
->>          printf("cgroup_id = 0x%llx\n", *(unsigned long long
-> *)fhp->f_handle);
->>      }
->
->>      return 0;
->> }
->> [yhs@localhost cg]$
->
->> Given a cgroup path, the user can get cgroup_id and use it in their bpf
->> program for filtering purpose.
->
->> I run a simple program t.c
->>     int main() { while(1) sleep(1); return 0; }
->> in the cgroup v2 directory /home/yhs/tmp/yhs
->>     none on /home/yhs/tmp type cgroup2 (rw,relatime,seclabel)
->
->> $ ./get_cgroup_id /home/yhs/tmp/yhs
->> dir = /home/yhs/tmp/yhs, mount_id = 124
->> handle_bytes = 8, handle_type = 1
->> cgroup_id = 0x1000006b2
->
->> // the below command to get cgroup_id from the kernel for the
->> // process compiled with t.c and ran under /home/yhs/tmp/yhs:
->> $ sudo ./trace.py -p 4067 '__x64_sys_nanosleep "cgid = %llx", $cgid'
->> PID     TID     COMM            FUNC             -
->> 4067    4067    a.out           __x64_sys_nanosleep cgid = 1000006b2
->> 4067    4067    a.out           __x64_sys_nanosleep cgid = 1000006b2
->> 4067    4067    a.out           __x64_sys_nanosleep cgid = 1000006b2
->> ^C[yhs@localhost tools]$
->
->> The kernel and user space cgid matches. Will provide a
->> formal patch later.
->
->
->
->
->> On Mon, May 21, 2018 at 5:24 PM, Y Song <ys114321@gmail.com> wrote:
->> > On Mon, May 21, 2018 at 9:26 AM, Alexei Starovoitov
->> > <alexei.starovoitov@gmail.com> wrote:
->> >> On Sun, May 13, 2018 at 07:33:18PM +0200, Alban Crequy wrote:
->> >>>
->> >>> +BPF_CALL_2(bpf_get_current_cgroup_ino, u32, hierarchy, u64, flags)
->> >>> +{
->> >>> +     // TODO: pick the correct hierarchy instead of the mem
-> controller
->> >>> +     struct cgroup *cgrp = task_cgroup(current, memory_cgrp_id);
->> >>> +
->> >>> +     if (unlikely(!cgrp))
->> >>> +             return -EINVAL;
->> >>> +     if (unlikely(hierarchy))
->> >>> +             return -EINVAL;
->> >>> +     if (unlikely(flags))
->> >>> +             return -EINVAL;
->> >>> +
->> >>> +     return cgrp->kn->id.ino;
->> >>
->> >> ino only is not enough to identify cgroup. It needs generation number
-> too.
->> >> I don't quite see how hierarchy and flags can be used in the future.
->> >> Also why limit it to memcg?
->> >>
->> >> How about something like this instead:
->> >>
->> >> BPF_CALL_2(bpf_get_current_cgroup_id)
->> >> {
->> >>         struct cgroup *cgrp = task_dfl_cgroup(current);
->> >>
->> >>         return cgrp->kn->id.id;
->> >> }
->> >> The user space can use fhandle api to get the same 64-bit id.
->> >
->> > I think this should work. This will also be useful to bcc as user
->> > space can encode desired id
->> > in the bpf program and compared that id to the current cgroup id, so we
-> can have
->> > cgroup level tracing (esp. stat collection) support. To cope with
->> > cgroup hierarchy, user can use
->> > cgroup-array based approach or explicitly compare against multiple
-> cgroup id's.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ab5673dbfc4e..0a88f824c550 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1893,6 +1893,18 @@ void mem_cgroup_handle_over_high(void)
+ 	current->memcg_nr_pages_over_high = 0;
+ }
+ 
++/*
++ * Based on try_charge() force charge conditions.
++ */
++static inline bool should_force_charge(gfp_t gfp_mask)
++{
++	return (unlikely(tsk_is_oom_victim(current) ||
++			 fatal_signal_pending(current) ||
++			 current->flags & PF_EXITING ||
++			 current->flags & PF_MEMALLOC ||
++			 gfp_mask & __GFP_NOFAIL));
++}
++
+ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 		      unsigned int nr_pages)
+ {
+@@ -2008,6 +2020,8 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * The allocation either can't fail or will lead to more memory
+ 	 * being freed very soon.  Allow memory usage go over the limit
+ 	 * temporarily by force charging it.
++	 *
++	 * NOTE: Please keep the should_force_charge() conditions in sync.
+ 	 */
+ 	page_counter_charge(&memcg->memory, nr_pages);
+ 	if (do_memsw_account())
+@@ -2331,8 +2345,11 @@ int memcg_kmem_charge_memcg(struct page *page, gfp_t gfp, int order,
+ 
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
+ 	    !page_counter_try_charge(&memcg->kmem, nr_pages, &counter)) {
+-		cancel_charge(memcg, nr_pages);
+-		return -ENOMEM;
++		if (!should_force_charge(gfp)) {
++			cancel_charge(memcg, nr_pages);
++			return -ENOMEM;
++		}
++		page_counter_charge(&memcg->kmem, nr_pages);
+ 	}
+ 
+ 	page->mem_cgroup = memcg;
+-- 
+2.17.0.921.gf22659ad46-goog
+
