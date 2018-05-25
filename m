@@ -1,61 +1,71 @@
-From: TSUKADA Koutaro <tsukada@ascade.co.jp>
-Subject: Re: [PATCH v2 0/7] mm: pages for hugetlb's overcommit may be able to
- charge to memcg
-Date: Fri, 25 May 2018 10:55:58 +0900
-Message-ID: <5943db59-1c33-7004-7574-fc07e577e1ee@ascade.co.jp>
-References: <e863529b-7ce5-4fbe-8cff-581b5789a5f9@ascade.co.jp>
- <20180522135148.GA20441@dhcp22.suse.cz>
- <af1a3050-7365-428a-dfb1-2f3da37dc9ff@ascade.co.jp>
- <4078bc2d-4aaf-cd1b-0145-5915e382852f@oracle.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v8 2/6] cpuset: Add new v2 cpuset.sched.domain flag
+Date: Fri, 25 May 2018 09:15:24 +0200
+Message-ID: <20180525071524.GQ12198@hirez.programming.kicks-ass.net>
+References: <1526590545-3350-1-git-send-email-longman@redhat.com>
+ <1526590545-3350-3-git-send-email-longman@redhat.com>
+ <20180524154156.GI12198@hirez.programming.kicks-ass.net>
+ <675f0f38-9154-4e73-1679-179eefdb7c9f@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4078bc2d-4aaf-cd1b-0145-5915e382852f@oracle.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=ccSGORzi1kauMm9VoF/P9IEFnX4OPSySDEXnF3jN2C8=; b=wKVe4SZEc9Gn53UoLaWFvXM8h
+        E9xZ1B4TcXPwXv0ZruOHpmFClM4UD1u4HcDRaX/NlrfByFFPoQczdrBpMuVCUu3hWkBKbljfhAmR0
+        EQnGuj5AiirNCjgF1S+DxoUB8rjZKHN8wkXs4VcE1fWz3WiJnb4oQ9c03qlbOkUHDJE1HuRHcND94
+        fpDQS4ErE1peJC8+XyVLysOobjgD9Xpug2sLZkdh2V5G8yk02SizUa4aTtA2ej2wbPjvaM3aBcD9/
+        kb634XPIHGd1zbOfxK+ngkeaTHDcyKzG11jESQpkmcv1AFzDqPtgYZxxdhsoemurT/0Pk9hMjkSXJ
+      
+Content-Disposition: inline
+In-Reply-To: <675f0f38-9154-4e73-1679-179eefdb7c9f@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mike Kravetz <mike.kravetz@oracle.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, David Rientjes <rientjes@google.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Marc-Andre Lureau <marcandre.lureau@redhat.com>, Punit Agrawal <punit.agrawal@arm.com>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgrou
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
 
-On 2018/05/25 2:45, Mike Kravetz wrote:
-[...]
->> THP does not guarantee to use the Huge Page, but may use the normal page.
+On Thu, May 24, 2018 at 02:53:31PM -0400, Waiman Long wrote:
+> On 05/24/2018 11:41 AM, Peter Zijlstra wrote:
+> > On Thu, May 17, 2018 at 04:55:41PM -0400, Waiman Long wrote:
+> >> A new cpuset.sched.domain boolean flag is added to cpuset v2. This new
+> >> flag indicates that the CPUs in the current cpuset should be treated
+> >> as a separate scheduling domain.
+> > The traditional name for this is a partition.
 > 
-> Note.  You do not want to use THP because "THP does not guarantee".
+> Do you want to call it cpuset.sched.partition? That name sounds strange
+> to me.
 
-[...]
->> One of the answers I have reached is to use HugeTLBfs by overcommitting
->> without creating a pool(this is the surplus hugepage).
+Let me explore the whole domain x load-balance space first. I'm thinking
+the two parameters are mostly redundant, but I might be overlooking
+something (trivial or otherwise).
+
+> >> +  cpuset.sched.domain
+> >> +	A read-write single value file which exists on non-root
+> >> +	cpuset-enabled cgroups.  It is a binary value flag that accepts
+> >> +	either "0" (off) or a non-zero value (on).
+> > I would be conservative and only allow 0/1.
 > 
-> Using hugetlbfs overcommit also does not provide a guarantee.  Without
-> doing much research, I would say the failure rate for obtaining a huge
-> page via THP and hugetlbfs overcommit is about the same.  The most
-> difficult issue in both cases will be obtaining a "huge page" number of
-> pages from the buddy allocator.
+> I stated that because echoing other integer value like 2 into the flag
+> file won't return any error. I will modify it to say just 0 and 1.
 
-Yes. If do not support multiple size hugetlb pages such as x86, because
-number of pages between THP and hugetlb is same, the failure rate of
-obtaining a compound page is same, as you said.
+Ah, I would make the file error on >1.
 
-> I really do not think hugetlbfs overcommit will provide any benefit over
-> THP for your use case.
+Because then you can always extend the meaning afterwards because you
+know it won't be written to with the new value.
 
-I think that what you say is absolutely right.
+> >> +	3) There is no child cgroups with cpuset enabled.
+> >> +
+> >> +	Setting this flag will take the CPUs away from the effective
+> >> +	CPUs of the parent cgroup. Once it is set, this flag cannot be
+> >> +	cleared if there are any child cgroups with cpuset enabled.
+> > This I'm not clear on. Why?
+> >
+> That is for pragmatic reason as it is easier to code this way. We could
+> remove this restriction but that will make the code more complex.
 
->  Also, new user space code is required to "fall back"
-> to normal pages in the case of hugetlbfs page allocation failure.  This
-> is not needed in the THP case.
-
-I understand the superiority of THP, but there are scenes where khugepaged
-occupies cpu due to page fragmentation. Instead of overcommit, setup a
-persistent pool once, I think that hugetlb can be superior, such as memory
-allocation performance exceeding THP. I will try to find a good way to use
-hugetlb page.
-
-I sincerely thank you for your help.
-
--- 
-Thanks,
-Tsukada
-
+Best to mention that I think.
