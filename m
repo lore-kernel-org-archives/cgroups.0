@@ -1,87 +1,234 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v8 3/6] cpuset: Add cpuset.sched.load_balance flag to v2
-Date: Fri, 25 May 2018 10:45:14 -0400
-Message-ID: <dc9c8ae5-d3fa-2c0a-a77a-bf79afa34134@redhat.com>
-References: <1526590545-3350-1-git-send-email-longman@redhat.com>
- <1526590545-3350-4-git-send-email-longman@redhat.com>
- <20180524143614.GC3948@localhost.localdomain>
- <4bd31510-4f73-e263-8dc1-5edb0fe63b59@redhat.com>
- <20180524151656.GD3948@localhost.localdomain>
- <5f409ed7-3850-f1ea-58cf-4326605d1570@redhat.com>
- <20180525094050.GB30654@e110439-lin>
+From: Alban Crequy <alban-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>
+Subject: Re: [PATCH] [RFC] bpf: tracing: new helper bpf_get_current_cgroup_ino
+Date: Fri, 25 May 2018 16:21:50 +0100
+Message-ID: <CADZs7q4xd1CwGULvYe2-Y2aYpwhiiw3upF=mAK0ve_-jrk1yFg@mail.gmail.com>
+References: <20180513173318.21680-1-alban@kinvolk.io>
+	<20180521162609.lpdrnozowmzdn57m@ast-mbp.dhcp.thefacebook.com>
+	<CAH3MdRWgruVq+3r+2pHTah-c2zTO03vPkepjWDZ0_KrYcroy9A@mail.gmail.com>
+	<CAH3MdRVdfw52atavT3KL8MpPw7zDM_hR6aUcqDP1PogLn_sH+w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180525094050.GB30654@e110439-lin>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Patrick Bellasi <patrick.bellasi@arm.com>
-Cc: Juri Lelli <juri.lelli@redhat.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kinvolk.io; s=google;
+	h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+	:cc; bh=FNH30+yl2tdRzZcUXPjwnQPdoUCGrqlTaT9xBDR53Y4=;
+	b=NM/tfGCurSHO5jnlqqq8cPom1ueRgqqz6j81azK5GHls87+N6ea8nqo2kNnuGCgotu
+	zZSnKwVmBQQBHlgOuO0xvRwssYdcDf80wacpXCGDUKuNfnmLSgYWGC5NwyN+rvDCmQT0
+	SqcHnsmDBjDlAb8IWFB1UVz4JlrGhv1yYNxB0=
+In-Reply-To: <CAH3MdRVdfw52atavT3KL8MpPw7zDM_hR6aUcqDP1PogLn_sH+w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Y Song <ys114321-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: =?UTF-8?Q?Iago_L=C3=B3pez_Galeiras?= <iago-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 05/25/2018 05:40 AM, Patrick Bellasi wrote:
-> On 24-May 11:22, Waiman Long wrote:
->> On 05/24/2018 11:16 AM, Juri Lelli wrote:
->>> On 24/05/18 11:09, Waiman Long wrote:
->>>> On 05/24/2018 10:36 AM, Juri Lelli wrote:
->>>>> On 17/05/18 16:55, Waiman Long wrote:
->>>>>
->>>>> [...]
->>>>>
->>>>>> +	A parent cgroup cannot distribute all its CPUs to child
->>>>>> +	scheduling domain cgroups unless its load balancing flag is
->>>>>> +	turned off.
->>>>>> +
->>>>>> +  cpuset.sched.load_balance
->>>>>> +	A read-write single value file which exists on non-root
->>>>>> +	cpuset-enabled cgroups.  It is a binary value flag that accepts
->>>>>> +	either "0" (off) or a non-zero value (on).  This flag is set
->>>>>> +	by the parent and is not delegatable.
->>>>>> +
->>>>>> +	When it is on, tasks within this cpuset will be load-balanced
->>>>>> +	by the kernel scheduler.  Tasks will be moved from CPUs with
->>>>>> +	high load to other CPUs within the same cpuset with less load
->>>>>> +	periodically.
->>>>>> +
->>>>>> +	When it is off, there will be no load balancing among CPUs on
->>>>>> +	this cgroup.  Tasks will stay in the CPUs they are running on
->>>>>> +	and will not be moved to other CPUs.
->>>>>> +
->>>>>> +	The initial value of this flag is "1".	This flag is then
->>>>>> +	inherited by child cgroups with cpuset enabled.  Its state
->>>>>> +	can only be changed on a scheduling domain cgroup with no
->>>>>> +	cpuset-enabled children.
->>>>> [...]
->>>>>
->>>>>> +	/*
->>>>>> +	 * On default hierachy, a load balance flag change is only allowed
->>>>>> +	 * in a scheduling domain with no child cpuset.
->>>>>> +	 */
->>>>>> +	if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys) && balance_flag_changed &&
->>>>>> +	   (!is_sched_domain(cs) || css_has_online_children(&cs->css))) {
->>>>>> +		err = -EINVAL;
->>>>>> +		goto out;
->>>>>> +	}
->>>>> The rule is actually
->>>>>
->>>>>  - no child cpuset
->>>>>  - and it must be a scheduling domain
-> I always a bit confused by the usage of "scheduling domain", which
-> overlaps with the SD concept from the scheduler standpoint.
+On Wed, May 23, 2018 at 4:34 AM Y Song <ys114321-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 
-It is supposed to mimic SD concept of scheduler.
+> I did a quick prototyping and the above interface seems working fine.
 
->
-> AFAIU a cpuset sched domain is not granted to be turned into an
-> actual scheduler SD, am I wrong?
->
-> If that's the case, why not better disambiguate these two concept by
-> calling the cpuset one a "cpus partition" or eventually "cpuset domain"?
+Thanks! I gave your kernel patch & userspace program a try and it works for
+me on cgroup-v2.
 
-Good point. Peter has similar comment. I will probably change the name
-and clarifying it better in the documentation.
+Also, I found out how to get my containers to use both cgroup-v1 and
+cgroup-v2 (by enabling systemd's hybrid cgroup mode and docker's
+'--exec-opt native.cgroupdriver=systemd' option). So I should be able to
+use the BPF helper function without having to add support for all the
+cgroup-v1 hierarchies.
 
-Cheers,
-Longman
+> The kernel change:
+> ===============
 
+> [yhs@localhost bpf-next]$ git diff
+> diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
+> index 97446bbe2ca5..669b7383fddb 100644
+> --- a/include/uapi/linux/bpf.h
+> +++ b/include/uapi/linux/bpf.h
+> @@ -1976,7 +1976,8 @@ union bpf_attr {
+>          FN(fib_lookup),                 \
+>          FN(sock_hash_update),           \
+>          FN(msg_redirect_hash),          \
+> -       FN(sk_redirect_hash),
+> +       FN(sk_redirect_hash),           \
+> +       FN(get_current_cgroup_id),
+
+>   /* integer value in 'imm' field of BPF_CALL instruction selects which
+helper
+>    * function eBPF program intends to call
+> diff --git a/kernel/trace/bpf_trace.c b/kernel/trace/bpf_trace.c
+> index ce2cbbff27e4..e11e3298f911 100644
+> --- a/kernel/trace/bpf_trace.c
+> +++ b/kernel/trace/bpf_trace.c
+> @@ -493,6 +493,21 @@ static const struct bpf_func_proto
+> bpf_current_task_under_cgroup_proto = {
+>          .arg2_type      = ARG_ANYTHING,
+>   };
+
+> +BPF_CALL_0(bpf_get_current_cgroup_id)
+> +{
+> +       struct cgroup *cgrp = task_dfl_cgroup(current);
+> +       if (!cgrp)
+> +               return -EINVAL;
+> +
+> +       return cgrp->kn->id.id;
+> +}
+> +
+> +static const struct bpf_func_proto bpf_get_current_cgroup_id_proto = {
+> +       .func           = bpf_get_current_cgroup_id,
+> +       .gpl_only       = false,
+> +       .ret_type       = RET_INTEGER,
+> +};
+> +
+>   BPF_CALL_3(bpf_probe_read_str, void *, dst, u32, size,
+>             const void *, unsafe_ptr)
+>   {
+> @@ -563,6 +578,8 @@ tracing_func_proto(enum bpf_func_id func_id, const
+> struct bpf_prog *prog)
+>                  return &bpf_get_prandom_u32_proto;
+>          case BPF_FUNC_probe_read_str:
+>                  return &bpf_probe_read_str_proto;
+> +       case BPF_FUNC_get_current_cgroup_id:
+> +               return &bpf_get_current_cgroup_id_proto;
+>          default:
+>                  return NULL;
+>          }
+
+> The following program can be used to print out a cgroup id given a cgroup
+path.
+> [yhs@localhost cg]$ cat get_cgroup_id.c
+> #define _GNU_SOURCE
+> #include <stdio.h>
+> #include <stdlib.h>
+> #include <sys/types.h>
+> #include <sys/stat.h>
+> #include <fcntl.h>
+
+> int main(int argc, char **argv)
+> {
+>      int dirfd, err, flags, mount_id, fhsize;
+>      struct file_handle *fhp;
+>      char *pathname;
+
+>      if (argc != 2) {
+>          printf("usage: %s <cgroup_path>\n", argv[0]);
+>          return 1;
+>      }
+
+>      pathname = argv[1];
+>      dirfd = AT_FDCWD;
+>      flags = 0;
+
+>      fhsize = sizeof(*fhp);
+>      fhp = malloc(fhsize);
+>      if (!fhp)
+>          return 1;
+
+>      err = name_to_handle_at(dirfd, pathname, fhp, &mount_id, flags);
+>      if (err >= 0) {
+>          printf("error\n");
+>          return 1;
+>      }
+
+>      fhsize = sizeof(struct file_handle) + fhp->handle_bytes;
+>      fhp = realloc(fhp, fhsize);
+>      if (!fhp)
+>          return 1;
+
+>      err = name_to_handle_at(dirfd, pathname, fhp, &mount_id, flags);
+>      if (err < 0)
+>          perror("name_to_handle_at");
+>      else {
+>          int i;
+
+>          printf("dir = %s, mount_id = %d\n", pathname, mount_id);
+>          printf("handle_bytes = %d, handle_type = %d\n", fhp->handle_bytes,
+>              fhp->handle_type);
+>          if (fhp->handle_bytes != 8)
+>              return 1;
+
+>          printf("cgroup_id = 0x%llx\n", *(unsigned long long
+*)fhp->f_handle);
+>      }
+
+>      return 0;
+> }
+> [yhs@localhost cg]$
+
+> Given a cgroup path, the user can get cgroup_id and use it in their bpf
+> program for filtering purpose.
+
+> I run a simple program t.c
+>     int main() { while(1) sleep(1); return 0; }
+> in the cgroup v2 directory /home/yhs/tmp/yhs
+>     none on /home/yhs/tmp type cgroup2 (rw,relatime,seclabel)
+
+> $ ./get_cgroup_id /home/yhs/tmp/yhs
+> dir = /home/yhs/tmp/yhs, mount_id = 124
+> handle_bytes = 8, handle_type = 1
+> cgroup_id = 0x1000006b2
+
+> // the below command to get cgroup_id from the kernel for the
+> // process compiled with t.c and ran under /home/yhs/tmp/yhs:
+> $ sudo ./trace.py -p 4067 '__x64_sys_nanosleep "cgid = %llx", $cgid'
+> PID     TID     COMM            FUNC             -
+> 4067    4067    a.out           __x64_sys_nanosleep cgid = 1000006b2
+> 4067    4067    a.out           __x64_sys_nanosleep cgid = 1000006b2
+> 4067    4067    a.out           __x64_sys_nanosleep cgid = 1000006b2
+> ^C[yhs@localhost tools]$
+
+> The kernel and user space cgid matches. Will provide a
+> formal patch later.
+
+
+
+
+> On Mon, May 21, 2018 at 5:24 PM, Y Song <ys114321-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> > On Mon, May 21, 2018 at 9:26 AM, Alexei Starovoitov
+> > <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >> On Sun, May 13, 2018 at 07:33:18PM +0200, Alban Crequy wrote:
+> >>>
+> >>> +BPF_CALL_2(bpf_get_current_cgroup_ino, u32, hierarchy, u64, flags)
+> >>> +{
+> >>> +     // TODO: pick the correct hierarchy instead of the mem
+controller
+> >>> +     struct cgroup *cgrp = task_cgroup(current, memory_cgrp_id);
+> >>> +
+> >>> +     if (unlikely(!cgrp))
+> >>> +             return -EINVAL;
+> >>> +     if (unlikely(hierarchy))
+> >>> +             return -EINVAL;
+> >>> +     if (unlikely(flags))
+> >>> +             return -EINVAL;
+> >>> +
+> >>> +     return cgrp->kn->id.ino;
+> >>
+> >> ino only is not enough to identify cgroup. It needs generation number
+too.
+> >> I don't quite see how hierarchy and flags can be used in the future.
+> >> Also why limit it to memcg?
+> >>
+> >> How about something like this instead:
+> >>
+> >> BPF_CALL_2(bpf_get_current_cgroup_id)
+> >> {
+> >>         struct cgroup *cgrp = task_dfl_cgroup(current);
+> >>
+> >>         return cgrp->kn->id.id;
+> >> }
+> >> The user space can use fhandle api to get the same 64-bit id.
+> >
+> > I think this should work. This will also be useful to bcc as user
+> > space can encode desired id
+> > in the bpf program and compared that id to the current cgroup id, so we
+can have
+> > cgroup level tracing (esp. stat collection) support. To cope with
+> > cgroup hierarchy, user can use
+> > cgroup-array based approach or explicitly compare against multiple
+cgroup id's.
