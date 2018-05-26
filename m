@@ -1,218 +1,94 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 0/7] psi: pressure stall information for CPU, memory, and IO
-Date: Fri, 25 May 2018 17:29:30 -0700
-Message-ID: <CAJuCfpF4q+1aSg4WQn_p-1-zEDhh-iqST6dc1DkxnDofSPBKGw@mail.gmail.com>
-References: <20180507210135.1823-1-hannes@cmpxchg.org>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
+Subject: Re: [PATCH] memcg: force charge kmem counter too
+Date: Sat, 26 May 2018 21:51:44 +0300
+Message-ID: <20180526185144.xvh7ejlyelzvqwdb@esperanza>
+References: <20180525185501.82098-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=LeE3nydzVDWN2EyGhc6bDvvtYHdY/D+e92hQcQMBLFs=;
-        b=ZAYhf6reES5+GWZuoEDf08d9IGIzyR5WB5AVbO3Y9C5e1SpW32IxLlOSwDlfBCG+vn
-         q8aakMKIQnduyLVHfRK+sOFZisJJggvV/t2F5oIsExniNLYHvR4NPHrN6/j802i4EveN
-         symvpLJXNgoZN9R8SPGkyXQko9x/TnMHDyzV+zwx8v6mTfnxc+lGL4+ZWUIjGIcw3ywu
-         W1oIMktCPTPsKd26WOE5u4kM/L2+N3W8Zb3fem92XVLH43m71QuF0QOCIn/t37nG+b8f
-         RfXc3orHrUxpMog5wTjh+/8x3xBWqPBkTuEaIIW802o7WQ6glhZxGZjqkciPwo9oS4ka
-         APyQ==
-In-Reply-To: <20180507210135.1823-1-hannes@cmpxchg.org>
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=iNL4kxrCaSEntuQJhwPEATyXyItKqBo7oCsUbKz+fMI=;
+        b=DZw8U7WYxDaAnIpArdI67LqMaEHn6frouzGjrBU79phvhIXGMaEs4yC7jfH+gOXWNV
+         Yr28vuQWT1k8eo06EgMGK3mmlIqex9/tXjuoW13dXZ1/wqePhKTv+Re1XFIRojSBt+NT
+         GglCNqVpyMneoxjEbnP4fAbl2y3cuDrY7hxiRKf4nHHiqwTmdQ2As7I/2uCtHBCiPJf0
+         Lvqat5td0vGK5r9Krqq1cWSklKtmPE6kB9Z47NIbu3quHkU9mKCZ+P8d3C3pHWxGOtBA
+         pnDbmidB4HATb3/ESi3idYGIhZPcppp9mRvm8VK2fDpTbNFGwmJBWgSNi/le5G4NeuuU
+         HuBw==
+Content-Disposition: inline
+In-Reply-To: <20180525185501.82098-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hi Johannes,
-I tried your previous memdelay patches before this new set was posted
-and results were promising for predicting when Android system is close
-to OOM. I'm definitely going to try this one after I backport it to
-4.9.
+On Fri, May 25, 2018 at 11:55:01AM -0700, Shakeel Butt wrote:
+> Based on several conditions the kernel can decide to force charge an
+> allocation for a memcg i.e. overcharge memcg->memory and memcg->memsw
+> counters. Do the same for memcg->kmem counter too. In cgroup-v1, this
+> bug can cause a __GFP_NOFAIL kmem allocation fail if an explicit limit
+> on kmem counter is set and reached.
 
-On Mon, May 7, 2018 at 2:01 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> Hi,
->
-> I previously submitted a version of this patch set called "memdelay",
-> which translated delays from reclaim, swap-in, thrashing page cache
-> into a pressure percentage of lost walltime. I've since extended this
-> code to aggregate all delay states tracked by delayacct in order to
-> have generalized pressure/overcommit levels for CPU, memory, and IO.
->
-> There was feedback from Peter on the previous version that I have
-> incorporated as much as possible and as it still applies to this code:
->
->         - got rid of the extra lock in the sched callbacks; all task
->           state changes we care about serialize through rq->lock
->
->         - got rid of ktime_get() inside the sched callbacks and
->           switched time measuring to rq_clock()
->
->         - got rid of all divisions inside the sched callbacks,
->           tracking everything natively in ns now
->
-> I also moved this stuff into existing sched/stat.h callbacks, so it
-> doesn't get in the way in sched/core.c, and of course moved the whole
-> thing behind CONFIG_PSI since not everyone is going to want it.
+memory.kmem.limit is broken and unlikely to ever be fixed as this knob
+was deprecated in cgroup-v2. The fact that hitting the limit doesn't
+trigger reclaim can result in unexpected behavior from user's pov, like
+getting ENOMEM while listing a directory. Bypassing the limit for NOFAIL
+allocations isn't going to fix those problem. So I'd suggest to avoid
+setting memory.kmem.limit instead of trying to fix it or, even better,
+switch to cgroup-v2.
 
-Would it make sense to split CONFIG_PSI into CONFIG_PSI_CPU,
-CONFIG_PSI_MEM and CONFIG_PSI_IO since one might need only specific
-subset of this feature?
-
->
-> Real-world applications
->
-> Since the last posting, we've begun using the data collected by this
-> code quite extensively at Facebook, and with several success stories.
->
-> First we used it on systems that frequently locked up in low memory
-> situations. The reason this happens is that the OOM killer is
-> triggered by reclaim not being able to make forward progress, but with
-> fast flash devices there is *always* some clean and uptodate cache to
-> reclaim; the OOM killer never kicks in, even as tasks wait 80-90% of
-> the time faulting executables. There is no situation where this ever
-> makes sense in practice. We wrote a <100 line POC python script to
-> monitor memory pressure and kill stuff manually, way before such
-> pathological thrashing.
->
-> We've since extended the python script into a more generic oomd that
-> we use all over the place, not just to avoid livelocks but also to
-> guarantee latency and throughput SLAs, since they're usually violated
-> way before the kernel OOM killer would ever kick in.
->
-> We also use the memory pressure info for loadshedding. Our batch job
-> infrastructure used to refuse new requests on heuristics based on RSS
-> and other existing VM metrics in an attempt to avoid OOM kills and
-> maximize utilization. Since it was still plagued by frequent OOM
-> kills, we switched it to shed load on psi memory pressure, which has
-> turned out to be a much better bellwether, and we managed to reduce
-> OOM kills drastically. Reducing the rate of OOM outages from the
-> worker pool raised its aggregate productivity, and we were able to
-> switch that service to smaller machines.
->
-> Lastly, we use cgroups to isolate a machine's main workload from
-> maintenance crap like package upgrades, logging, configuration, as
-> well as to prevent multiple workloads on a machine from stepping on
-> each others' toes. We were not able to do this properly without the
-> pressure metrics; we would see latency or bandwidth drops, but it
-> would often be hard to impossible to rootcause it post-mortem. We now
-> log and graph the pressure metrics for all containers in our fleet and
-> can trivially link service drops to resource pressure after the fact.
->
-> How do you use this?
->
-> A kernel with CONFIG_PSI=y will create a /proc/pressure directory with
-> 3 files: cpu, memory, and io. If using cgroup2, cgroups will also have
-> cpu.pressure, memory.pressure and io.pressure files, which simply
-> calculate pressure at the cgroup level instead of system-wide.
->
-> The cpu file contains one line:
->
->         some avg10=2.04 avg60=0.75 avg300=0.40 total=157656722
->
-> The averages give the percentage of walltime in which some tasks are
-> delayed on the runqueue while another task has the CPU. They're recent
-> averages over 10s, 1m, 5m windows, so you can tell short term trends
-> from long term ones, similarly to the load average.
->
-> What to make of this number? If CPU utilization is at 100% and CPU
-> pressure is 0, it means the system is perfectly utilized, with one
-> runnable thread per CPU and nobody waiting. At two or more runnable
-> tasks per CPU, the system is 100% overcommitted and the pressure
-> average will indicate as much. From a utilization perspective this is
-> a great state of course: no CPU cycles are being wasted, even when 50%
-> of the threads were to go idle (and most workloads do vary). From the
-> perspective of the individual job it's not great, however, and they
-> might do better with more resources. Depending on what your priority
-> is, an elevated "some" number may or may not require action.
->
-> The memory file contains two lines:
->
-> some avg10=70.24 avg60=68.52 avg300=69.91 total=3559632828
-> full avg10=57.59 avg60=58.06 avg300=60.38 total=3300487258
->
-> The some line is the same as for cpu: the time in which at least one
-> task is stalled on the resource.
->
-> The full line, however, indicates time in which *nobody* is using the
-> CPU productively due to pressure: all non-idle tasks could be waiting
-> on thrashing cache simultaneously. It can also happen when a single
-> reclaimer occupies the CPU, since nothing else can make forward
-> progress during that time. CPU cycles are being wasted. Significant
-> time spent in there is a good trigger for killing, moving jobs to
-> other machines, or dropping incoming requests, since neither the jobs
-> nor the machine overall is making too much headway.
->
-> The total= value gives the absolute stall time in microseconds. This
-> allows detecting latency spikes that might be too short to sway the
-> running averages. It also allows custom time averaging in case the
-> 10s/1m/5m windows aren't adequate for the usecase (or are too coarse
-> with future hardware).
->
-
-Any reasons these specific windows were chosen (empirical
-data/historical reasons)? I'm worried that with the smallest window
-being 10s the signal might be too inert to detect fast memory pressure
-buildup before OOM kill happens. I'll have to experiment with that
-first, however if you have some insights into this already please
-share them.
-
-> The io file is similar to memory. However, unlike CPU and memory, the
-> block layer doesn't have a concept of hardware contention. We cannot
-> know if the IO a task is waiting on is being performed by the device
-> or whether the device is busy with or slowed down other requests. As a
-> result, we can tell how many CPU cycles go to waste due to IO delays,
-> but we can not identify the competition factor in those delays.
->
-> These patches are against v4.17-rc4.
->
->  Documentation/accounting/psi.txt                |  73 ++++
->  Documentation/cgroup-v2.txt                     |  18 +
->  arch/powerpc/platforms/cell/cpufreq_spudemand.c |   2 +-
->  arch/powerpc/platforms/cell/spufs/sched.c       |   9 +-
->  arch/s390/appldata/appldata_os.c                |   4 -
->  drivers/cpuidle/governors/menu.c                |   4 -
->  fs/proc/loadavg.c                               |   3 -
->  include/linux/cgroup-defs.h                     |   4 +
->  include/linux/cgroup.h                          |  15 +
->  include/linux/delayacct.h                       |  23 +
->  include/linux/mmzone.h                          |   1 +
->  include/linux/page-flags.h                      |   5 +-
->  include/linux/psi.h                             |  52 +++
->  include/linux/psi_types.h                       |  84 ++++
->  include/linux/sched.h                           |  10 +
->  include/linux/sched/loadavg.h                   |  90 +++-
->  include/linux/sched/stat.h                      |  10 +-
->  include/linux/swap.h                            |   2 +-
->  include/trace/events/mmflags.h                  |   1 +
->  include/uapi/linux/taskstats.h                  |   6 +-
->  init/Kconfig                                    |  20 +
->  kernel/cgroup/cgroup.c                          |  45 +-
->  kernel/debug/kdb/kdb_main.c                     |   7 +-
->  kernel/delayacct.c                              |  15 +
->  kernel/fork.c                                   |   4 +
->  kernel/sched/Makefile                           |   1 +
->  kernel/sched/core.c                             |   3 +
->  kernel/sched/loadavg.c                          |  84 ----
->  kernel/sched/psi.c                              | 499 ++++++++++++++++++++++
->  kernel/sched/sched.h                            | 166 +++----
->  kernel/sched/stats.h                            |  91 +++-
->  mm/compaction.c                                 |   5 +
->  mm/filemap.c                                    |  27 +-
->  mm/huge_memory.c                                |   1 +
->  mm/memcontrol.c                                 |   2 +
->  mm/migrate.c                                    |   2 +
->  mm/page_alloc.c                                 |  10 +
->  mm/swap_state.c                                 |   1 +
->  mm/vmscan.c                                     |  14 +
->  mm/vmstat.c                                     |   1 +
->  mm/workingset.c                                 | 113 +++--
->  tools/accounting/getdelays.c                    |   8 +-
->  42 files changed, 1279 insertions(+), 256 deletions(-)
->
->
->
->
-
-Thanks,
-Suren.
+> 
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> ---
+>  mm/memcontrol.c | 21 +++++++++++++++++++--
+>  1 file changed, 19 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ab5673dbfc4e..0a88f824c550 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1893,6 +1893,18 @@ void mem_cgroup_handle_over_high(void)
+>  	current->memcg_nr_pages_over_high = 0;
+>  }
+>  
+> +/*
+> + * Based on try_charge() force charge conditions.
+> + */
+> +static inline bool should_force_charge(gfp_t gfp_mask)
+> +{
+> +	return (unlikely(tsk_is_oom_victim(current) ||
+> +			 fatal_signal_pending(current) ||
+> +			 current->flags & PF_EXITING ||
+> +			 current->flags & PF_MEMALLOC ||
+> +			 gfp_mask & __GFP_NOFAIL));
+> +}
+> +
+>  static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		      unsigned int nr_pages)
+>  {
+> @@ -2008,6 +2020,8 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	 * The allocation either can't fail or will lead to more memory
+>  	 * being freed very soon.  Allow memory usage go over the limit
+>  	 * temporarily by force charging it.
+> +	 *
+> +	 * NOTE: Please keep the should_force_charge() conditions in sync.
+>  	 */
+>  	page_counter_charge(&memcg->memory, nr_pages);
+>  	if (do_memsw_account())
+> @@ -2331,8 +2345,11 @@ int memcg_kmem_charge_memcg(struct page *page, gfp_t gfp, int order,
+>  
+>  	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
+>  	    !page_counter_try_charge(&memcg->kmem, nr_pages, &counter)) {
+> -		cancel_charge(memcg, nr_pages);
+> -		return -ENOMEM;
+> +		if (!should_force_charge(gfp)) {
+> +			cancel_charge(memcg, nr_pages);
+> +			return -ENOMEM;
+> +		}
+> +		page_counter_charge(&memcg->kmem, nr_pages);
+>  	}
+>  
+>  	page->mem_cgroup = memcg;
