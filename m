@@ -1,72 +1,46 @@
-From: Vladimir Davydov <vdavydov.dev@gmail.com>
-Subject: Re: [PATCH v2] mm: fix race between kmem_cache destroy, create and
- deactivate
-Date: Sat, 26 May 2018 21:58:37 +0300
-Message-ID: <20180526185837.k5ztrillokpi65qj@esperanza>
-References: <20180522201336.196994-1-shakeelb@google.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] memcg: force charge kmem counter too
+Date: Sat, 26 May 2018 15:37:05 -0700
+Message-ID: <CALvZod5yTxcuB_Aao-a0ChNEnwyBJk9UPvEQ80s9tZFBQ0cxpw@mail.gmail.com>
+References: <20180525185501.82098-1-shakeelb@google.com> <20180526185144.xvh7ejlyelzvqwdb@esperanza>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Kr1avp4EGKXKHnGL+qddOdi+NRTiEgybcc6cZoXiBsQ=;
-        b=XpTYHc+qHwQjWqjMnNJLES/ECGZY7O8wwqpKiZn7+zxEsQnsWDMK4SOVWFmLmbyA2z
-         4P1n1vEMTdvWEoGIotJ0KTGAv9a144JQdXA5T862HfrobNKw7PYnoXVhB1xQauKHiP3d
-         atn3Gt3xjkK5lXyA/4NcY/4945ZSB6xEpx4/aunSAtvur+rSnqlM4e9TIMO2uVw0v8vo
-         XlO+xFBKNn+MQwZoj4UBd0MaVkOskhSPBUnEgjuFsqVEhoVOXSaQ7wK5RWr8sL086ZOj
-         TKuSGNI+k6tXNrAJFRCKJJXeWUvbNS5hQjbwnan4AWTPnL2BeFSIRXkxJCY9IHK7E3YY
-         haPQ==
-Content-Disposition: inline
-In-Reply-To: <20180522201336.196994-1-shakeelb@google.com>
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=54+VJeasqBof8u0nfYimee377xmvUkl+RI8HREEgdcI=;
+        b=SfX6eyfRyNAyZqZuwPdiVz+D+J8ufClTwcxD1rAnyPBi1dLBG+6jn3GXezlSa4gVB9
+         lMtCbR9UeS+hKdRHehZ5CI3bFxJHEFBnidiWdyZEYM1BSiSzHX/opI+kikuUoQ0lxKPf
+         pwjcy5/jxHntmmCJloi4QcNgug67vBflYqmoDzIMkJpPEUHAgEzxMt7NFQfCqeYLO+WQ
+         BzcGVYfri8UrZuWKV19mqGeQe6EqedUaXoL6fciGbYbvg0ht7jOFRp0n/Rnv+G9D5J86
+         Nfsq1BA17bWQVLQsV8KhSfyL0lGN13URV6K+bGB9CuNBcLvXneFCrXmSTDWmYz6LA209
+         9GfA==
+In-Reply-To: <20180526185144.xvh7ejlyelzvqwdb@esperanza>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Linux MM <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, May 22, 2018 at 01:13:36PM -0700, Shakeel Butt wrote:
-> The memcg kmem cache creation and deactivation (SLUB only) is
-> asynchronous. If a root kmem cache is destroyed whose memcg cache is in
-> the process of creation or deactivation, the kernel may crash.
-> 
-> Example of one such crash:
-> 	general protection fault: 0000 [#1] SMP PTI
-> 	CPU: 1 PID: 1721 Comm: kworker/14:1 Not tainted 4.17.0-smp
-> 	...
-> 	Workqueue: memcg_kmem_cache kmemcg_deactivate_workfn
-> 	RIP: 0010:has_cpu_slab
-> 	...
-> 	Call Trace:
-> 	? on_each_cpu_cond
-> 	__kmem_cache_shrink
-> 	kmemcg_cache_deact_after_rcu
-> 	kmemcg_deactivate_workfn
-> 	process_one_work
-> 	worker_thread
-> 	kthread
-> 	ret_from_fork+0x35/0x40
-> 
-> This issue is due to the lack of real reference counting for the root
-> kmem_caches. Currently kmem_cache does have a field named refcount which
-> has been used for multiple purposes i.e. shared count, reference count
-> and noshare flag. Due to its conflated nature, it can not be used for
-> reference counting by other subsystems.
-> 
-> This patch decoupled the reference counting from shared count and
-> noshare flag. The new field 'shared_count' represents the shared count
-> and noshare flag while 'refcount' is converted into a real reference
-> counter.
-> 
-> The reference counting is only implemented for root kmem_caches for
-> simplicity. The reference of a root kmem_cache is elevated on sharing or
-> while its memcg kmem_cache creation or deactivation request is in the
-> fly and thus it is made sure that the root kmem_cache is not destroyed
-> in the middle. As the reference of kmem_cache is elevated on sharing,
-> the 'shared_count' does not need any locking protection as at worst it
-> can be out-dated for a small window which is tolerable.
+On Sat, May 26, 2018 at 11:51 AM, Vladimir Davydov
+<vdavydov.dev@gmail.com> wrote:
+> On Fri, May 25, 2018 at 11:55:01AM -0700, Shakeel Butt wrote:
+>> Based on several conditions the kernel can decide to force charge an
+>> allocation for a memcg i.e. overcharge memcg->memory and memcg->memsw
+>> counters. Do the same for memcg->kmem counter too. In cgroup-v1, this
+>> bug can cause a __GFP_NOFAIL kmem allocation fail if an explicit limit
+>> on kmem counter is set and reached.
+>
+> memory.kmem.limit is broken and unlikely to ever be fixed as this knob
+> was deprecated in cgroup-v2. The fact that hitting the limit doesn't
+> trigger reclaim can result in unexpected behavior from user's pov, like
+> getting ENOMEM while listing a directory. Bypassing the limit for NOFAIL
+> allocations isn't going to fix those problem.
 
-I wonder if we could fix this problem without introducing reference
-counting for kmem caches (which seems a bit of an overkill to me TBO),
-e.g. by flushing memcg_kmem_cache_wq before root cache destruction?
+I understand that fixing NOFAIL will not fix all other issues but it
+still is better than current situation. IMHO we should keep fixing
+kmem bit by bit.
+
+One crazy idea is to just break it completely by force charging all the time.
