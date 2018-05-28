@@ -1,59 +1,144 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] memcg: force charge kmem counter too
-Date: Mon, 28 May 2018 10:23:07 -0700
-Message-ID: <CALvZod6x5iRmcJ6pYKS+jwJd855jnwmVcPK9tnKbuJ9Hfppa-A@mail.gmail.com>
-References: <20180525185501.82098-1-shakeelb@google.com> <20180526185144.xvh7ejlyelzvqwdb@esperanza>
- <CALvZod5yTxcuB_Aao-a0ChNEnwyBJk9UPvEQ80s9tZFBQ0cxpw@mail.gmail.com> <20180528091110.GG1517@dhcp22.suse.cz>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v8 3/6] cpuset: Add cpuset.sched.load_balance flag to v2
+Date: Mon, 28 May 2018 14:31:48 -0400
+Message-ID: <5487d08f-322c-15d3-06e2-f3d3408141d6@redhat.com>
+References: <1526590545-3350-1-git-send-email-longman@redhat.com>
+ <1526590545-3350-4-git-send-email-longman@redhat.com>
+ <20180524154341.GJ12198@hirez.programming.kicks-ass.net>
+ <9f547771-54e8-118e-80f7-48f99c7b0a12@redhat.com>
+ <20180528124508.GE3452@worktop.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=QnZX55h+z4mn2KO+nqsq8zbiY2Dlp2GQR3mYXay8zB0=;
-        b=BPb1XuutyYNYdkl4lW39qZx8Uw+tkF/NyvtMAdRJbnlr4a8LcMqfvLthE8yClglHpg
-         rpsVCrt9rYOj5OHMeALdXBndnv0BmaLVuJn2j6vUQMS+2oKNYWCGEMF0r7Gu8yM0nXXM
-         pR5xaykaxfdDeVXLszdTPznOJb0GCSSUI4daDkTBJVvPNMum1LaQUkrzorPGm0CKUo7L
-         IQS4+W6AQGNe2eF0EdmZbRd9qMiP14v1iGdHJNwGvWSWZrhCu7PM1rHa3p5sInyr9nnw
-         E83DZ0E6DK0sgR+vUVuz6BtgDDoc7V0IT4p9VZ2gyxxSGqh2EJUswiZmI6cKlYfKNalg
-         wBNw==
-In-Reply-To: <20180528091110.GG1517@dhcp22.suse.cz>
+In-Reply-To: <20180528124508.GE3452@worktop.programming.kicks-ass.net>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
 
-On Mon, May 28, 2018 at 2:11 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> On Sat 26-05-18 15:37:05, Shakeel Butt wrote:
->> On Sat, May 26, 2018 at 11:51 AM, Vladimir Davydov
->> <vdavydov.dev@gmail.com> wrote:
->> > On Fri, May 25, 2018 at 11:55:01AM -0700, Shakeel Butt wrote:
->> >> Based on several conditions the kernel can decide to force charge an
->> >> allocation for a memcg i.e. overcharge memcg->memory and memcg->memsw
->> >> counters. Do the same for memcg->kmem counter too. In cgroup-v1, this
->> >> bug can cause a __GFP_NOFAIL kmem allocation fail if an explicit limit
->> >> on kmem counter is set and reached.
->> >
->> > memory.kmem.limit is broken and unlikely to ever be fixed as this knob
->> > was deprecated in cgroup-v2. The fact that hitting the limit doesn't
->> > trigger reclaim can result in unexpected behavior from user's pov, like
->> > getting ENOMEM while listing a directory. Bypassing the limit for NOFAIL
->> > allocations isn't going to fix those problem.
->>
->> I understand that fixing NOFAIL will not fix all other issues but it
->> still is better than current situation. IMHO we should keep fixing
->> kmem bit by bit.
->>
->> One crazy idea is to just break it completely by force charging all the time.
+On 05/28/2018 08:45 AM, Peter Zijlstra wrote:
+> On Thu, May 24, 2018 at 02:55:25PM -0400, Waiman Long wrote:
+>> On 05/24/2018 11:43 AM, Peter Zijlstra wrote:
+>>> I'm confused... why exactly do we have both domain and load_balance ?
+>> The domain is for partitioning the CPUs only. It doesn't change the load
+>> balancing state. So the load_balance flag is still need to turn on and
+>> off load balancing.
+> OK, so we have to two boolean flags, giving 4 possible states. Lets just
+> go through them one by on:
 >
-> What is the limit good for then? Accounting?
+> A) domain:0 load_balance:0 -- we have no exclusive domain, but have
+>    load-balancing disabled across them. AFAICT this should be an invalid
+>    state.
 >
+> B) domain:0 load_balance:1 -- we have no exclusive domain, but have
+>    load-balancing enabled. AFAICT this is the default state and is a
+>    no-op.
+>
+> C) domain:1 load_balance:0 -- we have an exclusive domain, and have
+>    load-balancing disabled across it. This is, AFAICT, identical to
+>    having a bunch of sub/sibling groups each with a single CPU domain.
+>
+> D) domain:1 load_balance:1 -- we have an exclusive domain, and have
+>    load-balancing enabled. This is a partition.
+>
+> Now, I think I've overlooked the fact that load_balance==1 only really
+> means something when the parent's load_balance==0, but I'm not sure that
+> really changes anything.
+>
+> So, afaict, the above only have two useful states: B and D. Which again
+> raises the question, why two knobs? What useful configurations does it
+> allow?
 
-Unlike tcpmem, the kmem accounting is enabled by default. No need to
-set the limit to enable accounting.
+I am working on the v9 patch, and below is the current draft of the
+documentation. Hopefully that will clarify some of the concepts that we
+are discussing here.
 
-I think my crazy idea was just wrong and without much thought. Though
-is there a precedence where the broken feature is not fixed because an
-alternative is available?
+  cpuset.sched.domain_root
+        A read-write single value file which exists on non-root
+        cpuset-enabled cgroups.  It is a binary value flag that accepts
+        either "0" (off) or "1" (on).  This flag is set by the parent
+        and is not delegatable.
+
+        If set, it indicates that the current cgroup is the root of a
+        new scheduling domain or partition that comprises itself and
+        all its descendants except those that are scheduling domain
+        roots themselves and their descendants.  The root cgroup is
+        always a scheduling domain root.
+
+        There are constraints on where this flag can be set.  It can
+        only be set in a cgroup if all the following conditions are true.
+
+        1) The "cpuset.cpus" is not empty and the list of CPUs are
+           exclusive, i.e. they are not shared by any of its siblings.
+        2) The parent cgroup is also a scheduling domain root.
+        3) There is no child cgroups with cpuset enabled.  This is
+           for eliminating corner cases that have to be handled if such
+           a condition is allowed.
+
+        Setting this flag will take the CPUs away from the effective
+        CPUs of the parent cgroup.  Once it is set, this flag cannot
+        be cleared if there are any child cgroups with cpuset enabled.
+        Further changes made to "cpuset.cpus" is allowed as long as
+        the first condition above is still true.
+
+        A parent scheduling domain root cgroup cannot distribute all
+        its CPUs to its child scheduling domain root cgroups unless
+        its load balancing flag is turned off.
+
+  cpuset.sched.load_balance
+        A read-write single value file which exists on non-root
+        cpuset-enabled cgroups.  It is a binary value flag that accepts
+        either "0" (off) or "1" (on).  This flag is set by the parent
+        and is not delegatable.  It is on by default in the root cgroup.
+
+        When it is on, tasks within this cpuset will be load-balanced
+        by the kernel scheduler.  Tasks will be moved from CPUs with
+        high load to other CPUs within the same cpuset with less load
+        periodically.
+
+        When it is off, there will be no load balancing among CPUs on
+        this cgroup.  Tasks will stay in the CPUs they are running on
+        and will not be moved to other CPUs.
+
+        The load balancing state of a cgroup can only be changed on a
+        scheduling domain root cgroup with no cpuset-enabled children.
+        All cgroups within a scheduling domain or partition must have
+        the same load balancing state.  As descendant cgroups of a
+        scheduling domain root are created, they inherit the same load
+        balancing state of their root.
+
+The main purpose of using a new domain_root flag is to enable user to
+create new partitions without the trick of disabling load_balance in the
+parent and enabling it in the child. Now, we can create as many
+partitions as we want without ever turning off load balancing in any of
+the cpusets. I find it to be more straight forward and easier to
+understand than using the load_balance trick.
+
+Of course, turning off load balancing is still useful in some use cases,
+so it is supported. To simplify thing, it is mandated that all the
+cpusets within a partition must have the same load balancing state. This
+is to ensure that we can't use the load_balance trick to create
+additional partition underneath it. The domain_root flag is the only way
+to create partition.
+
+A) domain_root: 0, load_balance: 0 -- a non-domain root cpuset within a
+no load balancing partition.
+
+B) domain_root: 0, load_balance: 1 -- a non-domain root cpuset within a
+load balancing partition.
+
+C) domain_root: 1, load_balance: 0 -- a domain root cpuset of a no load
+balancing partition.
+
+D) domain_root: 1, load_balance: 1 -- a domain root cpuset of a load
+balancing partition.
+
+Hope this help.
+
+Cheers,
+Longman
+
+
+
