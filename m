@@ -1,14 +1,15 @@
 From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v8 2/6] cpuset: Add new v2 cpuset.sched.domain flag
-Date: Mon, 28 May 2018 20:55:13 -0400
-Message-ID: <595ad976-6859-95bc-179f-88e11ba98dbf@redhat.com>
+Subject: Re: [PATCH v8 6/6] cpuset: Allow reporting of sched domain generation
+ info
+Date: Mon, 28 May 2018 21:04:22 -0400
+Message-ID: <9c1c3698-4eca-55ea-2796-7842ce5afeaf@redhat.com>
 References: <1526590545-3350-1-git-send-email-longman@redhat.com>
- <1526590545-3350-3-git-send-email-longman@redhat.com>
- <20180522125750.GA31040@localhost.localdomain>
+ <1526590545-3350-7-git-send-email-longman@redhat.com>
+ <20180522135349.GB31040@localhost.localdomain>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180522125750.GA31040@localhost.localdomain>
+In-Reply-To: <20180522135349.GB31040@localhost.localdomain>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -16,137 +17,178 @@ Content-Type: text/plain; charset="us-ascii"
 To: Juri Lelli <juri.lelli@redhat.com>
 Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-On 05/22/2018 08:57 AM, Juri Lelli wrote:
+On 05/22/2018 09:53 AM, Juri Lelli wrote:
 > Hi,
 >
 > On 17/05/18 16:55, Waiman Long wrote:
+>> This patch enables us to report sched domain generation information.
+>>
+>> If DYNAMIC_DEBUG is enabled, issuing the following command
+>>
+>>   echo "file cpuset.c +p" > /sys/kernel/debug/dynamic_debug/control
+>>
+>> and setting loglevel to 8 will allow the kernel to show what scheduling
+>> domain changes are being made.
+>>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>  kernel/cgroup/cpuset.c | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index fb8aa82b..8f586e8 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -820,6 +820,12 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>>  	}
+>>  	BUG_ON(nslot != ndoms);
+>>  
+>> +#ifdef CONFIG_DEBUG_KERNEL
+>> +	for (i = 0; i < ndoms; i++)
+>> +		pr_debug("generate_sched_domains dom %d: %*pbl\n", i,
+>> +			 cpumask_pr_args(doms[i]));
+>> +#endif
+>> +
+> While I'm always in favor of adding debug output, in this case I'm not
+> sure it's adding much to what we already print when booting with
+> sched_debug kernel command-line param, e.g.
+>
+> --->8---
+>  Kernel command line: BOOT_IMAGE=/vmlinuz-4.17.0-rc5+ ... sched_debug
 >
 > [...]
 >
->>  /**
->> + * update_isolated_cpumask - update the isolated_cpus mask of parent cpuset
->> + * @cpuset:  The cpuset that requests CPU isolation
->> + * @oldmask: The old isolated cpumask to be removed from the parent
->> + * @newmask: The new isolated cpumask to be added to the parent
->> + * Return: 0 if successful, an error code otherwise
->> + *
->> + * Changes to the isolated CPUs are not allowed if any of CPUs changing
->> + * state are in any of the child cpusets of the parent except the requesting
->> + * child.
->> + *
->> + * If the sched_domain flag changes, either the oldmask (0=>1) or the
->> + * newmask (1=>0) will be NULL.
->> + *
->> + * Called with cpuset_mutex held.
->> + */
->> +static int update_isolated_cpumask(struct cpuset *cpuset,
->> +	struct cpumask *oldmask, struct cpumask *newmask)
->> +{
->> +	int retval;
->> +	int adding, deleting;
->> +	cpumask_var_t addmask, delmask;
->> +	struct cpuset *parent = parent_cs(cpuset);
->> +	struct cpuset *sibling;
->> +	struct cgroup_subsys_state *pos_css;
->> +	int old_count = parent->isolation_count;
->> +	bool dying = cpuset->css.flags & CSS_DYING;
->> +
->> +	/*
->> +	 * Parent must be a scheduling domain with non-empty cpus_allowed.
->> +	 */
->> +	if (!is_sched_domain(parent) || cpumask_empty(parent->cpus_allowed))
->> +		return -EINVAL;
->> +
->> +	/*
->> +	 * The oldmask, if present, must be a subset of parent's isolated
->> +	 * CPUs.
->> +	 */
->> +	if (oldmask && !cpumask_empty(oldmask) && (!parent->isolation_count ||
->> +			!cpumask_subset(oldmask, parent->isolated_cpus))) {
->> +		WARN_ON_ONCE(1);
->> +		return -EINVAL;
->> +	}
->> +
->> +	/*
->> +	 * A sched_domain state change is not allowed if there are
->> +	 * online children and the cpuset is not dying.
->> +	 */
->> +	if (!dying && (!oldmask || !newmask) &&
->> +	    css_has_online_children(&cpuset->css))
->> +		return -EBUSY;
->> +
->> +	if (!zalloc_cpumask_var(&addmask, GFP_KERNEL))
->> +		return -ENOMEM;
->> +	if (!zalloc_cpumask_var(&delmask, GFP_KERNEL)) {
->> +		free_cpumask_var(addmask);
->> +		return -ENOMEM;
->> +	}
->> +
->> +	if (!old_count) {
->> +		if (!zalloc_cpumask_var(&parent->isolated_cpus, GFP_KERNEL)) {
->> +			retval = -ENOMEM;
->> +			goto out;
->> +		}
->> +		old_count = 1;
->> +	}
->> +
->> +	retval = -EBUSY;
->> +	adding = deleting = false;
->> +	if (newmask)
->> +		cpumask_copy(addmask, newmask);
->> +	if (oldmask)
->> +		deleting = cpumask_andnot(delmask, oldmask, addmask);
->> +	if (newmask)
->> +		adding = cpumask_andnot(addmask, newmask, delmask);
->> +
->> +	if (!adding && !deleting)
->> +		goto out_ok;
->> +
->> +	/*
->> +	 * The cpus to be added must be in the parent's effective_cpus mask
->> +	 * but not in the isolated_cpus mask.
->> +	 */
->> +	if (!cpumask_subset(addmask, parent->effective_cpus))
->> +		goto out;
->> +	if (parent->isolation_count &&
->> +	    cpumask_intersects(parent->isolated_cpus, addmask))
->> +		goto out;
->> +
->> +	/*
->> +	 * Check if any CPUs in addmask or delmask are in a sibling cpuset.
->> +	 * An empty sibling cpus_allowed means it is the same as parent's
->> +	 * effective_cpus. This checking is skipped if the cpuset is dying.
->> +	 */
->> +	if (dying)
->> +		goto updated_isolated_cpus;
->> +
->> +	cpuset_for_each_child(sibling, pos_css, parent) {
->> +		if ((sibling == cpuset) || !(sibling->css.flags & CSS_ONLINE))
->> +			continue;
->> +		if (cpumask_empty(sibling->cpus_allowed))
->> +			goto out;
->> +		if (adding &&
->> +		    cpumask_intersects(sibling->cpus_allowed, addmask))
->> +			goto out;
->> +		if (deleting &&
->> +		    cpumask_intersects(sibling->cpus_allowed, delmask))
->> +			goto out;
->> +	}
-> Just got the below by echoing 1 into cpuset.sched.domain of a sibling with
-> "isolated" cpuset.cpus. Guess you are missing proper locking about here
-> above.
+>  smp: Bringing up secondary CPUs ...
+>  x86: Booting SMP configuration:
+>  .... node  #0, CPUs:        #1  #2  #3  #4  #5
+>  .... node  #1, CPUs:    #6  #7  #8  #9 #10 #11
+>  smp: Brought up 2 nodes, 12 CPUs
+>  smpboot: Max logical packages: 2
+>  smpboot: Total of 12 processors activated (45636.50 BogoMIPS)
+>  CPU0 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
+>  CPU1 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
+>  CPU2 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
+>  CPU3 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 3:{ span=3 cap=1023 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
+>  CPU4 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
+>  CPU5 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 5:{ span=5 }, 0:{ span=0 cap=1016 }, 1:{ span=1 cap=1011 }, 2:{ span=2 }, 3:{ span=3 cap=1023 }, 4:{ span=4 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 0:{ span=0-5 cap=6122 }, 6:{ span=6-11 cap=6141 }
+>  CPU6 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
+>  CPU7 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
+>  CPU8 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
+>  CPU9 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
+>  CPU10 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
+>  CPU11 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 cap=1021 }, 9:{ span=9 }, 10:{ span=10 }
+>    domain-1: span=0-11 level=NUMA
+>     groups: 6:{ span=6-11 cap=6141 }, 0:{ span=0-5 cap=6122 }
+>  span: 0-11 (max cpu_capacity = 1024)
 >
-> --->8---
-> [ 7509.905005] =============================
-> [ 7509.905009] WARNING: suspicious RCU usage
-> [ 7509.905014] 4.17.0-rc5+ #11 Not tainted
-> [ 7509.905017] -----------------------------
-> [ 7509.905023] /home/juri/work/kernel/linux/kernel/cgroup/cgroup.c:3826 cgroup_mutex or RCU read lock required!
-> [ 7509.905026] 
->                other info that might help us debug this:
+> [...]
+>
+>  generate_sched_domains dom 0: 6-11 <-- this and the one below is what
+>  generate_sched_domains dom 1: 0-5      you are adding
+>  CPU0 attaching NULL sched-domain.
+>  CPU1 attaching NULL sched-domain.
+>  CPU2 attaching NULL sched-domain.
+>  CPU3 attaching NULL sched-domain.
+>  CPU4 attaching NULL sched-domain.
+>  CPU5 attaching NULL sched-domain.
+>  CPU6 attaching NULL sched-domain.
+>  CPU7 attaching NULL sched-domain.
+>  CPU8 attaching NULL sched-domain.
+>  CPU9 attaching NULL sched-domain.
+>  CPU10 attaching NULL sched-domain.
+>  CPU11 attaching NULL sched-domain.
+>  CPU6 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }
+>  CPU7 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }
+>  CPU8 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }
+>  CPU9 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 9:{ span=9 }, 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }
+>  CPU10 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 10:{ span=10 }, 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }
+>  CPU11 attaching sched-domain(s):
+>   domain-0: span=6-11 level=MC
+>    groups: 11:{ span=11 }, 6:{ span=6 }, 7:{ span=7 }, 8:{ span=8 }, 9:{ span=9 }, 10:{ span=10 }
+>  span: 6-11 (max cpu_capacity = 1024)
+>  CPU0 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }
+>  CPU1 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }
+>  CPU2 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }
+>  CPU3 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 3:{ span=3 }, 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }
+>  CPU4 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 4:{ span=4 }, 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }
+>  CPU5 attaching sched-domain(s):
+>   domain-0: span=0-5 level=MC
+>    groups: 5:{ span=5 }, 0:{ span=0 }, 1:{ span=1 }, 2:{ span=2 }, 3:{ span=3 }, 4:{ span=4 }
+>  span: 0-5 (max cpu_capacity = 1024)
+>  --->8---
+>
+>  Do you think there is still a benefit in printing out what
+>  generate_sched_domains does?
 
-The cause is missing rcu_lock/rcu_unlock in section of the code. It will
-be fixed in the next version.
+For testing purpose the debug messages from generate_sched_domains() is
+more concise. The sched_debug message is too verbose from my point of
+view. So I think it is still useful.
 
 Cheers,
 Longman
