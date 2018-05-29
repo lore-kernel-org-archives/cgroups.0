@@ -1,144 +1,153 @@
 From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v8 3/6] cpuset: Add cpuset.sched.load_balance flag to v2
-Date: Mon, 28 May 2018 14:31:48 -0400
-Message-ID: <5487d08f-322c-15d3-06e2-f3d3408141d6@redhat.com>
+Subject: Re: [PATCH v8 2/6] cpuset: Add new v2 cpuset.sched.domain flag
+Date: Mon, 28 May 2018 20:55:13 -0400
+Message-ID: <595ad976-6859-95bc-179f-88e11ba98dbf@redhat.com>
 References: <1526590545-3350-1-git-send-email-longman@redhat.com>
- <1526590545-3350-4-git-send-email-longman@redhat.com>
- <20180524154341.GJ12198@hirez.programming.kicks-ass.net>
- <9f547771-54e8-118e-80f7-48f99c7b0a12@redhat.com>
- <20180528124508.GE3452@worktop.programming.kicks-ass.net>
+ <1526590545-3350-3-git-send-email-longman@redhat.com>
+ <20180522125750.GA31040@localhost.localdomain>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180528124508.GE3452@worktop.programming.kicks-ass.net>
+In-Reply-To: <20180522125750.GA31040@localhost.localdomain>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>
 
-On 05/28/2018 08:45 AM, Peter Zijlstra wrote:
-> On Thu, May 24, 2018 at 02:55:25PM -0400, Waiman Long wrote:
->> On 05/24/2018 11:43 AM, Peter Zijlstra wrote:
->>> I'm confused... why exactly do we have both domain and load_balance ?
->> The domain is for partitioning the CPUs only. It doesn't change the load
->> balancing state. So the load_balance flag is still need to turn on and
->> off load balancing.
-> OK, so we have to two boolean flags, giving 4 possible states. Lets just
-> go through them one by on:
+On 05/22/2018 08:57 AM, Juri Lelli wrote:
+> Hi,
 >
-> A) domain:0 load_balance:0 -- we have no exclusive domain, but have
->    load-balancing disabled across them. AFAICT this should be an invalid
->    state.
+> On 17/05/18 16:55, Waiman Long wrote:
 >
-> B) domain:0 load_balance:1 -- we have no exclusive domain, but have
->    load-balancing enabled. AFAICT this is the default state and is a
->    no-op.
+> [...]
 >
-> C) domain:1 load_balance:0 -- we have an exclusive domain, and have
->    load-balancing disabled across it. This is, AFAICT, identical to
->    having a bunch of sub/sibling groups each with a single CPU domain.
+>>  /**
+>> + * update_isolated_cpumask - update the isolated_cpus mask of parent cpuset
+>> + * @cpuset:  The cpuset that requests CPU isolation
+>> + * @oldmask: The old isolated cpumask to be removed from the parent
+>> + * @newmask: The new isolated cpumask to be added to the parent
+>> + * Return: 0 if successful, an error code otherwise
+>> + *
+>> + * Changes to the isolated CPUs are not allowed if any of CPUs changing
+>> + * state are in any of the child cpusets of the parent except the requesting
+>> + * child.
+>> + *
+>> + * If the sched_domain flag changes, either the oldmask (0=>1) or the
+>> + * newmask (1=>0) will be NULL.
+>> + *
+>> + * Called with cpuset_mutex held.
+>> + */
+>> +static int update_isolated_cpumask(struct cpuset *cpuset,
+>> +	struct cpumask *oldmask, struct cpumask *newmask)
+>> +{
+>> +	int retval;
+>> +	int adding, deleting;
+>> +	cpumask_var_t addmask, delmask;
+>> +	struct cpuset *parent = parent_cs(cpuset);
+>> +	struct cpuset *sibling;
+>> +	struct cgroup_subsys_state *pos_css;
+>> +	int old_count = parent->isolation_count;
+>> +	bool dying = cpuset->css.flags & CSS_DYING;
+>> +
+>> +	/*
+>> +	 * Parent must be a scheduling domain with non-empty cpus_allowed.
+>> +	 */
+>> +	if (!is_sched_domain(parent) || cpumask_empty(parent->cpus_allowed))
+>> +		return -EINVAL;
+>> +
+>> +	/*
+>> +	 * The oldmask, if present, must be a subset of parent's isolated
+>> +	 * CPUs.
+>> +	 */
+>> +	if (oldmask && !cpumask_empty(oldmask) && (!parent->isolation_count ||
+>> +			!cpumask_subset(oldmask, parent->isolated_cpus))) {
+>> +		WARN_ON_ONCE(1);
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	/*
+>> +	 * A sched_domain state change is not allowed if there are
+>> +	 * online children and the cpuset is not dying.
+>> +	 */
+>> +	if (!dying && (!oldmask || !newmask) &&
+>> +	    css_has_online_children(&cpuset->css))
+>> +		return -EBUSY;
+>> +
+>> +	if (!zalloc_cpumask_var(&addmask, GFP_KERNEL))
+>> +		return -ENOMEM;
+>> +	if (!zalloc_cpumask_var(&delmask, GFP_KERNEL)) {
+>> +		free_cpumask_var(addmask);
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	if (!old_count) {
+>> +		if (!zalloc_cpumask_var(&parent->isolated_cpus, GFP_KERNEL)) {
+>> +			retval = -ENOMEM;
+>> +			goto out;
+>> +		}
+>> +		old_count = 1;
+>> +	}
+>> +
+>> +	retval = -EBUSY;
+>> +	adding = deleting = false;
+>> +	if (newmask)
+>> +		cpumask_copy(addmask, newmask);
+>> +	if (oldmask)
+>> +		deleting = cpumask_andnot(delmask, oldmask, addmask);
+>> +	if (newmask)
+>> +		adding = cpumask_andnot(addmask, newmask, delmask);
+>> +
+>> +	if (!adding && !deleting)
+>> +		goto out_ok;
+>> +
+>> +	/*
+>> +	 * The cpus to be added must be in the parent's effective_cpus mask
+>> +	 * but not in the isolated_cpus mask.
+>> +	 */
+>> +	if (!cpumask_subset(addmask, parent->effective_cpus))
+>> +		goto out;
+>> +	if (parent->isolation_count &&
+>> +	    cpumask_intersects(parent->isolated_cpus, addmask))
+>> +		goto out;
+>> +
+>> +	/*
+>> +	 * Check if any CPUs in addmask or delmask are in a sibling cpuset.
+>> +	 * An empty sibling cpus_allowed means it is the same as parent's
+>> +	 * effective_cpus. This checking is skipped if the cpuset is dying.
+>> +	 */
+>> +	if (dying)
+>> +		goto updated_isolated_cpus;
+>> +
+>> +	cpuset_for_each_child(sibling, pos_css, parent) {
+>> +		if ((sibling == cpuset) || !(sibling->css.flags & CSS_ONLINE))
+>> +			continue;
+>> +		if (cpumask_empty(sibling->cpus_allowed))
+>> +			goto out;
+>> +		if (adding &&
+>> +		    cpumask_intersects(sibling->cpus_allowed, addmask))
+>> +			goto out;
+>> +		if (deleting &&
+>> +		    cpumask_intersects(sibling->cpus_allowed, delmask))
+>> +			goto out;
+>> +	}
+> Just got the below by echoing 1 into cpuset.sched.domain of a sibling with
+> "isolated" cpuset.cpus. Guess you are missing proper locking about here
+> above.
 >
-> D) domain:1 load_balance:1 -- we have an exclusive domain, and have
->    load-balancing enabled. This is a partition.
->
-> Now, I think I've overlooked the fact that load_balance==1 only really
-> means something when the parent's load_balance==0, but I'm not sure that
-> really changes anything.
->
-> So, afaict, the above only have two useful states: B and D. Which again
-> raises the question, why two knobs? What useful configurations does it
-> allow?
+> --->8---
+> [ 7509.905005] =============================
+> [ 7509.905009] WARNING: suspicious RCU usage
+> [ 7509.905014] 4.17.0-rc5+ #11 Not tainted
+> [ 7509.905017] -----------------------------
+> [ 7509.905023] /home/juri/work/kernel/linux/kernel/cgroup/cgroup.c:3826 cgroup_mutex or RCU read lock required!
+> [ 7509.905026] 
+>                other info that might help us debug this:
 
-I am working on the v9 patch, and below is the current draft of the
-documentation. Hopefully that will clarify some of the concepts that we
-are discussing here.
-
-  cpuset.sched.domain_root
-        A read-write single value file which exists on non-root
-        cpuset-enabled cgroups.  It is a binary value flag that accepts
-        either "0" (off) or "1" (on).  This flag is set by the parent
-        and is not delegatable.
-
-        If set, it indicates that the current cgroup is the root of a
-        new scheduling domain or partition that comprises itself and
-        all its descendants except those that are scheduling domain
-        roots themselves and their descendants.  The root cgroup is
-        always a scheduling domain root.
-
-        There are constraints on where this flag can be set.  It can
-        only be set in a cgroup if all the following conditions are true.
-
-        1) The "cpuset.cpus" is not empty and the list of CPUs are
-           exclusive, i.e. they are not shared by any of its siblings.
-        2) The parent cgroup is also a scheduling domain root.
-        3) There is no child cgroups with cpuset enabled.  This is
-           for eliminating corner cases that have to be handled if such
-           a condition is allowed.
-
-        Setting this flag will take the CPUs away from the effective
-        CPUs of the parent cgroup.  Once it is set, this flag cannot
-        be cleared if there are any child cgroups with cpuset enabled.
-        Further changes made to "cpuset.cpus" is allowed as long as
-        the first condition above is still true.
-
-        A parent scheduling domain root cgroup cannot distribute all
-        its CPUs to its child scheduling domain root cgroups unless
-        its load balancing flag is turned off.
-
-  cpuset.sched.load_balance
-        A read-write single value file which exists on non-root
-        cpuset-enabled cgroups.  It is a binary value flag that accepts
-        either "0" (off) or "1" (on).  This flag is set by the parent
-        and is not delegatable.  It is on by default in the root cgroup.
-
-        When it is on, tasks within this cpuset will be load-balanced
-        by the kernel scheduler.  Tasks will be moved from CPUs with
-        high load to other CPUs within the same cpuset with less load
-        periodically.
-
-        When it is off, there will be no load balancing among CPUs on
-        this cgroup.  Tasks will stay in the CPUs they are running on
-        and will not be moved to other CPUs.
-
-        The load balancing state of a cgroup can only be changed on a
-        scheduling domain root cgroup with no cpuset-enabled children.
-        All cgroups within a scheduling domain or partition must have
-        the same load balancing state.  As descendant cgroups of a
-        scheduling domain root are created, they inherit the same load
-        balancing state of their root.
-
-The main purpose of using a new domain_root flag is to enable user to
-create new partitions without the trick of disabling load_balance in the
-parent and enabling it in the child. Now, we can create as many
-partitions as we want without ever turning off load balancing in any of
-the cpusets. I find it to be more straight forward and easier to
-understand than using the load_balance trick.
-
-Of course, turning off load balancing is still useful in some use cases,
-so it is supported. To simplify thing, it is mandated that all the
-cpusets within a partition must have the same load balancing state. This
-is to ensure that we can't use the load_balance trick to create
-additional partition underneath it. The domain_root flag is the only way
-to create partition.
-
-A) domain_root: 0, load_balance: 0 -- a non-domain root cpuset within a
-no load balancing partition.
-
-B) domain_root: 0, load_balance: 1 -- a non-domain root cpuset within a
-load balancing partition.
-
-C) domain_root: 1, load_balance: 0 -- a domain root cpuset of a no load
-balancing partition.
-
-D) domain_root: 1, load_balance: 1 -- a domain root cpuset of a load
-balancing partition.
-
-Hope this help.
+The cause is missing rcu_lock/rcu_unlock in section of the code. It will
+be fixed in the next version.
 
 Cheers,
 Longman
-
-
 
