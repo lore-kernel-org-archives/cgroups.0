@@ -1,13 +1,13 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH] cpuset: Enforce that a child's cpus must be a subset of
- the parent
-Date: Wed, 30 May 2018 16:00:21 +0200
-Message-ID: <20180530140021.GF3320@localhost.localdomain>
-References: <1527687991-1431-1-git-send-email-longman@redhat.com>
+Subject: Re: [PATCH v9 2/7] cpuset: Add new v2 cpuset.sched.domain_root flag
+Date: Wed, 30 May 2018 16:18:04 +0200
+Message-ID: <20180530141804.GG3320@localhost.localdomain>
+References: <1527601294-3444-1-git-send-email-longman@redhat.com>
+ <1527601294-3444-3-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1527687991-1431-1-git-send-email-longman@redhat.com>
+In-Reply-To: <1527601294-3444-3-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,35 +17,89 @@ Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <h
 
 Hi,
 
-On 30/05/18 09:46, Waiman Long wrote:
-> It was found that the cpuset.cpus could contain CPUs that are not listed
-> in their parent's cpu list as shown by the command sequence below:
-> 
->   # echo "+cpuset" >cgroup.subtree_control
->   # mkdir g1
->   # echo 0-5 >g1/cpuset.cpus
->   # mkdir g1/g11
->   # echo "+cpuset" > g1/cgroup.subtree_control
->   # echo 6-11 >g1/g11/cpuset.cpus
->   # grep -R . g1 | grep "\.cpus"
->   g1/cpuset.cpus:0-5
->   g1/cpuset.cpus.effective:0-5
->   g1/g11/cpuset.cpus:6-11
->   g1/g11/cpuset.cpus.effective:0-5
-> 
-> As the intersection of g11's cpus and that of g1 is empty, the effective
-> cpus of g11 is just that of g1. The check in update_cpumask() is now
-> corrected to make sure that cpus in a child cpus must be a subset of
-> its parent's cpus. The error "write error: Invalid argument" will now
-> be reported in the above case.
-> 
-> Reported-by: Juri Lelli <juri.lelli@redhat.com>
-> Signed-off-by: Waiman Long <longman@redhat.com>
+On 29/05/18 09:41, Waiman Long wrote:
 
-Looks like it fixes the bug.
+[...]
 
-Reviewed-and-Tested-by: Juri Lelli <juri.lelli@redhat.com>
+> +  cpuset.sched.domain_root
+> +	A read-write single value file which exists on non-root
+> +	cpuset-enabled cgroups.  It is a binary value flag that accepts
+> +	either "0" (off) or "1" (on).  This flag is set by the parent
+> +	and is not delegatable.
+> +
+> +	If set, it indicates that the current cgroup is the root of a
+> +	new scheduling domain or partition that comprises itself and
+> +	all its descendants except those that are scheduling domain
+> +	roots themselves and their descendants.  The root cgroup is
+> +	always a scheduling domain root.
+> +
+> +	There are constraints on where this flag can be set.  It can
+> +	only be set in a cgroup if all the following conditions are true.
+> +
+> +	1) The "cpuset.cpus" is not empty and the list of CPUs are
+> +	   exclusive, i.e. they are not shared by any of its siblings.
+> +	2) The parent cgroup is also a scheduling domain root.
+> +	3) There is no child cgroups with cpuset enabled.  This is
+> +	   for eliminating corner cases that have to be handled if such
+> +	   a condition is allowed.
+> +
+> +	Setting this flag will take the CPUs away from the effective
+> +	CPUs of the parent cgroup.  Once it is set, this flag cannot
+> +	be cleared if there are any child cgroups with cpuset enabled.
+> +	Further changes made to "cpuset.cpus" is allowed as long as
+> +	the first condition above is still true.
+
+IIUC, with the configuration below
+
+ cpuset.cpus.effective:6-11
+ cgroup.controllers:cpuset
+ cpuset.mems.effective:0-1
+ cgroup.subtree_control:cpuset
+ g1/cpuset.cpus.effective:0-5
+ g1/cgroup.controllers:cpuset
+ g1/cpuset.sched.load_balance:1
+ g1/cpuset.mems.effective:0-1
+ g1/cpuset.cpus:0-5
+ g1/cpuset.sched.domain_root:1
+ user.slice/cpuset.cpus.effective:6-11
+ user.slice/cgroup.controllers:cpuset
+ user.slice/cpuset.sched.load_balance:1
+ user.slice/cpuset.mems.effective:0-1
+ user.slice/cpuset.cpus:6-11
+ user.slice/cpuset.sched.domain_root:0
+ init.scope/cpuset.cpus.effective:6-11
+ init.scope/cgroup.controllers:cpuset
+ init.scope/cpuset.sched.load_balance:1
+ init.scope/cpuset.mems.effective:0-1
+ init.scope/cpuset.cpus:6-11
+ init.scope/cpuset.sched.domain_root:0
+ system.slice/cpuset.cpus.effective:6-11
+ system.slice/cgroup.controllers:cpuset
+ system.slice/cpuset.sched.load_balance:1
+ system.slice/cpuset.mems.effective:0-1
+ system.slice/cpuset.cpus:6-11
+ system.slice/cpuset.sched.domain_root:0
+ machine.slice/cpuset.cpus.effective:6-11
+ machine.slice/cgroup.controllers:cpuset
+ machine.slice/cpuset.sched.load_balance:1
+ machine.slice/cpuset.mems.effective:0-1
+ machine.slice/cpuset.cpus:6-11
+ machine.slice/cpuset.sched.domain_root:0
+
+I should be able to
+
+ # echo 0-4 >g1/cpuset.cpus
+
+?
+
+It doesn't let me.
+
+I'm not sure we actually want to allow that, but that's what would I
+expect as per your text above.
 
 Thanks,
 
 - Juri
+
+BTW: thanks a lot for your prompt feedback and hope it's OK if I keep
+playing and asking questions. :)
