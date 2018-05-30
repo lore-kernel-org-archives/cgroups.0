@@ -1,102 +1,158 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH v9 0/7] Enable cpuset controller in default hierarchy
-Date: Wed, 30 May 2018 15:05:55 +0200
-Message-ID: <20180530130555.GD3320@localhost.localdomain>
-References: <1527601294-3444-1-git-send-email-longman@redhat.com>
- <20180530101317.GB3320@localhost.localdomain>
- <d74c67ea-43c9-cabb-4303-ecff008412df@redhat.com>
+From: Steve Grubb <sgrubb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH ghak32 V2 00/13] audit: implement container id
+Date: Wed, 30 May 2018 09:20:01 -0400
+Message-ID: <23151436.iBN3rkXKiY@x2>
+References: <cover.1521179281.git.rgb@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d74c67ea-43c9-cabb-4303-ecff008412df@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <cover.1521179281.git.rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: simo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, carlos-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org
 
-On 30/05/18 08:56, Waiman Long wrote:
-> On 05/30/2018 06:13 AM, Juri Lelli wrote:
-> > Hi,
-> >
-> > On 29/05/18 09:41, Waiman Long wrote:
-> >> v9:
-> >>  - Rename cpuset.sched.domain to cpuset.sched.domain_root to better
-> >>    identify its purpose as the root of a new scheduling domain or
-> >>    partition.
-> >>  - Clarify in the document about the purpose of domain_root and
-> >>    load_balance. Using domain_root is th only way to create new
-> >>    partition.
-> >>  - Fix a lockdep warning in update_isolated_cpumask() function.
-> >>  - Add a new patch to eliminate call to generate_sched_domains() for
-> >>    v2 when a change in cpu list does not touch a domain_root.
-> > I was playing with this and ended up with the situation below:
-> >
-> >  g1/cgroup.controllers:cpuset
-> >  g1/cgroup.events:populated 0
-> >  g1/cgroup.max.depth:max
-> >  g1/cgroup.max.descendants:max
-> >  g1/cgroup.stat:nr_descendants 1
-> >  g1/cgroup.stat:nr_dying_descendants 0
-> >  g1/cgroup.subtree_control:cpuset
-> >  g1/cgroup.type:domain
-> >  g1/cpuset.cpus:0-5                   <---
-> >  g1/cpuset.cpus.effective:0-5
-> >  g1/cpuset.mems.effective:0-1
-> >  g1/cpuset.sched.domain_root:1        <---
-> >  g1/cpuset.sched.load_balance:1
-> >  g1/cpu.stat:usage_usec 0
-> >  g1/cpu.stat:user_usec 0
-> >  g1/cpu.stat:system_usec 0
-> >  g1/g11/cgroup.events:populated 0
-> >  g1/g11/cgroup.max.descendants:max
-> >  g1/g11/cpu.stat:usage_usec 0
-> >  g1/g11/cpu.stat:user_usec 0
-> >  g1/g11/cpu.stat:system_usec 0
-> >  g1/g11/cgroup.type:domain
-> >  g1/g11/cgroup.stat:nr_descendants 0
-> >  g1/g11/cgroup.stat:nr_dying_descendants 0
-> >  g1/g11/cpuset.cpus.effective:0-5
-> >  g1/g11/cgroup.controllers:cpuset
-> >  g1/g11/cpuset.sched.load_balance:1
-> >  g1/g11/cpuset.mems.effective:0-1
-> >  g1/g11/cpuset.cpus:6-11              <---
-> >  g1/g11/cgroup.max.depth:max
-> >  g1/g11/cpuset.sched.domain_root:0
-> >
-> > Should this be allowed? I was expecting subgroup g11 should be
-> > restricted to a subset of g1's cpus.
-> >
-> > Best,
-> >
-> > - Juri
+On Friday, March 16, 2018 5:00:27 AM EDT Richard Guy Briggs wrote:
+> Implement audit kernel container ID.
 > 
-> That shouldn't be allowed.The code is probably missing some checks that
-> should have been done. What was the sequence of commands leading to the
-> above configuration?
+> This patchset is a second RFC based on the proposal document (V3)
+> posted:
+> 	https://www.redhat.com/archives/linux-audit/2018-January/msg00014.html
 
-This is a E5-2609 v3 (12 cores) Fedora Server box (with systemd, so
-first command is needed to be able to use cpuset controller with v2,
-IIUC):
-
-# umount /sys/fs/cgroup/cpuset 
-# cd /sys/fs/cgroup/unified/
-# echo "+cpuset" >cgroup.subtree_control 
-# mkdir g1
-# echo 0-5 >g1/cpuset.cpus
-# echo 6-11 >init.scope/cpuset.cpus
-# echo 6-11 >machine.slice/cpuset.cpus
-# echo 6-11 >system.slice/cpuset.cpus
-# echo 6-11 >user.slice/cpuset.cpus
-# echo 1 >g1/cpuset.sched.domain_root 
-# mkdir g1/g11
-# echo "+cpuset" > g1/cgroup.subtree_control 
-# echo 6-11 >g1/g11/cpuset.cpus
-# grep -R . g1/*
-
-That should be it. Am I doing something wrong?
+So, if you work on a container orchestrator, how exactly is this set of 
+interfaces to be used and in what order?
 
 Thanks,
+-Steve
 
-- Juri
+> The first patch implements the proc fs write to set the audit container
+> ID of a process, emitting an AUDIT_CONTAINER record to announce the
+> registration of that container ID on that process.  This patch requires
+> userspace support for record acceptance and proper type display.
+> 
+> The second checks for children or co-threads and refuses to set the
+> container ID if either are present.  (This policy could be changed to
+> set both with the same container ID provided they meet the rest of the
+> requirements.)
+> 
+> The third implements the auxiliary record AUDIT_CONTAINER_INFO if a
+> container ID is identifiable with an event.  This patch requires
+> userspace support for proper type display.
+> 
+> The fourth adds container ID filtering to the exit, exclude and user
+> lists.  This patch requires auditctil userspace support for the
+> --containerid option.
+> 
+> The 5th adds signal and ptrace support.
+> 
+> The 6th creates a local audit context to be able to bind a standalone
+> record with a locally created auxiliary record.
+> 
+> The 7th, 8th, 9th, 10th patches add container ID records to standalone
+> records.  Some of these may end up being syscall auxiliary records and
+> won't need this specific support since they'll be supported via
+> syscalls.
+> 
+> The 11th adds network namespace container ID labelling based on member
+> tasks' container ID labels.
+> 
+> The 12th adds container ID support to standalone netfilter records that
+> don't have a task context and lists each container to which that net
+> namespace belongs.
+> 
+> The 13th implements reading the container ID from the proc filesystem
+> for debugging.  This patch isn't planned for upstream inclusion.
+> 
+> Feedback please!
+> 
+> Example: Set a container ID of 123456 to the "sleep" task:
+> 	sleep 2&
+> 	child=$!
+> 	echo 123456 > /proc/$child/containerid; echo $?
+> 	ausearch -ts recent -m container
+> 	echo child:$child contid:$( cat /proc/$child/containerid)
+> This should produce a record such as:
+> 	type=CONTAINER msg=audit(1521122590.315:222): op=set pid=689 uid=0
+> subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 auid=0 tty=pts0
+> ses=3 opid=707 old-contid=18446744073709551615 contid=123456 res=1
+> 
+> Example: Set a filter on a container ID 123459 on /tmp/tmpcontainerid:
+> 	containerid=123459
+> 	key=tmpcontainerid
+> 	auditctl -a exit,always -F dir=/tmp -F perm=wa -F containerid=$containerid
+> -F key=$key perl -e "sleep 1; open(my \$tmpfile, '>', \"/tmp/$key\");
+> close(\$tmpfile);" & child=$!
+> 	echo $containerid > /proc/$child/containerid
+> 	sleep 2
+> 	ausearch -i -ts recent -k $key
+> 	auditctl -d exit,always -F dir=/tmp -F perm=wa -F containerid=$containerid
+> -F key=$key rm -f /tmp/$key
+> This should produce an event such as:
+> 	type=CONTAINER_INFO msg=audit(1521122591.614:227): op=task contid=123459
+> 	type=PROCTITLE msg=audit(1521122591.614:227):
+> proctitle=7065726C002D6500736C65657020313B206F70656E286D792024746D7066696C
+> 652C20273E272C20222F746D702F746D70636F6E7461696E6572696422293B20636C6F73652
+> 824746D7066696C65293B type=PATH msg=audit(1521122591.614:227): item=1
+> name="/tmp/tmpcontainerid" inode=18427 dev=00:26 mode=0100644 ouid=0
+> ogid=0 rdev=00:00 obj=unconfined_u:object_r:user_tmp_t:s0 nametype=CREATE
+> cap_fp=0000000000000000 cap_fi=0000000000000000 cap_fe=0 cap_fver=0
+> type=PATH msg=audit(1521122591.614:227): item=0 name="/tmp/" inode=13513
+> dev=00:26 mode=041777 ouid=0 ogid=0 rdev=00:00
+> obj=system_u:object_r:tmp_t:s0 nametype=PARENT cap_fp=0000000000000000
+> cap_fi=0000000000000000 cap_fe=0 cap_fver=0 type=CWD
+> msg=audit(1521122591.614:227): cwd="/root"
+> 	type=SYSCALL msg=audit(1521122591.614:227): arch=c000003e syscall=257
+> success=yes exit=3 a0=ffffffffffffff9c a1=55db90a28900 a2=241 a3=1b6
+> items=2 ppid=689 pid=724 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0
+> sgid=0 fsgid=0 tty=pts0 ses=3 comm="perl" exe="/usr/bin/perl"
+> subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+> key="tmpcontainerid"
+> 
+> See:
+> 	https://github.com/linux-audit/audit-kernel/issues/32
+> 	https://github.com/linux-audit/audit-userspace/issues/40
+> 	https://github.com/linux-audit/audit-testsuite/issues/64
+> 
+> Richard Guy Briggs (13):
+>   audit: add container id
+>   audit: check children and threading before allowing containerid
+>   audit: log container info of syscalls
+>   audit: add containerid filtering
+>   audit: add containerid support for ptrace and signals
+>   audit: add support for non-syscall auxiliary records
+>   audit: add container aux record to watch/tree/mark
+>   audit: add containerid support for tty_audit
+>   audit: add containerid support for config/feature/user records
+>   audit: add containerid support for seccomp and anom_abend records
+>   audit: add support for containerid to network namespaces
+>   audit: NETFILTER_PKT: record each container ID associated with a netNS
+>   debug audit: read container ID of a process
+> 
+>  drivers/tty/tty_audit.c     |   5 +-
+>  fs/proc/base.c              |  53 ++++++++++++++++
+>  include/linux/audit.h       |  43 +++++++++++++
+>  include/linux/init_task.h   |   4 +-
+>  include/linux/sched.h       |   1 +
+>  include/net/net_namespace.h |  12 ++++
+>  include/uapi/linux/audit.h  |   8 ++-
+>  kernel/audit.c              |  75 ++++++++++++++++++++---
+>  kernel/audit.h              |   3 +
+>  kernel/audit_fsnotify.c     |   5 +-
+>  kernel/audit_tree.c         |   5 +-
+>  kernel/audit_watch.c        |  33 +++++-----
+>  kernel/auditfilter.c        |  52 +++++++++++++++-
+>  kernel/auditsc.c            | 145
+> ++++++++++++++++++++++++++++++++++++++++++-- kernel/nsproxy.c            |
+>   6 ++
+>  net/core/net_namespace.c    |  45 ++++++++++++++
+>  net/netfilter/xt_AUDIT.c    |  15 ++++-
+>  17 files changed, 473 insertions(+), 37 deletions(-)
