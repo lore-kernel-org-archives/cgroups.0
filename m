@@ -1,52 +1,93 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] memcg: force charge kmem counter too
-Date: Wed, 30 May 2018 11:14:33 -0700
-Message-ID: <CALvZod67qzq+hQLms4Wut5LNVBjBcEQPpMp9zxF6NE5k+7CLOw@mail.gmail.com>
-References: <20180525185501.82098-1-shakeelb@google.com> <20180526185144.xvh7ejlyelzvqwdb@esperanza>
- <CALvZod5yTxcuB_Aao-a0ChNEnwyBJk9UPvEQ80s9tZFBQ0cxpw@mail.gmail.com>
- <20180528091110.GG1517@dhcp22.suse.cz> <CALvZod6x5iRmcJ6pYKS+jwJd855jnwmVcPK9tnKbuJ9Hfppa-A@mail.gmail.com>
- <20180529083153.GR27180@dhcp22.suse.cz>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: Re: [PATCH 0/7] psi: pressure stall information for CPU, memory, and IO
+Date: Wed, 30 May 2018 16:32:52 -0700
+Message-ID: <CAJuCfpGXSyu3SOky6jMhKjix=bbaPccg05VcepbvuJiv+bQgzw@mail.gmail.com>
+References: <20180507210135.1823-1-hannes@cmpxchg.org> <CAJuCfpF4q+1aSg4WQn_p-1-zEDhh-iqST6dc1DkxnDofSPBKGw@mail.gmail.com>
+ <20180529181616.GB28689@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc;
-        bh=bH1fbk66ldNL3s7EMF466MPVK5koMb9gAcbp402ATr0=;
-        b=YdkxRkj8+3/+6g3rj7RykwttHriJbLAaX0XgcEh1Y7RkrT0UgZnHmWqew6zG/t4b9o
-         LnTKOAck9NvNhGvHL8w3h+q4qKfVkpiWvPa/DTh2Vc65Rv75W9FpyVdgOElJRoNfUCpz
-         tMfc0CGTBbG8qjVzKe8gMHlzHo3Vmeku1n03+BKmSeFyRT/lCUbHAAeo+eoQ+xCHum1L
-         Y9Fe4lkiXrDD70A1EIUFJlGE/QQhBbzmwUqt/B6hh21+kXiA+J90ar/9ktPL4ESc38e/
-         SDpRc4+pRlkKyGNS+1zO+SNm2FRnuS5GPnUZpHnHg4VZDH6ILkU6x6PmD1kDTtUqugSj
-         CxZg==
-In-Reply-To: <20180529083153.GR27180@dhcp22.suse.cz>
+        bh=hJwJPmg34GR13WY06X4l2DvZJg6z5d+fVYiqshCmDW8=;
+        b=Oueiurlc8IkQOYPCV9kNLk4cM8TfEKhAWn2dVA+9BDyjB+HMpbhqcFsOhZWKRrwWvH
+         rbgVcKgJeHKAU1c0Lr6l7TUnc14Os6dzWIXdZMCxDQYGsnRSvFb959ZWipxyzVHdHgRi
+         A5Ik7fpwyBRBXUDKQGvkRetO2V9oO3Qxo8Op7u6EStXFqam1yPARa9s4KehKvxy/EEe2
+         gsVNM1A2Ek3w/m2DIcF2ZPs5GWgI1HOyMASv+v5Yl5jKp01cz2gv+kmOsJI/GAoIEk9b
+         Z65WCMI6+sL49xUbEBjlQ2X0XBF4wK4RjFGy/MB8FFoJx9ehI36OM1Jy3hYrVLw86o3x
+         qL+w==
+In-Reply-To: <20180529181616.GB28689@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On Tue, May 29, 2018 at 1:31 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> On Mon 28-05-18 10:23:07, Shakeel Butt wrote:
->> On Mon, May 28, 2018 at 2:11 AM, Michal Hocko <mhocko@kernel.org> wrote:
->> Though is there a precedence where the broken feature is not fixed
->> because an alternative is available?
+On Tue, May 29, 2018 at 11:16 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+> Hi Suren,
 >
-> Well, I can see how breaking GFP_NOFAIL semantic is problematic, on the
-> other hand we keep saying that kmem accounting in v1 is hard usable and
-> strongly discourage people from using it. Sure we can add the code which
-> handles _this_ particular case but that wouldn't make the whole thing
-> more usable I strongly suspect. Maybe I am wrong and you can provide
-> some specific examples. Is GFP_NOFAIL that common to matter?
+> On Fri, May 25, 2018 at 05:29:30PM -0700, Suren Baghdasaryan wrote:
+>> Hi Johannes,
+>> I tried your previous memdelay patches before this new set was posted
+>> and results were promising for predicting when Android system is close
+>> to OOM. I'm definitely going to try this one after I backport it to
+>> 4.9.
 >
-> In any case we should balance between the code maintainability here.
-> Adding more cruft into the allocator path is not free.
+> I'm happy to hear that!
 >
+>> Would it make sense to split CONFIG_PSI into CONFIG_PSI_CPU,
+>> CONFIG_PSI_MEM and CONFIG_PSI_IO since one might need only specific
+>> subset of this feature?
+>
+> Yes, that should be doable. I'll split them out in the next version.
+>
+>> > The total= value gives the absolute stall time in microseconds. This
+>> > allows detecting latency spikes that might be too short to sway the
+>> > running averages. It also allows custom time averaging in case the
+>> > 10s/1m/5m windows aren't adequate for the usecase (or are too coarse
+>> > with future hardware).
+>>
+>> Any reasons these specific windows were chosen (empirical
+>> data/historical reasons)? I'm worried that with the smallest window
+>> being 10s the signal might be too inert to detect fast memory pressure
+>> buildup before OOM kill happens. I'll have to experiment with that
+>> first, however if you have some insights into this already please
+>> share them.
+>
+> They were chosen empirically. We started out with the loadavg window
+> sizes, but had to reduce them for exactly the reason you mention -
+> they're way too coarse to detect acute pressure buildup.
+>
+> 10s has been working well for us. We could make it smaller, but there
+> is some worry that we don't have enough samples then and the average
+> becomes too erratic - whereas monitoring total= directly would allow
+> you to detect accute spikes and handle this erraticness explicitly.
 
-We do not use kmem limits internally and this is something I found
-through code inspection. If this patch is increasing the cost of code
-maintainability I am fine with dropping it but at least there should a
-comment saying that kmem limits are broken and no need fix.
+Unfortunately total= field is now updated only at 2sec intervals which
+might be too late to react to mounting memory pressure. With previous
+memdelay patchset md->aggregate which is reported as "total" was
+calculated directly from inside memdelay_task_change, so it was always
+up-to-date. Now group->some and group->full are updated from inside
+psi_clock with up to 2sec delay. This prevents us from detecting these
+acute pressure spikes immediately. I understand why you moved these
+calculations out of the hot path but maybe we could keep updating
+"total" inside psi_group_update? This would allow for custom averaging
+and eliminate this delay for detecting spikes in the pressure signal.
+More conceptually I would love to have a way to monitor the averages
+at a slow rate and when they rise and cross some threshold to increase
+the monitoring rate and react quickly in case they shoot up. Current
+2sec delay poses a problem for doing that.
 
-Shakeel
+>
+> Let me know how it works out in your tests.
+
+I've done the backporting to 4.9 and running the tests but the 2sec
+delay is problematic for getting a detailed look at the signal and its
+usefulness. Thinking about workarounds if only for data collection but
+don't want to deviate too much from your baseline. Would love to hear
+from you if a good compromise can be reached here.
+
+>
+> Thanks for your feedback.
