@@ -1,142 +1,70 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH v3] mm: fix race between kmem_cache destroy, create and  deactivate
-Date: Tue, 29 May 2018 17:12:04 -0700
-Message-ID: <20180530001204.183758-1-shakeelb@google.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v9 0/7] Enable cpuset controller in default hierarchy
+Date: Wed, 30 May 2018 12:13:17 +0200
+Message-ID: <20180530101317.GB3320@localhost.localdomain>
+References: <1527601294-3444-1-git-send-email-longman@redhat.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=2OJnmQ7l7NGFZP9ipCIfC7mNh4H09z1pqCsCgocmqlg=;
-        b=sGtyIGYK4ifx7d1x9COXRmNyEoP2iG9FUajUa3T0KuY2mASWiq5x3XrKRS2BjMiTN8
-         QgAm6Szq+2t895V94c9pfSbYTAIITezaFw4NC/o9wmI6uK6nyMK1tSB7WG5dXomzIbyf
-         jRUdED+tSv65W/o/Guz/dkn2VdpB6T7wHSMLScmP4acScM2HkfVL+sJUKgLSxFgKsKJF
-         Pdqamd4v7fuGzE2C22qLYRFO61Tdt5CfFOqlFtLMtUbN0P/+N/rnd/R+/NtPUg24PQb2
-         iVd+kMCuKFjjzo/Svn/s4C/Wk1kvgpIYywoJoCsyonvcJMdPyAV+EgirbxsnS+HOYldA
-         GZFA==
+Content-Disposition: inline
+In-Reply-To: <1527601294-3444-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>
-Cc: Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shakeel Butt <shakeelb@google.com>
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-The memcg kmem cache creation and deactivation (SLUB only) is
-asynchronous. If a root kmem cache is destroyed whose memcg cache is in
-the process of creation or deactivation, the kernel may crash.
+Hi,
 
-Example of one such crash:
-	general protection fault: 0000 [#1] SMP PTI
-	CPU: 1 PID: 1721 Comm: kworker/14:1 Not tainted 4.17.0-smp
-	...
-	Workqueue: memcg_kmem_cache kmemcg_deactivate_workfn
-	RIP: 0010:has_cpu_slab
-	...
-	Call Trace:
-	? on_each_cpu_cond
-	__kmem_cache_shrink
-	kmemcg_cache_deact_after_rcu
-	kmemcg_deactivate_workfn
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork+0x35/0x40
+On 29/05/18 09:41, Waiman Long wrote:
+> v9:
+>  - Rename cpuset.sched.domain to cpuset.sched.domain_root to better
+>    identify its purpose as the root of a new scheduling domain or
+>    partition.
+>  - Clarify in the document about the purpose of domain_root and
+>    load_balance. Using domain_root is th only way to create new
+>    partition.
+>  - Fix a lockdep warning in update_isolated_cpumask() function.
+>  - Add a new patch to eliminate call to generate_sched_domains() for
+>    v2 when a change in cpu list does not touch a domain_root.
 
-To fix this race, on root kmem cache destruction, mark the cache as
-dying and flush the workqueue used for memcg kmem cache creation and
-deactivation.
+I was playing with this and ended up with the situation below:
 
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
----
-Changelog since v2:
-- Instead of refcount, flush the workqueue
+ g1/cgroup.controllers:cpuset
+ g1/cgroup.events:populated 0
+ g1/cgroup.max.depth:max
+ g1/cgroup.max.descendants:max
+ g1/cgroup.stat:nr_descendants 1
+ g1/cgroup.stat:nr_dying_descendants 0
+ g1/cgroup.subtree_control:cpuset
+ g1/cgroup.type:domain
+ g1/cpuset.cpus:0-5                   <---
+ g1/cpuset.cpus.effective:0-5
+ g1/cpuset.mems.effective:0-1
+ g1/cpuset.sched.domain_root:1        <---
+ g1/cpuset.sched.load_balance:1
+ g1/cpu.stat:usage_usec 0
+ g1/cpu.stat:user_usec 0
+ g1/cpu.stat:system_usec 0
+ g1/g11/cgroup.events:populated 0
+ g1/g11/cgroup.max.descendants:max
+ g1/g11/cpu.stat:usage_usec 0
+ g1/g11/cpu.stat:user_usec 0
+ g1/g11/cpu.stat:system_usec 0
+ g1/g11/cgroup.type:domain
+ g1/g11/cgroup.stat:nr_descendants 0
+ g1/g11/cgroup.stat:nr_dying_descendants 0
+ g1/g11/cpuset.cpus.effective:0-5
+ g1/g11/cgroup.controllers:cpuset
+ g1/g11/cpuset.sched.load_balance:1
+ g1/g11/cpuset.mems.effective:0-1
+ g1/g11/cpuset.cpus:6-11              <---
+ g1/g11/cgroup.max.depth:max
+ g1/g11/cpuset.sched.domain_root:0
 
-Changelog since v1:
-- Added more documentation to the code
-- Renamed fields to be more readable
+Should this be allowed? I was expecting subgroup g11 should be
+restricted to a subset of g1's cpus.
 
----
- include/linux/slab.h |  1 +
- mm/slab_common.c     | 21 ++++++++++++++++++++-
- 2 files changed, 21 insertions(+), 1 deletion(-)
+Best,
 
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 9ebe659bd4a5..71c5467d99c1 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -658,6 +658,7 @@ struct memcg_cache_params {
- 			struct memcg_cache_array __rcu *memcg_caches;
- 			struct list_head __root_caches_node;
- 			struct list_head children;
-+			bool dying;
- 		};
- 		struct {
- 			struct mem_cgroup *memcg;
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index b0dd9db1eb2f..a3496375f5ea 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -136,6 +136,7 @@ void slab_init_memcg_params(struct kmem_cache *s)
- 	s->memcg_params.root_cache = NULL;
- 	RCU_INIT_POINTER(s->memcg_params.memcg_caches, NULL);
- 	INIT_LIST_HEAD(&s->memcg_params.children);
-+	s->memcg_params.dying = false;
- }
- 
- static int init_memcg_params(struct kmem_cache *s,
-@@ -608,7 +609,7 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 	 * The memory cgroup could have been offlined while the cache
- 	 * creation work was pending.
- 	 */
--	if (memcg->kmem_state != KMEM_ONLINE)
-+	if (memcg->kmem_state != KMEM_ONLINE || root_cache->memcg_params.dying)
- 		goto out_unlock;
- 
- 	idx = memcg_cache_id(memcg);
-@@ -712,6 +713,9 @@ void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
- 	    WARN_ON_ONCE(s->memcg_params.deact_fn))
- 		return;
- 
-+	if (s->memcg_params.root_cache->memcg_params.dying)
-+		return;
-+
- 	/* pin memcg so that @s doesn't get destroyed in the middle */
- 	css_get(&s->memcg_params.memcg->css);
- 
-@@ -823,11 +827,24 @@ static int shutdown_memcg_caches(struct kmem_cache *s)
- 		return -EBUSY;
- 	return 0;
- }
-+
-+static void flush_memcg_workqueue(struct kmem_cache *s)
-+{
-+	mutex_lock(&slab_mutex);
-+	s->memcg_params.dying = true;
-+	mutex_unlock(&slab_mutex);
-+
-+	flush_workqueue(memcg_kmem_cache_wq);
-+}
- #else
- static inline int shutdown_memcg_caches(struct kmem_cache *s)
- {
- 	return 0;
- }
-+
-+static inline void flush_memcg_workqueue(struct kmem_cache *s)
-+{
-+}
- #endif /* CONFIG_MEMCG && !CONFIG_SLOB */
- 
- void slab_kmem_cache_release(struct kmem_cache *s)
-@@ -845,6 +862,8 @@ void kmem_cache_destroy(struct kmem_cache *s)
- 	if (unlikely(!s))
- 		return;
- 
-+	flush_memcg_workqueue(s);
-+
- 	get_online_cpus();
- 	get_online_mems();
- 
--- 
-2.17.0.921.gf22659ad46-goog
-
+- Juri
