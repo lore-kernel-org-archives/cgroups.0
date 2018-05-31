@@ -1,75 +1,75 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH] cpuset: Enforce that a child's cpus must be a subset of
- the parent
-Date: Thu, 31 May 2018 18:38:26 +0200
-Message-ID: <20180531163826.GO12180@hirez.programming.kicks-ass.net>
-References: <1527687991-1431-1-git-send-email-longman@redhat.com>
- <5B0F4F09.9050100@huawei.com>
- <5B0FAE72.1090204@huawei.com>
- <20180531082613.GF12180@hirez.programming.kicks-ass.net>
- <5B0FB58C.9030705@huawei.com>
- <4dc718bc-4bd5-4998-853b-9c6ba67b89a0@redhat.com>
- <20180531155807.GU1351649@devbig577.frc2.facebook.com>
- <20180531161645.GN12180@hirez.programming.kicks-ass.net>
- <20180531161942.GW1351649@devbig577.frc2.facebook.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v9 3/7] cpuset: Add cpuset.sched.load_balance flag to v2
+Date: Thu, 31 May 2018 12:42:20 -0400
+Message-ID: <54c607c3-e742-4da9-c89a-4ed54146e3bd@redhat.com>
+References: <1527601294-3444-1-git-send-email-longman@redhat.com>
+ <1527601294-3444-4-git-send-email-longman@redhat.com>
+ <20180531122638.GJ12180@hirez.programming.kicks-ass.net>
+ <42cc1f44-2355-1c0c-b575-49c863303c42@redhat.com>
+ <20180531152050.GK12180@hirez.programming.kicks-ass.net>
+ <ebe7f0c1-b2dc-57ad-e5cb-7edf0fee4626@redhat.com>
+ <20180531160857.GM12180@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=4rK4IzXCiPVSROPJKAT+5rH4BeY0bOW4blMqoXnQbuc=; b=nMuWzVE4wnl5a6kjxd2/7Duzj
-        QWnd8TCfhKaVdIxkGeykVz12bVapDyM17O4Bm13UjK5meBFEy/I3sbEhxDnOdfBx+XrmKBfDIaJbG
-        zYdcFOwLfi49C5cr86FwBbM0yEyaq4EtjXjTSnDhTCt56zcmjlfNVuCzBBd+VBE8rbHQHua9D27XZ
-        k3hLSjsOyl8aHeaOhu/eqT1lV4FsP90JNbL0z+ivGrEtGzcBSiQcKVaXh03iEUhcLbgJpaOa5A3Ws
-        xE7A3a46mEwqk7RdrCqQz3pY/S5lOenjFwdMaAW4kVW5akLpRoO67YZ864j5w+6xX8lsZh3B1wGhg
-    
-Content-Disposition: inline
-In-Reply-To: <20180531161942.GW1351649@devbig577.frc2.facebook.com>
+In-Reply-To: <20180531160857.GM12180@hirez.programming.kicks-ass.net>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Waiman Long <longman@redhat.com>, Zefan Li <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Thomas Gleixner <tglx@linutronix.de>
 
-On Thu, May 31, 2018 at 09:19:42AM -0700, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, May 31, 2018 at 06:16:45PM +0200, Peter Zijlstra wrote:
-> > > So, let's please stay away from it even if that means a bit of
-> > > overhead in terms of interface.
-> > 
-> > Urgh, that again :/
-> 
-> Yeah, well, it's pretty important.
-> 
-> > I'm still not convinced by your arguments though. The root container can
-> > access all the sub-groups anyway and can grub around in them to take
-> > away resources if it really wants to.
-> 
-> That's really messy and if you delegated away a subtree, you can't
-> walk the subtree in a race free way, not easily anyway.
+On 05/31/2018 12:08 PM, Peter Zijlstra wrote:
+> On Thu, May 31, 2018 at 11:36:39AM -0400, Waiman Long wrote:
+>>> I'm on the fence myself; the only thing I'm fairly sure of is that tying
+>>> this particular behaviour to the load-balance knob seems off.
+>> The main reason for doing it this way is that I don't want to have
+>> load-balanced partition with no cpu in it. How about we just don't allow
+>> consume-all at all. Each partition must have at least 1 cpu.
+> I suspect that might be sufficient. It certainly is for the use-cases
+> I'm aware of. You always want a system/control set which runs the
+> regular busy work of running a system.
+>
+> Then you have one (or more) partitions to run your 'important' work.
 
-Messy perhaps, but taking away resources you gave out earlier isn't
-particularly nice either way around.
+Good. I will make the change in the next version.
 
-Not sure the races matter, if you win, the delegate can't undo it, if
-you loose, you try again until you win.
+>
+>>> I also think we should not mix the 'consume all' thing with the
+>>> 'fully-partitioned' thing, as they are otherwise unrelated.
+>> The "consume all" and "fully-partitioned" look the same to me. Are you
+>> talking about allocating all the CPUs in a partition to sub-partitions
+>> so that there is no CPU left in the parent partition?
+> Not sure what you're asking. "consume all" is allowing sub-partitions to
+> allocate all CPUs of the parent, such that there are none left.
+>
+> "fully-partitioned" is N cpus but no load-balancing, also equivalent to
+> N 1 CPU parititions.
 
-It's not like cgroup stuff gets changed often, so a conflict causing you
-to loose should be very rare indeed.
+Thanks for the clarification.
 
-> > For cpuset in particular randomly restricting on the ancestor level can
-> > create an unrecoverable trainwreck inside a container. Affinities are
-> > not recoverable. Once a runnable task ends up with an empty set, its
-> > affinities are reset and the smaller (empty) set is lost.
-> 
-> Yeah, for cpuset, it's messier, but it isn't different from hotunplug
-> scenario, right?  I think the best we can do there is putting ancestor
-> operation on an equal footing as hotplug ops.
+> They are distinct things. Disabling load-balancing should not affect how
+> many CPUs can be allocated to sub-partitions, the moment you hit 1 CPU
+> the load balancing is effectively off already. Going down to 0 CPUs
+> isn't a problem for the load-balancer, it wasn't doing anything anyway.
+>
+> So the question is if someone really needs the one partition without
+> balancing over N separate paritions.
 
-Right, but hotplug is exceedingly rare, while I get the impression you
-think it is perfectly fine to recind on your resource grants.
+Thinking about isolcpus emulation, I now realize that it is more than
+just disabling load balancing. it also disables some kernel threads like
+kworker from running so that an userspace application can monopolize as
+much of a cpu as possible. Disabling kernel threads from running isn't
+that hard if it is only done once at boot time. it is trickier if we
+have to do it at run time.
+
+Without good isolcpus emulation, disabling load balance kind of loses
+its usefulness. So I am going to take out the load_balance flag for now
+unless I hear objection otherwise.
+
+Cheers,
+Longman
+
+
+
