@@ -1,61 +1,60 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] memcg: force charge kmem counter too
-Date: Thu, 31 May 2018 08:56:42 +0200
-Message-ID: <20180531065642.GI15278@dhcp22.suse.cz>
-References: <20180525185501.82098-1-shakeelb@google.com>
- <20180526185144.xvh7ejlyelzvqwdb@esperanza>
- <CALvZod5yTxcuB_Aao-a0ChNEnwyBJk9UPvEQ80s9tZFBQ0cxpw@mail.gmail.com>
- <20180528091110.GG1517@dhcp22.suse.cz>
- <CALvZod6x5iRmcJ6pYKS+jwJd855jnwmVcPK9tnKbuJ9Hfppa-A@mail.gmail.com>
- <20180529083153.GR27180@dhcp22.suse.cz>
- <CALvZod67qzq+hQLms4Wut5LNVBjBcEQPpMp9zxF6NE5k+7CLOw@mail.gmail.com>
- <20180531060133.GA31477@rodete-desktop-imager.corp.google.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH] cpuset: Enforce that a child's cpus must be a subset of
+ the parent
+Date: Thu, 31 May 2018 09:43:27 +0200
+Message-ID: <20180531074327.GD12180@hirez.programming.kicks-ass.net>
+References: <1527687991-1431-1-git-send-email-longman@redhat.com>
+ <5B0F4F09.9050100@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=XlTMzILn0Av3tkqRGXlOme8cC2e2AclD2RKkn0lbL6c=; b=L4L/OGW0isbfnpqqQt7FnhfE9
+        d//o+yzMLEZc1oBSnf1D9JDK7KAccn+oYyFZ6fnL8o24prW5TY8zZZvmM5YdICj5JmnGjlBNjgtcA
+        wWvO9aaieM9arquFVp9isxr2I3WUIyYgnzZdADm82Yjvc9PzqqpMYbEskBPg4qHcrfe32raBXsdum
+        H4kZeMbjEI29mUzROuHIu+TtpwW1Xd3wm8XaoXC1pygJ//KkfRllerWGH7okFo0kt1YXj0fn3+/4D
+        /SL7jWd8qQsrEU+J7MEKs7jmIuMh4EI4hxMyIfK+xunt+eIyM0U3zXF8DOFy8PA7Qbvyb2hPLLQMW
+    
 Content-Disposition: inline
-In-Reply-To: <20180531060133.GA31477@rodete-desktop-imager.corp.google.com>
+In-Reply-To: <5B0F4F09.9050100@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Minchan Kim <minchan@kernel.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Zefan Li <lizefan@huawei.com>
+Cc: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Thu 31-05-18 15:01:33, Minchan Kim wrote:
-> On Wed, May 30, 2018 at 11:14:33AM -0700, Shakeel Butt wrote:
-> > On Tue, May 29, 2018 at 1:31 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> > > On Mon 28-05-18 10:23:07, Shakeel Butt wrote:
-> > >> On Mon, May 28, 2018 at 2:11 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> > >> Though is there a precedence where the broken feature is not fixed
-> > >> because an alternative is available?
-> > >
-> > > Well, I can see how breaking GFP_NOFAIL semantic is problematic, on the
-> > > other hand we keep saying that kmem accounting in v1 is hard usable and
-> > > strongly discourage people from using it. Sure we can add the code which
-> > > handles _this_ particular case but that wouldn't make the whole thing
-> > > more usable I strongly suspect. Maybe I am wrong and you can provide
-> > > some specific examples. Is GFP_NOFAIL that common to matter?
-> > >
-> > > In any case we should balance between the code maintainability here.
-> > > Adding more cruft into the allocator path is not free.
-> > >
-> > 
-> > We do not use kmem limits internally and this is something I found
-> > through code inspection. If this patch is increasing the cost of code
-> > maintainability I am fine with dropping it but at least there should a
-> > comment saying that kmem limits are broken and no need fix.
->  
-> I agree.
+On Thu, May 31, 2018 at 09:25:29AM +0800, Zefan Li wrote:
+> Hi Waiman,
 > 
-> Even, I didn't know kmem is strongly discouraged until now. Then,
-> why is it enabled by default on cgroup v1?
+> On 2018/5/30 21:46, Waiman Long wrote:
+> > It was found that the cpuset.cpus could contain CPUs that are not listed
+> > in their parent's cpu list as shown by the command sequence below:
+> > 
+> >   # echo "+cpuset" >cgroup.subtree_control
+> >   # mkdir g1
+> >   # echo 0-5 >g1/cpuset.cpus
+> >   # mkdir g1/g11
+> >   # echo "+cpuset" > g1/cgroup.subtree_control
+> >   # echo 6-11 >g1/g11/cpuset.cpus
+> >   # grep -R . g1 | grep "\.cpus"
+> >   g1/cpuset.cpus:0-5
+> >   g1/cpuset.cpus.effective:0-5
+> >   g1/g11/cpuset.cpus:6-11
+> >   g1/g11/cpuset.cpus.effective:0-5
+> > 
+> > As the intersection of g11's cpus and that of g1 is empty, the effective
+> > cpus of g11 is just that of g1. The check in update_cpumask() is now
+> > corrected to make sure that cpus in a child cpus must be a subset of
+> > its parent's cpus. The error "write error: Invalid argument" will now
+> > be reported in the above case.
+> > 
+> 
+> We made the distinction between user-configured CPUs and effective CPUs
+> in commit 7e88291beefbb758, so actually it's not a bug.
 
-You have to set a non-zero limit to make it active IIRC. The code is
-compiled in because v2 enables it by default.
-
-> Let's turn if off with comment "It's broken so do not use/fix. Instead,
-> please move to cgroup v2".
-
--- 
-Michal Hocko
-SUSE Labs
+Why though; that makes no sense what so ever.
