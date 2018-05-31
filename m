@@ -1,51 +1,80 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: Re: [PATCH] cpuset: Enforce that a child's cpus must be a subset of
- the parent
-Date: Thu, 31 May 2018 16:12:34 +0800
-Message-ID: <5B0FAE72.1090204@huawei.com>
-References: <1527687991-1431-1-git-send-email-longman@redhat.com>
- <5B0F4F09.9050100@huawei.com>
+From: Minchan Kim <minchan@kernel.org>
+Subject: Re: [PATCH] memcg: force charge kmem counter too
+Date: Thu, 31 May 2018 17:23:17 +0900
+Message-ID: <20180531082317.GA52285@rodete-desktop-imager.corp.google.com>
+References: <20180525185501.82098-1-shakeelb@google.com>
+ <20180526185144.xvh7ejlyelzvqwdb@esperanza>
+ <CALvZod5yTxcuB_Aao-a0ChNEnwyBJk9UPvEQ80s9tZFBQ0cxpw@mail.gmail.com>
+ <20180528091110.GG1517@dhcp22.suse.cz>
+ <CALvZod6x5iRmcJ6pYKS+jwJd855jnwmVcPK9tnKbuJ9Hfppa-A@mail.gmail.com>
+ <20180529083153.GR27180@dhcp22.suse.cz>
+ <CALvZod67qzq+hQLms4Wut5LNVBjBcEQPpMp9zxF6NE5k+7CLOw@mail.gmail.com>
+ <20180531060133.GA31477@rodete-desktop-imager.corp.google.com>
+ <20180531065642.GI15278@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5B0F4F09.9050100@huawei.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=1iJECh9hcwzZjua5X69bSQGyGz6Uxy7aFiZPB6tGANE=;
+        b=dK9DL5zxVSEtXPZveEbafgsSmLiCuuMy02fajoh9+tx88Nk7ULyBl0n0mvpzj4MkAP
+         xIGQBltvAlLai5EQLpCTVvlqhJV9Zp2K5sV0d6ApALgLV/FkFFpxLcfjMkGBJfWSvhru
+         vCulq5KQ1Xy1owxE2wVmvmuFrNwuMFeplgkib9CerciJB16NOGk5h0Z/p92t9Z8lqWb4
+         EcGG7utqGiSPDufyPGIrxgSN6nhBU4Kq8e1G7273izjWJXC8LqSmKuB9qu/OpYPQq1Gd
+         zCiKodALgVvvR0lxAeAi978Eivui7OPGhPNlyOMjraOhObi8hjVuG9JYOcZ3DaA1vSiW
+         rGJQ==
+Content-Disposition: inline
+In-Reply-To: <20180531065642.GI15278@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Shakeel Butt <shakeelb@google.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 2018/5/31 9:25, Zefan Li wrote:
-> Hi Waiman,
+On Thu, May 31, 2018 at 08:56:42AM +0200, Michal Hocko wrote:
+> On Thu 31-05-18 15:01:33, Minchan Kim wrote:
+> > On Wed, May 30, 2018 at 11:14:33AM -0700, Shakeel Butt wrote:
+> > > On Tue, May 29, 2018 at 1:31 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> > > > On Mon 28-05-18 10:23:07, Shakeel Butt wrote:
+> > > >> On Mon, May 28, 2018 at 2:11 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> > > >> Though is there a precedence where the broken feature is not fixed
+> > > >> because an alternative is available?
+> > > >
+> > > > Well, I can see how breaking GFP_NOFAIL semantic is problematic, on the
+> > > > other hand we keep saying that kmem accounting in v1 is hard usable and
+> > > > strongly discourage people from using it. Sure we can add the code which
+> > > > handles _this_ particular case but that wouldn't make the whole thing
+> > > > more usable I strongly suspect. Maybe I am wrong and you can provide
+> > > > some specific examples. Is GFP_NOFAIL that common to matter?
+> > > >
+> > > > In any case we should balance between the code maintainability here.
+> > > > Adding more cruft into the allocator path is not free.
+> > > >
+> > > 
+> > > We do not use kmem limits internally and this is something I found
+> > > through code inspection. If this patch is increasing the cost of code
+> > > maintainability I am fine with dropping it but at least there should a
+> > > comment saying that kmem limits are broken and no need fix.
+> >  
+> > I agree.
+> > 
+> > Even, I didn't know kmem is strongly discouraged until now. Then,
+> > why is it enabled by default on cgroup v1?
 > 
-> On 2018/5/30 21:46, Waiman Long wrote:
->> It was found that the cpuset.cpus could contain CPUs that are not listed
->> in their parent's cpu list as shown by the command sequence below:
->>
->>   # echo "+cpuset" >cgroup.subtree_control
->>   # mkdir g1
->>   # echo 0-5 >g1/cpuset.cpus
->>   # mkdir g1/g11
->>   # echo "+cpuset" > g1/cgroup.subtree_control
->>   # echo 6-11 >g1/g11/cpuset.cpus
->>   # grep -R . g1 | grep "\.cpus"
->>   g1/cpuset.cpus:0-5
->>   g1/cpuset.cpus.effective:0-5
->>   g1/g11/cpuset.cpus:6-11
->>   g1/g11/cpuset.cpus.effective:0-5
->>
->> As the intersection of g11's cpus and that of g1 is empty, the effective
->> cpus of g11 is just that of g1. The check in update_cpumask() is now
->> corrected to make sure that cpus in a child cpus must be a subset of
->> its parent's cpus. The error "write error: Invalid argument" will now
->> be reported in the above case.
->>
-> 
-> We made the distinction between user-configured CPUs and effective CPUs
-> in commit 7e88291beefbb758, so actually it's not a bug.
-> 
+> You have to set a non-zero limit to make it active IIRC. The code is
 
-I remember the original reason is to support restoration of the original
-cpu after cpu offline->online. We use user-configured CPUs to remember
-if the cpu should be restored in the cpuset after it's onlined.
+Maybe, no. I didn't set anything. IOW, it was a default without any setting
+and I hit this as you can remember.
+http://lkml.kernel.org/r/<20180418022912.248417-1-minchan@kernel.org>
+We don't need to allocate memory for stuff even maintainers discourage.
 
+> compiled in because v2 enables it by default.
+> 
+> > Let's turn if off with comment "It's broken so do not use/fix. Instead,
+> > please move to cgroup v2".
+> 
+> -- 
+> Michal Hocko
+> SUSE Labs
