@@ -1,93 +1,44 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 0/7] psi: pressure stall information for CPU, memory, and IO
-Date: Wed, 30 May 2018 16:32:52 -0700
-Message-ID: <CAJuCfpGXSyu3SOky6jMhKjix=bbaPccg05VcepbvuJiv+bQgzw@mail.gmail.com>
-References: <20180507210135.1823-1-hannes@cmpxchg.org> <CAJuCfpF4q+1aSg4WQn_p-1-zEDhh-iqST6dc1DkxnDofSPBKGw@mail.gmail.com>
- <20180529181616.GB28689@cmpxchg.org>
+From: Zefan Li <lizefan@huawei.com>
+Subject: Re: [PATCH] cpuset: Enforce that a child's cpus must be a subset of
+ the parent
+Date: Thu, 31 May 2018 09:25:29 +0800
+Message-ID: <5B0F4F09.9050100@huawei.com>
+References: <1527687991-1431-1-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=hJwJPmg34GR13WY06X4l2DvZJg6z5d+fVYiqshCmDW8=;
-        b=Oueiurlc8IkQOYPCV9kNLk4cM8TfEKhAWn2dVA+9BDyjB+HMpbhqcFsOhZWKRrwWvH
-         rbgVcKgJeHKAU1c0Lr6l7TUnc14Os6dzWIXdZMCxDQYGsnRSvFb959ZWipxyzVHdHgRi
-         A5Ik7fpwyBRBXUDKQGvkRetO2V9oO3Qxo8Op7u6EStXFqam1yPARa9s4KehKvxy/EEe2
-         gsVNM1A2Ek3w/m2DIcF2ZPs5GWgI1HOyMASv+v5Yl5jKp01cz2gv+kmOsJI/GAoIEk9b
-         Z65WCMI6+sL49xUbEBjlQ2X0XBF4wK4RjFGy/MB8FFoJx9ehI36OM1Jy3hYrVLw86o3x
-         qL+w==
-In-Reply-To: <20180529181616.GB28689@cmpxchg.org>
+In-Reply-To: <1527687991-1431-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Tue, May 29, 2018 at 11:16 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> Hi Suren,
->
-> On Fri, May 25, 2018 at 05:29:30PM -0700, Suren Baghdasaryan wrote:
->> Hi Johannes,
->> I tried your previous memdelay patches before this new set was posted
->> and results were promising for predicting when Android system is close
->> to OOM. I'm definitely going to try this one after I backport it to
->> 4.9.
->
-> I'm happy to hear that!
->
->> Would it make sense to split CONFIG_PSI into CONFIG_PSI_CPU,
->> CONFIG_PSI_MEM and CONFIG_PSI_IO since one might need only specific
->> subset of this feature?
->
-> Yes, that should be doable. I'll split them out in the next version.
->
->> > The total= value gives the absolute stall time in microseconds. This
->> > allows detecting latency spikes that might be too short to sway the
->> > running averages. It also allows custom time averaging in case the
->> > 10s/1m/5m windows aren't adequate for the usecase (or are too coarse
->> > with future hardware).
->>
->> Any reasons these specific windows were chosen (empirical
->> data/historical reasons)? I'm worried that with the smallest window
->> being 10s the signal might be too inert to detect fast memory pressure
->> buildup before OOM kill happens. I'll have to experiment with that
->> first, however if you have some insights into this already please
->> share them.
->
-> They were chosen empirically. We started out with the loadavg window
-> sizes, but had to reduce them for exactly the reason you mention -
-> they're way too coarse to detect acute pressure buildup.
->
-> 10s has been working well for us. We could make it smaller, but there
-> is some worry that we don't have enough samples then and the average
-> becomes too erratic - whereas monitoring total= directly would allow
-> you to detect accute spikes and handle this erraticness explicitly.
+Hi Waiman,
 
-Unfortunately total= field is now updated only at 2sec intervals which
-might be too late to react to mounting memory pressure. With previous
-memdelay patchset md->aggregate which is reported as "total" was
-calculated directly from inside memdelay_task_change, so it was always
-up-to-date. Now group->some and group->full are updated from inside
-psi_clock with up to 2sec delay. This prevents us from detecting these
-acute pressure spikes immediately. I understand why you moved these
-calculations out of the hot path but maybe we could keep updating
-"total" inside psi_group_update? This would allow for custom averaging
-and eliminate this delay for detecting spikes in the pressure signal.
-More conceptually I would love to have a way to monitor the averages
-at a slow rate and when they rise and cross some threshold to increase
-the monitoring rate and react quickly in case they shoot up. Current
-2sec delay poses a problem for doing that.
+On 2018/5/30 21:46, Waiman Long wrote:
+> It was found that the cpuset.cpus could contain CPUs that are not listed
+> in their parent's cpu list as shown by the command sequence below:
+> 
+>   # echo "+cpuset" >cgroup.subtree_control
+>   # mkdir g1
+>   # echo 0-5 >g1/cpuset.cpus
+>   # mkdir g1/g11
+>   # echo "+cpuset" > g1/cgroup.subtree_control
+>   # echo 6-11 >g1/g11/cpuset.cpus
+>   # grep -R . g1 | grep "\.cpus"
+>   g1/cpuset.cpus:0-5
+>   g1/cpuset.cpus.effective:0-5
+>   g1/g11/cpuset.cpus:6-11
+>   g1/g11/cpuset.cpus.effective:0-5
+> 
+> As the intersection of g11's cpus and that of g1 is empty, the effective
+> cpus of g11 is just that of g1. The check in update_cpumask() is now
+> corrected to make sure that cpus in a child cpus must be a subset of
+> its parent's cpus. The error "write error: Invalid argument" will now
+> be reported in the above case.
+> 
 
->
-> Let me know how it works out in your tests.
+We made the distinction between user-configured CPUs and effective CPUs
+in commit 7e88291beefbb758, so actually it's not a bug.
 
-I've done the backporting to 4.9 and running the tests but the 2sec
-delay is problematic for getting a detailed look at the signal and its
-usefulness. Thinking about workarounds if only for data collection but
-don't want to deviate too much from your baseline. Would love to hear
-from you if a good compromise can be reached here.
-
->
-> Thanks for your feedback.
