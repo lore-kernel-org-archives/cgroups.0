@@ -1,71 +1,53 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] memcg: force charge kmem counter too
-Date: Thu, 31 May 2018 10:51:09 +0200
-Message-ID: <20180531085109.GJ15278@dhcp22.suse.cz>
-References: <20180525185501.82098-1-shakeelb@google.com>
- <20180526185144.xvh7ejlyelzvqwdb@esperanza>
- <CALvZod5yTxcuB_Aao-a0ChNEnwyBJk9UPvEQ80s9tZFBQ0cxpw@mail.gmail.com>
- <20180528091110.GG1517@dhcp22.suse.cz>
- <CALvZod6x5iRmcJ6pYKS+jwJd855jnwmVcPK9tnKbuJ9Hfppa-A@mail.gmail.com>
- <20180529083153.GR27180@dhcp22.suse.cz>
- <CALvZod67qzq+hQLms4Wut5LNVBjBcEQPpMp9zxF6NE5k+7CLOw@mail.gmail.com>
- <20180531060133.GA31477@rodete-desktop-imager.corp.google.com>
- <20180531065642.GI15278@dhcp22.suse.cz>
- <20180531082317.GA52285@rodete-desktop-imager.corp.google.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v9 2/7] cpuset: Add new v2 cpuset.sched.domain_root flag
+Date: Thu, 31 May 2018 11:49:43 +0200
+Message-ID: <20180531094943.GG12180@hirez.programming.kicks-ass.net>
+References: <1527601294-3444-1-git-send-email-longman@redhat.com>
+ <1527601294-3444-3-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=YPwuIStifaMAixrdlInWE8+yShLKNE+jvdZoydpcXf8=; b=P5dkN8xMIoYtv0LtfaI7tr+6n
+        C58w1+5p+UByAfY0aTkMuOjUMDhdqeQ1JP2k9/0aoaBTTOx6+rSYVGzjm9FPPE+KZucUSePbLUNrD
+        wSVrOLdXwQG6z7+iCRrZZzU88GlFLxu642Quoax5W5lgzH6L0gJB6UBjdwStfTcqudAta6OYKVDMr
+        38hSxYsEdndUDC+uyzI++KXFYD9Tzsc/X4WWIUhcYT2CkHqClxQlSIrRcNwEev/YpdDrwbEFv0OXb
+        s1cDaWCKN+CyuYnHFqu85qvlWW1tvq1Cd+9Uzmjh0cjKX1x8BcYKWaJkESTbFxcMrVQ3AxNxd48sB
+    
 Content-Disposition: inline
-In-Reply-To: <20180531082317.GA52285@rodete-desktop-imager.corp.google.com>
+In-Reply-To: <1527601294-3444-3-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Minchan Kim <minchan@kernel.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Thu 31-05-18 17:23:17, Minchan Kim wrote:
-> On Thu, May 31, 2018 at 08:56:42AM +0200, Michal Hocko wrote:
-> > On Thu 31-05-18 15:01:33, Minchan Kim wrote:
-> > > On Wed, May 30, 2018 at 11:14:33AM -0700, Shakeel Butt wrote:
-> > > > On Tue, May 29, 2018 at 1:31 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> > > > > On Mon 28-05-18 10:23:07, Shakeel Butt wrote:
-> > > > >> On Mon, May 28, 2018 at 2:11 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> > > > >> Though is there a precedence where the broken feature is not fixed
-> > > > >> because an alternative is available?
-> > > > >
-> > > > > Well, I can see how breaking GFP_NOFAIL semantic is problematic, on the
-> > > > > other hand we keep saying that kmem accounting in v1 is hard usable and
-> > > > > strongly discourage people from using it. Sure we can add the code which
-> > > > > handles _this_ particular case but that wouldn't make the whole thing
-> > > > > more usable I strongly suspect. Maybe I am wrong and you can provide
-> > > > > some specific examples. Is GFP_NOFAIL that common to matter?
-> > > > >
-> > > > > In any case we should balance between the code maintainability here.
-> > > > > Adding more cruft into the allocator path is not free.
-> > > > >
-> > > > 
-> > > > We do not use kmem limits internally and this is something I found
-> > > > through code inspection. If this patch is increasing the cost of code
-> > > > maintainability I am fine with dropping it but at least there should a
-> > > > comment saying that kmem limits are broken and no need fix.
-> > >  
-> > > I agree.
-> > > 
-> > > Even, I didn't know kmem is strongly discouraged until now. Then,
-> > > why is it enabled by default on cgroup v1?
-> > 
-> > You have to set a non-zero limit to make it active IIRC. The code is
-> 
-> Maybe, no. I didn't set anything. IOW, it was a default without any setting
-> and I hit this as you can remember.
-> http://lkml.kernel.org/r/<20180418022912.248417-1-minchan@kernel.org>
-> We don't need to allocate memory for stuff even maintainers discourage.
+On Tue, May 29, 2018 at 09:41:29AM -0400, Waiman Long wrote:
+> +  cpuset.sched.domain_root
+> +	A read-write single value file which exists on non-root
+> +	cpuset-enabled cgroups.  It is a binary value flag that accepts
+> +	either "0" (off) or "1" (on).  This flag is set by the parent
+> +	and is not delegatable.
 
-Well, you can disable the whole kmem accounting by cgroup.memory=nokmem
-kernel parameter. I wasn't very happy when we removed the config option
-which would have put all the tracking aside even when no limit is set
-but the argument was that the ifdefery was growing into an
-unmaintainable mess and I have to agree with that. So here we are...
--- 
-Michal Hocko
-SUSE Labs
+What does "is not delegatable" mean?
+
+I think you used to say "is owned by the parent", which is took to mean
+file ownership is that of the parent directory (..) and not of the
+current (,), which is slightly odd but works.
+
+So if you chown a cgroup to a user, that user will not be able to change
+the file of it's 'root' (will actually be the root in case of
+container), but it _can_ change this file for any sub-cgroups it
+creates, right?
+
+So in that respect the feature is delegatable, a container can create
+sub-partitions. It just cannot change it's 'root' partition, which is
+consistent with a real root.
+
+The only inconsistently left is then that the real root does not have
+the file at all, vs a container root having it, but not accessible.
