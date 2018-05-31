@@ -1,77 +1,75 @@
-From: Waiman Long <longman@redhat.com>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH] cpuset: Enforce that a child's cpus must be a subset of
  the parent
-Date: Thu, 31 May 2018 12:28:45 -0400
-Message-ID: <9f4ac270-9c56-d616-445d-7021210893f3@redhat.com>
+Date: Thu, 31 May 2018 18:38:26 +0200
+Message-ID: <20180531163826.GO12180@hirez.programming.kicks-ass.net>
 References: <1527687991-1431-1-git-send-email-longman@redhat.com>
- <5B0F4F09.9050100@huawei.com> <5B0FAE72.1090204@huawei.com>
+ <5B0F4F09.9050100@huawei.com>
+ <5B0FAE72.1090204@huawei.com>
  <20180531082613.GF12180@hirez.programming.kicks-ass.net>
  <5B0FB58C.9030705@huawei.com>
  <4dc718bc-4bd5-4998-853b-9c6ba67b89a0@redhat.com>
  <20180531155807.GU1351649@devbig577.frc2.facebook.com>
+ <20180531161645.GN12180@hirez.programming.kicks-ass.net>
+ <20180531161942.GW1351649@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180531155807.GU1351649@devbig577.frc2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=4rK4IzXCiPVSROPJKAT+5rH4BeY0bOW4blMqoXnQbuc=; b=nMuWzVE4wnl5a6kjxd2/7Duzj
+        QWnd8TCfhKaVdIxkGeykVz12bVapDyM17O4Bm13UjK5meBFEy/I3sbEhxDnOdfBx+XrmKBfDIaJbG
+        zYdcFOwLfi49C5cr86FwBbM0yEyaq4EtjXjTSnDhTCt56zcmjlfNVuCzBBd+VBE8rbHQHua9D27XZ
+        k3hLSjsOyl8aHeaOhu/eqT1lV4FsP90JNbL0z+ivGrEtGzcBSiQcKVaXh03iEUhcLbgJpaOa5A3Ws
+        xE7A3a46mEwqk7RdrCqQz3pY/S5lOenjFwdMaAW4kVW5akLpRoO67YZ864j5w+6xX8lsZh3B1wGhg
+    
+Content-Disposition: inline
+In-Reply-To: <20180531161942.GW1351649@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan@huawei.com>, Peter Zijlstra <peterz@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Cc: Waiman Long <longman@redhat.com>, Zefan Li <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On 05/31/2018 11:58 AM, Tejun Heo wrote:
+On Thu, May 31, 2018 at 09:19:42AM -0700, Tejun Heo wrote:
 > Hello,
->
-> On Thu, May 31, 2018 at 09:22:23AM -0400, Waiman Long wrote:
->>>>>>> As the intersection of g11's cpus and that of g1 is empty, the effective
->>>>>>> cpus of g11 is just that of g1. The check in update_cpumask() is now
->>>>>>> corrected to make sure that cpus in a child cpus must be a subset of
->>>>>>> its parent's cpus. The error "write error: Invalid argument" will now
->>>>>>> be reported in the above case.
->>>>>>>
->>>>>> We made the distinction between user-configured CPUs and effective CPUs
->>>>>> in commit 7e88291beefbb758, so actually it's not a bug.
->>>>>>
->>>>> I remember the original reason is to support restoration of the original
->>>>> cpu after cpu offline->online. We use user-configured CPUs to remember
->>>>> if the cpu should be restored in the cpuset after it's onlined.
->>>> AFAICT you can do that and still have the child a subset of the parent,
->>>> no?
->>>> .
->>> Sure. IIRC this was suggested by Tejun as he had done something similar to devcgroup.
->>>
->> OK, let wait until Tejun has time to chime in. For me, it just look
->> weird to be able to do that.
->>
->> Another corner case that is not handled is when cpus_allowed is empty.
->> In this case, it falls back to the parent's effective cpus. On the other
->> hand, it can also be argued that an empty cpus_allowed is a transient
->> state and a cpuset shouldn't have cpus undefined while creating children.
-> Tying together what's configured and what's applied may feel
-> attractive on the surface but it's a long term headache.
->
-> * It's inconsistent with what other controllers are doing.  All the
->   limit resource configs declare the upper bound the specific cgroup
->   can consume regardless of what's actually available to it.  They
->   limit but don't guarantee access.
->
-> * Which decouples a given cgroup's configurations from its ancestors',
->   which allows an ancestor to take away resources that it granted
->   before and then also giving it back later.  No matter what you do,
->   if you couple configs of cgroup hierarchy, you end up restricting
->   what an ancestor can do to its sub-hierarchy, which can quickly
->   become a difficult operational headache.
->
-> So, let's please stay away from it even if that means a bit of
-> overhead in terms of interface.
->
-> Thanks.
->
-I am fine with that argument. I will update the patch documentation to
-include this information as I think it is important for the users to be
-aware of that.
+> 
+> On Thu, May 31, 2018 at 06:16:45PM +0200, Peter Zijlstra wrote:
+> > > So, let's please stay away from it even if that means a bit of
+> > > overhead in terms of interface.
+> > 
+> > Urgh, that again :/
+> 
+> Yeah, well, it's pretty important.
+> 
+> > I'm still not convinced by your arguments though. The root container can
+> > access all the sub-groups anyway and can grub around in them to take
+> > away resources if it really wants to.
+> 
+> That's really messy and if you delegated away a subtree, you can't
+> walk the subtree in a race free way, not easily anyway.
 
-Cheers,
-Longman
+Messy perhaps, but taking away resources you gave out earlier isn't
+particularly nice either way around.
 
+Not sure the races matter, if you win, the delegate can't undo it, if
+you loose, you try again until you win.
+
+It's not like cgroup stuff gets changed often, so a conflict causing you
+to loose should be very rare indeed.
+
+> > For cpuset in particular randomly restricting on the ancestor level can
+> > create an unrecoverable trainwreck inside a container. Affinities are
+> > not recoverable. Once a runnable task ends up with an empty set, its
+> > affinities are reset and the smaller (empty) set is lost.
+> 
+> Yeah, for cpuset, it's messier, but it isn't different from hotunplug
+> scenario, right?  I think the best we can do there is putting ancestor
+> operation on an equal footing as hotplug ops.
+
+Right, but hotplug is exceedingly rare, while I get the impression you
+think it is perfectly fine to recind on your resource grants.
