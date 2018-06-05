@@ -1,76 +1,74 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
-Date: Tue, 5 Jun 2018 14:13:48 +0200
-Message-ID: <20180605121348.GD19202@dhcp22.suse.cz>
-References: <20171130152824.1591-1-guro@fb.com>
- <20180605114729.GB19202@dhcp22.suse.cz>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v5 1/2] mm: memcg: remote memcg charging for kmem allocations
+Date: Tue, 5 Jun 2018 10:54:18 -0700
+Message-ID: <CALvZod5buYF8O2TWq06f=M1SyJdS0vJrFhkH4FQw2Ga1qv3GsA@mail.gmail.com>
+References: <20180416205150.113915-1-shakeelb@google.com> <20180416205150.113915-2-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180605114729.GB19202@dhcp22.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=omYgLVHk5NB1avGVwfrhALdffXqk6rmqPKAVbAZu7/0=;
+        b=Z2EmOxx1bpwLvMUqnD1HexsAYplvSZT9BIH8+tgHAVpe/P0MC6K5lzEHDSpILrEhmH
+         hK8uo9nQ2FpNyZjsUgCSkj9KtckDpa8W28E8v9JcJPTx55LPSa4WXFJqGKGMnJEc2Sgl
+         /baLR1M09BQnU0LjsmCA74M4Qbc6eTqFwStDgbdHwImKn+RImnuhNkJBQqtIreDBzrJD
+         fy+2WwREnYBV97IBmE1t2jalcga4R8tO7TrPLVsNv1aW7wX8+APM1thndP7nnRKr3mBt
+         o073ZZSEggK/DD2dGd3qnXAStLK5W4r7KwofgdPt7BNy4ADBOTZRwXaNVO4c8YcfMY5g
+         xQMw==
+In-Reply-To: <20180416205150.113915-2-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Michal Hocko <mhocko@kernel.org>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shakeel Butt <shakeelb@google.com>
 
-On Tue 05-06-18 13:47:29, Michal Hocko wrote:
-> It seems that this is still in limbo mostly because of David's concerns.
-> So let me reiterate them and provide my POV once more (and the last
-> time) just to help Andrew make a decision:
+On Mon, Apr 16, 2018 at 1:51 PM, Shakeel Butt <shakeelb@google.com> wrote:
+> Introduce the memcg variant for kmalloc[_node] and
+> kmem_cache_alloc[_node].  For kmem_cache_alloc, the kernel switches the
+> root kmem cache with the memcg specific kmem cache for __GFP_ACCOUNT
+> allocations to charge those allocations to the memcg.  However, the memcg
+> to charge is extracted from the current task_struct.  This patch
+> introduces the variant of kmem cache allocation functions where the memcg
+> can be provided explicitly by the caller instead of deducing the memcg
+> from the current task.
+>
+> The kmalloc allocations are underlying served using the kmem caches unless
+> the size of the allocation request is larger than KMALLOC_MAX_CACHE_SIZE,
+> in which case, the kmem caches are bypassed and the request is routed
+> directly to page allocator.  So, for __GFP_ACCOUNT kmalloc allocations,
+> the memcg of current task is charged.  This patch introduces memcg variant
+> of kmalloc functions to allow callers to provide memcg for charging.
+>
+> These functions are useful for use-cases where the allocations should be
+> charged to the memcg different from the memcg of the caller.  One such
+> concrete use-case is the allocations for fsnotify event objects where the
+> objects should be charged to the listener instead of the producer.
+>
+> One requirement to call these functions is that the caller must have the
+> reference to the memcg.  Using kmalloc_memcg and kmem_cache_alloc_memcg
+> implicitly assumes that the caller is requesting a __GFP_ACCOUNT
+> allocation.
+>
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
 
-Sorry, I forgot to add reference to the email with the full David's
-reasoning. Here it is http://lkml.kernel.org/r/alpine.DEB.2.10.1801091556490.173445@chino.kir.corp.google.com
- 
-> 1) comparision root with tail memcgs during the OOM killer is not fair
-> because we are comparing tasks with memcgs.
-> 
-> This is true, but I do not think this matters much for workloads which
-> are going to use the feature. Why? Because the main consumers of the new
-> feature seem to be containers which really need some fairness when
-> comparing _workloads_ rather than processes. Those are unlikely to
-> contain any significant memory consumers in the root memcg. That would
-> be mostly common infrastructure.
-> 
-> Is this is fixable? Yes, we would need to account in the root memcgs.
-> Why are we not doing that now? Because it has some negligible
-> performance overhead. Are there other ways? Yes we can approximate root
-> memcg memory consumption but I would rather wait for somebody seeing
-> that as a real problem rather than add hacks now without a strong
-> reason.
-> 
-> 
-> 2) Evading the oom killer by attaching processes to child cgroups which
-> basically means that a task can split up the workload into smaller
-> memcgs to hide their real memory consumption.
-> 
-> Again true but not really anything new. Processes can already fork and
-> split up the memory consumption. Moreover it doesn't even require any
-> special privileges to do so unlike creating a sub memcg. Is this
-> fixable? Yes, untrusted workloads can setup group oom evaluation at the
-> delegation layer so all subgroups would be considered together.
-> 
-> 3) Userspace has zero control over oom kill selection in leaf mem
-> cgroups.
-> 
-> Again true but this is something that needs a good evaluation to not end
-> up in the fiasko we have seen with oom_score*. Current users demanding
-> this feature can live without any prioritization so blocking the whole
-> feature seems unreasonable.
-> 
-> 4) Future extensibility to be backward compatible.
-> 
-> David is wrong here IMHO. Any prioritization or oom selection policy
-> controls added in future are orthogonal to the oom_group concept added
-> by this patchset. Allowing memcg to be an oom entity is something that
-> we really want longterm. Global CGRP_GROUP_OOM is the most restrictive
-> semantic and softening it will be possible by a adding a new knob to
-> tell whether a memcg/hierarchy is a workload or a set of tasks.
-> -- 
-> Michal Hocko
-> SUSE Labs
+I will send the v6 of this patchset after this merge window. In v6, I
+will make memalloc_memcg_[save|restore] scope API similar to NOFS,
+NOIO and NORECLAIM APIs.
 
--- 
-Michal Hocko
-SUSE Labs
+> ---
+> Changelog since v4:
+> - Removed branch from hot path of memory charging.
+>
+> Changelog since v3:
+> - Added node variant of directed kmem allocation functions.
+>
+> Changelog since v2:
+> - Merge the kmalloc_memcg patch into this patch.
+> - Instead of plumbing memcg throughout, use field in task_struct to pass
+>   the target_memcg.
+>
+> Changelog since v1:
+> - Fixed build for SLOB
+>
