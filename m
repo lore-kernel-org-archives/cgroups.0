@@ -1,21 +1,32 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
 Subject: Re: [PATCH v3] mm: fix race between kmem_cache destroy, create and
-  deactivate
-Date: Fri, 8 Jun 2018 13:35:52 -0700
-Message-ID: <20180608133552.d9839eb08f6b98ec4d0ad783@linux-foundation.org>
+ deactivate
+Date: Sat, 9 Jun 2018 13:20:27 +0300
+Message-ID: <20180609102027.5vkqucnzvh6nfdxu@esperanza>
 References: <20180530001204.183758-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=+/b/SDyZlKUK9NczL3oeJkSsoYXoRsv/cYJN0usziws=;
+        b=Ztn7yHM797MQ0aa7fINHJH/f9aPJmXsbzC7WSmuhar2G26Xal3/KYmPBDi5HjEsXWx
+         7+IYH9AV0P55r6wXjyRjyPxwuRybkoYx9uPaHw4+HYrtqhescpk6YFVQXwFjOTQ5/ryq
+         tsYhzHXFSHDmjSuBaNJTYIC+chAYuIcgKBztvVe3KUEnRUZ5R2WrG62rCruY3isu/qy/
+         MROQRgTVvS15ZGwzmTtyRoQtZ1KQ7RoC5Czc/G49ot/JeUtqv0dk5HS88OpzyonvK1RC
+         pT0kF7ROiZTjK7/yzYPy/U5IWdck5qCAcCtraGKaguQJQgyU1H2bgCMLGEOSi1ru1tJm
+         UpAA==
+Content-Disposition: inline
 In-Reply-To: <20180530001204.183758-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, 29 May 2018 17:12:04 -0700 Shakeel Butt <shakeelb@google.com> wrote:
-
+On Tue, May 29, 2018 at 05:12:04PM -0700, Shakeel Butt wrote:
 > The memcg kmem cache creation and deactivation (SLUB only) is
 > asynchronous. If a root kmem cache is destroyed whose memcg cache is in
 > the process of creation or deactivation, the kernel may crash.
@@ -41,143 +52,25 @@ On Tue, 29 May 2018 17:12:04 -0700 Shakeel Butt <shakeelb@google.com> wrote:
 > dying and flush the workqueue used for memcg kmem cache creation and
 > deactivation.
 
-We have a distinct lack of reviewers and testers on this one.  Please.
+> @@ -845,6 +862,8 @@ void kmem_cache_destroy(struct kmem_cache *s)
+>  	if (unlikely(!s))
+>  		return;
+>  
+> +	flush_memcg_workqueue(s);
+> +
 
-Vladimir, v3 replaced the refcounting with workqueue flushing, as you
-suggested...
+This should definitely help against async memcg_kmem_cache_create(),
+but I'm afraid it doesn't eliminate the race with async destruction,
+unfortunately, because the latter uses call_rcu_sched():
 
+  memcg_deactivate_kmem_caches
+   __kmem_cache_deactivate
+    slab_deactivate_memcg_cache_rcu_sched
+     call_rcu_sched
+                                            kmem_cache_destroy
+                                             shutdown_memcg_caches
+                                              shutdown_cache
+      memcg_deactivate_rcufn
+       <dereference destroyed cache>
 
-From: Shakeel Butt <shakeelb@google.com>
-Subject: mm: fix race between kmem_cache destroy, create and deactivate
-
-The memcg kmem cache creation and deactivation (SLUB only) is
-asynchronous.  If a root kmem cache is destroyed whose memcg cache is in
-the process of creation or deactivation, the kernel may crash.
-
-Example of one such crash:
-	general protection fault: 0000 [#1] SMP PTI
-	CPU: 1 PID: 1721 Comm: kworker/14:1 Not tainted 4.17.0-smp
-	...
-	Workqueue: memcg_kmem_cache kmemcg_deactivate_workfn
-	RIP: 0010:has_cpu_slab
-	...
-	Call Trace:
-	? on_each_cpu_cond
-	__kmem_cache_shrink
-	kmemcg_cache_deact_after_rcu
-	kmemcg_deactivate_workfn
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork+0x35/0x40
-
-To fix this race, on root kmem cache destruction, mark the cache as dying
-and flush the workqueue used for memcg kmem cache creation and
-deactivation.
-
-[shakeelb@google.com: add more documentation, rename fields for readability]
-  Link: http://lkml.kernel.org/r/20180522201336.196994-1-shakeelb@google.com
-[akpm@linux-foundation.org: fix build, per Shakeel]
-[shakeelb@google.com: v3.  Instead of refcount, flush the workqueue]
-  Link: http://lkml.kernel.org/r/20180530001204.183758-1-shakeelb@google.com
-Link: http://lkml.kernel.org/r/20180521174116.171846-1-shakeelb@google.com
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Greg Thelen <gthelen@google.com>
-Cc: Christoph Lameter <cl@linux.com>
-Cc: Pekka Enberg <penberg@kernel.org>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- include/linux/slab.h |    1 +
- mm/slab_common.c     |   21 ++++++++++++++++++++-
- 2 files changed, 21 insertions(+), 1 deletion(-)
-
-diff -puN include/linux/slab_def.h~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate include/linux/slab_def.h
-diff -puN include/linux/slab.h~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate include/linux/slab.h
---- a/include/linux/slab.h~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate
-+++ a/include/linux/slab.h
-@@ -600,6 +600,7 @@ struct memcg_cache_params {
- 			struct memcg_cache_array __rcu *memcg_caches;
- 			struct list_head __root_caches_node;
- 			struct list_head children;
-+			bool dying;
- 		};
- 		struct {
- 			struct mem_cgroup *memcg;
-diff -puN include/linux/slub_def.h~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate include/linux/slub_def.h
-diff -puN mm/memcontrol.c~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate mm/memcontrol.c
-diff -puN mm/slab.c~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate mm/slab.c
-diff -puN mm/slab_common.c~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate mm/slab_common.c
---- a/mm/slab_common.c~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate
-+++ a/mm/slab_common.c
-@@ -136,6 +136,7 @@ void slab_init_memcg_params(struct kmem_
- 	s->memcg_params.root_cache = NULL;
- 	RCU_INIT_POINTER(s->memcg_params.memcg_caches, NULL);
- 	INIT_LIST_HEAD(&s->memcg_params.children);
-+	s->memcg_params.dying = false;
- }
- 
- static int init_memcg_params(struct kmem_cache *s,
-@@ -608,7 +609,7 @@ void memcg_create_kmem_cache(struct mem_
- 	 * The memory cgroup could have been offlined while the cache
- 	 * creation work was pending.
- 	 */
--	if (memcg->kmem_state != KMEM_ONLINE)
-+	if (memcg->kmem_state != KMEM_ONLINE || root_cache->memcg_params.dying)
- 		goto out_unlock;
- 
- 	idx = memcg_cache_id(memcg);
-@@ -712,6 +713,9 @@ void slab_deactivate_memcg_cache_rcu_sch
- 	    WARN_ON_ONCE(s->memcg_params.deact_fn))
- 		return;
- 
-+	if (s->memcg_params.root_cache->memcg_params.dying)
-+		return;
-+
- 	/* pin memcg so that @s doesn't get destroyed in the middle */
- 	css_get(&s->memcg_params.memcg->css);
- 
-@@ -823,11 +827,24 @@ static int shutdown_memcg_caches(struct
- 		return -EBUSY;
- 	return 0;
- }
-+
-+static void flush_memcg_workqueue(struct kmem_cache *s)
-+{
-+	mutex_lock(&slab_mutex);
-+	s->memcg_params.dying = true;
-+	mutex_unlock(&slab_mutex);
-+
-+	flush_workqueue(memcg_kmem_cache_wq);
-+}
- #else
- static inline int shutdown_memcg_caches(struct kmem_cache *s)
- {
- 	return 0;
- }
-+
-+static inline void flush_memcg_workqueue(struct kmem_cache *s)
-+{
-+}
- #endif /* CONFIG_MEMCG && !CONFIG_SLOB */
- 
- void slab_kmem_cache_release(struct kmem_cache *s)
-@@ -845,6 +862,8 @@ void kmem_cache_destroy(struct kmem_cach
- 	if (unlikely(!s))
- 		return;
- 
-+	flush_memcg_workqueue(s);
-+
- 	get_online_cpus();
- 	get_online_mems();
- 
-diff -puN mm/slab.h~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate mm/slab.h
-diff -puN mm/slub.c~mm-fix-race-between-kmem_cache-destroy-create-and-deactivate mm/slub.c
-_
-
+Can we somehow flush those pending rcu requests?
