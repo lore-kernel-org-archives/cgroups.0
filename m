@@ -1,103 +1,80 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v4 2/5] sched/topology: Adding function partition_sched_domains_locked()
-Date: Wed, 13 Jun 2018 14:17:08 +0200
-Message-ID: <20180613121711.5018-3-juri.lelli@redhat.com>
-References: <20180613121711.5018-1-juri.lelli@redhat.com>
+Subject: [PATCH v4 0/5] sched/deadline: fix cpusets bandwidth accounting
+Date: Wed, 13 Jun 2018 14:17:06 +0200
+Message-ID: <20180613121711.5018-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180613121711.5018-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org
-Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-From: Mathieu Poirier <mathieu.poirier@linaro.org>
+Hi,
 
-Introducing function partition_sched_domains_locked() by taking
-the mutex locking code out of the original function.  That way
-the work done by partition_sched_domains_locked() can be reused
-without dropping the mutex lock.
+This is v4 of a series of patches, authored by Mathieu (thanks for your
+work and for allowing me to try to move this forward), with the intent
+of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
+As originally reported by Steve [1], when hotplug and/or (certain)
+cpuset reconfiguration operations take place, DEADLINE bandwidth
+accounting information is lost since root domains are destroyed and
+recreated.
 
-No change of functionality is introduced by this patch.
+Mathieu's approach is based on restoring bandwidth accounting info on
+the newly created root domains by iterating through the (DEADLINE) tasks
+belonging to the configured cpuset(s).
 
-Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
----
- include/linux/sched/topology.h | 10 ++++++++++
- kernel/sched/topology.c        | 18 ++++++++++++++----
- 2 files changed, 24 insertions(+), 4 deletions(-)
+v3 still had issues (IMHO) because __sched_setscheduler() might race
+with the aforementioned restore operation (and it actually looks racy
+with cpuset ops in general), but grabbing cpuset_mutex from potential
+atomic contexs is a no-go.
 
-diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
-index 26347741ba50..57997caf61b6 100644
---- a/include/linux/sched/topology.h
-+++ b/include/linux/sched/topology.h
-@@ -162,6 +162,10 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
- 	return to_cpumask(sd->span);
- }
- 
-+extern void partition_sched_domains_locked(int ndoms_new,
-+					   cpumask_var_t doms_new[],
-+					   struct sched_domain_attr *dattr_new);
-+
- extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 				    struct sched_domain_attr *dattr_new);
- 
-@@ -206,6 +210,12 @@ extern void set_sched_topology(struct sched_domain_topology_level *tl);
- 
- struct sched_domain_attr;
- 
-+static inline void
-+partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
-+			       struct sched_domain_attr *dattr_new)
-+{
-+}
-+
- static inline void
- partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 			struct sched_domain_attr *dattr_new)
-diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
-index 96eee22fafe8..25a5727d3b48 100644
---- a/kernel/sched/topology.c
-+++ b/kernel/sched/topology.c
-@@ -1850,16 +1850,16 @@ static int dattrs_equal(struct sched_domain_attr *cur, int idx_cur,
-  * ndoms_new == 0 is a special case for destroying existing domains,
-  * and it will not create the default domain.
-  *
-- * Call with hotplug lock held
-+ * Call with hotplug lock and sched_domains_mutex held
-  */
--void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
--			     struct sched_domain_attr *dattr_new)
-+void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
-+				    struct sched_domain_attr *dattr_new)
- {
- 	int i, j, n;
- 	int new_topology;
- 
- 	lockdep_assert_cpus_held();
--	mutex_lock(&sched_domains_mutex);
-+	lockdep_assert_held(&sched_domains_mutex);
- 
- 	/* Always unregister in case we don't destroy any domains: */
- 	unregister_sched_domain_sysctl();
-@@ -1924,6 +1924,16 @@ void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 	ndoms_cur = ndoms_new;
- 
- 	register_sched_domain_sysctl();
-+}
- 
-+/*
-+ * Call with hotplug lock held
-+ */
-+void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
-+			     struct sched_domain_attr *dattr_new)
-+{
-+	lockdep_assert_cpus_held();
-+	mutex_lock(&sched_domains_mutex);
-+	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
- 	mutex_unlock(&sched_domains_mutex);
- }
+I reworked v3 solution a bit ending-up with something that seems to be
+working [2]. The idea is simply to trylock such mutex and return -EBUSY
+to the user if we raced with cpuset ops. It's gross, but didn't find
+anything better (and working) yet. :/
+
+I also don't particularly like 05/05, as it introduces lot of DEADLINE-
+iness into cpuset.c. I decided not to change Mathieu's patch for the
+moment and see if better approaches are suggested (a per-class thing
+maybe, even though other classes don't suffer from this problem and it
+is so still going to be DEADLINE specific).
+
+I also left out Mathieu's subsequent patches to focus on this crucial
+fix. They can easily come later, IMHO.
+
+Set also available at
+
+ https://github.com/jlelli/linux.git fixes/deadline/root-domain-accounting-v4
+
+Thanks,
+
+- Juri
+
+[1] https://lkml.org/lkml/2016/2/3/966
+[2] compare -before (that confirms what Steve saw) with -after
+    https://git.io/vhKfW
+
+Mathieu Poirier (5):
+  sched/topology: Add check to backup comment about hotplug lock
+  sched/topology: Adding function partition_sched_domains_locked()
+  sched/core: Streamlining calls to task_rq_unlock()
+  sched/core: Prevent race condition between cpuset and
+    __sched_setscheduler()
+  cpuset: Rebuild root domain deadline accounting information
+
+ include/linux/cpuset.h         |  6 ++++
+ include/linux/sched.h          |  5 +++
+ include/linux/sched/deadline.h |  8 +++++
+ include/linux/sched/topology.h | 10 ++++++
+ kernel/cgroup/cpuset.c         | 79 +++++++++++++++++++++++++++++++++++++++++-
+ kernel/sched/core.c            | 38 ++++++++++++++------
+ kernel/sched/deadline.c        | 31 +++++++++++++++++
+ kernel/sched/sched.h           |  3 --
+ kernel/sched/topology.c        | 32 ++++++++++++++---
+ 9 files changed, 193 insertions(+), 19 deletions(-)
+
 -- 
 2.14.3
 
