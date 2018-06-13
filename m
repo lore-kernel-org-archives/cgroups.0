@@ -1,61 +1,103 @@
-From: Vladimir Davydov <vdavydov.dev@gmail.com>
-Subject: Re: [PATCH v4] mm: fix race between kmem_cache destroy, create and
- deactivate
-Date: Tue, 12 Jun 2018 11:33:14 +0300
-Message-ID: <20180612083314.ftl4hmn4xwnehjdx@esperanza>
-References: <20180611192951.195727-1-shakeelb@google.com>
-Mime-Version: 1.0
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: [PATCH v4 2/5] sched/topology: Adding function partition_sched_domains_locked()
+Date: Wed, 13 Jun 2018 14:17:08 +0200
+Message-ID: <20180613121711.5018-3-juri.lelli@redhat.com>
+References: <20180613121711.5018-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=2CUoKXg/Jtc5sIdU2xR4mhcen0nTu7a2lUGvIEAuSVw=;
-        b=EOuJGpy8lYROQorMGNi92tF5uE0GVcl+EICrGulTwEvZFQoZQDG5b7q4aNubDCN7Gq
-         J3cHkLo+4OnA8cxGvy3I+d/6J2dHliSmpid1NYfMqnv/fmjLnCxNl4cMIjzhfxfb2WS9
-         qz9nNDbWPaRtmtittPfWdJO0915lN0q+Fek5/Z2HzsgfNtQ2DqpfgfI6wpv2GC6oCR7g
-         JCR7/gZy13y+qYEjgK0gArY9MwZjk+bDhxtdM12cA7kxtWdyqScwg4IKhEDN5PO+jTzl
-         wuU6EI/tA0dpAhtG4a03h9bK0bFYV9+OLKFH0eZzVZQqSVyfH5Bl+jatkpHq6erNgQNI
-         OOoQ==
-Content-Disposition: inline
-In-Reply-To: <20180611192951.195727-1-shakeelb@google.com>
+In-Reply-To: <20180613121711.5018-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
-On Mon, Jun 11, 2018 at 12:29:51PM -0700, Shakeel Butt wrote:
-> The memcg kmem cache creation and deactivation (SLUB only) is
-> asynchronous. If a root kmem cache is destroyed whose memcg cache is in
-> the process of creation or deactivation, the kernel may crash.
-> 
-> Example of one such crash:
-> 	general protection fault: 0000 [#1] SMP PTI
-> 	CPU: 1 PID: 1721 Comm: kworker/14:1 Not tainted 4.17.0-smp
-> 	...
-> 	Workqueue: memcg_kmem_cache kmemcg_deactivate_workfn
-> 	RIP: 0010:has_cpu_slab
-> 	...
-> 	Call Trace:
-> 	? on_each_cpu_cond
-> 	__kmem_cache_shrink
-> 	kmemcg_cache_deact_after_rcu
-> 	kmemcg_deactivate_workfn
-> 	process_one_work
-> 	worker_thread
-> 	kthread
-> 	ret_from_fork+0x35/0x40
-> 
-> To fix this race, on root kmem cache destruction, mark the cache as
-> dying and flush the workqueue used for memcg kmem cache creation and
-> deactivation. SLUB's memcg kmem cache deactivation also includes RCU
-> callback and thus make sure all previous registered RCU callbacks
-> have completed as well.
-> 
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+From: Mathieu Poirier <mathieu.poirier@linaro.org>
 
-Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
+Introducing function partition_sched_domains_locked() by taking
+the mutex locking code out of the original function.  That way
+the work done by partition_sched_domains_locked() can be reused
+without dropping the mutex lock.
 
-Thanks.
+No change of functionality is introduced by this patch.
+
+Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+---
+ include/linux/sched/topology.h | 10 ++++++++++
+ kernel/sched/topology.c        | 18 ++++++++++++++----
+ 2 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
+index 26347741ba50..57997caf61b6 100644
+--- a/include/linux/sched/topology.h
++++ b/include/linux/sched/topology.h
+@@ -162,6 +162,10 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
+ 	return to_cpumask(sd->span);
+ }
+ 
++extern void partition_sched_domains_locked(int ndoms_new,
++					   cpumask_var_t doms_new[],
++					   struct sched_domain_attr *dattr_new);
++
+ extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 				    struct sched_domain_attr *dattr_new);
+ 
+@@ -206,6 +210,12 @@ extern void set_sched_topology(struct sched_domain_topology_level *tl);
+ 
+ struct sched_domain_attr;
+ 
++static inline void
++partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
++			       struct sched_domain_attr *dattr_new)
++{
++}
++
+ static inline void
+ partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 			struct sched_domain_attr *dattr_new)
+diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
+index 96eee22fafe8..25a5727d3b48 100644
+--- a/kernel/sched/topology.c
++++ b/kernel/sched/topology.c
+@@ -1850,16 +1850,16 @@ static int dattrs_equal(struct sched_domain_attr *cur, int idx_cur,
+  * ndoms_new == 0 is a special case for destroying existing domains,
+  * and it will not create the default domain.
+  *
+- * Call with hotplug lock held
++ * Call with hotplug lock and sched_domains_mutex held
+  */
+-void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+-			     struct sched_domain_attr *dattr_new)
++void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
++				    struct sched_domain_attr *dattr_new)
+ {
+ 	int i, j, n;
+ 	int new_topology;
+ 
+ 	lockdep_assert_cpus_held();
+-	mutex_lock(&sched_domains_mutex);
++	lockdep_assert_held(&sched_domains_mutex);
+ 
+ 	/* Always unregister in case we don't destroy any domains: */
+ 	unregister_sched_domain_sysctl();
+@@ -1924,6 +1924,16 @@ void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 	ndoms_cur = ndoms_new;
+ 
+ 	register_sched_domain_sysctl();
++}
+ 
++/*
++ * Call with hotplug lock held
++ */
++void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
++			     struct sched_domain_attr *dattr_new)
++{
++	lockdep_assert_cpus_held();
++	mutex_lock(&sched_domains_mutex);
++	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
+ 	mutex_unlock(&sched_domains_mutex);
+ }
+-- 
+2.14.3
+
