@@ -1,8 +1,10 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v4 0/5] sched/deadline: fix cpusets bandwidth accounting
-Date: Wed, 13 Jun 2018 14:17:06 +0200
-Message-ID: <20180613121711.5018-1-juri.lelli@redhat.com>
+Subject: [PATCH v4 4/5] sched/core: Prevent race condition between cpuset and __sched_setscheduler()
+Date: Wed, 13 Jun 2018 14:17:10 +0200
+Message-ID: <20180613121711.5018-5-juri.lelli@redhat.com>
+References: <20180613121711.5018-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180613121711.5018-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -11,70 +13,123 @@ Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org
 Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-Hi,
+From: Mathieu Poirier <mathieu.poirier@linaro.org>
 
-This is v4 of a series of patches, authored by Mathieu (thanks for your
-work and for allowing me to try to move this forward), with the intent
-of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
-As originally reported by Steve [1], when hotplug and/or (certain)
-cpuset reconfiguration operations take place, DEADLINE bandwidth
-accounting information is lost since root domains are destroyed and
-recreated.
+No synchronisation mechanism exist between the cpuset subsystem and calls
+to function __sched_setscheduler().  As such it is possible that new root
+domains are created on the cpuset side while a deadline acceptance test
+is carried out in __sched_setscheduler(), leading to a potential oversell
+of CPU bandwidth.
 
-Mathieu's approach is based on restoring bandwidth accounting info on
-the newly created root domains by iterating through the (DEADLINE) tasks
-belonging to the configured cpuset(s).
+By making available the cpuset_mutex to the core scheduler it is possible
+to prevent situations such as the one described above from happening.
 
-v3 still had issues (IMHO) because __sched_setscheduler() might race
-with the aforementioned restore operation (and it actually looks racy
-with cpuset ops in general), but grabbing cpuset_mutex from potential
-atomic contexs is a no-go.
+Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+[fixed missing cpuset_unlock() and changed to use mutex_trylock()]
+Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
+---
+ include/linux/cpuset.h |  6 ++++++
+ kernel/cgroup/cpuset.c | 16 ++++++++++++++++
+ kernel/sched/core.c    | 14 ++++++++++++++
+ 3 files changed, 36 insertions(+)
 
-I reworked v3 solution a bit ending-up with something that seems to be
-working [2]. The idea is simply to trylock such mutex and return -EBUSY
-to the user if we raced with cpuset ops. It's gross, but didn't find
-anything better (and working) yet. :/
-
-I also don't particularly like 05/05, as it introduces lot of DEADLINE-
-iness into cpuset.c. I decided not to change Mathieu's patch for the
-moment and see if better approaches are suggested (a per-class thing
-maybe, even though other classes don't suffer from this problem and it
-is so still going to be DEADLINE specific).
-
-I also left out Mathieu's subsequent patches to focus on this crucial
-fix. They can easily come later, IMHO.
-
-Set also available at
-
- https://github.com/jlelli/linux.git fixes/deadline/root-domain-accounting-v4
-
-Thanks,
-
-- Juri
-
-[1] https://lkml.org/lkml/2016/2/3/966
-[2] compare -before (that confirms what Steve saw) with -after
-    https://git.io/vhKfW
-
-Mathieu Poirier (5):
-  sched/topology: Add check to backup comment about hotplug lock
-  sched/topology: Adding function partition_sched_domains_locked()
-  sched/core: Streamlining calls to task_rq_unlock()
-  sched/core: Prevent race condition between cpuset and
-    __sched_setscheduler()
-  cpuset: Rebuild root domain deadline accounting information
-
- include/linux/cpuset.h         |  6 ++++
- include/linux/sched.h          |  5 +++
- include/linux/sched/deadline.h |  8 +++++
- include/linux/sched/topology.h | 10 ++++++
- kernel/cgroup/cpuset.c         | 79 +++++++++++++++++++++++++++++++++++++++++-
- kernel/sched/core.c            | 38 ++++++++++++++------
- kernel/sched/deadline.c        | 31 +++++++++++++++++
- kernel/sched/sched.h           |  3 --
- kernel/sched/topology.c        | 32 ++++++++++++++---
- 9 files changed, 193 insertions(+), 19 deletions(-)
-
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 934633a05d20..a1970862ab8e 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -55,6 +55,8 @@ extern void cpuset_init_smp(void);
+ extern void cpuset_force_rebuild(void);
+ extern void cpuset_update_active_cpus(void);
+ extern void cpuset_wait_for_hotplug(void);
++extern int cpuset_lock(void);
++extern void cpuset_unlock(void);
+ extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
+ extern void cpuset_cpus_allowed_fallback(struct task_struct *p);
+ extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
+@@ -176,6 +178,10 @@ static inline void cpuset_update_active_cpus(void)
+ 
+ static inline void cpuset_wait_for_hotplug(void) { }
+ 
++static inline int cpuset_lock(void) { return 1; }
++
++static inline void cpuset_unlock(void) { }
++
+ static inline void cpuset_cpus_allowed(struct task_struct *p,
+ 				       struct cpumask *mask)
+ {
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index b42037e6e81d..d26fd4795aa3 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2409,6 +2409,22 @@ void __init cpuset_init_smp(void)
+ 	BUG_ON(!cpuset_migrate_mm_wq);
+ }
+ 
++/**
++ * cpuset_lock - Grab the cpuset_mutex from another subsysytem
++ */
++int cpuset_lock(void)
++{
++	return mutex_trylock(&cpuset_mutex);
++}
++
++/**
++ * cpuset_unlock - Release the cpuset_mutex from another subsysytem
++ */
++void cpuset_unlock(void)
++{
++	mutex_unlock(&cpuset_mutex);
++}
++
+ /**
+  * cpuset_cpus_allowed - return cpus_allowed mask from a tasks cpuset.
+  * @tsk: pointer to task_struct from which to obtain cpuset->cpus_allowed.
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index ca788f74259d..a5b0c6c25b44 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4218,6 +4218,14 @@ static int __sched_setscheduler(struct task_struct *p,
+ 		if (attr->sched_flags & SCHED_FLAG_SUGOV)
+ 			return -EINVAL;
+ 
++		/*
++		 * Make sure we don't race with the cpuset subsystem where root
++		 * domains can be rebuilt or modified while operations like DL
++		 * admission checks are carried out.
++		 */
++		if (!cpuset_lock())
++			return -EBUSY;
++
+ 		retval = security_task_setscheduler(p);
+ 		if (retval)
+ 			return retval;
+@@ -4295,6 +4303,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	if (unlikely(oldpolicy != -1 && oldpolicy != p->policy)) {
+ 		policy = oldpolicy = -1;
+ 		task_rq_unlock(rq, p, &rf);
++		if (user)
++			cpuset_unlock();
+ 		goto recheck;
+ 	}
+ 
+@@ -4352,6 +4362,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	/* Avoid rq from going away on us: */
+ 	preempt_disable();
+ 	task_rq_unlock(rq, p, &rf);
++	if (user)
++		cpuset_unlock();
+ 
+ 	if (pi)
+ 		rt_mutex_adjust_pi(p);
+@@ -4364,6 +4376,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 
+ unlock:
+ 	task_rq_unlock(rq, p, &rf);
++	if (user)
++		cpuset_unlock();
+ 	return retval;
+ }
+ 
 -- 
 2.14.3
 
