@@ -1,75 +1,79 @@
-From: Aleksa Sarai <asarai@suse.de>
-Subject: Re: Cgroups "pids" controller does not update "pids.current" count
- immediately
-Date: Fri, 15 Jun 2018 03:27:57 +1000
-Message-ID: <20180614172757.ovu6sbolcgc4cdjr@gordon>
-References: <77af3805-e912-2664-f347-e30c0919d0c4@icdsoft.com>
- <20180614172634.ymoik5uov3vzftmp@gordon>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH v4 4/5] sched/core: Prevent race condition between
+ cpuset and __sched_setscheduler()
+Date: Thu, 14 Jun 2018 16:11:42 -0400
+Message-ID: <20180614161142.69f186a6@gandalf.local.home>
+References: <20180613121711.5018-1-juri.lelli@redhat.com>
+        <20180613121711.5018-5-juri.lelli@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="ffjecwbgrtrqriux"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180614172634.ymoik5uov3vzftmp@gordon>
+In-Reply-To: <20180613121711.5018-5-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Ivan Zahariev <famzah@icdsoft.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: peterz@infradead.org, mingo@redhat.com, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
+On Wed, 13 Jun 2018 14:17:10 +0200
+Juri Lelli <juri.lelli@redhat.com> wrote:
 
---ffjecwbgrtrqriux
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> +/**
+> + * cpuset_lock - Grab the cpuset_mutex from another subsysytem
+> + */
+> +int cpuset_lock(void)
+> +{
+> +	return mutex_trylock(&cpuset_mutex);
+> +}
+> +
+> +/**
+> + * cpuset_unlock - Release the cpuset_mutex from another subsysytem
+> + */
+> +void cpuset_unlock(void)
+> +{
+> +	mutex_unlock(&cpuset_mutex);
+> +}
+> +
+>  /**
+>   * cpuset_cpus_allowed - return cpus_allowed mask from a tasks cpuset.
+>   * @tsk: pointer to task_struct from which to obtain cpuset->cpus_allowed.
+> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> index ca788f74259d..a5b0c6c25b44 100644
+> --- a/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -4218,6 +4218,14 @@ static int __sched_setscheduler(struct task_struct *p,
+>  		if (attr->sched_flags & SCHED_FLAG_SUGOV)
+>  			return -EINVAL;
+>  
+> +		/*
+> +		 * Make sure we don't race with the cpuset subsystem where root
+> +		 * domains can be rebuilt or modified while operations like DL
+> +		 * admission checks are carried out.
+> +		 */
+> +		if (!cpuset_lock())
+> +			return -EBUSY;
+> +
 
-On 2018-06-15, Aleksa Sarai <asarai@suse.de> wrote:
-> > I've tested this on 4.14.27 and 4.4.0-124-generic Ubuntu.
-> >=20
-> > If I start a couple of processes which exit very quickly (like a simple=
- Bash
-> > script with many commands in it), the reported value in "pids.current" =
-is
-> > not updated immediately when processes exit. This leads to too many
-> > processes incorrectly accounted in "pids.current" which hits the "pids.=
-max"
-> > prematurely.
->=20
-> One possible reason for this might be related to zombie processes.
-> cgroup.procs doesn't include any zombie processes (tasks are removed
-> when they exit(2)), but the pids controller does track zombies (tasks
-> are removed when the 'struct task' is put'd). This could explain why
-> there's a discrepancy which clears itself up after a short period of
-> time -- though I am not sure that your reproducer will actually produce
-> zombies (I only took a quick look at it).
+How important is this for being a trylock? Reason I am asking is that
+it is making my deadline test fail to get the resources. What my test
+does is to create a bunch of threads, and they try to get the deadline
+resources as they are created. This happens in parallel. Thus, when one
+gets the cpuset_lock, the others are hitting this and returning -EBUSY.
+At first I thought I was over committing somehow but after adding a
+trace_printk() in cpuset_lock(), and this fail case it became obvious
+to what was happening:
 
-Scratch that -- it can happen even without zombies. Basically it just
-depends on when the 'task struct' is freed (which could happen
-arbitrarily later than the process exit(2)-ed).
+   deadline_test-1376  [004]   107.179693: sys_enter_sched_setattr: pid: 0x00000000, uattr: 0x7f017fceeed0, flags: 0x00000000
+   deadline_test-1376  [004]   107.179697: bputs:                cpuset_lock: cpuset_mutex trylock
+   deadline_test-1377  [003]   107.179763: sys_exit_futex:       0x0
+   deadline_test-1377  [003]   107.179767: sys_enter_sched_setattr: pid: 0x00000000, uattr: 0x7f017f4eded0, flags: 0x00000000
+   deadline_test-1377  [003]   107.179771: bputs:                cpuset_lock: cpuset_mutex trylock
+   deadline_test-1377  [003]   107.179771: bputs:                __sched_setscheduler: cpuset_lock
+   deadline_test-1377  [003]   107.179773: sys_exit_sched_setattr: 0xfffffffffffffff0
 
---=20
-Aleksa Sarai
-Senior Software Engineer (Containers)
-SUSE Linux GmbH
-<https://www.cyphar.com/>
+-- Steve
 
---ffjecwbgrtrqriux
-Content-Type: application/pgp-signature; name="signature.asc"
+>  		retval = security_task_setscheduler(p);
+>  		if (retval)
+>  			return retval;
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEXzbGxhtUYBJKdfWmnhiqJn3bjbQFAlsipZ0ACgkQnhiqJn3b
-jbTowg//Q3Bz8gL+xLSPM+qPx5XjzY8pwhJWMvL/dPcXLSDeLyAvNnKJzmNk2yw8
-wp7TCm2Prl6IG/lb9VP/HK7Vy/EKDHfTeH72HPUsIpVLaQbSL0+CGEIlYJGBHseo
-XNj4Db75jFu9VtbJe33m9SnDweIh8W3+e8raqLUz55vbX4oCRMzXBMtH44waKKxN
-22vWutgvrhZhWd3CDdAAnJKh1EGIZqeSSui4v/aZ+lFFX49ydMEzwvf1yMAVLTGT
-RKiWFfpLDvEuPL21nPjVxkIXT2cLA9vb9dNs5xyOtEZtVKHnl6CMJRGx8Htu7VxT
-mX4+BRqDK059F/uU0PK/GsklvgrDGYCMpf9zZARwJBymm0VuKo+BFbPS/EcZIV41
-LsgN2NH0Ksm5g67F/5XfSkuS23zQqVBLn3Sq3YJcM1k8wEUd9UNicQ6O/QXQ2kZM
-Mga/tlwe5Iyep+dpYT50om655hY1Ya7+v1FXmpxcBxSJ3RPLwQ7UD4E30X4mVKNI
-o0Ubp2kFRPw4BvVVQxDF1Oat7TeWssbY4szSIF/ATIAtv+yGtCF7E4QEFdFQUE/q
-1I7AmO8ui7977s37w5vWThMfFvlpORfsKibVnBx75pXzpXkloNnYFJZuuYBi/WoX
-I3bCjAvrSXKtTSIlcXUB/hAkoD8fe9W6htUhWck4DoYbc+1cJWE=
-=iDN8
------END PGP SIGNATURE-----
-
---ffjecwbgrtrqriux--
