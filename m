@@ -1,48 +1,55 @@
-From: Ivan Zahariev <famzah@icdsoft.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: Cgroups "pids" controller does not update "pids.current" count
  immediately
-Date: Fri, 15 Jun 2018 19:07:27 +0300
-Message-ID: <1d635d1d-6152-ecfc-d235-147ff1fe7c95@icdsoft.com>
+Date: Fri, 15 Jun 2018 09:16:47 -0700
+Message-ID: <20180615161647.GW1351649@devbig577.frc2.facebook.com>
 References: <77af3805-e912-2664-f347-e30c0919d0c4@icdsoft.com>
  <20180614150650.GU1351649@devbig577.frc2.facebook.com>
  <7860105c-553a-534b-57fc-222d931cb972@icdsoft.com>
  <20180615154140.GV1351649@devbig577.frc2.facebook.com>
+ <1d635d1d-6152-ecfc-d235-147ff1fe7c95@icdsoft.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180615154140.GV1351649@devbig577.frc2.facebook.com>
-Content-Language: en-bg
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=tdG+trXG1kBx0hQ2bKXsm97k/QxWxuelgCi5+5yuNbg=;
+        b=uk3T+5Zo01OuIBCBK54GXfb7cf7pfBirnRuq/d5d9/YViODiY0IaiN4KQRR588NDxm
+         ykd102eWbaFpaTlVPEUTn87PHNz0wkI4tbWraD0Lz6mcnSGQm1cLf06afTGpjBcGlka9
+         HMK746pB6pmokdhuMRFMPHfWFLDquxrf8lBVWeXt3AEdd4s+Qx/EImdwKKiCQl1MH3ja
+         Ch/dq+jqgYNksqHYQefgQi8/yShhx6DXy/deRVJUf8rsnD818gyQxbFc1hzd/wkUVVil
+         kXcaJL4zIFM5hjbVX1/Nhoy0zDbb40PRYxvcKG3nPRYMoMYPg/Y3AmDE/kUlCBlvbjfT
+         3tBg==
+Content-Disposition: inline
+In-Reply-To: <1d635d1d-6152-ecfc-d235-147ff1fe7c95@icdsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Ivan Zahariev <famzah@icdsoft.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Hello,
 
-Thank you for the quick and insightful reply. I have one suggestion below:
+On Fri, Jun 15, 2018 at 07:07:27PM +0300, Ivan Zahariev wrote:
+> I understand all concerns and design decisions. However, having
+> RLIMIT_NPROC support combined with "cgroups" hierarchy would be very
+> handy.
+> 
+> Does it make sense that you introduce "nproc.current" and
+> "nproc.max" metrics which work in the same atomic, real-time way
+> like RLIMIT_NPROC? Or make this in a new "nproc" controller?
 
-On 15.6.2018 г. 18:41 ч., Tejun Heo wrote:
-> On Fri, Jun 15, 2018 at 05:26:04PM +0300, Ivan Zahariev wrote:
->> The standard RLIMIT_NPROC does not suffer from such accounting
->> discrepancies at any time.
-> They seem equivalent but serve a bit different purposes.  RLIMIT_NPROC
-> is primarily about limiting what the user can do and doesn't guarantee
-> that that actually matches resource (pid here) consumption.
->
->> Is it really technically not possible to make "pids.current" do
->> accounting properly like RLIMIT_NPROC does? We were hoping to
->> replace RLIMIT_NPROC with the "pids" controller.
-> It is of course possible but at a cost.  The cost (getting rid of lazy
-> release optimizations) is just not justifiable for most cases.
+I'm skeptical for two reasons.
 
-I understand all concerns and design decisions. However, having 
-RLIMIT_NPROC support combined with "cgroups" hierarchy would be very handy.
+1. That doesn't sound much like a resource control problem but more of
+   a policy enforcement problem.
 
-Does it make sense that you introduce "nproc.current" and "nproc.max" 
-metrics which work in the same atomic, real-time way like RLIMIT_NPROC? 
-Or make this in a new "nproc" controller?
+2. and it's difficult to see why such policies would need to be that
+   strict.  Where is the requirement coming from?
 
---
-Ivan
---
+Thanks.
+
+-- 
+tejun
