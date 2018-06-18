@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v10 7/9] cpuset: Expose cpus.effective and mems.effective on cgroup v2 root
-Date: Mon, 18 Jun 2018 12:14:07 +0800
-Message-ID: <1529295249-5207-9-git-send-email-longman@redhat.com>
+Subject: [PATCH v10 8/9] cpuset: Don't rebuild sched domains if cpu changes in non-domain root
+Date: Mon, 18 Jun 2018 12:14:08 +0800
+Message-ID: <1529295249-5207-10-git-send-email-longman@redhat.com>
 References: <1529295249-5207-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1529295249-5207-1-git-send-email-longman@redhat.com>
@@ -13,62 +13,46 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Waiman Long <longman@redhat.com>
 
-Because of the fact that setting the "cpuset.sched.domain_root" in
-a direct child of root can remove CPUs from the root's effective CPU
-list, it makes sense to know what CPUs are left in the root cgroup for
-scheduling purpose. So the "cpuset.cpus.effective" control file is now
-exposed in the v2 cgroup root.
+With the cpuset v1, any changes to the list of allowable CPUs in a cpuset
+may cause changes in the sched domain configuration depending on the
+load balancing states and the cpu lists of its parent and its children.
 
-For consistency, the "cpuset.mems.effective" control file is exposed
-as well.
+With cpuset v2 (on default hierarchy), there are more restrictions
+on how the load balancing state of a cpuset can change. As a result,
+only changes made in a sched domain root will cause possible changes
+to the corresponding sched domain. CPU changes to any of the non-domain
+root cpusets will not cause changes in the sched domain configuration.
+As a result, we don't need to call rebuild_sched_domains_locked()
+for changes in a non-domain root cpuset saving precious cpu cycles.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 4 ++--
- kernel/cgroup/cpuset.c                  | 2 --
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ kernel/cgroup/cpuset.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 6ef3516..c2b61e1 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1529,7 +1529,7 @@ Cpuset Interface Files
- 	and won't be affected by any CPU hotplug events.
- 
-   cpuset.cpus.effective
--	A read-only multiple values file which exists on non-root
-+	A read-only multiple values file which exists on all
- 	cpuset-enabled cgroups.
- 
- 	It lists the onlined CPUs that are actually granted to this
-@@ -1569,7 +1569,7 @@ Cpuset Interface Files
- 	and won't be affected by any memory nodes hotplug events.
- 
-   cpuset.mems.effective
--	A read-only multiple values file which exists on non-root
-+	A read-only multiple values file which exists on all
- 	cpuset-enabled cgroups.
- 
- 	It lists the onlined memory nodes that are actually granted to
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index ea640ce..b609795 100644
+index b609795..ed80663 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2225,14 +2225,12 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
- 		.name = "cpus.effective",
- 		.seq_show = cpuset_common_seq_show,
- 		.private = FILE_EFFECTIVE_CPULIST,
--		.flags = CFTYPE_NOT_ON_ROOT,
- 	},
+@@ -986,11 +986,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ 		update_tasks_cpumask(cp);
  
- 	{
- 		.name = "mems.effective",
- 		.seq_show = cpuset_common_seq_show,
- 		.private = FILE_EFFECTIVE_MEMLIST,
--		.flags = CFTYPE_NOT_ON_ROOT,
- 	},
+ 		/*
+-		 * If the effective cpumask of any non-empty cpuset is changed,
+-		 * we need to rebuild sched domains.
++		 * On legacy hierarchy, if the effective cpumask of any non-
++		 * empty cpuset is changed, we need to rebuild sched domains.
++		 * On default hiearchy, the cpuset needs to be a sched
++		 * domain root as well.
+ 		 */
+ 		if (!cpumask_empty(cp->cpus_allowed) &&
+-		    is_sched_load_balance(cp))
++		    is_sched_load_balance(cp) &&
++		   (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
++		    is_sched_domain_root(cp)))
+ 			need_rebuild_sched_domains = true;
  
- 	{
+ 		rcu_read_lock();
 -- 
 1.8.3.1
 
