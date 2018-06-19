@@ -1,66 +1,59 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v10 0/9] cpuset: Enable cpuset controller in default
- hierarchy
-Date: Mon, 18 Jun 2018 23:07:16 +0800
-Message-ID: <dc91e2ad-239d-3144-0814-c5da181f4ac6@redhat.com>
-References: <1529295249-5207-1-git-send-email-longman@redhat.com>
- <20180618142036.GA13097@localhost.localdomain>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v6 0/3] Directed kmem charging
+Date: Mon, 18 Jun 2018 22:13:24 -0700
+Message-ID: <20180619051327.149716-1-shakeelb@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180618142036.GA13097@localhost.localdomain>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=isp0D7fOHm2B+eMegAVDPCkhp4suKkoR3rfaJmek6NA=;
+        b=WMP14NhHdhEEe1tr3TYy4Fh5PUDmWJwERjLvnD7kYaPUNW/EM057iCQl2VBgsu1bhi
+         nXxleeEcUiYLziOmfPbQ3XBANbGx8Cb/Pjhs007nO90wothgdcc8SoAL3JonBg7PXYGi
+         GYuk1Kt2c6Uu+cKpfcwGQGurMCtNKjrYYQUcYnmfmegT0982350lv7OSB+xCP5B4GXM9
+         7IqhmY8O/uFjEzk05BByqyvD9TIuFbbdlgHlsw1siWXngcX7hzabe0HFTJcg8DuXfZ9N
+         XbXujiMBhcNAFOstQTyTm026k6XijzBRfD5BPQoA+kHxLxPru3NDtXCXdzsqeuGLfWI1
+         R04A==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Juri Lelli <juri.lelli@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>
 
-On 06/18/2018 10:20 PM, Juri Lelli wrote:
-> Hi,
->
-> On 18/06/18 12:13, Waiman Long wrote:
->> v10:
->>  - Remove the cpuset.sched.load_balance patch for now as it may not
->>    be that useful.
->>  - Break the large patch 2 into smaller patches to make them a bit
->>    easier to review.
->>  - Test and fix issues related to changing "cpuset.cpus" and cpu
->>    online/offline in a domain root.
->>  - Rename isolated_cpus to reserved_cpus as this cpumask holds CPUs
->>    reserved for child sched domains.
->>  - Rework the scheduling domain debug printing code in the last patch.
->>  - Document update to the newly moved
->>    Documentation/admin-guide/cgroup-v2.rst.
-> There seem to be two (similar but different) 6/9 in the set. Something
-> went wrong?
+This patchset introduces memcg variant memory allocation functions.  The
+caller can explicitly pass the memcg to charge for kmem allocations.
+Currently the kernel, for __GFP_ACCOUNT memory allocation requests,
+extract the memcg of the current task to charge for the kmem allocation.
+This patch series introduces kmem allocation functions where the caller
+can pass the pointer to the remote memcg.  The remote memcg will be
+charged for the allocation instead of the memcg of the caller.  However
+the caller must have a reference to the remote memcg.  This patch series
+also introduces scope API for targeted memcg charging. So, all the
+__GFP_ACCOUNT alloctions within the specified scope will be charged to
+the given target memcg.
 
-The isolated_cpus patch is old, I forgot to remove it before sending out
-the patch.
+Shakeel Butt (3):
+  mm: memcg: remote memcg charging for kmem allocations
+  fs: fsnotify: account fsnotify metadata to kmemcg
+  fs, mm: account buffer_head to kmemcg
 
+ fs/buffer.c                          | 14 ++++-
+ fs/notify/dnotify/dnotify.c          |  5 +-
+ fs/notify/fanotify/fanotify.c        |  6 +-
+ fs/notify/fanotify/fanotify_user.c   |  5 +-
+ fs/notify/group.c                    |  6 ++
+ fs/notify/inotify/inotify_fsnotify.c |  2 +-
+ fs/notify/inotify/inotify_user.c     |  5 +-
+ include/linux/fsnotify_backend.h     | 12 ++--
+ include/linux/memcontrol.h           | 14 +++++
+ include/linux/sched.h                |  3 +
+ include/linux/sched/mm.h             | 24 ++++++++
+ include/linux/slab.h                 | 83 ++++++++++++++++++++++++++++
+ kernel/fork.c                        |  3 +
+ mm/memcontrol.c                      | 54 ++++++++++++++++--
+ 14 files changed, 220 insertions(+), 16 deletions(-)
 
-> Also I can't seem to be able to create a subgroup with an isolated
-> domain root. I think that, when doing the following
->
->  # mount -t cgroup2 none /sys/fs/cgroup
->  # echo "+cpuset" >/sys/fs/cgroup/cgroup.subtree_control 
->  # mkdir /sys/fs/cgroup/g1
->  # echo 0-1 >/sys/fs/cgroup/g1/cpuset.cpus
->  # echo 1 >/sys/fs/cgroup/g1/cpuset.sched.domain_root
->
-> rebuild_sched_domains_locked exits early, since
-> top_cpuset.effective_cpus != cpu_active_mask. (effective_cpus being 2-3
-> at this point since I'm testing this on a 0-3 system)
->
-> In your v9 this [1] was adding a special condition to make rebuilding of
-> domains happen. Was the change intentional?
-
-Can you reply to the relevant patch to pinpoint what condition are you
-talking about? I do try to eliminate domain rebuild as much as possible,
-but I am just not sure which condition you have question about.
-
-Cheers,
-Longman
-
-
+-- 
+2.18.0.rc1.244.gcf134e6275-goog
 
