@@ -1,119 +1,62 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH 3/3] fs, mm: account buffer_head to kmemcg
-Date: Tue, 19 Jun 2018 12:55:28 -0700
-Message-ID: <20180619195525.GA19193@castle>
-References: <20180619051327.149716-1-shakeelb@google.com>
- <20180619051327.149716-4-shakeelb@google.com>
- <20180619162741.GC27423@cmpxchg.org>
- <20180619174040.GA4304@castle.DHCP.thefacebook.com>
- <CALvZod5_0_LuqWpri=uviE5hHhTMPT0VQOZDgHtTtLhvcCtb3A@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v6 0/3] Directed kmem charging
+Date: Tue, 19 Jun 2018 15:58:38 -0700
+Message-ID: <CALvZod56hRAjCE25Wc-+O-rc+v_t6a9n3JrD4gTRaFotkcrMCQ@mail.gmail.com>
+References: <20180619051327.149716-1-shakeelb@google.com> <20180619161149.GA27423@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=5ismp5RNMkW12oWlGaLYK/WMhlNbSpd78Lqr5jY/oL0=;
- b=LDbR/5brEplV4jIUBsbgi1C3m0eGgr3PZDgfr87QTojWW2WWHurfIwb+2Ji1S8d0VXLz
- CsGTKPgkIpa9b2WEY/n7EnwUrGk1CfPV3Cr4SQA2Kuypfz6wyM1TVlnqA6AGngcV4ebo
- clB2FdFkAjuZxZRpMs3b5ZCB0wmpXqQcHkI= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5ismp5RNMkW12oWlGaLYK/WMhlNbSpd78Lqr5jY/oL0=;
- b=jm1C2fFsMkKvUHbxJQm+Rq81Eth0fJi2zerBDzEz57Sc8TLS+SRBx5TfVW36LPMkx+KLAkrElauYNgRS9z9BY2dzMUDje8FKLW+SD44UULDVRVIByBvhpacYhZdx922dLJ4bPzdRbuW8MvcdR5LKLZ7miRsnGlGYmHTum2MdHyU=
-Content-Disposition: inline
-In-Reply-To: <CALvZod5_0_LuqWpri=uviE5hHhTMPT0VQOZDgHtTtLhvcCtb3A@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=zb3AjJowosb9dhIaQWVidJRDXoJHlmvZeXg5JHXf2xg=;
+        b=o+kdv+GSp/AQxWgH4loxhm4G7MLU9afWCP2I8pgEwr24jnPSbZGqm/jRg1iP4gePW1
+         UwmrDpSEvwAv1RcPe/nJX1BNZ8FKPBng+YRmS8CuFnKTLrFbmptc0w+gKxgoqHWPGGQE
+         eDJSa5B1Q+320W7PfohDAVQk/1ZvADDF3bQxt5TCQ7R1TYAQiLehY+MT5urDSV40Bb4P
+         q4ZbvCTzDZhustuEQWOlrWjK3ISVDYb4SRHeukzaRafhtoofYK8mO2dtYak5nA2cqndu
+         NugDjEfIY/U/O68/vF3J01WkIknbZQHS4WSnhoX/GVOau8XTIY4W+ItvX+RTETU/8Cdk
+         xZCQ==
+In-Reply-To: <20180619161149.GA27423@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-On Tue, Jun 19, 2018 at 12:51:15PM -0700, Shakeel Butt wrote:
-> On Tue, Jun 19, 2018 at 10:41 AM Roman Gushchin <guro@fb.com> wrote:
-> >
-> > On Tue, Jun 19, 2018 at 12:27:41PM -0400, Johannes Weiner wrote:
-> > > On Mon, Jun 18, 2018 at 10:13:27PM -0700, Shakeel Butt wrote:
-> > > > The buffer_head can consume a significant amount of system memory and
-> > > > is directly related to the amount of page cache. In our production
-> > > > environment we have observed that a lot of machines are spending a
-> > > > significant amount of memory as buffer_head and can not be left as
-> > > > system memory overhead.
-> > > >
-> > > > Charging buffer_head is not as simple as adding __GFP_ACCOUNT to the
-> > > > allocation. The buffer_heads can be allocated in a memcg different from
-> > > > the memcg of the page for which buffer_heads are being allocated. One
-> > > > concrete example is memory reclaim. The reclaim can trigger I/O of pages
-> > > > of any memcg on the system. So, the right way to charge buffer_head is
-> > > > to extract the memcg from the page for which buffer_heads are being
-> > > > allocated and then use targeted memcg charging API.
-> > > >
-> > > > Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> > > > Cc: Jan Kara <jack@suse.cz>
-> > > > Cc: Greg Thelen <gthelen@google.com>
-> > > > Cc: Michal Hocko <mhocko@kernel.org>
-> > > > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > > > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> > > > Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> > > > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > > > ---
-> > > >  fs/buffer.c                | 14 +++++++++++++-
-> > > >  include/linux/memcontrol.h |  7 +++++++
-> > > >  mm/memcontrol.c            | 21 +++++++++++++++++++++
-> > > >  3 files changed, 41 insertions(+), 1 deletion(-)
-> > > >
-> > > > diff --git a/fs/buffer.c b/fs/buffer.c
-> > > > index 8194e3049fc5..26389b7a3cab 100644
-> > > > --- a/fs/buffer.c
-> > > > +++ b/fs/buffer.c
-> > > > @@ -815,10 +815,17 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
-> > > >     struct buffer_head *bh, *head;
-> > > >     gfp_t gfp = GFP_NOFS;
-> > > >     long offset;
-> > > > +   struct mem_cgroup *old_memcg;
-> > > > +   struct mem_cgroup *memcg = get_mem_cgroup_from_page(page);
-> > > >
-> > > >     if (retry)
-> > > >             gfp |= __GFP_NOFAIL;
-> > > >
-> > > > +   if (memcg) {
-> > > > +           gfp |= __GFP_ACCOUNT;
-> > > > +           old_memcg = memalloc_memcg_save(memcg);
-> > > > +   }
-> > >
-> > > Please move the get_mem_cgroup_from_page() call out of the
-> > > declarations and down to right before the if (memcg) branch.
-> > >
-> > > >     head = NULL;
-> > > >     offset = PAGE_SIZE;
-> > > >     while ((offset -= size) >= 0) {
-> > > > @@ -835,6 +842,11 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
-> > > >             /* Link the buffer to its page */
-> > > >             set_bh_page(bh, page, offset);
-> > > >     }
-> > > > +out:
-> > > > +   if (memcg) {
-> > > > +           memalloc_memcg_restore(old_memcg);
-> > > > +#ifdef CONFIG_MEMCG
-> > > > +           css_put(&memcg->css);
-> > > > +#endif
-> > >
-> > > Please add a put_mem_cgroup() ;)
-> >
-> > I've added such helper by commit 8a34a8b7fd62 ("mm, oom: cgroup-aware OOM killer").
-> > It's in the mm tree.
-> >
-> 
-> I was using mem_cgroup_put() defined by Roman's patch but there were a
-> lot of build failure reports where someone was taking this series
-> without Roman's series or applying the series out of order. Andrew
-> asked me to keep it like this and then he will convert these callsites
-> into mem_cgroup_put() after making making sure Roman's series is
-> applied in mm tree. I will recheck with him, how he wants to handle it
-> now.
+On Tue, Jun 19, 2018 at 9:09 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
+>
+> Hi Shakeel,
+>
+> this looks generally reasonable to me.
+>
+> However, patch 1 introduces API that isn't used until patch 2 and 3,
+> which makes reviewing harder since you have to jump back and forth
+> between emails. Please fold patch 1 and introduce API along with the
+> users.
+>
 
-I can also split the introduction of mem_cgroup_put() into a separate commit,
-as it seems to be usable not only by the cgroup oom stuff.
-Please, let me know, if it's a preferred way to go.
+Thanks a lot for the review. Ack, I will do as you suggested in next version.
 
-Thanks!
+> On Mon, Jun 18, 2018 at 10:13:24PM -0700, Shakeel Butt wrote:
+> > This patchset introduces memcg variant memory allocation functions.  The
+> > caller can explicitly pass the memcg to charge for kmem allocations.
+> > Currently the kernel, for __GFP_ACCOUNT memory allocation requests,
+> > extract the memcg of the current task to charge for the kmem allocation.
+> > This patch series introduces kmem allocation functions where the caller
+> > can pass the pointer to the remote memcg.  The remote memcg will be
+> > charged for the allocation instead of the memcg of the caller.  However
+> > the caller must have a reference to the remote memcg.  This patch series
+> > also introduces scope API for targeted memcg charging. So, all the
+> > __GFP_ACCOUNT alloctions within the specified scope will be charged to
+> > the given target memcg.
+>
+> Can you open with the rationale for the series, i.e. the problem
+> statement (fsnotify and bh memory footprint), *then* follow with the
+> proposed solution?
+>
+
+Sure.
+
+thanks,
+Shakeel
