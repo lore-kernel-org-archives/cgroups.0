@@ -1,71 +1,57 @@
 From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v10 2/9] cpuset: Add new v2 cpuset.sched.domain_root flag
-Date: Wed, 20 Jun 2018 16:27:35 +0200
-Message-ID: <20180620142735.GM2494@hirez.programming.kicks-ass.net>
-References: <1529295249-5207-1-git-send-email-longman@redhat.com>
- <1529295249-5207-3-git-send-email-longman@redhat.com>
+Subject: Re: [PATCH v9 3/7] cpuset: Add cpuset.sched.load_balance flag to v2
+Date: Wed, 20 Jun 2018 16:46:13 +0200
+Message-ID: <20180620144613.GP2476@hirez.programming.kicks-ass.net>
+References: <1527601294-3444-1-git-send-email-longman@redhat.com>
+ <1527601294-3444-4-git-send-email-longman@redhat.com>
+ <20180531122638.GJ12180@hirez.programming.kicks-ass.net>
+ <42cc1f44-2355-1c0c-b575-49c863303c42@redhat.com>
+ <20180531152050.GK12180@hirez.programming.kicks-ass.net>
+ <ebe7f0c1-b2dc-57ad-e5cb-7edf0fee4626@redhat.com>
+ <20180531160857.GM12180@hirez.programming.kicks-ass.net>
+ <54c607c3-e742-4da9-c89a-4ed54146e3bd@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=eMGX/vsz54Q4caqt50tNX8W2/XJte3L4ED1D2DYi3DM=; b=NTy23Fnsf7WLUGXDCU7Zw7jvu
-        1M4RHZa6VjWMn91F72ExcFloyGANed3g6cq6XvBzm8yPXCl4S4CBQykPADUjAeyX2odDPvAm0QQz6
-        yfxE7hqrJIbMtIDuYQO4oLeMDbDLHv/vUfqq93ZG9Y8df2nE8U2Ldw4mIGoJc+QAbYPVrMdKgmRiu
-        51JP9eVTIm7Ivyx2WSRrpLyubjbWfUhd1cvrBMQXeSXBz+U1yasuhs80zQY94T1MBG5MgkAtKVHq4
-        R0WtHHtz+UBNsed6zSZFwR2aYtFXi6CnktqZKGvIlj1FPjQNCs2k2jWcRWjE6tt7KUyS37zVp/8ue
-      
+         bh=ZKf96prADD2Hvs7n4fXf2KFm7vCLkqBMyh1u+rx+U8I=; b=OAHa/VOJ8rCQdHOeWUY+u/fPV
+        TCmV0pmkhNh0Vbc/ftKRHmPuRRAfvnD0bt09Ehk01gz77jYjbtplIj4LF/vakZ9dxj2jbUTpjGe8d
+        Q8wXvCU/KoDWCrjkPxEUnrr7MR5FPDrPkqNkQXE6TqQ9oAmW0UAWK2S3d6Lu5UW/yRR3MNGcBempy
+        cmJuhd1lRcTbleYxXMzekk1VWVr8E6zlIaB3lEyB/97MXUVju8MCQQCHeXbRptjR9FfPv2JnGIdIX
+        yB496lON0JcYlD/m3DS5+Ie+N8rs/zhG1ka+WYRslUv9LKfE2IhX2W+JwNWW2QkVGUC7xiG8VWGFN
+    
 Content-Disposition: inline
-In-Reply-To: <1529295249-5207-3-git-send-email-longman@redhat.com>
+In-Reply-To: <54c607c3-e742-4da9-c89a-4ed54146e3bd@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Thomas Gleixner <tglx@linutronix.de>, Frederic Weisbecker <fweisbec@gmail.com>
 
-On Mon, Jun 18, 2018 at 12:14:01PM +0800, Waiman Long wrote:
-> +  cpuset.sched.domain_root
+On Thu, May 31, 2018 at 12:42:20PM -0400, Waiman Long wrote:
+> Thinking about isolcpus emulation, I now realize that it is more than
+> just disabling load balancing. it also disables some kernel threads like
+> kworker from running so that an userspace application can monopolize as
+> much of a cpu as possible. Disabling kernel threads from running isn't
+> that hard if it is only done once at boot time. it is trickier if we
+> have to do it at run time.
 
-Why are we calling this a domain_root and not a partition?
+Don't think it is all that difficult, we just need a notifier for when
+that housekeeping thing changes and ensure that everybody who uses it
+re-evaluates crap.
 
-> +	A read-write single value file which exists on non-root
-> +	cpuset-enabled cgroups.  It is a binary value flag that accepts
-> +	either "0" (off) or "1" (on).  This flag is set by the parent
-> +	and is not delegatable.
+> Without good isolcpus emulation, disabling load balance kind of loses
+> its usefulness. So I am going to take out the load_balance flag for now
+> unless I hear objection otherwise.
 
-You still haven't answered:
+I'm not seeing the direct link between the load_balance flag and
+isolcpus emulation in the proposed stuff.
 
-  https://lkml.kernel.org/r/20180531094943.GG12180@hirez.programming.kicks-ass.net
-
-the question stands.
-
-> +	If set, it indicates that the current cgroup is the root of a
-> +	new scheduling domain or partition that comprises itself and
-> +	all its descendants except those that are scheduling domain
-> +	roots themselves and their descendants.  The root cgroup is
-> +	always a scheduling domain root.
-> +
-> +	There are constraints on where this flag can be set.  It can
-> +	only be set in a cgroup if all the following conditions are true.
-> +
-> +	1) The "cpuset.cpus" is not empty and the list of CPUs are
-> +	   exclusive, i.e. they are not shared by any of its siblings.
-> +	2) The "cpuset.cpus" is also a proper subset of the parent's
-> +	   "cpuset.cpus.effective".
-> +	3) The parent cgroup is a scheduling domain root.
-> +	4) There is no child cgroups with cpuset enabled.  This is
-> +	   for eliminating corner cases that have to be handled if such
-> +	   a condition is allowed.
-> +
-> +	Setting this flag will take the CPUs away from the effective
-> +	CPUs of the parent cgroup.  Once it is set, this flag cannot be
-> +	cleared if there are any child cgroups with cpuset enabled.
-> +
-> +	A parent scheduling domain root cgroup cannot distribute
-> +	all its CPUs to its child scheduling domain root cgroups.
-> +	There must be at least one cpu left in the parent scheduling
-> +	domain root cgroup.
+We can tie the housekeeping mask to whatever CPUs remain in the root
+cgroup, couple that to that notifier and it should all just work I
+think.
