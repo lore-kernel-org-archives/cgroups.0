@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v11 3/9] cpuset: Simulate auto-off of sched.partition at cgroup removal
-Date: Sun, 24 Jun 2018 15:30:34 +0800
-Message-ID: <1529825440-9574-4-git-send-email-longman@redhat.com>
+Subject: [PATCH v11 5/9] cpuset: Make sure that partition flag work properly with CPU hotplug
+Date: Sun, 24 Jun 2018 15:30:36 +0800
+Message-ID: <1529825440-9574-6-git-send-email-longman@redhat.com>
 References: <1529825440-9574-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1529825440-9574-1-git-send-email-longman@redhat.com>
@@ -13,55 +13,105 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Waiman Long <longman@redhat.com>
 
-Making a cgroup a partition root will reserve cpu resource at its parent.
-So when a partition root cgroup is destroyed, we need to free the
-reserved cpus at its parent. This is now done by doing an auto-off of
-the sched.partition flag in the offlining phase when a partition root
-cgroup is being removed.
+When there is a cpu hotplug event (CPU online or offline), the partitions
+may need to be reconfigured and regenerated. So code is added to
+the hotplug functions to make them work with new reserved_cpus mask to
+compute the right effective_cpus for each of the affected cpusets.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 10 ++++++++++
+ kernel/cgroup/cpuset.c                  | 26 ++++++++++++++++++++++++--
+ 2 files changed, 34 insertions(+), 2 deletions(-)
 
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 5f3170f..f4efa40 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1626,6 +1626,16 @@ Cpuset Interface Files
+ 	2) No CPU that has been distributed to child partition roots is
+ 	   is deleted.
+ 
++	When all the CPUs allocated to a partition are offlined, the
++	partition will be temporaily gone and all the tasks in it will
++	be migrated to another one that belongs to the parent of the
++	partition root.  This is a destructive operation and all the
++	existing CPU affinity that is narrower than the cpuset itself
++	will be lost.
++
++	When any of those offlined CPUs is onlined again, a new partition
++	will be re-created and the tasks will be migrated back.
++
+ 
+ Device controller
+ -----------------
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 5989bff..e902f54 100644
+index 3a646a9..e118dd8 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2278,7 +2278,12 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
- /*
-  * If the cpuset being removed has its flag 'sched_load_balance'
-  * enabled, then simulate turning sched_load_balance off, which
-- * will call rebuild_sched_domains_locked().
-+ * will call rebuild_sched_domains_locked(). That is not needed
-+ * in the default hierarchy where only changes in partition
-+ * will cause repartitioning.
-+ *
-+ * If the cpuset has the 'sched.partition' flag enabled, simulate
-+ * turning 'sched.partition" off.
+@@ -900,7 +900,8 @@ static void update_tasks_cpumask(struct cpuset *cs)
+  * @parent: the parent cpuset
+  *
+  * If the parent has reserved CPUs, include them in the list of allowable
+- * CPUs in computing the new effective_cpus mask.
++ * CPUs in computing the new effective_cpus mask. The cpu_active_mask is
++ * used to mask off cpus that are to be offlined.
   */
+ static void compute_effective_cpumask(struct cpumask *new_cpus,
+ 				      struct cpuset *cs, struct cpuset *parent)
+@@ -909,6 +910,7 @@ static void compute_effective_cpumask(struct cpumask *new_cpus,
+ 		cpumask_or(new_cpus, parent->effective_cpus,
+ 			   parent->reserved_cpus);
+ 		cpumask_and(new_cpus, new_cpus, cs->cpus_allowed);
++		cpumask_and(new_cpus, new_cpus, cpu_active_mask);
+ 	} else {
+ 		cpumask_and(new_cpus, cs->cpus_allowed, parent->effective_cpus);
+ 	}
+@@ -2562,9 +2564,17 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs)
+ 		goto retry;
+ 	}
  
- static void cpuset_css_offline(struct cgroup_subsys_state *css)
-@@ -2287,7 +2292,18 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+-	cpumask_and(&new_cpus, cs->cpus_allowed, parent_cs(cs)->effective_cpus);
++	compute_effective_cpumask(&new_cpus, cs, parent_cs(cs));
+ 	nodes_and(new_mems, cs->mems_allowed, parent_cs(cs)->effective_mems);
  
- 	mutex_lock(&cpuset_mutex);
- 
--	if (is_sched_load_balance(cs))
-+	/*
-+	 * A WARN_ON_ONCE() check after calling update_flag() to make
-+	 * sure that the operation succceeds without failure.
-+	 */
-+	if (is_partition_root(cs)) {
-+		int ret = update_flag(CS_PARTITION_ROOT, cs, 0);
-+
-+		WARN_ON_ONCE(ret);
++	if (cs->nr_reserved) {
++		/*
++		 * Some of the CPUs may have been distributed to child
++		 * partition roots. So we need skip those when computing the
++		 * real effective cpus.
++		 */
++		cpumask_andnot(&new_cpus, &new_cpus, cs->reserved_cpus);
 +	}
-+
-+	if (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) &&
-+	    is_sched_load_balance(cs))
- 		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+ 	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
+ 	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
  
- 	cpuset_dec();
+@@ -2614,6 +2624,11 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+ 	cpumask_copy(&new_cpus, cpu_active_mask);
+ 	new_mems = node_states[N_MEMORY];
+ 
++	/*
++	 * If reserved_cpus is populated, it is likely that the check below
++	 * will produce a false positive on cpus_updated when the cpu list
++	 * isn't changed. It is extra work, but it is better to be safe.
++	 */
+ 	cpus_updated = !cpumask_equal(top_cpuset.effective_cpus, &new_cpus);
+ 	mems_updated = !nodes_equal(top_cpuset.effective_mems, new_mems);
+ 
+@@ -2622,6 +2637,13 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+ 		spin_lock_irq(&callback_lock);
+ 		if (!on_dfl)
+ 			cpumask_copy(top_cpuset.cpus_allowed, &new_cpus);
++		/*
++		 * Make sure that the reserved cpus aren't in the
++		 * effective cpus.
++		 */
++		if (top_cpuset.nr_reserved)
++			cpumask_andnot(&new_cpus, &new_cpus,
++					top_cpuset.reserved_cpus);
+ 		cpumask_copy(top_cpuset.effective_cpus, &new_cpus);
+ 		spin_unlock_irq(&callback_lock);
+ 		/* we don't mess with cpumasks of tasks in top_cpuset */
 -- 
 1.8.3.1
 
