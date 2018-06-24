@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v11 9/9] cpuset: Allow reporting of sched domain generation info
-Date: Sun, 24 Jun 2018 15:30:40 +0800
-Message-ID: <1529825440-9574-10-git-send-email-longman@redhat.com>
+Subject: [PATCH v11 4/9] cpuset: Allow changes to cpus in a partition root
+Date: Sun, 24 Jun 2018 15:30:35 +0800
+Message-ID: <1529825440-9574-5-git-send-email-longman@redhat.com>
 References: <1529825440-9574-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1529825440-9574-1-git-send-email-longman@redhat.com>
@@ -13,56 +13,229 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Waiman Long <longman@redhat.com>
 
-This patch enables us to report sched domain generation information.
+The previous patch introduces a new partition flag, but won't allow
+changes made to "cpuset.cpus" once the flag is on. That may be too
+restrictive in some use cases. So this restiction is now relaxed to
+allow changes made to the "cpuset.cpus" file with some constraints:
 
-If DYNAMIC_DEBUG is enabled, issuing the following command
-
-  echo "file cpuset.c +p" > /sys/kernel/debug/dynamic_debug/control
-
-and setting loglevel to 8 will allow the kernel to show what scheduling
-domain changes are being made.
+ 1) The new set of cpus must still be exclusive.
+ 2) Newly added cpus must be a subset of the parent effective_cpus.
+ 3) None of the deleted cpus can be one of those allocated to a child
+    partition roots, if present.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ Documentation/admin-guide/cgroup-v2.rst |  9 ++++
+ kernel/cgroup/cpuset.c                  | 80 ++++++++++++++++++++++++++-------
+ 2 files changed, 72 insertions(+), 17 deletions(-)
 
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 24a7133..5f3170f 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1617,6 +1617,15 @@ Cpuset Interface Files
+         its child partition root cgroups.  There must be at least one cpu
+         left in the parent partition root cgroup.
+ 
++	In a partition root, changes to "cpuset.cpus" is allowed as long
++	as the first condition above as well as the following two
++	additional conditions are true.
++
++	1) Any added CPUs must be a proper subset of the parent's
++	   "cpuset.cpus.effective".
++	2) No CPU that has been distributed to child partition roots is
++	   is deleted.
++
+ 
+ Device controller
+ -----------------
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 07a5575..62b7e61 100644
+index e902f54..3a646a9 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -836,6 +836,23 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 	return ndoms;
- }
+@@ -957,6 +957,9 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
  
-+#ifdef CONFIG_DEBUG_KERNEL
-+static inline void debug_print_domains(cpumask_var_t *doms, int ndoms)
-+{
-+	int i;
-+	char buf[200];
-+	char *ptr, *end = buf + sizeof(buf) - 1;
-+
-+	for (i = 0, ptr = buf, *end = '\0'; i < ndoms; i++)
-+		ptr += snprintf(ptr, end - ptr, "dom%d=%*pbl ", i,
-+				cpumask_pr_args(doms[i]));
-+
-+	pr_debug("Generated %d domains: %s\n", ndoms, buf);
-+}
-+#else
-+static inline void debug_print_domains(cpumask_var_t *doms, int ndoms) { }
-+#endif
-+
- /*
-  * Rebuild scheduler domains.
+ 		spin_lock_irq(&callback_lock);
+ 		cpumask_copy(cp->effective_cpus, new_cpus);
++		if (cp->nr_reserved)
++			cpumask_andnot(cp->effective_cpus, cp->effective_cpus,
++				       cp->reserved_cpus);
+ 		spin_unlock_irq(&callback_lock);
+ 
+ 		WARN_ON(!is_in_v2_mode() &&
+@@ -984,23 +987,25 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ /**
+  * update_reserved_cpumask - update the reserved_cpus mask of parent cpuset
+  * @cpuset:  The cpuset that requests CPU reservation
+- * @delmask: The old reserved cpumask to be removed from the parent
+- * @addmask: The new reserved cpumask to be added to the parent
++ * @oldmask: The old reserved cpumask to be removed from the parent
++ * @newmask: The new reserved cpumask to be added to the parent
+  * Return: 0 if successful, an error code otherwise
   *
-@@ -871,6 +888,7 @@ static void rebuild_sched_domains_locked(void)
+  * Changes to the reserved CPUs are not allowed if any of CPUs changing
+  * state are in any of the child cpusets of the parent except the requesting
+  * child.
+  *
+- * If the sched.partition flag changes, either the delmask (0=>1) or the
+- * addmask (1=>0) will be NULL.
++ * If the sched.partition flag changes, either the oldmask (0=>1) or the
++ * newmask (1=>0) will be NULL.
+  *
+  * Called with cpuset_mutex held.
+  */
+ static int update_reserved_cpumask(struct cpuset *cpuset,
+-	struct cpumask *delmask, struct cpumask *addmask)
++	struct cpumask *oldmask, struct cpumask *newmask)
+ {
+ 	int retval;
++	int adding, deleting;
++	cpumask_var_t addmask, delmask;
+ 	struct cpuset *parent = parent_cs(cpuset);
+ 	struct cpuset *sibling;
+ 	struct cgroup_subsys_state *pos_css;
+@@ -1011,15 +1016,15 @@ static int update_reserved_cpumask(struct cpuset *cpuset,
+ 	 * The new cpumask, if present, must not be empty.
+ 	 */
+ 	if (!is_partition_root(parent) ||
+-	   (addmask && cpumask_empty(addmask)))
++	   (newmask && cpumask_empty(newmask)))
+ 		return -EINVAL;
  
- 	/* Generate domain masks and attrs */
- 	ndoms = generate_sched_domains(&doms, &attr);
-+	debug_print_domains(doms, ndoms);
+ 	/*
+-	 * The delmask, if present, must be a subset of parent's reserved
++	 * The oldmask, if present, must be a subset of parent's reserved
+ 	 * CPUs.
+ 	 */
+-	if (delmask && !cpumask_empty(delmask) && (!parent->nr_reserved ||
+-		       !cpumask_subset(delmask, parent->reserved_cpus))) {
++	if (oldmask && !cpumask_empty(oldmask) && (!parent->nr_reserved ||
++		       !cpumask_subset(oldmask, parent->reserved_cpus))) {
+ 		WARN_ON_ONCE(1);
+ 		return -EINVAL;
+ 	}
+@@ -1028,9 +1033,16 @@ static int update_reserved_cpumask(struct cpuset *cpuset,
+ 	 * A sched.partition state change is not allowed if there are
+ 	 * online children.
+ 	 */
+-	if (css_has_online_children(&cpuset->css))
++	if ((!oldmask || !newmask) && css_has_online_children(&cpuset->css))
+ 		return -EBUSY;
  
- 	/* Have scheduler rebuild the domains */
- 	partition_sched_domains(ndoms, doms, attr);
++	if (!zalloc_cpumask_var(&addmask, GFP_KERNEL))
++		return -ENOMEM;
++	if (!zalloc_cpumask_var(&delmask, GFP_KERNEL)) {
++		free_cpumask_var(addmask);
++		return -ENOMEM;
++	}
++
+ 	if (!old_count) {
+ 		if (!zalloc_cpumask_var(&parent->reserved_cpus, GFP_KERNEL)) {
+ 			retval = -ENOMEM;
+@@ -1040,12 +1052,29 @@ static int update_reserved_cpumask(struct cpuset *cpuset,
+ 	}
+ 
+ 	retval = -EBUSY;
++	adding = deleting = false;
++	/*
++	 * addmask = newmask & ~oldmask
++	 * delmask = oldmask & ~newmask
++	 */
++	if (oldmask && newmask) {
++		adding   = cpumask_andnot(addmask, newmask, oldmask);
++		deleting = cpumask_andnot(delmask, oldmask, newmask);
++		if (!adding && !deleting)
++			goto out_ok;
++	} else if (newmask) {
++		adding = true;
++		cpumask_copy(addmask, newmask);
++	} else if (oldmask) {
++		deleting = true;
++		cpumask_copy(delmask, oldmask);
++	}
+ 
+ 	/*
+ 	 * The cpus to be added must be a proper subset of the parent's
+ 	 * effective_cpus mask but not in the reserved_cpus mask.
+ 	 */
+-	if (addmask) {
++	if (adding) {
+ 		if (!cpumask_subset(addmask, parent->effective_cpus) ||
+ 		     cpumask_equal(addmask, parent->effective_cpus))
+ 			goto out;
+@@ -1055,6 +1084,15 @@ static int update_reserved_cpumask(struct cpuset *cpuset,
+ 	}
+ 
+ 	/*
++	 * For cpu changes in a partition root, cpu deletion isn't allowed
++	 * if any of the deleted CPUs is in reserved_cpus (distributed
++	 * to child partition roots).
++	 */
++	if (oldmask && newmask && cpuset->nr_reserved && deleting &&
++	    cpumask_intersects(delmask, cpuset->reserved_cpus))
++		goto out;
++
++	/*
+ 	 * Check if any CPUs in addmask or delmask are in the effective_cpus
+ 	 * of a sibling cpuset. The implied cpu_exclusive of a partition
+ 	 * root will ensure there are no overlap in cpus_allowed.
+@@ -1063,10 +1101,10 @@ static int update_reserved_cpumask(struct cpuset *cpuset,
+ 	cpuset_for_each_child(sibling, pos_css, parent) {
+ 		if ((sibling == cpuset) || !(sibling->css.flags & CSS_ONLINE))
+ 			continue;
+-		if (addmask &&
++		if (adding &&
+ 		    cpumask_intersects(sibling->effective_cpus, addmask))
+ 			goto out_unlock;
+-		if (delmask &&
++		if (deleting &&
+ 		    cpumask_intersects(sibling->effective_cpus, delmask))
+ 			goto out_unlock;
+ 	}
+@@ -1078,13 +1116,13 @@ static int update_reserved_cpumask(struct cpuset *cpuset,
+ 	 * and newly deleted ones will be added back if they are online.
+ 	 */
+ 	spin_lock_irq(&callback_lock);
+-	if (addmask) {
++	if (adding) {
+ 		cpumask_or(parent->reserved_cpus,
+ 			   parent->reserved_cpus, addmask);
+ 		cpumask_andnot(parent->effective_cpus,
+ 			       parent->effective_cpus, addmask);
+ 	}
+-	if (delmask) {
++	if (deleting) {
+ 		cpumask_andnot(parent->reserved_cpus,
+ 			       parent->reserved_cpus, delmask);
+ 		cpumask_or(parent->effective_cpus,
+@@ -1093,8 +1131,12 @@ static int update_reserved_cpumask(struct cpuset *cpuset,
+ 
+ 	parent->nr_reserved = cpumask_weight(parent->reserved_cpus);
+ 	spin_unlock_irq(&callback_lock);
++
++out_ok:
+ 	retval = 0;
+ out:
++	free_cpumask_var(addmask);
++	free_cpumask_var(delmask);
+ 	if (old_count && !parent->nr_reserved)
+ 		free_cpumask_var(parent->reserved_cpus);
+ 
+@@ -1146,8 +1188,12 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (retval < 0)
+ 		return retval;
+ 
+-	if (is_partition_root(cs))
+-		return -EBUSY;
++	if (is_partition_root(cs)) {
++		retval = update_reserved_cpumask(cs, cs->cpus_allowed,
++						 trialcs->cpus_allowed);
++		if (retval < 0)
++			return retval;
++	}
+ 
+ 	spin_lock_irq(&callback_lock);
+ 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
 -- 
 1.8.3.1
 
