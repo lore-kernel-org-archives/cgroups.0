@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v11 8/9] cpuset: Don't rebuild sched domains if cpu changes in non-partition root
-Date: Sun, 24 Jun 2018 15:30:39 +0800
-Message-ID: <1529825440-9574-9-git-send-email-longman@redhat.com>
+Subject: [PATCH v11 9/9] cpuset: Allow reporting of sched domain generation info
+Date: Sun, 24 Jun 2018 15:30:40 +0800
+Message-ID: <1529825440-9574-10-git-send-email-longman@redhat.com>
 References: <1529825440-9574-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1529825440-9574-1-git-send-email-longman@redhat.com>
@@ -13,46 +13,56 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Waiman Long <longman@redhat.com>
 
-With the cpuset v1, any changes to the list of allowable CPUs in a cpuset
-may cause changes in the sched domain configuration depending on the
-load balancing states and the cpu lists of its parent and its children.
+This patch enables us to report sched domain generation information.
 
-With cpuset v2 (on default hierarchy), there are more restrictions
-on how the load balancing state of a cpuset can change. As a result,
-only changes made in a partition root will cause possible changes to
-the corresponding sched domain. CPU changes to any of the non-partition
-root cpusets will not cause changes in the sched domain configuration.
-As a result, we don't need to call rebuild_sched_domains_locked()
-for changes in a non-partition root cpuset saving precious cpu cycles.
+If DYNAMIC_DEBUG is enabled, issuing the following command
+
+  echo "file cpuset.c +p" > /sys/kernel/debug/dynamic_debug/control
+
+and setting loglevel to 8 will allow the kernel to show what scheduling
+domain changes are being made.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ kernel/cgroup/cpuset.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 9097e9d..07a5575 100644
+index 07a5575..62b7e61 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -986,11 +986,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
- 		update_tasks_cpumask(cp);
+@@ -836,6 +836,23 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	return ndoms;
+ }
  
- 		/*
--		 * If the effective cpumask of any non-empty cpuset is changed,
--		 * we need to rebuild sched domains.
-+		 * On legacy hierarchy, if the effective cpumask of any non-
-+		 * empty cpuset is changed, we need to rebuild sched domains.
-+		 * On default hierarchy, the cpuset needs to be a partition
-+		 * root as well.
- 		 */
- 		if (!cpumask_empty(cp->cpus_allowed) &&
--		    is_sched_load_balance(cp))
-+		    is_sched_load_balance(cp) &&
-+		   (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
-+		    is_partition_root(cp)))
- 			need_rebuild_sched_domains = true;
++#ifdef CONFIG_DEBUG_KERNEL
++static inline void debug_print_domains(cpumask_var_t *doms, int ndoms)
++{
++	int i;
++	char buf[200];
++	char *ptr, *end = buf + sizeof(buf) - 1;
++
++	for (i = 0, ptr = buf, *end = '\0'; i < ndoms; i++)
++		ptr += snprintf(ptr, end - ptr, "dom%d=%*pbl ", i,
++				cpumask_pr_args(doms[i]));
++
++	pr_debug("Generated %d domains: %s\n", ndoms, buf);
++}
++#else
++static inline void debug_print_domains(cpumask_var_t *doms, int ndoms) { }
++#endif
++
+ /*
+  * Rebuild scheduler domains.
+  *
+@@ -871,6 +888,7 @@ static void rebuild_sched_domains_locked(void)
  
- 		rcu_read_lock();
+ 	/* Generate domain masks and attrs */
+ 	ndoms = generate_sched_domains(&doms, &attr);
++	debug_print_domains(doms, ndoms);
+ 
+ 	/* Have scheduler rebuild the domains */
+ 	partition_sched_domains(ndoms, doms, attr);
 -- 
 1.8.3.1
 
