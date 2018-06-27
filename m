@@ -1,59 +1,71 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/2] fs: fsnotify: account fsnotify metadata to kmemcg
-Date: Wed, 27 Jun 2018 09:31:45 +0200
-Message-ID: <20180627073145.yyviq53ntkdkfv3w@quack2.suse.cz>
-References: <20180625230659.139822-1-shakeelb@google.com>
- <20180625230659.139822-2-shakeelb@google.com>
- <CAOQ4uxiV75+X3dMLS93iXqwmSU6eKPOUocdkXiR7MQZhEjotQg@mail.gmail.com>
- <CALvZod5ARMZL+eD8-mrxeBvxJcuVPXaCwWEgUyQw85xXWxHauA@mail.gmail.com>
- <20180626185724.GA3958@cmpxchg.org>
- <CALvZod5aEHcLs3j+AiuC1FppD-AakWhdZdQhzmTSSrktn2Gu0Q@mail.gmail.com>
-Mime-Version: 1.0
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v8 0/2] Directed kmem charging
+Date: Wed, 27 Jun 2018 12:12:48 -0700
+Message-ID: <20180627191250.209150-1-shakeelb@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CALvZod5aEHcLs3j+AiuC1FppD-AakWhdZdQhzmTSSrktn2Gu0Q@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=TlrWWiQPCjtC68tVmQ7b4F+X4V3UVnh2azcLgqQiihM=;
+        b=Bq/hMMEGB/x9xox1vKQmpA8TnWjUQ3cVxD760QU68bDDWQAVR6wgBN6aHeWoKQDwWf
+         x3SiCzX21Hc7O5Po2zJoBeYAKx37/PB356xhoZrI+XW+nlrTfa/oSjmijvqwXuFbdM7p
+         UU8MCvzxc55L1dlVyLFs81xckxYX0Kzr1iV9OVRNvhez1xceNcKKjNIPs5Dv3potbtfl
+         yzvtwCvHZxxtgm0zqmLOVbBKcl9sm5LUe0UqATfRjGeh5E3FwJk/bVq1rVU9sJ1Q/WOD
+         735uIGBvJkJA7woiZS0AVa+A0UXnWp+9RPEA9CyrVEIkAjhrk5LsJrUHA9X0pzN+/WMI
+         3a8A==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Amir Goldstein <amir73il@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jan Kara <jack@suse.cz>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Amir Goldstein <amir73il@gmail.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>
 
-On Tue 26-06-18 12:07:57, Shakeel Butt wrote:
-> On Tue, Jun 26, 2018 at 11:55 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> >
-> > On Tue, Jun 26, 2018 at 11:00:53AM -0700, Shakeel Butt wrote:
-> > > On Mon, Jun 25, 2018 at 10:49 PM Amir Goldstein <amir73il@gmail.com> wrote:
-> > > >
-> > > ...
-> > > >
-> > > > The verb 'unuse' takes an argument memcg and 'uses' it - too weird.
-> > > > You can use 'override'/'revert' verbs like override_creds or just call
-> > > > memalloc_use_memcg(old_memcg) since there is no reference taken
-> > > > anyway in use_memcg and no reference released in unuse_memcg.
-> > > >
-> > > > Otherwise looks good to me.
-> > > >
-> > >
-> > > Thanks for your feedback. Just using memalloc_use_memcg(old_memcg) and
-> > > ignoring the return seems more simple. I will wait for feedback from
-> > > other before changing anything.
-> >
-> > We're not nesting calls to memalloc_use_memcg(), right? So we don't
-> > have to return old_memcg and don't have to pass anything to unuse, it
-> > can always set current->active_memcg to NULL.
-> 
-> For buffer_head, the allocation is done with GFP_NOFS. So, I think
-> there is no chance of nesting. The fsnotify uses GFP_KERNEL but based
-> on my limited understanding of fsnotify, there should not be any
-> nesting i.e. the allocation triggering reclaim which trigger fsnotify
-> events. Though I would like Amir or Jan to confirm there is no nesting
-> possible.
+The Linux kernel's memory cgroup allows limiting the memory usage of
+the jobs running on the system to provide isolation between the jobs.
+All the kernel memory allocated in the context of the job and marked
+with __GFP_ACCOUNT will also be included in the memory usage and be
+limited by the job's limit.
 
-You are correct. Fsnotify events are generated only as a result of some
-syscall, not due to reclaim or stuff like that.
+The kernel memory can only be charged to the memcg of the process in
+whose context kernel memory was allocated. However there are cases where
+the allocated kernel memory should be charged to the memcg different
+from the current processes's memcg. This patch series contains two such
+concrete use-cases i.e. fsnotify and buffer_head.
 
-								Honza
+The fsnotify event objects can consume a lot of system memory for large
+or unlimited queues if there is either no or slow listener. The events
+are allocated in the context of the event producer. However they should
+be charged to the event consumer. Similarly the buffer_head objects can
+be allocated in a memcg different from the memcg of the page for which
+buffer_head objects are being allocated.
+
+To solve this issue, this patch series introduces mechanism to charge
+kernel memory to a given memcg. In case of fsnotify events, the memcg of
+the consumer can be used for charging and for buffer_head, the memcg of
+the page can be charged. For directed charging, the caller can use the
+scope API memalloc_[un]use_memcg() to specify the memcg to charge for
+all the __GFP_ACCOUNT allocations within the scope.
+
+Shakeel Butt (2):
+  fs: fsnotify: account fsnotify metadata to kmemcg
+  fs, mm: account buffer_head to kmemcg
+
+ fs/buffer.c                          | 15 ++++++-
+ fs/notify/dnotify/dnotify.c          |  5 ++-
+ fs/notify/fanotify/fanotify.c        | 17 ++++++--
+ fs/notify/fanotify/fanotify_user.c   |  5 ++-
+ fs/notify/group.c                    |  4 ++
+ fs/notify/inotify/inotify_fsnotify.c | 15 ++++++-
+ fs/notify/inotify/inotify_user.c     |  5 ++-
+ include/linux/fsnotify_backend.h     | 12 ++++--
+ include/linux/memcontrol.h           | 14 +++++++
+ include/linux/sched.h                |  3 ++
+ include/linux/sched/mm.h             | 41 +++++++++++++++++++
+ kernel/fork.c                        |  3 ++
+ mm/memcontrol.c                      | 60 ++++++++++++++++++++++++++--
+ 13 files changed, 182 insertions(+), 17 deletions(-)
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.18.0.rc2.346.g013aa6912e-goog
+
