@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Jan Kara <jack@suse.cz>
 Subject: Re: [PATCH 1/2] fs: fsnotify: account fsnotify metadata to kmemcg
-Date: Fri, 29 Jun 2018 11:52:00 +0200
-Message-ID: <20180629095200.GF13860@dhcp22.suse.cz>
+Date: Fri, 29 Jun 2018 19:44:15 +0200
+Message-ID: <20180629174415.edjickzrvascp43d@quack2.suse.cz>
 References: <20180627191250.209150-1-shakeelb@google.com>
  <20180627191250.209150-2-shakeelb@google.com>
  <20180628100253.jscxkw2d6vfhnbo5@quack2.suse.cz>
@@ -15,7 +15,7 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Shakeel Butt <shakeelb@google.com>
-Cc: Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Amir Goldstein <amir73il@gmail.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
+Cc: Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Amir Goldstein <amir73il@gmail.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
 On Thu 28-06-18 12:21:26, Shakeel Butt wrote:
 > On Thu, Jun 28, 2018 at 12:03 PM Jan Kara <jack@suse.cz> wrote:
@@ -68,11 +68,12 @@ On Thu 28-06-18 12:21:26, Shakeel Butt wrote:
 > 
 > Hi Jan, IMHO having a visible __GFP_ACCOUNT along with
 > memalloc_use_memcg() makes the code more explicit and readable that we
-> want to targeted/remote memcg charging.
+> want to targeted/remote memcg charging. However if you think
+> otherwise, I will replace __GFP_ACCOUNT with SLAB_ACCOUNT.
 
-Agreed. If you had an implicit SLAB_ACCOUNT then you could get
-inconsistencies when some allocations would get charged to the current
-task while others would not.
+OK, fair enough.
+
+								Honza
 -- 
-Michal Hocko
-SUSE Labs
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
