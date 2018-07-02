@@ -1,147 +1,80 @@
-From: Yafang Shao <laoar.shao@gmail.com>
-Subject: Re: [PATCH net-next] net, mm: avoid unnecessary memcg charge skmem
-Date: Sat, 30 Jun 2018 18:53:36 +0800
-Message-ID: <CALOAHbAXXB=WfG_ibcdbuNPRu8KDUPWurgaEU2yuBBSh386V1w@mail.gmail.com>
-References: <1530353397-12948-1-git-send-email-laoar.shao@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v10 2/9] cpuset: Add new v2 cpuset.sched.domain_root flag
+Date: Mon, 2 Jul 2018 09:32:25 -0700
+Message-ID: <20180702163225.GH533219@devbig577.frc2.facebook.com>
+References: <1529295249-5207-1-git-send-email-longman@redhat.com>
+ <1529295249-5207-3-git-send-email-longman@redhat.com>
+ <20180620142735.GM2494@hirez.programming.kicks-ass.net>
+ <b44b0748-9fec-6bb0-7665-435487e5d8b3@redhat.com>
+ <20180621092013.GU2494@hirez.programming.kicks-ass.net>
+ <1eb82b46-aa97-2ada-5196-5d7fc1cda87d@redhat.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=B11nRb1M9ylxyDLHy7hHr/o2CQ0FpLQ5xZPddyL+xJI=;
-        b=PzEBfRWgRvUXpvE702NWEr7P+KLLvxN5lXTZYnq+K4GKy6TvkfemVU8aOHzS3COhB5
-         BBSNef59Cp1r31G1MpJP943sAK4dA8ymWfhjdhf/O3lX27aMdv3/cUn6i211wdNn6LC/
-         8viaE58eyv22CUIowXwn4XHJnIi9r9+Y3uGA6+AjJkU0YRLjEiPSv2+d8SbsKSMNqn4P
-         4F+1ef6S/vEhrGAkC1N6JpBtXVAgXfo+wNly0TXo+sz6w/NQD4j1HmMWDypR3MQtlNR9
-         KhT63RbABfJhMYXWCD/tHD7EzdQ2cdi5avl2cFLSqMwlzaPXo8COEyydzWHEPeZ63+VV
-         5kmw==
-In-Reply-To: <1530353397-12948-1-git-send-email-laoar.shao@gmail.com>
-Sender: netdev-owner@vger.kernel.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=aP337yMUwjNxwESmqz63nB2IfmzYkv0fwTzPmlQUTIQ=;
+        b=drGLuWhUq4aurFCSnVKzj98WS3+4Y6rlKp6TuzYIjbcp08d/nl/udzQ0zkONrVT2ZE
+         yklCdGVYF6ccURz1O/qaaCDVlgMV6T6r8SLOlCmfEfMlusdsbl+A9zFiu3b6rZ6WT4oW
+         M52CJO/0714RDtezb9EIYc85awFBDikA7DYvADC7T8a2KqS1Yoc3mHarv213DeVSUdsw
+         7XNIuzqIM/ohPE80sne39nTIdnqipFchy1v95A+TN9yZnMpOiEiuzCRQOBKdpamhdhei
+         3hEEUGxdn/w76+bifw2/l0lEn6xJ8Nb2mYsAP+hUbc+pphcJW+fzIl2HsDhCUi/2KWd/
+         KcTQ==
+Content-Disposition: inline
+In-Reply-To: <1eb82b46-aa97-2ada-5196-5d7fc1cda87d@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Miller <davem@davemloft.net>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, netdev <netdev@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Yafang Shao <laoar.shao@gmail.com>
+To: Waiman Long <longman@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Sat, Jun 30, 2018 at 6:09 PM, Yafang Shao <laoar.shao@gmail.com> wrote:
-> In __sk_mem_raise_allocated(), if mem_cgroup_charge_skmem() return
-> false, mem_cgroup_uncharge_skmem will be executed.
->
-> The logic is as bellow,
-> __sk_mem_raise_allocated
->         ret = mem_cgroup_uncharge_skmem
->                 try_charge(memcg, gfp_mask|__GFP_NOFAIL, nr_pages);
->                 return false
->         if (!ret)
->                 mem_cgroup_uncharge_skmem(sk->sk_memcg, amt);
->
-> So it is unnecessary to charge if it is not forced.
->
-> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> ---
->  include/linux/memcontrol.h |  3 ++-
->  mm/memcontrol.c            | 12 +++++++++---
->  net/core/sock.c            |  5 +++--
->  net/ipv4/tcp_output.c      |  2 +-
->  4 files changed, 15 insertions(+), 7 deletions(-)
->
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 6c6fb11..56c07c9 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -1160,7 +1160,8 @@ static inline void mem_cgroup_wb_stats(struct bdi_writeback *wb,
->  #endif /* CONFIG_CGROUP_WRITEBACK */
->
->  struct sock;
-> -bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
-> +bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages,
-> +                            bool force);
->  void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
->  #ifdef CONFIG_MEMCG
->  extern struct static_key_false memcg_sockets_enabled_key;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e6f0d5e..1122be2 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5929,7 +5929,8 @@ void mem_cgroup_sk_free(struct sock *sk)
->   * Charges @nr_pages to @memcg. Returns %true if the charge fit within
->   * @memcg's configured limit, %false if the charge had to be forced.
->   */
-> -bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
-> +bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages,
-> +                            bool force)
->  {
->         gfp_t gfp_mask = GFP_KERNEL;
->
-> @@ -5940,7 +5941,10 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
->                         memcg->tcpmem_pressure = 0;
->                         return true;
->                 }
-> -               page_counter_charge(&memcg->tcpmem, nr_pages);
-> +
-> +               if (force)
-> +                       page_counter_charge(&memcg->tcpmem, nr_pages);
-> +
->                 memcg->tcpmem_pressure = 1;
->                 return false;
->         }
-> @@ -5954,7 +5958,9 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
->         if (try_charge(memcg, gfp_mask, nr_pages) == 0)
->                 return true;
->
-> -       try_charge(memcg, gfp_mask|__GFP_NOFAIL, nr_pages);
-> +       if (force)
-> +               try_charge(memcg, gfp_mask|__GFP_NOFAIL, nr_pages);
-> +
->         return false;
->  }
->
-> diff --git a/net/core/sock.c b/net/core/sock.c
-> index bcc4182..148a840 100644
-> --- a/net/core/sock.c
-> +++ b/net/core/sock.c
-> @@ -2401,9 +2401,10 @@ int __sk_mem_raise_allocated(struct sock *sk, int size, int amt, int kind)
->  {
->         struct proto *prot = sk->sk_prot;
->         long allocated = sk_memory_allocated_add(sk, amt);
-> +       bool charged = false;
->
->         if (mem_cgroup_sockets_enabled && sk->sk_memcg &&
-> -           !mem_cgroup_charge_skmem(sk->sk_memcg, amt))
-> +           !(charged = mem_cgroup_charge_skmem(sk->sk_memcg, amt, false)))
->                 goto suppress_allocation;
->
->         /* Under limit. */
-> @@ -2465,7 +2466,7 @@ int __sk_mem_raise_allocated(struct sock *sk, int size, int amt, int kind)
->
->         sk_memory_allocated_sub(sk, amt);
->
-> -       if (mem_cgroup_sockets_enabled && sk->sk_memcg)
-> +       if (mem_cgroup_sockets_enabled && sk->sk_memcg && charged)
->                 mem_cgroup_uncharge_skmem(sk->sk_memcg, amt);
->
->         return 0;
-> diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-> index f8f6129..9b741d4 100644
-> --- a/net/ipv4/tcp_output.c
-> +++ b/net/ipv4/tcp_output.c
-> @@ -3014,7 +3014,7 @@ void sk_forced_mem_schedule(struct sock *sk, int size)
->         sk_memory_allocated_add(sk, amt);
->
->         if (mem_cgroup_sockets_enabled && sk->sk_memcg)
-> -               mem_cgroup_charge_skmem(sk->sk_memcg, amt);
-> +               mem_cgroup_charge_skmem(sk->sk_memcg, amt, true);
->  }
->
->  /* Send a FIN. The caller locks the socket for us.
-> --
-> 1.8.3.1
->
+Hello,
 
-Pls. ignore this patch.
+On Fri, Jun 22, 2018 at 11:00:03AM +0800, Waiman Long wrote:
+> On 06/21/2018 05:20 PM, Peter Zijlstra wrote:
+> >> As for the inconsistency between the real root and the container root,
+> >> this is true for almost all the controllers. So it is a generic problem.
+> >> One possible solution is to create a kind a pseudo root cgroup for the
+> >> container that looks and feels like a real root. But is there really a
+> >> need to do that?
+> > I don't really know. I thought the idea was to make containers
+> > indistinguishable from a real system. Now I know we're really rather far
+> > away from that in reality, and I really have no clue how important all
+> > that is.
+> 
+> That will certainly be the ideal.
 
-Sorry about the noise.
+Sure, ideal in theoretical sense; however, the practical cost-benefit
+ratio of trying to make containers indistinguishible from system
+doesn't seem enough to justify the effort.  Not yet anyway.  It'd be
+nice to not paint ourselves into a corner where we can't get the
+equivalence without major interface changes later but I think that's
+about the extent we should go for now.
 
-Thanks
-Yafang
+> > It all depends on how exactly this works; is it like I assumed, that
+> > this file is owned by the parent instead of the current directory? And
+> > that if you namespace this, you have an effective read-only file?
+> 
+> Yes, that is right.
+> 
+> > Then fixing the inconsistency is trivial; simply provide a read-only
+> > file for the actual root cgroup too.
+> >
+> > And if the solution is trivial, I don't see a good reason not to do it.
+> 
+> Do you mean providing a flag like READONLY_AT_ROOT so that it will be
+> read-only at the real root? That is an cgroup architectural decision
+> that needs input from Tejun. Anyway, this issue is not specific to this
+> patchset and I would like to break it out as a separate discussion
+> independent of this patchset.
+
+Yeah, it's a larger problem than cpuset and different controllers
+trying it in different ways isn't a good idea anyway.  Let's shelve
+this topic for now.
+
+Thanks.
+
+-- 
+tejun
