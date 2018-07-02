@@ -1,78 +1,58 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v10 2/9] cpuset: Add new v2 cpuset.sched.domain_root flag
-Date: Mon, 2 Jul 2018 09:32:25 -0700
-Message-ID: <20180702163225.GH533219@devbig577.frc2.facebook.com>
-References: <1529295249-5207-1-git-send-email-longman@redhat.com>
- <1529295249-5207-3-git-send-email-longman@redhat.com>
- <20180620142735.GM2494@hirez.programming.kicks-ass.net>
- <b44b0748-9fec-6bb0-7665-435487e5d8b3@redhat.com>
- <20180621092013.GU2494@hirez.programming.kicks-ass.net>
- <1eb82b46-aa97-2ada-5196-5d7fc1cda87d@redhat.com>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Mon, 2 Jul 2018 09:53:22 -0700
+Message-ID: <20180702165322.GI533219@devbig577.frc2.facebook.com>
+References: <1529825440-9574-1-git-send-email-longman@redhat.com>
+ <1529825440-9574-8-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=aP337yMUwjNxwESmqz63nB2IfmzYkv0fwTzPmlQUTIQ=;
-        b=drGLuWhUq4aurFCSnVKzj98WS3+4Y6rlKp6TuzYIjbcp08d/nl/udzQ0zkONrVT2ZE
-         yklCdGVYF6ccURz1O/qaaCDVlgMV6T6r8SLOlCmfEfMlusdsbl+A9zFiu3b6rZ6WT4oW
-         M52CJO/0714RDtezb9EIYc85awFBDikA7DYvADC7T8a2KqS1Yoc3mHarv213DeVSUdsw
-         7XNIuzqIM/ohPE80sne39nTIdnqipFchy1v95A+TN9yZnMpOiEiuzCRQOBKdpamhdhei
-         3hEEUGxdn/w76+bifw2/l0lEn6xJ8Nb2mYsAP+hUbc+pphcJW+fzIl2HsDhCUi/2KWd/
-         KcTQ==
+        bh=0Jg384EXlL606hr7KDYmXTRZefett+h7ct6FErCR4KM=;
+        b=vTF0KCkjDxod1McirjGM++UnOdf+UcWoBW/8oUucmewwqecKbdt7WSYmldW4vaG5oi
+         6hLyF3FnVo9BLcbHnRpQw5GYkThh6rbYlo9hA6KhL9F1XQ0Qw/eMecwBZiEni1nigOkC
+         2ug5+0NodhNdWJ2y6/0RigvZIqHBEl5AhYTl2XIpwZtapo1w4mCM3QxJT1BwCa4DMhhd
+         Ek2BNz+thz+9AR8ym7mH1felvuD/hUd4qpsgg80RtDQr+Vz/pfQ38Q4JQMeY7OeLghxx
+         thKh03zSSeoiTvHOCMmlUe5GxUjVOIccEIS/nKjDkwME3uIupnfOjAtrORkpMFyYsi4v
+         L02w==
 Content-Disposition: inline
-In-Reply-To: <1eb82b46-aa97-2ada-5196-5d7fc1cda87d@redhat.com>
+In-Reply-To: <1529825440-9574-8-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Waiman Long <longman@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-Hello,
+Hello, Waiman.
 
-On Fri, Jun 22, 2018 at 11:00:03AM +0800, Waiman Long wrote:
-> On 06/21/2018 05:20 PM, Peter Zijlstra wrote:
-> >> As for the inconsistency between the real root and the container root,
-> >> this is true for almost all the controllers. So it is a generic problem.
-> >> One possible solution is to create a kind a pseudo root cgroup for the
-> >> container that looks and feels like a real root. But is there really a
-> >> need to do that?
-> > I don't really know. I thought the idea was to make containers
-> > indistinguishable from a real system. Now I know we're really rather far
-> > away from that in reality, and I really have no clue how important all
-> > that is.
-> 
-> That will certainly be the ideal.
+On Sun, Jun 24, 2018 at 03:30:38PM +0800, Waiman Long wrote:
+> Because of the fact that setting the "cpuset.sched.partition" in
+> a direct child of root can remove CPUs from the root's effective CPU
+> list, it makes sense to know what CPUs are left in the root cgroup for
+> scheduling purpose. So the "cpuset.cpus.effective" control file is now
+> exposed in the v2 cgroup root.
 
-Sure, ideal in theoretical sense; however, the practical cost-benefit
-ratio of trying to make containers indistinguishible from system
-doesn't seem enough to justify the effort.  Not yet anyway.  It'd be
-nice to not paint ourselves into a corner where we can't get the
-equivalence without major interface changes later but I think that's
-about the extent we should go for now.
+So, effective changing when enabling partition on a child feels wrong
+to me.  It's supposed to contain what's actually allowed to the cgroup
+from its parent and that shouldn't change regardless of how those
+resources are used.  It's still given to the cgroup from its parent.
 
-> > It all depends on how exactly this works; is it like I assumed, that
-> > this file is owned by the parent instead of the current directory? And
-> > that if you namespace this, you have an effective read-only file?
-> 
-> Yes, that is right.
-> 
-> > Then fixing the inconsistency is trivial; simply provide a read-only
-> > file for the actual root cgroup too.
-> >
-> > And if the solution is trivial, I don't see a good reason not to do it.
-> 
-> Do you mean providing a flag like READONLY_AT_ROOT so that it will be
-> read-only at the real root? That is an cgroup architectural decision
-> that needs input from Tejun. Anyway, this issue is not specific to this
-> patchset and I would like to break it out as a separate discussion
-> independent of this patchset.
+It's a bit different because the way partition behaves is different
+from other resource konbs in that it locks away those cpus so that
+they can't be taken back.
 
-Yeah, it's a larger problem than cpuset and different controllers
-trying it in different ways isn't a good idea anyway.  Let's shelve
-this topic for now.
+What do people think about restricting partition to the first level
+children for now at least?  That way we aren't locked into the special
+semantics and we can figure out how to this down the hierarchy later.
+Given that we ignore the regular cpuset settings when the set goes
+empty (which also is a special condition which only exists for cpuset)
+and inherits the parent's, I think the consistent thing to do is doing
+the same for partition - if it can't be satisfied, ignore it, but
+maybe there is a better way.
 
 Thanks.
 
