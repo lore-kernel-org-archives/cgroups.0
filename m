@@ -1,42 +1,279 @@
-From: Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: [PATCH 03/12] cgroup: use for_each_if
-Date: Mon,  9 Jul 2018 10:36:41 +0200
-Message-ID: <20180709083650.23549-3-daniel.vetter@ffwll.ch>
-References: <20180709083650.23549-1-daniel.vetter@ffwll.ch>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: [PATCH] cgroup/tracing: Move taking of spin lock out of trace event
+ handlers
+Date: Mon, 9 Jul 2018 17:48:54 -0400
+Message-ID: <20180709174854.74a30b57@gandalf.local.home>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20180709083650.23549-1-daniel.vetter@ffwll.ch>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: LKML <linux-kernel@vger.kernel.org>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>, Intel Graphics Development <intel-gfx@lists.freedesktop.org>, cgroups@vger.kernel.org, DRI Development <dri-devel@lists.freedesktop.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-QXZvaWRzIHRoZSBuZWVkIHRvIGludmVydCB0aGUgY29uZGl0aW9uIGluc3RlYWQgb2YgdGhlIG9w
-ZW4tY29kZWQKdmVyc2lvbi4KClNpZ25lZC1vZmYtYnk6IERhbmllbCBWZXR0ZXIgPGRhbmllbC52
-ZXR0ZXJAaW50ZWwuY29tPgpDYzogVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPgpDYzogTGkgWmVm
-YW4gPGxpemVmYW5AaHVhd2VpLmNvbT4KQ2M6IEpvaGFubmVzIFdlaW5lciA8aGFubmVzQGNtcHhj
-aGcub3JnPgpDYzogY2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmcKLS0tCiBpbmNsdWRlL2xpbnV4L2Nn
-cm91cC5oIHwgNCArLS0tCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDMgZGVsZXRp
-b25zKC0pCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9jZ3JvdXAuaCBiL2luY2x1ZGUvbGlu
-dXgvY2dyb3VwLmgKaW5kZXggYzlmZGY2ZjU3OTEzLi42NjZjNjIwMGQ2MWQgMTAwNjQ0Ci0tLSBh
-L2luY2x1ZGUvbGludXgvY2dyb3VwLmgKKysrIGIvaW5jbHVkZS9saW51eC9jZ3JvdXAuaApAQCAt
-Mjg3LDkgKzI4Nyw3IEBAIHZvaWQgY3NzX3Rhc2tfaXRlcl9lbmQoc3RydWN0IGNzc190YXNrX2l0
-ZXIgKml0KTsKIAlmb3IgKChsZWFkZXIpID0gY2dyb3VwX3Rhc2tzZXRfZmlyc3QoKHRzZXQpLCAm
-KGRzdF9jc3MpKTsJXAogCSAgICAgKGxlYWRlcik7CQkJCQkJCVwKIAkgICAgIChsZWFkZXIpID0g
-Y2dyb3VwX3Rhc2tzZXRfbmV4dCgodHNldCksICYoZHN0X2NzcykpKQlcCi0JCWlmICgobGVhZGVy
-KSAhPSAobGVhZGVyKS0+Z3JvdXBfbGVhZGVyKQkJCVwKLQkJCTsJCQkJCQlcCi0JCWVsc2UKKwkJ
-Zm9yX2VhY2hfaWYgKChsZWFkZXIpID09IChsZWFkZXIpLT5ncm91cF9sZWFkZXIpCiAKIC8qCiAg
-KiBJbmxpbmUgZnVuY3Rpb25zLgotLSAKMi4xOC4wCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBs
-aXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1h
-bi9saXN0aW5mby9kcmktZGV2ZWwK
+From: Steven Rostedt (VMware) <rostedt@goodmis.org>
+
+It is unwise to take spin locks from the handlers of trace events.
+Mainly, because they can introduce lockups, because it introduces locks
+in places that are normally not tested. Worse yet, because trace events
+are tucked away in the include/trace/events/ directory, locks that are
+taken there are forgotten about.
+
+As a general rule, I tell people never to take any locks in a trace
+event handler.
+
+Several cgroup trace event handlers call cgroup_path() which eventually
+takes the kernfs_rename_lock spinlock. This injects the spinlock in the
+code without people realizing it. It also can cause issues for the
+PREEMPT_RT patch, as the spinlock becomes a mutex, and the trace event
+handlers are called with preemption disabled.
+
+By moving the calculation of the cgroup_path() out of the trace event
+handlers and into a macro (surrounded by a
+trace_cgroup_##type##_enabled()), then we could place the cgroup_path
+into a string, and pass that to the trace event. Not only does this
+remove the taking of the spinlock out of the trace event handler, but
+it also means that the cgroup_path() only needs to be called once (it
+is currently called twice, once to get the length to reserver the
+buffer for, and once again to get the path itself. Now it only needs to
+be done once.
+
+Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
+---
+Index: linux-trace.git/include/trace/events/cgroup.h
+===================================================================
+--- linux-trace.git.orig/include/trace/events/cgroup.h
++++ linux-trace.git/include/trace/events/cgroup.h
+@@ -53,24 +53,22 @@ DEFINE_EVENT(cgroup_root, cgroup_remount
+ 
+ DECLARE_EVENT_CLASS(cgroup,
+ 
+-	TP_PROTO(struct cgroup *cgrp),
++	TP_PROTO(struct cgroup *cgrp, const char *path),
+ 
+-	TP_ARGS(cgrp),
++	TP_ARGS(cgrp, path),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(	int,		root			)
+ 		__field(	int,		id			)
+ 		__field(	int,		level			)
+-		__dynamic_array(char,		path,
+-				cgroup_path(cgrp, NULL, 0) + 1)
++		__string(	path,		path			)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		__entry->root = cgrp->root->hierarchy_id;
+ 		__entry->id = cgrp->id;
+ 		__entry->level = cgrp->level;
+-		cgroup_path(cgrp, __get_dynamic_array(path),
+-				  __get_dynamic_array_len(path));
++		__assign_str(path, path);
+ 	),
+ 
+ 	TP_printk("root=%d id=%d level=%d path=%s",
+@@ -79,45 +77,45 @@ DECLARE_EVENT_CLASS(cgroup,
+ 
+ DEFINE_EVENT(cgroup, cgroup_mkdir,
+ 
+-	TP_PROTO(struct cgroup *cgroup),
++	TP_PROTO(struct cgroup *cgrp, const char *path),
+ 
+-	TP_ARGS(cgroup)
++	TP_ARGS(cgrp, path)
+ );
+ 
+ DEFINE_EVENT(cgroup, cgroup_rmdir,
+ 
+-	TP_PROTO(struct cgroup *cgroup),
++	TP_PROTO(struct cgroup *cgrp, const char *path),
+ 
+-	TP_ARGS(cgroup)
++	TP_ARGS(cgrp, path)
+ );
+ 
+ DEFINE_EVENT(cgroup, cgroup_release,
+ 
+-	TP_PROTO(struct cgroup *cgroup),
++	TP_PROTO(struct cgroup *cgrp, const char *path),
+ 
+-	TP_ARGS(cgroup)
++	TP_ARGS(cgrp, path)
+ );
+ 
+ DEFINE_EVENT(cgroup, cgroup_rename,
+ 
+-	TP_PROTO(struct cgroup *cgroup),
++	TP_PROTO(struct cgroup *cgrp, const char *path),
+ 
+-	TP_ARGS(cgroup)
++	TP_ARGS(cgrp, path)
+ );
+ 
+ DECLARE_EVENT_CLASS(cgroup_migrate,
+ 
+-	TP_PROTO(struct cgroup *dst_cgrp, struct task_struct *task, bool threadgroup),
++	TP_PROTO(struct cgroup *dst_cgrp, const char *path,
++		 struct task_struct *task, bool threadgroup),
+ 
+-	TP_ARGS(dst_cgrp, task, threadgroup),
++	TP_ARGS(dst_cgrp, path, task, threadgroup),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(	int,		dst_root		)
+ 		__field(	int,		dst_id			)
+ 		__field(	int,		dst_level		)
+-		__dynamic_array(char,		dst_path,
+-				cgroup_path(dst_cgrp, NULL, 0) + 1)
+ 		__field(	int,		pid			)
++		__string(	dst_path,	path			)
+ 		__string(	comm,		task->comm		)
+ 	),
+ 
+@@ -125,8 +123,7 @@ DECLARE_EVENT_CLASS(cgroup_migrate,
+ 		__entry->dst_root = dst_cgrp->root->hierarchy_id;
+ 		__entry->dst_id = dst_cgrp->id;
+ 		__entry->dst_level = dst_cgrp->level;
+-		cgroup_path(dst_cgrp, __get_dynamic_array(dst_path),
+-				      __get_dynamic_array_len(dst_path));
++		__assign_str(dst_path, path);
+ 		__entry->pid = task->pid;
+ 		__assign_str(comm, task->comm);
+ 	),
+@@ -138,16 +135,18 @@ DECLARE_EVENT_CLASS(cgroup_migrate,
+ 
+ DEFINE_EVENT(cgroup_migrate, cgroup_attach_task,
+ 
+-	TP_PROTO(struct cgroup *dst_cgrp, struct task_struct *task, bool threadgroup),
++	TP_PROTO(struct cgroup *dst_cgrp, const char *path,
++		 struct task_struct *task, bool threadgroup),
+ 
+-	TP_ARGS(dst_cgrp, task, threadgroup)
++	TP_ARGS(dst_cgrp, path, task, threadgroup)
+ );
+ 
+ DEFINE_EVENT(cgroup_migrate, cgroup_transfer_tasks,
+ 
+-	TP_PROTO(struct cgroup *dst_cgrp, struct task_struct *task, bool threadgroup),
++	TP_PROTO(struct cgroup *dst_cgrp, const char *path,
++		 struct task_struct *task, bool threadgroup),
+ 
+-	TP_ARGS(dst_cgrp, task, threadgroup)
++	TP_ARGS(dst_cgrp, path, task, threadgroup)
+ );
+ 
+ #endif /* _TRACE_CGROUP_H */
+Index: linux-trace.git/kernel/cgroup/cgroup-internal.h
+===================================================================
+--- linux-trace.git.orig/kernel/cgroup/cgroup-internal.h
++++ linux-trace.git/kernel/cgroup/cgroup-internal.h
+@@ -8,6 +8,32 @@
+ #include <linux/list.h>
+ #include <linux/refcount.h>
+ 
++#define TRACE_CGROUP_PATH_LEN 1024
++extern spinlock_t trace_cgroup_path_lock;
++extern char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
++
++/*
++ * cgroup_path() takes a spin lock. It is good practice not to take
++ * spin locks within trace point handlers, as they are mostly hidden
++ * from normal view. As cgroup_path() can take the kernfs_rename_lock
++ * spin lock, it is best to not call that function from the trace event
++ * handler.
++ *
++ * Note: trace_cgroup_##type##_enabled() is a static branch that will only
++ *       be set when the trace event is enabled.
++ */
++#define TRACE_CGROUP_PATH(type, cgrp, ...)				\
++	do {								\
++		if (trace_cgroup_##type##_enabled()) {			\
++			spin_lock(&trace_cgroup_path_lock);		\
++			cgroup_path(cgrp, trace_cgroup_path,		\
++				    TRACE_CGROUP_PATH_LEN);		\
++			trace_cgroup_##type(cgrp, trace_cgroup_path,	\
++					    ##__VA_ARGS__);		\
++			spin_unlock(&trace_cgroup_path_lock);		\
++		}							\
++	} while (0)
++
+ /*
+  * A cgroup can be associated with multiple css_sets as different tasks may
+  * belong to different cgroups on different hierarchies.  In the other
+Index: linux-trace.git/kernel/cgroup/cgroup-v1.c
+===================================================================
+--- linux-trace.git.orig/kernel/cgroup/cgroup-v1.c
++++ linux-trace.git/kernel/cgroup/cgroup-v1.c
+@@ -135,7 +135,7 @@ int cgroup_transfer_tasks(struct cgroup
+ 		if (task) {
+ 			ret = cgroup_migrate(task, false, &mgctx);
+ 			if (!ret)
+-				trace_cgroup_transfer_tasks(to, task, false);
++				TRACE_CGROUP_PATH(transfer_tasks, to, task, false);
+ 			put_task_struct(task);
+ 		}
+ 	} while (task && !ret);
+@@ -865,7 +865,7 @@ static int cgroup1_rename(struct kernfs_
+ 
+ 	ret = kernfs_rename(kn, new_parent, new_name_str);
+ 	if (!ret)
+-		trace_cgroup_rename(cgrp);
++		TRACE_CGROUP_PATH(rename, cgrp);
+ 
+ 	mutex_unlock(&cgroup_mutex);
+ 
+Index: linux-trace.git/kernel/cgroup/cgroup.c
+===================================================================
+--- linux-trace.git.orig/kernel/cgroup/cgroup.c
++++ linux-trace.git/kernel/cgroup/cgroup.c
+@@ -83,6 +83,9 @@ EXPORT_SYMBOL_GPL(cgroup_mutex);
+ EXPORT_SYMBOL_GPL(css_set_lock);
+ #endif
+ 
++DEFINE_SPINLOCK(trace_cgroup_path_lock);
++char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
++
+ /*
+  * Protects cgroup_idr and css_idr so that IDs can be released without
+  * grabbing cgroup_mutex.
+@@ -2638,7 +2641,7 @@ int cgroup_attach_task(struct cgroup *ds
+ 	cgroup_migrate_finish(&mgctx);
+ 
+ 	if (!ret)
+-		trace_cgroup_attach_task(dst_cgrp, leader, threadgroup);
++		TRACE_CGROUP_PATH(attach_task, dst_cgrp, leader, threadgroup);
+ 
+ 	return ret;
+ }
+@@ -4634,7 +4637,7 @@ static void css_release_work_fn(struct w
+ 		struct cgroup *tcgrp;
+ 
+ 		/* cgroup release path */
+-		trace_cgroup_release(cgrp);
++		TRACE_CGROUP_PATH(release, cgrp);
+ 
+ 		if (cgroup_on_dfl(cgrp))
+ 			cgroup_rstat_flush(cgrp);
+@@ -4977,7 +4980,7 @@ int cgroup_mkdir(struct kernfs_node *par
+ 	if (ret)
+ 		goto out_destroy;
+ 
+-	trace_cgroup_mkdir(cgrp);
++	TRACE_CGROUP_PATH(mkdir, cgrp);
+ 
+ 	/* let's create and online css's */
+ 	kernfs_activate(kn);
+@@ -5165,9 +5168,8 @@ int cgroup_rmdir(struct kernfs_node *kn)
+ 		return 0;
+ 
+ 	ret = cgroup_destroy_locked(cgrp);
+-
+ 	if (!ret)
+-		trace_cgroup_rmdir(cgrp);
++		TRACE_CGROUP_PATH(rmdir, cgrp);
+ 
+ 	cgroup_kn_unlock(kn);
+ 	return ret;
