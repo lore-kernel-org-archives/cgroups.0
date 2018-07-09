@@ -1,62 +1,42 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
- on cgroup v2 root
-Date: Fri, 6 Jul 2018 16:32:25 -0400
-Message-ID: <4cf9924e-7b97-187f-a1f5-853a45165abb@redhat.com>
-References: <1529825440-9574-1-git-send-email-longman@redhat.com>
- <1529825440-9574-8-git-send-email-longman@redhat.com>
- <20180702165322.GI533219@devbig577.frc2.facebook.com>
- <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
- <20180703155823.GS533219@devbig577.frc2.facebook.com>
+From: Daniel Vetter <daniel.vetter@ffwll.ch>
+Subject: [PATCH 03/12] cgroup: use for_each_if
+Date: Mon,  9 Jul 2018 10:36:41 +0200
+Message-ID: <20180709083650.23549-3-daniel.vetter@ffwll.ch>
+References: <20180709083650.23549-1-daniel.vetter@ffwll.ch>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180703155823.GS533219@devbig577.frc2.facebook.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20180709083650.23549-1-daniel.vetter@ffwll.ch>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>, Intel Graphics Development <intel-gfx@lists.freedesktop.org>, cgroups@vger.kernel.org, DRI Development <dri-devel@lists.freedesktop.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>
 
-On 07/03/2018 11:58 AM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Tue, Jul 03, 2018 at 08:41:31AM +0800, Waiman Long wrote:
->>> So, effective changing when enabling partition on a child feels wrong
->>> to me.  It's supposed to contain what's actually allowed to the cgroup
->>> from its parent and that shouldn't change regardless of how those
->>> resources are used.  It's still given to the cgroup from its parent.
->> Another way to work around this issue is to expose the reserved_cpus in
->> the parent for holding CPUs that can taken by a chid partition. That
->> will require adding one more cpuset file for those cgroups that are
->> partition roots.
-> Yeah, that should work.
->
-
-Thinking about it a bit more, that approach will make creating a
-partition a multi-step process:
-
-1) Reserve the CPUs in reserved_cpus.
-2) enable sched.partition
-3) Write the CPUs list into cpus.
-
-There are also more exception cases that need to be handled. The current
-approach, on the other hands, is much simpler and easier to understand
-and use.
-
->> I don't mind restricting that to the first level children for now. That
->> does restrict where we can put the container root if we want a separate
->> partition for a container. Let's hear if others have any objection about
->> that.
-> As currently implemented, partioning locks away the cpus which should
-> be a system level decision, not container level, so it makes sense to
-> me that it is only available to system root.
-
-So my preference is to allow partition only on the first level children
-of the root for the time being. I think it should cover most of the use
-cases. I will update the patchset to reflect that.
-
-Cheers,
-Longman
-
+QXZvaWRzIHRoZSBuZWVkIHRvIGludmVydCB0aGUgY29uZGl0aW9uIGluc3RlYWQgb2YgdGhlIG9w
+ZW4tY29kZWQKdmVyc2lvbi4KClNpZ25lZC1vZmYtYnk6IERhbmllbCBWZXR0ZXIgPGRhbmllbC52
+ZXR0ZXJAaW50ZWwuY29tPgpDYzogVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPgpDYzogTGkgWmVm
+YW4gPGxpemVmYW5AaHVhd2VpLmNvbT4KQ2M6IEpvaGFubmVzIFdlaW5lciA8aGFubmVzQGNtcHhj
+aGcub3JnPgpDYzogY2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmcKLS0tCiBpbmNsdWRlL2xpbnV4L2Nn
+cm91cC5oIHwgNCArLS0tCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDMgZGVsZXRp
+b25zKC0pCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9jZ3JvdXAuaCBiL2luY2x1ZGUvbGlu
+dXgvY2dyb3VwLmgKaW5kZXggYzlmZGY2ZjU3OTEzLi42NjZjNjIwMGQ2MWQgMTAwNjQ0Ci0tLSBh
+L2luY2x1ZGUvbGludXgvY2dyb3VwLmgKKysrIGIvaW5jbHVkZS9saW51eC9jZ3JvdXAuaApAQCAt
+Mjg3LDkgKzI4Nyw3IEBAIHZvaWQgY3NzX3Rhc2tfaXRlcl9lbmQoc3RydWN0IGNzc190YXNrX2l0
+ZXIgKml0KTsKIAlmb3IgKChsZWFkZXIpID0gY2dyb3VwX3Rhc2tzZXRfZmlyc3QoKHRzZXQpLCAm
+KGRzdF9jc3MpKTsJXAogCSAgICAgKGxlYWRlcik7CQkJCQkJCVwKIAkgICAgIChsZWFkZXIpID0g
+Y2dyb3VwX3Rhc2tzZXRfbmV4dCgodHNldCksICYoZHN0X2NzcykpKQlcCi0JCWlmICgobGVhZGVy
+KSAhPSAobGVhZGVyKS0+Z3JvdXBfbGVhZGVyKQkJCVwKLQkJCTsJCQkJCQlcCi0JCWVsc2UKKwkJ
+Zm9yX2VhY2hfaWYgKChsZWFkZXIpID09IChsZWFkZXIpLT5ncm91cF9sZWFkZXIpCiAKIC8qCiAg
+KiBJbmxpbmUgZnVuY3Rpb25zLgotLSAKMi4xOC4wCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBs
+aXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1h
+bi9saXN0aW5mby9kcmktZGV2ZWwK
