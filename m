@@ -1,279 +1,196 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: [PATCH] cgroup/tracing: Move taking of spin lock out of trace event
- handlers
-Date: Mon, 9 Jul 2018 17:48:54 -0400
-Message-ID: <20180709174854.74a30b57@gandalf.local.home>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Tue, 10 Jul 2018 11:23:37 -0400
+Message-ID: <151fc655-7e29-f060-789e-ee6c5c23d132@redhat.com>
+References: <1529825440-9574-1-git-send-email-longman@redhat.com>
+ <1529825440-9574-8-git-send-email-longman@redhat.com>
+ <20180702165322.GI533219@devbig577.frc2.facebook.com>
+ <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
+ <20180703155823.GS533219@devbig577.frc2.facebook.com>
+ <4cf9924e-7b97-187f-a1f5-853a45165abb@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4cf9924e-7b97-187f-a1f5-853a45165abb@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-From: Steven Rostedt (VMware) <rostedt@goodmis.org>
+On 07/06/2018 04:32 PM, Waiman Long wrote:
+> On 07/03/2018 11:58 AM, Tejun Heo wrote:
+>> Hello, Waiman.
+>>
+>> On Tue, Jul 03, 2018 at 08:41:31AM +0800, Waiman Long wrote:
+>>>> So, effective changing when enabling partition on a child feels wrong
+>>>> to me.  It's supposed to contain what's actually allowed to the cgroup
+>>>> from its parent and that shouldn't change regardless of how those
+>>>> resources are used.  It's still given to the cgroup from its parent.
+>>> Another way to work around this issue is to expose the reserved_cpus in
+>>> the parent for holding CPUs that can taken by a chid partition. That
+>>> will require adding one more cpuset file for those cgroups that are
+>>> partition roots.
+>> Yeah, that should work.
+>>
+> Thinking about it a bit more, that approach will make creating a
+> partition a multi-step process:
+>
+> 1) Reserve the CPUs in reserved_cpus.
+> 2) enable sched.partition
+> 3) Write the CPUs list into cpus.
+>
+> There are also more exception cases that need to be handled. The current
+> approach, on the other hands, is much simpler and easier to understand
+> and use.
+>
+>>> I don't mind restricting that to the first level children for now. That
+>>> does restrict where we can put the container root if we want a separate
+>>> partition for a container. Let's hear if others have any objection about
+>>> that.
+>> As currently implemented, partioning locks away the cpus which should
+>> be a system level decision, not container level, so it makes sense to
+>> me that it is only available to system root.
+> So my preference is to allow partition only on the first level children
+> of the root for the time being. I think it should cover most of the use
+> cases. I will update the patchset to reflect that.
+>
+> Cheers,
+> Longman
+>
+Below is the incremental patch that allow partitioning only on the first
+level children of the root. Please let me know your thourght on that.
 
-It is unwise to take spin locks from the handlers of trace events.
-Mainly, because they can introduce lockups, because it introduces locks
-in places that are normally not tested. Worse yet, because trace events
-are tucked away in the include/trace/events/ directory, locks that are
-taken there are forgotten about.
+Thanks,
+Longman
 
-As a general rule, I tell people never to take any locks in a trace
-event handler.
+-------------[ Cut here ]-------------------------
 
-Several cgroup trace event handlers call cgroup_path() which eventually
-takes the kernfs_rename_lock spinlock. This injects the spinlock in the
-code without people realizing it. It also can cause issues for the
-PREEMPT_RT patch, as the spinlock becomes a mutex, and the trace event
-handlers are called with preemption disabled.
+From 5a41209da94385efff87d79f6523265c710cbea5 Mon Sep 17 00:00:00 2001
+From: Waiman Long <longman@redhat.com>
+Date: Tue, 10 Jul 2018 10:23:16 -0400
+Subject: [PATCH v11 10/10] cpuset: Restrict sched.partition to first level
+ children of root only
 
-By moving the calculation of the cgroup_path() out of the trace event
-handlers and into a macro (surrounded by a
-trace_cgroup_##type##_enabled()), then we could place the cgroup_path
-into a string, and pass that to the trace event. Not only does this
-remove the taking of the spinlock out of the trace event handler, but
-it also means that the cgroup_path() only needs to be called once (it
-is currently called twice, once to get the length to reserver the
-buffer for, and once again to get the path itself. Now it only needs to
-be done once.
+Enabling partition on a v2 cpuset has the side effect of affecting the
+effective CPUs of its parent which is currently unique to partitioning.
+As we are not sure about the repercussion of enabling that globally,
+we are now restricting the enabling of sched.partition to the first
+level children of the root cgroup in the default hierarchy.
 
-Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Signed-off-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
+This is done by removing the "cpuset.sched.partition" control file
+on cgroups that are not the first level children of the root. A new
+show_cfile function pointer is added to the cftype structure. If it
+is defined, it will be called to return a boolean value to determine
+if the corresponding control file should show up in the cgroup. It
+provides a more flexible mechanism to determine the visibility of the
+control file than a simple CFTYPE_* flag can do.
+
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
-Index: linux-trace.git/include/trace/events/cgroup.h
-===================================================================
---- linux-trace.git.orig/include/trace/events/cgroup.h
-+++ linux-trace.git/include/trace/events/cgroup.h
-@@ -53,24 +53,22 @@ DEFINE_EVENT(cgroup_root, cgroup_remount
+ Documentation/admin-guide/cgroup-v2.rst | 10 +++++-----
+ include/linux/cgroup-defs.h             |  9 +++++++++
+ kernel/cgroup/cgroup.c                  |  4 ++++
+ kernel/cgroup/cpuset.c                  | 10 ++++++++++
+ 4 files changed, 28 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst
+b/Documentation/admin-guide/cgroup-v2.rst
+index f7cde15..cf7cd88 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1585,10 +1585,10 @@ Cpuset Interface Files
+     Its value will be affected by memory nodes hotplug events.
  
- DECLARE_EVENT_CLASS(cgroup,
+   cpuset.sched.partition
+-    A read-write single value file which exists on non-root
+-    cpuset-enabled cgroups.  It is a binary value flag that accepts
+-    either "0" (off) or "1" (on).  This flag is set and owned by the
+-        parent cgroup.
++    A read-write single value file which exists on the first level
++    children of the root cgroup.  It is a binary value flag that
++    accepts either "0" (off) or "1" (on).  This flag is set and
++    owned by the parent cgroup.
  
--	TP_PROTO(struct cgroup *cgrp),
-+	TP_PROTO(struct cgroup *cgrp, const char *path),
+     If set, it indicates that the current cgroup is the root of a
+     new partition or scheduling domain that comprises itself and
+@@ -1603,7 +1603,7 @@ Cpuset Interface Files
+        exclusive, i.e. they are not shared by any of its siblings.
+     2) The "cpuset.cpus" is also a proper subset of the parent's
+        "cpuset.cpus.effective".
+-    3) The parent cgroup is a partition root.
++    3) The parent cgroup is the root cgroup.
+     4) There is no child cgroups with cpuset enabled.  This is for
+        eliminating corner cases that have to be handled if such a
+        condition is allowed.
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index c0e68f9..be79487 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -565,6 +565,15 @@ struct cftype {
+     ssize_t (*write)(struct kernfs_open_file *of,
+              char *buf, size_t nbytes, loff_t off);
  
--	TP_ARGS(cgrp),
-+	TP_ARGS(cgrp, path),
++    /*
++     * show_cfile(), if defined, will return a boolean value to
++     * determine if the control file should show up in the cgroup.
++     * It provides more flexibility in deciding where the control
++     * file should appear than simple criteria like on-root or
++     * not-on-root.
++     */
++    bool (*show_cfile)(struct cgroup_subsys_state *css);
++
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+     struct lock_class_key    lockdep_key;
+ #endif
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 077370b..0afdab8 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3612,6 +3612,10 @@ static int cgroup_addrm_files(struct
+cgroup_subsys_state *css,
+         if ((cft->flags & CFTYPE_ONLY_ON_ROOT) && cgroup_parent(cgrp))
+             continue;
  
- 	TP_STRUCT__entry(
- 		__field(	int,		root			)
- 		__field(	int,		id			)
- 		__field(	int,		level			)
--		__dynamic_array(char,		path,
--				cgroup_path(cgrp, NULL, 0) + 1)
-+		__string(	path,		path			)
- 	),
++        /* Should the control file show up in the cgroup */
++        if (cft->show_cfile && !cft->show_cfile(css))
++            continue;
++
+         if (is_add) {
+             ret = cgroup_add_file(css, cgrp, cft);
+             if (ret) {
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 62b7e61..2f85c1e 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2106,6 +2106,15 @@ static s64 cpuset_read_s64(struct
+cgroup_subsys_state *css, struct cftype *cft)
+ }
  
- 	TP_fast_assign(
- 		__entry->root = cgrp->root->hierarchy_id;
- 		__entry->id = cgrp->id;
- 		__entry->level = cgrp->level;
--		cgroup_path(cgrp, __get_dynamic_array(path),
--				  __get_dynamic_array_len(path));
-+		__assign_str(path, path);
- 	),
- 
- 	TP_printk("root=%d id=%d level=%d path=%s",
-@@ -79,45 +77,45 @@ DECLARE_EVENT_CLASS(cgroup,
- 
- DEFINE_EVENT(cgroup, cgroup_mkdir,
- 
--	TP_PROTO(struct cgroup *cgroup),
-+	TP_PROTO(struct cgroup *cgrp, const char *path),
- 
--	TP_ARGS(cgroup)
-+	TP_ARGS(cgrp, path)
- );
- 
- DEFINE_EVENT(cgroup, cgroup_rmdir,
- 
--	TP_PROTO(struct cgroup *cgroup),
-+	TP_PROTO(struct cgroup *cgrp, const char *path),
- 
--	TP_ARGS(cgroup)
-+	TP_ARGS(cgrp, path)
- );
- 
- DEFINE_EVENT(cgroup, cgroup_release,
- 
--	TP_PROTO(struct cgroup *cgroup),
-+	TP_PROTO(struct cgroup *cgrp, const char *path),
- 
--	TP_ARGS(cgroup)
-+	TP_ARGS(cgrp, path)
- );
- 
- DEFINE_EVENT(cgroup, cgroup_rename,
- 
--	TP_PROTO(struct cgroup *cgroup),
-+	TP_PROTO(struct cgroup *cgrp, const char *path),
- 
--	TP_ARGS(cgroup)
-+	TP_ARGS(cgrp, path)
- );
- 
- DECLARE_EVENT_CLASS(cgroup_migrate,
- 
--	TP_PROTO(struct cgroup *dst_cgrp, struct task_struct *task, bool threadgroup),
-+	TP_PROTO(struct cgroup *dst_cgrp, const char *path,
-+		 struct task_struct *task, bool threadgroup),
- 
--	TP_ARGS(dst_cgrp, task, threadgroup),
-+	TP_ARGS(dst_cgrp, path, task, threadgroup),
- 
- 	TP_STRUCT__entry(
- 		__field(	int,		dst_root		)
- 		__field(	int,		dst_id			)
- 		__field(	int,		dst_level		)
--		__dynamic_array(char,		dst_path,
--				cgroup_path(dst_cgrp, NULL, 0) + 1)
- 		__field(	int,		pid			)
-+		__string(	dst_path,	path			)
- 		__string(	comm,		task->comm		)
- 	),
- 
-@@ -125,8 +123,7 @@ DECLARE_EVENT_CLASS(cgroup_migrate,
- 		__entry->dst_root = dst_cgrp->root->hierarchy_id;
- 		__entry->dst_id = dst_cgrp->id;
- 		__entry->dst_level = dst_cgrp->level;
--		cgroup_path(dst_cgrp, __get_dynamic_array(dst_path),
--				      __get_dynamic_array_len(dst_path));
-+		__assign_str(dst_path, path);
- 		__entry->pid = task->pid;
- 		__assign_str(comm, task->comm);
- 	),
-@@ -138,16 +135,18 @@ DECLARE_EVENT_CLASS(cgroup_migrate,
- 
- DEFINE_EVENT(cgroup_migrate, cgroup_attach_task,
- 
--	TP_PROTO(struct cgroup *dst_cgrp, struct task_struct *task, bool threadgroup),
-+	TP_PROTO(struct cgroup *dst_cgrp, const char *path,
-+		 struct task_struct *task, bool threadgroup),
- 
--	TP_ARGS(dst_cgrp, task, threadgroup)
-+	TP_ARGS(dst_cgrp, path, task, threadgroup)
- );
- 
- DEFINE_EVENT(cgroup_migrate, cgroup_transfer_tasks,
- 
--	TP_PROTO(struct cgroup *dst_cgrp, struct task_struct *task, bool threadgroup),
-+	TP_PROTO(struct cgroup *dst_cgrp, const char *path,
-+		 struct task_struct *task, bool threadgroup),
- 
--	TP_ARGS(dst_cgrp, task, threadgroup)
-+	TP_ARGS(dst_cgrp, path, task, threadgroup)
- );
- 
- #endif /* _TRACE_CGROUP_H */
-Index: linux-trace.git/kernel/cgroup/cgroup-internal.h
-===================================================================
---- linux-trace.git.orig/kernel/cgroup/cgroup-internal.h
-+++ linux-trace.git/kernel/cgroup/cgroup-internal.h
-@@ -8,6 +8,32 @@
- #include <linux/list.h>
- #include <linux/refcount.h>
- 
-+#define TRACE_CGROUP_PATH_LEN 1024
-+extern spinlock_t trace_cgroup_path_lock;
-+extern char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
+ /*
++ * The sched.partition control file should only show up in the first
++ * level children of the root cgroup.
++ */
++static bool cpuset_show_partition(struct cgroup_subsys_state *css)
++{
++    return parent_cs(css_cs(css)) == &top_cpuset;
++}
 +
 +/*
-+ * cgroup_path() takes a spin lock. It is good practice not to take
-+ * spin locks within trace point handlers, as they are mostly hidden
-+ * from normal view. As cgroup_path() can take the kernfs_rename_lock
-+ * spin lock, it is best to not call that function from the trace event
-+ * handler.
-+ *
-+ * Note: trace_cgroup_##type##_enabled() is a static branch that will only
-+ *       be set when the trace event is enabled.
-+ */
-+#define TRACE_CGROUP_PATH(type, cgrp, ...)				\
-+	do {								\
-+		if (trace_cgroup_##type##_enabled()) {			\
-+			spin_lock(&trace_cgroup_path_lock);		\
-+			cgroup_path(cgrp, trace_cgroup_path,		\
-+				    TRACE_CGROUP_PATH_LEN);		\
-+			trace_cgroup_##type(cgrp, trace_cgroup_path,	\
-+					    ##__VA_ARGS__);		\
-+			spin_unlock(&trace_cgroup_path_lock);		\
-+		}							\
-+	} while (0)
-+
- /*
-  * A cgroup can be associated with multiple css_sets as different tasks may
-  * belong to different cgroups on different hierarchies.  In the other
-Index: linux-trace.git/kernel/cgroup/cgroup-v1.c
-===================================================================
---- linux-trace.git.orig/kernel/cgroup/cgroup-v1.c
-+++ linux-trace.git/kernel/cgroup/cgroup-v1.c
-@@ -135,7 +135,7 @@ int cgroup_transfer_tasks(struct cgroup
- 		if (task) {
- 			ret = cgroup_migrate(task, false, &mgctx);
- 			if (!ret)
--				trace_cgroup_transfer_tasks(to, task, false);
-+				TRACE_CGROUP_PATH(transfer_tasks, to, task, false);
- 			put_task_struct(task);
- 		}
- 	} while (task && !ret);
-@@ -865,7 +865,7 @@ static int cgroup1_rename(struct kernfs_
+  * for the common functions, 'private' gives the type of file
+  */
  
- 	ret = kernfs_rename(kn, new_parent, new_name_str);
- 	if (!ret)
--		trace_cgroup_rename(cgrp);
-+		TRACE_CGROUP_PATH(rename, cgrp);
- 
- 	mutex_unlock(&cgroup_mutex);
- 
-Index: linux-trace.git/kernel/cgroup/cgroup.c
-===================================================================
---- linux-trace.git.orig/kernel/cgroup/cgroup.c
-+++ linux-trace.git/kernel/cgroup/cgroup.c
-@@ -83,6 +83,9 @@ EXPORT_SYMBOL_GPL(cgroup_mutex);
- EXPORT_SYMBOL_GPL(css_set_lock);
- #endif
- 
-+DEFINE_SPINLOCK(trace_cgroup_path_lock);
-+char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
-+
- /*
-  * Protects cgroup_idr and css_idr so that IDs can be released without
-  * grabbing cgroup_mutex.
-@@ -2638,7 +2641,7 @@ int cgroup_attach_task(struct cgroup *ds
- 	cgroup_migrate_finish(&mgctx);
- 
- 	if (!ret)
--		trace_cgroup_attach_task(dst_cgrp, leader, threadgroup);
-+		TRACE_CGROUP_PATH(attach_task, dst_cgrp, leader, threadgroup);
- 
- 	return ret;
- }
-@@ -4634,7 +4637,7 @@ static void css_release_work_fn(struct w
- 		struct cgroup *tcgrp;
- 
- 		/* cgroup release path */
--		trace_cgroup_release(cgrp);
-+		TRACE_CGROUP_PATH(release, cgrp);
- 
- 		if (cgroup_on_dfl(cgrp))
- 			cgroup_rstat_flush(cgrp);
-@@ -4977,7 +4980,7 @@ int cgroup_mkdir(struct kernfs_node *par
- 	if (ret)
- 		goto out_destroy;
- 
--	trace_cgroup_mkdir(cgrp);
-+	TRACE_CGROUP_PATH(mkdir, cgrp);
- 
- 	/* let's create and online css's */
- 	kernfs_activate(kn);
-@@ -5165,9 +5168,8 @@ int cgroup_rmdir(struct kernfs_node *kn)
- 		return 0;
- 
- 	ret = cgroup_destroy_locked(cgrp);
--
- 	if (!ret)
--		trace_cgroup_rmdir(cgrp);
-+		TRACE_CGROUP_PATH(rmdir, cgrp);
- 
- 	cgroup_kn_unlock(kn);
- 	return ret;
+@@ -2250,6 +2259,7 @@ static s64 cpuset_read_s64(struct
+cgroup_subsys_state *css, struct cftype *cft)
+         .name = "sched.partition",
+         .read_u64 = cpuset_read_u64,
+         .write_u64 = cpuset_write_u64,
++        .show_cfile = cpuset_show_partition,
+         .private = FILE_PARTITION_ROOT,
+         .flags = CFTYPE_NOT_ON_ROOT,
+     },
+-- 
+1.8.3.1
+
