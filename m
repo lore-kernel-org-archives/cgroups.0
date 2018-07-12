@@ -1,65 +1,77 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup/tracing: Move taking of spin lock out of trace
- event handlers
-Date: Wed, 11 Jul 2018 10:49:40 -0700
-Message-ID: <20180711174940.GH72677@devbig577.frc2.facebook.com>
-References: <20180709174854.74a30b57@gandalf.local.home>
-Mime-Version: 1.0
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 01/10] mm: workingset: don't drop refault information prematurely
+Date: Thu, 12 Jul 2018 13:29:33 -0400
+Message-ID: <20180712172942.10094-2-hannes@cmpxchg.org>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=NeGXoR8z44F7IqX2W2+SCPz8Ki85jqIZ9XhKRi3d7Cs=;
-        b=Cz7E2fRh+SxU3POQD7g4SnSEw6+Q6VXkOLlmL3BxaIRq3XjGKSzE+ZvekuhHo4MJcT
-         KqgYegWecbHoUZQy5+2W9qRp3P94ftBvg7G0CNDHKu0VUaGDMEzSqfqgSSQa7xot+qB6
-         Z/PT/Hp/eiiD8d7MMqjigSKU1p4oVVIaVo3FmRiDGuYiNir7+UjcLARJQCMvrtcBKtxa
-         EKz0x9BZvUGDhGyufyJRCfH+Gs08czwAM3XGwjt/C89JO2xIS9672OLq9hWeAVzyEjTo
-         KquUvmj44BWdXSThl70CkakJMPWz4JkWfi9ANvvfHRlXkjADe9uchFnknOFT1yEUkHnx
-         ASMw==
-Content-Disposition: inline
-In-Reply-To: <20180709174854.74a30b57@gandalf.local.home>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
+        ; s=x; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:
+        Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=MB0JcxuTLfjEgf80Dz+nMnYicOFdIkPWH7p5+rE/WoA=; b=x2YUk0uIXeGwJU6n8JJ8Qh+LhF
+        2hRuZs0nJ3tgZ958KR+TPEUQyBMiWXv8gCELym3Co3rlB1/6sD/z4djvaZWCShd1PPmkyxx2rNezs
+        lph879F5+bd73GWIIyPCV3q3uHA4NFuoqQBgQan0s/QIieZmh/T2HdbbJGdVWE8JSZ30=;
+In-Reply-To: <20180712172942.10094-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Mon, Jul 09, 2018 at 05:48:54PM -0400, Steven Rostedt wrote:
-> From: Steven Rostedt (VMware) <rostedt@goodmis.org>
-> 
-> It is unwise to take spin locks from the handlers of trace events.
-> Mainly, because they can introduce lockups, because it introduces locks
-> in places that are normally not tested. Worse yet, because trace events
-> are tucked away in the include/trace/events/ directory, locks that are
-> taken there are forgotten about.
-> 
-> As a general rule, I tell people never to take any locks in a trace
-> event handler.
-> 
-> Several cgroup trace event handlers call cgroup_path() which eventually
-> takes the kernfs_rename_lock spinlock. This injects the spinlock in the
-> code without people realizing it. It also can cause issues for the
-> PREEMPT_RT patch, as the spinlock becomes a mutex, and the trace event
-> handlers are called with preemption disabled.
-> 
-> By moving the calculation of the cgroup_path() out of the trace event
-> handlers and into a macro (surrounded by a
-> trace_cgroup_##type##_enabled()), then we could place the cgroup_path
-> into a string, and pass that to the trace event. Not only does this
-> remove the taking of the spinlock out of the trace event handler, but
-> it also means that the cgroup_path() only needs to be called once (it
-> is currently called twice, once to get the length to reserver the
-> buffer for, and once again to get the path itself. Now it only needs to
-> be done once.
-> 
-> Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> Signed-off-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
+From: Johannes Weiner <jweiner@fb.com>
 
-Applied to cgroup/for-4.19.
+If we just keep enough refault information to match the CURRENT page
+cache during reclaim time, we could lose a lot of events when there is
+only a temporary spike in non-cache memory consumption that pushes out
+all the cache. Once cache comes back, we won't see those refaults.
+They might not be actionable for LRU aging, but we want to know about
+them for measuring memory pressure.
 
-Thanks.
+Signed-off-by: Johannes Weiner <jweiner@fb.com>
+---
+ mm/workingset.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 40ee02c83978..53759a3cf99a 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -364,7 +364,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ {
+ 	unsigned long max_nodes;
+ 	unsigned long nodes;
+-	unsigned long cache;
++	unsigned long pages;
+ 
+ 	/* list_lru lock nests inside the IRQ-safe i_pages lock */
+ 	local_irq_disable();
+@@ -393,14 +393,14 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ 	 *
+ 	 * PAGE_SIZE / radix_tree_nodes / node_entries * 8 / PAGE_SIZE
+ 	 */
+-	if (sc->memcg) {
+-		cache = mem_cgroup_node_nr_lru_pages(sc->memcg, sc->nid,
+-						     LRU_ALL_FILE);
+-	} else {
+-		cache = node_page_state(NODE_DATA(sc->nid), NR_ACTIVE_FILE) +
+-			node_page_state(NODE_DATA(sc->nid), NR_INACTIVE_FILE);
+-	}
+-	max_nodes = cache >> (RADIX_TREE_MAP_SHIFT - 3);
++#ifdef CONFIG_MEMCG
++	if (sc->memcg)
++		pages = page_counter_read(&sc->memcg->memory);
++	else
++#endif
++		pages = node_present_pages(sc->nid);
++
++	max_nodes = pages >> (RADIX_TREE_MAP_SHIFT - 3);
+ 
+ 	if (nodes <= max_nodes)
+ 		return 0;
 -- 
-tejun
+2.18.0
+
