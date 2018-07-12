@@ -1,19 +1,17 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 09/10] psi: cgroup support
-Date: Thu, 12 Jul 2018 13:29:41 -0400
-Message-ID: <20180712172942.10094-10-hannes@cmpxchg.org>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
+Subject: [PATCH 0/10] psi: pressure stall information for CPU, memory, and IO v2
+Date: Thu, 12 Jul 2018 13:29:32 -0400
+Message-ID: <20180712172942.10094-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org
-        ; s=x; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:
-        Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        ; s=x; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:MIME-Version:
+        Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=JFFriIGNXLiJJ3RhiiFN6GV3OIIIi6NJ7O8uJqis3VA=; b=2Eii14RwoFZAjc+8duHJUo0Jd6
-        rYOIVPPerZeKrxeB+P9G6PCnDG7NuPELesn4EabeTwBw+cdlWsabPi7h2XTFMmJ/rDCm5v1MYzu5H
-        hMOEH8K9RHOZcljGF2L+eZBFv0eR/+EVXcSaF9TW3eMVEFThVTuvStyXXfPmSUkSWamI=;
-In-Reply-To: <20180712172942.10094-1-hannes@cmpxchg.org>
+        bh=V3lyvegIAgTBYT1yIe2fqwyEnmi+jILg9qyyqD/Wy14=; b=iD53GL/dGSEeMeXtCyN8jgDTeo
+        krXlo1Tbr5RPKPvzMrU5H476OYpjm8cfsxxTx0UbQu9kbVZyfTh3kss+2PgsB0QJQJzoKmGf3S6Nc
+        EW18nI5F3ljL/4Jtz2TkP4mEj7l4+YTpZeKS6qBlApCln2ueC02ogrltgT3Aq4zJ4GbI=;
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -22,416 +20,220 @@ Content-Transfer-Encoding: 7bit
 To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On a system that executes multiple cgrouped jobs and independent
-workloads, we don't just care about the health of the overall system,
-but also that of individual jobs, so that we can ensure individual job
-health, fairness between jobs, or prioritize some jobs over others.
+PSI aggregates and reports the overall wallclock time in which the
+tasks in a system (or cgroup) wait for contended hardware resources.
 
-This patch implements pressure stall tracking for cgroups. In kernels
-with CONFIG_PSI=y, cgroup2 groups will have cpu.pressure,
-memory.pressure, and io.pressure files that track aggregate pressure
-stall times for only the tasks inside the cgroup.
+This helps users understand the resource pressure their workloads are
+under, which allows them to rootcause and fix throughput and latency
+problems caused by overcommitting, underprovisioning, suboptimal job
+placement in a grid, as well as anticipate major disruptions like OOM.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- Documentation/accounting/psi.txt |  9 ++++
- Documentation/cgroup-v2.txt      | 18 +++++++
- include/linux/cgroup-defs.h      |  4 ++
- include/linux/cgroup.h           | 15 ++++++
- include/linux/psi.h              | 25 ++++++++++
- init/Kconfig                     |  4 ++
- kernel/cgroup/cgroup.c           | 45 +++++++++++++++++-
- kernel/sched/psi.c               | 82 +++++++++++++++++++++++++++++++-
- 8 files changed, 198 insertions(+), 4 deletions(-)
+This version 2 of the series incorporates a ton of feedback from
+PeterZ and SurenB; more details at the end of this email.
 
-diff --git a/Documentation/accounting/psi.txt b/Documentation/accounting/psi.txt
-index 51e7ef14142e..e051810d5127 100644
---- a/Documentation/accounting/psi.txt
-+++ b/Documentation/accounting/psi.txt
-@@ -62,3 +62,12 @@ well as medium and long term trends. The total absolute stall time is
- tracked and exported as well, to allow detection of latency spikes
- which wouldn't necessarily make a dent in the time averages, or to
- average trends over custom time frames.
-+
-+Cgroup2 interface
-+=================
-+
-+In a system with a CONFIG_CGROUP=y kernel and the cgroup2 filesystem
-+mounted, pressure stall information is also tracked for tasks grouped
-+into cgroups. Each subdirectory in the cgroupfs mountpoint contains
-+cpu.pressure, memory.pressure, and io.pressure files; the format is
-+the same as the /proc/pressure/ files.
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 74cdeaed9f7a..a22879dba019 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -963,6 +963,12 @@ All time durations are in microseconds.
- 	$PERIOD duration.  "max" for $MAX indicates no limit.  If only
- 	one number is written, $MAX is updated.
- 
-+  cpu.pressure
-+	A read-only nested-key file which exists on non-root cgroups.
-+
-+	Shows pressure stall information for CPU. See
-+	Documentation/accounting/psi.txt for details.
-+
- 
- Memory
- ------
-@@ -1199,6 +1205,12 @@ PAGE_SIZE multiple when read back.
- 	Swap usage hard limit.  If a cgroup's swap usage reaches this
- 	limit, anonymous memory of the cgroup will not be swapped out.
- 
-+  memory.pressure
-+	A read-only nested-key file which exists on non-root cgroups.
-+
-+	Shows pressure stall information for memory. See
-+	Documentation/accounting/psi.txt for details.
-+
- 
- Usage Guidelines
- ~~~~~~~~~~~~~~~~
-@@ -1334,6 +1346,12 @@ IO Interface Files
- 
- 	  8:16 rbps=2097152 wbps=max riops=max wiops=max
- 
-+  io.pressure
-+	A read-only nested-key file which exists on non-root cgroups.
-+
-+	Shows pressure stall information for IO. See
-+	Documentation/accounting/psi.txt for details.
-+
- 
- Writeback
- ~~~~~~~~~
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index dc5b70449dc6..280f18da956a 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -20,6 +20,7 @@
- #include <linux/u64_stats_sync.h>
- #include <linux/workqueue.h>
- #include <linux/bpf-cgroup.h>
-+#include <linux/psi_types.h>
- 
- #ifdef CONFIG_CGROUPS
- 
-@@ -424,6 +425,9 @@ struct cgroup {
- 	/* used to schedule release agent */
- 	struct work_struct release_agent_work;
- 
-+	/* used to track pressure stalls */
-+	struct psi_group psi;
-+
- 	/* used to store eBPF programs */
- 	struct cgroup_bpf bpf;
- 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 473e0c0abb86..fd94c294c207 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -627,6 +627,11 @@ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
- 	pr_cont_kernfs_path(cgrp->kn);
- }
- 
-+static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
-+{
-+	return &cgrp->psi;
-+}
-+
- static inline void cgroup_init_kthreadd(void)
- {
- 	/*
-@@ -680,6 +685,16 @@ static inline union kernfs_node_id *cgroup_get_kernfs_id(struct cgroup *cgrp)
- 	return NULL;
- }
- 
-+static inline struct cgroup *cgroup_parent(struct cgroup *cgrp)
-+{
-+	return NULL;
-+}
-+
-+static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
-+{
-+	return NULL;
-+}
-+
- static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 					       struct cgroup *ancestor)
- {
-diff --git a/include/linux/psi.h b/include/linux/psi.h
-index 371af1479699..05c3dae3e9c5 100644
---- a/include/linux/psi.h
-+++ b/include/linux/psi.h
-@@ -4,6 +4,9 @@
- #include <linux/psi_types.h>
- #include <linux/sched.h>
- 
-+struct seq_file;
-+struct css_set;
-+
- #ifdef CONFIG_PSI
- 
- extern bool psi_disabled;
-@@ -15,6 +18,14 @@ void psi_task_change(struct task_struct *task, u64 now, int clear, int set);
- void psi_memstall_enter(unsigned long *flags);
- void psi_memstall_leave(unsigned long *flags);
- 
-+int psi_show(struct seq_file *s, struct psi_group *group, enum psi_res res);
-+
-+#ifdef CONFIG_CGROUPS
-+int psi_cgroup_alloc(struct cgroup *cgrp);
-+void psi_cgroup_free(struct cgroup *cgrp);
-+void cgroup_move_task(struct task_struct *p, struct css_set *to);
-+#endif
-+
- #else /* CONFIG_PSI */
- 
- static inline void psi_init(void) {}
-@@ -22,6 +33,20 @@ static inline void psi_init(void) {}
- static inline void psi_memstall_enter(unsigned long *flags) {}
- static inline void psi_memstall_leave(unsigned long *flags) {}
- 
-+#ifdef CONFIG_CGROUPS
-+static inline int psi_cgroup_alloc(struct cgroup *cgrp)
-+{
-+	return 0;
-+}
-+static inline void psi_cgroup_free(struct cgroup *cgrp)
-+{
-+}
-+static inline void cgroup_move_task(struct task_struct *p, struct css_set *to)
-+{
-+	rcu_assign_pointer(p->cgroups, to);
-+}
-+#endif
-+
- #endif /* CONFIG_PSI */
- 
- #endif /* _LINUX_PSI_H */
-diff --git a/init/Kconfig b/init/Kconfig
-index e34859bda33e..b471dee2f0d4 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -469,6 +469,10 @@ config PSI
- 	  the share of walltime in which some or all tasks in the system are
- 	  delayed due to contention of the respective resource.
- 
-+	  In kernels with cgroup support (cgroup2 only), cgroups will
-+	  have cpu.pressure, memory.pressure, and io.pressure files,
-+	  which aggregate pressure stalls for the grouped tasks only.
-+
- 	  For more details see Documentation/accounting/psi.txt.
- 
- 	  Say N if unsure.
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index a662bfcbea0e..de1ca380f234 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -54,6 +54,7 @@
- #include <linux/proc_ns.h>
- #include <linux/nsproxy.h>
- #include <linux/file.h>
-+#include <linux/psi.h>
- #include <net/sock.h>
- 
- #define CREATE_TRACE_POINTS
-@@ -826,7 +827,7 @@ static void css_set_move_task(struct task_struct *task,
- 		 */
- 		WARN_ON_ONCE(task->flags & PF_EXITING);
- 
--		rcu_assign_pointer(task->cgroups, to_cset);
-+		cgroup_move_task(task, to_cset);
- 		list_add_tail(&task->cg_list, use_mg_tasks ? &to_cset->mg_tasks :
- 							     &to_cset->tasks);
- 	}
-@@ -3388,6 +3389,21 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
- 	return ret;
- }
- 
-+#ifdef CONFIG_PSI
-+static int cgroup_cpu_pressure_show(struct seq_file *seq, void *v)
-+{
-+	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_CPU);
-+}
-+static int cgroup_memory_pressure_show(struct seq_file *seq, void *v)
-+{
-+	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_MEM);
-+}
-+static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
-+{
-+	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_IO);
-+}
-+#endif
-+
- static int cgroup_file_open(struct kernfs_open_file *of)
- {
- 	struct cftype *cft = of->kn->priv;
-@@ -4499,6 +4515,23 @@ static struct cftype cgroup_base_files[] = {
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = cpu_stat_show,
- 	},
-+#ifdef CONFIG_PSI
-+       {
-+               .name = "cpu.pressure",
-+               .flags = CFTYPE_NOT_ON_ROOT,
-+               .seq_show = cgroup_cpu_pressure_show,
-+       },
-+       {
-+               .name = "memory.pressure",
-+               .flags = CFTYPE_NOT_ON_ROOT,
-+               .seq_show = cgroup_memory_pressure_show,
-+       },
-+       {
-+               .name = "io.pressure",
-+               .flags = CFTYPE_NOT_ON_ROOT,
-+               .seq_show = cgroup_io_pressure_show,
-+       },
-+#endif
- 	{ }	/* terminate */
- };
- 
-@@ -4559,6 +4592,7 @@ static void css_free_rwork_fn(struct work_struct *work)
- 			 */
- 			cgroup_put(cgroup_parent(cgrp));
- 			kernfs_put(cgrp->kn);
-+			psi_cgroup_free(cgrp);
- 			if (cgroup_on_dfl(cgrp))
- 				cgroup_stat_exit(cgrp);
- 			kfree(cgrp);
-@@ -4805,10 +4839,15 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	cgrp->self.parent = &parent->self;
- 	cgrp->root = root;
- 	cgrp->level = level;
--	ret = cgroup_bpf_inherit(cgrp);
-+
-+	ret = psi_cgroup_alloc(cgrp);
- 	if (ret)
- 		goto out_idr_free;
- 
-+	ret = cgroup_bpf_inherit(cgrp);
-+	if (ret)
-+		goto out_psi_free;
-+
- 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
-@@ -4846,6 +4885,8 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 
- 	return cgrp;
- 
-+out_psi_free:
-+	psi_cgroup_free(cgrp);
- out_idr_free:
- 	cgroup_idr_remove(&root->cgroup_idr, cgrp->id);
- out_stat_exit:
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index ef8e20383e4c..53e0b7b83e2e 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -395,6 +395,9 @@ static void psi_group_change(struct psi_group *group, int cpu, u64 now,
- 
- void psi_task_change(struct task_struct *task, u64 now, int clear, int set)
- {
-+#ifdef CONFIG_CGROUPS
-+	struct cgroup *cgroup, *parent;
-+#endif
- 	int cpu = task_cpu(task);
- 
- 	if (psi_disabled)
-@@ -416,6 +419,18 @@ void psi_task_change(struct task_struct *task, u64 now, int clear, int set)
- 	task->psi_flags |= set;
- 
- 	psi_group_change(&psi_system, cpu, now, clear, set);
-+
-+#ifdef CONFIG_CGROUPS
-+       cgroup = task->cgroups->dfl_cgrp;
-+       while (cgroup && (parent = cgroup_parent(cgroup))) {
-+               struct psi_group *group;
-+
-+               group = cgroup_psi(cgroup);
-+               psi_group_change(group, cpu, now, clear, set);
-+
-+               cgroup = parent;
-+       }
-+#endif
- }
- 
- /**
-@@ -482,8 +497,71 @@ void psi_memstall_leave(unsigned long *flags)
- 	rq_unlock_irq(rq, &rf);
- }
- 
--static int psi_show(struct seq_file *m, struct psi_group *group,
--		    enum psi_res res)
-+#ifdef CONFIG_CGROUPS
-+int psi_cgroup_alloc(struct cgroup *cgroup)
-+{
-+	cgroup->psi.cpus = alloc_percpu(struct psi_group_cpu);
-+	if (!cgroup->psi.cpus)
-+		return -ENOMEM;
-+	psi_group_init(&cgroup->psi);
-+	return 0;
-+}
-+
-+void psi_cgroup_free(struct cgroup *cgroup)
-+{
-+	cancel_delayed_work_sync(&cgroup->psi.clock_work);
-+	free_percpu(cgroup->psi.cpus);
-+}
-+
-+/**
-+ * cgroup_move_task - move task to a different cgroup
-+ * @task: the task
-+ * @to: the target css_set
-+ *
-+ * Move task to a new cgroup and safely migrate its associated stall
-+ * state between the different groups.
-+ *
-+ * This function acquires the task's rq lock to lock out concurrent
-+ * changes to the task's scheduling state and - in case the task is
-+ * running - concurrent changes to its stall state.
-+ */
-+void cgroup_move_task(struct task_struct *task, struct css_set *to)
-+{
-+	unsigned int task_flags = 0;
-+	struct rq_flags rf;
-+	struct rq *rq;
-+	u64 now;
-+
-+	rq = task_rq_lock(task, &rf);
-+
-+	if (task_on_rq_queued(task)) {
-+		task_flags = TSK_RUNNING;
-+	} else if (task->in_iowait) {
-+		task_flags = TSK_IOWAIT;
-+	}
-+	if (task->flags & PF_MEMSTALL)
-+		task_flags |= TSK_MEMSTALL;
-+
-+	if (task_flags) {
-+		update_rq_clock(rq);
-+		now = rq_clock(rq);
-+		psi_task_change(task, now, task_flags, 0);
-+	}
-+
-+	/*
-+	 * Lame to do this here, but the scheduler cannot be locked
-+	 * from the outside, so we move cgroups from inside sched/.
-+	 */
-+	rcu_assign_pointer(task->cgroups, to);
-+
-+	if (task_flags)
-+		psi_task_change(task, now, 0, task_flags);
-+
-+	task_rq_unlock(rq, task, &rf);
-+}
-+#endif /* CONFIG_CGROUPS */
-+
-+int psi_show(struct seq_file *m, struct psi_group *group, enum psi_res res)
- {
- 	unsigned long avg[2][3];
- 	u64 some, full;
--- 
-2.18.0
+		Real-world applications
+
+We're using the data collected by psi (and its previous incarnation,
+memdelay) quite extensively at Facebook, with several success stories.
+
+One usecase is avoiding OOM hangs/livelocks. The reason these happen
+is because the OOM killer is triggered by reclaim not being able to
+free pages, but with fast flash devices there is *always* some clean
+and uptodate cache to reclaim; the OOM killer never kicks in, even as
+tasks spend 90% of the time thrashing the cache pages of their own
+executables. There is no situation where this ever makes sense in
+practice. We wrote a <100 line POC python script to monitor memory
+pressure and kill stuff way before such pathological thrashing leads
+to full system losses that require forcible hard resets.
+
+We've since extended and deployed this code into other places to
+guarantee latency and throughput SLAs, since they're usually violated
+way before the kernel OOM killer would ever kick in.
+
+The idea is to eventually incorporate this back into the kernel, so
+that Linux can avoid OOM livelocks (which TECHNICALLY aren't memory
+deadlocks, but for the user indistinguishable) out of the box.
+
+We also use psi memory pressure for loadshedding. Our batch job
+infrastructure used to use heuristics based on various VM stats to
+anticipate OOM situations, with lackluster success. We switched it to
+psi and managed to anticipate and avoid OOM kills and hangs fairly
+reliably. The reduction of OOM outages in the worker pool raised the
+pool's aggregate productivity, and we were able to switch that service
+to smaller machines.
+
+Lastly, we use cgroups to isolate a machine's main workload from
+maintenance crap like package upgrades, logging, configuration, as
+well as to prevent multiple workloads on a machine from stepping on
+each others' toes. We were not able to configure this properly without
+the pressure metrics; we would see latency or bandwidth drops, but it
+would often be hard to impossible to rootcause it post-mortem.
+
+We now log and graph pressure for the containers in our fleet and can
+trivially link latency spikes and throughput drops to shortages of
+specific resources after the fact, and fix the job config/scheduling.
+
+I've also recieved feedback and feature requests from Android for the
+purpose of low-latency OOM killing. The on-demand stats aggregation in
+the last patch of this series is for this purpose, to allow Android to
+react to pressure before the system starts visibly hanging.
+
+		How do you use this feature?
+
+A kernel with CONFIG_PSI=y will create a /proc/pressure directory with
+3 files: cpu, memory, and io. If using cgroup2, cgroups will also have
+cpu.pressure, memory.pressure and io.pressure files, which simply
+aggregate task stalls at the cgroup level instead of system-wide.
+
+The cpu file contains one line:
+
+	some avg10=2.04 avg60=0.75 avg300=0.40 total=157656722
+
+The averages give the percentage of walltime in which one or more
+tasks are delayed on the runqueue while another task has the
+CPU. They're recent averages over 10s, 1m, 5m windows, so you can tell
+short term trends from long term ones, similarly to the load average.
+
+The total= value gives the absolute stall time in microseconds. This
+allows detecting latency spikes that might be too short to sway the
+running averages. It also allows custom time averaging in case the
+10s/1m/5m windows aren't adequate for the usecase (or are too coarse
+with future hardware).
+
+What to make of this "some" metric? If CPU utilization is at 100% and
+CPU pressure is 0, it means the system is perfectly utilized, with one
+runnable thread per CPU and nobody waiting. At two or more runnable
+tasks per CPU, the system is 100% overcommitted and the pressure
+average will indicate as much. From a utilization perspective this is
+a great state of course: no CPU cycles are being wasted, even when 50%
+of the threads were to go idle (as most workloads do vary). From the
+perspective of the individual job it's not great, however, and they
+would do better with more resources. Depending on what your priority
+and options are, raised "some" numbers may or may not require action.
+
+The memory file contains two lines:
+
+some avg10=70.24 avg60=68.52 avg300=69.91 total=3559632828
+full avg10=57.59 avg60=58.06 avg300=60.38 total=3300487258
+
+The some line is the same as for cpu, the time in which at least one
+task is stalled on the resource. In the case of memory, this includes
+waiting on swap-in, page cache refaults and page reclaim.
+
+The full line, however, indicates time in which *nobody* is using the
+CPU productively due to pressure: all non-idle tasks are waiting for
+memory in one form or another. Significant time spent in there is a
+good trigger for killing things, moving jobs to other machines, or
+dropping incoming requests, since neither the jobs nor the machine
+overall are making too much headway.
+
+The io file is similar to memory. Because the block layer doesn't have
+a concept of hardware contention right now (how much longer is my IO
+request taking due to other tasks?), it reports CPU potential lost on
+all IO delays, not just the potential lost due to competition.
+
+		FAQ
+
+Q: How is PSI's CPU component different from the load average?
+
+A: There are several quirks in the load average that make it hard to
+   impossible to tell how overcommitted the CPU really is.
+
+   1. The load average is reported as a raw number of active tasks.
+      You need to know how many CPUs there are in the system, how many
+      CPUs the workload is allowed to use, then think about what the
+      proportion between load and the number of CPUs means for the
+      tasks trying to run.
+
+      PSI reports the percentage of wallclock time in which tasks are
+      waiting for a CPU to run on. It doesn't matter how many CPUs are
+      present or usable. The number always tells the quality of life
+      of tasks in the system or in a particular cgroup.
+
+   2. The shortest averaging window is 1m, which is extremely coarse,
+      and it's sampled in 5s intervals. A *lot* can happen on a CPU in
+      5 seconds. This *may* be able to identify persistent long-term
+      trends and very clear and obvious overloads, but it's unusable
+      for latency spikes and more subtle overutilization.
+
+      PSI's shortest window is 10s. It also exports the cumulative
+      stall times (in microseconds) of synchronously recorded events.
+
+   3. On Linux, the load average for historical reasons includes all
+      TASK_UNINTERRUPTIBLE tasks. This gives a broader sense of how
+      busy the system is, but on the flipside it doesn't distinguish
+      whether tasks are likely to contend over the CPU or IO - which
+      obviously requires very different interventions from a sys admin
+      or a job scheduler.
+
+      PSI reports independent metrics for CPU and IO. You can tell
+      which resource is making the tasks wait, but in conjunction
+      still see how overloaded the system is overall.
+
+These patches are against v4.17. They're maintained against upstream
+here as well: http://git.cmpxchg.org/cgit.cgi/linux-psi.git
+
+ Documentation/accounting/psi.txt                |  73 +++
+ Documentation/cgroup-v2.txt                     |  18 +
+ arch/powerpc/platforms/cell/cpufreq_spudemand.c |   2 +-
+ arch/powerpc/platforms/cell/spufs/sched.c       |   9 +-
+ arch/s390/appldata/appldata_os.c                |   4 -
+ drivers/cpuidle/governors/menu.c                |   4 -
+ fs/proc/loadavg.c                               |   3 -
+ include/linux/cgroup-defs.h                     |   4 +
+ include/linux/cgroup.h                          |  15 +
+ include/linux/delayacct.h                       |  23 +
+ include/linux/mmzone.h                          |   1 +
+ include/linux/page-flags.h                      |   5 +-
+ include/linux/psi.h                             |  52 ++
+ include/linux/psi_types.h                       |  90 +++
+ include/linux/sched.h                           |  10 +
+ include/linux/sched/loadavg.h                   |  24 +-
+ include/linux/sched/stat.h                      |  10 +-
+ include/linux/swap.h                            |   2 +-
+ include/trace/events/mmflags.h                  |   1 +
+ include/uapi/linux/taskstats.h                  |   6 +-
+ init/Kconfig                                    |  20 +
+ kernel/cgroup/cgroup.c                          |  45 +-
+ kernel/debug/kdb/kdb_main.c                     |   7 +-
+ kernel/delayacct.c                              |  15 +
+ kernel/fork.c                                   |   4 +
+ kernel/sched/Makefile                           |   1 +
+ kernel/sched/core.c                             |  11 +-
+ kernel/sched/loadavg.c                          | 139 ++---
+ kernel/sched/psi.c                              | 699 ++++++++++++++++++++++
+ kernel/sched/sched.h                            | 178 +++---
+ kernel/sched/stats.h                            | 102 +++-
+ mm/compaction.c                                 |   5 +
+ mm/filemap.c                                    |  27 +-
+ mm/huge_memory.c                                |   1 +
+ mm/memcontrol.c                                 |   2 +
+ mm/migrate.c                                    |   2 +
+ mm/page_alloc.c                                 |  10 +
+ mm/swap_state.c                                 |   1 +
+ mm/vmscan.c                                     |  14 +
+ mm/vmstat.c                                     |   1 +
+ mm/workingset.c                                 | 113 ++--
+ tools/accounting/getdelays.c                    |   8 +-
+ 42 files changed, 1505 insertions(+), 256 deletions(-)
+
+Changes in v2:
+- Extensive documentation and comment update. Per everybody.
+  In particular, I've added a much more detailed explanation
+  of the SMP model, which caused some misunderstandings last time.
+- Uninlined calc_load_n(), as it was just too fat. Per Peter.
+- Split kernel/sched/stats.h churn into its own commit to
+  avoid noise in the main patch and explain the reshuffle. Per Peter.
+- Abstracted this_rq_lock_irq(). Per Peter.
+- Eliminated cumulative clock drift error. Per Peter.
+- Packed the per-cpu datastructure. Per Peter.
+- Fixed 64-bit divisions on 32 bit. Per Peter.
+- Added outer-most psi_disabled checks. Per Peter.
+- Fixed some coding style issues. Per Peter.
+- Fixed a bug in the lazy clock. Per Suren.
+- On-demand stat aggregation when user reads. Per Suren.
+- Fixed task state corruption on preemption race. Per Suren.
+- Fixed a CONFIG_PSI=n build error.
+- Minor cleanups, optimizations.
+
 
