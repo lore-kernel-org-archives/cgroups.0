@@ -1,117 +1,64 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch v3 -mm 5/6] mm, memcg: separate oom_group from selection
- criteria
-Date: Fri, 13 Jul 2018 16:07:33 -0700 (PDT)
-Message-ID: <alpine.DEB.2.21.1807131606410.217600@chino.kir.corp.google.com>
-References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com> <alpine.DEB.2.20.1803151351140.55261@chino.kir.corp.google.com> <alpine.DEB.2.20.1803161405410.209509@chino.kir.corp.google.com> <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
- <alpine.DEB.2.21.1807131604560.217600@chino.kir.corp.google.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: Re: [RFC PATCH 10/10] psi: aggregate ongoing stall events when
+ somebody reads pressure
+Date: Fri, 13 Jul 2018 16:34:59 -0700
+Message-ID: <CAJuCfpFe-tfcK3BPZ2Y9AEC56PtYpCc04YPGF+fs=e=RqkW-XA@mail.gmail.com>
+References: <20180712172942.10094-1-hannes@cmpxchg.org> <20180712172942.10094-11-hannes@cmpxchg.org>
+ <CAJuCfpHGhSs6upZj0ARng-rE1Nbtcr_XHynZhN7EgGdC16tpPg@mail.gmail.com> <20180713224920.GA31566@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=epRZbX2MzRqd+YuWxHaOlHsDt6hjooJyagwCrO6Tw7s=;
-        b=rbbTv0pVdOMpkx6IDJePGKTtbXOpoY94OgqpCA9Sv8VNRdLlTS8Q4PH+wyvf4cJbQ0
-         Ml//JNgvPGZeftKDb2vEQ4bU9J/peofq60rEXlFLnNqXtR6jIITD2OrGZhzOB64SR0lq
-         fuPQLQPka3HJJxO2bmEM9Fi1utZJJAnBKNl4iVa6ooEgqJQ9ZIZZm0TKEXbOPzt9c0Mo
-         5kLGWZnlyci31B8wEm+R/ZkI+EPUcXrUZu+gq2T+FoOCpLKLoP3JjOR/qmTmrM0SvAXn
-         jY3Q8YXUkspZwvGtfmm0eezEzUdgwWOplAq3hvXUljbrvOXMUjRZavpJx+hBjnFK/o1N
-         /gpg==
-In-Reply-To: <alpine.DEB.2.21.1807131604560.217600@chino.kir.corp.google.com>
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=LbuajyqVafS+Oe0uGJrsnT4wqPiXVRFSTfmkTnit5WY=;
+        b=qT3SePYjvLFlPgcGsDtTeG5wOek+6Fff0AME4B/qoaS/iNMptN03hbtYFhonUtd+m6
+         issLWguzjzOZZjClJzoHhUKdX8S8v2zOcfrbhP5cyjY+Gguxb/cpy25unXLj+GlckHXi
+         gR4GyCXiYVumG/wYOGhtF96pDzntEgB0O4cpMgsd3YvSLT1mivMx/elyxLT6blG7c8KZ
+         L2zMHl77WSWjd51PxUTFRSa2jRpPD6VbINsUkadJ+phb/wLZIVeJGgMo5ggXrG7dfjMx
+         R6eeEgqs7LXRX79hW2IX9viVVs3fn1Ls3EcYrQr+oO+TYrb5SdweaMuj8SSsquTuTQAD
+         WzNg==
+In-Reply-To: <20180713224920.GA31566@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-With the current implementation of the cgroup-aware oom killer,
-memory.oom_group defines two behaviors:
+On Fri, Jul 13, 2018 at 3:49 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+> On Fri, Jul 13, 2018 at 03:13:07PM -0700, Suren Baghdasaryan wrote:
+>> On Thu, Jul 12, 2018 at 10:29 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+>> > might want to know about and react to stall states before they have
+>> > even concluded (e.g. a prolonged reclaim cycle).
+>> >
+>> > This patches the procfs/cgroupfs interface such that when the pressure
+>> > metrics are read, the current per-cpu states, if any, are taken into
+>> > account as well.
+>> >
+>> > Any ongoing states are concluded, their time snapshotted, and then
+>> > restarted. This requires holding the rq lock to avoid corruption. It
+>> > could use some form of rq lock ratelimiting or avoidance.
+>> >
+>> > Requested-by: Suren Baghdasaryan <surenb@google.com>
+>> > Not-yet-signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+>> > ---
+>>
+>> IMHO this description is a little difficult to understand. In essence,
+>> PSI information is being updated periodically every 2secs and without
+>> this patch the data can be stale at the time when we read it (because
+>> it was last updated up to 2secs ago). To avoid this we update the PSI
+>> "total" values when data is being read.
+>
+> That fix I actually folded into the main patch. We now always update
+> the total= field at the time the user reads to include all concluded
+> events, even if we sampled less than 2s ago. Only the running averages
+> are still bound to the 2s sampling window.
+>
+> What this patch adds on top is for total= to include any *ongoing*
+> stall events that might be happening on a CPU at the time of reading
+> from the interface, like a reclaim cycle that hasn't finished yet.
 
- - consider the footprint of the "group" consisting of the mem cgroup
-   itself and all descendants for comparison with other cgroups, and
-
- - when selected as the victim mem cgroup, kill all processes attached to
-   it and its descendants that are eligible to be killed.
-
-Now that the memory.oom_policy of "tree" considers the memory footprint of
-the mem cgroup and all its descendants, separate the memory.oom_group
-setting from the selection criteria.
-
-Now, memory.oom_group only controls whether all processes attached to the
-victim mem cgroup and its descendants are oom killed (when set to "1") or
-the single largest memory consuming process attached to the victim mem
-cgroup and its descendants is killed.
-
-This is generally regarded as a property of the workload attached to the
-subtree: it depends on whether the workload can continue running and be
-useful if a single process is oom killed or whether it's better to kill
-all attached processes.
-
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- Documentation/admin-guide/cgroup-v2.rst | 21 ++++-----------------
- mm/memcontrol.c                         |  8 ++++----
- 2 files changed, 8 insertions(+), 21 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1078,25 +1078,12 @@ PAGE_SIZE multiple when read back.
- 	A read-write single value file which exists on non-root
- 	cgroups.  The default is "0".
- 
--	If set, OOM killer will consider the memory cgroup as an
--	indivisible memory consumers and compare it with other memory
--	consumers by it's memory footprint.
--	If such memory cgroup is selected as an OOM victim, all
--	processes belonging to it or it's descendants will be killed.
-+	If such memory cgroup is selected as an OOM victim, all processes
-+	attached to it and its descendants that are eligible for oom kill
-+	(their /proc/pid/oom_score_adj is not oom disabled) will be killed.
- 
- 	This applies to system-wide OOM conditions and reaching
- 	the hard memory limit of the cgroup and their ancestor.
--	If OOM condition happens in a descendant cgroup with it's own
--	memory limit, the memory cgroup can't be considered
--	as an OOM victim, and OOM killer will not kill all belonging
--	tasks.
--
--	Also, OOM killer respects the /proc/pid/oom_score_adj value -1000,
--	and will never kill the unkillable task, even if memory.oom_group
--	is set.
--
--	If cgroup-aware OOM killer is not enabled, ENOTSUPP error
--	is returned on attempt to access the file.
- 
-   memory.oom_policy
- 
-@@ -1379,7 +1366,7 @@ When selecting a cgroup as a victim, the OOM killer will kill the process
- with the largest memory footprint.  A user can control this behavior by
- enabling the per-cgroup memory.oom_group option.  If set, it causes the
- OOM killer to kill all processes attached to the cgroup, except processes
--with /proc/pid/oom_score_adj set to -1000 (oom disabled).
-+with /proc/pid/oom_score_adj set to OOM_SCORE_ADJ_MIN.
- 
- The root cgroup is treated as a leaf memory cgroup as well, so it is
- compared with other leaf memory cgroups.
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2943,11 +2943,11 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
- 			continue;
- 
- 		/*
--		 * We don't consider non-leaf non-oom_group memory cgroups
--		 * without the oom policy of "tree" as OOM victims.
-+		 * We don't consider non-leaf memory cgroups without the oom
-+		 * policy of "tree" as OOM victims.
- 		 */
--		if (memcg_has_children(iter) && !mem_cgroup_oom_group(iter) &&
--		    iter->oom_policy != MEMCG_OOM_POLICY_TREE)
-+		if (iter->oom_policy != MEMCG_OOM_POLICY_TREE &&
-+				memcg_has_children(iter))
- 			continue;
- 
- 		/*
+Ok, I see now what you mean. So ondemand flag controls whether
+*ongoing* stall events are accounted for or not. Nit: maybe rename
+that flag to better explain it's function?
