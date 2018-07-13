@@ -1,61 +1,66 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [RFC PATCH 10/10] psi: aggregate ongoing stall events when
- somebody reads pressure
-Date: Fri, 13 Jul 2018 18:49:20 -0400
-Message-ID: <20180713224920.GA31566@cmpxchg.org>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-11-hannes@cmpxchg.org>
- <CAJuCfpHGhSs6upZj0ARng-rE1Nbtcr_XHynZhN7EgGdC16tpPg@mail.gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch v3 -mm 0/6] rewrite cgroup aware oom killer for general use
+Date: Fri, 13 Jul 2018 16:07:23 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1807131604560.217600@chino.kir.corp.google.com>
+References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com> <alpine.DEB.2.20.1803151351140.55261@chino.kir.corp.google.com> <alpine.DEB.2.20.1803161405410.209509@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=HZKdE5BEkuE41busR47XjmYnRCtqFvpmYwJ64dAu8iU=;
-        b=RfPu4v/XumHDR+n+s8fcBUN+mzsf8UVrzt5PgLxCRGYRdHEwfcCXpc3LlZfMgz7t6e
-         s+y+uo/IYQYbDXLiJE0NjWCaWHA315ilkxI/tBTDRPgH7CBlOzoyg/Q9RSZeFdVqUM9u
-         cidAzqAKgO0wKELYoZOPfR8BQGFy9dx5Lkt+VRxi8XNw9SobhD5yBiIRB19EHSBUTrZn
-         28A54Lh2FIEYS5hkFOTqoKgzjuxbvzzN+ul4ks6Yqla3LIxEJ0eFgWzSMH7QhVl2VTiL
-         gdj90CU3rqiO7dHORF9aYdZIsJ+DBDuyVkUWGrj9TvKrQKHExpY6uf1YrsIVIslHoidD
-         8Wxw==
-Content-Disposition: inline
-In-Reply-To: <CAJuCfpHGhSs6upZj0ARng-rE1Nbtcr_XHynZhN7EgGdC16tpPg@mail.gmail.com>
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=3nT8/OaJFbIBKu9R5rivmEY5NIymfud7kC1ewr2xxfg=;
+        b=vM6+58LE0Yyi6Z/CpK7NMee3AyULAQg99idjRTBl8opQqoZkSkwSJYx0qBwAjNp9Vm
+         9gnLFkaSstMwz3uLrp/81VtsKWQpOU/JXix/gwDWO9lZ0JZo2XMTopBbwCHvWfJ817bU
+         XenjR7uj50JB9H+kSvhmACPwZfv892LfGAIS+0jxd/5H4ThF7158kpOkYpTs8bPhJWkk
+         bLGxjZKukSfkpQ9ZWYC5pbPQ+XjvZeeIb6ZrANvxHgDx4tu5FsemENN8S3d0CV8c7Ba8
+         GVWQ8NtrvNF3Vk9LYocF5jG7tUa7JOoOzOd9DJoDH1q72dH2IpWyb+0ArzuuQgt26SLg
+         bUbA==
+In-Reply-To: <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Jul 13, 2018 at 03:13:07PM -0700, Suren Baghdasaryan wrote:
-> On Thu, Jul 12, 2018 at 10:29 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > might want to know about and react to stall states before they have
-> > even concluded (e.g. a prolonged reclaim cycle).
-> >
-> > This patches the procfs/cgroupfs interface such that when the pressure
-> > metrics are read, the current per-cpu states, if any, are taken into
-> > account as well.
-> >
-> > Any ongoing states are concluded, their time snapshotted, and then
-> > restarted. This requires holding the rq lock to avoid corruption. It
-> > could use some form of rq lock ratelimiting or avoidance.
-> >
-> > Requested-by: Suren Baghdasaryan <surenb@google.com>
-> > Not-yet-signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > ---
-> 
-> IMHO this description is a little difficult to understand. In essence,
-> PSI information is being updated periodically every 2secs and without
-> this patch the data can be stale at the time when we read it (because
-> it was last updated up to 2secs ago). To avoid this we update the PSI
-> "total" values when data is being read.
+There are three significant concerns about the cgroup aware oom killer as
+it is implemented in -mm:
 
-That fix I actually folded into the main patch. We now always update
-the total= field at the time the user reads to include all concluded
-events, even if we sampled less than 2s ago. Only the running averages
-are still bound to the 2s sampling window.
+ (1) allows users to evade the oom killer by creating subcontainers or
+     using other controllers since scoring is done per cgroup and not
+     hierarchically,
 
-What this patch adds on top is for total= to include any *ongoing*
-stall events that might be happening on a CPU at the time of reading
-from the interface, like a reclaim cycle that hasn't finished yet.
+ (2) unfairly compares the root mem cgroup using completely different
+     criteria than leaf mem cgroups and allows wildly inaccurate results
+     if oom_score_adj is used, and
+
+ (3) does not allow the user to influence the decisionmaking, such that
+     important subtrees cannot be preferred or biased.
+
+This patchset fixes (1) and (2) completely and, by doing so, introduces a
+completely extensible user interface that can be expanded in the future.
+
+Concern (3) could subsequently be addressed either before or after the
+cgroup-aware oom killer feature is merged.
+
+It preserves all functionality that currently exists in -mm and extends
+it to be generally useful outside of very specialized usecases.
+
+It eliminates the mount option for the cgroup aware oom killer entirely
+since it is now enabled through the root mem cgroup's oom policy.
+---
+v3:
+ - Rebased to next-20180713
+
+v2:
+ - Rebased to next-20180322
+ - Fixed get_nr_swap_pages() build bug found by kbuild test robot
+
+ Documentation/admin-guide/cgroup-v2.rst | 100 ++++++-----
+ include/linux/cgroup-defs.h             |   5 -
+ include/linux/memcontrol.h              |  21 +++
+ kernel/cgroup/cgroup.c                  |  13 +-
+ mm/memcontrol.c                         | 221 ++++++++++++++----------
+ 5 files changed, 204 insertions(+), 156 deletions(-)
