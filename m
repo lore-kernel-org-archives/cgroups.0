@@ -1,165 +1,146 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
- and IO
-Date: Fri, 13 Jul 2018 12:17:56 -0400
-Message-ID: <20180713161756.GA21168@cmpxchg.org>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-9-hannes@cmpxchg.org>
- <20180713092153.GU2494@hirez.programming.kicks-ass.net>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
+Date: Fri, 13 Jul 2018 14:59:59 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1807131438380.194789@chino.kir.corp.google.com>
+References: <20171130152824.1591-1-guro@fb.com> <20180605114729.GB19202@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Zl6YZJtiGG4QeyB5p11YdHpoxCmF1MQTVRQSz3Cerqo=;
-        b=ra0eqT3xYbyNOq7xZR3nZXhaFG/+3E69trzNPp+6/2YzxFyfcO7iX4oyGlT5aO18vA
-         BoE84ieBb85/CPuu7oLms0zBn2ednBRmmtoVLvgN2E4osL2+qXCuUb9yWvUUPsSLSOFo
-         ZYJQaC2d/3KqEOpEruB8lcaoRpW69K6qdEDSU4NLp4E/PGVGzK4wBMryqS2+AMV0hfRG
-         kSX7+mY5xS2ZK+8kRbE1kh8OOAldHM+Ct8O3+fdNguAOFnS1v88D8clfs6buFtIM1+Eb
-         OfUMtfl+0BiU9/7AoELz8kJwo6OMWex6eOXPRVkDgeHowaqtA1YT9vGeJ38tdAKAa+cQ
-         vxlA==
-Content-Disposition: inline
-In-Reply-To: <20180713092153.GU2494@hirez.programming.kicks-ass.net>
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=+DENwK4lkCnJMvCIXw6fud1Fyp78X4KXSPKJLfYtvXc=;
+        b=Efte97/gBjn/+D4ZQhrjfhi2NLUL/U5RfkolzZ/7+WnVX/zuZmP4EgSbySZUmrqDRT
+         nzfp2ENl37woS+lcz+AZhQIhbazCWe80pMSzWzD/TR8sMnbTq0l1jSbeYyRkSd/+0FZH
+         P4aBaxbQ4/qOJts7P9mWQi87Z6A7mhzGBzFm9MC3dB9taU7JAtwTWQ/Mi8ZtfjNTr2jq
+         WzH5iPW1jIRq7co5dRQPjjS+PBOAtoVZ7Y0Zi9n+d23CgtRY+qfKX6u6lgvR4YDT0iry
+         nT7jiZonn1NmRrCIodch0pID+Zb4Z6yigMpPDoQ0vHTbLW0CeUta7sdNFHkBOpzxrNxh
+         RbWA==
+In-Reply-To: <20180605114729.GB19202@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Hi Peter,
+On Tue, 5 Jun 2018, Michal Hocko wrote:
 
-On Fri, Jul 13, 2018 at 11:21:53AM +0200, Peter Zijlstra wrote:
-> On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
-> > +static inline void psi_ttwu_dequeue(struct task_struct *p)
-> > +{
-> > +	if (psi_disabled)
-> > +		return;
-> > +	/*
-> > +	 * Is the task being migrated during a wakeup? Make sure to
-> > +	 * deregister its sleep-persistent psi states from the old
-> > +	 * queue, and let psi_enqueue() know it has to requeue.
-> > +	 */
-> > +	if (unlikely(p->in_iowait || (p->flags & PF_MEMSTALL))) {
-> > +		struct rq_flags rf;
-> > +		struct rq *rq;
-> > +		int clear = 0;
-> > +
-> > +		if (p->in_iowait)
-> > +			clear |= TSK_IOWAIT;
-> > +		if (p->flags & PF_MEMSTALL)
-> > +			clear |= TSK_MEMSTALL;
-> > +
-> > +		rq = __task_rq_lock(p, &rf);
-> > +		update_rq_clock(rq);
-> > +		psi_task_change(p, rq_clock(rq), clear, 0);
-> > +		p->sched_psi_wake_requeue = 1;
-> > +		__task_rq_unlock(rq, &rf);
-> > +	}
-> > +}
+> 1) comparision root with tail memcgs during the OOM killer is not fair
+> because we are comparing tasks with memcgs.
 > 
-> Still NAK, what happened to this here:
+> This is true, but I do not think this matters much for workloads which
+> are going to use the feature. Why? Because the main consumers of the new
+> feature seem to be containers which really need some fairness when
+> comparing _workloads_ rather than processes. Those are unlikely to
+> contain any significant memory consumers in the root memcg. That would
+> be mostly common infrastructure.
 > 
->   https://lkml.kernel.org/r/20180514083353.GN12217@hirez.programming.kicks-ass.net
 
-I did react to this in the v2 docs / code comments, but I should have
-been more direct about addressing your points - sorry about that.
+There are users (us) who want to use the feature and not all processes are 
+attached to leaf mem cgroups.  The functionality can be provided in a 
+generally useful way that doesn't require any specific hierarchy, and I 
+implemented this in my patch series at 
+https://marc.info/?l=linux-mm&m=152175563004458&w=2.  That proposal to fix 
+*all* of my concerns with the cgroup-aware oom killer as it sits in -mm, 
+in it's entirety, only extends it so it is generally useful and does not 
+remove any functionality.  I'm not sure why we are discussing ways of 
+moving forward when that patchset has been waiting for review for almost 
+four months and, to date, I haven't seen an objection to.
 
-In that thread we disagree about exactly how to aggregate task stalls
-to produce meaningful numbers, but your main issue is with the way we
-track state per-CPU instead of globally, given the rq lock cost on
-wake-migration and the meaning of task->cpu of a sleeping task.
+I don't know why we cannot agree on making solutions generally useful nor 
+why that patchset has not been merged into -mm so that the whole feature 
+can be merged.  It's baffling.  This is the first time I've encountered a 
+perceived stalemate when there is a patchset sitting, unreviewed, that 
+fixes all of the concerns that there are about the implementation sitting 
+in -mm.
 
-First off, what I want to do can indeed be done without a strong link
-of a sleeping task to a CPU. We don't rely on it, and it's something I
-only figured out in v2. The important thing is not, as I previously
-thought, that CPUs are tracked independently from each other, but that
-we use potential execution threads as the baseline for potential that
-could be wasted by resource delays. Tracking CPUs independently just
-happens to do that implicitly, but it's not a requirement.
+This isn't a criticism just of comparing processes attached to root 
+differently than leaf mem cgroups, it's how oom_score_adj influences that 
+decision.  It's trivial for a very small consumer (not "significant" 
+memory consumer, as you put it) to require an oom kill from root instead 
+of a leaf mem cgroup.  I show in 
+https://marc.info/?l=linux-mm&m=152175564104468&w=2 that changing the 
+oom_score_adj of my bash shell attached to the root mem cgroup is 
+considered equal to a 95GB leaf mem cgroup with the current 
+implementation.
 
-In v2 of psi.c I'm outlining a model that formulates the SOME and FULL
-states from global state in a way that still produces meaningful
-numbers on SMP machines by comparing the task state to the number of
-possible concurrent execution threads. Here is the excerpt:
+> Is this is fixable? Yes, we would need to account in the root memcgs.
+> Why are we not doing that now? Because it has some negligible
+> performance overhead. Are there other ways? Yes we can approximate root
+> memcg memory consumption but I would rather wait for somebody seeing
+> that as a real problem rather than add hacks now without a strong
+> reason.
+> 
 
-	threads = min(nr_nonidle_tasks, nr_cpus)
-	   SOME = min(nr_delayed_tasks / threads, 1)
-	   FULL = (threads - min(nr_running_tasks, threads)) / threads
+I fixed this in https://marc.info/?t=152175564500007&r=1&w=2, and from 
+what I remmeber Roman actually liked it.
 
-It's followed in psi.c by examples of how/why it works, but whether
-you agree with the exact formula or not, what you can see is that it
-could be implemented exactly like the load average: use per-cpu
-counters to construct global values for those task counts, fold and
-sample that state periodically and feed it into the running averages.
+> 2) Evading the oom killer by attaching processes to child cgroups which
+> basically means that a task can split up the workload into smaller
+> memcgs to hide their real memory consumption.
+> 
+> Again true but not really anything new. Processes can already fork and
+> split up the memory consumption. Moreover it doesn't even require any
+> special privileges to do so unlike creating a sub memcg. Is this
+> fixable? Yes, untrusted workloads can setup group oom evaluation at the
+> delegation layer so all subgroups would be considered together.
+> 
 
-So whytf is it still done with cpu-local task states?
+Processes being able to fork to split up memory consumption is also fixed 
+by https://marc.info/?l=linux-mm&m=152175564104467 just as creating 
+subcontainers to intentionally or unintentionally subverting the oom 
+policy is fixed.  It solves both problems.
 
-The general problem with sampling here is that it's way too coarse to
-capture the events we want to know about. The load average is okay-ish
-for long term trends, but interactive things care about stalls in the
-millisecond range each, and we cannot get those accurately with
-second-long sampling intervals (and we cannot fold the CPU state much
-more frequently than this before it gets prohibitively expensive).
+> 3) Userspace has zero control over oom kill selection in leaf mem
+> cgroups.
+> 
+> Again true but this is something that needs a good evaluation to not end
+> up in the fiasko we have seen with oom_score*. Current users demanding
+> this feature can live without any prioritization so blocking the whole
+> feature seems unreasonable.
+> 
 
-Since our stall states are composed of multiple tasks, recording the
-precise time spent in them requires some sort of serialization with
-scheduling activity, and doing that globally would be a non-starter on
-SMP. Hence still the CPU-local state tracking to approximate the
-global state.
+One objection here is how the oom_score_adj of a process means something 
+or doesn't mean something depending on what cgroup it is attached to.  The 
+cgroup-aware oom killer is cgroup aware.  oom_score_adj should play no 
+part.  I fixed this with https://marc.info/?t=152175564500007&r=1&w=2.  
+The other objection is that users do have cgroups that shouldn't be oom 
+killed because they are important, either because they are required to 
+provide a service for a smaller cgroup or because of business goals.  We 
+have cgroups that use more than half of system memory and they are allowed 
+to do so because they are important.  We would love to be able to bias 
+against that cgroup to prefer others, or prefer cgroups for oom kill 
+because they are less important.  This was done for processes with 
+oom_score_adj, we need it for a cgroup aware oom killer for the same 
+reason.
 
-Now to your concern about relying on the task<->CPU association.
+But notice even in https://marc.info/?l=linux-mm&m=152175563004458&w=2 
+that I said priority or adjustment can be added on top of the feature 
+after it's merged.  This itself is not precluding anything from being 
+merged.
 
-We don't *really* rely on a strict association, it's more of a hint or
-historic correlation. It's fine if tasks move around on us, we just
-want to approximate when CPUs go idle due to stalls or lack of work.
-Let's take your quote from the thread:
+> 4) Future extensibility to be backward compatible.
+> 
+> David is wrong here IMHO. Any prioritization or oom selection policy
+> controls added in future are orthogonal to the oom_group concept added
+> by this patchset. Allowing memcg to be an oom entity is something that
+> we really want longterm. Global CGRP_GROUP_OOM is the most restrictive
+> semantic and softening it will be possible by a adding a new knob to
+> tell whether a memcg/hierarchy is a workload or a set of tasks.
 
-: Note that a task doesn't sleep on a CPU. When it sleeps it is not
-: strictly associated with a CPU, only when it runs does it have an
-: association.
-:
-: What is the value of accounting a sleep state to a particular CPU
-: if the task when wakes up on another? Where did the sleep take place?
+I've always said that the mechanism and policy in this patchset should be 
+separated.  I do that exact thing in 
+https://marc.info/?l=linux-mm&m=152175564304469&w=2.  I suggest that 
+different subtrees will want (or the admin will require) different 
+behaviors with regard to the mechanism.
 
-Let's say you have a CPU running a task that then stalls on
-memory. When it wakes back up it gets moved to another CPU.
 
-We don't care so much about what happens after the task wakes up, we
-just need to know where the task was running when it stalled. Even if
-the task gets migrated on wakeup - *while* the stall is occuring, we
-can say whether that task's old CPU goes idle due to that stall, and
-has to report FULL; or something else can run on it, in which case it
-only reports SOME. And even if the task bounced around CPUs while it
-was running, and it was only briefly on the CPU on which it stalled -
-what we care about is a CPU being idle because of stalls instead of a
-genuine lack of work.
+I've stated the problems (and there are others wrt mempolicy selection) 
+that the current implementation has and given a full solution at 
+https://marc.info/?l=linux-mm&m=152175563004458&w=2 that has not been 
+reviewed.  I would love feedback from anybody on this thread on that.  I'm 
+not trying to preclude the cgroup-aware oom killer from being merged, I'm 
+the only person actively trying to get it merged.
 
-This is certainly susceptible to delayed tasks bunching up unevenly on
-CPUs, like the comment in the referenced e33a9bba85a8 ("sched/core:
-move IO scheduling accounting from io_schedule_timeout() into
-scheduler") points out. I.e. a second task starts running on that CPU
-with the delayed task, then gets delayed as itself; now you have two
-delayed tasks on a single CPU and possibly none on some other CPU.
-
-Does that mean we underreport pressure, or report "a lower bound of
-pressure" in the words of e33a9bba85a8?
-
-Not entirely. We average CPUs based on nonidle weight. If you have two
-CPUs and one has two stalled tasks while the other CPU is idle, the
-average still works out to 100% FULL since the idle CPU doesn't weigh
-anything in the aggregation.
-
-It's not perfect since the nonidle tracking is shared between all
-three resources and, say, an iowait task tracked on the other CPU
-would render that CPU "productive" from a *memory* stand point. We
-*could* change that by splitting out nonidle tracking per resource,
-but I'm honestly not convinced that this is an issue in practice - it
-certainly hasn't been for us. Even if we said this *is* a legitimate
-issue, reporting the lower bound of all stall events is a smaller
-error than missing events entirely like periodic sampling would.
-
-That's my thought process, anyway. I'd be more than happy to make this
-more lightweight, but I don't see a way to do it without losing
-significant functional precision.
+Thanks.
