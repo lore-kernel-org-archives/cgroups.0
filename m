@@ -1,74 +1,41 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
- and IO
-Date: Sat, 14 Jul 2018 11:02:44 +0200
-Message-ID: <20180714090244.GC4920@worktop.programming.kicks-ass.net>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-9-hannes@cmpxchg.org>
- <20180713092153.GU2494@hirez.programming.kicks-ass.net>
- <20180713161756.GA21168@cmpxchg.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] mm: avoid bothering interrupted task when charge memcg in softirq
+Date: Sat, 14 Jul 2018 08:38:17 -0700
+Message-ID: <CALvZod57QFRVQ7kM4LSNQJACQ+dGC_otJkqK-5+i-0b53Zq5aA@mail.gmail.com>
+References: <1531557122-12540-1-git-send-email-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=DjX+vA0IobqjWniEWexVFNFhaNudjWnwNFHbmpTAbLY=; b=qX5TwQU+PVNWBKxA80Ffz56yc
-        GZYlxBHBVHTxiiyMFbEJHKKEkuxW31ZTNyvkfD1HF9Cd7Ukct6YTCnVoMFymNZ+R9euH8mb2pT0PR
-        rvZuraM50urQQtpxiRHr3cfkmgfBx73oISZHijxnuIFWDP7Fhc7eMZd7KwDpszO/vy7dynXux0ULR
-        HhK3+5UoEzTVE+tj+ucFlYUeVm46CRIF+oi/TpXNwCaOcklovHKdvTCluWOB/mJqe+U94f3eWO8S9
-        pxrwRWQX9mL+16zXaiGPoNTEpwNPVHo8gVCSUH0rC7SUTC71Q8fr2ovN6EMvOShtg+Iy4Md1E1Ijm
-    
-Content-Disposition: inline
-In-Reply-To: <20180713161756.GA21168@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=iluyll3MCCBbrDy+jCMfsrBekBknlCkm0XifQvaH1mE=;
+        b=M6Sz+C2P0N3PoJ0mQ2Gasps7WsdEUP/I8XExH8cIdMf+umBw99aG5DcAocXVXrFs8F
+         bGleg9/NiJQ21OGl88F5BBYsb0zJ+nJ7U9sVyiFCk83FgclMilHDHzZVWD5utHBDutDR
+         9Q1U05yS6BwyOpTt07JQK31m19nIIYNPXwjhKwYeuSBKoCROzb3sfH6rEzhrJOUaieU1
+         /pD6q9/NFNzi5/nvTyvZ/Uw7G+mLPvgNfdt7YceCPN0D6oyB0ZpTwLw9u16gOO334y8R
+         RwBVWm9tMQXA81RYF7bV5mWDRhWUJS1kI1EEU73vCN+nvV/6dS+IjgdX8+A8qrYQkGM3
+         fskw==
+In-Reply-To: <1531557122-12540-1-git-send-email-laoar.shao@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, Jul 13, 2018 at 12:17:56PM -0400, Johannes Weiner wrote:
-> On Fri, Jul 13, 2018 at 11:21:53AM +0200, Peter Zijlstra wrote:
-> > On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
-> > > +static inline void psi_ttwu_dequeue(struct task_struct *p)
-> > > +{
-> > > +	if (psi_disabled)
-> > > +		return;
-> > > +	/*
-> > > +	 * Is the task being migrated during a wakeup? Make sure to
-> > > +	 * deregister its sleep-persistent psi states from the old
-> > > +	 * queue, and let psi_enqueue() know it has to requeue.
-> > > +	 */
-> > > +	if (unlikely(p->in_iowait || (p->flags & PF_MEMSTALL))) {
-> > > +		struct rq_flags rf;
-> > > +		struct rq *rq;
-> > > +		int clear = 0;
-> > > +
-> > > +		if (p->in_iowait)
-> > > +			clear |= TSK_IOWAIT;
-> > > +		if (p->flags & PF_MEMSTALL)
-> > > +			clear |= TSK_MEMSTALL;
-> > > +
-> > > +		rq = __task_rq_lock(p, &rf);
-> > > +		update_rq_clock(rq);
-> > > +		psi_task_change(p, rq_clock(rq), clear, 0);
-> > > +		p->sched_psi_wake_requeue = 1;
-> > > +		__task_rq_unlock(rq, &rf);
-> > > +	}
-> > > +}
-> > 
-> > Still NAK, what happened to this here:
+On Sat, Jul 14, 2018 at 1:32 AM Yafang Shao <laoar.shao@gmail.com> wrote:
+>
+> try_charge maybe executed in packet receive path, which is in interrupt
+> context.
+> In this situation, the 'current' is the interrupted task, which may has
+> no relation to the rx softirq, So it is nonsense to use 'current'.
+>
 
-> That's my thought process, anyway. I'd be more than happy to make this
-> more lightweight, but I don't see a way to do it without losing
-> significant functional precision.
+Have you actually seen this occurring? I am not very familiar with the
+network code but I can think of two ways try_charge() can be called
+from network code. Either through kmem charging or through
+mem_cgroup_charge_skmem() and both locations correctly handle
+interrupt context.
 
-I think you're going to have to. We put a lot of effort into not taking
-the old rq->lock on remote wakeups and got a significant performance
-benefit from that.
-
-You just utterly destroyed that for workloads with a high number of
-iowait wakeups.
+Shakeel
