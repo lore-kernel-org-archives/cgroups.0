@@ -1,59 +1,70 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: avoid bothering interrupted task when charge memcg
- in softirq
-Date: Mon, 16 Jul 2018 09:58:36 +0200
-Message-ID: <20180716075836.GC17280@dhcp22.suse.cz>
-References: <1531557122-12540-1-git-send-email-laoar.shao@gmail.com>
+Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
+Date: Mon, 16 Jul 2018 11:36:30 +0200
+Message-ID: <20180716093630.GJ17280@dhcp22.suse.cz>
+References: <20171130152824.1591-1-guro@fb.com>
+ <20180605114729.GB19202@dhcp22.suse.cz>
+ <alpine.DEB.2.21.1807131438380.194789@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1531557122-12540-1-git-send-email-laoar.shao@gmail.com>
+In-Reply-To: <alpine.DEB.2.21.1807131438380.194789@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: David Rientjes <rientjes@google.com>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Sat 14-07-18 16:32:02, Yafang Shao wrote:
-> try_charge maybe executed in packet receive path, which is in interrupt
-> context.
-> In this situation, the 'current' is the interrupted task, which may has
-> no relation to the rx softirq, So it is nonsense to use 'current'.
+On Fri 13-07-18 14:59:59, David Rientjes wrote:
+> On Tue, 5 Jun 2018, Michal Hocko wrote:
 > 
-> Avoid bothering the interrupted if page_counter_try_charge failes.
-
-I agree with Shakeel that this changelog asks for more information about
-"why it matters". Small inconsistencies should be tolerable because the
-state we rely on is so rarely set that it shouldn't make a visible
-difference in practice.
-
-> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> ---
->  mm/memcontrol.c | 3 +++
->  1 file changed, 3 insertions(+)
+> > 1) comparision root with tail memcgs during the OOM killer is not fair
+> > because we are comparing tasks with memcgs.
+> > 
+> > This is true, but I do not think this matters much for workloads which
+> > are going to use the feature. Why? Because the main consumers of the new
+> > feature seem to be containers which really need some fairness when
+> > comparing _workloads_ rather than processes. Those are unlikely to
+> > contain any significant memory consumers in the root memcg. That would
+> > be mostly common infrastructure.
+> > 
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 68ef266..13f95db 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2123,6 +2123,9 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  		goto retry;
->  	}
->  
-> +	if (in_softirq())
-> +		goto nomem;
-> +
+> There are users (us) who want to use the feature and not all processes are 
+> attached to leaf mem cgroups.  The functionality can be provided in a 
+> generally useful way that doesn't require any specific hierarchy, and I 
+> implemented this in my patch series at 
+> https://marc.info/?l=linux-mm&m=152175563004458&w=2.  That proposal to fix 
+> *all* of my concerns with the cgroup-aware oom killer as it sits in -mm, 
+> in it's entirety, only extends it so it is generally useful and does not 
+> remove any functionality.  I'm not sure why we are discussing ways of 
+> moving forward when that patchset has been waiting for review for almost 
+> four months and, to date, I haven't seen an objection to.
 
-If anything would it make more sense to use in_interrupt() to be more
-bullet proof for future?
+Well, I didn't really get to your patches yet. The last time I've
+checked I had some pretty serious concerns about the consistency of your
+proposal. Those might have been fixed in the lastest version of your
+patchset I haven't seen. But I still strongly suspect that you are
+largerly underestimating the complexity of more generic oom policies
+which you are heading to.
 
->  	/*
->  	 * Unlike in global OOM situations, memcg is not in a physical
->  	 * memory shortage.  Allow dying and OOM-killed tasks to
-> -- 
-> 1.8.3.1
+Considering user API failures from the past (oom_*adj fiasco for
+example) suggests that we should start with smaller steps and only
+provide a clear and simple API. oom_group is such a simple and
+semantically consistent thing which is the reason I am OK with it much
+more than your "we can be more generic" approach. I simply do not trust
+we can agree on sane and consistent api in a reasonable time.
 
+And it is quite mind boggling that a simpler approach has been basically
+blocked for months because there are some concerns for workloads which
+are not really asking for the feature. Sure your usecase might need to
+handle root memcg differently. That is a fair point but that shouldn't
+really block containers users who can use the proposed solution without
+any further changes. If we ever decide to handle root memcg differently
+we are free to do so because the oom selection policy is not carved in
+stone by any api.
+ 
+[...]
 -- 
 Michal Hocko
 SUSE Labs
