@@ -1,92 +1,202 @@
-From: Daniel Drake <drake@endlessm.com>
-Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory, and IO v2
-Date: Mon, 16 Jul 2018 10:57:45 -0500
-Message-ID: <20180716155745.10368-1-drake@endlessm.com>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [patch v3 -mm 3/6] mm, memcg: add hierarchical usage oom policy
+Date: Mon, 16 Jul 2018 11:16:17 -0700
+Message-ID: <20180716181613.GA28327@castle>
+References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803151351140.55261@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803161405410.209509@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
+ <alpine.DEB.2.21.1807131604560.217600@chino.kir.corp.google.com>
+ <alpine.DEB.2.21.1807131605590.217600@chino.kir.corp.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to;
-        bh=GGcyW91RbtN4Ej1f/5DA+XtZqAGeGthSBLhmWj9C1eM=;
-        b=ULQiRHPsi2TLrxWooV71ltsbjlxbEMwGAsPY5j1VS96Bz/0RmwGasClpVNT0385ZQl
-         F9oY8Ts6bWqnKQKhhuelTDBDuRE3DTzpHtkk99uYr9hHlSU0gQkd3McPBpID3gsrHTXy
-         F1UrxVPaWK2VjwPGZtGs6sw9Tel+XT9owauzxi7AljvSLnJ8pV5ArC+gnniMR4sxXYqD
-         2P0/8nloX0O+fkuLXMLEXEl7KKQnx3fU+FitXUMv6qh5UusUqVPnRcu47CXkV7rcLdLt
-         kMqzTeVjIrmGV72Cv02GcFZgEQuapTUK6vcybpcW/uHX0ej4IrJwEzZwAPA/nGGM1hdw
-         KFTw==
-In-Reply-To: <20180712172942.10094-1-hannes@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=bpPvMuaWuYuzFBJ7xvah72j3wh+fdTgY/6YDdUXVwks=;
+ b=KhwY7OKgxz/GkggOo1PTbkolIszqfJHLU0EZYQ9dT5C0hVkFVJwVRSWuNYbWGpLFEXDo
+ +DsGBo/Me3c/nYAYJ6fwglb9kFpYw46eyXAaI7uBuIbN1m0BMFjJOtr05XSXSOxxql6Q
+ 9a1nfGW4VJYgoz+kkohKuwZoNva9cSQWY+s= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bpPvMuaWuYuzFBJ7xvah72j3wh+fdTgY/6YDdUXVwks=;
+ b=YEgFUm0QA8dgdx0DR+ve+bClpmUEPyyGE/yqx0cSt/SBu5lZKDJuKZsJEiyCsYvTKSATuLgIt9flVRA/xErTLHdyMaGnTajjHnyxD2246g6pyJacLJllfKAeX7/wBQ+iB4Xb3IzryXcm/efUNAjr4PGOitABDkYeHPUxQ7abSOY=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.21.1807131605590.217600@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux@endlessm.com, linux-block@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Hi Johannes,
+On Fri, Jul 13, 2018 at 04:07:29PM -0700, David Rientjes wrote:
+> One of the three significant concerns brought up about the cgroup aware
+> oom killer is that its decisionmaking is completely evaded by creating
+> subcontainers and attaching processes such that the ancestor's usage does
+> not exceed another cgroup on the system.
+> 
+> Consider the example from the previous patch where "memory" is set in
+> each mem cgroup's cgroup.controllers:
+> 
+> 	mem cgroup	cgroup.procs
+> 	==========	============
+> 	/cg1		1 process consuming 250MB
+> 	/cg2		3 processes consuming 100MB each
+> 	/cg3/cg31	2 processes consuming 100MB each
+> 	/cg3/cg32	2 processes consuming 100MB each
+> 
+> If memory.oom_policy is "cgroup", a process from /cg2 is chosen because it
+> is in the single indivisible memory consumer with the greatest usage.
+> 
+> The true usage of /cg3 is actually 400MB, but a process from /cg2 is
+> chosen because cgroups are compared individually rather than
+> hierarchically.
+> 
+> If a system is divided into two users, for example:
+> 
+> 	mem cgroup	memory.max
+> 	==========	==========
+> 	/userA		250MB
+> 	/userB		250MB
+> 
+> If /userA runs all processes attached to the local mem cgroup, whereas
+> /userB distributes their processes over a set of subcontainers under
+> /userB, /userA will be unfairly penalized.
+> 
+> There is incentive with cgroup v2 to distribute processes over a set of
+> subcontainers if those processes shall be constrained by other cgroup
+> controllers; this is a direct result of mandating a single, unified
+> hierarchy for cgroups.  A user may also reasonably do this for mem cgroup
+> control or statistics.  And, a user may do this to evade the cgroup-aware
+> oom killer selection logic.
+> 
+> This patch adds an oom policy, "tree", that accounts for hierarchical
+> usage when comparing cgroups and the cgroup aware oom killer is enabled by
+> an ancestor.  This allows administrators, for example, to require users in
+> their own top-level mem cgroup subtree to be accounted for with
+> hierarchical usage.  In other words, they can longer evade the oom killer
+> by using other controllers or subcontainers.
+> 
+> If an oom policy of "tree" is in place for a subtree, such as /cg3 above,
+> the hierarchical usage is used for comparisons with other cgroups if
+> either "cgroup" or "tree" is the oom policy of the oom mem cgroup.  Thus,
+> if /cg3/memory.oom_policy is "tree", one of the processes from /cg3's
+> subcontainers is chosen for oom kill.
+> 
+> Signed-off-by: David Rientjes <rientjes@google.com>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 17 ++++++++++++++---
+>  include/linux/memcontrol.h              |  5 +++++
+>  mm/memcontrol.c                         | 18 ++++++++++++------
+>  3 files changed, 31 insertions(+), 9 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1113,6 +1113,10 @@ PAGE_SIZE multiple when read back.
+>  	memory consumers; that is, they will compare mem cgroup usage rather
+>  	than process memory footprint.  See the "OOM Killer" section below.
+>  
+> +	If "tree", the OOM killer will compare mem cgroups and its subtree
+> +	as a single indivisible memory consumer.  This policy cannot be set
+> +	on the root mem cgroup.  See the "OOM Killer" section below.
+> +
+>  	When an OOM condition occurs, the policy is dictated by the mem
+>  	cgroup that is OOM (the root mem cgroup for a system-wide OOM
+>  	condition).  If a descendant mem cgroup has a policy of "none", for
+> @@ -1120,6 +1124,10 @@ PAGE_SIZE multiple when read back.
+>  	the heuristic will still compare mem cgroups as indivisible memory
+>  	consumers.
+>  
+> +	When an OOM condition occurs in a mem cgroup with an OOM policy of
+> +	"cgroup" or "tree", the OOM killer will compare mem cgroups with
+> +	"cgroup" policy individually with "tree" policy subtrees.
+> +
+>    memory.events
+>  	A read-only flat-keyed file which exists on non-root cgroups.
+>  	The following entries are defined.  Unless specified
+> @@ -1355,7 +1363,7 @@ out of memory, its memory.oom_policy will dictate how the OOM killer will
+>  select a process, or cgroup, to kill.  Likewise, when the system is OOM,
+>  the policy is dictated by the root mem cgroup.
+>  
+> -There are currently two available oom policies:
+> +There are currently three available oom policies:
+>  
+>   - "none": default, choose the largest single memory hogging process to
+>     oom kill, as traditionally the OOM killer has always done.
+> @@ -1364,6 +1372,9 @@ There are currently two available oom policies:
+>     subtree as an OOM victim and kill at least one process, depending on
+>     memory.oom_group, from it.
+>  
+> + - "tree": choose the cgroup with the largest memory footprint considering
+> +   itself and its subtree and kill at least one process.
+> +
+>  When selecting a cgroup as a victim, the OOM killer will kill the process
+>  with the largest memory footprint.  A user can control this behavior by
+>  enabling the per-cgroup memory.oom_group option.  If set, it causes the
+> @@ -1382,8 +1393,8 @@ Please, note that memory charges are not migrating if tasks
+>  are moved between different memory cgroups. Moving tasks with
+>  significant memory footprint may affect OOM victim selection logic.
+>  If it's a case, please, consider creating a common ancestor for
+> -the source and destination memory cgroups and enabling oom_group
+> -on ancestor layer.
+> +the source and destination memory cgroups and setting a policy of "tree"
+> +and enabling oom_group on an ancestor layer.
+>  
+>  
+>  IO
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -77,6 +77,11 @@ enum memcg_oom_policy {
+>  	 * mem cgroup as an indivisible consumer
+>  	 */
+>  	MEMCG_OOM_POLICY_CGROUP,
+> +	/*
+> +	 * Tree cgroup usage for all descendant memcg groups, treating each mem
+> +	 * cgroup and its subtree as an indivisible consumer
+> +	 */
+> +	MEMCG_OOM_POLICY_TREE,
+>  };
+>  
+>  struct mem_cgroup_reclaim_cookie {
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2952,7 +2952,7 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+>  	/*
+>  	 * The oom_score is calculated for leaf memory cgroups (including
+>  	 * the root memcg).
+> -	 * Non-leaf oom_group cgroups accumulating score of descendant
+> +	 * Cgroups with oom policy of "tree" accumulate the score of descendant
+>  	 * leaf memory cgroups.
+>  	 */
+>  	rcu_read_lock();
+> @@ -2961,10 +2961,11 @@ static void select_victim_memcg(struct mem_cgroup *root, struct oom_control *oc)
+>  
+>  		/*
+>  		 * We don't consider non-leaf non-oom_group memory cgroups
+> -		 * as OOM victims.
+> +		 * without the oom policy of "tree" as OOM victims.
+>  		 */
+>  		if (memcg_has_children(iter) && iter != root_mem_cgroup &&
+> -		    !mem_cgroup_oom_group(iter))
+> +		    !mem_cgroup_oom_group(iter) &&
+> +		    iter->oom_policy != MEMCG_OOM_POLICY_TREE)
+>  			continue;
 
-Thanks for your work on psi! 
+Hello, David!
 
-We have also been investigating the "thrashing problem" on our Endless
-desktop OS. We have seen that systems can easily get into a state where the
-UI becomes unresponsive to input, and the mouse cursor becomes extremely
-slow or stuck when the system is running out of memory. We are working with
-a full GNOME desktop environment on systems with only 2GB RAM, and
-sometimes no real swap (although zram-swap helps mitigate the problem to
-some extent).
+I think that there is an inconsistency in the memory.oom_policy definition.
+"none" and "cgroup" policies defining how the OOM scoped to this particular
+memory cgroup (or system, if set on root) is handled. And all sub-tree
+settings do not matter at all, right? Also, if a memory cgroup has no
+memory.max set, there is no meaning in setting memory.oom_policy.
 
-My analysis so far indicates that when the system is low on memory and hits
-this condition, the system is spending much of the time under
-__alloc_pages_direct_reclaim. "perf trace -F" shows many many page faults
-in executable code while this is going on. I believe the kernel is
-swapping out executable code in order to satisfy memory allocation
-requests, but then that swapped-out code is needed a moment later so it
-gets swapped in again via the page fault handler, and all this activity
-severely starves the system from being able to respond to user input.
+And "tree" is different. It actually changes how the selection algorithm works,
+and sub-tree settings do matter in this case.
 
-I appreciate the kernel's attempt to keep processes alive, but in the
-desktop case we see that the system rarely recovers from this situation,
-so you have to hard shutdown. In this case we view it as desirable that
-the OOM killer would step in (it is not doing so because direct reclaim
-is not actually failing).
+I find it very confusing.
 
-I had recently touched upon the cpuset mempressure counter, which
-looked promising, but in practice I found that it was not a useful enough
-representation of thrashing. It measures the rate at which
-__perform_reclaim() is called, but I have observed that as the system gets
-deeper and deeper into thrashing, __perform_reclaim() is actually called
-at an increasingly slower rate, because each invocation ends up taking
-more and more time (after 2 minutes of thrashing it can take close to 1s).
-
-Instead of rate of function call it seems necessary to measure the amount
-of work done by that codepath, and that's what you are doing with psi.
-
-I tried psi on a 2GB RAM system with no swap (also no zram-swap) and
-was pleased with the results combined with this sample userspace code:
-
-https://gist.github.com/dsd/a8988bf0b81a6163475988120fe8d9cd
-
-It invokes the OOM killer when memory full_avg10 is >=10%, i.e. it kills
-if all tasks were blocked on memory management for at least 1s in a 10s
-period.
-
-Upon initial tests it is working very well. The system recovers quickly
-from thrashing after the daemon steps in and kills a process. I have yet
-to see any kills being made prematurely. It would be great to see this
-upstream soon.
-
-I also support your ideas to have the kernel offer mechanisms to handle
-this directly in future; it would be nice not to have the requirement of
-delegating this task to userspace, plus there may be a possibility that
-userspace is starved so much that it cannot step in to handle this.
-
-The only question I have is about the format of the data in /proc. The
-memory file returns two lines and several values on each line. This
-requires a bit more parsing than what I have become accustomed to in recent
-years of the "one value per file" approach that seems prevalent in sysfs.
-Would it make sense to instead have a single value read from (say)
-/proc/pressure/memory/full_avg10 ?
-
-Thanks
-Daniel
-
+Thanks!
