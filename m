@@ -1,58 +1,92 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: avoid bothering interrupted task when charge memcg
- in softirq
-Date: Mon, 16 Jul 2018 13:08:45 +0200
-Message-ID: <20180716110845.GK17280@dhcp22.suse.cz>
-References: <1531557122-12540-1-git-send-email-laoar.shao@gmail.com>
- <20180716075836.GC17280@dhcp22.suse.cz>
- <CALOAHbD1+eYHDo5-q1--nsBTNj66ZX6iw2YU4koLgZD_0ZDy+w@mail.gmail.com>
-Mime-Version: 1.0
+From: Daniel Drake <drake@endlessm.com>
+Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory, and IO v2
+Date: Mon, 16 Jul 2018 10:57:45 -0500
+Message-ID: <20180716155745.10368-1-drake@endlessm.com>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CALOAHbD1+eYHDo5-q1--nsBTNj66ZX6iw2YU4koLgZD_0ZDy+w@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:in-reply-to;
+        bh=GGcyW91RbtN4Ej1f/5DA+XtZqAGeGthSBLhmWj9C1eM=;
+        b=ULQiRHPsi2TLrxWooV71ltsbjlxbEMwGAsPY5j1VS96Bz/0RmwGasClpVNT0385ZQl
+         F9oY8Ts6bWqnKQKhhuelTDBDuRE3DTzpHtkk99uYr9hHlSU0gQkd3McPBpID3gsrHTXy
+         F1UrxVPaWK2VjwPGZtGs6sw9Tel+XT9owauzxi7AljvSLnJ8pV5ArC+gnniMR4sxXYqD
+         2P0/8nloX0O+fkuLXMLEXEl7KKQnx3fU+FitXUMv6qh5UusUqVPnRcu47CXkV7rcLdLt
+         kMqzTeVjIrmGV72Cv02GcFZgEQuapTUK6vcybpcW/uHX0ej4IrJwEzZwAPA/nGGM1hdw
+         KFTw==
+In-Reply-To: <20180712172942.10094-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
+To: hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux@endlessm.com, linux-block@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
 
-On Mon 16-07-18 17:45:06, Yafang Shao wrote:
-> On Mon, Jul 16, 2018 at 3:58 PM, Michal Hocko <mhocko@kernel.org> wrote:
-> > On Sat 14-07-18 16:32:02, Yafang Shao wrote:
-> >> try_charge maybe executed in packet receive path, which is in interrupt
-> >> context.
-> >> In this situation, the 'current' is the interrupted task, which may has
-> >> no relation to the rx softirq, So it is nonsense to use 'current'.
-> >>
-> >> Avoid bothering the interrupted if page_counter_try_charge failes.
-> >
-> > I agree with Shakeel that this changelog asks for more information about
-> > "why it matters". Small inconsistencies should be tolerable because the
-> > state we rely on is so rarely set that it shouldn't make a visible
-> > difference in practice.
-> >
-> 
-> HI Michal,
-> 
-> No, it can make a visible difference in pratice.
-> The difference is in __sk_mem_raise_allocated().
-> 
-> Without this patch, if the random interrupted task is oom victim or
-> fatal signal pending or exiting, the charge will success anyway. That
-> means the cgroup limit doesn't work in this situation.
-> 
-> With this patch, in the same situation the charged memory will be
-> uncharged as it hits the memcg limit.
-> 
-> That is okay if the memcg of the interrupted task is same with the
-> sk->sk_memcg,  but it may not okay if they are difference.
-> 
-> I'm trying to prove it, but seems it's very hard to produce this issue.
+Hi Johannes,
 
-So it is possible that this is so marginal that it doesn't make any
-_practical_ impact after all.
+Thanks for your work on psi! 
 
--- 
-Michal Hocko
-SUSE Labs
+We have also been investigating the "thrashing problem" on our Endless
+desktop OS. We have seen that systems can easily get into a state where the
+UI becomes unresponsive to input, and the mouse cursor becomes extremely
+slow or stuck when the system is running out of memory. We are working with
+a full GNOME desktop environment on systems with only 2GB RAM, and
+sometimes no real swap (although zram-swap helps mitigate the problem to
+some extent).
+
+My analysis so far indicates that when the system is low on memory and hits
+this condition, the system is spending much of the time under
+__alloc_pages_direct_reclaim. "perf trace -F" shows many many page faults
+in executable code while this is going on. I believe the kernel is
+swapping out executable code in order to satisfy memory allocation
+requests, but then that swapped-out code is needed a moment later so it
+gets swapped in again via the page fault handler, and all this activity
+severely starves the system from being able to respond to user input.
+
+I appreciate the kernel's attempt to keep processes alive, but in the
+desktop case we see that the system rarely recovers from this situation,
+so you have to hard shutdown. In this case we view it as desirable that
+the OOM killer would step in (it is not doing so because direct reclaim
+is not actually failing).
+
+I had recently touched upon the cpuset mempressure counter, which
+looked promising, but in practice I found that it was not a useful enough
+representation of thrashing. It measures the rate at which
+__perform_reclaim() is called, but I have observed that as the system gets
+deeper and deeper into thrashing, __perform_reclaim() is actually called
+at an increasingly slower rate, because each invocation ends up taking
+more and more time (after 2 minutes of thrashing it can take close to 1s).
+
+Instead of rate of function call it seems necessary to measure the amount
+of work done by that codepath, and that's what you are doing with psi.
+
+I tried psi on a 2GB RAM system with no swap (also no zram-swap) and
+was pleased with the results combined with this sample userspace code:
+
+https://gist.github.com/dsd/a8988bf0b81a6163475988120fe8d9cd
+
+It invokes the OOM killer when memory full_avg10 is >=10%, i.e. it kills
+if all tasks were blocked on memory management for at least 1s in a 10s
+period.
+
+Upon initial tests it is working very well. The system recovers quickly
+from thrashing after the daemon steps in and kills a process. I have yet
+to see any kills being made prematurely. It would be great to see this
+upstream soon.
+
+I also support your ideas to have the kernel offer mechanisms to handle
+this directly in future; it would be nice not to have the requirement of
+delegating this task to userspace, plus there may be a possibility that
+userspace is starved so much that it cannot step in to handle this.
+
+The only question I have is about the format of the data in /proc. The
+memory file returns two lines and several values on each line. This
+requires a bit more parsing than what I have become accustomed to in recent
+years of the "one value per file" approach that seems prevalent in sysfs.
+Would it make sense to instead have a single value read from (say)
+/proc/pressure/memory/full_avg10 ?
+
+Thanks
+Daniel
+
