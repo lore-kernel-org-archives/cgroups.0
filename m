@@ -1,24 +1,24 @@
 From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
  and IO
-Date: Tue, 17 Jul 2018 16:21:57 +0200
-Message-ID: <20180717142157.GF2494@hirez.programming.kicks-ass.net>
+Date: Tue, 17 Jul 2018 17:01:42 +0200
+Message-ID: <20180717150142.GG2494@hirez.programming.kicks-ass.net>
 References: <20180712172942.10094-1-hannes@cmpxchg.org>
  <20180712172942.10094-9-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=OUNk26li7VwVFPkQIQ4fOTX19qt2GWgKPm5YuwyF2nY=; b=CVpUgEPrLebGmj2iK9Fn8Bu7C
-        RKjuMWD9R/pc5NaMPCEaTaGTEK7TxlCWmF2lHZmbfUkB9k+OXS/1b0/O6Oxrt4M7CtIbnAroPHfr5
-        Ej1plu6xu5F0HsI10Eglr8DxCNVWutsTYTJP6dTiJSBSdAh8AwnvY1ECBOa4sf+Oc22Y0S+2mkP9y
-        +WbtODQ2pQ3QsKlAlCCGj7Qs3C9xblzBs0tPUndR37/iGAub5G69ys5EiwPcLfpIF3C994B0wegxt
-        nXHdEaIzWK1fUGxwNY6U8ZJ9BlnsznecDEyXDUfnQy/M/hJlWTbEW+5ZU5VHC6M7a+2CXjYgoM0sx
-    
+         bh=xukDW9g+x+JE5sTurwzSx8e/tRij4uBDgfD9bhsMJhg=; b=1u+da1QuCoNB3qzUoUWAGAH83
+        uPaKcrbwKZR+mFn39STBN69Czr7riKV/I/YuJ9/3K2jnXPznC/EcKLT3yL8wlHsqIRlQgxceX258l
+        SDrJ3FTR2m9WIvRhY5x+ZGarqhL4kHB0a4Njhkyn0vBWlrC4A7cDBgpqxaC0jarj+TavbVwtOrSsX
+        X913q0dxkbF1iR0EbHd5Lgp1FAYyKdLC2ynyBAGT8N7zFloDq6F4U6lqygFfiA6VhmVl9M4MFulzI
+        mpUP4+l+7YyLPvyE7Unqc+cj+pRsNGzBnt9SrnAs/eCpgDI3GJ7cHX87PIOususYbsU7yxgbv8Gl0
+      
 Content-Disposition: inline
 In-Reply-To: <20180712172942.10094-9-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -29,44 +29,106 @@ To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
 On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
-> diff --git a/include/linux/sched/stat.h b/include/linux/sched/stat.h
-> index 04f1321d14c4..ac39435d1521 100644
-> --- a/include/linux/sched/stat.h
-> +++ b/include/linux/sched/stat.h
-> @@ -28,10 +28,14 @@ static inline int sched_info_on(void)
->  	return 1;
->  #elif defined(CONFIG_TASK_DELAY_ACCT)
->  	extern int delayacct_on;
-> +	if (delayacct_on)
-> +		return 1;
-> +#elif defined(CONFIG_PSI)
-> +	extern int psi_disabled;
-> +	if (!psi_disabled)
-> +		return 1;
->  #endif
-> +	return 0;
->  }
+> +static bool psi_update_stats(struct psi_group *group)
+> +{
+> +	u64 some[NR_PSI_RESOURCES] = { 0, };
+> +	u64 full[NR_PSI_RESOURCES] = { 0, };
+> +	unsigned long nonidle_total = 0;
+> +	unsigned long missed_periods;
+> +	unsigned long expires;
+> +	int cpu;
+> +	int r;
+> +
+> +	mutex_lock(&group->stat_lock);
+> +
+> +	/*
+> +	 * Collect the per-cpu time buckets and average them into a
+> +	 * single time sample that is normalized to wallclock time.
+> +	 *
+> +	 * For averaging, each CPU is weighted by its non-idle time in
+> +	 * the sampling period. This eliminates artifacts from uneven
+> +	 * loading, or even entirely idle CPUs.
+> +	 *
+> +	 * We could pin the online CPUs here, but the noise introduced
+> +	 * by missing up to one sample period from CPUs that are going
+> +	 * away shouldn't matter in practice - just like the noise of
+> +	 * previously offlined CPUs returning with a non-zero sample.
 
-Doesn't that want to be something like:
+But why!? cpuu_read_lock() is neither expensive nor complicated. So why
+try and avoid it?
 
-static inline bool sched_info_on(void)
-{
-#ifdef CONFIG_SCHEDSTAT
-	return true;
-#else /* !SCHEDSTAT */
-#ifdef CONFIG_TASK_DELAY_ACCT
-	extern int delayacct_on;
-	if (delayacct_on)
-		return true;
-#endif /* DELAYACCT */
-#ifdef CONFIG_PSI
-	extern int psi_disabled;
-	if (!psi_disabled)
-		return true;
-#endif
-	return false;
-#endif /* !SCHEDSTATE */
-}
+> +	 */
+> +	for_each_online_cpu(cpu) {
+> +		struct psi_group_cpu *groupc = per_cpu_ptr(group->cpus, cpu);
+> +		unsigned long nonidle;
+> +
+> +		if (!groupc->nonidle_time)
+> +			continue;
+> +
+> +		nonidle = nsecs_to_jiffies(groupc->nonidle_time);
+> +		groupc->nonidle_time = 0;
+> +		nonidle_total += nonidle;
+> +
+> +		for (r = 0; r < NR_PSI_RESOURCES; r++) {
+> +			struct psi_resource *res = &groupc->res[r];
+> +
+> +			some[r] += (res->times[0] + res->times[1]) * nonidle;
+> +			full[r] += res->times[1] * nonidle;
+> +
+> +			/* It's racy, but we can tolerate some error */
+> +			res->times[0] = 0;
+> +			res->times[1] = 0;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * Integrate the sample into the running statistics that are
+> +	 * reported to userspace: the cumulative stall times and the
+> +	 * decaying averages.
+> +	 *
+> +	 * Pressure percentages are sampled at PSI_FREQ. We might be
+> +	 * called more often when the user polls more frequently than
+> +	 * that; we might be called less often when there is no task
+> +	 * activity, thus no data, and clock ticks are sporadic. The
+> +	 * below handles both.
+> +	 */
+> +
+> +	/* total= */
+> +	for (r = 0; r < NR_PSI_RESOURCES; r++) {
+> +		do_div(some[r], max(nonidle_total, 1UL));
+> +		do_div(full[r], max(nonidle_total, 1UL));
+> +
+> +		group->some[r] += some[r];
+> +		group->full[r] += full[r];
 
-Such that if you build a TASK_DELAY_ACCT && PSI kernel, and boot with
-nodelayacct, you still get sched_info_on().
+		group->some[r] = div64_ul(some[r], max(nonidle_total, 1UL));
+		group->full[r] = div64_ul(full[r], max(nonidle_total, 1UL));
+
+Is easier to read imo.
+
+> +	}
+> +
+> +	/* avgX= */
+> +	expires = group->period_expires;
+> +	if (time_before(jiffies, expires))
+> +		goto out;
+> +
+> +	missed_periods = (jiffies - expires) / PSI_FREQ;
+> +	group->period_expires = expires + ((1 + missed_periods) * PSI_FREQ);
+> +
+> +	for (r = 0; r < NR_PSI_RESOURCES; r++) {
+> +		u64 some, full;
+> +
+> +		some = group->some[r] - group->last_some[r];
+> +		full = group->full[r] - group->last_full[r];
+> +
+> +		calc_avgs(group->avg_some[r], some, missed_periods);
+> +		calc_avgs(group->avg_full[r], full, missed_periods);
+> +
+> +		group->last_some[r] = group->some[r];
+> +		group->last_full[r] = group->full[r];
+> +	}
+> +out:
+> +	mutex_unlock(&group->stat_lock);
+> +	return nonidle_total;
+> +}
