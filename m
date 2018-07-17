@@ -1,52 +1,67 @@
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+From: David Rientjes <rientjes@google.com>
 Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
-Date: Tue, 17 Jul 2018 09:55:17 +0900
-Message-ID: <201807170055.w6H0tHn5075670@www262.sakura.ne.jp>
-References: <0d018c7e-a3de-a23a-3996-bed8b28b1e4a@i-love.sakura.ne.jp> <20180716220918.GA3898@castle.DHCP.thefacebook.com>
+Date: Mon, 16 Jul 2018 20:59:29 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1807162053190.157949@chino.kir.corp.google.com>
+References: <20171130152824.1591-1-guro@fb.com> <20180605114729.GB19202@dhcp22.suse.cz> <alpine.DEB.2.21.1807131438380.194789@chino.kir.corp.google.com> <20180716093630.GJ17280@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180716220918.GA3898@castle.DHCP.thefacebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=jHrn07gzUHpPm2gCNFENX79CHktkBI6qepWDsVP0Uus=;
+        b=XoPJvAq+l///furXh85SaohAqcdI78JfNcRHBgsKmPsXPUbpxyI+x3AAxYNwBA1AJs
+         tvRatX9Kb8QbqcQKXZr/+J31ePgM+9ge+yJvTqQcN31AI2Dk8yBgeWUcMykpaB8hqeje
+         C1uGNlJ/Z/SAT5CLwddSvb4ucdXjdYucR9+x/ssV4VSUY0CiVf3hEWrUoLUMJbKyddj1
+         ulc45SpFASY+c9J4DcUABAcpl52kdalJXtugAivpZVY+ohh5JJsbA1C3R7h85cf5B0SL
+         5F3OkkpwdHocoZ26+amAybJzyr7HsaiZV0iTNJiQtARQ/TAjcuxQh7ZUOC0cIkFHuBZX
+         fCeg==
+In-Reply-To: <20180716093630.GJ17280@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <guro@fb.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@kernel.org>, linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Roman Gushchin wrote:
-> On Tue, Jul 17, 2018 at 06:13:47AM +0900, Tetsuo Handa wrote:
-> > No response from Roman and David...
-> > 
-> > Andrew, will you once drop Roman's cgroup-aware OOM killer and David's patches?
-> > Roman's series has a bug which I mentioned and which can be avoided by my patch.
-> > David's patch is using MMF_UNSTABLE incorrectly such that it might start selecting
-> > next OOM victim without trying to reclaim any memory.
-> > 
-> > Since they are not responding to my mail, I suggest once dropping from linux-next.
+On Mon, 16 Jul 2018, Michal Hocko wrote:
+
+> Well, I didn't really get to your patches yet. The last time I've
+> checked I had some pretty serious concerns about the consistency of your
+> proposal. Those might have been fixed in the lastest version of your
+> patchset I haven't seen. But I still strongly suspect that you are
+> largerly underestimating the complexity of more generic oom policies
+> which you are heading to.
 > 
-> I was in cc, and didn't thought that you're expecting something from me.
 
-Oops. I was waiting for your response. ;-)
+I don't believe it's underestimated since it's used.  It's perfectly valid 
+the lock an entire hierarchy or individual subtrees into a single policy 
+if that's what is preferred.  Any use of a different policy at a subtree 
+root is a conscious decision made by the owner of that subtree.  If they 
+prefer to kill the largest process, the largest descendant cgroup, or the 
+largest subtree, it is up to them.  All three have valid usecases, the 
+goal is not to lock the entire hierarchy into a single policy: this 
+introduces the ability for users to subvert the selection policy either 
+intentionally or unintentionally because they are using a unified single 
+hierarchy with cgroup v2 and they are using controllers other than mem 
+cgroup.
 
-  But Roman, my patch conflicts with your "mm, oom: cgroup-aware OOM killer" patch
-  in linux-next. And it seems to me that your patch contains a bug which leads to
-  premature memory allocation failure explained below.
-
-  Can we apply my patch prior to your "mm, oom: cgroup-aware OOM killer" patch
-  (which eliminates "delay" and "out:" from your patch) so that people can easily
-  backport my patch? Or, do you want to apply a fix (which eliminates "delay" and
-  "out:" from linux-next) prior to my patch?
-
+> Considering user API failures from the past (oom_*adj fiasco for
+> example) suggests that we should start with smaller steps and only
+> provide a clear and simple API. oom_group is such a simple and
+> semantically consistent thing which is the reason I am OK with it much
+> more than your "we can be more generic" approach. I simply do not trust
+> we can agree on sane and consistent api in a reasonable time.
 > 
-> I don't get, why it's necessary to drop the cgroup oom killer to merge your fix?
-> I'm happy to help with rebasing and everything else.
+> And it is quite mind boggling that a simpler approach has been basically
+> blocked for months because there are some concerns for workloads which
+> are not really asking for the feature. Sure your usecase might need to
+> handle root memcg differently. That is a fair point but that shouldn't
+> really block containers users who can use the proposed solution without
+> any further changes. If we ever decide to handle root memcg differently
+> we are free to do so because the oom selection policy is not carved in
+> stone by any api.
+>  
 
-Yes, I wish you rebase your series on top of OOM lockup (CVE-2016-10723) mitigation
-patch ( https://marc.info/?l=linux-mm&m=153112243424285&w=4 ). It is a trivial change
-and easy to cleanly backport (if applied before your series).
-
-Also, I expect you to check whether my cleanup patch which removes "abort" path
-( [PATCH 1/2] at https://marc.info/?l=linux-mm&m=153119509215026&w=4 ) helps
-simplifying your series. I don't know detailed behavior of your series, but I
-assume that your series do not kill threads which current thread should not wait
-for MMF_OOM_SKIP.
+Please respond directly to the patchset which clearly enumerates the 
+problems with the current implementation in -mm.
