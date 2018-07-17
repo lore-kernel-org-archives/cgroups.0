@@ -1,45 +1,49 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory,
- and IO v2
-Date: Tue, 17 Jul 2018 14:23:27 +0200
-Message-ID: <20180717122327.GG7193@dhcp22.suse.cz>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
+ and IO
+Date: Tue, 17 Jul 2018 16:16:14 +0200
+Message-ID: <20180717141614.GE2494@hirez.programming.kicks-ass.net>
 References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180716155745.10368-1-drake@endlessm.com>
- <20180717112515.GE7193@dhcp22.suse.cz>
- <CAD8Lp45W00ga-P-nb6iytgSGW4xwSzmaTHA87DOvSotN0S2edw@mail.gmail.com>
+ <20180712172942.10094-9-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=ZZ4KndFwA3KV+5BHpYSUDzvyMA6B/8tFlNACiFPkc7g=; b=Qf5bl8Fz6G4a0Y75MfuqgChYz
+        gdlrC8C6MboDlATZLjH5AFTU9gZo9cGrVAmv6ZUubf8rvlF8MlnX7+vNtdKbV9CHjgs9HsfOwfYL3
+        BltAZ6Yi8BOf5ZjDAOKXWhKLol7opLAo7orHOtGjrYa12uFdjoMAyFT5LJoryhNBK2F9QXxeblnUO
+        XpbQeeBdv3drUPUC2sSWtkQqig+3siASQckpfU/gz673w5dcd6ckOtSIIOLoBEN+YJBVwEhd0X9H5
+        wElNFOTB7rPo4le5KqWhsR3zcjcPhbfsGgF6+Ur80RoDbbwkLpkXqBP/+tk8fBE28omgiyhQISGIN
+      
 Content-Disposition: inline
-In-Reply-To: <CAD8Lp45W00ga-P-nb6iytgSGW4xwSzmaTHA87DOvSotN0S2edw@mail.gmail.com>
+In-Reply-To: <20180712172942.10094-9-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Drake <drake@endlessm.com>
-Cc: hannes@cmpxchg.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Linux Upstreaming Team <linux@endlessm.com>, linux-block@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue 17-07-18 07:13:52, Daniel Drake wrote:
-> On Tue, Jul 17, 2018 at 6:25 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> > Yes this is really unfortunate. One thing that could help would be to
-> > consider a trashing level during the reclaim (get_scan_count) to simply
-> > forget about LRUs which are constantly refaulting pages back. We already
-> > have the infrastructure for that. We just need to plumb it in.
-> 
-> Can you go into a bit more detail about that infrastructure and how we
-> might detect which pages are being constantly refaulted? I'm
-> interested in spending a few hours on this topic to see if I can come
-> up with anything.
+On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
+> +/* Tracked task states */
+> +enum psi_task_count {
+> +	NR_RUNNING,
+> +	NR_IOWAIT,
+> +	NR_MEMSTALL,
+> +	NR_PSI_TASK_COUNTS,
+> +};
 
-mm/workingset.c allows for tracking when an actual page got evicted.
-workingset_refault tells us whether a give filemap fault is a recent
-refault and activates the page if that is the case. So what you need is
-to note how many refaulted pages we have on the active LRU list. If that
-is a large part of the list and if the inactive list is really small
-then we know we are trashing. This all sounds much easier than it will
-eventually turn out to be of course but I didn't really get to play with
-this much.
+> +/* Resources that workloads could be stalled on */
+> +enum psi_res {
+> +	PSI_CPU,
+> +	PSI_MEM,
+> +	PSI_IO,
+> +	NR_PSI_RESOURCES,
+> +};
 
-HTH even though it is not really thought through well.
--- 
-Michal Hocko
-SUSE Labs
+These two have mem and iowait in different order. It really doesn't
+matter, but my brain stumbled.
