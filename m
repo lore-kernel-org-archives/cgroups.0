@@ -1,140 +1,205 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
- and IO
-Date: Wed, 18 Jul 2018 09:56:33 -0400
-Message-ID: <20180718135633.GA5161@cmpxchg.org>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-9-hannes@cmpxchg.org>
- <20180718124627.GD2476@hirez.programming.kicks-ass.net>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Wed, 18 Jul 2018 11:21:18 -0400
+Message-ID: <a1eb4971-ff23-6fd8-d75b-112d63f0aee9@redhat.com>
+References: <1529825440-9574-1-git-send-email-longman@redhat.com>
+ <1529825440-9574-8-git-send-email-longman@redhat.com>
+ <20180702165322.GI533219@devbig577.frc2.facebook.com>
+ <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
+ <20180703155823.GS533219@devbig577.frc2.facebook.com>
+ <4cf9924e-7b97-187f-a1f5-853a45165abb@redhat.com>
+ <151fc655-7e29-f060-789e-ee6c5c23d132@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=fKRmFfiEiZawB24hwn9VgULRzC8ly5fwSmN5hO/0hnw=;
-        b=iolCabrzZ6IAESM5i/NqGGjIZOFoWftAGvno24p4cp2dcg6SEwDBOR0UbIY8mkuMiM
-         6tdq+jSmUfD/mGI0oJk/+rPVp/34yGUrenHYrUAL/XgX0i0HQEqASZL45j3iXGzaIzkd
-         s2K6SzOt+UnIv2phYgQ801kc5u5hrwMxrbt2F535LELTbI8Ou24+vR4a7hvP2SPszzMt
-         7SA9d0nxdZ+gO4/VlExRfPpsWrlTon1GYtbOa4PrAroFjZ0Yw1GMcjNRMzt19jKjLB8+
-         0ygHeVIu/Q6liif+phbUpp8WpxiIaNUPbEPuqnWl0/38xYuC7ne282mTok3xIc1kHZ8p
-         /WlA==
-Content-Disposition: inline
-In-Reply-To: <20180718124627.GD2476@hirez.programming.kicks-ass.net>
+In-Reply-To: <151fc655-7e29-f060-789e-ee6c5c23d132@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-Hi Peter,
+On 07/10/2018 11:23 AM, Waiman Long wrote:
+> On 07/06/2018 04:32 PM, Waiman Long wrote:
+>> On 07/03/2018 11:58 AM, Tejun Heo wrote:
+>>> Hello, Waiman.
+>>>
+>>> On Tue, Jul 03, 2018 at 08:41:31AM +0800, Waiman Long wrote:
+>>>>> So, effective changing when enabling partition on a child feels wrong
+>>>>> to me.  It's supposed to contain what's actually allowed to the cgroup
+>>>>> from its parent and that shouldn't change regardless of how those
+>>>>> resources are used.  It's still given to the cgroup from its parent.
+>>>> Another way to work around this issue is to expose the reserved_cpus in
+>>>> the parent for holding CPUs that can taken by a chid partition. That
+>>>> will require adding one more cpuset file for those cgroups that are
+>>>> partition roots.
+>>> Yeah, that should work.
+>>>
+>> Thinking about it a bit more, that approach will make creating a
+>> partition a multi-step process:
+>>
+>> 1) Reserve the CPUs in reserved_cpus.
+>> 2) enable sched.partition
+>> 3) Write the CPUs list into cpus.
+>>
+>> There are also more exception cases that need to be handled. The current
+>> approach, on the other hands, is much simpler and easier to understand
+>> and use.
+>>
+>>>> I don't mind restricting that to the first level children for now. That
+>>>> does restrict where we can put the container root if we want a separate
+>>>> partition for a container. Let's hear if others have any objection about
+>>>> that.
+>>> As currently implemented, partioning locks away the cpus which should
+>>> be a system level decision, not container level, so it makes sense to
+>>> me that it is only available to system root.
+>> So my preference is to allow partition only on the first level children
+>> of the root for the time being. I think it should cover most of the use
+>> cases. I will update the patchset to reflect that.
+>>
+>> Cheers,
+>> Longman
+>>
+> Below is the incremental patch that allow partitioning only on the first
+> level children of the root. Please let me know your thourght on that.
+>
+> Thanks,
+> Longman
+>
+> -------------[ Cut here ]-------------------------
+>
+> From 5a41209da94385efff87d79f6523265c710cbea5 Mon Sep 17 00:00:00 2001
+> From: Waiman Long <longman@redhat.com>
+> Date: Tue, 10 Jul 2018 10:23:16 -0400
+> Subject: [PATCH v11 10/10] cpuset: Restrict sched.partition to first level
+>  children of root only
+>
+> Enabling partition on a v2 cpuset has the side effect of affecting the
+> effective CPUs of its parent which is currently unique to partitioning.
+> As we are not sure about the repercussion of enabling that globally,
+> we are now restricting the enabling of sched.partition to the first
+> level children of the root cgroup in the default hierarchy.
+>
+> This is done by removing the "cpuset.sched.partition" control file
+> on cgroups that are not the first level children of the root. A new
+> show_cfile function pointer is added to the cftype structure. If it
+> is defined, it will be called to return a boolean value to determine
+> if the corresponding control file should show up in the cgroup. It
+> provides a more flexible mechanism to determine the visibility of the
+> control file than a simple CFTYPE_* flag can do.
+>
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 10 +++++-----
+>  include/linux/cgroup-defs.h             |  9 +++++++++
+>  kernel/cgroup/cgroup.c                  |  4 ++++
+>  kernel/cgroup/cpuset.c                  | 10 ++++++++++
+>  4 files changed, 28 insertions(+), 5 deletions(-)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst
+> b/Documentation/admin-guide/cgroup-v2.rst
+> index f7cde15..cf7cd88 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1585,10 +1585,10 @@ Cpuset Interface Files
+>      Its value will be affected by memory nodes hotplug events.
+>  
+>    cpuset.sched.partition
+> -    A read-write single value file which exists on non-root
+> -    cpuset-enabled cgroups.  It is a binary value flag that accepts
+> -    either "0" (off) or "1" (on).  This flag is set and owned by the
+> -        parent cgroup.
+> +    A read-write single value file which exists on the first level
+> +    children of the root cgroup.  It is a binary value flag that
+> +    accepts either "0" (off) or "1" (on).  This flag is set and
+> +    owned by the parent cgroup.
+>  
+>      If set, it indicates that the current cgroup is the root of a
+>      new partition or scheduling domain that comprises itself and
+> @@ -1603,7 +1603,7 @@ Cpuset Interface Files
+>         exclusive, i.e. they are not shared by any of its siblings.
+>      2) The "cpuset.cpus" is also a proper subset of the parent's
+>         "cpuset.cpus.effective".
+> -    3) The parent cgroup is a partition root.
+> +    3) The parent cgroup is the root cgroup.
+>      4) There is no child cgroups with cpuset enabled.  This is for
+>         eliminating corner cases that have to be handled if such a
+>         condition is allowed.
+> diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+> index c0e68f9..be79487 100644
+> --- a/include/linux/cgroup-defs.h
+> +++ b/include/linux/cgroup-defs.h
+> @@ -565,6 +565,15 @@ struct cftype {
+>      ssize_t (*write)(struct kernfs_open_file *of,
+>               char *buf, size_t nbytes, loff_t off);
+>  
+> +    /*
+> +     * show_cfile(), if defined, will return a boolean value to
+> +     * determine if the control file should show up in the cgroup.
+> +     * It provides more flexibility in deciding where the control
+> +     * file should appear than simple criteria like on-root or
+> +     * not-on-root.
+> +     */
+> +    bool (*show_cfile)(struct cgroup_subsys_state *css);
+> +
+>  #ifdef CONFIG_DEBUG_LOCK_ALLOC
+>      struct lock_class_key    lockdep_key;
+>  #endif
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 077370b..0afdab8 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -3612,6 +3612,10 @@ static int cgroup_addrm_files(struct
+> cgroup_subsys_state *css,
+>          if ((cft->flags & CFTYPE_ONLY_ON_ROOT) && cgroup_parent(cgrp))
+>              continue;
+>  
+> +        /* Should the control file show up in the cgroup */
+> +        if (cft->show_cfile && !cft->show_cfile(css))
+> +            continue;
+> +
+>          if (is_add) {
+>              ret = cgroup_add_file(css, cgrp, cft);
+>              if (ret) {
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 62b7e61..2f85c1e 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2106,6 +2106,15 @@ static s64 cpuset_read_s64(struct
+> cgroup_subsys_state *css, struct cftype *cft)
+>  }
+>  
+>  /*
+> + * The sched.partition control file should only show up in the first
+> + * level children of the root cgroup.
+> + */
+> +static bool cpuset_show_partition(struct cgroup_subsys_state *css)
+> +{
+> +    return parent_cs(css_cs(css)) == &top_cpuset;
+> +}
+> +
+> +/*
+>   * for the common functions, 'private' gives the type of file
+>   */
+>  
+> @@ -2250,6 +2259,7 @@ static s64 cpuset_read_s64(struct
+> cgroup_subsys_state *css, struct cftype *cft)
+>          .name = "sched.partition",
+>          .read_u64 = cpuset_read_u64,
+>          .write_u64 = cpuset_write_u64,
+> +        .show_cfile = cpuset_show_partition,
+>          .private = FILE_PARTITION_ROOT,
+>          .flags = CFTYPE_NOT_ON_ROOT,
+>      },
 
-thanks for the feedback so far, I'll get to the other emails
-later. I'm currently running A/B tests against our production traffic
-to get uptodate numbers in particular on the optimizations you
-suggested for the cacheline packing, time_state(), ffs() etc.
+Tejun,
 
-On Wed, Jul 18, 2018 at 02:46:27PM +0200, Peter Zijlstra wrote:
-> On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
-> 
-> > +static inline void psi_enqueue(struct task_struct *p, u64 now, bool wakeup)
-> > +{
-> > +	int clear = 0, set = TSK_RUNNING;
-> > +
-> > +	if (psi_disabled)
-> > +		return;
-> > +
-> > +	if (!wakeup || p->sched_psi_wake_requeue) {
-> > +		if (p->flags & PF_MEMSTALL)
-> > +			set |= TSK_MEMSTALL;
-> > +		if (p->sched_psi_wake_requeue)
-> > +			p->sched_psi_wake_requeue = 0;
-> > +	} else {
-> > +		if (p->in_iowait)
-> > +			clear |= TSK_IOWAIT;
-> > +	}
-> > +
-> > +	psi_task_change(p, now, clear, set);
-> > +}
-> > +
-> > +static inline void psi_dequeue(struct task_struct *p, u64 now, bool sleep)
-> > +{
-> > +	int clear = TSK_RUNNING, set = 0;
-> > +
-> > +	if (psi_disabled)
-> > +		return;
-> > +
-> > +	if (!sleep) {
-> > +		if (p->flags & PF_MEMSTALL)
-> > +			clear |= TSK_MEMSTALL;
-> > +	} else {
-> > +		if (p->in_iowait)
-> > +			set |= TSK_IOWAIT;
-> > +	}
-> > +
-> > +	psi_task_change(p, now, clear, set);
-> > +}
-> 
-> > +/**
-> > + * psi_memstall_enter - mark the beginning of a memory stall section
-> > + * @flags: flags to handle nested sections
-> > + *
-> > + * Marks the calling task as being stalled due to a lack of memory,
-> > + * such as waiting for a refault or performing reclaim.
-> > + */
-> > +void psi_memstall_enter(unsigned long *flags)
-> > +{
-> > +	struct rq_flags rf;
-> > +	struct rq *rq;
-> > +
-> > +	if (psi_disabled)
-> > +		return;
-> > +
-> > +	*flags = current->flags & PF_MEMSTALL;
-> > +	if (*flags)
-> > +		return;
-> > +	/*
-> > +	 * PF_MEMSTALL setting & accounting needs to be atomic wrt
-> > +	 * changes to the task's scheduling state, otherwise we can
-> > +	 * race with CPU migration.
-> > +	 */
-> > +	rq = this_rq_lock_irq(&rf);
-> > +
-> > +	update_rq_clock(rq);
-> > +
-> > +	current->flags |= PF_MEMSTALL;
-> > +	psi_task_change(current, rq_clock(rq), 0, TSK_MEMSTALL);
-> > +
-> > +	rq_unlock_irq(rq, &rf);
-> > +}
-> 
-> I'm confused by this whole MEMSTALL thing... I thought the idea was to
-> account the time we were _blocked_ because of memstall, but you seem to
-> count the time we're _running_ with PF_MEMSTALL.
+What do you think about this patch?
 
-Under heavy memory pressure, a lot of active CPU time is spent
-scanning and rotating through the LRU lists, which we do want to
-capture in the pressure metric. What we really want to know is the
-time in which CPU potential goes to waste due to a lack of
-resources. That's the CPU going idle due to a memstall, but it's also
-a CPU doing *work* which only occurs due to a lack of memory. We want
-to know about both to judge how productive system and workload are.
+Are there any other issues you have with this patchset?
 
-> And esp. the wait_on_page_bit_common caller seems performance sensitive,
-> and the above function is quite expensive.
+Thanks,
+Longman
 
-Right, but we don't call it on every invocation, only when waiting for
-the IO to read back a page that was recently deactivated and evicted:
-
-	if (bit_nr == PG_locked &&
-	    !PageUptodate(page) && PageWorkingset(page)) {
-		if (!PageSwapBacked(page))
-			delayacct_thrashing_start();
-		psi_memstall_enter(&pflags);
-		thrashing = true;
-	}
-
-That means the page cache workingset/file active list is thrashing, in
-which case the IO itself is our biggest concern, not necessarily a few
-additional cycles before going to sleep to wait on its completion.
