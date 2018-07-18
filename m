@@ -1,77 +1,54 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory,
- and IO v2
-Date: Wed, 18 Jul 2018 18:21:57 -0400
-Message-ID: <20180718222157.GG2838@cmpxchg.org>
+Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
+ and IO
+Date: Wed, 18 Jul 2018 18:36:44 -0400
+Message-ID: <20180718223644.GH2838@cmpxchg.org>
 References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180716155745.10368-1-drake@endlessm.com>
- <20180717112515.GE7193@dhcp22.suse.cz>
+ <20180712172942.10094-9-hannes@cmpxchg.org>
+ <20180718120318.GC2476@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=bD9srxegSeR+jqZ/FLmrRSF3IEaczzHH/71bKwF27TQ=;
-        b=NEmbyy20pPYu2Zcb3g6ZT+IkUwm2tZSRlFe9MhWjPIxUQwDBw9DOoiC5PuC7lSe0wz
-         LB8Wys7zS0ALFQQ3FlIIji0pZzPtNrVG1gua76vnxD1iILIJPsgdWkP2JyWVHmBtBvme
-         9H8rz+HWHQ0/BZ5ZvGrShNmGUVG/CARXHxyl0vFzggcl1J5x7TFnb9qhC1EYJz+Ha186
-         VSc6pCtU52M2rA4w4tIzrgiTKotAIDL414TlEp5N5/uzVVHftzrOM5TLTNFkMwfdEPsQ
-         XmoxYckRerpIfHfMhvQhU7Zt2UijY7wmgPf/3jxXEuZmcjoV5a2X/X28RJvZcOZAOGga
-         SLVA==
+        bh=mdcasbT5nuYq6T0zUYdhs6kUC62eS5unO9iAl6OFIhg=;
+        b=jVXcicgSqZHNrhICIqsWLnHN4/6/aFMac/r4iWo5HSuaRFGbFNvUHNLOU4Os+p/OSj
+         15tedgLd5o4vIEn490auASvCe1n6fLh8zndQz1R3c8NmVkXzLYW0zgralbYxLx3uBuA5
+         /OemkmXuvCOje1koOHZmEsFOrmoQQvHEo153dj5nulnfsCrecnhsJf69CGWbZSJVbfXP
+         +fLXGoyrPnl9eAWjU5Phl/M6bdyMAvG1Irkj8tPOIH+QiytLcXUw3SzW4pi6APL9p7ks
+         S9SdBH4ZNBJc/TOBxBLSSW6z5ZHQ4zdNrrNNDkylfyDscem/vJhbHq5qsovl0F4m9TRJ
+         5i0w==
 Content-Disposition: inline
-In-Reply-To: <20180717112515.GE7193@dhcp22.suse.cz>
+In-Reply-To: <20180718120318.GC2476@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Daniel Drake <drake@endlessm.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux@endlessm.com, linux-block@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Jul 17, 2018 at 01:25:15PM +0200, Michal Hocko wrote:
-> On Mon 16-07-18 10:57:45, Daniel Drake wrote:
-> > Hi Johannes,
-> > 
-> > Thanks for your work on psi! 
-> > 
-> > We have also been investigating the "thrashing problem" on our Endless
-> > desktop OS. We have seen that systems can easily get into a state where the
-> > UI becomes unresponsive to input, and the mouse cursor becomes extremely
-> > slow or stuck when the system is running out of memory. We are working with
-> > a full GNOME desktop environment on systems with only 2GB RAM, and
-> > sometimes no real swap (although zram-swap helps mitigate the problem to
-> > some extent).
-> > 
-> > My analysis so far indicates that when the system is low on memory and hits
-> > this condition, the system is spending much of the time under
-> > __alloc_pages_direct_reclaim. "perf trace -F" shows many many page faults
-> > in executable code while this is going on. I believe the kernel is
-> > swapping out executable code in order to satisfy memory allocation
-> > requests, but then that swapped-out code is needed a moment later so it
-> > gets swapped in again via the page fault handler, and all this activity
-> > severely starves the system from being able to respond to user input.
-> > 
-> > I appreciate the kernel's attempt to keep processes alive, but in the
-> > desktop case we see that the system rarely recovers from this situation,
-> > so you have to hard shutdown. In this case we view it as desirable that
-> > the OOM killer would step in (it is not doing so because direct reclaim
-> > is not actually failing).
+On Wed, Jul 18, 2018 at 02:03:18PM +0200, Peter Zijlstra wrote:
+> On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
+> > +	/* Time in which tasks wait for the CPU */
+> > +	state = PSI_NONE;
+> > +	if (tasks[NR_RUNNING] > 1)
+> > +		state = PSI_SOME;
+> > +	time_state(&groupc->res[PSI_CPU], state, now);
+> > +
+> > +	/* Time in which tasks wait for memory */
+> > +	state = PSI_NONE;
+> > +	if (tasks[NR_MEMSTALL]) {
+> > +		if (!tasks[NR_RUNNING] ||
+> > +		    (cpu_curr(cpu)->flags & PF_MEMSTALL))
+> 
+> I'm confused, why do we care if the current tasks is MEMSTALL or not?
 
-Yes, we currently use a userspace application that monitors pressure
-and OOM kills (there is usually plenty of headroom left for a small
-application to run by the time quality of service for most workloads
-has already tanked to unacceptable levels). We want to eventually add
-this back into the kernel with the appropriate configuration options
-(pressure threshold value and sustained duration etc.)
+We want to know whether we're losing CPU potential because of a lack
+of memory. That can happen when the task waits for refaults and the
+CPU goes idle, but it can also happen when the CPU is performing
+reclaim.
 
-> Yes this is really unfortunate. One thing that could help would be to
-> consider a trashing level during the reclaim (get_scan_count) to simply
-> forget about LRUs which are constantly refaulting pages back. We already
-> have the infrastructure for that. We just need to plumb it in.
-
-This doesn't work without quantifying the actual time you're spending
-on thrashing IO. The cutoff for acceptable refaults is very different
-between rotating disks, crappy SSDs, and high-end flash.
-
-But in the future we might want the OOM killer to monitor psi memory
-levels and dispatch tasks when we sustain X percent for Y seconds.
+If the task waits for refaults and something else is runnable, we're
+not losing CPU potential. But if the task performs reclaim and uses
+the CPU, nothing else can do productive work on that CPU.
