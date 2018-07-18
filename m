@@ -1,111 +1,230 @@
-From: =?UTF-8?Q?Krzysztof_Koz=C5=82owski?= <k.kozlowski.k@gmail.com>
-Subject: [BUG BISECT] "Support fs_context" causes systemd issues (linux-next)
-Date: Wed, 18 Jul 2018 13:46:35 +0200
-Message-ID: <CAJKOXPftCn+qcJtG6bBjUMa2ZX=_YAoHkoYH69-+jSam4-z86Q@mail.gmail.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
+ and IO
+Date: Wed, 18 Jul 2018 14:03:18 +0200
+Message-ID: <20180718120318.GC2476@hirez.programming.kicks-ass.net>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
+ <20180712172942.10094-9-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=1bZwF29+FCtSLHKvq7m3Z0VRLy2FqbqoFGTM6Gwocrk=;
-        b=AEZ+ArV85f4GvInPIJYUmnW61CER6Ya9+Wge97el2iHHPIqIoy+qjcPYjJl7HSKNKZ
-         5g95hzSOkeHBfWdmij4rG44LK+Gymi/jOJ7DPNxztRpiG2X1XbaYd/HKUsjJT+m5Cbqi
-         HCmz/0fo65sX0RuRoEgBJCphQ4i+wOeJnbSnuRLvc7leKrdjOZdLS1JpIiiYkfTQKi+H
-         BZnO7B858biE06pQzGBdA+w6n6WOIK3s6lkYh4Bv1wixs3ypHXGUuRIvzsQA6Q08sYJZ
-         denAk0wsRR0CwHN2NSs/p0o2vu/xcu1ROuileBvWMvW8WMfRS+uo4HgenpBhXhQYnlSe
-         A/0Q==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=gTYU+6nnAhHJ2vENSQyY/EC6nNMvKvAjXBEwhlAOTUk=; b=qTqthsZYjm1DQzD+zeFlMmsaV
+        pbXL235N/IE5m6GJrkBbT9LFDEG41iNsV8SpTldaoSr+5BmJBYF9fhLerIOjSVikjA5XdZ0RDMr16
+        M5HdDcyQfrMlr1oE14PNkks4NlmVcVQhLFwwS0kY1i+TxxshuSza9lVNzJ4zzGNh3uC6WykJpnCRH
+        uLksAwK+OkBNzYsZOXTPVNvojPh7SjbsP2Z2Im306lfVkBPotiBL5LAw1Em2h8xj6o15xst6L+qXj
+        CLG/p3ATCH2kcQoQJg4wg4k//Xf0vOvUqUU/uJQZzAz1dQtGBX5bh/IlTSHqxJ7uB3mjpYX1ryV/g
+      
+Content-Disposition: inline
+In-Reply-To: <20180712172942.10094-9-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Howells <dhowells@redhat.com>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, fenghua.yu@intel.com, "linux-samsung-soc@vger.kernel.org" <linux-samsung-soc@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hi,
+On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
+> +/* Tracked task states */
+> +enum psi_task_count {
+> +	NR_RUNNING,
+> +	NR_IOWAIT,
+> +	NR_MEMSTALL,
+> +	NR_PSI_TASK_COUNTS,
+> +};
+> +
+> +/* Task state bitmasks */
+> +#define TSK_RUNNING	(1 << NR_RUNNING)
+> +#define TSK_IOWAIT	(1 << NR_IOWAIT)
+> +#define TSK_MEMSTALL	(1 << NR_MEMSTALL)
+> +
+> +/* Resources that workloads could be stalled on */
+> +enum psi_res {
+> +	PSI_CPU,
+> +	PSI_MEM,
+> +	PSI_IO,
+> +	NR_PSI_RESOURCES,
+> +};
+> +
+> +/* Pressure states for a group of tasks */
+> +enum psi_state {
+> +	PSI_NONE,		/* No stalled tasks */
+> +	PSI_SOME,		/* Stalled tasks & working tasks */
+> +	PSI_FULL,		/* Stalled tasks & no working tasks */
+> +	NR_PSI_STATES,
+> +};
+> +
+> +struct psi_resource {
+> +	/* Current pressure state for this resource */
+> +	enum psi_state state;
 
-On recent linux-next, the commit f8076f3b0996 ("kernfs, sysfs, cgroup,
-intel_rdt: Support fs_context") causes weird behavior of two of
-systemd units: systemd-timesyncd.service and systemd-resolved.service
-fail to start.
+This has a 4 byte hole here (really 7 but GCC is generous and uses 4
+bytes for the enum that spans the value range [0-2]).
 
-Logs:
+> +	/* Start of current state (rq_clock) */
+> +	u64 state_start;
+> +
+> +	/* Time sampling buckets for pressure states SOME and FULL (ns) */
+> +	u64 times[2];
+> +};
+> +
+> +struct psi_group_cpu {
+> +	/* States of the tasks belonging to this group */
+> +	unsigned int tasks[NR_PSI_TASK_COUNTS];
+> +
+> +	/* There are runnable or D-state tasks */
+> +	int nonidle;
+> +
+> +	/* Start of current non-idle state (rq_clock) */
+> +	u64 nonidle_start;
+> +
+> +	/* Time sampling bucket for non-idle state (ns) */
+> +	u64 nonidle_time;
+> +
+> +	/* Per-resource pressure tracking in this group */
+> +	struct psi_resource res[NR_PSI_RESOURCES];
+> +};
 
-Jul 18 09:51:33 odroidu3 systemd[376]: systemd-timesyncd.service:
-Failed to set up mount namespacing: Invalid argument
-Jul 18 09:51:33 odroidu3 systemd[376]: systemd-timesyncd.service:
-Failed at step NAMESPACE spawning /usr/lib/systemd/systemd-timesyncd:
-Invalid argument
-Jul 18 09:51:33 odroidu3 systemd[1]: systemd-timesyncd.service: Main
-process exited, code=exited, status=226/NAMESPACE
-Jul 18 09:51:33 odroidu3 systemd[1]: systemd-timesyncd.service: Failed
-with result 'exit-code'.
+> +static DEFINE_PER_CPU(struct psi_group_cpu, system_group_cpus);
 
-The configuration:
+Since psi_group_cpu is exactly 2 lines big, I think you want the above
+to be DEFINE_PER_CPU_SHARED_ALIGNED() to minimize cache misses on
+accounting. Also, I think you want to stick ____cacheline_aligned_in_smp
+on the structure, such that alloc_percpu() also DTRT.
 
-1. exynos_defconfig
-2. ARMv7, octa-core (Cortex-A7+A15), Exynos5422 SoC, Odroid XU3 family
-3. ARMv7, quad-core, Exynos4412 SoC, Odroid U3
-4. The board boots from TFTP with NFS root (NFSv4)
-5. Arch ARM Linux
-6. Systemd: v236
+Of those 2 lines, 12 bytes are wasted because of that hole above, and a
+further 8 are wasted because PSI_CPU does not use FULL, for a total of
+20 wasted bytes in there.
 
-Example of boot (logs):
-https://krzk.eu/#/builders/21/builds/767/steps/10/logs/serial0
+> +static void time_state(struct psi_resource *res, int state, u64 now)
+> +{
+> +	if (res->state != PSI_NONE) {
+> +		bool was_full = res->state == PSI_FULL;
+> +
+> +		res->times[was_full] += now - res->state_start;
+> +	}
+> +	if (res->state != state)
+> +		res->state = state;
+> +	if (res->state != PSI_NONE)
+> +		res->state_start = now;
+> +}
 
+Does the compiler optimize that and fold the two != NONE branches?
 
-Bisect log:
-git bisect start
-# good: [30b06abfb92bfd5f9b63ea6a2ffb0bd905d1a6da] Merge tag
-'pinctrl-v4.18-3' of
-git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-pinctrl
-git bisect good 30b06abfb92bfd5f9b63ea6a2ffb0bd905d1a6da
-# bad: [1dcbe5f2c615337cb7d4e13fab198ab716180733] Add linux-next
-specific files for 20180717
-git bisect bad 1dcbe5f2c615337cb7d4e13fab198ab716180733
-# bad: [209dba6cb2664f6ac48282d666f2b4787286311a] Merge
-remote-tracking branch 'crypto/master'
-git bisect bad 209dba6cb2664f6ac48282d666f2b4787286311a
-# good: [5bd2314d41ad09c497bb72ad3cf94f65913a7da1] Merge
-remote-tracking branch 'overlayfs/overlayfs-next'
-git bisect good 5bd2314d41ad09c497bb72ad3cf94f65913a7da1
-# skip: [dc989d2ce2c2bc4b5cdc92a9d2c8a5c857448475] tools: bpftool:
-don't pass FEATURES_DUMP to libbpf
-git bisect skip dc989d2ce2c2bc4b5cdc92a9d2c8a5c857448475
-# good: [a1bf74dc6e66f91325cc8d35231e151a24a1f9ff] net/mlx5e: Add
-channel events counter
-git bisect good a1bf74dc6e66f91325cc8d35231e151a24a1f9ff
-# bad: [460b2b7ca7db36621315032f5fc4ca85e0b64589] Merge
-remote-tracking branch 'rdma/for-next'
-git bisect bad 460b2b7ca7db36621315032f5fc4ca85e0b64589
-# bad: [a9d11c1d00c560d86855b24f84457a191e70ca4a] Merge
-remote-tracking branch 'jc_docs/docs-next'
-git bisect bad a9d11c1d00c560d86855b24f84457a191e70ca4a
-# bad: [82ffa5de1706a23797d2409e09917bfd56222d32] Merge
-remote-tracking branch 'printk/for-next'
-git bisect bad 82ffa5de1706a23797d2409e09917bfd56222d32
-# good: [e339dd8d8b045399e918c6737b2cc435b21a451e] xfs: use sync
-buffer I/O for sync delwri queue submission
-git bisect good e339dd8d8b045399e918c6737b2cc435b21a451e
-# bad: [ee12a8e0dfcd34069fe1781f2e9d0d8c5fd4e1db] afs: Add fsinfo support
-git bisect bad ee12a8e0dfcd34069fe1781f2e9d0d8c5fd4e1db
-# good: [96e6c5ff548b9e18ef84b326b5c4c9e59a01e44b] proc: Add
-fs_context support to procfs
-git bisect good 96e6c5ff548b9e18ef84b326b5c4c9e59a01e44b
-# bad: [1ead04847d5b772c53b6d46f0670c83c8a081456] vfs: Implement
-fsopen() to prepare for a mount
-git bisect bad 1ead04847d5b772c53b6d46f0670c83c8a081456
-# bad: [a32434fa30a7f4390aa409726fa08ed4ac802078] hugetlbfs: Convert
-to fs_context
-git bisect bad a32434fa30a7f4390aa409726fa08ed4ac802078
-# good: [6e705c4c287ed7f7bf4fe04c7884e29dd5a9a33d] cpuset: Use fs_context
-git bisect good 6e705c4c287ed7f7bf4fe04c7884e29dd5a9a33d
-# bad: [f8076f3b0996b70f62b32d9c52649ea9bab2d6cd] kernfs, sysfs,
-cgroup, intel_rdt: Support fs_context
-git bisect bad f8076f3b0996b70f62b32d9c52649ea9bab2d6cd
-# first bad commit: [f8076f3b0996b70f62b32d9c52649ea9bab2d6cd] kernfs,
-sysfs, cgroup, intel_rdt: Support fs_context
+> +static void psi_group_change(struct psi_group *group, int cpu, u64 now,
+> +			     unsigned int clear, unsigned int set)
+> +{
+> +	enum psi_state state = PSI_NONE;
+> +	struct psi_group_cpu *groupc;
+> +	unsigned int *tasks;
+> +	unsigned int to, bo;
+> +
+> +	groupc = per_cpu_ptr(group->cpus, cpu);
+> +	tasks = groupc->tasks;
 
-Any hints how to debug this issue?
+	bool was_nonidle = tasks[NR_RUNNING] || tasks[NR_IOWAIT] || tasks[NR_MEMSTALL];
 
-Best regards,
-Krzysztof
+> +	/* Update task counts according to the set/clear bitmasks */
+> +	for (to = 0; (bo = ffs(clear)); to += bo, clear >>= bo) {
+> +		int idx = to + (bo - 1);
+> +
+> +		if (tasks[idx] == 0 && !psi_bug) {
+> +			printk_deferred(KERN_ERR "psi: task underflow! cpu=%d idx=%d tasks=[%u %u %u] clear=%x set=%x\n",
+> +					cpu, idx, tasks[0], tasks[1], tasks[2],
+> +					clear, set);
+> +			psi_bug = 1;
+> +		}
+
+		WARN_ONCE(!tasks[idx], ...);
+
+> +		tasks[idx]--;
+> +	}
+> +	for (to = 0; (bo = ffs(set)); to += bo, set >>= bo)
+> +		tasks[to + (bo - 1)]++;
+
+You want to benchmark this, but since it's only 3 consecutive bits, it
+might actually be faster to not use ffs() and simply test all 3 bits:
+
+	for (to = set, bo = 0; to; to &= ~(1 << bo), bo++)
+		tasks[bo]++;
+
+or something like that.
+
+> +
+> +	/* Time in which tasks wait for the CPU */
+> +	state = PSI_NONE;
+> +	if (tasks[NR_RUNNING] > 1)
+> +		state = PSI_SOME;
+> +	time_state(&groupc->res[PSI_CPU], state, now);
+> +
+> +	/* Time in which tasks wait for memory */
+> +	state = PSI_NONE;
+> +	if (tasks[NR_MEMSTALL]) {
+> +		if (!tasks[NR_RUNNING] ||
+> +		    (cpu_curr(cpu)->flags & PF_MEMSTALL))
+
+I'm confused, why do we care if the current tasks is MEMSTALL or not?
+
+> +			state = PSI_FULL;
+> +		else
+> +			state = PSI_SOME;
+> +	}
+> +	time_state(&groupc->res[PSI_MEM], state, now);
+> +
+> +	/* Time in which tasks wait for IO */
+> +	state = PSI_NONE;
+> +	if (tasks[NR_IOWAIT]) {
+> +		if (!tasks[NR_RUNNING])
+> +			state = PSI_FULL;
+> +		else
+> +			state = PSI_SOME;
+> +	}
+> +	time_state(&groupc->res[PSI_IO], state, now);
+> +
+> +	/* Time in which tasks are non-idle, to weigh the CPU in summaries */
+	if (was_nonidle);
+> +		groupc->nonidle_time += now - groupc->nonidle_start;
+
+	if (tasks[NR_RUNNING] || tasks[NR_IOWAIT] || tasks[NR_MEMSTALL])
+> +		groupc->nonidle_start = now;
+
+Does away with groupc->nonidle, giving us 24 bytes free.
+
+> +	/* Kick the stats aggregation worker if it's gone to sleep */
+> +	if (!delayed_work_pending(&group->clock_work))
+> +		schedule_delayed_work(&group->clock_work, PSI_FREQ);
+> +}
+
+If you always update the time buckets, rename nonidle_start as last_time
+and do away with psi_resource::state_start, you gain another 24 bytes,
+giving 48 bytes free.
+
+And as said before, we can compress the state from 12 bytes, to 6 bits
+(or 1 byte), giving another 11 bytes for 59 bytes free.
+
+Leaving us just 5 bytes short of needing a single cacheline :/
+
+struct ponies {
+        unsigned int               tasks[3];                                             /*     0    12 */
+        unsigned int               cpu_state:2;                                          /*    12:30  4 */
+        unsigned int               io_state:2;                                           /*    12:28  4 */
+        unsigned int               mem_state:2;                                          /*    12:26  4 */
+
+        /* XXX 26 bits hole, try to pack */
+
+        /* typedef u64 */ long long unsigned int     last_time;                          /*    16     8 */
+        /* typedef u64 */ long long unsigned int     some_time[3];                       /*    24    24 */
+        /* typedef u64 */ long long unsigned int     full_time[2];                       /*    48    16 */
+        /* --- cacheline 1 boundary (64 bytes) --- */
+        /* typedef u64 */ long long unsigned int     nonidle_time;                       /*    64     8 */
+
+        /* size: 72, cachelines: 2, members: 8 */
+        /* bit holes: 1, sum bit holes: 26 bits */
+        /* last cacheline: 8 bytes */
+};
+
+ARGGH!
