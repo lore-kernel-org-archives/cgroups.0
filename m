@@ -1,80 +1,537 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
- and IO
-Date: Wed, 18 Jul 2018 12:46:56 -0400
-Message-ID: <20180718164656.GA2838@cmpxchg.org>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-9-hannes@cmpxchg.org>
- <20180718124627.GD2476@hirez.programming.kicks-ass.net>
- <20180718135633.GA5161@cmpxchg.org>
- <20180718163115.GV2494@hirez.programming.kicks-ass.net>
-Mime-Version: 1.0
+From: Claudio <claudiozumbo@gmail.com>
+Subject: [PATCH kselftest-next] Add cgroup core selftests
+Date: Wed, 18 Jul 2018 19:33:58 +0200
+Message-ID: <20180718173358.14007-1-claudiozumbo@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=hn8PNeEVeBiPcjbyroz+adMVtPsNaYaDnRKKaOIrY5E=;
-        b=GHKwgm6DdSmOCkFrFrv42QUK9fk3virG1dzvW1E0Vvo+r6PE5no+K+qKo4JPp9vcuH
-         i657zfRdZ5fOXA2Y4EUZu1+7/5nfBwcl+qYfJ6xBcFDmRB0tNUiN4dCNubEo6owXF9FB
-         HRR2DlNCF4yYaaV4NE+SKFemGf8af0346shmAk+YrT0t+n/Vvg+ZxcJqCJxnOA10a/pQ
-         b+ktdoLgIv6lp4FAsq/B7yJyoJ5JiHVNraYZDivJTaJzosmYeik3Q3T6qUl0qdRar73b
-         28WCVoSExhX6o9VrIC4FYAkJqT3rhzUarHbsG6KtuHsBBJ8bi+oXHMELe+wVlgfv+6I0
-         nTtA==
-Content-Disposition: inline
-In-Reply-To: <20180718163115.GV2494@hirez.programming.kicks-ass.net>
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=ZHZyvZWaYFlZy4t9Me4Hp2dW+wIxR1+rJH+sanP6thA=;
+        b=IDXGPNgOw5OlBwmj9rKhQOUlL64pFA6kO5IZH5iVODOYlMifpA7bvzC23IXAN938X4
+         DvrglwxC9u+26tSh2Q3j/OS1JNjAUoHKihOqWgGd9TjoEBj0c4tObIkrFrpuijJ4JdRi
+         ovNC/oz5crcJOGpXdjWPeVaqb2WuOCTauEtazRDU8aTzvQHEwM//aKVVFNUQUkiEWwhz
+         bP97n/BB+bcobow6jNAc8jPlj9Vmlk7XGE0odxx6qmXEmIYK000LWaw5rp1iniZVXLJ9
+         b3zJY0vEpGFNR19rk5i9cJUTTmAkKDzGzFWSEdTxSbzZUmADUxfTUCnepLRZJY54hoFB
+         FWJQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: linux-kselftest@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Claudio <claudiozumbo@gmail.com>, Claudio Zumbo <claudioz@fb.com>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
 
-On Wed, Jul 18, 2018 at 06:31:15PM +0200, Peter Zijlstra wrote:
-> On Wed, Jul 18, 2018 at 09:56:33AM -0400, Johannes Weiner wrote:
-> > On Wed, Jul 18, 2018 at 02:46:27PM +0200, Peter Zijlstra wrote:
-> 
-> > > I'm confused by this whole MEMSTALL thing... I thought the idea was to
-> > > account the time we were _blocked_ because of memstall, but you seem to
-> > > count the time we're _running_ with PF_MEMSTALL.
-> > 
-> > Under heavy memory pressure, a lot of active CPU time is spent
-> > scanning and rotating through the LRU lists, which we do want to
-> > capture in the pressure metric. What we really want to know is the
-> > time in which CPU potential goes to waste due to a lack of
-> > resources. That's the CPU going idle due to a memstall, but it's also
-> > a CPU doing *work* which only occurs due to a lack of memory. We want
-> > to know about both to judge how productive system and workload are.
-> 
-> Then maybe memstall (esp. the 'stall' part of it) is a bit of a
-> misnomer.
+This commit adds tests for some of the core functionalities
+of cgroups v2.
 
-I'm not tied to that name, but I can't really think of a better
-one. It was called PF_MEMDELAY in the past, but "delay" also has
-busy-spinning connotations in the kernel. "wait" also implies that
-it's a passive state.
+The commit adds tests for some core principles of croup V2 API:
 
-> > > And esp. the wait_on_page_bit_common caller seems performance sensitive,
-> > > and the above function is quite expensive.
-> > 
-> > Right, but we don't call it on every invocation, only when waiting for
-> > the IO to read back a page that was recently deactivated and evicted:
-> > 
-> > 	if (bit_nr == PG_locked &&
-> > 	    !PageUptodate(page) && PageWorkingset(page)) {
-> > 		if (!PageSwapBacked(page))
-> > 			delayacct_thrashing_start();
-> > 		psi_memstall_enter(&pflags);
-> > 		thrashing = true;
-> > 	}
-> > 
-> > That means the page cache workingset/file active list is thrashing, in
-> > which case the IO itself is our biggest concern, not necessarily a few
-> > additional cycles before going to sleep to wait on its completion.
-> 
-> Ah, right. PageWorkingset() is only true if we (recently) evicted that
-> page before, right?
+- test_cgcore_internal_process_constraint
 
-Yep, but not all of those, only the ones who were on the active list
-in their previous incarnation, aka refaulting *hot* pages, aka there
-is little chance this is healthy behavior.
+  Tests internal process constraint.
+  You can't add a pid to a domain parent if a controller is enabled.
+
+- test_cgcore_top_down_constraint_enable
+
+   Tests that you can't enable a controller on a child if it's not enabled
+   on the parent.
+
+- test_cgcore_top_down_constraint_disable
+
+  Tests that you can't disable a controller on a parent if it's
+  enabled in a child.
+
+- test_cgcore_no_internal_process_constraint_on_threads
+
+  Tests that there's no internal process constrain on threaded cgroups.
+  You can add threads/processes on a parent with a controller enabled.
+
+- test_cgcore_parent_becomes_threaded
+
+  Tests that when a child becomes threaded the parent type becomes
+  domain threaded.
+
+- test_cgcore_invalid_domain
+
+  In a situation like:
+
+  A (domain threaded) - B (threaded) - C (domain)
+
+  it tests that C can't be used until it is turned into a threaded cgroup.
+  The "cgroup.type" file will report "domain (invalid)" in these cases.
+  Operations which fail due to invalid topology use EOPNOTSUPP as the errno.
+
+- test_cgcore_populated
+
+  In a situation like:
+
+  A(0) - B(0) - C(1)
+         \ D(0)
+
+  It tests that A, B and C's "populated" fields would be 1 while D's 0.
+  It tests that after the one process in C is moved to root, A,B and C's
+  "populated" fields would flip to "0" and file modified events will
+  be generated on the "cgroup.events" files of both cgroups.
+
+Signed-off-by: Claudio Zumbo <claudioz@fb.com>
+Cc: Shuah Khan <shuah@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
+---
+ tools/testing/selftests/cgroup/Makefile      |   2 +
+ tools/testing/selftests/cgroup/cgroup_util.c |   8 +
+ tools/testing/selftests/cgroup/cgroup_util.h |   1 +
+ tools/testing/selftests/cgroup/test_core.c   | 395 +++++++++++++++++++++++++++
+ 4 files changed, 406 insertions(+)
+ create mode 100644 tools/testing/selftests/cgroup/test_core.c
+
+diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
+index f7a31392eb2f..23fbaa4a9630 100644
+--- a/tools/testing/selftests/cgroup/Makefile
++++ b/tools/testing/selftests/cgroup/Makefile
+@@ -4,7 +4,9 @@ CFLAGS += -Wall
+ all:
+ 
+ TEST_GEN_PROGS = test_memcontrol
++TEST_GEN_PROGS += test_core
+ 
+ include ../lib.mk
+ 
+ $(OUTPUT)/test_memcontrol: cgroup_util.c
++$(OUTPUT)/test_core: cgroup_util.c
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 1e9e3c470561..1c5d2b2a583b 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -229,6 +229,14 @@ int cg_destroy(const char *cgroup)
+ 	return ret;
+ }
+ 
++int cg_enter_current(const char *cgroup)
++{
++	char pidbuf[64];
++
++	snprintf(pidbuf, sizeof(pidbuf), "%d", getpid());
++	return cg_write(cgroup, "cgroup.procs", pidbuf);
++}
++
+ int cg_run(const char *cgroup,
+ 	   int (*fn)(const char *cgroup, void *arg),
+ 	   void *arg)
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.h b/tools/testing/selftests/cgroup/cgroup_util.h
+index fe82a297d4e0..1ff6f9f1abdc 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.h
++++ b/tools/testing/selftests/cgroup/cgroup_util.h
+@@ -32,6 +32,7 @@ extern int cg_write(const char *cgroup, const char *control, char *buf);
+ extern int cg_run(const char *cgroup,
+ 		  int (*fn)(const char *cgroup, void *arg),
+ 		  void *arg);
++extern int cg_enter_current(const char *cgroup);
+ extern int cg_run_nowait(const char *cgroup,
+ 			 int (*fn)(const char *cgroup, void *arg),
+ 			 void *arg);
+diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
+new file mode 100644
+index 000000000000..be59f9c34ea2
+--- /dev/null
++++ b/tools/testing/selftests/cgroup/test_core.c
+@@ -0,0 +1,395 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++#include <linux/limits.h>
++#include <sys/types.h>
++#include <unistd.h>
++#include <stdio.h>
++#include <errno.h>
++
++#include "../kselftest.h"
++#include "cgroup_util.h"
++
++/*
++ * A(0) - B(0) - C(1)
++ *        \ D(0)
++ *
++ * A, B and C's "populated" fields would be 1 while D's 0.
++ * test that after the one process in C is moved to root,
++ * A,B and C's "populated" fields would flip to "0" and file
++ * modified events will be generated on the
++ * "cgroup.events" files of both cgroups.
++ */
++static int test_cgcore_populated(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *cg_test_a = NULL, *cg_test_b = NULL;
++	char *cg_test_c = NULL, *cg_test_d = NULL;
++
++	cg_test_a = cg_name(root, "cg_test_a");
++	cg_test_b = cg_name(root, "cg_test_a/cg_test_b");
++	cg_test_c = cg_name(root, "cg_test_a/cg_test_b/cg_test_c");
++	cg_test_d = cg_name(root, "cg_test_a/cg_test_b/cg_test_d");
++
++	if (!cg_test_a || !cg_test_b || !cg_test_c || !cg_test_d)
++		goto cleanup;
++
++	if (cg_create(cg_test_a))
++		goto cleanup;
++
++	if (cg_create(cg_test_b))
++		goto cleanup;
++
++	if (cg_create(cg_test_c))
++		goto cleanup;
++
++	if (cg_create(cg_test_d))
++		goto cleanup;
++
++	if (cg_enter_current(cg_test_c))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_a, "cgroup.events", "populated 1\n"))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_b, "cgroup.events", "populated 1\n"))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_c, "cgroup.events", "populated 1\n"))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_d, "cgroup.events", "populated 0\n"))
++		goto cleanup;
++
++	if (cg_enter_current(root))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_a, "cgroup.events", "populated 0\n"))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_b, "cgroup.events", "populated 0\n"))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_c, "cgroup.events", "populated 0\n"))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_test_d, "cgroup.events", "populated 0\n"))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (cg_test_d)
++		cg_destroy(cg_test_d);
++	if (cg_test_c)
++		cg_destroy(cg_test_c);
++	if (cg_test_b)
++		cg_destroy(cg_test_b);
++	if (cg_test_a)
++		cg_destroy(cg_test_a);
++	free(cg_test_d);
++	free(cg_test_c);
++	free(cg_test_b);
++	free(cg_test_a);
++	return ret;
++}
++
++/*
++ * A (domain threaded) - B (threaded) - C (domain)
++ *
++ * test that C can't be used until it is turned into a
++ * threaded cgroup.  "cgroup.type" file will report "domain (invalid)" in
++ * these cases. Operations which fail due to invalid topology use
++ * EOPNOTSUPP as the errno.
++ */
++static int test_cgcore_invalid_domain(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *grandparent = NULL, *parent = NULL, *child = NULL;
++
++	grandparent = cg_name(root, "cg_test_grandparent");
++	parent = cg_name(root, "cg_test_grandparent/cg_test_parent");
++	child = cg_name(root, "cg_test_grandparent/cg_test_parent/cg_test_child");
++	if (!parent || !child || !grandparent)
++		goto cleanup;
++
++	if (cg_create(grandparent))
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (cg_write(parent, "cgroup.type", "threaded"))
++		goto cleanup;
++
++	if (cg_read_strcmp(child, "cgroup.type", "domain invalid\n"))
++		goto cleanup;
++
++	if (!cg_enter_current(child))
++		goto cleanup;
++
++	if (errno != EOPNOTSUPP)
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	cg_enter_current(root);
++	if (child)
++		cg_destroy(child);
++	if (parent)
++		cg_destroy(parent);
++	if (grandparent)
++		cg_destroy(grandparent);
++	free(child);
++	free(parent);
++	free(grandparent);
++	return ret;
++}
++
++/*
++ * Test that when a child becomes threaded
++ * the parent type becomes domain threaded.
++ */
++static int test_cgcore_parent_becomes_threaded(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *parent = NULL, *child = NULL;
++
++	parent = cg_name(root, "cg_test_parent");
++	child = cg_name(root, "cg_test_parent/cg_test_child");
++	if (!parent || !child)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (cg_write(child, "cgroup.type", "threaded"))
++		goto cleanup;
++
++	if (cg_read_strcmp(parent, "cgroup.type", "domain threaded\n"))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (child)
++		cg_destroy(child);
++	if (parent)
++		cg_destroy(parent);
++	free(child);
++	free(parent);
++	return ret;
++
++}
++
++/*
++ * Test that there's no internal process constrain on threaded cgroups.
++ * You can add threads/processes on a parent with a controller enabled.
++ */
++static int test_cgcore_no_internal_process_constraint_on_threads(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *parent = NULL, *child = NULL;
++
++	if (cg_read_strstr(root, "cgroup.controllers", "cpu") ||
++	    cg_read_strstr(root, "cgroup.subtree_control", "cpu")) {
++		ret = KSFT_SKIP;
++		goto cleanup;
++	}
++
++	parent = cg_name(root, "cg_test_parent");
++	child = cg_name(root, "cg_test_parent/cg_test_child");
++	if (!parent || !child)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (cg_write(parent, "cgroup.type", "threaded"))
++		goto cleanup;
++
++	if (cg_write(child, "cgroup.type", "threaded"))
++		goto cleanup;
++
++	if (cg_write(parent, "cgroup.subtree_control", "+cpu"))
++		goto cleanup;
++
++	if (cg_enter_current(parent))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	cg_enter_current(root);
++	cg_enter_current(root);
++	if (child)
++		cg_destroy(child);
++	if (parent)
++		cg_destroy(parent);
++	free(child);
++	free(parent);
++	return ret;
++}
++
++/*
++ * Test that you can't enable a controller on a child if it's not enabled
++ * on the parent.
++ */
++static int test_cgcore_top_down_constraint_enable(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *parent = NULL, *child = NULL;
++
++	parent = cg_name(root, "cg_test_parent");
++	child = cg_name(root, "cg_test_parent/cg_test_child");
++	if (!parent || !child)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (!cg_write(child, "cgroup.subtree_control", "+memory"))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (child)
++		cg_destroy(child);
++	if (parent)
++		cg_destroy(parent);
++	free(child);
++	free(parent);
++	return ret;
++}
++
++/*
++ * Test that you can't disable a controller on a parent
++ * if it's enabled in a child.
++ */
++static int test_cgcore_top_down_constraint_disable(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *parent = NULL, *child = NULL;
++
++	parent = cg_name(root, "cg_test_parent");
++	child = cg_name(root, "cg_test_parent/cg_test_child");
++	if (!parent || !child)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (cg_write(parent, "cgroup.subtree_control", "+memory"))
++		goto cleanup;
++
++	if (cg_write(child, "cgroup.subtree_control", "+memory"))
++		goto cleanup;
++
++	if (!cg_write(parent, "cgroup.subtree_control", "-memory"))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (child)
++		cg_destroy(child);
++	if (parent)
++		cg_destroy(parent);
++	free(child);
++	free(parent);
++	return ret;
++}
++
++/*
++ * Test internal process constraint.
++ * You can't add a pid to a domain parent if a controller is enabled.
++ */
++static int test_cgcore_internal_process_constraint(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *parent = NULL, *child = NULL;
++
++	parent = cg_name(root, "cg_test_parent");
++	child = cg_name(root, "cg_test_parent/cg_test_child");
++	if (!parent || !child)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (cg_write(parent, "cgroup.subtree_control", "+memory"))
++		goto cleanup;
++
++	if (!cg_enter_current(parent))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (child)
++		cg_destroy(child);
++	if (parent)
++		cg_destroy(parent);
++	free(child);
++	free(parent);
++	return ret;
++}
++
++#define T(x) { x, #x }
++struct corecg_test {
++	int (*fn)(const char *root);
++	const char *name;
++} tests[] = {
++	T(test_cgcore_internal_process_constraint),
++	T(test_cgcore_top_down_constraint_enable),
++	T(test_cgcore_top_down_constraint_disable),
++	T(test_cgcore_no_internal_process_constraint_on_threads),
++	T(test_cgcore_parent_becomes_threaded),
++	T(test_cgcore_invalid_domain),
++	T(test_cgcore_populated),
++};
++#undef T
++
++int main(int argc, char *argv[])
++{
++	char root[PATH_MAX];
++	int i, ret = EXIT_SUCCESS;
++
++	if (cg_find_unified_root(root, sizeof(root)))
++		ksft_exit_skip("cgroup v2 isn't mounted\n");
++	for (i = 0; i < ARRAY_SIZE(tests); i++) {
++		switch (tests[i].fn(root)) {
++		case KSFT_PASS:
++			ksft_test_result_pass("%s\n", tests[i].name);
++			break;
++		case KSFT_SKIP:
++			ksft_test_result_skip("%s\n", tests[i].name);
++			break;
++		default:
++			ret = EXIT_FAILURE;
++			ksft_test_result_fail("%s\n", tests[i].name);
++			break;
++		}
++	}
++
++	return ret;
++}
+-- 
+2.11.0
+
