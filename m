@@ -1,46 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
- on cgroup v2 root
-Date: Wed, 18 Jul 2018 08:31:39 -0700
-Message-ID: <20180718153139.GQ72677@devbig577.frc2.facebook.com>
-References: <1529825440-9574-1-git-send-email-longman@redhat.com>
- <1529825440-9574-8-git-send-email-longman@redhat.com>
- <20180702165322.GI533219@devbig577.frc2.facebook.com>
- <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
- <20180703155823.GS533219@devbig577.frc2.facebook.com>
- <4cf9924e-7b97-187f-a1f5-853a45165abb@redhat.com>
- <151fc655-7e29-f060-789e-ee6c5c23d132@redhat.com>
- <a1eb4971-ff23-6fd8-d75b-112d63f0aee9@redhat.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
+ and IO
+Date: Wed, 18 Jul 2018 18:31:15 +0200
+Message-ID: <20180718163115.GV2494@hirez.programming.kicks-ass.net>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
+ <20180712172942.10094-9-hannes@cmpxchg.org>
+ <20180718124627.GD2476@hirez.programming.kicks-ass.net>
+ <20180718135633.GA5161@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=hR+qD/rstAfQOlQkLYPzveTTy2nQYci9SLbQtsf9TfI=;
-        b=sMZc31jhwq9tu4K/f0rBurhN0Hpa+rkT0/9jX9xSiSQF3nFbe87mIpEQY6aXK+t3k3
-         SR3a5suk1TX1lgqqOJ9djyBEmB5Z+mSDOd8CGS1I6qq9w5oTNAAPyRzbA2rJoPbUP4hz
-         DlC9f445y24coOLwjQyLpsVzs2JQJPS1AVY53zrWhVv0XZEN6tzOe9gATcQZYDCEErKT
-         2D48L1LLAE4h23oQ6b6UahXV7IIjBK+n2uVBbvbwZpSCJZ1hc3jEdC6lLkb6uXGnXXZK
-         jDiX9Ixul6z2OvIvpjA8wiPSf2QWv7S0fj9WuBGVNpebCaIHbRngkbKrY2W6TSdAteVP
-         RPaw==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=hcOhW0AxgeVW8KlsPYSm+C8c2IhtRyda4fOPsxxcs8s=; b=gOd6CZZvAM+wz80XpZd9n8PUQ
+        e52fnLMGVEXlYwPUJuYsTQpdOzYQQi6OfIay0CdCp7BBwdFOpSreNtnpPC+cnJTE5EybJ6GhJAfdq
+        hFcBjLxBu3UWJgEZ6cEpfh+d6b8RnWdbaxxjiB89rkWBBs7tNuqEJD+8PNuAkTGKHyfj/U7zNhsWp
+        SrkrpYnn3soo8hSZQy9djv6v9oHH5oWb5taSFdY81soZggrEwecgvDUN7/g3TlkedN3tZTKwGgaA2
+        7J6YLrJV3eCc9EbotCiVC7eAUfNtGgJRZgKDYYSBHJWdqLHpYpOX6rx9kV9GBzewJ86+LQRysCHG+
+    
 Content-Disposition: inline
-In-Reply-To: <a1eb4971-ff23-6fd8-d75b-112d63f0aee9@redhat.com>
+In-Reply-To: <20180718135633.GA5161@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Wed, Jul 18, 2018 at 11:21:18AM -0400, Waiman Long wrote:
-> What do you think about this patch?
+On Wed, Jul 18, 2018 at 09:56:33AM -0400, Johannes Weiner wrote:
+> On Wed, Jul 18, 2018 at 02:46:27PM +0200, Peter Zijlstra wrote:
+
+> > I'm confused by this whole MEMSTALL thing... I thought the idea was to
+> > account the time we were _blocked_ because of memstall, but you seem to
+> > count the time we're _running_ with PF_MEMSTALL.
 > 
-> Are there any other issues you have with this patchset?
+> Under heavy memory pressure, a lot of active CPU time is spent
+> scanning and rotating through the LRU lists, which we do want to
+> capture in the pressure metric. What we really want to know is the
+> time in which CPU potential goes to waste due to a lack of
+> resources. That's the CPU going idle due to a memstall, but it's also
+> a CPU doing *work* which only occurs due to a lack of memory. We want
+> to know about both to judge how productive system and workload are.
 
-Looks good to me.  If others are okay with it, I think we're all good.
+Then maybe memstall (esp. the 'stall' part of it) is a bit of a
+misnomer.
 
-Thanks.
+> > And esp. the wait_on_page_bit_common caller seems performance sensitive,
+> > and the above function is quite expensive.
+> 
+> Right, but we don't call it on every invocation, only when waiting for
+> the IO to read back a page that was recently deactivated and evicted:
+> 
+> 	if (bit_nr == PG_locked &&
+> 	    !PageUptodate(page) && PageWorkingset(page)) {
+> 		if (!PageSwapBacked(page))
+> 			delayacct_thrashing_start();
+> 		psi_memstall_enter(&pflags);
+> 		thrashing = true;
+> 	}
+> 
+> That means the page cache workingset/file active list is thrashing, in
+> which case the IO itself is our biggest concern, not necessarily a few
+> additional cycles before going to sleep to wait on its completion.
 
--- 
-tejun
+Ah, right. PageWorkingset() is only true if we (recently) evicted that
+page before, right?
