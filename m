@@ -1,26 +1,26 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
  and IO
-Date: Wed, 18 Jul 2018 18:03:10 -0400
-Message-ID: <20180718220310.GD2838@cmpxchg.org>
+Date: Wed, 18 Jul 2018 18:06:23 -0400
+Message-ID: <20180718220623.GE2838@cmpxchg.org>
 References: <20180712172942.10094-1-hannes@cmpxchg.org>
  <20180712172942.10094-9-hannes@cmpxchg.org>
- <20180717142157.GF2494@hirez.programming.kicks-ass.net>
+ <20180717150142.GG2494@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=R+3dIiRyHP1fioKsYuh/dXRSLNmOYtxcUdsY0xfFPLo=;
-        b=amPbMbni5KHTRvpPS5NjL05oE2UvGrywukrjUnj2kEd1CfT5OTDljNtSSvCfP39OrS
-         O4sbirpnCMUqYoU8wJY8VLnmXdSGyaUyaSMTTJcXwdAp2WHXplAv2sdsmocf7252eDnF
-         SoWrKGLI7Q0ru8aGPL06iXNRLMd8c3GtKvrKFvFMuMKY8JYWog6UDSEW/juvJ+8PP6Jr
-         9e0TxBrVWZQtgcQ/853DK51pdsVde684uEXBSt6GYuY+1cMcnLAMCukDPLbJk+26fqCd
-         vretef6I9vYmh6e1wi09Ef6DufqmFzbg2MzYFIx90It9aMVasokYwyA2zP1WkHgmlYkT
-         nCkA==
+        bh=wu822VWfbxTbIiJttkXqPEdGO8iaFFkoHKb0MR6LUhQ=;
+        b=GJhavJ1CI0+lP0q3vonS3J1NpNHq1O0CDD50W8RtXWgK4ObbI+Qy65zeAny1IoopKz
+         v2ufUHT03j4UlOJ0suI5T9mNRHmb9JggsFTdW3mwvtvmfBcYAY4j/eDflE6K1HkNnlcU
+         uaIwZZ6AqIekkTX8a3jmHWli+PO64rvro6ZmvO6MhmKMvvuRInQuHEfV1cbZHUuvCcqX
+         mgaSYVygsyr+VTBMJBBYg+SsxPDPb/Zv3xU41Q/fCuPtjgjtJdEStOQ+uhHE5jJcZ2p5
+         DSS/VyrFd32GjrxEGrRJ2LHiAbNkKwU1fQVsiaBPjc98XodWakZjcIal0EzvPnwwooaS
+         oo9A==
 Content-Disposition: inline
-In-Reply-To: <20180717142157.GF2494@hirez.programming.kicks-ass.net>
+In-Reply-To: <20180717150142.GG2494@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,50 +28,49 @@ Content-Transfer-Encoding: 7bit
 To: Peter Zijlstra <peterz@infradead.org>
 Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Jul 17, 2018 at 04:21:57PM +0200, Peter Zijlstra wrote:
+On Tue, Jul 17, 2018 at 05:01:42PM +0200, Peter Zijlstra wrote:
 > On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
-> > diff --git a/include/linux/sched/stat.h b/include/linux/sched/stat.h
-> > index 04f1321d14c4..ac39435d1521 100644
-> > --- a/include/linux/sched/stat.h
-> > +++ b/include/linux/sched/stat.h
-> > @@ -28,10 +28,14 @@ static inline int sched_info_on(void)
-> >  	return 1;
-> >  #elif defined(CONFIG_TASK_DELAY_ACCT)
-> >  	extern int delayacct_on;
-> > +	if (delayacct_on)
-> > +		return 1;
-> > +#elif defined(CONFIG_PSI)
-> > +	extern int psi_disabled;
-> > +	if (!psi_disabled)
-> > +		return 1;
-> >  #endif
-> > +	return 0;
-> >  }
+> > +static bool psi_update_stats(struct psi_group *group)
+> > +{
+> > +	u64 some[NR_PSI_RESOURCES] = { 0, };
+> > +	u64 full[NR_PSI_RESOURCES] = { 0, };
+> > +	unsigned long nonidle_total = 0;
+> > +	unsigned long missed_periods;
+> > +	unsigned long expires;
+> > +	int cpu;
+> > +	int r;
+> > +
+> > +	mutex_lock(&group->stat_lock);
+> > +
+> > +	/*
+> > +	 * Collect the per-cpu time buckets and average them into a
+> > +	 * single time sample that is normalized to wallclock time.
+> > +	 *
+> > +	 * For averaging, each CPU is weighted by its non-idle time in
+> > +	 * the sampling period. This eliminates artifacts from uneven
+> > +	 * loading, or even entirely idle CPUs.
+> > +	 *
+> > +	 * We could pin the online CPUs here, but the noise introduced
+> > +	 * by missing up to one sample period from CPUs that are going
+> > +	 * away shouldn't matter in practice - just like the noise of
+> > +	 * previously offlined CPUs returning with a non-zero sample.
 > 
-> Doesn't that want to be something like:
-> 
-> static inline bool sched_info_on(void)
-> {
-> #ifdef CONFIG_SCHEDSTAT
-> 	return true;
-> #else /* !SCHEDSTAT */
-> #ifdef CONFIG_TASK_DELAY_ACCT
-> 	extern int delayacct_on;
-> 	if (delayacct_on)
-> 		return true;
-> #endif /* DELAYACCT */
-> #ifdef CONFIG_PSI
-> 	extern int psi_disabled;
-> 	if (!psi_disabled)
-> 		return true;
-> #endif
-> 	return false;
-> #endif /* !SCHEDSTATE */
-> }
-> 
-> Such that if you build a TASK_DELAY_ACCT && PSI kernel, and boot with
-> nodelayacct, you still get sched_info_on().
+> But why!? cpuu_read_lock() is neither expensive nor complicated. So why
+> try and avoid it?
 
-You're right, that was a brainfart on my end. But as you point out in
-the other email, the SCHED_INFO dependency is artificial, so I'll
-rework this entire part.
+Hm, I don't feel strongly about it either way. I'll add it.
+
+> > +	/* total= */
+> > +	for (r = 0; r < NR_PSI_RESOURCES; r++) {
+> > +		do_div(some[r], max(nonidle_total, 1UL));
+> > +		do_div(full[r], max(nonidle_total, 1UL));
+> > +
+> > +		group->some[r] += some[r];
+> > +		group->full[r] += full[r];
+> 
+> 		group->some[r] = div64_ul(some[r], max(nonidle_total, 1UL));
+> 		group->full[r] = div64_ul(full[r], max(nonidle_total, 1UL));
+> 
+> Is easier to read imo.
+
+Sounds good to me, I'll change that.
