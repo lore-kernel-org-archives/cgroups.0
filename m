@@ -1,57 +1,41 @@
-From: Paul Moore <paul@paul-moore.com>
-Subject: Re: [RFC PATCH ghak90 (was ghak32) V3 10/10] rfkill: fix spelling
- mistake contidion to condition
-Date: Wed, 18 Jul 2018 16:56:56 -0400
-Message-ID: <CAHC9VhROqEZBq6BEoWFtWuVSNyZ4AtewMM2GDmJNaKdfVbcmzw@mail.gmail.com>
-References: <cover.1528304203.git.rgb@redhat.com> <6118147ea27ab5831956cf9dcad15b241c791420.1528304204.git.rgb@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Wed, 18 Jul 2018 17:12:15 -0400
+Message-ID: <7bd3b825-354d-a467-8f93-ee5da6b9941c@redhat.com>
+References: <1529825440-9574-1-git-send-email-longman@redhat.com>
+ <1529825440-9574-8-git-send-email-longman@redhat.com>
+ <20180702165322.GI533219@devbig577.frc2.facebook.com>
+ <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
+ <20180703155823.GS533219@devbig577.frc2.facebook.com>
+ <4cf9924e-7b97-187f-a1f5-853a45165abb@redhat.com>
+ <151fc655-7e29-f060-789e-ee6c5c23d132@redhat.com>
+ <a1eb4971-ff23-6fd8-d75b-112d63f0aee9@redhat.com>
+ <20180718153139.GQ72677@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VRmqhu6aqKi4FkFFmPgkcWZb9O+lQ5vPbaOH5H6gflE=;
-        b=lNHADKBRPR5iZ3WjYn3MuOIreuih+6Em3SL5NSH1AErjJrijKLFYgjqeXxj+XLhiga
-         VydqzQFgQFgKDlHBdtwG/NoS2EJmvn6uKo7U3V752nMAL/uT9fabp3ic3shPkQNYgE8r
-         LB3n0YjqQLCd323nJsqI/HFy6oSwDhLvL9/ikqUIhRPPoOOGhHvqFBoE4rG+JIcUokyj
-         8TsAS6y2WaUrV5Aero+xMNnlVc/J5XmptgEHJvI6031GvhfSEh2k6GMYLj6jeM6m2l/W
-         s1bA6j3vw3iJKR/XF2cNQpbnN1Eo0/QT7s/t6TCLT69A8n4pjtkbVoWiPm6ZfLX2Tfb0
-         +Klw==
-In-Reply-To: <6118147ea27ab5831956cf9dcad15b241c791420.1528304204.git.rgb@redhat.com>
-Sender: netdev-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180718153139.GQ72677@devbig577.frc2.facebook.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: rgb@redhat.com
-Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Wed, Jun 6, 2018 at 1:02 PM Richard Guy Briggs <rgb@redhat.com> wrote:
-> Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
-> ---
->  net/rfkill/core.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On 07/18/2018 11:31 AM, Tejun Heo wrote:
+> On Wed, Jul 18, 2018 at 11:21:18AM -0400, Waiman Long wrote:
+>> What do you think about this patch?
+>>
+>> Are there any other issues you have with this patchset?
+> Looks good to me.  If others are okay with it, I think we're all good.
+>
+> Thanks.
+>
+Peter,
 
-I would suggest splitting this patch from the audit container ID
-patchset and sending it to the netdev folks.  It really has nothing to
-do with the audit container ID work, although I suspect I know why you
-bumped into this spelling mistake ;)
+Do you have any major issues with this cpuset patchset as it stands today?
 
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index 59d0eb9..e89a009 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -494,7 +494,7 @@ void rfkill_remove_epo_lock(void)
->  /**
->   * rfkill_is_epo_lock_active - returns true EPO is active
->   *
-> - * Returns 0 (false) if there is NOT an active EPO contidion,
-> + * Returns 0 (false) if there is NOT an active EPO condition,
->   * and 1 (true) if there is an active EPO contition, which
->   * locks all radios in one of the BLOCKED states.
->   *
-> --
-> 1.8.3.1
+Thanks,
+Longman
 
--- 
-paul moore
-www.paul-moore.com
