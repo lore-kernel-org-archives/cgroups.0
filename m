@@ -1,69 +1,63 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v11 9/9] cpuset: Allow reporting of sched domain
- generation info
-Date: Thu, 19 Jul 2018 09:56:47 -0400
-Message-ID: <f1761707-28be-3e72-d87d-6e9a0f1653c8@redhat.com>
-References: <1529825440-9574-1-git-send-email-longman@redhat.com>
- <1529825440-9574-10-git-send-email-longman@redhat.com>
- <20180719135429.GF2494@hirez.programming.kicks-ass.net>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
+ and IO
+Date: Thu, 19 Jul 2018 15:58:46 +0200
+Message-ID: <20180719135846.GH2494@hirez.programming.kicks-ass.net>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
+ <20180712172942.10094-9-hannes@cmpxchg.org>
+ <20180718120318.GC2476@hirez.programming.kicks-ass.net>
+ <20180718223644.GH2838@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180719135429.GF2494@hirez.programming.kicks-ass.net>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=YbZEhod6+oCuO/XJF2r6OBkvvUCmqgWhGVTmfRqzeHs=; b=YPYzioMCKH4PSfBh4+LL2AHDL
+        j6HIpqdFgyPpOJOPtr3hPi9Z3+LfFKSXLuAzdwEJwu7i9h3JakG3tfdsK7cx7et62hiH4y1/mBGXJ
+        Xfm6eqoEBk5rh92v8+z0iECUZotqY6LDAoU1sWhVLChd2JH3LdkxGe8Sfmz3GGbm5ZIqGEp7yfWUt
+        Xd3c98GuMyzhsg/RNUme9fceOhhhfrsl0uUtDehgVgyOUFFMX/wWj8kBRo2cJqbf/Ozvv9+s1+yul
+        erSJY+tTJQdl6FBjVRTZeQW97mMJMe5Nt+dgyRCBHtqqpQLN10KU5UuVOKEcisA79z3OAV9GMrPKD
+    
+Content-Disposition: inline
+In-Reply-To: <20180718223644.GH2838@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 07/19/2018 09:54 AM, Peter Zijlstra wrote:
-> On Sun, Jun 24, 2018 at 03:30:40PM +0800, Waiman Long wrote:
->> This patch enables us to report sched domain generation information.
->>
->> If DYNAMIC_DEBUG is enabled, issuing the following command
->>
->>   echo "file cpuset.c +p" > /sys/kernel/debug/dynamic_debug/control
->>
->> and setting loglevel to 8 will allow the kernel to show what scheduling
->> domain changes are being made.
->>
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>  kernel/cgroup/cpuset.c | 18 ++++++++++++++++++
->>  1 file changed, 18 insertions(+)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 07a5575..62b7e61 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -836,6 +836,23 @@ static int generate_sched_domains(cpumask_var_t **domains,
->>  	return ndoms;
->>  }
->>  
->> +#ifdef CONFIG_DEBUG_KERNEL
->> +static inline void debug_print_domains(cpumask_var_t *doms, int ndoms)
->> +{
->> +	int i;
->> +	char buf[200];
->> +	char *ptr, *end = buf + sizeof(buf) - 1;
->> +
->> +	for (i = 0, ptr = buf, *end = '\0'; i < ndoms; i++)
->> +		ptr += snprintf(ptr, end - ptr, "dom%d=%*pbl ", i,
->> +				cpumask_pr_args(doms[i]));
->> +
->> +	pr_debug("Generated %d domains: %s\n", ndoms, buf);
->> +}
->> +#else
->> +static inline void debug_print_domains(cpumask_var_t *doms, int ndoms) { }
->> +#endif
-> I still hate this patch.. it prints information already available in
-> sched_debug and has that rediculous on-stack buffer.
+On Wed, Jul 18, 2018 at 06:36:44PM -0400, Johannes Weiner wrote:
+> On Wed, Jul 18, 2018 at 02:03:18PM +0200, Peter Zijlstra wrote:
+> > On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
+> > > +	/* Time in which tasks wait for the CPU */
+> > > +	state = PSI_NONE;
+> > > +	if (tasks[NR_RUNNING] > 1)
+> > > +		state = PSI_SOME;
+> > > +	time_state(&groupc->res[PSI_CPU], state, now);
+> > > +
+> > > +	/* Time in which tasks wait for memory */
+> > > +	state = PSI_NONE;
+> > > +	if (tasks[NR_MEMSTALL]) {
+> > > +		if (!tasks[NR_RUNNING] ||
+> > > +		    (cpu_curr(cpu)->flags & PF_MEMSTALL))
+> > 
+> > I'm confused, why do we care if the current tasks is MEMSTALL or not?
+> 
+> We want to know whether we're losing CPU potential because of a lack
+> of memory. That can happen when the task waits for refaults and the
+> CPU goes idle, but it can also happen when the CPU is performing
+> reclaim.
+> 
+> If the task waits for refaults and something else is runnable, we're
+> not losing CPU potential. But if the task performs reclaim and uses
+> the CPU, nothing else can do productive work on that CPU.
 
-This patch is just for my own testing purpose. We can certainly drop that.
+Right, this is because MEMSTALL is not just blocking (as per that other
+sub-thread).
 
-Tejun, please drop this one.
-
-Thanks,
-Longman
-
+This is really unfortunate, because it means the state is not a simple
+function of the task counts.
