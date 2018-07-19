@@ -1,59 +1,73 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
- and IO
-Date: Thu, 19 Jul 2018 11:26:14 +0200
-Message-ID: <20180719092614.GY2512@hirez.programming.kicks-ass.net>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-9-hannes@cmpxchg.org>
- <20180718120318.GC2476@hirez.programming.kicks-ass.net>
-Mime-Version: 1.0
+From: Jing Xia <jing.xia.mail@gmail.com>
+Subject: [PATCH] mm: memcg: fix use after free in mem_cgroup_iter()
+Date: Thu, 19 Jul 2018 18:06:47 +0800
+Message-ID: <1531994807-25639-1-git-send-email-jing.xia@unisoc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=/XzYF6OgunbOCgX1qSMgWlG2svJbh/a+gYsM8px3vOQ=; b=2UrTct1TTh99ANKw7NpiSZmc+
-        0NZS3UQ6cBIcbHNb4sN2U+yetfGdkVYM0uRe9VyDSKvu+927ANZXnZBiX/GXDa04DwqA2tqTRncD/
-        xdHZzyQEwEYW/DUCzBD7mf1mAJXwp1szVCkqCLUg6tHzhv++zvnmjWxYOmpXUroolyDMtQg4+oinU
-        iLLnhysu4TV6jUByFlkrOYUbE/lsL9VbH1f7BQOYcRGy+75PWgQI+DAeMQsKZbOUqwZBCdShBagdy
-        LqMslZdDXEK1K+/QaB3kq1Quhtnt7uOQeZ7yWYM8PGxK/wVNZrqxvAP6gKUzex5zLwSqgIZPGio6S
-      
-Content-Disposition: inline
-In-Reply-To: <20180718120318.GC2476@hirez.programming.kicks-ass.net>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=RJhJrPg5vB3sWmzaN5lFkpQiPrD9UBbb70hv06tTUJ4=;
+        b=LGi5d0BhcB4tPQcG26h5D5OhpGUIlojIG4lB+mcxmmVOvO9fCPITFBLoriP8vcRM7W
+         SsWSt7yC/SnEFr/o6aB/TXMiOQmREPLLkqVa5BQFvTDvHSqGJWKSHaGIIoOkVWSwLQe1
+         KrU0wVvvDtdKlLueIiTTlwC8f9qMVPrqUMQjeYLuW5iTo4fpjHZNHexVbV+EM0LVpTOq
+         uIMpyC1AYUc5TB2AyPETwm+MSx45Xw6DmgVOf4eeZ0KblVQ0eJ01Cl3zaeH6bgLE6HIA
+         JN//NmrgXYw978tqx4SOoLj6fblWI+Afadq0lwGc9HEvu2zDHC5F0Xe7PUecthW5qKvg
+         GJgA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
+Cc: chunyan.zhang@unisoc.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Wed, Jul 18, 2018 at 02:03:18PM +0200, Peter Zijlstra wrote:
+It was reported that a kernel crash happened in mem_cgroup_iter(),
+which can be triggered if the legacy cgroup-v1 non-hierarchical
+mode is used.
 
-> Leaving us just 5 bytes short of needing a single cacheline :/
-> 
-> struct ponies {
->         unsigned int               tasks[3];                                             /*     0    12 */
->         unsigned int               cpu_state:2;                                          /*    12:30  4 */
->         unsigned int               io_state:2;                                           /*    12:28  4 */
->         unsigned int               mem_state:2;                                          /*    12:26  4 */
-> 
->         /* XXX 26 bits hole, try to pack */
-> 
->         /* typedef u64 */ long long unsigned int     last_time;                          /*    16     8 */
->         /* typedef u64 */ long long unsigned int     some_time[3];                       /*    24    24 */
->         /* typedef u64 */ long long unsigned int     full_time[2];                       /*    48    16 */
->         /* --- cacheline 1 boundary (64 bytes) --- */
->         /* typedef u64 */ long long unsigned int     nonidle_time;                       /*    64     8 */
-> 
->         /* size: 72, cachelines: 2, members: 8 */
->         /* bit holes: 1, sum bit holes: 26 bits */
->         /* last cacheline: 8 bytes */
-> };
-> 
-> ARGGH!
+Unable to handle kernel paging request at virtual address 6b6b6b6b6b6b8f
+......
+Call trace:
+  mem_cgroup_iter+0x2e0/0x6d4
+  shrink_zone+0x8c/0x324
+  balance_pgdat+0x450/0x640
+  kswapd+0x130/0x4b8
+  kthread+0xe8/0xfc
+  ret_from_fork+0x10/0x20
 
-It _might_ be possible to use curr->se.exec_start for last_time if you
-very carefully audit and place the hooks. I've not gone through it in
-detail, but it might just work.
+  mem_cgroup_iter():
+      ......
+      if (css_tryget(css))    <-- crash here
+	    break;
+      ......
+
+The crashing reason is that mem_cgroup_iter() uses the memcg object
+whose pointer is stored in iter->position, which has been freed before
+and filled with POISON_FREE(0x6b).
+
+And the root cause of the use-after-free issue is that
+invalidate_reclaim_iterators() fails to reset the value of
+iter->position to NULL when the css of the memcg is released in non-
+hierarchical mode.
+
+Signed-off-by: Jing Xia <jing.xia.mail@gmail.com>
+---
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e6f0d5e..8c0280b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -850,7 +850,7 @@ static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
+ 	int nid;
+ 	int i;
+ 
+-	while ((memcg = parent_mem_cgroup(memcg))) {
++	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+ 		for_each_node(nid) {
+ 			mz = mem_cgroup_nodeinfo(memcg, nid);
+ 			for (i = 0; i <= DEF_PRIORITY; i++) {
+-- 
+1.9.1
+
