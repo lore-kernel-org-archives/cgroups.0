@@ -1,10 +1,9 @@
-From: Waiman Long <longman@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
  on cgroup v2 root
-Date: Thu, 19 Jul 2018 13:22:36 -0400
-Message-ID: <69903192-8711-6a1e-0cd0-fbb249a4204b@redhat.com>
-References: <1529825440-9574-1-git-send-email-longman@redhat.com>
- <1529825440-9574-8-git-send-email-longman@redhat.com>
+Date: Thu, 19 Jul 2018 10:25:51 -0700
+Message-ID: <20180719172551.GW72677@devbig577.frc2.facebook.com>
+References: <1529825440-9574-8-git-send-email-longman@redhat.com>
  <20180702165322.GI533219@devbig577.frc2.facebook.com>
  <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
  <20180703155823.GS533219@devbig577.frc2.facebook.com>
@@ -13,63 +12,51 @@ References: <1529825440-9574-1-git-send-email-longman@redhat.com>
  <20180719153045.GT72677@devbig577.frc2.facebook.com>
  <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
  <20180719165201.GU72677@devbig577.frc2.facebook.com>
+ <69903192-8711-6a1e-0cd0-fbb249a4204b@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180719165201.GU72677@devbig577.frc2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=hkpwUBwM3Y5AyhzYYuS8+vNKG4CoFqS7MqCRsCqif6A=;
+        b=dMxux7mtw7eZXdGQRMepih1kYfgQuOlxDNm+/j62pQ1/WfoQjkEsOlhiMAox/kNEnQ
+         359CsA8FfwlyNzP70XKopSkIo2sbxY1+OZyzN3nwa65DKtUiE5qDA6cxGSNWWIW9WTN3
+         Qu8DyEL8d1ibyvAOytf/29zvoasZkTmm0EIdH4CddXPXq7WfOGQVKWG1VKQpFtHNivmk
+         AFCezOkeZscvCvcwQShkSko4x0CovKFvCDA+K4+JYz7tsS2Fo9PYQHtv9KXBk1t/uNko
+         yiYwcqjVa3qm48Ijt8nFrhE2ey4Hhqn/Tn0dSHDGvTFcc4I6deLPl7hJEHifW2ywxKL1
+         spEw==
+Content-Disposition: inline
+In-Reply-To: <69903192-8711-6a1e-0cd0-fbb249a4204b@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
 Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On 07/19/2018 12:52 PM, Tejun Heo wrote:
-> Hello,
->
-> On Thu, Jul 19, 2018 at 11:52:46AM -0400, Waiman Long wrote:
->> BTW, the way the partition is currently implemented right now is that a
->> child cannot be a partition root unless its parent is a partition root
->> itself. That is to avoid turning on partition to affect ancestors
->> further up the hierarchy than just the parent. So in the case of a
->> container, it cannot allocate sub-partitions underneath it unless it is
->> a partition itself. Will that solve your concern?
-> Hmm... so a given ancestor must be able to both
->
-> 1. control which cpus are moved into a partition in all of its
->    subtree.
+Hello, Waiman.
 
-Not at the moment. I do have another idea of adding a "cpus.subpart"
-file, for example, to indicate what CPUs a child sub-partition can use
-in its partition. This control file only serves as an intention to
-grant, it won't affect anything else. Before the partition flag can be
-turned on, the kernel will have to check if the cpu list of the child is
-also a subset of its parent's cpus.subpart as a precondition. Does that
-serve the purpose of letting a parent has a say of what CPUs can be
-included in a child partition?
+On Thu, Jul 19, 2018 at 01:22:36PM -0400, Waiman Long wrote:
+...
+> Do you want a way at the parent level to take CPUs away from child
+> partitions? The "cpus.subpart" file can probably be used also for this
+> purpose, but we have to decide what taking CPUs away from child
+> partition means. Does that mean automatically turn off the partition
+> flag in the children if there is no CPU left in the partition? There are
 
-This change will require adding a new cpumask into the cpuset structure,
-the code to handle the mask as well as an additional check in the
-partition enable code. That will have minimal impact to the current code.
+Yeah, I think so.  That's what we do when cpuset.cpus or mems go empty
+- ignoring the config.
 
-> 2. take away any given cpu from ist subtree.
->
-> Right now, I don't think it's achieving either, right?
+> some implementation details that need to be fleshed out. I would prefer
+> not doing this as this will complicate the code without too much benefit
+> that I can see.
 
-The only way to take away the CPUs from a sub-partition is to turn off
-the partition flag in the child provided that it has no sub-partitions
-underneath it.
+So, given how long this has been dragging along and it isn't yet super
+clear to me why this needs to be fully hierarchical, I'd actually
+prefer just restricting it to the first level children.
 
-Do you want a way at the parent level to take CPUs away from child
-partitions? The "cpus.subpart" file can probably be used also for this
-purpose, but we have to decide what taking CPUs away from child
-partition means. Does that mean automatically turn off the partition
-flag in the children if there is no CPU left in the partition? There are
-some implementation details that need to be fleshed out. I would prefer
-not doing this as this will complicate the code without too much benefit
-that I can see.
+Thanks.
 
-Cheers,
-Longman
-
-
+-- 
+tejun
