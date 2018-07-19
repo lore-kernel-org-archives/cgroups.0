@@ -1,91 +1,75 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH kselftest-next] Add cgroup core selftests
-Date: Thu, 19 Jul 2018 10:08:30 -0700
-Message-ID: <20180719170829.GB21770@castle.DHCP.thefacebook.com>
-References: <20180718173358.14007-1-claudiozumbo@gmail.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Thu, 19 Jul 2018 13:22:36 -0400
+Message-ID: <69903192-8711-6a1e-0cd0-fbb249a4204b@redhat.com>
+References: <1529825440-9574-1-git-send-email-longman@redhat.com>
+ <1529825440-9574-8-git-send-email-longman@redhat.com>
+ <20180702165322.GI533219@devbig577.frc2.facebook.com>
+ <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
+ <20180703155823.GS533219@devbig577.frc2.facebook.com>
+ <20180719135224.GE2494@hirez.programming.kicks-ass.net>
+ <1107494a-9667-df58-dcac-9366e969dc3a@redhat.com>
+ <20180719153045.GT72677@devbig577.frc2.facebook.com>
+ <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
+ <20180719165201.GU72677@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=C3y+iFNwz7PrpjkVQpJg70wnvpwxnCMyM24OC4iGUi0=;
- b=aEZ2Xu6Y//GXfaVQzFATo8fTcVpGMKYttTKxjcmDVGPfQz7Rp3kTsCEzUZQpEkXskRfW
- vVRM2n5vu3rjSiSCbNuTeRblbDF5nBynLHyq1o/Wwbhbj5KQCmDky48977FMhcmKFSWU
- +FVeDKoHFN0wbeZoY7cDJZ3p6cvj3TbiXCs= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=C3y+iFNwz7PrpjkVQpJg70wnvpwxnCMyM24OC4iGUi0=;
- b=WlndKxlUBHuvFEEXj50UEZzcDV5t+k4cZiSLFLhLcN31u93cQmH5hOn/U1jTW1FljQ2sCC7fcDln2dBLx/m3zaTElMemJhiNof5cmvC3h8WKJnO/9waJpAazE5Yrz2WVM1ezvJrRLhodDnql3oRxgPRvmgjMl2Df8cEw5MBo/J8=
-Content-Disposition: inline
-In-Reply-To: <20180718173358.14007-1-claudiozumbo@gmail.com>
+In-Reply-To: <20180719165201.GU72677@devbig577.frc2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Claudio <claudiozumbo@gmail.com>
-Cc: linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Claudio Zumbo <claudioz@fb.com>, Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Wed, Jul 18, 2018 at 07:33:58PM +0200, Claudio wrote:
-> This commit adds tests for some of the core functionalities
-> of cgroups v2.
-> 
-> The commit adds tests for some core principles of croup V2 API:
-> 
-> - test_cgcore_internal_process_constraint
-> 
->   Tests internal process constraint.
->   You can't add a pid to a domain parent if a controller is enabled.
-> 
-> - test_cgcore_top_down_constraint_enable
-> 
->    Tests that you can't enable a controller on a child if it's not enabled
->    on the parent.
-> 
-> - test_cgcore_top_down_constraint_disable
-> 
->   Tests that you can't disable a controller on a parent if it's
->   enabled in a child.
-> 
-> - test_cgcore_no_internal_process_constraint_on_threads
-> 
->   Tests that there's no internal process constrain on threaded cgroups.
->   You can add threads/processes on a parent with a controller enabled.
-> 
-> - test_cgcore_parent_becomes_threaded
-> 
->   Tests that when a child becomes threaded the parent type becomes
->   domain threaded.
-> 
-> - test_cgcore_invalid_domain
-> 
->   In a situation like:
-> 
->   A (domain threaded) - B (threaded) - C (domain)
-> 
->   it tests that C can't be used until it is turned into a threaded cgroup.
->   The "cgroup.type" file will report "domain (invalid)" in these cases.
->   Operations which fail due to invalid topology use EOPNOTSUPP as the errno.
-> 
-> - test_cgcore_populated
-> 
->   In a situation like:
-> 
->   A(0) - B(0) - C(1)
->          \ D(0)
-> 
->   It tests that A, B and C's "populated" fields would be 1 while D's 0.
->   It tests that after the one process in C is moved to root, A,B and C's
->   "populated" fields would flip to "0" and file modified events will
->   be generated on the "cgroup.events" files of both cgroups.
-> 
-> Signed-off-by: Claudio Zumbo <claudioz@fb.com>
-> Cc: Shuah Khan <shuah@kernel.org>
-> Cc: Roman Gushchin <guro@fb.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: kernel-team@fb.com
+On 07/19/2018 12:52 PM, Tejun Heo wrote:
+> Hello,
+>
+> On Thu, Jul 19, 2018 at 11:52:46AM -0400, Waiman Long wrote:
+>> BTW, the way the partition is currently implemented right now is that a
+>> child cannot be a partition root unless its parent is a partition root
+>> itself. That is to avoid turning on partition to affect ancestors
+>> further up the hierarchy than just the parent. So in the case of a
+>> container, it cannot allocate sub-partitions underneath it unless it is
+>> a partition itself. Will that solve your concern?
+> Hmm... so a given ancestor must be able to both
+>
+> 1. control which cpus are moved into a partition in all of its
+>    subtree.
 
-Looks good to me!
+Not at the moment. I do have another idea of adding a "cpus.subpart"
+file, for example, to indicate what CPUs a child sub-partition can use
+in its partition. This control file only serves as an intention to
+grant, it won't affect anything else. Before the partition flag can be
+turned on, the kernel will have to check if the cpu list of the child is
+also a subset of its parent's cpus.subpart as a precondition. Does that
+serve the purpose of letting a parent has a say of what CPUs can be
+included in a child partition?
 
-Reviewed-by: Roman Gushchin <guro@fb.com>
+This change will require adding a new cpumask into the cpuset structure,
+the code to handle the mask as well as an additional check in the
+partition enable code. That will have minimal impact to the current code.
 
-Thank you!
+> 2. take away any given cpu from ist subtree.
+>
+> Right now, I don't think it's achieving either, right?
+
+The only way to take away the CPUs from a sub-partition is to turn off
+the partition flag in the child provided that it has no sub-partitions
+underneath it.
+
+Do you want a way at the parent level to take CPUs away from child
+partitions? The "cpus.subpart" file can probably be used also for this
+purpose, but we have to decide what taking CPUs away from child
+partition means. Does that mean automatically turn off the partition
+flag in the children if there is no CPU left in the partition? There are
+some implementation details that need to be fleshed out. I would prefer
+not doing this as this will complicate the code without too much benefit
+that I can see.
+
+Cheers,
+Longman
+
+
