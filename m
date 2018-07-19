@@ -1,110 +1,59 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] mm: memcg: fix use after free in mem_cgroup_iter()
-Date: Thu, 19 Jul 2018 09:23:10 -0700
-Message-ID: <CALvZod55Ku7U3soLtuYY_HL2_mMp5+OT-hngdZkPRGN9xm1a9Q@mail.gmail.com>
-References: <1531994807-25639-1-git-send-email-jing.xia@unisoc.com> <20180719104345.GV7193@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Thu, 19 Jul 2018 09:52:01 -0700
+Message-ID: <20180719165201.GU72677@devbig577.frc2.facebook.com>
+References: <1529825440-9574-1-git-send-email-longman@redhat.com>
+ <1529825440-9574-8-git-send-email-longman@redhat.com>
+ <20180702165322.GI533219@devbig577.frc2.facebook.com>
+ <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
+ <20180703155823.GS533219@devbig577.frc2.facebook.com>
+ <20180719135224.GE2494@hirez.programming.kicks-ass.net>
+ <1107494a-9667-df58-dcac-9366e969dc3a@redhat.com>
+ <20180719153045.GT72677@devbig577.frc2.facebook.com>
+ <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=eBoiAf+fwwTWl+wiFp1yO3mt7hvFDEp3X8YtzX7kZP0=;
-        b=AYVALAM1T0pbUtNSDPlYcIIu3Banr3Wr6fsxxrrZR5Z0HyCn4h2o7wnzhVHr0PZZia
-         iW0IyRnrkuIQZgQHeJk7qnxSPNRPgL8LhwpYv/lyQitQt33A9IEOtfzlZIQKafAaKKn8
-         +HDOM9YG5nP5Eo99YFwWr33tZ+b3kJ7ONZkbvO1no1r/ioUcIUMU0FTiYbIVp269aMRX
-         9IzxX1BMj73Pz+LO4oblsZLrP5UDjae7X9ajKWobRUxGADIGligITIPKcfvAQz9K9ygI
-         qK5W41HeW9CF0smBfA60bIRhflnyeIqys6j0XAA/IyKFz/OaZptPyElYKD6rsrOp6sW8
-         qluQ==
-In-Reply-To: <20180719104345.GV7193@dhcp22.suse.cz>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=S11QxldGb2rueyxaC44wods7Mrexh/qBlnMNZmhzCsE=;
+        b=d3I+R6/dVKJ/ByZS3i5E/MQVNNXGPhHTCGua0IYNTSIDDusgYui+slnnSmN3+H/SPU
+         kHqRNrcKKUs3FAbLr9L8trLadP+IgJFvlE+M5ji1s7HOxjL8QCcetLrssg2qEYzg3Moz
+         lG6+dpj96Qj4jSHkspN3M57Yhh1Qom5uauTlrCt7pz80Zo/h9cPKRj87vbePV8cTBx2d
+         9zOkqYh118nmtn91wxo0yNlqhq2pE+vHRdnSerYMs0I1MvLhhV0glNffOTWwG4JH4AsN
+         F6fJ4FJkvieSR5xqQChUN0/mS30fDvZj2kQgl0YueVLxWguforOnaV+dkFEE5bX3LDh2
+         YOaA==
+Content-Disposition: inline
+In-Reply-To: <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: jing.xia.mail@gmail.com, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, chunyan.zhang@unisoc.com, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Thu, Jul 19, 2018 at 3:43 AM Michal Hocko <mhocko@kernel.org> wrote:
->
-> [CC Andrew]
->
-> On Thu 19-07-18 18:06:47, Jing Xia wrote:
-> > It was reported that a kernel crash happened in mem_cgroup_iter(),
-> > which can be triggered if the legacy cgroup-v1 non-hierarchical
-> > mode is used.
-> >
-> > Unable to handle kernel paging request at virtual address 6b6b6b6b6b6b8f
-> > ......
-> > Call trace:
-> >   mem_cgroup_iter+0x2e0/0x6d4
-> >   shrink_zone+0x8c/0x324
-> >   balance_pgdat+0x450/0x640
-> >   kswapd+0x130/0x4b8
-> >   kthread+0xe8/0xfc
-> >   ret_from_fork+0x10/0x20
-> >
-> >   mem_cgroup_iter():
-> >       ......
-> >       if (css_tryget(css))    <-- crash here
-> >           break;
-> >       ......
-> >
-> > The crashing reason is that mem_cgroup_iter() uses the memcg object
-> > whose pointer is stored in iter->position, which has been freed before
-> > and filled with POISON_FREE(0x6b).
-> >
-> > And the root cause of the use-after-free issue is that
-> > invalidate_reclaim_iterators() fails to reset the value of
-> > iter->position to NULL when the css of the memcg is released in non-
-> > hierarchical mode.
->
-> Well, spotted!
->
-> I suspect
-> Fixes: 6df38689e0e9 ("mm: memcontrol: fix possible memcg leak due to interrupted reclaim")
->
-> but maybe it goes further into past. I also suggest
-> Cc: stable
->
-> even though the non-hierarchical mode is strongly discouraged.
+Hello,
 
-Why not set root_mem_cgroup's use_hierarchy to true by default on
-init? If someone wants non-hierarchical mode, they can explicitly set
-it to false.
+On Thu, Jul 19, 2018 at 11:52:46AM -0400, Waiman Long wrote:
+> BTW, the way the partition is currently implemented right now is that a
+> child cannot be a partition root unless its parent is a partition root
+> itself. That is to avoid turning on partition to affect ancestors
+> further up the hierarchy than just the parent. So in the case of a
+> container, it cannot allocate sub-partitions underneath it unless it is
+> a partition itself. Will that solve your concern?
 
-> A lack of
-> reports for 3 years is encouraging that not many people really use this
-> mode.
->
-> > Signed-off-by: Jing Xia <jing.xia.mail@gmail.com>
->
-> Acked-by: Michal Hocko <mhocko@suse.com>
->
-> Thanks!
-> > ---
-> >  mm/memcontrol.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index e6f0d5e..8c0280b 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -850,7 +850,7 @@ static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
-> >       int nid;
-> >       int i;
-> >
-> > -     while ((memcg = parent_mem_cgroup(memcg))) {
-> > +     for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-> >               for_each_node(nid) {
-> >                       mz = mem_cgroup_nodeinfo(memcg, nid);
-> >                       for (i = 0; i <= DEF_PRIORITY; i++) {
-> > --
-> > 1.9.1
->
-> --
-> Michal Hocko
-> SUSE Labs
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hmm... so a given ancestor must be able to both
+
+1. control which cpus are moved into a partition in all of its
+   subtree.
+
+2. take away any given cpu from ist subtree.
+
+Right now, I don't think it's achieving either, right?
+
+Thanks.
+
+-- 
+tejun
