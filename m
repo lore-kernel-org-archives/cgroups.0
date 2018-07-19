@@ -1,64 +1,130 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
- on cgroup v2 root
-Date: Thu, 19 Jul 2018 13:38:13 -0400
-Message-ID: <468d70b2-c3d8-53c6-bbda-050106bcf60d@redhat.com>
-References: <1529825440-9574-8-git-send-email-longman@redhat.com>
- <20180702165322.GI533219@devbig577.frc2.facebook.com>
- <bc59aa0a-70fd-583f-452d-9a947757cb69@redhat.com>
- <20180703155823.GS533219@devbig577.frc2.facebook.com>
- <20180719135224.GE2494@hirez.programming.kicks-ass.net>
- <1107494a-9667-df58-dcac-9366e969dc3a@redhat.com>
- <20180719153045.GT72677@devbig577.frc2.facebook.com>
- <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
- <20180719165201.GU72677@devbig577.frc2.facebook.com>
- <69903192-8711-6a1e-0cd0-fbb249a4204b@redhat.com>
- <20180719172551.GW72677@devbig577.frc2.facebook.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
+ and IO
+Date: Thu, 19 Jul 2018 13:54:05 -0400
+Message-ID: <20180719175405.GA19230@cmpxchg.org>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
+ <20180712172942.10094-9-hannes@cmpxchg.org>
+ <20180718120318.GC2476@hirez.programming.kicks-ass.net>
+ <CA+55aFw7t++BzEy-XsatNcauw3Wn22SSXfd3iTYECi4fJ97CCg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180719172551.GW72677@devbig577.frc2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=eiqsWTxMloG3jXlacTFcz45bqVpxQEMMAp/qxR7ltn0=;
+        b=w7eaUiZAJOauA9UXAmgmNehFlIEETn578nohUb1UsfkuyhK5uXadRY6591KPCN+pNb
+         4Bqvwph9+44OIB0rZCeArggih+/aGAU3Gc6+SMw2C3XiUCPiLZ4GyqanA29sh6cuoo+1
+         v2LIoNQj7GP+MxI+UN/AaXjiBbb9ZqVcoy3ISqyrf55ntpJBuEDkHPrkKdsMI1HSnxkp
+         49eoYfAHQDh46odwRW/z6cVb+9bMPA4/x7dQpJG/C4/r58JfKiZxI6JwwSIt8i0htKmX
+         z7vHjvMuKpSsURvswpZvahUk88TD+fxBhObJqa6+OwYJvszxca1zXzuKTBKZFZLU3F9O
+         b1JQ==
+Content-Disposition: inline
+In-Reply-To: <CA+55aFw7t++BzEy-XsatNcauw3Wn22SSXfd3iTYECi4fJ97CCg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, surenb@google.com, Vinayak Menon <vinmenon@codeaurora.org>, Christoph Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, shakeelb@google.com, linux-mm <linux-mm@kvack.org>, cgroups <cgroups@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>
 
-On 07/19/2018 01:25 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Thu, Jul 19, 2018 at 01:22:36PM -0400, Waiman Long wrote:
-> ...
->> Do you want a way at the parent level to take CPUs away from child
->> partitions? The "cpus.subpart" file can probably be used also for this
->> purpose, but we have to decide what taking CPUs away from child
->> partition means. Does that mean automatically turn off the partition
->> flag in the children if there is no CPU left in the partition? There are
-> Yeah, I think so.  That's what we do when cpuset.cpus or mems go empty
-> - ignoring the config.
->
->> some implementation details that need to be fleshed out. I would prefer
->> not doing this as this will complicate the code without too much benefit
->> that I can see.
-> So, given how long this has been dragging along and it isn't yet super
-> clear to me why this needs to be fully hierarchical, I'd actually
-> prefer just restricting it to the first level children.
->
-> Thanks.
->
-Yes, I would prefer to check in the v11 cpuset patch as it is today,
-including the incremental patch to limit partition to first level child
-minus the debug patch. I do need to make cpuset v2 enabled ASAP.
+On Thu, Jul 19, 2018 at 08:08:20AM -0700, Linus Torvalds wrote:
+> On Wed, Jul 18, 2018 at 5:03 AM Peter Zijlstra <peterz@infradead.org> wrote:
+> >
+> > And as said before, we can compress the state from 12 bytes, to 6 bits
+> > (or 1 byte), giving another 11 bytes for 59 bytes free.
+> >
+> > Leaving us just 5 bytes short of needing a single cacheline :/
+> 
+> Do you actually need 64 bits for the times?
+> 
+> That's the big cost. And it seems ridiculous, if you actually care about size.
+> 
+> You already have a 64-bit start time. Everything else is some
+> cumulative relative time. Do those really need 64-bit and nanosecond
+> resolution?
+> 
+> Maybe a 32-bit microsecond would be ok - would you ever account more
+> than 35 minutes of anything without starting anew?
 
-This will give me more times to work on extending partition to be
-hierarchical if the need arises as well as other cpuset v2 features. We
-usually can't get all the things right in one single step.
+D'oh, you're right, the per-cpu buckets don't need to be this big at
+all. In fact, we flush those deltas out every 2 seconds when there is
+activity to maintain the running averages. Since we get 4.2s worth of
+nanoseconds into a u32, we don't even need to divide in the hotpath.
 
-Peter, are you OK with that? I can promise you that I will work to make
-this happen at a later date if you really want it.
+Something along the lines of this here should work:
 
-Cheers,
-Longman
+static void psi_group_change(struct psi_group *group, int cpu, u64 now,
+			     unsigned int clear, unsigned int set)
+{
+	struct psi_group_cpu *groupc;
+	unsigned int *tasks;
+	unsigned int t;
+	u32 delta;
 
+	groupc = per_cpu_ptr(group->cpus, cpu);
+	tasks = groupc->tasks;
 
+	/* Time since last task change on this runqueue */
+	delta = now - groupc->last_time;
+	groupc->last_time = now;
+
+	/* Tasks waited for IO? */
+	if (tasks[NR_IOWAIT]) {
+		if (!tasks[NR_RUNNING])
+			groupc->full_time[PSI_IO] += delta;
+		else
+			groupc->some_time[PSI_IO] += delta;
+	}
+
+	/* Tasks waited for memory? */
+	if (tasks[NR_MEMSTALL]) {
+		if (!tasks[NR_RUNNING] ||
+		    (cpu_curr(cpu)->flags & PF_MEMSTALL))
+			groupc->full_time[PSI_MEM] += delta;
+		else
+			groupc->some_time[PSI_MEM] += delta;
+	}
+
+	/* Tasks waited for the CPU? */
+	if (tasks[NR_RUNNING] > 1)
+		groupc->some_time[PSI_CPU] += delta;
+
+	/* Tasks were generally non-idle? To weigh the CPU in summaries */
+	if (tasks[NR_RUNNING] || tasks[NR_IOWAIT] || tasks[NR_MEMSTALL])
+		groupc->nonidle_time += delta;
+
+	/* Update task counts according to the set/clear bitmasks */
+	for (t = 0; clear; clear &= ~(1 << t), t++)
+		if (clear & (1 << t))
+			groupc->tasks[t]--;
+	for (t = 0; set; set &= ~(1 << t), t++)
+		if (set & (1 << t))
+			groupc->tasks[t]++;
+
+	/* Kick the stats aggregation worker if it's gone to sleep */
+	if (!delayed_work_pending(&group->clock_work))
+		schedule_delayed_work(&group->clock_work, PSI_FREQ);
+}
+
+And then we can pack it down to one cacheline:
+
+struct psi_group_cpu {
+	/* States of the tasks belonging to this group */
+	unsigned int tasks[NR_PSI_TASK_COUNTS]; // 3
+
+	/* Time sampling bucket for pressure states - no FULL for CPU */
+	u32 some_time[NR_PSI_RESOURCES];
+	u32 full_time[NR_PSI_RESOURCES - 1];
+
+	/* Time sampling bucket for non-idle state (ns) */
+	u32 nonidle_time;
+
+	/* Time of last task change in this group (rq_clock) */
+	u64 last_time;
+};
+
+I'm going to go test with this.
+
+Thanks
