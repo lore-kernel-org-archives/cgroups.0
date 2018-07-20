@@ -1,69 +1,115 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
- on cgroup v2 root
-Date: Fri, 20 Jul 2018 10:41:00 -0700
-Message-ID: <20180720174100.GC1934745@devbig577.frc2.facebook.com>
-References: <20180719153045.GT72677@devbig577.frc2.facebook.com>
- <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
- <20180719165201.GU72677@devbig577.frc2.facebook.com>
- <20180720113121.GJ2476@hirez.programming.kicks-ass.net>
- <20180720114549.GY72677@devbig577.frc2.facebook.com>
- <20180720154454.GR2494@hirez.programming.kicks-ass.net>
- <20180720155613.GB1934745@devbig577.frc2.facebook.com>
- <4857a9db-ebf5-24f8-c42d-d795f5c75854@redhat.com>
- <20180720163712.GU2494@hirez.programming.kicks-ass.net>
- <8c655adc-6d9e-b767-1024-5d6941c995a9@redhat.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
+ and IO
+Date: Fri, 20 Jul 2018 22:35:24 +0200
+Message-ID: <20180720203524.GD4920@worktop.programming.kicks-ass.net>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
+ <20180712172942.10094-9-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=cwFuLmY72f0ORSsZ9OAumVPGmBV/AQlH7QKLVGd2oNA=;
-        b=Pl5o/+18GRH9i/WZPjrEHnH3xfrmbYm7BON6a7jmSq5sF3+GRLSTqbeeqtYn+3iXLE
-         IlYlR8zTN1r4vyBHxlYGZSNvFBykG51Bnj1Sn+O0+K8r86OBfJYnEOqVAdidxjwLaSF7
-         /O+pkY8WVMC+jLpTh/8Rlpb5/1cXey/xMa7tdqZkZdF4BBlFtBeVSxecbxl+N5vgsF0/
-         Sd7Wctlehg/wrpySRhUo8TFRdgFM77UjoUIN9/gCh/EC4fNpb1s7IBFC3B0Rfd3G8pV9
-         OPQ4D1rrhh1DsyY5Bp+fe1ZZzXLgBSUx4h/Ztm2QxNWIGbG8+lkxT70JSSJXJH+UvYWf
-         sMvQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=m3AslJrSGa4nehnkgY8erbmLSTX1GfmZUOxFRyZpk00=; b=Bw7AT1QhwIyLllWPym/ObCcIa
+        aMQipMCI7ue8NSvd2gNzBmagWYuNwazbNgvTjCmlZktCqhKTrfR4MecTzZMs9r/s7mOmXJXC9B+2y
+        gLJh52QBN7KleX2Jk9WQnBOeNiHUknwaowOaTuhf2+XtJg2qG9dmjQfPJIPPmhJWbx0wSfM3zjoRR
+        AuJ00r6VXE7np61qBxUTLgz5G5FqWQMrQGiBzRL9Q+elD4oIWYsQ3aEPDnsk+xvF4rokNE1AndoAj
+        S8ow6KuKhWgR0jJ8lKqWtyDMikXj0eNbH5UF5xh5Wqljx2G97RHNrlSf9YukM0wtKPsOEj84XVjFU
+    
 Content-Disposition: inline
-In-Reply-To: <8c655adc-6d9e-b767-1024-5d6941c995a9@redhat.com>
+In-Reply-To: <20180712172942.10094-9-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hello,
+On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
+> +static bool psi_update_stats(struct psi_group *group)
+> +{
 
-On Fri, Jul 20, 2018 at 01:09:23PM -0400, Waiman Long wrote:
-> On 07/20/2018 12:37 PM, Peter Zijlstra wrote:
-> > On Fri, Jul 20, 2018 at 12:19:29PM -0400, Waiman Long wrote:
-> >> I am not against the idea of making it hierarchical eventually. I am
-> >> just hoping to get thing going by merging the patchset in its current
-> >> form and then we can make it hierarchical in a followup patch.
-> > Where's the rush? Why can't we do this right in one go?
-> 
-> For me, the rush comes from RHEL8 as it is a goal to have a fully
-> functioning cgroup v2 in that release.
-> 
-> I also believe that most of the use cases of partition can be satisfied
-> with partitions at the first level children. Getting hierarchical
-> partition right may drag on for half a year, maybe, giving our history
-> with cpu v2 controller. No matter what we do to enable hierarchical
-> partition in the future, the current model of using a partition flag is
-> intuitive enough that it won't be changed at least for the first level
-> children.
+> +	for_each_online_cpu(cpu) {
+> +		struct psi_group_cpu *groupc = per_cpu_ptr(group->cpus, cpu);
+> +		unsigned long nonidle;
+> +
+> +		if (!groupc->nonidle_time)
+> +			continue;
+> +
+> +		nonidle = nsecs_to_jiffies(groupc->nonidle_time);
+> +		groupc->nonidle_time = 0;
+> +		nonidle_total += nonidle;
+> +
+> +		for (r = 0; r < NR_PSI_RESOURCES; r++) {
+> +			struct psi_resource *res = &groupc->res[r];
+> +
+> +			some[r] += (res->times[0] + res->times[1]) * nonidle;
+> +			full[r] += res->times[1] * nonidle;
+> +
+> +			/* It's racy, but we can tolerate some error */
+> +			res->times[0] = 0;
+> +			res->times[1] = 0;
+> +		}
+> +	}
 
-I'm fully with Waiman here.  There are people wanting to use it and
-the part most people isn't controversial at all.  I don't see what'd
-be gained by further delaying the whole thing.  If the first level
-partition thing isn't acceptable to everyone, we can even strip down
-further.  We can get .cpus and .mems merged first, which is what most
-people want anyway.
+An alternative for this, that also allows that ondemand update, but
+without spamming the rq->lock would be something like:
 
-Thanks.
+struct psi_group_cpu {
+	u32 tasks[3];
+	u32 cpu_state : 2;
+	u32 mem_state : 2;
+	u32 io_state  : 2;
+	u32 :0;
 
--- 
-tejun
+	u64 last_update_time;
+
+	u32 nonidle;
+	u32 full[2];
+	u32 some[3];
+} ____cacheline_aligned_in_smp;
+
+/* Allocate _2_ copies */
+DEFINE_PER_CPU_ALIGNED_SHARED(struct psi_group_cpu[2], psi_cpus);
+
+struct psi_group global_psi = {
+	.cpus = &psi_cpus[0],
+};
+
+
+	u64 sums[6] = { 0, };
+
+	for_each_possible_cpu(cpu) {
+		struct psi_group_cpu *pgc = per_cpu_ptr(group->cpus, cpu);
+		u32 *active, *shadow;
+
+		active = &pgc[0].nonidle;
+		shadow = &pgc[1].nonidle;
+
+		/*
+		 * Compare the active count to the shadow count
+		 * if different, compute the delta and update the shadow
+		 * copy.
+		 * This only writes to the shadow copy (separate line)
+		 * and leaves the active a read-only access.
+		 */
+		for (i = 0; i < 6; i++) {
+			u32 old = READ_ONCE(shadow[i]);
+			u32 new = READ_ONCE(active[i]);
+
+			delta = (new - old);
+			if (!delta) {
+				if (!i)
+					goto next;
+				continue;
+			}
+
+			WRITE_ONCE(shadow[i], new);
+
+			sums[i] += delta;
+		}
+next:		;
+	}
