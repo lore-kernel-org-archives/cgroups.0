@@ -1,124 +1,85 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 02/10] mm: workingset: tell cache transitions from
- workingset thrashing
-Date: Mon, 23 Jul 2018 17:35:35 +0200
-Message-ID: <CAK8P3a15K-TXYuFX-ZsJiroqA1GWX2XS4ioZSjcjJYgh1b_xSA@mail.gmail.com>
-References: <20180712172942.10094-1-hannes@cmpxchg.org> <20180712172942.10094-3-hannes@cmpxchg.org>
- <CAK8P3a3Nsmt54-ed_gWNev3CBS6_Sv5QGOw4G0sY4ZXOi1R4_Q@mail.gmail.com> <20180723152323.GA3699@cmpxchg.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] mm: memcg: fix use after free in mem_cgroup_iter()
+Date: Mon, 23 Jul 2018 09:17:28 -0700
+Message-ID: <CALvZod5UwJp8cM3OcjCDadkjKgAnGHj8XVcgjFk5Thcst02MAQ@mail.gmail.com>
+References: <1531994807-25639-1-git-send-email-jing.xia@unisoc.com>
+ <20180719104345.GV7193@dhcp22.suse.cz> <CALvZod55Ku7U3soLtuYY_HL2_mMp5+OT-hngdZkPRGN9xm1a9Q@mail.gmail.com>
+ <20180723064441.GA17905@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc;
-        bh=jOXEUEwojPSzHZIAs2rWvCfXbQ5Gp38MYhPZNpsoJKk=;
-        b=E7ahjsC4oB1RgvOCKCDGsvgZOzzE3v836tRhPyESNbXSQ5SjmToZHNyOtFXJ5iz2lL
-         yESOr/t/eF0ErNvhtYteGkSl8AmvXBCegyGeM58J97CxWJ9BfPKNn2pQo09xTfYvsoLQ
-         033p3HydsU0OAjhOe0rJrnGu+cFbRqo21ccSK5fMYjYxXcuDNm/XJ2X/Kyh4ak6y4uQu
-         kL2JY4u9KhmYjj43laWPiZ2dY5H8jTjvSrDd8L3mcMt+Jehb4hMhSsoa6SC8N+Qq1gMd
-         vgd7N/nIat264gj88ifitkR9fqkvlRMr1Y2vzX1q5lo1gDporGKkZBH2qHqBI/i+S1v7
-         3UpA==
-In-Reply-To: <20180723152323.GA3699@cmpxchg.org>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=cRCRWxPa5qhRdztjFVMXQMWVdzdRusjpODKHDjNtIpQ=;
+        b=oJK9oqyGMmqDX4tysDZpRJLCSEyrPZ1Bz6Wq4maicB36VaC1gB79X4ikJk2NLyLL7Q
+         41Trmh+y9QMHe3B77u/zO0Gg4YGOIhiJga1JwVjHBAoYheB4g+3CBaQHz0zDwJK6vlmY
+         SmDf6PSTjO/nZlXfkDqS2pngqDy+D9V6k4H/YW72NJEWrcSjy7/P29Q0S/Fgme5PKeBO
+         Z1LHPlKrxz9E1BzSLqIZHUJx2MhnvsXdlGo5DvbQnUyYQSiXtuL3ctUn/m2eSXmyWtmF
+         j5YKYhl8HUumFxqr7Sv5LetznIqf22hsuBMoTGABKnqR2/ofIZta6P6FIJQ/BuOIUG/O
+         DcKw==
+In-Reply-To: <20180723064441.GA17905@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Suren Baghdasaryan <surenb@google.com>, Mike Galbraith <efault@gmx.de>, Will Deacon <will.deacon@arm.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, kernel-team@fb.com, Linux-MM <linux-mm@kvack.org>, Vinayak Menon <vinmenon@codeaurora.org>, Ingo Molnar <mingo@redhat.com>, Shakeel Butt <shakeelb@google.com>, Catalin Marinas <catalin.marinas@arm.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christopher Lameter <cl@linux.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: jing.xia.mail@gmail.com, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, chunyan.zhang@unisoc.com, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Mon, Jul 23, 2018 at 5:23 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> On Mon, Jul 23, 2018 at 03:36:09PM +0200, Arnd Bergmann wrote:
->> On Thu, Jul 12, 2018 at 7:29 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
->> In file included from /git/arm-soc/include/linux/kernel.h:10,
->>                  from /git/arm-soc/arch/arm64/mm/init.c:20:
->> /git/arm-soc/arch/arm64/mm/init.c: In function 'mem_init':
->> /git/arm-soc/include/linux/compiler.h:357:38: error: call to
->> '__compiletime_assert_618' declared with attribute error: BUILD_BUG_ON
->> failed: sizeof(struct page) > (1 << STRUCT_PAGE_MAX_SHIFT)
+On Sun, Jul 22, 2018 at 11:44 PM Michal Hocko <mhocko@kernel.org> wrote:
 >
-> This BUILD_BUG_ON() is to make sure we're sizing the VMEMMAP struct
-> page array properly (address space divided by struct page size).
+> On Thu 19-07-18 09:23:10, Shakeel Butt wrote:
+> > On Thu, Jul 19, 2018 at 3:43 AM Michal Hocko <mhocko@kernel.org> wrote:
+> > >
+> > > [CC Andrew]
+> > >
+> > > On Thu 19-07-18 18:06:47, Jing Xia wrote:
+> > > > It was reported that a kernel crash happened in mem_cgroup_iter(),
+> > > > which can be triggered if the legacy cgroup-v1 non-hierarchical
+> > > > mode is used.
+> > > >
+> > > > Unable to handle kernel paging request at virtual address 6b6b6b6b6b6b8f
+> > > > ......
+> > > > Call trace:
+> > > >   mem_cgroup_iter+0x2e0/0x6d4
+> > > >   shrink_zone+0x8c/0x324
+> > > >   balance_pgdat+0x450/0x640
+> > > >   kswapd+0x130/0x4b8
+> > > >   kthread+0xe8/0xfc
+> > > >   ret_from_fork+0x10/0x20
+> > > >
+> > > >   mem_cgroup_iter():
+> > > >       ......
+> > > >       if (css_tryget(css))    <-- crash here
+> > > >           break;
+> > > >       ......
+> > > >
+> > > > The crashing reason is that mem_cgroup_iter() uses the memcg object
+> > > > whose pointer is stored in iter->position, which has been freed before
+> > > > and filled with POISON_FREE(0x6b).
+> > > >
+> > > > And the root cause of the use-after-free issue is that
+> > > > invalidate_reclaim_iterators() fails to reset the value of
+> > > > iter->position to NULL when the css of the memcg is released in non-
+> > > > hierarchical mode.
+> > >
+> > > Well, spotted!
+> > >
+> > > I suspect
+> > > Fixes: 6df38689e0e9 ("mm: memcontrol: fix possible memcg leak due to interrupted reclaim")
+> > >
+> > > but maybe it goes further into past. I also suggest
+> > > Cc: stable
+> > >
+> > > even though the non-hierarchical mode is strongly discouraged.
+> >
+> > Why not set root_mem_cgroup's use_hierarchy to true by default on
+> > init? If someone wants non-hierarchical mode, they can explicitly set
+> > it to false.
 >
-> From the code:
->
-> /*
->  * Log2 of the upper bound of the size of a struct page. Used for sizing
->  * the vmemmap region only, does not affect actual memory footprint.
->  * We don't use sizeof(struct page) directly since taking its size here
->  * requires its definition to be available at this point in the inclusion
->  * chain, and it may not be a power of 2 in the first place.
->  */
-> #define STRUCT_PAGE_MAX_SHIFT   6
->
-...
-> However, the check isn't conditional on that config option. And when
-> VMEMMAP is disabled, we need 22 additional bits to identify the sparse
-> memory sections in page->flags as well:
->
->> CONFIG_NODES_SHIFT=2
->> # CONFIG_ARCH_USES_PG_UNCACHED is not set
->> CONFIG_MEMORY_FAILURE=y
->> CONFIG_IDLE_PAGE_TRACKING=y
->>
->> #define MAX_NR_ZONES 3
->> #define ZONES_SHIFT 2
->> #define MAX_PHYSMEM_BITS 52
->> #define SECTION_SIZE_BITS 30
->> #define SECTIONS_WIDTH 22
->
-> ^^^ Those we get back with VMEMMAP enabled.
->
-> So for configs for which the check is intended, it passes. We just
-> need to make it conditional to those.
+> We do not change defaults under users feet usually.
 
-Ok, thanks for the analysis, I had missed that and was about to
-send a different patch to increase STRUCT_PAGE_MAX_SHIFT
-in some configurations, which is not as good.
+Then how non-hierarchical mode is being discouraged currently? I don't
+see any comments in the docs.
 
-> From 1d24635a6c7cd395bad5c29a3b9e5d2e98d9ab84 Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Date: Mon, 23 Jul 2018 10:18:23 -0400
-> Subject: [PATCH] arm64: fix vmemmap BUILD_BUG_ON() triggering on !vmemmap
->  setups
->
-> Arnd reports the following arm64 randconfig build error with the PSI
-> patches that add another page flag:
->
-
-You could add further text here that I had just added to my
-patch description (not sent):
-
-    Further experiments show that the build error already existed before,
-    but was only triggered with larger values of CONFIG_NR_CPU and/or
-    CONFIG_NODES_SHIFT that might be used in actual configurations but
-    not in randconfig builds.
-
-    With longer CPU and node masks, I could recreate the problem with
-    kernels as old as linux-4.7 when arm64 NUMA support got added.
-
-    Cc: stable@vger.kernel.org
-    Fixes: 1a2db300348b ("arm64, numa: Add NUMA support for arm64 platforms.")
-    Fixes: 3e1907d5bf5a ("arm64: mm: move vmemmap region right below
-the linear region")
-
->  arch/arm64/mm/init.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/arm64/mm/init.c b/arch/arm64/mm/init.c
-> index 1b18b4722420..72c9b6778b0a 100644
-> --- a/arch/arm64/mm/init.c
-> +++ b/arch/arm64/mm/init.c
-> @@ -611,11 +611,13 @@ void __init mem_init(void)
->         BUILD_BUG_ON(TASK_SIZE_32                       > TASK_SIZE_64);
->  #endif
->
-> +#ifndef CONFIG_SPARSEMEM_VMEMMAP
->         /*
-
-I tested it on two broken configurations, and found that you have
-a typo here, it should be 'ifdef', not 'ifndef'. With that change, it
-seems to build fine.
-
-Tested-by: Arnd Bergmann <arnd@arndb.de>
-
-      Arnd
+Shakeel
