@@ -1,152 +1,74 @@
-From: Balbir Singh <bsingharora@gmail.com>
-Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory, and
- IO v2
-Date: Tue, 24 Jul 2018 07:14:02 +1000
-Message-ID: <CAKTCnzmt_CnfZMMdK9_-rBrL4kUmoE70nVbnE58CJp++FP0CCQ@mail.gmail.com>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [patch v3 -mm 3/6] mm, memcg: add hierarchical usage oom policy
+Date: Mon, 23 Jul 2018 14:28:58 -0700
+Message-ID: <20180723212855.GA25062@castle>
+References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803151351140.55261@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803161405410.209509@chino.kir.corp.google.com>
+ <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
+ <alpine.DEB.2.21.1807131604560.217600@chino.kir.corp.google.com>
+ <alpine.DEB.2.21.1807131605590.217600@chino.kir.corp.google.com>
+ <20180716181613.GA28327@castle>
+ <alpine.DEB.2.21.1807162101170.157949@chino.kir.corp.google.com>
+ <alpine.DEB.2.21.1807231331510.105582@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=RWwxIEnBoVISPE9+JYRAjl8u3ujEBTaXxzWNyTN3g6Y=;
-        b=vRxecaJ10da3n7xAZYgprobXGgLBXQprbzt0kLF0Vtundt1t3iXqmkeuOTV8n7TKrP
-         XjD7oiC3ocTsqTvEX+IOziMXW6d5H6UDciHo/Myt02cUychJFBTmKrNNuOo8au3dkT/V
-         kVFd58NHXUFfGNXQHMy7wp6c6+t6U14lU+pVY2gCzwumbcmBrcg25GNj7oUZiCR6H3dO
-         sQWpF2ZxkVPBkh6ZvRPvX2dUx+nRIeYUvxNfaZjbWTGcsJ7eagCjwCjWeEynOkrrV451
-         RBcas2nfnTcTGA05HTW62PzQ68yg3WX8wo0EiMTLWKSvE2DIzKvQhBqa9a+vBFZHz+HK
-         baXA==
-In-Reply-To: <20180712172942.10094-1-hannes@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=NxyWxfg7dmMBXy2NFECFNYrgn5Jc0nDS444OLRxx2eQ=;
+ b=D0AKXUkorB2HF60OCTMtA9rb9IzeEMl/XozrY9mXFKMZZjzL+OTRR5JOjD+fXCys/ElL
+ VOCXxySBzMEPMOUqDUfL/CfakAsyDSCRqL0rqGKNl3CnBvVUoyaaO3eF118O9MCx/ACH
+ /Dr5/QEtowH92hoeuKLN4QcHlz1vlSksI4k= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NxyWxfg7dmMBXy2NFECFNYrgn5Jc0nDS444OLRxx2eQ=;
+ b=L0eMmfdmzSL8O1uZy+nopHmt8ax56m+XSo8KmKDHb2I6sVQq4JtOpAuCF5e+5ZHgRWP7wOJ13Y/lZso6AuoITmr6MmwqzdMFEHzvF74QKbevywBrPux2tc39brqWD8gMeha+DK9D58YMISp9qoQ7tPFYyMRxxgb4hqk+NY+0Fgk=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.21.1807231331510.105582@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, surenb@google.com, Vinayak Menon <vinmenon@codeaurora.org>, Christoph Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm <linux-mm@kvack.org>, cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-team@fb.com
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Jul 13, 2018 at 3:27 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
->
-> PSI aggregates and reports the overall wallclock time in which the
-> tasks in a system (or cgroup) wait for contended hardware resources.
->
-> This helps users understand the resource pressure their workloads are
-> under, which allows them to rootcause and fix throughput and latency
-> problems caused by overcommitting, underprovisioning, suboptimal job
-> placement in a grid, as well as anticipate major disruptions like OOM.
->
-> This version 2 of the series incorporates a ton of feedback from
-> PeterZ and SurenB; more details at the end of this email.
->
->                 Real-world applications
->
-> We're using the data collected by psi (and its previous incarnation,
-> memdelay) quite extensively at Facebook, with several success stories.
->
-> One usecase is avoiding OOM hangs/livelocks. The reason these happen
-> is because the OOM killer is triggered by reclaim not being able to
-> free pages, but with fast flash devices there is *always* some clean
-> and uptodate cache to reclaim; the OOM killer never kicks in, even as
-> tasks spend 90% of the time thrashing the cache pages of their own
-> executables. There is no situation where this ever makes sense in
-> practice. We wrote a <100 line POC python script to monitor memory
-> pressure and kill stuff way before such pathological thrashing leads
-> to full system losses that require forcible hard resets.
->
-> We've since extended and deployed this code into other places to
-> guarantee latency and throughput SLAs, since they're usually violated
-> way before the kernel OOM killer would ever kick in.
->
-> The idea is to eventually incorporate this back into the kernel, so
-> that Linux can avoid OOM livelocks (which TECHNICALLY aren't memory
-> deadlocks, but for the user indistinguishable) out of the box.
->
-> We also use psi memory pressure for loadshedding. Our batch job
-> infrastructure used to use heuristics based on various VM stats to
-> anticipate OOM situations, with lackluster success. We switched it to
-> psi and managed to anticipate and avoid OOM kills and hangs fairly
-> reliably. The reduction of OOM outages in the worker pool raised the
-> pool's aggregate productivity, and we were able to switch that service
-> to smaller machines.
->
-> Lastly, we use cgroups to isolate a machine's main workload from
-> maintenance crap like package upgrades, logging, configuration, as
-> well as to prevent multiple workloads on a machine from stepping on
-> each others' toes. We were not able to configure this properly without
-> the pressure metrics; we would see latency or bandwidth drops, but it
-> would often be hard to impossible to rootcause it post-mortem.
->
-> We now log and graph pressure for the containers in our fleet and can
-> trivially link latency spikes and throughput drops to shortages of
-> specific resources after the fact, and fix the job config/scheduling.
->
-> I've also recieved feedback and feature requests from Android for the
-> purpose of low-latency OOM killing. The on-demand stats aggregation in
-> the last patch of this series is for this purpose, to allow Android to
-> react to pressure before the system starts visibly hanging.
->
->                 How do you use this feature?
->
-> A kernel with CONFIG_PSI=y will create a /proc/pressure directory with
-> 3 files: cpu, memory, and io. If using cgroup2, cgroups will also have
-> cpu.pressure, memory.pressure and io.pressure files, which simply
-> aggregate task stalls at the cgroup level instead of system-wide.
->
-> The cpu file contains one line:
->
->         some avg10=2.04 avg60=0.75 avg300=0.40 total=157656722
->
-> The averages give the percentage of walltime in which one or more
-> tasks are delayed on the runqueue while another task has the
-> CPU. They're recent averages over 10s, 1m, 5m windows, so you can tell
-> short term trends from long term ones, similarly to the load average.
->
+On Mon, Jul 23, 2018 at 01:33:19PM -0700, David Rientjes wrote:
+> On Mon, 16 Jul 2018, David Rientjes wrote:
+> 
+> > > And "tree" is different. It actually changes how the selection algorithm works,
+> > > and sub-tree settings do matter in this case.
+> > > 
+> > 
+> > "Tree" is considering the entity as a single indivisible memory consumer, 
+> > it is compared with siblings based on its hierarhical usage.  It has 
+> > cgroup oom policy.
+> > 
+> > It would be possible to separate this out, if you'd prefer, to account 
+> > an intermediate cgroup as the largest descendant or the sum of all 
+> > descendants.  I hadn't found a usecase for that, however, but it doesn't 
+> > mean there isn't one.  If you'd like, I can introduce another tunable.
+> > 
+> 
+> Roman, I'm trying to make progress so that the cgroup aware oom killer is 
+> in a state that it can be merged.  Would you prefer a second tunable here 
+> to specify a cgroup's points includes memory from its subtree?
 
-Does the mechanism scale? I am a little concerned about how frequently
-this infrastructure is monitored/read/acted upon. Why aren't existing
-mechanisms sufficient -- why is the avg delay calculation in the
-kernel?
+Hi, David!
 
-> The total= value gives the absolute stall time in microseconds. This
-> allows detecting latency spikes that might be too short to sway the
-> running averages. It also allows custom time averaging in case the
-> 10s/1m/5m windows aren't adequate for the usecase (or are too coarse
-> with future hardware).
->
-> What to make of this "some" metric? If CPU utilization is at 100% and
-> CPU pressure is 0, it means the system is perfectly utilized, with one
-> runnable thread per CPU and nobody waiting. At two or more runnable
-> tasks per CPU, the system is 100% overcommitted and the pressure
-> average will indicate as much. From a utilization perspective this is
-> a great state of course: no CPU cycles are being wasted, even when 50%
-> of the threads were to go idle (as most workloads do vary). From the
-> perspective of the individual job it's not great, however, and they
-> would do better with more resources. Depending on what your priority
-> and options are, raised "some" numbers may or may not require action.
->
-> The memory file contains two lines:
->
-> some avg10=70.24 avg60=68.52 avg300=69.91 total=3559632828
-> full avg10=57.59 avg60=58.06 avg300=60.38 total=3300487258
->
-> The some line is the same as for cpu, the time in which at least one
-> task is stalled on the resource. In the case of memory, this includes
-> waiting on swap-in, page cache refaults and page reclaim.
->
-> The full line, however, indicates time in which *nobody* is using the
-> CPU productively due to pressure: all non-idle tasks are waiting for
-> memory in one form or another. Significant time spent in there is a
-> good trigger for killing things, moving jobs to other machines, or
-> dropping incoming requests, since neither the jobs nor the machine
-> overall are making too much headway.
->
-> The io file is similar to memory. Because the block layer doesn't have
-> a concept of hardware contention right now (how much longer is my IO
-> request taking due to other tasks?), it reports CPU potential lost on
-> all IO delays, not just the potential lost due to competition.
->
+It's hard to tell, because I don't have a clear picture of what you're
+suggesting now. My biggest concern about your last version was that it's hard
+to tell what oom_policy really defines. Each value has it's own application
+rules, which is a bit messy (some values are meaningful for OOMing cgroup only,
+other are reading on hierarchy traversal).
+If you know how to make it clear and non-contradictory,
+please, describe the proposed interface.
 
-There is no talk about the overhead this introduces in general, may be
-the details are in the patches. I'll read through them
+> 
+> It would be helpful if you would also review the rest of the patchset.
 
-Balbir Singh.
+I think, that we should focus on interface semantics right now.
+If we can't agree on how the things should work, it makes no sense
+to discuss the implementation.
+
+Thanks!
