@@ -1,100 +1,49 @@
-From: Paul Moore <paul@paul-moore.com>
-Subject: Re: [RFC PATCH ghak90 (was ghak32) V3 02/10] audit: log container
- info of syscalls
-Date: Mon, 23 Jul 2018 14:31:11 -0400
-Message-ID: <CAHC9VhTkuf+2BwJp399-NzSgQyp21GgY1SZVDboDdXgpvEV=pQ@mail.gmail.com>
-References: <cover.1528304203.git.rgb@redhat.com> <3318670.y8SpQ3RC2W@x2>
- <20180723151148.hyu4jqy2etp5afpt@madcap2.tricolour.ca> <2739536.aL1iVigTi9@x2>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch v3 -mm 3/6] mm, memcg: add hierarchical usage oom
+ policy
+Date: Mon, 23 Jul 2018 13:33:19 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1807231331510.105582@chino.kir.corp.google.com>
+References: <alpine.DEB.2.20.1803121755590.192200@chino.kir.corp.google.com> <alpine.DEB.2.20.1803151351140.55261@chino.kir.corp.google.com> <alpine.DEB.2.20.1803161405410.209509@chino.kir.corp.google.com> <alpine.DEB.2.20.1803221451370.17056@chino.kir.corp.google.com>
+ <alpine.DEB.2.21.1807131604560.217600@chino.kir.corp.google.com> <alpine.DEB.2.21.1807131605590.217600@chino.kir.corp.google.com> <20180716181613.GA28327@castle> <alpine.DEB.2.21.1807162101170.157949@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=jl9N+vIKdPZXD2bA1vCp/ip+qMPn3HmCXAiDuY1w9J8=;
-        b=OAxm4A1yatnhoX93nX4Mrcl3Jr0sVj0bJd5fFj2rVbIhY6JWqbwRYZeTtrB4CRtNSx
-         4vU/4OgWn4aVg3PJc+w1PTQcHeTh/TMfZ+YGWjDKDplGO6fVsw5stiq/QaHk9SMWABw4
-         Y9KIpEv0SEEu8XxcX8Zd61D9+QOxJKHZUFp0fyM7WUazm95RZ3UD6nL16pTvpHiVVOm+
-         IqrFv3rUua/je3hVMJOo+C9eVg4ExPNLnStTJTA3b9AtewKTsFQ2dGXPJXa7GyPKZ8iN
-         EOMZcv2FLLBK+ySH6EwXakzKdFkjH4UDL4sZF0X+58a6zNv9ooqz64skkyfO5573oe+q
-         LQUg==
-In-Reply-To: <2739536.aL1iVigTi9@x2>
-Sender: netdev-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=yGbLnZFJA6I0Ic94Ezv3ensUtPYygDmSuOZCeDVO0mw=;
+        b=oxLjg5buWfC5lY0MP4QEexzMyzT7/3auEi6ZXL2vv7Dlk7kWdcE6TMIM9cVmrCVMvw
+         BK31MZtGUg/nISgd64gQ5ZnjTuqzhnQqq7gKdcFwfsz/P5/N1SEgLWO502PThbZFYI5t
+         C95njTz3xBhxzoKMlTC0pqOoO/pLrl8z/GB7tIvVX8tgzxKK8T+eokHPns6PuIaoIZI7
+         cjA3IswRrkH+u0wSYphsn7iaNzsA7Jg7MrB/Gyk6/59Ck15suuL/o6BohMQlmC91IN4B
+         nrQT1nh9JrkfitRcrcoRPmaQjzS57XO0HdwXljyXU6Mwecxlp/oBuUTy1X1j2BRoZ5zE
+         e2fg==
+In-Reply-To: <alpine.DEB.2.21.1807162101170.157949@chino.kir.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: sgrubb@redhat.com, rgb@redhat.com
-Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
+To: Roman Gushchin <guro@fb.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Jul 23, 2018 at 12:48 PM Steve Grubb <sgrubb@redhat.com> wrote:
-> On Monday, July 23, 2018 11:11:48 AM EDT Richard Guy Briggs wrote:
-> > On 2018-07-23 09:19, Steve Grubb wrote:
-> > > On Sunday, July 22, 2018 4:55:10 PM EDT Richard Guy Briggs wrote:
-> > > > On 2018-07-22 09:32, Steve Grubb wrote:
-> > > > > On Saturday, July 21, 2018 4:29:30 PM EDT Richard Guy Briggs wrote:
-> > > > > > > > + * audit_log_contid - report container info
-> > > > > > > > + * @tsk: task to be recorded
-> > > > > > > > + * @context: task or local context for record
-> > > > > > > > + * @op: contid string description
-> > > > > > > > + */
-> > > > > > > > +int audit_log_contid(struct task_struct *tsk,
-> > > > > > > > +                            struct audit_context *context,
-> > > > > > > > char
-> > > > > > > > *op)
-> > > > > > > > +{
-> > > > > > > > +       struct audit_buffer *ab;
-> > > > > > > > +
-> > > > > > > > +       if (!audit_contid_set(tsk))
-> > > > > > > > +               return 0;
-> > > > > > > > +       /* Generate AUDIT_CONTAINER record with container ID */
-> > > > > > > > +       ab = audit_log_start(context, GFP_KERNEL,
-> > > > > > > > AUDIT_CONTAINER);
-> > > > > > > > +       if (!ab)
-> > > > > > > > +               return -ENOMEM;
-> > > > > > > > +       audit_log_format(ab, "op=%s contid=%llu",
-> > > > > > > > +                        op, audit_get_contid(tsk));
-> > > > > > >
-> > > > > > > Can you explain your reason for including an "op" field in this
-> > > > > > > record
-> > > > > > > type?  I've been looking at the rest of the patches in this
-> > > > > > > patchset
-> > > > > > > and it seems to be used more as an indicator of the record's
-> > > > > > > generating context rather than any sort of audit container ID
-> > > > > > > operation.
-> > > > > >
-> > > > > > "action" might work, but that's netfilter and numeric... "kind"?
-> > > > > > Nothing else really seems to fit from a field name, type or lack of
-> > > > > > searchability perspective.
-> > > > > >
-> > > > > > Steve, do you have an opinion?
-> > > > >
-> > > > > We only have 1 sample event where we have op=task. What are the other
-> > > > > possible values?
-> > > >
-> > > > For the AUDIT_CONTAINER record we have op= "task", "target" (from the
-> > > > ptrace and signals patch), "tty".
-> > > >
-> > > > For the AUDIT_CONTAINER_ID record we have "op=set".
-> > >
-> > > Since the purpose of this record is to log the container id, I think that
-> > > is all that is needed. We can get the context from the other records in
-> > > the event. I'd suggest dropping the "op" field.
-> >
-> > Ok, the information above it for two different audit container
-> > identifier records.  Which one should drop the "op=" field?  Both?  Or
-> > just the AUDIT_CONTAINER record?  The AUDIT_CONTAINER_ID record (which
-> > might be renamed) could use it to distinguish a "set" record from a
-> > dropped audit container identifier that is no longer registered by any
-> > task or namespace.
->
-> Neither of them need it. All they need to do is state the container that is
-> being acted upon.
+On Mon, 16 Jul 2018, David Rientjes wrote:
 
-I think we should keep the "op" field for audit container ID
-management operations, even though we really only have a "set"
-operation at the moment, but the others should drop the "op" field
-(see my previous emails in this thread).
+> > And "tree" is different. It actually changes how the selection algorithm works,
+> > and sub-tree settings do matter in this case.
+> > 
+> 
+> "Tree" is considering the entity as a single indivisible memory consumer, 
+> it is compared with siblings based on its hierarhical usage.  It has 
+> cgroup oom policy.
+> 
+> It would be possible to separate this out, if you'd prefer, to account 
+> an intermediate cgroup as the largest descendant or the sum of all 
+> descendants.  I hadn't found a usecase for that, however, but it doesn't 
+> mean there isn't one.  If you'd like, I can introduce another tunable.
+> 
 
--- 
-paul moore
-www.paul-moore.com
+Roman, I'm trying to make progress so that the cgroup aware oom killer is 
+in a state that it can be merged.  Would you prefer a second tunable here 
+to specify a cgroup's points includes memory from its subtree?
+
+It would be helpful if you would also review the rest of the patchset.
