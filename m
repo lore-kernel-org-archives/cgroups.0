@@ -1,71 +1,162 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcg: fix use after free in mem_cgroup_iter()
-Date: Mon, 23 Jul 2018 08:44:41 +0200
-Message-ID: <20180723064441.GA17905@dhcp22.suse.cz>
-References: <1531994807-25639-1-git-send-email-jing.xia@unisoc.com>
- <20180719104345.GV7193@dhcp22.suse.cz>
- <CALvZod55Ku7U3soLtuYY_HL2_mMp5+OT-hngdZkPRGN9xm1a9Q@mail.gmail.com>
+From: Paul Moore <paul@paul-moore.com>
+Subject: Re: [RFC PATCH ghak90 (was ghak32) V3 02/10] audit: log container
+ info of syscalls
+Date: Mon, 23 Jul 2018 09:16:25 -0400
+Message-ID: <CAHC9VhSUhSDaXzD9fpxm-oK=U4MieekKwY-pypzT=RA1HBw6+Q@mail.gmail.com>
+References: <cover.1528304203.git.rgb@redhat.com> <b839dc7fb29aae226b2a4602e7ef3c2a406ee90a.1528304203.git.rgb@redhat.com>
+ <CAHC9VhS0-4XSEFFPLrOvAiSYv-XDLG-yGyB4ULRGz=AnwE6diQ@mail.gmail.com> <20180721202930.a7rypxc5rxi3hyiv@madcap2.tricolour.ca>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CALvZod55Ku7U3soLtuYY_HL2_mMp5+OT-hngdZkPRGN9xm1a9Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=o2SsxW88pOHsRsleaQPlTTBgQ2OXBJ2JH6i/3a87KTY=;
+        b=g448z9EcT84iag84a5Fq/RVrJeyhDZVti//cS8wLSefHONZuRcbvhs5qA1usc/1OjI
+         Hn1Cj8OJtCmQWJR3jz8W19URlUE87ec+efYX7BdrZAyC0kyFkIA5JdiJAiv3IgucpInP
+         XNeJq/QejeyuzF5LaE91z1SUZ2LHpmByF6lyhMmSN+/MD6rPw2ETQx/O9PYUCc7zS0vX
+         mrVX3aOFgTxAH57UxXXG851wG6KK4v1pmcrgrP/vt8+RxsCzhAmnkaeVx2ksanm6lPXG
+         dzIznkVPejch99Py7Rri3n/SczdcUfK3L4iVZvWPBqgHXvQDlaRHQ2Sc+w6S7BqaItAk
+         fgMw==
+In-Reply-To: <20180721202930.a7rypxc5rxi3hyiv@madcap2.tricolour.ca>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: jing.xia.mail@gmail.com, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, chunyan.zhang@unisoc.com, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: rgb@redhat.com
+Cc: sgrubb@redhat.com, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
 
-On Thu 19-07-18 09:23:10, Shakeel Butt wrote:
-> On Thu, Jul 19, 2018 at 3:43 AM Michal Hocko <mhocko@kernel.org> wrote:
-> >
-> > [CC Andrew]
-> >
-> > On Thu 19-07-18 18:06:47, Jing Xia wrote:
-> > > It was reported that a kernel crash happened in mem_cgroup_iter(),
-> > > which can be triggered if the legacy cgroup-v1 non-hierarchical
-> > > mode is used.
+On Sat, Jul 21, 2018 at 4:32 PM Richard Guy Briggs <rgb@redhat.com> wrote:
+> On 2018-07-20 18:13, Paul Moore wrote:
+> > On Wed, Jun 6, 2018 at 1:00 PM Richard Guy Briggs <rgb@redhat.com> wrot=
+e:
+> > > Create a new audit record AUDIT_CONTAINER to document the audit
+> > > container identifier of a process if it is present.
 > > >
-> > > Unable to handle kernel paging request at virtual address 6b6b6b6b6b6b8f
-> > > ......
-> > > Call trace:
-> > >   mem_cgroup_iter+0x2e0/0x6d4
-> > >   shrink_zone+0x8c/0x324
-> > >   balance_pgdat+0x450/0x640
-> > >   kswapd+0x130/0x4b8
-> > >   kthread+0xe8/0xfc
-> > >   ret_from_fork+0x10/0x20
+> > > Called from audit_log_exit(), syscalls are covered.
 > > >
-> > >   mem_cgroup_iter():
-> > >       ......
-> > >       if (css_tryget(css))    <-- crash here
-> > >           break;
-> > >       ......
+> > > A sample raw event:
+> > > type=3DSYSCALL msg=3Daudit(1519924845.499:257): arch=3Dc000003e sysca=
+ll=3D257 success=3Dyes exit=3D3 a0=3Dffffff9c a1=3D56374e1cef30 a2=3D241 a3=
+=3D1b6 items=3D2 ppid=3D606 pid=3D635 auid=3D0 uid=3D0 gid=3D0 euid=3D0 sui=
+d=3D0 fsuid=3D0 egid=3D0 sgid=3D0 fsgid=3D0 tty=3Dpts0 ses=3D3 comm=3D"bash=
+" exe=3D"/usr/bin/bash" subj=3Dunconfined_u:unconfined_r:unconfined_t:s0-s0=
+:c0.c1023 key=3D"tmpcontainerid"
+> > > type=3DCWD msg=3Daudit(1519924845.499:257): cwd=3D"/root"
+> > > type=3DPATH msg=3Daudit(1519924845.499:257): item=3D0 name=3D"/tmp/" =
+inode=3D13863 dev=3D00:27 mode=3D041777 ouid=3D0 ogid=3D0 rdev=3D00:00 obj=
+=3Dsystem_u:object_r:tmp_t:s0 nametype=3D PARENT cap_fp=3D0000000000000000 =
+cap_fi=3D0000000000000000 cap_fe=3D0 cap_fver=3D0
+> > > type=3DPATH msg=3Daudit(1519924845.499:257): item=3D1 name=3D"/tmp/tm=
+pcontainerid" inode=3D17729 dev=3D00:27 mode=3D0100644 ouid=3D0 ogid=3D0 rd=
+ev=3D00:00 obj=3Dunconfined_u:object_r:user_tmp_t:s0 nametype=3DCREATE cap_=
+fp=3D0000000000000000 cap_fi=3D0000000000000000 cap_fe=3D0 cap_fver=3D0
+> > > type=3DPROCTITLE msg=3Daudit(1519924845.499:257): proctitle=3D6261736=
+8002D6300736C65657020313B206563686F2074657374203E202F746D702F746D70636F6E74=
+61696E65726964
+> > > type=3DCONTAINER msg=3Daudit(1519924845.499:257): op=3Dtask contid=3D=
+123458
 > > >
-> > > The crashing reason is that mem_cgroup_iter() uses the memcg object
-> > > whose pointer is stored in iter->position, which has been freed before
-> > > and filled with POISON_FREE(0x6b).
-> > >
-> > > And the root cause of the use-after-free issue is that
-> > > invalidate_reclaim_iterators() fails to reset the value of
-> > > iter->position to NULL when the css of the memcg is released in non-
-> > > hierarchical mode.
+> > > See: https://github.com/linux-audit/audit-kernel/issues/90
+> > > See: https://github.com/linux-audit/audit-userspace/issues/51
+> > > See: https://github.com/linux-audit/audit-testsuite/issues/64
+> > > See: https://github.com/linux-audit/audit-kernel/wiki/RFE-Audit-Conta=
+iner-ID
+> > > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
+> > > ---
+> > >  include/linux/audit.h      |  7 +++++++
+> > >  include/uapi/linux/audit.h |  1 +
+> > >  kernel/audit.c             | 23 +++++++++++++++++++++++
+> > >  kernel/auditsc.c           |  3 +++
+> > >  4 files changed, 34 insertions(+)
 > >
-> > Well, spotted!
+> > ...
 > >
-> > I suspect
-> > Fixes: 6df38689e0e9 ("mm: memcontrol: fix possible memcg leak due to interrupted reclaim")
+> > > --- a/include/uapi/linux/audit.h
+> > > +++ b/include/uapi/linux/audit.h
+> > > @@ -115,6 +115,7 @@
+> > >  #define AUDIT_REPLACE          1329    /* Replace auditd if this pac=
+ket unanswerd */
+> > >  #define AUDIT_KERN_MODULE      1330    /* Kernel Module events */
+> > >  #define AUDIT_FANOTIFY         1331    /* Fanotify access decision *=
+/
+> > > +#define AUDIT_CONTAINER                1332    /* Container ID */
 > >
-> > but maybe it goes further into past. I also suggest
-> > Cc: stable
-> >
-> > even though the non-hierarchical mode is strongly discouraged.
-> 
-> Why not set root_mem_cgroup's use_hierarchy to true by default on
-> init? If someone wants non-hierarchical mode, they can explicitly set
-> it to false.
+> > I'm not sure I'm completely sold on the AUDIT_CONTAINER_ID and
+> > AUDIT_CONTAINER record type names.  From what I can tell
+> > AUDIT_CONTAINER_ID seems to be used for audit container ID management
+> > operations, e.g. setting the ID, whereas the AUDIT_CONTAINER is used
+> > to tag events with the corresponding audit container ID.  Assuming
+> > that is correct, it seems like AUDIT_CONTAINER might be better served
+> > if it was named AUDIT_CONTAINER_ID and if we could change
+> > AUDIT_CONTAINER_ID to AUDIT_CONTAINER_OP/MGMT/etc.  Thoughts?
+>
+> Please see discussion at:
+>         https://www.redhat.com/archives/linux-audit/2018-May/msg00101.htm=
+l
+>
+> I'm fine with changing AUDIT_CONTAINER_ID to AUDIT_CONTAINER_OP/MGMT/etc.
 
-We do not change defaults under users feet usually.
--- 
-Michal Hocko
-SUSE Labs
+Noted, and while I'm generally a big fan of consistency for things
+like this, I think these things are different enough (the loginuid is
+recorded as a field, the audit container ID is recorded in a dedicated
+record) that we don't need to be bound by LOGINUID's naming
+convention.
+
+> > >  #define AUDIT_AVC              1400    /* SE Linux avc denial or gra=
+nt */
+> > >  #define AUDIT_SELINUX_ERR      1401    /* Internal SE Linux Errors *=
+/
+> > > diff --git a/kernel/audit.c b/kernel/audit.c
+> > > index e7478cb..5e150c6 100644
+> > > --- a/kernel/audit.c
+> > > +++ b/kernel/audit.c
+> > > @@ -2048,6 +2048,29 @@ void audit_log_session_info(struct audit_buffe=
+r *ab)
+> > >         audit_log_format(ab, " auid=3D%u ses=3D%u", auid, sessionid);
+> > >  }
+> > >
+> > > +/*
+> > > + * audit_log_contid - report container info
+> > > + * @tsk: task to be recorded
+> > > + * @context: task or local context for record
+> > > + * @op: contid string description
+> > > + */
+> > > +int audit_log_contid(struct task_struct *tsk,
+> > > +                            struct audit_context *context, char *op)
+> > > +{
+> > > +       struct audit_buffer *ab;
+> > > +
+> > > +       if (!audit_contid_set(tsk))
+> > > +               return 0;
+> > > +       /* Generate AUDIT_CONTAINER record with container ID */
+> > > +       ab =3D audit_log_start(context, GFP_KERNEL, AUDIT_CONTAINER);
+> > > +       if (!ab)
+> > > +               return -ENOMEM;
+> > > +       audit_log_format(ab, "op=3D%s contid=3D%llu",
+> > > +                        op, audit_get_contid(tsk));
+> >
+> > Can you explain your reason for including an "op" field in this record
+> > type?  I've been looking at the rest of the patches in this patchset
+> > and it seems to be used more as an indicator of the record's
+> > generating context rather than any sort of audit container ID
+> > operation.
+>
+> "action" might work, but that's netfilter and numeric... "kind"?
+> Nothing else really seems to fit from a field name, type or lack of
+> searchability perspective.
+
+My concern isn't so much the name of the "op" field, although that
+does seem wrong, but rather the existence of the field in the first
+place.  This audit container ID record (whatever we end up calling it)
+exists to attach an audit container ID to an audit event, that's it;
+an audit event should have other records which provide the context
+(granted, the exact number of records depends on the event and the
+system's configuration).  If we are relying on this record to provide
+critical information about the audit event other than the audit
+container ID, I believe this is a strong indicator that the existing
+audit records are lacking and should be augmented.
+
+--=20
+paul moore
+www.paul-moore.com
