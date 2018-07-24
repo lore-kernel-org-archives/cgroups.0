@@ -1,63 +1,87 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 08/10] psi: pressure stall information for CPU, memory,
- and IO
-Date: Tue, 24 Jul 2018 12:01:26 -0400
-Message-ID: <20180724160126.GC11598@cmpxchg.org>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-9-hannes@cmpxchg.org>
- <20180718120318.GC2476@hirez.programming.kicks-ass.net>
- <20180719184740.GA26291@cmpxchg.org>
- <20180719203114.GL2494@hirez.programming.kicks-ass.net>
+From: Shuah Khan <shuah@kernel.org>
+Subject: Re: [PATCH kselftest-next] Add cgroup core selftests
+Date: Tue, 24 Jul 2018 10:47:53 -0600
+Message-ID: <5fa20088-3797-7252-43b1-c7ede9e142f8@kernel.org>
+References: <20180718173358.14007-1-claudiozumbo@gmail.com>
+ <20180719170829.GB21770@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=1HixM+5ULudAYJSpUtJpJEudBqo7w2K0gXdXrRIXYek=;
-        b=TarmybQUl9cPow5/ZvWD+JrZXLkqHvRzQm02DewOeeHk8KW1asSeQBlEBnDSC1BpMa
-         js1hGK8C2MLyxF/U3yaiIIzbW9+BWxjQgyQaamUCHu1KpboASBXnt+qXxrjhoenx4gX9
-         /k/asiQlnbhPto+PZYhPY2sU2pLMfNnzBwB/KJ3VQAJsM+XYYPwb/lHaeF9AnW8yxHTl
-         9gxZ7JqByV6uar/rCufAq3+/G25uRqlhfdez/+zuE7L2dZ5NW1y1E2iZTIMQ1MwHlBdm
-         ynd1YiHIWg+7iz0elQJsqFq4fFDnbmWVjm7X5f9WzMqlncH3x8OUZz85ftWWV6BgDDhF
-         lX0g==
-Content-Disposition: inline
-In-Reply-To: <20180719203114.GL2494@hirez.programming.kicks-ass.net>
+In-Reply-To: <20180719170829.GB21770@castle.DHCP.thefacebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Roman Gushchin <guro@fb.com>, Claudio <claudiozumbo@gmail.com>
+Cc: linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Claudio Zumbo <claudioz@fb.com>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, Shuah Khan <shuah@kernel.org>
 
-On Thu, Jul 19, 2018 at 10:31:15PM +0200, Peter Zijlstra wrote:
-> On Thu, Jul 19, 2018 at 02:47:40PM -0400, Johannes Weiner wrote:
-> > On Wed, Jul 18, 2018 at 02:03:18PM +0200, Peter Zijlstra wrote:
-> > > On Thu, Jul 12, 2018 at 01:29:40PM -0400, Johannes Weiner wrote:
-> > > > +	/* Update task counts according to the set/clear bitmasks */
-> > > > +	for (to = 0; (bo = ffs(clear)); to += bo, clear >>= bo) {
-> > > > +		int idx = to + (bo - 1);
-> > > > +
-> > > > +		if (tasks[idx] == 0 && !psi_bug) {
-> > > > +			printk_deferred(KERN_ERR "psi: task underflow! cpu=%d idx=%d tasks=[%u %u %u] clear=%x set=%x\n",
-> > > > +					cpu, idx, tasks[0], tasks[1], tasks[2],
-> > > > +					clear, set);
-> > > > +			psi_bug = 1;
-> > > > +		}
-> > > 
-> > > 		WARN_ONCE(!tasks[idx], ...);
-> > 
-> > It's just open-coded because of the printk_deferred, since this is
-> > inside the scheduler.
+On 07/19/2018 11:08 AM, Roman Gushchin wrote:
+> On Wed, Jul 18, 2018 at 07:33:58PM +0200, Claudio wrote:
+>> This commit adds tests for some of the core functionalities
+>> of cgroups v2.
+>>
+>> The commit adds tests for some core principles of croup V2 API:
+>>
+>> - test_cgcore_internal_process_constraint
+>>
+>>   Tests internal process constraint.
+>>   You can't add a pid to a domain parent if a controller is enabled.
+>>
+>> - test_cgcore_top_down_constraint_enable
+>>
+>>    Tests that you can't enable a controller on a child if it's not enabled
+>>    on the parent.
+>>
+>> - test_cgcore_top_down_constraint_disable
+>>
+>>   Tests that you can't disable a controller on a parent if it's
+>>   enabled in a child.
+>>
+>> - test_cgcore_no_internal_process_constraint_on_threads
+>>
+>>   Tests that there's no internal process constrain on threaded cgroups.
+>>   You can add threads/processes on a parent with a controller enabled.
+>>
+>> - test_cgcore_parent_becomes_threaded
+>>
+>>   Tests that when a child becomes threaded the parent type becomes
+>>   domain threaded.
+>>
+>> - test_cgcore_invalid_domain
+>>
+>>   In a situation like:
+>>
+>>   A (domain threaded) - B (threaded) - C (domain)
+>>
+>>   it tests that C can't be used until it is turned into a threaded cgroup.
+>>   The "cgroup.type" file will report "domain (invalid)" in these cases.
+>>   Operations which fail due to invalid topology use EOPNOTSUPP as the errno.
+>>
+>> - test_cgcore_populated
+>>
+>>   In a situation like:
+>>
+>>   A(0) - B(0) - C(1)
+>>          \ D(0)
+>>
+>>   It tests that A, B and C's "populated" fields would be 1 while D's 0.
+>>   It tests that after the one process in C is moved to root, A,B and C's
+>>   "populated" fields would flip to "0" and file modified events will
+>>   be generated on the "cgroup.events" files of both cgroups.
+>>
+>> Signed-off-by: Claudio Zumbo <claudioz@fb.com>
+>> Cc: Shuah Khan <shuah@kernel.org>
+>> Cc: Roman Gushchin <guro@fb.com>
+>> Cc: Tejun Heo <tj@kernel.org>
+>> Cc: kernel-team@fb.com
 > 
-> Yeah, meh. There's ton of WARNs in the scheduler, WARNs should not
-> trigger anyway.
+> Looks good to me!
+> 
+> Reviewed-by: Roman Gushchin <guro@fb.com>
+> 
+> Thank you!
+> 
 
-This one in particular gave us quite a runaround. We had a subtle bug
-in how psi processed task CPU migration that would only manifest with
-hundreds of thousands of machine hours. When it triggered, instead of
-the warning, we'd crash on a corrupted stack with a completely useless
-crash dump - PC pointing to things that couldn't possibly trap etc.
+Thanks for the new test. I will queue this up for 4.19-rc1
 
-So printk_deferred has been a lot more useful in those rare but
-desparate cases ;-) Plus we keep the machine alive.
+-- Shuah
