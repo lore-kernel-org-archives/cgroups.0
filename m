@@ -1,84 +1,133 @@
-From: Richard Guy Briggs <rgb@redhat.com>
-Subject: Re: [RFC PATCH ghak90 (was ghak32) V3 05/10] audit: add containerid
- support for tty_audit
-Date: Tue, 24 Jul 2018 10:07:21 -0400
-Message-ID: <20180724140721.yyi5e7y3czxsjwug@madcap2.tricolour.ca>
-References: <cover.1528304203.git.rgb@redhat.com>
- <28ab8ad3c4e5de6f61b928eeb2af030b04a8820b.1528304204.git.rgb@redhat.com>
- <CAHC9VhTTJVbFq_Cmu8E7EzQD-JXjkbDz7P1EY8ePVrXpQAqPdw@mail.gmail.com>
+From: Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH 02/10] mm: workingset: tell cache transitions from
+ workingset thrashing
+Date: Tue, 24 Jul 2018 16:04:49 +0100
+Message-ID: <20180724150448.GA25412@arm.com>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
+ <20180712172942.10094-3-hannes@cmpxchg.org>
+ <CAK8P3a3Nsmt54-ed_gWNev3CBS6_Sv5QGOw4G0sY4ZXOi1R4_Q@mail.gmail.com>
+ <20180723152323.GA3699@cmpxchg.org>
+ <CAK8P3a15K-TXYuFX-ZsJiroqA1GWX2XS4ioZSjcjJYgh1b_xSA@mail.gmail.com>
+ <20180723162735.GA5980@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAHC9VhTTJVbFq_Cmu8E7EzQD-JXjkbDz7P1EY8ePVrXpQAqPdw@mail.gmail.com>
+In-Reply-To: <20180723162735.GA5980@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Paul Moore <paul@paul-moore.com>
-Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, jlayton@redhat.com, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Peter Zijlstra <peterz@infradead.org>, Suren Baghdasaryan <surenb@google.com>, Mike Galbraith <efault@gmx.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, kernel-team@fb.com, Linux-MM <linux-mm@kvack.org>, Vinayak Menon <vinmenon@codeaurora.org>, Ingo Molnar <mingo@redhat.com>, Shakeel Butt <shakeelb@google.com>, Catalin Marinas <catalin.marinas@arm.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christopher Lameter <cl@linux.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
 
-On 2018-07-20 18:14, Paul Moore wrote:
-> On Wed, Jun 6, 2018 at 1:04 PM Richard Guy Briggs <rgb@redhat.com> wrote:
-> > Add audit container identifier auxiliary record to tty logging rule
-> > event standalone records.
-> >
-> > Signed-off-by: Richard Guy Briggs <rgb@redhat.com>
-> > ---
-> >  drivers/tty/tty_audit.c | 5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/tty/tty_audit.c b/drivers/tty/tty_audit.c
-> > index e30aa6b..66bd850 100644
-> > --- a/drivers/tty/tty_audit.c
-> > +++ b/drivers/tty/tty_audit.c
-> > @@ -66,8 +66,9 @@ static void tty_audit_log(const char *description, dev_t dev,
-> >         uid_t uid = from_kuid(&init_user_ns, task_uid(tsk));
-> >         uid_t loginuid = from_kuid(&init_user_ns, audit_get_loginuid(tsk));
-> >         unsigned int sessionid = audit_get_sessionid(tsk);
-> > +       struct audit_context *context = audit_alloc_local();
+On Mon, Jul 23, 2018 at 12:27:35PM -0400, Johannes Weiner wrote:
+> On Mon, Jul 23, 2018 at 05:35:35PM +0200, Arnd Bergmann wrote:
+> > On Mon, Jul 23, 2018 at 5:23 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+> > > diff --git a/arch/arm64/mm/init.c b/arch/arm64/mm/init.c
+> > > index 1b18b4722420..72c9b6778b0a 100644
+> > > --- a/arch/arm64/mm/init.c
+> > > +++ b/arch/arm64/mm/init.c
+> > > @@ -611,11 +611,13 @@ void __init mem_init(void)
+> > >         BUILD_BUG_ON(TASK_SIZE_32                       > TASK_SIZE_64);
+> > >  #endif
+> > >
+> > > +#ifndef CONFIG_SPARSEMEM_VMEMMAP
+> > >         /*
+> > 
+> > I tested it on two broken configurations, and found that you have
+> > a typo here, it should be 'ifdef', not 'ifndef'. With that change, it
+> > seems to build fine.
+> > 
+> > Tested-by: Arnd Bergmann <arnd@arndb.de>
 > 
-> We should be using current's audit_context in tty_audit_log().
-> Actually, we should probably just get rid of the tsk variable in
-> tty_audit_log() and use current directly to make things a bit more
-> obvious.
-
-Ok, agreed.  At this point, it it current passed in anyways so no harm
-other than efficiency.
-
-> <time passes>
+> Thanks for testing it, I don't have a cross-compile toolchain set up.
 > 
-> I did some digging and I have a two year old, half-baked patch that
-> cleans up this tsk/current usage as well as a few others.  I just
-> rebased it against audit/next and surprisingly it seems to pass a
-> basic smoke test (kernel boots and audit-testsuite passes); I'll post
-> it to the list as a RFC once I'm done reviewing these patches.
+> ---
 
-I'll leave this patch the way it is since there should be no difference
-and trust this other patch will work its way through the system and
-solve that.
+Thanks Arnd, Johannes. I can pick this up for -rc7 via the arm64 tree,
+unless it's already queued elsewhere?
 
-> > -       ab = audit_log_start(NULL, GFP_KERNEL, AUDIT_TTY);
-> > +       ab = audit_log_start(context, GFP_KERNEL, AUDIT_TTY);
-> >         if (ab) {
-> >                 char name[sizeof(tsk->comm)];
-> >
-> > @@ -80,6 +81,8 @@ static void tty_audit_log(const char *description, dev_t dev,
-> >                 audit_log_n_hex(ab, data, size);
-> >                 audit_log_end(ab);
-> >         }
-> > +       audit_log_contid(context, "tty", audit_get_contid(tsk));
-> > +       audit_free_context(context);
-> >  }
+Will
+
+> From 34c4c4549f09f971d2d391a8d652d56cb9b05475 Mon Sep 17 00:00:00 2001
+> From: Johannes Weiner <hannes@cmpxchg.org>
+> Date: Mon, 23 Jul 2018 10:18:23 -0400
+> Subject: [PATCH] arm64: fix vmemmap BUILD_BUG_ON() triggering on !vmemmap
+>  setups
 > 
-> --
-> paul moore
-> www.paul-moore.com
-
-- RGB
-
---
-Richard Guy Briggs <rgb@redhat.com>
-Sr. S/W Engineer, Kernel Security, Base Operating Systems
-Remote, Ottawa, Red Hat Canada
-IRC: rgb, SunRaycer
-Voice: +1.647.777.2635, Internal: (81) 32635
+> Arnd reports the following arm64 randconfig build error with the PSI
+> patches that add another page flag:
+> 
+>   /git/arm-soc/arch/arm64/mm/init.c: In function 'mem_init':
+>   /git/arm-soc/include/linux/compiler.h:357:38: error: call to
+>   '__compiletime_assert_618' declared with attribute error: BUILD_BUG_ON
+>   failed: sizeof(struct page) > (1 << STRUCT_PAGE_MAX_SHIFT)
+> 
+> The additional page flag causes other information stored in
+> page->flags to get bumped into their own struct page member:
+> 
+>   #if SECTIONS_WIDTH+ZONES_WIDTH+NODES_SHIFT+LAST_CPUPID_SHIFT <=
+>   BITS_PER_LONG - NR_PAGEFLAGS
+>   #define LAST_CPUPID_WIDTH LAST_CPUPID_SHIFT
+>   #else
+>   #define LAST_CPUPID_WIDTH 0
+>   #endif
+> 
+>   #if defined(CONFIG_NUMA_BALANCING) && LAST_CPUPID_WIDTH == 0
+>   #define LAST_CPUPID_NOT_IN_PAGE_FLAGS
+>   #endif
+> 
+> which in turn causes the struct page size to exceed the size set in
+> STRUCT_PAGE_MAX_SHIFT. This value is an an estimate used to size the
+> VMEMMAP page array according to address space and struct page size.
+> 
+> However, the check is performed - and triggers here - on a !VMEMMAP
+> config, which consumes an additional 22 page bits for the sparse
+> section id. When VMEMMAP is enabled, those bits are returned, cpupid
+> doesn't need its own member, and the page passes the VMEMMAP check.
+> 
+> Restrict that check to the situation it was meant to check: that we
+> are sizing the VMEMMAP page array correctly.
+> 
+> Says Arnd:
+> 
+>     Further experiments show that the build error already existed before,
+>     but was only triggered with larger values of CONFIG_NR_CPU and/or
+>     CONFIG_NODES_SHIFT that might be used in actual configurations but
+>     not in randconfig builds.
+> 
+>     With longer CPU and node masks, I could recreate the problem with
+>     kernels as old as linux-4.7 when arm64 NUMA support got added.
+> 
+> Reported-by: Arnd Bergmann <arnd@arndb.de>
+> Tested-by: Arnd Bergmann <arnd@arndb.de>
+> Cc: stable@vger.kernel.org
+> Fixes: 1a2db300348b ("arm64, numa: Add NUMA support for arm64 platforms.")
+> Fixes: 3e1907d5bf5a ("arm64: mm: move vmemmap region right below the linear region")
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  arch/arm64/mm/init.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/arm64/mm/init.c b/arch/arm64/mm/init.c
+> index 1b18b4722420..86d9f9d303b0 100644
+> --- a/arch/arm64/mm/init.c
+> +++ b/arch/arm64/mm/init.c
+> @@ -611,11 +611,13 @@ void __init mem_init(void)
+>  	BUILD_BUG_ON(TASK_SIZE_32			> TASK_SIZE_64);
+>  #endif
+>  
+> +#ifdef CONFIG_SPARSEMEM_VMEMMAP
+>  	/*
+>  	 * Make sure we chose the upper bound of sizeof(struct page)
+> -	 * correctly.
+> +	 * correctly when sizing the VMEMMAP array.
+>  	 */
+>  	BUILD_BUG_ON(sizeof(struct page) > (1 << STRUCT_PAGE_MAX_SHIFT));
+> +#endif
+>  
+>  	if (PAGE_SIZE >= 16384 && get_num_physpages() <= 128) {
+>  		extern int sysctl_overcommit_memory;
+> -- 
+> 2.18.0
+> 
