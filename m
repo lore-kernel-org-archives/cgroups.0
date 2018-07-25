@@ -1,54 +1,38 @@
-From: Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH 02/10] mm: workingset: tell cache transitions from
- workingset thrashing
-Date: Wed, 25 Jul 2018 17:06:10 +0100
-Message-ID: <20180725160610.GD6866@arm.com>
-References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180712172942.10094-3-hannes@cmpxchg.org>
- <CAK8P3a3Nsmt54-ed_gWNev3CBS6_Sv5QGOw4G0sY4ZXOi1R4_Q@mail.gmail.com>
- <20180723152323.GA3699@cmpxchg.org>
- <CAK8P3a15K-TXYuFX-ZsJiroqA1GWX2XS4ioZSjcjJYgh1b_xSA@mail.gmail.com>
- <20180723162735.GA5980@cmpxchg.org>
- <20180724150448.GA25412@arm.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: cgroups iptables-restor: vmalloc: allocation failure
+Date: Wed, 25 Jul 2018 12:42:58 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1807251241380.201050@chino.kir.corp.google.com>
+References: <a1a4eb7c-e85c-dc6d-cfac-6d40af302182@icdsoft.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180724150448.GA25412@arm.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=Rr0DGf258LtpsVligxZ3mbAGceSMKOhw9gr7Ekbzz6o=;
+        b=WUxnOqImF5IuqKhi7lwDk2FGjpVzW3TULS4dToSIyZn358xW8fEBsGii/UkXFmp1jR
+         al351D5dIdd7Fgzr7r5MSBvvmR98KroPjojWms2rqOLKjKSIIsMbBUvoLz8qRzcaaeFt
+         keBwU1vDqEor/noqllou82uY1lA+UvgfxgKKeH8/Ck4UwCvdZPMEPcqhKC3Yfirlx+BM
+         qNqW0G+BrCiKifPmbEJX8xA6XEwmGzffaIt38bfSDHDpeEMja+IJHu/pjPg9baNe9xNs
+         c3oX218YD7+FcBwxZSq8PzZcobKcw2pjyzlhm2Zv8O6hF/f5tldDxkd4aVF35wDHPfGE
+         gqeA==
+In-Reply-To: <a1a4eb7c-e85c-dc6d-cfac-6d40af302182@icdsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Peter Zijlstra <peterz@infradead.org>, Suren Baghdasaryan <surenb@google.com>, Mike Galbraith <efault@gmx.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, kernel-team@fb.com, Linux-MM <linux-mm@kvack.org>, Vinayak Menon <vinmenon@codeaurora.org>, Ingo Molnar <mingo@redhat.com>, Shakeel Butt <shakeelb@google.com>, Catalin Marinas <catalin.marinas@arm.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christopher Lameter <cl@linux.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+To: Georgi Nikolov <gnikolov@icdsoft.com>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jul 24, 2018 at 04:04:48PM +0100, Will Deacon wrote:
-> On Mon, Jul 23, 2018 at 12:27:35PM -0400, Johannes Weiner wrote:
-> > On Mon, Jul 23, 2018 at 05:35:35PM +0200, Arnd Bergmann wrote:
-> > > On Mon, Jul 23, 2018 at 5:23 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > > > diff --git a/arch/arm64/mm/init.c b/arch/arm64/mm/init.c
-> > > > index 1b18b4722420..72c9b6778b0a 100644
-> > > > --- a/arch/arm64/mm/init.c
-> > > > +++ b/arch/arm64/mm/init.c
-> > > > @@ -611,11 +611,13 @@ void __init mem_init(void)
-> > > >         BUILD_BUG_ON(TASK_SIZE_32                       > TASK_SIZE_64);
-> > > >  #endif
-> > > >
-> > > > +#ifndef CONFIG_SPARSEMEM_VMEMMAP
-> > > >         /*
-> > > 
-> > > I tested it on two broken configurations, and found that you have
-> > > a typo here, it should be 'ifdef', not 'ifndef'. With that change, it
-> > > seems to build fine.
-> > > 
-> > > Tested-by: Arnd Bergmann <arnd@arndb.de>
-> > 
-> > Thanks for testing it, I don't have a cross-compile toolchain set up.
-> > 
-> > ---
+On Wed, 25 Jul 2018, Georgi Nikolov wrote:
+
+> Hello,
 > 
-> Thanks Arnd, Johannes. I can pick this up for -rc7 via the arm64 tree,
-> unless it's already queued elsewhere?
+> I posted a kernel bug https://bugzilla.kernel.org/show_bug.cgi?id=200651 and
+> i hope this is the correct place to discuss this.
+> 
 
-I've pushed this to the arm64 for-next/fixes branch heading for -rc7.
-
-Will
+Could you post the full allocation failure from the kernel log?  It's not 
+possible to vmalloc any additional memory due to the memory pressure, so 
+this is expected to fail but I'm curious as to the actual allocation that 
+is triggering it.
