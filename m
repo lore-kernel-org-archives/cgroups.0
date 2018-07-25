@@ -1,64 +1,54 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] memcg: reduce memcg tree traversals for stats collection
-Date: Wed, 25 Jul 2018 07:27:50 -0700
-Message-ID: <CALvZod7Fqj_pJ2sn+XiDsoDX4jBLM22iGUrB9PeJXg+8S5xExQ@mail.gmail.com>
-References: <20180724224635.143944-1-shakeelb@google.com> <CAOm-9arFu63A9YJ6yVtm6_LdtbRKZg1Q3dz8WugdkBBQfoOWYw@mail.gmail.com>
+From: Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH 02/10] mm: workingset: tell cache transitions from
+ workingset thrashing
+Date: Wed, 25 Jul 2018 17:06:10 +0100
+Message-ID: <20180725160610.GD6866@arm.com>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
+ <20180712172942.10094-3-hannes@cmpxchg.org>
+ <CAK8P3a3Nsmt54-ed_gWNev3CBS6_Sv5QGOw4G0sY4ZXOi1R4_Q@mail.gmail.com>
+ <20180723152323.GA3699@cmpxchg.org>
+ <CAK8P3a15K-TXYuFX-ZsJiroqA1GWX2XS4ioZSjcjJYgh1b_xSA@mail.gmail.com>
+ <20180723162735.GA5980@cmpxchg.org>
+ <20180724150448.GA25412@arm.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=CPxlBjp9IJJj6SZNOZXY2s4FyyZaG0r+B7Dvp6lfg5w=;
-        b=GxxB33XOBqTnuMHkXS2VMnZIVvqhHS59wcU0IGCzL+qX5Lunl7M/2tU2hXvjEXRiwr
-         sGOjyDI7zzC9UZbDROD3/XITzgZEIboIqNuhCIJpquF4MbkSUjgsE6tM6m6syPs2id7y
-         bMYPURH4VCvltpX0VKyM4mqx/Gc/Nd3JMGXGgrYJEP8OhRyEn6aqdnxZcWweyCPw8Jug
-         KS2LB1eQAlI48kr3Y7dzZ+fZVBUPgrjcUWuD4gt15FoEEpx89I/R81HHmBSdDVm4kQ5k
-         +Nv+iuWsxfFD3Hfs6Xb3nSo/poHQOmuep5Df8zvw7KZG9sI8yQBhLHETdrFVD8fleJRn
-         nMjA==
-In-Reply-To: <CAOm-9arFu63A9YJ6yVtm6_LdtbRKZg1Q3dz8WugdkBBQfoOWYw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20180724150448.GA25412@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: bmerry@ska.ac.za
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Peter Zijlstra <peterz@infradead.org>, Suren Baghdasaryan <surenb@google.com>, Mike Galbraith <efault@gmx.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, kernel-team@fb.com, Linux-MM <linux-mm@kvack.org>, Vinayak Menon <vinmenon@codeaurora.org>, Ingo Molnar <mingo@redhat.com>, Shakeel Butt <shakeelb@google.com>, Catalin Marinas <catalin.marinas@arm.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christopher Lameter <cl@linux.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
 
-On Wed, Jul 25, 2018 at 4:26 AM Bruce Merry <bmerry@ska.ac.za> wrote:
->
-> On 25 July 2018 at 00:46, Shakeel Butt <shakeelb@google.com> wrote:
-> > I ran a simple benchmark which reads the root_mem_cgroup's stat file
-> > 1000 times in the presense of 2500 memcgs on cgroup-v1. The results are:
-> >
-> > Without the patch:
-> > $ time ./read-root-stat-1000-times
-> >
-> > real    0m1.663s
-> > user    0m0.000s
-> > sys     0m1.660s
-> >
-> > With the patch:
-> > $ time ./read-root-stat-1000-times
-> >
-> > real    0m0.468s
-> > user    0m0.000s
-> > sys     0m0.467s
->
-> Thanks for cc'ing me. I've tried this patch using my test case and the
-> results are interesting. With the patch applied, running my script
-> only generates about 8000 new cgroups, compared to 40,000 before -
-> presumably because the optimisation has altered the timing.
->
-> On the other hand, if I run the script 5 times to generate 40000
-> zombie cgroups, the time to get stats for the root cgroup (cgroup-v1)
-> is almost unchanged at around 18ms (was 20ms, but there were slightly
-> more cgroups as well), compared to the almost 4x speedup you're seeing
-> in your test.
->
+On Tue, Jul 24, 2018 at 04:04:48PM +0100, Will Deacon wrote:
+> On Mon, Jul 23, 2018 at 12:27:35PM -0400, Johannes Weiner wrote:
+> > On Mon, Jul 23, 2018 at 05:35:35PM +0200, Arnd Bergmann wrote:
+> > > On Mon, Jul 23, 2018 at 5:23 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+> > > > diff --git a/arch/arm64/mm/init.c b/arch/arm64/mm/init.c
+> > > > index 1b18b4722420..72c9b6778b0a 100644
+> > > > --- a/arch/arm64/mm/init.c
+> > > > +++ b/arch/arm64/mm/init.c
+> > > > @@ -611,11 +611,13 @@ void __init mem_init(void)
+> > > >         BUILD_BUG_ON(TASK_SIZE_32                       > TASK_SIZE_64);
+> > > >  #endif
+> > > >
+> > > > +#ifndef CONFIG_SPARSEMEM_VMEMMAP
+> > > >         /*
+> > > 
+> > > I tested it on two broken configurations, and found that you have
+> > > a typo here, it should be 'ifdef', not 'ifndef'. With that change, it
+> > > seems to build fine.
+> > > 
+> > > Tested-by: Arnd Bergmann <arnd@arndb.de>
+> > 
+> > Thanks for testing it, I don't have a cross-compile toolchain set up.
+> > 
+> > ---
+> 
+> Thanks Arnd, Johannes. I can pick this up for -rc7 via the arm64 tree,
+> unless it's already queued elsewhere?
 
-Hi Bruce, I think your script is trying to create zombies, so, the
-experiments after that script will be non-deterministic. Why not just
-create 40k cgroups ,no need for zombies, and the see how much this
-patch affects reading stats.
+I've pushed this to the arm64 for-next/fixes branch heading for -rc7.
 
-Shakeel
+Will
