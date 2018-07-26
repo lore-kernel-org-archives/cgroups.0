@@ -1,91 +1,111 @@
-From: Daniel Drake <drake@endlessm.com>
-Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory, and
- IO v2
-Date: Wed, 25 Jul 2018 17:57:26 -0500
-Message-ID: <CAD8Lp44P2X5BNj14QjJBiv-_MxdVTP2UPQk3pX5iX4NEL46zwA@mail.gmail.com>
-References: <20180712172942.10094-1-hannes@cmpxchg.org> <20180716155745.10368-1-drake@endlessm.com>
- <20180717112515.GE7193@dhcp22.suse.cz> <CAD8Lp45W00ga-P-nb6iytgSGW4xwSzmaTHA87DOvSotN0S2edw@mail.gmail.com>
- <20180717122327.GG7193@dhcp22.suse.cz>
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: Re: [RFC PATCH ghak90 (was ghak32) V3 02/10] audit: log container
+ info of syscalls
+Date: Wed, 25 Jul 2018 20:51:29 -0400
+Message-ID: <20180726005129.vlwgj6bgnn2hufld@madcap2.tricolour.ca>
+References: <cover.1528304203.git.rgb@redhat.com>
+ <3318670.y8SpQ3RC2W@x2>
+ <20180723151148.hyu4jqy2etp5afpt@madcap2.tricolour.ca>
+ <2739536.aL1iVigTi9@x2>
+ <CAHC9VhTkuf+2BwJp399-NzSgQyp21GgY1SZVDboDdXgpvEV=pQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=4DFenC4IFmeOdLYVoPIkOsKOkd0Rud+Nhk9jcHit5Ow=;
-        b=QHB7+/Ndxu3QCw2GdN/va8neKfG5lCRDMW6v7xZbET6WvCJK3fJdJJGxqZYAFESPmy
-         loTmu7jnHGiaJIicvwOqtxiP/TvhABO6NirqnyJw0K9yTgu5zwIp/SVxJH4DZ1m18Ria
-         H3ivSNcsAjb0gy0oQz2hRkaPHw+NCFsvGUo+sX6M3ylZ58Ukn2g3iPvXoqzDZ7AaJCKI
-         LCgLRSFtSpxlruwi/9kpMKx95mllddXdtqZQUiRIGxddEJi0O6i1bm6EMajUhhZfs3AT
-         x2PYBvrXvvzS/gh2ej9DpBpw4DsqdnQjkO09RpxT2Shbrfurp6DPrRP30ibds148PL4m
-         vVmA==
-In-Reply-To: <20180717122327.GG7193@dhcp22.suse.cz>
+Content-Disposition: inline
+In-Reply-To: <CAHC9VhTkuf+2BwJp399-NzSgQyp21GgY1SZVDboDdXgpvEV=pQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: hannes@cmpxchg.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, Linux Upstreaming Team <linux@endlessm.com>, linux-block@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Mike Galbraith <efault@gmx.de>, Oliver Yang <yangoliver@me.com>, Shakeel Butt <shakeelb@google.com>, xxx xxx <x.qendo@gmail.com>, Taras Kondratiuk <takondra@cisco.com>, Daniel Walker <danielwa@cisco.com>, Vinayak Menon <vinmenon@codeaurora.org>, Ruslan Ruslichenko <rruslich@cisco.com>, kernel-team@fb.com
+To: Paul Moore <paul@paul-moore.com>
+Cc: sgrubb@redhat.com, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-api@vger.kernel.org, linux-audit@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ebiederm@xmission.com, luto@kernel.org, carlos@redhat.com, dhowells@redhat.com, viro@zeniv.linux.org.uk, simo@redhat.com, Eric Paris <eparis@parisplace.org>, serge@hallyn.com
 
-On Tue, Jul 17, 2018 at 7:23 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> On Tue 17-07-18 07:13:52, Daniel Drake wrote:
->> On Tue, Jul 17, 2018 at 6:25 AM, Michal Hocko <mhocko@kernel.org> wrote:
->> > Yes this is really unfortunate. One thing that could help would be to
->> > consider a trashing level during the reclaim (get_scan_count) to simply
->> > forget about LRUs which are constantly refaulting pages back. We already
->> > have the infrastructure for that. We just need to plumb it in.
->>
->> Can you go into a bit more detail about that infrastructure and how we
->> might detect which pages are being constantly refaulted? I'm
->> interested in spending a few hours on this topic to see if I can come
->> up with anything.
->
-> mm/workingset.c allows for tracking when an actual page got evicted.
-> workingset_refault tells us whether a give filemap fault is a recent
-> refault and activates the page if that is the case. So what you need is
-> to note how many refaulted pages we have on the active LRU list. If that
-> is a large part of the list and if the inactive list is really small
-> then we know we are trashing.
+On 2018-07-23 14:31, Paul Moore wrote:
+> On Mon, Jul 23, 2018 at 12:48 PM Steve Grubb <sgrubb@redhat.com> wrote:
+> > On Monday, July 23, 2018 11:11:48 AM EDT Richard Guy Briggs wrote:
+> > > On 2018-07-23 09:19, Steve Grubb wrote:
+> > > > On Sunday, July 22, 2018 4:55:10 PM EDT Richard Guy Briggs wrote:
+> > > > > On 2018-07-22 09:32, Steve Grubb wrote:
+> > > > > > On Saturday, July 21, 2018 4:29:30 PM EDT Richard Guy Briggs wrote:
+> > > > > > > > > + * audit_log_contid - report container info
+> > > > > > > > > + * @tsk: task to be recorded
+> > > > > > > > > + * @context: task or local context for record
+> > > > > > > > > + * @op: contid string description
+> > > > > > > > > + */
+> > > > > > > > > +int audit_log_contid(struct task_struct *tsk,
+> > > > > > > > > +                            struct audit_context *context,
+> > > > > > > > > char
+> > > > > > > > > *op)
+> > > > > > > > > +{
+> > > > > > > > > +       struct audit_buffer *ab;
+> > > > > > > > > +
+> > > > > > > > > +       if (!audit_contid_set(tsk))
+> > > > > > > > > +               return 0;
+> > > > > > > > > +       /* Generate AUDIT_CONTAINER record with container ID */
+> > > > > > > > > +       ab = audit_log_start(context, GFP_KERNEL,
+> > > > > > > > > AUDIT_CONTAINER);
+> > > > > > > > > +       if (!ab)
+> > > > > > > > > +               return -ENOMEM;
+> > > > > > > > > +       audit_log_format(ab, "op=%s contid=%llu",
+> > > > > > > > > +                        op, audit_get_contid(tsk));
+> > > > > > > >
+> > > > > > > > Can you explain your reason for including an "op" field in this
+> > > > > > > > record
+> > > > > > > > type?  I've been looking at the rest of the patches in this
+> > > > > > > > patchset
+> > > > > > > > and it seems to be used more as an indicator of the record's
+> > > > > > > > generating context rather than any sort of audit container ID
+> > > > > > > > operation.
+> > > > > > >
+> > > > > > > "action" might work, but that's netfilter and numeric... "kind"?
+> > > > > > > Nothing else really seems to fit from a field name, type or lack of
+> > > > > > > searchability perspective.
+> > > > > > >
+> > > > > > > Steve, do you have an opinion?
+> > > > > >
+> > > > > > We only have 1 sample event where we have op=task. What are the other
+> > > > > > possible values?
+> > > > >
+> > > > > For the AUDIT_CONTAINER record we have op= "task", "target" (from the
+> > > > > ptrace and signals patch), "tty".
+> > > > >
+> > > > > For the AUDIT_CONTAINER_ID record we have "op=set".
+> > > >
+> > > > Since the purpose of this record is to log the container id, I think that
+> > > > is all that is needed. We can get the context from the other records in
+> > > > the event. I'd suggest dropping the "op" field.
+> > >
+> > > Ok, the information above it for two different audit container
+> > > identifier records.  Which one should drop the "op=" field?  Both?  Or
+> > > just the AUDIT_CONTAINER record?  The AUDIT_CONTAINER_ID record (which
+> > > might be renamed) could use it to distinguish a "set" record from a
+> > > dropped audit container identifier that is no longer registered by any
+> > > task or namespace.
+> >
+> > Neither of them need it. All they need to do is state the container that is
+> > being acted upon.
+> 
+> I think we should keep the "op" field for audit container ID
+> management operations, even though we really only have a "set"
+> operation at the moment, but the others should drop the "op" field
+> (see my previous emails in this thread).
 
-Thanks for the guidance. So this sounds like it is something that
-should be done on a timer (or on some other condition?), check the
-state of the active LRU list as described and if things are bad then
-invoke the OOM killer?
+In fact, I'd like to question the wisdom of dropping this field and
+perhaps fine a better or new name for it, since these contid records
+could be multiple and different from the primary task that is generating
+this record.  In particular, there are extra contid records generated by
+the ptrace/signals patch that could be from other processes in other
+containers that I mentioned in a branch thread that got dropped
+including the auc_pids data and the target_pid also attached to the
+primary task's audit context.
 
-I'm having trouble linking that idea to your original suggestion:
+> paul moore
+> www.paul-moore.com
 
-> One thing that could help would be to consider a trashing level during the reclaim
-> (get_scan_count) to simply forget about LRUs which are constantly refaulting
-> pages back.
+- RGB
 
-which I interpret to mean that the  for_each_evictable_lru loop in
-get_scan_count should skip over constantly-refaulty LRUs rather than
-add them to nr[] and lru_pages, which I assume would then cause direct
-reclaim to fail when we are thrashing, leading to OOM kill?
-
-Are these two different ideas, or am I just misunderstanding something basic?
-
-That confusion aside, studying the code to understand how I can
-determine if a page is being constantly refaulted or not, I see that
-the well documented condition for this (in workingset_refault) is:
-
-  (refault - eviction) & EVICTION_MASK <= active_file
-
-refault and active_file are just values from the lruvec which seems
-easily accessible. However the eviction value is taken at the point of
-page eviction, and it is then stored in the shadow entries stored in
-the page cache for pages that have been evicted, but the shadow entry
-is then lost when the page is reactivated.
-
-The suggestion(s) seem to revolve around checking if currently-active
-pages are refaulting a lot, and I am still not clear on how to
-determine that, given that the shadow/eviction information was lost at
-the point when those active pages were refaulted.
-
-
-BTW feel free to drop this thread if you are busy, or delay your
-response to a convenient time. I'm new to this area and probably
-making silly mistakes, and not yet convinced that I'll be able to see
-it through.
-
-Daniel
+--
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
