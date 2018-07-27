@@ -1,52 +1,61 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
- on cgroup v2 root
-Date: Fri, 27 Jul 2018 17:21:37 -0400
-Message-ID: <8a671f47-ff1d-b470-987f-0b38badc21cb@redhat.com>
-References: <20180719135224.GE2494@hirez.programming.kicks-ass.net>
- <1107494a-9667-df58-dcac-9366e969dc3a@redhat.com>
- <20180719153045.GT72677@devbig577.frc2.facebook.com>
- <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
- <20180719165201.GU72677@devbig577.frc2.facebook.com>
- <20180720113121.GJ2476@hirez.programming.kicks-ass.net>
- <20180720114549.GY72677@devbig577.frc2.facebook.com>
- <20180720154454.GR2494@hirez.programming.kicks-ass.net>
- <20180720155613.GB1934745@devbig577.frc2.facebook.com>
- <4857a9db-ebf5-24f8-c42d-d795f5c75854@redhat.com>
- <20180720163712.GU2494@hirez.programming.kicks-ass.net>
- <8c655adc-6d9e-b767-1024-5d6941c995a9@redhat.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory,
+ and IO v2
+Date: Sat, 28 Jul 2018 00:01:23 +0200
+Message-ID: <20180727220123.GB18879@amd>
+References: <20180712172942.10094-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="LpQ9ahxlCli8rRTG"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8c655adc-6d9e-b767-1024-5d6941c995a9@redhat.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20180712172942.10094-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 07/20/2018 01:09 PM, Waiman Long wrote:
-> On 07/20/2018 12:37 PM, Peter Zijlstra wrote:
->> On Fri, Jul 20, 2018 at 12:19:29PM -0400, Waiman Long wrote:
->>> I am not against the idea of making it hierarchical eventually. I am
->>> just hoping to get thing going by merging the patchset in its current
->>> form and then we can make it hierarchical in a followup patch.
->> Where's the rush? Why can't we do this right in one go?
-> For me, the rush comes from RHEL8 as it is a goal to have a fully
-> functioning cgroup v2 in that release.
->
-> I also believe that most of the use cases of partition can be satisfied
-> with partitions at the first level children. Getting hierarchical
-> partition right may drag on for half a year, maybe, giving our history
-> with cpu v2 controller. No matter what we do to enable hierarchical
-> partition in the future, the current model of using a partition flag is
-> intuitive enough that it won't be changed at least for the first level
-> children.
 
-Peter, are you OK that or do you still want to have hierarchical
-partition done before submission?
+--LpQ9ahxlCli8rRTG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Longman
+Hi!
 
+> The idea is to eventually incorporate this back into the kernel, so
+> that Linux can avoid OOM livelocks (which TECHNICALLY aren't memory
+> deadlocks, but for the user indistinguishable) out of the box.
+>=20
+> We also use psi memory pressure for loadshedding. Our batch job
+
+psi->PSI?
+
+> 		How do you use this feature?
+>=20
+> A kernel with CONFIG_PSI=3Dy will create a /proc/pressure directory with
+> 3 files: cpu, memory, and io. If using cgroup2, cgroups will also
+
+Could we get the config named CONFIG_PRESSURE to match /proc/pressure?
+"PSI" is little too terse...
+
+								Pavel
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--LpQ9ahxlCli8rRTG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAltbljMACgkQMOfwapXb+vJangCfazQXvp2udMeXISRfTR8kVg3Q
+ReIAn1U+vmdcDISLPazXCUbd2cAXPJJI
+=ua6C
+-----END PGP SIGNATURE-----
+
+--LpQ9ahxlCli8rRTG--
