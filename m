@@ -1,59 +1,77 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory, and
- IO v2
-Date: Mon, 30 Jul 2018 10:54:05 -0700
-Message-ID: <dfc3c810-8918-add4-b818-8b9c294f5ea4@infradead.org>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 0/10] psi: pressure stall information for CPU, memory,
+ and IO v2
+Date: Mon, 30 Jul 2018 19:59:36 +0200
+Message-ID: <20180730175936.GA2416@amd>
 References: <20180712172942.10094-1-hannes@cmpxchg.org>
- <20180727220123.GB18879@amd> <20180730154035.GC4567@cmpxchg.org>
+ <20180727220123.GB18879@amd>
+ <20180730154035.GC4567@cmpxchg.org>
  <20180730173940.GB881@amd>
  <20180730175120.GJ1206094@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="IS0zKkzwUGydFO0o"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Jijkqbke+KlulpxFU8QfzKm63i1lUXpS4B7IzqkuFCY=; b=z9KQJpFaFByINWmDqFflNs49p4
-        1nzJq4A93NJbv5qHKVaT8uBW77Xr4/stgbn3xw50XHAElz0w+HWPyZT4CMHKc8BrCX92tTkWfk6oU
-        tt7C8p4KUh4122DKWbKT9sYGrbMMzAa1CSK4nZrSSdd60tuano1z5NBl1nCMe/gZAm2napCVS0Tsq
-        fdFC0H7ecOuglOTsBNihKm4MyH8MtRYREi71dklG708YW7rvg+tHSmYuY22MBaJcA2Pcq0A3C35hJ
-        THoDwvS85M27t2I1xGjiBxH/Xl+YCcPRQB4JHEBtBXmOkDEJ1ttrMwf4VjYYZztpluI27J0twTxOX
-      
+Content-Disposition: inline
 In-Reply-To: <20180730175120.GJ1206094@devbig004.ftw2.facebook.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Pavel Machek <pavel@ucw.cz>
+To: Tejun Heo <tj@kernel.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Suren Baghdasaryan <surenb@google.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 07/30/2018 10:51 AM, Tejun Heo wrote:
+
+--IS0zKkzwUGydFO0o
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon 2018-07-30 10:51:20, Tejun Heo wrote:
 > Hello,
-> 
+>=20
 > On Mon, Jul 30, 2018 at 07:39:40PM +0200, Pavel Machek wrote:
->>> I'd rather have the internal config symbol match the naming scheme in
->>> the code, where psi is a shorter, unique token as copmared to e.g.
->>> pressure, press, prsr, etc.
->>
->> I'd do "pressure", really. Yes, psi is shorter, but I'd say that
->> length is not really important there.
-> 
+> > > I'd rather have the internal config symbol match the naming scheme in
+> > > the code, where psi is a shorter, unique token as copmared to e.g.
+> > > pressure, press, prsr, etc.
+> >=20
+> > I'd do "pressure", really. Yes, psi is shorter, but I'd say that
+> > length is not really important there.
+>=20
 > This is an extreme bikeshedding without any relevance.  You can make
 > suggestions but please lay it to the rest.  There isn't any general
 > consensus against the current name and you're just trying to push your
 > favorite name without proper justifications after contributing nothing
 > to the project.  Please stop.
-> 
-> Thanks.
 
-I'd say he's trying to make something that is readable and easier to
-understand for users.
+Its true I have no interest in psi. But I'm trying to use same kernel
+you are trying to "improve" and I was confused enough by seing
+"CONFIG_PSI". And yes, my association was "pounds per square inch" and
+"what is it doing here".
 
-Thanks.
+So I'm asking you to change the name.
 
+USB is well known acronym, so it is okay to have CONFIG_USB. PSI is
+also well known -- but means something else.
 
--- 
-~Randy
+And the code kind-of acknowledges that acronym is unknown, by having
+/proc/pressure.
+
+So please just fix it.
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--IS0zKkzwUGydFO0o
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAltfUggACgkQMOfwapXb+vKAvgCfQE/kZZxaNG37MoP55aHmHCeO
+XIEAn0L3Iqd7uuiqMrYzFwuLGN0MMs/N
+=bq/s
+-----END PGP SIGNATURE-----
+
+--IS0zKkzwUGydFO0o--
