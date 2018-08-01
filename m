@@ -1,82 +1,61 @@
-From: Roman Gushchin <guro@fb.com>
+From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
 Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
-Date: Wed, 1 Aug 2018 09:37:23 -0700
-Message-ID: <20180801163718.GA23539@castle>
+Date: Thu, 2 Aug 2018 07:01:28 +0900
+Message-ID: <de9a2bad-d80d-98a0-e155-613a34c0b7be@i-love.sakura.ne.jp>
 References: <0d018c7e-a3de-a23a-3996-bed8b28b1e4a@i-love.sakura.ne.jp>
  <20180716220918.GA3898@castle.DHCP.thefacebook.com>
  <201807170055.w6H0tHn5075670@www262.sakura.ne.jp>
  <ede70c6a-620b-f835-d66c-b4608fe0ef54@i-love.sakura.ne.jp>
+ <20180801163718.GA23539@castle>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=0e6MzhHWH4G4SkUvZnVg7QTO8pf3lQ0eNxE6L3Mf5AE=;
- b=PndEGBK9xxtJoDpfKHkTqQZqpbMTs5p0cvw9aHHy9X80E+yeWK9wGMHfj2ETKoFIaO4b
- 94aVZaaGqTHNwdxeO0p5CDW+lfAhTB98VhFP8AgrVIRKQyalPfR+N+rznmGLM0hHeX1E
- 29YV/8nyrwCJlczl3FmgQT+a8ppugpUaNBk= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0e6MzhHWH4G4SkUvZnVg7QTO8pf3lQ0eNxE6L3Mf5AE=;
- b=Pvzz8nfCXScf7Yzm0gIgoqgi/nsrm3ioJHJqsreN2FpfYYVatXdzWpe9F/z2JcxrsEhJZuBedyQnBUVVAwn4geyfnuujAbux26WwZFO2lrj8a/w3HwI+EtfLmMBHYkeak47Dw6LGcKuD9i5gy33qmE7qDaxmxxfUkjFonYnFgtg=
-Content-Disposition: inline
-In-Reply-To: <ede70c6a-620b-f835-d66c-b4608fe0ef54@i-love.sakura.ne.jp>
+In-Reply-To: <20180801163718.GA23539@castle>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@kernel.org>, linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+To: Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Jul 31, 2018 at 11:14:01PM +0900, Tetsuo Handa wrote:
-> On 2018/07/17 9:55, Tetsuo Handa wrote:
-> >> I don't get, why it's necessary to drop the cgroup oom killer to merge your fix?
-> >> I'm happy to help with rebasing and everything else.
-> > 
-> > Yes, I wish you rebase your series on top of OOM lockup (CVE-2016-10723) mitigation
-> > patch ( https://marc.info/?l=linux-mm&m=153112243424285&w=4 ). It is a trivial change
-> > and easy to cleanly backport (if applied before your series).
-> > 
-> > Also, I expect you to check whether my cleanup patch which removes "abort" path
-> > ( [PATCH 1/2] at https://marc.info/?l=linux-mm&m=153119509215026&w=4 ) helps
-> > simplifying your series. I don't know detailed behavior of your series, but I
-> > assume that your series do not kill threads which current thread should not wait
-> > for MMF_OOM_SKIP.
+On 2018/08/02 1:37, Roman Gushchin wrote:
+> On Tue, Jul 31, 2018 at 11:14:01PM +0900, Tetsuo Handa wrote:
+>> Can we temporarily drop cgroup-aware OOM killer from linux-next.git and
+>> apply my cleanup patch? Since the merge window is approaching, I really want to
+>> see how next -rc1 would look like...
 > 
-> syzbot is hitting WARN(1) due to mem_cgroup_out_of_memory() == false.
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_bug-3Fid-3Dea8c7912757d253537375e981b61749b2da69258&d=DwICJg&c=5VD0RTtNlTh3ycd41b3MUw&r=i6WobKxbeG3slzHSIOxTVtYIJw7qjCE6S0spDTKL-J4&m=h9FJRAWtCmDLT-cVwvXKCYIUVRSrD--0XFJE-OnNY64&s=If6eFu6MlYjnfLXeg5_S-3tuhCZhSMv8_qfSrMfwOQ0&e=
+> Hi Tetsuo!
 > 
-> I can't tell what change is triggering this race. Maybe removal of oom_lock from
-> the oom reaper made more likely to hit. But anyway I suspect that
-> 
-> static bool oom_kill_memcg_victim(struct oom_control *oc)
-> {
->         if (oc->chosen_memcg == NULL || oc->chosen_memcg == INFLIGHT_VICTIM)
->                 return oc->chosen_memcg; // <= This line is still broken
-> 
-> because
-> 
->                 /* We have one or more terminating processes at this point. */
->                 oc->chosen_task = INFLIGHT_VICTIM;
-> 
-> is not called.
-> 
-> Also, that patch is causing confusion by reviving schedule_timeout_killable(1)
-> with oom_lock held.
-> 
-> Can we temporarily drop cgroup-aware OOM killer from linux-next.git and
-> apply my cleanup patch? Since the merge window is approaching, I really want to
-> see how next -rc1 would look like...
+> Has this cleanup patch been acked by somebody?
 
-Hi Tetsuo!
+Not yet. But since Michal considers this cleanup as "a nice shortcut"
+( https://marc.info/?i=20180607112836.GN32433@dhcp22.suse.cz ), I assume that
+I will get an ACK regarding this cleanup.
 
-Has this cleanup patch been acked by somebody?
-Which problem does it solve?
-Dropping patches for making a cleanup (if it's a cleanup) sounds a bit strange.
+> Which problem does it solve?
 
-Anyway, there is a good chance that current cgroup-aware OOM killer
-implementation will be replaced by a lightweight version (memory.oom.group).
-Please, take a look at it, probably your cleanup will not conflict with it
-at all.
+It simplifies tricky out_of_memory() return value decision, and
+it also fixes a bug in your series which syzbot is pointing out.
 
-Thanks!
+> Dropping patches for making a cleanup (if it's a cleanup) sounds a bit strange.
+
+What I need is a git tree which I can use as a baseline for making this cleanup.
+linux.git is not suitable because it does not include Michal's fix, but
+linux-next.git is not suitable because Michal's fix is overwritten by your series.
+I want a git tree which includes Michal's fix and does not include your series.
+
+> 
+> Anyway, there is a good chance that current cgroup-aware OOM killer
+> implementation will be replaced by a lightweight version (memory.oom.group).
+> Please, take a look at it, probably your cleanup will not conflict with it
+> at all.
+
+Then, please drop current cgroup-aware OOM killer implementation from linux-next.git .
+I want to see how next -rc1 would look like (for testing purpose) and want to use
+linux-next.git as a baseline (for making this cleanup).
+
+> 
+> Thanks!
+> 
+> 
+
