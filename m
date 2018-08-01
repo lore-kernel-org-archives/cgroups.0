@@ -1,56 +1,78 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] memcg: Remove memcg_cgroup::id from IDR on
- mem_cgroup_css_alloc() failure
-Date: Tue, 31 Jul 2018 16:39:08 -0700
-Message-ID: <20180731163908.603d7a27c6534341e1afa724@linux-foundation.org>
-References: <6dbc33bb-f3d5-1a46-b454-13c6f5865fcd@virtuozzo.com>
-        <20180413113855.GI17484@dhcp22.suse.cz>
-        <8a81c801-35c8-767d-54b0-df9f1ca0abc0@virtuozzo.com>
-        <20180413115454.GL17484@dhcp22.suse.cz>
-        <abfd4903-c455-fac2-7ed6-73707cda64d1@virtuozzo.com>
-        <20180413121433.GM17484@dhcp22.suse.cz>
-        <20180413125101.GO17484@dhcp22.suse.cz>
-        <20180726162512.6056b5d7c1d2a5fbff6ce214@linux-foundation.org>
-        <20180727193134.GA10996@cmpxchg.org>
-        <20180729192621.py4znecoinw5mqcp@esperanza>
-        <20180730153113.GB4567@cmpxchg.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 1/9] mm: workingset: don't drop refault information prematurely
+Date: Wed,  1 Aug 2018 11:19:50 -0400
+Message-ID: <20180801151958.32590-2-hannes@cmpxchg.org>
+References: <20180801151958.32590-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180730153113.GB4567@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=dPzbJJIeJgfn8++cxkOJb5Dz/B61/Buo1muVR4A4+7E=;
+        b=vjkKAP6ubSVRmeQnLIA1gqmu8OAqsEHegFTBIDM1/gU9CHgInYOeLeKoL9P1dcM5B8
+         F/g3ROFEMdcJg5dDR13yU3joj5UQWsjMnRDx0MouUUBe7DxHXOPd32pQJYysbbJZLLgH
+         xlEMIfX9TjiQ+72+ycMhG1eMvquOXetDj2NhDc9pedmsJU9lRUIPuf8Q0mfCT+Z74Pjf
+         yCDRJ+CA+TaGOqToLtodun/RLgCBPA0aO6HVisiIC05uiTi+4FORM5tjzYEcsdrHNd6T
+         wvNUSYsmzHT8lv5HXIX1e6XMrF/B/D9vp76MjyyLkRYtFV2y5qHoKO2H9z/aPvzbK0ua
+         6Tqw==
+In-Reply-To: <20180801151958.32590-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, Kirill Tkhai <ktkhai@virtuozzo.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Mon, 30 Jul 2018 11:31:13 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+From: Johannes Weiner <jweiner@fb.com>
 
-> Subject: [PATCH] mm: memcontrol: simplify memcg idr allocation and error
->  unwinding
-> 
-> The memcg ID is allocated early in the multi-step memcg creation
-> process, which needs 2-step ID allocation and IDR publishing, as well
-> as two separate IDR cleanup/unwind sites on error.
-> 
-> Defer the IDR allocation until the last second during onlining to
-> eliminate all this complexity. There is no requirement to have the ID
-> and IDR entry earlier than that. And the root reference to the ID is
-> put in the offline path, so this matches nicely.
+If we keep just enough refault information to match the CURRENT page
+cache during reclaim time, we could lose a lot of events when there is
+only a temporary spike in non-cache memory consumption that pushes out
+all the cache. Once cache comes back, we won't see those refaults.
+They might not be actionable for LRU aging, but we want to know about
+them for measuring memory pressure.
 
-This patch isn't aware of Kirill's later "mm, memcg: assign memcg-aware
-shrinkers bitmap to memcg", which altered mem_cgroup_css_online():
+Signed-off-by: Johannes Weiner <jweiner@fb.com>
+---
+ mm/workingset.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-@@ -4356,6 +4470,11 @@ static int mem_cgroup_css_online(struct
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 40ee02c83978..53759a3cf99a 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -364,7 +364,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
  {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 	unsigned long max_nodes;
+ 	unsigned long nodes;
+-	unsigned long cache;
++	unsigned long pages;
  
-+	if (memcg_alloc_shrinker_maps(memcg)) {
-+		mem_cgroup_id_remove(memcg);
-+		return -ENOMEM;
-+	}
+ 	/* list_lru lock nests inside the IRQ-safe i_pages lock */
+ 	local_irq_disable();
+@@ -393,14 +393,14 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ 	 *
+ 	 * PAGE_SIZE / radix_tree_nodes / node_entries * 8 / PAGE_SIZE
+ 	 */
+-	if (sc->memcg) {
+-		cache = mem_cgroup_node_nr_lru_pages(sc->memcg, sc->nid,
+-						     LRU_ALL_FILE);
+-	} else {
+-		cache = node_page_state(NODE_DATA(sc->nid), NR_ACTIVE_FILE) +
+-			node_page_state(NODE_DATA(sc->nid), NR_INACTIVE_FILE);
+-	}
+-	max_nodes = cache >> (RADIX_TREE_MAP_SHIFT - 3);
++#ifdef CONFIG_MEMCG
++	if (sc->memcg)
++		pages = page_counter_read(&sc->memcg->memory);
++	else
++#endif
++		pages = node_present_pages(sc->nid);
 +
- 	/* Online state pins memcg ID, memcg ID pins CSS */
- 	atomic_set(&memcg->id.ref, 1);
- 	css_get(css);
++	max_nodes = pages >> (RADIX_TREE_MAP_SHIFT - 3);
+ 
+ 	if (nodes <= max_nodes)
+ 		return 0;
+-- 
+2.18.0
 
