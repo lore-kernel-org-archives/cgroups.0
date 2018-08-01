@@ -1,441 +1,541 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 9/9] psi: cgroup support
-Date: Wed,  1 Aug 2018 11:19:58 -0400
-Message-ID: <20180801151958.32590-10-hannes@cmpxchg.org>
-References: <20180801151958.32590-1-hannes@cmpxchg.org>
+From: David Howells <dhowells@redhat.com>
+Subject: [PATCH 00/33] VFS: Introduce filesystem context [ver #11]
+Date: Wed, 01 Aug 2018 16:23:56 +0100
+Message-ID: <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=td8sVEq7B3zRpddgZoElV+O4+/3RnsPaR9Zy76qVrWc=;
-        b=KL9Kw381RFpnCLgDoWqIx1BR1NJDAptWxyqx03S6uawYslq4CKGBtWzF0Ih4PK519W
-         msUTCi4DSh35e+wZGcM/GIu0haSYPvTc9ZmFjklrpaTBXShCHT/oqaA3UI57uigLOLrY
-         RwgrZ5WlvxWUcp4bfk2R/pOtj8ScNj9XqOi0vjAccEUSe/f7bkceysqpIgkOdogH3Tgg
-         ZbNfGItmz8Wy/FS0WTRjhh8mxr0jqiu5Bn4tzFzqncBdPhIXFUFhEPMG7CpBwMLLhI8V
-         Ph0pitoppIirCVzVOwNTzB9R8MGHTDqkDMzp5Owm+58ggB0PkeAy1IsHMneC1FpIQN5+
-         /qrA==
-In-Reply-To: <20180801151958.32590-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: viro@zeniv.linux.org.uk
+Cc: John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@redhat.com>, selinux@tycho.nsa.gov, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, linux-api@vger.kernel.org, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, fenghua.yu@intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, linux-security-module@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.jp, cgroups@vger.kernel.org, torvalds@linux-foundation.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On a system that executes multiple cgrouped jobs and independent
-workloads, we don't just care about the health of the overall system,
-but also that of individual jobs, so that we can ensure individual job
-health, fairness between jobs, or prioritize some jobs over others.
 
-This patch implements pressure stall tracking for cgroups. In kernels
-with CONFIG_PSI=y, cgroup2 groups will have cpu.pressure,
-memory.pressure, and io.pressure files that track aggregate pressure
-stall times for only the tasks inside the cgroup.
+Hi Al,
 
-v3:
-- fix copy-paste indentation screwups
+Here are a set of patches to create a filesystem context prior to setting
+up a new mount, populating it with the parsed options/binary data, creating
+the superblock and then effecting the mount.  This is also used for remount
+since much of the parsing stuff is common in many filesystems.
 
-Acked-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+This allows namespaces and other information to be conveyed through the
+mount procedure.
+
+This also allows Mikl=C3=B3s Szeredi's idea of doing:
+
+	fd =3D fsopen("nfs");
+	fsconfig(fd, FSCONFIG_SET_STRING, "option", "val", 0);
+	fsconfig(fd, FSCONFIG_CMD_CREATE, NULL, NULL, 0);
+	mfd =3D fsmount(fd, MS_NODEV);
+	move_mount(mfd, "", AT_FDCWD, "/mnt", MOVE_MOUNT_F_EMPTY_PATH);
+
+that he presented at LSF-2017 to be implemented (see the relevant patches
+in the series).
+
+I didn't use netlink as that would make the core kernel depend on
+CONFIG_NET and CONFIG_NETLINK and would introduce network namespacing
+issues.
+
+I've implemented filesystem context handling for procfs, nfs, mqueue,
+cpuset, kernfs, sysfs, cgroup and afs filesystems.
+
+Unconverted filesystems are handled by a legacy filesystem wrapper.
+
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+WHY DO WE WANT THIS?
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Firstly, there's a bunch of problems with the mount(2) syscall:
+
+ (1) It's actually six or seven different interfaces rolled into one and
+     weird combinations of flags make it do different things beyond the
+     original specification of the syscall.
+
+ (2) It produces a particularly large and diverse set of errors, which have
+     to be mapped back to a small error code.  Yes, there's dmesg - if you
+     have it configured - but you can't necessarily see that if you're
+     doing a mount inside of a container.
+
+ (3) It copies a PAGE_SIZE block of data for each of the type, device name
+     and options.
+
+ (4) The size of the buffers is PAGE_SIZE - and this is arch dependent.
+
+ (5) You can't mount into another mount namespace.  I could, for example,
+     build a container without having to be in that container's namespace
+     if I can do it from outside.
+
+ (6) It's not really geared for the specification of multiple sources, but
+     some filesystems really want that - overlayfs, for example.
+
+and some problems in the internal kernel api:
+
+ (1) There's no defined way to supply namespace configuration for the
+     superblock - so, for instance, I can't say that I want to create a
+     superblock in a particular network namespace (on automount, say).
+
+     NFS hacks around this by creating multiple shadow file_system_types
+     with different ->mount() ops.
+
+ (2) When calling mount internally, unless you have NFS-like hacks, you
+     have to generate or otherwise provide text config data which then gets
+     parsed, when some of the time you could bypass the parsing stage
+     entirely.
+
+ (3) The amount of data in the data buffer is not known, but the data
+     buffer might be on a kernel stack somewhere, leading to the
+     possibility of tripping the stack underrun guard.
+
+and other issues too:
+
+ (1) Superblock remount in some filesystems applies options on an as-parsed
+     basis, so if there's a parse failure, a partial alteration with no
+     rollback is effected.
+
+ (2) Under some circumstances, the mount data may get copied multiple times
+     so that it can have multiple parsers applied to it or because it has
+     to be parsed multiple times - for instance, once to get the
+     preliminary info required to access the on-disk superblock and then
+     again to update the superblock record in the kernel.
+
+I want to be able to add support for a bunch of things:
+
+ (1) UID, GID and Project ID mapping/translation.  I want to be able to
+     install a translation table of some sort on the superblock to
+     translate source identifiers (which may be foreign numeric UIDs/GIDs,
+     text names, GUIDs) into system identifiers.  This needs to be done
+     before the superblock is published[*].
+
+     Note that this may, for example, involve using the context and the
+     superblock held therein to issue an RPC to a server to look up
+     translations.
+
+     [*] By "published" I mean made available through mount so that other
+     	 userspace processes can access it by path.
+
+     Maybe specifying a translation range element with something like:
+
+	fsconfig(fd, fsconfig_translate_uid, "<srcuid> <nsuid> <count>", 0, 0);
+
+     The translation information also needs to propagate over an automount
+     in some circumstances.
+
+ (2) Namespace configuration.  I want to be able to tell the superblock
+     creation process what namespaces should be applied when it created (in
+     particular the userns and netns) for containerisation purposes, e.g.:
+
+	fsconfig(fd, FSCONFIG_SET_NAMESPACE, "user", 0, userns_fd);
+	fsconfig(fd, FSCONFIG_SET_NAMESPACE, "net", 0, netns_fd);
+
+ (3) Namespace propagation.  I want to have a properly defined mechanism
+     for propagating namespace configuration over automounts within the
+     kernel.  This will be particularly useful for network filesystems.
+
+ (4) Pre-mount attribute query.  A chunk of the changes is actually the
+     fsinfo() syscall to query attributes of the filesystem beyond what's
+     available in statx() and statfs().  This will allow a created
+     superblock to be queried before it is published.
+
+ (5) Upcall for configuration.  I would like to be able to query
+     configuration that's stored in userspace when an automount is made.
+     For instance, to look up network parameters for NFS or to find a cache
+     selector for fscache.
+
+     The internal fs_context could be passed to the upcall process or the
+     kernel could read a config file directly if named appropriately for the
+     superblock, perhaps:
+
+	[/etc/fscontext.d/afs/example.com/cell.cfg]
+	realm =3D EXAMPLE.COM
+	translation =3D uid,3000,4000,100
+	fscache =3D tag=3Dfred
+
+ (6) Event notifications.  I want to be able to install a watch on a
+     superblock before it is published to catch things like quota events
+     and EIO.
+
+ (7) Large and binary parameters.  There might be at some point a need to
+     pass large/binary objects like Microsoft PACs around.  If I understand
+     PACs correctly, you can obtain these from the Kerberos server and then
+     pass them to the file server when you connect.
+
+     Having it possible to pass large or binary objects as individual
+     fsconfig calls make parsing these trivial.  OTOH, some or all of this
+     can potentially be handled with the use of the keyrings interface - as
+     the afs filesystem does for passing kerberos tokens around; it's just
+     that that seems overkill for a parameter you may only need once.
+
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+SIGNIFICANT CHANGES
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+ ver #11:
+
+ (*) Fixed AppArmor.
+
+ (*) Capitalised all the UAPI constants.
+
+ (*) Explicitly numbered the FSCONFIG_* UAPI constants.
+
+ (*) Removed all the places ANON_INODES is selected.
+
+ (*) Fixed a bug whereby the context gets freed twice (which broke mounts of
+     procfs).
+
+ (*) Split fsinfo() off into its own patch series.
+
+ ver #10:
+
+ (*) Renamed "option" to "parameter" in a number of places.
+
+ (*) Replaced the use of write() to drive the configuration with an fsconfi=
+g()
+     syscall.  This also allows at-style paths and fds to be presented as t=
+yped
+     object.
+
+ (*) Routed the key=3Dvalue parameter concept all the way through from the
+     fsconfig() system call to the LSM and filesystem.
+
+ (*) Added a parameter-description concept and helper functions to help
+     interpret a parameter and possibly convert the value.
+
+ (*) Made it possible to query the parameter description using the fsinfo()
+     syscall.  Added a test-fs-query sample to dump the parameters used by a
+     filesystem.
+
+ ver #9:
+
+ (*) Dropped the fd cookie stuff and the FMODE_*/O_* split stuff.
+
+ (*) Al added an open_tree() system call to allow a mount tree to be picked
+     referenced or cloned into an O_PATH-style fd.  This can then be used
+     with sys_move_mount().  Dropped the O_CLONE_MOUNT and O_NON_RECURSIVE
+     open() flags.
+
+ (*) Brought error logging back in, though only in the fs_context and not
+     in the task_struct.
+
+ (*) Separated MS_REMOUNT|MS_BIND handling from MS_REMOUNT handling.
+
+ (*) Used anon_inodes for the fd returned by fsopen() and fspick().  This
+     requires making it unconditional.
+
+ (*) Fixed lots of bugs.  Especial thanks to Al and Eric Biggers for
+     finding them and providing patches.
+
+ (*) Wrote manual pages, which I'll post separately.
+
+ ver #8:
+
+ (*) Changed the way fsmount() mounts into the namespace according to some
+     of Al's ideas.
+
+ (*) Put better typing on the fd cookie obtained from __fdget() & co..
+
+ (*) Stored the fd cookie in struct nameidata rather than the dfd number.
+
+ (*) Changed sys_fsmount() to return an O_PATH-style fd rather than
+     actually mounting into the mount namespace.
+
+ (*) Separated internal FMODE_* handling from O_* handling to free up
+     certain O_* flag numbers.
+
+ (*) Added two new open flags (O_CLONE_MOUNT and O_NON_RECURSIVE) for use
+     with open(O_PATH) to copy a mount or mount-subtree to an O_PATH fd.
+
+ (*) Added a new syscall, sys_move_mount(), to move a mount from an
+     dfd+path source to a dfd+path destination.
+
+ (*) Added a file->f_mode flag (FMODE_NEED_UNMOUNT) that indicates that the
+     vfsmount attached to file->f_path needs 'unmounting' if set.
+
+ (*) Made sys_move_mount() clear FMODE_NEED_UNMOUNT if successful.
+
+	[!] This doesn't work quite right.
+
+ (*) Added a new syscall, fsinfo(), to query information about a
+     filesystem.  The idea being that this will, in future, work with the
+     fd from fsopen() too and permit querying of the parameters and
+     metadata before fsmount() is called.
+
+ ver #7:
+
+ (*) Undo an incorrect MS_* -> SB_* conversion.
+
+ (*) Pass the mount data buffer size to all the mount-related functions that
+     take the data pointer.  This fixes a problem where someone (say SELinu=
+x)
+     tries to copy the mount data, assuming it to be a page in size, and
+     overruns the buffer - thereby incurring an oops by hitting a guard pag=
+e.
+
+ (*) Made the AFS filesystem use them as an example.  This is a much easier=
+ to
+     deal with than with NFS or Ext4 as there are very few mount options.
+
+ ver #6:
+
+ (*) Dropped the supplementary error string facility for the moment.
+
+ (*) Dropped the NFS patches for the moment.
+
+ (*) Dropped the reserved file descriptor argument from fsopen() and
+     replaced it with three reserved pointers that must be NULL.
+
+ ver #5:
+
+ (*) Renamed sb_config -> fs_context and adjusted variable names.
+
+ (*) Differentiated the flags in sb->s_flags (now named SB_*) from those
+     passed to mount(2) (named MS_*).
+
+ (*) Renamed __vfs_new_fs_context() to vfs_new_fs_context() and made the
+     caller always provide a struct file_system_type pointer and the
+     parameters required.
+
+ (*) Got rid of vfs_submount_fc() in favour of passing
+     FS_CONTEXT_FOR_SUBMOUNT to vfs_new_fs_context().  The purpose is now
+     used more.
+
+ (*) Call ->validate() on the remount path.
+
+ (*) Got rid of the inode locking in sys_fsmount().
+
+ (*) Call security_sb_mountpoint() in the mount(2) path.
+
+ ver #4:
+
+ (*) Split the sb_config patch up somewhat.
+
+ (*) Made the supplementary error string facility something attached to the
+     task_struct rather than the sb_config so that error messages can be
+     obtained from NFS doing a mount-root-and-pathwalk inside the
+     nfs_get_tree() operation.
+
+     Further, made this managed and read by prctl rather than through the
+     mount fd so that it's more generally available.
+
+ ver #3:
+
+ (*) Rebased on 4.12-rc1.
+
+ (*) Split the NFS patch up somewhat.
+
+ ver #2:
+
+ (*) Removed the ->fill_super() from sb_config_operations and passed it in
+     directly to functions that want to call it.  NFS now calls
+     nfs_fill_super() directly rather than jumping through a pointer to it
+     since there's only the one option at the moment.
+
+ (*) Removed ->mnt_ns and ->sb from sb_config and moved ->pid_ns into
+     proc_sb_config.
+
+ (*) Renamed create_super -> get_tree.
+
+ (*) Renamed struct mount_context to struct sb_config and amended various
+     variable names.
+
+ (*) sys_fsmount() acquired AT_* flags and MS_* flags (for MNT_* flags)
+     arguments.
+
+ ver #1:
+
+ (*) Split the sb_config stuff out into its own header.
+
+ (*) Support non-context aware filesystems through a special set of
+     sb_config operations.
+
+ (*) Stored the created superblock and root dentry into the sb_config after
+     creation rather than directly into a vfsmount.  This allows some
+     arguments to be removed to various NFS functions.
+
+ (*) Added an explicit superblock-creation step.  This allows a created
+     superblock to then be mounted multiple times.
+
+ (*) Added a flag to say that the sb_config is degraded and cannot have
+     another go at having a superblock creation whilst getting rid of the
+     one that says it's already mounted.
+
+Possible further developments:
+
+ (*) Implement sb reconfiguration (for now it returns ENOANO).
+
+ (*) Implement mount context support in more filesystems, ext4 being next
+     on my list.
+
+ (*) Move the walk-from-root stuff that nfs has to generic code so that you
+     can do something akin to:
+
+	mount /dev/sda1:/foo/bar /mnt
+
+     See nfs_follow_remote_path() and mount_subtree().  This is slightly
+     tricky in NFS as we have to prevent referral loops.
+
+ (*) Work out how to get at the error message incurred by submounts
+     encountered during nfs_follow_remote_path().
+
+     Should the error message be moved to task_struct and made more
+     general, perhaps retrieved with a prctl() function?
+
+ (*) Clean up/consolidate the security functions.  Possibly add a
+     validation hook to be called at the same time as the mount context
+     validate op.
+
+The patches can be found here also:
+
+	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git
+
+tagged as:
+
+	mount-api-20180801
+
+on branch:
+
+	mount-api
+
+David
 ---
- Documentation/accounting/psi.txt |  9 ++++
- Documentation/cgroup-v2.txt      | 18 +++++++
- include/linux/cgroup-defs.h      |  4 ++
- include/linux/cgroup.h           | 15 ++++++
- include/linux/psi.h              | 25 ++++++++++
- init/Kconfig                     |  4 ++
- kernel/cgroup/cgroup.c           | 45 +++++++++++++++++-
- kernel/sched/psi.c               | 81 +++++++++++++++++++++++++++++++-
- 8 files changed, 197 insertions(+), 4 deletions(-)
+Al Viro (2):
+      vfs: syscall: Add open_tree(2) to reference or clone a mount
+      teach move_mount(2) to work with OPEN_TREE_CLONE
 
-diff --git a/Documentation/accounting/psi.txt b/Documentation/accounting/psi.txt
-index 51e7ef14142e..e051810d5127 100644
---- a/Documentation/accounting/psi.txt
-+++ b/Documentation/accounting/psi.txt
-@@ -62,3 +62,12 @@ well as medium and long term trends. The total absolute stall time is
- tracked and exported as well, to allow detection of latency spikes
- which wouldn't necessarily make a dent in the time averages, or to
- average trends over custom time frames.
-+
-+Cgroup2 interface
-+=================
-+
-+In a system with a CONFIG_CGROUP=y kernel and the cgroup2 filesystem
-+mounted, pressure stall information is also tracked for tasks grouped
-+into cgroups. Each subdirectory in the cgroupfs mountpoint contains
-+cpu.pressure, memory.pressure, and io.pressure files; the format is
-+the same as the /proc/pressure/ files.
-diff --git a/Documentation/cgroup-v2.txt b/Documentation/cgroup-v2.txt
-index 74cdeaed9f7a..a22879dba019 100644
---- a/Documentation/cgroup-v2.txt
-+++ b/Documentation/cgroup-v2.txt
-@@ -963,6 +963,12 @@ All time durations are in microseconds.
- 	$PERIOD duration.  "max" for $MAX indicates no limit.  If only
- 	one number is written, $MAX is updated.
- 
-+  cpu.pressure
-+	A read-only nested-key file which exists on non-root cgroups.
-+
-+	Shows pressure stall information for CPU. See
-+	Documentation/accounting/psi.txt for details.
-+
- 
- Memory
- ------
-@@ -1199,6 +1205,12 @@ PAGE_SIZE multiple when read back.
- 	Swap usage hard limit.  If a cgroup's swap usage reaches this
- 	limit, anonymous memory of the cgroup will not be swapped out.
- 
-+  memory.pressure
-+	A read-only nested-key file which exists on non-root cgroups.
-+
-+	Shows pressure stall information for memory. See
-+	Documentation/accounting/psi.txt for details.
-+
- 
- Usage Guidelines
- ~~~~~~~~~~~~~~~~
-@@ -1334,6 +1346,12 @@ IO Interface Files
- 
- 	  8:16 rbps=2097152 wbps=max riops=max wiops=max
- 
-+  io.pressure
-+	A read-only nested-key file which exists on non-root cgroups.
-+
-+	Shows pressure stall information for IO. See
-+	Documentation/accounting/psi.txt for details.
-+
- 
- Writeback
- ~~~~~~~~~
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index dc5b70449dc6..280f18da956a 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -20,6 +20,7 @@
- #include <linux/u64_stats_sync.h>
- #include <linux/workqueue.h>
- #include <linux/bpf-cgroup.h>
-+#include <linux/psi_types.h>
- 
- #ifdef CONFIG_CGROUPS
- 
-@@ -424,6 +425,9 @@ struct cgroup {
- 	/* used to schedule release agent */
- 	struct work_struct release_agent_work;
- 
-+	/* used to track pressure stalls */
-+	struct psi_group psi;
-+
- 	/* used to store eBPF programs */
- 	struct cgroup_bpf bpf;
- 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 473e0c0abb86..fd94c294c207 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -627,6 +627,11 @@ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
- 	pr_cont_kernfs_path(cgrp->kn);
- }
- 
-+static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
-+{
-+	return &cgrp->psi;
-+}
-+
- static inline void cgroup_init_kthreadd(void)
- {
- 	/*
-@@ -680,6 +685,16 @@ static inline union kernfs_node_id *cgroup_get_kernfs_id(struct cgroup *cgrp)
- 	return NULL;
- }
- 
-+static inline struct cgroup *cgroup_parent(struct cgroup *cgrp)
-+{
-+	return NULL;
-+}
-+
-+static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
-+{
-+	return NULL;
-+}
-+
- static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 					       struct cgroup *ancestor)
- {
-diff --git a/include/linux/psi.h b/include/linux/psi.h
-index 371af1479699..05c3dae3e9c5 100644
---- a/include/linux/psi.h
-+++ b/include/linux/psi.h
-@@ -4,6 +4,9 @@
- #include <linux/psi_types.h>
- #include <linux/sched.h>
- 
-+struct seq_file;
-+struct css_set;
-+
- #ifdef CONFIG_PSI
- 
- extern bool psi_disabled;
-@@ -15,6 +18,14 @@ void psi_task_change(struct task_struct *task, u64 now, int clear, int set);
- void psi_memstall_enter(unsigned long *flags);
- void psi_memstall_leave(unsigned long *flags);
- 
-+int psi_show(struct seq_file *s, struct psi_group *group, enum psi_res res);
-+
-+#ifdef CONFIG_CGROUPS
-+int psi_cgroup_alloc(struct cgroup *cgrp);
-+void psi_cgroup_free(struct cgroup *cgrp);
-+void cgroup_move_task(struct task_struct *p, struct css_set *to);
-+#endif
-+
- #else /* CONFIG_PSI */
- 
- static inline void psi_init(void) {}
-@@ -22,6 +33,20 @@ static inline void psi_init(void) {}
- static inline void psi_memstall_enter(unsigned long *flags) {}
- static inline void psi_memstall_leave(unsigned long *flags) {}
- 
-+#ifdef CONFIG_CGROUPS
-+static inline int psi_cgroup_alloc(struct cgroup *cgrp)
-+{
-+	return 0;
-+}
-+static inline void psi_cgroup_free(struct cgroup *cgrp)
-+{
-+}
-+static inline void cgroup_move_task(struct task_struct *p, struct css_set *to)
-+{
-+	rcu_assign_pointer(p->cgroups, to);
-+}
-+#endif
-+
- #endif /* CONFIG_PSI */
- 
- #endif /* _LINUX_PSI_H */
-diff --git a/init/Kconfig b/init/Kconfig
-index ad61ddb5d68e..5c029f8d69f1 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -468,6 +468,10 @@ config PSI
- 	  the share of walltime in which some or all tasks in the system are
- 	  delayed due to contention of the respective resource.
- 
-+	  In kernels with cgroup support (cgroup2 only), cgroups will
-+	  have cpu.pressure, memory.pressure, and io.pressure files,
-+	  which aggregate pressure stalls for the grouped tasks only.
-+
- 	  For more details see Documentation/accounting/psi.txt.
- 
- 	  Say N if unsure.
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index a662bfcbea0e..bbb00b3ab752 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -54,6 +54,7 @@
- #include <linux/proc_ns.h>
- #include <linux/nsproxy.h>
- #include <linux/file.h>
-+#include <linux/psi.h>
- #include <net/sock.h>
- 
- #define CREATE_TRACE_POINTS
-@@ -826,7 +827,7 @@ static void css_set_move_task(struct task_struct *task,
- 		 */
- 		WARN_ON_ONCE(task->flags & PF_EXITING);
- 
--		rcu_assign_pointer(task->cgroups, to_cset);
-+		cgroup_move_task(task, to_cset);
- 		list_add_tail(&task->cg_list, use_mg_tasks ? &to_cset->mg_tasks :
- 							     &to_cset->tasks);
- 	}
-@@ -3388,6 +3389,21 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
- 	return ret;
- }
- 
-+#ifdef CONFIG_PSI
-+static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
-+{
-+	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_IO);
-+}
-+static int cgroup_memory_pressure_show(struct seq_file *seq, void *v)
-+{
-+	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_MEM);
-+}
-+static int cgroup_cpu_pressure_show(struct seq_file *seq, void *v)
-+{
-+	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_CPU);
-+}
-+#endif
-+
- static int cgroup_file_open(struct kernfs_open_file *of)
- {
- 	struct cftype *cft = of->kn->priv;
-@@ -4499,6 +4515,23 @@ static struct cftype cgroup_base_files[] = {
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = cpu_stat_show,
- 	},
-+#ifdef CONFIG_PSI
-+	{
-+		.name = "io.pressure",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cgroup_io_pressure_show,
-+	},
-+	{
-+		.name = "memory.pressure",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cgroup_memory_pressure_show,
-+	},
-+	{
-+		.name = "cpu.pressure",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cgroup_cpu_pressure_show,
-+	},
-+#endif
- 	{ }	/* terminate */
- };
- 
-@@ -4559,6 +4592,7 @@ static void css_free_rwork_fn(struct work_struct *work)
- 			 */
- 			cgroup_put(cgroup_parent(cgrp));
- 			kernfs_put(cgrp->kn);
-+			psi_cgroup_free(cgrp);
- 			if (cgroup_on_dfl(cgrp))
- 				cgroup_stat_exit(cgrp);
- 			kfree(cgrp);
-@@ -4805,10 +4839,15 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	cgrp->self.parent = &parent->self;
- 	cgrp->root = root;
- 	cgrp->level = level;
--	ret = cgroup_bpf_inherit(cgrp);
-+
-+	ret = psi_cgroup_alloc(cgrp);
- 	if (ret)
- 		goto out_idr_free;
- 
-+	ret = cgroup_bpf_inherit(cgrp);
-+	if (ret)
-+		goto out_psi_free;
-+
- 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
-@@ -4846,6 +4885,8 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 
- 	return cgrp;
- 
-+out_psi_free:
-+	psi_cgroup_free(cgrp);
- out_idr_free:
- 	cgroup_idr_remove(&root->cgroup_idr, cgrp->id);
- out_stat_exit:
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index 57ec86592b5a..a20f885da66f 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -464,6 +464,9 @@ static void psi_group_change(struct psi_group *group, int cpu, u64 now,
- 
- void psi_task_change(struct task_struct *task, u64 now, int clear, int set)
- {
-+#ifdef CONFIG_CGROUPS
-+	struct cgroup *cgroup, *parent;
-+#endif
- 	int cpu = task_cpu(task);
- 
- 	if (psi_disabled)
-@@ -485,6 +488,18 @@ void psi_task_change(struct task_struct *task, u64 now, int clear, int set)
- 	task->psi_flags |= set;
- 
- 	psi_group_change(&psi_system, cpu, now, clear, set);
-+
-+#ifdef CONFIG_CGROUPS
-+	cgroup = task->cgroups->dfl_cgrp;
-+	while (cgroup && (parent = cgroup_parent(cgroup))) {
-+		struct psi_group *group;
-+
-+		group = cgroup_psi(cgroup);
-+		psi_group_change(group, cpu, now, clear, set);
-+
-+		cgroup = parent;
-+	}
-+#endif
- }
- 
- /**
-@@ -551,8 +566,70 @@ void psi_memstall_leave(unsigned long *flags)
- 	rq_unlock_irq(rq, &rf);
- }
- 
--static int psi_show(struct seq_file *m, struct psi_group *group,
--		    enum psi_res res)
-+#ifdef CONFIG_CGROUPS
-+int psi_cgroup_alloc(struct cgroup *cgroup)
-+{
-+	cgroup->psi.pcpu = alloc_percpu(struct psi_group_cpu);
-+	if (!cgroup->psi.pcpu)
-+		return -ENOMEM;
-+	psi_group_init(&cgroup->psi);
-+	return 0;
-+}
-+
-+void psi_cgroup_free(struct cgroup *cgroup)
-+{
-+	cancel_delayed_work_sync(&cgroup->psi.clock_work);
-+	free_percpu(cgroup->psi.pcpu);
-+}
-+
-+/**
-+ * cgroup_move_task - move task to a different cgroup
-+ * @task: the task
-+ * @to: the target css_set
-+ *
-+ * Move task to a new cgroup and safely migrate its associated stall
-+ * state between the different groups.
-+ *
-+ * This function acquires the task's rq lock to lock out concurrent
-+ * changes to the task's scheduling state and - in case the task is
-+ * running - concurrent changes to its stall state.
-+ */
-+void cgroup_move_task(struct task_struct *task, struct css_set *to)
-+{
-+	unsigned int task_flags = 0;
-+	struct rq_flags rf;
-+	struct rq *rq;
-+	u64 now;
-+
-+	rq = task_rq_lock(task, &rf);
-+
-+	if (task_on_rq_queued(task))
-+		task_flags = TSK_RUNNING;
-+	else if (task->in_iowait)
-+		task_flags = TSK_IOWAIT;
-+	if (task->flags & PF_MEMSTALL)
-+		task_flags |= TSK_MEMSTALL;
-+
-+	if (task_flags) {
-+		update_rq_clock(rq);
-+		now = rq_clock(rq);
-+		psi_task_change(task, now, task_flags, 0);
-+	}
-+
-+	/*
-+	 * Lame to do this here, but the scheduler cannot be locked
-+	 * from the outside, so we move cgroups from inside sched/.
-+	 */
-+	rcu_assign_pointer(task->cgroups, to);
-+
-+	if (task_flags)
-+		psi_task_change(task, now, 0, task_flags);
-+
-+	task_rq_unlock(rq, task, &rf);
-+}
-+#endif /* CONFIG_CGROUPS */
-+
-+int psi_show(struct seq_file *m, struct psi_group *group, enum psi_res res)
- {
- 	int full;
- 
--- 
-2.18.0
+David Howells (31):
+      vfs: syscall: Add move_mount(2) to move mounts around
+      vfs: Suppress MS_* flag defs within the kernel unless explicitly enab=
+led
+      vfs: Introduce the basic header for the new mount API's filesystem co=
+ntext
+      vfs: Introduce logging functions
+      vfs: Add configuration parser helpers
+      vfs: Add LSM hooks for the new mount API
+      selinux: Implement the new mount API LSM hooks
+      smack: Implement filesystem context security hooks
+      apparmor: Implement security hooks for the new mount API
+      tomoyo: Implement security hooks for the new mount API
+      vfs: Separate changing mount flags full remount
+      vfs: Implement a filesystem superblock creation/configuration context
+      vfs: Remove unused code after filesystem context changes
+      procfs: Move proc_fill_super() to fs/proc/root.c
+      proc: Add fs_context support to procfs
+      ipc: Convert mqueue fs to fs_context
+      cpuset: Use fs_context
+      kernfs, sysfs, cgroup, intel_rdt: Support fs_context
+      hugetlbfs: Convert to fs_context
+      vfs: Remove kern_mount_data()
+      vfs: Provide documentation for new mount API
+      Make anon_inodes unconditional
+      vfs: syscall: Add fsopen() to prepare for superblock creation
+      vfs: Implement logging through fs_context
+      vfs: Add some logging to the core users of the fs_context log
+      vfs: syscall: Add fsconfig() for configuring and managing a context
+      vfs: syscall: Add fsmount() to create a mount for a superblock
+      vfs: syscall: Add fspick() to select a superblock for reconfiguration
+      afs: Add fs_context support
+      afs: Use fs_context to pass parameters over automount
+      vfs: Add a sample program for the new mount API
+
+
+ Documentation/filesystems/mount_api.txt  |  706 ++++++++++++++++++++++++
+ arch/arc/kernel/setup.c                  |    1=20
+ arch/arm/kernel/atags_parse.c            |    1=20
+ arch/arm/kvm/Kconfig                     |    1=20
+ arch/arm64/kvm/Kconfig                   |    1=20
+ arch/mips/kvm/Kconfig                    |    1=20
+ arch/powerpc/kvm/Kconfig                 |    1=20
+ arch/s390/kvm/Kconfig                    |    1=20
+ arch/sh/kernel/setup.c                   |    1=20
+ arch/sparc/kernel/setup_32.c             |    1=20
+ arch/sparc/kernel/setup_64.c             |    1=20
+ arch/x86/Kconfig                         |    1=20
+ arch/x86/entry/syscalls/syscall_32.tbl   |    6=20
+ arch/x86/entry/syscalls/syscall_64.tbl   |    6=20
+ arch/x86/kernel/cpu/intel_rdt.h          |   15 +
+ arch/x86/kernel/cpu/intel_rdt_rdtgroup.c |  184 ++++--
+ arch/x86/kernel/setup.c                  |    1=20
+ arch/x86/kvm/Kconfig                     |    1=20
+ drivers/base/Kconfig                     |    1=20
+ drivers/base/devtmpfs.c                  |    1=20
+ drivers/char/tpm/Kconfig                 |    1=20
+ drivers/dma-buf/Kconfig                  |    1=20
+ drivers/gpio/Kconfig                     |    1=20
+ drivers/iio/Kconfig                      |    1=20
+ drivers/infiniband/Kconfig               |    1=20
+ drivers/vfio/Kconfig                     |    1=20
+ fs/Kconfig                               |    7=20
+ fs/Makefile                              |    5=20
+ fs/afs/internal.h                        |    9=20
+ fs/afs/mntpt.c                           |  148 +++--
+ fs/afs/super.c                           |  470 +++++++++-------
+ fs/afs/volume.c                          |    4=20
+ fs/f2fs/super.c                          |    2=20
+ fs/file_table.c                          |    9=20
+ fs/filesystems.c                         |    4=20
+ fs/fs_context.c                          |  779 +++++++++++++++++++++++++++
+ fs/fs_parser.c                           |  476 ++++++++++++++++
+ fs/fsopen.c                              |  491 +++++++++++++++++
+ fs/hugetlbfs/inode.c                     |  392 ++++++++------
+ fs/internal.h                            |   13=20
+ fs/kernfs/mount.c                        |   87 +--
+ fs/libfs.c                               |   19 +
+ fs/namei.c                               |    4=20
+ fs/namespace.c                           |  867 +++++++++++++++++++++++---=
+----
+ fs/notify/fanotify/Kconfig               |    1=20
+ fs/notify/inotify/Kconfig                |    1=20
+ fs/pnode.c                               |    1=20
+ fs/proc/inode.c                          |   51 --
+ fs/proc/internal.h                       |    6=20
+ fs/proc/root.c                           |  245 ++++++--
+ fs/super.c                               |  368 ++++++++++---
+ fs/sysfs/mount.c                         |   67 ++
+ include/linux/cgroup.h                   |    3=20
+ include/linux/fs.h                       |   21 +
+ include/linux/fs_context.h               |  208 +++++++
+ include/linux/fs_parser.h                |  116 ++++
+ include/linux/kernfs.h                   |   39 +
+ include/linux/lsm_hooks.h                |   70 ++
+ include/linux/module.h                   |    6=20
+ include/linux/mount.h                    |    5=20
+ include/linux/security.h                 |   61 ++
+ include/linux/syscalls.h                 |    9=20
+ include/uapi/linux/fcntl.h               |    2=20
+ include/uapi/linux/fs.h                  |   82 +--
+ include/uapi/linux/mount.h               |   75 +++
+ init/Kconfig                             |   10=20
+ init/do_mounts.c                         |    1=20
+ init/do_mounts_initrd.c                  |    1=20
+ ipc/mqueue.c                             |  121 +++-
+ kernel/cgroup/cgroup-internal.h          |   50 +-
+ kernel/cgroup/cgroup-v1.c                |  347 +++++++-----
+ kernel/cgroup/cgroup.c                   |  256 ++++++---
+ kernel/cgroup/cpuset.c                   |   68 ++
+ samples/Kconfig                          |    6=20
+ samples/Makefile                         |    2=20
+ samples/mount_api/Makefile               |    7=20
+ samples/mount_api/test-fsmount.c         |  118 ++++
+ security/apparmor/include/mount.h        |   11=20
+ security/apparmor/lsm.c                  |  108 ++++
+ security/apparmor/mount.c                |   47 ++
+ security/security.c                      |   51 ++
+ security/selinux/hooks.c                 |  311 ++++++++++-
+ security/smack/smack.h                   |   11=20
+ security/smack/smack_lsm.c               |  370 ++++++++++++-
+ security/tomoyo/common.h                 |    3=20
+ security/tomoyo/mount.c                  |   46 ++
+ security/tomoyo/tomoyo.c                 |   15 +
+ 87 files changed, 6637 insertions(+), 1484 deletions(-)
+ create mode 100644 Documentation/filesystems/mount_api.txt
+ create mode 100644 fs/fs_context.c
+ create mode 100644 fs/fs_parser.c
+ create mode 100644 fs/fsopen.c
+ create mode 100644 include/linux/fs_context.h
+ create mode 100644 include/linux/fs_parser.h
+ create mode 100644 include/uapi/linux/mount.h
+ create mode 100644 samples/mount_api/Makefile
+ create mode 100644 samples/mount_api/test-fsmount.c
 
