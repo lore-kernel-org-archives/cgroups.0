@@ -1,19 +1,19 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 5/9] sched: loadavg: make calc_load_n() public
-Date: Wed,  1 Aug 2018 11:19:54 -0400
-Message-ID: <20180801151958.32590-6-hannes@cmpxchg.org>
+Subject: [PATCH 6/9] sched: sched.h: make rq locking and clock functions available in stats.h
+Date: Wed,  1 Aug 2018 11:19:55 -0400
+Message-ID: <20180801151958.32590-7-hannes@cmpxchg.org>
 References: <20180801151958.32590-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7HJ/faUwNp70pvtX2vst2/bX0oNS92n5Rlox7XiLwSM=;
-        b=DPctK5zfYaQ0V4YIT0cOc+G2ibXQKwNsexBwhBszDgpcxVUcfrnx9WMrfKc89CpzWh
-         DmYcv1soQq2VwT3zcvMIUKLLXwi7dgDFW2s8ZmC8sqY3YEjrAc6KPhIzyb83bim9RZIL
-         6EX7rvRwWH3wYHU+3AgXrQlfKub5GgQui0IGNFSIm9y8nAHMSO78eLwT72940dbXZgi4
-         XxhT6jMElMtHXZAHx8zuyjBtH7w0twHKqHL8aEBHOIMpi92YVD+KXJvpUg+tB50/0v3h
-         9Fv3op0mXYXYijb0hMh26+uwl4p3E8GNPT3CVKUyxOxO5cr/UjWFRJ3/6TSkO0snLH3s
-         wuYQ==
+        bh=NnxyiouhvZnUSydapW5h/V7JQgsuHd8XHvJ9oMKS3Xk=;
+        b=kT802V4gaqvbzln+f7fYdlx75z3raFvWWaTBt1Ow9JJu+sYDH8AC31h2MpNN+ybowx
+         kWiCmVtbOreLhY2E7Ss/RDFI5q+e71n0rRqALyj7H1GsxqyD90HGeMonuHIcCMH16La9
+         d0OcbT8ER8TruLjo/js6yfJNamgONc0l0RaEaNrDbELS7WDGUe56gFohc3Wang2B/ils
+         ekHw80UG/aGi4IdbXx4x294G9wbS8PW4DfBlYTJBxpUmYqT5Q3qXQ1Sf6qTCVbJpuAsU
+         uqHWEUJLMkuO0nmka52QhW6d+spDzMj6+dbkZD6t/BbBAvDVb4Q9l+tye6zJkb5XxztA
+         P9rw==
 In-Reply-To: <20180801151958.32590-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,184 +23,212 @@ Content-Transfer-Encoding: 7bit
 To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-It's going to be used in a later patch. Keep the churn separate.
+kernel/sched/sched.h includes "stats.h" half-way through the file. The
+next patch introduces users of sched.h's rq locking functions and
+update_rq_clock() in kernel/sched/stats.h. Move those definitions up
+in the file so they are available in stats.h.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/sched/loadavg.h |   3 +
- kernel/sched/loadavg.c        | 138 +++++++++++++++++-----------------
- 2 files changed, 72 insertions(+), 69 deletions(-)
+ kernel/sched/sched.h | 164 +++++++++++++++++++++----------------------
+ 1 file changed, 82 insertions(+), 82 deletions(-)
 
-diff --git a/include/linux/sched/loadavg.h b/include/linux/sched/loadavg.h
-index cc9cc62bb1f8..4859bea47a7b 100644
---- a/include/linux/sched/loadavg.h
-+++ b/include/linux/sched/loadavg.h
-@@ -37,6 +37,9 @@ calc_load(unsigned long load, unsigned long exp, unsigned long active)
- 	return newload / FIXED_1;
- }
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index cb467c221b15..b8f038497240 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -919,6 +919,8 @@ DECLARE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues);
+ #define cpu_curr(cpu)		(cpu_rq(cpu)->curr)
+ #define raw_rq()		raw_cpu_ptr(&runqueues)
  
-+extern unsigned long calc_load_n(unsigned long load, unsigned long exp,
-+				 unsigned long active, unsigned int n);
++extern void update_rq_clock(struct rq *rq);
 +
- #define LOAD_INT(x) ((x) >> FSHIFT)
- #define LOAD_FRAC(x) LOAD_INT(((x) & (FIXED_1-1)) * 100)
- 
-diff --git a/kernel/sched/loadavg.c b/kernel/sched/loadavg.c
-index 54fbdfb2d86c..28a516575c18 100644
---- a/kernel/sched/loadavg.c
-+++ b/kernel/sched/loadavg.c
-@@ -91,6 +91,75 @@ long calc_load_fold_active(struct rq *this_rq, long adjust)
- 	return delta;
+ static inline u64 __rq_clock_broken(struct rq *rq)
+ {
+ 	return READ_ONCE(rq->clock);
+@@ -1037,6 +1039,86 @@ static inline void rq_repin_lock(struct rq *rq, struct rq_flags *rf)
+ #endif
  }
  
-+/**
-+ * fixed_power_int - compute: x^n, in O(log n) time
-+ *
-+ * @x:         base of the power
-+ * @frac_bits: fractional bits of @x
-+ * @n:         power to raise @x to.
-+ *
-+ * By exploiting the relation between the definition of the natural power
-+ * function: x^n := x*x*...*x (x multiplied by itself for n times), and
-+ * the binary encoding of numbers used by computers: n := \Sum n_i * 2^i,
-+ * (where: n_i \elem {0, 1}, the binary vector representing n),
-+ * we find: x^n := x^(\Sum n_i * 2^i) := \Prod x^(n_i * 2^i), which is
-+ * of course trivially computable in O(log_2 n), the length of our binary
-+ * vector.
-+ */
-+static unsigned long
-+fixed_power_int(unsigned long x, unsigned int frac_bits, unsigned int n)
++struct rq *__task_rq_lock(struct task_struct *p, struct rq_flags *rf)
++	__acquires(rq->lock);
++
++struct rq *task_rq_lock(struct task_struct *p, struct rq_flags *rf)
++	__acquires(p->pi_lock)
++	__acquires(rq->lock);
++
++static inline void __task_rq_unlock(struct rq *rq, struct rq_flags *rf)
++	__releases(rq->lock)
 +{
-+	unsigned long result = 1UL << frac_bits;
-+
-+	if (n) {
-+		for (;;) {
-+			if (n & 1) {
-+				result *= x;
-+				result += 1UL << (frac_bits - 1);
-+				result >>= frac_bits;
-+			}
-+			n >>= 1;
-+			if (!n)
-+				break;
-+			x *= x;
-+			x += 1UL << (frac_bits - 1);
-+			x >>= frac_bits;
-+		}
-+	}
-+
-+	return result;
++	rq_unpin_lock(rq, rf);
++	raw_spin_unlock(&rq->lock);
 +}
 +
-+/*
-+ * a1 = a0 * e + a * (1 - e)
-+ *
-+ * a2 = a1 * e + a * (1 - e)
-+ *    = (a0 * e + a * (1 - e)) * e + a * (1 - e)
-+ *    = a0 * e^2 + a * (1 - e) * (1 + e)
-+ *
-+ * a3 = a2 * e + a * (1 - e)
-+ *    = (a0 * e^2 + a * (1 - e) * (1 + e)) * e + a * (1 - e)
-+ *    = a0 * e^3 + a * (1 - e) * (1 + e + e^2)
-+ *
-+ *  ...
-+ *
-+ * an = a0 * e^n + a * (1 - e) * (1 + e + ... + e^n-1) [1]
-+ *    = a0 * e^n + a * (1 - e) * (1 - e^n)/(1 - e)
-+ *    = a0 * e^n + a * (1 - e^n)
-+ *
-+ * [1] application of the geometric series:
-+ *
-+ *              n         1 - x^(n+1)
-+ *     S_n := \Sum x^i = -------------
-+ *             i=0          1 - x
-+ */
-+unsigned long
-+calc_load_n(unsigned long load, unsigned long exp,
-+	    unsigned long active, unsigned int n)
++static inline void
++task_rq_unlock(struct rq *rq, struct task_struct *p, struct rq_flags *rf)
++	__releases(rq->lock)
++	__releases(p->pi_lock)
 +{
-+	return calc_load(load, fixed_power_int(exp, FSHIFT, n), active);
++	rq_unpin_lock(rq, rf);
++	raw_spin_unlock(&rq->lock);
++	raw_spin_unlock_irqrestore(&p->pi_lock, rf->flags);
 +}
 +
- #ifdef CONFIG_NO_HZ_COMMON
- /*
-  * Handle NO_HZ for the global load-average.
-@@ -210,75 +279,6 @@ static long calc_load_nohz_fold(void)
- 	return delta;
++static inline void
++rq_lock_irqsave(struct rq *rq, struct rq_flags *rf)
++	__acquires(rq->lock)
++{
++	raw_spin_lock_irqsave(&rq->lock, rf->flags);
++	rq_pin_lock(rq, rf);
++}
++
++static inline void
++rq_lock_irq(struct rq *rq, struct rq_flags *rf)
++	__acquires(rq->lock)
++{
++	raw_spin_lock_irq(&rq->lock);
++	rq_pin_lock(rq, rf);
++}
++
++static inline void
++rq_lock(struct rq *rq, struct rq_flags *rf)
++	__acquires(rq->lock)
++{
++	raw_spin_lock(&rq->lock);
++	rq_pin_lock(rq, rf);
++}
++
++static inline void
++rq_relock(struct rq *rq, struct rq_flags *rf)
++	__acquires(rq->lock)
++{
++	raw_spin_lock(&rq->lock);
++	rq_repin_lock(rq, rf);
++}
++
++static inline void
++rq_unlock_irqrestore(struct rq *rq, struct rq_flags *rf)
++	__releases(rq->lock)
++{
++	rq_unpin_lock(rq, rf);
++	raw_spin_unlock_irqrestore(&rq->lock, rf->flags);
++}
++
++static inline void
++rq_unlock_irq(struct rq *rq, struct rq_flags *rf)
++	__releases(rq->lock)
++{
++	rq_unpin_lock(rq, rf);
++	raw_spin_unlock_irq(&rq->lock);
++}
++
++static inline void
++rq_unlock(struct rq *rq, struct rq_flags *rf)
++	__releases(rq->lock)
++{
++	rq_unpin_lock(rq, rf);
++	raw_spin_unlock(&rq->lock);
++}
++
+ #ifdef CONFIG_NUMA
+ enum numa_topology_type {
+ 	NUMA_DIRECT,
+@@ -1670,8 +1752,6 @@ static inline void sub_nr_running(struct rq *rq, unsigned count)
+ 	sched_update_tick_dependency(rq);
  }
  
--/**
-- * fixed_power_int - compute: x^n, in O(log n) time
-- *
-- * @x:         base of the power
-- * @frac_bits: fractional bits of @x
-- * @n:         power to raise @x to.
-- *
-- * By exploiting the relation between the definition of the natural power
-- * function: x^n := x*x*...*x (x multiplied by itself for n times), and
-- * the binary encoding of numbers used by computers: n := \Sum n_i * 2^i,
-- * (where: n_i \elem {0, 1}, the binary vector representing n),
-- * we find: x^n := x^(\Sum n_i * 2^i) := \Prod x^(n_i * 2^i), which is
-- * of course trivially computable in O(log_2 n), the length of our binary
-- * vector.
-- */
--static unsigned long
--fixed_power_int(unsigned long x, unsigned int frac_bits, unsigned int n)
+-extern void update_rq_clock(struct rq *rq);
+-
+ extern void activate_task(struct rq *rq, struct task_struct *p, int flags);
+ extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
+ 
+@@ -1752,86 +1832,6 @@ static inline void sched_rt_avg_update(struct rq *rq, u64 rt_delta) { }
+ static inline void sched_avg_update(struct rq *rq) { }
+ #endif
+ 
+-struct rq *__task_rq_lock(struct task_struct *p, struct rq_flags *rf)
+-	__acquires(rq->lock);
+-
+-struct rq *task_rq_lock(struct task_struct *p, struct rq_flags *rf)
+-	__acquires(p->pi_lock)
+-	__acquires(rq->lock);
+-
+-static inline void __task_rq_unlock(struct rq *rq, struct rq_flags *rf)
+-	__releases(rq->lock)
 -{
--	unsigned long result = 1UL << frac_bits;
--
--	if (n) {
--		for (;;) {
--			if (n & 1) {
--				result *= x;
--				result += 1UL << (frac_bits - 1);
--				result >>= frac_bits;
--			}
--			n >>= 1;
--			if (!n)
--				break;
--			x *= x;
--			x += 1UL << (frac_bits - 1);
--			x >>= frac_bits;
--		}
--	}
--
--	return result;
+-	rq_unpin_lock(rq, rf);
+-	raw_spin_unlock(&rq->lock);
 -}
 -
--/*
-- * a1 = a0 * e + a * (1 - e)
-- *
-- * a2 = a1 * e + a * (1 - e)
-- *    = (a0 * e + a * (1 - e)) * e + a * (1 - e)
-- *    = a0 * e^2 + a * (1 - e) * (1 + e)
-- *
-- * a3 = a2 * e + a * (1 - e)
-- *    = (a0 * e^2 + a * (1 - e) * (1 + e)) * e + a * (1 - e)
-- *    = a0 * e^3 + a * (1 - e) * (1 + e + e^2)
-- *
-- *  ...
-- *
-- * an = a0 * e^n + a * (1 - e) * (1 + e + ... + e^n-1) [1]
-- *    = a0 * e^n + a * (1 - e) * (1 - e^n)/(1 - e)
-- *    = a0 * e^n + a * (1 - e^n)
-- *
-- * [1] application of the geometric series:
-- *
-- *              n         1 - x^(n+1)
-- *     S_n := \Sum x^i = -------------
-- *             i=0          1 - x
-- */
--static unsigned long
--calc_load_n(unsigned long load, unsigned long exp,
--	    unsigned long active, unsigned int n)
+-static inline void
+-task_rq_unlock(struct rq *rq, struct task_struct *p, struct rq_flags *rf)
+-	__releases(rq->lock)
+-	__releases(p->pi_lock)
 -{
--	return calc_load(load, fixed_power_int(exp, FSHIFT, n), active);
+-	rq_unpin_lock(rq, rf);
+-	raw_spin_unlock(&rq->lock);
+-	raw_spin_unlock_irqrestore(&p->pi_lock, rf->flags);
 -}
 -
- /*
-  * NO_HZ can leave us missing all per-CPU ticks calling
-  * calc_load_fold_active(), but since a NO_HZ CPU folds its delta into
+-static inline void
+-rq_lock_irqsave(struct rq *rq, struct rq_flags *rf)
+-	__acquires(rq->lock)
+-{
+-	raw_spin_lock_irqsave(&rq->lock, rf->flags);
+-	rq_pin_lock(rq, rf);
+-}
+-
+-static inline void
+-rq_lock_irq(struct rq *rq, struct rq_flags *rf)
+-	__acquires(rq->lock)
+-{
+-	raw_spin_lock_irq(&rq->lock);
+-	rq_pin_lock(rq, rf);
+-}
+-
+-static inline void
+-rq_lock(struct rq *rq, struct rq_flags *rf)
+-	__acquires(rq->lock)
+-{
+-	raw_spin_lock(&rq->lock);
+-	rq_pin_lock(rq, rf);
+-}
+-
+-static inline void
+-rq_relock(struct rq *rq, struct rq_flags *rf)
+-	__acquires(rq->lock)
+-{
+-	raw_spin_lock(&rq->lock);
+-	rq_repin_lock(rq, rf);
+-}
+-
+-static inline void
+-rq_unlock_irqrestore(struct rq *rq, struct rq_flags *rf)
+-	__releases(rq->lock)
+-{
+-	rq_unpin_lock(rq, rf);
+-	raw_spin_unlock_irqrestore(&rq->lock, rf->flags);
+-}
+-
+-static inline void
+-rq_unlock_irq(struct rq *rq, struct rq_flags *rf)
+-	__releases(rq->lock)
+-{
+-	rq_unpin_lock(rq, rf);
+-	raw_spin_unlock_irq(&rq->lock);
+-}
+-
+-static inline void
+-rq_unlock(struct rq *rq, struct rq_flags *rf)
+-	__releases(rq->lock)
+-{
+-	rq_unpin_lock(rq, rf);
+-	raw_spin_unlock(&rq->lock);
+-}
+-
+ #ifdef CONFIG_SMP
+ #ifdef CONFIG_PREEMPT
+ 
 -- 
 2.18.0
 
