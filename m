@@ -1,82 +1,82 @@
-From: Vladimir Davydov <vdavydov.dev@gmail.com>
-Subject: Re: [PATCH] memcg: Remove memcg_cgroup::id from IDR on
- mem_cgroup_css_alloc() failure
-Date: Wed, 1 Aug 2018 19:22:35 +0300
-Message-ID: <20180801162235.j3v7xipyw5afnj4x@esperanza>
-References: <20180413115454.GL17484@dhcp22.suse.cz>
- <abfd4903-c455-fac2-7ed6-73707cda64d1@virtuozzo.com>
- <20180413121433.GM17484@dhcp22.suse.cz>
- <20180413125101.GO17484@dhcp22.suse.cz>
- <20180726162512.6056b5d7c1d2a5fbff6ce214@linux-foundation.org>
- <20180727193134.GA10996@cmpxchg.org>
- <20180729192621.py4znecoinw5mqcp@esperanza>
- <20180730153113.GB4567@cmpxchg.org>
- <20180731163908.603d7a27c6534341e1afa724@linux-foundation.org>
- <20180801155552.GA8600@cmpxchg.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v13 0/7] cgroup-aware OOM killer
+Date: Wed, 1 Aug 2018 09:37:23 -0700
+Message-ID: <20180801163718.GA23539@castle>
+References: <0d018c7e-a3de-a23a-3996-bed8b28b1e4a@i-love.sakura.ne.jp>
+ <20180716220918.GA3898@castle.DHCP.thefacebook.com>
+ <201807170055.w6H0tHn5075670@www262.sakura.ne.jp>
+ <ede70c6a-620b-f835-d66c-b4608fe0ef54@i-love.sakura.ne.jp>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=93x5y2Dc/rNkiXHdRkllzhsmzl11TBcLrZdlz8BmOfQ=;
-        b=jHon4covejtcXQIL+Rz/NKzNGofkC0fXLXQEZ1hkeSCFg/qSztBC7s2BBwatTV4wo0
-         R3uTxNQuq6ZuSnKZLMHCqYeqBl+jzWsBPsKsRm1ZqA0fgt1ILcBkbIcnioGNCp82aoc4
-         SkYAs9ZIjA3PWEUK1cdlCyaFmb0REcUSaPJDdKd1P4aIr/90QGv5Hf09VxJzga12IOs2
-         soxOt1MwaByi9Ka+doroH6K9bMJPyjHue7Dtb1ip39QJ0ndnsfLx23N4+Jj4VcYJ9+Ql
-         IzkmNv3Q6V6x6veXO025iAgXnOBH+r1m9TkMkc2aR8uDXskn+YYxGAgewnX3JKgxpG04
-         Xh/Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=facebook; bh=0e6MzhHWH4G4SkUvZnVg7QTO8pf3lQ0eNxE6L3Mf5AE=;
+ b=PndEGBK9xxtJoDpfKHkTqQZqpbMTs5p0cvw9aHHy9X80E+yeWK9wGMHfj2ETKoFIaO4b
+ 94aVZaaGqTHNwdxeO0p5CDW+lfAhTB98VhFP8AgrVIRKQyalPfR+N+rznmGLM0hHeX1E
+ 29YV/8nyrwCJlczl3FmgQT+a8ppugpUaNBk= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0e6MzhHWH4G4SkUvZnVg7QTO8pf3lQ0eNxE6L3Mf5AE=;
+ b=Pvzz8nfCXScf7Yzm0gIgoqgi/nsrm3ioJHJqsreN2FpfYYVatXdzWpe9F/z2JcxrsEhJZuBedyQnBUVVAwn4geyfnuujAbux26WwZFO2lrj8a/w3HwI+EtfLmMBHYkeak47Dw6LGcKuD9i5gy33qmE7qDaxmxxfUkjFonYnFgtg=
 Content-Disposition: inline
-In-Reply-To: <20180801155552.GA8600@cmpxchg.org>
+In-Reply-To: <ede70c6a-620b-f835-d66c-b4608fe0ef54@i-love.sakura.ne.jp>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Kirill Tkhai <ktkhai@virtuozzo.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@kernel.org>, linux-mm@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Aug 01, 2018 at 11:55:52AM -0400, Johannes Weiner wrote:
-> On Tue, Jul 31, 2018 at 04:39:08PM -0700, Andrew Morton wrote:
-> > On Mon, 30 Jul 2018 11:31:13 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+On Tue, Jul 31, 2018 at 11:14:01PM +0900, Tetsuo Handa wrote:
+> On 2018/07/17 9:55, Tetsuo Handa wrote:
+> >> I don't get, why it's necessary to drop the cgroup oom killer to merge your fix?
+> >> I'm happy to help with rebasing and everything else.
 > > 
-> > > Subject: [PATCH] mm: memcontrol: simplify memcg idr allocation and error
-> > >  unwinding
-> > > 
-> > > The memcg ID is allocated early in the multi-step memcg creation
-> > > process, which needs 2-step ID allocation and IDR publishing, as well
-> > > as two separate IDR cleanup/unwind sites on error.
-> > > 
-> > > Defer the IDR allocation until the last second during onlining to
-> > > eliminate all this complexity. There is no requirement to have the ID
-> > > and IDR entry earlier than that. And the root reference to the ID is
-> > > put in the offline path, so this matches nicely.
+> > Yes, I wish you rebase your series on top of OOM lockup (CVE-2016-10723) mitigation
+> > patch ( https://marc.info/?l=linux-mm&m=153112243424285&w=4 ). It is a trivial change
+> > and easy to cleanly backport (if applied before your series).
 > > 
-> > This patch isn't aware of Kirill's later "mm, memcg: assign memcg-aware
-> > shrinkers bitmap to memcg", which altered mem_cgroup_css_online():
-> > 
-> > @@ -4356,6 +4470,11 @@ static int mem_cgroup_css_online(struct
-> >  {
-> >  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> >  
-> > +	if (memcg_alloc_shrinker_maps(memcg)) {
-> > +		mem_cgroup_id_remove(memcg);
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> >  	/* Online state pins memcg ID, memcg ID pins CSS */
-> >  	atomic_set(&memcg->id.ref, 1);
-> >  	css_get(css);
-> > 
+> > Also, I expect you to check whether my cleanup patch which removes "abort" path
+> > ( [PATCH 1/2] at https://marc.info/?l=linux-mm&m=153119509215026&w=4 ) helps
+> > simplifying your series. I don't know detailed behavior of your series, but I
+> > assume that your series do not kill threads which current thread should not wait
+> > for MMF_OOM_SKIP.
 > 
-> Hm, that looks out of place too. The bitmaps are allocated for the
-> entire lifetime of the css, not just while it's online.
+> syzbot is hitting WARN(1) due to mem_cgroup_out_of_memory() == false.
+> https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_bug-3Fid-3Dea8c7912757d253537375e981b61749b2da69258&d=DwICJg&c=5VD0RTtNlTh3ycd41b3MUw&r=i6WobKxbeG3slzHSIOxTVtYIJw7qjCE6S0spDTKL-J4&m=h9FJRAWtCmDLT-cVwvXKCYIUVRSrD--0XFJE-OnNY64&s=If6eFu6MlYjnfLXeg5_S-3tuhCZhSMv8_qfSrMfwOQ0&e=
 > 
-> Any objections to the following fixup to that patch?
+> I can't tell what change is triggering this race. Maybe removal of oom_lock from
+> the oom reaper made more likely to hit. But anyway I suspect that
+> 
+> static bool oom_kill_memcg_victim(struct oom_control *oc)
+> {
+>         if (oc->chosen_memcg == NULL || oc->chosen_memcg == INFLIGHT_VICTIM)
+>                 return oc->chosen_memcg; // <= This line is still broken
+> 
+> because
+> 
+>                 /* We have one or more terminating processes at this point. */
+>                 oc->chosen_task = INFLIGHT_VICTIM;
+> 
+> is not called.
+> 
+> Also, that patch is causing confusion by reviving schedule_timeout_killable(1)
+> with oom_lock held.
+> 
+> Can we temporarily drop cgroup-aware OOM killer from linux-next.git and
+> apply my cleanup patch? Since the merge window is approaching, I really want to
+> see how next -rc1 would look like...
 
-That would be incorrect. Memory cgroups that haven't been put online
-are invisible to for_each_mem_cgroup(), which is used for expanding
-shrinker maps of all cgroups - see memcg_expand_shrinker_maps(). So if
-memcg_expand_shrinker_maps() is called between css_alloc and css_online,
-it will miss this cgroup and its shrinker_map won't be reallocated to
-fit the new id. Allocating the shrinker map in css_online guarantees
-that it won't happen. Looks like this code lacks a comment...
+Hi Tetsuo!
+
+Has this cleanup patch been acked by somebody?
+Which problem does it solve?
+Dropping patches for making a cleanup (if it's a cleanup) sounds a bit strange.
+
+Anyway, there is a good chance that current cgroup-aware OOM killer
+implementation will be replaced by a lightweight version (memory.oom.group).
+Please, take a look at it, probably your cleanup will not conflict with it
+at all.
+
+Thanks!
