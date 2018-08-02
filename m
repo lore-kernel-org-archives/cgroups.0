@@ -1,44 +1,84 @@
-From: peter enderborg <peter.enderborg@sony.com>
-Subject: Re: [PATCH 2/9] mm: workingset: tell cache transitions from
- workingset thrashing
-Date: Thu, 2 Aug 2018 08:57:31 +0200
-Message-ID: <c0480401-fb38-0b46-6dee-a20093dff065@sony.com>
-References: <20180801151308.32234-1-hannes@cmpxchg.org>
- <20180801151308.32234-3-hannes@cmpxchg.org>
+From: Kirill Tkhai <ktkhai@virtuozzo.com>
+Subject: Re: [PATCH] memcg: Remove memcg_cgroup::id from IDR on
+ mem_cgroup_css_alloc() failure
+Date: Thu, 2 Aug 2018 11:03:02 +0300
+Message-ID: <7a836e47-f0a4-6802-9b90-cc473e5ab90b@virtuozzo.com>
+References: <20180413115454.GL17484@dhcp22.suse.cz>
+ <abfd4903-c455-fac2-7ed6-73707cda64d1@virtuozzo.com>
+ <20180413121433.GM17484@dhcp22.suse.cz>
+ <20180413125101.GO17484@dhcp22.suse.cz>
+ <20180726162512.6056b5d7c1d2a5fbff6ce214@linux-foundation.org>
+ <20180727193134.GA10996@cmpxchg.org>
+ <20180729192621.py4znecoinw5mqcp@esperanza>
+ <20180730153113.GB4567@cmpxchg.org>
+ <20180731163908.603d7a27c6534341e1afa724@linux-foundation.org>
+ <20180801155552.GA8600@cmpxchg.org>
+ <20180801162235.j3v7xipyw5afnj4x@esperanza>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180801151308.32234-3-hannes@cmpxchg.org>
-Content-Language: en-GB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TIw906ph0bI5s0nDS6RhBXdJmz6EIy/+JD+n7yyyfvU=;
+ b=GCB2DSzwL2z+ULrOUaHAga/vMsBOAsdi2k6z8J/DTHHVxxkn+gYYHtR/9xhaE8dBPykDllo36cIPNf9lTLJ71lE/aSg9W9byFWuWhZJhYubRavuLdyak8GCkEH2D1H7SwYG2GG4BdWPrMtGCVkqoHCSWyBj4YEiqzke2Vo9O54E=
+In-Reply-To: <20180801162235.j3v7xipyw5afnj4x@esperanza>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On 08/01/2018 05:13 PM, Johannes Weiner wrote:
-> diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-> index e34a27727b9a..7af1c3c15d8e 100644
-> --- a/include/linux/page-flags.h
-> +++ b/include/linux/page-flags.h
-> @@ -69,13 +69,14 @@
->   */
->  enum pageflags {
->  	PG_locked,		/* Page is locked. Don't touch. */
-> -	PG_error,
->  	PG_referenced,
->  	PG_uptodate,
->  	PG_dirty,
->  	PG_lru,
->  	PG_active,
-> +	PG_workingset,
->  	PG_waiters,		/* Page has waiters, check its waitqueue. Must be bit #7 and in the same byte as "PG_locked" */
-> +	PG_error,
->  	PG_slab,
->  	PG_owner_priv_1,	/* Owner use. If pagecache, fs may use*/
->  	PG_arch_1,
-> @@ -280,6 +281,8 @@ PAGEFLAG(Dirty, dirty, PF_HEAD) TESTSCFLAG(Dirty, dirty, PF_HEAD)
-Any reason why the PG_error was moved? And dont you need to do some handling of this flag in proc/fs/page.c ?
-Some KFP_WORKINGSET ?
+On 01.08.2018 19:22, Vladimir Davydov wrote:
+> On Wed, Aug 01, 2018 at 11:55:52AM -0400, Johannes Weiner wrote:
+>> On Tue, Jul 31, 2018 at 04:39:08PM -0700, Andrew Morton wrote:
+>>> On Mon, 30 Jul 2018 11:31:13 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+>>>
+>>>> Subject: [PATCH] mm: memcontrol: simplify memcg idr allocation and error
+>>>>  unwinding
+>>>>
+>>>> The memcg ID is allocated early in the multi-step memcg creation
+>>>> process, which needs 2-step ID allocation and IDR publishing, as well
+>>>> as two separate IDR cleanup/unwind sites on error.
+>>>>
+>>>> Defer the IDR allocation until the last second during onlining to
+>>>> eliminate all this complexity. There is no requirement to have the ID
+>>>> and IDR entry earlier than that. And the root reference to the ID is
+>>>> put in the offline path, so this matches nicely.
+>>>
+>>> This patch isn't aware of Kirill's later "mm, memcg: assign memcg-aware
+>>> shrinkers bitmap to memcg", which altered mem_cgroup_css_online():
+>>>
+>>> @@ -4356,6 +4470,11 @@ static int mem_cgroup_css_online(struct
+>>>  {
+>>>  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+>>>  
+>>> +	if (memcg_alloc_shrinker_maps(memcg)) {
+>>> +		mem_cgroup_id_remove(memcg);
+>>> +		return -ENOMEM;
+>>> +	}
+>>> +
+>>>  	/* Online state pins memcg ID, memcg ID pins CSS */
+>>>  	atomic_set(&memcg->id.ref, 1);
+>>>  	css_get(css);
+>>>
+>>
+>> Hm, that looks out of place too. The bitmaps are allocated for the
+>> entire lifetime of the css, not just while it's online.
+>>
+>> Any objections to the following fixup to that patch?
+> 
+> That would be incorrect. Memory cgroups that haven't been put online
+> are invisible to for_each_mem_cgroup(), which is used for expanding
+> shrinker maps of all cgroups - see memcg_expand_shrinker_maps(). So if
+> memcg_expand_shrinker_maps() is called between css_alloc and css_online,
+> it will miss this cgroup and its shrinker_map won't be reallocated to
+> fit the new id. Allocating the shrinker map in css_online guarantees
+> that it won't happen.
 
+Yes, doubtless.
 
+>Looks like this code lacks a comment...
+
+Ok.
