@@ -1,66 +1,60 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/9] mm: workingset: tell cache transitions from
- workingset thrashing
-Date: Thu, 2 Aug 2018 08:38:13 -0400
-Message-ID: <20180802123813.GB17974@cmpxchg.org>
-References: <20180801151308.32234-1-hannes@cmpxchg.org>
- <20180801151308.32234-3-hannes@cmpxchg.org>
- <c0480401-fb38-0b46-6dee-a20093dff065@sony.com>
-Mime-Version: 1.0
+From: Zhaoyang Huang <huangzhaoyang@gmail.com>
+Subject: [PATCH v1] mm:memcg: skip memcg of current in mem_cgroup_soft_limit_reclaim
+Date: Fri,  3 Aug 2018 13:48:05 +0800
+Message-ID: <1533275285-12387-1-git-send-email-zhaoyang.huang@spreadtrum.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Ww2pzuKtFDKODo5ZENXYe4CkMdcQjkPC4MbTGXtAZ7M=;
-        b=0PzBxk9k/YOO8ruxcsVMLaCTLjWlOZR7eAT3rBqCYvtO4hdI42yHj50FFE+dUt6R0K
-         DlnyOIsdsnTYxViyPZ9pVGI032zWiXAK0h3c83rKOkQwxAWWSw+0n+XOgooAFriBF2zR
-         u4mh978kjDsIb8Jb0xwH5FkEcny6Q/ARiYKLh56pFrtRA8tnUmV9FaUPJbOcYO++C7BR
-         w03Kh95ZjTSe7G81X1aF9npuFl1eHfRMXuy+H7TM+Y9Kd5JEXb0aAGVfPleckX05+8Nj
-         gqYNME6BKxphrKbBmq+hde8SWbuaiXx/Guo24FpNRaTgTVHvJXCix7Whq7HGAdPIZ5vs
-         EzMg==
-Content-Disposition: inline
-In-Reply-To: <c0480401-fb38-0b46-6dee-a20093dff065@sony.com>
+        d=gmail.com; s=20161025;
+        h=from:to:subject:date:message-id;
+        bh=fVXWaxwxreKXlqc1RlFh2JofIARKEY7E1agRdUX+U64=;
+        b=cM8AIGcr923zdMpdIzff6uaGULx90HD6/pb1SzOlHNxmQn3SGmQgrKeg3Nlb4SdcOH
+         cq/h+mPUPhUuKOv2G+0z5sEW6+V/MAalhyHs20OWjxCoeA5ptfJnK7IEg1RwzULhiUsw
+         wVcWZUts+sDYXxQIkEzwX1NwC8rstIp4/7nfOB7OwGVhnOF8Iacuyx3n9YDEw7fwikdo
+         a6W9Ioie7idm4r/niISTiosCax+bavEPBe4jK8TqhvOcvztd7ONwFBKwZ3zBgafUMXmZ
+         UCWFU3UAsgx5SttmwJsyiVKdSBGSjwk39mCpgaz6LZ/K2RgIwBPFtxPcGP23CIqVd1vP
+         wXjA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: peter enderborg <peter.enderborg@sony.com>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-patch-test@lists.linaro.org
 
-On Thu, Aug 02, 2018 at 08:57:31AM +0200, peter enderborg wrote:
-> On 08/01/2018 05:13 PM, Johannes Weiner wrote:
-> > diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-> > index e34a27727b9a..7af1c3c15d8e 100644
-> > --- a/include/linux/page-flags.h
-> > +++ b/include/linux/page-flags.h
-> > @@ -69,13 +69,14 @@
-> >   */
-> >  enum pageflags {
-> >  	PG_locked,		/* Page is locked. Don't touch. */
-> > -	PG_error,
-> >  	PG_referenced,
-> >  	PG_uptodate,
-> >  	PG_dirty,
-> >  	PG_lru,
-> >  	PG_active,
-> > +	PG_workingset,
-> >  	PG_waiters,		/* Page has waiters, check its waitqueue. Must be bit #7 and in the same byte as "PG_locked" */
-> > +	PG_error,
-> >  	PG_slab,
-> >  	PG_owner_priv_1,	/* Owner use. If pagecache, fs may use*/
-> >  	PG_arch_1,
-> > @@ -280,6 +281,8 @@ PAGEFLAG(Dirty, dirty, PF_HEAD) TESTSCFLAG(Dirty, dirty, PF_HEAD)
-> Any reason why the PG_error was moved? And dont you need to do some handling of this flag in proc/fs/page.c ?
-> Some KFP_WORKINGSET ?
+for the soft_limit reclaim has more directivity than global reclaim, we
+have current memcg be skipped to avoid potential page thrashing.
 
-I wanted PG_workingset next to PG_active as they both describe how hot
-the page is, but PG_waiters needs to remain with the same bit number.
+Signed-off-by: Zhaoyang Huang <zhaoyang.huang@spreadtrum.com>
+---
+ mm/memcontrol.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-As far as fs/proc/page.c and include/uapi/linux/kernel-page-flags.h
-go, that's a good point and we'll probably want to make that available
-to userspace eventually. But I'm not super eager to make a brandnew
-page flag user ABI right away. Let's give the code that uses it some
-wider exposure first and maybe publish it a few release cycles later.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8c0280b..9d09e95 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2537,12 +2537,21 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ 			mz = mem_cgroup_largest_soft_limit_node(mctz);
+ 		if (!mz)
+ 			break;
+-
++		/*
++		 * skip current memcg to avoid page thrashing, for the
++		 * mem_cgroup_soft_reclaim has more directivity than
++		 * global reclaim.
++		 */
++		if (get_mem_cgroup_from_mm(current->mm) == mz->memcg) {
++			reclaimed = 0;
++			goto next;
++		}
+ 		nr_scanned = 0;
+ 		reclaimed = mem_cgroup_soft_reclaim(mz->memcg, pgdat,
+ 						    gfp_mask, &nr_scanned);
+ 		nr_reclaimed += reclaimed;
+ 		*total_scanned += nr_scanned;
++next:
+ 		spin_lock_irq(&mctz->lock);
+ 		__mem_cgroup_remove_exceeded(mz, mctz);
+ 
+-- 
+1.9.1
 
-Thanks
