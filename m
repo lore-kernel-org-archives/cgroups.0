@@ -1,122 +1,59 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 8/9] psi: pressure stall information for CPU, memory, and
- IO
-Date: Fri, 3 Aug 2018 19:21:39 +0200
-Message-ID: <20180803172139.GE2494@hirez.programming.kicks-ass.net>
-References: <20180801151958.32590-1-hannes@cmpxchg.org>
- <20180801151958.32590-9-hannes@cmpxchg.org>
+From: syzbot <syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com>
+Subject: WARNING in try_charge
+Date: Sat, 04 Aug 2018 06:33:02 -0700
+Message-ID: <0000000000005e979605729c1564@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=/7zcp47e6Ydd4cZN9LQW18xrO4SGF+ktz9zrchZXPTw=; b=IC0ceDxaj3PSNtMTXsAaOk1M9
-        QEtga76/juR42zvAw8YxOerG0K+uYK2ow40CGzi1YhW5SewN0LagB8Dfwz2LWm9Btlztd4040Zpl6
-        u0/ODDUHaxsv2ONZgj7/zbIBDGXO1qRD5kDu5ruoTk/wjutwUf0TfDR3kxkYUjYrrFVGfQObFkuFs
-        WSVr6hJyDuwr3bq6lDxduvs9KjgJq2oX76ZRgr8aiwsQg75b2NvkOHRn30bcFRwPnZQCUh1tkPUs0
-        MdNVE0Edk8oQuZyCVZHkWoqr7+K1hAYuXDzvw1kTkP2wUeiYZve62Gb2b7CUiY31wKu+X/8iGWQKM
-    
-Content-Disposition: inline
-In-Reply-To: <20180801151958.32590-9-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com
 
-On Wed, Aug 01, 2018 at 11:19:57AM -0400, Johannes Weiner wrote:
-> +			time = READ_ONCE(groupc->times[s]);
-> +			/*
-> +			 * In addition to already concluded states, we
-> +			 * also incorporate currently active states on
-> +			 * the CPU, since states may last for many
-> +			 * sampling periods.
-> +			 *
-> +			 * This way we keep our delta sampling buckets
-> +			 * small (u32) and our reported pressure close
-> +			 * to what's actually happening.
-> +			 */
-> +			if (test_state(groupc->tasks, cpu, s)) {
-> +				/*
-> +				 * We can race with a state change and
-> +				 * need to make sure the state_start
-> +				 * update is ordered against the
-> +				 * updates to the live state and the
-> +				 * time buckets (groupc->times).
-> +				 *
-> +				 * 1. If we observe task state that
-> +				 * needs to be recorded, make sure we
-> +				 * see state_start from when that
-> +				 * state went into effect or we'll
-> +				 * count time from the previous state.
-> +				 *
-> +				 * 2. If the time delta has already
-> +				 * been added to the bucket, make sure
-> +				 * we don't see it in state_start or
-> +				 * we'll count it twice.
-> +				 *
-> +				 * If the time delta is out of
-> +				 * state_start but not in the time
-> +				 * bucket yet, we'll miss it entirely
-> +				 * and handle it in the next period.
-> +				 */
-> +				smp_rmb();
-> +				time += cpu_clock(cpu) - groupc->state_start;
-> +			}
+Hello,
 
-As is, groupc->state_start needs a READ_ONCE() above and a WRITE_ONCE()
-below. But like stated earlier, doing an update in scheduler_tick() is
-probably easier.
+syzbot found the following crash on:
 
-> +static void psi_group_change(struct psi_group *group, int cpu, u64 now,
-> +			     unsigned int clear, unsigned int set)
-> +{
-> +	struct psi_group_cpu *groupc;
-> +	unsigned int t, m;
-> +	u32 delta;
-> +
-> +	groupc = per_cpu_ptr(group->pcpu, cpu);
-> +
-> +	/*
-> +	 * First we assess the aggregate resource states these CPU's
-> +	 * tasks have been in since the last change, and account any
-> +	 * SOME and FULL time that may have resulted in.
-> +	 *
-> +	 * Then we update the task counts according to the state
-> +	 * change requested through the @clear and @set bits.
-> +	 */
-> +
-> +	delta = now - groupc->state_start;
-> +	groupc->state_start = now;
-> +
-> +	/*
-> +	 * Update state_start before recording time in the sampling
-> +	 * buckets and changing task counts, to prevent a racing
-> +	 * aggregation from counting the delta twice or attributing it
-> +	 * to an old state.
-> +	 */
-> +	smp_wmb();
-> +
-> +	if (test_state(groupc->tasks, cpu, PSI_IO_SOME)) {
-> +		groupc->times[PSI_IO_SOME] += delta;
-> +		if (test_state(groupc->tasks, cpu, PSI_IO_FULL))
-> +			groupc->times[PSI_IO_FULL] += delta;
-> +	}
-> +	if (test_state(groupc->tasks, cpu, PSI_MEM_SOME)) {
-> +		groupc->times[PSI_MEM_SOME] += delta;
-> +		if (test_state(groupc->tasks, cpu, PSI_MEM_FULL))
-> +			groupc->times[PSI_MEM_FULL] += delta;
-> +	}
+HEAD commit:    d1e0b8e0cb7a Add linux-next specific files for 20180725
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=15a1c770400000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=eef3552c897e4d33
+dashboard link: https://syzkaller.appspot.com/bug?extid=bab151e82a4e973fa325
+compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
 
-Might we worth checking the compiler does the right thing here and
-optimizes this branch fest into something sensible.
+Unfortunately, I don't have any reproducer for this crash yet.
 
-> +	if (test_state(groupc->tasks, cpu, PSI_CPU_SOME))
-> +		groupc->times[PSI_CPU_SOME] += delta;
-> +	if (test_state(groupc->tasks, cpu, PSI_NONIDLE))
-> +		groupc->times[PSI_NONIDLE] += delta;
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com
 
+Killed process 23767 (syz-executor2) total-vm:70472kB, anon-rss:104kB,  
+file-rss:32768kB, shmem-rss:0kB
+oom_reaper: reaped process 23767 (syz-executor2), now anon-rss:0kB,  
+file-rss:32000kB, shmem-rss:0kB
+------------[ cut here ]------------
+Memory cgroup charge failed because of no reclaimable memory! This looks  
+like a misconfiguration or a kernel bug.
+WARNING: CPU: 1 PID: 23767 at mm/memcontrol.c:1710 mem_cgroup_oom  
+mm/memcontrol.c:1709 [inline]
+WARNING: CPU: 1 PID: 23767 at mm/memcontrol.c:1710 try_charge+0x734/0x1680  
+mm/memcontrol.c:2211
+Kernel panic - not syncing: panic_on_warn set ...
+
+CPU: 1 PID: 23767 Comm: syz-executor2 Not tainted 4.18.0-rc6-next-20180725+  
+#18
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x1c9/0x2b4 lib/dump_stack.c:113
+  panic+0x238/0x4e7 kernel/panic.c:184
+
+
+---
+This bug is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this bug report. See:
+https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with  
+syzbot.
