@@ -1,61 +1,54 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 8/9] psi: pressure stall information for CPU, memory, and
- IO
-Date: Mon, 6 Aug 2018 17:25:28 +0200
-Message-ID: <20180806152528.GM2494@hirez.programming.kicks-ass.net>
-References: <20180801151958.32590-1-hannes@cmpxchg.org>
- <20180801151958.32590-9-hannes@cmpxchg.org>
- <20180803165641.GA2476@hirez.programming.kicks-ass.net>
- <20180806150550.GA9888@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: WARNING in try_charge
+Date: Mon, 6 Aug 2018 11:31:07 -0400
+Message-ID: <20180806153107.GD9888@cmpxchg.org>
+References: <0000000000005e979605729c1564@google.com>
+ <20180806091552.GE19540@dhcp22.suse.cz>
+ <CACT4Y+Ystnwv4M6Uh+HBKbdADAnJ6otfR0GoA20crzqV+b2onQ@mail.gmail.com>
+ <20180806094827.GH19540@dhcp22.suse.cz>
+ <CACT4Y+ZJsDo1gjzHvbFVqHcrL=tFJXTAAWLs9mAJSv3+LiCdmA@mail.gmail.com>
+ <20180806110224.GI19540@dhcp22.suse.cz>
+ <CACT4Y+awxBatn3GQc7EWHVfHqMLKC9eVKjQMbJkCk0Po-X4VDQ@mail.gmail.com>
+ <20180806142124.GP19540@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=ZdfO5PyjZXR150UMtqHm4zxkP/3ep6gC1wezPDd7wUw=; b=EgVD2YUcxlgr5gvaAdGPF1a5X
-        bq1RrKJESnu+evMyio23d6fvKcFT0SO6xoEgyGCsKr4rDywUNX8yjV/q4LmRK7uSae7sBmRSXrQXV
-        l3fN2NdeMNFQytE9bCEq8Q0HOxQeFaLf1OIEZ2l7AHz+Tib3Q3VJnlhXg9Tr/HtdcHJSyWnWINFYS
-        VBP/R0BhbG92VEJbBM1IEqfG0ZfTnJb4VG+CoJiF4sgyknKpZz+q2VOOP01wiIqDPHoEez+rS5gHw
-        Lz3YBXs60EsDU12AuBJHtyoQG2rsmN6OeOkEsF7RRDYamoq7nnVxqAfPK0AZFofVl16/JKP480l13
-    
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=2GqIl2Igk9YwCWaoMedz8uktj2Dvrc+kRj9fzcXAx2Y=;
+        b=I2fbLXpA5/dyePV4VturmfTyLqz6fcZBzwMIvPkUyRMnANcFekann+eVsyFNFIauoE
+         CZ90ElaC6jZJFKzbVRdh8hopa+Oxlu28iXcGew41Xdh5chsfbIKgFGC1tZq5Eq7ZVysT
+         PsrjzkIxHHSJ8WbFkYDxqdUNp6Kwbin47XzJgFOzSq2XtcYi3e0/hRlvjeikEC1ael49
+         wIS7bpTS+Og40GPPB9BMf8gpvYkyOGV+R+6SnnUNJbBoiKyDYK3zfSRvJj5E3u79R5TI
+         SJepTyJB3ZuJTe7kEdNNxIOIdfGz/qoSBn6vQ365BE/hekrS2wFiGUj7C6Jiv3TRNfeT
+         qBig==
 Content-Disposition: inline
-In-Reply-To: <20180806150550.GA9888@cmpxchg.org>
+In-Reply-To: <20180806142124.GP19540@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Dmitry Torokhov <dtor@google.com>
 
-On Mon, Aug 06, 2018 at 11:05:50AM -0400, Johannes Weiner wrote:
-> Argh, that's right. This needs an explicit count if we want to access
-> it locklessly. And you already said you didn't like that this is the
-> only state not derived purely from the task counters, so maybe this is
-> the way to go after all.
+On Mon, Aug 06, 2018 at 04:21:24PM +0200, Michal Hocko wrote:
+> On Mon 06-08-18 13:57:38, Dmitry Vyukov wrote:
+> > On Mon, Aug 6, 2018 at 1:02 PM, Michal Hocko <mhocko@kernel.org> wrote:
+> > > If you have a strong reason to believe that this is an abuse of WARN I
+> > > am all happy to change that. But I haven't heard any yet, to be honest.
+> > 
+> > WARN must not be used for anything that is not kernel bugs. If this is
+> > not kernel bug, WARN must not be used here.
 > 
-> How about something like this (untested)?
+> This is rather strong wording without any backing arguments. I strongly
+> doubt 90% of existing WARN* match this expectation. WARN* has
+> traditionally been a way to tell that something suspicious is going on.
+> Those situation are mostly likely not fatal but it is good to know they
+> are happening.
 
+I have to agree with Dmitry here. WARN should indicate a real kernel
+issue, not user input that knowingly triggers undesirable behavior in
+the kernel. It's our assert() for states we don't think are possible.
 
-> +static inline void psi_switch(struct rq *rq, struct task_struct *prev,
-> +			      struct task_struct *next)
-> +{
-> +	if (psi_disabled)
-> +		return;
-> +
-> +	if (unlikely(prev->flags & PF_MEMSTALL))
-> +		psi_task_change(prev, rq_clock(rq), TSK_RECLAIMING, 0);
-> +	if (unlikely(next->flags & PF_MEMSTALL))
-> +		psi_task_change(next, rq_clock(rq), 0, TSK_RECLAIMING);
-> +}
-
-
-Urgh... can't say I really like that.
-
-I would really rather do that scheduler_tick() thing to avoid the remote
-update. The tick is a lot less hot than the switch path and esp.
-next->flags might be a cold line (prev->flags is typically the same line
-as prev->state so we already have that, but I don't think anybody now
-looks at next->flags or its line, so that'd be cold load).
+I would wager that MOST developers and users understand it that way.
