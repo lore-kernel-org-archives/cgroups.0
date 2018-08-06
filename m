@@ -1,33 +1,63 @@
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Subject: Re: WARNING in try_charge
-Date: Tue, 7 Aug 2018 01:02:07 +0900
-Message-ID: <4bf70718-59fd-dcad-c20e-8601cd665bca@i-love.sakura.ne.jp>
-References: <0000000000006350880572c61e62@google.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 8/9] psi: pressure stall information for CPU, memory, and
+ IO
+Date: Mon, 6 Aug 2018 18:03:29 +0200
+Message-ID: <20180806160329.GP2494@hirez.programming.kicks-ass.net>
+References: <20180801151958.32590-1-hannes@cmpxchg.org>
+ <20180801151958.32590-9-hannes@cmpxchg.org>
+ <20180803165641.GA2476@hirez.programming.kicks-ass.net>
+ <20180806151928.GB9888@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0000000000006350880572c61e62@google.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=8IaTbGiI2kBzPlXkTibDxExERHMd3REdT8BW2Nz2qnY=; b=bSkuTjxYN4NMHmlhw2dJhmPpJ
+        P/0O5ZWufJug37n30eMX6zn9IQ0QpAMnZAkNcmK7ou43dU+XTgCRkMmrSLxP6K8g2QeSdU49zFQUk
+        UKVCQQkrwn65ney/0EdNe2Jnp9GQB66ViYynnHVgRlOeS4wcg/b791Co6Qn7TbL5q8sJcAQTAGpKP
+        qK6iCvfApWakeMjob3w18AAJ53W+BD+pkUu590MFo5HHgYEY4zeE3PDYCg9VX6qeP2R/r5aVuarbv
+        nPOtSdbtiXpN80LRv/aCX3eAYocf/L9kvVddGLD3aVruUatVCx0nrIh8Rcf/LEUn+5bFekxQ4rWVI
+    
+Content-Disposition: inline
+In-Reply-To: <20180806151928.GB9888@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: mhocko@kernel.org
-Cc: syzbot <syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com>, cgroups@vger.kernel.org, dvyukov@google.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 2018/08/07 0:42, syzbot wrote:
-> Hello,
-> 
-> syzbot has tested the proposed patch but the reproducer still triggered crash:
-> WARNING in try_charge
-> 
-> Killed process 6410 (syz-executor5) total-vm:37708kB, anon-rss:2128kB, file-rss:0kB, shmem-rss:0kB
-> oom_reaper: reaped process 6410 (syz-executor5), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
-> task=syz-executor5 pid=6410 invoked memcg oom killer. oom_victim=1
-> ------------[ cut here ]------------
-> Memory cgroup charge failed because of no reclaimable memory! This looks like a misconfiguration or a kernel bug.
-> WARNING: CPU: 1 PID: 6410 at mm/memcontrol.c:1707 mem_cgroup_oom mm/memcontrol.c:1706 [inline]
-> WARNING: CPU: 1 PID: 6410 at mm/memcontrol.c:1707 try_charge+0x734/0x1680 mm/memcontrol.c:2264
-> Kernel panic - not syncing: panic_on_warn set ...
+On Mon, Aug 06, 2018 at 11:19:28AM -0400, Johannes Weiner wrote:
+> On Fri, Aug 03, 2018 at 06:56:41PM +0200, Peter Zijlstra wrote:
+> > On Wed, Aug 01, 2018 at 11:19:57AM -0400, Johannes Weiner wrote:
 
-Michal, this is "mm, oom: task_will_free_mem(current) should ignore MMF_OOM_SKIP for once."
-problem which you are refusing at https://www.spinics.net/lists/linux-mm/msg133774.html .
+> > > +		u32 uninitialized_var(nonidle);
+> > 
+> > urgh.. I can see why the compiler got confused. Dodgy :-)
+> 
+> :-) I think we can make this cleaner. Something like this (modulo the
+> READ_ONCE/WRITE_ONCE you pointed out in the other email)?
+> 
+
+> @@ -244,60 +287,17 @@ static bool psi_update_stats(struct psi_group *group)
+>  	 */
+>  	for_each_online_cpu(cpu) {
+>  		struct psi_group_cpu *groupc = per_cpu_ptr(group->pcpu, cpu);
+> +		u32 nonidle;
+> +
+> +		nonidle = read_update_delta(groupc, PSI_NONIDLE, cpu);
+> +		nonidle = nsecs_to_jiffies(nonidle);
+> +		nonidle_total += nonidle;
+> +
+> +		for (s = 0; s < PSI_NONIDLE; s++) {
+> +			u32 delta;
+> +
+> +			delta = read_update_delta(groupc, s, cpu);
+> +			deltas[s] += (u64)delta * nonidle;
+>  		}
+>  	}
+
+Yes, much clearer, thanks!
