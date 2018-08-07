@@ -1,34 +1,25 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: WARNING in try_charge
-Date: Tue, 7 Aug 2018 13:25:22 +0200
-Message-ID: <20180807112522.GA10003@dhcp22.suse.cz>
-References: <20180806181339.GD10003@dhcp22.suse.cz>
- <0000000000002ec4580572c85e46@google.com>
- <20180806185554.GG10003@dhcp22.suse.cz>
- <CACT4Y+Zg3DhAnKWBAyJ-Y-3XVL+jCQy1U2iWR8mdraX6w23X_Q@mail.gmail.com>
+From: peter enderborg <peter.enderborg@sony.com>
+Subject: Re: [PATCH 0/9] psi: pressure stall information for CPU, memory, and
+ IO v3
+Date: Tue, 7 Aug 2018 13:50:09 +0200
+Message-ID: <5576a988-fca9-15a5-5fa8-16f704ea20fb@sony.com>
+References: <20180801151958.32590-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+Zg3DhAnKWBAyJ-Y-3XVL+jCQy1U2iWR8mdraX6w23X_Q@mail.gmail.com>
+In-Reply-To: <20180801151958.32590-1-hannes@cmpxchg.org>
+Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: syzbot <syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>
+To: Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue 07-08-18 13:18:00, Dmitry Vyukov wrote:
-[...]
-> Great we are making progress here!
-> 
-> So if it's something to fix in kernel we just leave WARN alone. It
-> served its intended purpose of notifying kernel developers about
-> something to fix in kernel.
-
-Yes, agreed! And the way how your syzbot automation works made it so
-much easier so thanks a lot!
-
-The patch has been posted http://lkml.kernel.org/r/20180807072553.14941-1-mhocko@kernel.org
--- 
-Michal Hocko
-SUSE Labs
+On 08/01/2018 05:19 PM, Johannes Weiner wrote:
+>
+> A kernel with CONFIG_PSI=y will create a /proc/pressure directory with
+> 3 files: cpu, memory, and io. If using cgroup2, cgroups will also have
+> cpu.pressure, memory.pressure and io.pressure files, which simply
+> aggregate task stalls at the cgroup level instead of system-wide.
+>
+Usually there are objections to add more stuff to /proc. Is this an exception?
