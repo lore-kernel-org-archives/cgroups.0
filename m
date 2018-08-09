@@ -1,55 +1,137 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 0/9] psi: pressure stall information for CPU, memory, and
- IO v3
-Date: Tue, 7 Aug 2018 13:51:32 -0400
-Message-ID: <20180807175132.GA27979@cmpxchg.org>
-References: <20180801151958.32590-1-hannes@cmpxchg.org>
- <5576a988-fca9-15a5-5fa8-16f704ea20fb@sony.com>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: Re: WARNING in try_charge
+Date: Thu, 9 Aug 2018 22:57:43 +0900
+Message-ID: <e2869136-9f59-9ce8-8b9f-f75b157ee31d@I-love.SAKURA.ne.jp>
+References: <0000000000005e979605729c1564@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=UpJ6FyGDkvX9DB3o64kenGl56IYvhdWQ2odl8ODKXXc=;
-        b=xUf/RW9PAuGdg/aPmdXZd061y1b6q1zGr+kLQpDEaAEzJooB6827zXKVhjRHGN5n7e
-         HIjUtKUyaJOXzgZuXxznZcNUilT1xBZhA5aehh8lQruhFsIUm8GVYWMTmkLoG2UTPfFs
-         vXqQAH1vMLhucdZdSZ4omgtizpiFeVV32ipqPL4lUmkAsZCnWsRzwoCDnvuNz8bWCYbl
-         uCU6edKUuslSG6p9dY6Byjne8s33D9qm4zN4uqiFICsUB7jHC5eo+Wh79SWpC+5PHWUD
-         RNbqEMybZilTZhuktqRbxx2meHfWOn6J2tgPU9iNxja8HbkPqNkIuvqHrNMH4w4IZupg
-         IS3Q==
-Content-Disposition: inline
-In-Reply-To: <5576a988-fca9-15a5-5fa8-16f704ea20fb@sony.com>
+In-Reply-To: <0000000000005e979605729c1564@google.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: peter enderborg <peter.enderborg@sony.com>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: mhocko@kernel.org, Vladimir Davydov <vdavydov@virtuozzo.com>, Oleg Nesterov <oleg@redhat.com>, David Rientjes <rientjes@google.com>
+Cc: syzbot <syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com>, cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, syzkaller-bugs@googlegroups.com, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue, Aug 07, 2018 at 01:50:09PM +0200, peter enderborg wrote:
-> On 08/01/2018 05:19 PM, Johannes Weiner wrote:
-> >
-> > A kernel with CONFIG_PSI=y will create a /proc/pressure directory with
-> > 3 files: cpu, memory, and io. If using cgroup2, cgroups will also have
-> > cpu.pressure, memory.pressure and io.pressure files, which simply
-> > aggregate task stalls at the cgroup level instead of system-wide.
-> >
-> Usually there are objections to add more stuff to /proc. Is this an exception?
+From b1f38168f14397c7af9c122cd8207663d96e02ec Mon Sep 17 00:00:00 2001
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Date: Thu, 9 Aug 2018 22:49:40 +0900
+Subject: [PATCH] mm, oom: task_will_free_mem(current) should retry until
+ memory reserve fails
 
-It seems like a good fit given that all other system stats of this
-type and format are there: loadavg, schedstat, diskstats, uptime etc.
+Commit 696453e66630ad45 ("mm, oom: task_will_free_mem should skip
+oom_reaped tasks") changed to select next OOM victim as soon as
+MMF_OOM_SKIP is set. But we don't need to select next OOM victim as
+long as ALLOC_OOM allocation can succeed. And syzbot is hitting WARN(1)
+caused by this race window [1].
 
-sysfs, and its concept of kernel objects and their attributes, doesn't
-really match the type of info exported here. And its breakdown of
-complex information into many directories and files can be kind of
-tedious to be honest; some information is just more human readable in
-a simple table, and still trivial to parse mechanically.
+Since memcg OOM case uses forced charge if current thread is killed,
+out_of_memory() can return true without selecting next OOM victim.
+Therefore, this patch changes task_will_free_mem(current) to ignore
+MMF_OOM_SKIP unless ALLOC_OOM allocation failed.
 
-It would also be nice to keep the same file format for both the system
-level and cgroups, to avoid having two separate presentations (and two
-parsers) for the same type of information at different scopes, but the
-sysfs design goals clash with the cgroupfs ones. If we exported the
-system stats at the root cgroup level, we'd still need an interface
-for !CGROUP systems, and having two ways of reading actually identical
-data would again be fairly ugly.
+[1] https://syzkaller.appspot.com/bug?id=ea8c7912757d253537375e981b61749b2da69258
+
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Reported-by: syzbot <syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: David Rientjes <rientjes@google.com>
+---
+ include/linux/oom.h | 3 +++
+ mm/oom_kill.c       | 8 ++++----
+ mm/page_alloc.c     | 7 +++++--
+ 3 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/include/linux/oom.h b/include/linux/oom.h
+index 69864a5..b5abacd 100644
+--- a/include/linux/oom.h
++++ b/include/linux/oom.h
+@@ -38,6 +38,9 @@ struct oom_control {
+ 	 */
+ 	const int order;
+ 
++	/* Did we already try ALLOC_OOM allocation? i*/
++	const bool reserve_tried;
++
+ 	/* Used by oom implementation, do not set */
+ 	unsigned long totalpages;
+ 	struct task_struct *chosen;
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 0e10b86..95453e8 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -782,7 +782,7 @@ static inline bool __task_will_free_mem(struct task_struct *task)
+  * Caller has to make sure that task->mm is stable (hold task_lock or
+  * it operates on the current).
+  */
+-static bool task_will_free_mem(struct task_struct *task)
++static bool task_will_free_mem(struct task_struct *task, bool select_new)
+ {
+ 	struct mm_struct *mm = task->mm;
+ 	struct task_struct *p;
+@@ -803,7 +803,7 @@ static bool task_will_free_mem(struct task_struct *task)
+ 	 * This task has already been drained by the oom reaper so there are
+ 	 * only small chances it will free some more
+ 	 */
+-	if (test_bit(MMF_OOM_SKIP, &mm->flags))
++	if (test_bit(MMF_OOM_SKIP, &mm->flags) && select_new)
+ 		return false;
+ 
+ 	if (atomic_read(&mm->mm_users) <= 1)
+@@ -939,7 +939,7 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
+ 	 * so it can die quickly
+ 	 */
+ 	task_lock(p);
+-	if (task_will_free_mem(p)) {
++	if (task_will_free_mem(p, true)) {
+ 		mark_oom_victim(p);
+ 		wake_oom_reaper(p);
+ 		task_unlock(p);
+@@ -1069,7 +1069,7 @@ bool out_of_memory(struct oom_control *oc)
+ 	 * select it.  The goal is to allow it to allocate so that it may
+ 	 * quickly exit and free its memory.
+ 	 */
+-	if (task_will_free_mem(current)) {
++	if (task_will_free_mem(current, oc->reserve_tried)) {
+ 		mark_oom_victim(current);
+ 		wake_oom_reaper(current);
+ 		return true;
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 879b861..03ca29a 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -3455,7 +3455,7 @@ void warn_alloc(gfp_t gfp_mask, nodemask_t *nodemask, const char *fmt, ...)
+ }
+ 
+ static inline struct page *
+-__alloc_pages_may_oom(gfp_t gfp_mask, unsigned int order,
++__alloc_pages_may_oom(gfp_t gfp_mask, unsigned int order, bool reserve_tried,
+ 	const struct alloc_context *ac, unsigned long *did_some_progress)
+ {
+ 	struct oom_control oc = {
+@@ -3464,6 +3464,7 @@ void warn_alloc(gfp_t gfp_mask, nodemask_t *nodemask, const char *fmt, ...)
+ 		.memcg = NULL,
+ 		.gfp_mask = gfp_mask,
+ 		.order = order,
++		.reserve_tried = reserve_tried,
+ 	};
+ 	struct page *page;
+ 
+@@ -4239,7 +4240,9 @@ bool gfp_pfmemalloc_allowed(gfp_t gfp_mask)
+ 		goto retry_cpuset;
+ 
+ 	/* Reclaim has failed us, start killing things */
+-	page = __alloc_pages_may_oom(gfp_mask, order, ac, &did_some_progress);
++	page = __alloc_pages_may_oom(gfp_mask, order, alloc_flags == ALLOC_OOM
++				     || (gfp_mask & __GFP_NOMEMALLOC), ac,
++				     &did_some_progress);
+ 	if (page)
+ 		goto got_pg;
+ 
+-- 
+1.8.3.1
+
+
