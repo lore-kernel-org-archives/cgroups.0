@@ -1,63 +1,95 @@
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Subject: Re: WARNING in try_charge
-Date: Fri, 10 Aug 2018 06:05:19 +0900
-Message-ID: <56c95100-d7f9-b715-bdec-e8bb112e2630@i-love.sakura.ne.jp>
-References: <0000000000005e979605729c1564@google.com>
- <e2869136-9f59-9ce8-8b9f-f75b157ee31d@I-love.SAKURA.ne.jp>
- <20180809150735.GA15611@dhcp22.suse.cz>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: BUG: Mount ignores mount options
+Date: Fri, 10 Aug 2018 09:05:22 -0500
+Message-ID: <87d0uqpba5.fsf@xmission.com>
+References: <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180809150735.GA15611@dhcp22.suse.cz>
-Content-Language: en-US
+In-Reply-To: <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
+        (David Howells's message of "Wed, 01 Aug 2018 16:23:56 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Oleg Nesterov <oleg@redhat.com>, David Rientjes <rientjes@google.com>, syzbot <syzbot+bab151e82a4e973fa325@syzkaller.appspotmail.com>, cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, syzkaller-bugs@googlegroups.com, Andrew Morton <akpm@linux-foundation.org>
+Content-Transfer-Encoding: 7bit
+To: David Howells <dhowells@redhat.com>
+Cc: viro@zeniv.linux.org.uk, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, selinux@tycho.nsa.gov, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, linux-api@vger.kernel.org, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, fenghua.yu@intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, linux-security-module@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.jp, cgroups@vger.kernel.org, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, "Theodore Y. Ts'o" <tytso@mit.edu>, Miklos Szeredi <miklos@sze>
 
-On 2018/08/10 0:07, Michal Hocko wrote:
-> On Thu 09-08-18 22:57:43, Tetsuo Handa wrote:
->> >From b1f38168f14397c7af9c122cd8207663d96e02ec Mon Sep 17 00:00:00 2001
->> From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
->> Date: Thu, 9 Aug 2018 22:49:40 +0900
->> Subject: [PATCH] mm, oom: task_will_free_mem(current) should retry until
->>  memory reserve fails
->>
->> Commit 696453e66630ad45 ("mm, oom: task_will_free_mem should skip
->> oom_reaped tasks") changed to select next OOM victim as soon as
->> MMF_OOM_SKIP is set. But we don't need to select next OOM victim as
->> long as ALLOC_OOM allocation can succeed. And syzbot is hitting WARN(1)
->> caused by this race window [1].
-> 
-> It is not because the syzbot was exercising a completely different code
-> path (memcg charge rather than the page allocator).
 
-I know syzbot is hitting memcg charge path.
+There is a serious problem with mount options today that fsopen does not
+address.  The problem is that mount options are ignored for block based
+filesystems, and any other type of filesystem that follows the same
+pattern.
 
-> 
->> Since memcg OOM case uses forced charge if current thread is killed,
->> out_of_memory() can return true without selecting next OOM victim.
->> Therefore, this patch changes task_will_free_mem(current) to ignore
->> MMF_OOM_SKIP unless ALLOC_OOM allocation failed.
-> 
-> And the patch is simply wrong for memcg.
-> 
+The script below demonstrates this bug.  Showing this bug can cause the
+ext4 "acl" "quota" and "user_xattr" options to be silently ignored.
 
-Why? I think I should have done
+fsopen has my nack until it addresses this issue.
 
--+	page = __alloc_pages_may_oom(gfp_mask, order, alloc_flags == ALLOC_OOM
--+				     || (gfp_mask & __GFP_NOMEMALLOC), ac,
--+				     &did_some_progress);
-++	page = __alloc_pages_may_oom(gfp_mask, order, alloc_flags == ALLOC_OOM,
-++				     ac, &did_some_progress);
+I don't know if we can fix this in the context of sys_mount.  But we if
+we are redoing the option parsing of how we mount filesystems this needs
+to be fixed before we start worrying about bug compatibility.
 
-because nobody will use __GFP_NOMEMALLOC | __GFP_NOFAIL. But for memcg charge
-path, task_will_free_mem(current, false) == true and out_of_memory() will return
-true, which avoids unnecessary OOM killing.
+Hopefully this report is simple and clear enough that we can at least
+agree on the problem.
 
-Of course, this patch cannot avoid unnecessary OOM killing if out_of_memory()
-is called by not yet killed process. But to mitigate it, what can we do other
-than defer setting MMF_OOM_SKIP using a timeout based mechanism? Making
-the OOM reaper unconditionally reclaim all memory is not a valid answer.
+Eric
 
+# cat ~/bin/bdev-loop0.sh
+#!/bin/sh
+set -x
+set -e
+
+LOOP=loop0
+
+dd if=/dev/zero bs=1024 count=1048576 of=$LOOP-file
+losetup /dev/$LOOP $LOOP-file
+mkfs.ext4 /dev/$LOOP
+
+mkdir $LOOP-noacl-noquota-nouser_xattr
+mount -t ext4 /dev/$LOOP -o "noacl,noquota,nouser_xattr" $LOOP-noacl-noquota-nouser_xattr
+
+mkdir $LOOP-acl-quota-user_xattr
+mount -t ext4 /dev/$LOOP  -o "acl,quota,user_xattr" $LOOP-acl-quota-user_xattr
+
+cat /proc/mounts | grep loop0
+
+
+root@finagle:~# ~/bin/bdev-loop0.sh
++ set -e
++ LOOP=loop0
++ dd if=/dev/zero bs=1024 count=1048576 of=loop0-file
+1048576+0 records in
+1048576+0 records out
+1073741824 bytes (1.1 GB) copied, 4.37645 s, 245 MB/s
++ losetup /dev/loop0 loop0-file
++ mkfs.ext4 /dev/loop0
+mke2fs 1.41.12 (17-May-2010)
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=0 blocks
+65536 inodes, 262144 blocks
+13107 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=268435456
+8 block groups
+32768 blocks per group, 32768 fragments per group
+8192 inodes per group
+Superblock backups stored on blocks: 
+        32768, 98304, 163840, 229376
+
+Writing inode tables: done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 29 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
++ mkdir loop0-noacl-noquota-nouser_xattr
++ mount -t ext4 /dev/loop0 -o noacl,noquota,nouser_xattr loop0-noacl-noquota-nouser_xattr
++ mkdir loop0-acl-quota-user_xattr
++ mount -t ext4 /dev/loop0 -o acl,quota,user_xattr loop0-acl-quota-user_xattr
++ + grep loop0
+cat /proc/mounts
+/dev/loop0 /root/loop0-noacl-noquota-nouser_xattr ext4 rw,relatime,nouser_xattr,noacl 0 0
+/dev/loop0 /root/loop0-acl-quota-user_xattr ext4 rw,relatime,nouser_xattr,noacl 0 0
