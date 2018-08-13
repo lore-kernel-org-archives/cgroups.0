@@ -1,88 +1,50 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
- on cgroup v2 root
-Date: Mon, 13 Aug 2018 13:56:15 -0400
-Message-ID: <446ab203-85cd-32ff-40a9-0ba22d5a2534@redhat.com>
-References: <20180719153045.GT72677@devbig577.frc2.facebook.com>
- <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
- <20180719165201.GU72677@devbig577.frc2.facebook.com>
- <20180720113121.GJ2476@hirez.programming.kicks-ass.net>
- <20180720114549.GY72677@devbig577.frc2.facebook.com>
- <20180720154454.GR2494@hirez.programming.kicks-ass.net>
- <20180720155613.GB1934745@devbig577.frc2.facebook.com>
- <4857a9db-ebf5-24f8-c42d-d795f5c75854@redhat.com>
- <20180720163712.GU2494@hirez.programming.kicks-ass.net>
- <8c655adc-6d9e-b767-1024-5d6941c995a9@redhat.com>
- <20180720174100.GC1934745@devbig577.frc2.facebook.com>
+From: James Morris <jmorris@namei.org>
+Subject: Re: BUG: Mount ignores mount options
+Date: Tue, 14 Aug 2018 05:00:41 +1000 (AEST)
+Message-ID: <alpine.LRH.2.21.1808140458040.23296@namei.org>
+References: <20180810153902.GH21087@thunk.org> <87d0uqpba5.fsf@xmission.com> <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk> <22361.1533913891@warthog.procyon.org.uk> <28045.1533916438@warthog.procyon.org.uk> <20180810161400.GA627@thunk.org>
+ <CALCETrXC8Z-q+PzzqMC-McA7UdmFubVcs2dVsT0Dt+GbSqjF5A@mail.gmail.com> <20180813173502.1a7a1d9c@alans-desktop> <CALCETrXvtSLjwx0swXo5g-vU3PmF-_6J6j1a_2pAba7bhzO9QQ@mail.gmail.com> <20180813172947.GS6515@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180720174100.GC1934745@devbig577.frc2.facebook.com>
-Content-Language: en-US
+In-Reply-To: <20180813172947.GS6515@ZenIV.linux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Content-Transfer-Encoding: 7bit
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Andy Lutomirski <luto@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Theodore Y. Ts'o" <tytso@mit.edu>, David Howells <dhowells@redhat.com>, "Eric W. Biederman" <ebiederm@xmission.com>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, SELinux-NSA <selinux@tycho.nsa.gov>, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, Fenghua Yu <fenghua.yu@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, LSM List <linux-security-module@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sd>
 
-On 07/20/2018 01:41 PM, Tejun Heo wrote:
-> Hello,
->
-> On Fri, Jul 20, 2018 at 01:09:23PM -0400, Waiman Long wrote:
->> On 07/20/2018 12:37 PM, Peter Zijlstra wrote:
->>> On Fri, Jul 20, 2018 at 12:19:29PM -0400, Waiman Long wrote:
->>>> I am not against the idea of making it hierarchical eventually. I am
->>>> just hoping to get thing going by merging the patchset in its current
->>>> form and then we can make it hierarchical in a followup patch.
->>> Where's the rush? Why can't we do this right in one go?
->> For me, the rush comes from RHEL8 as it is a goal to have a fully
->> functioning cgroup v2 in that release.
->>
->> I also believe that most of the use cases of partition can be satisfied
->> with partitions at the first level children. Getting hierarchical
->> partition right may drag on for half a year, maybe, giving our history
->> with cpu v2 controller. No matter what we do to enable hierarchical
->> partition in the future, the current model of using a partition flag is
->> intuitive enough that it won't be changed at least for the first level
->> children.
-> I'm fully with Waiman here.  There are people wanting to use it and
-> the part most people isn't controversial at all.  I don't see what'd
-> be gained by further delaying the whole thing.  If the first level
-> partition thing isn't acceptable to everyone, we can even strip down
-> further.  We can get .cpus and .mems merged first, which is what most
-> people want anyway.
+On Mon, 13 Aug 2018, Al Viro wrote:
 
-BTW, I am trying to support hierarchical partition. The first thing that
-I want to support is to allow removing CPUs from partition root freely.
-It turns out that the following existing code in validate_change() will
-prevent the removal from happening when it touches any CPUs that are
-used in child cpusets:
+> On Mon, Aug 13, 2018 at 09:48:53AM -0700, Andy Lutomirski wrote:
 
-        /* Each of our child cpusets must be a subset of us */
-        ret = -EBUSY;
-        cpuset_for_each_child(c, css, cur)
-                if (!is_cpuset_subset(c, trial))
-                        goto out;
+> > Are there cases I'm missing?  It sounds like the API could be improved
+> > to fully model the last case, and everything will work nicely.
+> 
+> 	You know, that's starting to remind of this little gem of Borges:
+> http://www.alamut.com/subj/artiface/language/johnWilkins.html
+> Especially the delightful (fake) quote contained in there:
+> [...] it is written that the animals are divided into:
+> 	(a) belonging to the emperor,
+> 	(b) embalmed,
+> 	(c) tame,
+> 	(d) sucking pigs,
+> 	(e) sirens,
+> 	(f) fabulous,
+> 	(g) stray dogs,
+> 	(h) included in the present classification,
+> 	(i) frenzied,
+> 	(j) innumerable,
+> 	(k) drawn with a very fine camelhair brush,
+> 	(l) et cetera,
+> 	(m) having just broken the water pitcher,
+> 	(n) that from a long way off look like flies.
 
-So this is not a new restriction after all.
 
-The following restrictions are still imposed on a partition root wrt
-allowable changes in cpuset.cpus:
-1) cpuset.cpus cannot be set to "". There must be at least 1 cpu there.
-2) Adding cpus that are not in parent's cpuset.cpus (as well as
-cpuset.cpus.effective) or that will take all the parent's effective cpus
-away is not allowed.
+Coincidentally, this was also the model for Linux capabilities.
 
-So are these limitations acceptable?
 
-The easiest way to remove those restrictions is to forcefully turn off
-the cpuset.sched.partition flag in the cpuset as well as any
-sub-partitions when the user try to do that. With that change, there
-will be no more new restriction on what you can do on cpuset.cpus.
-
-What is your opinion on the best way forward wrt supporting hierarchical
-partitioning?
-
-Thanks,
-Longman
+-- 
+James Morris
+<jmorris@namei.org>
 
