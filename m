@@ -1,53 +1,47 @@
-From: Miklos Szeredi <miklos@szeredi.hu>
-Subject: Re: BUG: Mount ignores mount options
-Date: Mon, 13 Aug 2018 14:54:02 +0200
-Message-ID: <CAJfpegtuf7=sEMJhaiQj8e31uvFzckRSHH4Bf9nTNn4gxV10Ow@mail.gmail.com>
-References: <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
- <87d0uqpba5.fsf@xmission.com> <20180810151606.GA6515@ZenIV.linux.org.uk>
- <87pnypiufr.fsf@xmission.com> <20180811015815.GD6515@ZenIV.linux.org.uk>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC 1/3] cgroup: list all subsystem states in debugfs
+ files
+Date: Mon, 13 Aug 2018 06:48:42 -0700
+Message-ID: <20180813134842.GF3978217@devbig004.ftw2.facebook.com>
+References: <153414348591.737150.14229960913953276515.stgit@buzz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=zHPm9ENqpRL5SUv/M4L/XhK5ZNN5AtWTxqBNwdbXolU=;
-        b=ZhOwE0yLROyEjVqOLQVR23N5/aAulWoKXf+MA+uyTxI1HS9N1G8sqk3r6WHPChVxWx
-         14btbueYpTYApZLBjt3PPou49qK8TOsrhY8v4HQHclT3Qz7I44PnmxnuGcYkOdSkk7cT
-         iHrxDrFn7g4iVSHGAVquFT+uqcRrQeo8Ui9Ds=
-In-Reply-To: <20180811015815.GD6515@ZenIV.linux.org.uk>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=3fY520pK3MVFPuA8Ln4OHGZP00waF5d15Pwyeg+Ytn8=;
+        b=hUYQkC3/S6+l5kvwBkMQDaPxUkwku2LiPeZqhpuv27PCvmRd/HvWPkoNCPx3mlaaRn
+         7kkcZ6y1BMtfKlLGxjbJhKkpMwMio50GAcDr1K6lVdYStKqRCeLBG37psUDU++4ukXaY
+         aF0nvgCvh42hC5SQQlzl8p7SdSQdTflDV73lrNI1MnFK0pJHgHNI0ob3MPjkozhatKgG
+         pMg6KmmuveUEn91JRzGLcyocX7JG8rGRf9PDNup5E+FedYFigwatgPook4jRvRNCiZff
+         lPYSZSLEIOAiDgD1x2nunW59dJPmnnh9NO54bEnEO5aYaaBiXzVyu0Z4Qo0P3j81eaiN
+         UzcQ==
+Content-Disposition: inline
+In-Reply-To: <153414348591.737150.14229960913953276515.stgit@buzz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, David Howells <dhowells@redhat.com>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, selinux@tycho.nsa.gov, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, fenghua.yu@intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, LSM <linux-security-module@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.jp, cgroups@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, linux-fsdevel@vger.kern
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Sat, Aug 11, 2018 at 3:58 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+Hello, Konstantin.
 
->  What I'm saying is that the entire superblock-creating
-> machinery - all of it - is nothing but library helpers.  With the
-> decision of when/how/if they are to be used being down to filesystem
-> driver.  Your "first mount"/"additional mount" simply do not map
-> to anything universally applicable.
+On Mon, Aug 13, 2018 at 09:58:05AM +0300, Konstantin Khlebnikov wrote:
+> After removing cgroup subsystem state could leak or live in background
+> forever because it is pinned by some reference. For example memory cgroup
+> could be pinned by pages in cache or tmpfs.
+> 
+> This patch adds common debugfs interface for listing basic state for each
+> controller. Controller could define callback for dumping own attributes.
+> 
+> In file /sys/kernel/debug/cgroup/<controller> each line shows state in
+> format: <common_attr>=<value>... [-- <controller_attr>=<value>... ]
 
-Why so?   (Note: using the "mount" terminology here is fundamentally
-broken to start with, mounts have nothing to do with this...
-Filesystem instance is better word.)
+Seems pretty useful to me.  Roman, Johannes, what do you guys think?
 
-You bring up NFS as an example, but creating and/or reusing an nfs
-client instance connected to a certain server is certainly a clear and
-well defined concept.
+Thanks.
 
-The question becomes:  does it make  sense to generalize this concept
-and export it to userspace with the new API?
-
-You know the Plan 9 fs interface much better, but to me it looks like
-there's a separate namespace for filesystem instances, and the mount
-command just refers to such an instance.  So there's no comparing of
-options or any such horror, just the need to explicitly instantiate a
-new instance when necessary.  Doesn't sound very difficult to
-implement in the new API.
-
-Thanks,
-Miklos
+-- 
+tejun
