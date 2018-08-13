@@ -1,82 +1,215 @@
-From: Casey Schaufler <casey-iSGtlc1asvQWG2LlvL+J4A@public.gmane.org>
-Subject: Re: BUG: Mount ignores mount options
-Date: Sat, 11 Aug 2018 10:47:50 -0700
-Message-ID: <001a1608-d0fa-84c1-9c54-ae36df95fd89@schaufler-ca.com>
-References: <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
- <87d0uqpba5.fsf@xmission.com> <20180810151606.GA6515@ZenIV.linux.org.uk>
- <87pnypiufr.fsf@xmission.com> <20180811014619.GA14368@thunk.org>
- <8736vlo6ef.fsf@xmission.com>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: [PATCH RFC 1/3] cgroup: list all subsystem states in debugfs files
+Date: Mon, 13 Aug 2018 09:58:05 +0300
+Message-ID: <153414348591.737150.14229960913953276515.stgit@buzz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <apparmor-bounces-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048;
- t=1534009684; bh=sf4khYezCdxrT+rmqNy8MWwtEJ/vcYtOYusNjA8nknA=;
- h=Subject:To:Cc:References:From:Date:In-Reply-To:From:Subject;
- b=A6RGSAcrFFb4aUS+9P4U0mgxVzH73smflP/deb1Ef5uLczKsup6vOs/jMhBc5OzPNhhuw0GmPaFD9G7ruBwf9+gV0azGKqlkzI4iVePtj8wId1MqhEqQdPv+qjfrF4xeKKoQV9sZnG0rQdpYISA5c1B//P+otX4j1gjCO/a+tYxZMxNCUGGWYddMDfngtJ2QryH+rGN3bFJf2HTS8ZGuKCIox9CndYlbH2azUTyxIl7pOkMFf3G+JhmukFdpfDZZJV9F3KUdeqiyzVb/Wx1ZOiNzVv1VZdcheHpko8/wd+kO4K+fCaNJZiaBJhOMM3TSa3H1UW7CtHncqq4rx+zpeQ==
-In-Reply-To: <8736vlo6ef.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/apparmor>,
- <mailto:apparmor-request-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.ubuntu.com/archives/apparmor>
-List-Post: <mailto:apparmor-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org>
-List-Help: <mailto:apparmor-request-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/apparmor>,
- <mailto:apparmor-request-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org?subject=subscribe>
-Errors-To: apparmor-bounces-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org
-Sender: "AppArmor" <apparmor-bounces-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1534143489; bh=8ZtFv2UZmB81xn7HuqqAyGejETJ7l+kWbtMQf+KmMIc=;
+        h=Subject:From:To:Cc:Date:Message-ID;
+        b=Trt2gfZsIhydfpZMDowuOOUH4YLMQcag6yAMewYSM7zY5U4ozfAooEeaAMedsZC7m
+         aiYb0jgfwTFNKMKGzXV6o3bKHKWPgj9BCBHqxgyfJQByx7Zch19DDPGmXvI6QFHAYw
+         J3WVR+/GFEeMpYY6dioCl9Eife8g28hQ1HS3KyaY=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1534143489; bh=8ZtFv2UZmB81xn7HuqqAyGejETJ7l+kWbtMQf+KmMIc=;
+        h=Subject:From:To:Cc:Date:Message-ID;
+        b=Trt2gfZsIhydfpZMDowuOOUH4YLMQcag6yAMewYSM7zY5U4ozfAooEeaAMedsZC7m
+         aiYb0jgfwTFNKMKGzXV6o3bKHKWPgj9BCBHqxgyfJQByx7Zch19DDPGmXvI6QFHAYw
+         J3WVR+/GFEeMpYY6dioCl9Eife8g28hQ1HS3KyaY=
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>
-Cc: Eric Biggers <ebiggers-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Stephen Smalley <sds-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>, fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, apparmor-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org, tomoyo-dev-en-5NWGOfrQmneRv+LV9MX5uooqe+aC9MnS@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-T24gOC8xMC8yMDE4IDk6NDggUE0sIEVyaWMgVy4gQmllZGVybWFuIHdyb3RlOgo+ICJUaGVvZG9y
-ZSBZLiBUcydvIiA8dHl0c29AbWl0LmVkdT4gd3JpdGVzOgo+Cj4+IE9uIEZyaSwgQXVnIDEwLCAy
-MDE4IGF0IDA4OjA1OjQ0UE0gLTA1MDAsIEVyaWMgVy4gQmllZGVybWFuIHdyb3RlOgo+Pj4gTXkg
-Y29tcGxhaW50IGlzIHRoYXQgdGhlIGN1cnJlbnQgaW1wbGVtZW50ZWQgYmVoYXZpb3Igb2YgcHJh
-Y3RpY2FsbHkKPj4+IGV2ZXJ5IGZpbGVzeXN0ZW0gaW4gdGhlIGtlcm5lbCwgaXMgdGhhdCBpdCB3
-aWxsIGlnbm9yZSBtb3VudCBvcHRpb25zCj4+PiB3aGVuIG1vdW50ZWQgYSBzZWNvbmQgdGltZS4K
-Pj4gVGhlIGZpbGUgc3lzdGVtIGlzICoqKm5vdCoqKiBtb3VudGVkIGEgc2Vjb25kIHRpbWUuCj4+
-Cj4+IFRoZSBkZXNpZ24gYnVnIGlzIHRoYXQgd2UgYWxsb3cgYmluZCBtb3VudHMgdG8gYmUgc3Bl
-Y2lmaWVkIHZpYSBhCj4+IGJsb2NrIGRldmljZS4gIEEgYmluZCBtb3VudCBpcyBub3QgImEgc2Vj
-b25kIG1vdW50IiBvZiB0aGUgZmlsZQo+PiBzeXN0ZW0uICBCaW5kIG1vdW50cyAhPSBtb3VudHMu
-Cj4+Cj4+IEkgaGFkIGFzc3VtZWQgd2UgaGFkIGFsbG93ZWQgYmluZCBtb3VudHMgdG8gYmUgc3Bl
-Y2lmaWVkIHZpYSB0aGUgYmxvY2sKPj4gZGV2aWNlIGJlY2F1c2Ugb2YgY29udGFpbmVyIHVzZSBj
-YXNlcy4gIElmIHRoZSBjb250YWluZXIgZm9sa3MgZG9uJ3QKPj4gd2FudCBpdCwgSSB3b3VsZCBi
-ZSBwdXNoaW5nIHRvIHNpbXBseSBub3QgYWxsb3cgYmluZCBtb3VudHMgdG8gYmUKPj4gc3BlY2lm
-aWVkIHZpYSBibG9jayBkZXZpY2UgYXQgYWxsLgo+IE5vIGl0IGlzIG5vdCBhIGNvbnRhaW5lciB0
-aGluZy4KCglJbmlnbzogIkhlbGxvLiBNeSBuYW1lIGlzIEluaWdvIE1vbnRveWEuIFlvdSBraWxs
-ZWQgbXkgZmF0aGVyLiBQcmVwYXJlIHRvIGRpZS4iCglSdWdlbjogIlN0b3Agc2F5aW5nIHRoYXQh
-IgoKCUVyaWM6ICAiSXQgaXMgbm90IGEgY29udGFpbmVyIHRoaW5nLiIKCUNhc2V5OiAiU3RvcCBz
-YXlpbmcgdGhhdCEiCgpZZXMsIFZpcmdpbmlhLCBpdCAqaXMqIGEgY29udGFpbmVyIHRoaW5nLiBZ
-b3VyIGNvbnRhaW5lciBtYW5hZ2VyIGV4cGVjdHMgYWxsCmZpbGVzeXN0ZW1zIHRvIGJlIHNlcnZl
-ci1jbGllbnQgYmFzZWQuIEl0IG1ha2VzIGJhZCBhc3N1bXB0aW9ucy4gSXQgaXMgZG9pbmcKdGhp
-bmdzIHRoYXQgd2Ugd291bGQgZmlyZSBhIHN5c2FkbWluIGZvciBkb2luZy4gRG9uJ3QgYmxhbWUg
-dGhlIGZpbGVzeXN0ZW1zCmZvciBiZWhhdmluZyBhcyBkb2N1bWVudGVkLiBFeHBvcnQgdGhlIGZp
-bGVzeXN0ZW0gdXNpbmcgTkZTIGFuZCBtb3VudCB0aGVtCnVzaW5nIHRoZSBORlMgbWVjaGFuaXNt
-LCB3aGljaCBpcyBkZXNpZ25lZCB0byBkbyB3aGF0IHlvdSdyZSBhc2tpbmcgZm9yLiBUaGUKcHJv
-YmxlbSBpcyBub3QgaW4gdGhlIG1vdW50IG1lY2hhbmlzbSwgaXQncyBpbiB0aGUgd2F5IHlvdSB3
-YW50IHRvIGFidXNlIGl0LgoKPj4gVGhlIG9ubHkgcmVhc29uIHdoeSB3ZSBzaG91bGQgc3VwcG9y
-dCBpdCBpcyBiZWNhdXNlIHdlIGRvbid0IHdhbnQgdG8KPj4gYnJlYWsgc2NyaXB0czsgYW5kIGlm
-IHRoZSBnb2FsIGlzIG5vdCB0byBicmVhayBzY3JpcHRzLCB0aGVuIHdlIGhhdmUKPj4gdG8ga2Vl
-cCB0byB0aGUgY3VycmVudCBzZW1hbnRpY3MsIGhvd2V2ZXIgYnJva2VuIHlvdSB0aGluayBpdCBp
-cy4KPiBCdXQgd2UgZG9uJ3QgaGF2ZSB0byBzdXBwb3J0IHJldHVybmluZyBmaWxlc3lzdGVtcyB3
-aXRoIG1pc21hdGNoZWQgbW91bnQKPiBvcHRpb25zIGluIHRoZSBuZXcgZnNvcGVuIGFwaS4gICBU
-aGF0IGlzIG15IGNvbmNlcm4uICBDb25mdXNpbmcKPiB1c2Vyc3BhY2UgdGhpcyB3YXkgaGFzIGJl
-ZW4gc2hvd24gdG8gYmUgaGFybWZ1bCBsZXQncyBub3Qga2VlcCBkb2luZyBpdC4KCkl0J3Mgbm90
-ICJ1c2Vyc3BhY2UiIHRoYXQncyBjb25mdXNlZC4gRGV2ZWxvcGVycyBvZiB1c2Vyc3BhY2UgY29k
-ZQppbXBsZW1lbnRpbmcgc3lzdGVtIGJlaGF2aW9yIChlLmcuIHN5c3RlbWQsIGNvbnRhaW5lciBt
-YW5hZ2VycykgbmVlZCB0bwp1bmRlcnN0YW5kIGhvdyB0aGUgc3lzdGVtIHdvcmtzLiBUaGUgY29u
-dGFpbmVyIG1hbmFnZXIgbmVlZHMgdG8ga25vdwp0aGF0IGl0IGNhbid0IG1vdW50IGZpbGVzeXN0
-ZW1zIHdpdGggZGlmZmVyZW50IG9wdGlvbnMuIFRoYXQncyB0aGUga2luZApvZiB0aGluZyAibWFu
-YWdlcnMiIGRvLiBJZiBpdCBoYXMgdG8gZ28gdG8gdGhlIG1vdW50IHRhYmxlIGFuZCBjaGVjawpv
-biBob3cgdGhlIGRldmljZSBpcyBhbHJlYWR5IG1vdW50ZWQgYmVmb3JlIGRvaW5nIGEgbW91bnQs
-IHNvIGJlIGl0LgoKVW5sZXNzLCBvZiBjb3Vyc2UsIHlvdSB3YW50IHRoZSBjb25jZXB0IG9mICJj
-b250YWluZXIiIGludHJvZHVjZWQgaW50bwp0aGUga2VybmVsLiBUaGVyZSdzIGEgd2hvbGUgbG90
-IG9mIGZlbGRlcmNhcmIgdGhhdCBjb250YWluZXIgbWFuYWdlcnMKaGF2ZSB0byBkZWFsIHdpdGgg
-dGhhdCB3b3VsZCBiZSBsb3RzIGVhc2llciB0byBkZWFsIHdpdGggZG93biBiZWxvdy4KSSdtIG5v
-dCBhZHZvY2F0aW5nIHRoYXQsIGFuZCBJIHVuZGVyc3RhbmQgdGhlIGFyZ3VtZW50cyBhZ2FpbnN0
-IGl0LgpPbiB0aGUgb3RoZXIgaGFuZCwgaWYgeW91IHdhbnQgYSBwbGF0Zm9ybSB0aGF0IGlzIG9w
-dGltaXplZCBmb3IgYQpjb250YWluZXIgZW52aXJvbm1lbnQgLi4uCgo+IEVyaWMKCgotLSAKQXBw
-QXJtb3IgbWFpbGluZyBsaXN0CkFwcEFybW9yQGxpc3RzLnVidW50dS5jb20KTW9kaWZ5IHNldHRp
-bmdzIG9yIHVuc3Vic2NyaWJlIGF0OiBodHRwczovL2xpc3RzLnVidW50dS5jb20vbWFpbG1hbi9s
-aXN0aW5mby9hcHBhcm1vcgo=
+After removing cgroup subsystem state could leak or live in background
+forever because it is pinned by some reference. For example memory cgroup
+could be pinned by pages in cache or tmpfs.
+
+This patch adds common debugfs interface for listing basic state for each
+controller. Controller could define callback for dumping own attributes.
+
+In file /sys/kernel/debug/cgroup/<controller> each line shows state in
+format: <common_attr>=<value>... [-- <controller_attr>=<value>... ]
+
+Common attributes:
+
+css - css pointer
+cgroup - cgroup pointer
+id - css id
+ino - cgroup inode
+flags - css flags
+refcnt - css atomic refcount, for online shows huge bias
+path - cgroup path
+
+This patch adds memcg attributes:
+
+mem_id - 16-bit memory cgroup id
+memory - charged pages
+swap - charged swap
+
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+---
+ include/linux/cgroup-defs.h |    1 
+ kernel/cgroup/cgroup.c      |   99 +++++++++++++++++++++++++++++++++++++++++++
+ mm/memcontrol.c             |   12 +++++
+ 3 files changed, 112 insertions(+)
+
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index c0e68f903011..c828820e160f 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -595,6 +595,7 @@ struct cgroup_subsys {
+ 	void (*exit)(struct task_struct *task);
+ 	void (*free)(struct task_struct *task);
+ 	void (*bind)(struct cgroup_subsys_state *root_css);
++	void (*css_dump)(struct cgroup_subsys_state *css, struct seq_file *);
+ 
+ 	bool early_init:1;
+ 
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 077370bf8964..b7be190daffe 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -39,6 +39,7 @@
+ #include <linux/mount.h>
+ #include <linux/pagemap.h>
+ #include <linux/proc_fs.h>
++#include <linux/debugfs.h>
+ #include <linux/rcupdate.h>
+ #include <linux/sched.h>
+ #include <linux/sched/task.h>
+@@ -5978,3 +5979,101 @@ static int __init cgroup_sysfs_init(void)
+ }
+ subsys_initcall(cgroup_sysfs_init);
+ #endif /* CONFIG_SYSFS */
++
++#ifdef CONFIG_DEBUG_FS
++void *css_debugfs_seqfile_start(struct seq_file *m, loff_t *pos)
++{
++	struct cgroup_subsys *ss = m->private;
++	struct cgroup_subsys_state *css;
++	int id = *pos;
++
++	rcu_read_lock();
++	css = idr_get_next(&ss->css_idr, &id);
++	*pos = id;
++	return css;
++}
++
++void *css_debugfs_seqfile_next(struct seq_file *m, void *v, loff_t *pos)
++{
++	struct cgroup_subsys *ss = m->private;
++	struct cgroup_subsys_state *css;
++	int id = *pos + 1;
++
++	css = idr_get_next(&ss->css_idr, &id);
++	*pos = id;
++	return css;
++}
++
++void css_debugfs_seqfile_stop(struct seq_file *m, void *v)
++{
++	rcu_read_unlock();
++}
++
++int css_debugfs_seqfile_show(struct seq_file *m, void *v)
++{
++	struct cgroup_subsys *ss = m->private;
++	struct cgroup_subsys_state *css = v;
++	size_t buflen;
++	char *buf;
++	int len;
++
++	seq_printf(m, "css=%pK cgroup=%pK id=%d ino=%lu flags=%#x refcnt=%lu path=",
++		   css, css->cgroup, css->id, cgroup_ino(css->cgroup),
++		   css->flags, atomic_long_read(&css->refcnt.count));
++
++	buflen = seq_get_buf(m, &buf);
++	if (buf) {
++		len = cgroup_path(css->cgroup, buf, buflen);
++		seq_commit(m, len < buflen ? len : -1);
++	}
++
++	if (ss->css_dump) {
++		seq_puts(m, " -- ");
++		ss->css_dump(css, m);
++	}
++
++	seq_puts(m, "\n");
++	return 0;
++}
++
++static const struct seq_operations css_debug_seq_ops = {
++	.start = css_debugfs_seqfile_start,
++	.next = css_debugfs_seqfile_next,
++	.stop = css_debugfs_seqfile_stop,
++	.show = css_debugfs_seqfile_show,
++};
++
++static int css_debugfs_open(struct inode *inode, struct file *file)
++{
++	int ret = seq_open(file, &css_debug_seq_ops);
++	struct seq_file *m = file->private_data;
++
++	if (!ret)
++		m->private = inode->i_private;
++	return ret;
++}
++
++static const struct file_operations css_debugfs_fops = {
++	.open = css_debugfs_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release,
++};
++
++static int __init css_debugfs_init(void)
++{
++	struct cgroup_subsys *ss;
++	struct dentry *dir;
++	int ssid;
++
++	dir = debugfs_create_dir("cgroup", NULL);
++	if (dir) {
++		for_each_subsys(ss, ssid)
++			debugfs_create_file(ss->name, 0644, dir, ss,
++					    &css_debugfs_fops);
++	}
++
++	return 0;
++}
++late_initcall(css_debugfs_init);
++#endif /* CONFIG_DEBUG_FS */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b2173f7e5164..19a4348974a4 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4345,6 +4345,17 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+ 	memcg_wb_domain_size_changed(memcg);
+ }
+ 
++static void mem_cgroup_css_dump(struct cgroup_subsys_state *css,
++				struct seq_file *m)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++
++	seq_printf(m, "mem_id=%u memory=%lu swap=%lu",
++		   mem_cgroup_id(memcg),
++		   page_counter_read(&memcg->memory),
++		   page_counter_read(&memcg->swap));
++}
++
+ #ifdef CONFIG_MMU
+ /* Handlers for move charge at task migration. */
+ static int mem_cgroup_do_precharge(unsigned long count)
+@@ -5386,6 +5397,7 @@ struct cgroup_subsys memory_cgrp_subsys = {
+ 	.css_released = mem_cgroup_css_released,
+ 	.css_free = mem_cgroup_css_free,
+ 	.css_reset = mem_cgroup_css_reset,
++	.css_dump = mem_cgroup_css_dump,
+ 	.can_attach = mem_cgroup_can_attach,
+ 	.cancel_attach = mem_cgroup_cancel_attach,
+ 	.post_attach = mem_cgroup_move_task,
+
