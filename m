@@ -1,47 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC 1/3] cgroup: list all subsystem states in debugfs
- files
-Date: Mon, 13 Aug 2018 06:48:42 -0700
-Message-ID: <20180813134842.GF3978217@devbig004.ftw2.facebook.com>
-References: <153414348591.737150.14229960913953276515.stgit@buzz>
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: BUG: Mount ignores mount options
+Date: Mon, 13 Aug 2018 17:35:02 +0100
+Message-ID: <20180813173502.1a7a1d9c@alans-desktop>
+References: <20180810153902.GH21087@thunk.org>
+        <87d0uqpba5.fsf@xmission.com>
+        <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
+        <22361.1533913891@warthog.procyon.org.uk>
+        <28045.1533916438@warthog.procyon.org.uk>
+        <20180810161400.GA627@thunk.org>
+        <CALCETrXC8Z-q+PzzqMC-McA7UdmFubVcs2dVsT0Dt+GbSqjF5A@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=3fY520pK3MVFPuA8Ln4OHGZP00waF5d15Pwyeg+Ytn8=;
-        b=hUYQkC3/S6+l5kvwBkMQDaPxUkwku2LiPeZqhpuv27PCvmRd/HvWPkoNCPx3mlaaRn
-         7kkcZ6y1BMtfKlLGxjbJhKkpMwMio50GAcDr1K6lVdYStKqRCeLBG37psUDU++4ukXaY
-         aF0nvgCvh42hC5SQQlzl8p7SdSQdTflDV73lrNI1MnFK0pJHgHNI0ob3MPjkozhatKgG
-         pMg6KmmuveUEn91JRzGLcyocX7JG8rGRf9PDNup5E+FedYFigwatgPook4jRvRNCiZff
-         lPYSZSLEIOAiDgD1x2nunW59dJPmnnh9NO54bEnEO5aYaaBiXzVyu0Z4Qo0P3j81eaiN
-         UzcQ==
-Content-Disposition: inline
-In-Reply-To: <153414348591.737150.14229960913953276515.stgit@buzz>
+In-Reply-To: <CALCETrXC8Z-q+PzzqMC-McA7UdmFubVcs2dVsT0Dt+GbSqjF5A@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Andy Lutomirski <luto@kernel.org>
+Cc: "Theodore Y. Ts'o" <tytso@mit.edu>, David Howells <dhowells@redhat.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Al Viro <viro@zeniv.linux.org.uk>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, SELinux-NSA <selinux@tycho.nsa.gov>, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, Fenghua Yu <fenghua.yu@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, LSM List <linux-security-module@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.s
 
-Hello, Konstantin.
+> If the same block device is visible, with rw access, in two different
+> containers, I don't see any anything good can happen.  Sure, with the
 
-On Mon, Aug 13, 2018 at 09:58:05AM +0300, Konstantin Khlebnikov wrote:
-> After removing cgroup subsystem state could leak or live in background
-> forever because it is pinned by some reference. For example memory cgroup
-> could be pinned by pages in cache or tmpfs.
-> 
-> This patch adds common debugfs interface for listing basic state for each
-> controller. Controller could define callback for dumping own attributes.
-> 
-> In file /sys/kernel/debug/cgroup/<controller> each line shows state in
-> format: <common_attr>=<value>... [-- <controller_attr>=<value>... ]
+At the raw level there are lots of use cases involving high performance
+data capture, media streaming and the like.
 
-Seems pretty useful to me.  Roman, Johannes, what do you guys think?
+At the file system layer you can use GFS2 for example.
 
-Thanks.
+So there are cases where it's possible. There are even cases where it's
+actually useful at the filesystem level although not many I agree.
 
--- 
-tejun
+Alan
+
+
