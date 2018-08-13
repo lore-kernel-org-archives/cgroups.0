@@ -1,86 +1,88 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH RFC 1/3] cgroup: list all subsystem states in debugfs
- files
-Date: Mon, 13 Aug 2018 10:53:52 -0700
-Message-ID: <20180813175348.GA31962@castle.DHCP.thefacebook.com>
-References: <153414348591.737150.14229960913953276515.stgit@buzz>
- <20180813134842.GF3978217@devbig004.ftw2.facebook.com>
- <20180813171119.GA24658@cmpxchg.org>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Mon, 13 Aug 2018 13:56:15 -0400
+Message-ID: <446ab203-85cd-32ff-40a9-0ba22d5a2534@redhat.com>
+References: <20180719153045.GT72677@devbig577.frc2.facebook.com>
+ <de6f931d-613a-3e6a-2a4d-0e49b3bfe2e5@redhat.com>
+ <20180719165201.GU72677@devbig577.frc2.facebook.com>
+ <20180720113121.GJ2476@hirez.programming.kicks-ass.net>
+ <20180720114549.GY72677@devbig577.frc2.facebook.com>
+ <20180720154454.GR2494@hirez.programming.kicks-ass.net>
+ <20180720155613.GB1934745@devbig577.frc2.facebook.com>
+ <4857a9db-ebf5-24f8-c42d-d795f5c75854@redhat.com>
+ <20180720163712.GU2494@hirez.programming.kicks-ass.net>
+ <8c655adc-6d9e-b767-1024-5d6941c995a9@redhat.com>
+ <20180720174100.GC1934745@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=mkLvR07c0bI3mkTQ33poWU4P0Ee5dwtb9G6VxjlMce8=;
- b=Hcq7a99oZslzJfemRBnVbi06lVIfT6iz8sZrzcyXrlOB9QQwbg/YOSVJtZqXOwcXTWVC
- EA2Mw/kKAi6XSp1XeqG5gvmmOQaa6+IPA+t9z7xX+SIumCF8wj64i1u9rbsdTHNz2DGI
- WoOi1Q8+mZwSWm3jDF1ciuDCTLuP/FLO2sY= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mkLvR07c0bI3mkTQ33poWU4P0Ee5dwtb9G6VxjlMce8=;
- b=XmaTdU97LUl6IpzFoa01WuEWSGfAbNDUQ+VHMdja5lSoVzp5DUqpZm9xXWzY4iHjT41wOb/aEqNZEiaugmg/9bBClz6SNqN7eYKG5UUxX4yDXY9Fv/XC4V/YuJSAhHKkMIcSXK+9JNuTE4dlEo3K+n4tcRrclLH1AOIhhBj8bFs=
-Content-Disposition: inline
-In-Reply-To: <20180813171119.GA24658@cmpxchg.org>
+In-Reply-To: <20180720174100.GC1934745@devbig577.frc2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Mon, Aug 13, 2018 at 01:11:19PM -0400, Johannes Weiner wrote:
-> On Mon, Aug 13, 2018 at 06:48:42AM -0700, Tejun Heo wrote:
-> > Hello, Konstantin.
-> > 
-> > On Mon, Aug 13, 2018 at 09:58:05AM +0300, Konstantin Khlebnikov wrote:
-> > > After removing cgroup subsystem state could leak or live in background
-> > > forever because it is pinned by some reference. For example memory cgroup
-> > > could be pinned by pages in cache or tmpfs.
-> > > 
-> > > This patch adds common debugfs interface for listing basic state for each
-> > > controller. Controller could define callback for dumping own attributes.
-> > > 
-> > > In file /sys/kernel/debug/cgroup/<controller> each line shows state in
-> > > format: <common_attr>=<value>... [-- <controller_attr>=<value>... ]
-> > 
-> > Seems pretty useful to me.  Roman, Johannes, what do you guys think?
+On 07/20/2018 01:41 PM, Tejun Heo wrote:
+> Hello,
+>
+> On Fri, Jul 20, 2018 at 01:09:23PM -0400, Waiman Long wrote:
+>> On 07/20/2018 12:37 PM, Peter Zijlstra wrote:
+>>> On Fri, Jul 20, 2018 at 12:19:29PM -0400, Waiman Long wrote:
+>>>> I am not against the idea of making it hierarchical eventually. I am
+>>>> just hoping to get thing going by merging the patchset in its current
+>>>> form and then we can make it hierarchical in a followup patch.
+>>> Where's the rush? Why can't we do this right in one go?
+>> For me, the rush comes from RHEL8 as it is a goal to have a fully
+>> functioning cgroup v2 in that release.
+>>
+>> I also believe that most of the use cases of partition can be satisfied
+>> with partitions at the first level children. Getting hierarchical
+>> partition right may drag on for half a year, maybe, giving our history
+>> with cpu v2 controller. No matter what we do to enable hierarchical
+>> partition in the future, the current model of using a partition flag is
+>> intuitive enough that it won't be changed at least for the first level
+>> children.
+> I'm fully with Waiman here.  There are people wanting to use it and
+> the part most people isn't controversial at all.  I don't see what'd
+> be gained by further delaying the whole thing.  If the first level
+> partition thing isn't acceptable to everyone, we can even strip down
+> further.  We can get .cpus and .mems merged first, which is what most
+> people want anyway.
 
-Totally agree with the idea and was about to suggest something similar.
+BTW, I am trying to support hierarchical partition. The first thing that
+I want to support is to allow removing CPUs from partition root freely.
+It turns out that the following existing code in validate_change() will
+prevent the removal from happening when it touches any CPUs that are
+used in child cpusets:
 
-> Generally I like the idea of having more introspection into offlined
-> cgroups, but I wonder if having only memory= and swap= could be a
-> little too terse to track down what exactly is pinning the groups.
-> 
-> Roman has more experience debugging these pileups, but it seems to me
-> that unless we add a breakdown off memory, and maybe make slabinfo
-> available for these groups, that in practice this might not provide
-> that much more insight than per-cgroup stat counters of dead children.
+        /* Each of our child cpusets must be a subset of us */
+        ret = -EBUSY;
+        cpuset_for_each_child(c, css, cur)
+                if (!is_cpuset_subset(c, trial))
+                        goto out;
 
-I agree here.
+So this is not a new restriction after all.
 
-It's hard to say in advance what numbers are useful, so let's export
-these numbers, but also make the format more extendable, so we can
-easily add new information later. Maybe, something like:
+The following restrictions are still imposed on a partition root wrt
+allowable changes in cpuset.cpus:
+1) cpuset.cpus cannot be set to "". There must be at least 1 cpu there.
+2) Adding cpus that are not in parent's cpuset.cpus (as well as
+cpuset.cpus.effective) or that will take all the parent's effective cpus
+away is not allowed.
 
-cgroup {
-  path = ...
-  ino = ...
-  main css {
-    refcnt = ...
-    key = value
-    ...
-  }
-  memcg css {
-    refcnt = ...
-    ...
-  }
-  some other controller css {
-  }
-  ...
-}
+So are these limitations acceptable?
 
-Also, because we do batch charges, printing numbers without draining stocks
-is not that useful. All stats are also per-cpu cached, what adds some
-inaccuracy.
+The easiest way to remove those restrictions is to forcefully turn off
+the cpuset.sched.partition flag in the cpuset as well as any
+sub-partitions when the user try to do that. With that change, there
+will be no more new restriction on what you can do on cpuset.cpus.
 
-Thanks!
+What is your opinion on the best way forward wrt supporting hierarchical
+partitioning?
+
+Thanks,
+Longman
+
