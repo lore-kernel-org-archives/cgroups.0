@@ -1,62 +1,107 @@
-From: Casey Schaufler <casey@schaufler-ca.com>
-Subject: Re: BUG: Mount ignores mount options
-Date: Mon, 13 Aug 2018 12:20:14 -0700
-Message-ID: <48e443ba-51b5-cf10-3342-cdeabb91b224@schaufler-ca.com>
-References: <20180810153902.GH21087@thunk.org> <87d0uqpba5.fsf@xmission.com>
- <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
- <22361.1533913891@warthog.procyon.org.uk>
- <28045.1533916438@warthog.procyon.org.uk> <20180810161400.GA627@thunk.org>
- <CALCETrXC8Z-q+PzzqMC-McA7UdmFubVcs2dVsT0Dt+GbSqjF5A@mail.gmail.com>
- <20180813173502.1a7a1d9c@alans-desktop>
- <CALCETrXvtSLjwx0swXo5g-vU3PmF-_6J6j1a_2pAba7bhzO9QQ@mail.gmail.com>
- <20180813172947.GS6515@ZenIV.linux.org.uk>
- <alpine.LRH.2.21.1808140458040.23296@namei.org>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: Re: [PATCH RFC 1/3] cgroup: list all subsystem states in debugfs
+ files
+Date: Tue, 14 Aug 2018 12:40:58 +0300
+Message-ID: <1cc17b7b-8f5b-6682-ccc0-19ff5f9992e0@yandex-team.ru>
+References: <153414348591.737150.14229960913953276515.stgit@buzz>
+ <20180813134842.GF3978217@devbig004.ftw2.facebook.com>
+ <20180813171119.GA24658@cmpxchg.org>
+ <20180813175348.GA31962@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1534188018; bh=kFRH/+K5tQxnl/iRsE6H8IabvSBDdi6lblclbB0O66o=; h=Subject:To:Cc:References:From:Date:In-Reply-To:From:Subject; b=pBbYA3hDllZ68rKruQaPaMdZYx2eT+GqZau+JDsbdTZT/YMZXL9rvb0UViVkz/zERNEfl9+AhRGO/YBRKg2Uhlf7rWrbJ2Bn4OgmG6ydBX0/8M6t8UBDnG02T5SJP8YhlG2atY61u6j+4NRLLE8HjWpFHChXQBiNoZD2E6iPKbEi8M+Aq/FJBaQJR2opMIel2cBMlzLr5DL7BzZNgDNUjIGKSXAzUwmA8G+/eCDY8o/F+hpOXPbMpvewzefnBsDXSHvxRkFCSigTieIWtSZDsL3fXn3Dupw/UBDgSRyQ6kR8pnsXURo5PC8byejSm+y+Sk8NC27RYePv9+at84AJFQ==
-In-Reply-To: <alpine.LRH.2.21.1808140458040.23296@namei.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1534239658; bh=YxzDZA3Ck/k6jC7qMmngKFEGI7qDuhDO1A2jVGo9ew8=;
+        h=Subject:To:Cc:References:From:Message-ID:Date:In-Reply-To;
+        b=aU/Kjo9iUENgyG48ek671T7qR843hOe87O1vNHLbP+KTb7aJyvjMqjevhA20WB2nY
+         mpKFDgZvrZzh5BI7o5Hg5b5c7TK1e4UGqC809AkfGuMjvWV3KB9337uVPXBv//bW5Z
+         2DIkQ9ME/nYH1MizUaBHMTpI3Kbh8HiUZK88ajIY=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1534239658; bh=YxzDZA3Ck/k6jC7qMmngKFEGI7qDuhDO1A2jVGo9ew8=;
+        h=Subject:To:Cc:References:From:Message-ID:Date:In-Reply-To;
+        b=aU/Kjo9iUENgyG48ek671T7qR843hOe87O1vNHLbP+KTb7aJyvjMqjevhA20WB2nY
+         mpKFDgZvrZzh5BI7o5Hg5b5c7TK1e4UGqC809AkfGuMjvWV3KB9337uVPXBv//bW5Z
+         2DIkQ9ME/nYH1MizUaBHMTpI3Kbh8HiUZK88ajIY=
+In-Reply-To: <20180813175348.GA31962@castle.DHCP.thefacebook.com>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: James Morris <jmorris@namei.org>, Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Andy Lutomirski <luto@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Theodore Y. Ts'o" <tytso@mit.edu>, David Howells <dhowells@redhat.com>, "Eric W. Biederman" <ebiederm@xmission.com>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, SELinux-NSA <selinux@tycho.nsa.gov>, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, apparmor@lists.ubuntu.com, Fenghua Yu <fenghua.yu@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, LSM List <linux-security-module@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
 
-On 8/13/2018 12:00 PM, James Morris wrote:
-> On Mon, 13 Aug 2018, Al Viro wrote:
->
->> On Mon, Aug 13, 2018 at 09:48:53AM -0700, Andy Lutomirski wrote:
->>> Are there cases I'm missing?  It sounds like the API could be improved
->>> to fully model the last case, and everything will work nicely.
->> 	You know, that's starting to remind of this little gem of Borges:
->> http://www.alamut.com/subj/artiface/language/johnWilkins.html
->> Especially the delightful (fake) quote contained in there:
->> [...] it is written that the animals are divided into:
->> 	(a) belonging to the emperor,
->> 	(b) embalmed,
->> 	(c) tame,
->> 	(d) sucking pigs,
->> 	(e) sirens,
->> 	(f) fabulous,
->> 	(g) stray dogs,
->> 	(h) included in the present classification,
->> 	(i) frenzied,
->> 	(j) innumerable,
->> 	(k) drawn with a very fine camelhair brush,
->> 	(l) et cetera,
->> 	(m) having just broken the water pitcher,
->> 	(n) that from a long way off look like flies.
->
-> Coincidentally, this was also the model for Linux capabilities.
+On 13.08.2018 20:53, Roman Gushchin wrote:
+> On Mon, Aug 13, 2018 at 01:11:19PM -0400, Johannes Weiner wrote:
+>> On Mon, Aug 13, 2018 at 06:48:42AM -0700, Tejun Heo wrote:
+>>> Hello, Konstantin.
+>>>
+>>> On Mon, Aug 13, 2018 at 09:58:05AM +0300, Konstantin Khlebnikov wrote:
+>>>> After removing cgroup subsystem state could leak or live in background
+>>>> forever because it is pinned by some reference. For example memory cgroup
+>>>> could be pinned by pages in cache or tmpfs.
+>>>>
+>>>> This patch adds common debugfs interface for listing basic state for each
+>>>> controller. Controller could define callback for dumping own attributes.
+>>>>
+>>>> In file /sys/kernel/debug/cgroup/<controller> each line shows state in
+>>>> format: <common_attr>=<value>... [-- <controller_attr>=<value>... ]
+>>>
+>>> Seems pretty useful to me.  Roman, Johannes, what do you guys think?
+> 
+> Totally agree with the idea and was about to suggest something similar.
+> 
+>> Generally I like the idea of having more introspection into offlined
+>> cgroups, but I wonder if having only memory= and swap= could be a
+>> little too terse to track down what exactly is pinning the groups.
+>>
+>> Roman has more experience debugging these pileups, but it seems to me
+>> that unless we add a breakdown off memory, and maybe make slabinfo
+>> available for these groups, that in practice this might not provide
+>> that much more insight than per-cgroup stat counters of dead children.
+> 
+> I agree here.
 
-Linux capabilities are POSIX capabilities which are modeled closely
-to accommodate the historical behavior manifest in the P1003.1 specification.
-So except for (c), (f) and (k) you can use this characterization. 
+I don't think that we could cover all cases with single interface.
 
-On a slightly more serious note, there's a lot of Linux, mount semantics
-included, that have grow organically and that aren't quite up to the
-usage models they are being applied to. I applaud David's work in part
-because it may make it possible to accommodate more of those cases going
-forward.
+This debugfs just gives simple entry point for debugging:
+- paths for guessing user
+- pointers for looking with gdb via kcore
+- inode numbers for page-types - see second and third patch
 
+For slab: this could show one of remaining slab. Anyway each of them pins css.
+
+> 
+> It's hard to say in advance what numbers are useful, so let's export
+> these numbers, but also make the format more extendable, so we can
+> easily add new information later. Maybe, something like:
+> 
+> cgroup {
+>    path = ...
+>    ino = ...
+>    main css {
+>      refcnt = ...
+>      key = value
+>      ...
+>    }
+>    memcg css {
+>      refcnt = ...
+>      ...
+>    }
+>    some other controller css {
+>    }
+>    ...
+> }
+> 
+> Also, because we do batch charges, printing numbers without draining stocks
+> is not that useful. All stats are also per-cpu cached, what adds some
+> inaccuracy.
+
+Seems too verbose. And one-line key=value format is more grep/awk friendly.
+
+Anyway such extended debugging could be implemented as gdb plugin.
+While simple list of pointers gives enough information for dumping structures
+with gdb alone without extra plugins.
+
+> 
+> Thanks!
+> 
