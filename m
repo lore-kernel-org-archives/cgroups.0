@@ -1,107 +1,63 @@
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: Re: [PATCH RFC 1/3] cgroup: list all subsystem states in debugfs
- files
-Date: Tue, 14 Aug 2018 12:40:58 +0300
-Message-ID: <1cc17b7b-8f5b-6682-ccc0-19ff5f9992e0@yandex-team.ru>
-References: <153414348591.737150.14229960913953276515.stgit@buzz>
- <20180813134842.GF3978217@devbig004.ftw2.facebook.com>
- <20180813171119.GA24658@cmpxchg.org>
- <20180813175348.GA31962@castle.DHCP.thefacebook.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: BUG: Mount ignores mount options
+Date: Tue, 14 Aug 2018 23:03:17 -0500
+Message-ID: <87d0ukjmyi.fsf@xmission.com>
+References: <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
+        <87d0uqpba5.fsf@xmission.com>
+        <20180810151606.GA6515@ZenIV.linux.org.uk>
+        <87pnypiufr.fsf@xmission.com> <20180811014619.GA14368@thunk.org>
+        <8736vlo6ef.fsf@xmission.com>
+        <001a1608-d0fa-84c1-9c54-ae36df95fd89@schaufler-ca.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1534239658; bh=YxzDZA3Ck/k6jC7qMmngKFEGI7qDuhDO1A2jVGo9ew8=;
-        h=Subject:To:Cc:References:From:Message-ID:Date:In-Reply-To;
-        b=aU/Kjo9iUENgyG48ek671T7qR843hOe87O1vNHLbP+KTb7aJyvjMqjevhA20WB2nY
-         mpKFDgZvrZzh5BI7o5Hg5b5c7TK1e4UGqC809AkfGuMjvWV3KB9337uVPXBv//bW5Z
-         2DIkQ9ME/nYH1MizUaBHMTpI3Kbh8HiUZK88ajIY=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1534239658; bh=YxzDZA3Ck/k6jC7qMmngKFEGI7qDuhDO1A2jVGo9ew8=;
-        h=Subject:To:Cc:References:From:Message-ID:Date:In-Reply-To;
-        b=aU/Kjo9iUENgyG48ek671T7qR843hOe87O1vNHLbP+KTb7aJyvjMqjevhA20WB2nY
-         mpKFDgZvrZzh5BI7o5Hg5b5c7TK1e4UGqC809AkfGuMjvWV3KB9337uVPXBv//bW5Z
-         2DIkQ9ME/nYH1MizUaBHMTpI3Kbh8HiUZK88ajIY=
-In-Reply-To: <20180813175348.GA31962@castle.DHCP.thefacebook.com>
-Content-Language: en-CA
+In-Reply-To: <001a1608-d0fa-84c1-9c54-ae36df95fd89@schaufler-ca.com> (Casey
+        Schaufler's message of "Sat, 11 Aug 2018 10:47:50 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Casey Schaufler <casey@schaufler-ca.com>
+Cc: "Theodore Y. Ts'o" <tytso@mit.edu>, Al Viro <viro@ZenIV.linux.org.uk>, David Howells <dhowells@redhat.com>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, selinux@tycho.nsa.gov, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, linux-api@vger.kernel.org, apparmor@lists.ubuntu.com, fenghua.yu@intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, linux-security-module@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.jp, cgroups@vger.kernel.org, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Miklos Szeredi <miklo>
 
-On 13.08.2018 20:53, Roman Gushchin wrote:
-> On Mon, Aug 13, 2018 at 01:11:19PM -0400, Johannes Weiner wrote:
->> On Mon, Aug 13, 2018 at 06:48:42AM -0700, Tejun Heo wrote:
->>> Hello, Konstantin.
->>>
->>> On Mon, Aug 13, 2018 at 09:58:05AM +0300, Konstantin Khlebnikov wrote:
->>>> After removing cgroup subsystem state could leak or live in background
->>>> forever because it is pinned by some reference. For example memory cgroup
->>>> could be pinned by pages in cache or tmpfs.
->>>>
->>>> This patch adds common debugfs interface for listing basic state for each
->>>> controller. Controller could define callback for dumping own attributes.
->>>>
->>>> In file /sys/kernel/debug/cgroup/<controller> each line shows state in
->>>> format: <common_attr>=<value>... [-- <controller_attr>=<value>... ]
->>>
->>> Seems pretty useful to me.  Roman, Johannes, what do you guys think?
-> 
-> Totally agree with the idea and was about to suggest something similar.
-> 
->> Generally I like the idea of having more introspection into offlined
->> cgroups, but I wonder if having only memory= and swap= could be a
->> little too terse to track down what exactly is pinning the groups.
->>
->> Roman has more experience debugging these pileups, but it seems to me
->> that unless we add a breakdown off memory, and maybe make slabinfo
->> available for these groups, that in practice this might not provide
->> that much more insight than per-cgroup stat counters of dead children.
-> 
-> I agree here.
+Casey Schaufler <casey@schaufler-ca.com> writes:
 
-I don't think that we could cover all cases with single interface.
+> Don't blame the filesystems for behaving as documented.
 
-This debugfs just gives simple entry point for debugging:
-- paths for guessing user
-- pointers for looking with gdb via kcore
-- inode numbers for page-types - see second and third patch
+No.  This behavior is not documented.  At least I certainly don't see a
+word about this in any of the man pages.  Where does it say mounting a
+filesystem will not honor it's mount options?
 
-For slab: this could show one of remaining slab. Anyway each of them pins css.
+It is also rare enough in practice it is something it is reasonable to
+expect people to be surprised by.
 
-> 
-> It's hard to say in advance what numbers are useful, so let's export
-> these numbers, but also make the format more extendable, so we can
-> easily add new information later. Maybe, something like:
-> 
-> cgroup {
->    path = ...
->    ino = ...
->    main css {
->      refcnt = ...
->      key = value
->      ...
->    }
->    memcg css {
->      refcnt = ...
->      ...
->    }
->    some other controller css {
->    }
->    ...
-> }
-> 
-> Also, because we do batch charges, printing numbers without draining stocks
-> is not that useful. All stats are also per-cpu cached, what adds some
-> inaccuracy.
+> The problem is not in the mount mechanism, it's in the way you want to
+> abuse it.
 
-Seems too verbose. And one-line key=value format is more grep/awk friendly.
+I am not asking for this behavior.  I am pointing out this behavior
+exists.  I am pointing out this behavior is harmful.  I am asking we
+stop doing this harmful thing in the new API where we don't have a
+chance of breaking anything.
 
-Anyway such extended debugging could be implemented as gdb plugin.
-While simple list of pointers gives enough information for dumping structures
-with gdb alone without extra plugins.
+The place where this has bitten the hardest is someone wrote a script to
+do something for Xen in a chroot.  That script involved a chroot that
+mounted devpts and in doing so happend to change the options of the main
+/dev/pts.  Which resulted in ptys created with /dev/ptmx outside the
+chroot with the wrong permissions.  That in turn caused several distros
+to retain the ancient suid pt_chown binary from libc that the devpts
+filesystem was built to make obsolete.  As the world turned that
+pt_chown binary could be confused into chowning the wrong pty if a pty
+from a container was used.
 
-> 
-> Thanks!
-> 
+The fix was to mount a new instance of devpts every time mount of devpts
+is called.  That simplified the code, and allowed pt_chown to be removed
+permanently.  The tricky bit was figuring out how keep /dev/ptmx
+working.  I wound up testing on every distribution I could think of to
+ensure no one would notice the slightly changed behavior of the devpts
+filesystem.
+
+The behavior in other filesystems of ignoring the options instead of
+changing them on the filesystem isn't quite as bad.  But it still has
+the potential for a lot of mischief.
+
+Eric
+
