@@ -1,46 +1,56 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v8 0/2] Directed kmem charging
-Date: Wed, 15 Aug 2018 15:25:11 -0700
-Message-ID: <20180815152511.3ea63aa54c5fac0bfe9370da@linux-foundation.org>
-References: <20180627191250.209150-1-shakeelb@google.com>
+From: "Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: BUG: Mount ignores mount options
+Date: Wed, 15 Aug 2018 18:29:51 -0500
+Message-ID: <20180815232951.GA6891@mail.hallyn.com>
+References: <87d0uqpba5.fsf@xmission.com>
+ <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
+ <22361.1533913891@warthog.procyon.org.uk>
+ <28045.1533916438@warthog.procyon.org.uk>
+ <20180810161400.GA627@thunk.org>
+ <CALCETrXC8Z-q+PzzqMC-McA7UdmFubVcs2dVsT0Dt+GbSqjF5A@mail.gmail.com>
+ <20180813173502.1a7a1d9c@alans-desktop>
+ <CALCETrXvtSLjwx0swXo5g-vU3PmF-_6J6j1a_2pAba7bhzO9QQ@mail.gmail.com>
+ <20180813172947.GS6515@ZenIV.linux.org.uk>
+ <alpine.LRH.2.21.1808140458040.23296@namei.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180627191250.209150-1-shakeelb@google.com>
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.21.1808140458040.23296@namei.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Amir Goldstein <amir73il@gmail.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+To: James Morris <jmorris@namei.org>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Theodore Y. Ts'o" <tytso@mit.edu>, David Howells <dhowells@redhat.com>, "Eric W. Biederman" <ebiederm@xmission.com>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, SELinux-NSA <selinux@tycho.nsa.gov>, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, Fenghua Yu <fenghua.yu@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, LSM List <linux-security-module@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hanne>
 
-On Wed, 27 Jun 2018 12:12:48 -0700 Shakeel Butt <shakeelb@google.com> wrote:
-
-> The Linux kernel's memory cgroup allows limiting the memory usage of
-> the jobs running on the system to provide isolation between the jobs.
-> All the kernel memory allocated in the context of the job and marked
-> with __GFP_ACCOUNT will also be included in the memory usage and be
-> limited by the job's limit.
+Quoting James Morris (jmorris@namei.org):
+> On Mon, 13 Aug 2018, Al Viro wrote:
 > 
-> The kernel memory can only be charged to the memcg of the process in
-> whose context kernel memory was allocated. However there are cases where
-> the allocated kernel memory should be charged to the memcg different
-> from the current processes's memcg. This patch series contains two such
-> concrete use-cases i.e. fsnotify and buffer_head.
+> > On Mon, Aug 13, 2018 at 09:48:53AM -0700, Andy Lutomirski wrote:
 > 
-> The fsnotify event objects can consume a lot of system memory for large
-> or unlimited queues if there is either no or slow listener. The events
-> are allocated in the context of the event producer. However they should
-> be charged to the event consumer. Similarly the buffer_head objects can
-> be allocated in a memcg different from the memcg of the page for which
-> buffer_head objects are being allocated.
+> > > Are there cases I'm missing?  It sounds like the API could be improved
+> > > to fully model the last case, and everything will work nicely.
+> > 
+> > 	You know, that's starting to remind of this little gem of Borges:
+> > http://www.alamut.com/subj/artiface/language/johnWilkins.html
+> > Especially the delightful (fake) quote contained in there:
+> > [...] it is written that the animals are divided into:
+> > 	(a) belonging to the emperor,
+> > 	(b) embalmed,
+> > 	(c) tame,
+> > 	(d) sucking pigs,
+> > 	(e) sirens,
+> > 	(f) fabulous,
+> > 	(g) stray dogs,
+> > 	(h) included in the present classification,
+> > 	(i) frenzied,
+> > 	(j) innumerable,
+> > 	(k) drawn with a very fine camelhair brush,
+> > 	(l) et cetera,
+> > 	(m) having just broken the water pitcher,
+> > 	(n) that from a long way off look like flies.
 > 
-> To solve this issue, this patch series introduces mechanism to charge
-> kernel memory to a given memcg. In case of fsnotify events, the memcg of
-> the consumer can be used for charging and for buffer_head, the memcg of
-> the page can be charged. For directed charging, the caller can use the
-> scope API memalloc_[un]use_memcg() to specify the memcg to charge for
-> all the __GFP_ACCOUNT allocations within the scope.
+> 
+> Coincidentally, this was also the model for Linux capabilities.
 
-This patchset is not showing signs of having been well reviewed at
-this time.  Could people please take another look?
-
+But maybe we want to split the stray dogs up by breed.
