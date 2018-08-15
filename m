@@ -1,63 +1,46 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: BUG: Mount ignores mount options
-Date: Tue, 14 Aug 2018 23:03:17 -0500
-Message-ID: <87d0ukjmyi.fsf@xmission.com>
-References: <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
-        <87d0uqpba5.fsf@xmission.com>
-        <20180810151606.GA6515@ZenIV.linux.org.uk>
-        <87pnypiufr.fsf@xmission.com> <20180811014619.GA14368@thunk.org>
-        <8736vlo6ef.fsf@xmission.com>
-        <001a1608-d0fa-84c1-9c54-ae36df95fd89@schaufler-ca.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v8 0/2] Directed kmem charging
+Date: Wed, 15 Aug 2018 15:25:11 -0700
+Message-ID: <20180815152511.3ea63aa54c5fac0bfe9370da@linux-foundation.org>
+References: <20180627191250.209150-1-shakeelb@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <001a1608-d0fa-84c1-9c54-ae36df95fd89@schaufler-ca.com> (Casey
-        Schaufler's message of "Sat, 11 Aug 2018 10:47:50 -0700")
+In-Reply-To: <20180627191250.209150-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Casey Schaufler <casey@schaufler-ca.com>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>, Al Viro <viro@ZenIV.linux.org.uk>, David Howells <dhowells@redhat.com>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, selinux@tycho.nsa.gov, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, linux-api@vger.kernel.org, apparmor@lists.ubuntu.com, fenghua.yu@intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, linux-security-module@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.jp, cgroups@vger.kernel.org, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Miklos Szeredi <miklo>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Amir Goldstein <amir73il@gmail.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Casey Schaufler <casey@schaufler-ca.com> writes:
+On Wed, 27 Jun 2018 12:12:48 -0700 Shakeel Butt <shakeelb@google.com> wrote:
 
-> Don't blame the filesystems for behaving as documented.
+> The Linux kernel's memory cgroup allows limiting the memory usage of
+> the jobs running on the system to provide isolation between the jobs.
+> All the kernel memory allocated in the context of the job and marked
+> with __GFP_ACCOUNT will also be included in the memory usage and be
+> limited by the job's limit.
+> 
+> The kernel memory can only be charged to the memcg of the process in
+> whose context kernel memory was allocated. However there are cases where
+> the allocated kernel memory should be charged to the memcg different
+> from the current processes's memcg. This patch series contains two such
+> concrete use-cases i.e. fsnotify and buffer_head.
+> 
+> The fsnotify event objects can consume a lot of system memory for large
+> or unlimited queues if there is either no or slow listener. The events
+> are allocated in the context of the event producer. However they should
+> be charged to the event consumer. Similarly the buffer_head objects can
+> be allocated in a memcg different from the memcg of the page for which
+> buffer_head objects are being allocated.
+> 
+> To solve this issue, this patch series introduces mechanism to charge
+> kernel memory to a given memcg. In case of fsnotify events, the memcg of
+> the consumer can be used for charging and for buffer_head, the memcg of
+> the page can be charged. For directed charging, the caller can use the
+> scope API memalloc_[un]use_memcg() to specify the memcg to charge for
+> all the __GFP_ACCOUNT allocations within the scope.
 
-No.  This behavior is not documented.  At least I certainly don't see a
-word about this in any of the man pages.  Where does it say mounting a
-filesystem will not honor it's mount options?
-
-It is also rare enough in practice it is something it is reasonable to
-expect people to be surprised by.
-
-> The problem is not in the mount mechanism, it's in the way you want to
-> abuse it.
-
-I am not asking for this behavior.  I am pointing out this behavior
-exists.  I am pointing out this behavior is harmful.  I am asking we
-stop doing this harmful thing in the new API where we don't have a
-chance of breaking anything.
-
-The place where this has bitten the hardest is someone wrote a script to
-do something for Xen in a chroot.  That script involved a chroot that
-mounted devpts and in doing so happend to change the options of the main
-/dev/pts.  Which resulted in ptys created with /dev/ptmx outside the
-chroot with the wrong permissions.  That in turn caused several distros
-to retain the ancient suid pt_chown binary from libc that the devpts
-filesystem was built to make obsolete.  As the world turned that
-pt_chown binary could be confused into chowning the wrong pty if a pty
-from a container was used.
-
-The fix was to mount a new instance of devpts every time mount of devpts
-is called.  That simplified the code, and allowed pt_chown to be removed
-permanently.  The tricky bit was figuring out how keep /dev/ptmx
-working.  I wound up testing on every distribution I could think of to
-ensure no one would notice the slightly changed behavior of the devpts
-filesystem.
-
-The behavior in other filesystems of ignoring the options instead of
-changing them on the filesystem isn't quite as bad.  But it still has
-the potential for a lot of mischief.
-
-Eric
+This patchset is not showing signs of having been well reviewed at
+this time.  Could people please take another look?
 
