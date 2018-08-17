@@ -1,56 +1,74 @@
-From: "Serge E. Hallyn" <serge@hallyn.com>
-Subject: Re: BUG: Mount ignores mount options
-Date: Wed, 15 Aug 2018 18:29:51 -0500
-Message-ID: <20180815232951.GA6891@mail.hallyn.com>
-References: <87d0uqpba5.fsf@xmission.com>
- <153313703562.13253.5766498657900728120.stgit@warthog.procyon.org.uk>
- <22361.1533913891@warthog.procyon.org.uk>
- <28045.1533916438@warthog.procyon.org.uk>
- <20180810161400.GA627@thunk.org>
- <CALCETrXC8Z-q+PzzqMC-McA7UdmFubVcs2dVsT0Dt+GbSqjF5A@mail.gmail.com>
- <20180813173502.1a7a1d9c@alans-desktop>
- <CALCETrXvtSLjwx0swXo5g-vU3PmF-_6J6j1a_2pAba7bhzO9QQ@mail.gmail.com>
- <20180813172947.GS6515@ZenIV.linux.org.uk>
- <alpine.LRH.2.21.1808140458040.23296@namei.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v8 0/2] Directed kmem charging
+Date: Fri, 17 Aug 2018 09:04:25 -0400
+Message-ID: <20180817130425.GA12351@cmpxchg.org>
+References: <20180627191250.209150-1-shakeelb@google.com>
+ <20180815152511.3ea63aa54c5fac0bfe9370da@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=aac5Gm9TQQkSyYqATQFmTCaoOMMkRsihgXdj1y0MZos=;
+        b=OtiZsblMVy9ij4AVKGz73RvZsz9fpyEfp91t6viXYTzJ16rSUShEoEi70GV/2AG1NL
+         rnz0tbi/zojUEc8iq06IMBkcEt4USlvY13ivlB6BesauDPUzgIfHkun/9Wy82ty8RSGp
+         Y/lp/nQ6VeW154zdoQvhOHqqBzwEYW0rCFWO080EVbm23XmI+AXF3qLmq/cR1kqYg5GV
+         YqwfLCiijolLFX6OFTKjE8fp7VVlVClG9gcDqXLLKWP1oxQVkhK50cyPpAcQhgCfZg4c
+         FdkJxhqOQoQNMxkC5a7GbehJUNhojPjbMNXZL1IeICyXY4YjpPpcftysqpnqFDjKWV4m
+         mGIw==
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.21.1808140458040.23296@namei.org>
+In-Reply-To: <20180815152511.3ea63aa54c5fac0bfe9370da@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: James Morris <jmorris@namei.org>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, "Theodore Y. Ts'o" <tytso@mit.edu>, David Howells <dhowells@redhat.com>, "Eric W. Biederman" <ebiederm@xmission.com>, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, SELinux-NSA <selinux@tycho.nsa.gov>, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, Linux API <linux-api@vger.kernel.org>, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, Fenghua Yu <fenghua.yu@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, LSM List <linux-security-module@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hanne>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Amir Goldstein <amir73il@gmail.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Quoting James Morris (jmorris@namei.org):
-> On Mon, 13 Aug 2018, Al Viro wrote:
+On Wed, Aug 15, 2018 at 03:25:11PM -0700, Andrew Morton wrote:
+> On Wed, 27 Jun 2018 12:12:48 -0700 Shakeel Butt <shakeelb@google.com> wrote:
 > 
-> > On Mon, Aug 13, 2018 at 09:48:53AM -0700, Andy Lutomirski wrote:
-> 
-> > > Are there cases I'm missing?  It sounds like the API could be improved
-> > > to fully model the last case, and everything will work nicely.
+> > The Linux kernel's memory cgroup allows limiting the memory usage of
+> > the jobs running on the system to provide isolation between the jobs.
+> > All the kernel memory allocated in the context of the job and marked
+> > with __GFP_ACCOUNT will also be included in the memory usage and be
+> > limited by the job's limit.
 > > 
-> > 	You know, that's starting to remind of this little gem of Borges:
-> > http://www.alamut.com/subj/artiface/language/johnWilkins.html
-> > Especially the delightful (fake) quote contained in there:
-> > [...] it is written that the animals are divided into:
-> > 	(a) belonging to the emperor,
-> > 	(b) embalmed,
-> > 	(c) tame,
-> > 	(d) sucking pigs,
-> > 	(e) sirens,
-> > 	(f) fabulous,
-> > 	(g) stray dogs,
-> > 	(h) included in the present classification,
-> > 	(i) frenzied,
-> > 	(j) innumerable,
-> > 	(k) drawn with a very fine camelhair brush,
-> > 	(l) et cetera,
-> > 	(m) having just broken the water pitcher,
-> > 	(n) that from a long way off look like flies.
+> > The kernel memory can only be charged to the memcg of the process in
+> > whose context kernel memory was allocated. However there are cases where
+> > the allocated kernel memory should be charged to the memcg different
+> > from the current processes's memcg. This patch series contains two such
+> > concrete use-cases i.e. fsnotify and buffer_head.
+> > 
+> > The fsnotify event objects can consume a lot of system memory for large
+> > or unlimited queues if there is either no or slow listener. The events
+> > are allocated in the context of the event producer. However they should
+> > be charged to the event consumer. Similarly the buffer_head objects can
+> > be allocated in a memcg different from the memcg of the page for which
+> > buffer_head objects are being allocated.
+> > 
+> > To solve this issue, this patch series introduces mechanism to charge
+> > kernel memory to a given memcg. In case of fsnotify events, the memcg of
+> > the consumer can be used for charging and for buffer_head, the memcg of
+> > the page can be charged. For directed charging, the caller can use the
+> > scope API memalloc_[un]use_memcg() to specify the memcg to charge for
+> > all the __GFP_ACCOUNT allocations within the scope.
 > 
-> 
-> Coincidentally, this was also the model for Linux capabilities.
+> This patchset is not showing signs of having been well reviewed at
+> this time.  Could people please take another look?
 
-But maybe we want to split the stray dogs up by breed.
+I don't have the mailing list archives for this anymore, but the
+series as it stands in mmots looks good to me and incorporates all the
+feedback I remember giving.
+
+[ My only gripe really is that it applies current->active_memcg only
+  to kmem charges, not others as well. Right now it doesn't matter,
+  but I can see this costing a kernel developer implementing remote
+  charges for something other than kmem some time to realize. ]
+
+Anyway, please feel free to add
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+
+for 1/2 and 2/2 plus their two fixlets.
