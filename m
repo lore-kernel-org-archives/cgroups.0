@@ -1,74 +1,62 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v8 0/2] Directed kmem charging
-Date: Fri, 17 Aug 2018 09:04:25 -0400
-Message-ID: <20180817130425.GA12351@cmpxchg.org>
-References: <20180627191250.209150-1-shakeelb@google.com>
- <20180815152511.3ea63aa54c5fac0bfe9370da@linux-foundation.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v11 7/9] cpuset: Expose cpus.effective and mems.effective
+ on cgroup v2 root
+Date: Fri, 17 Aug 2018 08:59:46 -0700
+Message-ID: <20180817155946.GJ3978217@devbig004.ftw2.facebook.com>
+References: <20180719165201.GU72677@devbig577.frc2.facebook.com>
+ <20180720113121.GJ2476@hirez.programming.kicks-ass.net>
+ <20180720114549.GY72677@devbig577.frc2.facebook.com>
+ <20180720154454.GR2494@hirez.programming.kicks-ass.net>
+ <20180720155613.GB1934745@devbig577.frc2.facebook.com>
+ <4857a9db-ebf5-24f8-c42d-d795f5c75854@redhat.com>
+ <20180720163712.GU2494@hirez.programming.kicks-ass.net>
+ <8c655adc-6d9e-b767-1024-5d6941c995a9@redhat.com>
+ <20180720174100.GC1934745@devbig577.frc2.facebook.com>
+ <446ab203-85cd-32ff-40a9-0ba22d5a2534@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=aac5Gm9TQQkSyYqATQFmTCaoOMMkRsihgXdj1y0MZos=;
-        b=OtiZsblMVy9ij4AVKGz73RvZsz9fpyEfp91t6viXYTzJ16rSUShEoEi70GV/2AG1NL
-         rnz0tbi/zojUEc8iq06IMBkcEt4USlvY13ivlB6BesauDPUzgIfHkun/9Wy82ty8RSGp
-         Y/lp/nQ6VeW154zdoQvhOHqqBzwEYW0rCFWO080EVbm23XmI+AXF3qLmq/cR1kqYg5GV
-         YqwfLCiijolLFX6OFTKjE8fp7VVlVClG9gcDqXLLKWP1oxQVkhK50cyPpAcQhgCfZg4c
-         FdkJxhqOQoQNMxkC5a7GbehJUNhojPjbMNXZL1IeICyXY4YjpPpcftysqpnqFDjKWV4m
-         mGIw==
+        bh=4fcruF0wHWAiuq7TBuf0S7S9RugixbQxRSP48LAR0zc=;
+        b=Jsy3ErxEW5czngd306aCb2YJmiW2wT36rr2cN+fWybPa7H2AfX1lkF5OvYJ6kkPV8v
+         ZNwthLC3UktUqSduS9PFjdfFeY/bqhwcmIPxb4VFZPOEiwNv/OTIqVxONezaDBhDgzIG
+         MGb70uQXjMqkOyCuRvVHu6C66Q9fdmB1uxT8uMK9uxAOwDdtkhZ/ZjQiwo5NVVZvwPIh
+         XXcfM/l+IpFcxCpDzOLOFYcld6hOIL2wykT07YgEd5a04nmvfpPz6bP6pXcS9gvbb9ul
+         Zl1BmPSgsBPWXvUsREaoKwD3XwkRd/Bm0dK+0BNZi04CYdliQImVEr7LbEd7bUykC3OD
+         A1Fw==
 Content-Disposition: inline
-In-Reply-To: <20180815152511.3ea63aa54c5fac0bfe9370da@linux-foundation.org>
+In-Reply-To: <446ab203-85cd-32ff-40a9-0ba22d5a2534@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jan Kara <jack@suse.com>, Greg Thelen <gthelen@google.com>, Amir Goldstein <amir73il@gmail.com>, Roman Gushchin <guro@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Waiman Long <longman@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-On Wed, Aug 15, 2018 at 03:25:11PM -0700, Andrew Morton wrote:
-> On Wed, 27 Jun 2018 12:12:48 -0700 Shakeel Butt <shakeelb@google.com> wrote:
+Hello, Waiman.
+
+On Mon, Aug 13, 2018 at 01:56:15PM -0400, Waiman Long wrote:
+> The following restrictions are still imposed on a partition root wrt
+> allowable changes in cpuset.cpus:
+> 1) cpuset.cpus cannot be set to "". There must be at least 1 cpu there.
+> 2) Adding cpus that are not in parent's cpuset.cpus (as well as
+> cpuset.cpus.effective) or that will take all the parent's effective cpus
+> away is not allowed.
 > 
-> > The Linux kernel's memory cgroup allows limiting the memory usage of
-> > the jobs running on the system to provide isolation between the jobs.
-> > All the kernel memory allocated in the context of the job and marked
-> > with __GFP_ACCOUNT will also be included in the memory usage and be
-> > limited by the job's limit.
-> > 
-> > The kernel memory can only be charged to the memcg of the process in
-> > whose context kernel memory was allocated. However there are cases where
-> > the allocated kernel memory should be charged to the memcg different
-> > from the current processes's memcg. This patch series contains two such
-> > concrete use-cases i.e. fsnotify and buffer_head.
-> > 
-> > The fsnotify event objects can consume a lot of system memory for large
-> > or unlimited queues if there is either no or slow listener. The events
-> > are allocated in the context of the event producer. However they should
-> > be charged to the event consumer. Similarly the buffer_head objects can
-> > be allocated in a memcg different from the memcg of the page for which
-> > buffer_head objects are being allocated.
-> > 
-> > To solve this issue, this patch series introduces mechanism to charge
-> > kernel memory to a given memcg. In case of fsnotify events, the memcg of
-> > the consumer can be used for charging and for buffer_head, the memcg of
-> > the page can be charged. For directed charging, the caller can use the
-> > scope API memalloc_[un]use_memcg() to specify the memcg to charge for
-> > all the __GFP_ACCOUNT allocations within the scope.
+> So are these limitations acceptable?
 > 
-> This patchset is not showing signs of having been well reviewed at
-> this time.  Could people please take another look?
+> The easiest way to remove those restrictions is to forcefully turn off
+> the cpuset.sched.partition flag in the cpuset as well as any
+> sub-partitions when the user try to do that. With that change, there
+> will be no more new restriction on what you can do on cpuset.cpus.
 
-I don't have the mailing list archives for this anymore, but the
-series as it stands in mmots looks good to me and incorporates all the
-feedback I remember giving.
+I think that'd be the right thing to do.  That's what we do with
+cpuset.cpus and cpuset.mems too.  If there's nothing available, we
+ignore the config and show the settings which are currently in effect.
 
-[ My only gripe really is that it applies current->active_memcg only
-  to kmem charges, not others as well. Right now it doesn't matter,
-  but I can see this costing a kernel developer implementing remote
-  charges for something other than kmem some time to realize. ]
+Thanks.
 
-Anyway, please feel free to add
-
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-
-for 1/2 and 2/2 plus their two fixlets.
+-- 
+tejun
