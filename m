@@ -1,95 +1,121 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH] mm: memcontrol: print proper OOM header when no eligible victim left
-Date: Tue, 21 Aug 2018 12:04:06 -0400
-Message-ID: <20180821160406.22578-1-hannes@cmpxchg.org>
+Subject: Re: [PATCH 8/9] psi: pressure stall information for CPU, memory, and
+ IO
+Date: Tue, 21 Aug 2018 15:44:13 -0400
+Message-ID: <20180821194413.GA24538@cmpxchg.org>
+References: <20180801151958.32590-1-hannes@cmpxchg.org>
+ <20180801151958.32590-9-hannes@cmpxchg.org>
+ <20180803165641.GA2476@hirez.programming.kicks-ass.net>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id;
-        bh=HQveg+wwOvTMgdq8w8V2TDKUdmzAZcRDjRhbO3q1zV8=;
-        b=0l/jvN1YJk7d1P79vzNblx2RXEFZ05NKLc8X7lXMrwjyeWL8pCT5aqWoohrk+lsppp
-         Zkh1FJTP/GVyTfoCHUBwZvt/vRq1Grva0fuG/+ocLK9jR4mX4BHCLGNpLytptrmD/HUo
-         ekuSezfHj9CEUVzoMrFbKK8QXyhtddhDsjDicxzwwF7Ejnzp8rtwwI3+5OfABBap5ObG
-         0B+PTiAICHD470ZOQf1QtlXk0atuMOw4JzYy/SjzEfLoJoaiNb39csjsaBPktqZitd6b
-         6DW3ceomGLxsrWsHBBiOfcmgq0vbAnHIUKZTUiBGBaNcSwDQ/XWKB24bDd8C/FRwDzoM
-         Djpw==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Y7sn1yrXnMivKB1tsHT35xpqQapDm2oCf8sWGyB+fzE=;
+        b=sID9SnX2a7/YR0502EVfCCq+Sxl2ed4VFqtivAX9YclTEoBojimbnGqlm0pT4RnWtO
+         Xcw9YyY746os1eX3XDkJ58U7s23CIa/74RJpfC754ewrJDsNAbt/Dwtib7MgnVrz4+OK
+         6d78SbkkGuJ5jps0LBnjZj0YXRb41fkgvdH5EbgUtbZ494VbV9bNWVuUAobXXFx+G++s
+         PuDsj6PVW7HeEHzFdOYfy0Yb/mzbCHiMo0kyrtb0qevMY6ZqeZ/mHjcgn7yqbTcoysV2
+         hOs+uajbE8hhtSSVGngRef1j6LsFKoF1NySVq+pGldVtP69oYLJZPWwaQp+JITMn1ixF
+         bX4w==
+Content-Disposition: inline
+In-Reply-To: <20180803165641.GA2476@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>, Dmitry Vyukov <dvyukov@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-When the memcg OOM killer runs out of killable tasks, it currently
-prints a WARN with no further OOM context. This has caused some user
-confusion.
+Hi,
 
-Warnings indicate a kernel problem. In a reported case, however, the
-situation was triggered by a non-sensical memcg configuration (hard
-limit set to 0). But without any VM context this wasn't obvious from
-the report, and it took some back and forth on the mailing list to
-identify what is actually a trivial issue.
+a quick update on that feedback before I send out v4:
 
-Handle this OOM condition like we handle it in the global OOM killer:
-dump the full OOM context and tell the user we ran out of tasks.
+On Fri, Aug 03, 2018 at 06:56:41PM +0200, Peter Zijlstra wrote:
+> On Wed, Aug 01, 2018 at 11:19:57AM -0400, Johannes Weiner wrote:
+> > +static bool test_state(unsigned int *tasks, int cpu, enum psi_states state)
+> > +{
+> > +	switch (state) {
+> > +	case PSI_IO_SOME:
+> > +		return tasks[NR_IOWAIT];
+> > +	case PSI_IO_FULL:
+> > +		return tasks[NR_IOWAIT] && !tasks[NR_RUNNING];
+> > +	case PSI_MEM_SOME:
+> > +		return tasks[NR_MEMSTALL];
+> > +	case PSI_MEM_FULL:
+> > +		/*
+> > +		 * Since we care about lost potential, things are
+> > +		 * fully blocked on memory when there are no other
+> > +		 * working tasks, but also when the CPU is actively
+> > +		 * being used by a reclaimer and nothing productive
+> > +		 * could run even if it were runnable.
+> > +		 */
+> > +		return tasks[NR_MEMSTALL] &&
+> > +			(!tasks[NR_RUNNING] ||
+> > +			 cpu_curr(cpu)->flags & PF_MEMSTALL);
+> 
+> I don't think you can do this, there is nothing that guarantees
+> cpu_curr() still exists.
 
-This way the user can identify misconfigurations easily by themselves
-and rectify the problem - without having to go through the hassle of
-running into an obscure but unsettling warning, finding the
-appropriate kernel mailing list and waiting for a kernel developer to
-remote-analyze that the memcg configuration caused this.
+As discussed later in this thread, I've replaced this with time
+sampling from inside scheduler_tick(): in the unlikely event that
+rq->curr is PF_MEMSTALL, it'll record TICK_NSEC worth of MEM_FULL.
 
-If users cannot make sense of why the OOM killer was triggered or why
-it failed, they will still report it to the mailing list, we know that
-from experience. So in case there is an actual kernel bug causing
-this, kernel developers will very likely hear about it.
+However:
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-Acked-by: Michal Hocko <mhocko@suse.com>
----
- mm/memcontrol.c |  2 --
- mm/oom_kill.c   | 13 ++++++++++---
- 2 files changed, 10 insertions(+), 5 deletions(-)
+> > +		for (s = PSI_NONIDLE; s >= 0; s--) {
+> > +			u32 time, delta;
+> > +
+> > +			time = READ_ONCE(groupc->times[s]);
+> > +			/*
+> > +			 * In addition to already concluded states, we
+> > +			 * also incorporate currently active states on
+> > +			 * the CPU, since states may last for many
+> > +			 * sampling periods.
+> > +			 *
+> > +			 * This way we keep our delta sampling buckets
+> > +			 * small (u32) and our reported pressure close
+> > +			 * to what's actually happening.
+> > +			 */
+> > +			if (test_state(groupc->tasks, cpu, s)) {
+> > +				/*
+> > +				 * We can race with a state change and
+> > +				 * need to make sure the state_start
+> > +				 * update is ordered against the
+> > +				 * updates to the live state and the
+> > +				 * time buckets (groupc->times).
+> > +				 *
+> > +				 * 1. If we observe task state that
+> > +				 * needs to be recorded, make sure we
+> > +				 * see state_start from when that
+> > +				 * state went into effect or we'll
+> > +				 * count time from the previous state.
+> > +				 *
+> > +				 * 2. If the time delta has already
+> > +				 * been added to the bucket, make sure
+> > +				 * we don't see it in state_start or
+> > +				 * we'll count it twice.
+> > +				 *
+> > +				 * If the time delta is out of
+> > +				 * state_start but not in the time
+> > +				 * bucket yet, we'll miss it entirely
+> > +				 * and handle it in the next period.
+> > +				 */
+> > +				smp_rmb();
+> > +				time += cpu_clock(cpu) - groupc->state_start;
+> > +			}
+> 
+> The alternative is adding an update to scheduler_tick(), that would
+> ensure you're never more than nr_cpu_ids * TICK_NSEC behind.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4e3c1315b1de..29d9d1a69b36 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1701,8 +1701,6 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
- 	if (mem_cgroup_out_of_memory(memcg, mask, order))
- 		return OOM_SUCCESS;
- 
--	WARN(1,"Memory cgroup charge failed because of no reclaimable memory! "
--		"This looks like a misconfiguration or a kernel bug.");
- 	return OOM_FAILED;
- }
- 
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index b5b25e4dcbbb..95fbbc46f68f 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -1103,10 +1103,17 @@ bool out_of_memory(struct oom_control *oc)
- 	}
- 
- 	select_bad_process(oc);
--	/* Found nothing?!?! Either we hang forever, or we panic. */
--	if (!oc->chosen && !is_sysrq_oom(oc) && !is_memcg_oom(oc)) {
-+	/* Found nothing?!?! */
-+	if (!oc->chosen) {
- 		dump_header(oc, NULL);
--		panic("Out of memory and no killable processes...\n");
-+		pr_warn("Out of memory and no killable processes...\n");
-+		/*
-+		 * If we got here due to an actual allocation at the
-+		 * system level, we cannot survive this and will enter
-+		 * an endless loop in the allocator. Bail out now.
-+		 */
-+		if (!is_sysrq_oom(oc) && !is_memcg_oom(oc))
-+			panic("System is deadlocked on memory\n");
- 	}
- 	if (oc->chosen && oc->chosen != (void *)-1UL)
- 		oom_kill_process(oc, !is_memcg_oom(oc) ? "Out of memory" :
--- 
-2.18.0
+I wasn't able to convert *all* states to tick updates like this.
 
+The reason is that, while testing rq->curr for PF_MEMSTALL is cheap,
+other tasks associated with the rq could be from any cgroup in the
+system. That means we'd have to do for_each_cgroup() on every tick to
+keep the groupc->times that closely uptodate, and that wouldn't scale.
+We tend to have hundreds of them, some setups have thousands.
+
+Since we don't need to be *that* current, I left the on-demand update
+inside the aggregator for now. It's a bit trickier, but much cheaper.
