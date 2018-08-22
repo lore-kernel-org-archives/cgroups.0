@@ -1,12 +1,12 @@
 From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 8/9] psi: pressure stall information for CPU, memory, and
  IO
-Date: Wed, 22 Aug 2018 11:10:24 +0200
-Message-ID: <20180822091024.GU24124@hirez.programming.kicks-ass.net>
+Date: Wed, 22 Aug 2018 11:16:40 +0200
+Message-ID: <20180822091640.GV24124@hirez.programming.kicks-ass.net>
 References: <20180801151958.32590-1-hannes@cmpxchg.org>
  <20180801151958.32590-9-hannes@cmpxchg.org>
- <20180803172139.GE2494@hirez.programming.kicks-ass.net>
- <20180821201115.GB24538@cmpxchg.org>
+ <20180803165641.GA2476@hirez.programming.kicks-ass.net>
+ <20180821194413.GA24538@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
@@ -15,14 +15,14 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=YbdDDn0LmMntOvsDynUtkB+mSIAFRIE4RGQzJvC3h5Q=; b=jSiz0SUqgjqtYAL67S8Lqar0i
-        p0b7Y7CW10WpXS0NNVGlBubKM8EeCLv1Jaaou8dQCVTcElzguUN/Qs0+SlAHfcnF/mIHfVGmqsyLT
-        s93/sZxhQwWIwqwVs7MNBaOsFZm5hyd6ROK5gaL2lOBo982Ww+U0YqRMmdSV9UarpPQfzV6XNWn6m
-        0Nqq20kfiGNXzjtfK3hvjtA3dUXVqMMne8QJ4AijNqnL2KzK8YneUDZ8Yi9wiC2eZE6cOJYRs+rgo
-        SMdhHO15+3XIi073bSguMNAihmCZ709twxhLzv26WYHo5bMKi3vPi+YOwbljVTFkyYzXRxRTHssL2
+         bh=LuOvCEgwGsH/kKcIW3uG3WLfnGS0BKIJoNEFGYBxAkM=; b=BBBLrIeNjL/Amptv3C8Ba5ejf
+        DkRnXMvX2eB8hXqJbRmMyXfyfp/ScG+mBVmW2GWsyAo5ErX+yI74gNtk46+DHabAEtEhetYt2ygH9
+        DtZOuQZft2gQ35kw1wRZqkRZ1u+mCJhTUcn4qEucHgy4KdV+5gxGEbuL0LAcxixY2n6X6Tmm5FfYV
+        WhRQ/aRbxiMxeSDb/Br65EgSCoT91HW0YLMiJqaehk2/anwJDxLBmMXoM60MFkd2esPuUUDq1GFBM
+        iOYxF9vWoivleKz5jv0HjDBwm4pgafWlXTCsnj2cwQ9l33F/9TCiHbo016mrrhbI3mtm1+4JEM/nw
     
 Content-Disposition: inline
-In-Reply-To: <20180821201115.GB24538@cmpxchg.org>
+In-Reply-To: <20180821194413.GA24538@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -30,9 +30,11 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Aug 21, 2018 at 04:11:15PM -0400, Johannes Weiner wrote:
-> On Fri, Aug 03, 2018 at 07:21:39PM +0200, Peter Zijlstra wrote:
-> > On Wed, Aug 01, 2018 at 11:19:57AM -0400, Johannes Weiner wrote:
+On Tue, Aug 21, 2018 at 03:44:13PM -0400, Johannes Weiner wrote:
+
+> > > +		for (s = PSI_NONIDLE; s >= 0; s--) {
+> > > +			u32 time, delta;
+> > > +
 > > > +			time = READ_ONCE(groupc->times[s]);
 > > > +			/*
 > > > +			 * In addition to already concluded states, we
@@ -72,11 +74,21 @@ On Tue, Aug 21, 2018 at 04:11:15PM -0400, Johannes Weiner wrote:
 > > > +				time += cpu_clock(cpu) - groupc->state_start;
 > > > +			}
 > > 
-> > As is, groupc->state_start needs a READ_ONCE() above and a WRITE_ONCE()
-> > below. But like stated earlier, doing an update in scheduler_tick() is
-> > probably easier.
+> > The alternative is adding an update to scheduler_tick(), that would
+> > ensure you're never more than nr_cpu_ids * TICK_NSEC behind.
 > 
-> I've wrapped these in READ_ONCE/WRITE_ONCE.
+> I wasn't able to convert *all* states to tick updates like this.
+> 
+> The reason is that, while testing rq->curr for PF_MEMSTALL is cheap,
+> other tasks associated with the rq could be from any cgroup in the
+> system. That means we'd have to do for_each_cgroup() on every tick to
+> keep the groupc->times that closely uptodate, and that wouldn't scale.
+> We tend to have hundreds of them, some setups have thousands.
+> 
+> Since we don't need to be *that* current, I left the on-demand update
+> inside the aggregator for now. It's a bit trickier, but much cheaper.
 
-I just realized, these are u64, so READ_ONCE/WRITE_ONCE will not work
-correct on 32bit.
+ARGH indeed; I was thinking we only need to update current. But because
+we're tracking blocked state that doesn't work.
+
+Sorry for that :/
