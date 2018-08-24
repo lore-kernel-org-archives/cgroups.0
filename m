@@ -1,100 +1,56 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 8/9] psi: pressure stall information for CPU, memory, and
- IO
-Date: Wed, 22 Aug 2018 13:28:25 -0400
-Message-ID: <20180822172825.GA1317@cmpxchg.org>
-References: <20180801151958.32590-1-hannes@cmpxchg.org>
- <20180801151958.32590-9-hannes@cmpxchg.org>
- <20180803172139.GE2494@hirez.programming.kicks-ass.net>
- <20180821201115.GB24538@cmpxchg.org>
- <20180822091024.GU24124@hirez.programming.kicks-ass.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup changes for v4.19-rc1
+Date: Fri, 24 Aug 2018 11:46:56 -0700
+Message-ID: <20180824184656.GX3978217@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=0fqYneS8rObbjrQtaVaioH+NNLEqKGl0wY/oATv9iXk=;
-        b=zMr/NBJzORtE1COVfHArW9FY3wL+CbxviCU//4jeV194L2ftzIk+l+qA2p5rCW/Gdq
-         11Os04dc43eIa0tEDp9oFg/y+Wo6lsqcyG4FDCxC5aH71q59ijQPQkeRNbm5dOOD4Io7
-         aWhzN6IkM0yvn6C9AJt+0Ft65+pOMvYJgILrqhaQdPx/Poj1xuuq+m4nlfUIvU64XBk8
-         rhTxgyiwJtR6Ysoo97y7QX/aRjhHlatDrZ9GerLkrAhB6GJ7AYO9XTeNWSn+W3jwU7Av
-         kWrqQi83dDWfU304d8y4A3MFqjsMOh9Z4SyIb4YEjffsNprKHUp1LKX930wyl26XGNsK
-         wgPg==
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=4lIYOQNAJ/SvFT4BpHwj/tw6JnH50j7Nlqzxh6kS2EU=;
+        b=tmOU9bkcgkKrddtNAMGJAuKlXnIH87w/pshcyUjZwr613VSWnQCgM0zi7gxM7e60Vk
+         JA53FlueFh+/0aJibt5QBDIdz6EDDX9Hev04vOJ3OYrfd9L5Zzma4DlbdDW7syx+0ozO
+         qHbZHbLzUGLGv8RACCsDxp7uIfp/F8mI2DuYjV0MiHCkFgJtjY01o0Wa7IfxLkmrxs/B
+         lF1YOetwcyTvgkBusDGh7D9rawuVPxi8OmmnDEhKCXUOOMapvd52wTV/Fra/6o/iV1nq
+         eYLiuF3b9lLWkNeucSTj/6jEruGp7cf6jZ/DkP9O5wPVfsfaTTj0EUdv9okQGF/2/7Ek
+         diVQ==
 Content-Disposition: inline
-In-Reply-To: <20180822091024.GU24124@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Mike Galbraith <efault@gmx.de>, Shakeel Butt <shakeelb@google.com>, Peter Enderborg <peter.enderborg@sony.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Aug 22, 2018 at 11:10:24AM +0200, Peter Zijlstra wrote:
-> On Tue, Aug 21, 2018 at 04:11:15PM -0400, Johannes Weiner wrote:
-> > On Fri, Aug 03, 2018 at 07:21:39PM +0200, Peter Zijlstra wrote:
-> > > On Wed, Aug 01, 2018 at 11:19:57AM -0400, Johannes Weiner wrote:
-> > > > +			time = READ_ONCE(groupc->times[s]);
-> > > > +			/*
-> > > > +			 * In addition to already concluded states, we
-> > > > +			 * also incorporate currently active states on
-> > > > +			 * the CPU, since states may last for many
-> > > > +			 * sampling periods.
-> > > > +			 *
-> > > > +			 * This way we keep our delta sampling buckets
-> > > > +			 * small (u32) and our reported pressure close
-> > > > +			 * to what's actually happening.
-> > > > +			 */
-> > > > +			if (test_state(groupc->tasks, cpu, s)) {
-> > > > +				/*
-> > > > +				 * We can race with a state change and
-> > > > +				 * need to make sure the state_start
-> > > > +				 * update is ordered against the
-> > > > +				 * updates to the live state and the
-> > > > +				 * time buckets (groupc->times).
-> > > > +				 *
-> > > > +				 * 1. If we observe task state that
-> > > > +				 * needs to be recorded, make sure we
-> > > > +				 * see state_start from when that
-> > > > +				 * state went into effect or we'll
-> > > > +				 * count time from the previous state.
-> > > > +				 *
-> > > > +				 * 2. If the time delta has already
-> > > > +				 * been added to the bucket, make sure
-> > > > +				 * we don't see it in state_start or
-> > > > +				 * we'll count it twice.
-> > > > +				 *
-> > > > +				 * If the time delta is out of
-> > > > +				 * state_start but not in the time
-> > > > +				 * bucket yet, we'll miss it entirely
-> > > > +				 * and handle it in the next period.
-> > > > +				 */
-> > > > +				smp_rmb();
-> > > > +				time += cpu_clock(cpu) - groupc->state_start;
-> > > > +			}
-> > > 
-> > > As is, groupc->state_start needs a READ_ONCE() above and a WRITE_ONCE()
-> > > below. But like stated earlier, doing an update in scheduler_tick() is
-> > > probably easier.
-> > 
-> > I've wrapped these in READ_ONCE/WRITE_ONCE.
-> 
-> I just realized, these are u64, so READ_ONCE/WRITE_ONCE will not work
-> correct on 32bit.
+Hello,
 
-Ah, right.
+Just one commit from Steven to take out spin lock from trace event
+handlers.
 
-Actually, that race described in the comment above - "If the time
-delta is out of state_start but not in the time bucket yet, we'll miss
-it entirely and handle it in the next period" - can cause bogus time
-samples if state persists for more than 2s. Because if we observed a
-live state and included it in our private copy of the time bucket
-(times_prev), missing the delta in transit to the time bucket in the
-next aggregation results in times_prev being ahead of 'time', which
-causes the delta to underflow into a bogusly large sample.
+Thanks.
 
-Memory barriers alone cannot guarantee full coherency here (neither
-seeing the delta twice, nor missing it entirely) so I'm switching this
-over to seqcount to make sure the aggregator sees something sensible.
+The following changes since commit 1e09177acae32a61586af26d83ca5ef591cdcaf5:
 
-And then I don't need the READ_ONCE/WRITE_ONCE.
+  Merge tag 'mips_fixes_4.18_3' of git://git.kernel.org/pub/scm/linux/kernel/git/mips/linux (2018-07-10 16:18:09 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.19
+
+for you to fetch changes up to e4f8d81c738db6d3ffdabfb8329aa2feaa310699:
+
+  cgroup/tracing: Move taking of spin lock out of trace event handlers (2018-07-11 10:48:47 -0700)
+
+----------------------------------------------------------------
+Steven Rostedt (VMware) (1):
+      cgroup/tracing: Move taking of spin lock out of trace event handlers
+
+ include/trace/events/cgroup.h   | 47 ++++++++++++++++++++---------------------
+ kernel/cgroup/cgroup-internal.h | 26 +++++++++++++++++++++++
+ kernel/cgroup/cgroup-v1.c       |  4 ++--
+ kernel/cgroup/cgroup.c          | 12 ++++++-----
+ 4 files changed, 58 insertions(+), 31 deletions(-)
+
+-- 
+tejun
