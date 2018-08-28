@@ -1,72 +1,78 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v12 9/9] cpuset: Support forced turning off of partition
- flag
-Date: Mon, 27 Aug 2018 13:50:18 -0400
-Message-ID: <0daf1f43-2292-0281-3ab8-aef20d0475dc@redhat.com>
-References: <1535380884-31308-1-git-send-email-longman@redhat.com>
- <1535380884-31308-10-git-send-email-longman@redhat.com>
- <20180827164004.GE3978217@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 1/9] mm: workingset: don't drop refault information prematurely
+Date: Tue, 28 Aug 2018 13:22:50 -0400
+Message-ID: <20180828172258.3185-2-hannes@cmpxchg.org>
+References: <20180828172258.3185-1-hannes@cmpxchg.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180827164004.GE3978217@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=6LP4jYlbkEnBcnLxdEdJzxq3VgpVfWiBPMH3IQ/af2M=;
+        b=1VST8BwL/2+J3rqHHlYBmAySQOD3S7m02Nic1jjLJcfoHxI8+mwYve17/BJZ1m03lm
+         kRVchpfKFipfKjExKOaozqJk24pyutKM23M0yyaUW1Y75DxmgodD8EBE4FUnPBWGkC3v
+         QzJ7JPI6Y8ZyrfJXkJIW9+S/Ack5MkA1EWfKelcFc0/vOtym7aD4kD/Y5UIy9D3Z6LgB
+         f4/Gu1Ksf+I26xfika+1g+imCP2BqrH3XjSZPNh+5FfHwOn4qIHdGk2yH5Tl6qR0sYjn
+         AcKbmMfJUfgH1sCh6rU1rfM/lFq1Xxgvb/enMbtVwswr2ta+1n4NTADp06MNEhidpYtg
+         WNZg==
+In-Reply-To: <20180828172258.3185-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Content-Transfer-Encoding: 7bit
+To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Peter Enderborg <peter.enderborg@sony.com>, Shakeel Butt <shakeelb@google.com>, Mike Galbraith <efault@gmx.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 08/27/2018 12:40 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Mon, Aug 27, 2018 at 10:41:24AM -0400, Waiman Long wrote:
->> Cpuset allows arbitrary modification of cpu list in "cpuset.cpus"
->> even if the requested CPUs won't be granted in "cpuset.cpus.effective"
->> as restricted by its parent. However, the validate_change() function
->> will inhibit removal of CPUs that have been used in child cpusets.
->>
->> Being a partition root, however, limits the kind of cpu list
->> modification that is allowed. Adding CPUs is not allowed if the new
->> CPUs are not in the parent's effective cpu list that can be put into
->> "cpuset.cpus.reserved". In addition, a child partition cannot exhaust
->> all the parent's effective CPUs.
->>
->> Because of the implicit cpu exclusive nature of the partition root,
->> cpu changes that break that cpu exclusivity will not be allowed. Other
->> changes that break the conditions of being a partition root is generally
->> allowed. However, the partition flag of the cpuset as well those of
->> the descendant partitions will be forcefully turned off.
-> First of all, thanks a lot for your persistence.  I'm not necessarily
-> against the flag being forced off but wonder whether the same
-> config/effective approach can be used as in .cpus and .mems.  Can you
-> elaborate a bit on the choice here?
->
-> Thank you.
+From: Johannes Weiner <jweiner@fb.com>
 
-My current code has explicitly assumed the following relationship for
-partition root.
+If we keep just enough refault information to match the *current* page
+cache during reclaim time, we could lose a lot of events when there is
+only a temporary spike in non-cache memory consumption that pushes out
+all the cache. Once cache comes back, we won't see those refaults.
+They might not be actionable for LRU aging, but we want to know about
+them for measuring memory pressure.
 
-    cpus_allowed = effective_cpus + reserved_cpus
+Signed-off-by: Johannes Weiner <jweiner@fb.com>
+---
+ mm/workingset.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Also effective_cpus cannot be empty. Specifically, cpus_allowed has to
-be equal to effective_cpus before a cpuset can be made a partition root.
-
-Any changes that break the above conditions will turn off the partition
-flag forcefully. The only exception is cpu offlining where cpus_allowed
-> effective_cpus + reserved_cpus can happen.
-
-One reason for doing so is because reserved_cpus is hidden. So the main
-way to infer that is to do cpus_allowed - effective_cpus.
-
-It is probably doable to make cpus_allowed >= effective_cpus +
-reserved_cpus in general, but we may need to expose reserved_cpus as a
-read-only file, for instance. There may also be other complications that
-we will need to take care of if this is supported. My current preference
-is to not doing that unless there is compelling reason to do so.
-
-Cheers,
-Longman
-
-
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 40ee02c83978..53759a3cf99a 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -364,7 +364,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ {
+ 	unsigned long max_nodes;
+ 	unsigned long nodes;
+-	unsigned long cache;
++	unsigned long pages;
+ 
+ 	/* list_lru lock nests inside the IRQ-safe i_pages lock */
+ 	local_irq_disable();
+@@ -393,14 +393,14 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ 	 *
+ 	 * PAGE_SIZE / radix_tree_nodes / node_entries * 8 / PAGE_SIZE
+ 	 */
+-	if (sc->memcg) {
+-		cache = mem_cgroup_node_nr_lru_pages(sc->memcg, sc->nid,
+-						     LRU_ALL_FILE);
+-	} else {
+-		cache = node_page_state(NODE_DATA(sc->nid), NR_ACTIVE_FILE) +
+-			node_page_state(NODE_DATA(sc->nid), NR_INACTIVE_FILE);
+-	}
+-	max_nodes = cache >> (RADIX_TREE_MAP_SHIFT - 3);
++#ifdef CONFIG_MEMCG
++	if (sc->memcg)
++		pages = page_counter_read(&sc->memcg->memory);
++	else
++#endif
++		pages = node_present_pages(sc->nid);
++
++	max_nodes = pages >> (RADIX_TREE_MAP_SHIFT - 3);
+ 
+ 	if (nodes <= max_nodes)
+ 		return 0;
+-- 
+2.18.0
 
