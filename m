@@ -1,25 +1,25 @@
 From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH 02/15] blkcg: delay blkg destruction until after
- writeback has finished
-Date: Fri, 31 Aug 2018 11:27:07 -0400
-Message-ID: <20180831152705.4mjm7xo6jq7ptdqn@destiny>
+Subject: Re: [PATCH 03/15] blkcg: use tryget logic when associating a blkg
+ with a bio
+Date: Fri, 31 Aug 2018 11:30:08 -0400
+Message-ID: <20180831153007.nybnuyx43adn76rm@destiny>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
- <20180831015356.69796-3-dennisszhou@gmail.com>
+ <20180831015356.69796-4-dennisszhou@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=ehQWXVB9CUEK8Dd/OdxgyGILgSG54iuToHUqmjdn1ck=;
-        b=nVsa7lI1KmWNAA1Dx6R13JKqqhSud5b+177hLCUxcUSeQx0KU4G755vYcDRPyWZkzp
-         ZX1jKHBOHGcaGA6FxRuwI1UlaXmsS7UyHaHYbIcChjNqONYPkuxtlRFcTmlbQAUVv/Dk
-         rBqugJeJvCttbgtYbzsbDPekpVSuOJ6VwWE+W38ENqrorTbS+703QJUo/oWWHVH2vBk9
-         /ko0jJCj9WFIpZA6cHyleYPiUqXe2T/Z/1srrGRdEf12DwD/bgIY/mhZoV5D2CRTmqUL
-         DLBQ88unB5WpChALu37MzvXD8j+yDjtFUEGP5qo0b/ZlwKQyYw8e0xAQdNuc4FoJYBoR
-         WorA==
+        bh=r4xlJrCOyIDs6oSO9a8eot+HhJ0UKStNZvu7TqaUHHI=;
+        b=eUtCchfLR28qwPaFKR1o0VGLHzliYbHEoXgYVmNPog1b8I6I5HpHcSkIiC1JmRF7NN
+         /paBfy4M1KgUCcznVTxR7/0yA2vw0H+sp3z9ql4ZvtkejTzpf6CTIrS0sdUHAKZ5+UcO
+         l2R++nsfrw672Ef2svHQ4IoLEaGxTzO7VLGdCNsnxk0uU0+iyI11/JZ+o8c4mVpMOHg5
+         iRUnG/hgXArTezrHSAZVk5zPPe35b88NxVHNTEgbHPGAQPQzF4cycysMjuvJDbdq0LKF
+         sPLkLn0GFDHnYe2jdXeVtYwV4gHZm6xCgpK5/E/1yRbLBFYMgcqUtMyWc/Y8uygNX5+k
+         5cQg==
 Content-Disposition: inline
-In-Reply-To: <20180831015356.69796-3-dennisszhou@gmail.com>
+In-Reply-To: <20180831015356.69796-4-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,47 +27,63 @@ Content-Transfer-Encoding: 7bit
 To: Dennis Zhou <dennisszhou@gmail.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Jiufei Xue <jiufei.xue@linux.alibaba.com>, Joseph Qi <joseph.qi@linux.alibaba.com>
 
-On Thu, Aug 30, 2018 at 09:53:43PM -0400, Dennis Zhou wrote:
+On Thu, Aug 30, 2018 at 09:53:44PM -0400, Dennis Zhou wrote:
 > From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 > 
-> Currently, blkcg destruction relies on a sequence of events:
->   1. Destruction starts. blkcg_css_offline() is called and blkgs
->      release their reference to the blkcg. This immediately destroys
->      the cgwbs (writeback).
->   2. With blkgs giving up their reference, the blkcg ref count should
->      become zero and eventually call blkcg_css_free() which finally
->      frees the blkcg.
+> There is a very small change a bio gets caught up in a really
+> unfortunate race between a task migration, cgroup exiting, and itself
+> trying to associate with a blkg. This is due to css offlining being
+> performed after the css->refcnt is killed which triggers removal of
+> blkgs that reach their blkg->refcnt of 0.
 > 
-> Jiufei Xue reported that there is a race between blkcg_bio_issue_check()
-> and cgroup_rmdir(). To remedy this, blkg destruction becomes contingent
-> on the completion of all writeback associated with the blkcg. A count of
-> the number of cgwbs is maintained and once that goes to zero, blkg
-> destruction can follow. This should prevent premature blkg destruction.
+> To avoid this, association with a blkg should use tryget and fallback to
+> using the root_blkg.
 > 
-> The new process for blkcg cleanup is as follows:
->   1. Destruction starts. blkcg_css_offline() is called which offlines
->      writeback. Blkg destruction is delayed on the nr_cgwbs count to
->      avoid punting potentially large amounts of outstanding writeback
->      to root while maintaining any ongoing policies.
->   2. When the nr_cgwbs becomes zero, blkcg_destroy_blkgs() is called and
->      handles destruction of blkgs. This is where the css reference held
->      by each blkg is released.
->   3. Once the blkcg ref count goes to zero, blkcg_css_free() is called.
->      This finally frees the blkg.
+> Fixes: 08e18eab0c579 ("block: add bi_blkg to the bio for cgroups")
+> Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
+> Cc: Jiufei Xue <jiufei.xue@linux.alibaba.com>
+> Cc: Joseph Qi <joseph.qi@linux.alibaba.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Josef Bacik <josef@toxicpanda.com>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> ---
+>  block/bio.c          | 3 ++-
+>  block/blk-throttle.c | 5 +++--
+>  2 files changed, 5 insertions(+), 3 deletions(-)
 > 
-> It seems in the past blk-throttle didn't do the most understandable
-> things with taking data from a blkg while associating with current. So,
-> the simplification and unification of what blk-throttle is doing caused
-> this.
-> 
+> diff --git a/block/bio.c b/block/bio.c
+> index 04969b392c72..4473ccd22987 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -1987,7 +1987,8 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+>  {
+>  	if (unlikely(bio->bi_blkg))
+>  		return -EBUSY;
+> -	blkg_get(blkg);
+> +	if (!blkg_try_get(blkg))
+> +		return -ENODEV;
+>  	bio->bi_blkg = blkg;
+>  	return 0;
+>  }
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index a3eede00d302..c626e1f7cdcd 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -2129,8 +2129,9 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+>  static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
+>  {
+>  #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+> -	if (bio->bi_css)
+> -		bio_associate_blkg(bio, tg_to_blkg(tg));
+> +	/* fallback to root_blkg if we fail to get a blkg ref */
+> +	if (bio->bi_css && bio_associate_blkg(bio, tg_to_blkg(tg)))
+> +		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
 
-So the general approach is correct, but it's sort of confusing because you are
-using nr_cgwbs as a reference counter, because it's set at 1 at blkg creation
-time regardless of wether or not there's an assocated wb cg.  So instead why not
-just have a refcount_t ref, set it to 1 on creation and make the wb cg take a
-ref when it's attached, and then just do the get/put like normal and cleanup as
-you have below?  What you are doing is a reference counter masquerading as a
-count of the wb cg's, just add full ref counting to the blkcg and call it a day,
-it'll be much less confusing.  Thanks,
+Except if we've already assocated a blkg this is just extra, can we do
+
+if (bio->bi_css && (bio_associate_blkg(bio, tg_to_blkg(tg)) == -ENODEV))
+
+to make it clear that we're only attaching it to the root if we failed to attach
+a blkg at all?  Thanks,
 
 Josef
