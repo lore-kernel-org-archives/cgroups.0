@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 04/15] blkcg: fix ref count issue with bio_blkcg using task_css
-Date: Thu, 30 Aug 2018 21:53:45 -0400
-Message-ID: <20180831015356.69796-5-dennisszhou@gmail.com>
+Subject: [PATCH 02/15] blkcg: delay blkg destruction until after writeback has finished
+Date: Thu, 30 Aug 2018 21:53:43 -0400
+Message-ID: <20180831015356.69796-3-dennisszhou@gmail.com>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=LkEE0pjSjrKxZKabWLhZY5urVfS7TzuQIWA33suAzNs=;
-        b=aq0waw4df6zDbvfZ6ZB5CqAcqgDdx9PlclK5giTqoGn8kPUhXWKDffW1/lkkguo33g
-         lB2h2L5lz8n7NLxhSDlDaPIj7QY2GljarhMPJEgJXL95gIsDEk0APC8y41jdm7yyAnOR
-         RuL9mqAANWvH3Yfg1XkKzhOB7kWIRyefDQWWmwxM5/zw/tjsh5yKVOEzaJpvfJgrbujH
-         Y2Xj2Jfit9xiVF7NieG0yn0CG3wNGXdE8ygIVA5jA403d9IZkVHDro99sawob+tzgclK
-         splK05yVG79/DX7y53IH+9s+Dt1a/O3QkB4LXgZEKOPNrV7TUMdKpsNFZcKspEM6UO8f
-         6yEQ==
+        bh=k8lJl7i7FTYeBdqfAw+QVbGJHRo/sAwQBcaRUhagy58=;
+        b=Xvr+nriLTlLEABF5sEIpcHJQkaiad4VSO9wg2Zoc6LCEGfaTY0f/0eKKggr54RPwFP
+         G5mzHYIyTQ5Suvz1yx/FrC6ETSkZE+iKOE5onNlLjjZgOUxhfEdtNX3etrFonMvoX+6n
+         7ogrpxgKr0sISHYroCUc15SVViVYtwFO+8/2HwhwvV5aqpuH3CR3zUvD/zSiBBi68CkX
+         qwcnDFAaXAyFvT5G33zor9hI7+VCmmRlnbuoEwywB2S8bNM/8Ji47x4h+h4wyZiO//Ey
+         69g5NojLOZX0sc92pEq5DQMGYiajJubxYgBS/8t8PWMw7Y/jpSG+jhVLfPxNwpYSrm52
+         hzTA==
 In-Reply-To: <20180831015356.69796-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,172 +21,217 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Jiufei Xue <jiufei.xue@linux.alibaba.com>, Joseph Qi <joseph.qi@linux.alibaba.com>
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-The accessor function bio_blkcg either returns the blkcg associated with
-the bio or finds one in the current context. This can cause an issue
-when trying to associate a bio with a blkcg. Particularly, it's the
-third case that is problematic:
+Currently, blkcg destruction relies on a sequence of events:
+  1. Destruction starts. blkcg_css_offline() is called and blkgs
+     release their reference to the blkcg. This immediately destroys
+     the cgwbs (writeback).
+  2. With blkgs giving up their reference, the blkcg ref count should
+     become zero and eventually call blkcg_css_free() which finally
+     frees the blkcg.
 
-	return css_to_blkcg(task_css(current, io_cgrp_id));
+Jiufei Xue reported that there is a race between blkcg_bio_issue_check()
+and cgroup_rmdir(). To remedy this, blkg destruction becomes contingent
+on the completion of all writeback associated with the blkcg. A count of
+the number of cgwbs is maintained and once that goes to zero, blkg
+destruction can follow. This should prevent premature blkg destruction.
 
-As the above may race against task migration and the cgroup exiting, it
-is not always ok to take a reference on the blkcg returned from
-bio_blkcg.
+The new process for blkcg cleanup is as follows:
+  1. Destruction starts. blkcg_css_offline() is called which offlines
+     writeback. Blkg destruction is delayed on the nr_cgwbs count to
+     avoid punting potentially large amounts of outstanding writeback
+     to root while maintaining any ongoing policies.
+  2. When the nr_cgwbs becomes zero, blkcg_destroy_blkgs() is called and
+     handles destruction of blkgs. This is where the css reference held
+     by each blkg is released.
+  3. Once the blkcg ref count goes to zero, blkcg_css_free() is called.
+     This finally frees the blkg.
 
-This patch adds association ahead of calling bio_blkcg rather than
-after. This prevents makes association a required and explicit step
-along the code paths for calling bio_blkcg. blk_get_rl is modified
-as well to get a reference to the blkcg it may use and blk_put_rl
-will always put the reference back. Association is also moved above the
-bio_blkcg call to ensure it will not return NULL in blk-iolatency.
+It seems in the past blk-throttle didn't do the most understandable
+things with taking data from a blkg while associating with current. So,
+the simplification and unification of what blk-throttle is doing caused
+this.
 
+Fixes: 08e18eab0c579 ("block: add bi_blkg to the bio for cgroups")
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
+Cc: Jiufei Xue <jiufei.xue@linux.alibaba.com>
+Cc: Joseph Qi <joseph.qi@linux.alibaba.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>
+Cc: Jens Axboe <axboe@kernel.dk>
 ---
- block/bio.c                | 10 +++++--
- block/blk-iolatency.c      |  2 +-
- include/linux/blk-cgroup.h | 53 ++++++++++++++++++++++++++++++++------
- 3 files changed, 54 insertions(+), 11 deletions(-)
+ block/blk-cgroup.c         | 53 ++++++++++++++++++++++++++++++++------
+ include/linux/blk-cgroup.h | 29 +++++++++++++++++++++
+ mm/backing-dev.c           |  5 ++++
+ 3 files changed, 79 insertions(+), 8 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 4473ccd22987..09a31e4d46bb 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1962,13 +1962,19 @@ int bio_associate_blkcg_from_page(struct bio *bio, struct page *page)
-  *
-  * This function takes an extra reference of @blkcg_css which will be put
-  * when @bio is released.  The caller must own @bio and is responsible for
-- * synchronizing calls to this function.
-+ * synchronizing calls to this function.  If @blkcg_css is NULL, a call to
-+ * blkcg_get_css finds the current css from the kthread or task.
-  */
- int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css)
- {
- 	if (unlikely(bio->bi_css))
- 		return -EBUSY;
--	css_get(blkcg_css);
-+
-+	if (blkcg_css)
-+		css_get(blkcg_css);
-+	else
-+		blkcg_css = blkcg_get_css();
-+
- 	bio->bi_css = blkcg_css;
- 	return 0;
- }
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 19923f8a029d..62fdd9002c29 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -404,8 +404,8 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
- 		return;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 2998e4f095d1..d7114308a480 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1042,21 +1042,59 @@ static struct cftype blkcg_legacy_files[] = {
+ 	{ }	/* terminate */
+ };
  
- 	rcu_read_lock();
-+	bio_associate_blkcg(bio, NULL);
- 	blkcg = bio_blkcg(bio);
--	bio_associate_blkcg(bio, &blkcg->css);
- 	blkg = blkg_lookup(blkcg, q);
- 	if (unlikely(!blkg)) {
- 		if (!lock)
++/*
++ * blkcg destruction is a three-stage process.
++ *
++ * 1. Destruction starts.  The blkcg_css_offline() callback is invoked
++ *    which offlines writeback.  Here we tie the next stage of blkg destruction
++ *    to the completion of writeback associated with the blkcg.  This lets us
++ *    avoid punting potentially large amounts of outstanding writeback to root
++ *    while maintaining any ongoing policies.  The next stage is triggered when
++ *    the nr_cgwbs count goes to zero.
++ *
++ * 2. When the nr_cgwbs count goes to zero, blkcg_destroy_blkgs() is called
++ *    and handles the destruction of blkgs.  Here the css reference held by
++ *    the blkg is put back eventually allowing blkcg_css_free() to be called.
++ *    This work may occur in cgwb_release_workfn() on the cgwb_release
++ *    workqueue.  Any submitted ios that fail to get the blkg ref will be
++ *    punted to the root_blkg.
++ *
++ * 3. Once the blkcg ref count goes to zero, blkcg_css_free() is called.
++ *    This finally frees the blkcg.
++ */
++
+ /**
+  * blkcg_css_offline - cgroup css_offline callback
+  * @css: css of interest
+  *
+- * This function is called when @css is about to go away and responsible
+- * for shooting down all blkgs associated with @css.  blkgs should be
+- * removed while holding both q and blkcg locks.  As blkcg lock is nested
+- * inside q lock, this function performs reverse double lock dancing.
+- *
+- * This is the blkcg counterpart of ioc_release_fn().
++ * This function is called when @css is about to go away.  Here the cgwbs are
++ * offlined first and only once writeback associated with the blkcg has
++ * finished do we start step 2 (see above).
+  */
+ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+ {
+ 	struct blkcg *blkcg = css_to_blkcg(css);
+ 
++	/* this prevents anyone from attaching or migrating to this blkcg */
++	wb_blkcg_offline(blkcg);
++
++	/* allow the count the count to go to zero */
++	blkcg_cgwb_dec(blkcg);
++}
++
++/**
++ * blkcg_destroy_blkgs - responsible for shooting down blkgs
++ * @blkcg: blkcg of interest
++ *
++ * blkgs should be removed while holding both q and blkcg locks.  As blkcg lock
++ * is nested inside q lock, this function performs reverse double lock dancing.
++ * Destroying the blkgs releases the reference held on the blkcg's css allowing
++ * blkcg_css_free to eventually be called.
++ *
++ * This is the blkcg counterpart of ioc_release_fn().
++ */
++void blkcg_destroy_blkgs(struct blkcg *blkcg)
++{
+ 	spin_lock_irq(&blkcg->lock);
+ 
+ 	while (!hlist_empty(&blkcg->blkg_list)) {
+@@ -1075,8 +1113,6 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+ 	}
+ 
+ 	spin_unlock_irq(&blkcg->lock);
+-
+-	wb_blkcg_offline(blkcg);
+ }
+ 
+ static void blkcg_css_free(struct cgroup_subsys_state *css)
+@@ -1146,6 +1182,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	INIT_HLIST_HEAD(&blkcg->blkg_list);
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&blkcg->cgwb_list);
++	atomic_set(&blkcg->nr_cgwbs, 1);
+ #endif
+ 	list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
+ 
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index c7386464ec4c..d3cafb1eda48 100644
+index 1615cdd4c797..c7386464ec4c 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -230,22 +230,52 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 		   char *input, struct blkg_conf_ctx *ctx);
- void blkg_conf_finish(struct blkg_conf_ctx *ctx);
+@@ -56,6 +56,7 @@ struct blkcg {
+ 	struct list_head		all_blkcgs_node;
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct list_head		cgwb_list;
++	atomic_t			nr_cgwbs;
+ #endif
+ };
+ 
+@@ -386,6 +387,34 @@ static inline struct blkcg *cpd_to_blkcg(struct blkcg_policy_data *cpd)
+ 	return cpd ? cpd->blkcg : NULL;
+ }
  
 +/**
-+ * blkcg_get_css - find and get a reference to the css
++ * blkcg_cgwb_inc - increment the count for cgwb_list
++ * @blkcg: blkcg of interest
 + *
-+ * Find the css associated with either the kthread or the current task.
++ * This is used to count the number of active wb's related to a blkcg.
 + */
-+static inline struct cgroup_subsys_state *blkcg_get_css(void)
++static inline void blkcg_cgwb_inc(struct blkcg *blkcg)
 +{
-+	struct cgroup_subsys_state *css;
-+
-+	rcu_read_lock();
-+
-+	css = kthread_blkcg();
-+	if (css) {
-+		css_get(css);
-+	} else {
-+		while (true) {
-+			css = task_css(current, io_cgrp_id);
-+			if (likely(css_tryget(css)))
-+				break;
-+			cpu_relax();
-+		}
-+	}
-+
-+	rcu_read_unlock();
-+
-+	return css;
++	atomic_inc(&blkcg->nr_cgwbs);
 +}
- 
- static inline struct blkcg *css_to_blkcg(struct cgroup_subsys_state *css)
- {
- 	return css ? container_of(css, struct blkcg, css) : NULL;
- }
- 
++
++extern void blkcg_destroy_blkgs(struct blkcg *blkcg);
++
 +/**
-+ * bio_blkcg - grab the blkcg associated with a bio
-+ * @bio: target bio
++ * blkcg_cgwb_dec - decrement the count for cgwb_list
++ * @blkcg: blkcg of interest
 + *
-+ * This returns the blkcg associated with a bio, NULL if not associated.
-+ * Callers are expected to either handle NULL or know association has been
-+ * done prior to calling this.
++ * This is used to count the number of active wb's related to a blkcg.
++ * When this count goes to zero, all active wb has finished so the
++ * blkcg can be destroyed.  This does blkg destruction if the nr_cgwbs
++ * drops to zero.
 + */
- static inline struct blkcg *bio_blkcg(struct bio *bio)
++static inline void blkcg_cgwb_dec(struct blkcg *blkcg)
++{
++	if (atomic_dec_and_test(&blkcg->nr_cgwbs))
++		blkcg_destroy_blkgs(blkcg);
++}
++
+ /**
+  * blkg_path - format cgroup path of blkg
+  * @blkg: blkg of interest
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 2e5d3df0853d..92342d38f0c6 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -494,6 +494,7 @@ static void cgwb_release_workfn(struct work_struct *work)
  {
--	struct cgroup_subsys_state *css;
--
- 	if (bio && bio->bi_css)
- 		return css_to_blkcg(bio->bi_css);
--	css = kthread_blkcg();
--	if (css)
--		return css_to_blkcg(css);
--	return css_to_blkcg(task_css(current, io_cgrp_id));
-+	return NULL;
- }
+ 	struct bdi_writeback *wb = container_of(work, struct bdi_writeback,
+ 						release_work);
++	struct blkcg *blkcg = css_to_blkcg(wb->blkcg_css);
  
- static inline bool blk_cgroup_congested(void)
-@@ -519,6 +549,11 @@ static inline struct request_list *blk_get_rl(struct request_queue *q,
- 	rcu_read_lock();
+ 	mutex_lock(&wb->bdi->cgwb_release_mutex);
+ 	wb_shutdown(wb);
+@@ -502,6 +503,9 @@ static void cgwb_release_workfn(struct work_struct *work)
+ 	css_put(wb->blkcg_css);
+ 	mutex_unlock(&wb->bdi->cgwb_release_mutex);
  
- 	blkcg = bio_blkcg(bio);
-+	if (blkcg) {
-+		css_get(&blkcg->css);
-+	} else {
-+		blkcg = css_to_blkcg(blkcg_get_css());
-+	}
- 
- 	/* bypass blkg lookup and use @q->root_rl directly for root */
- 	if (blkcg == &blkcg_root)
-@@ -550,6 +585,8 @@ static inline struct request_list *blk_get_rl(struct request_queue *q,
-  */
- static inline void blk_put_rl(struct request_list *rl)
- {
-+	/* an additional ref is always taken for rl */
-+	css_put(&rl->blkg->blkcg->css);
- 	if (rl->blkg->blkcg != &blkcg_root)
- 		blkg_put(rl->blkg);
- }
-@@ -790,10 +827,10 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 	bool throtl = false;
- 
- 	rcu_read_lock();
--	blkcg = bio_blkcg(bio);
- 
- 	/* associate blkcg if bio hasn't attached one */
--	bio_associate_blkcg(bio, &blkcg->css);
-+	bio_associate_blkcg(bio, NULL);
-+	blkcg = bio_blkcg(bio);
- 
- 	blkg = blkg_lookup(blkcg, q);
- 	if (unlikely(!blkg)) {
++	/* this triggers destruction of blkgs if nr_cgwbs becomes zero */
++	blkcg_cgwb_dec(blkcg);
++
+ 	fprop_local_destroy_percpu(&wb->memcg_completions);
+ 	percpu_ref_exit(&wb->refcnt);
+ 	wb_exit(wb);
+@@ -600,6 +604,7 @@ static int cgwb_create(struct backing_dev_info *bdi,
+ 			list_add_tail_rcu(&wb->bdi_node, &bdi->wb_list);
+ 			list_add(&wb->memcg_node, memcg_cgwb_list);
+ 			list_add(&wb->blkcg_node, blkcg_cgwb_list);
++			blkcg_cgwb_inc(blkcg);
+ 			css_get(memcg_css);
+ 			css_get(blkcg_css);
+ 		}
 -- 
 2.17.1
 
