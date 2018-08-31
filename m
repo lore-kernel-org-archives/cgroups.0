@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 06/15] blkcg: always associate a bio with a blkg
-Date: Thu, 30 Aug 2018 21:53:47 -0400
-Message-ID: <20180831015356.69796-7-dennisszhou@gmail.com>
+Subject: [PATCH 05/15] blkcg: update blkg_lookup_create to do locking
+Date: Thu, 30 Aug 2018 21:53:46 -0400
+Message-ID: <20180831015356.69796-6-dennisszhou@gmail.com>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Mj25J0UoslyA5YmwNy0OqZFtdVfhQZOp37ROGcHR3Fc=;
-        b=QEXfyhc5/2+9jk5xLBPys7D34HzM2ObH4YFt7r0EnTI0aeKtvb9LXYDRQF1lpMBMak
-         zbi8UQMIqu4nbcPSomeVaG7vwWOJN3aT9xnL5gacaY0t6uRfuQTnR7zJAyXYSP/x4Jxi
-         SkL9XTyOlWBeFFL1BYuikzyoZJPRCzRGwFvAc8wBFA3Zl80lMibBkqaM9AP7lQhddUwV
-         LKzURAPrN2AXwiBjecsqqYILKRG22PoFln2HIRIhhhZKdIhwk4rNQGdnM6waZ7oa8rXE
-         QOLelyydMejuQSOHBb4xqMC+QF8tW35E1IOcP80Ul21wmuDjap1pcLc95zEwAWRWUYtN
-         bNvQ==
+        bh=V/nPLJiLoMbwxwUN+SeDjrPjMrJFtIi3YKNpVCr/rfI=;
+        b=cHIUDDO7zpJyjduUj1AwohQqhchaeZcF5rHzrvC830EPVE0vyg+4cTpVyh4a4QtOpU
+         +G9wWJT7qq6cToApALaQAi5T6bf1NbGO24PCuieqXgOz2/YsonS49UPFUl1UdubPctmx
+         F7rY9id1fp/KHKAJ8Tz8JTc+66obEHPfA0q+C6PiT0/7FlWtnXEtToIU4PCwJSkb4CLT
+         JUd+dM0bMrpjsOxGVs3MmiX9hfP6yeltlF/Vs+//MI2Onv+Ly3QKp2V5Fy5v8ul5qVPM
+         q4L4s3/h27gsLS0zx4y2ev2/+80AIbpNemaARAo3pBIWbTfe7+ABErERcJYDvMngGfrv
+         ALOw==
 In-Reply-To: <20180831015356.69796-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,150 +25,114 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-Previously, blkg's were only assigned as needed by blk-iolatency and
-blk-throttle. bio->css was also always being associated while blkg was
-being looked up and then thrown away in blkcg_bio_issue_check.
+To know when to create a blkg, the general pattern is to do a
+blkg_lookup and if that fails, lock and then do a lookup again and if
+that fails finally create. It doesn't make much sense for everyone who
+wants to do creation to write this themselves.
 
-This patch beings the cleanup of bio->css and bio->bi_blkg by always
-associating a blkg in blkcg_bio_issue_check. This tries to create the
-blkg, but if it is not possible, falls back to using the root_blkg of
-the request_queue. Therefore, a bio will always be associated with a
-blkg.
-
-A missing definition for bio_associate_blkg is also added for parity in
-bio.h.
+This changes blkg_lookup_create to do locking and implement this
+pattern. The old blkg_lookup_create is renamed to __blkg_lookup_create.
+If a call site wants to do its own error handling or already owns the
+queue lock, they can use __blkg_lookup_create.
 
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
 ---
- block/bio.c                | 41 ++++++++++++++++++++++++++++++++++++++
- include/linux/bio.h        |  5 +++++
- include/linux/blk-cgroup.h | 19 ++----------------
- 3 files changed, 48 insertions(+), 17 deletions(-)
+ block/blk-cgroup.c         | 31 ++++++++++++++++++++++++++++---
+ block/blk-iolatency.c      |  2 +-
+ include/linux/blk-cgroup.h |  4 +++-
+ 3 files changed, 32 insertions(+), 5 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 09a31e4d46bb..e937f9681188 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1999,6 +1999,44 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
- 	return 0;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index d7114308a480..f678cd555814 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -259,7 +259,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ }
+ 
+ /**
+- * blkg_lookup_create - lookup blkg, try to create one if not there
++ * __blkg_lookup_create - lookup blkg, try to create one if not there
+  * @blkcg: blkcg of interest
+  * @q: request_queue of interest
+  *
+@@ -272,8 +272,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+  * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
+  * dead and bypassing, returns ERR_PTR(-EBUSY).
+  */
+-struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+-				    struct request_queue *q)
++struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
++				      struct request_queue *q)
+ {
+ 	struct blkcg_gq *blkg;
+ 
+@@ -310,6 +310,31 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ 	}
  }
  
 +/**
-+ * bio_associate_create_blkg - associate a bio with a blkg from q
-+ * @q: request_queue where bio is going
-+ * @bio: target bio
++ * blkg_lookup_create - find or create a blkg
++ * @blkcg: target block cgroup
++ * @q: target request_queue
 + *
-+ * Associate @bio with the blkg found from the bio's css and the request_queue.
-+ * If one is not found, bio_lookup_blkg creates the blkg.
++ * This looks up or creates the blkg representing the unique pair
++ * of the blkcg and the request_queue.
 + */
-+int bio_associate_create_blkg(struct request_queue *q, struct bio *bio)
++struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
++				    struct request_queue *q)
 +{
-+	struct blkcg *blkcg;
-+	struct blkcg_gq *blkg;
-+	int ret = 0;
++	struct blkcg_gq *blkg = blkg_lookup(blkcg, q);
++	unsigned long flags;
 +
-+	/* someone has already associated this bio with a blkg */
-+	if (bio->bi_blkg)
-+		return ret;
++	if (unlikely(!blkg)) {
++		spin_lock_irqsave(q->queue_lock, flags);
 +
-+	rcu_read_lock();
++		blkg = __blkg_lookup_create(blkcg, q);
 +
-+	bio_associate_blkcg(bio, NULL);
-+	blkcg = bio_blkcg(bio);
-+
-+	if (!blkcg->css.parent) {
-+		ret = bio_associate_blkg(bio, q->root_blkg);
-+		goto assoc_out;
++		spin_unlock_irqrestore(q->queue_lock, flags);
 +	}
 +
-+	blkg = blkg_lookup_create(blkcg, q);
-+	if (IS_ERR(blkg))
-+		blkg = q->root_blkg;
-+
-+	ret = bio_associate_blkg(bio, blkg);
-+assoc_out:
-+	rcu_read_unlock();
-+	return ret;
++	return blkg;
 +}
 +
- /**
-  * bio_disassociate_task - undo bio_associate_current()
-  * @bio: target bio
-@@ -2028,6 +2066,9 @@ void bio_clone_blkcg_association(struct bio *dst, struct bio *src)
+ static void blkg_destroy(struct blkcg_gq *blkg)
  {
- 	if (src->bi_css)
- 		WARN_ON(bio_associate_blkcg(dst, src->bi_css));
-+
-+	if (src->bi_blkg)
-+		bio_associate_blkg(dst, src->bi_blkg);
- }
- EXPORT_SYMBOL_GPL(bio_clone_blkcg_association);
- #endif /* CONFIG_BLK_CGROUP */
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 51371740d2a8..d4626108b9d7 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -556,11 +556,16 @@ static inline int bio_associate_blkcg_from_page(struct bio *bio,
- #ifdef CONFIG_BLK_CGROUP
- int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css);
- int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg);
-+int bio_associate_create_blkg(struct request_queue *q, struct bio *bio);
- void bio_disassociate_task(struct bio *bio);
- void bio_clone_blkcg_association(struct bio *dst, struct bio *src);
- #else	/* CONFIG_BLK_CGROUP */
- static inline int bio_associate_blkcg(struct bio *bio,
- 			struct cgroup_subsys_state *blkcg_css) { return 0; }
-+static inline int bio_associate_blkg(struct bio *bio,
-+				     struct blkcg_gq *blkg) { return 0; }
-+static inline int bio_associate_create_blkg(struct request_queue *q,
-+					    struct bio *bio) { return 0; }
- static inline void bio_disassociate_task(struct bio *bio) { }
- static inline void bio_clone_blkcg_association(struct bio *dst,
- 			struct bio *src) { }
+ 	struct blkcg *blkcg = blkg->blkcg;
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 62fdd9002c29..22b2ff0440cc 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -410,7 +410,7 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
+ 	if (unlikely(!blkg)) {
+ 		if (!lock)
+ 			spin_lock_irq(q->queue_lock);
+-		blkg = blkg_lookup_create(blkcg, q);
++		blkg = __blkg_lookup_create(blkcg, q);
+ 		if (IS_ERR(blkg))
+ 			blkg = NULL;
+ 		if (!lock)
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index ea2dd6e6baf2..9931ec2f4e9e 100644
+index d3cafb1eda48..ea2dd6e6baf2 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -824,29 +824,15 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
- static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 					 struct bio *bio)
- {
--	struct blkcg *blkcg;
- 	struct blkcg_gq *blkg;
- 	bool throtl = false;
+@@ -184,6 +184,8 @@ extern struct cgroup_subsys_state * const blkcg_root_css;
  
--	rcu_read_lock();
--
--	/* associate blkcg if bio hasn't attached one */
--	bio_associate_blkcg(bio, NULL);
--	blkcg = bio_blkcg(bio);
--
--	blkg = blkg_lookup(blkcg, q);
--	if (unlikely(!blkg)) {
--		spin_lock_irq(q->queue_lock);
--		blkg = __blkg_lookup_create(blkcg, q);
--		if (IS_ERR(blkg))
--			blkg = NULL;
--		spin_unlock_irq(q->queue_lock);
--	}
-+	bio_associate_create_blkg(q, bio);
-+	blkg = bio->bi_blkg;
- 
- 	throtl = blk_throtl_bio(q, blkg, bio);
- 
- 	if (!throtl) {
--		blkg = blkg ?: q->root_blkg;
- 		/*
- 		 * If the bio is flagged with BIO_QUEUE_ENTERED it means this
- 		 * is a split bio and we would have already accounted for the
-@@ -858,7 +844,6 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
- 	}
- 
--	rcu_read_unlock();
- 	return !throtl;
- }
- 
+ struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
+ 				      struct request_queue *q, bool update_hint);
++struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
++				      struct request_queue *q);
+ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ 				    struct request_queue *q);
+ int blkcg_init_queue(struct request_queue *q);
+@@ -835,7 +837,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 	blkg = blkg_lookup(blkcg, q);
+ 	if (unlikely(!blkg)) {
+ 		spin_lock_irq(q->queue_lock);
+-		blkg = blkg_lookup_create(blkcg, q);
++		blkg = __blkg_lookup_create(blkcg, q);
+ 		if (IS_ERR(blkg))
+ 			blkg = NULL;
+ 		spin_unlock_irq(q->queue_lock);
 -- 
 2.17.1
 
