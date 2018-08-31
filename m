@@ -1,26 +1,26 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: Re: [PATCH 02/15] blkcg: delay blkg destruction until after
- writeback has finished
-Date: Fri, 31 Aug 2018 16:19:10 -0400
-Message-ID: <20180831201909.GA20194@dennisz-mbp.dhcp.thefacebook.com>
+Subject: Re: [PATCH 03/15] blkcg: use tryget logic when associating a blkg
+ with a bio
+Date: Fri, 31 Aug 2018 16:20:40 -0400
+Message-ID: <20180831202040.GB20194@dennisz-mbp.dhcp.thefacebook.com>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
- <20180831015356.69796-3-dennisszhou@gmail.com>
- <20180831152705.4mjm7xo6jq7ptdqn@destiny>
+ <20180831015356.69796-4-dennisszhou@gmail.com>
+ <20180831153007.nybnuyx43adn76rm@destiny>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Vk6eJaICnaGPvd/ak8gSgiTZzuoqUM/6teuv/tKzh+w=;
-        b=TopJtve0M1jk2OYvgWWQBfCKtk+Fv0HLw7ge+DUSAoydFXq3v2J0ZbIEdj14OOcy8W
-         /0fH5/sNsnEQlGv9d8+kgosmxRSNMJzyfaJpOHI5yf35vx4blaxsaFV6E9x8xGCjN8qO
-         HXj1OG0Ox5r/j3O0djnSnz1x98dA6+EkuyVg//C1wPReRDp9YPE9vn5dNcmE17eR5fzG
-         /d7ri0mHHyRPOZCzYMnmNvGmyC46HT+FZVZmOsVYzIB0h/TS05yy8m9R70FuVGVDyBUU
-         +uzN4iiPIFES0Bo7AXF+/F6uT8VXgQH6uLuHq7lxeZtySmEXFeRFIHpynmlhFalhx/1N
-         6WMQ==
+        bh=xB65XgsuIhVMr4wfu+fmV5tJ/QI8bJpBH5q/qwwB4aI=;
+        b=mLHZkhablFk9waUyMc8kuvj/PVXTKpZFF3mTAy+iVwTmSjp5bGMlkpbDQ+WexC9mat
+         X7UE7Ks2ezPEFePe9khKWJkqkIsWGEcDRxIB7Wo/nz8VDcuVbv2YaiH4ZAOTeq47okVL
+         dbT78Hp/pANTrGwrjY6jx2tHaBbyBtZOEUwQG38SKtuSruX3fqzCW6x9hpZfE8AdS1NA
+         pEQ5i+x/Qv8YZKyd3EVN/PI/Ci9IqIhY2nx2lGmaGqrWEeDyTjMg2dUuYvbcp9ZK/VFx
+         x7Rf0XUqTQvdOz8Tl/qkEdrAb2Ii45fyEpN9SGMjw3h+th+nnbIIXBiLTH6wQg+Zm5sF
+         zazg==
 Content-Disposition: inline
-In-Reply-To: <20180831152705.4mjm7xo6jq7ptdqn@destiny>
+In-Reply-To: <20180831153007.nybnuyx43adn76rm@destiny>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -30,20 +30,30 @@ Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <ha
 
 Hi Josef,
 
-On Fri, Aug 31, 2018 at 11:27:07AM -0400, Josef Bacik wrote:
-> So the general approach is correct, but it's sort of confusing because you are
-> using nr_cgwbs as a reference counter, because it's set at 1 at blkg creation
-> time regardless of wether or not there's an assocated wb cg.  So instead why not
-> just have a refcount_t ref, set it to 1 on creation and make the wb cg take a
-> ref when it's attached, and then just do the get/put like normal and cleanup as
-> you have below?  What you are doing is a reference counter masquerading as a
-> count of the wb cg's, just add full ref counting to the blkcg and call it a day,
-> it'll be much less confusing.  Thanks,
+On Fri, Aug 31, 2018 at 11:30:08AM -0400, Josef Bacik wrote:
+> On Thu, Aug 30, 2018 at 09:53:44PM -0400, Dennis Zhou wrote:
+> > diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> > index a3eede00d302..c626e1f7cdcd 100644
+> > --- a/block/blk-throttle.c
+> > +++ b/block/blk-throttle.c
+> > @@ -2129,8 +2129,9 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+> >  static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
+> >  {
+> >  #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+> > -	if (bio->bi_css)
+> > -		bio_associate_blkg(bio, tg_to_blkg(tg));
+> > +	/* fallback to root_blkg if we fail to get a blkg ref */
+> > +	if (bio->bi_css && bio_associate_blkg(bio, tg_to_blkg(tg)))
+> > +		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
+> 
+> Except if we've already assocated a blkg this is just extra, can we do
+> 
+> if (bio->bi_css && (bio_associate_blkg(bio, tg_to_blkg(tg)) == -ENODEV))
+> 
+> to make it clear that we're only attaching it to the root if we failed to attach
+> a blkg at all?  Thanks,
 
-Yeah, that makes more sense. I've switched to using refcount_t and
-renamed it to wbcg_refcnt. The corresponding actions have been renamed.
-
-I've also fixed the kbuild error in v2.
+Done in v2.
 
 Thanks,
 Dennis
