@@ -1,89 +1,185 @@
 From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH 03/15] blkcg: use tryget logic when associating a blkg
- with a bio
-Date: Fri, 31 Aug 2018 11:30:08 -0400
-Message-ID: <20180831153007.nybnuyx43adn76rm@destiny>
+Subject: Re: [PATCH 04/15] blkcg: fix ref count issue with bio_blkcg using
+ task_css
+Date: Fri, 31 Aug 2018 11:35:39 -0400
+Message-ID: <20180831153538.brzgcm3rgmwfy3rg@destiny>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
- <20180831015356.69796-4-dennisszhou@gmail.com>
+ <20180831015356.69796-5-dennisszhou@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=r4xlJrCOyIDs6oSO9a8eot+HhJ0UKStNZvu7TqaUHHI=;
-        b=eUtCchfLR28qwPaFKR1o0VGLHzliYbHEoXgYVmNPog1b8I6I5HpHcSkIiC1JmRF7NN
-         /paBfy4M1KgUCcznVTxR7/0yA2vw0H+sp3z9ql4ZvtkejTzpf6CTIrS0sdUHAKZ5+UcO
-         l2R++nsfrw672Ef2svHQ4IoLEaGxTzO7VLGdCNsnxk0uU0+iyI11/JZ+o8c4mVpMOHg5
-         iRUnG/hgXArTezrHSAZVk5zPPe35b88NxVHNTEgbHPGAQPQzF4cycysMjuvJDbdq0LKF
-         sPLkLn0GFDHnYe2jdXeVtYwV4gHZm6xCgpK5/E/1yRbLBFYMgcqUtMyWc/Y8uygNX5+k
-         5cQg==
+        bh=ZAYIrVBiYlNPqy2/vt2bGsfvNmg1V1NAFmw7W+/d1GI=;
+        b=Gfc3jmI8FNSwt5eebsoLdCsVXcOazfB1aRSbuyS2ME7bnDbRS6zd5N3gl+Uh3TM9tb
+         Dreo/YEuvCkxAn1RfZbsOHLYgMORsYeAy3QXntySEs1/UmbA18WWtoeonB/Ek2WXPnoE
+         2QwnbZZQtSH/uSHCerw5npkRAbxVTRftrd+chk8bycCnkJYBX/yCUCFGmWlvLp4ut3ET
+         MNtETOjX4hK8spMbyrp9LwTAGHk7WJ9dInRocsiI30ytQRW6Bt7/BF9rh2y0jX/D5pt+
+         2dqntrW6Yz8DDNrYPgweM8aSOEQuTJ0vY1289xJxrHU1q6gVgaq9PVI34g8pL7NJ3V+J
+         a27g==
 Content-Disposition: inline
-In-Reply-To: <20180831015356.69796-4-dennisszhou@gmail.com>
+In-Reply-To: <20180831015356.69796-5-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Dennis Zhou <dennisszhou@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Jiufei Xue <jiufei.xue@linux.alibaba.com>, Joseph Qi <joseph.qi@linux.alibaba.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 09:53:44PM -0400, Dennis Zhou wrote:
+On Thu, Aug 30, 2018 at 09:53:45PM -0400, Dennis Zhou wrote:
 > From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 > 
-> There is a very small change a bio gets caught up in a really
-> unfortunate race between a task migration, cgroup exiting, and itself
-> trying to associate with a blkg. This is due to css offlining being
-> performed after the css->refcnt is killed which triggers removal of
-> blkgs that reach their blkg->refcnt of 0.
+> The accessor function bio_blkcg either returns the blkcg associated with
+> the bio or finds one in the current context. This can cause an issue
+> when trying to associate a bio with a blkcg. Particularly, it's the
+> third case that is problematic:
 > 
-> To avoid this, association with a blkg should use tryget and fallback to
-> using the root_blkg.
+> 	return css_to_blkcg(task_css(current, io_cgrp_id));
 > 
-> Fixes: 08e18eab0c579 ("block: add bi_blkg to the bio for cgroups")
+> As the above may race against task migration and the cgroup exiting, it
+> is not always ok to take a reference on the blkcg returned from
+> bio_blkcg.
+> 
+> This patch adds association ahead of calling bio_blkcg rather than
+> after. This prevents makes association a required and explicit step
+> along the code paths for calling bio_blkcg. blk_get_rl is modified
+> as well to get a reference to the blkcg it may use and blk_put_rl
+> will always put the reference back. Association is also moved above the
+> bio_blkcg call to ensure it will not return NULL in blk-iolatency.
+> 
 > Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
-> Cc: Jiufei Xue <jiufei.xue@linux.alibaba.com>
-> Cc: Joseph Qi <joseph.qi@linux.alibaba.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Josef Bacik <josef@toxicpanda.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
 > ---
->  block/bio.c          | 3 ++-
->  block/blk-throttle.c | 5 +++--
->  2 files changed, 5 insertions(+), 3 deletions(-)
+>  block/bio.c                | 10 +++++--
+>  block/blk-iolatency.c      |  2 +-
+>  include/linux/blk-cgroup.h | 53 ++++++++++++++++++++++++++++++++------
+>  3 files changed, 54 insertions(+), 11 deletions(-)
 > 
 > diff --git a/block/bio.c b/block/bio.c
-> index 04969b392c72..4473ccd22987 100644
+> index 4473ccd22987..09a31e4d46bb 100644
 > --- a/block/bio.c
 > +++ b/block/bio.c
-> @@ -1987,7 +1987,8 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+> @@ -1962,13 +1962,19 @@ int bio_associate_blkcg_from_page(struct bio *bio, struct page *page)
+>   *
+>   * This function takes an extra reference of @blkcg_css which will be put
+>   * when @bio is released.  The caller must own @bio and is responsible for
+> - * synchronizing calls to this function.
+> + * synchronizing calls to this function.  If @blkcg_css is NULL, a call to
+> + * blkcg_get_css finds the current css from the kthread or task.
+>   */
+>  int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css)
 >  {
->  	if (unlikely(bio->bi_blkg))
+>  	if (unlikely(bio->bi_css))
 >  		return -EBUSY;
-> -	blkg_get(blkg);
-> +	if (!blkg_try_get(blkg))
-> +		return -ENODEV;
->  	bio->bi_blkg = blkg;
+> -	css_get(blkcg_css);
+> +
+> +	if (blkcg_css)
+> +		css_get(blkcg_css);
+> +	else
+> +		blkcg_css = blkcg_get_css();
+> +
+>  	bio->bi_css = blkcg_css;
 >  	return 0;
 >  }
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index a3eede00d302..c626e1f7cdcd 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -2129,8 +2129,9 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
->  static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
+> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+> index 19923f8a029d..62fdd9002c29 100644
+> --- a/block/blk-iolatency.c
+> +++ b/block/blk-iolatency.c
+> @@ -404,8 +404,8 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
+>  		return;
+>  
+>  	rcu_read_lock();
+> +	bio_associate_blkcg(bio, NULL);
+>  	blkcg = bio_blkcg(bio);
+> -	bio_associate_blkcg(bio, &blkcg->css);
+>  	blkg = blkg_lookup(blkcg, q);
+>  	if (unlikely(!blkg)) {
+>  		if (!lock)
+> diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+> index c7386464ec4c..d3cafb1eda48 100644
+> --- a/include/linux/blk-cgroup.h
+> +++ b/include/linux/blk-cgroup.h
+> @@ -230,22 +230,52 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+>  		   char *input, struct blkg_conf_ctx *ctx);
+>  void blkg_conf_finish(struct blkg_conf_ctx *ctx);
+>  
+> +/**
+> + * blkcg_get_css - find and get a reference to the css
+> + *
+> + * Find the css associated with either the kthread or the current task.
+> + */
+> +static inline struct cgroup_subsys_state *blkcg_get_css(void)
+> +{
+> +	struct cgroup_subsys_state *css;
+> +
+> +	rcu_read_lock();
+> +
+> +	css = kthread_blkcg();
+> +	if (css) {
+> +		css_get(css);
+> +	} else {
+> +		while (true) {
+> +			css = task_css(current, io_cgrp_id);
+> +			if (likely(css_tryget(css)))
+> +				break;
+> +			cpu_relax();
+
+Does this work?  I'm ignorant of what cpu_relax() does, but it seems if we're
+rcu_read_lock()'ed here we aren't going to queisce so if we fail to get the css
+here we just simply aren't going to get it unless we go to sleep right?  An
+honest question, because this is all magic to me, I'd like to understand how
+this isn't going to infinite loop on us if css_tryget(css) fails.
+
+> +		}
+> +	}
+> +
+> +	rcu_read_unlock();
+> +
+> +	return css;
+> +}
+>  
+>  static inline struct blkcg *css_to_blkcg(struct cgroup_subsys_state *css)
 >  {
->  #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
-> -	if (bio->bi_css)
-> -		bio_associate_blkg(bio, tg_to_blkg(tg));
-> +	/* fallback to root_blkg if we fail to get a blkg ref */
-> +	if (bio->bi_css && bio_associate_blkg(bio, tg_to_blkg(tg)))
-> +		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
+>  	return css ? container_of(css, struct blkcg, css) : NULL;
+>  }
+>  
+> +/**
+> + * bio_blkcg - grab the blkcg associated with a bio
+> + * @bio: target bio
+> + *
+> + * This returns the blkcg associated with a bio, NULL if not associated.
+> + * Callers are expected to either handle NULL or know association has been
+> + * done prior to calling this.
+> + */
+>  static inline struct blkcg *bio_blkcg(struct bio *bio)
+>  {
+> -	struct cgroup_subsys_state *css;
+> -
+>  	if (bio && bio->bi_css)
+>  		return css_to_blkcg(bio->bi_css);
+> -	css = kthread_blkcg();
+> -	if (css)
+> -		return css_to_blkcg(css);
+> -	return css_to_blkcg(task_css(current, io_cgrp_id));
+> +	return NULL;
+>  }
+>  
 
-Except if we've already assocated a blkg this is just extra, can we do
+So this is fine per se, but I know recently I was doing a bio_blkcg(NULL) to get
+whatever the blkcg was for the current task.  I threw that work away so I'm not
+worried about me, but have you made sure nobody else is doing something similar?
 
-if (bio->bi_css && (bio_associate_blkg(bio, tg_to_blkg(tg)) == -ENODEV))
+>  static inline bool blk_cgroup_congested(void)
+> @@ -519,6 +549,11 @@ static inline struct request_list *blk_get_rl(struct request_queue *q,
+>  	rcu_read_lock();
+>  
+>  	blkcg = bio_blkcg(bio);
+> +	if (blkcg) {
+> +		css_get(&blkcg->css);
+> +	} else {
+> +		blkcg = css_to_blkcg(blkcg_get_css());
+> +	}
 
-to make it clear that we're only attaching it to the root if we failed to attach
-a blkg at all?  Thanks,
+Kill these extra braces please.  Thanks,
 
 Josef
