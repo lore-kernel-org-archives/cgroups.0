@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 1/3] Revert "blk-throttle: fix race between blkcg_bio_issue_check() and cgroup_rmdir()"
-Date: Fri, 31 Aug 2018 16:22:42 -0400
-Message-ID: <20180831202244.21678-2-dennisszhou@gmail.com>
+Subject: [PATCH 2/3] blkcg: delay blkg destruction until after writeback has finished
+Date: Fri, 31 Aug 2018 16:22:43 -0400
+Message-ID: <20180831202244.21678-3-dennisszhou@gmail.com>
 References: <20180831202244.21678-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=TO0jmspUoRjVVfIoVYshEwAx1ch9EaHAEw+E1Q58OTI=;
-        b=dtudko1Nmh2H2c1PM8ht7LcHMmOxHgOtoWZA9s3pa8NiAK17tl61OBtVD8JeG2xxXv
-         r4OYLKTby9VlyfiJMSnpA1M5V2vpYdaZJ7BPhAN7dvOgi17ow3RrMhnhnrjMWIUsjI/+
-         94vxNB3HL6HMP508xnTTLBKF/45Yk7/v8iaurUpR0gqwJRZ3qypQjRrajZhKz13hyMAn
-         hvSz/ymXZvZ4S4MYPs4U5KVfx3LhsnrDsNXGvFp5FYaC72UFARdErT5I0SmSbGUchmwU
-         TeVHLYYYJD3eyp4eg0S7vB8XhSWJiGw7FyNVydKfrmFbtq8V9l85XEOGPKPV5PRzGuzN
-         iPAA==
+        bh=YFDuPP9E7I8d1EG/XHXWly2tlY10K1g0Rh4rNXi7iig=;
+        b=TQgI5TKLPh7/kfY2uzGkWEHPcCZPyWIfPVJFBi5HI1qpdFIKwGePjD+8Jpshg7RXxK
+         K9/3zJeJEZZQCzN8XbNWmey/zFeY1/e1EAvNFYQ7Z7HEYoB8ZYjGUw67MNNcLJdIrHTx
+         RhAGdqGXizin+cF+PoFqg8eOG9taI4DSJyJkmaIg8afoeuVgecFhP5hRfrqfzir3cuIP
+         exUVxPNDx0BhdWanLDaXSa3OVtXUFxLvYyTXdW9svn8zoan8Iup/EK/6DUiG4RmDr6qa
+         LcaA3TmCacZVFQvxNAR4RWf5xDrjvIWDOLTqNI+s7Y52NdhvVsB2SdLyur4PswR0rrRg
+         BBFg==
 In-Reply-To: <20180831202244.21678-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,193 +25,234 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-This reverts commit 4c6994806f708559c2812b73501406e21ae5dcd0.
+Currently, blkcg destruction relies on a sequence of events:
+  1. Destruction starts. blkcg_css_offline() is called and blkgs
+     release their reference to the blkcg. This immediately destroys
+     the cgwbs (writeback).
+  2. With blkgs giving up their reference, the blkcg ref count should
+     become zero and eventually call blkcg_css_free() which finally
+     frees the blkcg.
 
-Destroying blkgs is tricky because of the nature of the relationship. A
-blkg should go away when either a blkcg or a request_queue goes away.
-However, blkg's pin the blkcg to ensure they remain valid. To break this
-cycle, when a blkcg is offlined, blkgs put back their css ref. This
-eventually lets css_free() get called which frees the blkcg.
+Jiufei Xue reported that there is a race between blkcg_bio_issue_check()
+and cgroup_rmdir(). To remedy this, blkg destruction becomes contingent
+on the completion of all writeback associated with the blkcg. A count of
+the number of cgwbs is maintained and once that goes to zero, blkg
+destruction can follow. This should prevent premature blkg destruction
+related to writeback.
 
-The above commit (4c6994806f70) breaks this order of events by trying to
-destroy blkgs in css_free(). As the blkgs still hold references to the
-blkcg, css_free() is never called.
+The new process for blkcg cleanup is as follows:
+  1. Destruction starts. blkcg_css_offline() is called which offlines
+     writeback. Blkg destruction is delayed on the cgwb_refcnt count to
+     avoid punting potentially large amounts of outstanding writeback
+     to root while maintaining any ongoing policies. Here, the base
+     cgwb_refcnt is put back.
+  2. When the cgwb_refcnt becomes zero, blkcg_destroy_blkgs() is called
+     and handles destruction of blkgs. This is where the css reference
+     held by each blkg is released.
+  3. Once the blkcg ref count goes to zero, blkcg_css_free() is called.
+     This finally frees the blkg.
 
-The race between blkcg_bio_issue_check() and cgroup_rmdir() will be
-addressed in the following patch by delaying destruction of a blkg until
-all writeback associated with the blkcg has been finished.
+It seems in the past blk-throttle didn't do the most understandable
+things with taking data from a blkg while associating with current. So,
+the simplification and unification of what blk-throttle is doing caused
+this.
 
-Fixes: 4c6994806f70 ("blk-throttle: fix race between blkcg_bio_issue_check() and cgroup_rmdir()")
+v2:
+ - Changed nr_cgwbs to be an explicit refcnt.
+ - Updated a few comments to be more clear.
+
+Fixes: 08e18eab0c579 ("block: add bi_blkg to the bio for cgroups")
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
 Cc: Jiufei Xue <jiufei.xue@linux.alibaba.com>
 Cc: Joseph Qi <joseph.qi@linux.alibaba.com>
 Cc: Tejun Heo <tj@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>
 Cc: Jens Axboe <axboe@kernel.dk>
 ---
- block/blk-cgroup.c         | 78 ++++++++------------------------------
- include/linux/blk-cgroup.h |  1 -
- 2 files changed, 16 insertions(+), 63 deletions(-)
+ block/blk-cgroup.c         | 53 ++++++++++++++++++++++++++++++++------
+ include/linux/blk-cgroup.h | 44 +++++++++++++++++++++++++++++++
+ mm/backing-dev.c           |  5 ++++
+ 3 files changed, 94 insertions(+), 8 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 694595b29b8f..2998e4f095d1 100644
+index 2998e4f095d1..c19f9078da1e 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -310,28 +310,11 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 	}
- }
+@@ -1042,21 +1042,59 @@ static struct cftype blkcg_legacy_files[] = {
+ 	{ }	/* terminate */
+ };
  
--static void blkg_pd_offline(struct blkcg_gq *blkg)
--{
--	int i;
--
--	lockdep_assert_held(blkg->q->queue_lock);
--	lockdep_assert_held(&blkg->blkcg->lock);
--
--	for (i = 0; i < BLKCG_MAX_POLS; i++) {
--		struct blkcg_policy *pol = blkcg_policy[i];
--
--		if (blkg->pd[i] && !blkg->pd[i]->offline &&
--		    pol->pd_offline_fn) {
--			pol->pd_offline_fn(blkg->pd[i]);
--			blkg->pd[i]->offline = true;
--		}
--	}
--}
--
- static void blkg_destroy(struct blkcg_gq *blkg)
- {
- 	struct blkcg *blkcg = blkg->blkcg;
- 	struct blkcg_gq *parent = blkg->parent;
-+	int i;
- 
- 	lockdep_assert_held(blkg->q->queue_lock);
- 	lockdep_assert_held(&blkcg->lock);
-@@ -340,6 +323,13 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	WARN_ON_ONCE(list_empty(&blkg->q_node));
- 	WARN_ON_ONCE(hlist_unhashed(&blkg->blkcg_node));
- 
-+	for (i = 0; i < BLKCG_MAX_POLS; i++) {
-+		struct blkcg_policy *pol = blkcg_policy[i];
++/*
++ * blkcg destruction is a three-stage process.
++ *
++ * 1. Destruction starts.  The blkcg_css_offline() callback is invoked
++ *    which offlines writeback.  Here we tie the next stage of blkg destruction
++ *    to the completion of writeback associated with the blkcg.  This lets us
++ *    avoid punting potentially large amounts of outstanding writeback to root
++ *    while maintaining any ongoing policies.  The next stage is triggered when
++ *    the nr_cgwbs count goes to zero.
++ *
++ * 2. When the nr_cgwbs count goes to zero, blkcg_destroy_blkgs() is called
++ *    and handles the destruction of blkgs.  Here the css reference held by
++ *    the blkg is put back eventually allowing blkcg_css_free() to be called.
++ *    This work may occur in cgwb_release_workfn() on the cgwb_release
++ *    workqueue.  Any submitted ios that fail to get the blkg ref will be
++ *    punted to the root_blkg.
++ *
++ * 3. Once the blkcg ref count goes to zero, blkcg_css_free() is called.
++ *    This finally frees the blkcg.
++ */
 +
-+		if (blkg->pd[i] && pol->pd_offline_fn)
-+			pol->pd_offline_fn(blkg->pd[i]);
-+	}
-+
- 	if (parent) {
- 		blkg_rwstat_add_aux(&parent->stat_bytes, &blkg->stat_bytes);
- 		blkg_rwstat_add_aux(&parent->stat_ios, &blkg->stat_ios);
-@@ -382,7 +372,6 @@ static void blkg_destroy_all(struct request_queue *q)
- 		struct blkcg *blkcg = blkg->blkcg;
- 
- 		spin_lock(&blkcg->lock);
--		blkg_pd_offline(blkg);
- 		blkg_destroy(blkg);
- 		spin_unlock(&blkcg->lock);
- 	}
-@@ -1058,54 +1047,21 @@ static struct cftype blkcg_legacy_files[] = {
+ /**
+  * blkcg_css_offline - cgroup css_offline callback
   * @css: css of interest
   *
-  * This function is called when @css is about to go away and responsible
-- * for offlining all blkgs pd and killing all wbs associated with @css.
-- * blkgs pd offline should be done while holding both q and blkcg locks.
-- * As blkcg lock is nested inside q lock, this function performs reverse
-- * double lock dancing.
-+ * for shooting down all blkgs associated with @css.  blkgs should be
-+ * removed while holding both q and blkcg locks.  As blkcg lock is nested
-+ * inside q lock, this function performs reverse double lock dancing.
-  *
-  * This is the blkcg counterpart of ioc_release_fn().
+- * This function is called when @css is about to go away and responsible
+- * for shooting down all blkgs associated with @css.  blkgs should be
+- * removed while holding both q and blkcg locks.  As blkcg lock is nested
+- * inside q lock, this function performs reverse double lock dancing.
+- *
+- * This is the blkcg counterpart of ioc_release_fn().
++ * This function is called when @css is about to go away.  Here the cgwbs are
++ * offlined first and only once writeback associated with the blkcg has
++ * finished do we start step 2 (see above).
   */
  static void blkcg_css_offline(struct cgroup_subsys_state *css)
  {
  	struct blkcg *blkcg = css_to_blkcg(css);
--	struct blkcg_gq *blkg;
  
++	/* this prevents anyone from attaching or migrating to this blkcg */
++	wb_blkcg_offline(blkcg);
++
++	/* put the base cgwb reference allowing step 2 to be triggered */
++	blkcg_cgwb_put(blkcg);
++}
++
++/**
++ * blkcg_destroy_blkgs - responsible for shooting down blkgs
++ * @blkcg: blkcg of interest
++ *
++ * blkgs should be removed while holding both q and blkcg locks.  As blkcg lock
++ * is nested inside q lock, this function performs reverse double lock dancing.
++ * Destroying the blkgs releases the reference held on the blkcg's css allowing
++ * blkcg_css_free to eventually be called.
++ *
++ * This is the blkcg counterpart of ioc_release_fn().
++ */
++void blkcg_destroy_blkgs(struct blkcg *blkcg)
++{
  	spin_lock_irq(&blkcg->lock);
  
--	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
--		struct request_queue *q = blkg->q;
--
--		if (spin_trylock(q->queue_lock)) {
--			blkg_pd_offline(blkg);
--			spin_unlock(q->queue_lock);
--		} else {
--			spin_unlock_irq(&blkcg->lock);
--			cpu_relax();
--			spin_lock_irq(&blkcg->lock);
--		}
--	}
--
--	spin_unlock_irq(&blkcg->lock);
+ 	while (!hlist_empty(&blkcg->blkg_list)) {
+@@ -1075,8 +1113,6 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+ 	}
+ 
+ 	spin_unlock_irq(&blkcg->lock);
 -
 -	wb_blkcg_offline(blkcg);
--}
--
--/**
-- * blkcg_destroy_all_blkgs - destroy all blkgs associated with a blkcg
-- * @blkcg: blkcg of interest
-- *
-- * This function is called when blkcg css is about to free and responsible for
-- * destroying all blkgs associated with @blkcg.
-- * blkgs should be removed while holding both q and blkcg locks. As blkcg lock
-- * is nested inside q lock, this function performs reverse double lock dancing.
-- */
--static void blkcg_destroy_all_blkgs(struct blkcg *blkcg)
--{
--	spin_lock_irq(&blkcg->lock);
- 	while (!hlist_empty(&blkcg->blkg_list)) {
- 		struct blkcg_gq *blkg = hlist_entry(blkcg->blkg_list.first,
--						    struct blkcg_gq,
--						    blkcg_node);
-+						struct blkcg_gq, blkcg_node);
- 		struct request_queue *q = blkg->q;
- 
- 		if (spin_trylock(q->queue_lock)) {
-@@ -1117,7 +1073,10 @@ static void blkcg_destroy_all_blkgs(struct blkcg *blkcg)
- 			spin_lock_irq(&blkcg->lock);
- 		}
- 	}
-+
- 	spin_unlock_irq(&blkcg->lock);
-+
-+	wb_blkcg_offline(blkcg);
  }
  
  static void blkcg_css_free(struct cgroup_subsys_state *css)
-@@ -1125,8 +1084,6 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
- 	struct blkcg *blkcg = css_to_blkcg(css);
- 	int i;
+@@ -1146,6 +1182,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	INIT_HLIST_HEAD(&blkcg->blkg_list);
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&blkcg->cgwb_list);
++	refcount_set(&blkcg->cgwb_refcnt, 1);
+ #endif
+ 	list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
  
--	blkcg_destroy_all_blkgs(blkcg);
--
- 	mutex_lock(&blkcg_pol_mutex);
- 
- 	list_del(&blkcg->all_blkcgs_node);
-@@ -1480,11 +1437,8 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 
- 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
- 		if (blkg->pd[pol->plid]) {
--			if (!blkg->pd[pol->plid]->offline &&
--			    pol->pd_offline_fn) {
-+			if (pol->pd_offline_fn)
- 				pol->pd_offline_fn(blkg->pd[pol->plid]);
--				blkg->pd[pol->plid]->offline = true;
--			}
- 			pol->pd_free_fn(blkg->pd[pol->plid]);
- 			blkg->pd[pol->plid] = NULL;
- 		}
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 34aec30e06c7..1615cdd4c797 100644
+index 1615cdd4c797..6d766a19f2bb 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -89,7 +89,6 @@ struct blkg_policy_data {
- 	/* the blkg and policy id this per-policy data belongs to */
- 	struct blkcg_gq			*blkg;
- 	int				plid;
--	bool				offline;
+@@ -56,6 +56,7 @@ struct blkcg {
+ 	struct list_head		all_blkcgs_node;
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct list_head		cgwb_list;
++	refcount_t			cgwb_refcnt;
+ #endif
  };
  
- /*
+@@ -386,6 +387,49 @@ static inline struct blkcg *cpd_to_blkcg(struct blkcg_policy_data *cpd)
+ 	return cpd ? cpd->blkcg : NULL;
+ }
+ 
++extern void blkcg_destroy_blkgs(struct blkcg *blkcg);
++
++#ifdef CONFIG_CGROUP_WRITEBACK
++
++/**
++ * blkcg_cgwb_get - get a reference for blkcg->cgwb_list
++ * @blkcg: blkcg of interest
++ *
++ * This is used to track the number of active wb's related to a blkcg.
++ */
++static inline void blkcg_cgwb_get(struct blkcg *blkcg)
++{
++	refcount_inc(&blkcg->cgwb_refcnt);
++}
++
++/**
++ * blkcg_cgwb_put - put a reference for @blkcg->cgwb_list
++ * @blkcg: blkcg of interest
++ *
++ * This is used to track the number of active wb's related to a blkcg.
++ * When this count goes to zero, all active wb has finished so the
++ * blkcg can continue destruction by calling blkcg_destroy_blkgs().
++ * This work may occur in cgwb_release_workfn() on the cgwb_release
++ * workqueue.
++ */
++static inline void blkcg_cgwb_put(struct blkcg *blkcg)
++{
++	if (refcount_dec_and_test(&blkcg->cgwb_refcnt))
++		blkcg_destroy_blkgs(blkcg);
++}
++
++#else
++
++static inline void blkcg_cgwb_get(struct blkcg *blkcg) { }
++
++static inline void blkcg_cgwb_put(struct blkcg *blkcg)
++{
++	/* wb isn't being accounted, so trigger destruction right away */
++	blkcg_destroy_blkgs(blkcg);
++}
++
++#endif
++
+ /**
+  * blkg_path - format cgroup path of blkg
+  * @blkg: blkg of interest
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 2e5d3df0853d..dbae14986e04 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -494,6 +494,7 @@ static void cgwb_release_workfn(struct work_struct *work)
+ {
+ 	struct bdi_writeback *wb = container_of(work, struct bdi_writeback,
+ 						release_work);
++	struct blkcg *blkcg = css_to_blkcg(wb->blkcg_css);
+ 
+ 	mutex_lock(&wb->bdi->cgwb_release_mutex);
+ 	wb_shutdown(wb);
+@@ -502,6 +503,9 @@ static void cgwb_release_workfn(struct work_struct *work)
+ 	css_put(wb->blkcg_css);
+ 	mutex_unlock(&wb->bdi->cgwb_release_mutex);
+ 
++	/* triggers blkg destruction if cgwb_refcnt becomes zero */
++	blkcg_cgwb_put(blkcg);
++
+ 	fprop_local_destroy_percpu(&wb->memcg_completions);
+ 	percpu_ref_exit(&wb->refcnt);
+ 	wb_exit(wb);
+@@ -600,6 +604,7 @@ static int cgwb_create(struct backing_dev_info *bdi,
+ 			list_add_tail_rcu(&wb->bdi_node, &bdi->wb_list);
+ 			list_add(&wb->memcg_node, memcg_cgwb_list);
+ 			list_add(&wb->blkcg_node, blkcg_cgwb_list);
++			blkcg_cgwb_get(blkcg);
+ 			css_get(memcg_css);
+ 			css_get(blkcg_css);
+ 		}
 -- 
 2.17.1
 
