@@ -1,85 +1,65 @@
-From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 3/3] blkcg: use tryget logic when associating a blkg with a bio
-Date: Fri, 31 Aug 2018 16:22:44 -0400
-Message-ID: <20180831202244.21678-4-dennisszhou@gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 0/3] fix blkcg offlining and destruction
+Date: Fri, 31 Aug 2018 14:49:54 -0600
+Message-ID: <7b5ec635-c251-7ac3-bebd-2cfd687ffed6@kernel.dk>
 References: <20180831202244.21678-1-dennisszhou@gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=4ycn/g7fw8SqfXjt7f6eHXQQdDKhRrTOaowx1xDnWeg=;
-        b=bZuVkyCU1I70NNU/Nt6qA+o76T3OmFM2XGSQlTC/lPJT7C5jA/ts+UF53fAXi4g3tG
-         0Q2vQwCwAOE53QDwEOSFpaV0duuAdctBWbjH9Z+cZK5/PkbO2nqkAnO2Zz5Hj6REO2B2
-         Q771+5202p1QLs/shU8sZyELGxXPSy33lvsMWYvYk9LLDCwyJdcJDjgR432TelMGTm4n
-         2wcf8pmAJUalwtdh61M77DtcLaXCGL0/saDQ++CaWXD67LXH+uu58ycs24LQgz+/5fEy
-         1D3UR5eGeoKR8zwFnozt+gSTc0I6HMXMVho2482Fx0l6F8WBILRUmnmUpUJUODnwdPfn
-         pG0g==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=X4uyyJnze8eQmgn7dZYeBfQiceoBSu//s7aDIvG4h+U=;
+        b=bHZ5ElZZvw9mwSsdtRJKf3t4yaUTAiAzaWOPHinmtCSElcUgb9MejbLyVmzcIW8Nw0
+         APcdfFcUXlB5BS5twjDhEkSh3M+c0i9Taw/FV2bQobku2M0kN5a9yrc4TTqsWd0Oac6v
+         ndm0sVN/hSVuQ/ZSwnSk6SJMMoOWyx32wv44//arPDr/J6FCFMstB6y1sbs+L5bkYaML
+         Tuvcyizzuh+IxIXHuSxyIXaVkLML8ZWVi9bW2zoD+5CSfsdG3EimrQVh5VWdhTVeORLg
+         eGTWzNLerelUF14K2CN04kVpPJnCW4AaiC+2iMmn0T6pmkj8+CDPLmEcXNlMVfrjQTqS
+         Kxtw==
 In-Reply-To: <20180831202244.21678-1-dennisszhou@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Jiufei Xue <jiufei.xue@linux.alibaba.com>, Joseph Qi <joseph.qi@linux.alibaba.com>
+To: Dennis Zhou <dennisszhou@gmail.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
+On 8/31/18 2:22 PM, Dennis Zhou wrote:
+> Hi everyone,
+> 
+> This is a split of an earlier series I sent out [1] containing the first
+> 3 patches with fixes from feedback. This series tackles the first
+> problem where blkcgs were not being destroyed.
+> 
+> There is a regression in blkcg destruction where references weren't
+> properly put causing blkcgs to never be destroyed. Previously, blkgs
+> were destroyed during offlining of the blkcg. This puts back the blkcg
+> reference a blkg holds allowing blkcg ref to reach zero. Then,
+> blkcg_css_free() is called as part of the final cleanup.
+> 
+> To address the problem, 0001 reverts the broken commit, 0002 delays
+> blkg destruction until writeback has finished, and 0003 closes the
+> window on a race condition between a css migration and dying, and
+> blkg association. This should fix the issue where blkg_get() was getting
+> called when a blkcg had already begun exiting. If a bio finds itself
+> here, it will just fall back to root. Oddly enough at one point,
+> blk-throttle was using policy data from and associating with potentially
+> different blkgs, thus how this was exposed.
+> 
+> [1] https://lore.kernel.org/lkml/20180831015356.69796-1-dennisszhou@gmail.com/T
+> 
+> This patchset contains the following 3 patches:
+>   0001-Revert-blk-throttle-fix-race-between-blkcg_bio_issue.patch
+>   0002-blkcg-delay-blkg-destruction-until-after-writeback-h.patch
+>   0003-blkcg-use-tryget-logic-when-associating-a-blkg-with-.patch
+> 
+> 0001 reverts the broken commit.
+> 0002 delays blkg destruction until after writeback.
+> 0003 fixes a race condition for ongoing IO and blkcg destruction.
 
-There is a very small change a bio gets caught up in a really
-unfortunate race between a task migration, cgroup exiting, and itself
-trying to associate with a blkg. This is due to css offlining being
-performed after the css->refcnt is killed which triggers removal of
-blkgs that reach their blkg->refcnt of 0.
+Applied for 4.19, thanks Dennis.
 
-To avoid this, association with a blkg should use tryget and fallback to
-using the root_blkg.
-
-v2:
- - In blk-throttle, be explicit that we only associate with the
-   root_blkg if tryget failed.
-
-Fixes: 08e18eab0c579 ("block: add bi_blkg to the bio for cgroups")
-Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
-Cc: Jiufei Xue <jiufei.xue@linux.alibaba.com>
-Cc: Joseph Qi <joseph.qi@linux.alibaba.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Josef Bacik <josef@toxicpanda.com>
-Cc: Jens Axboe <axboe@kernel.dk>
----
- block/bio.c          | 3 ++-
- block/blk-throttle.c | 5 +++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/block/bio.c b/block/bio.c
-index 04969b392c72..4473ccd22987 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1987,7 +1987,8 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
- {
- 	if (unlikely(bio->bi_blkg))
- 		return -EBUSY;
--	blkg_get(blkg);
-+	if (!blkg_try_get(blkg))
-+		return -ENODEV;
- 	bio->bi_blkg = blkg;
- 	return 0;
- }
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index a3eede00d302..01d0620a4e4a 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2129,8 +2129,9 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
- static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
- {
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
--	if (bio->bi_css)
--		bio_associate_blkg(bio, tg_to_blkg(tg));
-+	/* fallback to root_blkg if we fail to get a blkg ref */
-+	if (bio->bi_css && (bio_associate_blkg(bio, tg_to_blkg(tg)) == -ENODEV))
-+		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
- #endif
- }
 -- 
-2.17.1
+Jens Axboe
 
