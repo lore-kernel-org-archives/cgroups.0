@@ -1,25 +1,24 @@
 From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH 13/15] blkcg: change blkg reference counting to use
- percpu_ref
-Date: Fri, 31 Aug 2018 11:49:41 -0400
-Message-ID: <20180831154939.sb24oz7ekxcwkkfd@destiny>
+Subject: Re: [PATCH 14/15] blkcg: rename blkg_try_get to blkg_tryget
+Date: Fri, 31 Aug 2018 11:50:17 -0400
+Message-ID: <20180831155016.2u5erpni5omhcncr@destiny>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
- <20180831015356.69796-14-dennisszhou@gmail.com>
+ <20180831015356.69796-15-dennisszhou@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=sC8N1acRi2T0wcB2hYaIbejNJ4iMdgdw+m2NKObxBm0=;
-        b=hmVVNNHXcUy+YLY9OhZzCIWW2RBnPcBYnVfh7t9lwJxo+qJTxhzzHiCaq8vucWlFMj
-         eYDo9R8u03JOZzxZ/kn3K3iNvUzShDcY2rjNyuYDPRai58GJGFCVPkQgZO9Y39iklpR7
-         N/RyVM/CoTMEJNbg7Vv7FzvJwismPWcOstByUEvGX5xSsh9bR+BT8Agvyrw/7kQ8gqw6
-         gNG/9PTQPRw7LMpm4zb5rhkzURuJY9NjNRPRyH5QpwAdUKIHcMsOnZYt4qt3iJhnpKlX
-         aoZp4j0xUqo7wpst3j89S8D7PCAXmHD2GUF+Hx/puogsSJwBMTZAl1vDsmVp9ijC3JCX
-         R0eQ==
+        bh=UqaA9H8RxsZ7IIFSLpndjVyK5I3+eZWdGd5MwXiwCqQ=;
+        b=xFPHzLgC4sh+KhS4ZP9khaBXROOYwkCxcppvRlSRnZwE/Fk4jSXgWzsTkC1d/QwWoL
+         ULECdegUNk6v49JIUEau+Lgmytsx96g++icAS0OrqGmpsa8GbFHVqRqauGJIboC9JH9I
+         G62OsSkIcfQudGL7RpUYOgeSlbottNanch3F3HDOULvSgVZjx6SXtOAsgSdhOdjsK9qK
+         q416PyTf4iul1hZll4jhEmnHqyQ5GkCD5cjNfZRrB9Z0N+Dle4LyBdvXWQXeF703PWmU
+         B+umTNjO+2ampF1Y4tJt1LWuxgjKFeWH/ZOLy15b9BpAsyxoVkBKzCQUeyk/aSYffZ/A
+         hCXQ==
 Content-Disposition: inline
-In-Reply-To: <20180831015356.69796-14-dennisszhou@gmail.com>
+In-Reply-To: <20180831015356.69796-15-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,12 +26,12 @@ Content-Transfer-Encoding: 7bit
 To: Dennis Zhou <dennisszhou@gmail.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 09:53:54PM -0400, Dennis Zhou wrote:
+On Thu, Aug 30, 2018 at 09:53:55PM -0400, Dennis Zhou wrote:
 > From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 > 
-> Now that every bio is associated with a blkg, this puts the use of
-> blkg_get, blkg_try_get, and blkg_put on the hot path. This switches over
-> the refcnt in blkg to use percpu_ref.
+> blkg reference counting now uses percpu_ref rather than atomic_t. Let's
+> make this consistent with css_tryget. This renames blkg_try_get to
+> blkg_tryget and now returns a bool rather than the blkg or NULL.
 > 
 > Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
 
