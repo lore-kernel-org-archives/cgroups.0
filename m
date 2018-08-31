@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 13/15] blkcg: change blkg reference counting to use percpu_ref
-Date: Thu, 30 Aug 2018 21:53:54 -0400
-Message-ID: <20180831015356.69796-14-dennisszhou@gmail.com>
+Subject: [PATCH 14/15] blkcg: rename blkg_try_get to blkg_tryget
+Date: Thu, 30 Aug 2018 21:53:55 -0400
+Message-ID: <20180831015356.69796-15-dennisszhou@gmail.com>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Tu/AriW7HdBy3hcsN7f/g+VUfGV9GCz/UgAHKU8KDmw=;
-        b=L4pGlUrxrEzZMR8p1KPpJpEOBv6PlROFKL19Z+Co1NyRMzzYpT36JXKdJyhaLS6bO3
-         GjOcIAShcjSmBMHCgcDOSkMrpO62nQJMShLwmrHQ7ouXVbbw6l0oIJzvPAE+gHQq/wkM
-         Dn99dyAfJduPXusYjkX1zeusfVZNzAJcvK0t7a+35zhE6Iuo5/HbQvfkdtVeftf0N1ZW
-         gWxWHleWSoXoyJuOxZf52ULtbNJmt+Mw+PqleW6lwhcVPszJwSjX/eBdythvLZkwFtsM
-         Vo1jzvg3TjmGI6JgfmER06xvh8Z6BDFY2cVoK0WO0ehRxQYSILfhN0FzHvF139fmZXup
-         eI3g==
+        bh=jit6SOP1wxl/niVnzyIL+oa21o0jJ66/5PbbODOSPhw=;
+        b=jvuaj3y63F1UhmCB4n3qpwUWx85ghl8Qp3rHbvaiZhV2MoaZ3n59hWfHxTPvMLBk2T
+         Xs6Mctg8koET+QLUfFJvO0LH0y+wh8UYIkhMX4+0Zc8Flk9bnjsm0UadHWDZYLgl26Sh
+         OybWJoB6WwH6HyZIjwtZn0S6zkrNZP5sV6bff655gS+Hr7ylwkp7lc9EziCXybz2LTEs
+         JVX+Ay0IX0fK/3CBQt+1ayRKLkqCLO5zTV+V3QyOduPWW/4spBVC5xrCUvHs94hC6Dja
+         9Si00l79UGljdNgtxy5dAf9+hU13qo49ofhj+CaDtNVu+lvwbl5nUnAkJ3skVVewI8CM
+         TI8A==
 In-Reply-To: <20180831015356.69796-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,167 +25,92 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-Now that every bio is associated with a blkg, this puts the use of
-blkg_get, blkg_try_get, and blkg_put on the hot path. This switches over
-the refcnt in blkg to use percpu_ref.
+blkg reference counting now uses percpu_ref rather than atomic_t. Let's
+make this consistent with css_tryget. This renames blkg_try_get to
+blkg_tryget and now returns a bool rather than the blkg or NULL.
 
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
 ---
- block/blk-cgroup.c         | 56 +++++++++++++++++++++-----------------
- include/linux/blk-cgroup.h | 14 +++-------
- 2 files changed, 35 insertions(+), 35 deletions(-)
+ block/bio.c                |  2 +-
+ block/blk-cgroup.c         |  3 +--
+ block/blk-iolatency.c      |  2 +-
+ include/linux/blk-cgroup.h | 10 ++++------
+ 4 files changed, 7 insertions(+), 10 deletions(-)
 
+diff --git a/block/bio.c b/block/bio.c
+index b792bffecce1..a0b816811e7d 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1943,7 +1943,7 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+ {
+ 	if (unlikely(bio->bi_blkg))
+ 		return -EBUSY;
+-	if (!blkg_try_get(blkg))
++	if (!blkg_tryget(blkg))
+ 		return -ENODEV;
+ 	bio->bi_blkg = blkg;
+ 	return 0;
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index f678cd555814..bbea4b44bd8f 100644
+index bbea4b44bd8f..1eaf097e38b0 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -84,6 +84,30 @@ static void blkg_free(struct blkcg_gq *blkg)
- 	kfree(blkg);
- }
+@@ -1777,8 +1777,7 @@ void blkcg_maybe_throttle_current(void)
+ 	blkg = blkg_lookup(blkcg, q);
+ 	if (!blkg)
+ 		goto out;
+-	blkg = blkg_try_get(blkg);
+-	if (!blkg)
++	if (!blkg_tryget(blkg))
+ 		goto out;
+ 	rcu_read_unlock();
  
-+/*
-+ * A group is RCU protected, but having an rcu lock does not mean that one
-+ * can access all the fields of blkg and assume these are valid.  For
-+ * example, don't try to follow throtl_data and request queue links.
-+ *
-+ * Having a reference to blkg under an rcu allows accesses to only values
-+ * local to groups like group stats and group rate limits.
-+ */
-+static void __blkg_release(struct percpu_ref *ref)
-+{
-+	struct blkcg_gq *blkg = container_of(ref, struct blkcg_gq, refcnt);
-+
-+	percpu_ref_exit(&blkg->refcnt);
-+
-+	/* release the blkcg and parent blkg refs this blkg has been holding */
-+	css_put(&blkg->blkcg->css);
-+	if (blkg->parent)
-+		blkg_put(blkg->parent);
-+
-+	wb_congested_put(blkg->wb_congested);
-+
-+	blkg_free(blkg);
-+}
-+
- /**
-  * blkg_alloc - allocate a blkg
-  * @blkcg: block cgroup the new blkg is associated with
-@@ -110,7 +134,6 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 	blkg->q = q;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
--	atomic_set(&blkg->refcnt, 1);
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 9d7052bad6f7..5a4cec54c998 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -628,7 +628,7 @@ static void blkiolatency_timer_fn(struct timer_list *t)
+ 		 * We could be exiting, don't access the pd unless we have a
+ 		 * ref on the blkg.
+ 		 */
+-		if (!blkg_try_get(blkg))
++		if (!blkg_tryget(blkg))
+ 			continue;
  
- 	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
- 	if (blkcg != &blkcg_root) {
-@@ -217,6 +240,10 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 		blkg_get(blkg->parent);
- 	}
- 
-+	ret = percpu_ref_init(&blkg->refcnt, __blkg_release, 0, GFP_KERNEL);
-+	if (ret)
-+		goto err_cancel_ref;
-+
- 	/* invoke per-policy init */
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -249,6 +276,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	blkg_put(blkg);
- 	return ERR_PTR(ret);
- 
-+err_cancel_ref:
-+	percpu_ref_exit(&blkg->refcnt);
- err_put_congested:
- 	wb_congested_put(wb_congested);
- err_put_css:
-@@ -378,7 +407,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	 * Put the reference taken at the time of creation so that when all
- 	 * queues are gone, group can be destroyed.
- 	 */
--	blkg_put(blkg);
-+	percpu_ref_kill(&blkg->refcnt);
- }
- 
- /**
-@@ -405,29 +434,6 @@ static void blkg_destroy_all(struct request_queue *q)
- 	q->root_rl.blkg = NULL;
- }
- 
--/*
-- * A group is RCU protected, but having an rcu lock does not mean that one
-- * can access all the fields of blkg and assume these are valid.  For
-- * example, don't try to follow throtl_data and request queue links.
-- *
-- * Having a reference to blkg under an rcu allows accesses to only values
-- * local to groups like group stats and group rate limits.
-- */
--void __blkg_release_rcu(struct rcu_head *rcu_head)
--{
--	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
--
--	/* release the blkcg and parent blkg refs this blkg has been holding */
--	css_put(&blkg->blkcg->css);
--	if (blkg->parent)
--		blkg_put(blkg->parent);
--
--	wb_congested_put(blkg->wb_congested);
--
--	blkg_free(blkg);
--}
--EXPORT_SYMBOL_GPL(__blkg_release_rcu);
--
- /*
-  * The next function used by blk_queue_for_each_rl().  It's a bit tricky
-  * because the root blkg uses @q->root_rl instead of its own rl.
+ 		iolat = blkg_to_lat(blkg);
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 97cb82029b18..b60d063fb0d7 100644
+index b60d063fb0d7..0134cdd270b8 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -126,7 +126,7 @@ struct blkcg_gq {
- 	struct request_list		rl;
- 
- 	/* reference count */
--	atomic_t			refcnt;
-+	struct percpu_ref		refcnt;
- 
- 	/* is this blkg online? protected by both blkcg and q locks */
- 	bool				online;
-@@ -455,8 +455,7 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
-  */
- static inline void blkg_get(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	atomic_inc(&blkg->refcnt);
-+	percpu_ref_get(&blkg->refcnt);
+@@ -459,17 +459,15 @@ static inline void blkg_get(struct blkcg_gq *blkg)
  }
  
  /**
-@@ -468,23 +467,18 @@ static inline void blkg_get(struct blkcg_gq *blkg)
+- * blkg_try_get - try and get a blkg reference
++ * blkg_tryget - try and get a blkg reference
+  * @blkg: blkg to get
+  *
+  * This is for use when doing an RCU lookup of the blkg.  We may be in the midst
+  * of freeing this blkg, so we can only use it if the refcnt is not zero.
   */
- static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
+-static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
++static inline bool blkg_tryget(struct blkcg_gq *blkg)
  {
--	if (atomic_inc_not_zero(&blkg->refcnt))
-+	if (percpu_ref_tryget(&blkg->refcnt))
- 		return blkg;
- 	return NULL;
- }
- 
--
--void __blkg_release_rcu(struct rcu_head *rcu);
--
- /**
-  * blkg_put - put a blkg reference
-  * @blkg: blkg to put
-  */
- static inline void blkg_put(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	if (atomic_dec_and_test(&blkg->refcnt))
--		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
-+	percpu_ref_put(&blkg->refcnt);
+-	if (percpu_ref_tryget(&blkg->refcnt))
+-		return blkg;
+-	return NULL;
++	return percpu_ref_tryget(&blkg->refcnt);
  }
  
  /**
+@@ -560,7 +558,7 @@ static inline struct request_list *blk_get_rl(struct request_queue *q,
+ 			}
+ 		}
+ 
+-		if (blkg_try_get(blkg))
++		if (blkg_tryget(blkg))
+ 			break;
+ 		cpu_relax();
+ 	}
 -- 
 2.17.1
 
