@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 01/15] Revert "blk-throttle: fix race between blkcg_bio_issue_check() and cgroup_rmdir()"
-Date: Thu, 30 Aug 2018 21:53:42 -0400
-Message-ID: <20180831015356.69796-2-dennisszhou@gmail.com>
+Subject: [PATCH 03/15] blkcg: use tryget logic when associating a blkg with a bio
+Date: Thu, 30 Aug 2018 21:53:44 -0400
+Message-ID: <20180831015356.69796-4-dennisszhou@gmail.com>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=TO0jmspUoRjVVfIoVYshEwAx1ch9EaHAEw+E1Q58OTI=;
-        b=Shz0Q5Qi2MPI43f81Ff0S8Vkr8KQ+4rzAUBtHB7nXItV+cY2rT5ow5cPeZxOPNpzKZ
-         OuXRIllcG3eSzNOluaqxO7dBoqyqs/LRscV2w5mj3dvPA34XPvmmEoCqDoCDrqZNxyKp
-         jvXasFYWbhH8CcoRlr37KkC2FBUyyo8SdQsLkgDnc36f4XfUajFWumnRoUI+pSQjqCn0
-         4KYIX4910H88Pr9GSLX1mWgYL7Gu/juxAwXwjZl0j3sURsuLp0sCW1F3Ave/JLTmT4Bo
-         UEdX0Gb+PYDUGGLx0l/aZNoTrqbnJ87I1DNwjY9jjkyLZQoW6JN+BCuwcnIsxwhJUDDT
-         KhxQ==
+        bh=rHUzs00gtBEcf/iXCghUQ5cCQKHUCn7Y3ahs7HcS1YY=;
+        b=EssQLpyrDxGRJAzRuWy/YJuWpnvt4vsVL2opMZ/12iKE7Tpsb2wt7YhKs3p29chxB3
+         SoGVl+CqnoPxteowucNydIkpR6aG77oygw6KhmjKEjVPFx7IDLKM/uI0lv5Kkn1WMCks
+         HxhMTSU837YTmCpNj8+CZPcL9pcqzDoYMrJ0OkeiqWKDigan/iSPlBmx502CNvbiFDO4
+         uSWt8NEJgxwWfQnSuuQzdXkgbRnc3ocbCh8QlTLa0+iluHa+friudt9TwJZW/KpzhVg2
+         8ByHXyrPfknxI1BgKyrySXdJ6mgEtAU8rDg6EVqAjJAXkAdRgZA5gGGeaAzfUnL+B76f
+         3BRg==
 In-Reply-To: <20180831015356.69796-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,193 +25,57 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-This reverts commit 4c6994806f708559c2812b73501406e21ae5dcd0.
+There is a very small change a bio gets caught up in a really
+unfortunate race between a task migration, cgroup exiting, and itself
+trying to associate with a blkg. This is due to css offlining being
+performed after the css->refcnt is killed which triggers removal of
+blkgs that reach their blkg->refcnt of 0.
 
-Destroying blkgs is tricky because of the nature of the relationship. A
-blkg should go away when either a blkcg or a request_queue goes away.
-However, blkg's pin the blkcg to ensure they remain valid. To break this
-cycle, when a blkcg is offlined, blkgs put back their css ref. This
-eventually lets css_free() get called which frees the blkcg.
+To avoid this, association with a blkg should use tryget and fallback to
+using the root_blkg.
 
-The above commit (4c6994806f70) breaks this order of events by trying to
-destroy blkgs in css_free(). As the blkgs still hold references to the
-blkcg, css_free() is never called.
-
-The race between blkcg_bio_issue_check() and cgroup_rmdir() will be
-addressed in the following patch by delaying destruction of a blkg until
-all writeback associated with the blkcg has been finished.
-
-Fixes: 4c6994806f70 ("blk-throttle: fix race between blkcg_bio_issue_check() and cgroup_rmdir()")
+Fixes: 08e18eab0c579 ("block: add bi_blkg to the bio for cgroups")
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
 Cc: Jiufei Xue <jiufei.xue@linux.alibaba.com>
 Cc: Joseph Qi <joseph.qi@linux.alibaba.com>
 Cc: Tejun Heo <tj@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>
 Cc: Jens Axboe <axboe@kernel.dk>
 ---
- block/blk-cgroup.c         | 78 ++++++++------------------------------
- include/linux/blk-cgroup.h |  1 -
- 2 files changed, 16 insertions(+), 63 deletions(-)
+ block/bio.c          | 3 ++-
+ block/blk-throttle.c | 5 +++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 694595b29b8f..2998e4f095d1 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -310,28 +310,11 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 	}
- }
- 
--static void blkg_pd_offline(struct blkcg_gq *blkg)
--{
--	int i;
--
--	lockdep_assert_held(blkg->q->queue_lock);
--	lockdep_assert_held(&blkg->blkcg->lock);
--
--	for (i = 0; i < BLKCG_MAX_POLS; i++) {
--		struct blkcg_policy *pol = blkcg_policy[i];
--
--		if (blkg->pd[i] && !blkg->pd[i]->offline &&
--		    pol->pd_offline_fn) {
--			pol->pd_offline_fn(blkg->pd[i]);
--			blkg->pd[i]->offline = true;
--		}
--	}
--}
--
- static void blkg_destroy(struct blkcg_gq *blkg)
+diff --git a/block/bio.c b/block/bio.c
+index 04969b392c72..4473ccd22987 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1987,7 +1987,8 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
  {
- 	struct blkcg *blkcg = blkg->blkcg;
- 	struct blkcg_gq *parent = blkg->parent;
-+	int i;
- 
- 	lockdep_assert_held(blkg->q->queue_lock);
- 	lockdep_assert_held(&blkcg->lock);
-@@ -340,6 +323,13 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	WARN_ON_ONCE(list_empty(&blkg->q_node));
- 	WARN_ON_ONCE(hlist_unhashed(&blkg->blkcg_node));
- 
-+	for (i = 0; i < BLKCG_MAX_POLS; i++) {
-+		struct blkcg_policy *pol = blkcg_policy[i];
-+
-+		if (blkg->pd[i] && pol->pd_offline_fn)
-+			pol->pd_offline_fn(blkg->pd[i]);
-+	}
-+
- 	if (parent) {
- 		blkg_rwstat_add_aux(&parent->stat_bytes, &blkg->stat_bytes);
- 		blkg_rwstat_add_aux(&parent->stat_ios, &blkg->stat_ios);
-@@ -382,7 +372,6 @@ static void blkg_destroy_all(struct request_queue *q)
- 		struct blkcg *blkcg = blkg->blkcg;
- 
- 		spin_lock(&blkcg->lock);
--		blkg_pd_offline(blkg);
- 		blkg_destroy(blkg);
- 		spin_unlock(&blkcg->lock);
- 	}
-@@ -1058,54 +1047,21 @@ static struct cftype blkcg_legacy_files[] = {
-  * @css: css of interest
-  *
-  * This function is called when @css is about to go away and responsible
-- * for offlining all blkgs pd and killing all wbs associated with @css.
-- * blkgs pd offline should be done while holding both q and blkcg locks.
-- * As blkcg lock is nested inside q lock, this function performs reverse
-- * double lock dancing.
-+ * for shooting down all blkgs associated with @css.  blkgs should be
-+ * removed while holding both q and blkcg locks.  As blkcg lock is nested
-+ * inside q lock, this function performs reverse double lock dancing.
-  *
-  * This is the blkcg counterpart of ioc_release_fn().
-  */
- static void blkcg_css_offline(struct cgroup_subsys_state *css)
- {
- 	struct blkcg *blkcg = css_to_blkcg(css);
--	struct blkcg_gq *blkg;
- 
- 	spin_lock_irq(&blkcg->lock);
- 
--	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
--		struct request_queue *q = blkg->q;
--
--		if (spin_trylock(q->queue_lock)) {
--			blkg_pd_offline(blkg);
--			spin_unlock(q->queue_lock);
--		} else {
--			spin_unlock_irq(&blkcg->lock);
--			cpu_relax();
--			spin_lock_irq(&blkcg->lock);
--		}
--	}
--
--	spin_unlock_irq(&blkcg->lock);
--
--	wb_blkcg_offline(blkcg);
--}
--
--/**
-- * blkcg_destroy_all_blkgs - destroy all blkgs associated with a blkcg
-- * @blkcg: blkcg of interest
-- *
-- * This function is called when blkcg css is about to free and responsible for
-- * destroying all blkgs associated with @blkcg.
-- * blkgs should be removed while holding both q and blkcg locks. As blkcg lock
-- * is nested inside q lock, this function performs reverse double lock dancing.
-- */
--static void blkcg_destroy_all_blkgs(struct blkcg *blkcg)
--{
--	spin_lock_irq(&blkcg->lock);
- 	while (!hlist_empty(&blkcg->blkg_list)) {
- 		struct blkcg_gq *blkg = hlist_entry(blkcg->blkg_list.first,
--						    struct blkcg_gq,
--						    blkcg_node);
-+						struct blkcg_gq, blkcg_node);
- 		struct request_queue *q = blkg->q;
- 
- 		if (spin_trylock(q->queue_lock)) {
-@@ -1117,7 +1073,10 @@ static void blkcg_destroy_all_blkgs(struct blkcg *blkcg)
- 			spin_lock_irq(&blkcg->lock);
- 		}
- 	}
-+
- 	spin_unlock_irq(&blkcg->lock);
-+
-+	wb_blkcg_offline(blkcg);
+ 	if (unlikely(bio->bi_blkg))
+ 		return -EBUSY;
+-	blkg_get(blkg);
++	if (!blkg_try_get(blkg))
++		return -ENODEV;
+ 	bio->bi_blkg = blkg;
+ 	return 0;
  }
- 
- static void blkcg_css_free(struct cgroup_subsys_state *css)
-@@ -1125,8 +1084,6 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
- 	struct blkcg *blkcg = css_to_blkcg(css);
- 	int i;
- 
--	blkcg_destroy_all_blkgs(blkcg);
--
- 	mutex_lock(&blkcg_pol_mutex);
- 
- 	list_del(&blkcg->all_blkcgs_node);
-@@ -1480,11 +1437,8 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 
- 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
- 		if (blkg->pd[pol->plid]) {
--			if (!blkg->pd[pol->plid]->offline &&
--			    pol->pd_offline_fn) {
-+			if (pol->pd_offline_fn)
- 				pol->pd_offline_fn(blkg->pd[pol->plid]);
--				blkg->pd[pol->plid]->offline = true;
--			}
- 			pol->pd_free_fn(blkg->pd[pol->plid]);
- 			blkg->pd[pol->plid] = NULL;
- 		}
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 34aec30e06c7..1615cdd4c797 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -89,7 +89,6 @@ struct blkg_policy_data {
- 	/* the blkg and policy id this per-policy data belongs to */
- 	struct blkcg_gq			*blkg;
- 	int				plid;
--	bool				offline;
- };
- 
- /*
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index a3eede00d302..c626e1f7cdcd 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2129,8 +2129,9 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+ static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
+ {
+ #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+-	if (bio->bi_css)
+-		bio_associate_blkg(bio, tg_to_blkg(tg));
++	/* fallback to root_blkg if we fail to get a blkg ref */
++	if (bio->bi_css && bio_associate_blkg(bio, tg_to_blkg(tg)))
++		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
+ 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+ #endif
+ }
 -- 
 2.17.1
 
