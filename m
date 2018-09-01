@@ -1,24 +1,25 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 11/15] blkcg: remove additional reference to the css
-Date: Fri, 31 Aug 2018 17:26:03 -0700
-Message-ID: <20180901002603.GI1488037@devbig004.ftw2.facebook.com>
+Subject: Re: [PATCH 12/15] blkcg: cleanup and make blk_get_rl use
+ blkg_lookup_create
+Date: Fri, 31 Aug 2018 17:29:00 -0700
+Message-ID: <20180901002900.GJ1488037@devbig004.ftw2.facebook.com>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
- <20180831015356.69796-12-dennisszhou@gmail.com>
+ <20180831015356.69796-13-dennisszhou@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=aYfyDUOdGSNfOZV/pI/zAY7JB35GXqB2P2f068rolNQ=;
-        b=Z8Jenl1LUYwyuWK1agPe3HE9kQsGp3l0rCQChLVbp17znEagSbfFwtK3d0oAEsgD9A
-         rOsYi/XgduU9ayspmwBgZgCkhg/XXd+rEtWSGjr7ASZo2UclSnVzYHbSY5YS9q/5WNYv
-         tdGjRN2Y9BqxZaf48tshmFB8yvpnGZe1LrJdxhTtet3IlDVwFazbg7A80v9Tmd7SSfRU
-         ftAglG8VG+TAK+Xd7Ru3zKbWwByME7+fEYdDcRC+KUJeFcPLeTshxkbw5ASG1ADzyul4
-         0fCxkbCXUwrQQj57Hk3D0Q5TY/Ujp+iwMxgL9Ykti4U8Q7Cbvhnx+QR7FswC+P8Dv7/O
-         edsg==
+        bh=StEz1mAJv0KzVZGP1EaarXGr3LePzazclN3Lxla0Mp0=;
+        b=Gx+AmDGBv/s3qria3fxuFzM5YHMkloGdUQ+f0LNYy2qzNN30B5ctsJi/ZczOaKxzKp
+         ol1RTToAh6Fj6/FRpNXItJchWh2ri4Ftfaqa40Rbk4yBilWli4TlVfNztJ9xCXSON6L+
+         c07PuyyoWxI5+MUUVc+AZ04hbwysuksBfIomrhqMhqHOEKHT6v5HSmGR7Ei9Td5ptZOU
+         EgLPpQtHnNw2ubvxx5HOYe8yQ8LFsyn6A4K7fkISn5mwMaQ8sr94jEhPPUk8qOEXNNwQ
+         iQd/kqmzja5JV3czwd08abHbjFXZgAz5cKOz572pe6TTJ9OX30XWZhB7p3PB+y6HLX2v
+         /+5Q==
 Content-Disposition: inline
-In-Reply-To: <20180831015356.69796-12-dennisszhou@gmail.com>
+In-Reply-To: <20180831015356.69796-13-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -26,29 +27,28 @@ Content-Transfer-Encoding: 7bit
 To: Dennis Zhou <dennisszhou@gmail.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Thu, Aug 30, 2018 at 09:53:53PM -0400, Dennis Zhou wrote:
+> From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
+> 
+> blk_get_rl is responsible for identifying which request_list a request
+> should be allocated to. Try get logic was added earlier, but
+> semantically the logic was not changed.
+> 
+> This patch makes better use of the bio already having a reference to the
+> blkg in the hot path. The cold path uses a better fallback of
+> blkg_lookup_create rather than just blkg_lookup and then falling back to
+> the q->root_rl. If lookup_create fails with anything but -ENODEV, it
+> falls back to q->root_rl.
+> 
+> A clarifying comment is added to explain why q->root_rl is used rather
+> than the root blkg's rl.
+> 
+> Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
 
-On Thu, Aug 30, 2018 at 09:53:52PM -0400, Dennis Zhou wrote:
-> -	css = cgroup_get_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
->  
-> -	return __bio_associate_blkg_from_css(bio, css);
-> +	rcu_read_lock();
-> +
-> +	while (true) {
-> +		css = cgroup_e_css(page->mem_cgroup->css.cgroup,
-> +				   &io_cgrp_subsys);
+Acked-by: Tejun Heo <tj@kernel.org>
 
-So, while they seem similar cgroup_e_css() and cgroup_get_e_css()
-behave very differently in terms of locking.  cgroup_e_css() can only
-be used under cgroup_mutex because it is used during migration and has
-to test cgroup_ss_mask().  The right thing to do here would be
-renaming cgroup_e_css() to something else and add a new implementation
-which operates in the same way as cgroup_get_e_css().
-
-BTW, this should have triggered lockdep warning.  I'd strongly
-recommend testing with lockdep enabled.
-
-Other than that, looks good to me.
+We're replicating that retry busy loop a lot.  It'd be really great to
+factor that out and document what it's doing.
 
 Thanks.
 
