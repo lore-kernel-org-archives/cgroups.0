@@ -1,7 +1,7 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v5 1/5] sched/topology: Adding function partition_sched_domains_locked()
-Date: Mon,  3 Sep 2018 16:27:57 +0200
-Message-ID: <20180903142801.20046-2-juri.lelli@redhat.com>
+Subject: [PATCH v5 2/5] sched/core: Streamlining calls to task_rq_unlock()
+Date: Mon,  3 Sep 2018 16:27:58 +0200
+Message-ID: <20180903142801.20046-3-juri.lelli@redhat.com>
 References: <20180903142801.20046-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180903142801.20046-1-juri.lelli@redhat.com>
@@ -15,87 +15,91 @@ Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.e
 
 From: Mathieu Poirier <mathieu.poirier@linaro.org>
 
-Introducing function partition_sched_domains_locked() by taking
-the mutex locking code out of the original function.  That way
-the work done by partition_sched_domains_locked() can be reused
-without dropping the mutex lock.
+Calls to task_rq_unlock() are done several times in function
+__sched_setscheduler().  This is fine when only the rq lock needs to be
+handled but not so much when other locks come into play.
+
+This patch streamlines the release of the rq lock so that only one
+location need to be modified when dealing with more than one lock.
 
 No change of functionality is introduced by this patch.
 
 Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+Reviewed-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
 ---
- include/linux/sched/topology.h | 10 ++++++++++
- kernel/sched/topology.c        | 17 +++++++++++++----
- 2 files changed, 23 insertions(+), 4 deletions(-)
+ kernel/sched/core.c | 24 ++++++++++++++----------
+ 1 file changed, 14 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
-index 26347741ba50..57997caf61b6 100644
---- a/include/linux/sched/topology.h
-+++ b/include/linux/sched/topology.h
-@@ -162,6 +162,10 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
- 	return to_cpumask(sd->span);
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index deafa9fe602b..22f5622cba69 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4232,8 +4232,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	 * Changing the policy of the stop threads its a very bad idea:
+ 	 */
+ 	if (p == rq->stop) {
+-		task_rq_unlock(rq, p, &rf);
+-		return -EINVAL;
++		retval = -EINVAL;
++		goto unlock;
+ 	}
+ 
+ 	/*
+@@ -4249,8 +4249,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			goto change;
+ 
+ 		p->sched_reset_on_fork = reset_on_fork;
+-		task_rq_unlock(rq, p, &rf);
+-		return 0;
++		retval = 0;
++		goto unlock;
+ 	}
+ change:
+ 
+@@ -4263,8 +4263,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 		if (rt_bandwidth_enabled() && rt_policy(policy) &&
+ 				task_group(p)->rt_bandwidth.rt_runtime == 0 &&
+ 				!task_group_is_autogroup(task_group(p))) {
+-			task_rq_unlock(rq, p, &rf);
+-			return -EPERM;
++			retval = -EPERM;
++			goto unlock;
+ 		}
+ #endif
+ #ifdef CONFIG_SMP
+@@ -4279,8 +4279,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			 */
+ 			if (!cpumask_subset(span, &p->cpus_allowed) ||
+ 			    rq->rd->dl_bw.bw == 0) {
+-				task_rq_unlock(rq, p, &rf);
+-				return -EPERM;
++				retval = -EPERM;
++				goto unlock;
+ 			}
+ 		}
+ #endif
+@@ -4299,8 +4299,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	 * is available.
+ 	 */
+ 	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
+-		task_rq_unlock(rq, p, &rf);
+-		return -EBUSY;
++		retval = -EBUSY;
++		goto unlock;
+ 	}
+ 
+ 	p->sched_reset_on_fork = reset_on_fork;
+@@ -4356,6 +4356,10 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	preempt_enable();
+ 
+ 	return 0;
++
++unlock:
++	task_rq_unlock(rq, p, &rf);
++	return retval;
  }
  
-+extern void partition_sched_domains_locked(int ndoms_new,
-+					   cpumask_var_t doms_new[],
-+					   struct sched_domain_attr *dattr_new);
-+
- extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 				    struct sched_domain_attr *dattr_new);
- 
-@@ -206,6 +210,12 @@ extern void set_sched_topology(struct sched_domain_topology_level *tl);
- 
- struct sched_domain_attr;
- 
-+static inline void
-+partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
-+			       struct sched_domain_attr *dattr_new)
-+{
-+}
-+
- static inline void
- partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 			struct sched_domain_attr *dattr_new)
-diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
-index 56a0fed30c0a..fb7ae691cb82 100644
---- a/kernel/sched/topology.c
-+++ b/kernel/sched/topology.c
-@@ -1850,15 +1850,15 @@ static int dattrs_equal(struct sched_domain_attr *cur, int idx_cur,
-  * ndoms_new == 0 is a special case for destroying existing domains,
-  * and it will not create the default domain.
-  *
-- * Call with hotplug lock held
-+ * Call with hotplug lock and sched_domains_mutex held
-  */
--void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
--			     struct sched_domain_attr *dattr_new)
-+void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
-+				    struct sched_domain_attr *dattr_new)
- {
- 	int i, j, n;
- 	int new_topology;
- 
--	mutex_lock(&sched_domains_mutex);
-+	lockdep_assert_held(&sched_domains_mutex);
- 
- 	/* Always unregister in case we don't destroy any domains: */
- 	unregister_sched_domain_sysctl();
-@@ -1923,6 +1923,15 @@ void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 	ndoms_cur = ndoms_new;
- 
- 	register_sched_domain_sysctl();
-+}
- 
-+/*
-+ * Call with hotplug lock held
-+ */
-+void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
-+			     struct sched_domain_attr *dattr_new)
-+{
-+	mutex_lock(&sched_domains_mutex);
-+	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
- 	mutex_unlock(&sched_domains_mutex);
- }
+ static int _sched_setscheduler(struct task_struct *p, int policy,
 -- 
 2.17.1
 
