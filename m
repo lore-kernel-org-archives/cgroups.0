@@ -1,141 +1,90 @@
-From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 02/12] blkcg: update blkg_lookup_create to do locking
-Date: Thu,  6 Sep 2018 17:10:35 -0400
-Message-ID: <20180906211045.29055-3-dennisszhou@gmail.com>
-References: <20180906211045.29055-1-dennisszhou@gmail.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v12 9/9] cpuset: Support forced turning off of partition
+ flag
+Date: Thu, 6 Sep 2018 17:20:38 -0400
+Message-ID: <7a57412b-ccdd-be20-529b-89f0737ce41d@redhat.com>
+References: <1535380884-31308-1-git-send-email-longman@redhat.com>
+ <1535380884-31308-10-git-send-email-longman@redhat.com>
+ <20180827164004.GE3978217@devbig004.ftw2.facebook.com>
+ <0daf1f43-2292-0281-3ab8-aef20d0475dc@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ElWDl0f7yaVkieg8dsiiyfInoiRyXp3U8BvsQtSTbKs=;
-        b=tisRTJJs/93AbzNxeq7Ak2SO6dKqyeOAdLDj4iU1p+9jLS6w40xlWxCzOeu+QQOjP+
-         bk/nCf5vIK//2ynQAG0WtMJyTYA02u7Tv6jp3F8vJGz+SLo3Ojpju8jRDvxB+htuMIdd
-         VYKiMWFX6cZfOwYLrrs/zokOqWAljBWvstbrHYgYGGN0qZwGmIv26/v2eSi9u4+LZhz7
-         JMT1ChKynlzNRFcNeKsdrqL8Xtg3iw1wbA94d23JFr+zpNhAqYCnnsuoXjxHYaVztLRW
-         mL0jb7P6hC7gybZsxhag1f2B+fWMOMEkUVU0vngSlTlS4OzqrOXCdcBXgcjilqJNIl4W
-         blBA==
-In-Reply-To: <20180906211045.29055-1-dennisszhou@gmail.com>
+In-Reply-To: <0daf1f43-2292-0281-3ab8-aef20d0475dc@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
 
-From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
+On 08/27/2018 01:50 PM, Waiman Long wrote:
+> On 08/27/2018 12:40 PM, Tejun Heo wrote:
+>> Hello, Waiman.
+>>
+>> On Mon, Aug 27, 2018 at 10:41:24AM -0400, Waiman Long wrote:
+>>> Cpuset allows arbitrary modification of cpu list in "cpuset.cpus"
+>>> even if the requested CPUs won't be granted in "cpuset.cpus.effective"
+>>> as restricted by its parent. However, the validate_change() function
+>>> will inhibit removal of CPUs that have been used in child cpusets.
+>>>
+>>> Being a partition root, however, limits the kind of cpu list
+>>> modification that is allowed. Adding CPUs is not allowed if the new
+>>> CPUs are not in the parent's effective cpu list that can be put into
+>>> "cpuset.cpus.reserved". In addition, a child partition cannot exhaust
+>>> all the parent's effective CPUs.
+>>>
+>>> Because of the implicit cpu exclusive nature of the partition root,
+>>> cpu changes that break that cpu exclusivity will not be allowed. Other
+>>> changes that break the conditions of being a partition root is generally
+>>> allowed. However, the partition flag of the cpuset as well those of
+>>> the descendant partitions will be forcefully turned off.
+>> First of all, thanks a lot for your persistence.  I'm not necessarily
+>> against the flag being forced off but wonder whether the same
+>> config/effective approach can be used as in .cpus and .mems.  Can you
+>> elaborate a bit on the choice here?
+>>
+>> Thank you.
+> My current code has explicitly assumed the following relationship for
+> partition root.
+>
+>     cpus_allowed = effective_cpus + reserved_cpus
+>
+> Also effective_cpus cannot be empty. Specifically, cpus_allowed has to
+> be equal to effective_cpus before a cpuset can be made a partition root.
+>
+> Any changes that break the above conditions will turn off the partition
+> flag forcefully. The only exception is cpu offlining where cpus_allowed
+>> effective_cpus + reserved_cpus can happen.
+> One reason for doing so is because reserved_cpus is hidden. So the main
+> way to infer that is to do cpus_allowed - effective_cpus.
+>
+> It is probably doable to make cpus_allowed >= effective_cpus +
+> reserved_cpus in general, but we may need to expose reserved_cpus as a
+> read-only file, for instance. There may also be other complications that
+> we will need to take care of if this is supported. My current preference
+> is to not doing that unless there is compelling reason to do so.
+>
+> Cheers,
+> Longman
 
-To know when to create a blkg, the general pattern is to do a
-blkg_lookup and if that fails, lock and then do a lookup again and if
-that fails finally create. It doesn't make much sense for everyone who
-wants to do creation to write this themselves.
+For the current patch, one of conditions to allow users to turn on the
+partition flag is cpus_allowed = effective_cpus. Once the partition flag
+is on, the twos have to be the same too except with cpu offlining. This
+patch is added to allow arbitrary modification to the cpuset.cpus file
+except those that have already been forbidden in the existing code. When
+the modification violates the rules of being a partition root, the flag
+will be turned off or we will have to deny the modification request.
 
-This changes blkg_lookup_create to do locking and implement this
-pattern. The old blkg_lookup_create is renamed to __blkg_lookup_create.
-If a call site wants to do its own error handling or already owns the
-queue lock, they can use __blkg_lookup_create. This will be used in
-upcoming patches.
+I am admitting that it is an easy way out in term of programming effort
+as I am not sure how much effort is needed to enable arbitrary
+modification to cpuset.cpus without force disabling and whether such an
+effort is even worthwhile to do.
 
-Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- block/blk-cgroup.c         | 31 ++++++++++++++++++++++++++++---
- block/blk-iolatency.c      |  2 +-
- include/linux/blk-cgroup.h |  4 +++-
- 3 files changed, 32 insertions(+), 5 deletions(-)
+We can certainly relax the current restrictions in the future.  Any
+suggestion to improve the patchset is welcome. I would really like to
+see this merged in 4.20 (or maybe 5.0) kernel.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c19f9078da1e..cd0d97bed83d 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -259,7 +259,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- }
- 
- /**
-- * blkg_lookup_create - lookup blkg, try to create one if not there
-+ * __blkg_lookup_create - lookup blkg, try to create one if not there
-  * @blkcg: blkcg of interest
-  * @q: request_queue of interest
-  *
-@@ -272,8 +272,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
-  * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
-  * dead and bypassing, returns ERR_PTR(-EBUSY).
-  */
--struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
--				    struct request_queue *q)
-+struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
-+				      struct request_queue *q)
- {
- 	struct blkcg_gq *blkg;
- 
-@@ -310,6 +310,31 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 	}
- }
- 
-+/**
-+ * blkg_lookup_create - find or create a blkg
-+ * @blkcg: target block cgroup
-+ * @q: target request_queue
-+ *
-+ * This looks up or creates the blkg representing the unique pair
-+ * of the blkcg and the request_queue.
-+ */
-+struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
-+				    struct request_queue *q)
-+{
-+	struct blkcg_gq *blkg = blkg_lookup(blkcg, q);
-+	unsigned long flags;
-+
-+	if (unlikely(!blkg)) {
-+		spin_lock_irqsave(q->queue_lock, flags);
-+
-+		blkg = __blkg_lookup_create(blkcg, q);
-+
-+		spin_unlock_irqrestore(q->queue_lock, flags);
-+	}
-+
-+	return blkg;
-+}
-+
- static void blkg_destroy(struct blkcg_gq *blkg)
- {
- 	struct blkcg *blkcg = blkg->blkcg;
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 62fdd9002c29..22b2ff0440cc 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -410,7 +410,7 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
- 	if (unlikely(!blkg)) {
- 		if (!lock)
- 			spin_lock_irq(q->queue_lock);
--		blkg = blkg_lookup_create(blkcg, q);
-+		blkg = __blkg_lookup_create(blkcg, q);
- 		if (IS_ERR(blkg))
- 			blkg = NULL;
- 		if (!lock)
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 24067a1f8b36..cc0f238530f6 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -184,6 +184,8 @@ extern struct cgroup_subsys_state * const blkcg_root_css;
- 
- struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
- 				      struct request_queue *q, bool update_hint);
-+struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
-+				      struct request_queue *q);
- struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 				    struct request_queue *q);
- int blkcg_init_queue(struct request_queue *q);
-@@ -897,7 +899,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 	blkg = blkg_lookup(blkcg, q);
- 	if (unlikely(!blkg)) {
- 		spin_lock_irq(q->queue_lock);
--		blkg = blkg_lookup_create(blkcg, q);
-+		blkg = __blkg_lookup_create(blkcg, q);
- 		if (IS_ERR(blkg))
- 			blkg = NULL;
- 		spin_unlock_irq(q->queue_lock);
--- 
-2.17.1
+Cheers,
+Longman
 
