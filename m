@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 03/12] blkcg: convert blkg_lookup_create to find closest blkg
-Date: Thu,  6 Sep 2018 17:10:36 -0400
-Message-ID: <20180906211045.29055-4-dennisszhou@gmail.com>
+Subject: [PATCH 07/12] blkcg: associate writeback bios with a blkg
+Date: Thu,  6 Sep 2018 17:10:40 -0400
+Message-ID: <20180906211045.29055-8-dennisszhou@gmail.com>
 References: <20180906211045.29055-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=GsrSo3YYCaTDgNImQTvjTcK+H+77PIQv1o+ghf7Ahqs=;
-        b=QmBKY0NdXoF0ARRChPUg4DTo5DQZXZvHuL/dbTpZ2cJUeglw3itd1ywwtni2pmAHzU
-         iA0O/kaqWA+ohPhxgl+U1HjPWhVdjQYSyu895+JVCcqD9AeE4+N/uayJcfsB9wYA5be4
-         Il9ln3ho2OI4glGXLIbDvSfjoZfjjcc9qO09qTAZFwgEevO2mOHkfmp7QbkylSEwhClg
-         tYfUVmsQwRQcwiHn6aI3CTyiBkoxCMqZ3alYv6FT5wsMJEM59lVkBDgP/NOa9j4P9SI+
-         LPh0SXWA8LL39N8HPlsl3ND9wmcZWCN6N+Hb3+oTi2SRwtLmcVTIVbrQmLMtG6A2tBei
-         ywzA==
+        bh=FkDgmX6YNgFCNFUn3Et8v5b6B07m4GOk66oKL1F2CRg=;
+        b=KXfPZkTowXdNn4bSmWJdu0fIAq+PTWF8ppkRCr5mf+HPR/zHI8m586ResP00rTLnio
+         z5f83bPQwcEOWBEQ9aFxMYcFsWRE/Gk1Df+CUI2S9wGfSMdZAMuEZEI/y0JUCEy9EYQB
+         QTWRQZZY1JIVBhBf2WTL6kUp11fUEkfVL44iehQ76JGSlOmONIkS7ll2icYTsE0zNVeP
+         ioOaWALWwpegBqrO4CGSooBz6rZ+p5Okp/icK8PRI6nJ2DbKesauU4gUnyjNGD31F1Kx
+         US/47kq1IwRVL/6HZcTa0Htvg/USykojSp9QRO/Gly93pQjNVnUUmHlwkWNKzUQrZXNH
+         bWEw==
 In-Reply-To: <20180906211045.29055-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,115 +25,117 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-There are several scenarios where blkg_lookup_create can fail. Examples
-include the blkcg dying, request_queue is dying, or simply being OOM. At
-the end of the day, most handle this by simply falling back to the
-q->root_blkg and calling it a day.
-
-This patch implements the notion of closest blkg. During
-blkg_lookup_create, if it fails to create, return the closest blkg
-found or the q->root_blkg. blkg_try_get_closest is introduced and used
-during association so a bio is always attached to a blkg.
+One of the goals of this series is to remove a separate reference to
+the css of the bio. This can and should be accessed via bio_blkcg. In
+this patch, the wbc_init_bio call is changed such that it must be called
+after a queue has been associated with the bio.
 
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/bio.c                |  4 +---
- block/blk-cgroup.c         | 22 +++++++++++++++-------
- include/linux/blk-cgroup.h | 14 ++++++++++++++
- 3 files changed, 30 insertions(+), 10 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  8 +++++---
+ fs/buffer.c                             | 10 +++++-----
+ fs/ext4/page-io.c                       |  2 +-
+ include/linux/writeback.h               |  5 +++--
+ 4 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 91c6b1458454..cd947ad4cf08 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -2021,9 +2021,7 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
- {
- 	if (unlikely(bio->bi_blkg))
- 		return -EBUSY;
--	if (!blkg_try_get(blkg))
--		return -ENODEV;
--	bio->bi_blkg = blkg;
-+	bio->bi_blkg = blkg_try_get_closest(blkg);
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 184193bcb262..caf36105a1c7 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1857,8 +1857,10 @@ following two functions.
+ 
+   wbc_init_bio(@wbc, @bio)
+ 	Should be called for each bio carrying writeback data and
+-	associates the bio with the inode's owner cgroup.  Can be
+-	called anytime between bio allocation and submission.
++	associates the bio with the inode's owner cgroup and the
++	corresponding request queue.  This must be called after
++	a queue (device) has been associated with the bio and
++	before submission.
+ 
+   wbc_account_io(@wbc, @page, @bytes)
+ 	Should be called for each data segment being written out.
+@@ -1877,7 +1879,7 @@ the configuration, the bio may be executed at a lower priority and if
+ the writeback session is holding shared resources, e.g. a journal
+ entry, may lead to priority inversion.  There is no one easy solution
+ for the problem.  Filesystems can try to work around specific problem
+-cases by skipping wbc_init_bio() or using bio_associate_blkcg()
++cases by skipping wbc_init_bio() or using bio_associate_create_blkg()
+ directly.
+ 
+ 
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 6f1ae3ac9789..109f55196866 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -3060,11 +3060,6 @@ static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+ 	 */
+ 	bio = bio_alloc(GFP_NOIO, 1);
+ 
+-	if (wbc) {
+-		wbc_init_bio(wbc, bio);
+-		wbc_account_io(wbc, bh->b_page, bh->b_size);
+-	}
+-
+ 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio_set_dev(bio, bh->b_bdev);
+ 	bio->bi_write_hint = write_hint;
+@@ -3084,6 +3079,11 @@ static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+ 		op_flags |= REQ_PRIO;
+ 	bio_set_op_attrs(bio, op, op_flags);
+ 
++	if (wbc) {
++		wbc_init_bio(wbc, bio);
++		wbc_account_io(wbc, bh->b_page, bh->b_size);
++	}
++
+ 	submit_bio(bio);
+ 	return 0;
+ }
+diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+index db7590178dfc..2aa62d58d8dd 100644
+--- a/fs/ext4/page-io.c
++++ b/fs/ext4/page-io.c
+@@ -374,13 +374,13 @@ static int io_submit_init_bio(struct ext4_io_submit *io,
+ 	bio = bio_alloc(GFP_NOIO, BIO_MAX_PAGES);
+ 	if (!bio)
+ 		return -ENOMEM;
+-	wbc_init_bio(io->io_wbc, bio);
+ 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio_set_dev(bio, bh->b_bdev);
+ 	bio->bi_end_io = ext4_end_bio;
+ 	bio->bi_private = ext4_get_io_end(io->io_end);
+ 	io->io_bio = bio;
+ 	io->io_next_block = bh->b_blocknr;
++	wbc_init_bio(io->io_wbc, bio);
  	return 0;
  }
  
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index cd0d97bed83d..9f8aba29b7c1 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -268,9 +268,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
-  * that all non-root blkg's have access to the parent blkg.  This function
-  * should be called under RCU read lock and @q->queue_lock.
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index fdfd04e348f6..738a0c24874f 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -246,7 +246,8 @@ static inline void wbc_attach_fdatawrite_inode(struct writeback_control *wbc,
   *
-- * Returns pointer to the looked up or created blkg on success, ERR_PTR()
-- * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
-- * dead and bypassing, returns ERR_PTR(-EBUSY).
-+ * Returns the blkg or the closest blkg if blkg_create fails as it walks
-+ * down from root.
+  * @bio is a part of the writeback in progress controlled by @wbc.  Perform
+  * writeback specific initialization.  This is used to apply the cgroup
+- * writeback context.
++ * writeback context.  Must be called after the bio has been associated with
++ * a device.
   */
- struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 				      struct request_queue *q)
-@@ -285,7 +284,7 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 	 * we shouldn't allow anything to go through for a bypassing queue.
+ static inline void wbc_init_bio(struct writeback_control *wbc, struct bio *bio)
+ {
+@@ -257,7 +258,7 @@ static inline void wbc_init_bio(struct writeback_control *wbc, struct bio *bio)
+ 	 * regular writeback instead of writing things out itself.
  	 */
- 	if (unlikely(blk_queue_bypass(q)))
--		return ERR_PTR(blk_queue_dying(q) ? -ENODEV : -EBUSY);
-+		return q->root_blkg;
- 
- 	blkg = __blkg_lookup(blkcg, q, true);
- 	if (blkg)
-@@ -298,14 +297,23 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 	while (true) {
- 		struct blkcg *pos = blkcg;
- 		struct blkcg *parent = blkcg_parent(blkcg);
--
--		while (parent && !__blkg_lookup(parent, q, false)) {
-+		struct blkcg_gq *ret_blkg = NULL;
-+
-+		while (parent) {
-+			blkg = __blkg_lookup(parent, q, false);
-+			if (blkg) {
-+				/* remember closest blkg */
-+				ret_blkg = blkg;
-+				break;
-+			}
- 			pos = parent;
- 			parent = blkcg_parent(parent);
- 		}
- 
- 		blkg = blkg_create(pos, q, NULL);
--		if (pos == blkcg || IS_ERR(blkg))
-+		if (IS_ERR(blkg))
-+			return ret_blkg ?: q->root_blkg;
-+		if (pos == blkcg)
- 			return blkg;
- 	}
- }
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index cc0f238530f6..1fbff1bbb651 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -549,6 +549,20 @@ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
- 	return NULL;
+ 	if (wbc->wb)
+-		bio_associate_blkcg(bio, wbc->wb->blkcg_css);
++		bio_associate_blkg_from_css(bio, wbc->wb->blkcg_css);
  }
  
-+/**
-+ * blkg_try_get_closest - try and get a blkg ref on the closet blkg
-+ * @blkg: blkg to get
-+ *
-+ * This walks up the blkg tree to find the closest non-dying blkg and returns
-+ * the blkg that it did association with as it may not be the passed in blkg.
-+ */
-+static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
-+{
-+	while (!atomic_inc_not_zero(&blkg->refcnt))
-+		blkg = blkg->parent;
-+
-+	return blkg;
-+}
- 
- void __blkg_release_rcu(struct rcu_head *rcu);
- 
+ #else	/* CONFIG_CGROUP_WRITEBACK */
 -- 
 2.17.1
 
