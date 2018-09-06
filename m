@@ -1,79 +1,61 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: Re: [PATCH 07/15] blkcg: consolidate bio_issue_init and blkg
- association
-Date: Thu, 6 Sep 2018 16:43:06 -0400
-Message-ID: <20180906204305.GB26048@dennisz-mbp.dhcp.thefacebook.com>
+Subject: Re: [PATCH 11/15] blkcg: remove additional reference to the css
+Date: Thu, 6 Sep 2018 16:45:15 -0400
+Message-ID: <20180906204514.GC26048@dennisz-mbp.dhcp.thefacebook.com>
 References: <20180831015356.69796-1-dennisszhou@gmail.com>
- <20180831015356.69796-8-dennisszhou@gmail.com>
- <20180831154225.zoiztxvdvcfaat5r@destiny>
+ <20180831015356.69796-12-dennisszhou@gmail.com>
+ <20180901002603.GI1488037@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=GJ0UPslJxrAbVKKtV6nvTniosPmHe+Z8otYVdfOdD3U=;
-        b=TlLtdSvNi260eITMOW/emVb421ywK2n3dkfZEQR+EgqMdVIm2rDjoiCsIrwzIqTTAe
-         Wywr5i66e5vKJc3Gg525voIrEISEKenkIEEmkGIqHcjFJ3zlzk5a/K6/R6rxM2n9Rq1g
-         3gQqgKxkkOFZj3ixQdlG3T2TE8vAgt068FXeveCPUiiwLtau9dCfIAu+zOqmfOCOGfHK
-         6Pt8a/LB/DIW+mxUuD4ifPogdmXfQRT6QWPSNKx08pGBmtd+C8HQ/MlpmltEQZt/mz0q
-         eqCLoZ/vOe9y6Lw+xc+1A61SFzPxjBd6My9FGJCEC2Rc11hry/IwvWzfEztMdSb3Kp2o
-         KyGQ==
+        bh=Z8m+mEIJj3McDnXqQOUT9a15bnp+tQ5IwmM7Yv0JRl4=;
+        b=aplzBXnwlI76XyctZYm//zUKqdO0Bscy1fKttYicmoFaQIweIAaTwuYJ6c+e0908L9
+         kj3CI+eX7NImufUT2SmVS5tdfW4DBXf6ywReEV49i/D7sScDWBL5doPRZ9gb/m7VHNvE
+         JYw80XZL8ho9/N/usYHmK/IrhQ+Zhsx+MJB8IVCndw6/hKp5DBKUk2ZuCdfg1v7u7/yw
+         31mtL7wGswKBa6DAyVairUnIdaCthkDGPSv59RhR2CN6SMNPtHdgBdvjWpUnKZw8GsuC
+         Hu2lOoGuhjOooSiEVwgfCtsSCamYEOx4Ikactw0ntp9kEJDsz3d9AzvQZmycsBfgJBKH
+         bTMg==
 Content-Disposition: inline
-In-Reply-To: <20180831154225.zoiztxvdvcfaat5r@destiny>
+In-Reply-To: <20180901002603.GI1488037@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Aug 31, 2018 at 11:42:26AM -0400, Josef Bacik wrote:
-> On Thu, Aug 30, 2018 at 09:53:48PM -0400, Dennis Zhou wrote:
-> > diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-> > index 22b2ff0440cc..9d7052bad6f7 100644
-> > --- a/block/blk-iolatency.c
-> > +++ b/block/blk-iolatency.c
-> > @@ -395,34 +395,12 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
-> >  				     spinlock_t *lock)
-> >  {
-> >  	struct blk_iolatency *blkiolat = BLKIOLATENCY(rqos);
-> > -	struct blkcg *blkcg;
-> > -	struct blkcg_gq *blkg;
-> > -	struct request_queue *q = rqos->q;
-> > +	struct blkcg_gq *blkg = bio->bi_blkg;
-> >  	bool issue_as_root = bio_issue_as_root_blkg(bio);
-> >  
-> >  	if (!blk_iolatency_enabled(blkiolat))
-> >  		return;
-> >  
-> > -	rcu_read_lock();
-> > -	bio_associate_blkcg(bio, NULL);
-> > -	blkcg = bio_blkcg(bio);
-> > -	blkg = blkg_lookup(blkcg, q);
-> > -	if (unlikely(!blkg)) {
-> > -		if (!lock)
-> > -			spin_lock_irq(q->queue_lock);
-> > -		blkg = __blkg_lookup_create(blkcg, q);
-> > -		if (IS_ERR(blkg))
-> > -			blkg = NULL;
-> > -		if (!lock)
-> > -			spin_unlock_irq(q->queue_lock);
-> > -	}
-> > -	if (!blkg)
-> > -		goto out;
-> > -
-> > -	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
-> > -	bio_associate_blkg(bio, blkg);
-> > -out:
-> > -	rcu_read_unlock();
+On Fri, Aug 31, 2018 at 05:26:03PM -0700, Tejun Heo wrote:
+> Hello,
 > 
-> Move this removal to the previous patch, so you keep this patch soley about the
-> bio_issue_init.  Thanks,
+> On Thu, Aug 30, 2018 at 09:53:52PM -0400, Dennis Zhou wrote:
+> > -	css = cgroup_get_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
+> >  
+> > -	return __bio_associate_blkg_from_css(bio, css);
+> > +	rcu_read_lock();
+> > +
+> > +	while (true) {
+> > +		css = cgroup_e_css(page->mem_cgroup->css.cgroup,
+> > +				   &io_cgrp_subsys);
+> 
+> So, while they seem similar cgroup_e_css() and cgroup_get_e_css()
+> behave very differently in terms of locking.  cgroup_e_css() can only
+> be used under cgroup_mutex because it is used during migration and has
+> to test cgroup_ss_mask().  The right thing to do here would be
+> renaming cgroup_e_css() to something else and add a new implementation
+> which operates in the same way as cgroup_get_e_css().
+> 
+> BTW, this should have triggered lockdep warning.  I'd strongly
+> recommend testing with lockdep enabled.
+> 
+> Other than that, looks good to me.
 > 
 
-I've moved this removal to the previous patch and addressed the kbuild
-errors.
+I see. I've renamed the original cgroup_e_css() to
+cgroup_e_css_by_mask() and then did what cgroup_get_e_css() did without
+the get part in the new cgroup_e_css().
 
 Thanks,
 Dennis
