@@ -1,49 +1,120 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 0/9] psi: pressure stall information for CPU, memory, and
- IO v4
-Date: Fri, 7 Sep 2018 13:04:07 +0200
-Message-ID: <20180907110407.GQ24106@hirez.programming.kicks-ass.net>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 8/9] psi: pressure stall information for CPU, memory, and
+ IO
+Date: Fri, 7 Sep 2018 10:44:22 -0400
+Message-ID: <20180907144422.GA11088@cmpxchg.org>
 References: <20180828172258.3185-1-hannes@cmpxchg.org>
- <20180905214303.GA30178@cmpxchg.org>
+ <20180828172258.3185-9-hannes@cmpxchg.org>
+ <20180907101634.GO24106@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Zj9m3bL7/GgZO6pd5S6/GDfgJpek/j4NHkhjpGW5ueg=; b=yzZHaAUklP+KBx3mEVEfW/ZMY
-        vXFpwnbTFa85MRnCiD5xEt7/JkNQRFdeVjiDTEbgwoYWKG+4KyLCo4K2uM3rL+0tcAkeNRDioOpe8
-        C5QbbmQ/iF7OyOrgqdjEKvM2ayJZKh7rX49/A1CS7//fQRCcsTP3hdmZsC86biJlwipQlWGp4hPGa
-        5z+iT6cMkXuvfP7TaWJHOFK25JDinH83ZOWYgj7JqIJZdYtpYMTfdJmJjy4MXP09G626dIC7khjoR
-        dNxQiBI8tCDiEqi0+BUbBj1KELBV78HL2v5Kh9O4ngzC/PCs2ZkWhOMxwSMiDvInRoWNcmqc1o4In
-      
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Xi0HJJ6Xvyxvxsf/RyFY/V2+9m/vHC2cCblt4mYHDoY=;
+        b=HvDjD5P/BQXbDDhdfdULZUDgagz+ZGKyCQvSzj/DeNvuO2arah2uzdmDwHPNXd7BQo
+         zmDnf0eddWXISnrmg/ks7id5jbGnPWFH1tOR9zeIMBXWVSxPxN44rGFFbUsTtozjR2MH
+         oskyRNwOk+vRcUN6FCRDHX5+G7FR/AVhAbQVddoD22G2GNa/CBT5d8yY7idPuz+xNklS
+         iEoXOia4czMku3vq+Vfajl+cymvDo6yB1aNgj+8BqMwRtvQhFs82QhSV+5kZm249krK5
+         S5mLQRhVMptA9Djd+5avCf/1kPnhv+eth+7ra+Exjhk0UXUJv33qvDIy8rJpW0z1fQOw
+         4LiA==
 Content-Disposition: inline
-In-Reply-To: <20180905214303.GA30178@cmpxchg.org>
+In-Reply-To: <20180907101634.GO24106@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
+To: Peter Zijlstra <peterz@infradead.org>
 Cc: Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Peter Enderborg <peter.enderborg@sony.com>, Shakeel Butt <shakeelb@google.com>, Mike Galbraith <efault@gmx.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Wed, Sep 05, 2018 at 05:43:03PM -0400, Johannes Weiner wrote:
-> On Tue, Aug 28, 2018 at 01:22:49PM -0400, Johannes Weiner wrote:
-> > This version 4 of the PSI series incorporates feedback from Peter and
-> > fixes two races in the lockless aggregator that Suren found in his
-> > testing and which caused the sample calculation to sometimes underflow
-> > and record bogusly large samples; details at the bottom of this email.
+On Fri, Sep 07, 2018 at 12:16:34PM +0200, Peter Zijlstra wrote:
+> On Tue, Aug 28, 2018 at 01:22:57PM -0400, Johannes Weiner wrote:
+> > +enum psi_states {
+> > +	PSI_IO_SOME,
+> > +	PSI_IO_FULL,
+> > +	PSI_MEM_SOME,
+> > +	PSI_MEM_FULL,
+> > +	PSI_CPU_SOME,
+> > +	/* Only per-CPU, to weigh the CPU in the global average: */
+> > +	PSI_NONIDLE,
+> > +	NR_PSI_STATES,
+> > +};
 > 
-> Peter, do the changes from v3 look sane to you?
+> > +static u32 get_recent_time(struct psi_group *group, int cpu,
+> > +			   enum psi_states state)
+> > +{
+> > +	struct psi_group_cpu *groupc = per_cpu_ptr(group->pcpu, cpu);
+> > +	unsigned int seq;
+> > +	u32 time, delta;
+> > +
+> > +	do {
+> > +		seq = read_seqcount_begin(&groupc->seq);
+> > +
+> > +		time = groupc->times[state];
+> > +		/*
+> > +		 * In addition to already concluded states, we also
+> > +		 * incorporate currently active states on the CPU,
+> > +		 * since states may last for many sampling periods.
+> > +		 *
+> > +		 * This way we keep our delta sampling buckets small
+> > +		 * (u32) and our reported pressure close to what's
+> > +		 * actually happening.
+> > +		 */
+> > +		if (test_state(groupc->tasks, state))
+> > +			time += cpu_clock(cpu) - groupc->state_start;
+> > +	} while (read_seqcount_retry(&groupc->seq, seq));
+> > +
+> > +	delta = time - groupc->times_prev[state];
+> > +	groupc->times_prev[state] = time;
+> > +
+> > +	return delta;
+> > +}
 > 
-> If there aren't any further objections, I was hoping we could get this
-> lined up for 4.20.
+> > +static bool update_stats(struct psi_group *group)
+> > +{
+> > +	u64 deltas[NR_PSI_STATES - 1] = { 0, };
+> > +	unsigned long missed_periods = 0;
+> > +	unsigned long nonidle_total = 0;
+> > +	u64 now, expires, period;
+> > +	int cpu;
+> > +	int s;
+> > +
+> > +	mutex_lock(&group->stat_lock);
+> > +
+> > +	/*
+> > +	 * Collect the per-cpu time buckets and average them into a
+> > +	 * single time sample that is normalized to wallclock time.
+> > +	 *
+> > +	 * For averaging, each CPU is weighted by its non-idle time in
+> > +	 * the sampling period. This eliminates artifacts from uneven
+> > +	 * loading, or even entirely idle CPUs.
+> > +	 */
+> > +	for_each_possible_cpu(cpu) {
+> > +		u32 nonidle;
+> > +
+> > +		nonidle = get_recent_time(group, cpu, PSI_NONIDLE);
+> > +		nonidle = nsecs_to_jiffies(nonidle);
+> > +		nonidle_total += nonidle;
+> > +
+> > +		for (s = 0; s < PSI_NONIDLE; s++) {
+> > +			u32 delta;
+> > +
+> > +			delta = get_recent_time(group, cpu, s);
+> > +			deltas[s] += (u64)delta * nonidle;
+> > +		}
+> > +	}
+> 
+> This does the whole seqcount thing 6x, which is a bit of a waste.
 
-I suppose it looks ok, there's a few small nits, but nothing big.
+[...]
 
-I still hate psi_ttwu_dequeue(), but I don't really know what to about
-that.
+> It's a bit cumbersome, but that's because of C.
 
-So yeah, grudingly acked. Did you want me to pick this up through the
-scheduler tree since most of this lives there?
+I was actually debating exactly this with Suren before, but since this
+is a super cold path I went with readability. I was also thinking that
+restarts could happen quite regularly under heavy scheduler load, and
+so keeping the individual retry sections small could be helpful - but
+I didn't instrument this in any way.
+
+No strong opinion from me, I can send an updated patch if you prefer.
