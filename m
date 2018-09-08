@@ -1,89 +1,95 @@
-From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: Re: [PATCH 03/12] blkcg: convert blkg_lookup_create to find closest
- blkg
-Date: Fri, 7 Sep 2018 16:33:21 -0400
-Message-ID: <20180907203320.GB97913@dennisz-mbp.dhcp.thefacebook.com>
-References: <20180906211045.29055-1-dennisszhou@gmail.com>
- <20180906211045.29055-4-dennisszhou@gmail.com>
- <20180907172730.GB1100574@devbig004.ftw2.facebook.com>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: Re: [PATCH] mm: memcontrol: print proper OOM header when no eligible
+ victim left
+Date: Sat, 8 Sep 2018 22:36:06 +0900
+Message-ID: <b94f9964-c785-20c1-34af-e9013770b89a@I-love.SAKURA.ne.jp>
+References: <20180821160406.22578-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=FT1JS+mP7s3H0ehWUhrZs7M0IklabbNNqY5+yLxrfIE=;
-        b=Q1VKss8Lue+m3hZoEmC1iP9DFK/xjg8lz1z8J7Ujsr7HryEXQRC1lTg8wqGJFvxEO+
-         bd6Jb9sfUf7vD4tNZT9y3zGccUxxhlimUzWYrXJuwB9/mafY4IGuHQxR0mAMY/8DVqKk
-         XPbtVip+rWcYNrCiTrrmfWfHMAklxPNakcHRBTmKYMRkB1bUWmQqU3ur/ge1Obdv8mrK
-         o2ZhlPouil/4ldzGShrmQDbafb2xbiaTEhebWY9C25oDyu8JjAGeXmn5OW4edWw48Ze2
-         3543IoWePb2R+ECB4s6AqNpjWBWVtm1Da2qpk8YD3a2iOVqn81bdIt7Ii0P0psva5JXm
-         NLrg==
-Content-Disposition: inline
-In-Reply-To: <20180907172730.GB1100574@devbig004.ftw2.facebook.com>
+In-Reply-To: <20180821160406.22578-1-hannes@cmpxchg.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>, Dmitry Vyukov <dvyukov@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Tejun,
-
-On Fri, Sep 07, 2018 at 10:27:30AM -0700, Tejun Heo wrote:
-> Hello,
+On 2018/08/22 1:04, Johannes Weiner wrote:
+> When the memcg OOM killer runs out of killable tasks, it currently
+> prints a WARN with no further OOM context. This has caused some user
+> confusion.
 > 
-> On Thu, Sep 06, 2018 at 05:10:36PM -0400, Dennis Zhou wrote:
-> > @@ -2021,9 +2021,7 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
-> >  {
-> >  	if (unlikely(bio->bi_blkg))
-> >  		return -EBUSY;
-> > +	bio->bi_blkg = blkg_try_get_closest(blkg);
-> >  	return 0;
+> Warnings indicate a kernel problem. In a reported case, however, the
+> situation was triggered by a non-sensical memcg configuration (hard
+> limit set to 0). But without any VM context this wasn't obvious from
+> the report, and it took some back and forth on the mailing list to
+> identify what is actually a trivial issue.
 > 
-> It prolly would be a good idea to point out that the associated blkg
-> might not be the same one passed in.  Maybe this gets cleared up later
-> in the series?
+> Handle this OOM condition like we handle it in the global OOM killer:
+> dump the full OOM context and tell the user we ran out of tasks.
 > 
-
-Heh. I added comments everywhere else but the place it's used. Updated.
-
-In hindsight though, it does make it a little problematic here as you
-may have a different blkg than css. FWIW, it makes the next few patches
-easier to read as they don't need to do nontrivial error handling that
-will eventually be ripped out. And this is to really handle the edge
-cases of OOM and dying cgroups. If you think it's worth fixing I can go
-back through the set and adjust it all.
-
-> > @@ -298,14 +297,23 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
-> >  	while (true) {
-> >  		struct blkcg *pos = blkcg;
-> >  		struct blkcg *parent = blkcg_parent(blkcg);
-> > -
-> > -		while (parent && !__blkg_lookup(parent, q, false)) {
-> > +		struct blkcg_gq *ret_blkg = NULL;
-> > +
-> > +		while (parent) {
-> > +			blkg = __blkg_lookup(parent, q, false);
-> > +			if (blkg) {
-> > +				/* remember closest blkg */
-> > +				ret_blkg = blkg;
-> > +				break;
-> > +			}
-> >  			pos = parent;
-> >  			parent = blkcg_parent(parent);
-> >  		}
-> >  
-> >  		blkg = blkg_create(pos, q, NULL);
-> > -		if (pos == blkcg || IS_ERR(blkg))
-> > +		if (IS_ERR(blkg))
-> > +			return ret_blkg ?: q->root_blkg;
+> This way the user can identify misconfigurations easily by themselves
+> and rectify the problem - without having to go through the hassle of
+> running into an obscure but unsettling warning, finding the
+> appropriate kernel mailing list and waiting for a kernel developer to
+> remote-analyze that the memcg configuration caused this.
 > 
-> Why not ret_blkg here?
+> If users cannot make sense of why the OOM killer was triggered or why
+> it failed, they will still report it to the mailing list, we know that
+> from experience. So in case there is an actual kernel bug causing
+> this, kernel developers will very likely hear about it.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> ---
+>  mm/memcontrol.c |  2 --
+>  mm/oom_kill.c   | 13 ++++++++++---
+>  2 files changed, 10 insertions(+), 5 deletions(-)
 > 
 
-ret_blkg is only set if a parent exists. I can move that up to the
-definition to remove the extra branch.
+Now that above patch went to 4.19-rc3, please apply below one.
 
-Thanks,
-Dennis
+From eb2bff2ed308da04785bcf541dd3f748286bfa23 Mon Sep 17 00:00:00 2001
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Date: Sat, 8 Sep 2018 22:26:28 +0900
+Subject: [PATCH] mm, oom: Don't emit noises for failed SysRq-f.
+
+Due to commit d75da004c708c9fc ("oom: improve oom disable handling") and
+commit 3100dab2aa09dc6e ("mm: memcontrol: print proper OOM header when
+no eligible victim left"), all
+
+  kworker/0:1 invoked oom-killer: gfp_mask=0x6000c0(GFP_KERNEL), nodemask=(null), order=-1, oom_score_adj=0
+  (...snipped...)
+  Out of memory and no killable processes...
+  OOM request ignored. No task eligible
+
+lines are printed.
+Let's not emit "invoked oom-killer" lines when SysRq-f failed.
+
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+---
+ mm/oom_kill.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index f10aa53..92122ef 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -1106,8 +1106,10 @@ bool out_of_memory(struct oom_control *oc)
+ 	select_bad_process(oc);
+ 	/* Found nothing?!?! */
+ 	if (!oc->chosen) {
+-		dump_header(oc, NULL);
+-		pr_warn("Out of memory and no killable processes...\n");
++		if (!is_sysrq_oom(oc)) {
++			dump_header(oc, NULL);
++			pr_warn("Out of memory and no killable processes...\n");
++		}
+ 		/*
+ 		 * If we got here due to an actual allocation at the
+ 		 * system level, we cannot survive this and will enter
+-- 
+1.8.3.1
+
+
