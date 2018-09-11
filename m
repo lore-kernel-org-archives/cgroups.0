@@ -1,17 +1,17 @@
 From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: [RFC PATCH v2 3/8] mm: convert lru_lock from a spinlock_t to a rwlock_t
-Date: Mon, 10 Sep 2018 20:42:35 -0400
-Message-ID: <20180911004240.4758-4-daniel.m.jordan@oracle.com>
+Subject: [RFC PATCH v2 4/8] mm: introduce smp_list_del for concurrent list entry removals
+Date: Mon, 10 Sep 2018 20:59:45 -0400
+Message-ID: <20180911005949.5635-1-daniel.m.jordan@oracle.com>
 References: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=corp-2018-07-02;
- bh=4Ed7kzcG2Xz+GZckontJ5kX27xOPSUtY6Bz6BF7+wsI=;
- b=JfKSAtRQK8MqrYdYRKp80G/pt2f5UTqJEshNQ0cmurQf2Nzvl7fIZ2zx9BHrYjHrZrxk
- OBtf+numXZ2XqVtfjv4Q00PrzTZ9N80LO3FA9riWlWGtY+mqQ4vx2PEtHL5Er1H0Yq2r
- mesADOvxayLxlPTFSUXkJPTuyRgOqbSif3+YHP7BzJc/krO6rJW5dDdPamxL1cHVwJB4
- ecgFQT4nXuWBqbQlqo/0OZXJ48gJc3zOpfzsBwWHyDcgszagFx6JuHPnQa1Ss558t3yT
- dC4HOUIfRUo13kwZ5sgov9wtXAzWmOu00+EjWUN5rfqP7r+NPasM0R7xwGDiENVgWf0J uw== 
+ bh=kE05DxU6fEOt0NEdrU+JKiVWLdV7pbXIFRnkj/LNuq8=;
+ b=1lcxVSZjmgtI3vWfB1cDWcOv0qeHRC7wqLgaewuUA/UXXz00KRhSqh8gf5qkOZLrB5Q8
+ PGs/45bu3wM5R5euoIbbtq0ad9d265u/JNQCl7/VTMZGHjolC5tlPvvrLHHcw2xKXKhn
+ VEbuvTAadAnY/bEtFmgI9qNI+fxkS8MXubB9Z4pAa6XyKB7MQbk8D16IdX6g0cp4dKls
+ 7tSPaOJ4P/jVHEdFl45um7p95gFHD01yI0es2psZpkZ8/O8zX2385fQIqab/hIH+wKSQ
+ 6FGs1QMGnDjC8Z7Vn5R7+RbdpEoXZ3Gf2+Icy7/5MP8n2YGWqcQP90oSQN5WEfjaDzxo dQ== 
 In-Reply-To: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,670 +21,283 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 Cc: aaron.lu@intel.com, ak@linux.intel.com, akpm@linux-foundation.org, dave.dice@oracle.com, dave.hansen@linux.intel.com, hannes@cmpxchg.org, levyossi@icloud.com, ldufour@linux.vnet.ibm.com, mgorman@techsingularity.net, mhocko@kernel.org, Pavel.Tatashin@microsoft.com, steven.sistare@oracle.com, tim.c.chen@intel.com, vdavydov.dev@gmail.com, ying.huang@intel.com
 
-lru_lock is currently a spinlock, which allows only one task at a time
-to add or remove pages from any of a node's LRU lists, even if the
-pages are in different parts of the same LRU or on different LRUs
-altogether.  This bottleneck shows up in memory-intensive database
-workloads such as decision support and data warehousing.  In the
-artificial benchmark will-it-scale/page_fault1, the lock contributes to
-system anti-scaling, so that adding more processes causes less work to
-be done.
+Now that the LRU lock is a RW lock, lay the groundwork for fine-grained
+synchronization so that multiple threads holding the lock as reader can
+safely remove pages from an LRU at the same time.
 
-To prepare for better lru_lock scalability, change lru_lock into a
-rwlock_t.  For now, just make all users take the lock as writers.
-Later, to allow concurrent operations, change some users to acquire as
-readers, which will synchronize amongst themselves in a fine-grained,
-per-page way.  This is explained more later.
+Add a thread-safe variant of list_del called smp_list_del that allows
+multiple threads to delete nodes from a list, and wrap this new list API
+in smp_del_page_from_lru to get the LRU statistics updates right.
 
-RW locks are slower than spinlocks.  However, our results show that low
-task counts do not significantly regress, even in the stress test
-page_fault1, and high task counts enjoy much better scalability.
+For bisectability's sake, call the new function only when holding
+lru_lock as writer.  In the next patch, switch to taking it as reader.
 
-zone->lock is often taken around the same times as lru_lock and
-contributes to this bottleneck.  For the full performance benefits of
-this work to be realized, both locks must be fixed, but changing
-lru_lock in isolation still allows modest performance improvements and
-is one step toward fixing the larger problem.
+The algorithm is explained in detail in the comments.  Yosef Lev
+conceived of the algorithm, and this patch is heavily based on an
+earlier version from him.  Thanks to Dave Dice for suggesting the
+prefetch.
 
-Remove the spin_is_locked check in lru_add_page_tail.  Unfortunately,
-rwlock_t lacks an equivalent and adding one would require 17 new
-arch_write_is_locked functions, a heavy price for a single debugging
-check.
-
-Yosef Lev had the idea to use a reader-writer lock to split up the code
-that lru_lock protects, a form of room synchronization.
-
-Suggested-by: Yosef Lev <levyossi@icloud.com>
+Signed-off-by: Yosef Lev <levyossi@icloud.com>
 Signed-off-by: Daniel Jordan <daniel.m.jordan@oracle.com>
 ---
- include/linux/mmzone.h |  4 +-
- mm/compaction.c        | 99 ++++++++++++++++++++++--------------------
- mm/huge_memory.c       |  6 +--
- mm/memcontrol.c        |  4 +-
- mm/mlock.c             | 10 ++---
- mm/page_alloc.c        |  2 +-
- mm/page_idle.c         |  4 +-
- mm/swap.c              | 44 +++++++++++--------
- mm/vmscan.c            | 42 +++++++++---------
- 9 files changed, 112 insertions(+), 103 deletions(-)
+ include/linux/list.h      |   2 +
+ include/linux/mm_inline.h |  28 +++++++
+ lib/Makefile              |   2 +-
+ lib/list.c                | 158 ++++++++++++++++++++++++++++++++++++++
+ mm/swap.c                 |   3 +-
+ 5 files changed, 191 insertions(+), 2 deletions(-)
+ create mode 100644 lib/list.c
 
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 6d4c23a3069d..c140aa9290a8 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -742,7 +742,7 @@ typedef struct pglist_data {
- 
- 	/* Write-intensive fields used by page reclaim */
- 	ZONE_PADDING(_pad1_)
--	spinlock_t		lru_lock;
-+	rwlock_t		lru_lock;
- 
- #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
- 	/*
-@@ -783,7 +783,7 @@ typedef struct pglist_data {
- 
- #define node_start_pfn(nid)	(NODE_DATA(nid)->node_start_pfn)
- #define node_end_pfn(nid) pgdat_end_pfn(NODE_DATA(nid))
--static inline spinlock_t *zone_lru_lock(struct zone *zone)
-+static inline rwlock_t *zone_lru_lock(struct zone *zone)
- {
- 	return &zone->zone_pgdat->lru_lock;
+diff --git a/include/linux/list.h b/include/linux/list.h
+index 4b129df4d46b..bb80fe9b48cf 100644
+--- a/include/linux/list.h
++++ b/include/linux/list.h
+@@ -47,6 +47,8 @@ static inline bool __list_del_entry_valid(struct list_head *entry)
  }
-diff --git a/mm/compaction.c b/mm/compaction.c
-index 29bd1df18b98..1d3c3f872a19 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -347,20 +347,20 @@ static inline void update_pageblock_skip(struct compact_control *cc,
-  * Returns true if the lock is held
-  * Returns false if the lock is not held and compaction should abort
-  */
--static bool compact_trylock_irqsave(spinlock_t *lock, unsigned long *flags,
--						struct compact_control *cc)
--{
--	if (cc->mode == MIGRATE_ASYNC) {
--		if (!spin_trylock_irqsave(lock, *flags)) {
--			cc->contended = true;
--			return false;
--		}
--	} else {
--		spin_lock_irqsave(lock, *flags);
--	}
--
--	return true;
--}
-+#define compact_trylock(lock, flags, cc, lockf, trylockf)		       \
-+({									       \
-+	bool __ret = true;						       \
-+	if ((cc)->mode == MIGRATE_ASYNC) {				       \
-+		if (!trylockf((lock), *(flags))) {			       \
-+			(cc)->contended = true;				       \
-+			__ret = false;					       \
-+		}							       \
-+	} else {							       \
-+		lockf((lock), *(flags));				       \
-+	}								       \
-+									       \
-+	__ret;								       \
-+})
- 
- /*
-  * Compaction requires the taking of some coarse locks that are potentially
-@@ -377,29 +377,29 @@ static bool compact_trylock_irqsave(spinlock_t *lock, unsigned long *flags,
-  * Returns false when compaction can continue (sync compaction might have
-  *		scheduled)
-  */
--static bool compact_unlock_should_abort(spinlock_t *lock,
--		unsigned long flags, bool *locked, struct compact_control *cc)
--{
--	if (*locked) {
--		spin_unlock_irqrestore(lock, flags);
--		*locked = false;
--	}
--
--	if (fatal_signal_pending(current)) {
--		cc->contended = true;
--		return true;
--	}
--
--	if (need_resched()) {
--		if (cc->mode == MIGRATE_ASYNC) {
--			cc->contended = true;
--			return true;
--		}
--		cond_resched();
--	}
--
--	return false;
--}
-+#define compact_unlock_should_abort(lock, flags, locked, cc, unlockf)	       \
-+({									       \
-+	bool __ret = false;						       \
-+									       \
-+	if (*(locked)) {						       \
-+		unlockf((lock), (flags));				       \
-+		*(locked) = false;					       \
-+	}								       \
-+									       \
-+	if (fatal_signal_pending(current)) {				       \
-+		(cc)->contended = true;					       \
-+		__ret = true;						       \
-+	} else if (need_resched()) {					       \
-+		if ((cc)->mode == MIGRATE_ASYNC) {			       \
-+			(cc)->contended = true;				       \
-+			__ret = true;					       \
-+		} else {						       \
-+			cond_resched();					       \
-+		}							       \
-+	}								       \
-+									       \
-+	__ret;								       \
-+})
- 
- /*
-  * Aside from avoiding lock contention, compaction also periodically checks
-@@ -457,7 +457,7 @@ static unsigned long isolate_freepages_block(struct compact_control *cc,
- 		 */
- 		if (!(blockpfn % SWAP_CLUSTER_MAX)
- 		    && compact_unlock_should_abort(&cc->zone->lock, flags,
--								&locked, cc))
-+					   &locked, cc, spin_unlock_irqrestore))
- 			break;
- 
- 		nr_scanned++;
-@@ -502,8 +502,9 @@ static unsigned long isolate_freepages_block(struct compact_control *cc,
- 			 * spin on the lock and we acquire the lock as late as
- 			 * possible.
- 			 */
--			locked = compact_trylock_irqsave(&cc->zone->lock,
--								&flags, cc);
-+			locked = compact_trylock(&cc->zone->lock, &flags, cc,
-+						 spin_lock_irqsave,
-+						 spin_trylock_irqsave);
- 			if (!locked)
- 				break;
- 
-@@ -757,8 +758,8 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
- 		 * if contended.
- 		 */
- 		if (!(low_pfn % SWAP_CLUSTER_MAX)
--		    && compact_unlock_should_abort(zone_lru_lock(zone), flags,
--								&locked, cc))
-+		    && compact_unlock_should_abort(zone_lru_lock(zone),
-+				   flags, &locked, cc, write_unlock_irqrestore))
- 			break;
- 
- 		if (!pfn_valid_within(low_pfn))
-@@ -817,8 +818,8 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
- 			if (unlikely(__PageMovable(page)) &&
- 					!PageIsolated(page)) {
- 				if (locked) {
--					spin_unlock_irqrestore(zone_lru_lock(zone),
--									flags);
-+					write_unlock_irqrestore(
-+						    zone_lru_lock(zone), flags);
- 					locked = false;
- 				}
- 
-@@ -847,8 +848,9 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
- 
- 		/* If we already hold the lock, we can skip some rechecking */
- 		if (!locked) {
--			locked = compact_trylock_irqsave(zone_lru_lock(zone),
--								&flags, cc);
-+			locked = compact_trylock(zone_lru_lock(zone), &flags,
-+						 cc, write_lock_irqsave,
-+						 write_trylock_irqsave);
- 			if (!locked)
- 				break;
- 
-@@ -912,7 +914,8 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
- 		 */
- 		if (nr_isolated) {
- 			if (locked) {
--				spin_unlock_irqrestore(zone_lru_lock(zone), flags);
-+				write_unlock_irqrestore(zone_lru_lock(zone),
-+							flags);
- 				locked = false;
- 			}
- 			putback_movable_pages(&cc->migratepages);
-@@ -939,7 +942,7 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
- 		low_pfn = end_pfn;
- 
- 	if (locked)
--		spin_unlock_irqrestore(zone_lru_lock(zone), flags);
-+		write_unlock_irqrestore(zone_lru_lock(zone), flags);
- 
- 	/*
- 	 * Update the pageblock-skip information and cached scanner pfn,
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index b9f3dbd885bd..6ad045df967d 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2453,7 +2453,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 		xa_unlock(&head->mapping->i_pages);
- 	}
- 
--	spin_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
-+	write_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
- 
- 	unfreeze_page(head);
- 
-@@ -2653,7 +2653,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 		lru_add_drain();
- 
- 	/* prevent PageLRU to go away from under us, and freeze lru stats */
--	spin_lock_irqsave(zone_lru_lock(page_zone(head)), flags);
-+	write_lock_irqsave(zone_lru_lock(page_zone(head)), flags);
- 
- 	if (mapping) {
- 		void **pslot;
-@@ -2701,7 +2701,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 		spin_unlock(&pgdata->split_queue_lock);
- fail:		if (mapping)
- 			xa_unlock(&mapping->i_pages);
--		spin_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
-+		write_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
- 		unfreeze_page(head);
- 		ret = -EBUSY;
- 	}
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f7f9682482cd..0580aff3bd98 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2043,7 +2043,7 @@ static void lock_page_lru(struct page *page, int *isolated)
- {
- 	struct zone *zone = page_zone(page);
- 
--	spin_lock_irq(zone_lru_lock(zone));
-+	write_lock_irq(zone_lru_lock(zone));
- 	if (PageLRU(page)) {
- 		struct lruvec *lruvec;
- 
-@@ -2067,7 +2067,7 @@ static void unlock_page_lru(struct page *page, int isolated)
- 		SetPageLRU(page);
- 		add_page_to_lru_list(page, lruvec, page_lru(page));
- 	}
--	spin_unlock_irq(zone_lru_lock(zone));
-+	write_unlock_irq(zone_lru_lock(zone));
- }
- 
- static void commit_charge(struct page *page, struct mem_cgroup *memcg,
-diff --git a/mm/mlock.c b/mm/mlock.c
-index 74e5a6547c3d..f3c628e0eeb0 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -194,7 +194,7 @@ unsigned int munlock_vma_page(struct page *page)
- 	 * might otherwise copy PageMlocked to part of the tail pages before
- 	 * we clear it in the head page. It also stabilizes hpage_nr_pages().
- 	 */
--	spin_lock_irq(zone_lru_lock(zone));
-+	write_lock_irq(zone_lru_lock(zone));
- 
- 	if (!TestClearPageMlocked(page)) {
- 		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
-@@ -206,14 +206,14 @@ unsigned int munlock_vma_page(struct page *page)
- 	__mod_zone_page_state(zone, NR_MLOCK, -nr_pages);
- 
- 	if (__munlock_isolate_lru_page(page, true)) {
--		spin_unlock_irq(zone_lru_lock(zone));
-+		write_unlock_irq(zone_lru_lock(zone));
- 		__munlock_isolated_page(page);
- 		goto out;
- 	}
- 	__munlock_isolation_failed(page);
- 
- unlock_out:
--	spin_unlock_irq(zone_lru_lock(zone));
-+	write_unlock_irq(zone_lru_lock(zone));
- 
- out:
- 	return nr_pages - 1;
-@@ -298,7 +298,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
- 	pagevec_init(&pvec_putback);
- 
- 	/* Phase 1: page isolation */
--	spin_lock_irq(zone_lru_lock(zone));
-+	write_lock_irq(zone_lru_lock(zone));
- 	for (i = 0; i < nr; i++) {
- 		struct page *page = pvec->pages[i];
- 
-@@ -325,7 +325,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
- 		pvec->pages[i] = NULL;
- 	}
- 	__mod_zone_page_state(zone, NR_MLOCK, delta_munlocked);
--	spin_unlock_irq(zone_lru_lock(zone));
-+	write_unlock_irq(zone_lru_lock(zone));
- 
- 	/* Now we can release pins of pages that we are not munlocking */
- 	pagevec_release(&pvec_putback);
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 22320ea27489..ca6620042431 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -6222,7 +6222,7 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
- 	init_waitqueue_head(&pgdat->kcompactd_wait);
  #endif
- 	pgdat_page_ext_init(pgdat);
--	spin_lock_init(&pgdat->lru_lock);
-+	rwlock_init(&pgdat->lru_lock);
- 	lruvec_init(node_lruvec(pgdat));
  
- 	pgdat->per_cpu_nodestats = &boot_nodestats;
-diff --git a/mm/page_idle.c b/mm/page_idle.c
-index e412a63b2b74..60118aa1b1ef 100644
---- a/mm/page_idle.c
-+++ b/mm/page_idle.c
-@@ -42,12 +42,12 @@ static struct page *page_idle_get_page(unsigned long pfn)
- 		return NULL;
++extern void smp_list_del(struct list_head *entry);
++
+ /*
+  * Insert a new entry between two known consecutive entries.
+  *
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 10191c28fc04..335bb9ba6510 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -4,6 +4,7 @@
  
- 	zone = page_zone(page);
--	spin_lock_irq(zone_lru_lock(zone));
-+	write_lock_irq(zone_lru_lock(zone));
- 	if (unlikely(!PageLRU(page))) {
- 		put_page(page);
- 		page = NULL;
- 	}
--	spin_unlock_irq(zone_lru_lock(zone));
-+	write_unlock_irq(zone_lru_lock(zone));
- 	return page;
+ #include <linux/huge_mm.h>
+ #include <linux/swap.h>
++#include <linux/list.h>
+ 
+ /**
+  * page_is_file_cache - should the page be on a file LRU or anon LRU?
+@@ -65,6 +66,33 @@ static __always_inline void del_page_from_lru_list(struct page *page,
+ 	update_lru_size(lruvec, lru, page_zonenum(page), -hpage_nr_pages(page));
  }
  
++/**
++ * smp_del_page_from_lru_list - thread-safe del_page_from_lru_list
++ * @page: page to delete from the LRU
++ * @lruvec: vector of LRUs
++ * @lru: type of LRU list to delete from within the lruvec
++ *
++ * Requires lru_lock to be held, preferably as reader for greater concurrency
++ * with other LRU operations but writers are also correct.
++ *
++ * Holding lru_lock as reader, the only unprotected shared state is @page's
++ * lru links, which smp_list_del safely handles.  lru_lock excludes other
++ * writers, and the atomics and per-cpu counters in update_lru_size serialize
++ * racing stat updates.
++ *
++ * Concurrent removal of adjacent pages is expected to be rare.  In
++ * will-it-scale/page_fault1, the ratio of iterations of any while loop in
++ * smp_list_del to calls to that function was less than 0.009% (and 0.009% was
++ * an outlier on an oversubscribed 44 core system).
++ */
++static __always_inline void smp_del_page_from_lru_list(struct page *page,
++						       struct lruvec *lruvec,
++						       enum lru_list lru)
++{
++	smp_list_del(&page->lru);
++	update_lru_size(lruvec, lru, page_zonenum(page), -hpage_nr_pages(page));
++}
++
+ /**
+  * page_lru_base_type - which LRU list type should a page be on?
+  * @page: the page to test
+diff --git a/lib/Makefile b/lib/Makefile
+index ce20696d5a92..f0689480f704 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -40,7 +40,7 @@ obj-y += bcd.o div64.o sort.o parser.o debug_locks.o random32.o \
+ 	 gcd.o lcm.o list_sort.o uuid.o flex_array.o iov_iter.o clz_ctz.o \
+ 	 bsearch.o find_bit.o llist.o memweight.o kfifo.o \
+ 	 percpu-refcount.o percpu_ida.o rhashtable.o reciprocal_div.o \
+-	 once.o refcount.o usercopy.o errseq.o bucket_locks.o
++	 once.o refcount.o usercopy.o errseq.o bucket_locks.o list.o
+ obj-$(CONFIG_STRING_SELFTEST) += test_string.o
+ obj-y += string_helpers.o
+ obj-$(CONFIG_TEST_STRING_HELPERS) += test-string_helpers.o
+diff --git a/lib/list.c b/lib/list.c
+new file mode 100644
+index 000000000000..22188fc0316d
+--- /dev/null
++++ b/lib/list.c
+@@ -0,0 +1,158 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2017, 2018 Oracle and/or its affiliates. All rights reserved.
++ *
++ * Authors: Yosef Lev <levyossi@icloud.com>
++ *          Daniel Jordan <daniel.m.jordan@oracle.com>
++ */
++
++#include <linux/list.h>
++#include <linux/prefetch.h>
++
++/*
++ * smp_list_del is a variant of list_del that allows concurrent list removals
++ * under certain assumptions.  The idea is to get away from overly coarse
++ * synchronization, such as using a lock to guard an entire list, which
++ * serializes all operations even though those operations might be happening on
++ * disjoint parts.
++ *
++ * If you want to use other functions from the list API concurrently,
++ * additional synchronization may be necessary.  For example, you could use a
++ * rwlock as a two-mode lock, where readers use the lock in shared mode and are
++ * allowed to call smp_list_del concurrently, and writers use the lock in
++ * exclusive mode and are allowed to use all list operations.
++ */
++
++/**
++ * smp_list_del - concurrent variant of list_del
++ * @entry: entry to delete from the list
++ *
++ * Safely removes an entry from the list in the presence of other threads that
++ * may try to remove adjacent entries.  Uses the entry's next field and the
++ * predecessor entry's next field as locks to accomplish this.
++ *
++ * Assumes that no two threads may try to delete the same entry.  This
++ * assumption holds, for example, if the objects on the list are
++ * reference-counted so that an object is only removed when its refcount falls
++ * to 0.
++ *
++ * @entry's next and prev fields are poisoned on return just as with list_del.
++ */
++void smp_list_del(struct list_head *entry)
++{
++	struct list_head *succ, *pred, *pred_reread;
++
++	/*
++	 * The predecessor entry's cacheline is read before it's written, so to
++	 * avoid an unnecessary cacheline state transition, prefetch for
++	 * writing.  In the common case, the predecessor won't change.
++	 */
++	prefetchw(entry->prev);
++
++	/*
++	 * Step 1: Lock @entry E by making its next field point to its
++	 * predecessor D.  This prevents any thread from removing the
++	 * predecessor because that thread will loop in its step 4 while
++	 * E->next == D.  This also prevents any thread from removing the
++	 * successor F because that thread will see that F->prev->next != F in
++	 * the cmpxchg in its step 3.  Retry if the successor is being removed
++	 * and has already set this field to NULL in step 3.
++	 */
++	succ = READ_ONCE(entry->next);
++	pred = READ_ONCE(entry->prev);
++	while (succ == NULL || cmpxchg(&entry->next, succ, pred) != succ) {
++		/*
++		 * Reread @entry's successor because it may change until
++		 * @entry's next field is locked.  Reread the predecessor to
++		 * have a better chance of publishing the right value and avoid
++		 * entering the loop in step 2 while @entry is locked,
++		 * but this isn't required for correctness because the
++		 * predecessor is reread in step 2.
++		 */
++		cpu_relax();
++		succ = READ_ONCE(entry->next);
++		pred = READ_ONCE(entry->prev);
++	}
++
++	/*
++	 * Step 2: A racing thread may remove @entry's predecessor.  Reread and
++	 * republish @entry->prev until it does not change.  This guarantees
++	 * that the racing thread has not passed the while loop in step 4 and
++	 * has not freed the predecessor, so it is safe for this thread to
++	 * access predecessor fields in step 3.
++	 */
++	pred_reread = READ_ONCE(entry->prev);
++	while (pred != pred_reread) {
++		WRITE_ONCE(entry->next, pred_reread);
++		pred = pred_reread;
++		/*
++		 * Ensure the predecessor is published in @entry's next field
++		 * before rereading the predecessor.  Pairs with the smp_mb in
++		 * step 4.
++		 */
++		smp_mb();
++		pred_reread = READ_ONCE(entry->prev);
++	}
++
++	/*
++	 * Step 3: If the predecessor points to @entry, lock it and continue.
++	 * Otherwise, the predecessor is being removed, so loop until that
++	 * removal finishes and this thread's @entry->prev is updated, which
++	 * indicates the old predecessor has reached the loop in step 4.  Write
++	 * the new predecessor into @entry->next.  This both releases the old
++	 * predecessor from its step 4 loop and sets this thread up to lock the
++	 * new predecessor.
++	 */
++	while (pred->next != entry ||
++	       cmpxchg(&pred->next, entry, NULL) != entry) {
++		/*
++		 * The predecessor is being removed so wait for a new,
++		 * unlocked predecessor.
++		 */
++		cpu_relax();
++		pred_reread = READ_ONCE(entry->prev);
++		if (pred != pred_reread) {
++			/*
++			 * The predecessor changed, so republish it and update
++			 * it as in step 2.
++			 */
++			WRITE_ONCE(entry->next, pred_reread);
++			pred = pred_reread;
++			/* Pairs with smp_mb in step 4. */
++			smp_mb();
++		}
++	}
++
++	/*
++	 * Step 4: @entry and @entry's predecessor are both locked, so now
++	 * actually remove @entry from the list.
++	 *
++	 * It is safe to write to the successor's prev pointer because step 1
++	 * prevents the successor from being removed.
++	 */
++
++	WRITE_ONCE(succ->prev, pred);
++
++	/*
++	 * The full barrier guarantees that all changes are visible to other
++	 * threads before the entry is unlocked by the final write, pairing
++	 * with the implied full barrier before the cmpxchg in step 1.
++	 *
++	 * The barrier also guarantees that this thread writes succ->prev
++	 * before reading succ->next, pairing with a thread in step 2 or 3 that
++	 * writes entry->next before reading entry->prev, which ensures that
++	 * the one that writes second sees the update from the other.
++	 */
++	smp_mb();
++
++	while (READ_ONCE(succ->next) == entry) {
++		/* The successor is being removed, so wait for it to finish. */
++		cpu_relax();
++	}
++
++	/* Simultaneously completes the removal and unlocks the predecessor. */
++	WRITE_ONCE(pred->next, succ);
++
++	entry->next = LIST_POISON1;
++	entry->prev = LIST_POISON2;
++}
 diff --git a/mm/swap.c b/mm/swap.c
-index 219c234d632f..a16ba5194e1c 100644
+index a16ba5194e1c..613b841bd208 100644
 --- a/mm/swap.c
 +++ b/mm/swap.c
-@@ -63,12 +63,12 @@ static void __page_cache_release(struct page *page)
- 		struct lruvec *lruvec;
- 		unsigned long flags;
- 
--		spin_lock_irqsave(zone_lru_lock(zone), flags);
-+		write_lock_irqsave(zone_lru_lock(zone), flags);
- 		lruvec = mem_cgroup_page_lruvec(page, zone->zone_pgdat);
- 		VM_BUG_ON_PAGE(!PageLRU(page), page);
- 		__ClearPageLRU(page);
- 		del_page_from_lru_list(page, lruvec, page_off_lru(page));
--		spin_unlock_irqrestore(zone_lru_lock(zone), flags);
-+		write_unlock_irqrestore(zone_lru_lock(zone), flags);
- 	}
- 	__ClearPageWaiters(page);
- 	mem_cgroup_uncharge(page);
-@@ -200,17 +200,19 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
- 		struct pglist_data *pagepgdat = page_pgdat(page);
- 
- 		if (pagepgdat != pgdat) {
--			if (pgdat)
--				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+			if (pgdat) {
-+				write_unlock_irqrestore(&pgdat->lru_lock,
-+							flags);
-+			}
- 			pgdat = pagepgdat;
--			spin_lock_irqsave(&pgdat->lru_lock, flags);
-+			write_lock_irqsave(&pgdat->lru_lock, flags);
- 		}
- 
- 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 		(*move_fn)(page, lruvec, arg);
- 	}
- 	if (pgdat)
--		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+		write_unlock_irqrestore(&pgdat->lru_lock, flags);
- 	release_pages(pvec->pages, pvec->nr);
- 	pagevec_reinit(pvec);
- }
-@@ -336,9 +338,9 @@ void activate_page(struct page *page)
- 	struct zone *zone = page_zone(page);
- 
- 	page = compound_head(page);
--	spin_lock_irq(zone_lru_lock(zone));
-+	write_lock_irq(zone_lru_lock(zone));
- 	__activate_page(page, mem_cgroup_page_lruvec(page, zone->zone_pgdat), NULL);
--	spin_unlock_irq(zone_lru_lock(zone));
-+	write_unlock_irq(zone_lru_lock(zone));
- }
- #endif
- 
-@@ -735,7 +737,8 @@ void release_pages(struct page **pages, int nr)
- 		 * same pgdat. The lock is held only if pgdat != NULL.
- 		 */
- 		if (locked_pgdat && ++lock_batch == SWAP_CLUSTER_MAX) {
--			spin_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
-+			write_unlock_irqrestore(&locked_pgdat->lru_lock,
-+						flags);
- 			locked_pgdat = NULL;
- 		}
- 
-@@ -745,8 +748,9 @@ void release_pages(struct page **pages, int nr)
- 		/* Device public page can not be huge page */
- 		if (is_device_public_page(page)) {
- 			if (locked_pgdat) {
--				spin_unlock_irqrestore(&locked_pgdat->lru_lock,
--						       flags);
-+				write_unlock_irqrestore(
-+						      &locked_pgdat->lru_lock,
-+						      flags);
- 				locked_pgdat = NULL;
- 			}
- 			put_zone_device_private_or_public_page(page);
-@@ -759,7 +763,9 @@ void release_pages(struct page **pages, int nr)
- 
- 		if (PageCompound(page)) {
- 			if (locked_pgdat) {
--				spin_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
-+				write_unlock_irqrestore(
-+						      &locked_pgdat->lru_lock,
-+						      flags);
- 				locked_pgdat = NULL;
- 			}
- 			__put_compound_page(page);
-@@ -770,12 +776,14 @@ void release_pages(struct page **pages, int nr)
- 			struct pglist_data *pgdat = page_pgdat(page);
- 
- 			if (pgdat != locked_pgdat) {
--				if (locked_pgdat)
--					spin_unlock_irqrestore(&locked_pgdat->lru_lock,
--									flags);
-+				if (locked_pgdat) {
-+					write_unlock_irqrestore(
-+					      &locked_pgdat->lru_lock, flags);
-+				}
- 				lock_batch = 0;
- 				locked_pgdat = pgdat;
--				spin_lock_irqsave(&locked_pgdat->lru_lock, flags);
-+				write_lock_irqsave(&locked_pgdat->lru_lock,
-+						   flags);
- 			}
- 
+@@ -789,7 +789,8 @@ void release_pages(struct page **pages, int nr)
  			lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
-@@ -791,7 +799,7 @@ void release_pages(struct page **pages, int nr)
- 		list_add(&page->lru, &pages_to_free);
- 	}
- 	if (locked_pgdat)
--		spin_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
-+		write_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
- 
- 	mem_cgroup_uncharge_list(&pages_to_free);
- 	free_unref_page_list(&pages_to_free);
-@@ -829,8 +837,6 @@ void lru_add_page_tail(struct page *page, struct page *page_tail,
- 	VM_BUG_ON_PAGE(!PageHead(page), page);
- 	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
- 	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
--	VM_BUG_ON(NR_CPUS != 1 &&
--		  !spin_is_locked(&lruvec_pgdat(lruvec)->lru_lock));
- 
- 	if (!list)
- 		SetPageLRU(page_tail);
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 730b6d0c6c61..e6f8f05d1bc6 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1601,7 +1601,7 @@ int isolate_lru_page(struct page *page)
- 		struct zone *zone = page_zone(page);
- 		struct lruvec *lruvec;
- 
--		spin_lock_irq(zone_lru_lock(zone));
-+		write_lock_irq(zone_lru_lock(zone));
- 		lruvec = mem_cgroup_page_lruvec(page, zone->zone_pgdat);
- 		if (PageLRU(page)) {
- 			int lru = page_lru(page);
-@@ -1610,7 +1610,7 @@ int isolate_lru_page(struct page *page)
- 			del_page_from_lru_list(page, lruvec, lru);
- 			ret = 0;
- 		}
--		spin_unlock_irq(zone_lru_lock(zone));
-+		write_unlock_irq(zone_lru_lock(zone));
- 	}
- 	return ret;
- }
-@@ -1668,9 +1668,9 @@ putback_inactive_pages(struct lruvec *lruvec, struct list_head *page_list)
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
- 		list_del(&page->lru);
- 		if (unlikely(!page_evictable(page))) {
--			spin_unlock_irq(&pgdat->lru_lock);
-+			write_unlock_irq(&pgdat->lru_lock);
- 			putback_lru_page(page);
--			spin_lock_irq(&pgdat->lru_lock);
-+			write_lock_irq(&pgdat->lru_lock);
- 			continue;
+ 			VM_BUG_ON_PAGE(!PageLRU(page), page);
+ 			__ClearPageLRU(page);
+-			del_page_from_lru_list(page, lruvec, page_off_lru(page));
++			smp_del_page_from_lru_list(page, lruvec,
++						   page_off_lru(page));
  		}
  
-@@ -1691,10 +1691,10 @@ putback_inactive_pages(struct lruvec *lruvec, struct list_head *page_list)
- 			del_page_from_lru_list(page, lruvec, lru);
- 
- 			if (unlikely(PageCompound(page))) {
--				spin_unlock_irq(&pgdat->lru_lock);
-+				write_unlock_irq(&pgdat->lru_lock);
- 				mem_cgroup_uncharge(page);
- 				(*get_compound_page_dtor(page))(page);
--				spin_lock_irq(&pgdat->lru_lock);
-+				write_lock_irq(&pgdat->lru_lock);
- 			} else
- 				list_add(&page->lru, &pages_to_free);
- 		}
-@@ -1755,7 +1755,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	if (!sc->may_unmap)
- 		isolate_mode |= ISOLATE_UNMAPPED;
- 
--	spin_lock_irq(&pgdat->lru_lock);
-+	write_lock_irq(&pgdat->lru_lock);
- 
- 	nr_taken = isolate_lru_pages(nr_to_scan, lruvec, &page_list,
- 				     &nr_scanned, sc, isolate_mode, lru);
-@@ -1774,7 +1774,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 		count_memcg_events(lruvec_memcg(lruvec), PGSCAN_DIRECT,
- 				   nr_scanned);
- 	}
--	spin_unlock_irq(&pgdat->lru_lock);
-+	write_unlock_irq(&pgdat->lru_lock);
- 
- 	if (nr_taken == 0)
- 		return 0;
-@@ -1782,7 +1782,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	nr_reclaimed = shrink_page_list(&page_list, pgdat, sc, 0,
- 				&stat, false);
- 
--	spin_lock_irq(&pgdat->lru_lock);
-+	write_lock_irq(&pgdat->lru_lock);
- 
- 	if (current_is_kswapd()) {
- 		if (global_reclaim(sc))
-@@ -1800,7 +1800,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 
- 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
- 
--	spin_unlock_irq(&pgdat->lru_lock);
-+	write_unlock_irq(&pgdat->lru_lock);
- 
- 	mem_cgroup_uncharge_list(&page_list);
- 	free_unref_page_list(&page_list);
-@@ -1880,10 +1880,10 @@ static unsigned move_active_pages_to_lru(struct lruvec *lruvec,
- 			del_page_from_lru_list(page, lruvec, lru);
- 
- 			if (unlikely(PageCompound(page))) {
--				spin_unlock_irq(&pgdat->lru_lock);
-+				write_unlock_irq(&pgdat->lru_lock);
- 				mem_cgroup_uncharge(page);
- 				(*get_compound_page_dtor(page))(page);
--				spin_lock_irq(&pgdat->lru_lock);
-+				write_lock_irq(&pgdat->lru_lock);
- 			} else
- 				list_add(&page->lru, pages_to_free);
- 		} else {
-@@ -1923,7 +1923,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
- 	if (!sc->may_unmap)
- 		isolate_mode |= ISOLATE_UNMAPPED;
- 
--	spin_lock_irq(&pgdat->lru_lock);
-+	write_lock_irq(&pgdat->lru_lock);
- 
- 	nr_taken = isolate_lru_pages(nr_to_scan, lruvec, &l_hold,
- 				     &nr_scanned, sc, isolate_mode, lru);
-@@ -1934,7 +1934,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
- 	__count_vm_events(PGREFILL, nr_scanned);
- 	count_memcg_events(lruvec_memcg(lruvec), PGREFILL, nr_scanned);
- 
--	spin_unlock_irq(&pgdat->lru_lock);
-+	write_unlock_irq(&pgdat->lru_lock);
- 
- 	while (!list_empty(&l_hold)) {
- 		cond_resched();
-@@ -1979,7 +1979,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
- 	/*
- 	 * Move pages back to the lru list.
- 	 */
--	spin_lock_irq(&pgdat->lru_lock);
-+	write_lock_irq(&pgdat->lru_lock);
- 	/*
- 	 * Count referenced pages from currently used mappings as rotated,
- 	 * even though only some of them are actually re-activated.  This
-@@ -1991,7 +1991,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
- 	nr_activate = move_active_pages_to_lru(lruvec, &l_active, &l_hold, lru);
- 	nr_deactivate = move_active_pages_to_lru(lruvec, &l_inactive, &l_hold, lru - LRU_ACTIVE);
- 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
--	spin_unlock_irq(&pgdat->lru_lock);
-+	write_unlock_irq(&pgdat->lru_lock);
- 
- 	mem_cgroup_uncharge_list(&l_hold);
- 	free_unref_page_list(&l_hold);
-@@ -2235,7 +2235,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
- 	file  = lruvec_lru_size(lruvec, LRU_ACTIVE_FILE, MAX_NR_ZONES) +
- 		lruvec_lru_size(lruvec, LRU_INACTIVE_FILE, MAX_NR_ZONES);
- 
--	spin_lock_irq(&pgdat->lru_lock);
-+	write_lock_irq(&pgdat->lru_lock);
- 	recent_scanned[0] = atomic_long_read(&rstat->recent_scanned[0]);
- 	recent_rotated[0] = atomic_long_read(&rstat->recent_rotated[0]);
- 	if (unlikely(recent_scanned[0] > anon / 4)) {
-@@ -2264,7 +2264,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
- 
- 	fp = file_prio * (recent_scanned[1] + 1);
- 	fp /= recent_rotated[1] + 1;
--	spin_unlock_irq(&pgdat->lru_lock);
-+	write_unlock_irq(&pgdat->lru_lock);
- 
- 	fraction[0] = ap;
- 	fraction[1] = fp;
-@@ -3998,9 +3998,9 @@ void check_move_unevictable_pages(struct page **pages, int nr_pages)
- 		pgscanned++;
- 		if (pagepgdat != pgdat) {
- 			if (pgdat)
--				spin_unlock_irq(&pgdat->lru_lock);
-+				write_unlock_irq(&pgdat->lru_lock);
- 			pgdat = pagepgdat;
--			spin_lock_irq(&pgdat->lru_lock);
-+			write_lock_irq(&pgdat->lru_lock);
- 		}
- 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 
-@@ -4021,7 +4021,7 @@ void check_move_unevictable_pages(struct page **pages, int nr_pages)
- 	if (pgdat) {
- 		__count_vm_events(UNEVICTABLE_PGRESCUED, pgrescued);
- 		__count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
--		spin_unlock_irq(&pgdat->lru_lock);
-+		write_unlock_irq(&pgdat->lru_lock);
- 	}
- }
- #endif /* CONFIG_SHMEM */
+ 		/* Clear Active bit in case of parallel mark_page_accessed */
 -- 
 2.18.0
 
