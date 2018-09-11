@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 03/12] blkcg: convert blkg_lookup_create to find closest blkg
-Date: Tue, 11 Sep 2018 14:41:28 -0400
-Message-ID: <20180911184137.35897-4-dennisszhou@gmail.com>
+Subject: [PATCH 04/12] blkcg: always associate a bio with a blkg
+Date: Tue, 11 Sep 2018 14:41:29 -0400
+Message-ID: <20180911184137.35897-5-dennisszhou@gmail.com>
 References: <20180911184137.35897-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=0vFvSHzEg8C5aAk8MUn2HD/7B9Z1ZlOCDdmp1KeTvd0=;
-        b=By7vpYN5SSFvh9S236XgvWLLPWN69zPWXl78tdPTVfQLdiOR8NXC1hauzGbN3WhaTG
-         hM4ilN8GhwkkRSk10Lyf6XsJbs91J/BWivdQDesdPsEwS/xtvjHRDDenfGQJUlfefUWZ
-         LGqDl2XlzQ/ZWZC/18n4QIZoAKPKCnWYGeO5fWps1ZYA2BnNFTAbZn0WiNGzxmPB7L0f
-         8ra+5pBWbqB/oexvBStmAdOv3PeMsiKCD4vuFEofEe4sMB3o4QLWorFZomYZlyLftEZa
-         MUrJArYE8XEjRpi5j9LlfspbFuXU4NdGghZUJZYhyIdcOazTTg8qqgmPa9utze8PYu51
-         fQOg==
+        bh=N0pKhA7/QEQ1I21aBpLNJq0PPd2R4B39KJXaiCvhNQI=;
+        b=qIYBLZ/1tuspipkuIJwiZ2whRfmILbilgJgMRE/IeOEZe1gQMLHiI2NpNYG9c4uv8H
+         FAehYBc9zluSa2+oVQMunhC0bsVfe1EjHfm7ZqZnFxIdMj3aZ7IENB6dLrncEOlMTLlV
+         +wzg29W8vQ9c9m17wyUD2hKpbnwixCOcPf0JrGQsNxsHsZJCEcydW+tvsbrP413+fPFY
+         RVuoZFIcf3bFA+5ohomdSUH1SIa4HbsQIwmMdqF6rSSSGELbI76TQmsoFS2ibTnCK6B6
+         dyZ/UjCUhTT/FDuqrmRWRAVc5LY20fFF+x5N9JI6E4JKi99garHHlAcDN+QqDSskW+gC
+         Dvgg==
 In-Reply-To: <20180911184137.35897-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,143 +25,202 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-There are several scenarios where blkg_lookup_create can fail. Examples
-include the blkcg dying, request_queue is dying, or simply being OOM. At
-the end of the day, most handle this by simply falling back to the
-q->root_blkg and calling it a day.
+Previously, blkg's were only assigned as needed by blk-iolatency and
+blk-throttle. bio->css was also always being associated while blkg was
+being looked up and then thrown away in blkcg_bio_issue_check.
 
-This patch implements the notion of closest blkg. During
-blkg_lookup_create, if it fails to create, return the closest blkg
-found or the q->root_blkg. blkg_try_get_closest is introduced and used
-during association so a bio is always attached to a blkg.
+This patch begins the cleanup of bio->css and bio->bi_blkg by always
+associating a blkg in blkcg_bio_issue_check. This tries to create the
+blkg, but if it is not possible, falls back to using the root_blkg of
+the request_queue. Therefore, a bio will always be associated with a
+blkg. The duplicate association logic is removed from blk-throttle and
+blk-iolatency.
 
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/bio.c                | 17 ++++++++++-------
- block/blk-cgroup.c         | 25 +++++++++++++++++--------
- include/linux/blk-cgroup.h | 14 ++++++++++++++
- 3 files changed, 41 insertions(+), 15 deletions(-)
+ block/bio.c                | 38 ++++++++++++++++++++++++++++++++++++++
+ block/blk-iolatency.c      | 24 ++----------------------
+ block/blk-throttle.c       |  5 +----
+ include/linux/bio.h        |  3 +++
+ include/linux/blk-cgroup.h | 16 ++--------------
+ 5 files changed, 46 insertions(+), 40 deletions(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index 6ca4dda481ca..49a28abd9772 100644
+index 49a28abd9772..97c1c4bf8df6 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -2008,21 +2008,24 @@ int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css)
- EXPORT_SYMBOL_GPL(bio_associate_blkcg);
- 
- /**
-- * bio_associate_blkg - associate a bio with the specified blkg
-+ * bio_associate_blkg - associate a bio with the a blkg
-  * @bio: target bio
-  * @blkg: the blkg to associate
-  *
-- * Associate @bio with the blkg specified by @blkg.  This is the queue specific
-- * blkcg information associated with the @bio, a reference will be taken on the
-- * @blkg and will be freed when the bio is freed.
-+ * This tries to associate @bio with the specified blkg.  Association failure
-+ * is handled by walking up the blkg tree.  Therefore, the blkg associated can
-+ * be anything between @blkg and the root_blkg.  This situation only happens
-+ * when a cgroup is dying and then the remaining bios will spill to the closest
-+ * alive blkg.
-+ *
-+ * A reference will be taken on the @blkg and will be released when @bio is
-+ * freed.
-  */
- int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
- {
- 	if (unlikely(bio->bi_blkg))
- 		return -EBUSY;
--	if (!blkg_try_get(blkg))
--		return -ENODEV;
--	bio->bi_blkg = blkg;
-+	bio->bi_blkg = blkg_try_get_closest(blkg);
+@@ -2029,6 +2029,41 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
  	return 0;
  }
  
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index cd0d97bed83d..e9e3a955f61a 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -268,9 +268,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
-  * that all non-root blkg's have access to the parent blkg.  This function
-  * should be called under RCU read lock and @q->queue_lock.
-  *
-- * Returns pointer to the looked up or created blkg on success, ERR_PTR()
-- * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
-- * dead and bypassing, returns ERR_PTR(-EBUSY).
-+ * Returns the blkg or the closest blkg if blkg_create fails as it walks
-+ * down from root.
-  */
- struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 				      struct request_queue *q)
-@@ -285,7 +284,7 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 	 * we shouldn't allow anything to go through for a bypassing queue.
- 	 */
- 	if (unlikely(blk_queue_bypass(q)))
--		return ERR_PTR(blk_queue_dying(q) ? -ENODEV : -EBUSY);
-+		return q->root_blkg;
- 
- 	blkg = __blkg_lookup(blkcg, q, true);
- 	if (blkg)
-@@ -293,19 +292,29 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
- 
- 	/*
- 	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
--	 * non-root blkgs have access to their parents.
-+	 * non-root blkgs have access to their parents.  Returns the closest
-+	 * blkg to the intended blkg should blkg_create() fail.
- 	 */
- 	while (true) {
- 		struct blkcg *pos = blkcg;
- 		struct blkcg *parent = blkcg_parent(blkcg);
--
--		while (parent && !__blkg_lookup(parent, q, false)) {
-+		struct blkcg_gq *ret_blkg = q->root_blkg;
++/**
++ * bio_associate_create_blkg - associate a bio with a blkg from q
++ * @q: request_queue where bio is going
++ * @bio: target bio
++ *
++ * Associate @bio with the blkg found from the bio's css and the request_queue.
++ * If one is not found, bio_lookup_blkg creates the blkg.
++ */
++int bio_associate_create_blkg(struct request_queue *q, struct bio *bio)
++{
++	struct blkcg *blkcg;
++	struct blkcg_gq *blkg;
++	int ret = 0;
 +
-+		while (parent) {
-+			blkg = __blkg_lookup(parent, q, false);
-+			if (blkg) {
-+				/* remember closest blkg */
-+				ret_blkg = blkg;
-+				break;
-+			}
- 			pos = parent;
- 			parent = blkcg_parent(parent);
- 		}
- 
- 		blkg = blkg_create(pos, q, NULL);
--		if (pos == blkcg || IS_ERR(blkg))
-+		if (IS_ERR(blkg))
-+			return ret_blkg;
-+		if (pos == blkcg)
- 			return blkg;
- 	}
++	/* someone has already associated this bio with a blkg */
++	if (bio->bi_blkg)
++		return ret;
++
++	rcu_read_lock();
++
++	bio_associate_blkcg(bio, NULL);
++	blkcg = bio_blkcg(bio);
++
++	if (!blkcg->css.parent) {
++		ret = bio_associate_blkg(bio, q->root_blkg);
++	} else {
++		blkg = blkg_lookup_create(blkcg, q);
++
++		ret = bio_associate_blkg(bio, blkg);
++	}
++
++	rcu_read_unlock();
++	return ret;
++}
++
+ /**
+  * bio_disassociate_task - undo bio_associate_current()
+  * @bio: target bio
+@@ -2058,6 +2093,9 @@ void bio_clone_blkcg_association(struct bio *dst, struct bio *src)
+ {
+ 	if (src->bi_css)
+ 		WARN_ON(bio_associate_blkcg(dst, src->bi_css));
++
++	if (src->bi_blkg)
++		bio_associate_blkg(dst, src->bi_blkg);
  }
+ EXPORT_SYMBOL_GPL(bio_clone_blkcg_association);
+ #endif /* CONFIG_BLK_CGROUP */
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 22b2ff0440cc..79a7549e2062 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -395,34 +395,14 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
+ 				     spinlock_t *lock)
+ {
+ 	struct blk_iolatency *blkiolat = BLKIOLATENCY(rqos);
+-	struct blkcg *blkcg;
+-	struct blkcg_gq *blkg;
+-	struct request_queue *q = rqos->q;
++	struct blkcg_gq *blkg = bio->bi_blkg;
+ 	bool issue_as_root = bio_issue_as_root_blkg(bio);
+ 
+ 	if (!blk_iolatency_enabled(blkiolat))
+ 		return;
+ 
+-	rcu_read_lock();
+-	bio_associate_blkcg(bio, NULL);
+-	blkcg = bio_blkcg(bio);
+-	blkg = blkg_lookup(blkcg, q);
+-	if (unlikely(!blkg)) {
+-		if (!lock)
+-			spin_lock_irq(q->queue_lock);
+-		blkg = __blkg_lookup_create(blkcg, q);
+-		if (IS_ERR(blkg))
+-			blkg = NULL;
+-		if (!lock)
+-			spin_unlock_irq(q->queue_lock);
+-	}
+-	if (!blkg)
+-		goto out;
+-
+ 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+-	bio_associate_blkg(bio, blkg);
+-out:
+-	rcu_read_unlock();
++
+ 	while (blkg && blkg->parent) {
+ 		struct iolatency_grp *iolat = blkg_to_lat(blkg);
+ 		if (!iolat) {
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 01d0620a4e4a..b7b5cc4defc2 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2129,9 +2129,6 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+ static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
+ {
+ #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+-	/* fallback to root_blkg if we fail to get a blkg ref */
+-	if (bio->bi_css && (bio_associate_blkg(bio, tg_to_blkg(tg)) == -ENODEV))
+-		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
+ 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+ #endif
+ }
+@@ -2140,7 +2137,7 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 		    struct bio *bio)
+ {
+ 	struct throtl_qnode *qn = NULL;
+-	struct throtl_grp *tg = blkg_to_tg(blkg ?: q->root_blkg);
++	struct throtl_grp *tg = blkg_to_tg(blkg);
+ 	struct throtl_service_queue *sq;
+ 	bool rw = bio_data_dir(bio);
+ 	bool throttled = false;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 14b4fa266357..829cd0bb407d 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -542,11 +542,14 @@ static inline int bio_associate_blkcg_from_page(struct bio *bio,
+ #ifdef CONFIG_BLK_CGROUP
+ int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css);
+ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg);
++int bio_associate_create_blkg(struct request_queue *q, struct bio *bio);
+ void bio_disassociate_task(struct bio *bio);
+ void bio_clone_blkcg_association(struct bio *dst, struct bio *src);
+ #else	/* CONFIG_BLK_CGROUP */
+ static inline int bio_associate_blkcg(struct bio *bio,
+ 			struct cgroup_subsys_state *blkcg_css) { return 0; }
++static inline int bio_associate_create_blkg(struct request_queue *q,
++					    struct bio *bio) { return 0; }
+ static inline void bio_disassociate_task(struct bio *bio) { }
+ static inline void bio_clone_blkcg_association(struct bio *dst,
+ 			struct bio *src) { }
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index cc0f238530f6..1fbff1bbb651 100644
+index 1fbff1bbb651..6e33ad1d92b4 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -549,6 +549,20 @@ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
- 	return NULL;
- }
+@@ -900,29 +900,17 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio)
+ {
+-	struct blkcg *blkcg;
+ 	struct blkcg_gq *blkg;
+ 	bool throtl = false;
  
-+/**
-+ * blkg_try_get_closest - try and get a blkg ref on the closet blkg
-+ * @blkg: blkg to get
-+ *
-+ * This walks up the blkg tree to find the closest non-dying blkg and returns
-+ * the blkg that it did association with as it may not be the passed in blkg.
-+ */
-+static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
-+{
-+	while (!atomic_inc_not_zero(&blkg->refcnt))
-+		blkg = blkg->parent;
-+
-+	return blkg;
-+}
+ 	rcu_read_lock();
  
- void __blkg_release_rcu(struct rcu_head *rcu);
+-	/* associate blkcg if bio hasn't attached one */
+-	bio_associate_blkcg(bio, NULL);
+-	blkcg = bio_blkcg(bio);
+-
+-	blkg = blkg_lookup(blkcg, q);
+-	if (unlikely(!blkg)) {
+-		spin_lock_irq(q->queue_lock);
+-		blkg = __blkg_lookup_create(blkcg, q);
+-		if (IS_ERR(blkg))
+-			blkg = NULL;
+-		spin_unlock_irq(q->queue_lock);
+-	}
++	bio_associate_create_blkg(q, bio);
++	blkg = bio->bi_blkg;
  
+ 	throtl = blk_throtl_bio(q, blkg, bio);
+ 
+ 	if (!throtl) {
+-		blkg = blkg ?: q->root_blkg;
+ 		/*
+ 		 * If the bio is flagged with BIO_QUEUE_ENTERED it means this
+ 		 * is a split bio and we would have already accounted for the
 -- 
 2.17.1
 
