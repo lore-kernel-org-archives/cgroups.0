@@ -1,16 +1,18 @@
 From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: [RFC PATCH v2 0/8] lru_lock scalability and SMP list functions
-Date: Mon, 10 Sep 2018 20:42:32 -0400
-Message-ID: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
+Subject: [RFC PATCH v2 3/8] mm: convert lru_lock from a spinlock_t to a rwlock_t
+Date: Mon, 10 Sep 2018 20:42:35 -0400
+Message-ID: <20180911004240.4758-4-daniel.m.jordan@oracle.com>
+References: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id; s=corp-2018-07-02;
- bh=unHgG0MRYG46Le37AmGrUiRS7SBj+pWHZ2tczdyxrJY=;
- b=bylFU415xOWkoailVvF4hPFZ/da+/X/53x/SWEdQ44bYcWXBZsXbGfYjDJm42JbkqQ7e
- qkzaJtO8E7EimDAizq320OjzBeEBMKGidT7NCv2JoIv7H8moecihcfgSLmW5NQHFZYSY
- n7qu+aS57s2Ef4Sn02JAvPh/gw8WEj5PNPutgb5akHFwuepzCcTX0TNuoz9o199zHpaK
- VvggN0pUpdP2vNgkkWLfkmQVD9pLZbgdXU+iz2+qy6Cew/f0ls1E4kMkuHO5BE+hvhtl
- 3GS4CRfheaT25VS8dIvP7dOtSZ+cLS1yZecTMRnCk5DkCiQ16K6ijINXYsuM1825V+/y ag== 
+ subject : date : message-id : in-reply-to : references; s=corp-2018-07-02;
+ bh=4Ed7kzcG2Xz+GZckontJ5kX27xOPSUtY6Bz6BF7+wsI=;
+ b=JfKSAtRQK8MqrYdYRKp80G/pt2f5UTqJEshNQ0cmurQf2Nzvl7fIZ2zx9BHrYjHrZrxk
+ OBtf+numXZ2XqVtfjv4Q00PrzTZ9N80LO3FA9riWlWGtY+mqQ4vx2PEtHL5Er1H0Yq2r
+ mesADOvxayLxlPTFSUXkJPTuyRgOqbSif3+YHP7BzJc/krO6rJW5dDdPamxL1cHVwJB4
+ ecgFQT4nXuWBqbQlqo/0OZXJ48gJc3zOpfzsBwWHyDcgszagFx6JuHPnQa1Ss558t3yT
+ dC4HOUIfRUo13kwZ5sgov9wtXAzWmOu00+EjWUN5rfqP7r+NPasM0R7xwGDiENVgWf0J uw== 
+In-Reply-To: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -19,236 +21,670 @@ Content-Transfer-Encoding: 7bit
 To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 Cc: aaron.lu@intel.com, ak@linux.intel.com, akpm@linux-foundation.org, dave.dice@oracle.com, dave.hansen@linux.intel.com, hannes@cmpxchg.org, levyossi@icloud.com, ldufour@linux.vnet.ibm.com, mgorman@techsingularity.net, mhocko@kernel.org, Pavel.Tatashin@microsoft.com, steven.sistare@oracle.com, tim.c.chen@intel.com, vdavydov.dev@gmail.com, ying.huang@intel.com
 
-Hi,
+lru_lock is currently a spinlock, which allows only one task at a time
+to add or remove pages from any of a node's LRU lists, even if the
+pages are in different parts of the same LRU or on different LRUs
+altogether.  This bottleneck shows up in memory-intensive database
+workloads such as decision support and data warehousing.  In the
+artificial benchmark will-it-scale/page_fault1, the lock contributes to
+system anti-scaling, so that adding more processes causes less work to
+be done.
 
-This is a work-in-progress of what I presented at LSF/MM this year[0] to
-greatly reduce contention on lru_lock, allowing it to scale on large systems.
+To prepare for better lru_lock scalability, change lru_lock into a
+rwlock_t.  For now, just make all users take the lock as writers.
+Later, to allow concurrent operations, change some users to acquire as
+readers, which will synchronize amongst themselves in a fine-grained,
+per-page way.  This is explained more later.
 
-This is completely different from the lru_lock series posted last January[1].
+RW locks are slower than spinlocks.  However, our results show that low
+task counts do not significantly regress, even in the stress test
+page_fault1, and high task counts enjoy much better scalability.
 
-I'm hoping for feedback on the overall design and general direction as I do
-more real-world performance testing and polish the code.  Is this a workable
-approach?
+zone->lock is often taken around the same times as lru_lock and
+contributes to this bottleneck.  For the full performance benefits of
+this work to be realized, both locks must be fixed, but changing
+lru_lock in isolation still allows modest performance improvements and
+is one step toward fixing the larger problem.
 
-                                        Thanks,
-                                          Daniel
+Remove the spin_is_locked check in lru_add_page_tail.  Unfortunately,
+rwlock_t lacks an equivalent and adding one would require 17 new
+arch_write_is_locked functions, a heavy price for a single debugging
+check.
 
+Yosef Lev had the idea to use a reader-writer lock to split up the code
+that lru_lock protects, a form of room synchronization.
+
+Suggested-by: Yosef Lev <levyossi@icloud.com>
+Signed-off-by: Daniel Jordan <daniel.m.jordan@oracle.com>
 ---
+ include/linux/mmzone.h |  4 +-
+ mm/compaction.c        | 99 ++++++++++++++++++++++--------------------
+ mm/huge_memory.c       |  6 +--
+ mm/memcontrol.c        |  4 +-
+ mm/mlock.c             | 10 ++---
+ mm/page_alloc.c        |  2 +-
+ mm/page_idle.c         |  4 +-
+ mm/swap.c              | 44 +++++++++++--------
+ mm/vmscan.c            | 42 +++++++++---------
+ 9 files changed, 112 insertions(+), 103 deletions(-)
 
-Summary:  lru_lock can be one of the hottest locks in the kernel on big
-systems.  It guards too much state, so introduce new SMP-safe list functions to
-allow multiple threads to operate on the LRUs at once.  The SMP list functions
-are provided in a standalone API that can be used in other parts of the kernel.
-When lru_lock and zone->lock are both fixed, the kernel can do up to 73.8% more
-page faults per second on a 44-core machine.
-
----
-
-On large systems, lru_lock can become heavily contended in memory-intensive
-workloads such as decision support, applications that manage their memory
-manually by allocating and freeing pages directly from the kernel, and
-workloads with short-lived processes that force many munmap and exit
-operations.  lru_lock also inhibits scalability in many of the MM paths that
-could be parallelized, such as freeing pages during exit/munmap and inode
-eviction.
-
-The problem is that lru_lock is too big of a hammer.  It guards all the LRUs in
-a pgdat's lruvec, needlessly serializing add-to-front, add-to-tail, and delete
-operations that are done on disjoint parts of an LRU, or even completely
-different LRUs.
-
-This RFC series, developed in collaboration with Yossi Lev and Dave Dice,
-offers a two-part solution to this problem.
-
-First, three new list functions are introduced to allow multiple threads to
-operate on the same linked list simultaneously under certain conditions, which
-are spelled out in more detail in code comments and changelogs.  The functions
-are smp_list_del, smp_list_splice, and smp_list_add, and do the same things as
-their non-SMP-safe counterparts.  These primitives may be used elsewhere in the
-kernel as the need arises; for example, in the page allocator free lists to
-scale zone->lock[2], or in file system LRUs[3].
-
-Second, lru_lock is converted from a spinlock to a rwlock.  The idea is to
-repurpose rwlock as a two-mode lock, where callers take the lock in shared
-(i.e. read) mode for code using the SMP list functions, and exclusive (i.e.
-write) mode for existing code that expects exclusive access to the LRUs.
-Multiple threads are allowed in under the read lock, of course, and they use
-the SMP list functions to synchronize amongst themselves.
-
-The rwlock is scaffolding to facilitate the transition from big-hammer lru_lock
-as it exists today to just using the list locking primitives and getting rid of
-lru_lock entirely.  Such an approach allows incremental conversion of lru_lock
-writers until everything uses the SMP list functions and takes the lock in
-shared mode, at which point lru_lock can just go away.
-
-This RFC series is incomplete.  More, and more realistic, performance
-numbers are needed; for now, I show only will-it-scale/page_fault1.
-Also, there are extensions I'd like to make to the locking scheme to
-handle certain lru_lock paths--in particular, those where multiple
-threads may delete the same node from an LRU.  The SMP list functions
-now handle only removal of _adjacent_ nodes from an LRU.  Finally, the
-diffstat should become more supportive after I remove some of the code
-duplication in patch 6 by converting the rest of the per-CPU pagevec
-code in mm/swap.c to use the SMP list functions.
-
-Series based on 4.17.
-
-
-Performance Numbers
--------------------
-
-In the artificial benchmark will-it-scale/page_fault1, N tasks mmap, touch each
-4K page in, and munmap an anonymous 128M memory region.  The test is run in
-process and thread modes on a 44-core Xeon E5-2699 v4 with 503G memory and
-using a 4.16 baseline kernel.  The table of results below is also graphed at:
-
-    https://raw.githubusercontent.com/danieljordan10/lru_lock-scalability/master/rfc-v2/graph.png
-
-The lu-zone kernel refers to Aaron Lu's work from [4], the lru kernel is this
-work, and the lru-lu-zone kernel contains both.
-
-     kernel (#)  ntask     proc      thr        proc    stdev        thr   stdev
-                        speedup  speedup       pgf/s               pgf/s        
-
-   baseline (1)      1                       626,944      910    625,509     756
-    lu-zone (2)      1    18.0%    17.6%     739,659    2,038    735,896   2,139
-        lru (3)      1     0.1%    -0.1%     627,490      878    625,162     770
-lru-lu-zone (4)      1    17.4%    17.2%     735,983    2,349    732,936   2,640
-
-   baseline (1)      2                     1,206,238    4,012  1,083,497   4,571
-    lu-zone (2)      2     2.4%     1.3%   1,235,318    3,158  1,097,745   8,919
-        lru (3)      2     0.1%     0.4%   1,207,246    4,988  1,087,846   5,700
-lru-lu-zone (4)      2     2.4%     0.0%   1,235,271    3,005  1,083,578   6,915
-
-   baseline (1)      3                     1,751,889    5,887  1,443,610  11,049
-    lu-zone (2)      3    -0.0%     1.9%   1,751,247    5,646  1,470,561  13,407
-        lru (3)      3    -0.4%     0.5%   1,744,999    7,040  1,451,507  13,186
-lru-lu-zone (4)      3    -0.3%     0.2%   1,747,431    4,420  1,447,024   9,847
-
-   baseline (1)      4                     2,260,201   11,482  1,769,095  16,576
-    lu-zone (2)      4    -0.5%     2.7%   2,249,463   14,628  1,816,409  10,988
-        lru (3)      4    -0.5%    -0.8%   2,248,302    7,457  1,754,936  13,288
-lru-lu-zone (4)      4    -0.8%     1.2%   2,243,240   10,386  1,790,833  11,186
-
-   baseline (1)      5                     2,735,351    9,731  2,022,303  18,199
-    lu-zone (2)      5    -0.0%     3.1%   2,734,270   13,779  2,084,468  11,230
-        lru (3)      5    -0.5%    -2.6%   2,721,069    8,417  1,970,701  14,747
-lru-lu-zone (4)      5     0.0%    -0.3%   2,736,317   11,533  2,016,043  10,324
-
-   baseline (1)      6                     3,186,435   13,939  2,241,910  22,103
-    lu-zone (2)      6     0.7%     3.1%   3,207,879   17,603  2,311,070  12,345
-        lru (3)      6    -0.1%    -1.6%   3,183,244    9,285  2,205,632  22,457
-lru-lu-zone (4)      6     0.2%    -0.2%   3,191,478   10,418  2,236,722  10,814
-
-   baseline (1)      7                     3,596,306   17,419  2,374,538  29,782
-    lu-zone (2)      7     1.1%     5.6%   3,637,085   21,485  2,506,351  11,448
-        lru (3)      7     0.1%    -1.2%   3,600,797    9,867  2,346,063  22,613
-lru-lu-zone (4)      7     1.1%     1.6%   3,635,861   12,439  2,413,326  15,745
-
-   baseline (1)      8                     3,986,712   15,947  2,519,189  30,129
-    lu-zone (2)      8     1.3%     3.7%   4,038,783   30,921  2,613,556   8,244
-        lru (3)      8     0.3%    -0.8%   3,997,520   11,823  2,499,498  28,395
-lru-lu-zone (4)      8     1.7%     4.3%   4,054,638   11,798  2,626,450   9,534
-
-   baseline (1)     11                     5,138,494   17,634  2,932,708  31,765
-    lu-zone (2)     11     3.0%     6.6%   5,292,452   40,896  3,126,170  21,254
-        lru (3)     11     1.1%    -1.1%   5,193,843   11,302  2,900,615  24,055
-lru-lu-zone (4)     11     4.6%     2.4%   5,374,562   10,654  3,002,084  24,255
-
-   baseline (1)     22                     7,569,187   13,649  3,134,116  58,149
-    lu-zone (2)     22     3.0%     9.6%   7,799,567   97,785  3,436,117  33,450
-        lru (3)     22     2.9%    -0.8%   7,785,212   15,388  3,109,155  41,575
-lru-lu-zone (4)     22    28.8%     7.6%   9,747,634   17,156  3,372,679  38,762
-
-   baseline (1)     33                    12,375,135   30,387  2,180,328  56,529
-    lu-zone (2)     33     1.9%     8.9%  12,613,466   77,903  2,373,756  30,706
-        lru (3)     33     2.1%     3.1%  12,637,508   22,712  2,248,516  42,622
-lru-lu-zone (4)     33    19.2%     9.1%  14,749,004   25,344  2,378,286  29,552
-
-   baseline (1)     44                    13,446,153   14,539  2,365,487  53,966
-    lu-zone (2)     44     3.2%     7.8%  13,876,101  112,976  2,549,351  50,656
-        lru (3)     44     2.0%    -8.1%  13,717,051   16,931  2,173,398  46,818
-lru-lu-zone (4)     44    18.6%     7.4%  15,947,859   26,001  2,540,516  56,259
-
-   baseline (1)     55                    12,050,977   30,210  2,372,251  58,151
-    lu-zone (2)     55     4.6%     3.2%  12,602,426  132,027  2,448,653  74,321
-        lru (3)     55     1.1%     1.5%  12,184,481   34,199  2,408,744  76,854
-lru-lu-zone (4)     55    46.3%     3.1%  17,628,736   25,595  2,446,613  60,293
-
-   baseline (1)     66                    11,464,526  146,140  2,389,751  55,417
-    lu-zone (2)     66     5.7%    17.5%  12,114,164   41,711  2,806,805  38,868
-        lru (3)     66     0.4%    13.2%  11,510,009   74,300  2,704,305  46,038
-lru-lu-zone (4)     66    58.6%    17.0%  18,185,360   27,496  2,796,004  96,458
-
-   baseline (1)     77                    10,818,432  149,865  2,634,568  49,631
-    lu-zone (2)     77     5.7%     4.9%  11,438,010   82,363  2,764,441  42,014
-        lru (3)     77     0.5%     3.5%  10,874,888   80,922  2,727,729  66,843
-lru-lu-zone (4)     77    66.5%     1.4%  18,016,393   23,742  2,670,715  36,931
-
-   baseline (1)     88                    10,321,790  214,000  2,815,546  40,597
-    lu-zone (2)     88     5.7%     8.3%  10,913,729  168,111  3,048,392  51,833
-        lru (3)     88     0.1%    -3.6%  10,328,335  142,255  2,715,226  46,835
-lru-lu-zone (4)     88    73.8%    -3.6%  17,942,799   22,720  2,715,442  33,006
-
-The lru-lu-zone kernel containing both lru_lock and zone->lock enhancements
-outperforms kernels with either enhancement on its own.  From this it's clear
-that, no matter how each lock is scaled, both locks must be fixed to get rid of
-this scalability issue in page allocation and freeing.
-
-The thread case doesn't show much improvement because mmap_sem, not
-lru_lock or zone->lock, is the limiting factor.
-
-Low task counts show slight regressions but are mostly in the noise.
-
-There's a significant speedup in the zone->lock kernels for the 1-task case,
-possibly because the pages aren't merged when they're returned to the free
-lists and so the cache is more likely to be warm on the next allocation.
-
-
-Apart from this artificial microbenchmark, I'm experimenting with an extended
-version of the SMP list locking functions (not shown here, still working on
-these) that has allowed a commercial database using 4K pages to exit 6.3x
-faster.  This is with only lru_lock modified, no other kernel changes.  The
-speedup comes from the SMP list functions allowing the many database processes
-to make concurrent mark_page_accessed calls from zap_pte_range while the shared
-memory region is being freed.  I'll post more about this later.
-
-[0] https://lwn.net/Articles/753058/
-[1] http://lkml.kernel.org/r/20180131230413.27653-1-daniel.m.jordan@oracle.com
-[2] http://lkml.kernel.org/r/20180509085450.3524-1-aaron.lu@intel.com
-[3] http://lkml.kernel.org/r/6bd1c8a5-c682-a3ce-1f9f-f1f53b4117a9@redhat.com
-[4] http://lkml.kernel.org/r/20180320085452.24641-1-aaron.lu@intel.com
-
-Daniel Jordan (8):
-  mm, memcontrol.c: make memcg lru stats thread-safe without lru_lock
-  mm: make zone_reclaim_stat updates thread-safe
-  mm: convert lru_lock from a spinlock_t to a rwlock_t
-  mm: introduce smp_list_del for concurrent list entry removals
-  mm: enable concurrent LRU removals
-  mm: splice local lists onto the front of the LRU
-  mm: introduce smp_list_splice to prepare for concurrent LRU adds
-  mm: enable concurrent LRU adds
-
- include/linux/list.h       |   3 +
- include/linux/memcontrol.h |  43 ++++++--
- include/linux/mm_inline.h  |  28 +++++
- include/linux/mmzone.h     |  54 +++++++++-
- init/main.c                |   1 +
- lib/Makefile               |   2 +-
- lib/list.c                 | 204 +++++++++++++++++++++++++++++++++++++
- mm/compaction.c            |  99 +++++++++---------
- mm/huge_memory.c           |   6 +-
- mm/memcontrol.c            |  53 ++++------
- mm/memory_hotplug.c        |   1 +
- mm/mlock.c                 |  10 +-
- mm/mmzone.c                |  14 +++
- mm/page_alloc.c            |   2 +-
- mm/page_idle.c             |   4 +-
- mm/swap.c                  | 183 ++++++++++++++++++++++++++++-----
- mm/vmscan.c                |  84 ++++++++-------
- 17 files changed, 620 insertions(+), 171 deletions(-)
- create mode 100644 lib/list.c
-
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 6d4c23a3069d..c140aa9290a8 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -742,7 +742,7 @@ typedef struct pglist_data {
+ 
+ 	/* Write-intensive fields used by page reclaim */
+ 	ZONE_PADDING(_pad1_)
+-	spinlock_t		lru_lock;
++	rwlock_t		lru_lock;
+ 
+ #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
+ 	/*
+@@ -783,7 +783,7 @@ typedef struct pglist_data {
+ 
+ #define node_start_pfn(nid)	(NODE_DATA(nid)->node_start_pfn)
+ #define node_end_pfn(nid) pgdat_end_pfn(NODE_DATA(nid))
+-static inline spinlock_t *zone_lru_lock(struct zone *zone)
++static inline rwlock_t *zone_lru_lock(struct zone *zone)
+ {
+ 	return &zone->zone_pgdat->lru_lock;
+ }
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 29bd1df18b98..1d3c3f872a19 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -347,20 +347,20 @@ static inline void update_pageblock_skip(struct compact_control *cc,
+  * Returns true if the lock is held
+  * Returns false if the lock is not held and compaction should abort
+  */
+-static bool compact_trylock_irqsave(spinlock_t *lock, unsigned long *flags,
+-						struct compact_control *cc)
+-{
+-	if (cc->mode == MIGRATE_ASYNC) {
+-		if (!spin_trylock_irqsave(lock, *flags)) {
+-			cc->contended = true;
+-			return false;
+-		}
+-	} else {
+-		spin_lock_irqsave(lock, *flags);
+-	}
+-
+-	return true;
+-}
++#define compact_trylock(lock, flags, cc, lockf, trylockf)		       \
++({									       \
++	bool __ret = true;						       \
++	if ((cc)->mode == MIGRATE_ASYNC) {				       \
++		if (!trylockf((lock), *(flags))) {			       \
++			(cc)->contended = true;				       \
++			__ret = false;					       \
++		}							       \
++	} else {							       \
++		lockf((lock), *(flags));				       \
++	}								       \
++									       \
++	__ret;								       \
++})
+ 
+ /*
+  * Compaction requires the taking of some coarse locks that are potentially
+@@ -377,29 +377,29 @@ static bool compact_trylock_irqsave(spinlock_t *lock, unsigned long *flags,
+  * Returns false when compaction can continue (sync compaction might have
+  *		scheduled)
+  */
+-static bool compact_unlock_should_abort(spinlock_t *lock,
+-		unsigned long flags, bool *locked, struct compact_control *cc)
+-{
+-	if (*locked) {
+-		spin_unlock_irqrestore(lock, flags);
+-		*locked = false;
+-	}
+-
+-	if (fatal_signal_pending(current)) {
+-		cc->contended = true;
+-		return true;
+-	}
+-
+-	if (need_resched()) {
+-		if (cc->mode == MIGRATE_ASYNC) {
+-			cc->contended = true;
+-			return true;
+-		}
+-		cond_resched();
+-	}
+-
+-	return false;
+-}
++#define compact_unlock_should_abort(lock, flags, locked, cc, unlockf)	       \
++({									       \
++	bool __ret = false;						       \
++									       \
++	if (*(locked)) {						       \
++		unlockf((lock), (flags));				       \
++		*(locked) = false;					       \
++	}								       \
++									       \
++	if (fatal_signal_pending(current)) {				       \
++		(cc)->contended = true;					       \
++		__ret = true;						       \
++	} else if (need_resched()) {					       \
++		if ((cc)->mode == MIGRATE_ASYNC) {			       \
++			(cc)->contended = true;				       \
++			__ret = true;					       \
++		} else {						       \
++			cond_resched();					       \
++		}							       \
++	}								       \
++									       \
++	__ret;								       \
++})
+ 
+ /*
+  * Aside from avoiding lock contention, compaction also periodically checks
+@@ -457,7 +457,7 @@ static unsigned long isolate_freepages_block(struct compact_control *cc,
+ 		 */
+ 		if (!(blockpfn % SWAP_CLUSTER_MAX)
+ 		    && compact_unlock_should_abort(&cc->zone->lock, flags,
+-								&locked, cc))
++					   &locked, cc, spin_unlock_irqrestore))
+ 			break;
+ 
+ 		nr_scanned++;
+@@ -502,8 +502,9 @@ static unsigned long isolate_freepages_block(struct compact_control *cc,
+ 			 * spin on the lock and we acquire the lock as late as
+ 			 * possible.
+ 			 */
+-			locked = compact_trylock_irqsave(&cc->zone->lock,
+-								&flags, cc);
++			locked = compact_trylock(&cc->zone->lock, &flags, cc,
++						 spin_lock_irqsave,
++						 spin_trylock_irqsave);
+ 			if (!locked)
+ 				break;
+ 
+@@ -757,8 +758,8 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 		 * if contended.
+ 		 */
+ 		if (!(low_pfn % SWAP_CLUSTER_MAX)
+-		    && compact_unlock_should_abort(zone_lru_lock(zone), flags,
+-								&locked, cc))
++		    && compact_unlock_should_abort(zone_lru_lock(zone),
++				   flags, &locked, cc, write_unlock_irqrestore))
+ 			break;
+ 
+ 		if (!pfn_valid_within(low_pfn))
+@@ -817,8 +818,8 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 			if (unlikely(__PageMovable(page)) &&
+ 					!PageIsolated(page)) {
+ 				if (locked) {
+-					spin_unlock_irqrestore(zone_lru_lock(zone),
+-									flags);
++					write_unlock_irqrestore(
++						    zone_lru_lock(zone), flags);
+ 					locked = false;
+ 				}
+ 
+@@ -847,8 +848,9 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 
+ 		/* If we already hold the lock, we can skip some rechecking */
+ 		if (!locked) {
+-			locked = compact_trylock_irqsave(zone_lru_lock(zone),
+-								&flags, cc);
++			locked = compact_trylock(zone_lru_lock(zone), &flags,
++						 cc, write_lock_irqsave,
++						 write_trylock_irqsave);
+ 			if (!locked)
+ 				break;
+ 
+@@ -912,7 +914,8 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 		 */
+ 		if (nr_isolated) {
+ 			if (locked) {
+-				spin_unlock_irqrestore(zone_lru_lock(zone), flags);
++				write_unlock_irqrestore(zone_lru_lock(zone),
++							flags);
+ 				locked = false;
+ 			}
+ 			putback_movable_pages(&cc->migratepages);
+@@ -939,7 +942,7 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 		low_pfn = end_pfn;
+ 
+ 	if (locked)
+-		spin_unlock_irqrestore(zone_lru_lock(zone), flags);
++		write_unlock_irqrestore(zone_lru_lock(zone), flags);
+ 
+ 	/*
+ 	 * Update the pageblock-skip information and cached scanner pfn,
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index b9f3dbd885bd..6ad045df967d 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2453,7 +2453,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 		xa_unlock(&head->mapping->i_pages);
+ 	}
+ 
+-	spin_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
++	write_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
+ 
+ 	unfreeze_page(head);
+ 
+@@ -2653,7 +2653,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 		lru_add_drain();
+ 
+ 	/* prevent PageLRU to go away from under us, and freeze lru stats */
+-	spin_lock_irqsave(zone_lru_lock(page_zone(head)), flags);
++	write_lock_irqsave(zone_lru_lock(page_zone(head)), flags);
+ 
+ 	if (mapping) {
+ 		void **pslot;
+@@ -2701,7 +2701,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 		spin_unlock(&pgdata->split_queue_lock);
+ fail:		if (mapping)
+ 			xa_unlock(&mapping->i_pages);
+-		spin_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
++		write_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
+ 		unfreeze_page(head);
+ 		ret = -EBUSY;
+ 	}
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f7f9682482cd..0580aff3bd98 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2043,7 +2043,7 @@ static void lock_page_lru(struct page *page, int *isolated)
+ {
+ 	struct zone *zone = page_zone(page);
+ 
+-	spin_lock_irq(zone_lru_lock(zone));
++	write_lock_irq(zone_lru_lock(zone));
+ 	if (PageLRU(page)) {
+ 		struct lruvec *lruvec;
+ 
+@@ -2067,7 +2067,7 @@ static void unlock_page_lru(struct page *page, int isolated)
+ 		SetPageLRU(page);
+ 		add_page_to_lru_list(page, lruvec, page_lru(page));
+ 	}
+-	spin_unlock_irq(zone_lru_lock(zone));
++	write_unlock_irq(zone_lru_lock(zone));
+ }
+ 
+ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 74e5a6547c3d..f3c628e0eeb0 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -194,7 +194,7 @@ unsigned int munlock_vma_page(struct page *page)
+ 	 * might otherwise copy PageMlocked to part of the tail pages before
+ 	 * we clear it in the head page. It also stabilizes hpage_nr_pages().
+ 	 */
+-	spin_lock_irq(zone_lru_lock(zone));
++	write_lock_irq(zone_lru_lock(zone));
+ 
+ 	if (!TestClearPageMlocked(page)) {
+ 		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
+@@ -206,14 +206,14 @@ unsigned int munlock_vma_page(struct page *page)
+ 	__mod_zone_page_state(zone, NR_MLOCK, -nr_pages);
+ 
+ 	if (__munlock_isolate_lru_page(page, true)) {
+-		spin_unlock_irq(zone_lru_lock(zone));
++		write_unlock_irq(zone_lru_lock(zone));
+ 		__munlock_isolated_page(page);
+ 		goto out;
+ 	}
+ 	__munlock_isolation_failed(page);
+ 
+ unlock_out:
+-	spin_unlock_irq(zone_lru_lock(zone));
++	write_unlock_irq(zone_lru_lock(zone));
+ 
+ out:
+ 	return nr_pages - 1;
+@@ -298,7 +298,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 	pagevec_init(&pvec_putback);
+ 
+ 	/* Phase 1: page isolation */
+-	spin_lock_irq(zone_lru_lock(zone));
++	write_lock_irq(zone_lru_lock(zone));
+ 	for (i = 0; i < nr; i++) {
+ 		struct page *page = pvec->pages[i];
+ 
+@@ -325,7 +325,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 		pvec->pages[i] = NULL;
+ 	}
+ 	__mod_zone_page_state(zone, NR_MLOCK, delta_munlocked);
+-	spin_unlock_irq(zone_lru_lock(zone));
++	write_unlock_irq(zone_lru_lock(zone));
+ 
+ 	/* Now we can release pins of pages that we are not munlocking */
+ 	pagevec_release(&pvec_putback);
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 22320ea27489..ca6620042431 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -6222,7 +6222,7 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat)
+ 	init_waitqueue_head(&pgdat->kcompactd_wait);
+ #endif
+ 	pgdat_page_ext_init(pgdat);
+-	spin_lock_init(&pgdat->lru_lock);
++	rwlock_init(&pgdat->lru_lock);
+ 	lruvec_init(node_lruvec(pgdat));
+ 
+ 	pgdat->per_cpu_nodestats = &boot_nodestats;
+diff --git a/mm/page_idle.c b/mm/page_idle.c
+index e412a63b2b74..60118aa1b1ef 100644
+--- a/mm/page_idle.c
++++ b/mm/page_idle.c
+@@ -42,12 +42,12 @@ static struct page *page_idle_get_page(unsigned long pfn)
+ 		return NULL;
+ 
+ 	zone = page_zone(page);
+-	spin_lock_irq(zone_lru_lock(zone));
++	write_lock_irq(zone_lru_lock(zone));
+ 	if (unlikely(!PageLRU(page))) {
+ 		put_page(page);
+ 		page = NULL;
+ 	}
+-	spin_unlock_irq(zone_lru_lock(zone));
++	write_unlock_irq(zone_lru_lock(zone));
+ 	return page;
+ }
+ 
+diff --git a/mm/swap.c b/mm/swap.c
+index 219c234d632f..a16ba5194e1c 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -63,12 +63,12 @@ static void __page_cache_release(struct page *page)
+ 		struct lruvec *lruvec;
+ 		unsigned long flags;
+ 
+-		spin_lock_irqsave(zone_lru_lock(zone), flags);
++		write_lock_irqsave(zone_lru_lock(zone), flags);
+ 		lruvec = mem_cgroup_page_lruvec(page, zone->zone_pgdat);
+ 		VM_BUG_ON_PAGE(!PageLRU(page), page);
+ 		__ClearPageLRU(page);
+ 		del_page_from_lru_list(page, lruvec, page_off_lru(page));
+-		spin_unlock_irqrestore(zone_lru_lock(zone), flags);
++		write_unlock_irqrestore(zone_lru_lock(zone), flags);
+ 	}
+ 	__ClearPageWaiters(page);
+ 	mem_cgroup_uncharge(page);
+@@ -200,17 +200,19 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+ 		struct pglist_data *pagepgdat = page_pgdat(page);
+ 
+ 		if (pagepgdat != pgdat) {
+-			if (pgdat)
+-				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
++			if (pgdat) {
++				write_unlock_irqrestore(&pgdat->lru_lock,
++							flags);
++			}
+ 			pgdat = pagepgdat;
+-			spin_lock_irqsave(&pgdat->lru_lock, flags);
++			write_lock_irqsave(&pgdat->lru_lock, flags);
+ 		}
+ 
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 		(*move_fn)(page, lruvec, arg);
+ 	}
+ 	if (pgdat)
+-		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
++		write_unlock_irqrestore(&pgdat->lru_lock, flags);
+ 	release_pages(pvec->pages, pvec->nr);
+ 	pagevec_reinit(pvec);
+ }
+@@ -336,9 +338,9 @@ void activate_page(struct page *page)
+ 	struct zone *zone = page_zone(page);
+ 
+ 	page = compound_head(page);
+-	spin_lock_irq(zone_lru_lock(zone));
++	write_lock_irq(zone_lru_lock(zone));
+ 	__activate_page(page, mem_cgroup_page_lruvec(page, zone->zone_pgdat), NULL);
+-	spin_unlock_irq(zone_lru_lock(zone));
++	write_unlock_irq(zone_lru_lock(zone));
+ }
+ #endif
+ 
+@@ -735,7 +737,8 @@ void release_pages(struct page **pages, int nr)
+ 		 * same pgdat. The lock is held only if pgdat != NULL.
+ 		 */
+ 		if (locked_pgdat && ++lock_batch == SWAP_CLUSTER_MAX) {
+-			spin_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
++			write_unlock_irqrestore(&locked_pgdat->lru_lock,
++						flags);
+ 			locked_pgdat = NULL;
+ 		}
+ 
+@@ -745,8 +748,9 @@ void release_pages(struct page **pages, int nr)
+ 		/* Device public page can not be huge page */
+ 		if (is_device_public_page(page)) {
+ 			if (locked_pgdat) {
+-				spin_unlock_irqrestore(&locked_pgdat->lru_lock,
+-						       flags);
++				write_unlock_irqrestore(
++						      &locked_pgdat->lru_lock,
++						      flags);
+ 				locked_pgdat = NULL;
+ 			}
+ 			put_zone_device_private_or_public_page(page);
+@@ -759,7 +763,9 @@ void release_pages(struct page **pages, int nr)
+ 
+ 		if (PageCompound(page)) {
+ 			if (locked_pgdat) {
+-				spin_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
++				write_unlock_irqrestore(
++						      &locked_pgdat->lru_lock,
++						      flags);
+ 				locked_pgdat = NULL;
+ 			}
+ 			__put_compound_page(page);
+@@ -770,12 +776,14 @@ void release_pages(struct page **pages, int nr)
+ 			struct pglist_data *pgdat = page_pgdat(page);
+ 
+ 			if (pgdat != locked_pgdat) {
+-				if (locked_pgdat)
+-					spin_unlock_irqrestore(&locked_pgdat->lru_lock,
+-									flags);
++				if (locked_pgdat) {
++					write_unlock_irqrestore(
++					      &locked_pgdat->lru_lock, flags);
++				}
+ 				lock_batch = 0;
+ 				locked_pgdat = pgdat;
+-				spin_lock_irqsave(&locked_pgdat->lru_lock, flags);
++				write_lock_irqsave(&locked_pgdat->lru_lock,
++						   flags);
+ 			}
+ 
+ 			lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
+@@ -791,7 +799,7 @@ void release_pages(struct page **pages, int nr)
+ 		list_add(&page->lru, &pages_to_free);
+ 	}
+ 	if (locked_pgdat)
+-		spin_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
++		write_unlock_irqrestore(&locked_pgdat->lru_lock, flags);
+ 
+ 	mem_cgroup_uncharge_list(&pages_to_free);
+ 	free_unref_page_list(&pages_to_free);
+@@ -829,8 +837,6 @@ void lru_add_page_tail(struct page *page, struct page *page_tail,
+ 	VM_BUG_ON_PAGE(!PageHead(page), page);
+ 	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+ 	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
+-	VM_BUG_ON(NR_CPUS != 1 &&
+-		  !spin_is_locked(&lruvec_pgdat(lruvec)->lru_lock));
+ 
+ 	if (!list)
+ 		SetPageLRU(page_tail);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 730b6d0c6c61..e6f8f05d1bc6 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1601,7 +1601,7 @@ int isolate_lru_page(struct page *page)
+ 		struct zone *zone = page_zone(page);
+ 		struct lruvec *lruvec;
+ 
+-		spin_lock_irq(zone_lru_lock(zone));
++		write_lock_irq(zone_lru_lock(zone));
+ 		lruvec = mem_cgroup_page_lruvec(page, zone->zone_pgdat);
+ 		if (PageLRU(page)) {
+ 			int lru = page_lru(page);
+@@ -1610,7 +1610,7 @@ int isolate_lru_page(struct page *page)
+ 			del_page_from_lru_list(page, lruvec, lru);
+ 			ret = 0;
+ 		}
+-		spin_unlock_irq(zone_lru_lock(zone));
++		write_unlock_irq(zone_lru_lock(zone));
+ 	}
+ 	return ret;
+ }
+@@ -1668,9 +1668,9 @@ putback_inactive_pages(struct lruvec *lruvec, struct list_head *page_list)
+ 		VM_BUG_ON_PAGE(PageLRU(page), page);
+ 		list_del(&page->lru);
+ 		if (unlikely(!page_evictable(page))) {
+-			spin_unlock_irq(&pgdat->lru_lock);
++			write_unlock_irq(&pgdat->lru_lock);
+ 			putback_lru_page(page);
+-			spin_lock_irq(&pgdat->lru_lock);
++			write_lock_irq(&pgdat->lru_lock);
+ 			continue;
+ 		}
+ 
+@@ -1691,10 +1691,10 @@ putback_inactive_pages(struct lruvec *lruvec, struct list_head *page_list)
+ 			del_page_from_lru_list(page, lruvec, lru);
+ 
+ 			if (unlikely(PageCompound(page))) {
+-				spin_unlock_irq(&pgdat->lru_lock);
++				write_unlock_irq(&pgdat->lru_lock);
+ 				mem_cgroup_uncharge(page);
+ 				(*get_compound_page_dtor(page))(page);
+-				spin_lock_irq(&pgdat->lru_lock);
++				write_lock_irq(&pgdat->lru_lock);
+ 			} else
+ 				list_add(&page->lru, &pages_to_free);
+ 		}
+@@ -1755,7 +1755,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	if (!sc->may_unmap)
+ 		isolate_mode |= ISOLATE_UNMAPPED;
+ 
+-	spin_lock_irq(&pgdat->lru_lock);
++	write_lock_irq(&pgdat->lru_lock);
+ 
+ 	nr_taken = isolate_lru_pages(nr_to_scan, lruvec, &page_list,
+ 				     &nr_scanned, sc, isolate_mode, lru);
+@@ -1774,7 +1774,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 		count_memcg_events(lruvec_memcg(lruvec), PGSCAN_DIRECT,
+ 				   nr_scanned);
+ 	}
+-	spin_unlock_irq(&pgdat->lru_lock);
++	write_unlock_irq(&pgdat->lru_lock);
+ 
+ 	if (nr_taken == 0)
+ 		return 0;
+@@ -1782,7 +1782,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	nr_reclaimed = shrink_page_list(&page_list, pgdat, sc, 0,
+ 				&stat, false);
+ 
+-	spin_lock_irq(&pgdat->lru_lock);
++	write_lock_irq(&pgdat->lru_lock);
+ 
+ 	if (current_is_kswapd()) {
+ 		if (global_reclaim(sc))
+@@ -1800,7 +1800,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 
+ 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
+ 
+-	spin_unlock_irq(&pgdat->lru_lock);
++	write_unlock_irq(&pgdat->lru_lock);
+ 
+ 	mem_cgroup_uncharge_list(&page_list);
+ 	free_unref_page_list(&page_list);
+@@ -1880,10 +1880,10 @@ static unsigned move_active_pages_to_lru(struct lruvec *lruvec,
+ 			del_page_from_lru_list(page, lruvec, lru);
+ 
+ 			if (unlikely(PageCompound(page))) {
+-				spin_unlock_irq(&pgdat->lru_lock);
++				write_unlock_irq(&pgdat->lru_lock);
+ 				mem_cgroup_uncharge(page);
+ 				(*get_compound_page_dtor(page))(page);
+-				spin_lock_irq(&pgdat->lru_lock);
++				write_lock_irq(&pgdat->lru_lock);
+ 			} else
+ 				list_add(&page->lru, pages_to_free);
+ 		} else {
+@@ -1923,7 +1923,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 	if (!sc->may_unmap)
+ 		isolate_mode |= ISOLATE_UNMAPPED;
+ 
+-	spin_lock_irq(&pgdat->lru_lock);
++	write_lock_irq(&pgdat->lru_lock);
+ 
+ 	nr_taken = isolate_lru_pages(nr_to_scan, lruvec, &l_hold,
+ 				     &nr_scanned, sc, isolate_mode, lru);
+@@ -1934,7 +1934,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 	__count_vm_events(PGREFILL, nr_scanned);
+ 	count_memcg_events(lruvec_memcg(lruvec), PGREFILL, nr_scanned);
+ 
+-	spin_unlock_irq(&pgdat->lru_lock);
++	write_unlock_irq(&pgdat->lru_lock);
+ 
+ 	while (!list_empty(&l_hold)) {
+ 		cond_resched();
+@@ -1979,7 +1979,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 	/*
+ 	 * Move pages back to the lru list.
+ 	 */
+-	spin_lock_irq(&pgdat->lru_lock);
++	write_lock_irq(&pgdat->lru_lock);
+ 	/*
+ 	 * Count referenced pages from currently used mappings as rotated,
+ 	 * even though only some of them are actually re-activated.  This
+@@ -1991,7 +1991,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 	nr_activate = move_active_pages_to_lru(lruvec, &l_active, &l_hold, lru);
+ 	nr_deactivate = move_active_pages_to_lru(lruvec, &l_inactive, &l_hold, lru - LRU_ACTIVE);
+ 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
+-	spin_unlock_irq(&pgdat->lru_lock);
++	write_unlock_irq(&pgdat->lru_lock);
+ 
+ 	mem_cgroup_uncharge_list(&l_hold);
+ 	free_unref_page_list(&l_hold);
+@@ -2235,7 +2235,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+ 	file  = lruvec_lru_size(lruvec, LRU_ACTIVE_FILE, MAX_NR_ZONES) +
+ 		lruvec_lru_size(lruvec, LRU_INACTIVE_FILE, MAX_NR_ZONES);
+ 
+-	spin_lock_irq(&pgdat->lru_lock);
++	write_lock_irq(&pgdat->lru_lock);
+ 	recent_scanned[0] = atomic_long_read(&rstat->recent_scanned[0]);
+ 	recent_rotated[0] = atomic_long_read(&rstat->recent_rotated[0]);
+ 	if (unlikely(recent_scanned[0] > anon / 4)) {
+@@ -2264,7 +2264,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+ 
+ 	fp = file_prio * (recent_scanned[1] + 1);
+ 	fp /= recent_rotated[1] + 1;
+-	spin_unlock_irq(&pgdat->lru_lock);
++	write_unlock_irq(&pgdat->lru_lock);
+ 
+ 	fraction[0] = ap;
+ 	fraction[1] = fp;
+@@ -3998,9 +3998,9 @@ void check_move_unevictable_pages(struct page **pages, int nr_pages)
+ 		pgscanned++;
+ 		if (pagepgdat != pgdat) {
+ 			if (pgdat)
+-				spin_unlock_irq(&pgdat->lru_lock);
++				write_unlock_irq(&pgdat->lru_lock);
+ 			pgdat = pagepgdat;
+-			spin_lock_irq(&pgdat->lru_lock);
++			write_lock_irq(&pgdat->lru_lock);
+ 		}
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
+@@ -4021,7 +4021,7 @@ void check_move_unevictable_pages(struct page **pages, int nr_pages)
+ 	if (pgdat) {
+ 		__count_vm_events(UNEVICTABLE_PGRESCUED, pgrescued);
+ 		__count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
+-		spin_unlock_irq(&pgdat->lru_lock);
++		write_unlock_irq(&pgdat->lru_lock);
+ 	}
+ }
+ #endif /* CONFIG_SHMEM */
 -- 
 2.18.0
 
