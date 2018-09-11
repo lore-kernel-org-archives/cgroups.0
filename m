@@ -1,61 +1,209 @@
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Subject: Re: [PATCH] mm: memcontrol: print proper OOM header when no eligible
- victim left
-Date: Sat, 8 Sep 2018 23:15:44 +0900
-Message-ID: <1bdda2c0-f01f-a687-ad98-16f0473e3e32@i-love.sakura.ne.jp>
-References: <20180821160406.22578-1-hannes@cmpxchg.org>
- <b94f9964-c785-20c1-34af-e9013770b89a@I-love.SAKURA.ne.jp>
- <20180908135728.GA17637@cmpxchg.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Daniel Jordan <daniel.m.jordan@oracle.com>
+Subject: [RFC PATCH v2 1/8] mm, memcontrol.c: make memcg lru stats thread-safe without lru_lock
+Date: Mon, 10 Sep 2018 20:42:33 -0400
+Message-ID: <20180911004240.4758-2-daniel.m.jordan@oracle.com>
+References: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180908135728.GA17637@cmpxchg.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=corp-2018-07-02;
+ bh=AYffcWNGUXpctZYcdeMQTwk8kPozUsCUImBciAV0wPQ=;
+ b=yE9q03bGg4DiTrzu//XkMz0lWNcWcMHJRdVcfQidV3VrlNKaKs91rjE0E5osBLaYN1QS
+ 9/b5H7DspSjo409QRAhFRZBAm+3yiIEBCLldWsPSvUnAc1khkA8bjZyATQMs2y+RY0w4
+ Di3rFSVnxWPxbTzqocWWlm3ZPsPzQ1+PiErwTJp3HWKpcBJwSss0FajR+i7jXjm4cKGK
+ D6UthFjwuorYfjBVp24QCf7XKFwj4lGDXlYx7iRdLPjewj8MTpAg5QtxXCFY7xNSZRSy
+ W22Cu/tezk62jWB5yfW55DXrDx/wEFHhXRKUFvaMUY+0pWIBOaRyBXAhwAcM4Sw9tGOt Sw== 
+In-Reply-To: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.com>, Dmitry Vyukov <dvyukov@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: aaron.lu@intel.com, ak@linux.intel.com, akpm@linux-foundation.org, dave.dice@oracle.com, dave.hansen@linux.intel.com, hannes@cmpxchg.org, levyossi@icloud.com, ldufour@linux.vnet.ibm.com, mgorman@techsingularity.net, mhocko@kernel.org, Pavel.Tatashin@microsoft.com, steven.sistare@oracle.com, tim.c.chen@intel.com, vdavydov.dev@gmail.com, ying.huang@intel.com
 
-On 2018/09/08 22:57, Johannes Weiner wrote:
-> On Sat, Sep 08, 2018 at 10:36:06PM +0900, Tetsuo Handa wrote:
->> Due to commit d75da004c708c9fc ("oom: improve oom disable handling") and
->> commit 3100dab2aa09dc6e ("mm: memcontrol: print proper OOM header when
->> no eligible victim left"), all
->>
->>   kworker/0:1 invoked oom-killer: gfp_mask=0x6000c0(GFP_KERNEL), nodemask=(null), order=-1, oom_score_adj=0
->>   (...snipped...)
->>   Out of memory and no killable processes...
->>   OOM request ignored. No task eligible
->>
->> lines are printed.
-> 
-> This doesn't explain the context, what you were trying to do here, and
-> what you expected to happen. Plus, you (...snipped...) the important
-> part to understand why it failed in the first place.
+lru_lock needs to be held to update memcg LRU statistics.  This
+requirement arises fairly naturally based on when the stats are updated
+because callers are holding lru_lock already.
 
-I expect:
+In preparation for allowing concurrent adds and removes from the LRU,
+however, make concurrent updates to these statistics safe without
+lru_lock.  The lock continues to be held until later in the series, when
+it is replaced with a rwlock that also disables preemption, maintaining
+the assumption of __mod_lru_zone_size, which is introduced here.
 
-  When SysRq-f did not find killable processes, it does not emit
-  message other than "OOM request ignored. No task eligible".
+Follow the existing pattern for statistics in memcontrol.h by using a
+combination of per-cpu counters and atomics.
 
-There is no point with emitting memory information etc.
+Remove the negative statistics warning from ca707239e8a7 ("mm:
+update_lru_size warn and reset bad lru_size").  Although an earlier
+version of this patch updated the warning to account for the error
+introduced by the per-cpu counters, Hugh says this warning has not been
+seen in the wild and that for simplicity's sake it should probably just
+be removed.
 
-> 
->> Let's not emit "invoked oom-killer" lines when SysRq-f failed.
-> 
-> I disagree. If the user asked for an OOM kill, it makes perfect sense
-> to dump the memory context and the outcome of the operation - even if
-> the outcome is "I didn't find anything to kill". I'd argue that the
-> failure case *in particular* is where I want to know about and have
-> all the information that could help me understand why it failed.
+Signed-off-by: Daniel Jordan <daniel.m.jordan@oracle.com>
+---
+ include/linux/memcontrol.h | 43 +++++++++++++++++++++++++++++---------
+ mm/memcontrol.c            | 29 +++++++------------------
+ 2 files changed, 40 insertions(+), 32 deletions(-)
 
-How emitting memory information etc. helps you understand why it failed?
-"No task eligible" is sufficient for you to understand why, isn't it?
-
-> 
-> So NAK on the inferred patch premise, but please include way more
-> rationale, reproduction scenario etc. in future patches. It's not at
-> all clear *why* you think it should work the way you propose here.
-> 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d99b71bc2c66..6377dc76dc41 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -99,7 +99,8 @@ struct mem_cgroup_reclaim_iter {
+ };
+ 
+ struct lruvec_stat {
+-	long count[NR_VM_NODE_STAT_ITEMS];
++	long node[NR_VM_NODE_STAT_ITEMS];
++	long lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
+ };
+ 
+ /*
+@@ -109,9 +110,8 @@ struct mem_cgroup_per_node {
+ 	struct lruvec		lruvec;
+ 
+ 	struct lruvec_stat __percpu *lruvec_stat_cpu;
+-	atomic_long_t		lruvec_stat[NR_VM_NODE_STAT_ITEMS];
+-
+-	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
++	atomic_long_t		node_stat[NR_VM_NODE_STAT_ITEMS];
++	atomic_long_t		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
+ 
+ 	struct mem_cgroup_reclaim_iter	iter[DEF_PRIORITY + 1];
+ 
+@@ -446,7 +446,7 @@ unsigned long mem_cgroup_get_lru_size(struct lruvec *lruvec, enum lru_list lru)
+ 
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+ 	for (zid = 0; zid < MAX_NR_ZONES; zid++)
+-		nr_pages += mz->lru_zone_size[zid][lru];
++		nr_pages += atomic64_read(&mz->lru_zone_size[zid][lru]);
+ 	return nr_pages;
+ }
+ 
+@@ -457,7 +457,7 @@ unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
+ 	struct mem_cgroup_per_node *mz;
+ 
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	return mz->lru_zone_size[zone_idx][lru];
++	return atomic64_read(&mz->lru_zone_size[zone_idx][lru]);
+ }
+ 
+ void mem_cgroup_handle_over_high(void);
+@@ -575,7 +575,7 @@ static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
+ 		return node_page_state(lruvec_pgdat(lruvec), idx);
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = atomic_long_read(&pn->lruvec_stat[idx]);
++	x = atomic_long_read(&pn->node_stat[idx]);
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -601,12 +601,12 @@ static inline void __mod_lruvec_state(struct lruvec *lruvec,
+ 	__mod_memcg_state(pn->memcg, idx, val);
+ 
+ 	/* Update lruvec */
+-	x = val + __this_cpu_read(pn->lruvec_stat_cpu->count[idx]);
++	x = val + __this_cpu_read(pn->lruvec_stat_cpu->node[idx]);
+ 	if (unlikely(abs(x) > MEMCG_CHARGE_BATCH)) {
+-		atomic_long_add(x, &pn->lruvec_stat[idx]);
++		atomic_long_add(x, &pn->node_stat[idx]);
+ 		x = 0;
+ 	}
+-	__this_cpu_write(pn->lruvec_stat_cpu->count[idx], x);
++	__this_cpu_write(pn->lruvec_stat_cpu->node[idx], x);
+ }
+ 
+ static inline void mod_lruvec_state(struct lruvec *lruvec,
+@@ -619,6 +619,29 @@ static inline void mod_lruvec_state(struct lruvec *lruvec,
+ 	local_irq_restore(flags);
+ }
+ 
++/**
++ * __mod_lru_zone_size - update memcg lru statistics in batches
++ *
++ * Updates memcg lru statistics using per-cpu counters that spill into atomics
++ * above a threshold.
++ *
++ * Assumes that the caller has disabled preemption.  IRQs may be enabled
++ * because this function is not called from irq context.
++ */
++static inline void __mod_lru_zone_size(struct mem_cgroup_per_node *pn,
++				       enum lru_list lru, int zid, int val)
++{
++	long x;
++	struct lruvec_stat __percpu *lruvec_stat_cpu = pn->lruvec_stat_cpu;
++
++	x = val + __this_cpu_read(lruvec_stat_cpu->lru_zone_size[zid][lru]);
++	if (unlikely(abs(x) > MEMCG_CHARGE_BATCH)) {
++		atomic_long_add(x, &pn->lru_zone_size[zid][lru]);
++		x = 0;
++	}
++	__this_cpu_write(lruvec_stat_cpu->lru_zone_size[zid][lru], x);
++}
++
+ static inline void __mod_lruvec_page_state(struct page *page,
+ 					   enum node_stat_item idx, int val)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2bd3df3d101a..5463ad160e10 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -962,36 +962,20 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
+  * @zid: zone id of the accounted pages
+  * @nr_pages: positive when adding or negative when removing
+  *
+- * This function must be called under lru_lock, just before a page is added
+- * to or just after a page is removed from an lru list (that ordering being
+- * so as to allow it to check that lru_size 0 is consistent with list_empty).
++ * This function must be called just before a page is added to, or just after a
++ * page is removed from, an lru list.  Callers aren't required to hold lru_lock
++ * because these statistics use per-cpu counters and atomics.
+  */
+ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+ 				int zid, int nr_pages)
+ {
+ 	struct mem_cgroup_per_node *mz;
+-	unsigned long *lru_size;
+-	long size;
+ 
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	lru_size = &mz->lru_zone_size[zid][lru];
+-
+-	if (nr_pages < 0)
+-		*lru_size += nr_pages;
+-
+-	size = *lru_size;
+-	if (WARN_ONCE(size < 0,
+-		"%s(%p, %d, %d): lru_size %ld\n",
+-		__func__, lruvec, lru, nr_pages, size)) {
+-		VM_BUG_ON(1);
+-		*lru_size = 0;
+-	}
+-
+-	if (nr_pages > 0)
+-		*lru_size += nr_pages;
++	__mod_lru_zone_size(mz, lru, zid, nr_pages);
+ }
+ 
+ bool task_in_mem_cgroup(struct task_struct *task, struct mem_cgroup *memcg)
+@@ -1833,9 +1817,10 @@ static int memcg_hotplug_cpu_dead(unsigned int cpu)
+ 				struct mem_cgroup_per_node *pn;
+ 
+ 				pn = mem_cgroup_nodeinfo(memcg, nid);
+-				x = this_cpu_xchg(pn->lruvec_stat_cpu->count[i], 0);
++				x = this_cpu_xchg(pn->lruvec_stat_cpu->node[i],
++						  0);
+ 				if (x)
+-					atomic_long_add(x, &pn->lruvec_stat[i]);
++					atomic_long_add(x, &pn->node_stat[i]);
+ 			}
+ 		}
+ 
+-- 
+2.18.0
 
