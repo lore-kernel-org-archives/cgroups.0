@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 04/12] blkcg: always associate a bio with a blkg
-Date: Tue, 11 Sep 2018 14:41:29 -0400
-Message-ID: <20180911184137.35897-5-dennisszhou@gmail.com>
+Subject: [PATCH 07/12] blkcg: associate writeback bios with a blkg
+Date: Tue, 11 Sep 2018 14:41:32 -0400
+Message-ID: <20180911184137.35897-8-dennisszhou@gmail.com>
 References: <20180911184137.35897-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=N0pKhA7/QEQ1I21aBpLNJq0PPd2R4B39KJXaiCvhNQI=;
-        b=qIYBLZ/1tuspipkuIJwiZ2whRfmILbilgJgMRE/IeOEZe1gQMLHiI2NpNYG9c4uv8H
-         FAehYBc9zluSa2+oVQMunhC0bsVfe1EjHfm7ZqZnFxIdMj3aZ7IENB6dLrncEOlMTLlV
-         +wzg29W8vQ9c9m17wyUD2hKpbnwixCOcPf0JrGQsNxsHsZJCEcydW+tvsbrP413+fPFY
-         RVuoZFIcf3bFA+5ohomdSUH1SIa4HbsQIwmMdqF6rSSSGELbI76TQmsoFS2ibTnCK6B6
-         dyZ/UjCUhTT/FDuqrmRWRAVc5LY20fFF+x5N9JI6E4JKi99garHHlAcDN+QqDSskW+gC
-         Dvgg==
+        bh=FkDgmX6YNgFCNFUn3Et8v5b6B07m4GOk66oKL1F2CRg=;
+        b=mGygZNE6R8vykkRJpASf0GghNDi/HMMohnHWuxa5UMirclwqDK6yWQFiht/cECSYxa
+         Q5RGNy0B6E4DoS01BWEZoT7RVb3FVqaq+u4qS6MiWnOt2/utnbtTYotziTsNJAlx4f2/
+         4yBS8HuTEAuTkdUzi7ZW1aTgR7Q/QYxq0eDbUdSqd6PMN/l3fliYR534AyjF1iSBbRPp
+         l9A6TJxM0c4Vym3fWG9vFcOTce5dI9EKiGi0qgeX6L+UZIUc+nEUgwPNiFbgx0r2ZAJF
+         LmlvIM92ZsElKIxZFBirxLyvzJ9LPu/z6u8YfEGm6XSPd++52sv1rxvAJKru7bCRx0jz
+         jflg==
 In-Reply-To: <20180911184137.35897-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,202 +25,117 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-Previously, blkg's were only assigned as needed by blk-iolatency and
-blk-throttle. bio->css was also always being associated while blkg was
-being looked up and then thrown away in blkcg_bio_issue_check.
-
-This patch begins the cleanup of bio->css and bio->bi_blkg by always
-associating a blkg in blkcg_bio_issue_check. This tries to create the
-blkg, but if it is not possible, falls back to using the root_blkg of
-the request_queue. Therefore, a bio will always be associated with a
-blkg. The duplicate association logic is removed from blk-throttle and
-blk-iolatency.
+One of the goals of this series is to remove a separate reference to
+the css of the bio. This can and should be accessed via bio_blkcg. In
+this patch, the wbc_init_bio call is changed such that it must be called
+after a queue has been associated with the bio.
 
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/bio.c                | 38 ++++++++++++++++++++++++++++++++++++++
- block/blk-iolatency.c      | 24 ++----------------------
- block/blk-throttle.c       |  5 +----
- include/linux/bio.h        |  3 +++
- include/linux/blk-cgroup.h | 16 ++--------------
- 5 files changed, 46 insertions(+), 40 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  8 +++++---
+ fs/buffer.c                             | 10 +++++-----
+ fs/ext4/page-io.c                       |  2 +-
+ include/linux/writeback.h               |  5 +++--
+ 4 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 49a28abd9772..97c1c4bf8df6 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -2029,6 +2029,41 @@ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 184193bcb262..caf36105a1c7 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1857,8 +1857,10 @@ following two functions.
+ 
+   wbc_init_bio(@wbc, @bio)
+ 	Should be called for each bio carrying writeback data and
+-	associates the bio with the inode's owner cgroup.  Can be
+-	called anytime between bio allocation and submission.
++	associates the bio with the inode's owner cgroup and the
++	corresponding request queue.  This must be called after
++	a queue (device) has been associated with the bio and
++	before submission.
+ 
+   wbc_account_io(@wbc, @page, @bytes)
+ 	Should be called for each data segment being written out.
+@@ -1877,7 +1879,7 @@ the configuration, the bio may be executed at a lower priority and if
+ the writeback session is holding shared resources, e.g. a journal
+ entry, may lead to priority inversion.  There is no one easy solution
+ for the problem.  Filesystems can try to work around specific problem
+-cases by skipping wbc_init_bio() or using bio_associate_blkcg()
++cases by skipping wbc_init_bio() or using bio_associate_create_blkg()
+ directly.
+ 
+ 
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 6f1ae3ac9789..109f55196866 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -3060,11 +3060,6 @@ static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+ 	 */
+ 	bio = bio_alloc(GFP_NOIO, 1);
+ 
+-	if (wbc) {
+-		wbc_init_bio(wbc, bio);
+-		wbc_account_io(wbc, bh->b_page, bh->b_size);
+-	}
+-
+ 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio_set_dev(bio, bh->b_bdev);
+ 	bio->bi_write_hint = write_hint;
+@@ -3084,6 +3079,11 @@ static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+ 		op_flags |= REQ_PRIO;
+ 	bio_set_op_attrs(bio, op, op_flags);
+ 
++	if (wbc) {
++		wbc_init_bio(wbc, bio);
++		wbc_account_io(wbc, bh->b_page, bh->b_size);
++	}
++
+ 	submit_bio(bio);
+ 	return 0;
+ }
+diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+index db7590178dfc..2aa62d58d8dd 100644
+--- a/fs/ext4/page-io.c
++++ b/fs/ext4/page-io.c
+@@ -374,13 +374,13 @@ static int io_submit_init_bio(struct ext4_io_submit *io,
+ 	bio = bio_alloc(GFP_NOIO, BIO_MAX_PAGES);
+ 	if (!bio)
+ 		return -ENOMEM;
+-	wbc_init_bio(io->io_wbc, bio);
+ 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio_set_dev(bio, bh->b_bdev);
+ 	bio->bi_end_io = ext4_end_bio;
+ 	bio->bi_private = ext4_get_io_end(io->io_end);
+ 	io->io_bio = bio;
+ 	io->io_next_block = bh->b_blocknr;
++	wbc_init_bio(io->io_wbc, bio);
  	return 0;
  }
  
-+/**
-+ * bio_associate_create_blkg - associate a bio with a blkg from q
-+ * @q: request_queue where bio is going
-+ * @bio: target bio
-+ *
-+ * Associate @bio with the blkg found from the bio's css and the request_queue.
-+ * If one is not found, bio_lookup_blkg creates the blkg.
-+ */
-+int bio_associate_create_blkg(struct request_queue *q, struct bio *bio)
-+{
-+	struct blkcg *blkcg;
-+	struct blkcg_gq *blkg;
-+	int ret = 0;
-+
-+	/* someone has already associated this bio with a blkg */
-+	if (bio->bi_blkg)
-+		return ret;
-+
-+	rcu_read_lock();
-+
-+	bio_associate_blkcg(bio, NULL);
-+	blkcg = bio_blkcg(bio);
-+
-+	if (!blkcg->css.parent) {
-+		ret = bio_associate_blkg(bio, q->root_blkg);
-+	} else {
-+		blkg = blkg_lookup_create(blkcg, q);
-+
-+		ret = bio_associate_blkg(bio, blkg);
-+	}
-+
-+	rcu_read_unlock();
-+	return ret;
-+}
-+
- /**
-  * bio_disassociate_task - undo bio_associate_current()
-  * @bio: target bio
-@@ -2058,6 +2093,9 @@ void bio_clone_blkcg_association(struct bio *dst, struct bio *src)
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index fdfd04e348f6..738a0c24874f 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -246,7 +246,8 @@ static inline void wbc_attach_fdatawrite_inode(struct writeback_control *wbc,
+  *
+  * @bio is a part of the writeback in progress controlled by @wbc.  Perform
+  * writeback specific initialization.  This is used to apply the cgroup
+- * writeback context.
++ * writeback context.  Must be called after the bio has been associated with
++ * a device.
+  */
+ static inline void wbc_init_bio(struct writeback_control *wbc, struct bio *bio)
  {
- 	if (src->bi_css)
- 		WARN_ON(bio_associate_blkcg(dst, src->bi_css));
-+
-+	if (src->bi_blkg)
-+		bio_associate_blkg(dst, src->bi_blkg);
+@@ -257,7 +258,7 @@ static inline void wbc_init_bio(struct writeback_control *wbc, struct bio *bio)
+ 	 * regular writeback instead of writing things out itself.
+ 	 */
+ 	if (wbc->wb)
+-		bio_associate_blkcg(bio, wbc->wb->blkcg_css);
++		bio_associate_blkg_from_css(bio, wbc->wb->blkcg_css);
  }
- EXPORT_SYMBOL_GPL(bio_clone_blkcg_association);
- #endif /* CONFIG_BLK_CGROUP */
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 22b2ff0440cc..79a7549e2062 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -395,34 +395,14 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
- 				     spinlock_t *lock)
- {
- 	struct blk_iolatency *blkiolat = BLKIOLATENCY(rqos);
--	struct blkcg *blkcg;
--	struct blkcg_gq *blkg;
--	struct request_queue *q = rqos->q;
-+	struct blkcg_gq *blkg = bio->bi_blkg;
- 	bool issue_as_root = bio_issue_as_root_blkg(bio);
  
- 	if (!blk_iolatency_enabled(blkiolat))
- 		return;
- 
--	rcu_read_lock();
--	bio_associate_blkcg(bio, NULL);
--	blkcg = bio_blkcg(bio);
--	blkg = blkg_lookup(blkcg, q);
--	if (unlikely(!blkg)) {
--		if (!lock)
--			spin_lock_irq(q->queue_lock);
--		blkg = __blkg_lookup_create(blkcg, q);
--		if (IS_ERR(blkg))
--			blkg = NULL;
--		if (!lock)
--			spin_unlock_irq(q->queue_lock);
--	}
--	if (!blkg)
--		goto out;
--
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
--	bio_associate_blkg(bio, blkg);
--out:
--	rcu_read_unlock();
-+
- 	while (blkg && blkg->parent) {
- 		struct iolatency_grp *iolat = blkg_to_lat(blkg);
- 		if (!iolat) {
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 01d0620a4e4a..b7b5cc4defc2 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2129,9 +2129,6 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
- static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
- {
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
--	/* fallback to root_blkg if we fail to get a blkg ref */
--	if (bio->bi_css && (bio_associate_blkg(bio, tg_to_blkg(tg)) == -ENODEV))
--		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
- #endif
- }
-@@ -2140,7 +2137,7 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
- 		    struct bio *bio)
- {
- 	struct throtl_qnode *qn = NULL;
--	struct throtl_grp *tg = blkg_to_tg(blkg ?: q->root_blkg);
-+	struct throtl_grp *tg = blkg_to_tg(blkg);
- 	struct throtl_service_queue *sq;
- 	bool rw = bio_data_dir(bio);
- 	bool throttled = false;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 14b4fa266357..829cd0bb407d 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -542,11 +542,14 @@ static inline int bio_associate_blkcg_from_page(struct bio *bio,
- #ifdef CONFIG_BLK_CGROUP
- int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css);
- int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg);
-+int bio_associate_create_blkg(struct request_queue *q, struct bio *bio);
- void bio_disassociate_task(struct bio *bio);
- void bio_clone_blkcg_association(struct bio *dst, struct bio *src);
- #else	/* CONFIG_BLK_CGROUP */
- static inline int bio_associate_blkcg(struct bio *bio,
- 			struct cgroup_subsys_state *blkcg_css) { return 0; }
-+static inline int bio_associate_create_blkg(struct request_queue *q,
-+					    struct bio *bio) { return 0; }
- static inline void bio_disassociate_task(struct bio *bio) { }
- static inline void bio_clone_blkcg_association(struct bio *dst,
- 			struct bio *src) { }
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 1fbff1bbb651..6e33ad1d92b4 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -900,29 +900,17 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
- static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 					 struct bio *bio)
- {
--	struct blkcg *blkcg;
- 	struct blkcg_gq *blkg;
- 	bool throtl = false;
- 
- 	rcu_read_lock();
- 
--	/* associate blkcg if bio hasn't attached one */
--	bio_associate_blkcg(bio, NULL);
--	blkcg = bio_blkcg(bio);
--
--	blkg = blkg_lookup(blkcg, q);
--	if (unlikely(!blkg)) {
--		spin_lock_irq(q->queue_lock);
--		blkg = __blkg_lookup_create(blkcg, q);
--		if (IS_ERR(blkg))
--			blkg = NULL;
--		spin_unlock_irq(q->queue_lock);
--	}
-+	bio_associate_create_blkg(q, bio);
-+	blkg = bio->bi_blkg;
- 
- 	throtl = blk_throtl_bio(q, blkg, bio);
- 
- 	if (!throtl) {
--		blkg = blkg ?: q->root_blkg;
- 		/*
- 		 * If the bio is flagged with BIO_QUEUE_ENTERED it means this
- 		 * is a split bio and we would have already accounted for the
+ #else	/* CONFIG_CGROUP_WRITEBACK */
 -- 
 2.17.1
 
