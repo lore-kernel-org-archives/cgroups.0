@@ -1,19 +1,19 @@
 From: Dennis Zhou <dennisszhou@gmail.com>
-Subject: [PATCH 02/12] blkcg: update blkg_lookup_create to do locking
-Date: Tue, 11 Sep 2018 14:41:27 -0400
-Message-ID: <20180911184137.35897-3-dennisszhou@gmail.com>
+Subject: [PATCH 03/12] blkcg: convert blkg_lookup_create to find closest blkg
+Date: Tue, 11 Sep 2018 14:41:28 -0400
+Message-ID: <20180911184137.35897-4-dennisszhou@gmail.com>
 References: <20180911184137.35897-1-dennisszhou@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Eiy8jfjFxZHKC78nIxR0T2ImKwTJro98JlpbbKeKMRI=;
-        b=HJ798DPPWplZmJZHKHsOW0+OYclb38wIF2w+ETObMy2xRpsvJJV77fOn7PNoon9lTJ
-         FFQyi197w65ow/gFMbpVIlEYlKl74C9zN9RFNL3LSaSmru9twJVejPcPhoPDRLWjiLAy
-         ZokjYpjiESf+hZyWYkCYFeTj/ZL9RcRfb8vjjqBx5iNoXxKFiPn28DIxejIP+4l+DVQF
-         O+Jh8WB59ucN4WgaNC0f9Y5UUFIVH/U1eJOl7BwwHBFDR0veFhJww4WhUP3X4EusF05q
-         K6TCWZSdiaK1MbJG7ytOSTduro16l74zwAo/lCpyZLSUKP4xStZFt1PPZNuSJ96KAtd7
-         JEPg==
+        bh=0vFvSHzEg8C5aAk8MUn2HD/7B9Z1ZlOCDdmp1KeTvd0=;
+        b=By7vpYN5SSFvh9S236XgvWLLPWN69zPWXl78tdPTVfQLdiOR8NXC1hauzGbN3WhaTG
+         hM4ilN8GhwkkRSk10Lyf6XsJbs91J/BWivdQDesdPsEwS/xtvjHRDDenfGQJUlfefUWZ
+         LGqDl2XlzQ/ZWZC/18n4QIZoAKPKCnWYGeO5fWps1ZYA2BnNFTAbZn0WiNGzxmPB7L0f
+         8ra+5pBWbqB/oexvBStmAdOv3PeMsiKCD4vuFEofEe4sMB3o4QLWorFZomYZlyLftEZa
+         MUrJArYE8XEjRpi5j9LlfspbFuXU4NdGghZUJZYhyIdcOazTTg8qqgmPa9utze8PYu51
+         fQOg==
 In-Reply-To: <20180911184137.35897-1-dennisszhou@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,118 +25,143 @@ Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, li
 
 From: "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-To know when to create a blkg, the general pattern is to do a
-blkg_lookup and if that fails, lock and then do a lookup again and if
-that fails finally create. It doesn't make much sense for everyone who
-wants to do creation to write this themselves.
+There are several scenarios where blkg_lookup_create can fail. Examples
+include the blkcg dying, request_queue is dying, or simply being OOM. At
+the end of the day, most handle this by simply falling back to the
+q->root_blkg and calling it a day.
 
-This changes blkg_lookup_create to do locking and implement this
-pattern. The old blkg_lookup_create is renamed to __blkg_lookup_create.
-If a call site wants to do its own error handling or already owns the
-queue lock, they can use __blkg_lookup_create. This will be used in
-upcoming patches.
+This patch implements the notion of closest blkg. During
+blkg_lookup_create, if it fails to create, return the closest blkg
+found or the q->root_blkg. blkg_try_get_closest is introduced and used
+during association so a bio is always attached to a blkg.
 
 Signed-off-by: Dennis Zhou <dennisszhou@gmail.com>
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Liu Bo <bo.liu@linux.alibaba.com>
 ---
- block/blk-cgroup.c         | 31 ++++++++++++++++++++++++++++---
- block/blk-iolatency.c      |  2 +-
- include/linux/blk-cgroup.h |  4 +++-
- 3 files changed, 32 insertions(+), 5 deletions(-)
+ block/bio.c                | 17 ++++++++++-------
+ block/blk-cgroup.c         | 25 +++++++++++++++++--------
+ include/linux/blk-cgroup.h | 14 ++++++++++++++
+ 3 files changed, 41 insertions(+), 15 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c19f9078da1e..cd0d97bed83d 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -259,7 +259,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- }
+diff --git a/block/bio.c b/block/bio.c
+index 6ca4dda481ca..49a28abd9772 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -2008,21 +2008,24 @@ int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css)
+ EXPORT_SYMBOL_GPL(bio_associate_blkcg);
  
  /**
-- * blkg_lookup_create - lookup blkg, try to create one if not there
-+ * __blkg_lookup_create - lookup blkg, try to create one if not there
-  * @blkcg: blkcg of interest
-  * @q: request_queue of interest
+- * bio_associate_blkg - associate a bio with the specified blkg
++ * bio_associate_blkg - associate a bio with the a blkg
+  * @bio: target bio
+  * @blkg: the blkg to associate
   *
-@@ -272,8 +272,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
-  * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
-  * dead and bypassing, returns ERR_PTR(-EBUSY).
+- * Associate @bio with the blkg specified by @blkg.  This is the queue specific
+- * blkcg information associated with the @bio, a reference will be taken on the
+- * @blkg and will be freed when the bio is freed.
++ * This tries to associate @bio with the specified blkg.  Association failure
++ * is handled by walking up the blkg tree.  Therefore, the blkg associated can
++ * be anything between @blkg and the root_blkg.  This situation only happens
++ * when a cgroup is dying and then the remaining bios will spill to the closest
++ * alive blkg.
++ *
++ * A reference will be taken on the @blkg and will be released when @bio is
++ * freed.
   */
--struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
--				    struct request_queue *q)
-+struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
-+				      struct request_queue *q)
+ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
  {
- 	struct blkcg_gq *blkg;
+ 	if (unlikely(bio->bi_blkg))
+ 		return -EBUSY;
+-	if (!blkg_try_get(blkg))
+-		return -ENODEV;
+-	bio->bi_blkg = blkg;
++	bio->bi_blkg = blkg_try_get_closest(blkg);
+ 	return 0;
+ }
  
-@@ -310,6 +310,31 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index cd0d97bed83d..e9e3a955f61a 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -268,9 +268,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+  * that all non-root blkg's have access to the parent blkg.  This function
+  * should be called under RCU read lock and @q->queue_lock.
+  *
+- * Returns pointer to the looked up or created blkg on success, ERR_PTR()
+- * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
+- * dead and bypassing, returns ERR_PTR(-EBUSY).
++ * Returns the blkg or the closest blkg if blkg_create fails as it walks
++ * down from root.
+  */
+ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 				      struct request_queue *q)
+@@ -285,7 +284,7 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 	 * we shouldn't allow anything to go through for a bypassing queue.
+ 	 */
+ 	if (unlikely(blk_queue_bypass(q)))
+-		return ERR_PTR(blk_queue_dying(q) ? -ENODEV : -EBUSY);
++		return q->root_blkg;
+ 
+ 	blkg = __blkg_lookup(blkcg, q, true);
+ 	if (blkg)
+@@ -293,19 +292,29 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 
+ 	/*
+ 	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
+-	 * non-root blkgs have access to their parents.
++	 * non-root blkgs have access to their parents.  Returns the closest
++	 * blkg to the intended blkg should blkg_create() fail.
+ 	 */
+ 	while (true) {
+ 		struct blkcg *pos = blkcg;
+ 		struct blkcg *parent = blkcg_parent(blkcg);
+-
+-		while (parent && !__blkg_lookup(parent, q, false)) {
++		struct blkcg_gq *ret_blkg = q->root_blkg;
++
++		while (parent) {
++			blkg = __blkg_lookup(parent, q, false);
++			if (blkg) {
++				/* remember closest blkg */
++				ret_blkg = blkg;
++				break;
++			}
+ 			pos = parent;
+ 			parent = blkcg_parent(parent);
+ 		}
+ 
+ 		blkg = blkg_create(pos, q, NULL);
+-		if (pos == blkcg || IS_ERR(blkg))
++		if (IS_ERR(blkg))
++			return ret_blkg;
++		if (pos == blkcg)
+ 			return blkg;
  	}
+ }
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index cc0f238530f6..1fbff1bbb651 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -549,6 +549,20 @@ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
+ 	return NULL;
  }
  
 +/**
-+ * blkg_lookup_create - find or create a blkg
-+ * @blkcg: target block cgroup
-+ * @q: target request_queue
++ * blkg_try_get_closest - try and get a blkg ref on the closet blkg
++ * @blkg: blkg to get
 + *
-+ * This looks up or creates the blkg representing the unique pair
-+ * of the blkcg and the request_queue.
++ * This walks up the blkg tree to find the closest non-dying blkg and returns
++ * the blkg that it did association with as it may not be the passed in blkg.
 + */
-+struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
-+				    struct request_queue *q)
++static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
 +{
-+	struct blkcg_gq *blkg = blkg_lookup(blkcg, q);
-+	unsigned long flags;
-+
-+	if (unlikely(!blkg)) {
-+		spin_lock_irqsave(q->queue_lock, flags);
-+
-+		blkg = __blkg_lookup_create(blkcg, q);
-+
-+		spin_unlock_irqrestore(q->queue_lock, flags);
-+	}
++	while (!atomic_inc_not_zero(&blkg->refcnt))
++		blkg = blkg->parent;
 +
 +	return blkg;
 +}
-+
- static void blkg_destroy(struct blkcg_gq *blkg)
- {
- 	struct blkcg *blkcg = blkg->blkcg;
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 62fdd9002c29..22b2ff0440cc 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -410,7 +410,7 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio,
- 	if (unlikely(!blkg)) {
- 		if (!lock)
- 			spin_lock_irq(q->queue_lock);
--		blkg = blkg_lookup_create(blkcg, q);
-+		blkg = __blkg_lookup_create(blkcg, q);
- 		if (IS_ERR(blkg))
- 			blkg = NULL;
- 		if (!lock)
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 24067a1f8b36..cc0f238530f6 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -184,6 +184,8 @@ extern struct cgroup_subsys_state * const blkcg_root_css;
  
- struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
- 				      struct request_queue *q, bool update_hint);
-+struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
-+				      struct request_queue *q);
- struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 				    struct request_queue *q);
- int blkcg_init_queue(struct request_queue *q);
-@@ -897,7 +899,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 	blkg = blkg_lookup(blkcg, q);
- 	if (unlikely(!blkg)) {
- 		spin_lock_irq(q->queue_lock);
--		blkg = blkg_lookup_create(blkcg, q);
-+		blkg = __blkg_lookup_create(blkcg, q);
- 		if (IS_ERR(blkg))
- 			blkg = NULL;
- 		spin_unlock_irq(q->queue_lock);
+ void __blkg_release_rcu(struct rcu_head *rcu);
+ 
 -- 
 2.17.1
 
