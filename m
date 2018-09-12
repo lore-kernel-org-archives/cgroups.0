@@ -1,46 +1,56 @@
-From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: Re: [RFC PATCH v2 2/8] mm: make zone_reclaim_stat updates thread-safe
-Date: Wed, 12 Sep 2018 09:30:28 -0400
-Message-ID: <7e0c2fe0-c867-3ea2-83a2-c3bcb35057d7@oracle.com>
-References: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
- <20180911004240.4758-3-daniel.m.jordan@oracle.com>
- <fe814c4f-f049-9b7f-0f4c-7238f159f144@linux.vnet.ibm.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 4/9] sched: loadavg: consolidate LOAD_INT, LOAD_FRAC,
+ CALC_LOAD
+Date: Wed, 12 Sep 2018 16:28:28 -0700
+Message-ID: <20180912162828.ae336d83e8c467345e70de17@linux-foundation.org>
+References: <20180828172258.3185-1-hannes@cmpxchg.org>
+        <20180828172258.3185-5-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2018-07-02;
- bh=wIQl5Jcc5252bXoEoaBBGvv+myxEy41bsq+Hf3UwZVQ=;
- b=nv3XL8FzNHlHBdxxvRLLEKbQxGSNyUVkSD+kwXSEqtQl2PChFLtA3z5yDNj7YgwRplS4
- ZOYmqvhwMDEMtBJvWpEA5J6avN+0ESdWO/l6CSTLMLAqKIykfNo0Gs8TRWgJJ3Wbq9it
- aKSkSVyqhsfRvAwx603FK5CM8msAS2Cdn8w+KNs73bCKlu1rkXUspYU/4wVzmiardvY+
- F5gh7gd0hUA9/BFTS9rYOHeSwU9MlCaNhuPtImHx5jSlRywwB8Y2xEHINP8DtVT500LT
- A+UO9RwppHuHN7rIM7pLN+vR2Xi1dYkIZJww/ogJwfJzC52B+U5B9kQqGjf8G/D78VZO fw== 
-In-Reply-To: <fe814c4f-f049-9b7f-0f4c-7238f159f144@linux.vnet.ibm.com>
-Content-Language: en-US
+In-Reply-To: <20180828172258.3185-5-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Laurent Dufour <ldufour@linux.vnet.ibm.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: aaron.lu@intel.com, ak@linux.intel.com, akpm@linux-foundation.org, dave.dice@oracle.com, dave.hansen@linux.intel.com, hannes@cmpxchg.org, levyossi@icloud.com, mgorman@techsingularity.net, mhocko@kernel.org, Pavel.Tatashin@microsoft.com, steven.sistare@oracle.com, tim.c.chen@intel.com, vdavydov.dev@gmail.com, ying.huang@intel.com
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Peter Enderborg <peter.enderborg@sony.com>, Shakeel Butt <shakeelb@google.com>, Mike Galbraith <efault@gmx.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 9/11/18 12:40 PM, Laurent Dufour wrote:
-> On 11/09/2018 02:42, Daniel Jordan wrote:
->> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
->> index 32699b2dc52a..6d4c23a3069d 100644
->> --- a/include/linux/mmzone.h
->> +++ b/include/linux/mmzone.h
->> @@ -229,6 +229,12 @@ struct zone_reclaim_stat {
->>   	 *
->>   	 * The anon LRU stats live in [0], file LRU stats in [1]
->>   	 */
->> +	atomic_long_t		recent_rotated[2];
->> +	atomic_long_t		recent_scanned[2];
-> 
-> It might be better to use a slightly different name for these fields to
-> distinguish them from the ones in the zone_reclaim_stat_cpu structure.
+On Tue, 28 Aug 2018 13:22:53 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
 
-Sure, these are now named recent_rotated_cpu and recent_scanned_cpu, absent better names.
+> There are several definitions of those functions/macros in places that
+> mess with fixed-point load averages. Provide an official version.
 
-Thanks for your comments.
+missed blk-iolatency.c for some reason?
+
+
+--- a/block/blk-iolatency.c~sched-loadavg-consolidate-load_int-load_frac-calc_load-fix
++++ a/block/blk-iolatency.c
+@@ -139,7 +139,7 @@ struct iolatency_grp {
+ #define BLKIOLATENCY_MAX_WIN_SIZE NSEC_PER_SEC
+ /*
+  * These are the constants used to fake the fixed-point moving average
+- * calculation just like load average.  The call to CALC_LOAD folds
++ * calculation just like load average.  The call to calc_load() folds
+  * (FIXED_1 (2048) - exp_factor) * new_sample into lat_avg.  The sampling
+  * window size is bucketed to try to approximately calculate average
+  * latency such that 1/exp (decay rate) is [1 min, 2.5 min) when windows
+@@ -503,7 +503,7 @@ static void iolatency_check_latencies(st
+ 	lat_info = &parent->child_lat;
+ 
+ 	/*
+-	 * CALC_LOAD takes in a number stored in fixed point representation.
++	 * calc_load() takes in a number stored in fixed point representation.
+ 	 * Because we are using this for IO time in ns, the values stored
+ 	 * are significantly larger than the FIXED_1 denominator (2048).
+ 	 * Therefore, rounding errors in the calculation are negligible and
+@@ -512,7 +512,7 @@ static void iolatency_check_latencies(st
+ 	exp_idx = min_t(int, BLKIOLATENCY_NR_EXP_FACTORS - 1,
+ 			div64_u64(iolat->cur_win_nsec,
+ 				  BLKIOLATENCY_EXP_BUCKET_SIZE));
+-	CALC_LOAD(iolat->lat_avg, iolatency_exp_factors[exp_idx], stat.mean);
++	calc_load(iolat->lat_avg, iolatency_exp_factors[exp_idx], stat.mean);
+ 
+ 	/* Everything is ok and we don't need to adjust the scale. */
+ 	if (stat.mean <= iolat->min_lat_nsec &&
+_
+
