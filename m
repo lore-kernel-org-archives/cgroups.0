@@ -1,63 +1,100 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 0/9] psi: pressure stall information for CPU, memory, and
- IO v4
-Date: Tue, 18 Sep 2018 09:03:05 -0700
-Message-ID: <CAJuCfpFSTEBySRR2X=3b5+pHP_J1MBqfPXPJCUVajGF6AwJDpA@mail.gmail.com>
-References: <20180828172258.3185-1-hannes@cmpxchg.org> <20180905214303.GA30178@cmpxchg.org>
- <20180907110407.GQ24106@hirez.programming.kicks-ass.net> <20180907150955.GC11088@cmpxchg.org>
- <CAJuCfpG1=pXOg=1GwC33Uy0BcXNq-BsR6dO0JJq4Jnm5TyNENQ@mail.gmail.com> <29f0bb2c-31d4-0b2e-d816-68076b90e9d3@sony.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] memcg: remove memcg_kmem_skip_account
+Date: Tue, 18 Sep 2018 17:45:01 -0700
+Message-ID: <20180919004501.178023-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=BMFNQQpQoruj7zBh3aMY+r/etAqs8yFqlr/AFgpS008=;
-        b=qY68wHOYFQnd357nu9mKACcCeuQCGcmGrAreZv560ekIDMINaYupSjMuDKjGztbKOF
-         DmRzMZhaaSb+OwwmMu7iNtAyT7YTTUJ7g3E976JmaxZLRNctXkXwOPNobmLQYNCpveV9
-         IyCqAWzHSK/6h0V6mZdQNa8iadmA02uY1HxkoOYFyQ5sQ74psovs+MQ/njRK+kb2Ubza
-         24iI1xN1fl+DhqlidPuObXD//mLBykEpvUXuhdkL5WCHwI0KFt+T9xMsq+OMgycBjxvU
-         wWl/NTfx2xphAsKpOlFcn1gJGzm9zWevaWpenTwATkIfeRkrWcSGpPp9S0vLbsizHTgi
-         FS4A==
-In-Reply-To: <29f0bb2c-31d4-0b2e-d816-68076b90e9d3@sony.com>
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=dPLvabeEu2R5NLjbgna2in9ApyNxHhQTFLi6gYIcZD0=;
+        b=D9KTvBvrrAn23w6+nsWFdBhh5C7g8llWsnMC/BzXW0nGAXspOy4e9BubHJLItqLxt5
+         nbZlHvMY08B0mvPSdc/43Vf21U8YDgbIBpJBLb+PA7eg03ur18PwVxfnbekEvNqXyK6m
+         zKYVbVPRC4QTO3I+KOQ2NESTqBDI5VgcuP+/ocHFqQzGJfiR2Jfr/n4iXqS1xacLOskx
+         BXLhnwKFNv5XEYvMkiU+FgdtXU2sg8RkXl9XNKHdl+DnQFvnfRhSlZRxAzLerEvninOv
+         sdO2jN0nCRQJeKEGCDI6500p8Ca3xckLP6psNtZBY0Ag9FR1m0VYeviPkbi+MxKiNwDS
+         eDyg==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: peter enderborg <peter.enderborg@sony.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Shakeel Butt <shakeelb@google.com>, Mike Galbraith <efault@gmx.de>, linux-mm <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-team@fb.com
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-On Mon, Sep 17, 2018 at 6:29 AM, peter enderborg
-<peter.enderborg@sony.com> wrote:
-> Will it be part of the backport to 4.9 google android or is it for test only?
+The flag memcg_kmem_skip_account was added during the era of opt-out
+kmem accounting. There is no need for such flag in the opt-in world as
+there aren't any __GFP_ACCOUNT allocations within
+memcg_create_cache_enqueue().
 
-Currently I'm testing these patches in tandem with PSI monitor that
-I'm developing and test results look good. If things go well and we
-start using PSI for Android I will try to upstream the backport. If
-upstream rejects it we will have to merge it into Android common
-kernel repo as a last resort. Hope this answers your question.
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+---
+ include/linux/sched.h |  3 ---
+ mm/memcontrol.c       | 24 +-----------------------
+ 2 files changed, 1 insertion(+), 26 deletions(-)
 
-> I guess that this patch is to big for the LTS tree.
->
-> On 09/07/2018 05:58 PM, Suren Baghdasaryan wrote:
->> Thanks for the new patchset! Backported to 4.9 and retested on ARMv8 8
->> code system running Android. Signals behave as expected reacting to
->> memory pressure, no jumps in "total" counters that would indicate an
->> overflow/underflow issues. Nicely done!
->>
->> Tested-by: Suren Baghdasaryan <surenb@google.com>
->>
->> On Fri, Sep 7, 2018 at 8:09 AM, Johannes Weiner <hannes@cmpxchg.org> wrote:
->>> On Fri, Sep 07, 2018 at 01:04:07PM +0200, Peter Zijlstra wrote:
->>>> So yeah, grudingly acked. Did you want me to pick this up through the
->>>> scheduler tree since most of this lives there?
->>> Thanks for the ack.
->>>
->>> As for routing it, I'll leave that decision to you and Andrew. It
->>> touches stuff all over, so it could result in quite a few conflicts
->>> between trees (although I don't expect any of them to be non-trivial).
->
->
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 977cb57d7bc9..c30e3cd4b81c 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -723,9 +723,6 @@ struct task_struct {
+ #endif
+ #ifdef CONFIG_MEMCG
+ 	unsigned			in_user_fault:1;
+-#ifdef CONFIG_MEMCG_KMEM
+-	unsigned			memcg_kmem_skip_account:1;
+-#endif
+ #endif
+ #ifdef CONFIG_COMPAT_BRK
+ 	unsigned			brk_randomized:1;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e79cb59552d9..bde698a0bb99 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2460,7 +2460,7 @@ static void memcg_kmem_cache_create_func(struct work_struct *w)
+ /*
+  * Enqueue the creation of a per-memcg kmem_cache.
+  */
+-static void __memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
++static void memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
+ 					       struct kmem_cache *cachep)
+ {
+ 	struct memcg_kmem_cache_create_work *cw;
+@@ -2478,25 +2478,6 @@ static void __memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
+ 	queue_work(memcg_kmem_cache_wq, &cw->work);
+ }
+ 
+-static void memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
+-					     struct kmem_cache *cachep)
+-{
+-	/*
+-	 * We need to stop accounting when we kmalloc, because if the
+-	 * corresponding kmalloc cache is not yet created, the first allocation
+-	 * in __memcg_schedule_kmem_cache_create will recurse.
+-	 *
+-	 * However, it is better to enclose the whole function. Depending on
+-	 * the debugging options enabled, INIT_WORK(), for instance, can
+-	 * trigger an allocation. This too, will make us recurse. Because at
+-	 * this point we can't allow ourselves back into memcg_kmem_get_cache,
+-	 * the safest choice is to do it like this, wrapping the whole function.
+-	 */
+-	current->memcg_kmem_skip_account = 1;
+-	__memcg_schedule_kmem_cache_create(memcg, cachep);
+-	current->memcg_kmem_skip_account = 0;
+-}
+-
+ static inline bool memcg_kmem_bypass(void)
+ {
+ 	if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
+@@ -2531,9 +2512,6 @@ struct kmem_cache *memcg_kmem_get_cache(struct kmem_cache *cachep)
+ 	if (memcg_kmem_bypass())
+ 		return cachep;
+ 
+-	if (current->memcg_kmem_skip_account)
+-		return cachep;
+-
+ 	memcg = get_mem_cgroup_from_current();
+ 	kmemcg_id = READ_ONCE(memcg->kmemcg_id);
+ 	if (kmemcg_id < 0)
+-- 
+2.19.0.397.gdd90340f6a-goog
 
-Thanks,
-Suren.
