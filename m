@@ -1,572 +1,1766 @@
 From: David Howells <dhowells@redhat.com>
-Subject: [PATCH 00/34] VFS: Introduce filesystem context [ver #12]
-Date: Fri, 21 Sep 2018 17:30:08 +0100
-Message-ID: <153754740781.17872.7869536526927736855.stgit@warthog.procyon.org.uk>
+Subject: [PATCH 21/34] kernfs, sysfs, cgroup,
+ intel_rdt: Support fs_context [ver #12]
+Date: Fri, 21 Sep 2018 17:33:01 +0100
+Message-ID: <153754758187.17872.2791003837321822804.stgit@warthog.procyon.org.uk>
+References: <153754740781.17872.7869536526927736855.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <153754740781.17872.7869536526927736855.stgit@warthog.procyon.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 To: viro@zeniv.linux.org.uk
-Cc: John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@redhat.com>, selinux@tycho.nsa.gov, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, linux-api@vger.kernel.org, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, fenghua.yu@intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, linux-security-module@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.jp, cgroups@vger.kernel.org, torvalds@linux-foundation.org, dhowells@redhat.com, ebiederm@xmission.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, fenghua.yu@intel.com, torvalds@linux-foundation.org, dhowells@redhat.com, ebiederm@xmission.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, mszeredi@redhat.com
 
+Make kernfs support superblock creation/mount/remount with fs_context.
 
-Hi Al,
+This requires that sysfs, cgroup and intel_rdt, which are built on kernfs,
+be made to support fs_context also.
 
-Here are a set of patches to create a filesystem context prior to setting
-up a new mount, populating it with the parsed options/binary data, creating
-the superblock and then effecting the mount.  This is also used for remount
-since much of the parsing stuff is common in many filesystems.
+Notes:
 
-This allows namespaces and other information to be conveyed through the
-mount procedure.
+ (1) A kernfs_fs_context struct is created to wrap fs_context and the
+     kernfs mount parameters are moved in here (or are in fs_context).
 
-This also allows Miklós Szeredi's idea of doing:
+ (2) kernfs_mount{,_ns}() are made into kernfs_get_tree().  The extra
+     namespace tag parameter is passed in the context if desired
 
-	fd = fsopen("nfs");
-	fsconfig(fd, FSCONFIG_SET_STRING, "option", "val", 0);
-	fsconfig(fd, FSCONFIG_CMD_CREATE, NULL, NULL, 0);
-	mfd = fsmount(fd, MS_NODEV);
-	move_mount(mfd, "", AT_FDCWD, "/mnt", MOVE_MOUNT_F_EMPTY_PATH);
+ (3) kernfs_free_fs_context() is provided as a destructor for the
+     kernfs_fs_context struct, but for the moment it does nothing except
+     get called in the right places.
 
-that he presented at LSF-2017 to be implemented (see the relevant patches
-in the series).
+ (4) sysfs doesn't wrap kernfs_fs_context since it has no parameters to
+     pass, but possibly this should be done anyway in case someone wants to
+     add a parameter in future.
 
-I didn't use netlink as that would make the core kernel depend on
-CONFIG_NET and CONFIG_NETLINK and would introduce network namespacing
-issues.
+ (5) A cgroup_fs_context struct is created to wrap kernfs_fs_context and
+     the cgroup v1 and v2 mount parameters are all moved there.
 
-I've implemented filesystem context handling for procfs, nfs, mqueue,
-cpuset, kernfs, sysfs, cgroup and afs filesystems.
+ (6) cgroup1 parameter parsing error messages are now handled by invalf(),
+     which allows userspace to collect them directly.
 
-Unconverted filesystems are handled by a legacy filesystem wrapper.
+ (7) cgroup1 parameter cleanup is now done in the context destructor rather
+     than in the mount/get_tree and remount functions.
 
+Weirdies:
 
-====================
-WHY DO WE WANT THIS?
-====================
+ (*) cgroup_do_get_tree() calls cset_cgroup_from_root() with locks held,
+     but then uses the resulting pointer after dropping the locks.  I'm
+     told this is okay and needs commenting.
 
-Firstly, there's a bunch of problems with the mount(2) syscall:
+ (*) The cgroup refcount web.  This really needs documenting.
 
- (1) It's actually six or seven different interfaces rolled into one and
-     weird combinations of flags make it do different things beyond the
-     original specification of the syscall.
+ (*) cgroup2 only has one root?
 
- (2) It produces a particularly large and diverse set of errors, which have
-     to be mapped back to a small error code.  Yes, there's dmesg - if you
-     have it configured - but you can't necessarily see that if you're
-     doing a mount inside of a container.
+Add a suggestion from Thomas Gleixner in which the RDT enablement code is
+placed into its own function.
 
- (3) It copies a PAGE_SIZE block of data for each of the type, device name
-     and options.
-
- (4) The size of the buffers is PAGE_SIZE - and this is arch dependent.
-
- (5) You can't mount into another mount namespace.  I could, for example,
-     build a container without having to be in that container's namespace
-     if I can do it from outside.
-
- (6) It's not really geared for the specification of multiple sources, but
-     some filesystems really want that - overlayfs, for example.
-
-and some problems in the internal kernel api:
-
- (1) There's no defined way to supply namespace configuration for the
-     superblock - so, for instance, I can't say that I want to create a
-     superblock in a particular network namespace (on automount, say).
-
-     NFS hacks around this by creating multiple shadow file_system_types
-     with different ->mount() ops.
-
- (2) When calling mount internally, unless you have NFS-like hacks, you
-     have to generate or otherwise provide text config data which then gets
-     parsed, when some of the time you could bypass the parsing stage
-     entirely.
-
- (3) The amount of data in the data buffer is not known, but the data
-     buffer might be on a kernel stack somewhere, leading to the
-     possibility of tripping the stack underrun guard.
-
-and other issues too:
-
- (1) Superblock remount in some filesystems applies options on an as-parsed
-     basis, so if there's a parse failure, a partial alteration with no
-     rollback is effected.
-
- (2) Under some circumstances, the mount data may get copied multiple times
-     so that it can have multiple parsers applied to it or because it has
-     to be parsed multiple times - for instance, once to get the
-     preliminary info required to access the on-disk superblock and then
-     again to update the superblock record in the kernel.
-
-I want to be able to add support for a bunch of things:
-
- (1) UID, GID and Project ID mapping/translation.  I want to be able to
-     install a translation table of some sort on the superblock to
-     translate source identifiers (which may be foreign numeric UIDs/GIDs,
-     text names, GUIDs) into system identifiers.  This needs to be done
-     before the superblock is published[*].
-
-     Note that this may, for example, involve using the context and the
-     superblock held therein to issue an RPC to a server to look up
-     translations.
-
-     [*] By "published" I mean made available through mount so that other
-     	 userspace processes can access it by path.
-
-     Maybe specifying a translation range element with something like:
-
-	fsconfig(fd, fsconfig_translate_uid, "<srcuid> <nsuid> <count>", 0, 0);
-
-     The translation information also needs to propagate over an automount
-     in some circumstances.
-
- (2) Namespace configuration.  I want to be able to tell the superblock
-     creation process what namespaces should be applied when it created (in
-     particular the userns and netns) for containerisation purposes, e.g.:
-
-	fsconfig(fd, FSCONFIG_SET_NAMESPACE, "user", 0, userns_fd);
-	fsconfig(fd, FSCONFIG_SET_NAMESPACE, "net", 0, netns_fd);
-
- (3) Namespace propagation.  I want to have a properly defined mechanism
-     for propagating namespace configuration over automounts within the
-     kernel.  This will be particularly useful for network filesystems.
-
- (4) Pre-mount attribute query.  A chunk of the changes is actually the
-     fsinfo() syscall to query attributes of the filesystem beyond what's
-     available in statx() and statfs().  This will allow a created
-     superblock to be queried before it is published.
-
- (5) Upcall for configuration.  I would like to be able to query
-     configuration that's stored in userspace when an automount is made.
-     For instance, to look up network parameters for NFS or to find a cache
-     selector for fscache.
-
-     The internal fs_context could be passed to the upcall process or the
-     kernel could read a config file directly if named appropriately for the
-     superblock, perhaps:
-
-	[/etc/fscontext.d/afs/example.com/cell.cfg]
-	realm = EXAMPLE.COM
-	translation = uid,3000,4000,100
-	fscache = tag=fred
-
- (6) Event notifications.  I want to be able to install a watch on a
-     superblock before it is published to catch things like quota events
-     and EIO.
-
- (7) Large and binary parameters.  There might be at some point a need to
-     pass large/binary objects like Microsoft PACs around.  If I understand
-     PACs correctly, you can obtain these from the Kerberos server and then
-     pass them to the file server when you connect.
-
-     Having it possible to pass large or binary objects as individual
-     fsconfig calls make parsing these trivial.  OTOH, some or all of this
-     can potentially be handled with the use of the keyrings interface - as
-     the afs filesystem does for passing kerberos tokens around; it's just
-     that that seems overkill for a parameter you may only need once.
-
-
-===================
-SIGNIFICANT CHANGES
-===================
-
- ver #12:
-
- (*) Rebased on v4.19-rc3.
-
- (*) Added three new context purposes: mount for hidden root, reconfigure
-     for unmount, reconfigure for emergency remount.
-
- (*) Added a parameter for the new purpose into vfs_dup_fs_context().
-
- (*) Moved the reconfiguration hook from struct super_operations to struct
-     fs_context_operations so they can be handled through the legacy
-     wrapper.  mount -o remount now goes through that.
-
- (*) Changed the parameter description in the following ways:
-
-     - Nominated one master name for each parameter, held in a simple
-       string pointer array.  This makes it easy to simply look up a name
-       for that parameter for logging.
-
-     - Added a table of additional names for parameters.  The name chosen
-       can be used to influence the action of the parameter.
-
-     - Noted which parameter is the source specifier, if there is one.
-
- (*) Use correct user_ns for a new pidns superblock.
-
- (*) Fix mqueue to not crash on mounting.
-
- (*) Make VFS sample programs dependent on X86 to avoid errors in
-     autobuilders due to unset syscall IDs in other arches.
-
- (*) [Miklós] Fixed subtype handling.
-
- ver #11:
-
- (*) Fixed AppArmor.
-
- (*) Capitalised all the UAPI constants.
-
- (*) Explicitly numbered the FSCONFIG_* UAPI constants.
-
- (*) Removed all the places ANON_INODES is selected.
-
- (*) Fixed a bug whereby the context gets freed twice (which broke mounts of
-     procfs).
-
- (*) Split fsinfo() off into its own patch series.
-
- ver #10:
-
- (*) Renamed "option" to "parameter" in a number of places.
-
- (*) Replaced the use of write() to drive the configuration with an fsconfig()
-     syscall.  This also allows at-style paths and fds to be presented as typed
-     object.
-
- (*) Routed the key=value parameter concept all the way through from the
-     fsconfig() system call to the LSM and filesystem.
-
- (*) Added a parameter-description concept and helper functions to help
-     interpret a parameter and possibly convert the value.
-
- (*) Made it possible to query the parameter description using the fsinfo()
-     syscall.  Added a test-fs-query sample to dump the parameters used by a
-     filesystem.
-
- ver #9:
-
- (*) Dropped the fd cookie stuff and the FMODE_*/O_* split stuff.
-
- (*) Al added an open_tree() system call to allow a mount tree to be picked
-     referenced or cloned into an O_PATH-style fd.  This can then be used
-     with sys_move_mount().  Dropped the O_CLONE_MOUNT and O_NON_RECURSIVE
-     open() flags.
-
- (*) Brought error logging back in, though only in the fs_context and not
-     in the task_struct.
-
- (*) Separated MS_REMOUNT|MS_BIND handling from MS_REMOUNT handling.
-
- (*) Used anon_inodes for the fd returned by fsopen() and fspick().  This
-     requires making it unconditional.
-
- (*) Fixed lots of bugs.  Especial thanks to Al and Eric Biggers for
-     finding them and providing patches.
-
- (*) Wrote manual pages, which I'll post separately.
-
- ver #8:
-
- (*) Changed the way fsmount() mounts into the namespace according to some
-     of Al's ideas.
-
- (*) Put better typing on the fd cookie obtained from __fdget() & co..
-
- (*) Stored the fd cookie in struct nameidata rather than the dfd number.
-
- (*) Changed sys_fsmount() to return an O_PATH-style fd rather than
-     actually mounting into the mount namespace.
-
- (*) Separated internal FMODE_* handling from O_* handling to free up
-     certain O_* flag numbers.
-
- (*) Added two new open flags (O_CLONE_MOUNT and O_NON_RECURSIVE) for use
-     with open(O_PATH) to copy a mount or mount-subtree to an O_PATH fd.
-
- (*) Added a new syscall, sys_move_mount(), to move a mount from an
-     dfd+path source to a dfd+path destination.
-
- (*) Added a file->f_mode flag (FMODE_NEED_UNMOUNT) that indicates that the
-     vfsmount attached to file->f_path needs 'unmounting' if set.
-
- (*) Made sys_move_mount() clear FMODE_NEED_UNMOUNT if successful.
-
-	[!] This doesn't work quite right.
-
- (*) Added a new syscall, fsinfo(), to query information about a
-     filesystem.  The idea being that this will, in future, work with the
-     fd from fsopen() too and permit querying of the parameters and
-     metadata before fsmount() is called.
-
- ver #7:
-
- (*) Undo an incorrect MS_* -> SB_* conversion.
-
- (*) Pass the mount data buffer size to all the mount-related functions that
-     take the data pointer.  This fixes a problem where someone (say SELinux)
-     tries to copy the mount data, assuming it to be a page in size, and
-     overruns the buffer - thereby incurring an oops by hitting a guard page.
-
- (*) Made the AFS filesystem use them as an example.  This is a much easier to
-     deal with than with NFS or Ext4 as there are very few mount options.
-
- ver #6:
-
- (*) Dropped the supplementary error string facility for the moment.
-
- (*) Dropped the NFS patches for the moment.
-
- (*) Dropped the reserved file descriptor argument from fsopen() and
-     replaced it with three reserved pointers that must be NULL.
-
- ver #5:
-
- (*) Renamed sb_config -> fs_context and adjusted variable names.
-
- (*) Differentiated the flags in sb->s_flags (now named SB_*) from those
-     passed to mount(2) (named MS_*).
-
- (*) Renamed __vfs_new_fs_context() to vfs_new_fs_context() and made the
-     caller always provide a struct file_system_type pointer and the
-     parameters required.
-
- (*) Got rid of vfs_submount_fc() in favour of passing
-     FS_CONTEXT_FOR_SUBMOUNT to vfs_new_fs_context().  The purpose is now
-     used more.
-
- (*) Call ->validate() on the remount path.
-
- (*) Got rid of the inode locking in sys_fsmount().
-
- (*) Call security_sb_mountpoint() in the mount(2) path.
-
- ver #4:
-
- (*) Split the sb_config patch up somewhat.
-
- (*) Made the supplementary error string facility something attached to the
-     task_struct rather than the sb_config so that error messages can be
-     obtained from NFS doing a mount-root-and-pathwalk inside the
-     nfs_get_tree() operation.
-
-     Further, made this managed and read by prctl rather than through the
-     mount fd so that it's more generally available.
-
- ver #3:
-
- (*) Rebased on 4.12-rc1.
-
- (*) Split the NFS patch up somewhat.
-
- ver #2:
-
- (*) Removed the ->fill_super() from sb_config_operations and passed it in
-     directly to functions that want to call it.  NFS now calls
-     nfs_fill_super() directly rather than jumping through a pointer to it
-     since there's only the one option at the moment.
-
- (*) Removed ->mnt_ns and ->sb from sb_config and moved ->pid_ns into
-     proc_sb_config.
-
- (*) Renamed create_super -> get_tree.
-
- (*) Renamed struct mount_context to struct sb_config and amended various
-     variable names.
-
- (*) sys_fsmount() acquired AT_* flags and MS_* flags (for MNT_* flags)
-     arguments.
-
- ver #1:
-
- (*) Split the sb_config stuff out into its own header.
-
- (*) Support non-context aware filesystems through a special set of
-     sb_config operations.
-
- (*) Stored the created superblock and root dentry into the sb_config after
-     creation rather than directly into a vfsmount.  This allows some
-     arguments to be removed to various NFS functions.
-
- (*) Added an explicit superblock-creation step.  This allows a created
-     superblock to then be mounted multiple times.
-
- (*) Added a flag to say that the sb_config is degraded and cannot have
-     another go at having a superblock creation whilst getting rid of the
-     one that says it's already mounted.
-
-Possible further developments:
-
- (*) Implement sb reconfiguration (for now it returns ENOANO).
-
- (*) Implement mount context support in more filesystems, ext4 being next
-     on my list.
-
- (*) Move the walk-from-root stuff that nfs has to generic code so that you
-     can do something akin to:
-
-	mount /dev/sda1:/foo/bar /mnt
-
-     See nfs_follow_remote_path() and mount_subtree().  This is slightly
-     tricky in NFS as we have to prevent referral loops.
-
- (*) Work out how to get at the error message incurred by submounts
-     encountered during nfs_follow_remote_path().
-
-     Should the error message be moved to task_struct and made more
-     general, perhaps retrieved with a prctl() function?
-
- (*) Clean up/consolidate the security functions.  Possibly add a
-     validation hook to be called at the same time as the mount context
-     validate op.
-
-The patches can be found here also:
-
-	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git
-
-on branch:
-
-	mount-api
-
-David
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+cc: Tejun Heo <tj@kernel.org>
+cc: Li Zefan <lizefan@huawei.com>
+cc: Johannes Weiner <hannes@cmpxchg.org>
+cc: cgroups@vger.kernel.org
+cc: fenghua.yu@intel.com
 ---
-Al Viro (2):
-      vfs: syscall: Add open_tree(2) to reference or clone a mount
-      teach move_mount(2) to work with OPEN_TREE_CLONE
 
-David Howells (32):
-      vfs: syscall: Add move_mount(2) to move mounts around
-      vfs: Suppress MS_* flag defs within the kernel unless explicitly enabled
-      vfs: Introduce the basic header for the new mount API's filesystem context
-      vfs: Introduce logging functions
-      vfs: Add configuration parser helpers
-      vfs: Add LSM hooks for the new mount API
-      vfs: Put security flags into the fs_context struct
-      selinux: Implement the new mount API LSM hooks
-      smack: Implement filesystem context security hooks
-      apparmor: Implement security hooks for the new mount API
-      tomoyo: Implement security hooks for the new mount API
-      vfs: Separate changing mount flags full remount
-      vfs: Implement a filesystem superblock creation/configuration context
-      vfs: Remove unused code after filesystem context changes
-      procfs: Move proc_fill_super() to fs/proc/root.c
-      proc: Add fs_context support to procfs
-      ipc: Convert mqueue fs to fs_context
-      cpuset: Use fs_context
-      kernfs, sysfs, cgroup, intel_rdt: Support fs_context
-      hugetlbfs: Convert to fs_context
-      vfs: Remove kern_mount_data()
-      vfs: Provide documentation for new mount API
-      Make anon_inodes unconditional
-      vfs: syscall: Add fsopen() to prepare for superblock creation
-      vfs: Implement logging through fs_context
-      vfs: Add some logging to the core users of the fs_context log
-      vfs: syscall: Add fsconfig() for configuring and managing a context
-      vfs: syscall: Add fsmount() to create a mount for a superblock
-      vfs: syscall: Add fspick() to select a superblock for reconfiguration
-      afs: Add fs_context support
-      afs: Use fs_context to pass parameters over automount
-      vfs: Add a sample program for the new mount API
-
-
- Documentation/filesystems/mount_api.txt  |  741 +++++++++++++++++++++++++
- arch/arc/kernel/setup.c                  |    1 
- arch/arm/kernel/atags_parse.c            |    1 
- arch/arm/kvm/Kconfig                     |    1 
- arch/arm64/kvm/Kconfig                   |    1 
- arch/mips/kvm/Kconfig                    |    1 
- arch/powerpc/kvm/Kconfig                 |    1 
- arch/s390/kvm/Kconfig                    |    1 
- arch/sh/kernel/setup.c                   |    1 
- arch/sparc/kernel/setup_32.c             |    1 
- arch/sparc/kernel/setup_64.c             |    1 
- arch/x86/Kconfig                         |    1 
- arch/x86/entry/syscalls/syscall_32.tbl   |    6 
- arch/x86/entry/syscalls/syscall_64.tbl   |    6 
  arch/x86/kernel/cpu/intel_rdt.h          |   15 +
- arch/x86/kernel/cpu/intel_rdt_rdtgroup.c |  183 ++++--
- arch/x86/kernel/setup.c                  |    1 
- arch/x86/kvm/Kconfig                     |    1 
- drivers/base/Kconfig                     |    1 
- drivers/base/devtmpfs.c                  |    1 
- drivers/char/tpm/Kconfig                 |    1 
- drivers/dma-buf/Kconfig                  |    1 
- drivers/gpio/Kconfig                     |    1 
- drivers/iio/Kconfig                      |    1 
- drivers/infiniband/Kconfig               |    1 
- drivers/vfio/Kconfig                     |    1 
- fs/Kconfig                               |    7 
- fs/Makefile                              |    5 
- fs/afs/internal.h                        |    9 
- fs/afs/mntpt.c                           |  148 +++--
- fs/afs/super.c                           |  470 +++++++++-------
- fs/afs/volume.c                          |    4 
- fs/f2fs/super.c                          |    2 
- fs/file_table.c                          |    9 
- fs/filesystems.c                         |    4 
- fs/fs_context.c                          |  769 ++++++++++++++++++++++++++
- fs/fs_parser.c                           |  555 +++++++++++++++++++
- fs/fsopen.c                              |  563 +++++++++++++++++++
- fs/hugetlbfs/inode.c                     |  391 ++++++++-----
- fs/internal.h                            |   19 +
- fs/kernfs/mount.c                        |   88 +--
- fs/libfs.c                               |   20 +
- fs/namei.c                               |    4 
- fs/namespace.c                           |  895 +++++++++++++++++++++++-------
- fs/notify/fanotify/Kconfig               |    1 
- fs/notify/inotify/Kconfig                |    1 
- fs/pnode.c                               |    1 
- fs/proc/inode.c                          |   50 --
- fs/proc/internal.h                       |    5 
- fs/proc/root.c                           |  256 ++++++---
- fs/super.c                               |  464 ++++++++++++----
- fs/sysfs/mount.c                         |   67 ++
+ arch/x86/kernel/cpu/intel_rdt_rdtgroup.c |  183 ++++++++++------
+ fs/kernfs/mount.c                        |   88 ++++----
+ fs/sysfs/mount.c                         |   67 ++++--
  include/linux/cgroup.h                   |    3 
- include/linux/errno.h                    |    1 
- include/linux/fs.h                       |   23 +
- include/linux/fs_context.h               |  215 +++++++
- include/linux/fs_parser.h                |  119 ++++
- include/linux/kernfs.h                   |   41 +
- include/linux/lsm_hooks.h                |   79 ++-
- include/linux/module.h                   |    6 
- include/linux/mount.h                    |    5 
- include/linux/security.h                 |   65 ++
- include/linux/syscalls.h                 |    9 
- include/uapi/linux/fcntl.h               |    2 
- include/uapi/linux/fs.h                  |   82 +--
- include/uapi/linux/mount.h               |   75 +++
- init/Kconfig                             |   10 
- init/do_mounts.c                         |    1 
- init/do_mounts_initrd.c                  |    1 
- ipc/mqueue.c                             |  107 +++-
- ipc/namespace.c                          |    2 
- kernel/cgroup/cgroup-internal.h          |   50 +-
- kernel/cgroup/cgroup-v1.c                |  345 ++++++------
- kernel/cgroup/cgroup.c                   |  264 ++++++---
- kernel/cgroup/cpuset.c                   |   69 ++
- samples/Kconfig                          |   10 
- samples/Makefile                         |    2 
- samples/statx/Makefile                   |    7 
- samples/statx/test-statx.c               |  258 ---------
- samples/vfs/Makefile                     |   10 
- samples/vfs/test-fsmount.c               |  118 ++++
- samples/vfs/test-statx.c                 |  258 +++++++++
- security/apparmor/include/mount.h        |   11 
- security/apparmor/lsm.c                  |  108 ++++
- security/apparmor/mount.c                |   47 ++
- security/security.c                      |   56 ++
- security/selinux/hooks.c                 |  387 ++++++++++---
- security/selinux/include/security.h      |   16 -
- security/smack/smack.h                   |   21 -
- security/smack/smack_lsm.c               |  365 +++++++++++-
- security/tomoyo/common.h                 |    3 
- security/tomoyo/mount.c                  |   46 ++
- security/tomoyo/tomoyo.c                 |   15 +
- 93 files changed, 7191 insertions(+), 1900 deletions(-)
- create mode 100644 Documentation/filesystems/mount_api.txt
- create mode 100644 fs/fs_context.c
- create mode 100644 fs/fs_parser.c
- create mode 100644 fs/fsopen.c
- create mode 100644 include/linux/fs_context.h
- create mode 100644 include/linux/fs_parser.h
- create mode 100644 include/uapi/linux/mount.h
- delete mode 100644 samples/statx/Makefile
- delete mode 100644 samples/statx/test-statx.c
- create mode 100644 samples/vfs/Makefile
- create mode 100644 samples/vfs/test-fsmount.c
- create mode 100644 samples/vfs/test-statx.c
+ include/linux/kernfs.h                   |   39 ++-
+ kernel/cgroup/cgroup-internal.h          |   50 +++-
+ kernel/cgroup/cgroup-v1.c                |  345 ++++++++++++++++--------------
+ kernel/cgroup/cgroup.c                   |  264 +++++++++++++++--------
+ kernel/cgroup/cpuset.c                   |    4 
+ 10 files changed, 640 insertions(+), 418 deletions(-)
+
+diff --git a/arch/x86/kernel/cpu/intel_rdt.h b/arch/x86/kernel/cpu/intel_rdt.h
+index 4e588f36228f..1461adc2c5e8 100644
+--- a/arch/x86/kernel/cpu/intel_rdt.h
++++ b/arch/x86/kernel/cpu/intel_rdt.h
+@@ -33,6 +33,21 @@
+ #define RMID_VAL_ERROR			BIT_ULL(63)
+ #define RMID_VAL_UNAVAIL		BIT_ULL(62)
+ 
++
++struct rdt_fs_context {
++	struct kernfs_fs_context	kfc;
++	bool				enable_cdpl2;
++	bool				enable_cdpl3;
++	bool				enable_mba_mbps;
++};
++
++static inline struct rdt_fs_context *rdt_fc2context(struct fs_context *fc)
++{
++	struct kernfs_fs_context *kfc = fc->fs_private;
++
++	return container_of(kfc, struct rdt_fs_context, kfc);
++}
++
+ DECLARE_STATIC_KEY_FALSE(rdt_enable_key);
+ 
+ /**
+diff --git a/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c b/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c
+index d6cb04c3a28b..34733a221669 100644
+--- a/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c
++++ b/arch/x86/kernel/cpu/intel_rdt_rdtgroup.c
+@@ -24,6 +24,7 @@
+ #include <linux/cpu.h>
+ #include <linux/debugfs.h>
+ #include <linux/fs.h>
++#include <linux/fs_parser.h>
+ #include <linux/sysfs.h>
+ #include <linux/kernfs.h>
+ #include <linux/seq_buf.h>
+@@ -1707,43 +1708,6 @@ static void cdp_disable_all(void)
+ 		cdpl2_disable();
+ }
+ 
+-static int parse_rdtgroupfs_options(char *data)
+-{
+-	char *token, *o = data;
+-	int ret = 0;
+-
+-	while ((token = strsep(&o, ",")) != NULL) {
+-		if (!*token) {
+-			ret = -EINVAL;
+-			goto out;
+-		}
+-
+-		if (!strcmp(token, "cdp")) {
+-			ret = cdpl3_enable();
+-			if (ret)
+-				goto out;
+-		} else if (!strcmp(token, "cdpl2")) {
+-			ret = cdpl2_enable();
+-			if (ret)
+-				goto out;
+-		} else if (!strcmp(token, "mba_MBps")) {
+-			ret = set_mba_sc(true);
+-			if (ret)
+-				goto out;
+-		} else {
+-			ret = -EINVAL;
+-			goto out;
+-		}
+-	}
+-
+-	return 0;
+-
+-out:
+-	pr_err("Invalid mount option \"%s\"\n", token);
+-
+-	return ret;
+-}
+-
+ /*
+  * We don't allow rdtgroup directories to be created anywhere
+  * except the root directory. Thus when looking for the rdtgroup
+@@ -1815,13 +1779,27 @@ static int mkdir_mondata_all(struct kernfs_node *parent_kn,
+ 			     struct rdtgroup *prgrp,
+ 			     struct kernfs_node **mon_data_kn);
+ 
+-static struct dentry *rdt_mount(struct file_system_type *fs_type,
+-				int flags, const char *unused_dev_name,
+-				void *data, size_t data_size)
++static int rdt_enable_ctx(struct rdt_fs_context *ctx)
++{
++	int ret = 0;
++
++	if (ctx->enable_cdpl2)
++		ret = cdpl2_enable();
++
++	if (!ret && ctx->enable_cdpl3)
++		ret = cdpl3_enable();
++
++	if (!ret && ctx->enable_mba_mbps)
++		ret = set_mba_sc(true);
++
++	return ret;
++}
++
++static int rdt_get_tree(struct fs_context *fc)
+ {
++	struct rdt_fs_context *ctx = rdt_fc2context(fc);
+ 	struct rdt_domain *dom;
+ 	struct rdt_resource *r;
+-	struct dentry *dentry;
+ 	int ret;
+ 
+ 	cpus_read_lock();
+@@ -1830,53 +1808,42 @@ static struct dentry *rdt_mount(struct file_system_type *fs_type,
+ 	 * resctrl file system can only be mounted once.
+ 	 */
+ 	if (static_branch_unlikely(&rdt_enable_key)) {
+-		dentry = ERR_PTR(-EBUSY);
++		ret = -EBUSY;
+ 		goto out;
+ 	}
+ 
+-	ret = parse_rdtgroupfs_options(data);
+-	if (ret) {
+-		dentry = ERR_PTR(ret);
++	ret = rdt_enable_ctx(ctx);
++	if (ret < 0)
+ 		goto out_cdp;
+-	}
+ 
+ 	closid_init();
+ 
+ 	ret = rdtgroup_create_info_dir(rdtgroup_default.kn);
+-	if (ret) {
+-		dentry = ERR_PTR(ret);
+-		goto out_cdp;
+-	}
++	if (ret < 0)
++		goto out_mba;
+ 
+ 	if (rdt_mon_capable) {
+ 		ret = mongroup_create_dir(rdtgroup_default.kn,
+ 					  NULL, "mon_groups",
+ 					  &kn_mongrp);
+-		if (ret) {
+-			dentry = ERR_PTR(ret);
++		if (ret < 0)
+ 			goto out_info;
+-		}
+ 		kernfs_get(kn_mongrp);
+ 
+ 		ret = mkdir_mondata_all(rdtgroup_default.kn,
+ 					&rdtgroup_default, &kn_mondata);
+-		if (ret) {
+-			dentry = ERR_PTR(ret);
++		if (ret < 0)
+ 			goto out_mongrp;
+-		}
+ 		kernfs_get(kn_mondata);
+ 		rdtgroup_default.mon.mon_data_kn = kn_mondata;
+ 	}
+ 
+ 	ret = rdt_pseudo_lock_init();
+-	if (ret) {
+-		dentry = ERR_PTR(ret);
++	if (ret)
+ 		goto out_mondata;
+-	}
+ 
+-	dentry = kernfs_mount(fs_type, flags, rdt_root,
+-			      RDTGROUP_SUPER_MAGIC, NULL);
+-	if (IS_ERR(dentry))
++	ret = kernfs_get_tree(fc);
++	if (ret < 0)
+ 		goto out_psl;
+ 
+ 	if (rdt_alloc_capable)
+@@ -1905,14 +1872,97 @@ static struct dentry *rdt_mount(struct file_system_type *fs_type,
+ 		kernfs_remove(kn_mongrp);
+ out_info:
+ 	kernfs_remove(kn_info);
++out_mba:
++	if (ctx->enable_mba_mbps)
++		set_mba_sc(false);
+ out_cdp:
+ 	cdp_disable_all();
+ out:
+ 	rdt_last_cmd_clear();
+ 	mutex_unlock(&rdtgroup_mutex);
+ 	cpus_read_unlock();
++	return ret;
++}
++
++enum rdt_param {
++	Opt_cdp,
++	Opt_cdpl2,
++	Opt_mba_mpbs,
++	nr__rdt_params
++};
++
++static const struct fs_parameter_spec rdt_param_specs[nr__rdt_params] = {
++	[Opt_cdp]	= { fs_param_is_flag },
++	[Opt_cdpl2]	= { fs_param_is_flag },
++	[Opt_mba_mpbs]	= { fs_param_is_flag },
++};
++
++static const char *const rdt_param_keys[nr__rdt_params] = {
++	[Opt_cdp]	= "cdp",
++	[Opt_cdpl2]	= "cdpl2",
++	[Opt_mba_mpbs]	= "mba_mbps",
++};
++
++static const struct fs_parameter_description rdt_fs_parameters = {
++	.name		= "rdt",
++	.nr_params	= nr__rdt_params,
++	.keys		= rdt_param_keys,
++	.specs		= rdt_param_specs,
++	.no_source	= true,
++};
++
++static int rdt_parse_param(struct fs_context *fc, struct fs_parameter *param)
++{
++	struct rdt_fs_context *ctx = rdt_fc2context(fc);
++	struct fs_parse_result result;
++	int opt;
+ 
+-	return dentry;
++	opt = fs_parse(fc, &rdt_fs_parameters, param, &result);
++	if (opt < 0)
++		return opt;
++
++	switch (opt) {
++	case Opt_cdp:
++		ctx->enable_cdpl3 = true;
++		return 0;
++	case Opt_cdpl2:
++		ctx->enable_cdpl2 = true;
++		return 0;
++	case Opt_mba_mpbs:
++		ctx->enable_mba_mbps = true;
++		return 0;
++	}
++
++	return -EINVAL;
++}
++
++static void rdt_fs_context_free(struct fs_context *fc)
++{
++	struct rdt_fs_context *ctx = rdt_fc2context(fc);
++
++	kernfs_free_fs_context(fc);
++	kfree(ctx);
++}
++
++static const struct fs_context_operations rdt_fs_context_ops = {
++	.free		= rdt_fs_context_free,
++	.parse_param	= rdt_parse_param,
++	.get_tree	= rdt_get_tree,
++};
++
++static int rdt_init_fs_context(struct fs_context *fc, struct dentry *reference)
++{
++	struct rdt_fs_context *ctx;
++
++	ctx = kzalloc(sizeof(struct rdt_fs_context), GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++
++	ctx->kfc.root = rdt_root;
++	ctx->kfc.magic = RDTGROUP_SUPER_MAGIC;
++	fc->fs_private = &ctx->kfc;
++	fc->ops = &rdt_fs_context_ops;
++	return 0;
+ }
+ 
+ static int reset_all_ctrls(struct rdt_resource *r)
+@@ -2085,9 +2135,10 @@ static void rdt_kill_sb(struct super_block *sb)
+ }
+ 
+ static struct file_system_type rdt_fs_type = {
+-	.name    = "resctrl",
+-	.mount   = rdt_mount,
+-	.kill_sb = rdt_kill_sb,
++	.name			= "resctrl",
++	.init_fs_context	= rdt_init_fs_context,
++	.parameters		= &rdt_fs_parameters,
++	.kill_sb		= rdt_kill_sb,
+ };
+ 
+ static int mon_addfile(struct kernfs_node *parent_kn, const char *name,
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index f70e0b69e714..56742632956c 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -22,14 +22,13 @@
+ 
+ struct kmem_cache *kernfs_node_cache;
+ 
+-static int kernfs_sop_remount_fs(struct super_block *sb, int *flags,
+-				 char *data, size_t data_size)
++int kernfs_reconfigure(struct fs_context *fc)
+ {
+-	struct kernfs_root *root = kernfs_info(sb)->root;
++	struct kernfs_root *root = kernfs_info(fc->root->d_sb)->root;
+ 	struct kernfs_syscall_ops *scops = root->syscall_ops;
+ 
+-	if (scops && scops->remount_fs)
+-		return scops->remount_fs(root, flags, data);
++	if (scops && scops->reconfigure)
++		return scops->reconfigure(root, fc);
+ 	return 0;
+ }
+ 
+@@ -61,7 +60,6 @@ const struct super_operations kernfs_sops = {
+ 	.drop_inode	= generic_delete_inode,
+ 	.evict_inode	= kernfs_evict_inode,
+ 
+-	.remount_fs	= kernfs_sop_remount_fs,
+ 	.show_options	= kernfs_sop_show_options,
+ 	.show_path	= kernfs_sop_show_path,
+ };
+@@ -219,7 +217,7 @@ struct dentry *kernfs_node_dentry(struct kernfs_node *kn,
+ 	} while (true);
+ }
+ 
+-static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
++static int kernfs_fill_super(struct super_block *sb, struct kernfs_fs_context *kfc)
+ {
+ 	struct kernfs_super_info *info = kernfs_info(sb);
+ 	struct inode *inode;
+@@ -230,7 +228,7 @@ static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
+ 	sb->s_iflags |= SB_I_NOEXEC | SB_I_NODEV;
+ 	sb->s_blocksize = PAGE_SIZE;
+ 	sb->s_blocksize_bits = PAGE_SHIFT;
+-	sb->s_magic = magic;
++	sb->s_magic = kfc->magic;
+ 	sb->s_op = &kernfs_sops;
+ 	sb->s_xattr = kernfs_xattr_handlers;
+ 	if (info->root->flags & KERNFS_ROOT_SUPPORT_EXPORTOP)
+@@ -257,21 +255,20 @@ static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
+ 	return 0;
+ }
+ 
+-static int kernfs_test_super(struct super_block *sb, void *data)
++static int kernfs_test_super(struct super_block *sb, struct fs_context *fc)
+ {
+ 	struct kernfs_super_info *sb_info = kernfs_info(sb);
+-	struct kernfs_super_info *info = data;
++	struct kernfs_super_info *info = fc->s_fs_info;
+ 
+ 	return sb_info->root == info->root && sb_info->ns == info->ns;
+ }
+ 
+-static int kernfs_set_super(struct super_block *sb, void *data)
++static int kernfs_set_super(struct super_block *sb, struct fs_context *fc)
+ {
+-	int error;
+-	error = set_anon_super(sb, data);
+-	if (!error)
+-		sb->s_fs_info = data;
+-	return error;
++	struct kernfs_fs_context *kfc = fc->fs_private;
++
++	kfc->ns_tag = NULL;
++	return set_anon_super_fc(sb, fc);
+ }
+ 
+ /**
+@@ -288,63 +285,60 @@ const void *kernfs_super_ns(struct super_block *sb)
+ }
+ 
+ /**
+- * kernfs_mount_ns - kernfs mount helper
+- * @fs_type: file_system_type of the fs being mounted
+- * @flags: mount flags specified for the mount
+- * @root: kernfs_root of the hierarchy being mounted
+- * @magic: file system specific magic number
+- * @new_sb_created: tell the caller if we allocated a new superblock
+- * @ns: optional namespace tag of the mount
+- *
+- * This is to be called from each kernfs user's file_system_type->mount()
+- * implementation, which should pass through the specified @fs_type and
+- * @flags, and specify the hierarchy and namespace tag to mount via @root
+- * and @ns, respectively.
++ * kernfs_get_tree - kernfs filesystem access/retrieval helper
++ * @fc: The filesystem context.
+  *
+- * The return value can be passed to the vfs layer verbatim.
++ * This is to be called from each kernfs user's fs_context->ops->get_tree()
++ * implementation, which should set the specified ->@fs_type and ->@flags, and
++ * specify the hierarchy and namespace tag to mount via ->@root and ->@ns,
++ * respectively.
+  */
+-struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-				struct kernfs_root *root, unsigned long magic,
+-				bool *new_sb_created, const void *ns)
++int kernfs_get_tree(struct fs_context *fc)
+ {
++	struct kernfs_fs_context *kfc = fc->fs_private;
+ 	struct super_block *sb;
+ 	struct kernfs_super_info *info;
+ 	int error;
+ 
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info)
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 
+-	info->root = root;
+-	info->ns = ns;
++	info->root = kfc->root;
++	info->ns = kfc->ns_tag;
+ 	INIT_LIST_HEAD(&info->node);
+ 
+-	sb = sget_userns(fs_type, kernfs_test_super, kernfs_set_super, flags,
+-			 &init_user_ns, info);
+-	if (IS_ERR(sb) || sb->s_fs_info != info)
+-		kfree(info);
++	fc->s_fs_info = info;
++	sb = sget_fc(fc, kernfs_test_super, kernfs_set_super);
+ 	if (IS_ERR(sb))
+-		return ERR_CAST(sb);
+-
+-	if (new_sb_created)
+-		*new_sb_created = !sb->s_root;
++		return PTR_ERR(sb);
+ 
+ 	if (!sb->s_root) {
+ 		struct kernfs_super_info *info = kernfs_info(sb);
+ 
+-		error = kernfs_fill_super(sb, magic);
++		kfc->new_sb_created = true;
++
++		error = kernfs_fill_super(sb, kfc);
+ 		if (error) {
+ 			deactivate_locked_super(sb);
+-			return ERR_PTR(error);
++			return error;
+ 		}
+ 		sb->s_flags |= SB_ACTIVE;
+ 
+ 		mutex_lock(&kernfs_mutex);
+-		list_add(&info->node, &root->supers);
++		list_add(&info->node, &info->root->supers);
+ 		mutex_unlock(&kernfs_mutex);
+ 	}
+ 
+-	return dget(sb->s_root);
++	fc->root = dget(sb->s_root);
++	return 0;
++}
++
++void kernfs_free_fs_context(struct fs_context *fc)
++{
++	/* Note that we don't deal with kfc->ns_tag here. */
++	kfree(fc->s_fs_info);
++	fc->s_fs_info = NULL;
+ }
+ 
+ /**
+diff --git a/fs/sysfs/mount.c b/fs/sysfs/mount.c
+index 77302c35b0ff..1e1c0ccc6a36 100644
+--- a/fs/sysfs/mount.c
++++ b/fs/sysfs/mount.c
+@@ -13,6 +13,7 @@
+ #include <linux/magic.h>
+ #include <linux/mount.h>
+ #include <linux/init.h>
++#include <linux/slab.h>
+ #include <linux/user_namespace.h>
+ 
+ #include "sysfs.h"
+@@ -20,27 +21,55 @@
+ static struct kernfs_root *sysfs_root;
+ struct kernfs_node *sysfs_root_kn;
+ 
+-static struct dentry *sysfs_mount(struct file_system_type *fs_type,
+-	int flags, const char *dev_name, void *data, size_t data_size)
++static int sysfs_get_tree(struct fs_context *fc)
+ {
+-	struct dentry *root;
+-	void *ns;
+-	bool new_sb = false;
++	struct kernfs_fs_context *kfc = fc->fs_private;
++	int ret;
+ 
+-	if (!(flags & SB_KERNMOUNT)) {
++	ret = kernfs_get_tree(fc);
++	if (ret)
++		return ret;
++
++	if (kfc->new_sb_created)
++		fc->root->d_sb->s_iflags |= SB_I_USERNS_VISIBLE;
++	return 0;
++}
++
++static void sysfs_fs_context_free(struct fs_context *fc)
++{
++	struct kernfs_fs_context *kfc = fc->fs_private;
++
++	if (kfc->ns_tag)
++		kobj_ns_drop(KOBJ_NS_TYPE_NET, kfc->ns_tag);
++	kernfs_free_fs_context(fc);
++	kfree(kfc);
++}
++
++static const struct fs_context_operations sysfs_fs_context_ops = {
++	.free		= sysfs_fs_context_free,
++	.get_tree	= sysfs_get_tree,
++};
++
++static int sysfs_init_fs_context(struct fs_context *fc,
++				 struct dentry *reference)
++{
++	struct kernfs_fs_context *kfc;
++
++	if (!(fc->sb_flags & SB_KERNMOUNT)) {
+ 		if (!kobj_ns_current_may_mount(KOBJ_NS_TYPE_NET))
+-			return ERR_PTR(-EPERM);
++			return -EPERM;
+ 	}
+ 
+-	ns = kobj_ns_grab_current(KOBJ_NS_TYPE_NET);
+-	root = kernfs_mount_ns(fs_type, flags, sysfs_root,
+-				SYSFS_MAGIC, &new_sb, ns);
+-	if (!new_sb)
+-		kobj_ns_drop(KOBJ_NS_TYPE_NET, ns);
+-	else if (!IS_ERR(root))
+-		root->d_sb->s_iflags |= SB_I_USERNS_VISIBLE;
++	kfc = kzalloc(sizeof(struct kernfs_fs_context), GFP_KERNEL);
++	if (!kfc)
++		return -ENOMEM;
+ 
+-	return root;
++	kfc->ns_tag = kobj_ns_grab_current(KOBJ_NS_TYPE_NET);
++	kfc->root = sysfs_root;
++	kfc->magic = SYSFS_MAGIC;
++	fc->fs_private = kfc;
++	fc->ops = &sysfs_fs_context_ops;
++	return 0;
+ }
+ 
+ static void sysfs_kill_sb(struct super_block *sb)
+@@ -52,10 +81,10 @@ static void sysfs_kill_sb(struct super_block *sb)
+ }
+ 
+ static struct file_system_type sysfs_fs_type = {
+-	.name		= "sysfs",
+-	.mount		= sysfs_mount,
+-	.kill_sb	= sysfs_kill_sb,
+-	.fs_flags	= FS_USERNS_MOUNT,
++	.name			= "sysfs",
++	.init_fs_context	= sysfs_init_fs_context,
++	.kill_sb		= sysfs_kill_sb,
++	.fs_flags		= FS_USERNS_MOUNT,
+ };
+ 
+ int __init sysfs_init(void)
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 32c553556bbd..13b6379648ec 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -859,10 +859,11 @@ copy_cgroup_ns(unsigned long flags, struct user_namespace *user_ns,
+ 
+ #endif /* !CONFIG_CGROUPS */
+ 
+-static inline void get_cgroup_ns(struct cgroup_namespace *ns)
++static inline struct cgroup_namespace *get_cgroup_ns(struct cgroup_namespace *ns)
+ {
+ 	if (ns)
+ 		refcount_inc(&ns->count);
++	return ns;
+ }
+ 
+ static inline void put_cgroup_ns(struct cgroup_namespace *ns)
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index 0f6bb8e1bc83..051709212f55 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -17,6 +17,7 @@
+ #include <linux/atomic.h>
+ #include <linux/uidgid.h>
+ #include <linux/wait.h>
++#include <linux/fs_context.h>
+ 
+ struct file;
+ struct dentry;
+@@ -27,6 +28,7 @@ struct super_block;
+ struct file_system_type;
+ struct fs_context;
+ 
++struct kernfs_fs_context;
+ struct kernfs_open_node;
+ struct kernfs_iattrs;
+ 
+@@ -168,7 +170,7 @@ struct kernfs_node {
+  * kernfs_node parameter.
+  */
+ struct kernfs_syscall_ops {
+-	int (*remount_fs)(struct kernfs_root *root, int *flags, char *data);
++	int (*reconfigure)(struct kernfs_root *root, struct fs_context *fc);
+ 	int (*show_options)(struct seq_file *sf, struct kernfs_root *root);
+ 
+ 	int (*mkdir)(struct kernfs_node *parent, const char *name,
+@@ -269,6 +271,18 @@ struct kernfs_ops {
+ #endif
+ };
+ 
++/*
++ * The kernfs superblock creation/mount parameter context.
++ */
++struct kernfs_fs_context {
++	struct kernfs_root	*root;		/* Root of the hierarchy being mounted */
++	void			*ns_tag;	/* Namespace tag of the mount (or NULL) */
++	unsigned long		magic;		/* File system specific magic number */
++
++	/* The following are set/used by kernfs_mount() */
++	bool			new_sb_created;	/* Set to T if we allocated a new sb */
++};
++
+ #ifdef CONFIG_KERNFS
+ 
+ static inline enum kernfs_node_type kernfs_type(struct kernfs_node *kn)
+@@ -354,9 +368,8 @@ int kernfs_setattr(struct kernfs_node *kn, const struct iattr *iattr);
+ void kernfs_notify(struct kernfs_node *kn);
+ 
+ const void *kernfs_super_ns(struct super_block *sb);
+-struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-			       struct kernfs_root *root, unsigned long magic,
+-			       bool *new_sb_created, const void *ns);
++int kernfs_get_tree(struct fs_context *fc);
++void kernfs_free_fs_context(struct fs_context *fc);
+ void kernfs_kill_sb(struct super_block *sb);
+ struct super_block *kernfs_pin_sb(struct kernfs_root *root, const void *ns);
+ int kernfs_reconfigure(struct fs_context *fc);
+@@ -461,11 +474,10 @@ static inline void kernfs_notify(struct kernfs_node *kn) { }
+ static inline const void *kernfs_super_ns(struct super_block *sb)
+ { return NULL; }
+ 
+-static inline struct dentry *
+-kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-		struct kernfs_root *root, unsigned long magic,
+-		bool *new_sb_created, const void *ns)
+-{ return ERR_PTR(-ENOSYS); }
++static inline int kernfs_get_tree(struct fs_context *fc)
++{ return -ENOSYS; }
++
++static inline void kernfs_free_fs_context(struct fs_context *fc) { }
+ 
+ static inline void kernfs_kill_sb(struct super_block *sb) { }
+ 
+@@ -547,13 +559,4 @@ static inline int kernfs_rename(struct kernfs_node *kn,
+ 	return kernfs_rename_ns(kn, new_parent, new_name, NULL);
+ }
+ 
+-static inline struct dentry *
+-kernfs_mount(struct file_system_type *fs_type, int flags,
+-		struct kernfs_root *root, unsigned long magic,
+-		bool *new_sb_created)
+-{
+-	return kernfs_mount_ns(fs_type, flags, root,
+-				magic, new_sb_created, NULL);
+-}
+-
+ #endif	/* __LINUX_KERNFS_H */
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index 75568fcf2180..35012d2aca97 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -34,6 +34,33 @@ extern char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
+ 		}							\
+ 	} while (0)
+ 
++/*
++ * The cgroup filesystem superblock creation/mount context.
++ */
++struct cgroup_fs_context {
++	struct kernfs_fs_context kfc;
++	struct cgroup_root	*root;
++	struct cgroup_namespace	*ns;
++	u8		version;		/* cgroups version */
++	unsigned int	flags;			/* CGRP_ROOT_* flags */
++
++	/* cgroup1 bits */
++	bool		cpuset_clone_children;
++	bool		none;			/* User explicitly requested empty subsystem */
++	bool		all_ss;			/* Seen 'all' option */
++	bool		one_ss;			/* Seen 'none' option */
++	u16		subsys_mask;		/* Selected subsystems */
++	char		*name;			/* Hierarchy name */
++	char		*release_agent;		/* Path for release notifications */
++};
++
++static inline struct cgroup_fs_context *cgroup_fc2context(struct fs_context *fc)
++{
++	struct kernfs_fs_context *kfc = fc->fs_private;
++
++	return container_of(kfc, struct cgroup_fs_context, kfc);
++}
++
+ /*
+  * A cgroup can be associated with multiple css_sets as different tasks may
+  * belong to different cgroups on different hierarchies.  In the other
+@@ -115,16 +142,6 @@ struct cgroup_mgctx {
+ #define DEFINE_CGROUP_MGCTX(name)						\
+ 	struct cgroup_mgctx name = CGROUP_MGCTX_INIT(name)
+ 
+-struct cgroup_sb_opts {
+-	u16 subsys_mask;
+-	unsigned int flags;
+-	char *release_agent;
+-	bool cpuset_clone_children;
+-	char *name;
+-	/* User explicitly requested empty subsystem */
+-	bool none;
+-};
+-
+ extern struct mutex cgroup_mutex;
+ extern spinlock_t css_set_lock;
+ extern struct cgroup_subsys *cgroup_subsys[];
+@@ -195,12 +212,10 @@ int cgroup_path_ns_locked(struct cgroup *cgrp, char *buf, size_t buflen,
+ 			  struct cgroup_namespace *ns);
+ 
+ void cgroup_free_root(struct cgroup_root *root);
+-void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts);
++void init_cgroup_root(struct cgroup_fs_context *ctx);
+ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask, int ref_flags);
+ int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask);
+-struct dentry *cgroup_do_mount(struct file_system_type *fs_type, int flags,
+-			       struct cgroup_root *root, unsigned long magic,
+-			       struct cgroup_namespace *ns);
++int cgroup_do_get_tree(struct fs_context *fc);
+ 
+ int cgroup_migrate_vet_dst(struct cgroup *dst_cgrp);
+ void cgroup_migrate_finish(struct cgroup_mgctx *mgctx);
+@@ -244,14 +259,15 @@ extern const struct proc_ns_operations cgroupns_operations;
+  */
+ extern struct cftype cgroup1_base_files[];
+ extern struct kernfs_syscall_ops cgroup1_kf_syscall_ops;
++extern const struct fs_parameter_description cgroup1_fs_parameters;
+ 
+ int proc_cgroupstats_show(struct seq_file *m, void *v);
+ bool cgroup1_ssid_disabled(int ssid);
+ void cgroup1_pidlist_destroy_all(struct cgroup *cgrp);
+ void cgroup1_release_agent(struct work_struct *work);
+ void cgroup1_check_for_release(struct cgroup *cgrp);
+-struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+-			     void *data, unsigned long magic,
+-			     struct cgroup_namespace *ns);
++int cgroup1_parse_param(struct fs_context *fc, struct fs_parameter *param);
++int cgroup1_validate(struct fs_context *fc);
++int cgroup1_get_tree(struct fs_context *fc);
+ 
+ #endif /* __CGROUP_INTERNAL_H */
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 51063e7a93c2..d8b325c3c2eb 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -13,9 +13,12 @@
+ #include <linux/delayacct.h>
+ #include <linux/pid_namespace.h>
+ #include <linux/cgroupstats.h>
++#include <linux/fs_parser.h>
+ 
+ #include <trace/events/cgroup.h>
+ 
++#define cg_invalf(fc, fmt, ...) ({ pr_err(fmt, ## __VA_ARGS__); -EINVAL; })
++
+ /*
+  * pidlists linger the following amount before being destroyed.  The goal
+  * is avoiding frequent destruction in the middle of consecutive read calls
+@@ -903,92 +906,61 @@ static int cgroup1_show_options(struct seq_file *seq, struct kernfs_root *kf_roo
+ 	return 0;
+ }
+ 
+-static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+-{
+-	char *token, *o = data;
+-	bool all_ss = false, one_ss = false;
+-	u16 mask = U16_MAX;
+-	struct cgroup_subsys *ss;
+-	int nr_opts = 0;
+-	int i;
+-
+-#ifdef CONFIG_CPUSETS
+-	mask = ~((u16)1 << cpuset_cgrp_id);
+-#endif
++enum cgroup1_param {
++	Opt_all,
++	Opt_clone_children,
++	Opt_cpuset_v2_mode,
++	Opt_name,
++	Opt_none,
++	Opt_noprefix,
++	Opt_release_agent,
++	Opt_xattr,
++	nr__cgroup1_params
++};
+ 
+-	memset(opts, 0, sizeof(*opts));
++static const struct fs_parameter_spec cgroup1_param_specs[nr__cgroup1_params] = {
++	[Opt_all]		= { fs_param_is_flag },
++	[Opt_clone_children]	= { fs_param_is_flag },
++	[Opt_cpuset_v2_mode]	= { fs_param_is_flag },
++	[Opt_name]		= { fs_param_is_string },
++	[Opt_none]		= { fs_param_is_flag },
++	[Opt_noprefix]		= { fs_param_is_flag },
++	[Opt_release_agent]	= { fs_param_is_string },
++	[Opt_xattr]		= { fs_param_is_flag },
++};
+ 
+-	while ((token = strsep(&o, ",")) != NULL) {
+-		nr_opts++;
++static const char *const cgroup1_param_keys[nr__cgroup1_params] = {
++	[Opt_all]		= "all",
++	[Opt_clone_children]	= "clone_children",
++	[Opt_cpuset_v2_mode]	= "cpuset_v2_mode",
++	[Opt_name]		= "name",
++	[Opt_none]		= "none",
++	[Opt_noprefix]		= "noprefix",
++	[Opt_release_agent]	= "release_agent",
++	[Opt_xattr]		= "xattr",
++};
+ 
+-		if (!*token)
+-			return -EINVAL;
+-		if (!strcmp(token, "none")) {
+-			/* Explicitly have no subsystems */
+-			opts->none = true;
+-			continue;
+-		}
+-		if (!strcmp(token, "all")) {
+-			/* Mutually exclusive option 'all' + subsystem name */
+-			if (one_ss)
+-				return -EINVAL;
+-			all_ss = true;
+-			continue;
+-		}
+-		if (!strcmp(token, "noprefix")) {
+-			opts->flags |= CGRP_ROOT_NOPREFIX;
+-			continue;
+-		}
+-		if (!strcmp(token, "clone_children")) {
+-			opts->cpuset_clone_children = true;
+-			continue;
+-		}
+-		if (!strcmp(token, "cpuset_v2_mode")) {
+-			opts->flags |= CGRP_ROOT_CPUSET_V2_MODE;
+-			continue;
+-		}
+-		if (!strcmp(token, "xattr")) {
+-			opts->flags |= CGRP_ROOT_XATTR;
+-			continue;
+-		}
+-		if (!strncmp(token, "release_agent=", 14)) {
+-			/* Specifying two release agents is forbidden */
+-			if (opts->release_agent)
+-				return -EINVAL;
+-			opts->release_agent =
+-				kstrndup(token + 14, PATH_MAX - 1, GFP_KERNEL);
+-			if (!opts->release_agent)
+-				return -ENOMEM;
+-			continue;
+-		}
+-		if (!strncmp(token, "name=", 5)) {
+-			const char *name = token + 5;
+-			/* Can't specify an empty name */
+-			if (!strlen(name))
+-				return -EINVAL;
+-			/* Must match [\w.-]+ */
+-			for (i = 0; i < strlen(name); i++) {
+-				char c = name[i];
+-				if (isalnum(c))
+-					continue;
+-				if ((c == '.') || (c == '-') || (c == '_'))
+-					continue;
+-				return -EINVAL;
+-			}
+-			/* Specifying two names is forbidden */
+-			if (opts->name)
+-				return -EINVAL;
+-			opts->name = kstrndup(name,
+-					      MAX_CGROUP_ROOT_NAMELEN - 1,
+-					      GFP_KERNEL);
+-			if (!opts->name)
+-				return -ENOMEM;
++const struct fs_parameter_description cgroup1_fs_parameters = {
++	.name		= "cgroup1",
++	.nr_params	= nr__cgroup1_params,
++	.keys		= cgroup1_param_keys,
++	.specs		= cgroup1_param_specs,
++	.no_source	= true,
++};
+ 
+-			continue;
+-		}
++int cgroup1_parse_param(struct fs_context *fc, struct fs_parameter *param)
++{
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
++	struct cgroup_subsys *ss;
++	struct fs_parse_result result;
++	int opt, i;
+ 
++	opt = fs_parse(fc, &cgroup1_fs_parameters, param, &result);
++	if (opt == -ENOPARAM) {
++		if (strcmp(param->key, "source") == 0)
++			return 0;
+ 		for_each_subsys(ss, i) {
+-			if (strcmp(token, ss->legacy_name))
++			if (strcmp(param->key, ss->legacy_name) != 0)
+ 				continue;
+ 			if (!cgroup_ssid_enabled(i))
+ 				continue;
+@@ -996,75 +968,144 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 				continue;
+ 
+ 			/* Mutually exclusive option 'all' + subsystem name */
+-			if (all_ss)
+-				return -EINVAL;
+-			opts->subsys_mask |= (1 << i);
+-			one_ss = true;
++			if (ctx->all_ss)
++				return cg_invalf(fc, "cgroup1: subsys name conflicts with all");
++			ctx->subsys_mask |= (1 << i);
++			ctx->one_ss = true;
++			return 0;
++		}
+ 
+-			break;
++		return cg_invalf(fc, "cgroup1: Unknown subsys name '%s'", param->key);
++	}
++	if (opt < 0)
++		return opt;
++
++	switch (opt) {
++	case Opt_none:
++		/* Explicitly have no subsystems */
++		ctx->none = true;
++		return 0;
++	case Opt_all:
++		/* Mutually exclusive option 'all' + subsystem name */
++		if (ctx->one_ss)
++			return cg_invalf(fc, "cgroup1: all conflicts with subsys name");
++		ctx->all_ss = true;
++		return 0;
++	case Opt_noprefix:
++		ctx->flags |= CGRP_ROOT_NOPREFIX;
++		return 0;
++	case Opt_clone_children:
++		ctx->cpuset_clone_children = true;
++		return 0;
++	case Opt_cpuset_v2_mode:
++		ctx->flags |= CGRP_ROOT_CPUSET_V2_MODE;
++		return 0;
++	case Opt_xattr:
++		ctx->flags |= CGRP_ROOT_XATTR;
++		return 0;
++	case Opt_release_agent:
++		/* Specifying two release agents is forbidden */
++		if (ctx->release_agent)
++			return cg_invalf(fc, "cgroup1: release_agent respecified");
++		ctx->release_agent = param->string;
++		param->string = NULL;
++		if (!ctx->release_agent)
++			return -ENOMEM;
++		return 0;
++
++	case Opt_name:
++		/* Can't specify an empty name */
++		if (!param->size)
++			return cg_invalf(fc, "cgroup1: Empty name");
++		if (param->size > MAX_CGROUP_ROOT_NAMELEN - 1)
++			return cg_invalf(fc, "cgroup1: Name too long");
++		/* Must match [\w.-]+ */
++		for (i = 0; i < param->size; i++) {
++			char c = param->string[i];
++			if (isalnum(c))
++				continue;
++			if ((c == '.') || (c == '-') || (c == '_'))
++				continue;
++			return cg_invalf(fc, "cgroup1: Invalid name");
+ 		}
+-		if (i == CGROUP_SUBSYS_COUNT)
+-			return -ENOENT;
++		/* Specifying two names is forbidden */
++		if (ctx->name)
++			return cg_invalf(fc, "cgroup1: name respecified");
++		ctx->name = param->string;
++		param->string = NULL;
++		return 0;
+ 	}
+ 
++	return 0;
++}
++
++/*
++ * Validate the options that have been parsed.
++ */
++int cgroup1_validate(struct fs_context *fc)
++{
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
++	struct cgroup_subsys *ss;
++	u16 mask = U16_MAX;
++	int i;
++
++#ifdef CONFIG_CPUSETS
++	mask = ~((u16)1 << cpuset_cgrp_id);
++#endif
++
+ 	/*
+ 	 * If the 'all' option was specified select all the subsystems,
+ 	 * otherwise if 'none', 'name=' and a subsystem name options were
+ 	 * not specified, let's default to 'all'
+ 	 */
+-	if (all_ss || (!one_ss && !opts->none && !opts->name))
++	if (ctx->all_ss || (!ctx->one_ss && !ctx->none && !ctx->name))
+ 		for_each_subsys(ss, i)
+ 			if (cgroup_ssid_enabled(i) && !cgroup1_ssid_disabled(i))
+-				opts->subsys_mask |= (1 << i);
++				ctx->subsys_mask |= (1 << i);
+ 
+ 	/*
+ 	 * We either have to specify by name or by subsystems. (So all
+ 	 * empty hierarchies must have a name).
+ 	 */
+-	if (!opts->subsys_mask && !opts->name)
+-		return -EINVAL;
++	if (!ctx->subsys_mask && !ctx->name)
++		return cg_invalf(fc, "cgroup1: Need name or subsystem set");
+ 
+ 	/*
+ 	 * Option noprefix was introduced just for backward compatibility
+ 	 * with the old cpuset, so we allow noprefix only if mounting just
+ 	 * the cpuset subsystem.
+ 	 */
+-	if ((opts->flags & CGRP_ROOT_NOPREFIX) && (opts->subsys_mask & mask))
+-		return -EINVAL;
++	if ((ctx->flags & CGRP_ROOT_NOPREFIX) && (ctx->subsys_mask & mask))
++		return cg_invalf(fc, "cgroup1: noprefix used incorrectly");
+ 
+ 	/* Can't specify "none" and some subsystems */
+-	if (opts->subsys_mask && opts->none)
+-		return -EINVAL;
++	if (ctx->subsys_mask && ctx->none)
++		return cg_invalf(fc, "cgroup1: none used incorrectly");
+ 
+ 	return 0;
+ }
+ 
+-static int cgroup1_remount(struct kernfs_root *kf_root, int *flags, char *data)
++static int cgroup1_reconfigure(struct kernfs_root *kf_root, struct fs_context *fc)
+ {
+-	int ret = 0;
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
+ 	struct cgroup_root *root = cgroup_root_from_kf(kf_root);
+-	struct cgroup_sb_opts opts;
+ 	u16 added_mask, removed_mask;
++	int ret = 0;
+ 
+ 	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
+ 
+-	/* See what subsystems are wanted */
+-	ret = parse_cgroupfs_options(data, &opts);
+-	if (ret)
+-		goto out_unlock;
+-
+-	if (opts.subsys_mask != root->subsys_mask || opts.release_agent)
++	if (ctx->subsys_mask != root->subsys_mask || ctx->release_agent)
+ 		pr_warn("option changes via remount are deprecated (pid=%d comm=%s)\n",
+ 			task_tgid_nr(current), current->comm);
+ 
+-	added_mask = opts.subsys_mask & ~root->subsys_mask;
+-	removed_mask = root->subsys_mask & ~opts.subsys_mask;
++	added_mask = ctx->subsys_mask & ~root->subsys_mask;
++	removed_mask = root->subsys_mask & ~ctx->subsys_mask;
+ 
+ 	/* Don't allow flags or name to change at remount */
+-	if ((opts.flags ^ root->flags) ||
+-	    (opts.name && strcmp(opts.name, root->name))) {
+-		pr_err("option or name mismatch, new: 0x%x \"%s\", old: 0x%x \"%s\"\n",
+-		       opts.flags, opts.name ?: "", root->flags, root->name);
++	if ((ctx->flags ^ root->flags) ||
++	    (ctx->name && strcmp(ctx->name, root->name))) {
++		cg_invalf(fc, "option or name mismatch, new: 0x%x \"%s\", old: 0x%x \"%s\"",
++		       ctx->flags, ctx->name ?: "", root->flags, root->name);
+ 		ret = -EINVAL;
+ 		goto out_unlock;
+ 	}
+@@ -1081,17 +1122,15 @@ static int cgroup1_remount(struct kernfs_root *kf_root, int *flags, char *data)
+ 
+ 	WARN_ON(rebind_subsystems(&cgrp_dfl_root, removed_mask));
+ 
+-	if (opts.release_agent) {
++	if (ctx->release_agent) {
+ 		spin_lock(&release_agent_path_lock);
+-		strcpy(root->release_agent_path, opts.release_agent);
++		strcpy(root->release_agent_path, ctx->release_agent);
+ 		spin_unlock(&release_agent_path_lock);
+ 	}
+ 
+ 	trace_cgroup_remount(root);
+ 
+  out_unlock:
+-	kfree(opts.release_agent);
+-	kfree(opts.name);
+ 	mutex_unlock(&cgroup_mutex);
+ 	return ret;
+ }
+@@ -1099,31 +1138,26 @@ static int cgroup1_remount(struct kernfs_root *kf_root, int *flags, char *data)
+ struct kernfs_syscall_ops cgroup1_kf_syscall_ops = {
+ 	.rename			= cgroup1_rename,
+ 	.show_options		= cgroup1_show_options,
+-	.remount_fs		= cgroup1_remount,
++	.reconfigure		= cgroup1_reconfigure,
+ 	.mkdir			= cgroup_mkdir,
+ 	.rmdir			= cgroup_rmdir,
+ 	.show_path		= cgroup_show_path,
+ };
+ 
+-struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+-			     void *data, unsigned long magic,
+-			     struct cgroup_namespace *ns)
++/*
++ * Find or create a v1 cgroups superblock.
++ */
++int cgroup1_get_tree(struct fs_context *fc)
+ {
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
+ 	struct super_block *pinned_sb = NULL;
+-	struct cgroup_sb_opts opts;
+ 	struct cgroup_root *root;
+ 	struct cgroup_subsys *ss;
+-	struct dentry *dentry;
+ 	int i, ret;
+ 	bool new_root = false;
+ 
+ 	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
+ 
+-	/* First find the desired set of subsystems */
+-	ret = parse_cgroupfs_options(data, &opts);
+-	if (ret)
+-		goto out_unlock;
+-
+ 	/*
+ 	 * Destruction of cgroup root is asynchronous, so subsystems may
+ 	 * still be dying after the previous unmount.  Let's drain the
+@@ -1132,15 +1166,13 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 	 * starting.  Testing ref liveliness is good enough.
+ 	 */
+ 	for_each_subsys(ss, i) {
+-		if (!(opts.subsys_mask & (1 << i)) ||
++		if (!(ctx->subsys_mask & (1 << i)) ||
+ 		    ss->root == &cgrp_dfl_root)
+ 			continue;
+ 
+ 		if (!percpu_ref_tryget_live(&ss->root->cgrp.self.refcnt)) {
+ 			mutex_unlock(&cgroup_mutex);
+-			msleep(10);
+-			ret = restart_syscall();
+-			goto out_free;
++			goto err_restart;
+ 		}
+ 		cgroup_put(&ss->root->cgrp);
+ 	}
+@@ -1156,8 +1188,8 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 		 * name matches but sybsys_mask doesn't, we should fail.
+ 		 * Remember whether name matched.
+ 		 */
+-		if (opts.name) {
+-			if (strcmp(opts.name, root->name))
++		if (ctx->name) {
++			if (strcmp(ctx->name, root->name))
+ 				continue;
+ 			name_match = true;
+ 		}
+@@ -1166,15 +1198,15 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 		 * If we asked for subsystems (or explicitly for no
+ 		 * subsystems) then they must match.
+ 		 */
+-		if ((opts.subsys_mask || opts.none) &&
+-		    (opts.subsys_mask != root->subsys_mask)) {
++		if ((ctx->subsys_mask || ctx->none) &&
++		    (ctx->subsys_mask != root->subsys_mask)) {
+ 			if (!name_match)
+ 				continue;
+ 			ret = -EBUSY;
+-			goto out_unlock;
++			goto err_unlock;
+ 		}
+ 
+-		if (root->flags ^ opts.flags)
++		if (root->flags ^ ctx->flags)
+ 			pr_warn("new mount options do not match the existing superblock, will be ignored\n");
+ 
+ 		/*
+@@ -1195,11 +1227,10 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 			mutex_unlock(&cgroup_mutex);
+ 			if (!IS_ERR_OR_NULL(pinned_sb))
+ 				deactivate_super(pinned_sb);
+-			msleep(10);
+-			ret = restart_syscall();
+-			goto out_free;
++			goto err_restart;
+ 		}
+ 
++		ctx->root = root;
+ 		ret = 0;
+ 		goto out_unlock;
+ 	}
+@@ -1209,41 +1240,35 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 	 * specification is allowed for already existing hierarchies but we
+ 	 * can't create new one without subsys specification.
+ 	 */
+-	if (!opts.subsys_mask && !opts.none) {
+-		ret = -EINVAL;
+-		goto out_unlock;
++	if (!ctx->subsys_mask && !ctx->none) {
++		ret = cg_invalf(fc, "cgroup1: No subsys list or none specified");
++		goto err_unlock;
+ 	}
+ 
+ 	/* Hierarchies may only be created in the initial cgroup namespace. */
+-	if (ns != &init_cgroup_ns) {
++	if (ctx->ns != &init_cgroup_ns) {
+ 		ret = -EPERM;
+-		goto out_unlock;
++		goto err_unlock;
+ 	}
+ 
+ 	root = kzalloc(sizeof(*root), GFP_KERNEL);
+ 	if (!root) {
+ 		ret = -ENOMEM;
+-		goto out_unlock;
++		goto err_unlock;
+ 	}
+ 	new_root = true;
++	ctx->root = root;
+ 
+-	init_cgroup_root(root, &opts);
++	init_cgroup_root(ctx);
+ 
+-	ret = cgroup_setup_root(root, opts.subsys_mask, PERCPU_REF_INIT_DEAD);
++	ret = cgroup_setup_root(root, ctx->subsys_mask, PERCPU_REF_INIT_DEAD);
+ 	if (ret)
+-		cgroup_free_root(root);
++		goto err_unlock;
+ 
+ out_unlock:
+ 	mutex_unlock(&cgroup_mutex);
+-out_free:
+-	kfree(opts.release_agent);
+-	kfree(opts.name);
+-
+-	if (ret)
+-		return ERR_PTR(ret);
+ 
+-	dentry = cgroup_do_mount(&cgroup_fs_type, flags, root,
+-				 CGROUP_SUPER_MAGIC, ns);
++	ret = cgroup_do_get_tree(fc);
+ 
+ 	/*
+ 	 * There's a race window after we release cgroup_mutex and before
+@@ -1256,6 +1281,7 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 		percpu_ref_reinit(&root->cgrp.self.refcnt);
+ 		mutex_unlock(&cgroup_mutex);
+ 	}
++	cgroup_get(&root->cgrp);
+ 
+ 	/*
+ 	 * If @pinned_sb, we're reusing an existing root and holding an
+@@ -1264,7 +1290,14 @@ struct dentry *cgroup1_mount(struct file_system_type *fs_type, int flags,
+ 	if (pinned_sb)
+ 		deactivate_super(pinned_sb);
+ 
+-	return dentry;
++	return ret;
++
++err_restart:
++	msleep(10);
++	return restart_syscall();
++err_unlock:
++	mutex_unlock(&cgroup_mutex);
++	return ret;
+ }
+ 
+ static int __init cgroup1_wq_init(void)
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 48dbf249bec5..3c3c40cad257 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -54,6 +54,7 @@
+ #include <linux/proc_ns.h>
+ #include <linux/nsproxy.h>
+ #include <linux/file.h>
++#include <linux/fs_parser.h>
+ #include <linux/sched/cputime.h>
+ #include <net/sock.h>
+ 
+@@ -1737,25 +1738,51 @@ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ 	return len;
+ }
+ 
+-static int parse_cgroup_root_flags(char *data, unsigned int *root_flags)
+-{
+-	char *token;
++enum cgroup2_param {
++	Opt_nsdelegate,
++	nr__cgroup2_params
++};
+ 
+-	*root_flags = 0;
++static const struct fs_parameter_spec cgroup2_param_specs[nr__cgroup2_params] = {
++	[Opt_nsdelegate]	= { fs_param_is_flag },
++};
+ 
+-	if (!data)
+-		return 0;
++static const char *const cgroup2_param_keys[nr__cgroup2_params] = {
++	[Opt_nsdelegate]	= "nsdelegate",
++};
+ 
+-	while ((token = strsep(&data, ",")) != NULL) {
+-		if (!strcmp(token, "nsdelegate")) {
+-			*root_flags |= CGRP_ROOT_NS_DELEGATE;
+-			continue;
+-		}
++static const struct fs_parameter_description cgroup2_fs_parameters = {
++	.name		= "cgroup2",
++	.nr_params	= nr__cgroup2_params,
++	.keys		= cgroup2_param_keys,
++	.specs		= cgroup2_param_specs,
++	.no_source	= true,
++};
+ 
+-		pr_err("cgroup2: unknown option \"%s\"\n", token);
+-		return -EINVAL;
++static int cgroup2_parse_param(struct fs_context *fc, struct fs_parameter *param)
++{
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
++	struct fs_parse_result result;
++	int opt;
++
++	opt = fs_parse(fc, &cgroup2_fs_parameters, param, &result);
++	if (opt < 0)
++		return opt;
++
++	switch (opt) {
++	case Opt_nsdelegate:
++		ctx->flags |= CGRP_ROOT_NS_DELEGATE;
++		return 0;
+ 	}
+ 
++	return -EINVAL;
++}
++
++static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root)
++{
++	if (current->nsproxy->cgroup_ns == &init_cgroup_ns &&
++	    cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE)
++		seq_puts(seq, ",nsdelegate");
+ 	return 0;
+ }
+ 
+@@ -1769,23 +1796,11 @@ static void apply_cgroup_root_flags(unsigned int root_flags)
+ 	}
+ }
+ 
+-static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root)
+-{
+-	if (cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE)
+-		seq_puts(seq, ",nsdelegate");
+-	return 0;
+-}
+-
+-static int cgroup_remount(struct kernfs_root *kf_root, int *flags, char *data)
++static int cgroup_reconfigure(struct kernfs_root *kf_root, struct fs_context *fc)
+ {
+-	unsigned int root_flags;
+-	int ret;
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
+ 
+-	ret = parse_cgroup_root_flags(data, &root_flags);
+-	if (ret)
+-		return ret;
+-
+-	apply_cgroup_root_flags(root_flags);
++	apply_cgroup_root_flags(ctx->flags);
+ 	return 0;
+ }
+ 
+@@ -1873,8 +1888,9 @@ static void init_cgroup_housekeeping(struct cgroup *cgrp)
+ 	INIT_WORK(&cgrp->release_agent_work, cgroup1_release_agent);
+ }
+ 
+-void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts)
++void init_cgroup_root(struct cgroup_fs_context *ctx)
+ {
++	struct cgroup_root *root = ctx->root;
+ 	struct cgroup *cgrp = &root->cgrp;
+ 
+ 	INIT_LIST_HEAD(&root->root_list);
+@@ -1883,12 +1899,12 @@ void init_cgroup_root(struct cgroup_root *root, struct cgroup_sb_opts *opts)
+ 	init_cgroup_housekeeping(cgrp);
+ 	idr_init(&root->cgroup_idr);
+ 
+-	root->flags = opts->flags;
+-	if (opts->release_agent)
+-		strscpy(root->release_agent_path, opts->release_agent, PATH_MAX);
+-	if (opts->name)
+-		strscpy(root->name, opts->name, MAX_CGROUP_ROOT_NAMELEN);
+-	if (opts->cpuset_clone_children)
++	root->flags = ctx->flags;
++	if (ctx->release_agent)
++		strscpy(root->release_agent_path, ctx->release_agent, PATH_MAX);
++	if (ctx->name)
++		strscpy(root->name, ctx->name, MAX_CGROUP_ROOT_NAMELEN);
++	if (ctx->cpuset_clone_children)
+ 		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->cgrp.flags);
+ }
+ 
+@@ -1993,57 +2009,53 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask, int ref_flags)
+ 	return ret;
+ }
+ 
+-struct dentry *cgroup_do_mount(struct file_system_type *fs_type, int flags,
+-			       struct cgroup_root *root, unsigned long magic,
+-			       struct cgroup_namespace *ns)
++int cgroup_do_get_tree(struct fs_context *fc)
+ {
+-	struct dentry *dentry;
+-	bool new_sb;
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
++	int ret;
+ 
+-	dentry = kernfs_mount(fs_type, flags, root->kf_root, magic, &new_sb);
++	ctx->kfc.root = ctx->root->kf_root;
++
++	ret = kernfs_get_tree(fc);
++	if (ret < 0)
++		goto out_cgrp;
+ 
+ 	/*
+ 	 * In non-init cgroup namespace, instead of root cgroup's dentry,
+ 	 * we return the dentry corresponding to the cgroupns->root_cgrp.
+ 	 */
+-	if (!IS_ERR(dentry) && ns != &init_cgroup_ns) {
++	if (ctx->ns != &init_cgroup_ns) {
+ 		struct dentry *nsdentry;
+ 		struct cgroup *cgrp;
+ 
+ 		mutex_lock(&cgroup_mutex);
+ 		spin_lock_irq(&css_set_lock);
+ 
+-		cgrp = cset_cgroup_from_root(ns->root_cset, root);
++		cgrp = cset_cgroup_from_root(ctx->ns->root_cset, ctx->root);
+ 
+ 		spin_unlock_irq(&css_set_lock);
+ 		mutex_unlock(&cgroup_mutex);
+ 
+-		nsdentry = kernfs_node_dentry(cgrp->kn, dentry->d_sb);
+-		dput(dentry);
+-		dentry = nsdentry;
++		nsdentry = kernfs_node_dentry(cgrp->kn, fc->root->d_sb);
++		if (IS_ERR(nsdentry))
++			return PTR_ERR(nsdentry);
++		dput(fc->root);
++		fc->root = nsdentry;
+ 	}
+ 
+-	if (IS_ERR(dentry) || !new_sb)
+-		cgroup_put(&root->cgrp);
++	ret = 0;
++	if (ctx->kfc.new_sb_created)
++		goto out_cgrp;
++	apply_cgroup_root_flags(ctx->flags);
++	return 0;
+ 
+-	return dentry;
++out_cgrp:
++	return ret;
+ }
+ 
+-static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+-			 int flags, const char *unused_dev_name,
+-			 void *data, size_t data_size)
++static int cgroup_get_tree(struct fs_context *fc)
+ {
+-	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+-	struct dentry *dentry;
+-	int ret;
+-
+-	get_cgroup_ns(ns);
+-
+-	/* Check if the caller has permission to mount. */
+-	if (!ns_capable(ns->user_ns, CAP_SYS_ADMIN)) {
+-		put_cgroup_ns(ns);
+-		return ERR_PTR(-EPERM);
+-	}
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
+ 
+ 	/*
+ 	 * The first time anyone tries to mount a cgroup, enable the list
+@@ -2052,29 +2064,96 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	if (!use_task_css_set_links)
+ 		cgroup_enable_task_cg_lists();
+ 
+-	if (fs_type == &cgroup2_fs_type) {
+-		unsigned int root_flags;
+-
+-		ret = parse_cgroup_root_flags(data, &root_flags);
+-		if (ret) {
+-			put_cgroup_ns(ns);
+-			return ERR_PTR(ret);
+-		}
++	switch (ctx->version) {
++	case 1:
++		return cgroup1_get_tree(fc);
+ 
++	case 2:
+ 		cgrp_dfl_visible = true;
+ 		cgroup_get_live(&cgrp_dfl_root.cgrp);
+ 
+-		dentry = cgroup_do_mount(&cgroup2_fs_type, flags, &cgrp_dfl_root,
+-					 CGROUP2_SUPER_MAGIC, ns);
+-		if (!IS_ERR(dentry))
+-			apply_cgroup_root_flags(root_flags);
+-	} else {
+-		dentry = cgroup1_mount(&cgroup_fs_type, flags, data,
+-				       CGROUP_SUPER_MAGIC, ns);
++		ctx->root = &cgrp_dfl_root;
++		return cgroup_do_get_tree(fc);
++
++	default:
++		BUG();
++	}
++}
++
++static int cgroup_parse_param(struct fs_context *fc, struct fs_parameter *param)
++{
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
++
++	if (ctx->version == 1)
++		return cgroup1_parse_param(fc, param);
++
++	return cgroup2_parse_param(fc, param);
++}
++
++static int cgroup_validate(struct fs_context *fc)
++{
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
++
++	if (ctx->version == 1)
++		return cgroup1_validate(fc);
++	return 0;
++}
++
++/*
++ * Destroy a cgroup filesystem context.
++ */
++static void cgroup_fs_context_free(struct fs_context *fc)
++{
++	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
++
++	kfree(ctx->name);
++	kfree(ctx->release_agent);
++	if (ctx->root)
++		cgroup_put(&ctx->root->cgrp);
++	put_cgroup_ns(ctx->ns);
++	kernfs_free_fs_context(fc);
++	kfree(ctx);
++}
++
++static const struct fs_context_operations cgroup_fs_context_ops = {
++	.free		= cgroup_fs_context_free,
++	.parse_param	= cgroup_parse_param,
++	.validate	= cgroup_validate,
++	.get_tree	= cgroup_get_tree,
++	.reconfigure	= kernfs_reconfigure,
++};
++
++/*
++ * Initialise the cgroup filesystem creation/reconfiguration context.  Notably,
++ * we select the namespace we're going to use.
++ */
++static int cgroup_init_fs_context(struct fs_context *fc, struct dentry *reference)
++{
++	struct cgroup_fs_context *ctx;
++	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
++
++	switch (fc->purpose) {
++	case FS_CONTEXT_FOR_UMOUNT:
++	case FS_CONTEXT_FOR_EMERGENCY_RO:
++		return -EOPNOTSUPP;
++	default:
++		break;
+ 	}
+ 
+-	put_cgroup_ns(ns);
+-	return dentry;
++	/* Check if the caller has permission to mount. */
++	if (!ns_capable(ns->user_ns, CAP_SYS_ADMIN))
++		return -EPERM;
++
++	ctx = kzalloc(sizeof(struct cgroup_fs_context), GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++
++	ctx->ns = get_cgroup_ns(ns);
++	ctx->version = (fc->fs_type == &cgroup2_fs_type) ? 2 : 1;
++	ctx->kfc.magic = (ctx->version == 2) ? CGROUP2_SUPER_MAGIC : CGROUP_SUPER_MAGIC;
++	fc->fs_private = &ctx->kfc;
++	fc->ops = &cgroup_fs_context_ops;
++	return 0;
+ }
+ 
+ static void cgroup_kill_sb(struct super_block *sb)
+@@ -2099,17 +2178,19 @@ static void cgroup_kill_sb(struct super_block *sb)
+ }
+ 
+ struct file_system_type cgroup_fs_type = {
+-	.name = "cgroup",
+-	.mount = cgroup_mount,
+-	.kill_sb = cgroup_kill_sb,
+-	.fs_flags = FS_USERNS_MOUNT,
++	.name			= "cgroup",
++	.init_fs_context	= cgroup_init_fs_context,
++	.parameters		= &cgroup1_fs_parameters,
++	.kill_sb		= cgroup_kill_sb,
++	.fs_flags		= FS_USERNS_MOUNT,
+ };
+ 
+ static struct file_system_type cgroup2_fs_type = {
+-	.name = "cgroup2",
+-	.mount = cgroup_mount,
+-	.kill_sb = cgroup_kill_sb,
+-	.fs_flags = FS_USERNS_MOUNT,
++	.name			= "cgroup2",
++	.init_fs_context	= cgroup_init_fs_context,
++	.parameters		= &cgroup2_fs_parameters,
++	.kill_sb		= cgroup_kill_sb,
++	.fs_flags		= FS_USERNS_MOUNT,
+ };
+ 
+ int cgroup_path_ns_locked(struct cgroup *cgrp, char *buf, size_t buflen,
+@@ -5179,7 +5260,7 @@ int cgroup_rmdir(struct kernfs_node *kn)
+ 
+ static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
+ 	.show_options		= cgroup_show_options,
+-	.remount_fs		= cgroup_remount,
++	.reconfigure		= cgroup_reconfigure,
+ 	.mkdir			= cgroup_mkdir,
+ 	.rmdir			= cgroup_rmdir,
+ 	.show_path		= cgroup_show_path,
+@@ -5246,11 +5327,12 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+  */
+ int __init cgroup_init_early(void)
+ {
+-	static struct cgroup_sb_opts __initdata opts;
++	static struct cgroup_fs_context __initdata ctx;
+ 	struct cgroup_subsys *ss;
+ 	int i;
+ 
+-	init_cgroup_root(&cgrp_dfl_root, &opts);
++	ctx.root = &cgrp_dfl_root;
++	init_cgroup_root(&ctx);
+ 	cgrp_dfl_root.cgrp.self.flags |= CSS_NO_REF;
+ 
+ 	RCU_INIT_POINTER(init_task.cgroups, &init_css_set);
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index df78e166028c..b4ad1a52f006 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -324,10 +324,8 @@ static int cpuset_get_tree(struct fs_context *fc)
+ 	int ret = -ENODEV;
+ 
+ 	cgroup_fs = get_fs_type("cgroup");
+-	if (cgroup_fs) {
+-		ret = PTR_ERR(cgroup_fs);
++	if (!cgroup_fs)
+ 		goto out;
+-	}
+ 
+ 	cg_fc = vfs_new_fs_context(cgroup_fs, NULL, fc->sb_flags, fc->sb_flags,
+ 				   fc->purpose);
 
