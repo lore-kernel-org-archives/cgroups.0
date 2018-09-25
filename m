@@ -1,101 +1,54 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v12 9/9] cpuset: Support forced turning off of partition
- flag
-Date: Mon, 24 Sep 2018 11:47:11 -0400
-Message-ID: <be374350-df64-5685-2802-629d43b0b284@redhat.com>
-References: <1535380884-31308-1-git-send-email-longman@redhat.com>
- <1535380884-31308-10-git-send-email-longman@redhat.com>
- <20180827164004.GE3978217@devbig004.ftw2.facebook.com>
- <0daf1f43-2292-0281-3ab8-aef20d0475dc@redhat.com>
- <7a57412b-ccdd-be20-529b-89f0737ce41d@redhat.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v5 0/5] sched/deadline: fix cpusets bandwidth accounting
+Date: Tue, 25 Sep 2018 10:14:48 +0200
+Message-ID: <20180925081448.GA4287@localhost.localdomain>
+References: <20180903142801.20046-1-juri.lelli@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <7a57412b-ccdd-be20-529b-89f0737ce41d@redhat.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20180903142801.20046-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>
+Content-Transfer-Encoding: 7bit
+To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
-On 09/06/2018 05:20 PM, Waiman Long wrote:
-> On 08/27/2018 01:50 PM, Waiman Long wrote:
->> On 08/27/2018 12:40 PM, Tejun Heo wrote:
->>> Hello, Waiman.
->>>
->>> On Mon, Aug 27, 2018 at 10:41:24AM -0400, Waiman Long wrote:
->>>> Cpuset allows arbitrary modification of cpu list in "cpuset.cpus"
->>>> even if the requested CPUs won't be granted in "cpuset.cpus.effective"
->>>> as restricted by its parent. However, the validate_change() function
->>>> will inhibit removal of CPUs that have been used in child cpusets.
->>>>
->>>> Being a partition root, however, limits the kind of cpu list
->>>> modification that is allowed. Adding CPUs is not allowed if the new
->>>> CPUs are not in the parent's effective cpu list that can be put into
->>>> "cpuset.cpus.reserved". In addition, a child partition cannot exhaust
->>>> all the parent's effective CPUs.
->>>>
->>>> Because of the implicit cpu exclusive nature of the partition root,
->>>> cpu changes that break that cpu exclusivity will not be allowed. Other
->>>> changes that break the conditions of being a partition root is generally
->>>> allowed. However, the partition flag of the cpuset as well those of
->>>> the descendant partitions will be forcefully turned off.
->>> First of all, thanks a lot for your persistence.  I'm not necessarily
->>> against the flag being forced off but wonder whether the same
->>> config/effective approach can be used as in .cpus and .mems.  Can you
->>> elaborate a bit on the choice here?
->>>
->>> Thank you.
->> My current code has explicitly assumed the following relationship for
->> partition root.
->>
->>     cpus_allowed = effective_cpus + reserved_cpus
->>
->> Also effective_cpus cannot be empty. Specifically, cpus_allowed has to
->> be equal to effective_cpus before a cpuset can be made a partition root.
->>
->> Any changes that break the above conditions will turn off the partition
->> flag forcefully. The only exception is cpu offlining where cpus_allowed
->>> effective_cpus + reserved_cpus can happen.
->> One reason for doing so is because reserved_cpus is hidden. So the main
->> way to infer that is to do cpus_allowed - effective_cpus.
->>
->> It is probably doable to make cpus_allowed >= effective_cpus +
->> reserved_cpus in general, but we may need to expose reserved_cpus as a
->> read-only file, for instance. There may also be other complications that
->> we will need to take care of if this is supported. My current preference
->> is to not doing that unless there is compelling reason to do so.
->>
->> Cheers,
->> Longman
-> For the current patch, one of conditions to allow users to turn on the
-> partition flag is cpus_allowed = effective_cpus. Once the partition flag
-> is on, the twos have to be the same too except with cpu offlining. This
-> patch is added to allow arbitrary modification to the cpuset.cpus file
-> except those that have already been forbidden in the existing code. When
-> the modification violates the rules of being a partition root, the flag
-> will be turned off or we will have to deny the modification request.
->
-> I am admitting that it is an easy way out in term of programming effort
-> as I am not sure how much effort is needed to enable arbitrary
-> modification to cpuset.cpus without force disabling and whether such an
-> effort is even worthwhile to do.
->
-> We can certainly relax the current restrictions in the future.  Any
-> suggestion to improve the patchset is welcome. I would really like to
-> see this merged in 4.20 (or maybe 5.0) kernel.
->
-> Cheers,
-> Longman
->
-Tejun,
+Hi,
 
-Sorry for bothering you again.
+On 03/09/18 16:27, Juri Lelli wrote:
+> Hi,
+> 
+> v5 of a series of patches, originally authored by Mathieu, with the intent
+> of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
+> As originally reported by Steve [1], when hotplug and/or (certain)
+> cpuset reconfiguration operations take place, DEADLINE bandwidth
+> accounting information is lost since root domains are destroyed and
+> recreated.
+> 
+> Mathieu's approach is based on restoring bandwidth accounting info on
+> the newly created root domains by iterating through the (DEADLINE) tasks
+> belonging to the configured cpuset(s).
+> 
+> Main problem of v4 was caused by the trylocking of cpuset_mutex. As
+> noticed by Steve [2], if multiple tasks are created at they same time
+> only the first gets to grab the mutex, the other get -EBUSY and need to
+> retry. Not really nice. So, in v5 I'm proposing to use callback_lock
+> instead of cpuset_mutex, which AFAIU should be enough to grant read-only
+> safe access to cpusets.
+> 
+> 01/05 has been dropped because it wasn't really adding much and was
+> only causing false positives.
+> 
+> 05/05 is still too much DEADLINE specific I guess, but let's first agree
+> on foundations patches.
+> 
+> Set also available at
+> 
+>  https://github.com/jlelli/linux.git fixes/deadline/root-domain-accounting-v5
 
-I would like to know your assessment of this patchset as to whether it
-is ready or not.
+Gentle ping about this.
 
-Thanks,
-Longman
+Best,
 
+- Juri
