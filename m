@@ -1,8 +1,8 @@
 From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH v5 5/5] cpuset: Rebuild root domain deadline accounting
  information
-Date: Tue, 25 Sep 2018 14:32:22 +0200
-Message-ID: <20180925123222.GA29985@hirez.programming.kicks-ass.net>
+Date: Tue, 25 Sep 2018 14:53:59 +0200
+Message-ID: <20180925125359.GB29985@hirez.programming.kicks-ass.net>
 References: <20180903142801.20046-1-juri.lelli@redhat.com>
  <20180903142801.20046-6-juri.lelli@redhat.com>
 Mime-Version: 1.0
@@ -13,11 +13,11 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=fVeypW0c9yXTee3kTdE5jLY+GhHFXVY9Trn7iK79WZQ=; b=RdLVZhG+lDkTXc9gPp6JKufWK
-        XYlEPTdEsYb5m/FWU0aWrOza2KZ+bdH0Z9EwY5OnN6aBeJz5+Y6K296s6j6sEXbAzKvnFDah2gKZE
-        jdbZvcDhXnt8T/NOP4WCScOZCzud2CiDfyTxComHG/D+cJG5/7SbiFvuVRTzL3pkZpNmYtx/LLdaF
-        gWWpf+RLxMGoeFqqMcLLuKt90bA9UGl4iYAdpi7C/wm5sipmZ9MYL8i7ZZib5Y25FvIqUcf15ebNy
-        aB6+jEPDnNLhhqJFv30zZS6anOycuXpSw2uA8eSgSYDdc7D/t+niJiBsk9xRgQTEQEDZTjDF71i+/
+         bh=YfEgqCZsL0D0MX2UFgrk0gZ2R/zh4SL983DQE0j7GFE=; b=NTAuHPTBofAjMrR1WN4NdN55e
+        M4pzeMj4oDIbpsvrsrJcH4K3wVuXgN5eDInCFzwZ4j0sOXcbKOJQcNHHnReiAICb98+JOggs94/A6
+        WmgUORQL+iwYxPIQ39WIw09TC/4lqqfj+2cyChwES5GxjnxFJLTkOdd9nY+GAARvHtz2DFzAWZBI5
+        Qyax5D13zGJOGVZ4YE79ojWZVfKtV5PbowQJV2bQi9ZroEH06ULaU4xvRQUPcwmWanC4L5l9xjN+n
+        n4ZFqlha26Fr5IQwPWhVCuTAGCQqN41cgmbPPfbhq9a8jnaDArrn8wPP7/NSnfknUazAkj94LXF0P
     
 Content-Disposition: inline
 In-Reply-To: <20180903142801.20046-6-juri.lelli@redhat.com>
@@ -29,45 +29,34 @@ To: Juri Lelli <juri.lelli@redhat.com>
 Cc: mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
 On Mon, Sep 03, 2018 at 04:28:01PM +0200, Juri Lelli wrote:
-> +/*
-> + * Called with cpuset_mutex held (rebuild_sched_domains())
-> + * Called with hotplug lock held (rebuild_sched_domains_locked())
-> + * Called with sched_domains_mutex held (partition_and_rebuild_domains())
+> diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
+> index fb7ae691cb82..08128bdf3944 100644
+> --- a/kernel/sched/topology.c
+> +++ b/kernel/sched/topology.c
+> @@ -1883,8 +1883,19 @@ void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
+>  	for (i = 0; i < ndoms_cur; i++) {
+>  		for (j = 0; j < n && !new_topology; j++) {
+>  			if (cpumask_equal(doms_cur[i], doms_new[j])
+> -			    && dattrs_equal(dattr_cur, i, dattr_new, j))
+> +			    && dattrs_equal(dattr_cur, i, dattr_new, j)) {
 
-Isn't that what we have lockdep_assert_held() for?
+While there, please also fix that wrongly placed operator.
 
-> + */
-> +static void rebuild_root_domains(void)
-> +{
-> +	struct cpuset *cs = NULL;
-> +	struct cgroup_subsys_state *pos_css;
+> +				struct root_domain *rd;
 > +
-> +	rcu_read_lock();
-> +
-> +	/*
-> +	 * Clear default root domain DL accounting, it will be computed again
-> +	 * if a task belongs to it.
-> +	 */
-> +	dl_clear_root_domain(&def_root_domain);
-> +
-> +	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
-> +
-> +		if (cpumask_empty(cs->effective_cpus)) {
-> +			pos_css = css_rightmost_descendant(pos_css);
-> +			continue;
-> +		}
-> +
-> +		css_get(&cs->css);
-> +
-> +		rcu_read_unlock();
-
-That looks really dodgy, but I suppose the comment near
-css_next_descendant_pre() spells out that this is in fact OK.
-
-> +		update_tasks_root_domain(cs);
-> +
-> +		rcu_read_lock();
-> +		css_put(&cs->css);
-> +	}
-> +	rcu_read_unlock();
-> +}
+> +				/*
+> +				 * This domain won't be destroyed and as such
+> +				 * its dl_bw->total_bw needs to be cleared.  It
+> +				 * will be recomputed in function
+> +				 * update_tasks_root_domain().
+> +				 */
+> +				rd = cpu_rq(cpumask_any(doms_cur[i]))->rd;
+> +				dl_clear_root_domain(rd);
+>  				goto match1;
+> +			}
+>  		}
+>  		/* No match - a current sched domain not in new doms_new[] */
+>  		detach_destroy_domains(doms_cur[i]);
+> -- 
+> 2.17.1
+> 
