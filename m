@@ -1,67 +1,211 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH 00/34] VFS: Introduce filesystem context [ver #12]
-Date: Thu, 04 Oct 2018 20:37:09 +0200
-Message-ID: <87sh1ld0dm.fsf@xmission.com>
-References: <153754740781.17872.7869536526927736855.stgit@warthog.procyon.org.uk>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Subject: Re: Cgroup v2 bug: "domain invalid" node can't be converted to
+ "threaded"
+Date: Thu, 4 Oct 2018 21:12:01 +0200
+Message-ID: <1558fb10-5a70-61fb-1e2f-771e044a2e6b@gmail.com>
+References: <CAKgNAkhHYCMn74TCNiMJ=ccLd7DcmXSbvw3CbZ1YREeG7iJM5g@mail.gmail.com>
+ <20181002210741.GJ270328@devbig004.ftw2.facebook.com>
+ <0cf4f9de-70d2-cf94-12d2-283759638e20@gmail.com>
+ <20181004182017.GK270328@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <153754740781.17872.7869536526927736855.stgit@warthog.procyon.org.uk>
-        (David Howells's message of "Fri, 21 Sep 2018 17:30:08 +0100")
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=cc:subject:to:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=9th6wm9+/VGG3F3Bqr6Re6NhsZvdns3WWk6xeTshRtc=;
+        b=Y/dafZ1Fqf5wT2FhORaiGIzlaD4KPhNJjQVi8KAP223RdoAZlTZZmAL8NG8RMADaDZ
+         tB7sqcgBAOClRURzlVjbgShopoxrjTd6Z8Klos2q7LJRE/v82xt7IhZhRwsaXvt9RYmo
+         AJtR3m8SWxHWfCwhVf4fHZT/1WlIsgMdDZhtkK6kAR/ANwi3BJdyG/zq1On8jGIMGTYm
+         qtN8nTwR0LNZOSv3Bx5s/QlNNdFxQoAOzBOEXD0JdCDx7jyE/VITOTrH3jv3J4rFW+8R
+         s2FV46HtlWaIN7R60GBR91ZhEeyDv9eEkwLVbkYNkMZrifvxnYv/yFUtMcfmvVJOYYJd
+         i9Pg==
+In-Reply-To: <20181004182017.GK270328@devbig004.ftw2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Howells <dhowells@redhat.com>
-Cc: viro@zeniv.linux.org.uk, John Johansen <john.johansen@canonical.com>, Tejun Heo <tj@kernel.org>, "Eric W. Biederman" <ebiederm@redhat.com>, selinux@tycho.nsa.gov, Paul Moore <paul@paul-moore.com>, Li Zefan <lizefan@huawei.com>, linux-api@vger.kernel.org, apparmor@lists.ubuntu.com, Casey Schaufler <casey@schaufler-ca.com>, fenghua.yu@intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Biggers <ebiggers@google.com>, linux-security-module@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Stephen Smalley <sds@tycho.nsa.gov>, tomoyo-dev-en@lists.sourceforge.jp, cgroups@vger.kernel.org, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, mszeredi@redhat.com
+To: Tejun Heo <tj@kernel.org>
+Cc: mtk.manpages@gmail.com, lkml <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "Serge E. Hallyn" <serge@hallyn.com>, Amin Jamali <ajamali@pivotal.io>, Joao De Almeida Pereira <jpereira@pivotal.io>
+
+Hello Tejun,
+
+On 10/04/2018 08:20 PM, Tejun Heo wrote:
+> Hello,
+> 
+> On Thu, Oct 04, 2018 at 08:14:55PM +0200, Michael Kerrisk (man-pages) wrote:
+>> On 10/02/2018 11:07 PM, Tejun Heo wrote:
+>>> Hello, Michael.
+>>>
+>>> Great catch.  Can you please verify whether the following patch fixes
+>>> the issue?
+>>>
+>>> Thanks.
+>> Against which kernel version should this apply? I get these build
+>> errors on kernel 4.18:
+> 
+> lol, sorry about that.  The header change ended up in the wrong patch.
+> Updated patch follows.
+
+That fixes the problem for me (built against 4.19-rc6).
+
+When you roll the final patch, please include Amin and Joao in the 
+Reported-by:
+
+Thanks,
+
+Michael
 
 
-David,
+> ------ 8< ------
+> Subject: cgroup: Fix dom_cgrp propagation when enabling threaded mode
+> 
+> A cgroup which is already a threaded domain may be converted into a
+> threaded cgroup if the prerequisite conditions are met.  When this
+> happens, all threaded descendant should also have their ->dom_cgrp
+> updated to the new threaded domain cgroup.  Unfortunately, this
+> propagation was missing leading to the following failure.
+> 
+>   # cd /sys/fs/cgroup/unified
+>   # cat cgroup.subtree_control    # show that no controllers are enabled
+> 
+>   # mkdir -p mycgrp/a/b/c
+>   # echo threaded > mycgrp/a/b/cgroup.type
+> 
+>   At this point, the hierarchy looks as follows:
+> 
+>       mycgrp [d]
+> 	  a [dt]
+> 	      b [t]
+> 		  c [inv]
+> 
+>   Now let's make node "a" threaded (and thus "mycgrp" s made "domain threaded"):
+> 
+>   # echo threaded > mycgrp/a/cgroup.type
+> 
+>   By this point, we now have a hierarchy that looks as follows:
+> 
+>       mycgrp [dt]
+> 	  a [t]
+> 	      b [t]
+> 		  c [inv]
+> 
+>   But, when we try to convert the node "c" from "domain invalid" to
+>   "threaded", we get ENOTSUP on the write():
+> 
+>   # echo threaded > mycgrp/a/b/c/cgroup.type
+>   sh: echo: write error: Operation not supported
+> 
+> This patch fixes the problem by
+> 
+> * Moving the opencoded ->dom_cgrp save and restoration in
+>   cgroup_enable_threaded() into cgroup_{save|restore}_control() so
+>   that mulitple cgroups can be handled.
+>   
+> * Updating all threaded descendants' ->dom_cgrp to point to the new
+>   dom_cgrp when enabling threaded mode.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+> Link: https://lore.kernel.org/r/CAKgNAkhHYCMn74TCNiMJ=ccLd7DcmXSbvw3CbZ1YREeG7iJM5g@mail.gmail.com
+> Fixes: 454000adaa2a ("cgroup: introduce cgroup->dom_cgrp and threaded css_set handling")
+> Cc: stable@vger.kernel.org # v4.14+
+> ---
+>  include/linux/cgroup-defs.h |    1 +
+>  kernel/cgroup/cgroup.c      |   25 ++++++++++++++++---------
+>  2 files changed, 17 insertions(+), 9 deletions(-)
+> 
+> --- a/include/linux/cgroup-defs.h
+> +++ b/include/linux/cgroup-defs.h
+> @@ -412,6 +412,7 @@ struct cgroup {
+>  	 * specific task are charged to the dom_cgrp.
+>  	 */
+>  	struct cgroup *dom_cgrp;
+> +	struct cgroup *old_dom_cgrp;		/* used while enabling threaded */
+>  
+>  	/* per-cpu recursive resource statistics */
+>  	struct cgroup_rstat_cpu __percpu *rstat_cpu;
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -2836,11 +2836,12 @@ restart:
+>  }
+>  
+>  /**
+> - * cgroup_save_control - save control masks of a subtree
+> + * cgroup_save_control - save control masks and dom_cgrp of a subtree
+>   * @cgrp: root of the target subtree
+>   *
+> - * Save ->subtree_control and ->subtree_ss_mask to the respective old_
+> - * prefixed fields for @cgrp's subtree including @cgrp itself.
+> + * Save ->subtree_control, ->subtree_ss_mask and ->dom_cgrp to the
+> + * respective old_ prefixed fields for @cgrp's subtree including @cgrp
+> + * itself.
+>   */
+>  static void cgroup_save_control(struct cgroup *cgrp)
+>  {
+> @@ -2850,6 +2851,7 @@ static void cgroup_save_control(struct c
+>  	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
+>  		dsct->old_subtree_control = dsct->subtree_control;
+>  		dsct->old_subtree_ss_mask = dsct->subtree_ss_mask;
+> +		dsct->old_dom_cgrp = dsct->dom_cgrp;
+>  	}
+>  }
+>  
+> @@ -2875,11 +2877,12 @@ static void cgroup_propagate_control(str
+>  }
+>  
+>  /**
+> - * cgroup_restore_control - restore control masks of a subtree
+> + * cgroup_restore_control - restore control masks and dom_cgrp of a subtree
+>   * @cgrp: root of the target subtree
+>   *
+> - * Restore ->subtree_control and ->subtree_ss_mask from the respective old_
+> - * prefixed fields for @cgrp's subtree including @cgrp itself.
+> + * Restore ->subtree_control, ->subtree_ss_mask and ->dom_cgrp from the
+> + * respective old_ prefixed fields for @cgrp's subtree including @cgrp
+> + * itself.
+>   */
+>  static void cgroup_restore_control(struct cgroup *cgrp)
+>  {
+> @@ -2889,6 +2892,7 @@ static void cgroup_restore_control(struc
+>  	cgroup_for_each_live_descendant_post(dsct, d_css, cgrp) {
+>  		dsct->subtree_control = dsct->old_subtree_control;
+>  		dsct->subtree_ss_mask = dsct->old_subtree_ss_mask;
+> +		dsct->dom_cgrp = dsct->old_dom_cgrp;
+>  	}
+>  }
+>  
+> @@ -3196,6 +3200,8 @@ static int cgroup_enable_threaded(struct
+>  {
+>  	struct cgroup *parent = cgroup_parent(cgrp);
+>  	struct cgroup *dom_cgrp = parent->dom_cgrp;
+> +	struct cgroup *dsct;
+> +	struct cgroup_subsys_state *d_css;
+>  	int ret;
+>  
+>  	lockdep_assert_held(&cgroup_mutex);
+> @@ -3225,12 +3231,13 @@ static int cgroup_enable_threaded(struct
+>  	 */
+>  	cgroup_save_control(cgrp);
+>  
+> -	cgrp->dom_cgrp = dom_cgrp;
+> +	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp)
+> +		if (dsct == cgrp || cgroup_is_threaded(dsct))
+> +			dsct->dom_cgrp = dom_cgrp;
+> +
+>  	ret = cgroup_apply_control(cgrp);
+>  	if (!ret)
+>  		parent->nr_threaded_children++;
+> -	else
+> -		cgrp->dom_cgrp = cgrp;
+>  
+>  	cgroup_finalize_control(cgrp, ret);
+>  	return ret;
+> 
 
-I have been going through these and it is a wonderful proof of concept
-patchset.  There are a couple significant problems with it however.
 
-- Many patches do more than one thing that could benefit from being
-  broken up into more patches so that there is only one logical change
-  per patch.  I have attempted a little of that and have found several
-  significant bugs.
-
-- There are many unnecessary changes in this patchset that just add
-  noise and make it difficult to review.
-
-- There are many typos and thinkos in this patchset that while not hard
-  to correct keep this from being anywhere close to being ready for
-  prime time.
-
-- Some of the bugs I have encountered.
-  * proc that isn't pid_ns_prepare_proc does not set fc->user_ns to
-    match the pid namespace.
-  * mqueue does not set fc->user_ns to match the ipc namespace.
-  * The cpuset filesystem always fails to mount
-  * Non-converted filesystems don't have the old security hooks
-    and only have a bit blob so don't call into the new security
-    hooks either.
-  * The changes to implement the new security hooks at least for
-    selinux are riddled with typos, and thinkos.
-
-I was hoping to get into the semantic questions but I can't get
-there until I get a good solid baseline patch to work with.
-
-I have been able to hoist the permission check out of sget_fc for
-converted filesystems.  So progress is being made.  That absolutely
-requires fc->user_ns to be set properly before vfs_get_tree.  Something
-that still needs to be fixed.
-
-I have also observed that by not allowing unconverted filesystems
-to mount using the new api.  The compatbitility code can be
-significantly simplified, and the who data_size problem goes away.
-
-I am going to be travelling for the next couple of days so I
-don't expect I will be able to answer questions in a timely manner.
-In the hopes that it might help below is my work in progress git
-tree where I have cleaned up some of these issues.
-
-https://git.kernel.org/pub/scm/linux/kernel/git/ebiederm/user-namespace.git new-mount-api-testing
-
-Eric
-
-
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
