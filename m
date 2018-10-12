@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v13 10/11] cpuset: Add documentation about the new "cpuset.sched.partition" flag
-Date: Fri, 12 Oct 2018 13:55:50 -0400
-Message-ID: <1539366951-8498-11-git-send-email-longman@redhat.com>
+Subject: [PATCH v13 09/11] cpuset: Expose cpus.effective and mems.effective on cgroup v2 root
+Date: Fri, 12 Oct 2018 13:55:49 -0400
+Message-ID: <1539366951-8498-10-git-send-email-longman@redhat.com>
 References: <1539366951-8498-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1539366951-8498-1-git-send-email-longman@redhat.com>
@@ -13,91 +13,62 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Waiman Long <longman@redhat.com>
 
-The cgroup-v2.rst file is updated to document the purpose of the new
-"cpuset.sched.partition" flag and how its usage.
+Because of the fact that setting the "cpuset.sched.partition" in
+a direct child of root can remove CPUs from the root's effective CPU
+list, it makes sense to know what CPUs are left in the root cgroup for
+scheduling purpose. So the "cpuset.cpus.effective" control file is now
+exposed in the v2 cgroup root.
+
+For consistency, the "cpuset.mems.effective" control file is exposed
+as well.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 66 +++++++++++++++++++++++++++++++++
- 1 file changed, 66 insertions(+)
+ Documentation/admin-guide/cgroup-v2.rst | 4 ++--
+ kernel/cgroup/cpuset.c                  | 2 --
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 533e85c..178cda4 100644
+index 0465c23..533e85c 100644
 --- a/Documentation/admin-guide/cgroup-v2.rst
 +++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1686,6 +1686,72 @@ Cpuset Interface Files
+@@ -1631,7 +1631,7 @@ Cpuset Interface Files
+ 	and won't be affected by any CPU hotplug events.
  
- 	Its value will be affected by memory nodes hotplug events.
+   cpuset.cpus.effective
+-	A read-only multiple values file which exists on non-root
++	A read-only multiple values file which exists on all
+ 	cpuset-enabled cgroups.
  
-+  cpuset.sched.partition
-+	A read-write single value file which exists on non-root
-+	cpuset-enabled cgroups.  It accepts either "0" (off) or "1"
-+	(on) when written to.  This flag is set and owned by the
-+	parent cgroup.
-+
-+	If set, it indicates that the current cgroup is the root of a
-+	new partition or scheduling domain that comprises itself and
-+	all its descendants except those that are separate partition
-+	roots themselves and their descendants.  The root cgroup is
-+	always a partition root.
-+
-+	There are constraints on where this flag can be set.  It can
-+	only be set in a cgroup if all the following conditions are true.
-+
-+	1) The "cpuset.cpus" is not empty and the list of CPUs are
-+	   exclusive, i.e. they are not shared by any of its siblings.
-+	2) The parent cgroup is a partition root.
-+	3) The "cpuset.cpus" is also a proper subset of the parent's
-+	   "cpuset.cpus.effective".
-+	4) There is no child cgroups with cpuset enabled.  This is for
-+	   eliminating corner cases that have to be handled if such a
-+	   condition is allowed.
-+
-+	Setting this flag will take the CPUs away from the effective
-+	CPUs of the parent cgroup.  Once it is set, this flag cannot
-+	be cleared if there are any child cgroups with cpuset enabled.
-+
-+	A parent partition cannot distribute all its CPUs to its
-+	child partitions.  There must be at least one cpu left in the
-+	parent partition.
-+
-+	Once becoming a partition root, changes to "cpuset.cpus" is
-+	generally allowed as long as the first condition above is true,
-+	the change will not take away all the CPUs from the parent
-+	partition and the new "cpuset.cpus" value is a superset of its
-+	children's "cpuset.cpus" values.
-+
-+	Sometimes, external factors like changes to ancestors'
-+	"cpuset.cpus" or cpu hotplug can cause the state of the partition
-+	root to change.  On read, the "cpuset.sched.partition" file
-+	can show the following values.
-+
-+	"0"  Not a partition root
-+	"1"  Partition root
-+	"-1" Erroneous partition root
-+
-+	It is a partition root if the first 2 partition root conditions
-+	above are true and at least one CPU from "cpuset.cpus" is
-+	granted by the parent cgroup.
-+
-+	A partition root can become an erroneous partition root if none
-+	of CPUs requested in "cpuset.cpus" can be granted by the parent
-+	cgroup or the parent cgroup is no longer a partition root.
-+	In this case, it is not a real partition even though the
-+	restriction of the first partition root condition above will
-+	still apply.  All the tasks in the cgroup will be migrated to
-+	the nearest ancestor partition.
-+
-+	An erroneous partition root can be transitioned back to a real
-+	partition root if at least one of the requested CPUs can now be
-+	granted by its parent.	In this case, the tasks will be migrated
-+	back to the newly created partition.  Clearing the partition
-+	flag of an erroneous partition root is always allowed even if
-+	child cpusets are present.
-+
+ 	It lists the onlined CPUs that are actually granted to this
+@@ -1671,7 +1671,7 @@ Cpuset Interface Files
+ 	and won't be affected by any memory nodes hotplug events.
  
- Device controller
- -----------------
+   cpuset.mems.effective
+-	A read-only multiple values file which exists on non-root
++	A read-only multiple values file which exists on all
+ 	cpuset-enabled cgroups.
+ 
+ 	It lists the onlined memory nodes that are actually granted to
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index c52074e..a3b81d4 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2560,14 +2560,12 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 		.name = "cpus.effective",
+ 		.seq_show = cpuset_common_seq_show,
+ 		.private = FILE_EFFECTIVE_CPULIST,
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 	},
+ 
+ 	{
+ 		.name = "mems.effective",
+ 		.seq_show = cpuset_common_seq_show,
+ 		.private = FILE_EFFECTIVE_MEMLIST,
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 	},
+ 
+ 	{
 -- 
 1.8.3.1
 
