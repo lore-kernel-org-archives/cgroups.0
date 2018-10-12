@@ -1,8 +1,10 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v13 00/11] cpuset: Enable cpuset controller in default hierarchy
-Date: Fri, 12 Oct 2018 13:55:40 -0400
-Message-ID: <1539366951-8498-1-git-send-email-longman@redhat.com>
+Subject: [PATCH v13 01/11] cpuset: Enable cpuset controller in default hierarchy
+Date: Fri, 12 Oct 2018 13:55:41 -0400
+Message-ID: <1539366951-8498-2-git-send-email-longman@redhat.com>
+References: <1539366951-8498-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1539366951-8498-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -11,141 +13,238 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Waiman Long <longman@redhat.com>
 
-v13:
- - A major rewrite of the partition code so that there will be no
-   auto-turning off anymore. Instead, the partition root can enter into
-   an error state that can be restored back to a partition root later on.
- - Patches 1 and 9 are the same as previous version, the rests are
-   either new or substantially revised.
+Given the fact that thread mode had been merged into 4.14, it is now
+time to enable cpuset to be used in the default hierarchy (cgroup v2)
+as it is clearly threaded.
 
-v12:
- - Take out the debugging patch to print partitions.
- - Add a patch to force turning off partition flag if newly modified CPU
-   list doesn't meet the requirement of being a partition root.
- - Remove some unneeded checking code in update_reserved_cpumask().
+The cpuset controller had experienced feature creep since its
+introduction more than a decade ago. Besides the core cpus and mems
+control files to limit cpus and memory nodes, there are a bunch of
+additional features that can be controlled from the userspace. Some of
+the features are of doubtful usefulness and may not be actively used.
 
-v11:
- - Change the "domain_root" name to "partition" as suggested by Peter and
-   update the documentation and code accordingly.
- - Remove the dying cgroup check in update_reserved_cpus() as the check
-   may not be needed after all.
- - Document the effect of losing CPU affinity after offling all the cpus
-   in a partition.
- - There is no other major code changes in this version.
+This patch enables cpuset controller in the default hierarchy with
+a minimal set of features, namely just the cpus and mems and their
+effective_* counterparts.  We can certainly add more features to the
+default hierarchy in the future if there is a real user need for them
+later on.
 
-v10:
- - Remove the cpuset.sched.load_balance patch for now as it may not
-   be that useful.
- - Break the large patch 2 into smaller patches to make them a bit
-   easier to review.
- - Test and fix issues related to changing "cpuset.cpus" and cpu
-   online/offline in a domain root.
- - Rename isolated_cpus to reserved_cpus as this cpumask holds CPUs
-   reserved for child sched domains.
- - Rework the scheduling domain debug printing code in the last patch.
- - Document update to the newly moved
-   Documentation/admin-guide/cgroup-v2.rst.
+Alternatively, with the unified hiearachy, it may make more sense
+to move some of those additional cpuset features, if desired, to
+memory controller or may be to the cpu controller instead of staying
+with cpuset.
 
-v10 patch: https://lkml.org/lkml/2018/6/18/3
-v11 patch: https://lkml.org/lkml/2018/6/24/30
-v12 patch: https://lkml.org/lkml/2018/8/27/423
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 109 ++++++++++++++++++++++++++++++--
+ kernel/cgroup/cpuset.c                  |  48 +++++++++++++-
+ 2 files changed, 149 insertions(+), 8 deletions(-)
 
-The purpose of this patchset is to provide a basic set of cpuset control
-files for cgroup v2. This basic set includes the non-root "cpus",
-"mems" and "sched.partition". The "cpus.effective" and "mems.effective"
-will appear in all cpuset-enabled cgroups.
-
-The new control file that is unique to v2 is "sched.partition". It is
-a tristate flag file that designates if a cgroup is the root of a new
-scheduling domain or partition with its own set of unique list of CPUs
-from scheduling perspective disjointed from other partitions. An user
-can write only "1" or "0" into this file to turn on and off partition root.
-Depending on circumstances, a partition root may become erroneous and has
-a flag value of -1. However, if condition becomes favorable again, it can
-be changed back to a partition root automatically.
-
-The root cgroup is always a partition root. Multiple levels of partitions
-are supported with some limitations. So a container partition root can
-behave like a real root.
-
-When a partition root cgroup is removed, its list of exclusive CPUs
-will be returned back to the parent's cpus.effective automatically.
-
-A container root can be a partition root with sub-partitions
-created underneath it. One difference from the real root is that the
-"cpuset.sched.partition" flag isn't present in the real root, but is
-present in a container root. This is also true for other cpuset control
-files as well as those from the other controllers. This is a general
-issue that is not going to be addressed here in this patchset.
-
-This patchset does not exclude the possibility of adding more features
-in the future after careful consideration.
-
-Patch 1 enables cpuset in cgroup v2 with cpus, mems and their effective
-counterparts.
-
-Patch 2 defines new data structures to support partitioning.
-
-Patch 3 simplifies the allocation and freeing of cpumasks in the cpuset
-code and prepares for use by subsequent patches.
-
-Patch 4 adds a new "sched.partition" control file for setting up multiple
-scheduling domains or partitions. A partition root implies cpu_exclusive.
-
-Patch 5 makes new "sched.partition" file to have a new error value of -1
-which indicates that the partition root enters into an erroneous state
-where some of the constraints of a partition root (like cpu_exclusive)
-will still hold but it is not a real partition root anymore. This allows
-the cpuset to change back to a partition root later on automatically
-if the conditions become favorable again.
-
-Patch 6 adds tracking of the number of cpusets that use the parent's
-effective_cpus in order to make sure that those cpusets will be properly
-updated if their parents effective cpus changes because of changes in
-sibling partitions.
-
-Patch 7 makes the hotplug code deal with partition root properly.
-
-Patch 8 updates the scheduling domain genaration code to work with
-the new partition feature.
-
-Patch 9 exposes cpus.effective and mems.effective to the root cgroup
-as enabling child partitions will take CPUs away from the root cgroup.
-So it will be nice to monitor what CPUs are left there.
-
-Patch 10 updates the cgroup v2 documentation file with information
-about the new "sched.partition" file.
-
-Patch 11 adds a new read-only "cpus.subpartitions" file that list the
-CPUs in the subparts_cpus mask in the cpuset data structure when the
-command line option "cgroup_debug" is specified. This is mostly used
-for debugging and verification purposes.
-
-A test script with various cpuset configurations was run on both regular
-and debug kernels with this patchset applied to verify that the cpusets
-behaved appropriate without unexpected error.
-
-Waiman Long (11):
-  cpuset: Enable cpuset controller in default hierarchy
-  cpuset: Define data structures to support scheduling partition
-  cpuset: Simply allocation and freeing of cpumasks
-  cpuset: Add new v2 cpuset.sched.partition flag
-  cpuset: Add an error state to cpuset.sched.partition
-  cpuset: Track cpusets that use parent's effective_cpus
-  cpuset: Make CPU hotplug work with partition
-  cpuset: Make generate_sched_domains() work with partition
-  cpuset: Expose cpus.effective and mems.effective on cgroup v2 root
-  cpuset: Add documentation about the new "cpuset.sched.partition" flag
-  cpuset: Expose cpuset.cpus.subpartitions with cgroup_debug
-
- Documentation/admin-guide/cgroup-v2.rst | 175 ++++++-
- include/linux/cgroup-defs.h             |   1 +
- kernel/cgroup/cgroup-internal.h         |   2 +
- kernel/cgroup/cgroup.c                  |  14 +-
- kernel/cgroup/cpuset.c                  | 887 +++++++++++++++++++++++++++++---
- kernel/cgroup/debug.c                   |   4 +-
- 6 files changed, 1007 insertions(+), 76 deletions(-)
-
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 184193b..0465c23 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -56,11 +56,13 @@ v1 is available under Documentation/cgroup-v1/.
+          5-3-3-2. IO Latency Interface Files
+      5-4. PID
+        5-4-1. PID Interface Files
+-     5-5. Device
+-     5-6. RDMA
+-       5-6-1. RDMA Interface Files
+-     5-7. Misc
+-       5-7-1. perf_event
++     5-5. Cpuset
++       5.5-1. Cpuset Interface Files
++     5-6. Device
++     5-7. RDMA
++       5-7-1. RDMA Interface Files
++     5-8. Misc
++       5-8-1. perf_event
+      5-N. Non-normative information
+        5-N-1. CPU controller root cgroup process behaviour
+        5-N-2. IO controller root cgroup process behaviour
+@@ -1588,6 +1590,103 @@ through fork() or clone(). These will return -EAGAIN if the creation
+ of a new process would cause a cgroup policy to be violated.
+ 
+ 
++Cpuset
++------
++
++The "cpuset" controller provides a mechanism for constraining
++the CPU and memory node placement of tasks to only the resources
++specified in the cpuset interface files in a task's current cgroup.
++This is especially valuable on large NUMA systems where placing jobs
++on properly sized subsets of the systems with careful processor and
++memory placement to reduce cross-node memory access and contention
++can improve overall system performance.
++
++The "cpuset" controller is hierarchical.  That means the controller
++cannot use CPUs or memory nodes not allowed in its parent.
++
++
++Cpuset Interface Files
++~~~~~~~~~~~~~~~~~~~~~~
++
++  cpuset.cpus
++	A read-write multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the requested CPUs to be used by tasks within this
++	cgroup.  The actual list of CPUs to be granted, however, is
++	subjected to constraints imposed by its parent and can differ
++	from the requested CPUs.
++
++	The CPU numbers are comma-separated numbers or ranges.
++	For example:
++
++	  # cat cpuset.cpus
++	  0-4,6,8-10
++
++	An empty value indicates that the cgroup is using the same
++	setting as the nearest cgroup ancestor with a non-empty
++	"cpuset.cpus" or all the available CPUs if none is found.
++
++	The value of "cpuset.cpus" stays constant until the next update
++	and won't be affected by any CPU hotplug events.
++
++  cpuset.cpus.effective
++	A read-only multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the onlined CPUs that are actually granted to this
++	cgroup by its parent.  These CPUs are allowed to be used by
++	tasks within the current cgroup.
++
++	If "cpuset.cpus" is empty, the "cpuset.cpus.effective" file shows
++	all the CPUs from the parent cgroup that can be available to
++	be used by this cgroup.  Otherwise, it should be a subset of
++	"cpuset.cpus" unless none of the CPUs listed in "cpuset.cpus"
++	can be granted.  In this case, it will be treated just like an
++	empty "cpuset.cpus".
++
++	Its value will be affected by CPU hotplug events.
++
++  cpuset.mems
++	A read-write multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the requested memory nodes to be used by tasks within
++	this cgroup.  The actual list of memory nodes granted, however,
++	is subjected to constraints imposed by its parent and can differ
++	from the requested memory nodes.
++
++	The memory node numbers are comma-separated numbers or ranges.
++	For example:
++
++	  # cat cpuset.mems
++	  0-1,3
++
++	An empty value indicates that the cgroup is using the same
++	setting as the nearest cgroup ancestor with a non-empty
++	"cpuset.mems" or all the available memory nodes if none
++	is found.
++
++	The value of "cpuset.mems" stays constant until the next update
++	and won't be affected by any memory nodes hotplug events.
++
++  cpuset.mems.effective
++	A read-only multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the onlined memory nodes that are actually granted to
++	this cgroup by its parent. These memory nodes are allowed to
++	be used by tasks within the current cgroup.
++
++	If "cpuset.mems" is empty, it shows all the memory nodes from the
++	parent cgroup that will be available to be used by this cgroup.
++	Otherwise, it should be a subset of "cpuset.mems" unless none of
++	the memory nodes listed in "cpuset.mems" can be granted.  In this
++	case, it will be treated just like an empty "cpuset.mems".
++
++	Its value will be affected by memory nodes hotplug events.
++
++
+ Device controller
+ -----------------
+ 
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 266f10c..2b5c447 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1824,12 +1824,11 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 	return 0;
+ }
+ 
+-
+ /*
+  * for the common functions, 'private' gives the type of file
+  */
+ 
+-static struct cftype files[] = {
++static struct cftype legacy_files[] = {
+ 	{
+ 		.name = "cpus",
+ 		.seq_show = cpuset_common_seq_show,
+@@ -1932,6 +1931,47 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ };
+ 
+ /*
++ * This is currently a minimal set for the default hierarchy. It can be
++ * expanded later on by migrating more features and control files from v1.
++ */
++static struct cftype dfl_files[] = {
++	{
++		.name = "cpus",
++		.seq_show = cpuset_common_seq_show,
++		.write = cpuset_write_resmask,
++		.max_write_len = (100U + 6 * NR_CPUS),
++		.private = FILE_CPULIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "mems",
++		.seq_show = cpuset_common_seq_show,
++		.write = cpuset_write_resmask,
++		.max_write_len = (100U + 6 * MAX_NUMNODES),
++		.private = FILE_MEMLIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "cpus.effective",
++		.seq_show = cpuset_common_seq_show,
++		.private = FILE_EFFECTIVE_CPULIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "mems.effective",
++		.seq_show = cpuset_common_seq_show,
++		.private = FILE_EFFECTIVE_MEMLIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{ }	/* terminate */
++};
++
++
++/*
+  *	cpuset_css_alloc - allocate a cpuset css
+  *	cgrp:	control group that the new cpuset will be part of
+  */
+@@ -2105,8 +2145,10 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+ 	.post_attach	= cpuset_post_attach,
+ 	.bind		= cpuset_bind,
+ 	.fork		= cpuset_fork,
+-	.legacy_cftypes	= files,
++	.legacy_cftypes	= legacy_files,
++	.dfl_cftypes	= dfl_files,
+ 	.early_init	= true,
++	.threaded	= true,
+ };
+ 
+ /**
 -- 
 1.8.3.1
 
