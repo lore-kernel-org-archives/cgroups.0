@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v13 08/11] cpuset: Make generate_sched_domains() work with partition
-Date: Fri, 12 Oct 2018 13:55:48 -0400
-Message-ID: <1539366951-8498-9-git-send-email-longman@redhat.com>
+Subject: [PATCH v13 10/11] cpuset: Add documentation about the new "cpuset.sched.partition" flag
+Date: Fri, 12 Oct 2018 13:55:50 -0400
+Message-ID: <1539366951-8498-11-git-send-email-longman@redhat.com>
 References: <1539366951-8498-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1539366951-8498-1-git-send-email-longman@redhat.com>
@@ -13,106 +13,91 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Waiman Long <longman@redhat.com>
 
-The generate_sched_domains() function is modified to make it work
-correctly with the newly introduced subparts_cpus mask for scheduling
-domains generation.
+The cgroup-v2.rst file is updated to document the purpose of the new
+"cpuset.sched.partition" flag and how its usage.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 34 +++++++++++++++++++++++++++-------
- 1 file changed, 27 insertions(+), 7 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 66 +++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 578e6ae..c52074e 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -763,13 +763,14 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 	int ndoms = 0;		/* number of sched domains in result */
- 	int nslot;		/* next empty doms[] struct cpumask slot */
- 	struct cgroup_subsys_state *pos_css;
-+	bool root_load_balance = is_sched_load_balance(&top_cpuset);
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 533e85c..178cda4 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1686,6 +1686,72 @@ Cpuset Interface Files
  
- 	doms = NULL;
- 	dattr = NULL;
- 	csa = NULL;
+ 	Its value will be affected by memory nodes hotplug events.
  
- 	/* Special case for the 99% of systems with one, full, sched domain */
--	if (is_sched_load_balance(&top_cpuset)) {
-+	if (root_load_balance && !top_cpuset.nr_subparts_cpus) {
- 		ndoms = 1;
- 		doms = alloc_sched_domains(ndoms);
- 		if (!doms)
-@@ -792,6 +793,8 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 	csn = 0;
- 
- 	rcu_read_lock();
-+	if (root_load_balance)
-+		csa[csn++] = &top_cpuset;
- 	cpuset_for_each_descendant_pre(cp, pos_css, &top_cpuset) {
- 		if (cp == &top_cpuset)
- 			continue;
-@@ -802,6 +805,9 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 		 * parent's cpus, so just skip them, and then we call
- 		 * update_domain_attr_tree() to calc relax_domain_level of
- 		 * the corresponding sched domain.
-+		 *
-+		 * If root is load-balancing, we can skip @cp if it
-+		 * is a subset of the root's effective_cpus.
- 		 */
- 		if (!cpumask_empty(cp->cpus_allowed) &&
- 		    !(is_sched_load_balance(cp) &&
-@@ -809,11 +815,16 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 					 housekeeping_cpumask(HK_FLAG_DOMAIN))))
- 			continue;
- 
-+		if (root_load_balance &&
-+		    cpumask_subset(cp->cpus_allowed, top_cpuset.effective_cpus))
-+			continue;
++  cpuset.sched.partition
++	A read-write single value file which exists on non-root
++	cpuset-enabled cgroups.  It accepts either "0" (off) or "1"
++	(on) when written to.  This flag is set and owned by the
++	parent cgroup.
 +
- 		if (is_sched_load_balance(cp))
- 			csa[csn++] = cp;
- 
--		/* skip @cp's subtree */
--		pos_css = css_rightmost_descendant(pos_css);
-+		/* skip @cp's subtree if not a partition root */
-+		if (!is_partition_root(cp))
-+			pos_css = css_rightmost_descendant(pos_css);
- 	}
- 	rcu_read_unlock();
- 
-@@ -941,7 +952,12 @@ static void rebuild_sched_domains_locked(void)
- 	 * passing doms with offlined cpu to partition_sched_domains().
- 	 * Anyways, hotplug work item will rebuild sched domains.
- 	 */
--	if (!cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
-+	if (!top_cpuset.nr_subparts_cpus &&
-+	    !cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
-+		goto out;
++	If set, it indicates that the current cgroup is the root of a
++	new partition or scheduling domain that comprises itself and
++	all its descendants except those that are separate partition
++	roots themselves and their descendants.  The root cgroup is
++	always a partition root.
 +
-+	if (top_cpuset.nr_subparts_cpus &&
-+	   !cpumask_subset(top_cpuset.effective_cpus, cpu_active_mask))
- 		goto out;
++	There are constraints on where this flag can be set.  It can
++	only be set in a cgroup if all the following conditions are true.
++
++	1) The "cpuset.cpus" is not empty and the list of CPUs are
++	   exclusive, i.e. they are not shared by any of its siblings.
++	2) The parent cgroup is a partition root.
++	3) The "cpuset.cpus" is also a proper subset of the parent's
++	   "cpuset.cpus.effective".
++	4) There is no child cgroups with cpuset enabled.  This is for
++	   eliminating corner cases that have to be handled if such a
++	   condition is allowed.
++
++	Setting this flag will take the CPUs away from the effective
++	CPUs of the parent cgroup.  Once it is set, this flag cannot
++	be cleared if there are any child cgroups with cpuset enabled.
++
++	A parent partition cannot distribute all its CPUs to its
++	child partitions.  There must be at least one cpu left in the
++	parent partition.
++
++	Once becoming a partition root, changes to "cpuset.cpus" is
++	generally allowed as long as the first condition above is true,
++	the change will not take away all the CPUs from the parent
++	partition and the new "cpuset.cpus" value is a superset of its
++	children's "cpuset.cpus" values.
++
++	Sometimes, external factors like changes to ancestors'
++	"cpuset.cpus" or cpu hotplug can cause the state of the partition
++	root to change.  On read, the "cpuset.sched.partition" file
++	can show the following values.
++
++	"0"  Not a partition root
++	"1"  Partition root
++	"-1" Erroneous partition root
++
++	It is a partition root if the first 2 partition root conditions
++	above are true and at least one CPU from "cpuset.cpus" is
++	granted by the parent cgroup.
++
++	A partition root can become an erroneous partition root if none
++	of CPUs requested in "cpuset.cpus" can be granted by the parent
++	cgroup or the parent cgroup is no longer a partition root.
++	In this case, it is not a real partition even though the
++	restriction of the first partition root condition above will
++	still apply.  All the tasks in the cgroup will be migrated to
++	the nearest ancestor partition.
++
++	An erroneous partition root can be transitioned back to a real
++	partition root if at least one of the requested CPUs can now be
++	granted by its parent.	In this case, the tasks will be migrated
++	back to the newly created partition.  Clearing the partition
++	flag of an erroneous partition root is always allowed even if
++	child cpusets are present.
++
  
- 	/* Generate domain masks and attrs */
-@@ -1356,11 +1372,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
- 		update_tasks_cpumask(cp);
- 
- 		/*
--		 * If the effective cpumask of any non-empty cpuset is changed,
--		 * we need to rebuild sched domains.
-+		 * On legacy hierarchy, if the effective cpumask of any non-
-+		 * empty cpuset is changed, we need to rebuild sched domains.
-+		 * On default hierarchy, the cpuset needs to be a partition
-+		 * root as well.
- 		 */
- 		if (!cpumask_empty(cp->cpus_allowed) &&
--		    is_sched_load_balance(cp))
-+		    is_sched_load_balance(cp) &&
-+		   (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
-+		    is_partition_root(cp)))
- 			need_rebuild_sched_domains = true;
- 
- 		rcu_read_lock();
+ Device controller
+ -----------------
 -- 
 1.8.3.1
 
