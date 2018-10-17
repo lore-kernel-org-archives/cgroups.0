@@ -1,42 +1,59 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v14 12/12] cpuset: Show descriptive text when reading
- cpuset.sched.partition
-Date: Wed, 17 Oct 2018 11:20:08 -0400
-Message-ID: <55f76a9b-9e6d-0e5f-c07a-c94777555d4e@redhat.com>
-References: <1539635377-22335-1-git-send-email-longman@redhat.com>
- <1539635377-22335-13-git-send-email-longman@redhat.com>
- <20181017150836.GS270328@devbig004.ftw2.facebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Cgroup v2 thread mode oddity: "domain invalid" cgroup with
+ threaded controller enabled
+Date: Wed, 17 Oct 2018 09:19:58 -0700
+Message-ID: <20181017161958.GT270328@devbig004.ftw2.facebook.com>
+References: <a4912516-8c6b-d8d3-b714-5c03bcfc5e91@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181017150836.GS270328@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=tASjEjfws3/XHl7yNeAIkgDk0U2NJ7AFE81cCChSL6E=;
+        b=Y5FBr9V5kqJXG6zjHU7WZnmah4mhzBAjmOjq4fBTz40SQLAArQNoX8ddthirR5Szw+
+         K/9RHEEx7wjVKNIovY3EyMwGiMn4t5r7aog9pAUShzYCVJljSIPHmYbhf/a7+3oU/r8i
+         3HcYH/H2DLOBUy8uNcPqJXDgRWRc9CgOQq4b6JMV9K2CEiyJ4vzmU8lV0J6YvLCKlxom
+         ZV3pOqbUe81cYw7K8rLEV4SDcNCs82mGhNCrrGZqAfUJW6XzO1gT9dT/oXyfRyT2aFDY
+         6aPaSED7mtXLMfbEiPl+Nknsdp9WxxcKiVV6/p8LyKroJzdasbOWjViybDoT2kwfdVBz
+         RkjQ==
+Content-Disposition: inline
+In-Reply-To: <a4912516-8c6b-d8d3-b714-5c03bcfc5e91@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
+Content-Transfer-Encoding: 7bit
+To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Cc: "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "Serge E. Hallyn" <serge@hallyn.com>, lkml <linux-kernel@vger.kernel.org>
 
-On 10/17/2018 11:08 AM, Tejun Heo wrote:
-> On Mon, Oct 15, 2018 at 04:29:37PM -0400, Waiman Long wrote:
->> Currently, cpuset.sched.partition returns the values, 0, 1 or -1 on
->> read. A person who is not familiar with the partition code may not
->> understand what they mean.
->>
->> In order to make cpuset.sched.partition more user-friendly, it will
->> now display the following descriptive text on read:
->>
->>   "normal" - A normal cpuset, not a partition root
->>   "partition" - A partition root
->>   "partition invalid" - An invalid partition root
->>
->> Suggested-by: Tejun Heo <tj@kernel.org>
->> Signed-off-by: Waiman Long <longman@redhat.com>
-> Can you also make this consistent when writing to the file?
->
-> Thanks.
->
-Yes, sure.
+Hello, Michael.
 
--Longman
+Sorry about the delay.
 
+On Thu, Oct 04, 2018 at 09:40:57PM +0200, Michael Kerrisk (man-pages) wrote:
+> This seems odd. x/y is now of "domain invalid" type with a controller
+> enabled! This feels like a violation of the rules, since we can't
+> in other circumstances do anything with a "domain invalid" cgroup
+> except convert it to "threaded". In particular, we can't create
+> child cgroups under a "domain invalid" cgroup, or add member processes
+> to the cgroup, or *enable controllers in the cgroup*. In fact, when
+> doing the 
+> 
+>     # echo threaded > x/z/cgroup.type
+> 
+> I had expected a write(2) error because the state of x/y should
+> (I thought) not be permitted.
+
+So, both the interim (before turning x/z into threaded) and final
+(after) are completely fine - the cgroups are empty and whether
+threaded controllers like pids are enabled or not don't really change
+things that much.
+
+Maybe it is a bit inconsistent to then deny enabling threaded
+controllers on invalid domain cgroups.  We can lift that restriction
+but I personally can't see why that'd be clearly better.
+
+Thanks.
+
+-- 
+tejun
