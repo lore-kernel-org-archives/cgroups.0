@@ -1,93 +1,270 @@
-From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: Re: [RFC PATCH v2 0/8] lru_lock scalability and SMP list functions
-Date: Fri, 19 Oct 2018 08:35:55 -0700
-Message-ID: <20181019153555.mza7t5siubhk3ohu@ca-dmjordan1.us.oracle.com>
-References: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
- <2705c814-a6b8-0b14-7ea8-790325833d95@suse.cz>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v14 12/12] cpuset: Show descriptive text when reading
+ cpuset.sched.partition
+Date: Fri, 19 Oct 2018 14:56:13 -0400
+Message-ID: <b797288a-6088-f7b0-c881-81633c071754@redhat.com>
+References: <1539635377-22335-1-git-send-email-longman@redhat.com>
+ <1539635377-22335-13-git-send-email-longman@redhat.com>
+ <20181017150836.GS270328@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------275CDF22CC2523499699C9E0"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=HXYgnJ3P5i00nVrBX3BRh1qEJz/jjKvHMDodfy1uMuE=;
- b=S4hxkkoLtY2CG3AX8T3NKKAwJtfSaIa2PdQa+iW3yGgtRkhaErLLAQ50/XRDzZ5YU/kw
- q6EKwrKf0aRM9hjaWyIM7R92BdSQ9lOH9e17cPXyI5imH5feGnydW8Fqa1XJgvL1lz3Z
- flr7RTVhKdAwsO9BIL2fkqZpuv4QoJ5Jzmnvqrx7/QYfZOY/YGuM/MP7ubtiAqwCTSQ4
- QKdk82m+NbObQIk52pkxDYj8vIaDyZ6+pE3FfUWDAskz0+h0jnxLyuvW43nJQYXUoHU+
- zonC1VGbSNSvynYNjms2h46whCjAGhK/7RbgzaE/WfSe4JkA0pAhKVruaAq5gJCKA33U cQ== 
-Content-Disposition: inline
-In-Reply-To: <2705c814-a6b8-0b14-7ea8-790325833d95@suse.cz>
+In-Reply-To: <20181017150836.GS270328@devbig004.ftw2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
+
+This is a multi-part message in MIME format.
+--------------275CDF22CC2523499699C9E0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Daniel Jordan <daniel.m.jordan@oracle.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, aaron.lu@intel.com, ak@linux.intel.com, akpm@linux-foundation.org, dave.dice@oracle.com, dave.hansen@linux.intel.com, hannes@cmpxchg.org, levyossi@icloud.com, ldufour@linux.vnet.ibm.com, mgorman@techsingularity.net, mhocko@kernel.org, Pavel.Tatashin@microsoft.com, steven.sistare@oracle.com, tim.c.chen@intel.com, vdavydov.dev@gmail.com, ying.huang@intel.com
 
-On Fri, Oct 19, 2018 at 01:35:11PM +0200, Vlastimil Babka wrote:
-> On 9/11/18 2:42 AM, Daniel Jordan wrote:
-> > On large systems, lru_lock can become heavily contended in memory-intensive
-> > workloads such as decision support, applications that manage their memory
-> > manually by allocating and freeing pages directly from the kernel, and
-> > workloads with short-lived processes that force many munmap and exit
-> > operations.  lru_lock also inhibits scalability in many of the MM paths that
-> > could be parallelized, such as freeing pages during exit/munmap and inode
-> > eviction.
-> 
-> Interesting, I would have expected isolate_lru_pages() to be the main
-> culprit, as the comment says:
-> 
->  * For pagecache intensive workloads, this function is the hottest
->  * spot in the kernel (apart from copy_*_user functions).
+On 10/17/2018 11:08 AM, Tejun Heo wrote:
+> On Mon, Oct 15, 2018 at 04:29:37PM -0400, Waiman Long wrote:
+>> Currently, cpuset.sched.partition returns the values, 0, 1 or -1 on
+>> read. A person who is not familiar with the partition code may not
+>> understand what they mean.
+>>
+>> In order to make cpuset.sched.partition more user-friendly, it will
+>> now display the following descriptive text on read:
+>>
+>>   "normal" - A normal cpuset, not a partition root
+>>   "partition" - A partition root
+>>   "partition invalid" - An invalid partition root
+>>
+>> Suggested-by: Tejun Heo <tj@kernel.org>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+> Can you also make this consistent when writing to the file?
+>
+> Thanks.
+>
+How about the attached patch instead?
 
-Yes, I'm planning to stress reclaim to see how lru_lock responds.  I've
-experimented some with using dd on lots of nvme drives to keep kswapd busy, but
-I'm always looking for more realistic stuff.  Suggestions welcome :)
+Cheers,
+Longman
 
-> It also says "Some of the functions that shrink the lists perform better
-> by taking out a batch of pages and working on them outside the LRU
-> lock." Makes me wonder why isolate_lru_pages() also doesn't cut the list
-> first instead of doing per-page list_move() (and perhaps also prefetch
-> batch of struct pages outside the lock first? Could be doable with some
-> care hopefully).
 
-Seems like the batch prefetching and list cutting would go hand in hand, since
-cutting requires walking the LRU to find where to cut, which could miss on all
-the page list nodes along the way.
+--------------275CDF22CC2523499699C9E0
+Content-Type: text/x-patch;
+ name="v14-0012-cpuset-Use-descriptive-text-when-reading-writing.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="v14-0012-cpuset-Use-descriptive-text-when-reading-writing.pa";
+ filename*1="tch"
 
-I'll experiment with this.
+From ab96b5d735102b0167a5e92f0aee92caa18a18ae Mon Sep 17 00:00:00 2001
+From: Waiman Long <longman@redhat.com>
+Date: Fri, 19 Oct 2018 11:46:41 -0400
+Subject: [PATCH v14 12/12] cpuset: Use descriptive text when reading/writing
+ cpuset.sched.partition
 
-> > Second, lru_lock is converted from a spinlock to a rwlock.  The idea is to
-> > repurpose rwlock as a two-mode lock, where callers take the lock in shared
-> > (i.e. read) mode for code using the SMP list functions, and exclusive (i.e.
-> > write) mode for existing code that expects exclusive access to the LRUs.
-> > Multiple threads are allowed in under the read lock, of course, and they use
-> > the SMP list functions to synchronize amongst themselves.
-> > 
-> > The rwlock is scaffolding to facilitate the transition from big-hammer lru_lock
-> > as it exists today to just using the list locking primitives and getting rid of
-> > lru_lock entirely.  Such an approach allows incremental conversion of lru_lock
-> > writers until everything uses the SMP list functions and takes the lock in
-> > shared mode, at which point lru_lock can just go away.
-> 
-> Yeah I guess that will need more care, e.g. I think smp_list_del() can
-> break any thread doing just a read-only traversal as it can end up with
-> an entry that's been deleted and its next/prev poisoned.
+Currently, cpuset.sched.partition returns the values, 0, 1 or -1 on
+read. A person who is not familiar with the partition code may not
+understand what they mean.
 
-As far as I can see from checking everywhere the kernel takes lru_lock, nothing
-currently walks the LRUs.  LRU-using code just deletes a page from anywhere, or
-adds one page at a time from the head or tail, so it seems safe to use
-smp_list_* for all LRU paths.
+In order to make cpuset.sched.partition more user-friendly, it will
+now display the following descriptive text on read:
 
-This RFC doesn't handle adding and removing from list tails yet, but that seems
-doable.
+  "normal" - A normal cpuset, not a partition root
+  "partition" - A partition root
+  "partition invalid" - An invalid partition root
 
-> It's a bit
-> counterintuitive that "read lock" is now enough for selected modify
-> operations, while read-only traversal would need a write lock.
+The cpuset.sched.partition file will now also accept "normal" and
+"partition" besides 1 and 0 as valid input values. The "partition
+invalid" value is internal only and cannot be written to the file.
 
-Yes, I considered introducing wrappers to clarify this, e.g. an inline function
-exclusive_lock_irqsave that just calls write_lock_irqsave, to let people know
-the locks are being used specially.  Would be happy to add these in.
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 50 +++++++++++++++-------------
+ kernel/cgroup/cpuset.c                  | 58 +++++++++++++++++++++++++++++----
+ 2 files changed, 79 insertions(+), 29 deletions(-)
 
-Thanks for taking a look, Vlastimil, and for your comments!
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 178cda4..072f09d 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1688,18 +1688,23 @@ Cpuset Interface Files
+ 
+   cpuset.sched.partition
+ 	A read-write single value file which exists on non-root
+-	cpuset-enabled cgroups.  It accepts either "0" (off) or "1"
+-	(on) when written to.  This flag is set and owned by the
++	cpuset-enabled cgroups.  This file is set and owned by the
+ 	parent cgroup.
+ 
+-	If set, it indicates that the current cgroup is the root of a
+-	new partition or scheduling domain that comprises itself and
++        It accepts only the following input values when written to.
++
++        "normal" or "0" - normal cpuset, not a partition root
++        "partition" or "1" - partition root
++
++	When set to a partition root, the current cgroup is the root of
++	a new partition or scheduling domain that comprises itself and
+ 	all its descendants except those that are separate partition
+ 	roots themselves and their descendants.  The root cgroup is
+ 	always a partition root.
+ 
+-	There are constraints on where this flag can be set.  It can
+-	only be set in a cgroup if all the following conditions are true.
++	There are constraints on where a partition root can be set.
++	It can only be set in a cgroup if all the following conditions
++	are true.
+ 
+ 	1) The "cpuset.cpus" is not empty and the list of CPUs are
+ 	   exclusive, i.e. they are not shared by any of its siblings.
+@@ -1710,9 +1715,10 @@ Cpuset Interface Files
+ 	   eliminating corner cases that have to be handled if such a
+ 	   condition is allowed.
+ 
+-	Setting this flag will take the CPUs away from the effective
+-	CPUs of the parent cgroup.  Once it is set, this flag cannot
+-	be cleared if there are any child cgroups with cpuset enabled.
++	Setting it to partition root will take the CPUs away from the
++	effective CPUs of the parent cgroup.  Once it is set, this
++	file cannot be reverted back to "normal" if there are any child
++	cgroups with cpuset enabled.
+ 
+ 	A parent partition cannot distribute all its CPUs to its
+ 	child partitions.  There must be at least one cpu left in the
+@@ -1729,28 +1735,28 @@ Cpuset Interface Files
+ 	root to change.  On read, the "cpuset.sched.partition" file
+ 	can show the following values.
+ 
+-	"0"  Not a partition root
+-	"1"  Partition root
+-	"-1" Erroneous partition root
++	"normal" - Normal cpuset, not a partition root
++	"partition" - Partition root
++	"partition invalid" - Invalid partition root
+ 
+ 	It is a partition root if the first 2 partition root conditions
+ 	above are true and at least one CPU from "cpuset.cpus" is
+ 	granted by the parent cgroup.
+ 
+-	A partition root can become an erroneous partition root if none
+-	of CPUs requested in "cpuset.cpus" can be granted by the parent
+-	cgroup or the parent cgroup is no longer a partition root.
+-	In this case, it is not a real partition even though the
++	A partition root can become an invalid partition root if none
++	of the CPUs requested in "cpuset.cpus" can be granted by the
++	parent cgroup or the parent cgroup is no longer a partition
++	root.  In this case, it is not a real partition even though the
+ 	restriction of the first partition root condition above will
+ 	still apply.  All the tasks in the cgroup will be migrated to
+ 	the nearest ancestor partition.
+ 
+-	An erroneous partition root can be transitioned back to a real
+-	partition root if at least one of the requested CPUs can now be
+-	granted by its parent.	In this case, the tasks will be migrated
+-	back to the newly created partition.  Clearing the partition
+-	flag of an erroneous partition root is always allowed even if
+-	child cpusets are present.
++	An invalid partition root can be transitioned back to a real
++	partition root if at least one of the requested CPUs can now
++	be granted by its parent.  In this case, the tasks will be
++	migrated back to the newly created partition.  Converting an
++	invalid partition root back to "normal" is always allowed even
++	if child cpusets are present.
+ 
+ 
+ Device controller
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 34d47e4..d356205 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2274,9 +2274,6 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	case FILE_SCHED_RELAX_DOMAIN_LEVEL:
+ 		retval = update_relax_domain_level(cs, val);
+ 		break;
+-	case FILE_PARTITION_ROOT:
+-		retval = update_prstate(cs, val);
+-		break;
+ 	default:
+ 		retval = -EINVAL;
+ 		break;
+@@ -2430,8 +2427,6 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 	switch (type) {
+ 	case FILE_SCHED_RELAX_DOMAIN_LEVEL:
+ 		return cs->relax_domain_level;
+-	case FILE_PARTITION_ROOT:
+-		return cs->partition_root_state;
+ 	default:
+ 		BUG();
+ 	}
+@@ -2440,6 +2435,55 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 	return 0;
+ }
+ 
++static int sched_partition_show(struct seq_file *seq, void *v)
++{
++	struct cpuset *cs = css_cs(seq_css(seq));
++
++	switch (cs->partition_root_state) {
++	case PRS_ENABLED:
++		seq_puts(seq, "partition\n");
++		break;
++	case PRS_DISABLED:
++		seq_puts(seq, "normal\n");
++		break;
++	case PRS_ERROR:
++		seq_puts(seq, "partition invalid\n");
++		break;
++	}
++	return 0;
++}
++
++static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
++				     size_t nbytes, loff_t off)
++{
++	struct cpuset *cs = css_cs(of_css(of));
++	int val;
++	int retval = -ENODEV;
++
++	buf = strstrip(buf);
++
++	/*
++	 * Convert "partition"/"1" to 1, and convert "normal"/"0" to 0.
++	 */
++	if (!strcmp(buf, "partition") || !strcmp(buf, "1"))
++		val = PRS_ENABLED;
++	else if (!strcmp(buf, "normal") || !strcmp(buf, "0"))
++		val = PRS_DISABLED;
++	else
++		return -EINVAL;
++
++	css_get(&cs->css);
++	mutex_lock(&cpuset_mutex);
++	if (!is_cpuset_online(cs))
++		goto out_unlock;
++
++	retval = update_prstate(cs, val);
++out_unlock:
++	mutex_unlock(&cpuset_mutex);
++	css_put(&cs->css);
++	return retval ?: nbytes;
++}
++
+ /*
+  * for the common functions, 'private' gives the type of file
+  */
+@@ -2583,8 +2627,8 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 
+ 	{
+ 		.name = "sched.partition",
+-		.read_s64 = cpuset_read_s64,
+-		.write_s64 = cpuset_write_s64,
++		.seq_show = sched_partition_show,
++		.write = sched_partition_write,
+ 		.private = FILE_PARTITION_ROOT,
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 	},
+-- 
+1.8.3.1
+
+
+--------------275CDF22CC2523499699C9E0--
