@@ -1,26 +1,107 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 0/9] psi: pressure stall information for CPU, memory,
- and IO v4
-Date: Thu, 18 Oct 2018 19:07:10 -0700
-Message-ID: <20181018190710.fcea1c5f9c3b0c15d37ee762@linux-foundation.org>
-References: <20180828172258.3185-1-hannes@cmpxchg.org>
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [RFC PATCH v2 0/8] lru_lock scalability and SMP list functions
+Date: Fri, 19 Oct 2018 13:35:11 +0200
+Message-ID: <2705c814-a6b8-0b14-7ea8-790325833d95@suse.cz>
+References: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180828172258.3185-1-hannes@cmpxchg.org>
+In-Reply-To: <20180911004240.4758-1-daniel.m.jordan@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Peter Enderborg <peter.enderborg@sony.com>, Shakeel Butt <shakeelb@google.com>, Mike Galbraith <efault@gmx.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Daniel Jordan <daniel.m.jordan@oracle.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: aaron.lu@intel.com, ak@linux.intel.com, akpm@linux-foundation.org, dave.dice@oracle.com, dave.hansen@linux.intel.com, hannes@cmpxchg.org, levyossi@icloud.com, ldufour@linux.vnet.ibm.com, mgorman@techsingularity.net, mhocko@kernel.org, Pavel.Tatashin@microsoft.com, steven.sistare@oracle.com, tim.c.chen@intel.com, vdavydov.dev@gmail.com, ying.huang@intel.com
 
-On Tue, 28 Aug 2018 13:22:49 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+On 9/11/18 2:42 AM, Daniel Jordan wrote:
+> Hi,
+> 
+> This is a work-in-progress of what I presented at LSF/MM this year[0] to
+> greatly reduce contention on lru_lock, allowing it to scale on large systems.
+> 
+> This is completely different from the lru_lock series posted last January[1].
+> 
+> I'm hoping for feedback on the overall design and general direction as I do
+> more real-world performance testing and polish the code.  Is this a workable
+> approach?
+> 
+>                                         Thanks,
+>                                           Daniel
+> 
+> ---
+> 
+> Summary:  lru_lock can be one of the hottest locks in the kernel on big
+> systems.  It guards too much state, so introduce new SMP-safe list functions to
+> allow multiple threads to operate on the LRUs at once.  The SMP list functions
+> are provided in a standalone API that can be used in other parts of the kernel.
+> When lru_lock and zone->lock are both fixed, the kernel can do up to 73.8% more
+> page faults per second on a 44-core machine.
+> 
+> ---
+> 
+> On large systems, lru_lock can become heavily contended in memory-intensive
+> workloads such as decision support, applications that manage their memory
+> manually by allocating and freeing pages directly from the kernel, and
+> workloads with short-lived processes that force many munmap and exit
+> operations.  lru_lock also inhibits scalability in many of the MM paths that
+> could be parallelized, such as freeing pages during exit/munmap and inode
+> eviction.
 
-> This version 4 of the PSI series incorporates feedback from Peter and
-> fixes two races in the lockless aggregator that Suren found in his
-> testing and which caused the sample calculation to sometimes underflow
-> and record bogusly large samples; details at the bottom of this email.
+Interesting, I would have expected isolate_lru_pages() to be the main
+culprit, as the comment says:
 
-We've had very little in the way of review activity for the PSI
-patchset.  According to the changelog tags, anyway.
+ * For pagecache intensive workloads, this function is the hottest
+ * spot in the kernel (apart from copy_*_user functions).
 
+It also says "Some of the functions that shrink the lists perform better
+by taking out a batch of pages and working on them outside the LRU
+lock." Makes me wonder why isolate_lru_pages() also doesn't cut the list
+first instead of doing per-page list_move() (and perhaps also prefetch
+batch of struct pages outside the lock first? Could be doable with some
+care hopefully).
+
+> The problem is that lru_lock is too big of a hammer.  It guards all the LRUs in
+> a pgdat's lruvec, needlessly serializing add-to-front, add-to-tail, and delete
+> operations that are done on disjoint parts of an LRU, or even completely
+> different LRUs.
+> 
+> This RFC series, developed in collaboration with Yossi Lev and Dave Dice,
+> offers a two-part solution to this problem.
+> 
+> First, three new list functions are introduced to allow multiple threads to
+> operate on the same linked list simultaneously under certain conditions, which
+> are spelled out in more detail in code comments and changelogs.  The functions
+> are smp_list_del, smp_list_splice, and smp_list_add, and do the same things as
+> their non-SMP-safe counterparts.  These primitives may be used elsewhere in the
+> kernel as the need arises; for example, in the page allocator free lists to
+> scale zone->lock[2], or in file system LRUs[3].
+> 
+> Second, lru_lock is converted from a spinlock to a rwlock.  The idea is to
+> repurpose rwlock as a two-mode lock, where callers take the lock in shared
+> (i.e. read) mode for code using the SMP list functions, and exclusive (i.e.
+> write) mode for existing code that expects exclusive access to the LRUs.
+> Multiple threads are allowed in under the read lock, of course, and they use
+> the SMP list functions to synchronize amongst themselves.
+> 
+> The rwlock is scaffolding to facilitate the transition from big-hammer lru_lock
+> as it exists today to just using the list locking primitives and getting rid of
+> lru_lock entirely.  Such an approach allows incremental conversion of lru_lock
+> writers until everything uses the SMP list functions and takes the lock in
+> shared mode, at which point lru_lock can just go away.
+
+Yeah I guess that will need more care, e.g. I think smp_list_del() can
+break any thread doing just a read-only traversal as it can end up with
+an entry that's been deleted and its next/prev poisoned. It's a bit
+counterintuitive that "read lock" is now enough for selected modify
+operations, while read-only traversal would need a write lock.
+
+> This RFC series is incomplete.  More, and more realistic, performance
+> numbers are needed; for now, I show only will-it-scale/page_fault1.
+> Also, there are extensions I'd like to make to the locking scheme to
+> handle certain lru_lock paths--in particular, those where multiple
+> threads may delete the same node from an LRU.  The SMP list functions
+> now handle only removal of _adjacent_ nodes from an LRU.  Finally, the
+> diffstat should become more supportive after I remove some of the code
+> duplication in patch 6 by converting the rest of the per-CPU pagevec
+> code in mm/swap.c to use the SMP list functions.
