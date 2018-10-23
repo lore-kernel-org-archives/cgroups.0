@@ -1,72 +1,65 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Subject: Re: Cgroup v2 thread mode oddity: "domain invalid" cgroup with
- threaded controller enabled
-Date: Tue, 23 Oct 2018 18:09:05 +0200
-Message-ID: <CAKgNAkgEeHSYCFGdXOBQHBALg0KgWP_1=dEFYD_R6wCaV99MJg@mail.gmail.com>
-References: <a4912516-8c6b-d8d3-b714-5c03bcfc5e91@gmail.com> <20181017161958.GT270328@devbig004.ftw2.facebook.com>
-Reply-To: mtk.manpages@gmail.com
+From: Parav Pandit <parav@mellanox.com>
+Subject: RE: [PATCH] rdmacg: fix a typo in rdmacg documentation
+Date: Tue, 23 Oct 2018 16:13:33 +0000
+Message-ID: <VI1PR0501MB2271192C00D2E25E0AB6950DD1F50@VI1PR0501MB2271.eurprd05.prod.outlook.com>
+References: <20181023150106.7332-1-ramirose@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=Fgm4tFmb3aCVBUqVRe/lYD1am1ANjqT3rkKG73BHrA0=;
-        b=ZqKtQQotqtvSi/BvgAxSrFvgRLYJqUDOhA0kxHrEufBXnxNntz5BcbEzjTuayF1q7a
-         0ysmOTlaBB+WHtnpemnIlA/t4rb5kqzUEHJKk8CNYvwvzcCKhGTFPlmpi7sx84OdpqwC
-         8Fpj9q7UjGZ/wYOAuDU9+6mJbyiLfEuTMUjmIZl6oa/KzgyoVhV0KXZfEXwxBk9qRxva
-         2nvc5uYKDSHXh7VZgFQnqdkjztLS1KwAd3u+xOoLi8XEiuibW+jHKfdffMlOJ2mAqS3k
-         poLVZH36Cf8KMyHe0E0lQX+sMTVMvywClNw5s+LZUK1BP1hGZV03qVj6QhIr7CPb8nLh
-         AnYA==
-In-Reply-To: <20181017161958.GT270328@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QtKVwKm1RytM3kwFLau/gSZVIzzMvQodGqzgmYKAwLA=;
+ b=bGsTPBBW8WHhNW5qWW+9+rRCqHBwFGldEv3Zes5/d/sazUIA9CWhXPlIxxz+6mjioQpjpXuaJJn7vvFQ9NrFRDnKVClglnNbPVKNOnf3bRQP2mLtuXJ+xkx5Ay3kxznqDHemtmr9I5eE2OPyPsIxBlTeEjkeYXrd65taPGYzADU=
+In-Reply-To: <20181023150106.7332-1-ramirose@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "Serge E. Hallyn" <serge@hallyn.com>, lkml <linux-kernel@vger.kernel.org>
+To: Rami Rosen <ramirose@gmail.com>, "pandit.parav@gmail.com" <pandit.parav@gmail.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-Hi Tejun
-On Wed, 17 Oct 2018 at 18:20, Tejun Heo <tj@kernel.org> wrote:
->
-> Hello, Michael.
->
-> Sorry about the delay.
->
-> On Thu, Oct 04, 2018 at 09:40:57PM +0200, Michael Kerrisk (man-pages) wrote:
-> > This seems odd. x/y is now of "domain invalid" type with a controller
-> > enabled! This feels like a violation of the rules, since we can't
-> > in other circumstances do anything with a "domain invalid" cgroup
-> > except convert it to "threaded". In particular, we can't create
-> > child cgroups under a "domain invalid" cgroup, or add member processes
-> > to the cgroup, or *enable controllers in the cgroup*. In fact, when
-> > doing the
-> >
-> >     # echo threaded > x/z/cgroup.type
-> >
-> > I had expected a write(2) error because the state of x/y should
-> > (I thought) not be permitted.
->
-> So, both the interim (before turning x/z into threaded) and final
-> (after) are completely fine - the cgroups are empty and whether
-> threaded controllers like pids are enabled or not don't really change
-> things that much.
->
-> Maybe it is a bit inconsistent to then deny enabling threaded
-> controllers on invalid domain cgroups.  We can lift that restriction
-> but I personally can't see why that'd be clearly better.
 
-So, I also can't see anything that seems harmful in the scenario I
-described; it's just an odd inconsistency, and I supposed it was
-unintended/overlooked behavior, and I wanted to alert you to it, in
-case it seemed problematic. However, as long as you have no concerns,
-I see no reason to change the existing behavior.
 
-Thanks,
+> -----Original Message-----
+> From: linux-rdma-owner@vger.kernel.org <linux-rdma-
+> owner@vger.kernel.org> On Behalf Of Rami Rosen
+> Sent: Tuesday, October 23, 2018 8:31 PM
+> To: pandit.parav@gmail.com
+> Cc: tj@kernel.org; linux-rdma@vger.kernel.org; linux-kernel@vger.kernel.o=
+rg;
+> cgroups@vger.kernel.org; Rami Rosen <ramirose@gmail.com>
+> Subject: [PATCH] rdmacg: fix a typo in rdmacg documentation
+>=20
+> This patch fixes a typo in RDMA cgroup documentation.
+>=20
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+> ---
+>  Documentation/cgroup-v1/rdma.txt | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/Documentation/cgroup-v1/rdma.txt b/Documentation/cgroup-
+> v1/rdma.txt
+> index af618171e0eb..9bdb7fd03f83 100644
+> --- a/Documentation/cgroup-v1/rdma.txt
+> +++ b/Documentation/cgroup-v1/rdma.txt
+> @@ -27,7 +27,7 @@ cgroup.
+>  Currently user space applications can easily take away all the rdma verb
+> specific resources such as AH, CQ, QP, MR etc. Due to which other
+> applications  in other cgroup or kernel space ULPs may not even get chanc=
+e
+> to allocate any -rdma resources. This can leads to service unavailability=
+.
+> +rdma resources. This can lead to service unavailability.
+>=20
+>  Therefore RDMA controller is needed through which resource consumption
+> of processes can be limited. Through this controller different rdma
+> --
+> 2.17.1
 
-Michael
+Thanks Rami for the correction.
+For sake of process correctness, below fixes tag is good to have.
 
--- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+Fixes: 9c1e67f94101 ("rdmacg: Added documentation for rdmacg")
+
+Reviewed-by: Parav Pandit <parav@mellanox.com>
