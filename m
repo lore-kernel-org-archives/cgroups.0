@@ -1,65 +1,45 @@
-From: Parav Pandit <parav@mellanox.com>
-Subject: RE: [PATCH] rdmacg: fix a typo in rdmacg documentation
-Date: Tue, 23 Oct 2018 16:13:33 +0000
-Message-ID: <VI1PR0501MB2271192C00D2E25E0AB6950DD1F50@VI1PR0501MB2271.eurprd05.prod.outlook.com>
-References: <20181023150106.7332-1-ramirose@gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 0/9] psi: pressure stall information for CPU, memory, and
+ IO v4
+Date: Tue, 23 Oct 2018 13:29:37 -0400
+Message-ID: <20181023172937.GA21443@cmpxchg.org>
+References: <20180828172258.3185-1-hannes@cmpxchg.org>
+ <20181018190710.fcea1c5f9c3b0c15d37ee762@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QtKVwKm1RytM3kwFLau/gSZVIzzMvQodGqzgmYKAwLA=;
- b=bGsTPBBW8WHhNW5qWW+9+rRCqHBwFGldEv3Zes5/d/sazUIA9CWhXPlIxxz+6mjioQpjpXuaJJn7vvFQ9NrFRDnKVClglnNbPVKNOnf3bRQP2mLtuXJ+xkx5Ay3kxznqDHemtmr9I5eE2OPyPsIxBlTeEjkeYXrd65taPGYzADU=
-In-Reply-To: <20181023150106.7332-1-ramirose@gmail.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=p+GUZjTRskiLlmKpga5pTHMTouwhMfYvT279qB1hK60=;
+        b=itbAAzwpNKBDUm2qri1EI6NDeyb6tJAFb0npG0uiL1Bq600UD6HkQpy+vxvjN4HUXB
+         n83zpzv9aJikA4zNrmza5FkAr1idSFSEqp5RAeOi6YFUHJxwHcXX6pm0rQcGFCDv1AZw
+         zcjNGkV488c3szCN7bC4kNlbtxWBnKjP6dNTnk5ETWDvVCyecCLmR0Cz+vwVb6vFKR8J
+         kUdg65uNQrXS1rtZUQWPh7w+rZo0TX1NClFYees36oCx6xP7lSdUJ2uOUcT/4rzqMpNv
+         SDRJ09r+Bcg1HbK24GY5pp02AGGs7At29N6iFDmRWrEp1RyDpp0niZ4FXKLHcuvr5zzR
+         SqpA==
+Content-Disposition: inline
+In-Reply-To: <20181018190710.fcea1c5f9c3b0c15d37ee762@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Rami Rosen <ramirose@gmail.com>, "pandit.parav@gmail.com" <pandit.parav@gmail.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Daniel Drake <drake@endlessm.com>, Vinayak Menon <vinmenon@codeaurora.org>, Christopher Lameter <cl@linux.com>, Peter Enderborg <peter.enderborg@sony.com>, Shakeel Butt <shakeelb@google.com>, Mike Galbraith <efault@gmx.de>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
+On Thu, Oct 18, 2018 at 07:07:10PM -0700, Andrew Morton wrote:
+> On Tue, 28 Aug 2018 13:22:49 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+> 
+> > This version 4 of the PSI series incorporates feedback from Peter and
+> > fixes two races in the lockless aggregator that Suren found in his
+> > testing and which caused the sample calculation to sometimes underflow
+> > and record bogusly large samples; details at the bottom of this email.
+> 
+> We've had very little in the way of review activity for the PSI
+> patchset.  According to the changelog tags, anyway.
 
+Peter reviewed it quite extensively over all revisions, and acked the
+final version. Peter, can we add your acked-by or reviewed-by tag(s)?
 
-> -----Original Message-----
-> From: linux-rdma-owner@vger.kernel.org <linux-rdma-
-> owner@vger.kernel.org> On Behalf Of Rami Rosen
-> Sent: Tuesday, October 23, 2018 8:31 PM
-> To: pandit.parav@gmail.com
-> Cc: tj@kernel.org; linux-rdma@vger.kernel.org; linux-kernel@vger.kernel.o=
-rg;
-> cgroups@vger.kernel.org; Rami Rosen <ramirose@gmail.com>
-> Subject: [PATCH] rdmacg: fix a typo in rdmacg documentation
->=20
-> This patch fixes a typo in RDMA cgroup documentation.
->=20
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
-> ---
->  Documentation/cgroup-v1/rdma.txt | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/Documentation/cgroup-v1/rdma.txt b/Documentation/cgroup-
-> v1/rdma.txt
-> index af618171e0eb..9bdb7fd03f83 100644
-> --- a/Documentation/cgroup-v1/rdma.txt
-> +++ b/Documentation/cgroup-v1/rdma.txt
-> @@ -27,7 +27,7 @@ cgroup.
->  Currently user space applications can easily take away all the rdma verb
-> specific resources such as AH, CQ, QP, MR etc. Due to which other
-> applications  in other cgroup or kernel space ULPs may not even get chanc=
-e
-> to allocate any -rdma resources. This can leads to service unavailability=
-.
-> +rdma resources. This can lead to service unavailability.
->=20
->  Therefore RDMA controller is needed through which resource consumption
-> of processes can be limited. Through this controller different rdma
-> --
-> 2.17.1
-
-Thanks Rami for the correction.
-For sake of process correctness, below fixes tag is good to have.
-
-Fixes: 9c1e67f94101 ("rdmacg: Added documentation for rdmacg")
-
-Reviewed-by: Parav Pandit <parav@mellanox.com>
+The scheduler part accounts for 99% of the complexity in those
+patches. The mm bits, while somewhat sprawling, are mostly mechanical.
