@@ -1,54 +1,46 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v14 12/12] cpuset: Show descriptive text when reading
- cpuset.sched.partition
-Date: Fri, 19 Oct 2018 15:32:16 -0400
-Message-ID: <9fd20993-ab71-4a0b-aecb-9ebcc775561a@redhat.com>
-References: <1539635377-22335-1-git-send-email-longman@redhat.com>
- <1539635377-22335-13-git-send-email-longman@redhat.com>
- <20181017150836.GS270328@devbig004.ftw2.facebook.com>
- <b797288a-6088-f7b0-c881-81633c071754@redhat.com>
- <20181019192444.GV270328@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Rami Rosen <ramirose@gmail.com>
+Subject: [PATCH] rdmacg: fix a typo in rdmacg documentation
+Date: Tue, 23 Oct 2018 18:01:06 +0300
+Message-ID: <20181023150106.7332-1-ramirose@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181019192444.GV270328@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=DNPRj44yO0W2TUQq8beXtrJGB9zkBaGSgZsPlXqFj/A=;
+        b=QyJJfFLOY65FbWduxMazW7FJJXkw829rPfmxBiDmTW1Grwx3zH4By+FeutZyqpGuUB
+         d1twqZKnF2Y5h+gal1/ugPCpPGHXMExhLZlXQBtMemOV5Jx+GDd8sQ63Cy058iJkGwe8
+         k01594Wk+rR3HpFrHr8BmEeK9Jyu1AX9f5gRHZpEqlWIWxMV0fqOdBiBDETuC4HMUiyU
+         iMTBHBCrwDRlYuixfZhjfNuBdwa/e9NQho4NjA4hFFF402j1i94/Cg/LK5PIsUuqFbuc
+         5h/OjZI5lnc917GsV7huKASiiHKTmYE5NfCkGzA1tjqYR2K6yUxSLjDgOUWZ4+Yl9jab
+         VCNA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
+Content-Transfer-Encoding: 7bit
+To: pandit.parav@gmail.com
+Cc: tj@kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Rami Rosen <ramirose@gmail.com>
 
-On 10/19/2018 03:24 PM, Tejun Heo wrote:
-> On Fri, Oct 19, 2018 at 02:56:13PM -0400, Waiman Long wrote:
->> On 10/17/2018 11:08 AM, Tejun Heo wrote:
->>> On Mon, Oct 15, 2018 at 04:29:37PM -0400, Waiman Long wrote:
->>>> Currently, cpuset.sched.partition returns the values, 0, 1 or -1 on
->>>> read. A person who is not familiar with the partition code may not
->>>> understand what they mean.
->>>>
->>>> In order to make cpuset.sched.partition more user-friendly, it will
->>>> now display the following descriptive text on read:
->>>>
->>>>   "normal" - A normal cpuset, not a partition root
->>>>   "partition" - A partition root
->>>>   "partition invalid" - An invalid partition root
->>>>
->>>> Suggested-by: Tejun Heo <tj@kernel.org>
->>>> Signed-off-by: Waiman Long <longman@redhat.com>
->>> Can you also make this consistent when writing to the file?
->>>
->>> Thanks.
->>>
->> How about the attached patch instead?
-> Looks good to me.  Once Peter is okay with it, I'll roll it into
-> cgroup devel branch.  As v4.19 is almost done, I think it makes more
-> sense to target the next merge window (v4.21).
->
-> Thanks.
->
-v4.21 is fine. Thanks for valuable help and suggestions.
+This patch fixes a typo in RDMA cgroup documentation.
 
-Cheers,
-Longman
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+---
+ Documentation/cgroup-v1/rdma.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/cgroup-v1/rdma.txt b/Documentation/cgroup-v1/rdma.txt
+index af618171e0eb..9bdb7fd03f83 100644
+--- a/Documentation/cgroup-v1/rdma.txt
++++ b/Documentation/cgroup-v1/rdma.txt
+@@ -27,7 +27,7 @@ cgroup.
+ Currently user space applications can easily take away all the rdma verb
+ specific resources such as AH, CQ, QP, MR etc. Due to which other applications
+ in other cgroup or kernel space ULPs may not even get chance to allocate any
+-rdma resources. This can leads to service unavailability.
++rdma resources. This can lead to service unavailability.
+ 
+ Therefore RDMA controller is needed through which resource consumption
+ of processes can be limited. Through this controller different rdma
+-- 
+2.17.1
 
