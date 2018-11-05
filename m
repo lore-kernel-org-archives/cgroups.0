@@ -1,55 +1,37 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v14 12/12] cpuset: Show descriptive text when reading
- cpuset.sched.partition
-Date: Fri, 2 Nov 2018 10:34:21 -0400
-Message-ID: <bd198f0c-e5b9-13f1-ffe2-05414d0b392f@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v14 00/12] Enable cpuset controller in default hierarchy
+Date: Mon, 5 Nov 2018 08:36:56 -0800
+Message-ID: <20181105163656.GK4182586@devbig004.ftw2.facebook.com>
 References: <1539635377-22335-1-git-send-email-longman@redhat.com>
- <1539635377-22335-13-git-send-email-longman@redhat.com>
- <20181017150836.GS270328@devbig004.ftw2.facebook.com>
- <b797288a-6088-f7b0-c881-81633c071754@redhat.com>
- <20181019192444.GV270328@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181019192444.GV270328@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=5D6B8SZiDJWloZJTLfl8O4vQl7ln5NDRmJQc+XqseP4=;
+        b=Kv6QzhDDiGVwesKpr09Smj12ROI23t+yHETDN2mC/n5VCP1cxi5lkMfplmQRjJ9RFk
+         7yWiOAG4kVquv49U/n+3BUWenNmRx7lx5H+h733vYQ5kbRTzR7uZu9R17qu4WC5PfvZS
+         M7wSvinTc0zBvoQLGhMucOV3HWyhY7wHpwfv4PjEcSPAj/bpiQvLUkoaJkags8XK1080
+         gAtIw11DHCU6+DtzNAnlXbTJDD0WLvgt+56Aph9EqhTqDgbiIQdIvgh8W1AxxwhKIs8X
+         vPTz4DPH/Ej4gxH/D3iGNpyECrjWMYDbKk9P7B01yUhgrA8j106UMBkVNw9v7fZmDvm7
+         FL9Q==
+Content-Disposition: inline
+In-Reply-To: <1539635377-22335-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
 
-On 10/19/2018 03:24 PM, Tejun Heo wrote:
-> On Fri, Oct 19, 2018 at 02:56:13PM -0400, Waiman Long wrote:
->> On 10/17/2018 11:08 AM, Tejun Heo wrote:
->>> On Mon, Oct 15, 2018 at 04:29:37PM -0400, Waiman Long wrote:
->>>> Currently, cpuset.sched.partition returns the values, 0, 1 or -1 on
->>>> read. A person who is not familiar with the partition code may not
->>>> understand what they mean.
->>>>
->>>> In order to make cpuset.sched.partition more user-friendly, it will
->>>> now display the following descriptive text on read:
->>>>
->>>>   "normal" - A normal cpuset, not a partition root
->>>>   "partition" - A partition root
->>>>   "partition invalid" - An invalid partition root
->>>>
->>>> Suggested-by: Tejun Heo <tj@kernel.org>
->>>> Signed-off-by: Waiman Long <longman@redhat.com>
->>> Can you also make this consistent when writing to the file?
->>>
->>> Thanks.
->>>
->> How about the attached patch instead?
-> Looks good to me.  Once Peter is okay with it, I'll roll it into
-> cgroup devel branch.  As v4.19 is almost done, I think it makes more
-> sense to target the next merge window (v4.21).
->
-> Thanks.
->
-Peter, are you OK with the current cpuset v2 patch which does allow
-hierarchical partitions as you have requested?
+Hello,
 
-Cheers,
-Longman
+So, this looks good to me.  Peter, I'm gonna roll the series into
+cgroup/for-4.21-cpuset.  Please holler if you have any objections /
+comments.
 
+Thanks.
+
+-- 
+tejun
