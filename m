@@ -1,47 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v14 00/12] Enable cpuset controller in default hierarchy
-Date: Tue, 6 Nov 2018 06:11:14 -0800
-Message-ID: <20181106141114.GA2351522@devbig004.ftw2.facebook.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v14 05/12] cpuset: Add an error state to
+ cpuset.sched.partition
+Date: Tue, 6 Nov 2018 09:17:29 -0500
+Message-ID: <98a0b581-584b-ef6e-e38b-20ab601b7c05@redhat.com>
 References: <1539635377-22335-1-git-send-email-longman@redhat.com>
- <20181105163656.GK4182586@devbig004.ftw2.facebook.com>
- <20181106115335.GQ22431@hirez.programming.kicks-ass.net>
- <20181106115558.GB22485@hirez.programming.kicks-ass.net>
- <8c386375-b801-8adb-602e-40c73a7efedc@redhat.com>
- <CAOS58YPye=7Ga+y-ujFsgHqo6vdVnjykmON1z+UjNQLvvM_g4w@mail.gmail.com>
+ <1539635377-22335-6-git-send-email-longman@redhat.com>
+ <20181106113712.GL22431@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=gdt1kJmntyurggHbrPSal7IcRdlpLMCs8QQ+tTT63wQ=;
-        b=nFnkRYgCfWmZoENAc3hxQqb3oem6Dqi1Fzsjl34P34GjlCAWv2dUbLNpLZlJtN0A2R
-         SPCHRYNCW4HUjQlkH29zJwyff0RK8VU3U9fYfmlhcNzy9HQZtinG8ov+ZwsGSXH72sKB
-         blQQgIPRbLC3hp97L5UoehkD+SRiodlQoAdNN6SO8d5mwdvhfzjVlL5bKB4cSlIP7wa1
-         xiBr6WH8NpVqZyyZY1Z97Cx2tw9An4K3aLgy6IF/Fky5cBqxmiORnf7T/wUajQVMAJRP
-         qR6BiC4eJAGklw063yi1o6DY0YFcPFMNzi6jyLHBdFXUfMFy7FICkv314Ws6a5dp1n+N
-         GFgg==
-Content-Disposition: inline
-In-Reply-To: <CAOS58YPye=7Ga+y-ujFsgHqo6vdVnjykmON1z+UjNQLvvM_g4w@mail.gmail.com>
+In-Reply-To: <20181106113712.GL22431@hirez.programming.kicks-ass.net>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
 
-Hello, again, guys.
+On 11/06/2018 06:37 AM, Peter Zijlstra wrote:
+> On Mon, Oct 15, 2018 at 04:29:30PM -0400, Waiman Long wrote:
+>> Handling error returned by update_parent_subparts_cpumask() in
+>> update_cpumasks_hier() is problematic as the states may become
+>> inconsistent. To avoid that and increase flexibility in handling other
+>> error cases, a new error state (-1) is added to the partition_root_state
+>> flag. This new error state is set internally and user cannot write this
+>> value to "cpuset.sched.partition".
+>>
+>> In this error state, the partition root becomes an erroneous one. It is
+>> no longer a real partition root, but the CS_CPU_EXCLUSIVE flag will
+>> still be set as it can be changed back to a real one if appropriate
+>> change happens later on.
+> I feel this Changelog should be much more explicit about the reasons
+> this -1 state can happen. As is, I've got no clue.
 
-On Tue, Nov 06, 2018 at 09:09:07AM -0500, Tejun Heo wrote:
-> Hello, Waiman, Peter.
-> 
-> Let's skip this patch for now. I'll think more about the interface and
-> adapt your patch later.
+OK, I will elaborate more on this changelog.
 
-Sorry about the last message.  I thought I configured web interface
-but obviously didn't and it went out with html subpart.
+Cheers,
+Longman
 
-Thanks.
-
--- 
-tejun
