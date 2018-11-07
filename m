@@ -1,55 +1,99 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH v5 3/5] cgroup/cpuset: make callback_lock raw
-Date: Wed, 7 Nov 2018 17:38:41 +0100
-Message-ID: <20181107163841.GA18091@localhost.localdomain>
-References: <20180903142801.20046-1-juri.lelli@redhat.com>
- <20180903142801.20046-4-juri.lelli@redhat.com>
- <20180925143416.GD25664@localhost.localdomain>
- <20181107155330.GA2509588@devbig004.ftw2.facebook.com>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Subject: Cgroups v2 bug: incorrect reporting in "domain threaded" cgroup.procs
+ file
+Date: Wed, 7 Nov 2018 20:46:30 +0100
+Message-ID: <fdb057a2-342a-d49e-587a-f1ca8680033e@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181107155330.GA2509588@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=cc:to:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=WX4o1b9CfavJF7tL72poCIr5V1AP6JICSuMh15MN7FA=;
+        b=toGPkD/u9gsg5XYh+1AjF+hDC5yB4AYYOI/hIgwSp6LaV5gIj6TAGcxovhEq6l2Vmt
+         AdwEWMmSICVS5svbYv7QvgMEnFI+cO9TYWG95OQHsQ1N7Nd9tEHeUmqXPWCuXi8LpTrR
+         6GQuGbyAQmIjT7VLOCaRfYOCoxUmFqKSJK94nhuIQX8NaEOyZH4ay7fObNflqi8WXji9
+         ouWTFoNKzd3vlUXR+bw744TeG3eN2IaOw+h+uW09I7B915DQ/DlhrvFO5t8pQDJPxCzl
+         QbrLsZwK44f7KcR+/kpJqhLi4J4Ifc4tsDM9zNw1G8d6+fq3UX4/GvKgXcM231t2WFUs
+         Nctw==
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, cgroups@vger.kernel.org, peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, longman@redhat.com
+Cc: mtk.manpages@gmail.com, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 
-Hi,
+Hello Tejun,
 
-On 07/11/18 07:53, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Sep 25, 2018 at 04:34:16PM +0200, Juri Lelli wrote:
-> > It would be great if you could please have a look at the proposed change
-> > below (and the rest of the set of course :-).
-> 
-> Yeah, looks good to me.  Please feel free to add
-> 
->  Acked-by: Tejun Heo <tj@kernel.org>
+I've discovered what looks to be a bug in the reporting
+of PIDs in the cgroup.procs file in the "domain threaded"
+node at the root of a threaded subtree. The following
+demo is on vanilla kernel 4.19.
 
-Thanks!
+Suppose we have the following multithreaded process:
 
-> > Another bit that I'd be more comfortable after hearing your word on it
-> > is this one (discussed over 5/5):
-> > 
-> > https://lore.kernel.org/lkml/20180925130750.GA25664@localhost.localdomain/
-> 
-> Can you please loop Waiman Long <longman@redhat.com> into discussion?
-> He's working on cgroup2 cpuset support which might collide.
+$ ps -L 654
+  PID   LWP TTY      STAT   TIME COMMAND
+  654   654 pts/12   Tl     0:00 ./cpu_multithread_burner 100
+  654   655 pts/12   Tl     0:01 ./cpu_multithread_burner 100
 
-Sure, I've been originally working on this on top of his series, but
-didn't try with latest version. Hopefully the two series don't generate
-too much collisions. I'll try to find some time soon to check again.
+Now suppose we create a threaded subtree in the v2 hierarchy:
 
-In the meantime, Waiman Long, how do you feel about it? :-)
+# cd /sys/fs/cgroup/unified/
+# mkdir -p x/a/b
+# echo 'threaded' > x/a/cgroup.type
+# echo 'threaded' > x/a/b/cgroup.type
 
-Thread starts at (you if missed it)
+Then we move the multithreaded process into x/a in 
+the threaded subtree:
 
-https://lore.kernel.org/lkml/20180903142801.20046-1-juri.lelli@redhat.com/
+# echo 654 > x/a/cgroup.procs 
 
-Best,
+Now we visualize the set-up using my visualization
+program[1]:
 
-- Juri
+# go run ~mtk/lsp/cgroups/view_v2_cgroups.go x
+x [dt]
+    PIDs: {654}
+    a [t]
+        TIDs: {654 655-[654]}
+        b [t]
+
+The above is as I expect.
+
+Now, we move the thread group leader (it has to be the 
+thread group leader to show the bug) to a x/a/b, and again
+use my visualization program:
+
+# echo 654 > x/a/b/cgroup.threads 
+# go run ~mtk/lsp/cgroups/view_v2_cgroups.go x
+x [dt]
+    PIDs: {654 655}
+    a [t]
+        TIDs: {655-[654]}
+        b [t]
+            TIDs: {654}
+
+Note how the *thread ID* of the non-thread-group-leader
+(655) is being reported in the x/cgroup.procs!
+
+And just to verify that this is not a bug in my 
+visualization program:
+
+# cat x/cgroup.procs 
+655
+654
+
+Your thoughts?
+
+Thanks,
+
+Michael
+
+[1] https://www.spinics.net/lists/cgroups/msg20710.html
+
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
