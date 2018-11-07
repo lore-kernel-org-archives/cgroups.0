@@ -1,99 +1,65 @@
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Subject: Cgroups v2 bug: incorrect reporting in "domain threaded" cgroup.procs
- file
-Date: Wed, 7 Nov 2018 20:46:30 +0100
-Message-ID: <fdb057a2-342a-d49e-587a-f1ca8680033e@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v14 00/12] Enable cpuset controller in default hierarchy
+Date: Wed, 7 Nov 2018 13:32:29 -0800
+Message-ID: <20181107213229.GB2509588@devbig004.ftw2.facebook.com>
+References: <1539635377-22335-1-git-send-email-longman@redhat.com>
+ <20181105163656.GK4182586@devbig004.ftw2.facebook.com>
+ <20181106115335.GQ22431@hirez.programming.kicks-ass.net>
+ <20181106115558.GB22485@hirez.programming.kicks-ass.net>
+ <8c386375-b801-8adb-602e-40c73a7efedc@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=cc:to:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=WX4o1b9CfavJF7tL72poCIr5V1AP6JICSuMh15MN7FA=;
-        b=toGPkD/u9gsg5XYh+1AjF+hDC5yB4AYYOI/hIgwSp6LaV5gIj6TAGcxovhEq6l2Vmt
-         AdwEWMmSICVS5svbYv7QvgMEnFI+cO9TYWG95OQHsQ1N7Nd9tEHeUmqXPWCuXi8LpTrR
-         6GQuGbyAQmIjT7VLOCaRfYOCoxUmFqKSJK94nhuIQX8NaEOyZH4ay7fObNflqi8WXji9
-         ouWTFoNKzd3vlUXR+bw744TeG3eN2IaOw+h+uW09I7B915DQ/DlhrvFO5t8pQDJPxCzl
-         QbrLsZwK44f7KcR+/kpJqhLi4J4Ifc4tsDM9zNw1G8d6+fq3UX4/GvKgXcM231t2WFUs
-         Nctw==
-Content-Language: en-US
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ocqIJI97jpN2dVlV1t1A/wPKjhZZa+9X2Rj+z/TPzm0=;
+        b=QcliHLl8U0U/LckvbdwuWgns7Sys/Ajc/dyupghRVgVL9fjW4dMTC3mmCQ2jviMJXy
+         aJzZA854k8CtKAhWxFBeBDLSjKtmmMUZIiARA6gl+JJc+EL68abLyU9MgZKHKdrbZoLb
+         8Oj/U+soaqUllCN5k+4uBnKsfVx33Kc+7+pTOpLMtcvphgrQ7ney6QRxTo3unQD/BXBD
+         v/PhHifrsNA2C3rP1iHKlFg1TMOhaIuKSSbDqvuihI/KMUcbMDvC84A+DAB4PP0bRl8y
+         0UrF2pC290gBPuN5JyI3WTG1M3ncu9z8YaAlZnun57+HqdHtCbSvxu6s8Sri8Bdt3kzd
+         crkA==
+Content-Disposition: inline
+In-Reply-To: <8c386375-b801-8adb-602e-40c73a7efedc@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: mtk.manpages@gmail.com, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
 
-Hello Tejun,
+Hello,
 
-I've discovered what looks to be a bug in the reporting
-of PIDs in the cgroup.procs file in the "domain threaded"
-node at the root of a threaded subtree. The following
-demo is on vanilla kernel 4.19.
+On Tue, Nov 06, 2018 at 09:06:01AM -0500, Waiman Long wrote:
+> On 11/06/2018 06:55 AM, Peter Zijlstra wrote:
+> > On Tue, Nov 06, 2018 at 12:53:35PM +0100, Peter Zijlstra wrote:
+> >> On Mon, Nov 05, 2018 at 08:36:56AM -0800, Tejun Heo wrote:
+> >>> Hello,
+> >>>
+> >>> So, this looks good to me.  Peter, I'm gonna roll the series into
+> >>> cgroup/for-4.21-cpuset.  Please holler if you have any objections /
+> >>> comments.
+> >> Mostly nits, except I think the interface for cpuset.sched.partition
+> >> needs to find another term for "not a parition", "normal" really doesn't
+> >> work for me.
+> > cpuset.sched.partition: "true", "false", "error"
+> >
+> > makes more sense to me.
+> 
+> The terms "true", "false", "error" look good to me. I can change the
+> patchset to use those if Tejun has no objection. I will fix the other
+> nits you have as well.
 
-Suppose we have the following multithreaded process:
+How about the following?
 
-$ ps -L 654
-  PID   LWP TTY      STAT   TIME COMMAND
-  654   654 pts/12   Tl     0:00 ./cpu_multithread_burner 100
-  654   655 pts/12   Tl     0:01 ./cpu_multithread_burner 100
+Interface file is named "cpuset.cpus.partition" as it's a partition of
+cpus.  The writeable keys are "root" and "member" - a partition root
+and a partition member.  When "root" is requested but can't be
+satisfied it shows "root invalid".  This seems pretty consistent with
+cgroup.type and other cpuset files.
 
-Now suppose we create a threaded subtree in the v2 hierarchy:
-
-# cd /sys/fs/cgroup/unified/
-# mkdir -p x/a/b
-# echo 'threaded' > x/a/cgroup.type
-# echo 'threaded' > x/a/b/cgroup.type
-
-Then we move the multithreaded process into x/a in 
-the threaded subtree:
-
-# echo 654 > x/a/cgroup.procs 
-
-Now we visualize the set-up using my visualization
-program[1]:
-
-# go run ~mtk/lsp/cgroups/view_v2_cgroups.go x
-x [dt]
-    PIDs: {654}
-    a [t]
-        TIDs: {654 655-[654]}
-        b [t]
-
-The above is as I expect.
-
-Now, we move the thread group leader (it has to be the 
-thread group leader to show the bug) to a x/a/b, and again
-use my visualization program:
-
-# echo 654 > x/a/b/cgroup.threads 
-# go run ~mtk/lsp/cgroups/view_v2_cgroups.go x
-x [dt]
-    PIDs: {654 655}
-    a [t]
-        TIDs: {655-[654]}
-        b [t]
-            TIDs: {654}
-
-Note how the *thread ID* of the non-thread-group-leader
-(655) is being reported in the x/cgroup.procs!
-
-And just to verify that this is not a bug in my 
-visualization program:
-
-# cat x/cgroup.procs 
-655
-654
-
-Your thoughts?
-
-Thanks,
-
-Michael
-
-[1] https://www.spinics.net/lists/cgroups/msg20710.html
+Thanks.
 
 -- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+tejun
