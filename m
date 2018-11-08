@@ -1,63 +1,39 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH v5 4/5] sched/core: Prevent race condition between cpuset
- and __sched_setscheduler()
-Date: Thu, 8 Nov 2018 17:23:48 +0100
-Message-ID: <20181108162348.GF18091@localhost.localdomain>
-References: <20180903142801.20046-1-juri.lelli@redhat.com>
- <20180903142801.20046-5-juri.lelli@redhat.com>
- <20181003154230.4b8792fb@gandalf.local.home>
- <20181004090401.GB12774@localhost.localdomain>
- <16587a21-ed6e-809d-78a8-5f76d1787665@gmail.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v15 12/12] cpuset: Expose cpuset.cpus.subpartitions with
+ cgroup_debug
+Date: Thu, 8 Nov 2018 13:59:43 -0500
+Message-ID: <5e3df063-251b-b6e0-fbc5-25e7a8b6efb5@redhat.com>
+References: <1541689726-20088-1-git-send-email-longman@redhat.com>
+ <1541689726-20088-13-git-send-email-longman@redhat.com>
+ <20181108154617.GX9761@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16587a21-ed6e-809d-78a8-5f76d1787665@gmail.com>
+In-Reply-To: <20181108154617.GX9761@hirez.programming.kicks-ass.net>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman9394@gmail.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>, peterz@infradead.org, mingo@redhat.com, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
 
-Hi,
+On 11/08/2018 10:46 AM, Peter Zijlstra wrote:
+> On Thu, Nov 08, 2018 at 10:08:46AM -0500, Waiman Long wrote:
+>> For debugging purpose, it will be useful to expose the content of the
+>> subparts_cpus as a read-only file to see if the code work correctly.
+>> However, subparts_cpus will not be used at all in most use cases. So
+>> adding a new cpuset file that clutters the cgroup directory may not be
+>> desirable.  This is now being done by using the hidden "cgroup_debug"
+>> kernel command line option to expose a new "cpuset.cpus.subpartitions"
+>> file.
+> One thought I had; would it make sense to make these debug files hidden
+> ("." prefix) ?
 
-On 08/11/18 10:49, Waiman Long wrote:
-> On 10/04/2018 05:04 AM, Juri Lelli wrote:
 
-[...]
+These debug files will only appear when the cgroup_debug command line
+option is used. So I don't think we really need to add an extra "."
+prefix as it will break the naming convention.
 
-> > +/**
-> > + * cpuset_read_only_lock - Grab the callback_lock from cpuset subsystem.
-> > + *
-> > + * Description: As described in full details the comment above cpuset_mutex
-> > + * and callback_lock definitions, holding callback_lock gives the holder
-> > + * read-only access to cpusets. Even though it might look counter-intuitive
-> > + * (as callback_lock is a spinlock), in fact a task must hold both
-> > + * callback_lock _and_ cpuset_mutex to modify cpusets (write access).
-> > + */
-> > +void cpuset_read_only_lock(void)
-> > +{
-> > +	raw_spin_lock(&callback_lock);
-> > +}
-> > +
-> > +/**
-> > + * cpuset_read_only_unlock - Release the callback_lock from cpuset subsystem.
-> > + */
-> > +void cpuset_read_only_unlock(void)
-> > +{
-> > +	raw_spin_unlock(&callback_lock);
-> > +}
-> > +
-> 
-> Maybe you can drop the "_only" part to be consistent with the rwlock
-> APIs (read_lock/write_lock).
+Cheers,
+Longman
 
-I called it this way because it looked more descriptive of which kind of
-guarantee the holder gets using these. Can change of course, what others
-think?
-
-Thanks for reviewing!
-
-Best,
-
-- Juri
