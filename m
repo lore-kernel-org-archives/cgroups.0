@@ -1,56 +1,250 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH v5 3/5] cgroup/cpuset: make callback_lock raw
-Date: Thu, 8 Nov 2018 12:22:59 +0100
-Message-ID: <20181108112259.GB18091@localhost.localdomain>
-References: <20180903142801.20046-1-juri.lelli@redhat.com>
- <20180903142801.20046-4-juri.lelli@redhat.com>
- <20180925143416.GD25664@localhost.localdomain>
- <20181107155330.GA2509588@devbig004.ftw2.facebook.com>
- <20181107163841.GA18091@localhost.localdomain>
-Mime-Version: 1.0
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v15 01/12] cpuset: Enable cpuset controller in default hierarchy
+Date: Thu,  8 Nov 2018 10:08:35 -0500
+Message-ID: <1541689726-20088-2-git-send-email-longman@redhat.com>
+References: <1541689726-20088-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181107163841.GA18091@localhost.localdomain>
+In-Reply-To: <1541689726-20088-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, cgroups@vger.kernel.org, peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, longman@redhat.com
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>, Waiman Long <longman@redhat.com>
 
-On 07/11/18 17:38, Juri Lelli wrote:
-> Hi,
-> 
-> On 07/11/18 07:53, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Tue, Sep 25, 2018 at 04:34:16PM +0200, Juri Lelli wrote:
-> > > It would be great if you could please have a look at the proposed change
-> > > below (and the rest of the set of course :-).
-> > 
-> > Yeah, looks good to me.  Please feel free to add
-> > 
-> >  Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> Thanks!
-> 
-> > > Another bit that I'd be more comfortable after hearing your word on it
-> > > is this one (discussed over 5/5):
-> > > 
-> > > https://lore.kernel.org/lkml/20180925130750.GA25664@localhost.localdomain/
-> > 
-> > Can you please loop Waiman Long <longman@redhat.com> into discussion?
-> > He's working on cgroup2 cpuset support which might collide.
-> 
-> Sure, I've been originally working on this on top of his series, but
-> didn't try with latest version. Hopefully the two series don't generate
-> too much collisions. I'll try to find some time soon to check again.
+Given the fact that thread mode had been merged into 4.14, it is now
+time to enable cpuset to be used in the default hierarchy (cgroup v2)
+as it is clearly threaded.
 
-So, conflicts weren't too bad (on top of v14).
+The cpuset controller had experienced feature creep since its
+introduction more than a decade ago. Besides the core cpus and mems
+control files to limit cpus and memory nodes, there are a bunch of
+additional features that can be controlled from the userspace. Some of
+the features are of doubtful usefulness and may not be actively used.
 
-I guess I'll wait for Waiman Long's patches to land for rebasing again
-and testing.
+This patch enables cpuset controller in the default hierarchy with
+a minimal set of features, namely just the cpus and mems and their
+effective_* counterparts.  We can certainly add more features to the
+default hierarchy in the future if there is a real user need for them
+later on.
 
-Best,
+Alternatively, with the unified hiearachy, it may make more sense
+to move some of those additional cpuset features, if desired, to
+memory controller or may be to the cpu controller instead of staying
+with cpuset.
 
-- Juri
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 109 ++++++++++++++++++++++++++++++--
+ kernel/cgroup/cpuset.c                  |  48 +++++++++++++-
+ 2 files changed, 149 insertions(+), 8 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 476722b..01b70f6 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -56,11 +56,13 @@ v1 is available under Documentation/cgroup-v1/.
+          5-3-3-2. IO Latency Interface Files
+      5-4. PID
+        5-4-1. PID Interface Files
+-     5-5. Device
+-     5-6. RDMA
+-       5-6-1. RDMA Interface Files
+-     5-7. Misc
+-       5-7-1. perf_event
++     5-5. Cpuset
++       5.5-1. Cpuset Interface Files
++     5-6. Device
++     5-7. RDMA
++       5-7-1. RDMA Interface Files
++     5-8. Misc
++       5-8-1. perf_event
+      5-N. Non-normative information
+        5-N-1. CPU controller root cgroup process behaviour
+        5-N-2. IO controller root cgroup process behaviour
+@@ -1610,6 +1612,103 @@ through fork() or clone(). These will return -EAGAIN if the creation
+ of a new process would cause a cgroup policy to be violated.
+ 
+ 
++Cpuset
++------
++
++The "cpuset" controller provides a mechanism for constraining
++the CPU and memory node placement of tasks to only the resources
++specified in the cpuset interface files in a task's current cgroup.
++This is especially valuable on large NUMA systems where placing jobs
++on properly sized subsets of the systems with careful processor and
++memory placement to reduce cross-node memory access and contention
++can improve overall system performance.
++
++The "cpuset" controller is hierarchical.  That means the controller
++cannot use CPUs or memory nodes not allowed in its parent.
++
++
++Cpuset Interface Files
++~~~~~~~~~~~~~~~~~~~~~~
++
++  cpuset.cpus
++	A read-write multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the requested CPUs to be used by tasks within this
++	cgroup.  The actual list of CPUs to be granted, however, is
++	subjected to constraints imposed by its parent and can differ
++	from the requested CPUs.
++
++	The CPU numbers are comma-separated numbers or ranges.
++	For example:
++
++	  # cat cpuset.cpus
++	  0-4,6,8-10
++
++	An empty value indicates that the cgroup is using the same
++	setting as the nearest cgroup ancestor with a non-empty
++	"cpuset.cpus" or all the available CPUs if none is found.
++
++	The value of "cpuset.cpus" stays constant until the next update
++	and won't be affected by any CPU hotplug events.
++
++  cpuset.cpus.effective
++	A read-only multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the onlined CPUs that are actually granted to this
++	cgroup by its parent.  These CPUs are allowed to be used by
++	tasks within the current cgroup.
++
++	If "cpuset.cpus" is empty, the "cpuset.cpus.effective" file shows
++	all the CPUs from the parent cgroup that can be available to
++	be used by this cgroup.  Otherwise, it should be a subset of
++	"cpuset.cpus" unless none of the CPUs listed in "cpuset.cpus"
++	can be granted.  In this case, it will be treated just like an
++	empty "cpuset.cpus".
++
++	Its value will be affected by CPU hotplug events.
++
++  cpuset.mems
++	A read-write multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the requested memory nodes to be used by tasks within
++	this cgroup.  The actual list of memory nodes granted, however,
++	is subjected to constraints imposed by its parent and can differ
++	from the requested memory nodes.
++
++	The memory node numbers are comma-separated numbers or ranges.
++	For example:
++
++	  # cat cpuset.mems
++	  0-1,3
++
++	An empty value indicates that the cgroup is using the same
++	setting as the nearest cgroup ancestor with a non-empty
++	"cpuset.mems" or all the available memory nodes if none
++	is found.
++
++	The value of "cpuset.mems" stays constant until the next update
++	and won't be affected by any memory nodes hotplug events.
++
++  cpuset.mems.effective
++	A read-only multiple values file which exists on non-root
++	cpuset-enabled cgroups.
++
++	It lists the onlined memory nodes that are actually granted to
++	this cgroup by its parent. These memory nodes are allowed to
++	be used by tasks within the current cgroup.
++
++	If "cpuset.mems" is empty, it shows all the memory nodes from the
++	parent cgroup that will be available to be used by this cgroup.
++	Otherwise, it should be a subset of "cpuset.mems" unless none of
++	the memory nodes listed in "cpuset.mems" can be granted.  In this
++	case, it will be treated just like an empty "cpuset.mems".
++
++	Its value will be affected by memory nodes hotplug events.
++
++
+ Device controller
+ -----------------
+ 
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 266f10c..2b5c447 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1824,12 +1824,11 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 	return 0;
+ }
+ 
+-
+ /*
+  * for the common functions, 'private' gives the type of file
+  */
+ 
+-static struct cftype files[] = {
++static struct cftype legacy_files[] = {
+ 	{
+ 		.name = "cpus",
+ 		.seq_show = cpuset_common_seq_show,
+@@ -1932,6 +1931,47 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ };
+ 
+ /*
++ * This is currently a minimal set for the default hierarchy. It can be
++ * expanded later on by migrating more features and control files from v1.
++ */
++static struct cftype dfl_files[] = {
++	{
++		.name = "cpus",
++		.seq_show = cpuset_common_seq_show,
++		.write = cpuset_write_resmask,
++		.max_write_len = (100U + 6 * NR_CPUS),
++		.private = FILE_CPULIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "mems",
++		.seq_show = cpuset_common_seq_show,
++		.write = cpuset_write_resmask,
++		.max_write_len = (100U + 6 * MAX_NUMNODES),
++		.private = FILE_MEMLIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "cpus.effective",
++		.seq_show = cpuset_common_seq_show,
++		.private = FILE_EFFECTIVE_CPULIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{
++		.name = "mems.effective",
++		.seq_show = cpuset_common_seq_show,
++		.private = FILE_EFFECTIVE_MEMLIST,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++
++	{ }	/* terminate */
++};
++
++
++/*
+  *	cpuset_css_alloc - allocate a cpuset css
+  *	cgrp:	control group that the new cpuset will be part of
+  */
+@@ -2105,8 +2145,10 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+ 	.post_attach	= cpuset_post_attach,
+ 	.bind		= cpuset_bind,
+ 	.fork		= cpuset_fork,
+-	.legacy_cftypes	= files,
++	.legacy_cftypes	= legacy_files,
++	.dfl_cftypes	= dfl_files,
+ 	.early_init	= true,
++	.threaded	= true,
+ };
+ 
+ /**
+-- 
+1.8.3.1
+
