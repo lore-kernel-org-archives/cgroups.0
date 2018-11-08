@@ -1,136 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH for-4.20-fixes] cgroup: fix CSS_TASK_ITER_PROCS
-Date: Thu, 8 Nov 2018 12:15:15 -0800
-Message-ID: <20181108201515.GC2509588@devbig004.ftw2.facebook.com>
-References: <fdb057a2-342a-d49e-587a-f1ca8680033e@gmail.com>
-Mime-Version: 1.0
+From: Roman Gushchin <guroan@gmail.com>
+Subject: [PATCH 0/5] freezer for cgroup v2
+Date: Thu,  8 Nov 2018 15:15:55 -0500
+Message-ID: <20181108201600.9129-1-guro@fb.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=BxbFJOzRVuNYYE5nClkVAe8F5JFbtv/j1hv7sF2oke4=;
-        b=sHVViSG38AH29tX4KYViKHyE5I0BS8AxKoHFzPXi9B1F5NSPn2W/o+307GGO5968Oi
-         0ey++lvswOOWgEctbhBXCNTrlDgaztC7HVXUUejF3yEEeeLMzPC5pENVpw103gcRZUps
-         Yti1YtoCZFmihDrzIm9YWCBnRIfl3GGGRV5/oz6wLt0NrmuWtYJL957ui1qVOIIg6Iwd
-         QdBfcr4crf/RVck6eYfcgahkbwa5ZgEGc2fbBIF/p1+K5fP+mUJaoeAPVCK3WbKOnF3D
-         KPYJRGyffsyiPt4lg+2aucEjzxmUflGpcWItxqkYY/MZ0njVxSFww6ofeInLlB34Typi
-         N4fg==
-Content-Disposition: inline
-In-Reply-To: <fdb057a2-342a-d49e-587a-f1ca8680033e@gmail.com>
+        h=from:to:cc:subject:date:message-id;
+        bh=AVWov9oTOLa0o8ptLdw/1Bm5RUGAQRjdANBdPA/XZu4=;
+        b=hvkLkTNKujjz1aQzDBYFbCmLaXzD+yTIu3FChGLjWGDvmmiNsi9heX0jIAjT15BS9e
+         qKlaAeXp4T4btrSWM15KEdJKp8CtS99coEP4tLaSKhKL6+ipdm6Ke4lrmRWjIHaRA0wD
+         X0zzHC9bsfBQkKi4rsmrTCaUy13i0XJ4f2rSJ2APnyN43mS/LxB69+tZT63X3qzD23Ce
+         XgMe/aKfRN/dHFy6rFrOTGaTAHLfq8DHnfaVsPIsJj43R3qUQQJi44+egSm9cEtEBgfe
+         H/4R1JDfWvj0ep/0w+9hfNC0ngqCm0AKDbmLJ642Q/r1oX7fAyAqIx4LMULrd9+RuNP5
+         sE/g==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, kernel-team@fb.com
+To: cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-CSS_TASK_ITER_PROCS implements process-only iteration by making
-css_task_iter_advance() skip tasks which aren't threadgroup leaders;
-however, when an iteration is started css_task_iter_start() calls the
-inner helper function css_task_iter_advance_css_set() instead of
-css_task_iter_advance().  As the helper doesn't have the skip logic,
-when the first task to visit is a non-leader thread, it doesn't get
-skipped correctly as shown in the following example.
+This patchset implements freezer for cgroup v2.
 
-  # ps -L 2030
-    PID   LWP TTY      STAT   TIME COMMAND
-   2030  2030 pts/0    Sl+    0:00 ./test-thread
-   2030  2031 pts/0    Sl+    0:00 ./test-thread
-  # mkdir -p /sys/fs/cgroup/x/a/b
-  # echo threaded > /sys/fs/cgroup/x/a/cgroup.type
-  # echo threaded > /sys/fs/cgroup/x/a/b/cgroup.type
-  # echo 2030 > /sys/fs/cgroup/x/a/cgroup.procs
-  # cat /sys/fs/cgroup/x/a/cgroup.threads
-  2030
-  2031
-  # cat /sys/fs/cgroup/x/cgroup.procs
-  2030
-  # echo 2030 > /sys/fs/cgroup/x/a/b/cgroup.threads
-  # cat /sys/fs/cgroup/x/cgroup.procs
-  2031
-  2030
+It provides similar functionality as v1 freezer, but the interface
+conforms to the cgroup v2 interface design principles, and it
+provides a better user experience: tasks can be killed, ptrace works,
+there is no separate controller, which has to be enabled, etc.
 
-The last read of cgroup.procs is incorrectly showing non-leader 2031
-in cgroup.procs output.
+Patches (1) and (2) are some preparational work, patch (3) contains
+the implementation, patch (4) is a small cgroup kselftest fix,
+patch (5) covers freezer adds 6 new kselftests to cover the freezer
+functionality.
 
-This can be fixed by updating css_task_iter_advance() to handle the
-first advance and css_task_iters_tart() to call
-css_task_iter_advance() instead of the inner helper.  After the fix,
-the same commands result in the following (correct) result:
+Roman Gushchin (5):
+  cgroup: rename freezer.c into legacy_freezer.c
+  cgroup: implement __cgroup_task_count() helper
+  cgroup: cgroup v2 freezer
+  kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
+  kselftests: cgroup: add freezer controller self-tests
 
-  # ps -L 2062
-    PID   LWP TTY      STAT   TIME COMMAND
-   2062  2062 pts/0    Sl+    0:00 ./test-thread
-   2062  2063 pts/0    Sl+    0:00 ./test-thread
-  # mkdir -p /sys/fs/cgroup/x/a/b
-  # echo threaded > /sys/fs/cgroup/x/a/cgroup.type
-  # echo threaded > /sys/fs/cgroup/x/a/b/cgroup.type
-  # echo 2062 > /sys/fs/cgroup/x/a/cgroup.procs
-  # cat /sys/fs/cgroup/x/a/cgroup.threads
-  2062
-  2063
-  # cat /sys/fs/cgroup/x/cgroup.procs
-  2062
-  # echo 2062 > /sys/fs/cgroup/x/a/b/cgroup.threads
-  # cat /sys/fs/cgroup/x/cgroup.procs
-  2062
+ include/linux/cgroup-defs.h                   |  33 +
+ include/linux/cgroup.h                        |  42 ++
+ include/linux/sched.h                         |   5 +-
+ include/linux/sched/jobctl.h                  |   5 +-
+ kernel/cgroup/Makefile                        |   4 +-
+ kernel/cgroup/cgroup-internal.h               |   1 +
+ kernel/cgroup/cgroup-v1.c                     |  16 -
+ kernel/cgroup/cgroup.c                        | 132 +++-
+ kernel/cgroup/freezer.c                       | 590 +++++----------
+ kernel/cgroup/legacy_freezer.c                | 481 ++++++++++++
+ kernel/ptrace.c                               |   6 +
+ kernel/signal.c                               |  51 +-
+ tools/testing/selftests/cgroup/.gitignore     |   1 +
+ tools/testing/selftests/cgroup/Makefile       |   2 +
+ tools/testing/selftests/cgroup/cgroup_util.c  |  85 ++-
+ tools/testing/selftests/cgroup/cgroup_util.h  |   7 +
+ tools/testing/selftests/cgroup/test_freezer.c | 685 ++++++++++++++++++
+ 17 files changed, 1695 insertions(+), 451 deletions(-)
+ create mode 100644 kernel/cgroup/legacy_freezer.c
+ create mode 100644 tools/testing/selftests/cgroup/test_freezer.c
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Fixes: 8cfd8147df67 ("cgroup: implement cgroup v2 thread support")
-Cc: stable@vger.kernel.org # v4.14+
----
- kernel/cgroup/cgroup.c |   29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+-- 
+2.17.2
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 6aaf5dd5383b..1f84977fab47 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4202,20 +4202,25 @@ static void css_task_iter_advance(struct css_task_iter *it)
- 
- 	lockdep_assert_held(&css_set_lock);
- repeat:
--	/*
--	 * Advance iterator to find next entry.  cset->tasks is consumed
--	 * first and then ->mg_tasks.  After ->mg_tasks, we move onto the
--	 * next cset.
--	 */
--	next = it->task_pos->next;
-+	if (it->task_pos) {
-+		/*
-+		 * Advance iterator to find next entry.  cset->tasks is
-+		 * consumed first and then ->mg_tasks.  After ->mg_tasks,
-+		 * we move onto the next cset.
-+		 */
-+		next = it->task_pos->next;
- 
--	if (next == it->tasks_head)
--		next = it->mg_tasks_head->next;
-+		if (next == it->tasks_head)
-+			next = it->mg_tasks_head->next;
- 
--	if (next == it->mg_tasks_head)
-+		if (next == it->mg_tasks_head)
-+			css_task_iter_advance_css_set(it);
-+		else
-+			it->task_pos = next;
-+	} else {
-+		/* called from start, proceed to the first cset */
- 		css_task_iter_advance_css_set(it);
--	else
--		it->task_pos = next;
-+	}
- 
- 	/* if PROCS, skip over tasks which aren't group leaders */
- 	if ((it->flags & CSS_TASK_ITER_PROCS) && it->task_pos &&
-@@ -4255,7 +4260,7 @@ void css_task_iter_start(struct cgroup_subsys_state *css, unsigned int flags,
- 
- 	it->cset_head = it->cset_pos;
- 
--	css_task_iter_advance_css_set(it);
-+	css_task_iter_advance(it);
- 
- 	spin_unlock_irq(&css_set_lock);
- }
