@@ -1,56 +1,33 @@
-From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH 4/5] kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
-Date: Thu,  8 Nov 2018 15:15:59 -0500
-Message-ID: <20181108201600.9129-5-guro@fb.com>
-References: <20181108201600.9129-1-guro@fb.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v15 00/12] Enable cpuset controller in default hierarchy
+Date: Thu, 8 Nov 2018 12:28:44 -0800
+Message-ID: <20181108202844.GD2509588@devbig004.ftw2.facebook.com>
+References: <1541689726-20088-1-git-send-email-longman@redhat.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=DzcE5bixymM64ursY5BeupFFYZWpXSHlxEvgaLA1wns=;
-        b=G9W+9a9Owr0udn9+avJL0Cm5EE2JVW/Y6IAVePlgAQzQaJSetWPvajRzsuemZwsSLn
-         NieBizmjVwCJaDYHQcO1iFS1oH4vq4EhggaeGy/EC8G8PUziMlSuCRfjb6ud2pT3C/eD
-         Y4f5O0VcC62DRnyBT48R6hueokdmbs4TfzQA9PAs2MEo1TabjDzEeKApDqnEVmzyaWiv
-         hQ2ewi/imNIVRf7DBrOn0cPhzGDcFDqJMPA2/tR/aj9t37UOa638LoDnpiEuoO9LGn0N
-         leHI7hB1TL7J3DYcuRJwr/NkY/4Va7WCBuDRmcOk4SCJiowXWBhhXzynsqmRQzSSzR0c
-         Oetw==
-In-Reply-To: <20181108201600.9129-1-guro@fb.com>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=oFvXt1P0vn6sjABmGNaUrUlafHub2RfoXmi03uK+8m4=;
+        b=nsyJe1azy7g8xkNeQnKWBS/6x1Y+xiykM9A/ifEMUFKl9tg2Rr1io4dMm+mCuY4Z3E
+         f4U+AQtISuiAUwf63xbkTYq1W+nJgx7yQ56IZ5S8u0BuL0dUVjwQkqEVCtDzak/Vh5Xh
+         Wt3MV56PQGBfy9gLi8DiyR1IGQSRBvhLPQrBOqZ+DFlpjhxdEKrxa1rwzGqLsOjM5azF
+         rx0HO5XijYzqXJThN6qo0RKo2YEL/BeJ0bLzfxxox8PexvifGqK/NvPIM3xkeZGTiqDM
+         0xm1NRao+0QCPIL+iK7Mk3F47APbv2ymemdu0AXUnYP+4dZeRehIyYyPdC/31LHO8S56
+         DTzA==
+Content-Disposition: inline
+In-Reply-To: <1541689726-20088-1-git-send-email-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>, Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
 
-If the cgroup destruction races with an exit() of a belonging
-process(es), cg_kill_all() may fail. It's not a good reason to make
-cg_destroy() fail and leave the cgroup in place, potentially causing
-next test runs to fail.
+Applied to cgroup/for-4.21.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Shuah Khan <shuah@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
----
- tools/testing/selftests/cgroup/cgroup_util.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Thanks a lot, Waiman!
 
-diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
-index 14c9fe284806..eba06f94433b 100644
---- a/tools/testing/selftests/cgroup/cgroup_util.c
-+++ b/tools/testing/selftests/cgroup/cgroup_util.c
-@@ -227,9 +227,7 @@ int cg_destroy(const char *cgroup)
- retry:
- 	ret = rmdir(cgroup);
- 	if (ret && errno == EBUSY) {
--		ret = cg_killall(cgroup);
--		if (ret)
--			return ret;
-+		cg_killall(cgroup);
- 		usleep(100);
- 		goto retry;
- 	}
 -- 
-2.17.2
-
+tejun
