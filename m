@@ -1,7 +1,7 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v15 12/12] cpuset: Expose cpuset.cpus.subpartitions with cgroup_debug
-Date: Thu,  8 Nov 2018 10:08:46 -0500
-Message-ID: <1541689726-20088-13-git-send-email-longman@redhat.com>
+Subject: [PATCH v15 08/12] cpuset: Make generate_sched_domains() work with partition
+Date: Thu,  8 Nov 2018 10:08:42 -0500
+Message-ID: <1541689726-20088-9-git-send-email-longman@redhat.com>
 References: <1541689726-20088-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1541689726-20088-1-git-send-email-longman@redhat.com>
@@ -13,146 +13,106 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>, Waiman Long <longman@redhat.com>
 
-For debugging purpose, it will be useful to expose the content of the
-subparts_cpus as a read-only file to see if the code work correctly.
-However, subparts_cpus will not be used at all in most use cases. So
-adding a new cpuset file that clutters the cgroup directory may not be
-desirable.  This is now being done by using the hidden "cgroup_debug"
-kernel command line option to expose a new "cpuset.cpus.subpartitions"
-file.
-
-That option was originally used by the debug controller to expose
-itself when configured into the kernel. This is now extended to set an
-internal flag used by cgroup_addrm_files(). A new CFTYPE_DEBUG flag
-can now be used to specify that a cgroup file should only be created
-when the "cgroup_debug" option is specified.
+The generate_sched_domains() function is modified to make it work
+correctly with the newly introduced subparts_cpus mask for scheduling
+domains generation.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- include/linux/cgroup-defs.h     |  1 +
- kernel/cgroup/cgroup-internal.h |  2 ++
- kernel/cgroup/cgroup.c          | 14 +++++++++++++-
- kernel/cgroup/cpuset.c          | 11 +++++++++++
- kernel/cgroup/debug.c           |  4 +---
- 5 files changed, 28 insertions(+), 4 deletions(-)
+ kernel/cgroup/cpuset.c | 34 +++++++++++++++++++++++++++-------
+ 1 file changed, 27 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 5e1694f..8fcbae1 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -92,6 +92,7 @@ enum {
- 
- 	CFTYPE_NO_PREFIX	= (1 << 3),	/* (DON'T USE FOR NEW FILES) no subsys prefix */
- 	CFTYPE_WORLD_WRITABLE	= (1 << 4),	/* (DON'T USE FOR NEW FILES) S_IWUGO */
-+	CFTYPE_DEBUG		= (1 << 5),	/* create when cgroup_debug */
- 
- 	/* internal flags, do not use outside cgroup core proper */
- 	__CFTYPE_ONLY_ON_DFL	= (1 << 16),	/* only on default hierarchy */
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index 75568fc..c950864 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -11,6 +11,8 @@
- #define TRACE_CGROUP_PATH_LEN 1024
- extern spinlock_t trace_cgroup_path_lock;
- extern char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
-+extern bool cgroup_debug;
-+extern void __init enable_debug_cgroup(void);
- 
- /*
-  * cgroup_path() takes a spin lock. It is good practice not to take
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 6aaf5dd..f0a8c68 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -86,6 +86,7 @@
- 
- DEFINE_SPINLOCK(trace_cgroup_path_lock);
- char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
-+bool cgroup_debug __read_mostly;
- 
- /*
-  * Protects cgroup_idr and css_idr so that IDs can be released without
-@@ -3639,7 +3640,8 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
- 			continue;
- 		if ((cft->flags & CFTYPE_ONLY_ON_ROOT) && cgroup_parent(cgrp))
- 			continue;
--
-+		if ((cft->flags & CFTYPE_DEBUG) && !cgroup_debug)
-+			continue;
- 		if (is_add) {
- 			ret = cgroup_add_file(css, cgrp, cft);
- 			if (ret) {
-@@ -5743,6 +5745,16 @@ static int __init cgroup_disable(char *str)
- }
- __setup("cgroup_disable=", cgroup_disable);
- 
-+void __init __weak enable_debug_cgroup(void) { }
-+
-+static int __init enable_cgroup_debug(char *str)
-+{
-+	cgroup_debug = true;
-+	enable_debug_cgroup();
-+	return 1;
-+}
-+__setup("cgroup_debug", enable_cgroup_debug);
-+
- /**
-  * css_tryget_online_from_dir - get corresponding css from a cgroup dentry
-  * @dentry: directory dentry of interest
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index c739fda..b897314 100644
+index 82c88c6..3960de7 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2204,6 +2204,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 	FILE_MEMLIST,
- 	FILE_EFFECTIVE_CPULIST,
- 	FILE_EFFECTIVE_MEMLIST,
-+	FILE_SUBPARTS_CPULIST,
- 	FILE_CPU_EXCLUSIVE,
- 	FILE_MEM_EXCLUSIVE,
- 	FILE_MEM_HARDWALL,
-@@ -2382,6 +2383,9 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
- 	case FILE_EFFECTIVE_MEMLIST:
- 		seq_printf(sf, "%*pbl\n", nodemask_pr_args(&cs->effective_mems));
- 		break;
-+	case FILE_SUBPARTS_CPULIST:
-+		seq_printf(sf, "%*pbl\n", cpumask_pr_args(cs->subparts_cpus));
-+		break;
- 	default:
- 		ret = -EINVAL;
- 	}
-@@ -2634,6 +2638,13 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 	},
+@@ -769,13 +769,14 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	int ndoms = 0;		/* number of sched domains in result */
+ 	int nslot;		/* next empty doms[] struct cpumask slot */
+ 	struct cgroup_subsys_state *pos_css;
++	bool root_load_balance = is_sched_load_balance(&top_cpuset);
  
-+	{
-+		.name = "cpus.subpartitions",
-+		.seq_show = cpuset_common_seq_show,
-+		.private = FILE_SUBPARTS_CPULIST,
-+		.flags = CFTYPE_DEBUG,
-+	},
+ 	doms = NULL;
+ 	dattr = NULL;
+ 	csa = NULL;
+ 
+ 	/* Special case for the 99% of systems with one, full, sched domain */
+-	if (is_sched_load_balance(&top_cpuset)) {
++	if (root_load_balance && !top_cpuset.nr_subparts_cpus) {
+ 		ndoms = 1;
+ 		doms = alloc_sched_domains(ndoms);
+ 		if (!doms)
+@@ -798,6 +799,8 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	csn = 0;
+ 
+ 	rcu_read_lock();
++	if (root_load_balance)
++		csa[csn++] = &top_cpuset;
+ 	cpuset_for_each_descendant_pre(cp, pos_css, &top_cpuset) {
+ 		if (cp == &top_cpuset)
+ 			continue;
+@@ -808,6 +811,9 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 		 * parent's cpus, so just skip them, and then we call
+ 		 * update_domain_attr_tree() to calc relax_domain_level of
+ 		 * the corresponding sched domain.
++		 *
++		 * If root is load-balancing, we can skip @cp if it
++		 * is a subset of the root's effective_cpus.
+ 		 */
+ 		if (!cpumask_empty(cp->cpus_allowed) &&
+ 		    !(is_sched_load_balance(cp) &&
+@@ -815,11 +821,16 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 					 housekeeping_cpumask(HK_FLAG_DOMAIN))))
+ 			continue;
+ 
++		if (root_load_balance &&
++		    cpumask_subset(cp->cpus_allowed, top_cpuset.effective_cpus))
++			continue;
 +
- 	{ }	/* terminate */
- };
+ 		if (is_sched_load_balance(cp))
+ 			csa[csn++] = cp;
  
-diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-index 9caeda6..5f1b873 100644
---- a/kernel/cgroup/debug.c
-+++ b/kernel/cgroup/debug.c
-@@ -373,11 +373,9 @@ struct cgroup_subsys debug_cgrp_subsys = {
-  * On v2, debug is an implicit controller enabled by "cgroup_debug" boot
-  * parameter.
-  */
--static int __init enable_cgroup_debug(char *str)
-+void __init enable_debug_cgroup(void)
- {
- 	debug_cgrp_subsys.dfl_cftypes = debug_files;
- 	debug_cgrp_subsys.implicit_on_dfl = true;
- 	debug_cgrp_subsys.threaded = true;
--	return 1;
- }
--__setup("cgroup_debug", enable_cgroup_debug);
+-		/* skip @cp's subtree */
+-		pos_css = css_rightmost_descendant(pos_css);
++		/* skip @cp's subtree if not a partition root */
++		if (!is_partition_root(cp))
++			pos_css = css_rightmost_descendant(pos_css);
+ 	}
+ 	rcu_read_unlock();
+ 
+@@ -947,7 +958,12 @@ static void rebuild_sched_domains_locked(void)
+ 	 * passing doms with offlined cpu to partition_sched_domains().
+ 	 * Anyways, hotplug work item will rebuild sched domains.
+ 	 */
+-	if (!cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
++	if (!top_cpuset.nr_subparts_cpus &&
++	    !cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
++		goto out;
++
++	if (top_cpuset.nr_subparts_cpus &&
++	   !cpumask_subset(top_cpuset.effective_cpus, cpu_active_mask))
+ 		goto out;
+ 
+ 	/* Generate domain masks and attrs */
+@@ -1367,11 +1383,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
+ 		update_tasks_cpumask(cp);
+ 
+ 		/*
+-		 * If the effective cpumask of any non-empty cpuset is changed,
+-		 * we need to rebuild sched domains.
++		 * On legacy hierarchy, if the effective cpumask of any non-
++		 * empty cpuset is changed, we need to rebuild sched domains.
++		 * On default hierarchy, the cpuset needs to be a partition
++		 * root as well.
+ 		 */
+ 		if (!cpumask_empty(cp->cpus_allowed) &&
+-		    is_sched_load_balance(cp))
++		    is_sched_load_balance(cp) &&
++		   (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
++		    is_partition_root(cp)))
+ 			need_rebuild_sched_domains = true;
+ 
+ 		rcu_read_lock();
 -- 
 1.8.3.1
 
