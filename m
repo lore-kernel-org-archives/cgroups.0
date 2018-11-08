@@ -1,19 +1,19 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH 3/5] cgroup: cgroup v2 freezer
-Date: Thu,  8 Nov 2018 15:15:58 -0500
-Message-ID: <20181108201600.9129-4-guro@fb.com>
+Subject: [PATCH 5/5] kselftests: cgroup: add freezer controller self-tests
+Date: Thu,  8 Nov 2018 15:16:00 -0500
+Message-ID: <20181108201600.9129-6-guro@fb.com>
 References: <20181108201600.9129-1-guro@fb.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+I3ALMt7zJJmybqZaz7L0tH/rMwRLH4QhV+Ygy+6N70=;
-        b=ey1pIc2UCwrBVnHMQWjQ+px4bJE5/z7QuruCRxKRgvQSl0M9ycK5XN53uqFzHTNGdD
-         j/OtKtJzbu2OKP6IjFKa8Tah6CrEkJtpgztWWeu1o8JIRD4QtsVBP2oWlbDBoxUQzCTI
-         1GFS0bRTbg9IqD9ErusppMQf3R197eiEd714xn0rssoBuqTepyF3vmruui6lpMKpLUoq
-         E/9XmEViBforzl6KAXuG3xQUf1OhV+6G0SxNN6enwW3eNlXKHjgjsp/+LwgpAQbik16D
-         lC+a7O3pKX7YhDaTqHFQgHc57HJOniWIrafpzM9YBr6EA0pzO7Tt6X7s9zM6L2YB3n1w
-         mr6w==
+        bh=GAYzodnFq1lskZ/fyA+TLyLOJdBqblOczoyEUeSQizE=;
+        b=nHMd+eLiGRtORYnSv8K7LvKeHw0QolOBXqnrjIKKiHaneivouvenbpi4H0FQrIYREt
+         MQEPFs635xkuQKR2UgbBSC8YN0YpxTLVPAcIbyc7kas5aKOxd5Bnyh9+B/qdg6K/0cBC
+         iXZ320GDn16QfEjX+scZVBdmaHORZrIqwThQ1nUBV0AvZxl88HYUagRfS6ANq9fitSeO
+         Hj+1V5Z36NP8vlILO+3Jx62LIn8l1yuLHs13YPMK5pUS2qMul4oGme2tBzXw2KECh415
+         sDyORLQ6u22iR1rK1a7xHA4H3AHzkh3sOXh9nrdCm6IItUfmH17aZoxUOkLg42x24ESw
+         aA3w==
 In-Reply-To: <20181108201600.9129-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,733 +21,904 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>, Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>
 
-Cgroup v1 implements the freezer controller, which provides an ability
-to stop the workload in a cgroup and temporarily free up some
-resources (cpu, io, network bandwidth and, potentially, memory)
-for some other tasks. Cgroup v2 lacks this functionality.
+This patch implements six tests for the freezer controller for
+cgroup v2:
+1) a simple test, which aims to freeze and unfreeze a cgroup with 100
+processes
+2) a more complicated tree test, which creates a hierarchy of cgroups,
+puts some processes in some cgroups, and tries to freeze and unfreeze
+different parts of the subtree
+3) a forkbomb test: the test aims to freeze a forkbomb running in a
+cgroup, kill all tasks in the cgroup and remove the cgroup without
+the unfreezing.
+4) rmdir test: the test creates two nested cgroups, freezes the parent
+one, checks that the child can be successfully removed, and a new
+child can be created
+5) migration tests: the test checks migration of a task between
+frozen cgroups: from a frozen to a running, from a running to a
+frozen, and from a frozen to a frozen.
+6) ptrace test: the test checks that it's possible to attach to
+a process in a frozen cgroup, get some information and detach, and
+the cgroup will remain frozen.
 
-This patch implements freezer for cgroup v2. However the functionality
-is similar, the interface is different to cgroup v1: it follows
-cgroup v2 interface principles.
+Expected output:
 
-Key differences are:
-1) There is no separate controller: the functionality is always
-available and is represented by cgroup.freeze and cgroup.events
-cgroup control files.
-2) The desired state is defined by the cgroup.freeze control file.
-Any hierarchical configuration is allowed.
-3) The interface is asynchronous. The actual state is available
-using cgroup.events control file ("frozen" field). There are no
-dedicated transitional states.
-4) It's allowed to make any changes with the cgroup hierarchy
-(create new cgroups, remove old cgroups, move tasks between cgroups)
-no matter if some cgroups are frozen.
-5) Tasks in a frozen cgroup can be killed.
+  $ ./test_freezer
+  ok 1 test_cgfreezer_simple
+  ok 2 test_cgfreezer_tree
+  ok 3 test_cgfreezer_forkbomb
+  ok 4 test_cgrreezer_rmdir
+  ok 5 test_cgfreezer_migrate
+  ok 6 test_cgfreezer_ptrace
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Shuah Khan <shuah@kernel.org>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
 ---
- include/linux/cgroup-defs.h  |  33 +++++
- include/linux/cgroup.h       |  42 ++++++
- include/linux/sched.h        |   5 +-
- include/linux/sched/jobctl.h |   5 +-
- kernel/cgroup/Makefile       |   2 +-
- kernel/cgroup/cgroup.c       |  99 +++++++++++++-
- kernel/cgroup/freezer.c      | 247 +++++++++++++++++++++++++++++++++++
- kernel/ptrace.c              |   6 +
- kernel/signal.c              |  51 ++++++--
- 9 files changed, 472 insertions(+), 18 deletions(-)
- create mode 100644 kernel/cgroup/freezer.c
+ tools/testing/selftests/cgroup/.gitignore     |   1 +
+ tools/testing/selftests/cgroup/Makefile       |   2 +
+ tools/testing/selftests/cgroup/cgroup_util.c  |  81 ++-
+ tools/testing/selftests/cgroup/cgroup_util.h  |   7 +
+ tools/testing/selftests/cgroup/test_freezer.c | 685 ++++++++++++++++++
+ 5 files changed, 775 insertions(+), 1 deletion(-)
+ create mode 100644 tools/testing/selftests/cgroup/test_freezer.c
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 22254c1fe1c5..600165d0f5a2 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -63,6 +63,12 @@ enum {
- 	 * specified at mount time and thus is implemented here.
- 	 */
- 	CGRP_CPUSET_CLONE_CHILDREN,
-+
-+	/* Control group has to be frozen. */
-+	CGRP_FREEZE,
-+
-+	/* Cgroup is frozen. */
-+	CGRP_FROZEN,
- };
+diff --git a/tools/testing/selftests/cgroup/.gitignore b/tools/testing/selftests/cgroup/.gitignore
+index adacda50a4b2..7f9835624793 100644
+--- a/tools/testing/selftests/cgroup/.gitignore
++++ b/tools/testing/selftests/cgroup/.gitignore
+@@ -1,2 +1,3 @@
+ test_memcontrol
+ test_core
++test_freezer
+diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
+index 23fbaa4a9630..8d369b6a2069 100644
+--- a/tools/testing/selftests/cgroup/Makefile
++++ b/tools/testing/selftests/cgroup/Makefile
+@@ -5,8 +5,10 @@ all:
  
- /* cgroup_root->flags */
-@@ -314,6 +320,27 @@ struct cgroup_rstat_cpu {
- 	struct cgroup *updated_next;		/* NULL iff not on the list */
- };
+ TEST_GEN_PROGS = test_memcontrol
+ TEST_GEN_PROGS += test_core
++TEST_GEN_PROGS += test_freezer
  
-+struct cgroup_freezer_state {
-+	/* Should the cgroup actually be frozen?
-+	 * (protected by cgroup_mutex)
-+	 */
-+	int e_freeze;
-+
-+	/* Fields below are protected by css_set_lock */
-+
-+	/* Number of frozen descendant cgroups */
-+	int nr_frozen_descendants;
-+
-+	/* Number of tasks to freeze */
-+	int nr_tasks_to_freeze;
-+
-+	/* Number of frozen tasks */
-+	int nr_frozen_tasks;
-+
-+	/* Used for delayed notifications */
-+	struct work_struct notify_work;
-+};
-+
- struct cgroup {
- 	/* self css with NULL ->ss, points back to this cgroup */
- 	struct cgroup_subsys_state self;
-@@ -442,6 +469,12 @@ struct cgroup {
- 	/* If there is block congestion on this cgroup. */
- 	atomic_t congestion_count;
+ include ../lib.mk
  
-+	/* Should the cgroup and its descendants be frozen. */
-+	bool freeze;
-+
-+	/* Used to store internal freezer state */
-+	struct cgroup_freezer_state freezer;
-+
- 	/* ids of the ancestors at each level including self */
- 	int ancestor_ids[];
- };
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 32c553556bbd..8f7e82b05bf8 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -871,4 +871,46 @@ static inline void put_cgroup_ns(struct cgroup_namespace *ns)
- 		free_cgroup_ns(ns);
+ $(OUTPUT)/test_memcontrol: cgroup_util.c
+ $(OUTPUT)/test_core: cgroup_util.c
++$(OUTPUT)/test_freezer: cgroup_util.c
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index eba06f94433b..e9cdad673901 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -74,6 +74,16 @@ char *cg_name_indexed(const char *root, const char *name, int index)
+ 	return ret;
  }
  
-+#ifdef CONFIG_CGROUPS
-+
-+static inline bool cgroup_frozen(struct task_struct *task)
++char *cg_control(const char *cgroup, const char *control)
 +{
-+	bool ret;
++	size_t len = strlen(cgroup) + strlen(control) + 2;
++	char *ret = malloc(len);
 +
-+	rcu_read_lock();
-+	ret = test_bit(CGRP_FREEZE, &task_dfl_cgroup(task)->flags);
-+	rcu_read_unlock();
++	snprintf(ret, len, "%s/%s", cgroup, control);
 +
 +	return ret;
 +}
 +
-+static inline bool cgroup_task_in_freezer(struct task_struct *task)
-+{
-+	return task->frozen;
-+}
-+
-+void cgroup_freezer_enter(void);
-+void cgroup_freezer_leave(void);
-+void cgroup_freeze(struct cgroup *cgrp, bool freeze);
-+void cgroup_notify_frozen_fn(struct work_struct *work);
-+void cgroup_notify_frozen(struct cgroup *cgrp, bool frozen);
-+void cgroup_queue_notify_frozen(struct cgroup *cgrp);
-+void cgroup_freezer_migrate_task(struct task_struct *task, struct cgroup *src,
-+				 struct cgroup *dst);
-+
-+#else /* !CONFIG_CGROUPS */
-+
-+static inline bool cgroup_task_in_freezer(struct task_struct *task)
-+{
-+	return false;
-+}
-+static inline void cgroup_freezer_enter(void) { }
-+static inline void cgroup_freezer_leave(void) { }
-+static inline bool cgroup_frozen(struct task_struct *task)
-+{
-+	return false;
-+}
-+
-+#endif /* !CONFIG_CGROUPS */
-+
- #endif /* _LINUX_CGROUP_H */
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 977cb57d7bc9..8ef5d3174e50 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -83,7 +83,8 @@ struct task_group;
- #define TASK_WAKING			0x0200
- #define TASK_NOLOAD			0x0400
- #define TASK_NEW			0x0800
--#define TASK_STATE_MAX			0x1000
-+#define TASK_FROZEN			0x1000
-+#define TASK_STATE_MAX			0x2000
- 
- /* Convenience macros for the sake of set_current_state: */
- #define TASK_KILLABLE			(TASK_WAKEKILL | TASK_UNINTERRUPTIBLE)
-@@ -733,6 +734,8 @@ struct task_struct {
- #ifdef CONFIG_CGROUPS
- 	/* disallow userland-initiated cgroup migration */
- 	unsigned			no_cgroup_migration:1;
-+	/* task is in the cgroup freezer loop */
-+	unsigned			frozen:1;
- #endif
- #ifdef CONFIG_BLK_CGROUP
- 	/* to be used once the psi infrastructure lands upstream. */
-diff --git a/include/linux/sched/jobctl.h b/include/linux/sched/jobctl.h
-index 98228bd48aee..6c49455dcfe6 100644
---- a/include/linux/sched/jobctl.h
-+++ b/include/linux/sched/jobctl.h
-@@ -18,6 +18,7 @@ struct task_struct;
- #define JOBCTL_TRAP_NOTIFY_BIT	20	/* trap for NOTIFY */
- #define JOBCTL_TRAPPING_BIT	21	/* switching to TRACED */
- #define JOBCTL_LISTENING_BIT	22	/* ptracer is listening for events */
-+#define JOBCTL_TRAP_FREEZE_BIT	23	/* trap for cgroup freezer */
- 
- #define JOBCTL_STOP_DEQUEUED	(1UL << JOBCTL_STOP_DEQUEUED_BIT)
- #define JOBCTL_STOP_PENDING	(1UL << JOBCTL_STOP_PENDING_BIT)
-@@ -26,8 +27,10 @@ struct task_struct;
- #define JOBCTL_TRAP_NOTIFY	(1UL << JOBCTL_TRAP_NOTIFY_BIT)
- #define JOBCTL_TRAPPING		(1UL << JOBCTL_TRAPPING_BIT)
- #define JOBCTL_LISTENING	(1UL << JOBCTL_LISTENING_BIT)
-+#define JOBCTL_TRAP_FREEZE	(1UL << JOBCTL_TRAP_FREEZE_BIT)
- 
--#define JOBCTL_TRAP_MASK	(JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY)
-+#define JOBCTL_TRAP_MASK	(JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY | \
-+				 JOBCTL_TRAP_FREEZE)
- #define JOBCTL_PENDING_MASK	(JOBCTL_STOP_PENDING | JOBCTL_TRAP_MASK)
- 
- extern bool task_set_jobctl_pending(struct task_struct *task, unsigned long mask);
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index 8d5689ca94b9..5d7a76bfbbb7 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -1,5 +1,5 @@
- # SPDX-License-Identifier: GPL-2.0
--obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o
-+obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o freezer.o
- 
- obj-$(CONFIG_CGROUP_FREEZER) += legacy_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index ef3442555b32..4cffaae075af 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2358,6 +2358,10 @@ static int cgroup_migrate_execute(struct cgroup_mgctx *mgctx)
- 			css_set_move_task(task, from_cset, to_cset, true);
- 			put_css_set_locked(from_cset);
- 			from_cset->nr_tasks--;
-+
-+			cgroup_freezer_migrate_task(task,
-+						    from_cset->dfl_cgrp,
-+						    to_cset->dfl_cgrp);
- 		}
- 	}
- 	spin_unlock_irq(&css_set_lock);
-@@ -3401,8 +3405,11 @@ static ssize_t cgroup_max_depth_write(struct kernfs_open_file *of,
- 
- static int cgroup_events_show(struct seq_file *seq, void *v)
+ int cg_read(const char *cgroup, const char *control, char *buf, size_t len)
  {
--	seq_printf(seq, "populated %d\n",
--		   cgroup_is_populated(seq_css(seq)->cgroup));
-+	struct cgroup *cgrp = seq_css(seq)->cgroup;
-+
-+	seq_printf(seq, "populated %d\n", cgroup_is_populated(cgrp));
-+	seq_printf(seq, "frozen %d\n", test_bit(CGRP_FROZEN, &cgrp->flags));
-+
- 	return 0;
+ 	char path[PATH_MAX];
+@@ -196,7 +206,59 @@ int cg_create(const char *cgroup)
+ 	return mkdir(cgroup, 0644);
  }
  
-@@ -3449,6 +3456,40 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
- 	return ret;
- }
- 
-+static int cgroup_freeze_show(struct seq_file *seq, void *v)
+-static int cg_killall(const char *cgroup)
++int cg_for_all_procs(const char *cgroup, int (*fn)(int pid, void *arg),
++		     void *arg)
 +{
-+	struct cgroup *cgrp = seq_css(seq)->cgroup;
++	char buf[PAGE_SIZE];
++	char *ptr = buf;
++	int ret;
 +
-+	seq_printf(seq, "%d\n", cgrp->freeze);
++	if (cg_read(cgroup, "cgroup.procs", buf, sizeof(buf)))
++		return -1;
++
++	while (ptr < buf + sizeof(buf)) {
++		int pid = strtol(ptr, &ptr, 10);
++
++		if (pid == 0)
++			break;
++		if (*ptr)
++			ptr++;
++		else
++			break;
++		ret = fn(pid, arg);
++		if (ret)
++			return ret;
++	}
 +
 +	return 0;
 +}
 +
-+static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
-+				   char *buf, size_t nbytes, loff_t off)
++int cg_wait_for_proc_count(const char *cgroup, int count)
 +{
-+	struct cgroup *cgrp;
-+	ssize_t ret;
-+	int freeze;
++	char buf[10 * PAGE_SIZE] = {0};
++	int attempts;
++	char *ptr;
 +
-+	ret = kstrtoint(strstrip(buf), 0, &freeze);
-+	if (ret)
-+		return ret;
++	for (attempts = 10; attempts >= 0; attempts--) {
++		int nr = 0;
 +
-+	if (freeze < 0 || freeze > 1)
-+		return -ERANGE;
++		if (cg_read(cgroup, "cgroup.procs", buf, sizeof(buf)))
++			break;
 +
-+	cgrp = cgroup_kn_lock_live(of->kn, false);
-+	if (!cgrp)
-+		return -ENOENT;
++		for (ptr = buf; *ptr; ptr++)
++			if (*ptr == '\n')
++				nr++;
 +
-+	cgroup_freeze(cgrp, freeze);
++		if (nr >= count)
++			return 0;
 +
-+	cgroup_kn_unlock(of->kn);
++		usleep(100000);
++	}
 +
-+	return nbytes;
++	return -1;
 +}
 +
- static int cgroup_file_open(struct kernfs_open_file *of)
++int cg_killall(const char *cgroup)
  {
- 	struct cftype *cft = of->kn->priv;
-@@ -4574,6 +4615,12 @@ static struct cftype cgroup_base_files[] = {
- 		.name = "cgroup.stat",
- 		.seq_show = cgroup_stat_show,
- 	},
-+	{
-+		.name = "cgroup.freeze",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cgroup_freeze_show,
-+		.write = cgroup_freeze_write,
-+	},
- 	{
- 		.name = "cpu.stat",
- 		.flags = CFTYPE_NOT_ON_ROOT,
-@@ -4899,11 +4946,20 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	if (ret)
- 		goto out_idr_free;
+ 	char buf[PAGE_SIZE];
+ 	char *ptr = buf;
+@@ -238,6 +300,14 @@ int cg_destroy(const char *cgroup)
+ 	return ret;
+ }
  
-+	INIT_WORK(&cgrp->freezer.notify_work, cgroup_notify_frozen_fn);
-+	cgrp->freezer.e_freeze = parent->freezer.e_freeze;
-+	if (cgrp->freezer.e_freeze)
-+		set_bit(CGRP_FROZEN, &cgrp->flags);
++int cg_enter(const char *cgroup, int pid)
++{
++	char pidbuf[64];
 +
- 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
--		if (tcgrp != cgrp)
-+		if (tcgrp != cgrp) {
- 			tcgrp->nr_descendants++;
++	snprintf(pidbuf, sizeof(pidbuf), "%d", pid);
++	return cg_write(cgroup, "cgroup.procs", pidbuf);
++}
 +
-+			if (cgrp->freezer.e_freeze)
-+				tcgrp->freezer.nr_frozen_descendants++;
-+		}
- 	}
- 
- 	if (notify_on_release(parent))
-@@ -5190,6 +5246,8 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		tcgrp->nr_descendants--;
- 		tcgrp->nr_dying_descendants++;
-+		if (cgrp->freezer.e_freeze)
-+			tcgrp->freezer.nr_frozen_descendants--;
- 	}
- 
- 	cgroup1_check_for_release(parent);
-@@ -5642,6 +5700,23 @@ void cgroup_post_fork(struct task_struct *child)
- 			cset->nr_tasks++;
- 			css_set_move_task(child, NULL, cset, false);
- 		}
+ int cg_enter_current(const char *cgroup)
+ {
+ 	char pidbuf[64];
+@@ -367,3 +437,12 @@ int set_oom_adj_score(int pid, int score)
+ 	close(fd);
+ 	return 0;
+ }
 +
-+		if (unlikely(cgroup_frozen(child) &&
-+			     (child->flags & ~PF_KTHREAD))) {
-+			struct cgroup *cgrp;
-+			unsigned long flags;
++char proc_read_text(int pid, const char *item, char *buf, size_t size)
++{
++	char path[PATH_MAX];
 +
-+			if (lock_task_sighand(child, &flags)) {
-+				cgrp = cset->dfl_cgrp;
-+				cgrp->freezer.nr_tasks_to_freeze++;
-+				WARN_ON_ONCE(cgrp->freezer.nr_tasks_to_freeze <
-+					     cgrp->freezer.nr_frozen_tasks);
-+				child->jobctl |= JOBCTL_TRAP_FREEZE;
-+				signal_wake_up(child, false);
-+				unlock_task_sighand(child, &flags);
-+			}
-+		}
++	snprintf(path, sizeof(path), "/proc/%d/%s", pid, item);
 +
- 		spin_unlock_irq(&css_set_lock);
- 	}
- 
-@@ -5690,6 +5765,24 @@ void cgroup_exit(struct task_struct *tsk)
- 		spin_lock_irq(&css_set_lock);
- 		css_set_move_task(tsk, cset, NULL, false);
- 		cset->nr_tasks--;
-+
-+		if (unlikely(cgroup_frozen(tsk) &&
-+			     (tsk->flags & ~PF_KTHREAD))) {
-+			struct cgroup *frozen_cgrp = cset->dfl_cgrp;
-+
-+			frozen_cgrp->freezer.nr_tasks_to_freeze--;
-+
-+			WARN_ON(tsk->frozen);
-+			WARN_ON_ONCE(frozen_cgrp->freezer.nr_tasks_to_freeze <
-+				     0);
-+			WARN_ON_ONCE(frozen_cgrp->freezer.nr_tasks_to_freeze <
-+				     frozen_cgrp->freezer.nr_frozen_tasks);
-+
-+			if (frozen_cgrp->freezer.nr_frozen_tasks ==
-+			    frozen_cgrp->freezer.nr_tasks_to_freeze)
-+				cgroup_queue_notify_frozen(frozen_cgrp);
-+		}
-+
- 		spin_unlock_irq(&css_set_lock);
- 	} else {
- 		get_css_set(cset);
-diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/freezer.c
++	return read_text(path, buf, size);
++}
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.h b/tools/testing/selftests/cgroup/cgroup_util.h
+index 9ac8b7958f83..8ee63c00a668 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.h
++++ b/tools/testing/selftests/cgroup/cgroup_util.h
+@@ -18,6 +18,7 @@ static inline int values_close(long a, long b, int err)
+ extern int cg_find_unified_root(char *root, size_t len);
+ extern char *cg_name(const char *root, const char *name);
+ extern char *cg_name_indexed(const char *root, const char *name, int index);
++extern char *cg_control(const char *cgroup, const char *control);
+ extern int cg_create(const char *cgroup);
+ extern int cg_destroy(const char *cgroup);
+ extern int cg_read(const char *cgroup, const char *control,
+@@ -32,6 +33,7 @@ extern int cg_write(const char *cgroup, const char *control, char *buf);
+ extern int cg_run(const char *cgroup,
+ 		  int (*fn)(const char *cgroup, void *arg),
+ 		  void *arg);
++extern int cg_enter(const char *cgroup, int pid);
+ extern int cg_enter_current(const char *cgroup);
+ extern int cg_run_nowait(const char *cgroup,
+ 			 int (*fn)(const char *cgroup, void *arg),
+@@ -41,3 +43,8 @@ extern int alloc_pagecache(int fd, size_t size);
+ extern int alloc_anon(const char *cgroup, void *arg);
+ extern int is_swap_enabled(void);
+ extern int set_oom_adj_score(int pid, int score);
++extern int cg_for_all_procs(const char *cgroup, int (*fn)(int pid, void *arg),
++			    void *arg);
++extern int cg_wait_for_proc_count(const char *cgroup, int count);
++extern int cg_killall(const char *cgroup);
++extern char proc_read_text(int pid, const char *item, char *buf, size_t size);
+diff --git a/tools/testing/selftests/cgroup/test_freezer.c b/tools/testing/selftests/cgroup/test_freezer.c
 new file mode 100644
-index 000000000000..b81e215e2cce
+index 000000000000..dc9830986f08
 --- /dev/null
-+++ b/kernel/cgroup/freezer.c
-@@ -0,0 +1,247 @@
-+//SPDX-License-Identifier: GPL-2.0
-+#include <linux/cgroup.h>
-+#include <linux/sched.h>
-+#include <linux/sched/task.h>
-+#include <linux/sched/signal.h>
++++ b/tools/testing/selftests/cgroup/test_freezer.c
+@@ -0,0 +1,685 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#include <stdbool.h>
++#include <linux/limits.h>
++#include <sys/ptrace.h>
++#include <sys/types.h>
++#include <sys/mman.h>
++#include <unistd.h>
++#include <stdio.h>
++#include <errno.h>
++#include <poll.h>
++#include <stdlib.h>
++#include <sys/inotify.h>
++#include <string.h>
++#include <sys/types.h>
++#include <sys/wait.h>
 +
-+#include "cgroup-internal.h"
++#include "../kselftest.h"
++#include "cgroup_util.h"
 +
-+void cgroup_notify_frozen(struct cgroup *cgrp, bool frozen)
++#define DEBUG
++#ifdef DEBUG
++#define debug(args...) fprintf(stderr, args)
++#else
++#define debug(args...)
++#endif
++
++/*
++ * Freeze the given cgroup and wait for the inotify signal.
++ * If there is no signal in 10 seconds, treat this as an error.
++ */
++static int cg_freeze_wait(const char *cgroup, bool freeze)
 +{
-+	int delta = 1;
++	int fd, wd;
++	struct pollfd fds;
++	int ret = -1;
 +
-+	lockdep_assert_held(&cgroup_mutex);
++	fd = inotify_init1(IN_NONBLOCK);
++	if (fd == -1)
++		return fd;
 +
-+	/*
-+	 * Did we race with fork() or exit()? Np, everything is still frozen.
-+	 */
-+	if (frozen == test_bit(CGRP_FROZEN, &cgrp->flags))
-+		return;
++	wd = inotify_add_watch(fd, cg_control(cgroup, "cgroup.events"),
++			       IN_MODIFY);
++	if (wd == -1) {
++		close(fd);
++		return wd;
++	}
++	fds.fd = fd;
++	fds.events = POLLIN;
 +
-+	if (frozen)
-+		set_bit(CGRP_FROZEN, &cgrp->flags);
-+	else
-+		clear_bit(CGRP_FROZEN, &cgrp->flags);
-+	cgroup_file_notify(&cgrp->events_file);
++	ret = cg_write(cgroup, "cgroup.freeze", freeze ? "1" : "0");
++	if (ret) {
++		close(fd);
++		return ret;
++	}
 +
-+	while ((cgrp = cgroup_parent(cgrp))) {
-+		if (frozen) {
-+			cgrp->freezer.nr_frozen_descendants += delta;
-+			if (!test_bit(CGRP_FROZEN, &cgrp->flags) &&
-+			    test_bit(CGRP_FREEZE, &cgrp->flags) &&
-+			    cgrp->freezer.nr_frozen_descendants ==
-+			    cgrp->nr_descendants) {
-+				set_bit(CGRP_FROZEN, &cgrp->flags);
-+				cgroup_file_notify(&cgrp->events_file);
-+				delta++;
-+			}
-+		} else {
-+			cgrp->freezer.nr_frozen_descendants -= delta;
-+			if (test_bit(CGRP_FROZEN, &cgrp->flags)) {
-+				clear_bit(CGRP_FROZEN, &cgrp->flags);
-+				cgroup_file_notify(&cgrp->events_file);
-+				delta++;
-+			}
++	while (true) {
++		wd = poll(&fds, 1, 10000);
++
++		if (wd == -1 && errno == EINTR)
++			continue;
++
++		if (wd == 1 && fds.revents & POLLIN)
++			ret = 0;
++
++		break;
++	}
++
++	close(fd);
++
++	return ret;
++}
++
++/*
++ * Check if the process is frozen and parked in a proper place.
++ */
++static int proc_check_frozen(int pid, void *arg)
++{
++	char buf[PAGE_SIZE];
++	int len;
++
++	len = proc_read_text(pid, "stat", buf, sizeof(buf));
++	if (len == -1) {
++		debug("Can't get %d stat\n", pid);
++		return -1;
++	}
++
++	if (strstr(buf, "(test_freezer) S ") == NULL) {
++		debug("Process %d in the unexpected state: %s\n", pid, buf);
++		return -1;
++	}
++
++	len = proc_read_text(pid, "stack", buf, sizeof(buf));
++	if (len == -1) {
++		debug("Can't get stack of the process %d\n", pid);
++		return -1;
++	}
++
++	if (strstr(buf, "[<0>] cgroup_freezer") != buf) {
++		debug("Process %d has unexpected stacktrace: %s\n", pid, buf);
++		return -1;
++	}
++
++	return 0;
++}
++
++/*
++ * Check if the cgroup is frozen and all belonging processes are
++ * parked in a proper place.
++ */
++static int cg_check_frozen(const char *cgroup, bool frozen)
++{
++	if (frozen) {
++		/*
++		 * Check the cgroup.events::frozen value.
++		 */
++		if (cg_read_strstr(cgroup, "cgroup.events", "frozen 1") != 0) {
++			debug("Cgroup %s isn't unexpectedly frozen\n", cgroup);
++			return -1;
 +		}
-+	}
-+}
 +
-+void cgroup_notify_frozen_fn(struct work_struct *work)
-+{
-+	struct cgroup *cgrp = container_of(work, struct cgroup,
-+					   freezer.notify_work);
-+
-+	mutex_lock(&cgroup_mutex);
-+	cgroup_notify_frozen(cgrp, true);
-+	mutex_unlock(&cgroup_mutex);
-+
-+	css_put(&cgrp->self);
-+}
-+
-+void cgroup_queue_notify_frozen(struct cgroup *cgrp)
-+{
-+	if (work_pending(&cgrp->freezer.notify_work))
-+		return;
-+
-+	css_get(&cgrp->self);
-+	schedule_work(&cgrp->freezer.notify_work);
-+}
-+
-+void cgroup_freezer_enter(void)
-+{
-+	long state = current->state;
-+	struct cgroup *cgrp;
-+
-+	if (!current->frozen) {
-+		spin_lock_irq(&css_set_lock);
-+		current->frozen = true;
-+		cgrp = task_dfl_cgroup(current);
-+		cgrp->freezer.nr_frozen_tasks++;
-+
-+		WARN_ON_ONCE(cgrp->freezer.nr_tasks_to_freeze <
-+			     cgrp->freezer.nr_frozen_tasks);
-+
-+		if (cgrp->freezer.nr_tasks_to_freeze ==
-+		    cgrp->freezer.nr_frozen_tasks)
-+			cgroup_queue_notify_frozen(cgrp);
-+		spin_unlock_irq(&css_set_lock);
-+	}
-+
-+	/* refrigerator */
-+	set_current_state(TASK_WAKEKILL | TASK_INTERRUPTIBLE | TASK_FROZEN);
-+	clear_thread_flag(TIF_SIGPENDING);
-+	schedule();
-+	recalc_sigpending();
-+
-+	set_current_state(state);
-+}
-+
-+void cgroup_freezer_leave(void)
-+{
-+	struct cgroup *cgrp;
-+
-+	spin_lock_irq(&css_set_lock);
-+	cgrp = task_dfl_cgroup(current);
-+	cgrp->freezer.nr_frozen_tasks--;
-+	WARN_ON_ONCE(cgrp->freezer.nr_frozen_tasks < 0);
-+	current->frozen = false;
-+	spin_unlock_irq(&css_set_lock);
-+}
-+
-+static void cgroup_do_freeze(struct cgroup *cgrp, bool freeze)
-+{
-+	struct css_task_iter it;
-+	struct task_struct *task;
-+	unsigned long flags;
-+
-+	lockdep_assert_held(&cgroup_mutex);
-+
-+	spin_lock_irq(&css_set_lock);
-+	if (freeze) {
-+		cgrp->freezer.nr_tasks_to_freeze = __cgroup_task_count(cgrp);
-+		set_bit(CGRP_FREEZE, &cgrp->flags);
++		/*
++		 * Check that all processes are parked in the proper place.
++		 */
++		if (cg_for_all_procs(cgroup, proc_check_frozen, NULL)) {
++			debug("Some processes of cgroup %s are not frozen\n",
++			      cgroup);
++			return -1;
++		}
 +	} else {
-+		clear_bit(CGRP_FREEZE, &cgrp->flags);
-+		cgroup_notify_frozen(cgrp, false);
-+	}
-+	spin_unlock_irq(&css_set_lock);
-+
-+	css_task_iter_start(&cgrp->self, 0, &it);
-+	while ((task = css_task_iter_next(&it))) {
-+		if (task->flags & PF_KTHREAD)
-+			continue;
-+
-+		if (!lock_task_sighand(task, &flags))
-+			continue;
-+
-+		if (freeze) {
-+			task->jobctl |= JOBCTL_TRAP_FREEZE;
-+			signal_wake_up(task, false);
-+		} else {
-+			task->jobctl &= ~JOBCTL_TRAP_FREEZE;
-+			wake_up_process(task);
++		/*
++		 * Check the cgroup.events::frozen value.
++		 */
++		if (cg_read_strstr(cgroup, "cgroup.events", "frozen 0") != 0) {
++			debug("Cgroup %s is unexpectedly frozen\n", cgroup);
++			return -1;
 +		}
-+
-+		unlock_task_sighand(task, &flags);
 +	}
-+	css_task_iter_end(&it);
 +
-+	if (freeze && cgrp->nr_descendants ==
-+	    cgrp->freezer.nr_frozen_descendants) {
-+		spin_lock_irq(&css_set_lock);
-+		WARN_ON_ONCE(cgrp->freezer.nr_tasks_to_freeze <
-+			     cgrp->freezer.nr_frozen_tasks);
-+		if (cgrp->freezer.nr_tasks_to_freeze ==
-+		    cgrp->freezer.nr_frozen_tasks)
-+			cgroup_notify_frozen(cgrp, true);
-+		spin_unlock_irq(&css_set_lock);
-+	}
++	return 0;
 +}
 +
-+void cgroup_freezer_migrate_task(struct task_struct *task,
-+				 struct cgroup *src, struct cgroup *dst)
++/*
++ * A simple process running in a sleep loop until being
++ * re-parented.
++ */
++static int child_fn(const char *cgroup, void *arg)
 +{
-+	unsigned long flags;
++	int ppid = getppid();
 +
-+	lockdep_assert_held(&css_set_lock);
++	while (getppid() == ppid)
++		usleep(1000);
 +
-+	if (task->flags & PF_KTHREAD)
-+		return;
-+
-+	if (test_bit(CGRP_FREEZE, &src->flags) || task->frozen)
-+		src->freezer.nr_tasks_to_freeze--;
-+	if (test_bit(CGRP_FREEZE, &dst->flags) || task->frozen)
-+		dst->freezer.nr_tasks_to_freeze++;
-+
-+	if (task->frozen) {
-+		src->freezer.nr_frozen_tasks--;
-+		dst->freezer.nr_frozen_tasks++;
-+	}
-+
-+	if (test_bit(CGRP_FREEZE, &src->flags) ==
-+	    test_bit(CGRP_FREEZE, &dst->flags))
-+		return;
-+
-+	if (lock_task_sighand(task, &flags)) {
-+		if (test_bit(CGRP_FREEZE, &dst->flags))
-+			task->jobctl |= JOBCTL_TRAP_FREEZE;
-+		else
-+			task->jobctl &= ~JOBCTL_TRAP_FREEZE;
-+		signal_wake_up(task, false);
-+		unlock_task_sighand(task, &flags);
-+	}
++	return getppid() == ppid;
 +}
 +
-+void cgroup_freeze(struct cgroup *cgrp, bool freeze)
++/*
++ * A simple test for the cgroup freezer: populated the cgroup with 100
++ * running processes and freeze it. Then unfreeze it. Then it kills all
++ * processes and destroys the cgroup.
++ */
++static int test_cgfreezer_simple(const char *root)
 +{
-+	struct cgroup_subsys_state *css;
-+	struct cgroup *dsct;
-+	bool applied = false;
++	int ret = KSFT_FAIL;
++	char *cgroup = NULL;
++	int i;
 +
-+	lockdep_assert_held(&cgroup_mutex);
++	cgroup = cg_name(root, "cg_test");
++	if (!cgroup)
++		goto cleanup;
++
++	if (cg_create(cgroup))
++		goto cleanup;
++
++	for (i = 0; i < 100; i++)
++		cg_run_nowait(cgroup, child_fn, NULL);
++
++	if (cg_wait_for_proc_count(cgroup, 100))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup, false))
++		goto cleanup;
++
++	if (cg_freeze_wait(cgroup, true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup, true))
++		goto cleanup;
++
++	if (cg_freeze_wait(cgroup, false))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup, false))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (cgroup)
++		cg_destroy(cgroup);
++	free(cgroup);
++	return ret;
++}
++
++/*
++ * The test creates the following hierarchy:
++ *       A
++ *    / / \ \
++ *   B  E  I K
++ *  /\  |
++ * C  D F
++ *      |
++ *      G
++ *      |
++ *      H
++ *
++ * with a process in C, H and 3 processes in K.
++ * Then it tries to freeze and unfreeze the whole tree.
++ */
++static int test_cgfreezer_tree(const char *root)
++{
++	char *cgroup[10] = {0};
++	int ret = KSFT_FAIL;
++	int i;
++
++	cgroup[0] = cg_name(root, "cg_test_A");
++	if (!cgroup[0])
++		goto cleanup;
++
++	cgroup[1] = cg_name(cgroup[0], "cg_test_B");
++	if (!cgroup[1])
++		goto cleanup;
++
++	cgroup[2] = cg_name(cgroup[1], "cg_test_C");
++	if (!cgroup[2])
++		goto cleanup;
++
++	cgroup[3] = cg_name(cgroup[1], "cg_test_D");
++	if (!cgroup[3])
++		goto cleanup;
++
++	cgroup[4] = cg_name(cgroup[0], "cg_test_E");
++	if (!cgroup[4])
++		goto cleanup;
++
++	cgroup[5] = cg_name(cgroup[4], "cg_test_F");
++	if (!cgroup[5])
++		goto cleanup;
++
++	cgroup[6] = cg_name(cgroup[5], "cg_test_G");
++	if (!cgroup[6])
++		goto cleanup;
++
++	cgroup[7] = cg_name(cgroup[6], "cg_test_H");
++	if (!cgroup[7])
++		goto cleanup;
++
++	cgroup[8] = cg_name(cgroup[0], "cg_test_I");
++	if (!cgroup[8])
++		goto cleanup;
++
++	cgroup[9] = cg_name(cgroup[0], "cg_test_K");
++	if (!cgroup[9])
++		goto cleanup;
++
++	for (i = 0; i < 10; i++)
++		if (cg_create(cgroup[i]))
++			goto cleanup;
++
++	cg_run_nowait(cgroup[2], child_fn, NULL);
++	cg_run_nowait(cgroup[7], child_fn, NULL);
++	cg_run_nowait(cgroup[9], child_fn, NULL);
++	cg_run_nowait(cgroup[9], child_fn, NULL);
++	cg_run_nowait(cgroup[9], child_fn, NULL);
 +
 +	/*
-+	 * Nothing changed? Just exit.
++	 * Wait until all child processes will enter
++	 * corresponding cgroups.
 +	 */
-+	if (cgrp->freeze == freeze)
-+		return;
 +
-+	cgrp->freeze = freeze;
++	if (cg_wait_for_proc_count(cgroup[2], 1) ||
++	    cg_wait_for_proc_count(cgroup[7], 1) ||
++	    cg_wait_for_proc_count(cgroup[9], 3))
++		goto cleanup;
 +
 +	/*
-+	 * Propagate changes downwards the cgroup tree.
++	 * Freeze B.
 +	 */
-+	css_for_each_descendant_pre(css, &cgrp->self) {
-+		dsct = css->cgroup;
++	if (cg_freeze_wait(cgroup[1], true))
++		goto cleanup;
 +
-+		if (cgroup_is_dead(dsct))
-+			continue;
++	if (cg_check_frozen(cgroup[1], true))
++		goto cleanup;
 +
-+		if (freeze) {
-+			dsct->freezer.e_freeze++;
-+			/*
-+			 * Already frozen because of ancestor's settings?
-+			 */
-+			if (dsct->freezer.e_freeze > 1)
-+				continue;
-+		} else {
-+			dsct->freezer.e_freeze--;
-+			/*
-+			 * Still frozen because of ancestor's settings?
-+			 */
-+			if (dsct->freezer.e_freeze > 0)
-+				continue;
++	/*
++	 * Freeze F.
++	 */
++	if (cg_freeze_wait(cgroup[5], true))
++		goto cleanup;
 +
-+			WARN_ON_ONCE(dsct->freezer.e_freeze < 0);
-+		}
++	if (cg_check_frozen(cgroup[5], true))
++		goto cleanup;
 +
-+		/*
-+		 * Do change actual state: freeze or unfreeze.
-+		 */
-+		cgroup_do_freeze(dsct, freeze);
-+		applied = true;
++	/*
++	 * Freeze G.
++	 */
++	if (cg_freeze_wait(cgroup[6], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[6], true))
++		goto cleanup;
++
++	/*
++	 * Check that A and E are not frozen.
++	 */
++	if (cg_check_frozen(cgroup[0], false))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[4], false))
++		goto cleanup;
++
++	/*
++	 * Freeze A. Check that A, B and E are frozen.
++	 */
++	if (cg_freeze_wait(cgroup[0], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[0], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[1], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[4], true))
++		goto cleanup;
++
++	/*
++	 * Unfreeze B, F and G
++	 */
++	if (cg_freeze_wait(cgroup[1], false))
++		goto cleanup;
++
++	if (cg_freeze_wait(cgroup[5], false))
++		goto cleanup;
++
++	if (cg_freeze_wait(cgroup[6], false))
++		goto cleanup;
++
++	/*
++	 * Check that C and H are still frozen.
++	 */
++	if (cg_check_frozen(cgroup[2], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[7], true))
++		goto cleanup;
++
++	/*
++	 * Unfreezing A failed. Check that A, C and K are not frozen.
++	 */
++	if (cg_freeze_wait(cgroup[0], false))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[0], false))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[2], false))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[9], false))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	for (i = 9; i >= 0 && cgroup[i]; i--) {
++		cg_destroy(cgroup[i]);
++		free(cgroup[i]);
 +	}
 +
-+	if (!applied)
-+		cgroup_file_notify(&cgrp->events_file);
++	return ret;
 +}
-diff --git a/kernel/ptrace.c b/kernel/ptrace.c
-index 21fec73d45d4..5e484e2480e5 100644
---- a/kernel/ptrace.c
-+++ b/kernel/ptrace.c
-@@ -400,6 +400,12 @@ static int ptrace_attach(struct task_struct *task, long request,
- 
- 	spin_lock(&task->sighand->siglock);
- 
-+	/*
-+	 * Kick the process to get it out of the refrigerator.
-+	 */
-+	if (cgroup_frozen(task))
-+		wake_up_process(task);
 +
- 	/*
- 	 * If the task is already STOPPED, set JOBCTL_TRAP_STOP and
- 	 * TRAPPING, and kick it so that it transits to TRACED.  TRAPPING
-diff --git a/kernel/signal.c b/kernel/signal.c
-index 5843c541fda9..41fee9a38201 100644
---- a/kernel/signal.c
-+++ b/kernel/signal.c
-@@ -326,6 +326,11 @@ void task_clear_jobctl_pending(struct task_struct *task, unsigned long mask)
- 	if (mask & JOBCTL_STOP_PENDING)
- 		mask |= JOBCTL_STOP_CONSUME | JOBCTL_STOP_DEQUEUED;
- 
-+	/*
-+	 * JOBCTL_TRAP_FREEZE is set and cleared from cgroup side,
-+	 * don't touch it here.
-+	 */
-+	mask &= ~JOBCTL_TRAP_FREEZE;
- 	task->jobctl &= ~mask;
- 
- 	if (!(task->jobctl & JOBCTL_PENDING_MASK))
-@@ -2252,7 +2257,7 @@ static bool do_signal_stop(int signr)
- }
- 
- /**
-- * do_jobctl_trap - take care of ptrace jobctl traps
-+ * do_jobctl_trap - take care of ptrace and cgroup freezer jobctl traps
-  *
-  * When PT_SEIZED, it's used for both group stop and explicit
-  * SEIZE/INTERRUPT traps.  Both generate PTRACE_EVENT_STOP trap with
-@@ -2268,20 +2273,35 @@ static bool do_signal_stop(int signr)
-  */
- static void do_jobctl_trap(void)
- {
-+	struct sighand_struct *sighand = current->sighand;
- 	struct signal_struct *signal = current->signal;
- 	int signr = current->jobctl & JOBCTL_STOP_SIGMASK;
- 
--	if (current->ptrace & PT_SEIZED) {
--		if (!signal->group_stop_count &&
--		    !(signal->flags & SIGNAL_STOP_STOPPED))
--			signr = SIGTRAP;
--		WARN_ON_ONCE(!signr);
--		ptrace_do_notify(signr, signr | (PTRACE_EVENT_STOP << 8),
--				 CLD_STOPPED);
--	} else {
--		WARN_ON_ONCE(!signr);
--		ptrace_stop(signr, CLD_STOPPED, 0, NULL);
--		current->exit_code = 0;
-+	if (current->jobctl & (JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY)) {
-+		if (current->ptrace & PT_SEIZED) {
-+			if (!signal->group_stop_count &&
-+			    !(signal->flags & SIGNAL_STOP_STOPPED))
-+				signr = SIGTRAP;
-+			WARN_ON_ONCE(!signr);
-+			ptrace_do_notify(signr,
-+					 signr | (PTRACE_EVENT_STOP << 8),
-+					 CLD_STOPPED);
-+		} else {
-+			WARN_ON_ONCE(!signr);
-+			ptrace_stop(signr, CLD_STOPPED, 0, NULL);
-+			current->exit_code = 0;
-+		}
-+	} else if (current->jobctl & JOBCTL_TRAP_FREEZE) {
-+		/*
-+		 * Enter the freezer, unless the task is about to exit.
-+		 */
-+		if (fatal_signal_pending(current)) {
-+			current->jobctl &= ~JOBCTL_TRAP_FREEZE;
-+		} else {
-+			spin_unlock_irq(&sighand->siglock);
-+			cgroup_freezer_enter();
-+			spin_lock_irq(&sighand->siglock);
-+		}
- 	}
- }
- 
-@@ -2403,6 +2423,13 @@ bool get_signal(struct ksignal *ksig)
- 			goto relock;
- 		}
- 
-+		/*
-+		 * If the task is leaving the freezer look, let's notify
-+		 * the cgroup and reset the frozen mark.
-+		 */
-+		if (unlikely(cgroup_task_in_freezer(current)))
-+			cgroup_freezer_leave();
++/*
++ * A fork bomb emulator.
++ */
++static int forkbomb_fn(const char *cgroup, void *arg)
++{
++	int ppid;
 +
- 		signr = dequeue_signal(current, &current->blocked, &ksig->info);
- 
- 		if (!signr)
++	fork();
++	fork();
++
++	ppid = getppid();
++
++	while (getppid() == ppid)
++		usleep(1000);
++
++	return getppid() == ppid;
++}
++
++/*
++ * The test runs a fork bomb in a cgroup and tries to freeze it.
++ * Then it kills all processes and checks that cgroup isn't populated
++ * anymore.
++ */
++static int test_cgfreezer_forkbomb(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *cgroup = NULL;
++
++	cgroup = cg_name(root, "cg_forkbomb_test");
++	if (!cgroup)
++		goto cleanup;
++
++	if (cg_create(cgroup))
++		goto cleanup;
++
++	cg_run_nowait(cgroup, forkbomb_fn, NULL);
++
++	usleep(100000);
++
++	if (cg_freeze_wait(cgroup, true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup, true))
++		goto cleanup;
++
++	if (cg_killall(cgroup))
++		goto cleanup;
++
++	if (cg_wait_for_proc_count(cgroup, 0))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (cgroup)
++		cg_destroy(cgroup);
++	free(cgroup);
++	return ret;
++}
++
++/*
++ * The test creates two nested cgroups, freezes the parent
++ * and removes the child. Then it checks that the parent cgroup
++ * remains frozen and it's possible to create a new child
++ * without unfreezing. The new child is frozen too.
++ */
++static int test_cgfreezer_rmdir(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *parent, *child = NULL;
++
++	parent = cg_name(root, "cg_test_A");
++	if (!parent)
++		goto cleanup;
++
++	child = cg_name(parent, "cg_test_B");
++	if (!child)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (cg_freeze_wait(parent, true))
++		goto cleanup;
++
++	if (cg_check_frozen(parent, true))
++		goto cleanup;
++
++	if (cg_destroy(child))
++		goto cleanup;
++
++	if (cg_check_frozen(parent, true))
++		goto cleanup;
++
++	if (cg_create(child))
++		goto cleanup;
++
++	if (cg_check_frozen(child, true))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (child)
++		cg_destroy(child);
++	free(child);
++	if (parent)
++		cg_destroy(parent);
++	free(parent);
++	return ret;
++}
++
++/*
++ * The test creates two cgroups: A and B. The it runs a process in A,
++ * and performs several migrations:
++ * 1) A (running) -> B (frozen)
++ * 2) B (frozen) -> A (running)
++ * 3) A (frozen) -> B (frozen)
++ *
++ * One each step it checks that the actual state of cgroups matches
++ * the expected state.
++ */
++static int test_cgfreezer_migrate(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *cgroup[2] = {0};
++	int pid;
++
++	cgroup[0] = cg_name(root, "cg_test_A");
++	if (!cgroup[0])
++		goto cleanup;
++
++	cgroup[1] = cg_name(root, "cg_test_B");
++	if (!cgroup[1])
++		goto cleanup;
++
++	if (cg_create(cgroup[0]))
++		goto cleanup;
++
++	if (cg_create(cgroup[1]))
++		goto cleanup;
++
++	pid = cg_run_nowait(cgroup[0], child_fn, NULL);
++	if (pid < 0)
++		goto cleanup;
++
++	if (cg_wait_for_proc_count(cgroup[0], 1))
++		goto cleanup;
++
++	/*
++	 * Migrate from A (running) to B (frozen)
++	 */
++	if (cg_freeze_wait(cgroup[1], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[1], true))
++		goto cleanup;
++
++	if (cg_enter(cgroup[1], pid))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[0], false))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[1], true))
++		goto cleanup;
++
++	/*
++	 * Migrate from B (frozen) to A (running)
++	 */
++	if (cg_enter(cgroup[0], pid))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[0], false))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[1], true))
++		goto cleanup;
++
++	/*
++	 * Migrate from A (frozen) to B (frozen)
++	 */
++	if (cg_freeze_wait(cgroup[0], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[0], true))
++		goto cleanup;
++
++	if (cg_enter(cgroup[1], pid))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[0], true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup[1], true))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (cgroup[0])
++		cg_destroy(cgroup[0]);
++	free(cgroup[0]);
++	if (cgroup[1])
++		cg_destroy(cgroup[1]);
++	free(cgroup[1]);
++	return ret;
++}
++
++/*
++ * The test checks that ptrace works with a tracing process in a frozen cgroup.
++ */
++static int test_cgfreezer_ptrace(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *cgroup = NULL;
++	siginfo_t siginfo;
++	int pid;
++
++	cgroup = cg_name(root, "cg_test");
++	if (!cgroup)
++		goto cleanup;
++
++	if (cg_create(cgroup))
++		goto cleanup;
++
++	pid = cg_run_nowait(cgroup, child_fn, NULL);
++	if (pid < 0)
++		goto cleanup;
++
++	if (cg_wait_for_proc_count(cgroup, 1))
++		goto cleanup;
++
++	if (cg_freeze_wait(cgroup, true))
++		goto cleanup;
++
++	if (cg_check_frozen(cgroup, true))
++		goto cleanup;
++
++	if (ptrace(PTRACE_SEIZE, pid, NULL, NULL))
++		goto cleanup;
++
++	if (ptrace(PTRACE_INTERRUPT, pid, NULL, NULL))
++		goto cleanup;
++
++	waitpid(pid, NULL, 0);
++
++	if (ptrace(PTRACE_GETSIGINFO, pid, NULL, &siginfo))
++		goto cleanup;
++
++	if (ptrace(PTRACE_DETACH, pid, NULL, NULL))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (cgroup)
++		cg_destroy(cgroup);
++	free(cgroup);
++	return ret;
++}
++
++#define T(x) { x, #x }
++struct cgfreezer_test {
++	int (*fn)(const char *root);
++	const char *name;
++} tests[] = {
++	T(test_cgfreezer_simple),
++	T(test_cgfreezer_tree),
++	T(test_cgfreezer_forkbomb),
++	T(test_cgfreezer_rmdir),
++	T(test_cgfreezer_migrate),
++	T(test_cgfreezer_ptrace),
++};
++#undef T
++
++int main(int argc, char *argv[])
++{
++	char root[PATH_MAX];
++	int i, ret = EXIT_SUCCESS;
++
++	if (cg_find_unified_root(root, sizeof(root)))
++		ksft_exit_skip("cgroup v2 isn't mounted\n");
++	for (i = 0; i < ARRAY_SIZE(tests); i++) {
++		switch (tests[i].fn(root)) {
++		case KSFT_PASS:
++			ksft_test_result_pass("%s\n", tests[i].name);
++			break;
++		case KSFT_SKIP:
++			ksft_test_result_skip("%s\n", tests[i].name);
++			break;
++		default:
++			ret = EXIT_FAILURE;
++			ksft_test_result_fail("%s\n", tests[i].name);
++			break;
++		}
++	}
++
++	return ret;
++}
 -- 
 2.17.2
 
