@@ -1,27 +1,66 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v15 00/12] Enable cpuset controller in default hierarchy
-Date: Thu, 8 Nov 2018 15:31:27 -0500
-Message-ID: <5249d679-0d57-305d-ea9f-8aba22b8d5d5@redhat.com>
-References: <1541689726-20088-1-git-send-email-longman@redhat.com>
- <20181108202844.GD2509588@devbig004.ftw2.facebook.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v5 3/5] cgroup/cpuset: make callback_lock raw
+Date: Fri, 9 Nov 2018 11:34:17 +0100
+Message-ID: <20181109103417.GB9471@localhost.localdomain>
+References: <20180903142801.20046-1-juri.lelli@redhat.com>
+ <20180903142801.20046-4-juri.lelli@redhat.com>
+ <20180925143416.GD25664@localhost.localdomain>
+ <20181107155330.GA2509588@devbig004.ftw2.facebook.com>
+ <20181107163841.GA18091@localhost.localdomain>
+ <95aeb057-d63f-a6b8-cf0e-cdff80e79021@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181108202844.GD2509588@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <95aeb057-d63f-a6b8-cf0e-cdff80e79021@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, kernel-team@fb.com, pjt@google.com, luto@amacapital.net, Mike Galbraith <efault@gmx.de>, torvalds@linux-foundation.org, Roman Gushchin <guro@fb.com>, Juri Lelli <juri.lelli@redhat.com>, Patrick Bellasi <patrick.bellasi@arm.com>, Tom Hromatka <tom.hromatka@oracle.com>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, cgroups@vger.kernel.org, peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org
 
-On 11/08/2018 03:28 PM, Tejun Heo wrote:
-> Applied to cgroup/for-4.21.
->
-> Thanks a lot, Waiman!
->
-Thanks for applying it. It is a long way to get to this point.
+On 08/11/18 14:11, Waiman Long wrote:
+> On 11/07/2018 11:38 AM, Juri Lelli wrote:
+> > Hi,
+> >
+> > On 07/11/18 07:53, Tejun Heo wrote:
+> >> Hello,
+> >>
+> >> On Tue, Sep 25, 2018 at 04:34:16PM +0200, Juri Lelli wrote:
+> >>> It would be great if you could please have a look at the proposed change
+> >>> below (and the rest of the set of course :-).
+> >> Yeah, looks good to me.  Please feel free to add
+> >>
+> >>  Acked-by: Tejun Heo <tj@kernel.org>
+> > Thanks!
+> >
+> >>> Another bit that I'd be more comfortable after hearing your word on it
+> >>> is this one (discussed over 5/5):
+> >>>
+> >>> https://lore.kernel.org/lkml/20180925130750.GA25664@localhost.localdomain/
+> >> Can you please loop Waiman Long <longman@redhat.com> into discussion?
+> >> He's working on cgroup2 cpuset support which might collide.
+> > Sure, I've been originally working on this on top of his series, but
+> > didn't try with latest version. Hopefully the two series don't generate
+> > too much collisions. I'll try to find some time soon to check again.
+> >
+> > In the meantime, Waiman Long, how do you feel about it? :-)
+> >
+> > Thread starts at (you if missed it)
+> >
+> > https://lore.kernel.org/lkml/20180903142801.20046-1-juri.lelli@redhat.com/
+> >
+> > Best,
+> >
+> > - Juri
+> 
+> Your patches look good to me. There will be some minor conflicts, I
+> think, but nothing big.
 
-Cheers,
-Longman
+Thanks a lot for reviewing them.
 
+Going to test and respin soon.
+
+Best,
+
+- Juri
