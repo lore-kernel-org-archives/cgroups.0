@@ -1,16 +1,16 @@
 From: Paolo Valente <paolo.valente@linaro.org>
-Subject: [PATCH 08/12] block, cfq: allow cgroup files to be shared
-Date: Mon, 12 Nov 2018 10:56:28 +0100
-Message-ID: <20181112095632.69114-9-paolo.valente@linaro.org>
+Subject: [PATCH 10/12] block, throttle: allow sharing cgroup statistic files
+Date: Mon, 12 Nov 2018 10:56:30 +0100
+Message-ID: <20181112095632.69114-11-paolo.valente@linaro.org>
 References: <20181112095632.69114-1-paolo.valente@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=BhhSrhl3GPkKSUoXIhn9nAMo7Bh19cGOMzxu3Gi9vPg=;
-        b=QG+hymxrp0k2JHc1mCXq7bGzmIVfKn8kyei84SG0+Y3J9yu8gRuP/KiUBxNO6H35Yw
-         PAM/xy0h10htiE9hYdXK9BcdZPCqgmM0bjBMsEt8TvvDzFJTQMZNtCgl4n1iF4YqNIE/
-         nqEomghns5VaEzxAIC/4QDraAfkZx5bQG9Ixk=
+        bh=tJzqIZ4whiBiBt1HUGz+jcfYWcwBBnR88Hf7l4Y3mww=;
+        b=FDIijxyzwzKUw8K/20a1vK7NhMkivhaxGdBShwBbInbBKMPrlnQRfW4Q14WNLJlAgk
+         +5kolkin8wKT5bN1KavHsyCPbdwxMplfi0IRkntZ056n0gKQV+UuCM8samekxvyVvzGV
+         rA+3TSy9ixB0Rhl9TjcTj+dGLIzKf73wxGTX4=
 In-Reply-To: <20181112095632.69114-1-paolo.valente@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,195 +22,56 @@ Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linar
 
 From: Angelo Ruocco <angeloruocco90@gmail.com>
 
-Some of the files exposed in a cgroup by cfq have the same meaning as
-the files exposed by bfq and throttle.
+Some of the cgroup files defined in the throttle policy have the same
+meaning as those defined in the proportional share policy.
 
-This commit allows these files to be shared.
+This commit uses the new file sharing interface in cgroup to share
+these files.
 
 Signed-off-by: Angelo Ruocco <angeloruocco90@gmail.com>
 Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
 ---
- block/cfq-iosched.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 47 insertions(+), 2 deletions(-)
+ block/blk-throttle.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index af0c59c2dcde..f046039bdfc6 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -2016,7 +2016,8 @@ static struct cftype cfq_blkcg_legacy_files[] = {
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 5c43821dc528..239957c12d34 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1491,22 +1491,30 @@ static struct cftype throtl_legacy_files[] = {
+ 		.write = tg_set_conf_uint,
  	},
  	{
- 		.name = "weight",
--		.flags = CFTYPE_NOT_ON_ROOT,
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_SHARES_FILE,
- 		.seq_show = cfq_print_weight,
- 		.write_u64 = cfq_set_weight,
- 	},
-@@ -2035,40 +2036,56 @@ static struct cftype cfq_blkcg_legacy_files[] = {
- 	/* statistics, covers only the tasks in the cfqg */
- 	{
- 		.name = "time",
-+		.owner_name = "cfq",
+-		.name = "throttle.io_service_bytes",
++		.name = "io_service_bytes",
++		.owner_name = "throttle",
 +		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.time),
- 		.seq_show_cft = cfqg_print_stat,
- 	},
- 	{
- 		.name = "sectors",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.seq_show = cfqg_print_stat_sectors,
- 	},
- 	{
- 		.name = "io_service_bytes",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_cfq,
+ 		.private = (unsigned long)&blkcg_policy_throtl,
  		.seq_show_cft = blkg_print_stat_bytes,
  	},
  	{
- 		.name = "io_serviced",
-+		.owner_name = "cfq",
+-		.name = "throttle.io_service_bytes_recursive",
++		.name = "io_service_bytes_recursive",
++		.owner_name = "throttle",
 +		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_cfq,
- 		.seq_show_cft = blkg_print_stat_ios,
- 	},
- 	{
- 		.name = "io_service_time",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.service_time),
- 		.seq_show_cft = cfqg_print_rwstat,
- 	},
- 	{
- 		.name = "io_wait_time",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.wait_time),
- 		.seq_show_cft = cfqg_print_rwstat,
- 	},
- 	{
- 		.name = "io_merged",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.merged),
- 		.seq_show_cft = cfqg_print_rwstat,
- 	},
- 	{
- 		.name = "io_queued",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.queued),
- 		.seq_show_cft = cfqg_print_rwstat,
- 	},
-@@ -2076,70 +2093,97 @@ static struct cftype cfq_blkcg_legacy_files[] = {
- 	/* the same statictics which cover the cfqg and its descendants */
- 	{
- 		.name = "time_recursive",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.time),
- 		.seq_show_cft = cfqg_print_stat_recursive,
- 	},
- 	{
- 		.name = "sectors_recursive",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.seq_show = cfqg_print_stat_sectors_recursive,
- 	},
- 	{
- 		.name = "io_service_bytes_recursive",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_cfq,
+ 		.private = (unsigned long)&blkcg_policy_throtl,
  		.seq_show_cft = blkg_print_stat_bytes_recursive,
  	},
  	{
- 		.name = "io_serviced_recursive",
-+		.owner_name = "cfq",
+-		.name = "throttle.io_serviced",
++		.name = "io_serviced",
++		.owner_name = "throttle",
 +		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_cfq,
+ 		.private = (unsigned long)&blkcg_policy_throtl,
+ 		.seq_show_cft = blkg_print_stat_ios,
+ 	},
+ 	{
+-		.name = "throttle.io_serviced_recursive",
++		.name = "io_serviced_recursive",
++		.owner_name = "throttle",
++		.flags = CFTYPE_SHARES_FILE,
+ 		.private = (unsigned long)&blkcg_policy_throtl,
  		.seq_show_cft = blkg_print_stat_ios_recursive,
- 	},
- 	{
- 		.name = "io_service_time_recursive",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.service_time),
- 		.seq_show_cft = cfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "io_wait_time_recursive",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.wait_time),
- 		.seq_show_cft = cfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "io_merged_recursive",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.merged),
- 		.seq_show_cft = cfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "io_queued_recursive",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.queued),
- 		.seq_show_cft = cfqg_print_rwstat_recursive,
- 	},
- #ifdef CONFIG_DEBUG_BLK_CGROUP
- 	{
- 		.name = "avg_queue_size",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.seq_show = cfqg_print_avg_queue_size,
- 	},
- 	{
- 		.name = "group_wait_time",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.group_wait_time),
- 		.seq_show_cft = cfqg_print_stat,
- 	},
- 	{
- 		.name = "idle_time",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.idle_time),
- 		.seq_show_cft = cfqg_print_stat,
- 	},
- 	{
- 		.name = "empty_time",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.empty_time),
- 		.seq_show_cft = cfqg_print_stat,
- 	},
- 	{
- 		.name = "dequeue",
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = offsetof(struct cfq_group, stats.dequeue),
- 		.seq_show_cft = cfqg_print_stat,
- 	},
- 	{
- 		.name = "unaccounted_time",
-+		.owner_name = "cfq",
- 		.private = offsetof(struct cfq_group, stats.unaccounted_time),
- 		.seq_show_cft = cfqg_print_stat,
- 	},
-@@ -2181,7 +2225,8 @@ static ssize_t cfq_set_weight_on_dfl(struct kernfs_open_file *of,
- static struct cftype cfq_blkcg_files[] = {
- 	{
- 		.name = "weight",
--		.flags = CFTYPE_NOT_ON_ROOT,
-+		.owner_name = "cfq",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_SHARES_FILE,
- 		.seq_show = cfq_print_weight_on_dfl,
- 		.write = cfq_set_weight_on_dfl,
  	},
 -- 
 2.16.1
