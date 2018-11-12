@@ -1,19 +1,19 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH] cgroup: document cgroup v2 freezer interface
-Date: Mon, 12 Nov 2018 15:04:16 -0800
-Message-ID: <20181112230422.5911-2-guro@fb.com>
+Subject: [PATCH v2 2/6] cgroup: implement __cgroup_task_count() helper
+Date: Mon, 12 Nov 2018 15:04:18 -0800
+Message-ID: <20181112230422.5911-4-guro@fb.com>
 References: <20181112230422.5911-1-guro@fb.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=4w/uS5CdZfUu32Qk39NtHIWDaBjSkhBcPb+FbjjLeZ4=;
-        b=s1RIXgb3b+vXc5c89w24eOfcjmq9stBNrOwsuwcbhG9TyvKyMIw0z5/w5SCfK4ZFxR
-         YDhm1UYvp7mmOJ+5vmN2WDG+abzd+uo2KIuR84P8HT92DH/jFnwA4ngNNtUC8cK24umN
-         cR8Pie8hNyZOIQKHYDUvZP3Bc9drjlXrxw4Ev0YJkGZrvJdx6PvERxFYJmo6w7/r/bbj
-         NexQouHzH9t3y2zfNs0UgMl8V6+O3lxko6nbpqJtSxor9uqSsncKIEjByKD7JjDtto6w
-         +xj0+7cyIzPxIQvsxzh0pzAClsudMgWWBplzdhCaf/XaAtWON7+JKfWZw1J2Im77UCut
-         Bw8g==
+        bh=FP20pGgu3D25STEzu2nQYXaFb5vqYhGB0+bCEyu/01c=;
+        b=gYj4+QLLPEksUSiryQwvQyfZONhBhGfmUh6aioSQOgcZxDkws2ECAoGpjf/mp/Nbxr
+         KPARXI8utFVk1kJaUtwb3VxjhHO4OJzsCDBhLN0sdIIJ1AQ49ulu+9Qw7yDo5R2Wj2Ph
+         nNrZ24JgzwwK0O8lrvif9dZ4PVotn32doQl23DdWJ29gLWXeujl2ol6Y1lMQW+JnqKWk
+         AopiBCgKrtdHzGGHEIugqmwW0f/+uVRM7lJzJ4KCyOX4xW/Rv+J3+y8HihBX/lh+Kdt/
+         YcZ4ow5oHeZqFGJZV5FBmy4apL0w4PTmLhrQ7UfnAyfyGQWFSzJJkWF/9rr6RTw0dwFE
+         09tA==
 In-Reply-To: <20181112230422.5911-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,58 +23,105 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
 Cc: Oleg Nesterov <oleg@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-Describe cgroup v2 freezer interface in the cgroup v2 admin guide.
+The helper is identical to the existing cgroup_task_count()
+except it doesn't take the css_set_lock by itself, assuming
+that the caller does.
+
+Also, move cgroup_task_count() implementation into
+kernel/cgroup/cgroup.c, as there is nothing specific to cgroup v1.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
 ---
- Documentation/admin-guide/cgroup-v2.rst | 26 +++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ kernel/cgroup/cgroup-internal.h |  1 +
+ kernel/cgroup/cgroup-v1.c       | 16 ----------------
+ kernel/cgroup/cgroup.c          | 33 +++++++++++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 16 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 184193bcb262..a065c0bed88c 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -862,6 +862,8 @@ All cgroup core files are prefixed with "cgroup."
- 	  populated
- 		1 if the cgroup or its descendants contains any live
- 		processes; otherwise, 0.
-+	  frozen
-+		1 if the cgroup is frozen; otherwise, 0.
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index 75568fcf2180..fe01a9fa4a8d 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -224,6 +224,7 @@ int cgroup_rmdir(struct kernfs_node *kn);
+ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ 		     struct kernfs_root *kf_root);
  
-   cgroup.max.descendants
- 	A read-write single value files.  The default is "max".
-@@ -895,6 +897,30 @@ All cgroup core files are prefixed with "cgroup."
- 		A dying cgroup can consume system resources not exceeding
- 		limits, which were active at the moment of cgroup deletion.
++int __cgroup_task_count(const struct cgroup *cgrp);
+ int cgroup_task_count(const struct cgroup *cgrp);
  
-+  cgroup.freeze
-+	A read-write single value file which exists on non-root cgroups.
-+	Allowed values are "0" and "1". The default is "0".
-+
-+	Writing "1" to the file causes freezing of the cgroup and all
-+	descendant cgroups. This means that all belonging processes will
-+	be stopped and will not run until the cgroup will be explicitly
-+	unfrozen. Freezing of the cgroup may take some time; when the process
-+	is complete, the "frozen" value in the cgroup.events control file
-+	will be updated and the corresponding notification will be issued.
-+
-+	Cgroup can be frozen either by its own settings, either by settings
-+	of any ancestor cgroups. If any of ancestor cgroups is frozen, the
-+	cgroup will remain frozen.
-+
-+	Processes in the frozen cgroup can be killed by a fatal signal.
-+	They also can enter and leave a frozen cgroup: either by an explicit
-+	move by a user, either if freezing of the cgroup races with fork().
-+	If a cgroup is moved to a frozen cgroup, it stops. If a process is
-+	moving out of a frozen cgroup, it becomes running.
-+
-+	Frozen status of a cgroup doesn't affect any cgroup tree operations:
-+	it's possible to delete a frozen (and empty) cgroup, as well as
-+	create new sub-cgroups.
+ /*
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 51063e7a93c2..6134fef07d57 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -336,22 +336,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
+ 	return l;
+ }
  
- Controllers
- ===========
+-/**
+- * cgroup_task_count - count the number of tasks in a cgroup.
+- * @cgrp: the cgroup in question
+- */
+-int cgroup_task_count(const struct cgroup *cgrp)
+-{
+-	int count = 0;
+-	struct cgrp_cset_link *link;
+-
+-	spin_lock_irq(&css_set_lock);
+-	list_for_each_entry(link, &cgrp->cset_links, cset_link)
+-		count += link->cset->nr_tasks;
+-	spin_unlock_irq(&css_set_lock);
+-	return count;
+-}
+-
+ /*
+  * Load a cgroup's pidarray with either procs' tgids or tasks' pids
+  */
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 4a3dae2a8283..ef3442555b32 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -561,6 +561,39 @@ static void cgroup_get_live(struct cgroup *cgrp)
+ 	css_get(&cgrp->self);
+ }
+ 
++/**
++ * __cgroup_task_count - count the number of tasks in a cgroup. The caller
++ * is responsible for taking the css_set_lock.
++ * @cgrp: the cgroup in question
++ */
++int __cgroup_task_count(const struct cgroup *cgrp)
++{
++	int count = 0;
++	struct cgrp_cset_link *link;
++
++	lockdep_assert_held(&css_set_lock);
++
++	list_for_each_entry(link, &cgrp->cset_links, cset_link)
++		count += link->cset->nr_tasks;
++
++	return count;
++}
++
++/**
++ * cgroup_task_count - count the number of tasks in a cgroup.
++ * @cgrp: the cgroup in question
++ */
++int cgroup_task_count(const struct cgroup *cgrp)
++{
++	int count;
++
++	spin_lock_irq(&css_set_lock);
++	count = __cgroup_task_count(cgrp);
++	spin_unlock_irq(&css_set_lock);
++
++	return count;
++}
++
+ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+ {
+ 	struct cgroup *cgrp = of->kn->parent->priv;
 -- 
 2.17.2
 
