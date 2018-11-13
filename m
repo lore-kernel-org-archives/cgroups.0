@@ -1,51 +1,73 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v2 3/6] cgroup: cgroup v2 freezer
-Date: Tue, 13 Nov 2018 17:00:04 +0100
-Message-ID: <20181113160003.GD30990@redhat.com>
-References: <20181112230422.5911-1-guro@fb.com>
- <20181112230422.5911-5-guro@fb.com>
- <20181113153700.GB30990@redhat.com>
- <20181113154349.GF2509588@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH 01/12] kernfs: add function to find kernfs_node without
+ increasing ref counter
+Date: Tue, 13 Nov 2018 18:53:59 +0100
+Message-ID: <07A5F685-9D7D-42A7-9A10-73C658F47435@linaro.org>
+References: <20181112095632.69114-1-paolo.valente@linaro.org>
+ <20181112095632.69114-2-paolo.valente@linaro.org>
+ <20181112122840.GA1429@kroah.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.0 \(3445.100.39\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181113154349.GF2509588@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=/UQjNl9KMYOO2L/Btjnus7YePUZ4dnRxDDZ4QOFJ+4Q=;
+        b=RwoGukJJ7K/gZSt1+7JVUvI3S4b7QqodpFcNlk4KWLoTAHsfD+7zFrfMXBRT2KUp59
+         gmmc8Mwn2I91WRjCnL5QxXqgapAXgG9n+I5bljScvf4yFYSXXn7GxZIf4pJWI4rj60Gu
+         CikS/N9nWD+xRVUir63QNA8LGtTC6vAjqY2M0=
+In-Reply-To: <20181112122840.GA1429@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guroan@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, Mark Brown <broonie@kernel.org>, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
 
-Hi Tejun,
 
-On 11/13, Tejun Heo wrote:
->
-> > OK, please forget for now, but perhaps it would be more clean to add
-> > JOBCTL_TRAP_FREEZE to the JOBCTL_PENDING_MASK check in recalc_sigpending()
-> > and change get_signal to check JOBCTL_TRAP_MASK | JOBCTL_TRAP_FREEZE; and
-> > I am not even sure cgroup_freezer_enter() should live in do_jobctl_trap().
->
-> I'm sure you're aware of the context but just to refresh - one thing
-> which was really broken about cgroup1 freezer was that it piggybacked
-> on hibernation freezer and put frozen tasks in a state which is
-> undefined when seen from userspace - they're just stuck in D sleep
-> somewhere in the kernel.  That's fine when the whole system is not
-> gonna be running, but not when only a subportion is being frozen.
 
-Thanks, I see.
+> Il giorno 12 nov 2018, alle ore 13:28, Greg Kroah-Hartman =
+<gregkh@linuxfoundation.org> ha scritto:
+>=20
+> On Mon, Nov 12, 2018 at 10:56:21AM +0100, Paolo Valente wrote:
+>> From: Angelo Ruocco <angeloruocco90@gmail.com>
+>>=20
+>> The kernfs pseudo file system doesn't export any function to only =
+find
+>> a node by name, without also getting a reference on it.
+>> But in some cases it is useful to just locate a kernfs node, while
+>> using it or not depends on some other condition.
+>>=20
+>> This commit adds a function to just look for a node, without getting
+>> a reference on it.
+>=20
+> Eeek, that sounds really bad.  So you save off a pointer to something,
+> and have no idea if that pointer now really is valid or not?  It can
+> instantly disappear right afterwards.
+>=20
 
-> So, the primary goal of cgroup2 freezer is putting the tasks in an
-> equivalent state as jobctl stop.  It's a jobctl stop but controlled by
-> cgroup frozen state, meaning that they can be killed, PTRACE_SEIZE'd
-> and INTERRUPT'ed (PTRACE_ATTACH doesn't work as signal delivery should
-> be blocked but that's fine) and so on.
+Hi Greg,
+that function is invoked only in functions executed with cgroup_mutex
+held.  This guarantees that nothing disappears or becomes
+inconsistent.  That's why we decided to go for this optimization,
+instead of doing useless gets&puts pairs.  Still, I'm not expert
+enough to state whether it is impossible that, once we have defined
+that function, it may then get used in some unsafe way.
 
-And I agree, JOBCTL_TRAP_FREEZE looks fine.
+So, I seem to see two options:
+1) Add a comment on the function, saying that cgroup_mutex must be
+   held while invoking it (I guess you won't like this one).
+2) Do not define such a new function, and, in the other patches, use
+   the already-available find_and_get.
 
-Just somehow I _feel_ that we can improve this logic a bit, but let me
-repeat that of course I can be easily wrong and I didn't even read the
-patch yet.
+Looking forward to your feedback (or of other knowledgeable people on
+this issue) before proceeding to a rebased V2,
+Paolo
 
-Oleg.
+
+> This feels wrong, what is the problem of having a properly reference
+> counted object passed back to you that you have to create a dangerous
+> function like this?
+>=20
+> greg k-h
 
