@@ -1,121 +1,105 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 40/44] mm: don't raise MEMCG_OOM event due to failed high-order allocation
-Date: Tue, 13 Nov 2018 00:49:46 -0500
-Message-ID: <20181113054950.77898-40-sashal@kernel.org>
-References: <20181113054950.77898-1-sashal@kernel.org>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v2 3/6] cgroup: cgroup v2 freezer
+Date: Tue, 13 Nov 2018 16:37:01 +0100
+Message-ID: <20181113153700.GB30990@redhat.com>
+References: <20181112230422.5911-1-guro@fb.com>
+ <20181112230422.5911-5-guro@fb.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1542088246;
-        bh=yJj7yxwCd9gAJEYNBBa6SsMFc1+V44MjmokWsyOmifw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oJ/BqPSTiVKImYZKS8eXSi0Hrkn0lKHFA+WpCLOYwSLgXFbUCiGsA5+AqWwBqZHlo
-         8U+BKfZXko9Enx/fLikn1jQ/7RfuJb+/VoXrULkjnL4L9xyZ6H5duG7s9847hhXfYJ
-         BieMUCDK4wBDhyADD31Wl/2mRFfSFjksHyKnVWV4=
-In-Reply-To: <20181113054950.77898-1-sashal@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20181112230422.5911-5-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: stable@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Roman Gushchin <guro@fb.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Sasha Levin <sashal@kernel.org>, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Roman Gushchin <guroan@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-From: Roman Gushchin <guro@fb.com>
+On 11/12, Roman Gushchin wrote:
+>
+> This patch implements freezer for cgroup v2. However the functionality
+> is similar, the interface is different to cgroup v1: it follows
+> cgroup v2 interface principles.
 
-[ Upstream commit 7a1adfddaf0d11a39fdcaf6e82a88e9c0586e08b ]
+Oh, it seems that I actually need to apply this patch to (try to) understand
+the details ;) Will try tomorrow.
 
-It was reported that on some of our machines containers were restarted
-with OOM symptoms without an obvious reason.  Despite there were almost no
-memory pressure and plenty of page cache, MEMCG_OOM event was raised
-occasionally, causing the container management software to think, that OOM
-has happened.  However, no tasks have been killed.
+> --- a/include/linux/sched/jobctl.h
+> +++ b/include/linux/sched/jobctl.h
+> @@ -18,6 +18,7 @@ struct task_struct;
+>  #define JOBCTL_TRAP_NOTIFY_BIT	20	/* trap for NOTIFY */
+>  #define JOBCTL_TRAPPING_BIT	21	/* switching to TRACED */
+>  #define JOBCTL_LISTENING_BIT	22	/* ptracer is listening for events */
+> +#define JOBCTL_TRAP_FREEZE_BIT	23	/* trap for cgroup freezer */
+>
+>  #define JOBCTL_STOP_DEQUEUED	(1UL << JOBCTL_STOP_DEQUEUED_BIT)
+>  #define JOBCTL_STOP_PENDING	(1UL << JOBCTL_STOP_PENDING_BIT)
+> @@ -26,8 +27,10 @@ struct task_struct;
+>  #define JOBCTL_TRAP_NOTIFY	(1UL << JOBCTL_TRAP_NOTIFY_BIT)
+>  #define JOBCTL_TRAPPING		(1UL << JOBCTL_TRAPPING_BIT)
+>  #define JOBCTL_LISTENING	(1UL << JOBCTL_LISTENING_BIT)
+> +#define JOBCTL_TRAP_FREEZE	(1UL << JOBCTL_TRAP_FREEZE_BIT)
+>
+> -#define JOBCTL_TRAP_MASK	(JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY)
+> +#define JOBCTL_TRAP_MASK	(JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY | \
+> +				 JOBCTL_TRAP_FREEZE)
 
-The following investigation showed that the problem is caused by a failing
-attempt to charge a high-order page.  In such case, the OOM killer is
-never invoked.  As shown below, it can happen under conditions, which are
-very far from a real OOM: e.g.  there is plenty of clean page cache and no
-memory pressure.
+Again, I didn't actually read the patch yet, but my gut feeling tells me
+we shouldn't change JOBCTL_TRAP_MASK... and the fact you had to change
+task_clear_jobctl_pending() to filter out JOBCTL_TRAP_FREEZE bit may be
+proves this.
 
-There is no sense in raising an OOM event in this case, as it might
-confuse a user and lead to wrong and excessive actions (e.g.  restart the
-workload, as in my case).
+This
 
-Let's look at the charging path in try_charge().  If the memory usage is
-about memory.max, which is absolutely natural for most memory cgroups, we
-try to reclaim some pages.  Even if we were able to reclaim enough memory
-for the allocation, the following check can fail due to a race with
-another concurrent allocation:
+	if (current->jobctl & (JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY))
+	...
+	else if (current->jobctl & JOBCTL_TRAP_FREEZE)
 
-    if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
-        goto retry;
+code in do_jobctl_trap() doesn't look nice too.
 
-For regular pages the following condition will save us from triggering
-the OOM:
+OK, please forget for now, but perhaps it would be more clean to add
+JOBCTL_TRAP_FREEZE to the JOBCTL_PENDING_MASK check in recalc_sigpending()
+and change get_signal to check JOBCTL_TRAP_MASK | JOBCTL_TRAP_FREEZE; and
+I am not even sure cgroup_freezer_enter() should live in do_jobctl_trap().
 
-   if (nr_reclaimed && nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER))
-       goto retry;
+> @@ -5642,6 +5700,23 @@ void cgroup_post_fork(struct task_struct *child)
+>  			cset->nr_tasks++;
+>  			css_set_move_task(child, NULL, cset, false);
+>  		}
+> +
+> +		if (unlikely(cgroup_frozen(child) &&
+> +			     (child->flags & ~PF_KTHREAD))) {
+> +			struct cgroup *cgrp;
+> +			unsigned long flags;
+> +
+> +			if (lock_task_sighand(child, &flags)) {
 
-But for high-order allocation this condition will intentionally fail.  The
-reason behind is that we'll likely fall to regular pages anyway, so it's
-ok and even preferred to return ENOMEM.
+You can just do spin_lock_irq(siglock). The new child can't go away
+until wake_up_new_task(), otherwise any usage of "child" including
+lock_task_sighand() was not safe.
 
-In this case the idea of raising MEMCG_OOM looks dubious.
+> +				cgrp = cset->dfl_cgrp;
+> +				cgrp->freezer.nr_tasks_to_freeze++;
+> +				WARN_ON_ONCE(cgrp->freezer.nr_tasks_to_freeze <
+> +					     cgrp->freezer.nr_frozen_tasks);
+> +				child->jobctl |= JOBCTL_TRAP_FREEZE;
+> +				signal_wake_up(child, false);
 
-Fix this by moving MEMCG_OOM raising to mem_cgroup_oom() after allocation
-order check, so that the event won't be raised for high order allocations.
-This change doesn't affect regular pages allocation and charging.
+signal_wake_up() is pointless.
 
-Link: http://lkml.kernel.org/r/20181004214050.7417-1-guro@fb.com
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Acked-by: David Rientjes <rientjes@google.com>
-Acked-by: Michal Hocko <mhocko@kernel.org>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- Documentation/admin-guide/cgroup-v2.rst | 4 ++++
- mm/memcontrol.c                         | 4 ++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
+wake_up_process() has no effect, set_tsk_thread_flag(TIF_SIGPENDING) is
+not needed because schedule_tail() does calculate_sigpending() which should
+notice JOBCTL_TRAP_FREEZE.
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 184193bcb262..5d9939388a78 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1127,6 +1127,10 @@ PAGE_SIZE multiple when read back.
- 		disk readahead.  For now OOM in memory cgroup kills
- 		tasks iff shortage has happened inside page fault.
- 
-+		This event is not raised if the OOM killer is not
-+		considered as an option, e.g. for failed high-order
-+		allocations.
-+
- 	  oom_kill
- 		The number of processes belonging to this cgroup
- 		killed by any kind of OOM killer.
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e79cb59552d9..07c7af6f5e59 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1669,6 +1669,8 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
- 	if (order > PAGE_ALLOC_COSTLY_ORDER)
- 		return OOM_SKIPPED;
- 
-+	memcg_memory_event(memcg, MEMCG_OOM);
-+
- 	/*
- 	 * We are in the middle of the charge context here, so we
- 	 * don't want to block when potentially sitting on a callstack
-@@ -2250,8 +2252,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	if (fatal_signal_pending(current))
- 		goto force;
- 
--	memcg_memory_event(mem_over_limit, MEMCG_OOM);
--
- 	/*
- 	 * keep retrying as long as the memcg oom killer is able to make
- 	 * a forward progress or bypass the charge if the oom killer
--- 
-2.17.1
+> +	} else if (current->jobctl & JOBCTL_TRAP_FREEZE) {
+> +		/*
+> +		 * Enter the freezer, unless the task is about to exit.
+> +		 */
+> +		if (fatal_signal_pending(current)) {
+> +			current->jobctl &= ~JOBCTL_TRAP_FREEZE;
+
+And again, please note that we need this because task_clear_jobctl_pending()
+drops JOBCTL_TRAP_FREEZE. It shouldn't, I think...
+
+Oleg.
 
