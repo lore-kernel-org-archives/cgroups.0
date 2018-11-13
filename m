@@ -1,76 +1,102 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 01/12] kernfs: add function to find kernfs_node without
- increasing ref counter
-Date: Tue, 13 Nov 2018 11:35:38 -0800
-Message-ID: <20181113193538.GA5096@kroah.com>
-References: <20181112095632.69114-1-paolo.valente@linaro.org>
- <20181112095632.69114-2-paolo.valente@linaro.org>
- <20181112122840.GA1429@kroah.com>
- <07A5F685-9D7D-42A7-9A10-73C658F47435@linaro.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-4.21 1/2] cpuset: Minor cgroup2 interface updates
+Date: Tue, 13 Nov 2018 12:13:39 -0800
+Message-ID: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1542137738;
-        bh=IdQcfyuvdm+re6Cg0ueAy5cNXPj5ZQVuW0IBiT0DzBc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HTWv29RID+GfRKNj/L/QDgwP4Af7T59ZxO2+iJZTCbsp8+PVNYmnlEmpKsQ+VxntY
-         8WtRdw7JzUB6mH4FOvAfSPay/tZeggDYYQEBYxmbIwnGCaqquT5oC+sQx127rpywA1
-         NyWHM46k5n3NXz1B1LAn1OTfiulTA3OeK2QAHWjo=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=2ZrBBNm0u84HZ38qh08jp3zITb1XB0WpVsLPVfRiw/w=;
+        b=kvkPzukP6X+WB0lrK9Kb15QmO+Y28dYN4/HwZwFWSZiLwAiQucsf5UiCKQrssc52Eu
+         Y4anHzde6DWnJ09mBznlH0PToeqI9ZfNx0ZZSoF+fqy73xVQXw7QHAOAfCwXU5sEl6ft
+         9xj5ygEqPamdm5kgG1eOdsuGoXtmFOVuHwx3NZSrhopzkxh1k2qqS97KsfCCqWamx+iY
+         OQGHPyfq98gg5H0/YXGkiLj7kmAytyDeLGwzbem8azd4hSwzDGNP6J8JjPBE1Bujl0Xz
+         nXQWcNxNVSLN4NtVtb67CAU4OS/J9hcnzBqQdJoLu9nS2Q3ve/30hd7esALp0qMCDdxJ
+         xeZQ==
 Content-Disposition: inline
-In-Reply-To: <07A5F685-9D7D-42A7-9A10-73C658F47435@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, Mark Brown <broonie@kernel.org>, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
+To: Peter Zijlstra <peterz@infradead.org>, Waiman Long <longman@redhat.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 13, 2018 at 06:53:59PM +0100, Paolo Valente wrote:
-> 
-> 
-> > Il giorno 12 nov 2018, alle ore 13:28, Greg Kroah-Hartman <gregkh@linuxfoundation.org> ha scritto:
-> > 
-> > On Mon, Nov 12, 2018 at 10:56:21AM +0100, Paolo Valente wrote:
-> >> From: Angelo Ruocco <angeloruocco90@gmail.com>
-> >> 
-> >> The kernfs pseudo file system doesn't export any function to only find
-> >> a node by name, without also getting a reference on it.
-> >> But in some cases it is useful to just locate a kernfs node, while
-> >> using it or not depends on some other condition.
-> >> 
-> >> This commit adds a function to just look for a node, without getting
-> >> a reference on it.
-> > 
-> > Eeek, that sounds really bad.  So you save off a pointer to something,
-> > and have no idea if that pointer now really is valid or not?  It can
-> > instantly disappear right afterwards.
-> > 
-> 
-> Hi Greg,
-> that function is invoked only in functions executed with cgroup_mutex
-> held.  This guarantees that nothing disappears or becomes
-> inconsistent.  That's why we decided to go for this optimization,
-> instead of doing useless gets&puts pairs.  Still, I'm not expert
-> enough to state whether it is impossible that, once we have defined
-> that function, it may then get used in some unsafe way.
+From b1e3aeb11c5e86ee0988a038c4e7682d6beaa977 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Tue, 13 Nov 2018 12:03:33 -0800
 
-I can guarantee once you define that function, it will be used in an
-unsafe way :(
+* Rename the partition file from "cpuset.sched.partition" to
+  "cpuset.cpus.partition".
 
-So just don't create it, use the put calls, it's fast and should never
-be a performance issue.
+* When writing to the partition file, drop "0" and "1" and only accept
+  "member" and "root".
 
-> So, I seem to see two options:
-> 1) Add a comment on the function, saying that cgroup_mutex must be
->    held while invoking it (I guess you won't like this one).
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra (Intel) <peterz@infradead.org>
+Cc: Waiman Long <longman@redhat.com>
+---
+Two minor cpuset interface followup patches.  Applying to
+cgroup/for-4.21.
 
-Nope, do not create it.
+Thanks.
 
-> 2) Do not define such a new function, and, in the other patches, use
->    the already-available find_and_get.
+ Documentation/admin-guide/cgroup-v2.rst | 6 +++---
+ kernel/cgroup/cpuset.c                  | 8 ++++----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-Yes, please do that.
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index f83a5231bbe3..07e06136a550 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1708,15 +1708,15 @@ Cpuset Interface Files
+ 
+ 	Its value will be affected by memory nodes hotplug events.
+ 
+-  cpuset.sched.partition
++  cpuset.cpus.partition
+ 	A read-write single value file which exists on non-root
+ 	cpuset-enabled cgroups.  This flag is owned by the parent cgroup
+ 	and is not delegatable.
+ 
+         It accepts only the following input values when written to.
+ 
+-        "root" or "1"   - a paritition root
+-        "member" or "0" - a non-root member of a partition
++        "root"   - a paritition root
++        "member" - a non-root member of a partition
+ 
+ 	When set to be a partition root, the current cgroup is the
+ 	root of a new partition or scheduling domain that comprises
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index b897314bab53..1151e93d71b6 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2468,11 +2468,11 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
+ 	buf = strstrip(buf);
+ 
+ 	/*
+-	 * Convert "root"/"1" to 1, and convert "member"/"0" to 0.
++	 * Convert "root" to ENABLED, and convert "member" to DISABLED.
+ 	 */
+-	if (!strcmp(buf, "root") || !strcmp(buf, "1"))
++	if (!strcmp(buf, "root"))
+ 		val = PRS_ENABLED;
+-	else if (!strcmp(buf, "member") || !strcmp(buf, "0"))
++	else if (!strcmp(buf, "member"))
+ 		val = PRS_DISABLED;
+ 	else
+ 		return -EINVAL;
+@@ -2631,7 +2631,7 @@ static struct cftype dfl_files[] = {
+ 	},
+ 
+ 	{
+-		.name = "sched.partition",
++		.name = "cpus.partition",
+ 		.seq_show = sched_partition_show,
+ 		.write = sched_partition_write,
+ 		.private = FILE_PARTITION_ROOT,
+-- 
+2.17.1
 
-thanks,
-
-greg k-h
