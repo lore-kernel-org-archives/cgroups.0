@@ -1,123 +1,97 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v2 3/6] cgroup: cgroup v2 freezer
-Date: Tue, 13 Nov 2018 21:59:23 +0000
-Message-ID: <20181113215919.GC15590@tower.DHCP.thefacebook.com>
-References: <20181112230422.5911-1-guro@fb.com>
- <20181112230422.5911-5-guro@fb.com> <20181113154825.GC30990@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH cgroup/for-4.21 1/2] cpuset: Minor cgroup2 interface
+ updates
+Date: Tue, 13 Nov 2018 18:09:38 -0800
+Message-ID: <adc9e840-0fe9-343e-6e0e-b878287016c5@redhat.com>
+References: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=BI5sKWfHNi89UzPilsd17pYMNcKueVRYVALJ7m46zIo=;
- b=KR/iEmo56N37WsPi5a13VWSNqk2gb6AYKHj51E+Tsa3J4jZbXTpa8wK5uPMdgDAhwa6e
- FN8ojExWn/PXXDsiHF9u8medKKfBnkGyJRGju9kIxT6eEW+ehLSsq/pM4WzFgS3ygWfS
- 4dGRC2kAz8UmoeRwmbVnBU+V4OHg7DadiLU= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BI5sKWfHNi89UzPilsd17pYMNcKueVRYVALJ7m46zIo=;
- b=hDs+A1UMem1elTkYaJbjlxBmR21KwFaAkrFeP/oEtCSctMctmw+rASrLJOjYlXgwHAsE45V0y8h2fxdPzm+XMb1gWWhJesJHlXGpvUX5DjrerSVZsCXMa+Ieln6HbQwcCxU1n3vYRxC4pe8Pmxqn38/bQ1fuEUtTL2aXWCKdnEg=
-In-Reply-To: <20181113154825.GC30990@redhat.com>
+In-Reply-To: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
 Content-Language: en-US
-Content-ID: <6F48ABCFBF9C6F4591F8F42FAB296F0D@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Oleg!
+On 11/13/2018 12:13 PM, Tejun Heo wrote:
+> From b1e3aeb11c5e86ee0988a038c4e7682d6beaa977 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj@kernel.org>
+> Date: Tue, 13 Nov 2018 12:03:33 -0800
+>
+> * Rename the partition file from "cpuset.sched.partition" to
+>   "cpuset.cpus.partition".
+>
+> * When writing to the partition file, drop "0" and "1" and only accept
+>   "member" and "root".
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Peter Zijlstra (Intel) <peterz@infradead.org>
+> Cc: Waiman Long <longman@redhat.com>
+> ---
+> Two minor cpuset interface followup patches.  Applying to
+> cgroup/for-4.21.
+>
+> Thanks.
+>
+>  Documentation/admin-guide/cgroup-v2.rst | 6 +++---
+>  kernel/cgroup/cpuset.c                  | 8 ++++----
+>  2 files changed, 7 insertions(+), 7 deletions(-)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index f83a5231bbe3..07e06136a550 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1708,15 +1708,15 @@ Cpuset Interface Files
+>  
+>  	Its value will be affected by memory nodes hotplug events.
+>  
+> -  cpuset.sched.partition
+> +  cpuset.cpus.partition
+>  	A read-write single value file which exists on non-root
+>  	cpuset-enabled cgroups.  This flag is owned by the parent cgroup
+>  	and is not delegatable.
+>  
+>          It accepts only the following input values when written to.
+>  
+> -        "root" or "1"   - a paritition root
+> -        "member" or "0" - a non-root member of a partition
+> +        "root"   - a paritition root
+> +        "member" - a non-root member of a partition
+>  
+>  	When set to be a partition root, the current cgroup is the
+>  	root of a new partition or scheduling domain that comprises
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index b897314bab53..1151e93d71b6 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2468,11 +2468,11 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
+>  	buf = strstrip(buf);
+>  
+>  	/*
+> -	 * Convert "root"/"1" to 1, and convert "member"/"0" to 0.
+> +	 * Convert "root" to ENABLED, and convert "member" to DISABLED.
+>  	 */
+> -	if (!strcmp(buf, "root") || !strcmp(buf, "1"))
+> +	if (!strcmp(buf, "root"))
+>  		val = PRS_ENABLED;
+> -	else if (!strcmp(buf, "member") || !strcmp(buf, "0"))
+> +	else if (!strcmp(buf, "member"))
+>  		val = PRS_DISABLED;
+>  	else
+>  		return -EINVAL;
+> @@ -2631,7 +2631,7 @@ static struct cftype dfl_files[] = {
+>  	},
+>  
+>  	{
+> -		.name = "sched.partition",
+> +		.name = "cpus.partition",
+>  		.seq_show = sched_partition_show,
+>  		.write = sched_partition_write,
+>  		.private = FILE_PARTITION_ROOT,
 
-On Tue, Nov 13, 2018 at 04:48:25PM +0100, Oleg Nesterov wrote:
-> On 11/12, Roman Gushchin wrote:
-> >
-> > --- a/include/linux/sched.h
-> > +++ b/include/linux/sched.h
-> > @@ -83,7 +83,8 @@ struct task_group;
-> >  #define TASK_WAKING			0x0200
-> >  #define TASK_NOLOAD			0x0400
-> >  #define TASK_NEW			0x0800
-> > -#define TASK_STATE_MAX			0x1000
-> > +#define TASK_FROZEN			0x1000
-> > +#define TASK_STATE_MAX			0x2000
->=20
-> Just noticed the new task state... Why? Can't we avoid it?
+I am fine with both of your patches.
 
-We can, but it's nice to show to userspace that tasks are frozen,
-rather than just stuck somewhere in the kernel...
+Acked-by: Waiman Long <longman@redhat.com>
 
->=20
-> ...
->=20
-> > +void cgroup_freezer_enter(void)
-> > +{
-> > +	long state =3D current->state;
->=20
-> Why? it must be TASK_RUNNING?
->=20
-> If not set_current_state() at the end is simply wrong... Yes, __refrigera=
-tor()
-> does this, but at least it has a reason although it is wrong too.
->=20
-> > +	struct cgroup *cgrp;
-> > +
-> > +	if (!current->frozen) {
-> > +		spin_lock_irq(&css_set_lock);
-> > +		current->frozen =3D true;
-> > +		cgrp =3D task_dfl_cgroup(current);
-> > +		cgrp->freezer.nr_frozen_tasks++;
-> > +
-> > +		WARN_ON_ONCE(cgrp->freezer.nr_tasks_to_freeze <
-> > +			     cgrp->freezer.nr_frozen_tasks);
-> > +
-> > +		if (cgrp->freezer.nr_tasks_to_freeze =3D=3D
-> > +		    cgrp->freezer.nr_frozen_tasks)
-> > +			cgroup_queue_notify_frozen(cgrp);
-> > +		spin_unlock_irq(&css_set_lock);
-> > +	}
-> > +
-> > +	/* refrigerator */
-> > +	set_current_state(TASK_WAKEKILL | TASK_INTERRUPTIBLE | TASK_FROZEN);
->=20
-> Why not __set_current_state() ?
-
-Hm, it's not a hot path at all, so set_current_state() is good enough.
-Not a strong preference, of course.
-
->=20
-> If ->state include TASK_INTERRUPTIBLE, why do we need TASK_WAKEKILL?
->=20
-> And again, why TASK_FROZEN?
-
-So, should it be just TASK_INTERRUPTIBLE | TASK_FROZEN ?
-
->=20
-> > +	clear_thread_flag(TIF_SIGPENDING);
-> > +	schedule();
-> > +	recalc_sigpending();
->=20
-> I simply can't understand these 3 lines above but I bet this is not corre=
-ct ;)
-
-So, yeah, the problem is that if there is TIF_SIGPENDING bit set, schedule(=
-)
-will return immediately, so we're getting pretty much a busy loop here.
-This is a nasty workaround.
-
-I believe we can clear and not call recalc_sigpending() at all. Does this s=
-eem
-to be correct?
-
->=20
-> if nothing else recalc_sigpending() without ->siglock is wrong, it can ra=
-ce
-> with signal_wakeup/etc.
->=20
-> > +	set_current_state(state);
->=20
-> see above...
-
-Thank you for the review!
-And looking forward for more comments from you!
