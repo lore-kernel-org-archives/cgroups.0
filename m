@@ -1,97 +1,90 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH cgroup/for-4.21 1/2] cpuset: Minor cgroup2 interface
- updates
-Date: Tue, 13 Nov 2018 18:09:38 -0800
-Message-ID: <adc9e840-0fe9-343e-6e0e-b878287016c5@redhat.com>
-References: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v2 3/6] cgroup: cgroup v2 freezer
+Date: Wed, 14 Nov 2018 17:56:32 +0100
+Message-ID: <20181114165631.GE13885@redhat.com>
+References: <20181112230422.5911-1-guro@fb.com>
+ <20181112230422.5911-5-guro@fb.com>
+ <20181113154825.GC30990@redhat.com>
+ <20181113215919.GC15590@tower.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20181113215919.GC15590@tower.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-On 11/13/2018 12:13 PM, Tejun Heo wrote:
-> From b1e3aeb11c5e86ee0988a038c4e7682d6beaa977 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj@kernel.org>
-> Date: Tue, 13 Nov 2018 12:03:33 -0800
->
-> * Rename the partition file from "cpuset.sched.partition" to
->   "cpuset.cpus.partition".
->
-> * When writing to the partition file, drop "0" and "1" and only accept
->   "member" and "root".
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Peter Zijlstra (Intel) <peterz@infradead.org>
-> Cc: Waiman Long <longman@redhat.com>
-> ---
-> Two minor cpuset interface followup patches.  Applying to
-> cgroup/for-4.21.
->
-> Thanks.
->
->  Documentation/admin-guide/cgroup-v2.rst | 6 +++---
->  kernel/cgroup/cpuset.c                  | 8 ++++----
->  2 files changed, 7 insertions(+), 7 deletions(-)
->
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index f83a5231bbe3..07e06136a550 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1708,15 +1708,15 @@ Cpuset Interface Files
->  
->  	Its value will be affected by memory nodes hotplug events.
->  
-> -  cpuset.sched.partition
-> +  cpuset.cpus.partition
->  	A read-write single value file which exists on non-root
->  	cpuset-enabled cgroups.  This flag is owned by the parent cgroup
->  	and is not delegatable.
->  
->          It accepts only the following input values when written to.
->  
-> -        "root" or "1"   - a paritition root
-> -        "member" or "0" - a non-root member of a partition
-> +        "root"   - a paritition root
-> +        "member" - a non-root member of a partition
->  
->  	When set to be a partition root, the current cgroup is the
->  	root of a new partition or scheduling domain that comprises
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index b897314bab53..1151e93d71b6 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -2468,11 +2468,11 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
->  	buf = strstrip(buf);
->  
->  	/*
-> -	 * Convert "root"/"1" to 1, and convert "member"/"0" to 0.
-> +	 * Convert "root" to ENABLED, and convert "member" to DISABLED.
->  	 */
-> -	if (!strcmp(buf, "root") || !strcmp(buf, "1"))
-> +	if (!strcmp(buf, "root"))
->  		val = PRS_ENABLED;
-> -	else if (!strcmp(buf, "member") || !strcmp(buf, "0"))
-> +	else if (!strcmp(buf, "member"))
->  		val = PRS_DISABLED;
->  	else
->  		return -EINVAL;
-> @@ -2631,7 +2631,7 @@ static struct cftype dfl_files[] = {
->  	},
->  
->  	{
-> -		.name = "sched.partition",
-> +		.name = "cpus.partition",
->  		.seq_show = sched_partition_show,
->  		.write = sched_partition_write,
->  		.private = FILE_PARTITION_ROOT,
+Hi Roman,
 
-I am fine with both of your patches.
+On 11/13, Roman Gushchin wrote:
+>
+> > > +#define TASK_FROZEN			0x1000
+> > > +#define TASK_STATE_MAX			0x2000
+> >
+> > Just noticed the new task state... Why? Can't we avoid it?
+>
+> We can, but it's nice to show to userspace that tasks are frozen,
+> rather than just stuck somewhere in the kernel...
 
-Acked-by: Waiman Long <longman@redhat.com>
+But then you need to change get_task_state() too. Which iiuc could
+probably check ->frozen along with ->state.
+
+I do not think the new task state is a good idea, at least I would like
+to ask you to make a separate patch which we can discuss separately.
+
+
+> > > +	set_current_state(TASK_WAKEKILL | TASK_INTERRUPTIBLE | TASK_FROZEN);
+> >
+> > Why not __set_current_state() ?
+>
+> Hm, it's not a hot path at all, so set_current_state() is good enough.
+> Not a strong preference, of course.
+
+It is not about performance, to me set_current_state() looks as if we need
+a memory barrier for some obscure/undocumented reason and this doesn't help
+to understand the code.
+
+> > If ->state include TASK_INTERRUPTIBLE, why do we need TASK_WAKEKILL?
+> >
+> > And again, why TASK_FROZEN?
+>
+> So, should it be just TASK_INTERRUPTIBLE | TASK_FROZEN ?
+
+Again, TASK_FROZEN is pointless at least until you change fs/proc or until
+you have wake_up_state(TASK_FROZEN). May be cgroup_do_freeze() and/or
+ptrace_attach() could use it, but see above, I'd suggest to make another
+patch.
+
+Looks like you need TASK_KILLABLE, see below.
+
+> > > +	clear_thread_flag(TIF_SIGPENDING);
+> > > +	schedule();
+> > > +	recalc_sigpending();
+> >
+> > I simply can't understand these 3 lines above but I bet this is not correct ;)
+>
+> So, yeah, the problem is that if there is TIF_SIGPENDING bit set, schedule()
+> will return immediately, so we're getting pretty much a busy loop here.
+
+I suspected this answer ;)
+
+> This is a nasty workaround.
+
+No, this is very wrong. Just suppose the caller is killed right before
+clear_thread_flag(TIF_SIGPENDING).
+
+> I believe we can clear and not call recalc_sigpending() at all. Does this seem
+> to be correct?
+
+I think you need to simply remove both clear_thread_flag() and recalc_sigpending().
+If schedule() is called in TASK_KILLABLE state it will return only if
+fatal_signal_pending() is true, and this is what we want, right?
+
+OK, it seems you are going to make the new version anyway, so I can wait for it
+and not read this series ;)
+
+Oleg.
 
