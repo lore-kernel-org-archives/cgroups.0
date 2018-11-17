@@ -1,109 +1,86 @@
-From: Mike Rapoport <rppt@linux.ibm.com>
-Subject: Re: [PATCH v3 7/7] cgroup: document cgroup v2 freezer interface
-Date: Sat, 17 Nov 2018 00:02:28 -0800
-Message-ID: <20181117080227.GA22672@rapoport-lnx>
-References: <20181117003830.15344-1-guro@fb.com>
- <20181117003830.15344-8-guro@fb.com>
+From: Andrei Vagin <avagin@gmail.com>
+Subject: linux-next: Unable to mount a cgroup file system
+Date: Sat, 17 Nov 2018 13:18:06 -0800
+Message-ID: <CANaxB-wD3JYsnqP1=fw0qQfvc=qtEJN9Va0tUg64iHEHKcajAQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181117003830.15344-8-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=KhH8xCamSqNRp3Ejs9BDBB0c9QFFTmbr8QUWAeX2qG0=;
+        b=jeJHDryKt7n5/75taGa64hNdSJR9NXXvDFfR6Dk+lZNUl9QZO+tK+p1outEJb6TQGG
+         mJqEvNWYgqtChFtnhP2k9uSfdAUrrpjNjK5++5psRtHBi11xVg4TR6oJelv+m4uiGCWL
+         kOy7XblmW345bB/ATP8NHlceJt7EomNDudRaeQBs4aSPvPMMS6Z59e1C2FnMsaK5A8oE
+         tWqOQ5raJDNKw8DpK2bmXjD0qpT8v6OX7wNDdNwBdhygrcjVCkWotUZzUcLLWqziBfli
+         2ntbH23IIMphEzBkIgC+1nPXV3NRQQHeobC43uV1hrPicbnymyEzlfscxeOTivRCRwnA
+         fUtQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guroan@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>, linux-doc@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Cyrill Gorcunov <gorcunov@openvz.org>
 
-Hi,
+Hello,
 
-On Fri, Nov 16, 2018 at 04:38:30PM -0800, Roman Gushchin wrote:
-> Describe cgroup v2 freezer interface in the cgroup v2 admin guide.
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: linux-doc@vger.kernel.org
-> Cc: kernel-team@fb.com
-> ---
->  Documentation/admin-guide/cgroup-v2.rst | 26 +++++++++++++++++++++++++
->  1 file changed, 26 insertions(+)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 184193bcb262..a065c0bed88c 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -862,6 +862,8 @@ All cgroup core files are prefixed with "cgroup."
->  	  populated
->  		1 if the cgroup or its descendants contains any live
->  		processes; otherwise, 0.
-> +	  frozen
-> +		1 if the cgroup is frozen; otherwise, 0.
-> 
->    cgroup.max.descendants
->  	A read-write single value files.  The default is "max".
-> @@ -895,6 +897,30 @@ All cgroup core files are prefixed with "cgroup."
->  		A dying cgroup can consume system resources not exceeding
->  		limits, which were active at the moment of cgroup deletion.
-> 
-> +  cgroup.freeze
-> +	A read-write single value file which exists on non-root cgroups.
-> +	Allowed values are "0" and "1". The default is "0".
-> +
-> +	Writing "1" to the file causes freezing of the cgroup and all
-> +	descendant cgroups. This means that all belonging processes will
-> +	be stopped and will not run until the cgroup will be explicitly
-> +	unfrozen. Freezing of the cgroup may take some time; when the process
+We run CRIU tests on linux-next kernels. Today, I found that our test
+robot hangs up on mounting a cgroup file system.
 
-"when the process is complete" sounds somewhat ambiguous, it's unclear
-whether freezing is complete or the process that's being frozen is
-complete.
+https://travis-ci.org/avagin/linux/jobs/455732006
 
-Maybe "when this action is completed"?
+  632 ?        Ssl    0:00 /usr/bin/containerd
+  843 ?        Sl     0:00  \_ containerd-shim -namespace moby
+-workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/c2311352d53eed1f5094580102e41c2a02eaf98b8626c86ccf314599101b26
+  862 pts/0    Ss+    0:00      \_ python test/zdtm.py run -T
+zdtm/static/cgroup.*
+ 1652 pts/0    S+     0:00          \_ flock zdtm_mount_cgroups.lock
+./zdtm_umount_cgroups
+ 1653 pts/0    S+     0:00              \_ /bin/sh ./zdtm_umount_cgroups
+ 1659 pts/0    D+     0:06                  \_ mount -t cgroup -o
+none,name=zdtmtst.defaultroot zdtm zdtm.9QFGko
 
-> +	is complete, the "frozen" value in the cgroup.events control file
-> +	will be updated and the corresponding notification will be issued.
+[root@fc24 ~]# cat /proc/1659/stack
+[<0>] msleep+0x38/0x40
+[<0>] cgroup1_get_tree+0x4e1/0x749
+[<0>] vfs_get_tree+0x5e/0x140
+[<0>] do_mount+0x326/0xc70
+[<0>] ksys_mount+0xba/0xd0
+[<0>] __x64_sys_mount+0x21/0x30
+[<0>] do_syscall_64+0x60/0x210
+[<0>] entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[<0>] 0xffffffffffffffff
 
-Can you please clarify how exactly cgroup.events would be updated?
+[root@fc24 ~]# cat /proc/1659/cgroup  | grep zdtm
+13:name=zdtmtst.defaultroot:/
+12:name=zdtmtst:/
 
-> +	Cgroup can be frozen either by its own settings, either by settings
+[root@fc24 ~]# strace -fp 1659
+strace: Process 1659 attached
+mount("zdtm", "/criu/test/zdtm.9QFGko", "cgroup", MS_MGC_VAL,
+"none,name=zdtmtst.defaultroot") = ? ERESTARTNOINTR (To be restarted)
+mount("zdtm", "/criu/test/zdtm.9QFGko", "cgroup", MS_MGC_VAL,
+"none,name=zdtmtst.defaultroot") = ? ERESTARTNOINTR (To be restarted)
+mount("zdtm", "/criu/test/zdtm.9QFGko", "cgroup", MS_MGC_VAL,
+"none,name=zdtmtst.defaultroot") = ? ERESTARTNOINTR (To be restarted)
+mount("zdtm", "/criu/test/zdtm.9QFGko", "cgroup", MS_MGC_VAL,
+"none,name=zdtmtst.defaultroot") = ? ERESTARTNOINTR (To be restarted)
+mount("zdtm", "/criu/test/zdtm.9QFGko", "cgroup", MS_MGC_VAL,
+"none,name=zdtmtst.defaultroot") = ? ERESTARTNOINTR (To be restarted)
 
-      ^ A cgroup ... and maybe there are more "a" and "the" that should be
-fixed, it's hard for me to tell.
+Steps to reproduce:
+I don't know how to reproduce this issue without running criu tests. I
+tried to create a simple reproducer, but I failed. So I created a
+docker container and the problem can be reproduced by running this
+command:
+docker run --rm -it --privileged -v /lib/modules:/lib/modules --tmpfs
+/run docker.io/avagin/criu-fc29-cgroup python test/zdtm.py run -T
+'zdtm/static/cgroup.*'
 
-Also, I believe "either ..., or ..." sounds better than "either ...,
-either ..."
+I found that something wrong is in
+[16ec1a5d58ea67ba737d3a66efe9e53c6bb149f7] kernfs, sysfs, cgroup,
+intel_rdt: Support fs_context
 
-> +	of any ancestor cgroups. If any of ancestor cgroups is frozen, the
-> +	cgroup will remain frozen.
-> +
-> +	Processes in the frozen cgroup can be killed by a fatal signal.
-> +	They also can enter and leave a frozen cgroup: either by an explicit
-> +	move by a user, either if freezing of the cgroup races with fork().
+https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?h=next-20181116&id=16ec1a5d58ea67ba737d3a66efe9e53c6bb149f7
 
-ditto
-
-> +	If a cgroup is moved to a frozen cgroup, it stops. If a process is
-
-            ^ process?
-
-> +	moving out of a frozen cgroup, it becomes running.
-
-       ^ moved
-
-> +	Frozen status of a cgroup doesn't affect any cgroup tree operations:
-> +	it's possible to delete a frozen (and empty) cgroup, as well as
-> +	create new sub-cgroups.
-
-Maybe it's also worth adding that freezing a process has no effect on its
-memory consumption, at least directly.
-
->  Controllers
->  ===========
-> -- 
-> 2.17.2
-> 
-
--- 
-Sincerely yours,
-Mike.
-
+Thanks,
+Andrei
