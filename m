@@ -1,52 +1,85 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 00/12] unify the interface of the proportional-share
- policy in blkio/io
-Date: Thu, 15 Nov 2018 09:30:11 -0700
-Message-ID: <79a2da26-669a-359c-3832-354ec2b47231@kernel.dk>
-References: <20181112095632.69114-1-paolo.valente@linaro.org>
- <9e8adb3271680165d85994a225713391@natalenko.name>
- <E8A20452-A73C-4A31-B5EC-48EFB9937832@linaro.org>
- <e85cfae0-7743-8c51-c2c9-0855c26f868e@kernel.dk>
- <CADiTV-37tqWsbxmeZJsqq+pqSqxN-_L9+T9R+PmBBJhfO-G09g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Roman Gushchin <guroan@gmail.com>
+Subject: [PATCH v3 0/7] freezer for cgroup v2
+Date: Fri, 16 Nov 2018 16:38:23 -0800
+Message-ID: <20181117003830.15344-1-guro@fb.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Tx62oY/cQGEQBatE3T+ZeNxDEUkb6ZnVjpvyQS2CbEs=;
-        b=yXZ7N81O4WaHO2liYAjKeUMC7J8Ygqqmyhi6Wd03NuR5xOx0MzCvYs4eN/RfnXK1JU
-         ObIqEzKIctWYhf1R9HDq4v0j1clVAMJqCTBBaBsKB+KjNwUS2Pc1e2jXdoXZeeGKvFe4
-         VsCWGaqJ/6+ZQ6pTv5k2fo389eZ3lB2ZoWBf5Pb6n3z76p0Ht+pyCZlJUZE06fTaOFtw
-         VGt+pnW9MeEN1cAPgoLDZv1Xt0plfUBNlga/jVx4gSdBvUS2f1AQZFxVS+V3+kPvVhOM
-         GnGG4fderMfma0gQfUCtGptN9YWQiiY0l6g/I1faSvYURftxw8U3SQwVB0DCJ1u6Ypb7
-         hYZw==
-In-Reply-To: <CADiTV-37tqWsbxmeZJsqq+pqSqxN-_L9+T9R+PmBBJhfO-G09g@mail.gmail.com>
-Content-Language: en-US
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=sJCmN87GOMtrEMXquC7JcDyvMaVa3PWfwko+KjgM5Bg=;
+        b=rDlJVH/5Y506158JOjpZezHMToVw4YyZvjtrQ14KUJaG1DRLpVyVRo6kFJrwyt6eLU
+         /40IroVzhihiYQt26ePxF+TtFkNcs3ElHyN118Gzp9dO86tUridOdz2ViJVqUSoZHyGh
+         Dr5cR8SgWrjU7UaqqvIg0enuCBxLXP329pqT/5rDV0BTWwPNh1tKc3YSS8/dQKtllBoz
+         f13QTlDgH4Tv4XjK1eLd2jHOORxb7u+V3SZUoKhUhc0toMJH1KFhcAOdlYlNzxioaKW/
+         nKsOsZaArN6EJWp2Gbwx+5NHVAZ0ADJi2VHrHAa8Y8O2IsoySdkpxbWIbqkxgXahQEyf
+         Ec1g==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Angelo Ruocco <angelo.ruocco.90@gmail.com>
-Cc: Paolo Valente <paolo.valente@linaro.org>, Oleksandr Natalenko <oleksandr@natalenko.name>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, Mark Brown <broonie@kernel.org>, 'Paolo Valente' via bfq-iosched <bfq-iosched@googlegroups.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Oleg Nesterov <oleg@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-On 11/15/18 4:54 AM, Angelo Ruocco wrote:
-> Hi Jens,
-> 
-> I have rebased the patchset against the for-4.21/block branch, but I
-> can't test them properly because the compiling process has an error on
-> a different file. In particular:
-> 
-> include/net/xfrm.h:1465:3 error: unknown type 'spruct'
-> include/net/xfrm.h:1465:30 error: expected ':', ',', ';', '}' or
-> '__attribute__' before 'auth'
-> 
-> To be clear, and so that you can check I haven't made some trivial
-> mistakes: I have added/fetched the remote [1] and then simply rebased
-> against the for-4.21/block branch.
+This patchset implements freezer for cgroup v2.
 
-I think you have memory issues, a 'p' is just one bit away from a 't'.
+It provides similar functionality as v1 freezer, but the interface
+conforms to the cgroup v2 interface design principles, and it
+provides a better user experience: tasks can be killed, ptrace works,
+there is no separate controller, which has to be enabled, etc.
+
+Patches (1), (2) and (3) are some preparational work, patch (4) contains
+the implementation, patch (5) is a small cgroup kselftest fix,
+patch (6) covers freezer adds 6 new kselftests to cover the freezer
+functionality. Patch (7) adds corresponding docs.
+
+v3->v2:
+  - dropped TASK_FROZEN for now, frozen tasks are put into TASK_INTERRUPTIBLE
+  state; it's probably not the final version, but the API question can be
+  discussed separately
+  - don't clear TIF_SIGPENDING before going to sleep, instead add
+  task->frozen check in signal_pending_state() and recalc_sigpending()
+  - cgroup-level counter are now synchronized using css_set_lock,
+  which simplified the whole code (e.g. per-cgroup works were removed)
+  - the amount of comments increased significantly
+  - many other improvements incorporating feedback from Tejun and Oleg
+
+v2->v1:
+  - fixed locking aroung calling cgroup_freezer_leave()
+  - added docs
+
+Roman Gushchin (7):
+  cgroup: rename freezer.c into legacy_freezer.c
+  cgroup: implement __cgroup_task_count() helper
+  cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
+  cgroup: cgroup v2 freezer
+  kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
+  kselftests: cgroup: add freezer controller self-tests
+  cgroup: document cgroup v2 freezer interface
+
+ Documentation/admin-guide/cgroup-v2.rst       |  26 +
+ include/linux/cgroup-defs.h                   |  31 +
+ include/linux/cgroup.h                        |  42 ++
+ include/linux/sched.h                         |   2 +
+ include/linux/sched/jobctl.h                  |   2 +
+ include/linux/sched/signal.h                  |   2 +
+ kernel/cgroup/Makefile                        |   4 +-
+ kernel/cgroup/cgroup-internal.h               |   1 +
+ kernel/cgroup/cgroup-v1.c                     |  16 -
+ kernel/cgroup/cgroup.c                        | 165 ++++-
+ kernel/cgroup/freezer.c                       | 641 ++++++----------
+ kernel/cgroup/legacy_freezer.c                | 481 ++++++++++++
+ kernel/ptrace.c                               |   7 +
+ kernel/signal.c                               |  57 +-
+ tools/testing/selftests/cgroup/.gitignore     |   1 +
+ tools/testing/selftests/cgroup/Makefile       |   2 +
+ tools/testing/selftests/cgroup/cgroup_util.c  |  85 ++-
+ tools/testing/selftests/cgroup/cgroup_util.h  |   7 +
+ tools/testing/selftests/cgroup/test_freezer.c | 685 ++++++++++++++++++
+ 19 files changed, 1804 insertions(+), 453 deletions(-)
+ create mode 100644 kernel/cgroup/legacy_freezer.c
+ create mode 100644 tools/testing/selftests/cgroup/test_freezer.c
 
 -- 
-Jens Axboe
+2.17.2
 
