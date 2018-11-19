@@ -1,16 +1,16 @@
 From: Paolo Valente <paolo.valente@linaro.org>
-Subject: [PATCH V2 08/10] block, throttle: allow sharing cgroup statistic files
-Date: Mon, 19 Nov 2018 11:34:22 +0100
-Message-ID: <20181119103424.3853-9-paolo.valente@linaro.org>
+Subject: [PATCH V2 09/10] doc, bfq-iosched: fix a few clerical errors
+Date: Mon, 19 Nov 2018 11:34:23 +0100
+Message-ID: <20181119103424.3853-10-paolo.valente@linaro.org>
 References: <20181119103424.3853-1-paolo.valente@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=oBc3JwPq73FtDGvqk3t8T7Oot3rzsOXj87W1YQabmq0=;
-        b=U+uluio6KwtbMMoH3Jp0DEoAQtuhcEmvMYrNiM5KHAwwCapWC33wQhLaMnZr9S/I/0
-         Z6sK2Z1/uUcwEavzu8hwJhNC29Gt2B+bLxPWg0ogiXB9yWoJOlUzzK8ssUxgRpXHV3EU
-         XnLEDqKsSc9kSrVv/zIWFoLbWLaZfx4laO4js=
+        bh=95cHSgXhObq6AUCu/Rr/+wEQTPHLVt9I8/orFJ2tnV8=;
+        b=N8iZHEZvKWz0J/nual7jk0fkuGeRXXZ7k/3ibe4bHVxzhla7D7v8KTcgOO8yVpWvFT
+         B3vEIw+EBmC/yavIAvjOIiUz2wiAPEAIzT1RHvDAgZUu4MTPxiKzIwxtEJH+JHWk3fW/
+         YZJUNoJLJnP75HF8BVdkglOlyHl+oOYs6W9pY=
 In-Reply-To: <20181119103424.3853-1-paolo.valente@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -20,59 +20,45 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Paolo Valente <paolo.valente@linaro.org>
 
-From: Angelo Ruocco <angeloruocco90@gmail.com>
+This commit fixes a few clerical errors in
+Documentation/block/bfq-iosched.txt.
 
-Some of the cgroup files defined in the throttle policy have the same
-meaning as those defined in the proportional share policy.
-
-This commit uses the new file sharing interface in cgroup to share
-these files.
-
-Signed-off-by: Angelo Ruocco <angeloruocco90@gmail.com>
 Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
 ---
- block/blk-throttle.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ Documentation/block/bfq-iosched.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 6bfdaac53b6f..95825448c031 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1491,22 +1491,30 @@ static struct cftype throtl_legacy_files[] = {
- 		.write = tg_set_conf_uint,
- 	},
- 	{
--		.name = "throttle.io_service_bytes",
-+		.name = "io_service_bytes",
-+		.owner_name = "throttle",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_throtl,
- 		.seq_show_cft = blkg_print_stat_bytes,
- 	},
- 	{
--		.name = "throttle.io_service_bytes_recursive",
-+		.name = "io_service_bytes_recursive",
-+		.owner_name = "throttle",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_throtl,
- 		.seq_show_cft = blkg_print_stat_bytes_recursive,
- 	},
- 	{
--		.name = "throttle.io_serviced",
-+		.name = "io_serviced",
-+		.owner_name = "throttle",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_throtl,
- 		.seq_show_cft = blkg_print_stat_ios,
- 	},
- 	{
--		.name = "throttle.io_serviced_recursive",
-+		.name = "io_serviced_recursive",
-+		.owner_name = "throttle",
-+		.flags = CFTYPE_SHARES_FILE,
- 		.private = (unsigned long)&blkcg_policy_throtl,
- 		.seq_show_cft = blkg_print_stat_ios_recursive,
- 	},
+diff --git a/Documentation/block/bfq-iosched.txt b/Documentation/block/bfq-iosched.txt
+index 8d8d8f06cab2..6d7dd5ab8554 100644
+--- a/Documentation/block/bfq-iosched.txt
++++ b/Documentation/block/bfq-iosched.txt
+@@ -42,7 +42,7 @@ sustainable throughputs, on the same systems as above:
+ 
+ BFQ works for multi-queue devices too.
+ 
+-The table of contents follow. Impatients can just jump to Section 3.
++The table of contents follows. Impatients can just jump to Section 3.
+ 
+ CONTENTS
+ 
+@@ -51,7 +51,7 @@ CONTENTS
+  1-2 Server systems
+ 2. How does BFQ work?
+ 3. What are BFQ's tunables and how to properly configure BFQ?
+-4. BFQ group scheduling
++4. Group scheduling with BFQ
+  4-1 Service guarantees provided
+  4-2 Interface
+ 
+@@ -294,7 +294,7 @@ too.
+ per-process ioprio and weight
+ -----------------------------
+ 
+-Unless the cgroups interface is used (see "4. BFQ group scheduling"),
++Unless the cgroups interface is used (see "4. Group scheduling with BFQ"),
+ weights can be assigned to processes only indirectly, through I/O
+ priorities, and according to the relation:
+ weight = (IOPRIO_BE_NR - ioprio) * 10.
 -- 
 2.16.1
 
