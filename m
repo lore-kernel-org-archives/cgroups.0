@@ -1,16 +1,16 @@
 From: Paolo Valente <paolo.valente@linaro.org>
-Subject: [PATCH V2 02/10] block, cgroup: pass cftype to functions that need to use it
-Date: Mon, 19 Nov 2018 11:34:16 +0100
-Message-ID: <20181119103424.3853-3-paolo.valente@linaro.org>
+Subject: [PATCH V2 03/10] cgroup: link cftypes of the same subsystem with the same name
+Date: Mon, 19 Nov 2018 11:34:17 +0100
+Message-ID: <20181119103424.3853-4-paolo.valente@linaro.org>
 References: <20181119103424.3853-1-paolo.valente@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=xE31UGISHMijh6BWsEpclRZoNNImo7FAKtEIn5NIV0A=;
-        b=SU4gX9UrHxz7m4v1tXtIXnFVKBC85SmHhU3WWiQYYH5YJWdQrx77/09MmnpPILr2Gv
-         PCbKmtQgB2koGowWyZFjNRJlKJFv9udeNRVF/Tx2HHxFCDZQhXGe45I/uov9rCuAnB50
-         t7iYiiNqnQaObo/r0EtTj0WBdzrK0QxzCGtFc=
+        bh=x0Itf0ZxI+Oxy7a9zO1EZJNmqUfunAWUlaUx3OwJfXE=;
+        b=ZY9L6xbrDMh2HjcNz0YOjsrYk0Kmtklvb60AEmHSjiJI/Pk+YMBYPF0O31vnW8uYNA
+         c9mhYofxWkWb+nOOBKPvdgFBpZSiuq0Z0Cb090oHVsvuIymAZOAd3UGEwStIpuBuMv3h
+         6BZEXTJWgLYIrrgwNuGx/H/HnMh1Ym7GLwhns=
 In-Reply-To: <20181119103424.3853-1-paolo.valente@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -20,334 +20,205 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Paolo Valente <paolo.valente@linaro.org>
 
-Some seq_show functions need to access the cftype they belong to, for
-retrieving the data to show. These functions get their cftype by using
-the seq_cft accessor for the seq_file. This solution is no longer
-viable in case a seq_file is shared among more than one cftype,
-because the accessor always returns (only) the first of the cftypes
-sharing the seq_file.
+From: Angelo Ruocco <angeloruocco90@gmail.com>
 
-This commit enables these seq_show functions to be passed their
-cftype, by replacing their prototype with that of the newly defined
-seq_show_cft hook, and by invoking these functions through this new
-hook.
+Two entities, of any kind, are not able to create a cgroup file with
+the same name in the same folder: if an entity tries to create a file
+that has the same name as a file created by another entity, the cgroup
+core stops it, warns the user about the error, and then proceeds to
+delete all the files created by the last entity.
+
+However, in some specific situations, it may be useful for two or more
+entities to use a common file, e.g., the I/O schedulers bfq and cfq
+had the same "weight" attribute, that changed the behavior of the two
+schedulers in a similar way.
+
+This commit prepares the interface that allows two entities to share
+files. It adds a flag CFTYPE_SHARE_FILE for cftypes, flag that allows
+cftypes to be linked together if they are part of the same subsystem
+and have the same name.
+
+There is a limitation for a cftype that wants to share a file: it can't
+have the hooks seq_start/next/stop. The reason is that there is no
+consistent way to show portions of a file once multiple cftypes are
+attached to it, and thus more than one seq_show() is invoked: there are
+neither an univocal start point, nor univocal "next" and "stop"
+operations.
 
 Signed-off-by: Angelo Ruocco <angeloruocco90@gmail.com>
 Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
 ---
- block/bfq-cgroup.c         | 54 ++++++++++++++++++++++++----------------------
- block/blk-cgroup.c         | 22 ++++++++++++-------
- block/blk-throttle.c       |  8 +++----
- include/linux/blk-cgroup.h | 10 +++++----
- 4 files changed, 52 insertions(+), 42 deletions(-)
+ include/linux/cgroup-defs.h |  9 ++++++
+ kernel/cgroup/cgroup.c      | 78 +++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 85 insertions(+), 2 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index a7a1712632b0..038e418fa64f 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -918,17 +918,17 @@ static ssize_t bfq_io_set_weight(struct kernfs_open_file *of,
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 7841db6e7fb3..d659763c7221 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -93,6 +93,8 @@ enum {
+ 	CFTYPE_NO_PREFIX	= (1 << 3),	/* (DON'T USE FOR NEW FILES) no subsys prefix */
+ 	CFTYPE_WORLD_WRITABLE	= (1 << 4),	/* (DON'T USE FOR NEW FILES) S_IWUGO */
+ 
++	CFTYPE_SHARES_FILE	= (1 << 5),	/* shares file w/ other cfts */
++
+ 	/* internal flags, do not use outside cgroup core proper */
+ 	__CFTYPE_ONLY_ON_DFL	= (1 << 16),	/* only on default hierarchy */
+ 	__CFTYPE_NOT_ON_DFL	= (1 << 17),	/* not on default hierarchy */
+@@ -528,6 +530,13 @@ struct cftype {
+ 	 */
+ 	struct cgroup_subsys *ss;	/* NULL for cgroup core files */
+ 	struct list_head node;		/* anchored at ss->cfts */
++
++	/*
++	 * List of cftypes that are sharing the same file. It allows the hook
++	 * functions of the cftypes in the list to be called together.
++	 */
++	struct list_head share_node;
++
+ 	struct kernfs_ops *kf_ops;
+ 
+ 	int (*open)(struct kernfs_open_file *of);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 9d0993dd68fe..61eafd69e2fd 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1549,11 +1549,15 @@ struct cgroup *cgroup_kn_lock_live(struct kernfs_node *kn, bool drain_offline)
+ 	return NULL;
  }
  
- #ifdef CONFIG_DEBUG_BLK_CGROUP
--static int bfqg_print_stat(struct seq_file *sf, void *v)
-+static int bfqg_print_stat(struct seq_file *sf, struct cftype *cft, void *v)
+-static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
++static void cgroup_rm_file(struct cgroup *cgrp, struct cftype *cft)
  {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_stat,
--			  &blkcg_policy_bfq, seq_cft(sf)->private, false);
-+			  &blkcg_policy_bfq, cft->private, false);
- 	return 0;
+ 	char name[CGROUP_FILE_NAME_MAX];
++	struct kernfs_node *kn = kernfs_find_and_get(cgrp->kn,
++			cgroup_file_name(cgrp, cft, name));
++	struct cftype *cfts = kn->priv;
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
++	kernfs_put(kn);
+ 
+ 	if (cft->file_offset) {
+ 		struct cgroup_subsys_state *css = cgroup_css(cgrp, cft->ss);
+@@ -1566,7 +1570,19 @@ static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+ 		del_timer_sync(&cfile->notify_timer);
+ 	}
+ 
+-	kernfs_remove_by_name(cgrp->kn, cgroup_file_name(cgrp, cft, name));
++	/* Delete the file only if it's used by one cftype */
++	if (list_empty(&cft->share_node) || atomic_read(&kn->count) == 1) {
++		kernfs_remove(kn);
++	} else {
++		/*
++		 * Update the "priv" pointer of the kernfs_node if the cftype
++		 * that first created the file is removed.
++		 */
++		if (cft == cfts)
++			kn->priv = list_next_entry(cft, share_node);
++
++		kernfs_put(kn);
++	}
  }
  
--static int bfqg_print_rwstat(struct seq_file *sf, void *v)
-+static int bfqg_print_rwstat(struct seq_file *sf, struct cftype *cft, void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_rwstat,
--			  &blkcg_policy_bfq, seq_cft(sf)->private, true);
-+			  &blkcg_policy_bfq, cft->private, true);
- 	return 0;
- }
- 
-@@ -949,19 +949,21 @@ static u64 bfqg_prfill_rwstat_recursive(struct seq_file *sf,
- 	return __blkg_prfill_rwstat(sf, pd, &sum);
- }
- 
--static int bfqg_print_stat_recursive(struct seq_file *sf, void *v)
-+static int bfqg_print_stat_recursive(struct seq_file *sf, struct cftype *cft,
-+				     void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
- 			  bfqg_prfill_stat_recursive, &blkcg_policy_bfq,
--			  seq_cft(sf)->private, false);
-+			  cft->private, false);
- 	return 0;
- }
- 
--static int bfqg_print_rwstat_recursive(struct seq_file *sf, void *v)
-+static int bfqg_print_rwstat_recursive(struct seq_file *sf, struct cftype *cft,
-+				       void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
- 			  bfqg_prfill_rwstat_recursive, &blkcg_policy_bfq,
--			  seq_cft(sf)->private, true);
-+			  cft->private, true);
- 	return 0;
- }
- 
-@@ -1063,18 +1065,18 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 	{
- 		.name = "bfq.io_service_bytes",
- 		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_bytes,
-+		.seq_show_cft = blkg_print_stat_bytes,
- 	},
- 	{
- 		.name = "bfq.io_serviced",
- 		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_ios,
-+		.seq_show_cft = blkg_print_stat_ios,
- 	},
- #ifdef CONFIG_DEBUG_BLK_CGROUP
- 	{
- 		.name = "bfq.time",
- 		.private = offsetof(struct bfq_group, stats.time),
--		.seq_show = bfqg_print_stat,
-+		.seq_show_cft = bfqg_print_stat,
- 	},
- 	{
- 		.name = "bfq.sectors",
-@@ -1083,22 +1085,22 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 	{
- 		.name = "bfq.io_service_time",
- 		.private = offsetof(struct bfq_group, stats.service_time),
--		.seq_show = bfqg_print_rwstat,
-+		.seq_show_cft = bfqg_print_rwstat,
- 	},
- 	{
- 		.name = "bfq.io_wait_time",
- 		.private = offsetof(struct bfq_group, stats.wait_time),
--		.seq_show = bfqg_print_rwstat,
-+		.seq_show_cft = bfqg_print_rwstat,
- 	},
- 	{
- 		.name = "bfq.io_merged",
- 		.private = offsetof(struct bfq_group, stats.merged),
--		.seq_show = bfqg_print_rwstat,
-+		.seq_show_cft = bfqg_print_rwstat,
- 	},
- 	{
- 		.name = "bfq.io_queued",
- 		.private = offsetof(struct bfq_group, stats.queued),
--		.seq_show = bfqg_print_rwstat,
-+		.seq_show_cft = bfqg_print_rwstat,
- 	},
- #endif /* CONFIG_DEBUG_BLK_CGROUP */
- 
-@@ -1106,18 +1108,18 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 	{
- 		.name = "bfq.io_service_bytes_recursive",
- 		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_bytes_recursive,
-+		.seq_show_cft = blkg_print_stat_bytes_recursive,
- 	},
- 	{
- 		.name = "bfq.io_serviced_recursive",
- 		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_ios_recursive,
-+		.seq_show_cft = blkg_print_stat_ios_recursive,
- 	},
- #ifdef CONFIG_DEBUG_BLK_CGROUP
- 	{
- 		.name = "bfq.time_recursive",
- 		.private = offsetof(struct bfq_group, stats.time),
--		.seq_show = bfqg_print_stat_recursive,
-+		.seq_show_cft = bfqg_print_stat_recursive,
- 	},
- 	{
- 		.name = "bfq.sectors_recursive",
-@@ -1126,22 +1128,22 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 	{
- 		.name = "bfq.io_service_time_recursive",
- 		.private = offsetof(struct bfq_group, stats.service_time),
--		.seq_show = bfqg_print_rwstat_recursive,
-+		.seq_show_cft = bfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "bfq.io_wait_time_recursive",
- 		.private = offsetof(struct bfq_group, stats.wait_time),
--		.seq_show = bfqg_print_rwstat_recursive,
-+		.seq_show_cft = bfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "bfq.io_merged_recursive",
- 		.private = offsetof(struct bfq_group, stats.merged),
--		.seq_show = bfqg_print_rwstat_recursive,
-+		.seq_show_cft = bfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "bfq.io_queued_recursive",
- 		.private = offsetof(struct bfq_group, stats.queued),
--		.seq_show = bfqg_print_rwstat_recursive,
-+		.seq_show_cft = bfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "bfq.avg_queue_size",
-@@ -1150,22 +1152,22 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 	{
- 		.name = "bfq.group_wait_time",
- 		.private = offsetof(struct bfq_group, stats.group_wait_time),
--		.seq_show = bfqg_print_stat,
-+		.seq_show_cft = bfqg_print_stat,
- 	},
- 	{
- 		.name = "bfq.idle_time",
- 		.private = offsetof(struct bfq_group, stats.idle_time),
--		.seq_show = bfqg_print_stat,
-+		.seq_show_cft = bfqg_print_stat,
- 	},
- 	{
- 		.name = "bfq.empty_time",
- 		.private = offsetof(struct bfq_group, stats.empty_time),
--		.seq_show = bfqg_print_stat,
-+		.seq_show_cft = bfqg_print_stat,
- 	},
- 	{
- 		.name = "bfq.dequeue",
- 		.private = offsetof(struct bfq_group, stats.dequeue),
--		.seq_show = bfqg_print_stat,
-+		.seq_show_cft = bfqg_print_stat,
- 	},
- #endif	/* CONFIG_DEBUG_BLK_CGROUP */
- 	{ }	/* terminate */
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 63d226a084cd..772d32bbecae 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -565,15 +565,16 @@ static u64 blkg_prfill_rwstat_field(struct seq_file *sf,
  /**
-  * blkg_print_stat_bytes - seq_show callback for blkg->stat_bytes
-  * @sf: seq_file to print to
-+ * @cft: cftype holding the data
-  * @v: unused
-  *
-  * To be used as cftype->seq_show to print blkg->stat_bytes.
-  * cftype->private must be set to the blkcg_policy.
-  */
--int blkg_print_stat_bytes(struct seq_file *sf, void *v)
-+int blkg_print_stat_bytes(struct seq_file *sf, struct cftype *cft, void *v)
+@@ -3437,6 +3453,7 @@ static int cgroup_file_open(struct kernfs_open_file *of)
  {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
--			  blkg_prfill_rwstat_field, (void *)seq_cft(sf)->private,
-+			  blkg_prfill_rwstat_field, (void *)cft->private,
- 			  offsetof(struct blkcg_gq, stat_bytes), true);
- 	return 0;
- }
-@@ -582,15 +583,16 @@ EXPORT_SYMBOL_GPL(blkg_print_stat_bytes);
- /**
-  * blkg_print_stat_bytes - seq_show callback for blkg->stat_ios
-  * @sf: seq_file to print to
-+ * @cft: cftype holding the data
-  * @v: unused
-  *
-  * To be used as cftype->seq_show to print blkg->stat_ios.  cftype->private
-  * must be set to the blkcg_policy.
-  */
--int blkg_print_stat_ios(struct seq_file *sf, void *v)
-+int blkg_print_stat_ios(struct seq_file *sf, struct cftype *cft, void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
--			  blkg_prfill_rwstat_field, (void *)seq_cft(sf)->private,
-+			  blkg_prfill_rwstat_field, (void *)cft->private,
- 			  offsetof(struct blkcg_gq, stat_ios), true);
- 	return 0;
- }
-@@ -608,13 +610,15 @@ static u64 blkg_prfill_rwstat_field_recursive(struct seq_file *sf,
- /**
-  * blkg_print_stat_bytes_recursive - recursive version of blkg_print_stat_bytes
-  * @sf: seq_file to print to
-+ * @cft: cftype holding the data
-  * @v: unused
-  */
--int blkg_print_stat_bytes_recursive(struct seq_file *sf, void *v)
-+int blkg_print_stat_bytes_recursive(struct seq_file *sf, struct cftype *cft,
-+				    void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
- 			  blkg_prfill_rwstat_field_recursive,
--			  (void *)seq_cft(sf)->private,
-+			  (void *)cft->private,
- 			  offsetof(struct blkcg_gq, stat_bytes), true);
- 	return 0;
- }
-@@ -623,13 +627,15 @@ EXPORT_SYMBOL_GPL(blkg_print_stat_bytes_recursive);
- /**
-  * blkg_print_stat_ios_recursive - recursive version of blkg_print_stat_ios
-  * @sf: seq_file to print to
-+ * @cft: cftype holding the data
-  * @v: unused
-  */
--int blkg_print_stat_ios_recursive(struct seq_file *sf, void *v)
-+int blkg_print_stat_ios_recursive(struct seq_file *sf, struct cftype *cft,
-+				  void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
- 			  blkg_prfill_rwstat_field_recursive,
--			  (void *)seq_cft(sf)->private,
-+			  (void *)cft->private,
- 			  offsetof(struct blkcg_gq, stat_ios), true);
- 	return 0;
- }
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 8f0a104770ee..6bfdaac53b6f 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1493,22 +1493,22 @@ static struct cftype throtl_legacy_files[] = {
- 	{
- 		.name = "throttle.io_service_bytes",
- 		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_bytes,
-+		.seq_show_cft = blkg_print_stat_bytes,
- 	},
- 	{
- 		.name = "throttle.io_service_bytes_recursive",
- 		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_bytes_recursive,
-+		.seq_show_cft = blkg_print_stat_bytes_recursive,
- 	},
- 	{
- 		.name = "throttle.io_serviced",
- 		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_ios,
-+		.seq_show_cft = blkg_print_stat_ios,
- 	},
- 	{
- 		.name = "throttle.io_serviced_recursive",
- 		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_ios_recursive,
-+		.seq_show_cft = blkg_print_stat_ios_recursive,
- 	},
- 	{ }	/* terminate */
- };
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index a9e2e2037129..770b59e0d35f 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -207,10 +207,12 @@ u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
- u64 blkg_prfill_stat(struct seq_file *sf, struct blkg_policy_data *pd, int off);
- u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
- 		       int off);
--int blkg_print_stat_bytes(struct seq_file *sf, void *v);
--int blkg_print_stat_ios(struct seq_file *sf, void *v);
--int blkg_print_stat_bytes_recursive(struct seq_file *sf, void *v);
--int blkg_print_stat_ios_recursive(struct seq_file *sf, void *v);
-+int blkg_print_stat_bytes(struct seq_file *sf, struct cftype *cft, void *v);
-+int blkg_print_stat_ios(struct seq_file *sf, struct cftype *cft, void *v);
-+int blkg_print_stat_bytes_recursive(struct seq_file *sf, struct cftype *cft,
-+				    void *v);
-+int blkg_print_stat_ios_recursive(struct seq_file *sf, struct cftype *cft,
-+				  void *v);
+ 	struct cftype *cft = of->kn->priv;
  
- u64 blkg_stat_recursive_sum(struct blkcg_gq *blkg,
- 			    struct blkcg_policy *pol, int off);
++
+ 	if (cft->open)
+ 		return cft->open(of);
+ 	return 0;
+@@ -3585,6 +3602,22 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+ 	key = &cft->lockdep_key;
+ #endif
++
++	if (cft->flags & CFTYPE_SHARES_FILE) {
++		/* kn->count keeps track of how many cftypes share kn */
++		kn = kernfs_find_and_get(cgrp->kn,
++					 cgroup_file_name(cgrp, cft, name));
++		if (kn) {
++			struct cftype *cfts = kn->priv;
++
++			if (cfts->flags & CFTYPE_SHARES_FILE)
++				goto out_set_cfile;
++			else
++				kernfs_put(kn);
++
++		}
++	}
++
+ 	kn = __kernfs_create_file(cgrp->kn, cgroup_file_name(cgrp, cft, name),
+ 				  cgroup_file_mode(cft),
+ 				  GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
+@@ -3599,6 +3632,7 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
+ 		return ret;
+ 	}
+ 
++out_set_cfile:
+ 	if (cft->file_offset) {
+ 		struct cgroup_file *cfile = (void *)css + cft->file_offset;
+ 
+@@ -3696,11 +3730,46 @@ static void cgroup_exit_cftypes(struct cftype *cfts)
+ 		cft->kf_ops = NULL;
+ 		cft->ss = NULL;
+ 
++		list_del(&cft->share_node);
++
+ 		/* revert flags set by cgroup core while adding @cfts */
+ 		cft->flags &= ~(__CFTYPE_ONLY_ON_DFL | __CFTYPE_NOT_ON_DFL);
+ 	}
+ }
+ 
++/*
++ * Link a cftype that wants to share a file to the list of cftypes that are
++ * using it.
++ *
++ * The conditions for a cftype to be put in an existing list of cftypes and
++ * thus start to share a file are:
++ *	- to have the flag CFTYPE_SHARES_FILE set;
++ *	- to have all flags coincide with the flags of the other cftypes in the
++ *	  list;
++ *	- to not have a seq_start hook: there is no consistent way to show
++ *	  portions of a file once multiple cftypes are attached to it, and thus
++ *	  more than one seq_show() is invoked.
++ *
++ * Once two or more cftypes are linked together, the file only points
++ * to the first of them.
++ */
++static void cgroup_link_cftype(struct cgroup_subsys *ss, struct cftype *cft)
++{
++	struct cftype *cfts;
++
++	list_for_each_entry(cfts, &ss->cfts, node) {
++		struct cftype *c;
++
++		for (c = cfts; c->name[0] != '\0'; c++)
++			if (c != cft && !(c->flags ^ cft->flags) &&
++			    !(c->seq_start || cft->seq_start) &&
++			    !strcmp(c->name, cft->name)) {
++				list_add(&cft->share_node, &c->share_node);
++				return;
++			}
++	}
++}
++
+ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ {
+ 	struct cftype *cft;
+@@ -3730,6 +3799,11 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 
+ 		cft->kf_ops = kf_ops;
+ 		cft->ss = ss;
++
++		INIT_LIST_HEAD(&cft->share_node);
++
++		if (cft->flags & CFTYPE_SHARES_FILE)
++			cgroup_link_cftype(ss, cft);
+ 	}
+ 
+ 	return 0;
 -- 
 2.16.1
 
