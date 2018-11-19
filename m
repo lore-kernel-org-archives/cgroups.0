@@ -1,16 +1,16 @@
 From: Paolo Valente <paolo.valente@linaro.org>
-Subject: [PATCH V2 04/10] cgroup: add owner name to cftypes
-Date: Mon, 19 Nov 2018 11:34:18 +0100
-Message-ID: <20181119103424.3853-5-paolo.valente@linaro.org>
+Subject: [PATCH V2 05/10] block, bfq: align min and default weights with the old cfq default
+Date: Mon, 19 Nov 2018 11:34:19 +0100
+Message-ID: <20181119103424.3853-6-paolo.valente@linaro.org>
 References: <20181119103424.3853-1-paolo.valente@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ixCco3tkgOz6XOnATIyg3v7JG+fMVyFH/i6hN9+7LbE=;
-        b=kKp2I6yh/orVyEouSJpVWokRdAT9xO+g+kCnqgaaTzcRgXwvj2mzpvsQeI/fL870j/
-         FWJpkmfYHVEX994JHS9HKt3nipa3xeLHvXCMO6b7u5kQXIhAGjuRJ+Y8HyG2lb5f+Ag9
-         5/O6i7rXVsv45I3wffJr69woHSqCdtIyD3Cxw=
+        bh=X5boqJ0UbdeKGVE+FnIPUcIjT6rvSPY3NTZlqHlp7eY=;
+        b=cOaOohdKAX6mJq3wr2E6Hwafuweehz68ABx+2oXHJV0TZuvr4qoCBxK2dufKJTVwOI
+         pIuCn8YJgCmgtwHWw/Bhfhh2VvhLRaaHj0AkzG5SpAmKlDJQv+8kIIsF2MoREcj+qMIQ
+         C2MBBTrmNvoV9HHeYBNRnb8XIcdxNvnBM7qSs=
 In-Reply-To: <20181119103424.3853-1-paolo.valente@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,63 +22,38 @@ Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linar
 
 From: Angelo Ruocco <angeloruocco90@gmail.com>
 
-The piece of information "who created a certain cftype" is not stored
-anywhere, thus a cftype is not able to know who is its owner.
+bfq exposes a cgroup attribute, weight, with the same meaning as that
+exposed by cfq.
 
-This commit addresses this problem by adding a new field in the cftype
-structure that enables the name of its owner to be explicitly set.
+This commit changes bfq default and min weights to match the ones set
+by cfq (before legacy blk was removed).
 
 Signed-off-by: Angelo Ruocco <angeloruocco90@gmail.com>
 Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
 ---
- include/linux/cgroup-defs.h |  2 ++
- include/linux/cgroup.h      | 13 +++++++++++++
- 2 files changed, 15 insertions(+)
+ block/bfq-iosched.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index d659763c7221..6e31f478c6e1 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -36,6 +36,7 @@ struct seq_file;
- #define MAX_CGROUP_TYPE_NAMELEN 32
- #define MAX_CGROUP_ROOT_NAMELEN 64
- #define MAX_CFTYPE_NAME		64
-+#define MAX_OWNER_NAME		64
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index 77651d817ecd..249d8128d3ee 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -22,13 +22,13 @@
+ #define BFQ_IOPRIO_CLASSES	3
+ #define BFQ_CL_IDLE_TIMEOUT	(HZ/5)
  
- /* define the enumeration of all cgroup subsystems */
- #define SUBSYS(_x) _x ## _cgrp_id,
-@@ -505,6 +506,7 @@ struct cftype {
- 	 * end of cftype array.
- 	 */
- 	char name[MAX_CFTYPE_NAME];
-+	char owner_name[MAX_OWNER_NAME];
- 	unsigned long private;
+-#define BFQ_MIN_WEIGHT			1
++#define BFQ_MIN_WEIGHT			10
+ #define BFQ_MAX_WEIGHT			1000
+ #define BFQ_WEIGHT_CONVERSION_COEFF	10
  
- 	/*
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 9d12757a65b0..267153bd898a 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -291,6 +291,19 @@ void css_task_iter_end(struct css_task_iter *it);
- 			;						\
- 		else
+ #define BFQ_DEFAULT_QUEUE_IOPRIO	4
  
-+/**
-+ * list_for_each_cft - walk circular list of cftypes linked together
-+ * @cft: cftype from where to start
-+ * @n: cftype used as a temporary storage
-+ *
-+ * A cftype pointed by a file may be part of a circular list of cftypes, this
-+ * macro walks the circular list starting from any given cftype. Unlike the
-+ * "list_for_each_entry" macro, the first element is included in the iteration.
-+ */
-+#define list_for_each_cft(cft, n)					\
-+	for (n = NULL; cft != n; n = (n == NULL) ? cft : n,		\
-+	     cft = list_next_entry(cft, share_node))
-+
- /*
-  * Inline functions.
-  */
+-#define BFQ_WEIGHT_LEGACY_DFL	100
++#define BFQ_WEIGHT_LEGACY_DFL	500
+ #define BFQ_DEFAULT_GRP_IOPRIO	0
+ #define BFQ_DEFAULT_GRP_CLASS	IOPRIO_CLASS_BE
+ 
 -- 
 2.16.1
 
