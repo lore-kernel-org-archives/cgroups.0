@@ -1,88 +1,134 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: [PATCH V2 10/10] doc, bfq-iosched: make it consistent with the new cgroup interface
-Date: Mon, 19 Nov 2018 11:34:24 +0100
-Message-ID: <20181119103424.3853-11-paolo.valente@linaro.org>
-References: <20181119103424.3853-1-paolo.valente@linaro.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v3 7/7] cgroup: document cgroup v2 freezer interface
+Date: Mon, 19 Nov 2018 17:42:48 +0000
+Message-ID: <20181119174241.GA7273@tower.DHCP.thefacebook.com>
+References: <20181117003830.15344-1-guro@fb.com>
+ <20181117003830.15344-8-guro@fb.com> <20181117080227.GA22672@rapoport-lnx>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=2PZH8WwXkvnGeOOTNTp/CB09k6USJvSSB6C0CaaMGjI=;
-        b=hcuU6/VqTQwptGHjtIMvqO0p51x14o0CH8VynZz+6pAYFV8wdEQyx+ljlgfV6rV2w7
-         ITCCyWJsgcX5EmmWYweoyDAMoKM4kZS/0KIuLLINuDr3CFzBBAYSz+58G1YiRCRMTQrt
-         ivc6Bbj1bt5nmThOu57faArw/3BCDnwjUELl8=
-In-Reply-To: <20181119103424.3853-1-paolo.valente@linaro.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=0GH69XRohz9tDKf3ZKzTGh11HkwB0aZ27psb4gvcZD8=;
+ b=ZHp0VNAqUARrnkgKqV1Bbgpx+3UPxw4oDDq76mQvL6LHpbHjSOS4xNfvbFw34/p4Yyjt
+ JMZjF9RkfE4W0jClhZI72lM5iTmq6mWX5p/mfYUTS6zRyKv4gpt99NJ3dCyRrig53IdC
+ cauounKoscAbUYYlX/UFoYJ8QMAXfTkBVKo= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0GH69XRohz9tDKf3ZKzTGh11HkwB0aZ27psb4gvcZD8=;
+ b=Mav3XKjrZa4nDgjupgahMoRFnACn43LCyEt3yDQpynoDTR7zn3wKhyhKTWlzoNVeQLXsUkidFef+3F8uDECayC9YVpiqk1Z3gl3NuElkJcx9T/av0gtf01Old5O/isEwVrCJ3Rb8a8IraWaYUHPo1iZeE05dn2EfG8wKqiD7+mc=
+In-Reply-To: <20181117080227.GA22672@rapoport-lnx>
+Content-Language: en-US
+Content-ID: <1E0C6B5BD81F3242BFB23BFB36F079BD@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Paolo Valente <paolo.valente@linaro.org>
+To: Mike Rapoport <rppt@linux.ibm.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
 
-BFQ now shares interface files with CFQ, for the proportional-share
-policy. Make documentation consistent with that.
+On Sat, Nov 17, 2018 at 12:02:28AM -0800, Mike Rapoport wrote:
+> Hi,
+>=20
+> On Fri, Nov 16, 2018 at 04:38:30PM -0800, Roman Gushchin wrote:
+> > Describe cgroup v2 freezer interface in the cgroup v2 admin guide.
+> >=20
+> > Signed-off-by: Roman Gushchin <guro@fb.com>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: linux-doc@vger.kernel.org
+> > Cc: kernel-team@fb.com
+> > ---
+> >  Documentation/admin-guide/cgroup-v2.rst | 26 +++++++++++++++++++++++++
+> >  1 file changed, 26 insertions(+)
+> >=20
+> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/ad=
+min-guide/cgroup-v2.rst
+> > index 184193bcb262..a065c0bed88c 100644
+> > --- a/Documentation/admin-guide/cgroup-v2.rst
+> > +++ b/Documentation/admin-guide/cgroup-v2.rst
+> > @@ -862,6 +862,8 @@ All cgroup core files are prefixed with "cgroup."
+> >  	  populated
+> >  		1 if the cgroup or its descendants contains any live
+> >  		processes; otherwise, 0.
+> > +	  frozen
+> > +		1 if the cgroup is frozen; otherwise, 0.
+> >=20
+> >    cgroup.max.descendants
+> >  	A read-write single value files.  The default is "max".
+> > @@ -895,6 +897,30 @@ All cgroup core files are prefixed with "cgroup."
+> >  		A dying cgroup can consume system resources not exceeding
+> >  		limits, which were active at the moment of cgroup deletion.
+> >=20
+> > +  cgroup.freeze
+> > +	A read-write single value file which exists on non-root cgroups.
+> > +	Allowed values are "0" and "1". The default is "0".
+> > +
+> > +	Writing "1" to the file causes freezing of the cgroup and all
+> > +	descendant cgroups. This means that all belonging processes will
+> > +	be stopped and will not run until the cgroup will be explicitly
+> > +	unfrozen. Freezing of the cgroup may take some time; when the process
+>=20
+> "when the process is complete" sounds somewhat ambiguous, it's unclear
+> whether freezing is complete or the process that's being frozen is
+> complete.
+>=20
+> Maybe "when this action is completed"?
+>=20
+> > +	is complete, the "frozen" value in the cgroup.events control file
+> > +	will be updated and the corresponding notification will be issued.
+>=20
+> Can you please clarify how exactly cgroup.events would be updated?
+>=20
+> > +	Cgroup can be frozen either by its own settings, either by settings
+>=20
+>       ^ A cgroup ... and maybe there are more "a" and "the" that should b=
+e
+> fixed, it's hard for me to tell.
+>=20
+> Also, I believe "either ..., or ..." sounds better than "either ...,
+> either ..."
+>=20
+> > +	of any ancestor cgroups. If any of ancestor cgroups is frozen, the
+> > +	cgroup will remain frozen.
+> > +
+> > +	Processes in the frozen cgroup can be killed by a fatal signal.
+> > +	They also can enter and leave a frozen cgroup: either by an explicit
+> > +	move by a user, either if freezing of the cgroup races with fork().
+>=20
+> ditto
+>=20
+> > +	If a cgroup is moved to a frozen cgroup, it stops. If a process is
+>=20
+>             ^ process?
+>=20
+> > +	moving out of a frozen cgroup, it becomes running.
+>=20
+>        ^ moved
 
-Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
----
- Documentation/block/bfq-iosched.txt | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+Hello, Mike!
 
-diff --git a/Documentation/block/bfq-iosched.txt b/Documentation/block/bfq-iosched.txt
-index 6d7dd5ab8554..3d7ef138ce6a 100644
---- a/Documentation/block/bfq-iosched.txt
-+++ b/Documentation/block/bfq-iosched.txt
-@@ -508,12 +508,14 @@ process.
- To get proportional sharing of bandwidth with BFQ for a given device,
- BFQ must of course be the active scheduler for that device.
- 
--Within each group directory, the names of the files associated with
--BFQ-specific cgroup parameters and stats begin with the "bfq."
--prefix. So, with cgroups-v1 or cgroups-v2, the full prefix for
--BFQ-specific files is "blkio.bfq." or "io.bfq." For example, the group
--parameter to set the weight of a group with BFQ is blkio.bfq.weight
--or io.bfq.weight.
-+BFQ uses the standard interface files of the proportional-share
-+policy, previously used by CFQ. If one such file is read/written, then
-+the operation associated with the file is performed by BFQ for each
-+device where BFQ is the active scheduler. In addition, BFQ is
-+configured so as to share interface files with other entities (if some
-+of these files does happen to be shared, then its associated operation
-+is performed also by any of the other entities that is using the
-+file).
- 
- As for cgroups-v1 (blkio controller), the exact set of stat files
- created, and kept up-to-date by bfq, depends on whether
-@@ -521,13 +523,13 @@ CONFIG_DEBUG_BLK_CGROUP is set. If it is set, then bfq creates all
- the stat files documented in
- Documentation/cgroup-v1/blkio-controller.txt. If, instead,
- CONFIG_DEBUG_BLK_CGROUP is not set, then bfq creates only the files
--blkio.bfq.io_service_bytes
--blkio.bfq.io_service_bytes_recursive
--blkio.bfq.io_serviced
--blkio.bfq.io_serviced_recursive
-+blkio.io_service_bytes
-+blkio.io_service_bytes_recursive
-+blkio.io_serviced
-+blkio.io_serviced_recursive
- 
- The value of CONFIG_DEBUG_BLK_CGROUP greatly influences the maximum
--throughput sustainable with bfq, because updating the blkio.bfq.*
-+throughput sustainable with BFQ, because updating the blkio.*
- stats is rather costly, especially for some of the stats enabled by
- CONFIG_DEBUG_BLK_CGROUP.
- 
-@@ -536,8 +538,8 @@ Parameters to set
- 
- For each group, there is only the following parameter to set.
- 
--weight (namely blkio.bfq.weight or io.bfq-weight): the weight of the
--group inside its parent. Available values: 1..10000 (default 100). The
-+weight (namely blkio.weight or io.weight): the weight of the group
-+inside its parent. Available values: 1..10000 (default 100). The
- linear mapping between ioprio and weights, described at the beginning
- of the tunable section, is still valid, but all weights higher than
- IOPRIO_BE_NR*10 are mapped to ioprio 0.
--- 
-2.16.1
+Thanks for the review! I agree with all comments above; fixes queued for v4=
+.
 
+>=20
+> > +	Frozen status of a cgroup doesn't affect any cgroup tree operations:
+> > +	it's possible to delete a frozen (and empty) cgroup, as well as
+> > +	create new sub-cgroups.
+>=20
+> Maybe it's also worth adding that freezing a process has no effect on its
+> memory consumption, at least directly.
+
+Hm, isn't it the expected behavior?
+
+In any case, I assume that cgroup.freeze knob description is not the best p=
+lace
+for a such explanations. Maybe it's better to add a standalone paragraph wi=
+th
+the description of the frozen process state, what's expected to work, what'=
+s
+not, etc. I'd return to this question a bit later, when we'll agree on the =
+user
+interface and the implementation.
+
+Thanks!
