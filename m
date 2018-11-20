@@ -1,71 +1,52 @@
-From: Eric Anholt <eric@anholt.net>
-Subject: Re: [PATCH RFC 4/5] drm/amdgpu: Add accounting of
- command submission via DRM cgroup
-Date: Tue, 20 Nov 2018 12:57:33 -0800
-Message-ID: <87r2ff79he.fsf@anholt.net>
+From: "Ho, Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+Subject: RE: [PATCH RFC 2/5] cgroup: Add mechanism to register vendor specific
+ DRM devices
+Date: Tue, 20 Nov 2018 22:21:14 +0000
+Message-ID: <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>
 References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20181120185814.13362-5-Kenny.Ho@amd.com>
+ <20181120185814.13362-3-Kenny.Ho@amd.com>
+ <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1076449786=="
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20181120185814.13362-5-Kenny.Ho@amd.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Kenny Ho <Kenny.Ho@amd.com>, y2kenny@gmail.com, Kenny.Ho@amd.com, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org, intel-gfx@lists.freedesktop.org
-
---===============1076449786==
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-
---=-=-=
-Content-Type: text/plain
-
-Kenny Ho <Kenny.Ho@amd.com> writes:
-
-> Account for the number of command submitted to amdgpu by type on a per
-> cgroup basis, for the purpose of profiling/monitoring applications.
-
-For profiling other drivers, I've used perf tracepoints, which let you
-get useful timelines of multiple events in the driver.  Have you made
-use of this stat for productive profiling?
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEE/JuuFDWp9/ZkuCBXtdYpNtH8nugFAlv0dT0ACgkQtdYpNtH8
-nugKoA//SsLocOcohCUR9cppO+vnmzsSMVn0S6CUmE/ltY2q14LsKvmL23VgjgkN
-5iC1eEq1waFrfoDeYhBYOL3j8dHxQA3b2kk3gXbUcaV04fPb+stNIM0V82eMAm9C
-JZKY+/Rd5nKC9nSLuA4berAy+Pg4A/WsY6QnV37WuVWBdPm3jVPN720Gmpm0ZLX2
-6acwxqJoaGzvf4YuS2FxITymzQke/fwa+zd4tIhbc9CG2u9b8hmBpi7eG2dkycLt
-a5d4TR/P7Ez9AVcYCmiyN55PaoVXTPn2p0cb5vNcVrU1TbNaOBIPlJSgQazsmyyq
-X7q/kACo79I50zO1jXrO9BmimXik39V9XHb4u1Hycpr5BWUld/2cbwt5JLoKiJ9a
-Fx52aBs5mcmREF6eSnAsvj5ZbJ82S2Edj2lxehD7P7OIoqmBpklG2EB2mIaNSbh7
-laibAVKDKVApHBB2VmBBZAOgZlRcHnaggaIRHMOenLhhy2hFAIF839c/07tS/xxu
-6UVCVpabtIVCjzy7h4gUdqCurffrK7lotZuggg9s41JEWewCD+5KuTX3S7e1REPM
-O81oI8X0gQ7L1LmR8bjF0IVfovGJ6EK3GiwcjQDMw64FbKoFy/ClDP9CSXaY62x+
-+Z6OlHnOsoae0tdYh06vtvISgkNK4M93NRUT+mCQS7hzQod4kVU=
-=5vQ5
------END PGP SIGNATURE-----
---=-=-=--
-
---===============1076449786==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
 Content-Transfer-Encoding: base64
-Content-Disposition: inline
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20181120202141.GA2509588-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Language: en-US
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4
-IG1haWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
-
---===============1076449786==--
+SGkgVGVqdW4sCgpUaGFua3MgZm9yIHRoZSByZXBseS4gIEEgZmV3IGNsYXJpZnlpbmcgcXVlc3Rp
+b25zOgoKT24gVHVlLCBOb3YgMjAsIDIwMTggYXQgMzoyMSBQTSBUZWp1biBIZW8gPHRqQGtlcm5l
+bC5vcmc+IHdyb3RlOgo+IFNvLCBJJ20gc3RpbGwgcHJldHR5IG5lZ2F0aXZlIGFib3V0IGFkZGlu
+ZyBkcm0gY29udHJvbGxlciBhdCB0aGlzCj4gcG9pbnQuICBUaGVyZSBpc24ndCBlbm91Z2ggb2Yg
+Y29tbW9uIHJlc291cmNlIG1vZGVsIGRlZmluZWQgeWV0IGFuZAo+IHVudGlsIHRoYXQgZ2V0cyBz
+b3J0ZWQgb3V0IEkgdGhpbmsgaXQncyBpbiB0aGUgYmVzdCBpbnRlcmVzdCBvZgo+IGV2ZXJ5b25l
+IGludm9sdmVkIHRvIGtlZXAgaXQgaW5zaWRlIGRybSBvciBzcGVjaWZpYyBkcml2ZXIgcHJvcGVy
+LgpCeSB0aGlzIHJlcGx5LCBhcmUgeW91IHN1Z2dlc3RpbmcgdGhhdCB2ZW5kb3Igc3BlY2lmaWMg
+cmVzb3VyY2VzIHdpbGwgbmV2ZXIgYmUgYWNjZXB0YWJsZSB0byBiZSBtYW5hZ2VkIHVuZGVyIGNn
+cm91cD8gIExldCBzYXkgYSB1c2VyIHdhbnQgdG8gaGF2ZSBzaW1pbGFyIGZ1bmN0aW9uYWxpdHkg
+YXMgd2hhdCBjZ3JvdXAgaXMgb2ZmZXJpbmcgYnV0IHRvIG1hbmFnZSB2ZW5kb3Igc3BlY2lmaWMg
+cmVzb3VyY2VzLCB3aGF0IHdvdWxkIHlvdSBzdWdnZXN0IGFzIGEgc29sdXRpb24/ICBXaGVuIHlv
+dSBzYXkga2VlcGluZyB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2UgcmVndWxhdGlvbiBpbnNpZGUg
+ZHJtIG9yIHNwZWNpZmljIGRyaXZlcnMsIGRvIHlvdSBtZWFuIHdlIHNob3VsZCByZXBsaWNhdGUg
+dGhlIGNncm91cCBpbmZyYXN0cnVjdHVyZSB0aGVyZSBvciBkbyB5b3UgbWVhbiBlaXRoZXIgZHJt
+IG9yIHNwZWNpZmljIGRyaXZlciBzaG91bGQgcXVlcnkgZXhpc3RpbmcgaGllcmFyY2h5IChzdWNo
+IGFzIGRldmljZSBvciBwZXJoYXBzIGNwdSkgZm9yIHRoZSBwcm9jZXNzIG9yZ2FuaXphdGlvbiBp
+bmZvcm1hdGlvbj8KClRvIHB1dCB0aGUgcXVlc3Rpb25zIGluIG1vcmUgY29uY3JldGUgdGVybXMs
+IGxldCBzYXkgYSB1c2VyIHdhbnRzIHRvIGV4cG9zZSBjZXJ0YWluIHBhcnQgb2YgYSBncHUgdG8g
+YSBwYXJ0aWN1bGFyIGNncm91cCBzaW1pbGFyIHRvIHRoZSB3YXkgc2VsZWN0aXZlIGNwdSBjb3Jl
+cyBhcmUgZXhwb3NlZCB0byBhIGNncm91cCB2aWEgY3B1c2V0LCBob3cgc2hvdWxkIHdlIGdvIGFi
+b3V0IGVuYWJsaW5nIHN1Y2ggZnVuY3Rpb25hbGl0eT8KClJlZ2FyZHMsCktlbm55Cl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBs
+aXN0CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
+b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeAo=
