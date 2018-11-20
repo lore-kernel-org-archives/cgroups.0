@@ -1,62 +1,94 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v3 4/7] cgroup: cgroup v2 freezer
-Date: Tue, 20 Nov 2018 17:39:03 +0000
-Message-ID: <20181120173858.GC21462@tower.DHCP.thefacebook.com>
-References: <20181117003830.15344-1-guro@fb.com>
- <20181117003830.15344-5-guro@fb.com>
- <20181120162529.GU2509588@devbig004.ftw2.facebook.com>
- <20181120163304.GA21462@tower.DHCP.thefacebook.com>
- <20181120163604.GX2509588@devbig004.ftw2.facebook.com>
- <20181120164349.GB21462@tower.DHCP.thefacebook.com>
- <20181120164859.GY2509588@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v4 0/5] cgroup: Introducing bypass mode
+Date: Tue, 20 Nov 2018 12:51:24 -0500
+Message-ID: <1542736289-31338-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=pLJmpNR42xWZjxlbuIeDtN22i4yM9M666IQ0eJ+zUWE=;
- b=eeZNHoEayLd+/OY/3OCsM130voVvzOjUGlyozABQBQRTamNvk+NPplKvc0ZI9FlcoD0U
- E2hkx/DJ7DHTtjJX+lim+ViqW2s9fWooCv7pWyYFbQsY4PKiS6LXK57sBqtziZpyL9Sb
- /RKnEsU7p7Y/4JxyaFuPLccQ42lfoqEl6Nc= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pLJmpNR42xWZjxlbuIeDtN22i4yM9M666IQ0eJ+zUWE=;
- b=MMI2nc565gQ6iZaY393AK5mY2Ygac1Lv6kRflUhgZ/A+AXR7puxaEJzu4Ze4qqBUaSuhD+bZVnt18gmzQ4VWz0F3wBxoWo00V4PLIGmCN6lrUDsea0fCK0smZOfesIM7+SsHZPNH04y2wbPT6pzZgpk+N1Zd2eNJBzjjQH1KBjA=
-In-Reply-To: <20181120164859.GY2509588@devbig004.ftw2.facebook.com>
-Content-Language: en-US
-Content-ID: <ED3B4FA8405D0345AAFB57A5FA827BF5@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guroan@gmail.com>, Oleg Nesterov <oleg@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, Roman Gushchin <guro@fb.com>, Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Shakeel Butt <shakeelb@google.com>, Waiman Long <longman@redhat.com>
 
-On Tue, Nov 20, 2018 at 08:48:59AM -0800, Tejun Heo wrote:
-> Hello,
->=20
-> On Tue, Nov 20, 2018 at 04:43:52PM +0000, Roman Gushchin wrote:
-> > > But that wouldn't udpate the cgroup's frozen state and generate
-> > > notifications, right?
-> >=20
-> > Why? The task will be eventually trapped into cgroup_enter_frozen(),
-> > and from there cgroup_update_frozen() will be called.
->=20
-> Because the cgroup is no longer frozen?
->=20
-> > You are right, that notification will not be issued, because the cgroup
-> > is not changing its state (frozen->frozen). I'm not sure that it makes
-> > sense to change the cgroup state back and forth in this case. Are there
-> > any reasons I'm missing?
->=20
-> Imagine the task being trapped in nfs or wherever and not getting into
-> the freezer for an extended period of time.
+ v4:
+  - Rebased to the latest for-4.21 branch of cgroup tree.
+  - Make each controller explicitly opt in to become bypassable by
+    setting the bypassable cgroup_subsys flag. Currently, only cpu
+    controller is made bypassable.
+  - Break out the cgroup_v2.rst documentation update as separate patch.
 
-Yeah, it's a good point. I've thought about it mostly in the fork() context=
-,
-where if freezing of a cgroup races with fork(), it makes no sense to
-switch the cgroup state back and forth. But that case is different, as
-the child will be trapped just on the return path from fork() call.
+ v3:
+  - Remove invalid cgroup subdirectory creation patch.
+  - Add use cases for the bypass mode and removing statements about
+    control files ownership in cgroup-v2.txt.
+  - Restrict bypass mode to non-domain (threaded) controllers only.
 
-Thanks!
+ v3 patch - https://lkml.org/lkml/2017/8/9/604
+
+This patchset introduces a new bypass mode to the cgroup v2 core to
+give more freedom and flexibility to controllers which choose to become
+bypassable the freedom to shape their own unique views of the virtual
+cgroup hierarchies that can best suit thier own use cases.
+
+Because of the inherent performance overhead in enabling cpu controller,
+it is made bypassable so that the controller only needs to be enabled
+at those cgroups that really need it instead of in every cgroups at a
+given layer if at least one of them needs it.
+
+The cpu controller performance problem is one of the major issues
+in migrating from cgroup v1 to v2.
+
+For example,
+
+  R - A(+) - B(#) - C(+)
+                  \ D(#)
+
+where "+" means the controller is enabled and "#" means the controller
+is bypassed. For this controller's perspective, the cgroups are
+equivalent to:
+
+  R - A|B|D - C
+
+Underneath the root R, cgoups A, B and D are controlled by one set of
+knobs and cgroup C is controlled by another set of knobs as a child of
+cgroups A|B|C.
+
+This patchset is layered on top of the "for-4.21" branch of Tejun's
+cgroup git tree.
+
+Patch 1 introduces a new bypass mode that allows a bypassable
+controller to be disabled in a cgroup, but to be re-enabled again in its
+children. This is enabled by writing the controller name prefixed with
+'#' to the "cgroup.subtree_control" file. Then all its children will
+have this controller in bypass mode.
+
+Patch 2 extends the bypass mode mechanism to allow those child cgroups
+that are put into the bypass mode for a particular bypassable controller
+by their parent to be re-enabled again by writing the controller name
+with the '+' prefix to the "cgroup.controllers" file.
+
+Patch 3 extends the debug controller to expose additional controller
+masks introduced by this patchset.
+
+Patch 4 makes the cpu controller bypassable.
+
+Patch 5 documents the new bypass mode in cgroup-v2.rst file.
+
+Waiman Long (5):
+  cgroup: subtree_control bypass mode for bypassable controllers
+  cgroup: Allow reenabling of controller in bypass mode
+  cgroup: Make debug controller report new controller masks
+  sched/core: Make cpu cgroup controller bypassable
+  cgroup: Document bypass mode
+
+ Documentation/admin-guide/cgroup-v2.rst |  66 +++++---
+ include/linux/cgroup-defs.h             |  26 +++-
+ kernel/cgroup/cgroup.c                  | 256 +++++++++++++++++++++++++-------
+ kernel/cgroup/debug.c                   |   2 +
+ kernel/sched/core.c                     |   1 +
+ 5 files changed, 276 insertions(+), 75 deletions(-)
+
+-- 
+1.8.3.1
+
