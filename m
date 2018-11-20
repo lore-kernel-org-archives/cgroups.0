@@ -1,44 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
- policy in blkio/io
-Date: Tue, 20 Nov 2018 08:28:16 -0800
-Message-ID: <20181120162816.GV2509588@devbig004.ftw2.facebook.com>
-References: <20181119103424.3853-1-paolo.valente@linaro.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v3 4/7] cgroup: cgroup v2 freezer
+Date: Tue, 20 Nov 2018 16:33:11 +0000
+Message-ID: <20181120163304.GA21462@tower.DHCP.thefacebook.com>
+References: <20181117003830.15344-1-guro@fb.com>
+ <20181117003830.15344-5-guro@fb.com>
+ <20181120162529.GU2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6pLLM1p+5cDN52i8L+l5I/RKjfgAuOq/8xc6t5eHQeA=;
-        b=Q1dmlJaqef4PhMUe8KijF7vIIIQS/5OPUDZ76zqN9VTRe3/eXoy3K4ifcH/33T68vy
-         ydDsdzCnml+hVBgexIcWmYgG5c19ZDDCoW+8WPcss4AhjWlpuO4AZDw5CDgrQ9vinafm
-         QYyzS2Ddi8K9t4Uqk4ZMZmMBRhaxeGJQDBiZtlo+9xDem/jc5cFPoyRQKMUlHGGvQmeW
-         0is3bdkuDj/ZhDl/9jTEOdjhwbfCrZ9LG5iZjounIfuwVo3XqGWSf6w9KG5BSOJfUxFo
-         04pPI4WxX0FmPvvEcltUAJtrmcvXDpJAlWx9juT3oINlVeRaIbVnoF6PGQm4cAdiQbQB
-         tbcQ==
-Content-Disposition: inline
-In-Reply-To: <20181119103424.3853-1-paolo.valente@linaro.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=1QWNwXk+d7gvnjiLHK8+lTv5uCYNdFQcPLt4U9dAXPg=;
+ b=MlFk8xXirmkwe93vaKWWevEovJ2oWhsgEmtylHyNGoZ4NlXyDWEqVTQqIcYuM1Bmd5oa
+ CzMz80ye4CaUe8XldnqndfFOWjkJ/yiTxSnEUF21areK7akSqe8e6upYWLuFTfELvsVr
+ oEwfyy6ZcYL9H4hgekOHTT5yV0gJjAZWj6o= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1QWNwXk+d7gvnjiLHK8+lTv5uCYNdFQcPLt4U9dAXPg=;
+ b=YzFnXuXTuAQ/WY5FSRJyeJneSTJ0rh87V69wRjWqJ5ZbWRAMmhdHbpfvzlw8Pic5xkmdRPA/fFcE2+TZ04JlHXojsZImGLgdnAeSwxSZ87rQVTBsEHwyIXWaCWF02I7KLQEQTZtiN4dyKGZ6xMzkRRF4c1PriTZMXYT/E5dZB5s=
+In-Reply-To: <20181120162529.GU2509588@devbig004.ftw2.facebook.com>
+Content-Language: en-US
+Content-ID: <BF46CAD78D143D44BEF5C9251F9041F1@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guroan@gmail.com>, Oleg Nesterov <oleg@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-Hello, Paolo.
+On Tue, Nov 20, 2018 at 08:25:29AM -0800, Tejun Heo wrote:
+> On Fri, Nov 16, 2018 at 04:38:27PM -0800, Roman Gushchin wrote:
+> > +void cgroup_freezer_migrate_task(struct task_struct *task,
+> > +				 struct cgroup *src, struct cgroup *dst)
+> > +{
+> > +	lockdep_assert_held(&css_set_lock);
+> > +
+> > +	/*
+> > +	 * Kernel threads are not supposed to be frozen at all.
+> > +	 */
+> > +	if (task->flags & PF_KTHREAD)
+> > +		return;
+> > +
+> > +	/*
+> > +	 * Adjust counters of freezing and frozen tasks.
+> > +	 */
+> > +	if (test_bit(CGRP_FREEZE, &src->flags)) {
+> > +		src->freezer.nr_tasks_to_freeze--;
+> > +		WARN_ON_ONCE(src->freezer.nr_tasks_to_freeze < 0);
+> > +	}
+> > +
+> > +	/*
+> > +	 * If the task is frozen, let's bump nr_tasks_to_freeze even
+> > +	 * if the target cgroup isn't frozen: the counter will be decreased
+> > +	 * in cgroup_leave_frozen().
+> > +	 */
+> > +	if (test_bit(CGRP_FREEZE, &dst->flags) || task->frozen)
+> > +		dst->freezer.nr_tasks_to_freeze++;
+> > +
+> > +	if (task->frozen) {
+> > +		src->freezer.nr_frozen_tasks--;
+> > +		dst->freezer.nr_frozen_tasks++;
+> > +		WARN_ON_ONCE(src->freezer.nr_frozen_tasks < 0);
+> > +		WARN_ON_ONCE(dst->freezer.nr_frozen_tasks >
+> > +			     dst->freezer.nr_tasks_to_freeze);
+> > +	}
+>=20
+> If a non-frozen task is being moved into a frozen cgroup, shouldn't
+> that also trigger frozen state update?
 
-On Mon, Nov 19, 2018 at 11:34:14AM +0100, Paolo Valente wrote:
-> - if all entities produce the same output, the this common output is
->  shown only once;
-> - if the outputs differ, then every per-entity output is shown,
->  followed by the name of the entity that produced that output.
+It does! Just below these lines:
 
-So, this doesn't make sense to me.  One set of numbers is meaningful,
-the other not and the user doesn't have a way to tell which one is.
-It makes no sense to present both numbers.
+	/*
+	 * If the task isn't in the desired state, force it to it.
+	 */
+	if (task->frozen !=3D test_bit(CGRP_FREEZE, &dst->flags))
+		cgroup_freeze_task(task, test_bit(CGRP_FREEZE, &dst->flags));
 
-Thanks.
 
--- 
-tejun
+It's also covered by the 5th kselftest.
+
+Thanks!
