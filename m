@@ -1,58 +1,60 @@
-From: Roman Gushchin <guro@fb.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v3 4/7] cgroup: cgroup v2 freezer
-Date: Tue, 20 Nov 2018 16:43:52 +0000
-Message-ID: <20181120164349.GB21462@tower.DHCP.thefacebook.com>
+Date: Tue, 20 Nov 2018 08:48:59 -0800
+Message-ID: <20181120164859.GY2509588@devbig004.ftw2.facebook.com>
 References: <20181117003830.15344-1-guro@fb.com>
  <20181117003830.15344-5-guro@fb.com>
  <20181120162529.GU2509588@devbig004.ftw2.facebook.com>
  <20181120163304.GA21462@tower.DHCP.thefacebook.com>
  <20181120163604.GX2509588@devbig004.ftw2.facebook.com>
+ <20181120164349.GB21462@tower.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=ofVL+ggquv88hnR3uyRp1SYaszN31SFysNi2uYqIwVA=;
- b=VE/XxHYyonmm0hByt8o/fSkfRaa1cM8Jqb92Rds/+FJnfmPIHEhQVMGM/jBfhMHJmK/O
- BVd4YvppRl9ksYRfHCMITfup37DRpK6OQUTicePJ4ch88TbJ0ZjrFWd2JQ8onwqUkbsB
- U4tC0wuckpzm+w5no2BnWCdy0zfzC3/qnIg= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ofVL+ggquv88hnR3uyRp1SYaszN31SFysNi2uYqIwVA=;
- b=dt7sULZfEnlppAKSWl6Wd5TH1yNycNSWopbdmN81z9L+PV9QePm/QonSIc3wJTQAYUfv9rHyHu0KHiEtmHVYYyBd6S8KckD7LnJZydwaV2xzhFUDUdX9nx4y8+YzDpnxuxV7pdN2TEhnitKEGshVyj+3Jzu8Kk+LyvhgWo2Q+f0=
-In-Reply-To: <20181120163604.GX2509588@devbig004.ftw2.facebook.com>
-Content-Language: en-US
-Content-ID: <5BDF97299AA57540AA815ECADEB34026@namprd15.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=8CU25lHrO1FY40uNdnhUc0zkm2QTX3yunP2lI1VdBs8=;
+        b=Z18SQVnDdQYOEqxh50XaL/a0dCPfQDq3LYrNEJEsQ4VgKNuNiHTSp/aWZEW+8y9xnZ
+         wlJD9Ecum4v9RaJZeSKkaSYUUX0tjJOHh2sJqcYTwYg44yGi7i9jZ92miXUIx0vn4Mh+
+         DEvl0K0xChGinDY8TUwnBeOohpWKrWobfcnCVt2d/pspLSxYxz42cLXD65RKKp7LL4VF
+         EPc73qV1x/fTMOFGNsnkFwc4gM+QHgHbYeaRKaRwUv+Xk0Q9hyC5p9/hHdksrT5wZl6b
+         HM3xGjrW3ooHf9r0ytPyicI3KAOGMILG+R+668HI2OM92/Ly+/MlVvnHJqKjjqdc9UC2
+         BfCg==
+Content-Disposition: inline
+In-Reply-To: <20181120164349.GB21462@tower.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
 Cc: Roman Gushchin <guroan@gmail.com>, Oleg Nesterov <oleg@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-On Tue, Nov 20, 2018 at 08:36:04AM -0800, Tejun Heo wrote:
-> On Tue, Nov 20, 2018 at 04:33:11PM +0000, Roman Gushchin wrote:
-> > > If a non-frozen task is being moved into a frozen cgroup, shouldn't
-> > > that also trigger frozen state update?
-> >=20
-> > It does! Just below these lines:
-> >=20
-> > 	/*
-> > 	 * If the task isn't in the desired state, force it to it.
-> > 	 */
-> > 	if (task->frozen !=3D test_bit(CGRP_FREEZE, &dst->flags))
-> > 		cgroup_freeze_task(task, test_bit(CGRP_FREEZE, &dst->flags));
->=20
-> But that wouldn't udpate the cgroup's frozen state and generate
-> notifications, right?
+Hello,
 
-Why? The task will be eventually trapped into cgroup_enter_frozen(),
-and from there cgroup_update_frozen() will be called.
+On Tue, Nov 20, 2018 at 04:43:52PM +0000, Roman Gushchin wrote:
+> > But that wouldn't udpate the cgroup's frozen state and generate
+> > notifications, right?
+> 
+> Why? The task will be eventually trapped into cgroup_enter_frozen(),
+> and from there cgroup_update_frozen() will be called.
 
-You are right, that notification will not be issued, because the cgroup
-is not changing its state (frozen->frozen). I'm not sure that it makes
-sense to change the cgroup state back and forth in this case. Are there
-any reasons I'm missing?
+Because the cgroup is no longer frozen?
 
-Thanks!
+> You are right, that notification will not be issued, because the cgroup
+> is not changing its state (frozen->frozen). I'm not sure that it makes
+> sense to change the cgroup state back and forth in this case. Are there
+> any reasons I'm missing?
+
+Imagine the task being trapped in nfs or wherever and not getting into
+the freezer for an extended period of time.  That'd make the frozen
+state reporting observably and obviously wrong when seen from userland
+which can lead to other issues.
+
+But, above all, because the cgroup is not frozen - it may have active
+running tasks in it at that point.
+
+Thanks.
+
+-- 
+tejun
