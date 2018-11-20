@@ -1,61 +1,62 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH cgroup/for-4.21 1/2] cpuset: Minor cgroup2 interface
- updates
-Date: Tue, 20 Nov 2018 18:19:20 +0100
-Message-ID: <20181120171920.GA2131@hirez.programming.kicks-ass.net>
-References: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
- <20181120124624.GL2131@hirez.programming.kicks-ass.net>
- <20181120154410.GQ2509588@devbig004.ftw2.facebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v3 4/7] cgroup: cgroup v2 freezer
+Date: Tue, 20 Nov 2018 17:39:03 +0000
+Message-ID: <20181120173858.GC21462@tower.DHCP.thefacebook.com>
+References: <20181117003830.15344-1-guro@fb.com>
+ <20181117003830.15344-5-guro@fb.com>
+ <20181120162529.GU2509588@devbig004.ftw2.facebook.com>
+ <20181120163304.GA21462@tower.DHCP.thefacebook.com>
+ <20181120163604.GX2509588@devbig004.ftw2.facebook.com>
+ <20181120164349.GB21462@tower.DHCP.thefacebook.com>
+ <20181120164859.GY2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=I+8Ok8d3U7ODhT6w9ubsS4qTzg7vYuk5vhO0Db4ECIs=; b=X/JhevL5RIpdVTkxKR652x/Bv
-        JCu18806N+sEXYqj7D8zNEIM/ZD2VNlb2UQq57PoBEzCmKjYCarQI27OjG8a2kG1mBYoSteoi3QOT
-        JBFQDou1md9Ap9t6x7VjAmxUF1OF4jtEIZ2R/KRRrx0niyNOGZ8JQdE15cLnL+D/hz5/EJ4JmMOx7
-        Kx0suzHHwMxDUhgxT0K5vOc4G22VHMNW/XCzAxpbUCwqjhYupxbWbbub3NuXqudLyQaTo7tUVV/lX
-        j4EhMGnj5k4a0wi51xxMNFl3S6NRaQ1uLu+SnaMRw2e+9dYmqq8/urZbH8t/hzv+y6VWXi+WaWZKb
-    
-Content-Disposition: inline
-In-Reply-To: <20181120154410.GQ2509588@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=pLJmpNR42xWZjxlbuIeDtN22i4yM9M666IQ0eJ+zUWE=;
+ b=eeZNHoEayLd+/OY/3OCsM130voVvzOjUGlyozABQBQRTamNvk+NPplKvc0ZI9FlcoD0U
+ E2hkx/DJ7DHTtjJX+lim+ViqW2s9fWooCv7pWyYFbQsY4PKiS6LXK57sBqtziZpyL9Sb
+ /RKnEsU7p7Y/4JxyaFuPLccQ42lfoqEl6Nc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pLJmpNR42xWZjxlbuIeDtN22i4yM9M666IQ0eJ+zUWE=;
+ b=MMI2nc565gQ6iZaY393AK5mY2Ygac1Lv6kRflUhgZ/A+AXR7puxaEJzu4Ze4qqBUaSuhD+bZVnt18gmzQ4VWz0F3wBxoWo00V4PLIGmCN6lrUDsea0fCK0smZOfesIM7+SsHZPNH04y2wbPT6pzZgpk+N1Zd2eNJBzjjQH1KBjA=
+In-Reply-To: <20181120164859.GY2509588@devbig004.ftw2.facebook.com>
+Content-Language: en-US
+Content-ID: <ED3B4FA8405D0345AAFB57A5FA827BF5@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: Waiman Long <longman@redhat.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Roman Gushchin <guroan@gmail.com>, Oleg Nesterov <oleg@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-On Tue, Nov 20, 2018 at 07:44:10AM -0800, Tejun Heo wrote:
-> Hello, Peter.
-> 
-> On Tue, Nov 20, 2018 at 01:46:24PM +0100, Peter Zijlstra wrote:
-> > Why though? The Changelog doesn't give rationale for the actual changes.
-> 
-> Ah yeah, sorry about that.
-> 
-> > And I'm not sure I agree with either one of them.
-> > 
-> > The partition is a scheduling feature;
-> 
-> So is everything with cpuset.cpus prefix.  They're all modifying how
-> scheduler handles the cpus.
+On Tue, Nov 20, 2018 at 08:48:59AM -0800, Tejun Heo wrote:
+> Hello,
+>=20
+> On Tue, Nov 20, 2018 at 04:43:52PM +0000, Roman Gushchin wrote:
+> > > But that wouldn't udpate the cgroup's frozen state and generate
+> > > notifications, right?
+> >=20
+> > Why? The task will be eventually trapped into cgroup_enter_frozen(),
+> > and from there cgroup_update_frozen() will be called.
+>=20
+> Because the cgroup is no longer frozen?
+>=20
+> > You are right, that notification will not be issued, because the cgroup
+> > is not changing its state (frozen->frozen). I'm not sure that it makes
+> > sense to change the cgroup state back and forth in this case. Are there
+> > any reasons I'm missing?
+>=20
+> Imagine the task being trapped in nfs or wherever and not getting into
+> the freezer for an extended period of time.
 
-Fair enough I suppose.
+Yeah, it's a good point. I've thought about it mostly in the fork() context=
+,
+where if freezing of a cgroup races with fork(), it makes no sense to
+switch the cgroup state back and forth. But that case is different, as
+the child will be trapped just on the return path from fork() call.
 
-> > and I like 0/1 much better to type, so why not allow that?
-> 
-> Mostly for consistency and it's generally better to keep interfaces
-> minimal - e.g. what if we need to add support for more key words to
-> the file?  Would we assign incrementing integers to them?
-
-Or just not give them a numeric alias at all.
-
-But numbers are more minimal than words, so lets just get rid of them
-pesky word things ;-)
-
-Alternatively; we could use kstrtobool(). That accepts a metric ton of
-input ;-)
+Thanks!
