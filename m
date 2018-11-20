@@ -1,60 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 4/7] cgroup: cgroup v2 freezer
-Date: Tue, 20 Nov 2018 08:48:59 -0800
-Message-ID: <20181120164859.GY2509588@devbig004.ftw2.facebook.com>
-References: <20181117003830.15344-1-guro@fb.com>
- <20181117003830.15344-5-guro@fb.com>
- <20181120162529.GU2509588@devbig004.ftw2.facebook.com>
- <20181120163304.GA21462@tower.DHCP.thefacebook.com>
- <20181120163604.GX2509588@devbig004.ftw2.facebook.com>
- <20181120164349.GB21462@tower.DHCP.thefacebook.com>
-Mime-Version: 1.0
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
+ policy in blkio/io
+Date: Tue, 20 Nov 2018 17:50:14 +0100
+Message-ID: <25296DAE-73EC-46CC-9A98-A8B7E9017BB7@linaro.org>
+References: <20181119103424.3853-1-paolo.valente@linaro.org>
+ <20181120162816.GV2509588@devbig004.ftw2.facebook.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.0 \(3445.100.39\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=8CU25lHrO1FY40uNdnhUc0zkm2QTX3yunP2lI1VdBs8=;
-        b=Z18SQVnDdQYOEqxh50XaL/a0dCPfQDq3LYrNEJEsQ4VgKNuNiHTSp/aWZEW+8y9xnZ
-         wlJD9Ecum4v9RaJZeSKkaSYUUX0tjJOHh2sJqcYTwYg44yGi7i9jZ92miXUIx0vn4Mh+
-         DEvl0K0xChGinDY8TUwnBeOohpWKrWobfcnCVt2d/pspLSxYxz42cLXD65RKKp7LL4VF
-         EPc73qV1x/fTMOFGNsnkFwc4gM+QHgHbYeaRKaRwUv+Xk0Q9hyC5p9/hHdksrT5wZl6b
-         HM3xGjrW3ooHf9r0ytPyicI3KAOGMILG+R+668HI2OM92/Ly+/MlVvnHJqKjjqdc9UC2
-         BfCg==
-Content-Disposition: inline
-In-Reply-To: <20181120164349.GB21462@tower.DHCP.thefacebook.com>
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=+Wf6CDJUPs+eWjtmr8Hr9KG3FFVm+nlkqZS2f8RgM/w=;
+        b=bR53PuEkjfKVO5TfuQ57wxNpCGss5PElS42NlnIjUGGw8biMobE8VfD8A7yOhyg7TC
+         evXEdHcDLEQS1PR8hyjN3k1q1TpLWTTPVIMHma0fR4A9eq/FXWqA9rrXZQ6+52BApAWS
+         dXn5fVB13ahQLsouU+4AlZzMipjOTQmhOgXT0=
+In-Reply-To: <20181120162816.GV2509588@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Oleg Nesterov <oleg@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
 
-Hello,
 
-On Tue, Nov 20, 2018 at 04:43:52PM +0000, Roman Gushchin wrote:
-> > But that wouldn't udpate the cgroup's frozen state and generate
-> > notifications, right?
-> 
-> Why? The task will be eventually trapped into cgroup_enter_frozen(),
-> and from there cgroup_update_frozen() will be called.
 
-Because the cgroup is no longer frozen?
+> Il giorno 20 nov 2018, alle ore 17:28, Tejun Heo <tj@kernel.org> ha =
+scritto:
+>=20
+> Hello, Paolo.
+>=20
+> On Mon, Nov 19, 2018 at 11:34:14AM +0100, Paolo Valente wrote:
+>> - if all entities produce the same output, the this common output is
+>> shown only once;
+>> - if the outputs differ, then every per-entity output is shown,
+>> followed by the name of the entity that produced that output.
+>=20
+> So, this doesn't make sense to me.  One set of numbers is meaningful,
+> the other not and the user doesn't have a way to tell which one is.
+> It makes no sense to present both numbers.
+>=20
 
-> You are right, that notification will not be issued, because the cgroup
-> is not changing its state (frozen->frozen). I'm not sure that it makes
-> sense to change the cgroup state back and forth in this case. Are there
-> any reasons I'm missing?
+I do agree that these numbers may confuse.  Before discussing how to
+do this better, let me tell you why we are showing them.
 
-Imagine the task being trapped in nfs or wherever and not getting into
-the freezer for an extended period of time.  That'd make the frozen
-state reporting observably and obviously wrong when seen from userland
-which can lead to other issues.
+In the first place, the need for a diversified output showed up in the
+following case.  Given a group using the blkio/io controller, and two
+drives
+- one with legacy block and cfq
+- one with blk-mq and bfq
+there will be different statistics for each scheduler, for the same
+interface files.
 
-But, above all, because the cgroup is not frozen - it may have active
-running tasks in it at that point.
+Then we understood that exactly the same happens with throttling, in
+case the latter is activated on different devices w.r.t. bfq.
 
-Thanks.
+In addition, the same may happen, in the near future, with the
+bandwidth controller Josef is working on.  If the controller can be
+configured per device, as with throttling, then statistics may differ,
+for the same interface files, between bfq, throttling and that
+controller.
 
--- 
-tejun
+More general examples could be made considering that this extension is
+for the generic cgroup interface.
+
+Of course, suggestions for a clearer way to show these numbers are
+more than welcome!  Maybe involved device identifiers can be somehow
+gathered by the entities providing these numbers, and then shown?  In
+this respect, consider that, even without this extension, one still
+has the fundamental problem of not knowing to which devices numbers
+apply (unless I'm missing something else).
+
+Thanks,
+Paolo
+
+> Thanks.
+>=20
+> --=20
+> tejun
+
