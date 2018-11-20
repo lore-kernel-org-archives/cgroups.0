@@ -1,134 +1,47 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v3 7/7] cgroup: document cgroup v2 freezer interface
-Date: Mon, 19 Nov 2018 17:42:48 +0000
-Message-ID: <20181119174241.GA7273@tower.DHCP.thefacebook.com>
-References: <20181117003830.15344-1-guro@fb.com>
- <20181117003830.15344-8-guro@fb.com> <20181117080227.GA22672@rapoport-lnx>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH cgroup/for-4.21 1/2] cpuset: Minor cgroup2 interface
+ updates
+Date: Tue, 20 Nov 2018 13:46:24 +0100
+Message-ID: <20181120124624.GL2131@hirez.programming.kicks-ass.net>
+References: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=0GH69XRohz9tDKf3ZKzTGh11HkwB0aZ27psb4gvcZD8=;
- b=ZHp0VNAqUARrnkgKqV1Bbgpx+3UPxw4oDDq76mQvL6LHpbHjSOS4xNfvbFw34/p4Yyjt
- JMZjF9RkfE4W0jClhZI72lM5iTmq6mWX5p/mfYUTS6zRyKv4gpt99NJ3dCyRrig53IdC
- cauounKoscAbUYYlX/UFoYJ8QMAXfTkBVKo= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0GH69XRohz9tDKf3ZKzTGh11HkwB0aZ27psb4gvcZD8=;
- b=Mav3XKjrZa4nDgjupgahMoRFnACn43LCyEt3yDQpynoDTR7zn3wKhyhKTWlzoNVeQLXsUkidFef+3F8uDECayC9YVpiqk1Z3gl3NuElkJcx9T/av0gtf01Old5O/isEwVrCJ3Rb8a8IraWaYUHPo1iZeE05dn2EfG8wKqiD7+mc=
-In-Reply-To: <20181117080227.GA22672@rapoport-lnx>
-Content-Language: en-US
-Content-ID: <1E0C6B5BD81F3242BFB23BFB36F079BD@namprd15.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=Hx+N0qqyp8Kutna+wQulsJnrAVNatTI43rCTFTdq0qk=; b=f3HNuLdmTaWL6U6rNKK0XscSJ
+        ZBfbc3GRz8rgcfXZeSe0LlAINtRcvwb7puUf7gCuRUfLDJn3U9vyhBNt0XEbdSMnsoLB1RFVSMlKB
+        rRFSui1FQYkSrdrklS+gqdxKAk8cfmF+D+/Wxscox/Z1RHHuXiqaNFE/SIGsU0um6eJWOarofYWeJ
+        06lXtzh0kmYd4CXEkyqJT08b9mFmp4zwgpAK/pxxJOydRwQiCNqBd7KBhTTjSzMWHKV6zPGfTKOld
+        k3NGw/D71OUlBpwmZvYxBm/+z4J7hNpjchRwhwjk7oeQgrQ8uEDJbTb3RbPGzsrDbm9ztwT5RtxPl
+      
+Content-Disposition: inline
+In-Reply-To: <20181113201339.GN2509588@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Mike Rapoport <rppt@linux.ibm.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Waiman Long <longman@redhat.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Nov 17, 2018 at 12:02:28AM -0800, Mike Rapoport wrote:
-> Hi,
->=20
-> On Fri, Nov 16, 2018 at 04:38:30PM -0800, Roman Gushchin wrote:
-> > Describe cgroup v2 freezer interface in the cgroup v2 admin guide.
-> >=20
-> > Signed-off-by: Roman Gushchin <guro@fb.com>
-> > Cc: Tejun Heo <tj@kernel.org>
-> > Cc: linux-doc@vger.kernel.org
-> > Cc: kernel-team@fb.com
-> > ---
-> >  Documentation/admin-guide/cgroup-v2.rst | 26 +++++++++++++++++++++++++
-> >  1 file changed, 26 insertions(+)
-> >=20
-> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/ad=
-min-guide/cgroup-v2.rst
-> > index 184193bcb262..a065c0bed88c 100644
-> > --- a/Documentation/admin-guide/cgroup-v2.rst
-> > +++ b/Documentation/admin-guide/cgroup-v2.rst
-> > @@ -862,6 +862,8 @@ All cgroup core files are prefixed with "cgroup."
-> >  	  populated
-> >  		1 if the cgroup or its descendants contains any live
-> >  		processes; otherwise, 0.
-> > +	  frozen
-> > +		1 if the cgroup is frozen; otherwise, 0.
-> >=20
-> >    cgroup.max.descendants
-> >  	A read-write single value files.  The default is "max".
-> > @@ -895,6 +897,30 @@ All cgroup core files are prefixed with "cgroup."
-> >  		A dying cgroup can consume system resources not exceeding
-> >  		limits, which were active at the moment of cgroup deletion.
-> >=20
-> > +  cgroup.freeze
-> > +	A read-write single value file which exists on non-root cgroups.
-> > +	Allowed values are "0" and "1". The default is "0".
-> > +
-> > +	Writing "1" to the file causes freezing of the cgroup and all
-> > +	descendant cgroups. This means that all belonging processes will
-> > +	be stopped and will not run until the cgroup will be explicitly
-> > +	unfrozen. Freezing of the cgroup may take some time; when the process
->=20
-> "when the process is complete" sounds somewhat ambiguous, it's unclear
-> whether freezing is complete or the process that's being frozen is
-> complete.
->=20
-> Maybe "when this action is completed"?
->=20
-> > +	is complete, the "frozen" value in the cgroup.events control file
-> > +	will be updated and the corresponding notification will be issued.
->=20
-> Can you please clarify how exactly cgroup.events would be updated?
->=20
-> > +	Cgroup can be frozen either by its own settings, either by settings
->=20
->       ^ A cgroup ... and maybe there are more "a" and "the" that should b=
-e
-> fixed, it's hard for me to tell.
->=20
-> Also, I believe "either ..., or ..." sounds better than "either ...,
-> either ..."
->=20
-> > +	of any ancestor cgroups. If any of ancestor cgroups is frozen, the
-> > +	cgroup will remain frozen.
-> > +
-> > +	Processes in the frozen cgroup can be killed by a fatal signal.
-> > +	They also can enter and leave a frozen cgroup: either by an explicit
-> > +	move by a user, either if freezing of the cgroup races with fork().
->=20
-> ditto
->=20
-> > +	If a cgroup is moved to a frozen cgroup, it stops. If a process is
->=20
->             ^ process?
->=20
-> > +	moving out of a frozen cgroup, it becomes running.
->=20
->        ^ moved
+On Tue, Nov 13, 2018 at 12:13:39PM -0800, Tejun Heo wrote:
+> From b1e3aeb11c5e86ee0988a038c4e7682d6beaa977 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj@kernel.org>
+> Date: Tue, 13 Nov 2018 12:03:33 -0800
+> 
+> * Rename the partition file from "cpuset.sched.partition" to
+>   "cpuset.cpus.partition".
+> 
+> * When writing to the partition file, drop "0" and "1" and only accept
+>   "member" and "root".
 
-Hello, Mike!
+Why though? The Changelog doesn't give rationale for the actual changes.
 
-Thanks for the review! I agree with all comments above; fixes queued for v4=
-.
+And I'm not sure I agree with either one of them.
 
->=20
-> > +	Frozen status of a cgroup doesn't affect any cgroup tree operations:
-> > +	it's possible to delete a frozen (and empty) cgroup, as well as
-> > +	create new sub-cgroups.
->=20
-> Maybe it's also worth adding that freezing a process has no effect on its
-> memory consumption, at least directly.
+The partition is a scheduling feature; and I like 0/1 much better to
+type, so why not allow that?
 
-Hm, isn't it the expected behavior?
-
-In any case, I assume that cgroup.freeze knob description is not the best p=
-lace
-for a such explanations. Maybe it's better to add a standalone paragraph wi=
-th
-the description of the frozen process state, what's expected to work, what'=
-s
-not, etc. I'd return to this question a bit later, when we'll agree on the =
-user
-interface and the implementation.
-
-Thanks!
