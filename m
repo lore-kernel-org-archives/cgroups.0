@@ -1,119 +1,131 @@
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH RFC 4/5] drm/amdgpu: Add accounting of command submission
- via DRM cgroup
-Date: Wed, 21 Nov 2018 11:03:28 +0100
-Message-ID: <56833f60-1636-d149-c9b0-c021a6ad99d1@gmail.com>
-References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20181120185814.13362-5-Kenny.Ho@amd.com> <87r2ff79he.fsf@anholt.net>
-Reply-To: christian.koenig-5C7GfCeVMHo@public.gmane.org
+From: Michael Kerrisk <mtk.manpages@gmail.com>
+Subject: Re: [PATCH v4 0/5] cgroup: Introducing bypass mode
+Date: Wed, 21 Nov 2018 15:27:15 +0100
+Message-ID: <CAHO5Pa1axpoweQuO7A9K2yv+HvSkVXCkXS5f6Ag3fA1_SjPcuA@mail.gmail.com>
+References: <1542736289-31338-1-git-send-email-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1817031157=="
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <87r2ff79he.fsf-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>
-Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-
-This is a multi-part message in MIME format.
---===============1817031157==
-Content-Type: multipart/alternative;
- boundary="------------A9E74F24E04BBDB26A778365"
-Content-Language: en-US
-
-This is a multi-part message in MIME format.
---------------A9E74F24E04BBDB26A778365
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=34QTK7OeG1TZywdi1Tg4zHkVOpYjEGspENTdEZheEyM=;
+        b=M2tigcFW240lX227EHTuCKKAMFHhLYO5UMQJdpXtOAzHhQaoFmPCLAP6iPS+WN7v06
+         DRDs7ioEZ7eEXawBnrA84ST7Kqizu4xNb8KRWx1z1U0rya83pYyuh0i0ppHr1oa78x2I
+         BJS3B0Wjdq+Qlf3zm54nM8e53WYx9hCtdL3apm7TGsourckflNDUFjVUrj84+hE5Gwn9
+         ObWvIXIUxwAh4sxd2ijkoIAvjmSn1RFxlSn5jkdfKXJUxtiB2+wwUxUUxegUXBo5IFVn
+         UUl1t4Q4KNCotMW8HmZdb0AXPQ4ky+Agbi045pNgvIe0ZtxlHhN+5CzO/14Rtij+l8MT
+         UGrQ==
+In-Reply-To: <1542736289-31338-1-git-send-email-longman@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: longman@redhat.com
+Cc: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-doc <linux-doc@vger.kernel.org>, guro@fb.com, axboe@kernel.dk, Andrew Morton <akpm@linux-foundation.org>, dennis@kernel.org, shakeelb@google.com, Linux API <linux-api@vger.kernel.org>, Michael Kerrisk <mtk.manpages@gmail.com>
 
-Am 20.11.18 um 21:57 schrieb Eric Anholt:
-> Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org> writes:
+[CC += linux-api@vger.kernel.org]
+
+Hi Waiman,
+
+Since this is a kernel-user-space API change, for all future
+iterations of this patch, please CC linux-api@.
+
+The kernel source file Documentation/SubmitChecklist notes that all
+Linux kernel patches that change userspace interfaces should be CCed
+to linux-api@vger.kernel.org, so that the various parties who are
+interested in API changes are informed. For further information, see
+https://www.kernel.org/doc/man-pages/linux-api-ml.html
+
+Thanks,
+
+Michael
+On Tue, Nov 20, 2018 at 8:45 PM Waiman Long <longman@redhat.com> wrote:
 >
->> Account for the number of command submitted to amdgpu by type on a per
->> cgroup basis, for the purpose of profiling/monitoring applications.
-> For profiling other drivers, I've used perf tracepoints, which let you
-> get useful timelines of multiple events in the driver.  Have you made
-> use of this stat for productive profiling?
-
-Yes, but this is not related to profiling at all.
-
-What we want to do is to limit the resource usage of processes.
-
-Regards,
-Christian.
-
+>  v4:
+>   - Rebased to the latest for-4.21 branch of cgroup tree.
+>   - Make each controller explicitly opt in to become bypassable by
+>     setting the bypassable cgroup_subsys flag. Currently, only cpu
+>     controller is made bypassable.
+>   - Break out the cgroup_v2.rst documentation update as separate patch.
 >
-> _______________________________________________
-> amd-gfx mailing list
-> amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-> https://lists.freedesktop.org/mailman/listinfo/amd-gfx
+>  v3:
+>   - Remove invalid cgroup subdirectory creation patch.
+>   - Add use cases for the bypass mode and removing statements about
+>     control files ownership in cgroup-v2.txt.
+>   - Restrict bypass mode to non-domain (threaded) controllers only.
+>
+>  v3 patch - https://lkml.org/lkml/2017/8/9/604
+>
+> This patchset introduces a new bypass mode to the cgroup v2 core to
+> give more freedom and flexibility to controllers which choose to become
+> bypassable the freedom to shape their own unique views of the virtual
+> cgroup hierarchies that can best suit thier own use cases.
+>
+> Because of the inherent performance overhead in enabling cpu controller,
+> it is made bypassable so that the controller only needs to be enabled
+> at those cgroups that really need it instead of in every cgroups at a
+> given layer if at least one of them needs it.
+>
+> The cpu controller performance problem is one of the major issues
+> in migrating from cgroup v1 to v2.
+>
+> For example,
+>
+>   R - A(+) - B(#) - C(+)
+>                   \ D(#)
+>
+> where "+" means the controller is enabled and "#" means the controller
+> is bypassed. For this controller's perspective, the cgroups are
+> equivalent to:
+>
+>   R - A|B|D - C
+>
+> Underneath the root R, cgoups A, B and D are controlled by one set of
+> knobs and cgroup C is controlled by another set of knobs as a child of
+> cgroups A|B|C.
+>
+> This patchset is layered on top of the "for-4.21" branch of Tejun's
+> cgroup git tree.
+>
+> Patch 1 introduces a new bypass mode that allows a bypassable
+> controller to be disabled in a cgroup, but to be re-enabled again in its
+> children. This is enabled by writing the controller name prefixed with
+> '#' to the "cgroup.subtree_control" file. Then all its children will
+> have this controller in bypass mode.
+>
+> Patch 2 extends the bypass mode mechanism to allow those child cgroups
+> that are put into the bypass mode for a particular bypassable controller
+> by their parent to be re-enabled again by writing the controller name
+> with the '+' prefix to the "cgroup.controllers" file.
+>
+> Patch 3 extends the debug controller to expose additional controller
+> masks introduced by this patchset.
+>
+> Patch 4 makes the cpu controller bypassable.
+>
+> Patch 5 documents the new bypass mode in cgroup-v2.rst file.
+>
+> Waiman Long (5):
+>   cgroup: subtree_control bypass mode for bypassable controllers
+>   cgroup: Allow reenabling of controller in bypass mode
+>   cgroup: Make debug controller report new controller masks
+>   sched/core: Make cpu cgroup controller bypassable
+>   cgroup: Document bypass mode
+>
+>  Documentation/admin-guide/cgroup-v2.rst |  66 +++++---
+>  include/linux/cgroup-defs.h             |  26 +++-
+>  kernel/cgroup/cgroup.c                  | 256 +++++++++++++++++++++++++-------
+>  kernel/cgroup/debug.c                   |   2 +
+>  kernel/sched/core.c                     |   1 +
+>  5 files changed, 276 insertions(+), 75 deletions(-)
+>
+> --
+> 1.8.3.1
+>
 
 
---------------A9E74F24E04BBDB26A778365
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body text="#000000" bgcolor="#FFFFFF">
-    <div class="moz-cite-prefix">Am 20.11.18 um 21:57 schrieb Eric
-      Anholt:<br>
-    </div>
-    <blockquote type="cite" cite="mid:87r2ff79he.fsf-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org">
-      <pre class="moz-quote-pre" wrap="">Kenny Ho <a class="moz-txt-link-rfc2396E" href="mailto:Kenny.Ho-5C7GfCeVMHo@public.gmane.org">&lt;Kenny.Ho-5C7GfCeVMHo@public.gmane.org&gt;</a> writes:
-
-</pre>
-      <blockquote type="cite">
-        <pre class="moz-quote-pre" wrap="">Account for the number of command submitted to amdgpu by type on a per
-cgroup basis, for the purpose of profiling/monitoring applications.
-</pre>
-      </blockquote>
-      <pre class="moz-quote-pre" wrap="">
-For profiling other drivers, I've used perf tracepoints, which let you
-get useful timelines of multiple events in the driver.  Have you made
-use of this stat for productive profiling?
-</pre>
-    </blockquote>
-    <br>
-    Yes, but this is not related to profiling at all.<br>
-    <br>
-    What we want to do is to limit the resource usage of processes.<br>
-    <br>
-    Regards,<br>
-    Christian.<br>
-    <br>
-    <blockquote type="cite" cite="mid:87r2ff79he.fsf-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org"><br>
-      <fieldset class="mimeAttachmentHeader"></fieldset>
-      <pre class="moz-quote-pre" wrap="">_______________________________________________
-amd-gfx mailing list
-<a class="moz-txt-link-abbreviated" href="mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org">amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org</a>
-<a class="moz-txt-link-freetext" href="https://lists.freedesktop.org/mailman/listinfo/amd-gfx">https://lists.freedesktop.org/mailman/listinfo/amd-gfx</a>
-</pre>
-    </blockquote>
-    <br>
-  </body>
-</html>
-
---------------A9E74F24E04BBDB26A778365--
-
---===============1817031157==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
-
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1kLWdmeCBt
-YWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5m
-cmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4Cg==
-
---===============1817031157==--
+-- 
+Michael Kerrisk Linux man-pages maintainer;
+http://www.kernel.org/doc/man-pages/
+Author of "The Linux Programming Interface", http://blog.man7.org/
