@@ -1,131 +1,248 @@
-From: Michael Kerrisk <mtk.manpages@gmail.com>
-Subject: Re: [PATCH v4 0/5] cgroup: Introducing bypass mode
-Date: Wed, 21 Nov 2018 15:27:15 +0100
-Message-ID: <CAHO5Pa1axpoweQuO7A9K2yv+HvSkVXCkXS5f6Ag3fA1_SjPcuA@mail.gmail.com>
-References: <1542736289-31338-1-git-send-email-longman@redhat.com>
+From: "Ho, Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+Subject: Re: [PATCH RFC 2/5] cgroup: Add mechanism to register vendor specific
+ DRM devices
+Date: Wed, 21 Nov 2018 22:07:22 +0000
+Message-ID: <DM5PR12MB1226238684747E76C7FE217D83DA0@DM5PR12MB1226.namprd12.prod.outlook.com>
+References: <20181120185814.13362-1-Kenny.Ho@amd.com>
+ <20181120185814.13362-3-Kenny.Ho@amd.com>
+ <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
+ <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>,
+ <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=34QTK7OeG1TZywdi1Tg4zHkVOpYjEGspENTdEZheEyM=;
-        b=M2tigcFW240lX227EHTuCKKAMFHhLYO5UMQJdpXtOAzHhQaoFmPCLAP6iPS+WN7v06
-         DRDs7ioEZ7eEXawBnrA84ST7Kqizu4xNb8KRWx1z1U0rya83pYyuh0i0ppHr1oa78x2I
-         BJS3B0Wjdq+Qlf3zm54nM8e53WYx9hCtdL3apm7TGsourckflNDUFjVUrj84+hE5Gwn9
-         ObWvIXIUxwAh4sxd2ijkoIAvjmSn1RFxlSn5jkdfKXJUxtiB2+wwUxUUxegUXBo5IFVn
-         UUl1t4Q4KNCotMW8HmZdb0AXPQ4ky+Agbi045pNgvIe0ZtxlHhN+5CzO/14Rtij+l8MT
-         UGrQ==
-In-Reply-To: <1542736289-31338-1-git-send-email-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: longman@redhat.com
-Cc: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-doc <linux-doc@vger.kernel.org>, guro@fb.com, axboe@kernel.dk, Andrew Morton <akpm@linux-foundation.org>, dennis@kernel.org, shakeelb@google.com, Linux API <linux-api@vger.kernel.org>, Michael Kerrisk <mtk.manpages@gmail.com>
+Content-Type: multipart/mixed; boundary="===============0758498318=="
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20181120223018.GB2509588-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Language: en-US
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 
-[CC += linux-api@vger.kernel.org]
+--===============0758498318==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_DM5PR12MB1226238684747E76C7FE217D83DA0DM5PR12MB1226namp_"
 
-Hi Waiman,
+--_000_DM5PR12MB1226238684747E76C7FE217D83DA0DM5PR12MB1226namp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Since this is a kernel-user-space API change, for all future
-iterations of this patch, please CC linux-api@.
+Hi Tejun,
 
-The kernel source file Documentation/SubmitChecklist notes that all
-Linux kernel patches that change userspace interfaces should be CCed
-to linux-api@vger.kernel.org, so that the various parties who are
-interested in API changes are informed. For further information, see
-https://www.kernel.org/doc/man-pages/linux-api-ml.html
+On Tue, Nov 20, 2018 at 5:30 PM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> On Tue, Nov 20, 2018 at 10:21:14PM +0000, Ho, Kenny wrote:
+> > By this reply, are you suggesting that vendor specific resources
+> > will never be acceptable to be managed under cgroup?  Let say a user
+>
+> I wouldn't say never but whatever which gets included as a cgroup
+> controller should have clearly defined resource abstractions and the
+> control schemes around them including support for delegation.  AFAICS,
+> gpu side still seems to have a long way to go (and it's not clear
+> whether that's somewhere it will or needs to end up).
+Right, I totally understand that it's not obvious from this RFC because the=
+ 'resource' counting demonstrated in this RFC is trivial in nature, mostly =
+to illustrate the 'vendor' concept.  The structure of this patch actually g=
+ive us the ability to support both abstracted resources you mentioned and v=
+endor specific resources.  But it is probably not very clear as the RFC onl=
+y includes two resources and they are both vendor specific.  To be clear, I=
+ am not saying there aren't abstracted resources in drm, there are (we are =
+still working on those).  What I am saying is that not all resources are ab=
+stracted and for the purpose of this RFC I was hoping to get some feedback =
+on the vendor specific parts early just so that we don't go down the wrong =
+path.
 
-Thanks,
+That said, I think I am getting a better sense of what you are saying.  Ple=
+ase correct me if I misinterpreted: your concern is that abstracting by ven=
+dor is too high level and it's too much of a free-for-all.  Instead, resour=
+ces should be abstracted at the controller level even if it's only availabl=
+e to a specific vendor (or even a specific product from a specific vendor).=
+  Is that a fair read?
 
-Michael
-On Tue, Nov 20, 2018 at 8:45 PM Waiman Long <longman@redhat.com> wrote:
+A couple of additional side questions:
+* Is statistic/accounting-only use cases like those enabled by cpuacct cont=
+roller no longer sufficient?  If it is still sufficient, can you elaborate =
+more on what you mean by having control schemes and supporting delegation?
+* When you wrote delegation, do you mean delegation in the sense described =
+in https://www.kernel.org/doc/Documentation/cgroup-v2.txt ?
+
+> > To put the questions in more concrete terms, let say a user wants to
+> > expose certain part of a gpu to a particular cgroup similar to the
+> > way selective cpu cores are exposed to a cgroup via cpuset, how
+> > should we go about enabling such functionality?
 >
->  v4:
->   - Rebased to the latest for-4.21 branch of cgroup tree.
->   - Make each controller explicitly opt in to become bypassable by
->     setting the bypassable cgroup_subsys flag. Currently, only cpu
->     controller is made bypassable.
->   - Break out the cgroup_v2.rst documentation update as separate patch.
->
->  v3:
->   - Remove invalid cgroup subdirectory creation patch.
->   - Add use cases for the bypass mode and removing statements about
->     control files ownership in cgroup-v2.txt.
->   - Restrict bypass mode to non-domain (threaded) controllers only.
->
->  v3 patch - https://lkml.org/lkml/2017/8/9/604
->
-> This patchset introduces a new bypass mode to the cgroup v2 core to
-> give more freedom and flexibility to controllers which choose to become
-> bypassable the freedom to shape their own unique views of the virtual
-> cgroup hierarchies that can best suit thier own use cases.
->
-> Because of the inherent performance overhead in enabling cpu controller,
-> it is made bypassable so that the controller only needs to be enabled
-> at those cgroups that really need it instead of in every cgroups at a
-> given layer if at least one of them needs it.
->
-> The cpu controller performance problem is one of the major issues
-> in migrating from cgroup v1 to v2.
->
-> For example,
->
->   R - A(+) - B(#) - C(+)
->                   \ D(#)
->
-> where "+" means the controller is enabled and "#" means the controller
-> is bypassed. For this controller's perspective, the cgroups are
-> equivalent to:
->
->   R - A|B|D - C
->
-> Underneath the root R, cgoups A, B and D are controlled by one set of
-> knobs and cgroup C is controlled by another set of knobs as a child of
-> cgroups A|B|C.
->
-> This patchset is layered on top of the "for-4.21" branch of Tejun's
-> cgroup git tree.
->
-> Patch 1 introduces a new bypass mode that allows a bypassable
-> controller to be disabled in a cgroup, but to be re-enabled again in its
-> children. This is enabled by writing the controller name prefixed with
-> '#' to the "cgroup.subtree_control" file. Then all its children will
-> have this controller in bypass mode.
->
-> Patch 2 extends the bypass mode mechanism to allow those child cgroups
-> that are put into the bypass mode for a particular bypassable controller
-> by their parent to be re-enabled again by writing the controller name
-> with the '+' prefix to the "cgroup.controllers" file.
->
-> Patch 3 extends the debug controller to expose additional controller
-> masks introduced by this patchset.
->
-> Patch 4 makes the cpu controller bypassable.
->
-> Patch 5 documents the new bypass mode in cgroup-v2.rst file.
->
-> Waiman Long (5):
->   cgroup: subtree_control bypass mode for bypassable controllers
->   cgroup: Allow reenabling of controller in bypass mode
->   cgroup: Make debug controller report new controller masks
->   sched/core: Make cpu cgroup controller bypassable
->   cgroup: Document bypass mode
->
->  Documentation/admin-guide/cgroup-v2.rst |  66 +++++---
->  include/linux/cgroup-defs.h             |  26 +++-
->  kernel/cgroup/cgroup.c                  | 256 +++++++++++++++++++++++++-------
->  kernel/cgroup/debug.c                   |   2 +
->  kernel/sched/core.c                     |   1 +
->  5 files changed, 276 insertions(+), 75 deletions(-)
->
-> --
-> 1.8.3.1
->
+> Do what the intel driver or bpf is doing?  It's not difficult to hook
+> into cgroup for identification purposes.
+Does intel driver or bpf present an interface file in cgroupfs for users to=
+ configure the core selection like cpuset?  I must admit I am not too famil=
+iar with the bpf case as I was referencing mostly the way rdma was implemen=
+ted when putting this RFC together.
 
 
--- 
-Michael Kerrisk Linux man-pages maintainer;
-http://www.kernel.org/doc/man-pages/
-Author of "The Linux Programming Interface", http://blog.man7.org/
+Perhaps I wasn't communicating clearly so let me see if I can illustrate th=
+is discussion with a hypothetical but concrete example using our competitor=
+'s product.  Nvidia has something called Tensor Cores in some of their GPUs=
+ and the purpose of those cores is to accelerate matrix operations for mach=
+ine learning applications.  This is something unique to Nvidia and to my kn=
+owledge no one else has something like it.  These cores are different from =
+regular shader processors and there are multiple of them in a GPU.
+
+Under the structure of this RFC, if Nvidia wants to make Tensor Cores manag=
+eable via cgroup (with the "Allocation" distribution model let say), they w=
+ill probably have an interface file called "drm.nvidia.tensor_core", in whi=
+ch only nvidia's GPUs will be listed.  If a GPU has TC, it will have a posi=
+tive count, otherwise 0.
+
+If I understand you correctly Tejun, is that they should not do that.  What=
+ they should do is have an abstracted resource, possibly named "drm.matrix_=
+accelerator" where all drm devices available on a system will be listed.  A=
+ll GPUs except some Nvidia's will have a count of 0.  Or perhaps that is no=
+t sufficiently abstracted so instead there should be just "drm.cores" inste=
+ad and that file list both device, core types and count.  For one vendor th=
+ey may have shader proc, texture map unit, tensor core, ray tracing cores a=
+s types.  Others may have ALUs, EUs and subslices.
+
+Is that an accurate representation of what you are recommending?
+
+Regards,
+Kenny
+
+
+--_000_DM5PR12MB1226238684747E76C7FE217D83DA0DM5PR12MB1226namp_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+<style type=3D"text/css" style=3D"display:none;"><!-- P {margin-top:0;margi=
+n-bottom:0;} --></style>
+</head>
+<body dir=3D"ltr">
+<div id=3D"divtagdefaultwrapper" style=3D"font-size: 12pt; color: rgb(0, 0,=
+ 0); font-family: Calibri, Helvetica, sans-serif, EmojiFont, &quot;Apple Co=
+lor Emoji&quot;, &quot;Segoe UI Emoji&quot;, NotoColorEmoji, &quot;Segoe UI=
+ Symbol&quot;, &quot;Android Emoji&quot;, EmojiSymbols;" dir=3D"ltr">
+<p style=3D"margin-top:0;margin-bottom:0"></p>
+<div>Hi Tejun,<br>
+<br>
+On Tue, Nov 20, 2018 at 5:30 PM Tejun Heo &lt;tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org&gt; wrote:<br>
+&gt; On Tue, Nov 20, 2018 at 10:21:14PM &#43;0000, Ho, Kenny wrote:<br>
+&gt; &gt; By this reply, are you suggesting that vendor specific resources<=
+br>
+&gt; &gt; will never be acceptable to be managed under cgroup? &nbsp;Let sa=
+y a user<br>
+&gt;<br>
+&gt; I wouldn't say never but whatever which gets included as a cgroup<br>
+&gt; controller should have clearly defined resource abstractions and the<b=
+r>
+&gt; control schemes around them including support for delegation. &nbsp;AF=
+AICS,<br>
+&gt; gpu side still seems to have a long way to go (and it's not clear<br>
+&gt; whether that's somewhere it will or needs to end up).<br>
+Right, I totally understand that it's not obvious from this RFC because the=
+ 'resource' counting demonstrated in this RFC is trivial in nature, mostly =
+to illustrate the 'vendor' concept. &nbsp;The structure of this patch actua=
+lly give us the ability to support both
+ abstracted resources you mentioned and vendor specific resources.&nbsp; Bu=
+t it is probably not very clear as the RFC only includes two resources and =
+they are both vendor specific.&nbsp; To be clear, I am not saying there are=
+n't abstracted resources in drm, there are
+ (we are still working on those).&nbsp; What I am saying is that not all re=
+sources are abstracted and for the purpose of this RFC I was hoping to get =
+some feedback on the vendor specific parts early just so that we don't go d=
+own the wrong path.<br>
+<br>
+That said, I think I am getting a better sense of what you are saying. &nbs=
+p;Please correct me if I misinterpreted: your concern is that abstracting b=
+y vendor is too high level and it's too much of a free-for-all. &nbsp;Inste=
+ad, resources should be abstracted at the
+ controller level even if it's only available to a specific vendor (or even=
+ a specific product from a specific vendor). &nbsp;Is that a fair read?<br>
+<br>
+A couple of additional side questions:<br>
+* Is statistic/accounting-only use cases like those enabled by cpuacct cont=
+roller no longer sufficient? &nbsp;If it is still sufficient, can you elabo=
+rate more on what you mean by having control schemes and supporting delegat=
+ion?<br>
+* When you wrote delegation, do you mean delegation in the sense described =
+in https://www.kernel.org/doc/Documentation/cgroup-v2.txt ?<br>
+<br>
+&gt; &gt; To put the questions in more concrete terms, let say a user wants=
+ to<br>
+&gt; &gt; expose certain part of a gpu to a particular cgroup similar to th=
+e<br>
+&gt; &gt; way selective cpu cores are exposed to a cgroup via cpuset, how<b=
+r>
+&gt; &gt; should we go about enabling such functionality?<br>
+&gt;<br>
+&gt; Do what the intel driver or bpf is doing? &nbsp;It's not difficult to =
+hook<br>
+&gt; into cgroup for identification purposes.<br>
+Does intel driver or bpf present an interface file in cgroupfs for users to=
+ configure the core selection like cpuset?&nbsp; I must admit I am not too =
+familiar with the bpf case as I was referencing mostly the way rdma was imp=
+lemented when putting this RFC together.<br>
+<br>
+<br>
+Perhaps I wasn't communicating clearly so let me see if I can illustrate th=
+is discussion with a hypothetical but concrete example using our competitor=
+'s product. &nbsp;Nvidia has something called Tensor Cores in some of their=
+ GPUs and the purpose of those cores
+ is to accelerate matrix operations for machine learning applications. &nbs=
+p;This is something unique to Nvidia and to my knowledge no one else has so=
+mething like it. &nbsp;These cores are different from regular shader proces=
+sors and there are multiple of them in a GPU.<br>
+<br>
+Under the structure of this RFC, if Nvidia wants to make Tensor Cores manag=
+eable via cgroup (with the &quot;Allocation&quot; distribution model let sa=
+y), they will probably have an interface file called &quot;drm.nvidia.tenso=
+r_core&quot;, in which only nvidia's GPUs will be listed.
+ &nbsp;If a GPU has TC, it will have a positive count, otherwise 0.<br>
+<br>
+If I understand you correctly Tejun, is that they should not do that.&nbsp;=
+ What they should do is have an abstracted resource, possibly named &quot;d=
+rm.matrix_accelerator&quot; where all drm devices available on a system wil=
+l be listed.&nbsp; All GPUs except some Nvidia's will
+ have a count of 0.&nbsp; Or perhaps that is not sufficiently abstracted so=
+ instead there should be just &quot;drm.cores&quot; instead and that file l=
+ist both device, core types and count.&nbsp; For one vendor they may have s=
+hader proc, texture map unit, tensor core, ray tracing
+ cores as types.&nbsp; Others may have ALUs, EUs and subslices.<br>
+<br>
+Is that an&nbsp;accurate representation of what you are recommending?<br>
+<br>
+Regards,<br>
+Kenny&nbsp;</div>
+<div style=3D"color: rgb(0, 0, 0);">
+<div class=3D"BodyFragment"><font size=3D"2"><span style=3D"font-size:11pt;=
+">
+<div class=3D"PlainText"><br>
+</div>
+</span></font></div>
+</div>
+</div>
+</body>
+</html>
+
+--_000_DM5PR12MB1226238684747E76C7FE217D83DA0DM5PR12MB1226namp_--
+
+--===============0758498318==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1kLWdmeCBt
+YWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5m
+cmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4Cg==
+
+--===============0758498318==--
