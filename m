@@ -1,85 +1,50 @@
-From: Eric Anholt <eric@anholt.net>
+From: "Koenig, Christian" <Christian.Koenig-5C7GfCeVMHo@public.gmane.org>
 Subject: Re: [PATCH RFC 4/5] drm/amdgpu: Add accounting of command submission
  via DRM cgroup
-Date: Fri, 23 Nov 2018 09:36:28 -0800
-Message-ID: <871s7b7l2b.fsf@anholt.net>
+Date: Fri, 23 Nov 2018 18:13:32 +0000
+Message-ID: <095e010c-e3b8-ec79-c87b-a05ce1d95e10@amd.com>
 References: <20181120185814.13362-1-Kenny.Ho@amd.com>
  <20181120185814.13362-5-Kenny.Ho@amd.com> <87r2ff79he.fsf@anholt.net>
- <56833f60-1636-d149-c9b0-c021a6ad99d1@gmail.com>
+ <56833f60-1636-d149-c9b0-c021a6ad99d1@gmail.com> <871s7b7l2b.fsf@anholt.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1616063232=="
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <56833f60-1636-d149-c9b0-c021a6ad99d1@gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: christian.koenig@amd.com, Kenny Ho <Kenny.Ho@amd.com>, y2kenny@gmail.com, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org, intel-gfx@lists.freedesktop.org
-
---===============1616063232==
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-Christian K=C3=B6nig <ckoenig.leichtzumerken@gmail.com> writes:
-
-> Am 20.11.18 um 21:57 schrieb Eric Anholt:
->> Kenny Ho <Kenny.Ho@amd.com> writes:
->>
->>> Account for the number of command submitted to amdgpu by type on a per
->>> cgroup basis, for the purpose of profiling/monitoring applications.
->> For profiling other drivers, I've used perf tracepoints, which let you
->> get useful timelines of multiple events in the driver.  Have you made
->> use of this stat for productive profiling?
->
-> Yes, but this is not related to profiling at all.
->
-> What we want to do is to limit the resource usage of processes.
-
-That sounds great, and something I'd be interested in for vc4.  However,
-as far as I saw explained here, this patch doesn't let you limit
-resource usage of a process and is only useful for
-"profiling/monitoring" so I'm wondering how it is useful for that
-purpose.
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEE/JuuFDWp9/ZkuCBXtdYpNtH8nugFAlv4OpwACgkQtdYpNtH8
-nuisag//cE0Np/kVFyEqmSwGSjAUUFQlcU8hw9wFMGoCbeNdWzpcciUtTP2gNlMX
-Ujxuc6Z9woYmAGOsTf1i1Hc/wZ32TLKMh66tSB6fHLJNfK3js04nmJRurBr/0SIr
-QYlOieQl6U+AAFUyXMtSMyDWu8KX9ZnHpodbDiIm0jqSLsvsIQt9M9+pny5hgwkz
-dDeprOAEhI8TtP367Dy/nDnd7bS8f3prEhonGPiMul1MyowAsrNMRGG4IUox93SY
-0MRlaBPjkPCQKvS2jT4T8+bMoGb3eO2QrR87oiywxhTLORZYxRvI/aT2sSMgA9/A
-EbVryTlR7Jj0XNwY11JGwlO1Pg3YsU4DJZqyuX2l/d+v6bNbZYkQB30d+5ETiZNM
-D7m0kz7/NTaJEBttlMFJOexJgd5on+J94CkLvzlhiJhyWICJoV5Uhpvvoxad/plK
-1p5jTRC/lOzR38XDfcTWkCbEE8VJJvr2Vjc5zMypeDny05I7cQ5puZ8tDlZDETdK
-/yal9PeiujPmUBMYbm+bGDHe3EYy3uXC5s+Sa3t7nO5SNIiCQH34pcNTgsw1YQjQ
-Hua85qgR1859FAn333zOnvcp5L9Lnwn5OFrr/SUlJygLz1mUL8VSFKWXpnDICty5
-B0KxEpgziHzS75JQlAahsx63SmFyTPjIbgFoi4lZDsrE9M5RgFk=
-=HeYD
------END PGP SIGNATURE-----
---=-=-=--
-
---===============1616063232==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
 Content-Transfer-Encoding: base64
-Content-Disposition: inline
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <871s7b7l2b.fsf-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>
+Content-Language: en-US
+Content-ID: <C5A09E2F2F87E4479F3AC2B8EBA62877-asWib9pRmPqcE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, "Ho, Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVs
-IG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsCg==
-
---===============1616063232==--
+QW0gMjMuMTEuMTggdW0gMTg6MzYgc2NocmllYiBFcmljIEFuaG9sdDoNCj4gQ2hyaXN0aWFuIEvD
+tm5pZyA8Y2tvZW5pZy5sZWljaHR6dW1lcmtlbkBnbWFpbC5jb20+IHdyaXRlczoNCj4NCj4+IEFt
+IDIwLjExLjE4IHVtIDIxOjU3IHNjaHJpZWIgRXJpYyBBbmhvbHQ6DQo+Pj4gS2VubnkgSG8gPEtl
+bm55LkhvQGFtZC5jb20+IHdyaXRlczoNCj4+Pg0KPj4+PiBBY2NvdW50IGZvciB0aGUgbnVtYmVy
+IG9mIGNvbW1hbmQgc3VibWl0dGVkIHRvIGFtZGdwdSBieSB0eXBlIG9uIGEgcGVyDQo+Pj4+IGNn
+cm91cCBiYXNpcywgZm9yIHRoZSBwdXJwb3NlIG9mIHByb2ZpbGluZy9tb25pdG9yaW5nIGFwcGxp
+Y2F0aW9ucy4NCj4+PiBGb3IgcHJvZmlsaW5nIG90aGVyIGRyaXZlcnMsIEkndmUgdXNlZCBwZXJm
+IHRyYWNlcG9pbnRzLCB3aGljaCBsZXQgeW91DQo+Pj4gZ2V0IHVzZWZ1bCB0aW1lbGluZXMgb2Yg
+bXVsdGlwbGUgZXZlbnRzIGluIHRoZSBkcml2ZXIuICBIYXZlIHlvdSBtYWRlDQo+Pj4gdXNlIG9m
+IHRoaXMgc3RhdCBmb3IgcHJvZHVjdGl2ZSBwcm9maWxpbmc/DQo+PiBZZXMsIGJ1dCB0aGlzIGlz
+IG5vdCByZWxhdGVkIHRvIHByb2ZpbGluZyBhdCBhbGwuDQo+Pg0KPj4gV2hhdCB3ZSB3YW50IHRv
+IGRvIGlzIHRvIGxpbWl0IHRoZSByZXNvdXJjZSB1c2FnZSBvZiBwcm9jZXNzZXMuDQo+IFRoYXQg
+c291bmRzIGdyZWF0LCBhbmQgc29tZXRoaW5nIEknZCBiZSBpbnRlcmVzdGVkIGluIGZvciB2YzQu
+ICBIb3dldmVyLA0KPiBhcyBmYXIgYXMgSSBzYXcgZXhwbGFpbmVkIGhlcmUsIHRoaXMgcGF0Y2gg
+ZG9lc24ndCBsZXQgeW91IGxpbWl0DQo+IHJlc291cmNlIHVzYWdlIG9mIGEgcHJvY2VzcyBhbmQg
+aXMgb25seSB1c2VmdWwgZm9yDQo+ICJwcm9maWxpbmcvbW9uaXRvcmluZyIgc28gSSdtIHdvbmRl
+cmluZyBob3cgaXQgaXMgdXNlZnVsIGZvciB0aGF0DQo+IHB1cnBvc2UuDQoNCk9rLCBnb29kIHRv
+IGtub3cuIEkgaGF2ZW4ndCBsb29rZWQgYXQgdGhpcyBpbiBkZWVwLCBidXQgaWYgdGhpcyBpcyBq
+dXN0IA0KZm9yIGFjY291bnRpbmcgdGhhdCB3b3VsZCBjZXJ0YWlubHkgYmUgbWlzc2luZyB0aGUg
+Z29hbC4NCg0KQ2hyaXN0aWFuLg0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KYW1kLWdmeCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3Rv
+cC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQt
+Z2Z4Cg==
