@@ -1,109 +1,85 @@
-From: "Ho, Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-Subject: Re: [PATCH RFC 2/5] cgroup: Add mechanism to register vendor specific
- DRM devices
-Date: Wed, 21 Nov 2018 22:12:22 +0000
-Message-ID: <DM5PR12MB12268BDE84A4539FCDC9065D83DA0@DM5PR12MB1226.namprd12.prod.outlook.com>
+From: Eric Anholt <eric@anholt.net>
+Subject: Re: [PATCH RFC 4/5] drm/amdgpu: Add accounting of command submission
+ via DRM cgroup
+Date: Fri, 23 Nov 2018 09:36:28 -0800
+Message-ID: <871s7b7l2b.fsf@anholt.net>
 References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20181120185814.13362-3-Kenny.Ho@amd.com>
- <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
- <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>,
- <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
+ <20181120185814.13362-5-Kenny.Ho@amd.com> <87r2ff79he.fsf@anholt.net>
+ <56833f60-1636-d149-c9b0-c021a6ad99d1@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20181120223018.GB2509588-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Content-Language: en-US
+Content-Type: multipart/mixed; boundary="===============1616063232=="
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <56833f60-1636-d149-c9b0-c021a6ad99d1@gmail.com>
 List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: christian.koenig@amd.com, Kenny Ho <Kenny.Ho@amd.com>, y2kenny@gmail.com, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org, intel-gfx@lists.freedesktop.org
 
-KHJlc2VuZGluZyBiZWNhdXNlIHByZXZpb3VzIGVtYWlsIHN3aXRjaGVkIHRvIEhUTUwgbW9kZSBh
-bmQgd2FzIGZpbHRlcmVkIG91dCkKCkhpIFRlanVuLAoKT24gVHVlLCBOb3YgMjAsIDIwMTggYXQg
-NTozMCBQTSBUZWp1biBIZW8gPHRqQGtlcm5lbC5vcmc+IHdyb3RlOgo+IE9uIFR1ZSwgTm92IDIw
-LCAyMDE4IGF0IDEwOjIxOjE0UE0gKzAwMDAsIEhvLCBLZW5ueSB3cm90ZToKPiA+IEJ5IHRoaXMg
-cmVwbHksIGFyZSB5b3Ugc3VnZ2VzdGluZyB0aGF0IHZlbmRvciBzcGVjaWZpYyByZXNvdXJjZXMK
-PiA+IHdpbGwgbmV2ZXIgYmUgYWNjZXB0YWJsZSB0byBiZSBtYW5hZ2VkIHVuZGVyIGNncm91cD8g
-IExldCBzYXkgYSB1c2VyCj4KPiBJIHdvdWxkbid0IHNheSBuZXZlciBidXQgd2hhdGV2ZXIgd2hp
-Y2ggZ2V0cyBpbmNsdWRlZCBhcyBhIGNncm91cAo+IGNvbnRyb2xsZXIgc2hvdWxkIGhhdmUgY2xl
-YXJseSBkZWZpbmVkIHJlc291cmNlIGFic3RyYWN0aW9ucyBhbmQgdGhlCj4gY29udHJvbCBzY2hl
-bWVzIGFyb3VuZCB0aGVtIGluY2x1ZGluZyBzdXBwb3J0IGZvciBkZWxlZ2F0aW9uLiAgQUZBSUNT
-LAo+IGdwdSBzaWRlIHN0aWxsIHNlZW1zIHRvIGhhdmUgYSBsb25nIHdheSB0byBnbyAoYW5kIGl0
-J3Mgbm90IGNsZWFyCj4gd2hldGhlciB0aGF0J3Mgc29tZXdoZXJlIGl0IHdpbGwgb3IgbmVlZHMg
-dG8gZW5kIHVwKS4KUmlnaHQsIEkgdG90YWxseSB1bmRlcnN0YW5kIHRoYXQgaXQncyBub3Qgb2J2
-aW91cyBmcm9tIHRoaXMgUkZDIGJlY2F1c2UgdGhlICdyZXNvdXJjZScgY291bnRpbmcgZGVtb25z
-dHJhdGVkIGluIHRoaXMgUkZDIGlzIHRyaXZpYWwgaW4gbmF0dXJlLCBtb3N0bHkgdG8gaWxsdXN0
-cmF0ZSB0aGUgJ3ZlbmRvcicgY29uY2VwdC4gIFRoZSBzdHJ1Y3R1cmUgb2YgdGhpcyBwYXRjaCBh
-Y3R1YWxseSBnaXZlIHVzIHRoZSBhYmlsaXR5IHRvIHN1cHBvcnQgYm90aCBhYnN0cmFjdGVkIHJl
-c291cmNlcyB5b3UgbWVudGlvbmVkIGFuZCB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2VzLiAgSXQg
-aXMgcHJvYmFibHkgbm90IG9idmlvdXMgYXMgdGhlIFJGQyBvbmx5IGluY2x1ZGVzIHR3byByZXNv
-dXJjZXMgYW5kIHRoZXkgYXJlIGJvdGggdmVuZG9yIHNwZWNpZmljLiAgVG8gYmUgY2xlYXIsIEkg
-YW0gbm90IHNheWluZyB0aGVyZSBhcmVuJ3QgYWJzdHJhY3RlZCByZXNvdXJjZXMgaW4gZHJtLCB0
-aGVyZSBhcmUgKHdlIGFyZSBzdGlsbCB3b3JraW5nIG9uIHRob3NlKS4gIFdoYXQgSSBhbSBzYXlp
-bmcgaXMgdGhhdCBub3QgYWxsIHJlc291cmNlcyBhcmUgYWJzdHJhY3RlZCBhbmQgZm9yIHRoZSBw
-dXJwb3NlIG9mIHRoaXMgUkZDIEkgd2FzIGhvcGluZyB0byBnZXQgc29tZSBmZWVkYmFjayBvbiB0
-aGUgdmVuZG9yIHNwZWNpZmljIHBhcnRzIGVhcmx5IGp1c3Qgc28gdGhhdCB3ZSBkb24ndCBnbyBk
-b3duIHRoZSB3cm9uZyBwYXRoLgoKVGhhdCBzYWlkLCBJIHRoaW5rIEkgYW0gZ2V0dGluZyBhIGJl
-dHRlciBzZW5zZSBvZiB3aGF0IHlvdSBhcmUgc2F5aW5nLiAgUGxlYXNlIGNvcnJlY3QgbWUgaWYg
-SSBtaXNpbnRlcnByZXRlZDogeW91ciBjb25jZXJuIGlzIHRoYXQgYWJzdHJhY3RpbmcgYnkgdmVu
-ZG9yIGlzIHRvbyBoaWdoIGxldmVsIGFuZCBpdCdzIHRvbyBtdWNoIG9mIGEgZnJlZS1mb3ItYWxs
-LiAgSW5zdGVhZCwgcmVzb3VyY2VzIHNob3VsZCBiZSBhYnN0cmFjdGVkIGF0IHRoZSBjb250cm9s
-bGVyIGxldmVsIGV2ZW4gaWYgaXQncyBvbmx5IGF2YWlsYWJsZSB0byBhIHNwZWNpZmljIHZlbmRv
-ciAob3IgZXZlbiBhIHNwZWNpZmljIHByb2R1Y3QgZnJvbSBhIHNwZWNpZmljIHZlbmRvcikuICBJ
-cyB0aGF0IGEgZmFpciByZWFkPwoKQSBjb3VwbGUgb2YgYWRkaXRpb25hbCBzaWRlIHF1ZXN0aW9u
-czoKKiBJcyBzdGF0aXN0aWMvYWNjb3VudGluZy1vbmx5IHVzZSBjYXNlcyBsaWtlIHRob3NlIGVu
-YWJsZWQgYnkgY3B1YWNjdCBjb250cm9sbGVyIG5vIGxvbmdlciBzdWZmaWNpZW50PyAgSWYgaXQg
-aXMgc3RpbGwgc3VmZmljaWVudCwgY2FuIHlvdSBlbGFib3JhdGUgbW9yZSBvbiB3aGF0IHlvdSBt
-ZWFuIGJ5IGhhdmluZyBjb250cm9sIHNjaGVtZXMgYW5kIHN1cHBvcnRpbmcgZGVsZWdhdGlvbj8K
-KiBXaGVuIHlvdSB3cm90ZSBkZWxlZ2F0aW9uLCBkbyB5b3UgbWVhbiBkZWxlZ2F0aW9uIGluIHRo
-ZSBzZW5zZSBkZXNjcmliZWQgaW4gaHR0cHM6Ly93d3cua2VybmVsLm9yZy9kb2MvRG9jdW1lbnRh
-dGlvbi9jZ3JvdXAtdjIudHh0ID8KCj4gPiBUbyBwdXQgdGhlIHF1ZXN0aW9ucyBpbiBtb3JlIGNv
-bmNyZXRlIHRlcm1zLCBsZXQgc2F5IGEgdXNlciB3YW50cyB0bwo+ID4gZXhwb3NlIGNlcnRhaW4g
-cGFydCBvZiBhIGdwdSB0byBhIHBhcnRpY3VsYXIgY2dyb3VwIHNpbWlsYXIgdG8gdGhlCj4gPiB3
-YXkgc2VsZWN0aXZlIGNwdSBjb3JlcyBhcmUgZXhwb3NlZCB0byBhIGNncm91cCB2aWEgY3B1c2V0
-LCBob3cKPiA+IHNob3VsZCB3ZSBnbyBhYm91dCBlbmFibGluZyBzdWNoIGZ1bmN0aW9uYWxpdHk/
-Cj4KPiBEbyB3aGF0IHRoZSBpbnRlbCBkcml2ZXIgb3IgYnBmIGlzIGRvaW5nPyAgSXQncyBub3Qg
-ZGlmZmljdWx0IHRvIGhvb2sKPiBpbnRvIGNncm91cCBmb3IgaWRlbnRpZmljYXRpb24gcHVycG9z
-ZXMuCkRvZXMgaW50ZWwgZHJpdmVyIG9yIGJwZiBwcmVzZW50IGFuIGludGVyZmFjZSBmaWxlIGlu
-IGNncm91cGZzIGZvciB1c2VycyB0byBjb25maWd1cmUgdGhlIGNvcmUgc2VsZWN0aW9uIGxpa2Ug
-Y3B1c2V0PyAgSSBtdXN0IGFkbWl0IEkgYW0gbm90IHRvbyBmYW1pbGlhciB3aXRoIHRoZSBicGYg
-Y2FzZSBhcyBJIHdhcyByZWZlcmVuY2luZyBtb3N0bHkgdGhlIHdheSByZG1hIHdhcyBpbXBsZW1l
-bnRlZCB3aGVuIHB1dHRpbmcgdGhpcyBSRkMgdG9nZXRoZXIuCgoKUGVyaGFwcyBJIHdhc24ndCBj
-b21tdW5pY2F0aW5nIGNsZWFybHkgc28gbGV0IG1lIHNlZSBpZiBJIGNhbiBpbGx1c3RyYXRlIHRo
-aXMgZGlzY3Vzc2lvbiB3aXRoIGEgaHlwb3RoZXRpY2FsIGJ1dCBjb25jcmV0ZSBleGFtcGxlIHVz
-aW5nIG91ciBjb21wZXRpdG9yJ3MgcHJvZHVjdC4gIE52aWRpYSBoYXMgc29tZXRoaW5nIGNhbGxl
-ZCBUZW5zb3IgQ29yZXMgaW4gc29tZSBvZiB0aGVpciBHUFVzIGFuZCB0aGUgcHVycG9zZSBvZiB0
-aG9zZSBjb3JlcyBpcyB0byBhY2NlbGVyYXRlIG1hdHJpeCBvcGVyYXRpb25zIGZvciBtYWNoaW5l
-IGxlYXJuaW5nIGFwcGxpY2F0aW9ucy4gIFRoaXMgaXMgc29tZXRoaW5nIHVuaXF1ZSB0byBOdmlk
-aWEgYW5kIHRvIG15IGtub3dsZWRnZSBubyBvbmUgZWxzZSBoYXMgc29tZXRoaW5nIGxpa2UgaXQu
-ICBUaGVzZSBjb3JlcyBhcmUgZGlmZmVyZW50IGZyb20gcmVndWxhciBzaGFkZXIgcHJvY2Vzc29y
-cyBhbmQgdGhlcmUgYXJlIG11bHRpcGxlIG9mIHRoZW0gaW4gYSBHUFUuCgpVbmRlciB0aGUgc3Ry
-dWN0dXJlIG9mIHRoaXMgUkZDLCBpZiBOdmlkaWEgd2FudHMgdG8gbWFrZSBUZW5zb3IgQ29yZXMg
-bWFuYWdlYWJsZSB2aWEgY2dyb3VwICh3aXRoIHRoZSAiQWxsb2NhdGlvbiIgZGlzdHJpYnV0aW9u
-IG1vZGVsIGxldCBzYXkpLCB0aGV5IHdpbGwgcHJvYmFibHkgaGF2ZSBhbiBpbnRlcmZhY2UgZmls
-ZSBjYWxsZWQgImRybS5udmlkaWEudGVuc29yX2NvcmUiLCBpbiB3aGljaCBvbmx5IG52aWRpYSdz
-IEdQVXMgd2lsbCBiZSBsaXN0ZWQuICBJZiBhIEdQVSBoYXMgVEMsIGl0IHdpbGwgaGF2ZSBhIHBv
-c2l0aXZlIGNvdW50LCBvdGhlcndpc2UgMC4KCklmIEkgdW5kZXJzdGFuZCB5b3UgY29ycmVjdGx5
-IFRlanVuLCBpcyB0aGF0IHRoZXkgc2hvdWxkIG5vdCBkbyB0aGF0LiAgV2hhdCB0aGV5IHNob3Vs
-ZCBkbyBpcyBoYXZlIGFuIGFic3RyYWN0ZWQgcmVzb3VyY2UsIHBvc3NpYmx5IG5hbWVkICJkcm0u
-bWF0cml4X2FjY2VsZXJhdG9yIiB3aGVyZSBhbGwgZHJtIGRldmljZXMgYXZhaWxhYmxlIG9uIGEg
-c3lzdGVtIHdpbGwgYmUgbGlzdGVkLiAgQWxsIEdQVXMgZXhjZXB0IHNvbWUgTnZpZGlhJ3Mgd2ls
-bCBoYXZlIGEgY291bnQgb2YgMC4gIE9yIHBlcmhhcHMgdGhhdCBpcyBub3Qgc3VmZmljaWVudGx5
-IGFic3RyYWN0ZWQgc28gaW5zdGVhZCB0aGVyZSBzaG91bGQgYmUganVzdCAiZHJtLmNvcmVzIiBp
-bnN0ZWFkIGFuZCB0aGF0IGZpbGUgbGlzdCBib3RoIGRldmljZSwgY29yZSB0eXBlcyBhbmQgY291
-bnQuICBGb3Igb25lIHZlbmRvciB0aGV5IG1heSBoYXZlIHNoYWRlciBwcm9jLCB0ZXh0dXJlIG1h
-cCB1bml0LCB0ZW5zb3IgY29yZSwgcmF5IHRyYWNpbmcgY29yZXMgYXMgdHlwZXMuICBPdGhlcnMg
-bWF5IGhhdmUgQUxVcywgRVVzIGFuZCBzdWJzbGljZXMuCgpJcyB0aGF0IGFuIGFjY3VyYXRlIHJl
-cHJlc2VudGF0aW9uIG9mIHdoYXQgeW91IGFyZSByZWNvbW1lbmRpbmc/CgpSZWdhcmRzLApLZW5u
-eSAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1kLWdm
-eCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0
-cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4Cg==
+--===============1616063232==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
+
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Christian K=C3=B6nig <ckoenig.leichtzumerken@gmail.com> writes:
+
+> Am 20.11.18 um 21:57 schrieb Eric Anholt:
+>> Kenny Ho <Kenny.Ho@amd.com> writes:
+>>
+>>> Account for the number of command submitted to amdgpu by type on a per
+>>> cgroup basis, for the purpose of profiling/monitoring applications.
+>> For profiling other drivers, I've used perf tracepoints, which let you
+>> get useful timelines of multiple events in the driver.  Have you made
+>> use of this stat for productive profiling?
+>
+> Yes, but this is not related to profiling at all.
+>
+> What we want to do is to limit the resource usage of processes.
+
+That sounds great, and something I'd be interested in for vc4.  However,
+as far as I saw explained here, this patch doesn't let you limit
+resource usage of a process and is only useful for
+"profiling/monitoring" so I'm wondering how it is useful for that
+purpose.
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEE/JuuFDWp9/ZkuCBXtdYpNtH8nugFAlv4OpwACgkQtdYpNtH8
+nuisag//cE0Np/kVFyEqmSwGSjAUUFQlcU8hw9wFMGoCbeNdWzpcciUtTP2gNlMX
+Ujxuc6Z9woYmAGOsTf1i1Hc/wZ32TLKMh66tSB6fHLJNfK3js04nmJRurBr/0SIr
+QYlOieQl6U+AAFUyXMtSMyDWu8KX9ZnHpodbDiIm0jqSLsvsIQt9M9+pny5hgwkz
+dDeprOAEhI8TtP367Dy/nDnd7bS8f3prEhonGPiMul1MyowAsrNMRGG4IUox93SY
+0MRlaBPjkPCQKvS2jT4T8+bMoGb3eO2QrR87oiywxhTLORZYxRvI/aT2sSMgA9/A
+EbVryTlR7Jj0XNwY11JGwlO1Pg3YsU4DJZqyuX2l/d+v6bNbZYkQB30d+5ETiZNM
+D7m0kz7/NTaJEBttlMFJOexJgd5on+J94CkLvzlhiJhyWICJoV5Uhpvvoxad/plK
+1p5jTRC/lOzR38XDfcTWkCbEE8VJJvr2Vjc5zMypeDny05I7cQ5puZ8tDlZDETdK
+/yal9PeiujPmUBMYbm+bGDHe3EYy3uXC5s+Sa3t7nO5SNIiCQH34pcNTgsw1YQjQ
+Hua85qgR1859FAn333zOnvcp5L9Lnwn5OFrr/SUlJygLz1mUL8VSFKWXpnDICty5
+B0KxEpgziHzS75JQlAahsx63SmFyTPjIbgFoi4lZDsrE9M5RgFk=
+=HeYD
+-----END PGP SIGNATURE-----
+--=-=-=--
+
+--===============1616063232==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVs
+IG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
+dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsCg==
+
+--===============1616063232==--
