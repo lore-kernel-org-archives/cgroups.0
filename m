@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 12/13] blkcg: change blkg reference counting to use percpu_ref
-Date: Mon, 26 Nov 2018 16:19:45 -0500
-Message-ID: <20181126211946.77067-13-dennis@kernel.org>
+Subject: [PATCH 11/13] blkcg: remove bio_disassociate_task()
+Date: Mon, 26 Nov 2018 16:19:44 -0500
+Message-ID: <20181126211946.77067-12-dennis@kernel.org>
 References: <20181126211946.77067-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181126211946.77067-1-dennis@kernel.org>
@@ -13,155 +13,65 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-Every bio is now associated with a blkg putting blkg_get, blkg_try_get,
-and blkg_put on the hot path. Switch over the refcnt in blkg to use
-percpu_ref.
+Now that a bio only holds a blkg reference, so clean up is simply
+putting back that reference. Remove bio_disassociate_task() as it just
+calls bio_disassociate_blkg() and call the latter directly.
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
-Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c         | 41 ++++++++++++++++++++++++++++++++++++--
- include/linux/blk-cgroup.h | 15 +++++---------
- 2 files changed, 44 insertions(+), 12 deletions(-)
+ block/bio.c         | 11 +----------
+ include/linux/bio.h |  2 --
+ 2 files changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index dfd984bbed27..64ce424a78fd 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -81,6 +81,37 @@ static void blkg_free(struct blkcg_gq *blkg)
- 	kfree(blkg);
- }
+diff --git a/block/bio.c b/block/bio.c
+index f713aa236ac5..41cc2ead39f5 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -244,7 +244,7 @@ struct bio_vec *bvec_alloc(gfp_t gfp_mask, int nr, unsigned long *idx,
  
-+static void __blkg_release(struct rcu_head *rcu)
-+{
-+	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
-+
-+	percpu_ref_exit(&blkg->refcnt);
-+
-+	/* release the blkcg and parent blkg refs this blkg has been holding */
-+	css_put(&blkg->blkcg->css);
-+	if (blkg->parent)
-+		blkg_put(blkg->parent);
-+
-+	wb_congested_put(blkg->wb_congested);
-+
-+	blkg_free(blkg);
-+}
-+
-+/*
-+ * A group is RCU protected, but having an rcu lock does not mean that one
-+ * can access all the fields of blkg and assume these are valid.  For
-+ * example, don't try to follow throtl_data and request queue links.
-+ *
-+ * Having a reference to blkg under an rcu allows accesses to only values
-+ * local to groups like group stats and group rate limits.
-+ */
-+static void blkg_release(struct percpu_ref *ref)
-+{
-+	struct blkcg_gq *blkg = container_of(ref, struct blkcg_gq, refcnt);
-+
-+	call_rcu(&blkg->rcu_head, __blkg_release);
-+}
-+
- /**
-  * blkg_alloc - allocate a blkg
-  * @blkcg: block cgroup the new blkg is associated with
-@@ -107,7 +138,6 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 	blkg->q = q;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
--	atomic_set(&blkg->refcnt, 1);
- 
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -207,6 +237,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 		blkg_get(blkg->parent);
- 	}
- 
-+	ret = percpu_ref_init(&blkg->refcnt, blkg_release, 0,
-+			      GFP_NOWAIT | __GFP_NOWARN);
-+	if (ret)
-+		goto err_cancel_ref;
-+
- 	/* invoke per-policy init */
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -239,6 +274,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	blkg_put(blkg);
- 	return ERR_PTR(ret);
- 
-+err_cancel_ref:
-+	percpu_ref_exit(&blkg->refcnt);
- err_put_congested:
- 	wb_congested_put(wb_congested);
- err_put_css:
-@@ -369,7 +406,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	 * Put the reference taken at the time of creation so that when all
- 	 * queues are gone, group can be destroyed.
- 	 */
--	blkg_put(blkg);
-+	percpu_ref_kill(&blkg->refcnt);
- }
- 
- /**
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 6f3bb5e82a57..fc23bb758566 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -123,7 +123,7 @@ struct blkcg_gq {
- 	struct blkcg_gq			*parent;
- 
- 	/* reference count */
--	atomic_t			refcnt;
-+	struct percpu_ref		refcnt;
- 
- 	/* is this blkg online? protected by both blkcg and q locks */
- 	bool				online;
-@@ -486,8 +486,7 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
-  */
- static inline void blkg_get(struct blkcg_gq *blkg)
+ void bio_uninit(struct bio *bio)
  {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	atomic_inc(&blkg->refcnt);
-+	percpu_ref_get(&blkg->refcnt);
+-	bio_disassociate_task(bio);
++	bio_disassociate_blkg(bio);
  }
+ EXPORT_SYMBOL(bio_uninit);
  
- /**
-@@ -499,7 +498,7 @@ static inline void blkg_get(struct blkcg_gq *blkg)
-  */
- static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
- {
--	if (atomic_inc_not_zero(&blkg->refcnt))
-+	if (percpu_ref_tryget(&blkg->refcnt))
- 		return blkg;
- 	return NULL;
+@@ -2108,15 +2108,6 @@ void bio_associate_blkg(struct bio *bio)
  }
-@@ -513,23 +512,19 @@ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
-  */
- static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
- {
--	while (!atomic_inc_not_zero(&blkg->refcnt))
-+	while (!percpu_ref_tryget(&blkg->refcnt))
- 		blkg = blkg->parent;
+ EXPORT_SYMBOL_GPL(bio_associate_blkg);
  
- 	return blkg;
- }
- 
--void __blkg_release_rcu(struct rcu_head *rcu);
+-/**
+- * bio_disassociate_task - undo bio_associate_current()
+- * @bio: target bio
+- */
+-void bio_disassociate_task(struct bio *bio)
+-{
+-	bio_disassociate_blkg(bio);
+-}
 -
  /**
-  * blkg_put - put a blkg reference
-  * @blkg: blkg to put
-  */
- static inline void blkg_put(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	if (atomic_dec_and_test(&blkg->refcnt))
--		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
-+	percpu_ref_put(&blkg->refcnt);
- }
- 
- /**
+  * bio_clone_blkg_association - clone blkg association from src to dst bio
+  * @dst: destination bio
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 7b8bb1365977..419fdf5f8ab6 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -521,7 +521,6 @@ void bio_disassociate_blkg(struct bio *bio);
+ void bio_associate_blkg(struct bio *bio);
+ void bio_associate_blkg_from_css(struct bio *bio,
+ 				 struct cgroup_subsys_state *css);
+-void bio_disassociate_task(struct bio *bio);
+ void bio_clone_blkg_association(struct bio *dst, struct bio *src);
+ #else	/* CONFIG_BLK_CGROUP */
+ static inline void bio_disassociate_blkg(struct bio *bio) { }
+@@ -529,7 +528,6 @@ static inline void bio_associate_blkg(struct bio *bio) { }
+ static inline void bio_associate_blkg_from_css(struct bio *bio,
+ 					       struct cgroup_subsys_state *css)
+ { }
+-static inline void bio_disassociate_task(struct bio *bio) { }
+ static inline void bio_clone_blkg_association(struct bio *dst,
+ 					      struct bio *src) { }
+ #endif	/* CONFIG_BLK_CGROUP */
 -- 
 2.17.1
 
