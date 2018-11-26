@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 07/13] blkcg: associate a blkg for pages being evicted by swap
-Date: Mon, 26 Nov 2018 16:19:40 -0500
-Message-ID: <20181126211946.77067-8-dennis@kernel.org>
+Subject: [PATCH 06/13] blkcg: consolidate bio_issue_init() to be a part of core
+Date: Mon, 26 Nov 2018 16:19:39 -0500
+Message-ID: <20181126211946.77067-7-dennis@kernel.org>
 References: <20181126211946.77067-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181126211946.77067-1-dennis@kernel.org>
@@ -13,132 +13,120 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-A prior patch in this series added blkg association to bios issued by
-cgroups. There are two other paths that we want to attribute work back
-to the appropriate cgroup: swap and writeback. Here we modify the way
-swap tags bios to include the blkg. Writeback will be tackle in the next
-patch.
+bio_issue_init among other things initializes the timestamp for an IO.
+Rather than have this logic handled by policies, this consolidates it to
+be on the init paths (normal, clone, bounce clone).
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Liu Bo <bo.liu@linux.alibaba.com>
 ---
- block/bio.c         | 62 +++++++++++++++++++++++++++------------------
- include/linux/bio.h |  6 ++---
- mm/page_io.c        |  2 +-
- 3 files changed, 42 insertions(+), 28 deletions(-)
+ block/bio.c                | 2 ++
+ block/blk-iolatency.c      | 2 --
+ block/blk-throttle.c       | 8 --------
+ block/bounce.c             | 2 ++
+ include/linux/blk-cgroup.h | 9 +++++++++
+ 5 files changed, 13 insertions(+), 10 deletions(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index efca5ae607a4..4600808ac606 100644
+index 929fd3692e4a..efca5ae607a4 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -1958,30 +1958,6 @@ EXPORT_SYMBOL(bioset_init_from_src);
+@@ -611,6 +611,8 @@ void __bio_clone_fast(struct bio *bio, struct bio *bio_src)
+ 	bio->bi_io_vec = bio_src->bi_io_vec;
  
- #ifdef CONFIG_BLK_CGROUP
- 
--#ifdef CONFIG_MEMCG
--/**
-- * bio_associate_blkcg_from_page - associate a bio with the page's blkcg
-- * @bio: target bio
-- * @page: the page to lookup the blkcg from
-- *
-- * Associate @bio with the blkcg from @page's owning memcg.  This works like
-- * every other associate function wrt references.
-- */
--int bio_associate_blkcg_from_page(struct bio *bio, struct page *page)
--{
--	struct cgroup_subsys_state *blkcg_css;
--
--	if (unlikely(bio->bi_css))
--		return -EBUSY;
--	if (!page->mem_cgroup)
--		return 0;
--	blkcg_css = cgroup_get_e_css(page->mem_cgroup->css.cgroup,
--				     &io_cgrp_subsys);
--	bio->bi_css = blkcg_css;
--	return 0;
--}
--#endif /* CONFIG_MEMCG */
--
- /**
-  * bio_associate_blkcg - associate a bio with the specified blkcg
-  * @bio: target bio
-@@ -2059,6 +2035,44 @@ static void __bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
- 	bio->bi_blkg = blkg_try_get_closest(blkg);
+ 	bio_clone_blkcg_association(bio, bio_src);
++
++	blkcg_bio_issue_init(bio);
  }
+ EXPORT_SYMBOL(__bio_clone_fast);
  
-+static void __bio_associate_blkg_from_css(struct bio *bio,
-+					  struct cgroup_subsys_state *css)
-+{
-+	struct blkcg_gq *blkg;
-+
-+	rcu_read_lock();
-+
-+	blkg = blkg_lookup_create(css_to_blkcg(css), bio->bi_disk->queue);
-+	__bio_associate_blkg(bio, blkg);
-+
-+	rcu_read_unlock();
-+}
-+
-+#ifdef CONFIG_MEMCG
-+/**
-+ * bio_associate_blkg_from_page - associate a bio with the page's blkg
-+ * @bio: target bio
-+ * @page: the page to lookup the blkcg from
-+ *
-+ * Associate @bio with the blkg from @page's owning memcg and the respective
-+ * request_queue.  This works like every other associate function wrt
-+ * references.
-+ */
-+void bio_associate_blkg_from_page(struct bio *bio, struct page *page)
-+{
-+	struct cgroup_subsys_state *css;
-+
-+	if (unlikely(bio->bi_css))
-+		return;
-+	if (!bio_has_queue(bio) || !page->mem_cgroup)
-+		return;
-+
-+	css = cgroup_get_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
-+	bio->bi_css = css;
-+	__bio_associate_blkg_from_css(bio, css);
-+}
-+#endif /* CONFIG_MEMCG */
-+
- /**
-  * bio_associate_blkg - associate a bio with a blkg from q
-  * @bio: target bio
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 8bc9d9b29fd3..ad322232db3e 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -510,10 +510,10 @@ do {						\
- 	disk_devt((bio)->bi_disk)
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index e6b47c255521..5a79f06a730d 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -478,8 +478,6 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	if (!blk_iolatency_enabled(blkiolat))
+ 		return;
  
- #if defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
--int bio_associate_blkcg_from_page(struct bio *bio, struct page *page);
-+void bio_associate_blkg_from_page(struct bio *bio, struct page *page);
- #else
--static inline int bio_associate_blkcg_from_page(struct bio *bio,
--						struct page *page) {  return 0; }
-+static inline void bio_associate_blkg_from_page(struct bio *bio,
-+						struct page *page) { }
+-	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+-
+ 	while (blkg && blkg->parent) {
+ 		struct iolatency_grp *iolat = blkg_to_lat(blkg);
+ 		if (!iolat) {
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 1c6529df2002..1b97a73d2fb1 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2115,13 +2115,6 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+ }
  #endif
  
- #ifdef CONFIG_BLK_CGROUP
-diff --git a/mm/page_io.c b/mm/page_io.c
-index 257fdd67308d..409dcd438488 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -339,7 +339,7 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
- 		goto out;
+-static void blk_throtl_assoc_bio(struct bio *bio)
+-{
+-#ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+-	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+-#endif
+-}
+-
+ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 		    struct bio *bio)
+ {
+@@ -2142,7 +2135,6 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 
+ 	throtl_update_latency_buckets(td);
+ 
+-	blk_throtl_assoc_bio(bio);
+ 	blk_throtl_update_idletime(tg);
+ 
+ 	sq = &tg->service_queue;
+diff --git a/block/bounce.c b/block/bounce.c
+index 559c55bda040..e77a44a80ac2 100644
+--- a/block/bounce.c
++++ b/block/bounce.c
+@@ -279,6 +279,8 @@ static struct bio *bounce_clone_bio(struct bio *bio_src, gfp_t gfp_mask,
+ 
+ 	bio_clone_blkcg_association(bio, bio_src);
+ 
++	blkcg_bio_issue_init(bio);
++
+ 	return bio;
+ }
+ 
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 81b45943ce29..58eb91a9aa8d 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -799,6 +799,12 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
+ 				  struct bio *bio) { return false; }
+ #endif
+ 
++
++static inline void blkcg_bio_issue_init(struct bio *bio)
++{
++	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
++}
++
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio)
+ {
+@@ -826,6 +832,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
  	}
- 	bio->bi_opf = REQ_OP_WRITE | REQ_SWAP | wbc_to_write_flags(wbc);
--	bio_associate_blkcg_from_page(bio, page);
-+	bio_associate_blkg_from_page(bio, page);
- 	count_swpout_vm_event(page);
- 	set_page_writeback(page);
- 	unlock_page(page);
+ 
++	blkcg_bio_issue_init(bio);
++
+ 	rcu_read_unlock();
+ 	return !throtl;
+ }
+@@ -932,6 +940,7 @@ static inline char *blkg_path(struct blkcg_gq *blkg) { return NULL; }
+ static inline void blkg_get(struct blkcg_gq *blkg) { }
+ static inline void blkg_put(struct blkcg_gq *blkg) { }
+ 
++static inline void blkcg_bio_issue_init(struct bio *bio) { }
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio) { return true; }
+ 
 -- 
 2.17.1
 
