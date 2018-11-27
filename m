@@ -1,102 +1,58 @@
-From: "Ho, Kenny" <Kenny.Ho@amd.com>
-Subject: RE: [Intel-gfx] [PATCH RFC 2/5] cgroup: Add mechanism to register
- vendor specific DRM devices
-Date: Tue, 27 Nov 2018 15:41:17 +0000
-Message-ID: <DM5PR12MB12263983A136E378F46A525D83D00@DM5PR12MB1226.namprd12.prod.outlook.com>
-References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20181120185814.13362-3-Kenny.Ho@amd.com>
- <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
- <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>,
- <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
- <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
- <154331198147.4538.9472338565824691695@jlahtine-desk.ger.corp.intel.com>
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [PATCH 01/13] blkcg: fix ref count issue with bio_blkcg() using
+ task_css
+Date: Tue, 27 Nov 2018 15:54:29 -0500
+Message-ID: <20181127205427.v2x7ezd6jgkxg562@macbook-pro-91.dhcp.thefacebook.com>
+References: <20181126211946.77067-1-dennis@kernel.org>
+ <20181126211946.77067-2-dennis@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <154331198147.4538.9472338565824691695@jlahtine-desk.ger.corp.intel.com>
-Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=bqyE1nmXeAtPZbB2AL1Q4bwPXAN2rTBpblfeBKlhVg4=;
+        b=KgSSMt4L+4tqXR2s+UHTYAZflYlIuedUbXzViNuZYxBCrGfB2P6tWYKhhL9LqkWnIY
+         uIWLGg625SPIus4yfa8vQ4Rn0berTLnGHGJa0iC2cJa1eD73Mt8pBBGxNhs12Ms1ggKI
+         uksj6n+fKLc9mFWtfr5/rf0CwViWF9qHyxCrZ5RORsfJAT+ehnebXCrGtBK2naK75PTa
+         ZR/Etd+hEl93Th/ytTmMiCidhAapEKabckiaf41BfTMzQlwxwJd5YIaSy8qZoovKLOD6
+         z3SMMTiPewSfzgbh5hyY0w6FVDCe/+tBO5ZYPm47xWSCJszcmh28uTamHa22akWBpx2D
+         BYuw==
+Content-Disposition: inline
+In-Reply-To: <20181126211946.77067-2-dennis@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, "Kasiviswanathan,
- Harish" <Harish.Kasiviswanathan@amd.com>, Tejun Heo <tj@kernel.org>
-Cc: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>, "y2kenny@gmail.com" <y2kenny@gmail.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
+Content-Transfer-Encoding: 7bit
+To: Dennis Zhou <dennis@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-T24gVHVlLCBOb3YgMjcsIDIwMTggYXQgNDo0NiBBTSBKb29uYXMgTGFodGluZW4gPGpvb25hcy5s
-YWh0aW5lbkBsaW51eC5pbnRlbC5jb20+IHdyb3RlOg0KPiBJIHRoaW5rIGEgbW9yZSBhYnN0cmFj
-dCBwcm9wZXJ0eSAiJSBvZiBHUFUgKHByb2Nlc3NpbmcgcG93ZXIpIiBtaWdodA0KPiBiZSBhIG1v
-cmUgdW5pdmVyc2FsIGFwcHJvYWNoLiBPbmUgY2FuIHRoZW4gaW1wbGVtZW50IHRoYXQgdGhyb3Vn
-aA0KPiBzdWJkaXZpZGluZyB0aGUgcmVzb3VyY2VzIG9yIHRpbWVzbGljaW5nIHRoZW0sIGRlcGVu
-ZGluZyBvbiB0aGUgR1BVDQo+IHRvcG9sb2d5Lg0KPg0KPiBMZWFzaW5nIDEvOHRoLCAxLzR0aCBv
-ciAxLzIgb2YgdGhlIEdQVSB3b3VsZCBwcm9iYWJseSBiZSB0aGUgbW9zdA0KPiBhcHBsaWNhYmxl
-IHRvIGNsb3VkIHByb3ZpZGVyIHVzZWNhc2VzLCB0b28uIEF0IGxlYXN0IHRoYXQncyB3aGF0IEkN
-Cj4gc2VlIGRvbmUgZm9yIHRoZSBDUFVzIHRvZGF5Lg0KSSB0aGluayB0aGVyZSBhcmUgb3Bwb3J0
-dW5pdGllcyB0byBzbGljZSB0aGUgZ3B1IGluIG1vcmUgdGhhbiBvbmUgd2F5IChzaW1pbGFyIHRv
-IHRoZSB3YXkgaXQgaXMgZG9uZSBmb3IgY3B1LikgIFdlIGNhbiBwb3RlbnRpYWxseSBmcmFtZSBy
-ZXNvdXJjZXMgYXMgY29udGludW91cyBvciBkaXNjcmV0ZS4gIFBlcmNlbnRhZ2UgZGVmaW5pdGVs
-eSBmaXRzIHdlbGwgZm9yIGNvbnRpbnVvdXMgbWVhc3VyZW1lbnRzIHN1Y2ggYXMgdGltZS90aW1l
-IHNsaWNlcyBidXQgSSB0aGluayB0aGVyZSBhcmUgcGxhY2VzIGZvciBkaXNjcmV0ZSB1bml0cyBz
-dWNoIGFzIGNvcmUgY291bnRzIGFzIHdlbGwuDQoNClJlZ2FyZHMsDQpLZW5ueQ0KDQo+IFRoYXQg
-Y29tYmluZWQgd2l0aCB0aGUgIkdQVSBtZW1vcnkgdXNhYmxlIiBwcm9wZXJ0eSBzaG91bGQgYmUg
-YSBnb29kDQo+IHN0YXJ0aW5nIHBvaW50IHRvIHN0YXJ0IHN1YmRpdmlkaW5nIHRoZSBHUFUgcmVz
-b3VyY2VzIGZvciBtdWx0aXBsZQ0KPiB1c2Vycy4NCj4NCj4gUmVnYXJkcywgSm9vbmFzDQo+DQo+
-ID4NCj4gPiBZb3VyIGZlZWRiYWNrIGlzIGhpZ2hseSBhcHByZWNpYXRlZC4NCj4gPg0KPiA+IEJl
-c3QgUmVnYXJkcywNCj4gPiBIYXJpc2gNCj4gPg0KPiA+DQo+ID4NCj4gPiBGcm9tOiBhbWQtZ2Z4
-IDxhbWQtZ2Z4LWJvdW5jZXNAbGlzdHMuZnJlZWRlc2t0b3Aub3JnPiBvbiBiZWhhbGYgb2YgVGVq
-dW4gSGVvIDx0akBrZXJuZWwub3JnPg0KPiA+IFNlbnQ6IFR1ZXNkYXksIE5vdmVtYmVyIDIwLCAy
-MDE4IDU6MzAgUE0NCj4gPiBUbzogSG8sIEtlbm55DQo+ID4gQ2M6IGNncm91cHNAdmdlci5rZXJu
-ZWwub3JnOyBpbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnOyB5Mmtlbm55QGdtYWlsLmNv
-bTsgYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IGRyaS1kZXZlbEBsaXN0cy5mcmVlZGVz
-a3RvcC5vcmcNCj4gPiBTdWJqZWN0OiBSZTogW1BBVENIIFJGQyAyLzVdIGNncm91cDogQWRkIG1l
-Y2hhbmlzbSB0byByZWdpc3RlciB2ZW5kb3Igc3BlY2lmaWMgRFJNIGRldmljZXMNCj4gPg0KPiA+
-DQo+ID4gSGVsbG8sDQo+ID4NCj4gPiBPbiBUdWUsIE5vdiAyMCwgMjAxOCBhdCAxMDoyMToxNFBN
-ICswMDAwLCBIbywgS2Vubnkgd3JvdGU6DQo+ID4gPiBCeSB0aGlzIHJlcGx5LCBhcmUgeW91IHN1
-Z2dlc3RpbmcgdGhhdCB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2VzDQo+ID4gPiB3aWxsIG5ldmVy
-IGJlIGFjY2VwdGFibGUgdG8gYmUgbWFuYWdlZCB1bmRlciBjZ3JvdXA/ICBMZXQgc2F5IGEgdXNl
-cg0KPiA+DQo+ID4gSSB3b3VsZG4ndCBzYXkgbmV2ZXIgYnV0IHdoYXRldmVyIHdoaWNoIGdldHMg
-aW5jbHVkZWQgYXMgYSBjZ3JvdXANCj4gPiBjb250cm9sbGVyIHNob3VsZCBoYXZlIGNsZWFybHkg
-ZGVmaW5lZCByZXNvdXJjZSBhYnN0cmFjdGlvbnMgYW5kIHRoZQ0KPiA+IGNvbnRyb2wgc2NoZW1l
-cyBhcm91bmQgdGhlbSBpbmNsdWRpbmcgc3VwcG9ydCBmb3IgZGVsZWdhdGlvbi4gIEFGQUlDUywN
-Cj4gPiBncHUgc2lkZSBzdGlsbCBzZWVtcyB0byBoYXZlIGEgbG9uZyB3YXkgdG8gZ28gKGFuZCBp
-dCdzIG5vdCBjbGVhcg0KPiA+IHdoZXRoZXIgdGhhdCdzIHNvbWV3aGVyZSBpdCB3aWxsIG9yIG5l
-ZWRzIHRvIGVuZCB1cCkuDQo+ID4NCj4gPiA+IHdhbnQgdG8gaGF2ZSBzaW1pbGFyIGZ1bmN0aW9u
-YWxpdHkgYXMgd2hhdCBjZ3JvdXAgaXMgb2ZmZXJpbmcgYnV0IHRvDQo+ID4gPiBtYW5hZ2UgdmVu
-ZG9yIHNwZWNpZmljIHJlc291cmNlcywgd2hhdCB3b3VsZCB5b3Ugc3VnZ2VzdCBhcyBhDQo+ID4g
-PiBzb2x1dGlvbj8gIFdoZW4geW91IHNheSBrZWVwaW5nIHZlbmRvciBzcGVjaWZpYyByZXNvdXJj
-ZSByZWd1bGF0aW9uDQo+ID4gPiBpbnNpZGUgZHJtIG9yIHNwZWNpZmljIGRyaXZlcnMsIGRvIHlv
-dSBtZWFuIHdlIHNob3VsZCByZXBsaWNhdGUgdGhlDQo+ID4gPiBjZ3JvdXAgaW5mcmFzdHJ1Y3R1
-cmUgdGhlcmUgb3IgZG8geW91IG1lYW4gZWl0aGVyIGRybSBvciBzcGVjaWZpYw0KPiA+ID4gZHJp
-dmVyIHNob3VsZCBxdWVyeSBleGlzdGluZyBoaWVyYXJjaHkgKHN1Y2ggYXMgZGV2aWNlIG9yIHBl
-cmhhcHMNCj4gPiA+IGNwdSkgZm9yIHRoZSBwcm9jZXNzIG9yZ2FuaXphdGlvbiBpbmZvcm1hdGlv
-bj8NCj4gPiA+DQo+ID4gPiBUbyBwdXQgdGhlIHF1ZXN0aW9ucyBpbiBtb3JlIGNvbmNyZXRlIHRl
-cm1zLCBsZXQgc2F5IGEgdXNlciB3YW50cyB0bw0KPiA+ID4gZXhwb3NlIGNlcnRhaW4gcGFydCBv
-ZiBhIGdwdSB0byBhIHBhcnRpY3VsYXIgY2dyb3VwIHNpbWlsYXIgdG8gdGhlDQo+ID4gPiB3YXkg
-c2VsZWN0aXZlIGNwdSBjb3JlcyBhcmUgZXhwb3NlZCB0byBhIGNncm91cCB2aWEgY3B1c2V0LCBo
-b3cNCj4gPiA+IHNob3VsZCB3ZSBnbyBhYm91dCBlbmFibGluZyBzdWNoIGZ1bmN0aW9uYWxpdHk/
-DQo+ID4NCj4gPiBEbyB3aGF0IHRoZSBpbnRlbCBkcml2ZXIgb3IgYnBmIGlzIGRvaW5nPyAgSXQn
-cyBub3QgZGlmZmljdWx0IHRvIGhvb2sNCj4gPiBpbnRvIGNncm91cCBmb3IgaWRlbnRpZmljYXRp
-b24gcHVycG9zZXMuDQo+ID4NCj4gPiBUaGFua3MuDQo+ID4NCj4gPiAtLQ0KPiA+IHRlanVuDQo+
-ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gPiBh
-bWQtZ2Z4IG1haWxpbmcgbGlzdA0KPiA+IGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnDQo+
-ID4gaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
-DQo+ID4NCj4gPg0KPiA+IGFtZC1nZnggSW5mbyBQYWdlIC0gZnJlZWRlc2t0b3Aub3JnDQo+ID4g
-bGlzdHMuZnJlZWRlc2t0b3Aub3JnDQo+ID4gVG8gc2VlIHRoZSBjb2xsZWN0aW9uIG9mIHByaW9y
-IHBvc3RpbmdzIHRvIHRoZSBsaXN0LCB2aXNpdCB0aGUgYW1kLWdmeCBBcmNoaXZlcy4uIFVzaW5n
-IGFtZC1nZng6IFRvIHBvc3QgYSBtZXNzYWdlIHRvIGFsbCB0aGUgbGlzdCBtZW1iZXJzLCBzZW5k
-IGVtYWlsIHRvIGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnLiBZb3UgY2FuIHN1YnNjcmli
-ZSB0byB0aGUgbGlzdCwgb3IgY2hhbmdlIHlvdXIgZXhpc3Rpbmcgc3Vic2NyaXB0aW9uLCBpbiB0
-aGUgc2VjdGlvbnMgYmVsb3cuDQo+ID4gDQo+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18NCj4gPiBJbnRlbC1nZnggbWFpbGluZyBsaXN0DQo+ID4gSW50
-ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiA+IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4DQpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZl
-bEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFp
-bG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+On Mon, Nov 26, 2018 at 04:19:34PM -0500, Dennis Zhou wrote:
+> The bio_blkcg() function turns out to be inconsistent and consequently
+> dangerous to use. The first part returns a blkcg where a reference is
+> owned by the bio meaning it does not need to be rcu protected. However,
+> the third case, the last line, is problematic:
+> 
+> 	return css_to_blkcg(task_css(current, io_cgrp_id));
+> 
+> This can race against task migration and the cgroup dying. It is also
+> semantically different as it must be called rcu protected and is
+> susceptible to failure when trying to get a reference to it.
+> 
+> This patch adds association ahead of calling bio_blkcg() rather than
+> after. This makes association a required and explicit step along the
+> code paths for calling bio_blkcg(). In blk-iolatency, association is
+> moved above the bio_blkcg() call to ensure it will not return %NULL.
+> 
+> BFQ uses the old bio_blkcg() function, but I do not want to address it
+> in this series due to the complexity. I have created a private version
+> documenting the inconsistency and noting not to use it.
+> 
+> Signed-off-by: Dennis Zhou <dennis@kernel.org>
+> Acked-by: Tejun Heo <tj@kernel.org>
+
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+
+Thanks,
+
+Josef
