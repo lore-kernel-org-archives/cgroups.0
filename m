@@ -1,37 +1,37 @@
-From: Peng Wang <rocking@whu.edu.cn>
-Subject: [PATCH] cgroup: remove unused member "cgrp_ancestor_id_storage" in struct cgroup_root
-Date: Tue, 27 Nov 2018 14:53:57 +0800
-Message-ID: <20181127065357.28130-1-rocking@whu.edu.cn>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: remove unused member "cgrp_ancestor_id_storage"
+ in struct cgroup_root
+Date: Tue, 27 Nov 2018 01:28:59 -0800
+Message-ID: <20181127092859.GC2509588@devbig004.ftw2.facebook.com>
+References: <20181127065357.28130-1-rocking@whu.edu.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=3tECLqTkzFOjFCy4pDgJ59MTjzCv98LoBr5PspWdCgI=;
+        b=qVMdZIudvMC2OTME8ZOMUm3eUfKK2siVbKT9hbBaUVdfwBf82p3ZwW2TKTtnM9tcC8
+         4Sqk0nsKeO+zhMu41M5Tg50V9ko29928unxXxSmVG6t3MKssXScO6iBmQoKfZb9q4L+o
+         8MxbLLBXU9PTSPbIKsXmXUTASbAyb1Bvbi/ffYkkb+ENjb+/azKEP179lglIiNu56qBf
+         9T5PQ00+Oot5PqqKEjhd0/o06J5KiJ0G6DznoNn/r4qaftEfebbq9Q83+mSLYpcbaThc
+         cIQzJ8xcKmd/YIBfQzU51LLrLRgS8DETxKpx1Zvswcfdj3hprAMqTPV/Km/YhNOPN0jk
+         iuDg==
+Content-Disposition: inline
+In-Reply-To: <20181127065357.28130-1-rocking@whu.edu.cn>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Peng Wang <rocking@whu.edu.cn>
+Content-Transfer-Encoding: 7bit
+To: Peng Wang <rocking@whu.edu.cn>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-"cgrp_ancestor_id_storage" is not used, so let's clean it up.
+On Tue, Nov 27, 2018 at 02:53:57PM +0800, Peng Wang wrote:
+> "cgrp_ancestor_id_storage" is not used, so let's clean it up.
 
-Signed-off-by: Peng Wang <rocking@whu.edu.cn>
----
- include/linux/cgroup-defs.h | 3 ---
- 1 file changed, 3 deletions(-)
+It is being used.
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 5e1694fe035b..639a96576ef3 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -467,9 +467,6 @@ struct cgroup_root {
- 	/* The root cgroup.  Root is destroyed on its release. */
- 	struct cgroup cgrp;
- 
--	/* for cgrp->ancestor_ids[0] */
--	int cgrp_ancestor_id_storage;
--
- 	/* Number of cgroups in the hierarchy, used only for /proc/cgroups */
- 	atomic_t nr_cgrps;
- 
+Thanks.
+
 -- 
-2.19.1
-
+tejun
