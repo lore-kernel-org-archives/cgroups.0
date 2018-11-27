@@ -1,37 +1,88 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: remove unused member "cgrp_ancestor_id_storage"
- in struct cgroup_root
-Date: Tue, 27 Nov 2018 01:28:59 -0800
-Message-ID: <20181127092859.GC2509588@devbig004.ftw2.facebook.com>
-References: <20181127065357.28130-1-rocking@whu.edu.cn>
+From: "Koenig, Christian" <Christian.Koenig@amd.com>
+Subject: Re: [PATCH RFC 2/5] cgroup: Add mechanism to register vendor specific
+ DRM devices
+Date: Tue, 27 Nov 2018 09:38:59 +0000
+Message-ID: <322ed4bd-cc1a-6116-c360-2a2c4352595f@amd.com>
+References: <20181120185814.13362-1-Kenny.Ho@amd.com>
+ <20181120185814.13362-3-Kenny.Ho@amd.com>
+ <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
+ <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>
+ <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
+ <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=3tECLqTkzFOjFCy4pDgJ59MTjzCv98LoBr5PspWdCgI=;
-        b=qVMdZIudvMC2OTME8ZOMUm3eUfKK2siVbKT9hbBaUVdfwBf82p3ZwW2TKTtnM9tcC8
-         4Sqk0nsKeO+zhMu41M5Tg50V9ko29928unxXxSmVG6t3MKssXScO6iBmQoKfZb9q4L+o
-         8MxbLLBXU9PTSPbIKsXmXUTASbAyb1Bvbi/ffYkkb+ENjb+/azKEP179lglIiNu56qBf
-         9T5PQ00+Oot5PqqKEjhd0/o06J5KiJ0G6DznoNn/r4qaftEfebbq9Q83+mSLYpcbaThc
-         cIQzJ8xcKmd/YIBfQzU51LLrLRgS8DETxKpx1Zvswcfdj3hprAMqTPV/Km/YhNOPN0jk
-         iuDg==
-Content-Disposition: inline
-In-Reply-To: <20181127065357.28130-1-rocking@whu.edu.cn>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peng Wang <rocking@whu.edu.cn>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
+Content-Language: en-US
+Content-ID: <2458E587FA12134A8B30176F31A7211E@namprd12.prod.outlook.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan@amd.com>, Tejun Heo <tj@kernel.org>, "Ho, Kenny" <Kenny.Ho@amd.com>
+Cc: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>, "y2kenny@gmail.com" <y2kenny@gmail.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
 
-On Tue, Nov 27, 2018 at 02:53:57PM +0800, Peng Wang wrote:
-> "cgrp_ancestor_id_storage" is not used, so let's clean it up.
-
-It is being used.
-
-Thanks.
-
--- 
-tejun
+SGkgSGFyaXNoLA0KDQpBbSAyNi4xMS4xOCB1bSAyMTo1OSBzY2hyaWViIEthc2l2aXN3YW5hdGhh
+biwgSGFyaXNoOg0KPiBUaGFua3MgVGVqdW4sRXJpYyBhbmQgQ2hyaXN0aWFuIGZvciB5b3VyIHJl
+cGxpZXMuDQo+DQo+IFdlIHdhbnQgR1BVcyByZXNvdXJjZSBtYW5hZ2VtZW50IHRvIHdvcmsgc2Vh
+bWxlc3NseSB3aXRoIGNvbnRhaW5lcnMgYW5kIGNvbnRhaW5lciBvcmNoZXN0cmF0aW9uLiBXaXRo
+IHRoZSBJbnRlbCAvIGJwZiBiYXNlZCBhcHByb2FjaCB0aGlzIGlzIG5vdCBwb3NzaWJsZS4NCg0K
+SSB0aGluayBvbmUgbGVzc29uIGxlYXJuZWQgaXMgdGhhdCB3ZSBzaG91bGQgZGVzY3JpYmUgdGhp
+cyBnb2FsIGluIHRoZSANCnBhdGNoIGNvdmVydCBsZXR0ZXIgd2hlbiBzZW5kaW5nIGl0IG91dC4g
+VGhhdCBjb3VsZCBoYXZlIGF2b2lkIHNvbWV0aGluZyANCmxpa2UgaGF2ZSBvZiB0aGUgaW5pdGlh
+bCBjb25mdXNpb24uDQoNCj4gIEZyb20geW91ciByZXNwb25zZSB3ZSBnYXRoZXIgdGhlIGZvbGxv
+d2luZy4gR1BVIHJlc291cmNlcyBuZWVkIHRvIGJlIGFic3RyYWN0ZWQuIFdlIHdpbGwgc2VuZCBh
+IG5ldyBwcm9wb3NhbCBpbiBzYW1lIHZlaW4uIE91ciBjdXJyZW50IHRoaW5raW5nIGlzIHRvIHN0
+YXJ0IHdpdGggYSBzaW5nbGUgYWJzdHJhY3RlZCByZXNvdXJjZSBhbmQgYnVpbGQgYSBmcmFtZXdv
+cmsgdGhhdCBjYW4gYmUgZXhwYW5kZWQgdG8gaW5jbHVkZSBhZGRpdGlvbmFsIHJlc291cmNlcy4g
+V2UgcGxhbiB0byBzdGFydCB3aXRoIOKAnEdQVSBjb3Jlc+KAnS4gV2UgYmVsaWV2ZSBhbGwgR1BV
+cyBoYXZlIHNvbWUgY29uY2VwdCBvZiBjb3JlcyBvciBjb21wdXRlIHVuaXQuDQoNClNvdW5kcyBn
+b29kLCBqdXN0IG9uZSBjb21tZW50IG9uIGNyZWF0aW5nIGEgZnJhbWV3b3JrOiBCZWZvcmUgZG9p
+bmcgDQpzb21ldGhpbmcgbGlrZSB0aGlzIHRoaW5rIGZvciBhIG1vbWVudCBpZiBpdCBkb2Vzbid0
+IG1ha2Ugc2Vuc2UgdG8gDQpyYXRoZXIgZXh0ZW5kIHRoZSBleGlzdGluZyBjZ3JvdXAgZnJhbWV3
+b3JrLiBUaGF0IGFwcHJvYWNoIHVzdWFsbHkgbWFrZXMgDQptb3JlIHNlbnNlIGJlY2F1c2UgeW91
+IHJhcmVseSBuZWVkIHNvbWV0aGluZyBmdW5kYW1lbnRhbGx5IG5ldy4NCg0KUmVnYXJkcywNCkNo
+cmlzdGlhbi4NCg0KPg0KPiBZb3VyIGZlZWRiYWNrIGlzIGhpZ2hseSBhcHByZWNpYXRlZC4NCj4N
+Cj4gQmVzdCBSZWdhcmRzLA0KPiBIYXJpc2gNCj4NCj4NCj4NCj4gRnJvbTogYW1kLWdmeCA8YW1k
+LWdmeC1ib3VuY2VzQGxpc3RzLmZyZWVkZXNrdG9wLm9yZz4gb24gYmVoYWxmIG9mIFRlanVuIEhl
+byA8dGpAa2VybmVsLm9yZz4NCj4gU2VudDogVHVlc2RheSwgTm92ZW1iZXIgMjAsIDIwMTggNToz
+MCBQTQ0KPiBUbzogSG8sIEtlbm55DQo+IENjOiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZzsgaW50
+ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZzsgeTJrZW5ueUBnbWFpbC5jb207IGFtZC1nZnhA
+bGlzdHMuZnJlZWRlc2t0b3Aub3JnOyBkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnDQo+
+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggUkZDIDIvNV0gY2dyb3VwOiBBZGQgbWVjaGFuaXNtIHRvIHJl
+Z2lzdGVyIHZlbmRvciBzcGVjaWZpYyBEUk0gZGV2aWNlcw0KPiAgICANCj4NCj4gSGVsbG8sDQo+
+DQo+IE9uIFR1ZSwgTm92IDIwLCAyMDE4IGF0IDEwOjIxOjE0UE0gKzAwMDAsIEhvLCBLZW5ueSB3
+cm90ZToNCj4+IEJ5IHRoaXMgcmVwbHksIGFyZSB5b3Ugc3VnZ2VzdGluZyB0aGF0IHZlbmRvciBz
+cGVjaWZpYyByZXNvdXJjZXMNCj4+IHdpbGwgbmV2ZXIgYmUgYWNjZXB0YWJsZSB0byBiZSBtYW5h
+Z2VkIHVuZGVyIGNncm91cD/CoCBMZXQgc2F5IGEgdXNlcg0KPiBJIHdvdWxkbid0IHNheSBuZXZl
+ciBidXQgd2hhdGV2ZXIgd2hpY2ggZ2V0cyBpbmNsdWRlZCBhcyBhIGNncm91cA0KPiBjb250cm9s
+bGVyIHNob3VsZCBoYXZlIGNsZWFybHkgZGVmaW5lZCByZXNvdXJjZSBhYnN0cmFjdGlvbnMgYW5k
+IHRoZQ0KPiBjb250cm9sIHNjaGVtZXMgYXJvdW5kIHRoZW0gaW5jbHVkaW5nIHN1cHBvcnQgZm9y
+IGRlbGVnYXRpb24uwqAgQUZBSUNTLA0KPiBncHUgc2lkZSBzdGlsbCBzZWVtcyB0byBoYXZlIGEg
+bG9uZyB3YXkgdG8gZ28gKGFuZCBpdCdzIG5vdCBjbGVhcg0KPiB3aGV0aGVyIHRoYXQncyBzb21l
+d2hlcmUgaXQgd2lsbCBvciBuZWVkcyB0byBlbmQgdXApLg0KPg0KPj4gd2FudCB0byBoYXZlIHNp
+bWlsYXIgZnVuY3Rpb25hbGl0eSBhcyB3aGF0IGNncm91cCBpcyBvZmZlcmluZyBidXQgdG8NCj4+
+IG1hbmFnZSB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2VzLCB3aGF0IHdvdWxkIHlvdSBzdWdnZXN0
+IGFzIGENCj4+IHNvbHV0aW9uP8KgIFdoZW4geW91IHNheSBrZWVwaW5nIHZlbmRvciBzcGVjaWZp
+YyByZXNvdXJjZSByZWd1bGF0aW9uDQo+PiBpbnNpZGUgZHJtIG9yIHNwZWNpZmljIGRyaXZlcnMs
+IGRvIHlvdSBtZWFuIHdlIHNob3VsZCByZXBsaWNhdGUgdGhlDQo+PiBjZ3JvdXAgaW5mcmFzdHJ1
+Y3R1cmUgdGhlcmUgb3IgZG8geW91IG1lYW4gZWl0aGVyIGRybSBvciBzcGVjaWZpYw0KPj4gZHJp
+dmVyIHNob3VsZCBxdWVyeSBleGlzdGluZyBoaWVyYXJjaHkgKHN1Y2ggYXMgZGV2aWNlIG9yIHBl
+cmhhcHMNCj4+IGNwdSkgZm9yIHRoZSBwcm9jZXNzIG9yZ2FuaXphdGlvbiBpbmZvcm1hdGlvbj8N
+Cj4+DQo+PiBUbyBwdXQgdGhlIHF1ZXN0aW9ucyBpbiBtb3JlIGNvbmNyZXRlIHRlcm1zLCBsZXQg
+c2F5IGEgdXNlciB3YW50cyB0bw0KPj4gZXhwb3NlIGNlcnRhaW4gcGFydCBvZiBhIGdwdSB0byBh
+IHBhcnRpY3VsYXIgY2dyb3VwIHNpbWlsYXIgdG8gdGhlDQo+PiB3YXkgc2VsZWN0aXZlIGNwdSBj
+b3JlcyBhcmUgZXhwb3NlZCB0byBhIGNncm91cCB2aWEgY3B1c2V0LCBob3cNCj4+IHNob3VsZCB3
+ZSBnbyBhYm91dCBlbmFibGluZyBzdWNoIGZ1bmN0aW9uYWxpdHk/DQo+IERvIHdoYXQgdGhlIGlu
+dGVsIGRyaXZlciBvciBicGYgaXMgZG9pbmc/wqAgSXQncyBub3QgZGlmZmljdWx0IHRvIGhvb2sN
+Cj4gaW50byBjZ3JvdXAgZm9yIGlkZW50aWZpY2F0aW9uIHB1cnBvc2VzLg0KPg0KPiBUaGFua3Mu
+DQo+DQoNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRy
+aS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRw
+czovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
