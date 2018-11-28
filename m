@@ -1,110 +1,45 @@
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-Subject: RE: [Intel-gfx] [PATCH RFC 2/5] cgroup: Add mechanism to register
- vendor specific DRM devices
-Date: Wed, 28 Nov 2018 11:14:14 +0200
-Message-ID: <154339645444.5339.6291298808444340104@jlahtine-desk.ger.corp.intel.com>
-References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20181120185814.13362-3-Kenny.Ho@amd.com>
- <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
- <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>,
- <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
- <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
- <154331198147.4538.9472338565824691695@jlahtine-desk.ger.corp.intel.com>
- <DM5PR12MB12263983A136E378F46A525D83D00@DM5PR12MB1226.namprd12.prod.outlook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v2 3/6] cgroup: cgroup v2 freezer
+Date: Wed, 28 Nov 2018 17:36:28 +0000
+Message-ID: <20181128173622.GA22882@tower.DHCP.thefacebook.com>
+References: <20181112230422.5911-1-guro@fb.com>
+ <20181112230422.5911-5-guro@fb.com> <20181113154825.GC30990@redhat.com>
+ <20181113215919.GC15590@tower.DHCP.thefacebook.com>
+ <20181114165631.GE13885@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <DM5PR12MB12263983A136E378F46A525D83D00@DM5PR12MB1226.namprd12.prod.outlook.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Ho, Kenny" <Kenny.Ho@amd.com>, "Kasiviswanathan,
- Harish" <Harish.Kasiviswanathan@amd.com>, Tejun Heo <tj@kernel.org>
-Cc: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>, "y2kenny@gmail.com" <y2kenny@gmail.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=OCGIgRcpxduPNPXad1ZkrGVGa7pcF5jdEdemT6YgYeM=;
+ b=NXeryYgftpXETazZz3U4/MweNGRj1sf5NoMYkOuhQVAJvFD1PsLyxj5mdSojgkH/HJdl
+ PWvgFOJyNDJkA7ot63U4EI2TcsrjkzcQqPKWcdXYYkrmnaxQfdE5bpQX+2pf8ls0LDes
+ uYe9wYL83OYgpOaIfwr9+Zqh7aTqBryI4z8= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OCGIgRcpxduPNPXad1ZkrGVGa7pcF5jdEdemT6YgYeM=;
+ b=f0Op8P/OhT03Dkhqm0ZOhUDnvOZdPJsV6aJK7Y2OBCRhrCLE+5Mkh7kLUHGf5L0z68piaCto3OAsWQA53ieptf93rrsmxaKv2rABpmXW4XJQggTx4RwLcd2v0PYPxItGAjnRPU87tkgaSo/EjmCGTmhkdUdAZgUAWsnzEqgp1nY=
+In-Reply-To: <20181114165631.GE13885@redhat.com>
+Content-Language: en-US
+Content-ID: <622259CAEDB0B143B8C259C3B9CAC130@namprd15.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-UXVvdGluZyBIbywgS2VubnkgKDIwMTgtMTEtMjcgMTc6NDE6MTcpCj4gT24gVHVlLCBOb3YgMjcs
-IDIwMTggYXQgNDo0NiBBTSBKb29uYXMgTGFodGluZW4gPGpvb25hcy5sYWh0aW5lbkBsaW51eC5p
-bnRlbC5jb20+IHdyb3RlOgo+ID4gSSB0aGluayBhIG1vcmUgYWJzdHJhY3QgcHJvcGVydHkgIiUg
-b2YgR1BVIChwcm9jZXNzaW5nIHBvd2VyKSIgbWlnaHQKPiA+IGJlIGEgbW9yZSB1bml2ZXJzYWwg
-YXBwcm9hY2guIE9uZSBjYW4gdGhlbiBpbXBsZW1lbnQgdGhhdCB0aHJvdWdoCj4gPiBzdWJkaXZp
-ZGluZyB0aGUgcmVzb3VyY2VzIG9yIHRpbWVzbGljaW5nIHRoZW0sIGRlcGVuZGluZyBvbiB0aGUg
-R1BVCj4gPiB0b3BvbG9neS4KPiA+Cj4gPiBMZWFzaW5nIDEvOHRoLCAxLzR0aCBvciAxLzIgb2Yg
-dGhlIEdQVSB3b3VsZCBwcm9iYWJseSBiZSB0aGUgbW9zdAo+ID4gYXBwbGljYWJsZSB0byBjbG91
-ZCBwcm92aWRlciB1c2VjYXNlcywgdG9vLiBBdCBsZWFzdCB0aGF0J3Mgd2hhdCBJCj4gPiBzZWUg
-ZG9uZSBmb3IgdGhlIENQVXMgdG9kYXkuCj4gSSB0aGluayB0aGVyZSBhcmUgb3Bwb3J0dW5pdGll
-cyB0byBzbGljZSB0aGUgZ3B1IGluIG1vcmUgdGhhbiBvbmUgd2F5IChzaW1pbGFyIHRvIHRoZSB3
-YXkgaXQgaXMgZG9uZSBmb3IgY3B1LikgIFdlIGNhbiBwb3RlbnRpYWxseSBmcmFtZSByZXNvdXJj
-ZXMgYXMgY29udGludW91cyBvciBkaXNjcmV0ZS4gIFBlcmNlbnRhZ2UgZGVmaW5pdGVseSBmaXRz
-IHdlbGwgZm9yIGNvbnRpbnVvdXMgbWVhc3VyZW1lbnRzIHN1Y2ggYXMgdGltZS90aW1lIHNsaWNl
-cyBidXQgSSB0aGluayB0aGVyZSBhcmUgcGxhY2VzIGZvciBkaXNjcmV0ZSB1bml0cyBzdWNoIGFz
-IGNvcmUgY291bnRzIGFzIHdlbGwuCgpJIHRoaW5rIHRoZSBhc2sgaW4gcmV0dXJuIHRvIHRoZSBl
-YXJseSBzZXJpZXMgZnJvbSBJbnRhbCB3YXMgdG8gYWdyZWUKb24gdGhlIHZhcmlhYmxlcyB0aGF0
-IGNvdWxkIGJlIGNvbW1vbiB0byBhbGwgb2YgRFJNIHN1YnN5c3RlbS4KClNvIHdlIGNhbiBvbmx5
-IGNob29zZSB0aGUgbG93ZXN0IGNvbW1vbiBkZW5vbWluYXRvciwgcmlnaHQ/CgpBbnkgY29yZSBj
-b3VudCBvdXQgb2YgdG90YWwgY29yZSBjb3VudCBzaG91bGQgdHJhbnNsYXRlIG5pY2VseSBpbnRv
-IGEKZnJhY3Rpb24sIHNvIHdoYXQgd291bGQgYmUgdGhlIHByb2JsZW0gd2l0aCBwZXJjZW50YWdl
-IGFtb3VudHM/CgpSZWdhcmRzLCBKb29uYXMKCj4gCj4gUmVnYXJkcywKPiBLZW5ueQo+IAo+ID4g
-VGhhdCBjb21iaW5lZCB3aXRoIHRoZSAiR1BVIG1lbW9yeSB1c2FibGUiIHByb3BlcnR5IHNob3Vs
-ZCBiZSBhIGdvb2QKPiA+IHN0YXJ0aW5nIHBvaW50IHRvIHN0YXJ0IHN1YmRpdmlkaW5nIHRoZSBH
-UFUgcmVzb3VyY2VzIGZvciBtdWx0aXBsZQo+ID4gdXNlcnMuCj4gPgo+ID4gUmVnYXJkcywgSm9v
-bmFzCj4gPgo+ID4gPgo+ID4gPiBZb3VyIGZlZWRiYWNrIGlzIGhpZ2hseSBhcHByZWNpYXRlZC4K
-PiA+ID4KPiA+ID4gQmVzdCBSZWdhcmRzLAo+ID4gPiBIYXJpc2gKPiA+ID4KPiA+ID4KPiA+ID4K
-PiA+ID4gRnJvbTogYW1kLWdmeCA8YW1kLWdmeC1ib3VuY2VzQGxpc3RzLmZyZWVkZXNrdG9wLm9y
-Zz4gb24gYmVoYWxmIG9mIFRlanVuIEhlbyA8dGpAa2VybmVsLm9yZz4KPiA+ID4gU2VudDogVHVl
-c2RheSwgTm92ZW1iZXIgMjAsIDIwMTggNTozMCBQTQo+ID4gPiBUbzogSG8sIEtlbm55Cj4gPiA+
-IENjOiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZzsgaW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9w
-Lm9yZzsgeTJrZW5ueUBnbWFpbC5jb207IGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnOyBk
-cmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCj4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
-UkZDIDIvNV0gY2dyb3VwOiBBZGQgbWVjaGFuaXNtIHRvIHJlZ2lzdGVyIHZlbmRvciBzcGVjaWZp
-YyBEUk0gZGV2aWNlcwo+ID4gPgo+ID4gPgo+ID4gPiBIZWxsbywKPiA+ID4KPiA+ID4gT24gVHVl
-LCBOb3YgMjAsIDIwMTggYXQgMTA6MjE6MTRQTSArMDAwMCwgSG8sIEtlbm55IHdyb3RlOgo+ID4g
-PiA+IEJ5IHRoaXMgcmVwbHksIGFyZSB5b3Ugc3VnZ2VzdGluZyB0aGF0IHZlbmRvciBzcGVjaWZp
-YyByZXNvdXJjZXMKPiA+ID4gPiB3aWxsIG5ldmVyIGJlIGFjY2VwdGFibGUgdG8gYmUgbWFuYWdl
-ZCB1bmRlciBjZ3JvdXA/ICBMZXQgc2F5IGEgdXNlcgo+ID4gPgo+ID4gPiBJIHdvdWxkbid0IHNh
-eSBuZXZlciBidXQgd2hhdGV2ZXIgd2hpY2ggZ2V0cyBpbmNsdWRlZCBhcyBhIGNncm91cAo+ID4g
-PiBjb250cm9sbGVyIHNob3VsZCBoYXZlIGNsZWFybHkgZGVmaW5lZCByZXNvdXJjZSBhYnN0cmFj
-dGlvbnMgYW5kIHRoZQo+ID4gPiBjb250cm9sIHNjaGVtZXMgYXJvdW5kIHRoZW0gaW5jbHVkaW5n
-IHN1cHBvcnQgZm9yIGRlbGVnYXRpb24uICBBRkFJQ1MsCj4gPiA+IGdwdSBzaWRlIHN0aWxsIHNl
-ZW1zIHRvIGhhdmUgYSBsb25nIHdheSB0byBnbyAoYW5kIGl0J3Mgbm90IGNsZWFyCj4gPiA+IHdo
-ZXRoZXIgdGhhdCdzIHNvbWV3aGVyZSBpdCB3aWxsIG9yIG5lZWRzIHRvIGVuZCB1cCkuCj4gPiA+
-Cj4gPiA+ID4gd2FudCB0byBoYXZlIHNpbWlsYXIgZnVuY3Rpb25hbGl0eSBhcyB3aGF0IGNncm91
-cCBpcyBvZmZlcmluZyBidXQgdG8KPiA+ID4gPiBtYW5hZ2UgdmVuZG9yIHNwZWNpZmljIHJlc291
-cmNlcywgd2hhdCB3b3VsZCB5b3Ugc3VnZ2VzdCBhcyBhCj4gPiA+ID4gc29sdXRpb24/ICBXaGVu
-IHlvdSBzYXkga2VlcGluZyB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2UgcmVndWxhdGlvbgo+ID4g
-PiA+IGluc2lkZSBkcm0gb3Igc3BlY2lmaWMgZHJpdmVycywgZG8geW91IG1lYW4gd2Ugc2hvdWxk
-IHJlcGxpY2F0ZSB0aGUKPiA+ID4gPiBjZ3JvdXAgaW5mcmFzdHJ1Y3R1cmUgdGhlcmUgb3IgZG8g
-eW91IG1lYW4gZWl0aGVyIGRybSBvciBzcGVjaWZpYwo+ID4gPiA+IGRyaXZlciBzaG91bGQgcXVl
-cnkgZXhpc3RpbmcgaGllcmFyY2h5IChzdWNoIGFzIGRldmljZSBvciBwZXJoYXBzCj4gPiA+ID4g
-Y3B1KSBmb3IgdGhlIHByb2Nlc3Mgb3JnYW5pemF0aW9uIGluZm9ybWF0aW9uPwo+ID4gPiA+Cj4g
-PiA+ID4gVG8gcHV0IHRoZSBxdWVzdGlvbnMgaW4gbW9yZSBjb25jcmV0ZSB0ZXJtcywgbGV0IHNh
-eSBhIHVzZXIgd2FudHMgdG8KPiA+ID4gPiBleHBvc2UgY2VydGFpbiBwYXJ0IG9mIGEgZ3B1IHRv
-IGEgcGFydGljdWxhciBjZ3JvdXAgc2ltaWxhciB0byB0aGUKPiA+ID4gPiB3YXkgc2VsZWN0aXZl
-IGNwdSBjb3JlcyBhcmUgZXhwb3NlZCB0byBhIGNncm91cCB2aWEgY3B1c2V0LCBob3cKPiA+ID4g
-PiBzaG91bGQgd2UgZ28gYWJvdXQgZW5hYmxpbmcgc3VjaCBmdW5jdGlvbmFsaXR5Pwo+ID4gPgo+
-ID4gPiBEbyB3aGF0IHRoZSBpbnRlbCBkcml2ZXIgb3IgYnBmIGlzIGRvaW5nPyAgSXQncyBub3Qg
-ZGlmZmljdWx0IHRvIGhvb2sKPiA+ID4gaW50byBjZ3JvdXAgZm9yIGlkZW50aWZpY2F0aW9uIHB1
-cnBvc2VzLgo+ID4gPgo+ID4gPiBUaGFua3MuCj4gPiA+Cj4gPiA+IC0tCj4gPiA+IHRlanVuCj4g
-PiA+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPiA+
-IGFtZC1nZnggbWFpbGluZyBsaXN0Cj4gPiA+IGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
-Cj4gPiA+IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1k
-LWdmeAo+ID4gPgo+ID4gPgo+ID4gPiBhbWQtZ2Z4IEluZm8gUGFnZSAtIGZyZWVkZXNrdG9wLm9y
-Zwo+ID4gPiBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+ID4gVG8gc2VlIHRoZSBjb2xsZWN0aW9u
-IG9mIHByaW9yIHBvc3RpbmdzIHRvIHRoZSBsaXN0LCB2aXNpdCB0aGUgYW1kLWdmeCBBcmNoaXZl
-cy4uIFVzaW5nIGFtZC1nZng6IFRvIHBvc3QgYSBtZXNzYWdlIHRvIGFsbCB0aGUgbGlzdCBtZW1i
-ZXJzLCBzZW5kIGVtYWlsIHRvIGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnLiBZb3UgY2Fu
-IHN1YnNjcmliZSB0byB0aGUgbGlzdCwgb3IgY2hhbmdlIHlvdXIgZXhpc3Rpbmcgc3Vic2NyaXB0
-aW9uLCBpbiB0aGUgc2VjdGlvbnMgYmVsb3cuCj4gPiA+IAo+ID4gPiBfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+ID4gPiBJbnRlbC1nZnggbWFpbGluZyBs
-aXN0Cj4gPiA+IEludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+ID4gaHR0cHM6Ly9s
-aXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcg
-bGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRl
-c2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsCg==
+On Wed, Nov 14, 2018 at 05:56:32PM +0100, Oleg Nesterov wrote:
+> Hi Roman,
+>=20
+> OK, it seems you are going to make the new version anyway, so I can wait =
+for it
+> and not read this series ;)
+
+Hi Oleg!
+
+Can you, please, take a look at v3, which I posted recently?
+https://lkml.org/lkml/2018/11/17/193
+
+Thank you!
