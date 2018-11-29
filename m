@@ -1,66 +1,59 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: Re: [PATCH 04/13] blkcg: introduce common blkg association logic
-Date: Thu, 29 Nov 2018 14:48:29 -0500
-Message-ID: <20181129194829.GA95415@dennisz-mbp.dhcp.thefacebook.com>
+Subject: Re: [PATCH 05/13] blkcg: associate blkg when associating a device
+Date: Thu, 29 Nov 2018 14:54:07 -0500
+Message-ID: <20181129195407.GB95415@dennisz-mbp.dhcp.thefacebook.com>
 References: <20181126211946.77067-1-dennis@kernel.org>
- <20181126211946.77067-5-dennis@kernel.org>
- <20181129154917.GD2509588@devbig004.ftw2.facebook.com>
+ <20181126211946.77067-6-dennis@kernel.org>
+ <20181129155333.GE2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20181129154917.GD2509588@devbig004.ftw2.facebook.com>
+In-Reply-To: <20181129155333.GE2509588@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: Dennis Zhou <dennis@kernel.org>, Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Nov 29, 2018 at 07:49:17AM -0800, Tejun Heo wrote:
-> On Mon, Nov 26, 2018 at 04:19:37PM -0500, Dennis Zhou wrote:
-> > There are 3 ways blkg association can happen: association with the
-> > current css, with the page css (swap), or from the wbc css (writeback).
-> > 
-> > This patch handles how association is done for the first case where we
-> > are associating bsaed on the current css. If there is already a blkg
-> > associated, the css will be reused and association will be redone as the
-> > request_queue may have changed.
-> > 
-> > Signed-off-by: Dennis Zhou <dennis@kernel.org>
-> 
-> Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> A minor nit below.
-> 
-> > +/**
-> > + * bio_associate_blkg - associate a bio with a blkg from q
-> > + * @bio: target bio
-> > + *
-> > + * Associate @bio with the blkg found from the bio's css and request_queue.
-> > + * If one is not found, bio_lookup_blkg() creates the blkg.  If a blkg is
-> > + * already associated, the css is reused and association redone as the
-> > + * request_queue may have changed.
-> > + */
-> > +void bio_associate_blkg(struct bio *bio)
-> > +{
-> > +	struct request_queue *q;
-> > +	struct blkcg *blkcg;
-> > +	struct blkcg_gq *blkg;
+On Thu, Nov 29, 2018 at 07:53:33AM -0800, Tejun Heo wrote:
+> On Mon, Nov 26, 2018 at 04:19:38PM -0500, Dennis Zhou wrote:
+> > diff --git a/include/linux/bio.h b/include/linux/bio.h
+> > index 62715a5a4f32..8bc9d9b29fd3 100644
+> > --- a/include/linux/bio.h
+> > +++ b/include/linux/bio.h
+> > @@ -486,6 +486,12 @@ extern unsigned int bvec_nr_vecs(unsigned short idx);
+> >  extern const char *bio_devname(struct bio *bio, char *buffer);
+> >  
+> >  #define bio_set_dev(bio, bdev) 			\
+> > +do {						\
+> > +	bio_set_dev_only(bio, bdev);		\
+> > +	bio_associate_blkg(bio);		\
+> > +} while (0)
 > > +
-> > +	if (!bio_has_queue(bio))
-> > +		return;
+> > +#define bio_set_dev_only(bio, bdev)		\
+> >  do {						\
+> >  	if ((bio)->bi_disk != (bdev)->bd_disk)	\
+> >  		bio_clear_flag(bio, BIO_THROTTLED);\
 > 
-> So, this isn't actually necessary cuz we don't stack with
-> request_queues but it might be more consistent to call disassociate
-> before returning above so that even if sth like that happens the
-> function always guarantees that the blkg and bio agree.
+> Generally looks okay to me but I'm not sure about bio_set_dev_only().
+> Maybe sth more explicit like bio_set_dev_without_blkg()?  Also, can
+> you please add comments explaining which should be used when?
+> 
 
-Ah. That makes sense. I've changed bio_has_queue() to be
-bio_blkg_association_check(). This calls disassociate and should handle
-the case a bio transfers from a request_queue device to a bio driven
-device. It changes the future patches slightly as we have to remember
-the css before doing the check in case we want to reassociate with the
-same css.
+I've switched it to bio_set_dev_without_blkg() and added the comment
+below and added a comment in the use cases. Let me know if the wording
+is fine below.
+
++/*
++ * Bio device setters.  A blkg represents the relationship between a blkcg
++ * and a request_queue.  When the device is set for a bio, it becomes possible
++ * to do blkg association.  Importantly, a blkg also holds a pointer back to
++ * the request_queue.  In general, bio_set_dev() should be used to keep
++ * bio->bi_disk->queue and bio->bi_blkg->q consistent.  If blkg association
++ * will be done explicitly or is a bio based device, use
++ * bio_set_dev_without_blkg().
++ */
 
 Thanks,
 Dennis
