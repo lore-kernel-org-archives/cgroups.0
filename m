@@ -1,18 +1,20 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v4 0/7] freezer for cgroup v2
-Date: Fri, 30 Nov 2018 15:47:38 -0800
-Message-ID: <20181130234745.6756-1-guro@fb.com>
+Subject: [PATCH v4 2/7] cgroup: implement __cgroup_task_count() helper
+Date: Fri, 30 Nov 2018 15:47:40 -0800
+Message-ID: <20181130234745.6756-3-guro@fb.com>
+References: <20181130234745.6756-1-guro@fb.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=8wWgJ9mRatXUK5Ii2MmF/AjR4kqI/jk/sjBZOiW0lNk=;
-        b=FB/75V07p4TGJd0um2iwcghXUClp+mgyExRg+GqzYv7+qUJSFl5f2LYgb5w2B0z0bY
-         z6ZTJpki25OZwbXX9woJyB8ovQAwyzmGDiIXpUZEmkWxn40vjcYb7BIVLSUMj36YEFTU
-         fxEnYULbK4m0yehe93ZlpIEfj/LDUwhHs23IiUPz1wMmmJmO6Anj97vHVhw34NhxQkJl
-         oyL0TTX9IdqoRM/uHT5XTFVeWZ3bbWTrD6Mxp0/3y8tAV7VgP273RTAZ4IKCkF5QXQwl
-         VhX1heKDXQoIS0kqx36r6XswVWZRVmneOkAYKRj5UAnhyM7vTw4paocU+MuAg/Uloxb5
-         actA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=CXMv0Vhrfz8OgUyxnyaG6yJ3Btg8UiW/JMvPPUaP47g=;
+        b=dseK9gLvRqCEjaUIDiNh6BoR08VIiCwfwpEK03qKOwbxyAli+YNA2zUJtTHp9iEigk
+         EYiUaZB7ndO0EGLz2AluZJ7nuhL1ToenJAjeBzv3+tUvKtzyXXKyPug3I9mfkOu0DSw3
+         Y1Imx/m2fBjNarZhVgS3nCJF0xWIZCoRGEHJNV6tV+yAJ+x/jnaXAVOlrWcs67jQ8hj8
+         /Nn8GP7XYvd1T/yo6rE+s/JeGSZ7Ih9GD2aujpMhQfsF4Z0gw85nqUTi1r8zdBwD1tqh
+         Xbyju0l6ecOodnkLmwF8JhHd5eiXJoX+APsytY7Lg7PAcVVxExeERkSbX7nOQNacQgu9
+         h5tQ==
+In-Reply-To: <20181130234745.6756-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -21,73 +23,105 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-freezer for cgroup v2
+The helper is identical to the existing cgroup_task_count()
+except it doesn't take the css_set_lock by itself, assuming
+that the caller does.
 
-This patchset implements freezer for cgroup v2.
+Also, move cgroup_task_count() implementation into
+kernel/cgroup/cgroup.c, as there is nothing specific to cgroup v1.
 
-It provides similar functionality as v1 freezer, but the interface
-conforms to the cgroup v2 interface design principles, and it
-provides a better user experience: tasks can be killed, ptrace works,
-there is no separate controller, which has to be enabled, etc.
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com
+---
+ kernel/cgroup/cgroup-internal.h |  1 +
+ kernel/cgroup/cgroup-v1.c       | 16 ----------------
+ kernel/cgroup/cgroup.c          | 33 +++++++++++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 16 deletions(-)
 
-Patches (1), (2) and (3) are some preparational work, patch (4) contains
-the implementation, patch (5) is a small cgroup kselftest fix,
-patch (6) covers freezer adds 6 new kselftests to cover the freezer
-functionality. Patch (7) adds corresponding docs.
-
-v4->v3:
-  - fixed cgroup state transitions on task migration (by Tejun Heo)
-  - reading nr_descendants doesn't require taking css_set_lock anymore
-  - fixed docs based on Mike Rapoport's feedback
-  - fixed double irq lock found by Dan Carpenter
-
-v3->v2:
-  - dropped TASK_FROZEN for now, frozen tasks are put into TASK_INTERRUPTIBLE
-  state; it's probably not the final version, but the API question can be
-  discussed separately
-  - don't clear TIF_SIGPENDING before going to sleep, instead add
-  task->frozen check in signal_pending_state() and recalc_sigpending()
-  - cgroup-level counter are now synchronized using css_set_lock,
-  which simplified the whole code (e.g. per-cgroup works were removed)
-  - the amount of comments increased significantly
-  - many other improvements incorporating feedback from Tejun and Oleg
-
-v2->v1:
-  - fixed locking aroung calling cgroup_freezer_leave()
-  - added docs
-
-Roman Gushchin (7):
-  cgroup: rename freezer.c into legacy_freezer.c
-  cgroup: implement __cgroup_task_count() helper
-  cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
-  cgroup: cgroup v2 freezer
-  kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
-  kselftests: cgroup: add freezer controller self-tests
-  cgroup: document cgroup v2 freezer interface
-
- Documentation/admin-guide/cgroup-v2.rst       |  27 +
- include/linux/cgroup-defs.h                   |  31 +
- include/linux/cgroup.h                        |  42 ++
- include/linux/sched.h                         |   2 +
- include/linux/sched/jobctl.h                  |   2 +
- include/linux/sched/signal.h                  |   3 +
- kernel/cgroup/Makefile                        |   4 +-
- kernel/cgroup/cgroup-internal.h               |   1 +
- kernel/cgroup/cgroup-v1.c                     |  16 -
- kernel/cgroup/cgroup.c                        | 151 +++-
- kernel/cgroup/freezer.c                       | 653 +++++++----------
- kernel/cgroup/legacy_freezer.c                | 481 ++++++++++++
- kernel/ptrace.c                               |   7 +
- kernel/signal.c                               |  58 +-
- tools/testing/selftests/cgroup/.gitignore     |   1 +
- tools/testing/selftests/cgroup/Makefile       |   2 +
- tools/testing/selftests/cgroup/cgroup_util.c  |  85 ++-
- tools/testing/selftests/cgroup/cgroup_util.h  |   7 +
- tools/testing/selftests/cgroup/test_freezer.c | 685 ++++++++++++++++++
- 19 files changed, 1811 insertions(+), 447 deletions(-)
- create mode 100644 kernel/cgroup/legacy_freezer.c
- create mode 100644 tools/testing/selftests/cgroup/test_freezer.c
-
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index c950864016e2..a195328431ce 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -226,6 +226,7 @@ int cgroup_rmdir(struct kernfs_node *kn);
+ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ 		     struct kernfs_root *kf_root);
+ 
++int __cgroup_task_count(const struct cgroup *cgrp);
+ int cgroup_task_count(const struct cgroup *cgrp);
+ 
+ /*
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 51063e7a93c2..6134fef07d57 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -336,22 +336,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
+ 	return l;
+ }
+ 
+-/**
+- * cgroup_task_count - count the number of tasks in a cgroup.
+- * @cgrp: the cgroup in question
+- */
+-int cgroup_task_count(const struct cgroup *cgrp)
+-{
+-	int count = 0;
+-	struct cgrp_cset_link *link;
+-
+-	spin_lock_irq(&css_set_lock);
+-	list_for_each_entry(link, &cgrp->cset_links, cset_link)
+-		count += link->cset->nr_tasks;
+-	spin_unlock_irq(&css_set_lock);
+-	return count;
+-}
+-
+ /*
+  * Load a cgroup's pidarray with either procs' tgids or tasks' pids
+  */
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index e06994fd4e34..7519a4307021 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -563,6 +563,39 @@ static void cgroup_get_live(struct cgroup *cgrp)
+ 	css_get(&cgrp->self);
+ }
+ 
++/**
++ * __cgroup_task_count - count the number of tasks in a cgroup. The caller
++ * is responsible for taking the css_set_lock.
++ * @cgrp: the cgroup in question
++ */
++int __cgroup_task_count(const struct cgroup *cgrp)
++{
++	int count = 0;
++	struct cgrp_cset_link *link;
++
++	lockdep_assert_held(&css_set_lock);
++
++	list_for_each_entry(link, &cgrp->cset_links, cset_link)
++		count += link->cset->nr_tasks;
++
++	return count;
++}
++
++/**
++ * cgroup_task_count - count the number of tasks in a cgroup.
++ * @cgrp: the cgroup in question
++ */
++int cgroup_task_count(const struct cgroup *cgrp)
++{
++	int count;
++
++	spin_lock_irq(&css_set_lock);
++	count = __cgroup_task_count(cgrp);
++	spin_unlock_irq(&css_set_lock);
++
++	return count;
++}
++
+ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+ {
+ 	struct cgroup *cgrp = of->kn->parent->priv;
 -- 
 2.17.2
 
