@@ -1,19 +1,19 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v4 2/7] cgroup: implement __cgroup_task_count() helper
-Date: Fri, 30 Nov 2018 15:47:40 -0800
-Message-ID: <20181130234745.6756-3-guro@fb.com>
+Subject: [PATCH v4 5/7] kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
+Date: Fri, 30 Nov 2018 15:47:43 -0800
+Message-ID: <20181130234745.6756-6-guro@fb.com>
 References: <20181130234745.6756-1-guro@fb.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=CXMv0Vhrfz8OgUyxnyaG6yJ3Btg8UiW/JMvPPUaP47g=;
-        b=dseK9gLvRqCEjaUIDiNh6BoR08VIiCwfwpEK03qKOwbxyAli+YNA2zUJtTHp9iEigk
-         EYiUaZB7ndO0EGLz2AluZJ7nuhL1ToenJAjeBzv3+tUvKtzyXXKyPug3I9mfkOu0DSw3
-         Y1Imx/m2fBjNarZhVgS3nCJF0xWIZCoRGEHJNV6tV+yAJ+x/jnaXAVOlrWcs67jQ8hj8
-         /Nn8GP7XYvd1T/yo6rE+s/JeGSZ7Ih9GD2aujpMhQfsF4Z0gw85nqUTi1r8zdBwD1tqh
-         Xbyju0l6ecOodnkLmwF8JhHd5eiXJoX+APsytY7Lg7PAcVVxExeERkSbX7nOQNacQgu9
-         h5tQ==
+        bh=oiVWgL/WHUTd0gentorRc6DDTrlDET1vasHz44Fkvas=;
+        b=bkac+1geXCQMO7SBGOHvZYHy+O1blewP8Fl9p5hxw+eIZxmX5Dmdkxefu53YmAODGv
+         ArCDssqsorbtsVVUA7FVvlNYYZ987LCMhIpv0DqUB/jzpfDXtJDghqSa/KXydxtN06dS
+         opbTdxUVgO9nQXx5Eng4S0A6atZmaSPJzIxoMEpOujx8zDxDVVJmYlKu1Itc24gGv4Ed
+         EMVieW+0ME1m1gy2ynCnWl2o6WwMQK7BxuLPw4HDH1uBgR55ENZ3sGQXGuP3kJDi+Qg8
+         Oj1Ojjz+VqF+3ROVtu2Eom7E07dmDW2ql1xzzx3iOsjpem0B+TwK2CzlqqeYzttebd2a
+         MbEA==
 In-Reply-To: <20181130234745.6756-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,107 +21,37 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>, Shuah Khan <shuah@kernel.org>, linux-kselftest@vger.kernel.org
 
-The helper is identical to the existing cgroup_task_count()
-except it doesn't take the css_set_lock by itself, assuming
-that the caller does.
-
-Also, move cgroup_task_count() implementation into
-kernel/cgroup/cgroup.c, as there is nothing specific to cgroup v1.
+If the cgroup destruction races with an exit() of a belonging
+process(es), cg_kill_all() may fail. It's not a good reason to make
+cg_destroy() fail and leave the cgroup in place, potentially causing
+next test runs to fail.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Shuah Khan <shuah@kernel.org>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
+Cc: linux-kselftest@vger.kernel.org
 ---
- kernel/cgroup/cgroup-internal.h |  1 +
- kernel/cgroup/cgroup-v1.c       | 16 ----------------
- kernel/cgroup/cgroup.c          | 33 +++++++++++++++++++++++++++++++++
- 3 files changed, 34 insertions(+), 16 deletions(-)
+ tools/testing/selftests/cgroup/cgroup_util.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index c950864016e2..a195328431ce 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -226,6 +226,7 @@ int cgroup_rmdir(struct kernfs_node *kn);
- int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
- 		     struct kernfs_root *kf_root);
- 
-+int __cgroup_task_count(const struct cgroup *cgrp);
- int cgroup_task_count(const struct cgroup *cgrp);
- 
- /*
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 51063e7a93c2..6134fef07d57 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -336,22 +336,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
- 	return l;
- }
- 
--/**
-- * cgroup_task_count - count the number of tasks in a cgroup.
-- * @cgrp: the cgroup in question
-- */
--int cgroup_task_count(const struct cgroup *cgrp)
--{
--	int count = 0;
--	struct cgrp_cset_link *link;
--
--	spin_lock_irq(&css_set_lock);
--	list_for_each_entry(link, &cgrp->cset_links, cset_link)
--		count += link->cset->nr_tasks;
--	spin_unlock_irq(&css_set_lock);
--	return count;
--}
--
- /*
-  * Load a cgroup's pidarray with either procs' tgids or tasks' pids
-  */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e06994fd4e34..7519a4307021 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -563,6 +563,39 @@ static void cgroup_get_live(struct cgroup *cgrp)
- 	css_get(&cgrp->self);
- }
- 
-+/**
-+ * __cgroup_task_count - count the number of tasks in a cgroup. The caller
-+ * is responsible for taking the css_set_lock.
-+ * @cgrp: the cgroup in question
-+ */
-+int __cgroup_task_count(const struct cgroup *cgrp)
-+{
-+	int count = 0;
-+	struct cgrp_cset_link *link;
-+
-+	lockdep_assert_held(&css_set_lock);
-+
-+	list_for_each_entry(link, &cgrp->cset_links, cset_link)
-+		count += link->cset->nr_tasks;
-+
-+	return count;
-+}
-+
-+/**
-+ * cgroup_task_count - count the number of tasks in a cgroup.
-+ * @cgrp: the cgroup in question
-+ */
-+int cgroup_task_count(const struct cgroup *cgrp)
-+{
-+	int count;
-+
-+	spin_lock_irq(&css_set_lock);
-+	count = __cgroup_task_count(cgrp);
-+	spin_unlock_irq(&css_set_lock);
-+
-+	return count;
-+}
-+
- struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
- {
- 	struct cgroup *cgrp = of->kn->parent->priv;
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 14c9fe284806..eba06f94433b 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -227,9 +227,7 @@ int cg_destroy(const char *cgroup)
+ retry:
+ 	ret = rmdir(cgroup);
+ 	if (ret && errno == EBUSY) {
+-		ret = cg_killall(cgroup);
+-		if (ret)
+-			return ret;
++		cg_killall(cgroup);
+ 		usleep(100);
+ 		goto retry;
+ 	}
 -- 
 2.17.2
 
