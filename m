@@ -1,96 +1,156 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
- policy in blkio/io
-Date: Fri, 30 Nov 2018 19:53:07 +0100
-Message-ID: <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
-References: <20181119103424.3853-1-paolo.valente@linaro.org>
- <20181120162816.GV2509588@devbig004.ftw2.facebook.com>
- <25296DAE-73EC-46CC-9A98-A8B7E9017BB7@linaro.org>
- <7D7FAB43-5F62-4402-A9B3-E7C2E30AE680@linaro.org>
- <20181130184256.GI2509588@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.0 \(3445.100.39\))
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=iEs0bu2v/4Sbmzc6i6UNYRAir2y1g1QCSGpytJmcmF4=;
-        b=g8dX7FoZG+8Sd9IqjIs5yD0k5Nvh75AU4C2jRh+xbHynzneloHDxHX7x4y6NEIU9lo
-         rK3R56IyT7atQubRCSGtGLextL736gjUxcfoa5s2pLusGyHaozLv8rbzjs0kxtXD1LAM
-         3S0cGJHkXW9aNOCNa1MfpIculGopHk6o10gVQ=
-In-Reply-To: <20181130184256.GI2509588@devbig004.ftw2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+From: Matt Roper <matthew.d.roper@intel.com>
+Subject: Re: [PATCH RFC 2/5] cgroup: Add mechanism to register
+ vendor specific DRM devices
+Date: Fri, 30 Nov 2018 14:22:28 -0800
+Message-ID: <20181130222228.GE31345@mdroper-desk.amr.corp.intel.com>
+References: <20181120185814.13362-1-Kenny.Ho@amd.com>
+ <20181120185814.13362-3-Kenny.Ho@amd.com>
+ <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
+ <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>
+ <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
+ <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
+ <154331198147.4538.9472338565824691695@jlahtine-desk.ger.corp.intel.com>
+ <DM5PR12MB12263983A136E378F46A525D83D00@DM5PR12MB1226.namprd12.prod.outlook.com>
+ <154339645444.5339.6291298808444340104@jlahtine-desk.ger.corp.intel.com>
+ <DM5PR12MB1226FFCA14F0CB3B9BE7DD0583D10@DM5PR12MB1226.namprd12.prod.outlook.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <DM5PR12MB1226FFCA14F0CB3B9BE7DD0583D10@DM5PR12MB1226.namprd12.prod.outlook.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 'Paolo Valente' via bfq-iosched <bfq-iosched@googlegroups.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
+To: "Ho, Kenny" <Kenny.Ho@amd.com>
+Cc: "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "y2kenny@gmail.com" <y2kenny@gmail.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-
-
-> Il giorno 30 nov 2018, alle ore 19:42, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> Hello, Paolo.
->=20
-> On Fri, Nov 30, 2018 at 07:23:24PM +0100, Paolo Valente wrote:
->>> Then we understood that exactly the same happens with throttling, in
->>> case the latter is activated on different devices w.r.t. bfq.
->>>=20
->>> In addition, the same may happen, in the near future, with the
->>> bandwidth controller Josef is working on.  If the controller can be
->>> configured per device, as with throttling, then statistics may =
-differ,
->>> for the same interface files, between bfq, throttling and that
->>> controller.
->=20
-> So, regardless of how all these are implemented, what's presented to
-> user should be consistent and clear.  There's no other way around it.
-> Only what's relevant should be visible to userspace.
->=20
->> have you had time to look into this?  Any improvement to this
->> interface is ok for us. We are only interested in finally solving =
-this
->> interface issue, as, for what concerns us directly, it has been
->> preventing legacy code to use bfq for years.
->=20
-> Unfortunately, I don't have any implementation proposal, but we can't
-> show things this way to userspace.
->=20
-
-Well, this is not very helpful to move forward :)
-
-Let me try to repeat the problem, to try to help you help us unblock
-the situation.
-
-If we have multiple entities attached to the same interface output
-file, you don't find it clear that each entity shows the number it
-wants to show.  But you have no idea either of how that differentiated
-information should be shown.  Is this the situation, or is the problem
-somewhere 'above' this level?
-
-If the problem is as I described it, here are some proposal attempts:
-1) Do you want file sharing to be allowed only if all entities will
-output the same number?  (this seems excessive, but maybe it makes
-sense)
-2) Do you want only one number to be shown, equal to the sum of the
-numbers of each entity?  (in some cases, this may make sense)
-3) Do you prefer an average?
-4) Do you have any other idea, even if just germinal?
-
-Looking forward to your feedback,
-Paolo=20
-
-
-> Thanks.
->=20
-> --=20
-> tejun
->=20
-> --=20
-> You received this message because you are subscribed to the Google =
-Groups "bfq-iosched" group.
-> To unsubscribe from this group and stop receiving emails from it, send =
-an email to bfq-iosched+unsubscribe@googlegroups.com.
-> For more options, visit https://groups.google.com/d/optout.
-
+T24gV2VkLCBOb3YgMjgsIDIwMTggYXQgMDc6NDY6MDZQTSArMDAwMCwgSG8sIEtlbm55IHdyb3Rl
+Ogo+IAo+IE9uIFdlZCwgTm92IDI4LCAyMDE4IGF0IDQ6MTQgQU0gSm9vbmFzIExhaHRpbmVuIDxq
+b29uYXMubGFodGluZW5AbGludXguaW50ZWwuY29tPiB3cm90ZToKPiA+IFNvIHdlIGNhbiBvbmx5
+IGNob29zZSB0aGUgbG93ZXN0IGNvbW1vbiBkZW5vbWluYXRvciwgcmlnaHQ/Cj4gPgo+ID4gQW55
+IGNvcmUgY291bnQgb3V0IG9mIHRvdGFsIGNvcmUgY291bnQgc2hvdWxkIHRyYW5zbGF0ZSBuaWNl
+bHkgaW50byBhCj4gPiBmcmFjdGlvbiwgc28gd2hhdCB3b3VsZCBiZSB0aGUgcHJvYmxlbSB3aXRo
+IHBlcmNlbnRhZ2UgYW1vdW50cz8KPiAKPiBJIGRvbid0IHRoaW5rIGhhdmluZyBhbiBhYnN0cmFj
+dGVkIHJlc291cmNlIG5lY2Vzc2FyaWx5IGVxdWF0ZQo+ICdsb3dlc3QnLiAgVGhlIGlzc3VlIHdp
+dGggcGVyY2VudGFnZSBpcyB0aGUgbGFjayBvZiBwcmVjaXNpb24uICBJZiB5b3UKPiBsb29rIGF0
+IGNwdXNldCBjZ3JvdXAsIHlvdSBjYW4gc2VlIHRoZSBzcGVjaWZpY2F0aW9uIGNhbiBiZSB2ZXJ5
+Cj4gcHJlY2lzZToKPiAKPiAjIC9iaW4vZWNobyAxLTQsNiA+IGNwdXNldC5jcHVzIC0+IHNldCBj
+cHVzIGxpc3QgdG8gY3B1cyAxLDIsMyw0LDYKPiAoaHR0cHM6Ly93d3cua2VybmVsLm9yZy9kb2Mv
+RG9jdW1lbnRhdGlvbi9jZ3JvdXAtdjEvY3B1c2V0cy50eHQpCj4gCj4gVGhlIGRyaXZlciBjYW4g
+dHJhbnNsYXRlIHNvbWV0aGluZyBsaWtlIHRoaXMgdG8gY29yZSBjb3VudCBhbmQgdGhlbiB0bwo+
+IHBlcmNlbnRhZ2UgYW5kIGhhbmRsZSBhY2NvcmRpbmdseSB3aGlsZSB0aGUgcmV2ZXJzZSBpcyBu
+b3QgcG9zc2libGUuCj4gKFlvdSBjYW4ndCB0ZWxsIHdoaWNoIHNldCBvZiBDVXMvRVVzIGEgdXNl
+ciB3YW50IGZyb20gYSBwZXJjZW50YWdlCj4gcmVxdWVzdC4pICBJdCdzIGFsc28gbm90IGNsZWFy
+IHRvIG1lLCBmcm9tCj4gdXNlci9hcHBsaWNhdGlvbi9hZG1pbi9yZXNvdXJjZSBtYW5hZ2VtZW50
+IHBlcnNwZWN0aXZlLCBob3cgdGhlIGJhc2UKPiBjb3JlIGNvdW50cyBvZiBhIEdQVSBpcyByZWxl
+dmFudCB0byB0aGUgd29ya2xvYWQgKHNpbmNlIHBlcmNlbnRhZ2UgaXMKPiBhICdyZWxhdGl2ZScg
+cXVhbnRpdHkuKSAgRm9yIGV4YW1wbGUsIGxldCBzYXkgYSB3b3JrbG9hZCB3YW50cyB0byB1c2UK
+PiAyNTYgJ2NvcmVzJywgZG9lcyBpdCBtYXR0ZXIgaWYgdGhhdCB3b3JrbG9hZCBpcyBwdXQgb24g
+YSBHUFUgd2l0aCAxMDI0Cj4gY29yZXMgb3IgYSBHUFUgd2l0aCA0MDk2IGNvcmVzIHRvdGFsPwo+
+IAo+IEkgYW0gbm90IGRpc21pc3NpbmcgdGhlIHBvc3NpYmxlIG5lZWQgZm9yIHBlcmNlbnRhZ2Uu
+ICBJIGp1c3QgdGhpbmsKPiB0aGVyZSBzaG91bGQgYmUgYSB3YXkgdG8gYWNjb21tb2RhdGUgbW9y
+ZSB0aGFuIGp1c3QgdGhlICdsb3dlc3QnLiAKPiAKCkFzIHlvdSBub3RlZCwgeW91ciBwcm9wb3Nh
+bCBpcyBzaW1pbGFyIHRvIHRoZSBjZ3JvdXAtdjEgImNwdXNldCIKY29udHJvbGxlciwgd2hpY2gg
+aXMgc29ydCBvZiBhIHdheSBvZiBwYXJ0aXRpb25pbmcgeW91ciB1bmRlcmx5aW5nCmhhcmR3YXJl
+IHJlc291cmNlczsgSSB0aGluayBKb29uYXMgaXMgZGVzY3JpYmluZyBzb21ldGhpbmcgY2xvc2Vy
+IGluCmRlc2lnbiB0byB0aGUgY2dyb3VwLXYyICJjcHUiIGNvbnRyb2xsZXIsIHdoaWNoIHBhcnRp
+dGlvbnMgdGhlIGdlbmVyYWwKdGltZS91c2FnZSBhbGxvY2F0ZWQgdG8gdmlhIGNncm91cDsgYWZh
+aXUsICJjcHUiIGRvZXNuJ3QgcmVhbGx5IGNhcmUKd2hpY2ggc3BlY2lmaWMgY29yZSB0aGUgdGFz
+a3MgcnVuIG9uLCBqdXN0IHRoZSByZWxhdGl2ZSB3ZWlnaHRzIHRoYXQKZGV0ZXJtaW5lIGhvdyBt
+dWNoIHRpbWUgdGhleSBnZXQgdG8gcnVuIG9uIGFueSBvZiB0aGUgY29yZXMuCgpJdCBzb3VuZHMg
+bGlrZSB3aXRoIHlvdXIgaGFyZHdhcmUsIHlvdXIga2VybmVsIGRyaXZlciBpcyBhYmxlIHRvIHNw
+ZWNpZnkKZXhhY3RseSB3aGljaCBzdWJzZXQgb2YgR1BVIEVVJ3MgYSBzcGVjaWZpYyBHUFUgY29u
+dGV4dCB3aW5kcyB1cCBydW5uaW5nCm9uLiAgSG93ZXZlciBJIHRoaW5rIHRoZXJlIGFyZSBhIGxv
+dCBvZiBwbGF0Zm9ybXMgdGhhdCBkb24ndCBhbGxvdyB0aGF0CmtpbmQgb2YgbG93LWxldmVsIGNv
+bnRyb2wuICBFLmcuLCBJIGRvbid0IHRoaW5rIHdlIGNhbiBkbyB0aGF0IG9uIEludGVsCmhhcmR3
+YXJlOyB3ZSBoYXZlIGEgaGFuZGZ1bCBvZiBoaWdoLWxldmVsIEdQVSBlbmdpbmVzIHRoYXQgd2Ug
+Y2FuIHN1Ym1pdApkaWZmZXJlbnQgdHlwZXMgb2YgYmF0Y2hidWZmZXJzIHRvIChyZW5kZXIsIGJs
+aXR0ZXIsIG1lZGlhLCBldGMuKS4gIFdoYXQKd2UgY2FuIGRvIGlzIHVzZSBHUFUgcHJlZW1wdGlv
+biB0byBsaW1pdCBob3cgbXVjaCB0aW1lIHNwZWNpZmljIEdQVQpjb250ZXh0cyBnZXQgdG8gcnVu
+IG9uIHRoZSByZW5kZXIgZW5naW5lIGJlZm9yZSB0aGUgZW5naW5lIGlzIHJlY2xhaW1lZApmb3Ig
+dXNlIGJ5IGEgZGlmZmVyZW50IGNvbnRleHQuCgpVc2luZyBhICVncHV0aW1lIGFwcHJvYWNoIGxp
+a2UgSm9vbmFzIGlzIHN1Z2dlc3RpbmcgY291bGQgYmUgaGFuZGxlZCBpbgphIGRyaXZlciBieSBy
+ZXNlcnZpbmcgc3BlY2lmaWMgc3Vic2V0cyBvZiBFVSdzIG9uIGhhcmR3YXJlIGxpa2UgeW91cnMK
+dGhhdCdzIGNhcGFibGUgb2YgZG9pbmcgdGhhdCwgd2hlcmVhcyBpdCBjb3VsZCBiZSBtb3N0bHkg
+aGFuZGxlZCBvbgpvdGhlciB0eXBlcyBvZiBoYXJkd2FyZSB2aWEgR1BVIGVuZ2luZSBwcmVlbXB0
+aW9uLgoKSSB0aGluayBlaXRoZXIgYXBwcm9hY2ggImdwdV9ldXNldCIgb3IgIiVncHV0aW1lIiBz
+aG91bGQgbWFwIHdlbGwgdG8gYQpjZ3JvdXAgY29udHJvbGxlciBpbXBsZW1lbnRhdGlvbi4gIEdy
+YW50ZWQsIG5laXRoZXIgb25lIHNvbHZlcyB0aGUKc3BlY2lmaWMgdXNlIGNhc2UgSSB3YXMgd29y
+a2luZyBvbiBlYXJsaWVyIHRoaXMgeWVhciB3aGVyZSB3ZSBuZWVkCnVuZmFpciAoc3RhcnZhdGlv
+bi1va2F5KSBzY2hlZHVsaW5nIHRoYXQgd2lsbCBydW4gY29udGV4dHMgc3RyaWN0bHkKYWNjb3Jk
+aW5nIHRvIHByaW9yaXR5IChpLmUuLCBsb3dlciBwcmlvcml0eSBjb250ZXh0cyB3aWxsIG5ldmVy
+IHJ1biBhdAphbGwgdW5sZXNzIGFsbCBoaWdoZXIgcHJpb3JpdHkgY29udGV4dHMgaGF2ZSBjb21w
+bGV0ZWQgYWxsIG9mIHRoZWlyCnN1Ym1pdHRlZCB3b3JrKSwgYnV0IHRoYXQncyBhIHByZXR0eSBz
+cGVjaWFsaXplZCB1c2UgY2FzZSB0aGF0IHdlJ2xsCnByb2JhYmx5IG5lZWQgdG8gaGFuZGxlIGlu
+IGEgZGlmZmVyZW50IG1hbm5lciBhbnl3YXkuCgoKTWF0dAoKCj4gUmVnYXJkcywKPiBLZW5ubnkK
+PiAKPiAKPiA+ID4gPiBUaGF0IGNvbWJpbmVkIHdpdGggdGhlICJHUFUgbWVtb3J5IHVzYWJsZSIg
+cHJvcGVydHkgc2hvdWxkIGJlIGEgZ29vZAo+ID4gPiA+IHN0YXJ0aW5nIHBvaW50IHRvIHN0YXJ0
+IHN1YmRpdmlkaW5nIHRoZSBHUFUgcmVzb3VyY2VzIGZvciBtdWx0aXBsZQo+ID4gPiA+IHVzZXJz
+Lgo+ID4gPiA+Cj4gPiA+ID4gUmVnYXJkcywgSm9vbmFzCj4gPiA+ID4KPiA+ID4gPiA+Cj4gPiA+
+ID4gPiBZb3VyIGZlZWRiYWNrIGlzIGhpZ2hseSBhcHByZWNpYXRlZC4KPiA+ID4gPiA+Cj4gPiA+
+ID4gPiBCZXN0IFJlZ2FyZHMsCj4gPiA+ID4gPiBIYXJpc2gKPiA+ID4gPiA+Cj4gPiA+ID4gPgo+
+ID4gPiA+ID4KPiA+ID4gPiA+IEZyb206IGFtZC1nZnggPGFtZC1nZngtYm91bmNlc0BsaXN0cy5m
+cmVlZGVza3RvcC5vcmc+IG9uIGJlaGFsZiBvZiBUZWp1biBIZW8gPHRqQGtlcm5lbC5vcmc+Cj4g
+PiA+ID4gPiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAyMCwgMjAxOCA1OjMwIFBNCj4gPiA+ID4g
+PiBUbzogSG8sIEtlbm55Cj4gPiA+ID4gPiBDYzogY2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmc7IGlu
+dGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IHkya2VubnlAZ21haWwuY29tOyBhbWQtZ2Z4
+QGxpc3RzLmZyZWVkZXNrdG9wLm9yZzsgZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwo+
+ID4gPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCBSRkMgMi81XSBjZ3JvdXA6IEFkZCBtZWNoYW5p
+c20gdG8gcmVnaXN0ZXIgdmVuZG9yIHNwZWNpZmljIERSTSBkZXZpY2VzCj4gPiA+ID4gPgo+ID4g
+PiA+ID4KPiA+ID4gPiA+IEhlbGxvLAo+ID4gPiA+ID4KPiA+ID4gPiA+IE9uIFR1ZSwgTm92IDIw
+LCAyMDE4IGF0IDEwOjIxOjE0UE0gKzAwMDAsIEhvLCBLZW5ueSB3cm90ZToKPiA+ID4gPiA+ID4g
+QnkgdGhpcyByZXBseSwgYXJlIHlvdSBzdWdnZXN0aW5nIHRoYXQgdmVuZG9yIHNwZWNpZmljIHJl
+c291cmNlcwo+ID4gPiA+ID4gPiB3aWxsIG5ldmVyIGJlIGFjY2VwdGFibGUgdG8gYmUgbWFuYWdl
+ZCB1bmRlciBjZ3JvdXA/ICBMZXQgc2F5IGEgdXNlcgo+ID4gPiA+ID4KPiA+ID4gPiA+IEkgd291
+bGRuJ3Qgc2F5IG5ldmVyIGJ1dCB3aGF0ZXZlciB3aGljaCBnZXRzIGluY2x1ZGVkIGFzIGEgY2dy
+b3VwCj4gPiA+ID4gPiBjb250cm9sbGVyIHNob3VsZCBoYXZlIGNsZWFybHkgZGVmaW5lZCByZXNv
+dXJjZSBhYnN0cmFjdGlvbnMgYW5kIHRoZQo+ID4gPiA+ID4gY29udHJvbCBzY2hlbWVzIGFyb3Vu
+ZCB0aGVtIGluY2x1ZGluZyBzdXBwb3J0IGZvciBkZWxlZ2F0aW9uLiAgQUZBSUNTLAo+ID4gPiA+
+ID4gZ3B1IHNpZGUgc3RpbGwgc2VlbXMgdG8gaGF2ZSBhIGxvbmcgd2F5IHRvIGdvIChhbmQgaXQn
+cyBub3QgY2xlYXIKPiA+ID4gPiA+IHdoZXRoZXIgdGhhdCdzIHNvbWV3aGVyZSBpdCB3aWxsIG9y
+IG5lZWRzIHRvIGVuZCB1cCkuCj4gPiA+ID4gPgo+ID4gPiA+ID4gPiB3YW50IHRvIGhhdmUgc2lt
+aWxhciBmdW5jdGlvbmFsaXR5IGFzIHdoYXQgY2dyb3VwIGlzIG9mZmVyaW5nIGJ1dCB0bwo+ID4g
+PiA+ID4gPiBtYW5hZ2UgdmVuZG9yIHNwZWNpZmljIHJlc291cmNlcywgd2hhdCB3b3VsZCB5b3Ug
+c3VnZ2VzdCBhcyBhCj4gPiA+ID4gPiA+IHNvbHV0aW9uPyAgV2hlbiB5b3Ugc2F5IGtlZXBpbmcg
+dmVuZG9yIHNwZWNpZmljIHJlc291cmNlIHJlZ3VsYXRpb24KPiA+ID4gPiA+ID4gaW5zaWRlIGRy
+bSBvciBzcGVjaWZpYyBkcml2ZXJzLCBkbyB5b3UgbWVhbiB3ZSBzaG91bGQgcmVwbGljYXRlIHRo
+ZQo+ID4gPiA+ID4gPiBjZ3JvdXAgaW5mcmFzdHJ1Y3R1cmUgdGhlcmUgb3IgZG8geW91IG1lYW4g
+ZWl0aGVyIGRybSBvciBzcGVjaWZpYwo+ID4gPiA+ID4gPiBkcml2ZXIgc2hvdWxkIHF1ZXJ5IGV4
+aXN0aW5nIGhpZXJhcmNoeSAoc3VjaCBhcyBkZXZpY2Ugb3IgcGVyaGFwcwo+ID4gPiA+ID4gPiBj
+cHUpIGZvciB0aGUgcHJvY2VzcyBvcmdhbml6YXRpb24gaW5mb3JtYXRpb24/Cj4gPiA+ID4gPiA+
+Cj4gPiA+ID4gPiA+IFRvIHB1dCB0aGUgcXVlc3Rpb25zIGluIG1vcmUgY29uY3JldGUgdGVybXMs
+IGxldCBzYXkgYSB1c2VyIHdhbnRzIHRvCj4gPiA+ID4gPiA+IGV4cG9zZSBjZXJ0YWluIHBhcnQg
+b2YgYSBncHUgdG8gYSBwYXJ0aWN1bGFyIGNncm91cCBzaW1pbGFyIHRvIHRoZQo+ID4gPiA+ID4g
+PiB3YXkgc2VsZWN0aXZlIGNwdSBjb3JlcyBhcmUgZXhwb3NlZCB0byBhIGNncm91cCB2aWEgY3B1
+c2V0LCBob3cKPiA+ID4gPiA+ID4gc2hvdWxkIHdlIGdvIGFib3V0IGVuYWJsaW5nIHN1Y2ggZnVu
+Y3Rpb25hbGl0eT8KPiA+ID4gPiA+Cj4gPiA+ID4gPiBEbyB3aGF0IHRoZSBpbnRlbCBkcml2ZXIg
+b3IgYnBmIGlzIGRvaW5nPyAgSXQncyBub3QgZGlmZmljdWx0IHRvIGhvb2sKPiA+ID4gPiA+IGlu
+dG8gY2dyb3VwIGZvciBpZGVudGlmaWNhdGlvbiBwdXJwb3Nlcy4KPiA+ID4gPiA+Cj4gPiA+ID4g
+PiBUaGFua3MuCj4gPiA+ID4gPgo+ID4gPiA+ID4gLS0KPiA+ID4gPiA+IHRlanVuCj4gPiA+ID4g
+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+ID4gPiA+
+ID4gYW1kLWdmeCBtYWlsaW5nIGxpc3QKPiA+ID4gPiA+IGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0
+b3Aub3JnCj4gPiA+ID4gPiBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xp
+c3RpbmZvL2FtZC1nZngKPiA+ID4gPiA+Cj4gPiA+ID4gPgo+ID4gPiA+ID4gYW1kLWdmeCBJbmZv
+IFBhZ2UgLSBmcmVlZGVza3RvcC5vcmcKPiA+ID4gPiA+IGxpc3RzLmZyZWVkZXNrdG9wLm9yZwo+
+ID4gPiA+ID4gVG8gc2VlIHRoZSBjb2xsZWN0aW9uIG9mIHByaW9yIHBvc3RpbmdzIHRvIHRoZSBs
+aXN0LCB2aXNpdCB0aGUgYW1kLWdmeCBBcmNoaXZlcy4uIFVzaW5nIGFtZC1nZng6IFRvIHBvc3Qg
+YSBtZXNzYWdlIHRvIGFsbCB0aGUgbGlzdCBtZW1iZXJzLCBzZW5kIGVtYWlsIHRvIGFtZC1nZnhA
+bGlzdHMuZnJlZWRlc2t0b3Aub3JnLiBZb3UgY2FuIHN1YnNjcmliZSB0byB0aGUgbGlzdCwgb3Ig
+Y2hhbmdlIHlvdXIgZXhpc3Rpbmcgc3Vic2NyaXB0aW9uLCBpbiB0aGUgc2VjdGlvbnMgYmVsb3cu
+Cj4gPiA+ID4gPgo+ID4gPiA+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KPiA+ID4gPiA+IEludGVsLWdmeCBtYWlsaW5nIGxpc3QKPiA+ID4gPiA+IElu
+dGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+ID4gPiA+IGh0dHBzOi8vbGlzdHMuZnJl
+ZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4CgotLSAKTWF0dCBSb3BlcgpH
+cmFwaGljcyBTb2Z0d2FyZSBFbmdpbmVlcgpJb1RHIFBsYXRmb3JtIEVuYWJsaW5nICYgRGV2ZWxv
+cG1lbnQKSW50ZWwgQ29ycG9yYXRpb24KKDkxNikgMzU2LTI3OTUKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4IG1haWxpbmcgbGlzdApJbnRl
+bC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
+L21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
