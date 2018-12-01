@@ -1,57 +1,45 @@
-From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v4 1/7] cgroup: rename freezer.c into legacy_freezer.c
-Date: Fri, 30 Nov 2018 15:47:39 -0800
-Message-ID: <20181130234745.6756-2-guro@fb.com>
-References: <20181130234745.6756-1-guro@fb.com>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] cpuset: Remove set but not used variable 'cs'
+Date: Sat, 1 Dec 2018 03:12:56 +0000
+Message-ID: <1543633976-183380-1-git-send-email-yuehaibing@huawei.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=mJ+hAWBjzYrtG9eKN+9slhswn7Xi2CuWuxj5q13heRo=;
-        b=hmQbOmQkV6ljdW0TaOvMcRuzEZsaozfPkRaLYJNXP8OepQ0Pr4eJVIeLZg6G+hs83q
-         s8hd5fcqPW+j1gKTRiEMFBLqSN5SO6pgrMU4xI5Wj4+VL0vyhhyM0JbQYL144J+Jzu7B
-         wAgTxsPzGtE3bpSybq+O2OEvYElzu2/H5M1rnrc/9quHagXlcLd5ind+qThxTJl9LO58
-         GQe7DHH/oIKKo9gSnAB7dM7BpX3tuaFcwNRABuWBef8w+ccFWvxEU1y3lSgZR8emtK/H
-         /6xgFb1EZDnxuOQzgM0YLeSO7fxRS14xzNoiVmD5EfgceCgCL/CFwJQcMvwRwGoyc4vq
-         fMCQ==
-In-Reply-To: <20181130234745.6756-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
+To: Li Zefan <lizefan@huawei.com>, tj@kernel.org, mingo@kernel.org
+Cc: YueHaibing <yuehaibing@huawei.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Freezer.c will contain an implementation of cgroup v2 freezer,
-so let's rename the v1 freezer to avoid naming conflicts.
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
+kernel/cgroup/cpuset.c: In function 'cpuset_cancel_attach':
+kernel/cgroup/cpuset.c:2167:17: warning:
+ variable 'cs' set but not used [-Wunused-but-set-variable]
+
+It never used since introduction in commit 1f7dd3e5a6e4 ("cgroup: fix handling
+of multi-destination migration from subtree_control enabling")
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- kernel/cgroup/Makefile                        | 2 +-
- kernel/cgroup/{freezer.c => legacy_freezer.c} | 0
- 2 files changed, 1 insertion(+), 1 deletion(-)
- rename kernel/cgroup/{freezer.c => legacy_freezer.c} (100%)
+ kernel/cgroup/cpuset.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index bfcdae896122..8d5689ca94b9 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
- obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index e9f6906..48cfe55 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2164,10 +2164,8 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ static void cpuset_cancel_attach(struct cgroup_taskset *tset)
+ {
+ 	struct cgroup_subsys_state *css;
+-	struct cpuset *cs;
  
--obj-$(CONFIG_CGROUP_FREEZER) += freezer.o
-+obj-$(CONFIG_CGROUP_FREEZER) += legacy_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
- obj-$(CONFIG_CGROUP_RDMA) += rdma.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
-diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/legacy_freezer.c
-similarity index 100%
-rename from kernel/cgroup/freezer.c
-rename to kernel/cgroup/legacy_freezer.c
--- 
-2.17.2
+ 	cgroup_taskset_first(tset, &css);
+-	cs = css_cs(css);
+ 
+ 	mutex_lock(&cpuset_mutex);
+ 	css_cs(css)->attach_in_progress--;
+
+
 
