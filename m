@@ -1,84 +1,160 @@
-From: Mike Rapoport <rppt@linux.ibm.com>
-Subject: Re: [PATCH v4 7/7] cgroup: document cgroup v2 freezer interface
-Date: Mon, 3 Dec 2018 08:21:23 +0200
-Message-ID: <20181203062123.GE6959@rapoport-lnx>
-References: <20181130234745.6756-1-guro@fb.com>
- <20181130234745.6756-8-guro@fb.com>
+From: "Ho, Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+Subject: Re: [Intel-gfx] [PATCH RFC 2/5] cgroup: Add mechanism to register
+ vendor specific DRM devices
+Date: Mon, 3 Dec 2018 06:46:01 +0000
+Message-ID: <DM5PR12MB122643DABCCF5D06C80235FA83AE0@DM5PR12MB1226.namprd12.prod.outlook.com>
+References: <20181120185814.13362-1-Kenny.Ho@amd.com>
+ <20181120185814.13362-3-Kenny.Ho@amd.com>
+ <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
+ <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>
+ <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
+ <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
+ <154331198147.4538.9472338565824691695@jlahtine-desk.ger.corp.intel.com>
+ <DM5PR12MB12263983A136E378F46A525D83D00@DM5PR12MB1226.namprd12.prod.outlook.com>
+ <154339645444.5339.6291298808444340104@jlahtine-desk.ger.corp.intel.com>
+ <DM5PR12MB1226FFCA14F0CB3B9BE7DD0583D10@DM5PR12MB1226.namprd12.prod.outlook.com>,
+ <20181130222228.GE31345@mdroper-desk.amr.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181130234745.6756-8-guro@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20181130222228.GE31345-b/RNqDZ/lqH1fpGqjiHozbKMmGWinSIL2HeeBUIffwg@public.gmane.org>
+Content-Language: en-US
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guroan@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
+To: Matt Roper <matthew.d.roper-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "Kasiviswanathan, 
+ Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Nov 30, 2018 at 03:47:45PM -0800, Roman Gushchin wrote:
-> Describe cgroup v2 freezer interface in the cgroup v2 admin guide.
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: linux-doc@vger.kernel.org
-> Cc: kernel-team@fb.com
-
-Reviewed-by: Mike Rapoport <rppt@linux.ibm.com>
-
-> ---
->  Documentation/admin-guide/cgroup-v2.rst | 27 +++++++++++++++++++++++++
->  1 file changed, 27 insertions(+)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 07e06136a550..f8335e26b362 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -864,6 +864,8 @@ All cgroup core files are prefixed with "cgroup."
->  	  populated
->  		1 if the cgroup or its descendants contains any live
->  		processes; otherwise, 0.
-> +	  frozen
-> +		1 if the cgroup is frozen; otherwise, 0.
-> 
->    cgroup.max.descendants
->  	A read-write single value files.  The default is "max".
-> @@ -897,6 +899,31 @@ All cgroup core files are prefixed with "cgroup."
->  		A dying cgroup can consume system resources not exceeding
->  		limits, which were active at the moment of cgroup deletion.
-> 
-> +  cgroup.freeze
-> +	A read-write single value file which exists on non-root cgroups.
-> +	Allowed values are "0" and "1". The default is "0".
-> +
-> +	Writing "1" to the file causes freezing of the cgroup and all
-> +	descendant cgroups. This means that all belonging processes will
-> +	be stopped and will not run until the cgroup will be explicitly
-> +	unfrozen. Freezing of the cgroup may take some time; when this action
-> +	is completed, the "frozen" value in the cgroup.events control file
-> +	will be updated to "1" and the corresponding notification will be
-> +	issued.
-> +
-> +	A cgroup can be frozen either by its own settings, or by settings
-> +	of any ancestor cgroups. If any of ancestor cgroups is frozen, the
-> +	cgroup will remain frozen.
-> +
-> +	Processes in the frozen cgroup can be killed by a fatal signal.
-> +	They also can enter and leave a frozen cgroup: either by an explicit
-> +	move by a user, or if freezing of the cgroup races with fork().
-> +	If a process is moved to a frozen cgroup, it stops. If a process is
-> +	moved out of a frozen cgroup, it becomes running.
-> +
-> +	Frozen status of a cgroup doesn't affect any cgroup tree operations:
-> +	it's possible to delete a frozen (and empty) cgroup, as well as
-> +	create new sub-cgroups.
-> 
->  Controllers
->  ===========
-> -- 
-> 2.17.2
-> 
-
--- 
-Sincerely yours,
-Mike.
-
+SGV5IE1hdHQsCgpPbiBGcmksIE5vdiAzMCwgMjAxOCBhdCA1OjIyIFBNIE1hdHQgUm9wZXIgPG1h
+dHRoZXcuZC5yb3BlckBpbnRlbC5jb20+IHdyb3RlOgo+IEkgdGhpbmsgSm9vbmFzIGlzIGRlc2Ny
+aWJpbmcgc29tZXRoaW5nIGNsb3NlciBpbgo+IGRlc2lnbiB0byB0aGUgY2dyb3VwLXYyICJjcHUi
+IGNvbnRyb2xsZXIsIHdoaWNoIHBhcnRpdGlvbnMgdGhlIGdlbmVyYWwKPiB0aW1lL3VzYWdlIGFs
+bG9jYXRlZCB0byB2aWEgY2dyb3VwOyBhZmFpdSwgImNwdSIgZG9lc24ndCByZWFsbHkgY2FyZQo+
+IHdoaWNoIHNwZWNpZmljIGNvcmUgdGhlIHRhc2tzIHJ1biBvbiwganVzdCB0aGUgcmVsYXRpdmUg
+d2VpZ2h0cyB0aGF0Cj4gZGV0ZXJtaW5lIGhvdyBtdWNoIHRpbWUgdGhleSBnZXQgdG8gcnVuIG9u
+IGFueSBvZiB0aGUgY29yZXMuCgpEZXBlbmRpbmcgb24gdGhlIGxldmVsIG9mIG9wdGltaXphdGlv
+biBvbmUgd2FudHMgdG8gZG8sIEkgdGhpbmsgcGVvcGxlIGNhcmUgYWJvdXQgd2hpY2ggY3B1IGNv
+cmUgYSB0YXNrIHJ1bnMgb24uICBNb2Rlcm4gcHJvY2Vzc29ycyBhcmUgbm8gbG9uZ2VyIGEgbW9u
+b2xpdGhpYyAndGhpbmcnLiAgQXQgbGVhc3QgZm9yIEFNRCwgdGhlcmUgYXJlIG11bHRpcGxlIGNw
+dXMgb24gYSBjb3JlIGNvbXBsZXggKENDWCksIG11bHRpcGxlIENDWCBvbiBhIGRpZSwgYW5kIG11
+bHRpcGxlIGRpZXMgb24gYSBwcm9jZXNzb3IuICBBIHRhc2sgcnVubmluZyBvbiBjcHUgMCBhbmQg
+Y3B1IDEgb24gZGllIDAgd2lsbCBiZWhhdmUgdmVyeSBkaWZmZXJlbnRseSBmcm9tIGEgdGFzayBy
+dW5uaW5nIG9uIGNvcmUgMHMgb24gZGllIDAgYW5kIGRpZSAxIG9uIHRoZSBzYW1lIHNvY2tldC4g
+IChodHRwczovL2VuLndpa2ljaGlwLm9yZy93aWtpL2FtZC9taWNyb2FyY2hpdGVjdHVyZXMvemVu
+I0RpZS1kaWVfbWVtb3J5X2xhdGVuY2llcykKCkl0J3Mgbm90IGp1c3QgYW4gQU1EIHRoaW5nIGVp
+dGhlci4gIEhlcmUgaXMgYW4gb3BlbiBpc3N1ZSBvbiBJbnRlbCdzIGFyY2hpdGVjdHVyZToKaHR0
+cHM6Ly9naXRodWIuY29tL2t1YmVybmV0ZXMva3ViZXJuZXRlcy9pc3N1ZXMvNjczNTUKCmFuZCBh
+IHByb3Bvc2VkIHNvbHV0aW9uIHVzaW5nIGNwdSBhZmZpbml0eSBodHRwczovL2dpdGh1Yi5jb20v
+a3ViZXJuZXRlcy9jb21tdW5pdHkvYmxvYi82MzBhY2M0ODdjODBlNDk4MWEyMzJjZGQ4NDAwZWI4
+MjA3MTE5Nzg4L2tlcHMvc2lnLW5vZGUvMDAzMC1xb3MtY2xhc3MtY3B1LWFmZmluaXR5Lm1kI3By
+b3Bvc2FsIChieSBvbmUgb2YgeW91ciBjb2xsZWFndWVzLikKClRoZSB0aW1lLWJhc2VkIHNoYXJp
+bmcgYmVsb3cgaXMgYWxzbyBzb21ldGhpbmcgd2UgYXJlIHRoaW5raW5nIGFib3V0LCBidXQgaXQn
+cyBwZXJzb25hbGx5IG5vdCBhcyBleGNpdGluZyBhcyB0aGUgcmVzb3VyY2UtYmFzZWQgc2hhcmlu
+ZyBmb3IgbWUgYmVjYXVzZSB0aGUgdGltZS1zaGFyZSB1c2UgY2FzZSBoYXMgYWxyZWFkeSBiZWVu
+IGFkZHJlc3NlZCBieSBvdXIgU1JJT1YvdmlydHVhbGl6YXRpb24gcHJvZHVjdHMuICBXZSBjYW4g
+cG90ZW50aWFsbHkgaGF2ZSBkaWZmZXJlbnQgbGV2ZWwgb2YgdGltZSBzaGFyaW5nIHVzaW5nIGNn
+cm91cCB0aG91Z2ggKGluIGFkZGl0aW9uIHRvIFNSSU9WKSwgcG90ZW50aWFsbHkgdHJhZGluZyBl
+ZmZpY2llbmN5IGFnYWluc3QgaXNvbGF0aW9uLiAgVGhhdCBzYWlkLCBJIHRoaW5rIHRoZSB0aW1l
+LWJhc2VkIGFwcHJvYWNoIG1heWJlIG9ydGhvZ29uYWwgdG8gdGhlIHJlc291cmNlLWJhc2VkIGFw
+cHJvYWNoIChvcnRob2dvbmFsIGluIHRoZSBzZW5zZSB0aGF0IGJvdGggYXJlIG5lZWRlZCBkZXBl
+bmRpbmcgb24gdGhlIHVzYWdlLikKClJlZ2FyZHMsCktlbm55CgoKPiBJdCBzb3VuZHMgbGlrZSB3
+aXRoIHlvdXIgaGFyZHdhcmUsIHlvdXIga2VybmVsIGRyaXZlciBpcyBhYmxlIHRvIHNwZWNpZnkK
+PiBleGFjdGx5IHdoaWNoIHN1YnNldCBvZiBHUFUgRVUncyBhIHNwZWNpZmljIEdQVSBjb250ZXh0
+IHdpbmRzIHVwIHJ1bm5pbmcKPiBvbi4gIEhvd2V2ZXIgSSB0aGluayB0aGVyZSBhcmUgYSBsb3Qg
+b2YgcGxhdGZvcm1zIHRoYXQgZG9uJ3QgYWxsb3cgdGhhdAo+IGtpbmQgb2YgbG93LWxldmVsIGNv
+bnRyb2wuICBFLmcuLCBJIGRvbid0IHRoaW5rIHdlIGNhbiBkbyB0aGF0IG9uIEludGVsCj4gaGFy
+ZHdhcmU7IHdlIGhhdmUgYSBoYW5kZnVsIG9mIGhpZ2gtbGV2ZWwgR1BVIGVuZ2luZXMgdGhhdCB3
+ZSBjYW4gc3VibWl0Cj4gZGlmZmVyZW50IHR5cGVzIG9mIGJhdGNoYnVmZmVycyB0byAocmVuZGVy
+LCBibGl0dGVyLCBtZWRpYSwgZXRjLikuICBXaGF0Cj4gd2UgY2FuIGRvIGlzIHVzZSBHUFUgcHJl
+ZW1wdGlvbiB0byBsaW1pdCBob3cgbXVjaCB0aW1lIHNwZWNpZmljIEdQVQo+IGNvbnRleHRzIGdl
+dCB0byBydW4gb24gdGhlIHJlbmRlciBlbmdpbmUgYmVmb3JlIHRoZSBlbmdpbmUgaXMgcmVjbGFp
+bWVkCj4gZm9yIHVzZSBieSBhIGRpZmZlcmVudCBjb250ZXh0Lgo+Cj4gVXNpbmcgYSAlZ3B1dGlt
+ZSBhcHByb2FjaCBsaWtlIEpvb25hcyBpcyBzdWdnZXN0aW5nIGNvdWxkIGJlIGhhbmRsZWQgaW4K
+PiBhIGRyaXZlciBieSByZXNlcnZpbmcgc3BlY2lmaWMgc3Vic2V0cyBvZiBFVSdzIG9uIGhhcmR3
+YXJlIGxpa2UgeW91cnMKPiB0aGF0J3MgY2FwYWJsZSBvZiBkb2luZyB0aGF0LCB3aGVyZWFzIGl0
+IGNvdWxkIGJlIG1vc3RseSBoYW5kbGVkIG9uCj4gb3RoZXIgdHlwZXMgb2YgaGFyZHdhcmUgdmlh
+IEdQVSBlbmdpbmUgcHJlZW1wdGlvbi4KPgo+IEkgdGhpbmsgZWl0aGVyIGFwcHJvYWNoICJncHVf
+ZXVzZXQiIG9yICIlZ3B1dGltZSIgc2hvdWxkIG1hcCB3ZWxsIHRvIGEKPiBjZ3JvdXAgY29udHJv
+bGxlciBpbXBsZW1lbnRhdGlvbi4gIEdyYW50ZWQsIG5laXRoZXIgb25lIHNvbHZlcyB0aGUKPiBz
+cGVjaWZpYyB1c2UgY2FzZSBJIHdhcyB3b3JraW5nIG9uIGVhcmxpZXIgdGhpcyB5ZWFyIHdoZXJl
+IHdlIG5lZWQKPiB1bmZhaXIgKHN0YXJ2YXRpb24tb2theSkgc2NoZWR1bGluZyB0aGF0IHdpbGwg
+cnVuIGNvbnRleHRzIHN0cmljdGx5Cj4gYWNjb3JkaW5nIHRvIHByaW9yaXR5IChpLmUuLCBsb3dl
+ciBwcmlvcml0eSBjb250ZXh0cyB3aWxsIG5ldmVyIHJ1biBhdAo+IGFsbCB1bmxlc3MgYWxsIGhp
+Z2hlciBwcmlvcml0eSBjb250ZXh0cyBoYXZlIGNvbXBsZXRlZCBhbGwgb2YgdGhlaXIKPiBzdWJt
+aXR0ZWQgd29yayksIGJ1dCB0aGF0J3MgYSBwcmV0dHkgc3BlY2lhbGl6ZWQgdXNlIGNhc2UgdGhh
+dCB3ZSdsbAo+IHByb2JhYmx5IG5lZWQgdG8gaGFuZGxlIGluIGEgZGlmZmVyZW50IG1hbm5lciBh
+bnl3YXkuCj4KPgo+IE1hdHQKPgo+Cj4gPiBSZWdhcmRzLAo+ID4gS2Vubm55Cj4gPgo+ID4KPiA+
+ID4gPiA+IFRoYXQgY29tYmluZWQgd2l0aCB0aGUgIkdQVSBtZW1vcnkgdXNhYmxlIiBwcm9wZXJ0
+eSBzaG91bGQgYmUgYSBnb29kCj4gPiA+ID4gPiBzdGFydGluZyBwb2ludCB0byBzdGFydCBzdWJk
+aXZpZGluZyB0aGUgR1BVIHJlc291cmNlcyBmb3IgbXVsdGlwbGUKPiA+ID4gPiA+IHVzZXJzLgo+
+ID4gPiA+ID4KPiA+ID4gPiA+IFJlZ2FyZHMsIEpvb25hcwo+ID4gPiA+ID4KPiA+ID4gPiA+ID4K
+PiA+ID4gPiA+ID4gWW91ciBmZWVkYmFjayBpcyBoaWdobHkgYXBwcmVjaWF0ZWQuCj4gPiA+ID4g
+PiA+Cj4gPiA+ID4gPiA+IEJlc3QgUmVnYXJkcywKPiA+ID4gPiA+ID4gSGFyaXNoCj4gPiA+ID4g
+PiA+Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IEZyb206IGFtZC1nZnggPGFt
+ZC1nZngtYm91bmNlc0BsaXN0cy5mcmVlZGVza3RvcC5vcmc+IG9uIGJlaGFsZiBvZiBUZWp1biBI
+ZW8gPHRqQGtlcm5lbC5vcmc+Cj4gPiA+ID4gPiA+IFNlbnQ6IFR1ZXNkYXksIE5vdmVtYmVyIDIw
+LCAyMDE4IDU6MzAgUE0KPiA+ID4gPiA+ID4gVG86IEhvLCBLZW5ueQo+ID4gPiA+ID4gPiBDYzog
+Y2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmc7IGludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7
+IHkya2VubnlAZ21haWwuY29tOyBhbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZzsgZHJpLWRl
+dmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwo+ID4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENI
+IFJGQyAyLzVdIGNncm91cDogQWRkIG1lY2hhbmlzbSB0byByZWdpc3RlciB2ZW5kb3Igc3BlY2lm
+aWMgRFJNIGRldmljZXMKPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gSGVsbG8s
+Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IE9uIFR1ZSwgTm92IDIwLCAyMDE4IGF0IDEwOjIxOjE0
+UE0gKzAwMDAsIEhvLCBLZW5ueSB3cm90ZToKPiA+ID4gPiA+ID4gPiBCeSB0aGlzIHJlcGx5LCBh
+cmUgeW91IHN1Z2dlc3RpbmcgdGhhdCB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2VzCj4gPiA+ID4g
+PiA+ID4gd2lsbCBuZXZlciBiZSBhY2NlcHRhYmxlIHRvIGJlIG1hbmFnZWQgdW5kZXIgY2dyb3Vw
+PyAgTGV0IHNheSBhIHVzZXIKPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gSSB3b3VsZG4ndCBzYXkg
+bmV2ZXIgYnV0IHdoYXRldmVyIHdoaWNoIGdldHMgaW5jbHVkZWQgYXMgYSBjZ3JvdXAKPiA+ID4g
+PiA+ID4gY29udHJvbGxlciBzaG91bGQgaGF2ZSBjbGVhcmx5IGRlZmluZWQgcmVzb3VyY2UgYWJz
+dHJhY3Rpb25zIGFuZCB0aGUKPiA+ID4gPiA+ID4gY29udHJvbCBzY2hlbWVzIGFyb3VuZCB0aGVt
+IGluY2x1ZGluZyBzdXBwb3J0IGZvciBkZWxlZ2F0aW9uLiAgQUZBSUNTLAo+ID4gPiA+ID4gPiBn
+cHUgc2lkZSBzdGlsbCBzZWVtcyB0byBoYXZlIGEgbG9uZyB3YXkgdG8gZ28gKGFuZCBpdCdzIG5v
+dCBjbGVhcgo+ID4gPiA+ID4gPiB3aGV0aGVyIHRoYXQncyBzb21ld2hlcmUgaXQgd2lsbCBvciBu
+ZWVkcyB0byBlbmQgdXApLgo+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+IHdhbnQgdG8gaGF2ZSBz
+aW1pbGFyIGZ1bmN0aW9uYWxpdHkgYXMgd2hhdCBjZ3JvdXAgaXMgb2ZmZXJpbmcgYnV0IHRvCj4g
+PiA+ID4gPiA+ID4gbWFuYWdlIHZlbmRvciBzcGVjaWZpYyByZXNvdXJjZXMsIHdoYXQgd291bGQg
+eW91IHN1Z2dlc3QgYXMgYQo+ID4gPiA+ID4gPiA+IHNvbHV0aW9uPyAgV2hlbiB5b3Ugc2F5IGtl
+ZXBpbmcgdmVuZG9yIHNwZWNpZmljIHJlc291cmNlIHJlZ3VsYXRpb24KPiA+ID4gPiA+ID4gPiBp
+bnNpZGUgZHJtIG9yIHNwZWNpZmljIGRyaXZlcnMsIGRvIHlvdSBtZWFuIHdlIHNob3VsZCByZXBs
+aWNhdGUgdGhlCj4gPiA+ID4gPiA+ID4gY2dyb3VwIGluZnJhc3RydWN0dXJlIHRoZXJlIG9yIGRv
+IHlvdSBtZWFuIGVpdGhlciBkcm0gb3Igc3BlY2lmaWMKPiA+ID4gPiA+ID4gPiBkcml2ZXIgc2hv
+dWxkIHF1ZXJ5IGV4aXN0aW5nIGhpZXJhcmNoeSAoc3VjaCBhcyBkZXZpY2Ugb3IgcGVyaGFwcwo+
+ID4gPiA+ID4gPiA+IGNwdSkgZm9yIHRoZSBwcm9jZXNzIG9yZ2FuaXphdGlvbiBpbmZvcm1hdGlv
+bj8KPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+IFRvIHB1dCB0aGUgcXVlc3Rpb25zIGluIG1v
+cmUgY29uY3JldGUgdGVybXMsIGxldCBzYXkgYSB1c2VyIHdhbnRzIHRvCj4gPiA+ID4gPiA+ID4g
+ZXhwb3NlIGNlcnRhaW4gcGFydCBvZiBhIGdwdSB0byBhIHBhcnRpY3VsYXIgY2dyb3VwIHNpbWls
+YXIgdG8gdGhlCj4gPiA+ID4gPiA+ID4gd2F5IHNlbGVjdGl2ZSBjcHUgY29yZXMgYXJlIGV4cG9z
+ZWQgdG8gYSBjZ3JvdXAgdmlhIGNwdXNldCwgaG93Cj4gPiA+ID4gPiA+ID4gc2hvdWxkIHdlIGdv
+IGFib3V0IGVuYWJsaW5nIHN1Y2ggZnVuY3Rpb25hbGl0eT8KPiA+ID4gPiA+ID4KPiA+ID4gPiA+
+ID4gRG8gd2hhdCB0aGUgaW50ZWwgZHJpdmVyIG9yIGJwZiBpcyBkb2luZz8gIEl0J3Mgbm90IGRp
+ZmZpY3VsdCB0byBob29rCj4gPiA+ID4gPiA+IGludG8gY2dyb3VwIGZvciBpZGVudGlmaWNhdGlv
+biBwdXJwb3Nlcy4KPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gVGhhbmtzLgo+ID4gPiA+ID4gPgo+
+ID4gPiA+ID4gPiAtLQo+ID4gPiA+ID4gPiB0ZWp1bgo+ID4gPiA+ID4gPiBfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+ID4gPiA+ID4gPiBhbWQtZ2Z4IG1h
+aWxpbmcgbGlzdAo+ID4gPiA+ID4gPiBhbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwo+ID4g
+PiA+ID4gPiBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Ft
+ZC1nZngKPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gYW1kLWdmeCBJbmZvIFBh
+Z2UgLSBmcmVlZGVza3RvcC5vcmcKPiA+ID4gPiA+ID4gbGlzdHMuZnJlZWRlc2t0b3Aub3JnCj4g
+PiA+ID4gPiA+IFRvIHNlZSB0aGUgY29sbGVjdGlvbiBvZiBwcmlvciBwb3N0aW5ncyB0byB0aGUg
+bGlzdCwgdmlzaXQgdGhlIGFtZC1nZnggQXJjaGl2ZXMuLiBVc2luZyBhbWQtZ2Z4OiBUbyBwb3N0
+IGEgbWVzc2FnZSB0byBhbGwgdGhlIGxpc3QgbWVtYmVycywgc2VuZCBlbWFpbCB0byBhbWQtZ2Z4
+QGxpc3RzLmZyZWVkZXNrdG9wLm9yZy4gWW91IGNhbiBzdWJzY3JpYmUgdG8gdGhlIGxpc3QsIG9y
+IGNoYW5nZSB5b3VyIGV4aXN0aW5nIHN1YnNjcmlwdGlvbiwgaW4gdGhlIHNlY3Rpb25zIGJlbG93
+Lgo+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwo+ID4gPiA+ID4gPiBJbnRlbC1nZnggbWFpbGluZyBsaXN0Cj4gPiA+
+ID4gPiA+IEludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+ID4gPiA+ID4gaHR0cHM6
+Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngKPgo+IC0t
+Cj4gTWF0dCBSb3Blcgo+IEdyYXBoaWNzIFNvZnR3YXJlIEVuZ2luZWVyCj4gSW9URyBQbGF0Zm9y
+bSBFbmFibGluZyAmIERldmVsb3BtZW50Cj4gSW50ZWwgQ29ycG9yYXRpb24KPiAoOTE2KSAzNTYt
+Mjc5NQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwphbWQt
+Z2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xp
+c3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2FtZC1nZngK
