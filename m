@@ -1,45 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next] cpuset: Remove set but not used variable 'cs'
-Date: Mon, 3 Dec 2018 08:25:55 -0800
-Message-ID: <20181203162555.GM2509588@devbig004.ftw2.facebook.com>
-References: <1543633976-183380-1-git-send-email-yuehaibing@huawei.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v4 3/7] cgroup: protect cgroup->nr_(dying_)descendants by
+ css_set_lock
+Date: Mon, 3 Dec 2018 17:55:32 +0000
+Message-ID: <20181203175525.GA31090@castle.DHCP.thefacebook.com>
+References: <20181130234745.6756-1-guro@fb.com>
+ <20181130234745.6756-4-guro@fb.com>
+ <20181203161706.GL2509588@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=7Bsr4wedVD9JxukZDVeRReP8kYGIjt+Mgx/noLT6+wk=;
-        b=OfU4f2K4/+i0w36IQJ4ER9JlDdl0Amu+6Fi8sfliIUvurK/k311bGtZhBim0ZwLTCF
-         dDY0iqwW9W1euaFaByK2cowZhCEfNAWI15ZpZSDtRj3Hg764CmFUFhvskg636alCV0AF
-         SpDdPkRpqp/qVmFfJTW2ngefrjXvIPSk+ctflhGUWpQWAJe6sQluHFg3LQvHub0wiS3B
-         fnSo9RV93Vbza0qST2/+mzcO9CWsCEhIs9HF4UcIs9QIjDFO1q4EA8Pvrd86kgvRjAe9
-         dGg+B/ooaqL9yg0za2fx5hw5HrRp8pNsdCgdps+yKVl57zSm8UU6c8Ce3PsadBJy1CcY
-         qNHg==
-Content-Disposition: inline
-In-Reply-To: <1543633976-183380-1-git-send-email-yuehaibing@huawei.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=jXgZmmGrKJOCH7aXns46ZCD3NukG2hkqMLsh3ROlQSY=;
+ b=pTraOz16Qug3Wy6ITtrBMdD8cBywjhMEQZvStRzMQ3+LJ2dK8yzp9XlE2Io7QgXV49gf
+ 0gSOwQ7B18CFpkV9MoP5L2LxmSETu4HyYMnKVRYAVPk+c+wI8W98yXpKYWHN+Xl2PDmy
+ J5Ybxe5RZFZikvo19qITE82Emi50HlWQ3vc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jXgZmmGrKJOCH7aXns46ZCD3NukG2hkqMLsh3ROlQSY=;
+ b=NegAf/PUbTfQMkN4Jz/EF5FsiLbCJdThsiMPaHgVxvT1l+Iwbwf25Fgs+7/po7O3XcCkQ2RLHqi0rgyOm1TC1ldkWvVVmirVR4xKcKhQEY5uH56or7D0JGUvSeloLgNmwstR/t/+8ULDXZAThW2qH6jPD0NKDsXIry+aM68ZA8o=
+In-Reply-To: <20181203161706.GL2509588@devbig004.ftw2.facebook.com>
+Content-Language: en-US
+Content-ID: <2BFDF386C6DA804C8707CAE220CD369C@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: Li Zefan <lizefan@huawei.com>, mingo@kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guroan@gmail.com>, Oleg Nesterov <oleg@redhat.com>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-On Sat, Dec 01, 2018 at 03:12:56AM +0000, YueHaibing wrote:
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> kernel/cgroup/cpuset.c: In function 'cpuset_cancel_attach':
-> kernel/cgroup/cpuset.c:2167:17: warning:
->  variable 'cs' set but not used [-Wunused-but-set-variable]
-> 
-> It never used since introduction in commit 1f7dd3e5a6e4 ("cgroup: fix handling
-> of multi-destination migration from subtree_control enabling")
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+On Mon, Dec 03, 2018 at 08:17:06AM -0800, Tejun Heo wrote:
+> On Fri, Nov 30, 2018 at 03:47:41PM -0800, Roman Gushchin wrote:
+> > +	 * nr_descendants and nr_dying_descendants are protected
+> > +	 * by cgroup_mutex and css_set_lock.
+>=20
+> Can you be a bit more specific - hold both for writes, either for
+> reads.
 
-Applied to cgroup/for-4.21.
-
-Thanks.
-
--- 
-tejun
+Sure. Thanks!
