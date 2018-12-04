@@ -1,211 +1,136 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v4 4/7] cgroup: cgroup v2 freezer
-Date: Tue, 4 Dec 2018 00:11:13 +0000
-Message-ID: <20181204001105.GA14586@castle.DHCP.thefacebook.com>
-References: <20181130234745.6756-1-guro@fb.com>
- <20181130234745.6756-5-guro@fb.com> <20181203144717.GD31795@redhat.com>
+From: syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>
+Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
+Date: Tue, 04 Dec 2018 07:43:04 -0800
+Message-ID: <00000000000006457e057c341ff8@google.com>
+References: <000000000000601367057a095de4@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=U3JjbP/W/sU665MEzYUwF/I0/Jtnm8EbcXnYYbGHVWE=;
- b=VoT7Y/J+TEZoF1P/Ep3X/ceknIYm+xRV2k8d5htltf8v8z2/7+oqTcwTcOF5NO1WEdgU
- JpSFr5PjkG/bMgfHn100OHe7OBJWwSFM7KTzowvm5MGK2Qg61E+YzqG8nXg4GHj5MgyY
- Eoz54+8Pp8nL4jDbaXfiDtPoRh1o0w2QHq0= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=U3JjbP/W/sU665MEzYUwF/I0/Jtnm8EbcXnYYbGHVWE=;
- b=hqy3wa11mMwe0Mv2HkXxZ0jtequq0TF4VXKe3BWGEoiOGHcL4z9JbdcGIWiSpekfX7WCyZTa+HpUPCYpMu8pSFyGzZmiidY1A2ncNOI7LECz7l9rtKPcKs35uYljsA8nbGbU/xZwzQzxFYVi+S97QXVUUzNDgrRc8wxLaEjgulA=
-In-Reply-To: <20181203144717.GD31795@redhat.com>
-Content-Language: en-US
-Content-ID: <87C0C50BC289E147B62B1AF5F48DDDBE@namprd15.prod.outlook.com>
+In-Reply-To: <000000000000601367057a095de4@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com
 
-On Mon, Dec 03, 2018 at 03:47:18PM +0100, Oleg Nesterov wrote:
-> To be honest, I fail to understand this patch. At least after a quick gla=
-nce,
-> I will try to read it again tomorrow but so far I do not even understand =
-the
-> desired semantics wrt signals/ptrace.
->=20
-> On 11/30, Roman Gushchin wrote:
-> >
-> > @@ -368,6 +369,8 @@ static inline int signal_pending_state(long state, =
-struct task_struct *p)
-> >  		return 0;
-> >  	if (!signal_pending(p))
-> >  		return 0;
-> > +	if (unlikely(cgroup_task_frozen(p)))
-> > +		return __fatal_signal_pending(p);
->=20
-> Oh, this is not nice. And doesn't look right.
->=20
-> > +/*
-> > + * Entry path into frozen state.
-> > + * If the task was not frozen before, counters are updated and the cgr=
-oup state
-> > + * is revisited. Otherwise, the task is put into the TASK_KILLABLE sle=
-ep.
-> > + */
-> > +void cgroup_enter_frozen(void)
-> > +{
-> > +	if (!current->frozen) {
-> > +		struct cgroup *cgrp;
-> > +
-> > +		spin_lock_irq(&css_set_lock);
-> > +		current->frozen =3D true;
-> > +		cgrp =3D task_dfl_cgroup(current);
-> > +		cgrp->freezer.nr_frozen_tasks++;
-> > +		WARN_ON_ONCE(cgrp->freezer.nr_frozen_tasks >
-> > +			     cgrp->freezer.nr_tasks_to_freeze);
-> > +		cgroup_update_frozen(cgrp, true);
-> > +		spin_unlock_irq(&css_set_lock);
-> > +	}
-> > +
-> > +	__set_current_state(TASK_INTERRUPTIBLE);
-> > +	schedule();
->=20
-> The comment above says TASK_KILLABLE, very confusing.
+syzbot has found a reproducer for the following crash on:
 
-Sorry, it's a leftover from one of the previous versions. Fixed.
+HEAD commit:    0072a0c14d5b Merge tag 'media/v4.20-4' of git://git.kernel..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11c885a3400000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=b9cc5a440391cbfd
+dashboard link: https://syzkaller.appspot.com/bug?extid=cbb52e396df3e565ab02
+compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12835e25400000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=172fa5a3400000
 
->=20
-> Probably this pairs with the change in signal_pending_state() above. So t=
-his
-> schedule() should actually "work" in that it won't return if signal_pendi=
-ng().
->=20
-> But this can't protect from another signal_wake_up(). Yes, iiuc in this c=
-ase
-> cgroup_enter_frozen() will be called again "soon" but this all looks stra=
-nge.
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com
 
-So, the idea here is to make ptrace traps and fatal signals working, but
-non-fatal shouldn't be delivered.
+cgroup: fork rejected by pids controller in /syz2
+==================================================================
+BUG: KASAN: use-after-free in __read_once_size include/linux/compiler.h:182  
+[inline]
+BUG: KASAN: use-after-free in task_css include/linux/cgroup.h:477 [inline]
+BUG: KASAN: use-after-free in mem_cgroup_from_task mm/memcontrol.c:815  
+[inline]
+BUG: KASAN: use-after-free in get_mem_cgroup_from_mm.part.62+0x6d7/0x880  
+mm/memcontrol.c:844
+Read of size 8 at addr ffff8881b72af310 by task syz-executor198/9332
 
-As soon as the frozen task is looping in the signal delivery loop, it's fin=
-e,
-it's not going anywhere.
+CPU: 0 PID: 9332 Comm: syz-executor198 Not tainted 4.20.0-rc5+ #142
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x244/0x39d lib/dump_stack.c:113
+  print_address_description.cold.7+0x9/0x1ff mm/kasan/report.c:256
+  kasan_report_error mm/kasan/report.c:354 [inline]
+  kasan_report.cold.8+0x242/0x309 mm/kasan/report.c:412
+  __asan_report_load8_noabort+0x14/0x20 mm/kasan/report.c:433
+  __read_once_size include/linux/compiler.h:182 [inline]
+  task_css include/linux/cgroup.h:477 [inline]
+  mem_cgroup_from_task mm/memcontrol.c:815 [inline]
+  get_mem_cgroup_from_mm.part.62+0x6d7/0x880 mm/memcontrol.c:844
+  get_mem_cgroup_from_mm mm/memcontrol.c:834 [inline]
+  mem_cgroup_try_charge+0x608/0xe20 mm/memcontrol.c:5888
+  mcopy_atomic_pte mm/userfaultfd.c:71 [inline]
+  mfill_atomic_pte mm/userfaultfd.c:418 [inline]
+  __mcopy_atomic mm/userfaultfd.c:559 [inline]
+  mcopy_atomic+0xb08/0x2c70 mm/userfaultfd.c:609
+  userfaultfd_copy fs/userfaultfd.c:1705 [inline]
+  userfaultfd_ioctl+0x29fb/0x5610 fs/userfaultfd.c:1851
+  vfs_ioctl fs/ioctl.c:46 [inline]
+  file_ioctl fs/ioctl.c:509 [inline]
+  do_vfs_ioctl+0x1de/0x1790 fs/ioctl.c:696
+  ksys_ioctl+0xa9/0xd0 fs/ioctl.c:713
+  __do_sys_ioctl fs/ioctl.c:720 [inline]
+  __se_sys_ioctl fs/ioctl.c:718 [inline]
+  __x64_sys_ioctl+0x73/0xb0 fs/ioctl.c:718
+  do_syscall_64+0x1b9/0x820 arch/x86/entry/common.c:290
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x44c7e9
+Code: 5d c5 fb ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 48 89 f8 48 89 f7  
+48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff  
+ff 0f 83 2b c5 fb ff c3 66 2e 0f 1f 84 00 00 00 00
+RSP: 002b:00007f906b69fdb8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00000000006e4a08 RCX: 000000000044c7e9
+RDX: 0000000020000100 RSI: 00000000c028aa03 RDI: 0000000000000004
+RBP: 00000000006e4a00 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00000000006e4a0c
+R13: 00007ffdfd47813f R14: 00007f906b6a09c0 R15: 000000000000002d
 
-Without the change above the task is getting out of schedule() immediately,
-if any signal is pending (including non-fatals). So it becomes a busy-loop.
+Allocated by task 9325:
+  save_stack+0x43/0xd0 mm/kasan/kasan.c:448
+  set_track mm/kasan/kasan.c:460 [inline]
+  kasan_kmalloc+0xc7/0xe0 mm/kasan/kasan.c:553
+  kasan_slab_alloc+0x12/0x20 mm/kasan/kasan.c:490
+  kmem_cache_alloc_node+0x144/0x730 mm/slab.c:3644
+  alloc_task_struct_node kernel/fork.c:158 [inline]
+  dup_task_struct kernel/fork.c:843 [inline]
+  copy_process+0x2026/0x87a0 kernel/fork.c:1751
+  _do_fork+0x1cb/0x11d0 kernel/fork.c:2216
+  __do_sys_clone kernel/fork.c:2323 [inline]
+  __se_sys_clone kernel/fork.c:2317 [inline]
+  __x64_sys_clone+0xbf/0x150 kernel/fork.c:2317
+  do_syscall_64+0x1b9/0x820 arch/x86/entry/common.c:290
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
->=20
-> > --- a/kernel/ptrace.c
-> > +++ b/kernel/ptrace.c
-> > @@ -410,6 +410,13 @@ static int ptrace_attach(struct task_struct *task,=
- long request,
-> >
-> >  	spin_lock(&task->sighand->siglock);
-> >
-> > +	/*
-> > +	 * If the process is frozen, let's wake it up to give it a chance
-> > +	 * to enter the ptrace trap.
-> > +	 */
-> > +	if (cgroup_task_frozen(task))
-> > +		wake_up_process(task);
->=20
-> And why this can't race with cgroup_enter_frozen() ?
->=20
-> Or think of PTRACE_INTERRUPT. It can race with cgroup_enter_frozen() too,=
- the
-> tracee can miss this request because of that change in signal_pending_sta=
-te().
+Freed by task 9325:
+  save_stack+0x43/0xd0 mm/kasan/kasan.c:448
+  set_track mm/kasan/kasan.c:460 [inline]
+  __kasan_slab_free+0x102/0x150 mm/kasan/kasan.c:521
+  kasan_slab_free+0xe/0x10 mm/kasan/kasan.c:528
+  __cache_free mm/slab.c:3498 [inline]
+  kmem_cache_free+0x83/0x290 mm/slab.c:3760
+  free_task_struct kernel/fork.c:163 [inline]
+  free_task+0x16e/0x1f0 kernel/fork.c:457
+  copy_process+0x1dcc/0x87a0 kernel/fork.c:2148
+  _do_fork+0x1cb/0x11d0 kernel/fork.c:2216
+  __do_sys_clone kernel/fork.c:2323 [inline]
+  __se_sys_clone kernel/fork.c:2317 [inline]
+  __x64_sys_clone+0xbf/0x150 kernel/fork.c:2317
+  do_syscall_64+0x1b9/0x820 arch/x86/entry/common.c:290
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-It's a good point. So I need an additional synchronization around
-checking/setting the JOBCTL_TRAP_FREEZE?
+The buggy address belongs to the object at ffff8881b72ae240
+  which belongs to the cache task_struct(81:syz2) of size 6080
+The buggy address is located 4304 bytes inside of
+  6080-byte region [ffff8881b72ae240, ffff8881b72afa00)
+The buggy address belongs to the page:
+page:ffffea0006dcab80 count:1 mapcount:0 mapping:ffff8881d2dce0c0 index:0x0  
+compound_mapcount: 0
+flags: 0x2fffc0000010200(slab|head)
+raw: 02fffc0000010200 ffffea00074a1f88 ffffea0006ebbb88 ffff8881d2dce0c0
+raw: 0000000000000000 ffff8881b72ae240 0000000100000001 ffff8881d87fe580
+page dumped because: kasan: bad access detected
+page->mem_cgroup:ffff8881d87fe580
 
->=20
->=20
-> >  static void do_jobctl_trap(void)
-> >  {
-> > +	struct sighand_struct *sighand =3D current->sighand;
-> >  	struct signal_struct *signal =3D current->signal;
-> >  	int signr =3D current->jobctl & JOBCTL_STOP_SIGMASK;
-> > =20
-> > -	if (current->ptrace & PT_SEIZED) {
-> > -		if (!signal->group_stop_count &&
-> > -		    !(signal->flags & SIGNAL_STOP_STOPPED))
-> > -			signr =3D SIGTRAP;
-> > -		WARN_ON_ONCE(!signr);
-> > -		ptrace_do_notify(signr, signr | (PTRACE_EVENT_STOP << 8),
-> > -				 CLD_STOPPED);
-> > -	} else {
-> > -		WARN_ON_ONCE(!signr);
-> > -		ptrace_stop(signr, CLD_STOPPED, 0, NULL);
-> > -		current->exit_code =3D 0;
-> > +	if (current->jobctl & (JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY)) {
-> > +		if (current->ptrace & PT_SEIZED) {
-> > +			if (!signal->group_stop_count &&
-> > +			    !(signal->flags & SIGNAL_STOP_STOPPED))
-> > +				signr =3D SIGTRAP;
-> > +			WARN_ON_ONCE(!signr);
-> > +			ptrace_do_notify(signr,
-> > +					 signr | (PTRACE_EVENT_STOP << 8),
-> > +					 CLD_STOPPED);
-> > +		} else {
-> > +			WARN_ON_ONCE(!signr);
-> > +			ptrace_stop(signr, CLD_STOPPED, 0, NULL);
-> > +			current->exit_code =3D 0;
-> > +		}
-> > +	} else if (current->jobctl & JOBCTL_TRAP_FREEZE) {
-> > +		/*
-> > +		 * Enter the frozen state, unless the task is about to exit.
-> > +		 */
-> > +		if (fatal_signal_pending(current)) {
-> > +			current->jobctl &=3D ~JOBCTL_TRAP_FREEZE;
-> > +		} else {
-> > +			spin_unlock_irq(&sighand->siglock);
-> > +			cgroup_enter_frozen();
-> > +			spin_lock_irq(&sighand->siglock);
-> > +		}
-> >  	}
-> >  }
-> > =20
-> > @@ -2401,12 +2420,23 @@ bool get_signal(struct ksignal *ksig)
-> >  		    do_signal_stop(0))
-> >  			goto relock;
-> > =20
-> > -		if (unlikely(current->jobctl & JOBCTL_TRAP_MASK)) {
-> > +		if (unlikely(current->jobctl &
-> > +			     (JOBCTL_TRAP_MASK | JOBCTL_TRAP_FREEZE))) {
-> >  			do_jobctl_trap();
->=20
-> Cosmetic nit, but can't you add another helper? To me something like
->=20
-> 		if (JOBCTL_TRAP_MASK)
-> 			do_jobctl_trap();
-> 		else if (JOBCTL_TRAP_FREEZE)
-> 			do_jobctl_freeze();
->=20
-> will look more clean, but I won't insist.
+Memory state around the buggy address:
+  ffff8881b72af200: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  ffff8881b72af280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+> ffff8881b72af300: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                          ^
+  ffff8881b72af380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  ffff8881b72af400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
 
-Sure.
-
->=20
->=20
-> > +		/*
-> > +		 * If the task is leaving the frozen state, let's update
-> > +		 * cgroup counters and reset the frozen bit.
-> > +		 */
-> > +		if (unlikely(cgroup_task_frozen(current))) {
-> > +			spin_unlock_irq(&sighand->siglock);
-> > +			cgroup_leave_frozen();
-> > +			spin_lock_irq(&sighand->siglock);
->=20
-> looks like this needs another "goto relock", no?
->=20
-> And perhaps this another reason for the new do_jobctl_freeze() helper whi=
-ch
-> could absorb this leave_frozen() ?
-
-Makes sense. Will follow this path in v5.
-
-Thank you!
