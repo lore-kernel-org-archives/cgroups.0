@@ -1,24 +1,25 @@
 From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH 06/14] blkcg: associate blkg when associating a device
-Date: Tue, 4 Dec 2018 14:48:39 -0500
-Message-ID: <20181204194838.ylk546legwikfrik@MacBook-Pro-91.local>
+Subject: Re: [PATCH 07/14] blkcg: consolidate bio_issue_init() to be a part
+ of core
+Date: Tue, 4 Dec 2018 14:50:01 -0500
+Message-ID: <20181204195000.gwhgdqa7ouaf73sp@MacBook-Pro-91.local>
 References: <20181204183600.99746-1-dennis@kernel.org>
- <20181204183600.99746-7-dennis@kernel.org>
+ <20181204183600.99746-8-dennis@kernel.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=s+VP0A474Tn5W27kbi2McsJ3o8jRy8Pe/xLsJObravE=;
-        b=TXuxE6OXamLMpftTaSywcaxH6buXuteXDw6YAvhwyWP5Ilhszc8nNplZozwycnERdt
-         K9wa6Z5NLf/T6bTOYzzx6TcBWmsZIiOw1anKCR4zK+38Kp2HZfHb8fSiBqrRlpqbk7Wh
-         NvvLyWWYzflnENQXLFCC/Zhz/NQ9LdvjDxdaf+P+sXS3wTDCGZYp5LVgys7slXZWF9Rt
-         AOAvS074N3tCvoR9yJNHjkgz8DeL6t29p1dj3hKDslsHQy8qn01MJxlDY/cmHOkUqdyE
-         XLY0MkGS+wKuajdXZ2G0IYPpmuTliseWMKwHRd8+V+YJfcoixFepVBEHMsT8w2wXt1qB
-         Oulw==
+        bh=Q+ueYi+brXN7pPHAwUWTDfeiGp090xsVy/6F9O9E86E=;
+        b=rdLIjCGjf0tAo/Mp4Kny0fqVkOhTxceoBFcGu715eAhPc4QSjcfOFbregjVvWysA4g
+         OFhq2Kv5A3/fmL4WiVdxFam0H7sVbVUAjSBO1+VMItULxS2Oktve08quU8YU/EihF51c
+         5vgqcqxmcxz6IFcwYbXNsHU+wm7gE3eRAmq2SFrSGkMb8WuaCebEB2U8Zcbr8mnCEwUE
+         EEOWpScyOeFpUwmblq6k0XKhLKQmbCex2t6S12OZmI+69rF6s9BJZWsN4xJx+EZ7LZ3p
+         N4toDwckwREJGuOA9MC8sbywTn6WDBGdVYqKvK3HRA364Bp4ojsAajuBQTrhM5c8awp8
+         bZkA==
 Content-Disposition: inline
-In-Reply-To: <20181204183600.99746-7-dennis@kernel.org>
+In-Reply-To: <20181204183600.99746-8-dennis@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -26,108 +27,15 @@ Content-Transfer-Encoding: 7bit
 To: Dennis Zhou <dennis@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 04, 2018 at 01:35:52PM -0500, Dennis Zhou wrote:
-> Previously, blkg association was handled by controller specific code in
-> blk-throttle and blk-iolatency. However, because a blkg represents a
-> relationship between a blkcg and a request_queue, it makes sense to keep
-> the blkg->q and bio->bi_disk->queue consistent.
-> 
-> This patch moves association into the bio_set_dev macro(). This should
-> cover the majority of cases where the device is set/changed keeping the
-> two pointers consistent. Fallback code is added to
-> blkcg_bio_issue_check() to catch any missing paths.
+On Tue, Dec 04, 2018 at 01:35:53PM -0500, Dennis Zhou wrote:
+> bio_issue_init among other things initializes the timestamp for an IO.
+> Rather than have this logic handled by policies, this consolidates it to
+> be on the init paths (normal, clone, bounce clone).
 > 
 > Signed-off-by: Dennis Zhou <dennis@kernel.org>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> Reviewed-by: Liu Bo <bo.liu@linux.alibaba.com>
 > ---
->  block/bio.c                |  1 +
->  block/blk-iolatency.c      |  4 +---
->  block/blk-throttle.c       |  1 -
->  include/linux/bio.h        |  2 ++
->  include/linux/blk-cgroup.h | 11 +++--------
->  5 files changed, 7 insertions(+), 12 deletions(-)
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index 41ebb3f8e2fc..1e852ab904aa 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -2074,6 +2074,7 @@ void bio_associate_blkg(struct bio *bio)
->  
->  	rcu_read_unlock();
->  }
-> +EXPORT_SYMBOL_GPL(bio_associate_blkg);
->  
->  /**
->   * bio_disassociate_task - undo bio_associate_current()
-> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-> index cdbd10564e66..e6b47c255521 100644
-> --- a/block/blk-iolatency.c
-> +++ b/block/blk-iolatency.c
-> @@ -472,14 +472,12 @@ static void check_scale_change(struct iolatency_grp *iolat)
->  static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
->  {
->  	struct blk_iolatency *blkiolat = BLKIOLATENCY(rqos);
-> -	struct blkcg_gq *blkg;
-> +	struct blkcg_gq *blkg = bio->bi_blkg;
->  	bool issue_as_root = bio_issue_as_root_blkg(bio);
->  
->  	if (!blk_iolatency_enabled(blkiolat))
->  		return;
->  
-> -	bio_associate_blkg(bio);
-> -	blkg = bio->bi_blkg;
->  	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
->  
->  	while (blkg && blkg->parent) {
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index 228c3a007ebc..1c6529df2002 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -2118,7 +2118,6 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
->  static void blk_throtl_assoc_bio(struct bio *bio)
->  {
->  #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
-> -	bio_associate_blkg(bio);
->  	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
->  #endif
->  }
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index 62715a5a4f32..6ee2ea8b378a 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -491,12 +491,14 @@ do {						\
->  		bio_clear_flag(bio, BIO_THROTTLED);\
->  	(bio)->bi_disk = (bdev)->bd_disk;	\
->  	(bio)->bi_partno = (bdev)->bd_partno;	\
-> +	bio_associate_blkg(bio);		\
->  } while (0)
->  
->  #define bio_copy_dev(dst, src)			\
->  do {						\
->  	(dst)->bi_disk = (src)->bi_disk;	\
->  	(dst)->bi_partno = (src)->bi_partno;	\
-> +	bio_clone_blkcg_association(dst, src);	\
->  } while (0)
->  
->  #define bio_dev(bio) \
-> diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-> index c08e96e521ed..3c87ae71156f 100644
-> --- a/include/linux/blk-cgroup.h
-> +++ b/include/linux/blk-cgroup.h
-> @@ -802,21 +802,17 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
->  static inline bool blkcg_bio_issue_check(struct request_queue *q,
->  					 struct bio *bio)
->  {
-> -	struct blkcg *blkcg;
->  	struct blkcg_gq *blkg;
->  	bool throtl = false;
->  
-> -	rcu_read_lock();
-> +	if (!bio->bi_blkg)
-> +		bio_associate_blkg(bio);
->  
-
-Should we maybe WARN_ON_ONCE() here since this really shouldn't happen?
-Otherwise you can add
 
 Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 
