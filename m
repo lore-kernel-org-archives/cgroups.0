@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 13/14] blkcg: change blkg reference counting to use percpu_ref
-Date: Tue,  4 Dec 2018 13:35:59 -0500
-Message-ID: <20181204183600.99746-14-dennis@kernel.org>
+Subject: [PATCH 14/14] blkcg: rename blkg_try_get() to blkg_tryget()
+Date: Tue,  4 Dec 2018 13:36:00 -0500
+Message-ID: <20181204183600.99746-15-dennis@kernel.org>
 References: <20181204183600.99746-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181204183600.99746-1-dennis@kernel.org>
@@ -13,155 +13,97 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-Every bio is now associated with a blkg putting blkg_get, blkg_try_get,
-and blkg_put on the hot path. Switch over the refcnt in blkg to use
-percpu_ref.
+blkg reference counting now uses percpu_ref rather than atomic_t. Let's
+make this consistent with css_tryget. This renames blkg_try_get to
+blkg_tryget and now returns a bool rather than the blkg or %NULL.
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c         | 41 ++++++++++++++++++++++++++++++++++++--
- include/linux/blk-cgroup.h | 15 +++++---------
- 2 files changed, 44 insertions(+), 12 deletions(-)
+ block/bio.c                |  2 +-
+ block/blk-cgroup.c         |  3 +--
+ block/blk-iolatency.c      |  2 +-
+ include/linux/blk-cgroup.h | 12 +++++-------
+ 4 files changed, 8 insertions(+), 11 deletions(-)
 
+diff --git a/block/bio.c b/block/bio.c
+index 7ec5316e6ecc..06760543ec81 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1990,7 +1990,7 @@ static void __bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+ {
+ 	bio_disassociate_blkg(bio);
+ 
+-	bio->bi_blkg = blkg_try_get_closest(blkg);
++	bio->bi_blkg = blkg_tryget_closest(blkg);
+ }
+ 
+ /**
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 120f2e2835fb..2ca7611fe274 100644
+index 2ca7611fe274..6bd0619a7d6e 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -81,6 +81,37 @@ static void blkg_free(struct blkcg_gq *blkg)
- 	kfree(blkg);
- }
+@@ -1736,8 +1736,7 @@ void blkcg_maybe_throttle_current(void)
+ 	blkg = blkg_lookup(blkcg, q);
+ 	if (!blkg)
+ 		goto out;
+-	blkg = blkg_try_get(blkg);
+-	if (!blkg)
++	if (!blkg_tryget(blkg))
+ 		goto out;
+ 	rcu_read_unlock();
  
-+static void __blkg_release(struct rcu_head *rcu)
-+{
-+	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
-+
-+	percpu_ref_exit(&blkg->refcnt);
-+
-+	/* release the blkcg and parent blkg refs this blkg has been holding */
-+	css_put(&blkg->blkcg->css);
-+	if (blkg->parent)
-+		blkg_put(blkg->parent);
-+
-+	wb_congested_put(blkg->wb_congested);
-+
-+	blkg_free(blkg);
-+}
-+
-+/*
-+ * A group is RCU protected, but having an rcu lock does not mean that one
-+ * can access all the fields of blkg and assume these are valid.  For
-+ * example, don't try to follow throtl_data and request queue links.
-+ *
-+ * Having a reference to blkg under an rcu allows accesses to only values
-+ * local to groups like group stats and group rate limits.
-+ */
-+static void blkg_release(struct percpu_ref *ref)
-+{
-+	struct blkcg_gq *blkg = container_of(ref, struct blkcg_gq, refcnt);
-+
-+	call_rcu(&blkg->rcu_head, __blkg_release);
-+}
-+
- /**
-  * blkg_alloc - allocate a blkg
-  * @blkcg: block cgroup the new blkg is associated with
-@@ -107,7 +138,6 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 	blkg->q = q;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
--	atomic_set(&blkg->refcnt, 1);
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 5a79f06a730d..0b14c3d57769 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -698,7 +698,7 @@ static void blkiolatency_timer_fn(struct timer_list *t)
+ 		 * We could be exiting, don't access the pd unless we have a
+ 		 * ref on the blkg.
+ 		 */
+-		if (!blkg_try_get(blkg))
++		if (!blkg_tryget(blkg))
+ 			continue;
  
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -207,6 +237,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 		blkg_get(blkg->parent);
- 	}
- 
-+	ret = percpu_ref_init(&blkg->refcnt, blkg_release, 0,
-+			      GFP_NOWAIT | __GFP_NOWARN);
-+	if (ret)
-+		goto err_cancel_ref;
-+
- 	/* invoke per-policy init */
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -239,6 +274,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	blkg_put(blkg);
- 	return ERR_PTR(ret);
- 
-+err_cancel_ref:
-+	percpu_ref_exit(&blkg->refcnt);
- err_put_congested:
- 	wb_congested_put(wb_congested);
- err_put_css:
-@@ -367,7 +404,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	 * Put the reference taken at the time of creation so that when all
- 	 * queues are gone, group can be destroyed.
- 	 */
--	blkg_put(blkg);
-+	percpu_ref_kill(&blkg->refcnt);
- }
- 
- /**
+ 		iolat = blkg_to_lat(blkg);
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 68cae7961060..05909cf31ed1 100644
+index 05909cf31ed1..64ac89130ae8 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -123,7 +123,7 @@ struct blkcg_gq {
- 	struct blkcg_gq			*parent;
- 
- 	/* reference count */
--	atomic_t			refcnt;
-+	struct percpu_ref		refcnt;
- 
- 	/* is this blkg online? protected by both blkcg and q locks */
- 	bool				online;
-@@ -486,8 +486,7 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
-  */
- static inline void blkg_get(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	atomic_inc(&blkg->refcnt);
-+	percpu_ref_get(&blkg->refcnt);
+@@ -490,27 +490,25 @@ static inline void blkg_get(struct blkcg_gq *blkg)
  }
  
  /**
-@@ -499,7 +498,7 @@ static inline void blkg_get(struct blkcg_gq *blkg)
+- * blkg_try_get - try and get a blkg reference
++ * blkg_tryget - try and get a blkg reference
+  * @blkg: blkg to get
+  *
+  * This is for use when doing an RCU lookup of the blkg.  We may be in the midst
+  * of freeing this blkg, so we can only use it if the refcnt is not zero.
   */
- static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
+-static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
++static inline bool blkg_tryget(struct blkcg_gq *blkg)
  {
--	if (atomic_inc_not_zero(&blkg->refcnt))
-+	if (percpu_ref_tryget(&blkg->refcnt))
- 		return blkg;
- 	return NULL;
+-	if (percpu_ref_tryget(&blkg->refcnt))
+-		return blkg;
+-	return NULL;
++	return percpu_ref_tryget(&blkg->refcnt);
  }
-@@ -513,23 +512,19 @@ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
+ 
+ /**
+- * blkg_try_get_closest - try and get a blkg ref on the closet blkg
++ * blkg_tryget_closest - try and get a blkg ref on the closet blkg
+  * @blkg: blkg to get
+  *
+  * This walks up the blkg tree to find the closest non-dying blkg and returns
+  * the blkg that it did association with as it may not be the passed in blkg.
   */
- static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
+-static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
++static inline struct blkcg_gq *blkg_tryget_closest(struct blkcg_gq *blkg)
  {
--	while (!atomic_inc_not_zero(&blkg->refcnt))
-+	while (!percpu_ref_tryget(&blkg->refcnt))
+ 	while (!percpu_ref_tryget(&blkg->refcnt))
  		blkg = blkg->parent;
- 
- 	return blkg;
- }
- 
--void __blkg_release_rcu(struct rcu_head *rcu);
--
- /**
-  * blkg_put - put a blkg reference
-  * @blkg: blkg to put
-  */
- static inline void blkg_put(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	if (atomic_dec_and_test(&blkg->refcnt))
--		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
-+	percpu_ref_put(&blkg->refcnt);
- }
- 
- /**
 -- 
 2.17.1
 
