@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 08/14] blkcg: associate a blkg for pages being evicted by swap
-Date: Tue,  4 Dec 2018 13:35:54 -0500
-Message-ID: <20181204183600.99746-9-dennis@kernel.org>
+Subject: [PATCH 12/14] blkcg: remove bio_disassociate_task()
+Date: Tue,  4 Dec 2018 13:35:58 -0500
+Message-ID: <20181204183600.99746-13-dennis@kernel.org>
 References: <20181204183600.99746-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181204183600.99746-1-dennis@kernel.org>
@@ -13,132 +13,66 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-A prior patch in this series added blkg association to bios issued by
-cgroups. There are two other paths that we want to attribute work back
-to the appropriate cgroup: swap and writeback. Here we modify the way
-swap tags bios to include the blkg. Writeback will be tackle in the next
-patch.
+Now that a bio only holds a blkg reference, so clean up is simply
+putting back that reference. Remove bio_disassociate_task() as it just
+calls bio_disassociate_blkg() and call the latter directly.
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/bio.c         | 62 +++++++++++++++++++++++++++------------------
- include/linux/bio.h |  6 ++---
- mm/page_io.c        |  2 +-
- 3 files changed, 42 insertions(+), 28 deletions(-)
+ block/bio.c         | 11 +----------
+ include/linux/bio.h |  2 --
+ 2 files changed, 1 insertion(+), 12 deletions(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index 90089124b512..f0f069c1823c 100644
+index ce1e512dca5a..7ec5316e6ecc 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -1957,30 +1957,6 @@ EXPORT_SYMBOL(bioset_init_from_src);
+@@ -244,7 +244,7 @@ struct bio_vec *bvec_alloc(gfp_t gfp_mask, int nr, unsigned long *idx,
  
- #ifdef CONFIG_BLK_CGROUP
- 
--#ifdef CONFIG_MEMCG
--/**
-- * bio_associate_blkcg_from_page - associate a bio with the page's blkcg
-- * @bio: target bio
-- * @page: the page to lookup the blkcg from
-- *
-- * Associate @bio with the blkcg from @page's owning memcg.  This works like
-- * every other associate function wrt references.
-- */
--int bio_associate_blkcg_from_page(struct bio *bio, struct page *page)
--{
--	struct cgroup_subsys_state *blkcg_css;
--
--	if (unlikely(bio->bi_css))
--		return -EBUSY;
--	if (!page->mem_cgroup)
--		return 0;
--	blkcg_css = cgroup_get_e_css(page->mem_cgroup->css.cgroup,
--				     &io_cgrp_subsys);
--	bio->bi_css = blkcg_css;
--	return 0;
--}
--#endif /* CONFIG_MEMCG */
--
- /**
-  * bio_associate_blkcg - associate a bio with the specified blkcg
-  * @bio: target bio
-@@ -2045,6 +2021,44 @@ static void __bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
- 	bio->bi_blkg = blkg_try_get_closest(blkg);
+ void bio_uninit(struct bio *bio)
+ {
+-	bio_disassociate_task(bio);
++	bio_disassociate_blkg(bio);
  }
+ EXPORT_SYMBOL(bio_uninit);
  
-+static void __bio_associate_blkg_from_css(struct bio *bio,
-+					  struct cgroup_subsys_state *css)
-+{
-+	struct blkcg_gq *blkg;
-+
-+	rcu_read_lock();
-+
-+	blkg = blkg_lookup_create(css_to_blkcg(css), bio->bi_disk->queue);
-+	__bio_associate_blkg(bio, blkg);
-+
-+	rcu_read_unlock();
-+}
-+
-+#ifdef CONFIG_MEMCG
-+/**
-+ * bio_associate_blkg_from_page - associate a bio with the page's blkg
-+ * @bio: target bio
-+ * @page: the page to lookup the blkcg from
-+ *
-+ * Associate @bio with the blkg from @page's owning memcg and the respective
-+ * request_queue.  This works like every other associate function wrt
-+ * references.
-+ */
-+void bio_associate_blkg_from_page(struct bio *bio, struct page *page)
-+{
-+	struct cgroup_subsys_state *css;
-+
-+	if (unlikely(bio->bi_css))
-+		return;
-+	if (!page->mem_cgroup)
-+		return;
-+
-+	css = cgroup_get_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
-+	bio->bi_css = css;
-+	__bio_associate_blkg_from_css(bio, css);
-+}
-+#endif /* CONFIG_MEMCG */
-+
+@@ -2073,15 +2073,6 @@ void bio_associate_blkg(struct bio *bio)
+ }
+ EXPORT_SYMBOL_GPL(bio_associate_blkg);
+ 
+-/**
+- * bio_disassociate_task - undo bio_associate_current()
+- * @bio: target bio
+- */
+-void bio_disassociate_task(struct bio *bio)
+-{
+-	bio_disassociate_blkg(bio);
+-}
+-
  /**
-  * bio_associate_blkg - associate a bio with a blkg
-  * @bio: target bio
+  * bio_clone_blkg_association - clone blkg association from src to dst bio
+  * @dst: destination bio
 diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 6ee2ea8b378a..f13572c254a7 100644
+index 84e1c4dc703a..7380b094dcca 100644
 --- a/include/linux/bio.h
 +++ b/include/linux/bio.h
-@@ -505,10 +505,10 @@ do {						\
- 	disk_devt((bio)->bi_disk)
- 
- #if defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
--int bio_associate_blkcg_from_page(struct bio *bio, struct page *page);
-+void bio_associate_blkg_from_page(struct bio *bio, struct page *page);
- #else
--static inline int bio_associate_blkcg_from_page(struct bio *bio,
--						struct page *page) {  return 0; }
-+static inline void bio_associate_blkg_from_page(struct bio *bio,
-+						struct page *page) { }
- #endif
- 
- #ifdef CONFIG_BLK_CGROUP
-diff --git a/mm/page_io.c b/mm/page_io.c
-index 5bdfd21c1bd9..3475733b1926 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -339,7 +339,7 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
- 		goto out;
- 	}
- 	bio->bi_opf = REQ_OP_WRITE | REQ_SWAP | wbc_to_write_flags(wbc);
--	bio_associate_blkcg_from_page(bio, page);
-+	bio_associate_blkg_from_page(bio, page);
- 	count_swpout_vm_event(page);
- 	set_page_writeback(page);
- 	unlock_page(page);
+@@ -516,7 +516,6 @@ void bio_disassociate_blkg(struct bio *bio);
+ void bio_associate_blkg(struct bio *bio);
+ void bio_associate_blkg_from_css(struct bio *bio,
+ 				 struct cgroup_subsys_state *css);
+-void bio_disassociate_task(struct bio *bio);
+ void bio_clone_blkg_association(struct bio *dst, struct bio *src);
+ #else	/* CONFIG_BLK_CGROUP */
+ static inline void bio_disassociate_blkg(struct bio *bio) { }
+@@ -524,7 +523,6 @@ static inline void bio_associate_blkg(struct bio *bio) { }
+ static inline void bio_associate_blkg_from_css(struct bio *bio,
+ 					       struct cgroup_subsys_state *css)
+ { }
+-static inline void bio_disassociate_task(struct bio *bio) { }
+ static inline void bio_clone_blkg_association(struct bio *dst,
+ 					      struct bio *src) { }
+ #endif	/* CONFIG_BLK_CGROUP */
 -- 
 2.17.1
 
