@@ -1,8 +1,10 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH v5 00/14] block: always associate blkg and refcount cleanup
-Date: Tue,  4 Dec 2018 13:35:46 -0500
-Message-ID: <20181204183600.99746-1-dennis@kernel.org>
+Subject: [PATCH 03/14] blkcg: convert blkg_lookup_create() to find closest blkg
+Date: Tue,  4 Dec 2018 13:35:49 -0500
+Message-ID: <20181204183600.99746-4-dennis@kernel.org>
+References: <20181204183600.99746-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181204183600.99746-1-dennis@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -11,128 +13,198 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-Hi everyone,
+There are several scenarios where blkg_lookup_create() can fail such as
+the blkcg dying, request_queue is dying, or simply being OOM. Most
+handle this by simply falling back to the q->root_blkg and calling it a
+day.
 
-A special case with dm is the flush bio which is statically initialized
-before the block device is opened and associated with a disk. This
-caused blkg association to throw a NPE. 0005 addresses this case by
-moving association to be on the flush path.
+This patch implements the notion of closest blkg. During
+blkg_lookup_create(), if it fails to create, return the closest blkg
+found or the q->root_blkg. blkg_try_get_closest() is introduced and used
+during association so a bio is always attached to a blkg.
 
-With v4 moving association to piggyback off of bio_set_dev(), this
-caused a NPE to be thrown by the special case above. I was overly
-cautious with v4 and added the bio_has_queue() check which is now
-removed in v5.
+Signed-off-by: Dennis Zhou <dennis@kernel.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+---
+ block/bio.c                | 17 ++++++++++-------
+ block/blk-cgroup.c         | 23 ++++++++++++++++-------
+ block/blk-iolatency.c      | 14 ++------------
+ block/blk-throttle.c       |  4 +---
+ include/linux/blk-cgroup.h | 24 +++++++++++++++---------
+ 5 files changed, 44 insertions(+), 38 deletions(-)
 
-Also, the addition of bio_set_dev_only() wasn't quite right due to
-writeback and swap sharing the same bio init paths in many places. The
-safer thing to do is double association for those paths and in a follow
-up series split out the bio init paths.
+diff --git a/block/bio.c b/block/bio.c
+index 346a7f5cb2dd..5c9828524adc 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -2009,21 +2009,24 @@ int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css)
+ EXPORT_SYMBOL_GPL(bio_associate_blkcg);
+ 
+ /**
+- * bio_associate_blkg - associate a bio with the specified blkg
++ * bio_associate_blkg - associate a bio with the a blkg
+  * @bio: target bio
+  * @blkg: the blkg to associate
+  *
+- * Associate @bio with the blkg specified by @blkg.  This is the queue specific
+- * blkcg information associated with the @bio, a reference will be taken on the
+- * @blkg and will be freed when the bio is freed.
++ * This tries to associate @bio with the specified @blkg.  Association failure
++ * is handled by walking up the blkg tree.  Therefore, the blkg associated can
++ * be anything between @blkg and the root_blkg.  This situation only happens
++ * when a cgroup is dying and then the remaining bios will spill to the closest
++ * alive blkg.
++ *
++ * A reference will be taken on the @blkg and will be released when @bio is
++ * freed.
+  */
+ int bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+ {
+ 	if (unlikely(bio->bi_blkg))
+ 		return -EBUSY;
+-	if (!blkg_try_get(blkg))
+-		return -ENODEV;
+-	bio->bi_blkg = blkg;
++	bio->bi_blkg = blkg_try_get_closest(blkg);
+ 	return 0;
+ }
+ 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index b421a9457e05..120f2e2835fb 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -258,9 +258,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+  * that all non-root blkg's have access to the parent blkg.  This function
+  * should be called under RCU read lock and @q->queue_lock.
+  *
+- * Returns pointer to the looked up or created blkg on success, ERR_PTR()
+- * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
+- * dead and bypassing, returns ERR_PTR(-EBUSY).
++ * Returns the blkg or the closest blkg if blkg_create() fails as it walks
++ * down from root.
+  */
+ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 				      struct request_queue *q)
+@@ -276,19 +275,29 @@ struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
+ 
+ 	/*
+ 	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
+-	 * non-root blkgs have access to their parents.
++	 * non-root blkgs have access to their parents.  Returns the closest
++	 * blkg to the intended blkg should blkg_create() fail.
+ 	 */
+ 	while (true) {
+ 		struct blkcg *pos = blkcg;
+ 		struct blkcg *parent = blkcg_parent(blkcg);
+-
+-		while (parent && !__blkg_lookup(parent, q, false)) {
++		struct blkcg_gq *ret_blkg = q->root_blkg;
++
++		while (parent) {
++			blkg = __blkg_lookup(parent, q, false);
++			if (blkg) {
++				/* remember closest blkg */
++				ret_blkg = blkg;
++				break;
++			}
+ 			pos = parent;
+ 			parent = blkcg_parent(parent);
+ 		}
+ 
+ 		blkg = blkg_create(pos, q, NULL);
+-		if (pos == blkcg || IS_ERR(blkg))
++		if (IS_ERR(blkg))
++			return ret_blkg;
++		if (pos == blkcg)
+ 			return blkg;
+ 	}
+ }
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index e6f68f15dee9..46e86c34cf79 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -483,21 +483,11 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	rcu_read_lock();
+ 	bio_associate_blkcg(bio, NULL);
+ 	blkcg = bio_blkcg(bio);
+-	blkg = blkg_lookup(blkcg, q);
+-	if (unlikely(!blkg)) {
+-		spin_lock_irq(&q->queue_lock);
+-		blkg = __blkg_lookup_create(blkcg, q);
+-		if (IS_ERR(blkg))
+-			blkg = NULL;
+-		spin_unlock_irq(&q->queue_lock);
+-	}
+-	if (!blkg)
+-		goto out;
+-
++	blkg = blkg_lookup_create(blkcg, q);
+ 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+ 	bio_associate_blkg(bio, blkg);
+-out:
+ 	rcu_read_unlock();
++
+ 	while (blkg && blkg->parent) {
+ 		struct iolatency_grp *iolat = blkg_to_lat(blkg);
+ 		if (!iolat) {
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 8f0a104770ee..d648d6720f46 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2118,9 +2118,7 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+ static void blk_throtl_assoc_bio(struct throtl_grp *tg, struct bio *bio)
+ {
+ #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+-	/* fallback to root_blkg if we fail to get a blkg ref */
+-	if (bio->bi_css && (bio_associate_blkg(bio, tg_to_blkg(tg)) == -ENODEV))
+-		bio_associate_blkg(bio, bio->bi_disk->queue->root_blkg);
++	bio_associate_blkg(bio, tg_to_blkg(tg));
+ 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+ #endif
+ }
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index b3b1a8187d23..c08e96e521ed 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -545,6 +545,20 @@ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
+ 	return NULL;
+ }
+ 
++/**
++ * blkg_try_get_closest - try and get a blkg ref on the closet blkg
++ * @blkg: blkg to get
++ *
++ * This walks up the blkg tree to find the closest non-dying blkg and returns
++ * the blkg that it did association with as it may not be the passed in blkg.
++ */
++static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
++{
++	while (!atomic_inc_not_zero(&blkg->refcnt))
++		blkg = blkg->parent;
++
++	return blkg;
++}
+ 
+ void __blkg_release_rcu(struct rcu_head *rcu);
+ 
+@@ -797,15 +811,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 	/* associate blkcg if bio hasn't attached one */
+ 	bio_associate_blkcg(bio, NULL);
+ 	blkcg = bio_blkcg(bio);
+-
+-	blkg = blkg_lookup(blkcg, q);
+-	if (unlikely(!blkg)) {
+-		spin_lock_irq(&q->queue_lock);
+-		blkg = __blkg_lookup_create(blkcg, q);
+-		if (IS_ERR(blkg))
+-			blkg = NULL;
+-		spin_unlock_irq(&q->queue_lock);
+-	}
++	blkg = blkg_lookup_create(blkcg, q);
+ 
+ 	throtl = blk_throtl_bio(q, blkg, bio);
+ 
+-- 
+2.17.1
 
-Changes in v5: 
-All:  Fixed minor grammar and syntactic issues.
-0004: Removed bio_has_queue() for being overly cautious.
-0005: New, properly addressed the static flush_bio in md. 
-0006: Removed the rcu lock in blkcg_bio_issue_check() as the bio will
-      own a ref on the blkg so it is unnecessary.
-0011: Consolidated bio_associate_blkg_from_css() (removed __ version).
-
-From v4:
-This is respin of v3 [1] with fixes for the errors reported in [2] and
-[3]. v3 was reverted in [4].
-
-The issue in [3] was that bio->bi_disk->queue and blkg->q were out
-of sync. So when I changed blk_get_rl() to use blkg->q, the wrong queue
-was returned and elevator from q->elevator->type threw a NPE. Note, with
-v4.21, the old block stack was removed and so this patch was dropped. I
-did backport this to v4.20 and verified this series does not encounter
-the error.
-
-The biggest changes in v4 are when association occurs and clearly
-defining the cases where association should happen.
-  1. Association is now done when the device is set to keep blkg->q and
-     bio->bi_disk->queue in sync.
-  2. When a bio is submitted directly to the device, it will not be
-     associated with a blkg. This is because a blkg represents the
-     relationship between a blkcg and a request_queue. Going directly to
-     the device means the request_queue may not exist meaning no blkg
-     will exist.
-
-The patch updating blk_get_rl() was dropped (v3 10/12). The patch to
-always associate a blkg from v3 (v3 04/12) was fixed and split into
-patches 0004 and 0005. 0011 is new removing bio_disassociate_task().
-
-Summarizing the ideas of this series:
-  1. Gracefully handle blkg failure to create by walking up the blkg
-     tree rather than fall through to root.
-  2. Associate a bio with a blkg in core logic rather than per
-     controller logic.
-  3. Rather than have a css and blkg reference, hold just a blkg ref
-     as it also holds a css ref.
-  4. Switch to percpu ref counting for blkg.
-
-[1] https://lore.kernel.org/lkml/20180911184137.35897-1-dennisszhou@gmail.com/ 
-[2] https://lore.kernel.org/lkml/13987.1539646128@turing-police.cc.vt.edu/
-[3] https://marc.info/?l=linux-cgroups&m=154110436103723
-[4] https://lore.kernel.org/lkml/20181101212410.47569-1-dennis@kernel.org/
-
-This patchset contains the following 14 patches:
-  0001-blkcg-fix-ref-count-issue-with-bio_blkcg-using-task_.patch
-  0002-blkcg-update-blkg_lookup_create-to-do-locking.patch
-  0003-blkcg-convert-blkg_lookup_create-to-find-closest-blk.patch
-  0004-blkcg-introduce-common-blkg-association-logic.patch
-  0005-dm-set-flush-bio-device-on-demand.patch
-  0006-blkcg-associate-blkg-when-associating-a-device.patch
-  0007-blkcg-consolidate-bio_issue_init-to-be-a-part-of-cor.patch
-  0008-blkcg-associate-a-blkg-for-pages-being-evicted-by-sw.patch
-  0009-blkcg-associate-writeback-bios-with-a-blkg.patch
-  0010-blkcg-remove-bio-bi_css-and-instead-use-bio-bi_blkg.patch
-  0011-blkcg-remove-additional-reference-to-the-css.patch
-  0012-blkcg-remove-bio_disassociate_task.patch
-  0013-blkcg-change-blkg-reference-counting-to-use-percpu_r.patch
-  0014-blkcg-rename-blkg_try_get-to-blkg_tryget.patch
-
-This patchset is on top of linu-block#for-4.21/block 154989e45fd8.
-
-diffstats below:
-
-Dennis Zhou (14):
-  blkcg: fix ref count issue with bio_blkcg() using task_css
-  blkcg: update blkg_lookup_create() to do locking
-  blkcg: convert blkg_lookup_create() to find closest blkg
-  blkcg: introduce common blkg association logic
-  dm: set the static flush bio device on demand
-  blkcg: associate blkg when associating a device
-  blkcg: consolidate bio_issue_init() to be a part of core
-  blkcg: associate a blkg for pages being evicted by swap
-  blkcg: associate writeback bios with a blkg
-  blkcg: remove bio->bi_css and instead use bio->bi_blkg
-  blkcg: remove additional reference to the css
-  blkcg: remove bio_disassociate_task()
-  blkcg: change blkg reference counting to use percpu_ref
-  blkcg: rename blkg_try_get() to blkg_tryget()
-
- Documentation/admin-guide/cgroup-v2.rst |   8 +-
- block/bfq-cgroup.c                      |   4 +-
- block/bfq-iosched.c                     |   2 +-
- block/bio.c                             | 156 +++++++++++++++---------
- block/blk-cgroup.c                      |  95 ++++++++++++---
- block/blk-iolatency.c                   |  24 +---
- block/blk-throttle.c                    |  11 --
- block/bounce.c                          |   3 +-
- drivers/block/loop.c                    |   5 +-
- drivers/md/dm.c                         |  12 +-
- drivers/md/raid0.c                      |   2 +-
- fs/buffer.c                             |  10 +-
- fs/ext4/page-io.c                       |   2 +-
- include/linux/bio.h                     |  29 +++--
- include/linux/blk-cgroup.h              | 120 ++++++++++++------
- include/linux/blk_types.h               |   7 +-
- include/linux/cgroup.h                  |   2 +
- include/linux/writeback.h               |   5 +-
- kernel/cgroup/cgroup.c                  |  48 ++++++--
- kernel/trace/blktrace.c                 |   4 +-
- mm/page_io.c                            |   2 +-
- 21 files changed, 361 insertions(+), 190 deletions(-)
-
-Thanks,
-Dennis
