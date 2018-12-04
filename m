@@ -1,90 +1,211 @@
-From: Anton Blanchard <anton@ozlabs.org>
-Subject: CFS bandwidth control hits hard lockup warnings
-Date: Tue, 4 Dec 2018 09:59:30 +1100
-Message-ID: <20181204095930.19818537@kryten>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v4 4/7] cgroup: cgroup v2 freezer
+Date: Tue, 4 Dec 2018 00:11:13 +0000
+Message-ID: <20181204001105.GA14586@castle.DHCP.thefacebook.com>
+References: <20181130234745.6756-1-guro@fb.com>
+ <20181130234745.6756-5-guro@fb.com> <20181203144717.GD31795@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ozlabs.org; s=201707;
-        t=1543877973; bh=4IrH3sD/1eeRZTdHyhB754M2cg/D8VYQnUXpKwpuh6o=;
-        h=Date:From:To:Cc:Subject:From;
-        b=uVYVq1nk7KYtniUj+QR0wMldhCcgRLZqb8dZRk0+sspzyVcJD8PIqDPA4NLhNFwFl
-         Lf7ghIPQmdFl2JPVfGAShwgMd6jFpzKmDfRI12s0NnpbmCVLZ40oUcAvX872NLjJXU
-         lODQXw0RDUy9Bj4LKuDarQXMkgAHJwsId/44xX5zsmsFvs7utQOh5xvm9Jj7XjuXrD
-         /kQXOa+oIogYpkB260t9cSl4tTbes7nbXDYrw8GlVRPFPaHZJj59hB19YsIwgsQ4uT
-         feblNiFifDlNzL4hFLwQ8Exf6I5d+uHEy+MQzqYH8wzmYtGxCojiYuAj2sxPCDxHat
-         SdXZLfSDqFP8A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=U3JjbP/W/sU665MEzYUwF/I0/Jtnm8EbcXnYYbGHVWE=;
+ b=VoT7Y/J+TEZoF1P/Ep3X/ceknIYm+xRV2k8d5htltf8v8z2/7+oqTcwTcOF5NO1WEdgU
+ JpSFr5PjkG/bMgfHn100OHe7OBJWwSFM7KTzowvm5MGK2Qg61E+YzqG8nXg4GHj5MgyY
+ Eoz54+8Pp8nL4jDbaXfiDtPoRh1o0w2QHq0= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=U3JjbP/W/sU665MEzYUwF/I0/Jtnm8EbcXnYYbGHVWE=;
+ b=hqy3wa11mMwe0Mv2HkXxZ0jtequq0TF4VXKe3BWGEoiOGHcL4z9JbdcGIWiSpekfX7WCyZTa+HpUPCYpMu8pSFyGzZmiidY1A2ncNOI7LECz7l9rtKPcKs35uYljsA8nbGbU/xZwzQzxFYVi+S97QXVUUzNDgrRc8wxLaEjgulA=
+In-Reply-To: <20181203144717.GD31795@redhat.com>
+Content-Language: en-US
+Content-ID: <87C0C50BC289E147B62B1AF5F48DDDBE@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: npiggin@gmail.com, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, pauld@redhat.com, peterz@infradead.org, srikar@linux.vnet.ibm.com, pjt@google.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-Hi,
+On Mon, Dec 03, 2018 at 03:47:18PM +0100, Oleg Nesterov wrote:
+> To be honest, I fail to understand this patch. At least after a quick gla=
+nce,
+> I will try to read it again tomorrow but so far I do not even understand =
+the
+> desired semantics wrt signals/ptrace.
+>=20
+> On 11/30, Roman Gushchin wrote:
+> >
+> > @@ -368,6 +369,8 @@ static inline int signal_pending_state(long state, =
+struct task_struct *p)
+> >  		return 0;
+> >  	if (!signal_pending(p))
+> >  		return 0;
+> > +	if (unlikely(cgroup_task_frozen(p)))
+> > +		return __fatal_signal_pending(p);
+>=20
+> Oh, this is not nice. And doesn't look right.
+>=20
+> > +/*
+> > + * Entry path into frozen state.
+> > + * If the task was not frozen before, counters are updated and the cgr=
+oup state
+> > + * is revisited. Otherwise, the task is put into the TASK_KILLABLE sle=
+ep.
+> > + */
+> > +void cgroup_enter_frozen(void)
+> > +{
+> > +	if (!current->frozen) {
+> > +		struct cgroup *cgrp;
+> > +
+> > +		spin_lock_irq(&css_set_lock);
+> > +		current->frozen =3D true;
+> > +		cgrp =3D task_dfl_cgroup(current);
+> > +		cgrp->freezer.nr_frozen_tasks++;
+> > +		WARN_ON_ONCE(cgrp->freezer.nr_frozen_tasks >
+> > +			     cgrp->freezer.nr_tasks_to_freeze);
+> > +		cgroup_update_frozen(cgrp, true);
+> > +		spin_unlock_irq(&css_set_lock);
+> > +	}
+> > +
+> > +	__set_current_state(TASK_INTERRUPTIBLE);
+> > +	schedule();
+>=20
+> The comment above says TASK_KILLABLE, very confusing.
 
-We are seeing hard lockup warnings caused by CFS bandwidth control code. The
-test case below fails almost immediately on a reasonably large (144 thread)
-POWER9 guest with:
+Sorry, it's a leftover from one of the previous versions. Fixed.
 
-watchdog: CPU 80 Hard LOCKUP
-watchdog: CPU 80 TB:1134131922788, last heartbeat TB:1133207948315 (1804ms ago)
-Modules linked in:
-CPU: 80 PID: 0 Comm: swapper/80 Tainted: G             L    4.20.0-rc4-00156-g94f371cb7394-dirty #98
-NIP:  c00000000018f618 LR: c000000000185174 CTR: c00000000018f5f0
-REGS: c00000000fbbbd70 TRAP: 0100   Tainted: G             L     (4.20.0-rc4-00156-g94f371cb7394-dirty)
-MSR:  8000000000009033 <SF,EE,ME,IR,DR,RI,LE>  CR: 28000222  XER: 00000000
-CFAR: c000000000002440 IRQMASK: 1
-GPR00: c000000000185174 c000003fef927610 c0000000010bd500 c000003fab1dbb80
-GPR04: c000003ffe2d3000 c00000000018f5f0 c000003ffe2d3000 00000076e60d19fe
-GPR08: c000003fab1dbb80 0000000000000178 c000003fa722f800 0000000000000001
-GPR12: c00000000018f5f0 c00000000ffb3700 c000003fef927f90 0000000000000000
-GPR16: 0000000000000000 c000000000f8d468 0000000000000050 c00000000004ace0
-GPR20: c000003ffe743260 0000000000002a61 0000000000000001 0000000000000000
-GPR24: 00000076e61c5aa0 000000003b9aca00 0000000000000000 c00000000017cdb0
-GPR28: c000003fc2290000 c000003ffe2d3000 c00000000018f5f0 c000003fa74ca800
-NIP [c00000000018f618] tg_unthrottle_up+0x28/0xc0
-LR [c000000000185174] walk_tg_tree_from+0x94/0x120
-Call Trace:
-[c000003fef927610] [c000003fe3ad5000] 0xc000003fe3ad5000 (unreliable)
-[c000003fef927690] [c00000000004b8ac] smp_muxed_ipi_message_pass+0x5c/0x70
-[c000003fef9276e0] [c00000000019d828] unthrottle_cfs_rq+0xe8/0x300
-[c000003fef927770] [c00000000019dc80] distribute_cfs_runtime+0x160/0x1d0
-[c000003fef927820] [c00000000019e044] sched_cfs_period_timer+0x154/0x2f0
-[c000003fef9278a0] [c0000000001f8fc0] __hrtimer_run_queues+0x180/0x430
-[c000003fef927920] [c0000000001fa2a0] hrtimer_interrupt+0x110/0x300
-[c000003fef9279d0] [c0000000000291d4] timer_interrupt+0x104/0x2e0
-[c000003fef927a30] [c000000000009028] decrementer_common+0x108/0x110
+>=20
+> Probably this pairs with the change in signal_pending_state() above. So t=
+his
+> schedule() should actually "work" in that it won't return if signal_pendi=
+ng().
+>=20
+> But this can't protect from another signal_wake_up(). Yes, iiuc in this c=
+ase
+> cgroup_enter_frozen() will be called again "soon" but this all looks stra=
+nge.
 
-Adding CPUs, or adding empty cgroups makes the situation worse. We haven't
-had a chance to dig deeper yet.
+So, the idea here is to make ptrace traps and fatal signals working, but
+non-fatal shouldn't be delivered.
 
-Note: The test case makes no attempt to clean up after itself and sometimes
-takes my guest down :)
+As soon as the frozen task is looping in the signal delivery loop, it's fin=
+e,
+it's not going anywhere.
 
-Thanks,
-Anton
---
+Without the change above the task is getting out of schedule() immediately,
+if any signal is pending (including non-fatals). So it becomes a busy-loop.
 
-#!/bin/bash -e 
+>=20
+> > --- a/kernel/ptrace.c
+> > +++ b/kernel/ptrace.c
+> > @@ -410,6 +410,13 @@ static int ptrace_attach(struct task_struct *task,=
+ long request,
+> >
+> >  	spin_lock(&task->sighand->siglock);
+> >
+> > +	/*
+> > +	 * If the process is frozen, let's wake it up to give it a chance
+> > +	 * to enter the ptrace trap.
+> > +	 */
+> > +	if (cgroup_task_frozen(task))
+> > +		wake_up_process(task);
+>=20
+> And why this can't race with cgroup_enter_frozen() ?
+>=20
+> Or think of PTRACE_INTERRUPT. It can race with cgroup_enter_frozen() too,=
+ the
+> tracee can miss this request because of that change in signal_pending_sta=
+te().
 
-echo 1 > /proc/sys/kernel/nmi_watchdog
-echo 1 > /proc/sys/kernel/watchdog_thresh
+It's a good point. So I need an additional synchronization around
+checking/setting the JOBCTL_TRAP_FREEZE?
 
-mkdir -p /sys/fs/cgroup/cpu/base_cgroup
-echo 1000 > /sys/fs/cgroup/cpu/base_cgroup/cpu.cfs_period_us
-echo 1000000 > /sys/fs/cgroup/cpu/base_cgroup/cpu.cfs_quota_us
+>=20
+>=20
+> >  static void do_jobctl_trap(void)
+> >  {
+> > +	struct sighand_struct *sighand =3D current->sighand;
+> >  	struct signal_struct *signal =3D current->signal;
+> >  	int signr =3D current->jobctl & JOBCTL_STOP_SIGMASK;
+> > =20
+> > -	if (current->ptrace & PT_SEIZED) {
+> > -		if (!signal->group_stop_count &&
+> > -		    !(signal->flags & SIGNAL_STOP_STOPPED))
+> > -			signr =3D SIGTRAP;
+> > -		WARN_ON_ONCE(!signr);
+> > -		ptrace_do_notify(signr, signr | (PTRACE_EVENT_STOP << 8),
+> > -				 CLD_STOPPED);
+> > -	} else {
+> > -		WARN_ON_ONCE(!signr);
+> > -		ptrace_stop(signr, CLD_STOPPED, 0, NULL);
+> > -		current->exit_code =3D 0;
+> > +	if (current->jobctl & (JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY)) {
+> > +		if (current->ptrace & PT_SEIZED) {
+> > +			if (!signal->group_stop_count &&
+> > +			    !(signal->flags & SIGNAL_STOP_STOPPED))
+> > +				signr =3D SIGTRAP;
+> > +			WARN_ON_ONCE(!signr);
+> > +			ptrace_do_notify(signr,
+> > +					 signr | (PTRACE_EVENT_STOP << 8),
+> > +					 CLD_STOPPED);
+> > +		} else {
+> > +			WARN_ON_ONCE(!signr);
+> > +			ptrace_stop(signr, CLD_STOPPED, 0, NULL);
+> > +			current->exit_code =3D 0;
+> > +		}
+> > +	} else if (current->jobctl & JOBCTL_TRAP_FREEZE) {
+> > +		/*
+> > +		 * Enter the frozen state, unless the task is about to exit.
+> > +		 */
+> > +		if (fatal_signal_pending(current)) {
+> > +			current->jobctl &=3D ~JOBCTL_TRAP_FREEZE;
+> > +		} else {
+> > +			spin_unlock_irq(&sighand->siglock);
+> > +			cgroup_enter_frozen();
+> > +			spin_lock_irq(&sighand->siglock);
+> > +		}
+> >  	}
+> >  }
+> > =20
+> > @@ -2401,12 +2420,23 @@ bool get_signal(struct ksignal *ksig)
+> >  		    do_signal_stop(0))
+> >  			goto relock;
+> > =20
+> > -		if (unlikely(current->jobctl & JOBCTL_TRAP_MASK)) {
+> > +		if (unlikely(current->jobctl &
+> > +			     (JOBCTL_TRAP_MASK | JOBCTL_TRAP_FREEZE))) {
+> >  			do_jobctl_trap();
+>=20
+> Cosmetic nit, but can't you add another helper? To me something like
+>=20
+> 		if (JOBCTL_TRAP_MASK)
+> 			do_jobctl_trap();
+> 		else if (JOBCTL_TRAP_FREEZE)
+> 			do_jobctl_freeze();
+>=20
+> will look more clean, but I won't insist.
 
-# Create some empty cgroups
-for i in $(seq 1 1024)
-do
-	mkdir -p /sys/fs/cgroup/cpu/base_cgroup/$i
-done
+Sure.
 
-# Create some cgroups with a CPU soaker
-for i in $(seq 1 144)
-do
-	(while :; do :; done ) &
-	PID=$!
-	mkdir -p /sys/fs/cgroup/cpu/base_cgroup/$PID
-	echo $PID > /sys/fs/cgroup/cpu/base_cgroup/$PID/cgroup.procs
-done
+>=20
+>=20
+> > +		/*
+> > +		 * If the task is leaving the frozen state, let's update
+> > +		 * cgroup counters and reset the frozen bit.
+> > +		 */
+> > +		if (unlikely(cgroup_task_frozen(current))) {
+> > +			spin_unlock_irq(&sighand->siglock);
+> > +			cgroup_leave_frozen();
+> > +			spin_lock_irq(&sighand->siglock);
+>=20
+> looks like this needs another "goto relock", no?
+>=20
+> And perhaps this another reason for the new do_jobctl_freeze() helper whi=
+ch
+> could absorb this leave_frozen() ?
+
+Makes sense. Will follow this path in v5.
+
+Thank you!
