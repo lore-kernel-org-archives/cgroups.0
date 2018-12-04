@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 05/14] dm: set the static flush bio device on demand
-Date: Tue,  4 Dec 2018 13:35:51 -0500
-Message-ID: <20181204183600.99746-6-dennis@kernel.org>
+Subject: [PATCH 13/14] blkcg: change blkg reference counting to use percpu_ref
+Date: Tue,  4 Dec 2018 13:35:59 -0500
+Message-ID: <20181204183600.99746-14-dennis@kernel.org>
 References: <20181204183600.99746-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181204183600.99746-1-dennis@kernel.org>
@@ -11,71 +11,157 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-The next patch changes the macro bio_set_dev() to associate a bio with a
-blkg based on the device set. However, dm creates a static bio to be
-used as the basis for cloning empty flush bios on creation. The
-bio_set_dev() call in alloc_dev() will cause problems with the next
-patch adding association to bio_set_dev() because the call is before the
-bdev is associated with a gendisk (bd_disk is %NULL). To get around
-this, set the device on the static bio every time and use that to clone
-to the other bios.
+Every bio is now associated with a blkg putting blkg_get, blkg_try_get,
+and blkg_put on the hot path. Switch over the refcnt in blkg to use
+percpu_ref.
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
-Cc: Alasdair Kergon <agk@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/bio.c     |  1 +
- drivers/md/dm.c | 12 +++++++++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ block/blk-cgroup.c         | 41 ++++++++++++++++++++++++++++++++++++--
+ include/linux/blk-cgroup.h | 15 +++++---------
+ 2 files changed, 44 insertions(+), 12 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 452b8e79b998..41ebb3f8e2fc 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -2021,6 +2021,7 @@ void bio_disassociate_blkg(struct bio *bio)
- 		bio->bi_blkg = NULL;
- 	}
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 120f2e2835fb..2ca7611fe274 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -81,6 +81,37 @@ static void blkg_free(struct blkcg_gq *blkg)
+ 	kfree(blkg);
  }
-+EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
+ 
++static void __blkg_release(struct rcu_head *rcu)
++{
++	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
++
++	percpu_ref_exit(&blkg->refcnt);
++
++	/* release the blkcg and parent blkg refs this blkg has been holding */
++	css_put(&blkg->blkcg->css);
++	if (blkg->parent)
++		blkg_put(blkg->parent);
++
++	wb_congested_put(blkg->wb_congested);
++
++	blkg_free(blkg);
++}
++
++/*
++ * A group is RCU protected, but having an rcu lock does not mean that one
++ * can access all the fields of blkg and assume these are valid.  For
++ * example, don't try to follow throtl_data and request queue links.
++ *
++ * Having a reference to blkg under an rcu allows accesses to only values
++ * local to groups like group stats and group rate limits.
++ */
++static void blkg_release(struct percpu_ref *ref)
++{
++	struct blkcg_gq *blkg = container_of(ref, struct blkcg_gq, refcnt);
++
++	call_rcu(&blkg->rcu_head, __blkg_release);
++}
++
+ /**
+  * blkg_alloc - allocate a blkg
+  * @blkcg: block cgroup the new blkg is associated with
+@@ -107,7 +138,6 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 	blkg->q = q;
+ 	INIT_LIST_HEAD(&blkg->q_node);
+ 	blkg->blkcg = blkcg;
+-	atomic_set(&blkg->refcnt, 1);
+ 
+ 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 		struct blkcg_policy *pol = blkcg_policy[i];
+@@ -207,6 +237,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 		blkg_get(blkg->parent);
+ 	}
+ 
++	ret = percpu_ref_init(&blkg->refcnt, blkg_release, 0,
++			      GFP_NOWAIT | __GFP_NOWARN);
++	if (ret)
++		goto err_cancel_ref;
++
+ 	/* invoke per-policy init */
+ 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 		struct blkcg_policy *pol = blkcg_policy[i];
+@@ -239,6 +274,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 	blkg_put(blkg);
+ 	return ERR_PTR(ret);
+ 
++err_cancel_ref:
++	percpu_ref_exit(&blkg->refcnt);
+ err_put_congested:
+ 	wb_congested_put(wb_congested);
+ err_put_css:
+@@ -367,7 +404,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 	 * Put the reference taken at the time of creation so that when all
+ 	 * queues are gone, group can be destroyed.
+ 	 */
+-	blkg_put(blkg);
++	percpu_ref_kill(&blkg->refcnt);
+ }
  
  /**
-  * __bio_associate_blkg - associate a bio with the a blkg
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index a733e4c920af..a2d6f8b33d23 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1417,10 +1417,21 @@ static int __send_empty_flush(struct clone_info *ci)
- 	unsigned target_nr = 0;
- 	struct dm_target *ti;
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 68cae7961060..05909cf31ed1 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -123,7 +123,7 @@ struct blkcg_gq {
+ 	struct blkcg_gq			*parent;
  
-+	/*
-+	 * Empty flush uses a statically initialized bio as the base for
-+	 * cloning, &md->flush_bio.  However, blkg association requires that
-+	 * a bdev is associated with a gendisk, which doesn't happen until the
-+	 * bdev is opened.  So, blkg association is done at issue time of the
-+	 * flush rather than when the device is created in dm_alloc().
-+	 */
-+	bio_set_dev(ci->bio, ci->io->md->bdev);
-+
- 	BUG_ON(bio_has_data(ci->bio));
- 	while ((ti = dm_table_get_target(ci->map, target_nr++)))
- 		__send_duplicate_bios(ci, ti, ti->num_flush_bios, NULL);
+ 	/* reference count */
+-	atomic_t			refcnt;
++	struct percpu_ref		refcnt;
  
-+	bio_disassociate_blkg(ci->bio);
-+
- 	return 0;
+ 	/* is this blkg online? protected by both blkcg and q locks */
+ 	bool				online;
+@@ -486,8 +486,7 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
+  */
+ static inline void blkg_get(struct blkcg_gq *blkg)
+ {
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	atomic_inc(&blkg->refcnt);
++	percpu_ref_get(&blkg->refcnt);
  }
  
-@@ -1939,7 +1950,6 @@ static struct mapped_device *alloc_dev(int minor)
- 		goto bad;
+ /**
+@@ -499,7 +498,7 @@ static inline void blkg_get(struct blkcg_gq *blkg)
+  */
+ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
+ {
+-	if (atomic_inc_not_zero(&blkg->refcnt))
++	if (percpu_ref_tryget(&blkg->refcnt))
+ 		return blkg;
+ 	return NULL;
+ }
+@@ -513,23 +512,19 @@ static inline struct blkcg_gq *blkg_try_get(struct blkcg_gq *blkg)
+  */
+ static inline struct blkcg_gq *blkg_try_get_closest(struct blkcg_gq *blkg)
+ {
+-	while (!atomic_inc_not_zero(&blkg->refcnt))
++	while (!percpu_ref_tryget(&blkg->refcnt))
+ 		blkg = blkg->parent;
  
- 	bio_init(&md->flush_bio, NULL, 0);
--	bio_set_dev(&md->flush_bio, md->bdev);
- 	md->flush_bio.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
+ 	return blkg;
+ }
  
- 	dm_stats_init(&md->stats);
+-void __blkg_release_rcu(struct rcu_head *rcu);
+-
+ /**
+  * blkg_put - put a blkg reference
+  * @blkg: blkg to put
+  */
+ static inline void blkg_put(struct blkcg_gq *blkg)
+ {
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	if (atomic_dec_and_test(&blkg->refcnt))
+-		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
++	percpu_ref_put(&blkg->refcnt);
+ }
+ 
+ /**
 -- 
 2.17.1
 
