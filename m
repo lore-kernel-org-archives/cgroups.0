@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 06/14] blkcg: associate blkg when associating a device
-Date: Tue,  4 Dec 2018 13:35:52 -0500
-Message-ID: <20181204183600.99746-7-dennis@kernel.org>
+Subject: [PATCH 05/14] dm: set the static flush bio device on demand
+Date: Tue,  4 Dec 2018 13:35:51 -0500
+Message-ID: <20181204183600.99746-6-dennis@kernel.org>
 References: <20181204183600.99746-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181204183600.99746-1-dennis@kernel.org>
@@ -11,127 +11,71 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 
-Previously, blkg association was handled by controller specific code in
-blk-throttle and blk-iolatency. However, because a blkg represents a
-relationship between a blkcg and a request_queue, it makes sense to keep
-the blkg->q and bio->bi_disk->queue consistent.
-
-This patch moves association into the bio_set_dev macro(). This should
-cover the majority of cases where the device is set/changed keeping the
-two pointers consistent. Fallback code is added to
-blkcg_bio_issue_check() to catch any missing paths.
+The next patch changes the macro bio_set_dev() to associate a bio with a
+blkg based on the device set. However, dm creates a static bio to be
+used as the basis for cloning empty flush bios on creation. The
+bio_set_dev() call in alloc_dev() will cause problems with the next
+patch adding association to bio_set_dev() because the call is before the
+bdev is associated with a gendisk (bd_disk is %NULL). To get around
+this, set the device on the static bio every time and use that to clone
+to the other bios.
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
+Cc: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
 ---
- block/bio.c                |  1 +
- block/blk-iolatency.c      |  4 +---
- block/blk-throttle.c       |  1 -
- include/linux/bio.h        |  2 ++
- include/linux/blk-cgroup.h | 11 +++--------
- 5 files changed, 7 insertions(+), 12 deletions(-)
+ block/bio.c     |  1 +
+ drivers/md/dm.c | 12 +++++++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index 41ebb3f8e2fc..1e852ab904aa 100644
+index 452b8e79b998..41ebb3f8e2fc 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -2074,6 +2074,7 @@ void bio_associate_blkg(struct bio *bio)
- 
- 	rcu_read_unlock();
+@@ -2021,6 +2021,7 @@ void bio_disassociate_blkg(struct bio *bio)
+ 		bio->bi_blkg = NULL;
+ 	}
  }
-+EXPORT_SYMBOL_GPL(bio_associate_blkg);
++EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
  
  /**
-  * bio_disassociate_task - undo bio_associate_current()
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index cdbd10564e66..e6b47c255521 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -472,14 +472,12 @@ static void check_scale_change(struct iolatency_grp *iolat)
- static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
- {
- 	struct blk_iolatency *blkiolat = BLKIOLATENCY(rqos);
--	struct blkcg_gq *blkg;
-+	struct blkcg_gq *blkg = bio->bi_blkg;
- 	bool issue_as_root = bio_issue_as_root_blkg(bio);
+  * __bio_associate_blkg - associate a bio with the a blkg
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index a733e4c920af..a2d6f8b33d23 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1417,10 +1417,21 @@ static int __send_empty_flush(struct clone_info *ci)
+ 	unsigned target_nr = 0;
+ 	struct dm_target *ti;
  
- 	if (!blk_iolatency_enabled(blkiolat))
- 		return;
++	/*
++	 * Empty flush uses a statically initialized bio as the base for
++	 * cloning, &md->flush_bio.  However, blkg association requires that
++	 * a bdev is associated with a gendisk, which doesn't happen until the
++	 * bdev is opened.  So, blkg association is done at issue time of the
++	 * flush rather than when the device is created in dm_alloc().
++	 */
++	bio_set_dev(ci->bio, ci->io->md->bdev);
++
+ 	BUG_ON(bio_has_data(ci->bio));
+ 	while ((ti = dm_table_get_target(ci->map, target_nr++)))
+ 		__send_duplicate_bios(ci, ti, ti->num_flush_bios, NULL);
  
--	bio_associate_blkg(bio);
--	blkg = bio->bi_blkg;
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
- 
- 	while (blkg && blkg->parent) {
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 228c3a007ebc..1c6529df2002 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2118,7 +2118,6 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
- static void blk_throtl_assoc_bio(struct bio *bio)
- {
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
--	bio_associate_blkg(bio);
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
- #endif
- }
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 62715a5a4f32..6ee2ea8b378a 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -491,12 +491,14 @@ do {						\
- 		bio_clear_flag(bio, BIO_THROTTLED);\
- 	(bio)->bi_disk = (bdev)->bd_disk;	\
- 	(bio)->bi_partno = (bdev)->bd_partno;	\
-+	bio_associate_blkg(bio);		\
- } while (0)
- 
- #define bio_copy_dev(dst, src)			\
- do {						\
- 	(dst)->bi_disk = (src)->bi_disk;	\
- 	(dst)->bi_partno = (src)->bi_partno;	\
-+	bio_clone_blkcg_association(dst, src);	\
- } while (0)
- 
- #define bio_dev(bio) \
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index c08e96e521ed..3c87ae71156f 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -802,21 +802,17 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
- static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 					 struct bio *bio)
- {
--	struct blkcg *blkcg;
- 	struct blkcg_gq *blkg;
- 	bool throtl = false;
- 
--	rcu_read_lock();
-+	if (!bio->bi_blkg)
-+		bio_associate_blkg(bio);
- 
--	/* associate blkcg if bio hasn't attached one */
--	bio_associate_blkcg(bio, NULL);
--	blkcg = bio_blkcg(bio);
--	blkg = blkg_lookup_create(blkcg, q);
-+	blkg = bio->bi_blkg;
- 
- 	throtl = blk_throtl_bio(q, blkg, bio);
- 
- 	if (!throtl) {
--		blkg = blkg ?: q->root_blkg;
- 		/*
- 		 * If the bio is flagged with BIO_QUEUE_ENTERED it means this
- 		 * is a split bio and we would have already accounted for the
-@@ -828,7 +824,6 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
- 	}
- 
--	rcu_read_unlock();
- 	return !throtl;
++	bio_disassociate_blkg(ci->bio);
++
+ 	return 0;
  }
  
+@@ -1939,7 +1950,6 @@ static struct mapped_device *alloc_dev(int minor)
+ 		goto bad;
+ 
+ 	bio_init(&md->flush_bio, NULL, 0);
+-	bio_set_dev(&md->flush_bio, md->bdev);
+ 	md->flush_bio.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
+ 
+ 	dm_stats_init(&md->stats);
 -- 
 2.17.1
 
