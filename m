@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 11/14] blkcg: remove additional reference to the css
-Date: Wed,  5 Dec 2018 12:10:36 -0500
-Message-ID: <20181205171039.73066-12-dennis@kernel.org>
+Subject: [PATCH 09/14] blkcg: associate writeback bios with a blkg
+Date: Wed,  5 Dec 2018 12:10:34 -0500
+Message-ID: <20181205171039.73066-10-dennis@kernel.org>
 References: <20181205171039.73066-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181205171039.73066-1-dennis@kernel.org>
@@ -13,314 +13,171 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-The previous patch in this series removed carrying around a pointer to
-the css in blkg. However, the blkg association logic still relied on
-taking a reference on the css to ensure we wouldn't fail in getting a
-reference for the blkg.
-
-Here the implicit dependency on the css is removed. The association
-continues to rely on the tryget logic walking up the blkg tree. This
-streamlines the three ways that association can happen: normal, swap,
-and writeback.
+One of the goals of this series is to remove a separate reference to
+the css of the bio. This can and should be accessed via bio_blkcg(). In
+this patch, wbc_init_bio() now requires a bio to have a device
+associated with it.
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
-Acked-by: Tejun Heo <tj@kernel.org>
 Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/bio.c                | 66 ++++++++++++++++----------------------
- include/linux/blk-cgroup.h | 41 -----------------------
- include/linux/cgroup.h     |  2 ++
- kernel/cgroup/cgroup.c     | 48 +++++++++++++++++++++------
- 4 files changed, 69 insertions(+), 88 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  8 +++++---
+ block/bio.c                             | 18 ++++++++++++++++++
+ fs/buffer.c                             | 10 +++++-----
+ fs/ext4/page-io.c                       |  2 +-
+ include/linux/bio.h                     |  5 +++++
+ include/linux/writeback.h               |  5 +++--
+ 6 files changed, 37 insertions(+), 11 deletions(-)
 
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 476722b7b636..baf19bf28385 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1879,8 +1879,10 @@ following two functions.
+ 
+   wbc_init_bio(@wbc, @bio)
+ 	Should be called for each bio carrying writeback data and
+-	associates the bio with the inode's owner cgroup.  Can be
+-	called anytime between bio allocation and submission.
++	associates the bio with the inode's owner cgroup and the
++	corresponding request queue.  This must be called after
++	a queue (device) has been associated with the bio and
++	before submission.
+ 
+   wbc_account_io(@wbc, @page, @bytes)
+ 	Should be called for each data segment being written out.
+@@ -1899,7 +1901,7 @@ the configuration, the bio may be executed at a lower priority and if
+ the writeback session is holding shared resources, e.g. a journal
+ entry, may lead to priority inversion.  There is no one easy solution
+ for the problem.  Filesystems can try to work around specific problem
+-cases by skipping wbc_init_bio() or using bio_associate_blkcg()
++cases by skipping wbc_init_bio() and using bio_associate_blkg()
+ directly.
+ 
+ 
 diff --git a/block/bio.c b/block/bio.c
-index 2b6bc7b805ec..ce1e512dca5a 100644
+index f0f069c1823c..b42477b6a225 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -1966,8 +1966,6 @@ EXPORT_SYMBOL(bioset_init_from_src);
- void bio_disassociate_blkg(struct bio *bio)
- {
- 	if (bio->bi_blkg) {
--		/* a ref is always taken on css */
--		css_put(&bio_blkcg(bio)->css);
- 		blkg_put(bio->bi_blkg);
- 		bio->bi_blkg = NULL;
- 	}
-@@ -1995,33 +1993,31 @@ static void __bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
- 	bio->bi_blkg = blkg_try_get_closest(blkg);
- }
- 
--static void __bio_associate_blkg_from_css(struct bio *bio,
--					  struct cgroup_subsys_state *css)
--{
--	struct blkcg_gq *blkg;
--
--	rcu_read_lock();
--
--	blkg = blkg_lookup_create(css_to_blkcg(css), bio->bi_disk->queue);
--	__bio_associate_blkg(bio, blkg);
--
--	rcu_read_unlock();
--}
--
- /**
-  * bio_associate_blkg_from_css - associate a bio with a specified css
-  * @bio: target bio
-  * @css: target css
-  *
-  * Associate @bio with the blkg found by combining the css's blkg and the
-- * request_queue of the @bio.  This takes a reference on the css that will
-- * be put upon freeing of @bio.
-+ * request_queue of the @bio.  This falls back to the queue's root_blkg if
-+ * the association fails with the css.
-  */
- void bio_associate_blkg_from_css(struct bio *bio,
- 				 struct cgroup_subsys_state *css)
- {
--	css_get(css);
--	__bio_associate_blkg_from_css(bio, css);
-+	struct request_queue *q = bio->bi_disk->queue;
-+	struct blkcg_gq *blkg;
-+
-+	rcu_read_lock();
-+
-+	if (!css || !css->parent)
-+		blkg = q->root_blkg;
-+	else
-+		blkg = blkg_lookup_create(css_to_blkcg(css), q);
-+
-+	__bio_associate_blkg(bio, blkg);
-+
-+	rcu_read_unlock();
- }
- EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
- 
-@@ -2032,8 +2028,8 @@ EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
-  * @page: the page to lookup the blkcg from
-  *
-  * Associate @bio with the blkg from @page's owning memcg and the respective
-- * request_queue.  This works like every other associate function wrt
-- * references.
-+ * request_queue.  If cgroup_e_css returns %NULL, fall back to the queue's
-+ * root_blkg.
-  */
- void bio_associate_blkg_from_page(struct bio *bio, struct page *page)
- {
-@@ -2042,8 +2038,12 @@ void bio_associate_blkg_from_page(struct bio *bio, struct page *page)
- 	if (!page->mem_cgroup)
- 		return;
- 
--	css = cgroup_get_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
--	__bio_associate_blkg_from_css(bio, css);
-+	rcu_read_lock();
-+
-+	css = cgroup_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
-+	bio_associate_blkg_from_css(bio, css);
-+
-+	rcu_read_unlock();
- }
- #endif /* CONFIG_MEMCG */
- 
-@@ -2058,24 +2058,16 @@ void bio_associate_blkg_from_page(struct bio *bio, struct page *page)
-  */
- void bio_associate_blkg(struct bio *bio)
- {
--	struct request_queue *q = bio->bi_disk->queue;
--	struct blkcg *blkcg;
--	struct blkcg_gq *blkg;
-+	struct cgroup_subsys_state *css;
- 
- 	rcu_read_lock();
- 
- 	if (bio->bi_blkg)
--		blkcg = bio->bi_blkg->blkcg;
-+		css = &bio_blkcg(bio)->css;
- 	else
--		blkcg = css_to_blkcg(blkcg_get_css());
-+		css = blkcg_css();
- 
--	if (!blkcg->css.parent) {
--		__bio_associate_blkg(bio, q->root_blkg);
--	} else {
--		blkg = blkg_lookup_create(blkcg, q);
--
--		__bio_associate_blkg(bio, blkg);
--	}
-+	bio_associate_blkg_from_css(bio, css);
- 
+@@ -2034,6 +2034,24 @@ static void __bio_associate_blkg_from_css(struct bio *bio,
  	rcu_read_unlock();
- }
-@@ -2097,10 +2089,8 @@ void bio_disassociate_task(struct bio *bio)
-  */
- void bio_clone_blkg_association(struct bio *dst, struct bio *src)
- {
--	if (src->bi_blkg) {
--		css_get(&bio_blkcg(src)->css);
-+	if (src->bi_blkg)
- 		__bio_associate_blkg(dst, src->bi_blkg);
--	}
- }
- EXPORT_SYMBOL_GPL(bio_clone_blkg_association);
- #endif /* CONFIG_BLK_CGROUP */
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index f11c37f8ce09..284819a4d122 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -247,47 +247,6 @@ static inline struct cgroup_subsys_state *blkcg_css(void)
- 	return task_css(current, io_cgrp_id);
- }
- 
--/**
-- * blkcg_get_css - find and get a reference to the css
-- *
-- * Find the css associated with either the kthread or the current task.
-- * This takes a reference on the blkcg which will need to be managed by the
-- * caller.
-- */
--static inline struct cgroup_subsys_state *blkcg_get_css(void)
--{
--	struct cgroup_subsys_state *css;
--
--	rcu_read_lock();
--
--	css = kthread_blkcg();
--	if (css) {
--		css_get(css);
--	} else {
--		/*
--		 * This is a bit complicated.  It is possible task_css() is
--		 * seeing an old css pointer here.  This is caused by the
--		 * current thread migrating away from this cgroup and this
--		 * cgroup dying.  css_tryget() will fail when trying to take a
--		 * ref on a cgroup that's ref count has hit 0.
--		 *
--		 * Therefore, if it does fail, this means current must have
--		 * been swapped away already and this is waiting for it to
--		 * propagate on the polling cpu.  Hence the use of cpu_relax().
--		 */
--		while (true) {
--			css = task_css(current, io_cgrp_id);
--			if (likely(css_tryget(css)))
--				break;
--			cpu_relax();
--		}
--	}
--
--	rcu_read_unlock();
--
--	return css;
--}
--
- static inline struct blkcg *css_to_blkcg(struct cgroup_subsys_state *css)
- {
- 	return css ? container_of(css, struct blkcg, css) : NULL;
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 9d12757a65b0..9968332cceed 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -93,6 +93,8 @@ extern struct css_set init_css_set;
- 
- bool css_has_online_children(struct cgroup_subsys_state *css);
- struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss);
-+struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgroup,
-+					 struct cgroup_subsys *ss);
- struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
- 					     struct cgroup_subsys *ss);
- struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 6aaf5dd5383b..8b79318810ad 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -493,7 +493,7 @@ static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
- }
- 
- /**
-- * cgroup_e_css - obtain a cgroup's effective css for the specified subsystem
-+ * cgroup_e_css_by_mask - obtain a cgroup's effective css for the specified ss
-  * @cgrp: the cgroup of interest
-  * @ss: the subsystem of interest (%NULL returns @cgrp->self)
-  *
-@@ -502,8 +502,8 @@ static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
-  * enabled.  If @ss is associated with the hierarchy @cgrp is on, this
-  * function is guaranteed to return non-NULL css.
-  */
--static struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
--						struct cgroup_subsys *ss)
-+static struct cgroup_subsys_state *cgroup_e_css_by_mask(struct cgroup *cgrp,
-+							struct cgroup_subsys *ss)
- {
- 	lockdep_assert_held(&cgroup_mutex);
- 
-@@ -523,6 +523,35 @@ static struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
- 	return cgroup_css(cgrp, ss);
  }
  
 +/**
-+ * cgroup_e_css - obtain a cgroup's effective css for the specified subsystem
-+ * @cgrp: the cgroup of interest
-+ * @ss: the subsystem of interest
++ * bio_associate_blkg_from_css - associate a bio with a specified css
++ * @bio: target bio
++ * @css: target css
 + *
-+ * Find and get the effective css of @cgrp for @ss.  The effective css is
-+ * defined as the matching css of the nearest ancestor including self which
-+ * has @ss enabled.  If @ss is not mounted on the hierarchy @cgrp is on,
-+ * the root css is returned, so this function always returns a valid css.
-+ *
-+ * The returned css is not guaranteed to be online, and therefore it is the
-+ * callers responsiblity to tryget a reference for it.
++ * Associate @bio with the blkg found by combining the css's blkg and the
++ * request_queue of the @bio.  This takes a reference on the css that will
++ * be put upon freeing of @bio.
 + */
-+struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
-+					 struct cgroup_subsys *ss)
++void bio_associate_blkg_from_css(struct bio *bio,
++				 struct cgroup_subsys_state *css)
 +{
-+	struct cgroup_subsys_state *css;
-+
-+	do {
-+		css = cgroup_css(cgrp, ss);
-+
-+		if (css)
-+			return css;
-+		cgrp = cgroup_parent(cgrp);
-+	} while (cgrp);
-+
-+	return init_css_set.subsys[ss->id];
++	css_get(css);
++	bio->bi_css = css;
++	__bio_associate_blkg_from_css(bio, css);
 +}
++EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
 +
+ #ifdef CONFIG_MEMCG
  /**
-  * cgroup_get_e_css - get a cgroup's effective css for the specified subsystem
-  * @cgrp: the cgroup of interest
-@@ -605,10 +634,11 @@ EXPORT_SYMBOL_GPL(of_css);
-  *
-  * Should be called under cgroup_[tree_]mutex.
-  */
--#define for_each_e_css(css, ssid, cgrp)					\
--	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT; (ssid)++)	\
--		if (!((css) = cgroup_e_css(cgrp, cgroup_subsys[(ssid)]))) \
--			;						\
-+#define for_each_e_css(css, ssid, cgrp)					    \
-+	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT; (ssid)++)	    \
-+		if (!((css) = cgroup_e_css_by_mask(cgrp,		    \
-+						   cgroup_subsys[(ssid)]))) \
-+			;						    \
- 		else
- 
- /**
-@@ -1007,7 +1037,7 @@ static struct css_set *find_existing_css_set(struct css_set *old_cset,
- 			 * @ss is in this hierarchy, so we want the
- 			 * effective css from @cgrp.
- 			 */
--			template[i] = cgroup_e_css(cgrp, ss);
-+			template[i] = cgroup_e_css_by_mask(cgrp, ss);
- 		} else {
- 			/*
- 			 * @ss is not in this hierarchy, so we don't want
-@@ -3024,7 +3054,7 @@ static int cgroup_apply_control(struct cgroup *cgrp)
- 		return ret;
- 
- 	/*
--	 * At this point, cgroup_e_css() results reflect the new csses
-+	 * At this point, cgroup_e_css_by_mask() results reflect the new csses
- 	 * making the following cgroup_update_dfl_csses() properly update
- 	 * css associations of all tasks in the subtree.
+  * bio_associate_blkg_from_page - associate a bio with the page's blkg
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 1286c2b95498..d60d61e8ed7d 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -3060,11 +3060,6 @@ static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
  	 */
+ 	bio = bio_alloc(GFP_NOIO, 1);
+ 
+-	if (wbc) {
+-		wbc_init_bio(wbc, bio);
+-		wbc_account_io(wbc, bh->b_page, bh->b_size);
+-	}
+-
+ 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio_set_dev(bio, bh->b_bdev);
+ 	bio->bi_write_hint = write_hint;
+@@ -3084,6 +3079,11 @@ static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+ 		op_flags |= REQ_PRIO;
+ 	bio_set_op_attrs(bio, op, op_flags);
+ 
++	if (wbc) {
++		wbc_init_bio(wbc, bio);
++		wbc_account_io(wbc, bh->b_page, bh->b_size);
++	}
++
+ 	submit_bio(bio);
+ 	return 0;
+ }
+diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+index db7590178dfc..2aa62d58d8dd 100644
+--- a/fs/ext4/page-io.c
++++ b/fs/ext4/page-io.c
+@@ -374,13 +374,13 @@ static int io_submit_init_bio(struct ext4_io_submit *io,
+ 	bio = bio_alloc(GFP_NOIO, BIO_MAX_PAGES);
+ 	if (!bio)
+ 		return -ENOMEM;
+-	wbc_init_bio(io->io_wbc, bio);
+ 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio_set_dev(bio, bh->b_bdev);
+ 	bio->bi_end_io = ext4_end_bio;
+ 	bio->bi_private = ext4_get_io_end(io->io_end);
+ 	io->io_bio = bio;
+ 	io->io_next_block = bh->b_blocknr;
++	wbc_init_bio(io->io_wbc, bio);
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index f13572c254a7..f0438061a5a3 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -515,6 +515,8 @@ static inline void bio_associate_blkg_from_page(struct bio *bio,
+ int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css);
+ void bio_disassociate_blkg(struct bio *bio);
+ void bio_associate_blkg(struct bio *bio);
++void bio_associate_blkg_from_css(struct bio *bio,
++				 struct cgroup_subsys_state *css);
+ void bio_disassociate_task(struct bio *bio);
+ void bio_clone_blkcg_association(struct bio *dst, struct bio *src);
+ #else	/* CONFIG_BLK_CGROUP */
+@@ -522,6 +524,9 @@ static inline int bio_associate_blkcg(struct bio *bio,
+ 			struct cgroup_subsys_state *blkcg_css) { return 0; }
+ static inline void bio_disassociate_blkg(struct bio *bio) { }
+ static inline void bio_associate_blkg(struct bio *bio) { }
++static inline void bio_associate_blkg_from_css(struct bio *bio,
++					       struct cgroup_subsys_state *css)
++{ }
+ static inline void bio_disassociate_task(struct bio *bio) { }
+ static inline void bio_clone_blkcg_association(struct bio *dst,
+ 			struct bio *src) { }
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index fdfd04e348f6..738a0c24874f 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -246,7 +246,8 @@ static inline void wbc_attach_fdatawrite_inode(struct writeback_control *wbc,
+  *
+  * @bio is a part of the writeback in progress controlled by @wbc.  Perform
+  * writeback specific initialization.  This is used to apply the cgroup
+- * writeback context.
++ * writeback context.  Must be called after the bio has been associated with
++ * a device.
+  */
+ static inline void wbc_init_bio(struct writeback_control *wbc, struct bio *bio)
+ {
+@@ -257,7 +258,7 @@ static inline void wbc_init_bio(struct writeback_control *wbc, struct bio *bio)
+ 	 * regular writeback instead of writing things out itself.
+ 	 */
+ 	if (wbc->wb)
+-		bio_associate_blkcg(bio, wbc->wb->blkcg_css);
++		bio_associate_blkg_from_css(bio, wbc->wb->blkcg_css);
+ }
+ 
+ #else	/* CONFIG_CGROUP_WRITEBACK */
 -- 
 2.17.1
 
