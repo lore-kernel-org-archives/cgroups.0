@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 06/14] blkcg: associate blkg when associating a device
-Date: Wed,  5 Dec 2018 12:10:31 -0500
-Message-ID: <20181205171039.73066-7-dennis@kernel.org>
+Subject: [PATCH 07/14] blkcg: consolidate bio_issue_init() to be a part of core
+Date: Wed,  5 Dec 2018 12:10:32 -0500
+Message-ID: <20181205171039.73066-8-dennis@kernel.org>
 References: <20181205171039.73066-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181205171039.73066-1-dennis@kernel.org>
@@ -13,139 +13,118 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-Previously, blkg association was handled by controller specific code in
-blk-throttle and blk-iolatency. However, because a blkg represents a
-relationship between a blkcg and a request_queue, it makes sense to keep
-the blkg->q and bio->bi_disk->queue consistent.
-
-This patch moves association into the bio_set_dev macro(). This should
-cover the majority of cases where the device is set/changed keeping the
-two pointers consistent. Fallback code is added to
-blkcg_bio_issue_check() to catch any missing paths.
+bio_issue_init among other things initializes the timestamp for an IO.
+Rather than have this logic handled by policies, this consolidates it to
+be on the init paths (normal, clone, bounce clone).
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Liu Bo <bo.liu@linux.alibaba.com>
 Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 ---
- block/bio.c                |  1 +
- block/blk-iolatency.c      |  4 +---
- block/blk-throttle.c       |  1 -
- include/linux/bio.h        |  2 ++
- include/linux/blk-cgroup.h | 18 ++++++++++--------
- 5 files changed, 14 insertions(+), 12 deletions(-)
+ block/bio.c                | 1 +
+ block/blk-iolatency.c      | 2 --
+ block/blk-throttle.c       | 8 --------
+ block/bounce.c             | 1 +
+ include/linux/blk-cgroup.h | 9 +++++++++
+ 5 files changed, 11 insertions(+), 10 deletions(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index 41ebb3f8e2fc..1e852ab904aa 100644
+index 1e852ab904aa..90089124b512 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -2074,6 +2074,7 @@ void bio_associate_blkg(struct bio *bio)
+@@ -611,6 +611,7 @@ void __bio_clone_fast(struct bio *bio, struct bio *bio_src)
+ 	bio->bi_io_vec = bio_src->bi_io_vec;
  
- 	rcu_read_unlock();
+ 	bio_clone_blkcg_association(bio, bio_src);
++	blkcg_bio_issue_init(bio);
  }
-+EXPORT_SYMBOL_GPL(bio_associate_blkg);
+ EXPORT_SYMBOL(__bio_clone_fast);
  
- /**
-  * bio_disassociate_task - undo bio_associate_current()
 diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index cdbd10564e66..e6b47c255521 100644
+index e6b47c255521..5a79f06a730d 100644
 --- a/block/blk-iolatency.c
 +++ b/block/blk-iolatency.c
-@@ -472,14 +472,12 @@ static void check_scale_change(struct iolatency_grp *iolat)
- static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
- {
- 	struct blk_iolatency *blkiolat = BLKIOLATENCY(rqos);
--	struct blkcg_gq *blkg;
-+	struct blkcg_gq *blkg = bio->bi_blkg;
- 	bool issue_as_root = bio_issue_as_root_blkg(bio);
- 
+@@ -478,8 +478,6 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
  	if (!blk_iolatency_enabled(blkiolat))
  		return;
  
--	bio_associate_blkg(bio);
--	blkg = bio->bi_blkg;
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
- 
+-	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+-
  	while (blkg && blkg->parent) {
+ 		struct iolatency_grp *iolat = blkg_to_lat(blkg);
+ 		if (!iolat) {
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 228c3a007ebc..1c6529df2002 100644
+index 1c6529df2002..1b97a73d2fb1 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -2118,7 +2118,6 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
- static void blk_throtl_assoc_bio(struct bio *bio)
- {
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
--	bio_associate_blkg(bio);
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
- #endif
+@@ -2115,13 +2115,6 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
  }
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 62715a5a4f32..6ee2ea8b378a 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -491,12 +491,14 @@ do {						\
- 		bio_clear_flag(bio, BIO_THROTTLED);\
- 	(bio)->bi_disk = (bdev)->bd_disk;	\
- 	(bio)->bi_partno = (bdev)->bd_partno;	\
-+	bio_associate_blkg(bio);		\
- } while (0)
+ #endif
  
- #define bio_copy_dev(dst, src)			\
- do {						\
- 	(dst)->bi_disk = (src)->bi_disk;	\
- 	(dst)->bi_partno = (src)->bi_partno;	\
-+	bio_clone_blkcg_association(dst, src);	\
- } while (0)
+-static void blk_throtl_assoc_bio(struct bio *bio)
+-{
+-#ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+-	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+-#endif
+-}
+-
+ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
+ 		    struct bio *bio)
+ {
+@@ -2142,7 +2135,6 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
  
- #define bio_dev(bio) \
+ 	throtl_update_latency_buckets(td);
+ 
+-	blk_throtl_assoc_bio(bio);
+ 	blk_throtl_update_idletime(tg);
+ 
+ 	sq = &tg->service_queue;
+diff --git a/block/bounce.c b/block/bounce.c
+index 559c55bda040..cfb96d5170d0 100644
+--- a/block/bounce.c
++++ b/block/bounce.c
+@@ -278,6 +278,7 @@ static struct bio *bounce_clone_bio(struct bio *bio_src, gfp_t gfp_mask,
+ 	}
+ 
+ 	bio_clone_blkcg_association(bio, bio_src);
++	blkcg_bio_issue_init(bio);
+ 
+ 	return bio;
+ }
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index c08e96e521ed..f09752968c2a 100644
+index f09752968c2a..8b069c3775ee 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -21,6 +21,7 @@
- #include <linux/blkdev.h>
- #include <linux/atomic.h>
- #include <linux/kthread.h>
-+#include <linux/fs.h>
+@@ -800,6 +800,12 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
+ 				  struct bio *bio) { return false; }
+ #endif
  
- /* percpu_counter batch for blkg_[rw]stats, per-cpu drift doesn't matter */
- #define BLKG_STAT_CPU_BATCH	(INT_MAX / 2)
-@@ -802,21 +803,23 @@ static inline bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg
++
++static inline void blkcg_bio_issue_init(struct bio *bio)
++{
++	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
++}
++
  static inline bool blkcg_bio_issue_check(struct request_queue *q,
  					 struct bio *bio)
  {
--	struct blkcg *blkcg;
- 	struct blkcg_gq *blkg;
- 	bool throtl = false;
- 
--	rcu_read_lock();
-+	if (!bio->bi_blkg) {
-+		char b[BDEVNAME_SIZE];
-+
-+		WARN_ONCE(1,
-+			  "no blkg associated for bio on block-device: %s\n",
-+			  bio_devname(bio, b));
-+		bio_associate_blkg(bio);
-+	}
- 
--	/* associate blkcg if bio hasn't attached one */
--	bio_associate_blkcg(bio, NULL);
--	blkcg = bio_blkcg(bio);
--	blkg = blkg_lookup_create(blkcg, q);
-+	blkg = bio->bi_blkg;
- 
- 	throtl = blk_throtl_bio(q, blkg, bio);
- 
- 	if (!throtl) {
--		blkg = blkg ?: q->root_blkg;
- 		/*
- 		 * If the bio is flagged with BIO_QUEUE_ENTERED it means this
- 		 * is a split bio and we would have already accounted for the
-@@ -828,7 +831,6 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+@@ -831,6 +837,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
  		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
  	}
  
--	rcu_read_unlock();
++	blkcg_bio_issue_init(bio);
++
  	return !throtl;
  }
+ 
+@@ -936,6 +944,7 @@ static inline char *blkg_path(struct blkcg_gq *blkg) { return NULL; }
+ static inline void blkg_get(struct blkcg_gq *blkg) { }
+ static inline void blkg_put(struct blkcg_gq *blkg) { }
+ 
++static inline void blkcg_bio_issue_init(struct bio *bio) { }
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio) { return true; }
  
 -- 
 2.17.1
