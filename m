@@ -1,114 +1,142 @@
-From: Dennis Zhou <dennis@kernel.org>
-Subject: Re: [PATCH 05/14] dm: set the static flush bio device on demand
-Date: Tue, 4 Dec 2018 17:15:23 -0500
-Message-ID: <20181204221523.GA14183@dennisz-mbp.dhcp.thefacebook.com>
-References: <20181204183600.99746-1-dennis@kernel.org>
- <20181204183600.99746-6-dennis@kernel.org>
- <20181204202807.GA4689@redhat.com>
+From: Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [Intel-gfx] [PATCH RFC 2/5] cgroup: Add mechanism to register
+ vendor specific DRM devices
+Date: Wed, 05 Dec 2018 16:20:08 +0200
+Message-ID: <154401960831.13649.10355701332486999347@jlahtine-desk.ger.corp.intel.com>
+References: <20181120185814.13362-1-Kenny.Ho@amd.com>
+ <20181120185814.13362-3-Kenny.Ho@amd.com>
+ <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
+ <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>
+ <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
+ <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
+ <154331198147.4538.9472338565824691695@jlahtine-desk.ger.corp.intel.com>
+ <DM5PR12MB12263983A136E378F46A525D83D00@DM5PR12MB1226.namprd12.prod.outlook.com>
+ <154339645444.5339.6291298808444340104@jlahtine-desk.ger.corp.intel.com>
+ <219f8754-3e14-05ad-07a3-6cddb8bb74aa@amd.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181204202807.GA4689@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Dennis Zhou <dennis@kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <219f8754-3e14-05ad-07a3-6cddb8bb74aa-5C7GfCeVMHo@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: "Ho, Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kasiviswanathan,
+ Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>, "Kuehling,
+ Felix" <Felix.Kuehling-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 
-On Tue, Dec 04, 2018 at 03:28:07PM -0500, Mike Snitzer wrote:
-> On Tue, Dec 04 2018 at  1:35pm -0500,
-> Dennis Zhou <dennis@kernel.org> wrote:
-> 
-> > The next patch changes the macro bio_set_dev() to associate a bio with a
-> > blkg based on the device set. However, dm creates a static bio to be
-> > used as the basis for cloning empty flush bios on creation. The
-> > bio_set_dev() call in alloc_dev() will cause problems with the next
-> > patch adding association to bio_set_dev() because the call is before the
-> > bdev is associated with a gendisk (bd_disk is %NULL). To get around
-> > this, set the device on the static bio every time and use that to clone
-> > to the other bios.
-> > 
-> > Signed-off-by: Dennis Zhou <dennis@kernel.org>
-> > Cc: Alasdair Kergon <agk@redhat.com>
-> > Cc: Mike Snitzer <snitzer@redhat.com>
-> > ---
-> >  block/bio.c     |  1 +
-> >  drivers/md/dm.c | 12 +++++++++++-
-> >  2 files changed, 12 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/block/bio.c b/block/bio.c
-> > index 452b8e79b998..41ebb3f8e2fc 100644
-> > --- a/block/bio.c
-> > +++ b/block/bio.c
-> > @@ -2021,6 +2021,7 @@ void bio_disassociate_blkg(struct bio *bio)
-> >  		bio->bi_blkg = NULL;
-> >  	}
-> >  }
-> > +EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
-> >  
-> >  /**
-> >   * __bio_associate_blkg - associate a bio with the a blkg
-> > diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> > index a733e4c920af..a2d6f8b33d23 100644
-> > --- a/drivers/md/dm.c
-> > +++ b/drivers/md/dm.c
-> > @@ -1417,10 +1417,21 @@ static int __send_empty_flush(struct clone_info *ci)
-> >  	unsigned target_nr = 0;
-> >  	struct dm_target *ti;
-> >  
-> > +	/*
-> > +	 * Empty flush uses a statically initialized bio as the base for
-> > +	 * cloning, &md->flush_bio.  However, blkg association requires that
-> 
-> Would prefer:
-> "Empty flush uses a statically initialized bio, &md->flush_bio, as the
-> base for cloning.  ..."
-> 
-
-Cool, that reads better.
-
-> > +	 * a bdev is associated with a gendisk, which doesn't happen until the
-> > +	 * bdev is opened.  So, blkg association is done at issue time of the
-> > +	 * flush rather than when the device is created in dm_alloc().
-> 
-> Another nit but I think you mean "alloc_dev()" here .......^
-> 
-
-Yeah, I did mean alloc_dev(). Fixed.
-
-> > +	 */
-> > +	bio_set_dev(ci->bio, ci->io->md->bdev);
-> > +
-> >  	BUG_ON(bio_has_data(ci->bio));
-> >  	while ((ti = dm_table_get_target(ci->map, target_nr++)))
-> >  		__send_duplicate_bios(ci, ti, ti->num_flush_bios, NULL);
-> >  
-> > +	bio_disassociate_blkg(ci->bio);
-> > +
-> >  	return 0;
-> >  }
-> >  
-> > @@ -1939,7 +1950,6 @@ static struct mapped_device *alloc_dev(int minor)
-> >  		goto bad;
-> >  
-> >  	bio_init(&md->flush_bio, NULL, 0);
-> > -	bio_set_dev(&md->flush_bio, md->bdev);
-> >  	md->flush_bio.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
-> >  
-> >  	dm_stats_init(&md->stats);
-> 
-> The top-level DM device's bdev->bd_disk is only assigned after the first
-> blkdev_get(), so I can see why this is needed.
-> 
-> Think this type of life-cycle quirk was the kind of thing that caused
-> blk cgroup issues with DM.
-> 
-> Left wondering whether there would be a better way of handling N flush
-> bios for DM devices.  But for the now this will have to do.
-> 
-> Acked-by: Mike Snitzer <snitzer@redhat.com>
-> 
-
-Thanks,
-Dennis
+UXVvdGluZyBLdWVobGluZywgRmVsaXggKDIwMTgtMTItMDMgMjI6NTU6MTYpCj4gCj4gT24gMjAx
+OC0xMS0yOCA0OjE0IGEubS4sIEpvb25hcyBMYWh0aW5lbiB3cm90ZToKPiA+IFF1b3RpbmcgSG8s
+IEtlbm55ICgyMDE4LTExLTI3IDE3OjQxOjE3KQo+ID4+IE9uIFR1ZSwgTm92IDI3LCAyMDE4IGF0
+IDQ6NDYgQU0gSm9vbmFzIExhaHRpbmVuIDxqb29uYXMubGFodGluZW5AbGludXguaW50ZWwuY29t
+PiB3cm90ZToKPiA+Pj4gSSB0aGluayBhIG1vcmUgYWJzdHJhY3QgcHJvcGVydHkgIiUgb2YgR1BV
+IChwcm9jZXNzaW5nIHBvd2VyKSIgbWlnaHQKPiA+Pj4gYmUgYSBtb3JlIHVuaXZlcnNhbCBhcHBy
+b2FjaC4gT25lIGNhbiB0aGVuIGltcGxlbWVudCB0aGF0IHRocm91Z2gKPiA+Pj4gc3ViZGl2aWRp
+bmcgdGhlIHJlc291cmNlcyBvciB0aW1lc2xpY2luZyB0aGVtLCBkZXBlbmRpbmcgb24gdGhlIEdQ
+VQo+ID4+PiB0b3BvbG9neS4KPiA+Pj4KPiA+Pj4gTGVhc2luZyAxLzh0aCwgMS80dGggb3IgMS8y
+IG9mIHRoZSBHUFUgd291bGQgcHJvYmFibHkgYmUgdGhlIG1vc3QKPiA+Pj4gYXBwbGljYWJsZSB0
+byBjbG91ZCBwcm92aWRlciB1c2VjYXNlcywgdG9vLiBBdCBsZWFzdCB0aGF0J3Mgd2hhdCBJCj4g
+Pj4+IHNlZSBkb25lIGZvciB0aGUgQ1BVcyB0b2RheS4KPiA+PiBJIHRoaW5rIHRoZXJlIGFyZSBv
+cHBvcnR1bml0aWVzIHRvIHNsaWNlIHRoZSBncHUgaW4gbW9yZSB0aGFuIG9uZSB3YXkgKHNpbWls
+YXIgdG8gdGhlIHdheSBpdCBpcyBkb25lIGZvciBjcHUuKSAgV2UgY2FuIHBvdGVudGlhbGx5IGZy
+YW1lIHJlc291cmNlcyBhcyBjb250aW51b3VzIG9yIGRpc2NyZXRlLiAgUGVyY2VudGFnZSBkZWZp
+bml0ZWx5IGZpdHMgd2VsbCBmb3IgY29udGludW91cyBtZWFzdXJlbWVudHMgc3VjaCBhcyB0aW1l
+L3RpbWUgc2xpY2VzIGJ1dCBJIHRoaW5rIHRoZXJlIGFyZSBwbGFjZXMgZm9yIGRpc2NyZXRlIHVu
+aXRzIHN1Y2ggYXMgY29yZSBjb3VudHMgYXMgd2VsbC4KPiA+IEkgdGhpbmsgdGhlIGFzayBpbiBy
+ZXR1cm4gdG8gdGhlIGVhcmx5IHNlcmllcyBmcm9tIEludGFsIHdhcyB0byBhZ3JlZQo+ID4gb24g
+dGhlIHZhcmlhYmxlcyB0aGF0IGNvdWxkIGJlIGNvbW1vbiB0byBhbGwgb2YgRFJNIHN1YnN5c3Rl
+bS4KPiA+Cj4gPiBTbyB3ZSBjYW4gb25seSBjaG9vc2UgdGhlIGxvd2VzdCBjb21tb24gZGVub21p
+bmF0b3IsIHJpZ2h0Pwo+ID4KPiA+IEFueSBjb3JlIGNvdW50IG91dCBvZiB0b3RhbCBjb3JlIGNv
+dW50IHNob3VsZCB0cmFuc2xhdGUgbmljZWx5IGludG8gYQo+ID4gZnJhY3Rpb24sIHNvIHdoYXQg
+d291bGQgYmUgdGhlIHByb2JsZW0gd2l0aCBwZXJjZW50YWdlIGFtb3VudHM/Cj4gSG93IHdvdWxk
+IHlvdSBoYW5kbGUgb3ZlcmNvbW1pdG1lbnQgd2l0aCBhIHBlcmNlbnRhZ2U/IFRoYXQgaXMsIG1v
+cmUKPiB0aGFuIDEwMCUgb2YgdGhlIEdQVSBjb3JlcyBhc3NpZ25lZCB0byBjZ3JvdXBzLiBXaGlj
+aCBjZ3JvdXBzIGVuZCB1cAo+IHNoYXJpbmcgY29yZXMgd291bGQgYmUgdXAgdG8gY2hhbmNlLgoK
+SSBzZWUgeW91ciBwb2ludC4gV2l0aCB0aW1lLXNsaWNpbmcsIHlvdSByZWFsbHkgY2FuJ3Qgb3Zl
+cmNvbW1pdC4gU28gd291bGQKYXNzdW1lIHRoYXQgdGhlcmUgd291bGQgaGF2ZSB0byBiZSBzZWNv
+bmQgbGV2ZWwgb2YgZGV0YWlsIHByb3ZpZGVkIGZvcgpvdmVyY29tbWl0dGluZyAoYW5kIGRlY2lk
+aW5nIHdoaWNoIGNncm91cHMgYXJlIHRvIHNoYXJlIEdQVSBjb3JlcykuCgo+IElmIHdlIGFsbG93
+IHNwZWNpZnlpbmcgYSBzZXQgb2YgR1BVIGNvcmVzLCB3ZSBjYW4gYmUgbW9yZSBzcGVjaWZpYyBp
+bgo+IGFzc2lnbmluZyBhbmQgc2hhcmluZyByZXNvdXJjZXMgYmV0d2VlbiBjZ3JvdXBzLgoKQXMg
+TWF0dCBvdXRsaW5lZCBpbiB0aGUgb3RoZXIgcmVwbHkgdG8gdGhpcyB0aHJlYWQsIHdlIGRvbid0
+IHJlYWxseSBoYXZlCnRoZSBjb25jZXB0IG9mIEdQVSBjb3Jlcy4gV2UgZG8gaGF2ZSB0aGUgY29t
+bWFuZCBzdHJlYW1lcnMsIGJ1dCB0aGUKZ3JhbnVsYXJpdHkgaXMgYml0IGxvdy4KCkluIHlvdXIg
+YXJjaGl0ZWN0dXJlLCBkb2VzIGl0IG1hdHRlciB3aGljaCBzcGVjaWZpYyBjb3JlcyBhcmUgc2hh
+cmVkLCBvcgppcyBpdCBqdXN0IGEgcXVlc3Rpb24gb2Ygd2hpY2ggc3BlY2lmaWMgY2dyb3VwcyB3
+b3VsZCBzaGFyZSBzb21lIGNvcmVzCmluIGNhc2Ugb2Ygb3ZlcmNvbW1pdD8KCklmIHdlIHRhY2sg
+aW4gdGhlIHByaW9yaXR5IGluIGFkZGl0aW9uIHRvIHRoZSBwZXJjZW50YWdlLCB5b3UgY291bGQg
+bWFrZQphIGNob2ljZSB0byBzaGFyZSBjb3JlcyBvbmx5IGF0IGFuIGlkZW50aWNhbCBwcmlvcml0
+eSBsZXZlbCBvbmx5LiBUaGF0J2QKbWVhbiB0aGF0IGluIHRoZSBjYXNlIG9mIG92ZXJjb21taXQs
+IHlvdSdkIGFpbSB0byBrZWVwIGFzIG1hbnkgaGlnaApwcmlvcml0eSBsZXZlbHMgZnJlZSBvZiBv
+dmVyY29tbWl0IGFzIHBvc3NpYmxlIGFuZCB0aGVuIGZvciBsb3dlcgpwcmlvcml0eSBjZ3JvdXBz
+IHlvdSdkIHN0YXJ0IG92ZXJjb21taXR0aW5nLgoKV291bGQgdGhhdCBldmVuIHBhcnRpYWxseSBh
+ZGRyZXNzIHRoZSBjb25jZXJuPwoKUmVnYXJkcywgSm9vbmFzCgo+IAo+IFJlZ2FyZHMsCj4gwqAg
+RmVsaXgKPiAKPiAKPiA+Cj4gPiBSZWdhcmRzLCBKb29uYXMKPiA+Cj4gPj4gUmVnYXJkcywKPiA+
+PiBLZW5ueQo+ID4+Cj4gPj4+IFRoYXQgY29tYmluZWQgd2l0aCB0aGUgIkdQVSBtZW1vcnkgdXNh
+YmxlIiBwcm9wZXJ0eSBzaG91bGQgYmUgYSBnb29kCj4gPj4+IHN0YXJ0aW5nIHBvaW50IHRvIHN0
+YXJ0IHN1YmRpdmlkaW5nIHRoZSBHUFUgcmVzb3VyY2VzIGZvciBtdWx0aXBsZQo+ID4+PiB1c2Vy
+cy4KPiA+Pj4KPiA+Pj4gUmVnYXJkcywgSm9vbmFzCj4gPj4+Cj4gPj4+PiBZb3VyIGZlZWRiYWNr
+IGlzIGhpZ2hseSBhcHByZWNpYXRlZC4KPiA+Pj4+Cj4gPj4+PiBCZXN0IFJlZ2FyZHMsCj4gPj4+
+PiBIYXJpc2gKPiA+Pj4+Cj4gPj4+Pgo+ID4+Pj4KPiA+Pj4+IEZyb206IGFtZC1nZnggPGFtZC1n
+ZngtYm91bmNlc0BsaXN0cy5mcmVlZGVza3RvcC5vcmc+IG9uIGJlaGFsZiBvZiBUZWp1biBIZW8g
+PHRqQGtlcm5lbC5vcmc+Cj4gPj4+PiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAyMCwgMjAxOCA1
+OjMwIFBNCj4gPj4+PiBUbzogSG8sIEtlbm55Cj4gPj4+PiBDYzogY2dyb3Vwc0B2Z2VyLmtlcm5l
+bC5vcmc7IGludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IHkya2VubnlAZ21haWwuY29t
+OyBhbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZzsgZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNr
+dG9wLm9yZwo+ID4+Pj4gU3ViamVjdDogUmU6IFtQQVRDSCBSRkMgMi81XSBjZ3JvdXA6IEFkZCBt
+ZWNoYW5pc20gdG8gcmVnaXN0ZXIgdmVuZG9yIHNwZWNpZmljIERSTSBkZXZpY2VzCj4gPj4+Pgo+
+ID4+Pj4KPiA+Pj4+IEhlbGxvLAo+ID4+Pj4KPiA+Pj4+IE9uIFR1ZSwgTm92IDIwLCAyMDE4IGF0
+IDEwOjIxOjE0UE0gKzAwMDAsIEhvLCBLZW5ueSB3cm90ZToKPiA+Pj4+PiBCeSB0aGlzIHJlcGx5
+LCBhcmUgeW91IHN1Z2dlc3RpbmcgdGhhdCB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2VzCj4gPj4+
+Pj4gd2lsbCBuZXZlciBiZSBhY2NlcHRhYmxlIHRvIGJlIG1hbmFnZWQgdW5kZXIgY2dyb3VwPyAg
+TGV0IHNheSBhIHVzZXIKPiA+Pj4+IEkgd291bGRuJ3Qgc2F5IG5ldmVyIGJ1dCB3aGF0ZXZlciB3
+aGljaCBnZXRzIGluY2x1ZGVkIGFzIGEgY2dyb3VwCj4gPj4+PiBjb250cm9sbGVyIHNob3VsZCBo
+YXZlIGNsZWFybHkgZGVmaW5lZCByZXNvdXJjZSBhYnN0cmFjdGlvbnMgYW5kIHRoZQo+ID4+Pj4g
+Y29udHJvbCBzY2hlbWVzIGFyb3VuZCB0aGVtIGluY2x1ZGluZyBzdXBwb3J0IGZvciBkZWxlZ2F0
+aW9uLiAgQUZBSUNTLAo+ID4+Pj4gZ3B1IHNpZGUgc3RpbGwgc2VlbXMgdG8gaGF2ZSBhIGxvbmcg
+d2F5IHRvIGdvIChhbmQgaXQncyBub3QgY2xlYXIKPiA+Pj4+IHdoZXRoZXIgdGhhdCdzIHNvbWV3
+aGVyZSBpdCB3aWxsIG9yIG5lZWRzIHRvIGVuZCB1cCkuCj4gPj4+Pgo+ID4+Pj4+IHdhbnQgdG8g
+aGF2ZSBzaW1pbGFyIGZ1bmN0aW9uYWxpdHkgYXMgd2hhdCBjZ3JvdXAgaXMgb2ZmZXJpbmcgYnV0
+IHRvCj4gPj4+Pj4gbWFuYWdlIHZlbmRvciBzcGVjaWZpYyByZXNvdXJjZXMsIHdoYXQgd291bGQg
+eW91IHN1Z2dlc3QgYXMgYQo+ID4+Pj4+IHNvbHV0aW9uPyAgV2hlbiB5b3Ugc2F5IGtlZXBpbmcg
+dmVuZG9yIHNwZWNpZmljIHJlc291cmNlIHJlZ3VsYXRpb24KPiA+Pj4+PiBpbnNpZGUgZHJtIG9y
+IHNwZWNpZmljIGRyaXZlcnMsIGRvIHlvdSBtZWFuIHdlIHNob3VsZCByZXBsaWNhdGUgdGhlCj4g
+Pj4+Pj4gY2dyb3VwIGluZnJhc3RydWN0dXJlIHRoZXJlIG9yIGRvIHlvdSBtZWFuIGVpdGhlciBk
+cm0gb3Igc3BlY2lmaWMKPiA+Pj4+PiBkcml2ZXIgc2hvdWxkIHF1ZXJ5IGV4aXN0aW5nIGhpZXJh
+cmNoeSAoc3VjaCBhcyBkZXZpY2Ugb3IgcGVyaGFwcwo+ID4+Pj4+IGNwdSkgZm9yIHRoZSBwcm9j
+ZXNzIG9yZ2FuaXphdGlvbiBpbmZvcm1hdGlvbj8KPiA+Pj4+Pgo+ID4+Pj4+IFRvIHB1dCB0aGUg
+cXVlc3Rpb25zIGluIG1vcmUgY29uY3JldGUgdGVybXMsIGxldCBzYXkgYSB1c2VyIHdhbnRzIHRv
+Cj4gPj4+Pj4gZXhwb3NlIGNlcnRhaW4gcGFydCBvZiBhIGdwdSB0byBhIHBhcnRpY3VsYXIgY2dy
+b3VwIHNpbWlsYXIgdG8gdGhlCj4gPj4+Pj4gd2F5IHNlbGVjdGl2ZSBjcHUgY29yZXMgYXJlIGV4
+cG9zZWQgdG8gYSBjZ3JvdXAgdmlhIGNwdXNldCwgaG93Cj4gPj4+Pj4gc2hvdWxkIHdlIGdvIGFi
+b3V0IGVuYWJsaW5nIHN1Y2ggZnVuY3Rpb25hbGl0eT8KPiA+Pj4+IERvIHdoYXQgdGhlIGludGVs
+IGRyaXZlciBvciBicGYgaXMgZG9pbmc/ICBJdCdzIG5vdCBkaWZmaWN1bHQgdG8gaG9vawo+ID4+
+Pj4gaW50byBjZ3JvdXAgZm9yIGlkZW50aWZpY2F0aW9uIHB1cnBvc2VzLgo+ID4+Pj4KPiA+Pj4+
+IFRoYW5rcy4KPiA+Pj4+Cj4gPj4+PiAtLQo+ID4+Pj4gdGVqdW4KPiA+Pj4+IF9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPj4+PiBhbWQtZ2Z4IG1haWxp
+bmcgbGlzdAo+ID4+Pj4gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+Pj4+IGh0dHBz
+Oi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeAo+ID4+Pj4K
+PiA+Pj4+Cj4gPj4+PiBhbWQtZ2Z4IEluZm8gUGFnZSAtIGZyZWVkZXNrdG9wLm9yZwo+ID4+Pj4g
+bGlzdHMuZnJlZWRlc2t0b3Aub3JnCj4gPj4+PiBUbyBzZWUgdGhlIGNvbGxlY3Rpb24gb2YgcHJp
+b3IgcG9zdGluZ3MgdG8gdGhlIGxpc3QsIHZpc2l0IHRoZSBhbWQtZ2Z4IEFyY2hpdmVzLi4gVXNp
+bmcgYW1kLWdmeDogVG8gcG9zdCBhIG1lc3NhZ2UgdG8gYWxsIHRoZSBsaXN0IG1lbWJlcnMsIHNl
+bmQgZW1haWwgdG8gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcuIFlvdSBjYW4gc3Vic2Ny
+aWJlIHRvIHRoZSBsaXN0LCBvciBjaGFuZ2UgeW91ciBleGlzdGluZyBzdWJzY3JpcHRpb24sIGlu
+IHRoZSBzZWN0aW9ucyBiZWxvdy4KPiA+Pj4+Cj4gPj4+PiBfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwo+ID4+Pj4gSW50ZWwtZ2Z4IG1haWxpbmcgbGlzdAo+
+ID4+Pj4gSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwo+ID4+Pj4gaHR0cHM6Ly9saXN0
+cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngKPiA+IF9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPiBhbWQtZ2Z4IG1haWxp
+bmcgbGlzdAo+ID4gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+IGh0dHBzOi8vbGlz
+dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeApfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlzdAph
+bWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9y
+Zy9tYWlsbWFuL2xpc3RpbmZvL2FtZC1nZngK
