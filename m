@@ -1,142 +1,145 @@
-From: Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [Intel-gfx] [PATCH RFC 2/5] cgroup: Add mechanism to register
- vendor specific DRM devices
-Date: Wed, 05 Dec 2018 16:20:08 +0200
-Message-ID: <154401960831.13649.10355701332486999347@jlahtine-desk.ger.corp.intel.com>
-References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20181120185814.13362-3-Kenny.Ho@amd.com>
- <20181120202141.GA2509588@devbig004.ftw2.facebook.com>
- <DM5PR12MB1226E972538A45325114ADF683D90@DM5PR12MB1226.namprd12.prod.outlook.com>
- <20181120223018.GB2509588@devbig004.ftw2.facebook.com>
- <BL0PR12MB23402885843A36223A1863908CD70@BL0PR12MB2340.namprd12.prod.outlook.com>
- <154331198147.4538.9472338565824691695@jlahtine-desk.ger.corp.intel.com>
- <DM5PR12MB12263983A136E378F46A525D83D00@DM5PR12MB1226.namprd12.prod.outlook.com>
- <154339645444.5339.6291298808444340104@jlahtine-desk.ger.corp.intel.com>
- <219f8754-3e14-05ad-07a3-6cddb8bb74aa@amd.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <219f8754-3e14-05ad-07a3-6cddb8bb74aa-5C7GfCeVMHo@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: "Ho, Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kasiviswanathan,
- Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>, "Kuehling,
- Felix" <Felix.Kuehling-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+From: Dennis Zhou <dennis@kernel.org>
+Subject: [PATCH v6 00/14] block: always associate blkg and refcount cleanup
+Date: Wed,  5 Dec 2018 12:10:25 -0500
+Message-ID: <20181205171039.73066-1-dennis@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-UXVvdGluZyBLdWVobGluZywgRmVsaXggKDIwMTgtMTItMDMgMjI6NTU6MTYpCj4gCj4gT24gMjAx
-OC0xMS0yOCA0OjE0IGEubS4sIEpvb25hcyBMYWh0aW5lbiB3cm90ZToKPiA+IFF1b3RpbmcgSG8s
-IEtlbm55ICgyMDE4LTExLTI3IDE3OjQxOjE3KQo+ID4+IE9uIFR1ZSwgTm92IDI3LCAyMDE4IGF0
-IDQ6NDYgQU0gSm9vbmFzIExhaHRpbmVuIDxqb29uYXMubGFodGluZW5AbGludXguaW50ZWwuY29t
-PiB3cm90ZToKPiA+Pj4gSSB0aGluayBhIG1vcmUgYWJzdHJhY3QgcHJvcGVydHkgIiUgb2YgR1BV
-IChwcm9jZXNzaW5nIHBvd2VyKSIgbWlnaHQKPiA+Pj4gYmUgYSBtb3JlIHVuaXZlcnNhbCBhcHBy
-b2FjaC4gT25lIGNhbiB0aGVuIGltcGxlbWVudCB0aGF0IHRocm91Z2gKPiA+Pj4gc3ViZGl2aWRp
-bmcgdGhlIHJlc291cmNlcyBvciB0aW1lc2xpY2luZyB0aGVtLCBkZXBlbmRpbmcgb24gdGhlIEdQ
-VQo+ID4+PiB0b3BvbG9neS4KPiA+Pj4KPiA+Pj4gTGVhc2luZyAxLzh0aCwgMS80dGggb3IgMS8y
-IG9mIHRoZSBHUFUgd291bGQgcHJvYmFibHkgYmUgdGhlIG1vc3QKPiA+Pj4gYXBwbGljYWJsZSB0
-byBjbG91ZCBwcm92aWRlciB1c2VjYXNlcywgdG9vLiBBdCBsZWFzdCB0aGF0J3Mgd2hhdCBJCj4g
-Pj4+IHNlZSBkb25lIGZvciB0aGUgQ1BVcyB0b2RheS4KPiA+PiBJIHRoaW5rIHRoZXJlIGFyZSBv
-cHBvcnR1bml0aWVzIHRvIHNsaWNlIHRoZSBncHUgaW4gbW9yZSB0aGFuIG9uZSB3YXkgKHNpbWls
-YXIgdG8gdGhlIHdheSBpdCBpcyBkb25lIGZvciBjcHUuKSAgV2UgY2FuIHBvdGVudGlhbGx5IGZy
-YW1lIHJlc291cmNlcyBhcyBjb250aW51b3VzIG9yIGRpc2NyZXRlLiAgUGVyY2VudGFnZSBkZWZp
-bml0ZWx5IGZpdHMgd2VsbCBmb3IgY29udGludW91cyBtZWFzdXJlbWVudHMgc3VjaCBhcyB0aW1l
-L3RpbWUgc2xpY2VzIGJ1dCBJIHRoaW5rIHRoZXJlIGFyZSBwbGFjZXMgZm9yIGRpc2NyZXRlIHVu
-aXRzIHN1Y2ggYXMgY29yZSBjb3VudHMgYXMgd2VsbC4KPiA+IEkgdGhpbmsgdGhlIGFzayBpbiBy
-ZXR1cm4gdG8gdGhlIGVhcmx5IHNlcmllcyBmcm9tIEludGFsIHdhcyB0byBhZ3JlZQo+ID4gb24g
-dGhlIHZhcmlhYmxlcyB0aGF0IGNvdWxkIGJlIGNvbW1vbiB0byBhbGwgb2YgRFJNIHN1YnN5c3Rl
-bS4KPiA+Cj4gPiBTbyB3ZSBjYW4gb25seSBjaG9vc2UgdGhlIGxvd2VzdCBjb21tb24gZGVub21p
-bmF0b3IsIHJpZ2h0Pwo+ID4KPiA+IEFueSBjb3JlIGNvdW50IG91dCBvZiB0b3RhbCBjb3JlIGNv
-dW50IHNob3VsZCB0cmFuc2xhdGUgbmljZWx5IGludG8gYQo+ID4gZnJhY3Rpb24sIHNvIHdoYXQg
-d291bGQgYmUgdGhlIHByb2JsZW0gd2l0aCBwZXJjZW50YWdlIGFtb3VudHM/Cj4gSG93IHdvdWxk
-IHlvdSBoYW5kbGUgb3ZlcmNvbW1pdG1lbnQgd2l0aCBhIHBlcmNlbnRhZ2U/IFRoYXQgaXMsIG1v
-cmUKPiB0aGFuIDEwMCUgb2YgdGhlIEdQVSBjb3JlcyBhc3NpZ25lZCB0byBjZ3JvdXBzLiBXaGlj
-aCBjZ3JvdXBzIGVuZCB1cAo+IHNoYXJpbmcgY29yZXMgd291bGQgYmUgdXAgdG8gY2hhbmNlLgoK
-SSBzZWUgeW91ciBwb2ludC4gV2l0aCB0aW1lLXNsaWNpbmcsIHlvdSByZWFsbHkgY2FuJ3Qgb3Zl
-cmNvbW1pdC4gU28gd291bGQKYXNzdW1lIHRoYXQgdGhlcmUgd291bGQgaGF2ZSB0byBiZSBzZWNv
-bmQgbGV2ZWwgb2YgZGV0YWlsIHByb3ZpZGVkIGZvcgpvdmVyY29tbWl0dGluZyAoYW5kIGRlY2lk
-aW5nIHdoaWNoIGNncm91cHMgYXJlIHRvIHNoYXJlIEdQVSBjb3JlcykuCgo+IElmIHdlIGFsbG93
-IHNwZWNpZnlpbmcgYSBzZXQgb2YgR1BVIGNvcmVzLCB3ZSBjYW4gYmUgbW9yZSBzcGVjaWZpYyBp
-bgo+IGFzc2lnbmluZyBhbmQgc2hhcmluZyByZXNvdXJjZXMgYmV0d2VlbiBjZ3JvdXBzLgoKQXMg
-TWF0dCBvdXRsaW5lZCBpbiB0aGUgb3RoZXIgcmVwbHkgdG8gdGhpcyB0aHJlYWQsIHdlIGRvbid0
-IHJlYWxseSBoYXZlCnRoZSBjb25jZXB0IG9mIEdQVSBjb3Jlcy4gV2UgZG8gaGF2ZSB0aGUgY29t
-bWFuZCBzdHJlYW1lcnMsIGJ1dCB0aGUKZ3JhbnVsYXJpdHkgaXMgYml0IGxvdy4KCkluIHlvdXIg
-YXJjaGl0ZWN0dXJlLCBkb2VzIGl0IG1hdHRlciB3aGljaCBzcGVjaWZpYyBjb3JlcyBhcmUgc2hh
-cmVkLCBvcgppcyBpdCBqdXN0IGEgcXVlc3Rpb24gb2Ygd2hpY2ggc3BlY2lmaWMgY2dyb3VwcyB3
-b3VsZCBzaGFyZSBzb21lIGNvcmVzCmluIGNhc2Ugb2Ygb3ZlcmNvbW1pdD8KCklmIHdlIHRhY2sg
-aW4gdGhlIHByaW9yaXR5IGluIGFkZGl0aW9uIHRvIHRoZSBwZXJjZW50YWdlLCB5b3UgY291bGQg
-bWFrZQphIGNob2ljZSB0byBzaGFyZSBjb3JlcyBvbmx5IGF0IGFuIGlkZW50aWNhbCBwcmlvcml0
-eSBsZXZlbCBvbmx5LiBUaGF0J2QKbWVhbiB0aGF0IGluIHRoZSBjYXNlIG9mIG92ZXJjb21taXQs
-IHlvdSdkIGFpbSB0byBrZWVwIGFzIG1hbnkgaGlnaApwcmlvcml0eSBsZXZlbHMgZnJlZSBvZiBv
-dmVyY29tbWl0IGFzIHBvc3NpYmxlIGFuZCB0aGVuIGZvciBsb3dlcgpwcmlvcml0eSBjZ3JvdXBz
-IHlvdSdkIHN0YXJ0IG92ZXJjb21taXR0aW5nLgoKV291bGQgdGhhdCBldmVuIHBhcnRpYWxseSBh
-ZGRyZXNzIHRoZSBjb25jZXJuPwoKUmVnYXJkcywgSm9vbmFzCgo+IAo+IFJlZ2FyZHMsCj4gwqAg
-RmVsaXgKPiAKPiAKPiA+Cj4gPiBSZWdhcmRzLCBKb29uYXMKPiA+Cj4gPj4gUmVnYXJkcywKPiA+
-PiBLZW5ueQo+ID4+Cj4gPj4+IFRoYXQgY29tYmluZWQgd2l0aCB0aGUgIkdQVSBtZW1vcnkgdXNh
-YmxlIiBwcm9wZXJ0eSBzaG91bGQgYmUgYSBnb29kCj4gPj4+IHN0YXJ0aW5nIHBvaW50IHRvIHN0
-YXJ0IHN1YmRpdmlkaW5nIHRoZSBHUFUgcmVzb3VyY2VzIGZvciBtdWx0aXBsZQo+ID4+PiB1c2Vy
-cy4KPiA+Pj4KPiA+Pj4gUmVnYXJkcywgSm9vbmFzCj4gPj4+Cj4gPj4+PiBZb3VyIGZlZWRiYWNr
-IGlzIGhpZ2hseSBhcHByZWNpYXRlZC4KPiA+Pj4+Cj4gPj4+PiBCZXN0IFJlZ2FyZHMsCj4gPj4+
-PiBIYXJpc2gKPiA+Pj4+Cj4gPj4+Pgo+ID4+Pj4KPiA+Pj4+IEZyb206IGFtZC1nZnggPGFtZC1n
-ZngtYm91bmNlc0BsaXN0cy5mcmVlZGVza3RvcC5vcmc+IG9uIGJlaGFsZiBvZiBUZWp1biBIZW8g
-PHRqQGtlcm5lbC5vcmc+Cj4gPj4+PiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAyMCwgMjAxOCA1
-OjMwIFBNCj4gPj4+PiBUbzogSG8sIEtlbm55Cj4gPj4+PiBDYzogY2dyb3Vwc0B2Z2VyLmtlcm5l
-bC5vcmc7IGludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IHkya2VubnlAZ21haWwuY29t
-OyBhbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZzsgZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNr
-dG9wLm9yZwo+ID4+Pj4gU3ViamVjdDogUmU6IFtQQVRDSCBSRkMgMi81XSBjZ3JvdXA6IEFkZCBt
-ZWNoYW5pc20gdG8gcmVnaXN0ZXIgdmVuZG9yIHNwZWNpZmljIERSTSBkZXZpY2VzCj4gPj4+Pgo+
-ID4+Pj4KPiA+Pj4+IEhlbGxvLAo+ID4+Pj4KPiA+Pj4+IE9uIFR1ZSwgTm92IDIwLCAyMDE4IGF0
-IDEwOjIxOjE0UE0gKzAwMDAsIEhvLCBLZW5ueSB3cm90ZToKPiA+Pj4+PiBCeSB0aGlzIHJlcGx5
-LCBhcmUgeW91IHN1Z2dlc3RpbmcgdGhhdCB2ZW5kb3Igc3BlY2lmaWMgcmVzb3VyY2VzCj4gPj4+
-Pj4gd2lsbCBuZXZlciBiZSBhY2NlcHRhYmxlIHRvIGJlIG1hbmFnZWQgdW5kZXIgY2dyb3VwPyAg
-TGV0IHNheSBhIHVzZXIKPiA+Pj4+IEkgd291bGRuJ3Qgc2F5IG5ldmVyIGJ1dCB3aGF0ZXZlciB3
-aGljaCBnZXRzIGluY2x1ZGVkIGFzIGEgY2dyb3VwCj4gPj4+PiBjb250cm9sbGVyIHNob3VsZCBo
-YXZlIGNsZWFybHkgZGVmaW5lZCByZXNvdXJjZSBhYnN0cmFjdGlvbnMgYW5kIHRoZQo+ID4+Pj4g
-Y29udHJvbCBzY2hlbWVzIGFyb3VuZCB0aGVtIGluY2x1ZGluZyBzdXBwb3J0IGZvciBkZWxlZ2F0
-aW9uLiAgQUZBSUNTLAo+ID4+Pj4gZ3B1IHNpZGUgc3RpbGwgc2VlbXMgdG8gaGF2ZSBhIGxvbmcg
-d2F5IHRvIGdvIChhbmQgaXQncyBub3QgY2xlYXIKPiA+Pj4+IHdoZXRoZXIgdGhhdCdzIHNvbWV3
-aGVyZSBpdCB3aWxsIG9yIG5lZWRzIHRvIGVuZCB1cCkuCj4gPj4+Pgo+ID4+Pj4+IHdhbnQgdG8g
-aGF2ZSBzaW1pbGFyIGZ1bmN0aW9uYWxpdHkgYXMgd2hhdCBjZ3JvdXAgaXMgb2ZmZXJpbmcgYnV0
-IHRvCj4gPj4+Pj4gbWFuYWdlIHZlbmRvciBzcGVjaWZpYyByZXNvdXJjZXMsIHdoYXQgd291bGQg
-eW91IHN1Z2dlc3QgYXMgYQo+ID4+Pj4+IHNvbHV0aW9uPyAgV2hlbiB5b3Ugc2F5IGtlZXBpbmcg
-dmVuZG9yIHNwZWNpZmljIHJlc291cmNlIHJlZ3VsYXRpb24KPiA+Pj4+PiBpbnNpZGUgZHJtIG9y
-IHNwZWNpZmljIGRyaXZlcnMsIGRvIHlvdSBtZWFuIHdlIHNob3VsZCByZXBsaWNhdGUgdGhlCj4g
-Pj4+Pj4gY2dyb3VwIGluZnJhc3RydWN0dXJlIHRoZXJlIG9yIGRvIHlvdSBtZWFuIGVpdGhlciBk
-cm0gb3Igc3BlY2lmaWMKPiA+Pj4+PiBkcml2ZXIgc2hvdWxkIHF1ZXJ5IGV4aXN0aW5nIGhpZXJh
-cmNoeSAoc3VjaCBhcyBkZXZpY2Ugb3IgcGVyaGFwcwo+ID4+Pj4+IGNwdSkgZm9yIHRoZSBwcm9j
-ZXNzIG9yZ2FuaXphdGlvbiBpbmZvcm1hdGlvbj8KPiA+Pj4+Pgo+ID4+Pj4+IFRvIHB1dCB0aGUg
-cXVlc3Rpb25zIGluIG1vcmUgY29uY3JldGUgdGVybXMsIGxldCBzYXkgYSB1c2VyIHdhbnRzIHRv
-Cj4gPj4+Pj4gZXhwb3NlIGNlcnRhaW4gcGFydCBvZiBhIGdwdSB0byBhIHBhcnRpY3VsYXIgY2dy
-b3VwIHNpbWlsYXIgdG8gdGhlCj4gPj4+Pj4gd2F5IHNlbGVjdGl2ZSBjcHUgY29yZXMgYXJlIGV4
-cG9zZWQgdG8gYSBjZ3JvdXAgdmlhIGNwdXNldCwgaG93Cj4gPj4+Pj4gc2hvdWxkIHdlIGdvIGFi
-b3V0IGVuYWJsaW5nIHN1Y2ggZnVuY3Rpb25hbGl0eT8KPiA+Pj4+IERvIHdoYXQgdGhlIGludGVs
-IGRyaXZlciBvciBicGYgaXMgZG9pbmc/ICBJdCdzIG5vdCBkaWZmaWN1bHQgdG8gaG9vawo+ID4+
-Pj4gaW50byBjZ3JvdXAgZm9yIGlkZW50aWZpY2F0aW9uIHB1cnBvc2VzLgo+ID4+Pj4KPiA+Pj4+
-IFRoYW5rcy4KPiA+Pj4+Cj4gPj4+PiAtLQo+ID4+Pj4gdGVqdW4KPiA+Pj4+IF9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPj4+PiBhbWQtZ2Z4IG1haWxp
-bmcgbGlzdAo+ID4+Pj4gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+Pj4+IGh0dHBz
-Oi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeAo+ID4+Pj4K
-PiA+Pj4+Cj4gPj4+PiBhbWQtZ2Z4IEluZm8gUGFnZSAtIGZyZWVkZXNrdG9wLm9yZwo+ID4+Pj4g
-bGlzdHMuZnJlZWRlc2t0b3Aub3JnCj4gPj4+PiBUbyBzZWUgdGhlIGNvbGxlY3Rpb24gb2YgcHJp
-b3IgcG9zdGluZ3MgdG8gdGhlIGxpc3QsIHZpc2l0IHRoZSBhbWQtZ2Z4IEFyY2hpdmVzLi4gVXNp
-bmcgYW1kLWdmeDogVG8gcG9zdCBhIG1lc3NhZ2UgdG8gYWxsIHRoZSBsaXN0IG1lbWJlcnMsIHNl
-bmQgZW1haWwgdG8gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcuIFlvdSBjYW4gc3Vic2Ny
-aWJlIHRvIHRoZSBsaXN0LCBvciBjaGFuZ2UgeW91ciBleGlzdGluZyBzdWJzY3JpcHRpb24sIGlu
-IHRoZSBzZWN0aW9ucyBiZWxvdy4KPiA+Pj4+Cj4gPj4+PiBfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwo+ID4+Pj4gSW50ZWwtZ2Z4IG1haWxpbmcgbGlzdAo+
-ID4+Pj4gSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwo+ID4+Pj4gaHR0cHM6Ly9saXN0
-cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngKPiA+IF9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPiBhbWQtZ2Z4IG1haWxp
-bmcgbGlzdAo+ID4gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiA+IGh0dHBzOi8vbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeApfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlzdAph
-bWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9y
-Zy9tYWlsbWFuL2xpc3RpbmZvL2FtZC1nZngK
+Hi everyone,
+
+This is a minor update addressing the feedback from Mike and Josef.
+
+v6:
+0005: Address Mike's feedback for the flush bio comment.
+0006: Add a WARN_ONCE() for blkg fallback suggested by Josef.
+
+From v5:
+A special case with dm is the flush bio which is statically initialized
+before the block device is opened and associated with a disk. This
+caused blkg association to throw a NPE. 0005 addresses this case by
+moving association to be on the flush path.
+
+With v4 moving association to piggyback off of bio_set_dev(), this
+caused a NPE to be thrown by the special case above. I was overly
+cautious with v4 and added the bio_has_queue() check which is now
+removed in v5.
+
+Also, the addition of bio_set_dev_only() wasn't quite right due to
+writeback and swap sharing the same bio init paths in many places. The
+safer thing to do is double association for those paths and in a follow
+up series split out the bio init paths.
+
+Changes in v5: 
+All:  Fixed minor grammar and syntactic issues.
+0004: Removed bio_has_queue() for being overly cautious.
+0005: New, properly addressed the static flush_bio in md. 
+0006: Removed the rcu lock in blkcg_bio_issue_check() as the bio will
+      own a ref on the blkg so it is unnecessary.
+0011: Consolidated bio_associate_blkg_from_css() (removed __ version).
+
+From v4:
+This is respin of v3 [1] with fixes for the errors reported in [2] and
+[3]. v3 was reverted in [4].
+
+The issue in [3] was that bio->bi_disk->queue and blkg->q were out
+of sync. So when I changed blk_get_rl() to use blkg->q, the wrong queue
+was returned and elevator from q->elevator->type threw a NPE. Note, with
+v4.21, the old block stack was removed and so this patch was dropped. I
+did backport this to v4.20 and verified this series does not encounter
+the error.
+
+The biggest changes in v4 are when association occurs and clearly
+defining the cases where association should happen.
+  1. Association is now done when the device is set to keep blkg->q and
+     bio->bi_disk->queue in sync.
+  2. When a bio is submitted directly to the device, it will not be
+     associated with a blkg. This is because a blkg represents the
+     relationship between a blkcg and a request_queue. Going directly to
+     the device means the request_queue may not exist meaning no blkg
+     will exist.
+
+The patch updating blk_get_rl() was dropped (v3 10/12). The patch to
+always associate a blkg from v3 (v3 04/12) was fixed and split into
+patches 0004 and 0005. 0011 is new removing bio_disassociate_task().
+
+Summarizing the ideas of this series:
+  1. Gracefully handle blkg failure to create by walking up the blkg
+     tree rather than fall through to root.
+  2. Associate a bio with a blkg in core logic rather than per
+     controller logic.
+  3. Rather than have a css and blkg reference, hold just a blkg ref
+     as it also holds a css ref.
+  4. Switch to percpu ref counting for blkg.
+
+[1] https://lore.kernel.org/lkml/20180911184137.35897-1-dennisszhou@gmail.com/ 
+[2] https://lore.kernel.org/lkml/13987.1539646128@turing-police.cc.vt.edu/
+[3] https://marc.info/?l=linux-cgroups&m=154110436103723
+[4] https://lore.kernel.org/lkml/20181101212410.47569-1-dennis@kernel.org/
+
+This patchset contains the following 14 patches:
+  0001-blkcg-fix-ref-count-issue-with-bio_blkcg-using-task_.patch
+  0002-blkcg-update-blkg_lookup_create-to-do-locking.patch
+  0003-blkcg-convert-blkg_lookup_create-to-find-closest-blk.patch
+  0004-blkcg-introduce-common-blkg-association-logic.patch
+  0005-dm-set-flush-bio-device-on-demand.patch
+  0006-blkcg-associate-blkg-when-associating-a-device.patch
+  0007-blkcg-consolidate-bio_issue_init-to-be-a-part-of-cor.patch
+  0008-blkcg-associate-a-blkg-for-pages-being-evicted-by-sw.patch
+  0009-blkcg-associate-writeback-bios-with-a-blkg.patch
+  0010-blkcg-remove-bio-bi_css-and-instead-use-bio-bi_blkg.patch
+  0011-blkcg-remove-additional-reference-to-the-css.patch
+  0012-blkcg-remove-bio_disassociate_task.patch
+  0013-blkcg-change-blkg-reference-counting-to-use-percpu_r.patch
+  0014-blkcg-rename-blkg_try_get-to-blkg_tryget.patch
+
+This patchset is on top of linux-block#for-4.21/block 154989e45fd8.
+
+diffstats below:
+
+Dennis Zhou (14):
+  blkcg: fix ref count issue with bio_blkcg() using task_css
+  blkcg: update blkg_lookup_create() to do locking
+  blkcg: convert blkg_lookup_create() to find closest blkg
+  blkcg: introduce common blkg association logic
+  dm: set the static flush bio device on demand
+  blkcg: associate blkg when associating a device
+  blkcg: consolidate bio_issue_init() to be a part of core
+  blkcg: associate a blkg for pages being evicted by swap
+  blkcg: associate writeback bios with a blkg
+  blkcg: remove bio->bi_css and instead use bio->bi_blkg
+  blkcg: remove additional reference to the css
+  blkcg: remove bio_disassociate_task()
+  blkcg: change blkg reference counting to use percpu_ref
+  blkcg: rename blkg_try_get() to blkg_tryget()
+
+ Documentation/admin-guide/cgroup-v2.rst |   8 +-
+ block/bfq-cgroup.c                      |   4 +-
+ block/bfq-iosched.c                     |   2 +-
+ block/bio.c                             | 156 +++++++++++++++---------
+ block/blk-cgroup.c                      |  95 ++++++++++++---
+ block/blk-iolatency.c                   |  24 +---
+ block/blk-throttle.c                    |  11 --
+ block/bounce.c                          |   3 +-
+ drivers/block/loop.c                    |   5 +-
+ drivers/md/dm.c                         |  12 +-
+ drivers/md/raid0.c                      |   2 +-
+ fs/buffer.c                             |  10 +-
+ fs/ext4/page-io.c                       |   2 +-
+ include/linux/bio.h                     |  29 +++--
+ include/linux/blk-cgroup.h              | 125 +++++++++++++------
+ include/linux/blk_types.h               |   7 +-
+ include/linux/cgroup.h                  |   2 +
+ include/linux/writeback.h               |   5 +-
+ kernel/cgroup/cgroup.c                  |  48 ++++++--
+ kernel/trace/blktrace.c                 |   4 +-
+ mm/page_io.c                            |   2 +-
+ 21 files changed, 367 insertions(+), 189 deletions(-)
+
+Thanks,
+Dennis
