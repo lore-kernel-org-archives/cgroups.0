@@ -1,127 +1,42 @@
-From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH 02/14] blkcg: update blkg_lookup_create() to do locking
-Date: Wed,  5 Dec 2018 12:10:27 -0500
-Message-ID: <20181205171039.73066-3-dennis@kernel.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v6 00/14] block: always associate blkg and refcount
+ cleanup
+Date: Wed, 5 Dec 2018 10:26:58 -0700
+Message-ID: <4505f5f5-144d-39aa-24ac-477604c43212@kernel.dk>
 References: <20181205171039.73066-1-dennis@kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Y0JPiAN+MBquXGfcJsu1JHXuGc4PyL3a4dgPwNvkMYo=;
+        b=y0H/WKgIG3fgpLuvX1P/6QIfqMmu3n8qDBR5XkzCgiibl8hKJ0mzZ5jrA1YKg6MBP3
+         fNFyqsHyzvhIz3m8MD1wXzw/0eapZy9CJyVJ2BuqUnZait/20SoOx3mHpRTE0J04ARQT
+         pH+3diooIJka0Q/pjSO1pyFeg4UZpTK4B6AX3WBaushjf9RhtUGRdNtaCb6yxNpXSIKF
+         rSzyuTKnnSrhIzhUfLIu6rZ2xDXC1veiBcwLLjq5xhSW4XaMFMPLjBkDRb4KIE9s0iyr
+         KC6fy01zZa4IMt64xDp//xGHfUPCyqX004da1J37r8+8UmpDP5SrNA7CODEbo9RKvGSj
+         fKMw==
 In-Reply-To: <20181205171039.73066-1-dennis@kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
+To: Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-To know when to create a blkg, the general pattern is to do a
-blkg_lookup() and if that fails, lock and do the lookup again, and if
-that fails finally create. It doesn't make much sense for everyone who
-wants to do creation to write this themselves.
+On 12/5/18 10:10 AM, Dennis Zhou wrote:
+> Hi everyone,
+> 
+> This is a minor update addressing the feedback from Mike and Josef.
+> 
+> v6:
+> 0005: Address Mike's feedback for the flush bio comment.
+> 0006: Add a WARN_ONCE() for blkg fallback suggested by Josef.
 
-This changes blkg_lookup_create() to do locking and implement this
-pattern. The old blkg_lookup_create() is renamed to
-__blkg_lookup_create().  If a call site wants to do its own error
-handling or already owns the queue lock, they can use
-__blkg_lookup_create(). This will be used in upcoming patches.
+Thanks Dennis, applied for 4.21.
 
-Signed-off-by: Dennis Zhou <dennis@kernel.org>
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Liu Bo <bo.liu@linux.alibaba.com>
----
- block/blk-cgroup.c         | 28 +++++++++++++++++++++++++---
- block/blk-iolatency.c      |  2 +-
- include/linux/blk-cgroup.h |  4 +++-
- 3 files changed, 29 insertions(+), 5 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 63d226a084cd..b421a9457e05 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -249,7 +249,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- }
- 
- /**
-- * blkg_lookup_create - lookup blkg, try to create one if not there
-+ * __blkg_lookup_create - lookup blkg, try to create one if not there
-  * @blkcg: blkcg of interest
-  * @q: request_queue of interest
-  *
-@@ -262,8 +262,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
-  * value on error.  If @q is dead, returns ERR_PTR(-EINVAL).  If @q is not
-  * dead and bypassing, returns ERR_PTR(-EBUSY).
-  */
--struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
--				    struct request_queue *q)
-+struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
-+				      struct request_queue *q)
- {
- 	struct blkcg_gq *blkg;
- 
-@@ -293,6 +293,28 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 	}
- }
- 
-+/**
-+ * blkg_lookup_create - find or create a blkg
-+ * @blkcg: target block cgroup
-+ * @q: target request_queue
-+ *
-+ * This looks up or creates the blkg representing the unique pair
-+ * of the blkcg and the request_queue.
-+ */
-+struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
-+				    struct request_queue *q)
-+{
-+	struct blkcg_gq *blkg = blkg_lookup(blkcg, q);
-+
-+	if (unlikely(!blkg)) {
-+		spin_lock_irq(&q->queue_lock);
-+		blkg = __blkg_lookup_create(blkcg, q);
-+		spin_unlock_irq(&q->queue_lock);
-+	}
-+
-+	return blkg;
-+}
-+
- static void blkg_destroy(struct blkcg_gq *blkg)
- {
- 	struct blkcg *blkcg = blkg->blkcg;
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index fe0c4ca312ff..e6f68f15dee9 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -486,7 +486,7 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
- 	blkg = blkg_lookup(blkcg, q);
- 	if (unlikely(!blkg)) {
- 		spin_lock_irq(&q->queue_lock);
--		blkg = blkg_lookup_create(blkcg, q);
-+		blkg = __blkg_lookup_create(blkcg, q);
- 		if (IS_ERR(blkg))
- 			blkg = NULL;
- 		spin_unlock_irq(&q->queue_lock);
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index f619307171a6..b3b1a8187d23 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -181,6 +181,8 @@ extern struct cgroup_subsys_state * const blkcg_root_css;
- 
- struct blkcg_gq *blkg_lookup_slowpath(struct blkcg *blkcg,
- 				      struct request_queue *q, bool update_hint);
-+struct blkcg_gq *__blkg_lookup_create(struct blkcg *blkcg,
-+				      struct request_queue *q);
- struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 				    struct request_queue *q);
- int blkcg_init_queue(struct request_queue *q);
-@@ -799,7 +801,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 	blkg = blkg_lookup(blkcg, q);
- 	if (unlikely(!blkg)) {
- 		spin_lock_irq(&q->queue_lock);
--		blkg = blkg_lookup_create(blkcg, q);
-+		blkg = __blkg_lookup_create(blkcg, q);
- 		if (IS_ERR(blkg))
- 			blkg = NULL;
- 		spin_unlock_irq(&q->queue_lock);
 -- 
-2.17.1
+Jens Axboe
 
