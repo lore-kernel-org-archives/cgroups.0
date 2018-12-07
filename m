@@ -1,19 +1,19 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v5 3/7] cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
-Date: Fri,  7 Dec 2018 12:15:27 -0800
-Message-ID: <20181207201531.1665-4-guro@fb.com>
+Subject: [PATCH v5 2/7] cgroup: implement __cgroup_task_count() helper
+Date: Fri,  7 Dec 2018 12:15:26 -0800
+Message-ID: <20181207201531.1665-3-guro@fb.com>
 References: <20181207201531.1665-1-guro@fb.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=AF6FjZ5bYHqrhn2j5NEFo6/8zOWEnmu3uN/KpDBNyX8=;
-        b=Zab/XM4V325VwLDjQweH6/BjCmL72mI1hULkW0qXSRg8VLOY0XFTvNNtOPrJPZL50C
-         eq1kPcbT++Kv9gQaRQassMfIIa4TjxnlWxGak0TIK7KWHKsTDevl5n1aPTBKIRaMtcH/
-         365X7yjF6admMely003US2abDL4tEZEVQgPShcLtBSzu5G5XPFq+qeIcA4aakQh5koOR
-         TORvjAVHpA3Qe53DyMmCvUk51knVyBPPacmJ+uHZyyIKVCbu5fVA1PIV8JJZS4UMqNcO
-         0Bs1g+Zfffl7P022i3lO54vLdB20PdVYUCzQuEUJ8pOZHdDatawPP6aoODY3S4xa5tGg
-         Cbiw==
+        bh=CXMv0Vhrfz8OgUyxnyaG6yJ3Btg8UiW/JMvPPUaP47g=;
+        b=iv1dU8CL7eCxkwjdGBFS0mbtxk6GU8XmzSL0nJFOoIS3VrhbCDGf0tP7iWGdFyLajD
+         aplvV93AwOr0eNpnVx2zfFszUcI9KJzC3oAbVs0+ahZvCFNKy+zAlp8pkxa97NR92hMK
+         pjgD1Fm33eANuoVbsiu7oh7dI0OarvO/14v6gXDwWqljuOHakvlaZDRSXOua3/s8mujq
+         IaDC3x/5XRCDmnhvPaBJZHXh66MAnAM5vF+v0MytJfiEbYunsILafsGbXfnynRIPXzwN
+         ysUrfKuhMeXogcAMnw5sPNpw2f175HdVKRuW7TFFgHtHiu2p3QYsNPAaktOHWdQM1i84
+         5GQA==
 In-Reply-To: <20181207201531.1665-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,89 +23,105 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
 Cc: Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-The number of descendant cgroups and the number of dying
-descendant cgroups are currently synchronized using the cgroup_mutex.
+The helper is identical to the existing cgroup_task_count()
+except it doesn't take the css_set_lock by itself, assuming
+that the caller does.
 
-The number of descendant cgroups will be required by the cgroup v2
-freezer, which will use it to determine if a cgroup is frozen
-(depending on total number of descendants and number of frozen
-descendants). It's not always acceptable to grab the cgroup_mutex,
-especially from quite hot paths (e.g. exit()).
-
-To avoid this, let's additionally synchronize these counters using
-the css_set_lock.
-
-So, it's safe to read these counters with either cgroup_mutex or
-css_set_lock locked, and for changing both locks should be acquired.
+Also, move cgroup_task_count() implementation into
+kernel/cgroup/cgroup.c, as there is nothing specific to cgroup v1.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
 ---
- include/linux/cgroup-defs.h | 5 +++++
- kernel/cgroup/cgroup.c      | 6 ++++++
- 2 files changed, 11 insertions(+)
+ kernel/cgroup/cgroup-internal.h |  1 +
+ kernel/cgroup/cgroup-v1.c       | 16 ----------------
+ kernel/cgroup/cgroup.c          | 33 +++++++++++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 8fcbae1b8db0..03355d7008ff 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -348,6 +348,11 @@ struct cgroup {
- 	 * Dying cgroups are cgroups which were deleted by a user,
- 	 * but are still existing because someone else is holding a reference.
- 	 * max_descendants is a maximum allowed number of descent cgroups.
-+	 *
-+	 * nr_descendants and nr_dying_descendants are protected
-+	 * by cgroup_mutex and css_set_lock. It's fine to read them holding
-+	 * any of cgroup_mutex and css_set_lock; for writing both locks
-+	 * should be held.
- 	 */
- 	int nr_descendants;
- 	int nr_dying_descendants;
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index c950864016e2..a195328431ce 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -226,6 +226,7 @@ int cgroup_rmdir(struct kernfs_node *kn);
+ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ 		     struct kernfs_root *kf_root);
+ 
++int __cgroup_task_count(const struct cgroup *cgrp);
+ int cgroup_task_count(const struct cgroup *cgrp);
+ 
+ /*
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 51063e7a93c2..6134fef07d57 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -336,22 +336,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
+ 	return l;
+ }
+ 
+-/**
+- * cgroup_task_count - count the number of tasks in a cgroup.
+- * @cgrp: the cgroup in question
+- */
+-int cgroup_task_count(const struct cgroup *cgrp)
+-{
+-	int count = 0;
+-	struct cgrp_cset_link *link;
+-
+-	spin_lock_irq(&css_set_lock);
+-	list_for_each_entry(link, &cgrp->cset_links, cset_link)
+-		count += link->cset->nr_tasks;
+-	spin_unlock_irq(&css_set_lock);
+-	return count;
+-}
+-
+ /*
+  * Load a cgroup's pidarray with either procs' tgids or tasks' pids
+  */
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 7519a4307021..f89dde50f693 100644
+index e06994fd4e34..7519a4307021 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -4723,9 +4723,11 @@ static void css_release_work_fn(struct work_struct *work)
- 		if (cgroup_on_dfl(cgrp))
- 			cgroup_rstat_flush(cgrp);
+@@ -563,6 +563,39 @@ static void cgroup_get_live(struct cgroup *cgrp)
+ 	css_get(&cgrp->self);
+ }
  
-+		spin_lock_irq(&css_set_lock);
- 		for (tcgrp = cgroup_parent(cgrp); tcgrp;
- 		     tcgrp = cgroup_parent(tcgrp))
- 			tcgrp->nr_dying_descendants--;
-+		spin_unlock_irq(&css_set_lock);
- 
- 		cgroup_idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
- 		cgrp->id = -1;
-@@ -4943,12 +4945,14 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	if (ret)
- 		goto out_psi_free;
- 
++/**
++ * __cgroup_task_count - count the number of tasks in a cgroup. The caller
++ * is responsible for taking the css_set_lock.
++ * @cgrp: the cgroup in question
++ */
++int __cgroup_task_count(const struct cgroup *cgrp)
++{
++	int count = 0;
++	struct cgrp_cset_link *link;
++
++	lockdep_assert_held(&css_set_lock);
++
++	list_for_each_entry(link, &cgrp->cset_links, cset_link)
++		count += link->cset->nr_tasks;
++
++	return count;
++}
++
++/**
++ * cgroup_task_count - count the number of tasks in a cgroup.
++ * @cgrp: the cgroup in question
++ */
++int cgroup_task_count(const struct cgroup *cgrp)
++{
++	int count;
++
 +	spin_lock_irq(&css_set_lock);
- 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
- 		if (tcgrp != cgrp)
- 			tcgrp->nr_descendants++;
- 	}
++	count = __cgroup_task_count(cgrp);
 +	spin_unlock_irq(&css_set_lock);
- 
- 	if (notify_on_release(parent))
- 		set_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
-@@ -5233,10 +5237,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	if (parent && cgroup_is_threaded(cgrp))
- 		parent->nr_threaded_children--;
- 
-+	spin_lock_irq(&css_set_lock);
- 	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		tcgrp->nr_descendants--;
- 		tcgrp->nr_dying_descendants++;
- 	}
-+	spin_unlock_irq(&css_set_lock);
- 
- 	cgroup1_check_for_release(parent);
- 
++
++	return count;
++}
++
+ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+ {
+ 	struct cgroup *cgrp = of->kn->parent->priv;
 -- 
 2.17.2
 
