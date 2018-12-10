@@ -1,127 +1,118 @@
-From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v5 2/7] cgroup: implement __cgroup_task_count() helper
-Date: Fri,  7 Dec 2018 12:15:26 -0800
-Message-ID: <20181207201531.1665-3-guro@fb.com>
-References: <20181207201531.1665-1-guro@fb.com>
+From: Angelo Ruocco <angelo.ruocco.90@gmail.com>
+Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
+ policy in blkio/io
+Date: Mon, 10 Dec 2018 14:45:47 +0100
+Message-ID: <CADiTV-29TmkB5-k=TtQfoJqjP2Qv7GSsGLXAPBaTB6DoQ+6yyw@mail.gmail.com>
+References: <20181119103424.3853-1-paolo.valente@linaro.org>
+ <20181120162816.GV2509588@devbig004.ftw2.facebook.com> <25296DAE-73EC-46CC-9A98-A8B7E9017BB7@linaro.org>
+ <7D7FAB43-5F62-4402-A9B3-E7C2E30AE680@linaro.org> <20181130184256.GI2509588@devbig004.ftw2.facebook.com>
+ <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=CXMv0Vhrfz8OgUyxnyaG6yJ3Btg8UiW/JMvPPUaP47g=;
-        b=iv1dU8CL7eCxkwjdGBFS0mbtxk6GU8XmzSL0nJFOoIS3VrhbCDGf0tP7iWGdFyLajD
-         aplvV93AwOr0eNpnVx2zfFszUcI9KJzC3oAbVs0+ahZvCFNKy+zAlp8pkxa97NR92hMK
-         pjgD1Fm33eANuoVbsiu7oh7dI0OarvO/14v6gXDwWqljuOHakvlaZDRSXOua3/s8mujq
-         IaDC3x/5XRCDmnhvPaBJZHXh66MAnAM5vF+v0MytJfiEbYunsILafsGbXfnynRIPXzwN
-         ysUrfKuhMeXogcAMnw5sPNpw2f175HdVKRuW7TFFgHtHiu2p3QYsNPAaktOHWdQM1i84
-         5GQA==
-In-Reply-To: <20181207201531.1665-1-guro@fb.com>
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=zZyLLUhZXcYJ2LtJLGESHBqFDN04cjKgYPLf3lUGB3w=;
+        b=NzDeZ9KudDpiXL9cdONJSrPvKBsw5xsCqlcR36gRoKo7fa3HU8xHnR7sDtDApmo7By
+         78Yv7t8uaY0AVR2yAs/0NOq4fHbkiF3cdlS/NVfLC2XBKdJPs03wvHz5oGiEs1j2NgFa
+         ZiZzDJh8lx/Y5U9BgFARDcjBu4wBhz9MSTOOQxK/Y4vw9OfRfHLzcyGO/98wx+cMjptz
+         eiVzZ1tQ57KZFCyNkcugCAZL/+lB5o8wdR8V23hYlxMKJ082ob2+P3ZGL/ru9U7HQI75
+         bXuBZahoJqwzfmM+IpO9vCHnKTNjeR7KLlTPBc2xt0KMkckofr/Et8CT3giTkJ5Yjwtt
+         q27g==
+In-Reply-To: <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: 'Paolo Valente' via bfq-iosched <bfq-iosched@googlegroups.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
 
-The helper is identical to the existing cgroup_task_count()
-except it doesn't take the css_set_lock by itself, assuming
-that the caller does.
+2018-11-30 19:53 GMT+01:00, Paolo Valente <paolo.valente@linaro.org>:
+>
+>
+>> Il giorno 30 nov 2018, alle ore 19:42, Tejun Heo <tj@kernel.org> ha
+>> scritto:
+>>
+>> Hello, Paolo.
+>>
+>> On Fri, Nov 30, 2018 at 07:23:24PM +0100, Paolo Valente wrote:
+>>>> Then we understood that exactly the same happens with throttling, in
+>>>> case the latter is activated on different devices w.r.t. bfq.
+>>>>
+>>>> In addition, the same may happen, in the near future, with the
+>>>> bandwidth controller Josef is working on.  If the controller can be
+>>>> configured per device, as with throttling, then statistics may differ,
+>>>> for the same interface files, between bfq, throttling and that
+>>>> controller.
+>>
+>> So, regardless of how all these are implemented, what's presented to
+>> user should be consistent and clear.  There's no other way around it.
+>> Only what's relevant should be visible to userspace.
+>>
+>>> have you had time to look into this?  Any improvement to this
+>>> interface is ok for us. We are only interested in finally solving this
+>>> interface issue, as, for what concerns us directly, it has been
+>>> preventing legacy code to use bfq for years.
+>>
+>> Unfortunately, I don't have any implementation proposal, but we can't
+>> show things this way to userspace.
+>>
+>
+> Well, this is not very helpful to move forward :)
+>
+> Let me try to repeat the problem, to try to help you help us unblock
+> the situation.
+>
+> If we have multiple entities attached to the same interface output
+> file, you don't find it clear that each entity shows the number it
+> wants to show.  But you have no idea either of how that differentiated
+> information should be shown.  Is this the situation, or is the problem
+> somewhere 'above' this level?
+>
+> If the problem is as I described it, here are some proposal attempts:
+> 1) Do you want file sharing to be allowed only if all entities will
+> output the same number?  (this seems excessive, but maybe it makes
+> sense)
+> 2) Do you want only one number to be shown, equal to the sum of the
+> numbers of each entity?  (in some cases, this may make sense)
+> 3) Do you prefer an average?
+> 4) Do you have any other idea, even if just germinal?
 
-Also, move cgroup_task_count() implementation into
-kernel/cgroup/cgroup.c, as there is nothing specific to cgroup v1.
+To further add to what Paolo said and better expose the problem, I'd like to
+say that all those proposals have issues.
+If we only allow "same output" cftypes to be shared then we lose all the
+flexibility of this solution, and we need a way for an entity to know other
+entities internal variables beforehand, which sounds at least very hard, and
+maybe is not even an acceptable thing to do.
+To put the average, sum or some other mathematical function in the file only
+makes sense for certain cftypes, so also doesn't sound like a good idea. In
+fact I can think of scenarios where only seeing the different values of the
+entities makes sense for a user.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
----
- kernel/cgroup/cgroup-internal.h |  1 +
- kernel/cgroup/cgroup-v1.c       | 16 ----------------
- kernel/cgroup/cgroup.c          | 33 +++++++++++++++++++++++++++++++++
- 3 files changed, 34 insertions(+), 16 deletions(-)
+I understand that the problem is inconsistency: having a file that behaves
+differently depending on the situation, and the only way to prevent this I can
+think of is to *always* show the entity owner of a certain file (or part of the
+output), even when the output would be the same among entities or when the
+file is not currently shared but could be. Can this be an acceptable solution?
 
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index c950864016e2..a195328431ce 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -226,6 +226,7 @@ int cgroup_rmdir(struct kernfs_node *kn);
- int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
- 		     struct kernfs_root *kf_root);
- 
-+int __cgroup_task_count(const struct cgroup *cgrp);
- int cgroup_task_count(const struct cgroup *cgrp);
- 
- /*
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 51063e7a93c2..6134fef07d57 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -336,22 +336,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
- 	return l;
- }
- 
--/**
-- * cgroup_task_count - count the number of tasks in a cgroup.
-- * @cgrp: the cgroup in question
-- */
--int cgroup_task_count(const struct cgroup *cgrp)
--{
--	int count = 0;
--	struct cgrp_cset_link *link;
--
--	spin_lock_irq(&css_set_lock);
--	list_for_each_entry(link, &cgrp->cset_links, cset_link)
--		count += link->cset->nr_tasks;
--	spin_unlock_irq(&css_set_lock);
--	return count;
--}
--
- /*
-  * Load a cgroup's pidarray with either procs' tgids or tasks' pids
-  */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e06994fd4e34..7519a4307021 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -563,6 +563,39 @@ static void cgroup_get_live(struct cgroup *cgrp)
- 	css_get(&cgrp->self);
- }
- 
-+/**
-+ * __cgroup_task_count - count the number of tasks in a cgroup. The caller
-+ * is responsible for taking the css_set_lock.
-+ * @cgrp: the cgroup in question
-+ */
-+int __cgroup_task_count(const struct cgroup *cgrp)
-+{
-+	int count = 0;
-+	struct cgrp_cset_link *link;
-+
-+	lockdep_assert_held(&css_set_lock);
-+
-+	list_for_each_entry(link, &cgrp->cset_links, cset_link)
-+		count += link->cset->nr_tasks;
-+
-+	return count;
-+}
-+
-+/**
-+ * cgroup_task_count - count the number of tasks in a cgroup.
-+ * @cgrp: the cgroup in question
-+ */
-+int cgroup_task_count(const struct cgroup *cgrp)
-+{
-+	int count;
-+
-+	spin_lock_irq(&css_set_lock);
-+	count = __cgroup_task_count(cgrp);
-+	spin_unlock_irq(&css_set_lock);
-+
-+	return count;
-+}
-+
- struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
- {
- 	struct cgroup *cgrp = of->kn->parent->priv;
--- 
-2.17.2
+Angelo
 
+>
+> Looking forward to your feedback,
+> Paolo
+>
+>
+>> Thanks.
+>>
+>> --
+>> tejun
+>>
+>> --
+>> You received this message because you are subscribed to the Google Groups
+>> "bfq-iosched" group.
+>> To unsubscribe from this group and stop receiving emails from it, send an
+>> email to bfq-iosched+unsubscribe@googlegroups.com.
+>> For more options, visit https://groups.google.com/d/optout.
+>
+>
