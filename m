@@ -1,118 +1,118 @@
-From: Angelo Ruocco <angelo.ruocco.90@gmail.com>
-Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
- policy in blkio/io
-Date: Mon, 10 Dec 2018 14:45:47 +0100
-Message-ID: <CADiTV-29TmkB5-k=TtQfoJqjP2Qv7GSsGLXAPBaTB6DoQ+6yyw@mail.gmail.com>
-References: <20181119103424.3853-1-paolo.valente@linaro.org>
- <20181120162816.GV2509588@devbig004.ftw2.facebook.com> <25296DAE-73EC-46CC-9A98-A8B7E9017BB7@linaro.org>
- <7D7FAB43-5F62-4402-A9B3-E7C2E30AE680@linaro.org> <20181130184256.GI2509588@devbig004.ftw2.facebook.com>
- <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
-Mime-Version: 1.0
+From: Dennis Zhou <dennis@kernel.org>
+Subject: [PATCH] block: fix iolat timestamp and restore accounting semantics
+Date: Mon, 10 Dec 2018 11:35:10 -0500
+Message-ID: <20181210163510.58985-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=zZyLLUhZXcYJ2LtJLGESHBqFDN04cjKgYPLf3lUGB3w=;
-        b=NzDeZ9KudDpiXL9cdONJSrPvKBsw5xsCqlcR36gRoKo7fa3HU8xHnR7sDtDApmo7By
-         78Yv7t8uaY0AVR2yAs/0NOq4fHbkiF3cdlS/NVfLC2XBKdJPs03wvHz5oGiEs1j2NgFa
-         ZiZzDJh8lx/Y5U9BgFARDcjBu4wBhz9MSTOOQxK/Y4vw9OfRfHLzcyGO/98wx+cMjptz
-         eiVzZ1tQ57KZFCyNkcugCAZL/+lB5o8wdR8V23hYlxMKJ082ob2+P3ZGL/ru9U7HQI75
-         bXuBZahoJqwzfmM+IpO9vCHnKTNjeR7KLlTPBc2xt0KMkckofr/Et8CT3giTkJ5Yjwtt
-         q27g==
-In-Reply-To: <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: 'Paolo Valente' via bfq-iosched <bfq-iosched@googlegroups.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, broonie@kernel.org, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-2018-11-30 19:53 GMT+01:00, Paolo Valente <paolo.valente@linaro.org>:
->
->
->> Il giorno 30 nov 2018, alle ore 19:42, Tejun Heo <tj@kernel.org> ha
->> scritto:
->>
->> Hello, Paolo.
->>
->> On Fri, Nov 30, 2018 at 07:23:24PM +0100, Paolo Valente wrote:
->>>> Then we understood that exactly the same happens with throttling, in
->>>> case the latter is activated on different devices w.r.t. bfq.
->>>>
->>>> In addition, the same may happen, in the near future, with the
->>>> bandwidth controller Josef is working on.  If the controller can be
->>>> configured per device, as with throttling, then statistics may differ,
->>>> for the same interface files, between bfq, throttling and that
->>>> controller.
->>
->> So, regardless of how all these are implemented, what's presented to
->> user should be consistent and clear.  There's no other way around it.
->> Only what's relevant should be visible to userspace.
->>
->>> have you had time to look into this?  Any improvement to this
->>> interface is ok for us. We are only interested in finally solving this
->>> interface issue, as, for what concerns us directly, it has been
->>> preventing legacy code to use bfq for years.
->>
->> Unfortunately, I don't have any implementation proposal, but we can't
->> show things this way to userspace.
->>
->
-> Well, this is not very helpful to move forward :)
->
-> Let me try to repeat the problem, to try to help you help us unblock
-> the situation.
->
-> If we have multiple entities attached to the same interface output
-> file, you don't find it clear that each entity shows the number it
-> wants to show.  But you have no idea either of how that differentiated
-> information should be shown.  Is this the situation, or is the problem
-> somewhere 'above' this level?
->
-> If the problem is as I described it, here are some proposal attempts:
-> 1) Do you want file sharing to be allowed only if all entities will
-> output the same number?  (this seems excessive, but maybe it makes
-> sense)
-> 2) Do you want only one number to be shown, equal to the sum of the
-> numbers of each entity?  (in some cases, this may make sense)
-> 3) Do you prefer an average?
-> 4) Do you have any other idea, even if just germinal?
+The blk-iolatency controller measures the time from rq_qos_throttle() to
+rq_qos_done_bio() and attributes this time to the first bio that needs
+to create the request. This means if a bio is plug-mergeable or
+bio-mergeable, it gets to bypass the blk-iolatency controller.
 
-To further add to what Paolo said and better expose the problem, I'd like to
-say that all those proposals have issues.
-If we only allow "same output" cftypes to be shared then we lose all the
-flexibility of this solution, and we need a way for an entity to know other
-entities internal variables beforehand, which sounds at least very hard, and
-maybe is not even an acceptable thing to do.
-To put the average, sum or some other mathematical function in the file only
-makes sense for certain cftypes, so also doesn't sound like a good idea. In
-fact I can think of scenarios where only seeing the different values of the
-entities makes sense for a user.
+The recent series, to tag all bios w/ blkgs in [1] changed the timing
+incorrectly as well. First, the iolatency controller was tagging bios
+and using that information if it should process it in rq_qos_done_bio().
+However, now that all bios are tagged, this caused the atomic_t for the
+struct rq_wait inflight count to underflow resulting in a stall. Second,
+now the timing was using the duration a bio from generic_make_request()
+rather than the timing mentioned above.
 
-I understand that the problem is inconsistency: having a file that behaves
-differently depending on the situation, and the only way to prevent this I can
-think of is to *always* show the entity owner of a certain file (or part of the
-output), even when the output would be the same among entities or when the
-file is not currently shared but could be. Can this be an acceptable solution?
+This patch fixes the errors by accounting time separately in a bio
+adding the field bi_start. If this field is set, the bio should be
+processed by blk-iolatency in rq_qos_done_bio().
 
-Angelo
+[1] https://lore.kernel.org/lkml/20181205171039.73066-1-dennis@kernel.org/
 
->
-> Looking forward to your feedback,
-> Paolo
->
->
->> Thanks.
->>
->> --
->> tejun
->>
->> --
->> You received this message because you are subscribed to the Google Groups
->> "bfq-iosched" group.
->> To unsubscribe from this group and stop receiving emails from it, send an
->> email to bfq-iosched+unsubscribe@googlegroups.com.
->> For more options, visit https://groups.google.com/d/optout.
->
->
+Signed-off-by: Dennis Zhou <dennis@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>
+---
+ block/blk-iolatency.c     | 17 ++++++-----------
+ include/linux/blk_types.h | 12 ++++++++++++
+ 2 files changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index bee092727cad..52d5d7cc387c 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -463,6 +463,8 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	if (!blk_iolatency_enabled(blkiolat))
+ 		return;
+ 
++	bio->bi_start = ktime_get_ns();
++
+ 	while (blkg && blkg->parent) {
+ 		struct iolatency_grp *iolat = blkg_to_lat(blkg);
+ 		if (!iolat) {
+@@ -480,18 +482,12 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
+ }
+ 
+ static void iolatency_record_time(struct iolatency_grp *iolat,
+-				  struct bio_issue *issue, u64 now,
++				  struct bio *bio, u64 now,
+ 				  bool issue_as_root)
+ {
+-	u64 start = bio_issue_time(issue);
++	u64 start = bio->bi_start;
+ 	u64 req_time;
+ 
+-	/*
+-	 * Have to do this so we are truncated to the correct time that our
+-	 * issue is truncated to.
+-	 */
+-	now = __bio_issue_time(now);
+-
+ 	if (now <= start)
+ 		return;
+ 
+@@ -593,7 +589,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
+ 	bool enabled = false;
+ 
+ 	blkg = bio->bi_blkg;
+-	if (!blkg)
++	if (!blkg || !bio->bi_start)
+ 		return;
+ 
+ 	iolat = blkg_to_lat(bio->bi_blkg);
+@@ -612,8 +608,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
+ 		atomic_dec(&rqw->inflight);
+ 		if (!enabled || iolat->min_lat_nsec == 0)
+ 			goto next;
+-		iolatency_record_time(iolat, &bio->bi_issue, now,
+-				      issue_as_root);
++		iolatency_record_time(iolat, bio, now, issue_as_root);
+ 		window_start = atomic64_read(&iolat->window_start);
+ 		if (now > window_start &&
+ 		    (now - window_start) >= iolat->cur_win_nsec) {
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 46c005d601ac..c2c02ec08d7c 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -181,6 +181,18 @@ struct bio {
+ 	 */
+ 	struct blkcg_gq		*bi_blkg;
+ 	struct bio_issue	bi_issue;
++#ifdef CONFIG_BLK_CGROUP_IOLATENCY
++	/*
++	 * blk-iolatency measure the time a bio takes between rq_qos_throttle()
++	 * and rq_qos_done_bio().  It attributes the time to the bio that gets
++	 * the request allowing any bios that can tag along via plug merging or
++	 * bio merging to be free (from blk-iolatency's perspective). This is
++	 * different from the time a bio takes from generic_make_request() to
++	 * the end of its life.  So, this also serves as a marker for which bios
++	 * should be processed by blk-iolatency.
++	 */
++	u64			bi_start;
++#endif /* CONFIG_BLK_CGROUP_IOLATENCY */
+ #endif
+ 	union {
+ #if defined(CONFIG_BLK_DEV_INTEGRITY)
+-- 
+2.17.1
+
