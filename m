@@ -1,127 +1,98 @@
 From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v4 1/5] cgroup: subtree_control bypass mode for bypassable
- controllers
-Date: Mon, 10 Dec 2018 14:56:25 -0500
-Message-ID: <181c8ea6-7b5a-1ee4-7049-84aad192697c@redhat.com>
-References: <20181129111811.GP3073@unbuntlaptop>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v5 0/5] cgroup: Introducing bypass mode
+Date: Mon, 10 Dec 2018 16:40:53 -0500
+Message-ID: <1544478058-24252-1-git-send-email-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181129111811.GP3073@unbuntlaptop>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Dan Carpenter <dan.carpenter@oracle.com>, kbuild@01.org
-Cc: kbuild-all@01.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, Roman Gushchin <guro@fb.com>, Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Shakeel Butt <shakeelb@google.com>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-api@vger.kernel.org, Roman Gushchin <guro@fb.com>, Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Shakeel Butt <shakeelb@google.com>, Michael Kerrisk <mtk.manpages@gmail.com>, Waiman Long <longman@redhat.com>
 
-On 11/29/2018 06:18 AM, Dan Carpenter wrote:
-> Hi Waiman,
->
-> Thank you for the patch! Perhaps something to improve:
->
-> url:    https://github.com/0day-ci/linux/commits/Waiman-Long/cgroup-Introducing-bypass-mode/20181123-030552
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
->
-> smatch warnings:
-> kernel/cgroup/cgroup.c:4893 css_create() error: we previously assumed 'parent' could be null (see line 4864)
->
-> # https://github.com/0day-ci/linux/commit/8b68fd4330e043645667a5d3306398f8f88f9ff2
-> git remote add linux-review https://github.com/0day-ci/linux
-> git remote update linux-review
-> git checkout 8b68fd4330e043645667a5d3306398f8f88f9ff2
-> vim +/parent +4893 kernel/cgroup/cgroup.c
->
-> a31f2d3ff kernel/cgroup.c        Tejun Heo        2012-11-19  4840  
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4841  /**
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4842   * css_create - create a cgroup_subsys_state
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4843   * @cgrp: the cgroup new css will be associated with
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4844   * @ss: the subsys of new css
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4845   *
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4846   * Create a new css associated with @cgrp - @ss pair.  On success, the new
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4847   * css is online and installed in @cgrp.  This function doesn't create the
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4848   * interface files.  Returns 0 on success, -errno on failure.
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4849   */
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4850  static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4851  					      struct cgroup_subsys *ss)
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4852  {
-> d51f39b05 kernel/cgroup.c        Tejun Heo        2014-05-16  4853  	struct cgroup *parent = cgroup_parent(cgrp);
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4854  	struct cgroup_subsys_state *parent_css = NULL;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4855  	struct cgroup_subsys_state *css;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4856  	int err;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4857  
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4858  	lockdep_assert_held(&cgroup_mutex);
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4859  
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4860  	/*
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4861  	 * As cgroup may be in bypass mode, need to skip over ancestor
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4862  	 * cgroups with NULL CSS.
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4863  	 */
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20 @4864  	for (; parent && !parent_css; parent = cgroup_parent(parent))
->                                                                                ^^^^^^^^^^^^^^^^^^^^^
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4865  		parent_css = cgroup_css(parent, ss);
->
-> When we exit this loop it means either parent is NULL or parent_css
-> is non-NULL.
+ v5:
+  - Fix a bug in css_create() reported by Dan Carpenter.
 
-Sorry for the bug. I should have a temp variable to go up
-cgroup_parent() iteration chain and leave parent alone. Thanks for
-spotting that.
+ v4:
+  - Rebased to the latest for-4.21 branch of cgroup tree.
+  - Make each controller explicitly opt in to become bypassable by
+    setting the bypassable cgroup_subsys flag. Currently, only cpu
+    controller is made bypassable.
+  - Break out the cgroup_v2.rst documentation update as separate patch.
 
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4866  
-> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4867  	css = ss->css_alloc(parent_css);
-> e7e15b87f kernel/cgroup.c        Tejun Heo        2016-06-21  4868  	if (!css)
-> e7e15b87f kernel/cgroup.c        Tejun Heo        2016-06-21  4869  		css = ERR_PTR(-ENOMEM);
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4870  	if (IS_ERR(css))
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4871  		return css;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4872  
-> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4873  	init_and_link_css(css, ss, cgrp, parent_css);
-> a2bed8209 kernel/cgroup.c        Tejun Heo        2014-05-04  4874  
-> 2aad2a86f kernel/cgroup.c        Tejun Heo        2014-09-24  4875  	err = percpu_ref_init(&css->refcnt, css_release, 0, GFP_KERNEL);
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4876  	if (err)
-> 3eb59ec64 kernel/cgroup.c        Li Zefan         2014-03-18  4877  		goto err_free_css;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4878  
-> cf780b7dc kernel/cgroup.c        Vladimir Davydov 2015-08-03  4879  	err = cgroup_idr_alloc(&ss->css_idr, NULL, 2, 0, GFP_KERNEL);
-> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4880  	if (err < 0)
-> b00c52dae kernel/cgroup.c        Wenwei Tao       2016-05-13  4881  		goto err_free_css;
-> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4882  	css->id = err;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4883  
-> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4884  	/* @css is ready to be brought online now, make it visible */
-> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4885  	list_add_tail_rcu(&css->sibling, &parent_css->children);
-> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4886  	cgroup_idr_replace(&ss->css_idr, css, css->id);
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4887  
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4888  	err = online_css(css);
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4889  	if (err)
-> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4890  		goto err_list_del;
-> 944196278 kernel/cgroup.c        Tejun Heo        2014-03-19  4891  
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4892  	if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
-> d51f39b05 kernel/cgroup.c        Tejun Heo        2014-05-16 @4893  	    cgroup_parent(parent)) {
->                                                                                           ^^^^^^
-> We dereference parent inside the function, but I don't know for sure
-> if this is reachable when "parent" is NULL.
->
-> ed3d261b5 kernel/cgroup.c        Joe Perches      2014-04-25  4894  		pr_warn("%s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4895  			current->comm, current->pid, ss->name);
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4896  		if (!strcmp(ss->name, "memory"))
-> ed3d261b5 kernel/cgroup.c        Joe Perches      2014-04-25  4897  			pr_warn("\"memory\" requires setting use_hierarchy to 1 on the root\n");
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4898  		ss->warned_broken_hierarchy = true;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4899  	}
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4900  
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4901  	return css;
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4902  
-> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4903  err_list_del:
-> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4904  	list_del_rcu(&css->sibling);
-> 3eb59ec64 kernel/cgroup.c        Li Zefan         2014-03-18  4905  err_free_css:
-> 8f53470ba kernel/cgroup/cgroup.c Tejun Heo        2018-04-26  4906  	list_del_rcu(&css->rstat_css_node);
-> 8f36aaec9 kernel/cgroup/cgroup.c Tejun Heo        2018-03-14  4907  	INIT_RCU_WORK(&css->destroy_rwork, css_free_rwork_fn);
-> 8f36aaec9 kernel/cgroup/cgroup.c Tejun Heo        2018-03-14  4908  	queue_rcu_work(cgroup_destroy_wq, &css->destroy_rwork);
-> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4909  	return ERR_PTR(err);
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4910  }
-> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4911  
->
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ v3:
+  - Remove invalid cgroup subdirectory creation patch.
+  - Add use cases for the bypass mode and removing statements about
+    control files ownership in cgroup-v2.txt.
+  - Restrict bypass mode to non-domain (threaded) controllers only.
 
-Cheers,
-Longman
+ v3 patch - https://lkml.org/lkml/2017/8/9/604
+ v4 patch - https://lkml.org/lkml/2018/11/20/1361
+
+This patchset introduces a new bypass mode to the cgroup v2 core to
+give more freedom and flexibility to controllers which choose to become
+bypassable the freedom to shape their own unique views of the virtual
+cgroup hierarchies that can best suit thier own use cases.
+
+Because of the inherent performance overhead in enabling cpu controller,
+it is made bypassable so that the controller only needs to be enabled
+at those cgroups that really need it instead of in every cgroups at a
+given layer if at least one of them needs it.
+
+The cpu controller performance problem is one of the major issues
+in migrating from cgroup v1 to v2.
+
+For example,
+
+  R - A(+) - B(#) - C(+)
+                  \ D(#)
+
+where "+" means the controller is enabled and "#" means the controller
+is bypassed. For this controller's perspective, the cgroups are
+equivalent to:
+
+  R - A|B|D - C
+
+Underneath the root R, cgoups A, B and D are controlled by one set of
+knobs and cgroup C is controlled by another set of knobs as a child of
+cgroups A|B|C.
+
+This patchset is layered on top of the "for-4.21" branch of Tejun's
+cgroup git tree.
+
+Patch 1 introduces a new bypass mode that allows a bypassable
+controller to be disabled in a cgroup, but to be re-enabled again in its
+children. This is enabled by writing the controller name prefixed with
+'#' to the "cgroup.subtree_control" file. Then all its children will
+have this controller in bypass mode.
+
+Patch 2 extends the bypass mode mechanism to allow those child cgroups
+that are put into the bypass mode for a particular bypassable controller
+by their parent to be re-enabled again by writing the controller name
+with the '+' prefix to the "cgroup.controllers" file.
+
+Patch 3 extends the debug controller to expose additional controller
+masks introduced by this patchset.
+
+Patch 4 makes the cpu controller bypassable.
+
+Patch 5 documents the new bypass mode in cgroup-v2.rst file.
+
+Waiman Long (5):
+  cgroup: subtree_control bypass mode for bypassable controllers
+  cgroup: Allow reenabling of controller in bypass mode
+  cgroup: Make debug controller report new controller masks
+  sched/core: Make cpu cgroup controller bypassable
+  cgroup: Document bypass mode
+
+ Documentation/admin-guide/cgroup-v2.rst |  66 +++++---
+ include/linux/cgroup-defs.h             |  26 +++-
+ kernel/cgroup/cgroup.c                  | 258 +++++++++++++++++++++++++-------
+ kernel/cgroup/debug.c                   |   2 +
+ kernel/sched/core.c                     |   1 +
+ 5 files changed, 279 insertions(+), 74 deletions(-)
+
+-- 
+1.8.3.1
 
