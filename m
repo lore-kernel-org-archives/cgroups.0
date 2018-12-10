@@ -1,140 +1,127 @@
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH] block: fix iolat timestamp and restore accounting
- semantics
-Date: Mon, 10 Dec 2018 13:25:08 -0500
-Message-ID: <20181210182507.qtoj5egbflr5s366@macbook-pro-91.dhcp.thefacebook.com>
-References: <20181210163510.58985-1-dennis@kernel.org>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v4 1/5] cgroup: subtree_control bypass mode for bypassable
+ controllers
+Date: Mon, 10 Dec 2018 14:56:25 -0500
+Message-ID: <181c8ea6-7b5a-1ee4-7049-84aad192697c@redhat.com>
+References: <20181129111811.GP3073@unbuntlaptop>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=6sOnz/4vgAk2eH1xfravzxXZdhKh8tythlohwKwR+IE=;
-        b=AgzPf1Wv/ITlr1cVgvVofeRippKx7t4YdEh5qR+OYpPI6TM6j5PimSAZz3yW4FNZF1
-         5GrAdWygE8mDZe4r1S4IU9dbVJ53CnVKwWVDbIoqPWwLn1MUWp6b1GkuRuijq03LlLyi
-         YbVVJaIlNFvX3+qYn8cL5aQ88Pyp0ZFWFqqm1S8le8bheqbc/X9PBSURrSMioYa7R082
-         QgGFC2eeG32/lKEm0wAud51Q2K8ElR/gmnXhhfV0JARswyJTZUhYsUMWz0825PYDBc39
-         CIQEjDSLcFB72qdFpOOyhK8kCvuG7nZTb0OXJpYb+arGPT31crZZWQC//0R17YHDV60Z
-         Mi5g==
-Content-Disposition: inline
-In-Reply-To: <20181210163510.58985-1-dennis@kernel.org>
+In-Reply-To: <20181129111811.GP3073@unbuntlaptop>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dennis Zhou <dennis@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, kbuild@01.org
+Cc: kbuild-all@01.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, Roman Gushchin <guro@fb.com>, Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Shakeel Butt <shakeelb@google.com>
 
-On Mon, Dec 10, 2018 at 11:35:10AM -0500, Dennis Zhou wrote:
-> The blk-iolatency controller measures the time from rq_qos_throttle() to
-> rq_qos_done_bio() and attributes this time to the first bio that needs
-> to create the request. This means if a bio is plug-mergeable or
-> bio-mergeable, it gets to bypass the blk-iolatency controller.
-> 
-> The recent series, to tag all bios w/ blkgs in [1] changed the timing
-> incorrectly as well. First, the iolatency controller was tagging bios
-> and using that information if it should process it in rq_qos_done_bio().
-> However, now that all bios are tagged, this caused the atomic_t for the
-> struct rq_wait inflight count to underflow resulting in a stall. Second,
-> now the timing was using the duration a bio from generic_make_request()
-> rather than the timing mentioned above.
-> 
-> This patch fixes the errors by accounting time separately in a bio
-> adding the field bi_start. If this field is set, the bio should be
-> processed by blk-iolatency in rq_qos_done_bio().
-> 
-> [1] https://lore.kernel.org/lkml/20181205171039.73066-1-dennis@kernel.org/
-> 
-> Signed-off-by: Dennis Zhou <dennis@kernel.org>
-> Cc: Josef Bacik <josef@toxicpanda.com>
+On 11/29/2018 06:18 AM, Dan Carpenter wrote:
+> Hi Waiman,
+>
+> Thank you for the patch! Perhaps something to improve:
+>
+> url:    https://github.com/0day-ci/linux/commits/Waiman-Long/cgroup-Introducing-bypass-mode/20181123-030552
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+>
+> smatch warnings:
+> kernel/cgroup/cgroup.c:4893 css_create() error: we previously assumed 'parent' could be null (see line 4864)
+>
+> # https://github.com/0day-ci/linux/commit/8b68fd4330e043645667a5d3306398f8f88f9ff2
+> git remote add linux-review https://github.com/0day-ci/linux
+> git remote update linux-review
+> git checkout 8b68fd4330e043645667a5d3306398f8f88f9ff2
+> vim +/parent +4893 kernel/cgroup/cgroup.c
+>
+> a31f2d3ff kernel/cgroup.c        Tejun Heo        2012-11-19  4840  
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4841  /**
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4842   * css_create - create a cgroup_subsys_state
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4843   * @cgrp: the cgroup new css will be associated with
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4844   * @ss: the subsys of new css
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4845   *
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4846   * Create a new css associated with @cgrp - @ss pair.  On success, the new
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4847   * css is online and installed in @cgrp.  This function doesn't create the
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4848   * interface files.  Returns 0 on success, -errno on failure.
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4849   */
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4850  static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4851  					      struct cgroup_subsys *ss)
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4852  {
+> d51f39b05 kernel/cgroup.c        Tejun Heo        2014-05-16  4853  	struct cgroup *parent = cgroup_parent(cgrp);
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4854  	struct cgroup_subsys_state *parent_css = NULL;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4855  	struct cgroup_subsys_state *css;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4856  	int err;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4857  
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4858  	lockdep_assert_held(&cgroup_mutex);
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4859  
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4860  	/*
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4861  	 * As cgroup may be in bypass mode, need to skip over ancestor
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4862  	 * cgroups with NULL CSS.
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4863  	 */
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20 @4864  	for (; parent && !parent_css; parent = cgroup_parent(parent))
+>                                                                                ^^^^^^^^^^^^^^^^^^^^^
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4865  		parent_css = cgroup_css(parent, ss);
+>
+> When we exit this loop it means either parent is NULL or parent_css
+> is non-NULL.
+
+Sorry for the bug. I should have a temp variable to go up
+cgroup_parent() iteration chain and leave parent alone. Thanks for
+spotting that.
+
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4866  
+> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4867  	css = ss->css_alloc(parent_css);
+> e7e15b87f kernel/cgroup.c        Tejun Heo        2016-06-21  4868  	if (!css)
+> e7e15b87f kernel/cgroup.c        Tejun Heo        2016-06-21  4869  		css = ERR_PTR(-ENOMEM);
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4870  	if (IS_ERR(css))
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4871  		return css;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4872  
+> 8b68fd433 kernel/cgroup/cgroup.c Waiman Long      2018-11-20  4873  	init_and_link_css(css, ss, cgrp, parent_css);
+> a2bed8209 kernel/cgroup.c        Tejun Heo        2014-05-04  4874  
+> 2aad2a86f kernel/cgroup.c        Tejun Heo        2014-09-24  4875  	err = percpu_ref_init(&css->refcnt, css_release, 0, GFP_KERNEL);
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4876  	if (err)
+> 3eb59ec64 kernel/cgroup.c        Li Zefan         2014-03-18  4877  		goto err_free_css;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4878  
+> cf780b7dc kernel/cgroup.c        Vladimir Davydov 2015-08-03  4879  	err = cgroup_idr_alloc(&ss->css_idr, NULL, 2, 0, GFP_KERNEL);
+> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4880  	if (err < 0)
+> b00c52dae kernel/cgroup.c        Wenwei Tao       2016-05-13  4881  		goto err_free_css;
+> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4882  	css->id = err;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4883  
+> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4884  	/* @css is ready to be brought online now, make it visible */
+> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4885  	list_add_tail_rcu(&css->sibling, &parent_css->children);
+> 15a4c835e kernel/cgroup.c        Tejun Heo        2014-05-04  4886  	cgroup_idr_replace(&ss->css_idr, css, css->id);
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4887  
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4888  	err = online_css(css);
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4889  	if (err)
+> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4890  		goto err_list_del;
+> 944196278 kernel/cgroup.c        Tejun Heo        2014-03-19  4891  
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4892  	if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
+> d51f39b05 kernel/cgroup.c        Tejun Heo        2014-05-16 @4893  	    cgroup_parent(parent)) {
+>                                                                                           ^^^^^^
+> We dereference parent inside the function, but I don't know for sure
+> if this is reachable when "parent" is NULL.
+>
+> ed3d261b5 kernel/cgroup.c        Joe Perches      2014-04-25  4894  		pr_warn("%s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4895  			current->comm, current->pid, ss->name);
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4896  		if (!strcmp(ss->name, "memory"))
+> ed3d261b5 kernel/cgroup.c        Joe Perches      2014-04-25  4897  			pr_warn("\"memory\" requires setting use_hierarchy to 1 on the root\n");
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4898  		ss->warned_broken_hierarchy = true;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4899  	}
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4900  
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4901  	return css;
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4902  
+> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4903  err_list_del:
+> 1fed1b2e3 kernel/cgroup.c        Tejun Heo        2014-05-16  4904  	list_del_rcu(&css->sibling);
+> 3eb59ec64 kernel/cgroup.c        Li Zefan         2014-03-18  4905  err_free_css:
+> 8f53470ba kernel/cgroup/cgroup.c Tejun Heo        2018-04-26  4906  	list_del_rcu(&css->rstat_css_node);
+> 8f36aaec9 kernel/cgroup/cgroup.c Tejun Heo        2018-03-14  4907  	INIT_RCU_WORK(&css->destroy_rwork, css_free_rwork_fn);
+> 8f36aaec9 kernel/cgroup/cgroup.c Tejun Heo        2018-03-14  4908  	queue_rcu_work(cgroup_destroy_wq, &css->destroy_rwork);
+> 6cd0f5bba kernel/cgroup.c        Tejun Heo        2016-03-03  4909  	return ERR_PTR(err);
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4910  }
+> c81c925ad kernel/cgroup.c        Tejun Heo        2013-12-06  4911  
+>
 > ---
->  block/blk-iolatency.c     | 17 ++++++-----------
->  include/linux/blk_types.h | 12 ++++++++++++
->  2 files changed, 18 insertions(+), 11 deletions(-)
-> 
-> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-> index bee092727cad..52d5d7cc387c 100644
-> --- a/block/blk-iolatency.c
-> +++ b/block/blk-iolatency.c
-> @@ -463,6 +463,8 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
->  	if (!blk_iolatency_enabled(blkiolat))
->  		return;
->  
-> +	bio->bi_start = ktime_get_ns();
-> +
->  	while (blkg && blkg->parent) {
->  		struct iolatency_grp *iolat = blkg_to_lat(blkg);
->  		if (!iolat) {
-> @@ -480,18 +482,12 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
->  }
->  
->  static void iolatency_record_time(struct iolatency_grp *iolat,
-> -				  struct bio_issue *issue, u64 now,
-> +				  struct bio *bio, u64 now,
->  				  bool issue_as_root)
->  {
-> -	u64 start = bio_issue_time(issue);
-> +	u64 start = bio->bi_start;
->  	u64 req_time;
->  
-> -	/*
-> -	 * Have to do this so we are truncated to the correct time that our
-> -	 * issue is truncated to.
-> -	 */
-> -	now = __bio_issue_time(now);
-> -
->  	if (now <= start)
->  		return;
->  
-> @@ -593,7 +589,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
->  	bool enabled = false;
->  
->  	blkg = bio->bi_blkg;
-> -	if (!blkg)
-> +	if (!blkg || !bio->bi_start)
->  		return;
->  
->  	iolat = blkg_to_lat(bio->bi_blkg);
-> @@ -612,8 +608,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
->  		atomic_dec(&rqw->inflight);
->  		if (!enabled || iolat->min_lat_nsec == 0)
->  			goto next;
-> -		iolatency_record_time(iolat, &bio->bi_issue, now,
-> -				      issue_as_root);
-> +		iolatency_record_time(iolat, bio, now, issue_as_root);
->  		window_start = atomic64_read(&iolat->window_start);
->  		if (now > window_start &&
->  		    (now - window_start) >= iolat->cur_win_nsec) {
-> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-> index 46c005d601ac..c2c02ec08d7c 100644
-> --- a/include/linux/blk_types.h
-> +++ b/include/linux/blk_types.h
-> @@ -181,6 +181,18 @@ struct bio {
->  	 */
->  	struct blkcg_gq		*bi_blkg;
->  	struct bio_issue	bi_issue;
-> +#ifdef CONFIG_BLK_CGROUP_IOLATENCY
-> +	/*
-> +	 * blk-iolatency measure the time a bio takes between rq_qos_throttle()
-> +	 * and rq_qos_done_bio().  It attributes the time to the bio that gets
-> +	 * the request allowing any bios that can tag along via plug merging or
-> +	 * bio merging to be free (from blk-iolatency's perspective). This is
-> +	 * different from the time a bio takes from generic_make_request() to
-> +	 * the end of its life.  So, this also serves as a marker for which bios
-> +	 * should be processed by blk-iolatency.
-> +	 */
-> +	u64			bi_start;
-> +#endif /* CONFIG_BLK_CGROUP_IOLATENCY */
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-So now we have bi_issue and bi_start, both count basically the same thing.  Does
-using bi_issue actually matter?  I assume that it's going to be basically the
-same as bi_start for the most part, you are just getting us to only care about
-the bio's that we care about.
+Cheers,
+Longman
 
-What if we just add a bio flag to indicate that we've gone through io-latency?
-Once that's in place do these problems go away?  Or is the extra time counted
-from make_request_time to rq_qos_throttle() actually matter?  I feel like it
-shouldn't since it's mostly just checks, but I could be mistaken.  Thanks,
-
-Josef
