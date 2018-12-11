@@ -1,69 +1,40 @@
-From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH] blkcg: handle dying request_queue when associating a blkg
-Date: Tue, 11 Dec 2018 18:03:08 -0500
-Message-ID: <20181211230308.66276-1-dennis@kernel.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] blkcg: handle dying request_queue when associating a
+ blkg
+Date: Tue, 11 Dec 2018 15:16:13 -0800
+Message-ID: <1544570173.185366.397.camel@acm.org>
+References: <20181211230308.66276-1-dennis@kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181211230308.66276-1-dennis@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Dennis Zhou <dennis@kernel.org>
+To: Dennis Zhou <dennis@kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
 
-Between v3 [1] and v4 [2] of the blkg association series, the
-association point moved from generic_make_request_checks(), which is
-called after the request enters the queue, to bio_set_dev(), which is when
-the bio is formed before submit_bio(). When the request_queue goes away,
-the blkgs supporting the request_queue are destroyed and then the
-q->root_blkg is set to %NULL.
+On Tue, 2018-12-11 at 18:03 -0500, Dennis Zhou wrote:
++AD4 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
++AD4 index 6bd0619a7d6e..c30661ddc873 100644
++AD4 --- a/block/blk-cgroup.c
++AD4 +-+-+- b/block/blk-cgroup.c
++AD4 +AEAAQA -202,6 +-202,12 +AEAAQA static struct blkcg+AF8-gq +ACo-blkg+AF8-create(struct blkcg +ACo-blkcg,
++AD4  	WARN+AF8-ON+AF8-ONCE(+ACE-rcu+AF8-read+AF8-lock+AF8-held())+ADs
++AD4  	lockdep+AF8-assert+AF8-held(+ACY-q-+AD4-queue+AF8-lock)+ADs
++AD4  
++AD4 +-	/+ACo request+AF8-queue is dying, do not create/recreate a blkg +ACo-/
++AD4 +-	if (blk+AF8-queue+AF8-dying(q)) +AHs
++AD4 +-		ret +AD0 -ENODEV+ADs
++AD4 +-		goto err+AF8-free+AF8-blkg+ADs
++AD4 +-	+AH0
++AD4 +-
++AD4  	/+ACo blkg holds a reference to blkcg +ACo-/
++AD4  	if (+ACE-css+AF8-tryget+AF8-online(+ACY-blkcg-+AD4-css)) +AHs
++AD4  		ret +AD0 -ENODEV+ADs
 
-This patch adds a %NULL check to blkg_tryget_closest() to prevent the
-NPE caused by the above. It also adds a guard to see if the
-request_queue is dying when creating a blkg to prevent creating a blkg
-for a dead request_queue.
+What prevents that the queue state changes after blk+AF8-queue+AF8-dying() has returned
+and before blkg+AF8-create() returns? Are you sure you don't need to protect this
+code with a blk+AF8-queue+AF8-enter() / blk+AF8-queue+AF8-exit() pair?
 
-[1] https://lore.kernel.org/lkml/20180911184137.35897-1-dennisszhou@gmail.com/
-[2] https://lore.kernel.org/lkml/20181126211946.77067-1-dennis@kernel.org/
-
-Fixes: 5cdf2e3fea5e ("blkcg: associate blkg when associating a device")
-Reported-and-tested-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Dennis Zhou <dennis@kernel.org>
----
- block/blk-cgroup.c         | 6 ++++++
- include/linux/blk-cgroup.h | 2 +-
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 6bd0619a7d6e..c30661ddc873 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -202,6 +202,12 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	WARN_ON_ONCE(!rcu_read_lock_held());
- 	lockdep_assert_held(&q->queue_lock);
- 
-+	/* request_queue is dying, do not create/recreate a blkg */
-+	if (blk_queue_dying(q)) {
-+		ret = -ENODEV;
-+		goto err_free_blkg;
-+	}
-+
- 	/* blkg holds a reference to blkcg */
- 	if (!css_tryget_online(&blkcg->css)) {
- 		ret = -ENODEV;
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index bf13ecb0fe4f..f025fd1e22e6 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -511,7 +511,7 @@ static inline bool blkg_tryget(struct blkcg_gq *blkg)
-  */
- static inline struct blkcg_gq *blkg_tryget_closest(struct blkcg_gq *blkg)
- {
--	while (!percpu_ref_tryget(&blkg->refcnt))
-+	while (blkg && !percpu_ref_tryget(&blkg->refcnt))
- 		blkg = blkg->parent;
- 
- 	return blkg;
--- 
-2.17.1
-
+Bart.
