@@ -1,63 +1,130 @@
-From: Dennis Zhou <dennis@kernel.org>
-Subject: Re: [PATCH] blkcg: handle dying request_queue when associating a blkg
-Date: Tue, 11 Dec 2018 23:06:43 -0500
-Message-ID: <20181212040643.GA73727@dennisz-mbp.dhcp.thefacebook.com>
-References: <20181211230308.66276-1-dennis@kernel.org>
- <1544570173.185366.397.camel@acm.org>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v5 4/7] cgroup: cgroup v2 freezer
+Date: Wed, 12 Dec 2018 18:49:02 +0100
+Message-ID: <20181212174902.GA30309@redhat.com>
+References: <20181207201531.1665-1-guro@fb.com>
+ <20181207201531.1665-5-guro@fb.com>
+ <20181211162632.GB8504@redhat.com>
+ <20181211184033.GA8971@tower.DHCP.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1544570173.185366.397.camel@acm.org>
+In-Reply-To: <20181211184033.GA8971@tower.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
+To: Roman Gushchin <guro@fb.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-Hi Bart,
+On 12/11, Roman Gushchin wrote:
+>
+> On Tue, Dec 11, 2018 at 05:26:32PM +0100, Oleg Nesterov wrote:
+> > On 12/07, Roman Gushchin wrote:
+> > >
+> > > Cgroup v2 freezer tries to put tasks into a state similar to jobctl
+> > > stop. This means that tasks can be killed, ptraced (using
+> > > PTRACE_SEIZE*), and interrupted. It is possible to attach to
+> > > a frozen task, get some information (e.g. read registers) and detach.
+> >
+> > I fail to understand how this all supposed to work.
+> >
+> > > @@ -368,6 +369,8 @@ static inline int signal_pending_state(long state, struct task_struct *p)
+> > >  		return 0;
+> > >  	if (!signal_pending(p))
+> > >  		return 0;
+> > > +	if (unlikely(cgroup_task_frozen(p) && p->jobctl == JOBCTL_TRAP_FREEZE))
+> > > +		return __fatal_signal_pending(p);
+> >
+> > I think I will never agree with this change ;) and I don't think it actually helps.
+>
+> See below.
+>
+> >
+> > > +void cgroup_enter_frozen(void)
+> > > +{
+> > > +	if (!current->frozen) {
+> > > +		spin_lock_irq(&css_set_lock);
+> > > +		current->frozen = true;
+> > > +		cgroup_inc_frozen_cnt(task_dfl_cgroup(current), false, true);
+> > > +		spin_unlock_irq(&css_set_lock);
+> > > +	}
+> > > +
+> > > +	__set_current_state(TASK_INTERRUPTIBLE);
+> > > +	schedule();
+> >
+> > So once again, suppose it races with PTRACE_INTERRUPT, or SIGSTOP, or something
+> > else which should be handled by get_signal() before do_freezer_trap().
+> >
+> > If (say) PTRACE_INTERRUPT comes before schedule it will be lost. Otherwise
+> > the frozen task will react. This can't be right. Or I am totally confused.
+>
+> Why?
+> PTRACE_INTERRUPT will set JOBCTL_TRAP_STOP, so signal_pending_state()
+> will return true, schedule() will return immediately, and we'll handle the trap.
 
-On Tue, Dec 11, 2018 at 03:16:13PM -0800, Bart Van Assche wrote:
-> On Tue, 2018-12-11 at 18:03 -0500, Dennis Zhou wrote:
-> > diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> > index 6bd0619a7d6e..c30661ddc873 100644
-> > --- a/block/blk-cgroup.c
-> > +++ b/block/blk-cgroup.c
-> > @@ -202,6 +202,12 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
-> >  	WARN_ON_ONCE(!rcu_read_lock_held());
-> >  	lockdep_assert_held(&q->queue_lock);
-> >  
-> > +	/* request_queue is dying, do not create/recreate a blkg */
-> > +	if (blk_queue_dying(q)) {
-> > +		ret = -ENODEV;
-> > +		goto err_free_blkg;
-> > +	}
-> > +
-> >  	/* blkg holds a reference to blkcg */
-> >  	if (!css_tryget_online(&blkcg->css)) {
-> >  		ret = -ENODEV;
-> 
-> What prevents that the queue state changes after blk_queue_dying() has returned
-> and before blkg_create() returns? Are you sure you don't need to protect this
-> code with a blk_queue_enter() / blk_queue_exit() pair?
-> 
+OK, I misread the JOBCTL_TRAP_FREEZE check as "jobctl & JOBCTL_TRAP_FREEZE".
 
-Hmmm. So I think the idea is that we rely on normal shutdown as I don't
-think there is anything wrong with creating a blkg on a dying
-request_queue. When we are doing association, the request_queue should
-be pinned by the open call. What we are racing against is when the
-request_queue is shutting down, it goes around and destroys the blkgs.
-For clarity, QUEUE_FLAG_DYING is set in blk_cleanup_queue() before
-calling blk_exit_queue() which eventually calls blkcg_exit_queue().
+But p->jobctl == JOBCTL_TRAP_FREEZE doesn't look right too. For example,
+JOBCTL_STOP_DEQUEUED can be set. You probably need something like
 
-The use of blk_queue_dying() is to determine whether blkg shutdown has
-already started as if we create one after it has started, we may
-incorrectly orphan a blkg and leak it. Both blkg creation and
-destruction require holding the queue_lock, so if the QUEUE_FLAG_DYING
-flag is set after we've checked it, it means blkg destruction hasn't
-started because it has to wait on the queue_lock. If QUEUE_FLAG_DYING is
-set, then we have no guarantee of knowing what phase blkg destruction is
-in leading to a potential leak.
+	jobctl & (JOBCTL_PENDING_MASK | JOBCTL_TRAP_FREEZE) == JOBCTL_TRAP_FREEZE
 
-Thanks,
-Dennis
+And you need a barrier in between, iow you need set_current_state(TASK_INTERRUPTIBLE).
+
+But this doesn't really matter. I don't think you need to modify signal_pending_state()
+and penalize schedule(). You can do something like
+
+	spin_lock_irq(sigllock);
+	if (jobctl & (JOBCTL_PENDING_MASK | JOBCTL_TRAP_FREEZE) == JOBCTL_TRAP_FREEZE &&
+	    !__fatal_signal_pending())
+	{
+		__set_current_state(TASK_INTERRUPTIBLE);
+		clear_thread_flag(TIF_SIGPENDING);
+	}
+	spin_unlock_irq(siglock);
+
+	schedule();
+	// recalc_sigpending() is not needed
+
+in cgroup_enter_frozen() with the same effect. Which looks equally ugly and
+suboptimal, but at least this doesn't touch the sched code.
+
+> > and btw.... what about suspend? try_to_freeze_tasks() will obviously fail
+> > if there is a ->frozen thread?
+>
+> I have to think a bit more here, but something like this will probably work:
+>
+> diff --git a/kernel/freezer.c b/kernel/freezer.c
+> index b162b74611e4..590ac4d10b02 100644
+> --- a/kernel/freezer.c
+> +++ b/kernel/freezer.c
+> @@ -134,7 +134,7 @@ bool freeze_task(struct task_struct *p)
+>                 return false;
+>
+>         spin_lock_irqsave(&freezer_lock, flags);
+> -       if (!freezing(p) || frozen(p)) {
+> +       if (!freezing(p) || frozen(p) || cgroup_task_frozen()) {
+>                 spin_unlock_irqrestore(&freezer_lock, flags);
+>                 return false;
+>         }
+>
+> --
+>
+> If the task is already frozen by the cgroup freezer, we don't have to do
+> anything additionally.
+
+I don't think so. A cgroup_task_frozen() task can be killed after
+try_to_freeze_tasks() succeeds, and the exiting task can close files,
+do IO, etc. Or it can be thawed by cgroup_freeze_task(false).
+
+In short, if try_to_freeze_tasks() succeeds, the caller has all rights
+to assume that nobody can escape from __refrigerator().
+
+
+And what about TASK_STOPPED/TASK_TRACED tasks? They can not be frozen
+or thawed, right? This doesn't look good, and this differs from the
+current freezer controller...
+
+Oleg.
+
