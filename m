@@ -1,130 +1,74 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v5 4/7] cgroup: cgroup v2 freezer
-Date: Wed, 12 Dec 2018 18:49:02 +0100
-Message-ID: <20181212174902.GA30309@redhat.com>
-References: <20181207201531.1665-1-guro@fb.com>
- <20181207201531.1665-5-guro@fb.com>
- <20181211162632.GB8504@redhat.com>
- <20181211184033.GA8971@tower.DHCP.thefacebook.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] blkcg: handle dying request_queue when associating a
+ blkg
+Date: Wed, 12 Dec 2018 15:54:52 -0800
+Message-ID: <1544658892.185366.412.camel@acm.org>
+References: <20181211230308.66276-1-dennis@kernel.org>
+         <1544570173.185366.397.camel@acm.org>
+         <20181212040643.GA73727@dennisz-mbp.dhcp.thefacebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181211184033.GA8971@tower.DHCP.thefacebook.com>
+In-Reply-To: <20181212040643.GA73727@dennisz-mbp.dhcp.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+To: Dennis Zhou <dennis@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
 
-On 12/11, Roman Gushchin wrote:
->
-> On Tue, Dec 11, 2018 at 05:26:32PM +0100, Oleg Nesterov wrote:
-> > On 12/07, Roman Gushchin wrote:
-> > >
-> > > Cgroup v2 freezer tries to put tasks into a state similar to jobctl
-> > > stop. This means that tasks can be killed, ptraced (using
-> > > PTRACE_SEIZE*), and interrupted. It is possible to attach to
-> > > a frozen task, get some information (e.g. read registers) and detach.
-> >
-> > I fail to understand how this all supposed to work.
-> >
-> > > @@ -368,6 +369,8 @@ static inline int signal_pending_state(long state, struct task_struct *p)
-> > >  		return 0;
-> > >  	if (!signal_pending(p))
-> > >  		return 0;
-> > > +	if (unlikely(cgroup_task_frozen(p) && p->jobctl == JOBCTL_TRAP_FREEZE))
-> > > +		return __fatal_signal_pending(p);
-> >
-> > I think I will never agree with this change ;) and I don't think it actually helps.
->
-> See below.
->
-> >
-> > > +void cgroup_enter_frozen(void)
-> > > +{
-> > > +	if (!current->frozen) {
-> > > +		spin_lock_irq(&css_set_lock);
-> > > +		current->frozen = true;
-> > > +		cgroup_inc_frozen_cnt(task_dfl_cgroup(current), false, true);
-> > > +		spin_unlock_irq(&css_set_lock);
-> > > +	}
-> > > +
-> > > +	__set_current_state(TASK_INTERRUPTIBLE);
-> > > +	schedule();
-> >
-> > So once again, suppose it races with PTRACE_INTERRUPT, or SIGSTOP, or something
-> > else which should be handled by get_signal() before do_freezer_trap().
-> >
-> > If (say) PTRACE_INTERRUPT comes before schedule it will be lost. Otherwise
-> > the frozen task will react. This can't be right. Or I am totally confused.
->
-> Why?
-> PTRACE_INTERRUPT will set JOBCTL_TRAP_STOP, so signal_pending_state()
-> will return true, schedule() will return immediately, and we'll handle the trap.
+On Tue, 2018-12-11 at 23:06 -0500, Dennis Zhou wrote:
++AD4 Hi Bart,
++AD4 
++AD4 On Tue, Dec 11, 2018 at 03:16:13PM -0800, Bart Van Assche wrote:
++AD4 +AD4 On Tue, 2018-12-11 at 18:03 -0500, Dennis Zhou wrote:
++AD4 +AD4 +AD4 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
++AD4 +AD4 +AD4 index 6bd0619a7d6e..c30661ddc873 100644
++AD4 +AD4 +AD4 --- a/block/blk-cgroup.c
++AD4 +AD4 +AD4 +-+-+- b/block/blk-cgroup.c
++AD4 +AD4 +AD4 +AEAAQA -202,6 +-202,12 +AEAAQA static struct blkcg+AF8-gq +ACo-blkg+AF8-create(struct blkcg +ACo-blkcg,
++AD4 +AD4 +AD4  	WARN+AF8-ON+AF8-ONCE(+ACE-rcu+AF8-read+AF8-lock+AF8-held())+ADs
++AD4 +AD4 +AD4  	lockdep+AF8-assert+AF8-held(+ACY-q-+AD4-queue+AF8-lock)+ADs
++AD4 +AD4 +AD4  
++AD4 +AD4 +AD4 +-	/+ACo request+AF8-queue is dying, do not create/recreate a blkg +ACo-/
++AD4 +AD4 +AD4 +-	if (blk+AF8-queue+AF8-dying(q)) +AHs
++AD4 +AD4 +AD4 +-		ret +AD0 -ENODEV+ADs
++AD4 +AD4 +AD4 +-		goto err+AF8-free+AF8-blkg+ADs
++AD4 +AD4 +AD4 +-	+AH0
++AD4 +AD4 +AD4 +-
++AD4 +AD4 +AD4  	/+ACo blkg holds a reference to blkcg +ACo-/
++AD4 +AD4 +AD4  	if (+ACE-css+AF8-tryget+AF8-online(+ACY-blkcg-+AD4-css)) +AHs
++AD4 +AD4 +AD4  		ret +AD0 -ENODEV+ADs
++AD4 +AD4 
++AD4 +AD4 What prevents that the queue state changes after blk+AF8-queue+AF8-dying() has returned
++AD4 +AD4 and before blkg+AF8-create() returns? Are you sure you don't need to protect this
++AD4 +AD4 code with a blk+AF8-queue+AF8-enter() / blk+AF8-queue+AF8-exit() pair?
++AD4 +AD4 
++AD4 
++AD4 Hmmm. So I think the idea is that we rely on normal shutdown as I don't
++AD4 think there is anything wrong with creating a blkg on a dying
++AD4 request+AF8-queue. When we are doing association, the request+AF8-queue should
++AD4 be pinned by the open call. What we are racing against is when the
++AD4 request+AF8-queue is shutting down, it goes around and destroys the blkgs.
++AD4 For clarity, QUEUE+AF8-FLAG+AF8-DYING is set in blk+AF8-cleanup+AF8-queue() before
++AD4 calling blk+AF8-exit+AF8-queue() which eventually calls blkcg+AF8-exit+AF8-queue().
++AD4 
++AD4 The use of blk+AF8-queue+AF8-dying() is to determine whether blkg shutdown has
++AD4 already started as if we create one after it has started, we may
++AD4 incorrectly orphan a blkg and leak it. Both blkg creation and
++AD4 destruction require holding the queue+AF8-lock, so if the QUEUE+AF8-FLAG+AF8-DYING
++AD4 flag is set after we've checked it, it means blkg destruction hasn't
++AD4 started because it has to wait on the queue+AF8-lock. If QUEUE+AF8-FLAG+AF8-DYING is
++AD4 set, then we have no guarantee of knowing what phase blkg destruction is
++AD4 in leading to a potential leak.
 
-OK, I misread the JOBCTL_TRAP_FREEZE check as "jobctl & JOBCTL_TRAP_FREEZE".
+Hi Dennis,
 
-But p->jobctl == JOBCTL_TRAP_FREEZE doesn't look right too. For example,
-JOBCTL_STOP_DEQUEUED can be set. You probably need something like
+To answer my own question: since all queue flag manipulations are protected
+by the queue lock and since blkg+AF8-create() is called with the queue lock held
+the above code does not need any further protection. Hence feel free to add
+the following:
 
-	jobctl & (JOBCTL_PENDING_MASK | JOBCTL_TRAP_FREEZE) == JOBCTL_TRAP_FREEZE
-
-And you need a barrier in between, iow you need set_current_state(TASK_INTERRUPTIBLE).
-
-But this doesn't really matter. I don't think you need to modify signal_pending_state()
-and penalize schedule(). You can do something like
-
-	spin_lock_irq(sigllock);
-	if (jobctl & (JOBCTL_PENDING_MASK | JOBCTL_TRAP_FREEZE) == JOBCTL_TRAP_FREEZE &&
-	    !__fatal_signal_pending())
-	{
-		__set_current_state(TASK_INTERRUPTIBLE);
-		clear_thread_flag(TIF_SIGPENDING);
-	}
-	spin_unlock_irq(siglock);
-
-	schedule();
-	// recalc_sigpending() is not needed
-
-in cgroup_enter_frozen() with the same effect. Which looks equally ugly and
-suboptimal, but at least this doesn't touch the sched code.
-
-> > and btw.... what about suspend? try_to_freeze_tasks() will obviously fail
-> > if there is a ->frozen thread?
->
-> I have to think a bit more here, but something like this will probably work:
->
-> diff --git a/kernel/freezer.c b/kernel/freezer.c
-> index b162b74611e4..590ac4d10b02 100644
-> --- a/kernel/freezer.c
-> +++ b/kernel/freezer.c
-> @@ -134,7 +134,7 @@ bool freeze_task(struct task_struct *p)
->                 return false;
->
->         spin_lock_irqsave(&freezer_lock, flags);
-> -       if (!freezing(p) || frozen(p)) {
-> +       if (!freezing(p) || frozen(p) || cgroup_task_frozen()) {
->                 spin_unlock_irqrestore(&freezer_lock, flags);
->                 return false;
->         }
->
-> --
->
-> If the task is already frozen by the cgroup freezer, we don't have to do
-> anything additionally.
-
-I don't think so. A cgroup_task_frozen() task can be killed after
-try_to_freeze_tasks() succeeds, and the exiting task can close files,
-do IO, etc. Or it can be thawed by cgroup_freeze_task(false).
-
-In short, if try_to_freeze_tasks() succeeds, the caller has all rights
-to assume that nobody can escape from __refrigerator().
+Reviewed-by: Bart Van Assche +ADw-bvanassche+AEA-acm.org+AD4
 
 
-And what about TASK_STOPPED/TASK_TRACED tasks? They can not be frozen
-or thawed, right? This doesn't look good, and this differs from the
-current freezer controller...
-
-Oleg.
 
