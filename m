@@ -1,83 +1,57 @@
-From: Dennis Zhou <dennis@kernel.org>
-Subject: Re: [PATCH] blkcg: handle dying request_queue when associating a blkg
-Date: Thu, 13 Dec 2018 10:47:13 -0500
-Message-ID: <20181213154713.GA76721@dennisz-mbp.dhcp.thefacebook.com>
-References: <20181211230308.66276-1-dennis@kernel.org>
- <1544570173.185366.397.camel@acm.org>
- <20181212040643.GA73727@dennisz-mbp.dhcp.thefacebook.com>
- <1544658892.185366.412.camel@acm.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2] block: fix iolat timestamp and restore accounting
+ semantics
+Date: Thu, 13 Dec 2018 12:48:11 -0700
+Message-ID: <59500829-10f5-fa83-b2db-fcfa4a1cd11d@kernel.dk>
+References: <20181211230114.65967-1-dennis@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1544658892.185366.412.camel@acm.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=vO0PVlC/h/TD8mOKDcNOZghona65qVLNu9TgC87CmsI=;
+        b=0d8wMK6WrqJrVzfELihclsJcuETB5BnN3+Arx/NlwWZIkj/puRhien7VXSOJzfYbZk
+         7765Fzp6yB+Pcn2BhLUD4zsM397yly3SvQFucCDiwr30DMMJEtdbWQ7Xq9J5YLhyNKq5
+         BcW1CX4L7b2SZdQ9OWMjBeOn7x+H0VCgI5uAIl8++xgHeqsSLgwvMqdPblGq1s+I6YLc
+         Y5uqbp6wzckfuuypl4tdT0jU71CFgFMGzfzdHXdehhODUwGOh+0yD1YFRzanLF03kmJP
+         72XnekOd/HSkK+LrkmfKsgbkzWbpuqOnRoMAH+tgC4slWNZbCYI+0sVUhPrnkfk166F4
+         LYQA==
+In-Reply-To: <20181211230114.65967-1-dennis@kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Dennis Zhou <dennis@kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
+To: Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Dec 12, 2018 at 03:54:52PM -0800, Bart Van Assche wrote:
-> On Tue, 2018-12-11 at 23:06 -0500, Dennis Zhou wrote:
-> > Hi Bart,
-> > 
-> > On Tue, Dec 11, 2018 at 03:16:13PM -0800, Bart Van Assche wrote:
-> > > On Tue, 2018-12-11 at 18:03 -0500, Dennis Zhou wrote:
-> > > > diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> > > > index 6bd0619a7d6e..c30661ddc873 100644
-> > > > --- a/block/blk-cgroup.c
-> > > > +++ b/block/blk-cgroup.c
-> > > > @@ -202,6 +202,12 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
-> > > >  	WARN_ON_ONCE(!rcu_read_lock_held());
-> > > >  	lockdep_assert_held(&q->queue_lock);
-> > > >  
-> > > > +	/* request_queue is dying, do not create/recreate a blkg */
-> > > > +	if (blk_queue_dying(q)) {
-> > > > +		ret = -ENODEV;
-> > > > +		goto err_free_blkg;
-> > > > +	}
-> > > > +
-> > > >  	/* blkg holds a reference to blkcg */
-> > > >  	if (!css_tryget_online(&blkcg->css)) {
-> > > >  		ret = -ENODEV;
-> > > 
-> > > What prevents that the queue state changes after blk_queue_dying() has returned
-> > > and before blkg_create() returns? Are you sure you don't need to protect this
-> > > code with a blk_queue_enter() / blk_queue_exit() pair?
-> > > 
-> > 
-> > Hmmm. So I think the idea is that we rely on normal shutdown as I don't
-> > think there is anything wrong with creating a blkg on a dying
-> > request_queue. When we are doing association, the request_queue should
-> > be pinned by the open call. What we are racing against is when the
-> > request_queue is shutting down, it goes around and destroys the blkgs.
-> > For clarity, QUEUE_FLAG_DYING is set in blk_cleanup_queue() before
-> > calling blk_exit_queue() which eventually calls blkcg_exit_queue().
-> > 
-> > The use of blk_queue_dying() is to determine whether blkg shutdown has
-> > already started as if we create one after it has started, we may
-> > incorrectly orphan a blkg and leak it. Both blkg creation and
-> > destruction require holding the queue_lock, so if the QUEUE_FLAG_DYING
-> > flag is set after we've checked it, it means blkg destruction hasn't
-> > started because it has to wait on the queue_lock. If QUEUE_FLAG_DYING is
-> > set, then we have no guarantee of knowing what phase blkg destruction is
-> > in leading to a potential leak.
+On 12/11/18 4:01 PM, Dennis Zhou wrote:
+> The blk-iolatency controller measures the time from rq_qos_throttle() to
+> rq_qos_done_bio() and attributes this time to the first bio that needs
+> to create the request. This means if a bio is plug-mergeable or
+> bio-mergeable, it gets to bypass the blk-iolatency controller.
 > 
-> Hi Dennis,
+> The recent series, to tag all bios w/ blkgs in [1] changed the timing
+> incorrectly as well. First, the iolatency controller was tagging bios
+> and using that information if it should process it in rq_qos_done_bio().
+> However, now that all bios are tagged, this caused the atomic_t for the
+> struct rq_wait inflight count to underflow resulting in a stall. Second,
+> now the timing was using the duration a bio from generic_make_request()
+> rather than the timing mentioned above.
 > 
-> To answer my own question: since all queue flag manipulations are protected
-> by the queue lock and since blkg_create() is called with the queue lock held
-> the above code does not need any further protection. Hence feel free to add
-> the following:
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> 
+> This patch fixes these issues by reusing the BLK_QUEUE_ENTERED flag to
+> determine if a bio has entered the request layer and is responsible for
+> starting a request. Stacked drivers don't recurse through
+> blk_mq_make_request(), so the overhead of using time between
+> generic_make_request() and the blk_mq_get_request() should be minimal.
+> blk-iolatency now checks if this flag is set to determine if it should
+> process the bio in rq_qos_done_bio().
 
-It seems that Christoph in 57d74df90783 ("block: use atomic bitops for
-->queue_flags") changed it so that flag manipulations no longer are
-protected by the queue_lock in for-4.21/block. But I think my
-explanation above suffices that we will always be able to clean up a
-blkg created as long as the QUEUE_FLAG_DYING is not set.
+I'm having a hard time convincing myself that this is correct... Maybe
+we should just add a new flag for this specific use case? Or feel free
+to convince me otherwise.
 
-Thanks for reviewing this!
-Dennis
+-- 
+Jens Axboe
+
