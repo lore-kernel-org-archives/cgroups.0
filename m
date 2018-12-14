@@ -1,96 +1,107 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2] block: fix iolat timestamp and restore accounting
- semantics
-Date: Thu, 13 Dec 2018 13:10:07 -0700
-Message-ID: <317a289a-5c0a-636b-70af-c3aaaf9b0d81@kernel.dk>
-References: <20181211230114.65967-1-dennis@kernel.org>
- <59500829-10f5-fa83-b2db-fcfa4a1cd11d@kernel.dk>
- <20181213195208.qgvfeb5ilbf3ttsf@MacBook-Pro-91.local>
- <cbf1ca87-6a47-6c98-0c41-5cf495d6508b@kernel.dk>
- <20181213200358.e5zxe4tacrwylg32@MacBook-Pro-91.local>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH 0/6] psi: pressure stall monitors
+Date: Fri, 14 Dec 2018 09:15:02 -0800
+Message-ID: <20181214171508.7791-1-surenb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=fHszRcQD/Xo2QERAL0m1tRp8DU2FUA/4azDChFxDoGU=;
-        b=wJP1SQ8ImzHtwUh0cjnLe7Dk8ufoQYVWa4WBiuA1Q1UDTjqC2eHMHWJIzJ71ZT90N+
-         O+f4vVZxqMMST9jVOXUCJIsS8bk3k+z9nX1jb/DhOhF1xi318pufij+kPLR5HJMHHVTv
-         lQWGLO9IogK6WHgondokFSd0iaHsFbA9O5EWrFa1nKO1AuOmUDbUqF5QTdlGk85Z+Ljl
-         D6rKlD1DxeTYvoAS67buBkBlKOV70deiksigOln/m3RdCqABptRo5gggXiHpRjkfpCjr
-         CwVRH3ZQnRRJQw+ZTCbX47jyXZWbJZ7cEgHmV0CAuM/84nFJf8weneRjJ1CyEZq+uisQ
-         Lxxg==
-In-Reply-To: <20181213200358.e5zxe4tacrwylg32@MacBook-Pro-91.local>
-Content-Language: en-US
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=SQH8taIQkjdsZM4vXe8YuYSXfYbFmiDD/sxQ2CNRa+Q=;
+        b=VMlcDc6pBbefgdLgbx3BcKdCAoBNsxf/QXyvozcie1dZ7JHxwPkvj+fpOcvPhlxdCD
+         Aor+gaWOgpUb/+t5BxoCW1Zf56LnakBSXB7vCmyXudReJIdR5rm+k6CPIo6E1inL/Aw3
+         V9g8MO/sbuDMPNP0PILBab5iuBBuV1+hKwsVbnihgRz5ZZDffEC4ejVIYBcIw3FghUM1
+         2htQ844fjf/54XM5IWxGpdqSuvJLtBNhNuZePcROUtK8iuWon/vjfh1Q4sTGuotxzZ1t
+         PVEfrcG8EQoRG9WQ4mzZy8YmG7coFYwxA1htS7YNPMyoSZojqhCZsFpNhgLPcZwc8nSE
+         Cn1A==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: gregkh@linuxfoundation.org
+Cc: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, axboe@kernel.dk, dennis@kernel.org, dennisszhou@gmail.com, mingo@redhat.com, peterz@infradead.org, akpm@linux-foundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@android.com, Suren Baghdasaryan <surenb@google.com>
 
-On 12/13/18 1:03 PM, Josef Bacik wrote:
-> On Thu, Dec 13, 2018 at 12:59:03PM -0700, Jens Axboe wrote:
->> On 12/13/18 12:52 PM, Josef Bacik wrote:
->>> On Thu, Dec 13, 2018 at 12:48:11PM -0700, Jens Axboe wrote:
->>>> On 12/11/18 4:01 PM, Dennis Zhou wrote:
->>>>> The blk-iolatency controller measures the time from
->>>>> rq_qos_throttle() to rq_qos_done_bio() and attributes this time to
->>>>> the first bio that needs to create the request. This means if a bio
->>>>> is plug-mergeable or bio-mergeable, it gets to bypass the
->>>>> blk-iolatency controller.
->>>>>
->>>>> The recent series, to tag all bios w/ blkgs in [1] changed the
->>>>> timing incorrectly as well. First, the iolatency controller was
->>>>> tagging bios and using that information if it should process it in
->>>>> rq_qos_done_bio().  However, now that all bios are tagged, this
->>>>> caused the atomic_t for the struct rq_wait inflight count to
->>>>> underflow resulting in a stall. Second, now the timing was using the
->>>>> duration a bio from generic_make_request() rather than the timing
->>>>> mentioned above.
->>>>>
->>>>> This patch fixes these issues by reusing the BLK_QUEUE_ENTERED flag
->>>>> to determine if a bio has entered the request layer and is
->>>>> responsible for starting a request. Stacked drivers don't recurse
->>>>> through blk_mq_make_request(), so the overhead of using time between
->>>>> generic_make_request() and the blk_mq_get_request() should be
->>>>> minimal.  blk-iolatency now checks if this flag is set to determine
->>>>> if it should process the bio in rq_qos_done_bio().
->>>>
->>>> I'm having a hard time convincing myself that this is correct...
->>>> Maybe we should just add a new flag for this specific use case? Or
->>>> feel free to convince me otherwise.
->>>>
->>>
->>> I mean it'll work for now, but then when somebody else wants to do
->>> something similar *cough*io.weight*cough* it'll need a new flag.  I
->>> kind of hate adding a new flag for every controller, but then again
->>> it's not like there's thousands of these things.  I'm having a hard
->>> time coming up with a solution other than a per-tracker flag.  As for
->>> this specific version, I still think it needs to be in iolatency
->>> itself, trying to make it generic just means it'll get fucked up again
->>> later down the line.  Thanks,
->>
->> We definitely don't have that many flags, and I'd hate to add a
->> per-whatever flag for this.
->>
->> But do we need that? We really just need single flag for this, my main
->> worry was overloading ENTERED. Especially since we're adding different
->> clearing and setting for it. If we had a specific one, if it's set, we
->> would need to disallow merging for it, I guess.
->>
->> And there's already BIO_THROTTLED...
->>
-> 
-> Oh well I guess we only really want to know if we saw the BIO, which
-> should be able to be shared by all the rq_qos implementations.  I
-> think I'd rather just have a BIO_TRACKED to indicate it went through
-> the normal rq_qos path.  Thanks,
+Android is adopting psi to detect and remedy memory pressure that
+results in stuttering and decreased responsiveness on mobile devices.
 
-Agree, so how about renaming BIO_THROTTLED to BIO_TRACKED and using
-that?
+Psi gives us the stall information, but because we're dealing with
+latencies in the millisecond range, periodically reading the pressure
+files to detect stalls in a timely fashion is not feasible. Psi also
+doesn't aggregate its averages at a high-enough frequency right now.
+
+This patch series extends the psi interface such that users can
+configure sensitive latency thresholds and use poll() and friends to
+be notified when these are breached.
+
+As high-frequency aggregation is costly, it implements an aggregation
+method that is optimized for fast, short-interval averaging, and makes
+the aggregation frequency adaptive, such that high-frequency updates
+only happen while monitored stall events are actively occurring.
+
+With these patches applied, Android can monitor for, and ward off,
+mounting memory shortages before they cause problems for the user.
+For example, using memory stall monitors in userspace low memory
+killer daemon (lmkd) we can detect mounting pressure and kill less
+important processes before device becomes visibly sluggish. In our
+memory stress testing psi memory monitors produce roughly 10x less
+false positives compared to vmpressure signals. Having ability to
+specify multiple triggers for the same psi metric allows other parts
+of Android framework to monitor memory state of the device and act
+accordingly.
+
+The new interface is straight-forward. The user opens one of the
+pressure files for writing and writes a trigger description into the
+file descriptor that defines the stall state - some or full, and the
+maximum stall time over a given window of time. E.g.:
+
+        /* Signal when stall time exceeds 100ms of a 1s window */
+        char trigger[] = "full 100000 1000000"
+        fd = open("/proc/pressure/memory")
+        write(fd, trigger, sizeof(trigger))
+        while (poll() >= 0) {
+                ...
+        };
+        close(fd);
+
+When the monitored stall state is entered, psi adapts its aggregation
+frequency according to what the configured time window requires in
+order to emit event signals in a timely fashion. Once the stalling
+subsides, aggregation reverts back to normal.
+
+The trigger is associated with the open file descriptor. To stop
+monitoring, the user only needs to close the file descriptor and the
+trigger is discarded.
+
+Patches 1-5 prepare the psi code for polling support. Patch 6
+implements the adaptive polling logic, the pressure growth detection
+optimized for short intervals, and hooks up write() and poll() on the
+pressure files.
+
+The patches were developed in collaboration with Johannes Weiner.
+
+The patches are based on 4.20-rc6.
+
+Johannes Weiner (3):
+  fs: kernfs: add poll file operation
+  kernel: cgroup: add poll file operation
+  psi: eliminate lazy clock mode
+
+Suren Baghdasaryan (3):
+  psi: introduce state_mask to represent stalled psi states
+  psi: rename psi fields in preparation for psi trigger addition
+  psi: introduce psi monitor
+
+ Documentation/accounting/psi.txt | 105 ++++++
+ fs/kernfs/file.c                 |  31 +-
+ include/linux/cgroup-defs.h      |   4 +
+ include/linux/kernfs.h           |   6 +
+ include/linux/psi.h              |  10 +
+ include/linux/psi_types.h        |  90 ++++-
+ kernel/cgroup/cgroup.c           | 119 ++++++-
+ kernel/sched/psi.c               | 586 +++++++++++++++++++++++++++----
+ 8 files changed, 865 insertions(+), 86 deletions(-)
 
 -- 
-Jens Axboe
+2.20.0.405.gbc1bbc6f85-goog
 
