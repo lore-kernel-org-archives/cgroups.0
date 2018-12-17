@@ -1,67 +1,90 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 4/6] psi: introduce state_mask to represent stalled psi
- states
-Date: Mon, 17 Dec 2018 16:55:25 +0100
-Message-ID: <20181217155525.GC2218@hirez.programming.kicks-ass.net>
-References: <20181214171508.7791-1-surenb@google.com>
- <20181214171508.7791-5-surenb@google.com>
-Mime-Version: 1.0
+From: Dennis Zhou <dennis@kernel.org>
+Subject: [PATCH v3] block: fix blk-iolatency accounting underflow
+Date: Mon, 17 Dec 2018 11:03:51 -0500
+Message-ID: <20181217160351.27903-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=574+4ZD7Du9DDrY3jcdjsYd7VDFDIpxaJakuUWbr19s=; b=NzN4oTZi6gyJm2aSWquP3ym0d
-        9omamrHx6pqwcZKsaR2e90jn3JJGPgWxUbNtXeKUrfjI47HpoiolK5gTOXYmROfIcTsA4j38T2tS6
-        QwtlKihqL0AwxJKPVt2KhAMOEkNu+c9hCRXVjbXZIp9geLuF9OkitZG5hfKTCJ3BtBmTXjGlrSYI1
-        4TgSqH4hgpz+eFez7W8mmEGlwcbjR5NRugb3gofnJfLixyB/rnj0dIWTg3Trhfze1lT42vr5lqQVB
-        Z5uHM1LAngIidwmkDDiiTrrPgFICAjkZgEEmZ5miFSveGJjArtzaUovOv2s9v6TQNP94sjT0v0yGT
-    
-Content-Disposition: inline
-In-Reply-To: <20181214171508.7791-5-surenb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: gregkh@linuxfoundation.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, axboe@kernel.dk, dennis@kernel.org, dennisszhou@gmail.com, mingo@redhat.com, akpm@linux-foundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@android.com
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-On Fri, Dec 14, 2018 at 09:15:06AM -0800, Suren Baghdasaryan wrote:
-> The psi monitoring patches will need to determine the same states as
-> record_times(). To avoid calculating them twice, maintain a state mask
-> that can be consulted cheaply. Do this in a separate patch to keep the
-> churn in the main feature patch at a minimum.
-> 
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> ---
->  include/linux/psi_types.h |  3 +++
->  kernel/sched/psi.c        | 29 +++++++++++++++++++----------
->  2 files changed, 22 insertions(+), 10 deletions(-)
-> 
-> diff --git a/include/linux/psi_types.h b/include/linux/psi_types.h
-> index 2cf422db5d18..2c6e9b67b7eb 100644
-> --- a/include/linux/psi_types.h
-> +++ b/include/linux/psi_types.h
-> @@ -53,6 +53,9 @@ struct psi_group_cpu {
->  	/* States of the tasks belonging to this group */
->  	unsigned int tasks[NR_PSI_TASK_COUNTS];
->  
-> +	/* Aggregate pressure state derived from the tasks */
-> +	u32 state_mask;
-> +
->  	/* Period time sampling buckets for each state of interest (ns) */
->  	u32 times[NR_PSI_STATES];
->  
+The blk-iolatency controller measures the time from rq_qos_throttle() to
+rq_qos_done_bio() and attributes this time to the first bio that needs
+to create the request. This means if a bio is plug-mergeable or
+bio-mergeable, it gets to bypass the blk-iolatency controller.
 
-Since we spend so much time counting space in that line, maybe add a
-note to the Changlog about how this fits.
+The recent series [1], to tag all bios w/ blkgs undermined how iolatency
+was determining which bios it was charging and should process in
+rq_qos_done_bio(). Because all bios are being tagged, this caused the
+atomic_t for the struct rq_wait inflight count to underflow and result
+in a stall.
 
-Also, since I just had to re-count, you might want to add explicit
-numbers to the psi_res and psi_states enums.
+This patch adds a new flag BIO_TRACKED to let controllers know that a
+bio is going through the rq_qos path. blk-iolatency now checks if this
+flag is set to see if it should process the bio in rq_qos_done_bio().
 
-> +		if (state_mask & (1 << s))
+Overloading BLK_QUEUE_ENTERED works, but makes the flag rules confusing.
+BIO_THROTTLED was another candidate, but the flag is set for all bios
+that have gone through blk-throttle code. Overloading a flag comes with
+the burden of making sure that when either implementation changes, a
+change in setting rules for one doesn't cause a bug in the other. So
+here, we unfortunately opt for adding a new flag.
 
-We have the BIT() macro, but I'm honestly not sure that will improve
-things.
+[1] https://lore.kernel.org/lkml/20181205171039.73066-1-dennis@kernel.org/
+
+Fixes: 5cdf2e3fea5e ("blkcg: associate blkg when associating a device")
+Signed-off-by: Dennis Zhou <dennis@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>
+---
+ block/blk-iolatency.c     | 2 +-
+ block/blk-rq-qos.h        | 5 +++++
+ include/linux/blk_types.h | 1 +
+ 3 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index bee092727cad..fc714ef402a6 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -593,7 +593,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
+ 	bool enabled = false;
+ 
+ 	blkg = bio->bi_blkg;
+-	if (!blkg)
++	if (!blkg || !bio_flagged(bio, BIO_TRACKED))
+ 		return;
+ 
+ 	iolat = blkg_to_lat(bio->bi_blkg);
+diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
+index fd8a0c5debd3..58f62483b537 100644
+--- a/block/blk-rq-qos.h
++++ b/block/blk-rq-qos.h
+@@ -170,6 +170,11 @@ static inline void rq_qos_done_bio(struct request_queue *q, struct bio *bio)
+ 
+ static inline void rq_qos_throttle(struct request_queue *q, struct bio *bio)
+ {
++	/*
++	 * BIO_TRACKED lets controllers know that a bio went through the
++	 * normal rq_qos path.
++	 */
++	bio_set_flag(bio, BIO_TRACKED);
+ 	if (q->rq_qos)
+ 		__rq_qos_throttle(q->rq_qos, bio);
+ }
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 46c005d601ac..fc99474ac968 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -228,6 +228,7 @@ struct bio {
+ #define BIO_TRACE_COMPLETION 10	/* bio_endio() should trace the final completion
+ 				 * of this bio. */
+ #define BIO_QUEUE_ENTERED 11	/* can use blk_queue_enter_live() */
++#define BIO_TRACKED 12		/* set if bio goes through the rq_qos path */
+ 
+ /* See BVEC_POOL_OFFSET below before adding new flags */
+ 
+-- 
+2.17.1
+
