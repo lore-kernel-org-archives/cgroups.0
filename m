@@ -1,23 +1,23 @@
 From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 3/6] psi: eliminate lazy clock mode
-Date: Mon, 17 Dec 2018 17:10:01 -0800
-Message-ID: <CAJuCfpFtqd=RDDW_U5HFXuAZzNh6F+Enrjz3P4jZg=hvyH9RwQ@mail.gmail.com>
-References: <20181214171508.7791-1-surenb@google.com> <20181214171508.7791-4-surenb@google.com>
- <20181217145754.GB2218@hirez.programming.kicks-ass.net>
+Subject: Re: [PATCH 4/6] psi: introduce state_mask to represent stalled psi states
+Date: Mon, 17 Dec 2018 17:14:53 -0800
+Message-ID: <CAJuCfpHrQB7OtEC535=s4iJqwan17nAc-mbycV1aJ3RUQTWCPA@mail.gmail.com>
+References: <20181214171508.7791-1-surenb@google.com> <20181214171508.7791-5-surenb@google.com>
+ <20181217155525.GC2218@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=IWqTg7e7BySNj9lmjGI7lNLIjnRegZYKQ+my+yKGfqs=;
-        b=S2EgdtpyJLHPh2GZK2JRSXX2DuPbm4Qa8TB+iKtlgxbHhbVIJOfJR+VQ7xFKBBziQr
-         vjjazB7I+4dLyyswD3fy+9bSCL5llq+20jnJ1Qa7oFlnhTP/3HGph75JlcvgwZ7+6IZJ
-         1s/b3UYNLpenPmORnuzkDmSfiuRODv7l0zt7vQT1ed9PGwj7X3zvF/aIiyvh119ZkM6R
-         WbFTiU56mQLwJRANDgm+/i22iIe8nwVZrsGkDAjFlBYL4utfVJnfyQDkHG6lWx5x+CqR
-         eK2RWXHiY7x5TpCWK/8chwBirg0TbkUQLBdgJeUedmLxWEbLlEjOvZGBzF/32lZcWE9P
-         gE7A==
-In-Reply-To: <20181217145754.GB2218@hirez.programming.kicks-ass.net>
+        bh=MtV8grmjLA0rwx3YhGhQj1UX/LL1RwYw0cDYDYDCZQ4=;
+        b=HhtqGWhr4ELtOVTsQaCzl2jfH5UQSFbjJ7o0cQPu3tty6slMA5FrhcMyuWO1862TPC
+         TovMgF0u9tuNUPWYSU3wBU+0sTAK7m7KKZ51S+rSpJNjy8Z5TEPt8HN2xJLke0aWMze2
+         g6huHXJmZfpJgb82OUlb80GH6G72sXqfTLAkuFGOO8uML3Dw7NUlIwBiaAubDnk6GyiC
+         RQxOzg3vvGHYzXPfDRWdgwrvpD3M3+HNrEUpI1oAKGR9FrpzlZ9mRzp4lf3qUM9Pij8v
+         Uq/mmngb36fGkAijmpWMUx7rWM5WCXfaRx8ZyJokBUrz8Gt2kg+Fals6cH5C1wyK/Q4h
+         qobQ==
+In-Reply-To: <20181217155525.GC2218@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -25,31 +25,49 @@ Content-Transfer-Encoding: 7bit
 To: Peter Zijlstra <peterz@infradead.org>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, axboe@kernel.dk, dennis@kernel.org, Dennis Zhou <dennisszhou@gmail.com>, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-mm <linux-mm@kvack.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-team@android.com
 
-On Mon, Dec 17, 2018 at 6:58 AM Peter Zijlstra <peterz@infradead.org> wrote:
+On Mon, Dec 17, 2018 at 7:55 AM Peter Zijlstra <peterz@infradead.org> wrote:
 >
-> On Fri, Dec 14, 2018 at 09:15:05AM -0800, Suren Baghdasaryan wrote:
-> > Eliminate the idle mode and keep the worker doing 2s update intervals
-> > at all times.
+> On Fri, Dec 14, 2018 at 09:15:06AM -0800, Suren Baghdasaryan wrote:
+> > The psi monitoring patches will need to determine the same states as
+> > record_times(). To avoid calculating them twice, maintain a state mask
+> > that can be consulted cheaply. Do this in a separate patch to keep the
+> > churn in the main feature patch at a minimum.
+> >
+> > Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+> > ---
+> >  include/linux/psi_types.h |  3 +++
+> >  kernel/sched/psi.c        | 29 +++++++++++++++++++----------
+> >  2 files changed, 22 insertions(+), 10 deletions(-)
+> >
+> > diff --git a/include/linux/psi_types.h b/include/linux/psi_types.h
+> > index 2cf422db5d18..2c6e9b67b7eb 100644
+> > --- a/include/linux/psi_types.h
+> > +++ b/include/linux/psi_types.h
+> > @@ -53,6 +53,9 @@ struct psi_group_cpu {
+> >       /* States of the tasks belonging to this group */
+> >       unsigned int tasks[NR_PSI_TASK_COUNTS];
+> >
+> > +     /* Aggregate pressure state derived from the tasks */
+> > +     u32 state_mask;
+> > +
+> >       /* Period time sampling buckets for each state of interest (ns) */
+> >       u32 times[NR_PSI_STATES];
+> >
 >
-> That sounds like a bad deal.. esp. so for battery powered devices like
-> say Andoird.
->
-> In general the push has been to always idle everything, see NOHZ and
-> NOHZ_FULL and all the work that's being put into getting rid of any and
-> all period work.
+> Since we spend so much time counting space in that line, maybe add a
+> note to the Changlog about how this fits.
 
-Thanks for the feedback Peter! The removal of idle mode is unfortunate
-but so far we could not find an elegant solution to handle 3 states
-(IDLE / REGULAR / POLLING) without additional synchronization inside
-the hotpath. The issue, as I remember it, was that while scheduling a
-regular update inside psi_group_change() (IDLE to REGULAR transition)
-we might override an earlier update being scheduled inside
-psi_update_work(). I think we can solve that by using
-mod_delayed_work_on() inside psi_update_work() but I might be missing
-some other race. I'll discuss this again with Johannes and see if we
-can synchronize all states using only atomic operations on clock_mode.
+Will do.
 
-> --
-> You received this message because you are subscribed to the Google Groups "kernel-team" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to kernel-team+unsubscribe@android.com.
+> Also, since I just had to re-count, you might want to add explicit
+> numbers to the psi_res and psi_states enums.
+
+Sounds reasonable.
+
+> > +             if (state_mask & (1 << s))
 >
+> We have the BIT() macro, but I'm honestly not sure that will improve
+> things.
+
+I was mimicking the rest of the code in psi.c that uses this kind of
+bit masking. Can change if you think that would be better.
