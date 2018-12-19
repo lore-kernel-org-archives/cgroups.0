@@ -1,7 +1,7 @@
 From: Dennis Zhou <dennis@kernel.org>
-Subject: [PATCH] blkcg: clean up blkg_tryget_closest()
-Date: Wed, 19 Dec 2018 16:43:21 -0600
-Message-ID: <20181219224321.32624-1-dennis@kernel.org>
+Subject: [PATCH] blkcg: remove unused __blkg_release_rcu()
+Date: Wed, 19 Dec 2018 16:43:53 -0600
+Message-ID: <20181219224353.32763-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -11,60 +11,50 @@ Content-Transfer-Encoding: 7bit
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-The implementation of blkg_tryget_closest() wasn't super obvious and
-became a point of suspicion when debugging [1]. So let's clean it up so
-it's obviously not the problem.
-
-[1] https://lore.kernel.org/linux-block/a7e97e4b-0dd8-3a54-23b7-a0f27b17fde8@kernel.dk/
+An earlier commit 7fcf2b033b84 ("blkcg: change blkg reference counting
+to use percpu_ref") moved around the release call from blkg_put() to be
+a part of the percpu_ref cleanup. Remove the additional unused code
+which should have been removed earlier.
 
 Signed-off-by: Dennis Zhou <dennis@kernel.org>
 ---
- include/linux/blk-cgroup.h | 21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ block/blk-cgroup.c | 23 -----------------------
+ 1 file changed, 23 deletions(-)
 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index f025fd1e22e6..76c61318fda5 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -499,22 +499,33 @@ static inline void blkg_get(struct blkcg_gq *blkg)
-  */
- static inline bool blkg_tryget(struct blkcg_gq *blkg)
- {
--	return percpu_ref_tryget(&blkg->refcnt);
-+	return blkg && percpu_ref_tryget(&blkg->refcnt);
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c8cc1cbb6370..2bed5725aa03 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -438,29 +438,6 @@ static void blkg_destroy_all(struct request_queue *q)
+ 	spin_unlock_irq(&q->queue_lock);
  }
  
- /**
-  * blkg_tryget_closest - try and get a blkg ref on the closet blkg
-  * @blkg: blkg to get
-  *
-- * This walks up the blkg tree to find the closest non-dying blkg and returns
-- * the blkg that it did association with as it may not be the passed in blkg.
-+ * This needs to be called rcu protected.  As the failure mode here is to walk
-+ * up the blkg tree, this ensure that the blkg->parent pointers are always
-+ * valid.  This returns the blkg that it ended up taking a reference on or %NULL
-+ * if no reference was taken.
-  */
- static inline struct blkcg_gq *blkg_tryget_closest(struct blkcg_gq *blkg)
+-/*
+- * A group is RCU protected, but having an rcu lock does not mean that one
+- * can access all the fields of blkg and assume these are valid.  For
+- * example, don't try to follow throtl_data and request queue links.
+- *
+- * Having a reference to blkg under an rcu allows accesses to only values
+- * local to groups like group stats and group rate limits.
+- */
+-void __blkg_release_rcu(struct rcu_head *rcu_head)
+-{
+-	struct blkcg_gq *blkg = container_of(rcu_head, struct blkcg_gq, rcu_head);
+-
+-	/* release the blkcg and parent blkg refs this blkg has been holding */
+-	css_put(&blkg->blkcg->css);
+-	if (blkg->parent)
+-		blkg_put(blkg->parent);
+-
+-	wb_congested_put(blkg->wb_congested);
+-
+-	blkg_free(blkg);
+-}
+-EXPORT_SYMBOL_GPL(__blkg_release_rcu);
+-
+ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ 			     struct cftype *cftype, u64 val)
  {
--	while (blkg && !percpu_ref_tryget(&blkg->refcnt))
-+	struct blkcg_gq *ret_blkg = NULL;
-+
-+	WARN_ON_ONCE(!rcu_read_lock_held());
-+
-+	while (blkg) {
-+		if (blkg_tryget(blkg)) {
-+			ret_blkg = blkg;
-+			break;
-+		}
- 		blkg = blkg->parent;
-+	}
- 
--	return blkg;
-+	return ret_blkg;
- }
- 
- /**
 -- 
 2.17.1
 
