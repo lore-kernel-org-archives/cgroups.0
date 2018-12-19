@@ -1,47 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] cgroup/cpuset: Update stale generate_sched_domains()
- comments
-Date: Wed, 19 Dec 2018 11:36:53 -0800
-Message-ID: <20181219193653.GA2509588@devbig004.ftw2.facebook.com>
-References: <20181219133445.31982-1-juri.lelli@redhat.com>
-Mime-Version: 1.0
+From: Dennis Zhou <dennis@kernel.org>
+Subject: [PATCH] blkcg: clean up blkg_tryget_closest()
+Date: Wed, 19 Dec 2018 16:43:21 -0600
+Message-ID: <20181219224321.32624-1-dennis@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Nb/krCkYkipwbbjhtz1VO0hBalYD/mY6I6NOXTIsGYU=;
-        b=TBRJwvLNp0Chy9DoHq+iGgubWhhX0bf7ikfLESW+nOXCKjAhg5rV5zb+dtLjhf1t1Y
-         PEUmSOOOxJ39GU2hkOsIhwP5vcC0rRJNvYIdp3CkvNmeW20ly9wRBT2JEH5pE0Zgl6et
-         Xz4aJW7UGx+f0yL3Tuu4J2CzOEVquxp7fsRxONZHl+a2MokniB4qgHy2s5n7GvQo6QSl
-         Ayamqe9KIaSVv7JqBpkComwtVIYjnSAz4PDBLeuU9g163dVnsxewUahUqdUvmFgeMxlu
-         eEYeaOOTckV9NYpkDIbQtr2Lsdqcl7SiM/4oLOSlStiqvR/VBHFMPEWhCPOMko1h4RLA
-         c5JQ==
-Content-Disposition: inline
-In-Reply-To: <20181219133445.31982-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Juri Lelli <juri.lelli@redhat.com>
-Cc: lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+Cc: kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dennis Zhou <dennis@kernel.org>
 
-On Wed, Dec 19, 2018 at 02:34:44PM +0100, Juri Lelli wrote:
-> Commit fc560a26acce ("cpuset: replace cpuset->stack_list with
-> cpuset_for_each_descendant_pre()") removed the local list (q)
-> that was used to perform a top-down scan of all cpusets;
-> however, comments mentioning it were not updated.
-> 
-> Update comments to reflect current implementation.
-> 
-> Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
+The implementation of blkg_tryget_closest() wasn't super obvious and
+became a point of suspicion when debugging [1]. So let's clean it up so
+it's obviously not the problem.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+[1] https://lore.kernel.org/linux-block/a7e97e4b-0dd8-3a54-23b7-a0f27b17fde8@kernel.dk/
 
-Prolly better to route through scheduler tree together with the second
-patch?
+Signed-off-by: Dennis Zhou <dennis@kernel.org>
+---
+ include/linux/blk-cgroup.h | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
-Thanks.
-
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index f025fd1e22e6..76c61318fda5 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -499,22 +499,33 @@ static inline void blkg_get(struct blkcg_gq *blkg)
+  */
+ static inline bool blkg_tryget(struct blkcg_gq *blkg)
+ {
+-	return percpu_ref_tryget(&blkg->refcnt);
++	return blkg && percpu_ref_tryget(&blkg->refcnt);
+ }
+ 
+ /**
+  * blkg_tryget_closest - try and get a blkg ref on the closet blkg
+  * @blkg: blkg to get
+  *
+- * This walks up the blkg tree to find the closest non-dying blkg and returns
+- * the blkg that it did association with as it may not be the passed in blkg.
++ * This needs to be called rcu protected.  As the failure mode here is to walk
++ * up the blkg tree, this ensure that the blkg->parent pointers are always
++ * valid.  This returns the blkg that it ended up taking a reference on or %NULL
++ * if no reference was taken.
+  */
+ static inline struct blkcg_gq *blkg_tryget_closest(struct blkcg_gq *blkg)
+ {
+-	while (blkg && !percpu_ref_tryget(&blkg->refcnt))
++	struct blkcg_gq *ret_blkg = NULL;
++
++	WARN_ON_ONCE(!rcu_read_lock_held());
++
++	while (blkg) {
++		if (blkg_tryget(blkg)) {
++			ret_blkg = blkg;
++			break;
++		}
+ 		blkg = blkg->parent;
++	}
+ 
+-	return blkg;
++	return ret_blkg;
+ }
+ 
+ /**
 -- 
-tejun
+2.17.1
+
