@@ -1,96 +1,35 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v5 4/7] cgroup: cgroup v2 freezer
-Date: Thu, 20 Dec 2018 17:16:50 +0100
-Message-ID: <20181220161649.GA31865@redhat.com>
-References: <20181207201531.1665-1-guro@fb.com>
- <20181207201531.1665-5-guro@fb.com>
- <20181211162632.GB8504@redhat.com>
- <20181211184033.GA8971@tower.DHCP.thefacebook.com>
- <20181212174902.GA30309@redhat.com>
- <20181218012800.GA29563@tower.DHCP.thefacebook.com>
- <20181218171230.GA11319@redhat.com>
- <20181218202701.GA12730@castle.DHCP.thefacebook.com>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH] blkcg: clean up blkg_tryget_closest()
+Date: Thu, 20 Dec 2018 17:07:59 +0000
+Message-ID: <149cd7b6-a330-2197-6792-b8f0235f02de@fb.com>
+References: <20181219224321.32624-1-dennis@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181218202701.GA12730@castle.DHCP.thefacebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=MoSum3lXlafz/ri1eI4VoM0zzraxjJ267tMMn2oqN44=;
+ b=qNJBxqORZyrU8qZMjbGx3CrqiTJQLPz1KtqWD8MVDHgjXARX/816/T2GnyRbm+XTleLt
+ tYUlehcBOahbABmgJDJ6dG90NKArQZu3a6+/KQ02dBVk/7H2sx4/p7/LImZUTFhFYVHd
+ j2BBFUuVNXVxxGuv9wRTj8BtL/DeGU9B7qs= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=MoSum3lXlafz/ri1eI4VoM0zzraxjJ267tMMn2oqN44=;
+ b=W5TOgPl1y4srW7H5pLtEqYVFjH/fgRo4ZyeiC5Mkm88dFyqXDxyYst7io5mPPZHNsecqBXWDHncHIXXG0wKIn38yEvq4bedKJGCHD+piN4MDl49w5jLXn/epk8ZqODwm9EOQheXIYOX02u2Cip7zKGGFn59aClu1ik4P/72wwIQ=
+In-Reply-To: <20181219224321.32624-1-dennis@kernel.org>
+Content-Language: en-US
+Content-ID: <6DA903CE69BE754E81BDE655E83BCC41@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+To: Dennis Zhou <dennis@kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+Cc: Kernel Team <Kernel-team@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 12/18, Roman Gushchin wrote:
->
-> > > > > --- a/kernel/freezer.c
-> > > > > +++ b/kernel/freezer.c
-> > > > > @@ -134,7 +134,7 @@ bool freeze_task(struct task_struct *p)
-> > > > >                 return false;
-> > > > >
-> > > > >         spin_lock_irqsave(&freezer_lock, flags);
-> > > > > -       if (!freezing(p) || frozen(p)) {
-> > > > > +       if (!freezing(p) || frozen(p) || cgroup_task_frozen()) {
-> > > > >                 spin_unlock_irqrestore(&freezer_lock, flags);
-> > > > >                 return false;
-> > > > >         }
-> > > > >
-> > > > > --
-> > > > >
-> > > > > If the task is already frozen by the cgroup freezer, we don't have to do
-> > > > > anything additionally.
-> > > >
-> > > > I don't think so. A cgroup_task_frozen() task can be killed after
-> > > > try_to_freeze_tasks() succeeds, and the exiting task can close files,
-> > > > do IO, etc. Or it can be thawed by cgroup_freeze_task(false).
-> > > >
-> > > > In short, if try_to_freeze_tasks() succeeds, the caller has all rights
-> > > > to assume that nobody can escape from __refrigerator().
-> > >
-> > > But this is what we do with stopped and ptraced tasks, isn't it?
-> >
-> > No,
-> >
-> > > We do use freezable_schedule() and the system freezer just ignores such tasks.
-> >
-> > 	static inline void freezable_schedule(void)
-> > 	{
-> > 		freezer_do_not_count();
-> > 		schedule();
-> > 		freezer_count();
-> > 	}
-> >
-> > and note that freezer_count() calls try_to_freeze().
-> >
-> > IOW, the task sleeping in freezable_schedule() doesn't really differ from the
-> > task sleeping in __refrigerator(). It is not that "the system freezer just
-> > ignores such tasks", it ignores them because it can safely count them as frozen.
->
-> Right, so the task is sleeping peacefully, and we know, that it won't get
-> anywhere, because we'll catch it in freezer_count(). We allow it to sleep
-> there, we don't force it to __refrigerator(), and we treat it as frozen.
->
-> How's that different to cgroup v2 freezer? If the task is frozen by cgroup v2
-> freezer, let it sleep there, and catch if it tries to escape. Exactly as it
-> works for SIGSTOP.
->
-> Am I missing something?
-
-Roman, perhaps we misunderstood each other...
-
-I still think that the cgroup_task_frozen() check in freeze_task() you proposed
-a) is not right, and b) it is not what we do with the STOPPED/TRACED tasks which
-call freezable_schedule(). This is what I tried to say.
-
-If you meant that freezer v2 can too use freezable_schedule() - I agree.
-
-> So, you think that v2 freezer should follow the same approach, and allow tasks
-> sleeping on SIGSTOP, for instance, to be treated as frozen?
-> Hm, maybe. I have to think more here.
-
-I think this would be nice. Otherwise, say, CGRP_FREEZE can be never reported
-if I read this code correctly. And this looks "symmetrical" with the fact that
-a ->frozen task reacts to SIGSTOP and it is still treated as frozen after that.
-
-Oleg.
-
+T24gMTIvMTkvMTggMzo0MyBQTSwgRGVubmlzIFpob3Ugd3JvdGU6DQo+IFRoZSBpbXBsZW1lbnRh
+dGlvbiBvZiBibGtnX3RyeWdldF9jbG9zZXN0KCkgd2Fzbid0IHN1cGVyIG9idmlvdXMgYW5kDQo+
+IGJlY2FtZSBhIHBvaW50IG9mIHN1c3BpY2lvbiB3aGVuIGRlYnVnZ2luZyBbMV0uIFNvIGxldCdz
+IGNsZWFuIGl0IHVwIHNvDQo+IGl0J3Mgb2J2aW91c2x5IG5vdCB0aGUgcHJvYmxlbS4NCg0KSSBs
+aWtlIHRoZSBjbGVhbnVwIC0gYWRkaW5nIHRvIHRoZSBsYXRlciBwaWxlIGZvciB0aGUgbWVyZ2Ug
+d2luZG93LCB0aGFua3MNCkRlbm5pcy4NCg0KLS0gDQpKZW5zIEF4Ym9lDQoNCg==
