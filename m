@@ -1,35 +1,36 @@
 From: Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH] blkcg: clean up blkg_tryget_closest()
-Date: Thu, 20 Dec 2018 17:07:59 +0000
-Message-ID: <149cd7b6-a330-2197-6792-b8f0235f02de@fb.com>
-References: <20181219224321.32624-1-dennis@kernel.org>
+Subject: Re: [PATCH] blkcg: remove unused __blkg_release_rcu()
+Date: Thu, 20 Dec 2018 17:08:17 +0000
+Message-ID: <f23e7319-307d-df88-4bad-0e9f71331677@fb.com>
+References: <20181219224353.32763-1-dennis@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : references : in-reply-to : content-type : content-id
  : content-transfer-encoding : mime-version; s=facebook;
- bh=MoSum3lXlafz/ri1eI4VoM0zzraxjJ267tMMn2oqN44=;
- b=qNJBxqORZyrU8qZMjbGx3CrqiTJQLPz1KtqWD8MVDHgjXARX/816/T2GnyRbm+XTleLt
- tYUlehcBOahbABmgJDJ6dG90NKArQZu3a6+/KQ02dBVk/7H2sx4/p7/LImZUTFhFYVHd
- j2BBFUuVNXVxxGuv9wRTj8BtL/DeGU9B7qs= 
+ bh=cMcXGK4vCoYqSAoydb+ELhPwhzqXjOIP/gleJ+dLsFE=;
+ b=BqEcoubBDKEdEoDGxqORKBA7SQh8vezbEfhdEQoPHwUCRWTn2PtkIskXqtrhhVw5Cv9u
+ 716n26kVnZLxIGpXj3a+F8ko/cZrmtdM1XDJ4mEbtqBOWmRPcei7YwbtxmuwDvwBJTS8
+ SdkROAqHllmafR0noGsmp7emhOm1urcrO/g= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MoSum3lXlafz/ri1eI4VoM0zzraxjJ267tMMn2oqN44=;
- b=W5TOgPl1y4srW7H5pLtEqYVFjH/fgRo4ZyeiC5Mkm88dFyqXDxyYst7io5mPPZHNsecqBXWDHncHIXXG0wKIn38yEvq4bedKJGCHD+piN4MDl49w5jLXn/epk8ZqODwm9EOQheXIYOX02u2Cip7zKGGFn59aClu1ik4P/72wwIQ=
-In-Reply-To: <20181219224321.32624-1-dennis@kernel.org>
+ bh=cMcXGK4vCoYqSAoydb+ELhPwhzqXjOIP/gleJ+dLsFE=;
+ b=hf41rUaOQPbyd75HMHy8dhkZHydHHRUodnv8tuDkHMCI/SFSA2rzazzSOTg/Sq0MuBR/P0DPTM3b3tq3xRLti5K+tLv1idQQ/LEv0c1E6vNY/tFNOOwmawYrxvLWu4ra9WVFo9if9jQmzvo1xExhSfh5EFUmrTfnheojbe5HWMQ=
+In-Reply-To: <20181219224353.32763-1-dennis@kernel.org>
 Content-Language: en-US
-Content-ID: <6DA903CE69BE754E81BDE655E83BCC41@namprd15.prod.outlook.com>
+Content-ID: <FDD3FCFA0EDEDF49BC60965D69A44107@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Dennis Zhou <dennis@kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 Cc: Kernel Team <Kernel-team@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-T24gMTIvMTkvMTggMzo0MyBQTSwgRGVubmlzIFpob3Ugd3JvdGU6DQo+IFRoZSBpbXBsZW1lbnRh
-dGlvbiBvZiBibGtnX3RyeWdldF9jbG9zZXN0KCkgd2Fzbid0IHN1cGVyIG9idmlvdXMgYW5kDQo+
-IGJlY2FtZSBhIHBvaW50IG9mIHN1c3BpY2lvbiB3aGVuIGRlYnVnZ2luZyBbMV0uIFNvIGxldCdz
-IGNsZWFuIGl0IHVwIHNvDQo+IGl0J3Mgb2J2aW91c2x5IG5vdCB0aGUgcHJvYmxlbS4NCg0KSSBs
-aWtlIHRoZSBjbGVhbnVwIC0gYWRkaW5nIHRvIHRoZSBsYXRlciBwaWxlIGZvciB0aGUgbWVyZ2Ug
-d2luZG93LCB0aGFua3MNCkRlbm5pcy4NCg0KLS0gDQpKZW5zIEF4Ym9lDQoNCg==
+T24gMTIvMTkvMTggMzo0MyBQTSwgRGVubmlzIFpob3Ugd3JvdGU6DQo+IEFuIGVhcmxpZXIgY29t
+bWl0IDdmY2YyYjAzM2I4NCAoImJsa2NnOiBjaGFuZ2UgYmxrZyByZWZlcmVuY2UgY291bnRpbmcN
+Cj4gdG8gdXNlIHBlcmNwdV9yZWYiKSBtb3ZlZCBhcm91bmQgdGhlIHJlbGVhc2UgY2FsbCBmcm9t
+IGJsa2dfcHV0KCkgdG8gYmUNCj4gYSBwYXJ0IG9mIHRoZSBwZXJjcHVfcmVmIGNsZWFudXAuIFJl
+bW92ZSB0aGUgYWRkaXRpb25hbCB1bnVzZWQgY29kZQ0KPiB3aGljaCBzaG91bGQgaGF2ZSBiZWVu
+IHJlbW92ZWQgZWFybGllci4NCg0KQXBwbGllZCBmb3IgNC4yMSwgdGhhbmtzLg0KDQotLSANCkpl
+bnMgQXhib2UNCg0K
