@@ -1,135 +1,105 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v5 4/7] cgroup: cgroup v2 freezer
-Date: Thu, 20 Dec 2018 21:43:47 +0000
-Message-ID: <20181220214338.GA16795@tower.DHCP.thefacebook.com>
-References: <20181207201531.1665-1-guro@fb.com>
- <20181207201531.1665-5-guro@fb.com> <20181211162632.GB8504@redhat.com>
- <20181211184033.GA8971@tower.DHCP.thefacebook.com>
- <20181212174902.GA30309@redhat.com>
- <20181218012800.GA29563@tower.DHCP.thefacebook.com>
- <20181218171230.GA11319@redhat.com>
- <20181218202701.GA12730@castle.DHCP.thefacebook.com>
- <20181220161649.GA31865@redhat.com>
+From: Roman Gushchin <guroan@gmail.com>
+Subject: [PATCH v6 0/7] freezer for cgroup v2
+Date: Fri, 21 Dec 2018 16:03:00 -0800
+Message-ID: <20181222000307.28231-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=0YXgXI7mcWc33l9vb73uIL6NxcZpO2O+MM8onuB+MHU=;
- b=NqjK4j+YyK8rkmDQ3gQnjRI34H5if3lCb1iEintr/diCawadDcjXPn4ZVLlS2H1FvZf1
- llW4yA90exHktqG8JdWO1RABwMYtF8sccA45SdSqhVk0dIIuBGV5h+SPi1avEQYK5oEb
- gqXSbElDWeeJ9TmPJTHQVax86Q/AfehSV1k= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0YXgXI7mcWc33l9vb73uIL6NxcZpO2O+MM8onuB+MHU=;
- b=HLY04jtHPGqBSSNS2ZWxSEDCLZqhFcS0E8cZuKnztwh5oStdcI43P7nUe49oyHWqgjwB9YE6wvulFW2yxznu7oxgkzkzq2hqpfeJrsPSU14BXGX/c9PucXv8d4BwffO3St89yQbAGN5L0BbkaPRAYro1iuWhGAkDXaB4N9O7BW0=
-In-Reply-To: <20181220161649.GA31865@redhat.com>
-Content-Language: en-US
-Content-ID: <833EAB85961EEC41B965B6416EA86CDC@namprd15.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=sutVbmkRcHShCG3l/1vJqsHf/W2WwWTpZmygJ/DciHs=;
+        b=gVhwF7dpNHrrapRzS9yIMgz2IprGlO/0UIeyAA0yk45Hx5KkkRLlweg/bTaCjgrJ4/
+         lsSFqEK8Q56HZS/YhSukTOkAceSAn8gQ1F2ZMSViZ4sIYUIT38rA5/BVyi/sbY5O3ymB
+         hC3vHSvreLagRTCLKLfra/zqN6Nj8kt8yeArYqT97YqzyYZVXHyIkl9hkIVIYkR8I7I3
+         pAjdPuGXGG08yZnxwfAQymcLyjOmOkOZ3r+Yrc0Pma1y0s1ohhgkgXpKC9g8qKnbPjYF
+         Ped7fzyyKRb51NabBfQUd8gyL7ckRGCMIiXj1egALoHqw6Way4X1LYVa3BpYAWRWSCW6
+         KhJw==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
+Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On Thu, Dec 20, 2018 at 05:16:50PM +0100, Oleg Nesterov wrote:
-> On 12/18, Roman Gushchin wrote:
-> >
-> > > > > > --- a/kernel/freezer.c
-> > > > > > +++ b/kernel/freezer.c
-> > > > > > @@ -134,7 +134,7 @@ bool freeze_task(struct task_struct *p)
-> > > > > >                 return false;
-> > > > > >
-> > > > > >         spin_lock_irqsave(&freezer_lock, flags);
-> > > > > > -       if (!freezing(p) || frozen(p)) {
-> > > > > > +       if (!freezing(p) || frozen(p) || cgroup_task_frozen()) =
-{
-> > > > > >                 spin_unlock_irqrestore(&freezer_lock, flags);
-> > > > > >                 return false;
-> > > > > >         }
-> > > > > >
-> > > > > > --
-> > > > > >
-> > > > > > If the task is already frozen by the cgroup freezer, we don't h=
-ave to do
-> > > > > > anything additionally.
-> > > > >
-> > > > > I don't think so. A cgroup_task_frozen() task can be killed after
-> > > > > try_to_freeze_tasks() succeeds, and the exiting task can close fi=
-les,
-> > > > > do IO, etc. Or it can be thawed by cgroup_freeze_task(false).
-> > > > >
-> > > > > In short, if try_to_freeze_tasks() succeeds, the caller has all r=
-ights
-> > > > > to assume that nobody can escape from __refrigerator().
-> > > >
-> > > > But this is what we do with stopped and ptraced tasks, isn't it?
-> > >
-> > > No,
-> > >
-> > > > We do use freezable_schedule() and the system freezer just ignores =
-such tasks.
-> > >
-> > > 	static inline void freezable_schedule(void)
-> > > 	{
-> > > 		freezer_do_not_count();
-> > > 		schedule();
-> > > 		freezer_count();
-> > > 	}
-> > >
-> > > and note that freezer_count() calls try_to_freeze().
-> > >
-> > > IOW, the task sleeping in freezable_schedule() doesn't really differ =
-from the
-> > > task sleeping in __refrigerator(). It is not that "the system freezer=
- just
-> > > ignores such tasks", it ignores them because it can safely count them=
- as frozen.
-> >
-> > Right, so the task is sleeping peacefully, and we know, that it won't g=
-et
-> > anywhere, because we'll catch it in freezer_count(). We allow it to sle=
-ep
-> > there, we don't force it to __refrigerator(), and we treat it as frozen=
-.
-> >
-> > How's that different to cgroup v2 freezer? If the task is frozen by cgr=
-oup v2
-> > freezer, let it sleep there, and catch if it tries to escape. Exactly a=
-s it
-> > works for SIGSTOP.
-> >
-> > Am I missing something?
->=20
-> Roman, perhaps we misunderstood each other...
->=20
-> I still think that the cgroup_task_frozen() check in freeze_task() you pr=
-oposed
-> a) is not right, and b) it is not what we do with the STOPPED/TRACED task=
-s which
-> call freezable_schedule(). This is what I tried to say.
->=20
-> If you meant that freezer v2 can too use freezable_schedule() - I agree.
+This patchset implements freezer for cgroup v2.
 
-Sorry for the confusion. Yeah, what I'm saying, is that freezable_schedule(=
-)
-will work for v2 as well.
+It provides similar functionality as v1 freezer, but the interface
+conforms to the cgroup v2 interface design principles, and it
+provides a better user experience: tasks can be killed, ptrace works,
+there is no separate controller, which has to be enabled, etc.
 
->=20
-> > So, you think that v2 freezer should follow the same approach, and allo=
-w tasks
-> > sleeping on SIGSTOP, for instance, to be treated as frozen?
-> > Hm, maybe. I have to think more here.
->=20
-> I think this would be nice. Otherwise, say, CGRP_FREEZE can be never repo=
-rted
-> if I read this code correctly. And this looks "symmetrical" with the fact=
- that
-> a ->frozen task reacts to SIGSTOP and it is still treated as frozen after=
- that.
+Patches (1), (2) and (3) are some preparational work, patch (4) contains
+the implementation, patch (5) is a small cgroup kselftest fix,
+patch (6) covers freezer adds 6 new kselftests to cover the freezer
+functionality. Patch (7) adds corresponding docs.
 
-Yeah, looks so. I'll try to implement this in v6.
+v6->v5:
+  - reverted to clear TIF_SIGPENDING with additional checks before schedule(),
+  as proposed by Oleg Nesterov
+  - made cgroup v2 freezer working with the system freezer (by using
+  freezable_schedule())
+  - make freezer working with SIGSTOPped and PTRACEd tasks
+  - added tests to cover freezing a cgroup with SIGSTOPped and PTRACEd tasks
 
-Thanks!
+v5->v4:
+  - rewored cgroup state transition code (suggested by Tejun Heo)
+  - look at JOBCTL_TRAP_FREEZE instead of task->frozen in
+    recalc_sigpending(), check for task->frozen and JOBCTL_TRAP_FREEZE
+    in signal_pending_state() (suggested by Oleg Nesterov)
+  - some cosmetic changes in signal.c (suggested by Oleg Nesterov)
+  - cleaned up comments
+
+v4->v3:
+  - reading nr_descendants doesn't require taking css_set_lock anymore
+  - fixed docs based on Mike Rapoport's feedback
+  - fixed double irq lock found by Dan Carpenter
+
+v3->v2:
+  - dropped TASK_FROZEN for now, frozen tasks are put into TASK_INTERRUPTIBLE
+  state; it's probably not the final version, but the API question can be
+  discussed separately
+  - don't clear TIF_SIGPENDING before going to sleep, instead add
+  task->frozen check in signal_pending_state() and recalc_sigpending()
+  - cgroup-level counter are now synchronized using css_set_lock,
+  which simplified the whole code (e.g. per-cgroup works were removed)
+  - the amount of comments increased significantly
+  - many other improvements incorporating feedback from Tejun and Oleg
+
+v2->v1:
+  - fixed locking aroung calling cgroup_freezer_leave()
+  - added docs
+
+Roman Gushchin (7):
+  cgroup: rename freezer.c into legacy_freezer.c
+  cgroup: implement __cgroup_task_count() helper
+  cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
+  cgroup: cgroup v2 freezer
+  kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
+  kselftests: cgroup: add freezer controller self-tests
+  cgroup: document cgroup v2 freezer interface
+
+ Documentation/admin-guide/cgroup-v2.rst       |  27 +
+ include/linux/cgroup-defs.h                   |  39 +
+ include/linux/cgroup.h                        |  46 +
+ include/linux/sched.h                         |   4 +
+ include/linux/sched/jobctl.h                  |   2 +
+ kernel/cgroup/Makefile                        |   4 +-
+ kernel/cgroup/cgroup-internal.h               |   1 +
+ kernel/cgroup/cgroup-v1.c                     |  16 -
+ kernel/cgroup/cgroup.c                        | 145 +++-
+ kernel/cgroup/freezer.c                       | 650 ++++++--------
+ kernel/cgroup/legacy_freezer.c                | 481 ++++++++++
+ kernel/signal.c                               |  93 +-
+ tools/testing/selftests/cgroup/.gitignore     |   1 +
+ tools/testing/selftests/cgroup/Makefile       |   2 +
+ tools/testing/selftests/cgroup/cgroup_util.c  |  85 +-
+ tools/testing/selftests/cgroup/cgroup_util.h  |   7 +
+ tools/testing/selftests/cgroup/test_freezer.c | 821 ++++++++++++++++++
+ 17 files changed, 1993 insertions(+), 431 deletions(-)
+ create mode 100644 kernel/cgroup/legacy_freezer.c
+ create mode 100644 tools/testing/selftests/cgroup/test_freezer.c
+
+-- 
+2.19.2
+
