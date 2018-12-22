@@ -1,7 +1,7 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v6 3/7] cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
-Date: Fri, 21 Dec 2018 16:03:03 -0800
-Message-ID: <20181222000307.28231-4-guro@fb.com>
+Subject: [PATCH v6 5/7] kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
+Date: Fri, 21 Dec 2018 16:03:05 -0800
+Message-ID: <20181222000307.28231-6-guro@fb.com>
 References: <20181222000307.28231-1-guro@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,103 +10,49 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=RrGEExZrjErotvNk8wICdc9iWJu5BfH17QjMu1wcK58=;
-        b=erpFjPWYBras5XE2h7nsoH4CdLPoGyR60K3sIf+/V/Z5Uhladw+3XWMK0w4rMo/YvW
-         KP/AnoXHgbwBnie9tO3qa1j/diPkak4KdK7Sff3Yt2Exh5mYyVtCTsS1PAIdZuSckA2f
-         FkPPIDRWISiC9fUvKALg71CR7ZW9amV1g+dmdceepd1EWlkuNpdCAC9b21MpxkMrRLkY
-         H0nJHqJL7d12LixuISq7r/VjArt8BU+eRwgpHVVvDNlUnCiXOjGtwfeiIX8zRmQK++rE
-         6Ihu9hURk95nMuj2y04LzXKtG3GOK0BNoihZlkZxnOfEPtmlLAoz5Fs044P/05RDcrTR
-         SPPA==
+        bh=CNs81y4CnakkHOiMBhU/ECBjLx8oP0VFMrPLGDOhpII=;
+        b=G4KeCjZIzCd4AUKqQLHckdHP0rluxIgkGmhJzHAib9IerLRdW7nakvDpl6t4atSH+i
+         hRJ3vjTEwz6X/+plbmMNNlMsep8u73x36C+g2rdBZ8ms1ekG/vTtNcggsKpdU0CrkAwK
+         B/BtXIXWNIu9r899zYEu/Wo2cSYXCkJK0VvNzJTABHMYci6v6RyCsh8yIWC0YcaXsOnJ
+         VCyagZVsYL2odkr8Gcw8nXxM5YwDTOXJxMk8PPuYkJG5mqHqfMFO+XeHNX1MXHy5DETQ
+         LQ/O1HEHAsKFgMJ47mSQhW3NCM+nE7zEAcvUIfdnoZDR68P7OwWr7ErQk40ogzDjtkTF
+         OWNQ==
 In-Reply-To: <20181222000307.28231-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shuah Khan <shuah@kernel.org>, linux-kselftest@vger.kernel.org
 
-The number of descendant cgroups and the number of dying
-descendant cgroups are currently synchronized using the cgroup_mutex.
-
-The number of descendant cgroups will be required by the cgroup v2
-freezer, which will use it to determine if a cgroup is frozen
-(depending on total number of descendants and number of frozen
-descendants). It's not always acceptable to grab the cgroup_mutex,
-especially from quite hot paths (e.g. exit()).
-
-To avoid this, let's additionally synchronize these counters using
-the css_set_lock.
-
-So, it's safe to read these counters with either cgroup_mutex or
-css_set_lock locked, and for changing both locks should be acquired.
+If the cgroup destruction races with an exit() of a belonging
+process(es), cg_kill_all() may fail. It's not a good reason to make
+cg_destroy() fail and leave the cgroup in place, potentially causing
+next test runs to fail.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Shuah Khan <shuah@kernel.org>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
+Cc: linux-kselftest@vger.kernel.org
 ---
- include/linux/cgroup-defs.h | 5 +++++
- kernel/cgroup/cgroup.c      | 6 ++++++
- 2 files changed, 11 insertions(+)
+ tools/testing/selftests/cgroup/cgroup_util.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 8fcbae1b8db0..03355d7008ff 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -348,6 +348,11 @@ struct cgroup {
- 	 * Dying cgroups are cgroups which were deleted by a user,
- 	 * but are still existing because someone else is holding a reference.
- 	 * max_descendants is a maximum allowed number of descent cgroups.
-+	 *
-+	 * nr_descendants and nr_dying_descendants are protected
-+	 * by cgroup_mutex and css_set_lock. It's fine to read them holding
-+	 * any of cgroup_mutex and css_set_lock; for writing both locks
-+	 * should be held.
- 	 */
- 	int nr_descendants;
- 	int nr_dying_descendants;
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 7519a4307021..f89dde50f693 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4723,9 +4723,11 @@ static void css_release_work_fn(struct work_struct *work)
- 		if (cgroup_on_dfl(cgrp))
- 			cgroup_rstat_flush(cgrp);
- 
-+		spin_lock_irq(&css_set_lock);
- 		for (tcgrp = cgroup_parent(cgrp); tcgrp;
- 		     tcgrp = cgroup_parent(tcgrp))
- 			tcgrp->nr_dying_descendants--;
-+		spin_unlock_irq(&css_set_lock);
- 
- 		cgroup_idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
- 		cgrp->id = -1;
-@@ -4943,12 +4945,14 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	if (ret)
- 		goto out_psi_free;
- 
-+	spin_lock_irq(&css_set_lock);
- 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
- 		if (tcgrp != cgrp)
- 			tcgrp->nr_descendants++;
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 14c9fe284806..eba06f94433b 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -227,9 +227,7 @@ int cg_destroy(const char *cgroup)
+ retry:
+ 	ret = rmdir(cgroup);
+ 	if (ret && errno == EBUSY) {
+-		ret = cg_killall(cgroup);
+-		if (ret)
+-			return ret;
++		cg_killall(cgroup);
+ 		usleep(100);
+ 		goto retry;
  	}
-+	spin_unlock_irq(&css_set_lock);
- 
- 	if (notify_on_release(parent))
- 		set_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
-@@ -5233,10 +5237,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	if (parent && cgroup_is_threaded(cgrp))
- 		parent->nr_threaded_children--;
- 
-+	spin_lock_irq(&css_set_lock);
- 	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		tcgrp->nr_descendants--;
- 		tcgrp->nr_dying_descendants++;
- 	}
-+	spin_unlock_irq(&css_set_lock);
- 
- 	cgroup1_check_for_release(parent);
- 
 -- 
 2.19.2
 
