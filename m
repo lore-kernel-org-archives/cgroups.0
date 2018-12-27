@@ -1,87 +1,52 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH] memcg, oom: notify on oom killer invocation from the charge path
-Date: Mon, 24 Dec 2018 10:11:07 +0100
-Message-ID: <20181224091107.18354-1-mhocko@kernel.org>
-References: <5ba5ba06-554c-d1ec-0967-b1d3486d0699@fnal.gov>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
+ policy in blkio/io
+Date: Thu, 27 Dec 2018 15:41:44 -0800
+Message-ID: <20181227234144.GE2509588@devbig004.ftw2.facebook.com>
+References: <20181120162816.GV2509588@devbig004.ftw2.facebook.com>
+ <25296DAE-73EC-46CC-9A98-A8B7E9017BB7@linaro.org>
+ <7D7FAB43-5F62-4402-A9B3-E7C2E30AE680@linaro.org>
+ <20181130184256.GI2509588@devbig004.ftw2.facebook.com>
+ <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
+ <CADiTV-29TmkB5-k=TtQfoJqjP2Qv7GSsGLXAPBaTB6DoQ+6yyw@mail.gmail.com>
+ <874A0232-2103-4364-BD88-F33B85D6A764@linaro.org>
+ <20181218164126.GX2509588@devbig004.ftw2.facebook.com>
+ <EC4F9B54-2352-4D85-B56C-5800CFEBCCB8@linaro.org>
+ <A360EBDC-B297-4754-AF5C-0A6C30D725B4@linaro.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <5ba5ba06-554c-d1ec-0967-b1d3486d0699@fnal.gov>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=xXBTIXHVAax3PJVgWEmGAt722IyPRVkq/7ftu76zskQ=;
+        b=nHfNQX9WXbd4v1mYIWQy9AJqEYEykYb6VEtomgVx398VGjNDSzl1QME1bez7OOt2Vw
+         wSqtfmtGl2Gc9HatZWi/yVq3upLi8AJolttyrb0KzXCS+OGY+dsUPieA7cy199UNekp4
+         pPzQcLgMIGp1H+wAlId3XaC5phb2GrqvWxY1ZIOjP23OxnhDaIA9C1IPYlXkYoNBwQar
+         u97YBGsc2chKeilI6xnMZ2oVYWXKbWOi3ucrHJkfmRlc/JnJHq8WVIyDoQwGTM3iGhbM
+         Q5PIgAeFdI4adTRai6O64MmXbIFRr0EhhZ06navKwHiU5mFIpXG+ofq4TJkz89aleImg
+         XvsQ==
+Content-Disposition: inline
+In-Reply-To: <A360EBDC-B297-4754-AF5C-0A6C30D725B4@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Burt Holzman <burt@fnal.gov>, cgroups mailinglist <cgroups@vger.kernel.org>, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Stable tree <stable@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: bfq-iosched@googlegroups.com, Angelo Ruocco <angelo.ruocco.90@gmail.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, broonie@kernel.org, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
 
-From: Michal Hocko <mhocko@suse.com>
+Hello, Paolo.
 
-Burt Holzman has noticed that memcg v1 doesn't notify about OOM events
-via eventfd anymore. The reason is that 29ef680ae7c2 ("memcg, oom: move
-out_of_memory back to the charge path") has moved the oom handling back
-to the charge path. While doing so the notification was left behind in
-mem_cgroup_oom_synchronize.
+On Sun, Dec 23, 2018 at 12:00:14PM +0100, Paolo Valente wrote:
+> 4.21 is coming ...  and the legacy proportional share interface will
+> be gone with cfq.  This will break legacy code using the
+> proportional-share interface on top of bfq.  This code may just fail
+> when trying to use interface files that don't exist any longer.
 
-Fix the issue by replicating the oom hierarchy locking and the
-notification.
+Sounds like inheriting .cfq namespace would be the easiest.  Would
+that work?
 
-Reported-by: Burt Holzman <burt@fnal.gov>
-Fixes: 29ef680ae7c2 ("memcg, oom: move out_of_memory back to the charge path")
-Cc: stable # 4.19+
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Signed-off-by: Michal Hocko <mhocko@suse.com>
----
-Hi Andrew,
-I forgot to CC you on the patch sent as a reply to the original bug
-report [1] so I am reposting with Ack from Johannes. Burt has confirmed
-this is resolving the regression for him [2]. 4.20 is out but I have
-marked the patch for stable so it should hit both 4.19 and 4.20.
+Thanks.
 
-[1] http://lkml.kernel.org/r/20181221153302.GB6410@dhcp22.suse.cz
-[2] http://lkml.kernel.org/r/96D4815C-420F-41B7-B1E9-A741E7523596@services.fnal.gov
-
- mm/memcontrol.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6e1469b80cb7..7e6bf74ddb1e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1666,6 +1666,9 @@ enum oom_status {
- 
- static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
- {
-+	enum oom_status ret;
-+	bool locked;
-+
- 	if (order > PAGE_ALLOC_COSTLY_ORDER)
- 		return OOM_SKIPPED;
- 
-@@ -1700,10 +1703,23 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
- 		return OOM_ASYNC;
- 	}
- 
-+	mem_cgroup_mark_under_oom(memcg);
-+
-+	locked = mem_cgroup_oom_trylock(memcg);
-+
-+	if (locked)
-+		mem_cgroup_oom_notify(memcg);
-+
-+	mem_cgroup_unmark_under_oom(memcg);
- 	if (mem_cgroup_out_of_memory(memcg, mask, order))
--		return OOM_SUCCESS;
-+		ret = OOM_SUCCESS;
-+	else
-+		ret = OOM_FAILED;
- 
--	return OOM_FAILED;
-+	if (locked)
-+		mem_cgroup_oom_unlock(memcg);
-+
-+	return ret;
- }
- 
- /**
 -- 
-2.19.2
-
+tejun
