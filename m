@@ -1,35 +1,67 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT UPDATED PULL] cgroup changes for v4.21-rc1
-Date: Sat, 29 Dec 2018 19:55:03 +0000
-Message-ID: <20181229195503.31407.2100.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
-References: <20181228021605.GI2509588@devbig004.ftw2.facebook.com>
- <20181228184117.GN2509588@devbig004.ftw2.facebook.com>
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
+ policy in blkio/io
+Date: Sun, 30 Dec 2018 11:25:25 +0100
+Message-ID: <F2A4E669-8C79-46D7-8A97-2C561FF5346B@linaro.org>
+References: <20181120162816.GV2509588@devbig004.ftw2.facebook.com>
+ <25296DAE-73EC-46CC-9A98-A8B7E9017BB7@linaro.org>
+ <7D7FAB43-5F62-4402-A9B3-E7C2E30AE680@linaro.org>
+ <20181130184256.GI2509588@devbig004.ftw2.facebook.com>
+ <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
+ <CADiTV-29TmkB5-k=TtQfoJqjP2Qv7GSsGLXAPBaTB6DoQ+6yyw@mail.gmail.com>
+ <874A0232-2103-4364-BD88-F33B85D6A764@linaro.org>
+ <20181218164126.GX2509588@devbig004.ftw2.facebook.com>
+ <EC4F9B54-2352-4D85-B56C-5800CFEBCCB8@linaro.org>
+ <A360EBDC-B297-4754-AF5C-0A6C30D725B4@linaro.org>
+ <20181227234144.GE2509588@devbig004.ftw2.facebook.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1546113303;
-        bh=2ZqHaJQnCTq5FGj49INdYKc6wJA1mUeTI4PEzUD6Q/g=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=DuHqdGaj6iHmll5PcoFcdQ5GCVTtoAlNwytN0mWYxYV+DScfN9f1eh5MHmqX/yVCa
-         GedOCGwlPY4CWKUCcLttwQ19vaG0CMd2caCbY5lVHpO0rxuRCdNgSyi1cgGpAQCdYz
-         vHX4KWWs7OkXRXDxE2Tou7Q2c9fBaUUnafVuxl+c=
-In-Reply-To: <20181228184117.GN2509588@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=RcIxiy51crz2BQyDtywt/mbWbWq0tfJAe0NkaqiG1IM=;
+        b=J2Gz+1F1qZXyqxAPjwSRThTSJUptrgZUg6fKCtvgXhgC8HcoRmlPrhLmIwcxyF6xn+
+         wbCktOKo6nps6P+AolCt1l1RLjoq9WdSMOwUXb/dz10JTbqZ9y+TOrrS6g4FyWrMhgfI
+         gy1xRQH3ziJRyLLoBvajgBfamYoD0nXeNpCIU=
+In-Reply-To: <20181227234144.GE2509588@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>
+Cc: 'Paolo Valente' via bfq-iosched <bfq-iosched@googlegroups.com>, Angelo Ruocco <angelo.ruocco.90@gmail.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, broonie@kernel.org, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
 
-The pull request you sent on Fri, 28 Dec 2018 10:41:17 -0800:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.21
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/6f9d71c9c759b1e7d31189a4de228983192c7dc7
+> Il giorno 28 dic 2018, alle ore 00:41, Tejun Heo <tj@kernel.org> ha =
+scritto:
+>=20
+> Hello, Paolo.
+>=20
+> On Sun, Dec 23, 2018 at 12:00:14PM +0100, Paolo Valente wrote:
+>> 4.21 is coming ...  and the legacy proportional share interface will
+>> be gone with cfq.  This will break legacy code using the
+>> proportional-share interface on top of bfq.  This code may just fail
+>> when trying to use interface files that don't exist any longer.
+>=20
+> Sounds like inheriting .cfq namespace would be the easiest.  Would
+> that work?
+>=20
 
-Thank you!
+For bfq, yes, but what will, e.g., Josef do when he adds his new
+proportional-share implementation?  Will he add a new set of names not
+used by any legacy piece of code?
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+What's the benefit of throwing away months of work, on which we agreed
+before starting it, and that solves a problem already acknowledged by
+interested parties?
+
+Thanks,
+Paolo
+
+> Thanks.
+>=20
+> --=20
+> tejun
+
