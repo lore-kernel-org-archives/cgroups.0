@@ -1,70 +1,56 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH V2 00/10] unify the interface of the proportional-share
- policy in blkio/io
-Date: Wed, 2 Jan 2019 17:28:05 +0100
-Message-ID: <CAFEB3AA-1E80-4A75-8B93-D3E4A46C30DB@linaro.org>
-References: <7D7FAB43-5F62-4402-A9B3-E7C2E30AE680@linaro.org>
- <20181130184256.GI2509588@devbig004.ftw2.facebook.com>
- <5534B7D4-A5D9-4F44-9620-970A7F9EC140@linaro.org>
- <CADiTV-29TmkB5-k=TtQfoJqjP2Qv7GSsGLXAPBaTB6DoQ+6yyw@mail.gmail.com>
- <874A0232-2103-4364-BD88-F33B85D6A764@linaro.org>
- <20181218164126.GX2509588@devbig004.ftw2.facebook.com>
- <EC4F9B54-2352-4D85-B56C-5800CFEBCCB8@linaro.org>
- <A360EBDC-B297-4754-AF5C-0A6C30D725B4@linaro.org>
- <20181227234144.GE2509588@devbig004.ftw2.facebook.com>
- <F2A4E669-8C79-46D7-8A97-2C561FF5346B@linaro.org>
- <20190102160328.GR2509588@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] fork, memcg: fix cached_stacks case
+Date: Wed,  2 Jan 2019 10:01:45 -0800
+Message-ID: <20190102180145.57406-1-shakeelb@google.com>
+Mime-Version: 1.0
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=zoEN4e7FVLBdSCM0JYwFQBKnXFgM1dT6w5T9AKkbJH8=;
-        b=BiIw0OXCrudcQU0jcN1txwA/8FRcTFQA1AxQR5YzktjRsEHIJIAbu5rYwEbu3m+CZ6
-         YTm+fuD1qtRH9p3dY9OQrb3tzMg6q4R66WcI4x8WmgRVEpN7CEhjujAsotpvheB3dpLn
-         OOqibQOGfEFtJRSqXhsOPJ2zDYrUPRHV6y1MY=
-In-Reply-To: <20190102160328.GR2509588@devbig004.ftw2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=5dUXWnMYVxK4GhlE9mU3i7S+YQhp/yuwfcvNZh6pQ54=;
+        b=qwipEX4wIkJkoVONyw3px8ydt+BiUWSb5U5RBPSsg7mhqCD+4qDp9Uj7JYhb/A9Wor
+         HGqBh8MUbe7wxfjpQpqc+O8AenWmE4OjT/7XjR4dKHO72AkllbS6mYl+xwh2rAwMGRVy
+         BeEtch55uq4z+z+HihCDU/thB4jlyVfn7Ax0WKYyWHtP4mvf1pkAT/gw9M1obguZFDwz
+         VXYecv1XxqTFYnefuQotftd9giuHUU/3eX7wCghZm0IGTbQDkI4F3ArxMZGS8pKURKGH
+         GWEb7bvAiTowOkeKfzxgaSbx7UHm1gD5UZrvAN4lhg6X5eSgig7+6g51ewHZVobYp4u5
+         SpAg==
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: 'Paolo Valente' via bfq-iosched <bfq-iosched@googlegroups.com>, Angelo Ruocco <angelo.ruocco.90@gmail.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Li Zefan <lizefan@huawei.com>, Angelo Ruocco <angeloruocco90@gmail.com>, Dennis Zhou <dennis@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Liu Bo <bo.liu@linux.alibaba.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, broonie@kernel.org, oleksandr@natalenko.name, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
+Content-Transfer-Encoding: 7bit
+To: Rik van Riel <riel@surriel.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, stable@vger.kernel.org
 
+Commit 5eed6f1dff87 ("fork,memcg: fix crash in free_thread_stack on
+memcg charge fail") fixes a crash caused due to failed memcg charge of
+the kernel stack. However the fix misses the cached_stacks case which
+this patch fixes. So, the same crash can happen if the memcg charge of
+a cached stack is failed.
 
+Fixes: 5eed6f1dff87 ("fork,memcg: fix crash in free_thread_stack on memcg charge fail")
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+Cc: Rik van Riel <riel@surriel.com>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: <stable@vger.kernel.org>
+---
+ kernel/fork.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Il giorno 2 gen 2019, alle ore 17:03, Tejun Heo <tj@kernel.org> ha scritto:
-> 
-> Hello, Paolo.
-> 
-> On Sun, Dec 30, 2018 at 11:25:25AM +0100, Paolo Valente wrote:
->> What's the benefit of throwing away months of work, on which we agreed
->> before starting it, and that solves a problem already acknowledged by
->> interested parties?
-> 
-> Showing multiple conflicting numbers definitely isn't anything which
-> is agreed upon.
-> 
-
-Sorry, of course you din't realize that sharing interface files had
-this consequence, otherwise you'd have protested beforehand.
-
-The problem is that this consequence seems unavoidable: if two
-policies have different numbers to convey, through a shared interface
-file, then they must be allowed to write their different numbers.  To
-me, this doesn't sound like a problem.
-
-The only other natural option is no unification, unless you have a
-third way.
-
-What do you prefer, or propose?
-
-Thanks,
-Paolo
-
-> Thanks.
-> 
-> -- 
-> tejun
+diff --git a/kernel/fork.c b/kernel/fork.c
+index e4a51124661a..593cd1577dff 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -216,6 +216,7 @@ static unsigned long *alloc_thread_stack_node(struct task_struct *tsk, int node)
+ 		memset(s->addr, 0, THREAD_SIZE);
+ 
+ 		tsk->stack_vm_area = s;
++		tsk->stack = s->addr;
+ 		return s->addr;
+ 	}
+ 
+-- 
+2.20.1.415.g653613c723-goog
 
