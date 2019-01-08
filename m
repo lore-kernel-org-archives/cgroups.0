@@ -1,68 +1,79 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol: use struct_size() in kmalloc()
-Date: Tue, 8 Jan 2019 15:52:45 +0100
-Message-ID: <20190108145245.GW31793@dhcp22.suse.cz>
-References: <20190104183726.GA6374@embeddedor>
+Subject: Re: [PATCH] memcg: schedule high reclaim for remote memcgs on
+ high_work
+Date: Tue, 8 Jan 2019 15:59:42 +0100
+Message-ID: <20190108145942.GZ31793@dhcp22.suse.cz>
+References: <20190103015638.205424-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190104183726.GA6374@embeddedor>
+In-Reply-To: <20190103015638.205424-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Cc Andrew (original patch is here http://lkml.kernel.org/r/20190104183726.GA6374@embeddedor)
+On Wed 02-01-19 17:56:38, Shakeel Butt wrote:
+> If a memcg is over high limit, memory reclaim is scheduled to run on
+> return-to-userland. However it is assumed that the memcg is the current
+> process's memcg. With remote memcg charging for kmem or swapping in a
+> page charged to remote memcg, current process can trigger reclaim on
+> remote memcg. So, schduling reclaim on return-to-userland for remote
+> memcgs will ignore the high reclaim altogether. So, punt the high
+> reclaim of remote memcgs to high_work.
 
-On Fri 04-01-19 12:37:26, Gustavo A. R. Silva wrote:
-> One of the more common cases of allocation size calculations is finding
-> the size of a structure that has a zero-sized array at the end, along
-> with memory for some number of elements for that array. For example:
-> 
-> struct foo {
->     int stuff;
->     void *entry[];
-> };
-> 
-> instance = kmalloc(sizeof(struct foo) + sizeof(void *) * count, GFP_KERNEL);
-> 
-> Instead of leaving these open-coded and prone to type mistakes, we can
-> now use the new struct_size() helper:
-> 
-> instance = kmalloc(struct_size(instance, entry, count), GFP_KERNEL);
+Have you seen this happening in real life workloads? And is this
+offloading what we really want to do? I mean it is clearly the current
+task that has triggered the remote charge so why should we offload that
+work to a system? Is there any reason we cannot reclaim on the remote
+memcg from the return-to-userland path?
 
-This looks indeed neater
-
-> This code was detected with the help of Coccinelle.
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-Thanks
-
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
 > ---
->  mm/memcontrol.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+>  mm/memcontrol.c | 20 ++++++++++++--------
+>  1 file changed, 12 insertions(+), 8 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index af7f18b32389..ad256cf7da47 100644
+> index e9db1160ccbc..47439c84667a 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -3626,8 +3626,7 @@ static int __mem_cgroup_usage_register_event(struct mem_cgroup *memcg,
->  	size = thresholds->primary ? thresholds->primary->size + 1 : 1;
->  
->  	/* Allocate memory for new array of thresholds */
-> -	new = kmalloc(sizeof(*new) + size * sizeof(struct mem_cgroup_threshold),
-> -			GFP_KERNEL);
-> +	new = kmalloc(struct_size(new, entries, size), GFP_KERNEL);
->  	if (!new) {
->  		ret = -ENOMEM;
->  		goto unlock;
+> @@ -2302,19 +2302,23 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	 * reclaim on returning to userland.  We can perform reclaim here
+>  	 * if __GFP_RECLAIM but let's always punt for simplicity and so that
+>  	 * GFP_KERNEL can consistently be used during reclaim.  @memcg is
+> -	 * not recorded as it most likely matches current's and won't
+> -	 * change in the meantime.  As high limit is checked again before
+> -	 * reclaim, the cost of mismatch is negligible.
+> +	 * not recorded as the return-to-userland high reclaim will only reclaim
+> +	 * from current's memcg (or its ancestor). For other memcgs we punt them
+> +	 * to work queue.
+>  	 */
+>  	do {
+>  		if (page_counter_read(&memcg->memory) > memcg->high) {
+> -			/* Don't bother a random interrupted task */
+> -			if (in_interrupt()) {
+> +			/*
+> +			 * Don't bother a random interrupted task or if the
+> +			 * memcg is not current's memcg's ancestor.
+> +			 */
+> +			if (in_interrupt() ||
+> +			    !mm_match_cgroup(current->mm, memcg)) {
+>  				schedule_work(&memcg->high_work);
+> -				break;
+> +			} else {
+> +				current->memcg_nr_pages_over_high += batch;
+> +				set_notify_resume(current);
+>  			}
+> -			current->memcg_nr_pages_over_high += batch;
+> -			set_notify_resume(current);
+>  			break;
+>  		}
+>  	} while ((memcg = parent_mem_cgroup(memcg)));
 > -- 
-> 2.20.1
+> 2.20.1.415.g653613c723-goog
+> 
 
 -- 
 Michal Hocko
