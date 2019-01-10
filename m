@@ -1,132 +1,119 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH v3] memcg: schedule high reclaim for remote memcgs on high_work
-Date: Thu, 10 Jan 2019 09:44:32 -0800
-Message-ID: <20190110174432.82064-1-shakeelb@google.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH v2 0/5] psi: pressure stall monitors v2
+Date: Thu, 10 Jan 2019 14:07:13 -0800
+Message-ID: <20190110220718.261134-1-surenb@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=Gt8KB5JyoxxYaL1/z6NLcbWHN8NvTltGpPlll2SY3FY=;
-        b=rSTdy8EqKNDloKVk7yuhlbAdCYfMtPuUgqSsT99xkRUxQP4YdeQX2BlE7gVeyBCUB4
-         DpDB0pJiexAVR5wSa5LDB3gsKPGKD+LzAUgOfgBvfmCpIiJlxceVQCSfa9D6WKocBTzg
-         CYIeuSwBbcGCiapIrOH0wtIfM2+pZuVqkR2qPKjwZIZ9Q/OaKZ9U6wPPpODCqYJ9tJZc
-         6gH3LHZUs7tR7Lr6og9K7DHz8PgDkBLmDPoUWPUCZ0/l1+UuFjyKz4+4VS/zaqdz+l7d
-         LPp6BPRean8RE7C8UrsGUuZHKMYV1OYT4HSiOyZMuAh25AbdI6di/fQ+TJzKXPLcvOps
-         CAlQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ig5qBTqAOOl2ALQFgSUOe0w9ro7QA1aOFe2gQIbsj8Y=;
+        b=crAkPTvPLfl2A5lFXysX3vaxjF/2y1f3sxNNf1vPvrnJgrf1xy0zKoKE0zzMIP8sS4
+         0S4/4dPxl8/cpbT2+JIamABRXt4zrS5tHeKi87QxVixpM8yUAq1DkjhfZCKFm3gr/FEf
+         r83CtOyVbwKYyJrYqv5cQI+2NexV0ZWdKBlYrAizrbZ1vMfqm8xh1WQK+W4l2XUDA73F
+         EaY+oWW1RgTZl8J/azSIUL/Kstz71dOR7Hd7iLpZyF7k2F4Boy6FL/vx9o8H56KDhfPC
+         dVpshDaNnUqN8JlZA++d4n+h8jU7ydNXmt4QX2GlX88chDJ+D4pRC1IsvTCI2aE7T49c
+         EAMw==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+To: gregkh@linuxfoundation.org
+Cc: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, axboe@kernel.dk, dennis@kernel.org, dennisszhou@gmail.com, mingo@redhat.com, peterz@infradead.org, akpm@linux-foundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@android.com, Suren Baghdasaryan <surenb@google.com>
 
-If a memcg is over high limit, memory reclaim is scheduled to run on
-return-to-userland.  However it is assumed that the memcg is the current
-process's memcg.  With remote memcg charging for kmem or swapping in a
-page charged to remote memcg, current process can trigger reclaim on
-remote memcg.  So, schduling reclaim on return-to-userland for remote
-memcgs will ignore the high reclaim altogether.  So, record the memcg
-needing high reclaim and trigger high reclaim for that memcg on
-return-to-userland.  However if the memcg is already recorded for high
-reclaim and the recorded memcg is not the descendant of the the memcg
-needing high reclaim, punt the high reclaim to the work queue.
+This is respin of:
+  https://lwn.net/ml/linux-kernel/20181214171508.7791-1-surenb@google.com/
 
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
----
-Changelog since v2:
-- TIF_NOTIFY_RESUME can be set from places other than try_charge() in
-  which case current->memcg_high_reclaim will be null. Correctly handle
-  such scenarios.
+Android is adopting psi to detect and remedy memory pressure that
+results in stuttering and decreased responsiveness on mobile devices.
 
-Changelog since v1:
-- Punt high reclaim of a memcg to work queue only if the recorded memcg
-  is not its descendant.
+Psi gives us the stall information, but because we're dealing with
+latencies in the millisecond range, periodically reading the pressure
+files to detect stalls in a timely fashion is not feasible. Psi also
+doesn't aggregate its averages at a high-enough frequency right now.
 
- include/linux/sched.h |  3 +++
- kernel/fork.c         |  1 +
- mm/memcontrol.c       | 22 ++++++++++++++++------
- 3 files changed, 20 insertions(+), 6 deletions(-)
+This patch series extends the psi interface such that users can
+configure sensitive latency thresholds and use poll() and friends to
+be notified when these are breached.
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 7d08562eeec7..5e6690042497 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1172,6 +1172,9 @@ struct task_struct {
- 
- 	/* Used by memcontrol for targeted memcg charge: */
- 	struct mem_cgroup		*active_memcg;
-+
-+	/* Used by memcontrol for high relcaim: */
-+	struct mem_cgroup		*memcg_high_reclaim;
- #endif
- 
- #ifdef CONFIG_BLK_CGROUP
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 1b0fde63d831..85da44137847 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -918,6 +918,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
- 
- #ifdef CONFIG_MEMCG
- 	tsk->active_memcg = NULL;
-+	tsk->memcg_high_reclaim = NULL;
- #endif
- 	return tsk;
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 953d4ba8a595..18f4aefbe0bf 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2168,14 +2168,17 @@ static void high_work_func(struct work_struct *work)
- void mem_cgroup_handle_over_high(void)
- {
- 	unsigned int nr_pages = current->memcg_nr_pages_over_high;
--	struct mem_cgroup *memcg;
-+	struct mem_cgroup *memcg = current->memcg_high_reclaim;
- 
- 	if (likely(!nr_pages))
- 		return;
- 
--	memcg = get_mem_cgroup_from_mm(current->mm);
-+	if (!memcg)
-+		memcg = get_mem_cgroup_from_mm(current->mm);
-+
- 	reclaim_high(memcg, nr_pages, GFP_KERNEL);
- 	css_put(&memcg->css);
-+	current->memcg_high_reclaim = NULL;
- 	current->memcg_nr_pages_over_high = 0;
- }
- 
-@@ -2329,10 +2332,10 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	 * If the hierarchy is above the normal consumption range, schedule
- 	 * reclaim on returning to userland.  We can perform reclaim here
- 	 * if __GFP_RECLAIM but let's always punt for simplicity and so that
--	 * GFP_KERNEL can consistently be used during reclaim.  @memcg is
--	 * not recorded as it most likely matches current's and won't
--	 * change in the meantime.  As high limit is checked again before
--	 * reclaim, the cost of mismatch is negligible.
-+	 * GFP_KERNEL can consistently be used during reclaim. Record the memcg
-+	 * for the return-to-userland high reclaim. If the memcg is already
-+	 * recorded and the recorded memcg is not the descendant of the memcg
-+	 * needing high reclaim, punt the high reclaim to the work queue.
- 	 */
- 	do {
- 		if (page_counter_read(&memcg->memory) > memcg->high) {
-@@ -2340,6 +2343,13 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 			if (in_interrupt()) {
- 				schedule_work(&memcg->high_work);
- 				break;
-+			} else if (!current->memcg_high_reclaim) {
-+				css_get(&memcg->css);
-+				current->memcg_high_reclaim = memcg;
-+			} else if (!mem_cgroup_is_descendant(
-+					current->memcg_high_reclaim, memcg)) {
-+				schedule_work(&memcg->high_work);
-+				break;
- 			}
- 			current->memcg_nr_pages_over_high += batch;
- 			set_notify_resume(current);
+As high-frequency aggregation is costly, it implements an aggregation
+method that is optimized for fast, short-interval averaging, and makes
+the aggregation frequency adaptive, such that high-frequency updates
+only happen while monitored stall events are actively occurring.
+
+With these patches applied, Android can monitor for, and ward off,
+mounting memory shortages before they cause problems for the user.
+For example, using memory stall monitors in userspace low memory
+killer daemon (lmkd) we can detect mounting pressure and kill less
+important processes before device becomes visibly sluggish. In our
+memory stress testing psi memory monitors produce roughly 10x less
+false positives compared to vmpressure signals. Having ability to
+specify multiple triggers for the same psi metric allows other parts
+of Android framework to monitor memory state of the device and act
+accordingly.
+
+The new interface is straight-forward. The user opens one of the
+pressure files for writing and writes a trigger description into the
+file descriptor that defines the stall state - some or full, and the
+maximum stall time over a given window of time. E.g.:
+
+        /* Signal when stall time exceeds 100ms of a 1s window */
+        char trigger[] = "full 100000 1000000"
+        fd = open("/proc/pressure/memory")
+        write(fd, trigger, sizeof(trigger))
+        while (poll() >= 0) {
+                ...
+        };
+        close(fd);
+
+When the monitored stall state is entered, psi adapts its aggregation
+frequency according to what the configured time window requires in
+order to emit event signals in a timely fashion. Once the stalling
+subsides, aggregation reverts back to normal.
+
+The trigger is associated with the open file descriptor. To stop
+monitoring, the user only needs to close the file descriptor and the
+trigger is discarded.
+
+Patches 1-4 prepare the psi code for polling support. Patch 5
+implements the adaptive polling logic, the pressure growth detection
+optimized for short intervals, and hooks up write() and poll() on the
+pressure files.
+
+The patches were developed in collaboration with Johannes Weiner.
+
+The patches are based on 4.20-rc7.
+
+Johannes Weiner (2):
+  fs: kernfs: add poll file operation
+  kernel: cgroup: add poll file operation
+
+Suren Baghdasaryan (3):
+  psi: introduce state_mask to represent stalled psi states
+  psi: rename psi fields in preparation for psi trigger addition
+  psi: introduce psi monitor
+
+ Documentation/accounting/psi.txt | 104 ++++++
+ fs/kernfs/file.c                 |  31 +-
+ include/linux/cgroup-defs.h      |   4 +
+ include/linux/kernfs.h           |   6 +
+ include/linux/psi.h              |  10 +
+ include/linux/psi_types.h        |  83 ++++-
+ kernel/cgroup/cgroup.c           | 119 +++++-
+ kernel/sched/psi.c               | 597 ++++++++++++++++++++++++++++---
+ 8 files changed, 885 insertions(+), 69 deletions(-)
+
+Changes in v2:
+- Preserved psi idle mode, as per Peter
+- Changed input parser to use sscanf, as per Peter
+- Removed percentage threshold support, as per Johannes and Joel
+- Added explicit numbers corresponding to NR_PSI_TASK_COUNTS,
+NR_PSI_RESOURCES and NR_PSI_STATES, as per Peter
+- Added a note about psi_group_cpu struct new size in the changelog
+of the patch introducing new member (0003-...), as per Peter
+- Fixed 64-bit division using div_u64, as per kbuild test robot
+
 -- 
 2.20.1.97.g81188d93c3-goog
 
